@@ -1098,7 +1098,7 @@ access_entry_class_movedown(idnode_t *self)
 }
 
 static const char *
-access_entry_class_get_title (idnode_t *self)
+access_entry_class_get_title (idnode_t *self, const char *lang)
 {
   access_entry_t *ae = (access_entry_t *)self;
 
@@ -1169,9 +1169,9 @@ access_entry_chtag_get(void *o)
 }
 
 static char *
-access_entry_chtag_rend (void *o)
+access_entry_chtag_rend (void *o, const char *lang)
 {
-  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_chtags);
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_chtags, lang);
 }
 
 static int
@@ -1204,9 +1204,9 @@ access_entry_dvr_config_get(void *o)
 }
 
 static char *
-access_entry_dvr_config_rend (void *o)
+access_entry_dvr_config_rend (void *o, const char *lang)
 {
-  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_dvr_configs);
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_dvr_configs, lang);
 }
 
 static int
@@ -1239,13 +1239,13 @@ access_entry_profile_get(void *o)
 }
 
 static char *
-access_entry_profile_rend (void *o)
+access_entry_profile_rend (void *o, const char *lang)
 {
-  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_profiles);
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_profiles, lang);
 }
 
 static htsmsg_t *
-access_entry_conn_limit_type_enum ( void *p )
+access_entry_conn_limit_type_enum ( void *p, const char *lang )
 {
   static struct strtab
   conn_limit_type_tab[] = {
@@ -1253,11 +1253,11 @@ access_entry_conn_limit_type_enum ( void *p )
     { N_("Streaming"),              ACCESS_CONN_LIMIT_TYPE_STREAMING   },
     { N_("DVR"),                    ACCESS_CONN_LIMIT_TYPE_DVR },
   };
-  return strtab2htsmsg(conn_limit_type_tab, 1);
+  return strtab2htsmsg(conn_limit_type_tab, 1, lang);
 }
 
 static htsmsg_t *
-language_get_list ( void *obj )
+language_get_list ( void *obj, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -1584,7 +1584,7 @@ passwd_entry_class_delete(idnode_t *self)
 }
 
 static const char *
-passwd_entry_class_get_title (idnode_t *self)
+passwd_entry_class_get_title (idnode_t *self, const char *lang)
 {
   passwd_entry_t *pw = (passwd_entry_t *)self;
 

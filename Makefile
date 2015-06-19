@@ -455,7 +455,7 @@ ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 # Internationalization
 #
 PO-FILES = $(foreach f,$(LANGUAGES),intl/tvheadend.$(f).po)
-MO-FILES = $(PO-FILES:%.po=$(BUILDDIR)/%.mo)
+SRCS += src/tvh_locale.c
 
 define merge-po
 	@if ! test -r "$(1)"; then \
@@ -587,12 +587,11 @@ intl/tvheadend.cs.po: intl/tvheadend.pot
 intl/tvheadend.pl.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
-${BUILDDIR}/%.mo: %.po
+$(BUILDDIR)/src/tvh_locale.o: src/tvh_locale_inc.c
+src/tvh_locale_inc.c: $(PO_FILES)
 	@printf "Building $@\n"
-	@mkdir -p $(dir $@)/$(subst .,,$(suffix $(basename $@)))/LC_MESSAGES
-	@$(MSGFMT) -o $@ $<
-	@ln -sf ../../tvheadend.$(subst .,,$(suffix $(basename $@))).mo \
-                $(dir $@)/$(subst .,,$(suffix $(basename $@)))/LC_MESSAGES/tvheadend.mo
+	@./support/poc.py --in="$(PO-FILES)" > $@.new
+	@mv $@.new $@
 
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c

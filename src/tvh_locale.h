@@ -1,6 +1,6 @@
 /*
- *  tvheadend, dvb charset config
- *  Copyright (C) 2012 Mariusz Białończyk
+ *  Tvheadend - internationalization (locale)
+ *  Copyright (C) 2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,28 +15,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef __TVH_LOCALE_H__
+#define __TVH_LOCALE_H__
 
-#ifndef __TVH_DVB_CHARSET_H__
-#define __TVH_DVB_CHARSET_H__
+const char *tvh_gettext_lang(const char *lang, const char *s);
+const char *tvh_gettext(const char *s);
 
-typedef struct dvb_charset {
-  LIST_ENTRY(dvb_charset) link;
- uint16_t onid;
- uint16_t tsid;
- uint16_t sid;
- const char *charset;
-} dvb_charset_t;
+#define _(s) tvh_gettext(s)
+#define N_(s) (s)
 
-void dvb_charset_init ( void );
-void dvb_charset_done ( void );
-
-struct mpegts_network;
-struct mpegts_mux;
-struct mpegts_service;
-
-const char *dvb_charset_find
-  (struct mpegts_network *mn, struct mpegts_mux *mm, struct mpegts_service *s);
-
-htsmsg_t *dvb_charset_enum ( void*, const char *lang );
-
-#endif /* __TVH_DVB_CHARSET_H__ */
+#endif /* __TVH_LOCALE_H__ */

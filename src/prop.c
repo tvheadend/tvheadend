@@ -228,7 +228,7 @@ prop_write_values
     if (save) {
       save2 = 1;
       if (p->notify)
-        p->notify(obj);
+        p->notify(obj, NULL);
       if (updated)
         htsmsg_set_u32(updated, p->id, 1);
     }
@@ -376,7 +376,7 @@ prop_read_values
  */
 static void
 prop_serialize_value
-  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask, const char *lang)
 {
   htsmsg_field_t *f;
   char buf[16];
@@ -473,7 +473,7 @@ prop_serialize_value
 
   /* Enum list */
   if (pl->list)
-    htsmsg_add_msg(m, "enum", pl->list(obj));
+    htsmsg_add_msg(m, "enum", pl->list(obj, lang));
 
   /* Visual group */
   if (pl->group)
@@ -495,14 +495,15 @@ prop_serialize_value
  */
 void
 prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *msg, htsmsg_t *list, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *msg, htsmsg_t *list,
+   int optmask, const char *lang)
 {
   if(pl == NULL)
     return;
 
   if(list == NULL) {
     for (; pl->id; pl++)
-      prop_serialize_value(obj, pl, msg, optmask);
+      prop_serialize_value(obj, pl, msg, optmask, lang);
   } else {
     const property_t *p;
     htsmsg_field_t *f;
@@ -512,7 +513,7 @@ prop_serialize
       if (!htsmsg_field_get_bool(f, &b) && b > 0) {
         p = prop_find(pl, f->hmf_name);
         if (p)
-          prop_serialize_value(obj, p, msg, optmask);
+          prop_serialize_value(obj, p, msg, optmask, lang);
         count++;
       }
     }
@@ -522,7 +523,7 @@ prop_serialize
           if (!strcmp(pl->id, f->hmf_name))
             break;
         if (f == NULL)
-          prop_serialize_value(obj, pl, msg, optmask);
+          prop_serialize_value(obj, pl, msg, optmask, lang);
       }
     }
   }

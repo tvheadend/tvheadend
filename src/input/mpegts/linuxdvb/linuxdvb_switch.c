@@ -49,7 +49,7 @@ typedef struct linuxdvb_switch
 } linuxdvb_switch_t;
 
 static htsmsg_t *
-linuxdvb_switch_class_committed_list ( void *o )
+linuxdvb_switch_class_committed_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("NONE"), -1 },
@@ -58,11 +58,11 @@ linuxdvb_switch_class_committed_list ( void *o )
     { N_("BA"),    2 },
     { N_("BB"),    3 },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-linuxdvb_switch_class_uncommitted_list ( void *o )
+linuxdvb_switch_class_uncommitted_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("NONE"), -1 },
@@ -83,26 +83,26 @@ linuxdvb_switch_class_uncommitted_list ( void *o )
     { N_("14"),   14 },
     { N_("15"),   15 },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-linuxdvb_switch_class_toneburst_list ( void *o )
+linuxdvb_switch_class_toneburst_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("NONE"), -1 },
     { N_("A"),    0 },
     { N_("B"),    1 },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static const char *
-linuxdvb_switch_class_get_title ( idnode_t *o )
+linuxdvb_switch_class_get_title ( idnode_t *o, const char *lang )
 {
   static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  snprintf(buf, sizeof(buf), N_("Switch: %s"), ld->ld_type);
+  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("Switch: %s")), ld->ld_type);
   return buf;
 }
 
@@ -246,11 +246,11 @@ linuxdvb_switch_tune
  * *************************************************************************/
 
 htsmsg_t *
-linuxdvb_switch_list ( void *o )
+linuxdvb_switch_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "None");
-  htsmsg_add_str(m, NULL, "Generic");
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("Generic")));
   return m;
 }
 

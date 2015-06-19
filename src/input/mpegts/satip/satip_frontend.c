@@ -125,7 +125,7 @@ satip_frontend_class_override_set( void *obj, const void * p )
 }
 
 static htsmsg_t *
-satip_frontend_class_override_enum( void * p )
+satip_frontend_class_override_enum( void * p, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
   htsmsg_add_str(m, NULL, "DVB-T");
@@ -210,7 +210,7 @@ satip_frontend_dvbs_class_get_childs ( idnode_t *self )
   idnode_set_t        *is  = idnode_set_create(0);
   satip_satconf_t *sfc;
   TAILQ_FOREACH(sfc, &lfe->sf_satconf, sfc_link)
-    idnode_set_add(is, &sfc->sfc_id, NULL);
+    idnode_set_add(is, &sfc->sfc_id, NULL, NULL);
   return is;
 }
 
@@ -258,7 +258,7 @@ satip_frontend_dvbs_class_master_set ( void *self, const void *val )
 }
 
 static htsmsg_t *
-satip_frontend_dvbs_class_master_enum( void * self )
+satip_frontend_dvbs_class_master_enum( void * self, const char *lang )
 {
   satip_frontend_t *lfe = self, *lfe2;
   satip_device_t *sd = lfe->sf_device;

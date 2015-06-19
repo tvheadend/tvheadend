@@ -101,7 +101,7 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   return 0;
 }
 static htsmsg_t *
-dvb_network_class_scanfile_list ( void *o, const char *type )
+dvb_network_class_scanfile_list ( void *o, const char *lang, const char *type )
 {
   dvb_network_t *ln = o;
   htsmsg_t *e, *m = htsmsg_create_map();
@@ -117,24 +117,24 @@ dvb_network_class_scanfile_list ( void *o, const char *type )
 }
 
 static htsmsg_t *
-dvb_network_dvbt_class_scanfile_list ( void *o )
+dvb_network_dvbt_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "dvbt");
+  return dvb_network_class_scanfile_list(o, lang, "dvbt");
 }
 static htsmsg_t *
-dvb_network_dvbc_class_scanfile_list ( void *o )
+dvb_network_dvbc_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "dvbc");
+  return dvb_network_class_scanfile_list(o, lang, "dvbc");
 }
 static htsmsg_t *
-dvb_network_dvbs_class_scanfile_list ( void *o )
+dvb_network_dvbs_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "dvbs");
+  return dvb_network_class_scanfile_list(o, lang, "dvbs");
 }
 static htsmsg_t *
-dvb_network_atsc_class_scanfile_list ( void *o )
+dvb_network_atsc_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "atsc");
+  return dvb_network_class_scanfile_list(o, lang, "atsc");
 }
 
 static const void *
@@ -172,7 +172,7 @@ dvb_network_class_orbital_pos_set ( void *o, const void *s )
 }
 
 static htsmsg_t *
-dvb_network_class_orbital_pos_list ( void *o )
+dvb_network_class_orbital_pos_list ( void *o, const char *lang )
 {
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type", "api");

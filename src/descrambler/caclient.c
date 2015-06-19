@@ -164,13 +164,13 @@ caclient_class_save ( idnode_t *in )
 }
 
 static const char *
-caclient_class_get_title ( idnode_t *in )
+caclient_class_get_title ( idnode_t *in, const char *lang )
 {
   caclient_t *cac = (caclient_t *)in;
   static char buf[32];
   if (cac->cac_name && cac->cac_name[0])
     return cac->cac_name;
-  snprintf(buf, sizeof(buf), "CA Client %i", cac->cac_index);
+  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("CA Client %i")), cac->cac_index);
   return buf;
 }
 

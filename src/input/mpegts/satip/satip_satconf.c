@@ -99,7 +99,7 @@ satip_satconf_class_network_set( void *o, const void *p )
   HTSMSG_FOREACH(f, msg) {
     if (!(str = htsmsg_field_get_str(f))) continue;
     if (!(mn = mpegts_network_find(str))) continue;
-    idnode_set_add(n, &mn->mn_id, NULL);
+    idnode_set_add(n, &mn->mn_id, NULL, NULL);
   }
 
   save = n->is_count != sfc->sfc_networks->is_count;
@@ -137,7 +137,7 @@ satip_satconf_class_network_set( void *o, const void *p )
 }
 
 static htsmsg_t *
-satip_satconf_class_network_enum( void *o )
+satip_satconf_class_network_enum( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *p = htsmsg_create_map();
@@ -152,7 +152,7 @@ satip_satconf_class_network_enum( void *o )
 }
 
 static char *
-satip_satconf_class_network_rend( void *o )
+satip_satconf_class_network_rend( void *o, const char *lang )
 {
   satip_satconf_t *sfc  = o;
   htsmsg_t               *l   = idnode_set_as_htsmsg(sfc->sfc_networks);
@@ -162,7 +162,7 @@ satip_satconf_class_network_rend( void *o )
 }
 
 static const char *
-satip_satconf_class_get_title ( idnode_t *o )
+satip_satconf_class_get_title ( idnode_t *o, const char *lang )
 {
   return ((satip_satconf_t *)o)->sfc_name;
 }

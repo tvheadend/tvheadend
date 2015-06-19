@@ -641,7 +641,7 @@ dvr_config_class_profile_get(void *o)
 }
 
 static char *
-dvr_config_class_profile_rend(void *o)
+dvr_config_class_profile_rend(void *o, const char *lang)
 {
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (cfg->dvr_profile)
@@ -650,7 +650,7 @@ dvr_config_class_profile_rend(void *o)
 }
 
 static const char *
-dvr_config_class_get_title (idnode_t *self)
+dvr_config_class_get_title (idnode_t *self, const char *lang)
 {
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (!dvr_config_is_default(cfg))
@@ -666,7 +666,7 @@ dvr_config_class_charset_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-dvr_config_class_charset_list(void *o)
+dvr_config_class_charset_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -675,7 +675,7 @@ dvr_config_class_charset_list(void *o)
 }
 
 static htsmsg_t *
-dvr_config_class_cache_list(void *o)
+dvr_config_class_cache_list(void *o, const char *lang)
 {
   static struct strtab tab[] = {
     { N_("Unknown"),            MC_CACHE_UNKNOWN },
@@ -684,19 +684,23 @@ dvr_config_class_cache_list(void *o)
     { N_("Sync"),               MC_CACHE_SYNC },
     { N_("Sync + Do not keep"), MC_CACHE_SYNCDONTKEEP }
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-dvr_config_class_extra_list(void *o)
+dvr_config_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, N_("Not set (none or channel config)"), 4*60, 1);
+  return dvr_entry_class_duration_list(o, 
+           tvh_gettext_lang(lang, N_("Not set (none or channel config)")),
+           4*60, 1, lang);
 }
 
 static htsmsg_t *
-dvr_config_entry_class_update_window_list(void *o)
+dvr_config_entry_class_update_window_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, N_("Update Disabled"), 24*3600, 60);
+  return dvr_entry_class_duration_list(o,
+           tvh_gettext_lang(lang, N_("Update Disabled")),
+           24*3600, 60, lang);
 }
 
 static int

@@ -85,10 +85,10 @@ channel_class_services_get ( void *obj )
 }
 
 static char *
-channel_class_services_rend ( void *obj )
+channel_class_services_rend ( void *obj, const char *lang )
 {
   channel_t *ch = obj;
-  return idnode_list_get_csv2(&ch->ch_services);
+  return idnode_list_get_csv2(&ch->ch_services, lang);
 }
 
 static int
@@ -101,7 +101,7 @@ channel_class_services_set ( void *obj, const void *p )
 }
 
 static htsmsg_t *
-channel_class_services_enum ( void *obj )
+channel_class_services_enum ( void *obj, const char *lang )
 {
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -121,10 +121,10 @@ channel_class_tags_get ( void *obj )
 }
 
 static char *
-channel_class_tags_rend ( void *obj )
+channel_class_tags_rend ( void *obj, const char *lang )
 {
   channel_t *ch = obj;
-  return idnode_list_get_csv2(&ch->ch_ctms);
+  return idnode_list_get_csv2(&ch->ch_ctms, lang);
 }
 
 static int
@@ -143,7 +143,7 @@ channel_class_tags_set ( void *obj, const void *p )
 }
 
 static void
-channel_class_icon_notify ( void *obj )
+channel_class_icon_notify ( void *obj, const char *lang )
 {
   channel_t *ch = obj;
   if (!ch->ch_load)
@@ -159,14 +159,14 @@ channel_class_get_icon ( void *obj )
 }
 
 static const char *
-channel_class_get_title ( idnode_t *self )
+channel_class_get_title ( idnode_t *self, const char *lang )
 {
   return channel_get_name((channel_t*)self);
 }
 
 /* exported for others */
 htsmsg_t *
-channel_class_get_list(void *o)
+channel_class_get_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *p = htsmsg_create_map();
@@ -243,7 +243,7 @@ channel_class_epggrab_set ( void *o, const void *v )
 }
 
 static htsmsg_t *
-channel_class_epggrab_list ( void *o )
+channel_class_epggrab_list ( void *o, const char *lang )
 {
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -1044,14 +1044,14 @@ channel_tag_class_delete(idnode_t *self)
 }
 
 static const char *
-channel_tag_class_get_title (idnode_t *self)
+channel_tag_class_get_title (idnode_t *self, const char *lang)
 {
   channel_tag_t *ct = (channel_tag_t *)self;
   return ct->ct_name ?: "";
 }
 
 static void
-channel_tag_class_icon_notify ( void *obj )
+channel_tag_class_icon_notify ( void *obj, const char *lang )
 {
   (void)channel_tag_get_icon(obj);
 }
@@ -1066,7 +1066,7 @@ channel_tag_class_get_icon ( void *obj )
 
 /* exported for others */
 htsmsg_t *
-channel_tag_class_get_list(void *o)
+channel_tag_class_get_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *p = htsmsg_create_map();

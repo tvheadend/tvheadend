@@ -44,7 +44,7 @@ typedef struct linuxdvb_lnb_conf
 } linuxdvb_lnb_conf_t;
 
 static const char *
-linuxdvb_lnb_class_get_title ( idnode_t *o )
+linuxdvb_lnb_class_get_title ( idnode_t *o, const char *lang )
 {
   static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
@@ -309,7 +309,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
  * *************************************************************************/
 
 htsmsg_t *
-linuxdvb_lnb_list ( void *o )
+linuxdvb_lnb_list ( void *o, const char *lang )
 {
   int i;
   htsmsg_t *m = htsmsg_create_list();

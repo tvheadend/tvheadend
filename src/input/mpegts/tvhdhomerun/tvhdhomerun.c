@@ -43,7 +43,7 @@ tvhdhomerun_device_class_get_childs ( idnode_t *in )
   tvhdhomerun_frontend_t *lfe;
 
   TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
-    idnode_set_add(is, &lfe->ti_id, NULL);
+    idnode_set_add(is, &lfe->ti_id, NULL, NULL);
   return is;
 }
 
@@ -57,7 +57,7 @@ static int tvhdhomerun_discoveries_count;
 static struct tvhdhomerun_discovery_queue tvhdhomerun_discoveries;
 
 static const char *
-tvhdhomerun_device_class_get_title( idnode_t *in )
+tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
 {
   static char buf[256];
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
@@ -67,7 +67,7 @@ tvhdhomerun_device_class_get_title( idnode_t *in )
 }
 
 static htsmsg_t *
-tvhdhomerun_device_class_override_enum( void * p )
+tvhdhomerun_device_class_override_enum( void * p, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
   htsmsg_add_str(m, NULL, "DVB-T");
@@ -93,7 +93,7 @@ tvhdhomerun_device_class_override_set( void *obj, const void * p )
 }
 
 static void
-tvhdhomerun_device_class_override_notify( void * obj )
+tvhdhomerun_device_class_override_notify( void * obj, const char *lang )
 {
   tvhdhomerun_device_t *hd = obj;
   tvhdhomerun_frontend_t *hfe;

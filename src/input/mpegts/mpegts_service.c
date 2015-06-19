@@ -71,14 +71,14 @@ mpegts_service_class_get_network ( void *ptr )
 }
 
 static htsmsg_t *
-mpegts_service_pref_capid_lock_list ( void *o )
+mpegts_service_pref_capid_lock_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Off"),                0 },
     { N_("On"),                 1 },
     { N_("Only Pref. CA PID"),  2 },
   };
-   return strtab2htsmsg(tab, 1);
+   return strtab2htsmsg(tab, 1, lang);
 }
 
 const idclass_t mpegts_service_class =

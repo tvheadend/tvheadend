@@ -162,13 +162,13 @@ profile_class_save ( idnode_t *in )
 }
 
 static const char *
-profile_class_get_title ( idnode_t *in )
+profile_class_get_title ( idnode_t *in, const char *lang )
 {
   profile_t *pro = (profile_t *)in;
   static char buf[32];
   if (pro->pro_name && pro->pro_name[0])
     return pro->pro_name;
-  snprintf(buf, sizeof(buf), "%s", idclass_get_caption(in->in_class));
+  snprintf(buf, sizeof(buf), "%s", idclass_get_caption(in->in_class, lang));
   return buf;
 }
 
@@ -240,7 +240,7 @@ profile_class_name_opts(void *o)
 }
 
 static htsmsg_t *
-profile_class_priority_list ( void *o )
+profile_class_priority_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Unset (default)"),          PROFILE_SPRIO_NOTSET },
@@ -255,18 +255,18 @@ profile_class_priority_list ( void *o )
     { N_("DVR Override Low"),         PROFILE_SPRIO_DVR_LOW },
     { N_("DVR Override Unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-profile_class_svfilter_list ( void *o )
+profile_class_svfilter_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("None"),                    PROFILE_SVF_NONE },
     { N_("SD: Standard Definition"), PROFILE_SVF_SD },
     { N_("HD: High Definition"),     PROFILE_SVF_HD },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 const idclass_t profile_class =
@@ -496,7 +496,7 @@ profile_validate_name(const char *name)
  *
  */
 htsmsg_t *
-profile_class_get_list(void *o)
+profile_class_get_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -1349,7 +1349,7 @@ typedef struct profile_transcode {
 } profile_transcode_t;
 
 static htsmsg_t *
-profile_class_mc_list ( void *o )
+profile_class_mc_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Not set"),                       MC_UNKNOWN },
@@ -1360,11 +1360,11 @@ profile_class_mc_list ( void *o )
     { N_("Matroska (mkv) /av-lib"),        MC_AVMATROSKA },
     { N_("WEBM /av-lib"),                  MC_AVWEBM },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-profile_class_channels_list ( void *o )
+profile_class_channels_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Copy layout"),                   0 },
@@ -1377,11 +1377,11 @@ profile_class_channels_list ( void *o )
     { N_("6.1"),                           7 },
     { N_("7.1"),                           8 }
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-profile_class_language_list(void *o)
+profile_class_language_list(void *o, const char *lang)
 {
   htsmsg_t *l = htsmsg_create_list();
   const lang_code_t *lc = lang_codes;
@@ -1464,7 +1464,7 @@ profile_class_vcodec_sct_check(int sct)
 }
 
 static htsmsg_t *
-profile_class_vcodec_list(void *o)
+profile_class_vcodec_list(void *o, const char *lang)
 {
   return profile_class_codec_list(profile_class_vcodec_sct_check);
 }
@@ -1476,7 +1476,7 @@ profile_class_acodec_sct_check(int sct)
 }
 
 static htsmsg_t *
-profile_class_acodec_list(void *o)
+profile_class_acodec_list(void *o, const char *lang)
 {
   return profile_class_codec_list(profile_class_acodec_sct_check);
 }
@@ -1488,7 +1488,7 @@ profile_class_scodec_sct_check(int sct)
 }
 
 static htsmsg_t *
-profile_class_scodec_list(void *o)
+profile_class_scodec_list(void *o, const char *lang)
 {
   return profile_class_codec_list(profile_class_scodec_sct_check);
 }

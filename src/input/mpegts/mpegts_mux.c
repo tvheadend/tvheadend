@@ -304,7 +304,7 @@ mpegts_mux_class_delete ( idnode_t *self )
 }
 
 static const char *
-mpegts_mux_class_get_title ( idnode_t *self )
+mpegts_mux_class_get_title ( idnode_t *self, const char *lang )
 {
   static __thread char buf[256];
   mpegts_mux_nice_name((mpegts_mux_t*)self, buf, sizeof(buf));
@@ -430,19 +430,19 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
 }
 
 static htsmsg_t *
-mpegts_mux_class_scan_state_enum ( void *p )
+mpegts_mux_class_scan_state_enum ( void *p, const char *lang )
 {
-  return strtab2htsmsg(scan_state_tab, 1);
+  return strtab2htsmsg(scan_state_tab, 1, lang);
 }
 
 static htsmsg_t *
-mpegts_mux_class_scan_result_enum ( void *p )
+mpegts_mux_class_scan_result_enum ( void *p, const char *lang )
 {
-  return strtab2htsmsg(scan_result_tab, 1);
+  return strtab2htsmsg(scan_result_tab, 1, lang);
 }
 
 static void
-mpegts_mux_class_enabled_notify ( void *p )
+mpegts_mux_class_enabled_notify ( void *p, const char *lang )
 {
   mpegts_mux_t *mm = p;
   if (!mm->mm_is_enabled(mm)) {
@@ -452,7 +452,7 @@ mpegts_mux_class_enabled_notify ( void *p )
 }
 
 static htsmsg_t *
-mpegts_mux_epg_list ( void *o )
+mpegts_mux_epg_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Disable"),                  MM_EPG_DISABLE },
@@ -466,18 +466,18 @@ mpegts_mux_epg_list ( void *o )
     { N_("Only OpenTV Sky Italia"),   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
     { N_("Only OpenTV Sky Ausat"),    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-mpegts_mux_ac3_list ( void *o )
+mpegts_mux_ac3_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Standard"),                 MM_AC3_STANDARD },
     { N_("AC-3 = descriptor 6"),      MM_AC3_PMT_06 },
     { N_("Ignore descriptor 5"),      MM_AC3_PMT_N05 },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 const idclass_t mpegts_mux_class =

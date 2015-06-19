@@ -179,7 +179,7 @@ profile_t *profile_find_by_name(const char *name, const char *alt);
 profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name,
                                 const char *alt, int sflags);
 
-htsmsg_t * profile_class_get_list(void *o);
+htsmsg_t * profile_class_get_list(void *o, const char *lang);
 
 char *profile_validate_name(const char *name);
 

@@ -491,10 +491,10 @@ void dvr_entry_delete(dvr_entry_t *de);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de);
 
-htsmsg_t *dvr_entry_class_mc_list (void *o);
-htsmsg_t *dvr_entry_class_pri_list(void *o);
-htsmsg_t *dvr_entry_class_config_name_list(void *o);
-htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step);
+htsmsg_t *dvr_entry_class_mc_list (void *o, const char *lang);
+htsmsg_t *dvr_entry_class_pri_list(void *o, const char *lang);
+htsmsg_t *dvr_entry_class_config_name_list(void *o, const char *lang);
+htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang);
 
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
@@ -541,8 +541,8 @@ dvr_autorec_find_by_uuid(const char *uuid)
 
 htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
 htsmsg_t * dvr_autorec_entry_class_weekdays_get(uint32_t weekdays);
-htsmsg_t * dvr_autorec_entry_class_weekdays_list ( void *o );
-char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays);
+htsmsg_t * dvr_autorec_entry_class_weekdays_list (void *o, const char *list);
+char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang);
 
 void dvr_autorec_check_event(epg_broadcast_t *e);
 void dvr_autorec_check_brand(epg_brand_t *b);

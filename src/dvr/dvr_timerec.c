@@ -329,7 +329,7 @@ dvr_timerec_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write
 }
 
 static const char *
-dvr_timerec_entry_class_get_title (idnode_t *self)
+dvr_timerec_entry_class_get_title (idnode_t *self, const char *lang)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)self;
   const char *s = "";
@@ -375,7 +375,7 @@ dvr_timerec_entry_class_channel_get(void *o)
 }
 
 static char *
-dvr_timerec_entry_class_channel_rend(void *o)
+dvr_timerec_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte->dte_channel)
@@ -448,9 +448,9 @@ dvr_timerec_entry_class_stop_get(void *o)
 }
 
 static htsmsg_t *
-dvr_timerec_entry_class_time_list(void *o)
+dvr_timerec_entry_class_time_list(void *o, const char *lang)
 {
-  return dvr_autorec_entry_class_time_list(o, "Invalid");
+  return dvr_autorec_entry_class_time_list(o, tvh_gettext_lang(lang, N_("Invalid")));
 }
 
 static int
@@ -486,7 +486,7 @@ dvr_timerec_entry_class_config_name_get(void *o)
 }
 
 static char *
-dvr_timerec_entry_class_config_name_rend(void *o)
+dvr_timerec_entry_class_config_name_rend(void *o, const char *lang)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte->dte_config)
@@ -526,10 +526,10 @@ dvr_timerec_entry_class_weekdays_default(void)
 }
 
 static char *
-dvr_timerec_entry_class_weekdays_rend(void *o)
+dvr_timerec_entry_class_weekdays_rend(void *o, const char *lang)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
-  return dvr_autorec_entry_class_weekdays_rend(dte->dte_weekdays);
+  return dvr_autorec_entry_class_weekdays_rend(dte->dte_weekdays, lang);
 }
 
 static uint32_t

@@ -57,7 +57,7 @@ struct service_queue service_all;
 struct service_queue service_raw_all;
 
 static void
-service_class_notify_enabled ( void *obj )
+service_class_notify_enabled ( void *obj, const char *lang )
 {
   service_t *t = (service_t *)obj;
   if (t->s_enabled && t->s_auto != SERVICE_AUTO_OFF)
@@ -73,10 +73,10 @@ service_class_channel_get ( void *obj )
 }
 
 static char *
-service_class_channel_rend ( void *obj )
+service_class_channel_rend ( void *obj, const char *lang )
 {
   service_t *svc = obj;
-  return idnode_list_get_csv1(&svc->s_channels);
+  return idnode_list_get_csv1(&svc->s_channels, lang);
 }
 
 static int
@@ -91,7 +91,7 @@ service_class_channel_set
 
 static htsmsg_t *
 service_class_channel_enum
-  ( void *obj )
+  ( void *obj, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -101,7 +101,7 @@ service_class_channel_enum
 }
 
 static const char *
-service_class_get_title ( idnode_t *self )
+service_class_get_title ( idnode_t *self, const char *lang )
 {
   return service_get_full_channel_name((service_t *)self);
 }
@@ -144,14 +144,14 @@ service_class_caid_get ( void *obj )
 }
 
 static htsmsg_t *
-service_class_auto_list ( void *o )
+service_class_auto_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Auto Check Enabled"),  0 },
     { N_("Auto Check Disabled"), 1 },
     { N_("Missing In PAT/SDT"),  2 }
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 const idclass_t service_class = {
@@ -846,7 +846,7 @@ service_set_enabled(service_t *t, int enabled, int _auto)
   if (t->s_enabled != !!enabled) {
     t->s_enabled = !!enabled;
     t->s_auto = _auto;
-    service_class_notify_enabled(t);
+    service_class_notify_enabled(t, NULL);
     service_request_save(t, 0);
     idnode_notify_changed(&t->s_id);
   }

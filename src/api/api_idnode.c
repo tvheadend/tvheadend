@@ -196,12 +196,12 @@ api_idnode_load_by_class
       if (_enum) {
         e = htsmsg_create_map();
         htsmsg_add_str(e, "key", idnode_uuid_as_str(in));
-        htsmsg_add_str(e, "val", idnode_get_title(in));
+        htsmsg_add_str(e, "val", idnode_get_title(in, perm->aa_lang));
 
       /* Full record */
       } else {
         htsmsg_t *flist = api_idnode_flist_conf(args, "list");
-        e = idnode_serialize0(in, flist, 0);
+        e = idnode_serialize0(in, flist, 0, perm->aa_lang);
         htsmsg_destroy(flist);
       }
 
@@ -268,9 +268,9 @@ api_idnode_load
         err = EPERM;
         continue;
       }
-      m = idnode_serialize0(in, flist, 0);
+      m = idnode_serialize0(in, flist, 0, perm->aa_lang);
       if (meta > 0)
-        htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0));
+        htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang));
       htsmsg_add_msg(l, NULL, m);
       count++;
       idnode_perm_unset(in);
@@ -288,9 +288,9 @@ api_idnode_load
         err = EPERM;
       } else {
         l = htsmsg_create_list();
-        m = idnode_serialize0(in, flist, 0);
+        m = idnode_serialize0(in, flist, 0, perm->aa_lang);
         if (meta > 0)
-          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0));
+          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang));
         htsmsg_add_msg(l, NULL, m);
         idnode_perm_unset(in);
       }
@@ -411,7 +411,7 @@ api_idnode_tree
   if (isroot && node) {
     htsmsg_t *m;
     idnode_perm_set(node, perm);
-    m = idnode_serialize(node);
+    m = idnode_serialize(node, perm->aa_lang);
     idnode_perm_unset(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(*resp, NULL, m);
@@ -421,12 +421,12 @@ api_idnode_tree
     idnode_set_t *v = node ? idnode_get_childs(node) : rootfn(perm);
     if (v) {
       int i;
-      idnode_set_sort_by_title(v);
+      idnode_set_sort_by_title(v, perm->aa_lang);
       for(i = 0; i < v->is_count; i++) {
         idnode_t *in = v->is_array[i];
         htsmsg_t *m;
         idnode_perm_set(in, perm);
-        m = idnode_serialize(v->is_array[i]);
+        m = idnode_serialize(v->is_array[i], perm->aa_lang);
         idnode_perm_unset(in);
         htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
         htsmsg_add_msg(*resp, NULL, m);
@@ -462,7 +462,7 @@ api_idnode_class
   }
 
   err   = 0;
-  *resp = idclass_serialize0(idc, flist, 0);
+  *resp = idclass_serialize0(idc, flist, 0, perm->aa_lang);
 
 exit:
   pthread_mutex_unlock(&global_lock);

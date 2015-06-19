@@ -32,7 +32,7 @@ api_passwd_entry_grid
   passwd_entry_t *pw;
 
   TAILQ_FOREACH(pw, &passwd_entries, pw_link)
-    idnode_set_add(ins, (idnode_t*)pw, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)pw, &conf->filter, perm->aa_lang);
 }
 
 static int
@@ -64,7 +64,7 @@ api_access_entry_grid
   access_entry_t *ae;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link)
-    idnode_set_add(ins, (idnode_t*)ae, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)ae, &conf->filter, perm->aa_lang);
 }
 
 static int

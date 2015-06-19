@@ -73,7 +73,7 @@ typedef struct linuxdvb_rotor
 #ifndef ROTOR_TEST
 
 static const char *
-linuxdvb_rotor_class_get_title ( idnode_t *o )
+linuxdvb_rotor_class_get_title ( idnode_t *o, const char *lang )
 {
   static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
@@ -451,13 +451,13 @@ struct {
 };
 
 htsmsg_t *
-linuxdvb_rotor_list ( void *o )
+linuxdvb_rotor_list ( void *o, const char *lang )
 {
   int i;
   htsmsg_t *m = htsmsg_create_list(); 
-  htsmsg_add_str(m, NULL, "None");
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
   for (i = 0; i < ARRAY_SIZE(linuxdvb_rotor_all); i++)
-    htsmsg_add_str(m, NULL, linuxdvb_rotor_all[i].name);
+    htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, linuxdvb_rotor_all[i].name));
   return m;
 }
 

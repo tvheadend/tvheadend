@@ -251,12 +251,12 @@ idnode_uuid_as_str(const idnode_t *in)
  *
  */
 const char *
-idnode_get_title(idnode_t *in)
+idnode_get_title(idnode_t *in, const char *lang)
 {
   const idclass_t *ic = in->in_class;
   for(; ic != NULL; ic = ic->ic_super) {
     if(ic->ic_get_title != NULL)
-      return ic->ic_get_title(in);
+      return ic->ic_get_title(in, lang);
   }
   return idnode_uuid_as_str(in);
 }
@@ -325,17 +325,17 @@ idnode_find_prop
  */
 static char *
 idnode_get_display
-  ( idnode_t *self, const property_t *p )
+  ( idnode_t *self, const property_t *p, const char *lang )
 {
   if (p) {
     if (p->rend)
-      return p->rend(self);
+      return p->rend(self, lang);
     else if (p->islist) {
       htsmsg_t *l = (htsmsg_t*)p->get(self);
       if (l)
         return htsmsg_list_2_csv(l);
     } else if (p->list) {
-      htsmsg_t *l = p->list(self), *m;
+      htsmsg_t *l = p->list(self, lang), *m;
       htsmsg_field_t *f;
       uint32_t k, v;
       char *r = NULL;
@@ -640,7 +640,7 @@ idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
       while (ic) {
         if (ic == idc) {
           tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
-          idnode_set_add(is, in, NULL);
+          idnode_set_add(is, in, NULL, NULL);
           break;
         }
         ic = ic->ic_super;
@@ -652,7 +652,7 @@ idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
       while (ic) {
         if (ic == idc) {
           tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
-          idnode_set_add(is, in, NULL);
+          idnode_set_add(is, in, NULL, NULL);
           break;
         }
         ic = ic->ic_super;
@@ -668,12 +668,12 @@ idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
 
 static int
 idnode_cmp_title
-  ( const void *a, const void *b )
+  ( const void *a, const void *b, void *lang )
 {
   idnode_t      *ina  = *(idnode_t**)a;
   idnode_t      *inb  = *(idnode_t**)b;
-  const char *sa = idnode_get_title(ina);
-  const char *sb = idnode_get_title(inb);
+  const char *sa = idnode_get_title(ina, (const char *)lang);
+  const char *sb = idnode_get_title(inb, (const char *)lang);
   return strcmp(sa ?: "", sb ?: "");
 }
 
@@ -692,8 +692,8 @@ idnode_cmp_sort
   /* Get display string */
   if (p->islist || (p->list && !(p->opts & PO_SORTKEY))) {
     int r;
-    char *stra = idnode_get_display(ina, p);
-    char *strb = idnode_get_display(inb, p);
+    char *stra = idnode_get_display(ina, p, sort->lang);
+    char *strb = idnode_get_display(inb, p, sort->lang);
     if (sort->dir == IS_ASC)
       r = strcmp(stra ?: "", strb ?: "");
     else
@@ -809,7 +809,7 @@ idnode_filter_init
 
 int
 idnode_filter
-  ( idnode_t *in, idnode_filter_t *filter )
+  ( idnode_t *in, idnode_filter_t *filter, const char *lang )
 {
   idnode_filter_ele_t *f;
   
@@ -820,7 +820,7 @@ idnode_filter
       const char *str;
       char *strdisp;
       int r = 1;
-      str = strdisp = idnode_get_display(in, idnode_find_prop(in, f->key));
+      str = strdisp = idnode_get_display(in, idnode_find_prop(in, f->key), lang);
       if (!str)
         if (!(str = idnode_get_str(in, f->key)))
           return 1;
@@ -960,9 +960,9 @@ idnode_filter_clear
 
 void
 idnode_set_add
-  ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt )
+  ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt, const char *lang )
 {
-  if (filt && idnode_filter(in, filt))
+  if (filt && idnode_filter(in, filt, lang))
     return;
   
   /* Allocate more space */
@@ -1031,9 +1031,9 @@ idnode_set_sort
 
 void
 idnode_set_sort_by_title
-  ( idnode_set_t *is )
+  ( idnode_set_t *is, const char *lang )
 {
-  qsort(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_title);
+  tvh_qsort_r(is->is_array, is->is_count, sizeof(idnode_t*), idnode_cmp_title, (void*)lang);
 }
 
 htsmsg_t *
@@ -1124,11 +1124,12 @@ idnode_read0 ( idnode_t *self, htsmsg_t *c, htsmsg_t *list, int optmask )
  */
 static void
 add_params
-  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, htsmsg_t *list, int optmask)
+  (struct idnode *self, const idclass_t *ic, htsmsg_t *p, htsmsg_t *list,
+   int optmask, const char *lang)
 {
   /* Parent first */
   if(ic->ic_super != NULL)
-    add_params(self, ic->ic_super, p, list, optmask);
+    add_params(self, ic->ic_super, p, list, optmask, lang);
 
   /* Seperator (if not empty) */
 #if 0
@@ -1141,23 +1142,25 @@ add_params
 #endif
 
   /* Properties */
-  prop_serialize(self, ic->ic_properties, p, list, optmask);
+  prop_serialize(self, ic->ic_properties, p, list, optmask, lang);
 }
 
 static htsmsg_t *
-idnode_params (const idclass_t *idc, idnode_t *self, htsmsg_t *list, int optmask)
+idnode_params
+  (const idclass_t *idc, idnode_t *self, htsmsg_t *list,
+   int optmask, const char *lang)
 {
   htsmsg_t *p  = htsmsg_create_list();
-  add_params(self, idc, p, list, optmask);
+  add_params(self, idc, p, list, optmask, lang);
   return p;
 }
 
 const char *
-idclass_get_caption (const idclass_t *idc)
+idclass_get_caption (const idclass_t *idc, const char *lang)
 {
   while (idc) {
     if (idc->ic_caption)
-      return gettext(idc->ic_caption);
+      return tvh_gettext_lang(lang, idc->ic_caption);
     idc = idc->ic_super;
   }
   return NULL;
@@ -1197,7 +1200,7 @@ idclass_get_order (const idclass_t *idc)
 }
 
 static htsmsg_t *
-idclass_get_property_groups (const idclass_t *idc)
+idclass_get_property_groups (const idclass_t *idc, const char *lang)
 {
   const property_group_t *g;
   htsmsg_t *e, *m;
@@ -1209,7 +1212,7 @@ idclass_get_property_groups (const idclass_t *idc)
       for (g = idc->ic_groups; g->number && g->name; g++) {
         e = htsmsg_create_map();
         htsmsg_add_u32(e, "number", g->number);
-        htsmsg_add_str(e, "name",   gettext(g->name));
+        htsmsg_add_str(e, "name",   tvh_gettext_lang(lang, g->name));
         if (g->parent)
           htsmsg_add_u32(e, "parent", g->parent);
         if (g->column)
@@ -1278,13 +1281,13 @@ idclass_find ( const char *class )
  * Just get the class definition
  */
 htsmsg_t *
-idclass_serialize0(const idclass_t *idc, htsmsg_t *list, int optmask)
+idclass_serialize0(const idclass_t *idc, htsmsg_t *list, int optmask, const char *lang)
 {
   const char *s;
   htsmsg_t *p, *m = htsmsg_create_map();
 
   /* Caption and name */
-  if ((s = idclass_get_caption(idc)))
+  if ((s = idclass_get_caption(idc, lang)))
     htsmsg_add_str(m, "caption", s);
   if ((s = idclass_get_class(idc)))
     htsmsg_add_str(m, "class", s);
@@ -1292,11 +1295,11 @@ idclass_serialize0(const idclass_t *idc, htsmsg_t *list, int optmask)
     htsmsg_add_str(m, "event", s);
   if ((s = idclass_get_order(idc)))
     htsmsg_add_str(m, "order", s);
-  if ((p = idclass_get_property_groups(idc)))
+  if ((p = idclass_get_property_groups(idc, lang)))
     htsmsg_add_msg(m, "groups", p);
 
   /* Props */
-  if ((p = idnode_params(idc, NULL, list, optmask)))
+  if ((p = idnode_params(idc, NULL, list, optmask, lang)))
     htsmsg_add_msg(m, "props", p);
   
   return m;
@@ -1306,7 +1309,7 @@ idclass_serialize0(const idclass_t *idc, htsmsg_t *list, int optmask)
  *
  */
 htsmsg_t *
-idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
+idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask, const char *lang)
 {
   const idclass_t *idc = self->in_class;
   const char *uuid, *s;
@@ -1315,15 +1318,15 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask)
   uuid = idnode_uuid_as_str(self);
   htsmsg_add_str(m, "uuid", uuid);
   htsmsg_add_str(m, "id",   uuid);
-  htsmsg_add_str(m, "text", idnode_get_title(self) ?: "");
-  if ((s = idclass_get_caption(idc)))
+  htsmsg_add_str(m, "text", idnode_get_title(self, lang) ?: "");
+  if ((s = idclass_get_caption(idc, lang)))
     htsmsg_add_str(m, "caption", s);
   if ((s = idclass_get_class(idc)))
     htsmsg_add_str(m, "class", s);
   if ((s = idclass_get_event(idc)))
     htsmsg_add_str(m, "event", s);
 
-  htsmsg_add_msg(m, "params", idnode_params(idc, self, list, optmask));
+  htsmsg_add_msg(m, "params", idnode_params(idc, self, list, optmask, lang));
 
   return m;
 }
@@ -1444,14 +1447,14 @@ idnode_list_get2
 
 char *
 idnode_list_get_csv1
-  ( idnode_list_head_t *in1_list )
+  ( idnode_list_head_t *in1_list, const char *lang )
 {
   char *str;
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
 
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2));
+    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2, lang));
 
   str = htsmsg_list_2_csv(l);
   htsmsg_destroy(l);
@@ -1460,14 +1463,14 @@ idnode_list_get_csv1
 
 char *
 idnode_list_get_csv2
-  ( idnode_list_head_t *in2_list )
+  ( idnode_list_head_t *in2_list, const char *lang )
 {
   char *str;
   idnode_list_mapping_t *ilm;
   htsmsg_t *l = htsmsg_create_list();
 
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1));
+    htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1, lang));
 
   str = htsmsg_list_2_csv(l);
   htsmsg_destroy(l);
@@ -1583,11 +1586,11 @@ idnode_notify_changed (void *in)
 }
 
 void
-idnode_notify_title_changed (void *in)
+idnode_notify_title_changed (void *in, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in));
-  htsmsg_add_str(m, "text", idnode_get_title(in));
+  htsmsg_add_str(m, "text", idnode_get_title(in, lang));
   notify_by_msg("title", m);
   idnode_notify_changed(in);
 }

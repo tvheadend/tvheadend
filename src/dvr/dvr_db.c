@@ -1350,13 +1350,19 @@ dvr_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
 }
 
 static const char *
-dvr_entry_class_get_title (idnode_t *self)
+dvr_entry_class_get_title (idnode_t *self, const char *lang)
 {
   dvr_entry_t *de = (dvr_entry_t *)self;
   const char *s;
-  s = lang_str_get(de->de_title, NULL);
-  if (s == NULL || s[0] == '\0')
-    s = lang_str_get(de->de_desc, NULL);
+  s = lang_str_get(de->de_title, lang);
+  if (s == NULL || s[0] == '\0') {
+    s = lang ? lang_str_get(de->de_title, NULL) : NULL;
+    if (s == NULL || s[0] == '\0') {
+      s = lang ? lang_str_get(de->de_desc, lang) : NULL;
+      if (s == NULL || s[0] == '\0')
+        s = lang_str_get(de->de_desc, NULL);
+    }
+  }
   return s;
 }
 
@@ -1485,7 +1491,7 @@ dvr_entry_class_config_name_get(void *o)
 }
 
 htsmsg_t *
-dvr_entry_class_config_name_list(void *o)
+dvr_entry_class_config_name_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_t *p = htsmsg_create_map();
@@ -1499,7 +1505,7 @@ dvr_entry_class_config_name_list(void *o)
 }
 
 static char *
-dvr_entry_class_config_name_rend(void *o)
+dvr_entry_class_config_name_rend(void *o, const char *lang)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_config)
@@ -1559,7 +1565,7 @@ dvr_entry_class_channel_get(void *o)
 }
 
 static char *
-dvr_entry_class_channel_rend(void *o)
+dvr_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_channel)
@@ -1606,7 +1612,7 @@ dvr_entry_class_pri_set(void *o, const void *v)
 }
 
 htsmsg_t *
-dvr_entry_class_pri_list ( void *o )
+dvr_entry_class_pri_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Not set"),        DVR_PRIO_NOTSET },
@@ -1616,7 +1622,7 @@ dvr_entry_class_pri_list ( void *o )
     { N_("Low"),            DVR_PRIO_LOW },
     { N_("Unimportant"),    DVR_PRIO_UNIMPORTANT },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static int
@@ -1634,7 +1640,7 @@ dvr_entry_class_mc_set(void *o, const void *v)
 }
 
 htsmsg_t *
-dvr_entry_class_mc_list ( void *o )
+dvr_entry_class_mc_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Not set"),                       -1 },
@@ -1645,7 +1651,7 @@ dvr_entry_class_mc_list ( void *o )
     { N_("MPEG-PS (DVD)"),                 MC_MPEGPS },
 #endif
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static int
@@ -1929,17 +1935,20 @@ dvr_entry_class_duplicate_get(void *o)
 }
 
 htsmsg_t *
-dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step)
+dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang)
 {
   int i;
   htsmsg_t *e, *l = htsmsg_create_list();
+  const char *hrs  = tvh_gettext_lang(lang, N_("hrs"));
+  const char *min  = tvh_gettext_lang(lang, N_("min"));
+  const char *mins = tvh_gettext_lang(lang, N_("mins"));
   char buf[32];
   e = htsmsg_create_map();
   htsmsg_add_u32(e, "key", 0);
   htsmsg_add_str(e, "val", not_set);
   htsmsg_add_msg(l, NULL, e);
   for (i = 1; i <= 120;  i++) {
-    snprintf(buf, sizeof(buf), "%d min%s", i, i > 1 ? "s" : "");
+    snprintf(buf, sizeof(buf), "%d %s", i, i > 1 ? mins : min);
     e = htsmsg_create_map();
     htsmsg_add_u32(e, "key", i * step);
     htsmsg_add_str(e, "val", buf);
@@ -1947,9 +1956,9 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step)
   }
   for (i = 120; i <= max; i += 30) {
     if ((i % 60) == 0)
-      snprintf(buf, sizeof(buf), "%d hrs", i / 60);
+      snprintf(buf, sizeof(buf), "%d %s", i / 60, hrs);
     else
-      snprintf(buf, sizeof(buf), "%d hrs %d min%s", i / 60, i % 60, (i % 60) > 0 ? "s" : "");
+      snprintf(buf, sizeof(buf), "%d %s %d %s", i / 60, hrs, i % 60, (i % 60) > 0 ? mins : min);
     e = htsmsg_create_map();
     htsmsg_add_u32(e, "key", i * step);
     htsmsg_add_str(e, "val", buf);
@@ -1959,13 +1968,14 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step)
 }
 
 static htsmsg_t *
-dvr_entry_class_extra_list(void *o)
+dvr_entry_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
+  const char *msg = N_("Not set (use channel or DVR config)");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 4*60, 1, lang);
 }
                                         
 static htsmsg_t *
-dvr_entry_class_content_type_list(void *o)
+dvr_entry_class_content_type_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");

@@ -78,7 +78,7 @@ mpegts_mux_sched_class_delete ( idnode_t *in )
 }
 
 static htsmsg_t *
-mpegts_mux_sched_class_mux_list ( void *o )
+mpegts_mux_sched_class_mux_list ( void *o, const char *lang )
 {
   htsmsg_t *m, *p;
 

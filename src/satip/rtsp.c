@@ -422,13 +422,13 @@ rtsp_manage_descramble(session_t *rs)
   if (rs->pids.all) {
     LIST_FOREACH(s, &rs->mux->mm_services, s_dvb_mux_link)
       if (rtsp_validate_service(s, NULL))
-        idnode_set_add(found, &s->s_id, NULL);
+        idnode_set_add(found, &s->s_id, NULL, NULL);
   } else {
     for (i = 0; i < rs->pids.count; i++) {
       s = mpegts_service_find_by_pid((mpegts_mux_t *)rs->mux, rs->pids.pids[i].pid);
       if (s != NULL && rtsp_validate_service(s, &rs->pids))
         if (!idnode_set_exists(found, &s->s_id))
-          idnode_set_add(found, &s->s_id, NULL);
+          idnode_set_add(found, &s->s_id, NULL, NULL);
     }
   }
 

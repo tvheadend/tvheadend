@@ -131,12 +131,12 @@ satip_device_class_get_childs ( idnode_t *in )
   satip_frontend_t *lfe;
 
   TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
-    idnode_set_add(is, &lfe->ti_id, NULL);
+    idnode_set_add(is, &lfe->ti_id, NULL, NULL);
   return is;
 }
 
 static const char *
-satip_device_class_get_title( idnode_t *in )
+satip_device_class_get_title( idnode_t *in, const char *lang )
 {
   static char buf[256];
   satip_device_t *sd = (satip_device_t *)in;
@@ -170,7 +170,7 @@ static const char *satip_tunercfg_tab[] = {
 };
 
 static htsmsg_t *
-satip_device_class_tunercfg_list ( void *o )
+satip_device_class_tunercfg_list ( void *o, const char *lang )
 {
   htsmsg_t *l = htsmsg_create_list();
   const char **p;
@@ -181,7 +181,7 @@ satip_device_class_tunercfg_list ( void *o )
 }
 
 static void
-satip_device_class_tunercfg_notify ( void *o )
+satip_device_class_tunercfg_notify ( void *o, const char *lang )
 {
   satip_device_t *sd = (satip_device_t *)o;
   if (!sd->sd_inload)

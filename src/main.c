@@ -449,7 +449,7 @@ show_usage
 
     /* Section */
     if (!opts[i].lopt) {
-      printf("\n%s\n\n", gettext(opts[i].desc));
+      printf("\n%s\n\n", tvh_gettext(opts[i].desc));
 
     /* Option */
     } else {
@@ -460,7 +460,7 @@ show_usage
       else
         strcpy(sopt, "   ");
       snprintf(buf, sizeof(buf), "  %s --%s", sopt, opts[i].lopt);
-      desc = strdup(gettext(opts[i].desc));
+      desc = strdup(tvh_gettext(opts[i].desc));
       tok  = strtok(desc, "\n");
       while (tok) {
         printf("%-30s%s\n", buf, tok);
@@ -733,14 +733,6 @@ main(int argc, char **argv)
   /* Set locale */
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
-  snprintf(buf, sizeof(buf), "%s/build.h", tvheadend_cwd0);
-  if (!access(buf, W_OK)) {
-    snprintf(buf, sizeof(buf), "%s/intl", tvheadend_cwd0);
-    bindtextdomain("tvheadend", buf);
-  } else {
-    bindtextdomain("tvheadend", "/usr/share/locale");
-  }
-  textdomain("tvheadend");
 
   /* make sure the timezone is set */
   tzset();

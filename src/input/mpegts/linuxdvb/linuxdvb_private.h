@@ -416,13 +416,13 @@ void linuxdvb_switch_destroy  ( linuxdvb_diseqc_t *ld );
 void linuxdvb_rotor_destroy   ( linuxdvb_diseqc_t *ld );
 void linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *ld );
 
-htsmsg_t *linuxdvb_lnb_list     ( void *o );
-htsmsg_t *linuxdvb_switch_list  ( void *o );
-htsmsg_t *linuxdvb_rotor_list   ( void *o );
-htsmsg_t *linuxdvb_en50494_list ( void *o );
+htsmsg_t *linuxdvb_lnb_list     ( void *o, const char *lang );
+htsmsg_t *linuxdvb_switch_list  ( void *o, const char *lang );
+htsmsg_t *linuxdvb_rotor_list   ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_list ( void *o, const char *lang );
 
-htsmsg_t *linuxdvb_en50494_id_list ( void *o );
-htsmsg_t *linuxdvb_en50494_pin_list ( void *o );
+htsmsg_t *linuxdvb_en50494_id_list ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_pin_list ( void *o, const char *lang );
 
 void linuxdvb_en50494_init (void);
 
@@ -441,7 +441,7 @@ linuxdvb_satconf_ele_t *linuxdvb_satconf_ele_create0
 
 void linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls );
 
-htsmsg_t *linuxdvb_satconf_type_list ( void *o );
+htsmsg_t *linuxdvb_satconf_type_list ( void *o, const char *lang );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create
   ( linuxdvb_frontend_t *lfe,

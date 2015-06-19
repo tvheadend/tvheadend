@@ -62,7 +62,7 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
   idnode_set_t *is = idnode_set_create(0);
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    idnode_set_add(is, &lfe->ti_id, NULL);
+    idnode_set_add(is, &lfe->ti_id, NULL, NULL);
 #if ENABLE_LINUXDVB_CA
   LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
     idnode_set_add(is, &lca->lca_id, NULL);
@@ -71,7 +71,7 @@ linuxdvb_adapter_class_get_childs ( idnode_t *in )
 }
 
 static const char *
-linuxdvb_adapter_class_get_title ( idnode_t *in )
+linuxdvb_adapter_class_get_title ( idnode_t *in, const char *lang )
 {
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
   return la->la_name ?: la->la_rootpath;

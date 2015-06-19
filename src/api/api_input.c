@@ -32,7 +32,7 @@ api_input_hw_tree ( void )
   tvh_hardware_t *th;
   idnode_set_t *is = idnode_set_create(0);
   TVH_HARDWARE_FOREACH(th)
-    idnode_set_add(is, &th->th_id, NULL);
+    idnode_set_add(is, &th->th_id, NULL, NULL);
   return is;
 }
 

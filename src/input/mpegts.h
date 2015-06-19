@@ -753,8 +753,8 @@ int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags )
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );
 int         mpegts_input_class_network_set  ( void *o, const void *p );
-htsmsg_t   *mpegts_input_class_network_enum ( void *o );
-char       *mpegts_input_class_network_rend ( void *o );
+htsmsg_t   *mpegts_input_class_network_enum ( void *o, const char *lang );
+char       *mpegts_input_class_network_rend ( void *o, const char *lang );
 
 int mpegts_mps_cmp( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b );
 

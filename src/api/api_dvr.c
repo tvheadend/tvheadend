@@ -34,7 +34,7 @@ api_dvr_config_grid
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
     if (!idnode_perm((idnode_t *)cfg, perm, NULL)) {
-      idnode_set_add(ins, (idnode_t*)cfg, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)cfg, &conf->filter, perm->aa_lang);
       idnode_perm_unset((idnode_t *)cfg);
     }
 }
@@ -90,7 +90,7 @@ api_dvr_entry_grid
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static void
@@ -101,7 +101,7 @@ api_dvr_entry_grid_upcoming
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_upcoming(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static void
@@ -112,7 +112,7 @@ api_dvr_entry_grid_finished
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_finished(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static void
@@ -123,7 +123,7 @@ api_dvr_entry_grid_failed
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_failed(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static int
@@ -260,7 +260,7 @@ api_dvr_autorec_grid
   dvr_autorec_entry_t *dae;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    idnode_set_add(ins, (idnode_t*)dae, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)dae, &conf->filter, perm->aa_lang);
 }
 
 static int
@@ -353,7 +353,7 @@ api_dvr_timerec_grid
   dvr_timerec_entry_t *dte;
 
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    idnode_set_add(ins, (idnode_t*)dte, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)dte, &conf->filter, perm->aa_lang);
 }
 
 static int

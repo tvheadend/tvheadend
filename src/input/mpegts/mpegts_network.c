@@ -38,7 +38,7 @@ mpegts_network_class_save
 }
 
 static const char *
-mpegts_network_class_get_title ( idnode_t *in )
+mpegts_network_class_get_title ( idnode_t *in, const char *lang )
 {
   static char buf[256];
   mpegts_network_t *mn = (mpegts_network_t*)in;
@@ -112,7 +112,7 @@ mpegts_network_class_get_scanq_length ( void *ptr )
 }
 
 static void
-mpegts_network_class_idlescan_notify ( void *p )
+mpegts_network_class_idlescan_notify ( void *p, const char *lang )
 {
   mpegts_network_t *mn = p;
   mpegts_mux_t *mm;

@@ -214,7 +214,7 @@ esfilter_class_save(idnode_t *self)
 }
 
 static const char *
-esfilter_class_get_title(idnode_t *self)
+esfilter_class_get_title(idnode_t *self, const char *lang)
 {
   esfilter_t *esf = (esfilter_t *)self;
   return idnode_uuid_as_str(&esf->esf_id);
@@ -265,7 +265,7 @@ esfilter_class_type_get(void *o)
 }
 
 static char *
-esfilter_class_type_rend (void *o)
+esfilter_class_type_rend (void *o, const char *lang)
 {
   char *str;
   htsmsg_t *l = htsmsg_create_list();
@@ -306,10 +306,11 @@ esfilter_class_type_set_(void *o, const void *v, esfilter_class_t cls)
 }
 
 static htsmsg_t *
-esfilter_class_type_enum_(void *o, esfilter_class_t cls)
+esfilter_class_type_enum_(void *o, const char *lang, esfilter_class_t cls)
 {
   uint32_t mask = esfilterclsmask[cls];
   htsmsg_t *l = htsmsg_create_list();
+  const char *any = N_("ANY");
   int i;
 
   for (i = SCT_UNKNOWN; i <= SCT_LAST; i++) {
@@ -317,7 +318,8 @@ esfilter_class_type_enum_(void *o, esfilter_class_t cls)
       htsmsg_t *e = htsmsg_create_map();
       htsmsg_add_u32(e, "key", i);
       htsmsg_add_str(e, "val",
-          i == SCT_UNKNOWN ? "ANY" : streaming_component_type2txt(i));
+          i == SCT_UNKNOWN ? tvh_gettext_lang(lang, any) :
+                             streaming_component_type2txt(i));
       htsmsg_add_msg(l, NULL, e);
     }
   }
@@ -327,8 +329,8 @@ esfilter_class_type_enum_(void *o, esfilter_class_t cls)
 #define ESFILTER_CLS(func, type) \
 static int esfilter_class_type_set_##func(void *o, const void *v) \
   { return esfilter_class_type_set_(o, v, type); } \
-static htsmsg_t * esfilter_class_type_enum_##func(void *o) \
-  { return esfilter_class_type_enum_(o, type); }
+static htsmsg_t * esfilter_class_type_enum_##func(void *o, const char *lang) \
+  { return esfilter_class_type_enum_(o, lang, type); }
 
 ESFILTER_CLS(video, ESF_CLASS_VIDEO);
 ESFILTER_CLS(audio, ESF_CLASS_AUDIO);
@@ -361,17 +363,18 @@ esfilter_class_language_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_language_enum(void *o)
+esfilter_class_language_enum(void *o, const char *lang)
 {
   htsmsg_t *l = htsmsg_create_list();
   const lang_code_t *lc = lang_codes;
+  const char *any = N_("ANY");
   char buf[128];
 
   while (lc->code2b) {
     htsmsg_t *e = htsmsg_create_map();
     if (!strcmp(lc->code2b, "und")) {
       htsmsg_add_str(e, "key", "");
-      htsmsg_add_str(e, "val", "ANY");
+      htsmsg_add_str(e, "val", tvh_gettext_lang(lang, any));
     } else {
       htsmsg_add_str(e, "key", lc->code2b);
       snprintf(buf, sizeof(buf), "%s (%s)", lc->desc, lc->code2b);
@@ -408,7 +411,7 @@ esfilter_class_service_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_service_enum(void *o)
+esfilter_class_service_enum(void *o, const char *lang)
 {
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -510,7 +513,7 @@ esfilter_class_caid_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_caid_enum(void *o)
+esfilter_class_caid_enum(void *o, const char *lang)
 {
   return esfilter_build_ca_enum(0);
 }
@@ -547,7 +550,7 @@ esfilter_class_caprovider_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_caprovider_enum(void *o)
+esfilter_class_caprovider_enum(void *o, const char *lang)
 {
   return esfilter_build_ca_enum(1);
 }
@@ -573,7 +576,7 @@ esfilter_class_action_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_action_enum(void *o)
+esfilter_class_action_enum(void *o, const char *lang)
 {
   htsmsg_t *l = htsmsg_create_list();
   int i;

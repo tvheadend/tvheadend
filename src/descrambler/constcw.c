@@ -52,7 +52,7 @@ typedef struct constcw {
 static const char *
 constcw_name(constcw_t *ccw)
 {
-  return idnode_get_title(&ccw->cac_id);
+  return idnode_get_title(&ccw->cac_id, NULL);
 }
 
 /**

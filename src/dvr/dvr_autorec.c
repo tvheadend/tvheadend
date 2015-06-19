@@ -405,7 +405,7 @@ dvr_autorec_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write
 }
 
 static const char *
-dvr_autorec_entry_class_get_title (idnode_t *self)
+dvr_autorec_entry_class_get_title (idnode_t *self, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
   const char *s = "";
@@ -451,7 +451,7 @@ dvr_autorec_entry_class_channel_get(void *o)
 }
 
 static char *
-dvr_autorec_entry_class_channel_rend(void *o)
+dvr_autorec_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
@@ -512,7 +512,7 @@ dvr_autorec_entry_class_tag_get(void *o)
 }
 
 static char *
-dvr_autorec_entry_class_tag_rend(void *o)
+dvr_autorec_entry_class_tag_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel_tag)
@@ -599,27 +599,31 @@ dvr_autorec_entry_class_time_list(void *o, const char *null)
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_time_list_(void *o)
+dvr_autorec_entry_class_time_list_(void *o, const char *lang)
 {
-  return dvr_autorec_entry_class_time_list(o, "Any");
+  const char *msg = N_("Any");
+  return dvr_autorec_entry_class_time_list(o, tvh_gettext_lang(lang, msg));
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_extra_list(void *o)
+dvr_autorec_entry_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
+  const char *msg = N_("Not set (use channel or DVR config)");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 4*60, 1, lang);
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_minduration_list(void *o)
+dvr_autorec_entry_class_minduration_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
+  const char *msg = N_("Any");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 24*60, 60, lang);
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_maxduration_list(void *o)
+dvr_autorec_entry_class_maxduration_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
+  const char *msg = N_("Any");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 24*60, 60, lang);
 }
 
 static int
@@ -655,7 +659,7 @@ dvr_autorec_entry_class_config_name_get(void *o)
 }
 
 static char *
-dvr_autorec_entry_class_config_name_rend(void *o)
+dvr_autorec_entry_class_config_name_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_config)
@@ -716,38 +720,38 @@ static const struct strtab dvr_autorec_entry_class_weekdays_tab[] = {
 };
 
 htsmsg_t *
-dvr_autorec_entry_class_weekdays_list ( void *o )
+dvr_autorec_entry_class_weekdays_list ( void *o, const char *lang )
 {
-  return strtab2htsmsg(dvr_autorec_entry_class_weekdays_tab, 1);
+  return strtab2htsmsg(dvr_autorec_entry_class_weekdays_tab, 1, lang);
 }
 
 char *
-dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays)
+dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang)
 {
   char buf[32];
   size_t l;
   int i;
   if (weekdays == 0x7f)
-    strcpy(buf + 1, "All days");
+    strcpy(buf + 1, tvh_gettext_lang(lang, N_("All days")));
   else if (weekdays == 0)
-    strcpy(buf + 1, "No days");
+    strcpy(buf + 1, tvh_gettext_lang(lang, N_("No days")));
   else {
     buf[0] = '\0';
     for (i = 0; i < 7; i++)
       if (weekdays & (1 << i)) {
         l = strlen(buf);
         snprintf(buf + l, sizeof(buf) - l, ",%s",
-                 val2str(i + 1, dvr_autorec_entry_class_weekdays_tab));
+                 tvh_gettext_lang(lang, val2str(i + 1, dvr_autorec_entry_class_weekdays_tab)));
       }
   }
   return strdup(buf + 1);
 }
 
 static char *
-dvr_autorec_entry_class_weekdays_rend_(void *o)
+dvr_autorec_entry_class_weekdays_rend_(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays);
+  return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays, lang);
 }
 
 static int
@@ -859,7 +863,7 @@ dvr_autorec_entry_class_series_link_get(void *o)
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_content_type_list(void *o)
+dvr_autorec_entry_class_content_type_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -868,7 +872,7 @@ dvr_autorec_entry_class_content_type_list(void *o)
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_dedup_list ( void *o )
+dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Record all"),
@@ -884,7 +888,7 @@ dvr_autorec_entry_class_dedup_list ( void *o )
     { N_("Record once per day"),
         DVR_AUTOREC_RECORD_ONCE_PER_DAY },
   };
-  return strtab2htsmsg(tab, 1);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static uint32_t

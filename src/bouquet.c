@@ -266,7 +266,7 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
 
   if (!idnode_set_exists(bq->bq_services, &s->s_id)) {
     tvhtrace("bouquet", "add service %s to %s", s->s_nicename, bq->bq_name ?: "<unknown>");
-    idnode_set_add(bq->bq_services, &s->s_id, NULL);
+    idnode_set_add(bq->bq_services, &s->s_id, NULL, NULL);
     bq->bq_saveflag = 1;
   }
 
@@ -301,7 +301,7 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
 
   if (!bq->bq_in_load &&
       !idnode_set_exists(bq->bq_active_services, &s->s_id))
-    idnode_set_add(bq->bq_active_services, &s->s_id, NULL);
+    idnode_set_add(bq->bq_active_services, &s->s_id, NULL, NULL);
 }
 
 /*
@@ -385,7 +385,7 @@ bouquet_completed(bouquet_t *bq, uint32_t seen)
   remove = idnode_set_create(0);
   for (z = 0; z < bq->bq_services->is_count; z++)
     if (!idnode_set_exists(bq->bq_active_services, bq->bq_services->is_array[z]))
-      idnode_set_add(remove, bq->bq_services->is_array[z], NULL);
+      idnode_set_add(remove, bq->bq_services->is_array[z], NULL, NULL);
   for (z = 0; z < remove->is_count; z++)
     bouquet_remove_service(bq, (service_t *)remove->is_array[z]);
   idnode_set_free(remove);
@@ -545,7 +545,7 @@ bouquet_class_delete(idnode_t *self)
 }
 
 static const char *
-bouquet_class_get_title (idnode_t *self)
+bouquet_class_get_title (idnode_t *self, const char *lang)
 {
   bouquet_t *bq = (bouquet_t *)self;
 
@@ -556,7 +556,7 @@ bouquet_class_get_title (idnode_t *self)
 
 /* exported for others */
 htsmsg_t *
-bouquet_class_get_list(void *o)
+bouquet_class_get_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -566,7 +566,7 @@ bouquet_class_get_list(void *o)
 }
 
 static void
-bouquet_class_rescan_notify0 ( bouquet_t *bq )
+bouquet_class_rescan_notify0 ( bouquet_t *bq, const char *lang )
 {
   void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
   mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
@@ -574,32 +574,32 @@ bouquet_class_rescan_notify0 ( bouquet_t *bq )
 }
 
 static void
-bouquet_class_rescan_notify ( void *obj )
+bouquet_class_rescan_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
 
   if (bq->bq_rescan)
-    bouquet_class_rescan_notify0(bq);
+    bouquet_class_rescan_notify0(bq, lang);
 }
 
 static void
-bouquet_class_enabled_notify ( void *obj )
+bouquet_class_enabled_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
 
   if (bq->bq_enabled)
-    bouquet_class_rescan_notify0(bq);
+    bouquet_class_rescan_notify0(bq, lang);
   bouquet_map_to_channels(bq);
 }
 
 static void
-bouquet_class_maptoch_notify ( void *obj )
+bouquet_class_maptoch_notify ( void *obj, const char *lang )
 {
   bouquet_map_to_channels((bouquet_t *)obj);
 }
 
 static void
-bouquet_class_mapnolcn_notify ( void *obj )
+bouquet_class_mapnolcn_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
   service_t *t;
@@ -620,7 +620,7 @@ bouquet_class_mapnolcn_notify ( void *obj )
 }
 
 static void
-bouquet_class_mapnoname_notify ( void *obj )
+bouquet_class_mapnoname_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
   service_t *t;
@@ -640,7 +640,7 @@ bouquet_class_mapnoname_notify ( void *obj )
 }
 
 static void
-bouquet_class_mapradio_notify ( void *obj )
+bouquet_class_mapradio_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
   service_t *t;
@@ -660,7 +660,7 @@ bouquet_class_mapradio_notify ( void *obj )
 }
 
 static void
-bouquet_class_chtag_notify ( void *obj )
+bouquet_class_chtag_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
   service_t *t;
@@ -688,7 +688,7 @@ bouquet_class_chtag_notify ( void *obj )
 }
 
 static void
-bouquet_class_lcn_offset_notify ( void *obj )
+bouquet_class_lcn_offset_notify ( void *obj, const char *lang )
 {
   if (((bouquet_t *)obj)->bq_in_load)
     return;
@@ -709,7 +709,7 @@ bouquet_class_chtag_ref_get ( void *obj )
 }
 
 static char *
-bouquet_class_chtag_ref_rend ( void *obj )
+bouquet_class_chtag_ref_rend ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
   if (bq->bq_chtag_ptr)
@@ -755,11 +755,12 @@ bouquet_class_services_get ( void *obj )
 }
 
 static char *
-bouquet_class_services_rend ( void *obj )
+bouquet_class_services_rend ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
+  const char *sc = N_("Services Count %zi");
   char buf[32];
-  snprintf(buf, sizeof(buf), "Services Count %zi", bq->bq_services->is_count);
+  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, sc), bq->bq_services->is_count);
   return strdup(buf);
 }
 

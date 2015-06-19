@@ -62,14 +62,14 @@
 static pthread_mutex_t linuxdvb_en50494_lock;
 
 static const char *
-linuxdvb_en50494_class_get_title ( idnode_t *o )
+linuxdvb_en50494_class_get_title ( idnode_t *o, const char *lang )
 {
-  static const char *title = "Unicable";
-  return title;
+  static const char *title = N_("Unicable");
+  return tvh_gettext_lang(lang, title);
 }
 
 static htsmsg_t *
-linuxdvb_en50494_position_list ( void *o )
+linuxdvb_en50494_position_list ( void *o, const char *lang )
 {
   uint32_t i;
   htsmsg_t *m = htsmsg_create_list();
@@ -80,7 +80,7 @@ linuxdvb_en50494_position_list ( void *o )
 }
 
 htsmsg_t *
-linuxdvb_en50494_id_list ( void *o )
+linuxdvb_en50494_id_list ( void *o, const char *lang )
 {
   uint32_t i;
   htsmsg_t *m = htsmsg_create_list();
@@ -91,7 +91,7 @@ linuxdvb_en50494_id_list ( void *o )
 }
 
 htsmsg_t *
-linuxdvb_en50494_pin_list ( void *o )
+linuxdvb_en50494_pin_list ( void *o, const char *lang )
 {
   int32_t i;
 
@@ -100,7 +100,7 @@ linuxdvb_en50494_pin_list ( void *o )
 
   e = htsmsg_create_map();
   htsmsg_add_u32(e, "key", 256);
-  htsmsg_add_str(e, "val", "No pin");
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("No pin")));
   htsmsg_add_msg(m, NULL, e);
 
   for (i = 0; i < 256; i++) {
@@ -265,11 +265,11 @@ linuxdvb_en50494_init (void)
 }
 
 htsmsg_t *
-linuxdvb_en50494_list ( void *o )
+linuxdvb_en50494_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "None");
-  htsmsg_add_str(m, NULL, "Generic");
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("Generic")));
   return m;
 }
 

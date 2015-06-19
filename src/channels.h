@@ -132,7 +132,7 @@ channel_t *channel_find_by_number(const char *no);
 
 #define channel_find channel_find_by_uuid
 
-htsmsg_t * channel_class_get_list(void *o);
+htsmsg_t * channel_class_get_list(void *o, const char *lang);
 
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
 
@@ -147,7 +147,7 @@ static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
 
 void channel_tag_save(channel_tag_t *ct);
 
-htsmsg_t * channel_tag_class_get_list(void *o);
+htsmsg_t * channel_tag_class_get_list(void *o, const char *lang);
 
 const char * channel_tag_get_icon(channel_tag_t *ct);
 

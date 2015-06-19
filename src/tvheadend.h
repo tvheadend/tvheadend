@@ -32,7 +32,6 @@
 #include <assert.h>
 #include <unistd.h>
 #include <limits.h>
-#include <libintl.h>
 #if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
 #endif
@@ -44,8 +43,7 @@
 
 #include "redblack.h"
 
-#define _(s) gettext(s)
-#define N_(s) (s)
+#include "tvh_locale.h"
 
 #define STRINGIFY(s) # s
 #define SRCLINEID() SRCLINEID2(__FILE__, __LINE__)

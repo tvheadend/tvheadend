@@ -64,7 +64,7 @@ mpegts_input_dbus_notify(mpegts_input_t *mi, int64_t subs)
  * *************************************************************************/
 
 static const char *
-mpegts_input_class_get_title ( idnode_t *in )
+mpegts_input_class_get_title ( idnode_t *in, const char *lang )
 {
   static char buf[512];
   mpegts_input_t *mi = (mpegts_input_t*)in;
@@ -92,7 +92,7 @@ mpegts_input_class_network_set ( void *obj, const void *p )
 }
 
 htsmsg_t *
-mpegts_input_class_network_enum ( void *obj )
+mpegts_input_class_network_enum ( void *obj, const char *lang )
 {
   htsmsg_t *p, *m;
 
@@ -109,7 +109,7 @@ mpegts_input_class_network_enum ( void *obj )
 }
 
 char *
-mpegts_input_class_network_rend ( void *obj )
+mpegts_input_class_network_rend ( void *obj, const char *lang )
 {
   char *str;
   mpegts_network_link_t *mnl;  
@@ -117,7 +117,7 @@ mpegts_input_class_network_rend ( void *obj )
   htsmsg_t        *l = htsmsg_create_list();
 
   LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
-    htsmsg_add_str(l, NULL, idnode_get_title(&mnl->mnl_network->mn_id));
+    htsmsg_add_str(l, NULL, idnode_get_title(&mnl->mnl_network->mn_id, lang));
 
   str = htsmsg_list_2_csv(l);
   htsmsg_destroy(l);
@@ -126,7 +126,7 @@ mpegts_input_class_network_rend ( void *obj )
 }
 
 static void
-mpegts_input_enabled_notify ( void *p )
+mpegts_input_enabled_notify ( void *p, const char *lang )
 {
   mpegts_input_t *mi = p;
   mpegts_mux_instance_t *mmi;
@@ -194,7 +194,7 @@ mpegts_input_add_keyval(htsmsg_t *l, const char *key, const char *val)
 }
 
 static htsmsg_t *
-mpegts_input_class_linked_enum( void * self )
+mpegts_input_class_linked_enum( void * self, const char *lang )
 {
   mpegts_input_t *mi = self, *mi2;
   tvh_input_t *ti;
@@ -205,7 +205,7 @@ mpegts_input_class_linked_enum( void * self )
       mi2 = (mpegts_input_t *)ti;
       if (mi2 != mi)
         mpegts_input_add_keyval(m, idnode_uuid_as_str(&ti->ti_id),
-                                   idnode_get_title(&mi2->ti_id));
+                                   idnode_get_title(&mi2->ti_id, lang));
   }
   return m;
 }
