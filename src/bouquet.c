@@ -159,7 +159,7 @@ bouquet_find_by_source(const char *name, const char *src, int create)
   bqs.bq_src = (char *)src;
   bq = RB_FIND(&bouquets, &bqs, bq_link, _bq_cmp);
   if (bq) {
-    if (name && *name && strcmp(name, bq->bq_name)) {
+    if (name && *name && bq->bq_name && strcmp(name, bq->bq_name)) {
       tvhwarn("bouquet", "bouquet name '%s' changed to '%s'", bq->bq_name ?: "", name);
       free(bq->bq_name);
       bq->bq_name = strdup(name);
