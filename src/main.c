@@ -795,7 +795,7 @@ main(int argc, char **argv)
     }
     free(dvb_adapters);
     if (!adapter_mask) {
-      fprintf(stderr, _("No adapters specified!\n"));
+      fprintf(stderr, "%s", _("No adapters specified!\n"));
       return 1;
     }
   }
