@@ -572,6 +572,7 @@ intl:
 	@$(XGETTEXT) -o intl/tvheadend.pot.new $(I18N-C)
 	@mv intl/tvheadend.pot.new intl/tvheadend.pot
 	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" WEBUI=std intl
+	$(MAKE)
 
 intl/tvheadend.pot:
 
