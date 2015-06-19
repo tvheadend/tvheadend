@@ -94,6 +94,36 @@ tvheadend.loading = function(on) {
       Ext.getBody().unmask();
 };
 
+tvheadend.PagingToolbarConf = function(conf, title, auto=null, count=null)
+{
+  conf.width = 50;
+  conf.pageSize = 50;
+  conf.displayInfo = true;
+  conf.displayMsg = title + _(' {0} - {1} of {2}');
+  conf.emptyMsg = String.format(_('No {0} to display'), title.toLowerCase());
+  conf.beforePageText = _('Page');
+  conf.afterPageText = _('of {0}');
+  conf.firstText = _('First Page');
+  conf.prevText = _('Previous Page');
+  conf.nextText = _('Next Page');
+  conf.lastText = _('Last Page');
+  conf.refreshText = _('Refresh');
+  conf.items = [];
+  if (auto || count)
+    conf.items.push('-');
+  if (auto) {
+    conf.items.push(_('Auto-refresh'));
+    conf.items.push(auto);
+  }
+  if (count) {
+    conf.items.push('->');
+    conf.items.push('-');
+    conf.items.push(_('Per page'));
+    conf.items.push(count);
+  }
+  return conf;
+}
+
 /*
  * Any Match option in ComboBox queries
  * This query is identical as in extjs-all.js

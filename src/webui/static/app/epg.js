@@ -874,10 +874,9 @@ tvheadend.epg = function() {
         selModel: new Ext.ux.grid.livegrid.RowSelectionModel(),
         view: epgView,
         tbar: tbar,
-        bbar: new Ext.ux.grid.livegrid.Toolbar({
-            view: epgView,
-            displayInfo: true
-        }),
+        bbar: new Ext.ux.grid.livegrid.Toolbar(
+            tvheadend.PagingToolbarConf({view: epgView},_('Events'),0,0)
+        ),
         listeners: {
             beforestaterestore: {
                fn: function(grid, state) {

@@ -1338,13 +1338,21 @@ tvheadend.idnode_grid = function(panel, conf)
             buttons.push(_('Hide') + ':');
             buttons.push(hidemode);
         }
-        var page = new Ext.PagingToolbar({
-            store: store,
-            pageSize: 50,
-            displayInfo: true,
-            displayMsg: conf.titleP + _(' {0} - {1} of {2}'),
-            width: 50
+
+        /* Grid Panel */
+        auto = new Ext.form.Checkbox({
+            checked: true,
+            listeners: {
+                check: function(s, c) {
+                    if (c)
+                        store.reload();
+                }
+            }
         });
+
+        var page = new Ext.PagingToolbar(
+            tvheadend.PagingToolbarConf({store:store}, conf.titleP, auto, count)
+        );
 
         /* Extra buttons */
         if (conf.tbar) {
@@ -1376,16 +1384,6 @@ tvheadend.idnode_grid = function(panel, conf)
             });
         }
 
-        /* Grid Panel */
-        auto = new Ext.form.Checkbox({
-            checked: true,
-            listeners: {
-                check: function(s, c) {
-                    if (c)
-                        store.reload();
-                }
-            }
-        });
         var count = new Ext.form.ComboBox({
             width: 50,
             displayField: 'val',
@@ -1411,15 +1409,6 @@ tvheadend.idnode_grid = function(panel, conf)
                     }
                 }
             }
-        });
-        var page = new Ext.PagingToolbar({
-            store: store,
-            pageSize: 50,
-            displayInfo: true,
-            displayMsg: conf.titleP + _(' {0} - {1} of {2}'),
-            emptyMsg: 'No ' + conf.titleP.toLowerCase() + ' to display',
-            items: ['-', _('Auto-refresh'), auto,
-                '->', '-', _('Per page'), count]
         });
         plugins.push(filter);
         var gconf = {
