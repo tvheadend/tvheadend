@@ -188,7 +188,7 @@ _dvr_inotify_moved
     if (de->de_files == NULL)
       continue;
     HTSMSG_FOREACH(f, de->de_files)
-      if ((m = htsmsg_field_get_list(f)) != NULL) {
+      if ((m = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(m, "filename");
         if (filename && !strcmp(path, filename))
           break;
