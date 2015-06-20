@@ -457,6 +457,8 @@ ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 PO-FILES = $(foreach f,$(LANGUAGES),intl/tvheadend.$(f).po)
 SRCS += src/tvh_locale.c
 
+POC_PY=PYTHONIOENCODING=utf-8 $(PYTHON) support/poc.py
+
 define merge-po
 	@if ! test -r "$(1)"; then \
 	  sed -e 's/Content-Type: text\/plain; charset=CHARSET/Content-Type: text\/plain; charset=utf-8/' < "$(2)" > "$(1).new"; \
@@ -591,7 +593,7 @@ intl/tvheadend.pl.po: intl/tvheadend.pot
 $(BUILDDIR)/src/tvh_locale.o: src/tvh_locale_inc.c
 src/tvh_locale_inc.c: $(PO-FILES)
 	@printf "Building $@\n"
-	@./support/poc.py --in="$(PO-FILES)" > $@.new
+	@$(POC_PY) --in="$(PO-FILES)" > $@.new
 	@mv $@.new $@
 
 # Bundle files
