@@ -89,17 +89,6 @@ service_class_channel_set
                           service_mapper_create);
 }
 
-static htsmsg_t *
-service_class_channel_enum
-  ( void *obj, const char *lang )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "channel/list");
-  htsmsg_add_str(m, "event", "channel");
-  return m;
-}
-
 static const char *
 service_class_get_title ( idnode_t *self, const char *lang )
 {
@@ -184,7 +173,7 @@ const idclass_t service_class = {
       .name     = N_("Channel"),
       .get      = service_class_channel_get,
       .set      = service_class_channel_set,
-      .list     = service_class_channel_enum,
+      .list     = channel_class_get_list,
       .rend     = service_class_channel_rend,
       .opts     = PO_NOSAVE
     },
