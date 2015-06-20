@@ -151,7 +151,7 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
 }
 
 static void
-linuxdvb_ca_class_high_bitrate_notify ( void *p )
+linuxdvb_ca_class_high_bitrate_notify ( void *p, const char *lang )
 {
   linuxdvb_ca_t *lca = (linuxdvb_ca_t *) p;
   ciplus13_app_ai_data_rate_info(lca, lca->lca_high_bitrate_mode ?
