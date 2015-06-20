@@ -162,7 +162,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         name: 'stop',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Stop the selected recording',
+                tooltip: _('Stop the selected recording'),
                 iconCls: 'stopRec',
                 text: _('Stop'),
                 disabled: true
