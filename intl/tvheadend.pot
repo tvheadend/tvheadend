@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-19 21:18+0200\n"
+"POT-Creation-Date: 2015-06-20 15:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,8 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/main.c:477
-#, c-format
+#: src/main.c:478
 msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
@@ -202,11 +201,11 @@ msgstr ""
 msgid "Adapter in use by other subscription"
 msgstr ""
 
-#: src/main.c:702
+#: src/main.c:703
 msgid "Add file and line numbers to debug"
 msgstr ""
 
-#: src/main.c:703
+#: src/main.c:704
 msgid "Add the thread ID to debug"
 msgstr ""
 
@@ -238,11 +237,11 @@ msgstr ""
 msgid "All days"
 msgstr ""
 
-#: src/main.c:646
+#: src/main.c:647
 msgid "Alternate config path"
 msgstr ""
 
-#: src/main.c:651
+#: src/main.c:652
 msgid "Alternate pid path"
 msgstr ""
 
@@ -267,11 +266,11 @@ msgstr ""
 msgid "Audio Stream Filter"
 msgstr ""
 
-#: src/service.c:151
+#: src/service.c:140
 msgid "Auto Check Disabled"
 msgstr ""
 
-#: src/service.c:150
+#: src/service.c:139
 msgid "Auto Check Enabled"
 msgstr ""
 
@@ -291,7 +290,7 @@ msgstr ""
 msgid "Auto-Map to Channels"
 msgstr ""
 
-#: src/service.c:176
+#: src/service.c:165
 msgid "Automatic Checking"
 msgstr ""
 
@@ -355,7 +354,7 @@ msgstr ""
 msgid "CA Stream Filter"
 msgstr ""
 
-#: src/service.c:207
+#: src/service.c:196
 msgid "CAID"
 msgstr ""
 
@@ -383,7 +382,7 @@ msgstr ""
 msgid "Camd.socket Filename / IP Address (TCP mode)"
 msgstr ""
 
-#: src/channels.c:287 src/service.c:184 src/dvr/dvr_db.c:2052
+#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2052
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
 msgid "Channel"
 msgstr ""
@@ -513,7 +512,7 @@ msgstr ""
 msgid "Cron"
 msgstr ""
 
-#: src/main.c:661
+#: src/main.c:662
 msgid "DBus - use the session message bus instead system one"
 msgstr ""
 
@@ -641,7 +640,7 @@ msgstr ""
 msgid "Data Errors"
 msgstr ""
 
-#: src/main.c:693
+#: src/main.c:694
 msgid "Debug Options"
 msgstr ""
 
@@ -691,11 +690,11 @@ msgstr ""
 msgid "Disable"
 msgstr ""
 
-#: src/main.c:712
+#: src/main.c:713
 msgid "Disable DVB bouquets"
 msgstr ""
 
-#: src/main.c:710
+#: src/main.c:711
 msgid "Disable all access control checks"
 msgstr ""
 
@@ -703,7 +702,7 @@ msgstr ""
 msgid "Disable device-/firmware-specific workarounds"
 msgstr ""
 
-#: src/main.c:696
+#: src/main.c:697
 msgid "Disable syslog (all msgs)"
 msgstr ""
 
@@ -731,7 +730,7 @@ msgstr ""
 msgid "Do Not Reschedule"
 msgstr ""
 
-#: src/main.c:647
+#: src/main.c:648
 msgid "Do not backup config tree at upgrade"
 msgstr ""
 
@@ -771,40 +770,40 @@ msgstr ""
 msgid "Enable (auto)"
 msgstr ""
 
-#: src/main.c:659
+#: src/main.c:660
 msgid "Enable DBus"
 msgstr ""
 
-#: src/main.c:709
+#: src/main.c:710
 msgid "Enable coredumps for daemon"
 msgstr ""
 
-#: src/main.c:694
+#: src/main.c:695
 msgid "Enable debug on stderr"
 msgstr ""
 
-#: src/main.c:698
+#: src/main.c:699
 msgid "Enable debug subsystems"
 msgstr ""
 
-#: src/main.c:697
+#: src/main.c:698
 msgid "Enable debug to file"
 msgstr ""
 
-#: src/main.c:695
+#: src/main.c:696
 msgid "Enable debug to syslog"
 msgstr ""
 
-#: src/main.c:700
+#: src/main.c:701
 msgid "Enable trace subsystems"
 msgstr ""
 
-#: src/main.c:707
+#: src/main.c:708
 msgid "Enable webUI debug (non-minified JS)"
 msgstr ""
 
 #: src/access.c:1289 src/access.c:1649 src/channels.c:296 src/channels.c:1092
-#: src/service.c:169 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
+#: src/service.c:158 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
 #: src/bouquet.c:802 src/dvr/dvr_autorec.c:916 src/dvr/dvr_timerec.c:557
 #: src/dvr/dvr_config.c:762 src/descrambler/caclient.c:262
 #: src/input/mpegts/mpegts_input.c:224 src/input/mpegts/mpegts_mux.c:496
@@ -815,7 +814,7 @@ msgstr ""
 msgid "Enabled"
 msgstr ""
 
-#: src/service.c:200
+#: src/service.c:189
 msgid "Encrypted"
 msgstr ""
 
@@ -936,7 +935,7 @@ msgstr ""
 msgid "Force teardown delay"
 msgstr ""
 
-#: src/main.c:648
+#: src/main.c:649
 msgid "Fork and run as daemon"
 msgstr ""
 
@@ -1013,7 +1012,7 @@ msgstr ""
 msgid "Generic"
 msgstr ""
 
-#: src/main.c:641
+#: src/main.c:642
 msgid "Generic Options"
 msgstr ""
 
@@ -1126,7 +1125,7 @@ msgstr ""
 msgid "Idle Scan Muxes"
 msgstr ""
 
-#: src/main.c:652
+#: src/main.c:653
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -1151,7 +1150,7 @@ msgstr ""
 msgid "Ignore invalid SSL certificate"
 msgstr ""
 
-#: src/main.c:708
+#: src/main.c:709
 msgid "Immediately abort"
 msgstr ""
 
@@ -1215,7 +1214,7 @@ msgstr ""
 msgid "Invalid"
 msgstr ""
 
-#: src/main.c:788
+#: src/main.c:789
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
@@ -1309,7 +1308,7 @@ msgstr ""
 msgid "LinuxDVB Network"
 msgstr ""
 
-#: src/main.c:678
+#: src/main.c:679
 msgid "Listen on IPv6"
 msgstr ""
 
@@ -1507,7 +1506,7 @@ msgstr ""
 msgid "Minimal Duration"
 msgstr ""
 
-#: src/service.c:152
+#: src/service.c:141
 msgid "Missing In PAT/SDT"
 msgstr ""
 
@@ -1539,7 +1538,7 @@ msgstr ""
 msgid "Mono"
 msgstr ""
 
-#: src/main.c:705
+#: src/main.c:706
 msgid "More verbose libav log"
 msgstr ""
 
@@ -1637,8 +1636,7 @@ msgstr ""
 msgid "No access"
 msgstr ""
 
-#: src/main.c:797
-#, c-format
+#: src/main.c:798
 msgid "No adapters specified!\n"
 msgstr ""
 
@@ -1700,7 +1698,7 @@ msgstr ""
 msgid "Number"
 msgstr ""
 
-#: src/main.c:720
+#: src/main.c:721
 msgid "Number of tsfile tuners"
 msgstr ""
 
@@ -1776,7 +1774,7 @@ msgstr ""
 msgid "Only Viasat Baltic"
 msgstr ""
 
-#: src/main.c:665
+#: src/main.c:666
 msgid "Only use specified DVB adapters (comma separated)"
 msgstr ""
 
@@ -1804,7 +1802,7 @@ msgstr ""
 msgid "Other Stream Filter"
 msgstr ""
 
-#: src/main.c:724
+#: src/main.c:725
 msgid "Output directory for tsdebug"
 msgstr ""
 
@@ -1918,7 +1916,7 @@ msgstr ""
 msgid "Priority"
 msgstr ""
 
-#: src/service.c:194
+#: src/service.c:183
 msgid "Priority (-10..10)"
 msgstr ""
 
@@ -2050,11 +2048,11 @@ msgstr ""
 msgid "Rotor Type"
 msgstr ""
 
-#: src/main.c:650
+#: src/main.c:651
 msgid "Run as group"
 msgstr ""
 
-#: src/main.c:649
+#: src/main.c:650
 msgid "Run as user"
 msgstr ""
 
@@ -2090,7 +2088,7 @@ msgstr ""
 msgid "SAT>IP DVB-T Frontend"
 msgstr ""
 
-#: src/main.c:669
+#: src/main.c:670
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
@@ -2192,16 +2190,16 @@ msgstr ""
 msgid "Server"
 msgstr ""
 
-#: src/main.c:677
+#: src/main.c:678
 msgid "Server Connectivity"
 msgstr ""
 
-#: src/service.c:159 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
+#: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
 msgid "Service"
 msgstr ""
 
-#: src/main.c:645
+#: src/main.c:646
 msgid "Service Configuration"
 msgstr ""
 
@@ -2218,7 +2216,7 @@ msgstr ""
 msgid "Service Name"
 msgstr ""
 
-#: src/service.c:217
+#: src/service.c:206
 msgid "Service Raw"
 msgstr ""
 
@@ -2235,11 +2233,11 @@ msgstr ""
 msgid "Services Count %zi"
 msgstr ""
 
-#: src/main.c:642
+#: src/main.c:643
 msgid "Show this page"
 msgstr ""
 
-#: src/main.c:643
+#: src/main.c:644
 msgid "Show version information"
 msgstr ""
 
@@ -2291,27 +2289,27 @@ msgstr ""
 msgid "Source reconfigured"
 msgstr ""
 
-#: src/main.c:688
+#: src/main.c:689
 msgid "Specify User-Agent header for the http client"
 msgstr ""
 
-#: src/main.c:684
+#: src/main.c:685
 msgid "Specify alternative htsp port"
 msgstr ""
 
-#: src/main.c:680
+#: src/main.c:681
 msgid "Specify alternative http port"
 msgstr ""
 
-#: src/main.c:682
+#: src/main.c:683
 msgid "Specify alternative http webroot"
 msgstr ""
 
-#: src/main.c:679
+#: src/main.c:680
 msgid "Specify bind address"
 msgstr ""
 
-#: src/main.c:686
+#: src/main.c:687
 msgid "Specify extra htsp port"
 msgstr ""
 
@@ -2386,7 +2384,7 @@ msgstr ""
 msgid "Subdirectory Options"
 msgstr ""
 
-#: src/main.c:714
+#: src/main.c:715
 msgid "Subscribe to a service permanently"
 msgstr ""
 
@@ -2455,7 +2453,7 @@ msgstr ""
 msgid "Teletext Stream Filter"
 msgstr ""
 
-#: src/main.c:719
+#: src/main.c:720
 msgid "Testing options"
 msgstr ""
 
@@ -2548,7 +2546,7 @@ msgstr ""
 msgid "URL"
 msgstr ""
 
-#: src/main.c:674
+#: src/main.c:675
 msgid "URL with the SAT>IP server XML location"
 msgstr ""
 
@@ -2623,7 +2621,7 @@ msgstr ""
 msgid "Use Windows-compatible filenames"
 msgstr ""
 
-#: src/main.c:690
+#: src/main.c:691
 msgid "Use xspf playlist instead M3U"
 msgstr ""
 
@@ -2731,7 +2729,7 @@ msgstr ""
 msgid "hrs"
 msgstr ""
 
-#: src/main.c:748
+#: src/main.c:749
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr ""
@@ -2744,12 +2742,12 @@ msgstr ""
 msgid "mins"
 msgstr ""
 
-#: src/main.c:755
+#: src/main.c:756
 #, c-format
 msgid "option %s requires a value"
 msgstr ""
 
-#: src/main.c:721
+#: src/main.c:722
 msgid "tsfile input (mux file)"
 msgstr ""
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-19 21:18+0200\n"
+"POT-Creation-Date: 2015-06-20 15:13+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -58,11 +58,11 @@ msgid "Active"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:904 src/webui/static/app/idnode.js:934
-#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1636
+#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1637
 msgid "Add"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1634
+#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1635
 msgid "Add a new entry"
 msgstr ""
 
@@ -82,7 +82,7 @@ msgstr ""
 msgid "Age Rating"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1395
+#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1361
 msgid "All"
 msgstr ""
 
@@ -360,7 +360,7 @@ msgstr ""
 msgid "Default Language(s)"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1648
+#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1649
 msgid "Delete"
 msgstr ""
 
@@ -372,7 +372,7 @@ msgstr ""
 msgid "Delete scheduled recording of this program"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1646
+#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1647
 msgid "Delete selected entries"
 msgstr ""
 
@@ -627,8 +627,8 @@ msgstr ""
 msgid "Genre"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1381
-#: src/webui/static/app/idnode.js:1755 src/webui/static/app/timeshift.js:110
+#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
+#: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
 #: src/webui/static/app/config.js:334
 msgid "Help"
@@ -642,7 +642,7 @@ msgstr ""
 msgid "Hide"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1723
+#: src/webui/static/app/idnode.js:1724
 msgid "Hide passwords"
 msgstr ""
 
@@ -785,12 +785,16 @@ msgstr ""
 msgid "Module"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1695
+#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
 msgid "Move Down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1674
+#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1675
 msgid "Move Up"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:182
+msgid "Move channel one number down"
 msgstr ""
 
 #: src/webui/static/app/chconf.js:169
@@ -805,11 +809,11 @@ msgstr ""
 msgid "Move selected entries up"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1693
+#: src/webui/static/app/idnode.js:1694
 msgid "Move selected entry down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1672
+#: src/webui/static/app/idnode.js:1673
 msgid "Move selected entry up"
 msgstr ""
 
@@ -871,6 +875,10 @@ msgstr ""
 msgid "Number"
 msgstr ""
 
+#: src/webui/static/app/chconf.js:184
+msgid "Number Down"
+msgstr ""
+
 #: src/webui/static/app/chconf.js:171
 msgid "Number Up"
 msgstr ""
@@ -911,7 +919,7 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1782 src/webui/static/app/idnode.js:1968
+#: src/webui/static/app/idnode.js:1783 src/webui/static/app/idnode.js:1969
 msgid "Parameters"
 msgstr ""
 
@@ -1039,7 +1047,7 @@ msgstr ""
 msgid "Reset all filters (show all)"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1621
+#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1622
 msgid "Revert pending changes (marked with red border)"
 msgstr ""
 
@@ -1052,7 +1060,7 @@ msgid "SNR"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
-#: src/webui/static/app/idnode.js:1601
+#: src/webui/static/app/idnode.js:1602
 msgid "Save"
 msgstr ""
 
@@ -1070,7 +1078,7 @@ msgstr ""
 msgid "Save failed"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1599
+#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1600
 msgid "Save pending changes (marked with red border)"
 msgstr ""
 
@@ -1131,11 +1139,11 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1717
+#: src/webui/static/app/idnode.js:1718
 msgid "Show or hide passwords"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1719 src/webui/static/app/idnode.js:1723
+#: src/webui/static/app/idnode.js:1720 src/webui/static/app/idnode.js:1724
 msgid "Show passwords"
 msgstr ""
 
@@ -1331,7 +1339,7 @@ msgstr ""
 msgid "Uncorrected Blocks"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1623
+#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1624
 msgid "Undo"
 msgstr ""
 
