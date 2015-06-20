@@ -1350,6 +1350,33 @@ tvheadend.idnode_grid = function(panel, conf)
             }
         });
 
+        var count = new Ext.form.ComboBox({
+            width: 50,
+            displayField: 'val',
+            valueField: 'key',
+            store: new Ext.data.ArrayStore({
+                id: 0,
+                fields: ['key', 'val'],
+                data: [[25, '25'], [50, '50'], [100, '100'],
+                    [200, '200'], [999999999, _('All')]]
+            }),
+            value: 50,
+            mode: 'local',
+            forceSelection: false,
+            triggerAction: 'all',
+            listeners: {
+                select: function(s, r) {
+                    if (r !== page.pageSize) {
+                        page.pageSize = r.id;
+                        page.changePage(0);
+                        store.reload();
+                        // TODO: currently setting pageSize=-1 to disable paging confuses
+                        //       the UI elements, and I don't know how to sort that!
+                    }
+                }
+            }
+        });
+
         var page = new Ext.PagingToolbar(
             tvheadend.PagingToolbarConf({store:store}, conf.titleP, auto, count)
         );
@@ -1384,32 +1411,6 @@ tvheadend.idnode_grid = function(panel, conf)
             });
         }
 
-        var count = new Ext.form.ComboBox({
-            width: 50,
-            displayField: 'val',
-            valueField: 'key',
-            store: new Ext.data.ArrayStore({
-                id: 0,
-                fields: ['key', 'val'],
-                data: [[25, '25'], [50, '50'], [100, '100'],
-                    [200, '200'], [999999999, _('All')]]
-            }),
-            value: 50,
-            mode: 'local',
-            forceSelection: false,
-            triggerAction: 'all',
-            listeners: {
-                select: function(s, r) {
-                    if (r !== page.pageSize) {
-                        page.pageSize = r.id;
-                        page.changePage(0);
-                        store.reload();
-                        // TODO: currently setting pageSize=-1 to disable paging confuses
-                        //       the UI elements, and I don't know how to sort that!
-                    }
-                }
-            }
-        });
         plugins.push(filter);
         var gconf = {
             stateful: true,
