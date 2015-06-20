@@ -98,9 +98,8 @@ BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 #
 
 MKBUNDLE = $(PYTHON) $(ROOTDIR)/support/mkbundle
-XGETTEXT ?= xgettext --language=C -k_ -kN_ -s
+XGETTEXT2 ?= $(XGETTEXT) --language=C -k_ -kN_ -s
 MSGMERGE ?= msgmerge
-MSGFMT ?= msgfmt
 
 #
 # Debug/Output
@@ -528,7 +527,8 @@ ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 
 # Clean
 clean:
-	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle* ${BUILDDIR}/build.o ${BUILDDIR}/timestamp.*
+	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle* ${BUILDDIR}/build.o ${BUILDDIR}/timestamp.* \
+	       src/tvh_locale_inc.c
 	find . -name "*~" | xargs rm -f
 	$(MAKE) -f Makefile.webui clean
 
@@ -571,7 +571,7 @@ $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 .PHONY: intl
 intl:
 	@printf "Building tvheadend.pot\n"
-	@$(XGETTEXT) -o intl/tvheadend.pot.new $(I18N-C)
+	@$(XGETTEXT2) -o intl/tvheadend.pot.new $(I18N-C)
 	@mv intl/tvheadend.pot.new intl/tvheadend.pot
 	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" WEBUI=std intl
 	$(MAKE)

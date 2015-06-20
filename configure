@@ -238,6 +238,8 @@ check_py_import gzip
 #
 # Binaries
 #
+check_bin ${XGETTEXT} || die 'WARN: no gettext binaries found'
+check_bin ${MSGMERGE} || die 'WARN: no gettext binaries found'
 check_bin ${GZIPCMD} || die 'WARN: no gzip binary found'
 check_bin ${BZIP2} || echo 'WARN: no bzip2 binary found'
 

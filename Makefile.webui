@@ -34,7 +34,7 @@ CSS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/css.py
 RUN_JS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rjsmin-1.0.10/rjsmin.py
 RUN_CSS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rcssmin-1.0.5/rcssmin.py
 GZIPCMD += -n
-XGETTEXT ?= xgettext --language=JavaScript --from-code=utf-8 -k_ -kN_ -s
+XGETTEXT2 ?= $(XGETTEXT) --language=JavaScript --from-code=utf-8 -k_ -kN_ -s
 MSGMERGE ?= msgmerge
 POJS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/pojs.py
 
@@ -248,7 +248,7 @@ compile-debug: $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c
 .PHONY: intl
 intl:
 	@printf "Building intl/js/tvheadend.js.pot\n"
-	@$(XGETTEXT) -o intl/js/tvheadend.js.pot.new $(JAVASCRIPT_SRC)
+	@$(XGETTEXT2) -o intl/js/tvheadend.js.pot.new $(JAVASCRIPT_SRC)
 	@mv intl/js/tvheadend.js.pot.new intl/js/tvheadend.js.pot
 
 intl/js/tvheadend.js.pot:

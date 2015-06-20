@@ -19,6 +19,8 @@ CONFIGURE_ARGS="$*"
 [ -z "$PYTHON"   ] && PYTHON=python
 [ -z "$GZIPCMD"  ] && GZIPCMD=gzip
 [ -z "$BZIP2"    ] && BZIP2=bzip2
+[ -z "$XGETTEXT" ] && XGETTEXT=xgettext
+[ -z "$MSGMERGE" ] && MSGMERGE=msgmerge
 
 # Paths
 [ -z "$prefix"   ] && prefix=/usr/local
@@ -461,6 +463,8 @@ endif
 PYTHON   ?= ${PYTHON}
 GZIPCMD  ?= ${GZIPCMD}
 BZIP2    ?= ${BZIP2}
+XGETTEXT ?= ${XGETTEXT}
+MSGMERGE ?= ${MSGMERGE}
 CFLAGS   += ${CFLAGS}
 LDFLAGS  += ${LDFLAGS}
 prefix    = ${prefix}
