@@ -146,7 +146,7 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
     close(lca->lca_ca_fd);
     lca->lca_ca_fd = -1;
 
-    idnode_notify_title_changed(&lca->lca_id);
+    idnode_notify_title_changed(&lca->lca_id, lang);
   }
 }
 
@@ -471,7 +471,7 @@ linuxdvb_ca_ai_callback(void *arg, uint8_t slot_id, uint16_t session_num,
     snprintf(lca->lca_cam_menu_string, sizeof(lca->lca_cam_menu_string),
              "%.*s", menu_string_len, menu_string);
 
-    idnode_notify_title_changed(&lca->lca_id);
+    idnode_notify_title_changed(&lca->lca_id, NULL);
 
     return 0;
 }
@@ -736,7 +736,7 @@ linuxdvb_ca_monitor ( void *aux )
     if (lca->lca_state != state) {
       tvhlog(LOG_INFO, "linuxdvb", "CAM slot %u status changed to %s",
              csi.num, lca->lca_state_str);
-      idnode_notify_title_changed(&lca->lca_id);
+      idnode_notify_title_changed(&lca->lca_id, NULL);
       lca->lca_state = state;
     }
 
