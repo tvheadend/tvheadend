@@ -797,6 +797,10 @@ msgstr ""
 msgid "Move channel one number up"
 msgstr ""
 
+#: src/webui/static/app/chconf.js:182
+msgid "Move channel one number down"
+msgstr ""
+
 #: src/webui/static/app/idnode.js:1224
 msgid "Move selected entries down"
 msgstr ""
@@ -873,6 +877,10 @@ msgstr ""
 
 #: src/webui/static/app/chconf.js:171
 msgid "Number Up"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:184
+msgid "Number Down"
 msgstr ""
 
 #: src/webui/static/app/timeshift.js:31
