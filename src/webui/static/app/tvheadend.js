@@ -94,7 +94,7 @@ tvheadend.loading = function(on) {
       Ext.getBody().unmask();
 };
 
-tvheadend.PagingToolbarConf = function(conf, title, auto=null, count=null)
+tvheadend.PagingToolbarConf = function(conf, title, auto, count)
 {
   conf.width = 50;
   conf.pageSize = 50;

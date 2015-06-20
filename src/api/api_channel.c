@@ -112,6 +112,7 @@ api_channel_tag_list
   l = htsmsg_create_list();
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if (cfg || channel_tag_access(ct, perm, 0)) {
+      printf("channel tag list: '%s' '%s'\n", idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
       if (ct->ct_enabled) {
         api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), ct->ct_name);
       } else {
