@@ -179,9 +179,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'nodown',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Move channel one number down',
+                tooltip: _('Move channel one number down'),
                 iconCls: 'arrow_down',
-                text: 'Number Down',
+                text: _('Number Down'),
                 disabled: false
             });
         },
