@@ -1243,6 +1243,7 @@ dobackup(const char *oldver)
       usleep(20000);
     if (code == -ECHILD)
       code = 0;
+    tvhinfo("config", "backup: completed");
   }
 
   if (code) {
