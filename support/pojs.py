@@ -111,7 +111,10 @@ def cnv(fn):
   sep = ''
   for s in po.strings:
     if s != po.strings[s]:
-      sys.stdout.write("%s'%s':'%s'" % (sep, jsstr(s), jsstr(po.strings[s])))
+      a = jsstr(s)
+      b = jsstr(po.strings[s])
+      if a != b:
+        sys.stdout.write("%s'%s':'%s'" % (sep, a, b))
       sep = ',\n'
   sys.stdout.write("\n}\n");
 

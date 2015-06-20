@@ -122,7 +122,9 @@ def to_c(po_files):
     sep = ''
     for s in strings:
       if s != strings[s]:
-        sys.stdout.write('%s"%s", "%s"' % (sep, cstr(s), cstr(strings[s])));
+        a = cstr(s)
+        b = cstr(strings[s])
+        sys.stdout.write('%s"%s", "%s"' % (sep, a, b));
         sep = ',\n'
     sys.stdout.write('%sNULL, NULL' % sep)
     sys.stdout.write('\n};\n\n');
