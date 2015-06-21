@@ -209,7 +209,7 @@ tvheadend.VideoPlayer = function(url) {
         mode: 'local',
         editable: true,
         triggerAction: 'all',
-        emptyText: 'Select channel...'
+        emptyText: _('Select channel...)'
     });
 
     selectChannel.on('select', function(c, r) {
@@ -246,7 +246,7 @@ tvheadend.VideoPlayer = function(url) {
         mode: 'local',
         editable: false,
         triggerAction: 'all',
-        emptyText: 'Select stream profile...',
+        emptyText: _('Select stream profile...'),
         store: tvheadend.profiles
     });
 
