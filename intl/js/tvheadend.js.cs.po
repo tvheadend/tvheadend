@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Jaroslav Kysela, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-20 15:13+0200\n"
+"POT-Creation-Date: 2015-06-21 22:51+0200\n"
 "PO-Revision-Date: 2015-06-20 18:57+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
+"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
+"cs/)\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: cs\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -284,13 +285,19 @@ msgstr "Vytvoř Auto-Rekordér"
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programmes that matches the current query."
-msgstr "Vytvoření nového automatického rekordéru tohoto programu na základě současného dotazu, který bude automaticky nahrávat všechny nové vysílání, která splňují dotaz."
+msgstr ""
+"Vytvoření nového automatického rekordéru tohoto programu na základě "
+"současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
+"která splňují dotaz."
 
 #: src/webui/static/app/epg.js:826
 msgid ""
 "Create an automatic recording entry that will record all future programmes "
 "that matches the current query."
-msgstr "Vytvoření nového automatického rekordéru tohoto programu na základě současného dotazu, který bude automaticky nahrávat všechny nové vysílání, která splňují dotaz."
+msgstr ""
+"Vytvoření nového automatického rekordéru tohoto programu na základě "
+"současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
+"která splňují dotaz."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -1108,6 +1115,16 @@ msgstr "Hledej v IMDB (název pořadu)"
 msgid "Search title..."
 msgstr "Hledej název...."
 
+#: src/webui/static/app/tvheadend.js:212
+#, fuzzy
+msgid "Select channel...)"
+msgstr "Filtruj program..."
+
+#: src/webui/static/app/tvheadend.js:249
+#, fuzzy
+msgid "Select stream profile..."
+msgstr "Profil toku"
+
 #: src/webui/static/app/config.js:108
 msgid "Selected"
 msgstr "Vybrané"
@@ -1268,15 +1285,19 @@ msgstr "Filtry toku teletext"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying"
-" to reconnect..."
-msgstr "Spojení s programem Tvheadend bylo ztraceno. Pokouším se ho opětovně navázat..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying "
+"to reconnect..."
+msgstr ""
+"Spojení s programem Tvheadend bylo ztraceno. Pokouším se ho opětovně "
+"navázat..."
 
 #: src/webui/static/app/epg.js:1016
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programmes to record that match this query"
-msgstr "Toto vytoří automatický rekordér, který bude neustále scanovat elektronický průvodce programem pro shodu s tímto dotazem"
+msgstr ""
+"Toto vytoří automatický rekordér, který bude neustále scanovat elektronický "
+"průvodce programem pro shodu s tímto dotazem"
 
 #: src/webui/static/app/dvr.js:537
 msgid "Time Schedule"

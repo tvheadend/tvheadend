@@ -209,7 +209,7 @@ tvheadend.VideoPlayer = function(url) {
         mode: 'local',
         editable: true,
         triggerAction: 'all',
-        emptyText: _('Select channel...)'
+        emptyText: _('Select channel...')
     });
 
     selectChannel.on('select', function(c, r) {

@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Alexander Knöbel <alex@belogy.de>, 2015
 # Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
@@ -11,14 +11,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-20 15:13+0200\n"
+"POT-Creation-Date: 2015-06-21 22:51+0200\n"
 "PO-Revision-Date: 2015-06-21 20:48+0000\n"
 "Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
-"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
+"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/"
+"language/de/)\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -287,13 +288,17 @@ msgstr "Generiere automatische Aufnahme"
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programmes that matches the current query."
-msgstr "Erstelle eine automatische Aufnahme für diese Sendung, die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
+msgstr ""
+"Erstelle eine automatische Aufnahme für diese Sendung, die alle zukünftigen "
+"Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/epg.js:826
 msgid ""
 "Create an automatic recording entry that will record all future programmes "
 "that matches the current query."
-msgstr "Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
+msgstr ""
+"Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, "
+"die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -1111,6 +1116,16 @@ msgstr "IMDB Suche (Titel)"
 msgid "Search title..."
 msgstr "Suche Titel..."
 
+#: src/webui/static/app/tvheadend.js:212
+#, fuzzy
+msgid "Select channel...)"
+msgstr "Kanal filtern..."
+
+#: src/webui/static/app/tvheadend.js:249
+#, fuzzy
+msgid "Select stream profile..."
+msgstr "Stream Profil"
+
 #: src/webui/static/app/config.js:108
 msgid "Selected"
 msgstr "Ausgewählt"
@@ -1271,8 +1286,8 @@ msgstr "Videotext Stream-Filter"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying"
-" to reconnect..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying "
+"to reconnect..."
 msgstr ""
 
 #: src/webui/static/app/epg.js:1016
@@ -1425,7 +1440,9 @@ msgstr "Wird übersprungen"
 
 #: src/webui/static/app/idnode.js:393 src/webui/static/app/idnode.js:652
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
-msgstr "Sie müssen einen Wert angeben - benutzen Sie Chmod-Oktal-Schreibweise, z.B. 0664"
+msgstr ""
+"Sie müssen einen Wert angeben - benutzen Sie Chmod-Oktal-Schreibweise, z.B. "
+"0664"
 
 #: src/webui/static/app/dvr.js:31
 msgid "because is rerun of:"

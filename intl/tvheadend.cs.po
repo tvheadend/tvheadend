@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Jaroslav Kysela, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-20 15:13+0200\n"
+"POT-Creation-Date: 2015-06-21 22:51+0200\n"
 "PO-Revision-Date: 2015-06-21 19:33+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
+"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
+"cs/)\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: cs\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
 #: src/main.c:478
@@ -23,7 +24,10 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr "\nPro získání více informací navštivte webovou stránku programu Tvheadend:\nhttps://tvheadend.org\n"
+msgstr ""
+"\n"
+"Pro získání více informací navštivte webovou stránku programu Tvheadend:\n"
+"https://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
@@ -1133,7 +1137,11 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you edit\n"
 "the access-control from within the Tvheadend UI"
-msgstr "Pokud není vytvořený žádný uživatelský účet,\ntak se vytvoří účet bez uživatelského jména\na hesla. Je doporučené tento administrátorský\núčet okamžitě změnit (uživatelské jméno a heslo)"
+msgstr ""
+"Pokud není vytvořený žádný uživatelský účet,\n"
+"tak se vytvoří účet bez uživatelského jména\n"
+"a hesla. Je doporučené tento administrátorský\n"
+"účet okamžitě změnit (uživatelské jméno a heslo)"
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
@@ -2093,7 +2101,9 @@ msgstr "SAT>IP DVB-T Frontend"
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
-msgstr "SAT>IP RTSP číslo portu pro server\n(defaultní: -1 = disable, 0 = webová konfigurace, standardní port je 554)"
+msgstr ""
+"SAT>IP RTSP číslo portu pro server\n"
+"(defaultní: -1 = disable, 0 = webová konfigurace, standardní port je 554)"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
