@@ -22,6 +22,7 @@ libhdhomerun_static
 nbproject
 .settings
 
+*~
 *.pyc
 .*.sw[op]
 *.bak
