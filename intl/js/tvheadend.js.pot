@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-21 22:51+0200\n"
+"POT-Creation-Date: 2015-06-21 22:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1108,7 +1108,7 @@ msgid "Search title..."
 msgstr ""
 
 #: src/webui/static/app/tvheadend.js:212
-msgid "Select channel...)"
+msgid "Select channel..."
 msgstr ""
 
 #: src/webui/static/app/tvheadend.js:249
@@ -1197,6 +1197,10 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:184
 msgid "Stop recording of this program"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:165
+msgid "Stop the selected recording"
 msgstr ""
 
 #: src/webui/static/app/timeshift.js:37

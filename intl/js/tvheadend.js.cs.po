@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-21 22:51+0200\n"
+"POT-Creation-Date: 2015-06-21 22:56+0200\n"
 "PO-Revision-Date: 2015-06-20 18:57+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
@@ -1117,7 +1117,7 @@ msgstr "Hledej název...."
 
 #: src/webui/static/app/tvheadend.js:212
 #, fuzzy
-msgid "Select channel...)"
+msgid "Select channel..."
 msgstr "Filtruj program..."
 
 #: src/webui/static/app/tvheadend.js:249
@@ -1208,6 +1208,11 @@ msgstr "Ukončení záznamu"
 #: src/webui/static/app/epg.js:184
 msgid "Stop recording of this program"
 msgstr "Ukončit záznam tohoto vysílání"
+
+#: src/webui/static/app/dvr.js:165
+#, fuzzy
+msgid "Stop the selected recording"
+msgstr "Ukonči vybrané nahrávání"
 
 #: src/webui/static/app/timeshift.js:37
 msgid "Storage Path"
