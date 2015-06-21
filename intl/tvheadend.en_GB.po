@@ -3,19 +3,18 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# saen acro <saentist@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-20 15:13+0200\n"
-"PO-Revision-Date: 2015-06-21 11:54+0000\n"
-"Last-Translator: saen acro <saentist@gmail.com>\n"
-"Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
+"PO-Revision-Date: 2015-06-20 14:24+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: bg\n"
+"Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:478
@@ -23,19 +22,19 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr "\nЗа повече информация посетете сайта на Tvheadend\nhttps://tvheadend.org\n"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
-msgstr "#Канали"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:231
 msgid "# Mapped Channels"
-msgstr "# Селектирани Канали"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:217
 msgid "# Muxes"
-msgstr "#Муксове"
+msgstr ""
 
 #: src/bouquet.c:884
 msgid "# Seen Services"
@@ -261,11 +260,11 @@ msgstr ""
 
 #: src/profile.c:1550
 msgid "Audio Codec"
-msgstr "Аудио Кодек"
+msgstr ""
 
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
-msgstr "Филтър Аудио Потоци"
+msgstr ""
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
@@ -281,7 +280,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2222
 msgid "Auto Record"
-msgstr "Автоматизиран Запис"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2230
 msgid "Auto Time Record"
@@ -386,15 +385,15 @@ msgstr ""
 #: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2052
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
 msgid "Channel"
-msgstr "Канал"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2062
 msgid "Channel Icon"
-msgstr "Лого на Канал"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2069
 msgid "Channel Name"
-msgstr "Име на Канала"
+msgstr ""
 
 #: src/bouquet.c:904
 msgid "Channel Number Offset"
@@ -419,7 +418,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
 #: src/input/mpegts/mpegts_service.c:178
 msgid "Character Set"
-msgstr "Енкодинг"
+msgstr ""
 
 #: src/esfilter.c:607 src/profile.c:285 src/descrambler/caclient.c:247
 msgid "Class"
@@ -447,7 +446,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:2296 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
 #: src/dvr/dvr_config.c:782 src/descrambler/caclient.c:275
 msgid "Comment"
-msgstr "Коментар"
+msgstr ""
 
 #: src/dvr/dvr_db.c:292
 msgid "Commercial break"
@@ -664,7 +663,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2108 src/dvr/dvr_db.c:2115
 msgid "Description"
-msgstr "Описание"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "Device ID"
@@ -672,7 +671,7 @@ msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:165
 msgid "Device Model"
-msgstr "Устройство Модел"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:92
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:248
@@ -681,15 +680,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2180 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
 msgid "Directory"
-msgstr "Папка"
+msgstr ""
 
 #: src/dvr/dvr_config.c:897
 msgid "Directory Permissions (octal, e.g. 0775)"
-msgstr "Права на Папката (octal, пр. 0775)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:458
 msgid "Disable"
-msgstr "Изключи"
+msgstr ""
 
 #: src/main.c:713
 msgid "Disable DVB bouquets"
@@ -745,7 +744,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2045
 msgid "Duration"
-msgstr "Продължителност"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:210
 msgid "EIT Local Time"
@@ -813,7 +812,7 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:188
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
-msgstr "Разрешено"
+msgstr ""
 
 #: src/service.c:189
 msgid "Encrypted"
@@ -825,12 +824,12 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2254
 msgid "Episode"
-msgstr "Епизод"
+msgstr ""
 
 #: src/dvr/dvr_db.c:424
 #, c-format
 msgid "Episode %d"
-msgstr "Епизод %d"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2187
 msgid "Error Code"
@@ -838,7 +837,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2194
 msgid "Errors"
-msgstr "Грешки"
+msgstr ""
 
 #: src/descrambler/constcw.c:322 src/descrambler/constcw.c:382
 msgid "Even Key"
@@ -866,7 +865,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:391
 msgid "FAIL"
-msgstr "ПРОВАЛ"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:301
 msgid "FEC"
@@ -886,23 +885,23 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:311
 msgid "File Missing"
-msgstr "Файла Отсъства"
+msgstr ""
 
 #: src/dvr/dvr_db.c:302
 msgid "File Not Created"
-msgstr "Фаела не е създаден"
+msgstr ""
 
 #: src/dvr/dvr_config.c:855
 msgid "File Permissions (octal, e.g. 0664)"
-msgstr "Файлови Права (octal, пр. 0664)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2268
 msgid "File Size"
-msgstr "Файлов Размер"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2173
 msgid "Filename"
-msgstr "Име на фаела"
+msgstr ""
 
 #: src/dvr/dvr_config.c:863
 msgid "Filename Charset"
@@ -946,7 +945,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:133
 msgid "Frequency"
-msgstr "Честота"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:215 src/input/mpegts/mpegts_mux_dvb.c:287
 #: src/input/mpegts/mpegts_mux_dvb.c:647
@@ -2648,7 +2647,7 @@ msgstr ""
 
 #: src/access.c:1295 src/access.c:1655 src/descrambler/cwc.c:1726
 msgid "Username"
-msgstr "Потребител"
+msgstr ""
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
@@ -2668,7 +2667,7 @@ msgstr ""
 
 #: src/streaming.c:545
 msgid "Visually impaired commentary"
-msgstr "Коментар за Незрящи"
+msgstr ""
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"

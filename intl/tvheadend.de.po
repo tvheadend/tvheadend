@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-20 15:13+0200\n"
-"PO-Revision-Date: 2015-06-21 10:16+0000\n"
+"PO-Revision-Date: 2015-06-21 11:04+0000\n"
 "Last-Translator: stbenz <benz.st@gmail.com>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
@@ -1690,11 +1690,11 @@ msgstr "Nicht gesetzt"
 
 #: src/dvr/dvr_config.c:694
 msgid "Not set (none or channel config)"
-msgstr ""
+msgstr "Nicht gesetzt (keine oder Kanalkonfiguration)"
 
 #: src/dvr/dvr_db.c:1973 src/dvr/dvr_autorec.c:611
 msgid "Not set (use channel or DVR config)"
-msgstr ""
+msgstr "Nicht gesetzt (benutze Kanal- oder DVR-Konfiguration)"
 
 #: src/channels.c:311
 msgid "Number"
@@ -1710,19 +1710,19 @@ msgstr "OK"
 
 #: src/descrambler/capmt.c:2165
 msgid "OSCam (rev >= 9095)"
-msgstr ""
+msgstr "OSCam (rev >= 9095)"
 
 #: src/descrambler/capmt.c:2164
 msgid "OSCam TCP (rev >= 9574)"
-msgstr ""
+msgstr "OSCam TCP (rev >= 9574)"
 
 #: src/descrambler/capmt.c:2162
 msgid "OSCam net protocol (rev >= 10389)"
-msgstr ""
+msgstr "OSCam net protocol (rev >= 10389)"
 
 #: src/descrambler/capmt.c:2163
 msgid "OSCam pc-nodmx (rev >= 9756)"
-msgstr ""
+msgstr "OSCam pc-nodmx (rev >= 9756)"
 
 #: src/descrambler/constcw.c:331 src/descrambler/constcw.c:391
 msgid "Odd Key"
@@ -1734,67 +1734,67 @@ msgstr "Aus"
 
 #: src/descrambler/capmt.c:2166
 msgid "Older OSCam"
-msgstr "Altes OSCam"
+msgstr "Älteres OSCam"
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "On"
-msgstr "An"
+msgstr "Ein"
 
 #: src/descrambler/cwc.c:1768
 msgid "One Mux (EMM)"
-msgstr ""
+msgstr "Ein Mux (EMM)"
 
 #: src/input/mpegts/mpegts_mux.c:461
 msgid "Only EIT"
-msgstr ""
+msgstr "Nur EIT"
 
 #: src/input/mpegts/mpegts_mux.c:467
 msgid "Only OpenTV Sky Ausat"
-msgstr ""
+msgstr "Nur OpenTV Sky Ausat"
 
 #: src/input/mpegts/mpegts_mux.c:466
 msgid "Only OpenTV Sky Italia"
-msgstr ""
+msgstr "Nur OpenTV Sky Italia"
 
 #: src/input/mpegts/mpegts_mux.c:465
 msgid "Only OpenTV Sky UK"
-msgstr ""
+msgstr "Nur OpenTV Sky UK"
 
 #: src/input/mpegts/mpegts_service.c:79
 msgid "Only Pref. CA PID"
-msgstr ""
+msgstr "Nur bevorzugte CA PID"
 
 #: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freesat"
-msgstr ""
+msgstr "Nur UK Freesat"
 
 #: src/input/mpegts/mpegts_mux.c:463
 msgid "Only UK Freeview"
-msgstr ""
+msgstr "Nur UK Freeview"
 
 #: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Viasat Baltic"
-msgstr ""
+msgstr "Nur Viasat Baltic"
 
 #: src/main.c:666
 msgid "Only use specified DVB adapters (comma separated)"
-msgstr ""
+msgstr "Benutze nur angegebene DVB-Adapter (Komma getrennt)"
 
 #: src/input/mpegts/mpegts_service.c:136
 msgid "OpenTV Channel Number"
-msgstr ""
+msgstr "OpenTV Kanalnummer"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:611
 msgid "Orbital Pos."
-msgstr ""
+msgstr "Orbitale Pos."
 
 #: src/input/mpegts/mpegts_network_dvb.c:253
 msgid "Orbital Position"
-msgstr ""
+msgstr "Orbitale Position"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:567
 msgid "Orbital Positions"
-msgstr ""
+msgstr "Orbitale Positionen"
 
 #: src/input/mpegts/mpegts_mux.c:533
 msgid "Original Network ID"
@@ -1802,11 +1802,11 @@ msgstr ""
 
 #: src/esfilter.c:974
 msgid "Other Stream Filter"
-msgstr ""
+msgstr "Sonstiger Streamfilter"
 
 #: src/main.c:725
 msgid "Output directory for tsdebug"
-msgstr ""
+msgstr "Zielverzeichnis für tsdebug"
 
 #: src/input/mpegts/mpegts_input.c:255
 msgid "Over-the-air EPG"
@@ -1814,7 +1814,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2159 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
 msgid "Owner"
-msgstr ""
+msgstr "Besitzer"
 
 #: src/input/mpegts/mpegts_mux.c:383
 msgid "PEND"
@@ -1823,7 +1823,7 @@ msgstr ""
 #: src/esfilter.c:668 src/esfilter.c:735 src/esfilter.c:802 src/esfilter.c:869
 #: src/esfilter.c:944 src/esfilter.c:1005
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/input/mpegts/satip/satip.c:261
 msgid "PIDs 21 in setup"
@@ -1835,7 +1835,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:209
 msgid "PIN"
-msgstr ""
+msgstr "PIN"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:217
 msgid "PIN Enquiry Match String"
@@ -1843,7 +1843,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:243
 msgid "PLP ID"
-msgstr ""
+msgstr "PLP ID"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:604
 msgid "PLS Code"
@@ -1872,11 +1872,11 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
 msgid "Pin"
-msgstr ""
+msgstr "Pin"
 
 #: src/descrambler/cwc.c:1746
 msgid "Port"
-msgstr "Anschluss"
+msgstr "Port"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:126
 #: src/input/mpegts/satip/satip_satconf.c:216
@@ -1896,19 +1896,19 @@ msgstr "Energie sparen"
 #: src/input/mpegts/mpegts_network_dvb.c:244
 #: src/input/mpegts/mpegts_network_dvb.c:271
 msgid "Pre-defined Muxes"
-msgstr ""
+msgstr "Vordefinierte Muxe"
 
 #: src/input/mpegts/mpegts_service.c:186
 msgid "Pref. CA PID"
-msgstr ""
+msgstr "Bevorzugte CA PID"
 
 #: src/profile.c:357
 msgid "Preferred Service Video Type"
-msgstr ""
+msgstr "Bevorzugter Service-Videotyp"
 
 #: src/input/mpegts/satip/satip.c:380
 msgid "Presentation"
-msgstr ""
+msgstr "Präsentation"
 
 #: src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
@@ -1944,7 +1944,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:289
 msgid "RTSP Port"
-msgstr ""
+msgstr "RTSP-Port"
 
 #: src/imagecache.c:83
 msgid "Re-try period"
@@ -1956,19 +1956,19 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:878
 msgid "Record all"
-msgstr ""
+msgstr "Alle aufnehmen"
 
 #: src/dvr/dvr_autorec.c:884
 msgid "Record if different description"
-msgstr ""
+msgstr "Aufnahme bei unterschiedlicher Beschreibung"
 
 #: src/dvr/dvr_autorec.c:880
 msgid "Record if different episode number"
-msgstr ""
+msgstr "Aufnahme bei unterschiedlicher Episodennummer"
 
 #: src/dvr/dvr_autorec.c:882
 msgid "Record if different subtitle"
-msgstr ""
+msgstr "Aufnahme bei unterschiedlichem Untertitel"
 
 #: src/dvr/dvr_autorec.c:888
 msgid "Record once per day"
@@ -1988,19 +1988,19 @@ msgstr "Aufnahmedateipfad"
 
 #: src/dvr/dvr_config.c:968
 msgid "Remove All Unsafe Characters From Filename"
-msgstr ""
+msgstr "Alle unsicheren Zeichen aus Dateiname entfernen"
 
 #: src/dvr/dvr_config.c:975
 msgid "Replace Whitespace In Title with '-'"
-msgstr ""
+msgstr "Leerzeichen im Titel durch '-' ersetzen"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:202
 msgid "Reply to CAM PIN Enquiries"
-msgstr ""
+msgstr "Auf CAM PIN-Abfragen antworten"
 
 #: src/dvr/dvr_db.c:2289
 msgid "Rerun of"
-msgstr ""
+msgstr "Wiederholung von"
 
 #: src/bouquet.c:809
 msgid "Rescan"
@@ -2016,7 +2016,7 @@ msgstr "Auflösung"
 
 #: src/input/mpegts/iptv/iptv_mux.c:144
 msgid "Respawn (pipe)"
-msgstr ""
+msgstr "Neustart (pipe)"
 
 #: src/profile.c:343
 msgid "Restart On Error"
@@ -2024,23 +2024,23 @@ msgstr "Neustart nach Fehler"
 
 #: src/dvr/dvr_db.c:2132 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:631
 msgid "Retention"
-msgstr ""
+msgstr "Speicherzeit"
 
 #: src/profile.c:1027
 msgid "Rewrite EIT"
-msgstr "EIT neu schreiben"
+msgstr "EIT umschreiben"
 
 #: src/profile.c:1013
 msgid "Rewrite PAT"
-msgstr "PAT neu schreiben"
+msgstr "PAT umschreiben"
 
 #: src/profile.c:1006
 msgid "Rewrite PMT"
-msgstr "PMT neu schreiben"
+msgstr "PMT umschreiben"
 
 #: src/profile.c:1020
 msgid "Rewrite SDT"
-msgstr "SDT neu schreiben"
+msgstr "SDT umschreiben"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:570
 msgid "Rolloff"
@@ -2052,11 +2052,11 @@ msgstr ""
 
 #: src/main.c:651
 msgid "Run as group"
-msgstr ""
+msgstr "Als Gruppe ausführen"
 
 #: src/main.c:650
 msgid "Run as user"
-msgstr ""
+msgstr "Als Benutzer ausführen"
 
 #: src/dvr/dvr_db.c:290
 msgid "Running"
@@ -2103,7 +2103,7 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:505
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:139
 msgid "SCR (ID)"
-msgstr ""
+msgstr "SCR (ID)"
 
 #: src/profile.c:266
 msgid "SD: Standard Definition"
@@ -2145,7 +2145,7 @@ msgstr "Suchergebnis"
 
 #: src/input/mpegts/mpegts_mux.c:554
 msgid "Scan Status"
-msgstr ""
+msgstr "Suchstatus"
 
 #: src/dvr/dvr_db.c:2282
 msgid "Schedule Status"
