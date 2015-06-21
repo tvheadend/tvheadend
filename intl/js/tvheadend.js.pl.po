@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-20 15:13+0200\n"
-"PO-Revision-Date: 2015-06-20 17:31+0000\n"
+"PO-Revision-Date: 2015-06-21 20:19+0000\n"
 "Last-Translator: PiterEL <piotr.kuchciak@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/language/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -56,7 +56,7 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:24
 msgid "Active"
-msgstr "Aktywny"
+msgstr "Aktywne"
 
 #: src/webui/static/app/idnode.js:904 src/webui/static/app/idnode.js:934
 #: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1637
@@ -665,7 +665,7 @@ msgstr "Ignoruj nieprawidłowy certyfikat SSL"
 
 #: src/webui/static/app/servicemapper.js:19
 msgid "Ignored"
-msgstr "Zignorowany"
+msgstr "Zignorowane"
 
 #: src/webui/static/app/config.js:212
 msgid "Image Caching"

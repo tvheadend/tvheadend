@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Peter <zinonino91@gmail.com>, 2015
 # saen acro <saentist@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-20 15:13+0200\n"
-"PO-Revision-Date: 2015-06-21 12:58+0000\n"
-"Last-Translator: saen acro <saentist@gmail.com>\n"
+"PO-Revision-Date: 2015-06-21 20:25+0000\n"
+"Last-Translator: Peter <zinonino91@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -20,11 +21,11 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:102
 msgid " {0} - {1} of {2}"
-msgstr ""
+msgstr "{0} - {1} от {2}"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
 msgid "(Clear filter)"
-msgstr ""
+msgstr "(Изчисти филтъра)"
 
 #: src/webui/static/app/epg.js:205
 msgid "(default DVR Profile)"
@@ -40,7 +41,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:464
 msgid "About"
-msgstr "За"
+msgstr "За програмата"
 
 #: src/webui/static/app/acleditor.js:64
 msgid "Access Control Entries"
@@ -69,7 +70,7 @@ msgstr "Добави нов запис"
 
 #: src/webui/static/app/idnode.js:777
 msgid "Advanced Settings"
-msgstr "РАзширени Настройки"
+msgstr "Разширени Настройки"
 
 #: src/webui/static/app/mpegts.js:210
 msgid "After filtering and reordering (without PCR and PMT)"
@@ -590,7 +591,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:106
 msgid "First Page"
-msgstr ""
+msgstr "Първа Страница"
 
 #: src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
@@ -701,7 +702,7 @@ msgstr "Езикови Настройки"
 
 #: src/webui/static/app/tvheadend.js:109
 msgid "Last Page"
-msgstr ""
+msgstr "Последна Страница"
 
 #: src/webui/static/app/tvheadend.js:267
 msgid "Live TV Player"
@@ -747,7 +748,7 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:11
 msgid "Mapped"
-msgstr ""
+msgstr "Селектирани"
 
 #: src/webui/static/app/servicemapper.js:138
 msgid "Mapping services..."
@@ -771,11 +772,11 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
-msgstr ""
+msgstr "Обедини с еднакви имена"
 
 #: src/webui/static/app/tvheadend.js:81
 msgid "Message"
-msgstr ""
+msgstr "Съобщение"
 
 #: src/webui/static/app/extensions.js:115
 msgid "Minimum {0} item(s) required"
@@ -788,11 +789,11 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
 msgid "Move Down"
-msgstr ""
+msgstr "Премести Надолу "
 
 #: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1675
 msgid "Move Up"
-msgstr ""
+msgstr "Премести Нагоре"
 
 #: src/webui/static/app/chconf.js:182
 msgid "Move channel one number down"
@@ -820,7 +821,7 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:99 src/webui/static/app/mpegts.js:108
 msgid "Mux"
-msgstr ""
+msgstr "Мукс"
 
 #: src/webui/static/app/mpegts.js:330 src/webui/static/app/mpegts.js:340
 msgid "Mux Scheduler"
@@ -832,7 +833,7 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:105
 msgid "Muxes"
-msgstr ""
+msgstr "Муксове"
 
 #: src/webui/static/app/config.js:256
 msgid "Muxes Handling (0 = auto, 1 = keep, 2 = reject)"
@@ -849,7 +850,7 @@ msgstr "Мрежи"
 
 #: src/webui/static/app/tvheadend.js:108
 msgid "Next Page"
-msgstr ""
+msgstr "Следваща Страница"
 
 #: src/webui/static/app/dvr.js:117
 msgid "No days"
@@ -870,11 +871,11 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:291
 msgid "Not set"
-msgstr ""
+msgstr "Не зададен"
 
 #: src/webui/static/app/epg.js:522
 msgid "Number"
-msgstr ""
+msgstr "Номер"
 
 #: src/webui/static/app/chconf.js:184
 msgid "Number Down"
@@ -898,7 +899,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:708
 msgid "Out"
-msgstr ""
+msgstr "Изход"
 
 #: src/webui/static/app/status.js:144
 msgid "Output (kb/s)"
@@ -918,11 +919,11 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:104
 msgid "Page"
-msgstr ""
+msgstr "Страница"
 
 #: src/webui/static/app/idnode.js:1783 src/webui/static/app/idnode.js:1969
 msgid "Parameters"
-msgstr ""
+msgstr "Параметри"
 
 #: src/webui/static/app/idnode.js:1321
 msgid "Parent disabled"
@@ -946,7 +947,7 @@ msgstr "Пауза"
 
 #: src/webui/static/app/tvheadend.js:121
 msgid "Per page"
-msgstr ""
+msgstr "На страница"
 
 #: src/webui/static/app/epggrab.js:142
 msgid "Periodic save EPG to disk"
@@ -954,7 +955,7 @@ msgstr ""
 
 #: src/webui/static/app/config.js:171
 msgid "Picon"
-msgstr ""
+msgstr "Пикон"
 
 #: src/webui/static/app/config.js:166
 msgid "Picon path (see Help)"
@@ -978,11 +979,11 @@ msgstr ""
 
 #: src/webui/static/app/config.js:155
 msgid "Prefer picons over channel name"
-msgstr ""
+msgstr "Предпочети Пикони пред име на канала"
 
 #: src/webui/static/app/tvheadend.js:107
 msgid "Previous Page"
-msgstr ""
+msgstr "Предишна Страница"
 
 #: src/webui/static/app/dvr.js:450
 msgid "Profile Name"
@@ -990,7 +991,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:452
 msgid "Progress"
-msgstr ""
+msgstr "Прогрес"
 
 #: src/webui/static/app/config.js:244
 msgid "RTSP Port (554 or 9983), 0 = disable"
@@ -1030,7 +1031,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:110
 msgid "Refresh"
-msgstr ""
+msgstr "Опресни"
 
 #: src/webui/static/app/chconf.js:208
 msgid "Reset (clear) the selected icon URLs"
@@ -1063,17 +1064,17 @@ msgstr ""
 #: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
 #: src/webui/static/app/idnode.js:1602
 msgid "Save"
-msgstr ""
+msgstr "Съхрани"
 
 #: src/webui/static/app/timeshift.js:104 src/webui/static/app/epggrab.js:293
 #: src/webui/static/app/config.js:309
 msgid "Save changes made to configuration below"
-msgstr ""
+msgstr "Съхрани промените описани по-надолу"
 
 #: src/webui/static/app/timeshift.js:103 src/webui/static/app/epggrab.js:292
 #: src/webui/static/app/config.js:308
 msgid "Save configuration"
-msgstr ""
+msgstr "Съхрани конфигурацията"
 
 #: src/webui/static/app/timeshift.js:194 src/webui/static/app/config.js:430
 msgid "Save failed"
@@ -1106,19 +1107,19 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:596
 msgid "Search title..."
-msgstr ""
+msgstr "Търси заглавие..."
 
 #: src/webui/static/app/config.js:108
 msgid "Selected"
-msgstr ""
+msgstr "Избрано"
 
 #: src/webui/static/app/config.js:69
 msgid "Server"
-msgstr ""
+msgstr "Сървър"
 
 #: src/webui/static/app/mpegts.js:293 src/webui/static/app/status.js:108
 msgid "Service"
-msgstr ""
+msgstr "Услуга"
 
 #: src/webui/static/app/servicemapper.js:34
 msgid "Service Mapper"
@@ -1134,11 +1135,11 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:294 src/webui/static/app/mpegts.js:301
 msgid "Services"
-msgstr ""
+msgstr "Услуги"
 
 #: src/webui/static/app/idnode.js:737
 msgid "Settings"
-msgstr ""
+msgstr "Настройки"
 
 #: src/webui/static/app/idnode.js:1718
 msgid "Show or hide passwords"
@@ -1248,7 +1249,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:618
 msgid "System log"
-msgstr ""
+msgstr "Системен лог"
 
 #: src/webui/static/app/tvadapters.js:5 src/webui/static/app/tvadapters.js:10
 msgid "TV adapters"
@@ -1305,7 +1306,7 @@ msgstr ""
 #: src/webui/static/app/epg.js:474 src/webui/static/app/epg.js:1019
 #: src/webui/static/app/status.js:96
 msgid "Title"
-msgstr ""
+msgstr "Заглавие"
 
 #: src/webui/static/app/status.js:375
 msgid "Transport Errors"
@@ -1329,7 +1330,7 @@ msgstr ""
 
 #: src/webui/static/app/config.js:62
 msgid "Tvheadend server name"
-msgstr ""
+msgstr "Име на Tvhedend сървъра"
 
 #: src/webui/static/app/caclient.js:47 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:549
@@ -1342,11 +1343,11 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1624
 msgid "Undo"
-msgstr ""
+msgstr "Върни"
 
 #: src/webui/static/app/status.js:407 src/webui/static/app/status.js:427
 msgid "Unknown"
-msgstr ""
+msgstr "Неизвестен"
 
 #: src/webui/static/app/timeshift.js:71
 msgid "Unlimited size"
@@ -1390,7 +1391,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:90 src/webui/static/app/status.js:559
 msgid "Username"
-msgstr ""
+msgstr "Потребител"
 
 #: src/webui/static/app/esfilter.js:51
 msgid "Video Stream Filter"
@@ -1414,7 +1415,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:346
 msgid "Weight"
-msgstr ""
+msgstr "Тежест"
 
 #: src/webui/static/app/dvr.js:31
 msgid "Will be skipped"
@@ -1443,7 +1444,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:557
 msgid "logout"
-msgstr ""
+msgstr "изход"
 
 #: src/webui/static/app/idnode.js:300 src/webui/static/app/idnode.js:302
 #: src/webui/static/app/epg.js:421 src/webui/static/app/epg.js:424
