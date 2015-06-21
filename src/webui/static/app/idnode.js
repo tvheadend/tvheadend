@@ -1266,7 +1266,7 @@ tvheadend.idnode_grid = function(panel, conf)
                             });
                             p.setSize(800, 600);
                             var w = new Ext.Window({
-                                title: _('Edit') + ' ' + conf.titleS,
+                                title: String.format(_('Edit {0}'), conf.titleS),
                                 iconCls: 'edit',
                                 layout: 'fit',
                                 autoWidth: true,
@@ -1290,7 +1290,7 @@ tvheadend.idnode_grid = function(panel, conf)
                                     var c = {win: w};
                                     var p = tvheadend.idnode_editor(d[0], c);
                                     w = new Ext.Window({
-                                        title: _('Edit') + ' ' + conf.titleS,
+                                        title: String.format(_('Edit {0}'), conf.titleS),
                                         iconCls: 'edit',
                                         layout: 'fit',
                                         autoWidth: true,
