@@ -1,34 +1,32 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # PiterEL <piotr.kuchciak@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:34+0200\n"
-"PO-Revision-Date: 2015-06-22 12:32+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/"
-"language/pl/)\n"
-"Language: pl\n"
+"POT-Creation-Date: 2015-06-22 14:59+0200\n"
+"PO-Revision-Date: 2015-06-22 13:23+0000\n"
+"Last-Translator: PiterEL <piotr.kuchciak@gmail.com>\n"
+"Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
-"|| n%100>=20) ? 1 : 2);\n"
+"Language: pl\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: src/webui/static/app/tvheadend.js:102
 msgid " {0} - {1} of {2}"
 msgstr "{0} - {1} z {2}"
 
-#: src/webui/static/app/i18n-post.js:121
+#: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:88
+#: src/webui/static/app/i18n-post.js:106
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
 msgstr ""
 
@@ -36,7 +34,7 @@ msgstr ""
 msgid "(Clear filter)"
 msgstr "(Czyść filtr)"
 
-#: src/webui/static/app/i18n-post.js:191
+#: src/webui/static/app/i18n-post.js:205
 msgid "(None)"
 msgstr ""
 
@@ -44,55 +42,55 @@ msgstr ""
 msgid "(default DVR Profile)"
 msgstr "(domyślny Profil DVR)"
 
-#: src/webui/static/app/i18n-post.js:56
+#: src/webui/static/app/i18n-post.js:59
 msgid "0 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:206
+#: src/webui/static/app/i18n-post.js:219
 msgid "0,000.00#NumberColumn"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:57
+#: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:66
+#: src/webui/static/app/i18n-post.js:69
 msgid "10 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:67
+#: src/webui/static/app/i18n-post.js:70
 msgid "11 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:58
+#: src/webui/static/app/i18n-post.js:61
 msgid "2 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:59
+#: src/webui/static/app/i18n-post.js:62
 msgid "3 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:60
+#: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:61
+#: src/webui/static/app/i18n-post.js:64
 msgid "5 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:62
+#: src/webui/static/app/i18n-post.js:65
 msgid "6 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:63
+#: src/webui/static/app/i18n-post.js:66
 msgid "7 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:64
+#: src/webui/static/app/i18n-post.js:67
 msgid "8 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:65
+#: src/webui/static/app/i18n-post.js:68
 msgid "9 #monthNumber"
 msgstr ""
 
@@ -137,7 +135,7 @@ msgstr "Dodaj nowy wpis"
 msgid "Advanced Settings"
 msgstr "Zaawansowane ustawienia"
 
-#: src/webui/static/app/i18n-post.js:260
+#: src/webui/static/app/i18n-post.js:273
 msgid "After"
 msgstr ""
 
@@ -161,11 +159,11 @@ msgstr "Wszystko"
 msgid "All days"
 msgstr "Wszystkie dni"
 
-#: src/webui/static/app/i18n-post.js:40 src/webui/static/app/i18n-post.js:59
+#: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:25 src/webui/static/app/i18n-post.js:40
+#: src/webui/static/app/i18n-post.js:23
 msgid "April"
 msgstr ""
 
@@ -185,11 +183,11 @@ msgstr "Filtr Strumienia Audio"
 msgid "Audio Stream Filters"
 msgstr "Filtry Strumieni Audio"
 
-#: src/webui/static/app/i18n-post.js:44 src/webui/static/app/i18n-post.js:63
+#: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:29 src/webui/static/app/i18n-post.js:44
+#: src/webui/static/app/i18n-post.js:27
 msgid "August"
 msgstr ""
 
@@ -225,7 +223,7 @@ msgstr "Monitor przepustowości"
 msgid "Basic Settings"
 msgstr "Podstawowe ustawienia"
 
-#: src/webui/static/app/i18n-post.js:261
+#: src/webui/static/app/i18n-post.js:274
 msgid "Before"
 msgstr ""
 
@@ -263,7 +261,7 @@ msgstr "Filtr Strumienia CA"
 
 #: src/webui/static/app/esfilter.js:128
 msgid "CA Stream Filters"
-msgstr "Filtry Strumieni CA"
+msgstr "Filtry strumieni CA"
 
 #: src/webui/static/app/mpegts.js:189
 msgid "CAIDS: "
@@ -273,7 +271,7 @@ msgstr "CAIDS:"
 msgid "CAs"
 msgstr "CAs"
 
-#: src/webui/static/app/i18n-post.js:93 src/webui/static/app/i18n-post.js:122
+#: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:880
 msgid "Cancel"
 msgstr "Anuluj"
@@ -323,7 +321,7 @@ msgstr "Kanały"
 msgid "Check availability"
 msgstr "Sprawdź dostępność"
 
-#: src/webui/static/app/i18n-post.js:118
+#: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
 msgstr ""
 
@@ -347,7 +345,7 @@ msgstr "Wyczyścić statystyki dla wybranego wejścia?"
 msgid "Client Name"
 msgstr "Nazwa Klienta"
 
-#: src/webui/static/app/i18n-post.js:186
+#: src/webui/static/app/i18n-post.js:200
 msgid "Columns"
 msgstr ""
 
@@ -430,7 +428,7 @@ msgstr "DVB Skan Plików"
 
 #: src/webui/static/app/config.js:78
 msgid "DVB scan files path"
-msgstr "Scieżka DVB skanu plików"
+msgstr "DVB ścieżka skanowania plików"
 
 #: src/webui/static/app/epg.js:307 src/webui/static/app/dvr.js:459
 msgid "DVR"
@@ -464,11 +462,11 @@ msgstr "DVR-zakończone nagrania"
 msgid "DVR-Upcoming/Current Recordings"
 msgstr "DVR-nadchodzące/obecne nagrania"
 
-#: src/webui/static/app/i18n-post.js:48 src/webui/static/app/i18n-post.js:67
+#: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:33 src/webui/static/app/i18n-post.js:48
+#: src/webui/static/app/i18n-post.js:31
 msgid "December"
 msgstr ""
 
@@ -517,7 +515,7 @@ msgstr "Profil Cyfrowej Nagrywarki Wideo"
 msgid "Digital Video Recorder Profiles"
 msgstr "Profile cyfrowej nagrywarki wideo"
 
-#: src/webui/static/app/i18n-post.js:166 src/webui/static/app/i18n-post.js:167
+#: src/webui/static/app/i18n-post.js:180 src/webui/static/app/i18n-post.js:181
 #: src/webui/static/app/epggrab.js:47
 msgid "Disabled"
 msgstr "Wyłączony"
@@ -526,7 +524,7 @@ msgstr "Wyłączony"
 msgid "Discover SAT>IP servers"
 msgstr "Odkryj serwery SAT>IP"
 
-#: src/webui/static/app/i18n-post.js:136
+#: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
 msgstr ""
 
@@ -623,7 +621,7 @@ msgstr "Włączony"
 msgid "End Time"
 msgstr "Czas zakończenia"
 
-#: src/webui/static/app/i18n-post.js:246 src/webui/static/app/i18n-post.js:252
+#: src/webui/static/app/i18n-post.js:259 src/webui/static/app/i18n-post.js:265
 msgid "Enter Filter Text..."
 msgstr ""
 
@@ -687,11 +685,11 @@ msgstr "Nie udane Nagranie"
 msgid "Failed Recordings"
 msgstr "Nie udane nagrania"
 
-#: src/webui/static/app/i18n-post.js:38 src/webui/static/app/i18n-post.js:57
+#: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:23 src/webui/static/app/i18n-post.js:38
+#: src/webui/static/app/i18n-post.js:21
 msgid "February"
 msgstr ""
 
@@ -715,7 +713,7 @@ msgstr "Filtr czasu trwania"
 msgid "Filter tag..."
 msgstr "Filtr tagu"
 
-#: src/webui/static/app/i18n-post.js:235
+#: src/webui/static/app/i18n-post.js:248
 msgid "Filters"
 msgstr ""
 
@@ -727,7 +725,7 @@ msgstr "Zakończone Nagranie"
 msgid "Finished Recordings"
 msgstr "Zakończone nagrania"
 
-#: src/webui/static/app/i18n-post.js:131
+#: src/webui/static/app/i18n-post.js:146
 msgid "First Page"
 msgstr "Pierwsza Strona"
 
@@ -743,7 +741,11 @@ msgstr "Wymuś początkowe skanowanie EPG przy starcie"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "Wymuś nowe skanowanie (wszystkie muxy) dla wybranych sieci"
 
-#: src/webui/static/app/i18n-post.js:80
+#: src/webui/static/app/i18n-post.js:98
+msgid "Fri"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:88
 msgid "Friday"
 msgstr ""
 
@@ -771,7 +773,7 @@ msgstr "Ogólna Konfiguracja"
 msgid "Genre"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:192
+#: src/webui/static/app/i18n-post.js:206
 msgid "Group By This Field"
 msgstr ""
 
@@ -816,7 +818,7 @@ msgstr "Zignorowane"
 
 #: src/webui/static/app/config.js:212
 msgid "Image Caching"
-msgstr "Buforowanie Obrazów"
+msgstr "Buforowanie obrazów"
 
 #: src/webui/static/app/config.js:417
 msgid "Imagecache save failed"
@@ -842,27 +844,27 @@ msgstr "Wejście (kb/s)"
 msgid "Internal Grabber"
 msgstr "Wewnętrzny Grabber"
 
-#: src/webui/static/app/i18n-post.js:37 src/webui/static/app/i18n-post.js:56
+#: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:22 src/webui/static/app/i18n-post.js:37
+#: src/webui/static/app/i18n-post.js:20
 msgid "January"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:43 src/webui/static/app/i18n-post.js:62
+#: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:28 src/webui/static/app/i18n-post.js:43
+#: src/webui/static/app/i18n-post.js:26
 msgid "July"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:42 src/webui/static/app/i18n-post.js:61
+#: src/webui/static/app/i18n-post.js:40
 msgid "Jun"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:27 src/webui/static/app/i18n-post.js:42
+#: src/webui/static/app/i18n-post.js:25
 msgid "June"
 msgstr ""
 
@@ -870,7 +872,7 @@ msgstr ""
 msgid "Language Settings"
 msgstr "Ustawienia Języków"
 
-#: src/webui/static/app/i18n-post.js:134
+#: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
 msgstr "Ostatnia Strona"
 
@@ -878,8 +880,8 @@ msgstr "Ostatnia Strona"
 msgid "Live TV Player"
 msgstr "Player TV na żywo"
 
-#: src/webui/static/app/i18n-post.js:6 src/webui/static/app/i18n-post.js:18
-#: src/webui/static/app/i18n-post.js:178 src/webui/static/app/epg.js:607
+#: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
+#: src/webui/static/app/i18n-post.js:192 src/webui/static/app/epg.js:607
 #: src/webui/static/app/epg.js:630 src/webui/static/app/epg.js:654
 #: src/webui/static/app/epg.js:675 src/webui/static/app/tvheadend.js:198
 #: src/webui/static/app/tvheadend.js:236
@@ -926,11 +928,11 @@ msgstr "Zamapowane"
 msgid "Mapping services..."
 msgstr "Mapowanie usług..."
 
-#: src/webui/static/app/i18n-post.js:39 src/webui/static/app/i18n-post.js:58
+#: src/webui/static/app/i18n-post.js:37
 msgid "Mar"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:22
 msgid "March"
 msgstr ""
 
@@ -950,8 +952,7 @@ msgstr "Max. rozmiar (MB)"
 msgid "Maximum {0} item(s) allowed"
 msgstr "Maksymalna {0} pozyca(ji) dozwolona"
 
-#: src/webui/static/app/i18n-post.js:26 src/webui/static/app/i18n-post.js:41
-#: src/webui/static/app/i18n-post.js:60
+#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
 msgid "May"
 msgstr ""
 
@@ -972,7 +973,11 @@ msgstr "Minimalna {0} pozycja(ji) wymagana"
 msgid "Module"
 msgstr "Moduł"
 
-#: src/webui/static/app/i18n-post.js:76
+#: src/webui/static/app/i18n-post.js:94
+msgid "Mon"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
 msgstr ""
 
@@ -1037,19 +1042,19 @@ msgstr "Sieć"
 msgid "Networks"
 msgstr "Sieci"
 
-#: src/webui/static/app/i18n-post.js:116
+#: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:133
+#: src/webui/static/app/i18n-post.js:148
 msgid "Next Page"
 msgstr "Następna Strona"
 
-#: src/webui/static/app/i18n-post.js:95 src/webui/static/app/i18n-post.js:241
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:254
 msgid "No"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:137
+#: src/webui/static/app/i18n-post.js:152
 msgid "No data to display"
 msgstr ""
 
@@ -1074,11 +1079,11 @@ msgstr "Żaden"
 msgid "Not set"
 msgstr "Nie ustawiony"
 
-#: src/webui/static/app/i18n-post.js:47 src/webui/static/app/i18n-post.js:66
+#: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:32 src/webui/static/app/i18n-post.js:47
+#: src/webui/static/app/i18n-post.js:30
 msgid "November"
 msgstr ""
 
@@ -1094,15 +1099,15 @@ msgstr "Numer w dół"
 msgid "Number Up"
 msgstr "Numer w górę"
 
-#: src/webui/static/app/i18n-post.js:92
+#: src/webui/static/app/i18n-post.js:110
 msgid "OK"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:46 src/webui/static/app/i18n-post.js:65
+#: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:31 src/webui/static/app/i18n-post.js:46
+#: src/webui/static/app/i18n-post.js:29
 msgid "October"
 msgstr ""
 
@@ -1116,7 +1121,7 @@ msgstr "Inny Filtr Strumienia"
 
 #: src/webui/static/app/esfilter.js:146
 msgid "Other Stream Filters"
-msgstr "Inne Filtry Przesyłu"
+msgstr "Inne filtry strumieni"
 
 #: src/webui/static/app/status.js:708
 msgid "Out"
@@ -1138,7 +1143,7 @@ msgstr "Over-the-air Grabbers"
 msgid "PER"
 msgstr "PER"
 
-#: src/webui/static/app/i18n-post.js:129
+#: src/webui/static/app/i18n-post.js:144
 msgid "Page"
 msgstr "Strona"
 
@@ -1198,7 +1203,7 @@ msgstr "Odtwórz program"
 msgid "Play this program"
 msgstr "Odtwórz ten program"
 
-#: src/webui/static/app/i18n-post.js:142
+#: src/webui/static/app/i18n-post.js:156
 msgid "Please Wait..."
 msgstr ""
 
@@ -1206,11 +1211,11 @@ msgstr ""
 msgid "Prefer picons over channel name"
 msgstr "Preferuj picony zamiast nazwy kanałów"
 
-#: src/webui/static/app/i18n-post.js:117
+#: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:132
+#: src/webui/static/app/i18n-post.js:147
 msgid "Previous Page"
 msgstr "Poprzednia Strona"
 
@@ -1262,7 +1267,7 @@ msgstr "Nagrywanie"
 msgid "Recording details"
 msgstr "Szczegóły nagrania"
 
-#: src/webui/static/app/i18n-post.js:135
+#: src/webui/static/app/i18n-post.js:150
 msgid "Refresh"
 msgstr "Odśwież"
 
@@ -1294,7 +1299,11 @@ msgstr "Serwer SAT>IP"
 msgid "SNR"
 msgstr "SNR"
 
-#: src/webui/static/app/i18n-post.js:81
+#: src/webui/static/app/i18n-post.js:99
+msgid "Sat"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
 msgstr ""
 
@@ -1358,11 +1367,11 @@ msgstr "Wybierz profil strumienia..."
 msgid "Selected"
 msgstr "Wybrane"
 
-#: src/webui/static/app/i18n-post.js:45 src/webui/static/app/i18n-post.js:64
+#: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:30 src/webui/static/app/i18n-post.js:45
+#: src/webui/static/app/i18n-post.js:28
 msgid "September"
 msgstr ""
 
@@ -1394,7 +1403,7 @@ msgstr "Usługi"
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: src/webui/static/app/i18n-post.js:193
+#: src/webui/static/app/i18n-post.js:207
 msgid "Show in Groups"
 msgstr ""
 
@@ -1410,11 +1419,11 @@ msgstr "Pokaż Hasła"
 msgid "Signal Strength"
 msgstr "Siła Sygnału"
 
-#: src/webui/static/app/i18n-post.js:184
+#: src/webui/static/app/i18n-post.js:198
 msgid "Sort Ascending"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:185
+#: src/webui/static/app/i18n-post.js:199
 msgid "Sort Descending"
 msgstr ""
 
@@ -1482,7 +1491,7 @@ msgstr "Nazwa Profilu Strumienia"
 
 #: src/webui/static/app/esfilter.js:24
 msgid "Stream Profiles"
-msgstr "Profile Strumieni"
+msgstr "Profile strumieni"
 
 #: src/webui/static/app/epg.js:487
 msgid "SubTitle"
@@ -1506,9 +1515,13 @@ msgstr "Filtr Strumienia Napisów"
 
 #: src/webui/static/app/esfilter.js:109
 msgid "Subtitle Stream Filters"
-msgstr "Filtry Strumieni Napisów"
+msgstr "Filtry strumieni napisów"
 
-#: src/webui/static/app/i18n-post.js:75
+#: src/webui/static/app/i18n-post.js:93
+msgid "Sun"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
 msgstr ""
 
@@ -1538,57 +1551,55 @@ msgstr "Filtr Strumienia Teletextu"
 
 #: src/webui/static/app/esfilter.js:90
 msgid "Teletext Stream Filters"
-msgstr "Filtry Strumieni Teletextu"
+msgstr "Filtry strumieni teletextu"
 
-#: src/webui/static/app/i18n-post.js:168
+#: src/webui/static/app/i18n-post.js:182
 msgid "The date in this field must be after {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:169
+#: src/webui/static/app/i18n-post.js:183
 msgid "The date in this field must be before {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:150
+#: src/webui/static/app/i18n-post.js:164
 msgid "The maximum length for this field is {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:160
+#: src/webui/static/app/i18n-post.js:174
 msgid "The maximum value for this field is {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:149
+#: src/webui/static/app/i18n-post.js:163
 msgid "The minimum length for this field is {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:216
+#: src/webui/static/app/i18n-post.js:229
 msgid "The time in this field must be equal to or after {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:217
+#: src/webui/static/app/i18n-post.js:230
 msgid "The time in this field must be equal to or before {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:145
+#: src/webui/static/app/i18n-post.js:159
 msgid "The value in this field is invalid"
 msgstr ""
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
-msgstr ""
-"Wydaje się ze problem jest z aktualizacją na żywo Tvheadend. Próba ponownego "
-"połączenia..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "Wydaje się ze problem jest z aktualizacją na żywo Tvheadend. Próba ponownego połączenia..."
 
-#: src/webui/static/app/i18n-post.js:111
+#: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:110
+#: src/webui/static/app/i18n-post.js:126
 msgid "This date is before the minimum date"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:151
+#: src/webui/static/app/i18n-post.js:165
 msgid "This field is required"
 msgstr ""
 
@@ -1596,11 +1607,13 @@ msgstr ""
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programmes to record that match this query"
-msgstr ""
-"To stworzy automatyczną regułę nieustannie skanującą EPG dla programów do "
-"nagrywania na zapytanie"
+msgstr "To stworzy automatyczną regułę nieustannie skanującą EPG dla programów do nagrywania na zapytanie"
 
-#: src/webui/static/app/i18n-post.js:79
+#: src/webui/static/app/i18n-post.js:97
+msgid "Thu"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
 msgstr ""
 
@@ -1614,7 +1627,7 @@ msgstr "Harmonogramy"
 
 #: src/webui/static/app/config.js:141
 msgid "Time Update"
-msgstr "Aktualizuj Czas"
+msgstr "Aktualizacja czasu"
 
 #: src/webui/static/app/timeshift.js:150
 msgid "Timeshift"
@@ -1633,7 +1646,7 @@ msgstr "Opcje Timeshift"
 msgid "Title"
 msgstr "Tytuł"
 
-#: src/webui/static/app/i18n-post.js:109
+#: src/webui/static/app/i18n-post.js:125
 msgid "Today"
 msgstr ""
 
@@ -1649,7 +1662,11 @@ msgstr "Wyzwól OTA EPG Grabber"
 msgid "Triggering..."
 msgstr "Wyzwalanie..."
 
-#: src/webui/static/app/i18n-post.js:77
+#: src/webui/static/app/i18n-post.js:95
+msgid "Tue"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
 msgstr ""
 
@@ -1732,7 +1749,7 @@ msgstr "Filtr Strumienia Wideo"
 
 #: src/webui/static/app/esfilter.js:52
 msgid "Video Stream Filters"
-msgstr "Filtry Strumieni Wideo"
+msgstr "Filtry strumieni wideo"
 
 #: src/webui/static/app/tvheadend.js:314
 msgid "Volume"
@@ -1746,7 +1763,11 @@ msgstr "Oglądaj TV"
 msgid "Watch TV online in the window by web"
 msgstr "Oglądaj TV online w oknie przeglądarki web"
 
-#: src/webui/static/app/i18n-post.js:78
+#: src/webui/static/app/i18n-post.js:96
+msgid "Wed"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
 msgstr ""
 
@@ -1758,7 +1779,7 @@ msgstr "Waga"
 msgid "Will be skipped"
 msgstr "Zostaną pominięte"
 
-#: src/webui/static/app/i18n-post.js:94 src/webui/static/app/i18n-post.js:240
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:253
 msgid "Yes"
 msgstr ""
 
@@ -1766,11 +1787,11 @@ msgstr ""
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "Musisz podać wartość - wykorzystaj notacje ósemkową chmod, np. 0664"
 
-#: src/webui/static/app/i18n-post.js:225
+#: src/webui/static/app/i18n-post.js:238
 msgid "You must select at least one item in this group"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:230
+#: src/webui/static/app/i18n-post.js:243
 msgid "You must select one item in this group"
 msgstr ""
 
@@ -1782,18 +1803,18 @@ msgstr "ponieważ jest powtórzenie:"
 msgid "comet failure"
 msgstr "awaria komety"
 
-#: src/webui/static/app/i18n-post.js:200
+#: src/webui/static/app/i18n-post.js:213
 msgid "false"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:219
+#: src/webui/static/app/i18n-post.js:232
 msgid "g:i A#TimeField"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:220
+#: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
@@ -1809,27 +1830,27 @@ msgstr "login"
 msgid "logout"
 msgstr "Wyloguj"
 
-#: src/webui/static/app/i18n-post.js:211
+#: src/webui/static/app/i18n-post.js:224
 msgid "m/d/Y#DateColumn"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:262
+#: src/webui/static/app/i18n-post.js:275
 msgid "m/d/Y#DateFilter"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:103
+#: src/webui/static/app/i18n-post.js:120
 msgid "m/d/Y#Format.date"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:172
+#: src/webui/static/app/i18n-post.js:186
 msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:171
+#: src/webui/static/app/i18n-post.js:185
 msgid "m/d/y#DateField"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:120
+#: src/webui/static/app/i18n-post.js:136
 msgid "m/d/y#DatePicker"
 msgstr ""
 
@@ -1839,30 +1860,30 @@ msgstr ""
 msgid "min"
 msgstr "min"
 
-#: src/webui/static/app/i18n-post.js:130
+#: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
 msgstr "z {0}"
 
-#: src/webui/static/app/i18n-post.js:199
+#: src/webui/static/app/i18n-post.js:212
 msgid "true"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:119
+#: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:170
+#: src/webui/static/app/i18n-post.js:184
 msgid "{0} is not a valid date - it must be in the format {1}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:161
+#: src/webui/static/app/i18n-post.js:175
 msgid "{0} is not a valid number"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:218
+#: src/webui/static/app/i18n-post.js:231
 msgid "{0} is not a valid time"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:15
+#: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr ""

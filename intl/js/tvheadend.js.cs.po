@@ -1,99 +1,98 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Jaroslav Kysela, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:34+0200\n"
-"PO-Revision-Date: 2015-06-22 12:32+0000\n"
+"POT-Creation-Date: 2015-06-22 14:59+0200\n"
+"PO-Revision-Date: 2015-06-22 13:20+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
-"cs/)\n"
-"Language: cs\n"
+"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: cs\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
 #: src/webui/static/app/tvheadend.js:102
 msgid " {0} - {1} of {2}"
 msgstr " {0} - {1} z {2}"
 
-#: src/webui/static/app/i18n-post.js:121
+#: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
-msgstr ""
+msgstr "&#160;OK&#160;"
 
-#: src/webui/static/app/i18n-post.js:88
+#: src/webui/static/app/i18n-post.js:106
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
-msgstr ""
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
 msgid "(Clear filter)"
 msgstr "(Prázdný filtr)"
 
-#: src/webui/static/app/i18n-post.js:191
+#: src/webui/static/app/i18n-post.js:205
 msgid "(None)"
-msgstr ""
+msgstr "(Žádné)"
 
 #: src/webui/static/app/epg.js:205
 msgid "(default DVR Profile)"
 msgstr "(výchozí DVR profil)"
 
-#: src/webui/static/app/i18n-post.js:56
-msgid "0 #monthNumber"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:206
-msgid "0,000.00#NumberColumn"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:57
-msgid "1 #monthNumber"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:66
-msgid "10 #monthNumber"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:67
-msgid "11 #monthNumber"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:58
-msgid "2 #monthNumber"
-msgstr ""
-
 #: src/webui/static/app/i18n-post.js:59
-msgid "3 #monthNumber"
-msgstr ""
+msgid "0 #monthNumber"
+msgstr "0 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:219
+msgid "0,000.00#NumberColumn"
+msgstr "0.000,00#NumberColumn"
 
 #: src/webui/static/app/i18n-post.js:60
-msgid "4 #monthNumber"
-msgstr ""
+msgid "1 #monthNumber"
+msgstr "1 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:69
+msgid "10 #monthNumber"
+msgstr "10 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:70
+msgid "11 #monthNumber"
+msgstr "11 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:61
-msgid "5 #monthNumber"
-msgstr ""
+msgid "2 #monthNumber"
+msgstr "2 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:62
-msgid "6 #monthNumber"
-msgstr ""
+msgid "3 #monthNumber"
+msgstr "3 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:63
-msgid "7 #monthNumber"
-msgstr ""
+msgid "4 #monthNumber"
+msgstr "4 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:64
-msgid "8 #monthNumber"
-msgstr ""
+msgid "5 #monthNumber"
+msgstr "5 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:65
+msgid "6 #monthNumber"
+msgstr "6 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:66
+msgid "7 #monthNumber"
+msgstr "7 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:67
+msgid "8 #monthNumber"
+msgstr "8 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:68
 msgid "9 #monthNumber"
-msgstr ""
+msgstr "9 #monthNumber"
 
 #: src/webui/static/app/dvr.js:197
 msgid "Abort"
@@ -136,9 +135,9 @@ msgstr "Přidej novou položku"
 msgid "Advanced Settings"
 msgstr "Pokročilé nastavení"
 
-#: src/webui/static/app/i18n-post.js:260
+#: src/webui/static/app/i18n-post.js:273
 msgid "After"
-msgstr ""
+msgstr "Po"
 
 #: src/webui/static/app/mpegts.js:210
 msgid "After filtering and reordering (without PCR and PMT)"
@@ -160,13 +159,13 @@ msgstr "Vše"
 msgid "All days"
 msgstr "Všechny dny"
 
-#: src/webui/static/app/i18n-post.js:40 src/webui/static/app/i18n-post.js:59
+#: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
-msgstr ""
+msgstr "Dub"
 
-#: src/webui/static/app/i18n-post.js:25 src/webui/static/app/i18n-post.js:40
+#: src/webui/static/app/i18n-post.js:23
 msgid "April"
-msgstr ""
+msgstr "Duben"
 
 #: src/webui/static/app/chconf.js:158
 msgid "Assign Number"
@@ -184,13 +183,13 @@ msgstr "Filter pro audio"
 msgid "Audio Stream Filters"
 msgstr "Filtry pro audio"
 
-#: src/webui/static/app/i18n-post.js:44 src/webui/static/app/i18n-post.js:63
+#: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
-msgstr ""
+msgstr "Srp"
 
-#: src/webui/static/app/i18n-post.js:29 src/webui/static/app/i18n-post.js:44
+#: src/webui/static/app/i18n-post.js:27
 msgid "August"
-msgstr ""
+msgstr "Srpen"
 
 #: src/webui/static/app/epg.js:1016
 msgid "Auto Recorder"
@@ -202,7 +201,7 @@ msgstr "Automatické obnovení"
 
 #: src/webui/static/app/epg.js:223
 msgid "Autorec"
-msgstr ""
+msgstr "Auto-rekordér"
 
 #: src/webui/static/app/config.js:109
 msgid "Available"
@@ -224,9 +223,9 @@ msgstr "Monitor šířky pásma"
 msgid "Basic Settings"
 msgstr "Základní nastavení"
 
-#: src/webui/static/app/i18n-post.js:261
+#: src/webui/static/app/i18n-post.js:274
 msgid "Before"
-msgstr ""
+msgstr "Před"
 
 #: src/webui/static/app/servicemapper.js:122
 msgid "Begin mapping"
@@ -242,7 +241,7 @@ msgstr "Bukety"
 
 #: src/webui/static/app/epg.js:236
 msgid "Broadcast Details"
-msgstr ""
+msgstr "Detaily o vysílání"
 
 #: src/webui/static/app/epg.js:335
 msgid "Broadcast details"
@@ -272,7 +271,7 @@ msgstr "CAID kódy: "
 msgid "CAs"
 msgstr "CA kódy"
 
-#: src/webui/static/app/i18n-post.js:93 src/webui/static/app/i18n-post.js:122
+#: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:880
 msgid "Cancel"
 msgstr "Zruš"
@@ -322,9 +321,9 @@ msgstr "Programy"
 msgid "Check availability"
 msgstr "Kontrolovat dostupnost"
 
-#: src/webui/static/app/i18n-post.js:118
+#: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
-msgstr ""
+msgstr "Vyberte měsíc (Control+nahoru/dolů pro změnu roku)"
 
 #: src/webui/static/app/config.js:315
 msgid "Clean image (icon) cache"
@@ -346,9 +345,9 @@ msgstr "Vymažat statistiku pro vybraný vstup?"
 msgid "Client Name"
 msgstr "Název klienta"
 
-#: src/webui/static/app/i18n-post.js:186
+#: src/webui/static/app/i18n-post.js:200
 msgid "Columns"
-msgstr ""
+msgstr "Sloupce"
 
 #: src/webui/static/app/dvr.js:53
 msgid "Comment"
@@ -390,19 +389,13 @@ msgstr "Vytvoř Auto-Rekordér"
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programmes that matches the current query."
-msgstr ""
-"Vytvoření nového automatického rekordéru tohoto programu na základě "
-"současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
-"která splňují dotaz."
+msgstr "Vytvoření nového automatického rekordéru tohoto programu na základě současného dotazu, který bude automaticky nahrávat všechny nové vysílání, která splňují dotaz."
 
 #: src/webui/static/app/epg.js:826
 msgid ""
 "Create an automatic recording entry that will record all future programmes "
 "that matches the current query."
-msgstr ""
-"Vytvoření nového automatického rekordéru tohoto programu na základě "
-"současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
-"která splňují dotaz."
+msgstr "Vytvoření nového automatického rekordéru tohoto programu na základě současného dotazu, který bude automaticky nahrávat všechny nové vysílání, která splňují dotaz."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -469,13 +462,13 @@ msgstr "Rekordér dokončené záznamy"
 msgid "DVR-Upcoming/Current Recordings"
 msgstr "Rekordér budoucí/současné záznamy"
 
-#: src/webui/static/app/i18n-post.js:48 src/webui/static/app/i18n-post.js:67
+#: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
-msgstr ""
+msgstr "Pro"
 
-#: src/webui/static/app/i18n-post.js:33 src/webui/static/app/i18n-post.js:48
+#: src/webui/static/app/i18n-post.js:31
 msgid "December"
-msgstr ""
+msgstr "Prosinec"
 
 #: src/webui/static/app/config.js:101
 msgid "Default Language(s)"
@@ -522,7 +515,7 @@ msgstr "Profil digitální video rekordéru"
 msgid "Digital Video Recorder Profiles"
 msgstr "Profily digitálního video rekordéru"
 
-#: src/webui/static/app/i18n-post.js:166 src/webui/static/app/i18n-post.js:167
+#: src/webui/static/app/i18n-post.js:180 src/webui/static/app/i18n-post.js:181
 #: src/webui/static/app/epggrab.js:47
 msgid "Disabled"
 msgstr "Zakázáno"
@@ -531,9 +524,9 @@ msgstr "Zakázáno"
 msgid "Discover SAT>IP servers"
 msgstr "Vyhledej SAT>IP servery"
 
-#: src/webui/static/app/i18n-post.js:136
+#: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
-msgstr ""
+msgstr "Zobrazuji {0} - {1} z {2}"
 
 #: src/webui/static/app/dvr.js:215
 msgid "Do you really want to abort/unschedule the selection?"
@@ -628,9 +621,9 @@ msgstr "Povoleno"
 msgid "End Time"
 msgstr "Konec"
 
-#: src/webui/static/app/i18n-post.js:246 src/webui/static/app/i18n-post.js:252
+#: src/webui/static/app/i18n-post.js:259 src/webui/static/app/i18n-post.js:265
 msgid "Enter Filter Text..."
-msgstr ""
+msgstr "Vložte text pro filtr..."
 
 #: src/webui/static/app/epg.js:494
 msgid "Episode"
@@ -692,13 +685,13 @@ msgstr "Nezdařený záznam"
 msgid "Failed Recordings"
 msgstr "Nezdařené záznamy"
 
-#: src/webui/static/app/i18n-post.js:38 src/webui/static/app/i18n-post.js:57
+#: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
-msgstr ""
+msgstr "Úno"
 
-#: src/webui/static/app/i18n-post.js:23 src/webui/static/app/i18n-post.js:38
+#: src/webui/static/app/i18n-post.js:21
 msgid "February"
-msgstr ""
+msgstr "Únor"
 
 #: src/webui/static/app/dvr.js:51
 msgid "File size"
@@ -720,9 +713,9 @@ msgstr "Filtruj dobu..."
 msgid "Filter tag..."
 msgstr "Filtruj štítek..."
 
-#: src/webui/static/app/i18n-post.js:235
+#: src/webui/static/app/i18n-post.js:248
 msgid "Filters"
-msgstr ""
+msgstr "Filtry"
 
 #: src/webui/static/app/dvr.js:317
 msgid "Finished Recording"
@@ -732,7 +725,7 @@ msgstr "Ukončený záznam"
 msgid "Finished Recordings"
 msgstr "Ukončené záznamy"
 
-#: src/webui/static/app/i18n-post.js:131
+#: src/webui/static/app/i18n-post.js:146
 msgid "First Page"
 msgstr "První stránka"
 
@@ -748,9 +741,13 @@ msgstr "Vynutit počáteční EPG scan po startu"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "Vynutit nový scan (všechny muxy) pro vybrané sítě"
 
-#: src/webui/static/app/i18n-post.js:80
+#: src/webui/static/app/i18n-post.js:98
+msgid "Fri"
+msgstr "Pát"
+
+#: src/webui/static/app/i18n-post.js:88
 msgid "Friday"
-msgstr ""
+msgstr "Pátek"
 
 #: src/webui/static/app/tvheadend.js:304
 msgid "Fullscreen"
@@ -776,9 +773,9 @@ msgstr "Základní konfigurace"
 msgid "Genre"
 msgstr "Styl"
 
-#: src/webui/static/app/i18n-post.js:192
+#: src/webui/static/app/i18n-post.js:206
 msgid "Group By This Field"
-msgstr ""
+msgstr "Seskup podle tohoto pole"
 
 #: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
 #: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
@@ -847,35 +844,35 @@ msgstr "Vstup (kb/s)"
 msgid "Internal Grabber"
 msgstr "Interní grabber"
 
-#: src/webui/static/app/i18n-post.js:37 src/webui/static/app/i18n-post.js:56
+#: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
-msgstr ""
+msgstr "Led"
 
-#: src/webui/static/app/i18n-post.js:22 src/webui/static/app/i18n-post.js:37
+#: src/webui/static/app/i18n-post.js:20
 msgid "January"
-msgstr ""
+msgstr "Leden"
 
-#: src/webui/static/app/i18n-post.js:43 src/webui/static/app/i18n-post.js:62
+#: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
-msgstr ""
+msgstr "Črn"
 
-#: src/webui/static/app/i18n-post.js:28 src/webui/static/app/i18n-post.js:43
+#: src/webui/static/app/i18n-post.js:26
 msgid "July"
-msgstr ""
+msgstr "Červen"
 
-#: src/webui/static/app/i18n-post.js:42 src/webui/static/app/i18n-post.js:61
+#: src/webui/static/app/i18n-post.js:40
 msgid "Jun"
-msgstr ""
+msgstr "Črc"
 
-#: src/webui/static/app/i18n-post.js:27 src/webui/static/app/i18n-post.js:42
+#: src/webui/static/app/i18n-post.js:25
 msgid "June"
-msgstr ""
+msgstr "Červenec"
 
 #: src/webui/static/app/config.js:113
 msgid "Language Settings"
 msgstr "Jazykové nastavení"
 
-#: src/webui/static/app/i18n-post.js:134
+#: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
 msgstr "Poslední stránka"
 
@@ -883,8 +880,8 @@ msgstr "Poslední stránka"
 msgid "Live TV Player"
 msgstr "Live TV Přehrávač"
 
-#: src/webui/static/app/i18n-post.js:6 src/webui/static/app/i18n-post.js:18
-#: src/webui/static/app/i18n-post.js:178 src/webui/static/app/epg.js:607
+#: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
+#: src/webui/static/app/i18n-post.js:192 src/webui/static/app/epg.js:607
 #: src/webui/static/app/epg.js:630 src/webui/static/app/epg.js:654
 #: src/webui/static/app/epg.js:675 src/webui/static/app/tvheadend.js:198
 #: src/webui/static/app/tvheadend.js:236
@@ -931,13 +928,13 @@ msgstr "Namapováno"
 msgid "Mapping services..."
 msgstr "Mapuji služby..."
 
-#: src/webui/static/app/i18n-post.js:39 src/webui/static/app/i18n-post.js:58
+#: src/webui/static/app/i18n-post.js:37
 msgid "Mar"
-msgstr ""
+msgstr "Bře"
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:22
 msgid "March"
-msgstr ""
+msgstr "Březen"
 
 #: src/webui/static/app/timeshift.js:44
 msgid "Max. Period (mins)"
@@ -955,10 +952,9 @@ msgstr "Max. velikost (MB)"
 msgid "Maximum {0} item(s) allowed"
 msgstr "Je dovoleno maximálně {0} položek"
 
-#: src/webui/static/app/i18n-post.js:26 src/webui/static/app/i18n-post.js:41
-#: src/webui/static/app/i18n-post.js:60
+#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
 msgid "May"
-msgstr ""
+msgstr "Kvě"
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -977,9 +973,13 @@ msgstr "Požadováno minimálně {0} položek"
 msgid "Module"
 msgstr "Modul"
 
-#: src/webui/static/app/i18n-post.js:76
+#: src/webui/static/app/i18n-post.js:94
+msgid "Mon"
+msgstr "Květen"
+
+#: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
-msgstr ""
+msgstr "Pondělí"
 
 #: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
 msgid "Move Down"
@@ -1042,21 +1042,21 @@ msgstr "Síť"
 msgid "Networks"
 msgstr "Sítě"
 
-#: src/webui/static/app/i18n-post.js:116
+#: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
-msgstr ""
+msgstr "Další měsíc (Control+doprava)"
 
-#: src/webui/static/app/i18n-post.js:133
+#: src/webui/static/app/i18n-post.js:148
 msgid "Next Page"
 msgstr "Další stránka"
 
-#: src/webui/static/app/i18n-post.js:95 src/webui/static/app/i18n-post.js:241
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:254
 msgid "No"
-msgstr ""
+msgstr "Ne"
 
-#: src/webui/static/app/i18n-post.js:137
+#: src/webui/static/app/i18n-post.js:152
 msgid "No data to display"
-msgstr ""
+msgstr "Žádná data k zobrazení"
 
 #: src/webui/static/app/dvr.js:117
 msgid "No days"
@@ -1079,13 +1079,13 @@ msgstr "Žádný"
 msgid "Not set"
 msgstr "Nenastaveno"
 
-#: src/webui/static/app/i18n-post.js:47 src/webui/static/app/i18n-post.js:66
+#: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
-msgstr ""
+msgstr "Říj"
 
-#: src/webui/static/app/i18n-post.js:32 src/webui/static/app/i18n-post.js:47
+#: src/webui/static/app/i18n-post.js:30
 msgid "November"
-msgstr ""
+msgstr "Říjen"
 
 #: src/webui/static/app/epg.js:522
 msgid "Number"
@@ -1099,17 +1099,17 @@ msgstr "Číslo dolů"
 msgid "Number Up"
 msgstr "Zvýšit číslo"
 
-#: src/webui/static/app/i18n-post.js:92
+#: src/webui/static/app/i18n-post.js:110
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
-#: src/webui/static/app/i18n-post.js:46 src/webui/static/app/i18n-post.js:65
+#: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
-msgstr ""
+msgstr "Lis"
 
-#: src/webui/static/app/i18n-post.js:31 src/webui/static/app/i18n-post.js:46
+#: src/webui/static/app/i18n-post.js:29
 msgid "October"
-msgstr ""
+msgstr "Listopad"
 
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
@@ -1143,7 +1143,7 @@ msgstr "Over-the-air grabery"
 msgid "PER"
 msgstr "PER"
 
-#: src/webui/static/app/i18n-post.js:129
+#: src/webui/static/app/i18n-post.js:144
 msgid "Page"
 msgstr "Stránka"
 
@@ -1203,19 +1203,19 @@ msgstr "Přehraj program"
 msgid "Play this program"
 msgstr "Přehraj tento program"
 
-#: src/webui/static/app/i18n-post.js:142
+#: src/webui/static/app/i18n-post.js:156
 msgid "Please Wait..."
-msgstr ""
+msgstr "Prosím, čekejte..."
 
 #: src/webui/static/app/config.js:155
 msgid "Prefer picons over channel name"
 msgstr "Preferuj picony před názvy programů"
 
-#: src/webui/static/app/i18n-post.js:117
+#: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
-msgstr ""
+msgstr "Předchozí měsíc (Control+vlevo)"
 
-#: src/webui/static/app/i18n-post.js:132
+#: src/webui/static/app/i18n-post.js:147
 msgid "Previous Page"
 msgstr "Předchozí stránka"
 
@@ -1257,7 +1257,7 @@ msgstr "Zaznamenej vysílání"
 
 #: src/webui/static/app/epg.js:223
 msgid "Record series"
-msgstr ""
+msgstr "Série rekordéru"
 
 #: src/webui/static/app/tvheadend.js:425
 msgid "Recording"
@@ -1267,7 +1267,7 @@ msgstr "Nahrávání"
 msgid "Recording details"
 msgstr "Detaily nahrávání"
 
-#: src/webui/static/app/i18n-post.js:135
+#: src/webui/static/app/i18n-post.js:150
 msgid "Refresh"
 msgstr "Obnovit"
 
@@ -1299,9 +1299,13 @@ msgstr "SAT>IP Server"
 msgid "SNR"
 msgstr "SNR"
 
-#: src/webui/static/app/i18n-post.js:81
+#: src/webui/static/app/i18n-post.js:99
+msgid "Sat"
+msgstr "Sob"
+
+#: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
-msgstr ""
+msgstr "Sobota"
 
 #: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
 #: src/webui/static/app/idnode.js:1602
@@ -1363,13 +1367,13 @@ msgstr "Vybrat profil toku..."
 msgid "Selected"
 msgstr "Vybrané"
 
-#: src/webui/static/app/i18n-post.js:45 src/webui/static/app/i18n-post.js:64
+#: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
-msgstr ""
+msgstr "Zář"
 
-#: src/webui/static/app/i18n-post.js:30 src/webui/static/app/i18n-post.js:45
+#: src/webui/static/app/i18n-post.js:28
 msgid "September"
-msgstr ""
+msgstr "Září"
 
 #: src/webui/static/app/config.js:69
 msgid "Server"
@@ -1399,9 +1403,9 @@ msgstr "Služby"
 msgid "Settings"
 msgstr "Nastavení"
 
-#: src/webui/static/app/i18n-post.js:193
+#: src/webui/static/app/i18n-post.js:207
 msgid "Show in Groups"
-msgstr ""
+msgstr "Zobrazit ve skupinách"
 
 #: src/webui/static/app/idnode.js:1718
 msgid "Show or hide passwords"
@@ -1415,13 +1419,13 @@ msgstr "Ukázat hesla"
 msgid "Signal Strength"
 msgstr "Síla signálu"
 
-#: src/webui/static/app/i18n-post.js:184
+#: src/webui/static/app/i18n-post.js:198
 msgid "Sort Ascending"
-msgstr ""
+msgstr "Třídit vzestupně"
 
-#: src/webui/static/app/i18n-post.js:185
+#: src/webui/static/app/i18n-post.js:199
 msgid "Sort Descending"
-msgstr ""
+msgstr "Třídit sestupně"
 
 #: src/webui/static/app/epg.js:119
 msgid "Star Rating"
@@ -1513,9 +1517,13 @@ msgstr "Filtr toku podtitulků"
 msgid "Subtitle Stream Filters"
 msgstr "Filtry toků podtitulků"
 
-#: src/webui/static/app/i18n-post.js:75
+#: src/webui/static/app/i18n-post.js:93
+msgid "Sun"
+msgstr "Ned"
+
+#: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
-msgstr ""
+msgstr "Neděle"
 
 #: src/webui/static/app/chconf.js:197
 msgid "Swap Numbers"
@@ -1545,69 +1553,69 @@ msgstr "Filter toku teletext"
 msgid "Teletext Stream Filters"
 msgstr "Filtry toku teletext"
 
-#: src/webui/static/app/i18n-post.js:168
+#: src/webui/static/app/i18n-post.js:182
 msgid "The date in this field must be after {0}"
-msgstr ""
+msgstr "Datum v tomto poli musí být po {0}"
 
-#: src/webui/static/app/i18n-post.js:169
+#: src/webui/static/app/i18n-post.js:183
 msgid "The date in this field must be before {0}"
-msgstr ""
+msgstr "Datum v tomto poli musí být před {0}"
 
-#: src/webui/static/app/i18n-post.js:150
+#: src/webui/static/app/i18n-post.js:164
 msgid "The maximum length for this field is {0}"
-msgstr ""
+msgstr "Maximální velikost pro toto pole je {0}"
 
-#: src/webui/static/app/i18n-post.js:160
+#: src/webui/static/app/i18n-post.js:174
 msgid "The maximum value for this field is {0}"
-msgstr ""
+msgstr "Maximální hodnota pro toto pole je {0}"
 
-#: src/webui/static/app/i18n-post.js:149
+#: src/webui/static/app/i18n-post.js:163
 msgid "The minimum length for this field is {0}"
-msgstr ""
+msgstr "Minimální velikost pro toto pole je {0}"
 
-#: src/webui/static/app/i18n-post.js:216
+#: src/webui/static/app/i18n-post.js:229
 msgid "The time in this field must be equal to or after {0}"
-msgstr ""
+msgstr "Čas v tomto poli musí být shodný s nebo po {0}"
 
-#: src/webui/static/app/i18n-post.js:217
+#: src/webui/static/app/i18n-post.js:230
 msgid "The time in this field must be equal to or before {0}"
-msgstr ""
+msgstr " Čas v tomto poli musí být shodný nebo před {0}"
 
-#: src/webui/static/app/i18n-post.js:145
+#: src/webui/static/app/i18n-post.js:159
 msgid "The value in this field is invalid"
-msgstr ""
+msgstr "Hodnota v tomto poli je neplatná"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
-msgstr ""
-"Spojení s programem Tvheadend bylo ztraceno. Pokouším se ho opětovně "
-"navázat..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "Spojení s programem Tvheadend bylo ztraceno. Pokouším se ho opětovně navázat..."
 
-#: src/webui/static/app/i18n-post.js:111
+#: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
-msgstr ""
+msgstr "Tento datum je větší než maximální"
 
-#: src/webui/static/app/i18n-post.js:110
+#: src/webui/static/app/i18n-post.js:126
 msgid "This date is before the minimum date"
-msgstr ""
+msgstr "Tento datum je menší než minimální"
 
-#: src/webui/static/app/i18n-post.js:151
+#: src/webui/static/app/i18n-post.js:165
 msgid "This field is required"
-msgstr ""
+msgstr "Toto pole je povinné"
 
 #: src/webui/static/app/epg.js:1016
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programmes to record that match this query"
-msgstr ""
-"Toto vytoří automatický rekordér, který bude neustále scanovat elektronický "
-"průvodce programem pro shodu s tímto dotazem"
+msgstr "Toto vytoří automatický rekordér, který bude neustále scanovat elektronický průvodce programem pro shodu s tímto dotazem"
 
-#: src/webui/static/app/i18n-post.js:79
+#: src/webui/static/app/i18n-post.js:97
+msgid "Thu"
+msgstr "Čtv"
+
+#: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
-msgstr ""
+msgstr "Čtvrtek"
 
 #: src/webui/static/app/dvr.js:537
 msgid "Time Schedule"
@@ -1638,9 +1646,9 @@ msgstr "Timeshift volby"
 msgid "Title"
 msgstr "Název pořadu"
 
-#: src/webui/static/app/i18n-post.js:109
+#: src/webui/static/app/i18n-post.js:125
 msgid "Today"
-msgstr ""
+msgstr "Dnes"
 
 #: src/webui/static/app/status.js:375
 msgid "Transport Errors"
@@ -1654,9 +1662,13 @@ msgstr "Spustit OTA EPG graber"
 msgid "Triggering..."
 msgstr "Spouštím..."
 
-#: src/webui/static/app/i18n-post.js:77
+#: src/webui/static/app/i18n-post.js:95
+msgid "Tue"
+msgstr "Úte"
+
+#: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
-msgstr ""
+msgstr "Úterý"
 
 #: src/webui/static/app/epggrab.js:300
 msgid "Tune over-the-air EPG muxes to grab new events now"
@@ -1751,9 +1763,13 @@ msgstr "Sleduj TV"
 msgid "Watch TV online in the window by web"
 msgstr "Sleduj TV online v okně prohlížeče"
 
-#: src/webui/static/app/i18n-post.js:78
+#: src/webui/static/app/i18n-post.js:96
+msgid "Wed"
+msgstr "Stř"
+
+#: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
-msgstr ""
+msgstr "Středa"
 
 #: src/webui/static/app/status.js:346
 msgid "Weight"
@@ -1763,21 +1779,21 @@ msgstr "Váha"
 msgid "Will be skipped"
 msgstr "Bude přeskočeno"
 
-#: src/webui/static/app/i18n-post.js:94 src/webui/static/app/i18n-post.js:240
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:253
 msgid "Yes"
-msgstr ""
+msgstr "Ano"
 
 #: src/webui/static/app/idnode.js:393 src/webui/static/app/idnode.js:652
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "Musíte použít číslo v osmičkové soustavě - chmod notaci, např. 0644"
 
-#: src/webui/static/app/i18n-post.js:225
+#: src/webui/static/app/i18n-post.js:238
 msgid "You must select at least one item in this group"
-msgstr ""
+msgstr "Musíte zvolit alespoň jednu položku pro tuto skupinu"
 
-#: src/webui/static/app/i18n-post.js:230
+#: src/webui/static/app/i18n-post.js:243
 msgid "You must select one item in this group"
-msgstr ""
+msgstr "Musíte zvolit jednu položku pro tuto skupinu"
 
 #: src/webui/static/app/dvr.js:31
 msgid "because is rerun of:"
@@ -1787,19 +1803,19 @@ msgstr "protože je to opakování:"
 msgid "comet failure"
 msgstr "comet chyba"
 
-#: src/webui/static/app/i18n-post.js:200
+#: src/webui/static/app/i18n-post.js:213
 msgid "false"
-msgstr ""
+msgstr "nepravda"
 
-#: src/webui/static/app/i18n-post.js:219
+#: src/webui/static/app/i18n-post.js:232
 msgid "g:i A#TimeField"
-msgstr ""
+msgstr "g:i A#TimeField"
 
-#: src/webui/static/app/i18n-post.js:220
+#: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
-msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
@@ -1814,29 +1830,29 @@ msgstr "přihlásit"
 msgid "logout"
 msgstr "odhlásit"
 
-#: src/webui/static/app/i18n-post.js:211
+#: src/webui/static/app/i18n-post.js:224
 msgid "m/d/Y#DateColumn"
-msgstr ""
+msgstr "d.m.Y#DateColumn"
 
-#: src/webui/static/app/i18n-post.js:262
+#: src/webui/static/app/i18n-post.js:275
 msgid "m/d/Y#DateFilter"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:103
-msgid "m/d/Y#Format.date"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:172
-msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
-msgstr ""
-
-#: src/webui/static/app/i18n-post.js:171
-msgid "m/d/y#DateField"
-msgstr ""
+msgstr "d.m.Y#DateFilter"
 
 #: src/webui/static/app/i18n-post.js:120
+msgid "m/d/Y#Format.date"
+msgstr "d.m.Y#Format.date"
+
+#: src/webui/static/app/i18n-post.js:186
+msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+msgstr "d.m.Y|d-m-y|d-m-Y|d-m|dm|dmy|dmY|d#DateField"
+
+#: src/webui/static/app/i18n-post.js:185
+msgid "m/d/y#DateField"
+msgstr "d.m.Y#DateField"
+
+#: src/webui/static/app/i18n-post.js:136
 msgid "m/d/y#DatePicker"
-msgstr ""
+msgstr "d.m.Y#DatePicker"
 
 #: src/webui/static/app/idnode.js:300 src/webui/static/app/idnode.js:302
 #: src/webui/static/app/epg.js:421 src/webui/static/app/epg.js:424
@@ -1844,30 +1860,30 @@ msgstr ""
 msgid "min"
 msgstr "min"
 
-#: src/webui/static/app/i18n-post.js:130
+#: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
 msgstr "z {0}"
 
-#: src/webui/static/app/i18n-post.js:199
+#: src/webui/static/app/i18n-post.js:212
 msgid "true"
-msgstr ""
+msgstr "pravda"
 
-#: src/webui/static/app/i18n-post.js:119
+#: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"
-msgstr ""
+msgstr "{0} (Spacebar)"
 
-#: src/webui/static/app/i18n-post.js:170
+#: src/webui/static/app/i18n-post.js:184
 msgid "{0} is not a valid date - it must be in the format {1}"
-msgstr ""
+msgstr "{0} není platné datum - musí být ve formátu {1}"
 
-#: src/webui/static/app/i18n-post.js:161
+#: src/webui/static/app/i18n-post.js:175
 msgid "{0} is not a valid number"
-msgstr ""
+msgstr "{0} není platné číslo"
 
-#: src/webui/static/app/i18n-post.js:218
+#: src/webui/static/app/i18n-post.js:231
 msgid "{0} is not a valid time"
-msgstr ""
+msgstr "{0} není platný čas"
 
-#: src/webui/static/app/i18n-post.js:15
+#: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
-msgstr ""
+msgstr "{0} vybraný řádek{1}"
