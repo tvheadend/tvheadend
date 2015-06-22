@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:59+0200\n"
+"POT-Creation-Date: 2015-06-22 15:58+0200\n"
 "PO-Revision-Date: 2015-06-21 19:33+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
@@ -242,6 +242,12 @@ msgstr "Vše DVR (rw)"
 msgid "All days"
 msgstr "Všechny dny"
 
+#: src/webui/extjs.c:239
+msgid ""
+"All proceeds are used to support server infrastructure and buy test "
+"equipment."
+msgstr ""
+
 #: src/main.c:647
 msgid "Alternate config path"
 msgstr "Alternativní cesta ke konfiguraci"
@@ -318,6 +324,10 @@ msgstr "BB"
 msgid "Bandwidth"
 msgstr "Šířka pásma"
 
+#: src/webui/extjs.c:218
+msgid "Based on software from"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
 msgstr "Boot ID"
@@ -337,6 +347,10 @@ msgstr "Značka"
 #: src/dvr/dvr_db.c:2246
 msgid "Broadcast"
 msgstr "Vysílání"
+
+#: src/webui/extjs.c:222
+msgid "Build"
+msgstr ""
 
 #: src/descrambler/caclient.c:173
 #, c-format
@@ -1142,6 +1156,10 @@ msgstr ""
 "tak se vytvoří účet bez uživatelského jména\n"
 "a hesla. Je doporučené tento administrátorský\n"
 "účet okamžitě změnit (uživatelské jméno a heslo)"
+
+#: src/webui/extjs.c:238
+msgid "If you'd like to support the project, please consider a donation."
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
@@ -2496,6 +2514,10 @@ msgstr "Název"
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
 msgstr "Název (regexp)"
+
+#: src/webui/extjs.c:225
+msgid "Toggle details"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"

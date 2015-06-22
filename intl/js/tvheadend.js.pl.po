@@ -1,22 +1,24 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # PiterEL <piotr.kuchciak@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:59+0200\n"
-"PO-Revision-Date: 2015-06-22 13:23+0000\n"
-"Last-Translator: PiterEL <piotr.kuchciak@gmail.com>\n"
-"Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/language/pl/)\n"
+"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"PO-Revision-Date: 2015-06-22 13:40+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
+"Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/"
+"language/pl/)\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pl\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
 
 #: src/webui/static/app/tvheadend.js:102
 msgid " {0} - {1} of {2}"
@@ -135,7 +137,7 @@ msgstr "Dodaj nowy wpis"
 msgid "Advanced Settings"
 msgstr "Zaawansowane ustawienia"
 
-#: src/webui/static/app/i18n-post.js:273
+#: src/webui/static/app/i18n-post.js:274
 msgid "After"
 msgstr ""
 
@@ -223,7 +225,7 @@ msgstr "Monitor przepustowości"
 msgid "Basic Settings"
 msgstr "Podstawowe ustawienia"
 
-#: src/webui/static/app/i18n-post.js:274
+#: src/webui/static/app/i18n-post.js:275
 msgid "Before"
 msgstr ""
 
@@ -1111,6 +1113,10 @@ msgstr ""
 msgid "October"
 msgstr ""
 
+#: src/webui/static/app/i18n-post.js:276
+msgid "On#DateFilter"
+msgstr ""
+
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
 msgstr "Na żądanie"
@@ -1587,9 +1593,11 @@ msgstr ""
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying"
-" to reconnect..."
-msgstr "Wydaje się ze problem jest z aktualizacją na żywo Tvheadend. Próba ponownego połączenia..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying "
+"to reconnect..."
+msgstr ""
+"Wydaje się ze problem jest z aktualizacją na żywo Tvheadend. Próba ponownego "
+"połączenia..."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1607,7 +1615,9 @@ msgstr ""
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programmes to record that match this query"
-msgstr "To stworzy automatyczną regułę nieustannie skanującą EPG dla programów do nagrywania na zapytanie"
+msgstr ""
+"To stworzy automatyczną regułę nieustannie skanującą EPG dla programów do "
+"nagrywania na zapytanie"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1813,8 +1823,8 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
-"A|gi|hi|gia|hia|g|H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
+"H#TimeField"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
@@ -1834,7 +1844,7 @@ msgstr "Wyloguj"
 msgid "m/d/Y#DateColumn"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:275
+#: src/webui/static/app/i18n-post.js:277
 msgid "m/d/Y#DateFilter"
 msgstr ""
 

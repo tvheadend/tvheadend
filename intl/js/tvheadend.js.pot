@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:59+0200\n"
+"POT-Creation-Date: 2015-06-22 15:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -134,7 +134,7 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:273
+#: src/webui/static/app/i18n-post.js:274
 msgid "After"
 msgstr ""
 
@@ -222,7 +222,7 @@ msgstr ""
 msgid "Basic Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:274
+#: src/webui/static/app/i18n-post.js:275
 msgid "Before"
 msgstr ""
 
@@ -1110,6 +1110,10 @@ msgstr ""
 msgid "October"
 msgstr ""
 
+#: src/webui/static/app/i18n-post.js:276
+msgid "On#DateFilter"
+msgstr ""
+
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
 msgstr ""
@@ -1833,7 +1837,7 @@ msgstr ""
 msgid "m/d/Y#DateColumn"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:275
+#: src/webui/static/app/i18n-post.js:277
 msgid "m/d/Y#DateFilter"
 msgstr ""
 

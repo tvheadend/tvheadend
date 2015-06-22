@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:59+0200\n"
+"POT-Creation-Date: 2015-06-22 15:58+0200\n"
 "PO-Revision-Date: 2015-06-21 20:20+0000\n"
 "Last-Translator: PiterEL <piotr.kuchciak@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/"
@@ -243,6 +243,12 @@ msgstr "Wszystko DVR (rw)"
 msgid "All days"
 msgstr "Wszystkie dni"
 
+#: src/webui/extjs.c:239
+msgid ""
+"All proceeds are used to support server infrastructure and buy test "
+"equipment."
+msgstr ""
+
 #: src/main.c:647
 msgid "Alternate config path"
 msgstr "Alternatywna ścieżka konfiguracji"
@@ -319,6 +325,10 @@ msgstr "BB"
 msgid "Bandwidth"
 msgstr "Przepustowość"
 
+#: src/webui/extjs.c:218
+msgid "Based on software from"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
 msgstr "Boot ID"
@@ -338,6 +348,10 @@ msgstr "Marka"
 #: src/dvr/dvr_db.c:2246
 msgid "Broadcast"
 msgstr "Emisja"
+
+#: src/webui/extjs.c:222
+msgid "Build"
+msgstr ""
 
 #: src/descrambler/caclient.c:173
 #, c-format
@@ -1138,6 +1152,10 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you edit\n"
 "the access-control from within the Tvheadend UI"
+msgstr ""
+
+#: src/webui/extjs.c:238
+msgid "If you'd like to support the project, please consider a donation."
 msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:171
@@ -2491,6 +2509,10 @@ msgstr "Tytuł"
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
 msgstr "Tytuł (Regexp)"
+
+#: src/webui/extjs.c:225
+msgid "Toggle details"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"

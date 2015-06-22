@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 14:59+0200\n"
-"PO-Revision-Date: 2015-06-22 12:32+0000\n"
+"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"PO-Revision-Date: 2015-06-22 13:40+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Hebrew (http://www.transifex.com/projects/p/tvheadend/"
 "language/he/)\n"
@@ -135,7 +135,7 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:273
+#: src/webui/static/app/i18n-post.js:274
 msgid "After"
 msgstr ""
 
@@ -223,7 +223,7 @@ msgstr ""
 msgid "Basic Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:274
+#: src/webui/static/app/i18n-post.js:275
 msgid "Before"
 msgstr ""
 
@@ -1111,6 +1111,10 @@ msgstr ""
 msgid "October"
 msgstr ""
 
+#: src/webui/static/app/i18n-post.js:276
+msgid "On#DateFilter"
+msgstr ""
+
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
 msgstr ""
@@ -1834,7 +1838,7 @@ msgstr ""
 msgid "m/d/Y#DateColumn"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:275
+#: src/webui/static/app/i18n-post.js:277
 msgid "m/d/Y#DateFilter"
 msgstr ""
 

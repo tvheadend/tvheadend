@@ -203,34 +203,40 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
+  htsbuf_qprintf(hq, "<center>\n\
+<div class=\"about-title\">HTS Tvheadend %s</div>\n\
+<p>&copy; 2006 - 2015 Andreas \303\226man, et al.</p>\n\
+<p><img src=\"docresources/tvheadendlogo.png\"></p>\n\
+<p><a href=\"https://tvheadend.org\">https://tvheadend.org</a></p>\n",
+    tvheadend_version);
+
+  htsbuf_qprintf(hq, "<p>%s \n\
+<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. \
+Icons from <a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">\
+FamFamFam</a>\n\
+</p>\n",
+    _("Based on software from"));
+
+  htsbuf_qprintf(hq, "<p>%s: %s (%s) <a href=\"javascript:void(0)\"\
+ onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">%s</a></p>\n",
+    _("Build"),
+    tvheadend_version,
+    build_timestamp,
+    _("Toggle details"));
+
   htsbuf_qprintf(hq,
-                 "<center>"
-                   "<div class=\"about-title\">HTS Tvheadend %s</div>"
-                   "<p>&copy; 2006 - 2015 Andreas \303\226man, et al.</p>"
-                   "<p><img src=\"docresources/tvheadendlogo.png\"></p>"
-                   "<p><a href=\"https://tvheadend.org\">https://tvheadend.org</a></p>"
-                   "<p>Based on software from "
-                     "<a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. "
-                     "Icons from "
-                     "<a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">"
-                     "FamFamFam</a>"
-                   "</p>"
-                   "<p>Build: %s (%s) <a href=\"javascript:void(0)\" "
-                       "onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">Toggle details</a></p>"
-                   "<textarea id=\"textarea_build_config\" rows=\"20\" cols=\"80\" readonly "
-                       "style=\"display: none; margin: 5px auto 10px\">"
-                     "%s"
-                   "</textarea>"
-                   "<p>"
-                     "If you'd like to support the project, please consider a donation.<br/>"
-                     "All proceeds are used to support server infrastructure and buy test equipment."
-                   "</p>"
-                   "<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3Z87UEHP3WZK2'><img src='https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif' alt='' /></a>"
-                 "</center>",
-                 tvheadend_version,
-                 tvheadend_version,
-                 build_timestamp,
-                 build_config_str);
+"<textarea id=\"textarea_build_config\" rows=\"20\" cols=\"80\" readonly \
+ style=\"display: none; margin: 5px auto 10px\">\n%s\n</textarea>\n",
+    build_config_str);
+
+  htsbuf_qprintf(hq, "<p>\n\
+%s<br/>\n\
+%s\n\
+</p>\n\
+<a href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3Z87UEHP3WZK2'><img src='https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif' alt='' /></a>\n\
+</center>\n",
+   _("If you'd like to support the project, please consider a donation."),
+   _("All proceeds are used to support server infrastructure and buy test equipment."));
 
   http_output_html(hc);
   return 0;

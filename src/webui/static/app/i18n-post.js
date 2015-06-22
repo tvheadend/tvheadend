@@ -259,18 +259,20 @@ if(Ext.ux.grid.filter.StringFilter)
     emptyText: _('Enter Filter Text...')
   });
 
-if(Ext.ux.grid.filter.NumericFilter)
+if(Ext.ux.grid.filter.NumericFilter) {
   Ext.apply(Ext.ux.grid.filter.NumericFilter.prototype, {
-    menuItemsCfgs: {
+    menuItemCfgs: {
       emptyText: _('Enter Filter Text...'),
       selectOnFocus: true,
       width: 125
     }
   });
+}
 
 if(Ext.ux.grid.filter.DateFilter)
   Ext.apply(Ext.ux.grid.filter.DateFilter.prototype, {
     afterText: _('After'),
     beforeText: _('Before'),
+    onText: _('On#DateFilter').split('#')[0],
     dateFormat: _('m/d/Y#DateFilter').split('#')[0]
   });
