@@ -212,10 +212,11 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 
   htsbuf_qprintf(hq, "<p>%s \n\
 <a target=\"_blank\" href=\"http://www.extjs.com/\">ExtJS</a>. \
-Icons from <a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">\
+%s <a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">\
 FamFamFam</a>\n\
 </p>\n",
-    _("Based on software from"));
+    _("Based on software from"),
+    _("Icons from"));
 
   htsbuf_qprintf(hq, "<p>%s: %s (%s) <a href=\"javascript:void(0)\"\
  onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">%s</a></p>\n",
