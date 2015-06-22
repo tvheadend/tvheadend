@@ -1435,6 +1435,8 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
   char buf[256];
   int nc;
 
+  if (!remain)
+    return HTTP_STATUS_BAD_REQUEST;
   nc = http_tokenize((char *)remain, components, 3, '/');
   if(!nc)
     return HTTP_STATUS_BAD_REQUEST;
