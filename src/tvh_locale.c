@@ -103,7 +103,7 @@ static void tvh_gettext_new_lang(const char *lang)
     
   tvh_gettext_last_lang = NULL;
   tvh_gettext_last_strings = NULL;
-  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++)
+  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++, l++)
     if (strcmp(lang, l->lang) == 0) {
       tvh_gettext_last_lang = l->lang;
       tvh_gettext_last_strings = l->strings;
