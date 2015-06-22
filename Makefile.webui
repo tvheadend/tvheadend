@@ -90,6 +90,7 @@ JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/NumericFilter.js
 JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/StringFilter.js
 JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/ListMenu.js
 JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/RangeMenu.js
+JAVASCRIPT += $(ROOTPATH)/app/i18n-post.js
 
 #
 # app itself

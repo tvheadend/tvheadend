@@ -220,7 +220,7 @@ tvheadend.epgDetails = function(event) {
             tooltip: _('Create an automatic recording entry for this program that will '
                  + 'record all future programmes that matches '
                  + 'the current query.'),
-            text: event.serieslinkId ? "Record series" : "Autorec"
+            text: event.serieslinkId ? _("Record series") : _("Autorec")
         }));
 
     } else {
@@ -233,7 +233,7 @@ tvheadend.epgDetails = function(event) {
     }
 
     var win = new Ext.Window({
-        title: 'Broadcast Details',
+        title: _('Broadcast Details'),
         iconCls: 'broadcast_details',
         layout: 'fit',
         width: 650,
@@ -304,7 +304,7 @@ tvheadend.epgDetails = function(event) {
                 win.close();
             },
             failure: function(response, options) {
-                Ext.MessageBox.alert('DVR', response.statusText);
+                Ext.MessageBox.alert(_('DVR'), response.statusText);
             }
         });
     }
