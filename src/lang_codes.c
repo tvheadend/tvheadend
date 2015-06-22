@@ -145,7 +145,7 @@ const lang_code_t lang_codes[] = {
   { "egy", NULL, NULL , "Egyptian (Ancient)" },
   { "eka", NULL, NULL , "Ekajuk" },
   { "elx", NULL, NULL , "Elamite" },
-  { "eng", "en", NULL , "English" },
+  { "eng", "en", NULL , "English", "US|GB" },
   { "epo", "eo", NULL , "Esperanto" },
   { "est", "et", NULL , "Estonian" },
   { "ewe", "ee", NULL , "Ewe" },

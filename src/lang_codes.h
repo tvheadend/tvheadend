@@ -27,6 +27,7 @@ typedef struct lang_code
   const char *code1;  ///< ISO 639-1
   const char *code2t; ///< ISO 639-2 T
   const char *desc;   ///< Description
+  const char *locale; ///< Locale variants (like US|GB or DE|BE)
 } lang_code_t;
 
 extern const lang_code_t lang_codes[];

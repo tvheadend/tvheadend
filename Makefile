@@ -22,7 +22,7 @@
 
 include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
 PROG    := $(BUILDDIR)/tvheadend
-LANGUAGES ?= de fr cs pl
+LANGUAGES ?= en_GB de fr cs pl bg
 
 #
 # Common compiler flags
@@ -578,6 +578,9 @@ intl:
 
 intl/tvheadend.pot:
 
+intl/tvheadend.en_GB.po: intl/tvheadend.pot
+	$(call merge-po,$@,$<)
+
 intl/tvheadend.de.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
@@ -588,6 +591,9 @@ intl/tvheadend.cs.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
 intl/tvheadend.pl.po: intl/tvheadend.pot
+	$(call merge-po,$@,$<)
+
+intl/tvheadend.bg.po: intl/tvheadend.pot
 	$(call merge-po,$@,$<)
 
 $(BUILDDIR)/src/tvh_locale.o: src/tvh_locale_inc.c

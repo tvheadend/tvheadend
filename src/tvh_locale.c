@@ -39,6 +39,10 @@ const char **tvh_gettext_last_strings = NULL;
 
 static const char *tvh_gettext_lang_check(const char *lang)
 {
+  if (!strcmp(lang, "eng_US"))
+    return "en";
+  if (!strcmp(lang, "eng_GB"))
+    return "en_GB";
   if (!strcmp(lang, "ger"))
     return "de";
   if (!strcmp(lang, "fre"))
@@ -47,6 +51,8 @@ static const char *tvh_gettext_lang_check(const char *lang)
     return "cs";
   if (!strcmp(lang, "pol"))
     return "pl";
+  if (!strcmp(lang, "bul"))
+    return "bg";
   return lang;
 }
 
@@ -114,6 +120,7 @@ static void tvh_gettext_new_lang(const char *lang)
 const char *tvh_gettext_lang(const char *lang, const char *s)
 {
   const char **strings;
+  static char unklng[8];
 
   pthread_mutex_lock(&tvh_gettext_mutex);
   if (lang == NULL) {
@@ -129,6 +136,9 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
       if (tvh_gettext_default_lang == NULL)
         tvh_gettext_init();
       tvh_gettext_new_lang(tvh_gettext_default_lang);
+      strncpy(unklng, lang, sizeof(unklng));
+      unklng[sizeof(unklng)-1] = '\0';
+      tvh_gettext_last_lang = unklng;
     } else {
       if (tvh_gettext_last_lang == NULL)
         tvh_gettext_last_lang = "en";

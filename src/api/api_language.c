@@ -45,11 +45,49 @@ api_language_enum
   return 0;
 }
 
+static int
+api_language_locale_enum
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  const lang_code_t *c = lang_codes;
+  htsmsg_t *l, *e;
+  const char *s;
+  char buf1[8];
+  char buf2[128];
+
+  l = htsmsg_create_list();
+  while (c->code2b) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", c->code2b);
+    htsmsg_add_str(e, "val", c->desc);
+    htsmsg_add_msg(l, NULL, e);
+    s = c->locale;
+    while (s && *s) {
+      if (*s == '|')
+        s++;
+      if (s[0] == '\0' || s[1] == '\0')
+        break;
+      snprintf(buf1, sizeof(buf1), "%s_%c%c", c->code2b, s[0], s[1]);
+      snprintf(buf2, sizeof(buf2), "%s (%c%c)", c->desc, s[0], s[1]);
+      e = htsmsg_create_map();
+      htsmsg_add_str(e, "key", buf1);
+      htsmsg_add_str(e, "val", buf2);
+      htsmsg_add_msg(l, NULL, e);
+      s += 2;
+    }
+    c++;
+  }
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+  return 0;
+}
+
 void api_language_init ( void )
 {
   static api_hook_t ah[] = {
 
-    { "language/list", ACCESS_ANONYMOUS, api_language_enum, NULL },
+    { "language/list",   ACCESS_ANONYMOUS, api_language_enum, NULL },
+    { "language/locale", ACCESS_ANONYMOUS, api_language_locale_enum, NULL },
 
     { NULL },
   };

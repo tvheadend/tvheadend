@@ -1261,7 +1261,7 @@ language_get_list ( void *obj, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
-  htsmsg_add_str(m, "uri",   "language/list");
+  htsmsg_add_str(m, "uri",   "language/locale");
   return m;
 }
 
