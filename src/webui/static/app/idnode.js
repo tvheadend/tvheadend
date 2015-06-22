@@ -379,7 +379,7 @@ tvheadend.IdNodeField = function(conf)
             c['typeAhead'] = true;
             c['forceSelection'] = false;
             c['triggerAction'] = 'all';
-            c['emptyText'] = 'Select ' + this.text + ' ...';
+            c['emptyText'] = _('Select {0} ...').replace('{0}', this.text);
             
             combo = true;
 
