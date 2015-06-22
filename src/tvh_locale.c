@@ -139,9 +139,6 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
       strncpy(unklng, lang, sizeof(unklng));
       unklng[sizeof(unklng)-1] = '\0';
       tvh_gettext_last_lang = unklng;
-    } else {
-      if (tvh_gettext_last_lang == NULL)
-        tvh_gettext_last_lang = "en";
     }
   }
   if ((strings = tvh_gettext_last_strings) != NULL) {
