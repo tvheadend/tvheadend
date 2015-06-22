@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Peter <zinonino91@gmail.com>, 2015
 # saen acro <saentist@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-20 15:13+0200\n"
-"PO-Revision-Date: 2015-06-21 11:54+0000\n"
-"Last-Translator: saen acro <saentist@gmail.com>\n"
+"POT-Creation-Date: 2015-06-22 08:17+0200\n"
+"PO-Revision-Date: 2015-06-22 04:11+0000\n"
+"Last-Translator: Peter <zinonino91@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -35,7 +36,7 @@ msgstr "# Селектирани Канали"
 
 #: src/input/mpegts/mpegts_network.c:217
 msgid "# Muxes"
-msgstr "#Муксове"
+msgstr "# Муксове"
 
 #: src/bouquet.c:884
 msgid "# Seen Services"
@@ -48,39 +49,39 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
-msgstr ""
+msgstr "0"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "1"
-msgstr ""
+msgstr "1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:79
 msgid "10"
-msgstr ""
+msgstr "10"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:80
 msgid "11"
-msgstr ""
+msgstr "11"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:81
 msgid "12"
-msgstr ""
+msgstr "12"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:82
 msgid "13"
-msgstr ""
+msgstr "13"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:83
 msgid "14"
-msgstr ""
+msgstr "14"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "15"
-msgstr ""
+msgstr "15"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:71
 msgid "2"
-msgstr ""
+msgstr "2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
 msgid "2-port Switch (Universal LNB)"
@@ -88,11 +89,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "3"
-msgstr ""
+msgstr "3"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "4"
-msgstr ""
+msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
 msgid "4-port Switch (Universal LNB)"
@@ -100,54 +101,54 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "5"
-msgstr ""
+msgstr "5"
 
 #: src/profile.c:1375
 msgid "5.0"
-msgstr ""
+msgstr "5.0"
 
 #: src/profile.c:1376
 msgid "5.1"
-msgstr ""
+msgstr "5.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:75
 msgid "6"
-msgstr ""
+msgstr "6"
 
 #: src/profile.c:1377
 msgid "6.1"
-msgstr ""
+msgstr "6.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "7"
-msgstr ""
+msgstr "7"
 
 #: src/profile.c:1378
 msgid "7.1"
-msgstr ""
+msgstr "7.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "8"
-msgstr ""
+msgstr "8"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "9"
-msgstr ""
+msgstr "9"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:356
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "A"
-msgstr ""
+msgstr "A"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:391
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:56
 msgid "AA"
-msgstr ""
+msgstr "AA"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:402
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:57
 msgid "AB"
-msgstr ""
+msgstr "AB"
 
 #: src/input/mpegts/mpegts_mux.c:477
 msgid "AC-3 = descriptor 6"
@@ -171,7 +172,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
-msgstr ""
+msgstr "ATSC"
 
 #: src/input/mpegts/mpegts_network_dvb.c:266
 msgid "ATSC Network"
@@ -191,7 +192,7 @@ msgstr ""
 
 #: src/access.c:1270
 msgid "Access"
-msgstr ""
+msgstr "Достъп"
 
 #: src/esfilter.c:674 src/esfilter.c:741 src/esfilter.c:808 src/esfilter.c:875
 #: src/esfilter.c:950 src/esfilter.c:1011
@@ -212,11 +213,11 @@ msgstr ""
 
 #: src/access.c:1390
 msgid "Admin"
-msgstr ""
+msgstr "Администратор"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
-msgstr ""
+msgstr "Експертни Настройки (Не-Универсални конвертори, ротори, и т.н.)"
 
 #: src/access.c:1321
 msgid "Advanced Streaming"
@@ -298,17 +299,17 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:367
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:95
 msgid "B"
-msgstr ""
+msgstr "B"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:413
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:58
 msgid "BA"
-msgstr ""
+msgstr "BA"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:424
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:59
 msgid "BB"
-msgstr ""
+msgstr "BB"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220
 msgid "Bandwidth"
@@ -316,15 +317,15 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
-msgstr ""
+msgstr "Boot ID"
 
 #: src/bouquet.c:792
 msgid "Bouquet"
-msgstr ""
+msgstr "Букет"
 
 #: src/channels.c:382
 msgid "Bouquet (auto)"
-msgstr ""
+msgstr "Букет (авто)"
 
 #: src/dvr/dvr_autorec.c:1062
 msgid "Brand"
@@ -337,11 +338,11 @@ msgstr ""
 #: src/descrambler/caclient.c:173
 #, c-format
 msgid "CA Client %i"
-msgstr ""
+msgstr "CA Клиент %i"
 
 #: src/descrambler/constcw.c:290 src/descrambler/constcw.c:350
 msgid "CA ID"
-msgstr ""
+msgstr "CA ID"
 
 #: src/esfilter.c:914
 msgid "CA Identification"
@@ -357,15 +358,15 @@ msgstr ""
 
 #: src/service.c:196
 msgid "CAID"
-msgstr ""
+msgstr "CAID"
 
 #: src/descrambler/capmt.c:2176
 msgid "CAPMT (Linux DVBAPI)"
-msgstr ""
+msgstr "CAPMT (Linux DVBAPI)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:225
 msgid "CAPMT Interval (ms)"
-msgstr ""
+msgstr "CAPMT Интервал (ms)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:233
 msgid "CAPMT Query Interval (ms)"
@@ -402,7 +403,7 @@ msgstr ""
 
 #: src/channels.c:1083 src/dvr/dvr_autorec.c:956
 msgid "Channel Tag"
-msgstr ""
+msgstr "Категория на Канала"
 
 #: src/bouquet.c:852
 msgid "Channel Tag Reference"
@@ -410,11 +411,11 @@ msgstr ""
 
 #: src/access.c:1430
 msgid "Channel Tags"
-msgstr ""
+msgstr "Категории на Канала"
 
 #: src/profile.c:1520
 msgid "Channels"
-msgstr ""
+msgstr "Канали"
 
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
 #: src/input/mpegts/mpegts_service.c:178
@@ -455,7 +456,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:121
 msgid "Committed"
-msgstr ""
+msgstr "Committed"
 
 #: src/dvr/dvr_db.c:315
 msgid "Completed OK"
@@ -483,7 +484,7 @@ msgstr ""
 
 #: src/profile.c:1505 src/dvr/dvr_db.c:2139
 msgid "Container"
-msgstr ""
+msgstr "Контейнер"
 
 #: src/dvr/dvr_db.c:2238 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
@@ -503,15 +504,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:208
 msgid "Created"
-msgstr ""
+msgstr "Създаден"
 
 #: src/dvr/dvr_db.c:2166 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
 msgid "Creator"
-msgstr ""
+msgstr "Създател"
 
 #: src/input/mpegts/mpegts_mux_sched.c:140
 msgid "Cron"
-msgstr ""
+msgstr "Планирани задачи"
 
 #: src/main.c:662
 msgid "DBus - use the session message bus instead system one"
@@ -535,7 +536,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
 msgid "DVB-S 4-port"
-msgstr ""
+msgstr "DVB-S 4-портов"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:561
 msgid "DVB-S Advanced"
@@ -559,7 +560,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:351
 msgid "DVB-S Toneburst"
-msgstr ""
+msgstr "DVB-S Toneburst"
 
 #: src/input/mpegts/mpegts_network_dvb.c:201
 msgid "DVB-T Network"
@@ -567,11 +568,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
-msgstr ""
+msgstr "DVBC_ANNEX_AC"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVBT"
-msgstr ""
+msgstr "DVBT"
 
 #: src/access.c:1254
 msgid "DVR"
@@ -668,7 +669,7 @@ msgstr "Описание"
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "Device ID"
-msgstr ""
+msgstr "Устройство ID"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:165
 msgid "Device Model"
@@ -693,7 +694,7 @@ msgstr "Изключи"
 
 #: src/main.c:713
 msgid "Disable DVB bouquets"
-msgstr ""
+msgstr "Изключи DVB букети"
 
 #: src/main.c:711
 msgid "Disable all access control checks"
@@ -709,7 +710,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1363
 msgid "DiseqC"
-msgstr ""
+msgstr "DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:89
 msgid "DiseqC Rotor"
@@ -717,7 +718,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:229
 msgid "DiseqC repeats"
-msgstr ""
+msgstr "DiSEqC повторения"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:115
 msgid "DiseqC switch"
@@ -890,19 +891,19 @@ msgstr "Файла Отсъства"
 
 #: src/dvr/dvr_db.c:302
 msgid "File Not Created"
-msgstr "Фаела не е създаден"
+msgstr "Файла не е създаден"
 
 #: src/dvr/dvr_config.c:855
 msgid "File Permissions (octal, e.g. 0664)"
-msgstr "Файлови Права (octal, пр. 0664)"
+msgstr "Права на файловете (octal, пр. 0664)"
 
 #: src/dvr/dvr_db.c:2268
 msgid "File Size"
-msgstr "Файлов Размер"
+msgstr "Размер на файла"
 
 #: src/dvr/dvr_db.c:2173
 msgid "Filename"
-msgstr "Име на фаела"
+msgstr "Име на файла"
 
 #: src/dvr/dvr_config.c:863
 msgid "Filename Charset"
@@ -951,19 +952,19 @@ msgstr "Честота"
 #: src/input/mpegts/mpegts_mux_dvb.c:215 src/input/mpegts/mpegts_mux_dvb.c:287
 #: src/input/mpegts/mpegts_mux_dvb.c:647
 msgid "Frequency (Hz)"
-msgstr ""
+msgstr "Честота (Hz)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:523
 msgid "Frequency (MHz)"
-msgstr ""
+msgstr "Честота (MHz)"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:541
 msgid "Frequency (kHz)"
-msgstr ""
+msgstr "Честота (kHz)"
 
 #: src/dvr/dvr_autorec.c:717
 msgid "Fri"
-msgstr ""
+msgstr "Пет"
 
 #: src/input/mpegts/satip/satip.c:303
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:158
@@ -998,11 +999,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:444
 msgid "GOTOX"
-msgstr ""
+msgstr "GOTOX"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:102
 msgid "GOTOX Position"
-msgstr ""
+msgstr "GOTOX Позиция"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:97
 msgid "GOTOX Rotor"
@@ -1011,7 +1012,7 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:253
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:272
 msgid "Generic"
-msgstr ""
+msgstr "Общ"
 
 #: src/main.c:642
 msgid "Generic Options"
@@ -1023,23 +1024,23 @@ msgstr ""
 
 #: src/profile.c:267
 msgid "HD: High Definition"
-msgstr ""
+msgstr "HD: висока резолюция"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:590
 msgid "HDHomeRun ATSC Frontend"
-msgstr ""
+msgstr "HDHomeRun ATSC Frontend"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:552
 msgid "HDHomeRun DVB Frontend"
-msgstr ""
+msgstr "HDHomeRun DVB Frontend"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:580
 msgid "HDHomeRun DVB-C Frontend"
-msgstr ""
+msgstr "HDHomeRun DVB-C Frontend"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:570
 msgid "HDHomeRun DVB-T Frontend"
-msgstr ""
+msgstr "HDHomeRun DVB-T Frontend"
 
 #: src/access.c:1349
 msgid "HTSP DVR"
@@ -1084,11 +1085,11 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:282
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:144
 msgid "IP Address"
-msgstr ""
+msgstr "IP Адрес"
 
 #: src/input/mpegts/iptv/iptv.c:89
 msgid "IPTV"
-msgstr ""
+msgstr "IPTV"
 
 #: src/input/mpegts/iptv/iptv.c:95
 msgid "IPTV Input"
@@ -1104,7 +1105,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:588
 msgid "ISI (Stream ID)"
-msgstr ""
+msgstr "ISI (Stream ID)"
 
 #: src/channels.c:1122
 msgid "Icon (full URL)"
@@ -1181,7 +1182,7 @@ msgstr ""
 
 #: src/access.c:1282 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
-msgstr ""
+msgstr "Индекс"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:260
 msgid "Init Rotor Time (seconds)"
@@ -1193,7 +1194,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:120
 msgid "Input Buffer (Bytes)"
-msgstr ""
+msgstr "Входен буфер (байтове)"
 
 #: src/input.c:29
 msgid "Input Instance"
@@ -1230,20 +1231,20 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:61
 msgid "LNB"
-msgstr ""
+msgstr "Конвертор"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1227
 msgid "LNB Type"
-msgstr ""
+msgstr "Тип Конвертор"
 
 #: src/access.c:1308 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
-msgstr ""
+msgstr "Език"
 
 #: src/input/mpegts/mpegts_service.c:215
 msgid "Last Seen"
-msgstr ""
+msgstr "Последно видян"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 msgid "Latitude Direction South"
@@ -1344,7 +1345,7 @@ msgstr ""
 #: src/esfilter.c:682 src/esfilter.c:749 src/esfilter.c:816 src/esfilter.c:883
 #: src/esfilter.c:958 src/esfilter.c:1019
 msgid "Log"
-msgstr ""
+msgstr "Лог"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:297
 msgid "Longtitude Direction West"
@@ -1356,27 +1357,27 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1651
 msgid "MPEG-PS (DVD)"
-msgstr ""
+msgstr "MPEG-PS (DVD)"
 
 #: src/profile.c:1359
 msgid "MPEG-PS (DVD) /av-lib"
-msgstr ""
+msgstr "MPEG-PS (DVD) /av-lib"
 
 #: src/dvr/dvr_db.c:1650
 msgid "MPEG-TS"
-msgstr ""
+msgstr "MPEG-TS"
 
 #: src/profile.c:1187 src/profile.c:1358
 msgid "MPEG-TS /av-lib"
-msgstr ""
+msgstr "MPEG-TS /av-lib"
 
 #: src/profile.c:1806
 msgid "MPEG-TS Pass-through"
-msgstr ""
+msgstr "MPEG-TS Pass-through"
 
 #: src/profile.c:1001
 msgid "MPEG-TS Pass-through /build-in"
-msgstr ""
+msgstr "MPEG-TS Pass-through /build-in"
 
 #: src/input/mpegts/mpegts_input.c:216
 msgid "MPEGTS Input"
@@ -1384,11 +1385,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:486
 msgid "MPEGTS Multiplex"
-msgstr ""
+msgstr "MPEGTS Multiplex"
 
 #: src/input/mpegts/mpegts_mux.c:42
 msgid "MPEGTS Multiplex Phy"
-msgstr ""
+msgstr "MPEGTS Multiplex Phy"
 
 #: src/input/mpegts/mpegts_network.c:134
 msgid "MPEGTS Network"
@@ -1416,11 +1417,11 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:324
 msgid "Manufacturer"
-msgstr ""
+msgstr "Производител"
 
 #: src/input/mpegts/satip/satip.c:331
 msgid "Manufacturer URL"
-msgstr ""
+msgstr " URL Производител"
 
 #: src/bouquet.c:831
 msgid "Map No Name"
@@ -1441,27 +1442,27 @@ msgstr ""
 
 #: src/profile.c:1826
 msgid "Matroska"
-msgstr ""
+msgstr "Matroska"
 
 #: src/dvr/dvr_db.c:1647
 msgid "Matroska (mkv)"
-msgstr ""
+msgstr "Matroska (mkv)"
 
 #: src/profile.c:1360
 msgid "Matroska (mkv) /av-lib"
-msgstr ""
+msgstr "Matroska (mkv) /av-lib"
 
 #: src/profile.c:1102
 msgid "Matroska (mkv) /build-in"
-msgstr ""
+msgstr "Matroska (mkv) /build-in"
 
 #: src/profile.c:1356
 msgid "Matroska (mkv) /built-in"
-msgstr ""
+msgstr "Matroska (mkv) /built-in"
 
 #: src/profile.c:1258
 msgid "Matroska /av-lib"
-msgstr ""
+msgstr "Matroska /av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:474
 msgid "Max Bandwidth (Kbps)"
@@ -1481,15 +1482,15 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1017
 msgid "Maximal Duration"
-msgstr ""
+msgstr "Максимална Продължителност"
 
 #: src/input/mpegts/satip/satip.c:226
 msgid "Maximum PIDs"
-msgstr ""
+msgstr "Максимален брой PIDs"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:92
 msgid "Maximum PIDs "
-msgstr ""
+msgstr "Максимален брой PIDs"
 
 #: src/input/mpegts/satip/satip.c:233
 msgid "Maximum length of PIDs"
@@ -1509,7 +1510,7 @@ msgstr ""
 
 #: src/service.c:141
 msgid "Missing In PAT/SDT"
-msgstr ""
+msgstr "Липсва в PAT/SDT"
 
 #: src/descrambler/capmt.c:2181
 msgid "Mode"
@@ -1529,15 +1530,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:558 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "Modulation"
-msgstr ""
+msgstr "Модулация"
 
 #: src/dvr/dvr_autorec.c:713
 msgid "Mon"
-msgstr ""
+msgstr "Пон"
 
 #: src/profile.c:1371
 msgid "Mono"
-msgstr ""
+msgstr "Моно"
 
 #: src/main.c:706
 msgid "More verbose libav log"
@@ -1550,11 +1551,11 @@ msgstr ""
 #: src/input/mpegts/mpegts_service.c:101
 #: src/input/mpegts/mpegts_mux_sched.c:133
 msgid "Mux"
-msgstr ""
+msgstr "Мукс"
 
 #: src/input/mpegts/iptv/iptv_mux.c:132
 msgid "Mux Name"
-msgstr ""
+msgstr "Име на Мукса"
 
 #: src/input/mpegts/mpegts_mux_sched.c:118
 msgid "Mux Sched Entry"
@@ -1562,18 +1563,18 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:108
 msgid "Mux UUID"
-msgstr ""
+msgstr "Мукс UUID"
 
 #: src/streaming.c:426
 msgid "Mux not enabled"
-msgstr ""
+msgstr "Мукса не е разрешен"
 
 #: src/input/mpegts/mpegts_mux.c:389
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:55
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:68
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:93
 msgid "NONE"
-msgstr ""
+msgstr "НИКОЙ"
 
 #: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
 #: src/dvr/dvr_autorec.c:922 src/dvr/dvr_timerec.c:563
@@ -1598,7 +1599,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:157
 msgid "Network Discovery"
-msgstr ""
+msgstr "Мрежово сканиране"
 
 #: src/input/mpegts/mpegts_network.c:150
 msgid "Network ID (limit scanning)"
@@ -1659,7 +1660,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
 msgid "No pin"
-msgstr ""
+msgstr "Без пин"
 
 #: src/streaming.c:438
 msgid "No service assigned to channel"
@@ -1671,7 +1672,7 @@ msgstr ""
 
 #: src/streaming.c:436
 msgid "No source available"
-msgstr ""
+msgstr "Не е наличен източник"
 
 #: src/profile.c:265 src/input/mpegts/linuxdvb/linuxdvb_switch.c:252
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:458
@@ -1685,7 +1686,7 @@ msgstr ""
 
 #: src/profile.c:1355 src/dvr/dvr_db.c:1618 src/dvr/dvr_db.c:1646
 msgid "Not set"
-msgstr ""
+msgstr "Не зададен"
 
 #: src/dvr/dvr_config.c:694
 msgid "Not set (none or channel config)"
@@ -1705,23 +1706,23 @@ msgstr ""
 
 #: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: src/descrambler/capmt.c:2165
 msgid "OSCam (rev >= 9095)"
-msgstr ""
+msgstr "OSCam (rev >= 9095)"
 
 #: src/descrambler/capmt.c:2164
 msgid "OSCam TCP (rev >= 9574)"
-msgstr ""
+msgstr "OSCam TCP (rev >= 9574)"
 
 #: src/descrambler/capmt.c:2162
 msgid "OSCam net protocol (rev >= 10389)"
-msgstr ""
+msgstr "OSCam net протокол (rev >= 10389)"
 
 #: src/descrambler/capmt.c:2163
 msgid "OSCam pc-nodmx (rev >= 9756)"
-msgstr ""
+msgstr "OSCam pc-nodmx (rev >= 9756)"
 
 #: src/descrambler/constcw.c:331 src/descrambler/constcw.c:391
 msgid "Odd Key"
@@ -1733,7 +1734,7 @@ msgstr ""
 
 #: src/descrambler/capmt.c:2166
 msgid "Older OSCam"
-msgstr ""
+msgstr "По-стар OSCam"
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "On"
@@ -1745,19 +1746,19 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:461
 msgid "Only EIT"
-msgstr ""
+msgstr "Само EIT"
 
 #: src/input/mpegts/mpegts_mux.c:467
 msgid "Only OpenTV Sky Ausat"
-msgstr ""
+msgstr "Само OpenTV Sky Ausat"
 
 #: src/input/mpegts/mpegts_mux.c:466
 msgid "Only OpenTV Sky Italia"
-msgstr ""
+msgstr "Само OpenTV Sky Italia"
 
 #: src/input/mpegts/mpegts_mux.c:465
 msgid "Only OpenTV Sky UK"
-msgstr ""
+msgstr "Само OpenTV Sky UK"
 
 #: src/input/mpegts/mpegts_service.c:79
 msgid "Only Pref. CA PID"
@@ -1765,15 +1766,15 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freesat"
-msgstr ""
+msgstr "Само UK Freesat"
 
 #: src/input/mpegts/mpegts_mux.c:463
 msgid "Only UK Freeview"
-msgstr ""
+msgstr "Само UK Freeview"
 
 #: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Viasat Baltic"
-msgstr ""
+msgstr "Само Viasat Baltic"
 
 #: src/main.c:666
 msgid "Only use specified DVB adapters (comma separated)"
@@ -1813,7 +1814,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2159 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
 msgid "Owner"
-msgstr ""
+msgstr "Притежател"
 
 #: src/input/mpegts/mpegts_mux.c:383
 msgid "PEND"
@@ -1822,7 +1823,7 @@ msgstr ""
 #: src/esfilter.c:668 src/esfilter.c:735 src/esfilter.c:802 src/esfilter.c:869
 #: src/esfilter.c:944 src/esfilter.c:1005
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/input/mpegts/satip/satip.c:261
 msgid "PIDs 21 in setup"
@@ -1834,7 +1835,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:209
 msgid "PIN"
-msgstr ""
+msgstr "PIN"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:217
 msgid "PIN Enquiry Match String"
@@ -1842,45 +1843,45 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:243
 msgid "PLP ID"
-msgstr ""
+msgstr "PLP ID"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:604
 msgid "PLS Code"
-msgstr ""
+msgstr "PLS Code"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:595
 msgid "PLS Mode"
-msgstr ""
+msgstr "PLS Mode"
 
 #: src/access.c:1661 src/descrambler/cwc.c:1732
 msgid "Password"
-msgstr ""
+msgstr "Парола"
 
 #: src/access.c:1669
 msgid "Password2"
-msgstr ""
+msgstr "Парола2"
 
 #: src/access.c:1639
 msgid "Passwords"
-msgstr ""
+msgstr "Пароли"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
-msgstr ""
+msgstr "Pilot"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
 msgid "Pin"
-msgstr ""
+msgstr "Pin"
 
 #: src/descrambler/cwc.c:1746
 msgid "Port"
-msgstr ""
+msgstr "Port"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:126
 #: src/input/mpegts/satip/satip_satconf.c:216
 msgid "Position"
-msgstr ""
+msgstr "Позиция"
 
 #: src/dvr/dvr_config.c:841
 msgid "Post-Processor Command"
@@ -1915,11 +1916,11 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:451
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
-msgstr ""
+msgstr "Приоритет"
 
 #: src/service.c:183
 msgid "Priority (-10..10)"
-msgstr ""
+msgstr "Приоритет (-10..10)"
 
 #: src/channels.c:1116
 msgid "Private"
@@ -1927,23 +1928,23 @@ msgstr ""
 
 #: src/profile.c:307
 msgid "Profile Name"
-msgstr ""
+msgstr "Име на профила"
 
 #: src/input/mpegts/mpegts_service.c:150
 msgid "Provider"
-msgstr ""
+msgstr "Провайдър"
 
 #: src/descrambler/constcw.c:298 src/descrambler/constcw.c:358
 msgid "Provider ID"
-msgstr ""
+msgstr "Провайдър ID"
 
 #: src/profile.c:1374
 msgid "Quad (4.0)"
-msgstr ""
+msgstr "Quad (4.0)"
 
 #: src/input/mpegts/satip/satip.c:289
 msgid "RTSP Port"
-msgstr ""
+msgstr "RTSP Port"
 
 #: src/imagecache.c:83
 msgid "Re-try period"
@@ -1955,7 +1956,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:878
 msgid "Record all"
-msgstr ""
+msgstr "Запиши всичко"
 
 #: src/dvr/dvr_autorec.c:884
 msgid "Record if different description"
@@ -1971,11 +1972,11 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:888
 msgid "Record once per day"
-msgstr ""
+msgstr "Запис веднъж на ден"
 
 #: src/dvr/dvr_autorec.c:886
 msgid "Record once per week"
-msgstr ""
+msgstr "Запис веднъж на седмица"
 
 #: src/dvr/dvr_config.c:734
 msgid "Recording File Options"
@@ -1991,7 +1992,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:975
 msgid "Replace Whitespace In Title with '-'"
-msgstr ""
+msgstr "Замени празно пространство в Заглавие със '-'"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:202
 msgid "Reply to CAM PIN Enquiries"
@@ -2003,7 +2004,7 @@ msgstr ""
 
 #: src/bouquet.c:809
 msgid "Rescan"
-msgstr ""
+msgstr "Пресканирай"
 
 #: src/streaming.c:548
 msgid "Reserved"
@@ -2019,7 +2020,7 @@ msgstr ""
 
 #: src/profile.c:343
 msgid "Restart On Error"
-msgstr ""
+msgstr "Рестартирай при грешка"
 
 #: src/dvr/dvr_db.c:2132 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:631
 msgid "Retention"
@@ -2043,7 +2044,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:570
 msgid "Rolloff"
-msgstr ""
+msgstr "Rolloff"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1245
 msgid "Rotor Type"
@@ -2102,7 +2103,7 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:505
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:139
 msgid "SCR (ID)"
-msgstr ""
+msgstr "SCR (ID)"
 
 #: src/profile.c:266
 msgid "SD: Standard Definition"
@@ -2114,7 +2115,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:718
 msgid "Sat"
-msgstr ""
+msgstr "Съб"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:202
 msgid "SatConfig"
@@ -2344,7 +2345,7 @@ msgstr ""
 
 #: src/profile.c:1372
 msgid "Stereo"
-msgstr ""
+msgstr "Стерео"
 
 #: src/dvr/dvr_timerec.c:601
 msgid "Stop"
@@ -2407,7 +2408,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
-msgstr ""
+msgstr "Нед"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
@@ -2460,7 +2461,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
-msgstr ""
+msgstr "Чет"
 
 #: src/dvr/dvr_timerec.c:153
 #, c-format
@@ -2481,15 +2482,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2078 src/dvr/dvr_db.c:2085 src/dvr/dvr_timerec.c:569
 msgid "Title"
-msgstr ""
+msgstr "Заглавие"
 
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
-msgstr ""
+msgstr "Заглавие (Regexp)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"
-msgstr ""
+msgstr "Tone Burst"
 
 #: src/streaming.c:434
 msgid "Too bad signal quality"
@@ -2505,7 +2506,7 @@ msgstr ""
 
 #: src/descrambler/constcw.c:306 src/descrambler/constcw.c:366
 msgid "Transponder ID"
-msgstr ""
+msgstr "Транспондер ID"
 
 #: src/input/mpegts/mpegts_mux.c:540
 msgid "Transport Stream ID"
@@ -2513,7 +2514,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
-msgstr ""
+msgstr "Вто"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
 msgid "Tune Before DiseqC"
@@ -2545,7 +2546,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2261 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: src/main.c:675
 msgid "URL with the SAT>IP server XML location"
@@ -2553,7 +2554,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:448
 msgid "USALS"
-msgstr ""
+msgstr "USALS"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:119
 msgid "USALS Rotor"
@@ -2562,7 +2563,7 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:296
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:151
 msgid "UUID"
-msgstr ""
+msgstr "UUID"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:142
 msgid "Uncommited First"
@@ -2570,11 +2571,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:128
 msgid "Uncommitted"
-msgstr ""
+msgstr "Uncommitted"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:67
 msgid "Unicable"
-msgstr ""
+msgstr "Unicable"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:602
 msgid "Unicable Switch (Universal LNB, experimental)"
@@ -2594,12 +2595,12 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:681
 msgid "Unknown"
-msgstr ""
+msgstr "Непознат"
 
 #: src/streaming.c:451
 #, c-format
 msgid "Unknown reason (%i)"
-msgstr ""
+msgstr "Неизвестна причина (%i)"
 
 #: src/profile.c:246
 msgid "Unset (default)"
@@ -2656,7 +2657,7 @@ msgstr ""
 
 #: src/profile.c:1535
 msgid "Video Codec"
-msgstr ""
+msgstr "Видео кодек"
 
 #: src/access.c:1343
 msgid "Video Recorder"
@@ -2672,27 +2673,27 @@ msgstr "Коментар за Незрящи"
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
-msgstr ""
+msgstr "WEBM"
 
 #: src/profile.c:1361
 msgid "WEBM /av-lib"
-msgstr ""
+msgstr "WEBM /av-lib"
 
 #: src/profile.c:1357
 msgid "WEBM /built-in"
-msgstr ""
+msgstr "WEBM /built-in"
 
 #: src/profile.c:1880
 msgid "WEBTV profile H264/AAC/MPEG-TS"
-msgstr ""
+msgstr "WEBTV профил H264/AAC/MPEG-TS"
 
 #: src/profile.c:1900
 msgid "WEBTV profile H264/AAC/Matroska"
-msgstr ""
+msgstr "WEBTV профил profile H264/AAC/Matroska"
 
 #: src/profile.c:1860
 msgid "WEBTV profile VP8/Vorbis/WEBM"
-msgstr ""
+msgstr "WEBTV профил VP8/Vorbis/WEBM"
 
 #: src/dvr/dvr_db.c:288
 msgid "Waiting for program start"
@@ -2704,15 +2705,15 @@ msgstr ""
 
 #: src/access.c:1384
 msgid "Web Interface"
-msgstr ""
+msgstr "Уеб интерфейс"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
-msgstr ""
+msgstr "Сря"
 
 #: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
 msgid "Week Days"
-msgstr ""
+msgstr "Дни в седмицата"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
@@ -2724,7 +2725,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
-msgstr ""
+msgstr "en50494"
 
 #: src/dvr/dvr_db.c:1942
 msgid "hrs"
@@ -2737,11 +2738,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1943
 msgid "min"
-msgstr ""
+msgstr "мин"
 
 #: src/dvr/dvr_db.c:1944
 msgid "mins"
-msgstr ""
+msgstr "мин"
 
 #: src/main.c:756
 #, c-format
@@ -2754,4 +2755,4 @@ msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:129
 msgid "tvhdhomerun Client"
-msgstr ""
+msgstr "Клиент tvhdhomerun"

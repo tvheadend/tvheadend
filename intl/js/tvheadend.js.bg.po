@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-20 15:13+0200\n"
-"PO-Revision-Date: 2015-06-21 20:25+0000\n"
+"POT-Creation-Date: 2015-06-22 08:17+0200\n"
+"PO-Revision-Date: 2015-06-22 01:14+0000\n"
 "Last-Translator: Peter <zinonino91@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
@@ -142,11 +142,11 @@ msgstr ""
 
 #: src/webui/static/app/cteditor.js:41
 msgid "Bouquet"
-msgstr ""
+msgstr "Букет"
 
 #: src/webui/static/app/cteditor.js:42 src/webui/static/app/cteditor.js:68
 msgid "Bouquets"
-msgstr ""
+msgstr "Букети"
 
 #: src/webui/static/app/epg.js:335
 msgid "Broadcast details"
@@ -158,15 +158,15 @@ msgstr ""
 
 #: src/webui/static/app/caclient.js:33
 msgid "CA"
-msgstr ""
+msgstr "CA"
 
 #: src/webui/static/app/esfilter.js:127
 msgid "CA Stream Filter"
-msgstr ""
+msgstr "CA филтър"
 
 #: src/webui/static/app/esfilter.js:128
 msgid "CA Stream Filters"
-msgstr ""
+msgstr "CA филтъри"
 
 #: src/webui/static/app/mpegts.js:189
 msgid "CAIDS: "
@@ -178,7 +178,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:880
 msgid "Cancel"
-msgstr ""
+msgstr "Отмени"
 
 #: src/webui/static/app/status.js:500
 msgid "Cancel Connection"
@@ -360,7 +360,7 @@ msgstr ""
 
 #: src/webui/static/app/config.js:101
 msgid "Default Language(s)"
-msgstr ""
+msgstr "Език(ци) по подразбиране"
 
 #: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1649
 msgid "Delete"
@@ -417,7 +417,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:82
 msgid "Do you really want to delete the selection?"
-msgstr "Сигурни ли сте че искате да изтриете избраното?"
+msgstr "Сигурни ли сте, че искате да изтриете избраното?"
 
 #: src/webui/static/app/dvr.js:185
 msgid "Do you really want to gracefully stop/unschedule the selection?"
@@ -429,7 +429,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:292
 msgid "Do you really want to remove this recording?"
-msgstr ""
+msgstr "Сигурни ли сте, че искате да премахнете този запис?"
 
 #: src/webui/static/app/epg.js:999 src/webui/static/app/epg.js:1005
 #: src/webui/static/app/epg.js:1008 src/webui/static/app/epg.js:1011
@@ -473,7 +473,7 @@ msgstr "Редакция"
 
 #: src/webui/static/app/idnode.js:1253
 msgid "Edit selected entry"
-msgstr ""
+msgstr "Редактиране на избрания запис"
 
 #: src/webui/static/app/epg.js:860 src/webui/static/app/epg.js:871
 msgid "Electronic Program Guide"
@@ -551,19 +551,19 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
-msgstr ""
+msgstr "Провален"
 
 #: src/webui/static/app/dvr.js:397
 msgid "Failed Recording"
-msgstr ""
+msgstr "Неуспешен запис"
 
 #: src/webui/static/app/dvr.js:398
 msgid "Failed Recordings"
-msgstr ""
+msgstr "Неуспешни записи"
 
 #: src/webui/static/app/dvr.js:51
 msgid "File size"
-msgstr "Файлов Размер"
+msgstr "Размер на файла"
 
 #: src/webui/static/app/epg.js:616
 msgid "Filter channel..."
@@ -583,11 +583,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:317
 msgid "Finished Recording"
-msgstr ""
+msgstr "Приключил запис"
 
 #: src/webui/static/app/dvr.js:318
 msgid "Finished Recordings"
-msgstr ""
+msgstr "Приключили записи"
 
 #: src/webui/static/app/tvheadend.js:106
 msgid "First Page"
@@ -690,7 +690,7 @@ msgstr "Входящ"
 
 #: src/webui/static/app/status.js:136
 msgid "Input (kb/s)"
-msgstr ""
+msgstr "Входящ (kb/s)"
 
 #: src/webui/static/app/epggrab.js:161
 msgid "Internal Grabber"
@@ -858,7 +858,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:559
 msgid "No verified access"
-msgstr ""
+msgstr "Не проверен достъп"
 
 #: src/webui/static/app/tvheadend.js:103
 msgid "No {0} to display"
@@ -879,7 +879,7 @@ msgstr "Номер"
 
 #: src/webui/static/app/chconf.js:184
 msgid "Number Down"
-msgstr ""
+msgstr "Номер Надолу "
 
 #: src/webui/static/app/chconf.js:171
 msgid "Number Up"
@@ -903,7 +903,7 @@ msgstr "Изход"
 
 #: src/webui/static/app/status.js:144
 msgid "Output (kb/s)"
-msgstr ""
+msgstr "Изходящ (kb/s)"
 
 #: src/webui/static/app/epggrab.js:263
 msgid "Over-the-air Cron multi-line"
@@ -915,7 +915,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:364
 msgid "PER"
-msgstr ""
+msgstr "PER"
 
 #: src/webui/static/app/tvheadend.js:104
 msgid "Page"
@@ -951,7 +951,7 @@ msgstr "На страница"
 
 #: src/webui/static/app/epggrab.js:142
 msgid "Periodic save EPG to disk"
-msgstr ""
+msgstr "Периодично запазва EPG на диска"
 
 #: src/webui/static/app/config.js:171
 msgid "Picon"
@@ -959,7 +959,7 @@ msgstr "Пикон"
 
 #: src/webui/static/app/config.js:166
 msgid "Picon path (see Help)"
-msgstr ""
+msgstr "Път до Пикон  (погледнете Помощ)"
 
 #: src/webui/static/app/mpegts.js:130 src/webui/static/app/mpegts.js:306
 #: src/webui/static/app/mpegts.js:310 src/webui/static/app/chconf.js:244
@@ -967,7 +967,7 @@ msgstr ""
 #: src/webui/static/app/dvr.js:421 src/webui/static/app/dvr.js:427
 #: src/webui/static/app/tvheadend.js:279
 msgid "Play"
-msgstr ""
+msgstr "Пусни"
 
 #: src/webui/static/app/epg.js:158
 msgid "Play program"
@@ -995,7 +995,7 @@ msgstr "Прогрес"
 
 #: src/webui/static/app/config.js:244
 msgid "RTSP Port (554 or 9983), 0 = disable"
-msgstr ""
+msgstr "RTSP Порт (554 или 9983), 0 = забрани"
 
 #: src/webui/static/app/config.js:198
 msgid "Re-fetch period (hours)"
@@ -1055,7 +1055,7 @@ msgstr ""
 
 #: src/webui/static/app/config.js:292
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "SAT>IP сървър"
 
 #: src/webui/static/app/status.js:394
 msgid "SNR"
@@ -1099,15 +1099,23 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:149
 msgid "Search IMDB"
-msgstr ""
+msgstr "Търси в IMDB"
 
 #: src/webui/static/app/epg.js:148
 msgid "Search IMDB (for title)"
-msgstr ""
+msgstr "Търси в IMDB (за заглавие)"
 
 #: src/webui/static/app/epg.js:596
 msgid "Search title..."
 msgstr "Търси заглавие..."
+
+#: src/webui/static/app/tvheadend.js:212
+msgid "Select channel..."
+msgstr "Избери канал..."
+
+#: src/webui/static/app/tvheadend.js:249
+msgid "Select stream profile..."
+msgstr "Избери стрийм профил..."
 
 #: src/webui/static/app/config.js:108
 msgid "Selected"
@@ -1143,11 +1151,11 @@ msgstr "Настройки"
 
 #: src/webui/static/app/idnode.js:1718
 msgid "Show or hide passwords"
-msgstr ""
+msgstr "Покажи или скрий паролите"
 
 #: src/webui/static/app/idnode.js:1720 src/webui/static/app/idnode.js:1724
 msgid "Show passwords"
-msgstr ""
+msgstr "Покажи  паролите"
 
 #: src/webui/static/app/status.js:414
 msgid "Signal Strength"
@@ -1183,14 +1191,18 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:167 src/webui/static/app/tvheadend.js:303
 msgid "Stop"
-msgstr ""
+msgstr "Спри"
 
 #: src/webui/static/app/epg.js:185
 msgid "Stop recording"
-msgstr ""
+msgstr "Край на записа"
 
 #: src/webui/static/app/epg.js:184
 msgid "Stop recording of this program"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:165
+msgid "Stop the selected recording"
 msgstr ""
 
 #: src/webui/static/app/timeshift.js:37
@@ -1297,7 +1309,7 @@ msgstr ""
 
 #: src/webui/static/app/timeshift.js:113
 msgid "Timeshift Configuration"
-msgstr ""
+msgstr "Timeshift Конфигурация"
 
 #: src/webui/static/app/timeshift.js:132
 msgid "Timeshift Options"
@@ -1391,7 +1403,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:90 src/webui/static/app/status.js:559
 msgid "Username"
-msgstr "Потребител"
+msgstr "Потребителско име"
 
 #: src/webui/static/app/esfilter.js:51
 msgid "Video Stream Filter"
@@ -1403,15 +1415,15 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:321
 msgid "Volume"
-msgstr ""
+msgstr "Сила на звука"
 
 #: src/webui/static/app/epg.js:846
 msgid "Watch TV"
-msgstr ""
+msgstr "Гледай TV"
 
 #: src/webui/static/app/epg.js:848
 msgid "Watch TV online in the window by web"
-msgstr ""
+msgstr "Гледай телевизия онлайн в прозореца на браузъра"
 
 #: src/webui/static/app/status.js:346
 msgid "Weight"
@@ -1450,8 +1462,8 @@ msgstr "изход"
 #: src/webui/static/app/epg.js:421 src/webui/static/app/epg.js:424
 #: src/webui/static/app/dvr.js:44
 msgid "min"
-msgstr ""
+msgstr "мин"
 
 #: src/webui/static/app/tvheadend.js:105
 msgid "of {0}"
-msgstr ""
+msgstr "от {0}"

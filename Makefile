@@ -572,7 +572,7 @@ $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 intl:
 	@printf "Building tvheadend.pot\n"
 	@$(XGETTEXT2) -o intl/tvheadend.pot.new $(I18N-C)
-	@mv intl/tvheadend.pot.new intl/tvheadend.pot
+	@sed -e 's/^"Language: /"Language: en/' < intl/tvheadend.pot.new > intl/tvheadend.pot
 	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" WEBUI=std intl
 	$(MAKE)
 
