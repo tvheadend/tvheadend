@@ -10,8 +10,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 17:38+0200\n"
-"PO-Revision-Date: 2015-06-22 15:39+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-06-22 19:14+0000\n"
+"Last-Translator: Peter <zinonino91@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -45,7 +45,7 @@ msgstr ""
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
 #: src/input/mpegts/mpegts_mux.c:579
 msgid "# Services"
-msgstr ""
+msgstr "# Услуги"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
@@ -201,7 +201,7 @@ msgstr "Действие"
 
 #: src/streaming.c:428
 msgid "Adapter in use by other subscription"
-msgstr ""
+msgstr "Адаптера се ползва от друг клиент"
 
 #: src/main.c:703
 msgid "Add file and line numbers to debug"
@@ -276,11 +276,11 @@ msgstr "Филтър Аудио Потоци"
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
-msgstr ""
+msgstr "Автоматична Проверка Изключена"
 
 #: src/service.c:139
 msgid "Auto Check Enabled"
-msgstr ""
+msgstr "Автоматична Проверка Включена"
 
 #: src/channels.c:332
 msgid "Auto EPG Channel"
@@ -466,7 +466,7 @@ msgstr "Коментар"
 
 #: src/dvr/dvr_db.c:292
 msgid "Commercial break"
-msgstr ""
+msgstr "Рекламна пауза"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:121
 msgid "Committed"
@@ -502,7 +502,7 @@ msgstr "Контейнер"
 
 #: src/dvr/dvr_db.c:2238 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
-msgstr ""
+msgstr "Съдържание Тип"
 
 #: src/profile.c:350
 msgid "Continue On Access Error"
@@ -546,7 +546,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:220
 msgid "DVB-C Network"
-msgstr ""
+msgstr "DVB-C Мрежа"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
 msgid "DVB-S 4-port"
@@ -578,7 +578,7 @@ msgstr "DVB-S Toneburst"
 
 #: src/input/mpegts/mpegts_network_dvb.c:201
 msgid "DVB-T Network"
-msgstr ""
+msgstr "DVB-T Мрежа"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
@@ -728,7 +728,7 @@ msgstr "DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:89
 msgid "DiseqC Rotor"
-msgstr ""
+msgstr "DiseqC Мотор"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:229
 msgid "DiseqC repeats"
@@ -752,7 +752,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:683
 msgid "Don't keep"
-msgstr ""
+msgstr "Не запазвай"
 
 #: src/dvr/dvr_autorec.c:1039
 msgid "Duplicate Handling"
@@ -832,7 +832,7 @@ msgstr "Разрешено"
 
 #: src/service.c:189
 msgid "Encrypted"
-msgstr ""
+msgstr "Кодирано"
 
 #: src/input/mpegts/iptv/iptv_mux.c:151
 msgid "Environment (pipe)"
@@ -849,7 +849,7 @@ msgstr "Епизод %d"
 
 #: src/dvr/dvr_db.c:2187
 msgid "Error Code"
-msgstr ""
+msgstr "Грешка Код"
 
 #: src/dvr/dvr_db.c:2194
 msgid "Errors"
@@ -873,11 +873,11 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:824
 msgid "Extra Time After Recordings (minutes)"
-msgstr ""
+msgstr "Допълнително време След записа (минути)"
 
 #: src/dvr/dvr_config.c:816
 msgid "Extra Time Before Recordings (minutes)"
-msgstr ""
+msgstr "Допълнително време Преди записа (минути)"
 
 #: src/input/mpegts/mpegts_mux.c:391
 msgid "FAIL"
@@ -909,7 +909,7 @@ msgstr "Файла не е създаден"
 
 #: src/dvr/dvr_config.c:855
 msgid "File Permissions (octal, e.g. 0664)"
-msgstr "Права на файловете (octal, пр. 0664)"
+msgstr "Права на файла (octal, пр. 0664)"
 
 #: src/dvr/dvr_db.c:2268
 msgid "File Size"
@@ -1472,15 +1472,15 @@ msgstr "Matroska (mkv)"
 
 #: src/profile.c:1360
 msgid "Matroska (mkv)/av-lib"
-msgstr ""
+msgstr "Matroska (mkv)/av-lib"
 
 #: src/profile.c:1102 src/profile.c:1356
 msgid "Matroska (mkv)/built-in"
-msgstr ""
+msgstr "Matroska (mkv)/built-in"
 
 #: src/profile.c:1258
 msgid "Matroska/av-lib"
-msgstr ""
+msgstr "Matroska/av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:474
 msgid "Max Bandwidth (Kbps)"
@@ -1592,7 +1592,7 @@ msgstr "Мукса не е разрешен"
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:68
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:93
 msgid "NONE"
-msgstr "НИКОЙ"
+msgstr "ПРАЗНО"
 
 #: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
 #: src/dvr/dvr_autorec.c:922 src/dvr/dvr_timerec.c:563
@@ -1696,7 +1696,7 @@ msgstr "Не е наличен източник"
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:458
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:271
 msgid "None"
-msgstr ""
+msgstr "Празно"
 
 #: src/profile.c:249 src/dvr/dvr_db.c:1621
 msgid "Normal"
@@ -2708,7 +2708,7 @@ msgstr "WEBTV профил H264/AAC/MPEG-TS"
 
 #: src/profile.c:1900
 msgid "WEBTV profile H264/AAC/Matroska"
-msgstr "WEBTV профил profile H264/AAC/Matroska"
+msgstr "WEBTV профил H264/AAC/Matroska"
 
 #: src/profile.c:1860
 msgid "WEBTV profile VP8/Vorbis/WEBM"

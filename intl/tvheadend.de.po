@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 17:38+0200\n"
-"PO-Revision-Date: 2015-06-22 15:42+0000\n"
+"PO-Revision-Date: 2015-06-22 16:58+0000\n"
 "Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
@@ -1837,7 +1837,7 @@ msgstr "Besitzer"
 
 #: src/input/mpegts/mpegts_mux.c:383
 msgid "PEND"
-msgstr "Ausstehend"
+msgstr "AUSSTEHEND"
 
 #: src/esfilter.c:668 src/esfilter.c:735 src/esfilter.c:802 src/esfilter.c:869
 #: src/esfilter.c:944 src/esfilter.c:1005
