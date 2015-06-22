@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Prof Yaffle <ian@sproink.co.uk>, 2015
 # Mark Clarkstone <github@markclarkstone.co.uk>, 2015
@@ -9,14 +9,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-20 15:13+0200\n"
+"POT-Creation-Date: 2015-06-22 14:34+0200\n"
 "PO-Revision-Date: 2015-06-21 19:16+0000\n"
 "Last-Translator: Mark Clarkstone <github@markclarkstone.co.uk>\n"
-"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
+"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/"
+"tvheadend/language/en_GB/)\n"
+"Language: en_GB\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:478
@@ -24,7 +25,10 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr "\nFor more information please visit the Tvheadend website:\nhttps://tvheadend.org\n"
+msgstr ""
+"\n"
+"For more information please visit the Tvheadend website:\n"
+"https://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
@@ -1134,7 +1138,12 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you edit\n"
 "the access-control from within the Tvheadend UI"
-msgstr "If no user account exists then create one with\nno username and no password. Use with care as\nit will allow world-wide administrative access\nto your Tvheadend installation until you edit\nthe access-control from within the Tvheadend UI."
+msgstr ""
+"If no user account exists then create one with\n"
+"no username and no password. Use with care as\n"
+"it will allow world-wide administrative access\n"
+"to your Tvheadend installation until you edit\n"
+"the access-control from within the Tvheadend UI."
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
@@ -2094,7 +2103,9 @@ msgstr "SAT>IP DVB-T Frontend"
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
-msgstr "SAT>IP RTSP port number for server\n(default: -1 = disable, 0 = webconfig, standard port is 554)"
+msgstr ""
+"SAT>IP RTSP port number for server\n"
+"(default: -1 = disable, 0 = webconfig, standard port is 554)"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
