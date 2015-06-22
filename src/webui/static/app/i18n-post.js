@@ -89,8 +89,18 @@ Date.dayNames = [
   _("Saturday")
 ];
 
+Date.dayNames2 = [
+  _("Sun"),
+  _("Mon"),
+  _("Tue"),
+  _("Wed"),
+  _("Thu"),
+  _("Fri"),
+  _("Sat")
+];
+
 Date.getShortDayName = function(day) {
-  return Date.dayNames[day].substring(0, 3);
+  return Date.dayNames2[day];
 };
 
 Date.parseCodes.S.s = _("(?:st|nd|rd|th)#parseCodes.S.s").split('#')[0];
