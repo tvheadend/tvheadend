@@ -958,7 +958,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "omit-title",
-      .name     = N_("Don't Include Title To Filename"),
+      .name     = N_("Don't Include Title In Filename"),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
       .group    = 6,
     },

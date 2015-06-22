@@ -998,7 +998,7 @@ const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
-  .ic_caption    = N_("MPEG-TS Pass-thru/build-in"),
+  .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -1099,7 +1099,7 @@ const idclass_t profile_matroska_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-matroska",
-  .ic_caption    = N_("Matroska (mkv) /build-in"),
+  .ic_caption    = N_("Matroska (mkv)/built-in"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -1184,7 +1184,7 @@ const idclass_t profile_libav_mpegts_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-libav-mpegts",
-  .ic_caption    = N_("MPEG-TS /av-lib"),
+  .ic_caption    = N_("MPEG-TS/av-lib"),
   .ic_properties = (const property_t[]){
     { }
   }
@@ -1255,7 +1255,7 @@ const idclass_t profile_libav_matroska_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-libav-matroska",
-  .ic_caption    = N_("Matroska /av-lib"),
+  .ic_caption    = N_("Matroska/av-lib"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -1497,7 +1497,7 @@ const idclass_t profile_transcode_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-transcode",
-  .ic_caption    = N_("Transcode /av-lib"),
+  .ic_caption    = N_("Transcode/av-lib"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -1562,7 +1562,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "scodec",
-      .name     = N_("Subtitles CODEC"),
+      .name     = N_("Subtitle CODEC"),
       .off      = offsetof(profile_transcode_t, pro_scodec),
       .def.s    = "",
       .list     = profile_class_scodec_list,
