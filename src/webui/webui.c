@@ -45,6 +45,7 @@
 #include "config.h"
 #include "atomic.h"
 #include "lang_codes.h"
+#include "intlconv.h"
 #if ENABLE_MPEGTS
 #include "input.h"
 #endif
@@ -1157,7 +1158,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   char *fname;
   char *basename;
-  char *str;
+  char *str, *str0;
   char range_buf[255];
   char disposition[256];
   off_t content_len, chunk;
@@ -1203,12 +1204,17 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   basename = strrchr(fname, '/');
   if (basename) {
     basename++; /* Skip '/' */
+    str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                basename, strlen(basename) * 2);
     htsbuf_queue_init(&q, 0);
     htsbuf_append_and_escape_url(&q, basename);
     str = htsbuf_to_string(&q);
-    snprintf(disposition, sizeof(disposition), "attachment; filename=\"%s\"", str);
+    snprintf(disposition, sizeof(disposition),
+             "attachment; filename=\"%s\"; filename*=utf-8''%s",
+             str0, str);
     htsbuf_queue_flush(&q);
     free(str);
+    free(str0);
   } else {
     disposition[0] = 0;
   }
