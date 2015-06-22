@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 14:58+0000\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
+"PO-Revision-Date: 2015-06-22 15:18+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -102,7 +102,7 @@ msgstr "Zrušit"
 msgid "Abort the selected recording"
 msgstr "Ukonči vybrané nahrávání"
 
-#: src/webui/static/app/tvheadend.js:457
+#: src/webui/static/app/tvheadend.js:458
 msgid "About"
 msgstr "O programu"
 
@@ -603,13 +603,13 @@ msgstr "Elektronický průvodce programem"
 #: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
 #: src/webui/static/app/esfilter.js:158
 msgid "Elementary Stream Filter"
-msgstr "Filtr elementárního toku"
+msgstr "Filtr elementárního streamu"
 
 #: src/webui/static/app/config.js:132
 msgid "Enable NTP driver"
 msgstr "Povolit NTP ovladač"
 
-#: src/webui/static/app/tvheadend.js:615
+#: src/webui/static/app/tvheadend.js:616
 msgid "Enable debug output"
 msgstr "Povolit ladící výstup"
 
@@ -892,7 +892,7 @@ msgstr "Nahrávám..."
 msgid "Loading... Please, wait..."
 msgstr "Nahrávám... Prosím, čekejte..."
 
-#: src/webui/static/app/tvheadend.js:549
+#: src/webui/static/app/tvheadend.js:550
 msgid "Logged in as"
 msgstr "Přihlášen jako"
 
@@ -1062,7 +1062,7 @@ msgstr "Žádná data k zobrazení"
 msgid "No days"
 msgstr "Žádné dny"
 
-#: src/webui/static/app/tvheadend.js:552
+#: src/webui/static/app/tvheadend.js:553
 msgid "No verified access"
 msgstr "Neprověřený přístup"
 
@@ -1121,11 +1121,11 @@ msgstr "Na požádání"
 
 #: src/webui/static/app/esfilter.js:145
 msgid "Other Stream Filter"
-msgstr "Filtr jiných toků"
+msgstr "Filtr jiných streamů"
 
 #: src/webui/static/app/esfilter.js:146
 msgid "Other Stream Filters"
-msgstr "Filtry jiných toků"
+msgstr "Filtry jiných streamů"
 
 #: src/webui/static/app/status.js:708
 msgid "Out"
@@ -1365,7 +1365,7 @@ msgstr "Vybrat program..."
 
 #: src/webui/static/app/tvheadend.js:242
 msgid "Select stream profile..."
-msgstr "Vybrat profil toku..."
+msgstr "Vybrat profil streamu..."
 
 #: src/webui/static/app/config.js:108
 msgid "Selected"
@@ -1482,20 +1482,20 @@ msgstr "Cesta k úložišti"
 #: src/webui/static/app/status.js:336 src/webui/static/app/status.js:466
 #: src/webui/static/app/tvheadend.js:413
 msgid "Stream"
-msgstr "Tok"
+msgstr "Stream"
 
 #: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
 #: src/webui/static/app/esfilter.js:43
 msgid "Stream Profile"
-msgstr "Profil toku"
+msgstr "Profil streamu"
 
 #: src/webui/static/app/esfilter.js:25
 msgid "Stream Profile Name"
-msgstr "Název profilu toku"
+msgstr "Název profilu streamu"
 
 #: src/webui/static/app/esfilter.js:24
 msgid "Stream Profiles"
-msgstr "Profily toků"
+msgstr "Profily streamů"
 
 #: src/webui/static/app/epg.js:487
 msgid "SubTitle"
@@ -1515,11 +1515,11 @@ msgstr "Odběry"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
-msgstr "Filtr toku podtitulků"
+msgstr "Filtr streamu podtitulků"
 
 #: src/webui/static/app/esfilter.js:109
 msgid "Subtitle Stream Filters"
-msgstr "Filtry toků podtitulků"
+msgstr "Filtry streamu podtitulků"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
@@ -1537,7 +1537,7 @@ msgstr "Zaměň čísla"
 msgid "Swap the two selected channel's numbers"
 msgstr "Zaměnit čísla dvou vybraných programů"
 
-#: src/webui/static/app/tvheadend.js:611
+#: src/webui/static/app/tvheadend.js:612
 msgid "System log"
 msgstr "Systémový log"
 
@@ -1551,11 +1551,11 @@ msgstr "Štítek"
 
 #: src/webui/static/app/esfilter.js:89
 msgid "Teletext Stream Filter"
-msgstr "Filter toku teletext"
+msgstr "Filter streamu teletextu"
 
 #: src/webui/static/app/esfilter.js:90
 msgid "Teletext Stream Filters"
-msgstr "Filtry toku teletext"
+msgstr "Filtry streamu teletextu"
 
 #: src/webui/static/app/i18n-post.js:182
 msgid "The date in this field must be after {0}"
@@ -1678,7 +1678,7 @@ msgstr "Úterý"
 msgid "Tune over-the-air EPG muxes to grab new events now"
 msgstr "Naladit over-the-air EPG muxy pro grabování nových událostí"
 
-#: src/webui/static/app/tvheadend.js:590
+#: src/webui/static/app/tvheadend.js:591
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend webový panel"
 
@@ -1749,11 +1749,11 @@ msgstr "Uživatelské jméno"
 
 #: src/webui/static/app/esfilter.js:51
 msgid "Video Stream Filter"
-msgstr "Filtr video toku"
+msgstr "Filtr video streamu"
 
 #: src/webui/static/app/esfilter.js:52
 msgid "Video Stream Filters"
-msgstr "Filtr video toků"
+msgstr "Filtry video streamů"
 
 #: src/webui/static/app/tvheadend.js:314
 msgid "Volume"
@@ -1826,11 +1826,11 @@ msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H
 msgid "hrs"
 msgstr "hod"
 
-#: src/webui/static/app/tvheadend.js:553
+#: src/webui/static/app/tvheadend.js:554
 msgid "login"
 msgstr "přihlásit"
 
-#: src/webui/static/app/tvheadend.js:550
+#: src/webui/static/app/tvheadend.js:551
 msgid "logout"
 msgstr "odhlásit"
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
 "PO-Revision-Date: 2015-06-21 20:20+0000\n"
 "Last-Translator: PiterEL <piotr.kuchciak@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/"
@@ -243,7 +243,7 @@ msgstr "Wszystko DVR (rw)"
 msgid "All days"
 msgstr "Wszystkie dni"
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -350,7 +350,7 @@ msgstr "Marka"
 msgid "Broadcast"
 msgstr "Emisja"
 
-#: src/webui/extjs.c:222
+#: src/webui/extjs.c:223
 msgid "Build"
 msgstr ""
 
@@ -1138,6 +1138,10 @@ msgstr ""
 msgid "Icon has title"
 msgstr ""
 
+#: src/webui/extjs.c:219
+msgid "Icons from"
+msgstr ""
+
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
 msgstr ""
@@ -1155,7 +1159,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr ""
 
-#: src/webui/extjs.c:238
+#: src/webui/extjs.c:239
 msgid "If you'd like to support the project, please consider a donation."
 msgstr ""
 
@@ -2523,7 +2527,7 @@ msgstr "Tytuł"
 msgid "Title (Regexp)"
 msgstr "Tytuł (Regexp)"
 
-#: src/webui/extjs.c:225
+#: src/webui/extjs.c:226
 msgid "Toggle details"
 msgstr ""
 

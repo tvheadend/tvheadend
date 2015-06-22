@@ -1,21 +1,22 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Prof Yaffle <ian@sproink.co.uk>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
 "PO-Revision-Date: 2015-06-22 14:36+0000\n"
 "Last-Translator: Prof Yaffle <ian@sproink.co.uk>\n"
-"Language-Team: English (http://www.transifex.com/projects/p/tvheadend/language/en/)\n"
+"Language-Team: English (http://www.transifex.com/projects/p/tvheadend/"
+"language/en/)\n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -102,7 +103,7 @@ msgstr "Abort"
 msgid "Abort the selected recording"
 msgstr "Abort the selected recording"
 
-#: src/webui/static/app/tvheadend.js:457
+#: src/webui/static/app/tvheadend.js:458
 msgid "About"
 msgstr "About"
 
@@ -389,13 +390,17 @@ msgstr "Create AutoRec"
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programs that match the current query."
-msgstr "Create an automatic recording entry for this program that will record all future programs that match the current query."
+msgstr ""
+"Create an automatic recording entry for this program that will record all "
+"future programs that match the current query."
 
 #: src/webui/static/app/epg.js:826
 msgid ""
 "Create an automatic recording entry that will record all future programs "
 "that match the current query."
-msgstr "Create an automatic recording entry that will record all future programs that match the current query."
+msgstr ""
+"Create an automatic recording entry that will record all future programs "
+"that match the current query."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -609,7 +614,7 @@ msgstr "Elementary Stream Filter"
 msgid "Enable NTP driver"
 msgstr "Enable NTP driver"
 
-#: src/webui/static/app/tvheadend.js:615
+#: src/webui/static/app/tvheadend.js:616
 msgid "Enable debug output"
 msgstr "Enable debug output"
 
@@ -892,7 +897,7 @@ msgstr "Loading..."
 msgid "Loading... Please, wait..."
 msgstr "Loading... Please, wait..."
 
-#: src/webui/static/app/tvheadend.js:549
+#: src/webui/static/app/tvheadend.js:550
 msgid "Logged in as"
 msgstr "Logged in as"
 
@@ -1062,7 +1067,7 @@ msgstr "No data to display"
 msgid "No days"
 msgstr "No days"
 
-#: src/webui/static/app/tvheadend.js:552
+#: src/webui/static/app/tvheadend.js:553
 msgid "No verified access"
 msgstr "No verified access"
 
@@ -1537,7 +1542,7 @@ msgstr "Swap Numbers"
 msgid "Swap the two selected channel's numbers"
 msgstr "Swap the two selected channels' numbers"
 
-#: src/webui/static/app/tvheadend.js:611
+#: src/webui/static/app/tvheadend.js:612
 msgid "System log"
 msgstr "System log"
 
@@ -1591,9 +1596,11 @@ msgstr "The value in this field is invalid"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying"
-" to reconnect..."
-msgstr "There seems to be a problem with the live update feed from Tvheadend. Trying to reconnect..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying "
+"to reconnect..."
+msgstr ""
+"There seems to be a problem with the live update feed from Tvheadend. Trying "
+"to reconnect..."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1611,7 +1618,9 @@ msgstr "This field is required"
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr "This will create an automatic rule that continuously scans the EPG for programs to record that match this query"
+msgstr ""
+"This will create an automatic rule that continuously scans the EPG for "
+"programs to record that match this query"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1678,7 +1687,7 @@ msgstr "Tuesday"
 msgid "Tune over-the-air EPG muxes to grab new events now"
 msgstr "Tune over-the-air EPG muxes to grab new events now"
 
-#: src/webui/static/app/tvheadend.js:590
+#: src/webui/static/app/tvheadend.js:591
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend Web-Panel"
 
@@ -1817,20 +1826,22 @@ msgstr "g:i A#TimeField"
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
-"A|gi|hi|gia|hia|g|H#TimeField"
-msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
+"H#TimeField"
+msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
+"H#TimeField"
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
 msgid "hrs"
 msgstr "hrs"
 
-#: src/webui/static/app/tvheadend.js:553
+#: src/webui/static/app/tvheadend.js:554
 msgid "login"
 msgstr "login"
 
-#: src/webui/static/app/tvheadend.js:550
+#: src/webui/static/app/tvheadend.js:551
 msgid "logout"
 msgstr "logout"
 

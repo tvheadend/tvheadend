@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
 "PO-Revision-Date: 2015-06-22 13:40+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/"
@@ -104,7 +104,7 @@ msgstr "Przerwij"
 msgid "Abort the selected recording"
 msgstr "Przerwij wybrane nagrywanie"
 
-#: src/webui/static/app/tvheadend.js:457
+#: src/webui/static/app/tvheadend.js:458
 msgid "About"
 msgstr "O programie"
 
@@ -611,7 +611,7 @@ msgstr "Filtr Strumienia Podstawowego"
 msgid "Enable NTP driver"
 msgstr "Włącz sterownik NTP"
 
-#: src/webui/static/app/tvheadend.js:615
+#: src/webui/static/app/tvheadend.js:616
 msgid "Enable debug output"
 msgstr "Włącz wyjście debugowania"
 
@@ -894,7 +894,7 @@ msgstr "Ładowanie..."
 msgid "Loading... Please, wait..."
 msgstr "Ładowanie... Proszę czekać..."
 
-#: src/webui/static/app/tvheadend.js:549
+#: src/webui/static/app/tvheadend.js:550
 msgid "Logged in as"
 msgstr "Zalogowany jako"
 
@@ -1064,7 +1064,7 @@ msgstr ""
 msgid "No days"
 msgstr "Brak dni"
 
-#: src/webui/static/app/tvheadend.js:552
+#: src/webui/static/app/tvheadend.js:553
 msgid "No verified access"
 msgstr "Nie zweryfikowany dostęp"
 
@@ -1540,7 +1540,7 @@ msgstr "Zamień numery"
 msgid "Swap the two selected channel's numbers"
 msgstr "Zamień numery dwóch wybranych kanałów"
 
-#: src/webui/static/app/tvheadend.js:611
+#: src/webui/static/app/tvheadend.js:612
 msgid "System log"
 msgstr "Log Systemu"
 
@@ -1686,7 +1686,7 @@ msgstr ""
 msgid "Tune over-the-air EPG muxes to grab new events now"
 msgstr "Skanuj muxy OTA EPG, aby pobrać teraz nowe wydarzenia"
 
-#: src/webui/static/app/tvheadend.js:590
+#: src/webui/static/app/tvheadend.js:591
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend Web-Panel"
 
@@ -1834,11 +1834,11 @@ msgstr ""
 msgid "hrs"
 msgstr "godz"
 
-#: src/webui/static/app/tvheadend.js:553
+#: src/webui/static/app/tvheadend.js:554
 msgid "login"
 msgstr "login"
 
-#: src/webui/static/app/tvheadend.js:550
+#: src/webui/static/app/tvheadend.js:551
 msgid "logout"
 msgstr "Wyloguj"
 

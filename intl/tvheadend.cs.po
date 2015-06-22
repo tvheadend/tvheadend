@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 15:05+0000\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
+"PO-Revision-Date: 2015-06-22 15:16+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -238,7 +238,7 @@ msgstr "Vše DVR (rw)"
 msgid "All days"
 msgstr "Všechny dny"
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -271,7 +271,7 @@ msgstr "Audio kodek"
 
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
-msgstr "Filtr audio toku"
+msgstr "Filtr audio streamu"
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
@@ -322,7 +322,7 @@ msgstr "Šířka pásma"
 
 #: src/webui/extjs.c:218
 msgid "Based on software from"
-msgstr "Použítý software od"
+msgstr "Použitý software od"
 
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
@@ -344,7 +344,7 @@ msgstr "Značka"
 msgid "Broadcast"
 msgstr "Vysílání"
 
-#: src/webui/extjs.c:222
+#: src/webui/extjs.c:223
 msgid "Build"
 msgstr "Sestavení"
 
@@ -367,7 +367,7 @@ msgstr "CA poskytovatel"
 
 #: src/esfilter.c:899
 msgid "CA Stream Filter"
-msgstr "Filtr CA toku"
+msgstr "Filtr CA streamu"
 
 #: src/service.c:196
 msgid "CAID"
@@ -779,7 +779,7 @@ msgstr "EPG časové okno aktualizace"
 
 #: src/esfilter.c:595
 msgid "Elementary Stream Filter"
-msgstr "Filtr elementárního toku"
+msgstr "Filtr elementárního streamu"
 
 #: src/input/mpegts/mpegts_mux.c:459
 msgid "Enable (auto)"
@@ -1061,11 +1061,11 @@ msgstr "HTSP DVR"
 
 #: src/profile.c:1842
 msgid "HTSP Default Stream Settings"
-msgstr "HTSP standardní nastavení toku"
+msgstr "HTSP standardní nastavení streamu"
 
 #: src/profile.c:928
 msgid "HTSP Stream Profile"
-msgstr "HTSP profil toku"
+msgstr "HTSP profil streamu"
 
 #: src/access.c:1327
 msgid "HTSP Streaming"
@@ -1132,6 +1132,10 @@ msgstr "URL ikony"
 msgid "Icon has title"
 msgstr "Ikona má název"
 
+#: src/webui/extjs.c:219
+msgid "Icons from"
+msgstr "Ikony jsou od"
+
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
 msgstr "Vyhledávání při nečinnosti"
@@ -1149,7 +1153,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr "Pokud není vytvořený žádný uživatelský účet,\ntak se vytvoří účet bez uživatelského jména\na hesla. Je doporučené tento administrátorský\núčet okamžitě změnit (uživatelské jméno a heslo)"
 
-#: src/webui/extjs.c:238
+#: src/webui/extjs.c:239
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "Pokud se Vám tento projekt líbí, prosíme, zvažte příspěvek."
 
@@ -1495,7 +1499,7 @@ msgstr "Max. číslo programu"
 
 #: src/input/mpegts/iptv/iptv.c:467
 msgid "Max Input Streams"
-msgstr "Max. počet vstupních toků"
+msgstr "Max. počet vstupních streamů"
 
 #: src/input/mpegts/iptv/iptv.c:481
 msgid "Max timeout (seconds)"
@@ -1823,7 +1827,7 @@ msgstr "Originální ID sítě"
 
 #: src/esfilter.c:974
 msgid "Other Stream Filter"
-msgstr "Filtr jiného toku"
+msgstr "Filtr jiného streamu"
 
 #: src/main.c:725
 msgid "Output directory for tsdebug"
@@ -2380,16 +2384,16 @@ msgstr "Konec"
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
-msgstr "Index toku"
+msgstr "Index streamu"
 
 #: src/profile.c:275 src/dvr/dvr_config.c:789
 msgid "Stream Profile"
-msgstr "Profil toku"
+msgstr "Profil streamu"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream Type"
-msgstr "Typ toku"
+msgstr "Typ streamu"
 
 #: src/access.c:1253 src/access.c:1315
 msgid "Streaming"
@@ -2398,11 +2402,11 @@ msgstr "Streamování"
 #: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:459
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
-msgstr "Priorita toku"
+msgstr "Priorita streamu"
 
 #: src/access.c:1334
 msgid "Streaming Profiles"
-msgstr "Profily toku"
+msgstr "Profily streamů"
 
 #: src/dvr/dvr_config.c:742
 msgid "Subdirectory Options"
@@ -2422,7 +2426,7 @@ msgstr "Podtitulek"
 
 #: src/esfilter.c:832
 msgid "Subtitle Stream Filter"
-msgstr "Filt toku podtitilků"
+msgstr "Filtr streamu podtitilků"
 
 #: src/profile.c:1565
 msgid "Subtitles CODEC"
@@ -2475,7 +2479,7 @@ msgstr "Štítky"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
-msgstr "Filtr toku teletextu"
+msgstr "Filtr streamu teletextu"
 
 #: src/main.c:720
 msgid "Testing options"
@@ -2510,7 +2514,7 @@ msgstr "Název"
 msgid "Title (Regexp)"
 msgstr "Název (regexp)"
 
-#: src/webui/extjs.c:225
+#: src/webui/extjs.c:226
 msgid "Toggle details"
 msgstr "Přepnout detaily"
 
@@ -2532,7 +2536,7 @@ msgstr "ID transpodéru"
 
 #: src/input/mpegts/mpegts_mux.c:540
 msgid "Transport Stream ID"
-msgstr "ID toku transpondéru"
+msgstr "ID streamu transpondéru"
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
@@ -2687,7 +2691,7 @@ msgstr "Video rekordér"
 
 #: src/esfilter.c:631
 msgid "Video Stream Filter"
-msgstr "Filtr video toku"
+msgstr "Filtr video streamu"
 
 #: src/streaming.c:545
 msgid "Visually impaired commentary"
@@ -2723,7 +2727,7 @@ msgstr "Čekám na start programu"
 
 #: src/dvr/dvr_db.c:286
 msgid "Waiting for stream"
-msgstr "Čekám na tok"
+msgstr "Čekám na stream"
 
 #: src/access.c:1384
 msgid "Web Interface"

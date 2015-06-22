@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 14:40+0000\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
+"PO-Revision-Date: 2015-06-22 15:16+0000\n"
 "Last-Translator: stbenz <benz.st@gmail.com>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
@@ -240,7 +240,7 @@ msgstr "DVR (alle, Schreibrecht)"
 msgid "All days"
 msgstr "Jeden Tag"
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -346,7 +346,7 @@ msgstr "Marke"
 msgid "Broadcast"
 msgstr "Ausstrahlung"
 
-#: src/webui/extjs.c:222
+#: src/webui/extjs.c:223
 msgid "Build"
 msgstr "Build"
 
@@ -1134,6 +1134,10 @@ msgstr "Symbol URL"
 msgid "Icon has title"
 msgstr "Symbol hat Titel"
 
+#: src/webui/extjs.c:219
+msgid "Icons from"
+msgstr "Symbole von"
+
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
 msgstr "Leerlaufsuche"
@@ -1151,7 +1155,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr "Erstellen eines Kontos ohne Benutzername\nund Passwort, wenn kein Benutzerkonto existiert.\nBeachten Sie, dass es weltweiten administrativen\nZugriff zu Ihrer Tvheadend-Installation erlaubt, bis\nSie die Zugangskontrolle im Tvheadend UI\nanpassen."
 
-#: src/webui/extjs.c:238
+#: src/webui/extjs.c:239
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "Wenn Sie das Projekt unterstützen möchten, erwägen Sie bitte eine Spende."
 
@@ -2512,7 +2516,7 @@ msgstr "Titel"
 msgid "Title (Regexp)"
 msgstr "Titel (Regexp)"
 
-#: src/webui/extjs.c:225
+#: src/webui/extjs.c:226
 msgid "Toggle details"
 msgstr "Details umschalten"
 

@@ -3,16 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Prof Yaffle <ian@sproink.co.uk>, 2015
+# Prof Yaffle, 2015
 # Mark Clarkstone <github@markclarkstone.co.uk>, 2015
-# Prof Yaffle <ian@sproink.co.uk>, 2015
+# Prof Yaffle, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 14:39+0000\n"
-"Last-Translator: Prof Yaffle <ian@sproink.co.uk>\n"
+"POT-Creation-Date: 2015-06-22 17:11+0200\n"
+"PO-Revision-Date: 2015-06-22 15:15+0000\n"
+"Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -240,7 +240,7 @@ msgstr "All DVR (rw)"
 msgid "All days"
 msgstr "Every day"
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -346,7 +346,7 @@ msgstr "Brand"
 msgid "Broadcast"
 msgstr "Broadcast"
 
-#: src/webui/extjs.c:222
+#: src/webui/extjs.c:223
 msgid "Build"
 msgstr "Build"
 
@@ -1134,6 +1134,10 @@ msgstr "Icon URL"
 msgid "Icon has title"
 msgstr "Icon has title"
 
+#: src/webui/extjs.c:219
+msgid "Icons from"
+msgstr "Icons from"
+
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
 msgstr "Idle Scan"
@@ -1151,7 +1155,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr "If no user account exists then create one with\nno username and no password. Use with care as\nit will allow world-wide administrative access\nto your Tvheadend installation until you edit/create\naccess control from within the Tvheadend UI"
 
-#: src/webui/extjs.c:238
+#: src/webui/extjs.c:239
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "If you'd like to support the project, please consider a donation."
 
@@ -2512,7 +2516,7 @@ msgstr "Title"
 msgid "Title (Regexp)"
 msgstr "Title (Regexp)"
 
-#: src/webui/extjs.c:225
+#: src/webui/extjs.c:226
 msgid "Toggle details"
 msgstr "Toggle details"
 
