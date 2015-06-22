@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 14:24+0000\n"
+"POT-Creation-Date: 2015-06-22 17:38+0200\n"
+"PO-Revision-Date: 2015-06-22 15:39+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Serbian (http://www.transifex.com/projects/p/tvheadend/language/sr/)\n"
 "MIME-Version: 1.0\n"
@@ -101,7 +101,7 @@ msgstr ""
 msgid "Abort the selected recording"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:457
+#: src/webui/static/app/tvheadend.js:458
 msgid "About"
 msgstr ""
 
@@ -608,7 +608,7 @@ msgstr ""
 msgid "Enable NTP driver"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:615
+#: src/webui/static/app/tvheadend.js:616
 msgid "Enable debug output"
 msgstr ""
 
@@ -891,7 +891,7 @@ msgstr ""
 msgid "Loading... Please, wait..."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:549
+#: src/webui/static/app/tvheadend.js:550
 msgid "Logged in as"
 msgstr ""
 
@@ -1061,7 +1061,7 @@ msgstr ""
 msgid "No days"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:552
+#: src/webui/static/app/tvheadend.js:553
 msgid "No verified access"
 msgstr ""
 
@@ -1533,10 +1533,10 @@ msgid "Swap Numbers"
 msgstr ""
 
 #: src/webui/static/app/chconf.js:195
-msgid "Swap the two selected channel's numbers"
+msgid "Swap the numbers for the two selected channels"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:611
+#: src/webui/static/app/tvheadend.js:612
 msgid "System log"
 msgstr ""
 
@@ -1677,7 +1677,7 @@ msgstr ""
 msgid "Tune over-the-air EPG muxes to grab new events now"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:590
+#: src/webui/static/app/tvheadend.js:591
 msgid "Tvheadend Web-Panel"
 msgstr ""
 
@@ -1825,11 +1825,11 @@ msgstr ""
 msgid "hrs"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:553
+#: src/webui/static/app/tvheadend.js:554
 msgid "login"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:550
+#: src/webui/static/app/tvheadend.js:551
 msgid "logout"
 msgstr ""
 

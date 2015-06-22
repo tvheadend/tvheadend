@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 17:11+0200\n"
-"PO-Revision-Date: 2015-06-22 15:18+0000\n"
+"POT-Creation-Date: 2015-06-22 17:38+0200\n"
+"PO-Revision-Date: 2015-06-22 15:44+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -1534,8 +1534,8 @@ msgid "Swap Numbers"
 msgstr "Zaměň čísla"
 
 #: src/webui/static/app/chconf.js:195
-msgid "Swap the two selected channel's numbers"
-msgstr "Zaměnit čísla dvou vybraných programů"
+msgid "Swap the numbers for the two selected channels"
+msgstr "Zaměnit čísla pro dva vybrané programy"
 
 #: src/webui/static/app/tvheadend.js:612
 msgid "System log"
