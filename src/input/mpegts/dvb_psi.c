@@ -874,7 +874,8 @@ dvb_pat_callback
       int save = 0;
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
         if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
-          tvhinfo("mpegts", "enabling service %s (found in PAT)", s->s_nicename);
+          tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in PAT)",
+                  s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id);
           service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
         }
         s->s_dvb_check_seen = dispatch_clock;
@@ -1472,7 +1473,8 @@ dvb_sdt_mux
 
     if (s) {
       if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
-        tvhinfo("mpegts", "enabling service %s (found in SDT)", s->s_nicename);
+        tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in SDT)",
+                s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id);
         service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
       }
       s->s_dvb_check_seen = dispatch_clock;
