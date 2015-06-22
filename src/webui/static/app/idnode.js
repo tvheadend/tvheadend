@@ -901,7 +901,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
 
     /* Create window */
     win = new Ext.Window({
-        title: _('Add') + ' ' + conf.titleS,
+        title: String.format(_('Add {0}'), conf.titleS),
         iconCls: 'add',
         layout: 'fit',
         autoWidth: true,
@@ -931,7 +931,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                     if (d) {
                         d = tvheadend.idnode_filter_fields(d, conf.select.list || null);
                         pclass = r.get(conf.select.valueField);
-                        win.setTitle(_('Add') + ' ' + s.lastSelectionText);
+                        win.setTitle(String.format(_('Add {0}'), s.lastSelectionText));
                         panel.remove(s);
                         tvheadend.idnode_editor_form(d, null, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
