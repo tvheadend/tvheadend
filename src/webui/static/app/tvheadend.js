@@ -454,6 +454,7 @@ function accessUpdate(o) {
         tvheadend.aboutPanel = new Ext.Panel({
             border: false,
             layout: 'fit',
+            autoScroll: true,
             title: _('About'),
             iconCls: 'info',
             autoLoad: 'about.html'
