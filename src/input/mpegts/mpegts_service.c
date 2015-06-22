@@ -85,7 +85,7 @@ const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
-  .ic_caption    = N_("MPEGTS Service"),
+  .ic_caption    = N_("MPEG-TS Service"),
   .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){
     {
@@ -715,7 +715,7 @@ const idclass_t mpegts_service_raw_class =
 {
   .ic_super      = &service_raw_class,
   .ic_class      = "mpegts_raw_service",
-  .ic_caption    = N_("MPEGTS Raw Service"),
+  .ic_caption    = N_("MPEG-TS Raw Service"),
   .ic_properties = NULL
 };
 

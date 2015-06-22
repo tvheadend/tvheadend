@@ -100,7 +100,7 @@ linuxdvb_en50494_pin_list ( void *o, const char *lang )
 
   e = htsmsg_create_map();
   htsmsg_add_u32(e, "key", 256);
-  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("No pin")));
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("No PIN")));
   htsmsg_add_msg(m, NULL, e);
 
   for (i = 0; i < 256; i++) {
@@ -143,7 +143,7 @@ const idclass_t linuxdvb_en50494_class =
     {
       .type   = PT_U16,
       .id     = "pin",
-      .name   = N_("Pin"),
+      .name   = N_("PIN"),
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
       .list   = linuxdvb_en50494_pin_list,
     },

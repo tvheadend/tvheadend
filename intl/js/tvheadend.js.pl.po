@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"POT-Creation-Date: 2015-06-22 16:24+0200\n"
 "PO-Revision-Date: 2015-06-22 13:40+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/"
@@ -390,13 +390,13 @@ msgstr "Utwórz Auto-Zapis"
 #: src/webui/static/app/epg.js:220
 msgid ""
 "Create an automatic recording entry for this program that will record all "
-"future programmes that matches the current query."
+"future programs that match the current query."
 msgstr ""
 
 #: src/webui/static/app/epg.js:826
 msgid ""
-"Create an automatic recording entry that will record all future programmes "
-"that matches the current query."
+"Create an automatic recording entry that will record all future programs "
+"that match the current query."
 msgstr ""
 
 #: src/webui/static/app/idnode.js:858
@@ -802,13 +802,13 @@ msgstr "Ukryj Hasła"
 msgid "Hostname"
 msgstr "Nazwa hosta"
 
+#: src/webui/static/app/status.js:74
+msgid "ID"
+msgstr ""
+
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
 msgstr "Adres IP"
-
-#: src/webui/static/app/status.js:74
-msgid "Id"
-msgstr "Id"
 
 #: src/webui/static/app/config.js:208
 msgid "Ignore invalid SSL certificate"
@@ -1536,7 +1536,8 @@ msgid "Swap Numbers"
 msgstr "Zamień numery"
 
 #: src/webui/static/app/chconf.js:195
-msgid "Swap the two selected channels numbers"
+#, fuzzy
+msgid "Swap the two selected channel's numbers"
 msgstr "Zamień numery dwóch wybranych kanałów"
 
 #: src/webui/static/app/tvheadend.js:611
@@ -1612,9 +1613,10 @@ msgid "This field is required"
 msgstr ""
 
 #: src/webui/static/app/epg.js:1016
+#, fuzzy
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
-"programmes to record that match this query"
+"programs to record that match this query"
 msgstr ""
 "To stworzy automatyczną regułę nieustannie skanującą EPG dla programów do "
 "nagrywania na zapytanie"
@@ -1897,3 +1899,6 @@ msgstr ""
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr ""
+
+#~ msgid "Id"
+#~ msgstr "Id"

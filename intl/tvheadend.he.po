@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"POT-Creation-Date: 2015-06-22 16:24+0200\n"
 "PO-Revision-Date: 2015-06-20 14:24+0000\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Hebrew (http://www.transifex.com/projects/p/tvheadend/"
@@ -266,7 +266,7 @@ msgid "Audio Bitrate (kb/s) (0=Auto)"
 msgstr ""
 
 #: src/profile.c:1550
-msgid "Audio Codec"
+msgid "Audio CODEC"
 msgstr ""
 
 #: src/esfilter.c:698
@@ -596,7 +596,7 @@ msgid "DVR Auto-Record Entry"
 msgstr ""
 
 #: src/dvr/dvr_config.c:730
-msgid "DVR Behaviour"
+msgid "DVR Behavior"
 msgstr ""
 
 #: src/access.c:1375
@@ -738,19 +738,19 @@ msgid "DiseqC switch"
 msgstr ""
 
 #: src/dvr/dvr_config.c:961
-msgid "Do Not Include Title To Filename"
+msgid "Don't Include Title To Filename"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2215
-msgid "Do Not Reschedule"
+msgid "Don't Reschedule"
 msgstr ""
 
 #: src/main.c:648
-msgid "Do not backup config tree at upgrade"
+msgid "Don't backup config tree at upgrade"
 msgstr ""
 
 #: src/dvr/dvr_config.c:683
-msgid "Do not keep"
+msgid "Don't keep"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:1039
@@ -1145,8 +1145,8 @@ msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
-"to your Tvheadend installation until you edit\n"
-"the access-control from within the Tvheadend UI"
+"to your Tvheadend installation until you edit/create\n"
+"access-control from within the Tvheadend UI"
 msgstr ""
 
 #: src/webui/extjs.c:238
@@ -1377,47 +1377,51 @@ msgid "MPEG-PS (DVD)"
 msgstr ""
 
 #: src/profile.c:1359
-msgid "MPEG-PS (DVD) /av-lib"
+msgid "MPEG-PS (DVD)/av-lib"
 msgstr ""
 
 #: src/dvr/dvr_db.c:1650
 msgid "MPEG-TS"
 msgstr ""
 
-#: src/profile.c:1187 src/profile.c:1358
+#: src/profile.c:1187
 msgid "MPEG-TS /av-lib"
 msgstr ""
 
-#: src/profile.c:1806
-msgid "MPEG-TS Pass-through"
-msgstr ""
-
-#: src/profile.c:1001
-msgid "MPEG-TS Pass-through /build-in"
-msgstr ""
-
 #: src/input/mpegts/mpegts_input.c:216
-msgid "MPEGTS Input"
+msgid "MPEG-TS Input"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:486
-msgid "MPEGTS Multiplex"
+msgid "MPEG-TS Multiplex"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:42
-msgid "MPEGTS Multiplex Phy"
+msgid "MPEG-TS Multiplex Phy"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:134
-msgid "MPEGTS Network"
+msgid "MPEG-TS Network"
+msgstr ""
+
+#: src/profile.c:1806
+msgid "MPEG-TS Pass-thru"
+msgstr ""
+
+#: src/profile.c:1001
+msgid "MPEG-TS Pass-thru/build-in"
 msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:718
-msgid "MPEGTS Raw Service"
+msgid "MPEG-TS Raw Service"
 msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:88
-msgid "MPEGTS Service"
+msgid "MPEG-TS Service"
+msgstr ""
+
+#: src/profile.c:1358
+msgid "MPEG-TS/av-lib"
 msgstr ""
 
 #: src/dvr/dvr_config.c:912
@@ -1465,16 +1469,16 @@ msgstr ""
 msgid "Matroska (mkv)"
 msgstr ""
 
-#: src/profile.c:1360
-msgid "Matroska (mkv) /av-lib"
-msgstr ""
-
 #: src/profile.c:1102
 msgid "Matroska (mkv) /build-in"
 msgstr ""
 
+#: src/profile.c:1360
+msgid "Matroska (mkv)/av-lib"
+msgstr ""
+
 #: src/profile.c:1356
-msgid "Matroska (mkv) /built-in"
+msgid "Matroska (mkv)/built-in"
 msgstr ""
 
 #: src/profile.c:1258
@@ -1498,7 +1502,7 @@ msgid "Max timeout (seconds)"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:1017
-msgid "Maximal Duration"
+msgid "Maximum Duration"
 msgstr ""
 
 #: src/input/mpegts/satip/satip.c:226
@@ -1522,7 +1526,7 @@ msgid "Min Rotor Time (seconds)"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:1010
-msgid "Minimal Duration"
+msgid "Minimum Duration"
 msgstr ""
 
 #: src/service.c:141
@@ -1633,7 +1637,7 @@ msgid "Network Type"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:519
-msgid "Network Uuid"
+msgid "Network UUID"
 msgstr ""
 
 #: src/access.c:1301
@@ -1649,6 +1653,10 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:159
 msgid "Next tune delay in ms (0-2000)"
+msgstr ""
+
+#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
+msgid "No PIN"
 msgstr ""
 
 #: src/streaming.c:446
@@ -1673,10 +1681,6 @@ msgstr ""
 
 #: src/streaming.c:448
 msgid "No input detected"
-msgstr ""
-
-#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
-msgid "No pin"
 msgstr ""
 
 #: src/streaming.c:438
@@ -1850,6 +1854,8 @@ msgstr ""
 msgid "PIDs in setup"
 msgstr ""
 
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
+#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:209
 msgid "PIN"
 msgstr ""
@@ -1884,11 +1890,6 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
-msgstr ""
-
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
-#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
-msgid "Pin"
 msgstr ""
 
 #: src/descrambler/cwc.c:1746
@@ -2260,6 +2261,10 @@ msgstr ""
 msgid "Show version information"
 msgstr ""
 
+#: src/streaming.c:434
+msgid "Signal quality too poor"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
 msgstr ""
@@ -2420,7 +2425,7 @@ msgid "Subtitle Stream Filter"
 msgstr ""
 
 #: src/profile.c:1565
-msgid "Subtitles Codec"
+msgid "Subtitles CODEC"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:719
@@ -2453,7 +2458,7 @@ msgid "Sync"
 msgstr ""
 
 #: src/dvr/dvr_config.c:685
-msgid "Sync + Do not keep"
+msgid "Sync + Don't keep"
 msgstr ""
 
 #: src/dvr/dvr_config.c:682
@@ -2511,10 +2516,6 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"
-msgstr ""
-
-#: src/streaming.c:434
-msgid "Too bad signal quality"
 msgstr ""
 
 #: src/profile.c:1500
@@ -2645,7 +2646,7 @@ msgid "Use Windows-compatible filenames"
 msgstr ""
 
 #: src/main.c:691
-msgid "Use xspf playlist instead M3U"
+msgid "Use XSPF playlist instead of M3U"
 msgstr ""
 
 #: src/dvr/dvr_db.c:304
@@ -2677,7 +2678,7 @@ msgid "Video Bitrate (kb/s) (0=Auto)"
 msgstr ""
 
 #: src/profile.c:1535
-msgid "Video Codec"
+msgid "Video CODEC"
 msgstr ""
 
 #: src/access.c:1343
@@ -2697,11 +2698,11 @@ msgid "WEBM"
 msgstr ""
 
 #: src/profile.c:1361
-msgid "WEBM /av-lib"
+msgid "WEBM/av-lib"
 msgstr ""
 
 #: src/profile.c:1357
-msgid "WEBM /built-in"
+msgid "WEBM/built-in"
 msgstr ""
 
 #: src/profile.c:1880

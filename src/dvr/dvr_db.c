@@ -2212,7 +2212,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "noresched",
-      .name     = N_("Do Not Reschedule"),
+      .name     = N_("Don't Reschedule"),
       .off      = offsetof(dvr_entry_t, de_dont_reschedule),
       .opts     = PO_RDONLY,
     },

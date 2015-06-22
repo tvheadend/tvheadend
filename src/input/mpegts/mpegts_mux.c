@@ -39,7 +39,7 @@ const idclass_t mpegts_mux_instance_class =
 {
   .ic_super      = &tvh_input_instance_class,
   .ic_class      = "mpegts_mux_instance",
-  .ic_caption    = N_("MPEGTS Multiplex Phy"),
+  .ic_caption    = N_("MPEG-TS Multiplex Phy"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 
@@ -483,7 +483,7 @@ mpegts_mux_ac3_list ( void *o, const char *lang )
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
-  .ic_caption    = N_("MPEGTS Multiplex"),
+  .ic_caption    = N_("MPEG-TS Multiplex"),
   .ic_event      = "mpegts_mux",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_mux_class_save,
@@ -516,7 +516,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_STR,
       .id       = "network_uuid",
-      .name     = N_("Network Uuid"),
+      .name     = N_("Network UUID"),
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
       .get      = mpegts_mux_class_get_network_uuid,
     },

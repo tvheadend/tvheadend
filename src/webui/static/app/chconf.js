@@ -192,7 +192,7 @@ tvheadend.channel_tab = function(panel, index)
         name: 'swap',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: _('Swap the two selected channels numbers'),
+                tooltip: _('Swap the two selected channel\'s numbers'),
                 iconCls: 'arrow_switch',
                 text: _('Swap Numbers'),
                 disabled: false

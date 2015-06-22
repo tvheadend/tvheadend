@@ -1007,14 +1007,14 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_INT,
       .id       = "minduration",
-      .name     = N_("Minimal Duration"),
+      .name     = N_("Minimum Duration"),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
     },
     {
       .type     = PT_INT,
       .id       = "maxduration",
-      .name     = N_("Maximal Duration"),
+      .name     = N_("Maximum Duration"),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
     },

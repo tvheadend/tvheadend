@@ -71,7 +71,7 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 50,
                 id: 'id',
-                header: _("Id"),
+                header: _("ID"),
                 dataIndex: 'id',
                 renderer: function(v) {
                     return ("0000000" + v.toString(16).toUpperCase()).substr(-8);

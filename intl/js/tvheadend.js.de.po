@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"POT-Creation-Date: 2015-06-22 16:24+0200\n"
 "PO-Revision-Date: 2015-06-22 13:40+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/"
@@ -390,17 +390,19 @@ msgid "Create AutoRec"
 msgstr "Generiere automatische Aufnahme"
 
 #: src/webui/static/app/epg.js:220
+#, fuzzy
 msgid ""
 "Create an automatic recording entry for this program that will record all "
-"future programmes that matches the current query."
+"future programs that match the current query."
 msgstr ""
 "Erstelle eine automatische Aufnahme für diese Sendung, die alle zukünftigen "
 "Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/epg.js:826
+#, fuzzy
 msgid ""
-"Create an automatic recording entry that will record all future programmes "
-"that matches the current query."
+"Create an automatic recording entry that will record all future programs "
+"that match the current query."
 msgstr ""
 "Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, "
 "die der aktuellen Abfrage entsprechen."
@@ -808,13 +810,13 @@ msgstr "Passwörter verstecken"
 msgid "Hostname"
 msgstr "Hostname"
 
+#: src/webui/static/app/status.js:74
+msgid "ID"
+msgstr ""
+
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
 msgstr "IP-Adresse"
-
-#: src/webui/static/app/status.js:74
-msgid "Id"
-msgstr "Id"
 
 #: src/webui/static/app/config.js:208
 msgid "Ignore invalid SSL certificate"
@@ -1542,7 +1544,8 @@ msgid "Swap Numbers"
 msgstr "Nummern tauschen"
 
 #: src/webui/static/app/chconf.js:195
-msgid "Swap the two selected channels numbers"
+#, fuzzy
+msgid "Swap the two selected channel's numbers"
 msgstr "Tausche die zwei ausgewählten Kanalnummern"
 
 #: src/webui/static/app/tvheadend.js:611
@@ -1618,9 +1621,10 @@ msgid "This field is required"
 msgstr "Diese Feld ist erforderlich"
 
 #: src/webui/static/app/epg.js:1016
+#, fuzzy
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
-"programmes to record that match this query"
+"programs to record that match this query"
 msgstr ""
 "Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen "
 "durchsucht um diese aufzunehmen"
@@ -1908,3 +1912,6 @@ msgstr "{0} ist keine gültige Zeit"
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr "{0} Zeile(n) ausgewählt"
+
+#~ msgid "Id"
+#~ msgstr "Id"

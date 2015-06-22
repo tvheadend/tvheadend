@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"POT-Creation-Date: 2015-06-22 16:24+0200\n"
 "PO-Revision-Date: 2015-06-21 20:47+0000\n"
 "Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/"
@@ -272,7 +272,8 @@ msgid "Audio Bitrate (kb/s) (0=Auto)"
 msgstr "Audio-Bitrate (kb/s) (0=Auto)"
 
 #: src/profile.c:1550
-msgid "Audio Codec"
+#, fuzzy
+msgid "Audio CODEC"
 msgstr "Audio-Codec"
 
 #: src/esfilter.c:698
@@ -602,7 +603,8 @@ msgid "DVR Auto-Record Entry"
 msgstr "DVR Auto-Aufnahmeeintrag"
 
 #: src/dvr/dvr_config.c:730
-msgid "DVR Behaviour"
+#, fuzzy
+msgid "DVR Behavior"
 msgstr "DVR Verhalten"
 
 #: src/access.c:1375
@@ -744,19 +746,23 @@ msgid "DiseqC switch"
 msgstr "DiseqC Switch"
 
 #: src/dvr/dvr_config.c:961
-msgid "Do Not Include Title To Filename"
+#, fuzzy
+msgid "Don't Include Title To Filename"
 msgstr "Titel nicht in den Dateinaman einfügen"
 
 #: src/dvr/dvr_db.c:2215
-msgid "Do Not Reschedule"
+#, fuzzy
+msgid "Don't Reschedule"
 msgstr "Nicht neu ansetzen"
 
 #: src/main.c:648
-msgid "Do not backup config tree at upgrade"
+#, fuzzy
+msgid "Don't backup config tree at upgrade"
 msgstr "Konfigurationsverzeichnis bei Upgrade nicht sichern"
 
 #: src/dvr/dvr_config.c:683
-msgid "Do not keep"
+#, fuzzy
+msgid "Don't keep"
 msgstr "Nicht behalten"
 
 #: src/dvr/dvr_autorec.c:1039
@@ -1147,12 +1153,13 @@ msgid "Idle Scan Muxes"
 msgstr "Mux Leerlaufsuche"
 
 #: src/main.c:653
+#, fuzzy
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
-"to your Tvheadend installation until you edit\n"
-"the access-control from within the Tvheadend UI"
+"to your Tvheadend installation until you edit/create\n"
+"access-control from within the Tvheadend UI"
 msgstr ""
 "Erstellen eines Kontos ohne Benutzername\n"
 "und Passwort, wenn kein Benutzerkonto existiert.\n"
@@ -1389,48 +1396,61 @@ msgid "MPEG-PS (DVD)"
 msgstr "MPEG-PS (DVD)"
 
 #: src/profile.c:1359
-msgid "MPEG-PS (DVD) /av-lib"
+#, fuzzy
+msgid "MPEG-PS (DVD)/av-lib"
 msgstr "MPEG-PS (DVD) /av-lib"
 
 #: src/dvr/dvr_db.c:1650
 msgid "MPEG-TS"
 msgstr "MPEG-TS"
 
-#: src/profile.c:1187 src/profile.c:1358
+#: src/profile.c:1187
 msgid "MPEG-TS /av-lib"
 msgstr "MPEG-TS /av-lib"
 
-#: src/profile.c:1806
-msgid "MPEG-TS Pass-through"
-msgstr ""
-
-#: src/profile.c:1001
-msgid "MPEG-TS Pass-through /build-in"
-msgstr ""
-
 #: src/input/mpegts/mpegts_input.c:216
-msgid "MPEGTS Input"
-msgstr ""
+#, fuzzy
+msgid "MPEG-TS Input"
+msgstr "MPEG-TS"
 
 #: src/input/mpegts/mpegts_mux.c:486
-msgid "MPEGTS Multiplex"
-msgstr ""
+#, fuzzy
+msgid "MPEG-TS Multiplex"
+msgstr "IPTV-Multiplex"
 
 #: src/input/mpegts/mpegts_mux.c:42
-msgid "MPEGTS Multiplex Phy"
-msgstr ""
+#, fuzzy
+msgid "MPEG-TS Multiplex Phy"
+msgstr "IPTV-Multiplex"
 
 #: src/input/mpegts/mpegts_network.c:134
-msgid "MPEGTS Network"
+#, fuzzy
+msgid "MPEG-TS Network"
 msgstr "MPEGTS Netzwerk"
 
-#: src/input/mpegts/mpegts_service.c:718
-msgid "MPEGTS Raw Service"
+#: src/profile.c:1806
+#, fuzzy
+msgid "MPEG-TS Pass-thru"
+msgstr "MPEG-TS /av-lib"
+
+#: src/profile.c:1001
+msgid "MPEG-TS Pass-thru/build-in"
 msgstr ""
 
+#: src/input/mpegts/mpegts_service.c:718
+#, fuzzy
+msgid "MPEG-TS Raw Service"
+msgstr "MPEG-TS /av-lib"
+
 #: src/input/mpegts/mpegts_service.c:88
-msgid "MPEGTS Service"
-msgstr ""
+#, fuzzy
+msgid "MPEG-TS Service"
+msgstr "MPEG-TS /av-lib"
+
+#: src/profile.c:1358
+#, fuzzy
+msgid "MPEG-TS/av-lib"
+msgstr "MPEG-TS /av-lib"
 
 #: src/dvr/dvr_config.c:912
 msgid "Make Subdirectories Per Channel"
@@ -1477,16 +1497,18 @@ msgstr "Matroska"
 msgid "Matroska (mkv)"
 msgstr "Matroska (mkv)"
 
-#: src/profile.c:1360
-msgid "Matroska (mkv) /av-lib"
-msgstr "Matroska (mkv) /av-lib"
-
 #: src/profile.c:1102
 msgid "Matroska (mkv) /build-in"
 msgstr "Matroska (mkv) /eingebaut"
 
+#: src/profile.c:1360
+#, fuzzy
+msgid "Matroska (mkv)/av-lib"
+msgstr "Matroska (mkv) /av-lib"
+
 #: src/profile.c:1356
-msgid "Matroska (mkv) /built-in"
+#, fuzzy
+msgid "Matroska (mkv)/built-in"
 msgstr "Matroska (mkv) /eingebaut"
 
 #: src/profile.c:1258
@@ -1510,7 +1532,8 @@ msgid "Max timeout (seconds)"
 msgstr "Max. Zeitüberschreitung (Sekunden)"
 
 #: src/dvr/dvr_autorec.c:1017
-msgid "Maximal Duration"
+#, fuzzy
+msgid "Maximum Duration"
 msgstr "Maximale Dauer"
 
 #: src/input/mpegts/satip/satip.c:226
@@ -1534,7 +1557,8 @@ msgid "Min Rotor Time (seconds)"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:1010
-msgid "Minimal Duration"
+#, fuzzy
+msgid "Minimum Duration"
 msgstr "Minimale Dauer"
 
 #: src/service.c:141
@@ -1645,8 +1669,9 @@ msgid "Network Type"
 msgstr "Netzwerktyp"
 
 #: src/input/mpegts/mpegts_mux.c:519
-msgid "Network Uuid"
-msgstr "Netzwerk Uuid"
+#, fuzzy
+msgid "Network UUID"
+msgstr "Netzwerk A"
 
 #: src/access.c:1301
 msgid "Network prefix"
@@ -1661,6 +1686,10 @@ msgstr "Netzwerke"
 
 #: src/input/mpegts/satip/satip_frontend.c:159
 msgid "Next tune delay in ms (0-2000)"
+msgstr ""
+
+#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
+msgid "No PIN"
 msgstr ""
 
 #: src/streaming.c:446
@@ -1686,10 +1715,6 @@ msgstr "Kein freier Adapter"
 #: src/streaming.c:448
 msgid "No input detected"
 msgstr "Keine Daten erkannt"
-
-#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
-msgid "No pin"
-msgstr "Kein PIN"
 
 #: src/streaming.c:438
 msgid "No service assigned to channel"
@@ -1862,6 +1887,8 @@ msgstr ""
 msgid "PIDs in setup"
 msgstr ""
 
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
+#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:209
 msgid "PIN"
 msgstr "PIN"
@@ -1897,11 +1924,6 @@ msgstr "Passwörter"
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
 msgstr "Pilot"
-
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
-#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
-msgid "Pin"
-msgstr "Pin"
 
 #: src/descrambler/cwc.c:1746
 msgid "Port"
@@ -2274,6 +2296,10 @@ msgstr "Zeige diese Seite"
 msgid "Show version information"
 msgstr "Versionsinformationen anzeigen"
 
+#: src/streaming.c:434
+msgid "Signal quality too poor"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
 msgstr "Signalauflösung (240 oder 100)"
@@ -2434,7 +2460,8 @@ msgid "Subtitle Stream Filter"
 msgstr "Untertitel Stream-Filter"
 
 #: src/profile.c:1565
-msgid "Subtitles Codec"
+#, fuzzy
+msgid "Subtitles CODEC"
 msgstr "Untertitel-Codec"
 
 #: src/dvr/dvr_autorec.c:719
@@ -2467,8 +2494,9 @@ msgid "Sync"
 msgstr "Sync"
 
 #: src/dvr/dvr_config.c:685
-msgid "Sync + Do not keep"
-msgstr ""
+#, fuzzy
+msgid "Sync + Don't keep"
+msgstr "Nicht behalten"
 
 #: src/dvr/dvr_config.c:682
 msgid "System"
@@ -2526,10 +2554,6 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"
 msgstr "Tonburst"
-
-#: src/streaming.c:434
-msgid "Too bad signal quality"
-msgstr "Zu schlechte Signalqualität"
 
 #: src/profile.c:1500
 msgid "Transcode /av-lib"
@@ -2659,7 +2683,8 @@ msgid "Use Windows-compatible filenames"
 msgstr "Benutze Windows-kompatible Dateinamen"
 
 #: src/main.c:691
-msgid "Use xspf playlist instead M3U"
+#, fuzzy
+msgid "Use XSPF playlist instead of M3U"
 msgstr "Benutze xspf-Playlist statt M3U"
 
 #: src/dvr/dvr_db.c:304
@@ -2691,7 +2716,8 @@ msgid "Video Bitrate (kb/s) (0=Auto)"
 msgstr "Video-Bitrate (kb/s) (0=Auto)"
 
 #: src/profile.c:1535
-msgid "Video Codec"
+#, fuzzy
+msgid "Video CODEC"
 msgstr "Video-Codec"
 
 #: src/access.c:1343
@@ -2711,11 +2737,13 @@ msgid "WEBM"
 msgstr "WEBM"
 
 #: src/profile.c:1361
-msgid "WEBM /av-lib"
+#, fuzzy
+msgid "WEBM/av-lib"
 msgstr "WEBM /av-lib"
 
 #: src/profile.c:1357
-msgid "WEBM /built-in"
+#, fuzzy
+msgid "WEBM/built-in"
 msgstr "WEBM /built-in"
 
 #: src/profile.c:1880
@@ -2791,3 +2819,15 @@ msgstr ""
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:129
 msgid "tvhdhomerun Client"
 msgstr "TVHDHomeRun Client"
+
+#~ msgid "Network Uuid"
+#~ msgstr "Netzwerk Uuid"
+
+#~ msgid "No pin"
+#~ msgstr "Kein PIN"
+
+#~ msgid "Pin"
+#~ msgstr "Pin"
+
+#~ msgid "Too bad signal quality"
+#~ msgstr "Zu schlechte Signalqualität"

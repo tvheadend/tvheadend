@@ -218,7 +218,7 @@ tvheadend.epgDetails = function(event) {
             handler: recordSeries,
             iconCls: 'autoRec',
             tooltip: _('Create an automatic recording entry for this program that will '
-                 + 'record all future programmes that matches '
+                 + 'record all future programs that match '
                  + 'the current query.'),
             text: event.serieslinkId ? _("Record series") : _("Autorec")
         }));
@@ -824,7 +824,7 @@ tvheadend.epg = function() {
         text: _('Create AutoRec'),
         iconCls: 'autoRec',
         tooltip: _('Create an automatic recording entry that will '
-                 + 'record all future programmes that matches '
+                 + 'record all future programs that match '
                  + 'the current query.'),
         handler: createAutoRec
     });
@@ -1014,7 +1014,7 @@ tvheadend.epg = function() {
                 : "<i>" + _("Don't care") + "</i>";
 
         Ext.MessageBox.confirm(_('Auto Recorder'), _('This will create an automatic rule that '
-                + 'continuously scans the EPG for programmes '
+                + 'continuously scans the EPG for programs '
                 + 'to record that match this query') + ': ' + '<br><br>'
                 + '<div class="x-smallhdr">' + _('Title') + ':</div>' + title + fulltext + '<br>'
                 + '<div class="x-smallhdr">' + _('Channel') + ':</div>' + channel + '<br>'

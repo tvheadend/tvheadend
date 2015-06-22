@@ -511,7 +511,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
     {
       .type     = PT_U16,
       .id       = "pin",
-      .name     = N_("Pin"),
+      .name     = N_("PIN"),
       .get      = linuxdvb_satconf_class_en50494_pin_get,
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_en50494_pin_list,

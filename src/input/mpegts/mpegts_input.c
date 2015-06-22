@@ -213,7 +213,7 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
 const idclass_t mpegts_input_class =
 {
   .ic_class      = "mpegts_input",
-  .ic_caption    = N_("MPEGTS Input"),
+  .ic_caption    = N_("MPEG-TS Input"),
   .ic_event      = "mpegts_input",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = mpegts_input_class_get_title,

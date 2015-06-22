@@ -131,7 +131,7 @@ mpegts_network_class_idlescan_notify ( void *p, const char *lang )
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
-  .ic_caption    = N_("MPEGTS Network"),
+  .ic_caption    = N_("MPEG-TS Network"),
   .ic_event      = "mpegts_network",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_network_class_save,

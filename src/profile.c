@@ -998,7 +998,7 @@ const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
-  .ic_caption    = N_("MPEG-TS Pass-through /build-in"),
+  .ic_caption    = N_("MPEG-TS Pass-thru/build-in"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -1352,13 +1352,13 @@ static htsmsg_t *
 profile_class_mc_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Not set"),                       MC_UNKNOWN },
-    { N_("Matroska (mkv) /built-in"),      MC_MATROSKA, },
-    { N_("WEBM /built-in"),                MC_WEBM, },
-    { N_("MPEG-TS /av-lib"),               MC_MPEGTS },
-    { N_("MPEG-PS (DVD) /av-lib"),         MC_MPEGPS },
-    { N_("Matroska (mkv) /av-lib"),        MC_AVMATROSKA },
-    { N_("WEBM /av-lib"),                  MC_AVWEBM },
+    { N_("Not set"),                      MC_UNKNOWN },
+    { N_("Matroska (mkv)/built-in"),      MC_MATROSKA, },
+    { N_("WEBM/built-in"),                MC_WEBM, },
+    { N_("MPEG-TS/av-lib"),               MC_MPEGTS },
+    { N_("MPEG-PS (DVD)/av-lib"),         MC_MPEGPS },
+    { N_("Matroska (mkv)/av-lib"),        MC_AVMATROSKA },
+    { N_("WEBM/av-lib"),                  MC_AVWEBM },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -1532,7 +1532,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "vcodec",
-      .name     = N_("Video Codec"),
+      .name     = N_("Video CODEC"),
       .off      = offsetof(profile_transcode_t, pro_vcodec),
       .def.s    = "libx264",
       .list     = profile_class_vcodec_list,
@@ -1547,7 +1547,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "acodec",
-      .name     = N_("Audio Codec"),
+      .name     = N_("Audio CODEC"),
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,
@@ -1562,7 +1562,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "scodec",
-      .name     = N_("Subtitles Codec"),
+      .name     = N_("Subtitles CODEC"),
       .off      = offsetof(profile_transcode_t, pro_scodec),
       .def.s    = "",
       .list     = profile_class_scodec_list,
@@ -1803,7 +1803,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_bool(conf, "default", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("MPEG-TS Pass-through"));
+    htsmsg_add_str (conf, "comment", _("MPEG-TS Pass-thru"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_bool(conf, "rewrite_pmt", 1);
     htsmsg_add_bool(conf, "rewrite_pat", 1);

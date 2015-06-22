@@ -680,9 +680,9 @@ dvr_config_class_cache_list(void *o, const char *lang)
   static struct strtab tab[] = {
     { N_("Unknown"),            MC_CACHE_UNKNOWN },
     { N_("System"),             MC_CACHE_SYSTEM },
-    { N_("Do not keep"),        MC_CACHE_DONTKEEP },
+    { N_("Don't keep"),         MC_CACHE_DONTKEEP },
     { N_("Sync"),               MC_CACHE_SYNC },
-    { N_("Sync + Do not keep"), MC_CACHE_SYNCDONTKEEP }
+    { N_("Sync + Don't keep"),  MC_CACHE_SYNCDONTKEEP }
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -727,7 +727,7 @@ const idclass_t dvr_config_class = {
   .ic_perm       = dvr_config_class_perm,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("DVR Behaviour"),
+         .name   = N_("DVR Behavior"),
          .number = 1,
       },
       {
@@ -958,7 +958,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "omit-title",
-      .name     = N_("Do Not Include Title To Filename"),
+      .name     = N_("Don't Include Title To Filename"),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
       .group    = 6,
     },

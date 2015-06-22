@@ -431,7 +431,7 @@ streaming_code2txt(int code)
   case SM_CODE_SVC_NOT_ENABLED:
     return N_("No service enabled");
   case SM_CODE_BAD_SIGNAL:
-    return N_("Too bad signal quality");
+    return N_("Signal quality too poor");
   case SM_CODE_NO_SOURCE:
     return N_("No source available");
   case SM_CODE_NO_SERVICE:

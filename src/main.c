@@ -645,7 +645,7 @@ main(int argc, char **argv)
 
     {   0, NULL,        N_("Service Configuration"),   OPT_BOOL, NULL         },
     { 'c', "config",    N_("Alternate config path"),   OPT_STR,  &opt_config  },
-    { 'B', "nobackup",  N_("Do not backup config tree at upgrade"), OPT_BOOL, &opt_nobackup },
+    { 'B', "nobackup",  N_("Don't backup config tree at upgrade"), OPT_BOOL, &opt_nobackup },
     { 'f', "fork",      N_("Fork and run as daemon"),  OPT_BOOL, &opt_fork    },
     { 'u', "user",      N_("Run as user"),             OPT_STR,  &opt_user    },
     { 'g', "group",     N_("Run as group"),            OPT_STR,  &opt_group   },
@@ -653,8 +653,8 @@ main(int argc, char **argv)
     { 'C', "firstrun",  N_("If no user account exists then create one with\n"
 	                   "no username and no password. Use with care as\n"
 	                   "it will allow world-wide administrative access\n"
-	                   "to your Tvheadend installation until you edit\n"
-	                   "the access-control from within the Tvheadend UI"),
+	                   "to your Tvheadend installation until you edit/create\n"
+	                   "access-control from within the Tvheadend UI"),
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_DBUS_1
     { 'U', "dbus",      N_("Enable DBus"),
@@ -688,7 +688,7 @@ main(int argc, char **argv)
       OPT_INT, &tvheadend_htsp_port_extra },
     {   0, "useragent",  N_("Specify User-Agent header for the http client"),
       OPT_STR, &opt_user_agent },
-    {   0, "xspf",       N_("Use xspf playlist instead M3U"),
+    {   0, "xspf",       N_("Use XSPF playlist instead of M3U"),
       OPT_BOOL, &opt_xspf },
 
     {   0, NULL,        N_("Debug Options"),           OPT_BOOL, NULL         },

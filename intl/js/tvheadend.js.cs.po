@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 15:58+0200\n"
+"POT-Creation-Date: 2015-06-22 16:24+0200\n"
 "PO-Revision-Date: 2015-06-22 13:40+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
@@ -387,18 +387,20 @@ msgid "Create AutoRec"
 msgstr "Vytvoř Auto-Rekordér"
 
 #: src/webui/static/app/epg.js:220
+#, fuzzy
 msgid ""
 "Create an automatic recording entry for this program that will record all "
-"future programmes that matches the current query."
+"future programs that match the current query."
 msgstr ""
 "Vytvoření nového automatického rekordéru tohoto programu na základě "
 "současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
 "která splňují dotaz."
 
 #: src/webui/static/app/epg.js:826
+#, fuzzy
 msgid ""
-"Create an automatic recording entry that will record all future programmes "
-"that matches the current query."
+"Create an automatic recording entry that will record all future programs "
+"that match the current query."
 msgstr ""
 "Vytvoření nového automatického rekordéru tohoto programu na základě "
 "současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
@@ -807,13 +809,13 @@ msgstr "Schovat hesla"
 msgid "Hostname"
 msgstr "Název hostitele"
 
+#: src/webui/static/app/status.js:74
+msgid "ID"
+msgstr ""
+
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
 msgstr "IP Adresa"
-
-#: src/webui/static/app/status.js:74
-msgid "Id"
-msgstr "Id"
 
 #: src/webui/static/app/config.js:208
 msgid "Ignore invalid SSL certificate"
@@ -1541,7 +1543,8 @@ msgid "Swap Numbers"
 msgstr "Zaměň čísla"
 
 #: src/webui/static/app/chconf.js:195
-msgid "Swap the two selected channels numbers"
+#, fuzzy
+msgid "Swap the two selected channel's numbers"
 msgstr "Zaměň čísla pro dva vybrané programy"
 
 #: src/webui/static/app/tvheadend.js:611
@@ -1617,9 +1620,10 @@ msgid "This field is required"
 msgstr "Toto pole je povinné"
 
 #: src/webui/static/app/epg.js:1016
+#, fuzzy
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
-"programmes to record that match this query"
+"programs to record that match this query"
 msgstr ""
 "Toto vytoří automatický rekordér, který bude neustále scanovat elektronický "
 "průvodce programem pro shodu s tímto dotazem"
@@ -1904,3 +1908,6 @@ msgstr "{0} není platný čas"
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr "{0} vybraný řádek{1}"
+
+#~ msgid "Id"
+#~ msgstr "Id"
