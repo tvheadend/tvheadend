@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Peter <zinonino91@gmail.com>, 2015
 # saen acro <saentist@gmail.com>, 2015
@@ -10,14 +10,13 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 13:40+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/"
-"language/bg/)\n"
-"Language: bg\n"
+"PO-Revision-Date: 2015-06-22 14:45+0000\n"
+"Last-Translator: saen acro <saentist@gmail.com>\n"
+"Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: bg\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -26,11 +25,11 @@ msgstr "{0} - {1} от {2}"
 
 #: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
-msgstr ""
+msgstr "&#160;OK&#160;"
 
 #: src/webui/static/app/i18n-post.js:106
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
-msgstr ""
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
 msgid "(Clear filter)"
@@ -38,7 +37,7 @@ msgstr "(Изчисти филтъра)"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "(None)"
-msgstr ""
+msgstr "(Празно)"
 
 #: src/webui/static/app/epg.js:205
 msgid "(default DVR Profile)"
@@ -102,7 +101,7 @@ msgstr "Отказ"
 
 #: src/webui/static/app/dvr.js:195
 msgid "Abort the selected recording"
-msgstr ""
+msgstr "Откажи избрания запис"
 
 #: src/webui/static/app/tvheadend.js:457
 msgid "About"
@@ -139,7 +138,7 @@ msgstr "Разширени Настройки"
 
 #: src/webui/static/app/i18n-post.js:274
 msgid "After"
-msgstr ""
+msgstr "След"
 
 #: src/webui/static/app/mpegts.js:210
 msgid "After filtering and reordering (without PCR and PMT)"
@@ -163,11 +162,11 @@ msgstr "Всички дни"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
-msgstr ""
+msgstr "Апр"
 
 #: src/webui/static/app/i18n-post.js:23
 msgid "April"
-msgstr ""
+msgstr "Април"
 
 #: src/webui/static/app/chconf.js:158
 msgid "Assign Number"
@@ -187,11 +186,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
-msgstr ""
+msgstr "Авг"
 
 #: src/webui/static/app/i18n-post.js:27
 msgid "August"
-msgstr ""
+msgstr "Август"
 
 #: src/webui/static/app/epg.js:1016
 msgid "Auto Recorder"
@@ -227,7 +226,7 @@ msgstr "Основни Настройки"
 
 #: src/webui/static/app/i18n-post.js:275
 msgid "Before"
-msgstr ""
+msgstr "Преди"
 
 #: src/webui/static/app/servicemapper.js:122
 msgid "Begin mapping"
@@ -251,7 +250,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:811
 msgid "Buffering. Please wait..."
-msgstr ""
+msgstr "Буфериране. Моля изчакайте..."
 
 #: src/webui/static/app/caclient.js:33
 msgid "CA"
@@ -325,7 +324,7 @@ msgstr "Проверете за наличие"
 
 #: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
-msgstr ""
+msgstr "Избери месец (Контрол+Нагоре/Надолу за да местите годината)"
 
 #: src/webui/static/app/config.js:315
 msgid "Clean image (icon) cache"
@@ -349,7 +348,7 @@ msgstr "Потребителско Име"
 
 #: src/webui/static/app/i18n-post.js:200
 msgid "Columns"
-msgstr ""
+msgstr "Колони"
 
 #: src/webui/static/app/dvr.js:53
 msgid "Comment"
@@ -388,22 +387,16 @@ msgid "Create AutoRec"
 msgstr "Създай АвтоЗапис"
 
 #: src/webui/static/app/epg.js:220
-#, fuzzy
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programs that match the current query."
 msgstr ""
-"Създайте автоматична настройка за запис която ще спазва зададени условия за "
-"бъдещи записи."
 
 #: src/webui/static/app/epg.js:826
-#, fuzzy
 msgid ""
 "Create an automatic recording entry that will record all future programs "
 "that match the current query."
 msgstr ""
-"Създайте автоматична настройка за запис която ще спазва зададени условия за "
-"бъдещи записи."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -411,7 +404,7 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:105
 msgid "Create provider tags"
-msgstr ""
+msgstr "Създай категории на доставчика"
 
 #: src/webui/static/app/epg.js:1038
 msgid "Created from EPG query"
@@ -472,11 +465,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
-msgstr ""
+msgstr "Дек"
 
 #: src/webui/static/app/i18n-post.js:31
 msgid "December"
-msgstr ""
+msgstr "Декември"
 
 #: src/webui/static/app/config.js:101
 msgid "Default Language(s)"
@@ -534,7 +527,7 @@ msgstr "Открий SAT>IP сървъри"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
-msgstr ""
+msgstr "Показва {0} - {1} of {2}"
 
 #: src/webui/static/app/dvr.js:215
 msgid "Do you really want to abort/unschedule the selection?"
@@ -601,7 +594,7 @@ msgstr "Редактиране на избрания запис"
 
 #: src/webui/static/app/idnode.js:1269 src/webui/static/app/idnode.js:1293
 msgid "Edit {0}"
-msgstr ""
+msgstr "Редактирай {0}"
 
 #: src/webui/static/app/epg.js:860 src/webui/static/app/epg.js:871
 msgid "Electronic Program Guide"
@@ -631,7 +624,7 @@ msgstr "Свършва"
 
 #: src/webui/static/app/i18n-post.js:259 src/webui/static/app/i18n-post.js:265
 msgid "Enter Filter Text..."
-msgstr ""
+msgstr "Въведи Филтриращ текст..."
 
 #: src/webui/static/app/epg.js:494
 msgid "Episode"
@@ -695,11 +688,11 @@ msgstr "Неуспешни записи"
 
 #: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
-msgstr ""
+msgstr "Фев"
 
 #: src/webui/static/app/i18n-post.js:21
 msgid "February"
-msgstr ""
+msgstr "Февруари"
 
 #: src/webui/static/app/dvr.js:51
 msgid "File size"
@@ -723,7 +716,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:248
 msgid "Filters"
-msgstr ""
+msgstr "Филтри"
 
 #: src/webui/static/app/dvr.js:317
 msgid "Finished Recording"
@@ -739,7 +732,7 @@ msgstr "Първа Страница"
 
 #: src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
-msgstr ""
+msgstr "Принудително Сканиране"
 
 #: src/webui/static/app/epggrab.js:259
 msgid "Force initial EPG scan at startup"
@@ -751,11 +744,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
-msgstr ""
+msgstr "Пет"
 
 #: src/webui/static/app/i18n-post.js:88
 msgid "Friday"
-msgstr ""
+msgstr "Петък"
 
 #: src/webui/static/app/tvheadend.js:304
 msgid "Fullscreen"
@@ -763,7 +756,7 @@ msgstr "Цял екран"
 
 #: src/webui/static/app/epg.js:833 src/webui/static/app/epg.js:1001
 msgid "Fulltext"
-msgstr ""
+msgstr "Пълен текст"
 
 #: src/webui/static/app/config.js:372
 msgid "General"
@@ -779,7 +772,7 @@ msgstr "Основни Конфигурации"
 
 #: src/webui/static/app/epg.js:1022
 msgid "Genre"
-msgstr ""
+msgstr "Категория"
 
 #: src/webui/static/app/i18n-post.js:206
 msgid "Group By This Field"
@@ -838,7 +831,7 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:94
 msgid "Include encrypted services"
-msgstr ""
+msgstr "Включи криптираните услуги"
 
 #: src/webui/static/app/status.js:331 src/webui/static/app/status.js:797
 msgid "Input"
@@ -854,27 +847,27 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
-msgstr ""
+msgstr "Яну"
 
 #: src/webui/static/app/i18n-post.js:20
 msgid "January"
-msgstr ""
+msgstr "Януари"
 
 #: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
-msgstr ""
+msgstr "Юли"
 
 #: src/webui/static/app/i18n-post.js:26
 msgid "July"
-msgstr ""
+msgstr "Юли"
 
 #: src/webui/static/app/i18n-post.js:40
 msgid "Jun"
-msgstr ""
+msgstr "Юни"
 
 #: src/webui/static/app/i18n-post.js:25
 msgid "June"
-msgstr ""
+msgstr "Юни"
 
 #: src/webui/static/app/config.js:113
 msgid "Language Settings"
@@ -938,11 +931,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:37
 msgid "Mar"
-msgstr ""
+msgstr "Мар"
 
 #: src/webui/static/app/i18n-post.js:22
 msgid "March"
-msgstr ""
+msgstr "Март"
 
 #: src/webui/static/app/timeshift.js:44
 msgid "Max. Period (mins)"
@@ -962,7 +955,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
 msgid "May"
-msgstr ""
+msgstr "Май"
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -983,11 +976,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:94
 msgid "Mon"
-msgstr ""
+msgstr "Пон"
 
 #: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
-msgstr ""
+msgstr "Понеделник"
 
 #: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
 msgid "Move Down"
@@ -1052,7 +1045,7 @@ msgstr "Мрежи"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
-msgstr ""
+msgstr "Следващ Месец (Контрол+Дясно)"
 
 #: src/webui/static/app/i18n-post.js:148
 msgid "Next Page"
@@ -1060,7 +1053,7 @@ msgstr "Следваща Страница"
 
 #: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:254
 msgid "No"
-msgstr ""
+msgstr "Не"
 
 #: src/webui/static/app/i18n-post.js:152
 msgid "No data to display"
@@ -1081,7 +1074,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/mpegts.js:207
 #: src/webui/static/app/mpegts.js:217
 msgid "None"
-msgstr ""
+msgstr "Празно"
 
 #: src/webui/static/app/idnode.js:291
 msgid "Not set"
@@ -1089,11 +1082,11 @@ msgstr "Не зададен"
 
 #: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
-msgstr ""
+msgstr "Ное"
 
 #: src/webui/static/app/i18n-post.js:30
 msgid "November"
-msgstr ""
+msgstr "Ноември"
 
 #: src/webui/static/app/epg.js:522
 msgid "Number"
@@ -1109,15 +1102,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
-msgstr ""
+msgstr "OK"
 
 #: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
-msgstr ""
+msgstr "Окт"
 
 #: src/webui/static/app/i18n-post.js:29
 msgid "October"
-msgstr ""
+msgstr "Октомври"
 
 #: src/webui/static/app/i18n-post.js:276
 msgid "On#DateFilter"
@@ -1209,15 +1202,15 @@ msgstr "Пусни"
 
 #: src/webui/static/app/epg.js:158
 msgid "Play program"
-msgstr ""
+msgstr "Пусни програмата"
 
 #: src/webui/static/app/epg.js:157
 msgid "Play this program"
-msgstr ""
+msgstr "Изпълни тази програма"
 
 #: src/webui/static/app/i18n-post.js:156
 msgid "Please Wait..."
-msgstr ""
+msgstr "Моля изчакайте..."
 
 #: src/webui/static/app/config.js:155
 msgid "Prefer picons over channel name"
@@ -1225,7 +1218,7 @@ msgstr "Предпочети Пикони пред име на канала"
 
 #: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
-msgstr ""
+msgstr "Предишен Месец (Контрол+Ляво)"
 
 #: src/webui/static/app/i18n-post.js:147
 msgid "Previous Page"
@@ -1233,7 +1226,7 @@ msgstr "Предишна Страница"
 
 #: src/webui/static/app/dvr.js:450
 msgid "Profile Name"
-msgstr ""
+msgstr "Име на профила"
 
 #: src/webui/static/app/epg.js:452
 msgid "Progress"
@@ -1273,11 +1266,11 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:425
 msgid "Recording"
-msgstr ""
+msgstr "Записване"
 
 #: src/webui/static/app/dvr.js:99
 msgid "Recording details"
-msgstr ""
+msgstr "Детайли на записа"
 
 #: src/webui/static/app/i18n-post.js:150
 msgid "Refresh"
@@ -1313,11 +1306,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:99
 msgid "Sat"
-msgstr ""
+msgstr "Съб"
 
 #: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
-msgstr ""
+msgstr "Събота"
 
 #: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
 #: src/webui/static/app/idnode.js:1602
@@ -1336,7 +1329,7 @@ msgstr "Съхрани конфигурацията"
 
 #: src/webui/static/app/timeshift.js:194 src/webui/static/app/config.js:430
 msgid "Save failed"
-msgstr ""
+msgstr "Съхраняване неуспешно"
 
 #: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1600
 msgid "Save pending changes (marked with red border)"
@@ -1381,11 +1374,11 @@ msgstr "Избрано"
 
 #: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
-msgstr ""
+msgstr "Сеп"
 
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
-msgstr ""
+msgstr "Септември"
 
 #: src/webui/static/app/config.js:69
 msgid "Server"
@@ -1531,15 +1524,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
-msgstr ""
+msgstr "Нед"
 
 #: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
-msgstr ""
+msgstr "Неделя"
 
 #: src/webui/static/app/chconf.js:197
 msgid "Swap Numbers"
-msgstr ""
+msgstr "Замени Номерата"
 
 #: src/webui/static/app/chconf.js:195
 msgid "Swap the two selected channel's numbers"
@@ -1551,7 +1544,7 @@ msgstr "Системен лог"
 
 #: src/webui/static/app/tvadapters.js:5 src/webui/static/app/tvadapters.js:10
 msgid "TV adapters"
-msgstr ""
+msgstr "ТВ Адаптери"
 
 #: src/webui/static/app/epg.js:1021
 msgid "Tag"
@@ -1599,8 +1592,8 @@ msgstr ""
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:127
@@ -1623,11 +1616,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
-msgstr ""
+msgstr "Чет"
 
 #: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
-msgstr ""
+msgstr "Четвъртък"
 
 #: src/webui/static/app/dvr.js:537
 msgid "Time Schedule"
@@ -1660,7 +1653,7 @@ msgstr "Заглавие"
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
-msgstr ""
+msgstr "Днес"
 
 #: src/webui/static/app/status.js:375
 msgid "Transport Errors"
@@ -1676,11 +1669,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
-msgstr ""
+msgstr "Вто"
 
 #: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
-msgstr ""
+msgstr "Вторник"
 
 #: src/webui/static/app/epggrab.js:300
 msgid "Tune over-the-air EPG muxes to grab new events now"
@@ -1697,7 +1690,7 @@ msgstr "Име на Tvhedend сървъра"
 #: src/webui/static/app/caclient.js:47 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:549
 msgid "Type"
-msgstr ""
+msgstr "Вид"
 
 #: src/webui/static/app/status.js:370
 msgid "Uncorrected Blocks"
@@ -1713,11 +1706,11 @@ msgstr "Неизвестен"
 
 #: src/webui/static/app/timeshift.js:71
 msgid "Unlimited size"
-msgstr ""
+msgstr "Неограничен размер"
 
 #: src/webui/static/app/timeshift.js:51
 msgid "Unlimited time"
-msgstr ""
+msgstr "Неограничено време"
 
 #: src/webui/static/app/dvr.js:240
 msgid "Upcoming / Current Recordings"
@@ -1749,7 +1742,7 @@ msgstr ""
 
 #: src/webui/static/app/timeshift.js:77
 msgid "Use only RAM"
-msgstr ""
+msgstr "Само в Паметта"
 
 #: src/webui/static/app/status.js:90 src/webui/static/app/status.js:559
 msgid "Username"
@@ -1777,11 +1770,11 @@ msgstr "Гледай телевизия онлайн в прозореца на 
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
-msgstr ""
+msgstr "Сря"
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
-msgstr ""
+msgstr "Сряда"
 
 #: src/webui/static/app/status.js:346
 msgid "Weight"
@@ -1793,7 +1786,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:253
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 #: src/webui/static/app/idnode.js:393 src/webui/static/app/idnode.js:652
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
@@ -1817,7 +1810,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:213
 msgid "false"
-msgstr ""
+msgstr "грешно"
 
 #: src/webui/static/app/i18n-post.js:232
 msgid "g:i A#TimeField"
@@ -1825,14 +1818,14 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
 msgid "hrs"
-msgstr ""
+msgstr "часа"
 
 #: src/webui/static/app/tvheadend.js:553
 msgid "login"
@@ -1878,7 +1871,7 @@ msgstr "от {0}"
 
 #: src/webui/static/app/i18n-post.js:212
 msgid "true"
-msgstr ""
+msgstr "вярно"
 
 #: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"

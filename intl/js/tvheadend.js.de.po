@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Alexander Knöbel <alex@belogy.de>, 2015
 # Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
@@ -12,14 +12,13 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 13:40+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/"
-"language/de/)\n"
-"Language: de\n"
+"PO-Revision-Date: 2015-06-22 14:40+0000\n"
+"Last-Translator: stbenz <benz.st@gmail.com>\n"
+"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -390,22 +389,16 @@ msgid "Create AutoRec"
 msgstr "Generiere automatische Aufnahme"
 
 #: src/webui/static/app/epg.js:220
-#, fuzzy
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programs that match the current query."
-msgstr ""
-"Erstelle eine automatische Aufnahme für diese Sendung, die alle zukünftigen "
-"Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
+msgstr "Erstellt eine automatische Aufnahme für diese Sendung, die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/epg.js:826
-#, fuzzy
 msgid ""
 "Create an automatic recording entry that will record all future programs "
 "that match the current query."
-msgstr ""
-"Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, "
-"die der aktuellen Abfrage entsprechen."
+msgstr "Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -812,7 +805,7 @@ msgstr "Hostname"
 
 #: src/webui/static/app/status.js:74
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
@@ -1123,7 +1116,7 @@ msgstr "Oktober"
 
 #: src/webui/static/app/i18n-post.js:276
 msgid "On#DateFilter"
-msgstr ""
+msgstr "Am#DateFilter"
 
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
@@ -1544,7 +1537,6 @@ msgid "Swap Numbers"
 msgstr "Nummern tauschen"
 
 #: src/webui/static/app/chconf.js:195
-#, fuzzy
 msgid "Swap the two selected channel's numbers"
 msgstr "Tausche die zwei ausgewählten Kanalnummern"
 
@@ -1602,11 +1594,9 @@ msgstr "Der Wert in diesem Feld ist ungültig"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
-msgstr ""
-"Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. "
-"Wiederverbinden..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. Wiederverbinden..."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1621,13 +1611,10 @@ msgid "This field is required"
 msgstr "Diese Feld ist erforderlich"
 
 #: src/webui/static/app/epg.js:1016
-#, fuzzy
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr ""
-"Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen "
-"durchsucht um diese aufzunehmen"
+msgstr "Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen durchsucht um diese aufzunehmen"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1692,8 +1679,7 @@ msgstr "Dienstag"
 
 #: src/webui/static/app/epggrab.js:300
 msgid "Tune over-the-air EPG muxes to grab new events now"
-msgstr ""
-"Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
+msgstr "Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
 
 #: src/webui/static/app/tvheadend.js:590
 msgid "Tvheadend Web-Panel"
@@ -1806,9 +1792,7 @@ msgstr "Ja"
 
 #: src/webui/static/app/idnode.js:393 src/webui/static/app/idnode.js:652
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
-msgstr ""
-"Sie müssen einen Wert angeben - benutzen Sie Chmod-Oktal-Schreibweise, z.B. "
-"0664"
+msgstr "Sie müssen einen Wert angeben - benutzen Sie Chmod-Oktal-Schreibweise, z.B. 0664"
 
 #: src/webui/static/app/i18n-post.js:238
 msgid "You must select at least one item in this group"
@@ -1836,11 +1820,9 @@ msgstr "g:i A#TimeField"
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
-msgstr ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
@@ -1912,6 +1894,3 @@ msgstr "{0} ist keine gültige Zeit"
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr "{0} Zeile(n) ausgewählt"
-
-#~ msgid "Id"
-#~ msgstr "Id"

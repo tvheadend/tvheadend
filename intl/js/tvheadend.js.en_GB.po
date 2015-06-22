@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Prof Yaffle <ian@sproink.co.uk>, 2015
 # Mark Clarkstone <github@markclarkstone.co.uk>, 2015
@@ -11,14 +11,13 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 13:40+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/"
-"tvheadend/language/en_GB/)\n"
-"Language: en_GB\n"
+"PO-Revision-Date: 2015-06-22 14:38+0000\n"
+"Last-Translator: Prof Yaffle <ian@sproink.co.uk>\n"
+"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -389,22 +388,16 @@ msgid "Create AutoRec"
 msgstr "Create AutoRec"
 
 #: src/webui/static/app/epg.js:220
-#, fuzzy
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programs that match the current query."
-msgstr ""
-"Create an automatic recording entry for this programme that will record all "
-"future programmes that match the current query."
+msgstr "Create an automatic recording entry for this program that will record all future programmes that match the current query."
 
 #: src/webui/static/app/epg.js:826
-#, fuzzy
 msgid ""
 "Create an automatic recording entry that will record all future programs "
 "that match the current query."
-msgstr ""
-"Create an automatic recording entry that will record all future programmes "
-"that match the current query."
+msgstr "Create an automatic recording entry that will record all future programmes that match the current query."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -811,7 +804,7 @@ msgstr "Hostname"
 
 #: src/webui/static/app/status.js:74
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
@@ -1122,7 +1115,7 @@ msgstr "October"
 
 #: src/webui/static/app/i18n-post.js:276
 msgid "On#DateFilter"
-msgstr ""
+msgstr "On#DateFilter"
 
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
@@ -1543,7 +1536,6 @@ msgid "Swap Numbers"
 msgstr "Swap Numbers"
 
 #: src/webui/static/app/chconf.js:195
-#, fuzzy
 msgid "Swap the two selected channel's numbers"
 msgstr "Swap the two selected channels' numbers"
 
@@ -1601,11 +1593,9 @@ msgstr "The value in this field is invalid"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
-msgstr ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "There seems to be a problem with the live update feed from Tvheadend. Trying to reconnect..."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1620,13 +1610,10 @@ msgid "This field is required"
 msgstr "This field is required"
 
 #: src/webui/static/app/epg.js:1016
-#, fuzzy
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr ""
-"This will create an automatic rule that continuously scans the EPG for "
-"programmes to record that match this query"
+msgstr "This will create an automatic rule that continuously scans the EPG for programs to record that match this query"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1832,11 +1819,9 @@ msgstr "g:i A#TimeField"
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
-msgstr ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
@@ -1908,6 +1893,3 @@ msgstr "{0} is not a valid time"
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr "{0} selected row{1}"
-
-#~ msgid "Id"
-#~ msgstr "ID"

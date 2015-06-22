@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Jaroslav Kysela, 2015
 msgid ""
@@ -9,14 +9,13 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-21 19:33+0000\n"
+"PO-Revision-Date: 2015-06-22 15:05+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
-"cs/)\n"
-"Language: cs\n"
+"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: cs\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
 #: src/main.c:478
@@ -24,10 +23,7 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr ""
-"\n"
-"Pro získání více informací navštivte webovou stránku programu Tvheadend:\n"
-"https://tvheadend.org\n"
+msgstr "\nPro získání více informací navštivte webovou stránku programu Tvheadend:\nhttps://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
@@ -246,7 +242,7 @@ msgstr "Všechny dny"
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr ""
+msgstr "Všechny příspěvky jsou použity pro serverovou infrastrukturu a pro nákup testovacího vybavení."
 
 #: src/main.c:647
 msgid "Alternate config path"
@@ -270,7 +266,6 @@ msgid "Audio Bitrate (kb/s) (0=Auto)"
 msgstr "Audio Bitrate (kb/s) (0=Auto)"
 
 #: src/profile.c:1550
-#, fuzzy
 msgid "Audio CODEC"
 msgstr "Audio kodek"
 
@@ -327,7 +322,7 @@ msgstr "Šířka pásma"
 
 #: src/webui/extjs.c:218
 msgid "Based on software from"
-msgstr ""
+msgstr "Použítý software od"
 
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
@@ -351,7 +346,7 @@ msgstr "Vysílání"
 
 #: src/webui/extjs.c:222
 msgid "Build"
-msgstr ""
+msgstr "Sestavení"
 
 #: src/descrambler/caclient.c:173
 #, c-format
@@ -601,7 +596,6 @@ msgid "DVR Auto-Record Entry"
 msgstr "Položka DVR auto-rekordéru"
 
 #: src/dvr/dvr_config.c:730
-#, fuzzy
 msgid "DVR Behavior"
 msgstr "Chování DVR"
 
@@ -744,24 +738,20 @@ msgid "DiseqC switch"
 msgstr "DiseqC přepínač"
 
 #: src/dvr/dvr_config.c:961
-#, fuzzy
 msgid "Don't Include Title To Filename"
-msgstr "Nevkládat název programu do jména souboru"
+msgstr "Nevkládat název vysílání do jména souboru"
 
 #: src/dvr/dvr_db.c:2215
-#, fuzzy
 msgid "Don't Reschedule"
-msgstr "Nepřeplánovat"
+msgstr "Nepřeplánovávat"
 
 #: src/main.c:648
-#, fuzzy
 msgid "Don't backup config tree at upgrade"
-msgstr "Zakázat zálohování konfiguračního stromu při upgrade"
+msgstr "Nezálohovat konfigurační strom při aktualizaci"
 
 #: src/dvr/dvr_config.c:683
-#, fuzzy
 msgid "Don't keep"
-msgstr "Neuchovávat"
+msgstr "Nezanechávej"
 
 #: src/dvr/dvr_autorec.c:1039
 msgid "Duplicate Handling"
@@ -1151,22 +1141,17 @@ msgid "Idle Scan Muxes"
 msgstr "Vyhledávání muxů při nečinnosti"
 
 #: src/main.c:653
-#, fuzzy
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you edit/create\n"
 "access-control from within the Tvheadend UI"
-msgstr ""
-"Pokud není vytvořený žádný uživatelský účet,\n"
-"tak se vytvoří účet bez uživatelského jména\n"
-"a hesla. Je doporučené tento administrátorský\n"
-"účet okamžitě změnit (uživatelské jméno a heslo)"
+msgstr "Pokud není vytvořený žádný uživatelský účet,\ntak se vytvoří účet bez uživatelského jména\na hesla. Je doporučené tento administrátorský\núčet okamžitě změnit (uživatelské jméno a heslo)"
 
 #: src/webui/extjs.c:238
 msgid "If you'd like to support the project, please consider a donation."
-msgstr ""
+msgstr "Pokud se Vám tento projekt líbí, prosíme, zvažte příspěvek."
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
@@ -1392,9 +1377,8 @@ msgid "MPEG-PS (DVD)"
 msgstr "MPEG-PS (DVD)"
 
 #: src/profile.c:1359
-#, fuzzy
 msgid "MPEG-PS (DVD)/av-lib"
-msgstr "MPEG-PS (DVD) /av-lib"
+msgstr "MPEG-PS (DVD)/av-lib"
 
 #: src/dvr/dvr_db.c:1650
 msgid "MPEG-TS"
@@ -1405,49 +1389,40 @@ msgid "MPEG-TS /av-lib"
 msgstr "MPEG-TS /av-lib"
 
 #: src/input/mpegts/mpegts_input.c:216
-#, fuzzy
 msgid "MPEG-TS Input"
-msgstr "MPEGTS vstup"
+msgstr "MPEG-TS vstup"
 
 #: src/input/mpegts/mpegts_mux.c:486
-#, fuzzy
 msgid "MPEG-TS Multiplex"
-msgstr "MPEGTS Multiplex"
+msgstr "MPEG-TS multiplex"
 
 #: src/input/mpegts/mpegts_mux.c:42
-#, fuzzy
 msgid "MPEG-TS Multiplex Phy"
-msgstr "MPEGTS Multiplex Phy"
+msgstr "MPEG-TS multiplex phy"
 
 #: src/input/mpegts/mpegts_network.c:134
-#, fuzzy
 msgid "MPEG-TS Network"
-msgstr "MPEGTS síť"
+msgstr "MPEG-TS síť"
 
 #: src/profile.c:1806
-#, fuzzy
 msgid "MPEG-TS Pass-thru"
-msgstr "MPEG-TS Pass-through"
+msgstr "MPEG-TS Pass-thru"
 
 #: src/profile.c:1001
-#, fuzzy
 msgid "MPEG-TS Pass-thru/build-in"
-msgstr "MPEG-TS Pass-through /build-in"
+msgstr "MPEG-TS Pass-thru/vestavěný"
 
 #: src/input/mpegts/mpegts_service.c:718
-#, fuzzy
 msgid "MPEG-TS Raw Service"
-msgstr "MPEGTS holá služba"
+msgstr "MPEG-TS holá služba"
 
 #: src/input/mpegts/mpegts_service.c:88
-#, fuzzy
 msgid "MPEG-TS Service"
-msgstr "MPEGTS služba"
+msgstr "MPEG-TS služba"
 
 #: src/profile.c:1358
-#, fuzzy
 msgid "MPEG-TS/av-lib"
-msgstr "MPEG-TS /av-lib"
+msgstr "MPEG-TS/av-lib"
 
 #: src/dvr/dvr_config.c:912
 msgid "Make Subdirectories Per Channel"
@@ -1499,14 +1474,12 @@ msgid "Matroska (mkv) /build-in"
 msgstr "Matroska (mkv) /build-in"
 
 #: src/profile.c:1360
-#, fuzzy
 msgid "Matroska (mkv)/av-lib"
-msgstr "Matroska (mkv) /av-lib"
+msgstr "Matroska (mkv)/av-lib"
 
 #: src/profile.c:1356
-#, fuzzy
 msgid "Matroska (mkv)/built-in"
-msgstr "Matroska (mkv) /built-in"
+msgstr "Matroska (mkv)/built-in"
 
 #: src/profile.c:1258
 msgid "Matroska /av-lib"
@@ -1529,7 +1502,6 @@ msgid "Max timeout (seconds)"
 msgstr "Maximální čas odezvy (sekund)"
 
 #: src/dvr/dvr_autorec.c:1017
-#, fuzzy
 msgid "Maximum Duration"
 msgstr "Maximální doba"
 
@@ -1554,7 +1526,6 @@ msgid "Min Rotor Time (seconds)"
 msgstr "Min. čas rotoru (sekundy)"
 
 #: src/dvr/dvr_autorec.c:1010
-#, fuzzy
 msgid "Minimum Duration"
 msgstr "Minimální doba"
 
@@ -1666,9 +1637,8 @@ msgid "Network Type"
 msgstr "Typ sítě"
 
 #: src/input/mpegts/mpegts_mux.c:519
-#, fuzzy
 msgid "Network UUID"
-msgstr "Síť A"
+msgstr "UUID sítě"
 
 #: src/access.c:1301
 msgid "Network prefix"
@@ -1687,7 +1657,7 @@ msgstr "Zpoždění pro další ladění v ms (0-2000)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
 msgid "No PIN"
-msgstr ""
+msgstr "Žádný PIN"
 
 #: src/streaming.c:446
 msgid "No access"
@@ -2142,9 +2112,7 @@ msgstr "SAT>IP DVB-T Frontend"
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
-msgstr ""
-"SAT>IP RTSP číslo portu pro server\n"
-"(defaultní: -1 = disable, 0 = webová konfigurace, standardní port je 554)"
+msgstr "SAT>IP RTSP číslo portu pro server\n(defaultní: -1 = disable, 0 = webová konfigurace, standardní port je 554)"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2295,7 +2263,7 @@ msgstr "Ukaž informace o verzi"
 
 #: src/streaming.c:434
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "Kvalita signálu je velmi nízká"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
@@ -2457,7 +2425,6 @@ msgid "Subtitle Stream Filter"
 msgstr "Filt toku podtitilků"
 
 #: src/profile.c:1565
-#, fuzzy
 msgid "Subtitles CODEC"
 msgstr "Kodek podtitulků"
 
@@ -2491,9 +2458,8 @@ msgid "Sync"
 msgstr "Synchonizuj"
 
 #: src/dvr/dvr_config.c:685
-#, fuzzy
 msgid "Sync + Don't keep"
-msgstr "Sychronizuj ₊ nezanechávej v paměti"
+msgstr "Synch. ₊ nezanechávej"
 
 #: src/dvr/dvr_config.c:682
 msgid "System"
@@ -2546,7 +2512,7 @@ msgstr "Název (regexp)"
 
 #: src/webui/extjs.c:225
 msgid "Toggle details"
-msgstr ""
+msgstr "Přepnout detaily"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"
@@ -2680,9 +2646,8 @@ msgid "Use Windows-compatible filenames"
 msgstr "Použij názvy souborů kompatibilní s Windows"
 
 #: src/main.c:691
-#, fuzzy
 msgid "Use XSPF playlist instead of M3U"
-msgstr "Použij xspf playlist místo M3U"
+msgstr "Použít XSPF playlist místo M3U"
 
 #: src/dvr/dvr_db.c:304
 msgid "User Access Error"
@@ -2713,7 +2678,6 @@ msgid "Video Bitrate (kb/s) (0=Auto)"
 msgstr "Šířka pásma pro video (kb/s) (0=Auto)"
 
 #: src/profile.c:1535
-#, fuzzy
 msgid "Video CODEC"
 msgstr "Video kodek"
 
@@ -2734,14 +2698,12 @@ msgid "WEBM"
 msgstr "WEBM"
 
 #: src/profile.c:1361
-#, fuzzy
 msgid "WEBM/av-lib"
-msgstr "WEBM /av-lib"
+msgstr "WEBM/av-lib"
 
 #: src/profile.c:1357
-#, fuzzy
 msgid "WEBM/built-in"
-msgstr "WEBM /built-in"
+msgstr "WEBM/built-in"
 
 #: src/profile.c:1880
 msgid "WEBTV profile H264/AAC/MPEG-TS"
@@ -2816,15 +2778,3 @@ msgstr "tsfile vstup (mux soubor)"
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:129
 msgid "tvhdhomerun Client"
 msgstr "Klient tvhdhomerun"
-
-#~ msgid "Network Uuid"
-#~ msgstr "Uuid sítě"
-
-#~ msgid "No pin"
-#~ msgstr "Bez pinu"
-
-#~ msgid "Pin"
-#~ msgstr "Pin"
-
-#~ msgid "Too bad signal quality"
-#~ msgstr "Velmi špatná kvalita signálu"

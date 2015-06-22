@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Jaroslav Kysela, 2015
 msgid ""
@@ -9,14 +9,13 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-22 16:24+0200\n"
-"PO-Revision-Date: 2015-06-22 13:40+0000\n"
+"PO-Revision-Date: 2015-06-22 14:58+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/"
-"cs/)\n"
-"Language: cs\n"
+"Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: cs\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
 #: src/webui/static/app/tvheadend.js:102
@@ -387,24 +386,16 @@ msgid "Create AutoRec"
 msgstr "Vytvoř Auto-Rekordér"
 
 #: src/webui/static/app/epg.js:220
-#, fuzzy
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programs that match the current query."
-msgstr ""
-"Vytvoření nového automatického rekordéru tohoto programu na základě "
-"současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
-"která splňují dotaz."
+msgstr "Vytvořit auto-rekordér pro toto vysílání, který bude zaznamenávat všechna budoucí vysílání, které splňují tento dotaz."
 
 #: src/webui/static/app/epg.js:826
-#, fuzzy
 msgid ""
 "Create an automatic recording entry that will record all future programs "
 "that match the current query."
-msgstr ""
-"Vytvoření nového automatického rekordéru tohoto programu na základě "
-"současného dotazu, který bude automaticky nahrávat všechny nové vysílání, "
-"která splňují dotaz."
+msgstr "Vytvořit auto-rekordér, který bude zaznamenávat všechna budoucí vysílání, které splňují tento dotaz."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -594,7 +585,7 @@ msgstr "Timeout pro EPG scan v sekundách (30-7200)"
 
 #: src/webui/static/app/idnode.js:1255
 msgid "Edit"
-msgstr "Edituj"
+msgstr "Editace"
 
 #: src/webui/static/app/idnode.js:1253
 msgid "Edit selected entry"
@@ -716,11 +707,11 @@ msgstr "Filtruj typ obsahu..."
 
 #: src/webui/static/app/epg.js:684
 msgid "Filter duration..."
-msgstr "Filtruj dobu..."
+msgstr "Filtrace doby..."
 
 #: src/webui/static/app/epg.js:639
 msgid "Filter tag..."
-msgstr "Filtruj štítek..."
+msgstr "Filtrace štítků..."
 
 #: src/webui/static/app/i18n-post.js:248
 msgid "Filters"
@@ -811,7 +802,7 @@ msgstr "Název hostitele"
 
 #: src/webui/static/app/status.js:74
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
@@ -1122,7 +1113,7 @@ msgstr "Listopad"
 
 #: src/webui/static/app/i18n-post.js:276
 msgid "On#DateFilter"
-msgstr ""
+msgstr "V"
 
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
@@ -1543,9 +1534,8 @@ msgid "Swap Numbers"
 msgstr "Zaměň čísla"
 
 #: src/webui/static/app/chconf.js:195
-#, fuzzy
 msgid "Swap the two selected channel's numbers"
-msgstr "Zaměň čísla pro dva vybrané programy"
+msgstr "Zaměnit čísla dvou vybraných programů"
 
 #: src/webui/static/app/tvheadend.js:611
 msgid "System log"
@@ -1601,11 +1591,9 @@ msgstr "Hodnota v tomto poli je neplatná"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
-msgstr ""
-"Spojení s programem Tvheadend bylo ztraceno. Pokouším se ho opětovně "
-"navázat..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "Spojení s programem Tvheadend bylo ztraceno. Pokouším se ho opětovně navázat..."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1620,13 +1608,10 @@ msgid "This field is required"
 msgstr "Toto pole je povinné"
 
 #: src/webui/static/app/epg.js:1016
-#, fuzzy
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr ""
-"Toto vytoří automatický rekordér, který bude neustále scanovat elektronický "
-"průvodce programem pro shodu s tímto dotazem"
+msgstr "Toto vytvoří automatické pravidlo pro stálé hledání vysílání v EPG, které souhlasí s tímto dotazem"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1832,11 +1817,9 @@ msgstr "g:i A#TimeField"
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
-msgstr ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
@@ -1908,6 +1891,3 @@ msgstr "{0} není platný čas"
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
 msgstr "{0} vybraný řádek{1}"
-
-#~ msgid "Id"
-#~ msgstr "Id"
