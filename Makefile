@@ -98,7 +98,7 @@ BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 #
 
 MKBUNDLE = $(PYTHON) $(ROOTDIR)/support/mkbundle
-XGETTEXT2 ?= $(XGETTEXT) --language=C -k_ -kN_ -s
+XGETTEXT2 ?= $(XGETTEXT) --language=C --add-comments=/ -k_ -kN_ -s
 MSGMERGE ?= msgmerge
 
 #

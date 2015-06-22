@@ -99,8 +99,10 @@ tvheadend.PagingToolbarConf = function(conf, title, auto, count)
   conf.width = 50;
   conf.pageSize = 50;
   conf.displayInfo = true;
+                    /// {0} start, {1} end, {2} total, {3} title
   conf.displayMsg = _('{3} {0} - {1} of {2}').replace('{3}', title);
-  conf.emptyMsg = String.format(_('No {0} to display'), title.toLowerCase());
+                    /// {0} title (lowercase), {1} title
+  conf.emptyMsg = String.format(_('No {0} to display'), title.toLowerCase(), title);
   conf.items = [];
   if (auto || count)
     conf.items.push('-');
