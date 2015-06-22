@@ -2,11 +2,10 @@
  * Tvheadend specific locale definitions for ExtJS
  */
 
-
 Ext.UpdateManager.defaults.indicatorText = '<div class="loading-indicator">' + _('Loading...') + '</div>';
 
 if(Ext.data.Types)
-    Ext.data.Types.stripRe = /[\$,%]/g;
+  Ext.data.Types.stripRe = /[\$,%]/g;
 
 if(Ext.DataView)
   Ext.DataView.prototype.emptyText = "";
@@ -16,7 +15,6 @@ if(Ext.grid.GridPanel)
 
 if(Ext.LoadMask)
   Ext.LoadMask.prototype.msg = _("Loading...");
-
 
 Date.monthNames = [
   _("January"),
@@ -33,39 +31,49 @@ Date.monthNames = [
   _("December")
 ];
 
-Date.shortMonthNames = {
-  _('January')  : _('Jan'),
-  _('February') : _('Feb'),
-  _('March')    : _('Mar'),
-  _("April")    : _('Apr'),
-  _("May")      : _('May'),
-  _("June")     : _('Jun'),
-  _("July")     : _('Jul'),
-  _("August")   : _('Aug'),
-  _("September"): _('Sep'),
-  _("October")  : _('Oct'),
-  _("November") : _('Nov'),
-  _("December") : _('Dec')
-};
+Date.monthNames2 = [
+  _("Jan"),
+  _("Feb"),
+  _("Mar"),
+  _("Apr"),
+  _("May"),
+  _("Jun"),
+  _("Jul"),
+  _("Aug"),
+  _("Sep"),
+  _("Oct"),
+  _("Nov"),
+  _("Dec")
+];
+
+Date.shortMonthNames = {};
+
+for (__i = 0; __i < 12; __i++)
+  Date.shortMonthNames[Date.monthNames[__i]] = Date.monthNames2[__i];
 
 Date.getShortMonthName = function(month) {
   return Date.shortMonthNames[Date.monthNames[month]];
 };
 
-Date.monthNumbers = {
-  _('Jan') : parseInt(_('0 #monthNumber')),
-  _('Feb') : parseInt(_('1 #monthNumber')),
-  _('Mar') : parseInt(_('2 #monthNumber')),
-  _('Apr') : parseInt(_('3 #monthNumber')),
-  _('May') : parseInt(_('4 #monthNumber')),
-  _('Jun') : parseInt(_('5 #monthNumber')),
-  _('Jul') : parseInt(_('6 #monthNumber')),
-  _('Aug') : parseInt(_('7 #monthNumber')),
-  _('Sep') : parseInt(_('8 #monthNumber')),
-  _('Oct') : parseInt(_('9 #monthNumber')),
-  _('Nov') : parseInt(_('10 #monthNumber')),
-  _('Dec') : parseInt(_('11 #monthNumber'))
-};
+Date.monthNumbers2 = [
+  parseInt(_('0 #monthNumber')),
+  parseInt(_('1 #monthNumber')),
+  parseInt(_('2 #monthNumber')),
+  parseInt(_('3 #monthNumber')),
+  parseInt(_('4 #monthNumber')),
+  parseInt(_('5 #monthNumber')),
+  parseInt(_('6 #monthNumber')),
+  parseInt(_('7 #monthNumber')),
+  parseInt(_('8 #monthNumber')),
+  parseInt(_('9 #monthNumber')),
+  parseInt(_('10 #monthNumber')),
+  parseInt(_('11 #monthNumber'))
+];
+
+Date.monthNumbers = {};
+
+for (__i = 0; __i < 12; __i++)
+  Date.monthNumbers[Date.monthNames2[__i]] = Date.monthNumbers2[__i];
 
 Date.getMonthNumber = function(name) {
   return Date.monthNumbers[name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase()];
@@ -87,24 +95,22 @@ Date.getShortDayName = function(day) {
 
 Date.parseCodes.S.s = _("(?:st|nd|rd|th)#parseCodes.S.s").split('#')[0];
 
-if(Ext.MessageBox){
+if(Ext.MessageBox)
   Ext.MessageBox.buttonText = {
     ok     : _("OK"),
     cancel : _("Cancel"),
     yes    : _("Yes"),
     no     : _("No")
   };
-}
 
-if(Ext.util.Format){
+if(Ext.util.Format)
   Ext.util.Format.date = function(v, format){
     if(!v) return "";
     if(!(v instanceof Date)) v = new Date(Date.parse(v));
     return v.dateFormat(format || _("m/d/Y#Format.date").split('#')[0]);
   };
-}
 
-if(Ext.DatePicker){
+if(Ext.DatePicker)
   Ext.apply(Ext.DatePicker.prototype, {
     todayText         : _("Today"),
     minText           : _("This date is before the minimum date"),
@@ -122,9 +128,8 @@ if(Ext.DatePicker){
     cancelText        : _("Cancel"),
     startDay          : 0
   });
-}
 
-if(Ext.PagingToolbar){
+if(Ext.PagingToolbar)
   Ext.apply(Ext.PagingToolbar.prototype, {
     beforePageText : _("Page"),
     afterPageText  : _("of {0}"),
@@ -136,7 +141,6 @@ if(Ext.PagingToolbar){
     displayMsg     : _("Displaying {0} - {1} of {2}"),
     emptyMsg       : _('No data to display')
   });
-}
 
 if(Ext.form.BasicForm)
     Ext.form.BasicForm.prototype.waitTitle = _("Please Wait...");
@@ -186,30 +190,29 @@ if(Ext.grid.GridView)
     columnsText  : _("Columns")
   });
 
-if(Ext.grid.GroupingView){
+if(Ext.grid.GroupingView)
   Ext.apply(Ext.grid.GroupingView.prototype, {
     emptyGroupText : _('(None)'),
     groupByText    : _('Group By This Field'),
     showGroupsText : _('Show in Groups')
   });
-}
 
 if(Ext.grid.BooleanColumn)
-   Ext.apply(Ext.grid.BooleanColumn.prototype, {
-      trueText  : _("true"),
-      falseText : _("false"),
-      undefinedText: '&#160;'
-   });
+  Ext.apply(Ext.grid.BooleanColumn.prototype, {
+    trueText  : _("true"),
+    falseText : _("false"),
+    undefinedText: '&#160;'
+  });
 
 if(Ext.grid.NumberColumn)
-    Ext.apply(Ext.grid.NumberColumn.prototype, {
-        format : _('0,000.00#NumberColumn').split('#')[0]
-    });
+  Ext.apply(Ext.grid.NumberColumn.prototype, {
+    format : _('0,000.00#NumberColumn').split('#')[0]
+  });
 
 if(Ext.grid.DateColumn)
-    Ext.apply(Ext.grid.DateColumn.prototype, {
-        format : _('m/d/Y#DateColumn').split('#')[0]
-    });
+  Ext.apply(Ext.grid.DateColumn.prototype, {
+    format : _('m/d/Y#DateColumn').split('#')[0]
+  });
 
 if(Ext.form.TimeField)
   Ext.apply(Ext.form.TimeField.prototype, {
@@ -225,13 +228,13 @@ if(Ext.form.CheckboxGroup)
     blankText : _("You must select at least one item in this group")
   });
 
-if(Ext.form.RadioGroup){
+if(Ext.form.RadioGroup)
   Ext.apply(Ext.form.RadioGroup.prototype, {
     blankText : _("You must select one item in this group")
   });
 
 if(Ext.ux.grid.GridFilters)
-  Ext.apply(Ext.ux.grid.GridFilters.GridFilter.prototype, {
+  Ext.apply(Ext.ux.grid.GridFilters.prototype, {
     menuFilterText: _('Filters'),
   });
 
@@ -243,7 +246,7 @@ if(Ext.ux.grid.filter.BoolFilter)
 
 if(Ext.ux.grid.filter.StringFilter)
   Ext.apply(Ext.ux.grid.filter.StringFilter.prototype, {
-    emptyText: _('Enter Filter Text...');
+    emptyText: _('Enter Filter Text...')
   });
 
 if(Ext.ux.grid.filter.NumericFilter)
@@ -252,7 +255,7 @@ if(Ext.ux.grid.filter.NumericFilter)
       emptyText: _('Enter Filter Text...'),
       selectOnFocus: true,
       width: 125
-    };
+    }
   });
 
 if(Ext.ux.grid.filter.DateFilter)
