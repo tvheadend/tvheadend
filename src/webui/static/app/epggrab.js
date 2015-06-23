@@ -191,7 +191,7 @@ tvheadend.epggrab = function(panel, index) {
             width: 200,
             sortable: false
         }, {
-            header: 'Path',
+            header: _('Path'),
             dataIndex: 'path',
             width: 300,
             sortable: false
@@ -396,7 +396,7 @@ tvheadend.epggrab = function(panel, index) {
                 externalModuleStore.commitChanges();
             },
             failure: function(form, action) {
-                Ext.Msg.alert('Save failed', action.result.errormsg);
+                Ext.Msg.alert(_('Save failed'), action.result.errormsg);
             }
         });
     }
@@ -410,7 +410,7 @@ tvheadend.epggrab = function(panel, index) {
             },
             waitMsg: _('Triggering...'),
             failure: function(response, options) {
-                Ext.Msg.alert('Trigger failed', response.statusText);
+                Ext.Msg.alert(_('Trigger failed'), response.statusText);
             }
         });
     }
