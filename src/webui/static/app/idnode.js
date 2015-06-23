@@ -1040,6 +1040,7 @@ tvheadend.idnode_grid = function(panel, conf)
             var f = idnode.field(i);
             var c = f.column(conf.columns);
             fields.push(f.id);
+            c['tooltip'] = f.text;
             columns.push(c);
             if (c.filter)
                 filters.push(c.filter);
