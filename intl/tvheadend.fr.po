@@ -20,16 +20,16 @@ msgstr ""
 #: src/main.c:478
 msgid ""
 "\n"
-"For more information please visit the Tvheadend website:\n"
+"Pour plus d\'informations veuillez visiter notre site web:\n"
 "https://tvheadend.org\n"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:586
-msgid "# Channels"
+msgid "# Chaines"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:231
-msgid "# Mapped Channels"
+msgid "# Chaines mappées"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:217
@@ -37,7 +37,7 @@ msgid "# Muxes"
 msgstr ""
 
 #: src/bouquet.c:884
-msgid "# Seen Services"
+msgid "# Services vu"
 msgstr ""
 
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
@@ -165,7 +165,7 @@ msgid "AES Constant Code Word Client"
 msgstr ""
 
 #: src/esfilter.c:313 src/esfilter.c:370
-msgid "ANY"
+msgid "TOUS"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
@@ -185,11 +185,11 @@ msgid "AUTO"
 msgstr ""
 
 #: src/streaming.c:441
-msgid "Aborted by user"
+msgid "Annulé par l\'utilisateur"
 msgstr ""
 
 #: src/access.c:1270
-msgid "Access"
+msgid "Accès"
 msgstr ""
 
 #: src/esfilter.c:674 src/esfilter.c:741 src/esfilter.c:808 src/esfilter.c:875
@@ -198,15 +198,15 @@ msgid "Action"
 msgstr ""
 
 #: src/streaming.c:428
-msgid "Adapter in use by other subscription"
+msgid "Adapteur en cours d\'utilisation par un autre service"
 msgstr ""
 
 #: src/main.c:703
-msgid "Add file and line numbers to debug"
+msgid "Ajouter le fichier et le numero de ligne pour le debug"
 msgstr ""
 
 #: src/main.c:704
-msgid "Add the thread ID to debug"
+msgid "Ajouter le numero de  thread ID pour le debug"
 msgstr ""
 
 #: src/access.c:1390
@@ -218,23 +218,23 @@ msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
 msgstr ""
 
 #: src/access.c:1321
-msgid "Advanced Streaming"
+msgid "Flux avancés"
 msgstr ""
 
 #: src/access.c:1252
-msgid "All (Streaming + DVR)"
+msgid "Tous (flux + DVR)"
 msgstr ""
 
 #: src/access.c:1355
-msgid "All DVR"
+msgid "Tous les DVR"
 msgstr ""
 
 #: src/access.c:1361
-msgid "All DVR (rw)"
+msgid "Tous les DVR (lecture/ecriture)"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:735
-msgid "All days"
+msgid "Tous les jours"
 msgstr ""
 
 #: src/webui/extjs.c:240
@@ -244,7 +244,7 @@ msgid ""
 msgstr ""
 
 #: src/main.c:647
-msgid "Alternate config path"
+msgid "Configuration du chemin alternatif"
 msgstr ""
 
 #: src/main.c:652
@@ -252,12 +252,12 @@ msgid "Alternate pid path"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
-msgid "Altitude (meters)"
+msgid "Altitude (metres)"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
 #: src/dvr/dvr_autorec.c:625
-msgid "Any"
+msgid "Tous"
 msgstr ""
 
 #: src/profile.c:1558
@@ -265,7 +265,7 @@ msgid "Audio Bitrate (kb/s) (0=Auto)"
 msgstr ""
 
 #: src/profile.c:1550
-msgid "Audio CODEC"
+msgid "CODEC Audio"
 msgstr ""
 
 #: src/esfilter.c:698
@@ -285,11 +285,11 @@ msgid "Auto EPG Channel"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2222
-msgid "Auto Record"
+msgid "Enregistrement automatique"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2230
-msgid "Auto Time Record"
+msgid "Enregistrement automatique par horaire"
 msgstr ""
 
 #: src/bouquet.c:817
@@ -297,7 +297,7 @@ msgid "Auto-Map to Channels"
 msgstr ""
 
 #: src/service.c:165
-msgid "Automatic Checking"
+msgid "Verification automatique"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:367
@@ -316,7 +316,7 @@ msgid "BB"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220
-msgid "Bandwidth"
+msgid "Bande passante"
 msgstr ""
 
 #: src/webui/extjs.c:218
@@ -340,11 +340,11 @@ msgid "Brand"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2246
-msgid "Broadcast"
+msgid "Multidiffusion"
 msgstr ""
 
 #: src/webui/extjs.c:223
-msgid "Build"
+msgid "Version"
 msgstr ""
 
 #: src/descrambler/caclient.c:173
@@ -398,15 +398,15 @@ msgstr ""
 
 #: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2052
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
-msgid "Channel"
+msgid "Chaine"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2062
-msgid "Channel Icon"
+msgid "Icone de la chaine"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2069
-msgid "Channel Name"
+msgid "Nom de la chaine"
 msgstr ""
 
 #: src/bouquet.c:904
@@ -414,7 +414,7 @@ msgid "Channel Number Offset"
 msgstr ""
 
 #: src/channels.c:1083 src/dvr/dvr_autorec.c:956
-msgid "Channel Tag"
+msgid "Tag de la chaine"
 msgstr ""
 
 #: src/bouquet.c:852
@@ -422,11 +422,11 @@ msgid "Channel Tag Reference"
 msgstr ""
 
 #: src/access.c:1430
-msgid "Channel Tags"
+msgid "Tags de la chaine"
 msgstr ""
 
 #: src/profile.c:1520
-msgid "Channels"
+msgid "Chaines"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
@@ -435,7 +435,7 @@ msgid "Character Set"
 msgstr ""
 
 #: src/esfilter.c:607 src/profile.c:285 src/descrambler/caclient.c:247
-msgid "Class"
+msgid "Classe"
 msgstr ""
 
 #: src/streaming.c:543
@@ -443,7 +443,7 @@ msgid "Clean effects"
 msgstr ""
 
 #: src/descrambler/caclient.c:268
-msgid "Client Name"
+msgid "Nom du client"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
@@ -459,7 +459,7 @@ msgstr ""
 #: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
 #: src/dvr/dvr_db.c:2296 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
 #: src/dvr/dvr_config.c:782 src/descrambler/caclient.c:275
-msgid "Comment"
+msgid "Commentaire"
 msgstr ""
 
 #: src/dvr/dvr_db.c:292
@@ -471,7 +471,7 @@ msgid "Committed"
 msgstr ""
 
 #: src/dvr/dvr_db.c:315
-msgid "Completed OK"
+msgid "Fini correctement"
 msgstr ""
 
 #: src/descrambler/caclient.c:236
@@ -483,7 +483,7 @@ msgid "Config ID"
 msgstr ""
 
 #: src/dvr/dvr_config.c:772
-msgid "Config Name"
+msgid "Nom de la configuration"
 msgstr ""
 
 #: src/access.c:1396
@@ -519,7 +519,7 @@ msgid "Created"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2166 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
-msgid "Creator"
+msgid "Createur"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_sched.c:140
