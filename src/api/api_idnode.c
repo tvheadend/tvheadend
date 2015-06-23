@@ -141,9 +141,9 @@ api_idnode_grid
   /* Paginate */
   list  = htsmsg_create_list();
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
     in = ins.is_array[i];
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in));
     if (idnode_perm(in, perm, NULL))
       continue;
     idnode_read0(in, e, flist, 0, perm->aa_lang);
@@ -502,12 +502,24 @@ api_idnode_handler
   /* Multiple */
   if (uuids) {
     const idnodes_rb_t *domain = NULL;
+    int cnt = 0, pcnt = 0;
+    msg = htsmsg_create_map();
+    htsmsg_add_str(msg, "__op__", op);
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
       if (!(in   = idnode_find(uuid, NULL, domain))) continue;
       domain = in->in_domain;
+      if (idnode_perm(in, perm, msg)) {
+        pcnt++;
+        continue;
+      }
       handler(perm, in);
+      cnt++;
     }
+    htsmsg_destroy(msg);
+
+    if (pcnt && !cnt)
+      err = EPERM;
   
   /* Single */
   } else {
