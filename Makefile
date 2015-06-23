@@ -22,7 +22,7 @@
 
 include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
 PROG    := $(BUILDDIR)/tvheadend
-LANGUAGES ?= bg cs de en en_GB fr he hr it pl
+LANGUAGES ?= bg cs de en en_GB fr he hr it pl pt sv
 
 #
 # Common compiler flags

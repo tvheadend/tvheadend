@@ -55,6 +55,10 @@ const char *tvh_gettext_get_lang(const char *lang)
     return "pl";
   if (!strcmp(lang, "bul"))
     return "bg";
+  if (!strcmp(lang, "por"))
+    return "pt";
+  if (!strcmp(lang, "swe"))
+    return "sv";
   return lang;
 }
 
