@@ -408,7 +408,7 @@ htsmsg_t *
 imagecache_get_config ( void )
 {
   htsmsg_t *m = htsmsg_create_map();
-  prop_read_values(&imagecache_conf, imagecache_props, m, NULL, 0);
+  prop_read_values(&imagecache_conf, imagecache_props, m, NULL, 0, NULL);
   return m;
 }
 
