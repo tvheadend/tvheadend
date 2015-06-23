@@ -734,6 +734,7 @@ main(int argc, char **argv)
   /* Set locale */
   setlocale(LC_ALL, "");
   setlocale(LC_NUMERIC, "C");
+  tvh_gettext_init();
 
   /* make sure the timezone is set */
   tzset();
@@ -1165,6 +1166,7 @@ main(int argc, char **argv)
   extern void dbus_shutdown(void);
   if (opt_dbus) dbus_shutdown();
 #endif
+  tvh_gettext_done();
   return 0;
 }
 

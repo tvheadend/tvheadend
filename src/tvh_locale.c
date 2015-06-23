@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
@@ -33,127 +34,225 @@ struct tvh_locale {
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 pthread_mutex_t tvh_gettext_mutex = PTHREAD_MUTEX_INITIALIZER;
-const char *tvh_gettext_default_lang = NULL;
-const char *tvh_gettext_last_lang = NULL;
-const char **tvh_gettext_last_strings = NULL;
 
-const char *tvh_gettext_get_lang(const char *lang)
+/*
+ *
+ */
+
+struct msg {
+  RB_ENTRY(msg) link;
+  const char *src;
+  const char *dst;
+};
+
+struct lng {
+  RB_ENTRY(lng) link;
+  const char *tvh_lang;
+  const char *locale_lang;
+  int msgs_initialized;
+  RB_HEAD(, msg) msgs;
+};
+
+static RB_HEAD(, lng) lngs;
+
+static struct lng *lng_default = NULL;
+static struct lng *lng_last = NULL;
+
+/*
+ * Message RB tree
+ */
+
+static inline int msg_cmp(const struct msg *a, const struct msg *b)
 {
-  if (lang == NULL || lang[0] == '\0')
-    return "en";
-  if (!strcmp(lang, "eng_US"))
-    return "en";
-  if (!strcmp(lang, "eng_GB"))
-    return "en_GB";
-  if (!strcmp(lang, "ger"))
-    return "de";
-  if (!strcmp(lang, "fre"))
-    return "fr";
-  if (!strcmp(lang, "cze"))
-    return "cs";
-  if (!strcmp(lang, "pol"))
-    return "pl";
-  if (!strcmp(lang, "bul"))
-    return "bg";
-  if (!strcmp(lang, "por"))
-    return "pt";
-  if (!strcmp(lang, "swe"))
-    return "sv";
-  return lang;
+  return strcmp(a->src, b->src);
 }
 
-static void tvh_gettext_init(void)
+static void msg_add_strings(struct lng *lng, const char **strings)
 {
-  struct tvh_locale *l;
-  static char dflt[16];
-  char *p;
-  int i;
+  struct msg *m;
+  const char **p;
 
-  tvh_gettext_default_lang = getenv("LC_ALL");
-  if (tvh_gettext_default_lang == NULL)
-    tvh_gettext_default_lang = getenv("LANG");
-  if (tvh_gettext_default_lang == NULL)
-    tvh_gettext_default_lang = getenv("LANGUAGE");
-  if (tvh_gettext_default_lang == NULL)
-    tvh_gettext_default_lang = "en";
-
-  strncpy(dflt, tvh_gettext_default_lang, sizeof(dflt)-1);
-  dflt[sizeof(dflt)-1] = '\0';
-  for (p = dflt; p && *p != '.'; p++);
-  if (*p == '.') *p = '\0';
-
-  tvh_gettext_default_lang = NULL;
-  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++)
-    if (strcmp(dflt, l->lang) == 0) {
-      tvh_gettext_default_lang = l->lang;
-      tvh_gettext_last_lang = l->lang;
-      tvh_gettext_last_strings = l->strings;
-      return;
-    }
-
-  for (p = dflt; p && *p != '_'; p++);
-  if (*p == '_') *p = '\0';
-
-  tvh_gettext_default_lang = NULL;
-  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++)
-    if (strcmp(dflt, l->lang) == 0) {
-      tvh_gettext_default_lang = l->lang;
-      tvh_gettext_last_lang = l->lang;
-      tvh_gettext_last_strings = l->strings;
-      return;
-    }
-
-  tvh_gettext_default_lang = dflt;
-  tvh_gettext_last_lang = dflt;
-  tvh_gettext_last_strings = NULL;
+  for (p = strings; *p; p += 2) {
+    m = calloc(1, sizeof(*m));
+    m->src = p[0];
+    m->dst = p[1];
+    if (RB_INSERT_SORTED(&lng->msgs, m, link, msg_cmp))
+      abort();
+  }
 }
 
-static void tvh_gettext_new_lang(const char *lang)
+static inline const char *msg_find(struct lng *lng, const char *msg)
 {
-  struct tvh_locale *l;
+  struct msg *m, ms;
+
+  ms.src = msg;
+  m = RB_FIND(&lng->msgs, &ms, link, msg_cmp);
+  if (m)
+    return m->dst;
+  return msg;
+}
+
+/*
+ *  Language RB tree
+ */
+
+static inline int lng_cmp(const struct lng *a, const struct lng *b)
+{
+  return strcmp(a->tvh_lang, b->tvh_lang);
+}
+
+static struct lng *lng_add(const char *tvh_lang, const char *locale_lang)
+{
+  struct lng *l = calloc(1, sizeof(*l));
+  l->tvh_lang = tvh_lang;
+  l->locale_lang = locale_lang;
+  if (RB_INSERT_SORTED(&lngs, l, link, lng_cmp))
+    abort();
+  return l;
+}
+
+static void lng_init(struct lng *l)
+{
+  struct tvh_locale *tl;
   int i;
-    
-  tvh_gettext_last_lang = NULL;
-  tvh_gettext_last_strings = NULL;
-  for (i = 0, l = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++, l++)
-    if (strcmp(lang, l->lang) == 0) {
-      tvh_gettext_last_lang = l->lang;
-      tvh_gettext_last_strings = l->strings;
+
+  l->msgs_initialized = 1;
+  for (i = 0, tl = tvh_locales; i < ARRAY_SIZE(tvh_locales); i++, tl++)
+    if (strcmp(tl->lang, l->locale_lang) == 0) {
+      msg_add_strings(l, tl->strings);
       break;
     }
 }
 
-const char *tvh_gettext_lang(const char *lang, const char *s)
+static struct lng *lng_get(const char *tvh_lang)
 {
-  const char **strings;
-  static char unklng[8];
+  struct lng *l, ls;
 
-  pthread_mutex_lock(&tvh_gettext_mutex);
-  if (lang == NULL) {
-    if (tvh_gettext_default_lang == NULL)
-      tvh_gettext_init();
-    lang = tvh_gettext_default_lang;
-  } else {
-    lang = tvh_gettext_get_lang(lang);
-  }
-  if (tvh_gettext_last_lang == NULL || strcmp(tvh_gettext_last_lang, lang)) {
-    tvh_gettext_new_lang(lang);
-    if (tvh_gettext_last_lang == NULL) {
-      if (tvh_gettext_default_lang == NULL)
-        tvh_gettext_init();
-      tvh_gettext_new_lang(tvh_gettext_default_lang);
-      strncpy(unklng, lang, sizeof(unklng));
-      unklng[sizeof(unklng)-1] = '\0';
-      tvh_gettext_last_lang = unklng;
+  if (tvh_lang != NULL && tvh_lang[0] != '\0') {
+    ls.tvh_lang = tvh_lang;
+    l = RB_FIND(&lngs, &ls, link, lng_cmp);
+    if (l) {
+      if (!l->msgs_initialized)
+        lng_init(l);
+      return l;
     }
   }
-  if ((strings = tvh_gettext_last_strings) != NULL) {
-    for ( ; strings[0]; strings += 2)
-      if (strcmp(strings[0], s) == 0) {
-        s = strings[1];
-        break;
+  return lng_get("eng");
+}
+
+static struct lng *lng_get_locale(char *locale_lang)
+{
+  struct lng *l;
+
+  if (locale_lang != NULL && locale_lang[0] != '\0') {
+    RB_FOREACH(l, &lngs, link)
+      if (!strcmp(l->locale_lang, locale_lang)) {
+        if (!l->msgs_initialized)
+          lng_init(l);
+        return l;
       }
+  }
+  return lng_get("eng");
+}
+
+/*
+ *
+ */
+
+const char *tvh_gettext_get_lang(const char *lang)
+{
+  struct lng *l = lng_get(lang);
+  return l->locale_lang;
+}
+
+static void tvh_gettext_default_init(void)
+{
+  static char dflt[16];
+  char *p;
+
+  p = getenv("LC_ALL");
+  if (p == NULL)
+    p = getenv("LANG");
+  if (p == NULL)
+    p = getenv("LANGUAGE");
+  if (p == NULL)
+    p = (char *)"en";
+
+  strncpy(dflt, p, sizeof(dflt)-1);
+  dflt[sizeof(dflt)-1] = '\0';
+  for (p = dflt; p && *p != '.'; p++);
+  if (*p == '.') *p = '\0';
+
+  if ((lng_default = lng_get_locale(dflt)) != NULL)
+    return;
+
+  for (p = dflt; p && *p != '_'; p++);
+  if (*p == '_') *p = '\0';
+
+  if ((lng_default = lng_get_locale(dflt)) != NULL)
+    return;
+
+  lng_default = lng_add(dflt, dflt);
+  if (!lng_default)
+    return;
+}
+
+const char *tvh_gettext_lang(const char *lang, const char *s)
+{
+  pthread_mutex_lock(&tvh_gettext_mutex);
+  if (lang == NULL) {
+    s = msg_find(lng_default, s);
+  } else {
+    if (!strcmp(lng_last->locale_lang, lang)) {
+      s = msg_find(lng_last, s);
+    } else {
+      if ((lng_last = lng_get(lang)) == NULL)
+        s = msg_find(lng_default, s);
+      else
+        s = msg_find(lng_last, s);
+    }
   }
   pthread_mutex_unlock(&tvh_gettext_mutex);
   return s;
+}
+
+/*
+ *
+ */
+
+void tvh_gettext_init(void)
+{
+  static const char *tbl[] = {
+    "eng",    "en",
+    "eng_US", "en",
+    "eng_GB", "en_GB",
+    "ger",    "de",
+    "fre",    "fr",
+    "cze",    "cs",
+    "pol",    "pl",
+    "bul",    "bg",
+    "por",    "pt",
+    "swe",    "sv",
+    NULL, NULL
+  };
+  const char **p;
+  for (p = tbl; *p; p += 2)
+    lng_add(p[0], p[1]);
+  tvh_gettext_default_init();
+  lng_last = lng_default;
+}
+
+void tvh_gettext_done(void)
+{
+  struct lng *l;
+  struct msg *m;
+
+  while ((l = RB_FIRST(&lngs)) != NULL) {
+    while ((m = RB_FIRST(&l->msgs)) != NULL) {
+      RB_REMOVE(&l->msgs, m, link);
+      free(m);
+    }
+    RB_REMOVE(&lngs, l, link);
+    free(l);
+  }
 }

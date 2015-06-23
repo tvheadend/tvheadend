@@ -202,6 +202,7 @@ static int
 page_about(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
+  const char *lang = hc->hc_access->aa_lang;
 
   htsbuf_qprintf(hq, "<center>\n\
 <div class=\"about-title\">HTS Tvheadend %s</div>\n\
@@ -215,15 +216,15 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
 %s <a target=\"_blank\" href=\"http://www.famfamfam.com/lab/icons/silk/\">\
 FamFamFam</a>\n\
 </p>\n",
-    _("Based on software from"),
-    _("Icons from"));
+    tvh_gettext_lang(lang, N_("Based on software from")),
+    tvh_gettext_lang(lang, N_("Icons from")));
 
   htsbuf_qprintf(hq, "<p>%s: %s (%s) <a href=\"javascript:void(0)\"\
  onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">%s</a></p>\n",
-    _("Build"),
+    tvh_gettext_lang(lang, N_("Build")),
     tvheadend_version,
     build_timestamp,
-    _("Toggle details"));
+    tvh_gettext_lang(lang, N_("Toggle details")));
 
   htsbuf_qprintf(hq,
 "<textarea id=\"textarea_build_config\" rows=\"20\" cols=\"80\" readonly \
@@ -236,8 +237,8 @@ FamFamFam</a>\n\
 </p>\n\
 <a href='https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3Z87UEHP3WZK2'><img src='https://www.paypalobjects.com/en_US/GB/i/btn/btn_donateCC_LG.gif' alt='' /></a>\n\
 </center>\n",
-   _("If you'd like to support the project, please consider a donation."),
-   _("All proceeds are used to support server infrastructure and buy test equipment."));
+   tvh_gettext_lang(lang, N_("If you'd like to support the project, please consider a donation.")),
+   tvh_gettext_lang(lang, N_("All proceeds are used to support server infrastructure and buy test equipment.")));
 
   http_output_html(hc);
   return 0;

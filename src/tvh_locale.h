@@ -26,4 +26,7 @@ static inline const char *tvh_gettext(const char *s)
 #define _(s) tvh_gettext(s)
 #define N_(s) (s)
 
+void tvh_gettext_init(void);
+void tvh_gettext_done(void);
+
 #endif /* __TVH_LOCALE_H__ */
