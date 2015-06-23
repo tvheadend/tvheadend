@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Peter <zinonino91@gmail.com>, 2015
 # saen acro <saentist@gmail.com>, 2015
@@ -9,15 +9,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:54+0200\n"
-"PO-Revision-Date: 2015-06-22 19:14+0000\n"
-"Last-Translator: Peter <zinonino91@gmail.com>\n"
-"Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/"
-"language/bg/)\n"
-"Language: bg\n"
+"POT-Creation-Date: 2015-06-23 13:56+0200\n"
+"PO-Revision-Date: 2015-06-23 11:54+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
+"Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: bg\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:478
@@ -25,10 +24,7 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr ""
-"\n"
-"За повече информация посетете сайта на Tvheadend\n"
-"https://tvheadend.org\n"
+msgstr "\nЗа повече информация посетете сайта на Tvheadend\nhttps://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
@@ -558,7 +554,7 @@ msgstr "DVB-S 4-портов"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:561
 msgid "DVB-S Advanced"
-msgstr ""
+msgstr "DVB-S Разширена"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:500
 msgid "DVB-S EN50494 (UniCable, experimental)"
@@ -566,7 +562,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:239
 msgid "DVB-S Network"
-msgstr ""
+msgstr "DVB-S Мрежа"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:213
 msgid "DVB-S Satconf"
@@ -574,7 +570,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:327
 msgid "DVB-S Simple"
-msgstr ""
+msgstr "DVB-S Опростена"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:351
 msgid "DVB-S Toneburst"
@@ -889,7 +885,7 @@ msgstr "ПРОВАЛ"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:301
 msgid "FEC"
-msgstr ""
+msgstr "FEC"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:235
 msgid "FEC High"
@@ -1330,7 +1326,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:83
 msgid "LinuxDVB Adapter"
-msgstr ""
+msgstr "LinuxDVB Адаптер"
 
 #: src/input/mpegts/mpegts_network_dvb.c:190
 msgid "LinuxDVB Network"
@@ -1387,7 +1383,7 @@ msgstr "MPEG-PS (DVD)"
 
 #: src/profile.c:1359
 msgid "MPEG-PS (DVD)/av-lib"
-msgstr ""
+msgstr "MPEG-PS (DVD)/av-lib"
 
 #: src/dvr/dvr_db.c:1650
 msgid "MPEG-TS"
@@ -1427,7 +1423,7 @@ msgstr ""
 
 #: src/profile.c:1187 src/profile.c:1358
 msgid "MPEG-TS/av-lib"
-msgstr ""
+msgstr "MPEG-TS/av-lib"
 
 #: src/dvr/dvr_config.c:912
 msgid "Make Subdirectories Per Channel"
@@ -1678,7 +1674,7 @@ msgstr ""
 
 #: src/streaming.c:424
 msgid "No free adapter"
-msgstr ""
+msgstr "Няма свободен адаптер"
 
 #: src/streaming.c:448
 msgid "No input detected"
@@ -2704,11 +2700,11 @@ msgstr "WEBM"
 
 #: src/profile.c:1361
 msgid "WEBM/av-lib"
-msgstr ""
+msgstr "WEBM/av-lib"
 
 #: src/profile.c:1357
 msgid "WEBM/built-in"
-msgstr ""
+msgstr "WEBM/built-in"
 
 #: src/profile.c:1880
 msgid "WEBTV profile H264/AAC/MPEG-TS"
@@ -2756,7 +2752,7 @@ msgstr "en50494"
 
 #: src/dvr/dvr_db.c:1942
 msgid "hrs"
-msgstr ""
+msgstr "часа"
 
 #: src/main.c:749
 #, c-format

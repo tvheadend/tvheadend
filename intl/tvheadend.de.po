@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Alexander Knöbel <alex@belogy.de>, 2015
 # Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
@@ -10,15 +10,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:54+0200\n"
-"PO-Revision-Date: 2015-06-22 16:58+0000\n"
+"POT-Creation-Date: 2015-06-23 13:56+0200\n"
+"PO-Revision-Date: 2015-06-23 11:58+0000\n"
 "Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
-"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/"
-"language/de/)\n"
-"Language: de\n"
+"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:478
@@ -26,10 +25,7 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr ""
-"\n"
-"Für mehr Informationen besuchen Sie bitte die Tvheadend Webseite:\n"
-"https://tvheadend.org\n"
+msgstr "\nFür mehr Informationen besuchen Sie bitte die Tvheadend Webseite:\nhttps://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
@@ -248,9 +244,7 @@ msgstr "Jeden Tag"
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr ""
-"Alle Erlöse werden dafür genutzt, die Serverinfrastruktur zu unterhalten und "
-"Testgeräte zu kaufen."
+msgstr "Alle Erlöse werden dafür genutzt, die Serverinfrastruktur zu unterhalten und Testgeräte zu kaufen."
 
 #: src/main.c:647
 msgid "Alternate config path"
@@ -279,7 +273,7 @@ msgstr "Audio-CODEC"
 
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
-msgstr "Audio Stream-Filter"
+msgstr "Audio Streamfilter"
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
@@ -375,7 +369,7 @@ msgstr "CA Anbieter"
 
 #: src/esfilter.c:899
 msgid "CA Stream Filter"
-msgstr "CA Stream-Filter"
+msgstr "CA Streamfilter"
 
 #: src/service.c:196
 msgid "CAID"
@@ -412,7 +406,7 @@ msgstr "Kanal"
 
 #: src/dvr/dvr_db.c:2062
 msgid "Channel Icon"
-msgstr "Kanalsymbol"
+msgstr "Kanallogo"
 
 #: src/dvr/dvr_db.c:2069
 msgid "Channel Name"
@@ -1130,19 +1124,19 @@ msgstr "ISI (Stream ID)"
 
 #: src/channels.c:1122
 msgid "Icon (full URL)"
-msgstr "Symbol (komplette URL)"
+msgstr "Logo (komplette URL)"
 
 #: src/channels.c:325 src/channels.c:1129
 msgid "Icon URL"
-msgstr "Symbol URL"
+msgstr "Logo-URL"
 
 #: src/channels.c:1136
 msgid "Icon has title"
-msgstr "Symbol hat Titel"
+msgstr "Logo hat Titel"
 
 #: src/webui/extjs.c:219
 msgid "Icons from"
-msgstr "Symbole von"
+msgstr "Logos von"
 
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
@@ -1159,18 +1153,11 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you edit/create\n"
 "access-control from within the Tvheadend UI"
-msgstr ""
-"Erstellen eines Kontos ohne Benutzername\n"
-"und Passwort, wenn kein Benutzerkonto existiert.\n"
-"Beachten Sie, dass es weltweiten administrativen\n"
-"Zugriff zu Ihrer Tvheadend-Installation erlaubt, bis\n"
-"Sie die Zugangskontrolle im Tvheadend UI\n"
-"anpassen."
+msgstr "Erstellen eines Kontos ohne Benutzername\nund Passwort, wenn kein Benutzerkonto existiert.\nBeachten Sie, dass es weltweiten administrativen\nZugriff zu Ihrer Tvheadend-Installation erlaubt, bis\nSie die Zugangskontrolle im Tvheadend UI\nanpassen."
 
 #: src/webui/extjs.c:239
 msgid "If you'd like to support the project, please consider a donation."
-msgstr ""
-"Wenn Sie das Projekt unterstützen möchten, erwägen Sie bitte eine Spende."
+msgstr "Wenn Sie das Projekt unterstützen möchten, erwägen Sie bitte eine Spende."
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
@@ -1834,7 +1821,7 @@ msgstr "Original Netzwerk ID"
 
 #: src/esfilter.c:974
 msgid "Other Stream Filter"
-msgstr "Sonstiger Stream-Filter"
+msgstr "Sonstiger Streamfilter"
 
 #: src/main.c:725
 msgid "Output directory for tsdebug"
@@ -2123,9 +2110,7 @@ msgstr "SAT>IP DVB-T Frontend"
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
-msgstr ""
-"SAT>IP RTSP Portnummer für den Server\n"
-"(Standard: -1 = deaktiviert, 0 = webconfig, Standardport ist 554)"
+msgstr "SAT>IP RTSP Portnummer für den Server\n(Standard: -1 = deaktiviert, 0 = webconfig, Standardport ist 554)"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2393,16 +2378,16 @@ msgstr "Stop Zeit"
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
-msgstr "Stream-Index"
+msgstr "Streamindex"
 
 #: src/profile.c:275 src/dvr/dvr_config.c:789
 msgid "Stream Profile"
-msgstr "Stream Profil"
+msgstr "Streamprofil"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream Type"
-msgstr "Stream Typ"
+msgstr "Streamyp"
 
 #: src/access.c:1253 src/access.c:1315
 msgid "Streaming"
@@ -2411,11 +2396,11 @@ msgstr "Streaming"
 #: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:459
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
-msgstr "Streaming Priorität"
+msgstr "Streamingpriorität"
 
 #: src/access.c:1334
 msgid "Streaming Profiles"
-msgstr "Streaming Profile"
+msgstr "Streamingprofil"
 
 #: src/dvr/dvr_config.c:742
 msgid "Subdirectory Options"
@@ -2439,7 +2424,7 @@ msgstr "Untertitel-CODEC"
 
 #: src/esfilter.c:832
 msgid "Subtitle Stream Filter"
-msgstr "Untertitel Stream-Filter"
+msgstr "Untertitel Streamfilter"
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
@@ -2488,7 +2473,7 @@ msgstr "Tags"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
-msgstr "Videotext Stream-Filter"
+msgstr "Videotext Streamfilter"
 
 #: src/main.c:720
 msgid "Testing options"
@@ -2500,7 +2485,7 @@ msgstr "Do"
 
 #: src/dvr/dvr_db.c:318
 msgid "Time missed"
-msgstr ""
+msgstr "Zeit verpasst"
 
 #: src/dvr/dvr_timerec.c:153
 #, c-format
@@ -2549,7 +2534,7 @@ msgstr "Transponder ID"
 
 #: src/input/mpegts/mpegts_mux.c:540
 msgid "Transport Stream ID"
-msgstr "Transport Stream ID"
+msgstr "Transport Stream-ID"
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
@@ -2672,7 +2657,7 @@ msgstr "Benutzerzugriffsfehler"
 
 #: src/channels.c:318
 msgid "User Icon"
-msgstr "Benutzerbild"
+msgstr "Benutzerlogo"
 
 #: src/dvr/dvr_db.c:306
 msgid "User Limit Reached"
@@ -2704,7 +2689,7 @@ msgstr "Video Rekorder"
 
 #: src/esfilter.c:631
 msgid "Video Stream Filter"
-msgstr "Video Stream-Filter"
+msgstr "Video Streamfilter"
 
 #: src/streaming.c:545
 msgid "Visually impaired commentary"

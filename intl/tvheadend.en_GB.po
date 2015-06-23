@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 # Prof Yaffle, 2015
 # Mark Clarkstone, 2015
@@ -10,15 +10,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:54+0200\n"
-"PO-Revision-Date: 2015-06-22 15:40+0000\n"
-"Last-Translator: Prof Yaffle\n"
-"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/"
-"tvheadend/language/en_GB/)\n"
-"Language: en_GB\n"
+"POT-Creation-Date: 2015-06-23 13:56+0200\n"
+"PO-Revision-Date: 2015-06-23 12:06+0000\n"
+"Last-Translator: Mark Clarkstone\n"
+"Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: en_GB\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:478
@@ -26,10 +25,7 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr ""
-"\n"
-"For more information please visit the Tvheadend website:\n"
-"https://tvheadend.org\n"
+msgstr "\nFor more information please visit the Tvheadend website:\nhttps://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
@@ -248,9 +244,7 @@ msgstr "Every day"
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr ""
-"All proceeds are used to support server infrastructure and buy test "
-"equipment."
+msgstr "All proceeds are used to support server infrastructure and buy test equipment."
 
 #: src/main.c:647
 msgid "Alternate config path"
@@ -1159,12 +1153,7 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you edit/create\n"
 "access-control from within the Tvheadend UI"
-msgstr ""
-"If no user account exists then create one with\n"
-"no username and no password. Use with care as\n"
-"it will allow world-wide administrative access\n"
-"to your Tvheadend installation until you edit/create\n"
-"access control from within the Tvheadend UI"
+msgstr "If no user account exists then create one with\nno username and no password. Use with care as\nit will allow world-wide administrative access\nto your Tvheadend installation until you edit/create\naccess control from within the Tvheadend UI"
 
 #: src/webui/extjs.c:239
 msgid "If you'd like to support the project, please consider a donation."
@@ -2121,9 +2110,7 @@ msgstr "SAT>IP DVB-T Frontend"
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
-msgstr ""
-"SAT>IP RTSP port number for server\n"
-"(default: -1 = disable, 0 = webconfig, standard port is 554)"
+msgstr "SAT>IP RTSP port number for server\n(default: -1 = disable, 0 = webconfig, standard port is 554)"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2498,7 +2485,7 @@ msgstr "Thu"
 
 #: src/dvr/dvr_db.c:318
 msgid "Time missed"
-msgstr ""
+msgstr "Time missed"
 
 #: src/dvr/dvr_timerec.c:153
 #, c-format

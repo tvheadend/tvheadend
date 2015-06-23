@@ -1,21 +1,20 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:54+0200\n"
-"PO-Revision-Date: 2015-06-22 18:36+0000\n"
+"POT-Creation-Date: 2015-06-23 13:56+0200\n"
+"PO-Revision-Date: 2015-06-23 11:56+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Hebrew (http://www.transifex.com/projects/p/tvheadend/"
-"language/he/)\n"
-"Language: he\n"
+"Language-Team: Hebrew (http://www.transifex.com/projects/p/tvheadend/language/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: he\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/i18n-post.js:137
@@ -159,20 +158,18 @@ msgid "All days"
 msgstr ""
 
 #: src/webui/static/app/tvhlog.js:57
-msgid ""
-"Apply changes made bellow to the run-time configuration<br/>They will be "
-"lost on restart."
+msgid "Apply changes made bellow to the run-time configuration."
 msgstr ""
 
 #: src/webui/static/app/tvhlog.js:56
 msgid "Apply configuration (run-time only)"
 msgstr ""
 
-#: src/webui/static/app/tvhlog.js:130
+#: src/webui/static/app/tvhlog.js:131
 msgid "Apply failed"
 msgstr ""
 
-#: src/webui/static/app/tvhlog.js:128
+#: src/webui/static/app/tvhlog.js:129
 msgid "Applying Data..."
 msgstr ""
 
@@ -479,7 +476,7 @@ msgstr ""
 msgid "DVR-Upcoming/Current Recordings"
 msgstr ""
 
-#: src/webui/static/app/tvhlog.js:66
+#: src/webui/static/app/tvhlog.js:67
 msgid "Debug Configuration"
 msgstr ""
 
@@ -503,11 +500,11 @@ msgstr ""
 msgid "Debug trace (low-level stuff)"
 msgstr ""
 
-#: src/webui/static/app/tvhlog.js:91
+#: src/webui/static/app/tvhlog.js:92
 msgid "Debugging"
 msgstr ""
 
-#: src/webui/static/app/tvhlog.js:82
+#: src/webui/static/app/tvhlog.js:83
 msgid "Debugging Options"
 msgstr ""
 
@@ -829,7 +826,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
 #: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
-#: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:63
+#: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:64
 msgid "Help"
 msgstr ""
 
@@ -1645,8 +1642,12 @@ msgstr ""
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying "
-"to reconnect..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:58
+msgid "They will be lost on restart."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:127
@@ -1875,8 +1876,8 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
-"H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300

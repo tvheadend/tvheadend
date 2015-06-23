@@ -254,29 +254,29 @@ intl:
 
 intl/js/tvheadend.js.pot:
 
-intl/js/tvheadend.js.en.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.en.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.en_GB.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.en_GB.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.de.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.de.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.fr.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.fr.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.cs.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.cs.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.pl.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.pl.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.bg.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.bg.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.he.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.he.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
 intl/js/tvheadend.js.hr.po: intl/js/tvheadend.js.pot
 	$(call merge-po,$@,$<)

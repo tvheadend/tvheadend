@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 17:38+0200\n"
-"PO-Revision-Date: 2015-06-22 15:40+0000\n"
-"Last-Translator: Prof Yaffle\n"
+"POT-Creation-Date: 2015-06-23 13:56+0200\n"
+"PO-Revision-Date: 2015-06-23 11:54+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: English (http://www.transifex.com/projects/p/tvheadend/language/en/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1233,7 +1233,7 @@ msgstr "Interface"
 msgid "Internal"
 msgstr "Internal"
 
-#: src/dvr/dvr_db.c:296 src/dvr/dvr_timerec.c:453
+#: src/dvr/dvr_db.c:296 src/dvr/dvr_db.c:321 src/dvr/dvr_timerec.c:453
 msgid "Invalid"
 msgstr "Invalid"
 
@@ -2480,6 +2480,10 @@ msgstr "Testing options"
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
 msgstr "Thu"
+
+#: src/dvr/dvr_db.c:318
+msgid "Time missed"
+msgstr ""
 
 #: src/dvr/dvr_timerec.c:153
 #, c-format

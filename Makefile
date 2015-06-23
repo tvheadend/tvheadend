@@ -578,32 +578,32 @@ intl:
 
 intl/tvheadend.pot:
 
-intl/tvheadend.en_GB.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.en_GB.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.de.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.de.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.fr.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.fr.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.cs.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.cs.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.pl.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.pl.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.bg.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.bg.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.he.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.he.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.hr.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.hr.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
-intl/tvheadend.it.po: intl/tvheadend.pot
-	$(call merge-po,$@,$<)
+#intl/tvheadend.it.po: intl/tvheadend.pot
+#	$(call merge-po,$@,$<)
 
 $(BUILDDIR)/src/tvh_locale.o: src/tvh_locale_inc.c
 src/tvh_locale_inc.c: $(PO-FILES)
