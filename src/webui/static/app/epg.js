@@ -1,6 +1,6 @@
 insertContentGroupClearOption = function( scope, records, options ){
     var placeholder = Ext.data.Record.create(['val', 'key']);
-    scope.insert(0,new placeholder({val: '(Clear filter)', key: '-1'}));
+    scope.insert(0,new placeholder({val: _('(Clear filter)'), key: '-1'}));
 };
 
 tvheadend.ContentGroupStore = tvheadend.idnode_get_enum({
@@ -65,12 +65,12 @@ tvheadend.DurationStore = new Ext.data.SimpleStore({
     storeId: 'durationnames',
     idIndex: 0,
     fields: ['identifier','label','minvalue','maxvalue'],
-    data: [['-1', '(Clear filter)',"",""],
-           ['1','00:00:00 - 00:15:00', 0, 900],
-           ['2','00:15:00 - 00:30:00', 900, 1800],
-           ['3','00:30:00 - 01:30:00', 1800, 5400],
-           ['4','01:30:00 - 03:00:00', 5400, 10800],
-           ['5','03:00:00 - No maximum', 10800, 9999999]]
+    data: [['-1', _('(Clear filter)'),"",""],
+           ['1',_('00:00:00 - 00:15:00'), 0, 900],
+           ['2',_('00:15:00 - 00:30:00'), 900, 1800],
+           ['3',_('00:30:00 - 01:30:00'), 1800, 5400],
+           ['4',_('01:30:00 - 03:00:00'), 5400, 10800],
+           ['5',_('03:00:00 - No maximum'), 10800, 9999999]]
 });
 
 // Function to convert numeric duration to corresponding label string
