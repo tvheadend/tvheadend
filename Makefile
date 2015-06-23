@@ -512,7 +512,7 @@ reconfigure:
 	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: check_config make_webui $(MO-FILES) $(OBJS)
+${PROG}: check_config make_webui $(OBJS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object

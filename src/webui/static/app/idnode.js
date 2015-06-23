@@ -527,7 +527,7 @@ tvheadend.idnode_editor_field = function(f, conf)
             typeAhead: true, // TODO: this does strange things in multi
             forceSelection: false,
             triggerAction: 'all',
-            emptyText: 'Select ' + f.caption + ' ...',
+            emptyText:  _('Select {0} ...').replace('{0}', f.caption),
             listeners: {
                 beforequery: function(qe) {
                     delete qe.combo.lastQuery;

@@ -193,13 +193,13 @@ const idclass_t *idclass_find ( const char *name );
 const char *idclass_get_caption ( const idclass_t *idc, const char *lang );
 htsmsg_t *idclass_serialize0 (const idclass_t *idc, htsmsg_t *list, int optmask, const char *lang);
 htsmsg_t *idnode_serialize0  (idnode_t *self, htsmsg_t *list, int optmask, const char *lang);
-void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmask);
+void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmask, const char *lang);
 int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 
 #define idclass_serialize(idc, lang) idclass_serialize0(idc, NULL, 0, lang)
 #define idnode_serialize(in, lang)   idnode_serialize0(in, NULL, 0, lang)
 #define idnode_load(in, m)     idnode_write0(in, m, PO_NOSAVE, 0)
-#define idnode_save(in, m)     idnode_read0(in, m, NULL, PO_NOSAVE | PO_USERAW)
+#define idnode_save(in, m)     idnode_read0(in, m, NULL, PO_NOSAVE | PO_USERAW, NULL)
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)
 
 int idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write);

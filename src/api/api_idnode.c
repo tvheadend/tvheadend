@@ -60,7 +60,7 @@ static struct strtab filtcmptab[] = {
 
 static void
 api_idnode_grid_conf
-  ( htsmsg_t *args, api_idnode_grid_conf_t *conf )
+  ( access_t *perm, htsmsg_t *args, api_idnode_grid_conf_t *conf )
 {
   htsmsg_field_t *f, *f2;
   htsmsg_t *filter, *e;
@@ -104,6 +104,7 @@ api_idnode_grid_conf
   }
 
   /* Sort */
+  conf->sort.lang = perm->aa_lang;
   if ((str = htsmsg_get_str(args, "sort"))) {
     conf->sort.key = str;
     if ((str = htsmsg_get_str(args, "dir")) && !strcasecmp(str, "DESC"))
@@ -127,7 +128,7 @@ api_idnode_grid
   api_idnode_grid_callback_t cb = opaque;
 
   /* Grid configuration */
-  api_idnode_grid_conf(args, &conf);
+  api_idnode_grid_conf(perm, args, &conf);
 
   /* Create list */
   pthread_mutex_lock(&global_lock);
@@ -144,7 +145,7 @@ api_idnode_grid
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
     in = ins.is_array[i];
     idnode_perm_set(in, perm);
-    idnode_read0(in, e, flist, 0);
+    idnode_read0(in, e, flist, 0, perm->aa_lang);
     idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
     if (conf.limit > 0) conf.limit--;

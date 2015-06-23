@@ -56,6 +56,7 @@ typedef enum {
 #define PO_DURATION 0x0100  // For PT_TIME - differentiate between duration and datetime
 #define PO_HEXA     0x0200  // Hexadecimal value
 #define PO_DATE     0x0400  // Show date only
+#define PO_LOCALE   0x0800  // Call tvh_locale_lang on string
 
 /*
  * Property definition
@@ -105,7 +106,8 @@ int prop_write_values
   (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *updated);
 
 void prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask);
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
+   int optmask, const char *lang);
 
 void prop_serialize
   (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,

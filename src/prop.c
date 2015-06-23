@@ -22,6 +22,7 @@
 
 #include "tvheadend.h"
 #include "prop.h"
+#include "tvh_locale.h"
 #include "lang_str.h"
 
 /* **************************************************************************
@@ -246,7 +247,8 @@ prop_write_values
  */
 static void
 prop_read_value
-  (void *obj, const property_t *p, htsmsg_t *m, const char *name, int optmask)
+  (void *obj, const property_t *p, htsmsg_t *m, const char *name,
+   int optmask, const char *lang)
 {
   const char *s;
   const void *val = obj + p->off;
@@ -309,7 +311,7 @@ prop_read_value
       break;
     case PT_STR:
       if ((s = *(const char **)val))
-        htsmsg_add_str(m, name, s);
+        htsmsg_add_str(m, name, lang ? tvh_gettext_lang(lang, s) : s);
       break;
     case PT_DBL:
       htsmsg_add_dbl(m, name, *(double*)val);
@@ -335,14 +337,15 @@ prop_read_value
  */
 void
 prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
+   int optmask, const char *lang)
 {
   if(pl == NULL)
     return;
 
   if(list == NULL) {
     for (; pl->id; pl++)
-      prop_read_value(obj, pl, m, pl->id, optmask);
+      prop_read_value(obj, pl, m, pl->id, optmask, lang);
   } else {
     const property_t *p;
     htsmsg_field_t *f;
@@ -354,7 +357,7 @@ prop_read_values
         if (b > 0) {
           p = prop_find(pl, f->hmf_name);
           if (p)
-            prop_read_value(obj, p, m, p->id, optmask);
+            prop_read_value(obj, p, m, p->id, optmask, lang);
           count++;
         }
       }
@@ -365,7 +368,7 @@ prop_read_values
           if (!strcmp(pl->id, f->hmf_name))
             break;
         if (f == NULL)
-          prop_read_value(obj, pl, m, pl->id, optmask);
+          prop_read_value(obj, pl, m, pl->id, optmask, lang);
       }
     }
   }
@@ -485,7 +488,7 @@ prop_serialize_value
 
   /* Data */
   if (obj)
-    prop_read_value(obj, pl, m, "value", optmask);
+    prop_read_value(obj, pl, m, "value", optmask, lang);
 
   htsmsg_add_msg(msg, NULL, m);
 }

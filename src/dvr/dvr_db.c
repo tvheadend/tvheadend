@@ -315,10 +315,10 @@ dvr_entry_status(dvr_entry_t *de)
       return N_("Completed OK");
 
   case DVR_MISSED_TIME:
-    return "Time missed";
+    return N_("Time missed");
 
   default:
-    return "Invalid";
+    return N_("Invalid");
   }
 }
 
@@ -2274,7 +2274,7 @@ const idclass_t dvr_entry_class = {
       .id       = "status",
       .name     = N_("Status"),
       .get      = dvr_entry_class_status_get,
-      .opts     = PO_RDONLY | PO_NOSAVE,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_LOCALE,
     },
     {
       .type     = PT_STR,

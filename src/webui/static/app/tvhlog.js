@@ -12,7 +12,7 @@ tvheadend.tvhlog = function(panel, index) {
      * ***************************************************************/
 
     var tvhlogLogPath = new Ext.form.TextField({
-        fieldLabel: 'Debug log path',
+        fieldLabel: _('Debug log path'),
         name: 'tvhlog_path',
         allowBlank: true,
         width: 400
@@ -20,23 +20,23 @@ tvheadend.tvhlog = function(panel, index) {
 
     var tvhlogToSyslog = new Ext.form.Checkbox({
         name: 'tvhlog_dbg_syslog',
-        fieldLabel: 'Debug to syslog'
+        fieldLabel: _('Debug to syslog')
     });
 
     var tvhlogTraceOn = new Ext.form.Checkbox({
         name: 'tvhlog_trace_on',
-        fieldLabel: 'Debug trace (low-level stuff)'
+        fieldLabel: _('Debug trace (low-level stuff)')
     });
 
     var tvhlogDebugSubsys = new Ext.form.TextField({
-        fieldLabel: 'Debug subsystems',
+        fieldLabel: _('Debug subsystems'),
         name: 'tvhlog_debug',
         allowBlank: true,
         width: 400
     });
 
     var tvhlogTraceSubsys = new Ext.form.TextField({
-        fieldLabel: 'Trace subsystems',
+        fieldLabel: _('Trace subsystems'),
         name: 'tvhlog_trace',
         allowBlank: true,
         width: 400
@@ -44,7 +44,7 @@ tvheadend.tvhlog = function(panel, index) {
 
     var tvhlogLibav = new Ext.form.Checkbox({
         name: 'tvhlog_libav',
-        fieldLabel: 'Debug libav log'
+        fieldLabel: _('Debug libav log')
     });
 
 
@@ -53,17 +53,17 @@ tvheadend.tvhlog = function(panel, index) {
      * ***************************************************************/
 
     var saveButton = new Ext.Button({
-        text: "Apply configuration (run-time only)",
-        tooltip: 'Apply changes made bellow to the run-time configuration<br/>They will be lost on restart.',
+        text: _("Apply configuration (run-time only)"),
+        tooltip: _('Apply changes made bellow to the run-time configuration<br/>They will be lost on restart.'),
         iconCls: 'apply',
         handler: saveChanges
     });
 
     var helpButton = new Ext.Button({
-        text: 'Help',
-		iconCls: 'help',
+        text: _('Help'),
+        iconCls: 'help',
         handler: function() {
-            new tvheadend.help('Debug Configuration', 'config_debugging.html');
+            new tvheadend.help(_('Debug Configuration'), 'config_debugging.html');
         }
     });
 
@@ -79,7 +79,7 @@ tvheadend.tvhlog = function(panel, index) {
       items.push(tvhlogLibav);
 
     var DebuggingPanel = new Ext.form.FieldSet({
-        title: 'Debugging Options',
+        title: _('Debugging Options'),
         width: 700,
         autoHeight: true,
         collapsible: true,
@@ -88,7 +88,7 @@ tvheadend.tvhlog = function(panel, index) {
     });
 
     var confpanel = new Ext.form.FormPanel({
-        title: 'Debugging',
+        title: _('Debugging'),
         iconCls: 'debug',
         border: false,
         bodyStyle: 'padding:15px',
@@ -125,9 +125,9 @@ tvheadend.tvhlog = function(panel, index) {
             params: {
                 op: 'saveSettings'
             },
-            waitMsg: 'Applying Data...',
+            waitMsg: _('Applying Data...'),
             failure: function(form, action) {
-                Ext.Msg.alert('Apply failed', action.result.errormsg);
+                Ext.Msg.alert(_('Apply failed'), action.result.errormsg);
             }
         });
     }

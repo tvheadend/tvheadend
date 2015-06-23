@@ -1112,11 +1112,12 @@ idnode_changed( idnode_t *self )
  * *************************************************************************/
 
 void
-idnode_read0 ( idnode_t *self, htsmsg_t *c, htsmsg_t *list, int optmask )
+idnode_read0 ( idnode_t *self, htsmsg_t *c, htsmsg_t *list,
+               int optmask, const char *lang )
 {
   const idclass_t *idc = self->in_class;
   for (; idc; idc = idc->ic_super)
-    prop_read_values(self, idc->ic_properties, c, list, optmask);
+    prop_read_values(self, idc->ic_properties, c, list, optmask, lang);
 }
 
 /**
