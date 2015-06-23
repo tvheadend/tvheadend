@@ -310,8 +310,13 @@ prop_read_value
         htsmsg_add_s64(m, name, *(int64_t *)val);
       break;
     case PT_STR:
-      if ((s = *(const char **)val))
-        htsmsg_add_str(m, name, lang ? tvh_gettext_lang(lang, s) : s);
+      if (optmask & PO_LOCALE) {
+        if ((s = *(const char **)val))
+          htsmsg_add_str(m, name, lang ? tvh_gettext_lang(lang, s) : s);
+      } else {
+        if ((s = *(const char **)val))
+          htsmsg_add_str(m, name, s);
+      }
       break;
     case PT_DBL:
       htsmsg_add_dbl(m, name, *(double*)val);
