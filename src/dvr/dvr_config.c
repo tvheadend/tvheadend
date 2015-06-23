@@ -106,7 +106,7 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
   htsmsg_field_t *f;
   const char *uuid, *uuid2;
 
-  cfg  = dvr_config_find_by_uuid(name);
+  cfg = dvr_config_find_by_uuid(name);
   if (!cfg)
     cfg  = dvr_config_find_by_name(name);
   uuid = cfg ? idnode_uuid_as_str(&cfg->dvr_id) : "";
@@ -122,7 +122,8 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
       }
     }
   } else {
-    res = cfg;
+    if (cfg->dvr_enabled)
+      res = cfg;
   }
   if (!res)
     res = dvr_config_find_by_name_default(NULL);
