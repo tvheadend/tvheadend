@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:56+0200\n"
-"PO-Revision-Date: 2015-06-23 11:56+0000\n"
+"POT-Creation-Date: 2015-06-23 21:05+0200\n"
+"PO-Revision-Date: 2015-06-23 19:06+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
@@ -28,6 +28,7 @@ msgid "(?:st|nd|rd|th)#parseCodes.S.s"
 msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
 msgstr "(Изчисти филтъра)"
 
@@ -45,6 +46,26 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:219
 msgid "0,000.00#NumberColumn"
+msgstr ""
+
+#: src/webui/static/app/epg.js:69
+msgid "00:00:00 - 00:15:00"
+msgstr ""
+
+#: src/webui/static/app/epg.js:70
+msgid "00:15:00 - 00:30:00"
+msgstr ""
+
+#: src/webui/static/app/epg.js:71
+msgid "00:30:00 - 01:30:00"
+msgstr ""
+
+#: src/webui/static/app/epg.js:72
+msgid "01:30:00 - 03:00:00"
+msgstr ""
+
+#: src/webui/static/app/epg.js:73
+msgid "03:00:00 - No maximum"
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:60
@@ -119,11 +140,11 @@ msgstr ""
 msgid "Active"
 msgstr "Активен"
 
-#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1637
+#: src/webui/static/app/idnode.js:1157 src/webui/static/app/idnode.js:1638
 msgid "Add"
 msgstr "Добави"
 
-#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1635
+#: src/webui/static/app/idnode.js:1155 src/webui/static/app/idnode.js:1636
 msgid "Add a new entry"
 msgstr "Добави нов запис"
 
@@ -151,7 +172,7 @@ msgstr "Възраст"
 msgid "Age Rating"
 msgstr "Възрастова Граница"
 
-#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1361
+#: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Всички"
 
@@ -522,7 +543,7 @@ msgstr "Декември"
 msgid "Default Language(s)"
 msgstr "Език(ци) по подразбиране"
 
-#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1649
+#: src/webui/static/app/idnode.js:1171 src/webui/static/app/idnode.js:1650
 msgid "Delete"
 msgstr "Изтрий "
 
@@ -534,7 +555,7 @@ msgstr "Изтрий записа"
 msgid "Delete scheduled recording of this program"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1647
+#: src/webui/static/app/idnode.js:1169 src/webui/static/app/idnode.js:1648
 msgid "Delete selected entries"
 msgstr "Изтрий избраното"
 
@@ -631,15 +652,15 @@ msgstr ""
 msgid "EPG scan timeout in seconds (30-7200)"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1255
+#: src/webui/static/app/idnode.js:1256
 msgid "Edit"
 msgstr "Редакция"
 
-#: src/webui/static/app/idnode.js:1253
+#: src/webui/static/app/idnode.js:1254
 msgid "Edit selected entry"
 msgstr "Редактиране на избрания запис"
 
-#: src/webui/static/app/idnode.js:1269 src/webui/static/app/idnode.js:1293
+#: src/webui/static/app/idnode.js:1270 src/webui/static/app/idnode.js:1294
 msgid "Edit {0}"
 msgstr "Редактирай {0}"
 
@@ -825,8 +846,8 @@ msgstr "Категория"
 msgid "Group By This Field"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
-#: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
+#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1409
+#: src/webui/static/app/idnode.js:1757 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
 #: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:64
 msgid "Help"
@@ -836,11 +857,11 @@ msgstr "Помощ"
 msgid "Help for"
 msgstr "Помощ за"
 
-#: src/webui/static/app/idnode.js:1338
+#: src/webui/static/app/idnode.js:1339
 msgid "Hide"
 msgstr "Скрий "
 
-#: src/webui/static/app/idnode.js:1724
+#: src/webui/static/app/idnode.js:1725
 msgid "Hide passwords"
 msgstr "Скрий паролите"
 
@@ -1029,11 +1050,11 @@ msgstr "Пон"
 msgid "Monday"
 msgstr "Понеделник"
 
-#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
+#: src/webui/static/app/idnode.js:1227 src/webui/static/app/idnode.js:1697
 msgid "Move Down"
 msgstr "Премести Надолу "
 
-#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1675
+#: src/webui/static/app/idnode.js:1202 src/webui/static/app/idnode.js:1676
 msgid "Move Up"
 msgstr "Премести Нагоре"
 
@@ -1045,19 +1066,19 @@ msgstr ""
 msgid "Move channel one number up"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1224
+#: src/webui/static/app/idnode.js:1225
 msgid "Move selected entries down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1199
+#: src/webui/static/app/idnode.js:1200
 msgid "Move selected entries up"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1694
+#: src/webui/static/app/idnode.js:1695
 msgid "Move selected entry down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1673
+#: src/webui/static/app/idnode.js:1674
 msgid "Move selected entry up"
 msgstr ""
 
@@ -1119,7 +1140,7 @@ msgstr "Не проверен достъп"
 msgid "No {0} to display"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1323 src/webui/static/app/mpegts.js:207
+#: src/webui/static/app/idnode.js:1324 src/webui/static/app/mpegts.js:207
 #: src/webui/static/app/mpegts.js:217
 msgid "None"
 msgstr "Празно"
@@ -1200,11 +1221,11 @@ msgstr "PER"
 msgid "Page"
 msgstr "Страница"
 
-#: src/webui/static/app/idnode.js:1783 src/webui/static/app/idnode.js:1969
+#: src/webui/static/app/idnode.js:1784 src/webui/static/app/idnode.js:1970
 msgid "Parameters"
 msgstr "Параметри"
 
-#: src/webui/static/app/idnode.js:1321
+#: src/webui/static/app/idnode.js:1322
 msgid "Parent disabled"
 msgstr ""
 
@@ -1219,6 +1240,10 @@ msgstr ""
 #: src/webui/static/app/acleditor.js:80
 msgid "Passwords"
 msgstr "Пароли"
+
+#: src/webui/static/app/epggrab.js:194
+msgid "Path"
+msgstr ""
 
 #: src/webui/static/app/tvheadend.js:291
 msgid "Pause"
@@ -1340,7 +1365,7 @@ msgstr ""
 msgid "Reset all filters (show all)"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1622
+#: src/webui/static/app/idnode.js:1141 src/webui/static/app/idnode.js:1623
 msgid "Revert pending changes (marked with red border)"
 msgstr ""
 
@@ -1360,8 +1385,8 @@ msgstr "Съб"
 msgid "Saturday"
 msgstr "Събота"
 
-#: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
-#: src/webui/static/app/idnode.js:1602
+#: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1116
+#: src/webui/static/app/idnode.js:1603
 msgid "Save"
 msgstr "Съхрани"
 
@@ -1375,11 +1400,12 @@ msgstr "Съхрани промените описани по-надолу"
 msgid "Save configuration"
 msgstr "Съхрани конфигурацията"
 
-#: src/webui/static/app/timeshift.js:194 src/webui/static/app/config.js:430
+#: src/webui/static/app/timeshift.js:194 src/webui/static/app/epggrab.js:399
+#: src/webui/static/app/config.js:430
 msgid "Save failed"
 msgstr "Съхраняване неуспешно"
 
-#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1600
+#: src/webui/static/app/idnode.js:1114 src/webui/static/app/idnode.js:1601
 msgid "Save pending changes (marked with red border)"
 msgstr ""
 
@@ -1464,11 +1490,11 @@ msgstr "Настройки"
 msgid "Show in Groups"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1718
+#: src/webui/static/app/idnode.js:1719
 msgid "Show or hide passwords"
 msgstr "Покажи или скрий паролите"
 
-#: src/webui/static/app/idnode.js:1720 src/webui/static/app/idnode.js:1724
+#: src/webui/static/app/idnode.js:1721 src/webui/static/app/idnode.js:1725
 msgid "Show passwords"
 msgstr "Покажи  паролите"
 
@@ -1723,6 +1749,10 @@ msgstr ""
 msgid "Trigger OTA EPG Grabber"
 msgstr ""
 
+#: src/webui/static/app/epggrab.js:413
+msgid "Trigger failed"
+msgstr ""
+
 #: src/webui/static/app/epggrab.js:411
 msgid "Triggering..."
 msgstr ""
@@ -1756,7 +1786,7 @@ msgstr "Вид"
 msgid "Uncorrected Blocks"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1624
+#: src/webui/static/app/idnode.js:1143 src/webui/static/app/idnode.js:1625
 msgid "Undo"
 msgstr "Върни"
 

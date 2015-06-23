@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:56+0200\n"
-"PO-Revision-Date: 2015-06-23 12:32+0000\n"
+"POT-Creation-Date: 2015-06-23 21:05+0200\n"
+"PO-Revision-Date: 2015-06-23 20:56+0000\n"
 "Last-Translator: stbenz\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
@@ -30,6 +30,7 @@ msgid "(?:st|nd|rd|th)#parseCodes.S.s"
 msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
 msgstr "(Filter löschen)"
 
@@ -48,6 +49,26 @@ msgstr "0 #monthNumber"
 #: src/webui/static/app/i18n-post.js:219
 msgid "0,000.00#NumberColumn"
 msgstr "0,000.00#NumberColumn"
+
+#: src/webui/static/app/epg.js:69
+msgid "00:00:00 - 00:15:00"
+msgstr "00:00:00 - 00:15:00"
+
+#: src/webui/static/app/epg.js:70
+msgid "00:15:00 - 00:30:00"
+msgstr "00:15:00 - 00:30:00"
+
+#: src/webui/static/app/epg.js:71
+msgid "00:30:00 - 01:30:00"
+msgstr "00:30:00 - 01:30:00"
+
+#: src/webui/static/app/epg.js:72
+msgid "01:30:00 - 03:00:00"
+msgstr "01:30:00 - 03:00:00"
+
+#: src/webui/static/app/epg.js:73
+msgid "03:00:00 - No maximum"
+msgstr "03:00:00 - Kein Maximum"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
@@ -121,11 +142,11 @@ msgstr "Zugriffseintrag"
 msgid "Active"
 msgstr "Aktiv"
 
-#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1637
+#: src/webui/static/app/idnode.js:1157 src/webui/static/app/idnode.js:1638
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1635
+#: src/webui/static/app/idnode.js:1155 src/webui/static/app/idnode.js:1636
 msgid "Add a new entry"
 msgstr "Neuen Eintrag hinzufügen"
 
@@ -153,7 +174,7 @@ msgstr "Alter"
 msgid "Age Rating"
 msgstr "Altersfreigabe"
 
-#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1361
+#: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Alle"
 
@@ -524,7 +545,7 @@ msgstr "Dezember"
 msgid "Default Language(s)"
 msgstr "Standardsprache(n)"
 
-#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1649
+#: src/webui/static/app/idnode.js:1171 src/webui/static/app/idnode.js:1650
 msgid "Delete"
 msgstr "Löschen"
 
@@ -536,7 +557,7 @@ msgstr "Aufnahme Löschen"
 msgid "Delete scheduled recording of this program"
 msgstr "Geplante Aufnahme der Sendung löschen"
 
-#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1647
+#: src/webui/static/app/idnode.js:1169 src/webui/static/app/idnode.js:1648
 msgid "Delete selected entries"
 msgstr "Ausgewählte Einträge löschen"
 
@@ -580,7 +601,7 @@ msgstr "Zeige {0} - {1} von {2}"
 
 #: src/webui/static/app/dvr.js:215
 msgid "Do you really want to abort/unschedule the selection?"
-msgstr "Wollen Sie die Auswahl wirklich abbrechen/ausplanen?"
+msgstr "Wollen Sie die Auswahl wirklich abbrechen/löschen?"
 
 #: src/webui/static/app/tvheadend.js:82
 msgid "Do you really want to delete the selection?"
@@ -588,11 +609,11 @@ msgstr "Wollen Sie die Auswahl wirklich löschen?"
 
 #: src/webui/static/app/dvr.js:185
 msgid "Do you really want to gracefully stop/unschedule the selection?"
-msgstr "Wollen Sie die Auswahl wirklich kontrolliert abbrechen/ausplanen?"
+msgstr "Wollen Sie die Auswahl wirklich kontrolliert abbrechen/löschen?"
 
 #: src/webui/static/app/epg.js:279
 msgid "Do you really want to gracefully stop/unschedule this recording?"
-msgstr "Wollen Sie diese Aufnahme wirklich kontrolliert stoppen/ausplanen?"
+msgstr "Wollen Sie diese Aufnahme wirklich kontrolliert stoppen/löschen?"
 
 #: src/webui/static/app/epg.js:292
 msgid "Do you really want to remove this recording?"
@@ -615,7 +636,7 @@ msgstr "Ausgewählte Aufnahme herunterladen"
 #: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:516
 #: src/webui/static/app/epg.js:1023 src/webui/static/app/dvr.js:44
 msgid "Duration"
-msgstr "Dauer"
+msgstr "Länge"
 
 #: src/webui/static/app/epggrab.js:309
 msgid "EPG Grab Configuration"
@@ -633,15 +654,15 @@ msgstr "EPG-Aktualisierung"
 msgid "EPG scan timeout in seconds (30-7200)"
 msgstr "EPG Abfragezeitüberschreitung in Sekunden (30-7200)"
 
-#: src/webui/static/app/idnode.js:1255
+#: src/webui/static/app/idnode.js:1256
 msgid "Edit"
 msgstr "Bearbeiten"
 
-#: src/webui/static/app/idnode.js:1253
+#: src/webui/static/app/idnode.js:1254
 msgid "Edit selected entry"
 msgstr "Ausgewählten Eintrag bearbeiten"
 
-#: src/webui/static/app/idnode.js:1269 src/webui/static/app/idnode.js:1293
+#: src/webui/static/app/idnode.js:1270 src/webui/static/app/idnode.js:1294
 msgid "Edit {0}"
 msgstr "{0} bearbeiten"
 
@@ -827,8 +848,8 @@ msgstr "Genre"
 msgid "Group By This Field"
 msgstr "Nach diesem Feld gruppieren"
 
-#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
-#: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
+#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1409
+#: src/webui/static/app/idnode.js:1757 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
 #: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:64
 msgid "Help"
@@ -838,11 +859,11 @@ msgstr "Hilfe"
 msgid "Help for"
 msgstr "Hilfe für"
 
-#: src/webui/static/app/idnode.js:1338
+#: src/webui/static/app/idnode.js:1339
 msgid "Hide"
 msgstr "Verstecken"
 
-#: src/webui/static/app/idnode.js:1724
+#: src/webui/static/app/idnode.js:1725
 msgid "Hide passwords"
 msgstr "Passwörter verstecken"
 
@@ -1031,11 +1052,11 @@ msgstr "Mo"
 msgid "Monday"
 msgstr "Montag"
 
-#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
+#: src/webui/static/app/idnode.js:1227 src/webui/static/app/idnode.js:1697
 msgid "Move Down"
 msgstr "Nach unten"
 
-#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1675
+#: src/webui/static/app/idnode.js:1202 src/webui/static/app/idnode.js:1676
 msgid "Move Up"
 msgstr "Nach oben"
 
@@ -1047,19 +1068,19 @@ msgstr "Verschiebe Kanal eine Nummer nach unten"
 msgid "Move channel one number up"
 msgstr "Verschiebe Kanal eine Nummer nach oben"
 
-#: src/webui/static/app/idnode.js:1224
+#: src/webui/static/app/idnode.js:1225
 msgid "Move selected entries down"
 msgstr "Verschiebe ausgewählte Einträge nach unten"
 
-#: src/webui/static/app/idnode.js:1199
+#: src/webui/static/app/idnode.js:1200
 msgid "Move selected entries up"
 msgstr "Verschiebe ausgewählte Einträge nach oben"
 
-#: src/webui/static/app/idnode.js:1694
+#: src/webui/static/app/idnode.js:1695
 msgid "Move selected entry down"
 msgstr "Verschiebe ausgewählten Eintrag nach unten"
 
-#: src/webui/static/app/idnode.js:1673
+#: src/webui/static/app/idnode.js:1674
 msgid "Move selected entry up"
 msgstr "Verschiebe ausgewählten Eintrag nach oben"
 
@@ -1121,7 +1142,7 @@ msgstr "Kein verifizierter Zugriff"
 msgid "No {0} to display"
 msgstr "Keine {1} zum Anzeigen"
 
-#: src/webui/static/app/idnode.js:1323 src/webui/static/app/mpegts.js:207
+#: src/webui/static/app/idnode.js:1324 src/webui/static/app/mpegts.js:207
 #: src/webui/static/app/mpegts.js:217
 msgid "None"
 msgstr "Kein"
@@ -1202,11 +1223,11 @@ msgstr "PER"
 msgid "Page"
 msgstr "Seite"
 
-#: src/webui/static/app/idnode.js:1783 src/webui/static/app/idnode.js:1969
+#: src/webui/static/app/idnode.js:1784 src/webui/static/app/idnode.js:1970
 msgid "Parameters"
 msgstr "Parameter"
 
-#: src/webui/static/app/idnode.js:1321
+#: src/webui/static/app/idnode.js:1322
 msgid "Parent disabled"
 msgstr "Übergeordnet deaktiviert"
 
@@ -1221,6 +1242,10 @@ msgstr "Passwortkontrolleinträge"
 #: src/webui/static/app/acleditor.js:80
 msgid "Passwords"
 msgstr "Passwörter"
+
+#: src/webui/static/app/epggrab.js:194
+msgid "Path"
+msgstr "Pfad"
 
 #: src/webui/static/app/tvheadend.js:291
 msgid "Pause"
@@ -1342,7 +1367,7 @@ msgstr "Logo zurücksetzen"
 msgid "Reset all filters (show all)"
 msgstr "Alle Filter zurücksetzen (zeige alle)"
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1622
+#: src/webui/static/app/idnode.js:1141 src/webui/static/app/idnode.js:1623
 msgid "Revert pending changes (marked with red border)"
 msgstr "Änderungen zurücknehmen (Markiert mit roter Ecke)"
 
@@ -1362,8 +1387,8 @@ msgstr "Sa"
 msgid "Saturday"
 msgstr "Samstag"
 
-#: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
-#: src/webui/static/app/idnode.js:1602
+#: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1116
+#: src/webui/static/app/idnode.js:1603
 msgid "Save"
 msgstr "Speichern"
 
@@ -1377,11 +1402,12 @@ msgstr "Unten vorgenommene Änderungen speichern"
 msgid "Save configuration"
 msgstr "Konfiguration speichern"
 
-#: src/webui/static/app/timeshift.js:194 src/webui/static/app/config.js:430
+#: src/webui/static/app/timeshift.js:194 src/webui/static/app/epggrab.js:399
+#: src/webui/static/app/config.js:430
 msgid "Save failed"
 msgstr "Speichern fehlgeschlagen"
 
-#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1600
+#: src/webui/static/app/idnode.js:1114 src/webui/static/app/idnode.js:1601
 msgid "Save pending changes (marked with red border)"
 msgstr "Ausstehende Änderungen speichern (markiert mit roter Ecke)"
 
@@ -1466,11 +1492,11 @@ msgstr "Einstellungen"
 msgid "Show in Groups"
 msgstr "In Gruppen anzeigen"
 
-#: src/webui/static/app/idnode.js:1718
+#: src/webui/static/app/idnode.js:1719
 msgid "Show or hide passwords"
 msgstr "Passwörter zeigen/verstecken"
 
-#: src/webui/static/app/idnode.js:1720 src/webui/static/app/idnode.js:1724
+#: src/webui/static/app/idnode.js:1721 src/webui/static/app/idnode.js:1725
 msgid "Show passwords"
 msgstr "Zeige Passwörter"
 
@@ -1492,7 +1518,7 @@ msgstr "Bewertung"
 
 #: src/webui/static/app/epg.js:543
 msgid "Stars"
-msgstr "Sternchen"
+msgstr "Bewertung"
 
 #: src/webui/static/app/status.js:114
 msgid "Start"
@@ -1725,6 +1751,10 @@ msgstr "Transportfehler"
 msgid "Trigger OTA EPG Grabber"
 msgstr "OTA EPG Grabber auslösen"
 
+#: src/webui/static/app/epggrab.js:413
+msgid "Trigger failed"
+msgstr "Auslösen fehlgeschlagen"
+
 #: src/webui/static/app/epggrab.js:411
 msgid "Triggering..."
 msgstr "Wird ausgelöst..."
@@ -1758,7 +1788,7 @@ msgstr "Typ"
 msgid "Uncorrected Blocks"
 msgstr "Unkorrigierte Blocks"
 
-#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1624
+#: src/webui/static/app/idnode.js:1143 src/webui/static/app/idnode.js:1625
 msgid "Undo"
 msgstr "Rückgängig"
 

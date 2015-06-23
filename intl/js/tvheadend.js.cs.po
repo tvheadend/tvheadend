@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:56+0200\n"
-"PO-Revision-Date: 2015-06-23 14:59+0000\n"
+"POT-Creation-Date: 2015-06-23 21:05+0200\n"
+"PO-Revision-Date: 2015-06-23 19:10+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -27,6 +27,7 @@ msgid "(?:st|nd|rd|th)#parseCodes.S.s"
 msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
 msgstr "(Prázdný filtr)"
 
@@ -45,6 +46,26 @@ msgstr "0 #monthNumber"
 #: src/webui/static/app/i18n-post.js:219
 msgid "0,000.00#NumberColumn"
 msgstr "0.000,00#NumberColumn"
+
+#: src/webui/static/app/epg.js:69
+msgid "00:00:00 - 00:15:00"
+msgstr "0 - 15 min"
+
+#: src/webui/static/app/epg.js:70
+msgid "00:15:00 - 00:30:00"
+msgstr "15 min - 30 min"
+
+#: src/webui/static/app/epg.js:71
+msgid "00:30:00 - 01:30:00"
+msgstr "30 min - 1 hod 30 min"
+
+#: src/webui/static/app/epg.js:72
+msgid "01:30:00 - 03:00:00"
+msgstr "1 hod 30 min - 3 hod"
+
+#: src/webui/static/app/epg.js:73
+msgid "03:00:00 - No maximum"
+msgstr "3 hod - Bez limitu"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
@@ -118,11 +139,11 @@ msgstr "Přístupová položka"
 msgid "Active"
 msgstr "Aktivní"
 
-#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1637
+#: src/webui/static/app/idnode.js:1157 src/webui/static/app/idnode.js:1638
 msgid "Add"
 msgstr "Přidat"
 
-#: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1635
+#: src/webui/static/app/idnode.js:1155 src/webui/static/app/idnode.js:1636
 msgid "Add a new entry"
 msgstr "Přidat novou položku"
 
@@ -150,7 +171,7 @@ msgstr "Věk"
 msgid "Age Rating"
 msgstr "Věkové hodnocení"
 
-#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1361
+#: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Vše"
 
@@ -521,7 +542,7 @@ msgstr "Prosinec"
 msgid "Default Language(s)"
 msgstr "Výchozí jazyk(y)"
 
-#: src/webui/static/app/idnode.js:1170 src/webui/static/app/idnode.js:1649
+#: src/webui/static/app/idnode.js:1171 src/webui/static/app/idnode.js:1650
 msgid "Delete"
 msgstr "Vymazat"
 
@@ -533,7 +554,7 @@ msgstr "Vymazat záznam"
 msgid "Delete scheduled recording of this program"
 msgstr "Vymazat naplánovaný záznam tohoto programu"
 
-#: src/webui/static/app/idnode.js:1168 src/webui/static/app/idnode.js:1647
+#: src/webui/static/app/idnode.js:1169 src/webui/static/app/idnode.js:1648
 msgid "Delete selected entries"
 msgstr "Vymazat označené položky"
 
@@ -630,15 +651,15 @@ msgstr "Aktualizace EPG"
 msgid "EPG scan timeout in seconds (30-7200)"
 msgstr "Timeout pro EPG scan v sekundách (30-7200)"
 
-#: src/webui/static/app/idnode.js:1255
+#: src/webui/static/app/idnode.js:1256
 msgid "Edit"
 msgstr "Editace"
 
-#: src/webui/static/app/idnode.js:1253
+#: src/webui/static/app/idnode.js:1254
 msgid "Edit selected entry"
 msgstr "Edituj vybranou položku"
 
-#: src/webui/static/app/idnode.js:1269 src/webui/static/app/idnode.js:1293
+#: src/webui/static/app/idnode.js:1270 src/webui/static/app/idnode.js:1294
 msgid "Edit {0}"
 msgstr "Editace {0}"
 
@@ -824,8 +845,8 @@ msgstr "Styl"
 msgid "Group By This Field"
 msgstr "Seskup podle tohoto pole"
 
-#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
-#: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
+#: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1409
+#: src/webui/static/app/idnode.js:1757 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
 #: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:64
 msgid "Help"
@@ -835,11 +856,11 @@ msgstr "Nápověda"
 msgid "Help for"
 msgstr "Nápověda pro"
 
-#: src/webui/static/app/idnode.js:1338
+#: src/webui/static/app/idnode.js:1339
 msgid "Hide"
 msgstr "Skrýt"
 
-#: src/webui/static/app/idnode.js:1724
+#: src/webui/static/app/idnode.js:1725
 msgid "Hide passwords"
 msgstr "Schovat hesla"
 
@@ -1028,11 +1049,11 @@ msgstr "Květen"
 msgid "Monday"
 msgstr "Pondělí"
 
-#: src/webui/static/app/idnode.js:1226 src/webui/static/app/idnode.js:1696
+#: src/webui/static/app/idnode.js:1227 src/webui/static/app/idnode.js:1697
 msgid "Move Down"
 msgstr "Posunout dolů"
 
-#: src/webui/static/app/idnode.js:1201 src/webui/static/app/idnode.js:1675
+#: src/webui/static/app/idnode.js:1202 src/webui/static/app/idnode.js:1676
 msgid "Move Up"
 msgstr "Posunout nahoru"
 
@@ -1044,19 +1065,19 @@ msgstr "Snížení čísla programu"
 msgid "Move channel one number up"
 msgstr "Zvýšení čísla programu"
 
-#: src/webui/static/app/idnode.js:1224
+#: src/webui/static/app/idnode.js:1225
 msgid "Move selected entries down"
 msgstr "Posun vybraných programů dolů"
 
-#: src/webui/static/app/idnode.js:1199
+#: src/webui/static/app/idnode.js:1200
 msgid "Move selected entries up"
 msgstr "Posun vybraných programů nahoru"
 
-#: src/webui/static/app/idnode.js:1694
+#: src/webui/static/app/idnode.js:1695
 msgid "Move selected entry down"
 msgstr "Posun vybraného programu dolů"
 
-#: src/webui/static/app/idnode.js:1673
+#: src/webui/static/app/idnode.js:1674
 msgid "Move selected entry up"
 msgstr "Posun vybraného programu nahoru"
 
@@ -1118,7 +1139,7 @@ msgstr "Neprověřený přístup"
 msgid "No {0} to display"
 msgstr "Žádné {0} k zobrazení"
 
-#: src/webui/static/app/idnode.js:1323 src/webui/static/app/mpegts.js:207
+#: src/webui/static/app/idnode.js:1324 src/webui/static/app/mpegts.js:207
 #: src/webui/static/app/mpegts.js:217
 msgid "None"
 msgstr "Žádný"
@@ -1199,11 +1220,11 @@ msgstr "PER"
 msgid "Page"
 msgstr "Stránka"
 
-#: src/webui/static/app/idnode.js:1783 src/webui/static/app/idnode.js:1969
+#: src/webui/static/app/idnode.js:1784 src/webui/static/app/idnode.js:1970
 msgid "Parameters"
 msgstr "Parametry"
 
-#: src/webui/static/app/idnode.js:1321
+#: src/webui/static/app/idnode.js:1322
 msgid "Parent disabled"
 msgstr "Rodič zakázán"
 
@@ -1218,6 +1239,10 @@ msgstr "Položky hesel"
 #: src/webui/static/app/acleditor.js:80
 msgid "Passwords"
 msgstr "Hesla"
+
+#: src/webui/static/app/epggrab.js:194
+msgid "Path"
+msgstr "Cesta"
 
 #: src/webui/static/app/tvheadend.js:291
 msgid "Pause"
@@ -1339,7 +1364,7 @@ msgstr "Resetuj ikonu"
 msgid "Reset all filters (show all)"
 msgstr "Resetuj všechny filtry (zobraz vše)"
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1622
+#: src/webui/static/app/idnode.js:1141 src/webui/static/app/idnode.js:1623
 msgid "Revert pending changes (marked with red border)"
 msgstr "Obnovit neuložené změny (označené červeným okrajem)"
 
@@ -1359,8 +1384,8 @@ msgstr "Sob"
 msgid "Saturday"
 msgstr "Sobota"
 
-#: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1115
-#: src/webui/static/app/idnode.js:1602
+#: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1116
+#: src/webui/static/app/idnode.js:1603
 msgid "Save"
 msgstr "Ulož"
 
@@ -1374,11 +1399,12 @@ msgstr "Ulož změny udělané do konfigurace níže"
 msgid "Save configuration"
 msgstr "Uložit konfigurace"
 
-#: src/webui/static/app/timeshift.js:194 src/webui/static/app/config.js:430
+#: src/webui/static/app/timeshift.js:194 src/webui/static/app/epggrab.js:399
+#: src/webui/static/app/config.js:430
 msgid "Save failed"
 msgstr "Uložení selhalo"
 
-#: src/webui/static/app/idnode.js:1113 src/webui/static/app/idnode.js:1600
+#: src/webui/static/app/idnode.js:1114 src/webui/static/app/idnode.js:1601
 msgid "Save pending changes (marked with red border)"
 msgstr "Ulož změny udělané do konfigurace (označené červeným okrajem)"
 
@@ -1463,11 +1489,11 @@ msgstr "Nastavení"
 msgid "Show in Groups"
 msgstr "Zobrazit ve skupinách"
 
-#: src/webui/static/app/idnode.js:1718
+#: src/webui/static/app/idnode.js:1719
 msgid "Show or hide passwords"
 msgstr "Ukázat nebo skrýt hesla"
 
-#: src/webui/static/app/idnode.js:1720 src/webui/static/app/idnode.js:1724
+#: src/webui/static/app/idnode.js:1721 src/webui/static/app/idnode.js:1725
 msgid "Show passwords"
 msgstr "Ukázat hesla"
 
@@ -1722,6 +1748,10 @@ msgstr "Chyby transportu"
 msgid "Trigger OTA EPG Grabber"
 msgstr "Spustit OTA EPG graber"
 
+#: src/webui/static/app/epggrab.js:413
+msgid "Trigger failed"
+msgstr "Start byl neúspěšný"
+
 #: src/webui/static/app/epggrab.js:411
 msgid "Triggering..."
 msgstr "Spouštím..."
@@ -1755,7 +1785,7 @@ msgstr "Typ"
 msgid "Uncorrected Blocks"
 msgstr "Neopravené bloky"
 
-#: src/webui/static/app/idnode.js:1142 src/webui/static/app/idnode.js:1624
+#: src/webui/static/app/idnode.js:1143 src/webui/static/app/idnode.js:1625
 msgid "Undo"
 msgstr "Zpět"
 

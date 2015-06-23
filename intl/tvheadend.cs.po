@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 13:56+0200\n"
+"POT-Creation-Date: 2015-06-23 21:05+0200\n"
 "PO-Revision-Date: 2015-06-23 14:59+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
@@ -285,11 +285,11 @@ msgstr "Povolena automatická kontrola"
 msgid "Auto EPG Channel"
 msgstr "Automatický EPG program"
 
-#: src/dvr/dvr_db.c:2222
+#: src/dvr/dvr_db.c:2221
 msgid "Auto Record"
 msgstr "Automatický rekordér"
 
-#: src/dvr/dvr_db.c:2230
+#: src/dvr/dvr_db.c:2229
 msgid "Auto Time Record"
 msgstr "Automatický časový rekordér"
 
@@ -340,7 +340,7 @@ msgstr "Buket (automatický)"
 msgid "Brand"
 msgstr "Značka"
 
-#: src/dvr/dvr_db.c:2246
+#: src/dvr/dvr_db.c:2245
 msgid "Broadcast"
 msgstr "Vysílání"
 
@@ -389,7 +389,7 @@ msgstr "CAPMT interval dotazů (ms)"
 msgid "CRID Authority"
 msgstr "CRID autorita"
 
-#: src/dvr/dvr_config.c:799
+#: src/dvr/dvr_config.c:800
 msgid "Cache Scheme"
 msgstr "Schéma mezipaměti"
 
@@ -458,8 +458,8 @@ msgstr "Code Word Client (newcamd)"
 #: src/access.c:1439 src/access.c:1677 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
 #: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
-#: src/dvr/dvr_db.c:2296 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
-#: src/dvr/dvr_config.c:782 src/descrambler/caclient.c:275
+#: src/dvr/dvr_db.c:2295 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
+#: src/dvr/dvr_config.c:783 src/descrambler/caclient.c:275
 msgid "Comment"
 msgstr "Komentář"
 
@@ -483,7 +483,7 @@ msgstr "Klient podmíněného přístupu"
 msgid "Config ID"
 msgstr "ID konfigurace"
 
-#: src/dvr/dvr_config.c:772
+#: src/dvr/dvr_config.c:773
 msgid "Config Name"
 msgstr "Název konfigurace"
 
@@ -499,7 +499,7 @@ msgstr "Konstelace"
 msgid "Container"
 msgstr "Kontejner"
 
-#: src/dvr/dvr_db.c:2238 src/dvr/dvr_autorec.c:1024
+#: src/dvr/dvr_db.c:2237 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
 msgstr "Typ obsahu"
 
@@ -595,7 +595,7 @@ msgstr "DVR"
 msgid "DVR Auto-Record Entry"
 msgstr "Položka DVR auto-rekordéru"
 
-#: src/dvr/dvr_config.c:730
+#: src/dvr/dvr_config.c:731
 msgid "DVR Behavior"
 msgstr "Chování DVR"
 
@@ -607,7 +607,7 @@ msgstr "Konfigurační profily DVR"
 msgid "DVR Configuration"
 msgstr "Konfigurace DVR"
 
-#: src/dvr/dvr_config.c:722
+#: src/dvr/dvr_config.c:723
 msgid "DVR Configuration Profile"
 msgstr "Konfigurační profil DVR"
 
@@ -615,7 +615,7 @@ msgstr "Konfigurační profil DVR"
 msgid "DVR Entry"
 msgstr "Položka DVR"
 
-#: src/dvr/dvr_config.c:808
+#: src/dvr/dvr_config.c:809
 msgid "DVR Log Retention Time (days)"
 msgstr "Čas držení DVR logů (dny)"
 
@@ -697,7 +697,7 @@ msgstr "Cesta k zařízení"
 msgid "Directory"
 msgstr "Adresář"
 
-#: src/dvr/dvr_config.c:897
+#: src/dvr/dvr_config.c:898
 msgid "Directory Permissions (octal, e.g. 0775)"
 msgstr "Práva k adresáři (osmičkové, např. 0775)"
 
@@ -737,7 +737,7 @@ msgstr "DiseqC opakování"
 msgid "DiseqC switch"
 msgstr "DiseqC přepínač"
 
-#: src/dvr/dvr_config.c:961
+#: src/dvr/dvr_config.c:962
 msgid "Don't Include Title In Filename"
 msgstr "Nevkládat název vysílání do jména souboru"
 
@@ -749,7 +749,7 @@ msgstr "Nepřeplánovávat"
 msgid "Don't backup config tree at upgrade"
 msgstr "Nezálohovat konfigurační strom při aktualizaci"
 
-#: src/dvr/dvr_config.c:683
+#: src/dvr/dvr_config.c:684
 msgid "Don't keep"
 msgstr "Nezanechávej"
 
@@ -773,7 +773,7 @@ msgstr "EPG scan"
 msgid "EPG Source"
 msgstr "Zdroj EPG"
 
-#: src/dvr/dvr_config.c:832
+#: src/dvr/dvr_config.c:833
 msgid "EPG Update Window"
 msgstr "EPG časové okno aktualizace"
 
@@ -820,7 +820,7 @@ msgstr "Povolit ladění webUI (neminimalizované JS)"
 #: src/access.c:1289 src/access.c:1649 src/channels.c:296 src/channels.c:1092
 #: src/service.c:158 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
 #: src/bouquet.c:802 src/dvr/dvr_autorec.c:916 src/dvr/dvr_timerec.c:557
-#: src/dvr/dvr_config.c:762 src/descrambler/caclient.c:262
+#: src/dvr/dvr_config.c:763 src/descrambler/caclient.c:262
 #: src/input/mpegts/mpegts_input.c:224 src/input/mpegts/mpegts_mux.c:496
 #: src/input/mpegts/mpegts_mux_sched.c:126
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1196
@@ -837,7 +837,7 @@ msgstr "Zakódováno"
 msgid "Environment (pipe)"
 msgstr "Prostředí (roura)"
 
-#: src/dvr/dvr_db.c:2254
+#: src/dvr/dvr_db.c:2253
 msgid "Episode"
 msgstr "Epizoda"
 
@@ -870,11 +870,11 @@ msgstr "Extra začáteční čas"
 msgid "Extra Stop Time"
 msgstr "Extra koncový čas "
 
-#: src/dvr/dvr_config.c:824
+#: src/dvr/dvr_config.c:825
 msgid "Extra Time After Recordings (minutes)"
 msgstr "Extra koncový čas pro záznamy (minuty)"
 
-#: src/dvr/dvr_config.c:816
+#: src/dvr/dvr_config.c:817
 msgid "Extra Time Before Recordings (minutes)"
 msgstr "Extra začáteční čas pro záznamy (minuty)"
 
@@ -906,11 +906,11 @@ msgstr "Soubor chybí"
 msgid "File Not Created"
 msgstr "Soubor nebyl vytvořen"
 
-#: src/dvr/dvr_config.c:855
+#: src/dvr/dvr_config.c:856
 msgid "File Permissions (octal, e.g. 0664)"
 msgstr "Práva souboru (osmičkové, např. 0664)"
 
-#: src/dvr/dvr_db.c:2268
+#: src/dvr/dvr_db.c:2267
 msgid "File Size"
 msgstr "Velikost souboru"
 
@@ -918,11 +918,11 @@ msgstr "Velikost souboru"
 msgid "Filename"
 msgstr "Jméno souboru"
 
-#: src/dvr/dvr_config.c:863
+#: src/dvr/dvr_config.c:864
 msgid "Filename Charset"
 msgstr "Znaková sada jména souboru"
 
-#: src/dvr/dvr_config.c:746
+#: src/dvr/dvr_config.c:747
 msgid "Filename Options"
 msgstr "Volby pro jméno souboru"
 
@@ -954,7 +954,7 @@ msgstr "Vynutit zpoždění teardown"
 msgid "Fork and run as daemon"
 msgstr "Démon mód"
 
-#: src/dvr/dvr_config.c:889
+#: src/dvr/dvr_config.c:890
 msgid "Format String"
 msgstr "Řetězec formátu"
 
@@ -1002,7 +1002,7 @@ msgstr "Celý DiseqC"
 msgid "Full Mux Rx mode supported"
 msgstr "Podporován plný mux rx mód"
 
-#: src/dvr/dvr_config.c:738
+#: src/dvr/dvr_config.c:739
 msgid "Full Pathname Specification"
 msgstr "Plná specifikace cesty"
 
@@ -1181,23 +1181,23 @@ msgstr "Okamžitě ukonči činnost"
 msgid "Important"
 msgstr "Důležíté"
 
-#: src/dvr/dvr_config.c:926
+#: src/dvr/dvr_config.c:927
 msgid "Include Channel Name In Filename"
 msgstr "Vložit název programu do jména souboru"
 
-#: src/dvr/dvr_config.c:933
+#: src/dvr/dvr_config.c:934
 msgid "Include Date In Filename"
 msgstr "Vložit datum do jména souboru"
 
-#: src/dvr/dvr_config.c:947
+#: src/dvr/dvr_config.c:948
 msgid "Include Episode In Filename"
 msgstr "Vložit epizodu do jména souboru"
 
-#: src/dvr/dvr_config.c:954
+#: src/dvr/dvr_config.c:955
 msgid "Include Subtitle In Filename"
 msgstr "Vložit podtitulek do jména souboru"
 
-#: src/dvr/dvr_config.c:940
+#: src/dvr/dvr_config.c:941
 msgid "Include Time In Filename"
 msgstr "Vložit čas do jména souboru"
 
@@ -1424,15 +1424,15 @@ msgstr "MPEG-TS služba"
 msgid "MPEG-TS/av-lib"
 msgstr "MPEG-TS/av-lib"
 
-#: src/dvr/dvr_config.c:912
+#: src/dvr/dvr_config.c:913
 msgid "Make Subdirectories Per Channel"
 msgstr "Vytvořit podadresáře pro každý programu"
 
-#: src/dvr/dvr_config.c:905
+#: src/dvr/dvr_config.c:906
 msgid "Make Subdirectories Per Day"
 msgstr "Vytvořit podadresáře pro každý den"
 
-#: src/dvr/dvr_config.c:919
+#: src/dvr/dvr_config.c:920
 msgid "Make Subdirectories Per Title"
 msgstr "Vytvořit podadresáře pro každý název"
 
@@ -1705,7 +1705,7 @@ msgstr "Standardní"
 msgid "Not set"
 msgstr "Nenastaveno"
 
-#: src/dvr/dvr_config.c:694
+#: src/dvr/dvr_config.c:695
 msgid "Not set (none or channel config)"
 msgstr "Nenastaveno (žádný nebo z konfigurace programu)"
 
@@ -1897,7 +1897,7 @@ msgstr "Port"
 msgid "Position"
 msgstr "Pozice"
 
-#: src/dvr/dvr_config.c:841
+#: src/dvr/dvr_config.c:842
 msgid "Post-Processor Command"
 msgstr "Příkaz pro další zpracování"
 
@@ -1992,19 +1992,19 @@ msgstr "Zaznamenat jednou denně"
 msgid "Record once per week"
 msgstr "Zaznamenat jednou týdně"
 
-#: src/dvr/dvr_config.c:734
+#: src/dvr/dvr_config.c:735
 msgid "Recording File Options"
 msgstr "Volby souboru pro záznam"
 
-#: src/dvr/dvr_config.c:848
+#: src/dvr/dvr_config.c:849
 msgid "Recording System Path"
 msgstr "Systémový adresář pro záznamy"
 
-#: src/dvr/dvr_config.c:968
+#: src/dvr/dvr_config.c:969
 msgid "Remove All Unsafe Characters From Filename"
 msgstr "Odebrat všechny nebezpečné znaky z jména souboru"
 
-#: src/dvr/dvr_config.c:975
+#: src/dvr/dvr_config.c:976
 msgid "Replace Whitespace In Title with '-'"
 msgstr "Nahradit mezery v názvu znakem '-'"
 
@@ -2012,7 +2012,7 @@ msgstr "Nahradit mezery v názvu znakem '-'"
 msgid "Reply to CAM PIN Enquiries"
 msgstr "Odpovědět na CAM PIN dotazy"
 
-#: src/dvr/dvr_db.c:2289
+#: src/dvr/dvr_db.c:2288
 msgid "Rerun of"
 msgstr "Opakovaní"
 
@@ -2161,7 +2161,7 @@ msgstr "Výsledek scanu"
 msgid "Scan Status"
 msgstr "Stav scanu"
 
-#: src/dvr/dvr_db.c:2282
+#: src/dvr/dvr_db.c:2281
 msgid "Schedule Status"
 msgstr "Stav plánovače"
 
@@ -2273,7 +2273,7 @@ msgstr "Zeměpisná šířka umistění"
 msgid "Site Longitude"
 msgstr "Zeměpisná délka umístění"
 
-#: src/dvr/dvr_config.c:881
+#: src/dvr/dvr_config.c:882
 msgid "Skip Commercials"
 msgstr "Přeskočit reklamy"
 
@@ -2353,7 +2353,7 @@ msgstr "Začátek před"
 msgid "Start Time"
 msgstr "Začátek"
 
-#: src/dvr/dvr_db.c:2275 src/descrambler/caclient.c:281
+#: src/dvr/dvr_db.c:2274 src/descrambler/caclient.c:281
 msgid "Status"
 msgstr "Stav"
 
@@ -2378,7 +2378,7 @@ msgstr "Konec"
 msgid "Stream Index"
 msgstr "Index streamu"
 
-#: src/profile.c:275 src/dvr/dvr_config.c:789
+#: src/profile.c:275 src/dvr/dvr_config.c:790
 msgid "Stream Profile"
 msgstr "Profil streamu"
 
@@ -2400,7 +2400,7 @@ msgstr "Priorita streamu"
 msgid "Streaming Profiles"
 msgstr "Profily streamů"
 
-#: src/dvr/dvr_config.c:742
+#: src/dvr/dvr_config.c:743
 msgid "Subdirectory Options"
 msgstr "Volby podadresáře"
 
@@ -2449,19 +2449,19 @@ msgstr "Přepínač: %s"
 msgid "Symbol Rate (Sym/s)"
 msgstr "Symbol Rate (Sym/s)"
 
-#: src/dvr/dvr_config.c:684
+#: src/dvr/dvr_config.c:685
 msgid "Sync"
 msgstr "Synchronizovat"
 
-#: src/dvr/dvr_config.c:685
+#: src/dvr/dvr_config.c:686
 msgid "Sync + Don't keep"
 msgstr "Synch. ₊ nezanechávej"
 
-#: src/dvr/dvr_config.c:682
+#: src/dvr/dvr_config.c:683
 msgid "System"
 msgstr "Systém"
 
-#: src/dvr/dvr_config.c:873
+#: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
 msgstr "Vlož metadata do souborů"
 
@@ -2566,7 +2566,7 @@ msgstr "Vypni LNB při nečinnosti"
 msgid "UDP RTP Port Number (2 ports)"
 msgstr "UDP RTP číslo portu (2 porty)"
 
-#: src/dvr/dvr_db.c:2261 src/input/mpegts/iptv/iptv_mux.c:113
+#: src/dvr/dvr_db.c:2260 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
 msgstr "URL"
 
@@ -2615,7 +2615,7 @@ msgstr "Nedůležité"
 msgid "Universal LNB only"
 msgstr "Pouze univerzální LNB"
 
-#: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:681
+#: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
 msgid "Unknown"
 msgstr "Neznámé"
 
@@ -2632,7 +2632,7 @@ msgstr "Nenastaveno (standardní)"
 msgid "Update Card (EMM)"
 msgstr "Aktualizovat kartu (EMM)"
 
-#: src/dvr/dvr_config.c:702
+#: src/dvr/dvr_config.c:703
 msgid "Update Disabled"
 msgstr "Aktualizace zakázána"
 
@@ -2641,7 +2641,7 @@ msgstr "Aktualizace zakázána"
 msgid "Usage: %s [OPTIONS]\n"
 msgstr "Použití: %s [VOLBY]\n"
 
-#: src/dvr/dvr_config.c:982
+#: src/dvr/dvr_config.c:983
 msgid "Use Windows-compatible filenames"
 msgstr "Použij názvy souborů kompatibilní s Windows"
 
