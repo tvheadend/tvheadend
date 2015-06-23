@@ -203,7 +203,6 @@ int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)
 
 int idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
-static inline void idnode_perm_set(idnode_t *self, struct access *a) { self->in_access = a; }
 static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
 
 idnode_list_mapping_t * idnode_list_link

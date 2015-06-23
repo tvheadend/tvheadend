@@ -144,7 +144,8 @@ api_idnode_grid
     e = htsmsg_create_map();
     htsmsg_add_str(e, "uuid", idnode_uuid_as_str(ins.is_array[i]));
     in = ins.is_array[i];
-    idnode_perm_set(in, perm);
+    if (idnode_perm(in, perm, NULL))
+      continue;
     idnode_read0(in, e, flist, 0, perm->aa_lang);
     idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
@@ -411,7 +412,10 @@ api_idnode_tree
   /* Root node */
   if (isroot && node) {
     htsmsg_t *m;
-    idnode_perm_set(node, perm);
+    if (idnode_perm(node, perm, NULL)) {
+      pthread_mutex_unlock(&global_lock);
+      return EINVAL;
+    }
     m = idnode_serialize(node, perm->aa_lang);
     idnode_perm_unset(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
@@ -426,7 +430,8 @@ api_idnode_tree
       for(i = 0; i < v->is_count; i++) {
         idnode_t *in = v->is_array[i];
         htsmsg_t *m;
-        idnode_perm_set(in, perm);
+        if (idnode_perm(in, perm, NULL))
+          continue;
         m = idnode_serialize(v->is_array[i], perm->aa_lang);
         idnode_perm_unset(in);
         htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
