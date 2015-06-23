@@ -37,8 +37,10 @@ const char *tvh_gettext_default_lang = NULL;
 const char *tvh_gettext_last_lang = NULL;
 const char **tvh_gettext_last_strings = NULL;
 
-static const char *tvh_gettext_lang_check(const char *lang)
+const char *tvh_gettext_get_lang(const char *lang)
 {
+  if (lang == NULL || lang[0] == '\0')
+    return "en";
   if (!strcmp(lang, "eng_US"))
     return "en";
   if (!strcmp(lang, "eng_GB"))
@@ -128,7 +130,7 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
       tvh_gettext_init();
     lang = tvh_gettext_default_lang;
   } else {
-    lang = tvh_gettext_lang_check(lang);
+    lang = tvh_gettext_get_lang(lang);
   }
   if (tvh_gettext_last_lang == NULL || strcmp(tvh_gettext_last_lang, lang)) {
     tvh_gettext_new_lang(lang);

@@ -1405,21 +1405,6 @@ favicon(http_connection_t *hc, const char *remain, void *opaque)
 /**
  *
  */
-static const char *http_locale_lang(http_connection_t *hc)
-{
-  const char *s = hc->hc_access->aa_lang;
-  if (s && s[0]) {
-    const lang_code_t *lc;
-    lc = lang_code_get3(s);
-    if (strcmp(lc->code2b, "und"))
-      return lc->code1;
-  }
-  return NULL;
-}
-
-/**
- *
- */
 static int http_file_test(const char *path)
 {
   fb_file *fb = fb_open(path, 0, 0);
@@ -1449,7 +1434,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
 
   if (nc == 1) {
     if (!strcmp(components[0], "locale.js")) {
-      lang = http_locale_lang(hc);
+      lang = tvh_gettext_get_lang(hc->hc_access->aa_lang);
       if (lang) {
         snprintf(buf, sizeof(buf), "src/webui/static/intl/tvh.%s.js.gz", lang);
         if (!http_file_test(buf)) {
@@ -1467,7 +1452,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
 
   if (nc >= 2) {
     if (!strcmp(components[0], "docs")) {
-      lang = http_locale_lang(hc);
+      lang = tvh_gettext_get_lang(hc->hc_access->aa_lang);
       snprintf(buf, sizeof(buf), "docs/html/%s/%s%s%s", lang, components[1],
                                  nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
       if (http_file_test(buf)) lang = "en";
