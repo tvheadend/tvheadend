@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 17:38+0200\n"
+"POT-Creation-Date: 2015-06-23 13:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1232,7 +1232,7 @@ msgstr ""
 msgid "Internal"
 msgstr ""
 
-#: src/dvr/dvr_db.c:296 src/dvr/dvr_timerec.c:453
+#: src/dvr/dvr_db.c:296 src/dvr/dvr_db.c:321 src/dvr/dvr_timerec.c:453
 msgid "Invalid"
 msgstr ""
 
@@ -2478,6 +2478,10 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
+msgstr ""
+
+#: src/dvr/dvr_db.c:318
+msgid "Time missed"
 msgstr ""
 
 #: src/dvr/dvr_timerec.c:153

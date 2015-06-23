@@ -54,7 +54,8 @@ tvheadend.tvhlog = function(panel, index) {
 
     var saveButton = new Ext.Button({
         text: _("Apply configuration (run-time only)"),
-        tooltip: _('Apply changes made bellow to the run-time configuration<br/>They will be lost on restart.'),
+        tooltip: _('Apply changes made bellow to the run-time configuration.') + '<br/>' +
+                 _('They will be lost on restart.'),
         iconCls: 'apply',
         handler: saveChanges
     });

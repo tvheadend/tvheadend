@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 21:28+0200\n"
+"POT-Creation-Date: 2015-06-23 13:54+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,6 +155,24 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:115
 msgid "All days"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:57
+msgid ""
+"Apply changes made bellow to the run-time configuration<br/>They will be "
+"lost on restart."
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:56
+msgid "Apply configuration (run-time only)"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:130
+msgid "Apply failed"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:128
+msgid "Applying Data..."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:38
@@ -458,6 +476,38 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:274
 msgid "DVR-Upcoming/Current Recordings"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:66
+msgid "Debug Configuration"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:47
+msgid "Debug libav log"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:15
+msgid "Debug log path"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:32
+msgid "Debug subsystems"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:23
+msgid "Debug to syslog"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:28
+msgid "Debug trace (low-level stuff)"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:91
+msgid "Debugging"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:82
+msgid "Debugging Options"
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:46
@@ -778,7 +828,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
 #: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
-#: src/webui/static/app/config.js:334
+#: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:63
 msgid "Help"
 msgstr ""
 
@@ -1366,7 +1416,7 @@ msgstr ""
 msgid "Select stream profile..."
 msgstr ""
 
-#: src/webui/static/app/idnode.js:382
+#: src/webui/static/app/idnode.js:382 src/webui/static/app/idnode.js:530
 msgid "Select {0} ..."
 msgstr ""
 
@@ -1655,6 +1705,10 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:39
+msgid "Trace subsystems"
 msgstr ""
 
 #: src/webui/static/app/status.js:375

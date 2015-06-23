@@ -1,20 +1,21 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 17:38+0200\n"
+"POT-Creation-Date: 2015-06-23 13:54+0200\n"
 "PO-Revision-Date: 2015-06-22 15:39+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Hebrew (http://www.transifex.com/projects/p/tvheadend/language/he/)\n"
+"Language-Team: Hebrew (http://www.transifex.com/projects/p/tvheadend/"
+"language/he/)\n"
+"Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: he\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/main.c:478
@@ -1232,7 +1233,7 @@ msgstr ""
 msgid "Internal"
 msgstr ""
 
-#: src/dvr/dvr_db.c:296 src/dvr/dvr_timerec.c:453
+#: src/dvr/dvr_db.c:296 src/dvr/dvr_db.c:321 src/dvr/dvr_timerec.c:453
 msgid "Invalid"
 msgstr ""
 
@@ -2478,6 +2479,10 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
+msgstr ""
+
+#: src/dvr/dvr_db.c:318
+msgid "Time missed"
 msgstr ""
 
 #: src/dvr/dvr_timerec.c:153

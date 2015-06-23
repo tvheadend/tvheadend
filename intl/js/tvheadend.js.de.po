@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# 
+#
 # Translators:
 # Alexander Knöbel <alex@belogy.de>, 2015
 # Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
@@ -11,14 +11,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-22 21:28+0200\n"
+"POT-Creation-Date: 2015-06-23 13:54+0200\n"
 "PO-Revision-Date: 2015-06-22 19:32+0000\n"
 "Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
-"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
+"Language-Team: German (http://www.transifex.com/projects/p/tvheadend/"
+"language/de/)\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/i18n-post.js:137
@@ -160,6 +161,26 @@ msgstr "Alle"
 #: src/webui/static/app/dvr.js:115
 msgid "All days"
 msgstr "Jeden Tag"
+
+#: src/webui/static/app/tvhlog.js:57
+msgid ""
+"Apply changes made bellow to the run-time configuration<br/>They will be "
+"lost on restart."
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:56
+msgid "Apply configuration (run-time only)"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:130
+#, fuzzy
+msgid "Apply failed"
+msgstr "Speichern fehlgeschlagen"
+
+#: src/webui/static/app/tvhlog.js:128
+#, fuzzy
+msgid "Applying Data..."
+msgstr "Speichere Daten..."
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
@@ -391,13 +412,17 @@ msgstr "Generiere automatische Aufnahme"
 msgid ""
 "Create an automatic recording entry for this program that will record all "
 "future programs that match the current query."
-msgstr "Erstellt eine automatische Aufnahme für diese Sendung, die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
+msgstr ""
+"Erstellt eine automatische Aufnahme für diese Sendung, die alle zukünftigen "
+"Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/epg.js:826
 msgid ""
 "Create an automatic recording entry that will record all future programs "
 "that match the current query."
-msgstr "Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, die der aktuellen Abfrage entsprechen."
+msgstr ""
+"Erstellt eine automatische Aufnahme die alle zukünftigen Sendungen aufnimmt, "
+"die der aktuellen Abfrage entsprechen."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -463,6 +488,39 @@ msgstr "DVR Abgeschlossene Aufnahmen"
 #: src/webui/static/app/dvr.js:274
 msgid "DVR-Upcoming/Current Recordings"
 msgstr "DVR Zukünftige/Laufende Aufnahmen"
+
+#: src/webui/static/app/tvhlog.js:66
+#, fuzzy
+msgid "Debug Configuration"
+msgstr "Konfiguration"
+
+#: src/webui/static/app/tvhlog.js:47
+msgid "Debug libav log"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:15
+msgid "Debug log path"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:32
+msgid "Debug subsystems"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:23
+msgid "Debug to syslog"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:28
+msgid "Debug trace (low-level stuff)"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:91
+msgid "Debugging"
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:82
+msgid "Debugging Options"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
@@ -782,7 +840,7 @@ msgstr "Nach diesem Feld gruppieren"
 #: src/webui/static/app/idnode.js:816 src/webui/static/app/idnode.js:1408
 #: src/webui/static/app/idnode.js:1756 src/webui/static/app/timeshift.js:110
 #: src/webui/static/app/epg.js:857 src/webui/static/app/epggrab.js:306
-#: src/webui/static/app/config.js:334
+#: src/webui/static/app/config.js:334 src/webui/static/app/tvhlog.js:63
 msgid "Help"
 msgstr "Hilfe"
 
@@ -1370,7 +1428,7 @@ msgstr "Kanal auswählen..."
 msgid "Select stream profile..."
 msgstr "Stream Profil auswählen"
 
-#: src/webui/static/app/idnode.js:382
+#: src/webui/static/app/idnode.js:382 src/webui/static/app/idnode.js:530
 msgid "Select {0} ..."
 msgstr "{0} auswählen ..."
 
@@ -1598,9 +1656,11 @@ msgstr "Der Wert in diesem Feld ist ungültig"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
-"There seems to be a problem with the live update feed from Tvheadend. Trying"
-" to reconnect..."
-msgstr "Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. Wiederverbinden..."
+"There seems to be a problem with the live update feed from Tvheadend. Trying "
+"to reconnect..."
+msgstr ""
+"Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. "
+"Wiederverbinden..."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1618,7 +1678,9 @@ msgstr "Diese Feld ist erforderlich"
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr "Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen durchsucht um diese aufzunehmen"
+msgstr ""
+"Erstellt eine automatische Regel die kontinuierlich das EPG nach Sendungen "
+"durchsucht um diese aufzunehmen"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1661,6 +1723,10 @@ msgstr "Titel"
 msgid "Today"
 msgstr "Heute"
 
+#: src/webui/static/app/tvhlog.js:39
+msgid "Trace subsystems"
+msgstr ""
+
 #: src/webui/static/app/status.js:375
 msgid "Transport Errors"
 msgstr "Transportfehler"
@@ -1683,7 +1749,8 @@ msgstr "Dienstag"
 
 #: src/webui/static/app/epggrab.js:300
 msgid "Tune over-the-air EPG muxes to grab new events now"
-msgstr "Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
+msgstr ""
+"Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
 
 #: src/webui/static/app/tvheadend.js:593
 msgid "Tvheadend Web-Panel"
@@ -1796,7 +1863,9 @@ msgstr "Ja"
 
 #: src/webui/static/app/idnode.js:393 src/webui/static/app/idnode.js:652
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
-msgstr "Sie müssen einen Wert angeben - benutzen Sie Chmod-Oktal-Schreibweise, z.B. 0664"
+msgstr ""
+"Sie müssen einen Wert angeben - benutzen Sie Chmod-Oktal-Schreibweise, z.B. "
+"0664"
 
 #: src/webui/static/app/i18n-post.js:238
 msgid "You must select at least one item in this group"
@@ -1824,9 +1893,11 @@ msgstr "g:i A#TimeField"
 
 #: src/webui/static/app/i18n-post.js:233
 msgid ""
-"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
-"A|gi|hi|gia|hia|g|H#TimeField"
-msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
+"H#TimeField"
+msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|"
+"H#TimeField"
 
 #: src/webui/static/app/idnode.js:299 src/webui/static/app/idnode.js:300
 #: src/webui/static/app/epg.js:419 src/webui/static/app/epg.js:421
