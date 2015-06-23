@@ -2161,10 +2161,12 @@ caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
   static const struct strtab tab[] = {
     { N_("OSCam net protocol (rev >= 10389)"), CAPMT_OSCAM_NET_PROTO },
     { N_("OSCam pc-nodmx (rev >= 9756)"),      CAPMT_OSCAM_UNIX_SOCKET },
+#if 0
     { N_("OSCam TCP (rev >= 9574)"),           CAPMT_OSCAM_TCP },
     { N_("OSCam (rev >= 9095)"),               CAPMT_OSCAM_MULTILIST },
     { N_("Older OSCam"),                       CAPMT_OSCAM_OLD },
     { N_("Wrapper (capmt_ca.so)"),             CAPMT_OSCAM_SO_WRAPPER },
+#endif
   };
   return strtab2htsmsg(tab, 1, lang);
 }
