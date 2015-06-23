@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-23 13:56+0200\n"
-"PO-Revision-Date: 2015-06-23 11:55+0000\n"
+"PO-Revision-Date: 2015-06-23 14:59+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -2451,7 +2451,7 @@ msgstr "Symbol Rate (Sym/s)"
 
 #: src/dvr/dvr_config.c:684
 msgid "Sync"
-msgstr "Synchonizuj"
+msgstr "Synchronizovat"
 
 #: src/dvr/dvr_config.c:685
 msgid "Sync + Don't keep"
@@ -2483,7 +2483,7 @@ msgstr "Čtv"
 
 #: src/dvr/dvr_db.c:318
 msgid "Time missed"
-msgstr "Čas byl změškán"
+msgstr "Čas byl zmeškán"
 
 #: src/dvr/dvr_timerec.c:153
 #, c-format
@@ -2630,7 +2630,7 @@ msgstr "Nenastaveno (standardní)"
 
 #: src/descrambler/cwc.c:1761
 msgid "Update Card (EMM)"
-msgstr "Aktualizuj kartu (EMM)"
+msgstr "Aktualizovat kartu (EMM)"
 
 #: src/dvr/dvr_config.c:702
 msgid "Update Disabled"

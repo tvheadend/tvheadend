@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-23 13:56+0200\n"
-"PO-Revision-Date: 2015-06-23 12:08+0000\n"
+"PO-Revision-Date: 2015-06-23 14:59+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -120,11 +120,11 @@ msgstr "Aktivní"
 
 #: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1637
 msgid "Add"
-msgstr "Přidej"
+msgstr "Přidat"
 
 #: src/webui/static/app/idnode.js:1154 src/webui/static/app/idnode.js:1635
 msgid "Add a new entry"
-msgstr "Přidej novou položku"
+msgstr "Přidat novou položku"
 
 #: src/webui/static/app/idnode.js:904 src/webui/static/app/idnode.js:934
 msgid "Add {0}"
@@ -414,7 +414,7 @@ msgstr "Vytvořit auto-rekordér, který bude zaznamenávat všechna budoucí vy
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
-msgstr "Vytvoř novou položku"
+msgstr "Vytvořit novou položku"
 
 #: src/webui/static/app/servicemapper.js:105
 msgid "Create provider tags"
@@ -569,7 +569,7 @@ msgstr "Zakázáno"
 
 #: src/webui/static/app/config.js:323
 msgid "Discover SAT>IP servers"
-msgstr "Vyhledej SAT>IP servery"
+msgstr "Vyhledat SAT>IP servery"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -945,7 +945,7 @@ msgstr "Přihlášen jako"
 
 #: src/webui/static/app/config.js:324
 msgid "Look for new SAT>IP servers"
-msgstr "Hledej nové SAT>IP servery"
+msgstr "Hledat nové SAT>IP servery"
 
 #: src/webui/static/app/mpegts.js:243 src/webui/static/app/mpegts.js:255
 msgid "Map All"
@@ -1397,15 +1397,15 @@ msgstr "Naplánovaný konec"
 
 #: src/webui/static/app/epg.js:149
 msgid "Search IMDB"
-msgstr "Hledej v IMDB"
+msgstr "Hledat v IMDB"
 
 #: src/webui/static/app/epg.js:148
 msgid "Search IMDB (for title)"
-msgstr "Hledej v IMDB (název pořadu)"
+msgstr "Hledat v IMDB (název pořadu)"
 
 #: src/webui/static/app/epg.js:596
 msgid "Search title..."
-msgstr "Hledej název...."
+msgstr "Hledat název...."
 
 #: src/webui/static/app/tvheadend.js:207
 msgid "Select channel..."
