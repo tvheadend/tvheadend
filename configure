@@ -116,6 +116,7 @@ check_cc || die 'No C compiler found'
 check_cc_header execinfo
 check_cc_option mmx
 check_cc_option sse2
+check_cc_optionW unused-result
 
 if check_cc '
 #if !defined(__clang__)

@@ -303,6 +303,26 @@ check_cc_option ()
   fi
 }
 
+# Check compiler option
+check_cc_optionW ()
+{
+  local opt=$1
+  local nam=$2
+  [ -z "$nam" ] && nam=$opt
+  nam=$(echo "W_$nam" | sed -e 's/-/_/')
+
+  printf "$TAB" "checking for cc -W$opt ..."
+
+  # Enable if supported
+  if check_cc "" -W${opt}; then
+    echo "ok"
+    enable $nam
+  else
+    echo "fail"
+    return 1
+  fi
+}
+
 # Check compiler library
 check_cc_lib ()
 {

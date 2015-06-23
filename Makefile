@@ -28,7 +28,10 @@ LANGUAGES ?= bg cs de en en_GB fr he hr it pl pt sv
 # Common compiler flags
 #
 
-CFLAGS  += -g -O2 -Wunused-result
+CFLAGS  += -g -O2
+ifeq ($(CONFIG_W_UNUSED_RESULT),yes)
+CFLAGS  += -Wunused-result
+endif
 CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
