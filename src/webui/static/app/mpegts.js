@@ -123,7 +123,8 @@ tvheadend.muxes = function(panel, index)
         lcol: [
             {
                 width: 50,
-                header: 'Play',
+                header: _('Play'),
+                tooltip: _('Play'),
                 renderer: function(v, o, r) {
                     var title = r.data['name'] + ' / ' + r.data['network'];
                     return "<a href='play/stream/mux/" + r.id +
@@ -304,6 +305,7 @@ tvheadend.services = function(panel, index)
             {
                 width: 50,
                 header: _('Play'),
+                tooltip: _('Play'),
                 renderer: function(v, o, r) {
                     var title = r.data['svcname'] + ' / ' + r.data['provider'];
                     return "<a href='play/stream/service/" + r.id +

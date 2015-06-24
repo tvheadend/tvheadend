@@ -234,7 +234,8 @@ tvheadend.channel_tab = function(panel, index)
         lcol: [
             {
                 width: 50,
-                header: 'Play',
+                header: _('Play'),
+                tooltip: _('Play'),
                 renderer: function(v, o, r) {
                     var title = '';
                     if (r.data['number'])

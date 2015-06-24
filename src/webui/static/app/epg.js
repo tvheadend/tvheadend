@@ -320,6 +320,7 @@ tvheadend.epg = function() {
     var actions = new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
+        tooltip: _('Details'),
         width: 45,
         dataIndex: 'actions',
         callbacks: {
@@ -450,6 +451,7 @@ tvheadend.epg = function() {
             new Ext.ux.grid.ProgressColumn({
                 width: 100,
                 header: _("Progress"),
+                tooltip: _("Progress"),
                 dataIndex: 'progress',
                 colored: false,
                 ceiling: 100,
@@ -472,6 +474,7 @@ tvheadend.epg = function() {
                 width: 250,
                 id: 'title',
                 header: _("Title"),
+                tooltip: _("Title"),
                 dataIndex: 'title',
                 renderer: function(value, meta, record) {
                     var clickable = tvheadend.regexEscape(record.data['title']) !=
@@ -485,6 +488,7 @@ tvheadend.epg = function() {
                 width: 250,
                 id: 'subtitle',
                 header: _("SubTitle"),
+                tooltip: _("SubTitle"),
                 dataIndex: 'subtitle',
                 renderer: renderText
             },
@@ -492,6 +496,7 @@ tvheadend.epg = function() {
                 width: 100,
                 id: 'episodeOnscreen',
                 header: _("Episode"),
+                tooltip: _("Episode"),
                 dataIndex: 'episodeOnscreen',
                 renderer: renderText
             },
@@ -499,6 +504,7 @@ tvheadend.epg = function() {
                 width: 100,
                 id: 'start',
                 header: _("Start Time"),
+                tooltip: _("Start Time"),
                 dataIndex: 'start',
                 renderer: renderDate
             },
@@ -507,6 +513,7 @@ tvheadend.epg = function() {
                 hidden: true,
                 id: 'stop',
                 header: _("End Time"),
+                tooltip: _("End Time"),
                 dataIndex: 'stop',
                 renderer: renderDate
             },
@@ -514,12 +521,14 @@ tvheadend.epg = function() {
                 width: 100,
                 id: 'duration',
                 header: _("Duration"),
+                tooltip: _("Duration"),
                 renderer: renderDuration
             },
             {
                 width: 60,
                 id: 'channelNumber',
                 header: _("Number"),
+                tooltip: _("Number"),
                 align: 'right',
                 dataIndex: 'channelNumber',
                 renderer: renderText
@@ -528,6 +537,7 @@ tvheadend.epg = function() {
                 width: 250,
                 id: 'channelName',
                 header: _("Channel"),
+                tooltip: _("Channel"),
                 dataIndex: 'channelName',
                 renderer: function(value, meta, record) {
                     var clickable = record.data['channelUuid'] !==
@@ -541,6 +551,7 @@ tvheadend.epg = function() {
                 width: 50,
                 id: 'starRating',
                 header: _("Stars"),
+                tooltip: _("Stars"),
                 dataIndex: 'starRating',
                 renderer: renderInt
             },
@@ -548,12 +559,14 @@ tvheadend.epg = function() {
                 width: 50,
                 id: 'ageRating',
                 header: _("Age"),
+                tooltip: _("Age"),
                 dataIndex: 'ageRating',
                 renderer: renderInt
             }, {
                 width: 250,
                 id: 'genre',
                 header: _("Content Type"),
+                tooltip: _("Content Type"),
                 dataIndex: 'genre',
                 renderer: function(vals, meta, record) {
                     var r = [];

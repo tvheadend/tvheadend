@@ -89,6 +89,7 @@ tvheadend.dvrRowActions = function() {
     return new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
+        tooltip: _('Details'),
         width: 45,
         actions: [
             {
