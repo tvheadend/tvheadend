@@ -98,6 +98,8 @@ struct iptv_mux
   time_t                mm_iptv_respawn_last;
   char                 *mm_iptv_env;
 
+  uint32_t              mm_iptv_rtp_seq;
+
   sbuf_t                mm_iptv_buffer;
 
   iptv_handler_t       *im_handler;

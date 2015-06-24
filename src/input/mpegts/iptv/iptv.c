@@ -410,6 +410,7 @@ iptv_input_mux_started ( iptv_mux_t *im )
 {
   /* Allocate input buffer */
   sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+  im->mm_iptv_rtp_seq = -1;
 
   if (iptv_input_fd_started(im))
     return;
