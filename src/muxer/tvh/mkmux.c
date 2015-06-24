@@ -1128,6 +1128,12 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename, int permissions)
     return mkm->error;
   }
 
+  /* bypass umask settings */
+  if (fchmod(fd, permissions))
+    tvhlog(LOG_ERR, "mkv", "%s: Unable to change permissions -- %s",
+           filename, strerror(errno));
+                     
+
   mkm->filename = strdup(filename);
   mkm->fd = fd;
   mkm->cluster_maxsize = 2000000/4;

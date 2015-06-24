@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <libavformat/avformat.h>
 #include <libavutil/mathematics.h>
 
@@ -354,15 +355,23 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
 {
   AVFormatContext *oc;
   lav_muxer_t *lm = (lav_muxer_t*)m;
+  char buf[256];
+  int r;
 
   oc = lm->lm_oc;
   snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
-  if(avio_open(&oc->pb, filename, AVIO_FLAG_WRITE) < 0) {
-    tvhlog(LOG_ERR, "libav",  "Could not open %s", filename);
+  if((r = avio_open(&oc->pb, filename, AVIO_FLAG_WRITE)) < 0) {
+    av_strerror(r, buf, sizeof(buf));
+    tvhlog(LOG_ERR, "libav",  "%s: Could not open -- %s", filename, buf);
     lm->m_errors++;
     return -1;
   }
+
+  /* bypass umask settings */
+  if (chmod(filename, lm->m_config.m_file_permissions))
+    tvhlog(LOG_ERR, "libav", "%s: Unable to change permissions -- %s",
+           filename, strerror(errno));
 
   return 0;
 }
