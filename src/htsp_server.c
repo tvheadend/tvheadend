@@ -51,19 +51,12 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#if ENABLE_ANDROID
-#include <sys/vfs.h>
-#define statvfs statfs
-#define fstatvfs fstatfs
-#else
-#include <sys/statvfs.h>
-#endif
-#include "settings.h"
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <limits.h>
+#include "settings.h"
 
 /* **************************************************************************
  * Datatypes and variables
@@ -1069,17 +1062,14 @@ static htsmsg_t *
 htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  struct statvfs diskdata;
-  dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
+  int64_t bfree, btotal;
 
-  if(statvfs(cfg->dvr_storage,&diskdata) == -1)
+  if (dvr_get_disk_space(&bfree, &btotal))
     return htsp_error("Unable to stat path");
   
   out = htsmsg_create_map();
-  htsmsg_add_s64(out, "freediskspace",
-		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
-  htsmsg_add_s64(out, "totaldiskspace",
-		 diskdata.f_bsize * (int64_t)diskdata.f_blocks);
+  htsmsg_add_s64(out, "freediskspace", bfree);
+  htsmsg_add_s64(out, "totaldiskspace", btotal);
   return out;
 }
 

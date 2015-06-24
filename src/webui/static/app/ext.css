@@ -42,6 +42,12 @@
     float: right;
 }
 
+.x-tab-strip span.x-tab-diskspace {
+    vertical-align: middle;
+    white-space: nowrap;
+    padding:4px 0px;
+}
+
 .x-tree-col {
     float: left;
     overflow: hidden;

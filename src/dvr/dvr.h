@@ -498,6 +498,10 @@ htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, i
 
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
+void dvr_disk_space_init(void);
+void dvr_disk_space_done(void);
+int dvr_get_disk_space(int64_t *bfree, int64_t *btotal);
+
 /**
  *
  */

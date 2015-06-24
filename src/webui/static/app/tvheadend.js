@@ -334,6 +334,11 @@ tvheadend.VideoPlayer = function(url) {
     win.show();
 };
 
+function diskspaceUpdate(o) {
+  if ('freediskspace' in o && 'totaldiskspace' in o)
+    tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
+}
+
 /**
  * This function creates top level tabs based on access so users without 
  * access to subsystems won't see them.
@@ -349,6 +354,8 @@ function accessUpdate(o) {
       tvheadend.rootTabPanel.setLogin(o.username);
     if ('address' in o)
       tvheadend.rootTabPanel.setAddress(o.address);
+    if ('freediskspace' in o && 'totaldiskspace' in o)
+      tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
 
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);
@@ -532,8 +539,23 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         item.tabEl.select('a').on('click', this.onLoginCmdClicked, this, {preventDefault: true});
         this.loginCmdItem = item;
 
+        if (!this.diskSpaceTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-login" id="{id}">',
+                '<span class="x-tab-diskspace"></span></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabPanel.prototype.diskSpaceTpl = tt;
+        }
+        var item = new Ext.Component();
+        var p = this.getTemplateArgs(item);
+        var el = this.diskSpaceTpl.insertBefore(before, p);
+        item.tabEl = Ext.get(el);
+        this.diskSpaceItem = item;
+
         this.on('beforetabchange', function(tp, p) {
-            if (p == this.loginItem || p == this.loginCmdItem)
+            if (p == this.loginItem || p == this.loginCmdItem || p == this.diskSpaceItem)
                 return false;
         });
     },
@@ -543,6 +565,8 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             return this.loginItem;
         if (comp === this.loginCmdItem.id || comp == this.loginCmdItem)
             return this.loginCmdItem;
+        if (comp === this.diskSpaceItem.id || comp == this.diskSpaceItem)
+            return this.diskSpaceItem;
         return tvheadend.RootTabPanel.superclass.getComponent.call(this, comp);
     },
 
@@ -564,6 +588,20 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
 
     setAddress: function(addr) {
         Ext.get(this.loginItem.tabEl).child('span.x-tab-strip-login', true).qtip = addr;
+    },
+
+    setDiskSpace: function(bfree, btotal) {
+        human = function(val) {
+          if (val > 1000000000)
+            val = parseInt(val / 1000000000) + _('GB');
+          if (val > 1000000)
+            val = parseInt(val / 1000000) + _('MB');
+          if (val > 1000)
+            val = parseInt(val / 1000) + _('KB');
+          return val;
+        };
+        text = _('Disk space:') + '&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
+        Ext.get(this.diskSpaceItem.tabEl).child('span.x-tab-diskspace', true).innerHTML = text;
     },
 
     onLoginCmdClicked: function(e) {
@@ -629,6 +667,8 @@ tvheadend.app = function() {
             });
 
             tvheadend.comet.on('accessUpdate', accessUpdate);
+
+            tvheadend.comet.on('diskspaceUpdate', diskspaceUpdate);
 
             tvheadend.comet.on('setServerIpPort', setServerIpPort);
 

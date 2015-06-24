@@ -1046,6 +1046,7 @@ dvr_init(void)
   dvr_entry_init();
   dvr_autorec_update();
   dvr_timerec_update();
+  dvr_disk_space_init();
 }
 
 /**
@@ -1066,4 +1067,5 @@ dvr_done(void)
   pthread_mutex_unlock(&global_lock);
   dvr_autorec_done();
   dvr_timerec_done();
+  dvr_disk_space_done();
 }

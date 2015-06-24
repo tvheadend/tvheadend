@@ -24,6 +24,14 @@
 #include <sys/stat.h>
 #include <libgen.h> /* basename */
 
+#if ENABLE_ANDROID
+#include <sys/vfs.h>
+#define statvfs statfs
+#define fstatvfs fstatfs
+#else
+#include <sys/statvfs.h>
+#endif
+
 #include "htsstr.h"
 
 #include "tvheadend.h"
@@ -37,6 +45,7 @@
 #include "htsp_server.h"
 #include "atomic.h"
 #include "intlconv.h"
+#include "notify.h"
 
 #include "muxer.h"
 
@@ -1099,4 +1108,101 @@ dvr_thread_epilog(dvr_entry_t *de)
   dvr_config_t *cfg = de->de_config;
   if(cfg && cfg->dvr_postproc)
     dvr_spawn_postproc(de,cfg->dvr_postproc);
+}
+
+/**
+ *
+ */
+static int64_t dvr_bfree;
+static int64_t dvr_btotal;
+static pthread_mutex_t dvr_disk_space_mutex;
+static gtimer_t dvr_disk_space_timer;
+static tasklet_t dvr_disk_space_tasklet;
+
+/**
+ *
+ */
+static void
+dvr_get_disk_space_update(const char *path)
+{
+  struct statvfs diskdata;
+
+  if(statvfs(path, &diskdata) == -1)
+    return;
+
+  dvr_bfree = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
+  dvr_btotal = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
+}
+
+/**
+ *
+ */
+static void
+dvr_get_disk_space_tcb(void *s, int dearmed)
+{
+  dvr_config_t *cfg;
+  htsmsg_t *m;
+  char *path;
+
+  pthread_mutex_lock(&global_lock);
+  cfg = dvr_config_find_by_name_default(NULL);
+  path = tvh_strdupa(cfg->dvr_storage);
+  pthread_mutex_unlock(&global_lock);
+
+  m = htsmsg_create_map();
+  pthread_mutex_lock(&dvr_disk_space_mutex);
+  dvr_get_disk_space_update(path);
+  htsmsg_add_s64(m, "freediskspace", dvr_bfree);
+  htsmsg_add_s64(m, "totaldiskspace", dvr_btotal);
+  pthread_mutex_unlock(&dvr_disk_space_mutex);
+
+  notify_by_msg("diskspaceUpdate", m);
+}
+
+static void
+dvr_get_disk_space_cb(void *aux)
+{
+  tasklet_arm(&dvr_disk_space_tasklet, dvr_get_disk_space_tcb, NULL);
+  gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 60);
+}
+
+/**
+ *
+ */
+void
+dvr_disk_space_init(void)
+{
+  dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
+  pthread_mutex_init(&dvr_disk_space_mutex, NULL);
+  dvr_get_disk_space_update(cfg->dvr_storage);
+  gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 60);
+}
+
+/**
+ *
+ */
+void
+dvr_disk_space_done(void)
+{
+  tasklet_disarm(&dvr_disk_space_tasklet);
+  gtimer_disarm(&dvr_disk_space_timer);
+}
+
+/**
+ *
+ */
+int
+dvr_get_disk_space(int64_t *bfree, int64_t *btotal)
+{
+  int res = 0;
+
+  pthread_mutex_lock(&dvr_disk_space_mutex);
+  if (dvr_bfree || dvr_btotal) {
+    *bfree = dvr_bfree;
+    *btotal = dvr_btotal;
+  } else {
+    res = -EINVAL;
+  }
+  pthread_mutex_unlock(&dvr_disk_space_mutex);
+  return res;
 }
