@@ -499,6 +499,8 @@ makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
         err = mkdir(path, mode);
         if (!err && gid != -1 && uid != -1)
           err = chown(path, uid, gid);
+        if (!err)
+          err = chmod(path, mode); /* override umode */
         tvhtrace("settings", "Creating directory \"%s\" with octal permissions "
                              "\"%o\" gid %d uid %d", path, mode, gid, uid);
       } else {

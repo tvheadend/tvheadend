@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -363,6 +364,11 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
     pm->m_errors++;
     return -1;
   }
+
+  /* bypass umask settings */
+  if (fchmod(fd, pm->m_config.m_file_permissions))
+    tvhlog(LOG_ERR, "pass", "%s: Unable to change permissions -- %s",
+           filename, strerror(errno));
 
   pm->pm_off      = 0;
   pm->pm_seekable = 1;
