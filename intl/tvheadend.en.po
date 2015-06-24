@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 21:05+0200\n"
+"POT-Creation-Date: 2015-06-24 23:00+0200\n"
 "PO-Revision-Date: 2015-06-23 17:05+0000\n"
 "Last-Translator: Prof Yaffle\n"
 "Language-Team: English (http://www.transifex.com/projects/p/tvheadend/language/en/)\n"
@@ -238,7 +238,7 @@ msgstr "All DVR (rw)"
 msgid "All days"
 msgstr "Every day"
 
-#: src/webui/extjs.c:240
+#: src/webui/extjs.c:241
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -320,7 +320,7 @@ msgstr "BB"
 msgid "Bandwidth"
 msgstr "Bandwidth"
 
-#: src/webui/extjs.c:218
+#: src/webui/extjs.c:219
 msgid "Based on software from"
 msgstr "Based on software from"
 
@@ -344,7 +344,7 @@ msgstr "Brand"
 msgid "Broadcast"
 msgstr "Broadcast"
 
-#: src/webui/extjs.c:223
+#: src/webui/extjs.c:224
 msgid "Build"
 msgstr "Build"
 
@@ -1112,7 +1112,7 @@ msgstr "IPTV Input"
 msgid "IPTV Multiplex"
 msgstr "IPTV Multiplex"
 
-#: src/input/mpegts/iptv/iptv.c:445
+#: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
 msgstr "IPTV Network"
 
@@ -1132,7 +1132,7 @@ msgstr "Icon URL"
 msgid "Icon has title"
 msgstr "Icon has title"
 
-#: src/webui/extjs.c:219
+#: src/webui/extjs.c:220
 msgid "Icons from"
 msgstr "Icons from"
 
@@ -1153,7 +1153,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr "If no user account exists then create one with\nno username and no password. Use with care as\nit will allow world-wide administrative access\nto your Tvheadend installation until you create or edit the\naccess control rules from within the Tvheadend web interface."
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "If you'd like to support the project, please consider a donation."
 
@@ -1237,7 +1237,7 @@ msgstr "Internal"
 msgid "Invalid"
 msgstr "Invalid"
 
-#: src/main.c:789
+#: src/main.c:790
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr "Invalid adapter number '%s'\n"
@@ -1481,7 +1481,7 @@ msgstr "Matroska (mkv)/built-in"
 msgid "Matroska/av-lib"
 msgstr "Matroska/av-lib"
 
-#: src/input/mpegts/iptv/iptv.c:474
+#: src/input/mpegts/iptv/iptv.c:475
 msgid "Max Bandwidth (Kbps)"
 msgstr "Maximum Bandwidth (Kbps)"
 
@@ -1489,11 +1489,11 @@ msgstr "Maximum Bandwidth (Kbps)"
 msgid "Max Channel Num"
 msgstr "Maximum Channel Num"
 
-#: src/input/mpegts/iptv/iptv.c:467
+#: src/input/mpegts/iptv/iptv.c:468
 msgid "Max Input Streams"
 msgstr "Maximum Input Streams"
 
-#: src/input/mpegts/iptv/iptv.c:481
+#: src/input/mpegts/iptv/iptv.c:482
 msgid "Max timeout (seconds)"
 msgstr "Maximum timeout (seconds)"
 
@@ -1659,7 +1659,7 @@ msgstr "No PIN"
 msgid "No access"
 msgstr "No access"
 
-#: src/main.c:798
+#: src/main.c:799
 msgid "No adapters specified!\n"
 msgstr "No adapters specified!\n"
 
@@ -1927,7 +1927,7 @@ msgstr "Presentation"
 #: src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
-#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:451
+#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
 msgstr "Priority"
@@ -2391,7 +2391,7 @@ msgstr "Stream Type"
 msgid "Streaming"
 msgstr "Streaming"
 
-#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:459
+#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
 msgstr "Streaming Priority"
@@ -2510,7 +2510,7 @@ msgstr "Title"
 msgid "Title (Regexp)"
 msgstr "Title (Regexp)"
 
-#: src/webui/extjs.c:226
+#: src/webui/extjs.c:227
 msgid "Toggle details"
 msgstr "Toggle details"
 
@@ -2753,7 +2753,7 @@ msgstr "en50494"
 msgid "hrs"
 msgstr "hrs"
 
-#: src/main.c:749
+#: src/main.c:750
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr "invalid option specified [%s]"
@@ -2766,7 +2766,7 @@ msgstr "min"
 msgid "mins"
 msgstr "mins"
 
-#: src/main.c:756
+#: src/main.c:757
 #, c-format
 msgid "option %s requires a value"
 msgstr "option %s requires a value"

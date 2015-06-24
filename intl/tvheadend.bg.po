@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 21:05+0200\n"
+"POT-Creation-Date: 2015-06-24 23:00+0200\n"
 "PO-Revision-Date: 2015-06-23 11:54+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Bulgarian (http://www.transifex.com/projects/p/tvheadend/language/bg/)\n"
@@ -239,7 +239,7 @@ msgstr ""
 msgid "All days"
 msgstr ""
 
-#: src/webui/extjs.c:240
+#: src/webui/extjs.c:241
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -321,7 +321,7 @@ msgstr "BB"
 msgid "Bandwidth"
 msgstr ""
 
-#: src/webui/extjs.c:218
+#: src/webui/extjs.c:219
 msgid "Based on software from"
 msgstr ""
 
@@ -345,7 +345,7 @@ msgstr ""
 msgid "Broadcast"
 msgstr ""
 
-#: src/webui/extjs.c:223
+#: src/webui/extjs.c:224
 msgid "Build"
 msgstr ""
 
@@ -1113,7 +1113,7 @@ msgstr ""
 msgid "IPTV Multiplex"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:445
+#: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
 msgstr ""
 
@@ -1133,7 +1133,7 @@ msgstr ""
 msgid "Icon has title"
 msgstr ""
 
-#: src/webui/extjs.c:219
+#: src/webui/extjs.c:220
 msgid "Icons from"
 msgstr ""
 
@@ -1154,7 +1154,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr ""
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
 msgstr ""
 
@@ -1238,7 +1238,7 @@ msgstr ""
 msgid "Invalid"
 msgstr ""
 
-#: src/main.c:789
+#: src/main.c:790
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
@@ -1482,7 +1482,7 @@ msgstr "Matroska (mkv)/built-in"
 msgid "Matroska/av-lib"
 msgstr "Matroska/av-lib"
 
-#: src/input/mpegts/iptv/iptv.c:474
+#: src/input/mpegts/iptv/iptv.c:475
 msgid "Max Bandwidth (Kbps)"
 msgstr ""
 
@@ -1490,11 +1490,11 @@ msgstr ""
 msgid "Max Channel Num"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:467
+#: src/input/mpegts/iptv/iptv.c:468
 msgid "Max Input Streams"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:481
+#: src/input/mpegts/iptv/iptv.c:482
 msgid "Max timeout (seconds)"
 msgstr ""
 
@@ -1660,7 +1660,7 @@ msgstr ""
 msgid "No access"
 msgstr ""
 
-#: src/main.c:798
+#: src/main.c:799
 msgid "No adapters specified!\n"
 msgstr ""
 
@@ -1928,7 +1928,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
-#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:451
+#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
 msgstr "Приоритет"
@@ -2392,7 +2392,7 @@ msgstr ""
 msgid "Streaming"
 msgstr ""
 
-#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:459
+#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
 msgstr ""
@@ -2511,7 +2511,7 @@ msgstr "Заглавие"
 msgid "Title (Regexp)"
 msgstr "Заглавие (Regexp)"
 
-#: src/webui/extjs.c:226
+#: src/webui/extjs.c:227
 msgid "Toggle details"
 msgstr ""
 
@@ -2754,7 +2754,7 @@ msgstr "en50494"
 msgid "hrs"
 msgstr "часа"
 
-#: src/main.c:749
+#: src/main.c:750
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr ""
@@ -2767,7 +2767,7 @@ msgstr "мин"
 msgid "mins"
 msgstr "мин"
 
-#: src/main.c:756
+#: src/main.c:757
 #, c-format
 msgid "option %s requires a value"
 msgstr ""

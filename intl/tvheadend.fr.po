@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 21:05+0200\n"
-"PO-Revision-Date: 2015-06-23 14:35+0000\n"
+"POT-Creation-Date: 2015-06-24 23:00+0200\n"
+"PO-Revision-Date: 2015-06-24 08:00+0000\n"
 "Last-Translator: bigbig6 <bigbig6@hotmail.fr>\n"
 "Language-Team: French (http://www.transifex.com/projects/p/tvheadend/language/fr/)\n"
 "MIME-Version: 1.0\n"
@@ -239,7 +239,7 @@ msgstr ""
 msgid "All days"
 msgstr "Tous les jours"
 
-#: src/webui/extjs.c:240
+#: src/webui/extjs.c:241
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -321,7 +321,7 @@ msgstr ""
 msgid "Bandwidth"
 msgstr "Bande passante"
 
-#: src/webui/extjs.c:218
+#: src/webui/extjs.c:219
 msgid "Based on software from"
 msgstr ""
 
@@ -345,7 +345,7 @@ msgstr ""
 msgid "Broadcast"
 msgstr ""
 
-#: src/webui/extjs.c:223
+#: src/webui/extjs.c:224
 msgid "Build"
 msgstr "Version"
 
@@ -1113,7 +1113,7 @@ msgstr ""
 msgid "IPTV Multiplex"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:445
+#: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
 msgstr ""
 
@@ -1133,7 +1133,7 @@ msgstr "URL de l’icône"
 msgid "Icon has title"
 msgstr ""
 
-#: src/webui/extjs.c:219
+#: src/webui/extjs.c:220
 msgid "Icons from"
 msgstr "Icône venant de"
 
@@ -1154,7 +1154,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr ""
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
 msgstr ""
 
@@ -1238,7 +1238,7 @@ msgstr "Interne"
 msgid "Invalid"
 msgstr "Invalide"
 
-#: src/main.c:789
+#: src/main.c:790
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
@@ -1482,7 +1482,7 @@ msgstr "Matroska (mkv)/par défaut"
 msgid "Matroska/av-lib"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:474
+#: src/input/mpegts/iptv/iptv.c:475
 msgid "Max Bandwidth (Kbps)"
 msgstr ""
 
@@ -1490,11 +1490,11 @@ msgstr ""
 msgid "Max Channel Num"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:467
+#: src/input/mpegts/iptv/iptv.c:468
 msgid "Max Input Streams"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:481
+#: src/input/mpegts/iptv/iptv.c:482
 msgid "Max timeout (seconds)"
 msgstr ""
 
@@ -1660,7 +1660,7 @@ msgstr ""
 msgid "No access"
 msgstr "Aucun accès"
 
-#: src/main.c:798
+#: src/main.c:799
 msgid "No adapters specified!\n"
 msgstr "Aucun adaptateur spécifié\n"
 
@@ -1928,7 +1928,7 @@ msgstr "Présentation"
 #: src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
-#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:451
+#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
 msgstr ""
@@ -2252,15 +2252,15 @@ msgstr ""
 
 #: src/main.c:643
 msgid "Show this page"
-msgstr ""
+msgstr "Montre cette page"
 
 #: src/main.c:644
 msgid "Show version information"
-msgstr ""
+msgstr "Information de la version"
 
 #: src/streaming.c:434
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "Signal trop faible"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
@@ -2296,15 +2296,15 @@ msgstr ""
 
 #: src/bouquet.c:867
 msgid "Source"
-msgstr ""
+msgstr "Source"
 
 #: src/streaming.c:413
 msgid "Source deleted"
-msgstr ""
+msgstr "Source effacée"
 
 #: src/streaming.c:411
 msgid "Source quality is bad"
-msgstr ""
+msgstr "La qualité de la source est mauvaise"
 
 #: src/streaming.c:409
 msgid "Source reconfigured"
@@ -2336,27 +2336,27 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:476
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Start"
-msgstr ""
+msgstr "Démarrer"
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Start After"
-msgstr ""
+msgstr "Démarre après"
 
 #: src/dvr/dvr_autorec.c:974
 msgid "Start Before"
-msgstr ""
+msgstr "Démarre avant"
 
 #: src/dvr/dvr_db.c:1998
 msgid "Start Time"
-msgstr ""
+msgstr "Heure de démarrage"
 
 #: src/dvr/dvr_db.c:2274 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "Etat"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
@@ -2364,7 +2364,7 @@ msgstr ""
 
 #: src/profile.c:1372
 msgid "Stereo"
-msgstr ""
+msgstr "Stéréo"
 
 #: src/dvr/dvr_timerec.c:601
 msgid "Stop"
@@ -2372,27 +2372,27 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2023
 msgid "Stop Time"
-msgstr ""
+msgstr "Heure de fin"
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
-msgstr ""
+msgstr "Index du flux"
 
 #: src/profile.c:275 src/dvr/dvr_config.c:790
 msgid "Stream Profile"
-msgstr ""
+msgstr "Profile du flux"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream Type"
-msgstr ""
+msgstr "Type de flux"
 
 #: src/access.c:1253 src/access.c:1315
 msgid "Streaming"
-msgstr ""
+msgstr "Envois du flux"
 
-#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:459
+#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
 msgstr ""
@@ -2415,7 +2415,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2093 src/dvr/dvr_db.c:2100
 msgid "Subtitle"
-msgstr ""
+msgstr "Sous-titre"
 
 #: src/profile.c:1565
 msgid "Subtitle CODEC"
@@ -2427,7 +2427,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
-msgstr ""
+msgstr "Dim"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
@@ -2439,7 +2439,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1236
 msgid "Switch Type"
-msgstr ""
+msgstr "Switch Type"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:105
 #, c-format
@@ -2452,7 +2452,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:685
 msgid "Sync"
-msgstr ""
+msgstr "Sync"
 
 #: src/dvr/dvr_config.c:686
 msgid "Sync + Don't keep"
@@ -2460,7 +2460,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:683
 msgid "System"
-msgstr ""
+msgstr "Système"
 
 #: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
@@ -2468,7 +2468,7 @@ msgstr ""
 
 #: src/channels.c:373
 msgid "Tags"
-msgstr ""
+msgstr "Tags"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
@@ -2476,15 +2476,15 @@ msgstr ""
 
 #: src/main.c:720
 msgid "Testing options"
-msgstr ""
+msgstr "Tester les options"
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
-msgstr ""
+msgstr "Jeu"
 
 #: src/dvr/dvr_db.c:318
 msgid "Time missed"
-msgstr ""
+msgstr "Horaire manquant"
 
 #: src/dvr/dvr_timerec.c:153
 #, c-format
@@ -2505,13 +2505,13 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2078 src/dvr/dvr_db.c:2085 src/dvr/dvr_timerec.c:569
 msgid "Title"
-msgstr ""
+msgstr "Titre"
 
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
 msgstr ""
 
-#: src/webui/extjs.c:226
+#: src/webui/extjs.c:227
 msgid "Toggle details"
 msgstr ""
 
@@ -2537,7 +2537,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
-msgstr ""
+msgstr "Mar"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
 msgid "Tune Before DiseqC"
@@ -2569,7 +2569,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2260 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: src/main.c:675
 msgid "URL with the SAT>IP server XML location"
@@ -2618,7 +2618,7 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
 msgid "Unknown"
-msgstr ""
+msgstr "Inconnu"
 
 #: src/streaming.c:451
 #, c-format
@@ -2627,7 +2627,7 @@ msgstr ""
 
 #: src/profile.c:246
 msgid "Unset (default)"
-msgstr ""
+msgstr "Non défini (défaut)"
 
 #: src/descrambler/cwc.c:1761
 msgid "Update Card (EMM)"
@@ -2656,7 +2656,7 @@ msgstr ""
 
 #: src/channels.c:318
 msgid "User Icon"
-msgstr ""
+msgstr "Icône de l'utilisateur"
 
 #: src/dvr/dvr_db.c:306
 msgid "User Limit Reached"
@@ -2672,7 +2672,7 @@ msgstr ""
 
 #: src/access.c:1295 src/access.c:1655 src/descrambler/cwc.c:1726
 msgid "Username"
-msgstr ""
+msgstr "Nom de l'utilisateur"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
@@ -2724,19 +2724,19 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:286
 msgid "Waiting for stream"
-msgstr ""
+msgstr "En attente du flux"
 
 #: src/access.c:1384
 msgid "Web Interface"
-msgstr ""
+msgstr "Interface Web"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
-msgstr ""
+msgstr "Mer"
 
 #: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
 msgid "Week Days"
-msgstr ""
+msgstr "Jours"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
@@ -2752,25 +2752,25 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1942
 msgid "hrs"
-msgstr ""
+msgstr "hrs"
 
-#: src/main.c:749
+#: src/main.c:750
 #, c-format
 msgid "invalid option specified [%s]"
-msgstr ""
+msgstr "Option spécifiée invalide [%s]"
 
 #: src/dvr/dvr_db.c:1943
 msgid "min"
-msgstr ""
+msgstr "min"
 
 #: src/dvr/dvr_db.c:1944
 msgid "mins"
-msgstr ""
+msgstr "mins"
 
-#: src/main.c:756
+#: src/main.c:757
 #, c-format
 msgid "option %s requires a value"
-msgstr ""
+msgstr "Une valeur est obligatoire pour l'option %s"
 
 #: src/main.c:722
 msgid "tsfile input (mux file)"
@@ -2778,4 +2778,4 @@ msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:129
 msgid "tvhdhomerun Client"
-msgstr ""
+msgstr "Client tvhdhomerun"

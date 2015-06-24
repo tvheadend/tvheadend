@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-23 21:05+0200\n"
-"PO-Revision-Date: 2015-06-23 11:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2015-06-24 23:00+0200\n"
+"PO-Revision-Date: 2015-06-24 13:42+0000\n"
+"Last-Translator: Fredrik Tuomas <fredrik.tuomas@gmail.com>\n"
 "Language-Team: Swedish (http://www.transifex.com/projects/p/tvheadend/language/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -163,19 +163,19 @@ msgstr "ACTIVE"
 
 #: src/descrambler/constcw.c:345
 msgid "AES Constant Code Word Client"
-msgstr ""
+msgstr "AES konstant kodordklient"
 
 #: src/esfilter.c:313 src/esfilter.c:370
 msgid "ANY"
-msgstr ""
+msgstr "NÅGON"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
-msgstr ""
+msgstr "ATSC"
 
 #: src/input/mpegts/mpegts_network_dvb.c:266
 msgid "ATSC Network"
-msgstr ""
+msgstr "ATSC-nätverk"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220 src/input/mpegts/mpegts_mux_dvb.c:223
 #: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:229
@@ -183,15 +183,15 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:238 src/input/mpegts/mpegts_mux_dvb.c:298
 #: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "AUTO"
-msgstr ""
+msgstr "AUTO"
 
 #: src/streaming.c:441
 msgid "Aborted by user"
-msgstr ""
+msgstr "Avbruten av användaren"
 
 #: src/access.c:1270
 msgid "Access"
-msgstr ""
+msgstr "Access"
 
 #: src/esfilter.c:674 src/esfilter.c:741 src/esfilter.c:808 src/esfilter.c:875
 #: src/esfilter.c:950 src/esfilter.c:1011
@@ -238,7 +238,7 @@ msgstr ""
 msgid "All days"
 msgstr ""
 
-#: src/webui/extjs.c:240
+#: src/webui/extjs.c:241
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
@@ -320,7 +320,7 @@ msgstr ""
 msgid "Bandwidth"
 msgstr ""
 
-#: src/webui/extjs.c:218
+#: src/webui/extjs.c:219
 msgid "Based on software from"
 msgstr ""
 
@@ -344,7 +344,7 @@ msgstr ""
 msgid "Broadcast"
 msgstr ""
 
-#: src/webui/extjs.c:223
+#: src/webui/extjs.c:224
 msgid "Build"
 msgstr ""
 
@@ -1112,7 +1112,7 @@ msgstr ""
 msgid "IPTV Multiplex"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:445
+#: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
 msgstr ""
 
@@ -1132,7 +1132,7 @@ msgstr ""
 msgid "Icon has title"
 msgstr ""
 
-#: src/webui/extjs.c:219
+#: src/webui/extjs.c:220
 msgid "Icons from"
 msgstr ""
 
@@ -1153,7 +1153,7 @@ msgid ""
 "access-control from within the Tvheadend UI"
 msgstr ""
 
-#: src/webui/extjs.c:239
+#: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
 msgstr ""
 
@@ -1237,7 +1237,7 @@ msgstr ""
 msgid "Invalid"
 msgstr ""
 
-#: src/main.c:789
+#: src/main.c:790
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
@@ -1481,7 +1481,7 @@ msgstr ""
 msgid "Matroska/av-lib"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:474
+#: src/input/mpegts/iptv/iptv.c:475
 msgid "Max Bandwidth (Kbps)"
 msgstr ""
 
@@ -1489,11 +1489,11 @@ msgstr ""
 msgid "Max Channel Num"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:467
+#: src/input/mpegts/iptv/iptv.c:468
 msgid "Max Input Streams"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:481
+#: src/input/mpegts/iptv/iptv.c:482
 msgid "Max timeout (seconds)"
 msgstr ""
 
@@ -1659,7 +1659,7 @@ msgstr ""
 msgid "No access"
 msgstr ""
 
-#: src/main.c:798
+#: src/main.c:799
 msgid "No adapters specified!\n"
 msgstr ""
 
@@ -1927,7 +1927,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
-#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:451
+#: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
 msgstr ""
@@ -2295,114 +2295,114 @@ msgstr ""
 
 #: src/bouquet.c:867
 msgid "Source"
-msgstr ""
+msgstr "Källa"
 
 #: src/streaming.c:413
 msgid "Source deleted"
-msgstr ""
+msgstr "Källa raderad"
 
 #: src/streaming.c:411
 msgid "Source quality is bad"
-msgstr ""
+msgstr "Källkvalité är dålig"
 
 #: src/streaming.c:409
 msgid "Source reconfigured"
-msgstr ""
+msgstr "Källa omkonfigurerad"
 
 #: src/main.c:689
 msgid "Specify User-Agent header for the http client"
-msgstr ""
+msgstr "Specificera User-Agent header för http-klienten"
 
 #: src/main.c:685
 msgid "Specify alternative htsp port"
-msgstr ""
+msgstr "Specificera alternativ htsp-port"
 
 #: src/main.c:681
 msgid "Specify alternative http port"
-msgstr ""
+msgstr "Specificera alternativ http-port"
 
 #: src/main.c:683
 msgid "Specify alternative http webroot"
-msgstr ""
+msgstr "Specificera alternativ http webroot"
 
 #: src/main.c:680
 msgid "Specify bind address"
-msgstr ""
+msgstr "Specificera adress att binda"
 
 #: src/main.c:687
 msgid "Specify extra htsp port"
-msgstr ""
+msgstr "Specificera extra htsp-port"
 
 #: src/input/mpegts/mpegts_mux.c:476
 msgid "Standard"
-msgstr ""
+msgstr "Standard"
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Start"
-msgstr ""
+msgstr "Start"
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Start After"
-msgstr ""
+msgstr "Starta efter"
 
 #: src/dvr/dvr_autorec.c:974
 msgid "Start Before"
-msgstr ""
+msgstr "Starta före"
 
 #: src/dvr/dvr_db.c:1998
 msgid "Start Time"
-msgstr ""
+msgstr "Starttid"
 
 #: src/dvr/dvr_db.c:2274 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
-msgstr ""
+msgstr "Statusperiod (ms)"
 
 #: src/profile.c:1372
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 #: src/dvr/dvr_timerec.c:601
 msgid "Stop"
-msgstr ""
+msgstr "Stoppa"
 
 #: src/dvr/dvr_db.c:2023
 msgid "Stop Time"
-msgstr ""
+msgstr "Stopptid"
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
-msgstr ""
+msgstr "Strömindex"
 
 #: src/profile.c:275 src/dvr/dvr_config.c:790
 msgid "Stream Profile"
-msgstr ""
+msgstr "Strömprofil"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream Type"
-msgstr ""
+msgstr "Strömtyp"
 
 #: src/access.c:1253 src/access.c:1315
 msgid "Streaming"
-msgstr ""
+msgstr "Strömning"
 
-#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:459
+#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
-msgstr ""
+msgstr "Strömprioritet"
 
 #: src/access.c:1334
 msgid "Streaming Profiles"
-msgstr ""
+msgstr "Strömnningsprofiler"
 
 #: src/dvr/dvr_config.c:743
 msgid "Subdirectory Options"
-msgstr ""
+msgstr "Underkatalogval"
 
 #: src/main.c:715
 msgid "Subscribe to a service permanently"
@@ -2414,23 +2414,23 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2093 src/dvr/dvr_db.c:2100
 msgid "Subtitle"
-msgstr ""
+msgstr "Undertext"
 
 #: src/profile.c:1565
 msgid "Subtitle CODEC"
-msgstr ""
+msgstr "Undertexttyp"
 
 #: src/esfilter.c:832
 msgid "Subtitle Stream Filter"
-msgstr ""
+msgstr "Undertextströmfilter"
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
-msgstr ""
+msgstr "Sön"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
-msgstr ""
+msgstr "Surround (2 främre, mono bakre)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:253
 msgid "Switch Then Rotor"
@@ -2447,39 +2447,39 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:294 src/input/mpegts/mpegts_mux_dvb.c:548
 msgid "Symbol Rate (Sym/s)"
-msgstr ""
+msgstr "Symbolhastighet"
 
 #: src/dvr/dvr_config.c:685
 msgid "Sync"
-msgstr ""
+msgstr "Synk"
 
 #: src/dvr/dvr_config.c:686
 msgid "Sync + Don't keep"
-msgstr ""
+msgstr "Synk + spara inte"
 
 #: src/dvr/dvr_config.c:683
 msgid "System"
-msgstr ""
+msgstr "System"
 
 #: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
-msgstr ""
+msgstr "Märk filer med metadata"
 
 #: src/channels.c:373
 msgid "Tags"
-msgstr ""
+msgstr "Taggar"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Text-tv strömfilter"
 
 #: src/main.c:720
 msgid "Testing options"
-msgstr ""
+msgstr "Testval"
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
-msgstr ""
+msgstr "Tors"
 
 #: src/dvr/dvr_db.c:318
 msgid "Time missed"
@@ -2504,13 +2504,13 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2078 src/dvr/dvr_db.c:2085 src/dvr/dvr_timerec.c:569
 msgid "Title"
-msgstr ""
+msgstr "Titel"
 
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
-msgstr ""
+msgstr "Titel (reguljärt uttryck)"
 
-#: src/webui/extjs.c:226
+#: src/webui/extjs.c:227
 msgid "Toggle details"
 msgstr ""
 
@@ -2524,11 +2524,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:226
 msgid "Transmission Mode"
-msgstr ""
+msgstr "Sändningsläge"
 
 #: src/descrambler/constcw.c:306 src/descrambler/constcw.c:366
 msgid "Transponder ID"
-msgstr ""
+msgstr "Transponder ID"
 
 #: src/input/mpegts/mpegts_mux.c:540
 msgid "Transport Stream ID"
@@ -2536,7 +2536,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
-msgstr ""
+msgstr "Tis"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
 msgid "Tune Before DiseqC"
@@ -2585,7 +2585,7 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:296
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:151
 msgid "UUID"
-msgstr ""
+msgstr "UUID"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:142
 msgid "Uncommited First"
@@ -2617,12 +2617,12 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
 msgid "Unknown"
-msgstr ""
+msgstr "Okänd"
 
 #: src/streaming.c:451
 #, c-format
 msgid "Unknown reason (%i)"
-msgstr ""
+msgstr "Anledning okänd (%i)"
 
 #: src/profile.c:246
 msgid "Unset (default)"
@@ -2630,11 +2630,11 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1761
 msgid "Update Card (EMM)"
-msgstr ""
+msgstr "Uppdatera kort"
 
 #: src/dvr/dvr_config.c:703
 msgid "Update Disabled"
-msgstr ""
+msgstr "Uppdatering avslagen"
 
 #: src/main.c:447
 #, c-format
@@ -2643,7 +2643,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:983
 msgid "Use Windows-compatible filenames"
-msgstr ""
+msgstr "Använd Windows-kompatibla filnamn"
 
 #: src/main.c:691
 msgid "Use XSPF playlist instead of M3U"
@@ -2655,7 +2655,7 @@ msgstr ""
 
 #: src/channels.c:318
 msgid "User Icon"
-msgstr ""
+msgstr "Användar-ikon"
 
 #: src/dvr/dvr_db.c:306
 msgid "User Limit Reached"
@@ -2671,7 +2671,7 @@ msgstr ""
 
 #: src/access.c:1295 src/access.c:1655 src/descrambler/cwc.c:1726
 msgid "Username"
-msgstr ""
+msgstr "Användarnamn"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
@@ -2723,19 +2723,19 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:286
 msgid "Waiting for stream"
-msgstr ""
+msgstr "Väntar på ström"
 
 #: src/access.c:1384
 msgid "Web Interface"
-msgstr ""
+msgstr "Webbgränssnitt"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
-msgstr ""
+msgstr "Ons"
 
 #: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
 msgid "Week Days"
-msgstr ""
+msgstr "Vardagar"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
@@ -2753,23 +2753,23 @@ msgstr ""
 msgid "hrs"
 msgstr ""
 
-#: src/main.c:749
+#: src/main.c:750
 #, c-format
 msgid "invalid option specified [%s]"
-msgstr ""
+msgstr "ogiltigt val specificerat [%s]"
 
 #: src/dvr/dvr_db.c:1943
 msgid "min"
-msgstr ""
+msgstr "min"
 
 #: src/dvr/dvr_db.c:1944
 msgid "mins"
-msgstr ""
+msgstr "minuter"
 
-#: src/main.c:756
+#: src/main.c:757
 #, c-format
 msgid "option %s requires a value"
-msgstr ""
+msgstr "alternativ %s kräver ett värde"
 
 #: src/main.c:722
 msgid "tsfile input (mux file)"
