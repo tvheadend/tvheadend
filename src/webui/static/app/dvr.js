@@ -56,8 +56,8 @@ tvheadend.dvrDetails = function(uuid) {
             title: title,
             iconCls: 'info',
             layout: 'fit',
-            width: 500,
-            height: 400,
+            width: 650,
+            height: 450,
             constrainHeader: true,
             buttonAlign: 'center',
             html: content
