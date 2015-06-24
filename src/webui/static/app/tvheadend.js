@@ -601,7 +601,9 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
           return val;
         };
         text = _('Disk space:') + '&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
-        Ext.get(this.diskSpaceItem.tabEl).child('span.x-tab-diskspace', true).innerHTML = text;
+        var el = Ext.get(this.diskSpaceItem.tabEl).child('span.x-tab-diskspace', true);
+        el.innerHTML = text;
+        el.qtip = _('Free: ') + human(bfree) + ' ' + _('Total: ') + human(btotal);
     },
 
     onLoginCmdClicked: function(e) {
