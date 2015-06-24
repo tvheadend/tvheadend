@@ -340,6 +340,7 @@ tvheadend.dvr_finished = function(panel, index) {
             {
                 width: 40,
                 header: _("Play"),
+                tooltip: _("Play"),
                 renderer: function(v, o, r) {
                     var title = r.data['disp_title'];
                     if (r.data['episode'])
@@ -420,6 +421,7 @@ tvheadend.dvr_failed = function(panel, index) {
             {
                 width: 40,
                 header: _("Play"),
+                tooltip: _("Play"),
                 renderer: function(v, o, r) {
                     var title = r.data['disp_title'];
                     if (r.data['episode'])
