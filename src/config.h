@@ -29,7 +29,7 @@ void        config_init    ( int backup );
 void        config_done    ( void );
 void        config_save    ( void );
 
-htsmsg_t   *config_get_all ( void );
+htsmsg_t   *config_get_all ( int satip );
 
 const char *config_get_str ( const char *fld );
 int         config_set_str ( const char *fld, const char *val );

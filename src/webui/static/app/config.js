@@ -31,10 +31,10 @@ tvheadend.comet.on('config', function(m) {
     }
 });
 
-tvheadend.miscconf = function(panel, index) {
+tvheadend.baseconf = function(panel, index) {
 
     /*
-    * Basic Config
+    * Base Config
     */
 
     var confreader = new Ext.data.JsonReader({
@@ -45,9 +45,6 @@ tvheadend.miscconf = function(panel, index) {
         'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
         'tvhtime_tolerance',
         'prefer_picon', 'chiconpath', 'piconpath',
-        'satip_rtsp', 'satip_weight', 'satip_descramble', 'satip_muxcnf',
-        'satip_dvbs', 'satip_dvbs2', 'satip_dvbt', 'satip_dvbt2',
-        'satip_dvbc', 'satip_dvbc2', 'satip_atsc', 'satip_dvbcb'
     ]);
 
     /* ****************************************************************
@@ -177,128 +174,9 @@ tvheadend.miscconf = function(panel, index) {
     });
 
     /*
-    * Image cache
-    */
-
-    if (tvheadend.capabilities.indexOf('imagecache') !== -1) {
-        var imagecache_reader = new Ext.data.JsonReader({
-            root: 'entries'
-        },
-        [
-            'enabled', 'ok_period', 'fail_period', 'ignore_sslcert'
-        ]);
-
-        var imagecacheEnabled = new Ext.ux.form.XCheckbox({
-            name: 'enabled',
-            fieldLabel: _('Enabled')
-        });
-
-        var imagecacheOkPeriod = new Ext.form.NumberField({
-            name: 'ok_period',
-            fieldLabel: _('Re-fetch period (hours)')
-        });
-
-        var imagecacheFailPeriod = new Ext.form.NumberField({
-            name: 'fail_period',
-            fieldLabel: _('Re-try period (hours)')
-        });
-
-        var imagecacheIgnoreSSLCert = new Ext.ux.form.XCheckbox({
-            name: 'ignore_sslcert',
-            fieldLabel: _('Ignore invalid SSL certificate')
-        });
-
-        var imagecachePanel = new Ext.form.FieldSet({
-            title: _('Image Caching'),
-            width: 700,
-            autoHeight: true,
-            collapsible: true,
-            animCollapse: true,
-            items: [imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
-                imagecacheIgnoreSSLCert]
-        });
-
-        var imagecache_form = new Ext.form.FormPanel({
-            border: false,
-            labelAlign: 'left',
-            labelWidth: 200,
-            waitMsgTarget: true,
-            reader: imagecache_reader,
-            layout: 'form',
-            defaultType: 'textfield',
-            autoHeight: true,
-            items: [imagecachePanel]
-        });
-    } else {
-        var imagecache_form = null;
-    }
-
-    /*
     * SAT>IP server
     */
 
-    var satipPanel = null;
-    if (tvheadend.capabilities.indexOf('satip_server') !== -1) {
-        var rtsp = new Ext.form.NumberField({
-             name: 'satip_rtsp',
-             fieldLabel: _('RTSP Port (554 or 9983), 0 = disable')
-        });
-        var weight = new Ext.form.NumberField({
-             name: 'satip_weight',
-             fieldLabel: _('Subscription Weight')
-        });
-        var descramble = new Ext.form.NumberField({
-             name: 'satip_descramble',
-             fieldLabel: _('Descramble Services (Limit Per Mux)')
-        });
-        var muxcnf = new Ext.form.NumberField({
-             name: 'satip_muxcnf',
-             fieldLabel: _('Muxes Handling (0 = auto, 1 = keep, 2 = reject)')
-        });
-        var dvbs = new Ext.form.NumberField({
-             name: 'satip_dvbs',
-             fieldLabel: _('Exported DVB-S Tuners')
-        });
-        var dvbs2 = new Ext.form.NumberField({
-             name: 'satip_dvbs2',
-             fieldLabel: _('Exported DVB-S2 Tuners')
-        });
-        var dvbt = new Ext.form.NumberField({
-             name: 'satip_dvbt',
-             fieldLabel: _('Exported DVB-T Tuners')
-        });
-        var dvbt2 = new Ext.form.NumberField({
-             name: 'satip_dvbt2',
-             fieldLabel: _('Exported DVB-T2 Tuners')
-        });
-        var dvbc = new Ext.form.NumberField({
-             name: 'satip_dvbc',
-             fieldLabel: _('Exported DVB-C Tuners')
-        });
-        var dvbc2 = new Ext.form.NumberField({
-             name: 'satip_dvbc2',
-             fieldLabel: _('Exported DVB-C2 Tuners')
-        });
-        var atsc = new Ext.form.NumberField({
-             name: 'satip_atsc',
-             fieldLabel: _('Exported ATSC Tuners')
-        });
-        var dvbcb = new Ext.form.NumberField({
-             name: 'satip_dvbcb',
-             fieldLabel: _('Exported DVB-Cable/AnnexB Tuners')
-        });
-
-        satipPanel = new Ext.form.FieldSet({
-            title: _('SAT>IP Server'),
-            width: 700,
-            autoHeight: true,
-            collapsible: true,
-            collapsed: true,
-            animCollapse: true,
-            items: [rtsp, weight, descramble, muxcnf,
-                    dvbs, dvbs2, dvbt, dvbt2, dvbc, dvbc2, atsc, dvbcb]
-        });
-    }
 
     /* ****************************************************************
     * Form
@@ -311,25 +189,6 @@ tvheadend.miscconf = function(panel, index) {
         handler: saveChanges
     });
 
-    var imagecacheButton = new Ext.Button({
-        text: _("Clean image (icon) cache"),
-        tooltip: _('Clean image cache on storage'),
-        iconCls: 'clean',
-        handler: cleanImagecache
-    });
-
-    if (tvheadend.capabilities.indexOf('satip_client') !== -1) {
-        var satipButton = new Ext.Button({
-            text: _("Discover SAT>IP servers"),
-            tooltip: _('Look for new SAT>IP servers'),
-            iconCls: 'find',
-            handler: satipDiscover
-        });
-    } else {
-        var satipButton = null;
-    }
-
-
     var helpButton = new Ext.Button({
         text: _('Help'),
         iconCls: 'help',
@@ -339,9 +198,6 @@ tvheadend.miscconf = function(panel, index) {
     });
 
     var _items = [serverWrap, languageWrap, dvbscanWrap, tvhtimePanel, piconPanel];
-
-    if (satipPanel)
-      _items.push(satipPanel);
 
     var confpanel = new Ext.form.FormPanel({
         labelAlign: 'left',
@@ -355,28 +211,15 @@ tvheadend.miscconf = function(panel, index) {
         items: _items
     });
 
-    var _items = [confpanel];
-
-    if (imagecache_form)
-        _items.push(imagecache_form);
-
-    var _tbar = [saveButton, '-', imagecacheButton];
-    if (satipButton) {
-       _tbar.push('-');
-       _tbar.push(satipButton);
-    }
-    _tbar.push('->');
-    _tbar.push(helpButton);
-
     var mpanel = new Ext.Panel({
-        title: _('General'),
-        iconCls: 'general',
+        title: _('Base'),
+        iconCls: 'baseconf',
         border: false,
         autoScroll: true,
         bodyStyle: 'padding:15px',
         layout: 'form',
-        items: _items,
-        tbar: _tbar
+        items: [confpanel],
+        tbar: [saveButton, '->', helpButton]
     });
 
     tvheadend.paneladd(panel, mpanel, index);
@@ -395,29 +238,7 @@ tvheadend.miscconf = function(panel, index) {
                 confpanel.enable();
             }
         });
-        if (imagecache_form)
-            imagecache_form.getForm().load({
-                url: 'api/imagecache/config/load',
-                success: function(form, action) {
-                    imagecache_form.enable();
-                },
-                failure: function(form, action) {
-                    alert("FAILED");
-                }
-            });
     });
-
-    function saveChangesImagecache(params) {
-        if (imagecache_form)
-            imagecache_form.getForm().submit({
-                url: 'api/imagecache/config/save',
-                params: params || {},
-                waitMsg: 'Saving data...',
-                failure: function(form, action) {
-                    Ext.Msg.alert(_('Imagecache save failed'), action.result.errormsg);
-                }
-            });
-    }
 
     function saveChanges() {
         confpanel.getForm().submit({
@@ -430,11 +251,257 @@ tvheadend.miscconf = function(panel, index) {
                 Ext.Msg.alert(_('Save failed'), action.result.errormsg);
             }
         });
-        saveChangesImagecache();
+    }
+};
+
+/*
+ * Imagecache configuration
+ */
+
+tvheadend.imgcacheconf = function(panel, index) {
+
+    if (tvheadend.capabilities.indexOf('imagecache') === -1)
+        return;
+
+    var imagecache_reader = new Ext.data.JsonReader({root: 'entries'},
+        [ 'enabled', 'ok_period', 'fail_period', 'ignore_sslcert' ]);
+
+    var imagecacheEnabled = new Ext.ux.form.XCheckbox({
+        name: 'enabled',
+        fieldLabel: _('Enabled')
+    });
+
+    var imagecacheOkPeriod = new Ext.form.NumberField({
+        name: 'ok_period',
+        fieldLabel: _('Re-fetch period (hours)')
+    });
+
+    var imagecacheFailPeriod = new Ext.form.NumberField({
+        name: 'fail_period',
+        fieldLabel: _('Re-try period (hours)')
+    });
+
+    var imagecacheIgnoreSSLCert = new Ext.ux.form.XCheckbox({
+        name: 'ignore_sslcert',
+        fieldLabel: _('Ignore invalid SSL certificate')
+    });
+
+    var imagecachePanel = new Ext.form.FieldSet({
+        title: _('Image Caching'),
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items: [imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
+            imagecacheIgnoreSSLCert]
+    });
+
+    var imagecache_form = new Ext.form.FormPanel({
+        border: false,
+        labelAlign: 'left',
+        labelWidth: 300,
+        waitMsgTarget: true,
+        reader: imagecache_reader,
+        layout: 'form',
+        defaultType: 'textfield',
+        autoHeight: true,
+        items: [imagecachePanel]
+    });
+
+    var saveButton = new Ext.Button({
+        text: _("Save configuration"),
+        tooltip: _('Save changes made to configuration below'),
+        iconCls: 'save',
+        handler: saveChanges
+    });
+
+    var imagecacheButton = new Ext.Button({
+        text: _("Clean image (icon) cache"),
+        tooltip: _('Clean image cache on storage'),
+        iconCls: 'clean',
+        handler: cleanImagecache
+    });
+
+    var _tbar = [saveButton, '-', imagecacheButton];
+
+    var mpanel = new Ext.Panel({
+        title: _('Image cache'),
+        iconCls: 'imgcacheconf',
+        border: false,
+        autoScroll: true,
+        bodyStyle: 'padding:15px',
+        layout: 'form',
+        items: [imagecache_form],
+        tbar: _tbar
+    });
+
+    tvheadend.paneladd(panel, mpanel, index);
+
+    mpanel.on('render', function() {
+        imagecache_form.getForm().load({
+            url: 'api/imagecache/config/load',
+            success: function(form, action) {
+                imagecache_form.enable();
+            },
+            failure: function(form, action) {
+                alert(_("FAILED"));
+            }
+        });
+    });
+
+    function saveChanges(params) {
+        if (imagecache_form)
+            imagecache_form.getForm().submit({
+                url: 'api/imagecache/config/save',
+                params: params || {},
+                waitMsg: _('Saving data...'),
+                failure: function(form, action) {
+                    Ext.Msg.alert(_('Imagecache save failed'), action.result.errormsg);
+                }
+            });
     }
 
     function cleanImagecache() {
-        saveChangesImagecache({'clean': 1});
+        saveChanges({'clean': 1});
+    }
+};
+
+/*
+ * SAT>IP server configuration
+ */
+
+tvheadend.satipsrvconf = function(panel, index) {
+
+    if (tvheadend.capabilities.indexOf('satip_server') === -1)
+        return;
+
+    var satipsrv_reader = new Ext.data.JsonReader({root: 'entries'},
+        [ 'satip_rtsp', 'satip_weight', 'satip_descramble', 'satip_muxcnf',
+          'satip_dvbs', 'satip_dvbs2', 'satip_dvbt', 'satip_dvbt2',
+          'satip_dvbc', 'satip_dvbc2', 'satip_atsc', 'satip_dvbcb' ]);
+
+    var rtsp = new Ext.form.NumberField({
+         name: 'satip_rtsp',
+         fieldLabel: _('RTSP Port (554 or 9983), 0 = disable')
+    });
+    var weight = new Ext.form.NumberField({
+         name: 'satip_weight',
+         fieldLabel: _('Subscription Weight')
+    });
+    var descramble = new Ext.form.NumberField({
+         name: 'satip_descramble',
+         fieldLabel: _('Descramble Services (Limit Per Mux)')
+    });
+    var muxcnf = new Ext.form.NumberField({
+         name: 'satip_muxcnf',
+         fieldLabel: _('Muxes Handling (0 = auto, 1 = keep, 2 = reject)')
+    });
+    var dvbs = new Ext.form.NumberField({
+         name: 'satip_dvbs',
+         fieldLabel: _('Exported DVB-S Tuners')
+    });
+    var dvbs2 = new Ext.form.NumberField({
+         name: 'satip_dvbs2',
+         fieldLabel: _('Exported DVB-S2 Tuners')
+    });
+    var dvbt = new Ext.form.NumberField({
+         name: 'satip_dvbt',
+         fieldLabel: _('Exported DVB-T Tuners')
+    });
+    var dvbt2 = new Ext.form.NumberField({
+         name: 'satip_dvbt2',
+         fieldLabel: _('Exported DVB-T2 Tuners')
+    });
+    var dvbc = new Ext.form.NumberField({
+         name: 'satip_dvbc',
+         fieldLabel: _('Exported DVB-C Tuners')
+    });
+    var dvbc2 = new Ext.form.NumberField({
+         name: 'satip_dvbc2',
+         fieldLabel: _('Exported DVB-C2 Tuners')
+    });
+    var atsc = new Ext.form.NumberField({
+         name: 'satip_atsc',
+         fieldLabel: _('Exported ATSC Tuners')
+    });
+    var dvbcb = new Ext.form.NumberField({
+         name: 'satip_dvbcb',
+         fieldLabel: _('Exported DVB-Cable/AnnexB Tuners')
+    });
+
+    satipPanel = new Ext.form.FieldSet({
+        title: _('SAT>IP Server'),
+        width: 700,
+        autoHeight: true,
+        collapsible: true,
+        animCollapse: true,
+        items: [rtsp, weight, descramble, muxcnf,
+                dvbs, dvbs2, dvbt, dvbt2, dvbc, dvbc2, atsc, dvbcb]
+    });
+
+    var satipsrv_form = new Ext.form.FormPanel({
+        border: false,
+        labelAlign: 'left',
+        labelWidth: 300,
+        waitMsgTarget: true,
+        reader: satipsrv_reader,
+        layout: 'form',
+        defaultType: 'textfield',
+        autoHeight: true,
+        items: [satipPanel]
+    });
+
+    var saveButton = new Ext.Button({
+        text: _("Save configuration"),
+        tooltip: _('Save changes made to configuration below'),
+        iconCls: 'save',
+        handler: saveChanges
+    });
+
+    var satipButton = new Ext.Button({
+        text: _("Discover SAT>IP servers"),
+        tooltip: _('Look for new SAT>IP servers'),
+        iconCls: 'find',
+        handler: satipDiscover
+    });
+
+    var _tbar = [saveButton, '-', satipButton];
+
+    var mpanel = new Ext.Panel({
+        title: _('SAT>IP Server'),
+        iconCls: 'satipsrvconf',
+        border: false,
+        autoScroll: true,
+        bodyStyle: 'padding:15px',
+        layout: 'form',
+        items: [satipsrv_form],
+        tbar: _tbar
+    });
+
+    tvheadend.paneladd(panel, mpanel, index);
+
+    mpanel.on('render', function() {
+        satipsrv_form.getForm().load({
+            url: 'api/satips/config/load',
+            success: function(form, action) {
+                satipsrv_form.enable();
+            },
+            failure: function(form, action) {
+                alert(_("FAILED"));
+            }
+        });
+    });
+
+    function saveChanges(params) {
+        if (satipsrv_form)
+            satipsrv_form.getForm().submit({
+                url: 'api/satips/config/save',
+                params: params || {},
+                waitMsg: _('Saving data...'),
+                failure: function(form, action) {
+                    Ext.Msg.alert(_('SAT>IP Server configuration save failed'), action.result.errormsg);
+                }
+            });
     }
 
     function satipDiscover() {

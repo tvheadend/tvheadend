@@ -209,7 +209,8 @@ SRCS-2 = \
 	src/api/api_caclient.c \
 	src/api/api_profile.c \
 	src/api/api_bouquet.c \
-	src/api/api_language.c
+	src/api/api_language.c \
+	src/api/api_satip.c
 
 SRCS-2 += \
 	src/parsers/parsers.c \

@@ -375,7 +375,21 @@ function accessUpdate(o) {
             items: []
         });
 
-        tvheadend.miscconf(cp);
+        /* General */
+        var general = new Ext.TabPanel({
+            activeTab: 0,
+            autoScroll: true,
+            title: _('General'),
+            iconCls: 'general',
+            items: []
+        });
+
+
+        tvheadend.baseconf(general);
+        tvheadend.imgcacheconf(general);
+        tvheadend.satipsrvconf(general);
+        
+        cp.add(general);
 
         tvheadend.acleditor(cp);
         tvheadend.passwdeditor(cp);
@@ -388,8 +402,6 @@ function accessUpdate(o) {
             iconCls: 'hardware',
             items: []
         });
-
-        var idx = 0;
 
         if (tvheadend.capabilities.indexOf('tvadapters') !== -1)
             tvheadend.tvadapters(dvbin);

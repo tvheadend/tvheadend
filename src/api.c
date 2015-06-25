@@ -137,6 +137,7 @@ void api_init ( void )
   api_caclient_init();
   api_profile_init();
   api_language_init();
+  api_satip_server_init();
 }
 
 void api_done ( void )

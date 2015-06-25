@@ -1593,9 +1593,37 @@ void config_save ( void )
  * Access / Update routines
  * *************************************************************************/
 
-htsmsg_t *config_get_all ( void )
+htsmsg_t *config_get_all ( int satip )
 {
-  return htsmsg_copy(config);
+  htsmsg_field_t *f;
+  htsmsg_t *r;
+  const char *s;
+  int64_t s64;
+  int m, b;
+
+  r = htsmsg_create_map();
+  HTSMSG_FOREACH(f, config) {
+    m = strncmp(f->hmf_name, "satip_", 6);
+    if (satip && m) continue;
+    if (!satip && !m) continue;
+    switch (f->hmf_type) {
+    case HMF_STR:
+      s = htsmsg_field_get_str(f);
+      if (s)
+        htsmsg_add_str(r, f->hmf_name, s);
+      break;
+    case HMF_S64:
+      if (!htsmsg_field_get_s64(f, &s64))
+        htsmsg_add_s64(r, f->hmf_name, s64);
+      break;
+    case HMF_BOOL:
+      if (!htsmsg_field_get_bool(f, &b))
+        htsmsg_add_bool(r, f->hmf_name, b);
+      break;
+    default: abort();
+    }
+  }
+  return r;
 }
 
 const char *

@@ -467,7 +467,7 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
     /* Misc */
     pthread_mutex_lock(&global_lock);
-    m = config_get_all();
+    m = config_get_all(0);
     if (!m) {
       pthread_mutex_unlock(&global_lock);
       return HTTP_STATUS_BAD_REQUEST;
@@ -484,7 +484,7 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
 
   /* Save settings */
   } else if (!strcmp(op, "saveSettings") ) {
-    int save = 0, ssave = 0;
+    int save = 0;
 
     /* Misc settings */
     pthread_mutex_lock(&global_lock);
@@ -500,34 +500,8 @@ extjs_config(http_connection_t *hc, const char *remain, void *opaque)
       save |= config_set_chicon_path(str);
     if ((str = http_arg_get(&hc->hc_req_args, "piconpath")))
       save |= config_set_picon_path(str);
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_rtsp")))
-      ssave |= config_set_int("satip_rtsp", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_weight")))
-      ssave |= config_set_int("satip_weight", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_descramble")))
-      ssave |= config_set_int("satip_descramble", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_muxcnf")))
-      ssave |= config_set_int("satip_muxcnf", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs")))
-      ssave |= config_set_int("satip_dvbs", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbs2")))
-      ssave |= config_set_int("satip_dvbs2", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt")))
-      ssave |= config_set_int("satip_dvbt", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbt2")))
-      ssave |= config_set_int("satip_dvbt2", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc")))
-      ssave |= config_set_int("satip_dvbc", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbc2")))
-      ssave |= config_set_int("satip_dvbc2", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_atsc")))
-      ssave |= config_set_int("satip_atsc", atoi(str));
-    if ((str = http_arg_get(&hc->hc_req_args, "satip_dvbcb")))
-      ssave |= config_set_int("satip_dvbcb", atoi(str));
-    if (save | ssave)
+    if (save)
       config_save();
-    if (ssave)
-      satip_server_config_changed();
 
     /* Time */
     str = http_arg_get(&hc->hc_req_args, "tvhtime_update_enabled");

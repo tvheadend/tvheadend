@@ -529,10 +529,11 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 /*
  *
  */
-void satip_server_config_changed(void)
+void satip_server_save(void)
 {
   int descramble, muxcnf;
 
+  config_save();
   if (!satip_server_rtsp_port_locked) {
     satips_rtsp_port(0);
     if (satip_server_rtsp_port > 0) {
@@ -553,6 +554,41 @@ void satip_server_config_changed(void)
   }
 }
 
+htsmsg_t *satip_server_get_config(void)
+{
+  return config_get_all(1);
+}
+
+static int satip_server_set_int(htsmsg_t *conf, const char *name)
+{
+  const char *str;
+  if ((str = htsmsg_get_str(conf, name)))
+    return config_set_int(name, atoi(str));
+  return 0;
+}
+
+int satip_server_set_config(htsmsg_t *conf)
+{
+  static const char *names[] = {
+    "satip_rtsp",
+    "satip_weight",
+    "satip_descramble",
+    "satip_muxcnf",
+    "satip_dvbs",
+    "satip_dvbs2",
+    "satip_dvbt",
+    "satip_dvbt2",
+    "satip_dvbc",
+    "satip_dvbc2",
+    "satip_atsc",
+    "satip_dvbcb",
+    NULL
+  };
+  int i, save = 0;
+  for (i = 0; i < ARRAY_SIZE(names); i++)
+    save |= satip_server_set_int(conf, names[i]);
+  return save;
+}
 /*
  * Initialization
  */
