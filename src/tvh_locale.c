@@ -180,13 +180,13 @@ static void tvh_gettext_default_init(void)
 
   strncpy(dflt, p, sizeof(dflt)-1);
   dflt[sizeof(dflt)-1] = '\0';
-  for (p = dflt; p && *p != '.'; p++);
+  for (p = dflt; *p && *p != '.'; p++);
   if (*p == '.') *p = '\0';
 
   if ((lng_default = lng_get_locale(dflt)) != NULL)
     return;
 
-  for (p = dflt; p && *p != '_'; p++);
+  for (p = dflt; *p && *p != '_'; p++);
   if (*p == '_') *p = '\0';
 
   if ((lng_default = lng_get_locale(dflt)) != NULL)
