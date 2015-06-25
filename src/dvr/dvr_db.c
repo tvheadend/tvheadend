@@ -941,9 +941,10 @@ dvr_timer_expire(void *aux)
 }
 
 static dvr_entry_t *_dvr_entry_update
-  ( dvr_entry_t *de, epg_broadcast_t *e, const char *title, const char *subtitle,
-    const char *desc, const char *lang, time_t start, time_t stop,
-    time_t start_extra, time_t stop_extra, dvr_prio_t pri, int retention )
+  ( dvr_entry_t *de, epg_broadcast_t *e, channel_t *ch, const char *title,
+    const char *subtitle, const char *desc, const char *lang, time_t start,
+    time_t stop, time_t start_extra, time_t stop_extra, dvr_prio_t pri,
+    int retention )
 {
   char buf[40];
   int save = 0, updated = 0;
@@ -964,6 +965,12 @@ static dvr_entry_t *_dvr_entry_update
       save = 1;
     }
     goto dosave;
+  }
+
+  /* Channel */
+  if (ch && (ch != de->de_channel)) {
+    de->de_channel = ch;
+    save = 1;
   }
 
   /* Start/Stop */
@@ -1086,14 +1093,14 @@ dosave:
  */
 dvr_entry_t * 
 dvr_entry_update
-  ( dvr_entry_t *de,
+  ( dvr_entry_t *de, channel_t *ch,
     const char *title, const char *subtitle,
     const char *desc, const char *lang,
     time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention )
 {
-  return _dvr_entry_update(de, NULL, title, subtitle, desc, lang,
+  return _dvr_entry_update(de, NULL, ch, title, subtitle, desc, lang,
                            start, stop, start_extra, stop_extra,
                            pri, retention);
 }
@@ -1142,7 +1149,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                    channel_get_name(e->channel),
                    e->start, e->stop);
           dvr_entry_assign_broadcast(de, e);
-          _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
+          _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
           return;
         }
       }
@@ -1156,7 +1163,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
   dvr_entry_t *de;
   de = dvr_entry_find_by_event(e);
   if (de)
-    _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
+    _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
   else {
     LIST_FOREACH(de, &dvrentries, de_global_link) {
       if (de->de_sched_state != DVR_SCHEDULED) continue;
@@ -1171,7 +1178,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
                  channel_get_name(e->channel),
                  e->start, e->stop);
         dvr_entry_assign_broadcast(de, e);
-        _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
+        _dvr_entry_update(de, e, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0);
         break;
       }
     }

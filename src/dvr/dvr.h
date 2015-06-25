@@ -447,7 +447,7 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
                        const char *comment );
 
 dvr_entry_t *
-dvr_entry_update( dvr_entry_t *de,
+dvr_entry_update( dvr_entry_t *de, channel_t *ch,
                   const char *title, const char *subtitle,
                   const char *desc, const char *lang,
                   time_t start, time_t stop,
