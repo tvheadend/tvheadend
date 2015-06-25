@@ -11,8 +11,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-24 23:00+0200\n"
-"PO-Revision-Date: 2015-06-24 21:00+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-06-24 22:59+0000\n"
+"Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -599,7 +599,7 @@ msgstr "Discover SAT>IP servers"
 
 #: src/webui/static/app/tvheadend.js:603
 msgid "Disk space:"
-msgstr ""
+msgstr "Disc space:"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -822,7 +822,7 @@ msgstr "Force new scan (all muxes) for selected networks"
 
 #: src/webui/static/app/tvheadend.js:606
 msgid "Free:"
-msgstr ""
+msgstr "Free:"
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -842,7 +842,7 @@ msgstr "Fulltext"
 
 #: src/webui/static/app/tvheadend.js:596
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #: src/webui/static/app/config.js:372
 msgid "General"
@@ -957,7 +957,7 @@ msgstr "June"
 
 #: src/webui/static/app/tvheadend.js:600
 msgid "KB"
-msgstr ""
+msgstr "KB"
 
 #: src/webui/static/app/config.js:113
 msgid "Language Settings"
@@ -993,7 +993,7 @@ msgstr "Look for new SAT>IP servers"
 
 #: src/webui/static/app/tvheadend.js:598
 msgid "MB"
-msgstr ""
+msgstr "MB"
 
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/mpegts.js:256
 msgid "Map All"
@@ -1769,7 +1769,7 @@ msgstr "Today"
 
 #: src/webui/static/app/tvheadend.js:606
 msgid "Total:"
-msgstr ""
+msgstr "Total:"
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Trace subsystems"
@@ -1801,7 +1801,7 @@ msgstr "Tuesday"
 
 #: src/webui/static/app/epggrab.js:300
 msgid "Tune over-the-air EPG muxes to grab new events now"
-msgstr "Tune over-the-air EPG muxes to grab new events now"
+msgstr "Tune to the over-the-air EPG muxes to grab new events now"
 
 #: src/webui/static/app/tvheadend.js:633
 msgid "Tvheadend Web-Panel"
