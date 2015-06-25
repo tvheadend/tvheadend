@@ -476,7 +476,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         if (!this.loginTpl) {
             var tt = new Ext.Template(
                 '<li class="x-tab-login" id="{id}">',
-                '<span class="x-tab-strip-login {iconCls}">{text}</span></li>'
+                '<span class="x-tab-strip-login {iconCls} x-tab-strip-text">{text}</span></li>'
             );
             tt.disableFormats = true;
             tt.compile();
@@ -491,7 +491,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         if (!this.loginCmdTpl) {
             var tt = new Ext.Template(
                 '<li class="x-tab-login" id="{id}"><a href="#">',
-                '<span class="x-tab-strip-login-cmd"></span></a></li>'
+                '<span class="x-tab-strip-login-cmd x-tab-strip-text"></span></a></li>'
             );
             tt.disableFormats = true;
             tt.compile();
