@@ -65,7 +65,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 21
+#define HTSP_PROTO_VERSION 22
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -1581,11 +1581,12 @@ static htsmsg_t *
 htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  uint32_t dvrEntryId;
+  uint32_t dvrEntryId, u32;
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra, priority, retention;
   const char *title, *subtitle, *desc, *lang;
-    
+  channel_t *channel = NULL;
+
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
     return htsp_error("Missing argument 'id'");
   
@@ -1595,9 +1596,14 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(dvr_entry_verify(de, htsp->htsp_granted_access, 1))
     return htsp_error("User does not have access");
 
+  if(!htsmsg_get_u32(in, "channelId", &u32))
+    channel = channel_find_by_id(u32);
+  if (!channel)
+    channel = de->de_channel;
+
   /* Check access */
-  if (!htsp_user_access_channel(htsp, de->de_channel))
-    return htsp_error("User does not have access");
+  if (!htsp_user_access_channel(htsp, channel))
+    return htsp_error("User does not have access to channel");
 
   start       = htsmsg_get_s64_or_default(in, "start",      0);
   stop        = htsmsg_get_s64_or_default(in, "stop",       0);
@@ -1610,7 +1616,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  de = dvr_entry_update(de, title, subtitle, desc, lang, start, stop,
+  de = dvr_entry_update(de, channel, title, subtitle, desc, lang, start, stop,
                         start_extra, stop_extra, priority, retention);
 
   //create response
