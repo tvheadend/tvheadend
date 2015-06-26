@@ -10,9 +10,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-24 23:00+0200\n"
-"PO-Revision-Date: 2015-06-23 12:06+0000\n"
-"Last-Translator: Mark Clarkstone\n"
+"POT-Creation-Date: 2015-06-26 22:13+0200\n"
+"PO-Revision-Date: 2015-06-26 20:13+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -39,14 +39,14 @@ msgstr "# Mapped Channels"
 msgid "# Muxes"
 msgstr "# Muxes"
 
-#: src/bouquet.c:884
-msgid "# Seen Services"
-msgstr "# Seen Services"
-
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
 #: src/input/mpegts/mpegts_mux.c:579
 msgid "# Services"
 msgstr "# Services"
+
+#: src/bouquet.c:884
+msgid "# Services Seen"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
@@ -85,8 +85,8 @@ msgid "2"
 msgstr "2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
-msgid "2-port Switch (Universal LNB)"
-msgstr "2-port Switch (Universal LNB)"
+msgid "2-Port Switch (Universal LNB)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "3"
@@ -97,8 +97,8 @@ msgid "4"
 msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
-msgid "4-port Switch (Universal LNB)"
-msgstr "4-port Switch (Universal LNB)"
+msgid "4-Port Switch (Universal LNB)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "5"
@@ -201,8 +201,8 @@ msgid "Action"
 msgstr "Action"
 
 #: src/streaming.c:428
-msgid "Adapter in use by other subscription"
-msgstr "Adapter in use by other subscription"
+msgid "Adapter in use by another subscription"
+msgstr ""
 
 #: src/main.c:703
 msgid "Add file and line numbers to debug"
@@ -225,8 +225,8 @@ msgid "Advanced Streaming"
 msgstr "Advanced Streaming"
 
 #: src/access.c:1252
-msgid "All (Streaming + DVR)"
-msgstr "All (Streaming + DVR)"
+msgid "All (Streaming plus DVR)"
+msgstr ""
 
 #: src/access.c:1355
 msgid "All DVR"
@@ -236,23 +236,19 @@ msgstr "All DVR"
 msgid "All DVR (rw)"
 msgstr "All DVR (rw)"
 
-#: src/dvr/dvr_autorec.c:735
-msgid "All days"
-msgstr "Every day"
-
 #: src/webui/extjs.c:241
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
 msgstr "All proceeds are used to support server infrastructure and buy test equipment."
 
-#: src/main.c:647
-msgid "Alternate config path"
-msgstr "Alternate config path"
-
 #: src/main.c:652
-msgid "Alternate pid path"
-msgstr "Alternate pid path"
+msgid "Alternate PID path"
+msgstr ""
+
+#: src/main.c:647
+msgid "Alternate configuration path"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
 msgid "Altitude (meters)"
@@ -482,12 +478,12 @@ msgid "Conditional Access Client"
 msgstr "Conditional Access Client"
 
 #: src/input/mpegts/satip/satip.c:366
-msgid "Config ID"
-msgstr "Config ID"
+msgid "Configuration ID"
+msgstr ""
 
 #: src/dvr/dvr_config.c:773
-msgid "Config Name"
-msgstr "Config Name"
+msgid "Configuration Name"
+msgstr ""
 
 #: src/access.c:1396
 msgid "Connection Limit Type"
@@ -577,6 +573,10 @@ msgstr "DVB-S Simple"
 msgid "DVB-S Toneburst"
 msgstr "DVB-S Toneburst"
 
+#: src/input/mpegts/mpegts_mux_dvb.c:210
+msgid "DVB-T"
+msgstr ""
+
 #: src/input/mpegts/mpegts_network_dvb.c:201
 msgid "DVB-T Network"
 msgstr "DVB-T Network"
@@ -584,10 +584,6 @@ msgstr "DVB-T Network"
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
 msgstr "DVBC_ANNEX_AC"
-
-#: src/input/mpegts/mpegts_mux_dvb.c:210
-msgid "DVBT"
-msgstr "DVBT"
 
 #: src/access.c:1254
 msgid "DVR"
@@ -601,10 +597,6 @@ msgstr "DVR Auto-Record Entry"
 msgid "DVR Behavior"
 msgstr "DVR Behaviour"
 
-#: src/access.c:1375
-msgid "DVR Config Profiles"
-msgstr "DVR Config Profiles"
-
 #: src/dvr/dvr_db.c:2149 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
 msgstr "DVR Configuration"
@@ -612,6 +604,10 @@ msgstr "DVR Configuration"
 #: src/dvr/dvr_config.c:723
 msgid "DVR Configuration Profile"
 msgstr "DVR Configuration Profile"
+
+#: src/access.c:1375
+msgid "DVR Configuration Profiles"
+msgstr ""
 
 #: src/dvr/dvr_db.c:1988
 msgid "DVR Entry"
@@ -656,6 +652,10 @@ msgstr "DVR Time-Record Entry"
 #: src/dvr/dvr_db.c:2201
 msgid "Data Errors"
 msgstr "Data Errors"
+
+#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
+msgid "Days of Week"
+msgstr ""
 
 #: src/main.c:694
 msgid "Debug Options"
@@ -716,12 +716,12 @@ msgid "Disable all access control checks"
 msgstr "Disable all access control checks"
 
 #: src/input/mpegts/satip/satip.c:275
-msgid "Disable device-/firmware-specific workarounds"
-msgstr "Disable device/firmware specific workarounds"
+msgid "Disable device/firmware-specific workarounds"
+msgstr ""
 
 #: src/main.c:697
-msgid "Disable syslog (all msgs)"
-msgstr "Disable syslog (all msgs)"
+msgid "Disable syslog (all messages)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1363
 msgid "DiseqC"
@@ -748,8 +748,8 @@ msgid "Don't Reschedule"
 msgstr "Don't Reschedule"
 
 #: src/main.c:648
-msgid "Don't backup config tree at upgrade"
-msgstr "Don't backup config tree at upgrade"
+msgid "Don't backup configuration tree at upgrade"
+msgstr ""
 
 #: src/dvr/dvr_config.c:684
 msgid "Don't keep"
@@ -860,6 +860,10 @@ msgstr "Errors"
 msgid "Even Key"
 msgstr "Even Key"
 
+#: src/dvr/dvr_autorec.c:735
+msgid "Every day"
+msgstr ""
+
 #: src/access.c:1423
 msgid "Exclude Channel Tags"
 msgstr "Exclude Channel Tags"
@@ -921,8 +925,8 @@ msgid "Filename"
 msgstr "Filename"
 
 #: src/dvr/dvr_config.c:864
-msgid "Filename Charset"
-msgstr "Filename Charset"
+msgid "Filename Character Set"
+msgstr ""
 
 #: src/dvr/dvr_config.c:747
 msgid "Filename Options"
@@ -936,13 +940,13 @@ msgstr "Force (auto)"
 msgid "Force CA ID (e.g. 0x2600)"
 msgstr "Force CA ID (e.g. 0x2600)"
 
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:134
+msgid "Force Old Status"
+msgstr ""
+
 #: src/profile.c:330
 msgid "Force Priority"
 msgstr "Force Priority"
-
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:134
-msgid "Force old status"
-msgstr "Force old status"
 
 #: src/input/mpegts/satip/satip.c:254
 msgid "Force pilot for DVB-S2"
@@ -1009,8 +1013,8 @@ msgid "Full Pathname Specification"
 msgstr "Full Pathname Specification"
 
 #: src/dvr/dvr_autorec.c:941
-msgid "Fulltext"
-msgstr "Fulltext"
+msgid "Full-text"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:444
 msgid "GOTOX"
@@ -1090,8 +1094,8 @@ msgid "High Bitrate Mode (CI+ CAMs Only)"
 msgstr "High Bitrate Mode (CI+ CAMs Only)"
 
 #: src/descrambler/cwc.c:1739
-msgid "Hostname / IP"
-msgstr "Hostname / IP"
+msgid "Hostname/IP"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:382
 msgid "IDLE"
@@ -1151,9 +1155,9 @@ msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
-"to your Tvheadend installation until you edit/create\n"
-"access-control from within the Tvheadend UI"
-msgstr "If no user account exists then create one with\nno username and no password. Use with care as\nit will allow world-wide administrative access\nto your Tvheadend installation until you edit/create\naccess control from within the Tvheadend UI"
+"to your Tvheadend installation until you create or edit\n"
+"the access-control from within the Tvheadend web interface."
+msgstr ""
 
 #: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
@@ -1362,8 +1366,8 @@ msgid "Location"
 msgstr "Location"
 
 #: src/input/mpegts/mpegts_service.c:193
-msgid "Lock Pref. CA PID"
-msgstr "Lock Pref. CA PID"
+msgid "Lock Preferred CA PID"
+msgstr ""
 
 #: src/esfilter.c:682 src/esfilter.c:749 src/esfilter.c:816 src/esfilter.c:883
 #: src/esfilter.c:958 src/esfilter.c:1019
@@ -1484,24 +1488,20 @@ msgid "Matroska/av-lib"
 msgstr "Matroska/av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:475
-msgid "Max Bandwidth (Kbps)"
-msgstr "Max Bandwidth (Kbps)"
+msgid "Maximum Bandwidth (Kbps)"
+msgstr ""
 
 #: src/access.c:1417
-msgid "Max Channel Num"
-msgstr "Max Channel Num"
-
-#: src/input/mpegts/iptv/iptv.c:468
-msgid "Max Input Streams"
-msgstr "Max Input Streams"
-
-#: src/input/mpegts/iptv/iptv.c:482
-msgid "Max timeout (seconds)"
-msgstr "Max timeout (seconds)"
+msgid "Maximum Channel Num"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:1017
 msgid "Maximum Duration"
 msgstr "Maximum Duration"
+
+#: src/input/mpegts/iptv/iptv.c:468
+msgid "Maximum Input Streams"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:226
 msgid "Maximum PIDs"
@@ -1514,6 +1514,10 @@ msgstr "Maximum PIDs "
 #: src/input/mpegts/satip/satip.c:233
 msgid "Maximum length of PIDs"
 msgstr "Maximum length of PIDs"
+
+#: src/input/mpegts/iptv/iptv.c:482
+msgid "Maximum timeout (seconds)"
+msgstr ""
 
 #: src/access.c:1410
 msgid "Min Channel Num"
@@ -1708,12 +1712,12 @@ msgid "Not set"
 msgstr "Not set"
 
 #: src/dvr/dvr_config.c:695
-msgid "Not set (none or channel config)"
-msgstr "Not set (none or channel config)"
+msgid "Not set (none or channel configuration)"
+msgstr ""
 
 #: src/dvr/dvr_db.c:1973 src/dvr/dvr_autorec.c:611
-msgid "Not set (use channel or DVR config)"
-msgstr "Not set (use channel or DVR config)"
+msgid "Not set (use channel or DVR configuration)"
+msgstr ""
 
 #: src/channels.c:311
 msgid "Number"
@@ -1780,8 +1784,8 @@ msgid "Only OpenTV Sky UK"
 msgstr "Only OpenTV Sky UK"
 
 #: src/input/mpegts/mpegts_service.c:79
-msgid "Only Pref. CA PID"
-msgstr "Only Pref. CA PID"
+msgid "Only Preferred CA PID"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freesat"
@@ -1803,11 +1807,8 @@ msgstr "Only use specified DVB adapters (comma separated)"
 msgid "OpenTV Channel Number"
 msgstr "OpenTV Channel Number"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:611
-msgid "Orbital Pos."
-msgstr "Orbital Pos."
-
 #: src/input/mpegts/mpegts_network_dvb.c:253
+#: src/input/mpegts/mpegts_mux_dvb.c:611
 msgid "Orbital Position"
 msgstr "Orbital Position"
 
@@ -1915,8 +1916,8 @@ msgid "Pre-defined Muxes"
 msgstr "Pre-defined Muxes"
 
 #: src/input/mpegts/mpegts_service.c:186
-msgid "Pref. CA PID"
-msgstr "Pref. CA PID"
+msgid "Preferred CA PID"
+msgstr ""
 
 #: src/profile.c:357
 msgid "Preferred Service Video Type"
@@ -2152,8 +2153,8 @@ msgid "Satellite Positions"
 msgstr "Satellite Positions"
 
 #: src/input/mpegts/mpegts_network.c:238
-msgid "Scan Q length"
-msgstr "Scan Q length"
+msgid "Scan Queue length"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:563
 msgid "Scan Result"
@@ -2734,10 +2735,6 @@ msgstr "Web Interface"
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
 msgstr "Wed"
-
-#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
-msgid "Week Days"
-msgstr "Week Days"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
