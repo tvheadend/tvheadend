@@ -905,6 +905,14 @@ msgstr "Zignorowane"
 msgid "Image Caching"
 msgstr "Buforowanie obrazów"
 
+#: src/webui/static/app/config.js:328
+msgid "Image cache"
+msgstr "Bufor obrazów"
+
+#: src/webui/static/app/config.js:215
+msgid "Base"
+msgstr "Podstawowe"
+
 #: src/webui/static/app/config.js:417
 msgid "Imagecache save failed"
 msgstr "Nie udany zapis bufora obrazów"
