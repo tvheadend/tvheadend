@@ -676,8 +676,8 @@ msgid "Electronic Program Guide"
 msgstr "Elektroniczny przewodnik po programach"
 
 #: src/webui/static/app/esfilter.js:64 src/webui/static/app/esfilter.js:83
-#: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
-#: src/webui/static/app/esfilter.js:158
+#: src/webui/static/app/esfilter.js:102 src/webui/static/app/esfilter.js:121 
+#:src/webui/static/app/esfilter.js:139 src/webui/static/app/esfilter.js:158
 msgid "Elementary Stream Filter"
 msgstr "Filtr Strumienia Podstawowego"
 
@@ -853,6 +853,10 @@ msgstr "Ogólny Konfig"
 #: src/webui/static/app/config.js:337
 msgid "General Configuration"
 msgstr "Ogólna Konfiguracja"
+
+#: src/webui/static/app/config.js:196
+msgid "General Configuration"
+msgstr "ogólnej konfiguracji"
 
 #: src/webui/static/app/epg.js:1035
 msgid "Genre"
@@ -1603,6 +1607,10 @@ msgstr "Strumień"
 #: src/webui/static/app/esfilter.js:43
 msgid "Stream Profile"
 msgstr "Profil strumienia"
+
+#: src/webui/static/app/esfilter.js:43
+msgid "Stream Profile"
+msgstr "profilu strumienia"
 
 #: src/webui/static/app/esfilter.js:25
 msgid "Stream Profile Name"
