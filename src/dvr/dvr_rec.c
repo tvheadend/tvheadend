@@ -1138,16 +1138,10 @@ dvr_get_disk_space_update(const char *path)
  *
  */
 static void
-dvr_get_disk_space_tcb(void *s, int dearmed)
+dvr_get_disk_space_tcb(void *opaque, int dearmed)
 {
-  dvr_config_t *cfg;
+  const char *path = opaque;
   htsmsg_t *m;
-  char *path;
-
-  pthread_mutex_lock(&global_lock);
-  cfg = dvr_config_find_by_name_default(NULL);
-  path = tvh_strdupa(cfg->dvr_storage);
-  pthread_mutex_unlock(&global_lock);
 
   m = htsmsg_create_map();
   pthread_mutex_lock(&dvr_disk_space_mutex);
@@ -1157,12 +1151,23 @@ dvr_get_disk_space_tcb(void *s, int dearmed)
   pthread_mutex_unlock(&dvr_disk_space_mutex);
 
   notify_by_msg("diskspaceUpdate", m);
+
+  free(opaque);
 }
 
 static void
 dvr_get_disk_space_cb(void *aux)
 {
-  tasklet_arm(&dvr_disk_space_tasklet, dvr_get_disk_space_tcb, NULL);
+  dvr_config_t *cfg;
+  char *path;
+
+  lock_assert(&global_lock);
+
+  cfg = dvr_config_find_by_name_default(NULL);
+  if (cfg->dvr_storage && cfg->dvr_storage[0]) {
+    path = strdup(cfg->dvr_storage);
+    tasklet_arm(&dvr_disk_space_tasklet, dvr_get_disk_space_tcb, path);
+  }
   gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 60);
 }
 
