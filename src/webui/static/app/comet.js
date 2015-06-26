@@ -51,7 +51,7 @@ tvheadend.cometPoller = function() {
             try {
                 tvheadend.comet.fireEvent(m.notificationClass, m);
             } catch (e) {
-                tvheadend.log(_('comet failure') + ' [e=' + e.message + ']');
+                tvheadend.log(_('Comet failure') + ' [e=' + e.message + ']');
             }
         }
         cometRequest.delay(100);

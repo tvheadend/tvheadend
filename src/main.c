@@ -644,17 +644,17 @@ main(int argc, char **argv)
     { 'v', "version",   N_("Show version information"),OPT_BOOL, &opt_version },
 
     {   0, NULL,        N_("Service Configuration"),   OPT_BOOL, NULL         },
-    { 'c', "config",    N_("Alternate config path"),   OPT_STR,  &opt_config  },
-    { 'B', "nobackup",  N_("Don't backup config tree at upgrade"), OPT_BOOL, &opt_nobackup },
+    { 'c', "config",    N_("Alternate configuration path"), OPT_STR,  &opt_config  },
+    { 'B', "nobackup",  N_("Don't backup configuration tree at upgrade"), OPT_BOOL, &opt_nobackup },
     { 'f', "fork",      N_("Fork and run as daemon"),  OPT_BOOL, &opt_fork    },
     { 'u', "user",      N_("Run as user"),             OPT_STR,  &opt_user    },
     { 'g', "group",     N_("Run as group"),            OPT_STR,  &opt_group   },
-    { 'p', "pid",       N_("Alternate pid path"),      OPT_STR,  &opt_pidpath },
+    { 'p', "pid",       N_("Alternate PID path"),      OPT_STR,  &opt_pidpath },
     { 'C', "firstrun",  N_("If no user account exists then create one with\n"
 	                   "no username and no password. Use with care as\n"
 	                   "it will allow world-wide administrative access\n"
-	                   "to your Tvheadend installation until you edit/create\n"
-	                   "access-control from within the Tvheadend UI"),
+	                   "to your Tvheadend installation until you create or edit\n"
+	                   "the access-control from within the Tvheadend web interface."),
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_DBUS_1
     { 'U', "dbus",      N_("Enable DBus"),
@@ -694,7 +694,7 @@ main(int argc, char **argv)
     {   0, NULL,        N_("Debug Options"),           OPT_BOOL, NULL         },
     { 'd', "stderr",    N_("Enable debug on stderr"),  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    N_("Enable debug to syslog"),  OPT_BOOL, &opt_syslog  },
-    { 'S', "nosyslog",  N_("Disable syslog (all msgs)"), OPT_BOOL, &opt_nosyslog },
+    { 'S', "nosyslog",  N_("Disable syslog (all messages)"), OPT_BOOL, &opt_nosyslog },
     { 'l', "logfile",   N_("Enable debug to file"),    OPT_STR,  &opt_logpath },
     {   0, "debug",     N_("Enable debug subsystems"),  OPT_STR,  &opt_log_debug },
 #if ENABLE_TRACE

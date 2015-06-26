@@ -207,7 +207,7 @@ const idclass_t dvb_mux_dvbt_class =
   .ic_caption    = N_("Linux DVB-T Multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery System"), dvbt, delsys, N_("DVBT")),
+      MUX_PROP_STR("delsys", N_("Delivery System"), dvbt, delsys, N_("DVB-T")),
     },
     {
       .type     = PT_U32,
@@ -608,7 +608,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "orbital",
-      .name     = N_("Orbital Pos."),
+      .name     = N_("Orbital Position"),
       .set      = dvb_mux_dvbs_class_orbital_set,
       .get      = dvb_mux_dvbs_class_orbital_get,
       .opts     = PO_ADVANCED | PO_RDONLY

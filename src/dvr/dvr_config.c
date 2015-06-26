@@ -692,7 +692,7 @@ static htsmsg_t *
 dvr_config_class_extra_list(void *o, const char *lang)
 {
   return dvr_entry_class_duration_list(o, 
-           tvh_gettext_lang(lang, N_("Not set (none or channel config)")),
+           tvh_gettext_lang(lang, N_("Not set (none or channel configuration)")),
            4*60, 1, lang);
 }
 
@@ -770,7 +770,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = N_("Config Name"),
+      .name     = N_("Configuration Name"),
       .set      = dvr_config_class_name_set,
       .off      = offsetof(dvr_config_t, dvr_config_name),
       .def.s    = "! New config",
@@ -861,7 +861,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = N_("Filename Charset"),
+      .name     = N_("Filename Character Set"),
       .off      = offsetof(dvr_config_t, dvr_charset),
       .set      = dvr_config_class_charset_set,
       .list     = dvr_config_class_charset_list,

@@ -608,7 +608,7 @@ dvr_autorec_entry_class_time_list_(void *o, const char *lang)
 static htsmsg_t *
 dvr_autorec_entry_class_extra_list(void *o, const char *lang)
 {
-  const char *msg = N_("Not set (use channel or DVR config)");
+  const char *msg = N_("Not set (use channel or DVR configuration)");
   return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 4*60, 1, lang);
 }
 
@@ -732,7 +732,7 @@ dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang)
   size_t l;
   int i;
   if (weekdays == 0x7f)
-    strcpy(buf + 1, tvh_gettext_lang(lang, N_("All days")));
+    strcpy(buf + 1, tvh_gettext_lang(lang, N_("Every day")));
   else if (weekdays == 0)
     strcpy(buf + 1, tvh_gettext_lang(lang, N_("No days")));
   else {
@@ -938,7 +938,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "fulltext",
-      .name     = N_("Fulltext"),
+      .name     = N_("Full-text"),
       .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
     },
     {
@@ -997,7 +997,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .islist   = 1,
       .id       = "weekdays",
-      .name     = N_("Week Days"),
+      .name     = N_("Days of Week"),
       .set      = dvr_autorec_entry_class_weekdays_set,
       .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,

@@ -297,7 +297,7 @@ tvheadend.epggrab = function(panel, index) {
 
     var otaepgButton = new Ext.Button({
         text: _("Trigger OTA EPG Grabber"),
-        tooltip: _('Tune over-the-air EPG muxes to grab new events now'),
+        tooltip: _('Tune to the over-the-air EPG muxes to grab new events now'),
         iconCls: 'find',
         handler: otaepgTrigger
     });

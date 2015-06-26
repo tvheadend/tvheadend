@@ -211,15 +211,13 @@ tvheadend.epgDetails = function(event) {
         buttons.push(new Ext.Button({
             handler: recordEvent,
             iconCls: 'rec',
-            tooltip: _('Record now this program'),
+            tooltip: _('Record this program now'),
             text: _('Record program')
         }));
         buttons.push(new Ext.Button({
             handler: recordSeries,
             iconCls: 'autoRec',
-            tooltip: _('Create an automatic recording entry for this program that will '
-                 + 'record all future programs that match '
-                 + 'the current query.'),
+            tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
             text: event.serieslinkId ? _("Record series") : _("Autorec")
         }));
 
@@ -836,9 +834,7 @@ tvheadend.epg = function() {
     tvheadend.autorecButton = new Ext.Button({
         text: _('Create AutoRec'),
         iconCls: 'autoRec',
-        tooltip: _('Create an automatic recording entry that will '
-                 + 'record all future programs that match '
-                 + 'the current query.'),
+        tooltip: _('Create an automatic recording rule to record all future programs that match the current query.'),
         handler: createAutoRec
     });
 
@@ -858,7 +854,7 @@ tvheadend.epg = function() {
         {
             text: _('Watch TV'),
             iconCls: 'watchTv',
-            tooltip: _('Watch TV online in the window by web'),
+            tooltip: _('Watch live TV in a new browser window.'),
             handler: function() {
                 new tvheadend.VideoPlayer();
             }

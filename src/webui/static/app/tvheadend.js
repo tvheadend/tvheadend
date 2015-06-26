@@ -89,7 +89,7 @@ tvheadend.AjaxConfirm = function(conf) {
 
 tvheadend.loading = function(on) {
     if (on)
-      Ext.getBody().mask(_('Loading... Please, wait...'), 'loading');
+      Ext.getBody().mask(_('Loading, please wait...'), 'loading');
     else
       Ext.getBody().unmask();
 };

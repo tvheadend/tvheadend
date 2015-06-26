@@ -28,7 +28,7 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<img class="x-epg-chicon" src="' + chicon + '">';
 
         if (duplicate)
-            content += '<div class="x-epg-meta"><font color="red"><div class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because is rerun of:') + '</div>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
+            content += '<div class="x-epg-meta"><font color="red"><div class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</div>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
 
         if (title)
           content += '<div class="x-epg-title">' + title + '</div>';
@@ -272,7 +272,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         selected: selected,
         beforeedit: beforeedit,
         help: function() {
-            new tvheadend.help(_('DVR-Upcoming/Current Recordings'), 'dvr_upcoming.html');
+            new tvheadend.help(_('DVR - Upcoming/Current Recordings'), 'dvr_upcoming.html');
         }
     });
 
@@ -352,7 +352,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tbar: [downloadButton],
         selected: selected,
         help: function() {
-            new tvheadend.help(_('DVR-Finished Recordings'), 'dvr_finished.html');
+            new tvheadend.help(_('DVR - Finished Recordings'), 'dvr_finished.html');
         }
     });
 
@@ -433,7 +433,7 @@ tvheadend.dvr_failed = function(panel, index) {
         tbar: [downloadButton],
         selected: selected,
         help: function() {
-            new tvheadend.help(_('DVR-Failed Recordings'), 'dvr_failed.html');
+            new tvheadend.help(_('DVR - Failed Recordings'), 'dvr_failed.html');
         }
     });
 
@@ -474,8 +474,8 @@ tvheadend.autorec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
-        titleS: _('DVR AutoRec Entry'),
-        titleP: _('DVR AutoRec Entries'),
+        titleS: _('DVR Autorec Entry'),
+        titleP: _('DVR Autorec Entries'),
         iconCls: 'autoRec',
         tabIndex: index,
         columns: {
@@ -522,7 +522,7 @@ tvheadend.autorec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR AutoRec'), 'dvr_autorec.html');
+            new tvheadend.help(_('DVR Autorec'), 'dvr_autorec.html');
         }
     });
 
@@ -573,7 +573,7 @@ tvheadend.timerec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR TimeRec'), 'dvr_timerec.html');
+            new tvheadend.help(_('DVR Timerec'), 'dvr_timerec.html');
         }
     });
 

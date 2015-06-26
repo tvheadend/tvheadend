@@ -74,9 +74,9 @@ static htsmsg_t *
 mpegts_service_pref_capid_lock_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Off"),                0 },
-    { N_("On"),                 1 },
-    { N_("Only Pref. CA PID"),  2 },
+    { N_("Off"),                    0 },
+    { N_("On"),                     1 },
+    { N_("Only Preferred CA PID"),  2 },
   };
    return strtab2htsmsg(tab, 1, lang);
 }
@@ -183,14 +183,14 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "prefcapid",
-      .name     = N_("Pref. CA PID"),
+      .name     = N_("Preferred CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
       .id       = "prefcapid_lock",
-      .name     = N_("Lock Pref. CA PID"),
+      .name     = N_("Lock Preferred CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
       .opts     = PO_ADVANCED,
       .list     = mpegts_service_pref_capid_lock_list,

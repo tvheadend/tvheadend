@@ -587,13 +587,13 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
   },
   {
     .type  = "2port",
-    .name  = N_("2-port Switch (Universal LNB)"),
+    .name  = N_("2-Port Switch (Universal LNB)"),
     .idc   = &linuxdvb_satconf_2port_class,
     .ports = 2, 
   },
   {
     .type  = "4port",
-    .name  = N_("4-port Switch (Universal LNB)"),
+    .name  = N_("4-Port Switch (Universal LNB)"),
     .idc   = &linuxdvb_satconf_4port_class,
     .ports = 4, 
   },

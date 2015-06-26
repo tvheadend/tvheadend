@@ -425,7 +425,7 @@ streaming_code2txt(int code)
   case SM_CODE_MUX_NOT_ENABLED:
     return N_("Mux not enabled");
   case SM_CODE_NOT_FREE:
-    return N_("Adapter in use by other subscription");
+    return N_("Adapter in use by another subscription");
   case SM_CODE_TUNING_FAILED:
     return N_("Tuning failed");
   case SM_CODE_SVC_NOT_ENABLED:

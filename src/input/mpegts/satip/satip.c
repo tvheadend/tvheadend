@@ -272,7 +272,7 @@ const idclass_t satip_device_class =
     {
       .type     = PT_BOOL,
       .id       = "disableworkarounds",
-      .name     = N_("Disable device-/firmware-specific workarounds"),
+      .name     = N_("Disable device/firmware-specific workarounds"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_disable_workarounds),
     },
@@ -363,7 +363,7 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "configid",
-      .name     = N_("Config ID"),
+      .name     = N_("Configuration ID"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.configid),
     },

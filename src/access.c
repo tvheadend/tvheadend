@@ -1249,9 +1249,9 @@ access_entry_conn_limit_type_enum ( void *p, const char *lang )
 {
   static struct strtab
   conn_limit_type_tab[] = {
-    { N_("All (Streaming + DVR)"),  ACCESS_CONN_LIMIT_TYPE_ALL },
-    { N_("Streaming"),              ACCESS_CONN_LIMIT_TYPE_STREAMING   },
-    { N_("DVR"),                    ACCESS_CONN_LIMIT_TYPE_DVR },
+    { N_("All (Streaming plus DVR)"),  ACCESS_CONN_LIMIT_TYPE_ALL },
+    { N_("Streaming"),                 ACCESS_CONN_LIMIT_TYPE_STREAMING   },
+    { N_("DVR"),                       ACCESS_CONN_LIMIT_TYPE_DVR },
   };
   return strtab2htsmsg(conn_limit_type_tab, 1, lang);
 }
@@ -1372,7 +1372,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "dvr_config",
-      .name     = N_("DVR Config Profiles"),
+      .name     = N_("DVR Configuration Profiles"),
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
@@ -1414,7 +1414,7 @@ const idclass_t access_entry_class = {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
-      .name     = N_("Max Channel Num"),
+      .name     = N_("Maximum Channel Num"),
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {

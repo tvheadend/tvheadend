@@ -394,7 +394,7 @@ tvheadend.satipsrvconf = function(panel, index) {
     });
     var muxcnf = new Ext.form.NumberField({
          name: 'satip_muxcnf',
-         fieldLabel: _('Muxes Handling (0 = auto, 1 = keep, 2 = reject)')
+         fieldLabel: _('Mux Handling (0 = auto, 1 = keep, 2 = reject)')
     });
     var dvbs = new Ext.form.NumberField({
          name: 'satip_dvbs',

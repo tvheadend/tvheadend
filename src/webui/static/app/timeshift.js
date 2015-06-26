@@ -41,7 +41,7 @@ tvheadend.timeshift = function(panel, index) {
     });
 
     var timeshiftMaxPeriod = new Ext.form.NumberField({
-        fieldLabel: _('Max. Period (mins)'),
+        fieldLabel: _('Maximum Period (mins)'),
         name: 'timeshift_max_period',
         allowBlank: false,
         width: 300
@@ -54,14 +54,14 @@ tvheadend.timeshift = function(panel, index) {
     });
 
     var timeshiftMaxSize = new Ext.form.NumberField({
-        fieldLabel: _('Max. Size (MB)'),
+        fieldLabel: _('Maximum Size (MB)'),
         name: 'timeshift_max_size',
         allowBlank: false,
         width: 300
     });
 
     var timeshiftRamSize = new Ext.form.NumberField({
-        fieldLabel: _('Max. RAM Size (MB)'),
+        fieldLabel: _('Maximum RAM Size (MB)'),
         name: 'timeshift_ram_size',
         allowBlank: false,
         width: 250

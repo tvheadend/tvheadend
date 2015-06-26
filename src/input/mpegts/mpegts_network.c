@@ -235,7 +235,7 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_INT,
       .id       = "scanq_length",
-      .name     = N_("Scan Q length"),
+      .name     = N_("Scan Queue length"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_scanq_length,
     },

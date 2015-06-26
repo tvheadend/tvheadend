@@ -1970,7 +1970,7 @@ dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, c
 static htsmsg_t *
 dvr_entry_class_extra_list(void *o, const char *lang)
 {
-  const char *msg = N_("Not set (use channel or DVR config)");
+  const char *msg = N_("Not set (use channel or DVR configuration)");
   return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 4*60, 1, lang);
 }
                                         

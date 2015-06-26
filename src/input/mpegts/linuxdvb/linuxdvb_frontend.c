@@ -131,7 +131,7 @@ const idclass_t linuxdvb_frontend_class =
     {
       .type     = PT_BOOL,
       .id       = "old_status",
-      .name     = N_("Force old status"),
+      .name     = N_("Force Old Status"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_old_status),
     },
