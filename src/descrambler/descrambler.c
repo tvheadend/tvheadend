@@ -217,8 +217,10 @@ fin:
     uint16_t sid = ((mpegts_service_t *)td->td_service)->s_dvb_service_id;
     uint32_t pos = 0, crc;
     mpegts_mux_t *mm = ((mpegts_service_t *)td->td_service)->s_dvb_mux;
-    if (!mm->mm_active)
+    if (!mm->mm_active) {
+      free(tp);
       return;
+	}
     pthread_mutex_lock(&mm->mm_active->mmi_input->mi_output_lock);
     tp->pos = mm->mm_tsdebug_pos;
     memset(tp->pkt, 0xff, sizeof(tp->pkt));
