@@ -714,8 +714,10 @@ deferred_unlink(const char *filename, const char *rootdir)
     tasklet_arm_alloc(deferred_unlink_cb, s);
   else {
     du = calloc(1, sizeof(*du));
-    if (du == NULL)
+    if (du == NULL) {
+      free(s);
       return -ENOMEM;
+    }
     du->filename = s;
     du->rootdir = strdup(rootdir);
     tasklet_arm_alloc(deferred_unlink_dir_cb, du);
