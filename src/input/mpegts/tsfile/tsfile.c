@@ -47,14 +47,17 @@ tsfile_network_create_service
 {
   pthread_mutex_lock(&tsfile_lock);
   mpegts_service_t *s = mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
-  s->s_config_save = tsfile_service_config_save;
-  pthread_mutex_unlock(&tsfile_lock);
 
   // TODO: HACK: REMOVE ME
   if (s) {
+    s->s_config_save = tsfile_service_config_save;
+    pthread_mutex_unlock(&tsfile_lock);
     channel_t *c = channel_create(NULL, NULL, NULL);
     service_mapper_link((service_t*)s, c, NULL);
   }
+  else
+    pthread_mutex_unlock(&tsfile_lock);
+
   return s;
 }
 

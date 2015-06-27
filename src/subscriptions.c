@@ -549,12 +549,14 @@ subscription_input(void *opauqe, streaming_message_t *sm)
 void
 subscription_unsubscribe(th_subscription_t *s, int quiet)
 {
-  service_t *t = s->ths_service;
+  service_t *t;
   char buf[512];
   size_t l = 0;
 
   if (s == NULL)
     return;
+
+  t = s->ths_service;
 
   lock_assert(&global_lock);
 
