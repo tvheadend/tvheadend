@@ -67,8 +67,9 @@ ntp_shm_init ( void )
     return NULL;
 
   shmptr = shmat(shmid, 0, 0);
-  memset(shmptr, 0, sizeof(ntp_shm_t));
+
   if (shmptr) {
+    memset(shmptr, 0, sizeof(ntp_shm_t));
     shmptr->mode      = 1;
     shmptr->precision = -1;
     shmptr->nsamples  = 1;

@@ -197,12 +197,14 @@ iptv_rtsp_stop
   ( iptv_mux_t *im )
 {
   rtsp_priv_t *rp = im->im_data;
-  int play = rp->play;
+  int play;
 
   lock_assert(&global_lock);
 
   if (rp == NULL)
     return;
+
+  play = rp->play;
   im->im_data = NULL;
   rp->hc->hc_aux = NULL;
   if (play)
