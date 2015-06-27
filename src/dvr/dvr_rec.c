@@ -539,7 +539,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
 
   cfg = de->de_config;
-  if (cfg->dvr_storage == NULL || cfg->dvr_storage == '\0')
+  if (cfg->dvr_storage == NULL || *(cfg->dvr_storage) == '\0')
     return -1;
 
   localtime_r(&de->de_start, &tm);
