@@ -603,6 +603,9 @@ mpegts_service_create0
   if (!conf) {
     if (sid)     s->s_dvb_service_id = sid;
     if (pmt_pid) s->s_pmt_pid        = pmt_pid;
+  } else {
+    if (s->s_dvb_last_seen > dispatch_clock) /* sanity check */
+      s->s_dvb_last_seen = dispatch_clock;
   }
   s->s_dvb_mux        = mm;
   if ((r = dvb_servicetype_lookup(s->s_dvb_servicetype)) != -1)
