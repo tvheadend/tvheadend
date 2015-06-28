@@ -508,6 +508,18 @@
     background-image: url(../icons/cancel_button.png) !important;
 }
 
+.baseconf {
+    background-image: url(../icons/baseconf.png) !important;
+}
+
+.imgcacheconf {
+    background-image: url(../icons/imgcacheconf.png) !important;
+}
+
+.satipsrvconf {
+    background-image: url(../icons/satipsrvconf.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
