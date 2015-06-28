@@ -223,15 +223,23 @@ const char *tvh_gettext_lang(const char *lang, const char *s)
 void tvh_gettext_init(void)
 {
   static const char *tbl[] = {
-    "eng",    "en",
-    "eng_US", "en",
-    "eng_GB", "en_GB",
-    "ger",    "de",
-    "fre",    "fr",
-    "cze",    "cs",
-    "pol",    "pl",
     "bul",    "bg",
+    "cze",    "cs",
+    "ger",    "de",
+    "eng",    "en",
+    "eng_GB", "en_GB",
+    "eng_US", "en",
+    "spa",    "es",
+    "per",    "fa",
+    "fre",    "fr",
+    "pol",    "pl",
+    "heb",    "he",
+    "hrv",    "hr",
+    "hun",    "hu",
+    "ita",    "it",
+    "dut",    "nl",
     "por",    "pt",
+    "srp",    "sr",
     "swe",    "sv",
     NULL, NULL
   };
