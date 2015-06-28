@@ -22,7 +22,7 @@
 
 IAM=$(lastword $(MAKEFILE_LIST))
 WEBDIR ?= src/webui
-LANGUAGES ?= bg cs de en en_GB fr he hr it pl pt sw
+LANGUAGES ?= bg cs de en en_GB es fa fr he hr hu it nl pl pt sv
 ROOTPATH = static
 
 ifneq ($(WEBUI),)
@@ -278,11 +278,11 @@ intl/js/tvheadend.js.pot:
 #intl/js/tvheadend.js.he.po: intl/js/tvheadend.js.pot
 #	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.hr.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.hr.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
-intl/js/tvheadend.js.it.po: intl/js/tvheadend.js.pot
-	$(call merge-po,$@,$<)
+#intl/js/tvheadend.js.it.po: intl/js/tvheadend.js.pot
+#	$(call merge-po,$@,$<)
 
 src/webui/static/intl/tvh.en.js.gz: intl/js/tvheadend.js.en.po
 	$(call go-po,$@,$<)
@@ -318,6 +318,18 @@ src/webui/static/intl/tvh.pt.js.gz: intl/js/tvheadend.js.pt.po
 	$(call go-po,$@,$<)
 
 src/webui/static/intl/tvh.sv.js.gz: intl/js/tvheadend.js.sv.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.es.js.gz: intl/js/tvheadend.js.es.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.fa.js.gz: intl/js/tvheadend.js.fa.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.nl.js.gz: intl/js/tvheadend.js.nl.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh.hu.js.gz: intl/js/tvheadend.js.hu.po
 	$(call go-po,$@,$<)
 
 .PHONY:
