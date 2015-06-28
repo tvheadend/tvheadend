@@ -416,8 +416,10 @@ tasklet_thread ( void *aux )
       pthread_cond_wait(&tasklet_cond, &tasklet_lock);
       continue;
     }
-    if (tsk->tsk_callback)
+    if (tsk->tsk_callback) {
       tsk->tsk_callback(tsk->tsk_opaque, 0);
+      tsk->tsk_callback = NULL;
+    }
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
   }
   pthread_mutex_unlock(&tasklet_lock);
