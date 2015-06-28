@@ -11,8 +11,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-26 22:13+0200\n"
-"PO-Revision-Date: 2015-06-26 20:13+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-06-26 20:56+0000\n"
+"Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/projects/p/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -183,7 +183,7 @@ msgstr "Every day"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
-msgstr ""
+msgstr "Apply any changes made below to the run-time configuration."
 
 #: src/webui/static/app/tvhlog.js:56
 msgid "Apply configuration (run-time only)"
@@ -255,7 +255,7 @@ msgstr "Bandwidth monitor"
 
 #: src/webui/static/app/config.js:215
 msgid "Base"
-msgstr ""
+msgstr "Base"
 
 #: src/webui/static/app/idnode.js:775
 msgid "Basic Settings"
@@ -390,7 +390,7 @@ msgstr "Columns"
 
 #: src/webui/static/app/comet.js:54
 msgid "Comet failure"
-msgstr ""
+msgstr "Comet failure"
 
 #: src/webui/static/app/dvr.js:53
 msgid "Comment"
@@ -433,7 +433,7 @@ msgstr "Create AutoRec"
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
-msgstr ""
+msgstr "Create an automatic recording rule to record all future programmes that match the current query."
 
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
@@ -474,35 +474,35 @@ msgstr "DVR"
 
 #: src/webui/static/app/dvr.js:436
 msgid "DVR - Failed Recordings"
-msgstr ""
+msgstr "DVR - Failed Recordings"
 
 #: src/webui/static/app/dvr.js:355
 msgid "DVR - Finished Recordings"
-msgstr ""
+msgstr "DVR - Finished Recordings"
 
 #: src/webui/static/app/dvr.js:275
 msgid "DVR - Upcoming/Current Recordings"
-msgstr ""
+msgstr "DVR - Upcoming/Current Recordings"
 
 #: src/webui/static/app/dvr.js:525
 msgid "DVR Autorec"
-msgstr ""
+msgstr "DVR Autorec"
 
 #: src/webui/static/app/dvr.js:478
 msgid "DVR Autorec Entries"
-msgstr ""
+msgstr "DVR Autorec Entries"
 
 #: src/webui/static/app/dvr.js:477
 msgid "DVR Autorec Entry"
-msgstr ""
+msgstr "DVR Autorec Entry"
 
 #: src/webui/static/app/dvr.js:576
 msgid "DVR Timerec"
-msgstr ""
+msgstr "DVR Timerec"
 
 #: src/webui/static/app/tvhlog.js:131
 msgid "Data application failed"
-msgstr ""
+msgstr "Data application failed"
 
 #: src/webui/static/app/tvhlog.js:67
 msgid "Debug Configuration"
@@ -756,7 +756,7 @@ msgstr "External Interfaces"
 
 #: src/webui/static/app/config.js:347 src/webui/static/app/config.js:490
 msgid "FAILED"
-msgstr ""
+msgstr "FAILED"
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
@@ -915,7 +915,7 @@ msgstr "Image Caching"
 
 #: src/webui/static/app/config.js:328
 msgid "Image cache"
-msgstr ""
+msgstr "Image cache"
 
 #: src/webui/static/app/config.js:359
 msgid "Imagecache save failed"
@@ -983,7 +983,7 @@ msgstr "Live TV Player"
 
 #: src/webui/static/app/tvheadend.js:92
 msgid "Loading, please wait..."
-msgstr ""
+msgstr "Loading, please wait..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:192 src/webui/static/app/epg.js:618
@@ -1043,15 +1043,15 @@ msgstr "March"
 
 #: src/webui/static/app/timeshift.js:44
 msgid "Maximum Period (mins)"
-msgstr ""
+msgstr "Maximum Period (mins)"
 
 #: src/webui/static/app/timeshift.js:64
 msgid "Maximum RAM Size (MB)"
-msgstr ""
+msgstr "Maximum RAM Size (MB)"
 
 #: src/webui/static/app/timeshift.js:57
 msgid "Maximum Size (MB)"
-msgstr ""
+msgstr "Maximum Size (MB)"
 
 #: src/webui/static/app/extensions.js:120
 msgid "Maximum {0} item(s) allowed"
@@ -1124,7 +1124,7 @@ msgstr "Mux"
 
 #: src/webui/static/app/config.js:397
 msgid "Mux Handling (0 = auto, 1 = keep, 2 = reject)"
-msgstr ""
+msgstr "Mux Handling (0 = auto, 1 = keep, 2 = reject)"
 
 #: src/webui/static/app/mpegts.js:332 src/webui/static/app/mpegts.js:342
 msgid "Mux Scheduler"
@@ -1374,7 +1374,7 @@ msgstr "Record series"
 
 #: src/webui/static/app/epg.js:214
 msgid "Record this program now"
-msgstr ""
+msgstr "Record this programme now"
 
 #: src/webui/static/app/tvheadend.js:446
 msgid "Recording"
@@ -1414,7 +1414,7 @@ msgstr "SAT>IP Server"
 
 #: src/webui/static/app/config.js:502
 msgid "SAT>IP Server configuration save failed"
-msgstr ""
+msgstr "SAT>IP Server configuration save failed"
 
 #: src/webui/static/app/status.js:394
 msgid "SNR"
@@ -1461,7 +1461,7 @@ msgstr "Saving Data..."
 
 #: src/webui/static/app/config.js:357 src/webui/static/app/config.js:500
 msgid "Saving data..."
-msgstr ""
+msgstr "Saving data..."
 
 #: src/webui/static/app/dvr.js:40
 msgid "Scheduled Start Time"
@@ -1726,7 +1726,7 @@ msgstr "There seems to be a problem with the live update feed from Tvheadend. Tr
 
 #: src/webui/static/app/tvhlog.js:58
 msgid "They will be lost when the application next restarts."
-msgstr ""
+msgstr "They will be lost when the application next restarts."
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
@@ -1821,7 +1821,7 @@ msgstr "Tuesday"
 
 #: src/webui/static/app/epggrab.js:300
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
-msgstr ""
+msgstr "Tune to the over-the-air EPG muxes to grab new events now"
 
 #: src/webui/static/app/tvheadend.js:645
 msgid "Tvheadend Web-Panel"
@@ -1910,7 +1910,7 @@ msgstr "Watch TV"
 
 #: src/webui/static/app/epg.js:857
 msgid "Watch live TV in a new browser window."
-msgstr ""
+msgstr "Watch live TV in a new browser window."
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
@@ -1946,7 +1946,7 @@ msgstr "You must select one item in this group"
 
 #: src/webui/static/app/dvr.js:31
 msgid "because it is a rerun of:"
-msgstr ""
+msgstr "because it is a rerun of:"
 
 #: src/webui/static/app/i18n-post.js:213
 msgid "false"

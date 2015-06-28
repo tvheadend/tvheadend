@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-06-26 22:13+0200\n"
-"PO-Revision-Date: 2015-06-26 20:44+0000\n"
+"PO-Revision-Date: 2015-06-26 20:51+0000\n"
 "Last-Translator: PiterEL <piotr.kuchciak@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/projects/p/tvheadend/language/pl/)\n"
 "MIME-Version: 1.0\n"
@@ -2439,12 +2439,12 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1236
 msgid "Switch Type"
-msgstr ""
+msgstr "Typ przełącznika"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:105
 #, c-format
 msgid "Switch: %s"
-msgstr ""
+msgstr "Przełącznik: %s"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:294 src/input/mpegts/mpegts_mux_dvb.c:548
 msgid "Symbol Rate (Sym/s)"
@@ -2452,7 +2452,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:685
 msgid "Sync"
-msgstr ""
+msgstr "Sync"
 
 #: src/dvr/dvr_config.c:686
 msgid "Sync + Don't keep"
@@ -2464,7 +2464,7 @@ msgstr "System"
 
 #: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
-msgstr ""
+msgstr "Tagi pików z metadanymi"
 
 #: src/channels.c:373
 msgid "Tags"
@@ -2577,16 +2577,16 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:448
 msgid "USALS"
-msgstr ""
+msgstr "USALS"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:119
 msgid "USALS Rotor"
-msgstr ""
+msgstr "USALS Rotor"
 
 #: src/input/mpegts/satip/satip.c:296
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:151
 msgid "UUID"
-msgstr ""
+msgstr "UUID"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:142
 msgid "Uncommited First"
@@ -2631,7 +2631,7 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1761
 msgid "Update Card (EMM)"
-msgstr ""
+msgstr "Aktualizuj kartę (EMM)"
 
 #: src/dvr/dvr_config.c:703
 msgid "Update Disabled"
@@ -2644,7 +2644,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:983
 msgid "Use Windows-compatible filenames"
-msgstr ""
+msgstr "Użyj kompatybilności nazw plików Windows"
 
 #: src/main.c:691
 msgid "Use XSPF playlist instead of M3U"
@@ -2700,11 +2700,11 @@ msgstr "WEBM"
 
 #: src/profile.c:1361
 msgid "WEBM/av-lib"
-msgstr ""
+msgstr "WEBM/av-lib"
 
 #: src/profile.c:1357
 msgid "WEBM/built-in"
-msgstr ""
+msgstr "WEBM/built-in"
 
 #: src/profile.c:1880
 msgid "WEBTV profile H264/AAC/MPEG-TS"
