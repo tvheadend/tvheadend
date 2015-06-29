@@ -696,6 +696,32 @@ const char *lang_code_preferred( void )
   return ret;
 }
 
+char *lang_code_user( const char *ucode )
+{
+  const char *codes = config_get_language(), *s;
+  char *ret;
+
+  if (!codes)
+    return ucode ? strdup(ucode) : NULL;
+  if (!ucode)
+    return codes ? strdup(codes) : NULL;
+  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 1);
+  strcpy(ret, ucode);
+  while (codes && *codes) {
+    s = codes;
+    while (*s && *s != ',')
+      s++;
+    if (strncmp(codes, ucode ?: "", s - codes)) {
+      strcat(ret, ",");
+      strncat(ret, codes, s - codes);
+    }
+    if (*s && *s == ',')
+      s++;
+    codes = s;
+  }
+  return ret;
+}
+
 void lang_code_done( void )
 {
   lang_code_free(lang_codes_code2b);

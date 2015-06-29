@@ -127,9 +127,14 @@ static void lng_init(struct lng *l)
 static struct lng *lng_get(const char *tvh_lang)
 {
   struct lng *l, ls;
+  char *s;
 
   if (tvh_lang != NULL && tvh_lang[0] != '\0') {
-    ls.tvh_lang = tvh_lang;
+    s = alloca(strlen(tvh_lang) + 1);
+    ls.tvh_lang = s;
+    for ( ; *tvh_lang && *tvh_lang != ','; s++, tvh_lang++)
+      *s = *tvh_lang;
+    *s = '\0';
     l = RB_FIND(&lngs, &ls, link, lng_cmp);
     if (l) {
       if (!l->msgs_initialized)

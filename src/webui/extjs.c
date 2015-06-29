@@ -410,7 +410,7 @@ extjs_languages(http_connection_t *hc, const char *remain, void *opaque)
     out = htsmsg_create_map();
     array = htsmsg_create_list();
 
-    const lang_code_t **c = lang_code_split2(NULL);
+    const lang_code_t **c = lang_code_split2(hc->hc_access->aa_lang);
     if(c) {
       int i = 0;
       while (c[i]) {

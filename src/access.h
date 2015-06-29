@@ -188,6 +188,12 @@ void access_destroy(access_t *a);
 access_t *access_copy(access_t *src);
 
 /**
+ *
+ */
+char *
+access_get_lang(access_t *a, const char *lang);
+
+/**
  * Verifies that the given user in combination with the source ip
  * complies with the requested mask
  *

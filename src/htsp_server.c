@@ -34,6 +34,7 @@
 #include "descrambler/caid.h"
 #include "notify.h"
 #include "htsmsg_json.h"
+#include "lang_codes.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -2601,6 +2602,9 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
     access_destroy(htsp->htsp_granted_access);
     htsp->htsp_granted_access = rights;
+
+    if (htsp->htsp_language == NULL && rights->aa_lang)
+      htsp->htsp_language = strdup(rights->aa_lang);
 
   } else {
 

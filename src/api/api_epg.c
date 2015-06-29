@@ -24,6 +24,7 @@
 #include "epg.h"
 #include "imagecache.h"
 #include "dvr/dvr.h"
+#include "lang_codes.h"
 
 static htsmsg_t *
 api_epg_get_list ( const char *s )
@@ -280,7 +281,8 @@ api_epg_grid
 {
   int i;
   epg_query_t eq;
-  const char *lang, *str;
+  const char *str;
+  char *lang;
   uint32_t start, limit, end, genre;
   int64_t duration_min, duration_max;
   htsmsg_field_t *f, *f2;
@@ -288,9 +290,7 @@ api_epg_grid
 
   memset(&eq, 0, sizeof(eq));
 
-  lang = htsmsg_get_str(args, "lang");
-  if (lang)
-    eq.lang = strdup(lang);
+  eq.lang = lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   str = htsmsg_get_str(args, "title");
   if (str)
     eq.stitle = strdup(str);
@@ -471,17 +471,19 @@ api_epg_alternative
   uint32_t id, entries = 0;
   htsmsg_t *l = htsmsg_create_list();
   epg_broadcast_t *e;
-  const char *lang = htsmsg_get_str(args, "lang");
+  char *lang;
 
   if (!htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
+  lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   e = epg_broadcast_find_by_id(id);
   if (e && e->episode)
     api_epg_episode_broadcasts(perm, l, lang, e->episode, &entries, e);
   pthread_mutex_unlock(&global_lock);
+  free(lang);
 
   /* Build response */
   *resp = htsmsg_create_map();
@@ -499,13 +501,14 @@ api_epg_related
   htsmsg_t *l = htsmsg_create_list();
   epg_broadcast_t *e;
   epg_episode_t *ep, *ep2;
-  const char *lang = htsmsg_get_str(args, "lang");
+  char *lang;
   
   if (!htsmsg_get_u32(args, "eventId", &id))
     return -EINVAL;
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
+  lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   e = epg_broadcast_find_by_id(id);
   ep = e ? e->episode : NULL;
   if (ep && ep->brand) {
@@ -523,6 +526,7 @@ api_epg_related
     }
   }
   pthread_mutex_unlock(&global_lock);
+  free(lang);
 
   /* Build response */
   *resp = htsmsg_create_map();
@@ -540,7 +544,7 @@ api_epg_load
   htsmsg_t *l = htsmsg_create_list(), *ids = NULL, *m;
   htsmsg_field_t *f;
   epg_broadcast_t *e;
-  const char *lang = htsmsg_get_str(args, "lang");
+  char *lang;
 
   if (!(f = htsmsg_field_find(args, "eventId")))
     return -EINVAL;
@@ -550,6 +554,7 @@ api_epg_load
 
   /* Main Job */
   pthread_mutex_lock(&global_lock);
+  lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   if (ids) {
     HTSMSG_FOREACH(f, ids) {
       if (htsmsg_field_get_u32(f, &id)) continue;
@@ -567,6 +572,7 @@ api_epg_load
     }
   }
   pthread_mutex_unlock(&global_lock);
+  free(lang);
 
   /* Build response */
   *resp = htsmsg_create_map();

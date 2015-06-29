@@ -44,8 +44,6 @@ static void dvr_entry_destroy(dvr_entry_t *de, int delconf);
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
-static int dvr_entry_class_disp_title_set(void *o, const void *v);
-static int dvr_entry_class_disp_subtitle_set(void *o, const void *v);
 
 /*
  *
@@ -477,7 +475,6 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
   dvr_entry_t *de, *de2;
   int64_t start, stop;
   htsmsg_t *m;
-  const char *s;
 
   if (conf) {
     if (htsmsg_get_s64(conf, "start", &start))
@@ -509,16 +506,6 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf)
   m = htsmsg_get_list(conf, "files");
   if (m)
     de->de_files = htsmsg_copy(m);
-
-  /* special case, because PO_NOSAVE, load ignores it */
-  if (de->de_title == NULL &&
-      (s = htsmsg_get_str(conf, "disp_title")) != NULL)
-    dvr_entry_class_disp_title_set(de, s);
-
-  /* special case, because PO_NOSAVE, load ignores it */
-  if (de->de_subtitle == NULL &&
-          (s = htsmsg_get_str(conf, "disp_subtitle")) != NULL)
-    dvr_entry_class_disp_subtitle_set(de, s);
 
   de->de_refcnt = 1;
 
@@ -1746,54 +1733,19 @@ dvr_entry_class_broadcast_get(void *o)
   return &id;
 }
 
-static int
-dvr_entry_class_disp_title_set(void *o, const void *v)
-{
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  const char *s = "";
-  if (v == NULL || *((char *)v) == '\0')
-    v = "UnknownTitle";
-  if (de->de_title)
-    s = lang_str_get(de->de_title, NULL);
-  if (strcmp(s, v)) {
-    lang_str_destroy(de->de_title);
-    de->de_title = lang_str_create();
-    lang_str_add(de->de_title, v, NULL, 0);
-    return 1;
-  }
-  return 0;
-}
-
 static const void *
 dvr_entry_class_disp_title_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   static const char *s;
+  const char *lang = de->de_id.in_access ? de->de_id.in_access->aa_lang : NULL;
   s = "";
   if (de->de_title) {
-    s = lang_str_get(de->de_title, NULL);
+    s = lang_str_get(de->de_title, lang);
     if (s == NULL)
       s = "";
   }
   return &s;
-}
-
-static int
-dvr_entry_class_disp_subtitle_set(void *o, const void *v)
-{
-  dvr_entry_t *de = (dvr_entry_t *)o;
-  const char *s = "";
-  if (v == NULL || *((char *)v) == '\0')
-    v = "UnknownSubtitle";
-  if (de->de_subtitle)
-    s = lang_str_get(de->de_subtitle, NULL);
-  if (strcmp(s, v)) {
-    lang_str_destroy(de->de_subtitle);
-    de->de_subtitle = lang_str_create();
-    lang_str_add(de->de_subtitle, v, NULL, 0);
-    return 1;
-  }
-  return 0;
 }
 
 static const void *
@@ -1801,9 +1753,10 @@ dvr_entry_class_disp_subtitle_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   static const char *s;
+  const char *lang = de->de_id.in_access ? de->de_id.in_access->aa_lang : NULL;
   s = "";
   if (de->de_subtitle) {
-    s = lang_str_get(de->de_subtitle, NULL);
+    s = lang_str_get(de->de_subtitle, lang);
     if (s == NULL)
       s = "";
   }
@@ -1815,9 +1768,10 @@ dvr_entry_class_disp_description_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   static const char *s;
+  const char *lang = de->de_id.in_access ? de->de_id.in_access->aa_lang : NULL;
   s = "";
   if (de->de_desc) {
-    s = lang_str_get(de->de_desc, NULL);
+    s = lang_str_get(de->de_desc, lang);
     if (s == NULL)
       s = "";
   }
@@ -2084,7 +2038,6 @@ const idclass_t dvr_entry_class = {
       .id       = "disp_title",
       .name     = N_("Title"),
       .get      = dvr_entry_class_disp_title_get,
-      .set      = dvr_entry_class_disp_title_set,
       .opts     = PO_NOSAVE,
     },
     {
@@ -2099,7 +2052,6 @@ const idclass_t dvr_entry_class = {
       .id       = "disp_subtitle",
       .name     = N_("Subtitle"),
       .get      = dvr_entry_class_disp_subtitle_get,
-      .set      = dvr_entry_class_disp_subtitle_set,
       .opts     = PO_NOSAVE,
     },
     {

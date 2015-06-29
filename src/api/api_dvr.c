@@ -132,7 +132,8 @@ api_dvr_entry_create
 {
   dvr_entry_t *de;
   dvr_config_t *cfg;
-  htsmsg_t *conf;
+  htsmsg_t *conf, *m;
+  char *s, *lang;
   const char *s1;
   int res = EPERM;
 
@@ -147,10 +148,31 @@ api_dvr_entry_create
     htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
     htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
+    lang = access_get_lang(perm, htsmsg_get_str(conf, "lang"));
+    if (lang) {
+      for (s = lang; *s && *s != ','; s++);
+      *s = '\0';
+    }
+
+    s1 = htsmsg_get_str(conf, "disp_title");
+    if (s1 && !htsmsg_get_map(conf, "title")) {
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, lang, s1);
+      htsmsg_add_msg(conf, "title", m);
+    }
+
+    s1 = htsmsg_get_str(conf, "disp_subtitle");
+    if (s1 && !htsmsg_get_map(conf, "subtitle")) {
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, lang, s1);
+      htsmsg_add_msg(conf, "subtitle", m);
+    }
+
     if ((de = dvr_entry_create(NULL, conf)))
       dvr_entry_save(de);
 
     res = 0;
+    free(lang);
   }
   pthread_mutex_unlock(&global_lock);
 

@@ -39,6 +39,7 @@
 #include "channels.h"
 #include "dvr/dvr.h"
 #include "tcp.h"
+#include "lang_codes.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
@@ -223,6 +224,21 @@ access_copy(access_t *src)
   if (src->aa_chtags)
     dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
   return dst;
+}
+
+/**
+ *
+ */
+char *
+access_get_lang(access_t *a, const char *lang)
+{
+  if (lang == NULL) {
+    if (a->aa_lang == NULL)
+      return NULL;
+    return strdup(a->aa_lang);
+  } else {
+    return lang_code_user(lang);
+  }
 }
 
 /**
@@ -531,7 +547,7 @@ access_update(access_t *a, access_entry_t *ae)
   }
 
   if (!a->aa_lang && ae->ae_lang)
-    a->aa_lang = strdup(ae->ae_lang);
+    a->aa_lang = lang_code_user(ae->ae_lang);
 
   a->aa_rights |= ae->ae_rights;
 }
