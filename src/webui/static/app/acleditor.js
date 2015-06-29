@@ -13,7 +13,7 @@ tvheadend.acleditor = function(panel, index)
 	       'channel_tag_exclude,channel_tag,comment';
 
     var list2 = 'enabled,username,password,prefix,' +
-                'lang,webui,admin,' +
+                'lang,webui,langui,admin,' +
                 'streaming,adv_streaming,htsp_streaming,' +
                 'profile,conn_limit_type,conn_limit,' +
                 'dvr,htsp_dvr,all_dvr,all_rw_dvr,' +

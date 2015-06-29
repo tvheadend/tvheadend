@@ -209,6 +209,8 @@ access_copy(access_t *src)
     dst->aa_representative = strdup(src->aa_representative);
   if (src->aa_lang)
     dst->aa_lang = strdup(src->aa_lang);
+  if (src->aa_lang_ui)
+    dst->aa_lang_ui = strdup(src->aa_lang_ui);
   if (src->aa_profiles)
     dst->aa_profiles = htsmsg_copy(src->aa_profiles);
   if (src->aa_dvrcfgs)
@@ -252,6 +254,7 @@ access_destroy(access_t *a)
   free(a->aa_username);
   free(a->aa_representative);
   free(a->aa_lang);
+  free(a->aa_lang_ui);
   htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
@@ -546,8 +549,11 @@ access_update(access_t *a, access_entry_t *ae)
     }
   }
 
-  if (!a->aa_lang && ae->ae_lang)
+  if (!a->aa_lang && ae->ae_lang && ae->ae_lang[0])
     a->aa_lang = lang_code_user(ae->ae_lang);
+
+  if (!a->aa_lang_ui && ae->ae_lang_ui && ae->ae_lang_ui[0])
+    a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
 
   a->aa_rights |= ae->ae_rights;
 }
@@ -1009,6 +1015,7 @@ access_entry_destroy(access_entry_t *ae)
   free(ae->ae_username);
   free(ae->ae_comment);
   free(ae->ae_lang);
+  free(ae->ae_lang_ui);
   free(ae);
 }
 
@@ -1324,6 +1331,14 @@ const idclass_t access_entry_class = {
       .name     = N_("Language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "langui",
+      .name     = N_("WWW Language"),
+      .list     = language_get_list,
+      .off      = offsetof(access_entry_t, ae_lang_ui),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,

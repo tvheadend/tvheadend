@@ -1434,7 +1434,8 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
 
   if (nc == 1) {
     if (!strcmp(components[0], "locale.js")) {
-      lang = tvh_gettext_get_lang(hc->hc_access->aa_lang);
+      lang = hc->hc_access->aa_lang_ui ?: hc->hc_access->aa_lang;
+      lang = tvh_gettext_get_lang(lang);
       if (lang) {
         snprintf(buf, sizeof(buf), "src/webui/static/intl/tvh.%s.js.gz", lang);
         if (!http_file_test(buf)) {
@@ -1452,7 +1453,8 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
 
   if (nc >= 2) {
     if (!strcmp(components[0], "docs")) {
-      lang = tvh_gettext_get_lang(hc->hc_access->aa_lang);
+      lang = hc->hc_access->aa_lang_ui ?: hc->hc_access->aa_lang;
+      lang = tvh_gettext_get_lang(lang);
       snprintf(buf, sizeof(buf), "docs/html/%s/%s%s%s", lang, components[1],
                                  nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
       if (http_file_test(buf)) lang = "en";

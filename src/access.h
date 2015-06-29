@@ -76,6 +76,7 @@ typedef struct access_entry {
   char *ae_username;
   char *ae_comment;
   char *ae_lang;
+  char *ae_lang_ui;
 
   int ae_index;
   int ae_enabled;
@@ -117,6 +118,7 @@ typedef struct access {
   char     *aa_username;
   char     *aa_representative;
   char     *aa_lang;
+  char     *aa_lang_ui;
   uint32_t  aa_rights;
   htsmsg_t *aa_profiles;
   htsmsg_t *aa_dvrcfgs;
