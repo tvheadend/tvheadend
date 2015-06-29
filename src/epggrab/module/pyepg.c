@@ -64,7 +64,7 @@ static epg_genre_list_t
   HTSMSG_FOREACH(f, tags) {
     if (!strcmp(f->hmf_name, "genre") && (e = htsmsg_get_map_by_field(f))) {
       if (!egl) { egl = calloc(1, sizeof(epg_genre_list_t)); printf("alloc %p\n", egl); }
-      epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"));
+      epg_genre_list_add_by_str(egl, htsmsg_get_str(e, "cdata"), NULL);
     }
   }
   return egl;

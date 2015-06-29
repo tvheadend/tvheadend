@@ -70,7 +70,8 @@ struct epg_genre
 /* Accessors */
 uint8_t epg_genre_get_eit ( const epg_genre_t *genre );
 size_t  epg_genre_get_str ( const epg_genre_t *genre, int major_only,
-                            int major_prefix, char *buf, size_t len );
+                            int major_prefix, char *buf, size_t len,
+                            const char *lang );
 
 /* Delete */
 void epg_genre_list_destroy   ( epg_genre_list_t *list );
@@ -78,14 +79,14 @@ void epg_genre_list_destroy   ( epg_genre_list_t *list );
 /* Add to list */
 int epg_genre_list_add        ( epg_genre_list_t *list, epg_genre_t *genre );
 int epg_genre_list_add_by_eit ( epg_genre_list_t *list, uint8_t eit );
-int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str );
+int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str, const char *lang );
 
 /* Search */
 int epg_genre_list_contains
   ( epg_genre_list_t *list, epg_genre_t *genre, int partial );
 
 /* List all available genres */
-htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix );
+htsmsg_t *epg_genres_list_all ( int major_only, int major_prefix, const char *lang );
 
 /* ************************************************************************
  * Generic Object

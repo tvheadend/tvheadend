@@ -721,7 +721,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   } else if (ee) {
     eg = LIST_FIRST(&ee->genre);
   }
-  if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100))
+  if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100, NULL))
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
 
   if(ch)
