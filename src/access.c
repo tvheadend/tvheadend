@@ -1335,7 +1335,7 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_STR,
       .id       = "langui",
-      .name     = N_("WWW Language"),
+      .name     = N_("Web Interface Language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
       .opts     = PO_ADVANCED,
