@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-29 15:59+0200\n"
+"POT-Creation-Date: 2015-06-30 17:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -188,7 +188,7 @@ msgstr ""
 msgid "Aborted by user"
 msgstr ""
 
-#: src/access.c:1286
+#: src/access.c:1293
 msgid "Access"
 msgstr ""
 
@@ -209,7 +209,7 @@ msgstr ""
 msgid "Add the thread ID to debug"
 msgstr ""
 
-#: src/access.c:1406
+#: src/access.c:1421
 msgid "Admin"
 msgstr ""
 
@@ -222,7 +222,7 @@ msgstr ""
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
 msgstr ""
 
-#: src/access.c:1337
+#: src/access.c:1352
 msgid "Advanced Streaming"
 msgstr ""
 
@@ -234,15 +234,15 @@ msgstr ""
 msgid "Advertisement / Shopping"
 msgstr ""
 
-#: src/access.c:1268
+#: src/access.c:1275
 msgid "All (Streaming plus DVR)"
 msgstr ""
 
-#: src/access.c:1371
+#: src/access.c:1386
 msgid "All DVR"
 msgstr ""
 
-#: src/access.c:1377
+#: src/access.c:1392
 msgid "All DVR (rw)"
 msgstr ""
 
@@ -455,7 +455,7 @@ msgstr ""
 msgid "Channel Tag Reference"
 msgstr ""
 
-#: src/access.c:1446
+#: src/access.c:1461
 msgid "Channel Tags"
 msgstr ""
 
@@ -508,7 +508,7 @@ msgstr ""
 msgid "Comedy"
 msgstr ""
 
-#: src/access.c:1455 src/access.c:1693 src/channels.c:1142 src/esfilter.c:688
+#: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
 #: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
 #: src/dvr/dvr_db.c:2247 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
@@ -540,7 +540,7 @@ msgstr ""
 msgid "Configuration Name"
 msgstr ""
 
-#: src/access.c:1412
+#: src/access.c:1427
 msgid "Connection Limit Type"
 msgstr ""
 
@@ -656,7 +656,7 @@ msgstr ""
 msgid "DVBC_ANNEX_AC"
 msgstr ""
 
-#: src/access.c:1270
+#: src/access.c:1277
 msgid "DVR"
 msgstr ""
 
@@ -676,7 +676,7 @@ msgstr ""
 msgid "DVR Configuration Profile"
 msgstr ""
 
-#: src/access.c:1391
+#: src/access.c:1406
 msgid "DVR Configuration Profiles"
 msgstr ""
 
@@ -929,7 +929,7 @@ msgstr ""
 msgid "Enable webUI debug (non-minified JS)"
 msgstr ""
 
-#: src/access.c:1305 src/access.c:1665 src/channels.c:296 src/channels.c:1092
+#: src/access.c:1312 src/access.c:1680 src/channels.c:296 src/channels.c:1092
 #: src/service.c:158 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
 #: src/bouquet.c:802 src/dvr/dvr_autorec.c:916 src/dvr/dvr_timerec.c:557
 #: src/dvr/dvr_config.c:763 src/descrambler/caclient.c:262
@@ -986,7 +986,7 @@ msgstr ""
 msgid "Every day"
 msgstr ""
 
-#: src/access.c:1439
+#: src/access.c:1454
 msgid "Exclude Channel Tags"
 msgstr ""
 
@@ -1034,7 +1034,7 @@ msgstr ""
 msgid "Factual topics"
 msgstr ""
 
-#: src/access.c:1383
+#: src/access.c:1398
 msgid "Failed DVR"
 msgstr ""
 
@@ -1240,7 +1240,7 @@ msgstr ""
 msgid "HDHomeRun DVB-T Frontend"
 msgstr ""
 
-#: src/access.c:1365
+#: src/access.c:1380
 msgid "HTSP DVR"
 msgstr ""
 
@@ -1252,7 +1252,7 @@ msgstr ""
 msgid "HTSP Stream Profile"
 msgstr ""
 
-#: src/access.c:1343
+#: src/access.c:1358
 msgid "HTSP Streaming"
 msgstr ""
 
@@ -1398,7 +1398,7 @@ msgstr ""
 msgid "Include Time In Filename"
 msgstr ""
 
-#: src/access.c:1298 src/esfilter.c:614 src/descrambler/caclient.c:255
+#: src/access.c:1305 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
 msgstr ""
 
@@ -1468,7 +1468,7 @@ msgstr ""
 msgid "LNB Type"
 msgstr ""
 
-#: src/access.c:1324 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
+#: src/access.c:1331 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
 msgstr ""
@@ -1490,7 +1490,7 @@ msgstr ""
 msgid "Leisure hobbies"
 msgstr ""
 
-#: src/access.c:1419
+#: src/access.c:1434
 msgid "Limit Connections"
 msgstr ""
 
@@ -1712,7 +1712,7 @@ msgstr ""
 msgid "Maximum Bandwidth (Kbps)"
 msgstr ""
 
-#: src/access.c:1433
+#: src/access.c:1448
 msgid "Maximum Channel Num"
 msgstr ""
 
@@ -1748,7 +1748,7 @@ msgstr ""
 msgid "Melodrama"
 msgstr ""
 
-#: src/access.c:1426
+#: src/access.c:1441
 msgid "Min Channel Num"
 msgstr ""
 
@@ -1900,7 +1900,7 @@ msgstr ""
 msgid "Network UUID"
 msgstr ""
 
-#: src/access.c:1317
+#: src/access.c:1324
 msgid "Network prefix"
 msgstr ""
 
@@ -2150,15 +2150,15 @@ msgstr ""
 msgid "PLS Mode"
 msgstr ""
 
-#: src/access.c:1677 src/descrambler/cwc.c:1732
+#: src/access.c:1692 src/descrambler/cwc.c:1732
 msgid "Password"
 msgstr ""
 
-#: src/access.c:1685
+#: src/access.c:1700
 msgid "Password2"
 msgstr ""
 
-#: src/access.c:1655
+#: src/access.c:1670
 msgid "Passwords"
 msgstr ""
 
@@ -2792,7 +2792,7 @@ msgstr ""
 msgid "Stream Type"
 msgstr ""
 
-#: src/access.c:1269 src/access.c:1331
+#: src/access.c:1276 src/access.c:1346
 msgid "Streaming"
 msgstr ""
 
@@ -2801,7 +2801,7 @@ msgstr ""
 msgid "Streaming Priority"
 msgstr ""
 
-#: src/access.c:1350
+#: src/access.c:1365
 msgid "Streaming Profiles"
 msgstr ""
 
@@ -3108,7 +3108,7 @@ msgstr ""
 msgid "User limit reached"
 msgstr ""
 
-#: src/access.c:1311 src/access.c:1671 src/descrambler/cwc.c:1726
+#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
 msgid "Username"
 msgstr ""
 
@@ -3128,7 +3128,7 @@ msgstr ""
 msgid "Video CODEC"
 msgstr ""
 
-#: src/access.c:1359
+#: src/access.c:1374
 msgid "Video Recorder"
 msgstr ""
 
@@ -3184,8 +3184,12 @@ msgstr ""
 msgid "Weather report"
 msgstr ""
 
-#: src/access.c:1400
+#: src/access.c:1415
 msgid "Web Interface"
+msgstr ""
+
+#: src/access.c:1338
+msgid "Web Interface Language"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:715
