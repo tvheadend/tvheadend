@@ -302,6 +302,8 @@ char *epggrab_module_grab_spawn ( void *m )
   /* Grab */
   outlen = spawn_and_give_stdout(argv[0], (char **)argv, NULL, &rd, NULL, 1);
 
+  spawn_free_args(argv);
+
   if (outlen < 0)
     goto error;
 
