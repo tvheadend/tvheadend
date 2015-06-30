@@ -2104,8 +2104,11 @@ static const char *_genre_get_name(int a, int b, const char *lang)
   size_t l = 0;
   const char **p = _epg_genre_names[a][b];
   name[0] = '\0';
+  if (p == NULL)
+    return NULL;
   for ( ; *p; p++)
-    tvh_strlcatf(name, sizeof(name), l, "%s%s", l ? " / " : "", lang ? tvh_gettext(*p) : *p);
+    tvh_strlcatf(name, sizeof(name), l, "%s%s", l ? " / " : "",
+                 lang ? tvh_gettext_lang(lang, *p) : *p);
   return name;
 }
 
