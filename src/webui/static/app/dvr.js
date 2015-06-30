@@ -320,8 +320,8 @@ tvheadend.dvr_finished = function(panel, index) {
         iconCls: 'finishedRec',
         tabIndex: index,
         del: true,
-        delquestion: 'Do you really want to delete the selected recordings?<br/><br/>' +
-                     'The associated file will be removed from the storage.',
+        delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
+                     _('The associated file will be removed from the storage.'),
         list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,' +
               'config_name,sched_status,errors,data_errors,url,comment',
@@ -401,8 +401,8 @@ tvheadend.dvr_failed = function(panel, index) {
         iconCls: 'exclamation',
         tabIndex: index,
         del: true,
-        delquestion: 'Do you really want to delete the selected recordings?<br/><br/>' +
-                     'The associated file will be removed from the storage.',
+        delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
+                     _('The associated file will be removed from the storage.'),
         list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,config_name,' +
               'status,sched_status,errors,data_errors,url,comment',
