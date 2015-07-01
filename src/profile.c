@@ -1391,7 +1391,7 @@ profile_class_language_list(void *o, const char *lang)
     htsmsg_t *e = htsmsg_create_map();
     if (!strcmp(lc->code2b, "und")) {
       htsmsg_add_str(e, "key", "");
-      htsmsg_add_str(e, "val", "Use original");
+      htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Use original")));
     } else {
       htsmsg_add_str(e, "key", lc->code2b);
       snprintf(buf, sizeof(buf), "%s (%s)", lc->desc, lc->code2b);
@@ -1417,7 +1417,7 @@ profile_class_check_sct(htsmsg_t *c, int sct)
 }
 
 static htsmsg_t *
-profile_class_codec_list(int (*check)(int sct))
+profile_class_codec_list(int (*check)(int sct), const char *lang)
 {
   htsmsg_t *l = htsmsg_create_list(), *e, *c, *m;
   htsmsg_field_t *f;
@@ -1427,11 +1427,11 @@ profile_class_codec_list(int (*check)(int sct))
 
   e = htsmsg_create_map();
   htsmsg_add_str(e, "key", "");
-  htsmsg_add_str(e, "val", "Do not use");
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Do not use")));
   htsmsg_add_msg(l, NULL, e);
   e = htsmsg_create_map();
   htsmsg_add_str(e, "key", "copy");
-  htsmsg_add_str(e, "val", "Copy codec type");
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("Copy codec type")));
   htsmsg_add_msg(l, NULL, e);
   c = transcoder_get_capabilities(profile_transcode_experimental_codecs);
   HTSMSG_FOREACH(f, c) {
@@ -1466,7 +1466,7 @@ profile_class_vcodec_sct_check(int sct)
 static htsmsg_t *
 profile_class_vcodec_list(void *o, const char *lang)
 {
-  return profile_class_codec_list(profile_class_vcodec_sct_check);
+  return profile_class_codec_list(profile_class_vcodec_sct_check, lang);
 }
 
 static int
@@ -1478,7 +1478,7 @@ profile_class_acodec_sct_check(int sct)
 static htsmsg_t *
 profile_class_acodec_list(void *o, const char *lang)
 {
-  return profile_class_codec_list(profile_class_acodec_sct_check);
+  return profile_class_codec_list(profile_class_acodec_sct_check, lang);
 }
 
 static int
@@ -1490,7 +1490,7 @@ profile_class_scodec_sct_check(int sct)
 static htsmsg_t *
 profile_class_scodec_list(void *o, const char *lang)
 {
-  return profile_class_codec_list(profile_class_scodec_sct_check);
+  return profile_class_codec_list(profile_class_scodec_sct_check, lang);
 }
 
 const idclass_t profile_transcode_class =
