@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-30 17:48+0200\n"
+"POT-Creation-Date: 2015-07-01 15:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -568,6 +568,10 @@ msgstr ""
 msgid "Cooking"
 msgstr ""
 
+#: src/profile.c:1434
+msgid "Copy codec type"
+msgstr ""
+
 #: src/profile.c:1370
 msgid "Copy layout"
 msgstr ""
@@ -826,6 +830,10 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:115
 msgid "DiseqC switch"
+msgstr ""
+
+#: src/profile.c:1430
+msgid "Do not use"
 msgstr ""
 
 #: src/epg.c:1970 src/epg.c:2053
@@ -3086,6 +3094,10 @@ msgstr ""
 
 #: src/main.c:693
 msgid "Use XSPF playlist instead of M3U"
+msgstr ""
+
+#: src/profile.c:1394
+msgid "Use original"
 msgstr ""
 
 #: src/dvr/dvr_db.c:302

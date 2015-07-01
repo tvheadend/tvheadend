@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-26 22:13+0200\n"
-"PO-Revision-Date: 2015-06-26 20:53+0000\n"
+"POT-Creation-Date: 2015-07-01 15:41+0200\n"
+"PO-Revision-Date: 2015-06-30 15:54+0000\n"
 "Last-Translator: Prof Yaffle\n"
 "Language-Team: English (http://www.transifex.com/projects/p/tvheadend/language/en/)\n"
 "MIME-Version: 1.0\n"
@@ -608,6 +608,10 @@ msgstr "Displaying {0} - {1} of {2}"
 #: src/webui/static/app/dvr.js:216
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Do you really want to abort/unschedule the selection?"
+
+#: src/webui/static/app/dvr.js:323 src/webui/static/app/dvr.js:404
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Do you really want to delete the selected recordings?"
 
 #: src/webui/static/app/tvheadend.js:82
 msgid "Do you really want to delete the selection?"
@@ -1683,6 +1687,10 @@ msgstr "Teletext Stream Filter"
 #: src/webui/static/app/esfilter.js:90
 msgid "Teletext Stream Filters"
 msgstr "Teletext Stream Filters"
+
+#: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
+msgid "The associated file will be removed from the storage."
+msgstr "The associated file will be removed from storage."
 
 #: src/webui/static/app/i18n-post.js:182
 msgid "The date in this field must be after {0}"

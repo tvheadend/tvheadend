@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-26 22:13+0200\n"
-"PO-Revision-Date: 2015-06-26 20:38+0000\n"
+"POT-Creation-Date: 2015-07-01 15:41+0200\n"
+"PO-Revision-Date: 2015-06-30 16:06+0000\n"
 "Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
 "Language-Team: German (http://www.transifex.com/projects/p/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
@@ -611,6 +611,10 @@ msgstr "Zeige {0} - {1} von {2}"
 #: src/webui/static/app/dvr.js:216
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Wollen Sie die Auswahl wirklich abbrechen/löschen?"
+
+#: src/webui/static/app/dvr.js:323 src/webui/static/app/dvr.js:404
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Wollen Sie die ausgewählten Aufnahmen wirklich löschen?"
 
 #: src/webui/static/app/tvheadend.js:82
 msgid "Do you really want to delete the selection?"
@@ -1686,6 +1690,10 @@ msgstr "Videotext Streamfilter"
 #: src/webui/static/app/esfilter.js:90
 msgid "Teletext Stream Filters"
 msgstr "Videotext Streamfilter"
+
+#: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
+msgid "The associated file will be removed from the storage."
+msgstr "Die dazugehörige Datei wird von der Festplatte entfernt."
 
 #: src/webui/static/app/i18n-post.js:182
 msgid "The date in this field must be after {0}"

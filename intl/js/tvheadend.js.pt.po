@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-06-26 22:13+0200\n"
-"PO-Revision-Date: 2015-06-27 14:03+0000\n"
+"POT-Creation-Date: 2015-07-01 15:41+0200\n"
+"PO-Revision-Date: 2015-06-30 23:05+0000\n"
 "Last-Translator: Orlando Rocha <ornrocha@gmail.com>\n"
 "Language-Team: Portuguese (http://www.transifex.com/projects/p/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
@@ -456,7 +456,7 @@ msgstr "Actualmente isto irá corresponder (e gravar) aos eventos %d ."
 
 #: src/webui/static/app/tvheadend.js:401
 msgid "DVB Inputs"
-msgstr "Entradas DVB"
+msgstr "Dispositivos DVB"
 
 #: src/webui/static/app/config.js:82
 msgid "DVB Scan Files"
@@ -609,6 +609,10 @@ msgstr "Ver {0} - {1} of {2}"
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Quer mesmo abortar/remover os itens seleccionados?"
 
+#: src/webui/static/app/dvr.js:323 src/webui/static/app/dvr.js:404
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Quer mesmo apagar as gravações seleccionadas"
+
 #: src/webui/static/app/tvheadend.js:82
 msgid "Do you really want to delete the selection?"
 msgstr "Quer apagar o item seleccionado?"
@@ -675,7 +679,7 @@ msgstr "Editar {0}"
 
 #: src/webui/static/app/epg.js:869 src/webui/static/app/epg.js:880
 msgid "Electronic Program Guide"
-msgstr "Grelha da Programação Televisiva"
+msgstr "Programação Televisiva"
 
 #: src/webui/static/app/esfilter.js:64 src/webui/static/app/esfilter.js:83
 #: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
@@ -786,15 +790,15 @@ msgstr "Filtrar Canal..."
 
 #: src/webui/static/app/epg.js:674
 msgid "Filter content type..."
-msgstr "Filtrar o tipo de conteúdo..."
+msgstr "Filtrar por tipo de conteúdo..."
 
 #: src/webui/static/app/epg.js:695
 msgid "Filter duration..."
-msgstr "Filtrar duração..."
+msgstr "Filtrar por duração..."
 
 #: src/webui/static/app/epg.js:650
 msgid "Filter tag..."
-msgstr "Filtrar por etiqueta..."
+msgstr "Filtrar por categoria..."
 
 #: src/webui/static/app/i18n-post.js:248
 msgid "Filters"
@@ -818,7 +822,7 @@ msgstr "Forçar Procura"
 
 #: src/webui/static/app/epggrab.js:259
 msgid "Force initial EPG scan at startup"
-msgstr "Forçar procura  EPG ao iniciar"
+msgstr "Forçar a procura EPG ao iniciar"
 
 #: src/webui/static/app/mpegts.js:34
 msgid "Force new scan (all muxes) for selected networks"
@@ -977,7 +981,7 @@ msgstr "Última Página"
 
 #: src/webui/static/app/tvheadend.js:262
 msgid "Live TV Player"
-msgstr "Leitor de TV ao Vivo"
+msgstr "Reprodutor de TV"
 
 #: src/webui/static/app/tvheadend.js:92
 msgid "Loading, please wait..."
@@ -1308,15 +1312,15 @@ msgstr "Caminho do Picon (ver ajuda)"
 #: src/webui/static/app/dvr.js:423 src/webui/static/app/dvr.js:424
 #: src/webui/static/app/dvr.js:430 src/webui/static/app/tvheadend.js:274
 msgid "Play"
-msgstr "Começar"
+msgstr "Reproduzir"
 
 #: src/webui/static/app/epg.js:158
 msgid "Play program"
-msgstr "Começar programa"
+msgstr "Reproduzir programa"
 
 #: src/webui/static/app/epg.js:157
 msgid "Play this program"
-msgstr "Começar este programa"
+msgstr "Reproduzir este programa"
 
 #: src/webui/static/app/i18n-post.js:156
 msgid "Please Wait..."
@@ -1572,7 +1576,7 @@ msgstr "Iniciar"
 #: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:504
 #: src/webui/static/app/epg.js:505
 msgid "Start Time"
-msgstr "Tempo de Inicialização"
+msgstr "Início"
 
 #: src/webui/static/app/status.js:564
 msgid "Started"
@@ -1684,6 +1688,10 @@ msgstr "Filtro de Transmissão de Teletexto"
 msgid "Teletext Stream Filters"
 msgstr "Filtros de Transmissão de Teletexto"
 
+#: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
+msgid "The associated file will be removed from the storage."
+msgstr "O ficheiro associado vai ser apagado do disco"
+
 #: src/webui/static/app/i18n-post.js:182
 msgid "The date in this field must be after {0}"
 msgstr "A data presente neste campo deve ser posterior a {0} "
@@ -1766,15 +1774,15 @@ msgstr "Actualizar Tempo"
 
 #: src/webui/static/app/timeshift.js:150
 msgid "Timeshift"
-msgstr "Mudança De Horário"
+msgstr "Gravação em tempo real"
 
 #: src/webui/static/app/timeshift.js:113
 msgid "Timeshift Configuration"
-msgstr "Configuração da Mudança De Horário"
+msgstr "Configuração da gravação em tempo real"
 
 #: src/webui/static/app/timeshift.js:132
 msgid "Timeshift Options"
-msgstr "Opções da Mudança De Horário"
+msgstr "Opções da gravação em tempo real"
 
 #: src/webui/static/app/epg.js:474 src/webui/static/app/epg.js:475
 #: src/webui/static/app/epg.js:1028 src/webui/static/app/status.js:96
