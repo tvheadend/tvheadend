@@ -152,6 +152,11 @@ if(Ext.PagingToolbar)
     emptyMsg       : _('No data to display')
   });
 
+if(Ext.ux.grid.livegrid.Toolbar)
+  Ext.apply(Ext.ux.grid.livegrid.Toolbar.prototype, {
+    refreshText    : _("Refresh"),
+  });
+
 if(Ext.form.BasicForm)
     Ext.form.BasicForm.prototype.waitTitle = _("Please Wait...");
 
