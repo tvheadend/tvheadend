@@ -199,7 +199,7 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
   mpegts_input_t *mi = self, *mi2;
   tvh_input_t *ti;
   htsmsg_t *m = htsmsg_create_list();
-  mpegts_input_add_keyval(m, "", "Not Linked");
+  mpegts_input_add_keyval(m, "", tvh_gettext_lang(lang, N_("Not Linked")));
   TVH_INPUT_FOREACH(ti)
     if (idnode_is_instance(&ti->ti_id, &mpegts_input_class)) {
       mi2 = (mpegts_input_t *)ti;
