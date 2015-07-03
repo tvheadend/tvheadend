@@ -1740,19 +1740,56 @@ dvr_entry_class_broadcast_get(void *o)
   return &id;
 }
 
+static int
+dvr_entry_class_disp_title_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *lang = idnode_lang(&de->de_id);
+  const char *s = "";
+  if (v == NULL || *((char *)v) == '\0')
+    v = "UnknownTitle";
+  if (de->de_title)
+    s = lang_str_get(de->de_title, lang);
+  if (strcmp(s, v)) {
+    lang_str_destroy(de->de_title);
+    de->de_title = lang_str_create();
+    lang_str_add(de->de_title, v, lang, 0);
+    return 1;
+  }
+  return 0;
+}
+
 static const void *
 dvr_entry_class_disp_title_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   static const char *s;
-  const char *lang = de->de_id.in_access ? de->de_id.in_access->aa_lang : NULL;
   s = "";
   if (de->de_title) {
-    s = lang_str_get(de->de_title, lang);
+    s = lang_str_get(de->de_title, idnode_lang(o));
     if (s == NULL)
       s = "";
   }
   return &s;
+}
+
+static int
+dvr_entry_class_disp_subtitle_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *lang = idnode_lang(o);
+  const char *s = "";
+  if (v == NULL || *((char *)v) == '\0')
+    v = "UnknownSubtitle";
+  if (de->de_subtitle)
+    s = lang_str_get(de->de_subtitle, lang);
+  if (strcmp(s, v)) {
+    lang_str_destroy(de->de_subtitle);
+    de->de_subtitle = lang_str_create();
+    lang_str_add(de->de_subtitle, v, lang, 0);
+    return 1;
+  }
+  return 0;
 }
 
 static const void *
@@ -1760,10 +1797,9 @@ dvr_entry_class_disp_subtitle_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   static const char *s;
-  const char *lang = de->de_id.in_access ? de->de_id.in_access->aa_lang : NULL;
   s = "";
   if (de->de_subtitle) {
-    s = lang_str_get(de->de_subtitle, lang);
+    s = lang_str_get(de->de_subtitle, idnode_lang(o));
     if (s == NULL)
       s = "";
   }
@@ -1775,10 +1811,9 @@ dvr_entry_class_disp_description_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   static const char *s;
-  const char *lang = de->de_id.in_access ? de->de_id.in_access->aa_lang : NULL;
   s = "";
   if (de->de_desc) {
-    s = lang_str_get(de->de_desc, lang);
+    s = lang_str_get(de->de_desc, idnode_lang(o));
     if (s == NULL)
       s = "";
   }
@@ -2045,6 +2080,7 @@ const idclass_t dvr_entry_class = {
       .id       = "disp_title",
       .name     = N_("Title"),
       .get      = dvr_entry_class_disp_title_get,
+      .set      = dvr_entry_class_disp_title_set,
       .opts     = PO_NOSAVE,
     },
     {
@@ -2059,6 +2095,7 @@ const idclass_t dvr_entry_class = {
       .id       = "disp_subtitle",
       .name     = N_("Subtitle"),
       .get      = dvr_entry_class_disp_subtitle_get,
+      .set      = dvr_entry_class_disp_subtitle_set,
       .opts     = PO_NOSAVE,
     },
     {

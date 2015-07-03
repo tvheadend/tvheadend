@@ -205,6 +205,10 @@ int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 int idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write);
 static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
 
+#define idnode_lang(self) \
+  (((idnode_t *)self)->in_access ? \
+   ((idnode_t *)self)->in_access->aa_lang : NULL)
+
 idnode_list_mapping_t * idnode_list_link
                        ( idnode_t *in1, idnode_list_head_t *in1_list,
                          idnode_t *in2, idnode_list_head_t *in2_list,
