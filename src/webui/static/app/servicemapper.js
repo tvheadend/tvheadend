@@ -105,9 +105,14 @@ tvheadend.service_mapper = function(t, e, store, select)
         fieldLabel: _('Create provider tags'),
         checked: false
     });
+    var nettagCheck = new Ext.form.Checkbox({                                                                                                                                      
+        name: 'network_tags',                                                                                                                                                      
+        fieldLabel: _('Create network tags'),
+        checked: false
+    });
 
     // TODO: provider list
-    items = [availCheck, ftaCheck, mergeCheck, provtagCheck];
+    items = [availCheck, ftaCheck, mergeCheck, provtagCheck, nettagCheck];
 
     /* Form */
     var undoBtn = new Ext.Button({
