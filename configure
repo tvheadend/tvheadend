@@ -57,6 +57,10 @@ OPTIONS=(
 
 . "$ROOTDIR/support/configure.inc"
 
+case "$ROOTDIR" in
+  *\ * ) die "The source directory contains a space. It is not supported."
+esac
+
 # ###########################################################################
 # Parse arguments
 # ###########################################################################
