@@ -89,7 +89,7 @@ const idclass_t linuxdvb_frontend_class =
     {
       .type     = PT_INT,
       .id       = "pids_max",
-      .name     = N_("Maximum PIDs "),
+      .name     = N_("Maximum PIDs"),
       .off      = offsetof(linuxdvb_frontend_t, lfe_pids_max),
       .opts     = PO_ADVANCED,
       .def.i    = 32
