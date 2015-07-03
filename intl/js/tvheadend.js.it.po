@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-01 15:41+0200\n"
+"POT-Creation-Date: 2015-07-02 19:26+0200\n"
 "PO-Revision-Date: 2015-06-30 15:48+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Italian (http://www.transifex.com/projects/p/tvheadend/language/it/)\n"
@@ -30,7 +30,7 @@ msgstr ""
 msgid "(Clear filter)"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:205
+#: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
 msgstr ""
 
@@ -42,7 +42,7 @@ msgstr ""
 msgid "0 #monthNumber"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:219
+#: src/webui/static/app/i18n-post.js:224
 msgid "0,000.00#NumberColumn"
 msgstr ""
 
@@ -154,7 +154,7 @@ msgstr ""
 msgid "Advanced Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:274
+#: src/webui/static/app/i18n-post.js:279
 msgid "After"
 msgstr ""
 
@@ -258,7 +258,7 @@ msgstr ""
 msgid "Basic Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:275
+#: src/webui/static/app/i18n-post.js:280
 msgid "Before"
 msgstr ""
 
@@ -381,7 +381,7 @@ msgstr ""
 msgid "Client Name"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:200
+#: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
 msgstr ""
 
@@ -587,7 +587,7 @@ msgstr ""
 msgid "Digital Video Recorder Profiles"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:180 src/webui/static/app/i18n-post.js:181
+#: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 #: src/webui/static/app/epggrab.js:47
 msgid "Disabled"
 msgstr ""
@@ -703,7 +703,7 @@ msgstr ""
 msgid "End Time"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:259 src/webui/static/app/i18n-post.js:265
+#: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
 msgid "Enter Filter Text..."
 msgstr ""
 
@@ -799,7 +799,7 @@ msgstr ""
 msgid "Filter tag..."
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:248
+#: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
 msgstr ""
 
@@ -867,7 +867,7 @@ msgstr ""
 msgid "Genre"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:206
+#: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
 msgstr ""
 
@@ -987,7 +987,7 @@ msgid "Loading, please wait..."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:192 src/webui/static/app/epg.js:618
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:618
 #: src/webui/static/app/epg.js:641 src/webui/static/app/epg.js:665
 #: src/webui/static/app/epg.js:686 src/webui/static/app/tvheadend.js:200
 #: src/webui/static/app/tvheadend.js:238
@@ -1156,7 +1156,7 @@ msgstr ""
 msgid "Next Page"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:254
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
 msgid "No"
 msgstr ""
 
@@ -1218,7 +1218,7 @@ msgstr ""
 msgid "October"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:276
+#: src/webui/static/app/i18n-post.js:281
 msgid "On#DateFilter"
 msgstr ""
 
@@ -1321,7 +1321,7 @@ msgstr ""
 msgid "Play this program"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:156
+#: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
 msgstr ""
 
@@ -1385,7 +1385,7 @@ msgstr ""
 msgid "Recording details"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:150
+#: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
 msgstr ""
 
@@ -1536,7 +1536,7 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:207
+#: src/webui/static/app/i18n-post.js:212
 msgid "Show in Groups"
 msgstr ""
 
@@ -1552,11 +1552,11 @@ msgstr ""
 msgid "Signal Strength"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:198
+#: src/webui/static/app/i18n-post.js:203
 msgid "Sort Ascending"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:199
+#: src/webui/static/app/i18n-post.js:204
 msgid "Sort Descending"
 msgstr ""
 
@@ -1691,35 +1691,35 @@ msgstr ""
 msgid "The associated file will be removed from the storage."
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:182
+#: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:183
+#: src/webui/static/app/i18n-post.js:188
 msgid "The date in this field must be before {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:164
+#: src/webui/static/app/i18n-post.js:169
 msgid "The maximum length for this field is {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:174
+#: src/webui/static/app/i18n-post.js:179
 msgid "The maximum value for this field is {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:163
+#: src/webui/static/app/i18n-post.js:168
 msgid "The minimum length for this field is {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:229
+#: src/webui/static/app/i18n-post.js:234
 msgid "The time in this field must be equal to or after {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:230
+#: src/webui/static/app/i18n-post.js:235
 msgid "The time in this field must be equal to or before {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:159
+#: src/webui/static/app/i18n-post.js:164
 msgid "The value in this field is invalid"
 msgstr ""
 
@@ -1741,7 +1741,7 @@ msgstr ""
 msgid "This date is before the minimum date"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:165
+#: src/webui/static/app/i18n-post.js:170
 msgid "This field is required"
 msgstr ""
 
@@ -1933,7 +1933,7 @@ msgstr ""
 msgid "Will be skipped"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:253
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
 msgstr ""
 
@@ -1941,11 +1941,11 @@ msgstr ""
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:238
+#: src/webui/static/app/i18n-post.js:243
 msgid "You must select at least one item in this group"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:243
+#: src/webui/static/app/i18n-post.js:248
 msgid "You must select one item in this group"
 msgstr ""
 
@@ -1953,15 +1953,15 @@ msgstr ""
 msgid "because it is a rerun of:"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:213
+#: src/webui/static/app/i18n-post.js:218
 msgid "false"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:232
+#: src/webui/static/app/i18n-post.js:237
 msgid "g:i A#TimeField"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:233
+#: src/webui/static/app/i18n-post.js:238
 msgid ""
 "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
 "A|gi|hi|gia|hia|g|H#TimeField"
@@ -1980,11 +1980,11 @@ msgstr ""
 msgid "logout"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:224
+#: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:277
+#: src/webui/static/app/i18n-post.js:282
 msgid "m/d/Y#DateFilter"
 msgstr ""
 
@@ -1992,11 +1992,11 @@ msgstr ""
 msgid "m/d/Y#Format.date"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:186
+#: src/webui/static/app/i18n-post.js:191
 msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:185
+#: src/webui/static/app/i18n-post.js:190
 msgid "m/d/y#DateField"
 msgstr ""
 
@@ -2014,7 +2014,7 @@ msgstr ""
 msgid "of {0}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:212
+#: src/webui/static/app/i18n-post.js:217
 msgid "true"
 msgstr ""
 
@@ -2022,15 +2022,15 @@ msgstr ""
 msgid "{0} (Spacebar)"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:184
+#: src/webui/static/app/i18n-post.js:189
 msgid "{0} is not a valid date - it must be in the format {1}"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:175
+#: src/webui/static/app/i18n-post.js:180
 msgid "{0} is not a valid number"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:231
+#: src/webui/static/app/i18n-post.js:236
 msgid "{0} is not a valid time"
 msgstr ""
 

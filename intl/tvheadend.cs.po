@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-01 15:41+0200\n"
-"PO-Revision-Date: 2015-07-01 13:43+0000\n"
+"POT-Creation-Date: 2015-07-02 19:26+0200\n"
+"PO-Revision-Date: 2015-07-02 17:27+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/projects/p/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -306,11 +306,11 @@ msgstr "Povolena automatická kontrola"
 msgid "Auto EPG Channel"
 msgstr "Automatický EPG program"
 
-#: src/dvr/dvr_db.c:2173
+#: src/dvr/dvr_db.c:2180
 msgid "Auto Record"
 msgstr "Automatický rekordér"
 
-#: src/dvr/dvr_db.c:2181
+#: src/dvr/dvr_db.c:2188
 msgid "Auto Time Record"
 msgstr "Automatický časový rekordér"
 
@@ -365,7 +365,7 @@ msgstr "Buket (automatický)"
 msgid "Brand"
 msgstr "Značka"
 
-#: src/dvr/dvr_db.c:2197
+#: src/dvr/dvr_db.c:2204
 msgid "Broadcast"
 msgstr "Vysílání"
 
@@ -431,16 +431,16 @@ msgstr "Camd.socket soubor / IP adresa (TCP mód)"
 msgid "Cartoons"
 msgstr "Animované pohádky"
 
-#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2006
+#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2013
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
 msgid "Channel"
 msgstr "Program"
 
-#: src/dvr/dvr_db.c:2016
+#: src/dvr/dvr_db.c:2023
 msgid "Channel Icon"
 msgstr "Ikona programu"
 
-#: src/dvr/dvr_db.c:2023
+#: src/dvr/dvr_db.c:2030
 msgid "Channel Name"
 msgstr "Název programu"
 
@@ -512,7 +512,7 @@ msgstr "Komedie"
 #: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
 #: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
-#: src/dvr/dvr_db.c:2247 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
+#: src/dvr/dvr_db.c:2254 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
 #: src/dvr/dvr_config.c:783 src/descrambler/caclient.c:275
 msgid "Comment"
 msgstr "Komentář"
@@ -549,11 +549,11 @@ msgstr "Typ limitu pro spojení"
 msgid "Constellation"
 msgstr "Konstelace"
 
-#: src/profile.c:1505 src/dvr/dvr_db.c:2091
+#: src/profile.c:1505 src/dvr/dvr_db.c:2098
 msgid "Container"
 msgstr "Kontejner"
 
-#: src/dvr/dvr_db.c:2189 src/dvr/dvr_autorec.c:1024
+#: src/dvr/dvr_db.c:2196 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
 msgstr "Typ obsahu"
 
@@ -585,7 +585,7 @@ msgstr "Vytvoř štítek"
 msgid "Created"
 msgstr "Vytvořeno"
 
-#: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
+#: src/dvr/dvr_db.c:2125 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
 msgid "Creator"
 msgstr "Vytvořil"
 
@@ -613,7 +613,7 @@ msgstr "DES Constant Code Word klient"
 msgid "DES Key"
 msgstr "Klíč DES"
 
-#: src/dvr/dvr_db.c:2160
+#: src/dvr/dvr_db.c:2167
 msgid "DVB EPG ID"
 msgstr "DVB EPG ID"
 
@@ -673,7 +673,7 @@ msgstr "Položka DVR auto-rekordéru"
 msgid "DVR Behavior"
 msgstr "Chování DVR"
 
-#: src/dvr/dvr_db.c:2101 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
+#: src/dvr/dvr_db.c:2108 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
 msgstr "Konfigurace DVR"
 
@@ -685,7 +685,7 @@ msgstr "Konfigurační profil DVR"
 msgid "DVR Configuration Profiles"
 msgstr "Konfigurační profily DVR"
 
-#: src/dvr/dvr_db.c:1942
+#: src/dvr/dvr_db.c:1949
 msgid "DVR Entry"
 msgstr "Položka DVR"
 
@@ -729,7 +729,7 @@ msgstr "Time-rekordér položka"
 msgid "Dance"
 msgstr "Tanec"
 
-#: src/dvr/dvr_db.c:2153
+#: src/dvr/dvr_db.c:2160
 msgid "Data Errors"
 msgstr "Chyby v datech"
 
@@ -763,7 +763,7 @@ msgstr "Systém doručení"
 msgid "Demux Path"
 msgstr "Cesta k demuxu"
 
-#: src/dvr/dvr_db.c:2060 src/dvr/dvr_db.c:2067
+#: src/dvr/dvr_db.c:2067 src/dvr/dvr_db.c:2074
 msgid "Description"
 msgstr "Popis"
 
@@ -784,7 +784,7 @@ msgstr "Model zařízení"
 msgid "Device Path"
 msgstr "Cesta k zařízení"
 
-#: src/dvr/dvr_db.c:2132 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
+#: src/dvr/dvr_db.c:2139 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
 msgid "Directory"
 msgstr "Adresář"
 
@@ -845,7 +845,7 @@ msgstr "Dokumentární"
 msgid "Don't Include Title In Filename"
 msgstr "Nevkládat název vysílání do jména souboru"
 
-#: src/dvr/dvr_db.c:2167
+#: src/dvr/dvr_db.c:2174
 msgid "Don't Reschedule"
 msgstr "Nepřeplánovávat"
 
@@ -866,7 +866,7 @@ msgstr "Drama"
 msgid "Duplicate Handling"
 msgstr "Zacházení s duplicitami"
 
-#: src/dvr/dvr_db.c:1999
+#: src/dvr/dvr_db.c:2006
 msgid "Duration"
 msgstr "Doba"
 
@@ -970,7 +970,7 @@ msgstr "Životní prostředí"
 msgid "Environment (pipe)"
 msgstr "Prostředí (roura)"
 
-#: src/dvr/dvr_db.c:2205
+#: src/dvr/dvr_db.c:2212
 msgid "Episode"
 msgstr "Epizoda"
 
@@ -979,11 +979,11 @@ msgstr "Epizoda"
 msgid "Episode %d"
 msgstr "Epizoda %d"
 
-#: src/dvr/dvr_db.c:2139
+#: src/dvr/dvr_db.c:2146
 msgid "Error Code"
 msgstr "Kód chyby"
 
-#: src/dvr/dvr_db.c:2146
+#: src/dvr/dvr_db.c:2153
 msgid "Errors"
 msgstr "Chyby"
 
@@ -1007,11 +1007,11 @@ msgstr "Expedice"
 msgid "Experimental film"
 msgstr "Experimentální film"
 
-#: src/dvr/dvr_db.c:1960 src/dvr/dvr_autorec.c:983
+#: src/dvr/dvr_db.c:1967 src/dvr/dvr_autorec.c:983
 msgid "Extra Start Time"
 msgstr "Extra začáteční čas"
 
-#: src/dvr/dvr_db.c:1984 src/dvr/dvr_autorec.c:991
+#: src/dvr/dvr_db.c:1991 src/dvr/dvr_autorec.c:991
 msgid "Extra Stop Time"
 msgstr "Extra koncový čas "
 
@@ -1063,11 +1063,11 @@ msgstr "Soubor nebyl vytvořen"
 msgid "File Permissions (octal, e.g. 0664)"
 msgstr "Práva souboru (osmičkové, např. 0664)"
 
-#: src/dvr/dvr_db.c:2219
+#: src/dvr/dvr_db.c:2226
 msgid "File Size"
 msgstr "Velikost souboru"
 
-#: src/dvr/dvr_db.c:2125
+#: src/dvr/dvr_db.c:2132
 msgid "Filename"
 msgstr "Jméno souboru"
 
@@ -1277,7 +1277,7 @@ msgstr "Zhoršený sluch"
 msgid "Hierarchy"
 msgstr "Hierarchie"
 
-#: src/profile.c:248 src/dvr/dvr_db.c:1607
+#: src/profile.c:248 src/dvr/dvr_db.c:1614
 msgid "High"
 msgstr "Vysoká"
 
@@ -1383,7 +1383,7 @@ msgstr "Ignorovat neplatné SSL certifikáty"
 msgid "Immediately abort"
 msgstr "Okamžitě ukonči činnost"
 
-#: src/profile.c:247 src/dvr/dvr_db.c:1606
+#: src/profile.c:247 src/dvr/dvr_db.c:1613
 msgid "Important"
 msgstr "Důležíté"
 
@@ -1604,11 +1604,11 @@ msgstr "Log"
 msgid "Longtitude Direction West"
 msgstr "Směr zeměpisné délky - západ"
 
-#: src/profile.c:250 src/dvr/dvr_db.c:1609
+#: src/profile.c:250 src/dvr/dvr_db.c:1616
 msgid "Low"
 msgstr "Nízká"
 
-#: src/dvr/dvr_db.c:1638
+#: src/dvr/dvr_db.c:1645
 msgid "MPEG-PS (DVD)"
 msgstr "MPEG-PS (DVD)"
 
@@ -1616,7 +1616,7 @@ msgstr "MPEG-PS (DVD)"
 msgid "MPEG-PS (DVD)/av-lib"
 msgstr "MPEG-PS (DVD)/av-lib"
 
-#: src/dvr/dvr_db.c:1637
+#: src/dvr/dvr_db.c:1644
 msgid "MPEG-TS"
 msgstr "MPEG-TS"
 
@@ -1701,7 +1701,7 @@ msgstr "Hlavní tuner"
 msgid "Matroska"
 msgstr "Matroska"
 
-#: src/dvr/dvr_db.c:1634
+#: src/dvr/dvr_db.c:1641
 msgid "Matroska (mkv)"
 msgstr "Matroska (mkv)"
 
@@ -1978,11 +1978,15 @@ msgstr "Žádný zdroj není dostupný"
 msgid "None"
 msgstr "Žádný"
 
-#: src/profile.c:249 src/dvr/dvr_db.c:1608
+#: src/profile.c:249 src/dvr/dvr_db.c:1615
 msgid "Normal"
 msgstr "Standardní"
 
-#: src/profile.c:1355 src/dvr/dvr_db.c:1605 src/dvr/dvr_db.c:1633
+#: src/input/mpegts/mpegts_input.c:202
+msgid "Not Linked"
+msgstr "Nespojeno"
+
+#: src/profile.c:1355 src/dvr/dvr_db.c:1612 src/dvr/dvr_db.c:1640
 msgid "Not set"
 msgstr "Nenastaveno"
 
@@ -1990,7 +1994,7 @@ msgstr "Nenastaveno"
 msgid "Not set (none or channel configuration)"
 msgstr "Nenastaveno (žádný nebo z konfigurace programu)"
 
-#: src/dvr/dvr_db.c:1927 src/dvr/dvr_autorec.c:611
+#: src/dvr/dvr_db.c:1934 src/dvr/dvr_autorec.c:611
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Nenastaveno (použij konfiguraci programu nebo DVR)"
 
@@ -2116,7 +2120,7 @@ msgstr "Výstupní adresář pro tsdebug"
 msgid "Over-the-air EPG"
 msgstr "Over-the-air EPG"
 
-#: src/dvr/dvr_db.c:2111 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
+#: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
 msgid "Owner"
 msgstr "Majitel"
 
@@ -2239,7 +2243,7 @@ msgstr "Prezentace"
 msgid "Press"
 msgstr "Tisk"
 
-#: src/dvr/dvr_db.c:2074 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
+#: src/dvr/dvr_db.c:2081 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
@@ -2358,7 +2362,7 @@ msgstr "Odpovědět na CAM PIN dotazy"
 msgid "Reports"
 msgstr "Zprávy"
 
-#: src/dvr/dvr_db.c:2240
+#: src/dvr/dvr_db.c:2247
 msgid "Rerun of"
 msgstr "Opakovaní"
 
@@ -2382,7 +2386,7 @@ msgstr "Znovu spustit (roura)"
 msgid "Restart On Error"
 msgstr "Restartuj při chybě"
 
-#: src/dvr/dvr_db.c:2084 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:631
+#: src/dvr/dvr_db.c:2091 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:631
 msgid "Retention"
 msgstr "Zadržení"
 
@@ -2477,7 +2481,7 @@ msgstr "SCR (ID)"
 msgid "SD: Standard Definition"
 msgstr "SD: standardní rozlišení"
 
-#: src/dvr/dvr_db.c:1635
+#: src/dvr/dvr_db.c:1642
 msgid "Same as source (pass through)"
 msgstr "Stejný jako zdroj (pass through)"
 
@@ -2515,15 +2519,15 @@ msgstr "Výsledek scanu"
 msgid "Scan Status"
 msgstr "Stav scanu"
 
-#: src/dvr/dvr_db.c:2233
+#: src/dvr/dvr_db.c:2240
 msgid "Schedule Status"
 msgstr "Stav plánovače"
 
-#: src/dvr/dvr_db.c:1970
+#: src/dvr/dvr_db.c:1977
 msgid "Scheduled Start Time"
 msgstr "Naplánovaný čas začátku"
 
-#: src/dvr/dvr_db.c:1992
+#: src/dvr/dvr_db.c:1999
 msgid "Scheduled Stop Time"
 msgstr "Naplánovaný čas konce"
 
@@ -2763,11 +2767,11 @@ msgstr "Začátek za"
 msgid "Start Before"
 msgstr "Začátek před"
 
-#: src/dvr/dvr_db.c:1952
+#: src/dvr/dvr_db.c:1959
 msgid "Start Time"
 msgstr "Začátek"
 
-#: src/dvr/dvr_db.c:2226 src/descrambler/caclient.c:281
+#: src/dvr/dvr_db.c:2233 src/descrambler/caclient.c:281
 msgid "Status"
 msgstr "Stav"
 
@@ -2783,7 +2787,7 @@ msgstr "Stereo"
 msgid "Stop"
 msgstr "Zastavit"
 
-#: src/dvr/dvr_db.c:1977
+#: src/dvr/dvr_db.c:1984
 msgid "Stop Time"
 msgstr "Konec"
 
@@ -2826,7 +2830,7 @@ msgstr "Odebírej tuto službu permanentně"
 msgid "Subscription overridden"
 msgstr "Odběr přehlasován jiným požadavkem"
 
-#: src/dvr/dvr_db.c:2046 src/dvr/dvr_db.c:2053
+#: src/dvr/dvr_db.c:2053 src/dvr/dvr_db.c:2060
 msgid "Subtitle"
 msgstr "Podtitulek"
 
@@ -2938,7 +2942,7 @@ msgstr "Časový limit (sekundy)"
 msgid "Timout (secs)"
 msgstr "Časový limit (sek.)"
 
-#: src/dvr/dvr_db.c:2032 src/dvr/dvr_db.c:2039 src/dvr/dvr_timerec.c:569
+#: src/dvr/dvr_db.c:2039 src/dvr/dvr_db.c:2046 src/dvr/dvr_timerec.c:569
 msgid "Title"
 msgstr "Název"
 
@@ -3014,7 +3018,7 @@ msgstr "Vypni LNB při nečinnosti"
 msgid "UDP RTP Port Number (2 ports)"
 msgstr "UDP RTP číslo portu (2 porty)"
 
-#: src/dvr/dvr_db.c:2212 src/input/mpegts/iptv/iptv_mux.c:113
+#: src/dvr/dvr_db.c:2219 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
 msgstr "URL"
 
@@ -3055,7 +3059,7 @@ msgstr "Unicable přepínač (univerzální LNB, experimentální)"
 msgid "Unicable Type"
 msgstr "Typ unicable"
 
-#: src/profile.c:251 src/dvr/dvr_db.c:1610
+#: src/profile.c:251 src/dvr/dvr_db.c:1617
 msgid "Unimportant"
 msgstr "Nedůležité"
 
@@ -3225,7 +3229,7 @@ msgstr "podpora addpids/delpids"
 msgid "en50494"
 msgstr "en50494"
 
-#: src/dvr/dvr_db.c:1896
+#: src/dvr/dvr_db.c:1903
 msgid "hrs"
 msgstr "hod"
 
@@ -3234,11 +3238,11 @@ msgstr "hod"
 msgid "invalid option specified [%s]"
 msgstr "specifikována chybná volba [%s]"
 
-#: src/dvr/dvr_db.c:1897
+#: src/dvr/dvr_db.c:1904
 msgid "min"
 msgstr "min"
 
-#: src/dvr/dvr_db.c:1898
+#: src/dvr/dvr_db.c:1905
 msgid "mins"
 msgstr "min"
 
