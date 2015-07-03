@@ -84,7 +84,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   assert(de->de_s == NULL);
   assert(de->de_chain == NULL);
 
-  if(de->de_pri > 0 && de->de_pri < ARRAY_SIZE(prio2weight))
+  if(de->de_pri >= 0 && de->de_pri < ARRAY_SIZE(prio2weight))
     weight = prio2weight[de->de_pri];
   else
     weight = 300;
