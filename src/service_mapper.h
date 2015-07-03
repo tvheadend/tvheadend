@@ -27,6 +27,7 @@ typedef struct service_mapper_conf
   int encrypted;          ///< Include encrypted services
   int merge_same_name;    ///< Merge entries with the same name
   int provider_tags;      ///< Create tags based on provider name
+  int network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
 } service_mapper_conf_t;
 
 typedef struct service_mapper_status

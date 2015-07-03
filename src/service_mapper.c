@@ -255,6 +255,13 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
       if ((prov = s->s_provider_name(s)))
         channel_tag_map(channel_tag_find_by_name(prov, 1), chn, chn);
 
+    /* Network */
+    if (service_mapper_conf.network_tags) {
+      source_info_t si;
+      s->s_setsourceinfo(s, &si);
+      channel_tag_map(channel_tag_find_by_name(si.si_network, 1), chn, chn);
+    }
+
     /* save */
     idnode_notify_changed(&chn->ch_id);
     channel_save(chn);

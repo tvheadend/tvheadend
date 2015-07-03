@@ -42,6 +42,7 @@ api_mapper_start
   get_u32(encrypted);
   get_u32(merge_same_name);
   get_u32(provider_tags);
+  get_u32(network_tags);
   
   pthread_mutex_lock(&global_lock);
   service_mapper_start(&conf, uuids);
