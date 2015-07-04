@@ -3,13 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Mario Di Raimondo <mario.diraimondo@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-02 19:26+0200\n"
-"PO-Revision-Date: 2015-06-30 15:48+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2015-07-03 17:53+0200\n"
+"PO-Revision-Date: 2015-07-03 16:30+0000\n"
+"Last-Translator: Mario Di Raimondo <mario.diraimondo@gmail.com>\n"
 "Language-Team: Italian (http://www.transifex.com/projects/p/tvheadend/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,11 +20,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
-msgstr ""
+msgstr "&#160;OK&#160;"
 
 #: src/webui/static/app/i18n-post.js:106
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
-msgstr ""
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
@@ -262,7 +263,7 @@ msgstr ""
 msgid "Before"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:122
+#: src/webui/static/app/servicemapper.js:127
 msgid "Begin mapping"
 msgstr ""
 
@@ -430,6 +431,10 @@ msgstr ""
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:110
+msgid "Create network tags"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:858
@@ -1018,7 +1023,7 @@ msgstr ""
 msgid "Map Services"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:176
+#: src/webui/static/app/servicemapper.js:181
 msgid "Map services"
 msgstr ""
 
@@ -1030,7 +1035,7 @@ msgstr ""
 msgid "Mapped"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:138
+#: src/webui/static/app/servicemapper.js:143
 msgid "Mapping services..."
 msgstr ""
 
@@ -1520,7 +1525,7 @@ msgstr ""
 msgid "Service Mapper"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:146
+#: src/webui/static/app/servicemapper.js:151
 msgid "Service Mapper Status"
 msgstr ""
 

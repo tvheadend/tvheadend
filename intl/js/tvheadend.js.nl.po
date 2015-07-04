@@ -4,14 +4,15 @@
 # 
 # Translators:
 # Beralt Meppelink <beralt@beralt.nl>, 2015
+# MArk Hunting <mark@komkommerkom.com>, 2015
 # MO <meindert66@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-02 19:26+0200\n"
-"PO-Revision-Date: 2015-06-30 15:48+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2015-07-03 17:53+0200\n"
+"PO-Revision-Date: 2015-07-04 18:28+0000\n"
+"Last-Translator: MO <meindert66@gmail.com>\n"
 "Language-Team: Dutch (http://www.transifex.com/projects/p/tvheadend/language/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -190,7 +191,7 @@ msgstr "Pas wijzigingen toe (alleen nu)"
 
 #: src/webui/static/app/tvhlog.js:129
 msgid "Applying Data..."
-msgstr ""
+msgstr "Data Toepassen..."
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
@@ -218,7 +219,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
-msgstr ""
+msgstr "Aug"
 
 #: src/webui/static/app/i18n-post.js:27
 msgid "August"
@@ -264,13 +265,13 @@ msgstr "Basis instellingen"
 msgid "Before"
 msgstr "Voor"
 
-#: src/webui/static/app/servicemapper.js:122
+#: src/webui/static/app/servicemapper.js:127
 msgid "Begin mapping"
 msgstr "Begin mappen"
 
 #: src/webui/static/app/cteditor.js:41
 msgid "Bouquet"
-msgstr ""
+msgstr "Bouquet"
 
 #: src/webui/static/app/cteditor.js:42 src/webui/static/app/cteditor.js:68
 msgid "Bouquets"
@@ -434,6 +435,10 @@ msgid ""
 "the current query."
 msgstr "Maak een nieuwe automatische opname regel om alle toekomstige programma's op te nemen die overeenkomen met huidige query."
 
+#: src/webui/static/app/servicemapper.js:110
+msgid "Create network tags"
+msgstr ""
+
 #: src/webui/static/app/idnode.js:858
 msgid "Create new entry"
 msgstr "Nieuw item maken"
@@ -448,7 +453,7 @@ msgstr "Gemaakt via EPG query"
 
 #: src/webui/static/app/epggrab.js:96
 msgid "Cron multi-line"
-msgstr ""
+msgstr "Cron meerdere regels"
 
 #: src/webui/static/app/epg.js:1034
 #, javascript-format
@@ -457,7 +462,7 @@ msgstr "Op dit moment komen %d gebeurtenissen overeen (en worden opgenomen)"
 
 #: src/webui/static/app/tvheadend.js:401
 msgid "DVB Inputs"
-msgstr ""
+msgstr "DVB Inputs"
 
 #: src/webui/static/app/config.js:82
 msgid "DVB Scan Files"
@@ -469,7 +474,7 @@ msgstr "DVB scan bestanden pad"
 
 #: src/webui/static/app/epg.js:305 src/webui/static/app/dvr.js:462
 msgid "DVR"
-msgstr ""
+msgstr "DVR"
 
 #: src/webui/static/app/dvr.js:436
 msgid "DVR - Failed Recordings"
@@ -537,11 +542,11 @@ msgstr "Debug opties"
 
 #: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
-msgstr ""
+msgstr "Dec"
 
 #: src/webui/static/app/i18n-post.js:31
 msgid "December"
-msgstr ""
+msgstr "December"
 
 #: src/webui/static/app/config.js:98
 msgid "Default Language(s)"
@@ -575,11 +580,11 @@ msgstr "Gedetaileerde stream informatie"
 #: src/webui/static/app/epg.js:321 src/webui/static/app/dvr.js:91
 #: src/webui/static/app/dvr.js:92
 msgid "Details"
-msgstr ""
+msgstr "Details"
 
 #: src/webui/static/app/dvr.js:591
 msgid "Digital Video Recorder"
-msgstr ""
+msgstr "Digitale Video Recorder"
 
 #: src/webui/static/app/dvr.js:451
 msgid "Digital Video Recorder Profile"
@@ -612,7 +617,7 @@ msgstr "Weet je zeker dat je de huidig geselecteerde item wil afbreken/uitplanne
 
 #: src/webui/static/app/dvr.js:323 src/webui/static/app/dvr.js:404
 msgid "Do you really want to delete the selected recordings?"
-msgstr ""
+msgstr "Weet je zeker dat je de geselecteerde opnames wil verwijderen?"
 
 #: src/webui/static/app/tvheadend.js:82
 msgid "Do you really want to delete the selection?"
@@ -723,35 +728,35 @@ msgstr "Gebeurtenissen"
 
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
-msgstr "Geexporteerde ATSC tuners"
+msgstr "Geëxporteerde ATSC tuners"
 
 #: src/webui/static/app/config.js:417
 msgid "Exported DVB-C Tuners"
-msgstr "Geexporteerde DVB-C tuners"
+msgstr "Geëxporteerde DVB-C tuners"
 
 #: src/webui/static/app/config.js:421
 msgid "Exported DVB-C2 Tuners"
-msgstr ""
+msgstr "Geëxporteerde DVB-C2 tuners"
 
 #: src/webui/static/app/config.js:429
 msgid "Exported DVB-Cable/AnnexB Tuners"
-msgstr ""
+msgstr "Geëxporteerde DVB-Cable/AnnexB tuners"
 
 #: src/webui/static/app/config.js:401
 msgid "Exported DVB-S Tuners"
-msgstr ""
+msgstr "Geëxporteerde DVB-S tuners"
 
 #: src/webui/static/app/config.js:405
 msgid "Exported DVB-S2 Tuners"
-msgstr ""
+msgstr "Geëxporteerde DVB-S2 tuners"
 
 #: src/webui/static/app/config.js:409
 msgid "Exported DVB-T Tuners"
-msgstr ""
+msgstr "Geëxporteerde DVB-T tuners"
 
 #: src/webui/static/app/config.js:413
 msgid "Exported DVB-T2 Tuners"
-msgstr ""
+msgstr "Geëxporteerde DVB-T2 tuners"
 
 #: src/webui/static/app/epggrab.js:214
 msgid "External Interfaces"
@@ -803,7 +808,7 @@ msgstr "Filter label..."
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
-msgstr ""
+msgstr "Filters"
 
 #: src/webui/static/app/dvr.js:318
 msgid "Finished Recording"
@@ -851,7 +856,7 @@ msgstr "Volledige tekst"
 
 #: src/webui/static/app/tvheadend.js:608
 msgid "GB"
-msgstr ""
+msgstr "GB"
 
 #: src/webui/static/app/tvheadend.js:382
 msgid "General"
@@ -867,7 +872,7 @@ msgstr "Algemene configuratie"
 
 #: src/webui/static/app/epg.js:1031
 msgid "Genre"
-msgstr ""
+msgstr "Genre"
 
 #: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
@@ -878,7 +883,7 @@ msgstr "Groupeer op dit veld"
 #: src/webui/static/app/epg.js:866 src/webui/static/app/epggrab.js:306
 #: src/webui/static/app/config.js:193 src/webui/static/app/tvhlog.js:64
 msgid "Help"
-msgstr ""
+msgstr "Help"
 
 #: src/webui/static/app/tvheadend.js:32
 msgid "Help for"
@@ -894,11 +899,11 @@ msgstr "Verberg wachtwoorden"
 
 #: src/webui/static/app/status.js:84
 msgid "Hostname"
-msgstr ""
+msgstr "Hostnaam"
 
 #: src/webui/static/app/status.js:74
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
@@ -926,7 +931,7 @@ msgstr "Afbeelding cache opslaan mislukt"
 
 #: src/webui/static/app/status.js:707
 msgid "In"
-msgstr ""
+msgstr "In"
 
 #: src/webui/static/app/servicemapper.js:94
 msgid "Include encrypted services"
@@ -934,11 +939,11 @@ msgstr "Voeg encrypte services toe"
 
 #: src/webui/static/app/status.js:331 src/webui/static/app/status.js:797
 msgid "Input"
-msgstr ""
+msgstr "Input"
 
 #: src/webui/static/app/status.js:136
 msgid "Input (kb/s)"
-msgstr ""
+msgstr "Input (kb/s)"
 
 #: src/webui/static/app/epggrab.js:161
 msgid "Internal Grabber"
@@ -982,7 +987,7 @@ msgstr "Laatste pagine"
 
 #: src/webui/static/app/tvheadend.js:262
 msgid "Live TV Player"
-msgstr ""
+msgstr "Live TV Speler"
 
 #: src/webui/static/app/tvheadend.js:92
 msgid "Loading, please wait..."
@@ -1020,7 +1025,7 @@ msgstr ""
 msgid "Map Services"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:176
+#: src/webui/static/app/servicemapper.js:181
 msgid "Map services"
 msgstr ""
 
@@ -1032,7 +1037,7 @@ msgstr ""
 msgid "Mapped"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:138
+#: src/webui/static/app/servicemapper.js:143
 msgid "Mapping services..."
 msgstr ""
 
@@ -1062,7 +1067,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
 msgid "May"
-msgstr ""
+msgstr "Mei"
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -1087,15 +1092,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
-msgstr ""
+msgstr "Maandag"
 
 #: src/webui/static/app/idnode.js:1227 src/webui/static/app/idnode.js:1697
 msgid "Move Down"
-msgstr ""
+msgstr "Verplaats omlaag"
 
 #: src/webui/static/app/idnode.js:1202 src/webui/static/app/idnode.js:1676
 msgid "Move Up"
-msgstr ""
+msgstr "Verplaats omhoog"
 
 #: src/webui/static/app/chconf.js:182
 msgid "Move channel one number down"
@@ -1160,15 +1165,15 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
 msgid "No"
-msgstr ""
+msgstr "Nee"
 
 #: src/webui/static/app/i18n-post.js:152
 msgid "No data to display"
-msgstr ""
+msgstr "Geen data te tonen"
 
 #: src/webui/static/app/dvr.js:118
 msgid "No days"
-msgstr ""
+msgstr "Geen dagen"
 
 #: src/webui/static/app/tvheadend.js:591
 msgid "No verified access"
@@ -1182,7 +1187,7 @@ msgstr ""
 #: src/webui/static/app/idnode.js:1324 src/webui/static/app/mpegts.js:208
 #: src/webui/static/app/mpegts.js:218
 msgid "None"
-msgstr ""
+msgstr "Geen"
 
 #: src/webui/static/app/idnode.js:291
 msgid "Not set"
@@ -1194,19 +1199,19 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:30
 msgid "November"
-msgstr ""
+msgstr "November"
 
 #: src/webui/static/app/epg.js:528 src/webui/static/app/epg.js:529
 msgid "Number"
-msgstr ""
+msgstr "Nummer"
 
 #: src/webui/static/app/chconf.js:184
 msgid "Number Down"
-msgstr ""
+msgstr "Nummer omhoog"
 
 #: src/webui/static/app/chconf.js:171
 msgid "Number Up"
-msgstr ""
+msgstr "Nummer omlaag"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
@@ -1218,7 +1223,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:29
 msgid "October"
-msgstr ""
+msgstr "Oktober"
 
 #: src/webui/static/app/i18n-post.js:281
 msgid "On#DateFilter"
@@ -1258,11 +1263,11 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
-msgstr ""
+msgstr "Pagina"
 
 #: src/webui/static/app/idnode.js:1784 src/webui/static/app/idnode.js:1970
 msgid "Parameters"
-msgstr ""
+msgstr "Parameters"
 
 #: src/webui/static/app/idnode.js:1322
 msgid "Parent disabled"
@@ -1270,7 +1275,7 @@ msgstr ""
 
 #: src/webui/static/app/acleditor.js:79
 msgid "Password"
-msgstr ""
+msgstr "Wachtwoord"
 
 #: src/webui/static/app/acleditor.js:104
 msgid "Password Control Entries"
@@ -1278,7 +1283,7 @@ msgstr ""
 
 #: src/webui/static/app/acleditor.js:80
 msgid "Passwords"
-msgstr ""
+msgstr "Wachtwoorden"
 
 #: src/webui/static/app/epggrab.js:194
 msgid "Path"
@@ -1286,7 +1291,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:291
 msgid "Pause"
-msgstr ""
+msgstr "Pauze"
 
 #: src/webui/static/app/tvheadend.js:116
 msgid "Per page"
@@ -1325,7 +1330,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
-msgstr ""
+msgstr "Even wachten..."
 
 #: src/webui/static/app/config.js:152
 msgid "Prefer picons over channel name"
@@ -1337,7 +1342,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:147
 msgid "Previous Page"
-msgstr ""
+msgstr "Vorige pagina"
 
 #: src/webui/static/app/dvr.js:453
 msgid "Profile Name"
@@ -1381,11 +1386,11 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:446
 msgid "Recording"
-msgstr ""
+msgstr "Opname"
 
 #: src/webui/static/app/dvr.js:100
 msgid "Recording details"
-msgstr ""
+msgstr "Opname details"
 
 #: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
@@ -1429,7 +1434,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
-msgstr ""
+msgstr "Zaterdag"
 
 #: src/webui/static/app/idnode.js:795 src/webui/static/app/idnode.js:1116
 #: src/webui/static/app/idnode.js:1603
@@ -1476,15 +1481,15 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:149
 msgid "Search IMDB"
-msgstr ""
+msgstr "Zoek IMDB"
 
 #: src/webui/static/app/epg.js:148
 msgid "Search IMDB (for title)"
-msgstr ""
+msgstr "Zoek IMDB (voor titel)"
 
 #: src/webui/static/app/epg.js:607
 msgid "Search title..."
-msgstr ""
+msgstr "Zoek titel..."
 
 #: src/webui/static/app/tvheadend.js:207
 msgid "Select channel..."
@@ -1496,11 +1501,11 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:382 src/webui/static/app/idnode.js:530
 msgid "Select {0} ..."
-msgstr ""
+msgstr "Selecteer {0} ..."
 
 #: src/webui/static/app/config.js:105
 msgid "Selected"
-msgstr ""
+msgstr "Geselecteerde"
 
 #: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
@@ -1508,7 +1513,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
-msgstr ""
+msgstr "September"
 
 #: src/webui/static/app/config.js:66
 msgid "Server"
@@ -1522,7 +1527,7 @@ msgstr ""
 msgid "Service Mapper"
 msgstr ""
 
-#: src/webui/static/app/servicemapper.js:146
+#: src/webui/static/app/servicemapper.js:151
 msgid "Service Mapper Status"
 msgstr ""
 
@@ -1849,15 +1854,15 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1143 src/webui/static/app/idnode.js:1625
 msgid "Undo"
-msgstr ""
+msgstr "Maak ongedaan"
 
 #: src/webui/static/app/status.js:407 src/webui/static/app/status.js:427
 msgid "Unknown"
-msgstr ""
+msgstr "Onbekend"
 
 #: src/webui/static/app/timeshift.js:71
 msgid "Unlimited size"
-msgstr ""
+msgstr "Onbeperkte grootte"
 
 #: src/webui/static/app/timeshift.js:51
 msgid "Unlimited time"
@@ -1893,7 +1898,7 @@ msgstr ""
 
 #: src/webui/static/app/timeshift.js:77
 msgid "Use only RAM"
-msgstr ""
+msgstr "Gebruik alleen RAM"
 
 #: src/webui/static/app/status.js:90 src/webui/static/app/status.js:559
 msgid "Username"
@@ -1909,7 +1914,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:316
 msgid "Volume"
-msgstr ""
+msgstr "Volume"
 
 #: src/webui/static/app/epg.js:855
 msgid "Watch TV"
@@ -1917,11 +1922,11 @@ msgstr "TV kijken"
 
 #: src/webui/static/app/epg.js:857
 msgid "Watch live TV in a new browser window."
-msgstr ""
+msgstr "Kijk live TV in nieuw browser venster"
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
-msgstr ""
+msgstr "Woe"
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
@@ -1929,11 +1934,11 @@ msgstr "Woensdag"
 
 #: src/webui/static/app/status.js:346
 msgid "Weight"
-msgstr ""
+msgstr "Gewicht"
 
 #: src/webui/static/app/dvr.js:31
 msgid "Will be skipped"
-msgstr ""
+msgstr "Zal worden overgeslagen"
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
@@ -1957,7 +1962,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:218
 msgid "false"
-msgstr ""
+msgstr "Onwaar"
 
 #: src/webui/static/app/i18n-post.js:237
 msgid "g:i A#TimeField"
@@ -2010,35 +2015,35 @@ msgstr ""
 #: src/webui/static/app/epg.js:420 src/webui/static/app/epg.js:423
 #: src/webui/static/app/dvr.js:44
 msgid "min"
-msgstr ""
+msgstr "min"
 
 #: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
-msgstr ""
+msgstr "Voeg {0} toe"
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"
-msgstr ""
+msgstr "Waar"
 
 #: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"
-msgstr ""
+msgstr "{0} (Spatiebalk)"
 
 #: src/webui/static/app/i18n-post.js:189
 msgid "{0} is not a valid date - it must be in the format {1}"
-msgstr ""
+msgstr "{0} is geen geldige datum - het format is {1}"
 
 #: src/webui/static/app/i18n-post.js:180
 msgid "{0} is not a valid number"
-msgstr ""
+msgstr "{0} is geen geldig nummer"
 
 #: src/webui/static/app/i18n-post.js:236
 msgid "{0} is not a valid time"
-msgstr ""
+msgstr "{0} is geen geldige tijd"
 
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
-msgstr ""
+msgstr "{0} geselecteerde rij{1}"
 
 #. / {0} start, {1} end, {2} total, {3} title
 #: src/webui/static/app/tvheadend.js:103
