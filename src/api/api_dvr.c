@@ -155,14 +155,14 @@ api_dvr_entry_create
     }
 
     s1 = htsmsg_get_str(conf, "disp_title");
-    if (s1 && !htsmsg_get_map(conf, "title")) {
+    if (s1 && lang && !htsmsg_get_map(conf, "title")) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "title", m);
     }
 
     s1 = htsmsg_get_str(conf, "disp_subtitle");
-    if (s1 && !htsmsg_get_map(conf, "subtitle")) {
+    if (s1 && lang && !htsmsg_get_map(conf, "subtitle")) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "subtitle", m);
