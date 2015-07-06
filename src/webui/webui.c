@@ -262,6 +262,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
+  int64_t mono;
 
   if(muxer_open_stream(mux, hc->hc_fd))
     run = 0;
@@ -324,8 +325,20 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_START:
       grace = 10;
       if(!started) {
-        tvhlog(LOG_DEBUG, "webui",  "Start streaming %s", hc->hc_url_orig);
+        tvhlog(LOG_DEBUG, "webui", "%s streaming %s",
+               hc->hc_no_output ? "Probe" : "Start", hc->hc_url_orig);
         http_output_content(hc, muxer_mime(mux, sm->sm_data));
+
+        if (hc->hc_no_output) {
+          streaming_msg_free(sm);
+          mono = getmonoclock() + 2000000;
+          while (getmonoclock() < mono) {
+            if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err)
+              break;
+            usleep(50000);
+          }
+          return;
+        }
 
         if(muxer_init(mux, sm->sm_data, name) < 0)
           run = 0;
