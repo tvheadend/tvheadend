@@ -275,6 +275,12 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   lastpkt = dispatch_clock;
   ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 5;
 
+  if (hc->hc_no_output) {
+    pthread_mutex_lock(&sq->sq_mutex);
+    sq->sq_maxsize = 100000;
+    pthread_mutex_unlock(&sq->sq_mutex);
+  }
+
   while(!hc->hc_shutdown && run && tvheadend_running) {
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
