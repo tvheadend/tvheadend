@@ -1210,7 +1210,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_append_and_escape_url(&q, basename);
     str = htsbuf_to_string(&q);
     snprintf(disposition, sizeof(disposition),
-             "attachment; filename=\"%s\"; filename*=utf-8''%s",
+             "attachment; filename=\"%s\"; filename*=UTF-8''%s",
              str0, str);
     htsbuf_queue_flush(&q);
     free(str);
