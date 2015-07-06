@@ -1160,7 +1160,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   char *basename;
   char *str, *str0;
   char range_buf[255];
-  char disposition[256];
+  char disposition[512];
   off_t content_len, chunk;
   intmax_t file_start, file_end;
   void *tcp_id;
@@ -1205,7 +1205,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   if (basename) {
     basename++; /* Skip '/' */
     str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
-                                basename, strlen(basename) * 2);
+                                basename, strlen(basename) * 3);
     htsbuf_queue_init(&q, 0);
     htsbuf_append_and_escape_url(&q, basename);
     str = htsbuf_to_string(&q);
