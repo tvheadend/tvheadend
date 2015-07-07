@@ -913,8 +913,7 @@ dvr_thread(void *aux)
         atomic_add(&ts->ths_bytes_out, pktbuf_len(pb));
     }
 
-    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
-
+    streaming_queue_remove(sq, sm);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {

@@ -305,7 +305,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       continue;
     }
 
-    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    streaming_queue_remove(sq, sm);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {

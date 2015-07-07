@@ -183,7 +183,7 @@ satip_rtp_thread(void *aux)
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
-    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    streaming_queue_remove(sq, sm);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch (sm->sm_type) {

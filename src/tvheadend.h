@@ -522,6 +522,7 @@ typedef struct streaming_queue {
   pthread_cond_t  sq_cond;     /* Condvar for signalling new packets */
 
   size_t          sq_maxsize;  /* Max queue size (bytes) */
+  size_t          sq_size;     /* Actual queue size (bytes) - only data */
   
   struct streaming_message_queue sq_queue;
 

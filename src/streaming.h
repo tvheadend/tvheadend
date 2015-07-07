@@ -78,9 +78,9 @@ void streaming_queue_init
 
 void streaming_queue_clear(struct streaming_message_queue *q);
 
-size_t streaming_queue_size(struct streaming_message_queue *q);
-
 void streaming_queue_deinit(streaming_queue_t *sq);
+
+void streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm);
 
 void streaming_target_connect(streaming_pad_t *sp, streaming_target_t *st);
 

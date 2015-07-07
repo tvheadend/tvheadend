@@ -46,6 +46,23 @@ streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque,
   st->st_reject_filter = reject_filter;
 }
 
+/**
+ *
+ */
+static size_t
+streaming_message_data_size(streaming_message_t *sm)
+{
+  if (sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if (pkt && pkt->pkt_payload)
+      return pkt->pkt_payload->pb_size;
+  } else if (sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pkt_payload = sm->sm_data;
+    if (pkt_payload)
+      return pkt_payload->pb_size;
+  }
+  return 0;
+}
 
 /**
  *
@@ -58,18 +75,26 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
   pthread_mutex_lock(&sq->sq_mutex);
 
   /* queue size protection */
-  // TODO: would be better to update size as we go, but this would
-  //       require updates elsewhere to ensure all removals from the queue
-  //       are covered (new function)
-  if (sq->sq_maxsize && streaming_queue_size(&sq->sq_queue) >= sq->sq_maxsize)
+  if (sq->sq_maxsize && sq->sq_maxsize < sq->sq_size) {
     streaming_msg_free(sm);
-  else
+  } else {
     TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
+    sq->sq_size += streaming_message_data_size(sm);
+  }
 
   pthread_cond_signal(&sq->sq_cond);
   pthread_mutex_unlock(&sq->sq_mutex);
 }
 
+/**
+ *
+ */
+void
+streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
+{
+  sq->sq_size -= streaming_message_data_size(sm);
+  TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+}
 
 /**
  *
@@ -84,6 +109,7 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
   TAILQ_INIT(&sq->sq_queue);
 
   sq->sq_maxsize = maxsize;
+  sq->sq_size = 0;
 }
 
 /**
@@ -92,11 +118,25 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 void
 streaming_queue_deinit(streaming_queue_t *sq)
 {
+  sq->sq_size = 0;
   streaming_queue_clear(&sq->sq_queue);
   pthread_mutex_destroy(&sq->sq_mutex);
   pthread_cond_destroy(&sq->sq_cond);
 }
 
+/**
+ *
+ */
+void
+streaming_queue_clear(struct streaming_message_queue *q)
+{
+  streaming_message_t *sm;
+
+  while((sm = TAILQ_FIRST(q)) != NULL) {
+    TAILQ_REMOVE(q, sm, sm_link);
+    streaming_msg_free(sm);
+  }
+}
 
 /**
  *
@@ -347,51 +387,6 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
   else
     streaming_msg_free(sm);
 }
-
-/**
- *
- */
-void
-streaming_queue_clear(struct streaming_message_queue *q)
-{
-  streaming_message_t *sm;
-
-  while((sm = TAILQ_FIRST(q)) != NULL) {
-    TAILQ_REMOVE(q, sm, sm_link);
-    streaming_msg_free(sm);
-  }
-}
-
-
-/**
- *
- */
-size_t streaming_queue_size(struct streaming_message_queue *q)
-{
-  streaming_message_t *sm;
-  int size = 0;
-
-  TAILQ_FOREACH(sm, q, sm_link) {
-    if (sm->sm_type == SMT_PACKET)
-    {
-      th_pkt_t *pkt = sm->sm_data;
-      if (pkt && pkt->pkt_payload)
-      {
-        size += pkt->pkt_payload->pb_size;
-      }
-    }
-    else if (sm->sm_type == SMT_MPEGTS)
-    {
-      pktbuf_t *pkt_payload = sm->sm_data;
-      if (pkt_payload)
-      {
-        size += pkt_payload->pb_size;
-      }
-    }
-  }
-  return size;
-}
-
 
 /**
  *
