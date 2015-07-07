@@ -65,6 +65,14 @@
 #include <sys/socket.h>
 #endif
 
+#define MIME_M3U "audio/mpegurl"
+#define MIME_E2 "application/x-e2-bouquet"
+
+enum {
+  PLAYLIST_M3U,
+  PLAYLIST_E2
+};
+
 static int webui_xspf;
 
 /*
@@ -450,11 +458,12 @@ http_get_hostpath(http_connection_t *hc)
  * Output a playlist containing a single channel
  */
 static int
-http_channel_playlist(http_connection_t *hc, channel_t *channel)
+http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
 {
   htsbuf_queue_t *hq;
   char buf[255];
   char *profile, *hostpath;
+  const char *name;
 
   if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -466,14 +475,31 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
 
   snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(channel));
 
-  htsbuf_qprintf(hq, "#EXTM3U\n");
-  htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(channel));
-  htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
-     access_ticket_create(buf, hc->hc_access));
+  name = channel_get_name(channel);
 
-  htsbuf_qprintf(hq, "&profile=%s\n", profile);
+  if (pltype == PLAYLIST_M3U) {
 
-  http_output_content(hc, "audio/mpegurl");
+    htsbuf_qprintf(hq, "#EXTM3U\n");
+    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", name);
+    htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
+                       access_ticket_create(buf, hc->hc_access));
+
+    htsbuf_qprintf(hq, "&profile=%s\n", profile);
+
+    http_output_content(hc, MIME_M3U);
+
+  } else if (pltype == PLAYLIST_E2) {
+
+    htsbuf_qprintf(hq, "#NAME %s\n", name);
+    htsbuf_qprintf(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
+    htsbuf_append_and_escape_url(hq, hostpath);
+    htsbuf_append_and_escape_url(hq, buf);
+    htsbuf_qprintf(hq, ":%s\n", name);
+    htsbuf_qprintf(hq, "#DESCRIPTION %s\n", name);
+
+    http_output_content(hc, MIME_E2);
+
+  }
 
   free(hostpath);
   free(profile);
@@ -485,7 +511,7 @@ http_channel_playlist(http_connection_t *hc, channel_t *channel)
  * Output a playlist containing all channels with a specific tag
  */
 static int
-http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
+http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
 {
   htsbuf_queue_t *hq;
   char buf[255];
@@ -494,6 +520,9 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
   channel_t *ch;
   channel_t **chlist;
   int idx = 0, count = 0;
+
+  if(pltype != PLAYLIST_M3U)
+    return HTTP_STATUS_BAD_REQUEST;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -536,7 +565,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
 
   free(chlist);
 
-  http_output_content(hc, "audio/mpegurl");
+  http_output_content(hc, MIME_M3U);
 
   free(hostpath);
   free(profile);
@@ -548,7 +577,7 @@ http_tag_playlist(http_connection_t *hc, channel_tag_t *tag)
  * Output a playlist pointing to tag-specific playlists
  */
 static int
-http_tag_list_playlist(http_connection_t *hc)
+http_tag_list_playlist(http_connection_t *hc, int pltype)
 {
   htsbuf_queue_t *hq;
   char buf[255];
@@ -556,6 +585,9 @@ http_tag_list_playlist(http_connection_t *hc)
   channel_tag_t **ctlist;
   int idx = 0, count = 0;
   char *profile, *hostpath;
+
+  if(pltype != PLAYLIST_M3U)
+    return HTTP_STATUS_BAD_REQUEST;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -593,7 +625,7 @@ http_tag_list_playlist(http_connection_t *hc)
 
   free(ctlist);
 
-  http_output_content(hc, "audio/mpegurl");
+  http_output_content(hc, MIME_M3U);
 
   free(hostpath);
   free(profile);
@@ -605,7 +637,7 @@ http_tag_list_playlist(http_connection_t *hc)
  * Output a flat playlist with all channels
  */
 static int
-http_channel_list_playlist(http_connection_t *hc)
+http_channel_list_playlist(http_connection_t *hc, int pltype)
 {
   htsbuf_queue_t *hq;
   char buf[255];
@@ -613,6 +645,7 @@ http_channel_list_playlist(http_connection_t *hc)
   channel_t **chlist;
   int idx = 0, count = 0;
   char *profile, *hostpath;
+  const char *name;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -637,24 +670,37 @@ http_channel_list_playlist(http_connection_t *hc)
 
   qsort(chlist, count, sizeof(channel_t *), http_channel_playlist_cmp);
 
-  htsbuf_qprintf(hq, "#EXTM3U\n");
+  htsbuf_qprintf(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
 
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
       continue;
 
+    name = channel_get_name(ch);
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
-    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
-    htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
-       access_ticket_create(buf, hc->hc_access));
-    htsbuf_qprintf(hq, "&profile=%s\n", profile);
+    if (pltype != PLAYLIST_E2) {
+
+      htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", name);
+      htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
+         access_ticket_create(buf, hc->hc_access));
+      htsbuf_qprintf(hq, "&profile=%s\n", profile);
+
+    } else {
+
+      htsbuf_qprintf(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
+      htsbuf_append_and_escape_url(hq, hostpath);
+      htsbuf_append_and_escape_url(hq, buf);
+      htsbuf_qprintf(hq, ":%s\n", name);
+      htsbuf_qprintf(hq, "#DESCRIPTION %s\n", name);
+
+    }
   }
 
   free(chlist);
 
-  http_output_content(hc, "audio/mpegurl");
+  http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
 
   free(hostpath);
   free(profile);
@@ -667,7 +713,7 @@ http_channel_list_playlist(http_connection_t *hc)
  * Output a playlist of all recordings.
  */
 static int
-http_dvr_list_playlist(http_connection_t *hc)
+http_dvr_list_playlist(http_connection_t *hc, int pltype)
 {
   htsbuf_queue_t *hq;
   char buf[255];
@@ -678,6 +724,9 @@ http_dvr_list_playlist(http_connection_t *hc)
   time_t durration;
   struct tm tm;
   int bandwidth;
+
+  if (pltype != PLAYLIST_M3U)
+    return HTTP_STATUS_BAD_REQUEST;
 
   hq = &hc->hc_reply;
 
@@ -707,7 +756,7 @@ http_dvr_list_playlist(http_connection_t *hc)
        access_ticket_create(buf, hc->hc_access));
   }
 
-  http_output_content(hc, "audio/mpegurl");
+  http_output_content(hc, MIME_M3U);
 
   free(hostpath);
   return 0;
@@ -717,7 +766,7 @@ http_dvr_list_playlist(http_connection_t *hc)
  * Output a playlist with a http stream for a dvr entry (.m3u format)
  */
 static int
-http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
+http_dvr_playlist(http_connection_t *hc, int pltype, dvr_entry_t *de)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
   char buf[255];
@@ -727,6 +776,9 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
   int bandwidth = 0, ret = 0;
   struct tm tm;  
   char *hostpath;
+
+  if(pltype != PLAYLIST_M3U)
+    return HTTP_STATUS_BAD_REQUEST;
 
   if(http_access_verify(hc, ACCESS_RECORDER))
     return HTTP_STATUS_UNAUTHORIZED;
@@ -754,7 +806,7 @@ http_dvr_playlist(http_connection_t *hc, dvr_entry_t *de)
     ticket_id = access_ticket_create(buf, hc->hc_access);
     htsbuf_qprintf(hq, "%s%s?ticket=%s\n", hostpath, buf, ticket_id);
 
-    http_output_content(hc, "audio/mpegurl");
+    http_output_content(hc, MIME_M3U);
   } else {
     ret = HTTP_STATUS_NOT_FOUND;
   }
@@ -771,13 +823,25 @@ static int
 page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
 {
   char *components[2], *cmd, *s;
-  int nc, r;
+  int nc, r, pltype = PLAYLIST_M3U;
   channel_t *ch = NULL;
   dvr_entry_t *de = NULL;
   channel_tag_t *tag = NULL;
 
-  if(!remain) {
-    http_redirect(hc, "/playlist/channels", &hc->hc_req_args);
+  if (remain && !strcmp(remain, "e2")) {
+    pltype = PLAYLIST_E2;
+    remain = NULL;
+  }
+
+  if (remain && !strncmp(remain, "e2/", 3)) {
+    pltype = PLAYLIST_E2;
+    remain += 3;
+  }
+
+  if(!remain || *remain == '\0') {
+    http_redirect(hc, pltype == PLAYLIST_E2 ? "/playlist/e2/channels" :
+                                              "/playlist/channels",
+                                              &hc->hc_req_args);
     return HTTP_STATUS_FOUND;
   }
 
@@ -808,11 +872,11 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     tag = channel_tag_find_by_name(components[1], 0);
 
   if(ch)
-    r = http_channel_playlist(hc, ch);
+    r = http_channel_playlist(hc, pltype, ch);
   else if(tag)
-    r = http_tag_playlist(hc, tag);
+    r = http_tag_playlist(hc, pltype, tag);
   else if(de)
-    r = http_dvr_playlist(hc, de);
+    r = http_dvr_playlist(hc, pltype, de);
   else {
     cmd = s = tvh_strdupa(components[0]);
     while (*s && *s != '.') s++;
@@ -823,13 +887,13 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     if (s[0] != '\0' && strcmp(s, "m3u") && strcmp(s, "m3u8"))
       r = HTTP_STATUS_BAD_REQUEST;
     else if(!strcmp(cmd, "tags"))
-      r = http_tag_list_playlist(hc);
+      r = http_tag_list_playlist(hc, pltype);
     else if(!strcmp(cmd, "channels"))
-      r = http_channel_list_playlist(hc);
+      r = http_channel_list_playlist(hc, pltype);
     else if(!strcmp(cmd, "channels.m3u"))
-      r = http_channel_list_playlist(hc);
+      r = http_channel_list_playlist(hc, pltype);
     else if(!strcmp(cmd, "recordings"))
-      r = http_dvr_list_playlist(hc);
+      r = http_dvr_list_playlist(hc, pltype);
     else {
       r = HTTP_STATUS_BAD_REQUEST;
     }
@@ -1168,7 +1232,7 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
 %s/%s%s%s\r\n", title, hostpath, remain, profile ? "?profile=" : "", profile ?: "");
 
   len = strlen(buf);
-  http_send_header(hc, 200, "audio/mpegurl", len, 0, NULL, 10, 0, NULL, NULL);
+  http_send_header(hc, 200, MIME_M3U, len, 0, NULL, 10, 0, NULL, NULL);
   tvh_write(hc->hc_fd, buf, len);
 
   free(hostpath);
