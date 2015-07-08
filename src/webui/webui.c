@@ -494,7 +494,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
     htsbuf_qprintf(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
     htsbuf_append_and_escape_url(hq, hostpath);
     htsbuf_append_and_escape_url(hq, buf);
-    htsbuf_qprintf(hq, ":%s\n", name);
+    htsbuf_qprintf(hq, "&profile=%s:%s\n", profile, name);
     htsbuf_qprintf(hq, "#DESCRIPTION %s\n", name);
 
     http_output_content(hc, MIME_E2);
@@ -517,12 +517,10 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
   char buf[255];
   idnode_list_mapping_t *ilm;
   char *profile, *hostpath;
+  const char *name;
   channel_t *ch;
   channel_t **chlist;
   int idx = 0, count = 0;
-
-  if(pltype != PLAYLIST_M3U)
-    return HTTP_STATUS_BAD_REQUEST;
 
   if(hc->hc_access == NULL ||
      access_verify2(hc->hc_access, ACCESS_STREAMING))
@@ -549,23 +547,39 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
 
   assert(idx == count);
 
-  qsort(chlist, count, sizeof(channel_t *), http_channel_playlist_cmp);
-
-  htsbuf_qprintf(hq, "#EXTM3U\n");
+  if (pltype == PLAYLIST_M3U)
+    htsbuf_qprintf(hq, "#EXTM3U\n");
+  else if (pltype == PLAYLIST_E2)
+    htsbuf_qprintf(hq, "#NAME %s\n", tag->ct_name);
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
     if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
       continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
-    htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", channel_get_name(ch));
-    htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
-       access_ticket_create(buf, hc->hc_access));
-    htsbuf_qprintf(hq, "&profile=%s\n", profile);
+    name = channel_get_name(ch);
+
+    if (pltype == PLAYLIST_M3U) {
+
+      htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", name);
+      htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
+                         access_ticket_create(buf, hc->hc_access));
+      htsbuf_qprintf(hq, "&profile=%s\n", profile);
+
+    } else if (pltype == PLAYLIST_E2) {
+
+      htsbuf_qprintf(hq, "#NAME %s\n", name);
+      htsbuf_qprintf(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
+      htsbuf_append_and_escape_url(hq, hostpath);
+      htsbuf_append_and_escape_url(hq, buf);
+      htsbuf_qprintf(hq, "&profile=%s:%s\n", profile, name);
+      htsbuf_qprintf(hq, "#DESCRIPTION %s\n", name);
+
+    }
   }
 
   free(chlist);
 
-  http_output_content(hc, MIME_M3U);
+  http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
 
   free(hostpath);
   free(profile);
@@ -619,7 +633,7 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
     snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
     htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", ct->ct_name);
     htsbuf_qprintf(hq, "%s%s?ticket=%s", hostpath, buf,
-       access_ticket_create(buf, hc->hc_access));
+                       access_ticket_create(buf, hc->hc_access));
     htsbuf_qprintf(hq, "&profile=%s\n", profile);
   }
 
@@ -692,7 +706,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
       htsbuf_qprintf(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
       htsbuf_append_and_escape_url(hq, hostpath);
       htsbuf_append_and_escape_url(hq, buf);
-      htsbuf_qprintf(hq, ":%s\n", name);
+      htsbuf_qprintf(hq, "&profile=%s:%s\n", profile, name);
       htsbuf_qprintf(hq, "#DESCRIPTION %s\n", name);
 
     }
