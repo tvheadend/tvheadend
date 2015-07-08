@@ -18,8 +18,24 @@ DIR=$(cd $(dirname "$0"); pwd)
 
 # Configuration
 TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
-[ -z "$TVH_DIST" ] && TVH_DIST="wheezy lucid precise trusty utopic"
-[ -z "$TVH_ARCH" ] && TVH_ARCH="i386 amd64"
+
+# Builds
+TVH_BUILD="
+precise:i386
+precise:amd64
+trusty:i386
+trusty:amd64
+utopic:i386
+utopic:amd64
+vivid:i386
+vivid:amd64
+wheezy:i386
+wheezy:amd64
+sid:i386
+sid:amd64
+sid:armel
+sid:armhf
+"
 
 # Options
 [ ! -z "$1" ] && REL=$1 || REL=master
@@ -48,10 +64,12 @@ cd "$TMPDIR/tvheadend" || die "failed to enter archived tree"
 cd ..
 
 # For each distro
-for d in $TVH_DIST; do
+for b in $TVH_BUILD; do
   V=${VER}~${d}
   mv tvheadend "tvheadend-${V}"
   cd "tvheadend-${V}"
+  d=${b%%:*}
+  a=${b##*:}
 
   # Create changelog
   ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
@@ -62,9 +80,7 @@ for d in $TVH_DIST; do
   # Build
   if [ "$CMD" == "pbuilder" ]; then
   
-    for a in $TVH_ARCH; do
-      pbuilder-dist $d $a ../tvheadend_${V}.dsc
-    done
+    pbuilder-dist $d $a ../tvheadend_${V}.dsc
 
   # Upload
   else
