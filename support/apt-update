@@ -75,7 +75,7 @@ for b in $TVH_BUILD; do
   ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
   
   # Build source package
-  dpkg-buildpackage -I.git* -S -sgpg -pgpg || exit 1
+  dpkg-buildpackage -d -I.git* -S -sgpg -pgpg || exit 1
 
   # Build
   if [ "$CMD" == "pbuilder" ]; then
