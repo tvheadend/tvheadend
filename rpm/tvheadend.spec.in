@@ -20,7 +20,7 @@ BuildRequires:  dbus-devel
 BuildRequires:  avahi-devel
 BuildRequires:  avahi-libs
 BuildRequires:  openssl-devel
-BuildRequires:  wget python
+BuildRequires:  wget python git
 
 Requires:       systemd-units
 
