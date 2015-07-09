@@ -235,9 +235,13 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   htsbuf_qprintf(&hdrs, "%s %d %s\r\n", 
 		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
-  if (hc->hc_version != RTSP_VERSION_1_0)
+  if (hc->hc_version != RTSP_VERSION_1_0){
     htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
-
+    htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: *\r\n");
+    htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET\r\n");
+    htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
+  }
+  
   if(maxage == 0) {
     if (hc->hc_version != RTSP_VERSION_1_0)
       htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
