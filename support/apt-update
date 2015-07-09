@@ -31,9 +31,12 @@ vivid:i386
 vivid:amd64
 wheezy:i386
 wheezy:amd64
+wheezy:armhf
+jessie:i386
+jessie:amd64
+jessie:armhf
 sid:i386
 sid:amd64
-sid:armel
 sid:armhf
 "
 
