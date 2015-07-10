@@ -65,7 +65,7 @@
 #include <sys/socket.h>
 #endif
 
-#define MIME_M3U "audio/mpegurl"
+#define MIME_M3U "audio/x-mpegurl"
 #define MIME_E2 "application/x-e2-bouquet"
 
 enum {
