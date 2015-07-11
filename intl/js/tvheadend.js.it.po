@@ -3,15 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Alfio Saitta <as.android65@gmail.com>, 2015
 # Mario Di Raimondo <mario.diraimondo@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 16:30+0000\n"
-"Last-Translator: Mario Di Raimondo <mario.diraimondo@gmail.com>\n"
-"Language-Team: Italian (http://www.transifex.com/projects/p/tvheadend/language/it/)\n"
+"PO-Revision-Date: 2015-07-10 11:34+0000\n"
+"Last-Translator: Alfio Saitta <as.android65@gmail.com>\n"
+"Language-Team: Italian (http://www.transifex.com/p/tvheadend/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -29,7 +30,7 @@ msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
-msgstr ""
+msgstr "(Cancella filtri)"
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
@@ -113,15 +114,15 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:198
 msgid "Abort"
-msgstr ""
+msgstr "Annulla"
 
 #: src/webui/static/app/dvr.js:196
 msgid "Abort the selected recording"
-msgstr ""
+msgstr "Interrompere la registrazione selezionata"
 
 #: src/webui/static/app/tvheadend.js:479
 msgid "About"
-msgstr ""
+msgstr "Informazioni"
 
 #: src/webui/static/app/acleditor.js:64
 msgid "Access Control Entries"
@@ -1928,7 +1929,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
-msgstr ""
+msgstr "Mercoledì"
 
 #: src/webui/static/app/status.js:346
 msgid "Weight"
@@ -1936,11 +1937,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:31
 msgid "Will be skipped"
-msgstr ""
+msgstr "Sarà saltato"
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
-msgstr ""
+msgstr "Si"
 
 #: src/webui/static/app/idnode.js:393 src/webui/static/app/idnode.js:652
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
@@ -1983,7 +1984,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:589
 msgid "logout"
-msgstr ""
+msgstr "Esci"
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
