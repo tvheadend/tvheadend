@@ -732,10 +732,15 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
     htsmsg_add_str(out, "subtitle", s);
   if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
     htsmsg_add_str(out, "description", s);
+  if(de->de_episode)
+    htsmsg_add_str(out, "episode", de->de_episode);
   if(de->de_owner)
     htsmsg_add_str(out, "owner",   de->de_owner);
   if(de->de_creator)
     htsmsg_add_str(out, "creator", de->de_creator);
+  if(de->de_comment)
+    htsmsg_add_str(out, "comment", de->de_comment);
+
 
   last = NULL;
   if (!htsmsg_is_empty(de->de_files) && de->de_config) {
