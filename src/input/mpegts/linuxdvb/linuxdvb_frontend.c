@@ -1278,6 +1278,7 @@ linuxdvb_frontend_tune0
     { .t = DVB_PILOT_AUTO,              .l = PILOT_AUTO },
     { .t = DVB_PILOT_ON,                .l = PILOT_ON   },
     { .t = DVB_PILOT_OFF,               .l = PILOT_OFF  },
+    { .t = DVB_PILOT_NONE,              .l = PILOT_AUTO },
     { .l = TABLE_EOD }
   };
   static linuxdvb_tbl_t rolloff_tbl[] = {
