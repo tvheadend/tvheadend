@@ -6,7 +6,7 @@ Setup
 
 To use pbuilder you will need a couple of extra packages available:
 
-$ sudo apt-get install pbuilder-dist qemu-user-static
+$ sudo apt-get install ubuntu-dev-tools qemu-user-static
 
 amd64, i386 and armhf/ARMv7+ (RPi2)
 -----------------------------------
