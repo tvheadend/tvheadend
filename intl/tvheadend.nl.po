@@ -10,9 +10,9 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Dutch (http://www.transifex.com/projects/p/tvheadend/language/nl/)\n"
+"PO-Revision-Date: 2015-07-06 17:12+0000\n"
+"Last-Translator: MO <meindert66@gmail.com>\n"
+"Language-Team: Dutch (http://www.transifex.com/p/tvheadend/language/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -152,11 +152,11 @@ msgstr "AB"
 
 #: src/input/mpegts/mpegts_mux.c:478
 msgid "AC-3 = descriptor 6"
-msgstr ""
+msgstr "AC-3 = indicator 6"
 
 #: src/input/mpegts/mpegts_mux.c:594
 msgid "AC-3 Detection"
-msgstr ""
+msgstr "AC-3 Detectie"
 
 #: src/input/mpegts/mpegts_mux.c:384
 msgid "ACTIVE"
@@ -172,11 +172,11 @@ msgstr "ELKE"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
-msgstr ""
+msgstr "ATSC"
 
 #: src/input/mpegts/mpegts_network_dvb.c:266
 msgid "ATSC Network"
-msgstr ""
+msgstr "ATSC Netwerk"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220 src/input/mpegts/mpegts_mux_dvb.c:223
 #: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:229
@@ -184,7 +184,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:238 src/input/mpegts/mpegts_mux_dvb.c:298
 #: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "AUTO"
-msgstr ""
+msgstr "Auto"
 
 #: src/streaming.c:441
 msgid "Aborted by user"
@@ -213,12 +213,12 @@ msgstr "Voeg thread ID toe aan debug"
 
 #: src/access.c:1421
 msgid "Admin"
-msgstr ""
+msgstr "Admin"
 
 #: src/epg.c:1959 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
 #: src/epg.c:1964
 msgid "Adult movie"
-msgstr ""
+msgstr "Volwassen film"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
@@ -230,7 +230,7 @@ msgstr "Geavanceerde streaming"
 
 #: src/epg.c:1953
 msgid "Adventure"
-msgstr ""
+msgstr "Avontuur"
 
 #: src/epg.c:2090
 msgid "Advertisement / Shopping"
@@ -372,7 +372,7 @@ msgstr "Uitzending"
 
 #: src/epg.c:2049
 msgid "Broadcasting"
-msgstr ""
+msgstr "Uitzending"
 
 #: src/webui/extjs.c:224
 msgid "Build"
@@ -385,7 +385,7 @@ msgstr ""
 
 #: src/descrambler/constcw.c:290 src/descrambler/constcw.c:350
 msgid "CA ID"
-msgstr ""
+msgstr "CA ID"
 
 #: src/esfilter.c:914
 msgid "CA Identification"

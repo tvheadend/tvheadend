@@ -12,9 +12,9 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-04 15:35+0000\n"
-"Last-Translator: Adrien Cosson <cadiyak.theory@gmail.com>\n"
-"Language-Team: French (http://www.transifex.com/projects/p/tvheadend/language/fr/)\n"
+"PO-Revision-Date: 2015-07-10 11:48+0000\n"
+"Last-Translator: bigbig6 <bigbig6@hotmail.fr>\n"
+"Language-Team: French (http://www.transifex.com/p/tvheadend/language/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -203,7 +203,7 @@ msgstr "Action"
 
 #: src/streaming.c:428
 msgid "Adapter in use by another subscription"
-msgstr ""
+msgstr "Adaptateur déjà utilisé par un autre service"
 
 #: src/main.c:705
 msgid "Add file and line numbers to debug"
@@ -542,7 +542,7 @@ msgstr "ID de Configuration "
 
 #: src/dvr/dvr_config.c:773
 msgid "Configuration Name"
-msgstr ""
+msgstr "Nom de la config"
 
 #: src/access.c:1427
 msgid "Connection Limit Type"
@@ -602,7 +602,7 @@ msgstr "Culture (sans musique)"
 
 #: src/epg.c:1967
 msgid "Current affairs"
-msgstr ""
+msgstr "Affaire en cours"
 
 #: src/main.c:664
 msgid "DBus - use the session message bus instead system one"
@@ -813,7 +813,7 @@ msgstr ""
 
 #: src/main.c:699
 msgid "Disable syslog (all messages)"
-msgstr ""
+msgstr "Désactive le syslog (Tous les messages)"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
@@ -895,15 +895,15 @@ msgstr "Economie"
 
 #: src/epg.c:2068
 msgid "Education"
-msgstr ""
+msgstr "Education"
 
 #: src/epg.c:2014
 msgid "Educational"
-msgstr ""
+msgstr "Education"
 
 #: src/esfilter.c:595
 msgid "Elementary Stream Filter"
-msgstr ""
+msgstr "Filtre des flux élémentaires"
 
 #: src/input/mpegts/mpegts_mux.c:459
 msgid "Enable (auto)"
@@ -959,11 +959,11 @@ msgstr "Encrypté"
 
 #: src/epg.c:2013
 msgid "Entertainment programmes for 10 to 16"
-msgstr ""
+msgstr "Programmes éducatifs (de 10 a 16 ans)"
 
 #: src/epg.c:2012
 msgid "Entertainment programmes for 6 to 14"
-msgstr ""
+msgstr "Programmes éducatifs (de 6 a 14 ans)"
 
 #: src/epg.c:2069
 msgid "Environment"
@@ -1004,11 +1004,11 @@ msgstr "Exclure le tag de la chaine"
 
 #: src/epg.c:2072
 msgid "Expeditions"
-msgstr ""
+msgstr "Expéditions"
 
 #: src/epg.c:2048
 msgid "Experimental film"
-msgstr ""
+msgstr "Films expérimental"
 
 #: src/dvr/dvr_db.c:2002 src/dvr/dvr_autorec.c:983
 msgid "Extra Start Time"
@@ -1076,7 +1076,7 @@ msgstr "Nom du fichier"
 
 #: src/dvr/dvr_config.c:864
 msgid "Filename Character Set"
-msgstr ""
+msgstr "Type de caractères pour les noms de fichiers"
 
 #: src/dvr/dvr_config.c:747
 msgid "Filename Options"
@@ -1092,11 +1092,11 @@ msgstr ""
 
 #: src/epg.c:2088
 msgid "Fitness and health"
-msgstr ""
+msgstr "Fitness et santé"
 
 #: src/epg.c:2029
 msgid "Folk"
-msgstr ""
+msgstr "Folk"
 
 #: src/epg.c:1956
 msgid "Folkloric"
@@ -1116,7 +1116,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:134
 msgid "Force Old Status"
-msgstr ""
+msgstr "Forcer l'ancien état"
 
 #: src/profile.c:330
 msgid "Force Priority"
@@ -1124,7 +1124,7 @@ msgstr "Force la priorité"
 
 #: src/input/mpegts/satip/satip.c:254
 msgid "Force pilot for DVB-S2"
-msgstr ""
+msgstr "Forcer le pilote pour le DVB-S2"
 
 #: src/input/mpegts/satip/satip_frontend.c:173
 msgid "Force teardown delay"
@@ -1132,7 +1132,7 @@ msgstr "Délais pour forcer la fin de communication"
 
 #: src/epg.c:2072
 msgid "Foreign countries"
-msgstr ""
+msgstr "Pays étrangers"
 
 #: src/main.c:651
 msgid "Fork and run as daemon"
@@ -1180,11 +1180,11 @@ msgstr "Répertoire du frontal"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:237
 msgid "Full DiseqC"
-msgstr ""
+msgstr "Full DiseqC"
 
 #: src/input/mpegts/satip/satip.c:212
 msgid "Full Mux Rx mode supported"
-msgstr ""
+msgstr "Mode full Mux Rx supporté"
 
 #: src/dvr/dvr_config.c:739
 msgid "Full Pathname Specification"
@@ -1192,7 +1192,7 @@ msgstr "Spécification du chemin de fichier complet"
 
 #: src/dvr/dvr_autorec.c:941
 msgid "Full-text"
-msgstr ""
+msgstr "Mode texte"
 
 #: src/epg.c:2074
 msgid "Further education"
@@ -1212,7 +1212,7 @@ msgstr "Rotor du GOTOX"
 
 #: src/epg.c:1983 src/epg.c:1984
 msgid "Game show"
-msgstr ""
+msgstr "Exposition de jeux"
 
 #: src/epg.c:2091 src/epg.c:2092 src/epg.c:2093 src/epg.c:2094 src/epg.c:2095
 #: src/epg.c:2096 src/epg.c:2097
@@ -1270,7 +1270,7 @@ msgstr "Streaming HTSP"
 
 #: src/epg.c:2086
 msgid "Handicraft"
-msgstr ""
+msgstr "Artisanat"
 
 #: src/streaming.c:544
 msgid "Hearing impaired"
@@ -1298,7 +1298,7 @@ msgstr "Horreur"
 
 #: src/descrambler/cwc.c:1739
 msgid "Hostname/IP"
-msgstr ""
+msgstr "Nom d’hôte/adresse IP"
 
 #: src/input/mpegts/mpegts_mux.c:382
 msgid "IDLE"
@@ -1416,7 +1416,7 @@ msgstr "Index"
 
 #: src/epg.c:2014
 msgid "Informational"
-msgstr ""
+msgstr "Information"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:260
 msgid "Init Rotor Time (seconds)"
@@ -1466,7 +1466,7 @@ msgstr "Destination invalide"
 
 #: src/epg.c:2030
 msgid "Jazz"
-msgstr ""
+msgstr "Jazz"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
@@ -1500,7 +1500,7 @@ msgstr "Latitude direction sud"
 
 #: src/epg.c:2084
 msgid "Leisure hobbies"
-msgstr ""
+msgstr "Loisir et passe-temps"
 
 #: src/access.c:1434
 msgid "Limit Connections"
@@ -1685,7 +1685,7 @@ msgstr "URL du fabriquant"
 
 #: src/bouquet.c:831
 msgid "Map No Name"
-msgstr ""
+msgstr "Mapper les 'sans noms'"
 
 #: src/bouquet.c:838
 msgid "Map Radio"
@@ -1815,7 +1815,7 @@ msgstr "Sports motorisés"
 
 #: src/epg.c:2087
 msgid "Motoring"
-msgstr ""
+msgstr "Automobiles"
 
 #: src/epg.c:1951
 msgid "Movie"
@@ -1922,7 +1922,7 @@ msgstr "Réseaux"
 
 #: src/epg.c:1967 src/epg.c:1968
 msgid "News"
-msgstr ""
+msgstr "Journal"
 
 #: src/epg.c:1969
 msgid "News magazine"
@@ -1984,7 +1984,7 @@ msgstr "Normal"
 
 #: src/input/mpegts/mpegts_input.c:202
 msgid "Not Linked"
-msgstr ""
+msgstr "Pas de lien"
 
 #: src/profile.c:1355 src/dvr/dvr_db.c:1612 src/dvr/dvr_db.c:1640
 msgid "Not set"
@@ -1992,11 +1992,11 @@ msgstr "Non défini"
 
 #: src/dvr/dvr_config.c:695
 msgid "Not set (none or channel configuration)"
-msgstr ""
+msgstr "non défini (rien ou config de chaine)"
 
 #: src/dvr/dvr_db.c:1969 src/dvr/dvr_autorec.c:611
 msgid "Not set (use channel or DVR configuration)"
-msgstr ""
+msgstr "non défini (utiliser chaine ou la config du DVR)"
 
 #: src/channels.c:311
 msgid "Number"
@@ -2177,11 +2177,11 @@ msgstr "Mots de passe"
 
 #: src/epg.c:2042
 msgid "Performing arts"
-msgstr ""
+msgstr "arts du spectacle"
 
 #: src/epg.c:2071
 msgid "Physiology"
-msgstr ""
+msgstr "Physiologie"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
@@ -2189,7 +2189,7 @@ msgstr "Pilote"
 
 #: src/epg.c:2052
 msgid "Political issues"
-msgstr ""
+msgstr "Questions politiques"
 
 #: src/epg.c:2027
 msgid "Pop"
@@ -2233,7 +2233,7 @@ msgstr ""
 
 #: src/profile.c:357
 msgid "Preferred Service Video Type"
-msgstr ""
+msgstr "Type de service vidéo préféré"
 
 #: src/input/mpegts/satip/satip.c:380
 msgid "Presentation"
@@ -2241,7 +2241,7 @@ msgstr "Présentation"
 
 #: src/epg.c:2049
 msgid "Press"
-msgstr ""
+msgstr "Presses"
 
 #: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
@@ -2286,7 +2286,7 @@ msgstr "Quad (4.0)"
 
 #: src/epg.c:1984
 msgid "Quiz"
-msgstr ""
+msgstr "Quiz"
 
 #: src/input/mpegts/satip/satip.c:289
 msgid "RTSP Port"
@@ -2344,7 +2344,7 @@ msgstr "Religieux"
 #: src/epg.c:2060 src/epg.c:2061 src/epg.c:2062 src/epg.c:2063 src/epg.c:2064
 #: src/epg.c:2065
 msgid "Remarkable people"
-msgstr ""
+msgstr "Célébrités"
 
 #: src/dvr/dvr_config.c:969
 msgid "Remove All Unsafe Characters From Filename"
@@ -2360,7 +2360,7 @@ msgstr ""
 
 #: src/epg.c:2053
 msgid "Reports"
-msgstr ""
+msgstr "Rapports"
 
 #: src/dvr/dvr_db.c:2284
 msgid "Rerun of"
@@ -2412,7 +2412,7 @@ msgstr "Rock"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:570
 msgid "Rolloff"
-msgstr ""
+msgstr "Transfert"
 
 #: src/epg.c:1957
 msgid "Romance"
@@ -2509,7 +2509,7 @@ msgstr "Positions des satellites"
 
 #: src/input/mpegts/mpegts_network.c:238
 msgid "Scan Queue length"
-msgstr ""
+msgstr "Longueur de la file du scan"
 
 #: src/input/mpegts/mpegts_mux.c:564
 msgid "Scan Result"
@@ -2537,7 +2537,7 @@ msgstr "Programmé pour l'enregistrement"
 
 #: src/epg.c:2014
 msgid "School programmes"
-msgstr ""
+msgstr "Programmes scolaire"
 
 #: src/epg.c:2068
 msgid "Science"
@@ -2574,11 +2574,11 @@ msgstr "Lien des séries"
 
 #: src/epg.c:1958
 msgid "Serious"
-msgstr ""
+msgstr "Grave"
 
 #: src/epg.c:2028
 msgid "Serious music"
-msgstr ""
+msgstr "Musique"
 
 #: src/input/mpegts/satip/satip.c:394
 msgid "Server"
@@ -2612,7 +2612,7 @@ msgstr "Nom du service"
 
 #: src/service.c:206
 msgid "Service Raw"
-msgstr ""
+msgstr "Service de base"
 
 #: src/input/mpegts/mpegts_service.c:164
 msgid "Service Type"
@@ -2629,7 +2629,7 @@ msgstr "Compteur du service %zi"
 
 #: src/epg.c:1983
 msgid "Show"
-msgstr ""
+msgstr "Spectacles"
 
 #: src/main.c:645
 msgid "Show this page"
@@ -2673,11 +2673,11 @@ msgstr "Etat du slot"
 
 #: src/epg.c:1956
 msgid "Soap"
-msgstr ""
+msgstr "feuilleton"
 
 #: src/epg.c:2002
 msgid "Soccer"
-msgstr ""
+msgstr "Football"
 
 #: src/epg.c:2052 src/epg.c:2073
 msgid "Social"
@@ -2685,7 +2685,7 @@ msgstr "Social"
 
 #: src/epg.c:2054
 msgid "Social advisory"
-msgstr ""
+msgstr "Conseil social"
 
 #: src/channels.c:1098
 msgid "Sort Index"
@@ -2737,7 +2737,7 @@ msgstr "Spécifier un port supplémentaire pour le HTSP"
 
 #: src/epg.c:2073
 msgid "Spiritual sciences"
-msgstr ""
+msgstr "Sciences Spirituelle"
 
 #: src/epg.c:1999
 msgid "Sports"
@@ -2745,11 +2745,11 @@ msgstr "Sports"
 
 #: src/epg.c:2001
 msgid "Sports magazines"
-msgstr ""
+msgstr "Magazine sportif "
 
 #: src/epg.c:2003
 msgid "Squash"
-msgstr ""
+msgstr "Squash"
 
 #: src/input/mpegts/mpegts_mux.c:477
 msgid "Standard"
@@ -2881,7 +2881,7 @@ msgstr "Système"
 
 #: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
-msgstr ""
+msgstr "Marquer les fichiers avec les metadata"
 
 #: src/channels.c:373
 msgid "Tags"
@@ -2891,7 +2891,7 @@ msgstr "Etiquette"
 #: src/epg.c:1991 src/epg.c:1992 src/epg.c:1993 src/epg.c:1994 src/epg.c:1995
 #: src/epg.c:1996
 msgid "Talk show"
-msgstr ""
+msgstr "Débats"
 
 #: src/epg.c:2004
 msgid "Team sports (excluding football)"
@@ -2899,7 +2899,7 @@ msgstr ""
 
 #: src/epg.c:2070
 msgid "Technology"
-msgstr ""
+msgstr "Technologique"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
@@ -2915,7 +2915,7 @@ msgstr "Options de test"
 
 #: src/epg.c:1952
 msgid "Thriller"
-msgstr ""
+msgstr "Thriller"
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
@@ -2960,11 +2960,11 @@ msgstr ""
 
 #: src/epg.c:2085
 msgid "Tourism / Travel"
-msgstr ""
+msgstr "Tourisme / Voyage"
 
 #: src/epg.c:2045
 msgid "Traditional arts"
-msgstr ""
+msgstr "Arts traditionnel "
 
 #: src/epg.c:2029
 msgid "Traditional music"
@@ -2996,7 +2996,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:106
 msgid "Tune Repeats"
-msgstr ""
+msgstr "Répétiteur de tuner"
 
 #: src/input/mpegts/satip/satip.c:202 src/input/mpegts/satip/satip.c:317
 msgid "Tuner Configuration"
@@ -3012,7 +3012,7 @@ msgstr "Erreur du tuner"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:245
 msgid "Turn off LNB when idle"
-msgstr ""
+msgstr "Arrêter le LNB quand il est au repos"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
@@ -3065,7 +3065,7 @@ msgstr "Sans importance"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:584
 msgid "Universal LNB only"
-msgstr ""
+msgstr "Seulement le NLB universel"
 
 #: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
 msgid "Unknown"
@@ -3131,7 +3131,7 @@ msgstr "Nom de l'utilisateur"
 
 #: src/epg.c:1985
 msgid "Variety show"
-msgstr ""
+msgstr "Spectacle de variété"
 
 #: src/epg.c:2048
 msgid "Video"
@@ -3195,11 +3195,11 @@ msgstr "Guerre"
 
 #: src/epg.c:2007
 msgid "Water sport"
-msgstr ""
+msgstr "Sports aquatique"
 
 #: src/epg.c:1968
 msgid "Weather report"
-msgstr ""
+msgstr "Météo"
 
 #: src/access.c:1415
 msgid "Web Interface"
@@ -3207,7 +3207,7 @@ msgstr "Interface Web"
 
 #: src/access.c:1338
 msgid "Web Interface Language"
-msgstr ""
+msgstr "Langage de l'interface Web"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
@@ -3227,7 +3227,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
-msgstr ""
+msgstr "en50494"
 
 #: src/dvr/dvr_db.c:1938
 msgid "hrs"

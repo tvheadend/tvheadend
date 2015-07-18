@@ -9,9 +9,9 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Persian (http://www.transifex.com/projects/p/tvheadend/language/fa/)\n"
+"PO-Revision-Date: 2015-07-05 09:45+0000\n"
+"Last-Translator: bismark231 <soheil.hamisi@gmail.com>\n"
+"Language-Team: Persian (http://www.transifex.com/p/tvheadend/language/fa/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1935,7 +1935,7 @@ msgstr ""
 
 #: src/streaming.c:446
 msgid "No access"
-msgstr ""
+msgstr "عدم دسترسی"
 
 #: src/main.c:801
 msgid "No adapters specified!\n"
@@ -1973,11 +1973,11 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:458
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:271
 msgid "None"
-msgstr ""
+msgstr "هیچکدام"
 
 #: src/profile.c:249 src/dvr/dvr_db.c:1615
 msgid "Normal"
-msgstr ""
+msgstr "عادی"
 
 #: src/input/mpegts/mpegts_input.c:202
 msgid "Not Linked"
@@ -1997,7 +1997,7 @@ msgstr ""
 
 #: src/channels.c:311
 msgid "Number"
-msgstr ""
+msgstr "شماره"
 
 #: src/main.c:723
 msgid "Number of tsfile tuners"
@@ -2005,7 +2005,7 @@ msgstr ""
 
 #: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
-msgstr ""
+msgstr "تایید"
 
 #: src/descrambler/capmt.c:2165
 msgid "OSCam (rev >= 9095)"
@@ -2029,7 +2029,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:77
 msgid "Off"
-msgstr ""
+msgstr "خاموش"
 
 #: src/descrambler/capmt.c:2166
 msgid "Older OSCam"
@@ -2037,7 +2037,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "On"
-msgstr ""
+msgstr "روشن"
 
 #: src/descrambler/cwc.c:1768
 msgid "One Mux (EMM)"
@@ -2162,15 +2162,15 @@ msgstr ""
 
 #: src/access.c:1692 src/descrambler/cwc.c:1732
 msgid "Password"
-msgstr ""
+msgstr "رمز"
 
 #: src/access.c:1700
 msgid "Password2"
-msgstr ""
+msgstr "رمز 2"
 
 #: src/access.c:1670
 msgid "Passwords"
-msgstr ""
+msgstr "رمزها"
 
 #: src/epg.c:2042
 msgid "Performing arts"
@@ -2198,12 +2198,12 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1746
 msgid "Port"
-msgstr ""
+msgstr "پورت"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:126
 #: src/input/mpegts/satip/satip_satconf.c:216
 msgid "Position"
-msgstr ""
+msgstr "موقعیت"
 
 #: src/dvr/dvr_config.c:842
 msgid "Post-Processor Command"
@@ -2254,11 +2254,11 @@ msgstr ""
 
 #: src/channels.c:1116
 msgid "Private"
-msgstr ""
+msgstr "خصوصی"
 
 #: src/profile.c:307
 msgid "Profile Name"
-msgstr ""
+msgstr "اسم پروفایل"
 
 #: src/input/mpegts/mpegts_service.c:150
 msgid "Provider"
@@ -2484,7 +2484,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:718
 msgid "Sat"
-msgstr ""
+msgstr "ماهواره"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:202
 msgid "SatConfig"
@@ -2510,11 +2510,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:564
 msgid "Scan Result"
-msgstr ""
+msgstr "نتیجه اسکن"
 
 #: src/input/mpegts/mpegts_mux.c:555
 msgid "Scan Status"
-msgstr ""
+msgstr "وضعیت اسکن"
 
 #: src/dvr/dvr_db.c:2277
 msgid "Schedule Status"
@@ -2605,7 +2605,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:143 src/input/mpegts/iptv/iptv_mux.c:138
 msgid "Service Name"
-msgstr ""
+msgstr "اسم خدمات"
 
 #: src/service.c:206
 msgid "Service Raw"
@@ -2613,11 +2613,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:164
 msgid "Service Type"
-msgstr ""
+msgstr "نوع خدمات"
 
 #: src/channels.c:363 src/bouquet.c:875
 msgid "Services"
-msgstr ""
+msgstr "خدمات"
 
 #: src/bouquet.c:761
 #, c-format
@@ -2630,15 +2630,15 @@ msgstr ""
 
 #: src/main.c:645
 msgid "Show this page"
-msgstr ""
+msgstr "این صفحه را نشان بده"
 
 #: src/main.c:646
 msgid "Show version information"
-msgstr ""
+msgstr "نمایش اطلاعات ورژن"
 
 #: src/streaming.c:434
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "کیفیت سیگنال بسیار ضعیف است"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
@@ -2690,19 +2690,19 @@ msgstr ""
 
 #: src/bouquet.c:867
 msgid "Source"
-msgstr ""
+msgstr "منبع"
 
 #: src/streaming.c:413
 msgid "Source deleted"
-msgstr ""
+msgstr "منبع پاک شده"
 
 #: src/streaming.c:411
 msgid "Source quality is bad"
-msgstr ""
+msgstr "کیفیت منبع بد است"
 
 #: src/streaming.c:409
 msgid "Source reconfigured"
-msgstr ""
+msgstr "منبع دوباره تنظیم شد"
 
 #: src/epg.c:2000
 msgid "Special events (Olympic Games, World Cup, etc.)"
@@ -2750,7 +2750,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:477
 msgid "Standard"
-msgstr ""
+msgstr "استاندارد"
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Start"
@@ -2758,19 +2758,19 @@ msgstr "شروع"
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Start After"
-msgstr ""
+msgstr "شروع بعد از"
 
 #: src/dvr/dvr_autorec.c:974
 msgid "Start Before"
-msgstr ""
+msgstr "شروع قبل از"
 
 #: src/dvr/dvr_db.c:1994
 msgid "Start Time"
-msgstr ""
+msgstr "زمان شروع"
 
 #: src/dvr/dvr_db.c:2270 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "وضعیت"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
@@ -2778,15 +2778,15 @@ msgstr ""
 
 #: src/profile.c:1372
 msgid "Stereo"
-msgstr ""
+msgstr "استریو"
 
 #: src/dvr/dvr_timerec.c:601
 msgid "Stop"
-msgstr ""
+msgstr "توقف"
 
 #: src/dvr/dvr_db.c:2019
 msgid "Stop Time"
-msgstr ""
+msgstr "زمان توقف"
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
