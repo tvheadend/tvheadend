@@ -65,7 +65,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 22
+#define HTSP_PROTO_VERSION 23
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -3743,9 +3743,13 @@ htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *
   htsmsg_add_u32(m, "full", status->full);
   htsmsg_add_s64(m, "shift", hs->hs_90khz ? status->shift : ts_rescale(status->shift, 1000000));
   if (status->pts_start != PTS_UNSET)
-    htsmsg_add_s64(m, "start", hs->hs_90khz ? status->pts_start : ts_rescale(status->pts_start, 1000000)) ;
+    htsmsg_add_s64(m, "start", hs->hs_90khz ? status->pts_start : ts_rescale(status->pts_start, 1000000));
   if (status->pts_end != PTS_UNSET)
-    htsmsg_add_s64(m, "end", hs->hs_90khz ? status->pts_end : ts_rescale(status->pts_end, 1000000)) ;
+    htsmsg_add_s64(m, "end", hs->hs_90khz ? status->pts_end : ts_rescale(status->pts_end, 1000000));
+  if (status->time_start != 0)
+    htsmsg_add_s64(m, "startTime", hs->hs_90khz ? status->time_start : ts_rescale(status->time_start, 1000000));
+  if (status->time_end != 0)
+    htsmsg_add_s64(m, "endTime", hs->hs_90khz ? status->time_end : ts_rescale(status->time_end, 1000000));
   htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 #endif
