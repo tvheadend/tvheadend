@@ -679,9 +679,13 @@ void *timeshift_reader ( void *p )
       if (lst && fst && lst != fst && ts->pts_delta != PTS_UNSET) {
         status->pts_start = ts_rescale_i(fst->time - ts->pts_delta, 1000000);
         status->pts_end   = ts_rescale_i(lst->time - ts->pts_delta, 1000000);
+        status->time_start = ts_rescale_i(fst->time, 1000000);
+        status->time_end   = ts_rescale_i(lst->time, 1000000);
       } else {
         status->pts_start = PTS_UNSET;
         status->pts_end   = PTS_UNSET;
+        status->time_start = 0;
+        status->time_end   = 0;
       }
       tsm = streaming_msg_create_data(SMT_TIMESHIFT_STATUS, status);
       streaming_target_deliver2(ts->output, tsm);

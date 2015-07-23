@@ -38,6 +38,8 @@ typedef struct timeshift_status
   int64_t shift;
   int64_t pts_start;
   int64_t pts_end;
+  int64_t time_start;
+  int64_t time_end;
 } timeshift_status_t;
 
 void timeshift_init ( void );
