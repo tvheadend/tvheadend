@@ -1,6 +1,6 @@
 /*
  *  tvheadend, Automatic recordings
- *  Copyright (C) 2010 Andreas �man
+ *  Copyright (C) 2010 Andreas Öman
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del)
 static int
 autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 {
-  channel_tag_mapping_t *ctm;
+  idnode_list_mapping_t *ilm;
   dvr_config_t *cfg;
   double duration;
 
@@ -121,20 +121,19 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
   // Note: ignore channel test if we allow quality unlocking 
   if ((cfg = dae->dae_config) == NULL)
     return 0;
-  if (cfg->dvr_sl_quality_lock)
-    if(dae->dae_channel != NULL) {
-      if (dae->dae_channel != e->channel &&
-          dae->dae_channel->ch_enabled)
-        return 0;
-      if (!dae->dae_channel->ch_enabled)
-        return 0;
-    }
+  if(dae->dae_channel != NULL) {
+    if (dae->dae_channel != e->channel &&
+        dae->dae_channel->ch_enabled)
+      return 0;
+    if (!dae->dae_channel->ch_enabled)
+      return 0;
+  }
 
   if(dae->dae_channel_tag != NULL) {
-    LIST_FOREACH(ctm, &dae->dae_channel_tag->ct_ctms, ctm_tag_link)
-      if(ctm->ctm_channel == e->channel)
+    LIST_FOREACH(ilm, &dae->dae_channel_tag->ct_ctms, ilm_in1_link)
+      if((channel_t *)ilm->ilm_in2 == e->channel)
 	break;
-    if(ctm == NULL)
+    if(ilm == NULL)
       return 0;
   }
 
@@ -400,13 +399,13 @@ dvr_autorec_entry_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write
     return -1;
   if (!access_verify2(a, ACCESS_ADMIN))
     return 0;
-  if (dvr_autorec_entry_verify(dae, a))
+  if (dvr_autorec_entry_verify(dae, a, msg_to_write == NULL ? 1 : 0))
     return -1;
   return 0;
 }
 
 static const char *
-dvr_autorec_entry_class_get_title (idnode_t *self)
+dvr_autorec_entry_class_get_title (idnode_t *self, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
   const char *s = "";
@@ -452,7 +451,7 @@ dvr_autorec_entry_class_channel_get(void *o)
 }
 
 static char *
-dvr_autorec_entry_class_channel_rend(void *o)
+dvr_autorec_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
@@ -513,7 +512,7 @@ dvr_autorec_entry_class_tag_get(void *o)
 }
 
 static char *
-dvr_autorec_entry_class_tag_rend(void *o)
+dvr_autorec_entry_class_tag_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel_tag)
@@ -600,27 +599,31 @@ dvr_autorec_entry_class_time_list(void *o, const char *null)
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_time_list_(void *o)
+dvr_autorec_entry_class_time_list_(void *o, const char *lang)
 {
-  return dvr_autorec_entry_class_time_list(o, "Any");
+  const char *msg = N_("Any");
+  return dvr_autorec_entry_class_time_list(o, tvh_gettext_lang(lang, msg));
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_extra_list(void *o)
+dvr_autorec_entry_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Not set (use channel or DVR config)", 4*60, 1);
+  const char *msg = N_("Not set (use channel or DVR configuration)");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 4*60, 1, lang);
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_minduration_list(void *o)
+dvr_autorec_entry_class_minduration_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
+  const char *msg = N_("Any");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 24*60, 60, lang);
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_maxduration_list(void *o)
+dvr_autorec_entry_class_maxduration_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Any", 24*60, 60);
+  const char *msg = N_("Any");
+  return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 24*60, 60, lang);
 }
 
 static int
@@ -656,7 +659,7 @@ dvr_autorec_entry_class_config_name_get(void *o)
 }
 
 static char *
-dvr_autorec_entry_class_config_name_rend(void *o)
+dvr_autorec_entry_class_config_name_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_config)
@@ -707,48 +710,48 @@ dvr_autorec_entry_class_weekdays_get_(void *o)
 }
 
 static const struct strtab dvr_autorec_entry_class_weekdays_tab[] = {
-  { "Mon", 1 },
-  { "Tue", 2 },
-  { "Wed", 3 },
-  { "Thu", 4 },
-  { "Fri", 5 },
-  { "Sat", 6 },
-  { "Sun", 7 },
+  { N_("Mon"), 1 },
+  { N_("Tue"), 2 },
+  { N_("Wed"), 3 },
+  { N_("Thu"), 4 },
+  { N_("Fri"), 5 },
+  { N_("Sat"), 6 },
+  { N_("Sun"), 7 },
 };
 
 htsmsg_t *
-dvr_autorec_entry_class_weekdays_list ( void *o )
+dvr_autorec_entry_class_weekdays_list ( void *o, const char *lang )
 {
-  return strtab2htsmsg(dvr_autorec_entry_class_weekdays_tab);
+  return strtab2htsmsg(dvr_autorec_entry_class_weekdays_tab, 1, lang);
 }
 
 char *
-dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays)
+dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang)
 {
   char buf[32];
   size_t l;
   int i;
   if (weekdays == 0x7f)
-    strcpy(buf + 1, "All days");
+    strcpy(buf + 1, tvh_gettext_lang(lang, N_("Every day")));
   else if (weekdays == 0)
-    strcpy(buf + 1, "No days");
+    strcpy(buf + 1, tvh_gettext_lang(lang, N_("No days")));
   else {
     buf[0] = '\0';
     for (i = 0; i < 7; i++)
       if (weekdays & (1 << i)) {
         l = strlen(buf);
         snprintf(buf + l, sizeof(buf) - l, ",%s",
-                 val2str(i + 1, dvr_autorec_entry_class_weekdays_tab));
+                 tvh_gettext_lang(lang, val2str(i + 1, dvr_autorec_entry_class_weekdays_tab)));
       }
   }
   return strdup(buf + 1);
 }
 
 static char *
-dvr_autorec_entry_class_weekdays_rend_(void *o)
+dvr_autorec_entry_class_weekdays_rend_(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays);
+  return dvr_autorec_entry_class_weekdays_rend(dae->dae_weekdays, lang);
 }
 
 static int
@@ -860,7 +863,7 @@ dvr_autorec_entry_class_series_link_get(void *o)
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_content_type_list(void *o)
+dvr_autorec_entry_class_content_type_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -869,22 +872,38 @@ dvr_autorec_entry_class_content_type_list(void *o)
 }
 
 static htsmsg_t *
-dvr_autorec_entry_class_dedup_list ( void *o )
+dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "Record all",            DVR_AUTOREC_RECORD_ALL },
-    { "Record if different episode number", DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
-    { "Record if different subtitle", DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE },
-    { "Record if different description", DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION },
-    { "Record once per week", DVR_AUTOREC_RECORD_ONCE_PER_WEEK },
-    { "Record once per day", DVR_AUTOREC_RECORD_ONCE_PER_DAY },
+    { N_("Record all"),
+        DVR_AUTOREC_RECORD_ALL },
+    { N_("Record if different episode number"),
+        DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
+    { N_("Record if different subtitle"),
+        DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE },
+    { N_("Record if different description"),
+        DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION },
+    { N_("Record once per week"),
+        DVR_AUTOREC_RECORD_ONCE_PER_WEEK },
+    { N_("Record once per day"),
+        DVR_AUTOREC_RECORD_ONCE_PER_DAY },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+static uint32_t
+dvr_autorec_entry_class_owner_opts(void *o)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae && dae->dae_id.in_access &&
+      !access_verify2(dae->dae_id.in_access, ACCESS_ADMIN))
+    return 0;
+  return PO_RDONLY;
 }
 
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
-  .ic_caption    = "DVR Auto-Record Entry",
+  .ic_caption    = N_("DVR Auto-Record Entry"),
   .ic_event      = "dvrautorec",
   .ic_save       = dvr_autorec_entry_class_save,
   .ic_get_title  = dvr_autorec_entry_class_get_title,
@@ -894,38 +913,38 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(dvr_autorec_entry_t, dae_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Name",
+      .name     = N_("Name"),
       .off      = offsetof(dvr_autorec_entry_t, dae_name),
     },
 	{
       .type     = PT_STR,
       .id       = "directory",
-      .name     = "Directory",
+      .name     = N_("Directory"),
       .off      = offsetof(dvr_autorec_entry_t, dae_directory),
     },
     {
       .type     = PT_STR,
       .id       = "title",
-      .name     = "Title (Regexp)",
+      .name     = N_("Title (Regexp)"),
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
     },
     {
       .type     = PT_BOOL,
       .id       = "fulltext",
-      .name     = "Fulltext",
+      .name     = N_("Full-text"),
       .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
     },
     {
       .type     = PT_STR,
       .id       = "channel",
-      .name     = "Channel",
+      .name     = N_("Channel"),
       .set      = dvr_autorec_entry_class_channel_set,
       .get      = dvr_autorec_entry_class_channel_get,
       .rend     = dvr_autorec_entry_class_channel_rend,
@@ -934,7 +953,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "tag",
-      .name     = "Channel Tag",
+      .name     = N_("Channel Tag"),
       .set      = dvr_autorec_entry_class_tag_set,
       .get      = dvr_autorec_entry_class_tag_get,
       .rend     = dvr_autorec_entry_class_tag_rend,
@@ -943,7 +962,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start",
-      .name     = "Start After",
+      .name     = N_("Start After"),
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -952,7 +971,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start_window",
-      .name     = "Start Before",
+      .name     = N_("Start Before"),
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -961,7 +980,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_TIME,
       .id       = "start_extra",
-      .name     = "Extra Start Time",
+      .name     = N_("Extra Start Time"),
       .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
       .list     = dvr_autorec_entry_class_extra_list,
       .opts     = PO_DURATION | PO_SORTKEY
@@ -969,7 +988,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_TIME,
       .id       = "stop_extra",
-      .name     = "Extra Stop Time",
+      .name     = N_("Extra Stop Time"),
       .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
       .list     = dvr_autorec_entry_class_extra_list,
       .opts     = PO_DURATION | PO_SORTKEY
@@ -978,7 +997,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .islist   = 1,
       .id       = "weekdays",
-      .name     = "Week Days",
+      .name     = N_("Days of Week"),
       .set      = dvr_autorec_entry_class_weekdays_set,
       .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,
@@ -988,28 +1007,28 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_INT,
       .id       = "minduration",
-      .name     = "Minimal Duration",
+      .name     = N_("Minimum Duration"),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
     },
     {
       .type     = PT_INT,
       .id       = "maxduration",
-      .name     = "Maximal Duration",
+      .name     = N_("Maximum Duration"),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
     },
     {
       .type     = PT_U32,
       .id       = "content_type",
-      .name     = "Content Type",
+      .name     = N_("Content Type"),
       .list     = dvr_autorec_entry_class_content_type_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
     },
     {
       .type     = PT_U32,
       .id       = "pri",
-      .name     = "Priority",
+      .name     = N_("Priority"),
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
@@ -1017,7 +1036,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "record",
-      .name     = "Duplicate Handling",
+      .name     = N_("Duplicate Handling"),
       .def.i    = DVR_AUTOREC_RECORD_ALL,
       .off      = offsetof(dvr_autorec_entry_t, dae_record),
       .list     = dvr_autorec_entry_class_dedup_list,
@@ -1025,13 +1044,13 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_INT,
       .id       = "retention",
-      .name     = "Retention",
+      .name     = N_("Retention"),
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
     },
     {
       .type     = PT_STR,
       .id       = "config_name",
-      .name     = "DVR Configuration",
+      .name     = N_("DVR Configuration"),
       .set      = dvr_autorec_entry_class_config_name_set,
       .get      = dvr_autorec_entry_class_config_name_get,
       .rend     = dvr_autorec_entry_class_config_name_rend,
@@ -1040,7 +1059,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "brand",
-      .name     = "Brand",
+      .name     = N_("Brand"),
       .set      = dvr_autorec_entry_class_brand_set,
       .get      = dvr_autorec_entry_class_brand_get,
       .opts     = PO_RDONLY,
@@ -1048,7 +1067,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "season",
-      .name     = "Season",
+      .name     = N_("Season"),
       .set      = dvr_autorec_entry_class_season_set,
       .get      = dvr_autorec_entry_class_season_get,
       .opts     = PO_RDONLY,
@@ -1056,7 +1075,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "serieslink",
-      .name     = "Series Link",
+      .name     = N_("Series Link"),
       .set      = dvr_autorec_entry_class_series_link_set,
       .get      = dvr_autorec_entry_class_series_link_get,
       .opts     = PO_RDONLY,
@@ -1064,21 +1083,21 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "owner",
-      .name     = "Owner",
+      .name     = N_("Owner"),
       .off      = offsetof(dvr_autorec_entry_t, dae_owner),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_autorec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "creator",
-      .name     = "Creator",
+      .name     = N_("Creator"),
       .off      = offsetof(dvr_autorec_entry_t, dae_creator),
-      .opts     = PO_RDONLY,
+      .get_opts = dvr_autorec_entry_class_owner_opts,
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(dvr_autorec_entry_t, dae_comment),
     },
     {}
@@ -1207,7 +1226,7 @@ autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
   while((dae = LIST_FIRST(&ct->ct_autorecs)) != NULL) {
     LIST_REMOVE(dae, dae_channel_tag_link);
     dae->dae_channel_tag = NULL;
-    idnode_notify_simple(&dae->dae_id);
+    idnode_notify_changed(&dae->dae_id);
     if (delconf)
       dvr_autorec_save(dae);
   }
@@ -1245,4 +1264,54 @@ autorec_destroy_by_config(dvr_config_t *kcfg, int delconf)
     if (delconf)
       dvr_autorec_save(dae);
   }
+}
+
+static inline int extra_valid(time_t extra)
+{
+  return extra != 0 && extra != (time_t)-1;
+}
+
+/**
+ *
+ */
+int
+dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae )
+{
+  time_t extra = dae->dae_start_extra;
+
+  if (!extra_valid(extra)) {
+    if (dae->dae_channel)
+      extra = dae->dae_channel->ch_dvr_extra_time_pre;
+    if (!extra_valid(extra))
+      extra = dae->dae_config->dvr_extra_time_pre;
+  }
+  return extra;
+}
+
+/**
+ *
+ */
+int
+dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae )
+{
+  time_t extra = dae->dae_stop_extra;
+
+  if (!extra_valid(extra)) {
+    if (dae->dae_channel)
+      extra = dae->dae_channel->ch_dvr_extra_time_post;
+    if (!extra_valid(extra))
+      extra = dae->dae_config->dvr_extra_time_post;
+  }
+  return extra;
+}
+
+/**
+ *
+ */
+int
+dvr_autorec_get_retention( dvr_autorec_entry_t *dae )
+{
+  if (dae->dae_retention > 0)
+    return dae->dae_retention;
+  return dae->dae_config->dvr_retention_days;
 }

@@ -220,8 +220,12 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       ADD(dmc_fe_modulation, mtype,
           dmc->dmc_fe_delsys == DVB_SYS_ATSC ? "8vsb" : "64qam");
   }
-  if (flags & SATIP_SETUP_PIDS0)
+  if (flags & SATIP_SETUP_PIDS0) {
     strcat(buf, "&pids=0");
+    if (flags & SATIP_SETUP_PIDS21)
+      strcat(buf, ",21");
+  } else if (flags & SATIP_SETUP_PIDS21)
+             strcat(buf, "&pids=21");
   tvhtrace("satip", "setup params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",

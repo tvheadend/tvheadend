@@ -235,10 +235,7 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
   mmi->mmi_mux->mm_active = t;
 
   /* Install table handlers */
-  psi_tables_default(mm);
-  psi_tables_dvb(mm);
-  psi_tables_atsc_t(mm);
-  psi_tables_atsc_c(mm);
+  psi_tables_install(mi, mm, DVB_SYS_UNKNOWN);
 
   return 0;
 }

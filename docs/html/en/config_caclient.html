@@ -1,0 +1,127 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - CAs</h3>
+<p>Tvheadend support connecting to card clients via the cwc (newcamd) and capmt (dvbapi) protocols for so-called 'softcam' descrambling.</p>
+<p><img src="docresources/configcwc.png" alt="&#39;CAs&#39; Tab" /></p>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the CA client configuration </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the CA client configuration since the last save.</td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add a new CA client configuration. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete an existing CA client configuration. </td>
+</tr>
+<tr>
+<td><strong>Move Up</strong></td>
+<td>Move the selected CA client configuration up in the list. </td>
+</tr>
+<tr>
+<td><strong>Move Down</strong></td>
+<td>Move the selected CA client configuration down in the list. </td>
+</tr>
+<tr>
+<td><strong>Show Passwords</strong></td>
+<td>Reveals any stored CA client passwords. </td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Grid Items</h5>
+<p>The main grid items have the following functions:</p>
+<p><strong>Enabled</strong> : If selected, connection will be tried to be established and retained up. If unselected, Tvheadend will disconnect (if connected) and not try to reconnect.</p>
+<p><strong>Hostname</strong> : Server hostname. DNS lookup is performed upon every connection attempt.</p>
+<p><strong>Port</strong> : Server TCP port</p>
+<p><strong>Username</strong> : Username to use.</p>
+<p><strong>Password</strong> : Password to use.</p>
+<p><strong>DES Key</strong> : Initial DES key.</p>
+<p><strong>Update Card</strong> : Forward Entitlement Management Messages (EMMs) to the server.</p>
+<p><strong>Update One</strong> : Forward EMMs only from one channel at a time.</p>
+<p><strong>Comment</strong> : Allows the administrator to set a comment only visible in this editor. It does not serve any active purpose.</p>
+<p><img src="docresources/configcapmt.png" alt="&#39;CAs Tab 2&#39;" /></p>
+<hr />
+<p>The columns have the following functions:</p>
+<p><strong>Enabled</strong> : If selected, connection will be tried to be established and retained up. If unselected, Tvheadend will disconnect (if connected) and not try to reconnect.</p>
+<p><strong>Camd.socket Filename / IP Address</strong> : Socket filename which is usually opened by cam client. Tvheadend tries to connect to this socket file.</p>
+<p>In mode 3 (TCP), enter the IP address of the oscam server. Tvheadend tries to create a TCP connecting to this IP adress and <em>Connect port</em> .</p>
+<p><strong>Listen / Connect port</strong> : If running on a so called full-featured DVB-Card this can be left empty. Running on Budget-Cards one has to use a dummy ca-device. This is emulated via capmt_ca.so. This module has to be pre-loaded prior to the cam client.</p>
+<p><em>LD_PRELOAD=/path/to/capmt_ca.so cam_client &</em></p>
+<p>This module will communicate the received control-words back to Tvheadend via Port 9000</p>
+<p>In mode 3 (TCP), this port is used for the oscam connection. It must be equal to the listen port in the oscam/dvbapi settings.</p>
+<p><strong>OSCam mode</strong></p>
+<ul>
+<li><strong>mode 0 (LD_PRELOAD)</strong> : LD_PRELOAD hack is active</li>
+</ul>
+<ul>
+<li><strong>mode 1 (old OSCam)</strong> : If selected, connection will be made directly to oscam without using LD_PRELOAD hack. Port 9000 will be used automatically.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Usage Note for Mode 1</p>
+<p>The following lines are required in <strong>[dvbapi]</strong> section of oscam.conf
+file:</p>
+<code>boxtype = pc
+ pmt_mode = 4</code>
+</div>
+
+<ul>
+<li><strong>mode 2 (new OSCam since revision 9095)</strong> : In this mode, no UDP connections are required. All communication is processed though the Camd.socket. The configuration for OSCam should be same as for mode 1.</li>
+</ul>
+<ul>
+<li><strong>mode 3 (new OSCam since revision 9574)</strong> : A TCP connection to server is created. All emm/ecm data are send to oscam using this connection without a requirement for the real linuxdvb devices in the system with OSCam. This mode is suitable for all DVB devices including SAT>IP and IPTV.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Usage Note for Mode 3</p>
+<p>The following lines are required in <strong>[dvbapi]</strong> section of oscam.conf
+file:</p>
+<code>boxtype = pc
+ pmt_mode = 4
+ listen_port = 9000 # or your preferred port</code>
+</div>
+
+<ul>
+<li><p><strong>mode 4 (new OSCam since revision 9754)</strong> : Similar to mode 3, but a Camd.socket connection is used instead of the TCP connection.</p>
+<div class="admonition note">
+<p class="admonition-title">Usage Note for Mode 4</p>
+<p>The following lines are required in <strong>[dvbapi]</strong> section of oscam.conf
+file:</p>
+<code>boxtype = pc-nodmx
+pmt_mode = 4</code>
+</div></li>
+<li><p><strong>mode 5 (new OSCam since revision 10087)</strong> : Similar to mode 3 (TCP), but uses a new network protocol which also added client/server greeting messages and protocol version information (to be able to smoothly detect enhancements in the future).</p>
+<div class="admonition tip">
+<p class="admonition-title">Note</p>
+<p>Mode 5 is currently the preferred mode - others may be removed in the future</p>
+</div></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Usage Note for Mode 5</p>
+<p>The following lines are required in <strong>[dvbapi]</strong> section of oscam.conf
+file:</p>
+<code>boxtype = pc
+ pmt_mode = 4
+ listen_port = 9000 # or your preferred port</code>
+</div>
+
+<p><strong>Comment</strong> Allows the administrator to set a comment only visible in this editor. It does not serve any active purpose.</p>
+</div>

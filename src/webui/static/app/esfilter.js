@@ -20,16 +20,16 @@ tvheadend.esfilter_tab = function(panel)
         url: 'api/profile',
         clazz: 'profile',
         comet: 'profile',
-        titleS: 'Stream Profile',
-        titleP: 'Stream Profiles',
-        titleC: 'Stream Profile Name',
+        titleS: _('Stream Profile'),
+        titleP: _('Stream Profiles'),
+        titleC: _('Stream Profile Name'),
         iconCls: 'film',
         edit: { params: { list: list } },
         add: {
             url: 'api/profile',
-            titleS: 'Stream Profile',
+            titleS: _('Stream Profile'),
             select: {
-                label: 'Type',
+                label: _('Type'),
                 store: tvheadend.profile_builders,
                 displayField: 'caption',
                 valueField: 'class',
@@ -40,7 +40,7 @@ tvheadend.esfilter_tab = function(panel)
         },
         del: true,
         help: function() {
-            new tvheadend.help('Stream Profile', 'config_streamprofile.html');
+            new tvheadend.help(_('Stream Profile'), 'config_streamprofile.html');
         }
     });
 
@@ -48,8 +48,8 @@ tvheadend.esfilter_tab = function(panel)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/video',
-        titleS: 'Video Stream Filter',
-        titleP: 'Video Stream Filters',
+        titleS: _('Video Stream Filter'),
+        titleP: _('Video Stream Filters'),
         iconCls: 'film_edit',
         tabIndex: 1,
         edit: { params: { list: eslist } },
@@ -61,14 +61,14 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help('Elementary Stream Filter', 'config_esfilter.html');
+            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
         }
     });
 
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/audio',
-        titleS: 'Audio Stream Filter',
-        titleP: 'Audio Stream Filters',
+        titleS: _('Audio Stream Filter'),
+        titleP: _('Audio Stream Filters'),
         iconCls: 'control_volume',
         tabIndex: 2,
         edit: { params: { list: eslist } },
@@ -80,15 +80,15 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help('Elementary Stream Filter', 'config_esfilter.html');
+            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
         }
     });
 
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/teletext',
-        titleS: 'Teletext Stream Filter',
-        titleP: 'Teletext Stream Filters',
-		iconCls: 'teletext',
+        titleS: _('Teletext Stream Filter'),
+        titleP: _('Teletext Stream Filters'),
+        iconCls: 'teletext',
         tabIndex: 3,
         edit: { params: { list: eslist } },
         add: {
@@ -105,9 +105,9 @@ tvheadend.esfilter_tab = function(panel)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/subtit',
-        titleS: 'Subtitle Stream Filter',
-        titleP: 'Subtitle Stream Filters',
-		iconCls: 'subtitle',
+        titleS: _('Subtitle Stream Filter'),
+        titleP: _('Subtitle Stream Filters'),
+        iconCls: 'subtitle',
         tabIndex: 4,
         edit: { params: { list: eslist } },
         add: {
@@ -118,14 +118,14 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help('Elementary Stream Filter', 'config_esfilter.html');
+            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
         }
     });
 
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/ca',
-        titleS: 'CA Stream Filter',
-        titleP: 'CA Stream Filters',
+        titleS: _('CA Stream Filter'),
+        titleP: _('CA Stream Filters'),
         iconCls: 'film_key',
         tabIndex: 5,
         add: {
@@ -136,15 +136,15 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help('Elementary Stream Filter', 'config_esfilter.html');
+            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
         }
     });
 
     tvheadend.idnode_grid(panel, {
         url: 'api/esfilter/other',
-        titleS: 'Other Stream Filter',
-        titleP: 'Other Stream Filters',
-		iconCls: 'otherFilters',
+        titleS: _('Other Stream Filter'),
+        titleP: _('Other Stream Filters'),
+        iconCls: 'otherFilters',
         tabIndex: 6,
         edit: { params: { list: eslist } },
         add: {
@@ -155,7 +155,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help('Elementary Stream Filter', 'config_esfilter.html');
+            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
         }
     });
 };

@@ -62,6 +62,7 @@ struct satip_device
   tvh_hardware_t;
 
   gtimer_t                   sd_destroy_timer;
+  int                        sd_inload;
   int                        sd_nosave;
 
   /*
@@ -84,9 +85,12 @@ struct satip_device
   int                        sd_pids_deladd;
   int                        sd_sig_scale;
   int                        sd_pids0;
+  char                      *sd_tunercfg;
+  int                        sd_pids21;
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
   int                        sd_dbus_allow;
+  int                        sd_disable_workarounds;
   pthread_mutex_t            sd_tune_mutex;
 };
 
@@ -119,6 +123,7 @@ struct satip_frontend
   int                        sf_play2;
   int                        sf_tdelay;
   int                        sf_teardown_delay;
+  char                      *sf_tuner_bindaddr;
 
   /*
    * Reception
@@ -160,6 +165,7 @@ struct satip_satconf
   int                        sfc_enabled;
   int                        sfc_position;
   int                        sfc_priority;
+  int                        sfc_grace;
   char                      *sfc_name;
 
   /*
@@ -208,6 +214,9 @@ void satip_satconf_updated_positions
 int satip_satconf_get_priority
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
+int satip_satconf_get_grace
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm );
+
 int satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
@@ -218,6 +227,7 @@ int satip_satconf_get_position
 #define SATIP_SETUP_PLAY     (1<<0)
 #define SATIP_SETUP_PIDS0    (1<<1)
 #define SATIP_SETUP_PILOT_ON (1<<2)
+#define SATIP_SETUP_PIDS21   (1<<3)
 
 int
 satip_rtsp_setup( http_client_t *hc,

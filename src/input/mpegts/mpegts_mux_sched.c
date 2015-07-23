@@ -78,7 +78,7 @@ mpegts_mux_sched_class_delete ( idnode_t *in )
 }
 
 static htsmsg_t *
-mpegts_mux_sched_class_mux_list ( void *o )
+mpegts_mux_sched_class_mux_list ( void *o, const char *lang )
 {
   htsmsg_t *m, *p;
 
@@ -115,7 +115,7 @@ mpegts_mux_sched_class_cron_set ( void *p, const void *v )
 const idclass_t mpegts_mux_sched_class =
 {
   .ic_class      = "mpegts_mux_sched",
-  .ic_caption    = "Mux Sched Entry",
+  .ic_caption    = N_("Mux Sched Entry"),
   .ic_event      = "mpegts_mux_sched",
   .ic_save       = mpegts_mux_sched_class_save,
   .ic_delete     = mpegts_mux_sched_class_delete,
@@ -123,28 +123,28 @@ const idclass_t mpegts_mux_sched_class =
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(mpegts_mux_sched_t, mms_enabled),
       .def.i    = 1,
     },
     {
       .type     = PT_STR,
       .id       = "mux",
-      .name     = "Mux",
+      .name     = N_("Mux"),
       .off      = offsetof(mpegts_mux_sched_t, mms_mux),
       .list     = mpegts_mux_sched_class_mux_list,
     },
     {
       .type     = PT_STR,
       .id       = "cron",
-      .name     = "Cron",
+      .name     = N_("Cron"),
       .off      = offsetof(mpegts_mux_sched_t, mms_cronstr),
       .set      = mpegts_mux_sched_class_cron_set,
     },
     {
       .type     = PT_INT,
       .id       = "timeout",
-      .name     = "Timout (secs)",
+      .name     = N_("Timout (secs)"),
       .off      = offsetof(mpegts_mux_sched_t, mms_timeout),
     },
     {

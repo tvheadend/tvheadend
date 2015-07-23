@@ -65,7 +65,7 @@ extern const idclass_t bouquet_class;
  *
  */
 
-htsmsg_t * bouquet_class_get_list(void *o);
+htsmsg_t * bouquet_class_get_list(void *o, const char *lang);
 
 bouquet_t * bouquet_create(const char *uuid, htsmsg_t *conf,
                            const char *name, const char *src);

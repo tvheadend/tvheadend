@@ -240,16 +240,16 @@ headers_complete(globalheaders_t *gh)
     }
   }
 
-#if ENABLE_TRACE
-  for(i = 0; i < ss->ss_num_components; i++) {
-    ssc = &ss->ss_components[i];
-    tvhtrace("parser", "stream %d %s%s%s (PID %i) complete time %"PRId64"%s",
-             ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
-             ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
-             gh_queue_delay(gh, ssc->ssc_index),
-             ssc->ssc_disabled ? " disabled" : "");
+  if (tvhtrace_enabled()) {
+    for(i = 0; i < ss->ss_num_components; i++) {
+      ssc = &ss->ss_components[i];
+      tvhtrace("parser", "stream %d %s%s%s (PID %i) complete time %"PRId64"%s",
+               ssc->ssc_index, streaming_component_type2txt(ssc->ssc_type),
+               ssc->ssc_lang[0] ? " " : "", ssc->ssc_lang, ssc->ssc_pid,
+               gh_queue_delay(gh, ssc->ssc_index),
+               ssc->ssc_disabled ? " disabled" : "");
+    }
   }
-#endif
 
   return 1;
 }

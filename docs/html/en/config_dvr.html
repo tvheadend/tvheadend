@@ -1,0 +1,292 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - Recording - Digital Video Recorder Profiles</h3>
+<p>This tab is used to configure operation of the Digital Video Recorder. It is not used for scheduling or administration of individual recordings.</p>
+<p><img src="docresources/configdvrtab1.png" alt="&#39;Digital Video Recorder Profiles&#39; Tab 1" /></p>
+<p><img src="docresources/configdvrtab2.png" alt="&#39;Digital Video Recorder Profiles&#39; Tab 2" /></p>
+<p><img src="docresources/configdvrtab3.png" alt="&#39;Digital Video Recorder Profiles&#39; Tab 3" /></p>
+<h3>NOTE: <font color=red>Merge into one image</font></h3>
+<h3>NOTE: <font color=red>Have overview screenshot showing profiles, then focus on config</font></h3>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the DVR configuration </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the DVR configuration since the last save.</td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add a new DVR configuration. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete an existing DVR configuration. </td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Configuration Options</h5>
+<h5>DVR Behaviour</h5>
+<p><strong>Media container</strong> : Select the container format used to store recordings.</p>
+<p><strong>Cache scheme</strong> : Select the cache scheme used to store recordings. Leave as “system” unless you have a special case for one of the others.</p>
+<blockquote><p>Whenever you read or write data to the filesystems, the information is kept (cached) in memory for a while. This means that regularly-access files are available quickly without going back to the disc; it also means that there’s a disconnect when writing between the write request (from the application) and the actual write itself (to the disc/storage) as changes are buffered to be written in one go.</p>
+<ul>
+<li><strong>Unknown</strong> : A placeholder status, meaning that the configuration isn’t properly set.</li>
+</ul>
+<ul>
+<li><strong>System</strong> : Change nothing and rely on standard (default) system caching to behave as it normally would.</li>
+</ul>
+<ul>
+<li><strong>Do not keep</strong> : Tell the system that you’re not expecting to re-use the data soon, so don’t keep it in cache. The data will still be buffered for writing. <em>Useful e.g. in a RAM-limited system like a Pi (given that you’re unlikely to be watching while recording, so data can be discarded now and read back from disc later).</em>  </li>
+</ul>
+<ul>
+<li><strong>Sync</strong> : Tell the system to write the data immediately. This doesn’t affect whether or not it’s cached. <em>Useful e.g. if you’ve a particular problem with data loss due to delayed write (such as if you get frequent transient power problems).</em>  </li>
+</ul>
+<ul>
+<li><strong>Sync + Do not keep</strong> : A combination of last two variants above - data is written immediately and then discarded from cache.</li>
+</ul>
+</blockquote>
+<p><strong>DVR Log retention time (days)</strong> : Time that Tvheadend will keep information about the recording in its internal database. Notice that the actual recorded file will not be deleted when the log entry is deleted.</p>
+<p><strong>Extra time before recordings (minutes)</strong> : Specify the number of minutes to record before the events scheduled start time. Used to cope with small scheduling errors.</p>
+<p><strong>Extra time after recordings (minutes)</strong> : Specify the number of minutes to record after the events scheduled stop time. Used to cope with small scheduling errors.</p>
+<p><strong>Episode duplicate detection</strong> : If checked, broadcasts with matching title and matching non-zero episode number are considered duplicates.</p>
+<p><strong>EPG update window</strong> : Maximum difference between event start times when the EPG event is changed. TVHeadend uses a fuzzy match logic (using title, start times, duration, episode) to check when the event was changed.</p>
+<p><strong>Post-processor command</strong> : Command to run after finishing a recording. The command will be run in background and is executed even if a recording is aborted or an error occurred. Use the %e error formatting string to check for errors, the error string is “OK” if recording finished successfully.</p>
+<p>Supported format strings:</p>
+<table>
+<thead><tr>
+<th>Format</th>
+<th>Description</th>
+<th>Example value </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>%f</code></td>
+<td>Full path to recording</td>
+<td>/home/user/Videos/News.mkv</td>
+</tr>
+<tr>
+<td><code>%b</code></td>
+<td>Basename of recording</td>
+<td>News.mkv </td>
+</tr>
+<tr>
+<td><code>%c</code></td>
+<td>Channel name</td>
+<td>BBC world </td>
+</tr>
+<tr>
+<td><code>%O</code></td>
+<td>Owner of this recording</td>
+<td>user </td>
+</tr>
+<tr>
+<td><code>%C</code></td>
+<td>Who created this recording</td>
+<td>user </td>
+</tr>
+<tr>
+<td><code>%t</code></td>
+<td>Program title</td>
+<td>News </td>
+</tr>
+<tr>
+<td><code>%s</code></td>
+<td>Program subtitle</td>
+<td>Afternoon </td>
+</tr>
+<tr>
+<td><code>%p</code></td>
+<td>Program episode</td>
+<td>S02.E07 </td>
+</tr>
+<tr>
+<td><code>%d</code></td>
+<td>Program description</td>
+<td>News and stories… </td>
+</tr>
+<tr>
+<td><code>%e</code></td>
+<td>Error message</td>
+<td>Aborted by user </td>
+</tr>
+<tr>
+<td><code>%S</code></td>
+<td>Start time stamp of recording, UNIX epoch</td>
+<td>1224421200 </td>
+</tr>
+<tr>
+<td><code>%E</code></td>
+<td>Stop time stamp of recording, UNIX epoch</td>
+<td>1224426600 </td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Example usage</p>
+<p>To use special characters (e.g. spaces), either put the string in quotes or escape the individual characters.</p>
+<p><code>/path/to/ffmpeg -i "%f" -vcodec libx264 -acodec copy "/path/with white space/%b"</code></p>
+</div>
+
+<hr />
+<h5>Recording File Options</h5>
+<p><strong>Recording system path</strong> : Path to where Tvheadend will write recorded events. If components of the path does not exist, Tvheadend will try to create them.</p>
+<p><strong>File permissions</strong> : The permissions to be set on the resultant recording files.</p>
+<blockquote><p>This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.</p>
+<p>Common examples:</p>
+<table>
+<thead><tr>
+<th>Mode</th>
+<th>Permissions </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0644</strong></td>
+<td>rw-r–r– </td>
+</tr>
+<tr>
+<td><strong>0664</strong></td>
+<td>rw-rw-r– (default)</td>
+</tr>
+<tr>
+<td><strong>0666</strong></td>
+<td>rw-rw-rw- </td>
+</tr>
+</tbody>
+</table>
+<p>Note that the applicable umask applies, so <em>0666</em> with umask <em>0022</em> will produce <em>0644</em> (<code>rw-r–r–</code>). See also <em>Directory permissions</em> in <em>Subdirectory Options</em> .</p>
+</blockquote>
+<p><strong>Filename charset</strong> : Character set for the created filename. Tvheadend will try to approximate characters to similarly looking ones.</p>
+<p><strong>Tag files with metadata</strong> : If checked, media containers that support metadata will be tagged with the metadata associated with the event being recorded.</p>
+<p><strong>Skip commercials</strong> : If checked, commercials will be dropped from the recordings. At the moment, commercial detection only works for the swedish channel TV4.</p>
+<hr />
+<h5>Full Pathname Specification</h5>
+<p><strong>Format String</strong> : The string allow to manually specify the full path generation using the predefined modifiers for strftime (see <code>man strftime</code>, except <code>%n</code> and <code>%t</code>) and Tvheadend specific. Note that you may modify some of this format string setting using the GUI fields below.</p>
+<table>
+<thead><tr>
+<th>Format</th>
+<th>Description</th>
+<th>Example </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$t$n.$x</code></td>
+<td>Default format (title, unique number, extension)</td>
+<td>Tennis - Wimbledon-1.mkv</td>
+</tr>
+<tr>
+<td><code>$s</code></td>
+<td>Event subtitle name</td>
+<td>Sport </td>
+</tr>
+<tr>
+<td><code>$t</code></td>
+<td>Event title name</td>
+<td>Tennis - Wimbledon </td>
+</tr>
+<tr>
+<td><code>$e</code></td>
+<td>Event episode name</td>
+<td>S02-E06 </td>
+</tr>
+<tr>
+<td><code>$c</code></td>
+<td>Channel name</td>
+<td>SkySport </td>
+</tr>
+<tr>
+<td><code>$n</code></td>
+<td>Unique number added when the file already exists</td>
+<td>-1 </td>
+</tr>
+<tr>
+<td><code>$x</code></td>
+<td>Filename extension (from the active stream muxer</td>
+<td>mkv </td>
+</tr>
+<tr>
+<td><code>%F</code></td>
+<td>ISO 8601 date format</td>
+<td>2011-03-19 </td>
+</tr>
+<tr>
+<td><code>%R</code></td>
+<td>The time in 24-hour notation</td>
+<td>14:12 </td>
+</tr>
+</tbody>
+</table>
+<p>The format strings <code>$t</code>,<code>$s</code>,<code>%e</code>,<code>$c</code> also have delimiter variants such as <code>$ t</code> (space after the dollar character), <code>$-t</code>, <code>$_t</code>, <code>$.t</code>, <code>$,t</code>, <code>$;t</code>. In these cases, the delimiter is applied only when the substituted string is not empty.</p>
+<hr />
+<h5>Subdirectory Options</h5>
+<p><strong>Directory permissions</strong> : The permissions to be set on any sub-directories created for recordings.</p>
+<blockquote><p>This is useful if you need to manipulate the files after recording under a different user ID, e.g. to chop out commercials.</p>
+<p>Common examples:</p>
+<table>
+<thead><tr>
+<th>Mode</th>
+<th>Permissions </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>0755</strong></td>
+<td>rwxr-xr-x </td>
+</tr>
+<tr>
+<td><strong>0775</strong></td>
+<td>rwxrwxr-x (default)</td>
+</tr>
+<tr>
+<td><strong>0777</strong></td>
+<td>rwxrwxrwx </td>
+</tr>
+</tbody>
+</table>
+<p>Note that the applicable umask applies, so <em>0777</em> with umask <em>0022</em> will produce <em>0755</em> (<code>rwxr-xr-x</code>). See also <em>File permissions</em> in <em>Recording File Options</em> .</p>
+</blockquote>
+<p><strong>Make sub-directories per day</strong> : If checked, create a new directory per day in the recording system path. Only days when anything is recorded will be created. The format of the directory will be ISO standard <em>YYYY-MM-DD</em> .</p>
+<p><strong>Make sub-directories per channel</strong> : If checked, create a directory per channel when storing events. If both this and the ‘directory per day’ checkbox is enabled, the date-directory will be parent to the per-channel directory.</p>
+<p><strong>Make sub-directories per title</strong> : If checked, create a directory per title when storing events. If the day/channel directory checkboxes are also enabled, those directories will be parents of this directory.</p>
+<hr />
+<h5>Filename Options</h5>
+<p><strong>Include channel name in title</strong> : If checked, include the name of the channel in the event title. This applies to both the titled stored in the file and to the file name itself.</p>
+<p><strong>Include date in title</strong> : If checked, include the date for the recording in the event title. This applies to both the titled stored in the file and to the file name itself.</p>
+<p><strong>Include time in title</strong> : If checked, include the time for the recording in the event title. This applies to both the titled stored in the file and to the file name itself.</p>
+<p><strong>Include episode in title</strong> : If checked, include the season and episode in the title (if such info is available).</p>
+<p><strong>Include subtitle in title</strong> : If checked, include the episode subtitle in the title (if such info is available).</p>
+<p><strong>Put episode in filename before date and time</strong> : If checked, insert the episode number before the data and time rather than after (assumes <em>Include date</em> , <em>Include time</em> and <em>Include episode</em> options are set).</p>
+<p><strong>Remove all unsafe characters from filename</strong> : If checked, all characters that could possibly cause problems for filenaming will be replaced with underscore (<code>_</code>).</p>
+<blockquote><p>Applies to characters:</p>
+<ul>
+<li>not supported by Windows: <code>/</code>  <code>:</code>  <code>\</code>  <code>&lt;</code>  <code>&gt;</code>  <code>|</code>  <code>*</code>  <code>?</code>  <code>"</code></li>
+<li>control characters (ASCII code below 32)</li>
+<li>control and national characters (ASCII code above 122) <strong>Replace whitespace in title with ‘-’</strong> : If checked, whitespace characters (spaces and tabs) will be replaced with ‘-’.</li>
+</ul>
+</blockquote>
+<p><strong>Use Windows-compatible filenames</strong> : If checked, characters not supported in Windows filenames (e.g. for an SMB/CIFS share) will be stripped out or converted.</p>
+<blockquote><p>Makes the following changes:</p>
+<ul>
+<li>characters not supported by Windows (<code>/</code>  <code>:</code>  <code>\</code>  <code>&lt;</code>  <code>&gt;</code>  <code>|</code>  <code>*</code>  <code>?</code>  <code>"</code>) will be replaced with underscore (<code>_</code>)</li>
+<li>trailing spaces and dots will be removed Changes to any of these settings must be confirmed by pressing the ‘Save configuration’ button before taking effect.</li>
+</ul>
+</blockquote>
+</div>

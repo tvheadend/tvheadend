@@ -154,14 +154,24 @@ htsmsg_set_s32(htsmsg_t *msg, const char *name,  int32_t s32)
 void htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str);
 
 /**
+ * Add a string field to a list only once.
+ */
+void htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str);
+
+/**
  * Add/update a string field
  */
 int  htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str);
 
 /**
+ * Update a string field
+ */
+int  htsmsg_field_set_str(htsmsg_field_t *f, const char *str);
+
+/**
  * Add an field where source is a list or map message.
  */
-void htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);
+htsmsg_t *htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);
 
 /**
  * Add an field where source is a double
@@ -225,6 +235,8 @@ int htsmsg_field_get_s64(htsmsg_field_t *f, int64_t *s64p);
  * Return the field \p name as an s64.
  */
 int64_t htsmsg_get_s64_or_default(htsmsg_t *msg, const char *name, int64_t def);
+
+int bool_check(const char *str);
 
 int htsmsg_field_get_bool(htsmsg_field_t *f, int *boolp);
 
@@ -333,6 +345,11 @@ int32_t htsmsg_get_s32_or_default(htsmsg_t *msg, const char *name,
 int htsmsg_delete_field(htsmsg_t *msg, const char *name);
 
 /**
+ * Is list/map empty
+ */
+int htsmsg_is_empty(htsmsg_t *msg);
+
+/**
  * Detach will remove the given field (and only if it is a list or map)
  * from the message and make it a 'standalone message'. This means
  * the the contents of the sub message will stay valid if the parent is
@@ -355,6 +372,11 @@ htsmsg_field_t *htsmsg_field_add(htsmsg_t *msg, const char *name,
  * Get a field, return NULL if it does not exist
  */
 htsmsg_field_t *htsmsg_field_find(htsmsg_t *msg, const char *name);
+
+/**
+ * Get a last field, return NULL if it does not exist
+ */
+htsmsg_field_t *htsmsg_field_last(htsmsg_t *msg);
 
 
 /**

@@ -68,25 +68,25 @@ static const property_t  imagecache_props[] = {
   {
     .type   = PT_BOOL,
     .id     = "enabled",
-    .name   = "Enabled",
+    .name   = N_("Enabled"),
     .off    = offsetof(struct imagecache_config, enabled),
   },
   {
     .type   = PT_BOOL,
     .id     = "ignore_sslcert",
-    .name   = "Ignore invalid SSL certificate",
+    .name   = N_("Ignore invalid SSL certificate"),
     .off    = offsetof(struct imagecache_config, ignore_sslcert),
   },
   {
     .type   = PT_U32,
     .id     = "ok_period",
-    .name   = "Re-try period",
+    .name   = N_("Re-try period"),
     .off    = offsetof(struct imagecache_config, ok_period),
   },
   {
     .type   = PT_U32,
     .id     = "fail_period",
-    .name   = "Re-try period of failed images",
+    .name   = N_("Re-try period of failed images"),
     .off    = offsetof(struct imagecache_config, fail_period),
   },
   {}
@@ -408,7 +408,7 @@ htsmsg_t *
 imagecache_get_config ( void )
 {
   htsmsg_t *m = htsmsg_create_map();
-  prop_read_values(&imagecache_conf, imagecache_props, m, NULL, 0);
+  prop_read_values(&imagecache_conf, imagecache_props, m, NULL, 0, NULL);
   return m;
 }
 

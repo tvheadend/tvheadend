@@ -18,6 +18,7 @@
 
 #include "tvheadend.h"
 #include "atomic.h"
+#include "config.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "tcp.h"
@@ -30,7 +31,10 @@
 #include "plumbing/tsfix.h"
 #include "imagecache.h"
 #include "descrambler.h"
+#include "descrambler/caid.h"
 #include "notify.h"
+#include "htsmsg_json.h"
+#include "lang_codes.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -48,19 +52,12 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#if ENABLE_ANDROID
-#include <sys/vfs.h>
-#define statvfs statfs
-#define fstatvfs fstatfs
-#else
-#include <sys/statvfs.h>
-#endif
-#include "settings.h"
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <limits.h>
+#include "settings.h"
 
 /* **************************************************************************
  * Datatypes and variables
@@ -68,7 +65,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 20
+#define HTSP_PROTO_VERSION 22
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -232,6 +229,20 @@ typedef struct htsp_file {
  * *************************************************************************/
 
 static void
+htsp_trace(htsp_connection_t *htsp, const char *subsystem,
+           const char *prefix, htsmsg_t *m)
+{
+  htsbuf_queue_t q;
+  char *s;
+  htsbuf_queue_init(&q, 0);
+  htsmsg_json_serialize(m, &q, 0);
+  s = htsbuf_to_string(&q);
+  htsbuf_queue_flush(&q);
+  tvhtrace(subsystem, "%s - %s '%s'", htsp->htsp_logname, prefix, s);
+  free(s);
+}
+
+static void
 htsp_disable_stream(htsp_subscription_t *hs, unsigned int id)
 {
   if(id < NUM_FILTERED_STREAMS)
@@ -391,8 +402,34 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
  *
  */
 static void
+htsp_send_subscription(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
+	               htsp_subscription_t *hs, int payloadsize)
+{
+  if (tvhtrace_enabled()) {
+    char buf[64];
+    size_t l = 0;
+    tvh_strlcatf(buf, sizeof(buf), l, "subscription %i", hs->hs_sid);
+    if (payloadsize)
+      tvh_strlcatf(buf, sizeof(buf), l, " (payload %d)", payloadsize);
+    htsp_trace(htsp, "htsp-sub", buf, m);
+  }
+
+  htsp_send(htsp, m, pb, &hs->hs_q, payloadsize);
+}
+
+/**
+ *
+ */
+static void
 htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
 {
+  if (tvhtrace_enabled()) {
+    const char *qname = "answer";
+    if (hmq == &htsp->htsp_hmq_qstatus)
+      qname = "status";
+    htsp_trace(htsp, "htsp-ans", qname, m);
+  }
+
   htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl, 0);
 }
 
@@ -549,8 +586,7 @@ htsp_file_destroy(htsp_file_t *hf)
 static htsmsg_t *
 htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 {
-  channel_tag_mapping_t *ctm;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
@@ -577,7 +613,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       char buf[50];
       addrlen = sizeof(addr);
       getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
-      tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
+      tcp_get_str_from_ip((struct sockaddr*)&addr, buf, 50);
       snprintf(url, sizeof(url), "http://%s%s%s:%d%s/%s",
                     (addr.ss_family == AF_INET6)?"[":"",
                     buf,
@@ -604,21 +640,21 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   htsmsg_add_u32(out, "eventId", now ? now->id : 0);
   htsmsg_add_u32(out, "nextEventId", next ? next->id : 0);
 
-  LIST_FOREACH(ctm, &ch->ch_ctms, ctm_channel_link) {
-    ct = ctm->ctm_tag;
+  LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link) {
+    ct = (channel_tag_t *)ilm->ilm_in1;
     if(channel_tag_access(ct, htsp->htsp_granted_access, 0))
       htsmsg_add_u32(tags, NULL, htsp_channel_tag_get_identifier(ct));
   }
 
-  LIST_FOREACH(csm, &ch->ch_services, csm_chn_link) {
-    t = csm->csm_svc;
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    t = (service_t *)ilm->ilm_in1;
     htsmsg_t *svcmsg = htsmsg_create_map();
     uint16_t caid;
     htsmsg_add_str(svcmsg, "name", service_nicename(t));
     htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
     if((caid = service_get_encryption(t)) != 0) {
       htsmsg_add_u32(svcmsg, "caid", caid);
-      htsmsg_add_str(svcmsg, "caname", descrambler_caid2name(caid));
+      htsmsg_add_str(svcmsg, "caname", caid2name(caid));
     }
     htsmsg_add_msg(services, NULL, svcmsg);
   }
@@ -636,7 +672,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 static htsmsg_t *
 htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
 {
-  channel_tag_mapping_t *ctm;
+  idnode_list_mapping_t *ilm;
   htsmsg_t *out = htsmsg_create_map();
   htsmsg_t *members = include_channels ? htsmsg_create_list() : NULL;
  
@@ -648,8 +684,8 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
   htsmsg_add_u32(out, "tagTitledIcon", ct->ct_titled_icon);
 
   if(members != NULL) {
-    LIST_FOREACH(ctm, &ct->ct_ctms, ctm_tag_link)
-      htsmsg_add_u32(members, NULL, channel_get_id(ctm->ctm_channel));
+    LIST_FOREACH(ilm, &ct->ct_ctms, ilm_in1_link)
+      htsmsg_add_u32(members, NULL, channel_get_id((channel_t *)ilm->ilm_in2));
     htsmsg_add_msg(out, "members", members);
   }
 
@@ -661,11 +697,13 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
  *
  */
 static htsmsg_t *
-htsp_build_dvrentry(dvr_entry_t *de, const char *method)
+htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
 {
-  htsmsg_t *out = htsmsg_create_map();
+  htsmsg_t *out = htsmsg_create_map(), *l, *m, *e;
+  htsmsg_field_t *f;
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
-  const char *p;
+  const char *p, *last;
+  int64_t fsize = -1;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
   if (de->de_channel)
@@ -688,19 +726,36 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
   htsmsg_add_u32(out, "priority",    de->de_pri);
   htsmsg_add_u32(out, "contentType", de->de_content_type);
 
-  if( de->de_title && (s = lang_str_get(de->de_title, NULL)))
+  if(de->de_title && (s = lang_str_get(de->de_title, lang)))
     htsmsg_add_str(out, "title", s);
-  if( de->de_desc && (s = lang_str_get(de->de_desc, NULL)))
+  if(de->de_title && (s = lang_str_get(de->de_subtitle, lang)))
+    htsmsg_add_str(out, "subtitle", s);
+  if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
     htsmsg_add_str(out, "description", s);
   if(de->de_owner)
     htsmsg_add_str(out, "owner",   de->de_owner);
   if(de->de_creator)
     htsmsg_add_str(out, "creator", de->de_creator);
 
-  if( de->de_filename && de->de_config ) {
-    if ((p = tvh_strbegins(de->de_filename, de->de_config->dvr_storage)))
-      htsmsg_add_str(out, "path", p);
+  last = NULL;
+  if (!htsmsg_is_empty(de->de_files) && de->de_config) {
+    l = htsmsg_create_list();
+    HTSMSG_FOREACH(f, de->de_files) {
+      m = htsmsg_field_get_map(f);
+      if (m == NULL) continue;
+      s = last = htsmsg_get_str(m, "filename");
+      if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL) {
+        e = htsmsg_copy(m);
+        htsmsg_set_str(e, "filename", p);
+        htsmsg_add_msg(l, NULL, e);
+      }
+    }
+    htsmsg_add_msg(out, "files", l);
   }
+
+  if(last && de->de_config)
+    if ((p = tvh_strbegins(last, de->de_config->dvr_storage)))
+      htsmsg_add_str(out, "path", p);
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
@@ -708,6 +763,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_RECORDING:
     s = "recording";
+    fsize = dvr_get_filesize(de);
     if (de->de_rec_state == DVR_RS_ERROR ||
        (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
     {
@@ -717,7 +773,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(dvr_get_filesize(de) == -1)
+    fsize = dvr_get_filesize(de);
+    if (fsize < 0)
       error = "File missing";
     else if(de->de_last_error)
       error = streaming_code2txt(de->de_last_error);
@@ -739,6 +796,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method)
     htsmsg_add_u32(out, "streamErrors", de->de_errors);
   if (de->de_data_errors)
     htsmsg_add_u32(out, "dataErrors", de->de_data_errors);
+  if (fsize >= 0)
+    htsmsg_add_s64(out, "dataSize", fsize);
   htsmsg_add_str(out, "method", method);
   return out;
 }
@@ -756,7 +815,7 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "enabled",     dae->dae_enabled);
   htsmsg_add_u32(out, "maxDuration", dae->dae_maxduration);
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
-  htsmsg_add_u32(out, "retention",   dae->dae_retention);
+  htsmsg_add_u32(out, "retention",   dvr_autorec_get_retention(dae));
   htsmsg_add_u32(out, "daysOfWeek",  dae->dae_weekdays);
   if (dae->dae_start >= 0 && dae->dae_start_window >= 0) {
     if (dae->dae_start > dae->dae_start_window)
@@ -772,8 +831,8 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_s32(out, "start",       dae->dae_start >= 0 ? dae->dae_start : -1);
   htsmsg_add_s32(out, "startWindow", dae->dae_start_window >= 0 ? dae->dae_start_window : -1);
   htsmsg_add_u32(out, "priority",    dae->dae_pri);
-  htsmsg_add_s64(out, "startExtra",  dae->dae_start_extra);
-  htsmsg_add_s64(out, "stopExtra",   dae->dae_stop_extra);
+  htsmsg_add_s64(out, "startExtra",  dvr_autorec_get_extra_time_pre(dae));
+  htsmsg_add_s64(out, "stopExtra",   dvr_autorec_get_extra_time_post(dae));
   htsmsg_add_u32(out, "dupDetect",   dae->dae_record);
 
   if(dae->dae_title) {
@@ -807,7 +866,7 @@ htsp_build_timerecentry(dvr_timerec_entry_t *dte, const char *method)
   htsmsg_add_str(out, "id",          idnode_uuid_as_str(&dte->dte_id));
   htsmsg_add_u32(out, "enabled",     dte->dte_enabled);
   htsmsg_add_u32(out, "daysOfWeek",  dte->dte_weekdays);
-  htsmsg_add_u32(out, "retention",   dte->dte_retention);
+  htsmsg_add_u32(out, "retention",   dvr_timerec_get_retention(dte));
   htsmsg_add_u32(out, "priority",    dte->dte_pri);
   htsmsg_add_s32(out, "start",       dte->dte_start);
   htsmsg_add_s32(out, "stop",        dte->dte_stop);
@@ -870,6 +929,8 @@ htsp_build_event
   htsmsg_add_s64(out, "stop", e->stop);
   if ((str = epg_broadcast_get_title(e, lang)))
     htsmsg_add_str(out, "title", str);
+  if ((str = epg_broadcast_get_subtitle(e, lang)))
+    htsmsg_add_str(out, "subtitle", str);
   if ((str = epg_broadcast_get_description(e, lang))) {
     htsmsg_add_str(out, "description", str);
     if ((str = epg_broadcast_get_summary(e, lang)))
@@ -946,7 +1007,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *r;
   uint32_t v;
-  const char *name;
+  const char *name, *lang;
 
   if(htsmsg_get_u32(in, "htspversion", &v))
     return htsp_error("Missing argument 'htspversion'");
@@ -967,6 +1028,9 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
   if (tvheadend_webroot)
     htsmsg_add_str(r, "webroot", tvheadend_webroot);
+  lang = config_get_language();
+  if (lang)
+    htsmsg_add_str(r, "language", lang);
 
   /* Capabilities */
   htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
@@ -999,17 +1063,14 @@ static htsmsg_t *
 htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  struct statvfs diskdata;
-  dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
+  int64_t bfree, btotal;
 
-  if(statvfs(cfg->dvr_storage,&diskdata) == -1)
+  if (dvr_get_disk_space(&bfree, &btotal))
     return htsp_error("Unable to stat path");
   
   out = htsmsg_create_map();
-  htsmsg_add_s64(out, "freediskspace",
-		 diskdata.f_bsize * (int64_t)diskdata.f_bavail);
-  htsmsg_add_s64(out, "totaldiskspace",
-		 diskdata.f_bsize * (int64_t)diskdata.f_blocks);
+  htsmsg_add_s64(out, "freediskspace", bfree);
+  htsmsg_add_s64(out, "totaldiskspace", btotal);
   return out;
 }
 
@@ -1054,8 +1115,14 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_get_u32(in, "epg", &epg);
   htsmsg_get_s64(in, "lastUpdate", &lastUpdate);
   htsmsg_get_s64(in, "epgMaxTime", &epgMaxTime);
-  if ((lang = htsmsg_get_str(in, "language")))
-    htsp->htsp_language = strdup(lang);
+  if ((lang = htsmsg_get_str(in, "language")) != NULL) {
+    if (lang[0]) {
+      htsp->htsp_language = strdup(lang);
+    } else {
+      free(htsp->htsp_language);
+      htsp->htsp_language = NULL;
+    }
+  }
 
   /* First, just OK the async request */
   htsp_reply(htsp, in, htsmsg_create_map()); 
@@ -1084,19 +1151,19 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all autorecs */
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if (!dvr_autorec_entry_verify(dae, htsp->htsp_granted_access))
+    if (!dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_autorecentry(dae, "autorecEntryAdd"), NULL);
 
   /* Send all timerecs */
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    if (!dvr_timerec_entry_verify(dte, htsp->htsp_granted_access))
+    if (!dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_timerecentry(dte, "timerecEntryAdd"), NULL);
 
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
-        htsp_user_access_channel(htsp,de->de_channel))
-      htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd"), NULL);
+        htsp_user_access_channel(htsp, de->de_channel))
+      htsp_send_message(htsp, htsp_build_dvrentry(de, "dvrEntryAdd", htsp->htsp_language), NULL);
 
   /* Send EPG updates */
   if (epg) {
@@ -1421,7 +1488,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   epg_broadcast_t *e = NULL;
   dvr_entry_t *de;
   dvr_entry_sched_state_t dvr_status;
-  const char *dvr_config_name, *title, *desc, *subtitle, *creator, *lang, *comment;
+  const char *dvr_config_name, *title, *desc, *subtitle, *lang, *comment;
   int64_t start, stop, start_extra, stop_extra;
   uint32_t u32, priority, retention;
   channel_t *ch = NULL;
@@ -1443,9 +1510,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;
   comment = htsmsg_get_str(in, "comment");
-  creator = htsp->htsp_username;
-  if (!(lang        = htsmsg_get_str(in, "language")))
-    lang    = htsp->htsp_language;
+  if (!(lang  = htsmsg_get_str(in, "language")))
+    lang = htsp->htsp_language;
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
@@ -1475,16 +1541,16 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
                                start_extra, stop_extra,
                                title, subtitle, desc, lang, 0,
                                htsp->htsp_granted_access->aa_username,
-                               creator, NULL,
-                               priority, retention, comment);
+                               htsp->htsp_granted_access->aa_representative,
+                               NULL, priority, retention, comment);
 
   /* Event timer */
   } else {
     de = dvr_entry_create_by_event(dvr_config_name, e, 
                                    start_extra, stop_extra,
                                    htsp->htsp_granted_access->aa_username,
-                                   creator, NULL,
-                                   priority, retention, comment);
+                                   htsp->htsp_granted_access->aa_representative,
+                                   NULL, priority, retention, comment);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
@@ -1515,11 +1581,12 @@ static htsmsg_t *
 htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  uint32_t dvrEntryId;
+  uint32_t dvrEntryId, u32;
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra, priority, retention;
   const char *title, *subtitle, *desc, *lang;
-    
+  channel_t *channel = NULL;
+
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
     return htsp_error("Missing argument 'id'");
   
@@ -1529,9 +1596,14 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(dvr_entry_verify(de, htsp->htsp_granted_access, 1))
     return htsp_error("User does not have access");
 
+  if(!htsmsg_get_u32(in, "channelId", &u32))
+    channel = channel_find_by_id(u32);
+  if (!channel)
+    channel = de->de_channel;
+
   /* Check access */
-  if (!htsp_user_access_channel(htsp, de->de_channel))
-    return htsp_error("User does not have access");
+  if (!htsp_user_access_channel(htsp, channel))
+    return htsp_error("User does not have access to channel");
 
   start       = htsmsg_get_s64_or_default(in, "start",      0);
   stop        = htsmsg_get_s64_or_default(in, "stop",       0);
@@ -1540,12 +1612,11 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   retention   = htsmsg_get_u32_or_default(in, "retention",  0);
   priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
-  subtitle    = htsmsg_get_str(in, "title");
+  subtitle    = htsmsg_get_str(in, "subtitle");
   desc        = htsmsg_get_str(in, "description");
-  lang        = htsmsg_get_str(in, "language");
-  if (!lang) lang = htsp->htsp_language;
+  lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  de = dvr_entry_update(de, title, subtitle, desc, lang, start, stop,
+  de = dvr_entry_update(de, channel, title, subtitle, desc, lang, start, stop,
                         start_extra, stop_extra, priority, retention);
 
   //create response
@@ -1627,7 +1698,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   dvr_autorec_entry_t *dae;
-  const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
+  const char *dvr_config_name, *title, *comment, *name, *directory;
   int64_t start_extra, stop_extra;
   uint32_t u32, days_of_week, priority, min_duration, max_duration, dup_detect;
   uint32_t retention, enabled, fulltext;
@@ -1674,7 +1745,6 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     start_extra = 0;     // 0 = dvr config
   if(htsmsg_get_s64(in, "stopExtra", &stop_extra))
     stop_extra  = 0;     // 0 = dvr config
-  creator = htsp->htsp_username;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
@@ -1691,7 +1761,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dae = dvr_autorec_create_htsp(dvr_config_name, title, fulltext,
       ch, enabled, start, start_window, days_of_week,
       start_extra, stop_extra, priority, retention, min_duration, max_duration, dup_detect,
-      htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
+      htsp->htsp_granted_access->aa_username, htsp->htsp_granted_access->aa_representative,
+      comment, name, directory);
 
   /* create response */
   out = htsmsg_create_map();
@@ -1723,11 +1794,11 @@ htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if((dae = dvr_autorec_find_by_uuid(daeId)) == NULL)
     return htsp_error("id not found");
 
-  if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access))
+  if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 0))
     return htsp_error("User does not have access");
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, dae->dae_channel))
+  if (dae->dae_channel && !htsp_user_access_channel(htsp, dae->dae_channel))
     return htsp_error("User does not have access");
 
   autorec_destroy_by_id(daeId, 1);
@@ -1747,21 +1818,21 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
   dvr_timerec_entry_t *dte;
-  const char *dvr_config_name, *title, *creator, *comment, *name, *directory;
-  uint32_t u32, days_of_week, priority, retention, start, stop, enabled;
+  const char *dvr_config_name, *title, *comment, *name, *directory;
+  uint32_t u32, days_of_week, priority, retention, start = 0, stop = 0, enabled;
   channel_t *ch = NULL;
 
   /* Options */
-  if(!(title = htsmsg_get_str(in, "title"))
-      || htsmsg_get_u32(in, "start", &start)
-      || htsmsg_get_u32(in, "stop", &stop)
-      || htsmsg_get_u32(in, "channelId", &u32))
+  if(!(title = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
 
+  htsmsg_get_u32(in, "start", &start);
+  htsmsg_get_u32(in, "stop", &stop);
   if (stop == start)
     stop = start+1;
 
-  ch = channel_find_by_id(u32);
+  if (!htsmsg_get_u32(in, "channelId", &u32))
+    ch = channel_find_by_id(u32);
   dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
 
   if(htsmsg_get_u32(in, "retention", &retention))
@@ -1773,7 +1844,6 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "enabled", &enabled))
     enabled = 1;
 
-  creator = htsp->htsp_username;
   if (!(comment = htsmsg_get_str(in, "comment")))
     comment = "";
   if (!(name = htsmsg_get_str(in, "name")))
@@ -1787,7 +1857,8 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Add actual timerec */
   dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, enabled, start, stop, days_of_week,
-      priority, retention, htsp->htsp_granted_access->aa_username, creator, comment, name, directory);
+      priority, retention, htsp->htsp_granted_access->aa_username,
+      htsp->htsp_granted_access->aa_representative, comment, name, directory);
 
   /* create response */
   out = htsmsg_create_map();
@@ -1819,11 +1890,11 @@ htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if((dte = dvr_timerec_find_by_uuid(dteId)) == NULL)
     return htsp_error("id not found");
 
-  if(dvr_timerec_entry_verify(dte, htsp->htsp_granted_access))
+  if(dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 0))
     return htsp_error("User does not have access");
 
   /* Check access */
-  if (!htsp_user_access_channel(htsp, dte->dte_channel))
+  if (dte->dte_channel && !htsp_user_access_channel(htsp, dte->dte_channel))
     return htsp_error("User does not have access");
 
   timerec_destroy_by_id(dteId, 1);
@@ -1997,10 +2068,12 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   }
 #endif
 
-  pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id, "htsp");
+  pro = profile_find_by_list(htsp->htsp_granted_access->aa_profiles, profile_id,
+                             "htsp", SUBSCRIPTION_PACKET | SUBSCRIPTION_HTSP);
   profile_chain_init(&hs->hs_prch, pro, ch);
   if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
+    profile_chain_close(&hs->hs_prch);
     free(hs);
     return htsp_error("Stream setup error");
   }
@@ -2038,7 +2111,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      SUBSCRIPTION_PACKET |
 					      SUBSCRIPTION_STREAMING,
 					      htsp->htsp_peername,
-					      htsp->htsp_username,
+					      htsp->htsp_granted_access->aa_representative,
 					      htsp->htsp_clientname,
 					      NULL);
   return NULL;
@@ -2123,15 +2196,16 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
 
   abs = htsmsg_get_u32_or_default(in, "absolute", 0);
 
+  memset(&skip, 0, sizeof(skip));
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
     skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
-    tvhtrace("htsp", "skip: %s %"PRId64" (%s)\n", abs ? "abs" : "rel",
+    tvhtrace("htsp-sub", "skip: %s %"PRId64" (%s)\n", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
   } else if (!htsmsg_get_s64(in, "size", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
     skip.size = s64;
-    tvhtrace("htsp", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
+    tvhtrace("htsp-sub", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
   } else {
     return htsp_error("Missing argument 'time' or 'size'");
   }
@@ -2164,7 +2238,7 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
 
-  tvhtrace("htsp", "speed: %d", speed);
+  tvhtrace("htsp-sub", "speed: %d", speed);
   subscription_set_speed(hs->hs_s, speed);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -2191,8 +2265,9 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error("Requested subscription does not exist");
 
+  memset(&skip, 0, sizeof(skip));
   skip.type = SMT_SKIP_LIVE;
-  tvhtrace("htsp", "live");
+  tvhtrace("htsp-sub", "live");
   subscription_set_skip(hs->hs_s, &skip);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -2245,6 +2320,8 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 {
   const char *str, *s2;
   const char *filename = NULL;
+
+
   if((str = htsmsg_get_str(in, "file")) == NULL)
     return htsp_error("Missing argument 'file'");
 
@@ -2264,10 +2341,11 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     if (!htsp_user_access_channel(htsp, de->de_channel))
       return htsp_error("User does not have access");
 
-    if(de->de_filename == NULL)
+    filename = dvr_get_filename(de);
+
+    if (filename == NULL)
       return htsp_error("DVR entry does not have a file yet");
 
-    filename = de->de_filename;
     return htsp_file_open(htsp, filename, 0);
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
@@ -2501,34 +2579,50 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   const void *digest;
   size_t digestlen;
   access_t *rights;
-  int privgain;
+  int privgain = 0;
 
   if((username = htsmsg_get_str(m, "username")) == NULL)
     return 0;
 
-  if(strcmp(htsp->htsp_username ?: "", username)) {
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user %s", 
+  if(!htsmsg_get_bin(m, "digest", &digest, &digestlen)) {
+
+    rights = access_get_hashed(username, digest, htsp->htsp_challenge,
+                               (struct sockaddr *)htsp->htsp_peer);
+
+    if (rights->aa_rights == 0) {
+      tvhlog(LOG_INFO, "htsp", "%s: Unauthorized access", htsp->htsp_logname);
+      access_destroy(rights);
+      return 0;
+    }
+
+    privgain = (rights->aa_rights |
+                htsp->htsp_granted_access->aa_rights) !=
+                  htsp->htsp_granted_access->aa_rights;
+      
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user '%s'",
 	   htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
-    notify_reload("connections");
+    if(privgain)
+      tvhlog(LOG_INFO, "htsp", "%s: Privileges updated", htsp->htsp_logname);
+
+    access_destroy(htsp->htsp_granted_access);
+    htsp->htsp_granted_access = rights;
+
+    if (htsp->htsp_language == NULL && rights->aa_lang)
+      htsp->htsp_language = strdup(rights->aa_lang);
+
+  } else {
+
+    tvhlog(LOG_INFO, "htsp", "%s: Identified as user '%s' (unverified)",
+	   htsp->htsp_logname, username);
+    tvh_str_update(&htsp->htsp_username, username);
+    htsp_update_logname(htsp);
+
   }
 
-  if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
-    return 0;
+  notify_reload("connections");
 
-  rights = access_get_hashed(username, digest, htsp->htsp_challenge,
-			     (struct sockaddr *)htsp->htsp_peer);
-
-  privgain = (rights->aa_rights |
-              htsp->htsp_granted_access->aa_rights) !=
-                htsp->htsp_granted_access->aa_rights;
-    
-  if(privgain)
-    tvhlog(LOG_INFO, "htsp", "%s: Privileges raised", htsp->htsp_logname);
-
-  access_destroy(htsp->htsp_granted_access);
-  htsp->htsp_granted_access = rights;
   return privgain;
 }
 
@@ -2581,9 +2675,17 @@ static void
 htsp_server_status ( void *opaque, htsmsg_t *m )
 {
   htsp_connection_t *htsp = opaque;
+  access_t *aa;
+  char buf[128];
   htsmsg_add_str(m, "type", "HTSP");
-  if (htsp->htsp_username)
-    htsmsg_add_str(m, "user", htsp->htsp_username);
+  if (htsp->htsp_username) {
+    aa = htsp->htsp_granted_access;
+    if (!strcmp(htsp->htsp_username, aa->aa_username ?: ""))
+      snprintf(buf, sizeof(buf), "%s", htsp->htsp_username);
+    else
+      snprintf(buf, sizeof(buf), "[%s]", htsp->htsp_username);
+    htsmsg_add_str(m, "user", buf);
+  }
 }
 
 /**
@@ -2622,6 +2724,8 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   while(tvheadend_running) {
 readmsg:
+    reply = NULL;
+
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       break;
 
@@ -2639,6 +2743,8 @@ readmsg:
 
     if((method = htsmsg_get_str(m, "method")) != NULL) {
       tvhtrace("htsp", "%s - method %s", htsp->htsp_logname, method);
+      if (tvhtrace_enabled())
+        htsp_trace(htsp, "htsp-req", "request", m);
       for(i = 0; i < NUM_METHODS; i++) {
         if(!strcmp(method, htsp_methods[i].name)) {
 
@@ -2766,7 +2872,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   
   // Note: global_lock held on entry
 
-  tcp_get_ip_str((struct sockaddr*)source, buf, 50);
+  tcp_get_str_from_ip((struct sockaddr*)source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
   *opaque = &htsp;
@@ -3045,7 +3151,7 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
       if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1) &&
           htsp_user_access_channel(htsp, de->de_channel)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
-                        : htsp_build_dvrentry(de, method);
+                        : htsp_build_dvrentry(de, method, htsp->htsp_language);
         htsp_send_message(htsp, m, NULL);
       }
   }
@@ -3094,7 +3200,7 @@ _htsp_autorec_entry_update(dvr_autorec_entry_t *dae, const char *method, htsmsg_
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON) {
       if ((dae->dae_channel == NULL || htsp_user_access_channel(htsp, dae->dae_channel)) &&
-          !dvr_autorec_entry_verify(dae, htsp->htsp_granted_access)) {
+          !dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
                           : htsp_build_autorecentry(dae, method);
         htsp_send_message(htsp, m, NULL);
@@ -3147,7 +3253,7 @@ _htsp_timerec_entry_update(dvr_timerec_entry_t *dte, const char *method, htsmsg_
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON) {
       if ((dte->dte_channel == NULL || htsp_user_access_channel(htsp, dte->dte_channel)) &&
-          !dvr_timerec_entry_verify(dte, htsp->htsp_granted_access)) {
+          !dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
                           : htsp_build_timerecentry(dte, method);
         htsp_send_message(htsp, m, NULL);
@@ -3308,7 +3414,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
    */
   payloadlen = pktbuf_len(pkt->pkt_payload);
   htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
-  htsp_send(htsp, m, pkt->pkt_payload, &hs->hs_q, payloadlen);
+  htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
   atomic_add(&hs->hs_s->ths_bytes_out, payloadlen);
 
   if(hs->hs_last_report != dispatch_clock) {
@@ -3460,7 +3566,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
  
   htsmsg_add_str(m, "method", "subscriptionStart");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3480,7 +3586,7 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err, const char *sub
   if(subscriptionErr != NULL)
     htsmsg_add_str(m, "subscriptionError", subscriptionErr);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3495,7 +3601,7 @@ htsp_subscription_grace(htsp_subscription_t *hs, int grace)
   htsmsg_add_u32(m, "graceTimeout", grace);
   tvhdebug("htsp", "%s - subscription grace %i seconds", hs->hs_htsp->htsp_logname, grace);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3514,7 +3620,7 @@ htsp_subscription_status(htsp_subscription_t *hs, const char *err, const char *s
   if(subscriptionErr != NULL)
     htsmsg_add_str(m, "subscriptionError", subscriptionErr);
 
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3539,6 +3645,12 @@ _htsp_get_subscription_status(int smcode)
     return "subscriptionOverridden";
   case SM_CODE_MUX_NOT_ENABLED:
     return "muxNotEnabled";
+  case SM_CODE_INVALID_TARGET:
+    return "invalidTarget";
+  case SM_CODE_USER_ACCESS:
+    return "userAccess";
+  case SM_CODE_USER_LIMIT:
+    return "userLimit";
   default:
     return streaming_code2txt(smcode);
   }
@@ -3589,7 +3701,7 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
   htsmsg_add_str(m, "method", "subscriptionSpeed");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "speed", speed);
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3615,7 +3727,7 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
     htsmsg_add_s64(m, "time", hs->hs_90khz ? skip->time : ts_rescale(skip->time, 1000000));
   else if (skip->type == SMT_SKIP_ABS_SIZE || skip->type == SMT_SKIP_REL_SIZE)
     htsmsg_add_s64(m, "size", skip->size);
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
 /**
@@ -3634,7 +3746,7 @@ htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *
     htsmsg_add_s64(m, "start", hs->hs_90khz ? status->pts_start : ts_rescale(status->pts_start, 1000000)) ;
   if (status->pts_end != PTS_UNSET)
     htsmsg_add_s64(m, "end", hs->hs_90khz ? status->pts_end : ts_rescale(status->pts_end, 1000000)) ;
-  htsp_send(hs->hs_htsp, m, NULL, &hs->hs_q, 0);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 #endif
 

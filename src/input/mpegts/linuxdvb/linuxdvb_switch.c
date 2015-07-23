@@ -49,60 +49,60 @@ typedef struct linuxdvb_switch
 } linuxdvb_switch_t;
 
 static htsmsg_t *
-linuxdvb_switch_class_committed_list ( void *o )
+linuxdvb_switch_class_committed_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "NONE", -1 },
-    { "AA",    0 },
-    { "AB",    1 },
-    { "BA",    2 },
-    { "BB",    3 },
+    { N_("NONE"), -1 },
+    { N_("AA"),    0 },
+    { N_("AB"),    1 },
+    { N_("BA"),    2 },
+    { N_("BB"),    3 },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-linuxdvb_switch_class_uncommitted_list ( void *o )
+linuxdvb_switch_class_uncommitted_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "NONE", -1 },
-    {  "0",    0 },
-    {  "1",    1 },
-    {  "2",    2 },
-    {  "3",    3 },
-    {  "4",    4 },
-    {  "5",    5 },
-    {  "6",    6 },
-    {  "7",    7 },
-    {  "8",    8 },
-    {  "9",    9 },
-    { "10",   10 },
-    { "11",   11 },
-    { "12",   12 },
-    { "13",   13 },
-    { "14",   14 },
-    { "15",   15 },
+    { N_("NONE"), -1 },
+    { N_( "0"),    0 },
+    { N_( "1"),    1 },
+    { N_( "2"),    2 },
+    { N_( "3"),    3 },
+    { N_( "4"),    4 },
+    { N_( "5"),    5 },
+    { N_( "6"),    6 },
+    { N_( "7"),    7 },
+    { N_( "8"),    8 },
+    { N_( "9"),    9 },
+    { N_("10"),   10 },
+    { N_("11"),   11 },
+    { N_("12"),   12 },
+    { N_("13"),   13 },
+    { N_("14"),   14 },
+    { N_("15"),   15 },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-linuxdvb_switch_class_toneburst_list ( void *o )
+linuxdvb_switch_class_toneburst_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "NONE", -1 },
-    { "A",     0 },
-    { "B",     1 },
+    { N_("NONE"), -1 },
+    { N_("A"),    0 },
+    { N_("B"),    1 },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static const char *
-linuxdvb_switch_class_get_title ( idnode_t *o )
+linuxdvb_switch_class_get_title ( idnode_t *o, const char *lang )
 {
   static char buf[256];
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
-  snprintf(buf, sizeof(buf), "Switch: %s", ld->ld_type);
+  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("Switch: %s")), ld->ld_type);
   return buf;
 }
 
@@ -112,40 +112,40 @@ const idclass_t linuxdvb_switch_class =
 {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_switch",
-  .ic_caption     = "DiseqC switch",
+  .ic_caption     = N_("DiseqC switch"),
   .ic_get_title   = linuxdvb_switch_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_INT,
       .id     = "committed",
-      .name   = "Committed",
+      .name   = N_("Committed"),
       .off    = offsetof(linuxdvb_switch_t, ls_committed),
       .list   = linuxdvb_switch_class_committed_list
     },
     {
       .type   = PT_INT,
       .id     = "uncommitted",
-      .name   = "Uncommitted",
+      .name   = N_("Uncommitted"),
       .off    = offsetof(linuxdvb_switch_t, ls_uncommitted),
       .list   = linuxdvb_switch_class_uncommitted_list
     },
     {
       .type   = PT_INT,
       .id     = "toneburst",
-      .name   = "Tone Burst",
+      .name   = N_("Tone Burst"),
       .off    = offsetof(linuxdvb_switch_t, ls_toneburst),
       .list   = linuxdvb_switch_class_toneburst_list
     },
     {
       .type   = PT_BOOL,
       .id     = "preferun",
-      .name   = "Uncommited First",
+      .name   = N_("Uncommited First"),
       .off    = offsetof(linuxdvb_switch_t, ls_uncommitted_first),
     },
     {
       .type   = PT_INT,
       .id     = "sleeptime",
-      .name   = "Cmd Delay Time (ms) (10-500)",
+      .name   = N_("Cmd Delay Time (ms) (10-500)"),
       .off    = offsetof(linuxdvb_switch_t, ls_sleep_time)
     },
     {}
@@ -246,11 +246,11 @@ linuxdvb_switch_tune
  * *************************************************************************/
 
 htsmsg_t *
-linuxdvb_switch_list ( void *o )
+linuxdvb_switch_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "None");
-  htsmsg_add_str(m, NULL, "Generic");
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("Generic")));
   return m;
 }
 

@@ -28,6 +28,7 @@
 #include "spawn.h"
 #include "lock.h"
 #include "profile.h"
+#include "avahi.h"
 
 /* *************************************************************************
  * Global data
@@ -1012,6 +1013,7 @@ config_migrate_v12 ( void )
       hts_settings_remove("cwc/%s", f->hmf_name);
       hts_settings_save(e, "caclient/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
   if ((c = hts_settings_load("capmt")) != NULL) {
     HTSMSG_FOREACH(f, c) {
@@ -1019,6 +1021,7 @@ config_migrate_v12 ( void )
       hts_settings_remove("capmt/%s", f->hmf_name);
       hts_settings_save(e, "caclient/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1043,6 +1046,7 @@ config_migrate_v13 ( void )
       htsmsg_delete_field(e, "rewrite-pmt");
       hts_settings_save(e, "dvr/config/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1083,6 +1087,7 @@ config_migrate_v14 ( void )
         htsmsg_delete_field(e, "scodec");
       hts_settings_save(e, "profile/%s", f->hmf_name);
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1101,6 +1106,7 @@ config_migrate_v15 ( void )
         hts_settings_save(e, "profile/%s", f->hmf_name);
       }
     }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1182,6 +1188,95 @@ config_migrate_v17 ( void )
         hts_settings_save(e, "profile/%s", f->hmf_name);
       }
     }
+    htsmsg_destroy(c);
+  }
+}
+
+static void
+config_migrate_v18 ( void )
+{
+  htsmsg_t *c, *e, *l, *m;
+  htsmsg_field_t *f;
+  const char *filename;
+
+  if ((c = hts_settings_load("dvr/log")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if ((filename = htsmsg_get_str(e, "filename")) == NULL)
+        continue;
+      if ((l = htsmsg_get_list(e, "files")) != NULL)
+        continue;
+      l = htsmsg_create_list();
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, "filename", filename);
+      htsmsg_add_msg(l, NULL, m);
+      htsmsg_delete_field(e, "filename");
+      htsmsg_add_msg(e, "files", l);
+      hts_settings_save(e, "dvr/log/%s", f->hmf_name);
+    }
+    htsmsg_destroy(c);
+  }
+}
+
+static void
+config_migrate_v19 ( void )
+{
+  htsmsg_t *c, *e, *m;
+  htsmsg_field_t *f;
+  const char *username, *passwd;
+  tvh_uuid_t u;
+
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      if ((username = htsmsg_get_str(e, "username")) == NULL)
+        continue;
+      if ((passwd = htsmsg_get_str(e, "password2")) == NULL)
+        continue;
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, "username", username);
+      htsmsg_add_str(m, "password2", passwd);
+      uuid_init_hex(&u, NULL);
+      hts_settings_save(m, "passwd/%s", u.hex);
+      htsmsg_delete_field(e, "password2");
+      hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
+    }
+  }
+  htsmsg_destroy(c);
+}
+
+static void
+config_migrate_v20_helper ( htsmsg_t *e, const char *fname )
+{
+  htsmsg_t *l;
+  const char *str;
+  char *p;
+
+  if ((str = htsmsg_get_str(e, fname)) != NULL) {
+    p = strdup(str);
+    htsmsg_delete_field(e, fname);
+    l = htsmsg_create_list();
+    htsmsg_add_str(l, NULL, p);
+    htsmsg_add_msg(e, fname, l);
+    free(p);
+  }
+}
+
+static void
+config_migrate_v20 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_migrate_v20_helper(e, "profile");
+      config_migrate_v20_helper(e, "dvr_config");
+      config_migrate_v20_helper(e, "channel_tag");
+      hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
+    }
+    htsmsg_destroy(c);
   }
 }
 
@@ -1202,6 +1297,8 @@ dobackup(const char *oldver)
   const char **arg;
   pid_t pid;
   int code;
+
+  assert(root);
 
   tvhinfo("config", "backup: migrating config from %s (running %s)",
                     oldver, tvheadend_version);
@@ -1241,6 +1338,7 @@ dobackup(const char *oldver)
       usleep(20000);
     if (code == -ECHILD)
       code = 0;
+    tvhinfo("config", "backup: completed");
   }
 
   if (code) {
@@ -1295,7 +1393,10 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v14,
   config_migrate_v15,
   config_migrate_v16,
-  config_migrate_v17
+  config_migrate_v17,
+  config_migrate_v18,
+  config_migrate_v19,
+  config_migrate_v20
 };
 
 /*
@@ -1393,6 +1494,9 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 {
   struct stat st;
   char buf[1024];
+  htsmsg_t *config2;
+
+  config = htsmsg_create_map();
 
   /* Generate default */
   if (!path) {
@@ -1436,10 +1540,12 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
     tvhwarn("config", "unable to chown lock file %s UID:%d GID:%d", config_lock, uid, gid);
 
   /* Load global settings */
-  config = hts_settings_load("config");
-  if (!config) {
+  config2 = hts_settings_load("config");
+  if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
-    config = htsmsg_create_map();
+  } else {
+    htsmsg_destroy(config);
+    config = config2;
   }
 }
 
@@ -1448,7 +1554,7 @@ config_init ( int backup )
 {
   const char *path = hts_settings_get_root();
 
-  if (access(path, R_OK | W_OK)) {
+  if (path == NULL || access(path, R_OK | W_OK)) {
     tvhwarn("START", "configuration path %s is not r/w"
                      " for UID:%d GID:%d [e=%s],"
                      " settings will not be saved",
@@ -1460,6 +1566,7 @@ config_init ( int backup )
   if (config_newcfg) {
     htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));
     htsmsg_set_str(config, "fullversion", tvheadend_version);
+    htsmsg_set_str(config, "server_name", "Tvheadend");
     config_save();
   
   /* Perform migrations */
@@ -1486,9 +1593,37 @@ void config_save ( void )
  * Access / Update routines
  * *************************************************************************/
 
-htsmsg_t *config_get_all ( void )
+htsmsg_t *config_get_all ( int satip )
 {
-  return htsmsg_copy(config);
+  htsmsg_field_t *f;
+  htsmsg_t *r;
+  const char *s;
+  int64_t s64;
+  int m, b;
+
+  r = htsmsg_create_map();
+  HTSMSG_FOREACH(f, config) {
+    m = strncmp(f->hmf_name, "satip_", 6);
+    if (satip && m) continue;
+    if (!satip && !m) continue;
+    switch (f->hmf_type) {
+    case HMF_STR:
+      s = htsmsg_field_get_str(f);
+      if (s)
+        htsmsg_add_str(r, f->hmf_name, s);
+      break;
+    case HMF_S64:
+      if (!htsmsg_field_get_s64(f, &s64))
+        htsmsg_add_s64(r, f->hmf_name, s64);
+      break;
+    case HMF_BOOL:
+      if (!htsmsg_field_get_bool(f, &b))
+        htsmsg_add_bool(r, f->hmf_name, b);
+      break;
+    default: abort();
+    }
+  }
+  return r;
 }
 
 const char *
@@ -1529,9 +1664,27 @@ config_set_int ( const char *fld, int val )
   return 0;
 }
 
+const char *config_get_server_name ( void )
+{
+  const char *s = htsmsg_get_str(config, "server_name");
+  if (s == NULL || *s == '\0')
+    return "Tvheadend";
+  return s;
+}
+
+int config_set_server_name ( const char *name )
+{
+  int r = config_set_str("server_name", name);
+  avahi_restart();
+  return r;
+}
+
 const char *config_get_language ( void )
 {
-  return htsmsg_get_str(config, "language");
+  const char *s = htsmsg_get_str(config, "language");
+  if (s == NULL || *s == '\0')
+    return "eng";
+  return s;
 }
 
 int config_set_language ( const char *lang )

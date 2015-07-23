@@ -27,7 +27,6 @@ struct bouquet;
 
 RB_HEAD(channel_tree, channel);
 
-LIST_HEAD(channel_tag_mapping_list, channel_tag_mapping);
 TAILQ_HEAD(channel_tag_queue, channel_tag);
 
 extern struct channel_tag_queue channel_tags;
@@ -53,12 +52,12 @@ typedef struct channel
   char   *ch_name; // Note: do not access directly!
   int64_t ch_number;
   char   *ch_icon;
-  struct  channel_tag_mapping_list ch_ctms;
+  idnode_list_head_t ch_ctms;
   struct bouquet *ch_bouquet;
 
   /* Service/subscriptions */
-  LIST_HEAD(, channel_service_mapping) ch_services;
-  LIST_HEAD(, th_subscription)         ch_subscriptions;
+  idnode_list_head_t           ch_services;
+  LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
   epg_broadcast_tree_t  ch_epg_schedule;
@@ -99,42 +98,15 @@ typedef struct channel_tag {
   char *ct_comment;
   char *ct_icon;
 
-  struct channel_tag_mapping_list ct_ctms;
+  idnode_list_head_t ct_ctms;
 
   struct dvr_autorec_entry_list ct_autorecs;
 
-  struct access_entry_list ct_accesses;
+  idnode_list_head_t ct_accesses;
 
   int ct_htsp_id;
 
 } channel_tag_t;
-
-/**
- * Channel tag mapping
- */
-typedef struct channel_tag_mapping {
-  LIST_ENTRY(channel_tag_mapping) ctm_channel_link;
-  channel_t *ctm_channel;
-  
-  LIST_ENTRY(channel_tag_mapping) ctm_tag_link;
-  channel_tag_t *ctm_tag;
-
-  int ctm_mark;
-
-} channel_tag_mapping_t;
-
-/*
- * Service mappings
- */
-typedef struct channel_service_mapping {
-  LIST_ENTRY(channel_service_mapping) csm_chn_link;
-  LIST_ENTRY(channel_service_mapping) csm_svc_link;
-  
-  struct channel *csm_chn;
-  struct service *csm_svc;
-
-  int csm_mark;
-} channel_service_mapping_t;
 
 extern const idclass_t channel_class;
 extern const idclass_t channel_tag_class;
@@ -160,10 +132,9 @@ channel_t *channel_find_by_number(const char *no);
 
 #define channel_find channel_find_by_uuid
 
-htsmsg_t * channel_class_get_list(void *o);
+htsmsg_t * channel_class_get_list(void *o, const char *lang);
 
 int channel_set_tags_by_list ( channel_t *ch, htsmsg_t *tags );
-int channel_set_services_by_list ( channel_t *ch, htsmsg_t *svcs );
 
 channel_tag_t *channel_tag_create(const char *uuid, htsmsg_t *conf);
 
@@ -176,14 +147,14 @@ static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
 
 void channel_tag_save(channel_tag_t *ct);
 
-htsmsg_t * channel_tag_class_get_list(void *o);
+htsmsg_t * channel_tag_class_get_list(void *o, const char *lang);
 
 const char * channel_tag_get_icon(channel_tag_t *ct);
 
 int channel_access(channel_t *ch, struct access *a, int disabled);
 
-int channel_tag_map(channel_t *ch, channel_tag_t *ct);
-void channel_tag_unmap(channel_t *ch, channel_tag_t *ct);
+int channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin);
+void channel_tag_unmap(channel_t *ch, void *origin);
 
 int channel_tag_access(channel_tag_t *ct, struct access *a, int disabled);
 
@@ -203,8 +174,8 @@ int channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor );
 const char *channel_get_icon ( channel_t *ch );
 int channel_set_icon ( channel_t *ch, const char *icon );
 
-#define channel_get_uuid(ch) idnode_uuid_as_str(&ch->ch_id)
+#define channel_get_uuid(ch) idnode_uuid_as_str(&(ch)->ch_id)
 
-#define channel_get_id(ch)   idnode_get_short_uuid((&ch->ch_id))
+#define channel_get_id(ch)   idnode_get_short_uuid((&(ch)->ch_id))
 
 #endif /* CHANNELS_H */

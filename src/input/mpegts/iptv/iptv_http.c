@@ -27,6 +27,9 @@
 static int
 iptv_http_header ( http_client_t *hc )
 {
+  if (hc->hc_aux == NULL)
+    return 0;
+
   /* multiple headers for redirections */
   if (hc->hc_code == HTTP_STATUS_OK) {
     pthread_mutex_lock(&global_lock);
@@ -44,6 +47,9 @@ iptv_http_data
   ( http_client_t *hc, void *buf, size_t len )
 {
   iptv_mux_t *im = hc->hc_aux;
+
+  if (im == NULL)
+    return 0;
 
   pthread_mutex_lock(&iptv_lock);
 
@@ -93,8 +99,11 @@ static void
 iptv_http_stop
   ( iptv_mux_t *im )
 {
+  http_client_t *hc = im->im_data;
+
+  hc->hc_aux = NULL;
   pthread_mutex_unlock(&iptv_lock);
-  http_client_close(im->im_data);
+  http_client_close(hc);
   pthread_mutex_lock(&iptv_lock);
 }
 

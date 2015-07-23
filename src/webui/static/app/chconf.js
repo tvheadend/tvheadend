@@ -3,7 +3,7 @@
  */
 insertChannelTagsClearOption = function( scope, records, options ){
     var placeholder = Ext.data.Record.create(['key', 'val']);
-    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
+    scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
 };
 
 tvheadend.channelTags = tvheadend.idnode_get_enum({
@@ -28,7 +28,7 @@ tvheadend.channelrec = new Ext.data.Record.create(
 
 insertChannelClearOption = function( scope, records, options ){
     var placeholder = Ext.data.Record.create(['key', 'val']);
-    scope.insert(0,new placeholder({key: '-1', val: '(Clear filter)'}));
+    scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));
 };
 
 tvheadend.channels = tvheadend.idnode_get_enum({
@@ -140,9 +140,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'map',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Map services to channels',
+                tooltip: _('Map services to channels'),
                 iconCls: 'clone',
-                text: 'Map Services',
+                text: _('Map Services'),
                 disabled: false
             });
         },
@@ -153,9 +153,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'lowno',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Assign lowest free channel number',
+                tooltip: _('Assign lowest free channel number'),
                 iconCls: 'bullet_add',
-                text: 'Assign Number',
+                text: _('Assign Number'),
                 disabled: false
             });
         },
@@ -166,9 +166,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'noup',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Move channel one number up',
+                tooltip: _('Move channel one number up'),
                 iconCls: 'arrow_up',
-                text: 'Number Up',
+                text: _('Number Up'),
                 disabled: false
             });
         },
@@ -179,9 +179,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'nodown',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Move channel one number down',
+                tooltip: _('Move channel one number down'),
                 iconCls: 'arrow_down',
-                text: 'Number Down',
+                text: _('Number Down'),
                 disabled: false
             });
         },
@@ -192,9 +192,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'swap',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Swap the two selected channels numbers',
+                tooltip: _('Swap the numbers for the two selected channels'),
                 iconCls: 'arrow_switch',
-                text: 'Swap Numbers',
+                text: _('Swap Numbers'),
                 disabled: false
             });
         },
@@ -205,9 +205,9 @@ tvheadend.channel_tab = function(panel, index)
         name: 'iconreset',
         builder: function() {
             return new Ext.Toolbar.Button({
-                tooltip: 'Reset (clear) the selected icon URLs',
+                tooltip: _('Reset (clear) the selected icon URLs'),
                 iconCls: 'resetIcon',
-                text: 'Reset Icon',
+                text: _('Reset Icon'),
                 disabled: false
             });
         },
@@ -218,12 +218,12 @@ tvheadend.channel_tab = function(panel, index)
         url: 'api/channel',
         all: 1,
         comet: 'channel',
-        titleS: 'Channel',
-        titleP: 'Channels',
-		iconCls: 'channels',
+        titleS: _('Channel'),
+        titleP: _('Channels'),
+        iconCls: 'channels',
         tabIndex: index,
         help: function() {
-            new tvheadend.help('Channels', 'config_channels.html');
+            new tvheadend.help(_('Channels'), 'config_channels.html');
         },           
         add: {
             url: 'api/channel',
@@ -234,14 +234,15 @@ tvheadend.channel_tab = function(panel, index)
         lcol: [
             {
                 width: 50,
-                header: 'Play',
+                header: _('Play'),
+                tooltip: _('Play'),
                 renderer: function(v, o, r) {
                     var title = '';
                     if (r.data['number'])
                       title += r.data['number'] + ' : ';
                     title += r.data['name'];
                     return "<a href='play/stream/channel/" + r.id +
-                           "?title=" + encodeURIComponent(title) + "'>Play</a>";
+                           "?title=" + encodeURIComponent(title) + "'>" + _('Play') + "</a>";
                 }
             }
         ],

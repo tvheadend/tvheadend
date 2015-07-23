@@ -1,0 +1,86 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Digital Video Recorder - Time Schedules</h3>
+<p>This tab is used to create and maintain Digital Video Recorder rules. These can be EPG-driven (such as those created from the initial EPG tab) through the DVR AutoRec Entries tab , or can be timer-based through the Time Schedules tab.</p>
+<p>This tab controls timer-driven recording rules.</p>
+<p><img src="docresources/timeschedules.png" alt="Time Schedules Tab" /></p>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Action </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the recording rule list. </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the recording rules list since the last save. </td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add and configure a recording rule - define the channel, schedule, DVR configuration, priority, etc. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete an existing recording rule. </td>
+</tr>
+<tr>
+<td><strong>Edit</strong></td>
+<td>Manually edit an existing recording rule. This uses the same fields as Add, but they’re pre-populated with their current values.</td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Grid Items</h5>
+<p>The main grid items have the following functions:</p>
+<p><strong>Enabled</strong> : Check or clear this box to enable or disable this rule.</p>
+<p><strong>Name</strong> : The name you’ve given to the rule, e.g. ‘Evening cartoons for the children’.</p>
+<p><strong>Directory</strong> : When specified, this setting overrides the subdirectory rules specified by the DVR configuration and puts all recordings done by this entry into the specified subdirectory.</p>
+<blockquote><p>Useful for e.g. recording multiple different news broadcasts into one common subdirectory called “News”.</p>
+</blockquote>
+<p><strong>Title</strong> : The title is used in the filename that is created for the recording.</p>
+<blockquote><p>The default format string suggests <strong>Time-[date]_[time]</strong> .</p>
+<p>The escape-codes use <a href="http://man7.org/linux/man-pages/man3/strftime.3.html">strftime</a> format.</p>
+</blockquote>
+<p>Examples:</p>
+<table>
+<thead><tr>
+<th>String</th>
+<th>Format Result </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>%F</td>
+<td>The date in ISO-format (e.g. 2015-02-28) </td>
+</tr>
+<tr>
+<td>%R</td>
+<td>The time in 24h HH:MM format (e.g. 19:45) </td>
+</tr>
+<tr>
+<td>%x</td>
+<td>The date, formatted according to your locale settings</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Channel</strong> : The channel on which this rule applies, i.e. the channel you’re aiming to record.</p>
+<p><strong>Week Days</strong> : On which specific days of the week you wish this rule to be active (e.g. <em>only record channel XXX at xx:yy on Saturdays and Sundays</em> ).</p>
+<p><strong>Start</strong> : Start recording at this time.</p>
+<p><strong>Stop</strong> : Stop recording at this time.</p>
+<p><strong>Priority</strong> : The priority of any recordings set because of this rule: in descending priority, values are <em>important</em> , <em>high</em> , <em>normal</em> , <em>low</em> , and <em>unimportant</em> . Higher-priority events will take precedence and cancel lower-priority events.</p>
+<p><strong>DVR Configuration</strong> : The DVR configuration (e.g. extra start/stop time, post-processing rules) to be used for any recordings set because of this rule.</p>
+<p><strong>Owner</strong> : <font color=red>Text...</font></p>
+<p><strong>Creator</strong> : <font color=red>Text...</font></p>
+<p><strong>Comment</strong> : A free-text comment. Not used otherwise.</p>
+</div>

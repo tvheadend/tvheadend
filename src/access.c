@@ -1,6 +1,6 @@
 /*
  *  tvheadend, access control
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,14 +39,25 @@
 #include "channels.h"
 #include "dvr/dvr.h"
 #include "tcp.h"
+#include "lang_codes.h"
 
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
+struct passwd_entry_queue passwd_entries;
 
 const char *superuser_username;
 const char *superuser_password;
 
 int access_noacl;
+
+static int passwd_verify(const char *username, const char *passwd);
+static int passwd_verify2(const char *username, const char *passwd,
+                          const char *username2, const char *passwd2);
+static int passwd_verify_digest(const char *username, const uint8_t *digest,
+                                const uint8_t *challenge);
+static int passwd_verify_digest2(const char *username, const uint8_t *digest,
+                                 const uint8_t *challenge,
+                                 const char *username2, const char *passwd2);
 
 /**
  *
@@ -196,13 +207,40 @@ access_copy(access_t *src)
     dst->aa_username = strdup(src->aa_username);
   if (src->aa_representative)
     dst->aa_representative = strdup(src->aa_representative);
+  if (src->aa_lang)
+    dst->aa_lang = strdup(src->aa_lang);
+  if (src->aa_lang_ui)
+    dst->aa_lang_ui = strdup(src->aa_lang_ui);
   if (src->aa_profiles)
     dst->aa_profiles = htsmsg_copy(src->aa_profiles);
   if (src->aa_dvrcfgs)
     dst->aa_dvrcfgs = htsmsg_copy(src->aa_dvrcfgs);
+  if (src->aa_chrange) {
+    size_t l = src->aa_chrange_count * sizeof(uint64_t);
+    dst->aa_chrange = malloc(l);
+    if (dst->aa_chrange == NULL)
+      dst->aa_chrange_count = 0;
+    else
+      memcpy(dst->aa_chrange, src->aa_chrange, l);
+  }
   if (src->aa_chtags)
     dst->aa_chtags  = htsmsg_copy(src->aa_chtags);
   return dst;
+}
+
+/**
+ *
+ */
+char *
+access_get_lang(access_t *a, const char *lang)
+{
+  if (lang == NULL) {
+    if (a->aa_lang == NULL)
+      return NULL;
+    return strdup(a->aa_lang);
+  } else {
+    return lang_code_user(lang);
+  }
 }
 
 /**
@@ -215,6 +253,8 @@ access_destroy(access_t *a)
     return;
   free(a->aa_username);
   free(a->aa_representative);
+  free(a->aa_lang);
+  free(a->aa_lang_ui);
   htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
@@ -298,16 +338,17 @@ access_verify(const char *username, const char *password,
 {
   uint32_t bits = 0;
   access_entry_t *ae;
-  int match = 0;
+  int match = 0, nouser = username == NULL || username[0] == '\0';
 
   if (access_noacl)
     return 0;
 
-  if(username != NULL && superuser_username != NULL && 
-     password != NULL && superuser_password != NULL && 
-     !strcmp(username, superuser_username) &&
-     !strcmp(password, superuser_password))
+  if (!passwd_verify2(username, password,
+                      superuser_username, superuser_password))
     return 0;
+
+  if (passwd_verify(username, password))
+    username = NULL;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -316,12 +357,8 @@ access_verify(const char *username, const char *password,
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
-      if(username == NULL || password == NULL)
+      if(username == NULL || strcmp(username, ae->ae_username))
 	continue; /* Didn't get one */
-
-      if(strcmp(ae->ae_username, username) ||
-	 strcmp(ae->ae_password, password))
-	continue; /* username/password mismatch */
     }
 
     if(!netmask_verify(ae, src))
@@ -334,10 +371,8 @@ access_verify(const char *username, const char *password,
   }
 
   /* Username was not matched - no access */
-  if (!match) {
-    if (username && *username != '\0')
-      bits = 0;
-  }
+  if (!match && !nouser)
+    bits = 0;
 
   return (mask & ACCESS_OR) ?
          ((mask & bits) ? 0 : -1) :
@@ -347,7 +382,6 @@ access_verify(const char *username, const char *password,
 /*
  *
  */
-#if ENABLE_TRACE
 static void
 access_dump_a(access_t *a)
 {
@@ -357,7 +391,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c], conn=%u, chmin=%llu, chmax=%llu%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -368,9 +402,11 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_HTSP_RECORDER      ? 'E' : ' ',
     a->aa_rights & ACCESS_ALL_RECORDER       ? 'L' : ' ',
     a->aa_rights & ACCESS_ALL_RW_RECORDER    ? 'D' : ' ',
+    a->aa_rights & ACCESS_FAILED_RECORDER    ? 'F' : ' ',
     a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
-    (long long)a->aa_chmin, (long long)a->aa_chmax,
+    a->aa_conn_limit_streaming,
+    a->aa_conn_limit_dvr,
     a->aa_match ? ", matched" : "");
 
   if (a->aa_profiles) {
@@ -405,15 +441,20 @@ access_dump_a(access_t *a)
     tvh_strlcatf(buf, sizeof(buf), l, ", dvr=ANY");
   }
 
+  if (a->aa_chrange) {
+    for (first = 0; first < a->aa_chrange_count; first += 2)
+      tvh_strlcatf(buf, sizeof(buf), l, ", [chmin=%llu, chmax=%llu]",
+                   (long long)a->aa_chrange[first],
+                   (long long)a->aa_chrange[first+1]);
+  }
+
   if (a->aa_chtags) {
     first = 1;
     HTSMSG_FOREACH(f, a->aa_chtags) {
       channel_tag_t *ct = channel_tag_find_by_uuid(htsmsg_field_get_str(f) ?: "");
       if (ct) {
-        if (first)
-          tvh_strlcatf(buf, sizeof(buf), l, ", tags=");
         tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'",
-                 first ? "" : ",", ct->ct_name ?: "");
+                 first ? ", tags=" : ",", ct->ct_name ?: "");
         first = 0;
       }
     }
@@ -423,12 +464,14 @@ access_dump_a(access_t *a)
 
   tvhtrace("access", "%s", buf);
 }
-#else
-static inline void
-access_dump_a(access_t *a)
+
+/*
+ *
+ */
+static access_t *access_alloc(void)
 {
+  return calloc(1, sizeof(access_t));
 }
-#endif
 
 /*
  *
@@ -436,38 +479,81 @@ access_dump_a(access_t *a)
 static void
 access_update(access_t *a, access_entry_t *ae)
 {
-  if(a->aa_conn_limit < ae->ae_conn_limit)
-    a->aa_conn_limit = ae->ae_conn_limit;
+  idnode_list_mapping_t *ilm;
+
+  switch (ae->ae_conn_limit_type) {
+  case ACCESS_CONN_LIMIT_TYPE_ALL:
+    if (a->aa_conn_limit < ae->ae_conn_limit)
+      a->aa_conn_limit = ae->ae_conn_limit;
+    break;
+  case ACCESS_CONN_LIMIT_TYPE_STREAMING:
+    if (a->aa_conn_limit_streaming < ae->ae_conn_limit)
+      a->aa_conn_limit_streaming = ae->ae_conn_limit;
+    break;
+  case ACCESS_CONN_LIMIT_TYPE_DVR:
+    if (a->aa_conn_limit_dvr < ae->ae_conn_limit)
+      a->aa_conn_limit_dvr = ae->ae_conn_limit;
+    break;
+  }
 
   if(ae->ae_chmin || ae->ae_chmax) {
-    if(a->aa_chmin || a->aa_chmax) {
-      if (a->aa_chmin < ae->ae_chmin)
-        a->aa_chmin = ae->ae_chmin;
-      if (a->aa_chmax > ae->ae_chmax)
-        a->aa_chmax = ae->ae_chmax;
-    } else {
-      a->aa_chmin = ae->ae_chmin;
-      a->aa_chmax = ae->ae_chmax;
+    uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
+    if (p) {
+      p[a->aa_chrange_count++] = ae->ae_chmin;
+      p[a->aa_chrange_count++] = ae->ae_chmax;
+      a->aa_chrange = p;
     }
   }
 
-  if(ae->ae_profile && ae->ae_profile->pro_name[0] != '\0') {
-    if (a->aa_profiles == NULL)
-      a->aa_profiles = htsmsg_create_list();
-    htsmsg_add_str(a->aa_profiles, NULL, idnode_uuid_as_str(&ae->ae_profile->pro_id));
+  LIST_FOREACH(ilm, &ae->ae_profiles, ilm_in1_link) {
+    profile_t *pro = (profile_t *)ilm->ilm_in2;
+    if(pro && pro->pro_name[0] != '\0') {
+      if (a->aa_profiles == NULL)
+        a->aa_profiles = htsmsg_create_list();
+      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id));
+    }
   }
 
-  if(ae->ae_dvr_config && ae->ae_dvr_config->dvr_config_name[0] != '\0') {
-    if (a->aa_dvrcfgs == NULL)
-      a->aa_dvrcfgs = htsmsg_create_list();
-    htsmsg_add_str(a->aa_dvrcfgs, NULL, idnode_uuid_as_str(&ae->ae_dvr_config->dvr_id));
+  LIST_FOREACH(ilm, &ae->ae_dvr_configs, ilm_in1_link) {
+    dvr_config_t *dvr = (dvr_config_t *)ilm->ilm_in2;
+    if(dvr && dvr->dvr_config_name[0] != '\0') {
+      if (a->aa_dvrcfgs == NULL)
+        a->aa_dvrcfgs = htsmsg_create_list();
+      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id));
+     }
   }
 
-  if(ae->ae_chtag && ae->ae_chtag->ct_name[0] != '\0') {
-    if (a->aa_chtags == NULL)
-      a->aa_chtags = htsmsg_create_list();
-    htsmsg_add_str(a->aa_chtags, NULL, idnode_uuid_as_str(&ae->ae_chtag->ct_id));
+  if (ae->ae_chtags_exclude) {
+    channel_tag_t *ct;
+    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+      if(ct && ct->ct_name[0] != '\0') {
+        LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+          channel_tag_t *ct2 = (channel_tag_t *)ilm->ilm_in2;
+          if (ct == ct2) break;
+        }
+        if (ilm == NULL) {
+          if (a->aa_chtags == NULL)
+            a->aa_chtags = htsmsg_create_list();
+          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+        }
+      }
+    }
+  } else {
+    LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+      channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
+      if(ct && ct->ct_name[0] != '\0') {
+        if (a->aa_chtags == NULL)
+          a->aa_chtags = htsmsg_create_list();
+        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+      }
+    }
   }
+
+  if (!a->aa_lang && ae->ae_lang && ae->ae_lang[0])
+    a->aa_lang = lang_code_user(ae->ae_lang);
+
+  if (!a->aa_lang_ui && ae->ae_lang_ui && ae->ae_lang_ui[0])
+    a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
 
   a->aa_rights |= ae->ae_rights;
 }
@@ -478,26 +564,30 @@ access_update(access_t *a, access_entry_t *ae)
 access_t *
 access_get(const char *username, const char *password, struct sockaddr *src)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
+  int nouser = username == NULL || username[0] == '\0';
 
-  if (username) {
+  if (!passwd_verify(username, password)) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
+    if(!passwd_verify2(username, password,
+                       superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
   } else {
     a->aa_representative = malloc(50);
-    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+    tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
+    if(!passwd_verify2(username, password,
+                       superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
+    username = NULL;
   }
 
   if (access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
-
-  if(username != NULL && superuser_username != NULL &&
-     password != NULL && superuser_password != NULL &&
-     !strcmp(username, superuser_username) &&
-     !strcmp(password, superuser_password)) {
     a->aa_rights = ACCESS_FULL;
     return a;
   }
@@ -509,12 +599,8 @@ access_get(const char *username, const char *password, struct sockaddr *src)
 
     if(ae->ae_username[0] != '*') {
       /* acl entry requires username to match */
-      if(username == NULL || password == NULL)
+      if(username == NULL || strcmp(username, ae->ae_username))
 	continue; /* Didn't get one */
-
-      if(strcmp(ae->ae_username, username) ||
-	 strcmp(ae->ae_password, password))
-	continue; /* username/password mismatch */
     }
 
     if(!netmask_verify(ae, src))
@@ -530,11 +616,12 @@ access_get(const char *username, const char *password, struct sockaddr *src)
   if (!a->aa_match) {
     free(a->aa_username);
     a->aa_username = NULL;
-    if (username && *username != '\0')
+    if (!nouser)
       a->aa_rights = 0;
   }
 
-  access_dump_a(a);
+  if (tvhtrace_enabled())
+    access_dump_a(a);
   return a;
 }
 
@@ -545,36 +632,32 @@ access_t *
 access_get_hashed(const char *username, const uint8_t digest[20],
 		  const uint8_t *challenge, struct sockaddr *src)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
-  SHA_CTX shactx;
-  uint8_t d[20];
+  int nouser = username == NULL || username[0] == '\0';
 
-  if (username) {
+  if (!passwd_verify_digest(username, digest, challenge)) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
+    if(!passwd_verify_digest2(username, digest, challenge,
+                              superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
   } else {
     a->aa_representative = malloc(50);
-    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+    tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
+    if(!passwd_verify_digest2(username, digest, challenge,
+                              superuser_username, superuser_password)) {
+      a->aa_rights = ACCESS_FULL;
+      return a;
+    }
+    username = NULL;
   }
 
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
     return a;
-  }
-
-  if(username && superuser_username != NULL && superuser_password != NULL) {
-
-    SHA1_Init(&shactx);
-    SHA1_Update(&shactx, (const uint8_t *)superuser_password,
-		strlen(superuser_password));
-    SHA1_Update(&shactx, challenge, 32);
-    SHA1_Final(d, &shactx);
-
-    if(!strcmp(superuser_username, username) && !memcmp(d, digest, 20)) {
-      a->aa_rights = ACCESS_FULL;
-      return a;
-    }
   }
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
@@ -587,16 +670,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 
     if(ae->ae_username[0] != '*') {
 
-      if (!username)
-        continue;
-
-      SHA1_Init(&shactx);
-      SHA1_Update(&shactx, (const uint8_t *)ae->ae_password,
-                  strlen(ae->ae_password));
-      SHA1_Update(&shactx, challenge, 32);
-      SHA1_Final(d, &shactx);
-
-      if(strcmp(ae->ae_username, username) || memcmp(d, digest, 20))
+      if (username == NULL || strcmp(username, ae->ae_username))
         continue;
 
       a->aa_match = 1;
@@ -609,15 +683,48 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   if (!a->aa_match) {
     free(a->aa_username);
     a->aa_username = NULL;
-    if (username && *username != '\0')
+    if (!nouser)
       a->aa_rights = 0;
   }
 
-  access_dump_a(a);
+  if (tvhtrace_enabled())
+    access_dump_a(a);
   return a;
 }
 
+/**
+ *
+ */
+access_t *
+access_get_by_username(const char *username)
+{
+  access_t *a = access_alloc();
+  access_entry_t *ae;
 
+  a->aa_username = strdup(username);
+  a->aa_representative = strdup(username);
+
+  if(access_noacl) {
+    a->aa_rights = ACCESS_FULL;
+    return a;
+  }
+
+  if (username[0] == '\0')
+    return a;
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+
+    if(!ae->ae_enabled)
+      continue;
+
+    if(ae->ae_username[0] == '*' || strcmp(ae->ae_username, username))
+      continue;
+
+    access_update(a, ae);
+  }
+
+  return a;
+}
 
 /**
  *
@@ -625,8 +732,11 @@ access_get_hashed(const char *username, const uint8_t digest[20],
 access_t *
 access_get_by_addr(struct sockaddr *src)
 {
-  access_t *a = calloc(1, sizeof(*a));
+  access_t *a = access_alloc();
   access_entry_t *ae;
+
+  a->aa_representative = malloc(50);
+  tcp_get_str_from_ip(src, a->aa_representative, 50);
 
   if(access_noacl) {
     a->aa_rights = ACCESS_FULL;
@@ -810,18 +920,20 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_ADVANCED_STREAMING;
   if (ae->ae_htsp_streaming)
     r |= ACCESS_HTSP_STREAMING;
+  if (ae->ae_webui)
+    r |= ACCESS_WEB_INTERFACE;
   if (ae->ae_dvr)
     r |= ACCESS_RECORDER;
   if (ae->ae_htsp_dvr)
     r |= ACCESS_HTSP_RECORDER;
   if (ae->ae_all_dvr)
     r |= ACCESS_ALL_RECORDER;
-  if (ae->ae_webui)
-    r |= ACCESS_WEB_INTERFACE;
-  if (ae->ae_admin)
-    r |= ACCESS_ADMIN;
   if (ae->ae_all_rw_dvr)
     r |= ACCESS_ALL_RW_RECORDER;
+  if (ae->ae_failed_dvr)
+    r |= ACCESS_FAILED_RECORDER;
+  if (ae->ae_admin)
+    r |= ACCESS_ADMIN;
   ae->ae_rights = r;
 }
 
@@ -830,13 +942,11 @@ access_entry_update_rights(access_entry_t *ae)
  */
 
 static void access_entry_reindex(void);
-static int access_entry_class_password_set(void *o, const void *v);
 
 access_entry_t *
 access_entry_create(const char *uuid, htsmsg_t *conf)
 {
   access_entry_t *ae, *ae2;
-  const char *s;
 
   lock_assert(&global_lock);
 
@@ -856,10 +966,8 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
+    ae->ae_failed_dvr     = 1;
     idnode_load(&ae->ae_id, conf);
-    /* note password has PO_NOSAVE, thus it must be set manually */
-    if ((s = htsmsg_get_str(conf, "password")) != NULL)
-      access_entry_class_password_set(ae, s);
     access_entry_update_rights(ae);
     TAILQ_FOREACH(ae2, &access_entries, ae_link)
       if (ae->ae_index < ae2->ae_index)
@@ -877,8 +985,6 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_username = strdup("*");
   if (ae->ae_comment == NULL)
     ae->ae_comment = strdup("New entry");
-  if (ae->ae_password == NULL)
-    access_entry_class_password_set(ae, "*");
   if (TAILQ_FIRST(&ae->ae_ipmasks) == NULL)
     access_set_prefix_default(ae);
 
@@ -896,12 +1002,9 @@ access_entry_destroy(access_entry_t *ae)
   TAILQ_REMOVE(&access_entries, ae, ae_link);
   idnode_unlink(&ae->ae_id);
 
-  if (ae->ae_profile)
-    LIST_REMOVE(ae, ae_profile_link);
-  if (ae->ae_dvr_config)
-    LIST_REMOVE(ae, ae_dvr_config_link);
-  if (ae->ae_chtag)
-    LIST_REMOVE(ae, ae_channel_tag_link);
+  idnode_list_destroy(&ae->ae_profiles, ae);
+  idnode_list_destroy(&ae->ae_dvr_configs, ae);
+  idnode_list_destroy(&ae->ae_chtags, ae);
 
   while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL)
   {
@@ -910,9 +1013,9 @@ access_entry_destroy(access_entry_t *ae)
   }
 
   free(ae->ae_username);
-  free(ae->ae_password);
-  free(ae->ae_password2);
   free(ae->ae_comment);
+  free(ae->ae_lang);
+  free(ae->ae_lang_ui);
   free(ae);
 }
 
@@ -922,14 +1025,7 @@ access_entry_destroy(access_entry_t *ae)
 void
 access_destroy_by_profile(profile_t *pro, int delconf)
 {
-  access_entry_t *ae;
-
-  while ((ae = LIST_FIRST(&pro->pro_accesses)) != NULL) {
-    LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_profile = NULL;
-    if (delconf)
-      access_entry_save(ae);
-  }
+  idnode_list_destroy(&pro->pro_accesses, delconf ? pro : NULL);
 }
 
 /*
@@ -938,14 +1034,7 @@ access_destroy_by_profile(profile_t *pro, int delconf)
 void
 access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 {
-  access_entry_t *ae;
-
-  while ((ae = LIST_FIRST(&cfg->dvr_accesses)) != NULL) {
-    LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = NULL;
-    if (delconf)
-      access_entry_save(ae);
-  }
+  idnode_list_destroy(&cfg->dvr_accesses, delconf ? cfg : NULL);
 }
 
 /*
@@ -954,14 +1043,7 @@ access_destroy_by_dvr_config(dvr_config_t *cfg, int delconf)
 void
 access_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
 {
-  access_entry_t *ae;
-
-  while ((ae = LIST_FIRST(&ct->ct_accesses)) != NULL) {
-    LIST_REMOVE(ae, ae_channel_tag_link);
-    ae->ae_chtag = NULL;
-    if (delconf)
-      access_entry_save(ae);
-  }
+  idnode_list_destroy(&ct->ct_accesses, delconf ? ct : NULL);
 }
 
 /**
@@ -1039,7 +1121,7 @@ access_entry_class_movedown(idnode_t *self)
 }
 
 static const char *
-access_entry_class_get_title (idnode_t *self)
+access_entry_class_get_title (idnode_t *self, const char *lang)
 {
   access_entry_t *ae = (access_entry_t *)self;
 
@@ -1081,42 +1163,15 @@ access_entry_class_prefix_get(void *o)
 }
 
 static int
-access_entry_class_password_set(void *o, const void *v)
+access_entry_chtag_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
 {
-  access_entry_t *ae = (access_entry_t *)o;
-  char buf[256], result[300];
-
-  if (strcmp(v ?: "", ae->ae_password ?: "")) {
-    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v ?: "");
-    base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
-    free(ae->ae_password2);
-    ae->ae_password2 = strdup(result);
-    free(ae->ae_password);
-    ae->ae_password = strdup((const char *)v ?: "");
+  access_entry_t *ae = (access_entry_t *)in1;
+  idnode_list_mapping_t *ilm;
+  channel_tag_t *ct = (channel_tag_t *)in2;
+  ilm = idnode_list_link(in1, &ae->ae_chtags, in2, &ct->ct_accesses, origin);
+  if (ilm) {
+    ilm->ilm_in1_save = 1;
     return 1;
-  }
-  return 0;
-}
-
-static int
-access_entry_class_password2_set(void *o, const void *v)
-{
-  access_entry_t *ae = (access_entry_t *)o;
-  char result[300];
-  int l;
-
-  if (strcmp(v ?: "", ae->ae_password2 ?: "")) {
-    if (v && ((const char *)v)[0] != '\0') {
-      l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
-      if (l < 0)
-        l = 0;
-      result[l] = '\0';
-      free(ae->ae_password);
-      ae->ae_password = strdup(result + 15);
-      free(ae->ae_password2);
-      ae->ae_password2 = strdup((const char *)v);
-      return 1;
-    }
   }
   return 0;
 }
@@ -1125,98 +1180,117 @@ static int
 access_entry_chtag_set(void *o, const void *v)
 {
   access_entry_t *ae = (access_entry_t *)o;
-  channel_tag_t *tag = v ? channel_tag_find_by_uuid(v) : NULL;
-  if (tag == NULL && ae->ae_chtag) {
-    LIST_REMOVE(ae, ae_channel_tag_link);
-    ae->ae_chtag = NULL;
-    return 1;
-  } else if (ae->ae_chtag != tag) {
-    if (ae->ae_chtag)
-      LIST_REMOVE(ae, ae_channel_tag_link);
-    ae->ae_chtag = tag;
-    LIST_INSERT_HEAD(&tag->ct_accesses, ae, ae_channel_tag_link);
-    return 1;
-  }
-  return 0;
+  return idnode_list_set1(&ae->ae_id, &ae->ae_chtags,
+                          &channel_tag_class, (htsmsg_t *)v,
+                          access_entry_chtag_set_cb);
 }
 
 static const void *
 access_entry_chtag_get(void *o)
 {
-  static const char *ret;
-  access_entry_t *ae = (access_entry_t *)o;
-  if (ae->ae_chtag)
-    ret = idnode_uuid_as_str(&ae->ae_chtag->ct_id);
-  else
-    ret = "";
-  return &ret;
+  return idnode_list_get1(&((access_entry_t *)o)->ae_chtags);
+}
+
+static char *
+access_entry_chtag_rend (void *o, const char *lang)
+{
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_chtags, lang);
+}
+
+static int
+access_entry_dvr_config_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
+{
+  access_entry_t *ae = (access_entry_t *)in1;
+  idnode_list_mapping_t *ilm;
+  dvr_config_t *dvr = (dvr_config_t *)in2;
+  ilm = idnode_list_link(in1, &ae->ae_dvr_configs, in2, &dvr->dvr_accesses, origin);
+  if (ilm) {
+    ilm->ilm_in1_save = 1;
+    return 1;
+  }
+  return 0;
 }
 
 static int
 access_entry_dvr_config_set(void *o, const void *v)
 {
   access_entry_t *ae = (access_entry_t *)o;
-  dvr_config_t *cfg = v ? dvr_config_find_by_uuid(v) : NULL;
-  if (cfg == NULL && ae->ae_dvr_config) {
-    LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = NULL;
-    return 1;
-  } else if (ae->ae_dvr_config != cfg) {
-    if (ae->ae_dvr_config)
-      LIST_REMOVE(ae, ae_dvr_config_link);
-    ae->ae_dvr_config = cfg;
-    LIST_INSERT_HEAD(&cfg->dvr_accesses, ae, ae_dvr_config_link);
-    return 1;
-  }
-  return 0;
+  return idnode_list_set1(&ae->ae_id, &ae->ae_dvr_configs,
+                          &dvr_config_class, (htsmsg_t *)v,
+                          access_entry_dvr_config_set_cb);
 }
 
 static const void *
 access_entry_dvr_config_get(void *o)
 {
-  static const char *ret;
-  access_entry_t *ae = (access_entry_t *)o;
-  if (ae->ae_dvr_config)
-    ret = idnode_uuid_as_str(&ae->ae_dvr_config->dvr_id);
-  else
-    ret = "";
-  return &ret;
+  return idnode_list_get1(&((access_entry_t *)o)->ae_dvr_configs);
+}
+
+static char *
+access_entry_dvr_config_rend (void *o, const char *lang)
+{
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_dvr_configs, lang);
+}
+
+static int
+access_entry_profile_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
+{
+  access_entry_t *ae = (access_entry_t *)in1;
+  idnode_list_mapping_t *ilm;
+  profile_t *pro = (profile_t *)in2;
+  ilm = idnode_list_link(in1, &ae->ae_profiles, in2, &pro->pro_accesses, origin);
+  if (ilm) {
+    ilm->ilm_in1_save = 1;
+    return 1;
+  }
+  return 0;
 }
 
 static int
 access_entry_profile_set(void *o, const void *v)
 {
   access_entry_t *ae = (access_entry_t *)o;
-  profile_t *pro = v ? profile_find_by_uuid(v) : NULL;
-  if (pro == NULL && ae->ae_profile) {
-    LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_profile = NULL;
-    return 1;
-  } else if (ae->ae_profile != pro) {
-    if (ae->ae_profile)
-      LIST_REMOVE(ae, ae_profile_link);
-    ae->ae_profile = pro;
-    LIST_INSERT_HEAD(&pro->pro_accesses, ae, ae_profile_link);
-    return 1;
-  }
-  return 0;
+  return idnode_list_set1(&ae->ae_id, &ae->ae_profiles,
+                          &profile_class, (htsmsg_t *)v,
+                          access_entry_profile_set_cb);
 }
 
 static const void *
 access_entry_profile_get(void *o)
 {
-  static const char *ret;
-  access_entry_t *ae = (access_entry_t *)o;
-  if (ae->ae_profile)
-    ret = idnode_uuid_as_str(&ae->ae_profile->pro_id);
-  else
-    ret = "";
-  return &ret;
+  return idnode_list_get1(&((access_entry_t *)o)->ae_profiles);
+}
+
+static char *
+access_entry_profile_rend (void *o, const char *lang)
+{
+  return idnode_list_get_csv1(&((access_entry_t *)o)->ae_profiles, lang);
+}
+
+static htsmsg_t *
+access_entry_conn_limit_type_enum ( void *p, const char *lang )
+{
+  static struct strtab
+  conn_limit_type_tab[] = {
+    { N_("All (Streaming plus DVR)"),  ACCESS_CONN_LIMIT_TYPE_ALL },
+    { N_("Streaming"),                 ACCESS_CONN_LIMIT_TYPE_STREAMING   },
+    { N_("DVR"),                       ACCESS_CONN_LIMIT_TYPE_DVR },
+  };
+  return strtab2htsmsg(conn_limit_type_tab, 1, lang);
+}
+
+static htsmsg_t *
+language_get_list ( void *obj, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "language/locale");
+  return m;
 }
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
-  .ic_caption    = "Access",
+  .ic_caption    = N_("Access"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = access_entry_class_save,
@@ -1228,148 +1302,411 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_INT,
       .id       = "index",
-      .name     = "Index",
+      .name     = N_("Index"),
       .off      = offsetof(access_entry_t, ae_index),
       .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(access_entry_t, ae_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "username",
-      .name     = "Username",
+      .name     = N_("Username"),
       .off      = offsetof(access_entry_t, ae_username),
     },
     {
       .type     = PT_STR,
-      .id       = "password",
-      .name     = "Password",
-      .off      = offsetof(access_entry_t, ae_password),
-      .opts     = PO_PASSWORD | PO_NOSAVE,
-      .set      = access_entry_class_password_set,
-    },
-    {
-      .type     = PT_STR,
-      .id       = "password2",
-      .name     = "Password2",
-      .off      = offsetof(access_entry_t, ae_password2),
-      .opts     = PO_PASSWORD | PO_HIDDEN | PO_ADVANCED | PO_WRONCE,
-      .set      = access_entry_class_password2_set,
-    },
-    {
-      .type     = PT_STR,
       .id       = "prefix",
-      .name     = "Network prefix",
+      .name     = N_("Network prefix"),
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
     },
     {
+      .type     = PT_STR,
+      .id       = "lang",
+      .name     = N_("Language"),
+      .list     = language_get_list,
+      .off      = offsetof(access_entry_t, ae_lang),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "langui",
+      .name     = N_("Web Interface Language"),
+      .list     = language_get_list,
+      .off      = offsetof(access_entry_t, ae_lang_ui),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_BOOL,
       .id       = "streaming",
-      .name     = "Streaming",
+      .name     = N_("Streaming"),
       .off      = offsetof(access_entry_t, ae_streaming),
     },
     {
       .type     = PT_BOOL,
       .id       = "adv_streaming",
-      .name     = "Advanced Streaming",
+      .name     = N_("Advanced Streaming"),
       .off      = offsetof(access_entry_t, ae_adv_streaming),
     },
     {
       .type     = PT_BOOL,
       .id       = "htsp_streaming",
-      .name     = "HTSP Streaming",
+      .name     = N_("HTSP Streaming"),
       .off      = offsetof(access_entry_t, ae_htsp_streaming),
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "profile",
-      .name     = "Streaming Profile",
+      .name     = N_("Streaming Profiles"),
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
+      .rend     = access_entry_profile_rend,
     },
     {
       .type     = PT_BOOL,
       .id       = "dvr",
-      .name     = "Video Recorder",
+      .name     = N_("Video Recorder"),
       .off      = offsetof(access_entry_t, ae_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "htsp_dvr",
-      .name     = "HTSP DVR",
+      .name     = N_("HTSP DVR"),
       .off      = offsetof(access_entry_t, ae_htsp_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "all_dvr",
-      .name     = "All DVR",
+      .name     = N_("All DVR"),
       .off      = offsetof(access_entry_t, ae_all_dvr),
     },
     {
       .type     = PT_BOOL,
       .id       = "all_rw_dvr",
-      .name     = "All DVR (rw)",
+      .name     = N_("All DVR (rw)"),
       .off      = offsetof(access_entry_t, ae_all_rw_dvr),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "failed_dvr",
+      .name     = N_("Failed DVR"),
+      .off      = offsetof(access_entry_t, ae_failed_dvr),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+    },
+    {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "dvr_config",
-      .name     = "DVR Config Profile",
+      .name     = N_("DVR Configuration Profiles"),
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
+      .rend     = access_entry_dvr_config_rend,
     },
     {
       .type     = PT_BOOL,
       .id       = "webui",
-      .name     = "Web Interface",
+      .name     = N_("Web Interface"),
       .off      = offsetof(access_entry_t, ae_webui),
     },
     {
       .type     = PT_BOOL,
       .id       = "admin",
-      .name     = "Admin",
+      .name     = N_("Admin"),
       .off      = offsetof(access_entry_t, ae_admin),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "conn_limit_type",
+      .name     = N_("Connection Limit Type"),
+      .off      = offsetof(access_entry_t, ae_conn_limit_type),
+      .list     = access_entry_conn_limit_type_enum,
     },
     {
       .type     = PT_U32,
       .id       = "conn_limit",
-      .name     = "Limit Connections",
+      .name     = N_("Limit Connections"),
       .off      = offsetof(access_entry_t, ae_conn_limit),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_min",
-      .name     = "Min Channel Num",
+      .name     = N_("Min Channel Num"),
       .off      = offsetof(access_entry_t, ae_chmin),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
-      .name     = "Max Channel Num",
+      .name     = N_("Maximum Channel Num"),
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "channel_tag_exclude",
+      .name     = N_("Exclude Channel Tags"),
+      .off      = offsetof(access_entry_t, ae_chtags_exclude),
+    },
+    {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "channel_tag",
-      .name     = "Channel Tag",
+      .name     = N_("Channel Tags"),
       .set      = access_entry_chtag_set,
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,
+      .rend     = access_entry_chtag_rend,
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(access_entry_t, ae_comment),
+    },
+    {}
+  }
+};
+
+/*
+ * Password table
+ */
+
+static int passwd_entry_class_password_set(void *o, const void *v);
+
+static int
+passwd_verify_digest2(const char *username, const uint8_t *digest,
+                      const uint8_t *challenge,
+                      const char *username2, const char *passwd2)
+{
+  SHA_CTX shactx;
+  uint8_t d[20];
+
+  if (username == NULL || username[0] == '\0' ||
+      username2 == NULL || username2[0] == '\0' ||
+      passwd2 == NULL || passwd2[0] == '\0')
+    return -1;
+
+  if (strcmp(username, username2))
+    return -1;
+
+  SHA1_Init(&shactx);
+  SHA1_Update(&shactx, (const uint8_t *)passwd2, strlen(passwd2));
+  SHA1_Update(&shactx, challenge, 32);
+  SHA1_Final(d, &shactx);
+
+  return memcmp(d, digest, 20) ? -1 : 0;
+}
+
+static int
+passwd_verify_digest(const char *username, const uint8_t *digest,
+                     const uint8_t *challenge)
+{
+  passwd_entry_t *pw;
+
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
+    if (pw->pw_enabled &&
+        !passwd_verify_digest2(username, digest, challenge,
+                               pw->pw_username, pw->pw_password))
+      return 0;
+  return -1;
+}
+
+static int
+passwd_verify2(const char *username, const char *passwd,
+               const char *username2, const char *passwd2)
+{
+  if (username == NULL || username[0] == '\0' ||
+      username2 == NULL || username2[0] == '\0' ||
+      passwd == NULL || passwd2 == NULL)
+    return -1;
+
+  if (strcmp(username, username2))
+    return -1;
+
+  return strcmp(passwd, passwd2) ? -1 : 0;
+}
+
+static int
+passwd_verify(const char *username, const char *passwd)
+{
+  passwd_entry_t *pw;
+
+  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
+    if (pw->pw_enabled &&
+        !passwd_verify2(username, passwd,
+                        pw->pw_username, pw->pw_password))
+      return 0;
+  return -1;
+}
+
+passwd_entry_t *
+passwd_entry_create(const char *uuid, htsmsg_t *conf)
+{
+  passwd_entry_t *pw;
+  const char *s;
+
+  lock_assert(&global_lock);
+
+  pw = calloc(1, sizeof(passwd_entry_t));
+
+  if (idnode_insert(&pw->pw_id, uuid, &passwd_entry_class, 0)) {
+    if (uuid)
+      tvherror("access", "invalid uuid '%s'", uuid);
+    free(pw);
+    return NULL;
+  }
+
+  if (conf) {
+    pw->pw_enabled = 1;
+    idnode_load(&pw->pw_id, conf);
+    /* note password has PO_NOSAVE, thus it must be set manually */
+    if ((s = htsmsg_get_str(conf, "password")) != NULL)
+      passwd_entry_class_password_set(pw, s);
+  }
+
+  TAILQ_INSERT_TAIL(&passwd_entries, pw, pw_link);
+
+  return pw;
+}
+
+static void
+passwd_entry_destroy(passwd_entry_t *pw)
+{
+  if (pw == NULL)
+    return;
+  TAILQ_REMOVE(&passwd_entries, pw, pw_link);
+  idnode_unlink(&pw->pw_id);
+  free(pw->pw_username);
+  free(pw->pw_password);
+  free(pw->pw_password2);
+  free(pw->pw_comment);
+  free(pw);
+}
+
+void
+passwd_entry_save(passwd_entry_t *pw)
+{
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&pw->pw_id, c);
+  hts_settings_save(c, "passwd/%s", idnode_uuid_as_str(&pw->pw_id));
+  htsmsg_destroy(c);
+}
+
+static void
+passwd_entry_class_save(idnode_t *self)
+{
+  passwd_entry_save((passwd_entry_t *)self);
+}
+
+static void
+passwd_entry_class_delete(idnode_t *self)
+{
+  passwd_entry_t *pw = (passwd_entry_t *)self;
+
+  hts_settings_remove("passwd/%s", idnode_uuid_as_str(&pw->pw_id));
+  passwd_entry_destroy(pw);
+}
+
+static const char *
+passwd_entry_class_get_title (idnode_t *self, const char *lang)
+{
+  passwd_entry_t *pw = (passwd_entry_t *)self;
+
+  if (pw->pw_comment && pw->pw_comment[0] != '\0')
+    return pw->pw_comment;
+  return pw->pw_username ?: "";
+}
+
+static int
+passwd_entry_class_password_set(void *o, const void *v)
+{
+  passwd_entry_t *pw = (passwd_entry_t *)o;
+  char buf[256], result[300];
+
+  if (strcmp(v ?: "", pw->pw_password ?: "")) {
+    snprintf(buf, sizeof(buf), "TVHeadend-Hide-%s", (const char *)v ?: "");
+    base64_encode(result, sizeof(result), (uint8_t *)buf, strlen(buf));
+    free(pw->pw_password2);
+    pw->pw_password2 = strdup(result);
+    free(pw->pw_password);
+    pw->pw_password = strdup((const char *)v ?: "");
+    return 1;
+  }
+  return 0;
+}
+
+static int
+passwd_entry_class_password2_set(void *o, const void *v)
+{
+  passwd_entry_t *pw = (passwd_entry_t *)o;
+  char result[300];
+  int l;
+
+  if (strcmp(v ?: "", pw->pw_password2 ?: "")) {
+    if (v && ((const char *)v)[0] != '\0') {
+      l = base64_decode((uint8_t *)result, v, sizeof(result)-1);
+      if (l < 0)
+        l = 0;
+      result[l] = '\0';
+      free(pw->pw_password);
+      pw->pw_password = strdup(result + 15);
+      free(pw->pw_password2);
+      pw->pw_password2 = strdup((const char *)v);
+      return 1;
+    }
+  }
+  return 0;
+}
+
+const idclass_t passwd_entry_class = {
+  .ic_class      = "passwd",
+  .ic_caption    = N_("Passwords"),
+  .ic_event      = "passwd",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = passwd_entry_class_save,
+  .ic_get_title  = passwd_entry_class_get_title,
+  .ic_delete     = passwd_entry_class_delete,
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = N_("Enabled"),
+      .off      = offsetof(passwd_entry_t, pw_enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "username",
+      .name     = N_("Username"),
+      .off      = offsetof(passwd_entry_t, pw_username),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "password",
+      .name     = N_("Password"),
+      .off      = offsetof(passwd_entry_t, pw_password),
+      .opts     = PO_PASSWORD | PO_NOSAVE,
+      .set      = passwd_entry_class_password_set,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "password2",
+      .name     = N_("Password2"),
+      .off      = offsetof(passwd_entry_t, pw_password2),
+      .opts     = PO_PASSWORD | PO_HIDDEN | PO_ADVANCED | PO_WRONCE,
+      .set      = passwd_entry_class_password2_set,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "comment",
+      .name     = N_("Comment"),
+      .off      = offsetof(passwd_entry_t, pw_comment),
     },
     {}
   }
@@ -1401,8 +1738,18 @@ access_init(int createdefault, int noacl)
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
+  TAILQ_INIT(&passwd_entries);
 
-  /* Load */
+  /* Load passwd entries */
+  if ((c = hts_settings_load("passwd")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(m = htsmsg_field_get_map(f))) continue;
+      (void)passwd_entry_create(f->hmf_name, m);
+    }
+    htsmsg_destroy(c);
+  }
+
+  /* Load ACL entries */
   if ((c = hts_settings_load("accesscontrol")) != NULL) {
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
@@ -1423,11 +1770,12 @@ access_init(int createdefault, int noacl)
     ae->ae_streaming      = 1;
     ae->ae_adv_streaming  = 1;
     ae->ae_htsp_streaming = 1;
+    ae->ae_webui          = 1;
     ae->ae_dvr            = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
     ae->ae_all_rw_dvr     = 1;
-    ae->ae_webui          = 1;
+    ae->ae_failed_dvr     = 1;
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);
 
@@ -1460,12 +1808,15 @@ access_done(void)
 {
   access_entry_t *ae;
   access_ticket_t *at;
+  passwd_entry_t *pw;
 
   pthread_mutex_lock(&global_lock);
   while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
     access_entry_destroy(ae);
   while ((at = TAILQ_FIRST(&access_tickets)) != NULL)
     access_ticket_destroy(at);
+  while ((pw = TAILQ_FIRST(&passwd_entries)) != NULL)
+    passwd_entry_destroy(pw);
   free((void *)superuser_username);
   superuser_username = NULL;
   free((void *)superuser_password);

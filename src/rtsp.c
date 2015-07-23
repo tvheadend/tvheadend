@@ -46,6 +46,7 @@ rtsp_send( http_client_t *hc, http_cmd_t cmd,
     }
     http_arg_set(hdr, "Session", hc->hc_rtsp_session);
   }
+  http_client_basic_auth(hc, hdr, hc->hc_rtsp_user, hc->hc_rtsp_pass);
   if (hc->hc_port != 554)
     snprintf(buf2, sizeof(buf2), ":%d", hc->hc_port);
   else
@@ -165,6 +166,16 @@ rtsp_setup_decode( http_client_t *hc, int satip )
           if (hc->hc_rtpc_port <= 0)
             return -EIO;
         }
+      } else {
+        return -EIO;
+      }
+    }
+    else if (strncmp(argv[i], "server_port=", 12) == 0) {
+      j = http_tokenize(argv[i] + 12, argv2, 2, '-');
+      if (j > 1) {
+        hc->hc_rtcp_server_port = atoi(argv2[1]);
+        if (hc->hc_rtcp_server_port <= 0)
+          return -EIO;
       } else {
         return -EIO;
       }

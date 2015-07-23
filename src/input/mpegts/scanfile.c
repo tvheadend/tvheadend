@@ -374,7 +374,7 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
 
   /* validity check for [text] */
   s = str_trim(line);
-  if (s == '\0' || s[strlen(s) - 1] != ']')
+  if (*s == '\0' || s[strlen(s) - 1] != ']')
     return 1;
 
   l = htsmsg_create_map();

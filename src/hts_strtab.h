@@ -1,6 +1,6 @@
 /*
  *  tvheadend
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #define STRTAB_H_
 
 #include "htsmsg.h"
+#include "tvh_locale.h"
 
 #include <strings.h>
 
@@ -80,19 +81,19 @@ val2str0(int val, const struct strtab tab[], int l)
 #define val2str(val, tab) val2str0(val, tab, sizeof(tab) / sizeof(tab[0]))
 
 static inline htsmsg_t *
-strtab2htsmsg0(const struct strtab tab[], int n)
+strtab2htsmsg0(const struct strtab tab[], int n, int i18n, const char *lang)
 {
   int i;
   htsmsg_t *e, *l = htsmsg_create_list();
   for (i = 0; i < n; i++) {
     e = htsmsg_create_map();
     htsmsg_add_s32(e, "key", tab[i].val);
-    htsmsg_add_str(e, "val", tab[i].str);
+    htsmsg_add_str(e, "val", i18n ? tvh_gettext_lang(lang, tab[i].str) : tab[i].str);
     htsmsg_add_msg(l, NULL, e);
   }
   return l;
 }
 
-#define strtab2htsmsg(tab) strtab2htsmsg0(tab, sizeof(tab) / sizeof(tab[0]))
+#define strtab2htsmsg(tab,i18n,lang) strtab2htsmsg0(tab, sizeof(tab) / sizeof(tab[0]), i18n, lang)
 
 #endif /* STRTAB_H_ */

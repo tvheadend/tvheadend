@@ -16,8 +16,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "filebundle.h"
 #include "tvheadend.h"
+#include "filebundle.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -77,8 +77,8 @@ struct filebundle_file
  * Compression/Decompression
  * *************************************************************************/
 
-#if (ENABLE_ZLIB && ENABLE_BUNDLE)
-static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
+#if ENABLE_ZLIB
+uint8_t *gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
 {
   int err;
   z_stream zstr;
@@ -108,7 +108,7 @@ static uint8_t *_fb_inflate ( const uint8_t *data, size_t size, size_t orig )
 #endif
 
 #if ENABLE_ZLIB
-static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
+uint8_t *gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
 {
   int err;
   z_stream zstr;
@@ -125,7 +125,7 @@ static uint8_t *_fb_deflate ( const uint8_t *data, size_t orig, size_t *size )
   zstr.avail_out = orig;
   zstr.next_out  = bufout;
     
-  /* Decompress */
+  /* Compress */
   while (1) {
     err = deflate(&zstr, Z_FINISH);
 
@@ -395,7 +395,7 @@ fb_file *fb_open2
 #if (ENABLE_ZLIB && ENABLE_BUNDLE)
         ret->gzip = 0;
         ret->size = fb->f.orig;
-        ret->buf  = _fb_inflate(fb->f.data, fb->f.size, fb->f.orig);
+        ret->buf  = gzip_inflate(fb->f.data, fb->f.size, fb->f.orig);
         if (!ret->buf) {
           free(ret);
           ret = NULL;
@@ -432,12 +432,12 @@ fb_file *fb_open2
     if (ret->type == FB_BUNDLE) {
       const uint8_t *data;
       data     = ret->b.root->f.data;
-      ret->buf = _fb_deflate(data, ret->size, &ret->size);
+      ret->buf = gzip_deflate(data, ret->size, &ret->size);
     } else {
       uint8_t *data = malloc(ret->size);
       ssize_t c = fread(data, 1, ret->size, ret->d.cur);
       if (c == ret->size)
-        ret->buf = _fb_deflate(data, ret->size, &ret->size);
+        ret->buf = gzip_deflate(data, ret->size, &ret->size);
       fclose(ret->d.cur);
       ret->d.cur = NULL;
       free(data);

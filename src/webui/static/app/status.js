@@ -70,38 +70,48 @@ tvheadend.status_subs = function(panel, index)
         var subsCm = new Ext.grid.ColumnModel([
             {
                 width: 50,
+                id: 'id',
+                header: _("ID"),
+                dataIndex: 'id',
+                renderer: function(v) {
+                    return ("0000000" + v.toString(16).toUpperCase()).substr(-8);
+                }
+
+            },
+            {
+                width: 50,
                 id: 'hostname',
-                header: "Hostname",
+                header: _("Hostname"),
                 dataIndex: 'hostname'
             },
             {
                 width: 50,
                 id: 'username',
-                header: "Username",
+                header: _("Username"),
                 dataIndex: 'username'
             },
             {
                 width: 80,
                 id: 'title',
-                header: "Title",
+                header: _("Title"),
                 dataIndex: 'title'
             },
             {
                 width: 50,
                 id: 'channel',
-                header: "Channel",
+                header: _("Channel"),
                 dataIndex: 'channel'
             },
             {
                 width: 200,
                 id: 'service',
-                header: "Service",
+                header: _("Service"),
                 dataIndex: 'service'
             }, 
             {
                 width: 50,
                 id: 'start',
-                header: "Start",
+                header: _("Start"),
                 dataIndex: 'start',
                 renderer: function(v) {
                     var dt = new Date(v);
@@ -111,19 +121,19 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 50,
                 id: 'state',
-                header: "State",
+                header: _("State"),
                 dataIndex: 'state'
             },
             {
                 width: 50,
                 id: 'errors',
-                header: "Errors",
+                header: _("Errors"),
                 dataIndex: 'errors'
             },
             {
                 width: 50,
                 id: 'in',
-                header: "Input (kb/s)",
+                header: _("Input (kb/s)"),
                 dataIndex: 'in',
                 listeners: { click: { fn: clicked } },
                 renderer: renderBw
@@ -131,7 +141,7 @@ tvheadend.status_subs = function(panel, index)
             {
                 width: 50,
                 id: 'out',
-                header: "Output (kb/s)",
+                header: _("Output (kb/s)"),
                 dataIndex: 'out',
                 listeners: { click: { fn: clicked } },
                 renderer: renderBw
@@ -178,7 +188,7 @@ tvheadend.status_subs = function(panel, index)
         border: false,
         header: false,
         layout: 'fit',
-        title: 'Subscriptions',
+        title: _('Subscriptions'),
         iconCls: 'subscriptions'
     });
 
@@ -237,11 +247,11 @@ tvheadend.status_streams = function(panel, index)
             actions: [
                 {
                     iconCls: 'undo',
-                    qtip: 'Clear statistics',
+                    qtip: _('Clear statistics'),
                     cb: function(grid, rec, act, row) {
                         var uuid = grid.getStore().getAt(row).data.uuid;
-                        Ext.MessageBox.confirm('Clear statistics',
-                            'Clear statistics for selected input?',
+                        Ext.MessageBox.confirm(_('Clear statistics'),
+                            _('Clear statistics for selected input?'),
                             function(button) {
                                 if (button === 'no')
                                     return;
@@ -252,7 +262,7 @@ tvheadend.status_streams = function(panel, index)
                             }
                        );
                    }
-               },
+               }
             ],
             destroy: function() {
             }
@@ -318,56 +328,56 @@ tvheadend.status_streams = function(panel, index)
             actions,
             {
                 width: 120,
-                header: "Input",
+                header: _("Input"),
                 dataIndex: 'input'
             },
             {
                 width: 100,
-                header: "Stream",
+                header: _("Stream"),
                 dataIndex: 'stream'
             },
             {
                 width: 50,
-                header: "Subs #",
+                header: _("Subs #"),
                 dataIndex: 'subs'
             },
             {
                 width: 50,
-                header: "Weight",
+                header: _("Weight"),
                 dataIndex: 'weight'
             },
             {
                 width: 50,
-                header: "Bandwidth (kb/s)",
+                header: _("Bandwidth (kb/s)"),
                 dataIndex: 'bps',
                 renderer: renderBw,
                 listeners: { click: { fn: clicked } }
             },
             {
                 width: 50,
-                header: "BER",
+                header: _("BER"),
                 dataIndex: 'ber',
                 renderer: renderBer
             },
             {
                 width: 50,
-                header: "PER",
+                header: _("PER"),
                 dataIndex: 'tc_block',
                 renderer: renderPer
             },
             {
                 width: 50,
-                header: "Uncorrected Blocks",
+                header: _("Uncorrected Blocks"),
                 dataIndex: 'unc'
             },
             {
                 width: 50,
-                header: "Transport Errors",
+                header: _("Transport Errors"),
                 dataIndex: 'te'
             },
             {
                 width: 50,
-                header: "Continuity Errors",
+                header: _("Continuity Errors"),
                 dataIndex: 'cc'
             }
         ]);
@@ -381,7 +391,7 @@ tvheadend.status_streams = function(panel, index)
         }
 
         cm.config.push(new Ext.ux.grid.ProgressColumn({
-            header: "SNR",
+            header: _("SNR"),
             dataIndex: 'snr',
             width: 85,
             colored: true,
@@ -394,14 +404,14 @@ tvheadend.status_streams = function(panel, index)
                   var snr = v * 0.001;
                   return snr.toFixed(1) + " dB";
                 }
-                return '<span class="tvh-grid-unset">Unknown</span>';
+                return '<span class="tvh-grid-unset">' + _('Unknown') + '</span>';
             },
             destroy: function() {
             }
         }));
 
         cm.config.push(new Ext.ux.grid.ProgressColumn({
-            header: "Signal Strength",
+            header: _("Signal Strength"),
             dataIndex: 'signal',
             width: 85,
             colored: true,
@@ -414,7 +424,7 @@ tvheadend.status_streams = function(panel, index)
                     var snr = v * 0.001;
                     return snr.toFixed(1) + " dBm";
                 }
-                return '<span class="tvh-grid-unset">Unknown</span>';
+                return '<span class="tvh-grid-unset">' + _('Unknown') + '</span>';
             },
             destroy: function() {
             }
@@ -453,7 +463,7 @@ tvheadend.status_streams = function(panel, index)
         border: false,
         header: false,
         layout: 'fit',
-        title: 'Stream',
+        title: _('Stream'),
         iconCls: 'stream'
     });
 
@@ -484,11 +494,11 @@ tvheadend.status_conns = function(panel, index) {
             actions: [
                 {
                     iconCls: 'cancel',
-                    qtip: 'Cancel this connection',
+                    qtip: _('Cancel this connection'),
                     cb: function(grid, rec, act, row) {
                         var id = grid.getStore().getAt(row).data.id;
-                        Ext.MessageBox.confirm('Cancel Connection',
-                            'Cancel the selected connection?',
+                        Ext.MessageBox.confirm(_('Cancel Connection'),
+                            _('Cancel the selected connection?'),
                             function(button) {
                                 if (button === 'no')
                                     return;
@@ -499,7 +509,7 @@ tvheadend.status_conns = function(panel, index) {
                             }
                        );
                    }
-               },
+               }
             ],
             destroy: function() {
             }
@@ -536,22 +546,22 @@ tvheadend.status_conns = function(panel, index) {
             {
                 width: 50,
                 id: 'type',
-                header: "Type",
+                header: _("Type"),
                 dataIndex: 'type'
             }, {
                 width: 50,
                 id: 'peer',
-                header: "IP Address",
+                header: _("IP Address"),
                 dataIndex: 'peer'
             }, {
                 width: 50,
                 id: 'user',
-                header: "Username",
+                header: _("Username"),
                 dataIndex: 'user'
             }, {
                 width: 50,
                 id: 'started',
-                header: "Started",
+                header: _("Started"),
                 dataIndex: 'started',
                 renderer: renderDate
             }]);
@@ -588,7 +598,7 @@ tvheadend.status_conns = function(panel, index) {
         border: false,
         header: false,
         layout: 'fit',
-        title: 'Connections',
+        title: _('Connections'),
         iconCls: 'connections'
     });
 
@@ -598,7 +608,7 @@ tvheadend.status_conns = function(panel, index) {
 
 tvheadend.status = function() {
     var panel = new Ext.TabPanel({
-        title: 'Status',
+        title: _('Status'),
         autoScroll: true,
         activeTab: 0,
         iconCls: 'eye',
@@ -647,7 +657,7 @@ tvheadend.subscription_bw_monitor = function(id) {
     var comprLbl = new Ext.form.Label();
 
     var win = new Ext.Window({
-        title: 'Bandwidth monitor',
+        title: _('Bandwidth monitor'),
         layout: 'fit',
         resizable: false,
         width: 450 + 30,
@@ -694,9 +704,9 @@ tvheadend.subscription_bw_monitor = function(id) {
             var ratio = new Number(r.data['in'] / r.data.out).toPrecision(3);
 
             win.setTitle(r.data.channel);
-            inputLbl.setText('In: ' + input + ' kb/s');
-            outputLbl.setText('Out: ' + output + ' kb/s');
-            comprLbl.setText('Compression ratio: ' + ratio);
+            inputLbl.setText(_('In') + ': ' + input + ' kb/s');
+            outputLbl.setText(_('Out') + ': ' + output + ' kb/s');
+            comprLbl.setText(_('Compression ratio') + ': ' + ratio);
 
             inputSeries.append(new Date().getTime(), input);
             outputSeries.append(new Date().getTime(), output);
@@ -740,7 +750,7 @@ tvheadend.stream_bw_monitor = function(id) {
     var inputLbl = new Ext.form.Label();
 
     var win = new Ext.Window({
-        title: 'Bandwidth monitor',
+        title: _('Bandwidth monitor'),
         layout: 'fit',
         resizable: false,
         width: 450 + 30,
@@ -784,7 +794,7 @@ tvheadend.stream_bw_monitor = function(id) {
 
             win.setTitle(r.data.input + ' (' + r.data.stream + ')');
             var input = Math.round(r.data.bps / 1024);
-            inputLbl.setText('Input: ' + input + ' kb/s');
+            inputLbl.setText(_('Input') + ': ' + input + ' kb/s');
             inputSeries.append(new Date().getTime(), input);
         }
     };

@@ -405,11 +405,13 @@ void epggrab_done ( void )
   pthread_mutex_lock(&global_lock);
   while ((mod = LIST_FIRST(&epggrab_modules)) != NULL) {
     LIST_REMOVE(mod, link);
+    pthread_mutex_unlock(&global_lock);
     if (mod->done)
       mod->done(mod);
     free((void *)mod->id);
     free((void *)mod->name);
     free(mod);
+    pthread_mutex_lock(&global_lock);
   }
   pthread_mutex_unlock(&global_lock);
   epggrab_ota_shutdown();

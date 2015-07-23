@@ -7,13 +7,15 @@
         "git",
         "build-essential",
         "pkg-config",
+        "gettext",
         "libavahi-client-dev",
         "libssl-dev",
         "zlib1g-dev",
         "wget",
         "bzip2",
         "git-core",
-        "liburiparser-dev"
+        "liburiparser-dev",
+        "python"
       ],
 
       "buildcmd": [
@@ -28,6 +30,7 @@
         "git",
         "build-essential",
         "pkg-config",
+        "gettext",
         "libavahi-client-dev",
         "libssl-dev",
         "zlib1g-dev",
@@ -35,7 +38,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-	"libx264-dev"
+	"libx264-dev",
+        "python"
       ],
 
       "buildcmd": [
@@ -50,13 +54,15 @@
         "git",
         "build-essential",
         "pkg-config",
+        "gettext",
         "libavahi-client-dev",
         "libssl-dev",
         "zlib1g-dev",
         "wget",
         "bzip2",
         "git-core",
-        "liburiparser-dev"
+        "liburiparser-dev",
+        "python"
       ],
 
       "buildcmd": [
@@ -71,6 +77,7 @@
         "git",
         "build-essential",
         "pkg-config",
+        "gettext",
         "libavahi-client-dev",
         "libssl-dev",
         "zlib1g-dev",
@@ -78,7 +85,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-	"libx264-dev"
+	"libx264-dev",
+        "python"
       ],
 
       "buildcmd": [

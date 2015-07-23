@@ -1,6 +1,6 @@
 /*
  *  tvheadend, Notification framework
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,5 +24,10 @@
 void notify_by_msg(const char *class, htsmsg_t *m);
 
 void notify_reload(const char *class);
+
+void notify_delayed(const char *id, const char *event, const char *action);
+
+void notify_init(void);
+void notify_done(void);
 
 #endif /* NOTIFY_H_ */

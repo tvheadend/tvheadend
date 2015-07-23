@@ -39,6 +39,7 @@ struct dvr_config_list dvrconfigs;
 static dvr_config_t *dvrdefaultconfig = NULL;
 
 static void dvr_config_destroy(dvr_config_t *cfg, int delconf);
+static void dvr_update_pathname_from_booleans(dvr_config_t *cfg);
 
 /**
  * find a dvr config by name, return NULL if not found
@@ -105,7 +106,7 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
   htsmsg_field_t *f;
   const char *uuid, *uuid2;
 
-  cfg  = dvr_config_find_by_uuid(name);
+  cfg = dvr_config_find_by_uuid(name);
   if (!cfg)
     cfg  = dvr_config_find_by_name(name);
   uuid = cfg ? idnode_uuid_as_str(&cfg->dvr_id) : "";
@@ -121,7 +122,8 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
       }
     }
   } else {
-    res = cfg;
+    if (cfg->dvr_enabled)
+      res = cfg;
   }
   if (!res)
     res = dvr_config_find_by_name_default(NULL);
@@ -178,20 +180,10 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
   cfg->dvr_update_window = 24 * 3600;
-
-  /* series link support */
-  cfg->dvr_sl_brand_lock   = 1; // use brand linking
-  cfg->dvr_sl_season_lock  = 0; // ignore season (except if no brand)
-  cfg->dvr_sl_channel_lock = 1; // channel locked
-  cfg->dvr_sl_time_lock    = 0; // time slot (approx) locked
-  cfg->dvr_sl_more_recent  = 1; // Only record more reason episodes
-  cfg->dvr_sl_quality_lock = 1; // Don't attempt to ajust quality
+  cfg->dvr_pathname = strdup("$t$n.$x");
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
-
-  /* dup detect */
-  cfg->dvr_dup_detect_episode = 1; // detect dup episodes
 
   /* Default recording file and directory permissions */
 
@@ -200,6 +192,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   if (conf) {
     idnode_load(&cfg->dvr_id, conf);
+    if (!htsmsg_field_find(conf, "pathname"))
+      dvr_update_pathname_from_booleans(cfg);
     cfg->dvr_valid = 1;
   }
 
@@ -250,11 +244,244 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
   autorec_destroy_by_config(cfg, delconf);
   timerec_destroy_by_config(cfg, delconf);
 
+  free(cfg->dvr_pathname);
   free(cfg->dvr_charset_id);
   free(cfg->dvr_charset);
   free(cfg->dvr_storage);
   free(cfg->dvr_config_name);
   free(cfg);
+}
+
+/**
+ *
+ */
+static void
+dvr_config_storage_check(dvr_config_t *cfg)
+{
+  char buf[PATH_MAX];
+  struct stat st;
+  const char *homedir;
+
+  if(cfg->dvr_storage != NULL && cfg->dvr_storage[0])
+    return;
+
+  /* Try to figure out a good place to put them videos */
+
+  homedir = getenv("HOME");
+
+  if(homedir != NULL) {
+    snprintf(buf, sizeof(buf), "%s/Videos", homedir);
+    if(stat(buf, &st) == 0 && S_ISDIR(st.st_mode))
+      cfg->dvr_storage = strdup(buf);
+
+    else if(stat(homedir, &st) == 0 && S_ISDIR(st.st_mode))
+      cfg->dvr_storage = strdup(homedir);
+    else
+      cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
+  }
+
+  tvhlog(LOG_WARNING, "dvr",
+         "Output directory for video recording is not yet configured "
+         "for DVR configuration \"%s\". "
+         "Defaulting to to \"%s\". "
+         "This can be changed from the web user interface.",
+         cfg->dvr_config_name, cfg->dvr_storage);
+}
+
+/**
+ *
+ */
+static int
+dvr_filename_index(dvr_config_t *cfg)
+{
+  char *str = cfg->dvr_pathname, *p;
+
+  for (str = p = cfg->dvr_pathname; *p; p++) {
+    if (*p == '\\')
+      p++;
+    else if (*p == '/')
+      str = p;
+  }
+
+  return str - cfg->dvr_pathname;
+}
+
+/**
+ *
+ */
+static int
+dvr_match_fmtstr(dvr_config_t *cfg, const char *needle, int nodir)
+{
+  char *str = cfg->dvr_pathname, *p;
+  const char *x;
+
+  if (needle == NULL)
+    return -1;
+
+  if (nodir)
+    str += dvr_filename_index(cfg);
+
+  while (*str) {
+    if (*str == '\\') {
+      str++;
+      if (*str)
+        str++;
+      continue;
+    }
+    for (p = str, x = needle; *p && *x; p++, x++)
+      if (*p != *x)
+        break;
+    if (*x == '\0')
+      return str - cfg->dvr_pathname;
+    else
+      str++;
+  }
+  return -1;
+}
+
+/**
+ *
+ */
+static void
+dvr_insert_fmtstr(dvr_config_t *cfg, int idx, const char *str)
+{
+  size_t t = strlen(cfg->dvr_pathname);
+  size_t l = strlen(str);
+  char *n = malloc(t + l + 1);
+  memcpy(n, cfg->dvr_pathname, idx);
+  memcpy(n + idx, str, l);
+  memcpy(n + idx + l, cfg->dvr_pathname + idx, t - idx);
+  n[t + l] = '\0';
+  free(cfg->dvr_pathname);
+  cfg->dvr_pathname = n;
+}
+
+/**
+ *
+ */
+static void
+dvr_insert_fmtstr_before_extension(dvr_config_t *cfg, const char *str)
+{
+  int idx = dvr_match_fmtstr(cfg, "$n", 1);
+  idx = idx < 0 ? dvr_match_fmtstr(cfg, "$x", 1) : idx;
+  if (idx < 0) {
+    idx = strlen(cfg->dvr_pathname);
+  } else {
+    while (idx > 0) {
+      if (cfg->dvr_pathname[idx - 1] != '.')
+        break;
+      idx--;
+    }
+  }
+  dvr_insert_fmtstr(cfg, idx, str);
+}
+
+/**
+ *
+ */
+static void
+dvr_remove_fmtstr(dvr_config_t *cfg, int idx, int len)
+{
+  char *pathname = cfg->dvr_pathname;
+  size_t l = strlen(pathname);
+  memmove(pathname + idx, pathname + idx + len, l - idx - len);
+  pathname[l - len] = '\0';
+}
+
+/**
+ *
+ */
+static void
+dvr_match_and_insert_or_remove(dvr_config_t *cfg, const char *str, int val, int idx)
+{
+  int i = dvr_match_fmtstr(cfg, str, idx < 0 ? 1 : 0);
+  if (val) {
+    if (i < 0) {
+      if (idx < 0)
+        dvr_insert_fmtstr_before_extension(cfg, str);
+      else
+        dvr_insert_fmtstr(cfg, idx, str);
+    }
+  } else {
+    if (i >= 0) {
+      if (idx < 0 && i >= dvr_filename_index(cfg))
+        dvr_remove_fmtstr(cfg, i, strlen(str));
+      else if (idx >= 0 && i < dvr_filename_index(cfg))
+        dvr_remove_fmtstr(cfg, i, strlen(str));
+    }
+  }
+}
+
+/**
+ *
+ */
+static void
+dvr_update_pathname_safe(dvr_config_t *cfg)
+{
+  if (cfg->dvr_pathname[0] == '\0') {
+    free(cfg->dvr_pathname);
+    cfg->dvr_pathname = strdup("$t$n.$x");
+  }
+
+  if (strstr(cfg->dvr_pathname, "%n"))
+    dvr_insert_fmtstr_before_extension(cfg, "%n");
+}
+
+/**
+ *
+ */
+static void
+dvr_update_pathname_from_fmtstr(dvr_config_t *cfg)
+{
+  if (cfg->dvr_pathname == NULL)
+    return;
+
+  dvr_update_pathname_safe(cfg);
+
+  cfg->dvr_dir_per_day = dvr_match_fmtstr(cfg, "%F/", 0) >= 0;
+  cfg->dvr_channel_dir = dvr_match_fmtstr(cfg, "$c/", 0) >= 0;
+  cfg->dvr_title_dir   = dvr_match_fmtstr(cfg, "$t/", 0) >= 0;
+
+  cfg->dvr_channel_in_title  = dvr_match_fmtstr(cfg, "$-c", 1) >= 0;
+  cfg->dvr_date_in_title     = dvr_match_fmtstr(cfg, "%F", 1) >= 0;
+  cfg->dvr_time_in_title     = dvr_match_fmtstr(cfg, "%R", 1) >= 0;
+  cfg->dvr_episode_in_title  = dvr_match_fmtstr(cfg, "$-e", 1) >= 0;
+  cfg->dvr_subtitle_in_title = dvr_match_fmtstr(cfg, "$.s", 1) >= 0;
+
+  cfg->dvr_omit_title = dvr_match_fmtstr(cfg, "$t", 1) < 0;
+}
+
+/**
+ *
+ */
+static void
+dvr_update_pathname_from_booleans(dvr_config_t *cfg)
+{
+  int i;
+
+  i = dvr_match_fmtstr(cfg, "$t", 1);
+  if (cfg->dvr_omit_title) {
+    if (i >= 0)
+      dvr_remove_fmtstr(cfg, i, 2);
+  } else if (i < 0) {
+    i = dvr_match_fmtstr(cfg, "$n", 1);
+    if (i >= 0)
+      dvr_insert_fmtstr(cfg, i, "$t");
+    else
+      dvr_insert_fmtstr_before_extension(cfg, "$t");
+  }
+
+  dvr_match_and_insert_or_remove(cfg, "$t/", cfg->dvr_title_dir, 0);
+  dvr_match_and_insert_or_remove(cfg, "$c/", cfg->dvr_channel_dir, 0);
+  dvr_match_and_insert_or_remove(cfg, "%F/", cfg->dvr_dir_per_day, 0);
+
+  dvr_match_and_insert_or_remove(cfg, "$-c", cfg->dvr_channel_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "$.s", cfg->dvr_subtitle_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "%F",  cfg->dvr_date_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "%R",  cfg->dvr_time_in_title, -1);
+  dvr_match_and_insert_or_remove(cfg, "$-e",  cfg->dvr_episode_in_title, -1);
+
+  dvr_update_pathname_safe(cfg);
 }
 
 /**
@@ -282,6 +509,7 @@ dvr_config_save(dvr_config_t *cfg)
 
   lock_assert(&global_lock);
 
+  dvr_config_storage_check(cfg);
   idnode_save(&cfg->dvr_id, m);
   hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id));
   htsmsg_destroy(m);
@@ -298,6 +526,12 @@ dvr_config_class_save(idnode_t *self)
   if (dvr_config_is_default(cfg))
     cfg->dvr_enabled = 1;
   cfg->dvr_valid = 1;
+  if (cfg->dvr_pathname_changed) {
+    cfg->dvr_pathname_changed = 0;
+    dvr_update_pathname_from_fmtstr(cfg);
+  } else {
+    dvr_update_pathname_from_booleans(cfg);
+  }
   dvr_config_save(cfg);
 }
 
@@ -408,7 +642,7 @@ dvr_config_class_profile_get(void *o)
 }
 
 static char *
-dvr_config_class_profile_rend(void *o)
+dvr_config_class_profile_rend(void *o, const char *lang)
 {
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (cfg->dvr_profile)
@@ -417,7 +651,7 @@ dvr_config_class_profile_rend(void *o)
 }
 
 static const char *
-dvr_config_class_get_title (idnode_t *self)
+dvr_config_class_get_title (idnode_t *self, const char *lang)
 {
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (!dvr_config_is_default(cfg))
@@ -433,7 +667,7 @@ dvr_config_class_charset_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-dvr_config_class_charset_list(void *o)
+dvr_config_class_charset_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -442,33 +676,51 @@ dvr_config_class_charset_list(void *o)
 }
 
 static htsmsg_t *
-dvr_config_class_cache_list(void *o)
+dvr_config_class_cache_list(void *o, const char *lang)
 {
   static struct strtab tab[] = {
-    { "Unknown",            MC_CACHE_UNKNOWN },
-    { "System",             MC_CACHE_SYSTEM },
-    { "Do not keep",        MC_CACHE_DONTKEEP },
-    { "Sync",               MC_CACHE_SYNC },
-    { "Sync + Do not keep", MC_CACHE_SYNCDONTKEEP }
+    { N_("Unknown"),            MC_CACHE_UNKNOWN },
+    { N_("System"),             MC_CACHE_SYSTEM },
+    { N_("Don't keep"),         MC_CACHE_DONTKEEP },
+    { N_("Sync"),               MC_CACHE_SYNC },
+    { N_("Sync + Don't keep"),  MC_CACHE_SYNCDONTKEEP }
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-dvr_config_class_extra_list(void *o)
+dvr_config_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Not set (none or channel config)", 4*60, 1);
+  return dvr_entry_class_duration_list(o, 
+           tvh_gettext_lang(lang, N_("Not set (none or channel configuration)")),
+           4*60, 1, lang);
 }
 
 static htsmsg_t *
-dvr_config_entry_class_update_window_list(void *o)
+dvr_config_entry_class_update_window_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, "Update Disabled", 24*3600, 60);
+  return dvr_entry_class_duration_list(o,
+           tvh_gettext_lang(lang, N_("Update Disabled")),
+           24*3600, 60, lang);
+}
+
+static int
+dvr_config_class_pathname_set(void *o, const void *v)
+{
+  dvr_config_t *cfg = (dvr_config_t *)o;
+  const char *s = v;
+  if (strcmp(cfg->dvr_pathname ?: "", s ?: "")) {
+    free(cfg->dvr_pathname);
+    cfg->dvr_pathname = s ? strdup(s) : NULL;
+    cfg->dvr_pathname_changed = 1;
+    return 1;
+  }
+  return 0;
 }
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
-  .ic_caption    = "DVR Configuration Profile",
+  .ic_caption    = N_("DVR Configuration Profile"),
   .ic_event      = "dvrconfig",
   .ic_save       = dvr_config_class_save,
   .ic_get_title  = dvr_config_class_get_title,
@@ -476,25 +728,29 @@ const idclass_t dvr_config_class = {
   .ic_perm       = dvr_config_class_perm,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = "DVR Behaviour",
+         .name   = N_("DVR Behavior"),
          .number = 1,
       },
       {
-         .name   = "Recording File Options",
+         .name   = N_("Recording File Options"),
          .number = 2,
       },
       {
-         .name   = "Subdirectory Options",
+         .name   = N_("Full Pathname Specification"),
          .number = 3,
       },
       {
-         .name   = "Filename Options",
+         .name   = N_("Subdirectory Options"),
          .number = 4,
+      },
+      {
+         .name   = N_("Filename Options"),
+         .number = 5,
          .column = 1,
       },
       {
          .name   = "",
-         .number = 5,
+         .number = 6,
          .parent = 4,
          .column = 2,
       },
@@ -504,7 +760,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .set      = dvr_config_class_enabled_set,
       .off      = offsetof(dvr_config_t, dvr_enabled),
       .def.i    = 1,
@@ -514,7 +770,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Config Name",
+      .name     = N_("Configuration Name"),
       .set      = dvr_config_class_name_set,
       .off      = offsetof(dvr_config_t, dvr_config_name),
       .def.s    = "! New config",
@@ -524,14 +780,14 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(dvr_config_t, dvr_comment),
       .group    = 1,
     },
     {
       .type     = PT_STR,
       .id       = "profile",
-      .name     = "Stream Profile",
+      .name     = N_("Stream Profile"),
       .set      = dvr_config_class_profile_set,
       .get      = dvr_config_class_profile_get,
       .rend     = dvr_config_class_profile_rend,
@@ -541,7 +797,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_INT,
       .id       = "cache",
-      .name     = "Cache Scheme",
+      .name     = N_("Cache Scheme"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
       .list     = dvr_config_class_cache_list,
@@ -550,7 +806,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "retention-days",
-      .name     = "DVR Log Retention Time (days)",
+      .name     = N_("DVR Log Retention Time (days)"),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = 31,
       .group    = 1,
@@ -558,7 +814,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "pre-extra-time",
-      .name     = "Extra Time Before Recordings (minutes)",
+      .name     = N_("Extra Time Before Recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),
       .list     = dvr_config_class_extra_list,
       .group    = 1,
@@ -566,22 +822,15 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "post-extra-time",
-      .name     = "Extra Time After Recordings (minutes)",
+      .name     = N_("Extra Time After Recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_post),
       .list     = dvr_config_class_extra_list,
       .group    = 1,
     },
     {
-      .type     = PT_BOOL,
-      .id       = "episode-duplicate-detection",
-      .name     = "Episode Duplicate Detect",
-      .off      = offsetof(dvr_config_t, dvr_episode_duplicate),
-      .group    = 1,
-    },
-    {
       .type     = PT_U32,
       .id       = "epg-update-window",
-      .name     = "EPG Update Window",
+      .name     = N_("EPG Update Window"),
       .off      = offsetof(dvr_config_t, dvr_update_window),
       .list     = dvr_config_entry_class_update_window_list,
       .def.u32  = 24*3600,
@@ -590,21 +839,21 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "postproc",
-      .name     = "Post-Processor Command",
+      .name     = N_("Post-Processor Command"),
       .off      = offsetof(dvr_config_t, dvr_postproc),
       .group    = 1,
     },
     {
       .type     = PT_STR,
       .id       = "storage",
-      .name     = "Recording System Path",
+      .name     = N_("Recording System Path"),
       .off      = offsetof(dvr_config_t, dvr_storage),
       .group    = 2,
     },
     {
       .type     = PT_PERM,
       .id       = "file-permissions",
-      .name     = "File Permissions (octal, e.g. 0664)",
+      .name     = N_("File Permissions (octal, e.g. 0664)"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_file_permissions),
       .def.u32  = 0664,
       .group    = 2,
@@ -612,7 +861,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = "Filename Charset",
+      .name     = N_("Filename Character Set"),
       .off      = offsetof(dvr_config_t, dvr_charset),
       .set      = dvr_config_class_charset_set,
       .list     = dvr_config_class_charset_list,
@@ -622,7 +871,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "tag-files",
-      .name     = "Tag Files With Metadata",
+      .name     = N_("Tag Files With Metadata"),
       .off      = offsetof(dvr_config_t, dvr_tag_files),
       .def.i    = 1,
       .group    = 2,
@@ -630,109 +879,110 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "skip-commercials",
-      .name     = "Skip Commercials",
+      .name     = N_("Skip Commercials"),
       .off      = offsetof(dvr_config_t, dvr_skip_commercials),
       .def.i    = 1,
       .group    = 2,
     },
     {
+      .type     = PT_STR,
+      .id       = "pathname",
+      .name     = N_("Format String"),
+      .set      = dvr_config_class_pathname_set,
+      .off      = offsetof(dvr_config_t, dvr_pathname),
+      .group    = 3,
+    },
+    {
       .type     = PT_PERM,
       .id       = "directory-permissions",
-      .name     = "Directory Permissions (octal, e.g. 0775)",
+      .name     = N_("Directory Permissions (octal, e.g. 0775)"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_directory_permissions),
       .def.u32  = 0775,
-      .group    = 3,
+      .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "day-dir",
-      .name     = "Make Subdirectories Per Day",
+      .name     = N_("Make Subdirectories Per Day"),
       .off      = offsetof(dvr_config_t, dvr_dir_per_day),
-      .group    = 3,
+      .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "channel-dir",
-      .name     = "Make Subdirectories Per Channel",
+      .name     = N_("Make Subdirectories Per Channel"),
       .off      = offsetof(dvr_config_t, dvr_channel_dir),
-      .group    = 3,
+      .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "title-dir",
-      .name     = "Make Subdirectories Per Title",
+      .name     = N_("Make Subdirectories Per Title"),
       .off      = offsetof(dvr_config_t, dvr_title_dir),
-      .group    = 3,
+      .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "channel-in-title",
-      .name     = "Include Channel Name In Filename",
+      .name     = N_("Include Channel Name In Filename"),
       .off      = offsetof(dvr_config_t, dvr_channel_in_title),
-      .group    = 4,
+      .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "date-in-title",
-      .name     = "Include Date In Filename",
+      .name     = N_("Include Date In Filename"),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
-      .group    = 4,
+      .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "time-in-title",
-      .name     = "Include Time In Filename",
+      .name     = N_("Include Time In Filename"),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
-      .group    = 4,
+      .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "episode-in-title",
-      .name     = "Include Episode In Filename",
+      .name     = N_("Include Episode In Filename"),
       .off      = offsetof(dvr_config_t, dvr_episode_in_title),
-      .group    = 4,
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "episode-before-date",
-      .name     = "Put Episode In Filename Before Date And Time",
-      .off      = offsetof(dvr_config_t, dvr_episode_before_date),
-      .group    = 4,
+      .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "subtitle-in-title",
-      .name     = "Include Subtitle In Filename",
+      .name     = N_("Include Subtitle In Filename"),
       .off      = offsetof(dvr_config_t, dvr_subtitle_in_title),
-      .group    = 5,
+      .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "omit-title",
-      .name     = "Do Not Include Title To Filename",
+      .name     = N_("Don't Include Title In Filename"),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
-      .group    = 5,
+      .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "clean-title",
-      .name     = "Remove All Unsafe Characters From Filename",
+      .name     = N_("Remove All Unsafe Characters From Filename"),
       .off      = offsetof(dvr_config_t, dvr_clean_title),
-      .group    = 5,
+      .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "whitespace-in-title",
-      .name     = "Replace Whitespace In Title with '-'",
+      .name     = N_("Replace Whitespace In Title with '-'"),
       .off      = offsetof(dvr_config_t, dvr_whitespace_in_title),
-      .group    = 5,
+      .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "windows-compatible-filenames",
-      .name     = "Use Windows-compatible filenames",
+      .name     = N_("Use Windows-compatible filenames"),
       .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
-      .group    = 5,
+      .group    = 6,
     },
     {}
   },
@@ -760,9 +1010,6 @@ dvr_config_init(void)
 {
   htsmsg_t *m, *l;
   htsmsg_field_t *f;
-  char buf[500];
-  const char *homedir;
-  struct stat st;
   dvr_config_t *cfg;
 
   dvr_iov_max = sysconf(_SC_IOV_MAX);
@@ -784,31 +1031,8 @@ dvr_config_init(void)
   cfg = dvr_config_find_by_name_default(NULL);
   assert(cfg);
 
-  LIST_FOREACH(cfg, &dvrconfigs, config_link) {
-    if(cfg->dvr_storage == NULL || !strlen(cfg->dvr_storage)) {
-      /* Try to figure out a good place to put them videos */
-
-      homedir = getenv("HOME");
-
-      if(homedir != NULL) {
-        snprintf(buf, sizeof(buf), "%s/Videos", homedir);
-        if(stat(buf, &st) == 0 && S_ISDIR(st.st_mode))
-          cfg->dvr_storage = strdup(buf);
-        
-        else if(stat(homedir, &st) == 0 && S_ISDIR(st.st_mode))
-          cfg->dvr_storage = strdup(homedir);
-        else
-          cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
-      }
-
-      tvhlog(LOG_WARNING, "dvr",
-             "Output directory for video recording is not yet configured "
-             "for DVR configuration \"%s\". "
-             "Defaulting to to \"%s\". "
-             "This can be changed from the web user interface.",
-             cfg->dvr_config_name, cfg->dvr_storage);
-    }
-  }
+  LIST_FOREACH(cfg, &dvrconfigs, config_link)
+    dvr_config_storage_check(cfg);
 }
 
 void
@@ -822,6 +1046,7 @@ dvr_init(void)
   dvr_entry_init();
   dvr_autorec_update();
   dvr_timerec_update();
+  dvr_disk_space_init();
 }
 
 /**
@@ -842,4 +1067,5 @@ dvr_done(void)
   pthread_mutex_unlock(&global_lock);
   dvr_autorec_done();
   dvr_timerec_done();
+  dvr_disk_space_done();
 }

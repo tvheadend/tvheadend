@@ -1,6 +1,6 @@
 /*
  *  tvheadend, TCP common functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@
 #include "tvhpoll.h"
 #include "notify.h"
 #include "access.h"
+#include "dvr/dvr.h"
 
 int tcp_preferred_address_family = AF_INET;
 int tcp_server_running;
@@ -352,25 +353,49 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
  *
  */
 char *
-tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
+tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen)
 {
-  if(sa == NULL || s == NULL)
+  if (sa == NULL || dst == NULL)
     return NULL;
 
   switch(sa->sa_family)
   {
     case AF_INET:
-      inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), s, maxlen);
+      inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), dst, maxlen);
       break;
     case AF_INET6:
-      inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), s, maxlen);
+      inet_ntop(AF_INET6, &(((struct sockaddr_in6*)sa)->sin6_addr), dst, maxlen);
       break;
     default:
-      strncpy(s, "Unknown AF", maxlen);
+      strncpy(dst, "Unknown AF", maxlen);
       return NULL;
   }
 
-  return s;
+  return dst;
+}
+
+/**
+ *
+ */
+struct sockaddr *
+tcp_get_ip_from_str(const char *src, struct sockaddr *sa)
+{
+  if (sa == NULL || src == NULL)
+    return NULL;
+
+  if (strstr(src, ":")) {
+    sa->sa_family = AF_INET6;
+    if (inet_pton(AF_INET6, src, &(((struct sockaddr_in6*)sa)->sin6_addr)) != 1)
+      return NULL;
+  } else if (strstr(src, ".")) {
+    sa->sa_family = AF_INET;
+    if (inet_pton(AF_INET, src, &(((struct sockaddr_in*)sa)->sin_addr)) != 1)
+      return NULL;
+  } else {
+    return NULL;
+  }
+
+  return sa;
 }
 
 /**
@@ -409,13 +434,34 @@ static LIST_HEAD(, tcp_server_launch) tcp_server_join = { 0 };
 /**
  *
  */
+uint32_t
+tcp_connection_count(access_t *aa)
+{
+  tcp_server_launch_t *tsl;
+  uint32_t used = 0;
+
+  lock_assert(&global_lock);
+
+  if (aa == NULL)
+    return 0;
+
+  LIST_FOREACH(tsl, &tcp_server_active, alink)
+    if (!strcmp(aa->aa_representative ?: "", tsl->representative ?: ""))
+      used++;
+  return used;
+}
+
+/**
+ *
+ */
 void *
 tcp_connection_launch
   (int fd, void (*status) (void *opaque, htsmsg_t *m), access_t *aa)
 {
   tcp_server_launch_t *tsl, *res;
-  uint32_t used = 0;
+  uint32_t used = 0, used2;
   time_t started = dispatch_clock;
+  int c1, c2;
 
   lock_assert(&global_lock);
 
@@ -429,7 +475,7 @@ try_again:
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->fd == fd) {
       res = tsl;
-      if (!aa->aa_conn_limit)
+      if (!aa->aa_conn_limit && !aa->aa_conn_limit_streaming)
         break;
       continue;
     }
@@ -439,18 +485,28 @@ try_again:
   if (res == NULL)
     return NULL;
 
-  if (aa->aa_conn_limit && used >= aa->aa_conn_limit) {
-    if (started + 3 < dispatch_clock) {
-      tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' (limit %u)",
-               aa->aa_username ?: "", aa->aa_representative ?: "", aa->aa_conn_limit);
+  if (aa->aa_conn_limit || aa->aa_conn_limit_streaming) {
+    used2 = aa->aa_conn_limit ? dvr_usage_count(aa) : 0;
+    /* the rule is: allow if one condition is OK */
+    c1 = aa->aa_conn_limit ? used + used2 >= aa->aa_conn_limit : -1;
+    c2 = aa->aa_conn_limit_streaming ? used >= aa->aa_conn_limit_streaming : -1;
+
+    if (c1 && c2) {
+      if (started + 3 < dispatch_clock) {
+        tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' "
+                        "(limit %u, streaming limit %u, active streaming %u, DVR %u)",
+                 aa->aa_username ?: "", aa->aa_representative ?: "",
+                 aa->aa_conn_limit, aa->aa_conn_limit_streaming,
+                 used, used2);
+        return NULL;
+      }
+      pthread_mutex_unlock(&global_lock);
+      usleep(250000);
+      pthread_mutex_lock(&global_lock);
+      if (tvheadend_running)
+        goto try_again;
       return NULL;
     }
-    pthread_mutex_unlock(&global_lock);
-    usleep(250000);
-    pthread_mutex_lock(&global_lock);
-    if (tvheadend_running)
-      goto try_again;
-    return NULL;
   }
 
   res->representative = aa->aa_representative ? strdup(aa->aa_representative) : NULL;
@@ -854,7 +910,7 @@ tcp_server_connections ( void )
     if (!tsl->status) continue;
     c++;
     e = htsmsg_create_map();
-    tcp_get_ip_str((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
+    tcp_get_str_from_ip((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
     htsmsg_add_u32(e, "id", tsl->id);
     htsmsg_add_str(e, "peer", buf);
     htsmsg_add_s64(e, "started", tsl->started);

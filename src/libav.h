@@ -19,6 +19,9 @@
 #ifndef LIBAV_H_
 #define LIBAV_H_
 
+#include "build.h"
+
+#if ENABLE_LIBAV
 
 #include <libavformat/avformat.h>
 #include "tvheadend.h"
@@ -53,7 +56,14 @@ This list must be updated every time we use a new AV_CODEC_ID
 enum AVCodecID streaming_component_type2codec_id(streaming_component_type_t type);
 streaming_component_type_t codec_id2streaming_component_type(enum AVCodecID id);
 int libav_is_encoder(AVCodec *codec);
+void libav_set_loglevel(void);
 void libav_init(void);
+
+#else
+
+static inline void libav_set_loglevel(void) { };
+static inline void libav_init(void) { };
 
 #endif
 
+#endif

@@ -19,7 +19,6 @@
 
 #include "tvheadend.h"
 #include "esfilter.h"
-#include "lang_codes.h"
 #include "access.h"
 #include "api.h"
 
@@ -31,7 +30,7 @@ api_esfilter_grid
   esfilter_t *esf;
 
   TAILQ_FOREACH(esf, &esfilters[cls], esf_link) {
-    idnode_set_add(ins, (idnode_t*)esf, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)esf, &conf->filter, perm->aa_lang);
   }
 }
 

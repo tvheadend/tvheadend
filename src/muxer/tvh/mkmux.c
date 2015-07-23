@@ -721,7 +721,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
   } else if (ee) {
     eg = LIST_FIRST(&ee->genre);
   }
-  if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100))
+  if(eg && epg_genre_get_str(eg, 1, 0, ctype, 100, NULL))
     addtag(q, build_tag_string("CONTENT_TYPE", ctype, NULL, 0, NULL));
 
   if(ch)
@@ -1127,6 +1127,12 @@ mk_mux_open_file(mk_mux_t *mkm, const char *filename, int permissions)
 	   mkm->filename, strerror(errno));
     return mkm->error;
   }
+
+  /* bypass umask settings */
+  if (fchmod(fd, permissions))
+    tvhlog(LOG_ERR, "mkv", "%s: Unable to change permissions -- %s",
+           filename, strerror(errno));
+                     
 
   mkm->filename = strdup(filename);
   mkm->fd = fd;

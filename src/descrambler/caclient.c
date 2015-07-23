@@ -164,13 +164,13 @@ caclient_class_save ( idnode_t *in )
 }
 
 static const char *
-caclient_class_get_title ( idnode_t *in )
+caclient_class_get_title ( idnode_t *in, const char *lang )
 {
   caclient_t *cac = (caclient_t *)in;
   static char buf[32];
   if (cac->cac_name && cac->cac_name[0])
     return cac->cac_name;
-  snprintf(buf, sizeof(buf), "CA Client %i", cac->cac_index);
+  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("CA Client %i")), cac->cac_index);
   return buf;
 }
 
@@ -233,7 +233,7 @@ caclient_class_status_get(void *o)
 const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
-  .ic_caption    = "Conditional Access Client",
+  .ic_caption    = N_("Conditional Access Client"),
   .ic_save       = caclient_class_save,
   .ic_event      = "caclient",
   .ic_get_title  = caclient_class_get_title,
@@ -244,7 +244,7 @@ const idclass_t caclient_class =
     {
       .type     = PT_STR,
       .id       = "class",
-      .name     = "Class",
+      .name     = N_("Class"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .get      = caclient_class_class_get,
       .set      = caclient_class_class_set,
@@ -252,33 +252,33 @@ const idclass_t caclient_class =
     {
       .type     = PT_INT,
       .id       = "index",
-      .name     = "Index",
+      .name     = N_("Index"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(caclient_t, cac_index),
     },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(caclient_t, cac_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Client Name",
+      .name     = N_("Client Name"),
       .off      = offsetof(caclient_t, cac_name),
       .notify   = idnode_notify_title_changed,
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(caclient_t, cac_comment),
     },
     {
       .type     = PT_STR,
       .id       = "status",
-      .name     = "Status",
+      .name     = N_("Status"),
       .get      = caclient_class_status_get,
       .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE,
     },
@@ -320,7 +320,7 @@ caclient_set_status(caclient_t *cac, caclient_status_t status)
 {
   if (cac->cac_status != status) {
     cac->cac_status = status;
-    idnode_notify_simple(&cac->cac_id);
+    idnode_notify_changed(&cac->cac_id);
   }
 }
 

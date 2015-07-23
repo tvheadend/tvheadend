@@ -37,6 +37,12 @@ typedef enum {
   PROFILE_SPRIO_DVR_UNIMPORTANT
 } profile_sprio_t;
 
+typedef enum {
+  PROFILE_SVF_NONE = 0,
+  PROFILE_SVF_SD,
+  PROFILE_SVF_HD
+} profile_svfilter_t;
+
 struct profile;
 struct muxer;
 struct streaming_target;
@@ -112,8 +118,9 @@ typedef struct profile {
   int pro_refcount;
 
   LIST_HEAD(,dvr_config) pro_dvr_configs;
-  LIST_HEAD(,access_entry) pro_accesses;
+  idnode_list_head_t pro_accesses;
 
+  int pro_sflags;
   int pro_enabled;
   int pro_shield;
   char *pro_name;
@@ -122,6 +129,8 @@ typedef struct profile {
   int pro_fprio;
   int pro_timeout;
   int pro_restart;
+  int pro_contaccess;
+  int pro_svfilter;
 
   void (*pro_free)(struct profile *pro);
   void (*pro_conf_changed)(struct profile *pro);
@@ -167,9 +176,10 @@ int  profile_chain_weight(profile_chain_t *prch, int custom);
 static inline profile_t *profile_find_by_uuid(const char *uuid)
   {  return (profile_t*)idnode_find(uuid, &profile_class, NULL); }
 profile_t *profile_find_by_name(const char *name, const char *alt);
-profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name, const char *alt);
+profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name,
+                                const char *alt, int sflags);
 
-htsmsg_t * profile_class_get_list(void *o);
+htsmsg_t * profile_class_get_list(void *o, const char *lang);
 
 char *profile_validate_name(const char *name);
 

@@ -83,6 +83,8 @@ struct iptv_mux
   int                   mm_iptv_streaming_priority;
   int                   mm_iptv_fd;
   udp_connection_t     *mm_iptv_connection;
+  int                   mm_iptv_fd2;
+  udp_connection_t     *mm_iptv_connection2;
   char                 *mm_iptv_url;
   char                 *mm_iptv_url_sane;
   char                 *mm_iptv_interface;
@@ -95,6 +97,8 @@ struct iptv_mux
   int                   mm_iptv_respawn;
   time_t                mm_iptv_respawn_last;
   char                 *mm_iptv_env;
+
+  uint32_t              mm_iptv_rtp_seq;
 
   sbuf_t                mm_iptv_buffer;
 
@@ -123,7 +127,11 @@ void iptv_mux_load_all ( void );
 
 void iptv_http_init    ( void );
 void iptv_udp_init     ( void );
-void iptv_pipe_init     ( void );
+void iptv_rtsp_init    ( void );
+void iptv_pipe_init    ( void );
+
+ssize_t iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
+                        void (*pkt_cb)(iptv_mux_t *im, uint8_t *buf, int len) );
 
 #endif /* __IPTV_PRIVATE_H__ */
 

@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <libavformat/avformat.h>
 #include <libavutil/mathematics.h>
 
@@ -354,15 +355,23 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
 {
   AVFormatContext *oc;
   lav_muxer_t *lm = (lav_muxer_t*)m;
+  char buf[256];
+  int r;
 
   oc = lm->lm_oc;
   snprintf(oc->filename, sizeof(oc->filename), "%s", filename);
 
-  if(avio_open(&oc->pb, filename, AVIO_FLAG_WRITE) < 0) {
-    tvhlog(LOG_ERR, "libav",  "Could not open %s", filename);
+  if((r = avio_open(&oc->pb, filename, AVIO_FLAG_WRITE)) < 0) {
+    av_strerror(r, buf, sizeof(buf));
+    tvhlog(LOG_ERR, "libav",  "%s: Could not open -- %s", filename, buf);
     lm->m_errors++;
     return -1;
   }
+
+  /* bypass umask settings */
+  if (chmod(filename, lm->m_config.m_file_permissions))
+    tvhlog(LOG_ERR, "libav", "%s: Unable to change permissions -- %s",
+           filename, strerror(errno));
 
   return 0;
 }
@@ -380,7 +389,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   AVPacket packet;
   th_pkt_t *pkt = (th_pkt_t*)data, *opkt;
   lav_muxer_t *lm = (lav_muxer_t*)m;
-  int rc = 0, free_data = 0;
+  unsigned char *tofree;
+  int rc = 0;
 
   assert(smt == SMT_PACKET);
 
@@ -406,10 +416,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     if(pkt->pkt_payload == NULL)
       continue;
 
+    tofree = NULL;
     av_init_packet(&packet);
 
     if(lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) {
-      free_data = 1;
       pkt = avc_convert_pkt(opkt = pkt);
       pkt_ref_dec(opkt);
       if(av_bitstream_filter_filter(lm->lm_h264_filter,
@@ -424,6 +434,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 	if (packet.data != pktbuf_ptr(pkt->pkt_payload))
 	  av_free(packet.data);
 	break;
+      } else {
+        tofree = packet.data;
       }
     } else if (st->codec->codec_id == AV_CODEC_ID_AAC) {
       /* remove ADTS header */
@@ -446,8 +458,8 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     if((rc = av_interleaved_write_frame(oc, &packet)))
       tvhlog(LOG_WARNING, "libav",  "Failed to write frame");
 
-    if(free_data && packet.data != pktbuf_ptr(pkt->pkt_payload))
-      av_free(packet.data);
+    if(tofree && tofree != pktbuf_ptr(pkt->pkt_payload))
+      av_free(tofree);
 
     break;
   }

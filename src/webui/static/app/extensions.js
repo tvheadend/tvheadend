@@ -112,12 +112,12 @@ Ext.ux.Multiselect = Ext.extend(Ext.form.Field, {
      * @cfg {String} minLengthText Validation message displayed when {@link #minLength} is not met (defaults to 'Minimum {0} 
      * item(s) required').  The {0} token will be replaced by the value of {@link #minLength}.
      */
-    minLengthText: 'Minimum {0} item(s) required',
+    minLengthText: _('Minimum {0} item(s) required'),
     /**
      * @cfg {String} maxLengthText Validation message displayed when {@link #maxLength} is not met (defaults to 'Maximum {0} 
      * item(s) allowed').  The {0} token will be replaced by the value of {@link #maxLength}.
      */
-    maxLengthText: 'Maximum {0} item(s) allowed',
+    maxLengthText: _('Maximum {0} item(s) allowed'),
     /**
      * @cfg {String} delimiter The string used to delimit between items when set or returned as a string of values
      * (defaults to ',').
@@ -346,6 +346,7 @@ Ext.reg("multiselect", Ext.ux.Multiselect);
 /**
  * 22/07/2014: ceiling support backported from version 1.2, by Kai Sommerfeld
  * 01/08/2014: tvh_renderer fcn added by Jaroslav Kysela
+ * 09/06/2015: update timeout code added by Jaroslav Kysela
  */
 Ext.namespace('Ext.ux.grid');
 
@@ -357,6 +358,10 @@ Ext.ux.grid.ProgressColumn = function(config) {
 };
 
 Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
+    /**
+     * @cfg {Integer} update timeout in milliseconds (defaults to 0 - inactive)
+     */
+    timeout : 0,
     /**
      * @cfg {Integer} upper limit for full progress indicator (defaults to 100)
      */
@@ -405,6 +410,7 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
       return v;
     },
     renderer: function(v, p, record) {
+        var ov = v;
         v = this.tvh_renderer(v, p, record);
         if (typeof v === "string")
           return v; // custom string
@@ -430,11 +436,28 @@ Ext.extend(Ext.ux.grid.ProgressColumn, Ext.util.Observable, {
                 style = '-red';
         }
 
-        p.css += ' x-grid3-progresscol';
-        return String.format(
+        var res = String.format(
                 '<div class="x-progress-wrap"><div class="x-progress-inner"><div class="x-progress-bar{0}" style="width:{1}%;">{2}</div>' +
                 '</div>', style, value, text
                 );
+        if (!this.timerflag) {
+            p.css += ' x-grid3-progresscol';
+            if (this.timeout) {
+              var tid = Ext.id();
+              res = '<div id="' + tid + '">' + res + '</div>';
+              setInterval(this.runTimer, this.timeout, this, ov, p, record, tid);
+            }
+        }
+        return res;
+    },
+    runTimer: function(obj, v, p, record, tid) {
+        var dom = document.getElementById(tid);
+        if (dom) {
+           obj.timerflag = true;
+           var res = obj.renderer(v, p, record, tid);
+           obj.timerflag = false;
+           dom.innerHTML = res;
+        }
     }
 });
 
@@ -508,41 +531,41 @@ Ext.ux.grid.RowActions = function(config) {
     // {{{
     this.addEvents(
             /**
-             * @event beforeaction
+             * event beforeaction
              * Fires before action event. Return false to cancel the subsequent action event.
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Ext.data.Record} record Record corresponding to row clicked
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {Integer} rowIndex Index of clicked grid row
-             * @param {Integer} colIndex Index of clicked grid column that contains all action icons
+             * param {Ext.grid.GridPanel} grid
+             * param {Ext.data.Record} record Record corresponding to row clicked
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {Integer} rowIndex Index of clicked grid row
+             * param {Integer} colIndex Index of clicked grid column that contains all action icons
              */
             'beforeaction'
             /**
-             * @event action
+             * event action
              * Fires when icon is clicked
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Ext.data.Record} record Record corresponding to row clicked
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {Integer} rowIndex Index of clicked grid row
-             * @param {Integer} colIndex Index of clicked grid column that contains all action icons
+             * param {Ext.grid.GridPanel} grid
+             * param {Ext.data.Record} record Record corresponding to row clicked
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {Integer} rowIndex Index of clicked grid row
+             * param {Integer} colIndex Index of clicked grid column that contains all action icons
              */
             , 'action'
             /**
-             * @event beforegroupaction
+             * event beforegroupaction
              * Fires before group action event. Return false to cancel the subsequent groupaction event.
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Array} records Array of records in this group
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {String} groupId Identifies the group clicked
+             * param {Ext.grid.GridPanel} grid
+             * param {Array} records Array of records in this group
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {String} groupId Identifies the group clicked
              */
             , 'beforegroupaction'
             /**
-             * @event groupaction
+             * event groupaction
              * Fires when icon in a group header is clicked
-             * @param {Ext.grid.GridPanel} grid
-             * @param {Array} records Array of records in this group
-             * @param {String} action Identifies the action icon clicked. Equals to icon css class name.
-             * @param {String} groupId Identifies the group clicked
+             * param {Ext.grid.GridPanel} grid
+             * param {Array} records Array of records in this group
+             * param {String} action Identifies the action icon clicked. Equals to icon css class name.
+             * param {String} groupId Identifies the group clicked
              */
             , 'groupaction'
             );

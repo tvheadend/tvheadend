@@ -166,8 +166,7 @@ upnp_thread( void *aux )
         iplen = sizeof(ip);
         size = recvfrom(conn->fd, buf, sizeof(buf), 0,
                                            (struct sockaddr *)&ip, &iplen);
-#if ENABLE_TRACE
-        if (size > 0) {
+        if (size > 0 && tvhtrace_enabled()) {
           char tbuf[256];
           inet_ntop(ip.ss_family, IP_IN_ADDR(ip), tbuf, sizeof(tbuf));
           tvhtrace("upnp", "%s - received data from %s:%hu [size=%zi]",
@@ -175,7 +174,6 @@ upnp_thread( void *aux )
                    tbuf, (unsigned short) IP_PORT(ip), size);
           tvhlog_hexdump("upnp", buf, size);
         }
-#endif
         /* TODO: a filter */
         TAILQ_FOREACH(us, &upnp_services, us_link)
           us->us_received(buf, size, conn, &ip);

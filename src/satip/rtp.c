@@ -121,7 +121,7 @@ satip_rtp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
     pid = ((data[1] & 0x1f) << 8) | data[2];
     if (pid != last_pid && !rtp->pids.all) {
       for (i = 0; i < rtp->pids.count; i++) {
-        j = pids[i];
+        j = pids[i].pid;
         if (pid < j) break;
         if (j == pid) goto found;
       }
@@ -168,7 +168,7 @@ satip_rtp_thread(void *aux)
   char peername[50];
   int alive = 1, fatal = 0, r;
 
-  tcp_get_ip_str((struct sockaddr *)&rtp->peer, peername, sizeof(peername));
+  tcp_get_str_from_ip((struct sockaddr *)&rtp->peer, peername, sizeof(peername));
   tvhdebug("satips", "RTP streaming to %s:%d open", peername, rtp->port);
 
   pthread_mutex_lock(&sq->sq_mutex);
@@ -183,7 +183,7 @@ satip_rtp_thread(void *aux)
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
-    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    streaming_queue_remove(sq, sm);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch (sm->sm_type) {
@@ -399,7 +399,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     break;
   }
 
-  mpegts_pid_dump(&rtp->pids, pids, sizeof(pids));
+  mpegts_pid_dump(&rtp->pids, pids, sizeof(pids), 0, 0);
 
   switch (rtp->dmc.dmc_fe_delsys) {
   case DVB_SYS_DVBS:
@@ -611,7 +611,7 @@ satip_rtcp_thread(void *aux)
                    sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
       if (r < 0) {
         err = errno;
-        tcp_get_ip_str((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
+        tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
         tvhwarn("satips", "RTCP send to error %s:%d : %s",
                 addrbuf, IP_PORT(rtp->peer2), strerror(err));
       }

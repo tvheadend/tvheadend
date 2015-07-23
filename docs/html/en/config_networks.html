@@ -1,0 +1,83 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - DVB Inputs - Networks</h3>
+<p>A network is the type of carrier for your television signals. Tvheadend supports several different types of network, notably:</p>
+<ul>
+<li><strong>DVB-C</strong> : Cable TV, delivered via a cable to your house</li>
+</ul>
+<ul>
+<li><strong>DVB-S</strong> : Satellite (includes S2), so any signal coming in via a dish</li>
+</ul>
+<ul>
+<li><strong>DVB-T</strong> : Terrestrial, so over-the-air broadcasts received through a traditional television aerial</li>
+</ul>
+<ul>
+<li><strong>ATSC</strong> : Over-the-air terrestrial, common in north and central America and parts of south Asia</li>
+</ul>
+<ul>
+<li><strong>IPTV</strong> : IP, so over the Internet</li>
+</ul>
+<p><img src="docresources/configdvbnetwork.png" alt="&#39;Networks&#39; Tab Screenshot" /></p>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the network configuration. </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the network configuration since the last save. </td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add a new network. You can choose from any of the types described above. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete an existing network. This will also remove any association with an adapter. </td>
+</tr>
+<tr>
+<td><strong>Edit</strong></td>
+<td>Edit an existing network. This allows you to change any of the parameters you’d otherwise set when adding a new network, e.g. network discovery, idle scan, etc. - similar to using the check boxes to enable/disable functions.</td>
+</tr>
+<tr>
+<td><strong>Force Scan</strong></td>
+<td>Force a new scan (i.e. scan all muxes for services) for the selected networks. </td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Displays this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Grid Items</h5>
+<p>The main grid items have the following functions:</p>
+<p><strong>Network Name</strong> : The name of the network. This can be set automatically or you can give it a name that means something to you (e.g. if you have multiple OTA networks).</p>
+<p><strong>Network ID (limit scanning)</strong> : If you experience problems caused by overlaps between multiple network providers this option can be used to filter which network ID is received by a given adapter.</p>
+<p><strong>Network Discovery</strong> : Whether automatic discovery is enabled for this network, i.e. whether Tvheadend looks for muxes or simply stays with the list of muxes as defined initially.</p>
+<p><strong>Skip initial Scan</strong> : Don’t scan all muxes in this network at Tvheadend start. The initial scan procedure is not a blind scan. Only known muxes registered to this network are scanned. If Network Discovery is enabled and new muxes are discovered using DVB descriptors, these muxes will be scanned too.</p>
+<p><strong>Idle Scan Muxes</strong> : When nothing else happens Tvheadend will continuously rotate among all muxes and tune to them to verify that they are still working when the inputs are not used for streaming. If your adapter have problems with lots of (endless) tuning, try to disable this. Note that this option should be OFF for the normal operation. This type of mux probing is not required and it may cause issues for SAT>IP (limited number of PID filters).</p>
+<p><strong>Ignore Provider’s Channel Numbers</strong> : Some providers will try to set a channel number so that every receiver is consistent - “tune to Channel x on 150”. This option allows you to ignore this and let tvhheadend allocate a channel number itself.</p>
+<p><strong>SAT>IP Source Number</strong> : This field is matched through the “src” parameter asked from the SAT>IP client. Usually (and by default) this value is 1. For satellite tuners, this value determines the satellite source (dish). By specification position 1 = DiseqC AA, 2 = DiseqC AB, 3 = DiseqC BA, 4 = DiseqC BB, but any numbers may be used - depends on the SAT>IP client. Note that if you use same number for multiple networks, the first matched network containing the mux with requested parameters will win (also for unknown mux). If this field is set to zero, the network cannot be used by the SAT>IP server.</p>
+<p><strong>Character Set</strong> : The character encoding for this network (e.g. UTF-8).</p>
+<p><strong>EIT Local Time</strong> : EPG (EIT) events uses local time instead of UTC.</p>
+<p><strong># Muxes</strong> : The number of muxes defined for/discovered on this network.</p>
+<p><strong># Services</strong> : The number of services (across all muxes) defined for/discovered on this network.</p>
+<p><strong># Mapped Channels</strong> : The number of channels (across all services) mapped for this network.</p>
+<p><strong>Scan Q Length</strong> : The number of muxes remaining to be scanned on this network.</p>
+<h5>IPTV-Specific Configuration Items (Add/Edit Dialogs Only)</h5>
+<p><strong>Max Input Streams</strong> : Maximum simultaneous streams that can be played.</p>
+<p><strong>Max Bandwidth</strong> : Maximum bandwidth allowed for streams.</p>
+<p><strong>Max timeout</strong> : Maximum timeout trying to play stream.</p>
+<p><strong>Priority</strong> : The network priority value (higher value = higher priority to use muxes/services from this network).</p>
+<p><strong>Streaming Priority</strong> : The network priority value for streamed channels through HTTP or HTSP (higher value = higher priority to use muxes/services from this network). If not set, the standard network priority value is used.</p>
+</div>

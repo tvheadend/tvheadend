@@ -5,14 +5,14 @@ tvheadend.tvhlog = function(panel, index) {
     var confreader = new Ext.data.JsonReader({
         root: 'config'
     }, ['tvhlog_path', 'tvhlog_dbg_syslog', 'tvhlog_trace_on',
-        'tvhlog_debug', 'tvhlog_trace']);
+        'tvhlog_debug', 'tvhlog_trace', 'tvhlog_libav']);
 
     /* ****************************************************************
      * Form Fields
      * ***************************************************************/
 
     var tvhlogLogPath = new Ext.form.TextField({
-        fieldLabel: 'Debug log path',
+        fieldLabel: _('Debug log path'),
         name: 'tvhlog_path',
         allowBlank: true,
         width: 400
@@ -20,59 +20,76 @@ tvheadend.tvhlog = function(panel, index) {
 
     var tvhlogToSyslog = new Ext.form.Checkbox({
         name: 'tvhlog_dbg_syslog',
-        fieldLabel: 'Debug to syslog'
+        fieldLabel: _('Debug to syslog')
     });
 
     var tvhlogTraceOn = new Ext.form.Checkbox({
         name: 'tvhlog_trace_on',
-        fieldLabel: 'Debug trace (low-level stuff)'
+        fieldLabel: _('Debug trace (low-level stuff)')
     });
 
     var tvhlogDebugSubsys = new Ext.form.TextField({
-        fieldLabel: 'Debug subsystems',
+        fieldLabel: _('Debug subsystems'),
         name: 'tvhlog_debug',
         allowBlank: true,
         width: 400
     });
 
     var tvhlogTraceSubsys = new Ext.form.TextField({
-        fieldLabel: 'Trace subsystems',
+        fieldLabel: _('Trace subsystems'),
         name: 'tvhlog_trace',
         allowBlank: true,
         width: 400
     });
+
+    var tvhlogLibav = new Ext.form.Checkbox({
+        name: 'tvhlog_libav',
+        fieldLabel: _('Debug libav log')
+    });
+
 
     /* ****************************************************************
      * Form
      * ***************************************************************/
 
     var saveButton = new Ext.Button({
-        text: "Apply configuration (run-time only)",
-        tooltip: 'Apply changes made bellow to the run-time configuration<br/>They will be lost on restart.',
+        text: _("Apply configuration (run-time only)"),
+        tooltip: _('Apply any changes made below to the run-time configuration.') + '<br/>' +
+                 _('They will be lost when the application next restarts.'),
         iconCls: 'apply',
         handler: saveChanges
     });
 
     var helpButton = new Ext.Button({
-        text: 'Help',
-		iconCls: 'help',
+        text: _('Help'),
+        iconCls: 'help',
         handler: function() {
-            new tvheadend.help('Debug Configuration', 'config_tvhlog.html');
+            new tvheadend.help(_('Debug Configuration'), 'config_debugging.html');
         }
     });
 
+    items = new Array();
+    items.push(tvhlogLogPath);
+    items.push(tvhlogToSyslog);
+    if (tvheadend.capabilities.indexOf('trace') !== -1)
+      items.push(tvhlogTraceOn);
+    items.push(tvhlogDebugSubsys);
+    if (tvheadend.capabilities.indexOf('trace') !== -1)
+      items.push(tvhlogTraceSubsys);
+    if (tvheadend.capabilities.indexOf('libav') !== -1)
+      items.push(tvhlogLibav);
+
     var DebuggingPanel = new Ext.form.FieldSet({
-        title: 'Debugging Options',
+        title: _('Debugging Options'),
         width: 700,
         autoHeight: true,
         collapsible: true,
         animCollapse : true,
-        items: [tvhlogLogPath, tvhlogToSyslog,
-            tvhlogTraceOn, tvhlogDebugSubsys, tvhlogTraceSubsys]
+        items: items
     });
 
     var confpanel = new Ext.form.FormPanel({
-        title: 'Debugging',
+        title: _('Debugging'),
         iconCls: 'debug',
         border: false,
         bodyStyle: 'padding:15px',
@@ -109,9 +126,9 @@ tvheadend.tvhlog = function(panel, index) {
             params: {
                 op: 'saveSettings'
             },
-            waitMsg: 'Applying Data...',
+            waitMsg: _('Applying Data...'),
             failure: function(form, action) {
-                Ext.Msg.alert('Apply failed', action.result.errormsg);
+                Ext.Msg.alert(_('Data application failed'), action.result.errormsg);
             }
         });
     }

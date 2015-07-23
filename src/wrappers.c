@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
@@ -71,12 +72,15 @@ tvh_pipe_close(th_pipe_t *p)
 int
 tvh_write(int fd, const void *buf, size_t len)
 {
+  time_t next = dispatch_clock + 25;
   ssize_t c;
 
   while (len) {
     c = write(fd, buf, len);
     if (c < 0) {
       if (ERRNO_AGAIN(errno)) {
+        if (dispatch_clock > next)
+          break;
         usleep(100);
         continue;
       }

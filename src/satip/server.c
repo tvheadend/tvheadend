@@ -61,7 +61,7 @@ satip_server_http_xml(http_connection_t *hc)
 <specVersion><major>1</major><minor>1</minor></specVersion>\n\
 <device>\n\
 <deviceType>urn:ses-com:device:SatIPServer:1</deviceType>\n\
-<friendlyName>TVHeadend%s</friendlyName>\n\
+<friendlyName>%s%s</friendlyName>\n\
 <manufacturer>TVHeadend Team</manufacturer>\n\
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
 <modelDescription>TVHeadend %s</modelDescription>\n\
@@ -172,6 +172,7 @@ satip_server_http_xml(http_connection_t *hc)
     snprintf(buf2, sizeof(buf2), " %s", satip_server_uuid + 26);
 
   snprintf(buf, sizeof(buf), MSG,
+           config_get_server_name(),
            buf2, tvheadend_version,
            satip_server_uuid,
            http_server_ip, http_server_port,
@@ -347,11 +348,11 @@ CONFIGID.UPNP.ORG: 0\r\n"
   if (satips_upnp_discovery == NULL || satip_server_rtsp_port <= 0)
     return;
 
-#if ENABLE_TRACE
-  tcp_get_ip_str((struct sockaddr *)dst, buf, sizeof(buf));
-  tvhtrace("satips", "sending discover reply to %s:%d%s%s",
-           buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
-#endif
+  if (tvhtrace_enabled()) {
+    tcp_get_str_from_ip((struct sockaddr *)dst, buf, sizeof(buf));
+    tvhtrace("satips", "sending discover reply to %s:%d%s%s",
+             buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
+  }
 
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
            http_server_ip, http_server_port, tvheadend_version,
@@ -452,12 +453,12 @@ satips_upnp_discovery_received
   if (!conn->multicast && strcmp(argv[0], http_server_ip))
     return;
 
-#if ENABLE_TRACE
-  tcp_get_ip_str((struct sockaddr *)storage, buf2, sizeof(buf2));
-  tvhtrace("satips", "received %s M-SEARCH from %s:%d",
-           conn->multicast ? "multicast" : "unicast",
-           buf2, ntohs(IP_PORT(*storage)));
-#endif
+  if (tvhtrace_enabled()) {
+    tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
+    tvhtrace("satips", "received %s M-SEARCH from %s:%d",
+             conn->multicast ? "multicast" : "unicast",
+             buf2, ntohs(IP_PORT(*storage)));
+  }
 
   /* Check for deviceid collision */
   if (!conn->multicast) {
@@ -465,7 +466,7 @@ satips_upnp_discovery_received
       satip_server_deviceid += 1;
       if (satip_server_deviceid >= 254)
         satip_server_deviceid = 1;
-      tcp_get_ip_str((struct sockaddr *)storage, buf2, sizeof(buf2));
+      tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
       tvhwarn("satips", "received duplicate SAT>IP DeviceID %s from %s:%d, using %d",
               deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
       satips_upnp_send_discover_reply(storage, deviceid);
@@ -528,10 +529,11 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 /*
  *
  */
-void satip_server_config_changed(void)
+void satip_server_save(void)
 {
   int descramble, muxcnf;
 
+  config_save();
   if (!satip_server_rtsp_port_locked) {
     satips_rtsp_port(0);
     if (satip_server_rtsp_port > 0) {
@@ -552,6 +554,41 @@ void satip_server_config_changed(void)
   }
 }
 
+htsmsg_t *satip_server_get_config(void)
+{
+  return config_get_all(1);
+}
+
+static int satip_server_set_int(htsmsg_t *conf, const char *name)
+{
+  const char *str;
+  if ((str = htsmsg_get_str(conf, name)))
+    return config_set_int(name, atoi(str));
+  return 0;
+}
+
+int satip_server_set_config(htsmsg_t *conf)
+{
+  static const char *names[] = {
+    "satip_rtsp",
+    "satip_weight",
+    "satip_descramble",
+    "satip_muxcnf",
+    "satip_dvbs",
+    "satip_dvbs2",
+    "satip_dvbt",
+    "satip_dvbt2",
+    "satip_dvbc",
+    "satip_dvbc2",
+    "satip_atsc",
+    "satip_dvbcb",
+    NULL
+  };
+  int i, save = 0;
+  for (i = 0; i < ARRAY_SIZE(names); i++)
+    save |= satip_server_set_int(conf, names[i]);
+  return save;
+}
 /*
  * Initialization
  */
@@ -571,7 +608,7 @@ void satip_server_init(int rtsp_port)
     tvherror("satips", "Unable to determine the HTTP/RTSP address");
     return;
   }
-  tcp_get_ip_str((const struct sockaddr *)&http, http_ip, sizeof(http_ip));
+  tcp_get_str_from_ip((const struct sockaddr *)&http, http_ip, sizeof(http_ip));
   http_server_ip = strdup(http_ip);
   http_server_port = ntohs(IP_PORT(http));
 

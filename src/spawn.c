@@ -1,6 +1,6 @@
 /*
  *  Process spawn functions
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -241,8 +241,11 @@ spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
     return -EAGAIN;
   if(pid < 0)
     return -errno;
-  if(pid < 1)
+  if(pid < 1) {
+    if (wpid > 0 && pid != wpid)
+      return -EAGAIN;
     return 0;
+  }
 
   pthread_mutex_lock(&spawn_mutex);
   LIST_FOREACH(s, &spawns, link)

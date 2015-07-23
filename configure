@@ -57,6 +57,10 @@ OPTIONS=(
 
 . "$ROOTDIR/support/configure.inc"
 
+case "$ROOTDIR" in
+  *\ * ) die "The source directory contains a space. It is not supported."
+esac
+
 # ###########################################################################
 # Parse arguments
 # ###########################################################################
@@ -73,7 +77,10 @@ for opt do
     *dir|prefix)
       eval "$opt=$val"
       ;;
-    cc|cflags|ldflags|arch|cpu|platform|python)
+    gzip)
+      eval "$(toupper ${opt}CMD)=\"$val\""
+      ;;
+    cc|cflags|ldflags|arch|cpu|platform|python|bzip2)
       eval "$(toupper $opt)=\"$val\""
       ;;
     enable-*)
@@ -113,6 +120,7 @@ check_cc || die 'No C compiler found'
 check_cc_header execinfo
 check_cc_option mmx
 check_cc_option sse2
+check_cc_optionW unused-result
 
 if check_cc '
 #if !defined(__clang__)
@@ -161,6 +169,17 @@ check_cc_snippet qsort_r '
 int test(void)
 {
   qsort_r(NULL, 0, 0, NULL, NULL);
+  return 0;
+}
+'
+
+check_cc_snippet stime '
+#include <time.h>
+#define TEST test
+int test(void)
+{
+  time_t t = 1;
+  stime(&t);
   return 0;
 }
 '
@@ -224,7 +243,10 @@ check_py_import gzip
 #
 # Binaries
 #
-check_bin bzip2 || echo 'WARN: no bzip2 binary found'
+check_bin ${XGETTEXT} || die 'WARN: no gettext binaries found'
+check_bin ${MSGMERGE} || die 'WARN: no gettext binaries found'
+check_bin ${GZIPCMD} || die 'WARN: no gzip binary found'
+check_bin ${BZIP2} || echo 'WARN: no bzip2 binary found'
 
 #
 # SSL

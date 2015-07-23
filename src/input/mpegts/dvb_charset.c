@@ -131,7 +131,7 @@ const char *dvb_charset_find
  * List of available charsets
  */
 htsmsg_t *
-dvb_charset_enum ( void *p )
+dvb_charset_enum ( void *p, const char *lang )
 {
   int i;
   static const char *charsets[] = {

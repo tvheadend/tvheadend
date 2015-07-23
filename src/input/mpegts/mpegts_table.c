@@ -24,9 +24,13 @@
 void
 mpegts_table_consistency_check ( mpegts_mux_t *mm )
 {
-#if ENABLE_TRACE
-  int i, c = 0;
+  int i, c;
   mpegts_table_t *mt;
+
+  if (!tvhtrace_enabled())
+    return;
+
+  c = 0;
 
   lock_assert(&mm->mm_tables_lock);
 
@@ -38,19 +42,26 @@ mpegts_table_consistency_check ( mpegts_mux_t *mm )
     tvherror("mpegts", "table: mux %p count inconsistency (num %d, list %d)", mm, i, c);
     abort();
   }
-#endif
 }
 
 static void
-mpegts_table_fastswitch ( mpegts_mux_t *mm )
+mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
 {
   char buf[256];
   mpegts_table_t   *mt;
 
-  if(mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
-    return;
+  assert(mm == mtm->mt_mux);
 
   pthread_mutex_lock(&mm->mm_tables_lock);
+
+  if ((mtm->mt_flags & MT_ONESHOT) && (mtm->mt_complete && !mtm->mt_working))
+    mm->mm_unsubscribe_table(mm, mtm);
+
+  if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE) {
+    pthread_mutex_unlock(&mm->mm_tables_lock);
+    return;
+  }
+
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ) && !mt->mt_working)
       continue;
@@ -59,6 +70,7 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm )
       return;
     }
   }
+
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -70,33 +82,35 @@ void
 mpegts_table_dispatch
   ( const uint8_t *sec, size_t r, void *aux )
 {
-  int tid, len, ret;
+  int tid, len, crc_len, ret;
   mpegts_table_t *mt = aux;
 
   if(mt->mt_destroyed)
     return;
 
   tid = sec[0];
-  len = ((sec[1] & 0x0f) << 8) | sec[2];
 
   /* Check table mask */
   if((tid & mt->mt_mask) != mt->mt_table)
     return;
 
+  len = ((sec[1] & 0x0f) << 8) | sec[2];
+  crc_len = (mt->mt_flags & MT_CRC) ? 4 : 0;
+
   /* Pass with tableid / len in data */
   if (mt->mt_flags & MT_FULL)
-    ret = mt->mt_callback(mt, sec, len+3, tid);
+    ret = mt->mt_callback(mt, sec, len+3-crc_len, tid);
 
   /* Pass w/out tableid/len in data */
   else
-    ret = mt->mt_callback(mt, sec+3, len, tid);
+    ret = mt->mt_callback(mt, sec+3, len-crc_len, tid);
   
   /* Good */
   if(ret >= 0)
     mt->mt_count++;
 
   if(!ret && mt->mt_flags & (MT_QUICKREQ|MT_FASTSWITCH))
-    mpegts_table_fastswitch(mt->mt_mux);
+    mpegts_table_fastswitch(mt->mt_mux, mt);
 }
 
 void
@@ -111,10 +125,10 @@ mpegts_table_release_ ( mpegts_table_t *mt )
   if (mt->mt_destroy)
     mt->mt_destroy(mt);
   free(mt->mt_name);
-#if ENABLE_TRACE
-  /* poison */
-  memset(mt, 0xa5, sizeof(*mt));
-#endif
+  if (tvhtrace_enabled()) {
+    /* poison */
+    memset(mt, 0xa5, sizeof(*mt));
+  }
   free(mt);
 }
 
@@ -166,7 +180,7 @@ mpegts_table_t *
 mpegts_table_add
   ( mpegts_mux_t *mm, int tableid, int mask,
     mpegts_table_callback_t callback, void *opaque,
-    const char *name, int flags, int pid )
+    const char *name, int flags, int pid, int weight )
 {
   mpegts_table_t *mt;
   int subscribe = 1;
@@ -182,6 +196,7 @@ mpegts_table_add
         continue;
       mt->mt_callback   = callback;
       mt->mt_pid        = pid;
+      mt->mt_weight     = weight;
       mt->mt_table      = tableid;
       mm->mm_open_table(mm, mt, 1);
     } else if (pid >= 0) {
@@ -209,6 +224,7 @@ mpegts_table_add
   mt->mt_callback   = callback;
   mt->mt_opaque     = opaque;
   mt->mt_pid        = pid;
+  mt->mt_weight     = weight;
   mt->mt_flags      = flags & ~(MT_SKIPSUBS|MT_SCANSUBS);
   mt->mt_table      = tableid;
   mt->mt_mask       = mask;

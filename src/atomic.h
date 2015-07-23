@@ -18,6 +18,10 @@
 
 #pragma once
 
+#include <stdint.h>
+
+extern pthread_mutex_t atomic_lock;
+
 static inline int
 atomic_add(volatile int *ptr, int incr)
 {
@@ -46,6 +50,21 @@ atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
   pthread_mutex_lock(&atomic_lock);
   ret = *ptr;
   *ptr += incr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+static inline uint64_t
+atomic_dec_u64(volatile uint64_t *ptr, uint64_t decr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_fetch_and_sub(ptr, decr);
+#else
+  uint64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr -= decr;
   pthread_mutex_unlock(&atomic_lock);
   return ret;
 #endif

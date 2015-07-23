@@ -1,0 +1,234 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Electronic Program Guide</h3>
+<p>Tvheadend has a built-in Electronic Program Guide. The EPG is an in-memory database populated with all the information about events received from the DVB networks over-the-air or from external grabbers such as XMLTV.</p>
+<p>The EPG tab displays a filterable grid containing all events, sorted based on start time.</p>
+<p><img src="docresources/epg.png" alt="&#39;Electronic Program Guide&#39; Tab" /></p>
+<hr />
+<h4>Menu Bar/Buttons</h4>
+<p>The following functions are available:</p>
+<h5>Filtering (or searching)</h5>
+<p>In the EPG top tool bar you can access five input fields. These are used to filter/search for events. The form uses implicit AND between the input fields. This means that all filters must match for an event to be displayed.</p>
+<table>
+<thead><tr>
+<th>Filter</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Search title...</strong></td>
+<td>Only display events that match the given title.<br><br>The filter uses case-insensitive regular expressions. If you don’t know what a regular expression is, this simply means that you can type just parts of the title and filter on that - there’s no need for full, exact matching. If the fulltext checkbox is checked, the title text is matched against title, subtitle, summary and description.</td>
+</tr>
+<tr>
+<td><strong>Filter channel...</strong></td>
+<td>Only display events from the selected channel.<br><br>Channels in the drop down are ordered by name and can be filtered (by name) by typing in the box. </td>
+</tr>
+<tr>
+<td><strong>Filter tag...</strong></td>
+<td>Only display events from channels which are included in the selected tag.<br><br>Tags are used for grouping channels together - such as ‘Radio’ or ‘HDTV’ - and are configured by the administrator. You can start typing a tag name to filter the list. </td>
+</tr>
+<tr>
+<td><strong>Filter content type...</strong></td>
+<td>Only display events that match the given content type tag.<br><br>Most DVB networks classify their events into content groups. This field allows you to filter based on content type (e.g. “Sports” or “Game Show”). Supported tags are determined by your broadcaster. Again, simply start typing to filter the entries if you have a long list to choose from. </td>
+</tr>
+<tr>
+<td><strong>Filter duration...</strong></td>
+<td>Only display events that fall between the given minimum and maximum durations.<br><br>This allows you to filter for or against, say, a daily broadcast and a weekly omnibus edition of a programme, or only look for short news bulletins and not the 24-hour rolling broadcasts. </td>
+</tr>
+</tbody>
+</table>
+<p><em>Title</em> , <em>Channel</em> , <em>Tag</em> and <em>Content Type</em> are dependent on your configuration and on what your broadcaster sends. Options for the <em>Duration</em> are as follows:</p>
+<table>
+<thead><tr>
+<th>Filter Range</th>
+<th>Example Purpose </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00:00:01 to 00:15:00</td>
+<td>Very short news bulletins, children's programmes, etc.</td>
+</tr>
+<tr>
+<td>00:15:01 to 00:30:00</td>
+<td>Short programmes, e.g. daily soap operas </td>
+</tr>
+<tr>
+<td>00:30:01 to 01:30:00</td>
+<td>Medium-length programmes, e.g. documentaries </td>
+</tr>
+<tr>
+<td>01:30:01 to 03:00:00</td>
+<td>Longer programmes, e.g. films </td>
+</tr>
+<tr>
+<td>03:00:00 to no maximum</td>
+<td>Very long programmes, e.g. major sporting events </td>
+</tr>
+</tbody>
+</table>
+<p>So, if you only want to see Movies from your available HD channels, you would select ‘HDTV’ in the <em>[Filter tag…]</em> field, and select ‘Movie / Drama’ in the <em>[Filter content type…]</em> field. If you wish, you could then further limit the search to programmes of between 90 minutes and 3 hours by selecting ‘01:30:01 to 03:00:00’ in the <em>[Filter duration…]</em> field.</p>
+<p>Note that you don’t have to press a ‘Search’ button: the grid immediately updates itself as you change the filters.</p>
+<p>You can clear an individual filter by simply deleting its contents, or by selecting <em>‘(Clear filter)’</em> as appropriate on all except the title filter. If you want to clear all filters, just press the <em>[Reset All]</em> button.</p>
+<h5>Buttons</h5>
+<p>The following buttons are also available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Reset All</strong></td>
+<td>Clears all search filters. </td>
+</tr>
+<tr>
+<td><strong>Watch TV</strong></td>
+<td>Launches Live TV via HTML5 video (see below). </td>
+</tr>
+<tr>
+<td><strong>Create Autorec</strong></td>
+<td>Creates an auto-recording rule based on the current filter criteria (see below).</td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>Grid Items</h4>
+<p>The main grid items have the following functions:</p>
+<p><strong>Details</strong> : Displays the current status of a recording event for this programme if one applies:</p>
+<table>
+<thead><tr>
+<th>Icon</th>
+<th>Description </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img src="static/icons/clock.png" alt="Clock icon" /></td>
+<td>the programme is scheduled for recording </td>
+</tr>
+<tr>
+<td><img src="static/icons/rec.png" alt="Recording icon" /></td>
+<td>the programme is currently recording </td>
+</tr>
+<tr>
+<td><img src="static/icons/broadcast_details.png" alt="Broadcast details icon" /></td>
+<td>click to call up more detailed information about an event</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Progress</strong> : A bar graph display of how far through a programme we currently are.</p>
+<p><strong>Title</strong> : The title of the programme. <em>You can automatically set a filter to the value of this field by clicking on it (e.g. click on 'Daily News' will automatically filter the whole grid to only show programmes with the same name).</em></p>
+<p><strong>SubTitle</strong> : The subtitle of the programme, if gien by your EPG provider. Note that some (notably, UK) providers use this for a programme synopsis instead of a true subtitle.</p>
+<p><strong>Episode</strong> : Episode number, if given by your EPG provider.</p>
+<p><strong>Start Time</strong> : The scheduled start time of the programme.</p>
+<p><strong>End Time</strong> : The scheduled end time of the programme.</p>
+<p><strong>Duration</strong> : The scheduled duration (i.e. start time to end time) of the programme.</p>
+<p><strong>Number</strong> : The channel number of the broadcasting channel, if defined.</p>
+<p><strong>Channel</strong> : The name of the broadcasting channel. <em>You can automatically set a filter to the value of this field by clicking on it (e.g. click on 'Channel 4 HD' will automatically filter the whole grid to only show programmes from that channel).</em></p>
+<p><strong>Stars</strong> : Rating (in stars) of the programme.</p>
+<p><strong>Age</strong> : Age rating of the programme.</p>
+<p><strong>Content Type</strong> : Any content/genre information as provided by the EPG provider. <em>You can automatically set a filter to the value of this field by clicking on it (e.g. click on 'Movie/Drama' will automatically filter the whole grid to only show programmes of the same type).</em></p>
+<hr />
+<h4>Event details and recording</h4>
+<p>If you click on a single event, a popup will display detailed information about the event. It also allows you to schedule the event for recording by clicking on the <em>[Record program]</em> button.</p>
+<p>For EPG providers that supply series link information there will also be a <em>[Record series]</em> button that will record all entries in the series.</p>
+<p>For events without any series link information, an <em>[Autorec]</em> button will be provided to create a pseudo-series link using the autorec feature.</p>
+<p><img src="docresources/epg2.png" alt="EPG Detail 1" />  <img src="docresources/epg3.png" alt="EPG Detail 2" /></p>
+<p>If you schedule any kind of recording from this point, you can choose a specific DVR profile that will apply to the recording or autorec rule. This will normally show as <em>(default)</em> , but you can define different profiles in the <strong>Configuration -> Recording -> Digital Video Recorder</strong> tab. This allows you to set, for example, more post- broadcast padding for a channel that always runs late, or perhaps define a different post-processing command to strip adverts out on a commercial channel.</p>
+<p>You will also see a <em>[Search IMDB]</em> button to look for the programme by name on imdb.com, and a <em>[Play program]</em> button to watch a programme that’s already in progress. This second button downloads a playlist file (XSPF or M3U depending on your startup options); if your system is configured for it, this will automatically launch an appropriate player, otherwise you will need to manually open the playlist to start watching (normally a double-click on the downloaded file).</p>
+<p>To close the popup, just click on the [X] window button. The popup isn’t modal, so you don’t have to close it before doing something else, and you can open as many detailed information popups as you want.</p>
+<hr />
+<h4>Autorecordings</h4>
+<p>Should you wish to record all events matching a specific query (to record your favourite show every week, for example) you can press the <em>[Create AutoRec]</em> button in the top toolbar.</p>
+<p>A popup with details about the to-be-created autorecording rule needs to be confirmed before the rule takes effect.</p>
+<p><img src="docresources/autorecpopup.png" alt="Autorec Dialogue Box" /></p>
+<p>You can change or delete the autorec rules in the <strong>Digital Video Recorder</strong> tab. Use that editor if you temporarily want to disable an autorecording or make adjustments to the channel, tag, or similar.</p>
+<hr />
+<h4>Watch TV</h4>
+<p>If you want to watch live TV in the web UI, the <em>[Watch TV]</em> button will pop up a HTML5 video player, where you can select the channel to watch and a stream profile to use. A transcoding stream profile is required to transcode the stream to a format that is supported by your browser, as browsers only support certain formats and codecs.</p>
+<h5>Supported formats (containers)</h5>
+<table>
+<thead><tr>
+<th style="text-align:center">Browser</th>
+<th style="text-align:center">MPEG-TS</th>
+<th style="text-align:center">MPEG-PS</th>
+<th style="text-align:center">Matroska</th>
+<th style="text-align:center">WebM </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Google Chrome</td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+</tr>
+<tr>
+<td style="text-align:center">Mozilla Firefox</td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+</tr>
+</tbody>
+</table>
+<h5>Supported video codecs</h5>
+<table>
+<thead><tr>
+<th style="text-align:center">Browser</th>
+<th style="text-align:center">MPEG2 Video</th>
+<th style="text-align:center">H.264</th>
+<th style="text-align:center">VP8 </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Google Chrome</td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+</tr>
+<tr>
+<td style="text-align:center">Mozilla Firefox</td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+</tr>
+</tbody>
+</table>
+<h5>Supported audio codecs</h5>
+<table>
+<thead><tr>
+<th style="text-align:center">Browser</th>
+<th style="text-align:center">MPEG2 Audio</th>
+<th style="text-align:center">Dolby Digital (AC3)</th>
+<th style="text-align:center">AAC</th>
+<th style="text-align:center">Vorbis </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">Google Chrome</td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+</tr>
+<tr>
+<td style="text-align:center">Mozilla Firefox</td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"><img src="static/icons/exclamation.png" alt="no" /></td>
+<td style="text-align:center"></td>
+<td style="text-align:center"><img src="static/icons/accept.png" alt="yes" /></td>
+</tr>
+</tbody>
+</table>
+</div>

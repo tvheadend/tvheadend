@@ -1,6 +1,6 @@
 /*
  *  TV headend - Access control
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,6 +26,26 @@ struct profile;
 struct dvr_config;
 struct channel_tag;
 
+TAILQ_HEAD(passwd_entry_queue, passwd_entry);
+
+extern struct passwd_entry_queue passwd_entries;
+
+typedef struct passwd_entry {
+  idnode_t pw_id;
+
+  TAILQ_ENTRY(passwd_entry) pw_link;
+
+  char *pw_username;
+  char *pw_password;
+  char *pw_password2;
+
+  int   pw_enabled;
+
+  char *pw_comment;
+} passwd_entry_t;
+
+extern const idclass_t passwd_entry_class;
+
 typedef struct access_ipmask {
   TAILQ_ENTRY(access_ipmask) ai_link;
 
@@ -43,14 +63,20 @@ TAILQ_HEAD(access_entry_queue, access_entry);
 
 extern struct access_entry_queue access_entries;
 
+enum {
+  ACCESS_CONN_LIMIT_TYPE_ALL = 0,
+  ACCESS_CONN_LIMIT_TYPE_STREAMING,
+  ACCESS_CONN_LIMIT_TYPE_DVR,
+};
+
 typedef struct access_entry {
   idnode_t ae_id;
 
   TAILQ_ENTRY(access_entry) ae_link;
   char *ae_username;
-  char *ae_password;
-  char *ae_password2;
   char *ae_comment;
+  char *ae_lang;
+  char *ae_lang_ui;
 
   int ae_index;
   int ae_enabled;
@@ -59,17 +85,18 @@ typedef struct access_entry {
   int ae_adv_streaming;
   int ae_htsp_streaming;
 
-  struct profile *ae_profile;
-  LIST_ENTRY(access_entry) ae_profile_link;
+  idnode_list_head_t ae_profiles;
 
+  int ae_conn_limit_type;
   uint32_t ae_conn_limit;
 
   int ae_dvr;
   int ae_htsp_dvr;
   int ae_all_dvr;
   int ae_all_rw_dvr;
-  struct dvr_config *ae_dvr_config;
-  LIST_ENTRY(access_entry) ae_dvr_config_link;
+  int ae_failed_dvr;
+
+  idnode_list_head_t ae_dvr_configs;
 
   int ae_webui;
   int ae_admin;
@@ -77,8 +104,8 @@ typedef struct access_entry {
   uint64_t ae_chmin;
   uint64_t ae_chmax;
 
-  struct channel_tag *ae_chtag;
-  LIST_ENTRY(access_entry) ae_channel_tag_link;
+  int ae_chtags_exclude;
+  idnode_list_head_t ae_chtags;
 
   uint32_t ae_rights;
 
@@ -90,14 +117,20 @@ extern const idclass_t access_entry_class;
 typedef struct access {
   char     *aa_username;
   char     *aa_representative;
+  char     *aa_lang;
+  char     *aa_lang_ui;
   uint32_t  aa_rights;
   htsmsg_t *aa_profiles;
   htsmsg_t *aa_dvrcfgs;
-  uint64_t  aa_chmin;
-  uint64_t  aa_chmax;
+  uint64_t *aa_chrange;
+  int       aa_chrange_count;
   htsmsg_t *aa_chtags;
   int       aa_match;
   uint32_t  aa_conn_limit;
+  uint32_t  aa_conn_limit_streaming;
+  uint32_t  aa_conn_limit_dvr;
+  uint32_t  aa_conn_streaming;
+  uint32_t  aa_conn_dvr;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
@@ -122,15 +155,17 @@ typedef struct access_ticket {
 #define ACCESS_RECORDER           (1<<4)
 #define ACCESS_HTSP_RECORDER      (1<<5)
 #define ACCESS_ALL_RECORDER       (1<<6)
-#define ACCESS_ADMIN              (1<<7)
-#define ACCESS_ALL_RW_RECORDER    (1<<8)
+#define ACCESS_ALL_RW_RECORDER    (1<<7)
+#define ACCESS_FAILED_RECORDER    (1<<8)
+#define ACCESS_ADMIN              (1<<9)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
   (ACCESS_STREAMING | ACCESS_ADVANCED_STREAMING | \
    ACCESS_HTSP_STREAMING | ACCESS_WEB_INTERFACE | \
    ACCESS_RECORDER | ACCESS_HTSP_RECORDER | \
-   ACCESS_ALL_RECORDER | ACCESS_ADMIN | ACCESS_ALL_RW_RECORDER)
+   ACCESS_ALL_RECORDER | ACCESS_ALL_RW_RECORDER | \
+   ACCESS_FAILED_RECORDER | ACCESS_ADMIN)
 
 /**
  * Create a new ticket for the requested resource and generate a id for it
@@ -153,6 +188,12 @@ void access_destroy(access_t *a);
  * Copy the access structure
  */
 access_t *access_copy(access_t *src);
+
+/**
+ *
+ */
+char *
+access_get_lang(access_t *a, const char *lang);
 
 /**
  * Verifies that the given user in combination with the source ip
@@ -187,6 +228,12 @@ access_get_hashed(const char *username, const uint8_t digest[20],
  *
  */
 access_t *
+access_get_by_username(const char *username);
+
+/**
+ *
+ */
+access_t *
 access_get_by_addr(struct sockaddr *src);
 
 /**
@@ -210,6 +257,14 @@ void
 access_destroy_by_dvr_config(struct dvr_config *cfg, int delconf);
 void
 access_destroy_by_channel_tag(struct channel_tag *ct, int delconf);
+
+/**
+ *
+ */
+passwd_entry_t *
+passwd_entry_create(const char *uuid, htsmsg_t *conf);
+void
+passwd_entry_save(passwd_entry_t *pw);
 
 /**
  *

@@ -25,7 +25,7 @@ extern uint32_t tvhtime_ntp_enabled;
 extern uint32_t tvhtime_tolerance;
 
 void tvhtime_init ( void );
-void tvhtime_update ( struct tm *now );
+void tvhtime_update ( time_t utc, const char *srcname );
 
 void tvhtime_set_update_enabled ( uint32_t on );
 void tvhtime_set_ntp_enabled ( uint32_t on );

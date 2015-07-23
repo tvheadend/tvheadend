@@ -21,6 +21,7 @@
 #include "lang_codes.h"
 #include "service.h"
 #include "access.h"
+#include "descrambler/caid.h"
 #include "esfilter.h"
 
 struct esfilter_entry_queue esfilters[ESF_CLASS_LAST + 1];
@@ -213,7 +214,7 @@ esfilter_class_save(idnode_t *self)
 }
 
 static const char *
-esfilter_class_get_title(idnode_t *self)
+esfilter_class_get_title(idnode_t *self, const char *lang)
 {
   esfilter_t *esf = (esfilter_t *)self;
   return idnode_uuid_as_str(&esf->esf_id);
@@ -264,7 +265,7 @@ esfilter_class_type_get(void *o)
 }
 
 static char *
-esfilter_class_type_rend (void *o)
+esfilter_class_type_rend (void *o, const char *lang)
 {
   char *str;
   htsmsg_t *l = htsmsg_create_list();
@@ -305,10 +306,11 @@ esfilter_class_type_set_(void *o, const void *v, esfilter_class_t cls)
 }
 
 static htsmsg_t *
-esfilter_class_type_enum_(void *o, esfilter_class_t cls)
+esfilter_class_type_enum_(void *o, const char *lang, esfilter_class_t cls)
 {
   uint32_t mask = esfilterclsmask[cls];
   htsmsg_t *l = htsmsg_create_list();
+  const char *any = N_("ANY");
   int i;
 
   for (i = SCT_UNKNOWN; i <= SCT_LAST; i++) {
@@ -316,7 +318,8 @@ esfilter_class_type_enum_(void *o, esfilter_class_t cls)
       htsmsg_t *e = htsmsg_create_map();
       htsmsg_add_u32(e, "key", i);
       htsmsg_add_str(e, "val",
-          i == SCT_UNKNOWN ? "ANY" : streaming_component_type2txt(i));
+          i == SCT_UNKNOWN ? tvh_gettext_lang(lang, any) :
+                             streaming_component_type2txt(i));
       htsmsg_add_msg(l, NULL, e);
     }
   }
@@ -326,8 +329,8 @@ esfilter_class_type_enum_(void *o, esfilter_class_t cls)
 #define ESFILTER_CLS(func, type) \
 static int esfilter_class_type_set_##func(void *o, const void *v) \
   { return esfilter_class_type_set_(o, v, type); } \
-static htsmsg_t * esfilter_class_type_enum_##func(void *o) \
-  { return esfilter_class_type_enum_(o, type); }
+static htsmsg_t * esfilter_class_type_enum_##func(void *o, const char *lang) \
+  { return esfilter_class_type_enum_(o, lang, type); }
 
 ESFILTER_CLS(video, ESF_CLASS_VIDEO);
 ESFILTER_CLS(audio, ESF_CLASS_AUDIO);
@@ -360,17 +363,18 @@ esfilter_class_language_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_language_enum(void *o)
+esfilter_class_language_enum(void *o, const char *lang)
 {
   htsmsg_t *l = htsmsg_create_list();
   const lang_code_t *lc = lang_codes;
+  const char *any = N_("ANY");
   char buf[128];
 
   while (lc->code2b) {
     htsmsg_t *e = htsmsg_create_map();
     if (!strcmp(lc->code2b, "und")) {
       htsmsg_add_str(e, "key", "");
-      htsmsg_add_str(e, "val", "ANY");
+      htsmsg_add_str(e, "val", tvh_gettext_lang(lang, any));
     } else {
       htsmsg_add_str(e, "key", lc->code2b);
       snprintf(buf, sizeof(buf), "%s (%s)", lc->desc, lc->code2b);
@@ -407,7 +411,7 @@ esfilter_class_service_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_service_enum(void *o)
+esfilter_class_service_enum(void *o, const char *lang)
 {
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
@@ -474,7 +478,7 @@ esfilter_build_ca_enum(int provider)
     snprintf(buf, sizeof(buf), provider ? "%06x" : "%04x", a[i]);
     if (!provider)
       snprintf(buf2, sizeof(buf2), "%04x - %s",
-               a[i], descrambler_caid2name(a[i]));
+               a[i], caid2name(a[i]));
     htsmsg_add_str(e, "key", buf);
     htsmsg_add_str(e, "val", provider ? buf : buf2);
     htsmsg_add_msg(l, NULL, e);
@@ -509,7 +513,7 @@ esfilter_class_caid_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_caid_enum(void *o)
+esfilter_class_caid_enum(void *o, const char *lang)
 {
   return esfilter_build_ca_enum(0);
 }
@@ -546,7 +550,7 @@ esfilter_class_caprovider_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_caprovider_enum(void *o)
+esfilter_class_caprovider_enum(void *o, const char *lang)
 {
   return esfilter_build_ca_enum(1);
 }
@@ -572,7 +576,7 @@ esfilter_class_action_set(void *o, const void *v)
 }
 
 static htsmsg_t *
-esfilter_class_action_enum(void *o)
+esfilter_class_action_enum(void *o, const char *lang)
 {
   htsmsg_t *l = htsmsg_create_list();
   int i;
@@ -588,7 +592,7 @@ esfilter_class_action_enum(void *o)
 
 const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
-  .ic_caption    = "Elementary Stream Filter",
+  .ic_caption    = N_("Elementary Stream Filter"),
   .ic_event      = "esfilter",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = esfilter_class_save,
@@ -600,21 +604,21 @@ const idclass_t esfilter_class = {
     {
       .type     = PT_INT,
       .id       = "class",
-      .name     = "Class",
+      .name     = N_("Class"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(esfilter_t, esf_class),
     },
     {
       .type     = PT_INT,
       .id       = "index",
-      .name     = "Index",
+      .name     = N_("Index"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(esfilter_t, esf_index),
     },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(esfilter_t, esf_enabled),
     },
     {}
@@ -624,13 +628,13 @@ const idclass_t esfilter_class = {
 const idclass_t esfilter_class_video = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_video",
-  .ic_caption    = "Video Stream Filter",
+  .ic_caption    = N_("Video Stream Filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = "Stream Type",
+      .name     = N_("Stream Type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_video,
       .list     = esfilter_class_type_enum_video,
@@ -639,7 +643,7 @@ const idclass_t esfilter_class_video = {
     {
       .type     = PT_STR,
       .id       = "language",
-      .name     = "Language",
+      .name     = N_("Language"),
       .get      = esfilter_class_language_get,
       .set      = esfilter_class_language_set,
       .list     = esfilter_class_language_enum,
@@ -647,7 +651,7 @@ const idclass_t esfilter_class_video = {
     {
       .type     = PT_STR,
       .id       = "service",
-      .name     = "Service",
+      .name     = N_("Service"),
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
@@ -655,19 +659,19 @@ const idclass_t esfilter_class_video = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = "Stream Index",
+      .name     = N_("Stream Index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
       .id       = "pid",
-      .name     = "PID",
+      .name     = N_("PID"),
       .off      = offsetof(esfilter_t, esf_pid),
     },
     {
       .type     = PT_INT,
       .id       = "action",
-      .name     = "Action",
+      .name     = N_("Action"),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -675,13 +679,13 @@ const idclass_t esfilter_class_video = {
     {
       .type     = PT_BOOL,
       .id       = "log",
-      .name     = "Log",
+      .name     = N_("Log"),
       .off      = offsetof(esfilter_t, esf_log),
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(esfilter_t, esf_comment),
     },
     {}
@@ -691,13 +695,13 @@ const idclass_t esfilter_class_video = {
 const idclass_t esfilter_class_audio = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_audio",
-  .ic_caption    = "Audio Stream Filter",
+  .ic_caption    = N_("Audio Stream Filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = "Stream Type",
+      .name     = N_("Stream Type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_audio,
       .list     = esfilter_class_type_enum_audio,
@@ -706,7 +710,7 @@ const idclass_t esfilter_class_audio = {
     {
       .type     = PT_STR,
       .id       = "language",
-      .name     = "Language",
+      .name     = N_("Language"),
       .get      = esfilter_class_language_get,
       .set      = esfilter_class_language_set,
       .list     = esfilter_class_language_enum,
@@ -714,7 +718,7 @@ const idclass_t esfilter_class_audio = {
     {
       .type     = PT_STR,
       .id       = "service",
-      .name     = "Service",
+      .name     = N_("Service"),
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
@@ -722,19 +726,19 @@ const idclass_t esfilter_class_audio = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = "Stream Index",
+      .name     = N_("Stream Index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
       .id       = "pid",
-      .name     = "PID",
+      .name     = N_("PID"),
       .off      = offsetof(esfilter_t, esf_pid),
     },
     {
       .type     = PT_INT,
       .id       = "action",
-      .name     = "Action",
+      .name     = N_("Action"),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -742,13 +746,13 @@ const idclass_t esfilter_class_audio = {
     {
       .type     = PT_BOOL,
       .id       = "log",
-      .name     = "Log",
+      .name     = N_("Log"),
       .off      = offsetof(esfilter_t, esf_log),
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(esfilter_t, esf_comment),
     },
     {}
@@ -758,13 +762,13 @@ const idclass_t esfilter_class_audio = {
 const idclass_t esfilter_class_teletext = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_teletext",
-  .ic_caption    = "Teletext Stream Filter",
+  .ic_caption    = N_("Teletext Stream Filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = "Stream Type",
+      .name     = N_("Stream Type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_teletext,
       .list     = esfilter_class_type_enum_teletext,
@@ -773,7 +777,7 @@ const idclass_t esfilter_class_teletext = {
     {
       .type     = PT_STR,
       .id       = "language",
-      .name     = "Language",
+      .name     = N_("Language"),
       .get      = esfilter_class_language_get,
       .set      = esfilter_class_language_set,
       .list     = esfilter_class_language_enum,
@@ -781,7 +785,7 @@ const idclass_t esfilter_class_teletext = {
     {
       .type     = PT_STR,
       .id       = "service",
-      .name     = "Service",
+      .name     = N_("Service"),
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
@@ -789,19 +793,19 @@ const idclass_t esfilter_class_teletext = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = "Stream Index",
+      .name     = N_("Stream Index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
       .id       = "pid",
-      .name     = "PID",
+      .name     = N_("PID"),
       .off      = offsetof(esfilter_t, esf_pid),
     },
     {
       .type     = PT_INT,
       .id       = "action",
-      .name     = "Action",
+      .name     = N_("Action"),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -809,13 +813,13 @@ const idclass_t esfilter_class_teletext = {
     {
       .type     = PT_BOOL,
       .id       = "log",
-      .name     = "Log",
+      .name     = N_("Log"),
       .off      = offsetof(esfilter_t, esf_log),
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(esfilter_t, esf_comment),
     },
     {}
@@ -825,13 +829,13 @@ const idclass_t esfilter_class_teletext = {
 const idclass_t esfilter_class_subtit = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_subtit",
-  .ic_caption    = "Subtitle Stream Filter",
+  .ic_caption    = N_("Subtitle Stream Filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = "Stream Type",
+      .name     = N_("Stream Type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_subtit,
       .list     = esfilter_class_type_enum_subtit,
@@ -840,7 +844,7 @@ const idclass_t esfilter_class_subtit = {
     {
       .type     = PT_STR,
       .id       = "language",
-      .name     = "Language",
+      .name     = N_("Language"),
       .get      = esfilter_class_language_get,
       .set      = esfilter_class_language_set,
       .list     = esfilter_class_language_enum,
@@ -848,7 +852,7 @@ const idclass_t esfilter_class_subtit = {
     {
       .type     = PT_STR,
       .id       = "service",
-      .name     = "Service",
+      .name     = N_("Service"),
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
@@ -856,19 +860,19 @@ const idclass_t esfilter_class_subtit = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = "Stream Index",
+      .name     = N_("Stream Index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
       .id       = "pid",
-      .name     = "PID",
+      .name     = N_("PID"),
       .off      = offsetof(esfilter_t, esf_pid),
     },
     {
       .type     = PT_INT,
       .id       = "action",
-      .name     = "Action",
+      .name     = N_("Action"),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -876,13 +880,13 @@ const idclass_t esfilter_class_subtit = {
     {
       .type     = PT_BOOL,
       .id       = "log",
-      .name     = "Log",
+      .name     = N_("Log"),
       .off      = offsetof(esfilter_t, esf_log),
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(esfilter_t, esf_comment),
     },
     {}
@@ -892,13 +896,13 @@ const idclass_t esfilter_class_subtit = {
 const idclass_t esfilter_class_ca = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_ca",
-  .ic_caption    = "CA Stream Filter",
+  .ic_caption    = N_("CA Stream Filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = "Stream Type",
+      .name     = N_("Stream Type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_ca,
       .list     = esfilter_class_type_enum_ca,
@@ -907,7 +911,7 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_STR,
       .id       = "CAid",
-      .name     = "CA Identification",
+      .name     = N_("CA Identification"),
       .get      = esfilter_class_caid_get,
       .set      = esfilter_class_caid_set,
       .list     = esfilter_class_caid_enum,
@@ -915,7 +919,7 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_STR,
       .id       = "CAprovider",
-      .name     = "CA Provider",
+      .name     = N_("CA Provider"),
       .get      = esfilter_class_caprovider_get,
       .set      = esfilter_class_caprovider_set,
       .list     = esfilter_class_caprovider_enum,
@@ -923,7 +927,7 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_STR,
       .id       = "service",
-      .name     = "Service",
+      .name     = N_("Service"),
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
@@ -931,19 +935,19 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = "Stream Index",
+      .name     = N_("Stream Index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
       .type     = PT_INT,
       .id       = "pid",
-      .name     = "PID",
+      .name     = N_("PID"),
       .off      = offsetof(esfilter_t, esf_pid),
     },
     {
       .type     = PT_INT,
       .id       = "action",
-      .name     = "Action",
+      .name     = N_("Action"),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -951,13 +955,13 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_BOOL,
       .id       = "log",
-      .name     = "Log",
+      .name     = N_("Log"),
       .off      = offsetof(esfilter_t, esf_log),
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(esfilter_t, esf_comment),
     },
     {}
@@ -967,13 +971,13 @@ const idclass_t esfilter_class_ca = {
 const idclass_t esfilter_class_other = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_other",
-  .ic_caption    = "Other Stream Filter",
+  .ic_caption    = N_("Other Stream Filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = "Stream Type",
+      .name     = N_("Stream Type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_other,
       .list     = esfilter_class_type_enum_other,
@@ -982,7 +986,7 @@ const idclass_t esfilter_class_other = {
     {
       .type     = PT_STR,
       .id       = "language",
-      .name     = "Language",
+      .name     = N_("Language"),
       .get      = esfilter_class_language_get,
       .set      = esfilter_class_language_set,
       .list     = esfilter_class_language_enum,
@@ -990,7 +994,7 @@ const idclass_t esfilter_class_other = {
     {
       .type     = PT_STR,
       .id       = "service",
-      .name     = "Service",
+      .name     = N_("Service"),
       .get      = esfilter_class_service_get,
       .set      = esfilter_class_service_set,
       .list     = esfilter_class_service_enum,
@@ -998,13 +1002,13 @@ const idclass_t esfilter_class_other = {
     {
       .type     = PT_INT,
       .id       = "pid",
-      .name     = "PID",
+      .name     = N_("PID"),
       .off      = offsetof(esfilter_t, esf_pid),
     },
     {
       .type     = PT_INT,
       .id       = "action",
-      .name     = "Action",
+      .name     = N_("Action"),
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
@@ -1012,13 +1016,13 @@ const idclass_t esfilter_class_other = {
     {
       .type     = PT_BOOL,
       .id       = "log",
-      .name     = "Log",
+      .name     = N_("Log"),
       .off      = offsetof(esfilter_t, esf_log),
     },
     {
       .type     = PT_STR,
       .id       = "comment",
-      .name     = "Comment",
+      .name     = N_("Comment"),
       .off      = offsetof(esfilter_t, esf_comment),
     },
     {}

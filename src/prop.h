@@ -56,6 +56,7 @@ typedef enum {
 #define PO_DURATION 0x0100  // For PT_TIME - differentiate between duration and datetime
 #define PO_HEXA     0x0200  // Hexadecimal value
 #define PO_DATE     0x0400  // Show date only
+#define PO_LOCALE   0x0800  // Call tvh_locale_lang on string
 
 /*
  * Property definition
@@ -73,10 +74,11 @@ typedef struct property {
   /* String based processing */
   const void *(*get)  (void *ptr);
   int         (*set)  (void *ptr, const void *v);
-  htsmsg_t   *(*list) (void *ptr);
-  char       *(*rend) (void *ptr); ///< Provide the rendered value for enum/list
-                                   ///< Lists should be CSV. This is used for
-                                   ///< sorting and searching in UI API
+  htsmsg_t   *(*list) (void *ptr, const char *lang);
+  char       *(*rend) (void *ptr, const char *lang);
+                          ///< Provide the rendered value for enum/list
+                          ///< Lists should be CSV. This is used for
+                          ///< sorting and searching in UI API
 
   /* Default (for UI) */
   union {
@@ -94,7 +96,7 @@ typedef struct property {
   uint32_t    (*get_opts) (void *ptr);
 
   /* Notification callback */
-  void        (*notify)   (void *ptr);
+  void        (*notify)   (void *ptr, const char *lang);
 
 } property_t;
 
@@ -104,10 +106,12 @@ int prop_write_values
   (void *obj, const property_t *pl, htsmsg_t *m, int optmask, htsmsg_t *updated);
 
 void prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask);
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
+   int optmask, const char *lang);
 
 void prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask);
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
+   int optmask, const char *lang);
 
 #endif /* __TVH_PROP_H__ */
 

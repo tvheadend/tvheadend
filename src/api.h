@@ -76,6 +76,8 @@ void api_access_init        ( void );
 void api_dvr_init           ( void );
 void api_caclient_init      ( void );
 void api_profile_init       ( void );
+void api_language_init      ( void );
+void api_satip_server_init  ( void );
 
 /*
  * IDnode
@@ -106,7 +108,8 @@ int api_idnode_load_by_class
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 
 int api_idnode_handler
-  ( access_t *perm, htsmsg_t *args, htsmsg_t **resp, void (*handler)(access_t *perm, idnode_t *in) );
+  ( access_t *perm, htsmsg_t *args, htsmsg_t **resp,
+    void (*handler)(access_t *perm, idnode_t *in), const char *op );
 
 /*
  * Service mapper

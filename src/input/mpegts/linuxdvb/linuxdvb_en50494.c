@@ -62,14 +62,14 @@
 static pthread_mutex_t linuxdvb_en50494_lock;
 
 static const char *
-linuxdvb_en50494_class_get_title ( idnode_t *o )
+linuxdvb_en50494_class_get_title ( idnode_t *o, const char *lang )
 {
-  static const char *title = "Unicable";
-  return title;
+  static const char *title = N_("Unicable");
+  return tvh_gettext_lang(lang, title);
 }
 
 static htsmsg_t *
-linuxdvb_en50494_position_list ( void *o )
+linuxdvb_en50494_position_list ( void *o, const char *lang )
 {
   uint32_t i;
   htsmsg_t *m = htsmsg_create_list();
@@ -80,7 +80,7 @@ linuxdvb_en50494_position_list ( void *o )
 }
 
 htsmsg_t *
-linuxdvb_en50494_id_list ( void *o )
+linuxdvb_en50494_id_list ( void *o, const char *lang )
 {
   uint32_t i;
   htsmsg_t *m = htsmsg_create_list();
@@ -91,7 +91,7 @@ linuxdvb_en50494_id_list ( void *o )
 }
 
 htsmsg_t *
-linuxdvb_en50494_pin_list ( void *o )
+linuxdvb_en50494_pin_list ( void *o, const char *lang )
 {
   int32_t i;
 
@@ -100,7 +100,7 @@ linuxdvb_en50494_pin_list ( void *o )
 
   e = htsmsg_create_map();
   htsmsg_add_u32(e, "key", 256);
-  htsmsg_add_str(e, "val", "No pin");
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, N_("No PIN")));
   htsmsg_add_msg(m, NULL, e);
 
   for (i = 0; i < 256; i++) {
@@ -117,33 +117,33 @@ const idclass_t linuxdvb_en50494_class =
 {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_en50494",
-  .ic_caption     = "en50494",
+  .ic_caption     = N_("en50494"),
   .ic_get_title   = linuxdvb_en50494_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
       .id     = "position",
-      .name   = "Position",
+      .name   = N_("Position"),
       .off    = offsetof(linuxdvb_en50494_t, le_position),
       .list   = linuxdvb_en50494_position_list,
     },
     {
       .type   = PT_U16,
       .id     = "frequency",
-      .name   = "Frequency",
+      .name   = N_("Frequency"),
       .off    = offsetof(linuxdvb_en50494_t, le_frequency),
     },
     {
       .type   = PT_U16,
       .id     = "id",
-      .name   = "SCR (ID)",
+      .name   = N_("SCR (ID)"),
       .off    = offsetof(linuxdvb_en50494_t, le_id),
       .list   = linuxdvb_en50494_id_list,
     },
     {
       .type   = PT_U16,
       .id     = "pin",
-      .name   = "Pin",
+      .name   = N_("PIN"),
       .off    = offsetof(linuxdvb_en50494_t, le_pin),
       .list   = linuxdvb_en50494_pin_list,
     },
@@ -265,11 +265,11 @@ linuxdvb_en50494_init (void)
 }
 
 htsmsg_t *
-linuxdvb_en50494_list ( void *o )
+linuxdvb_en50494_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, "None");
-  htsmsg_add_str(m, NULL, "Generic");
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
+  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("Generic")));
   return m;
 }
 

@@ -52,7 +52,7 @@ typedef struct constcw {
 static const char *
 constcw_name(constcw_t *ccw)
 {
-  return idnode_get_title(&ccw->cac_id);
+  return idnode_get_title(&ccw->cac_id, NULL);
 }
 
 /**
@@ -282,12 +282,12 @@ const idclass_t caclient_ccw_des_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_des",
-  .ic_caption    = "DES Constant Code Word Client",
+  .ic_caption    = N_("DES Constant Code Word Client"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
       .id       = "caid",
-      .name     = "CA ID",
+      .name     = N_("CA ID"),
       .off      = offsetof(constcw_t, ccw_caid),
       .opts     = PO_HEXA,
       .def.u16  = 0x2600
@@ -295,7 +295,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_U32,
       .id       = "providerid",
-      .name     = "Provider ID",
+      .name     = N_("Provider ID"),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
       .def.u32  = 0
@@ -303,7 +303,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = "Transponder ID",
+      .name     = N_("Transponder ID"),
       .off      = offsetof(constcw_t, ccw_tsid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
@@ -311,7 +311,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_U16,
       .id       = "sid",
-      .name     = "Service ID",
+      .name     = N_("Service ID"),
       .off      = offsetof(constcw_t, ccw_sid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
@@ -319,7 +319,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_STR,
       .id       = "key_even",
-      .name     = "Even Key",
+      .name     = N_("Even Key"),
       .set      = constcw_class_key_even_set,
       .get      = constcw_class_key_even_get,
       .opts     = PO_PASSWORD,
@@ -328,7 +328,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_STR,
       .id       = "key_odd",
-      .name     = "Odd Key",
+      .name     = N_("Odd Key"),
       .set      = constcw_class_key_odd_set,
       .get      = constcw_class_key_odd_get,
       .opts     = PO_PASSWORD,
@@ -342,12 +342,12 @@ const idclass_t caclient_ccw_aes_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_aes",
-  .ic_caption    = "AES Constant Code Word Client",
+  .ic_caption    = N_("AES Constant Code Word Client"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
       .id       = "caid",
-      .name     = "CA ID",
+      .name     = N_("CA ID"),
       .off      = offsetof(constcw_t, ccw_caid),
       .opts     = PO_HEXA,
       .def.u16  = 0x2600,
@@ -355,7 +355,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_U32,
       .id       = "providerid",
-      .name     = "Provider ID",
+      .name     = N_("Provider ID"),
       .off      = offsetof(constcw_t, ccw_providerid),
       .opts     = PO_HEXA,
       .def.u32  = 0
@@ -363,7 +363,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = "Transponder ID",
+      .name     = N_("Transponder ID"),
       .off      = offsetof(constcw_t, ccw_tsid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
@@ -371,7 +371,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_U16,
       .id       = "sid",
-      .name     = "Service ID",
+      .name     = N_("Service ID"),
       .off      = offsetof(constcw_t, ccw_sid),
       .opts     = PO_HEXA,
       .def.u16  = 1,
@@ -379,7 +379,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_STR,
       .id       = "key_even",
-      .name     = "Even Key",
+      .name     = N_("Even Key"),
       .set      = constcw_class_key_even_set,
       .get      = constcw_class_key_even_get,
       .opts     = PO_PASSWORD,
@@ -388,7 +388,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_STR,
       .id       = "key_odd",
-      .name     = "Odd Key",
+      .name     = N_("Odd Key"),
       .set      = constcw_class_key_odd_set,
       .get      = constcw_class_key_odd_get,
       .opts     = PO_PASSWORD,

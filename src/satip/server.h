@@ -58,7 +58,9 @@ int satip_server_http_page(http_connection_t *hc,
 
 int satip_server_match_uuid(const char *uuid);
 
-void satip_server_config_changed(void);
+void satip_server_save(void);
+htsmsg_t *satip_server_get_config(void);
+int satip_server_set_config(htsmsg_t *conf);
 
 void satip_server_init(int rtsp_port);
 void satip_server_register(void);

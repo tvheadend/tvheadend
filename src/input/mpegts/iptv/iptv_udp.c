@@ -92,19 +92,22 @@ iptv_udp_read ( iptv_mux_t *im )
   return res;
 }
 
-static ssize_t
-iptv_rtp_read ( iptv_mux_t *im )
+ssize_t
+iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
+                void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int len) )
 {
   ssize_t len, hlen;
   uint8_t *rtp;
   int i, n;
+  uint32_t seq, nseq, unc = 0;
   struct iovec *iovec;
-  udp_multirecv_t *um = im->im_data;
   ssize_t res = 0;
 
   n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
   if (n < 0)
     return -1;
+
+  seq = im->mm_iptv_rtp_seq;
 
   for (i = 0; i < n; i++, iovec++) {
 
@@ -115,6 +118,9 @@ iptv_rtp_read ( iptv_mux_t *im )
     /* Strip RTP header */
     if (len < 12)
       continue;
+
+    if (pkt_cb)
+      pkt_cb(im, rtp, len);
 
     /* Version 2 */
     if ((rtp[0] & 0xC0) != 0x80)
@@ -135,14 +141,37 @@ iptv_rtp_read ( iptv_mux_t *im )
     if (len < hlen || ((len - hlen) % 188) != 0)
       continue;
 
-    /* Move data */
     len -= hlen;
+
+    /* Use uncorrectable value to notify RTP delivery issues */
+    nseq = (rtp[2] << 8) | rtp[3];
+    if (seq == -1)
+      seq = nseq;
+    else if (((seq + 1) & 0xffff) != nseq) {
+      unc += (len / 188) * (uint32_t)((uint16_t)nseq-(uint16_t)(seq+1));
+      tvhtrace("iptv", "RTP discontinuity (%i != %i)", seq + 1, nseq);
+    }
+    seq = nseq;
+
+    /* Move data */
     tsdebug_write((mpegts_mux_t *)im, rtp + hlen, len);
     sbuf_append(&im->mm_iptv_buffer, rtp + hlen, len);
     res += len;
   }
 
+  im->mm_iptv_rtp_seq = seq;
+  if (im->mm_active)
+    im->mm_active->tii_stats.unc += unc;
+
   return res;
+}
+
+static ssize_t
+iptv_udp_rtp_read ( iptv_mux_t *im )
+{
+  udp_multirecv_t *um = im->im_data;
+
+  return iptv_rtp_read(im, um, NULL);
 }
 
 /*
@@ -163,7 +192,7 @@ iptv_udp_init ( void )
       .scheme = "rtp",
       .start  = iptv_udp_start,
       .stop   = iptv_udp_stop,
-      .read   = iptv_rtp_read,
+      .read   = iptv_udp_rtp_read,
     }
   };
   iptv_handler_register(ih, 2);

@@ -40,8 +40,6 @@
 #include "parsers/bitstream.h"
 #include "parsers/parser_avc.h"
 
-static long transcoder_nrprocessors;
-
 LIST_HEAD(transcoder_stream_list, transcoder_stream);
 
 struct transcoder;
@@ -78,6 +76,10 @@ typedef struct audio_stream {
   int             resample;
   int             resample_is_open;
 
+  enum AVSampleFormat last_sample_fmt;
+  int             last_sample_rate;
+  uint64_t        last_channel_layout;
+
 } audio_stream_t;
 
 
@@ -98,6 +100,8 @@ typedef struct video_stream {
   int16_t                    vid_height;
 
   int                        vid_first_sent;
+  int                        vid_first_encoded;
+  th_pkt_t                  *vid_first_pkt;
 } video_stream_t;
 
 
@@ -151,9 +155,7 @@ avcodec_alloc_context3_tvh(const AVCodec *codec)
 {
   AVCodecContext *ctx = avcodec_alloc_context3(codec);
   if (ctx) {
-    ctx->codec_id = AV_CODEC_ID_NONE;
     ctx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
-
   }
   return ctx;
 }
@@ -183,17 +185,125 @@ transcode_opt_set_int(transcoder_t *t, transcoder_stream_t *ts,
 }
 
 /**
- *
+ * get best effort sample rate
  */
-static long
-transcoder_thread_count(transcoder_t *t, streaming_component_type_t ty)
+static int
+transcode_get_sample_rate(int rate, AVCodec *codec)
 {
-  long r = LONG_MAX;
-  if (SCT_ISAUDIO(ty))
-    return 1;
-  if (t->t_props.tp_nrprocessors)
-    r = t->t_props.tp_nrprocessors;
-  return MIN(r, transcoder_nrprocessors);
+  /* if codec only supports certain rates, check if rate is available */
+  if (codec->supported_samplerates) {
+    /* Find if we have a matching sample_rate */
+    int acount = 0;
+    int rate_alt = 0;
+    while (codec->supported_samplerates[acount] > 0) {
+      if (codec->supported_samplerates[acount] == rate) {
+        /* original rate supported by codec */
+        return rate;
+      }
+
+      /* check for highest available rate smaller that the original rate */
+      if (codec->supported_samplerates[acount] > rate_alt &&
+          codec->supported_samplerates[acount] < rate) {
+        rate_alt = codec->supported_samplerates[acount];
+      }
+      acount++;
+    }
+
+    return rate_alt;
+  }
+
+
+  return rate;
+}
+
+/**
+ * get best effort sample format
+ */
+static enum AVSampleFormat
+transcode_get_sample_fmt(enum AVSampleFormat fmt, AVCodec *codec)
+{
+  /* if codec only supports certain formats, check if selected format is available */
+  if (codec->sample_fmts) {
+    /* Find if we have a matching sample_fmt */
+    int acount = 0;
+    while (codec->sample_fmts[acount] > AV_SAMPLE_FMT_NONE) {
+      if (codec->sample_fmts[acount] == fmt) {
+        /* original format supported by codec */
+        return fmt;
+      }
+      acount++;
+    }
+
+    /* use first supported sample format */
+    if (acount > 0) {
+      return codec->sample_fmts[0];
+    } else {
+      return AV_SAMPLE_FMT_NONE;
+    }
+  }
+
+  return fmt;
+}
+
+/**
+ * get best effort channel layout
+ */
+static uint64_t
+transcode_get_channel_layout(int *channels, AVCodec *codec)
+{
+  uint64_t channel_layout = AV_CH_LAYOUT_STEREO;
+
+  /* use channel layout based on input field */
+  switch (*channels) {
+  case 1: channel_layout = AV_CH_LAYOUT_MONO;     break;
+  case 2: channel_layout = AV_CH_LAYOUT_STEREO;   break;
+  case 3: channel_layout = AV_CH_LAYOUT_SURROUND; break;
+  case 4: channel_layout = AV_CH_LAYOUT_QUAD;     break;
+  case 5: channel_layout = AV_CH_LAYOUT_5POINT0;  break;
+  case 6: channel_layout = AV_CH_LAYOUT_5POINT1;  break;
+  case 7: channel_layout = AV_CH_LAYOUT_6POINT1;  break;
+  case 8: channel_layout = AV_CH_LAYOUT_7POINT1;  break;
+  }
+
+  /* if codec only supports certain layouts, check if selected layout is available */
+  if (codec->channel_layouts) {
+    int acount = 0;
+    uint64_t channel_layout_def = av_get_default_channel_layout(*channels);
+    uint64_t channel_layout_alt = 0;
+
+    while (codec->channel_layouts[acount] > 0) {
+      if (codec->channel_layouts[acount] == channel_layout) {
+        /* original layout supported by codec */
+        return channel_layout;
+      }
+
+      /* check for best matching layout with same or less number of channels */
+      if (av_get_channel_layout_nb_channels(codec->channel_layouts[acount]) <= *channels) {
+        if (av_get_channel_layout_nb_channels(codec->channel_layouts[acount]) >
+            av_get_channel_layout_nb_channels(channel_layout_alt)) {
+          /* prefer layout with more channels */
+          channel_layout_alt = codec->channel_layouts[acount];
+        } else if (av_get_channel_layout_nb_channels(codec->channel_layouts[acount]) ==
+                   av_get_channel_layout_nb_channels(channel_layout_alt) &&
+                   codec->channel_layouts[acount] == channel_layout_def) {
+          /* prefer default layout for number of channels over alternative layout */
+          channel_layout_alt = channel_layout_def;
+        }
+      }
+
+      acount++;
+    }
+
+    if (channel_layout_alt) {
+      channel_layout = channel_layout_alt;
+      *channels = av_get_channel_layout_nb_channels(channel_layout_alt);
+    } else {
+      channel_layout = 0;
+      *channels = 0;
+    }
+  }
+
+  return channel_layout;
 }
 
 /**
@@ -286,9 +396,7 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   icodec = ss->sub_icodec;
   //ocodec = ss->sub_ocodec;
 
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-    ictx->codec_id = icodec->id;
-
+  if (!avcodec_is_open(ictx)) {
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder",
                shortid(t), icodec->name);
@@ -363,6 +471,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   audio_stream_t *as = (audio_stream_t*)ts;
   int got_frame, got_packet_ptr;
   AVFrame *frame = av_frame_alloc();
+  char layout_buf[100];
 
   ictx = as->aud_ictx;
   octx = as->aud_octx;
@@ -370,8 +479,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   icodec = as->aud_icodec;
   ocodec = as->aud_ocodec;
 
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-
+  if (!avcodec_is_open(ictx)) {
     if (icodec->id == AV_CODEC_ID_AAC || icodec->id == AV_CODEC_ID_VORBIS) {
       if (pkt->pkt_meta) {
         ictx->extradata_size = pktbuf_len(pkt->pkt_meta);
@@ -383,8 +491,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         return;
       }
     }
-
-    ictx->codec_id = icodec->id;
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder",
@@ -415,11 +521,6 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   tvhtrace("transcode", "%04X: audio decode: consumed=%d size=%zu, got=%d, pts=%" PRIi64,
            shortid(t), length, pktbuf_len(pkt->pkt_payload), got_frame, pkt->pkt_pts);
 
-  if (!got_frame) {
-    tvhtrace("transcode", "%04X: Did not have a full frame in the packet", shortid(t));
-    goto cleanup;
-  }
-
   if (length < 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
     tvherror("transcode", "%04X: Unable to decode audio (%d, %s)",
@@ -428,149 +529,92 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     goto cleanup;
   }
 
-  if (length != pktbuf_len(pkt->pkt_payload))
-    tvhtrace("transcode",
-             "%04X: undecoded data (in=%zu, consumed=%d)",
-             shortid(t), pktbuf_len(pkt->pkt_payload), length);
-
-  if (length == 0 || !got_frame) {
-    tvhtrace("transcode", "%04X: Not yet enough data for decoding", shortid(t));
+  if (!got_frame) {
+    tvhtrace("transcode", "%04X: Did not have a full frame in the packet", shortid(t));
     goto cleanup;
   }
 
-  if (octx->codec_id == AV_CODEC_ID_NONE) {
+  if (length != pktbuf_len(pkt->pkt_payload))
+    tvhwarn("transcode",
+            "%04X: undecoded data (in=%zu, consumed=%d)",
+            shortid(t), pktbuf_len(pkt->pkt_payload), length);
+
+  if (!avcodec_is_open(octx)) {
     as->aud_enc_pts       = pkt->pkt_pts;
-    octx->sample_rate     = ictx->sample_rate;
-    octx->sample_fmt      = ictx->sample_fmt;
-    if (ocodec->sample_fmts) {
-      /* Find if we have a matching sample_fmt */
-      int acount = 0;
-      octx->sample_fmt = -1;
-      while ((octx->sample_fmt == -1) && (ocodec->sample_fmts[acount] > -1)) {
-        if (ocodec->sample_fmts[acount] == ictx->sample_fmt) {
-          octx->sample_fmt = ictx->sample_fmt;
-          break;
-        }
-        acount++;
-      }
-      if (octx->sample_fmt == -1) {
-        if (acount > 0) {
-          tvhtrace("transcode", "%04X: No sample_fmt, using: %d",
-                   shortid(t), ocodec->sample_fmts[acount-1]);
-          octx->sample_fmt = ocodec->sample_fmts[acount-1];
-        } else {
-          tvherror("transcode", "%04X: Encoder no sample_fmt!!??", shortid(t));
-          transcoder_stream_invalidate(ts);
-          goto cleanup;
-        }
-      }
-    }
-
-    octx->time_base.den   = ictx->time_base.den;
-    octx->time_base.num   = ictx->time_base.num;
-
+    octx->sample_rate     = transcode_get_sample_rate(ictx->sample_rate, ocodec);
+    octx->sample_fmt      = transcode_get_sample_fmt(ictx->sample_fmt, ocodec);
+    octx->time_base       = ictx->time_base;
     octx->channels        = as->aud_channels ? as->aud_channels : ictx->channels;
-    octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : ictx->bit_rate;
+    octx->channel_layout  = transcode_get_channel_layout(&octx->channels, ocodec);
+    octx->bit_rate        = as->aud_bitrate  ? as->aud_bitrate  : 0;
+    octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
 
-    octx->channels        = MIN(octx->channels, ictx->channels);
-    octx->bit_rate        = MIN(octx->bit_rate, ictx->bit_rate);
-
-    switch (octx->channels) {
-    case 1:
-      octx->channel_layout = AV_CH_LAYOUT_MONO;
-      break;
-
-    case 2:
-      octx->channel_layout = AV_CH_LAYOUT_STEREO;
-      break;
-
-    case 3:
-      octx->channel_layout = AV_CH_LAYOUT_SURROUND;
-      break;
-
-    case 4:
-      octx->channel_layout = AV_CH_LAYOUT_QUAD;
-      break;
-
-    case 5:
-      octx->channel_layout = AV_CH_LAYOUT_5POINT0;
-      break;
-
-    case 6:
-      octx->channel_layout = AV_CH_LAYOUT_5POINT1;
-      break;
-
-    case 7:
-      octx->channel_layout = AV_CH_LAYOUT_6POINT1;
-      break;
-
-    case 8:
-      octx->channel_layout = AV_CH_LAYOUT_7POINT1;
-      break;
-
-    default:
-      break;
+    if (!octx->sample_rate) {
+      tvherror("transcode", "%04X: audio encoder has no suitable sample rate!", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    } else {
+      tvhdebug("transcode", "%04X: using audio sample rate %d",
+                          shortid(t), octx->sample_rate);
     }
 
-    if (ocodec->channel_layouts) {
-      /* Find a matching channel_layout */
-      int acount = 0, maxchannels = 0, maxacount = 0;
-      octx->channel_layout = 0;
-      while ((octx->channel_layout == 0) && (ocodec->channel_layouts[acount] > 0)) {
-        if ((av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) >= maxchannels) &&
-            (av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]) <= octx->channels)) {
-          maxchannels = av_get_channel_layout_nb_channels(ocodec->channel_layouts[acount]);
-          maxacount = acount;
-        }
-        if (ocodec->channel_layouts[acount] == ictx->channel_layout)
-          octx->channel_layout = ictx->channel_layout;
-        acount++;
-      }
-
-      if (octx->channel_layout == 0) {
-        if (acount > 0) {
-          /* find next which has same or less channels than decoder. */
-          tvhtrace("transcode", "%04X: No channel_layout, using: %d with %d channels",
-                   shortid(t), (int)ocodec->channel_layouts[maxacount], maxchannels);
-          octx->channel_layout = ocodec->channel_layouts[maxacount];
-          octx->channels = maxchannels;
-        } else {
-          tvherror("transcode", "%04X: Encoder no channel_layout!!??", shortid(t));
-          transcoder_stream_invalidate(ts);
-          goto cleanup;
-        }
-      }
+    if (octx->sample_fmt == AV_SAMPLE_FMT_NONE) {
+      tvherror("transcode", "%04X: audio encoder has no suitable sample format!", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    } else {
+      tvhdebug("transcode", "%04X: using audio sample format %s",
+                          shortid(t), av_get_sample_fmt_name(octx->sample_fmt));
     }
 
-    // User specified streaming profile audio bitrate limiter.
-    if (t->t_props.tp_abitrate >= 16) {
-      octx->bit_rate       = t->t_props.tp_abitrate * 1000;
+    if (!octx->channel_layout) {
+      tvherror("transcode", "%04X: audio encoder has no suitable channel layout!", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    } else {
+      av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
+      tvhdebug("transcode", "%04X: using audio channel layout %s",
+                          shortid(t), layout_buf);
     }
 
+    // Set flags and quality settings, if no bitrate was specified.
+    // The MPEG2 encoder only supports encoding with fixed bitrate.
+    // All AAC encoders should support encoding with fixed bitrate,
+    // but some don't support encoding with global_quality (vbr).
+    // All vorbis encoders support encoding with global_quality (vbr),
+    // but the built in vorbis encoder doesn't support fixed bitrate.
     switch (ts->ts_type) {
     case SCT_MPEG2AUDIO:
+      // use 96 kbit per channel as default
+      if (octx->bit_rate == 0) {
+        octx->bit_rate = octx->channels * 96000;
+      }
       break;
 
     case SCT_AAC:
-      octx->flags         |= CODEC_FLAG_BITEXACT;
+      octx->flags |= CODEC_FLAG_BITEXACT;
+      // use 64 kbit per channel as default
+      if (octx->bit_rate == 0) {
+        octx->bit_rate = octx->channels * 64000;
+      }
       break;
 
     case SCT_VORBIS:
-      octx->flags         |= CODEC_FLAG_QSCALE;
-      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
-      octx->global_quality = 4*FF_QP2LAMBDA;
+      // use vbr with quality setting as default
+      // and also use a user specified bitrate < 16 kbit as quality setting
+      if (octx->bit_rate == 0) {
+        octx->flags |= CODEC_FLAG_QSCALE;
+        octx->global_quality = 4 * FF_QP2LAMBDA;
+      } else if (t->t_props.tp_abitrate < 16) {
+        octx->flags |= CODEC_FLAG_QSCALE;
+        octx->global_quality = t->t_props.tp_abitrate * FF_QP2LAMBDA;
+        octx->bit_rate = 0;
+      }
       break;
 
     default:
       break;
     }
-
-    as->resample = (ictx->channels != octx->channels)             ||
-                   (ictx->channel_layout != octx->channel_layout) ||
-                   (ictx->sample_fmt != octx->sample_fmt)         ||
-                   (ictx->sample_rate != octx->sample_rate);
-
-    octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s encoder",
@@ -579,23 +623,62 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       goto cleanup;
     }
 
-    as->resample_context = NULL;
-    if (as->resample) {
+    as->fifo = av_audio_fifo_alloc(octx->sample_fmt, octx->channels, 1);
+    if (!as->fifo) {
+      tvherror("transcode", "%04X: Could not allocate fifo", shortid(t));
+      transcoder_stream_invalidate(ts);
+      goto cleanup;
+    }
+
+    as->resample_context    = NULL;
+
+    as->last_sample_rate    = ictx->sample_rate;
+    as->last_sample_fmt     = ictx->sample_fmt;
+    as->last_channel_layout = ictx->channel_layout;
+  }
+
+  /* check for changed input format and close resampler, if changed */
+  if (as->last_sample_rate    != ictx->sample_rate    ||
+      as->last_sample_fmt     != ictx->sample_fmt     ||
+      as->last_channel_layout != ictx->channel_layout) {
+    tvhdebug("transcode", "%04X: audio input format changed", shortid(t));
+
+    as->last_sample_rate    = ictx->sample_rate;
+    as->last_sample_fmt     = ictx->sample_fmt;
+    as->last_channel_layout = ictx->channel_layout;
+
+    if (as->resample_context) {
+      tvhdebug("transcode", "%04X: stopping audio resampling", shortid(t));
+      avresample_free(&as->resample_context);
+      as->resample_context = NULL;
+      as->resample_is_open = 0;
+    }
+  }
+
+  as->resample = (ictx->channel_layout != octx->channel_layout) ||
+                 (ictx->sample_fmt     != octx->sample_fmt)     ||
+                 (ictx->sample_rate    != octx->sample_rate);
+
+  if (as->resample) {
+    if (!as->resample_context) {
       if (!(as->resample_context = avresample_alloc_context())) {
         tvherror("transcode", "%04X: Could not allocate resample context", shortid(t));
         transcoder_stream_invalidate(ts);
         goto cleanup;
       }
 
-      // Convert audio
-      tvhtrace("transcode", "%04X: converting audio", shortid(t));
+      // resample audio
+      tvhdebug("transcode", "%04X: starting audio resampling", shortid(t));
 
-      tvhtrace("transcode", "%04X: IN : channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
-               shortid(t), ictx->channels, ictx->channel_layout, ictx->sample_rate,
-               ictx->sample_fmt, ictx->bit_rate);
-      tvhtrace("transcode", "%04X: OUT: channels=%d, layout=%" PRIi64 ", rate=%d, fmt=%d, bitrate=%d",
-               shortid(t), octx->channels, octx->channel_layout, octx->sample_rate,
-               octx->sample_fmt, octx->bit_rate);
+      av_get_channel_layout_string(layout_buf, sizeof (layout_buf), ictx->channels, ictx->channel_layout);
+      tvhdebug("transcode", "%04X: IN : channel_layout=%s, rate=%d, fmt=%s, bitrate=%d",
+               shortid(t), layout_buf, ictx->sample_rate,
+               av_get_sample_fmt_name(ictx->sample_fmt), ictx->bit_rate);
+
+      av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
+      tvhdebug("transcode", "%04X: OUT: channel_layout=%s, rate=%d, fmt=%s, bitrate=%d",
+               shortid(t), layout_buf, octx->sample_rate,
+               av_get_sample_fmt_name(octx->sample_fmt), octx->bit_rate);
 
       if (transcode_opt_set_int(t, ts, as->resample_context,
                                 "in_channel_layout", ictx->channel_layout, 1))
@@ -621,19 +704,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         goto cleanup;
       }
       as->resample_is_open = 1;
-
     }
-
-    as->fifo = av_audio_fifo_alloc(octx->sample_fmt, octx->channels, 1);
-    if (!as->fifo) {
-      tvherror("transcode", "%04X: Could not allocate fifo", shortid(t));
-      transcoder_stream_invalidate(ts);
-      goto cleanup;
-    }
-
-  }
-
-  if (as->resample) {
 
     uint8_t **output = alloca(octx->channels * sizeof(uint8_t *));
 
@@ -764,7 +835,7 @@ scleanup:
         create_adts_header(n->pkt_payload, n->pkt_sri, octx->channels);
 
       if (octx->extradata_size)
-	n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
+        n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
       tvhtrace("transcode", "%04X: deliver audio (pts = %" PRIi64 ", delay = %i)",
                shortid(t), n->pkt_pts, octx->delay);
@@ -859,6 +930,7 @@ static void
 send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
                   AVPacket *epkt, AVCodecContext *octx)
 {
+  video_stream_t *vs = (video_stream_t*)ts;
   streaming_message_t *sm;
   th_pkt_t *n;
 
@@ -925,7 +997,24 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
       extract_mpeg2_global_data(n, epkt->data, epkt->size);
   }
 
-  tvhtrace("transcode", "%04X: deliver video (pts = %" PRIu64 ")", shortid(t), n->pkt_pts);
+  tvhtrace("transcode", "%04X: deliver video (dts = %" PRIu64 ", pts = %" PRIu64 ")", shortid(t), n->pkt_dts, n->pkt_pts);
+
+  if (!vs->vid_first_encoded) {
+    vs->vid_first_pkt = n;
+    vs->vid_first_encoded = 1;
+    return;
+  }
+  if (vs->vid_first_pkt) {
+    if (vs->vid_first_pkt->pkt_dts < n->pkt_dts) {
+      sm = streaming_msg_create_pkt(vs->vid_first_pkt);
+      streaming_target_deliver2(ts->ts_target, sm);
+    } else {
+      tvhtrace("transcode", "%04X: video skip first packet", shortid(t));
+    }
+    pkt_ref_dec(vs->vid_first_pkt);
+    vs->vid_first_pkt = NULL;
+  }
+
   sm = streaming_msg_create_pkt(n);
   streaming_target_deliver2(ts->ts_target, sm);
   pkt_ref_dec(n);
@@ -965,10 +1054,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   got_ref = 0;
 
-  if (ictx->codec_id == AV_CODEC_ID_NONE) {
-
-    ictx->codec_id = icodec->id;
-
+  if (!avcodec_is_open(ictx)) {
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder", shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
@@ -983,7 +1069,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     pkt2->pkt_componentindex = pkt->pkt_componentindex;
     sm = streaming_msg_create_pkt(pkt2);
     streaming_target_deliver2(ts->ts_target, sm);
-    pkt_ref_dec(pkt);
+    pkt_ref_dec(pkt2);
     vs->vid_first_sent = 1;
   }
 
@@ -1022,12 +1108,10 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   vs->vid_enc_frame->sample_aspect_ratio.num = vs->vid_dec_frame->sample_aspect_ratio.num;
   vs->vid_enc_frame->sample_aspect_ratio.den = vs->vid_dec_frame->sample_aspect_ratio.den;
 
-  if(octx->codec_id == AV_CODEC_ID_NONE) {
+  if(!avcodec_is_open(octx)) {
     // Common settings
     octx->width           = vs->vid_width  ? vs->vid_width  : ictx->width;
     octx->height          = vs->vid_height ? vs->vid_height : ictx->height;
-    octx->gop_size        = 25;
-    octx->has_b_frames    = ictx->has_b_frames;
 
     // Encoder uses "time_base" for bitrate calculation, but "time_base" from decoder
     // will be deprecated in the future, therefore calculate "time_base" from "framerate" if available.
@@ -1038,118 +1122,93 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->time_base       = ictx->time_base;
 #endif
 
+    // set default gop size to 1 second
+    octx->gop_size        = ceil(av_q2d(av_inv_q(av_div_q(octx->time_base, (AVRational){1, octx->ticks_per_frame}))));
+
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
-      octx->codec_id       = AV_CODEC_ID_MPEG2VIDEO;
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
-      // Default settings for quantizer. Best quality unless changed by the streaming profile.
-      octx->qmin           = 1;
-      octx->qmax           = FF_LAMBDA_MAX;
-
-      if (t->t_props.tp_vbitrate == 0) { // "Auto"
-        octx->bit_rate       = 2 * octx->width * octx->height;
-        octx->rc_max_rate    = 4 * octx->bit_rate;
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality and optimize for low latency
+        // valid values for quality are 2-31, smaller means better quality, use 5 as default
+        octx->flags          |= CODEC_FLAG_QSCALE;
+        octx->global_quality  = FF_QP2LAMBDA *
+            (t->t_props.tp_vbitrate == 0 ? 5 : MAX(2, MIN(31, t->t_props.tp_vbitrate)));
+      } else {
+        // encode with specified bitrate and optimize for high compression
+        octx->bit_rate        = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate     = ceil(octx->bit_rate * 1.25);
+        octx->rc_buffer_size  = octx->rc_max_rate * 3;
+        // use gop size of 5 seconds
+        octx->gop_size       *= 5;
+        // activate b-frames
+        octx->max_b_frames    = 3;
       }
-
-      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) { // CRF
-        octx->qmin           = t->t_props.tp_vbitrate;
-      }
-
-      if (t->t_props.tp_vbitrate >= 64) { // CBR
-        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
-        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
-      }
-
-      if (octx->rc_max_rate > 0)
-        octx->rc_buffer_size = 2 * octx->rc_max_rate;
 
       break;
 
     case SCT_VP8:
-      octx->codec_id       = AV_CODEC_ID_VP8;
       octx->pix_fmt        = PIX_FMT_YUV420P;
 
+      // setting quality to realtime will use as much CPU for transcoding as possible,
+      // while still encoding in realtime
       av_dict_set(&opts, "quality", "realtime", 0);
 
-      octx->qcompress      = 0.6;
-
-      if (t->t_props.tp_vbitrate == 0) {
-        octx->qmin = 10;
-        octx->qmax = 20;
-        octx->rc_max_rate = 6 * octx->width * octx->height;
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality and optimize for low latency
+        // valid values for quality are 1-63, smaller means better quality, use 15 as default
+        char valuestr[3];
+        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate);
+        av_dict_set(&opts,      "crf", valuestr, 0);
+        // bitrate setting is still required, as it's used as max rate in CQ mode
+        // and set to a very low value by default
+        octx->bit_rate        = 25000000;
+      } else {
+        // encode with specified bitrate and optimize for high compression
+        octx->bit_rate        = t->t_props.tp_vbitrate * 1000;
+        octx->rc_buffer_size  = octx->bit_rate * 3;
+        // use gop size of 5 seconds
+        octx->gop_size       *= 5;
       }
-
-      // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
-      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) {
-        octx->qmin = t->t_props.tp_vbitrate;
-        octx->qmax = octx->qmin + 30 <= 63 ? octx->qmin + 30 : 63;
-        octx->rc_max_rate = 16 * octx->width * octx->height;
-       }
-
-      if (t->t_props.tp_vbitrate >= 64) { // CBR mode.
-        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
-        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
-      }
-
-      if (octx->rc_max_rate > 0)
-        octx->rc_buffer_size = 8 * 1024 * 224;
 
       break;
 
     case SCT_H264:
-      octx->codec_id       = AV_CODEC_ID_H264;
       octx->pix_fmt        = PIX_FMT_YUV420P;
-      octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
-
-      // Qscale difference between I-frames and P-frames. 
-      // Note: -i_qfactor is handled a little differently than --ipratio. 
-      // Recommended: -i_qfactor 0.71
-      octx->i_quant_factor = 0.71;
-
-      // QP curve compression: 0.0 => CBR, 1.0 => CQP.
-      // Recommended default: -qcomp 0.60
-      octx->qcompress = 0.6;
+      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
       av_dict_set(&opts, "preset",  "faster", 0);
-      // Use main profile instead of the standard "baseline", we are aiming for better quality.
-      // Older devices (iPhone <4, Android <4) only supports baseline. Chromecast only supports >=4.1...
-      av_dict_set(&opts, "profile", "main", 0); // L3.0
-      av_dict_set(&opts, "tune",    "zerolatency", 0);
 
-      // If we are encoding HD, upgrade the profile to high.
-      if (octx->height >= 720 && t->t_props.tp_resolution >= 720) {
-        av_dict_set(&opts, "profile", "high", 0); // L3.1
+      // All modern devices should support "high" profile
+      av_dict_set(&opts, "profile", "high", 0);
+
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality and optimize for low latency
+        // valid values for quality are 1-51, smaller means better quality, use 15 as default
+        char valuestr[3];
+        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate));
+        av_dict_set(&opts,      "crf", valuestr, 0);
+        // tune "zerolatency" removes as much encoder latency as possible
+        av_dict_set(&opts,      "tune", "zerolatency", 0);
+      } else {
+        // encode with specified bitrate and optimize for high compression
+        octx->bit_rate        = t->t_props.tp_vbitrate * 1000;
+        octx->rc_max_rate     = ceil(octx->bit_rate * 1.25);
+        octx->rc_buffer_size  = octx->rc_max_rate * 3;
+        // force-cfr=1 is needed for correct bitrate calculation (tune "zerolatency" also sets this)
+        av_dict_set(&opts,      "x264opts", "force-cfr=1", 0);
+        // use gop size of 5 seconds
+        octx->gop_size       *= 5;
       }
-
-      // Default "auto" CRF settings. Aimed for quality without being too agressive.
-      if (t->t_props.tp_vbitrate == 0) {
-        octx->qmin = 10;
-        octx->qmax = 30;
-      }
-
-      // Stream profile vbitrate 1-63 is used for user specified qmin quantizer (CRF mode).
-      if (t->t_props.tp_vbitrate > 0 && t->t_props.tp_vbitrate < 64) {
-        octx->qmin = t->t_props.tp_vbitrate; // qmax = 51 in all default profiles, let's stick with it for now.
-      }
-
-      if (t->t_props.tp_vbitrate >= 64) { // Bitrate limited encoding (CBR mode).
-        octx->rc_max_rate    = t->t_props.tp_vbitrate * 1000;
-        octx->bit_rate       = ceil(octx->rc_max_rate / 1.15);
-      }
-
-      if (octx->rc_max_rate > 0)
-        octx->rc_buffer_size = 8 * 1024 * 224;
 
       break;
 
     default:
       break;
     }
-
-    octx->codec_id = ocodec->id;
 
     if (avcodec_open2(octx, ocodec, &opts) < 0) {
       tvherror("transcode", "%04X: Unable to open %s encoder",
@@ -1478,9 +1537,6 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   as->aud_ictx = avcodec_alloc_context3_tvh(icodec);
   as->aud_octx = avcodec_alloc_context3_tvh(ocodec);
 
-  as->aud_ictx->thread_count =
-    as->aud_octx->thread_count = transcoder_thread_count(t, sct);
-
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)as, ts_link);
 
   tvhinfo("transcode", "%04X: %d:%s ==> %s (%s)",
@@ -1494,8 +1550,8 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
   if(tp->tp_channels > 0)
     as->aud_channels = tp->tp_channels; 
-
-  as->aud_bitrate = as->aud_channels * 64000;
+  if(tp->tp_abitrate > 0)
+    as->aud_bitrate = tp->tp_abitrate * 1000;
 
   as->resample_context = NULL;
   as->fifo = NULL;
@@ -1533,6 +1589,9 @@ transcoder_destroy_video(transcoder_t *t, transcoder_stream_t *ts)
 
   if(vs->vid_enc_frame)
     av_free(vs->vid_enc_frame);
+
+  if (vs->vid_first_pkt)
+    pkt_ref_dec(vs->vid_first_pkt);
 
   free(ts);
 }
@@ -1577,8 +1636,8 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   vs->vid_ictx = avcodec_alloc_context3_tvh(icodec);
   vs->vid_octx = avcodec_alloc_context3_tvh(ocodec);
 
-  vs->vid_ictx->thread_count =
-    vs->vid_octx->thread_count = transcoder_thread_count(t, sct);
+  if (t->t_props.tp_nrprocessors)
+    vs->vid_octx->thread_count = t->t_props.tp_nrprocessors;
 
   vs->vid_dec_frame = avcodec_alloc_frame();
   vs->vid_enc_frame = avcodec_alloc_frame();
@@ -1888,7 +1947,4 @@ transcoder_get_capabilities(int experimental)
  */
 void transcoding_init(void)
 {
-  transcoder_nrprocessors = sysconf(_SC_NPROCESSORS_ONLN);
-  if (transcoder_nrprocessors <= 0)
-    transcoder_nrprocessors = LONG_MAX;
 }

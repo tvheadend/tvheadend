@@ -557,13 +557,14 @@ static int _eit_process_event
     mpegts_service_t *svc, const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
   int ret = 0;
 
   if ( len < 12 ) return -1;
 
-  LIST_FOREACH(csm, &svc->s_channels, csm_svc_link)
-    ret = _eit_process_event_one(mod, tableid, svc, csm->csm_chn,
+  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link)
+    ret = _eit_process_event_one(mod, tableid, svc,
+                                 (channel_t *)ilm->ilm_in2,
                                  ptr, len, local, resched, save);
   return ret;
 }
@@ -579,15 +580,33 @@ _eit_callback
   uint16_t onid, tsid, sid;
   uint32_t extraid;
   mpegts_service_t     *svc;
-  mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
-  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
+  mpegts_mux_t         *mm;
+  epggrab_ota_map_t    *map;
+  epggrab_module_t     *mod;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_psi_table_state_t *st;
+  th_subscription_t    *ths;
+
+  if (!epggrab_ota_running)
+    return -1;
+
+  mm  = mt->mt_mux;
+  map = mt->mt_opaque;
+  mod = (epggrab_module_t *)map->om_module;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
+  if (ths) {
+    ths->ths_bytes_in += len;
+    ths->ths_bytes_out += len;
+  }
 
   /* Validate */
-  if(tableid < 0x4e || tableid > 0x6f || len < 11)
+  if(tableid < 0x4e || tableid > 0x6f || len < 11) {
+    if (ths)
+      ths->ths_total_err++;
     return -1;
+  }
 
   /* Basic info */
   sid     = ptr[0] << 8 | ptr[1];
@@ -705,19 +724,23 @@ static int _eit_start
 
   /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
-    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", MT_CRC, 3002);
+    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", MT_CRC, 3002, MPS_WEIGHT_EIT);
     pid = 3003;
 
   /* Viasat Baltic (0x39) */
   } else if (!strcmp("viasat_baltic", m->id)) {
     pid = 0x39;
 
+  /* Bulsatcom 39E (0x12b) */
+  } else if (!strcmp("Bulsatcom_39E", m->id)) {
+    pid = 0x12b;
+
   /* Standard (0x12) */
   } else {
     pid  = DVB_EIT_PID;
     opts = MT_RECORD;
   }
-  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid);
+  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid, MPS_WEIGHT_EIT);
   // TODO: might want to limit recording to EITpf only
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;
@@ -769,6 +792,7 @@ void eit_init ( void )
   epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops, NULL);
   epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5, &ops, NULL);
   epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5, &ops, NULL);
+  epggrab_module_ota_create(NULL, "Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops, NULL);
 }
 
 void eit_done ( void )

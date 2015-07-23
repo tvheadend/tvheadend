@@ -1,0 +1,52 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - Channel/EPG - Channel Tags</h3>
+<p>This tab is used to configure channel tags. Tags are used to define a set of channels - to group them, to aid searches, and similar. Tags are not required by Tvheadend itself, but are useful in media applications such as Kodi and are a requirement for using Tvheadend with Movian.</p>
+<p><img src="docresources/tagstab.png" alt="&#39;Channel Tags&#39; Tab" /></p>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the tag configuration. </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the tag configuration since the last save. </td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add a new tag. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete an existing tag. </td>
+</tr>
+<tr>
+<td><strong>Edit</strong></td>
+<td>Edit an existing tag. This allows you to change any of the parameters you’d otherwise set when adding a new channel, e.g. internal/private status, icon, etc.</td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Displays this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Grid Items</h5>
+<p>The main grid items have the following functions:</p>
+<p><strong>Enabled</strong> : Make the tag available in the rest of the system. If the tag is not enabled it is only presented in this grid for the administrator.</p>
+<p><strong>Name</strong> : Name of the tag. Changing the tag name does not interfere with any automatic recordings, groups, etc.</p>
+<p><strong>Internal</strong> : Tags are exported via HTSP/HTTP and used there for grouping of TV channels. If you do not wish to export a tag you can flag it as internal only.</p>
+<p><strong>Private</strong> : Tags are exported via HTSP/HTTP and used there for grouping of TV channels. If you do not wish to export a tag to other users you can flag it as private only. Only users with this tag configured in the access configuration (or users with not set tags) can use it.</p>
+<p><strong>Icon</strong> : Full path to an icon used to depict the tag. This can be a TV network logotype, etc.</p>
+<p><strong>Icon has title</strong> : If set, presentation of the tag icon will not superimpose the tag name on top of the icon.</p>
+<p><strong>Comment</strong> : Allows the administrator to set a comment only visible in this editor. It does not serve any active purpose.</p>
+</div>

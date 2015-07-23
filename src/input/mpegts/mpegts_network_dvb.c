@@ -83,25 +83,25 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
                            dmc, NULL, NULL);
       if (mm)
         mm->mm_config_save((mpegts_mux_t *)mm);
-#if ENABLE_TRACE
-      char buf[128];
-      dvb_mux_conf_str(dmc, buf, sizeof(buf));
-      tvhtrace("scanfile", "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
-#endif
+      if (tvhtrace_enabled()) {
+        char buf[128];
+        dvb_mux_conf_str(dmc, buf, sizeof(buf));
+        tvhtrace("scanfile", "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
+      }
     } else {
-#if ENABLE_TRACE
-      char buf[128];
-      dvb_mux_conf_str(dmc, buf, sizeof(buf));
-      tvhtrace("scanfile", "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
-      dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-      tvhtrace("scanfile", "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
-#endif
+      if (tvhtrace_enabled()) {
+        char buf[128];
+        dvb_mux_conf_str(dmc, buf, sizeof(buf));
+        tvhtrace("scanfile", "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
+        dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
+        tvhtrace("scanfile", "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
+      }
     }
   }
   return 0;
 }
 static htsmsg_t *
-dvb_network_class_scanfile_list ( void *o, const char *type )
+dvb_network_class_scanfile_list ( void *o, const char *lang, const char *type )
 {
   dvb_network_t *ln = o;
   htsmsg_t *e, *m = htsmsg_create_map();
@@ -117,24 +117,24 @@ dvb_network_class_scanfile_list ( void *o, const char *type )
 }
 
 static htsmsg_t *
-dvb_network_dvbt_class_scanfile_list ( void *o )
+dvb_network_dvbt_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "dvbt");
+  return dvb_network_class_scanfile_list(o, lang, "dvbt");
 }
 static htsmsg_t *
-dvb_network_dvbc_class_scanfile_list ( void *o )
+dvb_network_dvbc_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "dvbc");
+  return dvb_network_class_scanfile_list(o, lang, "dvbc");
 }
 static htsmsg_t *
-dvb_network_dvbs_class_scanfile_list ( void *o )
+dvb_network_dvbs_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "dvbs");
+  return dvb_network_class_scanfile_list(o, lang, "dvbs");
 }
 static htsmsg_t *
-dvb_network_atsc_class_scanfile_list ( void *o )
+dvb_network_atsc_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, "atsc");
+  return dvb_network_class_scanfile_list(o, lang, "atsc");
 }
 
 static const void *
@@ -172,7 +172,7 @@ dvb_network_class_orbital_pos_set ( void *o, const void *s )
 }
 
 static htsmsg_t *
-dvb_network_class_orbital_pos_list ( void *o )
+dvb_network_class_orbital_pos_list ( void *o, const char *lang )
 {
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type", "api");
@@ -187,7 +187,7 @@ const idclass_t dvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "dvb_network",
-  .ic_caption    = "LinuxDVB Network",
+  .ic_caption    = N_("LinuxDVB Network"),
   .ic_delete     = dvb_network_class_delete,
   .ic_properties = (const property_t[]){
     {}
@@ -198,12 +198,12 @@ const idclass_t dvb_network_dvbt_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbt",
-  .ic_caption    = "DVB-T Network",
+  .ic_caption    = N_("DVB-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = "Pre-defined Muxes",
+      .name     = N_("Pre-defined Muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbt_class_scanfile_list,
@@ -217,12 +217,12 @@ const idclass_t dvb_network_dvbc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbc",
-  .ic_caption    = "DVB-C Network",
+  .ic_caption    = N_("DVB-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = "Pre-defined Muxes",
+      .name     = N_("Pre-defined Muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbc_class_scanfile_list,
@@ -236,12 +236,12 @@ const idclass_t dvb_network_dvbs_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbs",
-  .ic_caption    = "DVB-S Network",
+  .ic_caption    = N_("DVB-S Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = "Pre-defined Muxes",
+      .name     = N_("Pre-defined Muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbs_class_scanfile_list,
@@ -250,7 +250,7 @@ const idclass_t dvb_network_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "orbital_pos",
-      .name     = "Orbital Position",
+      .name     = N_("Orbital Position"),
       .set      = dvb_network_class_orbital_pos_set,
       .get      = dvb_network_class_orbital_pos_get,
       .list     = dvb_network_class_orbital_pos_list,
@@ -263,12 +263,12 @@ const idclass_t dvb_network_atsc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc",
-  .ic_caption    = "ATSC Network",
+  .ic_caption    = N_("ATSC Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = "Pre-defined Muxes",
+      .name     = N_("Pre-defined Muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_atsc_class_scanfile_list,
@@ -456,12 +456,12 @@ dvb_network_create_mux
     }
     if (save) {
       mm = dvb_mux_create0(ln, onid, tsid, dmc, NULL, NULL);
-#if ENABLE_TRACE
-      char buf[128];
-      dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-      tvhtrace("mpegts", "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
-               mm, buf, onid, tsid, mm->mm_network->mn_network_name);
-#endif      
+      if (tvhtrace_enabled()) {
+        char buf[128];
+        dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
+        tvhtrace("mpegts", "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
+                 mm, buf, onid, tsid, mm->mm_network->mn_network_name);
+      }
     }
   } else if (mm) {
     dvb_mux_t *lm = (dvb_mux_t*)mm;
@@ -469,7 +469,6 @@ dvb_network_create_mux
     /* accept information only from one origin mux */
     if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
       goto noop;
-#if ENABLE_TRACE
     #define COMPARE(x) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
       if (xr) { \
@@ -484,17 +483,6 @@ dvb_network_create_mux
                  " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
         lm->lm_tuning.x = dmc->x; \
       } xr; })
-#else
-    #define COMPARE(x) ({ \
-      int xr = dmc->x != lm->lm_tuning.x; \
-      if (xr) lm->lm_tuning.x = dmc->x; \
-      xr; })
-    /* note - zero means NONE, one means AUTO */
-    #define COMPAREN(x) ({ \
-      int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != lm->lm_tuning.x; \
-      if (xr) lm->lm_tuning.x = dmc->x; \
-      xr; })
-#endif
     dvb_mux_conf_t tuning_old;
     char buf[128];
     tuning_old = lm->lm_tuning;

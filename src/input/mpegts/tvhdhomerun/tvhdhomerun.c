@@ -43,7 +43,7 @@ tvhdhomerun_device_class_get_childs ( idnode_t *in )
   tvhdhomerun_frontend_t *lfe;
 
   TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
-    idnode_set_add(is, &lfe->ti_id, NULL);
+    idnode_set_add(is, &lfe->ti_id, NULL, NULL);
   return is;
 }
 
@@ -57,7 +57,7 @@ static int tvhdhomerun_discoveries_count;
 static struct tvhdhomerun_discovery_queue tvhdhomerun_discoveries;
 
 static const char *
-tvhdhomerun_device_class_get_title( idnode_t *in )
+tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
 {
   static char buf[256];
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
@@ -67,7 +67,7 @@ tvhdhomerun_device_class_get_title( idnode_t *in )
 }
 
 static htsmsg_t *
-tvhdhomerun_device_class_override_enum( void * p )
+tvhdhomerun_device_class_override_enum( void * p, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
   htsmsg_add_str(m, NULL, "DVB-T");
@@ -93,7 +93,7 @@ tvhdhomerun_device_class_override_set( void *obj, const void * p )
 }
 
 static void
-tvhdhomerun_device_class_override_notify( void * obj )
+tvhdhomerun_device_class_override_notify( void * obj, const char *lang )
 {
   tvhdhomerun_device_t *hd = obj;
   tvhdhomerun_frontend_t *hfe;
@@ -126,7 +126,7 @@ tvhdhomerun_device_class_override_notify( void * obj )
 const idclass_t tvhdhomerun_device_class =
 {
   .ic_class      = "tvhdhomerun_client",
-  .ic_caption    = "tvhdhomerun Client",
+  .ic_caption    = N_("tvhdhomerun Client"),
   .ic_save       = tvhdhomerun_device_class_save,
   .ic_get_childs = tvhdhomerun_device_class_get_childs,
   .ic_get_title  = tvhdhomerun_device_class_get_title,
@@ -134,42 +134,42 @@ const idclass_t tvhdhomerun_device_class =
     {
       .type     = PT_STR,
       .id       = "networkType",
-      .name     = "Network",
+      .name     = N_("Network"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_override_type),
     },
     {
       .type     = PT_STR,
       .id       = "ip_address",
-      .name     = "IP Address",
+      .name     = N_("IP Address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.ip_address),
     },
     {
       .type     = PT_STR,
       .id       = "uuid",
-      .name     = "UUID",
+      .name     = N_("UUID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.uuid),
     },
     {
       .type     = PT_STR,
       .id       = "friendly",
-      .name     = "Friendly Name",
+      .name     = N_("Friendly Name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.friendlyname),
     },
     {
       .type     = PT_STR,
       .id       = "deviceModel",
-      .name     = "Device Model",
+      .name     = N_("Device Model"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.deviceModel),
     },
     {
       .type     = PT_STR,
       .id       = "fe_override",
-      .name     = "Network Type",
+      .name     = N_("Network Type"),
       .opts     = PO_ADVANCED,
       .set      = tvhdhomerun_device_class_override_set,
       .notify   = tvhdhomerun_device_class_override_notify,

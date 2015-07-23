@@ -37,6 +37,6 @@ struct mpegts_service;
 const char *dvb_charset_find
   (struct mpegts_network *mn, struct mpegts_mux *mm, struct mpegts_service *s);
 
-htsmsg_t *dvb_charset_enum ( void* );
+htsmsg_t *dvb_charset_enum ( void*, const char *lang );
 
 #endif /* __TVH_DVB_CHARSET_H__ */

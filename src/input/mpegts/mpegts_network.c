@@ -38,7 +38,7 @@ mpegts_network_class_save
 }
 
 static const char *
-mpegts_network_class_get_title ( idnode_t *in )
+mpegts_network_class_get_title ( idnode_t *in, const char *lang )
 {
   static char buf[256];
   mpegts_network_t *mn = (mpegts_network_t*)in;
@@ -85,12 +85,12 @@ mpegts_network_class_get_num_chn ( void *ptr )
   mpegts_mux_t *mm;
   mpegts_service_t *s;
   mpegts_network_t *mn = ptr;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   n = 0;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
     LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-      LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
+      LIST_FOREACH(ilm, &s->s_channels, ilm_in1_link)
         n++;
 
   return &n;
@@ -112,7 +112,7 @@ mpegts_network_class_get_scanq_length ( void *ptr )
 }
 
 static void
-mpegts_network_class_idlescan_notify ( void *p )
+mpegts_network_class_idlescan_notify ( void *p, const char *lang )
 {
   mpegts_network_t *mn = p;
   mpegts_mux_t *mm;
@@ -131,7 +131,7 @@ mpegts_network_class_idlescan_notify ( void *p )
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
-  .ic_caption    = "MPEGTS Network",
+  .ic_caption    = N_("MPEG-TS Network"),
   .ic_event      = "mpegts_network",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_network_class_save,
@@ -140,35 +140,35 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_STR,
       .id       = "networkname",
-      .name     = "Network Name",
+      .name     = N_("Network Name"),
       .off      = offsetof(mpegts_network_t, mn_network_name),
       .notify   = idnode_notify_title_changed,
     },
     {
       .type     = PT_U16,
       .id       = "nid",
-      .name     = "Network ID (limit scanning)",
+      .name     = N_("Network ID (limit scanning)"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(mpegts_network_t, mn_nid),
     },
     {
       .type     = PT_BOOL,
       .id       = "autodiscovery",
-      .name     = "Network Discovery",
+      .name     = N_("Network Discovery"),
       .off      = offsetof(mpegts_network_t, mn_autodiscovery),
       .def.i    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "skipinitscan",
-      .name     = "Skip Initial Scan",
+      .name     = N_("Skip Initial Scan"),
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
       .def.i    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "idlescan",
-      .name     = "Idle Scan Muxes",
+      .name     = N_("Idle Scan Muxes"),
       .off      = offsetof(mpegts_network_t, mn_idlescan),
       .def.i    = 0,
       .notify   = mpegts_network_class_idlescan_notify,
@@ -177,14 +177,14 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_BOOL,
       .id       = "sid_chnum",
-      .name     = "Service IDs as Channel Numbers",
+      .name     = N_("Service IDs as Channel Numbers"),
       .off      = offsetof(mpegts_network_t, mn_sid_chnum),
       .def.i    = 0,
     },
     {
       .type     = PT_BOOL,
       .id       = "ignore_chnum",
-      .name     = "Ignore Provider's Channel Numbers",
+      .name     = N_("Ignore Provider's Channel Numbers"),
       .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
       .def.i    = 0,
     },
@@ -192,14 +192,14 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_U16,
       .id       = "satip_source",
-      .name     = "SAT>IP Source Number",
+      .name     = N_("SAT>IP Source Number"),
       .off      = offsetof(mpegts_network_t, mn_satip_source),
     },
 #endif
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = "Character Set",
+      .name     = N_("Character Set"),
       .off      = offsetof(mpegts_network_t, mn_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -207,35 +207,35 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_BOOL,
       .id       = "localtime",
-      .name     = "EIT Local Time",
+      .name     = N_("EIT Local Time"),
       .off      = offsetof(mpegts_network_t, mn_localtime),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
       .id       = "num_mux",
-      .name     = "# Muxes",
+      .name     = N_("# Muxes"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_mux,
     },
     {
       .type     = PT_INT,
       .id       = "num_svc",
-      .name     = "# Services",
+      .name     = N_("# Services"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_svc,
     },
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = "# Mapped Channels",
+      .name     = N_("# Mapped Channels"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_chn,
     },
     {
       .type     = PT_INT,
       .id       = "scanq_length",
-      .name     = "Scan Q length",
+      .name     = N_("Scan Queue length"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_scanq_length,
     },
@@ -294,7 +294,7 @@ mpegts_network_mux_create2
 static void
 mpegts_network_link_delete ( mpegts_network_link_t *mnl )
 {
-  idnode_notify_simple(&mnl->mnl_input->ti_id);
+  idnode_notify_changed(&mnl->mnl_input->ti_id);
   LIST_REMOVE(mnl, mnl_mn_link);
   LIST_REMOVE(mnl, mnl_mi_link);
   free(mnl);

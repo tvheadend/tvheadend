@@ -22,9 +22,9 @@
 #include <string.h>
 #include "htsstr.h"
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 static void htsstr_argsplit_add(char ***argv, int *argc, char *s);
-static int htsstr_format0(const char *str, char *out, const char **map);
 
 char *
 hts_strndup(const char *src, size_t len)
@@ -33,7 +33,6 @@ hts_strndup(const char *src, size_t len)
   r[len] = 0;
   return memcpy(r, src, len);
 }
-
 
 char *
 htsstr_unescape(char *str) {
@@ -63,6 +62,43 @@ htsstr_unescape(char *str) {
   } 
 
   return str;
+}
+
+char *
+htsstr_unescape_to(const char *src, char *dst, size_t dstlen)
+{
+  char *res = dst;
+
+  while (*src && dstlen > 0) {
+    if (*src == '\\') {
+      if (dstlen < 2)
+        break;
+      src++;
+      if (*src) {
+        if (*src == 'b')
+          *dst = '\b';
+        else if (*src == 'f')
+          *dst = '\f';
+        else if (*src == 'n')
+          *dst = '\n';
+        else if (*src == 'r')
+          *dst = '\r';
+        else if (*src == 't')
+          *dst = '\t';
+        else
+          *dst = *src;
+        src++; dst++; dstlen--;
+      }
+      continue;
+    } else {
+      *dst = *src; src++; dst++; dstlen--;
+    }
+  }
+  if (dstlen == 0)
+    *(dst - 1) = '\0';
+  else if (dstlen > 0)
+    *dst = '\0';
+  return res;
 }
 
 static void
@@ -149,47 +185,62 @@ htsstr_argsplit_free(char **argv) {
   free(argv);
 }
 
-static int
-htsstr_format0(const char *str, char *out, const char **map) {
-  const char *s = str;
-  const char *f;
-  int n = 0;
+char *
+htsstr_substitute(const char *src, char *dst, size_t dstlen,
+                  int first, htsstr_substitute_t *sub, const void *aux)
+{
+  htsstr_substitute_t *s;
+  const char *p, *x, *v;
+  char *res = dst;
+  size_t l;
 
-  while(*s) {
-    switch(*s) {
-      case '%':
-        f = map[(unsigned char)*(s + 1)];
-        if(*(s + 1) != '%' && f) {
-          s += 2; /* skip %f * */
-          if(out)
-            strcpy(&out[n], f);
-          n += strlen(f);
-          break;
-        }
-        /* fallthru */
-      default:
-        if(out)
-          out[n] = *s;
-        s++;
-        n++;
+  if (!dstlen)
+    return NULL;
+  while (*src && dstlen > 0) {
+    if (*src == '\\') {
+      if (dstlen < 2)
         break;
+      *dst = '\\'; src++; dst++; dstlen--;
+      if (*src)
+        *dst = *src; src++; dst++; dstlen--;
+      continue;
+    }
+    if (first >= 0) {
+      if (*src != first) {
+        *dst = *src; src++; dst++; dstlen--;
+        continue;
+      }
+      src++;
+    }
+    for (s = sub; s->id; s++) {
+      for (p = s->id, x = src; *p; p++, x++)
+        if (*p != *x)
+          break;
+      if (*p == '\0') {
+        src = x;
+        if ((l = dstlen) > 0) {
+          v = s->getval(s->id, aux);
+          strncpy(dst, v, l);
+          l = MIN(strlen(v), l);
+          dst += l;
+          dstlen -= l;
+        }
+        break;
+      }
+    }
+    if (!s->id) {
+      if (first >= 0) {
+        *dst = first;
+      } else {
+        *dst = *src;
+        src++;
+      }
+      dst++; dstlen--;
     }
   }
-
-  if(out)
-    out[n] = '\0';
-
-  return n + 1; /* + \0 */
+  if (dstlen == 0)
+    *(dst - 1) = '\0';
+  else if (dstlen > 0)
+    *dst = '\0';
+  return res;
 }
-
-char *
-htsstr_format(const char *str, const char **map)
-{
-  char *s;
-  
-  s = malloc(htsstr_format0(str, NULL, map));
-  htsstr_format0(str, s, map);
-
-  return s;
-}
-

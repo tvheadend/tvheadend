@@ -25,10 +25,19 @@ char *hts_strndup(const char *str, size_t len);
 
 char *htsstr_unescape(char *str);
 
+char *htsstr_unescape_to(const char *src, char *dst, size_t dstlen);
+
 char **htsstr_argsplit(const char *str);
 
 void htsstr_argsplit_free(char **argv);
 
-char *htsstr_format(const char *str, const char **map);
+typedef struct {
+  const char *id;
+  const char *(*getval)(const char *id, const void *aux);
+} htsstr_substitute_t;
+
+char *
+htsstr_substitute(const char *src, char *dst, size_t dstlen,
+                  int first, htsstr_substitute_t *sub, const void *aux);
 
 #endif /* HTSSTR_H__ */

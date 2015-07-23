@@ -33,8 +33,10 @@ api_dvr_config_grid
   dvr_config_t *cfg;
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
-    if (!idnode_perm((idnode_t *)cfg, perm, NULL))
-      idnode_set_add(ins, (idnode_t*)cfg, &conf->filter);
+    if (!idnode_perm((idnode_t *)cfg, perm, NULL)) {
+      idnode_set_add(ins, (idnode_t*)cfg, &conf->filter, perm->aa_lang);
+      idnode_perm_unset((idnode_t *)cfg);
+    }
 }
 
 static int
@@ -88,7 +90,7 @@ api_dvr_entry_grid
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static void
@@ -99,7 +101,7 @@ api_dvr_entry_grid_upcoming
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_upcoming(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static void
@@ -110,7 +112,7 @@ api_dvr_entry_grid_finished
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_finished(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static void
@@ -121,7 +123,7 @@ api_dvr_entry_grid_failed
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_failed(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
 }
 
 static int
@@ -130,7 +132,8 @@ api_dvr_entry_create
 {
   dvr_entry_t *de;
   dvr_config_t *cfg;
-  htsmsg_t *conf;
+  htsmsg_t *conf, *m;
+  char *s, *lang;
   const char *s1;
   int res = EPERM;
 
@@ -142,14 +145,34 @@ api_dvr_entry_create
   cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
   if (cfg) {
     htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
+    htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
+    htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
-    if (perm->aa_representative)
-       htsmsg_set_str(conf, "creator", perm->aa_representative);
+    lang = access_get_lang(perm, htsmsg_get_str(conf, "lang"));
+    if (lang) {
+      for (s = lang; *s && *s != ','; s++);
+      *s = '\0';
+    }
+
+    s1 = htsmsg_get_str(conf, "disp_title");
+    if (s1 && lang && !htsmsg_get_map(conf, "title")) {
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, lang, s1);
+      htsmsg_add_msg(conf, "title", m);
+    }
+
+    s1 = htsmsg_get_str(conf, "disp_subtitle");
+    if (s1 && lang && !htsmsg_get_map(conf, "subtitle")) {
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, lang, s1);
+      htsmsg_add_msg(conf, "subtitle", m);
+    }
 
     if ((de = dvr_entry_create(NULL, conf)))
       dvr_entry_save(de);
 
     res = 0;
+    free(lang);
   }
   pthread_mutex_unlock(&global_lock);
 
@@ -227,6 +250,19 @@ api_dvr_entry_create_by_event
 }
 
 static void
+api_dvr_stop(access_t *perm, idnode_t *self)
+{
+  dvr_entry_stop((dvr_entry_t *)self);
+}
+
+static int
+api_dvr_entry_stop
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(perm, args, resp, api_dvr_stop, "stop");
+}
+
+static void
 api_dvr_cancel(access_t *perm, idnode_t *self)
 {
   dvr_entry_cancel((dvr_entry_t *)self);
@@ -236,7 +272,7 @@ static int
 api_dvr_entry_cancel
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_cancel);
+  return api_idnode_handler(perm, args, resp, api_dvr_cancel, "cancel");
 }
 
 static void
@@ -246,7 +282,7 @@ api_dvr_autorec_grid
   dvr_autorec_entry_t *dae;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    idnode_set_add(ins, (idnode_t*)dae, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)dae, &conf->filter, perm->aa_lang);
 }
 
 static int
@@ -254,21 +290,29 @@ api_dvr_autorec_create
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   htsmsg_t *conf;
+  dvr_config_t *cfg;
   dvr_autorec_entry_t *dae;
+  const char *s1;
 
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  if (perm->aa_username)
-    htsmsg_set_str(conf, "owner", perm->aa_username);
-  if (perm->aa_representative)
-    htsmsg_set_str(conf, "creator", perm->aa_representative);
+  htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
+  htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
+
+  s1 = htsmsg_get_str(conf, "config_uuid");
+  if (s1 == NULL)
+    s1 = htsmsg_get_str(conf, "config_name");
 
   pthread_mutex_lock(&global_lock);
-  dae = dvr_autorec_create(NULL, conf);
-  if (dae) {
-    dvr_autorec_save(dae);
-    dvr_autorec_changed(dae, 1);
+  cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
+  if (cfg) {
+    htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
+    dae = dvr_autorec_create(NULL, conf);
+    if (dae) {
+      dvr_autorec_save(dae);
+      dvr_autorec_changed(dae, 1);
+    }
   }
   pthread_mutex_unlock(&global_lock);
 
@@ -331,7 +375,7 @@ api_dvr_timerec_grid
   dvr_timerec_entry_t *dte;
 
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    idnode_set_add(ins, (idnode_t*)dte, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)dte, &conf->filter, perm->aa_lang);
 }
 
 static int
@@ -344,10 +388,8 @@ api_dvr_timerec_create
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
-  if (perm->aa_username)
-    htsmsg_set_str(conf, "owner", perm->aa_username);
-  if (perm->aa_representative)
-    htsmsg_set_str(conf, "creator", perm->aa_representative);
+  htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
+  htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
   pthread_mutex_lock(&global_lock);
   dte = dvr_timerec_create(NULL, conf);
@@ -376,6 +418,7 @@ void api_dvr_init ( void )
     { "dvr/entry/grid_failed",     ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_failed },
     { "dvr/entry/create",          ACCESS_RECORDER, api_dvr_entry_create, NULL },
     { "dvr/entry/create_by_event", ACCESS_RECORDER, api_dvr_entry_create_by_event, NULL },
+    { "dvr/entry/stop",            ACCESS_RECORDER, api_dvr_entry_stop, NULL },
     { "dvr/entry/cancel",          ACCESS_RECORDER, api_dvr_entry_cancel, NULL },
 
     { "dvr/autorec/class",         ACCESS_RECORDER, api_idnode_class, (void*)&dvr_autorec_entry_class },

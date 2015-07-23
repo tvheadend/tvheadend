@@ -1,0 +1,81 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - Access Entries</h3>
+<p>Setting up access control is an important initial step as <strong><u>the system
+is initially wide open</u></strong> .</p>
+<p>Tvheadend verifies access by scanning through all enabled access control entries in sequence, from the top of the list to the bottom. The permission flags, streaming profiles, DVR config profiles, channel tags and so on are combined for all matching access entries. An access entry is said to match if the username / password matches and the IP source address of the requesting peer is within the prefix.</p>
+<p><img src="docresources/accessconfig.png" alt="&#39;Access Entries&#39; Tab" /></p>
+<hr />
+<h5>Menu Bar/Buttons</h5>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the access rules. </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the access rules since the last save. </td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add a new access rule. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete the selected access rule. </td>
+</tr>
+<tr>
+<td><strong>Move up</strong></td>
+<td>Move the selected rule up one level (rules are executed top to bottom). </td>
+</tr>
+<tr>
+<td><strong>Move down</strong></td>
+<td>Move the selected rule down one level (rules are executed top to bottom).</td>
+</tr>
+<tr>
+<td><strong>Edit</strong></td>
+<td>Edit the selected access rule. </td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h5>Grid Items</h5>
+<p>The main grid items have the following functions:</p>
+<p><strong>Enabled</strong> : Enable this access control rule. Uncheck the box to disable.</p>
+<p><strong>Username</strong> : Login name to be used. If no username is required, this entry should contain a single asterisk (<code>*</code>).</p>
+<p><strong>Network prefix</strong> : IPv4 prefix for matching based on source IP address. If set to <code>0.0.0.0/0</code> it will match everything. The multiple networks can be delimited using comma or semicolon.</p>
+<p><strong>Web interface</strong> : Required for web user interface access. Also gives access to the EPG.</p>
+<p><strong>Admin</strong> : Enables access to the Configuration tab.</p>
+<p><strong>Streaming</strong> : Enables access to streaming functionality for HTTP (web).</p>
+<p><strong>Advanced Streaming</strong> : Enables access to advanced streaming function for HTTP (web) - like direct service or whole MPEG-TS stream (mux)..</p>
+<p><strong>HTSP Streaming</strong> : Enables access to streaming for the HTSP protocol (Movian, Kodi etc.).</p>
+<p><strong>Streaming Profile</strong> : Specify a streaming profile to be used when this user logs in; use the (default) stream if not specified.</p>
+<p><strong>Connection Limit Type</strong> : Allow to restrict the limit for connections to streaming or DVR only.</p>
+<p><strong>Limit Connections</strong> : If set, this will limit the number of concurrent streaming connections and DVR sessions a user is permitted to have. 0=disabled</p>
+<p><strong>Video Recorder</strong> : Enables access to all video recording functions. This also include administration of the auto recordings.</p>
+<p><strong>HTSP DVR</strong> : Enables access to video recording functions for the HTSP protocol (Movian, Kodi etc.).</p>
+<p><strong>All DVR</strong> : Enable to access to DVR entries created by other users (read-only).</p>
+<p><strong>All DVR (rw)</strong> : Enable to access to DVR entries created by other users with the ability to remove the DVR entries.</p>
+<p><strong>DVR Config Profile</strong> : If set, the user will only be able to use the DVR config profile equal to this value. Note that this field is unset when the DVR Config Profile is removed.</p>
+<p><strong>Min Channel Num</strong> : If non-zero, this sets the lower limit of the channels accessible by a user, i.e. the user will only be able to access channels where the channel number is equal to or greater than this value.</p>
+<p><strong>Max Channel Num</strong> : If non-zero, this sets the upper limit of the channels accessible by a user, i.e. the user will only be able to access channels where the channel number is equal to or less than this value.</p>
+<p><strong>Channel Tag</strong> : If set, the user will only be able to access channels containing this channel tag. Note that this field is unset when the channel tag is removed.</p>
+<p><strong>Comment</strong> : Allows the administrator to set a comment only visible in this editor. It does not serve any active purpose.</p>
+<hr />
+<p>Let’s also take a look at an example:</p>
+<p><img src="docresources/accessconfigexample.png" alt="Access Entries Example" /></p>
+<p>The first line gives clients originating from <em>192.168.0.0 - 192.168.0.255</em> network access to streaming functions. Typically, you would use this for your local media players at home (Although Movian can prompt for username and password in its HTSP client)</p>
+<p>The second line adds a user with world wide access who might want to modify recordings, etc., perhaps from their workplace or via a mobile 'phone.</p>
+<p>The third line provide admin access to an <em>admin</em> user. As an extra precaution this user is only allowed to log in from the home network.</p>
+</div>

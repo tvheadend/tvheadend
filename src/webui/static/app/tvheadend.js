@@ -1,3 +1,4 @@
+
 tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
@@ -17,7 +18,7 @@ tvheadend.regexEscape = function(s) {
  */
 tvheadend.help = function(title, pagename) {
     Ext.Ajax.request({
-        url: 'docs/' + pagename,
+        url: 'redir/docs/' + pagename,
         success: function(result, request) {
 
             var content = new Ext.Panel({
@@ -28,7 +29,7 @@ tvheadend.help = function(title, pagename) {
             });
 
             var win = new Ext.Window({
-                title: 'Help for ' + title,
+                title: _('Help for') + ' ' + title,
                 iconCls: 'help',
                 layout: 'fit',
                 width: 900,
@@ -77,8 +78,8 @@ tvheadend.Ajax = function(conf) {
 
 tvheadend.AjaxConfirm = function(conf) {
     Ext.MessageBox.confirm(
-        conf.title || 'Message',
-        conf.question || 'Do you really want to delete the selection?',
+        conf.title || _('Message'),
+        conf.question || _('Do you really want to delete the selection?'),
         function (btn) {
             if (btn == 'yes')
                 tvheadend.Ajax(conf);
@@ -88,10 +89,35 @@ tvheadend.AjaxConfirm = function(conf) {
 
 tvheadend.loading = function(on) {
     if (on)
-      Ext.getBody().mask('Loading... Please, wait...', 'loading');
+      Ext.getBody().mask(_('Loading, please wait...'), 'loading');
     else
       Ext.getBody().unmask();
 };
+
+tvheadend.PagingToolbarConf = function(conf, title, auto, count)
+{
+  conf.width = 50;
+  conf.pageSize = 50;
+  conf.displayInfo = true;
+                    /// {0} start, {1} end, {2} total, {3} title
+  conf.displayMsg = _('{3} {0} - {1} of {2}').replace('{3}', title);
+                    /// {0} title (lowercase), {1} title
+  conf.emptyMsg = String.format(_('No {0} to display'), title.toLowerCase(), title);
+  conf.items = [];
+  if (auto || count)
+    conf.items.push('-');
+  if (auto) {
+    conf.items.push(_('Auto-refresh'));
+    conf.items.push(auto);
+  }
+  if (count) {
+    conf.items.push('->');
+    conf.items.push('-');
+    conf.items.push(_('Per page'));
+    conf.items.push(count);
+  }
+  return conf;
+}
 
 /*
  * Any Match option in ComboBox queries
@@ -171,14 +197,14 @@ tvheadend.VideoPlayer = function(url) {
     });
 
     var selectChannel = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 200,
         displayField: 'val',
         store: tvheadend.channels,
         mode: 'local',
         editable: true,
         triggerAction: 'all',
-        emptyText: 'Select channel...'
+        emptyText: _('Select channel...')
     });
 
     selectChannel.on('select', function(c, r) {
@@ -209,13 +235,13 @@ tvheadend.VideoPlayer = function(url) {
     }
 
     var selectProfile = new Ext.form.ComboBox({
-        loadingText: 'Loading...',
+        loadingText: _('Loading...'),
         width: 150,
         displayField: 'val',
         mode: 'local',
         editable: false,
         triggerAction: 'all',
-        emptyText: 'Select stream profile...',
+        emptyText: _('Select stream profile...'),
         store: tvheadend.profiles
     });
 
@@ -233,7 +259,7 @@ tvheadend.VideoPlayer = function(url) {
     });
 
     var win = new Ext.Window({
-        title: 'Live TV Player',
+        title: _('Live TV Player'),
         layout: 'fit',
         width: 682 + 14,
         height: 384 + 56,
@@ -245,7 +271,7 @@ tvheadend.VideoPlayer = function(url) {
             '-',
             {
                 iconCls: 'control_play',
-                tooltip: 'Play',
+                tooltip: _('Play'),
                 handler: function() {
                     if (!videoPlayer.isIdle()) { //probobly paused
                         videoPlayer.play();
@@ -262,14 +288,14 @@ tvheadend.VideoPlayer = function(url) {
             },
             {
                 iconCls: 'control_pause',
-                tooltip: 'Pause',
+                tooltip: _('Pause'),
                 handler: function() {
                     videoPlayer.pause();
                 }
             },
             {
                 iconCls: 'control_stop',
-                tooltip: 'Stop',
+                tooltip: _('Stop'),
                 handler: function() {
                     videoPlayer.stop();
                 }
@@ -277,7 +303,7 @@ tvheadend.VideoPlayer = function(url) {
             '-',
             {
                 iconCls: 'control_fullscreen',
-                tooltip: 'Fullscreen',
+                tooltip: _('Fullscreen'),
                 handler: function() {
                     videoPlayer.fullscreen();
                 }
@@ -287,7 +313,7 @@ tvheadend.VideoPlayer = function(url) {
             '-',
             {
                 iconCls: 'control_volume',
-                tooltip: 'Volume',
+                tooltip: _('Volume'),
                 disabled: true
             }],
         items: [videoPlayer]
@@ -308,6 +334,11 @@ tvheadend.VideoPlayer = function(url) {
     win.show();
 };
 
+function diskspaceUpdate(o) {
+  if ('freediskspace' in o && 'totaldiskspace' in o)
+    tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
+}
+
 /**
  * This function creates top level tabs based on access so users without 
  * access to subsystems won't see them.
@@ -323,6 +354,8 @@ function accessUpdate(o) {
       tvheadend.rootTabPanel.setLogin(o.username);
     if ('address' in o)
       tvheadend.rootTabPanel.setAddress(o.address);
+    if ('freediskspace' in o && 'totaldiskspace' in o)
+      tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
 
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);
@@ -337,25 +370,38 @@ function accessUpdate(o) {
         var cp = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Configuration',
+            title: _('Configuration'),
             iconCls: 'wrench',
             items: []
         });
 
-        tvheadend.miscconf(cp);
+        /* General */
+        var general = new Ext.TabPanel({
+            activeTab: 0,
+            autoScroll: true,
+            title: _('General'),
+            iconCls: 'general',
+            items: []
+        });
+
+
+        tvheadend.baseconf(general);
+        tvheadend.imgcacheconf(general);
+        tvheadend.satipsrvconf(general);
+        
+        cp.add(general);
 
         tvheadend.acleditor(cp);
+        tvheadend.passwdeditor(cp);
 
         /* DVB inputs, networks, muxes, services */
         var dvbin = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'DVB Inputs',
+            title: _('DVB Inputs'),
             iconCls: 'hardware',
             items: []
         });
-
-        var idx = 0;
 
         if (tvheadend.capabilities.indexOf('tvadapters') !== -1)
             tvheadend.tvadapters(dvbin);
@@ -370,7 +416,7 @@ function accessUpdate(o) {
         var chepg = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Channel / EPG',
+            title: _('Channel / EPG'),
             iconCls: 'television',
             items: []
         });
@@ -385,7 +431,7 @@ function accessUpdate(o) {
         var stream = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Stream',
+            title: _('Stream'),
             iconCls: 'film_edit',
             items: []
         });
@@ -397,7 +443,7 @@ function accessUpdate(o) {
         var tsdvr = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: 'Recording',
+            title: _('Recording'),
             iconCls: 'recordingtab',
             items: []
         });
@@ -429,7 +475,8 @@ function accessUpdate(o) {
         tvheadend.aboutPanel = new Ext.Panel({
             border: false,
             layout: 'fit',
-            title: 'About',
+            autoScroll: true,
+            title: _('About'),
             iconCls: 'info',
             autoLoad: 'about.html'
         });
@@ -476,7 +523,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         if (!this.loginTpl) {
             var tt = new Ext.Template(
                 '<li class="x-tab-login" id="{id}">',
-                '<span class="x-tab-strip-login {iconCls}">{text}</span></li>'
+                '<span class="x-tab-strip-login {iconCls} x-tab-strip-text">{text}</span></li>'
             );
             tt.disableFormats = true;
             tt.compile();
@@ -491,7 +538,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         if (!this.loginCmdTpl) {
             var tt = new Ext.Template(
                 '<li class="x-tab-login" id="{id}"><a href="#">',
-                '<span class="x-tab-strip-login-cmd"></span></a></li>'
+                '<span class="x-tab-strip-login-cmd x-tab-strip-text"></span></a></li>'
             );
             tt.disableFormats = true;
             tt.compile();
@@ -504,8 +551,23 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         item.tabEl.select('a').on('click', this.onLoginCmdClicked, this, {preventDefault: true});
         this.loginCmdItem = item;
 
+        if (!this.diskSpaceTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-login" id="{id}">',
+                '<span class="x-tab-diskspace x-tab-strip-text"></span></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabPanel.prototype.diskSpaceTpl = tt;
+        }
+        var item = new Ext.Component();
+        var p = this.getTemplateArgs(item);
+        var el = this.diskSpaceTpl.insertBefore(before, p);
+        item.tabEl = Ext.get(el);
+        this.diskSpaceItem = item;
+
         this.on('beforetabchange', function(tp, p) {
-            if (p == this.loginItem || p == this.loginCmdItem)
+            if (p == this.loginItem || p == this.loginCmdItem || p == this.diskSpaceItem)
                 return false;
         });
     },
@@ -515,17 +577,19 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             return this.loginItem;
         if (comp === this.loginCmdItem.id || comp == this.loginCmdItem)
             return this.loginCmdItem;
+        if (comp === this.diskSpaceItem.id || comp == this.diskSpaceItem)
+            return this.diskSpaceItem;
         return tvheadend.RootTabPanel.superclass.getComponent.call(this, comp);
     },
 
     setLogin: function(login) {
         this.login = login;
         if (login) {
-            text = 'Logged in as <b>' + login + '</b>';
-            cmd = '(logout)';
+            text = _('Logged in as') + ' <b>' + login + '</b>';
+            cmd = '(' + _('logout') + ')';
         } else {
-            text = 'No verified access';
-            cmd = '(login)';
+            text = _('No verified access');
+            cmd = '(' + _('login') + ')';
         }
         var el = this.loginItem.tabEl;
         var fly = Ext.fly(this.loginItem.tabEl);
@@ -536,6 +600,22 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
 
     setAddress: function(addr) {
         Ext.get(this.loginItem.tabEl).child('span.x-tab-strip-login', true).qtip = addr;
+    },
+
+    setDiskSpace: function(bfree, btotal) {
+        human = function(val) {
+          if (val > 1000000000)
+            val = parseInt(val / 1000000000) + _('GB');
+          if (val > 1000000)
+            val = parseInt(val / 1000000) + _('MB');
+          if (val > 1000)
+            val = parseInt(val / 1000) + _('KB');
+          return val;
+        };
+        text = _('Disk space:') + '&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
+        var el = Ext.get(this.diskSpaceItem.tabEl).child('span.x-tab-diskspace', true);
+        el.innerHTML = text;
+        el.qtip = _('Free:') + ' ' + human(bfree) + ' ' + _('Total:') + ' ' + human(btotal);
     },
 
     onLoginCmdClicked: function(e) {
@@ -562,7 +642,7 @@ tvheadend.app = function() {
                 boxMinHeight: 45,
                 border: false,
                 hidden: true,
-                html: '<div id="header"><h1>Tvheadend Web-Panel</h1></div>'
+                html: '<div id="header"><h1>' + _('Tvheadend Web-Panel') + '</h1></div>'
             });
 
             tvheadend.rootTabPanel = new tvheadend.RootTabPanel({
@@ -583,11 +663,11 @@ tvheadend.app = function() {
                         maxSize: 400,
                         collapsible: true,
                         collapsed: true,
-                        title: 'System log',
+                        title: _('System log'),
                         margins: '0 0 0 0',
                         tools: [{
                                 id: 'gear',
-                                qtip: 'Enable debug output',
+                                qtip: _('Enable debug output'),
                                 handler: function(event, toolEl, panel) {
                                     Ext.Ajax.request({
                                         url: 'comet/debug',
@@ -602,6 +682,8 @@ tvheadend.app = function() {
 
             tvheadend.comet.on('accessUpdate', accessUpdate);
 
+            tvheadend.comet.on('diskspaceUpdate', diskspaceUpdate);
+
             tvheadend.comet.on('setServerIpPort', setServerIpPort);
 
             tvheadend.comet.on('logmessage', function(m) {
@@ -611,9 +693,6 @@ tvheadend.app = function() {
             new tvheadend.cometPoller;
 
             Ext.QuickTips.init();
-
-            // Load the chart library smoothie.js, as used by the bandwidth monitor.
-            Ext.Loader.load('static/smoothie.js');
         }
 
     };

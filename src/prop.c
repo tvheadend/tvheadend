@@ -22,6 +22,7 @@
 
 #include "tvheadend.h"
 #include "prop.h"
+#include "tvh_locale.h"
 #include "lang_str.h"
 
 /* **************************************************************************
@@ -228,7 +229,7 @@ prop_write_values
     if (save) {
       save2 = 1;
       if (p->notify)
-        p->notify(obj);
+        p->notify(obj, NULL);
       if (updated)
         htsmsg_set_u32(updated, p->id, 1);
     }
@@ -246,7 +247,8 @@ prop_write_values
  */
 static void
 prop_read_value
-  (void *obj, const property_t *p, htsmsg_t *m, const char *name, int optmask)
+  (void *obj, const property_t *p, htsmsg_t *m, const char *name,
+   int optmask, const char *lang)
 {
   const char *s;
   const void *val = obj + p->off;
@@ -308,8 +310,13 @@ prop_read_value
         htsmsg_add_s64(m, name, *(int64_t *)val);
       break;
     case PT_STR:
-      if ((s = *(const char **)val))
-        htsmsg_add_str(m, name, s);
+      if (optmask & PO_LOCALE) {
+        if ((s = *(const char **)val))
+          htsmsg_add_str(m, name, lang ? tvh_gettext_lang(lang, s) : s);
+      } else {
+        if ((s = *(const char **)val))
+          htsmsg_add_str(m, name, s);
+      }
       break;
     case PT_DBL:
       htsmsg_add_dbl(m, name, *(double*)val);
@@ -335,14 +342,15 @@ prop_read_value
  */
 void
 prop_read_values
-  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
+   int optmask, const char *lang)
 {
   if(pl == NULL)
     return;
 
   if(list == NULL) {
     for (; pl->id; pl++)
-      prop_read_value(obj, pl, m, pl->id, optmask);
+      prop_read_value(obj, pl, m, pl->id, optmask, lang);
   } else {
     const property_t *p;
     htsmsg_field_t *f;
@@ -354,7 +362,7 @@ prop_read_values
         if (b > 0) {
           p = prop_find(pl, f->hmf_name);
           if (p)
-            prop_read_value(obj, p, m, p->id, optmask);
+            prop_read_value(obj, p, m, p->id, optmask, lang);
           count++;
         }
       }
@@ -365,7 +373,7 @@ prop_read_values
           if (!strcmp(pl->id, f->hmf_name))
             break;
         if (f == NULL)
-          prop_read_value(obj, pl, m, pl->id, optmask);
+          prop_read_value(obj, pl, m, pl->id, optmask, lang);
       }
     }
   }
@@ -376,7 +384,7 @@ prop_read_values
  */
 static void
 prop_serialize_value
-  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *msg, int optmask, const char *lang)
 {
   htsmsg_field_t *f;
   char buf[16];
@@ -406,7 +414,7 @@ prop_serialize_value
   htsmsg_add_str(m, "type",     val2str(pl->type, typetab) ?: "none");
 
   /* Metadata */
-  htsmsg_add_str(m, "caption",  pl->name);
+  htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, pl->name));
   if (pl->islist) {
     htsmsg_add_u32(m, "list", 1);
     if (pl->def.list)
@@ -473,7 +481,7 @@ prop_serialize_value
 
   /* Enum list */
   if (pl->list)
-    htsmsg_add_msg(m, "enum", pl->list(obj));
+    htsmsg_add_msg(m, "enum", pl->list(obj, lang));
 
   /* Visual group */
   if (pl->group)
@@ -485,7 +493,7 @@ prop_serialize_value
 
   /* Data */
   if (obj)
-    prop_read_value(obj, pl, m, "value", optmask);
+    prop_read_value(obj, pl, m, "value", optmask, lang);
 
   htsmsg_add_msg(msg, NULL, m);
 }
@@ -495,14 +503,15 @@ prop_serialize_value
  */
 void
 prop_serialize
-  (void *obj, const property_t *pl, htsmsg_t *msg, htsmsg_t *list, int optmask)
+  (void *obj, const property_t *pl, htsmsg_t *msg, htsmsg_t *list,
+   int optmask, const char *lang)
 {
   if(pl == NULL)
     return;
 
   if(list == NULL) {
     for (; pl->id; pl++)
-      prop_serialize_value(obj, pl, msg, optmask);
+      prop_serialize_value(obj, pl, msg, optmask, lang);
   } else {
     const property_t *p;
     htsmsg_field_t *f;
@@ -512,7 +521,7 @@ prop_serialize
       if (!htsmsg_field_get_bool(f, &b) && b > 0) {
         p = prop_find(pl, f->hmf_name);
         if (p)
-          prop_serialize_value(obj, p, msg, optmask);
+          prop_serialize_value(obj, p, msg, optmask, lang);
         count++;
       }
     }
@@ -522,7 +531,7 @@ prop_serialize
           if (!strcmp(pl->id, f->hmf_name))
             break;
         if (f == NULL)
-          prop_serialize_value(obj, pl, msg, optmask);
+          prop_serialize_value(obj, pl, msg, optmask, lang);
       }
     }
   }

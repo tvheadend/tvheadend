@@ -1,6 +1,6 @@
 /*
  *  Tvheadend - DVB support routines and defines
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,10 +34,19 @@ struct mpegts_mux;
 
 #define DVB_PAT_PID                   0x00
 #define DVB_CAT_PID                   0x01
+#define DVB_TSDT_PID                  0x02
 #define DVB_NIT_PID                   0x10
 #define DVB_SDT_PID                   0x11
 #define DVB_BAT_PID                   0x11
 #define DVB_EIT_PID                   0x12
+#define DVB_RST_PID                   0x13
+#define DVB_TDT_PID                   0x14
+#define DVB_SNC_PID                   0x15
+#define DVB_RNT_PID                   0x16
+#define DVB_INB_PID                   0x1C
+#define DVB_MSR_PID                   0x1D
+#define DVB_DIT_PID                   0x1E
+#define DVB_SIT_PID                   0x1F
 #define DVB_VCT_PID                   0x1FFB
 
 /* Tables */
@@ -59,6 +68,12 @@ struct mpegts_mux;
 
 #define DVB_BAT_BASE                  0x48
 #define DVB_BAT_MASK                  0xF8
+
+#define DVB_TDT_BASE                  0x70
+#define DVB_TDT_MASK                  0xFF
+
+#define DVB_TOT_BASE                  0x73
+#define DVB_TOT_MASK                  0xFF
 
 #define DVB_FASTSCAN_NIT_BASE         0xBC
 #define DVB_FASTSCAN_SDT_BASE         0xBD
@@ -256,7 +271,7 @@ typedef struct mpegts_psi_table
  * Assemble SI section
  */
 void mpegts_psi_section_reassemble
- ( mpegts_psi_table_t *mt, const uint8_t *tsb, int crc,
+ ( mpegts_psi_table_t *mt, const char *logpref, const uint8_t *tsb, int crc,
    mpegts_psi_section_callback_t cb, void *opaque );
 
 /* PSI table parser helpers */
@@ -281,8 +296,9 @@ void dvb_table_parse_init
 void dvb_table_parse_done ( mpegts_psi_table_t *mt);
 
 void dvb_table_parse
-  (mpegts_psi_table_t *mt, const uint8_t *tsb, int len,
-   int crc, int full, mpegts_psi_parse_callback_t cb);
+  (mpegts_psi_table_t *mt, const char *logprefix,
+   const uint8_t *tsb, int len, int crc, int full,
+   mpegts_psi_parse_callback_t cb);
 
 int dvb_table_append_crc32(uint8_t *dst, int off, int maxlen);
 
@@ -291,19 +307,7 @@ int dvb_table_remux
 
 extern htsmsg_t *satellites;
 
-/*
- *
- */
-#if ENABLE_MPEGTS_DVB
-
-typedef enum dvb_fe_type {
-  DVB_TYPE_NONE = 0,
-  DVB_TYPE_T = 1,		/* terrestrial */
-  DVB_TYPE_C,			/* cable */
-  DVB_TYPE_S,			/* satellite */
-  DVB_TYPE_ATSC,		/* terrestrial - north america */
-  DVB_TYPE_LAST = DVB_TYPE_ATSC
-} dvb_fe_type_t;
+/* Delivery systems */
 
 typedef enum dvb_fe_delivery_system {
   DVB_SYS_NONE            =    0,
@@ -325,7 +329,24 @@ typedef enum dvb_fe_delivery_system {
   DVB_SYS_CMMB            =  900,
   DVB_SYS_DAB             = 1000,
   DVB_SYS_TURBO           = 1100,
+  /* TVH internal */
+  DVB_SYS_ATSC_ALL        = 9998,
+  DVB_SYS_UNKNOWN         = 9999
 } dvb_fe_delivery_system_t;
+
+/*
+ *
+ */
+#if ENABLE_MPEGTS_DVB
+
+typedef enum dvb_fe_type {
+  DVB_TYPE_NONE = 0,
+  DVB_TYPE_T = 1,		/* terrestrial */
+  DVB_TYPE_C,			/* cable */
+  DVB_TYPE_S,			/* satellite */
+  DVB_TYPE_ATSC,		/* terrestrial - north america */
+  DVB_TYPE_LAST = DVB_TYPE_ATSC
+} dvb_fe_type_t;
 
 typedef enum dvb_fe_spectral_inversion {
   DVB_INVERSION_UNDEFINED,

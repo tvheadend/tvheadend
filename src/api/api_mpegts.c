@@ -84,7 +84,7 @@ api_mpegts_network_grid
   mpegts_network_t *mn;
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-    idnode_set_add(ins, (idnode_t*)mn, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)mn, &conf->filter, perm->aa_lang);
   }
 }
 
@@ -98,7 +98,7 @@ api_mpegts_network_builders
   /* List of available builder classes */
   l = htsmsg_create_list();
   LIST_FOREACH(mnb, &mpegts_network_builders, link)
-    if ((e = idclass_serialize(mnb->idc)))
+    if ((e = idclass_serialize(mnb->idc, perm->aa_lang)))
       htsmsg_add_msg(l, NULL, e);
 
   /* Output */
@@ -193,7 +193,7 @@ api_mpegts_network_muxclass
   if (!(idc = mn->mn_mux_class(mn)))
     goto exit;
 
-  *resp = idclass_serialize(idc);
+  *resp = idclass_serialize(idc, perm->aa_lang);
   err    = 0;
 
 exit:
@@ -254,7 +254,7 @@ api_mpegts_mux_grid
     //if (hide && !mn->mn_enabled) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (hide == 2 && !mm->mm_is_enabled(mm)) continue;
-      idnode_set_add(ins, (idnode_t*)mm, &conf->filter);
+      idnode_set_add(ins, (idnode_t*)mm, &conf->filter, perm->aa_lang);
     }
   }
 }
@@ -284,7 +284,7 @@ api_mpegts_service_grid
       if (hide && !mm->mm_is_enabled(mm)) continue;
       LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
         if (hide == 2 && !ms->s_is_enabled((service_t*)ms, 0)) continue;
-        idnode_set_add(ins, (idnode_t*)ms, &conf->filter);
+        idnode_set_add(ins, (idnode_t*)ms, &conf->filter, perm->aa_lang);
       }
     }
   }
@@ -299,7 +299,7 @@ api_mpegts_mux_sched_grid
 {
   mpegts_mux_sched_t *mms;
   LIST_FOREACH(mms, &mpegts_mux_sched_all, mms_link)
-    idnode_set_add(ins, (idnode_t*)mms, &conf->filter);
+    idnode_set_add(ins, (idnode_t*)mms, &conf->filter, perm->aa_lang);
 }
 
 static int

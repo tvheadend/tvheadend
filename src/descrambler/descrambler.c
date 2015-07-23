@@ -24,60 +24,6 @@
 #include "input/mpegts/tsdemux.h"
 #include "dvbcam.h"
 
-struct caid_tab {
-  const char *name;
-  uint16_t caid;
-  uint16_t mask;
-};
-
-static struct caid_tab caidnametab[] = {
-  { "Seca",             0x0100, 0xff00 },
-  { "CCETT",            0x0200, 0xff00 },
-  { "Deutsche Telekom", 0x0300, 0xff00 },
-  { "Eurodec",          0x0400, 0xff00 },
-  { "Viaccess",         0x0500, 0xff00 },
-  { "Irdeto",           0x0600, 0xff00 },
-  { "Jerroldgi",        0x0700, 0xff00 },
-  { "Matra",            0x0800, 0xff00 },
-  { "NDS",              0x0900, 0xff00 },
-  { "Nokia",            0x0A00, 0xff00 },
-  { "Conax",            0x0B00, 0xff00 },
-  { "NTL",              0x0C00, 0xff00 },
-  { "CryptoWorks",      0x0D00, 0xff80 },
-  { "CryptoWorks ICE",	0x0D80, 0xff80 },
-  { "PowerVu",          0x0E00, 0xff00 },
-  { "Sony",             0x0F00, 0xff00 },
-  { "Tandberg",         0x1000, 0xff00 },
-  { "Thompson",         0x1100, 0xff00 },
-  { "TV-Com",           0x1200, 0xff00 },
-  { "HPT",              0x1300, 0xff00 },
-  { "HRT",              0x1400, 0xff00 },
-  { "IBM",              0x1500, 0xff00 },
-  { "Nera",             0x1600, 0xff00 },
-  { "BetaCrypt",        0x1700, 0xff00 },
-  { "NagraVision",      0x1800, 0xff00 },
-  { "Titan",            0x1900, 0xff00 },
-  { "Telefonica",       0x2000, 0xff00 },
-  { "Stentor",          0x2100, 0xff00 },
-  { "Tadiran Scopus",   0x2200, 0xff00 },
-  { "BARCO AS",         0x2300, 0xff00 },
-  { "StarGuide",        0x2400, 0xff00 },
-  { "Mentor",           0x2500, 0xff00 },
-  { "EBU",              0x2600, 0xff00 },
-  { "GI",               0x4700, 0xff00 },
-  { "Telemann",         0x4800, 0xff00 },
-  { "StreamGuard",      0x4ad2, 0xffff },
-  { "DRECrypt",         0x4ae0, 0xffff },
-  { "DRECrypt2",        0x4ae1, 0xffff },
-  { "Bulcrypt",         0x4aee, 0xffff },
-  { "TongFang",         0x4b00, 0xff00 },
-  { "Griffin",          0x5500, 0xffe0 },
-  { "Bulcrypt",         0x5581, 0xffff },
-  { "Verimatrix",       0x5601, 0xffff },
-  { "DRECrypt",         0x7be0, 0xffff },
-  { "DRECrypt2",        0x7be1, 0xffff },
-};
-
 void
 descrambler_init ( void )
 {
@@ -271,8 +217,10 @@ fin:
     uint16_t sid = ((mpegts_service_t *)td->td_service)->s_dvb_service_id;
     uint32_t pos = 0, crc;
     mpegts_mux_t *mm = ((mpegts_service_t *)td->td_service)->s_dvb_mux;
-    if (!mm->mm_active)
+    if (!mm->mm_active) {
+      free(tp);
       return;
+	}
     pthread_mutex_lock(&mm->mm_active->mmi_input->mi_output_lock);
     tp->pos = mm->mm_tsdebug_pos;
     memset(tp->pkt, 0xff, sizeof(tp->pkt));
@@ -477,7 +425,7 @@ descrambler_descramble ( service_t *t,
                                 (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         if (key_late(dr, ki)) {
-          tvhtrace("descrambler", "ECM late (%ld seconds) for service \"%s\"",
+          tvherror("descrambler", "ECM late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           if (ecm_reset(t, dr)) {
@@ -584,7 +532,7 @@ descrambler_table_callback
       } else {
         des->last_data_len = 0;
       }
-      ds->callback(ds->opaque, mt->mt_pid, ptr, len);
+      ds->callback(ds->opaque, mt->mt_pid, ptr, len, emm);
       if (!emm) { /* ECM */
         mpegts_service_t *t = mt->mt_service;
         if (t) {
@@ -620,10 +568,10 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
     return 0;
   if (mux->mm_descrambler_flush)
     return 0;
-  flags  = pid >> 16;
+  flags  = (pid >> 16) & MT_FAST;
   pid   &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
-    if (dt->table->mt_pid != pid)
+    if (dt->table->mt_pid != pid || (dt->table->mt_flags & MT_FAST) != flags)
       continue;
     TAILQ_FOREACH(ds, &dt->sections, link) {
       if (ds->opaque == opaque)
@@ -635,8 +583,9 @@ descrambler_open_pid_( mpegts_mux_t *mux, void *opaque, int pid,
     dt = calloc(1, sizeof(*dt));
     TAILQ_INIT(&dt->sections);
     dt->table = mpegts_table_add(mux, 0, 0, descrambler_table_callback,
-                                 dt, "descrambler",
-                                 MT_FULL | MT_DEFER | flags, pid);
+                                 dt, (flags & MT_FAST) ? "ecm" : "emm",
+                                 MT_FULL | MT_DEFER | flags, pid,
+                                 MPS_WEIGHT_CA);
     if (dt->table)
       dt->table->mt_service = (mpegts_service_t *)service;
     TAILQ_INSERT_TAIL(&mux->mm_descrambler_tables, dt, link);
@@ -669,17 +618,19 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
   descrambler_table_t *dt;
   descrambler_section_t *ds;
   descrambler_ecmsec_t *des;
+  int flags;
 
   if (mux == NULL)
     return 0;
-  pid &= 0x1fff;
+  flags =  (pid >> 16) & MT_FAST;
+  pid   &= 0x1fff;
   TAILQ_FOREACH(dt, &mux->mm_descrambler_tables, link) {
-    if (dt->table->mt_pid != pid)
+    if (dt->table->mt_pid != pid || (dt->table->mt_flags & MT_FAST) != flags)
       continue;
     TAILQ_FOREACH(ds, &dt->sections, link) {
       if (ds->opaque == opaque) {
         TAILQ_REMOVE(&dt->sections, ds, link);
-        ds->callback(ds->opaque, -1, NULL, 0);
+        ds->callback(ds->opaque, -1, NULL, 0, (flags & MT_FAST) == 0);
         while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
           LIST_REMOVE(des, link);
           free(des->last_data);
@@ -691,7 +642,7 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
           free(dt);
         }
         free(ds);
-        tvhtrace("descrambler", "mux %p close pid %04X (%i) for %p", mux, pid, pid, opaque);
+        tvhtrace("descrambler", "mux %p close pid %04X (%i) (flags 0x%04x) for %p", mux, pid, pid, flags, opaque);
         return 1;
       }
     }
@@ -727,7 +678,7 @@ descrambler_flush_tables( mpegts_mux_t *mux )
   while ((dt = TAILQ_FIRST(&mux->mm_descrambler_tables)) != NULL) {
     while ((ds = TAILQ_FIRST(&dt->sections)) != NULL) {
       TAILQ_REMOVE(&dt->sections, ds, link);
-      ds->callback(ds->opaque, -1, NULL, 0);
+      ds->callback(ds->opaque, -1, NULL, 0, (dt->table->mt_flags & MT_FAST) ? 0 : 1);
       while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
         LIST_REMOVE(des, link);
         free(des->last_data);
@@ -878,89 +829,6 @@ descrambler_close_emm( mpegts_mux_t *mux, void *opaque, int caid )
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
   free(emm);
   return 1;
-}
-
-// TODO: might actually put const char* into caid_t
-const char *
-descrambler_caid2name(uint16_t caid)
-{
-  const char *s = NULL;
-  static char __thread buf[20];
-  struct caid_tab *tab;
-  int i;
-
-  for (i = 0; i < ARRAY_SIZE(caidnametab); i++) {
-    tab = &caidnametab[i];
-    if ((caid & tab->mask) == tab->caid) {
-      s = tab->name;
-      break;
-    }
-  }
-  if(s != NULL)
-    return s;
-  snprintf(buf, sizeof(buf), "0x%x", caid);
-  return buf;
-}
-
-uint16_t
-descrambler_name2caid(const char *s)
-{
-  int i, r = -1;
-  struct caid_tab *tab;
-
-  for (i = 0; i < ARRAY_SIZE(caidnametab); i++) {
-    tab = &caidnametab[i];
-    if (strcmp(tab->name, s) == 0) {
-      r = tab->caid;
-      break;
-    }
-  }
-
-  return (r < 0) ? strtol(s, NULL, 0) : r;
-}
-
-/**
- * Detects the cam card type
- * If you want to add another card, have a look at
- * http://www.dvbservices.com/identifiers/ca_system_id?page=3
- *
- * based on the equivalent in sasc-ng
- */
-card_type_t
-detect_card_type(const uint16_t caid)
-{
-  
-  uint8_t c_sys = caid >> 8;
-  
-  switch(caid) {
-    case 0x4ad2:
-      return CARD_STREAMGUARD;
-    case 0x5581:
-    case 0x4aee:
-      return CARD_BULCRYPT;
-  }
-  
-  switch(c_sys) {
-    case 0x17:
-    case 0x06:
-      return CARD_IRDETO;
-    case 0x05:
-      return CARD_VIACCESS;
-    case 0x0b:
-      return CARD_CONAX;
-    case 0x01:
-      return CARD_SECA;
-    case 0x4a:
-      return CARD_DRE;
-    case 0x18:
-      return CARD_NAGRA;
-    case 0x09:
-      return CARD_NDS;
-    case 0x0d:
-      return CARD_CRYPTOWORKS;
-    default:
-      return CARD_UNKNOWN;
-  }
 }
 
 /* **************************************************************************

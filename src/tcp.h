@@ -1,6 +1,6 @@
 /*
  *  tvheadend, TCP common functions
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -85,10 +85,13 @@ int tcp_write_queue(int fd, htsbuf_queue_t *q);
 
 int tcp_read_timeout(int fd, void *buf, size_t len, int timeout);
 
-char *tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
+char *tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen);
+
+struct sockaddr *tcp_get_ip_from_str(const char *str, struct sockaddr *sa);
 
 struct access;
 
+uint32_t tcp_connection_count(struct access *aa);
 void *tcp_connection_launch(int fd, void (*status) (void *opaque, htsmsg_t *m),
                             struct access *aa);
 void tcp_connection_land(void *tcp_id);

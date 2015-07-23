@@ -49,6 +49,9 @@ typedef struct dvr_config {
 
   muxer_config_t dvr_muxcnf;
 
+  char *dvr_pathname;
+  int dvr_pathname_changed;
+
   int dvr_dir_per_day;
   int dvr_channel_dir;
   int dvr_channel_in_title;
@@ -62,26 +65,13 @@ typedef struct dvr_config {
   int dvr_tag_files;
   int dvr_skip_commercials;
   int dvr_subtitle_in_title;
-  int dvr_episode_before_date;
-  int dvr_episode_duplicate;
   int dvr_windows_compatible_filenames;
-
-  /* Series link support */
-  int dvr_sl_brand_lock;
-  int dvr_sl_season_lock;
-  int dvr_sl_channel_lock;
-  int dvr_sl_time_lock;
-  int dvr_sl_more_recent;
-  int dvr_sl_quality_lock;
-
-  /* Duplicate detect */
-  int dvr_dup_detect_episode;
 
   struct dvr_entry_list dvr_entries;
   struct dvr_autorec_entry_list dvr_autorec_entries;
   struct dvr_timerec_entry_list dvr_timerec_entries;
 
-  struct access_entry_list dvr_accesses;
+  idnode_list_head_t dvr_accesses;
 
 } dvr_config_t;
 
@@ -158,8 +148,7 @@ typedef struct dvr_entry {
   char *de_owner;
   char *de_creator;
   char *de_comment;
-  char *de_filename;   /* Initially null if no filename has been
-			  generated yet */
+  htsmsg_t *de_files; /* List of all used files */
   char *de_directory; /* Can be set for autorec entries, will override any 
                          directory setting from the configuration */
   lang_str_t *de_title;      /* Title in UTF-8 (from EPG) */
@@ -393,7 +382,7 @@ void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
  *
  */
 
-void dvr_make_title(char *output, size_t outlen, dvr_entry_t *de);
+uint32_t dvr_usage_count(access_t *aa);
 
 static inline int dvr_entry_is_editable(dvr_entry_t *de)
   { return de->de_sched_state == DVR_SCHEDULED; }
@@ -421,6 +410,9 @@ void dvr_entry_save(dvr_entry_t *de);
 
 void dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf);
 
+int dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
+                        dvr_rs_state_t rec_state, int error_code);
+
 const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
@@ -446,7 +438,8 @@ dvr_entry_t *
 dvr_entry_create_htsp( const char *dvr_config_uuid,
                        channel_t *ch, time_t start, time_t stop,
                        time_t start_extra, time_t stop_extra,
-                       const char *title, const char* subtitle, const char *description,
+                       const char *title, const char *subtitle,
+                       const char *description,
                        const char *lang, epg_genre_t *content_type,
                        const char *owner, const char *creator,
                        dvr_autorec_entry_t *dae,
@@ -454,17 +447,20 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
                        const char *comment );
 
 dvr_entry_t *
-dvr_entry_update( dvr_entry_t *de,
-                  const char* de_title, const char* de_subtitle, const char *de_desc, const char *lang,
-                  time_t de_start, time_t de_stop,
-                  time_t de_start_extra, time_t de_stop_extra,
+dvr_entry_update( dvr_entry_t *de, channel_t *ch,
+                  const char *title, const char *subtitle,
+                  const char *desc, const char *lang,
+                  time_t start, time_t stop,
+                  time_t start_extra, time_t stop_extra,
                   dvr_prio_t pri, int retention );
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
-void dvr_rec_subscribe(dvr_entry_t *de);
+void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf);
 
-void dvr_rec_unsubscribe(dvr_entry_t *de, int stopcode);
+int dvr_rec_subscribe(dvr_entry_t *de);
+
+void dvr_rec_unsubscribe(dvr_entry_t *de);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 
@@ -481,7 +477,11 @@ dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
+const char *dvr_get_filename(dvr_entry_t *de);
+
 int64_t dvr_get_filesize(dvr_entry_t *de);
+
+dvr_entry_t *dvr_entry_stop(dvr_entry_t *de);
 
 dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
 
@@ -491,23 +491,16 @@ void dvr_entry_delete(dvr_entry_t *de);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de);
 
-htsmsg_t *dvr_entry_class_mc_list (void *o);
-htsmsg_t *dvr_entry_class_pri_list(void *o);
-htsmsg_t *dvr_entry_class_config_name_list(void *o);
-htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step);
+htsmsg_t *dvr_entry_class_mc_list (void *o, const char *lang);
+htsmsg_t *dvr_entry_class_pri_list(void *o, const char *lang);
+htsmsg_t *dvr_entry_class_config_name_list(void *o, const char *lang);
+htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang);
 
-static inline int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
-{
-  if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
-    return 0;
+int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
-  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
-    return 0;
-
-  if (strcmp(de->de_owner ?: "", a->aa_username ?: ""))
-    return -1;
-  return 0;
-}
+void dvr_disk_space_init(void);
+void dvr_disk_space_done(void);
+int dvr_get_disk_space(int64_t *bfree, int64_t *btotal);
 
 /**
  *
@@ -552,8 +545,8 @@ dvr_autorec_find_by_uuid(const char *uuid)
 
 htsmsg_t * dvr_autorec_entry_class_time_list(void *o, const char *null);
 htsmsg_t * dvr_autorec_entry_class_weekdays_get(uint32_t weekdays);
-htsmsg_t * dvr_autorec_entry_class_weekdays_list ( void *o );
-char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays);
+htsmsg_t * dvr_autorec_entry_class_weekdays_list (void *o, const char *list);
+char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang);
 
 void dvr_autorec_check_event(epg_broadcast_t *e);
 void dvr_autorec_check_brand(epg_brand_t *b);
@@ -574,12 +567,23 @@ void dvr_autorec_done(void);
 
 void dvr_autorec_update(void);
 
-static inline int dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a)
+static inline int
+  dvr_autorec_entry_verify(dvr_autorec_entry_t *dae, access_t *a, int readonly)
 {
+  if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
+    return 0;
+  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
+    return 0;
   if (strcmp(dae->dae_owner ?: "", a->aa_username ?: ""))
     return -1;
   return 0;
 }
+
+int dvr_autorec_get_retention( dvr_autorec_entry_t *dae );
+
+int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
+
+int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
 
 /**
  *
@@ -616,12 +620,19 @@ void dvr_timerec_done(void);
 
 void dvr_timerec_update(void);
 
-static inline int dvr_timerec_entry_verify(dvr_timerec_entry_t *dte, access_t *a)
+static inline int dvr_timerec_entry_verify
+  (dvr_timerec_entry_t *dte, access_t *a, int readonly)
 {
+  if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
+    return 0;
+  if (!access_verify2(a, ACCESS_ALL_RW_RECORDER))
+    return 0;
   if (strcmp(dte->dte_owner ?: "", a->aa_username ?: ""))
     return -1;
   return 0;
 }
+
+int dvr_timerec_get_retention( dvr_timerec_entry_t *dte );
 
 /**
  *

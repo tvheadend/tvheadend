@@ -1,6 +1,6 @@
 /*
  *  tvheadend, web user interface
- *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2008 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,10 +37,6 @@ int page_static_file(http_connection_t *hc, const char *remain, void *opaque);
 
 #if ENABLE_LINUXDVB
 void extjs_start_dvb(void);
-#endif
-
-#if ENABLE_V4L
-void extjs_start_v4l(void);
 #endif
 
 void webui_api_init ( void );

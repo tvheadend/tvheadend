@@ -54,6 +54,7 @@ epggrab_ota_head_t           epggrab_ota_active;
 gtimer_t                     epggrab_ota_kick_timer;
 gtimer_t                     epggrab_ota_start_timer;
 
+int                          epggrab_ota_running;
 int                          epggrab_ota_pending_flag;
 
 pthread_mutex_t              epggrab_ota_mutex;
@@ -322,6 +323,9 @@ epggrab_ota_register
   int save = 0;
   epggrab_ota_map_t *map;
 
+  if (!epggrab_ota_running)
+    return NULL;
+
   if (ota == NULL) {
     /* Find mux entry */
     const char *uuid = idnode_uuid_as_str(&mm->mm_id);
@@ -465,6 +469,7 @@ epggrab_ota_kick_cb ( void *p )
     [MM_EPG_ONLY_UK_FREESAT]         = "uk_freesat",
     [MM_EPG_ONLY_UK_FREEVIEW]        = "uk_freeview",
     [MM_EPG_ONLY_VIASAT_BALTIC]      = "viasat_baltic",
+    [MM_EPG_ONLY_BULSATCOM_39E]      = "Bulsatcom_39E",
     [MM_EPG_ONLY_OPENTV_SKY_UK]      = "opentv-skyuk",
     [MM_EPG_ONLY_OPENTV_SKY_ITALIA]  = "opentv-skyit",
     [MM_EPG_ONLY_OPENTV_SKY_AUSAT]   = "opentv-ausat",
@@ -516,11 +521,11 @@ next_one:
   }
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
-#if ENABLE_TRACE
-    char name[256];
-    mpegts_mux_nice_name(mm, name, sizeof(name));
-    tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);
-#endif
+    if (tvhtrace_enabled()) {
+      char name[256];
+      mpegts_mux_nice_name(mm, name, sizeof(name));
+      tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);
+    }
     goto done;
   }
 
@@ -572,14 +577,14 @@ done:
   if (kick)
     epggrab_ota_kick(64); /* a random number? */
 
-#if ENABLE_TRACE
-  i = r = 0;
-  RB_FOREACH(om, &epggrab_ota_all, om_global_link)
-    i++;
-  TAILQ_FOREACH(om, &epggrab_ota_pending, om_q_link)
-    r++;
-  tvhtrace("epggrab", "mux stats - all %i pending %i", i, r);
-#endif
+  if (tvhtrace_enabled()) {
+    i = r = 0;
+    RB_FOREACH(om, &epggrab_ota_all, om_global_link)
+      i++;
+    TAILQ_FOREACH(om, &epggrab_ota_pending, om_q_link)
+      r++;
+    tvhtrace("epggrab", "mux stats - all %i pending %i", i, r);
+  }
 }
 
 /*
@@ -644,16 +649,20 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
                             epggrab_ota_svc_link_t *svcl,
                             const char *op )
 {
-#if ENABLE_TRACE
   char buf[256];
-  mpegts_mux_t *mm = mpegts_mux_find(ota->om_mux_uuid);
-  mpegts_service_t *svc = mpegts_service_find_by_uuid(svcl->uuid);
+  mpegts_mux_t *mm;
+  mpegts_service_t *svc;
+
+  if (!tvhtrace_enabled())
+    return;
+
+  mm = mpegts_mux_find(ota->om_mux_uuid);
+  svc = mpegts_service_find_by_uuid(svcl->uuid);
   if (mm && svc) {
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace("epggrab", "ota %s %s service %s", buf, op, svc->s_nicename);
   } else if (tvheadend_running)
     tvhtrace("epggrab", "ota %s, problem? (%p %p)", op, mm, svc);
-#endif
 }
 
 void
@@ -662,7 +671,7 @@ epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
 {
   epggrab_ota_svc_link_t *svcl;
 
-  if (uuid == NULL)
+  if (uuid == NULL || !epggrab_ota_running)
     return;
   SKEL_ALLOC(epggrab_svc_link_skel);
   epggrab_svc_link_skel->uuid = (char *)uuid;
@@ -682,7 +691,7 @@ void
 epggrab_ota_service_del ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
                           epggrab_ota_svc_link_t *svcl, int save )
 {
-  if (svcl == NULL)
+  if (svcl == NULL || (!epggrab_ota_running && save))
     return;
   epggrab_ota_service_trace(ota, svcl, "delete");
   RB_REMOVE(&map->om_svcs, svcl, link);
@@ -740,13 +749,11 @@ epggrab_ota_load_one
     hts_settings_remove("epggrab/otamux/%s", uuid);
     return;
   }
-#if ENABLE_TRACE
-  {
+  if (tvhtrace_enabled()) {
     char name[256];
     mpegts_mux_nice_name(mm, name, sizeof(name));
     tvhtrace("epggrab", "loading config for %s", name);
   }
-#endif
 
   ota = calloc(1, sizeof(epggrab_ota_mux_t));
   ota->om_mux_uuid = strdup(uuid);
@@ -807,6 +814,8 @@ epggrab_ota_init ( void )
   if (!lstat(path, &st))
     if (!S_ISDIR(st.st_mode))
       hts_settings_remove("epggrab/otamux");
+
+  epggrab_ota_running = 1;
   
   /* Load config */
   if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
@@ -871,6 +880,7 @@ epggrab_ota_shutdown ( void )
   epggrab_ota_mux_t *ota;
 
   pthread_mutex_lock(&global_lock);
+  epggrab_ota_running = 0;
   while ((ota = TAILQ_FIRST(&epggrab_ota_active)) != NULL)
     epggrab_ota_free(&epggrab_ota_active, ota);
   while ((ota = TAILQ_FIRST(&epggrab_ota_pending)) != NULL)

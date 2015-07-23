@@ -391,7 +391,7 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
     if (st->es_type == SCT_CA)
       enc = 1;
     if (st->es_pid > 0)
-      if (pids == NULL || mpegts_pid_exists(pids, st->es_pid))
+      if (pids == NULL || mpegts_pid_wexists(pids, st->es_pid, MPS_WEIGHT_RAW))
         if ((SCT_ISVIDEO(st->es_type) || SCT_ISAUDIO(st->es_type)))
           av = 1;
   }
@@ -422,13 +422,13 @@ rtsp_manage_descramble(session_t *rs)
   if (rs->pids.all) {
     LIST_FOREACH(s, &rs->mux->mm_services, s_dvb_mux_link)
       if (rtsp_validate_service(s, NULL))
-        idnode_set_add(found, &s->s_id, NULL);
+        idnode_set_add(found, &s->s_id, NULL, NULL);
   } else {
     for (i = 0; i < rs->pids.count; i++) {
-      s = mpegts_service_find_by_pid((mpegts_mux_t *)rs->mux, rs->pids.pids[i]);
+      s = mpegts_service_find_by_pid((mpegts_mux_t *)rs->mux, rs->pids.pids[i].pid);
       if (s != NULL && rtsp_validate_service(s, &rs->pids))
         if (!idnode_set_exists(found, &s->s_id))
-          idnode_set_add(found, &s->s_id, NULL);
+          idnode_set_add(found, &s->s_id, NULL, NULL);
     }
   }
 
@@ -522,7 +522,7 @@ rtsp_start
     if (!rs->subs)
       goto endclean;
     if (!rs->pids.all && rs->pids.count == 0)
-      mpegts_pid_add(&rs->pids, 0);
+      mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     /* retrigger play when new setup arrived */
     if (oldstate) {
       setup = 0;
@@ -533,7 +533,7 @@ pids:
     if (!rs->subs)
       goto endclean;
     if (!rs->pids.all && rs->pids.count == 0)
-      mpegts_pid_add(&rs->pids, 0);
+      mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
@@ -548,7 +548,7 @@ pids:
                     rs->frontend, rs->findex, &rs->mux->lm_tuning,
                     &rs->pids);
     if (!rs->pids.all && rs->pids.count == 0)
-      mpegts_pid_add(&rs->pids, 0);
+      mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     rs->state = STATE_PLAY;
@@ -750,7 +750,7 @@ parse_pids(char *p, mpegts_apids_t *pids)
       pid = atoi(x);
       if (pid < 0 || pid > 8191)
         return -1;
-      mpegts_pid_add(pids, pid);
+      mpegts_pid_add(pids, pid, MPS_WEIGHT_RAW);
     }
     x = strtok_r(NULL, ",", &saveptr);
     i++;
@@ -1048,7 +1048,7 @@ play:
   dvb_mux_conf_str(dmc, buf, sizeof(buf));
   r = strlen(buf);
   tvh_strlcatf(buf, sizeof(buf), r, " pids ");
-  if (mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r) == 0)
+  if (mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r, 0, 0) == 0)
     tvh_strlcatf(buf, sizeof(buf), r, "<none>");
 
   tvhdebug("satips", "%i/%s/%d: %s from %s:%d %s",
@@ -1443,7 +1443,7 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
 
   memset(&aa, 0, sizeof(aa));
   strcpy(buf, "SAT>IP Client ");
-  tcp_get_ip_str((struct sockaddr *)peer, buf + strlen(buf), sizeof(buf) - strlen(buf));
+  tcp_get_str_from_ip((struct sockaddr *)peer, buf + strlen(buf), sizeof(buf) - strlen(buf));
   aa.aa_representative = buf;
 
   tcp = tcp_connection_launch(fd, rtsp_stream_status, &aa);

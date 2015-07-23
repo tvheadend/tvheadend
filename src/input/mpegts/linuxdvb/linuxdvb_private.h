@@ -53,6 +53,7 @@ typedef struct linuxdvb_adapter     linuxdvb_adapter_t;
 typedef struct linuxdvb_frontend    linuxdvb_frontend_t;
 #if ENABLE_LINUXDVB_CA
 typedef struct linuxdvb_ca          linuxdvb_ca_t;
+typedef struct linuxdvb_ca_capmt    linuxdvb_ca_capmt_t;
 #endif
 typedef struct linuxdvb_satconf     linuxdvb_satconf_t;
 typedef struct linuxdvb_satconf_ele linuxdvb_satconf_ele_t;
@@ -63,6 +64,9 @@ typedef struct linuxdvb_en50494     linuxdvb_en50494_t;
 
 typedef LIST_HEAD(,linuxdvb_hardware) linuxdvb_hardware_list_t;
 typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satconf_ele_list_t;
+#if ENABLE_LINUXDVB_CA
+typedef TAILQ_HEAD(linuxdvb_ca_capmt_queue,linuxdvb_ca_capmt) linuxdvb_ca_capmt_queue_t;
+#endif
 
 struct linuxdvb_adapter
 {
@@ -74,6 +78,7 @@ struct linuxdvb_adapter
   char    *la_name;
   char    *la_rootpath;
   int      la_dvb_number;
+  int      la_exclusive; /* one frontend at a time */
 
   /*
    * Frontends
@@ -84,7 +89,7 @@ struct linuxdvb_adapter
    *  CA devices
    */
 #if ENABLE_LINUXDVB_CA
-  LIST_HEAD(,linuxdvb_ca) la_cas;
+  LIST_HEAD(,linuxdvb_ca) la_ca_devices;
 #endif
   /*
   * Functions
@@ -120,6 +125,8 @@ struct linuxdvb_frontend
   th_pipe_t                 lfe_dvr_pipe;
   pthread_mutex_t           lfe_dvr_lock;
   pthread_cond_t            lfe_dvr_cond;
+  mpegts_apids_t            lfe_pids;
+  int                       lfe_pids_max;
  
   /*
    * Tuning
@@ -145,6 +152,7 @@ struct linuxdvb_frontend
   uint32_t                  lfe_ibuf_size;
   uint32_t                  lfe_status_period;
   int                       lfe_old_status;
+  int                       lfe_lna;
 
   /*
    * Satconf (DVB-S only)
@@ -155,6 +163,7 @@ struct linuxdvb_frontend
 #if ENABLE_LINUXDVB_CA
 struct linuxdvb_ca
 {
+  idnode_t                     lca_id;
   /*
    * Adapter
    */
@@ -165,7 +174,13 @@ struct linuxdvb_ca
    * CA handling
    */
   int                       lca_ca_fd;
+  int                       lca_enabled;
+  int                       lca_high_bitrate_mode;
+  int                       lca_capmt_query;
   gtimer_t                  lca_monitor_timer;
+  gtimer_t                  lca_capmt_queue_timer;
+  int                       lca_capmt_interval;
+  int                       lca_capmt_query_interval;
   pthread_t                 lca_en50221_thread;
   int                       lca_en50221_thread_running;
 
@@ -179,7 +194,9 @@ struct linuxdvb_ca
   struct en50221_app_ai             *lca_ai_resource;
   struct en50221_app_ca             *lca_ca_resource;
   struct en50221_app_datetime       *lca_dt_resource;
+  struct en50221_app_mmi            *lca_mmi_resource;
   int                                lca_tc;
+  int                                lca_ai_version;
   uint16_t                           lca_ai_session_number;
   uint16_t                           lca_ca_session_number;
 
@@ -190,6 +207,15 @@ struct linuxdvb_ca
   char                     lca_name[128];
   char                     *lca_ca_path;
   int                      lca_state;
+  const char               *lca_state_str;
+  linuxdvb_ca_capmt_queue_t lca_capmt_queue;
+  /*
+   * CAM module info
+   */
+  char                     lca_cam_menu_string[64];
+  int                      lca_pin_reply;
+  char                    *lca_pin_str;
+  char                    *lca_pin_match_str;
 };
 #endif
 
@@ -341,7 +367,7 @@ void linuxdvb_frontend_add_network
   ( linuxdvb_frontend_t *lfe, linuxdvb_network_t *net );
 
 int linuxdvb_frontend_clear
-  ( linuxdvb_frontend_t *lfe );
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi );
 int linuxdvb_frontend_tune0
   ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi, uint32_t freq );
 int linuxdvb_frontend_tune1
@@ -353,10 +379,13 @@ int linuxdvb2tvh_delsys ( int delsys );
 
 linuxdvb_ca_t *
 linuxdvb_ca_create
-  ( linuxdvb_adapter_t *la, int number, const char *ca_path);
+  ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number, const char *ca_path);
+
+void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *m );
 
 void
-linuxdvb_ca_send_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr, int len);
+linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
+                          int len, uint8_t list_mgmt, uint8_t cmd_id);
 
 #endif
 
@@ -387,13 +416,13 @@ void linuxdvb_switch_destroy  ( linuxdvb_diseqc_t *ld );
 void linuxdvb_rotor_destroy   ( linuxdvb_diseqc_t *ld );
 void linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *ld );
 
-htsmsg_t *linuxdvb_lnb_list     ( void *o );
-htsmsg_t *linuxdvb_switch_list  ( void *o );
-htsmsg_t *linuxdvb_rotor_list   ( void *o );
-htsmsg_t *linuxdvb_en50494_list ( void *o );
+htsmsg_t *linuxdvb_lnb_list     ( void *o, const char *lang );
+htsmsg_t *linuxdvb_switch_list  ( void *o, const char *lang );
+htsmsg_t *linuxdvb_rotor_list   ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_list ( void *o, const char *lang );
 
-htsmsg_t *linuxdvb_en50494_id_list ( void *o );
-htsmsg_t *linuxdvb_en50494_pin_list ( void *o );
+htsmsg_t *linuxdvb_en50494_id_list ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_pin_list ( void *o, const char *lang );
 
 void linuxdvb_en50494_init (void);
 
@@ -412,7 +441,7 @@ linuxdvb_satconf_ele_t *linuxdvb_satconf_ele_create0
 
 void linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls );
 
-htsmsg_t *linuxdvb_satconf_type_list ( void *o );
+htsmsg_t *linuxdvb_satconf_type_list ( void *o, const char *lang );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create
   ( linuxdvb_frontend_t *lfe,

@@ -35,7 +35,7 @@
 #include <sys/socket.h>
 #endif
 
-static void satip_device_discovery_start( void );
+static void satip_discovery_timer_cb(void *aux);
 
 /*
  *
@@ -131,12 +131,12 @@ satip_device_class_get_childs ( idnode_t *in )
   satip_frontend_t *lfe;
 
   TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
-    idnode_set_add(is, &lfe->ti_id, NULL);
+    idnode_set_add(is, &lfe->ti_id, NULL, NULL);
   return is;
 }
 
 static const char *
-satip_device_class_get_title( idnode_t *in )
+satip_device_class_get_title( idnode_t *in, const char *lang )
 {
   static char buf[256];
   satip_device_t *sd = (satip_device_t *)in;
@@ -145,193 +145,260 @@ satip_device_class_get_title( idnode_t *in )
   return buf;
 }
 
+static const char *satip_tunercfg_tab[] = {
+  "DVBS2-1",
+  "DVBS2-2",
+  "DVBS2-4",
+  "DVBS2-8",
+  "DVBC-1",
+  "DVBC-2",
+  "DVBC-4",
+  "DVBC-8",
+  "DVBT-1",
+  "DVBT-2",
+  "DVBT-4",
+  "DVBT-8",
+  "DVBS2-1,DVBT-1",
+  "DVBS2-2,DVBT-2",
+  "DVBT-1,DVBS2-1",
+  "DVBT-2,DVBS2-2",
+  "DVBS2-1,DVB-C1",
+  "DVBS2-2,DVB-C2",
+  "DVBC-1,DVBS2-1",
+  "DVBC-2,DVBS2-2",
+  NULL
+};
+
+static htsmsg_t *
+satip_device_class_tunercfg_list ( void *o, const char *lang )
+{
+  htsmsg_t *l = htsmsg_create_list();
+  const char **p;
+  htsmsg_add_str(l, NULL, "Auto");
+  for (p = satip_tunercfg_tab; *p; p++)
+    htsmsg_add_str(l, NULL, *p);
+  return l;
+}
+
+static void
+satip_device_class_tunercfg_notify ( void *o, const char *lang )
+{
+  satip_device_t *sd = (satip_device_t *)o;
+  if (!sd->sd_inload)
+    satip_device_destroy_later(sd, 100);
+}
+
 const idclass_t satip_device_class =
 {
   .ic_class      = "satip_client",
-  .ic_caption    = "SAT>IP Client",
+  .ic_caption    = N_("SAT>IP Client"),
   .ic_save       = satip_device_class_save,
   .ic_get_childs = satip_device_class_get_childs,
   .ic_get_title  = satip_device_class_get_title,
   .ic_properties = (const property_t[]){
     {
+      .type     = PT_STR,
+      .id       = "tunercfgu",
+      .name     = N_("Tuner Configuration"),
+      .opts     = PO_SORTKEY,
+      .off      = offsetof(satip_device_t, sd_tunercfg),
+      .list     = satip_device_class_tunercfg_list,
+      .notify   = satip_device_class_tunercfg_notify,
+      .def.s    = "Auto"
+    },
+    {
       .type     = PT_BOOL,
       .id       = "fullmux_ok",
-      .name     = "Full Mux Rx mode supported",
+      .name     = N_("Full Mux Rx mode supported"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_fullmux_ok),
     },
     {
       .type     = PT_INT,
       .id       = "sigscale",
-      .name     = "Signal scale (240 or 100)",
+      .name     = N_("Signal scale (240 or 100)"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_sig_scale),
     },
     {
       .type     = PT_INT,
       .id       = "pids_max",
-      .name     = "Maximum PIDs",
+      .name     = N_("Maximum PIDs"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids_max),
     },
     {
       .type     = PT_INT,
       .id       = "pids_len",
-      .name     = "Maximum length of PIDs",
+      .name     = N_("Maximum length of PIDs"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids_len),
     },
     {
       .type     = PT_BOOL,
       .id       = "pids_deladd",
-      .name     = "addpids/delpids supported",
+      .name     = N_("addpids/delpids supported"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids_deladd),
     },
     {
       .type     = PT_BOOL,
       .id       = "pids0",
-      .name     = "PIDs in setup",
+      .name     = N_("PIDs in setup"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pids0),
     },
     {
       .type     = PT_BOOL,
       .id       = "piloton",
-      .name     = "Force pilot for DVB-S2",
+      .name     = N_("Force pilot for DVB-S2"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_pilot_on),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "pids21",
+      .name     = N_("PIDs 21 in setup"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_pids21),
+    },
+    {
       .type     = PT_STR,
       .id       = "bindaddr",
-      .name     = "Local bind IP address",
+      .name     = N_("Local bind IP address"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_bindaddr),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "disableworkarounds",
+      .name     = N_("Disable device/firmware-specific workarounds"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_disable_workarounds),
+    },
+    {
       .type     = PT_STR,
       .id       = "addr",
-      .name     = "IP Address",
+      .name     = N_("IP Address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.addr),
     },
     {
       .type     = PT_INT,
       .id       = "rtsp",
-      .name     = "RTSP Port",
+      .name     = N_("RTSP Port"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.rtsp_port),
     },
     {
       .type     = PT_STR,
       .id       = "device_uuid",
-      .name     = "UUID",
+      .name     = N_("UUID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(satip_device_t, sd_info.uuid),
     },
     {
       .type     = PT_STR,
       .id       = "friendly",
-      .name     = "Friendly Name",
+      .name     = N_("Friendly Name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.friendlyname),
     },
     {
       .type     = PT_STR,
       .id       = "serialnum",
-      .name     = "Serial Number",
+      .name     = N_("Serial Number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.serialnum),
     },
     {
       .type     = PT_STR,
       .id       = "tunercfg",
-      .name     = "Tuner Configuration",
+      .name     = N_("Tuner Configuration"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.tunercfg),
     },
     {
       .type     = PT_STR,
       .id       = "manufacturer",
-      .name     = "Manufacturer",
+      .name     = N_("Manufacturer"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.manufacturer),
     },
     {
       .type     = PT_STR,
       .id       = "manufurl",
-      .name     = "Manufacturer URL",
+      .name     = N_("Manufacturer URL"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.manufacturerURL),
     },
     {
       .type     = PT_STR,
       .id       = "modeldesc",
-      .name     = "Model Description",
+      .name     = N_("Model Description"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.modeldesc),
     },
     {
       .type     = PT_STR,
       .id       = "modelname",
-      .name     = "Model Name",
+      .name     = N_("Model Name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.modelname),
     },
     {
       .type     = PT_STR,
       .id       = "modelnum",
-      .name     = "Model Number",
+      .name     = N_("Model Number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.modelnum),
     },
     {
       .type     = PT_STR,
       .id       = "bootid",
-      .name     = "Boot ID",
+      .name     = N_("Boot ID"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.bootid),
     },
     {
       .type     = PT_STR,
       .id       = "configid",
-      .name     = "Config ID",
+      .name     = N_("Configuration ID"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.configid),
     },
     {
       .type     = PT_STR,
       .id       = "deviceid",
-      .name     = "Device ID",
+      .name     = N_("Device ID"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.deviceid),
     },
     {
       .type     = PT_STR,
       .id       = "presentation",
-      .name     = "Presentation",
+      .name     = N_("Presentation"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.presentation),
     },
     {
       .type     = PT_STR,
       .id       = "location",
-      .name     = "Location",
+      .name     = N_("Location"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.location),
     },
     {
       .type     = PT_STR,
       .id       = "server",
-      .name     = "Server",
+      .name     = N_("Server"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.server),
     },
     {
       .type     = PT_STR,
       .id       = "myaddr",
-      .name     = "Local Discovery IP Address",
+      .name     = N_("Local Discovery IP Address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.myaddr),
     },
@@ -364,6 +431,8 @@ satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
 static void
 satip_device_hack( satip_device_t *sd )
 {
+  if(sd->sd_disable_workarounds)
+      return;
   if (sd->sd_info.deviceid[0] &&
       strcmp(sd->sd_info.server, "Linux/1.0 UPnP/1.1 IDL4K/1.0") == 0) {
     /* AXE Linux distribution - Inverto firmware */
@@ -384,6 +453,12 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
     sd->sd_no_univ_lnb = 1;
+  } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
+             strstr(sd->sd_info.modelname, "FRITZ!")) {
+    sd->sd_fullmux_ok  = 0;
+    sd->sd_pids_deladd = 0;
+    sd->sd_pids0       = 1;
+    sd->sd_pids21       = 1;
   }
 }
 
@@ -393,10 +468,12 @@ satip_device_create( satip_device_info_t *info )
   satip_device_t *sd = calloc(1, sizeof(satip_device_t));
   tvh_uuid_t uuid;
   htsmsg_t *conf = NULL, *feconf = NULL;
-  char *argv[10];
+  char *argv[10], *tunercfg;
   int i, j, n, m, fenum, v2, save = 0;
   dvb_fe_type_t type;
   char buf2[60];
+
+  sd->sd_inload = 1;
 
   satip_device_calc_uuid(&uuid, info->uuid);
 
@@ -409,6 +486,7 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_pids_deladd = 1;
   sd->sd_sig_scale   = 240;
   sd->sd_dbus_allow  = 1;
+
 
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
@@ -455,8 +533,14 @@ satip_device_create( satip_device_info_t *info )
     feconf = htsmsg_get_map(conf, "frontends");
   save = !conf || !feconf;
 
-  n = http_tokenize(sd->sd_info.tunercfg, argv, 10, ',');
-  for (i = 0, fenum = 1; i < n; i++) {
+  tunercfg = sd->sd_tunercfg;
+  if (tunercfg == NULL)
+    tunercfg = sd->sd_tunercfg = strdup("Auto");
+  if (strncmp(tunercfg, "DVB", 3) && strncmp(tunercfg, "ATSC", 4))
+    tunercfg = sd->sd_info.tunercfg;
+
+  n = http_tokenize(tvh_strdupa(tunercfg), argv, 10, ',');
+  for (i = m = 0, fenum = 1; i < n; i++) {
     type = DVB_TYPE_NONE;
     v2 = 0;
     if (strncmp(argv[i], "DVBS2-", 6) == 0) {
@@ -504,6 +588,8 @@ satip_device_create( satip_device_info_t *info )
 
   if (save)
     satip_device_save(sd);
+
+  sd->sd_inload = 0;
 
   htsmsg_destroy(conf);
 
@@ -596,6 +682,7 @@ satip_device_destroy( satip_device_t *sd )
   FREEM(tunercfg);
 #undef FREEM
   free(sd->sd_bindaddr);
+  free(sd->sd_tunercfg);
 
   tvh_hardware_delete((tvh_hardware_t*)sd);
   free(sd);
@@ -705,10 +792,10 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
     return;
   }
 
-#if ENABLE_TRACE
-  tvhtrace("satip", "received XML description from %s", hc->hc_host);
-  tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
-#endif
+  if (tvhtrace_enabled()) {
+    tvhtrace("satip", "received XML description from %s", hc->hc_host);
+    tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
+  }
 
   if (d->myaddr == NULL || d->myaddr[0] == '\0') {
     struct sockaddr_storage ip;
@@ -767,7 +854,7 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   if ((udn          = htsmsg_xml_get_cdata_str(device, "UDN")) == NULL)
     goto finish;
   if ((tunercfg     = htsmsg_xml_get_cdata_str(device, "urn:ses-com:satipX_SATIPCAP")) == NULL)
-    goto finish;
+    tunercfg = "";
 
   uuid = NULL;
   n = http_tokenize((char *)udn, argv, ARRAY_SIZE(argv), ':');
@@ -947,13 +1034,13 @@ satip_discovery_service_received
   }
   /* Sanity checks */
   if (st == NULL || strcmp(st, "urn:ses-com:device:SatIPServer:1"))
-    return;
+    goto add_uuid;
   if (uuid == NULL || strlen(uuid) < 16 || satip_server_match_uuid(uuid))
-    return;
+    goto add_uuid;
   if (location == NULL || strncmp(location, "http://", 7))
-    return;
+    goto add_uuid;
   if (bootid == NULL || configid == NULL || server == NULL)
-    return;
+    goto add_uuid;
 
   /* Forward information to next layer */
 
@@ -986,6 +1073,16 @@ satip_discovery_service_received
   pthread_mutex_unlock(&global_lock);
   if (i) /* duplicate */
     satip_discovery_destroy(d, 0);
+  return;
+
+add_uuid:
+  if (deviceid == NULL || uuid == NULL)
+    return;
+  /* if new uuid was discovered, retrigger MSEARCH */
+  pthread_mutex_lock(&global_lock);
+  if (!satip_device_find(uuid))
+    gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 5);
+  pthread_mutex_unlock(&global_lock);
 }
 
 static void
@@ -1083,7 +1180,7 @@ satip_discovery_timer_cb(void *aux)
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 3600);
 }
 
-static void
+void
 satip_device_discovery_start( void )
 {
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);

@@ -46,6 +46,23 @@ streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque,
   st->st_reject_filter = reject_filter;
 }
 
+/**
+ *
+ */
+static size_t
+streaming_message_data_size(streaming_message_t *sm)
+{
+  if (sm->sm_type == SMT_PACKET) {
+    th_pkt_t *pkt = sm->sm_data;
+    if (pkt && pkt->pkt_payload)
+      return pkt->pkt_payload->pb_size;
+  } else if (sm->sm_type == SMT_MPEGTS) {
+    pktbuf_t *pkt_payload = sm->sm_data;
+    if (pkt_payload)
+      return pkt_payload->pb_size;
+  }
+  return 0;
+}
 
 /**
  *
@@ -58,18 +75,26 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
   pthread_mutex_lock(&sq->sq_mutex);
 
   /* queue size protection */
-  // TODO: would be better to update size as we go, but this would
-  //       require updates elsewhere to ensure all removals from the queue
-  //       are covered (new function)
-  if (sq->sq_maxsize && streaming_queue_size(&sq->sq_queue) >= sq->sq_maxsize)
+  if (sq->sq_maxsize && sq->sq_maxsize < sq->sq_size) {
     streaming_msg_free(sm);
-  else
+  } else {
     TAILQ_INSERT_TAIL(&sq->sq_queue, sm, sm_link);
+    sq->sq_size += streaming_message_data_size(sm);
+  }
 
   pthread_cond_signal(&sq->sq_cond);
   pthread_mutex_unlock(&sq->sq_mutex);
 }
 
+/**
+ *
+ */
+void
+streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
+{
+  sq->sq_size -= streaming_message_data_size(sm);
+  TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+}
 
 /**
  *
@@ -84,6 +109,7 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
   TAILQ_INIT(&sq->sq_queue);
 
   sq->sq_maxsize = maxsize;
+  sq->sq_size = 0;
 }
 
 /**
@@ -92,11 +118,25 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 void
 streaming_queue_deinit(streaming_queue_t *sq)
 {
+  sq->sq_size = 0;
   streaming_queue_clear(&sq->sq_queue);
   pthread_mutex_destroy(&sq->sq_mutex);
   pthread_cond_destroy(&sq->sq_cond);
 }
 
+/**
+ *
+ */
+void
+streaming_queue_clear(struct streaming_message_queue *q)
+{
+  streaming_message_t *sm;
+
+  while((sm = TAILQ_FIRST(q)) != NULL) {
+    TAILQ_REMOVE(q, sm, sm_link);
+    streaming_msg_free(sm);
+  }
+}
 
 /**
  *
@@ -351,97 +391,59 @@ streaming_pad_deliver(streaming_pad_t *sp, streaming_message_t *sm)
 /**
  *
  */
-void
-streaming_queue_clear(struct streaming_message_queue *q)
-{
-  streaming_message_t *sm;
-
-  while((sm = TAILQ_FIRST(q)) != NULL) {
-    TAILQ_REMOVE(q, sm, sm_link);
-    streaming_msg_free(sm);
-  }
-}
-
-
-/**
- *
- */
-size_t streaming_queue_size(struct streaming_message_queue *q)
-{
-  streaming_message_t *sm;
-  int size = 0;
-
-  TAILQ_FOREACH(sm, q, sm_link) {
-    if (sm->sm_type == SMT_PACKET)
-    {
-      th_pkt_t *pkt = sm->sm_data;
-      if (pkt && pkt->pkt_payload)
-      {
-        size += pkt->pkt_payload->pb_size;
-      }
-    }
-    else if (sm->sm_type == SMT_MPEGTS)
-    {
-      pktbuf_t *pkt_payload = sm->sm_data;
-      if (pkt_payload)
-      {
-        size += pkt_payload->pb_size;
-      }
-    }
-  }
-  return size;
-}
-
-
-/**
- *
- */
 const char *
 streaming_code2txt(int code)
 {
   static __thread char ret[64];
 
   switch(code) {
-  case SM_CODE_OK: return "OK";
+  case SM_CODE_OK:
+    return N_("OK");
     
   case SM_CODE_SOURCE_RECONFIGURED:
-    return "Source reconfigured";
+    return N_("Source reconfigured");
   case SM_CODE_BAD_SOURCE:
-    return "Source quality is bad";
+    return N_("Source quality is bad");
   case SM_CODE_SOURCE_DELETED:
-    return "Source deleted";
+    return N_("Source deleted");
   case SM_CODE_SUBSCRIPTION_OVERRIDDEN:
-    return "Subscription overridden";
+    return N_("Subscription overridden");
+  case SM_CODE_INVALID_TARGET:
+    return N_("Invalid target");
+  case SM_CODE_USER_ACCESS:
+    return N_("User access error");
+  case SM_CODE_USER_LIMIT:
+    return N_("User limit reached");
 
   case SM_CODE_NO_FREE_ADAPTER:
-    return "No free adapter";
+    return N_("No free adapter");
   case SM_CODE_MUX_NOT_ENABLED:
-    return "Mux not enabled";
+    return N_("Mux not enabled");
   case SM_CODE_NOT_FREE:
-    return "Adapter in use by other subscription";
+    return N_("Adapter in use by another subscription");
   case SM_CODE_TUNING_FAILED:
-    return "Tuning failed";
+    return N_("Tuning failed");
   case SM_CODE_SVC_NOT_ENABLED:
-    return "No service enabled";
+    return N_("No service enabled");
   case SM_CODE_BAD_SIGNAL:
-    return "Too bad signal quality";
+    return N_("Signal quality too poor");
   case SM_CODE_NO_SOURCE:
-    return "No source available";
+    return N_("No source available");
   case SM_CODE_NO_SERVICE:
-    return "No service assigned to channel";
+    return N_("No service assigned to channel");
 
   case SM_CODE_ABORTED:
-    return "Aborted by user";
+    return N_("Aborted by user");
 
   case SM_CODE_NO_DESCRAMBLER:
-    return "No descrambler";
+    return N_("No descrambler");
   case SM_CODE_NO_ACCESS:
-    return "No access";
+    return N_("No access");
   case SM_CODE_NO_INPUT:
-    return "No input detected";
+    return N_("No input detected");
 
   default:
-    snprintf(ret, sizeof(ret), "Unknown reason (%i)", code);
+    snprintf(ret, sizeof(ret), _("Unknown reason (%i)"), code);
     return ret;
   }
 }
@@ -533,10 +535,10 @@ streaming_component_audio_type2desc(int audio_type)
   /* From ISO 13818-1 - ISO 639 language descriptor */
   switch(audio_type) {
     case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
-    case 1: return "Clean effects";
-    case 2: return "Hearing impaired";
-    case 3: return "Visually impaired commentary";
+    case 1: return N_("Clean effects");
+    case 2: return N_("Hearing impaired");
+    case 3: return N_("Visually impaired commentary");
   }
 
-  return "Reserved";
+  return N_("Reserved");
 }

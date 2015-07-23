@@ -102,12 +102,12 @@ static void* timeshift_reaper_callback ( void *p )
 
 static void timeshift_reaper_remove ( timeshift_file_t *tsf )
 {
-#if ENABLE_TRACE
-  if (tsf->path)
-    tvhtrace("timeshift", "queue file for removal %s", tsf->path);
-  else
-    tvhtrace("timeshift", "queue file for removal - RAM segment time %li", (long)tsf->time);
-#endif
+  if (tvhtrace_enabled()) {
+    if (tsf->path)
+      tvhtrace("timeshift", "queue file for removal %s", tsf->path);
+    else
+      tvhtrace("timeshift", "queue file for removal - RAM segment time %li", (long)tsf->time);
+  }
   pthread_mutex_lock(&timeshift_reaper_lock);
   TAILQ_INSERT_TAIL(&timeshift_reaper_list, tsf, link);
   pthread_cond_signal(&timeshift_reaper_cond);
@@ -173,16 +173,16 @@ void timeshift_filemgr_remove
   if (tsf->wfd >= 0)
     close(tsf->wfd);
   assert(tsf->rfd < 0);
-#if ENABLE_TRACE
-  if (tsf->path)
-    tvhdebug("timeshift", "ts %d remove %s", ts->id, tsf->path);
-  else
-    tvhdebug("timeshift", "ts %d RAM segment remove time %li", ts->id, (long)tsf->time);
-#endif
+  if (tvhtrace_enabled()) {
+    if (tsf->path)
+      tvhdebug("timeshift", "ts %d remove %s", ts->id, tsf->path);
+    else
+      tvhdebug("timeshift", "ts %d RAM segment remove time %li", ts->id, (long)tsf->time);
+  }
   TAILQ_REMOVE(&ts->files, tsf, link);
-  atomic_add_u64(&timeshift_total_size, -tsf->size);
+  atomic_dec_u64(&timeshift_total_size, tsf->size);
   if (tsf->ram)
-    atomic_add_u64(&timeshift_total_ram_size, -tsf->size);
+    atomic_dec_u64(&timeshift_total_ram_size, tsf->size);
   timeshift_reaper_remove(tsf);
 }
 

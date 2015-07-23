@@ -68,7 +68,8 @@ htsmsg_t *epggrab_module_list ( void )
       htsmsg_add_str(e, "name", m->name);
     if(m->type == EPGGRAB_EXT) {
       epggrab_module_ext_t *ext = (epggrab_module_ext_t*)m;
-      htsmsg_add_str(e, "path", ext->path);
+      if (ext->path)
+        htsmsg_add_str(e, "path", ext->path);
     }
     htsmsg_add_msg(a, NULL, e);
   }
@@ -166,7 +167,7 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
   if (ch->major)
     htsmsg_add_u32(m, "major", ch->major);
   if (ch->minor)
-    htsmsg_add_u32(m, "major", ch->minor);
+    htsmsg_add_u32(m, "minor", ch->minor);
 
   hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
   htsmsg_destroy(m);
@@ -300,6 +301,8 @@ char *epggrab_module_grab_spawn ( void *m )
 
   /* Grab */
   outlen = spawn_and_give_stdout(argv[0], (char **)argv, NULL, &rd, NULL, 1);
+
+  spawn_free_args(argv);
 
   if (outlen < 0)
     goto error;

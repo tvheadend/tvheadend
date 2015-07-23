@@ -479,17 +479,13 @@ opentv_desc_channels
   mpegts_service_t *svc;
   channel_t *ch;
   int sid, cid, cnum, unk;
-#if ENABLE_TRACE
   int type;
-#endif
   int save = 0;
   int i = 2;
 
   while (i < len) {
     sid  = ((int)buf[i] << 8) | buf[i+1];
-#if ENABLE_TRACE
     type = buf[2];
-#endif
     cid  = ((int)buf[i+3] << 8) | buf[i+4];
     cnum = ((int)buf[i+5] << 8) | buf[i+6];
     unk  = ((int)buf[i+7] << 8) | buf[i+8];
@@ -520,7 +516,7 @@ skip_chnum:
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
       ecl = LIST_FIRST(&ec->channels);
-      ch  = LIST_FIRST(&svc->s_channels)->csm_chn;
+      ch  = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
       tvhtrace(mt->mt_name, "       ec = %p, ecl = %p", ec, ecl);
 
       if (ecl && ecl->ecl_channel != ch) {
@@ -545,9 +541,16 @@ opentv_table_callback
   int r = 1, cid, mjd;
   int sect, last, ver;
   mpegts_psi_table_state_t *st;
-  opentv_status_t *sta = mt->mt_opaque;
-  opentv_module_t *mod = sta->os_mod;
-  epggrab_ota_mux_t *ota = sta->os_ota;
+  opentv_status_t *sta;
+  opentv_module_t *mod;
+  epggrab_ota_mux_t *ota;
+  th_subscription_t *ths;
+
+  if (!epggrab_ota_running) return -1;
+
+  sta = mt->mt_opaque;
+  mod = sta->os_mod;
+  ota = sta->os_ota;
 
   /* Validate */
   if (len < 7) return -1;
@@ -556,6 +559,14 @@ opentv_table_callback
   cid = ((int)buf[0] << 8) | buf[1];
   mjd = ((int)buf[5] << 8) | buf[6];
   mjd = (mjd - 40587) * 86400;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mt->mt_mux, "epggrab");
+  if (ths) {
+    ths->ths_bytes_in += len;
+    ths->ths_bytes_out += len;
+  }
+
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, buf, len,
@@ -590,7 +601,8 @@ done:
           mt2 = mpegts_table_add(mt->mt_mux,
                                  OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
                                  opentv_table_callback, sta,
-                                 mod->id, MT_CRC, *t++);
+                                 mod->id, MT_CRC, *t++,
+                                 MPS_WEIGHT_EIT);
           if (mt2) {
             sta->os_refcount++;
             mt2->mt_destroy    = opentv_status_destroy;
@@ -615,11 +627,26 @@ static int
 opentv_bat_callback
   ( mpegts_table_t *mt, const uint8_t *buf, int len, int tableid )
 {
-  int *t;
-  opentv_status_t *sta = mt->mt_opaque;
-  opentv_module_t *mod = sta->os_mod;
-  int r = dvb_bat_callback(mt, buf, len, tableid);
-  epggrab_ota_mux_t *ota = sta->os_ota;
+  int *t, r;
+  opentv_status_t *sta;
+  opentv_module_t *mod;
+  epggrab_ota_mux_t *ota;
+  th_subscription_t *ths;
+
+  if (!epggrab_ota_running) return -1;
+
+  sta = mt->mt_opaque;
+  mod = sta->os_mod;
+  ota = sta->os_ota;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mt->mt_mux, "epggrab");
+  if (ths) {
+    ths->ths_bytes_in += len;
+    ths->ths_bytes_out += len;
+  }
+
+  r = dvb_bat_callback(mt, buf, len, tableid);
 
   /* Register */
   if (!ota) {
@@ -638,7 +665,8 @@ opentv_bat_callback
       mt2 = mpegts_table_add(mt->mt_mux,
                              OPENTV_TITLE_BASE, OPENTV_TABLE_MASK,
                              opentv_table_callback, mt->mt_opaque,
-                             mod->id, MT_CRC, *t++);
+                             mod->id, MT_CRC, *t++,
+                             MPS_WEIGHT_EIT);
       if (mt2) {
         if (!mt2->mt_destroy) {
           sta->os_refcount++;
@@ -688,7 +716,8 @@ static int _opentv_start
     }
     mt = mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK,
                           opentv_bat_callback, sta,
-                          m->id, MT_CRC, *t++);
+                          m->id, MT_CRC, *t++,
+                          MPS_WEIGHT_EIT);
     if (mt) {
       mt->mt_mux_cb  = bat_desc;
       if (!mt->mt_destroy) {

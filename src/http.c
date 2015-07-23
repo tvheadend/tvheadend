@@ -1,6 +1,6 @@
 /*
  *  tvheadend, HTTP interface
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
@@ -33,6 +34,7 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "http.h"
+#include "filebundle.h"
 #include "access.h"
 #include "notify.h"
 #include "channels.h"
@@ -42,6 +44,7 @@ void *http_server;
 static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
+  { "NONE",       HTTP_CMD_NONE },
   { "GET",        HTTP_CMD_GET },
   { "HEAD",       HTTP_CMD_HEAD },
   { "POST",       HTTP_CMD_POST },
@@ -309,7 +312,40 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   tcp_write_queue(hc->hc_fd, &hdrs);
 }
 
+/*
+ *
+ */
+int
+http_encoding_valid(http_connection_t *hc, const char *encoding)
+{
+  const char *accept;
+  char *tokbuf, *tok, *saveptr = NULL, *q, *s;
 
+  accept = http_arg_get(&hc->hc_args, "accept-encoding");
+  if (!accept)
+    return 0;
+
+  tokbuf = tvh_strdupa(accept);
+  tok = strtok_r(tokbuf, ",", &saveptr);
+  while (tok) {
+    while (*tok == ' ')
+      tok++;
+    // check for semicolon
+    if ((q = strchr(tok, ';')) != NULL) {
+      *q = '\0';
+      q++;
+      while (*q == ' ')
+        q++;
+    }
+    if ((s = strchr(tok, ' ')) != NULL)
+      *s = '\0';
+    // check for matching encoding with q > 0
+    if ((!strcasecmp(tok, encoding) || !strcmp(tok, "*")) && (q == NULL || strncmp(q, "q=0.000", strlen(q))))
+      return 1;
+    tok = strtok_r(NULL, ",", &saveptr);
+  }
+  return 0;
+}
 
 /**
  * Transmit a HTTP reply
@@ -318,13 +354,29 @@ static void
 http_send_reply(http_connection_t *hc, int rc, const char *content, 
 		const char *encoding, const char *location, int maxage)
 {
-  http_send_header(hc, rc, content, hc->hc_reply.hq_size,
+  size_t size = hc->hc_reply.hq_size;
+  uint8_t *data = NULL;
+
+#if ENABLE_ZLIB
+  if (http_encoding_valid(hc, "gzip") && encoding == NULL && size > 256) {
+    uint8_t *data2 = (uint8_t *)htsbuf_to_string(&hc->hc_reply);
+    data = gzip_deflate(data2, size, &size);
+    free(data2);
+    encoding = "gzip";
+  }
+#endif
+
+  http_send_header(hc, rc, content, size,
 		   encoding, location, maxage, 0, NULL, NULL);
   
-  if(hc->hc_no_output)
-    return;
+  if(!hc->hc_no_output) {
+    if (data == NULL)
+      tcp_write_queue(hc->hc_fd, &hc->hc_reply);
+    else
+      tvh_write(hc->hc_fd, data, size);
+  }
 
-  tcp_write_queue(hc->hc_fd, &hc->hc_reply);
+  free(data);
 }
 
 
@@ -524,7 +576,6 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 /*
  * Dump request
  */
-#if ENABLE_TRACE
 static void
 dump_request(http_connection_t *hc)
 {
@@ -549,12 +600,6 @@ dump_request(http_connection_t *hc)
   tvhtrace("http", "%s %s %s%s", http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
-#else
-static inline void
-dump_request(http_connection_t *hc)
-{
-}
-#endif
 
 /**
  * HTTP GET
@@ -566,7 +611,8 @@ http_cmd_get(http_connection_t *hc)
   char *remain;
   char *args;
 
-  dump_request(hc);
+  if (tvhtrace_enabled())
+    dump_request(hc);
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
@@ -632,7 +678,8 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
       http_parse_get_args(hc, hc->hc_post_data);
   }
 
-  dump_request(hc);
+  if (tvhtrace_enabled())
+    dump_request(hc);
 
   hp = http_resolve(hc, &remain, &args);
   if(hp == NULL) {
@@ -675,7 +722,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   char authbuf[150];
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+  tcp_get_str_from_ip((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
   hc->hc_peer_ipstr = tvh_strdupa(authbuf);
   hc->hc_representative = hc->hc_peer_ipstr;
   hc->hc_username = NULL;
@@ -735,7 +782,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   switch(hc->hc_version) {
   case RTSP_VERSION_1_0:
-    dump_request(hc);
+    if (tvhtrace_enabled())
+      dump_request(hc);
     if (hc->hc_cseq)
       rval = hc->hc_process(hc, spill);
     else

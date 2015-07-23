@@ -1,6 +1,6 @@
 /*
  *  Tvheadend - structures
- *  Copyright (C) 2007 Andreas Öman
+ *  Copyright (C) 2007 Andreas Ã–man
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,6 @@
 #if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
 #endif
-
 #include "queue.h"
 #include "avg.h"
 #include "hts_strtab.h"
@@ -43,6 +42,8 @@
 #include "tvhlog.h"
 
 #include "redblack.h"
+
+#include "tvh_locale.h"
 
 #define STRINGIFY(s) # s
 #define SRCLINEID() SRCLINEID2(__FILE__, __LINE__)
@@ -104,7 +105,6 @@ extern int tvheadend_running;
 
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t fork_lock;
-extern pthread_mutex_t atomic_lock;
 
 extern int tvheadend_webui_port;
 extern int tvheadend_webui_debug;
@@ -185,9 +185,9 @@ void GTIMER_FCN(gtimer_arm_abs2)
 
 #if ENABLE_GTIMER_CHECK
 #define gtimer_arm(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_ms(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_abs(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
-#define gtimer_arm_abs2(a, b, c, d) GTIMER_FCN(gtimer_arm)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_ms(a, b, c, d) GTIMER_FCN(gtimer_arm_ms)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs(a, b, c, d) GTIMER_FCN(gtimer_arm_abs)(SRCLINEID(), __func__, a, b, c, d)
+#define gtimer_arm_abs2(a, b, c, d) GTIMER_FCN(gtimer_arm_abs2)(SRCLINEID(), __func__, a, b, c, d)
 #endif
 
 void gtimer_disarm(gtimer_t *gti);
@@ -233,18 +233,6 @@ LIST_HEAD(dvr_autorec_entry_list, dvr_autorec_entry);
 LIST_HEAD(dvr_timerec_entry_list, dvr_timerec_entry);
 TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
-
-/**
- * Device connection types
- */
-#define HOSTCONNECTION_UNKNOWN    0
-#define HOSTCONNECTION_USB12      1
-#define HOSTCONNECTION_USB480     2
-#define HOSTCONNECTION_PCI        3
-
-const char *hostconnection2str(int type);
-int get_device_connection(const char *dev);
-
 
 /**
  * Stream component types
@@ -449,6 +437,9 @@ typedef enum {
 #define SM_CODE_BAD_SOURCE                101
 #define SM_CODE_SOURCE_DELETED            102
 #define SM_CODE_SUBSCRIPTION_OVERRIDDEN   103
+#define SM_CODE_INVALID_TARGET            104
+#define SM_CODE_USER_ACCESS               105
+#define SM_CODE_USER_LIMIT                106
 
 #define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201
@@ -531,6 +522,7 @@ typedef struct streaming_queue {
   pthread_cond_t  sq_cond;     /* Condvar for signalling new packets */
 
   size_t          sq_maxsize;  /* Max queue size (bytes) */
+  size_t          sq_size;     /* Actual queue size (bytes) - only data */
   
   struct streaming_message_queue sq_queue;
 
@@ -759,7 +751,7 @@ char *url_encode(char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 
-int deferred_unlink(const char *filename);
+int deferred_unlink(const char *filename, const char *rootdir);
 
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }

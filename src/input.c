@@ -26,7 +26,7 @@ tvh_hardware_list_t tvh_hardware;
 const idclass_t tvh_input_instance_class =
 {
   .ic_class      = "tvh_input_instance",
-  .ic_caption    = "Input Instance",
+  .ic_caption    = N_("Input Instance"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 
@@ -51,6 +51,8 @@ tvh_hardware_create0
   /* Load config */
   if (conf)
     idnode_load(&th->th_id, conf);
+
+  notify_reload("hardware");
   
   return o;
 }
@@ -65,6 +67,7 @@ tvh_hardware_delete ( tvh_hardware_t *th )
   // TODO
   LIST_REMOVE(th, th_link);
   idnode_unlink(&th->th_id);
+  notify_reload("hardware");
 }
 
 /*

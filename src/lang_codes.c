@@ -145,7 +145,7 @@ const lang_code_t lang_codes[] = {
   { "egy", NULL, NULL , "Egyptian (Ancient)" },
   { "eka", NULL, NULL , "Ekajuk" },
   { "elx", NULL, NULL , "Elamite" },
-  { "eng", "en", NULL , "English" },
+  { "eng", "en", NULL , "English", "US|GB" },
   { "epo", "eo", NULL , "Esperanto" },
   { "est", "et", NULL , "Estonian" },
   { "ewe", "ee", NULL , "Ewe" },
@@ -680,6 +680,46 @@ static void lang_code_free( lang_code_lookup_t *l )
     free(element);
   }
   free(l);
+}
+
+const char *lang_code_preferred( void )
+{
+  const char *codes = config_get_language(), *ret = "und";
+  const lang_code_t *co;
+
+  if (codes) {
+    co = lang_code_get3(codes);
+    if (co && co->code2b)
+      ret = co->code2b;
+  }
+
+  return ret;
+}
+
+char *lang_code_user( const char *ucode )
+{
+  const char *codes = config_get_language(), *s;
+  char *ret;
+
+  if (!codes)
+    return ucode ? strdup(ucode) : NULL;
+  if (!ucode)
+    return codes ? strdup(codes) : NULL;
+  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 1);
+  strcpy(ret, ucode);
+  while (codes && *codes) {
+    s = codes;
+    while (*s && *s != ',')
+      s++;
+    if (strncmp(codes, ucode ?: "", s - codes)) {
+      strcat(ret, ",");
+      strncat(ret, codes, s - codes);
+    }
+    if (*s && *s == ',')
+      s++;
+    codes = s;
+  }
+  return ret;
 }
 
 void lang_code_done( void )

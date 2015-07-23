@@ -39,7 +39,7 @@ const idclass_t mpegts_mux_instance_class =
 {
   .ic_super      = &tvh_input_instance_class,
   .ic_class      = "mpegts_mux_instance",
-  .ic_caption    = "MPEGTS Multiplex Phy",
+  .ic_caption    = N_("MPEG-TS Multiplex Phy"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 
@@ -134,8 +134,9 @@ mpegts_mux_subscribe_keep
 
   s = mi->mi_linked;
   mi->mi_linked = NULL;
+  tvhtrace("mpegts", "subscribe keep for '%s' (%p)", mi->mi_name, mm);
   r = mpegts_mux_subscribe(mm, mi, "keep", SUBSCRIPTION_PRIO_KEEP,
-                           SUBSCRIPTION_RESTART | SUBSCRIPTION_MINIMAL);
+                           SUBSCRIPTION_ONESHOT | SUBSCRIPTION_MINIMAL);
   mi->mi_linked = s;
   return r;
 }
@@ -199,20 +200,25 @@ fatal:
 
 void
 mpegts_mux_unsubscribe_linked
-  ( mpegts_input_t *mi )
+  ( mpegts_input_t *mi, service_t *t )
 {
-  mpegts_mux_instance_t *mmi;
+  th_subscription_t *ths, *ths_next;
 
   if (mi) {
-    tvhtrace("mpegts", "unsubscribing linked from '%s'", mi->mi_name);
-    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-      mpegts_mux_unsubscribe_by_name(mmi->mmi_mux, "keep");
+    tvhtrace("mpegts", "unsubscribing linked");
+
+    for (ths = LIST_FIRST(&subscriptions); ths; ths = ths_next) {
+      ths_next = LIST_NEXT(ths, ths_global_link);
+      if (ths->ths_source == (tvh_input_t *)mi && !strcmp(ths->ths_title, "keep") &&
+          ths->ths_service != t)
+        subscription_unsubscribe(ths, 0);
+    }
   }
 }
 
 int
 mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr )
+  ( mpegts_mux_instance_t **mmiptr, service_t *t )
 {
   int r;
   char buf[256], buf2[256];
@@ -237,6 +243,10 @@ mpegts_mux_instance_start
   /* Start */
   mi->mi_display_name(mi, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
+
+  if (mi->mi_linked)
+    mpegts_mux_unsubscribe_linked(mi, t);
+
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
   r = mi->mi_start_mux(mi, mmi);
@@ -264,18 +274,13 @@ mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
   int w = 0;
   const service_t *s;
   const th_subscription_t *ths;
-  mpegts_input_t *mi = mmi->mmi_input;
-  lock_assert(&mi->mi_output_lock);
+  mpegts_mux_t *mm = mmi->mmi_mux;
+  lock_assert(&mmi->mmi_input->mi_output_lock);
 
   /* Service subs */
-  LIST_FOREACH(s, &mi->mi_transports, s_active_link) {
-    mpegts_service_t *ms = (mpegts_service_t*)s;
-    if (ms->s_dvb_mux == mmi->mmi_mux) {
-      LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link) {
-        w = MAX(w, ths->ths_weight);
-      }
-    }
-  }
+  LIST_FOREACH(s, &mm->mm_transports, s_active_link)
+    LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
+      w = MAX(w, ths->ths_weight);
 
   return w;
 }
@@ -299,7 +304,7 @@ mpegts_mux_class_delete ( idnode_t *self )
 }
 
 static const char *
-mpegts_mux_class_get_title ( idnode_t *self )
+mpegts_mux_class_get_title ( idnode_t *self, const char *lang )
 {
   static __thread char buf[256];
   mpegts_mux_nice_name((mpegts_mux_t*)self, buf, sizeof(buf));
@@ -326,11 +331,11 @@ mpegts_mux_class_get_num_chn ( void *ptr )
   static int n;
   mpegts_mux_t *mm = ptr;
   mpegts_service_t *s;
-  channel_service_mapping_t *csm;
+  idnode_list_mapping_t *ilm;
 
   n = 0;
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
-    LIST_FOREACH(csm, &s->s_channels, csm_svc_link)
+    LIST_FOREACH(ilm, &s->s_channels, ilm_in1_link)
       n++;
 
   return &n;
@@ -374,16 +379,16 @@ mpegts_mux_class_get_name ( void *ptr )
 
 static struct strtab
 scan_state_tab[] = {
-  { "IDLE",   MM_SCAN_STATE_IDLE },
-  { "PEND",   MM_SCAN_STATE_PEND },
-  { "ACTIVE", MM_SCAN_STATE_ACTIVE },
+  { N_("IDLE"),   MM_SCAN_STATE_IDLE },
+  { N_("PEND"),   MM_SCAN_STATE_PEND },
+  { N_("ACTIVE"), MM_SCAN_STATE_ACTIVE },
 };
 
 static struct strtab
 scan_result_tab[] = {
- { "NONE",    MM_SCAN_NONE },
- { "OK",      MM_SCAN_OK   },
- { "FAIL",    MM_SCAN_FAIL },
+ { N_("NONE"),    MM_SCAN_NONE },
+ { N_("OK"),      MM_SCAN_OK   },
+ { N_("FAIL"),    MM_SCAN_FAIL },
 };
 
 int
@@ -425,19 +430,19 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
 }
 
 static htsmsg_t *
-mpegts_mux_class_scan_state_enum ( void *p )
+mpegts_mux_class_scan_state_enum ( void *p, const char *lang )
 {
-  return strtab2htsmsg(scan_state_tab);
+  return strtab2htsmsg(scan_state_tab, 1, lang);
 }
 
 static htsmsg_t *
-mpegts_mux_class_scan_result_enum ( void *p )
+mpegts_mux_class_scan_result_enum ( void *p, const char *lang )
 {
-  return strtab2htsmsg(scan_result_tab);
+  return strtab2htsmsg(scan_result_tab, 1, lang);
 }
 
 static void
-mpegts_mux_class_enabled_notify ( void *p )
+mpegts_mux_class_enabled_notify ( void *p, const char *lang )
 {
   mpegts_mux_t *mm = p;
   if (!mm->mm_is_enabled(mm)) {
@@ -447,38 +452,39 @@ mpegts_mux_class_enabled_notify ( void *p )
 }
 
 static htsmsg_t *
-mpegts_mux_epg_list ( void *o )
+mpegts_mux_epg_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "Disable",                  MM_EPG_DISABLE },
-    { "Enable (auto)",            MM_EPG_ENABLE },
-    { "Force (auto)",             MM_EPG_FORCE },
-    { "Only EIT",                 MM_EPG_ONLY_EIT },
-    { "Only UK Freesat",          MM_EPG_ONLY_UK_FREESAT },
-    { "Only UK Freeview",         MM_EPG_ONLY_UK_FREEVIEW },
-    { "Only Viasat Baltic",       MM_EPG_ONLY_VIASAT_BALTIC },
-    { "Only OpenTV Sky UK",       MM_EPG_ONLY_OPENTV_SKY_UK },
-    { "Only OpenTV Sky Italia",   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
-    { "Only OpenTV Sky Ausat",    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
+    { N_("Disable"),                  MM_EPG_DISABLE },
+    { N_("Enable (auto)"),            MM_EPG_ENABLE },
+    { N_("Force (auto)"),             MM_EPG_FORCE },
+    { N_("Only EIT"),                 MM_EPG_ONLY_EIT },
+    { N_("Only UK Freesat"),          MM_EPG_ONLY_UK_FREESAT },
+    { N_("Only UK Freeview"),         MM_EPG_ONLY_UK_FREEVIEW },
+    { N_("Only Viasat Baltic"),       MM_EPG_ONLY_VIASAT_BALTIC },
+    { N_("Only Bulsatcom 39E"),       MM_EPG_ONLY_BULSATCOM_39E },
+    { N_("Only OpenTV Sky UK"),       MM_EPG_ONLY_OPENTV_SKY_UK },
+    { N_("Only OpenTV Sky Italia"),   MM_EPG_ONLY_OPENTV_SKY_ITALIA },
+    { N_("Only OpenTV Sky Ausat"),    MM_EPG_ONLY_OPENTV_SKY_AUSAT },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
-mpegts_mux_ac3_list ( void *o )
+mpegts_mux_ac3_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "Standard",                 MM_AC3_STANDARD },
-    { "AC-3 = descriptor 6",      MM_AC3_PMT_06 },
-    { "Ignore descriptor 5",      MM_AC3_PMT_N05 },
+    { N_("Standard"),                 MM_AC3_STANDARD },
+    { N_("AC-3 = descriptor 6"),      MM_AC3_PMT_06 },
+    { N_("Ignore descriptor 5"),      MM_AC3_PMT_N05 },
   };
-  return strtab2htsmsg(tab);
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
-  .ic_caption    = "MPEGTS Multiplex",
+  .ic_caption    = N_("MPEG-TS Multiplex"),
   .ic_event      = "mpegts_mux",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_mux_class_save,
@@ -488,7 +494,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_BOOL,
       .id       = "enabled",
-      .name     = "Enabled",
+      .name     = N_("Enabled"),
       .off      = offsetof(mpegts_mux_t, mm_enabled),
       .def.i    = 1,
       .notify   = mpegts_mux_class_enabled_notify,
@@ -496,7 +502,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "epg",
-      .name     = "EPG Scan",
+      .name     = N_("EPG Scan"),
       .off      = offsetof(mpegts_mux_t, mm_epg),
       .def.i    = MM_EPG_ENABLE,
       .list     = mpegts_mux_epg_list,
@@ -504,49 +510,49 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_STR,
       .id       = "network",
-      .name     = "Network",
+      .name     = N_("Network"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_network,
     },
     {
       .type     = PT_STR,
       .id       = "network_uuid",
-      .name     = "Network Uuid",
+      .name     = N_("Network UUID"),
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
       .get      = mpegts_mux_class_get_network_uuid,
     },
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = "Name",
+      .name     = N_("Name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_name,
     },
     {
       .type     = PT_U16,
       .id       = "onid",
-      .name     = "Original Network ID",
+      .name     = N_("Original Network ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_onid),
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = "Transport Stream ID",
+      .name     = N_("Transport Stream ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_tsid),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
-      .name     = "CRID Authority",
+      .name     = N_("CRID Authority"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {
       .type     = PT_INT,
       .id       = "scan_state",
-      .name     = "Scan Status",
+      .name     = N_("Scan Status"),
       .off      = offsetof(mpegts_mux_t, mm_scan_state),
       .set      = mpegts_mux_class_scan_state_set,
       .list     = mpegts_mux_class_scan_state_enum,
@@ -555,7 +561,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "scan_result",
-      .name     = "Scan Result",
+      .name     = N_("Scan Result"),
       .off      = offsetof(mpegts_mux_t, mm_scan_result),
       .opts     = PO_RDONLY | PO_SORTKEY,
       .list     = mpegts_mux_class_scan_result_enum,
@@ -563,7 +569,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = "Character Set",
+      .name     = N_("Character Set"),
       .off      = offsetof(mpegts_mux_t, mm_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -571,21 +577,21 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "num_svc",
-      .name     = "# Services",
+      .name     = N_("# Services"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
     },
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = "# Channels",
+      .name     = N_("# Channels"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_chn,
     },
     {
       .type     = PT_INT,
       .id       = "pmt_06_ac3",
-      .name     = "AC-3 Detection",
+      .name     = N_("AC-3 Detection"),
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
@@ -639,6 +645,9 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   while ((s = LIST_FIRST(&mm->mm_services))) {
     service_destroy((service_t*)s, delconf);
   }
+
+  /* Stop PID timer */
+  gtimer_disarm(&mm->mm_update_pids_timer);
 
   /* Free memory */
   idnode_unlink(&mm->mm_id);
@@ -712,7 +721,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
       if (mmi2 && !mpegts_mux_has_subscribers(mmi2->mmi_mux, buf2)) {
         s = mi2->mi_linked;
         mi2->mi_linked = NULL;
-        mpegts_mux_unsubscribe_linked(mi2);
+        mpegts_mux_unsubscribe_linked(mi2, NULL);
         mi2->mi_linked = s;
       } else {
         if (!force) {
@@ -766,8 +775,6 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
       }
     }
     RB_REMOVE(&mm->mm_pids, mp, mp_link);
-    if (mp->mp_fd != -1)
-      linuxdvb_filter_close(mp->mp_fd);
     free(mp);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
@@ -780,6 +787,30 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
 
   free(mm->mm_fastscan_muxes);
   mm->mm_fastscan_muxes = NULL;
+}
+
+static void
+mpegts_mux_update_pids_cb ( void *aux )
+{
+  mpegts_mux_t *mm = aux;
+  mpegts_input_t *mi;
+
+  if (mm && mm->mm_active) {
+    mi = mm->mm_active->mmi_input;
+    if (mi) {
+      pthread_mutex_lock(&mi->mi_output_lock);
+      mm->mm_update_pids_flag = 0;
+      mi->mi_update_pids(mi, mm);
+      pthread_mutex_unlock(&mi->mi_output_lock);
+    }
+  }
+}
+
+void
+mpegts_mux_update_pids ( mpegts_mux_t *mm )
+{
+  if (mm && mm->mm_active)
+    gtimer_arm(&mm->mm_update_pids_timer, mpegts_mux_update_pids_cb, mm, 0);
 }
 
 void
@@ -815,7 +846,7 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
     mt->mt_subscribed = 1;
     pthread_mutex_unlock(&mm->mm_tables_lock);
     pthread_mutex_lock(&mi->mi_output_lock);
-    mi->mi_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
+    mpegts_input_open_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt);
     pthread_mutex_unlock(&mi->mi_output_lock);
     pthread_mutex_lock(&mm->mm_tables_lock);
     mpegts_table_release(mt);
@@ -823,10 +854,33 @@ mpegts_mux_open_table ( mpegts_mux_t *mm, mpegts_table_t *mt, int subscribe )
 }
 
 void
-mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+mpegts_mux_unsubscribe_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
 {
   mpegts_input_t *mi;
 
+  lock_assert(&mm->mm_tables_lock);
+
+  mi = mm->mm_active->mmi_input;
+  if (mt->mt_subscribed) {
+    mpegts_table_grab(mt);
+    mt->mt_subscribed = 0;
+    pthread_mutex_unlock(&mm->mm_tables_lock);
+    pthread_mutex_lock(&mi->mi_output_lock);
+    mpegts_input_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt->mt_weight, mt);
+    pthread_mutex_unlock(&mi->mi_output_lock);
+    pthread_mutex_lock(&mm->mm_tables_lock);
+    mpegts_table_release(mt);
+  }
+  if ((mt->mt_flags & MT_DEFER) && mt->mt_defer_cmd == MT_DEFER_OPEN_PID) {
+    TAILQ_REMOVE(&mm->mm_defer_tables, mt, mt_defer_link);
+    mt->mt_defer_cmd = 0;
+    mpegts_table_release(mt);
+  }
+}
+
+void
+mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
+{
   lock_assert(&mm->mm_tables_lock);
 
   if (!mm->mm_active || !mm->mm_active->mmi_input) {
@@ -857,19 +911,9 @@ mpegts_mux_close_table ( mpegts_mux_t *mm, mpegts_table_t *mt )
     TAILQ_INSERT_TAIL(&mm->mm_defer_tables, mt, mt_defer_link);
     return;
   }
-  mi = mm->mm_active->mmi_input;
   LIST_REMOVE(mt, mt_link);
   mm->mm_num_tables--;
-  if (mt->mt_subscribed) {
-    mpegts_table_grab(mt);
-    mt->mt_subscribed = 0;
-    pthread_mutex_unlock(&mm->mm_tables_lock);
-    pthread_mutex_lock(&mi->mi_output_lock);
-    mi->mi_close_pid(mi, mm, mt->mt_pid, mpegts_table_type(mt), mt);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-    pthread_mutex_lock(&mm->mm_tables_lock);
-    mpegts_table_release(mt);
-  }
+  mm->mm_unsubscribe_table(mm, mt);
 }
 
 /* **************************************************************************
@@ -1035,6 +1079,7 @@ mpegts_mux_create0
 
   /* Table processing */
   mm->mm_open_table          = mpegts_mux_open_table;
+  mm->mm_unsubscribe_table   = mpegts_mux_unsubscribe_table;
   mm->mm_close_table         = mpegts_mux_close_table;
   pthread_mutex_init(&mm->mm_tables_lock, NULL);
   TAILQ_INIT(&mm->mm_table_queue);
@@ -1079,8 +1124,7 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
   mm->mm_onid = onid;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   mm->mm_config_save(mm);
-  tvhtrace("mpegts", "%s - set onid %04X (%d)", buf, onid, onid);
-  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
+  idnode_notify_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1093,12 +1137,12 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
     return 0;
   mm->mm_tsid = tsid;
   mm->mm_config_save(mm);
-#if ENABLE_TRACE
-  char buf[256];
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
-#endif
-  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
+  }
+  idnode_notify_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1109,12 +1153,12 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
     return 0;
   tvh_str_update(&mm->mm_crid_authority, defauth);
   mm->mm_config_save(mm);
-#if ENABLE_TRACE
-  char buf[256];
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
-#endif
-  //idnode_notify(NULL, &mm->mm_id, 0, NULL);
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
+  }
+  idnode_notify_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1152,11 +1196,11 @@ void
 mpegts_mux_remove_subscriber
   ( mpegts_mux_t *mm, th_subscription_t *s, int reason )
 {
-#if ENABLE_TRACE
-  char buf[256];
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhtrace("mpegts", "%s - remove subscriber (reason %i)", buf, reason);
-#endif
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - remove subscriber (reason %i)", buf, reason);
+  }
   mm->mm_stop(mm, 0, reason);
 }
 
@@ -1186,12 +1230,27 @@ mpegts_mux_unsubscribe_by_name
 
   s = LIST_FIRST(&mm->mm_raw_subs);
   while (s) {
-    n = LIST_NEXT(s, ths_global_link);
+    n = LIST_NEXT(s, ths_mux_link);
     t = s->ths_service;
     if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
       subscription_unsubscribe(s, 0);
     s = n;
   }
+}
+
+th_subscription_t *
+mpegts_mux_find_subscription_by_name
+  ( mpegts_mux_t *mm, const char *name )
+{
+  const service_t *t;
+  th_subscription_t *s;
+
+  LIST_FOREACH(s, &mm->mm_raw_subs, ths_mux_link) {
+    t = s->ths_service;
+    if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
+      return s;
+  }
+  return NULL;
 }
 
 void
@@ -1248,7 +1307,6 @@ mpegts_mux_find_pid_ ( mpegts_mux_t *mm, int pid, int create )
       mp = calloc(1, sizeof(*mp));
       mp->mp_pid = pid;
       if (!RB_INSERT_SORTED(&mm->mm_pids, mp, mp_link, mp_cmp)) {
-        mp->mp_fd = -1;
         mp->mp_cc = -1;
       } else {
         free(mp);

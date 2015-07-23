@@ -210,11 +210,13 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
 {
   int i;
   char *path, *sptr;
+  const char *filename;
   dvr_cutpoint_list_t *cuts;
 
   /* Check this is a valid recording */
   assert(de != NULL);
-  if (de->de_filename == NULL)
+  filename = dvr_get_filename(de);
+  if (filename == NULL)
     return NULL;
 
   /* Allocate list space */
@@ -225,8 +227,8 @@ dvr_get_cutpoint_list (dvr_entry_t *de)
 
   /* Get base filename */
   // TODO: harcoded 3 for max extension
-  path = alloca(strlen(de->de_filename) + 3);
-  strcpy(path, de->de_filename);
+  path = alloca(strlen(filename) + 3);
+  strcpy(path, filename);
   sptr = strrchr(path, '.');
   if (!sptr) {
     free(cuts);

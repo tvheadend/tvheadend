@@ -71,111 +71,111 @@ mpegts_service_class_get_network ( void *ptr )
 }
 
 static htsmsg_t *
-mpegts_service_pref_capid_lock_list ( void *o )
+mpegts_service_pref_capid_lock_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { "Off",                0 },
-    { "On",                 1 },
-    { "Only Pref. CA PID",  2 },
+    { N_("Off"),                    0 },
+    { N_("On"),                     1 },
+    { N_("Only Preferred CA PID"),  2 },
   };
-   return strtab2htsmsg(tab);
+   return strtab2htsmsg(tab, 1, lang);
 }
 
 const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
-  .ic_caption    = "MPEGTS Service",
+  .ic_caption    = N_("MPEG-TS Service"),
   .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "network",
-      .name     = "Network",
+      .name     = N_("Network"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_service_class_get_network,
     },
     {
       .type     = PT_STR,
       .id       = "multiplex",
-      .name     = "Mux",
+      .name     = N_("Mux"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_service_class_get_mux,
     },
     {
       .type     = PT_STR,
       .id       = "multiplex_uuid",
-      .name     = "Mux UUID",
+      .name     = N_("Mux UUID"),
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
       .get      = mpegts_service_class_get_mux_uuid,
     },
     {
       .type     = PT_U16,
       .id       = "sid",
-      .name     = "Service ID",
+      .name     = N_("Service ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_service_id),
     },
     {
       .type     = PT_U16,
       .id       = "lcn",
-      .name     = "Local Channel Number",
+      .name     = N_("Local Channel Number"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_num),
     },
     {
       .type     = PT_U16,
       .id       = "lcn_minor",
-      .name     = "Local Channel Minor",
+      .name     = N_("Local Channel Minor"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_minor),
     },
     {
       .type     = PT_U16,
       .id       = "lcn2",
-      .name     = "OpenTV Channel Number",
+      .name     = N_("OpenTV Channel Number"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_opentv_chnum),
     },
     {
       .type     = PT_STR,
       .id       = "svcname",
-      .name     = "Service Name",
+      .name     = N_("Service Name"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_svcname),
     },
     {
       .type     = PT_STR,
       .id       = "provider",
-      .name     = "Provider",
+      .name     = N_("Provider"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_provider),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
-      .name     = "CRID Authority",
+      .name     = N_("CRID Authority"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_cridauth),
     },
     {
       .type     = PT_U16,
       .id       = "dvb_servicetype",
-      .name     = "Service Type",
+      .name     = N_("Service Type"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
     {
       .type     = PT_BOOL,
       .id       = "dvb_ignore_eit",
-      .name     = "Ignore EPG (EIT)",
+      .name     = N_("Ignore EPG (EIT)"),
       .off      = offsetof(mpegts_service_t, s_dvb_ignore_eit),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = "Character Set",
+      .name     = N_("Character Set"),
       .off      = offsetof(mpegts_service_t, s_dvb_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -183,14 +183,14 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "prefcapid",
-      .name     = "Pref. CA PID",
+      .name     = N_("Preferred CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
       .id       = "prefcapid_lock",
-      .name     = "Lock Pref. CA PID",
+      .name     = N_("Lock Preferred CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
       .opts     = PO_ADVANCED,
       .list     = mpegts_service_pref_capid_lock_list,
@@ -198,21 +198,21 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "force_caid",
-      .name     = "Force CA ID (e.g. 0x2600)",
+      .name     = N_("Force CA ID (e.g. 0x2600)"),
       .off      = offsetof(mpegts_service_t, s_dvb_forcecaid),
       .opts     = PO_ADVANCED | PO_HEXA,
     },
     {
       .type     = PT_TIME,
       .id       = "created",
-      .name     = "Created",
+      .name     = N_("Created"),
       .off      = offsetof(mpegts_service_t, s_dvb_created),
       .opts     = PO_ADVANCED | PO_RDONLY,
     },
     {
       .type     = PT_TIME,
       .id       = "last_seen",
-      .name     = "Last Seen",
+      .name     = N_("Last Seen"),
       .off      = offsetof(mpegts_service_t, s_dvb_last_seen),
       .opts     = PO_ADVANCED | PO_RDONLY,
     },
@@ -319,7 +319,7 @@ mpegts_service_start(service_t *t, int instance, int flags)
     return SM_CODE_UNDEFINED_ERROR;
 
   /* Start Mux */
-  r = mpegts_mux_instance_start(&mmi);
+  r = mpegts_mux_instance_start(&mmi, t);
 
   /* Start */
   if (!r) {
@@ -603,6 +603,9 @@ mpegts_service_create0
   if (!conf) {
     if (sid)     s->s_dvb_service_id = sid;
     if (pmt_pid) s->s_pmt_pid        = pmt_pid;
+  } else {
+    if (s->s_dvb_last_seen > dispatch_clock) /* sanity check */
+      s->s_dvb_last_seen = dispatch_clock;
   }
   s->s_dvb_mux        = mm;
   if ((r = dvb_servicetype_lookup(s->s_dvb_servicetype)) != -1)
@@ -632,8 +635,8 @@ mpegts_service_create0
   tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */
-  idnode_notify_simple(&mm->mm_id);
-  idnode_notify_simple(&mm->mm_network->mn_id);
+  idnode_notify_changed(&mm->mm_id);
+  idnode_notify_changed(&mm->mm_network->mn_id);
 
   /* Save the create time */
   if (s->s_dvb_created == dispatch_clock)
@@ -715,7 +718,7 @@ const idclass_t mpegts_service_raw_class =
 {
   .ic_super      = &service_raw_class,
   .ic_class      = "mpegts_raw_service",
-  .ic_caption    = "MPEGTS Raw Service",
+  .ic_caption    = N_("MPEG-TS Raw Service"),
   .ic_properties = NULL
 };
 
@@ -735,6 +738,7 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
   mpegts_mux_t *mm = t->s_dvb_mux;
   mpegts_apids_t *p, *x;
   mpegts_apids_t add, del;
+  mpegts_apid_t *pi;
   int i;
 
   lock_assert(&global_lock);
@@ -750,26 +754,33 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
     x = t->s_pids;
     t->s_pids = p;
     if (!pids->all && x && x->all) {
-      mi->mi_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
+      mpegts_input_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
       mpegts_input_close_pids(mi, mm, t, 1);
-      for (i = 0; i < x->count; i++)
-        mi->mi_open_pid(mi, mm, x->pids[i], MPS_RAW, t);
+      for (i = 0; i < x->count; i++) {
+        pi = &x->pids[i];
+        mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+      }
     } else {
       if (pids->all) {
         mpegts_input_close_pids(mi, mm, t, 1);
-        mi->mi_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
+        mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
       } else {
         mpegts_pid_compare(p, x, &add, &del);
-        for (i = 0; i < del.count; i++)
-          mi->mi_close_pid(mi, mm, del.pids[i], MPS_RAW, t);
-        for (i = 0; i < add.count; i++)
-          mi->mi_open_pid(mi, mm, add.pids[i], MPS_RAW, t);
+        for (i = 0; i < del.count; i++) {
+          pi = &del.pids[i];
+          mpegts_input_close_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+        }
+        for (i = 0; i < add.count; i++) {
+          pi = &add.pids[i];
+          mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+        }
         mpegts_pid_done(&add);
         mpegts_pid_done(&del);
       }
     }
     pthread_mutex_unlock(&t->s_stream_mutex);
     pthread_mutex_unlock(&mi->mi_output_lock);
+    mpegts_mux_update_pids(mm);
   } else {
     pthread_mutex_lock(&t->s_stream_mutex);
     x = t->s_pids;

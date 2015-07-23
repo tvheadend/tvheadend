@@ -1,0 +1,102 @@
+<!-- Do not edit! Automatically created file: https://github.com/tvheadend/tvheadend-documentation -->
+<div class="hts-doc-text">
+<h3>Configuration - Stream - Stream Profiles</h3>
+<p>Stream Profiles are the settings for output formats. These are used for Live TV streaming and recordings. The profiles are assigned through the Access Entries, DVR Profiles or as parameter for HTTP Streaming.</p>
+<p><img src="docresources/configstreamprofiles.png" alt="&#39;Stream Profiles&#39;" /></p>
+<hr />
+<h4>Menu Bar/Buttons</h4>
+<p>The following functions are available:</p>
+<table>
+<thead><tr>
+<th>Button</th>
+<th>Function </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Save</strong></td>
+<td>Save any changes made to the stream profile configuration. </td>
+</tr>
+<tr>
+<td><strong>Undo</strong></td>
+<td>Undo any changes made to the stream profile configuration since the last save.</td>
+</tr>
+<tr>
+<td><strong>Add</strong></td>
+<td>Add a new stream profile. </td>
+</tr>
+<tr>
+<td><strong>Delete</strong></td>
+<td>Delete an existing stream profile. </td>
+</tr>
+<tr>
+<td><strong>Help</strong></td>
+<td>Display this help page. </td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4>Stream Profile Types</h4>
+<p><strong>MPEG-TS Pass-through /build-in</strong> : Pass through of MPEG-TS packets.</p>
+<p><strong>Matroska (mkv) /build-in</strong> : Matroska/WebM muxer (built-in) to output in Matroska format.</p>
+<p><strong>HTSP Stream Profile</strong> : Stream Settings for HTSP.</p>
+<p><strong>MPEG-TS /av-lib</strong> : MPEG-TS stream muxer (libav) to output in MPEG-TS format (only available with libav/ffmpeg).</p>
+<p><strong>Matroska /av-lib</strong> : Matroska/WebM muxer (libav) to output in Matroska format (only available with libav/ffmpeg).</p>
+<p><strong>Transcode /av-lib</strong> : Transcode video/audio/subtitles with various encoders and output in various formats (only available with libav/ffmpeg).</p>
+<h4>Common Settings</h4>
+<p><strong>Enabled</strong> : Profile is enabled.</p>
+<p><strong>Default</strong> : Profile is the default profile.</p>
+<p><strong>Default Priority</strong> : The priority of the profile, if no specific priority was requested. This allows to give certain users a higher priority by assigning a streaming profile with a higher priority.</p>
+<p><strong>Force Priority</strong> : Don't allow the Default Priority to be overridden.</p>
+<p><strong>Timeout</strong> : Timeout for streaming to start.</p>
+<p><strong>Restart On Error</strong> : Restart streaming on error. This is useful for DVR, so a recording isn't aborted if an error occurs.</p>
+<p><strong>Continue On Access Error</strong> : Don't abort streaming, when an encrypted stream can't be decrypted by a CA client, that normally should be able to decrypt the stream.</p>
+<p><strong>Preferred Service Video Type</strong>  [<em>v4.2</em> ] : The selected video type should be preferred, when multiple services are available for a channel.</p>
+<h4>MPEG-TS Pass-through Settings</h4>
+<p><strong>Rewrite PMT/PAT/SDT/EIT</strong> : Rewrite PMT/PAT/SDT/EIT packets to only include information about the currently streamed service.</p>
+<h4>Matroska Settings</h4>
+<p><strong>WEBM</strong> : Use WebM format (WebM is a restricted subset of the Matroska format)</p>
+<h4>Transcode Settings</h4>
+<p><strong>Container</strong> : Container to use for transcoded streams.</p>
+<p><strong>Resolution</strong> : Vertical resolution (height) of the output video stream. Horizontal resolution is adjusted automatically to preserve aspect ratio. When set to 0, the input resolution is used.</p>
+<p><strong>Channels</strong> : Channel layout for audio streams.</p>
+<p><strong>Language</strong> : Currently unused.</p>
+<p><strong>Video Codec</strong> : Video encoder codec.</p>
+<ul>
+<li><strong>Do not use</strong> : Don't output a video stream.</li>
+</ul>
+<ul>
+<li><strong>Copy codec type</strong> : Pass through video stream without transcoding.</li>
+</ul>
+<ul>
+<li><strong>mpeg2video/libvpx/libx264/...</strong> : Transcode video to the selected codec.</li>
+</ul>
+<p><strong>Video Bitrate</strong> : Video quality/bitrate of the transcoded video stream.</p>
+<ul>
+<li><strong>0: Automatic Setting (target quality)</strong> : The automatic setting is dependent on the used codec. The respective values used are 5 for MPEG2 and 15 for H.264 and VP8, which are pretty high and therefore might result in an even higher bitrate than the input video.</li>
+</ul>
+<ul>
+<li><strong>1-63: Target Quality</strong> : Use the given value to achieve average quality. A lower value results in better quality. The resulting bitrate is dependent on the complexity of the video stream.</li>
+</ul>
+<ul>
+<li><strong>>63: Target Bitrate</strong> : Use the given value to achieve average bitrate. The resulting quality is dependent on the complexity of the video stream.</li>
+</ul>
+<p><strong>Audio Codec</strong> : Codec for audio streams.</p>
+<ul>
+<li><strong>Do not use</strong> : Don't output an audio stream.</li>
+</ul>
+<ul>
+<li><strong>Copy codec type</strong> : Pass through audio streams without transcoding.</li>
+</ul>
+<ul>
+<li><strong>aac/mp2/libvorbis/...</strong> : Transcode audio to the selected codec. (Note: if "vorbis" and "libvorbis" are available, "libvorbis" should be prefered when transcoding to Vorbis format)</li>
+</ul>
+<p><strong>Audio Bitrate</strong> : Audio bitrate of the transcoded audio streams.</p>
+<p><strong>Subtitles Codec</strong> : Codec for subtitles.</p>
+<ul>
+<li><strong>Do not use</strong> : Don't output subtitles.</li>
+</ul>
+<ul>
+<li><strong>Copy codec type</strong> : Pass through subtitles without transcoding.</li>
+</ul>
+</div>

@@ -29,12 +29,16 @@ void        config_init    ( int backup );
 void        config_done    ( void );
 void        config_save    ( void );
 
-htsmsg_t   *config_get_all ( void );
+htsmsg_t   *config_get_all ( int satip );
 
 const char *config_get_str ( const char *fld );
 int         config_set_str ( const char *fld, const char *val );
 int         config_get_int ( const char *fld, int dflt );
 int         config_set_int ( const char *fld, int val );
+
+const char *config_get_server_name ( void );
+int         config_set_server_name ( const char *str )
+  __attribute__((warn_unused_result));
 
 const char *config_get_muxconfpath ( void );
 int         config_set_muxconfpath ( const char *str )

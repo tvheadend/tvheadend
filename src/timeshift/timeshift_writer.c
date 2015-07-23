@@ -352,7 +352,7 @@ void *timeshift_writer ( void *aux )
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
-    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    streaming_queue_remove(sq, sm);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     _process_msg(ts, sm, &run);
@@ -376,7 +376,7 @@ void timeshift_writer_flush ( timeshift_t *ts )
 
   pthread_mutex_lock(&sq->sq_mutex);
   while ((sm = TAILQ_FIRST(&sq->sq_queue))) {
-    TAILQ_REMOVE(&sq->sq_queue, sm, sm_link);
+    streaming_queue_remove(sq, sm);
     _process_msg(ts, sm, NULL);
   }
   pthread_mutex_unlock(&sq->sq_mutex);
