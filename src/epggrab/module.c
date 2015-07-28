@@ -316,7 +316,6 @@ char *epggrab_module_grab_spawn ( void *m )
   return outbuf;
 
 error:
-  spawn_free_args(argv);
   if (rd >= 0)
     close(rd);
   tvhlog(LOG_ERR, mod->id, "no output detected");
