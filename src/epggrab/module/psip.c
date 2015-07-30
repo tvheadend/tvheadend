@@ -84,7 +84,7 @@ _psip_eit_callback
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_service_t     *svc;
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
 
   /* Validate */
   if (tableid != 0xcb) return -1;
@@ -107,7 +107,7 @@ _psip_eit_callback
   ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
   tvhdebug("psip", "0x%04x: EIT tsid %04X (%s), ver %d",
@@ -137,7 +137,7 @@ _psip_eit_callback
     char buf[512];
     epg_broadcast_t *ebc;
     epg_episode_t *ee;
-    channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
+    channel_t *ch = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
     lang_str_t       *title;
 
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
@@ -183,7 +183,7 @@ next:
     epg_updated();
 
 done:
-  r = dvb_table_end(mt, st, sect);
+  r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
   if (ota && !r)
     epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
 
@@ -204,7 +204,7 @@ _psip_ett_callback
   epggrab_ota_map_t    *map = mt->mt_opaque;
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   mpegts_service_t     *svc;
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
   char buf[4096];
 
   /* Validate */
@@ -215,7 +215,7 @@ _psip_ett_callback
   extraid = tsid;
 
   /* Begin */
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
 
@@ -242,7 +242,7 @@ _psip_ett_callback
   if (!isevent) {
     tvhdebug("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
-    channel_t *ch = LIST_FIRST(&svc->s_channels)->csm_chn;
+    channel_t *ch = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
     epg_broadcast_t *ebc;
     ebc = epg_broadcast_find_by_eid(ch, eventid);
     if (ebc) {
@@ -263,7 +263,7 @@ _psip_ett_callback
     epg_updated();
 
 done:
-  return dvb_table_end(mt, st, sect);
+  return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
 
@@ -291,7 +291,7 @@ _psip_mgt_callback
   uint32_t extraid;
   mpegts_mux_t         *mm  = mt->mt_mux;
   epggrab_ota_map_t    *map = mt->mt_opaque;
-  mpegts_table_state_t *st;
+  mpegts_psi_table_state_t *st;
 
   /* Validate */
   if (tableid != 0xc7) return -1;
@@ -301,7 +301,7 @@ _psip_mgt_callback
   extraid = tsid;
 
   /* Begin */
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
   tvhdebug("psip", "0x%04x: MGT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
@@ -332,15 +332,15 @@ _psip_mgt_callback
     if (type >= 0x100 && type <= 0x17f) {
       /* This is an EIT table */
       tvhdebug("psip", "  EIT-%d", type-0x100);
-      mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback, map, "eit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+      mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback, map, "eit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid, MPS_WEIGHT_EIT);
     } else if (type >= 0x200 && type <= 0x27f) {
       /* This is an ETT table */
       tvhdebug("psip", "  ETT-%d", type-0x200);
-      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid, MPS_WEIGHT_ETT);
     } else if (type == 0x04) {
       /* This is channel ETT */
       tvhdebug("psip", "  ETT-channel");
-      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid);
+      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid, MPS_WEIGHT_ETT);
     } else {
       /* Skip this table */
       goto next;
@@ -352,7 +352,7 @@ next:
     len -= dlen + 11;
   }
 
-  return dvb_table_end(mt, st, sect);
+  return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
 /* ************************************************************************
@@ -372,7 +372,7 @@ static int _psip_start
   opts = MT_QUICKREQ | MT_RECORD;
 
   /* Listen for Master Guide Table */
-  mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid);
+  mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid, MPS_WEIGHT_MGT);
 
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;

@@ -155,6 +155,8 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_VCT      999
 #define MPS_WEIGHT_STT      999
 #define MPS_WEIGHT_EIT      999
+#define MPS_WEIGHT_ETT      999
+#define MPS_WEIGHT_MGT      999
 #define MPS_WEIGHT_PMT      998
 #define MPS_WEIGHT_PCR      997
 #define MPS_WEIGHT_CA       996
