@@ -1734,7 +1734,7 @@ atsc_stt_callback
   int r, sect, last, ver, extraid;
   uint32_t systemtime, gps_utc_offset;
   int is_dst;
-  mpegts_table_state_t  *st  = NULL;
+  mpegts_psi_table_state_t *st  = NULL;
 
   /* Validate */
   if (tableid != DVB_ATSC_STT_BASE) return -1;
@@ -1743,7 +1743,7 @@ atsc_stt_callback
   extraid = ptr[0] << 8 | ptr[1];
 
   /* Begin */
-  r = dvb_table_begin(mt, ptr, len, tableid, extraid, 7,
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
 
@@ -1755,7 +1755,7 @@ atsc_stt_callback
   tvhdebug("stt", "system_time %d, gps_utc_offset %d, is DST %d",
       systemtime, gps_utc_offset, is_dst);
 
-  return dvb_table_end(mt, st, sect);
+  return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
 /*
