@@ -92,9 +92,9 @@ static int
 page_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   if(is_client_simple(hc)) {
-    http_redirect(hc, "simple.html", &hc->hc_req_args);
+    http_redirect(hc, "simple.html", &hc->hc_req_args, 0);
   } else {
-    http_redirect(hc, "extjs.html", &hc->hc_req_args);
+    http_redirect(hc, "extjs.html", &hc->hc_req_args, 0);
   }
   return 0;
 }
@@ -103,10 +103,7 @@ static int
 page_root2(http_connection_t *hc, const char *remain, void *opaque)
 {
   if (!tvheadend_webroot) return 1;
-  char *tmp = malloc(strlen(tvheadend_webroot) + 2);
-  sprintf(tmp, "%s/", tvheadend_webroot);
-  http_redirect(hc, tmp, &hc->hc_req_args);
-  free(tmp);
+  http_redirect(hc, "/", &hc->hc_req_args, 0);
   return 0;
 }
 
@@ -116,7 +113,7 @@ page_login(http_connection_t *hc, const char *remain, void *opaque)
   if (hc->hc_access != NULL &&
       hc->hc_access->aa_username != NULL &&
       hc->hc_access->aa_username != '\0') {
-    http_redirect(hc, "/", &hc->hc_req_args);
+    http_redirect(hc, "/", &hc->hc_req_args, 0);
     return 0;
   } else {
     return HTTP_STATUS_UNAUTHORIZED;
@@ -130,7 +127,7 @@ page_logout(http_connection_t *hc, const char *remain, void *opaque)
       hc->hc_access->aa_username == NULL ||
       hc->hc_access->aa_username == '\0') {
 redirect:
-    http_redirect(hc, "/", &hc->hc_req_args);
+    http_redirect(hc, "/", &hc->hc_req_args, 0);
     return 0;
   } else {
     const char *s = http_arg_get(&hc->hc_args, "Cookie");
@@ -1406,7 +1403,7 @@ webui_static_content(const char *http_path, const char *source)
 static int
 favicon(http_connection_t *hc, const char *remain, void *opaque)
 {
-  http_redirect(hc, "static/htslogo.png", NULL);
+  http_redirect(hc, "static/htslogo.png", NULL, 0);
   return 0;
 }
 

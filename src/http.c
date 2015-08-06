@@ -407,7 +407,8 @@ http_error(http_connection_t *hc, int error)
                    error, errtxt, error, errtxt);
 
     if (error == HTTP_STATUS_UNAUTHORIZED)
-      htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"/\">Default Login</A></P>");
+      htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"%s/\">Default Login</A></P>",
+                     tvheadend_webroot ? tvheadend_webroot : "");
 
     htsbuf_qprintf(&hc->hc_reply, "</BODY></HTML>\r\n");
 
@@ -444,7 +445,7 @@ http_output_content(http_connection_t *hc, const char *content)
  */
 void
 http_redirect(http_connection_t *hc, const char *location,
-              http_arg_list_t *req_args)
+              http_arg_list_t *req_args, int external)
 {
   const char *loc = location;
   htsbuf_queue_flush(&hc->hc_reply);
@@ -454,6 +455,8 @@ http_redirect(http_connection_t *hc, const char *location,
     htsbuf_queue_t hq;
     int first = 1;
     htsbuf_queue_init(&hq, 0);
+    if (!external && tvheadend_webroot && location[0] == '/')
+      htsbuf_append(&hq, tvheadend_webroot, strlen(tvheadend_webroot));
     htsbuf_append(&hq, location, strlen(location));
     htsbuf_append(&hq, "?", 1);
     TAILQ_FOREACH(ra, req_args, link) {
@@ -466,6 +469,10 @@ http_redirect(http_connection_t *hc, const char *location,
     }
     loc = htsbuf_to_string(&hq);
     htsbuf_queue_flush(&hq);
+  } else if (!external && tvheadend_webroot && location[0] == '/') {
+    loc = malloc(strlen(location) + strlen(tvheadend_webroot) + 1);
+    strcpy((char *)loc, tvheadend_webroot);
+    strcat((char *)loc, location);
   }
 
   htsbuf_qprintf(&hc->hc_reply,
