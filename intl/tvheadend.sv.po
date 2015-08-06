@@ -3,15 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Frans Nilsson <frans@keffa.se>, 2015
 # Fredrik Tuomas <fredrik.tuomas@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Swedish (http://www.transifex.com/p/tvheadend/language/sv/)\n"
+"PO-Revision-Date: 2015-08-05 18:15+0000\n"
+"Last-Translator: Frans Nilsson <frans@keffa.se>\n"
+"Language-Team: Swedish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/sv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -212,12 +213,12 @@ msgstr ""
 
 #: src/access.c:1421
 msgid "Admin"
-msgstr ""
+msgstr "Administratör"
 
 #: src/epg.c:1959 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
 #: src/epg.c:1964
 msgid "Adult movie"
-msgstr ""
+msgstr "Porrfilm"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
@@ -225,15 +226,15 @@ msgstr ""
 
 #: src/access.c:1352
 msgid "Advanced Streaming"
-msgstr ""
+msgstr "Avancerad strömning "
 
 #: src/epg.c:1953
 msgid "Adventure"
-msgstr ""
+msgstr "Äventyr"
 
 #: src/epg.c:2090
 msgid "Advertisement / Shopping"
-msgstr ""
+msgstr "Reklam / Shopping"
 
 #: src/access.c:1275
 msgid "All (Streaming plus DVR)"
@@ -263,11 +264,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
 msgid "Altitude (meters)"
-msgstr ""
+msgstr "Höjd (meter)"
 
 #: src/epg.c:2069
 msgid "Animals"
-msgstr ""
+msgstr "Djur"
 
 #: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
 #: src/dvr/dvr_autorec.c:625
@@ -276,7 +277,7 @@ msgstr ""
 
 #: src/epg.c:2041
 msgid "Arts"
-msgstr ""
+msgstr "Konst"
 
 #: src/epg.c:2005
 msgid "Athletics"
@@ -2634,11 +2635,11 @@ msgstr ""
 
 #: src/main.c:646
 msgid "Show version information"
-msgstr ""
+msgstr "Visa versions-information"
 
 #: src/streaming.c:434
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "För dålig signal-kvalité"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
@@ -2654,15 +2655,15 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:882
 msgid "Skip Commercials"
-msgstr ""
+msgstr "Hoppa över reklamen"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:113
 msgid "Skip Initial Bytes"
-msgstr ""
+msgstr "Hoppa över första byte:en"
 
 #: src/input/mpegts/mpegts_network.c:164
 msgid "Skip Initial Scan"
-msgstr ""
+msgstr "Hoppa över första scanning"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:255
 msgid "Slot State"
@@ -2670,11 +2671,11 @@ msgstr ""
 
 #: src/epg.c:1956
 msgid "Soap"
-msgstr ""
+msgstr "Såpa"
 
 #: src/epg.c:2002
 msgid "Soccer"
-msgstr ""
+msgstr "Fotboll"
 
 #: src/epg.c:2052 src/epg.c:2073
 msgid "Social"

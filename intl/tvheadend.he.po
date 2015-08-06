@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# dhead666 <myfoolishgames@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Hebrew (http://www.transifex.com/p/tvheadend/language/he/)\n"
+"PO-Revision-Date: 2015-07-24 20:10+0000\n"
+"Last-Translator: dhead666 <myfoolishgames@gmail.com>\n"
+"Language-Team: Hebrew (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -26,60 +27,60 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:587
 msgid "# Channels"
-msgstr ""
+msgstr "# ערוצים"
 
 #: src/input/mpegts/mpegts_network.c:231
 msgid "# Mapped Channels"
-msgstr ""
+msgstr "# ערוצים ממופים"
 
 #: src/input/mpegts/mpegts_network.c:217
 msgid "# Muxes"
-msgstr ""
+msgstr "# מוקסים"
 
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
 #: src/input/mpegts/mpegts_mux.c:580
 msgid "# Services"
-msgstr ""
+msgstr "# שירותים"
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
-msgstr ""
+msgstr "# שירותים אותרו"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
-msgstr ""
+msgstr "0"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "1"
-msgstr ""
+msgstr "1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:79
 msgid "10"
-msgstr ""
+msgstr "10"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:80
 msgid "11"
-msgstr ""
+msgstr "11"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:81
 msgid "12"
-msgstr ""
+msgstr "12"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:82
 msgid "13"
-msgstr ""
+msgstr "13"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:83
 msgid "14"
-msgstr ""
+msgstr "14"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "15"
-msgstr ""
+msgstr "15"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:71
 msgid "2"
-msgstr ""
+msgstr "2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
 msgid "2-Port Switch (Universal LNB)"
@@ -87,11 +88,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "3"
-msgstr ""
+msgstr "3"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "4"
-msgstr ""
+msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
 msgid "4-Port Switch (Universal LNB)"
@@ -99,54 +100,54 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "5"
-msgstr ""
+msgstr "5"
 
 #: src/profile.c:1375
 msgid "5.0"
-msgstr ""
+msgstr "5.0"
 
 #: src/profile.c:1376
 msgid "5.1"
-msgstr ""
+msgstr "5.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:75
 msgid "6"
-msgstr ""
+msgstr "6"
 
 #: src/profile.c:1377
 msgid "6.1"
-msgstr ""
+msgstr "6.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "7"
-msgstr ""
+msgstr "7"
 
 #: src/profile.c:1378
 msgid "7.1"
-msgstr ""
+msgstr "7.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "8"
-msgstr ""
+msgstr "8"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "9"
-msgstr ""
+msgstr "9"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:356
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "A"
-msgstr ""
+msgstr "A"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:391
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:56
 msgid "AA"
-msgstr ""
+msgstr "AA"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:402
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:57
 msgid "AB"
-msgstr ""
+msgstr "AB"
 
 #: src/input/mpegts/mpegts_mux.c:478
 msgid "AC-3 = descriptor 6"
@@ -154,11 +155,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:594
 msgid "AC-3 Detection"
-msgstr ""
+msgstr "זיהוי AC-3"
 
 #: src/input/mpegts/mpegts_mux.c:384
 msgid "ACTIVE"
-msgstr ""
+msgstr "פעיל"
 
 #: src/descrambler/constcw.c:345
 msgid "AES Constant Code Word Client"
@@ -170,11 +171,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
-msgstr ""
+msgstr "ATSC"
 
 #: src/input/mpegts/mpegts_network_dvb.c:266
 msgid "ATSC Network"
-msgstr ""
+msgstr "רשת ATSC"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220 src/input/mpegts/mpegts_mux_dvb.c:223
 #: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:229
@@ -182,7 +183,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:238 src/input/mpegts/mpegts_mux_dvb.c:298
 #: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "AUTO"
-msgstr ""
+msgstr "אוטומטי"
 
 #: src/streaming.c:441
 msgid "Aborted by user"
@@ -190,12 +191,12 @@ msgstr ""
 
 #: src/access.c:1293
 msgid "Access"
-msgstr ""
+msgstr "גישה"
 
 #: src/esfilter.c:674 src/esfilter.c:741 src/esfilter.c:808 src/esfilter.c:875
 #: src/esfilter.c:950 src/esfilter.c:1011
 msgid "Action"
-msgstr ""
+msgstr "פעולה"
 
 #: src/streaming.c:428
 msgid "Adapter in use by another subscription"
@@ -211,7 +212,7 @@ msgstr ""
 
 #: src/access.c:1421
 msgid "Admin"
-msgstr ""
+msgstr "מנהל"
 
 #: src/epg.c:1959 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
 #: src/epg.c:1964
@@ -228,7 +229,7 @@ msgstr ""
 
 #: src/epg.c:1953
 msgid "Adventure"
-msgstr ""
+msgstr "הרפתקאות"
 
 #: src/epg.c:2090
 msgid "Advertisement / Shopping"
@@ -287,7 +288,7 @@ msgstr ""
 
 #: src/profile.c:1550
 msgid "Audio CODEC"
-msgstr ""
+msgstr "קידוד שמע"
 
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
@@ -338,11 +339,11 @@ msgstr ""
 
 #: src/epg.c:2026
 msgid "Ballet"
-msgstr ""
+msgstr "בלט"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220
 msgid "Bandwidth"
-msgstr ""
+msgstr "רוחב פס"
 
 #: src/webui/extjs.c:219
 msgid "Based on software from"
@@ -354,11 +355,11 @@ msgstr ""
 
 #: src/bouquet.c:792
 msgid "Bouquet"
-msgstr ""
+msgstr "סל ערוצים"
 
 #: src/channels.c:382
 msgid "Bouquet (auto)"
-msgstr ""
+msgstr "סל ערוצים (אוטומטי)"
 
 #: src/dvr/dvr_autorec.c:1062
 msgid "Brand"
@@ -428,20 +429,20 @@ msgstr ""
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Cartoons"
-msgstr ""
+msgstr "מצויר"
 
 #: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2048
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
 msgid "Channel"
-msgstr ""
+msgstr "ערוץ"
 
 #: src/dvr/dvr_db.c:2058
 msgid "Channel Icon"
-msgstr ""
+msgstr "סמל ערוץ"
 
 #: src/dvr/dvr_db.c:2065
 msgid "Channel Name"
-msgstr ""
+msgstr "שם ערוץ"
 
 #: src/bouquet.c:904
 msgid "Channel Number Offset"
@@ -449,7 +450,7 @@ msgstr ""
 
 #: src/channels.c:1083 src/dvr/dvr_autorec.c:956
 msgid "Channel Tag"
-msgstr ""
+msgstr "תגית ערוץ"
 
 #: src/bouquet.c:852
 msgid "Channel Tag Reference"
@@ -457,16 +458,16 @@ msgstr ""
 
 #: src/access.c:1461
 msgid "Channel Tags"
-msgstr ""
+msgstr "תגיות ערוץ"
 
 #: src/profile.c:1520
 msgid "Channels"
-msgstr ""
+msgstr "ערוצים"
 
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:572
 #: src/input/mpegts/mpegts_service.c:178
 msgid "Character Set"
-msgstr ""
+msgstr "ערכת תווים"
 
 #: src/epg.c:2010
 msgid "Children's / Youth programmes"
@@ -474,7 +475,7 @@ msgstr ""
 
 #: src/epg.c:2047
 msgid "Cinema"
-msgstr ""
+msgstr "קולנוע"
 
 #: src/esfilter.c:607 src/profile.c:285 src/descrambler/caclient.c:247
 msgid "Class"
@@ -494,7 +495,7 @@ msgstr ""
 
 #: src/descrambler/caclient.c:268
 msgid "Client Name"
-msgstr ""
+msgstr "שם לקוח"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
 msgid "Cmd Delay Time (ms) (10-500)"
@@ -506,7 +507,7 @@ msgstr ""
 
 #: src/epg.c:1955
 msgid "Comedy"
-msgstr ""
+msgstr "קומדיה"
 
 #: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
@@ -514,7 +515,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:2291 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
 #: src/dvr/dvr_config.c:783 src/descrambler/caclient.c:275
 msgid "Comment"
-msgstr ""
+msgstr "הערה"
 
 #: src/dvr/dvr_db.c:290
 msgid "Commercial break"
@@ -526,7 +527,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:313
 msgid "Completed OK"
-msgstr ""
+msgstr "הסתיים בהצלחה"
 
 #: src/descrambler/caclient.c:236
 msgid "Conditional Access Client"
@@ -566,7 +567,7 @@ msgstr ""
 
 #: src/epg.c:2089
 msgid "Cooking"
-msgstr ""
+msgstr "בישול"
 
 #: src/profile.c:1434
 msgid "Copy codec type"
@@ -578,19 +579,19 @@ msgstr ""
 
 #: src/bouquet.c:845
 msgid "Create Tag"
-msgstr ""
+msgstr "יצירת תגית"
 
 #: src/input/mpegts/mpegts_service.c:208
 msgid "Created"
-msgstr ""
+msgstr "נוצר"
 
 #: src/dvr/dvr_db.c:2162 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
 msgid "Creator"
-msgstr ""
+msgstr "יוצר"
 
 #: src/input/mpegts/mpegts_mux_sched.c:140
 msgid "Cron"
-msgstr ""
+msgstr "Cron"
 
 #: src/epg.c:2041
 msgid "Culture (without music)"
@@ -610,7 +611,7 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1752
 msgid "DES Key"
-msgstr ""
+msgstr "מפתח DES"
 
 #: src/dvr/dvr_db.c:2204
 msgid "DVB EPG ID"
@@ -618,7 +619,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:220
 msgid "DVB-C Network"
-msgstr ""
+msgstr "רשת "
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
 msgid "DVB-S 4-port"
@@ -634,7 +635,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:239
 msgid "DVB-S Network"
-msgstr ""
+msgstr "רשת DVB-S"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:213
 msgid "DVB-S Satconf"
@@ -650,11 +651,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
-msgstr ""
+msgstr "DVB-T"
 
 #: src/input/mpegts/mpegts_network_dvb.c:201
 msgid "DVB-T Network"
-msgstr ""
+msgstr "רשת DVB-T"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
@@ -734,7 +735,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
 msgid "Days of Week"
-msgstr ""
+msgstr "ימים בשבוע"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
@@ -747,7 +748,7 @@ msgstr ""
 
 #: src/profile.c:300
 msgid "Default"
-msgstr ""
+msgstr "ברירת מחדל"
 
 #: src/profile.c:321
 msgid "Default Priority"
@@ -764,11 +765,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2104 src/dvr/dvr_db.c:2111
 msgid "Description"
-msgstr ""
+msgstr "תיאור"
 
 #: src/epg.c:1952
 msgid "Detective"
-msgstr ""
+msgstr "בלשי"
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "Device ID"
@@ -776,16 +777,16 @@ msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:165
 msgid "Device Model"
-msgstr ""
+msgstr "מודל התקן"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:92
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:248
 msgid "Device Path"
-msgstr ""
+msgstr "נתיב התקן"
 
 #: src/dvr/dvr_db.c:2176 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
 msgid "Directory"
-msgstr ""
+msgstr "תיקיה"
 
 #: src/dvr/dvr_config.c:898
 msgid "Directory Permissions (octal, e.g. 0775)"
@@ -793,7 +794,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:458
 msgid "Disable"
-msgstr ""
+msgstr "נטרול"
 
 #: src/main.c:715
 msgid "Disable DVB bouquets"
@@ -814,15 +815,15 @@ msgstr ""
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Discussion"
-msgstr ""
+msgstr "דיון"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1363
 msgid "DiseqC"
-msgstr ""
+msgstr "DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:89
 msgid "DiseqC Rotor"
-msgstr ""
+msgstr "מנוע DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:229
 msgid "DiseqC repeats"
@@ -859,7 +860,7 @@ msgstr ""
 #: src/epg.c:1951 src/epg.c:1958 src/epg.c:1959 src/epg.c:1960 src/epg.c:1961
 #: src/epg.c:1962 src/epg.c:1963 src/epg.c:1964
 msgid "Drama"
-msgstr ""
+msgstr "דרמה"
 
 #: src/dvr/dvr_autorec.c:1039
 msgid "Duplicate Handling"
@@ -867,19 +868,19 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2041
 msgid "Duration"
-msgstr ""
+msgstr "אורך"
 
 #: src/input/mpegts/mpegts_network.c:210
 msgid "EIT Local Time"
-msgstr ""
+msgstr "זמן מקומי EIT"
 
 #: src/input/mpegts/mpegts_mux.c:505
 msgid "EPG Scan"
-msgstr ""
+msgstr "סריקת לוח שידורים"
 
 #: src/channels.c:339
 msgid "EPG Source"
-msgstr ""
+msgstr "מקור לוח שידורים"
 
 #: src/dvr/dvr_config.c:833
 msgid "EPG Update Window"
@@ -903,7 +904,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:459
 msgid "Enable (auto)"
-msgstr ""
+msgstr "פעיל (אוטומטי)"
 
 #: src/main.c:662
 msgid "Enable DBus"
@@ -947,11 +948,11 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:188
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
-msgstr ""
+msgstr "פעיל"
 
 #: src/service.c:189
 msgid "Encrypted"
-msgstr ""
+msgstr "מוצפן"
 
 #: src/epg.c:2013
 msgid "Entertainment programmes for 10 to 16"
@@ -963,28 +964,28 @@ msgstr ""
 
 #: src/epg.c:2069
 msgid "Environment"
-msgstr ""
+msgstr "סביבה"
 
 #: src/input/mpegts/iptv/iptv_mux.c:151
 msgid "Environment (pipe)"
-msgstr ""
+msgstr "סביבה (צינור)"
 
 #: src/dvr/dvr_db.c:2249
 msgid "Episode"
-msgstr ""
+msgstr "פרק"
 
 #: src/dvr/dvr_db.c:422
 #, c-format
 msgid "Episode %d"
-msgstr ""
+msgstr "פרק %d"
 
 #: src/dvr/dvr_db.c:2183
 msgid "Error Code"
-msgstr ""
+msgstr "קוד שגיאה"
 
 #: src/dvr/dvr_db.c:2190
 msgid "Errors"
-msgstr ""
+msgstr "שגיאות"
 
 #: src/descrambler/constcw.c:322 src/descrambler/constcw.c:382
 msgid "Even Key"
@@ -992,7 +993,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:735
 msgid "Every day"
-msgstr ""
+msgstr "כל יום"
 
 #: src/access.c:1454
 msgid "Exclude Channel Tags"
@@ -1024,19 +1025,19 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:391
 msgid "FAIL"
-msgstr ""
+msgstr "נכשל"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:301
 msgid "FEC"
-msgstr ""
+msgstr "FEC"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:235
 msgid "FEC High"
-msgstr ""
+msgstr "FEC גבוה"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:238
 msgid "FEC Low"
-msgstr ""
+msgstr "FEC נמוך"
 
 #: src/epg.c:2068
 msgid "Factual topics"
@@ -1048,11 +1049,11 @@ msgstr ""
 
 #: src/epg.c:1954
 msgid "Fantasy"
-msgstr ""
+msgstr "פנטזיה"
 
 #: src/dvr/dvr_db.c:309
 msgid "File Missing"
-msgstr ""
+msgstr "קובץ חסר"
 
 #: src/dvr/dvr_db.c:300
 msgid "File Not Created"
@@ -1068,7 +1069,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2169
 msgid "Filename"
-msgstr ""
+msgstr "שם קובץ"
 
 #: src/dvr/dvr_config.c:864
 msgid "Filename Character Set"
@@ -1080,7 +1081,7 @@ msgstr ""
 
 #: src/epg.c:2047
 msgid "Film"
-msgstr ""
+msgstr "סרט"
 
 #: src/epg.c:2043
 msgid "Fine arts"
@@ -1092,7 +1093,7 @@ msgstr ""
 
 #: src/epg.c:2029
 msgid "Folk"
-msgstr ""
+msgstr "עממי"
 
 #: src/epg.c:1956
 msgid "Folkloric"
@@ -1100,7 +1101,7 @@ msgstr ""
 
 #: src/epg.c:2002
 msgid "Football"
-msgstr ""
+msgstr "כדורגל"
 
 #: src/input/mpegts/mpegts_mux.c:460
 msgid "Force (auto)"
@@ -1140,35 +1141,35 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:133
 msgid "Frequency"
-msgstr ""
+msgstr "תדירות"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:215 src/input/mpegts/mpegts_mux_dvb.c:287
 #: src/input/mpegts/mpegts_mux_dvb.c:647
 msgid "Frequency (Hz)"
-msgstr ""
+msgstr "תדירות (Hz)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:523
 msgid "Frequency (MHz)"
-msgstr ""
+msgstr "תדירות (MHz)"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:541
 msgid "Frequency (kHz)"
-msgstr ""
+msgstr "תדירות (kHz)"
 
 #: src/dvr/dvr_autorec.c:717
 msgid "Fri"
-msgstr ""
+msgstr "שישי"
 
 #: src/input/mpegts/satip/satip.c:303
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:158
 msgid "Friendly Name"
-msgstr ""
+msgstr "שם ידידותי"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:85
 #: src/input/mpegts/satip/satip_frontend.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:558
 msgid "Frontend Number"
-msgstr ""
+msgstr "מספר לקוח"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:64
 msgid "Frontend Path"
@@ -1176,7 +1177,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:237
 msgid "Full DiseqC"
-msgstr ""
+msgstr "DiseqC מלא"
 
 #: src/input/mpegts/satip/satip.c:212
 msgid "Full Mux Rx mode supported"
@@ -1188,7 +1189,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:941
 msgid "Full-text"
-msgstr ""
+msgstr "טקסט מלא"
 
 #: src/epg.c:2074
 msgid "Further education"
@@ -1196,33 +1197,33 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:444
 msgid "GOTOX"
-msgstr ""
+msgstr "GOTOX"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:102
 msgid "GOTOX Position"
-msgstr ""
+msgstr "מיקום GOTOX"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:97
 msgid "GOTOX Rotor"
-msgstr ""
+msgstr "מנוע GOTOX"
 
 #: src/epg.c:1983 src/epg.c:1984
 msgid "Game show"
-msgstr ""
+msgstr "שעשועון"
 
 #: src/epg.c:2091 src/epg.c:2092 src/epg.c:2093 src/epg.c:2094 src/epg.c:2095
 #: src/epg.c:2096 src/epg.c:2097
 msgid "Gardening"
-msgstr ""
+msgstr "גינון"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:253
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:272
 msgid "Generic"
-msgstr ""
+msgstr "כללי"
 
 #: src/main.c:644
 msgid "Generic Options"
-msgstr ""
+msgstr "אפשרויות כלליות"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:229
 msgid "Guard Interval"
@@ -1230,7 +1231,7 @@ msgstr ""
 
 #: src/profile.c:267
 msgid "HD: High Definition"
-msgstr ""
+msgstr "HD: אבחנה גבוהה"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:590
 msgid "HDHomeRun ATSC Frontend"
@@ -1274,11 +1275,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:232
 msgid "Hierarchy"
-msgstr ""
+msgstr "היררכיה"
 
 #: src/profile.c:248 src/dvr/dvr_db.c:1614
 msgid "High"
-msgstr ""
+msgstr "גבוה"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:195
 msgid "High Bitrate Mode (CI+ CAMs Only)"
@@ -1294,24 +1295,24 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1739
 msgid "Hostname/IP"
-msgstr ""
+msgstr "שם מארח/IP"
 
 #: src/input/mpegts/mpegts_mux.c:382
 msgid "IDLE"
-msgstr ""
+msgstr "סרק"
 
 #: src/input/mpegts/satip/satip.c:282
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:144
 msgid "IP Address"
-msgstr ""
+msgstr "כתובת IP"
 
 #: src/input/mpegts/iptv/iptv.c:89
 msgid "IPTV"
-msgstr ""
+msgstr "IPTV"
 
 #: src/input/mpegts/iptv/iptv.c:95
 msgid "IPTV Input"
-msgstr ""
+msgstr "כניסת IPTV"
 
 #: src/input/mpegts/iptv/iptv_mux.c:92
 msgid "IPTV Multiplex"
@@ -1319,7 +1320,7 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
-msgstr ""
+msgstr "רשת IPTV"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:588
 msgid "ISI (Stream ID)"
@@ -1327,11 +1328,11 @@ msgstr ""
 
 #: src/channels.c:1122
 msgid "Icon (full URL)"
-msgstr ""
+msgstr "סמל (כתובת מלאה)"
 
 #: src/channels.c:325 src/channels.c:1129
 msgid "Icon URL"
-msgstr ""
+msgstr "כתובת סמל"
 
 #: src/channels.c:1136
 msgid "Icon has title"
@@ -1384,7 +1385,7 @@ msgstr ""
 
 #: src/profile.c:247 src/dvr/dvr_db.c:1613
 msgid "Important"
-msgstr ""
+msgstr "חשוב"
 
 #: src/dvr/dvr_config.c:927
 msgid "Include Channel Name In Filename"
@@ -1408,7 +1409,7 @@ msgstr ""
 
 #: src/access.c:1305 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
-msgstr ""
+msgstr "אינדקס"
 
 #: src/epg.c:2014
 msgid "Informational"
@@ -1420,7 +1421,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:262
 msgid "Initial Scan"
-msgstr ""
+msgstr "סריקה ראשונית"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:120
 msgid "Input Buffer (Bytes)"
@@ -1436,16 +1437,16 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:120
 msgid "Interface"
-msgstr ""
+msgstr "ממשק"
 
 #: src/channels.c:1110
 msgid "Internal"
-msgstr ""
+msgstr "פנימי"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Interview"
-msgstr ""
+msgstr "ראיון"
 
 #: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:453
 msgid "Invalid"
@@ -1462,7 +1463,7 @@ msgstr ""
 
 #: src/epg.c:2030
 msgid "Jazz"
-msgstr ""
+msgstr "ג'אז"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
@@ -1470,25 +1471,25 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:61
 msgid "LNB"
-msgstr ""
+msgstr "LNB"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1227
 msgid "LNB Type"
-msgstr ""
+msgstr "סוג LNB"
 
 #: src/access.c:1331 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
-msgstr ""
+msgstr "שפה"
 
 #: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
 #: src/epg.c:2080 src/epg.c:2081
 msgid "Languages"
-msgstr ""
+msgstr "שפות"
 
 #: src/input/mpegts/mpegts_service.c:215
 msgid "Last Seen"
-msgstr ""
+msgstr "נצפה לאחרונה"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 msgid "Latitude Direction South"
@@ -1568,7 +1569,7 @@ msgstr ""
 
 #: src/epg.c:2046
 msgid "Literature"
-msgstr ""
+msgstr "ספרות"
 
 #: src/input/mpegts/mpegts_service.c:129
 msgid "Local Channel Minor"
@@ -1588,7 +1589,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:387
 msgid "Location"
-msgstr ""
+msgstr "מיקום"
 
 #: src/input/mpegts/mpegts_service.c:193
 msgid "Lock Preferred CA PID"
@@ -1605,23 +1606,23 @@ msgstr ""
 
 #: src/profile.c:250 src/dvr/dvr_db.c:1616
 msgid "Low"
-msgstr ""
+msgstr "נמוך"
 
 #: src/dvr/dvr_db.c:1645
 msgid "MPEG-PS (DVD)"
-msgstr ""
+msgstr "MPEG-PS (DVD)"
 
 #: src/profile.c:1359
 msgid "MPEG-PS (DVD)/av-lib"
-msgstr ""
+msgstr "MPEG-PS (DVD)/av-lib"
 
 #: src/dvr/dvr_db.c:1644
 msgid "MPEG-TS"
-msgstr ""
+msgstr "MPEG-TS"
 
 #: src/input/mpegts/mpegts_input.c:216
 msgid "MPEG-TS Input"
-msgstr ""
+msgstr "כניסת MPEG-TS"
 
 #: src/input/mpegts/mpegts_mux.c:487
 msgid "MPEG-TS Multiplex"
@@ -1653,11 +1654,11 @@ msgstr ""
 
 #: src/profile.c:1187 src/profile.c:1358
 msgid "MPEG-TS/av-lib"
-msgstr ""
+msgstr "MPEG-TS/av-lib"
 
 #: src/epg.c:2053
 msgid "Magazines"
-msgstr ""
+msgstr "מגזינים"
 
 #: src/dvr/dvr_config.c:913
 msgid "Make Subdirectories Per Channel"
@@ -1673,11 +1674,11 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:324
 msgid "Manufacturer"
-msgstr ""
+msgstr "יצרן"
 
 #: src/input/mpegts/satip/satip.c:331
 msgid "Manufacturer URL"
-msgstr ""
+msgstr "כתובת יצרן"
 
 #: src/bouquet.c:831
 msgid "Map No Name"
@@ -1685,7 +1686,7 @@ msgstr ""
 
 #: src/bouquet.c:838
 msgid "Map Radio"
-msgstr ""
+msgstr "מיפוי רדיו"
 
 #: src/bouquet.c:824
 msgid "Map Zero Numbers"
@@ -1694,27 +1695,27 @@ msgstr ""
 #: src/input/mpegts/satip/satip_frontend.c:292
 #: src/input/mpegts/satip/satip_frontend.c:314
 msgid "Master Tuner"
-msgstr ""
+msgstr "מקלט ראשי"
 
 #: src/profile.c:1826
 msgid "Matroska"
-msgstr ""
+msgstr "Matroska"
 
 #: src/dvr/dvr_db.c:1641
 msgid "Matroska (mkv)"
-msgstr ""
+msgstr "Matroska (mkv)"
 
 #: src/profile.c:1360
 msgid "Matroska (mkv)/av-lib"
-msgstr ""
+msgstr "Matroska (mkv)/av-lib"
 
 #: src/profile.c:1102 src/profile.c:1356
 msgid "Matroska (mkv)/built-in"
-msgstr ""
+msgstr "Matroska (mkv)/מובנה"
 
 #: src/profile.c:1258
 msgid "Matroska/av-lib"
-msgstr ""
+msgstr "Matroska/av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:475
 msgid "Maximum Bandwidth (Kbps)"
@@ -1747,7 +1748,7 @@ msgstr ""
 
 #: src/epg.c:2071
 msgid "Medicine"
-msgstr ""
+msgstr "רפואה"
 
 #: src/epg.c:1956
 msgid "Melodrama"
@@ -1771,31 +1772,31 @@ msgstr ""
 
 #: src/descrambler/capmt.c:2181
 msgid "Mode"
-msgstr ""
+msgstr "מצב"
 
 #: src/input/mpegts/satip/satip.c:338
 msgid "Model Description"
-msgstr ""
+msgstr "תיאור מודל"
 
 #: src/input/mpegts/satip/satip.c:345
 msgid "Model Name"
-msgstr ""
+msgstr "שם מודל"
 
 #: src/input/mpegts/satip/satip.c:352
 msgid "Model Number"
-msgstr ""
+msgstr "מספר מודל"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:558 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "Modulation"
-msgstr ""
+msgstr "מודולציה"
 
 #: src/dvr/dvr_autorec.c:713
 msgid "Mon"
-msgstr ""
+msgstr "שני"
 
 #: src/profile.c:1371
 msgid "Mono"
-msgstr ""
+msgstr "מונו"
 
 #: src/main.c:708
 msgid "More verbose libav log"
@@ -1807,33 +1808,33 @@ msgstr ""
 
 #: src/epg.c:2006
 msgid "Motor sport"
-msgstr ""
+msgstr "ספורט מוטורי"
 
 #: src/epg.c:2087
 msgid "Motoring"
-msgstr ""
+msgstr "מוטורי"
 
 #: src/epg.c:1951
 msgid "Movie"
-msgstr ""
+msgstr "סרט"
 
 #: src/epg.c:2026
 msgid "Music"
-msgstr ""
+msgstr "מוזיקה"
 
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
 msgid "Musical"
-msgstr ""
+msgstr "מוזיקלי"
 
 #: src/input/mpegts/mpegts_service.c:101
 #: src/input/mpegts/mpegts_mux_sched.c:133
 msgid "Mux"
-msgstr ""
+msgstr "מוקס"
 
 #: src/input/mpegts/iptv/iptv_mux.c:132
 msgid "Mux Name"
-msgstr ""
+msgstr "שם מוקס"
 
 #: src/input/mpegts/mpegts_mux_sched.c:118
 msgid "Mux Sched Entry"
@@ -1845,14 +1846,14 @@ msgstr ""
 
 #: src/streaming.c:426
 msgid "Mux not enabled"
-msgstr ""
+msgstr "מוקס מנוטרל"
 
 #: src/input/mpegts/mpegts_mux.c:389
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:55
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:68
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:93
 msgid "NONE"
-msgstr ""
+msgstr "ללא"
 
 #: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
 #: src/dvr/dvr_autorec.c:922 src/dvr/dvr_timerec.c:563
@@ -1860,7 +1861,7 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1202
 #: src/input/mpegts/satip/satip_satconf.c:194
 msgid "Name"
-msgstr ""
+msgstr "שם"
 
 #: src/epg.c:2070
 msgid "Natural sciences"
@@ -1868,12 +1869,12 @@ msgstr ""
 
 #: src/epg.c:2069
 msgid "Nature"
-msgstr ""
+msgstr "טבע"
 
 #: src/input/mpegts/mpegts_mux.c:513 src/input/mpegts/mpegts_service.c:94
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:137
 msgid "Network"
-msgstr ""
+msgstr "רשת"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:531
 msgid "Network A"
@@ -1893,13 +1894,13 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:143
 msgid "Network Name"
-msgstr ""
+msgstr "שם רשת"
 
 #: src/input/mpegts/satip/satip_frontend.c:197
 #: src/input/mpegts/satip/satip_frontend.c:336
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:172
 msgid "Network Type"
-msgstr ""
+msgstr "סוג רשת"
 
 #: src/input/mpegts/mpegts_mux.c:520
 msgid "Network UUID"
@@ -1914,11 +1915,11 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1217
 #: src/input/mpegts/satip/satip_satconf.c:224
 msgid "Networks"
-msgstr ""
+msgstr "רשתות"
 
 #: src/epg.c:1967 src/epg.c:1968
 msgid "News"
-msgstr ""
+msgstr "חדשות"
 
 #: src/epg.c:1969
 msgid "News magazine"
@@ -1972,11 +1973,11 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:458
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:271
 msgid "None"
-msgstr ""
+msgstr "ללא"
 
 #: src/profile.c:249 src/dvr/dvr_db.c:1615
 msgid "Normal"
-msgstr ""
+msgstr "רגיל"
 
 #: src/input/mpegts/mpegts_input.c:202
 msgid "Not Linked"
@@ -1996,7 +1997,7 @@ msgstr ""
 
 #: src/channels.c:311
 msgid "Number"
-msgstr ""
+msgstr "מספר"
 
 #: src/main.c:723
 msgid "Number of tsfile tuners"
@@ -2004,7 +2005,7 @@ msgstr ""
 
 #: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
-msgstr ""
+msgstr "אישור"
 
 #: src/descrambler/capmt.c:2165
 msgid "OSCam (rev >= 9095)"
@@ -2028,19 +2029,19 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:77
 msgid "Off"
-msgstr ""
+msgstr "כבוי"
 
 #: src/descrambler/capmt.c:2166
 msgid "Older OSCam"
-msgstr ""
+msgstr "OSCam ישן"
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "On"
-msgstr ""
+msgstr "פעיל"
 
 #: src/descrambler/cwc.c:1768
 msgid "One Mux (EMM)"
-msgstr ""
+msgstr "מוקס יחיד (EMM)"
 
 #: src/input/mpegts/mpegts_mux.c:465
 msgid "Only Bulsatcom 39E"
@@ -2048,7 +2049,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:461
 msgid "Only EIT"
-msgstr ""
+msgstr "EIT בלבד"
 
 #: src/input/mpegts/mpegts_mux.c:468
 msgid "Only OpenTV Sky Ausat"
@@ -2068,11 +2069,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freesat"
-msgstr ""
+msgstr "UK Freesat בלבד"
 
 #: src/input/mpegts/mpegts_mux.c:463
 msgid "Only UK Freeview"
-msgstr ""
+msgstr "UK Freeview בלבד"
 
 #: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Viasat Baltic"
@@ -2089,7 +2090,7 @@ msgstr ""
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
 msgid "Opera"
-msgstr ""
+msgstr "אופרה"
 
 #: src/input/mpegts/mpegts_network_dvb.c:253
 #: src/input/mpegts/mpegts_mux_dvb.c:611
@@ -2118,7 +2119,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2155 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
 msgid "Owner"
-msgstr ""
+msgstr "בעלים"
 
 #: src/input/mpegts/mpegts_mux.c:383
 msgid "PEND"
@@ -2127,7 +2128,7 @@ msgstr ""
 #: src/esfilter.c:668 src/esfilter.c:735 src/esfilter.c:802 src/esfilter.c:869
 #: src/esfilter.c:944 src/esfilter.c:1005
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/input/mpegts/satip/satip.c:261
 msgid "PIDs 21 in setup"
@@ -2161,15 +2162,15 @@ msgstr ""
 
 #: src/access.c:1692 src/descrambler/cwc.c:1732
 msgid "Password"
-msgstr ""
+msgstr "סיסמה"
 
 #: src/access.c:1700
 msgid "Password2"
-msgstr ""
+msgstr "סיסמה 2"
 
 #: src/access.c:1670
 msgid "Passwords"
-msgstr ""
+msgstr "סיסמאות"
 
 #: src/epg.c:2042
 msgid "Performing arts"
@@ -2181,7 +2182,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
-msgstr ""
+msgstr "פיילוט"
 
 #: src/epg.c:2052
 msgid "Political issues"
@@ -2189,7 +2190,7 @@ msgstr ""
 
 #: src/epg.c:2027
 msgid "Pop"
-msgstr ""
+msgstr "פםפ"
 
 #: src/epg.c:2045
 msgid "Popular culture"
@@ -2197,12 +2198,12 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1746
 msgid "Port"
-msgstr ""
+msgstr "פורט"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:126
 #: src/input/mpegts/satip/satip_satconf.c:216
 msgid "Position"
-msgstr ""
+msgstr "מיקום"
 
 #: src/dvr/dvr_config.c:842
 msgid "Post-Processor Command"
@@ -2245,7 +2246,7 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
-msgstr ""
+msgstr "קדימות"
 
 #: src/service.c:183
 msgid "Priority (-10..10)"
@@ -2253,15 +2254,15 @@ msgstr ""
 
 #: src/channels.c:1116
 msgid "Private"
-msgstr ""
+msgstr "פרטי"
 
 #: src/profile.c:307
 msgid "Profile Name"
-msgstr ""
+msgstr "שם פרופיל"
 
 #: src/input/mpegts/mpegts_service.c:150
 msgid "Provider"
-msgstr ""
+msgstr "ספק"
 
 #: src/descrambler/constcw.c:298 src/descrambler/constcw.c:358
 msgid "Provider ID"
@@ -2274,7 +2275,7 @@ msgstr ""
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Puppets"
-msgstr ""
+msgstr "בובות"
 
 #: src/profile.c:1374
 msgid "Quad (4.0)"
@@ -2282,11 +2283,11 @@ msgstr ""
 
 #: src/epg.c:1984
 msgid "Quiz"
-msgstr ""
+msgstr "חידון"
 
 #: src/input/mpegts/satip/satip.c:289
 msgid "RTSP Port"
-msgstr ""
+msgstr "פורט RTSP"
 
 #: src/imagecache.c:83
 msgid "Re-try period"
@@ -2330,11 +2331,11 @@ msgstr ""
 
 #: src/epg.c:2044
 msgid "Religion"
-msgstr ""
+msgstr "דת"
 
 #: src/epg.c:1958
 msgid "Religious"
-msgstr ""
+msgstr "דתי"
 
 #: src/epg.c:2055 src/epg.c:2056 src/epg.c:2057 src/epg.c:2058 src/epg.c:2059
 #: src/epg.c:2060 src/epg.c:2061 src/epg.c:2062 src/epg.c:2063 src/epg.c:2064
@@ -2404,7 +2405,7 @@ msgstr ""
 
 #: src/epg.c:2027
 msgid "Rock"
-msgstr ""
+msgstr "רוק"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:570
 msgid "Rolloff"
@@ -2412,11 +2413,11 @@ msgstr ""
 
 #: src/epg.c:1957
 msgid "Romance"
-msgstr ""
+msgstr "רומנטי"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1245
 msgid "Rotor Type"
-msgstr ""
+msgstr "סוג מנוע"
 
 #: src/main.c:653
 msgid "Run as group"
@@ -2428,7 +2429,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:288
 msgid "Running"
-msgstr ""
+msgstr "רץ"
 
 #: src/input/mpegts/satip/satip_frontend.c:349
 msgid "SAT>IP ATSC Frontend"
@@ -2436,7 +2437,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:194
 msgid "SAT>IP Client"
-msgstr ""
+msgstr "לקוח SAT>IP"
 
 #: src/input/mpegts/satip/satip_frontend.c:140
 msgid "SAT>IP DVB Frontend"
@@ -2483,7 +2484,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:718
 msgid "Sat"
-msgstr ""
+msgstr "שבת"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:202
 msgid "SatConfig"
@@ -2509,11 +2510,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:564
 msgid "Scan Result"
-msgstr ""
+msgstr "תוצאות חיפוש"
 
 #: src/input/mpegts/mpegts_mux.c:555
 msgid "Scan Status"
-msgstr ""
+msgstr "מצב חיפוש"
 
 #: src/dvr/dvr_db.c:2277
 msgid "Schedule Status"
@@ -2537,20 +2538,20 @@ msgstr ""
 
 #: src/epg.c:2068
 msgid "Science"
-msgstr ""
+msgstr "מדע"
 
 #: src/epg.c:1954
 msgid "Science fiction"
-msgstr ""
+msgstr "מדע בדיוני"
 
 #: src/dvr/dvr_autorec.c:1070
 msgid "Season"
-msgstr ""
+msgstr "עונה"
 
 #: src/dvr/dvr_db.c:422
 #, c-format
 msgid "Season %d"
-msgstr ""
+msgstr "עונה %d"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:241
 msgid "Send CAPMT Query"
@@ -2578,7 +2579,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:394
 msgid "Server"
-msgstr ""
+msgstr "שרת"
 
 #: src/main.c:680
 msgid "Server Connectivity"
@@ -2587,7 +2588,7 @@ msgstr ""
 #: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
 msgid "Service"
-msgstr ""
+msgstr "שירות"
 
 #: src/main.c:648
 msgid "Service Configuration"
@@ -2604,7 +2605,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:143 src/input/mpegts/iptv/iptv_mux.c:138
 msgid "Service Name"
-msgstr ""
+msgstr "שם שירות"
 
 #: src/service.c:206
 msgid "Service Raw"
@@ -2612,11 +2613,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:164
 msgid "Service Type"
-msgstr ""
+msgstr "סוג שירות"
 
 #: src/channels.c:363 src/bouquet.c:875
 msgid "Services"
-msgstr ""
+msgstr "שירותים"
 
 #: src/bouquet.c:761
 #, c-format
@@ -2669,15 +2670,15 @@ msgstr ""
 
 #: src/epg.c:1956
 msgid "Soap"
-msgstr ""
+msgstr "אופרת סבון"
 
 #: src/epg.c:2002
 msgid "Soccer"
-msgstr ""
+msgstr "כדורגל"
 
 #: src/epg.c:2052 src/epg.c:2073
 msgid "Social"
-msgstr ""
+msgstr "חברתי"
 
 #: src/epg.c:2054
 msgid "Social advisory"
@@ -2689,11 +2690,11 @@ msgstr ""
 
 #: src/bouquet.c:867
 msgid "Source"
-msgstr ""
+msgstr "מקור"
 
 #: src/streaming.c:413
 msgid "Source deleted"
-msgstr ""
+msgstr "מקור נמחק"
 
 #: src/streaming.c:411
 msgid "Source quality is bad"
@@ -2737,11 +2738,11 @@ msgstr ""
 
 #: src/epg.c:1999
 msgid "Sports"
-msgstr ""
+msgstr "ספורט"
 
 #: src/epg.c:2001
 msgid "Sports magazines"
-msgstr ""
+msgstr "מגזין ספורט"
 
 #: src/epg.c:2003
 msgid "Squash"
@@ -2749,27 +2750,27 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:477
 msgid "Standard"
-msgstr ""
+msgstr "רגיל"
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Start"
-msgstr ""
+msgstr "התחלה"
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Start After"
-msgstr ""
+msgstr "התחלה לאחר"
 
 #: src/dvr/dvr_autorec.c:974
 msgid "Start Before"
-msgstr ""
+msgstr "התחלה לפני"
 
 #: src/dvr/dvr_db.c:1994
 msgid "Start Time"
-msgstr ""
+msgstr "זמן התחלה"
 
 #: src/dvr/dvr_db.c:2270 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "מצב"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
@@ -2777,11 +2778,11 @@ msgstr ""
 
 #: src/profile.c:1372
 msgid "Stereo"
-msgstr ""
+msgstr "סטיראו"
 
 #: src/dvr/dvr_timerec.c:601
 msgid "Stop"
-msgstr ""
+msgstr "עצירה"
 
 #: src/dvr/dvr_db.c:2019
 msgid "Stop Time"
@@ -2799,11 +2800,11 @@ msgstr ""
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream Type"
-msgstr ""
+msgstr "סוג הזרמה"
 
 #: src/access.c:1276 src/access.c:1346
 msgid "Streaming"
-msgstr ""
+msgstr "מזרים"
 
 #: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
@@ -2828,7 +2829,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2089 src/dvr/dvr_db.c:2096
 msgid "Subtitle"
-msgstr ""
+msgstr "כתובית"
 
 #: src/profile.c:1565
 msgid "Subtitle CODEC"
@@ -2840,7 +2841,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
-msgstr ""
+msgstr "ראשון"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
@@ -2865,7 +2866,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:685
 msgid "Sync"
-msgstr ""
+msgstr "סנכרון"
 
 #: src/dvr/dvr_config.c:686
 msgid "Sync + Don't keep"
@@ -2873,7 +2874,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:683
 msgid "System"
-msgstr ""
+msgstr "מערכת"
 
 #: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
@@ -2881,7 +2882,7 @@ msgstr ""
 
 #: src/channels.c:373
 msgid "Tags"
-msgstr ""
+msgstr "תגיות"
 
 #: src/epg.c:1986 src/epg.c:1987 src/epg.c:1988 src/epg.c:1989 src/epg.c:1990
 #: src/epg.c:1991 src/epg.c:1992 src/epg.c:1993 src/epg.c:1994 src/epg.c:1995
@@ -2895,7 +2896,7 @@ msgstr ""
 
 #: src/epg.c:2070
 msgid "Technology"
-msgstr ""
+msgstr "טכנולוגיה"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
@@ -2903,11 +2904,11 @@ msgstr ""
 
 #: src/epg.c:2003
 msgid "Tennis"
-msgstr ""
+msgstr "טניס"
 
 #: src/main.c:722
 msgid "Testing options"
-msgstr ""
+msgstr "בודק אפשרויות"
 
 #: src/epg.c:1952
 msgid "Thriller"
@@ -2915,7 +2916,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
-msgstr ""
+msgstr "חמישי"
 
 #: src/dvr/dvr_db.c:316
 msgid "Time missed"
@@ -2940,7 +2941,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2074 src/dvr/dvr_db.c:2081 src/dvr/dvr_timerec.c:569
 msgid "Title"
-msgstr ""
+msgstr "כותרת"
 
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
@@ -2984,7 +2985,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
-msgstr ""
+msgstr "שלישי"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
 msgid "Tune Before DiseqC"
@@ -3016,7 +3017,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2256 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
-msgstr ""
+msgstr "כתובת"
 
 #: src/main.c:677
 msgid "URL with the SAT>IP server XML location"
@@ -3033,7 +3034,7 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:296
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:151
 msgid "UUID"
-msgstr ""
+msgstr "UUID"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:142
 msgid "Uncommited First"
@@ -3045,7 +3046,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:67
 msgid "Unicable"
-msgstr ""
+msgstr "Unicable"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:602
 msgid "Unicable Switch (Universal LNB, experimental)"
@@ -3053,7 +3054,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1254
 msgid "Unicable Type"
-msgstr ""
+msgstr "סוג Unicable"
 
 #: src/profile.c:251 src/dvr/dvr_db.c:1617
 msgid "Unimportant"
@@ -3065,7 +3066,7 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
 msgid "Unknown"
-msgstr ""
+msgstr "לא ידוע"
 
 #: src/streaming.c:451
 #, c-format
@@ -3107,7 +3108,7 @@ msgstr ""
 
 #: src/channels.c:318
 msgid "User Icon"
-msgstr ""
+msgstr "סמל משתמש"
 
 #: src/dvr/dvr_db.c:304
 msgid "User Limit Reached"
@@ -3123,7 +3124,7 @@ msgstr ""
 
 #: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
 msgid "Username"
-msgstr ""
+msgstr "שם משתמש"
 
 #: src/epg.c:1985
 msgid "Variety show"
@@ -3131,7 +3132,7 @@ msgstr ""
 
 #: src/epg.c:2048
 msgid "Video"
-msgstr ""
+msgstr "וידאו"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
@@ -3139,11 +3140,11 @@ msgstr ""
 
 #: src/profile.c:1535
 msgid "Video CODEC"
-msgstr ""
+msgstr "קידוד וידאו"
 
 #: src/access.c:1374
 msgid "Video Recorder"
-msgstr ""
+msgstr "מקליט וידאו"
 
 #: src/esfilter.c:631
 msgid "Video Stream Filter"
@@ -3155,7 +3156,7 @@ msgstr ""
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
-msgstr ""
+msgstr "WEBM"
 
 #: src/profile.c:1361
 msgid "WEBM/av-lib"
@@ -3187,31 +3188,31 @@ msgstr ""
 
 #: src/epg.c:1953
 msgid "War"
-msgstr ""
+msgstr "מלחמה"
 
 #: src/epg.c:2007
 msgid "Water sport"
-msgstr ""
+msgstr "ספורט מים"
 
 #: src/epg.c:1968
 msgid "Weather report"
-msgstr ""
+msgstr "תחזית מזג אוויר"
 
 #: src/access.c:1415
 msgid "Web Interface"
-msgstr ""
+msgstr "ממשק דפדפן"
 
 #: src/access.c:1338
 msgid "Web Interface Language"
-msgstr ""
+msgstr "שפת ממשק דפדפן"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
-msgstr ""
+msgstr "רביעי"
 
 #: src/epg.c:1953
 msgid "Western"
-msgstr ""
+msgstr "מערבון"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
@@ -3223,11 +3224,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
-msgstr ""
+msgstr "en50494"
 
 #: src/dvr/dvr_db.c:1938
 msgid "hrs"
-msgstr ""
+msgstr "שע'"
 
 #: src/main.c:752
 #, c-format
@@ -3236,11 +3237,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1939
 msgid "min"
-msgstr ""
+msgstr "דקה"
 
 #: src/dvr/dvr_db.c:1940
 msgid "mins"
-msgstr ""
+msgstr "דק'"
 
 #: src/main.c:759
 #, c-format

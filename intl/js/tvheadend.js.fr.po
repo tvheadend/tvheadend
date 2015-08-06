@@ -5,14 +5,15 @@
 # Translators:
 # Adrien Chevrier, 2015
 # Adrien Cosson <cadiyak.theory@gmail.com>, 2015
+# Glandos <bugs-transifex@antipoul.fr>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-04 15:35+0000\n"
-"Last-Translator: Adrien Cosson <cadiyak.theory@gmail.com>\n"
-"Language-Team: French (http://www.transifex.com/p/tvheadend/language/fr/)\n"
+"PO-Revision-Date: 2015-08-02 12:15+0000\n"
+"Last-Translator: Glandos <bugs-transifex@antipoul.fr>\n"
+"Language-Team: French (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,7 +22,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:137
 msgid "&#160;OK&#160;"
-msgstr ""
+msgstr "&#160;OK&#160;"
 
 #: src/webui/static/app/i18n-post.js:106
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
@@ -30,7 +31,7 @@ msgstr ""
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
-msgstr ""
+msgstr "(Effacer les filtres)"
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
@@ -38,15 +39,15 @@ msgstr "(Aucun)"
 
 #: src/webui/static/app/epg.js:205
 msgid "(default DVR Profile)"
-msgstr ""
+msgstr "(Profil d'enregistrement par défaut)"
 
 #: src/webui/static/app/i18n-post.js:59
 msgid "0 #monthNumber"
-msgstr ""
+msgstr "0 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:224
 msgid "0,000.00#NumberColumn"
-msgstr ""
+msgstr "0,000.00#NumberColumn"
 
 #: src/webui/static/app/epg.js:69
 msgid "00:00:00 - 00:15:00"
@@ -70,47 +71,47 @@ msgstr "03:00:00 - Pas de maximum"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
-msgstr ""
+msgstr "1 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:69
 msgid "10 #monthNumber"
-msgstr ""
+msgstr "10 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:70
 msgid "11 #monthNumber"
-msgstr ""
+msgstr "11 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:61
 msgid "2 #monthNumber"
-msgstr ""
+msgstr "2 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:62
 msgid "3 #monthNumber"
-msgstr ""
+msgstr "3 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
-msgstr ""
+msgstr "4 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:64
 msgid "5 #monthNumber"
-msgstr ""
+msgstr "5 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:65
 msgid "6 #monthNumber"
-msgstr ""
+msgstr "6 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:66
 msgid "7 #monthNumber"
-msgstr ""
+msgstr "7 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:67
 msgid "8 #monthNumber"
-msgstr ""
+msgstr "8 #monthNumber"
 
 #: src/webui/static/app/i18n-post.js:68
 msgid "9 #monthNumber"
-msgstr ""
+msgstr "9 #monthNumber"
 
 #: src/webui/static/app/dvr.js:198
 msgid "Abort"
@@ -118,7 +119,7 @@ msgstr "Annuler"
 
 #: src/webui/static/app/dvr.js:196
 msgid "Abort the selected recording"
-msgstr ""
+msgstr "Annuler l'enregistrement sélectionné"
 
 #: src/webui/static/app/tvheadend.js:479
 msgid "About"
@@ -138,7 +139,7 @@ msgstr ""
 
 #: src/webui/static/app/servicemapper.js:24
 msgid "Active"
-msgstr ""
+msgstr "Actif"
 
 #: src/webui/static/app/idnode.js:1157 src/webui/static/app/idnode.js:1638
 msgid "Add"
@@ -146,7 +147,7 @@ msgstr "Ajouter"
 
 #: src/webui/static/app/idnode.js:1155 src/webui/static/app/idnode.js:1636
 msgid "Add a new entry"
-msgstr ""
+msgstr "Ajouter une nouvelle entrée"
 
 #: src/webui/static/app/idnode.js:904 src/webui/static/app/idnode.js:934
 msgid "Add {0}"
@@ -162,11 +163,11 @@ msgstr "Après"
 
 #: src/webui/static/app/mpegts.js:211
 msgid "After filtering and reordering (without PCR and PMT)"
-msgstr ""
+msgstr "Après filtrage et ré-ordonnancement (sans PCR ni PMT)"
 
 #: src/webui/static/app/epg.js:559 src/webui/static/app/epg.js:560
 msgid "Age"
-msgstr ""
+msgstr "Âge"
 
 #: src/webui/static/app/epg.js:121
 msgid "Age Rating"
@@ -174,19 +175,19 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
-msgstr ""
+msgstr "Tout"
 
 #: src/webui/static/app/dvr.js:116
 msgid "All days"
-msgstr ""
+msgstr "Tous les jours"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
-msgstr ""
+msgstr "Appliquer tous les changements ci-dessous jusqu'au prochain redémarrage"
 
 #: src/webui/static/app/tvhlog.js:56
 msgid "Apply configuration (run-time only)"
-msgstr ""
+msgstr "Appliquer la configuration (jusqu'au prochain redémarrage seulement)"
 
 #: src/webui/static/app/tvhlog.js:129
 msgid "Applying Data..."
@@ -202,11 +203,11 @@ msgstr "Avril"
 
 #: src/webui/static/app/chconf.js:158
 msgid "Assign Number"
-msgstr ""
+msgstr "Assigner un numéro"
 
 #: src/webui/static/app/chconf.js:156
 msgid "Assign lowest free channel number"
-msgstr ""
+msgstr "Assigner le premier numéro de chaîne disponible"
 
 #: src/webui/static/app/esfilter.js:70
 msgid "Audio Stream Filter"
@@ -214,7 +215,7 @@ msgstr "Filtre de flux audio"
 
 #: src/webui/static/app/esfilter.js:71
 msgid "Audio Stream Filters"
-msgstr ""
+msgstr "Filtres de flux audio"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
@@ -230,11 +231,11 @@ msgstr "Enregistrement automatique"
 
 #: src/webui/static/app/tvheadend.js:110
 msgid "Auto-refresh"
-msgstr ""
+msgstr "Rafraîchissement automatique"
 
 #: src/webui/static/app/epg.js:221
 msgid "Autorec"
-msgstr ""
+msgstr "Enregistrement auto."
 
 #: src/webui/static/app/config.js:106
 msgid "Available"
@@ -254,7 +255,7 @@ msgstr "Moniteur de bande passante"
 
 #: src/webui/static/app/config.js:215
 msgid "Base"
-msgstr ""
+msgstr "Base"
 
 #: src/webui/static/app/idnode.js:775
 msgid "Basic Settings"

@@ -9,9 +9,9 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Croatian (http://www.transifex.com/p/tvheadend/language/hr/)\n"
+"PO-Revision-Date: 2015-07-18 10:12+0000\n"
+"Last-Translator: gogo <trebelnik2@gmail.com>\n"
+"Language-Team: Croatian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -35,7 +35,7 @@ msgstr "# Mapirani programi"
 
 #: src/input/mpegts/mpegts_network.c:217
 msgid "# Muxes"
-msgstr ""
+msgstr "# Multipleksi"
 
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
 #: src/input/mpegts/mpegts_mux.c:580
@@ -44,134 +44,134 @@ msgstr "# Usluge"
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
-msgstr ""
+msgstr "# Pogledane usluge"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
-msgstr ""
+msgstr "0"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "1"
-msgstr ""
+msgstr "1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:79
 msgid "10"
-msgstr ""
+msgstr "10"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:80
 msgid "11"
-msgstr ""
+msgstr "11"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:81
 msgid "12"
-msgstr ""
+msgstr "12"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:82
 msgid "13"
-msgstr ""
+msgstr "13"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:83
 msgid "14"
-msgstr ""
+msgstr "14"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:84
 msgid "15"
-msgstr ""
+msgstr "15"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:71
 msgid "2"
-msgstr ""
+msgstr "2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
 msgid "2-Port Switch (Universal LNB)"
-msgstr ""
+msgstr "2-Ulazni preklopnik (Univerzalni LNB)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "3"
-msgstr ""
+msgstr "3"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:73
 msgid "4"
-msgstr ""
+msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
 msgid "4-Port Switch (Universal LNB)"
-msgstr ""
+msgstr "4-Ulazni preklopnik (Univerzalni LNB)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "5"
-msgstr ""
+msgstr "5"
 
 #: src/profile.c:1375
 msgid "5.0"
-msgstr ""
+msgstr "5.0"
 
 #: src/profile.c:1376
 msgid "5.1"
-msgstr ""
+msgstr "5.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:75
 msgid "6"
-msgstr ""
+msgstr "6"
 
 #: src/profile.c:1377
 msgid "6.1"
-msgstr ""
+msgstr "6.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:76
 msgid "7"
-msgstr ""
+msgstr "7"
 
 #: src/profile.c:1378
 msgid "7.1"
-msgstr ""
+msgstr "7.1"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:77
 msgid "8"
-msgstr ""
+msgstr "8"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:78
 msgid "9"
-msgstr ""
+msgstr "9"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:356
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "A"
-msgstr ""
+msgstr "A"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:391
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:56
 msgid "AA"
-msgstr ""
+msgstr "AA"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:402
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:57
 msgid "AB"
-msgstr ""
+msgstr "AB"
 
 #: src/input/mpegts/mpegts_mux.c:478
 msgid "AC-3 = descriptor 6"
-msgstr ""
+msgstr "AC-3 = opisivač 6"
 
 #: src/input/mpegts/mpegts_mux.c:594
 msgid "AC-3 Detection"
-msgstr ""
+msgstr "AC-3 otkrivanje"
 
 #: src/input/mpegts/mpegts_mux.c:384
 msgid "ACTIVE"
-msgstr ""
+msgstr "AKTIVNO"
 
 #: src/descrambler/constcw.c:345
 msgid "AES Constant Code Word Client"
-msgstr ""
+msgstr "AES klijent nepromjenjive šifre"
 
 #: src/esfilter.c:313 src/esfilter.c:370
 msgid "ANY"
-msgstr ""
+msgstr "SVEJEDNO"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
-msgstr ""
+msgstr "ATSC"
 
 #: src/input/mpegts/mpegts_network_dvb.c:266
 msgid "ATSC Network"
@@ -200,11 +200,11 @@ msgstr "Radnja"
 
 #: src/streaming.c:428
 msgid "Adapter in use by another subscription"
-msgstr ""
+msgstr "Adapter koristi druga pretplata"
 
 #: src/main.c:705
 msgid "Add file and line numbers to debug"
-msgstr ""
+msgstr "Dodaj datoteku i broj redka za otklanjanje grešaka"
 
 #: src/main.c:706
 msgid "Add the thread ID to debug"
@@ -217,11 +217,11 @@ msgstr "Administrator"
 #: src/epg.c:1959 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
 #: src/epg.c:1964
 msgid "Adult movie"
-msgstr ""
+msgstr "Film za odrasle"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
-msgstr ""
+msgstr "Napredno (neuniverzalni LNB-ovi, rotori, itd.)"
 
 #: src/access.c:1352
 msgid "Advanced Streaming"
@@ -229,98 +229,98 @@ msgstr "Napredno strujanje"
 
 #: src/epg.c:1953
 msgid "Adventure"
-msgstr ""
+msgstr "Pustolovina"
 
 #: src/epg.c:2090
 msgid "Advertisement / Shopping"
-msgstr ""
+msgstr "Oglašavanje / Kupovina"
 
 #: src/access.c:1275
 msgid "All (Streaming plus DVR)"
-msgstr ""
+msgstr "Sve (Strujanje plus DVR)"
 
 #: src/access.c:1386
 msgid "All DVR"
-msgstr ""
+msgstr "Svi DVR"
 
 #: src/access.c:1392
 msgid "All DVR (rw)"
-msgstr ""
+msgstr "Svi DVR (rw)"
 
 #: src/webui/extjs.c:241
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr ""
+msgstr "Svi postupci su korišteni za podršku infrastrukture poslužitelja i kupovinu opreme za testiranje."
 
 #: src/main.c:654
 msgid "Alternate PID path"
-msgstr ""
+msgstr "Zamjenska PID putanja"
 
 #: src/main.c:649
 msgid "Alternate configuration path"
-msgstr ""
+msgstr "Zamjenska putanja podešavanja"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
 msgid "Altitude (meters)"
-msgstr ""
+msgstr "Nadmorska visina (metri)"
 
 #: src/epg.c:2069
 msgid "Animals"
-msgstr ""
+msgstr "Životinje"
 
 #: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
 #: src/dvr/dvr_autorec.c:625
 msgid "Any"
-msgstr ""
+msgstr "Svejedno"
 
 #: src/epg.c:2041
 msgid "Arts"
-msgstr ""
+msgstr "Umjetnost"
 
 #: src/epg.c:2005
 msgid "Athletics"
-msgstr ""
+msgstr "Atletika"
 
 #: src/profile.c:1558
 msgid "Audio Bitrate (kb/s) (0=Auto)"
-msgstr ""
+msgstr "Brzina prijenosa zvuka (kb/s) (0=Automatski)"
 
 #: src/profile.c:1550
 msgid "Audio CODEC"
-msgstr ""
+msgstr "Zvučni KÔDEK"
 
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
-msgstr ""
+msgstr "Zvuči filter struajanja"
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
-msgstr ""
+msgstr "Automatska provjera onemogućena"
 
 #: src/service.c:139
 msgid "Auto Check Enabled"
-msgstr ""
+msgstr "Automatska provjera omogućena"
 
 #: src/channels.c:332
 msgid "Auto EPG Channel"
-msgstr ""
+msgstr "Automatski EPG programa"
 
 #: src/dvr/dvr_db.c:2217
 msgid "Auto Record"
-msgstr ""
+msgstr "Automatski snimi"
 
 #: src/dvr/dvr_db.c:2225
 msgid "Auto Time Record"
-msgstr ""
+msgstr "Automatsko vrijeme snimanja"
 
 #: src/bouquet.c:817
 msgid "Auto-Map to Channels"
-msgstr ""
+msgstr "Automatski mapiraj u programe"
 
 #: src/service.c:165
 msgid "Automatic Checking"
-msgstr ""
+msgstr "Automatska provjera"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:367
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:95
@@ -339,15 +339,15 @@ msgstr ""
 
 #: src/epg.c:2026
 msgid "Ballet"
-msgstr ""
+msgstr "Balet"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220
 msgid "Bandwidth"
-msgstr ""
+msgstr "Frekvencijska širina"
 
 #: src/webui/extjs.c:219
 msgid "Based on software from"
-msgstr ""
+msgstr "Temeljeneo na softveru s"
 
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
@@ -355,11 +355,11 @@ msgstr ""
 
 #: src/bouquet.c:792
 msgid "Bouquet"
-msgstr ""
+msgstr "Buket"
 
 #: src/channels.c:382
 msgid "Bouquet (auto)"
-msgstr ""
+msgstr "Buket (automatski)"
 
 #: src/dvr/dvr_autorec.c:1062
 msgid "Brand"
@@ -367,139 +367,139 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2241
 msgid "Broadcast"
-msgstr ""
+msgstr "Emitiranje"
 
 #: src/epg.c:2049
 msgid "Broadcasting"
-msgstr ""
+msgstr "Emitiranje"
 
 #: src/webui/extjs.c:224
 msgid "Build"
-msgstr ""
+msgstr "Izgrađeno"
 
 #: src/descrambler/caclient.c:173
 #, c-format
 msgid "CA Client %i"
-msgstr ""
+msgstr "CA klijent %i"
 
 #: src/descrambler/constcw.c:290 src/descrambler/constcw.c:350
 msgid "CA ID"
-msgstr ""
+msgstr "CA ID"
 
 #: src/esfilter.c:914
 msgid "CA Identification"
-msgstr ""
+msgstr "CA identifikacija"
 
 #: src/esfilter.c:922
 msgid "CA Provider"
-msgstr ""
+msgstr "CA pružatelj"
 
 #: src/esfilter.c:899
 msgid "CA Stream Filter"
-msgstr ""
+msgstr "CA filter strujanja"
 
 #: src/service.c:196
 msgid "CAID"
-msgstr ""
+msgstr "CAID"
 
 #: src/descrambler/capmt.c:2176
 msgid "CAPMT (Linux DVBAPI)"
-msgstr ""
+msgstr "CAPMT (Linux DVBAPI)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:225
 msgid "CAPMT Interval (ms)"
-msgstr ""
+msgstr "CAPMT razdoblje (ms)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:233
 msgid "CAPMT Query Interval (ms)"
-msgstr ""
+msgstr "CAPMT razdoblje upita (ms)"
 
 #: src/input/mpegts/mpegts_mux.c:548 src/input/mpegts/mpegts_service.c:157
 msgid "CRID Authority"
-msgstr ""
+msgstr "CRID ovlast"
 
 #: src/dvr/dvr_config.c:800
 msgid "Cache Scheme"
-msgstr ""
+msgstr "Shema predmemorije"
 
 #: src/descrambler/capmt.c:2189
 msgid "Camd.socket Filename / IP Address (TCP mode)"
-msgstr ""
+msgstr "Camd.socket naziv datoteke / IP adresa (TCP način)"
 
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Cartoons"
-msgstr ""
+msgstr "Crtići"
 
 #: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2048
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
 msgid "Channel"
-msgstr ""
+msgstr "Program"
 
 #: src/dvr/dvr_db.c:2058
 msgid "Channel Icon"
-msgstr ""
+msgstr "Ikona programa"
 
 #: src/dvr/dvr_db.c:2065
 msgid "Channel Name"
-msgstr ""
+msgstr "Naziv programa"
 
 #: src/bouquet.c:904
 msgid "Channel Number Offset"
-msgstr ""
+msgstr "Pmak broja programa"
 
 #: src/channels.c:1083 src/dvr/dvr_autorec.c:956
 msgid "Channel Tag"
-msgstr ""
+msgstr "Oznaka programa"
 
 #: src/bouquet.c:852
 msgid "Channel Tag Reference"
-msgstr ""
+msgstr "Napomena oznake programa"
 
 #: src/access.c:1461
 msgid "Channel Tags"
-msgstr ""
+msgstr "Oznake programa"
 
 #: src/profile.c:1520
 msgid "Channels"
-msgstr ""
+msgstr "Programi"
 
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:572
 #: src/input/mpegts/mpegts_service.c:178
 msgid "Character Set"
-msgstr ""
+msgstr "Kôdnu stranicu"
 
 #: src/epg.c:2010
 msgid "Children's / Youth programmes"
-msgstr ""
+msgstr "Program za djecu / mlade"
 
 #: src/epg.c:2047
 msgid "Cinema"
-msgstr ""
+msgstr "Kino"
 
 #: src/esfilter.c:607 src/profile.c:285 src/descrambler/caclient.c:247
 msgid "Class"
-msgstr ""
+msgstr "Klasika"
 
 #: src/epg.c:1958
 msgid "Classical"
-msgstr ""
+msgstr "Klasično"
 
 #: src/epg.c:2028
 msgid "Classical music"
-msgstr ""
+msgstr "Klasična glazba"
 
 #: src/streaming.c:543
 msgid "Clean effects"
-msgstr ""
+msgstr "Jasni efekti"
 
 #: src/descrambler/caclient.c:268
 msgid "Client Name"
-msgstr ""
+msgstr "Naziv klijenta"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
 msgid "Cmd Delay Time (ms) (10-500)"
-msgstr ""
+msgstr "Cmd vrijeme odgode (ms) (10-500)"
 
 #: src/descrambler/cwc.c:1721
 msgid "Code Word Client (newcamd)"
@@ -507,7 +507,7 @@ msgstr ""
 
 #: src/epg.c:1955
 msgid "Comedy"
-msgstr ""
+msgstr "Komedija"
 
 #: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
@@ -515,11 +515,11 @@ msgstr ""
 #: src/dvr/dvr_db.c:2291 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
 #: src/dvr/dvr_config.c:783 src/descrambler/caclient.c:275
 msgid "Comment"
-msgstr ""
+msgstr "Komentar"
 
 #: src/dvr/dvr_db.c:290
 msgid "Commercial break"
-msgstr ""
+msgstr "Reklame"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:121
 msgid "Committed"
@@ -527,83 +527,83 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:313
 msgid "Completed OK"
-msgstr ""
+msgstr "Završeno U REDU"
 
 #: src/descrambler/caclient.c:236
 msgid "Conditional Access Client"
-msgstr ""
+msgstr "Uvjetovani pristup klijenta"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
-msgstr ""
+msgstr "ID podešavanja"
 
 #: src/dvr/dvr_config.c:773
 msgid "Configuration Name"
-msgstr ""
+msgstr "Naziv podešavanja"
 
 #: src/access.c:1427
 msgid "Connection Limit Type"
-msgstr ""
+msgstr "Vrsta ograničenja povezivanja"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:223 src/input/mpegts/mpegts_mux_dvb.c:298
 msgid "Constellation"
-msgstr ""
+msgstr "Konstelacija"
 
 #: src/profile.c:1505 src/dvr/dvr_db.c:2135
 msgid "Container"
-msgstr ""
+msgstr "Spremnik"
 
 #: src/dvr/dvr_db.c:2233 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
-msgstr ""
+msgstr "Vrsta sadržaja"
 
 #: src/epg.c:1984
 msgid "Contest"
-msgstr ""
+msgstr "Natjecanje"
 
 #: src/profile.c:350
 msgid "Continue On Access Error"
-msgstr ""
+msgstr "Nastavi pri greški pristupa"
 
 #: src/epg.c:2089
 msgid "Cooking"
-msgstr ""
+msgstr "Kuhanje"
 
 #: src/profile.c:1434
 msgid "Copy codec type"
-msgstr ""
+msgstr "Kopiraj vrstu kôdeka"
 
 #: src/profile.c:1370
 msgid "Copy layout"
-msgstr ""
+msgstr "Izlaz kopiranja"
 
 #: src/bouquet.c:845
 msgid "Create Tag"
-msgstr ""
+msgstr "Stvori oznaku"
 
 #: src/input/mpegts/mpegts_service.c:208
 msgid "Created"
-msgstr ""
+msgstr "Stvoreno"
 
 #: src/dvr/dvr_db.c:2162 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
 msgid "Creator"
-msgstr ""
+msgstr "Stvorio"
 
 #: src/input/mpegts/mpegts_mux_sched.c:140
 msgid "Cron"
-msgstr ""
+msgstr "Cron"
 
 #: src/epg.c:2041
 msgid "Culture (without music)"
-msgstr ""
+msgstr "Kultura (bez glazbe)"
 
 #: src/epg.c:1967
 msgid "Current affairs"
-msgstr ""
+msgstr "Aktualni događaji"
 
 #: src/main.c:664
 msgid "DBus - use the session message bus instead system one"
-msgstr ""
+msgstr "DBus - koristi dbus poruku sesije umjesto sustava"
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
@@ -611,31 +611,31 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1752
 msgid "DES Key"
-msgstr ""
+msgstr "DES ključ"
 
 #: src/dvr/dvr_db.c:2204
 msgid "DVB EPG ID"
-msgstr ""
+msgstr "DVB EPG ID"
 
 #: src/input/mpegts/mpegts_network_dvb.c:220
 msgid "DVB-C Network"
-msgstr ""
+msgstr "DVB-C mreža"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
 msgid "DVB-S 4-port"
-msgstr ""
+msgstr "DVB-S 4-ulaz"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:561
 msgid "DVB-S Advanced"
-msgstr ""
+msgstr "DVB-S napredno"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:500
 msgid "DVB-S EN50494 (UniCable, experimental)"
-msgstr ""
+msgstr "DVB-S EN50494 (UniCable, eksperimentalno)"
 
 #: src/input/mpegts/mpegts_network_dvb.c:239
 msgid "DVB-S Network"
-msgstr ""
+msgstr "DVB-S mreža"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:213
 msgid "DVB-S Satconf"
@@ -643,7 +643,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:327
 msgid "DVB-S Simple"
-msgstr ""
+msgstr "DVB-S jednostavno"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:351
 msgid "DVB-S Toneburst"
@@ -651,19 +651,19 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
-msgstr ""
+msgstr "DVB-T"
 
 #: src/input/mpegts/mpegts_network_dvb.c:201
 msgid "DVB-T Network"
-msgstr ""
+msgstr "DVB-T mreža"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
-msgstr ""
+msgstr "DVBC_ANNEX_AC"
 
 #: src/access.c:1277
 msgid "DVR"
-msgstr ""
+msgstr "DVR"
 
 #: src/dvr/dvr_autorec.c:906
 msgid "DVR Auto-Record Entry"
@@ -671,27 +671,27 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:731
 msgid "DVR Behavior"
-msgstr ""
+msgstr "DVR ponašanje"
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
-msgstr ""
+msgstr "DVR podešavanje"
 
 #: src/dvr/dvr_config.c:723
 msgid "DVR Configuration Profile"
-msgstr ""
+msgstr "DVR profil podešavanja"
 
 #: src/access.c:1406
 msgid "DVR Configuration Profiles"
-msgstr ""
+msgstr "DVR profili podešavanja"
 
 #: src/dvr/dvr_db.c:1984
 msgid "DVR Entry"
-msgstr ""
+msgstr "DVR stavka"
 
 #: src/dvr/dvr_config.c:809
 msgid "DVR Log Retention Time (days)"
-msgstr ""
+msgstr "Vrijeme zadržavanja DVR zapisa (u danima)"
 
 #: src/profile.c:253
 msgid "DVR Override High"
@@ -727,188 +727,188 @@ msgstr ""
 
 #: src/epg.c:2026
 msgid "Dance"
-msgstr ""
+msgstr "Ples"
 
 #: src/dvr/dvr_db.c:2197
 msgid "Data Errors"
-msgstr ""
+msgstr "Podaci greška"
 
 #: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
 msgid "Days of Week"
-msgstr ""
+msgstr "Dani u tjednu"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Debate"
-msgstr ""
+msgstr "Rasprava"
 
 #: src/main.c:696
 msgid "Debug Options"
-msgstr ""
+msgstr "Mogućnosti otklanjanja greške"
 
 #: src/profile.c:300
 msgid "Default"
-msgstr ""
+msgstr "Zadani"
 
 #: src/profile.c:321
 msgid "Default Priority"
-msgstr ""
+msgstr "Zadani prioritet"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
 #: src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery System"
-msgstr ""
+msgstr "Sustav isporuke"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:78
 msgid "Demux Path"
-msgstr ""
+msgstr "Putanja demultipleksa"
 
 #: src/dvr/dvr_db.c:2104 src/dvr/dvr_db.c:2111
 msgid "Description"
-msgstr ""
+msgstr "Opis"
 
 #: src/epg.c:1952
 msgid "Detective"
-msgstr ""
+msgstr "Dektetivski"
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "Device ID"
-msgstr ""
+msgstr "ID uređaja"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:165
 msgid "Device Model"
-msgstr ""
+msgstr "Model uređaja"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:92
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:248
 msgid "Device Path"
-msgstr ""
+msgstr "Putanja uređaja"
 
 #: src/dvr/dvr_db.c:2176 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
 msgid "Directory"
-msgstr ""
+msgstr "Direktorij"
 
 #: src/dvr/dvr_config.c:898
 msgid "Directory Permissions (octal, e.g. 0775)"
-msgstr ""
+msgstr "Dozvole direktorija (oktalno, npr. 0775)"
 
 #: src/input/mpegts/mpegts_mux.c:458
 msgid "Disable"
-msgstr ""
+msgstr "Onemogući"
 
 #: src/main.c:715
 msgid "Disable DVB bouquets"
-msgstr ""
+msgstr "Onemogući DVB bukete"
 
 #: src/main.c:713
 msgid "Disable all access control checks"
-msgstr ""
+msgstr "Onemogućei sve provjere upravljanja pristupom"
 
 #: src/input/mpegts/satip/satip.c:275
 msgid "Disable device/firmware-specific workarounds"
-msgstr ""
+msgstr "Onemogući određeno obilaženje uređaja/frimvera"
 
 #: src/main.c:699
 msgid "Disable syslog (all messages)"
-msgstr ""
+msgstr "Onemogući zapis sustava (sve poruke)"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Discussion"
-msgstr ""
+msgstr "Rasprava"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1363
 msgid "DiseqC"
-msgstr ""
+msgstr "DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:89
 msgid "DiseqC Rotor"
-msgstr ""
+msgstr "DiseqC rotor"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:229
 msgid "DiseqC repeats"
-msgstr ""
+msgstr "DiseqC ponavljanja"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:115
 msgid "DiseqC switch"
-msgstr ""
+msgstr "DiseqC preklopnik"
 
 #: src/profile.c:1430
 msgid "Do not use"
-msgstr ""
+msgstr "Ne koristi"
 
 #: src/epg.c:1970 src/epg.c:2053
 msgid "Documentary"
-msgstr ""
+msgstr "Dokumentarac"
 
 #: src/dvr/dvr_config.c:962
 msgid "Don't Include Title In Filename"
-msgstr ""
+msgstr "Ne uključuj naslov u naziv datoteke"
 
 #: src/dvr/dvr_db.c:2211
 msgid "Don't Reschedule"
-msgstr ""
+msgstr "Ponovno ne zakazuj"
 
 #: src/main.c:650
 msgid "Don't backup configuration tree at upgrade"
-msgstr ""
+msgstr "Sigurnosno ne kopiraj stablo podešavanja pri nadogradnji"
 
 #: src/dvr/dvr_config.c:684
 msgid "Don't keep"
-msgstr ""
+msgstr "Ne čuvaj"
 
 #: src/epg.c:1951 src/epg.c:1958 src/epg.c:1959 src/epg.c:1960 src/epg.c:1961
 #: src/epg.c:1962 src/epg.c:1963 src/epg.c:1964
 msgid "Drama"
-msgstr ""
+msgstr "Drama"
 
 #: src/dvr/dvr_autorec.c:1039
 msgid "Duplicate Handling"
-msgstr ""
+msgstr "Dvostruko rukovanje"
 
 #: src/dvr/dvr_db.c:2041
 msgid "Duration"
-msgstr ""
+msgstr "Trajanje"
 
 #: src/input/mpegts/mpegts_network.c:210
 msgid "EIT Local Time"
-msgstr ""
+msgstr "EIT Lokalno vrijeme"
 
 #: src/input/mpegts/mpegts_mux.c:505
 msgid "EPG Scan"
-msgstr ""
+msgstr "EPG pretraživanje"
 
 #: src/channels.c:339
 msgid "EPG Source"
-msgstr ""
+msgstr "EPG izvor"
 
 #: src/dvr/dvr_config.c:833
 msgid "EPG Update Window"
-msgstr ""
+msgstr "EPG prozor ažuriranja"
 
 #: src/epg.c:2052 src/epg.c:2054
 msgid "Economics"
-msgstr ""
+msgstr "Ekonomija"
 
 #: src/epg.c:2068
 msgid "Education"
-msgstr ""
+msgstr "Obrazovanje"
 
 #: src/epg.c:2014
 msgid "Educational"
-msgstr ""
+msgstr "Obrazovno"
 
 #: src/esfilter.c:595
 msgid "Elementary Stream Filter"
-msgstr ""
+msgstr "Osnovni filter strujanja"
 
 #: src/input/mpegts/mpegts_mux.c:459
 msgid "Enable (auto)"
-msgstr ""
+msgstr "Omogući (automatski)"
 
 #: src/main.c:662
 msgid "Enable DBus"
-msgstr ""
+msgstr "Omogući DBus"
 
 #: src/main.c:712
 msgid "Enable coredumps for daemon"
@@ -916,27 +916,27 @@ msgstr ""
 
 #: src/main.c:697
 msgid "Enable debug on stderr"
-msgstr ""
+msgstr "Omogući otklanjanje greške na stderr"
 
 #: src/main.c:701
 msgid "Enable debug subsystems"
-msgstr ""
+msgstr "Omogući otklanjanje greške podsustava"
 
 #: src/main.c:700
 msgid "Enable debug to file"
-msgstr ""
+msgstr "Omogući otklanjanje greške u datoteku"
 
 #: src/main.c:698
 msgid "Enable debug to syslog"
-msgstr ""
+msgstr "Omogući otklanjanje greške u zapis sustava"
 
 #: src/main.c:703
 msgid "Enable trace subsystems"
-msgstr ""
+msgstr "Omogući praćenje podsustava"
 
 #: src/main.c:710
 msgid "Enable webUI debug (non-minified JS)"
-msgstr ""
+msgstr "Omogući webUI otklanjanje grešaka (bez umanjenja JS)"
 
 #: src/access.c:1312 src/access.c:1680 src/channels.c:296 src/channels.c:1092
 #: src/service.c:158 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
@@ -948,84 +948,84 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:188
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
-msgstr ""
+msgstr "Omogućeno"
 
 #: src/service.c:189
 msgid "Encrypted"
-msgstr ""
+msgstr "Šifrirano"
 
 #: src/epg.c:2013
 msgid "Entertainment programmes for 10 to 16"
-msgstr ""
+msgstr "Zabavni programi od 10 do 16"
 
 #: src/epg.c:2012
 msgid "Entertainment programmes for 6 to 14"
-msgstr ""
+msgstr "Zabavni programi od 6 do 14"
 
 #: src/epg.c:2069
 msgid "Environment"
-msgstr ""
+msgstr "Okoliš"
 
 #: src/input/mpegts/iptv/iptv_mux.c:151
 msgid "Environment (pipe)"
-msgstr ""
+msgstr "Okoliš (slivnik)"
 
 #: src/dvr/dvr_db.c:2249
 msgid "Episode"
-msgstr ""
+msgstr "Epizoda"
 
 #: src/dvr/dvr_db.c:422
 #, c-format
 msgid "Episode %d"
-msgstr ""
+msgstr "Epizoda %d"
 
 #: src/dvr/dvr_db.c:2183
 msgid "Error Code"
-msgstr ""
+msgstr "Kôd greške"
 
 #: src/dvr/dvr_db.c:2190
 msgid "Errors"
-msgstr ""
+msgstr "Greške"
 
 #: src/descrambler/constcw.c:322 src/descrambler/constcw.c:382
 msgid "Even Key"
-msgstr ""
+msgstr "Paran ključ"
 
 #: src/dvr/dvr_autorec.c:735
 msgid "Every day"
-msgstr ""
+msgstr "Svaki dan"
 
 #: src/access.c:1454
 msgid "Exclude Channel Tags"
-msgstr ""
+msgstr "Isključi oznake programa"
 
 #: src/epg.c:2072
 msgid "Expeditions"
-msgstr ""
+msgstr "Ekspedicije"
 
 #: src/epg.c:2048
 msgid "Experimental film"
-msgstr ""
+msgstr "Eksperimentalan film"
 
 #: src/dvr/dvr_db.c:2002 src/dvr/dvr_autorec.c:983
 msgid "Extra Start Time"
-msgstr ""
+msgstr "Dodatno vrijeme početka"
 
 #: src/dvr/dvr_db.c:2026 src/dvr/dvr_autorec.c:991
 msgid "Extra Stop Time"
-msgstr ""
+msgstr "Dodatno vrijeme završetka"
 
 #: src/dvr/dvr_config.c:825
 msgid "Extra Time After Recordings (minutes)"
-msgstr ""
+msgstr "Dodatno vrijeme nakon snimanja (minuta)"
 
 #: src/dvr/dvr_config.c:817
 msgid "Extra Time Before Recordings (minutes)"
-msgstr ""
+msgstr "Dodatno vrijeme prije snimanja (minuta)"
 
 #: src/input/mpegts/mpegts_mux.c:391
 msgid "FAIL"
-msgstr ""
+msgstr "NEUSPJELO"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:301
 msgid "FEC"
@@ -1033,107 +1033,107 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:235
 msgid "FEC High"
-msgstr ""
+msgstr "FEC visoki"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:238
 msgid "FEC Low"
-msgstr ""
+msgstr "FEC niski"
 
 #: src/epg.c:2068
 msgid "Factual topics"
-msgstr ""
+msgstr "Stvarne teme"
 
 #: src/access.c:1398
 msgid "Failed DVR"
-msgstr ""
+msgstr "Neuspjeli DVR"
 
 #: src/epg.c:1954
 msgid "Fantasy"
-msgstr ""
+msgstr "Fantazija"
 
 #: src/dvr/dvr_db.c:309
 msgid "File Missing"
-msgstr ""
+msgstr "Datoteka nedostaje"
 
 #: src/dvr/dvr_db.c:300
 msgid "File Not Created"
-msgstr ""
+msgstr "Datoteka nije stvorena"
 
 #: src/dvr/dvr_config.c:856
 msgid "File Permissions (octal, e.g. 0664)"
-msgstr ""
+msgstr "Dozvole direktorija (oktalno, npr. 0664)"
 
 #: src/dvr/dvr_db.c:2263
 msgid "File Size"
-msgstr ""
+msgstr "Veličina datoteke"
 
 #: src/dvr/dvr_db.c:2169
 msgid "Filename"
-msgstr ""
+msgstr "Naziv datoteke"
 
 #: src/dvr/dvr_config.c:864
 msgid "Filename Character Set"
-msgstr ""
+msgstr "Skup znakova nazia datoteke"
 
 #: src/dvr/dvr_config.c:747
 msgid "Filename Options"
-msgstr ""
+msgstr "Mogućnosti naziva datoteke"
 
 #: src/epg.c:2047
 msgid "Film"
-msgstr ""
+msgstr "Film"
 
 #: src/epg.c:2043
 msgid "Fine arts"
-msgstr ""
+msgstr "Likovne umjetnosti"
 
 #: src/epg.c:2088
 msgid "Fitness and health"
-msgstr ""
+msgstr "Fitnes i zdravlje"
 
 #: src/epg.c:2029
 msgid "Folk"
-msgstr ""
+msgstr "Folk"
 
 #: src/epg.c:1956
 msgid "Folkloric"
-msgstr ""
+msgstr "Folklor"
 
 #: src/epg.c:2002
 msgid "Football"
-msgstr ""
+msgstr "Nogomet"
 
 #: src/input/mpegts/mpegts_mux.c:460
 msgid "Force (auto)"
-msgstr ""
+msgstr "Prisili (automatski)"
 
 #: src/input/mpegts/mpegts_service.c:201
 msgid "Force CA ID (e.g. 0x2600)"
-msgstr ""
+msgstr "Prisili CA ID (npr. 0x2600)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:134
 msgid "Force Old Status"
-msgstr ""
+msgstr "Prisili staro stanje"
 
 #: src/profile.c:330
 msgid "Force Priority"
-msgstr ""
+msgstr "Prisili prioritet"
 
 #: src/input/mpegts/satip/satip.c:254
 msgid "Force pilot for DVB-S2"
-msgstr ""
+msgstr "Prisili pilota za DVB-S2"
 
 #: src/input/mpegts/satip/satip_frontend.c:173
 msgid "Force teardown delay"
-msgstr ""
+msgstr "Prisli odgodu rastavljanja"
 
 #: src/epg.c:2072
 msgid "Foreign countries"
-msgstr ""
+msgstr "Strane zemlje"
 
 #: src/main.c:651
 msgid "Fork and run as daemon"
-msgstr ""
+msgstr "Račvaj i pokreni kao pozadinski program (daemon)"
 
 #: src/dvr/dvr_config.c:890
 msgid "Format String"
@@ -1141,43 +1141,43 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:133
 msgid "Frequency"
-msgstr ""
+msgstr "Frekvencija"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:215 src/input/mpegts/mpegts_mux_dvb.c:287
 #: src/input/mpegts/mpegts_mux_dvb.c:647
 msgid "Frequency (Hz)"
-msgstr ""
+msgstr "Frekvencija (Hz)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:523
 msgid "Frequency (MHz)"
-msgstr ""
+msgstr "Frekvencija (MHz)"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:541
 msgid "Frequency (kHz)"
-msgstr ""
+msgstr "Frekvencija (kHz)"
 
 #: src/dvr/dvr_autorec.c:717
 msgid "Fri"
-msgstr ""
+msgstr "Pet"
 
 #: src/input/mpegts/satip/satip.c:303
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:158
 msgid "Friendly Name"
-msgstr ""
+msgstr "Prijateljski naziv"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:85
 #: src/input/mpegts/satip/satip_frontend.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:558
 msgid "Frontend Number"
-msgstr ""
+msgstr "Broj uređaja"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:64
 msgid "Frontend Path"
-msgstr ""
+msgstr "Putanja uređaja"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:237
 msgid "Full DiseqC"
-msgstr ""
+msgstr "Puni DiseqC"
 
 #: src/input/mpegts/satip/satip.c:212
 msgid "Full Mux Rx mode supported"
@@ -1185,53 +1185,53 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:739
 msgid "Full Pathname Specification"
-msgstr ""
+msgstr "Opis cijelog naziva putanje"
 
 #: src/dvr/dvr_autorec.c:941
 msgid "Full-text"
-msgstr ""
+msgstr "Cijeli tekst"
 
 #: src/epg.c:2074
 msgid "Further education"
-msgstr ""
+msgstr "Stručno usavršavanje"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:444
 msgid "GOTOX"
-msgstr ""
+msgstr "GOTOX"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:102
 msgid "GOTOX Position"
-msgstr ""
+msgstr "GOTOX položaj"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:97
 msgid "GOTOX Rotor"
-msgstr ""
+msgstr "GOTOX rotor"
 
 #: src/epg.c:1983 src/epg.c:1984
 msgid "Game show"
-msgstr ""
+msgstr "Kviz"
 
 #: src/epg.c:2091 src/epg.c:2092 src/epg.c:2093 src/epg.c:2094 src/epg.c:2095
 #: src/epg.c:2096 src/epg.c:2097
 msgid "Gardening"
-msgstr ""
+msgstr "Vrtlarstvo"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:253
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:272
 msgid "Generic"
-msgstr ""
+msgstr "Osnovno"
 
 #: src/main.c:644
 msgid "Generic Options"
-msgstr ""
+msgstr "Osnovne mogućnosti"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:229
 msgid "Guard Interval"
-msgstr ""
+msgstr "Razdoblje čuvanja"
 
 #: src/profile.c:267
 msgid "HD: High Definition"
-msgstr ""
+msgstr "HD: Visoka razlučivost"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:590
 msgid "HDHomeRun ATSC Frontend"
@@ -1251,104 +1251,104 @@ msgstr ""
 
 #: src/access.c:1380
 msgid "HTSP DVR"
-msgstr ""
+msgstr "HTSP DVR"
 
 #: src/profile.c:1842
 msgid "HTSP Default Stream Settings"
-msgstr ""
+msgstr "HTSP zadane postavke strujanja"
 
 #: src/profile.c:928
 msgid "HTSP Stream Profile"
-msgstr ""
+msgstr "HTSP profil strujanja"
 
 #: src/access.c:1358
 msgid "HTSP Streaming"
-msgstr ""
+msgstr "HTSP strujanje"
 
 #: src/epg.c:2086
 msgid "Handicraft"
-msgstr ""
+msgstr "Radinosti"
 
 #: src/streaming.c:544
 msgid "Hearing impaired"
-msgstr ""
+msgstr "Osobe oštećenog sluha"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:232
 msgid "Hierarchy"
-msgstr ""
+msgstr "Hijerarhija"
 
 #: src/profile.c:248 src/dvr/dvr_db.c:1614
 msgid "High"
-msgstr ""
+msgstr "Visok"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:195
 msgid "High Bitrate Mode (CI+ CAMs Only)"
-msgstr ""
+msgstr "Način visoke brzine prijenosa (samo CI+ CAM-ovi)"
 
 #: src/epg.c:1958
 msgid "Historical movie"
-msgstr ""
+msgstr "Povijesni film"
 
 #: src/epg.c:1954
 msgid "Horror"
-msgstr ""
+msgstr "Horor"
 
 #: src/descrambler/cwc.c:1739
 msgid "Hostname/IP"
-msgstr ""
+msgstr "Naziv računala/IP"
 
 #: src/input/mpegts/mpegts_mux.c:382
 msgid "IDLE"
-msgstr ""
+msgstr "MIROVANJE"
 
 #: src/input/mpegts/satip/satip.c:282
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:144
 msgid "IP Address"
-msgstr ""
+msgstr "IP adresa"
 
 #: src/input/mpegts/iptv/iptv.c:89
 msgid "IPTV"
-msgstr ""
+msgstr "IPTV"
 
 #: src/input/mpegts/iptv/iptv.c:95
 msgid "IPTV Input"
-msgstr ""
+msgstr "IPTV ulaz"
 
 #: src/input/mpegts/iptv/iptv_mux.c:92
 msgid "IPTV Multiplex"
-msgstr ""
+msgstr "IPTV multipleks"
 
 #: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
-msgstr ""
+msgstr "IPTV mreža"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:588
 msgid "ISI (Stream ID)"
-msgstr ""
+msgstr "ISI (ID strujanja)"
 
 #: src/channels.c:1122
 msgid "Icon (full URL)"
-msgstr ""
+msgstr "Ikona (puni URL)"
 
 #: src/channels.c:325 src/channels.c:1129
 msgid "Icon URL"
-msgstr ""
+msgstr "URL ikone"
 
 #: src/channels.c:1136
 msgid "Icon has title"
-msgstr ""
+msgstr "Ikona ima naziv"
 
 #: src/webui/extjs.c:220
 msgid "Icons from"
-msgstr ""
+msgstr "Ikone s"
 
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
-msgstr ""
+msgstr "Pretraživanje u mirovanju"
 
 #: src/input/mpegts/mpegts_network.c:171
 msgid "Idle Scan Muxes"
-msgstr ""
+msgstr "Pretraži u mirovanju multiplekse"
 
 #: src/main.c:655
 msgid ""
@@ -1361,131 +1361,131 @@ msgstr ""
 
 #: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
-msgstr ""
+msgstr "Ako želite podržati projekt, razmislite o donaciji."
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
-msgstr ""
+msgstr "Zanemari EPG (EIT)"
 
 #: src/input/mpegts/mpegts_network.c:187
 msgid "Ignore Provider's Channel Numbers"
-msgstr ""
+msgstr "Zanemari brojeve programa pružatelja usluge"
 
 #: src/input/mpegts/mpegts_mux.c:479
 msgid "Ignore descriptor 5"
-msgstr ""
+msgstr "Zanemari opisivač 5"
 
 #: src/imagecache.c:77
 msgid "Ignore invalid SSL certificate"
-msgstr ""
+msgstr "Zanemari neispravne SSL vjerodajnice"
 
 #: src/main.c:711
 msgid "Immediately abort"
-msgstr ""
+msgstr "Odmah zaustavi"
 
 #: src/profile.c:247 src/dvr/dvr_db.c:1613
 msgid "Important"
-msgstr ""
+msgstr "Značajno"
 
 #: src/dvr/dvr_config.c:927
 msgid "Include Channel Name In Filename"
-msgstr ""
+msgstr "Uključi naziv programa u naziv datoteke"
 
 #: src/dvr/dvr_config.c:934
 msgid "Include Date In Filename"
-msgstr ""
+msgstr "Uključi datum u naziv datoteke"
 
 #: src/dvr/dvr_config.c:948
 msgid "Include Episode In Filename"
-msgstr ""
+msgstr "Uključi epizodu u naziv datoteke"
 
 #: src/dvr/dvr_config.c:955
 msgid "Include Subtitle In Filename"
-msgstr ""
+msgstr "Uključi podnaslov u naziv datoteke"
 
 #: src/dvr/dvr_config.c:941
 msgid "Include Time In Filename"
-msgstr ""
+msgstr "Uključi vrijeme u naziv datoteke"
 
 #: src/access.c:1305 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
-msgstr ""
+msgstr "Raspored"
 
 #: src/epg.c:2014
 msgid "Informational"
-msgstr ""
+msgstr "Informativni"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:260
 msgid "Init Rotor Time (seconds)"
-msgstr ""
+msgstr "Vrijeme pokretanja rotora (sekunde)"
 
 #: src/input/mpegts/mpegts_input.c:262
 msgid "Initial Scan"
-msgstr ""
+msgstr "Početno pretraživanje"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:120
 msgid "Input Buffer (Bytes)"
-msgstr ""
+msgstr "Ulazni međuspremnik (Bajtovi)"
 
 #: src/input.c:29
 msgid "Input Instance"
-msgstr ""
+msgstr "Ulazni primjerak"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:71
 msgid "Input Path"
-msgstr ""
+msgstr "Ulazna putanja"
 
 #: src/input/mpegts/iptv/iptv_mux.c:120
 msgid "Interface"
-msgstr ""
+msgstr "Sučelje"
 
 #: src/channels.c:1110
 msgid "Internal"
-msgstr ""
+msgstr "Unutrašnji"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Interview"
-msgstr ""
+msgstr "Intervju"
 
 #: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:453
 msgid "Invalid"
-msgstr ""
+msgstr "Neispravno"
 
 #: src/main.c:792
 #, c-format
 msgid "Invalid adapter number '%s'\n"
-msgstr ""
+msgstr "Neispravan broj adaptera '%s'\n"
 
 #: src/streaming.c:417
 msgid "Invalid target"
-msgstr ""
+msgstr "Neispravna meta"
 
 #: src/epg.c:2030
 msgid "Jazz"
-msgstr ""
+msgstr "Jazz"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
-msgstr ""
+msgstr "LNA (Niskošumno pojačalo)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:61
 msgid "LNB"
-msgstr ""
+msgstr "LNB"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1227
 msgid "LNB Type"
-msgstr ""
+msgstr "LNB vrsta"
 
 #: src/access.c:1331 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
-msgstr ""
+msgstr "Jezik"
 
 #: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
 #: src/epg.c:2080 src/epg.c:2081
 msgid "Languages"
-msgstr ""
+msgstr "Jezici"
 
 #: src/input/mpegts/mpegts_service.c:215
 msgid "Last Seen"
@@ -1497,15 +1497,15 @@ msgstr ""
 
 #: src/epg.c:2084
 msgid "Leisure hobbies"
-msgstr ""
+msgstr "Hobiji"
 
 #: src/access.c:1434
 msgid "Limit Connections"
-msgstr ""
+msgstr "Ograničena povezivanja"
 
 #: src/input/mpegts/mpegts_input.c:288
 msgid "Linked Input"
-msgstr ""
+msgstr "Povezani ulaz"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:231
 msgid "Linux ATSC Frontend"
@@ -1598,7 +1598,7 @@ msgstr ""
 #: src/esfilter.c:682 src/esfilter.c:749 src/esfilter.c:816 src/esfilter.c:883
 #: src/esfilter.c:958 src/esfilter.c:1019
 msgid "Log"
-msgstr ""
+msgstr "Zapis"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:297
 msgid "Longtitude Direction West"
@@ -1610,193 +1610,193 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1645
 msgid "MPEG-PS (DVD)"
-msgstr ""
+msgstr "MPEG-PS (DVD)"
 
 #: src/profile.c:1359
 msgid "MPEG-PS (DVD)/av-lib"
-msgstr ""
+msgstr "MPEG-PS (DVD)/av-lib"
 
 #: src/dvr/dvr_db.c:1644
 msgid "MPEG-TS"
-msgstr ""
+msgstr "MPEG-TS"
 
 #: src/input/mpegts/mpegts_input.c:216
 msgid "MPEG-TS Input"
-msgstr ""
+msgstr "MPEG-TS ulaz"
 
 #: src/input/mpegts/mpegts_mux.c:487
 msgid "MPEG-TS Multiplex"
-msgstr ""
+msgstr "MPEG-TS multipleks"
 
 #: src/input/mpegts/mpegts_mux.c:42
 msgid "MPEG-TS Multiplex Phy"
-msgstr ""
+msgstr "MPEG-TS multipleks Phy"
 
 #: src/input/mpegts/mpegts_network.c:134
 msgid "MPEG-TS Network"
-msgstr ""
+msgstr "MPEG-TS mreža"
 
 #: src/profile.c:1806
 msgid "MPEG-TS Pass-thru"
-msgstr ""
+msgstr "MPEG-TS prolaz"
 
 #: src/profile.c:1001
 msgid "MPEG-TS Pass-thru/built-in"
-msgstr ""
+msgstr "MPEG-TS prolaz/ugrađeni"
 
 #: src/input/mpegts/mpegts_service.c:721
 msgid "MPEG-TS Raw Service"
-msgstr ""
+msgstr "MPEG-TS osnovna usluga"
 
 #: src/input/mpegts/mpegts_service.c:88
 msgid "MPEG-TS Service"
-msgstr ""
+msgstr "MPEG-TS usluga"
 
 #: src/profile.c:1187 src/profile.c:1358
 msgid "MPEG-TS/av-lib"
-msgstr ""
+msgstr "MPEG-TS/av-lib"
 
 #: src/epg.c:2053
 msgid "Magazines"
-msgstr ""
+msgstr "Magazini"
 
 #: src/dvr/dvr_config.c:913
 msgid "Make Subdirectories Per Channel"
-msgstr ""
+msgstr "Napravi podirektorije prema programu"
 
 #: src/dvr/dvr_config.c:906
 msgid "Make Subdirectories Per Day"
-msgstr ""
+msgstr "Napravi podirektorije po danu"
 
 #: src/dvr/dvr_config.c:920
 msgid "Make Subdirectories Per Title"
-msgstr ""
+msgstr "Napravi podirektorije prema naslovu"
 
 #: src/input/mpegts/satip/satip.c:324
 msgid "Manufacturer"
-msgstr ""
+msgstr "Proizvođač"
 
 #: src/input/mpegts/satip/satip.c:331
 msgid "Manufacturer URL"
-msgstr ""
+msgstr "URL proizvođača"
 
 #: src/bouquet.c:831
 msgid "Map No Name"
-msgstr ""
+msgstr "Mapiraj bezimeno"
 
 #: src/bouquet.c:838
 msgid "Map Radio"
-msgstr ""
+msgstr "Mapiraj radio"
 
 #: src/bouquet.c:824
 msgid "Map Zero Numbers"
-msgstr ""
+msgstr "Mapiraj Nula brojeve"
 
 #: src/input/mpegts/satip/satip_frontend.c:292
 #: src/input/mpegts/satip/satip_frontend.c:314
 msgid "Master Tuner"
-msgstr ""
+msgstr "Glavni prijemnik"
 
 #: src/profile.c:1826
 msgid "Matroska"
-msgstr ""
+msgstr "Matroska"
 
 #: src/dvr/dvr_db.c:1641
 msgid "Matroska (mkv)"
-msgstr ""
+msgstr "Matroska (mkv)"
 
 #: src/profile.c:1360
 msgid "Matroska (mkv)/av-lib"
-msgstr ""
+msgstr "Matroska (mkv)/av-lib"
 
 #: src/profile.c:1102 src/profile.c:1356
 msgid "Matroska (mkv)/built-in"
-msgstr ""
+msgstr "Matroska (mkv)/ugrađeno"
 
 #: src/profile.c:1258
 msgid "Matroska/av-lib"
-msgstr ""
+msgstr "Matroska/av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:475
 msgid "Maximum Bandwidth (Kbps)"
-msgstr ""
+msgstr "Najveća brzina prijenosa (Kbps)"
 
 #: src/access.c:1448
 msgid "Maximum Channel Num"
-msgstr ""
+msgstr "Najveći broj programa"
 
 #: src/dvr/dvr_autorec.c:1017
 msgid "Maximum Duration"
-msgstr ""
+msgstr "Najveće trajanje"
 
 #: src/input/mpegts/iptv/iptv.c:468
 msgid "Maximum Input Streams"
-msgstr ""
+msgstr "Najviše ulaznih strujanja"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:92
 #: src/input/mpegts/satip/satip.c:226
 msgid "Maximum PIDs"
-msgstr ""
+msgstr "Najviše PID-ova"
 
 #: src/input/mpegts/satip/satip.c:233
 msgid "Maximum length of PIDs"
-msgstr ""
+msgstr "Najveće trajanje PID-ova"
 
 #: src/input/mpegts/iptv/iptv.c:482
 msgid "Maximum timeout (seconds)"
-msgstr ""
+msgstr "Najveće razdoblje čekanja (sekunde)"
 
 #: src/epg.c:2071
 msgid "Medicine"
-msgstr ""
+msgstr "Medicina"
 
 #: src/epg.c:1956
 msgid "Melodrama"
-msgstr ""
+msgstr "Melodrama"
 
 #: src/access.c:1441
 msgid "Min Channel Num"
-msgstr ""
+msgstr "Najmanji broj programa"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:268
 msgid "Min Rotor Time (seconds)"
-msgstr ""
+msgstr "Najmanje vrijeme rotora (sekunde)"
 
 #: src/dvr/dvr_autorec.c:1010
 msgid "Minimum Duration"
-msgstr ""
+msgstr "Najmanje trajanje"
 
 #: src/service.c:141
 msgid "Missing In PAT/SDT"
-msgstr ""
+msgstr "Nedostaje u PAT/SDT"
 
 #: src/descrambler/capmt.c:2181
 msgid "Mode"
-msgstr ""
+msgstr "Način"
 
 #: src/input/mpegts/satip/satip.c:338
 msgid "Model Description"
-msgstr ""
+msgstr "Opis modela"
 
 #: src/input/mpegts/satip/satip.c:345
 msgid "Model Name"
-msgstr ""
+msgstr "Naziv modela"
 
 #: src/input/mpegts/satip/satip.c:352
 msgid "Model Number"
-msgstr ""
+msgstr "Broj modela"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:558 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "Modulation"
-msgstr ""
+msgstr "Modulacija"
 
 #: src/dvr/dvr_autorec.c:713
 msgid "Mon"
-msgstr ""
+msgstr "Pon"
 
 #: src/profile.c:1371
 msgid "Mono"
-msgstr ""
+msgstr "Mono"
 
 #: src/main.c:708
 msgid "More verbose libav log"
@@ -1808,7 +1808,7 @@ msgstr ""
 
 #: src/epg.c:2006
 msgid "Motor sport"
-msgstr ""
+msgstr "Motorni sport"
 
 #: src/epg.c:2087
 msgid "Motoring"
@@ -1816,25 +1816,25 @@ msgstr ""
 
 #: src/epg.c:1951
 msgid "Movie"
-msgstr ""
+msgstr "Film"
 
 #: src/epg.c:2026
 msgid "Music"
-msgstr ""
+msgstr "Glazba"
 
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
 msgid "Musical"
-msgstr ""
+msgstr "Mjuzikl"
 
 #: src/input/mpegts/mpegts_service.c:101
 #: src/input/mpegts/mpegts_mux_sched.c:133
 msgid "Mux"
-msgstr ""
+msgstr "Multipleks"
 
 #: src/input/mpegts/iptv/iptv_mux.c:132
 msgid "Mux Name"
-msgstr ""
+msgstr "Naziv multipleksa"
 
 #: src/input/mpegts/mpegts_mux_sched.c:118
 msgid "Mux Sched Entry"
@@ -1842,18 +1842,18 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:108
 msgid "Mux UUID"
-msgstr ""
+msgstr "Multipleks UUID"
 
 #: src/streaming.c:426
 msgid "Mux not enabled"
-msgstr ""
+msgstr "Multipleks nije omogućen"
 
 #: src/input/mpegts/mpegts_mux.c:389
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:55
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:68
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:93
 msgid "NONE"
-msgstr ""
+msgstr "NIJEDAN"
 
 #: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
 #: src/dvr/dvr_autorec.c:922 src/dvr/dvr_timerec.c:563
@@ -1861,85 +1861,85 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1202
 #: src/input/mpegts/satip/satip_satconf.c:194
 msgid "Name"
-msgstr ""
+msgstr "Naziv"
 
 #: src/epg.c:2070
 msgid "Natural sciences"
-msgstr ""
+msgstr "Prirodne znanosti"
 
 #: src/epg.c:2069
 msgid "Nature"
-msgstr ""
+msgstr "Priroda"
 
 #: src/input/mpegts/mpegts_mux.c:513 src/input/mpegts/mpegts_service.c:94
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:137
 msgid "Network"
-msgstr ""
+msgstr "Mreža"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:531
 msgid "Network A"
-msgstr ""
+msgstr "Mreža A"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:542
 msgid "Network B"
-msgstr ""
+msgstr "Mreža B"
 
 #: src/input/mpegts/mpegts_network.c:157
 msgid "Network Discovery"
-msgstr ""
+msgstr "Otkrivanje mreže"
 
 #: src/input/mpegts/mpegts_network.c:150
 msgid "Network ID (limit scanning)"
-msgstr ""
+msgstr "ID mreže (ograniči pretraživanje)"
 
 #: src/input/mpegts/mpegts_network.c:143
 msgid "Network Name"
-msgstr ""
+msgstr "Naziv mreže"
 
 #: src/input/mpegts/satip/satip_frontend.c:197
 #: src/input/mpegts/satip/satip_frontend.c:336
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:172
 msgid "Network Type"
-msgstr ""
+msgstr "Vrsta mreže"
 
 #: src/input/mpegts/mpegts_mux.c:520
 msgid "Network UUID"
-msgstr ""
+msgstr "UUID mreže"
 
 #: src/access.c:1324
 msgid "Network prefix"
-msgstr ""
+msgstr "Predbroj mreže"
 
 #: src/input/mpegts/mpegts_input.c:278
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:332
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1217
 #: src/input/mpegts/satip/satip_satconf.c:224
 msgid "Networks"
-msgstr ""
+msgstr "Mreže"
 
 #: src/epg.c:1967 src/epg.c:1968
 msgid "News"
-msgstr ""
+msgstr "Vijesti"
 
 #: src/epg.c:1969
 msgid "News magazine"
-msgstr ""
+msgstr "Dnevnik"
 
 #: src/input/mpegts/satip/satip_frontend.c:159
 msgid "Next tune delay in ms (0-2000)"
-msgstr ""
+msgstr "Odgoda do sljedećeg podešavanja u ms (0-2000)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
 msgid "No PIN"
-msgstr ""
+msgstr "Bez PINA"
 
 #: src/streaming.c:446
 msgid "No access"
-msgstr ""
+msgstr "Bez pristupa"
 
 #: src/main.c:801
 msgid "No adapters specified!\n"
-msgstr ""
+msgstr "Nema određenog adapters!\n"
 
 #: src/dvr/dvr_autorec.c:737
 msgid "No days"
@@ -1977,7 +1977,7 @@ msgstr ""
 
 #: src/profile.c:249 src/dvr/dvr_db.c:1615
 msgid "Normal"
-msgstr ""
+msgstr "Normalan"
 
 #: src/input/mpegts/mpegts_input.c:202
 msgid "Not Linked"
@@ -1997,7 +1997,7 @@ msgstr ""
 
 #: src/channels.c:311
 msgid "Number"
-msgstr ""
+msgstr "Broj"
 
 #: src/main.c:723
 msgid "Number of tsfile tuners"
@@ -2005,27 +2005,27 @@ msgstr ""
 
 #: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
-msgstr ""
+msgstr "U REDU"
 
 #: src/descrambler/capmt.c:2165
 msgid "OSCam (rev >= 9095)"
-msgstr ""
+msgstr "OSCam (izdanje >= 9095)"
 
 #: src/descrambler/capmt.c:2164
 msgid "OSCam TCP (rev >= 9574)"
-msgstr ""
+msgstr "OSCam TCP (izdanje >= 9574)"
 
 #: src/descrambler/capmt.c:2162
 msgid "OSCam net protocol (rev >= 10389)"
-msgstr ""
+msgstr "OSCam mrežni protokol (izdanje >= 10389)"
 
 #: src/descrambler/capmt.c:2163
 msgid "OSCam pc-nodmx (rev >= 9756)"
-msgstr ""
+msgstr "OSCam pc-nodmx (izdanje >= 9756)"
 
 #: src/descrambler/constcw.c:331 src/descrambler/constcw.c:391
 msgid "Odd Key"
-msgstr ""
+msgstr "Neparan ključ"
 
 #: src/input/mpegts/mpegts_service.c:77
 msgid "Off"
@@ -2033,7 +2033,7 @@ msgstr ""
 
 #: src/descrambler/capmt.c:2166
 msgid "Older OSCam"
-msgstr ""
+msgstr "Stariji OSCam"
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "On"
@@ -2041,94 +2041,94 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1768
 msgid "One Mux (EMM)"
-msgstr ""
+msgstr "Jedan multipleks (EMM)"
 
 #: src/input/mpegts/mpegts_mux.c:465
 msgid "Only Bulsatcom 39E"
-msgstr ""
+msgstr "Samo Bulsatcom 39E"
 
 #: src/input/mpegts/mpegts_mux.c:461
 msgid "Only EIT"
-msgstr ""
+msgstr "Samo EIT"
 
 #: src/input/mpegts/mpegts_mux.c:468
 msgid "Only OpenTV Sky Ausat"
-msgstr ""
+msgstr "Samo OpenTV Sky Ausat"
 
 #: src/input/mpegts/mpegts_mux.c:467
 msgid "Only OpenTV Sky Italia"
-msgstr ""
+msgstr "Samo OpenTV Sky Italia"
 
 #: src/input/mpegts/mpegts_mux.c:466
 msgid "Only OpenTV Sky UK"
-msgstr ""
+msgstr "Samo OpenTV Sky UK"
 
 #: src/input/mpegts/mpegts_service.c:79
 msgid "Only Preferred CA PID"
-msgstr ""
+msgstr "Samo preferirani CA PID"
 
 #: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freesat"
-msgstr ""
+msgstr "Samo UK Freesat"
 
 #: src/input/mpegts/mpegts_mux.c:463
 msgid "Only UK Freeview"
-msgstr ""
+msgstr "Samo UK Freeview"
 
 #: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Viasat Baltic"
-msgstr ""
+msgstr "Samo Viasat Baltic"
 
 #: src/main.c:668
 msgid "Only use specified DVB adapters (comma separated)"
-msgstr ""
+msgstr "Samo koristi određene DVB adaptere (odvojene zarezom)"
 
 #: src/input/mpegts/mpegts_service.c:136
 msgid "OpenTV Channel Number"
-msgstr ""
+msgstr "OpenTV broj programa"
 
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
 msgid "Opera"
-msgstr ""
+msgstr "Opera"
 
 #: src/input/mpegts/mpegts_network_dvb.c:253
 #: src/input/mpegts/mpegts_mux_dvb.c:611
 msgid "Orbital Position"
-msgstr ""
+msgstr "Orbitalni položaj"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:567
 msgid "Orbital Positions"
-msgstr ""
+msgstr "Orbitalni položaji"
 
 #: src/input/mpegts/mpegts_mux.c:534
 msgid "Original Network ID"
-msgstr ""
+msgstr "ID izvorne mreže"
 
 #: src/esfilter.c:974
 msgid "Other Stream Filter"
-msgstr ""
+msgstr "Ostali filter strujanja"
 
 #: src/main.c:727
 msgid "Output directory for tsdebug"
-msgstr ""
+msgstr "Izlazni direktorij za ts otklanjnje greške"
 
 #: src/input/mpegts/mpegts_input.c:255
 msgid "Over-the-air EPG"
-msgstr ""
+msgstr "EPG iz signala"
 
 #: src/dvr/dvr_db.c:2155 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
 msgid "Owner"
-msgstr ""
+msgstr "Vlasnik"
 
 #: src/input/mpegts/mpegts_mux.c:383
 msgid "PEND"
-msgstr ""
+msgstr "ČEKANJE"
 
 #: src/esfilter.c:668 src/esfilter.c:735 src/esfilter.c:802 src/esfilter.c:869
 #: src/esfilter.c:944 src/esfilter.c:1005
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/input/mpegts/satip/satip.c:261
 msgid "PIDs 21 in setup"
@@ -2162,48 +2162,48 @@ msgstr ""
 
 #: src/access.c:1692 src/descrambler/cwc.c:1732
 msgid "Password"
-msgstr ""
+msgstr "Lozinka"
 
 #: src/access.c:1700
 msgid "Password2"
-msgstr ""
+msgstr "Lozinka2"
 
 #: src/access.c:1670
 msgid "Passwords"
-msgstr ""
+msgstr "Lozinke"
 
 #: src/epg.c:2042
 msgid "Performing arts"
-msgstr ""
+msgstr "Primjenjenja umjetnost"
 
 #: src/epg.c:2071
 msgid "Physiology"
-msgstr ""
+msgstr "Filozofija"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
-msgstr ""
+msgstr "Pilot"
 
 #: src/epg.c:2052
 msgid "Political issues"
-msgstr ""
+msgstr "Politička pitanja"
 
 #: src/epg.c:2027
 msgid "Pop"
-msgstr ""
+msgstr "Pop"
 
 #: src/epg.c:2045
 msgid "Popular culture"
-msgstr ""
+msgstr "Popularna kultura"
 
 #: src/descrambler/cwc.c:1746
 msgid "Port"
-msgstr ""
+msgstr "Ulaz"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:126
 #: src/input/mpegts/satip/satip_satconf.c:216
 msgid "Position"
-msgstr ""
+msgstr "Položaj"
 
 #: src/dvr/dvr_config.c:842
 msgid "Post-Processor Command"
@@ -2211,7 +2211,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:100
 msgid "Power Save"
-msgstr ""
+msgstr "Štednja energije"
 
 #: src/input/mpegts/mpegts_network_dvb.c:206
 #: src/input/mpegts/mpegts_network_dvb.c:225
@@ -2238,7 +2238,7 @@ msgstr ""
 
 #: src/epg.c:2049
 msgid "Press"
-msgstr ""
+msgstr "Tisak"
 
 #: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
@@ -2246,15 +2246,15 @@ msgstr ""
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "Priority"
-msgstr ""
+msgstr "Prioritet"
 
 #: src/service.c:183
 msgid "Priority (-10..10)"
-msgstr ""
+msgstr "Prioritet (-10..10)"
 
 #: src/channels.c:1116
 msgid "Private"
-msgstr ""
+msgstr "Privatno"
 
 #: src/profile.c:307
 msgid "Profile Name"
@@ -2270,7 +2270,7 @@ msgstr ""
 
 #: src/epg.c:2071
 msgid "Psychology"
-msgstr ""
+msgstr "Psihologija"
 
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
@@ -2283,11 +2283,11 @@ msgstr ""
 
 #: src/epg.c:1984
 msgid "Quiz"
-msgstr ""
+msgstr "Kviz"
 
 #: src/input/mpegts/satip/satip.c:289
 msgid "RTSP Port"
-msgstr ""
+msgstr "RTSP ulaz"
 
 #: src/imagecache.c:83
 msgid "Re-try period"
@@ -2299,7 +2299,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:878
 msgid "Record all"
-msgstr ""
+msgstr "Snimi sve"
 
 #: src/dvr/dvr_autorec.c:884
 msgid "Record if different description"
@@ -2311,7 +2311,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:882
 msgid "Record if different subtitle"
-msgstr ""
+msgstr "Snimi ako je drugačiji podnaslov"
 
 #: src/dvr/dvr_autorec.c:888
 msgid "Record once per day"
@@ -2331,17 +2331,17 @@ msgstr ""
 
 #: src/epg.c:2044
 msgid "Religion"
-msgstr ""
+msgstr "Religija"
 
 #: src/epg.c:1958
 msgid "Religious"
-msgstr ""
+msgstr "Religijski"
 
 #: src/epg.c:2055 src/epg.c:2056 src/epg.c:2057 src/epg.c:2058 src/epg.c:2059
 #: src/epg.c:2060 src/epg.c:2061 src/epg.c:2062 src/epg.c:2063 src/epg.c:2064
 #: src/epg.c:2065
 msgid "Remarkable people"
-msgstr ""
+msgstr "Neuobičajeni ljudi"
 
 #: src/dvr/dvr_config.c:969
 msgid "Remove All Unsafe Characters From Filename"
@@ -2349,7 +2349,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:976
 msgid "Replace Whitespace In Title with '-'"
-msgstr ""
+msgstr "Zamijeni razmak u naslovu s '-'"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:202
 msgid "Reply to CAM PIN Enquiries"
@@ -2373,7 +2373,7 @@ msgstr ""
 
 #: src/profile.c:1513
 msgid "Resolution"
-msgstr ""
+msgstr "Razlučivost"
 
 #: src/input/mpegts/iptv/iptv_mux.c:144
 msgid "Respawn (pipe)"
@@ -2510,7 +2510,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:564
 msgid "Scan Result"
-msgstr ""
+msgstr "Rezultat pretraživanja"
 
 #: src/input/mpegts/mpegts_mux.c:555
 msgid "Scan Status"
@@ -2522,15 +2522,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2012
 msgid "Scheduled Start Time"
-msgstr ""
+msgstr "Zakazano vrijeme početka"
 
 #: src/dvr/dvr_db.c:2034
 msgid "Scheduled Stop Time"
-msgstr ""
+msgstr "Zakazano vrijeme završetka"
 
 #: src/dvr/dvr_db.c:278
 msgid "Scheduled for recording"
-msgstr ""
+msgstr "Zakazano za snimanje"
 
 #: src/epg.c:2014
 msgid "School programmes"
@@ -2538,11 +2538,11 @@ msgstr ""
 
 #: src/epg.c:2068
 msgid "Science"
-msgstr ""
+msgstr "Znanost"
 
 #: src/epg.c:1954
 msgid "Science fiction"
-msgstr ""
+msgstr "Znanstvena fantastika"
 
 #: src/dvr/dvr_autorec.c:1070
 msgid "Season"
@@ -2563,7 +2563,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:310
 msgid "Serial Number"
-msgstr ""
+msgstr "Serijski broj"
 
 #: src/dvr/dvr_autorec.c:1078
 msgid "Series Link"
@@ -2575,70 +2575,70 @@ msgstr ""
 
 #: src/epg.c:2028
 msgid "Serious music"
-msgstr ""
+msgstr "Ozbiljna glazba"
 
 #: src/input/mpegts/satip/satip.c:394
 msgid "Server"
-msgstr ""
+msgstr "Poslužitelj"
 
 #: src/main.c:680
 msgid "Server Connectivity"
-msgstr ""
+msgstr "Povezivost poslužitelja"
 
 #: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
 msgid "Service"
-msgstr ""
+msgstr "Usluga"
 
 #: src/main.c:648
 msgid "Service Configuration"
-msgstr ""
+msgstr "Podešavanje usluge"
 
 #: src/input/mpegts/mpegts_service.c:115 src/descrambler/constcw.c:314
 #: src/descrambler/constcw.c:374
 msgid "Service ID"
-msgstr ""
+msgstr "ID usluge"
 
 #: src/input/mpegts/mpegts_network.c:180
 msgid "Service IDs as Channel Numbers"
-msgstr ""
+msgstr "ID-ovi usluge kao brojevi programa"
 
 #: src/input/mpegts/mpegts_service.c:143 src/input/mpegts/iptv/iptv_mux.c:138
 msgid "Service Name"
-msgstr ""
+msgstr "Naziv usluge"
 
 #: src/service.c:206
 msgid "Service Raw"
-msgstr ""
+msgstr "Osnova usluge"
 
 #: src/input/mpegts/mpegts_service.c:164
 msgid "Service Type"
-msgstr ""
+msgstr "Vrsta usluge"
 
 #: src/channels.c:363 src/bouquet.c:875
 msgid "Services"
-msgstr ""
+msgstr "Usluge"
 
 #: src/bouquet.c:761
 #, c-format
 msgid "Services Count %zi"
-msgstr ""
+msgstr "Broj usluge %zi"
 
 #: src/epg.c:1983
 msgid "Show"
-msgstr ""
+msgstr "Emisija"
 
 #: src/main.c:645
 msgid "Show this page"
-msgstr ""
+msgstr "Prikaži ovu informaciju"
 
 #: src/main.c:646
 msgid "Show version information"
-msgstr ""
+msgstr "Prikaži informaciju inačice"
 
 #: src/streaming.c:434
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "Kvaliteta usluge loša"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
@@ -2662,7 +2662,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:164
 msgid "Skip Initial Scan"
-msgstr ""
+msgstr "Preskoči početno pretraživanje"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:255
 msgid "Slot State"
@@ -2670,31 +2670,31 @@ msgstr ""
 
 #: src/epg.c:1956
 msgid "Soap"
-msgstr ""
+msgstr "Sapunica"
 
 #: src/epg.c:2002
 msgid "Soccer"
-msgstr ""
+msgstr "Nogomet"
 
 #: src/epg.c:2052 src/epg.c:2073
 msgid "Social"
-msgstr ""
+msgstr "Socijalno"
 
 #: src/epg.c:2054
 msgid "Social advisory"
-msgstr ""
+msgstr "Socijalni savjeti"
 
 #: src/channels.c:1098
 msgid "Sort Index"
-msgstr ""
+msgstr "Razvrstaj raspored"
 
 #: src/bouquet.c:867
 msgid "Source"
-msgstr ""
+msgstr "Izvor"
 
 #: src/streaming.c:413
 msgid "Source deleted"
-msgstr ""
+msgstr "Izvor obrisan"
 
 #: src/streaming.c:411
 msgid "Source quality is bad"
@@ -2734,15 +2734,15 @@ msgstr ""
 
 #: src/epg.c:2073
 msgid "Spiritual sciences"
-msgstr ""
+msgstr "Duhovne znanosti"
 
 #: src/epg.c:1999
 msgid "Sports"
-msgstr ""
+msgstr "Sportovi"
 
 #: src/epg.c:2001
 msgid "Sports magazines"
-msgstr ""
+msgstr "Sportske emisije"
 
 #: src/epg.c:2003
 msgid "Squash"
@@ -2750,43 +2750,43 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:477
 msgid "Standard"
-msgstr ""
+msgstr "Standarno"
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Start"
-msgstr ""
+msgstr "Pokreni"
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Start After"
-msgstr ""
+msgstr "Pokreni nakon"
 
 #: src/dvr/dvr_autorec.c:974
 msgid "Start Before"
-msgstr ""
+msgstr "Pokreni prije"
 
 #: src/dvr/dvr_db.c:1994
 msgid "Start Time"
-msgstr ""
+msgstr "Vrijeme početka"
 
 #: src/dvr/dvr_db.c:2270 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "Stanje"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
-msgstr ""
+msgstr "Razdoblje stanja (ms)"
 
 #: src/profile.c:1372
 msgid "Stereo"
-msgstr ""
+msgstr "Stereo"
 
 #: src/dvr/dvr_timerec.c:601
 msgid "Stop"
-msgstr ""
+msgstr "Zaustavi"
 
 #: src/dvr/dvr_db.c:2019
 msgid "Stop Time"
-msgstr ""
+msgstr "Vrijeme završetka"
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
@@ -2809,7 +2809,7 @@ msgstr ""
 #: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
-msgstr ""
+msgstr "Prioritet strujanja"
 
 #: src/access.c:1365
 msgid "Streaming Profiles"
@@ -2829,19 +2829,19 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2089 src/dvr/dvr_db.c:2096
 msgid "Subtitle"
-msgstr ""
+msgstr "Podnaslov"
 
 #: src/profile.c:1565
 msgid "Subtitle CODEC"
-msgstr ""
+msgstr "Podnaslov KÔDEK"
 
 #: src/esfilter.c:832
 msgid "Subtitle Stream Filter"
-msgstr ""
+msgstr "Podnaslov filter strujanja"
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
-msgstr ""
+msgstr "Ned"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
@@ -2874,49 +2874,49 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:683
 msgid "System"
-msgstr ""
+msgstr "Sustav"
 
 #: src/dvr/dvr_config.c:874
 msgid "Tag Files With Metadata"
-msgstr ""
+msgstr "Datoteke oznaka s metapodacima"
 
 #: src/channels.c:373
 msgid "Tags"
-msgstr ""
+msgstr "Oznake"
 
 #: src/epg.c:1986 src/epg.c:1987 src/epg.c:1988 src/epg.c:1989 src/epg.c:1990
 #: src/epg.c:1991 src/epg.c:1992 src/epg.c:1993 src/epg.c:1994 src/epg.c:1995
 #: src/epg.c:1996
 msgid "Talk show"
-msgstr ""
+msgstr "Emisija uživo"
 
 #: src/epg.c:2004
 msgid "Team sports (excluding football)"
-msgstr ""
+msgstr "Ekipni sportovi (osim nogometa)"
 
 #: src/epg.c:2070
 msgid "Technology"
-msgstr ""
+msgstr "Tehnologija"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Teletekst filter strujanja"
 
 #: src/epg.c:2003
 msgid "Tennis"
-msgstr ""
+msgstr "Tenis"
 
 #: src/main.c:722
 msgid "Testing options"
-msgstr ""
+msgstr "Mogućnost testiranja"
 
 #: src/epg.c:1952
 msgid "Thriller"
-msgstr ""
+msgstr "Triler"
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
-msgstr ""
+msgstr "Čet"
 
 #: src/dvr/dvr_db.c:316
 msgid "Time missed"
@@ -2941,7 +2941,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2074 src/dvr/dvr_db.c:2081 src/dvr/dvr_timerec.c:569
 msgid "Title"
-msgstr ""
+msgstr "Naslov"
 
 #: src/dvr/dvr_autorec.c:934
 msgid "Title (Regexp)"
@@ -2957,15 +2957,15 @@ msgstr ""
 
 #: src/epg.c:2085
 msgid "Tourism / Travel"
-msgstr ""
+msgstr "Turizam / Putovanja"
 
 #: src/epg.c:2045
 msgid "Traditional arts"
-msgstr ""
+msgstr "Tradicionalana umjetnost"
 
 #: src/epg.c:2029
 msgid "Traditional music"
-msgstr ""
+msgstr "Tradicionalana glazba"
 
 #: src/profile.c:1500
 msgid "Transcode/av-lib"
@@ -2985,7 +2985,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
-msgstr ""
+msgstr "Uto"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
 msgid "Tune Before DiseqC"
@@ -3017,7 +3017,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2256 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: src/main.c:677
 msgid "URL with the SAT>IP server XML location"
@@ -3079,11 +3079,11 @@ msgstr ""
 
 #: src/descrambler/cwc.c:1761
 msgid "Update Card (EMM)"
-msgstr ""
+msgstr "Ažuriraj karticu (EMM)"
 
 #: src/dvr/dvr_config.c:703
 msgid "Update Disabled"
-msgstr ""
+msgstr "Ažuriranje onemogućeno"
 
 #: src/main.c:449
 #, c-format
@@ -3108,7 +3108,7 @@ msgstr ""
 
 #: src/channels.c:318
 msgid "User Icon"
-msgstr ""
+msgstr "Korisnikova ikona"
 
 #: src/dvr/dvr_db.c:304
 msgid "User Limit Reached"
@@ -3124,35 +3124,35 @@ msgstr ""
 
 #: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
 msgid "Username"
-msgstr ""
+msgstr "Korisničko ime"
 
 #: src/epg.c:1985
 msgid "Variety show"
-msgstr ""
+msgstr "Posebna emisija"
 
 #: src/epg.c:2048
 msgid "Video"
-msgstr ""
+msgstr "Video"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
-msgstr ""
+msgstr "Brzina prijenosa videa (kb/s) (0=Automatski)"
 
 #: src/profile.c:1535
 msgid "Video CODEC"
-msgstr ""
+msgstr "Video KÔDEK"
 
 #: src/access.c:1374
 msgid "Video Recorder"
-msgstr ""
+msgstr "Video snimač"
 
 #: src/esfilter.c:631
 msgid "Video Stream Filter"
-msgstr ""
+msgstr "Video filter struajanja"
 
 #: src/streaming.c:545
 msgid "Visually impaired commentary"
-msgstr ""
+msgstr "Komentar za slabovidne osobe"
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
@@ -3184,35 +3184,35 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:284
 msgid "Waiting for stream"
-msgstr ""
+msgstr "Čekanje strujanja"
 
 #: src/epg.c:1953
 msgid "War"
-msgstr ""
+msgstr "Rat"
 
 #: src/epg.c:2007
 msgid "Water sport"
-msgstr ""
+msgstr "Vodeni sport"
 
 #: src/epg.c:1968
 msgid "Weather report"
-msgstr ""
+msgstr "Vremenska prognoza"
 
 #: src/access.c:1415
 msgid "Web Interface"
-msgstr ""
+msgstr "Web sučelje"
 
 #: src/access.c:1338
 msgid "Web Interface Language"
-msgstr ""
+msgstr "Jezik web sučelja"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
-msgstr ""
+msgstr "Sri"
 
 #: src/epg.c:1953
 msgid "Western"
-msgstr ""
+msgstr "Vesten"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
@@ -3228,20 +3228,20 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1938
 msgid "hrs"
-msgstr ""
+msgstr "sata"
 
 #: src/main.c:752
 #, c-format
 msgid "invalid option specified [%s]"
-msgstr ""
+msgstr "određena neispravna mogućnost [%s]"
 
 #: src/dvr/dvr_db.c:1939
 msgid "min"
-msgstr ""
+msgstr "min"
 
 #: src/dvr/dvr_db.c:1940
 msgid "mins"
-msgstr ""
+msgstr "minuta"
 
 #: src/main.c:759
 #, c-format

@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Adrian Fülöp <soulmode32@gmail.com>, 2015
 # Frankovics András <frankovics.andras@outlook.com>, 2015
 # Levente Cseh <levente@csehs.com>, 2015
 msgid ""
@@ -10,9 +11,9 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-04 14:07+0000\n"
-"Last-Translator: Frankovics András <frankovics.andras@outlook.com>\n"
-"Language-Team: Hungarian (http://www.transifex.com/p/tvheadend/language/hu/)\n"
+"PO-Revision-Date: 2015-07-17 09:26+0000\n"
+"Last-Translator: Adrian Fülöp <soulmode32@gmail.com>\n"
+"Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -24,7 +25,7 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr ""
+msgstr "\nTöbb információért kérjük látogasson el a Tvheadend honlapjára:\nhttps://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:587
 msgid "# Channels"
@@ -85,7 +86,7 @@ msgstr "2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
 msgid "2-Port Switch (Universal LNB)"
-msgstr "2 portos switch (Universal LNB)"
+msgstr "2 portos kapcsoló (Univerzális LNB)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "3"
@@ -97,7 +98,7 @@ msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
 msgid "4-Port Switch (Universal LNB)"
-msgstr "4 portos switch (Universal LNB)"
+msgstr "4 portos kapcsoló (Univerzális LNB)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "5"
@@ -447,7 +448,7 @@ msgstr "Csatorna-név"
 
 #: src/bouquet.c:904
 msgid "Channel Number Offset"
-msgstr ""
+msgstr "Csatorna szám eltolódása"
 
 #: src/channels.c:1083 src/dvr/dvr_autorec.c:956
 msgid "Channel Tag"
@@ -572,7 +573,7 @@ msgstr "Főző-műsor"
 
 #: src/profile.c:1434
 msgid "Copy codec type"
-msgstr ""
+msgstr "Kodektípus másolása"
 
 #: src/profile.c:1370
 msgid "Copy layout"
@@ -596,7 +597,7 @@ msgstr "Cron"
 
 #: src/epg.c:2041
 msgid "Culture (without music)"
-msgstr ""
+msgstr "Kultúra (kivéve zene)"
 
 #: src/epg.c:1967
 msgid "Current affairs"
@@ -688,7 +689,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:1984
 msgid "DVR Entry"
-msgstr ""
+msgstr "DVR bejegyzés"
 
 #: src/dvr/dvr_config.c:809
 msgid "DVR Log Retention Time (days)"
