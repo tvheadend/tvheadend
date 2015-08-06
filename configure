@@ -185,6 +185,17 @@ int test(void)
 }
 '
 
+check_cc_snippet gmtoff '
+#include <time.h>
+#define TEST test
+int test(void)
+{
+  struct tm x;
+  x.tm_gmtoff = 0;
+  return 0;
+}
+' -DHAS_GMTOFF
+
 check_cc_snippet recvmmsg '
 #define _GNU_SOURCE
 #include <stdlib.h>

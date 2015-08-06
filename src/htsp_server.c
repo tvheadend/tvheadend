@@ -1088,13 +1088,33 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   struct timeval tv;
   struct timezone tz;
+  int tz_offset;
+  struct tm serverLocalTime;
 
   if(gettimeofday(&tv, &tz) == -1)
     return htsp_error("Unable to get system time"); 
 
+  if (!localtime_r(&tv.tv_sec, &serverLocalTime))
+    return htsp_error("Unable to get system local time");
+#if defined(HAS_GMTOFF)
+  tz_offset = - serverLocalTime.tm_gmtoff / (60);
+#else
+  // NB: This will be a day out when GMT offsets >= 13hrs or <11 hrs apply
+  struct tm serverGmTime;
+  if (!gmtime_r(&tv.tv_sec, &serverGmTime))
+    return htsp_error("Unable to get system gmt");
+  tz_offset = (serverGmTime.tm_hour - serverLocalTime.tm_hour) * 60;
+  tz_offset += serverGmTime.tm_min - serverLocalTime.tm_min;
+  if (tz_offset > 11 * 60)
+    tz_offset -= 24 * 60;
+  if (tz_offset <= -13 * 60)
+    tz_offset += 24 * 60;
+#endif
+
   out = htsmsg_create_map();
   htsmsg_add_s32(out, "time", tv.tv_sec);
-  htsmsg_add_s32(out, "timezone", tz.tz_minuteswest / 60);
+  htsmsg_add_s32(out, "timezone", tz_offset/60);
+  htsmsg_add_s32(out, "gmtoffset", -tz_offset);
   return out;
 }
 
