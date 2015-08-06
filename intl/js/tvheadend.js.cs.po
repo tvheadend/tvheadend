@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:55+0000\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:24+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -174,10 +174,6 @@ msgstr "Věkové hodnocení"
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Vše"
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
-msgstr "Všechny dny"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
@@ -597,13 +593,13 @@ msgstr "Profily digitálního video rekordéru"
 msgid "Disabled"
 msgstr "Zakázáno"
 
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
+msgstr "Místo na disku"
+
 #: src/webui/static/app/config.js:462
 msgid "Discover SAT>IP servers"
 msgstr "Vyhledat SAT>IP servery"
-
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
-msgstr "Místo na disku:"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -724,6 +720,10 @@ msgstr "Chyby"
 msgid "Events"
 msgstr "Pořady"
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr "Každý den"
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr "Exportované ATSC tunery"
@@ -833,8 +833,8 @@ msgid "Force new scan (all muxes) for selected networks"
 msgstr "Vynutit nový scan (všechny muxy) pro vybrané sítě"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
-msgstr "Volné:"
+msgid "Free"
+msgstr "Volné"
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -1063,8 +1063,12 @@ msgstr "Maximální velikost (MB)"
 msgid "Maximum {0} item(s) allowed"
 msgstr "Je dovoleno maximálně {0} položek"
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
+msgstr "Kvě"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
 msgstr "Kvě"
 
 #: src/webui/static/app/servicemapper.js:100
@@ -1632,13 +1636,9 @@ msgstr "Název profilu streamu"
 msgid "Stream Profiles"
 msgstr "Profily streamů"
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr "Podtitulek"
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
-msgstr "Odběry #"
+msgid "Subs No."
+msgstr "Odběry Počet"
 
 #: src/webui/static/app/config.js:389
 msgid "Subscription Weight"
@@ -1647,6 +1647,10 @@ msgstr "Váha odběru"
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
 msgstr "Odběry"
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
+msgstr "Podtitulek"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
@@ -1693,7 +1697,7 @@ msgid "Teletext Stream Filters"
 msgstr "Filtry streamu teletextu"
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
+msgid "The associated file will be removed from storage."
 msgstr "Příslušný soubor (soubory) budou vymazány z úložiště."
 
 #: src/webui/static/app/i18n-post.js:187
@@ -1798,8 +1802,8 @@ msgid "Today"
 msgstr "Dnes"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
-msgstr "Celkově:"
+msgid "Total"
+msgstr "Celkově"
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Trace subsystems"

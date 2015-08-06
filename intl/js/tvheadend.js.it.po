@@ -10,9 +10,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-18 18:08+0000\n"
-"Last-Translator: Mario Di Raimondo <mario.diraimondo@gmail.com>\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:19+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Italian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -176,10 +176,6 @@ msgstr "Fascia d'Età"
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Tutti"
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
-msgstr "Tutti i giorni"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
@@ -599,13 +595,13 @@ msgstr "Profili per Registratore Video Digitale"
 msgid "Disabled"
 msgstr "Disabilitato"
 
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
+msgstr ""
+
 #: src/webui/static/app/config.js:462
 msgid "Discover SAT>IP servers"
 msgstr "Scoperta server SAT>IP"
-
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
-msgstr "Spazio su Disco:"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -726,6 +722,10 @@ msgstr "Errori"
 msgid "Events"
 msgstr "Eventi"
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr ""
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr "Sintonizzatori ATSC Esportati"
@@ -835,8 +835,8 @@ msgid "Force new scan (all muxes) for selected networks"
 msgstr "Forzare nuova scansione (tutti i mux) per le reti selezionate"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
-msgstr "Libero:"
+msgid "Free"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -1065,9 +1065,13 @@ msgstr "Dimensione Massima (MB)"
 msgid "Maximum {0} item(s) allowed"
 msgstr "Massimo {0} elemento/i permessi"
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
 msgstr "Maggio"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -1634,13 +1638,9 @@ msgstr "Nome del Profilo dello Stream"
 msgid "Stream Profiles"
 msgstr "Profili dello Stream"
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr "Sottotitolo"
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
-msgstr "Sottotitoli #"
+msgid "Subs No."
+msgstr ""
 
 #: src/webui/static/app/config.js:389
 msgid "Subscription Weight"
@@ -1649,6 +1649,10 @@ msgstr "Peso della Sottoscrizione"
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
 msgstr "Sottoscrizioni"
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
+msgstr ""
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
@@ -1695,8 +1699,8 @@ msgid "Teletext Stream Filters"
 msgstr "Filtri dello Stream Televideo"
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
-msgstr "I file associati saranno rimossi dal disco."
+msgid "The associated file will be removed from storage."
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
@@ -1800,8 +1804,8 @@ msgid "Today"
 msgstr "Oggi"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
-msgstr "Totale:"
+msgid "Total"
+msgstr ""
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Trace subsystems"

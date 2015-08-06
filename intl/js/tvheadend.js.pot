@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-04 21:11+0200\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -172,10 +172,6 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
-msgstr ""
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
 msgstr ""
 
 #: src/webui/static/app/tvhlog.js:57
@@ -596,12 +592,12 @@ msgstr ""
 msgid "Disabled"
 msgstr ""
 
-#: src/webui/static/app/config.js:462
-msgid "Discover SAT>IP servers"
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
+#: src/webui/static/app/config.js:462
+msgid "Discover SAT>IP servers"
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:151
@@ -723,6 +719,10 @@ msgstr ""
 msgid "Events"
 msgstr ""
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr ""
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr ""
@@ -832,7 +832,7 @@ msgid "Force new scan (all muxes) for selected networks"
 msgstr ""
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
+msgid "Free"
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
@@ -1062,8 +1062,12 @@ msgstr ""
 msgid "Maximum {0} item(s) allowed"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
 msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
@@ -1631,12 +1635,8 @@ msgstr ""
 msgid "Stream Profiles"
 msgstr ""
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr ""
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
+msgid "Subs No."
 msgstr ""
 
 #: src/webui/static/app/config.js:389
@@ -1645,6 +1645,10 @@ msgstr ""
 
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
+msgstr ""
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
 msgstr ""
 
 #: src/webui/static/app/esfilter.js:108
@@ -1692,7 +1696,7 @@ msgid "Teletext Stream Filters"
 msgstr ""
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
+msgid "The associated file will be removed from storage."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:187
@@ -1797,7 +1801,7 @@ msgid "Today"
 msgstr ""
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
+msgid "Total"
 msgstr ""
 
 #: src/webui/static/app/tvhlog.js:39

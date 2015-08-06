@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 19:28+0000\n"
-"Last-Translator: Prof Yaffle\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:19+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: English (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/en/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -174,10 +174,6 @@ msgstr "Age Rating"
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "All"
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
-msgstr "All days"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
@@ -597,13 +593,13 @@ msgstr "Digital Video Recorder Profiles"
 msgid "Disabled"
 msgstr "Disabled"
 
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
+msgstr ""
+
 #: src/webui/static/app/config.js:462
 msgid "Discover SAT>IP servers"
 msgstr "Discover SAT>IP servers"
-
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
-msgstr "Disk space:"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -724,6 +720,10 @@ msgstr "Errors"
 msgid "Events"
 msgstr "Events"
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr ""
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr "Exported ATSC Tuners"
@@ -833,8 +833,8 @@ msgid "Force new scan (all muxes) for selected networks"
 msgstr "Force new scan (all muxes) for selected networks"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
-msgstr "Free:"
+msgid "Free"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -1063,9 +1063,13 @@ msgstr "Maximum Size (MB)"
 msgid "Maximum {0} item(s) allowed"
 msgstr "Maximum {0} item(s) allowed"
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
 msgstr "May"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -1632,13 +1636,9 @@ msgstr "Stream Profile Name"
 msgid "Stream Profiles"
 msgstr "Stream Profiles"
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr "SubTitle"
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
-msgstr "Subs #"
+msgid "Subs No."
+msgstr ""
 
 #: src/webui/static/app/config.js:389
 msgid "Subscription Weight"
@@ -1647,6 +1647,10 @@ msgstr "Subscription Weight"
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
 msgstr "Subscriptions"
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
+msgstr ""
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
@@ -1693,8 +1697,8 @@ msgid "Teletext Stream Filters"
 msgstr "Teletext Stream Filters"
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
-msgstr "The associated file will be removed from storage."
+msgid "The associated file will be removed from storage."
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
@@ -1798,8 +1802,8 @@ msgid "Today"
 msgstr "Today"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
-msgstr "Total:"
+msgid "Total"
+msgstr ""
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Trace subsystems"

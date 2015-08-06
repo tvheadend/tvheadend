@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:22+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -185,7 +185,7 @@ msgstr "Síť ATSC"
 msgid "AUTO"
 msgstr "AUTO"
 
-#: src/streaming.c:441
+#: src/streaming.c:436
 msgid "Aborted by user"
 msgstr "Zrušeno uživatelem"
 
@@ -198,7 +198,7 @@ msgstr "Přístup"
 msgid "Action"
 msgstr "Akce"
 
-#: src/streaming.c:428
+#: src/streaming.c:423
 msgid "Adapter in use by another subscription"
 msgstr "Adaptéry používané jiným odběratelem"
 
@@ -262,7 +262,7 @@ msgid "Alternate configuration path"
 msgstr "Alternativní cesta ke konfiguraci"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
-msgid "Altitude (meters)"
+msgid "Altitude (metres)"
 msgstr "Výška (metry)"
 
 #: src/epg.c:2069
@@ -489,7 +489,7 @@ msgstr "Klasické"
 msgid "Classical music"
 msgstr "Klasická hudba"
 
-#: src/streaming.c:543
+#: src/streaming.c:538
 msgid "Clean effects"
 msgstr "Čisté efekty"
 
@@ -602,7 +602,7 @@ msgid "Current affairs"
 msgstr "Aktuální události"
 
 #: src/main.c:664
-msgid "DBus - use the session message bus instead system one"
+msgid "DBus - use the session message bus instead of the system one"
 msgstr "DBUs - použije se 'session' sběrnice pro zprávy místo systémové"
 
 #: src/descrambler/constcw.c:285
@@ -670,7 +670,7 @@ msgid "DVR Auto-Record Entry"
 msgstr "Položka DVR auto-rekordéru"
 
 #: src/dvr/dvr_config.c:731
-msgid "DVR Behavior"
+msgid "DVR Behaviour"
 msgstr "Chování DVR"
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
@@ -1269,7 +1269,7 @@ msgstr "HTSP streamování"
 msgid "Handicraft"
 msgstr "Řemeslo"
 
-#: src/streaming.c:544
+#: src/streaming.c:539
 msgid "Hearing impaired"
 msgstr "Zhoršený sluch"
 
@@ -1356,7 +1356,7 @@ msgid ""
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
-"the access-control from within the Tvheadend web interface."
+"the access control from within the Tvheadend web interface."
 msgstr "Pokud není vytvořený žádný uživatelský účet,\ntak se vytvoří účet bez uživatelského jména\na hesla. Je doporučené tento administrátorský\núčet okamžitě změnit (uživatelské jméno a heslo)"
 
 #: src/webui/extjs.c:240
@@ -1457,7 +1457,7 @@ msgstr "Chybný"
 msgid "Invalid adapter number '%s'\n"
 msgstr "Chybné číslo adaptéru '%s'\n"
 
-#: src/streaming.c:417
+#: src/streaming.c:412
 msgid "Invalid target"
 msgstr "Chybný cíl"
 
@@ -1637,12 +1637,12 @@ msgid "MPEG-TS Network"
 msgstr "MPEG-TS síť"
 
 #: src/profile.c:1806
-msgid "MPEG-TS Pass-thru"
-msgstr "MPEG-TS Pass-thru"
+msgid "MPEG-TS Pass-through"
+msgstr "MPEG-TS Pass-through"
 
 #: src/profile.c:1001
-msgid "MPEG-TS Pass-thru/built-in"
-msgstr "MPEG-TS Pass-thru/built-in"
+msgid "MPEG-TS Pass-through/built-in"
+msgstr "MPEG-TS Pass-through/build-in"
 
 #: src/input/mpegts/mpegts_service.c:721
 msgid "MPEG-TS Raw Service"
@@ -1844,7 +1844,7 @@ msgstr "Položka plánovače muxů"
 msgid "Mux UUID"
 msgstr "UUID muxu"
 
-#: src/streaming.c:426
+#: src/streaming.c:421
 msgid "Mux not enabled"
 msgstr "Mux není povolen"
 
@@ -1933,7 +1933,7 @@ msgstr "Zpoždění pro další ladění v ms (0-2000)"
 msgid "No PIN"
 msgstr "Žádný PIN"
 
-#: src/streaming.c:446
+#: src/streaming.c:441
 msgid "No access"
 msgstr "Přístup nepovolen"
 
@@ -1945,27 +1945,27 @@ msgstr "Žádné adaptéry nebyly specifikovány!\n"
 msgid "No days"
 msgstr "Žádné dny"
 
-#: src/streaming.c:444
+#: src/streaming.c:439
 msgid "No descrambler"
 msgstr "Žádný dešifrátor"
 
-#: src/streaming.c:424
+#: src/streaming.c:419
 msgid "No free adapter"
 msgstr "Žádný adaptér není volný"
 
-#: src/streaming.c:448
+#: src/streaming.c:443
 msgid "No input detected"
 msgstr "Žádný vstup nebyl detekován"
 
-#: src/streaming.c:438
+#: src/streaming.c:433
 msgid "No service assigned to channel"
 msgstr "Žádná služba není přiřazena programu"
 
-#: src/streaming.c:432
+#: src/streaming.c:427
 msgid "No service enabled"
 msgstr "Žádná služba není povolená"
 
-#: src/streaming.c:436
+#: src/streaming.c:431
 msgid "No source available"
 msgstr "Žádný zdroj není dostupný"
 
@@ -2003,7 +2003,7 @@ msgstr "Číslo"
 msgid "Number of tsfile tuners"
 msgstr "Počet tsfile tunerů"
 
-#: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
 msgstr "OK"
 
@@ -2367,7 +2367,7 @@ msgstr "Opakovaní"
 msgid "Rescan"
 msgstr "Nový scan"
 
-#: src/streaming.c:548
+#: src/streaming.c:543
 msgid "Reserved"
 msgstr "Rezervováno"
 
@@ -2636,7 +2636,7 @@ msgstr "Ukaž tuto stránku"
 msgid "Show version information"
 msgstr "Ukaž informace o verzi"
 
-#: src/streaming.c:434
+#: src/streaming.c:429
 msgid "Signal quality too poor"
 msgstr "Kvalita signálu je velmi nízká"
 
@@ -2692,15 +2692,15 @@ msgstr "Index třídění"
 msgid "Source"
 msgstr "Zdroj"
 
-#: src/streaming.c:413
+#: src/streaming.c:408
 msgid "Source deleted"
 msgstr "Zdroj smazán"
 
-#: src/streaming.c:411
+#: src/streaming.c:406
 msgid "Source quality is bad"
 msgstr "Kvalita zdroje je špatná"
 
-#: src/streaming.c:409
+#: src/streaming.c:404
 msgid "Source reconfigured"
 msgstr "Zdroj byl rekonfigurován"
 
@@ -2823,7 +2823,7 @@ msgstr "Volby podadresáře"
 msgid "Subscribe to a service permanently"
 msgstr "Odebírej tuto službu permanentně"
 
-#: src/streaming.c:415
+#: src/streaming.c:410
 msgid "Subscription overridden"
 msgstr "Odběr přehlasován jiným požadavkem"
 
@@ -3003,7 +3003,7 @@ msgstr "Konfigurace tuneru"
 msgid "Tuner bind IP address"
 msgstr "IP adresa pro komunikaci s tunerem"
 
-#: src/streaming.c:430
+#: src/streaming.c:425
 msgid "Tuning failed"
 msgstr "Ladění selhalo"
 
@@ -3068,7 +3068,7 @@ msgstr "Pouze univerzální LNB"
 msgid "Unknown"
 msgstr "Neznámé"
 
-#: src/streaming.c:451
+#: src/streaming.c:446
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Neznámá příčina (%i)"
@@ -3114,11 +3114,11 @@ msgstr "Uživatelská ikona"
 msgid "User Limit Reached"
 msgstr "Dosažen limit uživatele"
 
-#: src/streaming.c:419
+#: src/streaming.c:414
 msgid "User access error"
 msgstr "Chyba přístupu uživatele"
 
-#: src/streaming.c:421
+#: src/streaming.c:416
 msgid "User limit reached"
 msgstr "Dosažen limit uživatele"
 
@@ -3150,8 +3150,8 @@ msgstr "Video rekordér"
 msgid "Video Stream Filter"
 msgstr "Filtr video streamu"
 
-#: src/streaming.c:545
-msgid "Visually impaired commentary"
+#: src/streaming.c:540
+msgid "Visually impaired commentary/audio description"
 msgstr "Komentář pro zrakově postižené"
 
 #: src/profile.c:1107 src/profile.c:1263

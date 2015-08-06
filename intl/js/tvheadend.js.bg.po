@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-17 00:22+0000\n"
-"Last-Translator: saen acro <saentist@gmail.com>\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:19+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -175,10 +175,6 @@ msgstr "Възрастова Граница"
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Всички"
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
-msgstr "Всички дни"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
@@ -598,13 +594,13 @@ msgstr ""
 msgid "Disabled"
 msgstr "Изключен"
 
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
+msgstr ""
+
 #: src/webui/static/app/config.js:462
 msgid "Discover SAT>IP servers"
 msgstr "Открий SAT>IP сървъри"
-
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
-msgstr "Пространство на диска: "
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -725,6 +721,10 @@ msgstr "Грешки"
 msgid "Events"
 msgstr "Събития"
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr ""
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr ""
@@ -834,8 +834,8 @@ msgid "Force new scan (all muxes) for selected networks"
 msgstr "Принудително сканиране (всички муксове) за избраната мрежа"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
-msgstr "Свободно:"
+msgid "Free"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -1064,9 +1064,13 @@ msgstr ""
 msgid "Maximum {0} item(s) allowed"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
 msgstr "Май"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -1633,12 +1637,8 @@ msgstr ""
 msgid "Stream Profiles"
 msgstr ""
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr ""
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
+msgid "Subs No."
 msgstr ""
 
 #: src/webui/static/app/config.js:389
@@ -1647,6 +1647,10 @@ msgstr ""
 
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
+msgstr ""
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
 msgstr ""
 
 #: src/webui/static/app/esfilter.js:108
@@ -1694,7 +1698,7 @@ msgid "Teletext Stream Filters"
 msgstr ""
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
+msgid "The associated file will be removed from storage."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:187
@@ -1799,7 +1803,7 @@ msgid "Today"
 msgstr "Днес"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
+msgid "Total"
 msgstr ""
 
 #: src/webui/static/app/tvhlog.js:39

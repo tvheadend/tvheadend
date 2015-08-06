@@ -9,9 +9,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-04 13:52+0000\n"
-"Last-Translator: Frankovics András <frankovics.andras@outlook.com>\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:19+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -175,10 +175,6 @@ msgstr "Életkor Besorolás"
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Összes"
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
-msgstr "Minden nap"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
@@ -598,13 +594,13 @@ msgstr "Digitális Videó Felvevő profilok"
 msgid "Disabled"
 msgstr "Kikapcsolt"
 
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
+msgstr ""
+
 #: src/webui/static/app/config.js:462
 msgid "Discover SAT>IP servers"
 msgstr "SAT>IP szerver keresése"
-
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
-msgstr "Tárhely mérete"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -725,6 +721,10 @@ msgstr "Hibák"
 msgid "Events"
 msgstr "Események"
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr ""
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr "Exportált ATSC vevők"
@@ -834,8 +834,8 @@ msgid "Force new scan (all muxes) for selected networks"
 msgstr "A kiválasztott hálózatok újbóli scannelése (minden mux)"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
-msgstr "Szabad:"
+msgid "Free"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -1064,9 +1064,13 @@ msgstr "Maximális méret (MB)"
 msgid "Maximum {0} item(s) allowed"
 msgstr "Maximálisan {0} tétel megengedett"
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
 msgstr "Május"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -1633,13 +1637,9 @@ msgstr "Stream-profil név"
 msgid "Stream Profiles"
 msgstr "Stream-profilok"
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr "Felirat"
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
-msgstr "Subs #"
+msgid "Subs No."
+msgstr ""
 
 #: src/webui/static/app/config.js:389
 msgid "Subscription Weight"
@@ -1648,6 +1648,10 @@ msgstr "Előfizetés súlya"
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
 msgstr "Előfizetések"
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
+msgstr ""
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
@@ -1694,8 +1698,8 @@ msgid "Teletext Stream Filters"
 msgstr "Teletext stream-szűrők"
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
-msgstr "A hozzárendelt file eltávolításra kerül a tárhelyről"
+msgid "The associated file will be removed from storage."
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
@@ -1799,8 +1803,8 @@ msgid "Today"
 msgstr "Ma"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
-msgstr "Összesen:"
+msgid "Total"
+msgstr ""
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Trace subsystems"

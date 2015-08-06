@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:14+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Portuguese (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
@@ -185,7 +185,7 @@ msgstr "Rede ATSC"
 msgid "AUTO"
 msgstr "AUTO"
 
-#: src/streaming.c:441
+#: src/streaming.c:436
 msgid "Aborted by user"
 msgstr "Abortado pelo utilizador"
 
@@ -198,7 +198,7 @@ msgstr "Acesso"
 msgid "Action"
 msgstr "Acção"
 
-#: src/streaming.c:428
+#: src/streaming.c:423
 msgid "Adapter in use by another subscription"
 msgstr "Adaptador ocupado por outra subscrição"
 
@@ -262,8 +262,8 @@ msgid "Alternate configuration path"
 msgstr "Caminho da configuração alternativa"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
-msgid "Altitude (meters)"
-msgstr "Altitude (metros)"
+msgid "Altitude (metres)"
+msgstr ""
 
 #: src/epg.c:2069
 msgid "Animals"
@@ -489,7 +489,7 @@ msgstr "Clássico"
 msgid "Classical music"
 msgstr "Música Clássica"
 
-#: src/streaming.c:543
+#: src/streaming.c:538
 msgid "Clean effects"
 msgstr "Limpar efeitos"
 
@@ -602,8 +602,8 @@ msgid "Current affairs"
 msgstr "Assuntos actuais"
 
 #: src/main.c:664
-msgid "DBus - use the session message bus instead system one"
-msgstr "DBus - utilizar mensagem da sessão em alternativa ao do sistema"
+msgid "DBus - use the session message bus instead of the system one"
+msgstr ""
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
@@ -670,8 +670,8 @@ msgid "DVR Auto-Record Entry"
 msgstr "DVR Gravação Automática"
 
 #: src/dvr/dvr_config.c:731
-msgid "DVR Behavior"
-msgstr "Modo DVR"
+msgid "DVR Behaviour"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
@@ -1269,7 +1269,7 @@ msgstr "Transmissão HTSP"
 msgid "Handicraft"
 msgstr "Artesanato"
 
-#: src/streaming.c:544
+#: src/streaming.c:539
 msgid "Hearing impaired"
 msgstr "Deficiência auditiva"
 
@@ -1356,8 +1356,8 @@ msgid ""
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
-"the access-control from within the Tvheadend web interface."
-msgstr "Se não existir uma conta de utilizador, criar então\numa sem username e password. Utilizar com cuidado\npois pode permitir acessos indevidos de administrador \nà sua conta do Tvheadend, até editar ou criar um controlo de acesso\natravés da interface Web do TVheadend"
+"the access control from within the Tvheadend web interface."
+msgstr ""
 
 #: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
@@ -1457,7 +1457,7 @@ msgstr "Inválido"
 msgid "Invalid adapter number '%s'\n"
 msgstr "Número do adaptador inválido '%s'\n"
 
-#: src/streaming.c:417
+#: src/streaming.c:412
 msgid "Invalid target"
 msgstr "Destino inválido"
 
@@ -1637,12 +1637,12 @@ msgid "MPEG-TS Network"
 msgstr "Rede MPEG-TS"
 
 #: src/profile.c:1806
-msgid "MPEG-TS Pass-thru"
-msgstr "MPEG-TS Pass-thru"
+msgid "MPEG-TS Pass-through"
+msgstr ""
 
 #: src/profile.c:1001
-msgid "MPEG-TS Pass-thru/built-in"
-msgstr "MPEG-TS Pass-thru/built-in"
+msgid "MPEG-TS Pass-through/built-in"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:721
 msgid "MPEG-TS Raw Service"
@@ -1844,7 +1844,7 @@ msgstr "Mux Sched Entry"
 msgid "Mux UUID"
 msgstr "UUID da Mistura"
 
-#: src/streaming.c:426
+#: src/streaming.c:421
 msgid "Mux not enabled"
 msgstr "Mistura inactiva"
 
@@ -1933,7 +1933,7 @@ msgstr "Atraso na próxima sintonização em ms (0-2000)"
 msgid "No PIN"
 msgstr "Sem PIN"
 
-#: src/streaming.c:446
+#: src/streaming.c:441
 msgid "No access"
 msgstr "Sem acesso"
 
@@ -1945,27 +1945,27 @@ msgstr "Sem adaptadores especificados\n"
 msgid "No days"
 msgstr "Sem Dias"
 
-#: src/streaming.c:444
+#: src/streaming.c:439
 msgid "No descrambler"
 msgstr "Sem descodificador"
 
-#: src/streaming.c:424
+#: src/streaming.c:419
 msgid "No free adapter"
 msgstr "Nenhum adaptador livre"
 
-#: src/streaming.c:448
+#: src/streaming.c:443
 msgid "No input detected"
 msgstr "Não foi detectado nenhuma entrada"
 
-#: src/streaming.c:438
+#: src/streaming.c:433
 msgid "No service assigned to channel"
 msgstr "Não existem serviços atribuídos ao canal"
 
-#: src/streaming.c:432
+#: src/streaming.c:427
 msgid "No service enabled"
 msgstr "Serviço inactivo"
 
-#: src/streaming.c:436
+#: src/streaming.c:431
 msgid "No source available"
 msgstr "Nenhuma fonte disponível"
 
@@ -2003,7 +2003,7 @@ msgstr "Número"
 msgid "Number of tsfile tuners"
 msgstr "Número de Sintonizadores tsfile"
 
-#: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
 msgstr "OK"
 
@@ -2367,7 +2367,7 @@ msgstr "reexecução do "
 msgid "Rescan"
 msgstr "Reanalisar"
 
-#: src/streaming.c:548
+#: src/streaming.c:543
 msgid "Reserved"
 msgstr "Reservado"
 
@@ -2636,7 +2636,7 @@ msgstr "Mostrar esta página"
 msgid "Show version information"
 msgstr "Mostrar informação acerca da versão"
 
-#: src/streaming.c:434
+#: src/streaming.c:429
 msgid "Signal quality too poor"
 msgstr "Qualidade do Sinal Muito Fraca"
 
@@ -2692,15 +2692,15 @@ msgstr "Ordenar Índice"
 msgid "Source"
 msgstr "Origem"
 
-#: src/streaming.c:413
+#: src/streaming.c:408
 msgid "Source deleted"
 msgstr "Origem Apagada"
 
-#: src/streaming.c:411
+#: src/streaming.c:406
 msgid "Source quality is bad"
 msgstr "Qualidade da Origem é má"
 
-#: src/streaming.c:409
+#: src/streaming.c:404
 msgid "Source reconfigured"
 msgstr "Origem reconfigurada"
 
@@ -2823,7 +2823,7 @@ msgstr "Opções dos Sub-directórios"
 msgid "Subscribe to a service permanently"
 msgstr "Subscrever o serviço permanentemente"
 
-#: src/streaming.c:415
+#: src/streaming.c:410
 msgid "Subscription overridden"
 msgstr "Sobrescrever Subscrição"
 
@@ -3003,7 +3003,7 @@ msgstr "Configuração do Sintonizador"
 msgid "Tuner bind IP address"
 msgstr "Sintonizador vinculado ao endereço de IP"
 
-#: src/streaming.c:430
+#: src/streaming.c:425
 msgid "Tuning failed"
 msgstr "Falha na Sintonização"
 
@@ -3068,7 +3068,7 @@ msgstr "Apenas LNB Universal"
 msgid "Unknown"
 msgstr "Desconhecido"
 
-#: src/streaming.c:451
+#: src/streaming.c:446
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Razão desconhecida (%i)"
@@ -3114,11 +3114,11 @@ msgstr "Ícone do Utilizador"
 msgid "User Limit Reached"
 msgstr "Tempo Limite do Utilizador Atingido"
 
-#: src/streaming.c:419
+#: src/streaming.c:414
 msgid "User access error"
 msgstr "Erro de acesso do Utilizador"
 
-#: src/streaming.c:421
+#: src/streaming.c:416
 msgid "User limit reached"
 msgstr "Tempo Limite do Utilizador Atingido"
 
@@ -3150,9 +3150,9 @@ msgstr "Gravador de Vídeo"
 msgid "Video Stream Filter"
 msgstr "Filtro de Transmissão de Vídeo"
 
-#: src/streaming.c:545
-msgid "Visually impaired commentary"
-msgstr "Comentário de deficiência visual"
+#: src/streaming.c:540
+msgid "Visually impaired commentary/audio description"
+msgstr ""
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"

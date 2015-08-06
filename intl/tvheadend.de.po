@@ -11,9 +11,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-19 21:06+0000\n"
-"Last-Translator: Philipp Hunger <info@hungerphilipp.de>\n"
+"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"PO-Revision-Date: 2015-08-06 12:14+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: German (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -188,7 +188,7 @@ msgstr "ATSC-Netzwerk"
 msgid "AUTO"
 msgstr "AUTO"
 
-#: src/streaming.c:441
+#: src/streaming.c:436
 msgid "Aborted by user"
 msgstr "Durch Benutzer abgebrochen"
 
@@ -201,7 +201,7 @@ msgstr "Zugang"
 msgid "Action"
 msgstr "Aktion"
 
-#: src/streaming.c:428
+#: src/streaming.c:423
 msgid "Adapter in use by another subscription"
 msgstr "Adapter von anderem Abonnement in Verwendung"
 
@@ -265,8 +265,8 @@ msgid "Alternate configuration path"
 msgstr "Alternativer Konfigurationspfad"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
-msgid "Altitude (meters)"
-msgstr "Höhe über Normal-Null (Meter)"
+msgid "Altitude (metres)"
+msgstr ""
 
 #: src/epg.c:2069
 msgid "Animals"
@@ -492,7 +492,7 @@ msgstr "Klassisch"
 msgid "Classical music"
 msgstr "Klassische Musik"
 
-#: src/streaming.c:543
+#: src/streaming.c:538
 msgid "Clean effects"
 msgstr "Nur Effekte"
 
@@ -605,8 +605,8 @@ msgid "Current affairs"
 msgstr "Zeitgeschehen"
 
 #: src/main.c:664
-msgid "DBus - use the session message bus instead system one"
-msgstr "DBus - Benutzen des Session- anstatt des System-Bus"
+msgid "DBus - use the session message bus instead of the system one"
+msgstr ""
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
@@ -673,8 +673,8 @@ msgid "DVR Auto-Record Entry"
 msgstr "DVR Auto-Aufnahmeeintrag"
 
 #: src/dvr/dvr_config.c:731
-msgid "DVR Behavior"
-msgstr "DVR Verhalten"
+msgid "DVR Behaviour"
+msgstr ""
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
@@ -1272,7 +1272,7 @@ msgstr "HTSP Streaming"
 msgid "Handicraft"
 msgstr "Handwerk"
 
-#: src/streaming.c:544
+#: src/streaming.c:539
 msgid "Hearing impaired"
 msgstr "Hörgeschädigt"
 
@@ -1359,8 +1359,8 @@ msgid ""
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
-"the access-control from within the Tvheadend web interface."
-msgstr "Erstellen eines Kontos ohne Benutzername\nund Passwort, wenn kein Benutzerkonto existiert.\nBeachten Sie, dass es weltweiten administrativen\nZugriff zu Ihrer Tvheadend Installation erlaubt, bis\nSie die Zugangskontrolle in der Tvheadend Weboberfläche \nanpassen."
+"the access control from within the Tvheadend web interface."
+msgstr ""
 
 #: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
@@ -1460,7 +1460,7 @@ msgstr "Ungültig"
 msgid "Invalid adapter number '%s'\n"
 msgstr "Ungültige Adapternummer '%s'\n"
 
-#: src/streaming.c:417
+#: src/streaming.c:412
 msgid "Invalid target"
 msgstr "Ungültiges Ziel"
 
@@ -1640,12 +1640,12 @@ msgid "MPEG-TS Network"
 msgstr "MPEG-TS Netzwerk"
 
 #: src/profile.c:1806
-msgid "MPEG-TS Pass-thru"
-msgstr "MPEG-TS Durchreichen"
+msgid "MPEG-TS Pass-through"
+msgstr ""
 
 #: src/profile.c:1001
-msgid "MPEG-TS Pass-thru/built-in"
-msgstr "MPEG-TS Durchreichen/eingebaut"
+msgid "MPEG-TS Pass-through/built-in"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:721
 msgid "MPEG-TS Raw Service"
@@ -1847,7 +1847,7 @@ msgstr "Mux Plan Eintrag"
 msgid "Mux UUID"
 msgstr "Mux UUID"
 
-#: src/streaming.c:426
+#: src/streaming.c:421
 msgid "Mux not enabled"
 msgstr "Mux nicht aktiviert"
 
@@ -1936,7 +1936,7 @@ msgstr "Nächste Tuneverzögerung in ms (0-2000)"
 msgid "No PIN"
 msgstr "Keine PIN"
 
-#: src/streaming.c:446
+#: src/streaming.c:441
 msgid "No access"
 msgstr "Kein Zugriff"
 
@@ -1948,27 +1948,27 @@ msgstr "Keine Adapter spezifiziert!\n"
 msgid "No days"
 msgstr "Kein Tag"
 
-#: src/streaming.c:444
+#: src/streaming.c:439
 msgid "No descrambler"
 msgstr "Kein Descrambler"
 
-#: src/streaming.c:424
+#: src/streaming.c:419
 msgid "No free adapter"
 msgstr "Kein freier Adapter"
 
-#: src/streaming.c:448
+#: src/streaming.c:443
 msgid "No input detected"
 msgstr "Keine Daten erkannt"
 
-#: src/streaming.c:438
+#: src/streaming.c:433
 msgid "No service assigned to channel"
 msgstr "Dem Kanal ist kein Service zugeordnet"
 
-#: src/streaming.c:432
+#: src/streaming.c:427
 msgid "No service enabled"
 msgstr "Kein Service aktiviert"
 
-#: src/streaming.c:436
+#: src/streaming.c:431
 msgid "No source available"
 msgstr "Keine Quelle verfügbar"
 
@@ -2006,7 +2006,7 @@ msgstr "Nummer"
 msgid "Number of tsfile tuners"
 msgstr "Anzahl von tsfile-Tuner"
 
-#: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
 msgstr "OK"
 
@@ -2370,7 +2370,7 @@ msgstr "Wiederholung von"
 msgid "Rescan"
 msgstr "Neue Suche"
 
-#: src/streaming.c:548
+#: src/streaming.c:543
 msgid "Reserved"
 msgstr "Reserviert"
 
@@ -2639,7 +2639,7 @@ msgstr "Zeige diese Seite"
 msgid "Show version information"
 msgstr "Versionsinformationen anzeigen"
 
-#: src/streaming.c:434
+#: src/streaming.c:429
 msgid "Signal quality too poor"
 msgstr "Signalqualität zu schlecht"
 
@@ -2695,15 +2695,15 @@ msgstr "Sortier-Index"
 msgid "Source"
 msgstr "Quelle"
 
-#: src/streaming.c:413
+#: src/streaming.c:408
 msgid "Source deleted"
 msgstr "Quelle gelöscht"
 
-#: src/streaming.c:411
+#: src/streaming.c:406
 msgid "Source quality is bad"
 msgstr "Quellenqualität ist schlecht"
 
-#: src/streaming.c:409
+#: src/streaming.c:404
 msgid "Source reconfigured"
 msgstr "Quelle neu konfiguriert"
 
@@ -2826,7 +2826,7 @@ msgstr "Unterverzeichnis Optionen"
 msgid "Subscribe to a service permanently"
 msgstr "Abonniere einen Service permanent"
 
-#: src/streaming.c:415
+#: src/streaming.c:410
 msgid "Subscription overridden"
 msgstr "Abonnement überschrieben"
 
@@ -3006,7 +3006,7 @@ msgstr "Tuner Konfiguration"
 msgid "Tuner bind IP address"
 msgstr "Tuner Bind IP-Adresse"
 
-#: src/streaming.c:430
+#: src/streaming.c:425
 msgid "Tuning failed"
 msgstr "Tuning fehlgeschlagen"
 
@@ -3071,7 +3071,7 @@ msgstr "Nur Universal LNB"
 msgid "Unknown"
 msgstr "Unbekannt"
 
-#: src/streaming.c:451
+#: src/streaming.c:446
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Unbekannter Grund (%i)"
@@ -3117,11 +3117,11 @@ msgstr "Benutzerlogo"
 msgid "User Limit Reached"
 msgstr "Benutzerlimit erreicht"
 
-#: src/streaming.c:419
+#: src/streaming.c:414
 msgid "User access error"
 msgstr "Benutzerzugriffsfehler"
 
-#: src/streaming.c:421
+#: src/streaming.c:416
 msgid "User limit reached"
 msgstr "Benutzerlimit erreicht"
 
@@ -3153,9 +3153,9 @@ msgstr "Video Rekorder"
 msgid "Video Stream Filter"
 msgstr "Video Streamfilter"
 
-#: src/streaming.c:545
-msgid "Visually impaired commentary"
-msgstr "Kommentar für Sehbehinderte"
+#: src/streaming.c:540
+msgid "Visually impaired commentary/audio description"
+msgstr ""
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
