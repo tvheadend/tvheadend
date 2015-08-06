@@ -693,14 +693,16 @@ dvr_entry_create_by_event(const char *config_uuid,
 /**
  *
  */
-static dvr_entry_t* _dvr_duplicate_event(dvr_entry_t* de)
+static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
 {
+  dvr_entry_t *de2;
+  struct tm de_start;
+  int record;
+
   if (!de->de_autorec)
     return NULL;
 
-  int record = de->de_autorec->dae_record;
-
-  struct tm de_start;
+  record = de->de_autorec->dae_record;
   localtime_r(&de->de_start, &de_start);
 
   switch (record) {
@@ -728,8 +730,6 @@ static dvr_entry_t* _dvr_duplicate_event(dvr_entry_t* de)
   if (lang_str_empty(de->de_title))
     return NULL;
 
-  dvr_entry_t *de2;
-
   LIST_FOREACH(de2, &dvrentries, de_global_link) {
     if (de == de2)
       continue;
@@ -750,7 +750,7 @@ static dvr_entry_t* _dvr_duplicate_event(dvr_entry_t* de)
 
     switch (record) {
       case DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER:
-        if (!strcmp(de->de_episode, de2->de_episode))
+        if (!strempty(de2->de_episode) && !strcmp(de->de_episode, de2->de_episode))
           return de2;
         break;
       case DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE:
