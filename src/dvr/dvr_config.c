@@ -728,7 +728,7 @@ const idclass_t dvr_config_class = {
   .ic_perm       = dvr_config_class_perm,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("DVR Behavior"),
+         .name   = N_("DVR Behaviour"),
          .number = 1,
       },
       {

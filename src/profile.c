@@ -998,7 +998,7 @@ const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
-  .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
+  .ic_caption    = N_("MPEG-TS Pass-through/built-in"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
@@ -1803,7 +1803,7 @@ profile_init(void)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_bool(conf, "default", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("MPEG-TS Pass-thru"));
+    htsmsg_add_str (conf, "comment", _("MPEG-TS Pass-through"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     htsmsg_add_bool(conf, "rewrite_pmt", 1);
     htsmsg_add_bool(conf, "rewrite_pat", 1);

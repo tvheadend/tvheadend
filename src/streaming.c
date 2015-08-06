@@ -537,7 +537,7 @@ streaming_component_audio_type2desc(int audio_type)
     case 0: return ""; /* "Undefined" in the standard, but used for normal audio */
     case 1: return N_("Clean effects");
     case 2: return N_("Hearing impaired");
-    case 3: return N_("Visually impaired commentary");
+    case 3: return N_("Visually impaired commentary/audio description");
   }
 
   return N_("Reserved");

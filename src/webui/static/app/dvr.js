@@ -113,7 +113,7 @@ tvheadend.weekdaysRenderer = function(st) {
         var t = [];
         var d = v.push ? v : [v];
         if (d.length == 7) {
-            v = _("All days");
+            v = _("Every day");
         } else if (d.length == 0) {
             v = _("No days");
         } else {
@@ -321,7 +321,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tabIndex: index,
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
-                     _('The associated file will be removed from the storage.'),
+                     _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,' +
               'config_name,sched_status,errors,data_errors,url,comment',
@@ -402,7 +402,7 @@ tvheadend.dvr_failed = function(panel, index) {
         tabIndex: index,
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
-                     _('The associated file will be removed from the storage.'),
+                     _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,config_name,' +
               'status,sched_status,errors,data_errors,url,comment',
