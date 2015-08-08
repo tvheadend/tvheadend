@@ -172,9 +172,10 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 
 /**
  * Replace various chars with a dash
+ * - dosubs specifies if user demanded substitutions are performed
  */
 static char *
-cleanup_filename(dvr_config_t *cfg, char *s)
+cleanup_filename(dvr_config_t *cfg, char *s, int dosubs)
 {
   int len = strlen(s);
   char *s1, *p;
@@ -206,16 +207,19 @@ cleanup_filename(dvr_config_t *cfg, char *s)
       *s = '-';
 
     else if (cfg->dvr_whitespace_in_title &&
-             (*s == ' ' || *s == '\t'))
+             (*s == ' ' || *s == '\t') &&
+             dosubs)
       *s = '-';	
 
     else if (cfg->dvr_clean_title &&
              ((*s < 32) || (*s > 122) ||
-             (strchr("/:\\<>|*?\"", *s) != NULL)))
+             (strchr("/:\\<>|*?\"", *s) != NULL)) &&
+             dosubs)
       *s = '_';
 
     else if (cfg->dvr_windows_compatible_filenames &&
-             (strchr("/:\\<>|*?\"", *s) != NULL))
+             (strchr("/:\\<>|*?\"", *s) != NULL) &&
+             dosubs)
       *s = '_';
   }
 
@@ -609,7 +613,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       break;
     *(dirsep - 1) = '\0';
     if (*x) {
-      s = cleanup_filename(cfg, x);
+      s = cleanup_filename(cfg, x, de->de_directory == NULL);
       tvh_strlcatf(filename, sizeof(filename), j, "%s/", s);
       free(s);
     }
@@ -661,7 +665,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     }
 
     htsstr_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number);
-    s = cleanup_filename(cfg, ptmp);
+    s = cleanup_filename(cfg, ptmp, 1);
     if (s == NULL) {
       free(lastpath);
       return -1;
