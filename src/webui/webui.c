@@ -716,7 +716,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   channel_tag_t *tag = NULL;
 
   if(!remain) {
-    http_redirect(hc, "/playlist/channels", &hc->hc_req_args);
+    http_redirect(hc, "/playlist/channels", &hc->hc_req_args, 0);
     return HTTP_STATUS_FOUND;
   }
 
