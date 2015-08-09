@@ -35,7 +35,7 @@ typedef struct globalheaders {
 } globalheaders_t;
 
 #define PTS_MASK      0x1ffffffffLL
-#define MAX_SCAN_TIME 3000  // in ms
+#define MAX_SCAN_TIME 3500  // in ms
 
 /**
  *
