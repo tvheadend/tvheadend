@@ -19,6 +19,7 @@
 
 #include "tvheadend.h"
 #include "dvr/dvr.h"
+#include "lang_codes.h"
 #include "epg.h"
 #include "api.h"
 
@@ -150,24 +151,25 @@ api_dvr_entry_create
 
     lang = access_get_lang(perm, htsmsg_get_str(conf, "lang"));
     if (lang) {
-      for (s = lang; *s && *s != ','; s++);
+      for (s = (char *)lang; *s && *s != ','; s++);
       *s = '\0';
+    } else {
+      lang = strdup(lang_code_preferred());
     }
 
     s1 = htsmsg_get_str(conf, "disp_title");
-    if (s1 && lang && !htsmsg_get_map(conf, "title")) {
+    if (s1 && !htsmsg_get_map(conf, "title")) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "title", m);
     }
 
     s1 = htsmsg_get_str(conf, "disp_subtitle");
-    if (s1 && lang && !htsmsg_get_map(conf, "subtitle")) {
+    if (s1 && !htsmsg_get_map(conf, "subtitle")) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "subtitle", m);
     }
-
     if ((de = dvr_entry_create(NULL, conf)))
       dvr_entry_save(de);
 
