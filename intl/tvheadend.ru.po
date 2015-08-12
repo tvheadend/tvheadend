@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-08-06 14:18+0200\n"
-"PO-Revision-Date: 2015-08-06 12:14+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-08-07 07:33+0000\n"
+"Last-Translator: Mihail <sovaby@gmail.com>\n"
 "Language-Team: Russian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/ru/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -263,7 +263,7 @@ msgstr "Альтернативный путь к конфигурации"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
 msgid "Altitude (metres)"
-msgstr ""
+msgstr "Высота (метры)"
 
 #: src/epg.c:2069
 msgid "Animals"
@@ -603,7 +603,7 @@ msgstr "Текущие события"
 
 #: src/main.c:664
 msgid "DBus - use the session message bus instead of the system one"
-msgstr ""
+msgstr "DBus - использовать сообщения шины вместо системных"
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
@@ -671,7 +671,7 @@ msgstr "DVR Auto-Record Entry"
 
 #: src/dvr/dvr_config.c:731
 msgid "DVR Behaviour"
-msgstr ""
+msgstr "DVR режим"
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
@@ -1638,11 +1638,11 @@ msgstr "MPEG-TS Сеть"
 
 #: src/profile.c:1806
 msgid "MPEG-TS Pass-through"
-msgstr ""
+msgstr "MPEG-TS Pass-through"
 
 #: src/profile.c:1001
 msgid "MPEG-TS Pass-through/built-in"
-msgstr ""
+msgstr "MPEG-TS Pass-through/built-in"
 
 #: src/input/mpegts/mpegts_service.c:721
 msgid "MPEG-TS Raw Service"
@@ -3152,7 +3152,7 @@ msgstr "Фильтр Видео Потока"
 
 #: src/streaming.c:540
 msgid "Visually impaired commentary/audio description"
-msgstr ""
+msgstr "Комментарий/описание аудио"
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"

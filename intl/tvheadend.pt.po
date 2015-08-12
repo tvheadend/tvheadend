@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-08-06 14:18+0200\n"
-"PO-Revision-Date: 2015-08-06 12:14+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-08-10 12:50+0000\n"
+"Last-Translator: Orlando Rocha <ornrocha@gmail.com>\n"
 "Language-Team: Portuguese (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -263,7 +263,7 @@ msgstr "Caminho da configuração alternativa"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
 msgid "Altitude (metres)"
-msgstr ""
+msgstr "Altitude (metros)"
 
 #: src/epg.c:2069
 msgid "Animals"
@@ -603,7 +603,7 @@ msgstr "Assuntos actuais"
 
 #: src/main.c:664
 msgid "DBus - use the session message bus instead of the system one"
-msgstr ""
+msgstr "DBus -Utilizar mensagem da sessão do bus em alternativa ao bus do sistema"
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
@@ -671,7 +671,7 @@ msgstr "DVR Gravação Automática"
 
 #: src/dvr/dvr_config.c:731
 msgid "DVR Behaviour"
-msgstr ""
+msgstr "Comportamento DVR"
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
 msgid "DVR Configuration"
@@ -1357,7 +1357,7 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
 "the access control from within the Tvheadend web interface."
-msgstr ""
+msgstr "Se não existir uma conta de utilizador, criar então\numa sem username e password. Utilizar com cuidado\npois pode permitir acessos indevidos de administrador \nà sua conta do Tvheadend, até editar ou criar um controlo de acesso\natravés da interface Web do TVheadend"
 
 #: src/webui/extjs.c:240
 msgid "If you'd like to support the project, please consider a donation."
@@ -1638,11 +1638,11 @@ msgstr "Rede MPEG-TS"
 
 #: src/profile.c:1806
 msgid "MPEG-TS Pass-through"
-msgstr ""
+msgstr "MPEG-TS Pass-through"
 
 #: src/profile.c:1001
 msgid "MPEG-TS Pass-through/built-in"
-msgstr ""
+msgstr "MPEG-TS Pass-through/built-in"
 
 #: src/input/mpegts/mpegts_service.c:721
 msgid "MPEG-TS Raw Service"
@@ -3152,7 +3152,7 @@ msgstr "Filtro de Transmissão de Vídeo"
 
 #: src/streaming.c:540
 msgid "Visually impaired commentary/audio description"
-msgstr ""
+msgstr "Comentário de deficiência visual/ descrição do som"
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
