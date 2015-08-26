@@ -1661,7 +1661,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
         if (st && st->es_type == SCT_CA)
           LIST_FOREACH(c, &st->es_caids, link)
             LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
-              if(pcard->cs_ra.caid == c->caid && verify_provider(pcard, c->providerid))
+              if(pcard->cwc_caid == c->caid && verify_provider(pcard, c->providerid))
                 goto prefcapid_ok;
         tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
         t->s_dvb_prefcapid = 0;
