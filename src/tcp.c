@@ -41,6 +41,10 @@
 #include "access.h"
 #include "dvr/dvr.h"
 
+#if ENABLE_LIBSYSTEMD_DAEMON
+#include <systemd/sd-daemon.h>
+#endif
+
 int tcp_preferred_address_family = AF_INET;
 int tcp_server_running;
 th_pipe_t tcp_server_pipe;
@@ -688,12 +692,20 @@ next:
   return NULL;
 }
 
+
+
 /**
  *
  */
+#if ENABLE_LIBSYSTEMD_DAEMON
+static void *
+tcp_server_create_new
+  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+#else
 void *
 tcp_server_create
   (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+#endif
 {
   int fd, x;
   tcp_server_t *ts;
@@ -766,11 +778,90 @@ tcp_server_create
   return ts;
 }
 
+#if ENABLE_LIBSYSTEMD_DAEMON
+
+inline static int
+ip6_addr_cmp(unsigned char a1[16], unsigned char a2[16])
+{
+  int i;
+  int ret = 0;
+
+  for (i = 0; i < 16 && !ret; i++)
+    if (a1[i] != a2[i])
+      ret = 1;
+  return ret;
+}
 
 /**
  *
  */
+void *
+tcp_server_create
+  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+{
+  int sd_fds_num, i, fd;
+  struct sockaddr_storage bound;
+  tcp_server_t *ts;
+  struct in_addr addr4;
+  struct in6_addr addr6;
+  int found = 0;
 
+  sd_fds_num = sd_listen_fds(0);
+  inet_pton(AF_INET, bindaddr ?: "0.0.0.0", &addr4);
+  inet_pton(AF_INET6, bindaddr ?: "::", &addr6);
+
+  for (i = 0; i < sd_fds_num && !found; i++) {
+    struct sockaddr_in *s_addr4;
+    struct sockaddr_in6 *s_addr6;
+    socklen_t s_len;
+
+    /* Check which of the systemd-managed descriptors
+     * corresponds to the requested server (if any) */
+    fd = SD_LISTEN_FDS_START + i;
+    memset(&bound, 0, sizeof(bound));
+    s_len = sizeof(bound);
+    if (getsockname(fd, (struct sockaddr *) &bound, &s_len) != 0) {
+      tvhlog(LOG_ERR, "tcp", "getsockname failed: %s", strerror(errno));
+      continue;
+    }
+    switch (bound.ss_family) {
+      case AF_INET:
+        s_addr4 = (struct sockaddr_in *) &bound;
+        if (addr4.s_addr == s_addr4->sin_addr.s_addr
+            && htons(port) == s_addr4->sin_port)
+          found = 1;
+        break;
+      case AF_INET6:
+        s_addr6 = (struct sockaddr_in6 *) &bound;
+        if (ip6_addr_cmp(addr6.s6_addr, s_addr6->sin6_addr.s6_addr) == 0
+            && htons(port) == s_addr6->sin6_port)
+          found = 1;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (found) {
+    /* use the systemd provided socket */
+    ts = malloc(sizeof(tcp_server_t));
+    ts->serverfd = fd;
+    ts->bound  = bound;
+    ts->ops    = *ops;
+    ts->opaque = opaque;
+  } else {
+    /* no systemd-managed socket found, create a new one */
+    tvhlog(LOG_INFO, "tcp", "No systemd socket: creating a new one");
+    ts =  tcp_server_create_new(bindaddr, port, ops, opaque);
+  }
+
+  return ts;
+}
+#endif
+
+/**
+ *
+ */
 void tcp_server_register(void *server)
 {
   tcp_server_t *ts = server;
