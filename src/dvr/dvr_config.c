@@ -422,7 +422,7 @@ dvr_config_class_get_title (idnode_t *self)
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (!dvr_config_is_default(cfg))
     return cfg->dvr_config_name;
-  return "(Default Profile)";
+  return N_("(Default Profile)");
 }
 
 static int
