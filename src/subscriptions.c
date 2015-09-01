@@ -957,6 +957,7 @@ subscription_done(void)
 void subscription_add_bytes_in(th_subscription_t *s, size_t in)
 {
   atomic_add(&s->ths_bytes_in, in);
+  atomic_add_u64(&s->ths_total_bytes_in, in);
 }
 
 /**
@@ -965,6 +966,7 @@ void subscription_add_bytes_in(th_subscription_t *s, size_t in)
 void subscription_add_bytes_out(th_subscription_t *s, size_t out)
 {
   atomic_add(&s->ths_bytes_out, out);
+  atomic_add_u64(&s->ths_total_bytes_out, out);
 }
 
 /**

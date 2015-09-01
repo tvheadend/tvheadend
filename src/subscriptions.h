@@ -86,6 +86,8 @@ typedef struct th_subscription {
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
   int ths_total_err; /* total errors during entire subscription */
+  uint64_t ths_total_bytes_in; /* total bytes since the subscription started */
+  uint64_t ths_total_bytes_out; /* total bytes since the subscription started */
   int ths_bytes_in;   // Reset every second to get aprox. bandwidth (in)
   int ths_bytes_out; // Reset every second to get approx bandwidth (out)
 
