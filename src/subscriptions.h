@@ -90,6 +90,8 @@ typedef struct th_subscription {
   uint64_t ths_total_bytes_out; /* total bytes since the subscription started */
   int ths_bytes_in;   // Reset every second to get aprox. bandwidth (in)
   int ths_bytes_out; // Reset every second to get approx bandwidth (out)
+  int ths_bytes_in_prev; /* Bytes received during the last second */
+  int ths_bytes_out_prev; /* Bytes sent during the last second */
 
   streaming_target_t ths_input;
 

@@ -889,6 +889,9 @@ subscription_create_msg(th_subscription_t *s)
   else if(s->ths_dvrfile != NULL)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
 
+  htsmsg_add_u32(m, "in", s->ths_bytes_in_prev);
+  htsmsg_add_u32(m, "out", s->ths_bytes_out_prev);
+
   return m;
 }
 
@@ -906,14 +909,11 @@ subscription_status_callback ( void *p )
              subscription_status_callback, NULL, 1);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
-    int errors  = s->ths_total_err;
-    int in      = atomic_exchange(&s->ths_bytes_in, 0);
-    int out     = atomic_exchange(&s->ths_bytes_out, 0);
+    /* Store the previous periods byte count */
+    s->ths_bytes_in_prev = atomic_exchange(&s->ths_bytes_in, 0);
+    s->ths_bytes_out_prev = atomic_exchange(&s->ths_bytes_out, 0);
+
     htsmsg_t *m = subscription_create_msg(s);
-    htsmsg_delete_field(m, "errors");
-    htsmsg_add_u32(m, "errors", errors);
-    htsmsg_add_u32(m, "in", in);
-    htsmsg_add_u32(m, "out", out);
     htsmsg_add_u32(m, "updateEntry", 1);
     notify_by_msg("subscriptions", m);
     count++;
