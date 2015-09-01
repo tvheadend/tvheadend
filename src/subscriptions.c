@@ -891,6 +891,8 @@ subscription_create_msg(th_subscription_t *s)
 
   htsmsg_add_u32(m, "in", s->ths_bytes_in_prev);
   htsmsg_add_u32(m, "out", s->ths_bytes_out_prev);
+  htsmsg_add_s64(m, "total_in", s->ths_total_bytes_in);
+  htsmsg_add_s64(m, "total_out", s->ths_total_bytes_out);
 
   return m;
 }
