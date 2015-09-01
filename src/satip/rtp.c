@@ -23,6 +23,9 @@
 #include "input.h"
 #include "streaming.h"
 #include "satip/server.h"
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
 
 #define RTP_PACKETS 128
 #define RTP_PAYLOAD (7*188+12)
