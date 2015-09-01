@@ -349,7 +349,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
           pb = sm->sm_data;
-        atomic_add(&s->ths_bytes_out, pktbuf_len(pb));
+        subscription_add_bytes_out(s, pktbuf_len(pb));
         muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
         sm->sm_data = NULL;
       }
@@ -1500,8 +1500,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       }
       content_len -= r;
       if (sub) {
-        sub->ths_bytes_in += r;
-        sub->ths_bytes_out += r;
+        subscription_add_bytes_in(sub, r);
+        subscription_add_bytes_out(sub, r);
       }
     }
   }

@@ -457,11 +457,11 @@ subscription_input_direct(void *opauqe, streaming_message_t *sm)
     th_pkt_t *pkt = sm->sm_data;
     s->ths_total_err += pkt->pkt_err;
     if (pkt->pkt_payload)
-      s->ths_bytes_in += pkt->pkt_payload->pb_size;
+      subscription_add_bytes_in(s, pkt->pkt_payload->pb_size);
   } else if(sm->sm_type == SMT_MPEGTS) {
     pktbuf_t *pb = sm->sm_data;
     s->ths_total_err += pb->pb_err;
-    s->ths_bytes_in += pb->pb_size;
+    subscription_add_bytes_in(s, pb->pb_size);
   }
 
   /* Pass to output */
@@ -950,6 +950,22 @@ subscription_done(void)
 /* **************************************************************************
  * Subscription control
  * *************************************************************************/
+
+/**
+ * Update incoming byte count
+ */
+void subscription_add_bytes_in(th_subscription_t *s, size_t in)
+{
+  atomic_add(&s->ths_bytes_in, in);
+}
+
+/**
+ * Update outgoing byte count
+ */
+void subscription_add_bytes_out(th_subscription_t *s, size_t out)
+{
+  atomic_add(&s->ths_bytes_out, out);
+}
 
 /**
  * Change weight
