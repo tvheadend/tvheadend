@@ -70,7 +70,11 @@ tvhpoll_create ( size_t n )
 {
   int fd;
 #if ENABLE_EPOLL
+#if ENABLE_ANDROID
+  if ((fd = epoll_create(n)) < 0) {
+#else
   if ((fd = epoll_create1(EPOLL_CLOEXEC)) < 0) {
+#endif
     tvhlog(LOG_ERR, "tvhpoll", "failed to create epoll [%s]",
            strerror(errno));
     return NULL;
