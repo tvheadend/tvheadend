@@ -39,6 +39,10 @@
 #include "notify.h"
 #include "channels.h"
 
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
+
 void *http_server;
 
 static http_path_list_t http_paths;
