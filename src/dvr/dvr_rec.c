@@ -915,7 +915,7 @@ dvr_thread(void *aux)
         }
       }
       if (pb)
-        atomic_add(&ts->ths_bytes_out, pktbuf_len(pb));
+        subscription_add_bytes_out(ts, pktbuf_len(pb));
     }
 
     streaming_queue_remove(sq, sm);

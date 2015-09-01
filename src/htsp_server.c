@@ -3415,7 +3415,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   payloadlen = pktbuf_len(pkt->pkt_payload);
   htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
   htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
-  atomic_add(&hs->hs_s->ths_bytes_out, payloadlen);
+  subscription_add_bytes_out(hs->hs_s, payloadlen);
 
   if(hs->hs_last_report != dispatch_clock) {
 
