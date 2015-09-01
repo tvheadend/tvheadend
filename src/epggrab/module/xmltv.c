@@ -72,13 +72,15 @@ static time_t _xmltv_str2time(const char *in)
   str[sizeof(str)-1] = '\0';
 
   /* split tz */
-  while (str[sp] && str[sp] != ' ')
+  while (str[sp] && str[sp] != ' ' && str[sp] != '+' && str[sp] != '-')
+    sp++;
+  if (str[sp] == ' ')
     sp++;
 
   /* parse tz */
   // TODO: handle string TZ?
   if (str[sp]) {
-    sscanf(str+sp+1, "%d", &tz);
+    sscanf(str+sp, "%d", &tz);
     tz = (tz % 100) + (tz / 100) * 3600; // Convert from HHMM to seconds
     str[sp] = 0;
   }
