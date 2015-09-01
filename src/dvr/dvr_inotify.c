@@ -63,7 +63,11 @@ pthread_t dvr_inotify_tid;
 
 void dvr_inotify_init ( void )
 {
+#if ENABLE_ANDROID
+  _inot_fd = inotify_init();
+#else
   _inot_fd = inotify_init1(IN_CLOEXEC);
+#endif
   if (_inot_fd < 0) {
     tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
            strerror(errno));
