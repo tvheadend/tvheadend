@@ -24,14 +24,6 @@
 #include <sys/stat.h>
 #include <libgen.h> /* basename */
 
-#if ENABLE_ANDROID
-#include <sys/vfs.h>
-#define statvfs statfs
-#define fstatvfs fstatfs
-#else
-#include <sys/statvfs.h>
-#endif
-
 #include "htsstr.h"
 
 #include "tvheadend.h"
@@ -48,6 +40,14 @@
 #include "notify.h"
 
 #include "muxer.h"
+
+#if ENABLE_ANDROID
+#include <sys/vfs.h>
+#define statvfs statfs
+#define fstatvfs fstatfs
+#else
+#include <sys/statvfs.h>
+#endif
 
 /**
  *
