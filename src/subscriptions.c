@@ -889,8 +889,8 @@ subscription_create_msg(th_subscription_t *s)
   else if(s->ths_dvrfile != NULL)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
 
-  htsmsg_add_u32(m, "in", s->ths_bytes_in_prev);
-  htsmsg_add_u32(m, "out", s->ths_bytes_out_prev);
+  htsmsg_add_u32(m, "in", s->ths_bytes_in_avg);
+  htsmsg_add_u32(m, "out", s->ths_bytes_out_avg);
   htsmsg_add_s64(m, "total_in", s->ths_total_bytes_in);
   htsmsg_add_s64(m, "total_out", s->ths_total_bytes_out);
 
@@ -911,9 +911,16 @@ subscription_status_callback ( void *p )
              subscription_status_callback, NULL, 1);
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
-    /* Store the previous periods byte count */
-    s->ths_bytes_in_prev = atomic_exchange(&s->ths_bytes_in, 0);
-    s->ths_bytes_out_prev = atomic_exchange(&s->ths_bytes_out, 0);
+    /* Store the difference between total bytes from the last round */
+    uint64_t in_prev = s->ths_total_bytes_in_prev;
+    uint64_t in_curr = s->ths_total_bytes_in;
+    uint64_t out_prev = s->ths_total_bytes_out_prev;
+    uint64_t out_curr = s->ths_total_bytes_out;
+
+    atomic_exchange(&s->ths_bytes_in_avg, (in_curr - in_prev));
+    atomic_exchange_u64(&s->ths_total_bytes_in_prev, s->ths_total_bytes_in);
+    atomic_exchange(&s->ths_bytes_out_avg, (out_curr - out_prev));
+    atomic_exchange_u64(&s->ths_total_bytes_out_prev, s->ths_total_bytes_out);
 
     htsmsg_t *m = subscription_create_msg(s);
     htsmsg_add_u32(m, "updateEntry", 1);
@@ -958,7 +965,6 @@ subscription_done(void)
  */
 void subscription_add_bytes_in(th_subscription_t *s, size_t in)
 {
-  atomic_add(&s->ths_bytes_in, in);
   atomic_add_u64(&s->ths_total_bytes_in, in);
 }
 
@@ -967,7 +973,6 @@ void subscription_add_bytes_in(th_subscription_t *s, size_t in)
  */
 void subscription_add_bytes_out(th_subscription_t *s, size_t out)
 {
-  atomic_add(&s->ths_bytes_out, out);
   atomic_add_u64(&s->ths_total_bytes_out, out);
 }
 

@@ -88,10 +88,10 @@ typedef struct th_subscription {
   int ths_total_err; /* total errors during entire subscription */
   uint64_t ths_total_bytes_in; /* total bytes since the subscription started */
   uint64_t ths_total_bytes_out; /* total bytes since the subscription started */
-  int ths_bytes_in;   // Reset every second to get aprox. bandwidth (in)
-  int ths_bytes_out; // Reset every second to get approx bandwidth (out)
-  int ths_bytes_in_prev; /* Bytes received during the last second */
-  int ths_bytes_out_prev; /* Bytes sent during the last second */
+  uint64_t ths_total_bytes_in_prev; /* total bytes since the subscription started, minus 1 second */
+  uint64_t ths_total_bytes_out_prev; /* total bytes since the subscription started, minus 1 second */
+  int ths_bytes_in_avg; /* Average bytes in per second */
+  int ths_bytes_out_avg; /* Average bytes out per second */
 
   streaming_target_t ths_input;
 
