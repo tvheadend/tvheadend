@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-08-06 14:18+0200\n"
-"PO-Revision-Date: 2015-08-06 12:14+0000\n"
+"POT-Creation-Date: 2015-09-02 21:08+0200\n"
+"PO-Revision-Date: 2015-09-02 19:08+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Croatian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hr/)\n"
 "MIME-Version: 1.0\n"
@@ -45,6 +45,10 @@ msgstr "# Usluge"
 #: src/bouquet.c:884
 msgid "# Services Seen"
 msgstr "# Pogledane usluge"
+
+#: src/dvr/dvr_config.c:659
+msgid "(Default Profile)"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
@@ -269,8 +273,9 @@ msgstr ""
 msgid "Animals"
 msgstr "Životinje"
 
-#: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
-#: src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
+#: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_timerec.c:431
 msgid "Any"
 msgstr "Svejedno"
 
@@ -501,7 +506,7 @@ msgstr "Naziv klijenta"
 msgid "Cmd Delay Time (ms) (10-500)"
 msgstr "Cmd vrijeme odgode (ms) (10-500)"
 
-#: src/descrambler/cwc.c:1721
+#: src/descrambler/cwc.c:1725
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
@@ -609,7 +614,7 @@ msgstr ""
 msgid "DES Constant Code Word Client"
 msgstr ""
 
-#: src/descrambler/cwc.c:1752
+#: src/descrambler/cwc.c:1756
 msgid "DES Key"
 msgstr "DES ključ"
 
@@ -755,7 +760,7 @@ msgid "Default Priority"
 msgstr "Zadani prioritet"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
-#: src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery System"
 msgstr "Sustav isporuke"
 
@@ -1027,7 +1032,7 @@ msgstr "Dodatno vrijeme prije snimanja (minuta)"
 msgid "FAIL"
 msgstr "NEUSPJELO"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:301
+#: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:565
 msgid "FEC"
 msgstr ""
 
@@ -1293,7 +1298,7 @@ msgstr "Povijesni film"
 msgid "Horror"
 msgstr "Horor"
 
-#: src/descrambler/cwc.c:1739
+#: src/descrambler/cwc.c:1743
 msgid "Hostname/IP"
 msgstr "Naziv računala/IP"
 
@@ -2039,7 +2044,7 @@ msgstr "Stariji OSCam"
 msgid "On"
 msgstr ""
 
-#: src/descrambler/cwc.c:1768
+#: src/descrambler/cwc.c:1772
 msgid "One Mux (EMM)"
 msgstr "Jedan multipleks (EMM)"
 
@@ -2160,7 +2165,7 @@ msgstr ""
 msgid "PLS Mode"
 msgstr ""
 
-#: src/access.c:1692 src/descrambler/cwc.c:1732
+#: src/access.c:1692 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr "Lozinka"
 
@@ -2184,6 +2189,10 @@ msgstr "Filozofija"
 msgid "Pilot"
 msgstr "Pilot"
 
+#: src/input/mpegts/mpegts_mux_dvb.c:553
+msgid "Polarisation"
+msgstr ""
+
 #: src/epg.c:2052
 msgid "Political issues"
 msgstr "Politička pitanja"
@@ -2196,7 +2205,7 @@ msgstr "Pop"
 msgid "Popular culture"
 msgstr "Popularna kultura"
 
-#: src/descrambler/cwc.c:1746
+#: src/descrambler/cwc.c:1750
 msgid "Port"
 msgstr "Ulaz"
 
@@ -2910,6 +2919,10 @@ msgstr "Tenis"
 msgid "Testing options"
 msgstr "Mogućnost testiranja"
 
+#: src/input/mpegts/satip/satip_frontend.c:266
+msgid "This Tuner"
+msgstr ""
+
 #: src/epg.c:1952
 msgid "Thriller"
 msgstr "Triler"
@@ -3077,7 +3090,7 @@ msgstr ""
 msgid "Unset (default)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1761
+#: src/descrambler/cwc.c:1765
 msgid "Update Card (EMM)"
 msgstr "Ažuriraj karticu (EMM)"
 
@@ -3122,7 +3135,7 @@ msgstr ""
 msgid "User limit reached"
 msgstr ""
 
-#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
+#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1730
 msgid "Username"
 msgstr "Korisničko ime"
 

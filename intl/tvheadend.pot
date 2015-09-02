@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-08-06 14:18+0200\n"
+"POT-Creation-Date: 2015-09-02 21:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -43,6 +43,10 @@ msgstr ""
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
+msgstr ""
+
+#: src/dvr/dvr_config.c:659
+msgid "(Default Profile)"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
@@ -268,8 +272,9 @@ msgstr ""
 msgid "Animals"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
-#: src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
+#: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_timerec.c:431
 msgid "Any"
 msgstr ""
 
@@ -500,7 +505,7 @@ msgstr ""
 msgid "Cmd Delay Time (ms) (10-500)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1721
+#: src/descrambler/cwc.c:1725
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
@@ -608,7 +613,7 @@ msgstr ""
 msgid "DES Constant Code Word Client"
 msgstr ""
 
-#: src/descrambler/cwc.c:1752
+#: src/descrambler/cwc.c:1756
 msgid "DES Key"
 msgstr ""
 
@@ -754,7 +759,7 @@ msgid "Default Priority"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
-#: src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery System"
 msgstr ""
 
@@ -1026,7 +1031,7 @@ msgstr ""
 msgid "FAIL"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux_dvb.c:301
+#: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:565
 msgid "FEC"
 msgstr ""
 
@@ -1292,7 +1297,7 @@ msgstr ""
 msgid "Horror"
 msgstr ""
 
-#: src/descrambler/cwc.c:1739
+#: src/descrambler/cwc.c:1743
 msgid "Hostname/IP"
 msgstr ""
 
@@ -2038,7 +2043,7 @@ msgstr ""
 msgid "On"
 msgstr ""
 
-#: src/descrambler/cwc.c:1768
+#: src/descrambler/cwc.c:1772
 msgid "One Mux (EMM)"
 msgstr ""
 
@@ -2159,7 +2164,7 @@ msgstr ""
 msgid "PLS Mode"
 msgstr ""
 
-#: src/access.c:1692 src/descrambler/cwc.c:1732
+#: src/access.c:1692 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr ""
 
@@ -2183,6 +2188,10 @@ msgstr ""
 msgid "Pilot"
 msgstr ""
 
+#: src/input/mpegts/mpegts_mux_dvb.c:553
+msgid "Polarisation"
+msgstr ""
+
 #: src/epg.c:2052
 msgid "Political issues"
 msgstr ""
@@ -2195,7 +2204,7 @@ msgstr ""
 msgid "Popular culture"
 msgstr ""
 
-#: src/descrambler/cwc.c:1746
+#: src/descrambler/cwc.c:1750
 msgid "Port"
 msgstr ""
 
@@ -2909,6 +2918,10 @@ msgstr ""
 msgid "Testing options"
 msgstr ""
 
+#: src/input/mpegts/satip/satip_frontend.c:266
+msgid "This Tuner"
+msgstr ""
+
 #: src/epg.c:1952
 msgid "Thriller"
 msgstr ""
@@ -3076,7 +3089,7 @@ msgstr ""
 msgid "Unset (default)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1761
+#: src/descrambler/cwc.c:1765
 msgid "Update Card (EMM)"
 msgstr ""
 
@@ -3121,7 +3134,7 @@ msgstr ""
 msgid "User limit reached"
 msgstr ""
 
-#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
+#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1730
 msgid "Username"
 msgstr ""
 
