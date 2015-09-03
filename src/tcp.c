@@ -779,19 +779,6 @@ tcp_server_create
 }
 
 #if ENABLE_LIBSYSTEMD_DAEMON
-
-inline static int
-ip6_addr_cmp(unsigned char a1[16], unsigned char a2[16])
-{
-  int i;
-  int ret = 0;
-
-  for (i = 0; i < 16 && !ret; i++)
-    if (a1[i] != a2[i])
-      ret = 1;
-  return ret;
-}
-
 /**
  *
  */
@@ -833,7 +820,7 @@ tcp_server_create
         break;
       case AF_INET6:
         s_addr6 = (struct sockaddr_in6 *) &bound;
-        if (ip6_addr_cmp(addr6.s6_addr, s_addr6->sin6_addr.s6_addr) == 0
+        if (memcmp(addr6.s6_addr, s_addr6->sin6_addr.s6_addr, 16) == 0
             && htons(port) == s_addr6->sin6_port)
           found = 1;
         break;
