@@ -533,7 +533,7 @@ const idclass_t dvb_mux_dvbs_class =
   .ic_caption    = N_("Linux DVB-S Multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", "Delivery System", dvbs, delsys, "DVBS"),
+      MUX_PROP_STR("delsys", N_("Delivery System"), dvbs, delsys, "DVBS"),
     },
     {
       .type     = PT_U32,
@@ -550,7 +550,7 @@ const idclass_t dvb_mux_dvbs_class =
       .set      = dvb_mux_dvbs_class_symbol_rate_set,
     },
     {
-      MUX_PROP_STR("polarisation", "Polarisation", dvbs, polarity, NULL)
+      MUX_PROP_STR("polarisation", N_("Polarisation"), dvbs, polarity, NULL)
     },
     {
       .type     = PT_STR,
@@ -562,7 +562,7 @@ const idclass_t dvb_mux_dvbs_class =
       .def.s    = "AUTO",
     },
     {
-      MUX_PROP_STR("fec", "FEC", dvbs, fec, "AUTO")
+      MUX_PROP_STR("fec", N_("FEC"), dvbs, fec, "AUTO")
     },
     {
       .type     = PT_STR,

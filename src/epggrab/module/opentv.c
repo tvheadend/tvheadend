@@ -563,8 +563,8 @@ opentv_table_callback
   /* Statistics */
   ths = mpegts_mux_find_subscription_by_name(mt->mt_mux, "epggrab");
   if (ths) {
-    ths->ths_bytes_in += len;
-    ths->ths_bytes_out += len;
+    subscription_add_bytes_in(ths, len);
+    subscription_add_bytes_out(ths, len);
   }
 
 
@@ -642,8 +642,8 @@ opentv_bat_callback
   /* Statistics */
   ths = mpegts_mux_find_subscription_by_name(mt->mt_mux, "epggrab");
   if (ths) {
-    ths->ths_bytes_in += len;
-    ths->ths_bytes_out += len;
+    subscription_add_bytes_in(ths, len);
+    subscription_add_bytes_out(ths, len);
   }
 
   r = dvb_bat_callback(mt, buf, len, tableid);

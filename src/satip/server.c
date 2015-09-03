@@ -660,11 +660,11 @@ void satip_server_register(void)
       tvherror("satips", "Unable to create UUID");
       return;
     }
-    bin2hex(uu +  0, 9, u.bin,      4); uu[ 8] = '-';
-    bin2hex(uu +  9, 5, u.bin +  4, 2); uu[13] = '-';
-    bin2hex(uu + 14, 5, u.bin +  6, 2); uu[18] = '-';
-    bin2hex(uu + 19, 5, u.bin +  8, 2); uu[23] = '-';
-    bin2hex(uu + 24, 9, u.bin + 10, 6); uu[36] = 0;
+    bin2hex(uu +  0, 9,  u.bin,      4); uu[ 8] = '-';
+    bin2hex(uu +  9, 5,  u.bin +  4, 2); uu[13] = '-';
+    bin2hex(uu + 14, 5,  u.bin +  6, 2); uu[18] = '-';
+    bin2hex(uu + 19, 5,  u.bin +  8, 2); uu[23] = '-';
+    bin2hex(uu + 24, 13, u.bin + 10, 6); uu[36] = 0;
     if (config_set_str("satip_uuid", uu))
       save = 1;
     satip_server_uuid = uu;

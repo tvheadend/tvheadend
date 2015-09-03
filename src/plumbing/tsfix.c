@@ -49,6 +49,8 @@ typedef struct tfstream {
 
   int tfs_seen;
 
+  struct tfstream *tfs_parent;
+
 } tfstream_t;
 
 
@@ -429,7 +431,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       (tfs->tfs_video && pkt->pkt_frametype == PKT_I_FRAME))) {
     threshold = 22500;
     LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
-      if (tfs != tfs2 && tfs2->tfs_audio && tfs2->tfs_video && !tfs2->tfs_seen) {
+      if (tfs != tfs2 && (tfs2->tfs_audio || tfs2->tfs_video) && !tfs2->tfs_seen) {
         threshold = 90000;
         break;
       }
@@ -452,6 +454,22 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         tfs->tfs_local_ref = pkt->pkt_dts;
       } else {
         tfs->tfs_local_ref = tf->tf_tsref;
+      }
+    } else if (tfs->tfs_type == SCT_DVBSUB) {
+      diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
+      if (diff > 2 * 90000) {
+        LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link) {
+          if(tfs2->tfs_audio && tfs2->tfs_local_ref != PTS_UNSET) {
+            tvhwarn("parser", "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
+            tfs->tfs_parent = tfs2;
+            break;
+          }
+        }
+        if (tfs2 == NULL) {
+          pkt_ref_dec(pkt);
+          return;
+        }
+        tfs->tfs_local_ref = tfs2->tfs_local_ref;
       }
     } else if (tfs->tfs_type == SCT_TELETEXT) {
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
@@ -487,6 +505,9 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
   }
+
+  if (tfs->tfs_parent)
+    pkt->pkt_dts = pkt->pkt_pts = tfs->tfs_parent->tfs_last_dts_in;
 
   tfs->tfs_last_dts_in = pkt->pkt_dts;
 

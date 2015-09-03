@@ -189,7 +189,7 @@ satip_rtp_thread(void *aux)
     switch (sm->sm_type) {
     case SMT_MPEGTS:
       pb = sm->sm_data;
-      atomic_add(&subs->ths_bytes_out, pktbuf_len(pb));
+      subscription_add_bytes_out(subs, pktbuf_len(pb));
       pthread_mutex_lock(&rtp->lock);
       r = satip_rtp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
       pthread_mutex_unlock(&rtp->lock);

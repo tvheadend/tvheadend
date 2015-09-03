@@ -9,10 +9,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
+"POT-Creation-Date: 2015-09-02 21:08+0200\n"
+"PO-Revision-Date: 2015-08-06 12:19+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Bulgarian (http://www.transifex.com/p/tvheadend/language/bg/)\n"
+"Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -150,7 +150,7 @@ msgstr "Добави нов запис"
 
 #: src/webui/static/app/idnode.js:904 src/webui/static/app/idnode.js:934
 msgid "Add {0}"
-msgstr ""
+msgstr "Добави {0}"
 
 #: src/webui/static/app/idnode.js:777
 msgid "Advanced Settings"
@@ -175,10 +175,6 @@ msgstr "Възрастова Граница"
 #: src/webui/static/app/idnode.js:1323 src/webui/static/app/idnode.js:1362
 msgid "All"
 msgstr "Всички"
-
-#: src/webui/static/app/dvr.js:116
-msgid "All days"
-msgstr "Всички дни"
 
 #: src/webui/static/app/tvhlog.js:57
 msgid "Apply any changes made below to the run-time configuration."
@@ -405,7 +401,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:373
 msgid "Configuration"
-msgstr "Конфигурация"
+msgstr "Настройки"
 
 #: src/webui/static/app/status.js:601
 msgid "Connections"
@@ -598,13 +594,13 @@ msgstr ""
 msgid "Disabled"
 msgstr "Изключен"
 
+#: src/webui/static/app/tvheadend.js:615
+msgid "Disc space"
+msgstr ""
+
 #: src/webui/static/app/config.js:462
 msgid "Discover SAT>IP servers"
 msgstr "Открий SAT>IP сървъри"
-
-#: src/webui/static/app/tvheadend.js:615
-msgid "Disk space:"
-msgstr "Пространство на диска: "
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
@@ -725,6 +721,10 @@ msgstr "Грешки"
 msgid "Events"
 msgstr "Събития"
 
+#: src/webui/static/app/dvr.js:116
+msgid "Every day"
+msgstr ""
+
 #: src/webui/static/app/config.js:425
 msgid "Exported ATSC Tuners"
 msgstr ""
@@ -831,11 +831,11 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:34
 msgid "Force new scan (all muxes) for selected networks"
-msgstr ""
+msgstr "Принудително сканиране (всички муксове) за избраната мрежа"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Free:"
-msgstr "Свободно:"
+msgid "Free"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
@@ -910,7 +910,7 @@ msgstr "IP Адрес"
 
 #: src/webui/static/app/config.js:286
 msgid "Ignore invalid SSL certificate"
-msgstr ""
+msgstr "Игнорирай невалиден SSL сертификат"
 
 #: src/webui/static/app/servicemapper.js:19
 msgid "Ignored"
@@ -990,7 +990,7 @@ msgstr ""
 
 #: src/webui/static/app/tvheadend.js:92
 msgid "Loading, please wait..."
-msgstr ""
+msgstr "Зарежда, моля изчакайте..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:618
@@ -1064,9 +1064,13 @@ msgstr ""
 msgid "Maximum {0} item(s) allowed"
 msgstr ""
 
-#: src/webui/static/app/i18n-post.js:24 src/webui/static/app/i18n-post.js:39
+#: src/webui/static/app/i18n-post.js:24
 msgid "May"
 msgstr "Май"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr ""
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
@@ -1210,7 +1214,7 @@ msgstr "Номер Надолу "
 
 #: src/webui/static/app/chconf.js:171
 msgid "Number Up"
-msgstr ""
+msgstr "Номер Нагоре"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
@@ -1230,7 +1234,7 @@ msgstr ""
 
 #: src/webui/static/app/timeshift.js:31
 msgid "On-Demand"
-msgstr ""
+msgstr "По-заявка"
 
 #: src/webui/static/app/esfilter.js:145
 msgid "Other Stream Filter"
@@ -1464,11 +1468,11 @@ msgstr ""
 #: src/webui/static/app/timeshift.js:190 src/webui/static/app/epggrab.js:394
 #: src/webui/static/app/config.js:249
 msgid "Saving Data..."
-msgstr ""
+msgstr "Съхрани Данните.."
 
 #: src/webui/static/app/config.js:357 src/webui/static/app/config.js:500
 msgid "Saving data..."
-msgstr ""
+msgstr "Съхрани данните.."
 
 #: src/webui/static/app/dvr.js:40
 msgid "Scheduled Start Time"
@@ -1572,11 +1576,11 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:551 src/webui/static/app/epg.js:552
 msgid "Stars"
-msgstr ""
+msgstr "Звезди"
 
 #: src/webui/static/app/status.js:114
 msgid "Start"
-msgstr ""
+msgstr "Старт"
 
 #: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:504
 #: src/webui/static/app/epg.js:505
@@ -1618,7 +1622,7 @@ msgstr ""
 #: src/webui/static/app/status.js:336 src/webui/static/app/status.js:466
 #: src/webui/static/app/tvheadend.js:434
 msgid "Stream"
-msgstr ""
+msgstr "Поток"
 
 #: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
 #: src/webui/static/app/esfilter.js:43
@@ -1633,12 +1637,8 @@ msgstr ""
 msgid "Stream Profiles"
 msgstr ""
 
-#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
-msgid "SubTitle"
-msgstr ""
-
 #: src/webui/static/app/status.js:341
-msgid "Subs #"
+msgid "Subs No."
 msgstr ""
 
 #: src/webui/static/app/config.js:389
@@ -1647,6 +1647,10 @@ msgstr ""
 
 #: src/webui/static/app/status.js:191
 msgid "Subscriptions"
+msgstr ""
+
+#: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
+msgid "Subtitle"
 msgstr ""
 
 #: src/webui/static/app/esfilter.js:108
@@ -1667,11 +1671,11 @@ msgstr "Неделя"
 
 #: src/webui/static/app/chconf.js:197
 msgid "Swap Numbers"
-msgstr "Замени Номерата"
+msgstr "Размени Номерата"
 
 #: src/webui/static/app/chconf.js:195
 msgid "Swap the numbers for the two selected channels"
-msgstr ""
+msgstr "Разменени номерата за двата избрани канала"
 
 #: src/webui/static/app/tvheadend.js:666
 msgid "System log"
@@ -1694,7 +1698,7 @@ msgid "Teletext Stream Filters"
 msgstr ""
 
 #: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
-msgid "The associated file will be removed from the storage."
+msgid "The associated file will be removed from storage."
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:187
@@ -1727,7 +1731,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:164
 msgid "The value in this field is invalid"
-msgstr ""
+msgstr "Стойността в това поле е невалидна"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
@@ -1749,7 +1753,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:170
 msgid "This field is required"
-msgstr ""
+msgstr "Това поле е необходимо"
 
 #: src/webui/static/app/epg.js:1025
 msgid ""
@@ -1779,11 +1783,11 @@ msgstr ""
 
 #: src/webui/static/app/timeshift.js:150
 msgid "Timeshift"
-msgstr ""
+msgstr "ТаймШифт"
 
 #: src/webui/static/app/timeshift.js:113
 msgid "Timeshift Configuration"
-msgstr "Timeshift Конфигурация"
+msgstr "ТаймШифт Конфигурация"
 
 #: src/webui/static/app/timeshift.js:132
 msgid "Timeshift Options"
@@ -1799,7 +1803,7 @@ msgid "Today"
 msgstr "Днес"
 
 #: src/webui/static/app/tvheadend.js:618
-msgid "Total:"
+msgid "Total"
 msgstr ""
 
 #: src/webui/static/app/tvhlog.js:39
@@ -1808,7 +1812,7 @@ msgstr ""
 
 #: src/webui/static/app/status.js:375
 msgid "Transport Errors"
-msgstr "Транспортни грешки"
+msgstr "Транспортни Грешки"
 
 #: src/webui/static/app/epggrab.js:299
 msgid "Trigger OTA EPG Grabber"
@@ -2047,4 +2051,4 @@ msgstr ""
 #. / {0} start, {1} end, {2} total, {3} title
 #: src/webui/static/app/tvheadend.js:103
 msgid "{3} {0} - {1} of {2}"
-msgstr ""
+msgstr "{3} {0} - {1} от {2}"

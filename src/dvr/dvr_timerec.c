@@ -428,7 +428,7 @@ dvr_timerec_entry_class_time_get(void *o, int tm)
   if (tm >= 0)
     snprintf(buf, sizeof(buf), "%02d:%02d", tm / 60, tm % 60);
   else
-    strcpy(buf, "Any");
+    strncpy(buf, N_("Any"), 16);
   ret = buf;
   return &ret;
 }

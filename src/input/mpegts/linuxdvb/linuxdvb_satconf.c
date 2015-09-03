@@ -302,7 +302,7 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_INT,
       .id       = "site_altitude",
-      .name     = N_("Altitude (meters)"),
+      .name     = N_("Altitude (metres)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_altitude),
       .opts     = PO_ADVANCED,
       .def.i    = 0

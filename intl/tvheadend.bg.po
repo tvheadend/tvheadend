@@ -9,10 +9,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
+"POT-Creation-Date: 2015-09-02 21:08+0200\n"
+"PO-Revision-Date: 2015-09-02 19:08+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Bulgarian (http://www.transifex.com/p/tvheadend/language/bg/)\n"
+"Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -45,6 +45,10 @@ msgstr "# Услуги"
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
+msgstr ""
+
+#: src/dvr/dvr_config.c:659
+msgid "(Default Profile)"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
@@ -186,7 +190,7 @@ msgstr ""
 msgid "AUTO"
 msgstr ""
 
-#: src/streaming.c:441
+#: src/streaming.c:436
 msgid "Aborted by user"
 msgstr ""
 
@@ -199,7 +203,7 @@ msgstr "Достъп"
 msgid "Action"
 msgstr "Действие"
 
-#: src/streaming.c:428
+#: src/streaming.c:423
 msgid "Adapter in use by another subscription"
 msgstr ""
 
@@ -218,7 +222,7 @@ msgstr "Администратор"
 #: src/epg.c:1959 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
 #: src/epg.c:1964
 msgid "Adult movie"
-msgstr ""
+msgstr "Филм за възрастни"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
@@ -230,7 +234,7 @@ msgstr ""
 
 #: src/epg.c:1953
 msgid "Adventure"
-msgstr ""
+msgstr "Приключения"
 
 #: src/epg.c:2090
 msgid "Advertisement / Shopping"
@@ -263,25 +267,26 @@ msgid "Alternate configuration path"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
-msgid "Altitude (meters)"
+msgid "Altitude (metres)"
 msgstr ""
 
 #: src/epg.c:2069
 msgid "Animals"
-msgstr ""
+msgstr "Животни"
 
-#: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
-#: src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
+#: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_timerec.c:431
 msgid "Any"
 msgstr ""
 
 #: src/epg.c:2041
 msgid "Arts"
-msgstr ""
+msgstr "Изкуства"
 
 #: src/epg.c:2005
 msgid "Athletics"
-msgstr ""
+msgstr "Атлетика"
 
 #: src/profile.c:1558
 msgid "Audio Bitrate (kb/s) (0=Auto)"
@@ -289,7 +294,7 @@ msgstr ""
 
 #: src/profile.c:1550
 msgid "Audio CODEC"
-msgstr ""
+msgstr "Аудио CODEC"
 
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
@@ -340,7 +345,7 @@ msgstr "BB"
 
 #: src/epg.c:2026
 msgid "Ballet"
-msgstr ""
+msgstr "Балет"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220
 msgid "Bandwidth"
@@ -430,7 +435,7 @@ msgstr ""
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Cartoons"
-msgstr ""
+msgstr "Детски"
 
 #: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2048
 #: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
@@ -490,7 +495,7 @@ msgstr ""
 msgid "Classical music"
 msgstr ""
 
-#: src/streaming.c:543
+#: src/streaming.c:538
 msgid "Clean effects"
 msgstr ""
 
@@ -502,13 +507,13 @@ msgstr ""
 msgid "Cmd Delay Time (ms) (10-500)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1721
+#: src/descrambler/cwc.c:1725
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
 #: src/epg.c:1955
 msgid "Comedy"
-msgstr ""
+msgstr "Комедия"
 
 #: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
@@ -603,14 +608,14 @@ msgid "Current affairs"
 msgstr ""
 
 #: src/main.c:664
-msgid "DBus - use the session message bus instead system one"
+msgid "DBus - use the session message bus instead of the system one"
 msgstr ""
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
 msgstr ""
 
-#: src/descrambler/cwc.c:1752
+#: src/descrambler/cwc.c:1756
 msgid "DES Key"
 msgstr ""
 
@@ -652,7 +657,7 @@ msgstr "DVB-S Toneburst"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
-msgstr ""
+msgstr "DVB-T"
 
 #: src/input/mpegts/mpegts_network_dvb.c:201
 msgid "DVB-T Network"
@@ -671,7 +676,7 @@ msgid "DVR Auto-Record Entry"
 msgstr ""
 
 #: src/dvr/dvr_config.c:731
-msgid "DVR Behavior"
+msgid "DVR Behaviour"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
@@ -741,7 +746,7 @@ msgstr ""
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Debate"
-msgstr ""
+msgstr "Дебати"
 
 #: src/main.c:696
 msgid "Debug Options"
@@ -756,7 +761,7 @@ msgid "Default Priority"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
-#: src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery System"
 msgstr ""
 
@@ -861,7 +866,7 @@ msgstr "Не запазвай"
 #: src/epg.c:1951 src/epg.c:1958 src/epg.c:1959 src/epg.c:1960 src/epg.c:1961
 #: src/epg.c:1962 src/epg.c:1963 src/epg.c:1964
 msgid "Drama"
-msgstr ""
+msgstr "Драма"
 
 #: src/dvr/dvr_autorec.c:1039
 msgid "Duplicate Handling"
@@ -1028,7 +1033,7 @@ msgstr "Допълнително време Преди записа (минут�
 msgid "FAIL"
 msgstr "ПРОВАЛ"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:301
+#: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:565
 msgid "FEC"
 msgstr "FEC"
 
@@ -1102,7 +1107,7 @@ msgstr ""
 
 #: src/epg.c:2002
 msgid "Football"
-msgstr ""
+msgstr "Футбол"
 
 #: src/input/mpegts/mpegts_mux.c:460
 msgid "Force (auto)"
@@ -1270,7 +1275,7 @@ msgstr ""
 msgid "Handicraft"
 msgstr ""
 
-#: src/streaming.c:544
+#: src/streaming.c:539
 msgid "Hearing impaired"
 msgstr ""
 
@@ -1288,19 +1293,19 @@ msgstr ""
 
 #: src/epg.c:1958
 msgid "Historical movie"
-msgstr ""
+msgstr "Исторически филми"
 
 #: src/epg.c:1954
 msgid "Horror"
-msgstr ""
+msgstr "Ужаси"
 
-#: src/descrambler/cwc.c:1739
+#: src/descrambler/cwc.c:1743
 msgid "Hostname/IP"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:382
 msgid "IDLE"
-msgstr ""
+msgstr "ПРЕСТОЙ"
 
 #: src/input/mpegts/satip/satip.c:282
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:144
@@ -1317,11 +1322,11 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:92
 msgid "IPTV Multiplex"
-msgstr ""
+msgstr "IPTV Multiplex"
 
 #: src/input/mpegts/iptv/iptv.c:446
 msgid "IPTV Network"
-msgstr ""
+msgstr "IPTV Мрежа"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:588
 msgid "ISI (Stream ID)"
@@ -1341,7 +1346,7 @@ msgstr ""
 
 #: src/webui/extjs.c:220
 msgid "Icons from"
-msgstr ""
+msgstr "Икони от"
 
 #: src/input/mpegts/mpegts_input.c:270
 msgid "Idle Scan"
@@ -1357,7 +1362,7 @@ msgid ""
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
-"the access-control from within the Tvheadend web interface."
+"the access control from within the Tvheadend web interface."
 msgstr ""
 
 #: src/webui/extjs.c:240
@@ -1414,7 +1419,7 @@ msgstr "Индекс"
 
 #: src/epg.c:2014
 msgid "Informational"
-msgstr ""
+msgstr "Информационни"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:260
 msgid "Init Rotor Time (seconds)"
@@ -1458,13 +1463,13 @@ msgstr ""
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
 
-#: src/streaming.c:417
+#: src/streaming.c:412
 msgid "Invalid target"
 msgstr ""
 
 #: src/epg.c:2030
 msgid "Jazz"
-msgstr ""
+msgstr "Джаз"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
@@ -1486,7 +1491,7 @@ msgstr "Език"
 #: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
 #: src/epg.c:2080 src/epg.c:2081
 msgid "Languages"
-msgstr ""
+msgstr "Езици"
 
 #: src/input/mpegts/mpegts_service.c:215
 msgid "Last Seen"
@@ -1638,11 +1643,11 @@ msgid "MPEG-TS Network"
 msgstr ""
 
 #: src/profile.c:1806
-msgid "MPEG-TS Pass-thru"
+msgid "MPEG-TS Pass-through"
 msgstr ""
 
 #: src/profile.c:1001
-msgid "MPEG-TS Pass-thru/built-in"
+msgid "MPEG-TS Pass-through/built-in"
 msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:721
@@ -1809,7 +1814,7 @@ msgstr ""
 
 #: src/epg.c:2006
 msgid "Motor sport"
-msgstr ""
+msgstr "Моторни спортове"
 
 #: src/epg.c:2087
 msgid "Motoring"
@@ -1821,7 +1826,7 @@ msgstr ""
 
 #: src/epg.c:2026
 msgid "Music"
-msgstr ""
+msgstr "Музика"
 
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
@@ -1845,7 +1850,7 @@ msgstr ""
 msgid "Mux UUID"
 msgstr "Мукс UUID"
 
-#: src/streaming.c:426
+#: src/streaming.c:421
 msgid "Mux not enabled"
 msgstr "Мукса не е разрешен"
 
@@ -1866,7 +1871,7 @@ msgstr "Име"
 
 #: src/epg.c:2070
 msgid "Natural sciences"
-msgstr ""
+msgstr "Природни науки"
 
 #: src/epg.c:2069
 msgid "Nature"
@@ -1920,7 +1925,7 @@ msgstr "Мрежи"
 
 #: src/epg.c:1967 src/epg.c:1968
 msgid "News"
-msgstr ""
+msgstr "Новини"
 
 #: src/epg.c:1969
 msgid "News magazine"
@@ -1934,7 +1939,7 @@ msgstr ""
 msgid "No PIN"
 msgstr "Без ПИН"
 
-#: src/streaming.c:446
+#: src/streaming.c:441
 msgid "No access"
 msgstr "Без достъп"
 
@@ -1946,27 +1951,27 @@ msgstr ""
 msgid "No days"
 msgstr ""
 
-#: src/streaming.c:444
+#: src/streaming.c:439
 msgid "No descrambler"
 msgstr ""
 
-#: src/streaming.c:424
+#: src/streaming.c:419
 msgid "No free adapter"
 msgstr "Няма свободен адаптер"
 
-#: src/streaming.c:448
+#: src/streaming.c:443
 msgid "No input detected"
 msgstr ""
 
-#: src/streaming.c:438
+#: src/streaming.c:433
 msgid "No service assigned to channel"
 msgstr ""
 
-#: src/streaming.c:432
+#: src/streaming.c:427
 msgid "No service enabled"
 msgstr ""
 
-#: src/streaming.c:436
+#: src/streaming.c:431
 msgid "No source available"
 msgstr "Не е наличен източник"
 
@@ -2004,7 +2009,7 @@ msgstr "Номер"
 msgid "Number of tsfile tuners"
 msgstr ""
 
-#: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
 msgstr "OK"
 
@@ -2040,7 +2045,7 @@ msgstr "По-стар OSCam"
 msgid "On"
 msgstr ""
 
-#: src/descrambler/cwc.c:1768
+#: src/descrambler/cwc.c:1772
 msgid "One Mux (EMM)"
 msgstr ""
 
@@ -2161,7 +2166,7 @@ msgstr "PLS Code"
 msgid "PLS Mode"
 msgstr "PLS Mode"
 
-#: src/access.c:1692 src/descrambler/cwc.c:1732
+#: src/access.c:1692 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr "Парола"
 
@@ -2179,11 +2184,15 @@ msgstr ""
 
 #: src/epg.c:2071
 msgid "Physiology"
-msgstr ""
+msgstr "Физиология"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
 msgstr "Pilot"
+
+#: src/input/mpegts/mpegts_mux_dvb.c:553
+msgid "Polarisation"
+msgstr ""
 
 #: src/epg.c:2052
 msgid "Political issues"
@@ -2191,13 +2200,13 @@ msgstr ""
 
 #: src/epg.c:2027
 msgid "Pop"
-msgstr ""
+msgstr "Поп"
 
 #: src/epg.c:2045
 msgid "Popular culture"
 msgstr ""
 
-#: src/descrambler/cwc.c:1746
+#: src/descrambler/cwc.c:1750
 msgid "Port"
 msgstr "Port"
 
@@ -2239,7 +2248,7 @@ msgstr ""
 
 #: src/epg.c:2049
 msgid "Press"
-msgstr ""
+msgstr "Преса"
 
 #: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
 #: src/input/mpegts/mpegts_input.c:232
@@ -2271,7 +2280,7 @@ msgstr "Провайдър ID"
 
 #: src/epg.c:2071
 msgid "Psychology"
-msgstr ""
+msgstr "Психология"
 
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
@@ -2332,11 +2341,11 @@ msgstr ""
 
 #: src/epg.c:2044
 msgid "Religion"
-msgstr ""
+msgstr "Религия"
 
 #: src/epg.c:1958
 msgid "Religious"
-msgstr ""
+msgstr "Религиозни"
 
 #: src/epg.c:2055 src/epg.c:2056 src/epg.c:2057 src/epg.c:2058 src/epg.c:2059
 #: src/epg.c:2060 src/epg.c:2061 src/epg.c:2062 src/epg.c:2063 src/epg.c:2064
@@ -2368,7 +2377,7 @@ msgstr ""
 msgid "Rescan"
 msgstr "Пресканирай"
 
-#: src/streaming.c:548
+#: src/streaming.c:543
 msgid "Reserved"
 msgstr "Резервирано"
 
@@ -2406,7 +2415,7 @@ msgstr ""
 
 #: src/epg.c:2027
 msgid "Rock"
-msgstr ""
+msgstr "Рок"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:570
 msgid "Rolloff"
@@ -2414,7 +2423,7 @@ msgstr "Rolloff"
 
 #: src/epg.c:1957
 msgid "Romance"
-msgstr ""
+msgstr "Романтика"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1245
 msgid "Rotor Type"
@@ -2539,7 +2548,7 @@ msgstr ""
 
 #: src/epg.c:2068
 msgid "Science"
-msgstr ""
+msgstr "Наука"
 
 #: src/epg.c:1954
 msgid "Science fiction"
@@ -2637,7 +2646,7 @@ msgstr ""
 msgid "Show version information"
 msgstr ""
 
-#: src/streaming.c:434
+#: src/streaming.c:429
 msgid "Signal quality too poor"
 msgstr ""
 
@@ -2693,15 +2702,15 @@ msgstr ""
 msgid "Source"
 msgstr ""
 
-#: src/streaming.c:413
+#: src/streaming.c:408
 msgid "Source deleted"
 msgstr ""
 
-#: src/streaming.c:411
+#: src/streaming.c:406
 msgid "Source quality is bad"
 msgstr ""
 
-#: src/streaming.c:409
+#: src/streaming.c:404
 msgid "Source reconfigured"
 msgstr ""
 
@@ -2824,7 +2833,7 @@ msgstr ""
 msgid "Subscribe to a service permanently"
 msgstr ""
 
-#: src/streaming.c:415
+#: src/streaming.c:410
 msgid "Subscription overridden"
 msgstr ""
 
@@ -2905,15 +2914,19 @@ msgstr ""
 
 #: src/epg.c:2003
 msgid "Tennis"
-msgstr ""
+msgstr "Тенис"
 
 #: src/main.c:722
 msgid "Testing options"
 msgstr ""
 
+#: src/input/mpegts/satip/satip_frontend.c:266
+msgid "This Tuner"
+msgstr ""
+
 #: src/epg.c:1952
 msgid "Thriller"
-msgstr ""
+msgstr "Трилър"
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
@@ -3004,7 +3017,7 @@ msgstr ""
 msgid "Tuner bind IP address"
 msgstr ""
 
-#: src/streaming.c:430
+#: src/streaming.c:425
 msgid "Tuning failed"
 msgstr ""
 
@@ -3069,7 +3082,7 @@ msgstr ""
 msgid "Unknown"
 msgstr "Непознат"
 
-#: src/streaming.c:451
+#: src/streaming.c:446
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Неизвестна причина (%i)"
@@ -3078,7 +3091,7 @@ msgstr "Неизвестна причина (%i)"
 msgid "Unset (default)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1761
+#: src/descrambler/cwc.c:1765
 msgid "Update Card (EMM)"
 msgstr ""
 
@@ -3115,15 +3128,15 @@ msgstr ""
 msgid "User Limit Reached"
 msgstr ""
 
-#: src/streaming.c:419
+#: src/streaming.c:414
 msgid "User access error"
 msgstr ""
 
-#: src/streaming.c:421
+#: src/streaming.c:416
 msgid "User limit reached"
 msgstr ""
 
-#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
+#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1730
 msgid "Username"
 msgstr "Потребител"
 
@@ -3133,7 +3146,7 @@ msgstr ""
 
 #: src/epg.c:2048
 msgid "Video"
-msgstr ""
+msgstr "Видео"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
@@ -3151,9 +3164,9 @@ msgstr ""
 msgid "Video Stream Filter"
 msgstr ""
 
-#: src/streaming.c:545
-msgid "Visually impaired commentary"
-msgstr "Коментар за Незрящи"
+#: src/streaming.c:540
+msgid "Visually impaired commentary/audio description"
+msgstr ""
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
@@ -3189,11 +3202,11 @@ msgstr ""
 
 #: src/epg.c:1953
 msgid "War"
-msgstr ""
+msgstr "Военен"
 
 #: src/epg.c:2007
 msgid "Water sport"
-msgstr ""
+msgstr "Воден спорт"
 
 #: src/epg.c:1968
 msgid "Weather report"
@@ -3205,7 +3218,7 @@ msgstr "Уеб интерфейс"
 
 #: src/access.c:1338
 msgid "Web Interface Language"
-msgstr ""
+msgstr "Език на уеб интерфейса"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
@@ -3213,7 +3226,7 @@ msgstr "Сря"
 
 #: src/epg.c:1953
 msgid "Western"
-msgstr ""
+msgstr "Уестърн"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"

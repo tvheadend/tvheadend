@@ -36,7 +36,7 @@ Date.monthNames2 = [
   _("Feb"),
   _("Mar"),
   _("Apr"),
-  _("May"),
+  _("May#ShortNameForMay").split('#')[0],
   _("Jun"),
   _("Jul"),
   _("Aug"),

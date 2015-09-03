@@ -191,7 +191,7 @@ void http_output_html(http_connection_t *hc);
 void http_output_content(http_connection_t *hc, const char *content);
 
 void http_redirect(http_connection_t *hc, const char *location,
-                   struct http_arg_list *req_args);
+                   struct http_arg_list *req_args, int external);
 
 void http_send_header(http_connection_t *hc, int rc, const char *content, 
 		      int64_t contentlen, const char *encoding,

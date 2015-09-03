@@ -8,10 +8,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-07-03 17:53+0200\n"
-"PO-Revision-Date: 2015-07-03 15:54+0000\n"
+"POT-Creation-Date: 2015-09-02 21:08+0200\n"
+"PO-Revision-Date: 2015-09-02 19:08+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Latvian (http://www.transifex.com/p/tvheadend/language/lv/)\n"
+"Language-Team: Latvian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/lv/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -44,6 +44,10 @@ msgstr ""
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
+msgstr ""
+
+#: src/dvr/dvr_config.c:659
+msgid "(Default Profile)"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
@@ -185,7 +189,7 @@ msgstr ""
 msgid "AUTO"
 msgstr "AUTO"
 
-#: src/streaming.c:441
+#: src/streaming.c:436
 msgid "Aborted by user"
 msgstr "Lietotāja pārtraukts"
 
@@ -198,7 +202,7 @@ msgstr "Piekļuve"
 msgid "Action"
 msgstr "Darbība"
 
-#: src/streaming.c:428
+#: src/streaming.c:423
 msgid "Adapter in use by another subscription"
 msgstr ""
 
@@ -262,15 +266,16 @@ msgid "Alternate configuration path"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
-msgid "Altitude (meters)"
+msgid "Altitude (metres)"
 msgstr ""
 
 #: src/epg.c:2069
 msgid "Animals"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:604 src/dvr/dvr_autorec.c:618
-#: src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
+#: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_timerec.c:431
 msgid "Any"
 msgstr "Jebkurš"
 
@@ -489,7 +494,7 @@ msgstr ""
 msgid "Classical music"
 msgstr ""
 
-#: src/streaming.c:543
+#: src/streaming.c:538
 msgid "Clean effects"
 msgstr ""
 
@@ -501,7 +506,7 @@ msgstr ""
 msgid "Cmd Delay Time (ms) (10-500)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1721
+#: src/descrambler/cwc.c:1725
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
@@ -602,14 +607,14 @@ msgid "Current affairs"
 msgstr ""
 
 #: src/main.c:664
-msgid "DBus - use the session message bus instead system one"
+msgid "DBus - use the session message bus instead of the system one"
 msgstr ""
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
 msgstr ""
 
-#: src/descrambler/cwc.c:1752
+#: src/descrambler/cwc.c:1756
 msgid "DES Key"
 msgstr ""
 
@@ -670,7 +675,7 @@ msgid "DVR Auto-Record Entry"
 msgstr ""
 
 #: src/dvr/dvr_config.c:731
-msgid "DVR Behavior"
+msgid "DVR Behaviour"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
@@ -755,7 +760,7 @@ msgid "Default Priority"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
-#: src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery System"
 msgstr ""
 
@@ -1027,7 +1032,7 @@ msgstr ""
 msgid "FAIL"
 msgstr "NEIZDEVIES"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:301
+#: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:565
 msgid "FEC"
 msgstr ""
 
@@ -1269,7 +1274,7 @@ msgstr ""
 msgid "Handicraft"
 msgstr ""
 
-#: src/streaming.c:544
+#: src/streaming.c:539
 msgid "Hearing impaired"
 msgstr ""
 
@@ -1293,7 +1298,7 @@ msgstr ""
 msgid "Horror"
 msgstr ""
 
-#: src/descrambler/cwc.c:1739
+#: src/descrambler/cwc.c:1743
 msgid "Hostname/IP"
 msgstr ""
 
@@ -1356,7 +1361,7 @@ msgid ""
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
-"the access-control from within the Tvheadend web interface."
+"the access control from within the Tvheadend web interface."
 msgstr ""
 
 #: src/webui/extjs.c:240
@@ -1457,7 +1462,7 @@ msgstr ""
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
 
-#: src/streaming.c:417
+#: src/streaming.c:412
 msgid "Invalid target"
 msgstr ""
 
@@ -1637,11 +1642,11 @@ msgid "MPEG-TS Network"
 msgstr ""
 
 #: src/profile.c:1806
-msgid "MPEG-TS Pass-thru"
+msgid "MPEG-TS Pass-through"
 msgstr ""
 
 #: src/profile.c:1001
-msgid "MPEG-TS Pass-thru/built-in"
+msgid "MPEG-TS Pass-through/built-in"
 msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:721
@@ -1844,7 +1849,7 @@ msgstr ""
 msgid "Mux UUID"
 msgstr ""
 
-#: src/streaming.c:426
+#: src/streaming.c:421
 msgid "Mux not enabled"
 msgstr ""
 
@@ -1933,7 +1938,7 @@ msgstr ""
 msgid "No PIN"
 msgstr ""
 
-#: src/streaming.c:446
+#: src/streaming.c:441
 msgid "No access"
 msgstr ""
 
@@ -1945,27 +1950,27 @@ msgstr ""
 msgid "No days"
 msgstr ""
 
-#: src/streaming.c:444
+#: src/streaming.c:439
 msgid "No descrambler"
 msgstr ""
 
-#: src/streaming.c:424
+#: src/streaming.c:419
 msgid "No free adapter"
 msgstr ""
 
-#: src/streaming.c:448
+#: src/streaming.c:443
 msgid "No input detected"
 msgstr ""
 
-#: src/streaming.c:438
+#: src/streaming.c:433
 msgid "No service assigned to channel"
 msgstr ""
 
-#: src/streaming.c:432
+#: src/streaming.c:427
 msgid "No service enabled"
 msgstr ""
 
-#: src/streaming.c:436
+#: src/streaming.c:431
 msgid "No source available"
 msgstr ""
 
@@ -2003,7 +2008,7 @@ msgstr "Numurs"
 msgid "Number of tsfile tuners"
 msgstr ""
 
-#: src/streaming.c:406 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
 msgid "OK"
 msgstr "Labi"
 
@@ -2039,7 +2044,7 @@ msgstr ""
 msgid "On"
 msgstr "Ieslēgts"
 
-#: src/descrambler/cwc.c:1768
+#: src/descrambler/cwc.c:1772
 msgid "One Mux (EMM)"
 msgstr ""
 
@@ -2160,7 +2165,7 @@ msgstr ""
 msgid "PLS Mode"
 msgstr ""
 
-#: src/access.c:1692 src/descrambler/cwc.c:1732
+#: src/access.c:1692 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr "Parole"
 
@@ -2184,6 +2189,10 @@ msgstr ""
 msgid "Pilot"
 msgstr ""
 
+#: src/input/mpegts/mpegts_mux_dvb.c:553
+msgid "Polarisation"
+msgstr ""
+
 #: src/epg.c:2052
 msgid "Political issues"
 msgstr ""
@@ -2196,7 +2205,7 @@ msgstr ""
 msgid "Popular culture"
 msgstr ""
 
-#: src/descrambler/cwc.c:1746
+#: src/descrambler/cwc.c:1750
 msgid "Port"
 msgstr ""
 
@@ -2367,7 +2376,7 @@ msgstr ""
 msgid "Rescan"
 msgstr ""
 
-#: src/streaming.c:548
+#: src/streaming.c:543
 msgid "Reserved"
 msgstr ""
 
@@ -2636,7 +2645,7 @@ msgstr "Parādīt šo lapu"
 msgid "Show version information"
 msgstr ""
 
-#: src/streaming.c:434
+#: src/streaming.c:429
 msgid "Signal quality too poor"
 msgstr ""
 
@@ -2692,15 +2701,15 @@ msgstr ""
 msgid "Source"
 msgstr "Avots"
 
-#: src/streaming.c:413
+#: src/streaming.c:408
 msgid "Source deleted"
 msgstr ""
 
-#: src/streaming.c:411
+#: src/streaming.c:406
 msgid "Source quality is bad"
 msgstr ""
 
-#: src/streaming.c:409
+#: src/streaming.c:404
 msgid "Source reconfigured"
 msgstr ""
 
@@ -2823,7 +2832,7 @@ msgstr ""
 msgid "Subscribe to a service permanently"
 msgstr ""
 
-#: src/streaming.c:415
+#: src/streaming.c:410
 msgid "Subscription overridden"
 msgstr ""
 
@@ -2908,6 +2917,10 @@ msgstr ""
 
 #: src/main.c:722
 msgid "Testing options"
+msgstr ""
+
+#: src/input/mpegts/satip/satip_frontend.c:266
+msgid "This Tuner"
 msgstr ""
 
 #: src/epg.c:1952
@@ -3003,7 +3016,7 @@ msgstr ""
 msgid "Tuner bind IP address"
 msgstr ""
 
-#: src/streaming.c:430
+#: src/streaming.c:425
 msgid "Tuning failed"
 msgstr ""
 
@@ -3068,7 +3081,7 @@ msgstr ""
 msgid "Unknown"
 msgstr "Nezināms"
 
-#: src/streaming.c:451
+#: src/streaming.c:446
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Nezināms iemesls (%i)"
@@ -3077,7 +3090,7 @@ msgstr "Nezināms iemesls (%i)"
 msgid "Unset (default)"
 msgstr ""
 
-#: src/descrambler/cwc.c:1761
+#: src/descrambler/cwc.c:1765
 msgid "Update Card (EMM)"
 msgstr ""
 
@@ -3114,15 +3127,15 @@ msgstr ""
 msgid "User Limit Reached"
 msgstr ""
 
-#: src/streaming.c:419
+#: src/streaming.c:414
 msgid "User access error"
 msgstr ""
 
-#: src/streaming.c:421
+#: src/streaming.c:416
 msgid "User limit reached"
 msgstr ""
 
-#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1726
+#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1730
 msgid "Username"
 msgstr "Lietotājvārds"
 
@@ -3150,8 +3163,8 @@ msgstr ""
 msgid "Video Stream Filter"
 msgstr ""
 
-#: src/streaming.c:545
-msgid "Visually impaired commentary"
+#: src/streaming.c:540
+msgid "Visually impaired commentary/audio description"
 msgstr ""
 
 #: src/profile.c:1107 src/profile.c:1263

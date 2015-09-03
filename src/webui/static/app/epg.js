@@ -485,8 +485,8 @@ tvheadend.epg = function() {
             {
                 width: 250,
                 id: 'subtitle',
-                header: _("SubTitle"),
-                tooltip: _("SubTitle"),
+                header: _("Subtitle"),
+                tooltip: _("Subtitle"),
                 dataIndex: 'subtitle',
                 renderer: renderText
             },

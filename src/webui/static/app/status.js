@@ -338,7 +338,7 @@ tvheadend.status_streams = function(panel, index)
             },
             {
                 width: 50,
-                header: _("Subs #"),
+                header: _("Subs No."),
                 dataIndex: 'subs'
             },
             {

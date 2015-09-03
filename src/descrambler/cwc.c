@@ -1300,16 +1300,20 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
       // Validate prefered ECM PID
       tvhlog(LOG_DEBUG, "cwc", "ECM state INIT");
 
-      if(t->s_dvb_prefcapid != PREFCAPID_OFF) {
-        struct elementary_stream *prefca
-          = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
-        if (!prefca || prefca->es_type != SCT_CA) {
-          tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
-          t->s_dvb_prefcapid = 0;
-        }
+      if(t->s_dvb_prefcapid_lock != PREFCAPID_OFF) {
+        st = service_stream_find((service_t*)t, t->s_dvb_prefcapid);
+        if (st && st->es_type == SCT_CA)
+          LIST_FOREACH(c, &st->es_caids, link)
+            LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
+              if(pcard->cs_ra.caid == c->caid && verify_provider(pcard, c->providerid))
+                goto prefcapid_ok;
+        tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
+        t->s_dvb_prefcapid = 0;
       }
 
-      if(t->s_dvb_prefcapid == pid || t->s_dvb_prefcapid == 0) {
+prefcapid_ok:
+      if(t->s_dvb_prefcapid == pid || t->s_dvb_prefcapid == 0 ||
+         t->s_dvb_prefcapid_lock == PREFCAPID_OFF) {
         ep = calloc(1, sizeof(ecm_pid_t));
         ep->ep_pid = pid;
         LIST_INSERT_HEAD(&ct->cs_pids, ep, ep_link);
@@ -1317,9 +1321,9 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
                           t->s_dvb_prefcapid ? "preferred" : "new", pid, t->s_dvb_svcname);
       }
     }
+    if(ep == NULL)
+      goto end;
   }
-  if(ep == NULL)
-    goto end;
 
   st = service_stream_find((service_t *)t, pid);
   if (st) {

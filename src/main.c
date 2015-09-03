@@ -656,12 +656,12 @@ main(int argc, char **argv)
 	                   "no username and no password. Use with care as\n"
 	                   "it will allow world-wide administrative access\n"
 	                   "to your Tvheadend installation until you create or edit\n"
-	                   "the access-control from within the Tvheadend web interface."),
+	                   "the access control from within the Tvheadend web interface."),
       OPT_BOOL, &opt_firstrun },
 #if ENABLE_DBUS_1
     { 'U', "dbus",      N_("Enable DBus"),
       OPT_BOOL, &opt_dbus },
-    { 'e', "dbus_session", N_("DBus - use the session message bus instead system one"),
+    { 'e', "dbus_session", N_("DBus - use the session message bus instead of the system one"),
       OPT_BOOL, &opt_dbus_session },
 #endif
 #if ENABLE_LINUXDVB

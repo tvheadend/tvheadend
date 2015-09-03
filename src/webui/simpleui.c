@@ -409,7 +409,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
 
   if(de == NULL) {
     pthread_mutex_unlock(&global_lock);
-    http_redirect(hc, "/simple.html", &hc->hc_req_args);
+    http_redirect(hc, "/simple.html", &hc->hc_req_args, 0);
     return 0;
   }
 
