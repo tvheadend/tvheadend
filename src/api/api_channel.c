@@ -110,6 +110,7 @@ api_channel_tag_list
   char buf[128];
 
   l = htsmsg_create_list();
+  pthread_mutex_lock(&global_lock);
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if (cfg || channel_tag_access(ct, perm, 0)) {
       if (ct->ct_enabled) {
@@ -119,6 +120,7 @@ api_channel_tag_list
         api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id), buf);
       }
     }
+  pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
   return 0;
