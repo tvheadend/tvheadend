@@ -1404,18 +1404,33 @@ idnode_list_destroy(idnode_list_head_t *ilh, void *origin)
 }
 
 static int
-idnode_list_clean
-  ( idnode_t *in1, idnode_list_head_t *in1_list,
-    idnode_t *in2, idnode_list_head_t *in2_list,
-    void *origin )
+idnode_list_clean1
+  ( idnode_t *in1, idnode_list_head_t *in1_list )
 {
   int save = 0;
   idnode_list_mapping_t *ilm, *n;
 
-  for (ilm = LIST_FIRST(in1 ? in1_list : in2_list); ilm != NULL; ilm = n) {
-    n = in1 ? LIST_NEXT(ilm, ilm_in1_link) : LIST_NEXT(ilm, ilm_in2_link);
+  for (ilm = LIST_FIRST(in1_list); ilm != NULL; ilm = n) {
+    n = LIST_NEXT(ilm, ilm_in1_link);
     if (ilm->ilm_mark) {
-      idnode_list_unlink(ilm, origin);
+      idnode_list_unlink(ilm, in1);
+      save = 1;
+    }
+  }
+  return save;
+}
+
+static int
+idnode_list_clean2
+  ( idnode_t *in2, idnode_list_head_t *in2_list )
+{
+  int save = 0;
+  idnode_list_mapping_t *ilm, *n;
+
+  for (ilm = LIST_FIRST(in2_list); ilm != NULL; ilm = n) {
+    n = LIST_NEXT(ilm, ilm_in2_link);
+    if (ilm->ilm_mark) {
+      idnode_list_unlink(ilm, in2);
       save = 1;
     }
   }
@@ -1502,7 +1517,7 @@ idnode_list_set1
           save = 1;
 
   /* Delete unlinked */
-  if (idnode_list_clean(in1, in1_list, NULL, NULL, in1))
+  if (idnode_list_clean1(in1, in1_list))
     save = 1;
 
   /* Change notification */
@@ -1541,7 +1556,7 @@ idnode_list_set2
           save = 1;
 
   /* Delete unlinked */
-  if (idnode_list_clean(in2, in2_list, NULL, NULL, in2))
+  if (idnode_list_clean2(in2, in2_list))
     save = 1;
 
   /* Change notification */
