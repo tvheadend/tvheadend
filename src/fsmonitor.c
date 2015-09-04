@@ -105,11 +105,7 @@ void
 fsmonitor_init ( void )
 {
   /* Intialise inotify */
-  #if ENABLE_ANDROID
-  fsmonitor_fd = inotify_init();
-#else
   fsmonitor_fd = inotify_init1(IN_CLOEXEC);
-#endif
   tvhthread_create0(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
 }
 
