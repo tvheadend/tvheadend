@@ -53,6 +53,8 @@
 
 #if ENABLE_ANDROID
 #define S_IEXEC S_IXUSR
+#define epoll_create1(EPOLL_CLOEXEC) epoll_create(n)
+#define inotify_init1(IN_CLOEXEC) inotify_init()
 #include <time64.h>
 // 32-bit Android has only timegm64() and not timegm().
 // We replicate the behaviour of timegm() when the result overflows time_t.

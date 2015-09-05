@@ -350,7 +350,7 @@ static int _timeshift_read
       if (tsf->rfd < 0)
         return -1;
     }
-    tvhtrace("timeshift", "ts %d seek to %jd (fd %i)", ts->id, tsf->roff, tsf->rfd);
+    tvhtrace("timeshift", "ts %d seek to %jd (fd %i)", ts->id, (intmax_t)tsf->roff, tsf->rfd);
     if (tsf->rfd >= 0)
       if ((off = lseek(tsf->rfd, tsf->roff, SEEK_SET)) != tsf->roff)
         tvherror("timeshift", "seek to %s failed (off %"PRId64" != %"PRId64"): %s",
@@ -366,7 +366,7 @@ static int _timeshift_read
       return -1;
     }
 #if ENABLE_ANDROID
-    tvhtrace("timeshift", "ts %d read msg %p (%ld)", ts->id, *sm, r);  // Android bug, ssize_t is long int
+    tvhtrace("timeshift", "ts %d read msg %p (%ld)", ts->id, *sm, (long int)r);  // Android bug, ssize_t is long int
 #else
     tvhtrace("timeshift", "ts %d read msg %p (%zd)", ts->id, *sm, r);
 #endif
@@ -374,7 +374,7 @@ static int _timeshift_read
     /* Incomplete */
     if (r == 0) {
       if (tsf->rfd >= 0) {
-        tvhtrace("timeshift", "ts %d seek to %jd (fd %i) (incomplete)", ts->id, tsf->roff, tsf->rfd);
+        tvhtrace("timeshift", "ts %d seek to %jd (fd %i) (incomplete)", ts->id, (intmax_t)tsf->roff, tsf->rfd);
         if ((off = lseek(tsf->rfd, ooff, SEEK_SET)) != ooff)
           tvherror("timeshift", "seek to %s failed (off %"PRId64" != %"PRId64"): %s",
                    tsf->path, (int64_t)ooff, (int64_t)off, strerror(errno));
