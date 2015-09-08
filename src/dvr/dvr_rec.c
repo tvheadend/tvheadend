@@ -539,6 +539,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   dvr_config_t *cfg;
   htsmsg_t *m;
   size_t l, j;
+  long max;
 
   if (de == NULL)
     return -1;
@@ -631,11 +632,14 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   htsstr_unescape_to(path, filename, sizeof(filename));
   if (makedirs(filename, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
     return -1;
+  max = pathconf(filename, _PC_NAME_MAX);
+  if (max < 8)
+    max = NAME_MAX;
   j = strlen(filename);
   snprintf(filename + j, sizeof(filename) - j, "/%s", dirsep);
   if (filename[j] == '/')
     j++;
-  
+
   /* Unique filename loop */
   while (1) {
 
@@ -645,6 +649,16 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     } else {
       number[0] = '\0';
     }
+    /* Check the maximum filename length */
+    l = strlen(number);
+    if (l + strlen(filename + j) > max) {
+      l = j + (max - l);
+      if (filename[l - 1] == '$') /* not optimal */
+        filename[l + 1] = '\0';
+      else
+        filename[l] = '\0';
+    }
+
     htsstr_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number);
     s = cleanup_filename(cfg, ptmp);
     if (s == NULL)
