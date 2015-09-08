@@ -167,8 +167,8 @@ api_idnode_grid
   return 0;
 }
 
-int
-api_idnode_load_by_class
+static int
+api_idnode_load_by_class0
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int i, _enum;
@@ -179,8 +179,6 @@ api_idnode_load_by_class
 
   // TODO: this only works if pass as integer
   _enum = htsmsg_get_bool_or_default(args, "enum", 0);
-
-  pthread_mutex_lock(&global_lock);
 
   /* Find class */
   idc = opaque;
@@ -215,12 +213,22 @@ api_idnode_load_by_class
     free(is->is_array);
     free(is);
   }
+
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
 
-  pthread_mutex_unlock(&global_lock);
-
   return 0;
+}
+
+int
+api_idnode_load_by_class
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int ret;
+  pthread_mutex_lock(&global_lock);
+  ret = api_idnode_load_by_class0(perm, opaque, op, args, resp);
+  pthread_mutex_unlock(&global_lock);
+  return ret;
 }
 
 static int
@@ -239,11 +247,12 @@ api_idnode_load
     const idclass_t *idc;
     pthread_mutex_lock(&global_lock);
     idc = idclass_find(class);
+    if (idc)
+      err = api_idnode_load_by_class0(perm, (void*)idc, NULL, args, resp);
+    else
+      err = EINVAL;
     pthread_mutex_unlock(&global_lock);
-    if (!idc)
-      return EINVAL;
-    // TODO: bit naff that 2 locks are required here
-    return api_idnode_load_by_class(perm, (void*)idc, NULL, args, resp);
+    return err;
   }
   
   /* UUIDs */
