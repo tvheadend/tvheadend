@@ -105,11 +105,12 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
   dvr_config_t *cfg, *res = NULL;
   htsmsg_field_t *f;
   const char *uuid, *uuid2;
+  char ubuf[UUID_HEX_SIZE];
 
   cfg = dvr_config_find_by_uuid(name);
   if (!cfg)
     cfg  = dvr_config_find_by_name(name);
-  uuid = cfg ? idnode_uuid_as_str(&cfg->dvr_id) : "";
+  uuid = cfg ? idnode_uuid_as_str(&cfg->dvr_id, ubuf) : "";
   if (uuids) {
     HTSMSG_FOREACH(f, uuids) {
       uuid2 = htsmsg_field_get_str(f) ?: "";
@@ -229,7 +230,7 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
 {
   if (delconf) {
     tvhinfo("dvr", "Deleting configuration '%s'", cfg->dvr_config_name);
-    hts_settings_remove("dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id));
+    hts_settings_remove("dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
   }
   LIST_REMOVE(cfg, config_link);
   idnode_unlink(&cfg->dvr_id);
@@ -511,7 +512,7 @@ dvr_config_save(dvr_config_t *cfg)
 
   dvr_config_storage_check(cfg);
   idnode_save(&cfg->dvr_id, m);
-  hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id));
+  hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
   htsmsg_destroy(m);
 }
 
@@ -555,7 +556,7 @@ dvr_config_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
   if (!access_verify2(a, ACCESS_ADMIN))
     return 0;
   if (a->aa_dvrcfgs) {
-    my_uuid = idnode_uuid_as_str(&cfg->dvr_id);
+    my_uuid = idnode_uuid_as_sstr(&cfg->dvr_id);
     HTSMSG_FOREACH(f, a->aa_dvrcfgs) {
       uuid = htsmsg_field_get_str(f) ?: "";
       if (!strcmp(uuid, my_uuid))
@@ -635,7 +636,7 @@ dvr_config_class_profile_get(void *o)
   static const char *ret;
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (cfg->dvr_profile)
-    ret = idnode_uuid_as_str(&cfg->dvr_profile->pro_id);
+    ret = idnode_uuid_as_sstr(&cfg->dvr_profile->pro_id);
   else
     ret = "";
   return &ret;

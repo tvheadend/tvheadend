@@ -537,7 +537,7 @@ tvhdhomerun_frontend_save ( tvhdhomerun_frontend_t *hfe, htsmsg_t *fe )
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)hfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(hfe->hf_type));
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&hfe->ti_id));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&hfe->ti_id));
 
   /* Add to list */
   snprintf(id, sizeof(id), "%s #%d", dvb_type2str(hfe->hf_type), hfe->hf_tunerNumber);

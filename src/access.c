@@ -510,7 +510,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(pro && pro->pro_name[0] != '\0') {
       if (a->aa_profiles == NULL)
         a->aa_profiles = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id));
+      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_sstr(&pro->pro_id));
     }
   }
 
@@ -519,7 +519,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(dvr && dvr->dvr_config_name[0] != '\0') {
       if (a->aa_dvrcfgs == NULL)
         a->aa_dvrcfgs = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id));
+      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_sstr(&dvr->dvr_id));
      }
   }
 
@@ -534,7 +534,7 @@ access_update(access_t *a, access_entry_t *ae)
         if (ilm == NULL) {
           if (a->aa_chtags == NULL)
             a->aa_chtags = htsmsg_create_list();
-          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_sstr(&ct->ct_id));
         }
       }
     }
@@ -544,7 +544,7 @@ access_update(access_t *a, access_entry_t *ae)
       if(ct && ct->ct_name[0] != '\0') {
         if (a->aa_chtags == NULL)
           a->aa_chtags = htsmsg_create_list();
-        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_sstr(&ct->ct_id));
       }
     }
   }
@@ -1054,7 +1054,7 @@ access_entry_save(access_entry_t *ae)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ae->ae_id, c);
-  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id));
+  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_sstr(&ae->ae_id));
   htsmsg_destroy(c);
 }
 
@@ -1092,7 +1092,7 @@ access_entry_class_delete(idnode_t *self)
 {
   access_entry_t *ae = (access_entry_t *)self;
 
-  hts_settings_remove("accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id));
+  hts_settings_remove("accesscontrol/%s", idnode_uuid_as_sstr(&ae->ae_id));
   access_entry_destroy(ae);
 }
 
@@ -1595,7 +1595,7 @@ passwd_entry_save(passwd_entry_t *pw)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&pw->pw_id, c);
-  hts_settings_save(c, "passwd/%s", idnode_uuid_as_str(&pw->pw_id));
+  hts_settings_save(c, "passwd/%s", idnode_uuid_as_sstr(&pw->pw_id));
   htsmsg_destroy(c);
 }
 
@@ -1610,7 +1610,7 @@ passwd_entry_class_delete(idnode_t *self)
 {
   passwd_entry_t *pw = (passwd_entry_t *)self;
 
-  hts_settings_remove("passwd/%s", idnode_uuid_as_str(&pw->pw_id));
+  hts_settings_remove("passwd/%s", idnode_uuid_as_sstr(&pw->pw_id));
   passwd_entry_destroy(pw);
 }
 

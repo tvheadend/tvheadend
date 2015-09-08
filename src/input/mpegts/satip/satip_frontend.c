@@ -936,7 +936,7 @@ satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if (lfe->sf_running && lfe->sf_req == tr &&
       (mmi = tr->sf_mmi) != NULL && (mm = mmi->mmi_mux) != NULL) {
-    strcpy(uuid, idnode_uuid_as_str(&mm->mm_id));
+    idnode_uuid_as_str(&mm->mm_id, uuid);
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
     mpegts_mux_tuning_error(uuid, mmi);
     return;
@@ -1668,7 +1668,7 @@ satip_frontend_save ( satip_frontend_t *lfe, htsmsg_t *fe )
   /* Save frontend */
   mpegts_input_save((mpegts_input_t*)lfe, m);
   htsmsg_add_str(m, "type", dvb_type2str(lfe->sf_type));
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lfe->ti_id));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&lfe->ti_id));
   if (lfe->ti_id.in_class == &satip_frontend_dvbs_class) {
     satip_satconf_save(lfe, m);
     htsmsg_delete_field(m, "networks");

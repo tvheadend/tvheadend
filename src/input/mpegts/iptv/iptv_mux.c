@@ -159,11 +159,12 @@ const idclass_t iptv_mux_class =
 static void
 iptv_mux_config_save ( mpegts_mux_t *mm )
 {
+  char ubuf[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
   mpegts_mux_save(mm, c);
   hts_settings_save(c, "input/iptv/networks/%s/muxes/%s/config",
-                    idnode_uuid_as_str(&mm->mm_network->mn_id),
-                    idnode_uuid_as_str(&mm->mm_id));
+                    idnode_uuid_as_sstr(&mm->mm_network->mn_id),
+                    idnode_uuid_as_str(&mm->mm_id, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -172,11 +173,12 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   char *url, *url_sane, *muxname;
   iptv_mux_t *im = (iptv_mux_t*)mm;
+  char ubuf[UUID_HEX_SIZE];
 
   if (delconf)
     hts_settings_remove("input/iptv/networks/%s/muxes/%s/config",
-                        idnode_uuid_as_str(&mm->mm_network->mn_id),
-                        idnode_uuid_as_str(&mm->mm_id));
+                        idnode_uuid_as_sstr(&mm->mm_network->mn_id),
+                        idnode_uuid_as_str(&mm->mm_id, ubuf));
 
   url = im->mm_iptv_url; // Workaround for silly printing error
   url_sane = im->mm_iptv_url_sane;
@@ -212,6 +214,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Create Mux */
   iptv_mux_t *im =
@@ -230,8 +233,8 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
 
   /* Services */
   c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes/%s/services",
-                          idnode_uuid_as_str(&in->mn_id),
-                          idnode_uuid_as_str(&im->mm_id));
+                          idnode_uuid_as_sstr(&in->mn_id),
+                          idnode_uuid_as_str(&im->mm_id, ubuf));
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;

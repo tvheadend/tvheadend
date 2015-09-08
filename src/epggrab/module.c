@@ -161,7 +161,7 @@ void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
     htsmsg_add_str(m, "icon", ch->icon);
   LIST_FOREACH(ecl, &ch->channels, ecl_epg_link) {
     if (!a) a = htsmsg_create_list();
-    htsmsg_add_str(a, NULL, channel_get_uuid(ecl->ecl_channel));
+    htsmsg_add_str(a, NULL, channel_get_suuid(ecl->ecl_channel));
   }
   if (a) htsmsg_add_msg(m, "channels", a);
   if (ch->major)

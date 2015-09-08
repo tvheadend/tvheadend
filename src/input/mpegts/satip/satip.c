@@ -52,7 +52,7 @@ satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
   htsmsg_add_str(msg, NULL, sd->sd_info.location);
   htsmsg_add_str(msg, NULL, sd->sd_info.server);
   htsmsg_add_s64(msg, NULL, sd->sd_info.rtsp_port);
-  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_str(&sd->th_id));
+  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_sstr(&sd->th_id));
   dbus_emit_signal(buf, sig_name, msg);
 #endif
 }
@@ -644,7 +644,7 @@ satip_device_save( satip_device_t *sd )
   htsmsg_add_msg(m, "frontends", l);
 
   hts_settings_save(m, "input/satip/adapters/%s",
-                    idnode_uuid_as_str(&sd->th_id));
+                    idnode_uuid_as_sstr(&sd->th_id));
   htsmsg_destroy(m);
 }
 

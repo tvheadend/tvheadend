@@ -508,7 +508,7 @@ bouquet_save(bouquet_t *bq, int notify)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&bq->bq_id, c);
-  hts_settings_save(c, "bouquet/%s", idnode_uuid_as_str(&bq->bq_id));
+  hts_settings_save(c, "bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
   if (bq->bq_shield)
     htsmsg_add_bool(c, "shield", 1);
   htsmsg_destroy(c);
@@ -535,7 +535,7 @@ bouquet_class_delete(idnode_t *self)
   bq->bq_enabled = 0;
   bouquet_map_to_channels(bq);
   if (!bq->bq_shield) {
-    hts_settings_remove("bouquet/%s", idnode_uuid_as_str(&bq->bq_id));
+    hts_settings_remove("bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
     bouquet_destroy(bq);
   } else {
     idnode_set_free(bq->bq_services);
@@ -702,7 +702,7 @@ bouquet_class_chtag_ref_get ( void *obj )
   bouquet_t *bq = obj;
 
   if (bq->bq_chtag_ptr)
-    buf = idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id);
+    buf = idnode_uuid_as_sstr(&bq->bq_chtag_ptr->ct_id);
   else
     buf = "";
   return &buf;
@@ -748,7 +748,7 @@ bouquet_class_services_get ( void *obj )
       htsmsg_add_s64(e, "lcn", lcn);
     if ((tag = bouquet_get_tag_number(bq, t)) != 0)
       htsmsg_add_s64(e, "tag", lcn);
-    htsmsg_add_msg(m, idnode_uuid_as_str(&t->s_id), e);
+    htsmsg_add_msg(m, idnode_uuid_as_sstr(&t->s_id), e);
   }
 
   return m;

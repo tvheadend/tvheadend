@@ -439,7 +439,7 @@ filter:
             strncmp(esf->esf_language, st->es_lang, 4))
           continue;
         if (esf->esf_service[0]) {
-          if (strcmp(esf->esf_service, idnode_uuid_as_str(&t->s_id)))
+          if (strcmp(esf->esf_service, idnode_uuid_as_sstr(&t->s_id)))
             continue;
           if (esf->esf_pid && esf->esf_pid != st->es_pid)
             continue;

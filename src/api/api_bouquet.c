@@ -36,7 +36,7 @@ api_bouquet_list
   pthread_mutex_lock(&global_lock);
   RB_FOREACH(bq, &bouquets, bq_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&bq->bq_id));
+    htsmsg_add_str(e, "key", idnode_uuid_as_sstr(&bq->bq_id));
     htsmsg_add_str(e, "val", bq->bq_name ?: "");
     htsmsg_add_msg(l, NULL, e);
   }

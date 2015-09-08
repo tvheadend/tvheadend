@@ -128,7 +128,7 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
 
   /* Save */
   hts_settings_save(m, "input/linuxdvb/adapters/%s",
-                    idnode_uuid_as_str(&la->th_id));
+                    idnode_uuid_as_sstr(&la->th_id));
   htsmsg_destroy(m);
 }
 

@@ -139,7 +139,7 @@ dvb_fs_mux_add ( mpegts_table_t *mt, mpegts_mux_t *mm, mpegts_mux_t *mux )
   char *s;
   int i;
 
-  uuid = idnode_uuid_as_str(&mux->mm_id);
+  uuid = idnode_uuid_as_sstr(&mux->mm_id);
   if (mm->mm_fastscan_muxes == NULL)
     mm->mm_fastscan_muxes = calloc(DVB_FASTSCAN_MUXES, UUID_HEX_SIZE);
   for (i = 0; i < DVB_FASTSCAN_MUXES * UUID_HEX_SIZE; i += UUID_HEX_SIZE) {

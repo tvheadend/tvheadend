@@ -109,6 +109,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   struct tm tm_start, tm_stop;
   const char *title;
   char buf[200];
+  char ubuf[UUID_HEX_SIZE];
 
   if(dte->dte_enabled == 0 || dte->dte_weekdays == 0)
     goto fail;
@@ -153,7 +154,7 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   snprintf(buf, sizeof(buf), _("Time recording%s%s"),
            dte->dte_comment ? ": " : "",
            dte->dte_comment ?: "");
-  de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id),
+  de = dvr_entry_create_(idnode_uuid_as_str(&dte->dte_config->dvr_id, ubuf),
                          NULL, dte->dte_channel,
                          start, stop, 0, 0, title, NULL,
                          NULL, NULL, NULL, dte->dte_owner, dte->dte_creator,
@@ -227,7 +228,7 @@ dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
   htsmsg_add_u32(conf, "stop",        stop);
 
   if (ch)
-    htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id));
+    htsmsg_add_str(conf, "channel", idnode_uuid_as_sstr(&ch->ch_id));
 
   int i;
   for (i = 0; i < 7; i++)
@@ -257,7 +258,7 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
   dvr_timerec_purge_spawn(dte, delconf);
 
   if (delconf)
-    hts_settings_remove("dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id));
+    hts_settings_remove("dvr/timerec/%s", idnode_uuid_as_sstr(&dte->dte_id));
 
   htsp_timerec_entry_delete(dte);
 
@@ -291,7 +292,7 @@ dvr_timerec_save(dvr_timerec_entry_t *dte)
   lock_assert(&global_lock);
 
   idnode_save(&dte->dte_id, m);
-  hts_settings_save(m, "dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id));
+  hts_settings_save(m, "dvr/timerec/%s", idnode_uuid_as_sstr(&dte->dte_id));
   htsmsg_destroy(m);
 }
 
@@ -368,7 +369,7 @@ dvr_timerec_entry_class_channel_get(void *o)
   static const char *ret;
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte->dte_channel)
-    ret = idnode_uuid_as_str(&dte->dte_channel->ch_id);
+    ret = idnode_uuid_as_sstr(&dte->dte_channel->ch_id);
   else
     ret = "";
   return &ret;
@@ -479,7 +480,7 @@ dvr_timerec_entry_class_config_name_get(void *o)
   static const char *buf;
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte->dte_config)
-    buf = idnode_uuid_as_str(&dte->dte_config->dvr_id);
+    buf = idnode_uuid_as_sstr(&dte->dte_config->dvr_id);
   else
     buf = "";
   return &buf;

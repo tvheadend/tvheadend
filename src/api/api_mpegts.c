@@ -57,7 +57,7 @@ api_mpegts_input_network_list
       char buf[256];
       htsmsg_t *e = htsmsg_create_map();
       mn = (mpegts_network_t*)is->is_array[i];
-      htsmsg_add_str(e, "key", idnode_uuid_as_str(is->is_array[i]));
+      htsmsg_add_str(e, "key", idnode_uuid_as_sstr(is->is_array[i]));
       mn->mn_display_name(mn, buf, sizeof(buf));
       htsmsg_add_str(e, "val", buf);
       htsmsg_add_msg(l, NULL, e);

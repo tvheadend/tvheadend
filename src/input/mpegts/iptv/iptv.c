@@ -433,7 +433,7 @@ iptv_network_class_delete ( idnode_t *in )
 
   /* Remove config */
   hts_settings_remove("input/iptv/networks/%s",
-                      idnode_uuid_as_str(in));
+                      idnode_uuid_as_sstr(in));
 
   /* delete */
   mpegts_network_delete(mn, 1);
@@ -515,7 +515,7 @@ iptv_network_config_save ( mpegts_network_t *mn )
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&mn->mn_id, c);
   hts_settings_save(c, "input/iptv/networks/%s/config",
-                    idnode_uuid_as_str(&mn->mn_id));
+                    idnode_uuid_as_sstr(&mn->mn_id));
   htsmsg_destroy(c);
 }
 
@@ -550,7 +550,7 @@ iptv_network_create0
 
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes",
-                                idnode_uuid_as_str(&in->mn_id)))) {
+                                idnode_uuid_as_sstr(&in->mn_id)))) {
     htsmsg_field_t *f;
     htsmsg_t *e;
     HTSMSG_FOREACH(f, c) {

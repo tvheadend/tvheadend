@@ -56,7 +56,7 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
   char buf[32];
   const char *s;
   htsmsg_add_str(m, "channelName", channel_get_name(ch));
-  htsmsg_add_str(m, "channelUuid", channel_get_uuid(ch));
+  htsmsg_add_str(m, "channelUuid", channel_get_suuid(ch));
   if ((chnum = channel_get_number(ch)) >= 0) {
     uint32_t maj = chnum / CHANNEL_SPLIT;
     uint32_t min = chnum % CHANNEL_SPLIT;
@@ -167,8 +167,8 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
   if (!access_verify2(perm, ACCESS_RECORDER) &&
       (de = dvr_entry_find_by_event(eb)) &&
       !access_verify_list(perm->aa_dvrcfgs,
-                          idnode_uuid_as_str(&de->de_config->dvr_id))) {
-    htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_str(&de->de_id));
+                          idnode_uuid_as_sstr(&de->de_config->dvr_id))) {
+    htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_sstr(&de->de_id));
     htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
   }
 

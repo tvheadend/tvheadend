@@ -198,7 +198,7 @@ tvhdhomerun_device_save( tvhdhomerun_device_t *hd )
   htsmsg_add_str(m, "fe_override", hd->hd_override_type);
 
   hts_settings_save(m, "input/tvhdhomerun/adapters/%s",
-                    idnode_uuid_as_str(&hd->th_id));
+                    idnode_uuid_as_sstr(&hd->th_id));
   htsmsg_destroy(m);
 }
 

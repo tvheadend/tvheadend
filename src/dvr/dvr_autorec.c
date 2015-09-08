@@ -260,7 +260,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
   if (start_window >= 0)
     htsmsg_add_s32(conf, "start_window", start_window);
   if (ch)
-    htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id));
+    htsmsg_add_str(conf, "channel", idnode_uuid_as_sstr(&ch->ch_id));
 
   int i;
   for (i = 0; i < 7; i++)
@@ -320,7 +320,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   dvr_autorec_purge_spawns(dae, delconf);
 
   if (delconf)
-    hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
+    hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_sstr(&dae->dae_id));
 
   htsp_autorec_entry_delete(dae);
 
@@ -368,7 +368,7 @@ dvr_autorec_save(dvr_autorec_entry_t *dae)
   lock_assert(&global_lock);
 
   idnode_save(&dae->dae_id, m);
-  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
+  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_sstr(&dae->dae_id));
   htsmsg_destroy(m);
 }
 
@@ -444,7 +444,7 @@ dvr_autorec_entry_class_channel_get(void *o)
   static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
-    ret = idnode_uuid_as_str(&dae->dae_channel->ch_id);
+    ret = idnode_uuid_as_sstr(&dae->dae_channel->ch_id);
   else
     ret = "";
   return &ret;
@@ -505,7 +505,7 @@ dvr_autorec_entry_class_tag_get(void *o)
   static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel_tag)
-    ret = idnode_uuid_as_str(&dae->dae_channel_tag->ct_id);
+    ret = idnode_uuid_as_sstr(&dae->dae_channel_tag->ct_id);
   else
     ret = "";
   return &ret;
@@ -652,7 +652,7 @@ dvr_autorec_entry_class_config_name_get(void *o)
   static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_config)
-    ret = idnode_uuid_as_str(&dae->dae_config->dvr_id);
+    ret = idnode_uuid_as_sstr(&dae->dae_config->dvr_id);
   else
     ret = "";
   return &ret;

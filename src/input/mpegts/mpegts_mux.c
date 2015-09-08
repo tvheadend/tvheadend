@@ -359,7 +359,7 @@ mpegts_mux_class_get_network_uuid ( void *ptr )
   static char buf[UUID_HEX_SIZE], *s = buf;
   mpegts_mux_t *mm = ptr;
   if (mm && mm->mm_network)
-    strcpy(buf, idnode_uuid_as_str(&mm->mm_network->mn_id) ?: "");
+    strcpy(buf, idnode_uuid_as_sstr(&mm->mm_network->mn_id) ?: "");
   else
     *buf = 0;
   return &s;

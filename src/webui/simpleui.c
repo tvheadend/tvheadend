@@ -272,7 +272,7 @@ page_simple(http_connection_t *hc,
     rstatus = val2str(de->de_sched_state, recstatustxt);
 
 
-    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_str(&de->de_id));
+    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_sstr(&de->de_id));
     
     htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
@@ -431,7 +431,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%s\">",
-	         idnode_uuid_as_str(&de->de_id));
+	         idnode_uuid_as_sstr(&de->de_id));
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:

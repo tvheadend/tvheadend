@@ -143,7 +143,7 @@ api_idnode_grid
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
     in = ins.is_array[i];
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in));
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_sstr(in));
     if (idnode_perm(in, perm, NULL))
       continue;
     idnode_read0(in, e, flist, 0, perm->aa_lang);
@@ -197,7 +197,7 @@ api_idnode_load_by_class
       /* Name/UUID only */
       if (_enum) {
         e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", idnode_uuid_as_str(in));
+        htsmsg_add_str(e, "key", idnode_uuid_as_sstr(in));
         htsmsg_add_str(e, "val", idnode_get_title(in, perm->aa_lang));
 
       /* Full record */

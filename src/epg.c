@@ -1783,7 +1783,7 @@ epg_episode_t *epg_broadcast_get_episode
   if (ebc->episode) return ebc->episode;
   if (!create) return NULL;
   snprintf(uri, sizeof(uri)-1, "tvh://channel-%s/bcast-%u/episode",
-           idnode_uuid_as_str(&ebc->channel->ch_id), ebc->id);
+           idnode_uuid_as_sstr(&ebc->channel->ch_id), ebc->id);
   if ((ee = epg_episode_find_by_uri(uri, 1, save)))
     *save |= epg_broadcast_set_episode(ebc, ee, ebc->grabber);
   return ee;
@@ -1823,7 +1823,7 @@ htsmsg_t *epg_broadcast_serialize ( epg_broadcast_t *broadcast )
   htsmsg_add_s64(m, "stop", broadcast->stop);
   htsmsg_add_str(m, "episode", broadcast->episode->uri);
   if (broadcast->channel)
-    htsmsg_add_str(m, "channel", channel_get_uuid(broadcast->channel));
+    htsmsg_add_str(m, "channel", channel_get_suuid(broadcast->channel));
   if (broadcast->dvb_eid)
     htsmsg_add_u32(m, "dvb_eid", broadcast->dvb_eid);
   if (broadcast->is_widescreen)

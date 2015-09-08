@@ -160,6 +160,8 @@ typedef struct idnode_filter_ele
 
 typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
+extern char idnode_uuid_static[UUID_HEX_SIZE];
+
 void idnode_init(void);
 void idnode_done(void);
 
@@ -169,7 +171,9 @@ int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *idc, int fla
 void idnode_unlink(idnode_t *in);
 
 uint32_t      idnode_get_short_uuid (const idnode_t *in);
-const char   *idnode_uuid_as_str  (const idnode_t *in);
+const char   *idnode_uuid_as_str  (const idnode_t *in, char *buf);
+static inline const char *idnode_uuid_as_sstr(const idnode_t *in)
+  { return idnode_uuid_as_str(in, idnode_uuid_static); }
 idnode_set_t *idnode_get_childs   (idnode_t *in);
 const char   *idnode_get_title    (idnode_t *in, const char *lang);
 int           idnode_is_leaf      (idnode_t *in);
