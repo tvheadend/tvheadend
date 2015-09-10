@@ -26,6 +26,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+
+#include <openssl/sha.h>
+
 #include "tvheadend.h"
 #include "tvh_endian.h"
 
@@ -723,4 +726,19 @@ deferred_unlink(const char *filename, const char *rootdir)
     tasklet_arm_alloc(deferred_unlink_dir_cb, du);
   }
   return 0;
+}
+
+void
+sha1_calc(uint8_t *dst,
+          const uint8_t *d1, size_t d1_len,
+          const uint8_t *d2, size_t d2_len)
+{
+  SHA_CTX shactx;
+
+  SHA1_Init(&shactx);
+  if (d1)
+    SHA1_Update(&shactx, d1, d1_len);
+  if (d2)
+    SHA1_Update(&shactx, d2, d2_len);
+  SHA1_Final(dst, &shactx);
 }

@@ -424,7 +424,7 @@ satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
 {
   uint8_t uuidbin[20];
 
-  satip_device_calc_bin_uuid(uuidbin, satip_uuid);
+  sha1_calc(uuidbin, (const uint8_t *)satip_uuid, strlen(satip_uuid), NULL, 0);
   bin2hex(uuid->hex, sizeof(uuid->hex), uuidbin, sizeof(uuidbin));
 }
 

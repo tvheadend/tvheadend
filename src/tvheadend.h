@@ -753,6 +753,8 @@ int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 
 int deferred_unlink(const char *filename, const char *rootdir);
 
+void sha1_calc(uint8_t *dst, const uint8_t *d1, size_t d1_len, const uint8_t *d2, size_t d2_len);
+
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }
   

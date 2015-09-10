@@ -580,6 +580,11 @@ main(int argc, char **argv)
   uid_t uid = -1;
   char buf[512];
   FILE *pidfile = NULL;
+  static struct {
+    pid_t pid;
+    struct timeval tv;
+    uint8_t ru[32];
+  } randseed;
   extern int dvb_bouquets_parse;
 
   main_tid = pthread_self();
@@ -960,6 +965,11 @@ main(int argc, char **argv)
   OPENSSL_config(NULL);
   SSL_load_error_strings();
   SSL_library_init();
+  /* Rand seed */
+  randseed.pid = main_tid;
+  gettimeofday(&randseed.tv, NULL);
+  uuid_random(randseed.ru, sizeof(randseed.ru));
+  RAND_seed(&randseed, sizeof(randseed));
 
   /* Initialise configuration */
   notify_init();

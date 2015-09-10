@@ -30,9 +30,6 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include <openssl/sha.h>
-#include <openssl/rand.h>
-
 #include "tvheadend.h"
 #include "access.h"
 #include "settings.h"
@@ -116,7 +113,7 @@ access_ticket_create(const char *resource, access_t *a)
 
   at = calloc(1, sizeof(access_ticket_t));
 
-  RAND_bytes(buf, 20);
+  uuid_random(buf, 20);
 
   //convert to hexstring
   for(i=0; i<sizeof(buf); i++){
@@ -1485,7 +1482,6 @@ passwd_verify_digest2(const char *username, const uint8_t *digest,
                       const uint8_t *challenge,
                       const char *username2, const char *passwd2)
 {
-  SHA_CTX shactx;
   uint8_t d[20];
 
   if (username == NULL || username[0] == '\0' ||
@@ -1496,10 +1492,7 @@ passwd_verify_digest2(const char *username, const uint8_t *digest,
   if (strcmp(username, username2))
     return -1;
 
-  SHA1_Init(&shactx);
-  SHA1_Update(&shactx, (const uint8_t *)passwd2, strlen(passwd2));
-  SHA1_Update(&shactx, challenge, 32);
-  SHA1_Final(d, &shactx);
+  sha1_calc(d, (uint8_t *)passwd2, strlen(passwd2), challenge, 32);
 
   return memcmp(d, digest, 20) ? -1 : 0;
 }
@@ -1723,18 +1716,9 @@ access_init(int createdefault, int noacl)
   access_entry_t *ae;
   const char *s;
 
-  static struct {
-    pid_t pid;
-    struct timeval tv;
-  } randseed;
-
   access_noacl = noacl;
   if (noacl)
     tvhlog(LOG_WARNING, "access", "Access control checking disabled");
-
-  randseed.pid = getpid();
-  gettimeofday(&randseed.tv, NULL);
-  RAND_seed(&randseed, sizeof(randseed));
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
