@@ -29,6 +29,30 @@
 #include "udp.h"
 #include "http.h"
 
+#define MUXCNF_AUTO   0
+#define MUXCNF_KEEP   1
+#define MUXCNF_REJECT 2
+
+struct satip_server_conf {
+  idnode_t idnode;
+  int satip_rtsp;
+  int satip_weight;
+  int satip_descramble;
+  int satip_muxcnf;
+  int satip_dvbs;
+  int satip_dvbs2;
+  int satip_dvbt;
+  int satip_dvbt2;
+  int satip_dvbc;
+  int satip_dvbc2;
+  int satip_atsc;
+  int satip_dvbcb;
+};
+
+extern struct satip_server_conf satip_server_conf;
+
+extern const idclass_t satip_server_class;
+
 void satip_rtp_queue(void *id, th_subscription_t *subs,
                      streaming_queue_t *sq,
                      struct sockaddr_storage *peer, int port,
@@ -57,10 +81,6 @@ int satip_server_http_page(http_connection_t *hc,
                            const char *remain, void *opaque);
 
 int satip_server_match_uuid(const char *uuid);
-
-void satip_server_save(void);
-htsmsg_t *satip_server_get_config(void);
-int satip_server_set_config(htsmsg_t *conf);
 
 void satip_server_init(int rtsp_port);
 void satip_server_register(void);

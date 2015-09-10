@@ -34,6 +34,8 @@ static int satip_server_rtsp_port;
 static int satip_server_rtsp_port_locked;
 static upnp_service_t *satips_upnp_discovery;
 
+static void satip_server_save(void);
+
 /*
  *
  */
@@ -527,9 +529,125 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 }
 
 /*
+ * Node Simple Class
+ */
+struct satip_server_conf satip_server_conf = {
+  .idnode.in_class = &satip_server_class
+};
+
+static void satip_server_class_save(idnode_t *self)
+{
+  htsmsg_field_t *f;
+  int64_t s64;
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(self, c);
+  HTSMSG_FOREACH(f, c) {
+    if (f->hmf_type == HMF_S64 && !htsmsg_field_get_s64(f, &s64))
+      config_set_int(f->hmf_name, s64);
+  }
+  satip_server_save();
+  htsmsg_destroy(c);
+}
+
+static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Auto"),        MUXCNF_AUTO },
+    { N_("Keep"),        MUXCNF_KEEP },
+    { N_("Reject"),      MUXCNF_REJECT }
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+const idclass_t satip_server_class = {
+  .ic_snode      = (idnode_t *)&satip_server_conf,
+  .ic_class      = "satip_server",
+  .ic_caption    = N_("SAT>IP Server"),
+  .ic_event      = "satip_server",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = satip_server_class_save,
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_INT,
+      .id     = "satip_rtsp",
+      .name   = N_("RTSP Port (554 or 9983), 0 = disable"),
+      .off    = offsetof(struct satip_server_conf, satip_rtsp),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_weight",
+      .name   = N_("Subscription Weight"),
+      .off    = offsetof(struct satip_server_conf, satip_weight),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_descramble",
+      .name   = N_("Descramble Services (Limit Per Mux)"),
+      .off    = offsetof(struct satip_server_conf, satip_descramble),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_muxcnf",
+      .name   = N_("Mux Handling"),
+      .off    = offsetof(struct satip_server_conf, satip_muxcnf),
+      .list   = satip_server_class_muxcfg_list,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbs",
+      .name   = N_("Exported DVB-S Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbs),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbs2",
+      .name   = N_("Exported DVB-S2 Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbs2),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbt",
+      .name   = N_("Exported DVB-T Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbt),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbt2",
+      .name   = N_("Exported DVB-T2 Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbt2),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbc",
+      .name   = N_("Exported DVB-C Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbc),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbc2",
+      .name   = N_("Exported DVB-C2 Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbc2),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_atsc",
+      .name   = N_("Exported ATSC Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_atsc),
+    },
+    {
+      .type   = PT_INT,
+      .id     = "satip_dvbc2",
+      .name   = N_("Exported DVB-Cable/AnnexB Tuners"),
+      .off    = offsetof(struct satip_server_conf, satip_dvbcb),
+    },
+    {}
+  },
+};
+
+/*
  *
  */
-void satip_server_save(void)
+static void satip_server_save(void)
 {
   int descramble, muxcnf;
 
@@ -554,41 +672,6 @@ void satip_server_save(void)
   }
 }
 
-htsmsg_t *satip_server_get_config(void)
-{
-  return config_get_all(1);
-}
-
-static int satip_server_set_int(htsmsg_t *conf, const char *name)
-{
-  const char *str;
-  if ((str = htsmsg_get_str(conf, name)))
-    return config_set_int(name, atoi(str));
-  return 0;
-}
-
-int satip_server_set_config(htsmsg_t *conf)
-{
-  static const char *names[] = {
-    "satip_rtsp",
-    "satip_weight",
-    "satip_descramble",
-    "satip_muxcnf",
-    "satip_dvbs",
-    "satip_dvbs2",
-    "satip_dvbt",
-    "satip_dvbt2",
-    "satip_dvbc",
-    "satip_dvbc2",
-    "satip_atsc",
-    "satip_dvbcb",
-    NULL
-  };
-  int i, save = 0;
-  for (i = 0; i < ARRAY_SIZE(names); i++)
-    save |= satip_server_set_int(conf, names[i]);
-  return save;
-}
 /*
  * Initialization
  */
@@ -632,9 +715,14 @@ void satip_server_register(void)
   char uu[UUID_HEX_SIZE + 4];
   tvh_uuid_t u;
   int save = 0;
+  htsmsg_t *msg;
 
   if (http_server_ip == NULL)
     return;
+
+  msg = config_get_all(1);
+  idnode_load(&satip_server_conf.idnode, msg);
+  htsmsg_destroy(msg);
 
   if (config_set_int("satip_rtsp", satip_server_rtsp_port))
     save = 1;

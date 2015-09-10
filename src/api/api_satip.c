@@ -25,39 +25,12 @@
 
 #if ENABLE_SATIP_SERVER
 
-static int
-api_satip_server_load
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  htsmsg_t *l;
-  pthread_mutex_lock(&global_lock);
-  *resp = htsmsg_create_map();
-  l     = htsmsg_create_list();
-  htsmsg_add_msg(l, NULL, satip_server_get_config());
-  htsmsg_add_msg(*resp, "entries", l);
-  pthread_mutex_unlock(&global_lock);
-  return 0;
-}
-
-static int
-api_satip_server_save
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  pthread_mutex_lock(&global_lock);
-  if (satip_server_set_config(args))
-    satip_server_save();
-  pthread_mutex_unlock(&global_lock);
-  *resp = htsmsg_create_map();
-  htsmsg_add_u32(*resp, "success", 1);
-  return 0;
-}
-
 void
 api_satip_server_init ( void )
 {
   static api_hook_t ah[] = {
-    { "satips/config/load", ACCESS_ADMIN, api_satip_server_load, NULL },
-    { "satips/config/save", ACCESS_ADMIN, api_satip_server_save, NULL },
+    { "satips/config/load", ACCESS_ADMIN, api_idnode_load_simple, &satip_server_conf },
+    { "satips/config/save", ACCESS_ADMIN, api_idnode_save_simple, &satip_server_conf },
     { NULL },
   };
 

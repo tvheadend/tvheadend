@@ -29,10 +29,6 @@
 #define RTP_BUFSIZE  (256*1024)
 #define RTCP_BUFSIZE (16*1024)
 
-#define MUXCNF_AUTO   0
-#define MUXCNF_KEEP   1
-#define MUXCNF_REJECT 2
-
 #define STATE_DESCRIBE 0
 #define STATE_SETUP    1
 #define STATE_PLAY     2
