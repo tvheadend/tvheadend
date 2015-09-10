@@ -585,7 +585,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     while (*s == '/')
       s++;
     j = strlen(s);
-    while (j >= 0 && s[j-1] == '/')
+    while (j > 0 && s[j-1] == '/')
       j--;
     s[j] = '\0';
     snprintf(path + l, sizeof(path) - l, "%s", s);
