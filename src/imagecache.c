@@ -451,13 +451,13 @@ imagecache_clean( void )
 #endif
 
   tvhinfo("imagecache", "clean request");
-  /* remove unassociated data*/
+  /* remove unassociated data */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data")) {
     tvherror("imagecache", "clean - buildpath");
     return;
   }
   if((n = fb_scandir(path, &namelist)) < 0)
-    return;
+    goto done;
   for (i = 0; i < n; i++) {
     name = namelist[i]->name;
     if (name[0] == '.')
@@ -471,6 +471,25 @@ imagecache_clean( void )
     hts_settings_remove("imagecache/data/%s", name);
   }
   free(namelist);
+done:
+  imagecache_trigger();
+}
+
+/*
+ * Trigger
+ */
+void
+imagecache_trigger( void )
+{
+  imagecache_image_t *img;
+
+  lock_assert(&global_lock);
+
+  tvhinfo("imagecache", "load triggered");
+  RB_FOREACH(img, &imagecache_by_url, url_link) {
+    if (img->state != IDLE) continue;
+    imagecache_image_add(img);
+  }
 }
 
 #endif /* ENABLE_IMAGECACHE */

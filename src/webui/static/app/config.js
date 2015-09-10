@@ -280,13 +280,30 @@ tvheadend.imgcacheconf = function(panel, index) {
         }
     };
 
+    var triggerButton = {
+        name: 'trigger',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Re-fetch images'),
+                iconCls: 'trigger',
+                text: _('Re-fetch images'),
+            });
+        },
+        callback: function(conf) {
+            tvheadend.Ajax({
+               url: 'api/imagecache/config/trigger',
+               params: { trigger: 1 },
+            });
+        }
+    };
+
     tvheadend.idnode_simple(panel, {
         url: 'api/imagecache/config',
         title: _('Image cache'),
         iconCls: 'imgcacheconf',
         tabIndex: index,
         comet: 'imagecache',
-        tbar: [cleanButton],
+        tbar: [cleanButton, triggerButton],
         help: function() {
             new tvheadend.help(_('General Configuration'), 'config_general.html');
         }

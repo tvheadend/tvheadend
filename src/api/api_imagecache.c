@@ -40,13 +40,29 @@ api_imagecache_clean
   return 0;
 }
 
+static int
+api_imagecache_trigger
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int b;
+  if (htsmsg_get_bool(args, "trigger", &b))
+    return EINVAL;
+  if (b) {
+    pthread_mutex_lock(&global_lock);
+    imagecache_trigger();
+    pthread_mutex_unlock(&global_lock);
+  }
+  return 0;
+}
+
 void
 api_imagecache_init ( void )
 {
   static api_hook_t ah[] = {
-    { "imagecache/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &imagecache_conf },
-    { "imagecache/config/save",  ACCESS_ADMIN, api_idnode_save_simple, &imagecache_conf },
-    { "imagecache/config/clean", ACCESS_ADMIN, api_imagecache_clean, NULL },
+    { "imagecache/config/load",    ACCESS_ADMIN, api_idnode_load_simple, &imagecache_conf },
+    { "imagecache/config/save",    ACCESS_ADMIN, api_idnode_save_simple, &imagecache_conf },
+    { "imagecache/config/clean"  , ACCESS_ADMIN, api_imagecache_clean, NULL },
+    { "imagecache/config/trigger", ACCESS_ADMIN, api_imagecache_trigger, NULL },
     { NULL },
   };
 
