@@ -237,8 +237,7 @@ api_idnode_load
 {
   int err = 0, meta, count = 0;
   idnode_t *in;
-  htsmsg_t *uuids, *l = NULL, *m;
-  htsmsg_t *flist;
+  htsmsg_t *uuids, *l = NULL, *m, *flist;
   htsmsg_field_t *f;
   const char *uuid = NULL, *class;
 
@@ -320,6 +319,52 @@ api_idnode_load
   return err;
 }
 
+int
+api_idnode_load_simple
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int err = 0, meta;
+  htsmsg_t *l = NULL, *m, *flist;
+  const char *class;
+  idnode_t *in = (idnode_t *)opaque;
+
+  /* Class based */
+  if ((class = htsmsg_get_str(args, "class"))) {
+    pthread_mutex_lock(&global_lock);
+    err = api_idnode_load_by_class0(perm, (void*)in->in_class, NULL, args, resp);
+    pthread_mutex_unlock(&global_lock);
+    return err;
+  }
+
+  /* UUIDs */
+  meta = htsmsg_get_s32_or_default(args, "meta", 0);
+
+  flist = api_idnode_flist_conf(args, "list");
+
+  pthread_mutex_lock(&global_lock);
+
+  if (!idnode_perm(in, perm, NULL)) {
+    l = htsmsg_create_list();
+    m = idnode_serialize0(in, flist, 0, perm->aa_lang);
+    if (meta > 0)
+      htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang));
+    htsmsg_add_msg(l, NULL, m);
+  } else {
+    err = EPERM;
+  }
+
+  pthread_mutex_unlock(&global_lock);
+
+  if (l) {
+    *resp = htsmsg_create_map();
+    htsmsg_add_msg(*resp, "entries", l);
+  }
+
+  htsmsg_destroy(flist);
+
+  return err;
+}
+
 static int
 api_idnode_save
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
@@ -379,6 +424,35 @@ api_idnode_save
   // TODO: return updated UUIDs?
 
 exit:
+  pthread_mutex_unlock(&global_lock);
+
+  return err;
+}
+
+int
+api_idnode_save_simple
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int err = 0;
+  htsmsg_t *msg;
+  htsmsg_field_t *f;
+  idnode_t *in = (idnode_t *)opaque;
+
+  if (!(f = htsmsg_field_find(args, "node")))
+    return EINVAL;
+  if (!(msg = htsmsg_field_get_map(f)))
+      return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+
+  /* Single */
+  if (!idnode_perm(in, perm, msg)) {
+    idnode_update(in, msg);
+    idnode_perm_unset(in);
+  } else {
+    err = EPERM;
+  }
+
   pthread_mutex_unlock(&global_lock);
 
   return err;

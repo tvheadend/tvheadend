@@ -2031,3 +2031,189 @@ tvheadend.idnode_tree = function(panel, conf)
     tvheadend.paneladd(panel, dpanel, conf.tabIndex);
     tvheadend.panelreg(panel, dpanel, builder, destroyer);
 };
+
+/*
+ * Simple Node Editor
+ */
+tvheadend.idnode_simple = function(panel, conf)
+{
+    var mpanel = null;
+    var update_cb = null;
+
+    function update() {
+        if (update_cb)
+            update_cb(1);
+    }
+
+    function builder() {
+        if (mpanel)
+            return;
+
+        if (conf.builder)
+            conf.builder(conf);
+
+        var buttons = [];
+        var abuttons = {};
+        var current = null;
+
+        /* Top bar */
+        abuttons.save = new Ext.Toolbar.Button({
+            tooltip: _('Save pending changes (marked with red border)'),
+            iconCls: 'save',
+            text: _('Save'),
+            disabled: true,
+            handler: function() {
+                var node = current.getForm().getFieldValues();
+                tvheadend.Ajax({
+                    url: conf.url + '/save',
+                    params: {
+                        node: Ext.encode(node)
+                    },
+                    success: function() {
+                        roweditor_destroy();
+                        form_load(true);
+                    }
+                });
+            }
+        });
+        buttons.push(abuttons.save);
+        abuttons.undo = new Ext.Toolbar.Button({
+            tooltip: _('Revert pending changes (marked with red border)'),
+            iconCls: 'undo',
+            text: _('Undo'),
+            disabled: true,
+            handler: function() {
+                if (current)
+                    current.getForm().reset();
+            }
+        });
+        buttons.push(abuttons.undo);
+
+        /* Extra buttons */
+        if (conf.tbar) {
+            buttons.push('-');
+            for (i = 0; i < conf.tbar.length; i++) {
+                var t = conf.tbar[i];
+                if (t.name && t.builder) {
+                    var b = t.builder();
+                    if (t.callback) {
+                        b.callback = t.callback;
+                        b.handler = function(b, e) {
+                            this.callback(this, e);
+                        }
+                    }
+                    abuttons[t.name] = b;
+                    buttons.push(b);
+                } else if (t.name)
+                    buttons.push(t.name);
+            }
+        }
+
+        /* Help */
+        if (conf.help) {
+            buttons.push('->');
+            buttons.push({
+                text: _('Help'),
+                iconCls: 'help',
+                handler: conf.help
+            });
+        }
+
+        function form_build(d) {
+
+            fpanel = new Ext.form.FormPanel({
+                //title: conf.title || null,
+                frame: true,
+                border: true,
+                bodyStyle: 'padding: 5px',
+                labelAlign: 'left',
+                labelWidth: conf.labelWidth || 300,
+                autoWidth: false,
+                autoHeight: false,
+                width: conf.nowidth ? null : (conf.width || 730),
+                defaultType: 'textfield',
+                buttonAlign: 'left',
+                autoScroll: true
+            });
+
+            tvheadend.idnode_editor_form(d.props || d.params, d.meta,
+                                         fpanel, { showpwd: conf.showpwd });
+
+            return fpanel;
+
+        }
+
+        function form_destroy() {
+            if (current)
+                mpanel.remove(current);
+            current = null;
+        }
+
+        function form_load(force) {
+            if (!force && current)
+                return;
+            var params = conf.edit ? (conf.edit.params || {}) : {};
+            params.uuid = r.id;
+            params.meta = 1;
+            tvheadend.Ajax({
+                url: conf.url + '/load',
+                params: params,
+                success: function(d) {
+                    d = json_decode(d);
+                    form_destroy();
+                    current = new form_build(d[0]);
+                    abuttons.save.setDisabled(false);
+                    abuttons.undo.setDisabled(false);
+                    if (abuttons.del)
+                      abuttons.del.setDisabled(false);
+                    mpanel.add(current);
+                    mpanel.doLayout();
+                }
+            });
+        }
+
+        var mpanel = new Ext.Panel({
+            tbar: buttons,
+            layout: 'hbox',
+            padding: 5,
+            border: false,
+            layoutConfig: {
+               align: 'stretch'
+            }
+        });
+        
+        dpanel.add(mpanel);
+        dpanel.doLayout(false, true);
+
+        if (conf.comet) {
+            update_cb = form_load;
+            tvheadend.comet.on(conf.comet, update);
+        }
+
+        form_load(true);
+    }
+
+    function destroyer() {
+        if (mpanel === null || !tvheadend.dynamic)
+            return;
+        if (conf.comet) {
+            update_cb = null;
+            tvheadend.comet.un(conf.comet, update);
+        }
+        dpanel.removeAll(true);
+        mpanel = null;
+        if (conf.destroyer)
+            conf.destroyer(conf);
+    }
+
+    var dpanel = new Ext.Panel({
+        border: false,
+        header: false,
+        layout: 'fit',
+        title: conf.title || '',
+        iconCls: conf.iconCls || ''
+    });
+
+    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
+    tvheadend.panelreg(panel, dpanel, builder, destroyer);
+};

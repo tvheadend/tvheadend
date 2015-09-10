@@ -1314,9 +1314,11 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask, const char *lang)
   const char *uuid, *s;
 
   htsmsg_t *m = htsmsg_create_map();
-  uuid = idnode_uuid_as_sstr(self);
-  htsmsg_add_str(m, "uuid", uuid);
-  htsmsg_add_str(m, "id",   uuid);
+  if (!idc->ic_snode) {
+    uuid = idnode_uuid_as_sstr(self);
+    htsmsg_add_str(m, "uuid", uuid);
+    htsmsg_add_str(m, "id",   uuid);
+  }
   htsmsg_add_str(m, "text", idnode_get_title(self, lang) ?: "");
   if ((s = idclass_get_caption(idc, lang)))
     htsmsg_add_str(m, "caption", s);
@@ -1587,8 +1589,12 @@ idnode_notify ( idnode_t *in, const char *action )
     return;
 
   while (ic) {
-    if (ic->ic_event)
-      notify_delayed(uuid, ic->ic_event, action);
+    if (ic->ic_event) {
+      if (!ic->ic_snode)
+        notify_delayed(uuid, ic->ic_event, action);
+      else
+        notify_reload(ic->ic_event);
+    }
     ic = ic->ic_super;
   }
 }

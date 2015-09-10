@@ -63,33 +63,46 @@ static RB_HEAD(,imagecache_image)     imagecache_by_url;
 SKEL_DECLARE(imagecache_skel, imagecache_image_t);
 
 #if ENABLE_IMAGECACHE
-struct imagecache_config imagecache_conf;
-static const property_t  imagecache_props[] = {
-  {
-    .type   = PT_BOOL,
-    .id     = "enabled",
-    .name   = N_("Enabled"),
-    .off    = offsetof(struct imagecache_config, enabled),
-  },
-  {
-    .type   = PT_BOOL,
-    .id     = "ignore_sslcert",
-    .name   = N_("Ignore invalid SSL certificate"),
-    .off    = offsetof(struct imagecache_config, ignore_sslcert),
-  },
-  {
-    .type   = PT_U32,
-    .id     = "ok_period",
-    .name   = N_("Re-try period"),
-    .off    = offsetof(struct imagecache_config, ok_period),
-  },
-  {
-    .type   = PT_U32,
-    .id     = "fail_period",
-    .name   = N_("Re-try period of failed images"),
-    .off    = offsetof(struct imagecache_config, fail_period),
-  },
-  {}
+struct imagecache_config imagecache_conf = {
+  .idnode.in_class = &imagecache_class,
+};
+
+static void imagecache_save(idnode_t *self);
+
+const idclass_t imagecache_class = {
+  .ic_snode      = (idnode_t *)&imagecache_conf,
+  .ic_class      = "imagecache",
+  .ic_caption    = N_("Image Cache"),
+  .ic_event      = "imagecache",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = imagecache_save,
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_BOOL,
+      .id     = "enabled",
+      .name   = N_("Enabled"),
+      .off    = offsetof(struct imagecache_config, enabled),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "ignore_sslcert",
+      .name   = N_("Ignore invalid SSL certificate"),
+      .off    = offsetof(struct imagecache_config, ignore_sslcert),
+    },
+    {
+      .type   = PT_U32,
+      .id     = "ok_period",
+      .name   = N_("Re-fetch period"),
+      .off    = offsetof(struct imagecache_config, ok_period),
+    },
+    {
+      .type   = PT_U32,
+      .id     = "fail_period",
+      .name   = N_("Re-try period (hours)"),
+      .off    = offsetof(struct imagecache_config, fail_period),
+    },
+    {}
+  }
 };
 
 static pthread_cond_t                 imagecache_cond;
@@ -319,7 +332,7 @@ imagecache_init ( void )
   /* Load settings */
 #if ENABLE_IMAGECACHE
   if ((m = hts_settings_load("imagecache/config"))) {
-    imagecache_set_config(m);
+    idnode_load(&imagecache_conf.idnode, m);
     htsmsg_destroy(m);
   }
 #endif
@@ -402,37 +415,16 @@ imagecache_done ( void )
 #if ENABLE_IMAGECACHE
 
 /*
- * Get config
- */
-htsmsg_t *
-imagecache_get_config ( void )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  prop_read_values(&imagecache_conf, imagecache_props, m, NULL, 0, NULL);
-  return m;
-}
-
-/*
- * Set config
- */
-int
-imagecache_set_config ( htsmsg_t *m )
-{
-  int save = prop_write_values(&imagecache_conf, imagecache_props, m, 0, NULL);
-  if (save)
-    pthread_cond_broadcast(&imagecache_cond);
-  return save;
-}
-
-/*
  * Save
  */
-void
-imagecache_save ( void )
+static void
+imagecache_save ( idnode_t *self )
 {
-  htsmsg_t *m = imagecache_get_config();
-  hts_settings_save(m, "imagecache/config");
-  notify_reload("imagecache");
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&imagecache_conf.idnode, c);
+  hts_settings_save(c, "imagecache/config");
+  htsmsg_destroy(c);
+  pthread_cond_broadcast(&imagecache_cond);
 }
 
 /*

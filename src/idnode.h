@@ -64,6 +64,7 @@ struct idclass {
   const property_t       *ic_properties;   ///< Property list
   const char             *ic_event;        ///< Events to fire on add/delete/title
   uint32_t                ic_perm_def;     ///< Default permissions
+  idnode_t               *ic_snode;        ///< Simple node
 
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs) (idnode_t *self);

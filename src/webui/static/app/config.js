@@ -263,107 +263,35 @@ tvheadend.imgcacheconf = function(panel, index) {
     if (tvheadend.capabilities.indexOf('imagecache') === -1)
         return;
 
-    var imagecache_reader = new Ext.data.JsonReader({root: 'entries'},
-        [ 'enabled', 'ok_period', 'fail_period', 'ignore_sslcert' ]);
+    var cleanButton = {
+        name: 'clean',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Clean image cache on storage'),
+                iconCls: 'clean',
+                text: _('Clean image (icon) cache')
+            });
+        },
+        callback: function(conf) {
+            tvheadend.Ajax({
+               url: 'api/imagecache/config/clean',
+               params: { clean: 1 },
+            });
+        }
+    };
 
-    var imagecacheEnabled = new Ext.ux.form.XCheckbox({
-        name: 'enabled',
-        fieldLabel: _('Enabled')
-    });
-
-    var imagecacheOkPeriod = new Ext.form.NumberField({
-        name: 'ok_period',
-        fieldLabel: _('Re-fetch period (hours)')
-    });
-
-    var imagecacheFailPeriod = new Ext.form.NumberField({
-        name: 'fail_period',
-        fieldLabel: _('Re-try period (hours)')
-    });
-
-    var imagecacheIgnoreSSLCert = new Ext.ux.form.XCheckbox({
-        name: 'ignore_sslcert',
-        fieldLabel: _('Ignore invalid SSL certificate')
-    });
-
-    var imagecachePanel = new Ext.form.FieldSet({
-        title: _('Image Caching'),
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items: [imagecacheEnabled, imagecacheOkPeriod, imagecacheFailPeriod,
-            imagecacheIgnoreSSLCert]
-    });
-
-    var imagecache_form = new Ext.form.FormPanel({
-        border: false,
-        labelAlign: 'left',
-        labelWidth: 300,
-        waitMsgTarget: true,
-        reader: imagecache_reader,
-        layout: 'form',
-        defaultType: 'textfield',
-        autoHeight: true,
-        items: [imagecachePanel]
-    });
-
-    var saveButton = new Ext.Button({
-        text: _("Save configuration"),
-        tooltip: _('Save changes made to configuration below'),
-        iconCls: 'save',
-        handler: saveChanges
-    });
-
-    var imagecacheButton = new Ext.Button({
-        text: _("Clean image (icon) cache"),
-        tooltip: _('Clean image cache on storage'),
-        iconCls: 'clean',
-        handler: cleanImagecache
-    });
-
-    var _tbar = [saveButton, '-', imagecacheButton];
-
-    var mpanel = new Ext.Panel({
+    tvheadend.idnode_simple(panel, {
+        url: 'api/imagecache/config',
         title: _('Image cache'),
         iconCls: 'imgcacheconf',
-        border: false,
-        autoScroll: true,
-        bodyStyle: 'padding:15px',
-        layout: 'form',
-        items: [imagecache_form],
-        tbar: _tbar
+        tabIndex: index,
+        comet: 'imagecache',
+        tbar: [cleanButton],
+        help: function() {
+            new tvheadend.help(_('General Configuration'), 'config_general.html');
+        }
     });
 
-    tvheadend.paneladd(panel, mpanel, index);
-
-    mpanel.on('render', function() {
-        imagecache_form.getForm().load({
-            url: 'api/imagecache/config/load',
-            success: function(form, action) {
-                imagecache_form.enable();
-            },
-            failure: function(form, action) {
-                alert(_("FAILED"));
-            }
-        });
-    });
-
-    function saveChanges(params) {
-        if (imagecache_form)
-            imagecache_form.getForm().submit({
-                url: 'api/imagecache/config/save',
-                params: params || {},
-                waitMsg: _('Saving data...'),
-                failure: function(form, action) {
-                    Ext.Msg.alert(_('Imagecache save failed'), action.result.errormsg);
-                }
-            });
-    }
-
-    function cleanImagecache() {
-        saveChanges({'clean': 1});
-    }
 };
 
 /*
