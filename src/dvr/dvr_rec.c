@@ -583,7 +583,9 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       strcpy(filename, dirsep + 1);
     else
       strcpy(filename, path + l);
-    htsstr_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
+    //htsstr_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
+    strncpy(ptmp, de->de_directory, sizeof(ptmp));
+
     s = ptmp;
     while (*s == '/')
       s++;
