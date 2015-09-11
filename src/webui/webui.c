@@ -81,8 +81,14 @@ static int webui_xspf;
 static int
 http_channel_playlist_cmp(const void *a, const void *b)
 {
+  int r;
   channel_t *c1 = *(channel_t **)a, *c2 = *(channel_t **)b;
-  int r = channel_get_number(c1) - channel_get_number(c2);
+  if (channel_get_number(c1) > channel_get_number(c2))
+    r = 1;
+  else if (channel_get_number(c1) < channel_get_number(c2))
+    r = -1;
+  else
+    r = 0;
   if (r == 0)
     r = strcasecmp(channel_get_name(c1), channel_get_name(c2));
   return r;
