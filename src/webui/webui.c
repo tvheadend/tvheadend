@@ -83,13 +83,12 @@ http_channel_playlist_cmp(const void *a, const void *b)
 {
   int r;
   channel_t *c1 = *(channel_t **)a, *c2 = *(channel_t **)b;
-  if (channel_get_number(c1) > channel_get_number(c2))
+  int64_t n1 = channel_get_number(c1), n2 = channel_get_number(c2);
+  if (n1 > n2)
     r = 1;
-  else if (channel_get_number(c1) < channel_get_number(c2))
+  else if (n1 < n2)
     r = -1;
   else
-    r = 0;
-  if (r == 0)
     r = strcasecmp(channel_get_name(c1), channel_get_name(c2));
   return r;
 }
