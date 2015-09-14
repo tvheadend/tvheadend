@@ -24,73 +24,22 @@ tvheadend.config_languages = new Ext.data.JsonStore({
 
 tvheadend.languages.setDefaultSort('name', 'ASC');
 
+/*
 tvheadend.comet.on('config', function(m) {
     if (m.reload != null) {
         tvheadend.languages.reload();
         tvheadend.config_languages.reload();
     }
 });
+*/
+
+/*
+ * Base configuration
+ */
 
 tvheadend.baseconf = function(panel, index) {
 
-    /*
-    * Base Config
-    */
-
-    var confreader = new Ext.data.JsonReader({
-        root: 'config'
-    },
-    [
-        'server_name', 'muxconfpath', 'language',
-        'tvhtime_update_enabled', 'tvhtime_ntp_enabled',
-        'tvhtime_tolerance',
-        'prefer_picon', 'chiconpath', 'piconpath',
-    ]);
-
-    /* ****************************************************************
-    * Form Fields
-    * ***************************************************************/
-
-    /*
-    * DVB path
-    */
-
-    var serverName = new Ext.form.TextField({
-        fieldLabel: _('Tvheadend server name'),
-        name: 'server_name',
-        allowBlank: true,
-        width: 400
-    });
-
-    var serverWrap = new Ext.form.FieldSet({
-        title: _('Server'),
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items : [ serverName ]
-    });
-
-    var dvbscanPath = new Ext.form.TextField({
-        fieldLabel: _('DVB scan files path'),
-        name: 'muxconfpath',
-        allowBlank: true,
-        width: 400
-    });
-
-    var dvbscanWrap = new Ext.form.FieldSet({
-        title: _('DVB Scan Files'),
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items : [ dvbscanPath ]
-    });
-
-    /*
-    * Language
-    */
-
+/*
     var language = new Ext.ux.ItemSelector({
         name: 'language',
         fromStore: tvheadend.languages,
@@ -105,153 +54,20 @@ tvheadend.baseconf = function(panel, index) {
         toLegend: _('Selected'),
         fromLegend: _('Available')
     });
+*/
 
-    var languageWrap = new Ext.form.FieldSet({
-        title: _('Language Settings'),
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items : [ language ]
-    });
-
-    /*
-    * Time/Date
-    */
-
-    var tvhtimeUpdateEnabled = new Ext.ux.form.XCheckbox({
-        name: 'tvhtime_update_enabled',
-        fieldLabel: _('Update time')
-    });
-
-    var tvhtimeNtpEnabled = new Ext.ux.form.XCheckbox({
-        name: 'tvhtime_ntp_enabled',
-        fieldLabel: _('Enable NTP driver')
-    });
-
-    var tvhtimeTolerance = new Ext.form.NumberField({
-        name: 'tvhtime_tolerance',
-        fieldLabel: _('Update tolerance (ms)')
-    });
-
-    var tvhtimePanel = new Ext.form.FieldSet({
-        title: _('Time Update'),
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items: [tvhtimeUpdateEnabled, tvhtimeNtpEnabled, tvhtimeTolerance]
-    });
-
-    /*
-    * Picons
-    */
-
-    var preferPicon = new Ext.ux.form.XCheckbox({
-        name: 'prefer_picon',
-        fieldLabel: _('Prefer picons over channel name')
-    });
-
-    var chiconPath = new Ext.form.TextField({
-        name: 'chiconpath',
-        fieldLabel: _('Channel icon path (see Help)'),
-        width: 400
-    });
-
-    var piconPath = new Ext.form.TextField({
-        name: 'piconpath',
-        fieldLabel: _('Picon path (see Help)'),
-        width: 400
-    });
-
-    var piconPanel = new Ext.form.FieldSet({
-        title: _('Picon'),
-        width: 700,
-        autoHeight: true,
-        collapsible: true,
-        animCollapse: true,
-        items: [preferPicon, chiconPath, piconPath]
-    });
-
-    /*
-    * SAT>IP server
-    */
-
-
-    /* ****************************************************************
-    * Form
-    * ***************************************************************/
-
-    var saveButton = new Ext.Button({
-        text: _("Save configuration"),
-        tooltip: _('Save changes made to configuration below'),
-        iconCls: 'save',
-        handler: saveChanges
-    });
-
-    var helpButton = new Ext.Button({
-        text: _('Help'),
-        iconCls: 'help',
-        handler: function() {
+    tvheadend.idnode_simple(panel, {
+        url: 'api/config',
+        title: _('Base'),
+        iconCls: 'baseconf',
+        tabIndex: index,
+        comet: 'config',
+        labelWidth: 250,
+        help: function() {
             new tvheadend.help(_('General Configuration'), 'config_general.html');
         }
     });
 
-    var _items = [serverWrap, languageWrap, dvbscanWrap, tvhtimePanel, piconPanel];
-
-    var confpanel = new Ext.form.FormPanel({
-        labelAlign: 'left',
-        labelWidth: 200,
-        border: false,
-        waitMsgTarget: true,
-        reader: confreader,
-        layout: 'form',
-        defaultType: 'textfield',
-        autoHeight: true,
-        items: _items
-    });
-
-    var mpanel = new Ext.Panel({
-        title: _('Base'),
-        iconCls: 'baseconf',
-        border: false,
-        autoScroll: true,
-        bodyStyle: 'padding:15px',
-        layout: 'form',
-        items: [confpanel],
-        tbar: [saveButton, '->', helpButton]
-    });
-
-    tvheadend.paneladd(panel, mpanel, index);
-
-    /* ****************************************************************
-    * Load/Save
-    * ***************************************************************/
-
-    confpanel.on('render', function() {
-        confpanel.getForm().load({
-            url: 'config',
-            params: {
-                op: 'loadSettings'
-            },
-            success: function(form, action) {
-                confpanel.enable();
-            }
-        });
-    });
-
-    function saveChanges() {
-        confpanel.getForm().submit({
-            url: 'config',
-            params: {
-                op: 'saveSettings'
-            },
-            waitMsg: _('Saving Data...'),
-            failure: function(form, action) {
-                Ext.Msg.alert(_('Save failed'), action.result.errormsg);
-            }
-        });
-    }
 };
 
 /*

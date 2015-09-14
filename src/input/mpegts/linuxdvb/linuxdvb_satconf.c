@@ -1064,7 +1064,7 @@ linuxdvb_satconf_ele_class_network_rend( void *o, const char *lang )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   htsmsg_t               *l   = idnode_set_as_htsmsg(ls->lse_networks);
-  char                   *str = htsmsg_list_2_csv(l);
+  char                   *str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }

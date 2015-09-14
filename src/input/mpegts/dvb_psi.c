@@ -28,6 +28,7 @@
 #include "fastscan.h"
 #include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
+#include "config.h"
 #include "tvhtime.h"
 
 #include <assert.h>
@@ -2447,7 +2448,7 @@ psi_tables_dvb ( mpegts_mux_t *mm )
                    DVB_SDT_PID, MPS_WEIGHT_SDT);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                    NULL, "bat", MT_CRC, DVB_BAT_PID, MPS_WEIGHT_BAT);
-  if (tvhtime_update_enabled) {
+  if (config.tvhtime_update_enabled) {
     mpegts_table_add(mm, DVB_TDT_BASE, DVB_TDT_MASK, dvb_tdt_callback,
                      NULL, "tdt", MT_ONESHOT | MT_QUICKREQ | MT_RECORD,
                      DVB_TDT_PID, MPS_WEIGHT_TDT);

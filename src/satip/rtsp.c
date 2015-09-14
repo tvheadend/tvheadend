@@ -90,49 +90,49 @@ rtsp_delsys(int fe, int *findex)
   if (fe < 1)
     return DVB_SYS_NONE;
   pthread_mutex_lock(&global_lock);
-  i = config_get_int("satip_dvbs", 0);
+  i = satip_server_conf.satip_dvbs;
   if (fe <= i) {
     res = DVB_SYS_DVBS;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbs2", 0);
+  i = satip_server_conf.satip_dvbs2;
   if (fe <= i) {
     res = DVB_SYS_DVBS;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbt", 0);
+  i = satip_server_conf.satip_dvbt;
   if (fe <= i) {
     res = DVB_SYS_DVBT;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbt2", 0);
+  i = satip_server_conf.satip_dvbt2;
   if (fe <= i) {
     res = DVB_SYS_DVBT;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbc", 0);
+  i = satip_server_conf.satip_dvbc;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbc2", 0);
+  i = satip_server_conf.satip_dvbc2;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_atsc", 0);
+  i = satip_server_conf.satip_atsc;
   if (fe <= i) {
     res = DVB_SYS_ATSC;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbcb", 0);
+  i = satip_server_conf.satip_dvbcb;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_B;
     goto result;
@@ -508,7 +508,7 @@ rtsp_start
     if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize, 0))
       goto endclean;
     rs->subs = subscription_create_from_mux(&rs->prch, NULL,
-                                   config_get_int("satip_weight", 100),
+                                   satip_server_conf.satip_weight,
                                    "SAT>IP",
                                    rs->prch.prch_flags |
                                    SUBSCRIPTION_STREAMING,
@@ -1129,12 +1129,12 @@ rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
 
   pthread_mutex_lock(&global_lock);
   htsbuf_qprintf(q, "s=SatIPServer:1 %d",
-                 config_get_int("satip_dvbs", 0) +
-                 config_get_int("satip_dvbs2", 0));
-  dvbt = config_get_int("satip_dvbt", 0) +
-         config_get_int("satip_dvbt2", 0);
-  dvbc = config_get_int("satip_dvbc", 0) +
-         config_get_int("satip_dvbc2", 0);
+                 satip_server_conf.satip_dvbs +
+                 satip_server_conf.satip_dvbs2);
+  dvbt = satip_server_conf.satip_dvbt +
+         satip_server_conf.satip_dvbt2;
+  dvbc = satip_server_conf.satip_dvbc +
+         satip_server_conf.satip_dvbc2;
   if (dvbc)
     htsbuf_qprintf(q, " %d %d\r\n", dvbt, dvbc);
   else if (dvbt)

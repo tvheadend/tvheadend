@@ -950,12 +950,13 @@ htsmsg_get_cdata(htsmsg_t *m, const char *field)
  * Note: this will NOT work for lists of complex types
  */
 char *
-htsmsg_list_2_csv(htsmsg_t *m)
+htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
 {
   int alloc, used, first = 1;
   char *ret;
   htsmsg_field_t *f;
-  const char *sep = ", ";
+  char sep[3];
+  const char *ssep;
   if (!m->hm_islist) return NULL;
 
 #define MAX(a,b) ((a) < (b)) ? (a) : (b)
@@ -968,15 +969,25 @@ htsmsg_list_2_csv(htsmsg_t *m)
   ret  = malloc(alloc = 512);
   *ret = 0;
   used = 0;
+  if (human) {
+    sep[0] = delim;
+    sep[1] = ' ';
+    sep[2] = '\0';
+    ssep = "\"";
+  } else {
+    sep[0] = delim;
+    sep[1] = '\0';
+    ssep = "";
+  }
   HTSMSG_FOREACH(f, m) {
     if (f->hmf_type == HMF_STR) {
-      REALLOC(2 + strlen(f->hmf_str));
-      used += sprintf(ret+used, "%s%s", !first ? sep : "", f->hmf_str);
+      REALLOC(4 + strlen(f->hmf_str));
+      used += sprintf(ret+used, "%s%s%s%s", !first ? sep : "", ssep, f->hmf_str, ssep);
     } else if (f->hmf_type == HMF_S64) {
       REALLOC(34); // max length is actually 20 chars + 2
       used += sprintf(ret+used, "%s%"PRId64, !first ? sep : "", f->hmf_s64);
     } else if (f->hmf_type == HMF_BOOL) {
-      REALLOC(2); // max length is actually 20 chars + 2
+      REALLOC(12); // max length is actually 10 chars + 2
       used += sprintf(ret+used, "%s%d", !first ? sep : "", f->hmf_bool);
     } else {
       // TODO: handle doubles
@@ -987,4 +998,36 @@ htsmsg_list_2_csv(htsmsg_t *m)
   }
 
   return ret;
+}
+
+htsmsg_t *
+htsmsg_csv_2_list(const char *str, char delim)
+{
+  char *tokbuf, *tok, *saveptr = NULL, *p;
+  const char d[2] = { delim, '\0' };
+  htsmsg_t *m = htsmsg_create_list();
+
+  if (str) {
+    tokbuf = strdup(str);
+    tok = strtok_r(tokbuf, d, &saveptr);
+    while (tok) {
+      if (tok[0] == '"') {
+        p = ++tok;
+        while (*p && *p != '"') {
+          if (*p == '\\') {
+            p++;
+            if (*p)
+              p++;
+            continue;
+          }
+          p++;
+        }
+        *p = '\0';
+      }
+      htsmsg_add_str(m, NULL, tok);
+      tok = strtok_r(NULL, ",", &saveptr);
+    }
+    free(tokbuf);
+  }
+  return m;
 }

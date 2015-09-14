@@ -478,6 +478,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "hexa", 1);
   if (opts & PO_DATE)
     htsmsg_add_bool(m, "date", 1);
+  if (opts & PO_LORDER)
+    htsmsg_add_bool(m, "lorder", 1);
 
   /* Enum list */
   if (pl->list)

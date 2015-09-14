@@ -710,7 +710,7 @@ scanfile_stats(const char *what, scanfile_region_list_t *list)
 void
 scanfile_init ( void )
 {
-  const char *path = config_get_muxconfpath();
+  const char *path = config.muxconf_path;
   int r = 0;
   if (!path || !*path)
 #if ENABLE_DVBSCAN

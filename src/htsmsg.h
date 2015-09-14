@@ -396,4 +396,6 @@ htsmsg_t *htsmsg_get_map_by_field_if_name(htsmsg_field_t *f, const char *name);
 
 const char *htsmsg_get_cdata(htsmsg_t *m, const char *field);
 
-char *htsmsg_list_2_csv(htsmsg_t *m);
+char *htsmsg_list_2_csv(htsmsg_t *m, char delim, int human);
+
+htsmsg_t *htsmsg_csv_2_list(const char *str, char delim);

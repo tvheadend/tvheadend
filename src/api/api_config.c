@@ -1,7 +1,7 @@
 /*
- *  TVheadend - time processing
+ *  API - SAT>IP Server related calls
  *
- *  Copyright (C) 2013 Adam Sutton
+ *  Copyright (C) 2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -9,7 +9,7 @@
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY; withm even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
@@ -17,12 +17,20 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TVH_TIME_H__
-#define __TVH_TIME_H__
+#include "tvheadend.h"
+#include "channels.h"
+#include "access.h"
+#include "api.h"
+#include "config.h"
 
-#include "idnode.h"
+void
+api_config_init ( void )
+{
+  static api_hook_t ah[] = {
+    { "config/load", ACCESS_ADMIN, api_idnode_load_simple, &config },
+    { "config/save", ACCESS_ADMIN, api_idnode_save_simple, &config },
+    { NULL },
+  };
 
-void tvhtime_init ( void );
-void tvhtime_update ( time_t utc, const char *srcname );
-
-#endif /* __TVH_TIME_H__ */
+  api_register_all(ah);
+}

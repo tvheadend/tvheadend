@@ -120,6 +120,50 @@ tvheadend.idnode_enum_store = function(f)
     return store;
 };
 
+tvheadend.idnode_enum_select_store = function(conf, st, to=false)
+{
+  var r = new Ext.data.JsonStore({
+      id: 'key',
+      fields: ['key', 'val'],
+      data: []
+  });
+
+  function changed_from(st) {
+      r.loadData([], false); /* remove all data */
+      if (conf.value) {
+          st.each(function(rec) {
+              if (conf.value.indexOf(rec.id) < 0) {
+                  var nrec = new r.recordType({key: rec.data.key, val: rec.data.val});
+                  nrec.id = rec.id;
+                  r.add(nrec);
+              }
+          });
+      }
+  }
+
+  function changed_to(st) {
+      r.loadData([], false); /* remove all data */
+      for (var i = 0; i < conf.value.length; i++) {
+          var rec = st.getById(conf.value[i]);
+          if (rec) {
+              var nrec = new r.recordType({key: rec.data.key, val: rec.data.val});
+              nrec.id = rec.id;
+              r.add(nrec);
+          }
+      }
+  }
+
+  if (to) {
+    st.on('load', changed_to);
+    changed_to(st);
+  } else {
+    st.on('load', changed_from);
+    changed_from(st);
+  }
+
+  return r;
+}
+
 tvheadend.idnode_filter_fields = function(d, list)
 {
     if (!list)
@@ -203,10 +247,15 @@ tvheadend.IdNodeField = function(conf)
     this.intsplit = conf.intsplit;
     this.hexa = conf.hexa;
     this.group = conf.group;
+    this.lorder = config.lorder;
     this['enum'] = conf['enum'];
     this.store = null;
     if (this['enum'])
         this.store = tvheadend.idnode_enum_store(this);
+    if (this.lorder) {
+        this.fromstore = tvheadend.idnode_enum_select_store(this, this.store, false);
+        this.tostore = tvheadend.idnode_enum_select_store(this, this.store, true);
+    }
     this.ordered = false;
 
     /*
@@ -365,23 +414,39 @@ tvheadend.IdNodeField = function(conf)
         
         /* ComboBox */
         if (this['enum']) {
-            cons = Ext.form.ComboBox;
-            if (this.list) {
-                cons = Ext.ux.form.LovCombo;
-                c['checkField'] = 'checked_' + this.id;
-            }
 
-            /* Combo settings */
-            c['mode'] = 'local';
             c['valueField'] = 'key';
             c['displayField'] = 'val';
-            c['store'] = this.store;
-            c['typeAhead'] = true;
-            c['forceSelection'] = false;
-            c['triggerAction'] = 'all';
-            c['emptyText'] = _('Select {0} ...').replace('{0}', this.text);
-            
-            combo = true;
+
+            if (this.list && this.lorder) {
+
+                cons = Ext.ux.ItemSelector;
+                c['fromStore'] = this.fromstore;
+                c['toStore'] = this.tostore;
+                c['fromSortField'] = 'val';
+                c['dataFields'] = ['key', 'val'];
+                c['msHeight'] =  150;
+                c['imagePath'] = 'static/multiselect/resources',
+                c['toLegend'] = _('Selected');
+                c['fromLegend'] = _('Available');
+
+            } else {
+                cons = Ext.form.ComboBox;
+                if (this.list) {
+                    cons = Ext.ux.form.LovCombo;
+                    c['checkField'] = 'checked_' + this.id;
+                }
+
+                /* Combo settings */
+                c['mode'] = 'local';
+                c['store'] = this.store;
+                c['typeAhead'] = true;
+                c['forceSelection'] = false;
+                c['triggerAction'] = 'all';
+                c['emptyText'] = _('Select {0} ...').replace('{0}', this.text);
+                
+                combo = true;
+            }
 
             /* Single */
         } else {
@@ -507,8 +572,30 @@ tvheadend.idnode_editor_field = function(f, conf)
     if (value == null)
         value = f['default'];
 
+    /* Ordered list */
+    if (f['enum'] && f.lorder) {
+
+        var st = tvheadend.idnode_enum_store(f);
+        var fromst = tvheadend.idnode_enum_select_store(f, st, false);
+        var tost = tvheadend.idnode_enum_select_store(f, st, true);
+        return new Ext.ux.ItemSelector({
+            name: f.id,
+            fromStore: fromst,
+            toStore: tost,
+            fromSortField: 'val',
+            fieldLabel: f.caption,
+            dataFields: ['key', 'val'],
+            msWidth: 205,
+            msHeight: 150,
+            valueField: 'key',
+            displayField: 'val',
+            imagePath: 'static/multiselect/resources',
+            toLegend: _('Selected'),
+            fromLegend: _('Available')
+        });
+
     /* Enumerated (combobox) type */
-    if (f['enum']) {
+    } else if (f['enum']) {
         var cons = Ext.form.ComboBox;
         if (f.list)
             cons = Ext.ux.form.LovCombo;
@@ -2070,7 +2157,6 @@ tvheadend.idnode_simple = function(panel, conf)
                         node: Ext.encode(node)
                     },
                     success: function() {
-                        roweditor_destroy();
                         form_load(true);
                     }
                 });

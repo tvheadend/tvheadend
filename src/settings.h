@@ -19,8 +19,9 @@
 #ifndef HTSSETTINGS_H__
 #define HTSSETTINGS_H__
 
-#include "htsmsg.h"
 #include <stdarg.h>
+
+#include "htsmsg.h"
 
 void hts_settings_init(const char *confpath);
 

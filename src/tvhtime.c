@@ -11,15 +11,11 @@
 
 #include "tvhtime.h"
 #include "tvheadend.h"
-#include "settings.h"
+#include "config.h"
 
 #if !ENABLE_ANDROID
 #include <sys/shm.h>
 #endif
-
-uint32_t tvhtime_update_enabled;
-uint32_t tvhtime_ntp_enabled;
-uint32_t tvhtime_tolerance;
 
 /*
  * NTP processing
@@ -105,8 +101,8 @@ tvhtime_update ( time_t utc, const char *srcname )
   t2 = tv.tv_sec * 1000000 + tv.tv_usec;
 
   /* Update local clock */
-  if (tvhtime_update_enabled) {
-    if ((diff = llabs(t2 - t1)) > tvhtime_tolerance) {
+  if (config.tvhtime_update_enabled) {
+    if ((diff = llabs(t2 - t1)) > config.tvhtime_tolerance) {
 #if ENABLE_STIME
       if (stime(&utc) < 0)
         tvherror("time", "%s - unable to update system time: %s", srcname, strerror(errno));
@@ -121,7 +117,7 @@ tvhtime_update ( time_t utc, const char *srcname )
   }
 
   /* NTP */
-  if (tvhtime_ntp_enabled) {
+  if (config.tvhtime_ntp_enabled) {
     if (!(ntp_shm = ntp_shm_init()))
       return;
 
@@ -141,46 +137,6 @@ tvhtime_update ( time_t utc, const char *srcname )
 /* Initialise */
 void tvhtime_init ( void )
 {
-  htsmsg_t *m = hts_settings_load("tvhtime/config");
-  if (htsmsg_get_u32(m, "update_enabled", &tvhtime_update_enabled))
-    tvhtime_update_enabled = 0;
-  if (htsmsg_get_u32(m, "ntp_enabled", &tvhtime_ntp_enabled))
-    tvhtime_ntp_enabled = 0;
-  if (htsmsg_get_u32(m, "tolerance", &tvhtime_tolerance))
-    tvhtime_tolerance = 5000;
-  htsmsg_destroy(m);
-}
-
-static void tvhtime_save ( void )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_u32(m, "update_enabled", tvhtime_update_enabled);
-  htsmsg_add_u32(m, "ntp_enabled", tvhtime_ntp_enabled);
-  htsmsg_add_u32(m, "tolerance", tvhtime_tolerance);
-  hts_settings_save(m, "tvhtime/config");
-  htsmsg_destroy(m);
-}
-
-void tvhtime_set_update_enabled ( uint32_t on )
-{
-  if (tvhtime_update_enabled == on)
-    return;
-  tvhtime_update_enabled = on;
-  tvhtime_save();
-}
-
-void tvhtime_set_ntp_enabled ( uint32_t on )
-{
-  if (tvhtime_ntp_enabled == on)
-    return;
-  tvhtime_ntp_enabled = on;
-  tvhtime_save();
-}
-
-void tvhtime_set_tolerance ( uint32_t v )
-{
-  if (tvhtime_tolerance == v)
-    return;
-  tvhtime_tolerance = v;
-  tvhtime_save();
+  if (config.tvhtime_tolerance == 0)
+    config.tvhtime_tolerance = 5000;
 }

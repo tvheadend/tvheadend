@@ -119,7 +119,7 @@ mpegts_input_class_network_rend ( void *obj, const char *lang )
   LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
     htsmsg_add_str(l, NULL, idnode_get_title(&mnl->mnl_network->mn_id, lang));
 
-  str = htsmsg_list_2_csv(l);
+  str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
 
   return str;

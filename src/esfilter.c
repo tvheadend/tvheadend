@@ -277,7 +277,7 @@ esfilter_class_type_rend (void *o, const char *lang)
       htsmsg_add_str(l, NULL, streaming_component_type2txt(i));
   }
 
-  str = htsmsg_list_2_csv(l);
+  str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }

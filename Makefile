@@ -193,6 +193,7 @@ I18N-C += $(SRCS-SATIP-SERVER)
 
 SRCS-2 = \
 	src/api.c \
+	src/api/api_config.c \
 	src/api/api_status.c \
 	src/api/api_idnode.c \
 	src/api/api_input.c \

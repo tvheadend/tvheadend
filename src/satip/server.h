@@ -35,6 +35,8 @@
 
 struct satip_server_conf {
   idnode_t idnode;
+  int satip_deviceid;
+  char *satip_uuid;
   int satip_rtsp;
   int satip_weight;
   int satip_descramble;

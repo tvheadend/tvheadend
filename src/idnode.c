@@ -331,7 +331,7 @@ idnode_get_display
     else if (p->islist) {
       htsmsg_t *l = (htsmsg_t*)p->get(self);
       if (l)
-        return htsmsg_list_2_csv(l);
+        return htsmsg_list_2_csv(l, ',', 1);
     } else if (p->list) {
       htsmsg_t *l = p->list(self, lang), *m;
       htsmsg_field_t *f;
@@ -1472,7 +1472,7 @@ idnode_list_get_csv1
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
     htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2, lang));
 
-  str = htsmsg_list_2_csv(l);
+  str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }
@@ -1488,7 +1488,7 @@ idnode_list_get_csv2
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
     htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1, lang));
 
-  str = htsmsg_list_2_csv(l);
+  str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }

@@ -57,6 +57,7 @@ typedef enum {
 #define PO_HEXA     0x0200  // Hexadecimal value
 #define PO_DATE     0x0400  // Show date only
 #define PO_LOCALE   0x0800  // Call tvh_locale_lang on string
+#define PO_LORDER   0x1000  // Manage order in lists
 
 /*
  * Property definition
