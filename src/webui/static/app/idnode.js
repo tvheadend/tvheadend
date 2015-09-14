@@ -247,7 +247,7 @@ tvheadend.IdNodeField = function(conf)
     this.intsplit = conf.intsplit;
     this.hexa = conf.hexa;
     this.group = conf.group;
-    this.lorder = config.lorder;
+    this.lorder = conf.lorder;
     this['enum'] = conf['enum'];
     this.store = null;
     if (this['enum'])
