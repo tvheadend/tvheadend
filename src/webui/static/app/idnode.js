@@ -120,7 +120,7 @@ tvheadend.idnode_enum_store = function(f)
     return store;
 };
 
-tvheadend.idnode_enum_select_store = function(conf, st, to=false)
+tvheadend.idnode_enum_select_store = function(conf, st, to)
 {
   var r = new Ext.data.JsonStore({
       id: 'key',
