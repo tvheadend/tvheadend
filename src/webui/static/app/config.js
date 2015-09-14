@@ -119,6 +119,8 @@ tvheadend.imgcacheconf = function(panel, index) {
         iconCls: 'imgcacheconf',
         tabIndex: index,
         comet: 'imagecache',
+        width: 550,
+        labelWidth: 200,
         tbar: [cleanButton, triggerButton],
         help: function() {
             new tvheadend.help(_('General Configuration'), 'config_general.html');
@@ -159,6 +161,8 @@ tvheadend.satipsrvconf = function(panel, index) {
         iconCls: 'satipsrvconf',
         tabIndex: index,
         comet: 'satip_server',
+        width: 600,
+        labelWidth: 250,
         tbar: [discoverButton],
         help: function() {
             new tvheadend.help(_('SAT>IP Server Configuration'), 'config_satips.html');

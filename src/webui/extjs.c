@@ -580,7 +580,6 @@ extjs_start(void)
   http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
   http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
-  http_path_add("/config",           NULL, extjs_config,           ACCESS_WEB_INTERFACE);
 #if ENABLE_TIMESHIFT
   http_path_add("/timeshift",        NULL, extjs_timeshift,        ACCESS_ADMIN);
 #endif
