@@ -545,6 +545,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   htsmsg_t *m;
   size_t l, j;
   long max;
+  int dir_dosubs;
 
   if (de == NULL)
     return -1;
@@ -552,6 +553,10 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   cfg = de->de_config;
   if (cfg->dvr_storage == NULL || *(cfg->dvr_storage) == '\0')
     return -1;
+
+  dir_dosubs = de->de_directory == NULL ||
+              (de->de_directory[0] == '$' &&
+               de->de_directory[1] == '$');
 
   localtime_r(&de->de_start, &tm);
 
@@ -585,7 +590,12 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       strcpy(filename, dirsep + 1);
     else
       strcpy(filename, path + l);
-    htsstr_substitute(de->de_directory, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
+    if (dir_dosubs) {
+      htsstr_substitute(de->de_directory+2, ptmp, sizeof(ptmp), '$', dvr_subs_entry, de);
+    } else {
+      strncpy(ptmp, de->de_directory, sizeof(ptmp)-1);
+      ptmp[sizeof(ptmp)-1] = '\0';
+    }
     s = ptmp;
     while (*s == '/')
       s++;
@@ -613,7 +623,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
       break;
     *(dirsep - 1) = '\0';
     if (*x) {
-      s = cleanup_filename(cfg, x, de->de_directory == NULL);
+      s = cleanup_filename(cfg, x, dir_dosubs);
       tvh_strlcatf(filename, sizeof(filename), j, "%s/", s);
       free(s);
     }
