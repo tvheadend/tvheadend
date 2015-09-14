@@ -532,6 +532,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   char path[PATH_MAX];
   char ptmp[PATH_MAX];
   char number[16];
+  char *lastpath = NULL;
   int tally = 0;
   struct stat st;
   char *s, *x, *fmtstr, *dirsep;
@@ -661,24 +662,24 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
 
     htsstr_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number);
     s = cleanup_filename(cfg, ptmp);
-    if (s == NULL)
+    if (s == NULL) {
+      free(lastpath);
       return -1;
+    }
 
     /* Construct the final filename */
     memcpy(path, filename, j);
     path[j] = '\0';
     htsstr_unescape_to(s, path + j, sizeof(path) - j);
+    free(s);
 
-    if (tally > 0) {
-      htsstr_unescape_to(filename + j, ptmp, sizeof(ptmp));
-      if (strcmp(ptmp, s) == 0) {
-        free(s);
+    if (lastpath) {
+      if (strcmp(path, lastpath) == 0) {
+        free(lastpath);
         tvherror("dvr", "unable to create unique name (missing $n in format string?)");
         return -1;
       }
     }
-
-    free(s);
 
     if(stat(path, &st) == -1) {
       tvhlog(LOG_DEBUG, "dvr", "File \"%s\" -- %s -- Using for recording",
@@ -689,9 +690,12 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     tvhlog(LOG_DEBUG, "dvr", "Overwrite protection, file \"%s\" exists",
 	   path);
 
+    free(lastpath);
+    lastpath = strdup(path);
     tally++;
   }
 
+  free(lastpath);
   if (de->de_files == NULL)
     de->de_files = htsmsg_create_list();
   m = htsmsg_create_map();
