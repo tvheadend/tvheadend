@@ -568,6 +568,7 @@ regexp_escape(const char* str)
       case '[':
       case ']':
       case '*':
+      case '^':
         *b = '\\';
         b++;
         /* -fallthrough */
