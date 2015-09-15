@@ -80,19 +80,7 @@ extern const char      *tvheadend_cwd;
 extern const char      *tvheadend_webroot;
 extern const tvh_caps_t tvheadend_capabilities[];
 
-static inline htsmsg_t *tvheadend_capabilities_list(int check)
-{
-  int i = 0;
-  htsmsg_t *r = htsmsg_create_list();
-  while (tvheadend_capabilities[i].name) {
-    if (!check ||
-        !tvheadend_capabilities[i].enabled ||
-        *tvheadend_capabilities[i].enabled)
-      htsmsg_add_str(r, NULL, tvheadend_capabilities[i].name);
-    i++;
-  }
-  return r;
-}
+htsmsg_t *tvheadend_capabilities_list(int check);
 
 typedef struct str_list
 {
