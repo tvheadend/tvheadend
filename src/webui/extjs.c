@@ -476,20 +476,6 @@ extjs_tvhlog(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * Capability check
- */
-static int
-extjs_capabilities(http_connection_t *hc, const char *remain, void *opaque)
-{
-  htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *l = tvheadend_capabilities_list(0);
-  htsmsg_json_serialize(l, hq, 0);
-  htsmsg_destroy(l);
-  http_output_content(hc, "text/x-json; charset=UTF-8");
-  return 0;
-}
-
-/**
  * WEB user interface
  */
 void
@@ -498,7 +484,6 @@ extjs_start(void)
   http_path_add("/about.html",       NULL, page_about,             ACCESS_WEB_INTERFACE);
   http_path_add("/extjs.html",       NULL, extjs_root,             ACCESS_WEB_INTERFACE);
   http_path_add("/tv.html",          NULL, extjs_livetv,           ACCESS_WEB_INTERFACE);
-  http_path_add("/capabilities",     NULL, extjs_capabilities,     ACCESS_WEB_INTERFACE);
   http_path_add("/epggrab",          NULL, extjs_epggrab,          ACCESS_WEB_INTERFACE);
   http_path_add("/tvhlog",           NULL, extjs_tvhlog,           ACCESS_ADMIN);
 }

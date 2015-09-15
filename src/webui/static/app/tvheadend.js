@@ -166,7 +166,7 @@ tvheadend.doQueryAnyMatch = function(q, forceAll) {
  * General capabilities
  */
 Ext.Ajax.request({
-    url: 'capabilities',
+    url: 'api/config/capabilities',
     success: function(d)
     {
         if (d && d.responseText)

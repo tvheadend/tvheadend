@@ -23,12 +23,21 @@
 #include "api.h"
 #include "config.h"
 
+static int
+api_config_capabilities(access_t *perm, void *opaque, const char *op,
+                        htsmsg_t *args, htsmsg_t **resp)
+{
+    *resp = tvheadend_capabilities_list(0);
+    return 0;
+}
+
 void
 api_config_init ( void )
 {
   static api_hook_t ah[] = {
-    { "config/load", ACCESS_ADMIN, api_idnode_load_simple, &config },
-    { "config/save", ACCESS_ADMIN, api_idnode_save_simple, &config },
+    { "config/capabilities", ACCESS_WEB_INTERFACE, api_config_capabilities, NULL },
+    { "config/load",         ACCESS_ADMIN, api_idnode_load_simple, &config },
+    { "config/save",         ACCESS_ADMIN, api_idnode_save_simple, &config },
     { NULL },
   };
 
