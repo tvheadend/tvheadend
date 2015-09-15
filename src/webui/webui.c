@@ -1689,12 +1689,18 @@ int page_statedump(http_connection_t *hc, const char *remain, void *opaque);
 void
 webui_init(int xspf)
 {
+  const char *s;
+
   webui_xspf = xspf;
 
   if (tvheadend_webui_debug)
     tvhlog(LOG_INFO, "webui", "Running web interface in debug mode");
 
+  s = tvheadend_webroot;
+  tvheadend_webroot = NULL;
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
+  tvheadend_webroot = s;
+
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
