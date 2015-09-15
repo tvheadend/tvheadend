@@ -2045,10 +2045,10 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   profile_id = htsmsg_get_str(in, "profile");
 
 #if ENABLE_TIMESHIFT
-  if (timeshift_enabled) {
+  if (timeshift_conf.enabled) {
     timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
-    if (!timeshift_unlimited_period)
-      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_max_period);
+    if (!timeshift_conf.unlimited_period)
+      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period);
   }
 #endif
 

@@ -79,6 +79,7 @@ void api_caclient_init      ( void );
 void api_profile_init       ( void );
 void api_language_init      ( void );
 void api_satip_server_init  ( void );
+void api_timeshift_init     ( void );
 
 /*
  * IDnode

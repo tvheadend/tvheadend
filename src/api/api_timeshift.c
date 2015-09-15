@@ -1,5 +1,5 @@
 /*
- *  API - General configuration related calls
+ *  API - Timeshift related calls
  *
  *  Copyright (C) 2015 Jaroslav Kysela
  *
@@ -21,14 +21,14 @@
 #include "channels.h"
 #include "access.h"
 #include "api.h"
-#include "config.h"
+#include "timeshift.h"
 
 void
-api_config_init ( void )
+api_timeshift_init ( void )
 {
   static api_hook_t ah[] = {
-    { "config/load", ACCESS_ADMIN, api_idnode_load_simple, &config },
-    { "config/save", ACCESS_ADMIN, api_idnode_save_simple, &config },
+    { "timeshift/config/load", ACCESS_ADMIN, api_idnode_load_simple, &timeshift_conf },
+    { "timeshift/config/save", ACCESS_ADMIN, api_idnode_save_simple, &timeshift_conf },
     { NULL },
   };
 

@@ -62,7 +62,7 @@ static ssize_t _write
   if (tsf->ram) {
     pthread_mutex_lock(&tsf->ram_lock);
     if (tsf->ram_size < tsf->woff + count) {
-      if (tsf->ram_size >= timeshift_ram_segment_size)
+      if (tsf->ram_size >= timeshift_conf.ram_segment_size)
         alloc = MAX(count, 64*1024);
       else
         alloc = MAX(count, 4*1024*1024);
@@ -275,9 +275,9 @@ static inline ssize_t _process_msg0
   if (err > 0) {
     tsf->last  = sm->sm_time;
     tsf->size += err;
-    atomic_add_u64(&timeshift_total_size, err);
+    atomic_add_u64(&timeshift_conf.total_size, err);
     if (tsf->ram)
-      atomic_add_u64(&timeshift_total_ram_size, err);
+      atomic_add_u64(&timeshift_conf.total_ram_size, err);
   }
   return err;
 }

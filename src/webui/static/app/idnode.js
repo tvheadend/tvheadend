@@ -2205,9 +2205,14 @@ tvheadend.idnode_simple = function(panel, conf)
             });
         }
 
+        function fonchange(f, o, n) {
+            if (current)
+                conf.onchange(current, f, o, n);
+        }
+
         function form_build(d) {
 
-            fpanel = new Ext.form.FormPanel({
+            var fpanel = new Ext.form.FormPanel({
                 //title: conf.title || null,
                 frame: true,
                 border: true,
@@ -2225,6 +2230,14 @@ tvheadend.idnode_simple = function(panel, conf)
             tvheadend.idnode_editor_form(d.props || d.params, d.meta,
                                          fpanel, { showpwd: conf.showpwd });
 
+            if (conf.onchange) {
+                var f = fpanel.getForm().items;
+                for (var i = 0; i < f.items.length; i++) {
+                   var it = f.items[i];
+                   it.on('check', fonchange);
+                   it.on('change', fonchange);
+                }
+            }
             return fpanel;
 
         }
@@ -2239,7 +2252,6 @@ tvheadend.idnode_simple = function(panel, conf)
             if (!force && current)
                 return;
             var params = conf.edit ? (conf.edit.params || {}) : {};
-            params.uuid = r.id;
             params.meta = 1;
             tvheadend.Ajax({
                 url: conf.url + '/load',

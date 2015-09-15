@@ -126,7 +126,7 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
 static int
 timeshift_filemgr_get_root ( char *buf, size_t len )
 {
-  const char *path = timeshift_path;
+  const char *path = timeshift_conf.path;
   if (!path || !*path) {
     return hts_settings_buildpath(buf, len, "timeshift/buffer");
   } else {
@@ -243,7 +243,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
   time   = tp.tv_sec / TIMESHIFT_FILE_PERIOD;
   tsf_tl = TAILQ_LAST(&ts->files, timeshift_file_list);
   if (!tsf_tl || tsf_tl->time != time ||
-      (tsf_tl->ram && tsf_tl->woff >= timeshift_ram_segment_size)) {
+      (tsf_tl->ram && tsf_tl->woff >= timeshift_conf.ram_segment_size)) {
     tsf_hd = TAILQ_FIRST(&ts->files);
 
     /* Close existing */
@@ -251,7 +251,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
       timeshift_filemgr_close(tsf_tl);
 
     /* Check period */
-    if (!timeshift_unlimited_period &&
+    if (!timeshift_conf.unlimited_period &&
         ts->max_time && tsf_hd && tsf_tl) {
       time_t d = (tsf_tl->time - tsf_hd->time) * TIMESHIFT_FILE_PERIOD;
       if (d > (ts->max_time+5)) {
@@ -266,8 +266,8 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
     }
 
     /* Check size */
-    if (!timeshift_unlimited_size &&
-        atomic_pre_add_u64(&timeshift_total_size, 0) >= timeshift_max_size) {
+    if (!timeshift_conf.unlimited_size &&
+        atomic_pre_add_u64(&timeshift_conf.total_size, 0) >= timeshift_conf.max_size) {
 
       /* Remove the last file (if we can) */
       if (tsf_hd && !tsf_hd->refcount) {
@@ -286,12 +286,12 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
 
       tvhtrace("timeshift", "ts %d RAM total %"PRId64" requested %"PRId64" segment %"PRId64,
                    ts->id, atomic_pre_add_u64(&timeshift_total_ram_size, 0),
-                   timeshift_ram_size, timeshift_ram_segment_size);
-      if (timeshift_ram_size >= 8*1024*1024 &&
+                   timeshift_conf.ram_size, timeshift_conf.ram_segment_size);
+      if (timeshift_conf.ram_size >= 8*1024*1024 &&
           atomic_pre_add_u64(&timeshift_total_ram_size, 0) <
-            timeshift_ram_size + (timeshift_ram_segment_size / 2)) {
+            timeshift_conf.ram_size + (timeshift_conf.ram_segment_size / 2)) {
         tsf_tmp = timeshift_filemgr_file_init(ts, time);
-        tsf_tmp->ram_size = MIN(16*1024*1024, timeshift_ram_segment_size);
+        tsf_tmp->ram_size = MIN(16*1024*1024, timeshift_conf.ram_segment_size);
         tsf_tmp->ram = malloc(tsf_tmp->ram_size);
         if (!tsf_tmp->ram) {
           free(tsf_tmp);
@@ -302,7 +302,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
         }
       }
       
-      if (!tsf_tmp && !timeshift_ram_only) {
+      if (!tsf_tmp && !timeshift_conf.ram_only) {
         /* Create directories */
         if (!ts->path) {
           if (timeshift_filemgr_makedirs(ts->id, path, sizeof(path)))
@@ -402,7 +402,7 @@ void timeshift_filemgr_init ( void )
 
   /* Size processing */
   timeshift_total_size = 0;
-  timeshift_ram_size   = 0;
+  timeshift_conf.ram_size   = 0;
 
   /* Start the reaper thread */
   timeshift_reaper_run = 1;

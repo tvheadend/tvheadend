@@ -154,7 +154,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
   { "imagecache", (uint32_t*)&imagecache_conf.enabled },
 #endif
 #if ENABLE_TIMESHIFT
-  { "timeshift", &timeshift_enabled },
+  { "timeshift", (uint32_t *)&timeshift_conf.enabled },
 #endif
 #if ENABLE_TRACE
   { "trace",     NULL },
