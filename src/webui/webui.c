@@ -143,8 +143,24 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_root2(http_connection_t *hc, const char *remain, void *opaque)
 {
-  if (!tvheadend_webroot) return 1;
-  http_redirect(hc, "/", &hc->hc_req_args, 0);
+  size_t l;
+  char *s;
+
+  /* not found checks */
+  if (!tvheadend_webroot)
+    return HTTP_STATUS_NOT_FOUND;
+  l = strlen(tvheadend_webroot);
+  if (strncmp(hc->hc_url, tvheadend_webroot, l) == 0 &&
+      hc->hc_url[l] == '/')
+    return HTTP_STATUS_NOT_FOUND;
+
+  /* redirect if url is not in the specified webroot */
+  if (!remain)
+    remain = "";
+  s = alloca(2 + strlen(remain));
+  s[0] = '/';
+  strcpy(s + 1, remain);
+  http_redirect(hc, s, &hc->hc_req_args, 0);
   return 0;
 }
 

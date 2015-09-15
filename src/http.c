@@ -462,10 +462,11 @@ http_redirect(http_connection_t *hc, const char *location,
     if (!external && tvheadend_webroot && location[0] == '/')
       htsbuf_append(&hq, tvheadend_webroot, strlen(tvheadend_webroot));
     htsbuf_append(&hq, location, strlen(location));
-    htsbuf_append(&hq, "?", 1);
     TAILQ_FOREACH(ra, req_args, link) {
       if (!first)
         htsbuf_append(&hq, "&", 1);
+      else
+        htsbuf_append(&hq, "?", 1);
       first = 0;
       htsbuf_append_and_escape_url(&hq, ra->key);
       htsbuf_append(&hq, "=", 1);
