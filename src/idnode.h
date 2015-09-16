@@ -163,6 +163,9 @@ typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
 extern char idnode_uuid_static[UUID_HEX_SIZE];
 
+extern idnode_t tvhlog_conf;
+extern const idclass_t tvhlog_conf_class;
+
 void idnode_init(void);
 void idnode_done(void);
 

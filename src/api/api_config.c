@@ -38,6 +38,8 @@ api_config_init ( void )
     { "config/capabilities", ACCESS_WEB_INTERFACE, api_config_capabilities, NULL },
     { "config/load",         ACCESS_ADMIN, api_idnode_load_simple, &config },
     { "config/save",         ACCESS_ADMIN, api_idnode_save_simple, &config },
+    { "tvhlog/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &tvhlog_conf },
+    { "tvhlog/config/save",  ACCESS_ADMIN, api_idnode_save_simple, &tvhlog_conf },
     { NULL },
   };
 

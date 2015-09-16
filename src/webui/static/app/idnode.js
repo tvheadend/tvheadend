@@ -2145,9 +2145,9 @@ tvheadend.idnode_simple = function(panel, conf)
 
         /* Top bar */
         abuttons.save = new Ext.Toolbar.Button({
-            tooltip: _('Save pending changes (marked with red border)'),
+            tooltip: conf.saveTooltip || _('Save pending changes (marked with red border)'),
             iconCls: 'save',
-            text: _('Save'),
+            text: conf.saveText || _('Save'),
             disabled: true,
             handler: function() {
                 var node = current.getForm().getFieldValues();
@@ -2213,7 +2213,6 @@ tvheadend.idnode_simple = function(panel, conf)
         function form_build(d) {
 
             var fpanel = new Ext.form.FormPanel({
-                //title: conf.title || null,
                 frame: true,
                 border: true,
                 bodyStyle: 'padding: 5px',
