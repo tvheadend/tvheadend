@@ -33,22 +33,6 @@
 #include "tvheadend.h"
 #include "http.h"
 #include "webui.h"
-#include "access.h"
-#include "channels.h"
-
-#include "dvr/dvr.h"
-#include "epggrab.h"
-#include "epg.h"
-#include "muxer.h"
-#include "epggrab/private.h"
-#include "config.h"
-#include "lang_codes.h"
-#include "imagecache.h"
-#include "timeshift.h"
-#include "tvhtime.h"
-#include "input.h"
-#include "libav.h"
-#include "satip/server.h"
 
 #define EXTJSPATH "static/extjs"
 
