@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-17 21:03+0200\n"
+"POT-Creation-Date: 2015-09-17 21:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2508,7 +2508,7 @@ msgid "RTSP Port (554 or 9983), 0 = disable"
 msgstr ""
 
 #: src/imagecache.c:96
-msgid "Re-fetch period"
+msgid "Re-fetch period (hours)"
 msgstr ""
 
 #: src/imagecache.c:102
