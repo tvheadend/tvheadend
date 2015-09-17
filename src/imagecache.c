@@ -93,7 +93,7 @@ const idclass_t imagecache_class = {
     {
       .type   = PT_U32,
       .id     = "ok_period",
-      .name   = N_("Re-fetch period"),
+      .name   = N_("Re-fetch period (hours)"),
       .off    = offsetof(struct imagecache_config, ok_period),
     },
     {
