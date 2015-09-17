@@ -423,7 +423,8 @@ function accessUpdate(o) {
         tvheadend.channel_tab(chepg);
         tvheadend.cteditor(chepg);
         tvheadend.bouquet(chepg);
-        tvheadend.epggrab(chepg);
+        tvheadend.epggrab_base(chepg);
+        tvheadend.epggrab_mod(chepg);
 
         cp.add(chepg);
 

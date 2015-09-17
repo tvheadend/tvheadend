@@ -372,6 +372,14 @@
     background-image: url(../icons/exclamation.png) !important;
 }
 
+.epggrabmodNone {
+    background-image: url(../icons/stop.png) !important;
+}
+
+.epggrabmodEnabled {
+    background-image: url(../icons/accept.png) !important;
+}
+
 .tvCards {
     background-image: url(../icons/tv_cards.png) !important;
 }

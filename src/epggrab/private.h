@@ -26,7 +26,7 @@ struct mpegts_mux;
  * *************************************************************************/
 
 epggrab_module_t *epggrab_module_create
-  ( epggrab_module_t *skel,
+  ( epggrab_module_t *skel, const idclass_t *cls,
     const char *id, const char *name, int priority,
     epggrab_channel_tree_t *channels );
 
@@ -66,7 +66,7 @@ void epggrab_channel_done(void);
  * *************************************************************************/
 
 epggrab_module_int_t *epggrab_module_int_create
-  ( epggrab_module_int_t *skel,
+  ( epggrab_module_int_t *skel, const idclass_t *cls,
     const char *id, const char *name, int priority,
     const char *path,
     char* (*grab) (void*m),

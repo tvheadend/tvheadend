@@ -2701,7 +2701,7 @@ static int
 htsp_read_loop(htsp_connection_t *htsp)
 {
   htsmsg_t *m = NULL, *reply;
-  int r, i;
+  int r = 0, i;
   const char *method;
   void *tcp_id = NULL;;
 

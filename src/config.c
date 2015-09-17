@@ -1285,6 +1285,44 @@ config_migrate_v20 ( void )
 }
 
 /*
+ * v20 -> v21 : epggrab changes
+ */
+static void
+config_migrate_v21 ( void )
+{
+  htsmsg_t *c, *m, *e, *a;
+  htsmsg_field_t *f;
+  const char *str;
+  int64_t s64;
+
+  if ((c = hts_settings_load_r(1, "epggrab/config")) != NULL) {
+    str = htsmsg_get_str(c, "module");
+    m = htsmsg_get_map(c, "mod_enabled");
+    e = htsmsg_create_map();
+    if (m) {
+      HTSMSG_FOREACH(f, m) {
+        s64 = 0;
+        htsmsg_field_get_s64(f, &s64);
+        if ((s64 || !strcmp(str ?: "", f->hmf_name)) &&
+            f->hmf_name && f->hmf_name[0]) {
+          a = htsmsg_create_map();
+          htsmsg_add_bool(a, "enabled", 1);
+          htsmsg_add_msg(e, f->hmf_name, a);
+        }
+      }
+    }
+    htsmsg_delete_field(c, "mod_enabled");
+    htsmsg_delete_field(c, "module");
+    htsmsg_add_msg(c, "modules", e);
+    hts_settings_save(c, "epggrab/config");
+    htsmsg_destroy(c);
+  }
+}
+
+
+
+
+/*
  * Perform backup
  */
 static void
@@ -1400,7 +1438,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v17,
   config_migrate_v18,
   config_migrate_v19,
-  config_migrate_v20
+  config_migrate_v20,
+  config_migrate_v21
 };
 
 /*

@@ -426,7 +426,8 @@ void pyepg_init ( void )
 
   /* Internal module */
   if (find_exec("pyepg", buf, sizeof(buf)-1))
-    epggrab_module_int_create(NULL, "pyepg-internal", "PyEPG", 4, buf,
+    epggrab_module_int_create(NULL, NULL,
+                              "pyepg-internal", "PyEPG", 4, buf,
                               NULL, _pyepg_parse, NULL, NULL);
 
   /* External module */

@@ -42,10 +42,7 @@
 
 typedef TAILQ_HEAD(epggrab_ota_head,epggrab_ota_mux) epggrab_ota_head_t;
 
-uint32_t                     epggrab_ota_initial;
-char                        *epggrab_ota_cron;
 cron_multi_t                *epggrab_ota_cron_multi;
-uint32_t                     epggrab_ota_timeout;
 
 RB_HEAD(,epggrab_ota_mux)    epggrab_ota_all;
 epggrab_ota_head_t           epggrab_ota_pending;
@@ -93,7 +90,7 @@ om_svcl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
 static int
 epggrab_ota_timeout_get ( void )
 {
-  int timeout = epggrab_ota_timeout;
+  int timeout = epggrab_conf.ota_timeout;
 
   if (timeout < EPGGRAB_OTA_MIN_TIMEOUT)
     timeout = EPGGRAB_OTA_MIN_TIMEOUT;
@@ -792,10 +789,10 @@ epggrab_ota_init ( void )
   char path[1024];
   struct stat st;
 
-  epggrab_ota_initial      = 1;
-  epggrab_ota_timeout      = 600;
-  epggrab_ota_cron         = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");
-  epggrab_ota_cron_multi   = cron_multi_set(epggrab_ota_cron);
+  epggrab_conf.ota_initial = 1;
+  epggrab_conf.ota_timeout = 600;
+  epggrab_conf.ota_cron    = strdup("# Default config (02:04 and 14:04 everyday)\n4 2 * * *\n4 14 * * *");
+  epggrab_ota_cron_multi   = cron_multi_set(epggrab_conf.ota_cron);
   epggrab_ota_pending_flag = 0;
 
   RB_INIT(&epggrab_ota_all);
@@ -832,6 +829,8 @@ epggrab_ota_init ( void )
 void
 epggrab_ota_trigger ( int secs )
 {
+  lock_assert(&global_lock);
+
   /* notify another system layers, that we will do EPG OTA */
   secs = MIN(1, MAX(secs, 7*24*3600));
   dbus_emit_signal_s64("/epggrab/ota", "next", time(NULL) + secs);
@@ -845,7 +844,7 @@ epggrab_ota_post ( void )
   time_t t = (time_t)-1;
 
   /* Init timer (call after full init - wait for network tuners) */
-  if (epggrab_ota_initial) {
+  if (epggrab_conf.ota_initial) {
     epggrab_ota_trigger(15);
     t = time(NULL);
   }
@@ -892,8 +891,6 @@ epggrab_ota_shutdown ( void )
   pthread_mutex_unlock(&global_lock);
   SKEL_FREE(epggrab_ota_mux_skel);
   SKEL_FREE(epggrab_svc_link_skel);
-  free(epggrab_ota_cron);
-  epggrab_ota_cron = NULL;
   free(epggrab_ota_cron_multi);
   epggrab_ota_cron_multi = NULL;
 }
@@ -902,49 +899,16 @@ epggrab_ota_shutdown ( void )
  *  Global configuration handlers
  */
 
-int
-epggrab_ota_set_cron ( const char *cron, int lock )
+void
+epggrab_ota_set_cron ( void )
 {
-  int save = 0;
-  if ( epggrab_ota_cron == NULL || strcmp(epggrab_ota_cron, cron) ) {
-    save = 1;
-    pthread_mutex_lock(&epggrab_ota_mutex);
-    free(epggrab_ota_cron);
-    epggrab_ota_cron       = strdup(cron);
-    free(epggrab_ota_cron_multi);
-    epggrab_ota_cron_multi = cron_multi_set(cron);
-    pthread_mutex_unlock(&epggrab_ota_mutex);
-    if (lock) {
-      pthread_mutex_lock(&global_lock);
-      epggrab_ota_arm((time_t)-1);
-      pthread_mutex_unlock(&global_lock);
-    } else {
-      epggrab_ota_arm((time_t)-1);
-    }
-  }
-  return save;
-}
+  lock_assert(&global_lock);
 
-int
-epggrab_ota_set_timeout( uint32_t e )
-{
-  int save = 0;
-  if (epggrab_ota_timeout != e) {
-    epggrab_ota_timeout = e;
-    save = 1;
-  }
-  return save;
-}
-
-int
-epggrab_ota_set_initial( uint32_t e )
-{
-  int save = 0;
-  if (epggrab_ota_initial != e) {
-    epggrab_ota_initial = e;
-    save = 1;
-  }
-  return save;
+  pthread_mutex_lock(&epggrab_ota_mutex);
+  free(epggrab_ota_cron_multi);
+  epggrab_ota_cron_multi = cron_multi_set(epggrab_conf.ota_cron);
+  pthread_mutex_unlock(&epggrab_ota_mutex);
+  epggrab_ota_arm((time_t)-1);
 }
 
 /******************************************************************************

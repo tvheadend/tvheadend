@@ -248,6 +248,7 @@ tvheadend.IdNodeField = function(conf)
     this.hexa = conf.hexa;
     this.group = conf.group;
     this.lorder = conf.lorder;
+    this.multiline = conf.multiline;
     this['enum'] = conf['enum'];
     this.store = null;
     if (this['enum'])
@@ -741,7 +742,8 @@ tvheadend.idnode_editor_field = function(f, conf)
 
 
         default:
-            return new Ext.form.TextField({
+            cons = f.multiline ? Ext.form.TextArea : Ext.form.TextField;
+            return new cons({
                 fieldLabel: f.caption,
                 name: f.id,
                 value: value,

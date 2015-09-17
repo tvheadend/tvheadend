@@ -697,7 +697,7 @@ static void _xmltv_load_grabbers ( void )
       if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
         outbuf[i] = '\0';
         sprintf(name, "XMLTV: %s", &outbuf[n]);
-        epggrab_module_int_create(NULL, &outbuf[p], name, 3, &outbuf[p],
+        epggrab_module_int_create(NULL, NULL, &outbuf[p], name, 3, &outbuf[p],
                                   NULL, _xmltv_parse, NULL, NULL);
         p = n = i + 1;
       } else if ( outbuf[i] == '\\') {
@@ -742,7 +742,7 @@ static void _xmltv_load_grabbers ( void )
             close(rd);
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
-            epggrab_module_int_create(NULL, bin, name, 3, bin,
+            epggrab_module_int_create(NULL, NULL, bin, name, 3, bin,
                                       NULL, _xmltv_parse, NULL, NULL);
             free(outbuf);
           } else {

@@ -35,11 +35,49 @@ api_epggrab_channel_list
   return 0;
 }
 
+static int
+api_epggrab_module_list
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *l = htsmsg_create_list(), *m;
+  epggrab_module_t *mod;
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&mod->idnode));
+    htsmsg_add_str(m, "status", epggrab_module_get_status(mod));
+    htsmsg_add_str(m, "title", idnode_get_title(&mod->idnode, perm->aa_lang));
+    htsmsg_add_msg(l, NULL, m);
+  }
+  pthread_mutex_unlock(&global_lock);
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+  return 0;
+}
+
+static int
+api_epggrab_ota_trigger
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int32_t s32;
+  if (htsmsg_get_s32(args, "trigger", &s32))
+    return EINVAL;
+  if (s32 > 0) {
+    pthread_mutex_lock(&global_lock);
+    epggrab_ota_trigger(s32);
+    pthread_mutex_unlock(&global_lock);
+  }
+  return 0;
+}
+
 void api_epggrab_init ( void )
 {
   static api_hook_t ah[] = {
-    { "epggrab/channel/list", ACCESS_ANONYMOUS,
-      api_epggrab_channel_list, NULL },
+    { "epggrab/channel/list", ACCESS_ANONYMOUS, api_epggrab_channel_list, NULL },
+    { "epggrab/module/list",  ACCESS_ADMIN, api_epggrab_module_list, NULL },
+    { "epggrab/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &epggrab_conf.idnode },
+    { "epggrab/config/save",  ACCESS_ADMIN, api_idnode_save_simple, &epggrab_conf.idnode },
+    { "epggrab/ota/trigger",  ACCESS_ADMIN, api_epggrab_ota_trigger, NULL },
     { NULL },
   };
 

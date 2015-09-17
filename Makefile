@@ -28,7 +28,7 @@ LANGUAGES ?= bg cs de en en_GB es fa fr he hr hu it lv nl pl pt ru sv
 # Common compiler flags
 #
 
-CFLAGS  += -g -O2
+CFLAGS  += -g -Og
 ifeq ($(CONFIG_W_UNUSED_RESULT),yes)
 CFLAGS  += -Wunused-result
 endif
