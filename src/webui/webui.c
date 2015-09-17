@@ -31,19 +31,12 @@
 #include <sys/stat.h>
 
 #include "tvheadend.h"
-#include "access.h"
 #include "http.h"
 #include "webui.h"
 #include "dvr/dvr.h"
 #include "filebundle.h"
 #include "streaming.h"
-#include "profile.h"
-#include "epg.h"
-#include "muxer.h"
 #include "imagecache.h"
-#include "tcp.h"
-#include "config.h"
-#include "atomic.h"
 #include "lang_codes.h"
 #include "intlconv.h"
 #if ENABLE_MPEGTS
