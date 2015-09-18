@@ -34,6 +34,7 @@
 #include "ebml.h"
 #include "lang_codes.h"
 #include "parsers/parser_avc.h"
+#include "parsers/parser_hevc.h"
 
 extern int dvr_iov_max;
 
@@ -49,6 +50,7 @@ TAILQ_HEAD(mk_chapter_queue, mk_chapter);
 typedef struct mk_track {
   int index;
   int avc;
+  int hevc;
   int type;
   int tracknum;
   int tracktype;
@@ -279,6 +281,12 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       tr->avc = 1;
       break;
 
+    case SCT_HEVC:
+      tracktype = 1;
+      codec_id = "V_MPEGH/ISO/HEVC";
+      tr->hevc = 1;
+      break;
+
     case SCT_VP8:
       tracktype = 1;
       codec_id = "V_VP8";
@@ -288,10 +296,6 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       tracktype = 1;
       codec_id = "V_VP9";
       break;
-
-    case SCT_HEVC:
-      tvherror("mkv", "HEVC (H265) codec is not suppored for Matroska muxer (work in progress)");
-      continue;
 
     case SCT_MPEG2AUDIO:
       tracktype = 2;
@@ -360,6 +364,9 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
         sbuf_init(&hdr);
         if (tr->avc) {
           isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                                pktbuf_len(ssc->ssc_gh));
+        } else if (tr->hevc) {
+          isom_write_hvcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
                                 pktbuf_len(ssc->ssc_gh));
         } else {
           sbuf_append(&hdr, pktbuf_ptr(ssc->ssc_gh),

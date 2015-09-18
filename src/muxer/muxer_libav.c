@@ -34,6 +34,7 @@ typedef struct lav_muxer {
   muxer_t;
   AVFormatContext *lm_oc;
   AVBitStreamFilterContext *lm_h264_filter;
+  AVBitStreamFilterContext *lm_hevc_filter;
   int lm_fd;
   int lm_init;
 } lav_muxer_t;
@@ -273,8 +274,10 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   av_dict_set(&oc->metadata, "service_name", name, 0);
   av_dict_set(&oc->metadata, "service_provider", app, 0);
 
-  if(lm->m_config.m_type == MC_MPEGTS)
+  if(lm->m_config.m_type == MC_MPEGTS) {
     lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
+    lm->lm_hevc_filter = av_bitstream_filter_init("hevc_mp4toannexb");
+  }
 
   oc->max_delay = 0.7 * AV_TIME_BASE;
 
@@ -419,10 +422,12 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     tofree = NULL;
     av_init_packet(&packet);
 
-    if(lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) {
+    if((lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) ||
+       (lm->lm_hevc_filter && st->codec->codec_id == AV_CODEC_ID_HEVC)) {
       pkt = avc_convert_pkt(opkt = pkt);
       pkt_ref_dec(opkt);
-      if(av_bitstream_filter_filter(lm->lm_h264_filter,
+      if(av_bitstream_filter_filter(st->codec->codec_id == AV_CODEC_ID_H264 ?
+                                      lm->lm_h264_filter : lm->lm_hevc_filter,
 				    st->codec, 
 				    NULL, 
 				    &packet.data, 

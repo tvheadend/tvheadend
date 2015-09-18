@@ -21,29 +21,31 @@
 #include "bitstream.h"
 
 
-void
-init_rbits(bitstream_t *bs, const uint8_t *data, int bits)
+int
+init_rbits(bitstream_t *bs, const uint8_t *data, uint32_t bits)
 {
   bs->wdata = NULL;
   bs->rdata = data;
   bs->offset = 0;
   bs->len = bits;
+  return 0;
 }
 
 
-void
-init_wbits(bitstream_t *bs, uint8_t *data, int bits)
+int
+init_wbits(bitstream_t *bs, uint8_t *data, uint32_t bits)
 {
   bs->wdata = data;
   bs->rdata = NULL;
   bs->offset = 0;
   bs->len = bits;
+  return 0;
 }
 
-unsigned int
-read_bits(bitstream_t *bs, int num)
+uint32_t
+read_bits(bitstream_t *bs, uint32_t num)
 {
-  unsigned int r = 0;
+  uint32_t r = 0;
 
   while(num > 0) {
     if(bs->offset >= bs->len)
@@ -59,10 +61,29 @@ read_bits(bitstream_t *bs, int num)
   return r;
 }
 
-unsigned int
-show_bits(bitstream_t *bs, int num)
+uint64_t
+read_bits64(bitstream_t *bs, uint32_t num)
 {
-  unsigned int r = 0, offset = bs->offset;
+  uint64_t r = 0;
+
+  while(num > 0) {
+    if(bs->offset >= bs->len)
+      return 0;
+
+    num--;
+
+    if(bs->rdata[bs->offset / 8] & (1 << (7 - (bs->offset & 7))))
+      r |= 1 << num;
+
+    bs->offset++;
+  }
+  return r;
+}
+
+uint32_t
+show_bits(bitstream_t *bs, uint32_t num)
+{
+  uint32_t r = 0, offset = bs->offset;
 
   while(num > 0) {
     if(offset >= bs->len)
@@ -78,10 +99,11 @@ show_bits(bitstream_t *bs, int num)
   return r;
 }
 
-unsigned int
+uint32_t
 read_golomb_ue(bitstream_t *bs)
 {
-  int b, lzb = -1;
+  uint32_t b;
+  int lzb = -1;
 
   for(b = 0; !b && !bs_eof(bs); lzb++)
     b = read_bits1(bs);
@@ -92,10 +114,10 @@ read_golomb_ue(bitstream_t *bs)
 }
 
 
-signed int
+int32_t
 read_golomb_se(bitstream_t *bs)
 {
-  int v, pos;
+  uint32_t v, pos;
   v = read_golomb_ue(bs);
   if(v == 0)
     return 0;
@@ -107,7 +129,7 @@ read_golomb_se(bitstream_t *bs)
 
 
 void
-put_bits(bitstream_t *bs, int val, int num)
+put_bits(bitstream_t *bs, uint32_t val, uint32_t num)
 {
   while(num > 0) {
     if(bs->offset >= bs->len)

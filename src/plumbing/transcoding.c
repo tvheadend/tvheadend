@@ -858,13 +858,6 @@ scleanup:
 /**
  * Parse MPEG2 header, simplifier version (we know what ffmpeg/libav generates
  */
-static inline uint32_t
-RB32(const uint8_t *d)
-{
-  return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3];
-}
-
-
 static void
 extract_mpeg2_global_data(th_pkt_t *n, uint8_t *data, int len)
 {

@@ -218,6 +218,7 @@ SRCS-2 += \
 	src/parsers/parsers.c \
 	src/parsers/bitstream.c \
 	src/parsers/parser_h264.c \
+	src/parsers/parser_hevc.c \
 	src/parsers/parser_latm.c \
 	src/parsers/parser_avc.c \
 	src/parsers/parser_teletext.c \
