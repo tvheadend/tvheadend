@@ -853,15 +853,15 @@ linuxdvb_satconf_start_mux
 
     /* calculate tuning frequency for en50494 */
     if (lse->lse_en50494) {
-      /* transponder value - t*/
-      uint16_t t = round((( (f / 1000) + 2 + (((linuxdvb_en50494_t*)lse->lse_en50494)->le_frequency)) / 4) - 350);
-      if ( t > 1024) {
-        tvherror("en50494", "transponder value bigger then 1024");
+      r = lse->lse_en50494->ld_freq(lse->lse_en50494, lm, f);
+      if (r < 0) {
+        tvherror("en50494", "invalid tuning freq");
         return -1;
       }
       /* tune frequency for the frontend */
-      f = (t + 350) * 4000 - f;
+      f = r;
     }
+
     r = linuxdvb_frontend_tune0(lfe, mmi, f);
     if (r) return r;
   } else {
