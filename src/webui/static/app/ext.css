@@ -528,6 +528,10 @@
     background-image: url(../icons/satipsrvconf.png) !important;
 }
 
+.fetch_images {
+    background-image: url(../icons/fetch_images.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
