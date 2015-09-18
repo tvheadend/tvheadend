@@ -49,7 +49,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         builder: function() {
             return new Ext.Toolbar.Button({
                 tooltip: _('Re-fetch images'),
-                iconCls: 'trigger',
+                iconCls: 'fetch_images',
                 text: _('Re-fetch images'),
             });
         },
