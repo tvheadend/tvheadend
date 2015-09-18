@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <math.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <linux/dvb/dmx.h>
@@ -843,11 +844,24 @@ linuxdvb_satconf_start_mux
   //       the en50494 have to skip this test
   if (!lse->lse_lnb)
     return SM_CODE_TUNING_FAILED;
-  f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
-  if (f == (uint32_t)-1)
-    return SM_CODE_TUNING_FAILED;
 
-  if (ls->ls_early_tune && !lse->lse_en50494) {
+  if (ls->ls_early_tune) {
+
+    f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
+    if (f == (uint32_t)-1)
+      return SM_CODE_TUNING_FAILED;
+
+    /* calculate tuning frequency for en50494 */
+    if (lse->lse_en50494) {
+      /* transponder value - t*/
+      uint16_t t = round((( (f / 1000) + 2 + (((linuxdvb_en50494_t*)lse->lse_en50494)->le_frequency)) / 4) - 350);
+      if ( t > 1024) {
+        tvherror("en50494", "transponder value bigger then 1024");
+        return -1;
+      }
+      /* tune frequency for the frontend */
+      f = (t + 350) * 4000 - f;
+    }
     r = linuxdvb_frontend_tune0(lfe, mmi, f);
     if (r) return r;
   } else {
