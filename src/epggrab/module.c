@@ -98,6 +98,11 @@ static const void *epggrab_mod_class_type_get(void *o)
   return &s;
 }
 
+static int epggrab_mod_class_type_set(void *o, const void *v)
+{
+  return 0;
+}
+
 const idclass_t epggrab_mod_class = {
   .ic_class      = "epggrab_mod",
   .ic_caption    = N_("EPG Grabber"),
@@ -126,6 +131,7 @@ const idclass_t epggrab_mod_class = {
       .id     = "type",
       .name   = N_("Type"),
       .get    = epggrab_mod_class_type_get,
+      .set    = epggrab_mod_class_type_set,
       .opts   = PO_RDONLY | PO_LOCALE,
       .group  = 1,
     },
