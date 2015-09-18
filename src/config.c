@@ -29,6 +29,7 @@
 #include "lock.h"
 #include "profile.h"
 #include "avahi.h"
+#include "url.h"
 #include "satip/server.h"
 
 void tvh_str_set(char **strp, const char *src);
