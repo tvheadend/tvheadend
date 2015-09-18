@@ -91,11 +91,11 @@ epggrab_module_ext_t *epggrab_module_ext_create
  * *************************************************************************/
 
 typedef struct epggrab_ota_module_ops {
-    int (*start)   (epggrab_ota_map_t *map, struct mpegts_mux *mm);
-    int  (*enable) (void *m, uint8_t e );
-    void (*done)   (void *m);
-    int  (*tune)   (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
-                    struct mpegts_mux *mm);
+    int (*start)     (epggrab_ota_map_t *map, struct mpegts_mux *mm);
+    int  (*activate) (void *m, int e);
+    void (*done)     (void *m);
+    int  (*tune)     (epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
+                      struct mpegts_mux *mm);
 } epggrab_ota_module_ops_t;
 
 epggrab_module_ota_t *epggrab_module_ota_create

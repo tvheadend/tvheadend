@@ -140,8 +140,10 @@ static void _epggrab_load ( void )
       HTSMSG_FOREACH(f, a) {
         mod = epggrab_module_find_by_id(f->hmf_name);
         map = htsmsg_field_get_map(f);
-        if (mod && map)
+        if (mod && map) {
           idnode_load(&mod->idnode, map);
+          epggrab_activate_module(mod, mod->enabled);
+        }
       }
     }
     htsmsg_destroy(m);
@@ -151,8 +153,10 @@ static void _epggrab_load ( void )
     epggrab_conf.cron = strdup("# Default config (00:04 and 12:04 everyday)\n4 */12 * * *");
     LIST_FOREACH(mod, &epggrab_modules, link) // enable all OTA by default
       if (mod->type == EPGGRAB_OTA)
-        epggrab_enable_module(mod, 1);
+        epggrab_activate_module(mod, 1);
   }
+
+  idnode_notify_changed(&epggrab_conf.idnode);
  
   /* Load module config (channels) */
 #if 0
@@ -306,14 +310,14 @@ const idclass_t epggrab_class = {
  * Initialisation
  * *************************************************************************/
 
-int epggrab_enable_module ( epggrab_module_t *mod, int e )
+int epggrab_activate_module ( epggrab_module_t *mod, int a )
 {
   int save = 0;
   if (!mod) return 0;
-  if (mod->enable) {
-    save         = mod->enable(mod, e);
-  } else if (e != mod->enabled) {
-    mod->enabled = e;
+  if (mod->activate) {
+    save         = mod->activate(mod, a);
+  } else if (a != mod->active) {
+    mod->active  = a;
     save         = 1;
   }
   return save;

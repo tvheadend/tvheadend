@@ -87,7 +87,7 @@ static const char *epggrab_mod_class_title(idnode_t *self, const char *lang)
 static void epggrab_mod_class_save(idnode_t *self)
 {
   epggrab_module_t *mod = (epggrab_module_t *)self;
-  epggrab_enable_module(mod, mod->enabled);
+  epggrab_activate_module(mod, mod->enabled);
   epggrab_save();
 }
 
@@ -367,6 +367,7 @@ static void
 epggrab_module_int_done( void *m )
 {
   epggrab_module_int_t *mod = m;
+  mod->active = 0;
   free((char *)mod->path);
   mod->path = NULL;
 }
@@ -518,7 +519,7 @@ epggrab_module_done_socket( void *m )
   int sock;
 
   assert(mod->type == EPGGRAB_EXT);
-  mod->enabled = 0;
+  mod->active = 0;
   sock = mod->sock;
   mod->sock = 0;
   shutdown(sock, SHUT_RDWR);
@@ -534,23 +535,25 @@ epggrab_module_done_socket( void *m )
 }
 
 /*
- * Enable socket module
+ * Activate socket module
  */
 static int
-epggrab_module_enable_socket ( void *m, uint8_t e )
+epggrab_module_activate_socket ( void *m, int a )
 {
   pthread_attr_t tattr;
   struct sockaddr_un addr;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)m;
+  const char *path;
   assert(mod->type == EPGGRAB_EXT);
-  
+
   /* Ignore */
-  if ( mod->enabled == e ) return 0;
+  if ( mod->active == a ) return 0;
 
   /* Disable */
-  if (!e) {
+  if (!a) {
+    path = strdup(mod->path);
     epggrab_module_done_socket(m);
-  
+    mod->path = path;
   /* Enable */
   } else {
     unlink(mod->path); // just in case!
@@ -579,7 +582,7 @@ epggrab_module_enable_socket ( void *m, uint8_t e )
 
     tvhlog(LOG_DEBUG, mod->id, "starting socket thread");
     pthread_attr_init(&tattr);
-    mod->enabled = 1;
+    mod->active = 1;
     tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod);
   }
   return 1;
@@ -609,9 +612,9 @@ epggrab_module_ext_t *epggrab_module_ext_create
                             channels);
 
   /* Local */
-  skel->type   = EPGGRAB_EXT;
-  skel->enable = epggrab_module_enable_socket;
-  skel->done   = epggrab_module_done_socket;
+  skel->type     = EPGGRAB_EXT;
+  skel->activate = epggrab_module_activate_socket;
+  skel->done     = epggrab_module_done_socket;
 
   return skel;
 }
@@ -634,11 +637,11 @@ epggrab_module_ota_t *epggrab_module_ota_create
                         id, name, priority, channels);
 
   /* Setup */
-  skel->type   = EPGGRAB_OTA;
-  skel->enable = ops->enable;
-  skel->start  = ops->start;
-  skel->done   = ops->done;
-  skel->tune   = ops->tune;
+  skel->type     = EPGGRAB_OTA;
+  skel->activate = ops->activate;
+  skel->start    = ops->start;
+  skel->done     = ops->done;
+  skel->tune     = ops->tune;
   //TAILQ_INIT(&skel->muxes);
 
   return skel;

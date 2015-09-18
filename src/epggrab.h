@@ -146,11 +146,12 @@ struct epggrab_module
   const char                   *id;       ///< Module identifier
   const char                   *name;     ///< Module name (for display)
   int                          enabled;   ///< Whether the module is enabled
+  int                          active;    ///< Whether the module is active
   int                          priority;  ///< Priority of the module
   epggrab_channel_tree_t       *channels; ///< Channel list
 
-  /* Enable/Disable */
-  int       (*enable)  ( void *m, uint8_t e );
+  /* Activate */
+  int       (*activate) ( void *m, int activate );
 
   /* Free */
   void      (*done)    ( void *m );
@@ -300,7 +301,7 @@ extern int                   epggrab_ota_running;
 /*
  * Set configuration
  */
-int epggrab_enable_module         ( epggrab_module_t *mod, int e );
+int epggrab_activate_module       ( epggrab_module_t *mod, int activate );
 void epggrab_ota_set_cron         ( void );
 void epggrab_ota_trigger          ( int secs );
 
