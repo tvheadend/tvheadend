@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Miroslav Diviqm <diviqm@mail.bg>, 2015
 # Peter <zinonino91@gmail.com>, 2015
 # saen acro <saentist@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-02 21:08+0200\n"
-"PO-Revision-Date: 2015-09-02 19:08+0000\n"
+"POT-Creation-Date: 2015-09-17 21:18+0200\n"
+"PO-Revision-Date: 2015-09-17 19:18+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
@@ -26,7 +27,7 @@ msgid ""
 "https://tvheadend.org\n"
 msgstr "\nЗа повече информация посетете сайта на Tvheadend\nhttps://tvheadend.org\n"
 
-#: src/input/mpegts/mpegts_mux.c:587
+#: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
 msgstr "#Канали"
 
@@ -39,17 +40,17 @@ msgid "# Muxes"
 msgstr "# Муксове"
 
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
-#: src/input/mpegts/mpegts_mux.c:580
+#: src/input/mpegts/mpegts_mux.c:579
 msgid "# Services"
 msgstr "# Услуги"
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
-msgstr ""
+msgstr "Намерени услуги"
 
-#: src/dvr/dvr_config.c:659
+#: src/dvr/dvr_config.c:660
 msgid "(Default Profile)"
-msgstr ""
+msgstr "Профил по подразбиране"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
@@ -89,7 +90,7 @@ msgstr "2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
 msgid "2-Port Switch (Universal LNB)"
-msgstr ""
+msgstr "2-портов ключ"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:72
 msgid "3"
@@ -101,7 +102,7 @@ msgstr "4"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
 msgid "4-Port Switch (Universal LNB)"
-msgstr ""
+msgstr "4-портов ключ"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "5"
@@ -154,33 +155,34 @@ msgstr "AA"
 msgid "AB"
 msgstr "AB"
 
-#: src/input/mpegts/mpegts_mux.c:478
+#: src/input/mpegts/mpegts_mux.c:477
 msgid "AC-3 = descriptor 6"
-msgstr ""
+msgstr "AC-3 = декриптор 6"
 
-#: src/input/mpegts/mpegts_mux.c:594
+#: src/input/mpegts/mpegts_mux.c:593
 msgid "AC-3 Detection"
-msgstr ""
+msgstr "Търсене на AC-3"
 
-#: src/input/mpegts/mpegts_mux.c:384
+#: src/input/mpegts/mpegts_mux.c:383
 msgid "ACTIVE"
-msgstr ""
+msgstr "Активни"
 
 #: src/descrambler/constcw.c:345
 msgid "AES Constant Code Word Client"
-msgstr ""
+msgstr "AES постоянна парола клиент"
 
 #: src/esfilter.c:313 src/esfilter.c:370
 msgid "ANY"
-msgstr ""
+msgstr "всички"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
+#: src/satip/server.c:648 src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
 msgstr "ATSC"
 
 #: src/input/mpegts/mpegts_network_dvb.c:266
 msgid "ATSC Network"
-msgstr ""
+msgstr "ATSC Мрежа"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:220 src/input/mpegts/mpegts_mux_dvb.c:223
 #: src/input/mpegts/mpegts_mux_dvb.c:226 src/input/mpegts/mpegts_mux_dvb.c:229
@@ -188,13 +190,13 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:238 src/input/mpegts/mpegts_mux_dvb.c:298
 #: src/input/mpegts/mpegts_mux_dvb.c:301 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "AUTO"
-msgstr ""
+msgstr "Автоматично"
 
 #: src/streaming.c:436
 msgid "Aborted by user"
-msgstr ""
+msgstr "Прекратено от потребителя"
 
-#: src/access.c:1293
+#: src/access.c:1290
 msgid "Access"
 msgstr "Достъп"
 
@@ -205,17 +207,17 @@ msgstr "Действие"
 
 #: src/streaming.c:423
 msgid "Adapter in use by another subscription"
-msgstr ""
+msgstr "Адаптера е зает от друг абонамент"
 
-#: src/main.c:705
+#: src/main.c:710
 msgid "Add file and line numbers to debug"
-msgstr ""
+msgstr "Добави файл или ред за дебъг"
 
-#: src/main.c:706
+#: src/main.c:711
 msgid "Add the thread ID to debug"
-msgstr ""
+msgstr "Добави ID на задачата за дебъг"
 
-#: src/access.c:1421
+#: src/access.c:1418
 msgid "Admin"
 msgstr "Администратор"
 
@@ -228,9 +230,9 @@ msgstr "Филм за възрастни"
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
 msgstr "Експертни Настройки (Не-Универсални конвертори, мотори, и т.н.)"
 
-#: src/access.c:1352
+#: src/access.c:1349
 msgid "Advanced Streaming"
-msgstr ""
+msgstr "Стрииминг за напреднали"
 
 #: src/epg.c:1953
 msgid "Adventure"
@@ -238,37 +240,37 @@ msgstr "Приключения"
 
 #: src/epg.c:2090
 msgid "Advertisement / Shopping"
-msgstr ""
+msgstr "Реклама/пазаруване"
 
-#: src/access.c:1275
+#: src/access.c:1272
 msgid "All (Streaming plus DVR)"
-msgstr ""
+msgstr "Всички(стриим плюс DVR"
 
-#: src/access.c:1386
+#: src/access.c:1383
 msgid "All DVR"
-msgstr ""
+msgstr "Всички DVR"
 
-#: src/access.c:1392
+#: src/access.c:1389
 msgid "All DVR (rw)"
-msgstr ""
+msgstr "Всички DVR презаписваеми"
 
-#: src/webui/extjs.c:241
+#: src/webui/extjs.c:225
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr ""
+msgstr "Всички постъпления се използват за потдръйка на сървърната инфраструктура, тестове и оборудване"
+
+#: src/main.c:659
+msgid "Alternate PID path"
+msgstr "Алтернативен PID път"
 
 #: src/main.c:654
-msgid "Alternate PID path"
-msgstr ""
-
-#: src/main.c:649
 msgid "Alternate configuration path"
-msgstr ""
+msgstr "Път към алтернативна конфигурация"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
 msgid "Altitude (metres)"
-msgstr ""
+msgstr "Височина (метри)"
 
 #: src/epg.c:2069
 msgid "Animals"
@@ -276,9 +278,9 @@ msgstr "Животни"
 
 #: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
 #: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
-#: src/dvr/dvr_timerec.c:431
+#: src/dvr/dvr_timerec.c:432
 msgid "Any"
-msgstr ""
+msgstr "Всички"
 
 #: src/epg.c:2041
 msgid "Arts"
@@ -290,7 +292,7 @@ msgstr "Атлетика"
 
 #: src/profile.c:1558
 msgid "Audio Bitrate (kb/s) (0=Auto)"
-msgstr ""
+msgstr "Аудио битрейт"
 
 #: src/profile.c:1550
 msgid "Audio CODEC"
@@ -299,6 +301,10 @@ msgstr "Аудио CODEC"
 #: src/esfilter.c:698
 msgid "Audio Stream Filter"
 msgstr "Филтър Аудио Потоци"
+
+#: src/satip/server.c:548
+msgid "Auto"
+msgstr ""
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
@@ -310,23 +316,23 @@ msgstr "Автоматична Проверка Включена"
 
 #: src/channels.c:332
 msgid "Auto EPG Channel"
-msgstr ""
+msgstr "Автоматичен EPG на каналите"
 
-#: src/dvr/dvr_db.c:2217
+#: src/dvr/dvr_db.c:2221
 msgid "Auto Record"
 msgstr "Автоматизиран Запис"
 
-#: src/dvr/dvr_db.c:2225
+#: src/dvr/dvr_db.c:2229
 msgid "Auto Time Record"
-msgstr ""
+msgstr "Автоматично време за запис"
 
 #: src/bouquet.c:817
 msgid "Auto-Map to Channels"
-msgstr ""
+msgstr "Автоматично мапване на каналите"
 
 #: src/service.c:165
 msgid "Automatic Checking"
-msgstr ""
+msgstr "Автоматична проверка "
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:367
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:95
@@ -351,9 +357,9 @@ msgstr "Балет"
 msgid "Bandwidth"
 msgstr "Пропускателната способност"
 
-#: src/webui/extjs.c:219
+#: src/webui/extjs.c:203
 msgid "Based on software from"
-msgstr ""
+msgstr "Базиран на софтуер от"
 
 #: src/input/mpegts/satip/satip.c:359
 msgid "Boot ID"
@@ -369,19 +375,19 @@ msgstr "Букет (авто)"
 
 #: src/dvr/dvr_autorec.c:1062
 msgid "Brand"
-msgstr ""
+msgstr "Марка"
 
-#: src/dvr/dvr_db.c:2241
+#: src/dvr/dvr_db.c:2245
 msgid "Broadcast"
-msgstr ""
+msgstr "Предаване"
 
 #: src/epg.c:2049
 msgid "Broadcasting"
-msgstr ""
+msgstr "Излъчване на предаване"
 
-#: src/webui/extjs.c:224
+#: src/webui/extjs.c:208
 msgid "Build"
-msgstr ""
+msgstr "Създаване"
 
 #: src/descrambler/caclient.c:173
 #, c-format
@@ -394,15 +400,15 @@ msgstr "CA ID"
 
 #: src/esfilter.c:914
 msgid "CA Identification"
-msgstr ""
+msgstr "СА идентификация"
 
 #: src/esfilter.c:922
 msgid "CA Provider"
-msgstr ""
+msgstr "СА доставчик"
 
 #: src/esfilter.c:899
 msgid "CA Stream Filter"
-msgstr ""
+msgstr "СА стриим филтър"
 
 #: src/service.c:196
 msgid "CAID"
@@ -418,41 +424,41 @@ msgstr "CAPMT Интервал (ms)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:233
 msgid "CAPMT Query Interval (ms)"
-msgstr ""
+msgstr "CAMP време за запитване (ms)"
 
-#: src/input/mpegts/mpegts_mux.c:548 src/input/mpegts/mpegts_service.c:157
+#: src/input/mpegts/mpegts_mux.c:547 src/input/mpegts/mpegts_service.c:157
 msgid "CRID Authority"
-msgstr ""
+msgstr "CRID собственост"
 
-#: src/dvr/dvr_config.c:800
+#: src/dvr/dvr_config.c:801
 msgid "Cache Scheme"
-msgstr ""
+msgstr "Кеш схема"
 
 #: src/descrambler/capmt.c:2189
 msgid "Camd.socket Filename / IP Address (TCP mode)"
-msgstr ""
+msgstr "Camd.socket име на файла"
 
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Cartoons"
 msgstr "Детски"
 
-#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2048
-#: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
+#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2052
+#: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:583
 msgid "Channel"
 msgstr "Канал"
 
-#: src/dvr/dvr_db.c:2058
+#: src/dvr/dvr_db.c:2062
 msgid "Channel Icon"
 msgstr "Лого на Канал"
 
-#: src/dvr/dvr_db.c:2065
+#: src/dvr/dvr_db.c:2069
 msgid "Channel Name"
 msgstr "Име на Канала"
 
 #: src/bouquet.c:904
 msgid "Channel Number Offset"
-msgstr ""
+msgstr "Номер на канала за отместване"
 
 #: src/channels.c:1083 src/dvr/dvr_autorec.c:956
 msgid "Channel Tag"
@@ -460,66 +466,70 @@ msgstr "Категория на Канала"
 
 #: src/bouquet.c:852
 msgid "Channel Tag Reference"
-msgstr ""
+msgstr "Забележка за канала"
 
-#: src/access.c:1461
+#: src/access.c:1458
 msgid "Channel Tags"
 msgstr "Категории на Канала"
+
+#: src/config.c:1804
+msgid "Channel icon path (see Help)"
+msgstr ""
 
 #: src/profile.c:1520
 msgid "Channels"
 msgstr "Канали"
 
-#: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:572
+#: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
 #: src/input/mpegts/mpegts_service.c:178
 msgid "Character Set"
 msgstr "Енкодинг"
 
 #: src/epg.c:2010
 msgid "Children's / Youth programmes"
-msgstr ""
+msgstr "Детски / Младежки "
 
 #: src/epg.c:2047
 msgid "Cinema"
-msgstr ""
+msgstr "Кино"
 
 #: src/esfilter.c:607 src/profile.c:285 src/descrambler/caclient.c:247
 msgid "Class"
-msgstr ""
+msgstr "Клас"
 
 #: src/epg.c:1958
 msgid "Classical"
-msgstr ""
+msgstr "Класически"
 
 #: src/epg.c:2028
 msgid "Classical music"
-msgstr ""
+msgstr "Класическа музика"
 
 #: src/streaming.c:538
 msgid "Clean effects"
-msgstr ""
+msgstr "Изчистване ефекти"
 
 #: src/descrambler/caclient.c:268
 msgid "Client Name"
-msgstr ""
+msgstr "Име на клиента"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
 msgid "Cmd Delay Time (ms) (10-500)"
-msgstr ""
+msgstr "Cmd време на закъснение"
 
 #: src/descrambler/cwc.c:1725
 msgid "Code Word Client (newcamd)"
-msgstr ""
+msgstr "Парола на клиента"
 
 #: src/epg.c:1955
 msgid "Comedy"
 msgstr "Комедия"
 
-#: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
+#: src/access.c:1467 src/access.c:1701 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
 #: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
-#: src/dvr/dvr_db.c:2291 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
-#: src/dvr/dvr_config.c:783 src/descrambler/caclient.c:275
+#: src/dvr/dvr_db.c:2295 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:661
+#: src/dvr/dvr_config.c:784 src/descrambler/caclient.c:275
 msgid "Comment"
 msgstr "Коментар"
 
@@ -529,69 +539,77 @@ msgstr "Рекламна пауза"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:121
 msgid "Committed"
-msgstr "Committed"
+msgstr "Ангажиран"
 
 #: src/dvr/dvr_db.c:313
 msgid "Completed OK"
-msgstr ""
+msgstr "Завършено ОК"
 
 #: src/descrambler/caclient.c:236
 msgid "Conditional Access Client"
+msgstr "Условен достъп клиент"
+
+#: src/config.c:1704
+msgid "Configuration"
 msgstr ""
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
-msgstr ""
+msgstr "конфигурация на ID"
 
-#: src/dvr/dvr_config.c:773
+#: src/dvr/dvr_config.c:774
 msgid "Configuration Name"
+msgstr "Име на конфигурацията"
+
+#: src/config.c:1735
+msgid "Configuration version"
 msgstr ""
 
-#: src/access.c:1427
+#: src/access.c:1424
 msgid "Connection Limit Type"
-msgstr ""
+msgstr "Тип на ограничение на връзката"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:223 src/input/mpegts/mpegts_mux_dvb.c:298
 msgid "Constellation"
-msgstr ""
+msgstr "Съзвездие"
 
-#: src/profile.c:1505 src/dvr/dvr_db.c:2135
+#: src/profile.c:1505 src/dvr/dvr_db.c:2139
 msgid "Container"
 msgstr "Контейнер"
 
-#: src/dvr/dvr_db.c:2233 src/dvr/dvr_autorec.c:1024
+#: src/dvr/dvr_db.c:2237 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
 msgstr "Съдържание Тип"
 
 #: src/epg.c:1984
 msgid "Contest"
-msgstr ""
+msgstr "Състезание"
 
 #: src/profile.c:350
 msgid "Continue On Access Error"
-msgstr ""
+msgstr "Грешка в достъпа, продължаване"
 
 #: src/epg.c:2089
 msgid "Cooking"
-msgstr ""
+msgstr "Готварство"
 
 #: src/profile.c:1434
 msgid "Copy codec type"
-msgstr ""
+msgstr "Копиране на типа кодек"
 
 #: src/profile.c:1370
 msgid "Copy layout"
-msgstr ""
+msgstr "Копиране на макета"
 
 #: src/bouquet.c:845
 msgid "Create Tag"
-msgstr ""
+msgstr "Създаване на маркер"
 
 #: src/input/mpegts/mpegts_service.c:208
 msgid "Created"
 msgstr "Създаден"
 
-#: src/dvr/dvr_db.c:2162 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
+#: src/dvr/dvr_db.c:2166 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:654
 msgid "Creator"
 msgstr "Създател"
 
@@ -599,33 +617,61 @@ msgstr "Създател"
 msgid "Cron"
 msgstr "Планирани задачи"
 
+#: src/epggrab.c:272
+msgid "Cron multi-line"
+msgstr ""
+
 #: src/epg.c:2041
 msgid "Culture (without music)"
-msgstr ""
+msgstr "Култура"
 
 #: src/epg.c:1967
 msgid "Current affairs"
-msgstr ""
+msgstr "Актуални въпроси"
 
-#: src/main.c:664
+#: src/main.c:669
 msgid "DBus - use the session message bus instead of the system one"
-msgstr ""
+msgstr "DBus - използвайте съобщението на сесията вместо системното"
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word Client"
-msgstr ""
+msgstr "DES постоянна парола клиент"
 
 #: src/descrambler/cwc.c:1756
 msgid "DES Key"
+msgstr "DES ключ"
+
+#: src/dvr/dvr_db.c:2208
+msgid "DVB EPG ID"
+msgstr "DVB EPG ID"
+
+#: src/config.c:1718
+msgid "DVB Scan Files"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2204
-msgid "DVB EPG ID"
+#: src/config.c:1769
+msgid "DVB scan files path"
+msgstr ""
+
+#: src/satip/server.c:634
+msgid "DVB-C"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:220
 msgid "DVB-C Network"
 msgstr "DVB-C Мрежа"
+
+#: src/satip/server.c:641
+msgid "DVB-C2"
+msgstr ""
+
+#: src/satip/server.c:655
+msgid "DVB-Cable/AnnexB"
+msgstr ""
+
+#: src/satip/server.c:606
+msgid "DVB-S"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
 msgid "DVB-S 4-port"
@@ -637,7 +683,7 @@ msgstr "DVB-S Разширена"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:500
 msgid "DVB-S EN50494 (UniCable, experimental)"
-msgstr ""
+msgstr "DVB-S EN50494 (UniCable, experimental)"
 
 #: src/input/mpegts/mpegts_network_dvb.c:239
 msgid "DVB-S Network"
@@ -645,7 +691,7 @@ msgstr "DVB-S Мрежа"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:213
 msgid "DVB-S Satconf"
-msgstr ""
+msgstr "Конфигурация на сателити"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:327
 msgid "DVB-S Simple"
@@ -655,7 +701,11 @@ msgstr "DVB-S Опростена"
 msgid "DVB-S Toneburst"
 msgstr "DVB-S Toneburst"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:210
+#: src/satip/server.c:613
+msgid "DVB-S2"
+msgstr ""
+
+#: src/satip/server.c:620 src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
 msgstr "DVB-T"
 
@@ -663,119 +713,155 @@ msgstr "DVB-T"
 msgid "DVB-T Network"
 msgstr "DVB-T Мрежа"
 
+#: src/satip/server.c:627
+msgid "DVB-T2"
+msgstr ""
+
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
 msgstr "DVBC_ANNEX_AC"
 
-#: src/access.c:1277
+#: src/access.c:1274
 msgid "DVR"
-msgstr ""
+msgstr "Дигитален видео рекордер"
 
 #: src/dvr/dvr_autorec.c:906
 msgid "DVR Auto-Record Entry"
-msgstr ""
+msgstr "DVR влизане в автоматичен запис"
 
-#: src/dvr/dvr_config.c:731
+#: src/dvr/dvr_config.c:732
 msgid "DVR Behaviour"
-msgstr ""
+msgstr "DVR режим на работа"
 
-#: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
+#: src/dvr/dvr_db.c:2149 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:638
 msgid "DVR Configuration"
-msgstr ""
+msgstr "DVR конфигурация"
 
-#: src/dvr/dvr_config.c:723
+#: src/dvr/dvr_config.c:724
 msgid "DVR Configuration Profile"
-msgstr ""
+msgstr "DVR конфигурационен профил"
 
-#: src/access.c:1406
+#: src/access.c:1403
 msgid "DVR Configuration Profiles"
-msgstr ""
+msgstr "DVR конфигурационен профили"
 
-#: src/dvr/dvr_db.c:1984
+#: src/dvr/dvr_db.c:1988
 msgid "DVR Entry"
-msgstr ""
+msgstr "DVR вход"
 
-#: src/dvr/dvr_config.c:809
+#: src/dvr/dvr_config.c:810
 msgid "DVR Log Retention Time (days)"
-msgstr ""
+msgstr "DVR време за лог"
 
 #: src/profile.c:253
 msgid "DVR Override High"
-msgstr ""
+msgstr "DVR замяна горе"
 
 #: src/profile.c:252
 msgid "DVR Override Important"
-msgstr ""
+msgstr "DVR замяна важни"
 
 #: src/profile.c:255
 msgid "DVR Override Low"
-msgstr ""
+msgstr "DVR замяна долу"
 
 #: src/profile.c:254
 msgid "DVR Override Normal"
-msgstr ""
+msgstr "DVR замяна нормално"
 
 #: src/profile.c:256
 msgid "DVR Override Unimportant"
-msgstr ""
+msgstr "DVR замяна маловажни"
 
 #: src/channels.c:355
 msgid "DVR Post"
-msgstr ""
+msgstr "DVR Post"
 
 #: src/channels.c:348
 msgid "DVR Pre"
-msgstr ""
+msgstr "DVR Pre"
 
-#: src/dvr/dvr_timerec.c:547
+#: src/dvr/dvr_timerec.c:548
 msgid "DVR Time-Record Entry"
-msgstr ""
+msgstr "DVR запис на часа"
 
 #: src/epg.c:2026
 msgid "Dance"
-msgstr ""
+msgstr "Танци"
 
-#: src/dvr/dvr_db.c:2197
+#: src/dvr/dvr_db.c:2201
 msgid "Data Errors"
-msgstr ""
+msgstr "Грешка данни"
 
-#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
+#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:613
 msgid "Days of Week"
-msgstr ""
+msgstr "Ден от седмицата"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Debate"
 msgstr "Дебати"
 
-#: src/main.c:696
+#: src/main.c:701
 msgid "Debug Options"
+msgstr "Опции за откриване на грешки"
+
+#: src/tvhlog.c:624
+msgid "Debug libav log"
+msgstr ""
+
+#: src/tvhlog.c:589
+msgid "Debug log path"
+msgstr ""
+
+#: src/tvhlog.c:603
+msgid "Debug subsystems"
+msgstr ""
+
+#: src/tvhlog.c:596
+msgid "Debug to syslog"
+msgstr ""
+
+#: src/tvhlog.c:610
+msgid "Debug trace (low-level)"
+msgstr ""
+
+#: src/tvhlog.c:581
+msgid "Debugging"
 msgstr ""
 
 #: src/profile.c:300
 msgid "Default"
-msgstr ""
+msgstr "По подразбиране"
 
 #: src/profile.c:321
 msgid "Default Priority"
+msgstr "Приоритет По подразбиране"
+
+#: src/config.c:1759
+msgid "Default language(s)"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
 #: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery System"
-msgstr ""
+msgstr "Система за доставка"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:78
 msgid "Demux Path"
+msgstr "Път за разделяне"
+
+#: src/satip/server.c:591
+msgid "Descramble Services (Limit Per Mux)"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2104 src/dvr/dvr_db.c:2111
+#: src/dvr/dvr_db.c:2108 src/dvr/dvr_db.c:2115
 msgid "Description"
 msgstr "Описание"
 
 #: src/epg.c:1952
 msgid "Detective"
-msgstr ""
+msgstr "Детективски"
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "Device ID"
@@ -788,42 +874,42 @@ msgstr "Устройство Модел"
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:92
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:248
 msgid "Device Path"
-msgstr ""
+msgstr "Път до устройството"
 
-#: src/dvr/dvr_db.c:2176 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
+#: src/dvr/dvr_db.c:2180 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:577
 msgid "Directory"
 msgstr "Папка"
 
-#: src/dvr/dvr_config.c:898
+#: src/dvr/dvr_config.c:899
 msgid "Directory Permissions (octal, e.g. 0775)"
 msgstr "Права на Папката (octal, пр. 0775)"
 
-#: src/input/mpegts/mpegts_mux.c:458
+#: src/input/mpegts/mpegts_mux.c:457
 msgid "Disable"
 msgstr "Изключи"
 
-#: src/main.c:715
+#: src/main.c:720
 msgid "Disable DVB bouquets"
 msgstr "Изключи DVB букети"
 
-#: src/main.c:713
+#: src/main.c:718
 msgid "Disable all access control checks"
-msgstr ""
+msgstr "Изключи всички проверки за достъп"
 
 #: src/input/mpegts/satip/satip.c:275
 msgid "Disable device/firmware-specific workarounds"
-msgstr ""
+msgstr "Изключи устройство"
 
-#: src/main.c:699
+#: src/main.c:704
 msgid "Disable syslog (all messages)"
-msgstr ""
+msgstr "Изключи системния лог"
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Discussion"
-msgstr ""
+msgstr "Дискусии"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1363
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1362
 msgid "DiseqC"
 msgstr "DiseqC"
 
@@ -837,29 +923,29 @@ msgstr "DiSEqC повторения"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:115
 msgid "DiseqC switch"
-msgstr ""
+msgstr "DiseqC ключ"
 
 #: src/profile.c:1430
 msgid "Do not use"
-msgstr ""
+msgstr "Не използвай"
 
 #: src/epg.c:1970 src/epg.c:2053
 msgid "Documentary"
-msgstr ""
+msgstr "Документални"
 
-#: src/dvr/dvr_config.c:962
+#: src/dvr/dvr_config.c:963
 msgid "Don't Include Title In Filename"
-msgstr ""
+msgstr "Не включвай заглавие в името"
 
-#: src/dvr/dvr_db.c:2211
+#: src/dvr/dvr_db.c:2215
 msgid "Don't Reschedule"
-msgstr ""
+msgstr "Не променяй задачата"
 
-#: src/main.c:650
+#: src/main.c:655
 msgid "Don't backup configuration tree at upgrade"
-msgstr ""
+msgstr "Не прави бекъп на конфигурацията по време на ъпгрейд"
 
-#: src/dvr/dvr_config.c:684
+#: src/dvr/dvr_config.c:685
 msgid "Don't keep"
 msgstr "Не запазвай"
 
@@ -870,88 +956,104 @@ msgstr "Драма"
 
 #: src/dvr/dvr_autorec.c:1039
 msgid "Duplicate Handling"
-msgstr ""
+msgstr "Дублирана операция"
 
-#: src/dvr/dvr_db.c:2041
+#: src/dvr/dvr_db.c:2045
 msgid "Duration"
 msgstr "Продължителност"
 
 #: src/input/mpegts/mpegts_network.c:210
 msgid "EIT Local Time"
+msgstr "EIT локално време"
+
+#: src/epggrab/module.c:103
+msgid "EPG Grabber"
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:505
-msgid "EPG Scan"
+#: src/epggrab.c:221
+msgid "EPG Grabber Configuration"
 msgstr ""
+
+#: src/input/mpegts/mpegts_mux.c:504
+msgid "EPG Scan"
+msgstr "Сканиране на EPG"
 
 #: src/channels.c:339
 msgid "EPG Source"
-msgstr ""
+msgstr "EPG източник"
 
-#: src/dvr/dvr_config.c:833
+#: src/dvr/dvr_config.c:834
 msgid "EPG Update Window"
+msgstr "EPG прозорец за ъпдейт"
+
+#: src/epggrab.c:297
+msgid "EPG scan timeout in seconds (30-7200)"
 msgstr ""
 
 #: src/epg.c:2052 src/epg.c:2054
 msgid "Economics"
-msgstr ""
+msgstr "Икономични"
 
 #: src/epg.c:2068
 msgid "Education"
-msgstr ""
+msgstr "Образование"
 
 #: src/epg.c:2014
 msgid "Educational"
-msgstr ""
+msgstr "Образователни"
 
 #: src/esfilter.c:595
 msgid "Elementary Stream Filter"
-msgstr ""
+msgstr "Стриим филтър начален"
 
-#: src/input/mpegts/mpegts_mux.c:459
+#: src/input/mpegts/mpegts_mux.c:458
 msgid "Enable (auto)"
-msgstr ""
+msgstr "Разреши (автоматично)"
 
-#: src/main.c:662
+#: src/main.c:667
 msgid "Enable DBus"
+msgstr "Разреши DBus"
+
+#: src/config.c:1783
+msgid "Enable NTP driver"
 msgstr ""
 
-#: src/main.c:712
+#: src/main.c:717
 msgid "Enable coredumps for daemon"
-msgstr ""
+msgstr "Разреши подтискане на ядрото на демона"
 
-#: src/main.c:697
+#: src/main.c:702
 msgid "Enable debug on stderr"
-msgstr ""
+msgstr "Разреши stderr да открива грешки "
 
-#: src/main.c:701
+#: src/main.c:706
 msgid "Enable debug subsystems"
-msgstr ""
+msgstr "Разреши субсистемата за грешки"
 
-#: src/main.c:700
+#: src/main.c:705
 msgid "Enable debug to file"
-msgstr ""
-
-#: src/main.c:698
-msgid "Enable debug to syslog"
-msgstr ""
+msgstr "Разреши запис на грешките във файл"
 
 #: src/main.c:703
+msgid "Enable debug to syslog"
+msgstr "Разреши запис на грешките във системния лог"
+
+#: src/main.c:708
 msgid "Enable trace subsystems"
-msgstr ""
+msgstr "Разреши проследяване на субсистемата"
 
-#: src/main.c:710
+#: src/main.c:715
 msgid "Enable webUI debug (non-minified JS)"
-msgstr ""
+msgstr "Разреши дебъг на уеб узер интерфейса"
 
-#: src/access.c:1312 src/access.c:1680 src/channels.c:296 src/channels.c:1092
-#: src/service.c:158 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
-#: src/bouquet.c:802 src/dvr/dvr_autorec.c:916 src/dvr/dvr_timerec.c:557
-#: src/dvr/dvr_config.c:763 src/descrambler/caclient.c:262
-#: src/input/mpegts/mpegts_input.c:224 src/input/mpegts/mpegts_mux.c:497
-#: src/input/mpegts/mpegts_mux_sched.c:126
+#: src/access.c:1309 src/access.c:1673 src/channels.c:296 src/channels.c:1092
+#: src/service.c:158 src/imagecache.c:84 src/esfilter.c:621 src/profile.c:293
+#: src/bouquet.c:802 src/epggrab/module.c:135 src/dvr/dvr_autorec.c:916
+#: src/dvr/dvr_timerec.c:558 src/dvr/dvr_config.c:764
+#: src/descrambler/caclient.c:262 src/input/mpegts/mpegts_input.c:225
+#: src/input/mpegts/mpegts_mux.c:496 src/input/mpegts/mpegts_mux_sched.c:126
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1196
-#: src/input/mpegts/satip/satip_satconf.c:188
+#: src/input/mpegts/satip/satip_satconf.c:188 src/timeshift.c:150
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
 msgstr "Разрешено"
@@ -962,21 +1064,21 @@ msgstr "Кодирано"
 
 #: src/epg.c:2013
 msgid "Entertainment programmes for 10 to 16"
-msgstr ""
+msgstr "Потдръжка на канали 10 до 16"
 
 #: src/epg.c:2012
 msgid "Entertainment programmes for 6 to 14"
-msgstr ""
+msgstr "Потдръжка на канали 6 до 14"
 
 #: src/epg.c:2069
 msgid "Environment"
-msgstr ""
+msgstr "Среда"
 
 #: src/input/mpegts/iptv/iptv_mux.c:151
 msgid "Environment (pipe)"
-msgstr ""
+msgstr "Среда (pipe)"
 
-#: src/dvr/dvr_db.c:2249
+#: src/dvr/dvr_db.c:2253
 msgid "Episode"
 msgstr "Епизод"
 
@@ -985,51 +1087,63 @@ msgstr "Епизод"
 msgid "Episode %d"
 msgstr "Епизод %d"
 
-#: src/dvr/dvr_db.c:2183
+#: src/dvr/dvr_db.c:2187
 msgid "Error Code"
 msgstr "Грешка Код"
 
-#: src/dvr/dvr_db.c:2190
+#: src/dvr/dvr_db.c:2194
 msgid "Errors"
 msgstr "Грешки"
 
 #: src/descrambler/constcw.c:322 src/descrambler/constcw.c:382
 msgid "Even Key"
-msgstr ""
+msgstr "еднакъв ключ"
 
 #: src/dvr/dvr_autorec.c:735
 msgid "Every day"
-msgstr ""
+msgstr "Всеки ден"
 
-#: src/access.c:1454
+#: src/access.c:1451
 msgid "Exclude Channel Tags"
-msgstr ""
+msgstr "Изключи маркера на канала"
 
 #: src/epg.c:2072
 msgid "Expeditions"
-msgstr ""
+msgstr "Експедиция"
 
 #: src/epg.c:2048
 msgid "Experimental film"
+msgstr "Експериментален филм"
+
+#: src/satip/server.c:568
+msgid "Exported Tuners"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2002 src/dvr/dvr_autorec.c:983
+#: src/epggrab/module.c:59
+msgid "External"
+msgstr ""
+
+#: src/epggrab/module.c:162
+msgid "External EPG Grabber"
+msgstr ""
+
+#: src/dvr/dvr_db.c:2006 src/dvr/dvr_autorec.c:983
 msgid "Extra Start Time"
-msgstr ""
+msgstr "Допълнително старт време"
 
-#: src/dvr/dvr_db.c:2026 src/dvr/dvr_autorec.c:991
+#: src/dvr/dvr_db.c:2030 src/dvr/dvr_autorec.c:991
 msgid "Extra Stop Time"
-msgstr ""
+msgstr "Допълнително стоп време"
 
-#: src/dvr/dvr_config.c:825
+#: src/dvr/dvr_config.c:826
 msgid "Extra Time After Recordings (minutes)"
 msgstr "Допълнително време След записа (минути)"
 
-#: src/dvr/dvr_config.c:817
+#: src/dvr/dvr_config.c:818
 msgid "Extra Time Before Recordings (minutes)"
 msgstr "Допълнително време Преди записа (минути)"
 
-#: src/input/mpegts/mpegts_mux.c:391
+#: src/input/mpegts/mpegts_mux.c:390
 msgid "FAIL"
 msgstr "ПРОВАЛ"
 
@@ -1039,23 +1153,23 @@ msgstr "FEC"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:235
 msgid "FEC High"
-msgstr ""
+msgstr "FEC високо"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:238
 msgid "FEC Low"
-msgstr ""
+msgstr "FEC ниско"
 
 #: src/epg.c:2068
 msgid "Factual topics"
-msgstr ""
+msgstr "Фактически теми"
 
-#: src/access.c:1398
+#: src/access.c:1395
 msgid "Failed DVR"
-msgstr ""
+msgstr "Неуспешно DVR"
 
 #: src/epg.c:1954
 msgid "Fantasy"
-msgstr ""
+msgstr "Фантастични"
 
 #: src/dvr/dvr_db.c:309
 msgid "File Missing"
@@ -1065,85 +1179,89 @@ msgstr "Файла Отсъства"
 msgid "File Not Created"
 msgstr "Файла не е създаден"
 
-#: src/dvr/dvr_config.c:856
+#: src/dvr/dvr_config.c:857
 msgid "File Permissions (octal, e.g. 0664)"
 msgstr "Права на файла (octal, пр. 0664)"
 
-#: src/dvr/dvr_db.c:2263
+#: src/dvr/dvr_db.c:2267
 msgid "File Size"
 msgstr "Размер на файла"
 
-#: src/dvr/dvr_db.c:2169
+#: src/dvr/dvr_db.c:2173
 msgid "Filename"
 msgstr "Име на файла"
 
-#: src/dvr/dvr_config.c:864
+#: src/dvr/dvr_config.c:865
 msgid "Filename Character Set"
-msgstr ""
+msgstr "Настройка на знаците за име на файла"
 
-#: src/dvr/dvr_config.c:747
+#: src/dvr/dvr_config.c:748
 msgid "Filename Options"
-msgstr ""
+msgstr "Опции за име на файла"
 
 #: src/epg.c:2047
 msgid "Film"
-msgstr ""
+msgstr "Фимл"
 
 #: src/epg.c:2043
 msgid "Fine arts"
-msgstr ""
+msgstr "Изящни изкуства"
 
 #: src/epg.c:2088
 msgid "Fitness and health"
-msgstr ""
+msgstr "Фитнес и здраве"
 
 #: src/epg.c:2029
 msgid "Folk"
-msgstr ""
+msgstr "Фолк"
 
 #: src/epg.c:1956
 msgid "Folkloric"
-msgstr ""
+msgstr "Фолклорни"
 
 #: src/epg.c:2002
 msgid "Football"
 msgstr "Футбол"
 
-#: src/input/mpegts/mpegts_mux.c:460
+#: src/input/mpegts/mpegts_mux.c:459
 msgid "Force (auto)"
-msgstr ""
+msgstr "Принудително (автоматично)"
 
 #: src/input/mpegts/mpegts_service.c:201
 msgid "Force CA ID (e.g. 0x2600)"
-msgstr ""
+msgstr "Принудително CA ID (e.g. 0x2600)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:134
 msgid "Force Old Status"
-msgstr ""
+msgstr "Принудително стар статус"
 
 #: src/profile.c:330
 msgid "Force Priority"
+msgstr "Принудително приоритет"
+
+#: src/epggrab.c:281
+msgid "Force initial EPG scan at startup"
 msgstr ""
 
 #: src/input/mpegts/satip/satip.c:254
 msgid "Force pilot for DVB-S2"
-msgstr ""
+msgstr "Принудително пилот за DVB-S2"
 
 #: src/input/mpegts/satip/satip_frontend.c:173
 msgid "Force teardown delay"
-msgstr ""
+msgstr "Принудително закъснение на прекъсването"
 
 #: src/epg.c:2072
 msgid "Foreign countries"
-msgstr ""
+msgstr "Чужди страни"
 
-#: src/main.c:651
+#: src/main.c:656
 msgid "Fork and run as daemon"
-msgstr ""
+msgstr "Отделяне и стартиране като демон"
 
-#: src/dvr/dvr_config.c:890
+#: src/dvr/dvr_config.c:891
 msgid "Format String"
-msgstr ""
+msgstr "Формат на стринга"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:133
 msgid "Frequency"
@@ -1169,37 +1287,37 @@ msgstr "Пет"
 #: src/input/mpegts/satip/satip.c:303
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:158
 msgid "Friendly Name"
-msgstr ""
+msgstr "Приятелско име"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:85
 #: src/input/mpegts/satip/satip_frontend.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:558
 msgid "Frontend Number"
-msgstr ""
+msgstr "Номер на интерфейса"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:64
 msgid "Frontend Path"
-msgstr ""
+msgstr "Път към интерфейса"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:237
 msgid "Full DiseqC"
-msgstr ""
+msgstr "Пълен DiseqC"
 
 #: src/input/mpegts/satip/satip.c:212
 msgid "Full Mux Rx mode supported"
-msgstr ""
+msgstr "Потдръжка на Full Mux Rx mode"
 
-#: src/dvr/dvr_config.c:739
+#: src/dvr/dvr_config.c:740
 msgid "Full Pathname Specification"
-msgstr ""
+msgstr "Пълна спецификациа на името на пътя"
 
 #: src/dvr/dvr_autorec.c:941
 msgid "Full-text"
-msgstr ""
+msgstr "Пълен текст"
 
 #: src/epg.c:2074
 msgid "Further education"
-msgstr ""
+msgstr "Бъдещо образование"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:444
 msgid "GOTOX"
@@ -1211,15 +1329,23 @@ msgstr "GOTOX Позиция"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:97
 msgid "GOTOX Rotor"
-msgstr ""
+msgstr "GOTOX мотор"
 
 #: src/epg.c:1983 src/epg.c:1984
 msgid "Game show"
-msgstr ""
+msgstr "Шоу"
 
 #: src/epg.c:2091 src/epg.c:2092 src/epg.c:2093 src/epg.c:2094 src/epg.c:2095
 #: src/epg.c:2096 src/epg.c:2097
 msgid "Gardening"
+msgstr "Градинарство"
+
+#: src/satip/server.c:564
+msgid "General"
+msgstr ""
+
+#: src/epggrab.c:227
+msgid "General Config"
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:253
@@ -1227,13 +1353,13 @@ msgstr ""
 msgid "Generic"
 msgstr "Общ"
 
-#: src/main.c:644
+#: src/main.c:649
 msgid "Generic Options"
-msgstr ""
+msgstr "Общи опции"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:229
 msgid "Guard Interval"
-msgstr ""
+msgstr "Интервал охрана"
 
 #: src/profile.c:267
 msgid "HD: High Definition"
@@ -1255,41 +1381,41 @@ msgstr "HDHomeRun DVB-C Frontend"
 msgid "HDHomeRun DVB-T Frontend"
 msgstr "HDHomeRun DVB-T Frontend"
 
-#: src/access.c:1380
+#: src/access.c:1377
 msgid "HTSP DVR"
-msgstr ""
+msgstr "HTSP DVR"
 
 #: src/profile.c:1842
 msgid "HTSP Default Stream Settings"
-msgstr ""
+msgstr "HTSP основни стриим настройки"
 
 #: src/profile.c:928
 msgid "HTSP Stream Profile"
-msgstr ""
+msgstr "HTSP стриим профил"
 
-#: src/access.c:1358
+#: src/access.c:1355
 msgid "HTSP Streaming"
-msgstr ""
+msgstr "HTSP стриимване"
 
 #: src/epg.c:2086
 msgid "Handicraft"
-msgstr ""
+msgstr "Занаят"
 
 #: src/streaming.c:539
 msgid "Hearing impaired"
-msgstr ""
+msgstr "Увреден слух"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:232
 msgid "Hierarchy"
-msgstr ""
+msgstr "йерархия"
 
-#: src/profile.c:248 src/dvr/dvr_db.c:1614
+#: src/profile.c:248 src/dvr/dvr_db.c:1618
 msgid "High"
-msgstr ""
+msgstr "Високо"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:195
 msgid "High Bitrate Mode (CI+ CAMs Only)"
-msgstr ""
+msgstr "Висок битрейт режим (CI+ CAMs само)"
 
 #: src/epg.c:1958
 msgid "Historical movie"
@@ -1301,9 +1427,9 @@ msgstr "Ужаси"
 
 #: src/descrambler/cwc.c:1743
 msgid "Hostname/IP"
-msgstr ""
+msgstr "Име на хоста/IP"
 
-#: src/input/mpegts/mpegts_mux.c:382
+#: src/input/mpegts/mpegts_mux.c:381
 msgid "IDLE"
 msgstr "ПРЕСТОЙ"
 
@@ -1318,7 +1444,7 @@ msgstr "IPTV"
 
 #: src/input/mpegts/iptv/iptv.c:95
 msgid "IPTV Input"
-msgstr ""
+msgstr "IPTV въвеждане"
 
 #: src/input/mpegts/iptv/iptv_mux.c:92
 msgid "IPTV Multiplex"
@@ -1334,86 +1460,90 @@ msgstr "ISI (Stream ID)"
 
 #: src/channels.c:1122
 msgid "Icon (full URL)"
-msgstr ""
+msgstr "Икона (пълен адрес URL"
 
 #: src/channels.c:325 src/channels.c:1129
 msgid "Icon URL"
-msgstr ""
+msgstr "икона URL"
 
 #: src/channels.c:1136
 msgid "Icon has title"
-msgstr ""
+msgstr "Иконата има заглавие"
 
-#: src/webui/extjs.c:220
+#: src/webui/extjs.c:204
 msgid "Icons from"
 msgstr "Икони от"
 
-#: src/input/mpegts/mpegts_input.c:270
+#: src/input/mpegts/mpegts_input.c:271
 msgid "Idle Scan"
-msgstr ""
+msgstr "Сканиране неактивни"
 
 #: src/input/mpegts/mpegts_network.c:171
 msgid "Idle Scan Muxes"
-msgstr ""
+msgstr "Сканиране неактивни муксове"
 
-#: src/main.c:655
+#: src/main.c:660
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
 "the access control from within the Tvheadend web interface."
-msgstr ""
+msgstr "Ако няма съществъващ акаунт, тогава създайте един безпарола и юзер.Използвайте го внимателно тъй като тойще даде административен достъп на всички по светадо вашата Tvheadend инсталация след като я създадете и редактирате, чрез уеб интерфейса."
 
-#: src/webui/extjs.c:240
+#: src/webui/extjs.c:224
 msgid "If you'd like to support the project, please consider a donation."
-msgstr ""
+msgstr "Ако искате да помогнете за проекта, направете дарение. "
 
 #: src/input/mpegts/mpegts_service.c:171
 msgid "Ignore EPG (EIT)"
-msgstr ""
+msgstr "Игнорирай EPG"
 
 #: src/input/mpegts/mpegts_network.c:187
 msgid "Ignore Provider's Channel Numbers"
-msgstr ""
+msgstr "Игнорирай номерата на каналите на провайдера "
 
-#: src/input/mpegts/mpegts_mux.c:479
+#: src/input/mpegts/mpegts_mux.c:478
 msgid "Ignore descriptor 5"
-msgstr ""
+msgstr "Игнорирай дескриптор 5"
 
-#: src/imagecache.c:77
+#: src/imagecache.c:90
 msgid "Ignore invalid SSL certificate"
+msgstr "Игнорирай валидния SSL сертификат"
+
+#: src/imagecache.c:76
+msgid "Image Cache"
 msgstr ""
 
-#: src/main.c:711
+#: src/main.c:716
 msgid "Immediately abort"
-msgstr ""
+msgstr "Незабавно прекрати"
 
-#: src/profile.c:247 src/dvr/dvr_db.c:1613
+#: src/profile.c:247 src/dvr/dvr_db.c:1617
 msgid "Important"
-msgstr ""
+msgstr "Важно"
 
-#: src/dvr/dvr_config.c:927
+#: src/dvr/dvr_config.c:928
 msgid "Include Channel Name In Filename"
-msgstr ""
+msgstr "Включи името на канала във файловото име"
 
-#: src/dvr/dvr_config.c:934
+#: src/dvr/dvr_config.c:935
 msgid "Include Date In Filename"
-msgstr ""
+msgstr "Включи датата в файловото име"
 
-#: src/dvr/dvr_config.c:948
+#: src/dvr/dvr_config.c:949
 msgid "Include Episode In Filename"
-msgstr ""
+msgstr "Включи епизода в файловото име"
 
-#: src/dvr/dvr_config.c:955
+#: src/dvr/dvr_config.c:956
 msgid "Include Subtitle In Filename"
-msgstr ""
+msgstr "Включи субтитрите в името на файла"
 
-#: src/dvr/dvr_config.c:941
+#: src/dvr/dvr_config.c:942
 msgid "Include Time In Filename"
-msgstr ""
+msgstr "Включи часа в файловото име"
 
-#: src/access.c:1305 src/esfilter.c:614 src/descrambler/caclient.c:255
+#: src/access.c:1302 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
 msgstr "Индекс"
 
@@ -1423,11 +1553,11 @@ msgstr "Информационни"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:260
 msgid "Init Rotor Time (seconds)"
-msgstr ""
+msgstr "Първоначално време на мотора (секунди)"
 
-#: src/input/mpegts/mpegts_input.c:262
+#: src/input/mpegts/mpegts_input.c:263
 msgid "Initial Scan"
-msgstr ""
+msgstr "Начално сканиране"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:120
 msgid "Input Buffer (Bytes)"
@@ -1435,45 +1565,57 @@ msgstr "Входен буфер (байтове)"
 
 #: src/input.c:29
 msgid "Input Instance"
-msgstr ""
+msgstr "Входящо искане"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:71
 msgid "Input Path"
-msgstr ""
+msgstr "Входящ път"
 
 #: src/input/mpegts/iptv/iptv_mux.c:120
 msgid "Interface"
+msgstr "Интерфейс"
+
+#: src/channels.c:1110 src/epggrab/module.c:58
+msgid "Internal"
+msgstr "Вътрешен"
+
+#: src/epggrab/module.c:153
+msgid "Internal EPG Grabber"
 msgstr ""
 
-#: src/channels.c:1110
-msgid "Internal"
+#: src/epggrab.c:231
+msgid "Internal Grabber"
 msgstr ""
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Interview"
-msgstr ""
+msgstr "Интервю"
 
-#: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:453
+#: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:454
 msgid "Invalid"
-msgstr ""
+msgstr "Невалидно"
 
-#: src/main.c:792
+#: src/main.c:797
 #, c-format
 msgid "Invalid adapter number '%s'\n"
-msgstr ""
+msgstr "Невалиден номер на адаптер '%s'\n"
 
 #: src/streaming.c:412
 msgid "Invalid target"
-msgstr ""
+msgstr "Невалиден обект"
 
 #: src/epg.c:2030
 msgid "Jazz"
 msgstr "Джаз"
 
+#: src/satip/server.c:549
+msgid "Keep"
+msgstr ""
+
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
-msgstr ""
+msgstr "Ниско шумов усилвател"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_lnb.c:61
 msgid "LNB"
@@ -1483,10 +1625,14 @@ msgstr "Конвертор"
 msgid "LNB Type"
 msgstr "Тип Конвертор"
 
-#: src/access.c:1331 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
+#: src/access.c:1328 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
 msgstr "Език"
+
+#: src/config.c:1714
+msgid "Language Settings"
+msgstr ""
 
 #: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
 #: src/epg.c:2080 src/epg.c:2081
@@ -1497,29 +1643,33 @@ msgstr "Езици"
 msgid "Last Seen"
 msgstr "Последно видян"
 
+#: src/config.c:1743
+msgid "Last updated from"
+msgstr ""
+
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 msgid "Latitude Direction South"
-msgstr ""
+msgstr "Географска ширина юг"
 
 #: src/epg.c:2084
 msgid "Leisure hobbies"
-msgstr ""
+msgstr "услуги за свободното време хобита"
 
-#: src/access.c:1434
+#: src/access.c:1431
 msgid "Limit Connections"
-msgstr ""
+msgstr "Ограничение на връзките"
 
-#: src/input/mpegts/mpegts_input.c:288
+#: src/input/mpegts/mpegts_input.c:289
 msgid "Linked Input"
-msgstr ""
+msgstr "Свързани "
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:231
 msgid "Linux ATSC Frontend"
-msgstr ""
+msgstr "Linux ATSC интерфейс"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:639
 msgid "Linux ATSC Multiplex"
-msgstr ""
+msgstr "Линукс ATSC Multiplex"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:181
 msgid "Linux DVB CA"
@@ -1527,35 +1677,35 @@ msgstr "Linux DVB CA"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:58
 msgid "Linux DVB Frontend"
-msgstr ""
+msgstr "Линукс DVB интерфейс"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:135
 msgid "Linux DVB Multiplex"
-msgstr ""
+msgstr "Линукс DVB Multiplex"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:221
 msgid "Linux DVB-C Frontend"
-msgstr ""
+msgstr "Линукс DVB-C интерфейс"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:279
 msgid "Linux DVB-C Multiplex"
-msgstr ""
+msgstr "Линукс DVB-C Multiplex"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:196
 msgid "Linux DVB-S Frontend"
-msgstr ""
+msgstr "Линукс DVB-S интерфейс"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:533
 msgid "Linux DVB-S Multiplex"
-msgstr ""
+msgstr "Линукс DVB-S Multiplex"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:146
 msgid "Linux DVB-T Frontend"
-msgstr ""
+msgstr "Линукс DVB-T интерфейс"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:207
 msgid "Linux DVB-T Multiplex"
-msgstr ""
+msgstr "Линукс DVB-T Multiplex"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:83
 msgid "LinuxDVB Adapter"
@@ -1565,41 +1715,41 @@ msgstr "LinuxDVB Адаптер"
 msgid "LinuxDVB Network"
 msgstr "LinuxDVB Мрежа"
 
-#: src/main.c:681
+#: src/main.c:686
 msgid "Listen on IPv6"
-msgstr ""
+msgstr "Очакване на IPv6"
 
 #: src/descrambler/capmt.c:2196
 msgid "Listen/Connect Port"
-msgstr ""
+msgstr "Очакване/свързване на порт"
 
 #: src/epg.c:2046
 msgid "Literature"
-msgstr ""
+msgstr "Литература"
 
 #: src/input/mpegts/mpegts_service.c:129
 msgid "Local Channel Minor"
-msgstr ""
+msgstr "Локален канал минор"
 
 #: src/input/mpegts/mpegts_service.c:122
 msgid "Local Channel Number"
-msgstr ""
+msgstr "Локален номер на канал"
 
 #: src/input/mpegts/satip/satip.c:401
 msgid "Local Discovery IP Address"
-msgstr ""
+msgstr "Локално откриване IP адреси"
 
 #: src/input/mpegts/satip/satip.c:268
 msgid "Local bind IP address"
-msgstr ""
+msgstr "Локално привързани IP адреси"
 
 #: src/input/mpegts/satip/satip.c:387
 msgid "Location"
-msgstr ""
+msgstr "Местонахождение"
 
 #: src/input/mpegts/mpegts_service.c:193
 msgid "Lock Preferred CA PID"
-msgstr ""
+msgstr "Заключи предпочитания CA PID"
 
 #: src/esfilter.c:682 src/esfilter.c:749 src/esfilter.c:816 src/esfilter.c:883
 #: src/esfilter.c:958 src/esfilter.c:1019
@@ -1608,13 +1758,13 @@ msgstr "Лог"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:297
 msgid "Longtitude Direction West"
-msgstr ""
+msgstr "Дължина посока запад"
 
-#: src/profile.c:250 src/dvr/dvr_db.c:1616
+#: src/profile.c:250 src/dvr/dvr_db.c:1620
 msgid "Low"
-msgstr ""
+msgstr "Ниско"
 
-#: src/dvr/dvr_db.c:1645
+#: src/dvr/dvr_db.c:1649
 msgid "MPEG-PS (DVD)"
 msgstr "MPEG-PS (DVD)"
 
@@ -1622,41 +1772,41 @@ msgstr "MPEG-PS (DVD)"
 msgid "MPEG-PS (DVD)/av-lib"
 msgstr "MPEG-PS (DVD)/av-lib"
 
-#: src/dvr/dvr_db.c:1644
+#: src/dvr/dvr_db.c:1648
 msgid "MPEG-TS"
 msgstr "MPEG-TS"
 
-#: src/input/mpegts/mpegts_input.c:216
+#: src/input/mpegts/mpegts_input.c:217
 msgid "MPEG-TS Input"
-msgstr ""
+msgstr "MPEG-TS Input"
 
-#: src/input/mpegts/mpegts_mux.c:487
+#: src/input/mpegts/mpegts_mux.c:486
 msgid "MPEG-TS Multiplex"
-msgstr ""
+msgstr "MPEG-TS Multiplex"
 
-#: src/input/mpegts/mpegts_mux.c:42
+#: src/input/mpegts/mpegts_mux.c:41
 msgid "MPEG-TS Multiplex Phy"
-msgstr ""
+msgstr "MPEG-TS Multiplex Phy"
 
 #: src/input/mpegts/mpegts_network.c:134
 msgid "MPEG-TS Network"
-msgstr ""
+msgstr "MPEG-TS мрежа"
 
 #: src/profile.c:1806
 msgid "MPEG-TS Pass-through"
-msgstr ""
+msgstr "MPEG-TS Pass-through"
 
 #: src/profile.c:1001
 msgid "MPEG-TS Pass-through/built-in"
-msgstr ""
+msgstr "MPEG-TS Pass-through/built-in"
 
-#: src/input/mpegts/mpegts_service.c:721
+#: src/input/mpegts/mpegts_service.c:725
 msgid "MPEG-TS Raw Service"
-msgstr ""
+msgstr "MPEG-TS Raw Service"
 
 #: src/input/mpegts/mpegts_service.c:88
 msgid "MPEG-TS Service"
-msgstr ""
+msgstr "MPEG-TS Service"
 
 #: src/profile.c:1187 src/profile.c:1358
 msgid "MPEG-TS/av-lib"
@@ -1664,19 +1814,19 @@ msgstr "MPEG-TS/av-lib"
 
 #: src/epg.c:2053
 msgid "Magazines"
-msgstr ""
+msgstr "Списания"
 
-#: src/dvr/dvr_config.c:913
+#: src/dvr/dvr_config.c:914
 msgid "Make Subdirectories Per Channel"
-msgstr ""
+msgstr "Павене на субдиректория на канал"
 
-#: src/dvr/dvr_config.c:906
+#: src/dvr/dvr_config.c:907
 msgid "Make Subdirectories Per Day"
-msgstr ""
+msgstr "Правене на субдиректория на ден"
 
-#: src/dvr/dvr_config.c:920
+#: src/dvr/dvr_config.c:921
 msgid "Make Subdirectories Per Title"
-msgstr ""
+msgstr "Правене на субдиректория на заглавие"
 
 #: src/input/mpegts/satip/satip.c:324
 msgid "Manufacturer"
@@ -1688,26 +1838,26 @@ msgstr " URL Производител"
 
 #: src/bouquet.c:831
 msgid "Map No Name"
-msgstr ""
+msgstr "Карта без име"
 
 #: src/bouquet.c:838
 msgid "Map Radio"
-msgstr ""
+msgstr "Карта радио"
 
 #: src/bouquet.c:824
 msgid "Map Zero Numbers"
-msgstr ""
+msgstr "Карта нулеви номера"
 
 #: src/input/mpegts/satip/satip_frontend.c:292
 #: src/input/mpegts/satip/satip_frontend.c:314
 msgid "Master Tuner"
-msgstr ""
+msgstr "Основен тунер"
 
 #: src/profile.c:1826
 msgid "Matroska"
 msgstr "Matroska"
 
-#: src/dvr/dvr_db.c:1641
+#: src/dvr/dvr_db.c:1645
 msgid "Matroska (mkv)"
 msgstr "Matroska (mkv)"
 
@@ -1725,52 +1875,64 @@ msgstr "Matroska/av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:475
 msgid "Maximum Bandwidth (Kbps)"
-msgstr ""
+msgstr "Максимална честотна лента(Kbps)"
 
-#: src/access.c:1448
+#: src/access.c:1445
 msgid "Maximum Channel Num"
-msgstr ""
+msgstr "Максимален брой канали"
 
 #: src/dvr/dvr_autorec.c:1017
 msgid "Maximum Duration"
-msgstr ""
+msgstr "Максимална продължителност"
 
 #: src/input/mpegts/iptv/iptv.c:468
 msgid "Maximum Input Streams"
-msgstr ""
+msgstr "Максимум входящи стриима"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:92
 #: src/input/mpegts/satip/satip.c:226
 msgid "Maximum PIDs"
 msgstr "Максимален брой PIDs"
 
+#: src/timeshift.c:168
+msgid "Maximum Period (mins)"
+msgstr ""
+
+#: src/timeshift.c:187
+msgid "Maximum RAM Size (MB)"
+msgstr ""
+
+#: src/timeshift.c:180
+msgid "Maximum Size (MB)"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:233
 msgid "Maximum length of PIDs"
-msgstr ""
+msgstr "Максимална дължина на PIDs"
 
 #: src/input/mpegts/iptv/iptv.c:482
 msgid "Maximum timeout (seconds)"
-msgstr ""
+msgstr "Таймаут максимум(секунди)"
 
 #: src/epg.c:2071
 msgid "Medicine"
-msgstr ""
+msgstr "Медицина"
 
 #: src/epg.c:1956
 msgid "Melodrama"
-msgstr ""
+msgstr "Мелодрама"
 
-#: src/access.c:1441
+#: src/access.c:1438
 msgid "Min Channel Num"
-msgstr ""
+msgstr "Най-малък номер канал"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:268
 msgid "Min Rotor Time (seconds)"
-msgstr ""
+msgstr "Минимално време на мотора(секунди)"
 
 #: src/dvr/dvr_autorec.c:1010
 msgid "Minimum Duration"
-msgstr ""
+msgstr "Минимална продължителност"
 
 #: src/service.c:141
 msgid "Missing In PAT/SDT"
@@ -1778,7 +1940,7 @@ msgstr "Липсва в PAT/SDT"
 
 #: src/descrambler/capmt.c:2181
 msgid "Mode"
-msgstr ""
+msgstr "Режим"
 
 #: src/input/mpegts/satip/satip.c:338
 msgid "Model Description"
@@ -1798,19 +1960,19 @@ msgstr "Модулация"
 
 #: src/dvr/dvr_autorec.c:713
 msgid "Mon"
-msgstr "Пон"
+msgstr "Понеделник"
 
 #: src/profile.c:1371
 msgid "Mono"
 msgstr "Моно"
 
-#: src/main.c:708
+#: src/main.c:713
 msgid "More verbose libav log"
-msgstr ""
+msgstr "По-подробен libav лог"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:313
 msgid "Motor Rate (millis/deg)"
-msgstr ""
+msgstr "Скорост на мотора(милисекунди/градуси"
 
 #: src/epg.c:2006
 msgid "Motor sport"
@@ -1818,11 +1980,11 @@ msgstr "Моторни спортове"
 
 #: src/epg.c:2087
 msgid "Motoring"
-msgstr ""
+msgstr "Мониторинг"
 
 #: src/epg.c:1951
 msgid "Movie"
-msgstr ""
+msgstr "Филми"
 
 #: src/epg.c:2026
 msgid "Music"
@@ -1831,12 +1993,16 @@ msgstr "Музика"
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
 msgid "Musical"
-msgstr ""
+msgstr "Музикални"
 
 #: src/input/mpegts/mpegts_service.c:101
 #: src/input/mpegts/mpegts_mux_sched.c:133
 msgid "Mux"
 msgstr "Мукс"
+
+#: src/satip/server.c:598
+msgid "Mux Handling"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:132
 msgid "Mux Name"
@@ -1844,7 +2010,7 @@ msgstr "Име на Мукса"
 
 #: src/input/mpegts/mpegts_mux_sched.c:118
 msgid "Mux Sched Entry"
-msgstr ""
+msgstr "Mux програмиран вход"
 
 #: src/input/mpegts/mpegts_service.c:108
 msgid "Mux UUID"
@@ -1854,7 +2020,7 @@ msgstr "Мукс UUID"
 msgid "Mux not enabled"
 msgstr "Мукса не е разрешен"
 
-#: src/input/mpegts/mpegts_mux.c:389
+#: src/input/mpegts/mpegts_mux.c:388
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:55
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:68
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:93
@@ -1862,8 +2028,9 @@ msgid "NONE"
 msgstr "ПРАЗНО"
 
 #: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
-#: src/dvr/dvr_autorec.c:922 src/dvr/dvr_timerec.c:563
-#: src/input/mpegts/mpegts_input.c:248 src/input/mpegts/mpegts_mux.c:527
+#: src/epggrab/module.c:119 src/dvr/dvr_autorec.c:922
+#: src/dvr/dvr_timerec.c:564 src/input/mpegts/mpegts_input.c:249
+#: src/input/mpegts/mpegts_mux.c:526
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1202
 #: src/input/mpegts/satip/satip_satconf.c:194
 msgid "Name"
@@ -1875,20 +2042,20 @@ msgstr "Природни науки"
 
 #: src/epg.c:2069
 msgid "Nature"
-msgstr ""
+msgstr "Природа"
 
-#: src/input/mpegts/mpegts_mux.c:513 src/input/mpegts/mpegts_service.c:94
+#: src/input/mpegts/mpegts_mux.c:512 src/input/mpegts/mpegts_service.c:94
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:137
 msgid "Network"
 msgstr "Мрежа"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:531
 msgid "Network A"
-msgstr ""
+msgstr "Мрежа А"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:542
 msgid "Network B"
-msgstr ""
+msgstr "Мрежа Б"
 
 #: src/input/mpegts/mpegts_network.c:157
 msgid "Network Discovery"
@@ -1896,7 +2063,7 @@ msgstr "Мрежово сканиране"
 
 #: src/input/mpegts/mpegts_network.c:150
 msgid "Network ID (limit scanning)"
-msgstr ""
+msgstr "ИД на мрежата(ограничено сканиране"
 
 #: src/input/mpegts/mpegts_network.c:143
 msgid "Network Name"
@@ -1908,15 +2075,15 @@ msgstr "Име на мрежата"
 msgid "Network Type"
 msgstr "Вид на мрежата"
 
-#: src/input/mpegts/mpegts_mux.c:520
+#: src/input/mpegts/mpegts_mux.c:519
 msgid "Network UUID"
 msgstr "UUID Мрежа"
 
-#: src/access.c:1324
+#: src/access.c:1321
 msgid "Network prefix"
-msgstr ""
+msgstr "Мрежов префикс"
 
-#: src/input/mpegts/mpegts_input.c:278
+#: src/input/mpegts/mpegts_input.c:279
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:332
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1217
 #: src/input/mpegts/satip/satip_satconf.c:224
@@ -1929,11 +2096,11 @@ msgstr "Новини"
 
 #: src/epg.c:1969
 msgid "News magazine"
-msgstr ""
+msgstr "Новини от списания"
 
 #: src/input/mpegts/satip/satip_frontend.c:159
 msgid "Next tune delay in ms (0-2000)"
-msgstr ""
+msgstr "Максимално закъснение на настройката в милисекунди"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:103
 msgid "No PIN"
@@ -1943,17 +2110,17 @@ msgstr "Без ПИН"
 msgid "No access"
 msgstr "Без достъп"
 
-#: src/main.c:801
+#: src/main.c:806
 msgid "No adapters specified!\n"
-msgstr ""
+msgstr "Няма определен адаптер\n"
 
 #: src/dvr/dvr_autorec.c:737
 msgid "No days"
-msgstr ""
+msgstr "Няма дни"
 
 #: src/streaming.c:439
 msgid "No descrambler"
-msgstr ""
+msgstr "Няма декодиране"
 
 #: src/streaming.c:419
 msgid "No free adapter"
@@ -1961,15 +2128,15 @@ msgstr "Няма свободен адаптер"
 
 #: src/streaming.c:443
 msgid "No input detected"
-msgstr ""
+msgstr "Няма намерен вход"
 
 #: src/streaming.c:433
 msgid "No service assigned to channel"
-msgstr ""
+msgstr "Няма услуга към канала"
 
 #: src/streaming.c:427
 msgid "No service enabled"
-msgstr ""
+msgstr "Няма разрешена услуга"
 
 #: src/streaming.c:431
 msgid "No source available"
@@ -1981,35 +2148,35 @@ msgstr "Не е наличен източник"
 msgid "None"
 msgstr "Празно"
 
-#: src/profile.c:249 src/dvr/dvr_db.c:1615
+#: src/profile.c:249 src/dvr/dvr_db.c:1619
 msgid "Normal"
 msgstr "Нормален"
 
-#: src/input/mpegts/mpegts_input.c:202
+#: src/input/mpegts/mpegts_input.c:203
 msgid "Not Linked"
-msgstr ""
+msgstr "Не свързано"
 
-#: src/profile.c:1355 src/dvr/dvr_db.c:1612 src/dvr/dvr_db.c:1640
+#: src/profile.c:1355 src/dvr/dvr_db.c:1616 src/dvr/dvr_db.c:1644
 msgid "Not set"
 msgstr "Не зададен"
 
-#: src/dvr/dvr_config.c:695
+#: src/dvr/dvr_config.c:696
 msgid "Not set (none or channel configuration)"
-msgstr ""
+msgstr "Не настроен(няма или не конфигуриран канал"
 
-#: src/dvr/dvr_db.c:1969 src/dvr/dvr_autorec.c:611
+#: src/dvr/dvr_db.c:1973 src/dvr/dvr_autorec.c:611
 msgid "Not set (use channel or DVR configuration)"
-msgstr ""
+msgstr "Не настроен(използвай конфигурация на канала или DVR"
 
 #: src/channels.c:311
 msgid "Number"
 msgstr "Номер"
 
-#: src/main.c:723
+#: src/main.c:728
 msgid "Number of tsfile tuners"
-msgstr ""
+msgstr "Номер на тунерите от tsfile"
 
-#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:389
 msgid "OK"
 msgstr "OK"
 
@@ -2031,11 +2198,11 @@ msgstr "OSCam pc-nodmx (rev >= 9756)"
 
 #: src/descrambler/constcw.c:331 src/descrambler/constcw.c:391
 msgid "Odd Key"
-msgstr ""
+msgstr "Odd ключ"
 
 #: src/input/mpegts/mpegts_service.c:77
 msgid "Off"
-msgstr ""
+msgstr "Изключен"
 
 #: src/descrambler/capmt.c:2166
 msgid "Older OSCam"
@@ -2043,93 +2210,113 @@ msgstr "По-стар OSCam"
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "On"
+msgstr "Включен"
+
+#: src/timeshift.c:156
+msgid "On-Demand"
 msgstr ""
 
 #: src/descrambler/cwc.c:1772
 msgid "One Mux (EMM)"
-msgstr ""
+msgstr "Един Mux(EMM)"
 
-#: src/input/mpegts/mpegts_mux.c:465
+#: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Bulsatcom 39E"
-msgstr ""
+msgstr "Само Булсатком 39И"
 
-#: src/input/mpegts/mpegts_mux.c:461
+#: src/input/mpegts/mpegts_mux.c:460
 msgid "Only EIT"
 msgstr "Само EIT"
 
-#: src/input/mpegts/mpegts_mux.c:468
+#: src/input/mpegts/mpegts_mux.c:467
 msgid "Only OpenTV Sky Ausat"
 msgstr "Само OpenTV Sky Ausat"
 
-#: src/input/mpegts/mpegts_mux.c:467
+#: src/input/mpegts/mpegts_mux.c:466
 msgid "Only OpenTV Sky Italia"
 msgstr "Само OpenTV Sky Italia"
 
-#: src/input/mpegts/mpegts_mux.c:466
+#: src/input/mpegts/mpegts_mux.c:465
 msgid "Only OpenTV Sky UK"
 msgstr "Само OpenTV Sky UK"
 
 #: src/input/mpegts/mpegts_service.c:79
 msgid "Only Preferred CA PID"
-msgstr ""
+msgstr "Само избрания CA PID"
 
-#: src/input/mpegts/mpegts_mux.c:462
+#: src/input/mpegts/mpegts_mux.c:461
 msgid "Only UK Freesat"
 msgstr "Само UK Freesat"
 
-#: src/input/mpegts/mpegts_mux.c:463
+#: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freeview"
 msgstr "Само UK Freeview"
 
-#: src/input/mpegts/mpegts_mux.c:464
+#: src/input/mpegts/mpegts_mux.c:463
 msgid "Only Viasat Baltic"
 msgstr "Само Viasat Baltic"
 
-#: src/main.c:668
+#: src/main.c:673
 msgid "Only use specified DVB adapters (comma separated)"
-msgstr ""
+msgstr "Само избраните DVB адаптери(разделени със запетайка"
 
 #: src/input/mpegts/mpegts_service.c:136
 msgid "OpenTV Channel Number"
-msgstr ""
+msgstr "OpenTV номер на канала"
 
 #: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
 #: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
 msgid "Opera"
-msgstr ""
+msgstr "Опера"
 
 #: src/input/mpegts/mpegts_network_dvb.c:253
 #: src/input/mpegts/mpegts_mux_dvb.c:611
 msgid "Orbital Position"
-msgstr ""
+msgstr "Орбитална позиция"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:567
 msgid "Orbital Positions"
-msgstr ""
+msgstr "Орбитална позиция"
 
-#: src/input/mpegts/mpegts_mux.c:534
+#: src/input/mpegts/mpegts_mux.c:533
 msgid "Original Network ID"
-msgstr ""
+msgstr "Оргинална ИД на мрежата"
 
 #: src/esfilter.c:974
 msgid "Other Stream Filter"
-msgstr ""
+msgstr "Други филтри за стриима"
 
-#: src/main.c:727
+#: src/main.c:732
 msgid "Output directory for tsdebug"
+msgstr "Изходна директория за TS дебъг"
+
+#: src/epggrab/module.c:57
+msgid "Over-the-air"
 msgstr ""
 
-#: src/input/mpegts/mpegts_input.c:255
+#: src/epggrab.c:288
+msgid "Over-the-air Cron multi-line"
+msgstr ""
+
+#: src/input/mpegts/mpegts_input.c:256
 msgid "Over-the-air EPG"
+msgstr "Онлайн програмна таблица"
+
+#: src/epggrab/module.c:179
+msgid "Over-the-air EPG Grabber"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2155 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
+#: src/epggrab.c:235
+msgid "Over-the-air Grabbers"
+msgstr ""
+
+#: src/dvr/dvr_db.c:2159 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:647
 msgid "Owner"
 msgstr "Притежател"
 
-#: src/input/mpegts/mpegts_mux.c:383
+#: src/input/mpegts/mpegts_mux.c:382
 msgid "PEND"
-msgstr ""
+msgstr "PEND"
 
 #: src/esfilter.c:668 src/esfilter.c:735 src/esfilter.c:802 src/esfilter.c:869
 #: src/esfilter.c:944 src/esfilter.c:1005
@@ -2138,11 +2325,11 @@ msgstr "PID"
 
 #: src/input/mpegts/satip/satip.c:261
 msgid "PIDs 21 in setup"
-msgstr ""
+msgstr "PIDS 21 в настройката"
 
 #: src/input/mpegts/satip/satip.c:247
 msgid "PIDs in setup"
-msgstr ""
+msgstr "PIDS в настройката"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
@@ -2152,7 +2339,7 @@ msgstr "PIN"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:217
 msgid "PIN Enquiry Match String"
-msgstr ""
+msgstr "PIN трябва да отговаря на стринга"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:243
 msgid "PLP ID"
@@ -2166,37 +2353,53 @@ msgstr "PLS Code"
 msgid "PLS Mode"
 msgstr "PLS Mode"
 
-#: src/access.c:1692 src/descrambler/cwc.c:1736
+#: src/access.c:1685 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr "Парола"
 
-#: src/access.c:1700
+#: src/access.c:1693
 msgid "Password2"
 msgstr "Парола2"
 
-#: src/access.c:1670
+#: src/access.c:1663
 msgid "Passwords"
 msgstr "Пароли"
 
+#: src/epggrab/module.c:167
+msgid "Path"
+msgstr ""
+
 #: src/epg.c:2042
 msgid "Performing arts"
+msgstr "Приложни изкуства"
+
+#: src/epggrab.c:265
+msgid "Periodic save EPG to disk"
 msgstr ""
 
 #: src/epg.c:2071
 msgid "Physiology"
 msgstr "Физиология"
 
+#: src/config.c:1726
+msgid "Picon"
+msgstr ""
+
+#: src/config.c:1811
+msgid "Picon path (see Help)"
+msgstr ""
+
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
-msgstr "Pilot"
+msgstr "Пилот"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:553
 msgid "Polarisation"
-msgstr ""
+msgstr "Поляризация"
 
 #: src/epg.c:2052
 msgid "Political issues"
-msgstr ""
+msgstr "Политически въпроси"
 
 #: src/epg.c:2027
 msgid "Pop"
@@ -2204,54 +2407,58 @@ msgstr "Поп"
 
 #: src/epg.c:2045
 msgid "Popular culture"
-msgstr ""
+msgstr "Популярна култура"
 
 #: src/descrambler/cwc.c:1750
 msgid "Port"
-msgstr "Port"
+msgstr "Порт"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:126
 #: src/input/mpegts/satip/satip_satconf.c:216
 msgid "Position"
 msgstr "Позиция"
 
-#: src/dvr/dvr_config.c:842
+#: src/dvr/dvr_config.c:843
 msgid "Post-Processor Command"
-msgstr ""
+msgstr "Post-Processor команда"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:100
 msgid "Power Save"
-msgstr ""
+msgstr "Пестене на енергия "
 
 #: src/input/mpegts/mpegts_network_dvb.c:206
 #: src/input/mpegts/mpegts_network_dvb.c:225
 #: src/input/mpegts/mpegts_network_dvb.c:244
 #: src/input/mpegts/mpegts_network_dvb.c:271
 msgid "Pre-defined Muxes"
-msgstr ""
+msgstr "Предопределени MUX"
 
 #: src/epg.c:2011
 msgid "Pre-school children's programmes"
+msgstr "Предучилищни програми"
+
+#: src/config.c:1797
+msgid "Prefer picons over channel name"
 msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:186
 msgid "Preferred CA PID"
-msgstr ""
+msgstr "Предпочитан CA PID"
 
 #: src/profile.c:357
 msgid "Preferred Service Video Type"
-msgstr ""
+msgstr "Видеозапис на предпочитана услуга"
 
 #: src/input/mpegts/satip/satip.c:380
 msgid "Presentation"
-msgstr ""
+msgstr "Презентация"
 
 #: src/epg.c:2049
 msgid "Press"
 msgstr "Преса"
 
-#: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
-#: src/input/mpegts/mpegts_input.c:232
+#: src/epggrab/module.c:142 src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031
+#: src/dvr/dvr_timerec.c:623 src/input/mpegts/mpegts_input.c:233
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
@@ -2264,7 +2471,7 @@ msgstr "Приоритет (-10..10)"
 
 #: src/channels.c:1116
 msgid "Private"
-msgstr ""
+msgstr "Лично"
 
 #: src/profile.c:307
 msgid "Profile Name"
@@ -2285,7 +2492,7 @@ msgstr "Психология"
 #: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
 #: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 msgid "Puppets"
-msgstr ""
+msgstr "Куклени детски"
 
 #: src/profile.c:1374
 msgid "Quad (4.0)"
@@ -2293,18 +2500,22 @@ msgstr "Quad (4.0)"
 
 #: src/epg.c:1984
 msgid "Quiz"
-msgstr ""
+msgstr "Викторина"
 
 #: src/input/mpegts/satip/satip.c:289
 msgid "RTSP Port"
 msgstr "RTSP Port"
 
-#: src/imagecache.c:83
-msgid "Re-try period"
+#: src/satip/server.c:577
+msgid "RTSP Port (554 or 9983), 0 = disable"
 msgstr ""
 
-#: src/imagecache.c:89
-msgid "Re-try period of failed images"
+#: src/imagecache.c:96
+msgid "Re-fetch period (hours)"
+msgstr ""
+
+#: src/imagecache.c:102
+msgid "Re-try period (hours)"
 msgstr ""
 
 #: src/dvr/dvr_autorec.c:878
@@ -2313,15 +2524,15 @@ msgstr "Запиши всичко"
 
 #: src/dvr/dvr_autorec.c:884
 msgid "Record if different description"
-msgstr ""
+msgstr "Запиши ако е различно описанието"
 
 #: src/dvr/dvr_autorec.c:880
 msgid "Record if different episode number"
-msgstr ""
+msgstr "Запиши ако е различен номера на епизода"
 
 #: src/dvr/dvr_autorec.c:882
 msgid "Record if different subtitle"
-msgstr ""
+msgstr "Запиши ако са различни субтитрите"
 
 #: src/dvr/dvr_autorec.c:888
 msgid "Record once per day"
@@ -2331,12 +2542,16 @@ msgstr "Запис веднъж на ден"
 msgid "Record once per week"
 msgstr "Запис веднъж на седмица"
 
-#: src/dvr/dvr_config.c:735
+#: src/dvr/dvr_config.c:736
 msgid "Recording File Options"
-msgstr ""
+msgstr "Записване опциите на файла"
 
-#: src/dvr/dvr_config.c:849
+#: src/dvr/dvr_config.c:850
 msgid "Recording System Path"
+msgstr "Записване на системния път"
+
+#: src/satip/server.c:550
+msgid "Reject"
 msgstr ""
 
 #: src/epg.c:2044
@@ -2351,27 +2566,27 @@ msgstr "Религиозни"
 #: src/epg.c:2060 src/epg.c:2061 src/epg.c:2062 src/epg.c:2063 src/epg.c:2064
 #: src/epg.c:2065
 msgid "Remarkable people"
-msgstr ""
+msgstr "Забележителни хора"
 
-#: src/dvr/dvr_config.c:969
+#: src/dvr/dvr_config.c:970
 msgid "Remove All Unsafe Characters From Filename"
-msgstr ""
+msgstr "Изтриване на всички опасни знаци в файловото име"
 
-#: src/dvr/dvr_config.c:976
+#: src/dvr/dvr_config.c:977
 msgid "Replace Whitespace In Title with '-'"
 msgstr "Замени празно пространство в Заглавие със '-'"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:202
 msgid "Reply to CAM PIN Enquiries"
-msgstr ""
+msgstr "Отговори на искането за PIN на кама"
 
 #: src/epg.c:2053
 msgid "Reports"
-msgstr ""
+msgstr "Рапорт"
 
-#: src/dvr/dvr_db.c:2284
+#: src/dvr/dvr_db.c:2288
 msgid "Rerun of"
-msgstr ""
+msgstr "Върни от"
 
 #: src/bouquet.c:809
 msgid "Rescan"
@@ -2383,35 +2598,35 @@ msgstr "Резервирано"
 
 #: src/profile.c:1513
 msgid "Resolution"
-msgstr ""
+msgstr "Резолюция"
 
 #: src/input/mpegts/iptv/iptv_mux.c:144
 msgid "Respawn (pipe)"
-msgstr ""
+msgstr "Respawn"
 
 #: src/profile.c:343
 msgid "Restart On Error"
 msgstr "Рестартирай при грешка"
 
-#: src/dvr/dvr_db.c:2128 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:631
+#: src/dvr/dvr_db.c:2132 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:632
 msgid "Retention"
-msgstr ""
+msgstr "Задържане"
 
 #: src/profile.c:1027
 msgid "Rewrite EIT"
-msgstr ""
+msgstr "Презапиши EIT"
 
 #: src/profile.c:1013
 msgid "Rewrite PAT"
-msgstr ""
+msgstr "Презапиши PAT"
 
 #: src/profile.c:1006
 msgid "Rewrite PMT"
-msgstr ""
+msgstr "Презапиши PMT"
 
 #: src/profile.c:1020
 msgid "Rewrite SDT"
-msgstr ""
+msgstr "Презапиши SDT"
 
 #: src/epg.c:2027
 msgid "Rock"
@@ -2419,7 +2634,7 @@ msgstr "Рок"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:570
 msgid "Rolloff"
-msgstr "Rolloff"
+msgstr "Пропадане"
 
 #: src/epg.c:1957
 msgid "Romance"
@@ -2427,23 +2642,23 @@ msgstr "Романтика"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1245
 msgid "Rotor Type"
-msgstr ""
+msgstr "Тип на мотора"
 
-#: src/main.c:653
+#: src/main.c:658
 msgid "Run as group"
-msgstr ""
+msgstr "Стартирай като група"
 
-#: src/main.c:652
+#: src/main.c:657
 msgid "Run as user"
-msgstr ""
+msgstr "Стартирай като потребител"
 
 #: src/dvr/dvr_db.c:288
 msgid "Running"
-msgstr ""
+msgstr "Стартиран"
 
 #: src/input/mpegts/satip/satip_frontend.c:349
 msgid "SAT>IP ATSC Frontend"
-msgstr ""
+msgstr "SAT>IP ATSC интерфейс"
 
 #: src/input/mpegts/satip/satip.c:194
 msgid "SAT>IP Client"
@@ -2451,33 +2666,37 @@ msgstr "SAT>IP Клиент"
 
 #: src/input/mpegts/satip/satip_frontend.c:140
 msgid "SAT>IP DVB Frontend"
-msgstr ""
+msgstr "SAT>IP DVB интерфейс"
 
 #: src/input/mpegts/satip/satip_frontend.c:331
 msgid "SAT>IP DVB-C Frontend"
-msgstr ""
+msgstr "SAT>IP DVB-C интерфейс"
 
 #: src/input/mpegts/satip/satip_frontend.c:277
 msgid "SAT>IP DVB-S Frontend"
-msgstr ""
+msgstr "SAT>IP DVB-S интерфейс"
 
 #: src/input/mpegts/satip/satip_frontend.c:309
 msgid "SAT>IP DVB-S Slave Frontend"
-msgstr ""
+msgstr "SAT>IP DVB-S Slave интерфейс"
 
 #: src/input/mpegts/satip/satip_frontend.c:192
 msgid "SAT>IP DVB-T Frontend"
-msgstr ""
+msgstr "SAT>IP DVB-T интерфейс"
 
-#: src/main.c:672
+#: src/main.c:677
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
+msgstr "SAT>IP RTSP номер на порта за сървър\n(по подразбиране: -1 = изключено, 0 = уебконфиг, стандарния порт е 554)"
+
+#: src/satip/server.c:558
+msgid "SAT>IP Server"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
-msgstr ""
+msgstr "SAT>IP номер на източника"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:505
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:139
@@ -2486,65 +2705,65 @@ msgstr "SCR (ID)"
 
 #: src/profile.c:266
 msgid "SD: Standard Definition"
-msgstr ""
+msgstr "SD: стандартна резолюция"
 
-#: src/dvr/dvr_db.c:1642
+#: src/dvr/dvr_db.c:1646
 msgid "Same as source (pass through)"
 msgstr "Същото като източника (pass through)"
 
 #: src/dvr/dvr_autorec.c:718
 msgid "Sat"
-msgstr "Съб"
+msgstr "Сателит"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:202
 msgid "SatConfig"
-msgstr ""
+msgstr "Сателитна конфигурация"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1187
 #: src/input/mpegts/satip/satip_satconf.c:180
 msgid "Satconf"
-msgstr ""
+msgstr "Сателитна конфигурация"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:108
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:124
 msgid "Satellite Longitude"
-msgstr ""
+msgstr "Географска широчина на сателита"
 
 #: src/input/mpegts/satip/satip_frontend.c:283
 msgid "Satellite Positions"
-msgstr ""
+msgstr "Позиция на сателита"
 
 #: src/input/mpegts/mpegts_network.c:238
 msgid "Scan Queue length"
-msgstr ""
+msgstr "Сканиране Queue length"
 
-#: src/input/mpegts/mpegts_mux.c:564
+#: src/input/mpegts/mpegts_mux.c:563
 msgid "Scan Result"
-msgstr ""
+msgstr "Сканиране на резултатите"
 
-#: src/input/mpegts/mpegts_mux.c:555
+#: src/input/mpegts/mpegts_mux.c:554
 msgid "Scan Status"
-msgstr ""
+msgstr "Сканитане на статуса"
 
-#: src/dvr/dvr_db.c:2277
+#: src/dvr/dvr_db.c:2281
 msgid "Schedule Status"
-msgstr ""
+msgstr "Програмиране на статуса(задачи)"
 
-#: src/dvr/dvr_db.c:2012
+#: src/dvr/dvr_db.c:2016
 msgid "Scheduled Start Time"
-msgstr ""
+msgstr "Втеме на стартиране на задачата"
 
-#: src/dvr/dvr_db.c:2034
+#: src/dvr/dvr_db.c:2038
 msgid "Scheduled Stop Time"
-msgstr ""
+msgstr "Втеме на спиране на задачата"
 
 #: src/dvr/dvr_db.c:278
 msgid "Scheduled for recording"
-msgstr ""
+msgstr "Програмиране на записване"
 
 #: src/epg.c:2014
 msgid "School programmes"
-msgstr ""
+msgstr "Училищни програми"
 
 #: src/epg.c:2068
 msgid "Science"
@@ -2552,24 +2771,24 @@ msgstr "Наука"
 
 #: src/epg.c:1954
 msgid "Science fiction"
-msgstr ""
+msgstr "Научна фантастика"
 
 #: src/dvr/dvr_autorec.c:1070
 msgid "Season"
-msgstr ""
+msgstr "Сезон"
 
 #: src/dvr/dvr_db.c:422
 #, c-format
 msgid "Season %d"
-msgstr ""
+msgstr "Сезон %d"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:241
 msgid "Send CAPMT Query"
-msgstr ""
+msgstr "Изпрати CAPMT запитване"
 
 #: src/input/mpegts/satip/satip_frontend.c:166
 msgid "Send full PLAY cmd"
-msgstr ""
+msgstr "Изпрати full Play команда"
 
 #: src/input/mpegts/satip/satip.c:310
 msgid "Serial Number"
@@ -2577,352 +2796,364 @@ msgstr "Сериен Номер"
 
 #: src/dvr/dvr_autorec.c:1078
 msgid "Series Link"
-msgstr ""
+msgstr "Серийна връзка"
 
 #: src/epg.c:1958
 msgid "Serious"
-msgstr ""
+msgstr "Сериозни"
 
 #: src/epg.c:2028
 msgid "Serious music"
-msgstr ""
+msgstr "Сериозна музика"
 
-#: src/input/mpegts/satip/satip.c:394
+#: src/config.c:1710 src/input/mpegts/satip/satip.c:394
 msgid "Server"
 msgstr "Сървър"
 
-#: src/main.c:680
+#: src/main.c:685
 msgid "Server Connectivity"
-msgstr ""
+msgstr "Връзки на сървъра"
 
 #: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
 msgid "Service"
-msgstr ""
+msgstr "Услуги"
 
-#: src/main.c:648
+#: src/main.c:653
 msgid "Service Configuration"
-msgstr ""
+msgstr "Конфигурация на услугите"
 
 #: src/input/mpegts/mpegts_service.c:115 src/descrambler/constcw.c:314
 #: src/descrambler/constcw.c:374
 msgid "Service ID"
-msgstr ""
+msgstr "ИД на услугата"
 
 #: src/input/mpegts/mpegts_network.c:180
 msgid "Service IDs as Channel Numbers"
-msgstr ""
+msgstr "ИД на услугата като номера на каналите"
 
 #: src/input/mpegts/mpegts_service.c:143 src/input/mpegts/iptv/iptv_mux.c:138
 msgid "Service Name"
-msgstr ""
+msgstr "Име на услугата"
 
 #: src/service.c:206
 msgid "Service Raw"
-msgstr ""
+msgstr "Raw на услугата"
 
 #: src/input/mpegts/mpegts_service.c:164
 msgid "Service Type"
-msgstr ""
+msgstr "Вид на услугата"
 
 #: src/channels.c:363 src/bouquet.c:875
 msgid "Services"
-msgstr ""
+msgstr "Услуги"
 
 #: src/bouquet.c:761
 #, c-format
 msgid "Services Count %zi"
+msgstr "Преброени услуги %zi"
+
+#: src/epggrab/module.c:110
+msgid "Settings"
 msgstr ""
 
 #: src/epg.c:1983
 msgid "Show"
-msgstr ""
+msgstr "Покажи"
 
-#: src/main.c:645
+#: src/main.c:650
 msgid "Show this page"
-msgstr ""
+msgstr "Покажи тази страница"
 
-#: src/main.c:646
+#: src/main.c:651
 msgid "Show version information"
-msgstr ""
+msgstr "Покажи информация за версията"
 
 #: src/streaming.c:429
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "Качеството на сигнала е много лишо"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
-msgstr ""
+msgstr "Скала на сигнала (240 или 100)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:275
 msgid "Site Latitude"
-msgstr ""
+msgstr "Географска широчина на мястото"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:282
 msgid "Site Longitude"
-msgstr ""
+msgstr "Географска дължина на мястото"
 
-#: src/dvr/dvr_config.c:882
+#: src/dvr/dvr_config.c:883
 msgid "Skip Commercials"
-msgstr ""
+msgstr "Скрии комерсиалните"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:113
 msgid "Skip Initial Bytes"
-msgstr ""
+msgstr "Скрии началните байтове"
 
 #: src/input/mpegts/mpegts_network.c:164
 msgid "Skip Initial Scan"
-msgstr ""
+msgstr "Скрии началното сканиране"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:255
 msgid "Slot State"
-msgstr ""
+msgstr "Състояние на слота"
 
 #: src/epg.c:1956
 msgid "Soap"
-msgstr ""
+msgstr "Сапунки"
 
 #: src/epg.c:2002
 msgid "Soccer"
-msgstr ""
+msgstr "Футбол"
 
 #: src/epg.c:2052 src/epg.c:2073
 msgid "Social"
-msgstr ""
+msgstr "Социални"
 
 #: src/epg.c:2054
 msgid "Social advisory"
-msgstr ""
+msgstr "Социални съвети"
 
 #: src/channels.c:1098
 msgid "Sort Index"
-msgstr ""
+msgstr "Индекс на сортиране"
 
 #: src/bouquet.c:867
 msgid "Source"
-msgstr ""
+msgstr "Източник"
 
 #: src/streaming.c:408
 msgid "Source deleted"
-msgstr ""
+msgstr "Изтечника е изтрит"
 
 #: src/streaming.c:406
 msgid "Source quality is bad"
-msgstr ""
+msgstr "Качеството на източника е лошо"
 
 #: src/streaming.c:404
 msgid "Source reconfigured"
-msgstr ""
+msgstr "Източника е реконфигуриран"
 
 #: src/epg.c:2000
 msgid "Special events (Olympic Games, World Cup, etc.)"
-msgstr ""
+msgstr "Специални събития(Оломпиади, Световни купи и т.н."
 
-#: src/main.c:691
+#: src/main.c:696
 msgid "Specify User-Agent header for the http client"
-msgstr ""
+msgstr "Определяне на User-Agent заглавие за http клиент"
+
+#: src/main.c:692
+msgid "Specify alternative htsp port"
+msgstr "Определяне на алтернативен https порт"
+
+#: src/main.c:688
+msgid "Specify alternative http port"
+msgstr "Определяне на алтернативен http порт"
+
+#: src/main.c:690
+msgid "Specify alternative http webroot"
+msgstr "Определяне на алтернативен http руут"
 
 #: src/main.c:687
-msgid "Specify alternative htsp port"
-msgstr ""
-
-#: src/main.c:683
-msgid "Specify alternative http port"
-msgstr ""
-
-#: src/main.c:685
-msgid "Specify alternative http webroot"
-msgstr ""
-
-#: src/main.c:682
 msgid "Specify bind address"
-msgstr ""
+msgstr "Определяне на свързан адрес"
 
-#: src/main.c:689
+#: src/main.c:694
 msgid "Specify extra htsp port"
-msgstr ""
+msgstr "Определяне на extra htsp порт"
 
 #: src/epg.c:2073
 msgid "Spiritual sciences"
-msgstr ""
+msgstr "Духовна наука"
 
 #: src/epg.c:1999
 msgid "Sports"
-msgstr ""
+msgstr "Спорт"
 
 #: src/epg.c:2001
 msgid "Sports magazines"
-msgstr ""
+msgstr "Спопртни списания"
 
 #: src/epg.c:2003
 msgid "Squash"
-msgstr ""
+msgstr "Скуош"
 
-#: src/input/mpegts/mpegts_mux.c:477
+#: src/input/mpegts/mpegts_mux.c:476
 msgid "Standard"
-msgstr ""
+msgstr "Стандарт"
 
-#: src/dvr/dvr_timerec.c:591
+#: src/dvr/dvr_timerec.c:592
 msgid "Start"
-msgstr ""
+msgstr "Старт"
 
 #: src/dvr/dvr_autorec.c:965
 msgid "Start After"
-msgstr ""
+msgstr "Старт след"
 
 #: src/dvr/dvr_autorec.c:974
 msgid "Start Before"
-msgstr ""
+msgstr "Старт преди"
 
-#: src/dvr/dvr_db.c:1994
+#: src/dvr/dvr_db.c:1998
 msgid "Start Time"
-msgstr ""
+msgstr "Време на старта"
 
-#: src/dvr/dvr_db.c:2270 src/descrambler/caclient.c:281
+#: src/dvr/dvr_db.c:2274 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "Статус"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
-msgstr ""
+msgstr "Период за снемане на статус(ms)"
 
 #: src/profile.c:1372
 msgid "Stereo"
 msgstr "Стерео"
 
-#: src/dvr/dvr_timerec.c:601
+#: src/dvr/dvr_timerec.c:602
 msgid "Stop"
 msgstr "Спри"
 
-#: src/dvr/dvr_db.c:2019
+#: src/dvr/dvr_db.c:2023
 msgid "Stop Time"
+msgstr "Време за стоп"
+
+#: src/timeshift.c:162
+msgid "Storage Path"
 msgstr ""
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
-msgstr ""
+msgstr "Индекс на сриима"
 
-#: src/profile.c:275 src/dvr/dvr_config.c:790
+#: src/profile.c:275 src/dvr/dvr_config.c:791
 msgid "Stream Profile"
-msgstr ""
+msgstr "Профил на стриима"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream Type"
-msgstr ""
+msgstr "Тио на стриима"
 
-#: src/access.c:1276 src/access.c:1346
+#: src/access.c:1273 src/access.c:1343
 msgid "Streaming"
-msgstr ""
+msgstr "Стрииминг"
 
-#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
+#: src/input/mpegts/mpegts_input.c:241 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
-msgstr ""
+msgstr "Приоритет на стриима"
 
-#: src/access.c:1365
+#: src/access.c:1362
 msgid "Streaming Profiles"
-msgstr ""
+msgstr "Приоритет на стриимването"
 
-#: src/dvr/dvr_config.c:743
+#: src/dvr/dvr_config.c:744
 msgid "Subdirectory Options"
-msgstr ""
+msgstr "Опции на субдиректориите"
 
-#: src/main.c:717
+#: src/main.c:722
 msgid "Subscribe to a service permanently"
+msgstr "Абониране за услугата за постоянно"
+
+#: src/satip/server.c:584
+msgid "Subscription Weight"
 msgstr ""
 
 #: src/streaming.c:410
 msgid "Subscription overridden"
-msgstr ""
+msgstr "Презаписване на абонамента"
 
-#: src/dvr/dvr_db.c:2089 src/dvr/dvr_db.c:2096
+#: src/dvr/dvr_db.c:2093 src/dvr/dvr_db.c:2100
 msgid "Subtitle"
-msgstr ""
+msgstr "Субтитри"
 
 #: src/profile.c:1565
 msgid "Subtitle CODEC"
-msgstr ""
+msgstr "Кодек за субтитрите"
 
 #: src/esfilter.c:832
 msgid "Subtitle Stream Filter"
-msgstr ""
+msgstr "Филтър за субтитрите на стриима"
 
 #: src/dvr/dvr_autorec.c:719
 msgid "Sun"
-msgstr "Нед"
+msgstr "Слънце"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
-msgstr ""
+msgstr "Съраунд(2 предни, отзад моно)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:253
 msgid "Switch Then Rotor"
-msgstr ""
+msgstr "Превключи и после завърти мотора"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1236
 msgid "Switch Type"
-msgstr ""
+msgstr "Тип на превключвателя"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:105
 #, c-format
 msgid "Switch: %s"
-msgstr ""
+msgstr "Ключ:  %s"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:294 src/input/mpegts/mpegts_mux_dvb.c:548
 msgid "Symbol Rate (Sym/s)"
-msgstr ""
-
-#: src/dvr/dvr_config.c:685
-msgid "Sync"
-msgstr ""
+msgstr "Скорост на потока данни (Sym/s)"
 
 #: src/dvr/dvr_config.c:686
+msgid "Sync"
+msgstr "Синхронизиране"
+
+#: src/dvr/dvr_config.c:687
 msgid "Sync + Don't keep"
 msgstr "Синхронизирай + Не запазвай"
 
-#: src/dvr/dvr_config.c:683
+#: src/dvr/dvr_config.c:684
 msgid "System"
-msgstr ""
+msgstr "Система"
 
-#: src/dvr/dvr_config.c:874
+#: src/dvr/dvr_config.c:875
 msgid "Tag Files With Metadata"
-msgstr ""
+msgstr "Етикирай файловете с metadata"
 
 #: src/channels.c:373
 msgid "Tags"
-msgstr ""
+msgstr "Етикети"
 
 #: src/epg.c:1986 src/epg.c:1987 src/epg.c:1988 src/epg.c:1989 src/epg.c:1990
 #: src/epg.c:1991 src/epg.c:1992 src/epg.c:1993 src/epg.c:1994 src/epg.c:1995
 #: src/epg.c:1996
 msgid "Talk show"
-msgstr ""
+msgstr "Интервюта"
 
 #: src/epg.c:2004
 msgid "Team sports (excluding football)"
-msgstr ""
+msgstr "Отборни спортове (без футбол)"
 
 #: src/epg.c:2070
 msgid "Technology"
-msgstr ""
+msgstr "Технологии"
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Филтър за телетекст на стриима"
 
 #: src/epg.c:2003
 msgid "Tennis"
 msgstr "Тенис"
 
-#: src/main.c:722
+#: src/main.c:727
 msgid "Testing options"
-msgstr ""
+msgstr "Тестови опции"
 
 #: src/input/mpegts/satip/satip_frontend.c:266
 msgid "This Tuner"
-msgstr ""
+msgstr "Този тунер"
 
 #: src/epg.c:1952
 msgid "Thriller"
@@ -2930,30 +3161,38 @@ msgstr "Трилър"
 
 #: src/dvr/dvr_autorec.c:716
 msgid "Thu"
-msgstr "Чет"
+msgstr "Четвъртък"
+
+#: src/config.c:1722
+msgid "Time Update"
+msgstr ""
 
 #: src/dvr/dvr_db.c:316
 msgid "Time missed"
-msgstr ""
+msgstr "Липсващо време"
 
-#: src/dvr/dvr_timerec.c:153
+#: src/dvr/dvr_timerec.c:154
 #, c-format
 msgid "Time recording%s%s"
-msgstr ""
+msgstr "Време на записа%s%s"
 
 #: src/profile.c:336
 msgid "Timeout (sec) (0=infinite)"
-msgstr ""
+msgstr "Таймаут (sec) (0=неограничено)"
 
 #: src/input/mpegts/satip/satip_satconf.c:208
 msgid "Timeout (seconds)"
+msgstr "Таймаут (sec)"
+
+#: src/timeshift.c:142
+msgid "Timeshift"
 msgstr ""
 
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
-msgstr ""
+msgstr "Таймаут (sec)"
 
-#: src/dvr/dvr_db.c:2074 src/dvr/dvr_db.c:2081 src/dvr/dvr_timerec.c:569
+#: src/dvr/dvr_db.c:2078 src/dvr/dvr_db.c:2085 src/dvr/dvr_timerec.c:570
 msgid "Title"
 msgstr "Заглавие"
 
@@ -2961,9 +3200,9 @@ msgstr "Заглавие"
 msgid "Title (Regexp)"
 msgstr "Заглавие (Regexp)"
 
-#: src/webui/extjs.c:227
+#: src/webui/extjs.c:211
 msgid "Toggle details"
-msgstr ""
+msgstr "Toggle детайли"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:135
 msgid "Tone Burst"
@@ -2971,71 +3210,83 @@ msgstr "Tone Burst"
 
 #: src/epg.c:2085
 msgid "Tourism / Travel"
+msgstr "Туризъм/Пътуване"
+
+#: src/tvhlog.c:617
+msgid "Trace subsystems"
 msgstr ""
 
 #: src/epg.c:2045
 msgid "Traditional arts"
-msgstr ""
+msgstr "Традиционни изкуства"
 
 #: src/epg.c:2029
 msgid "Traditional music"
-msgstr ""
+msgstr "Традиционна музика"
 
 #: src/profile.c:1500
 msgid "Transcode/av-lib"
-msgstr ""
+msgstr "Транскодиране/av-lib"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:226
 msgid "Transmission Mode"
-msgstr ""
+msgstr "Режим на излъчване"
 
 #: src/descrambler/constcw.c:306 src/descrambler/constcw.c:366
 msgid "Transponder ID"
 msgstr "Транспондер ID"
 
-#: src/input/mpegts/mpegts_mux.c:541
+#: src/input/mpegts/mpegts_mux.c:540
 msgid "Transport Stream ID"
-msgstr ""
+msgstr "ИД на стриима на транспондера"
 
 #: src/dvr/dvr_autorec.c:714
 msgid "Tue"
-msgstr "Вто"
+msgstr "Вторник"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
 msgid "Tune Before DiseqC"
-msgstr ""
+msgstr "Настрой преди DiseqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:106
 msgid "Tune Repeats"
-msgstr ""
+msgstr "Настройка на повторението"
 
 #: src/input/mpegts/satip/satip.c:202 src/input/mpegts/satip/satip.c:317
 msgid "Tuner Configuration"
-msgstr ""
+msgstr "Конфигурация на тунера"
 
 #: src/input/mpegts/satip/satip_frontend.c:180
 msgid "Tuner bind IP address"
-msgstr ""
+msgstr "Ай пи адрес свързан с тунера"
 
 #: src/streaming.c:425
 msgid "Tuning failed"
-msgstr ""
+msgstr "Нстройката неуспешна"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:245
 msgid "Turn off LNB when idle"
+msgstr "Изключи конвертора когато бездейства"
+
+#: src/config.c:1751
+msgid "Tvheadend server name"
+msgstr ""
+
+#: src/epggrab/module.c:127
+msgid "Type"
 msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
-msgstr ""
+msgstr "UDP RTP номер на порта (два порта)"
 
-#: src/dvr/dvr_db.c:2256 src/input/mpegts/iptv/iptv_mux.c:113
+#: src/dvr/dvr_db.c:2260 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
 msgstr "URL"
 
-#: src/main.c:677
+#: src/main.c:682
 msgid "URL with the SAT>IP server XML location"
-msgstr ""
+msgstr "URL със SAT>IP сървър XML локация"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:448
 msgid "USALS"
@@ -3043,7 +3294,7 @@ msgstr "USALS"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:119
 msgid "USALS Rotor"
-msgstr ""
+msgstr "USALS мотор"
 
 #: src/input/mpegts/satip/satip.c:296
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:151
@@ -3052,11 +3303,11 @@ msgstr "UUID"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:142
 msgid "Uncommited First"
-msgstr ""
+msgstr "Първо необвързаните"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:128
 msgid "Uncommitted"
-msgstr "Uncommitted"
+msgstr "Необвързани"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:67
 msgid "Unicable"
@@ -3064,21 +3315,21 @@ msgstr "Unicable"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:602
 msgid "Unicable Switch (Universal LNB, experimental)"
-msgstr ""
+msgstr "Unicable ключ"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1254
 msgid "Unicable Type"
-msgstr ""
+msgstr "Тип Unicable"
 
-#: src/profile.c:251 src/dvr/dvr_db.c:1617
+#: src/profile.c:251 src/dvr/dvr_db.c:1621
 msgid "Unimportant"
-msgstr ""
+msgstr "Маловажни"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:584
 msgid "Universal LNB only"
-msgstr ""
+msgstr "Само универсален конвертор"
 
-#: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
+#: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:683
 msgid "Unknown"
 msgstr "Непознат"
 
@@ -3087,62 +3338,94 @@ msgstr "Непознат"
 msgid "Unknown reason (%i)"
 msgstr "Неизвестна причина (%i)"
 
+#: src/timeshift.c:194
+msgid "Unlimited Size"
+msgstr ""
+
+#: src/timeshift.c:174
+msgid "Unlimited Time"
+msgstr ""
+
 #: src/profile.c:246
 msgid "Unset (default)"
-msgstr ""
+msgstr "Ненастроено(по подразбиране)"
 
 #: src/descrambler/cwc.c:1765
 msgid "Update Card (EMM)"
+msgstr "Ъпдейт на картата (EMM)"
+
+#: src/dvr/dvr_config.c:704
+msgid "Update Disabled"
+msgstr "Ъпдейтването е изключено"
+
+#: src/epggrab.c:258
+msgid "Update channel icon"
 msgstr ""
 
-#: src/dvr/dvr_config.c:703
-msgid "Update Disabled"
+#: src/epggrab.c:244
+msgid "Update channel name"
+msgstr ""
+
+#: src/epggrab.c:251
+msgid "Update channel number"
+msgstr ""
+
+#: src/config.c:1776
+msgid "Update time"
+msgstr ""
+
+#: src/config.c:1790
+msgid "Update tolerance (ms)"
 msgstr ""
 
 #: src/main.c:449
 #, c-format
 msgid "Usage: %s [OPTIONS]\n"
-msgstr ""
+msgstr "Натоварване: %s [OPTIONS]\n"
 
-#: src/dvr/dvr_config.c:983
+#: src/dvr/dvr_config.c:984
 msgid "Use Windows-compatible filenames"
-msgstr ""
+msgstr "Използвай Уиндоус съвместими файлови имена"
 
-#: src/main.c:693
+#: src/main.c:698
 msgid "Use XSPF playlist instead of M3U"
+msgstr "Използвай XSPF плейлисти вместо M3U"
+
+#: src/timeshift.c:200
+msgid "Use only RAM"
 msgstr ""
 
 #: src/profile.c:1394
 msgid "Use original"
-msgstr ""
+msgstr "Използвай оргинала"
 
 #: src/dvr/dvr_db.c:302
 msgid "User Access Error"
-msgstr ""
+msgstr "Грешка в достъпа на потребителя"
 
 #: src/channels.c:318
 msgid "User Icon"
-msgstr ""
+msgstr "Икона за потребителя"
 
 #: src/dvr/dvr_db.c:304
 msgid "User Limit Reached"
-msgstr ""
+msgstr "Лимита на юзери е достигнат"
 
 #: src/streaming.c:414
 msgid "User access error"
-msgstr ""
+msgstr "Грешка в достъпа на потребителя"
 
 #: src/streaming.c:416
 msgid "User limit reached"
-msgstr ""
+msgstr "Лимита на юзери е достигнат"
 
-#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1730
+#: src/access.c:1315 src/access.c:1679 src/descrambler/cwc.c:1730
 msgid "Username"
-msgstr "Потребител"
+msgstr "Име на потребител"
 
 #: src/epg.c:1985
 msgid "Variety show"
-msgstr ""
+msgstr "Вариететно шоу"
 
 #: src/epg.c:2048
 msgid "Video"
@@ -3150,23 +3433,23 @@ msgstr "Видео"
 
 #: src/profile.c:1543
 msgid "Video Bitrate (kb/s) (0=Auto)"
-msgstr ""
+msgstr "Скорост на данни на видеото (kb/s) (0=Автоматично)"
 
 #: src/profile.c:1535
 msgid "Video CODEC"
-msgstr ""
+msgstr "Видео кодек"
 
-#: src/access.c:1374
+#: src/access.c:1371
 msgid "Video Recorder"
-msgstr ""
+msgstr "Видео рекордер"
 
 #: src/esfilter.c:631
 msgid "Video Stream Filter"
-msgstr ""
+msgstr "Видео стриим филтър"
 
 #: src/streaming.c:540
 msgid "Visually impaired commentary/audio description"
-msgstr ""
+msgstr "За хора с увредено зрение/аудио описания"
 
 #: src/profile.c:1107 src/profile.c:1263
 msgid "WEBM"
@@ -3194,15 +3477,15 @@ msgstr "WEBTV профил VP8/Vorbis/WEBM"
 
 #: src/dvr/dvr_db.c:286
 msgid "Waiting for program start"
-msgstr ""
+msgstr "Изчакване за започване на програмата"
 
 #: src/dvr/dvr_db.c:284
 msgid "Waiting for stream"
-msgstr ""
+msgstr "Изчакване на стриим"
 
 #: src/epg.c:1953
 msgid "War"
-msgstr "Военен"
+msgstr "Война"
 
 #: src/epg.c:2007
 msgid "Water sport"
@@ -3210,19 +3493,19 @@ msgstr "Воден спорт"
 
 #: src/epg.c:1968
 msgid "Weather report"
-msgstr ""
+msgstr "Прогнози за времето"
 
-#: src/access.c:1415
+#: src/access.c:1412
 msgid "Web Interface"
 msgstr "Уеб интерфейс"
 
-#: src/access.c:1338
+#: src/access.c:1335
 msgid "Web Interface Language"
 msgstr "Език на уеб интерфейса"
 
 #: src/dvr/dvr_autorec.c:715
 msgid "Wed"
-msgstr "Сря"
+msgstr "Сряда"
 
 #: src/epg.c:1953
 msgid "Western"
@@ -3230,41 +3513,41 @@ msgstr "Уестърн"
 
 #: src/descrambler/capmt.c:2167
 msgid "Wrapper (capmt_ca.so)"
-msgstr ""
+msgstr "Wrapper (capmt_ca.so)"
 
 #: src/input/mpegts/satip/satip.c:240
 msgid "addpids/delpids supported"
-msgstr ""
+msgstr "Потдръжка на изтриване/добавяне на пидове"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
 msgstr "en50494"
 
-#: src/dvr/dvr_db.c:1938
+#: src/dvr/dvr_db.c:1942
 msgid "hrs"
 msgstr "часа"
 
-#: src/main.c:752
+#: src/main.c:757
 #, c-format
 msgid "invalid option specified [%s]"
-msgstr ""
+msgstr "попълнена е невалидна стойност [%s]"
 
-#: src/dvr/dvr_db.c:1939
+#: src/dvr/dvr_db.c:1943
 msgid "min"
 msgstr "мин"
 
-#: src/dvr/dvr_db.c:1940
+#: src/dvr/dvr_db.c:1944
 msgid "mins"
 msgstr "мин"
 
-#: src/main.c:759
+#: src/main.c:764
 #, c-format
 msgid "option %s requires a value"
-msgstr ""
+msgstr "опция %s изисква стойност"
 
-#: src/main.c:724
+#: src/main.c:729
 msgid "tsfile input (mux file)"
-msgstr ""
+msgstr "Входен TS файл (mux файл)"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:129
 msgid "tvhdhomerun Client"

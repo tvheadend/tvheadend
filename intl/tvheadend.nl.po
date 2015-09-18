@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-02 21:08+0200\n"
-"PO-Revision-Date: 2015-09-02 19:09+0000\n"
+"POT-Creation-Date: 2015-09-17 21:18+0200\n"
+"PO-Revision-Date: 2015-09-17 19:18+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Dutch (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/nl/)\n"
 "MIME-Version: 1.0\n"
@@ -28,7 +28,7 @@ msgid ""
 "https://tvheadend.org\n"
 msgstr "\nVoor meer informatie kunt u de website van Tvheadend bezoeken:\nhttps://tvheadend.org\n"
 
-#: src/input/mpegts/mpegts_mux.c:587
+#: src/input/mpegts/mpegts_mux.c:586
 msgid "# Channels"
 msgstr "# Kanalen"
 
@@ -41,7 +41,7 @@ msgid "# Muxes"
 msgstr "# Muxen"
 
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
-#: src/input/mpegts/mpegts_mux.c:580
+#: src/input/mpegts/mpegts_mux.c:579
 msgid "# Services"
 msgstr "# Services"
 
@@ -49,7 +49,7 @@ msgstr "# Services"
 msgid "# Services Seen"
 msgstr "# Services gezien"
 
-#: src/dvr/dvr_config.c:659
+#: src/dvr/dvr_config.c:660
 msgid "(Default Profile)"
 msgstr ""
 
@@ -156,15 +156,15 @@ msgstr "AA"
 msgid "AB"
 msgstr "AB"
 
-#: src/input/mpegts/mpegts_mux.c:478
+#: src/input/mpegts/mpegts_mux.c:477
 msgid "AC-3 = descriptor 6"
 msgstr "AC-3 = indicator 6"
 
-#: src/input/mpegts/mpegts_mux.c:594
+#: src/input/mpegts/mpegts_mux.c:593
 msgid "AC-3 Detection"
 msgstr "AC-3 Detectie"
 
-#: src/input/mpegts/mpegts_mux.c:384
+#: src/input/mpegts/mpegts_mux.c:383
 msgid "ACTIVE"
 msgstr "ACTIEF"
 
@@ -176,7 +176,8 @@ msgstr "AES Constant Code Word Client"
 msgid "ANY"
 msgstr "ELKE"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:642 src/input/mpegts/iptv/iptv_mux.c:126
+#: src/satip/server.c:648 src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/iptv/iptv_mux.c:126
 msgid "ATSC"
 msgstr "ATSC"
 
@@ -196,7 +197,7 @@ msgstr "Auto"
 msgid "Aborted by user"
 msgstr "Afgebroken door gebruiker"
 
-#: src/access.c:1293
+#: src/access.c:1290
 msgid "Access"
 msgstr "Toegang"
 
@@ -209,15 +210,15 @@ msgstr "Actie"
 msgid "Adapter in use by another subscription"
 msgstr "Adapter is in gebruik door andere aanmelding"
 
-#: src/main.c:705
+#: src/main.c:710
 msgid "Add file and line numbers to debug"
 msgstr "Voeg bestandsnaam en regelnummer toe aan debug"
 
-#: src/main.c:706
+#: src/main.c:711
 msgid "Add the thread ID to debug"
 msgstr "Voeg thread ID toe aan debug"
 
-#: src/access.c:1421
+#: src/access.c:1418
 msgid "Admin"
 msgstr "Admin"
 
@@ -230,7 +231,7 @@ msgstr "Volwassen film"
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
 msgstr "Geavanceerd (niet universele LNBs, rotors, etc.)"
 
-#: src/access.c:1352
+#: src/access.c:1349
 msgid "Advanced Streaming"
 msgstr "Geavanceerde streaming"
 
@@ -242,29 +243,29 @@ msgstr "Avontuur"
 msgid "Advertisement / Shopping"
 msgstr "Reclame / Winkelen"
 
-#: src/access.c:1275
+#: src/access.c:1272
 msgid "All (Streaming plus DVR)"
 msgstr "Allen (streaming en DVR)"
 
-#: src/access.c:1386
+#: src/access.c:1383
 msgid "All DVR"
 msgstr "Alle DVR"
 
-#: src/access.c:1392
+#: src/access.c:1389
 msgid "All DVR (rw)"
 msgstr "Alle DVR (rw)"
 
-#: src/webui/extjs.c:241
+#: src/webui/extjs.c:225
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
 msgstr "Alle vooruitgang wordt gebruikt om de server infrastructuur uit te breiden en om test apparatuur te kopen."
 
-#: src/main.c:654
+#: src/main.c:659
 msgid "Alternate PID path"
 msgstr "Alternatief PID pad"
 
-#: src/main.c:649
+#: src/main.c:654
 msgid "Alternate configuration path"
 msgstr "Alternatief configuratie pad"
 
@@ -278,7 +279,7 @@ msgstr "Dieren"
 
 #: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
 #: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
-#: src/dvr/dvr_timerec.c:431
+#: src/dvr/dvr_timerec.c:432
 msgid "Any"
 msgstr "Elke"
 
@@ -302,6 +303,10 @@ msgstr "Audio CODEC"
 msgid "Audio Stream Filter"
 msgstr "Audio stream filter"
 
+#: src/satip/server.c:548
+msgid "Auto"
+msgstr ""
+
 #: src/service.c:140
 msgid "Auto Check Disabled"
 msgstr "Automatische check uitgeschakeld"
@@ -314,11 +319,11 @@ msgstr "Automatische check ingeschakeld"
 msgid "Auto EPG Channel"
 msgstr "Automatisch EPG kanaal"
 
-#: src/dvr/dvr_db.c:2217
+#: src/dvr/dvr_db.c:2221
 msgid "Auto Record"
 msgstr "Automatische opname"
 
-#: src/dvr/dvr_db.c:2225
+#: src/dvr/dvr_db.c:2229
 msgid "Auto Time Record"
 msgstr "Automatische tijd opname"
 
@@ -353,7 +358,7 @@ msgstr "Ballet"
 msgid "Bandwidth"
 msgstr "Bandbreedte"
 
-#: src/webui/extjs.c:219
+#: src/webui/extjs.c:203
 msgid "Based on software from"
 msgstr "Gebaseerd op software van"
 
@@ -373,7 +378,7 @@ msgstr "Groep (automatisch)"
 msgid "Brand"
 msgstr "Merk"
 
-#: src/dvr/dvr_db.c:2241
+#: src/dvr/dvr_db.c:2245
 msgid "Broadcast"
 msgstr "Uitzending"
 
@@ -381,7 +386,7 @@ msgstr "Uitzending"
 msgid "Broadcasting"
 msgstr "Uitzenden"
 
-#: src/webui/extjs.c:224
+#: src/webui/extjs.c:208
 msgid "Build"
 msgstr "Build"
 
@@ -422,11 +427,11 @@ msgstr "CAPMT Interval (ms)"
 msgid "CAPMT Query Interval (ms)"
 msgstr "CAPMT Query Interval (ms)"
 
-#: src/input/mpegts/mpegts_mux.c:548 src/input/mpegts/mpegts_service.c:157
+#: src/input/mpegts/mpegts_mux.c:547 src/input/mpegts/mpegts_service.c:157
 msgid "CRID Authority"
 msgstr "CRID Authority"
 
-#: src/dvr/dvr_config.c:800
+#: src/dvr/dvr_config.c:801
 msgid "Cache Scheme"
 msgstr "Cache schema"
 
@@ -439,16 +444,16 @@ msgstr "Camd.socket bestandsnaam / IP adres (TCP modus)"
 msgid "Cartoons"
 msgstr "Cartoons"
 
-#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2048
-#: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:582
+#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2052
+#: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:583
 msgid "Channel"
 msgstr "Kanaal"
 
-#: src/dvr/dvr_db.c:2058
+#: src/dvr/dvr_db.c:2062
 msgid "Channel Icon"
 msgstr "Kanaal logo"
 
-#: src/dvr/dvr_db.c:2065
+#: src/dvr/dvr_db.c:2069
 msgid "Channel Name"
 msgstr "Kanaal naam"
 
@@ -464,15 +469,19 @@ msgstr "Kanaal label"
 msgid "Channel Tag Reference"
 msgstr "Kanaal label referentie"
 
-#: src/access.c:1461
+#: src/access.c:1458
 msgid "Channel Tags"
 msgstr "Kanaal labels"
+
+#: src/config.c:1804
+msgid "Channel icon path (see Help)"
+msgstr ""
 
 #: src/profile.c:1520
 msgid "Channels"
 msgstr "Kanalen"
 
-#: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:572
+#: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
 #: src/input/mpegts/mpegts_service.c:178
 msgid "Character Set"
 msgstr "Kanalen reeks"
@@ -517,11 +526,11 @@ msgstr "Code Word Client (newcamd)"
 msgid "Comedy"
 msgstr "Komedie"
 
-#: src/access.c:1470 src/access.c:1708 src/channels.c:1142 src/esfilter.c:688
+#: src/access.c:1467 src/access.c:1701 src/channels.c:1142 src/esfilter.c:688
 #: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
 #: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
-#: src/dvr/dvr_db.c:2291 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:660
-#: src/dvr/dvr_config.c:783 src/descrambler/caclient.c:275
+#: src/dvr/dvr_db.c:2295 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:661
+#: src/dvr/dvr_config.c:784 src/descrambler/caclient.c:275
 msgid "Comment"
 msgstr "Commentaar"
 
@@ -541,15 +550,23 @@ msgstr "Succesvol"
 msgid "Conditional Access Client"
 msgstr "Conditional Access Client"
 
+#: src/config.c:1704
+msgid "Configuration"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
 msgstr "Configuratie ID"
 
-#: src/dvr/dvr_config.c:773
+#: src/dvr/dvr_config.c:774
 msgid "Configuration Name"
 msgstr "Configuratie naam"
 
-#: src/access.c:1427
+#: src/config.c:1735
+msgid "Configuration version"
+msgstr ""
+
+#: src/access.c:1424
 msgid "Connection Limit Type"
 msgstr "Verbindingslimiet type"
 
@@ -557,11 +574,11 @@ msgstr "Verbindingslimiet type"
 msgid "Constellation"
 msgstr "Stelsel"
 
-#: src/profile.c:1505 src/dvr/dvr_db.c:2135
+#: src/profile.c:1505 src/dvr/dvr_db.c:2139
 msgid "Container"
 msgstr "Container"
 
-#: src/dvr/dvr_db.c:2233 src/dvr/dvr_autorec.c:1024
+#: src/dvr/dvr_db.c:2237 src/dvr/dvr_autorec.c:1024
 msgid "Content Type"
 msgstr "Inhoudstype"
 
@@ -593,13 +610,17 @@ msgstr "Label maken"
 msgid "Created"
 msgstr "Gemaakt"
 
-#: src/dvr/dvr_db.c:2162 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:653
+#: src/dvr/dvr_db.c:2166 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:654
 msgid "Creator"
 msgstr "Gemaakt door"
 
 #: src/input/mpegts/mpegts_mux_sched.c:140
 msgid "Cron"
 msgstr "cron"
+
+#: src/epggrab.c:272
+msgid "Cron multi-line"
+msgstr ""
 
 #: src/epg.c:2041
 msgid "Culture (without music)"
@@ -609,7 +630,7 @@ msgstr "Cultuur (zonder muziek)"
 msgid "Current affairs"
 msgstr "Lopende zaken"
 
-#: src/main.c:664
+#: src/main.c:669
 msgid "DBus - use the session message bus instead of the system one"
 msgstr ""
 
@@ -621,13 +642,37 @@ msgstr "DES Constant Code Word Client"
 msgid "DES Key"
 msgstr "DES sleutel"
 
-#: src/dvr/dvr_db.c:2204
+#: src/dvr/dvr_db.c:2208
 msgid "DVB EPG ID"
 msgstr "DVB Electronische Programma Gids nummer"
+
+#: src/config.c:1718
+msgid "DVB Scan Files"
+msgstr ""
+
+#: src/config.c:1769
+msgid "DVB scan files path"
+msgstr ""
+
+#: src/satip/server.c:634
+msgid "DVB-C"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:220
 msgid "DVB-C Network"
 msgstr "DVB-C netwerk"
+
+#: src/satip/server.c:641
+msgid "DVB-C2"
+msgstr ""
+
+#: src/satip/server.c:655
+msgid "DVB-Cable/AnnexB"
+msgstr ""
+
+#: src/satip/server.c:606
+msgid "DVB-S"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
 msgid "DVB-S 4-port"
@@ -657,7 +702,11 @@ msgstr "DVB-S Eenvoudig"
 msgid "DVB-S Toneburst"
 msgstr "DVB-S Toneburst"
 
-#: src/input/mpegts/mpegts_mux_dvb.c:210
+#: src/satip/server.c:613
+msgid "DVB-S2"
+msgstr ""
+
+#: src/satip/server.c:620 src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
 msgstr "DVB-T"
 
@@ -665,11 +714,15 @@ msgstr "DVB-T"
 msgid "DVB-T Network"
 msgstr "DVB-T Netwerk"
 
+#: src/satip/server.c:627
+msgid "DVB-T2"
+msgstr ""
+
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
 msgstr "Conditional Access Client "
 
-#: src/access.c:1277
+#: src/access.c:1274
 msgid "DVR"
 msgstr "DVR"
 
@@ -677,27 +730,27 @@ msgstr "DVR"
 msgid "DVR Auto-Record Entry"
 msgstr "DVR automatisch gemaakte opname"
 
-#: src/dvr/dvr_config.c:731
+#: src/dvr/dvr_config.c:732
 msgid "DVR Behaviour"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2145 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:637
+#: src/dvr/dvr_db.c:2149 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:638
 msgid "DVR Configuration"
 msgstr "DVR configuratie"
 
-#: src/dvr/dvr_config.c:723
+#: src/dvr/dvr_config.c:724
 msgid "DVR Configuration Profile"
 msgstr "DVR configuratie profiel"
 
-#: src/access.c:1406
+#: src/access.c:1403
 msgid "DVR Configuration Profiles"
 msgstr "DVR configuratie profielen"
 
-#: src/dvr/dvr_db.c:1984
+#: src/dvr/dvr_db.c:1988
 msgid "DVR Entry"
 msgstr "DVR item"
 
-#: src/dvr/dvr_config.c:809
+#: src/dvr/dvr_config.c:810
 msgid "DVR Log Retention Time (days)"
 msgstr "DVR logboek houdbaarheid (dagen)"
 
@@ -729,7 +782,7 @@ msgstr "DVR na"
 msgid "DVR Pre"
 msgstr "DVR voor"
 
-#: src/dvr/dvr_timerec.c:547
+#: src/dvr/dvr_timerec.c:548
 msgid "DVR Time-Record Entry"
 msgstr "DVR tijdsopname"
 
@@ -737,11 +790,11 @@ msgstr "DVR tijdsopname"
 msgid "Dance"
 msgstr "Dans"
 
-#: src/dvr/dvr_db.c:2197
+#: src/dvr/dvr_db.c:2201
 msgid "Data Errors"
 msgstr "Data fouten"
 
-#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:612
+#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:613
 msgid "Days of Week"
 msgstr "Dagen van de week"
 
@@ -750,9 +803,33 @@ msgstr "Dagen van de week"
 msgid "Debate"
 msgstr "Debat"
 
-#: src/main.c:696
+#: src/main.c:701
 msgid "Debug Options"
 msgstr "Debug opties"
+
+#: src/tvhlog.c:624
+msgid "Debug libav log"
+msgstr ""
+
+#: src/tvhlog.c:589
+msgid "Debug log path"
+msgstr ""
+
+#: src/tvhlog.c:603
+msgid "Debug subsystems"
+msgstr ""
+
+#: src/tvhlog.c:596
+msgid "Debug to syslog"
+msgstr ""
+
+#: src/tvhlog.c:610
+msgid "Debug trace (low-level)"
+msgstr ""
+
+#: src/tvhlog.c:581
+msgid "Debugging"
+msgstr ""
 
 #: src/profile.c:300
 msgid "Default"
@@ -761,6 +838,10 @@ msgstr "Standaard"
 #: src/profile.c:321
 msgid "Default Priority"
 msgstr "Standaard prioriteit"
+
+#: src/config.c:1759
+msgid "Default language(s)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
 #: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
@@ -771,7 +852,11 @@ msgstr "Ontvangstsysteem"
 msgid "Demux Path"
 msgstr "Demux pad"
 
-#: src/dvr/dvr_db.c:2104 src/dvr/dvr_db.c:2111
+#: src/satip/server.c:591
+msgid "Descramble Services (Limit Per Mux)"
+msgstr ""
+
+#: src/dvr/dvr_db.c:2108 src/dvr/dvr_db.c:2115
 msgid "Description"
 msgstr "Omschrijving"
 
@@ -792,23 +877,23 @@ msgstr "Apparaat model"
 msgid "Device Path"
 msgstr "Apparaat pad"
 
-#: src/dvr/dvr_db.c:2176 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:576
+#: src/dvr/dvr_db.c:2180 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:577
 msgid "Directory"
 msgstr "Directory"
 
-#: src/dvr/dvr_config.c:898
+#: src/dvr/dvr_config.c:899
 msgid "Directory Permissions (octal, e.g. 0775)"
 msgstr "Directory rechten (octaal, bijvoorbeeld 0755)"
 
-#: src/input/mpegts/mpegts_mux.c:458
+#: src/input/mpegts/mpegts_mux.c:457
 msgid "Disable"
 msgstr "Uitschakelen"
 
-#: src/main.c:715
+#: src/main.c:720
 msgid "Disable DVB bouquets"
 msgstr "Schakel DVB bouquets uit"
 
-#: src/main.c:713
+#: src/main.c:718
 msgid "Disable all access control checks"
 msgstr "Schakel elke vorm van toegangscontrole uit"
 
@@ -816,7 +901,7 @@ msgstr "Schakel elke vorm van toegangscontrole uit"
 msgid "Disable device/firmware-specific workarounds"
 msgstr "Schakel apparaat/firmware specifieke oplossingen uit"
 
-#: src/main.c:699
+#: src/main.c:704
 msgid "Disable syslog (all messages)"
 msgstr "Schakel syslog uit (alle berichten)"
 
@@ -825,7 +910,7 @@ msgstr "Schakel syslog uit (alle berichten)"
 msgid "Discussion"
 msgstr "Discussie"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1363
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1362
 msgid "DiseqC"
 msgstr "DiseqC"
 
@@ -849,19 +934,19 @@ msgstr "Niet gebruiken"
 msgid "Documentary"
 msgstr "Documentaire"
 
-#: src/dvr/dvr_config.c:962
+#: src/dvr/dvr_config.c:963
 msgid "Don't Include Title In Filename"
 msgstr "Neem titel niet op in bestandsnaam"
 
-#: src/dvr/dvr_db.c:2211
+#: src/dvr/dvr_db.c:2215
 msgid "Don't Reschedule"
 msgstr "Niet opnieuw opnemen"
 
-#: src/main.c:650
+#: src/main.c:655
 msgid "Don't backup configuration tree at upgrade"
 msgstr "Maak geen backup van configuratie bij upgrade"
 
-#: src/dvr/dvr_config.c:684
+#: src/dvr/dvr_config.c:685
 msgid "Don't keep"
 msgstr "Niet houden"
 
@@ -874,7 +959,7 @@ msgstr "Drama"
 msgid "Duplicate Handling"
 msgstr "Herhaling behandeling"
 
-#: src/dvr/dvr_db.c:2041
+#: src/dvr/dvr_db.c:2045
 msgid "Duration"
 msgstr "Duur"
 
@@ -882,7 +967,15 @@ msgstr "Duur"
 msgid "EIT Local Time"
 msgstr "EIT lokale tijd"
 
-#: src/input/mpegts/mpegts_mux.c:505
+#: src/epggrab/module.c:103
+msgid "EPG Grabber"
+msgstr ""
+
+#: src/epggrab.c:221
+msgid "EPG Grabber Configuration"
+msgstr ""
+
+#: src/input/mpegts/mpegts_mux.c:504
 msgid "EPG Scan"
 msgstr "EPG scan"
 
@@ -890,9 +983,13 @@ msgstr "EPG scan"
 msgid "EPG Source"
 msgstr "EPG bron"
 
-#: src/dvr/dvr_config.c:833
+#: src/dvr/dvr_config.c:834
 msgid "EPG Update Window"
 msgstr "EPG update tijdsbestek"
+
+#: src/epggrab.c:297
+msgid "EPG scan timeout in seconds (30-7200)"
+msgstr ""
 
 #: src/epg.c:2052 src/epg.c:2054
 msgid "Economics"
@@ -910,50 +1007,54 @@ msgstr " Leerzaam"
 msgid "Elementary Stream Filter"
 msgstr "Elementary Stream Filter"
 
-#: src/input/mpegts/mpegts_mux.c:459
+#: src/input/mpegts/mpegts_mux.c:458
 msgid "Enable (auto)"
 msgstr "Aan (auto)"
 
-#: src/main.c:662
+#: src/main.c:667
 msgid "Enable DBus"
 msgstr "Gebruik DBus"
 
-#: src/main.c:712
+#: src/config.c:1783
+msgid "Enable NTP driver"
+msgstr ""
+
+#: src/main.c:717
 msgid "Enable coredumps for daemon"
 msgstr "Gebruik coredumps voor de daemon"
 
-#: src/main.c:697
+#: src/main.c:702
 msgid "Enable debug on stderr"
 msgstr "Debug op stderr"
 
-#: src/main.c:701
+#: src/main.c:706
 msgid "Enable debug subsystems"
 msgstr "Debug van subsystemen"
 
-#: src/main.c:700
+#: src/main.c:705
 msgid "Enable debug to file"
 msgstr "Debug naar bestand"
 
-#: src/main.c:698
+#: src/main.c:703
 msgid "Enable debug to syslog"
 msgstr "Debug naar syslog"
 
-#: src/main.c:703
+#: src/main.c:708
 msgid "Enable trace subsystems"
 msgstr "Trace subsytemen"
 
-#: src/main.c:710
+#: src/main.c:715
 msgid "Enable webUI debug (non-minified JS)"
 msgstr "webUI debug (non-minified JS)"
 
-#: src/access.c:1312 src/access.c:1680 src/channels.c:296 src/channels.c:1092
-#: src/service.c:158 src/imagecache.c:71 src/esfilter.c:621 src/profile.c:293
-#: src/bouquet.c:802 src/dvr/dvr_autorec.c:916 src/dvr/dvr_timerec.c:557
-#: src/dvr/dvr_config.c:763 src/descrambler/caclient.c:262
-#: src/input/mpegts/mpegts_input.c:224 src/input/mpegts/mpegts_mux.c:497
-#: src/input/mpegts/mpegts_mux_sched.c:126
+#: src/access.c:1309 src/access.c:1673 src/channels.c:296 src/channels.c:1092
+#: src/service.c:158 src/imagecache.c:84 src/esfilter.c:621 src/profile.c:293
+#: src/bouquet.c:802 src/epggrab/module.c:135 src/dvr/dvr_autorec.c:916
+#: src/dvr/dvr_timerec.c:558 src/dvr/dvr_config.c:764
+#: src/descrambler/caclient.c:262 src/input/mpegts/mpegts_input.c:225
+#: src/input/mpegts/mpegts_mux.c:496 src/input/mpegts/mpegts_mux_sched.c:126
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1196
-#: src/input/mpegts/satip/satip_satconf.c:188
+#: src/input/mpegts/satip/satip_satconf.c:188 src/timeshift.c:150
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
 msgstr "Aan"
@@ -978,7 +1079,7 @@ msgstr "Omgeving"
 msgid "Environment (pipe)"
 msgstr "Omgeving (pipe)"
 
-#: src/dvr/dvr_db.c:2249
+#: src/dvr/dvr_db.c:2253
 msgid "Episode"
 msgstr "Aflevering"
 
@@ -987,11 +1088,11 @@ msgstr "Aflevering"
 msgid "Episode %d"
 msgstr "Aflevering %d"
 
-#: src/dvr/dvr_db.c:2183
+#: src/dvr/dvr_db.c:2187
 msgid "Error Code"
 msgstr "Fout code"
 
-#: src/dvr/dvr_db.c:2190
+#: src/dvr/dvr_db.c:2194
 msgid "Errors"
 msgstr "Fouten"
 
@@ -1003,7 +1104,7 @@ msgstr "Even sleutel"
 msgid "Every day"
 msgstr "Elke dag"
 
-#: src/access.c:1454
+#: src/access.c:1451
 msgid "Exclude Channel Tags"
 msgstr "Sluit kanaal labels uit"
 
@@ -1015,23 +1116,35 @@ msgstr "Expedities"
 msgid "Experimental film"
 msgstr "Experimentele film"
 
-#: src/dvr/dvr_db.c:2002 src/dvr/dvr_autorec.c:983
+#: src/satip/server.c:568
+msgid "Exported Tuners"
+msgstr ""
+
+#: src/epggrab/module.c:59
+msgid "External"
+msgstr ""
+
+#: src/epggrab/module.c:162
+msgid "External EPG Grabber"
+msgstr ""
+
+#: src/dvr/dvr_db.c:2006 src/dvr/dvr_autorec.c:983
 msgid "Extra Start Time"
 msgstr "Extra start tijd"
 
-#: src/dvr/dvr_db.c:2026 src/dvr/dvr_autorec.c:991
+#: src/dvr/dvr_db.c:2030 src/dvr/dvr_autorec.c:991
 msgid "Extra Stop Time"
 msgstr "Extra stop tijd"
 
-#: src/dvr/dvr_config.c:825
+#: src/dvr/dvr_config.c:826
 msgid "Extra Time After Recordings (minutes)"
 msgstr "Extra tijd na opname (minuten)"
 
-#: src/dvr/dvr_config.c:817
+#: src/dvr/dvr_config.c:818
 msgid "Extra Time Before Recordings (minutes)"
 msgstr "Extra tijd voor opname (minuten)"
 
-#: src/input/mpegts/mpegts_mux.c:391
+#: src/input/mpegts/mpegts_mux.c:390
 msgid "FAIL"
 msgstr "FOUT"
 
@@ -1051,7 +1164,7 @@ msgstr "FEC laag"
 msgid "Factual topics"
 msgstr "Thema's"
 
-#: src/access.c:1398
+#: src/access.c:1395
 msgid "Failed DVR"
 msgstr "Mislukte DVR"
 
@@ -1067,23 +1180,23 @@ msgstr "Bestand ontbreekt"
 msgid "File Not Created"
 msgstr "Bestand niet aangemaakt"
 
-#: src/dvr/dvr_config.c:856
+#: src/dvr/dvr_config.c:857
 msgid "File Permissions (octal, e.g. 0664)"
 msgstr "Bestands rechten (octaal, bijvoorbeeld 0644)"
 
-#: src/dvr/dvr_db.c:2263
+#: src/dvr/dvr_db.c:2267
 msgid "File Size"
 msgstr "Bestand groote"
 
-#: src/dvr/dvr_db.c:2169
+#: src/dvr/dvr_db.c:2173
 msgid "Filename"
 msgstr "Bestandsnaam"
 
-#: src/dvr/dvr_config.c:864
+#: src/dvr/dvr_config.c:865
 msgid "Filename Character Set"
 msgstr "Bestand character set"
 
-#: src/dvr/dvr_config.c:747
+#: src/dvr/dvr_config.c:748
 msgid "Filename Options"
 msgstr "Bestandsnaam opties"
 
@@ -1111,7 +1224,7 @@ msgstr "Folkloristisch"
 msgid "Football"
 msgstr "Voetbal"
 
-#: src/input/mpegts/mpegts_mux.c:460
+#: src/input/mpegts/mpegts_mux.c:459
 msgid "Force (auto)"
 msgstr "Forceer (automatisch)"
 
@@ -1127,6 +1240,10 @@ msgstr "Forceer oude status"
 msgid "Force Priority"
 msgstr "Forceer prioriteit"
 
+#: src/epggrab.c:281
+msgid "Force initial EPG scan at startup"
+msgstr ""
+
 #: src/input/mpegts/satip/satip.c:254
 msgid "Force pilot for DVB-S2"
 msgstr "Forceer pilot voor DVB-S2"
@@ -1139,11 +1256,11 @@ msgstr "Forceer afsluit vertraging"
 msgid "Foreign countries"
 msgstr "Buitenland"
 
-#: src/main.c:651
+#: src/main.c:656
 msgid "Fork and run as daemon"
 msgstr "Fork en start als daemon"
 
-#: src/dvr/dvr_config.c:890
+#: src/dvr/dvr_config.c:891
 msgid "Format String"
 msgstr "Formateer tekst"
 
@@ -1191,7 +1308,7 @@ msgstr "Volledige DiseqC"
 msgid "Full Mux Rx mode supported"
 msgstr "Volledige Mux ontvangst modus ondersteund"
 
-#: src/dvr/dvr_config.c:739
+#: src/dvr/dvr_config.c:740
 msgid "Full Pathname Specification"
 msgstr "Volledig pad specificatie"
 
@@ -1224,12 +1341,20 @@ msgstr "Spelshow"
 msgid "Gardening"
 msgstr "Tuinieren"
 
+#: src/satip/server.c:564
+msgid "General"
+msgstr ""
+
+#: src/epggrab.c:227
+msgid "General Config"
+msgstr ""
+
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:253
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:272
 msgid "Generic"
 msgstr "Algemeen"
 
-#: src/main.c:644
+#: src/main.c:649
 msgid "Generic Options"
 msgstr "Algemene opties"
 
@@ -1257,7 +1382,7 @@ msgstr "HDHomeRun DVB-C Frontend"
 msgid "HDHomeRun DVB-T Frontend"
 msgstr "HDHomeRun DVB-T Frontend"
 
-#: src/access.c:1380
+#: src/access.c:1377
 msgid "HTSP DVR"
 msgstr "HTSP DVR"
 
@@ -1269,7 +1394,7 @@ msgstr "HTSP standaard stream instellingen"
 msgid "HTSP Stream Profile"
 msgstr "HTSP stream profiel"
 
-#: src/access.c:1358
+#: src/access.c:1355
 msgid "HTSP Streaming"
 msgstr "HTSP Streaming"
 
@@ -1285,7 +1410,7 @@ msgstr "Doven"
 msgid "Hierarchy"
 msgstr "Hierarchie"
 
-#: src/profile.c:248 src/dvr/dvr_db.c:1614
+#: src/profile.c:248 src/dvr/dvr_db.c:1618
 msgid "High"
 msgstr "Hoog"
 
@@ -1305,7 +1430,7 @@ msgstr "Horror"
 msgid "Hostname/IP"
 msgstr "Hostname/IP"
 
-#: src/input/mpegts/mpegts_mux.c:382
+#: src/input/mpegts/mpegts_mux.c:381
 msgid "IDLE"
 msgstr "RUST"
 
@@ -1346,11 +1471,11 @@ msgstr "Logo URL"
 msgid "Icon has title"
 msgstr "Logo heeft titel"
 
-#: src/webui/extjs.c:220
+#: src/webui/extjs.c:204
 msgid "Icons from"
 msgstr "Logos van"
 
-#: src/input/mpegts/mpegts_input.c:270
+#: src/input/mpegts/mpegts_input.c:271
 msgid "Idle Scan"
 msgstr "Scannen in rust"
 
@@ -1358,7 +1483,7 @@ msgstr "Scannen in rust"
 msgid "Idle Scan Muxes"
 msgstr "Bij rust scannen van muxen"
 
-#: src/main.c:655
+#: src/main.c:660
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -1367,7 +1492,7 @@ msgid ""
 "the access control from within the Tvheadend web interface."
 msgstr ""
 
-#: src/webui/extjs.c:240
+#: src/webui/extjs.c:224
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "Het project steunen kan door middel van donaties."
 
@@ -1379,43 +1504,47 @@ msgstr "Negeer EPG (EIT)"
 msgid "Ignore Provider's Channel Numbers"
 msgstr "Negeer kanaal nummers van provider"
 
-#: src/input/mpegts/mpegts_mux.c:479
+#: src/input/mpegts/mpegts_mux.c:478
 msgid "Ignore descriptor 5"
 msgstr "Negeer descriptor 5"
 
-#: src/imagecache.c:77
+#: src/imagecache.c:90
 msgid "Ignore invalid SSL certificate"
 msgstr "Negeer niet geldige SSL certificaten"
 
-#: src/main.c:711
+#: src/imagecache.c:76
+msgid "Image Cache"
+msgstr ""
+
+#: src/main.c:716
 msgid "Immediately abort"
 msgstr "Direct stoppen"
 
-#: src/profile.c:247 src/dvr/dvr_db.c:1613
+#: src/profile.c:247 src/dvr/dvr_db.c:1617
 msgid "Important"
 msgstr "Belangrijk"
 
-#: src/dvr/dvr_config.c:927
+#: src/dvr/dvr_config.c:928
 msgid "Include Channel Name In Filename"
 msgstr "Neem kanaalnaam op in bestandsnaam"
 
-#: src/dvr/dvr_config.c:934
+#: src/dvr/dvr_config.c:935
 msgid "Include Date In Filename"
 msgstr "Neem datum op in bestandsnaam"
 
-#: src/dvr/dvr_config.c:948
+#: src/dvr/dvr_config.c:949
 msgid "Include Episode In Filename"
 msgstr "Neem aflevering op in bestandsnaam"
 
-#: src/dvr/dvr_config.c:955
+#: src/dvr/dvr_config.c:956
 msgid "Include Subtitle In Filename"
 msgstr "Neem ondertiteling op in bestandsnaam"
 
-#: src/dvr/dvr_config.c:941
+#: src/dvr/dvr_config.c:942
 msgid "Include Time In Filename"
 msgstr "Neem tijd op in bestandsnaam"
 
-#: src/access.c:1305 src/esfilter.c:614 src/descrambler/caclient.c:255
+#: src/access.c:1302 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
 msgstr "Index"
 
@@ -1427,7 +1556,7 @@ msgstr "Informatief"
 msgid "Init Rotor Time (seconds)"
 msgstr "Rotor initialisatie tijd (seconden)"
 
-#: src/input/mpegts/mpegts_input.c:262
+#: src/input/mpegts/mpegts_input.c:263
 msgid "Initial Scan"
 msgstr "Initiele scan"
 
@@ -1447,20 +1576,28 @@ msgstr "Input pad"
 msgid "Interface"
 msgstr "Interface"
 
-#: src/channels.c:1110
+#: src/channels.c:1110 src/epggrab/module.c:58
 msgid "Internal"
 msgstr "Intern"
+
+#: src/epggrab/module.c:153
+msgid "Internal EPG Grabber"
+msgstr ""
+
+#: src/epggrab.c:231
+msgid "Internal Grabber"
+msgstr ""
 
 #: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
 #: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
 msgid "Interview"
 msgstr "Interview"
 
-#: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:453
+#: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:454
 msgid "Invalid"
 msgstr "Ongeldig"
 
-#: src/main.c:792
+#: src/main.c:797
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr "Foutief adapter number '%s'\n"
@@ -1472,6 +1609,10 @@ msgstr "Ongeldig doel"
 #: src/epg.c:2030
 msgid "Jazz"
 msgstr "Jazz"
+
+#: src/satip/server.c:549
+msgid "Keep"
+msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
@@ -1485,10 +1626,14 @@ msgstr "LNB"
 msgid "LNB Type"
 msgstr "LNB type"
 
-#: src/access.c:1331 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
+#: src/access.c:1328 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
 msgstr "Taal"
+
+#: src/config.c:1714
+msgid "Language Settings"
+msgstr ""
 
 #: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
 #: src/epg.c:2080 src/epg.c:2081
@@ -1499,6 +1644,10 @@ msgstr "Talen"
 msgid "Last Seen"
 msgstr "Laatst gezien"
 
+#: src/config.c:1743
+msgid "Last updated from"
+msgstr ""
+
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 msgid "Latitude Direction South"
 msgstr "Latitude richting het zuiden"
@@ -1507,11 +1656,11 @@ msgstr "Latitude richting het zuiden"
 msgid "Leisure hobbies"
 msgstr "Vrije tijd"
 
-#: src/access.c:1434
+#: src/access.c:1431
 msgid "Limit Connections"
 msgstr "Beperk aantal verbindingen"
 
-#: src/input/mpegts/mpegts_input.c:288
+#: src/input/mpegts/mpegts_input.c:289
 msgid "Linked Input"
 msgstr "Gekoppelde input"
 
@@ -1567,7 +1716,7 @@ msgstr "LinuxDVB Adapter"
 msgid "LinuxDVB Network"
 msgstr "LinuxDVB Network"
 
-#: src/main.c:681
+#: src/main.c:686
 msgid "Listen on IPv6"
 msgstr "Gebruik IPv6"
 
@@ -1612,11 +1761,11 @@ msgstr "Logboek"
 msgid "Longtitude Direction West"
 msgstr "Longitude richting het westen"
 
-#: src/profile.c:250 src/dvr/dvr_db.c:1616
+#: src/profile.c:250 src/dvr/dvr_db.c:1620
 msgid "Low"
 msgstr "Laag"
 
-#: src/dvr/dvr_db.c:1645
+#: src/dvr/dvr_db.c:1649
 msgid "MPEG-PS (DVD)"
 msgstr "MPEG-PS (DVD)"
 
@@ -1624,19 +1773,19 @@ msgstr "MPEG-PS (DVD)"
 msgid "MPEG-PS (DVD)/av-lib"
 msgstr "MPEG-PS (DVD)/av-lib"
 
-#: src/dvr/dvr_db.c:1644
+#: src/dvr/dvr_db.c:1648
 msgid "MPEG-TS"
 msgstr "MPEG-TS"
 
-#: src/input/mpegts/mpegts_input.c:216
+#: src/input/mpegts/mpegts_input.c:217
 msgid "MPEG-TS Input"
 msgstr "MPEG-TS Input"
 
-#: src/input/mpegts/mpegts_mux.c:487
+#: src/input/mpegts/mpegts_mux.c:486
 msgid "MPEG-TS Multiplex"
 msgstr "MPEG-TS Multiplex"
 
-#: src/input/mpegts/mpegts_mux.c:42
+#: src/input/mpegts/mpegts_mux.c:41
 msgid "MPEG-TS Multiplex Phy"
 msgstr "MPEG-TS Multiplex Phy"
 
@@ -1652,7 +1801,7 @@ msgstr ""
 msgid "MPEG-TS Pass-through/built-in"
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:721
+#: src/input/mpegts/mpegts_service.c:725
 msgid "MPEG-TS Raw Service"
 msgstr "MPEG-TS Raw Service"
 
@@ -1668,15 +1817,15 @@ msgstr "MPEG-TS/av-lib"
 msgid "Magazines"
 msgstr "Tijdschriften"
 
-#: src/dvr/dvr_config.c:913
+#: src/dvr/dvr_config.c:914
 msgid "Make Subdirectories Per Channel"
 msgstr "Maak directories per kanaal"
 
-#: src/dvr/dvr_config.c:906
+#: src/dvr/dvr_config.c:907
 msgid "Make Subdirectories Per Day"
 msgstr "Maak directories per dag"
 
-#: src/dvr/dvr_config.c:920
+#: src/dvr/dvr_config.c:921
 msgid "Make Subdirectories Per Title"
 msgstr "Maak directories per titel"
 
@@ -1709,7 +1858,7 @@ msgstr "Hoof tuner"
 msgid "Matroska"
 msgstr "Matroska"
 
-#: src/dvr/dvr_db.c:1641
+#: src/dvr/dvr_db.c:1645
 msgid "Matroska (mkv)"
 msgstr "Matroska (mkv)"
 
@@ -1729,7 +1878,7 @@ msgstr "Matroska/av-lib"
 msgid "Maximum Bandwidth (Kbps)"
 msgstr "Maximale bandbreedte (Kbps)"
 
-#: src/access.c:1448
+#: src/access.c:1445
 msgid "Maximum Channel Num"
 msgstr "Maximaal kanaal nummer"
 
@@ -1745,6 +1894,18 @@ msgstr "Maximaal aantal input streams"
 #: src/input/mpegts/satip/satip.c:226
 msgid "Maximum PIDs"
 msgstr "Maximaal aantal PID's"
+
+#: src/timeshift.c:168
+msgid "Maximum Period (mins)"
+msgstr ""
+
+#: src/timeshift.c:187
+msgid "Maximum RAM Size (MB)"
+msgstr ""
+
+#: src/timeshift.c:180
+msgid "Maximum Size (MB)"
+msgstr ""
 
 #: src/input/mpegts/satip/satip.c:233
 msgid "Maximum length of PIDs"
@@ -1762,7 +1923,7 @@ msgstr "Geneeskunde"
 msgid "Melodrama"
 msgstr "Melodrama"
 
-#: src/access.c:1441
+#: src/access.c:1438
 msgid "Min Channel Num"
 msgstr "Minimaal kanaal nummer"
 
@@ -1806,7 +1967,7 @@ msgstr "Maandag"
 msgid "Mono"
 msgstr "Mono"
 
-#: src/main.c:708
+#: src/main.c:713
 msgid "More verbose libav log"
 msgstr "Meer gedetailleerde libav log "
 
@@ -1840,6 +2001,10 @@ msgstr "Musical"
 msgid "Mux"
 msgstr "Mux"
 
+#: src/satip/server.c:598
+msgid "Mux Handling"
+msgstr ""
+
 #: src/input/mpegts/iptv/iptv_mux.c:132
 msgid "Mux Name"
 msgstr "Mux naam"
@@ -1856,7 +2021,7 @@ msgstr "Mux UUID"
 msgid "Mux not enabled"
 msgstr "Mux uitgeschakeld"
 
-#: src/input/mpegts/mpegts_mux.c:389
+#: src/input/mpegts/mpegts_mux.c:388
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:55
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:68
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:93
@@ -1864,8 +2029,9 @@ msgid "NONE"
 msgstr "GEEN"
 
 #: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
-#: src/dvr/dvr_autorec.c:922 src/dvr/dvr_timerec.c:563
-#: src/input/mpegts/mpegts_input.c:248 src/input/mpegts/mpegts_mux.c:527
+#: src/epggrab/module.c:119 src/dvr/dvr_autorec.c:922
+#: src/dvr/dvr_timerec.c:564 src/input/mpegts/mpegts_input.c:249
+#: src/input/mpegts/mpegts_mux.c:526
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1202
 #: src/input/mpegts/satip/satip_satconf.c:194
 msgid "Name"
@@ -1879,7 +2045,7 @@ msgstr "Natuurwetenschappen"
 msgid "Nature"
 msgstr "Natuur"
 
-#: src/input/mpegts/mpegts_mux.c:513 src/input/mpegts/mpegts_service.c:94
+#: src/input/mpegts/mpegts_mux.c:512 src/input/mpegts/mpegts_service.c:94
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:137
 msgid "Network"
 msgstr "Netwerk"
@@ -1910,15 +2076,15 @@ msgstr "Netwerk naam"
 msgid "Network Type"
 msgstr "Netwerk type"
 
-#: src/input/mpegts/mpegts_mux.c:520
+#: src/input/mpegts/mpegts_mux.c:519
 msgid "Network UUID"
 msgstr "Netwerk UUID"
 
-#: src/access.c:1324
+#: src/access.c:1321
 msgid "Network prefix"
 msgstr "Netwerk prefix"
 
-#: src/input/mpegts/mpegts_input.c:278
+#: src/input/mpegts/mpegts_input.c:279
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:332
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1217
 #: src/input/mpegts/satip/satip_satconf.c:224
@@ -1945,7 +2111,7 @@ msgstr "Geen PIN"
 msgid "No access"
 msgstr "Geen toegang"
 
-#: src/main.c:801
+#: src/main.c:806
 msgid "No adapters specified!\n"
 msgstr "Geen adapter gespecificeerd!\n"
 
@@ -1983,23 +2149,23 @@ msgstr "Geen bron beschikbaar"
 msgid "None"
 msgstr "Geen"
 
-#: src/profile.c:249 src/dvr/dvr_db.c:1615
+#: src/profile.c:249 src/dvr/dvr_db.c:1619
 msgid "Normal"
 msgstr "Normaal"
 
-#: src/input/mpegts/mpegts_input.c:202
+#: src/input/mpegts/mpegts_input.c:203
 msgid "Not Linked"
 msgstr "Niet gekoppeld"
 
-#: src/profile.c:1355 src/dvr/dvr_db.c:1612 src/dvr/dvr_db.c:1640
+#: src/profile.c:1355 src/dvr/dvr_db.c:1616 src/dvr/dvr_db.c:1644
 msgid "Not set"
 msgstr "Niet geconfigureerd"
 
-#: src/dvr/dvr_config.c:695
+#: src/dvr/dvr_config.c:696
 msgid "Not set (none or channel configuration)"
 msgstr "Niet geconfigureerd (geen of zie kanaal configuratie)"
 
-#: src/dvr/dvr_db.c:1969 src/dvr/dvr_autorec.c:611
+#: src/dvr/dvr_db.c:1973 src/dvr/dvr_autorec.c:611
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Niet geconfigureerd (gebruik kanaal of DVR configuratie)"
 
@@ -2007,11 +2173,11 @@ msgstr "Niet geconfigureerd (gebruik kanaal of DVR configuratie)"
 msgid "Number"
 msgstr "Aantal"
 
-#: src/main.c:723
+#: src/main.c:728
 msgid "Number of tsfile tuners"
 msgstr "Aantal tsfile tuners"
 
-#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:390
+#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:389
 msgid "OK"
 msgstr "OK"
 
@@ -2047,27 +2213,31 @@ msgstr "Oudere OSCam"
 msgid "On"
 msgstr "Aan"
 
+#: src/timeshift.c:156
+msgid "On-Demand"
+msgstr ""
+
 #: src/descrambler/cwc.c:1772
 msgid "One Mux (EMM)"
 msgstr "Enkele mux (EMM)"
 
-#: src/input/mpegts/mpegts_mux.c:465
+#: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Bulsatcom 39E"
 msgstr "Alleen Bulsatcom 39E"
 
-#: src/input/mpegts/mpegts_mux.c:461
+#: src/input/mpegts/mpegts_mux.c:460
 msgid "Only EIT"
 msgstr "Alleen EIT"
 
-#: src/input/mpegts/mpegts_mux.c:468
+#: src/input/mpegts/mpegts_mux.c:467
 msgid "Only OpenTV Sky Ausat"
 msgstr "Alleen OpenTV Sky Ausat"
 
-#: src/input/mpegts/mpegts_mux.c:467
+#: src/input/mpegts/mpegts_mux.c:466
 msgid "Only OpenTV Sky Italia"
 msgstr "Alleen "
 
-#: src/input/mpegts/mpegts_mux.c:466
+#: src/input/mpegts/mpegts_mux.c:465
 msgid "Only OpenTV Sky UK"
 msgstr "Alleen "
 
@@ -2075,19 +2245,19 @@ msgstr "Alleen "
 msgid "Only Preferred CA PID"
 msgstr "Alleen voorkeur CA PID"
 
-#: src/input/mpegts/mpegts_mux.c:462
+#: src/input/mpegts/mpegts_mux.c:461
 msgid "Only UK Freesat"
 msgstr "Alleen UK Freesat"
 
-#: src/input/mpegts/mpegts_mux.c:463
+#: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freeview"
 msgstr "Alleen UK Freeview"
 
-#: src/input/mpegts/mpegts_mux.c:464
+#: src/input/mpegts/mpegts_mux.c:463
 msgid "Only Viasat Baltic"
 msgstr "Alleeen Viasat Baltic"
 
-#: src/main.c:668
+#: src/main.c:673
 msgid "Only use specified DVB adapters (comma separated)"
 msgstr "Gebruik alleen gespecificeerde DVB adapters (gescheiden door komma)"
 
@@ -2109,7 +2279,7 @@ msgstr "Orbital Positie"
 msgid "Orbital Positions"
 msgstr "Orbital Posities"
 
-#: src/input/mpegts/mpegts_mux.c:534
+#: src/input/mpegts/mpegts_mux.c:533
 msgid "Original Network ID"
 msgstr "Origineel netwerk ID"
 
@@ -2117,19 +2287,35 @@ msgstr "Origineel netwerk ID"
 msgid "Other Stream Filter"
 msgstr "Andere stream filter"
 
-#: src/main.c:727
+#: src/main.c:732
 msgid "Output directory for tsdebug"
 msgstr "Output directory voor tsdebug"
 
-#: src/input/mpegts/mpegts_input.c:255
+#: src/epggrab/module.c:57
+msgid "Over-the-air"
+msgstr ""
+
+#: src/epggrab.c:288
+msgid "Over-the-air Cron multi-line"
+msgstr ""
+
+#: src/input/mpegts/mpegts_input.c:256
 msgid "Over-the-air EPG"
 msgstr "Over-the-air EPG"
 
-#: src/dvr/dvr_db.c:2155 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:646
+#: src/epggrab/module.c:179
+msgid "Over-the-air EPG Grabber"
+msgstr ""
+
+#: src/epggrab.c:235
+msgid "Over-the-air Grabbers"
+msgstr ""
+
+#: src/dvr/dvr_db.c:2159 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:647
 msgid "Owner"
 msgstr "Eigenaar"
 
-#: src/input/mpegts/mpegts_mux.c:383
+#: src/input/mpegts/mpegts_mux.c:382
 msgid "PEND"
 msgstr "WACHT"
 
@@ -2168,25 +2354,41 @@ msgstr "PLS Code"
 msgid "PLS Mode"
 msgstr "PLS Mode"
 
-#: src/access.c:1692 src/descrambler/cwc.c:1736
+#: src/access.c:1685 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr "Wachtwoord"
 
-#: src/access.c:1700
+#: src/access.c:1693
 msgid "Password2"
 msgstr "Wachtwoord2"
 
-#: src/access.c:1670
+#: src/access.c:1663
 msgid "Passwords"
 msgstr "Wachtwoorden"
+
+#: src/epggrab/module.c:167
+msgid "Path"
+msgstr ""
 
 #: src/epg.c:2042
 msgid "Performing arts"
 msgstr "Uitvoerende kunst"
 
+#: src/epggrab.c:265
+msgid "Periodic save EPG to disk"
+msgstr ""
+
 #: src/epg.c:2071
 msgid "Physiology"
 msgstr "Fysiologie"
+
+#: src/config.c:1726
+msgid "Picon"
+msgstr ""
+
+#: src/config.c:1811
+msgid "Picon path (see Help)"
+msgstr ""
 
 #: src/input/mpegts/mpegts_mux_dvb.c:579
 msgid "Pilot"
@@ -2217,7 +2419,7 @@ msgstr "Poort"
 msgid "Position"
 msgstr "Positie"
 
-#: src/dvr/dvr_config.c:842
+#: src/dvr/dvr_config.c:843
 msgid "Post-Processor Command"
 msgstr "Post-processor commando"
 
@@ -2236,6 +2438,10 @@ msgstr "Voorgedefineerde muxen"
 msgid "Pre-school children's programmes"
 msgstr "Peuter programma's"
 
+#: src/config.c:1797
+msgid "Prefer picons over channel name"
+msgstr ""
+
 #: src/input/mpegts/mpegts_service.c:186
 msgid "Preferred CA PID"
 msgstr "Voorkeurs CA PID"
@@ -2252,8 +2458,8 @@ msgstr "Presentatie"
 msgid "Press"
 msgstr "Pers"
 
-#: src/dvr/dvr_db.c:2118 src/dvr/dvr_autorec.c:1031 src/dvr/dvr_timerec.c:622
-#: src/input/mpegts/mpegts_input.c:232
+#: src/epggrab/module.c:142 src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031
+#: src/dvr/dvr_timerec.c:623 src/input/mpegts/mpegts_input.c:233
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
 #: src/input/mpegts/iptv/iptv_mux.c:97
@@ -2301,13 +2507,17 @@ msgstr "Quiz"
 msgid "RTSP Port"
 msgstr "RTSP poort"
 
-#: src/imagecache.c:83
-msgid "Re-try period"
-msgstr "Herhalingstijd"
+#: src/satip/server.c:577
+msgid "RTSP Port (554 or 9983), 0 = disable"
+msgstr ""
 
-#: src/imagecache.c:89
-msgid "Re-try period of failed images"
-msgstr "Herhalingstijd voor mislukte afbeeldingen"
+#: src/imagecache.c:96
+msgid "Re-fetch period (hours)"
+msgstr ""
+
+#: src/imagecache.c:102
+msgid "Re-try period (hours)"
+msgstr ""
 
 #: src/dvr/dvr_autorec.c:878
 msgid "Record all"
@@ -2333,13 +2543,17 @@ msgstr "Eenmalig per dag opnemen"
 msgid "Record once per week"
 msgstr "Eenmalig per week opnemen"
 
-#: src/dvr/dvr_config.c:735
+#: src/dvr/dvr_config.c:736
 msgid "Recording File Options"
 msgstr "Opname bestandopties"
 
-#: src/dvr/dvr_config.c:849
+#: src/dvr/dvr_config.c:850
 msgid "Recording System Path"
 msgstr "Opname directory"
+
+#: src/satip/server.c:550
+msgid "Reject"
+msgstr ""
 
 #: src/epg.c:2044
 msgid "Religion"
@@ -2355,11 +2569,11 @@ msgstr "Religieus"
 msgid "Remarkable people"
 msgstr "Opmerkelijke mensen"
 
-#: src/dvr/dvr_config.c:969
+#: src/dvr/dvr_config.c:970
 msgid "Remove All Unsafe Characters From Filename"
 msgstr "Verwijder alle gevaarlijke tekens uit bestandsnaam"
 
-#: src/dvr/dvr_config.c:976
+#: src/dvr/dvr_config.c:977
 msgid "Replace Whitespace In Title with '-'"
 msgstr "Vervang spaties in titels door '-'"
 
@@ -2371,7 +2585,7 @@ msgstr "Reageer op CAM PIN aanvragen"
 msgid "Reports"
 msgstr "Rapporten"
 
-#: src/dvr/dvr_db.c:2284
+#: src/dvr/dvr_db.c:2288
 msgid "Rerun of"
 msgstr "Herhaling van"
 
@@ -2395,7 +2609,7 @@ msgstr "Herstarten (pipe)"
 msgid "Restart On Error"
 msgstr "Herstart bij fout"
 
-#: src/dvr/dvr_db.c:2128 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:631
+#: src/dvr/dvr_db.c:2132 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:632
 msgid "Retention"
 msgstr "Bewaartermijn"
 
@@ -2431,11 +2645,11 @@ msgstr "Romantiek"
 msgid "Rotor Type"
 msgstr "Rotor type"
 
-#: src/main.c:653
+#: src/main.c:658
 msgid "Run as group"
 msgstr "Start als groep"
 
-#: src/main.c:652
+#: src/main.c:657
 msgid "Run as user"
 msgstr "Start als gebruiker"
 
@@ -2471,11 +2685,15 @@ msgstr "SAT>IP DVB-S Slave Frontend"
 msgid "SAT>IP DVB-T Frontend"
 msgstr "SAT>IP DVB-T Frontend"
 
-#: src/main.c:672
+#: src/main.c:677
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
 msgstr "SAT>IP RTSP port number for server\n(default: -1 = disable, 0 = webconfig, standard port is 554)"
+
+#: src/satip/server.c:558
+msgid "SAT>IP Server"
+msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2490,7 +2708,7 @@ msgstr "SCR (ID)"
 msgid "SD: Standard Definition"
 msgstr "SD: Standard Definition"
 
-#: src/dvr/dvr_db.c:1642
+#: src/dvr/dvr_db.c:1646
 msgid "Same as source (pass through)"
 msgstr "Zelfde als bron (pass through)"
 
@@ -2520,23 +2738,23 @@ msgstr "Satelliet posities"
 msgid "Scan Queue length"
 msgstr "Scan queue lengte"
 
-#: src/input/mpegts/mpegts_mux.c:564
+#: src/input/mpegts/mpegts_mux.c:563
 msgid "Scan Result"
 msgstr "Scan resultaat"
 
-#: src/input/mpegts/mpegts_mux.c:555
+#: src/input/mpegts/mpegts_mux.c:554
 msgid "Scan Status"
 msgstr "Scan status"
 
-#: src/dvr/dvr_db.c:2277
+#: src/dvr/dvr_db.c:2281
 msgid "Schedule Status"
 msgstr "Status van planning"
 
-#: src/dvr/dvr_db.c:2012
+#: src/dvr/dvr_db.c:2016
 msgid "Scheduled Start Time"
 msgstr "Geplande start tijd"
 
-#: src/dvr/dvr_db.c:2034
+#: src/dvr/dvr_db.c:2038
 msgid "Scheduled Stop Time"
 msgstr "Geplande stop tijd"
 
@@ -2589,11 +2807,11 @@ msgstr "Serieus"
 msgid "Serious music"
 msgstr "Serieuze muziek"
 
-#: src/input/mpegts/satip/satip.c:394
+#: src/config.c:1710 src/input/mpegts/satip/satip.c:394
 msgid "Server"
 msgstr "Server"
 
-#: src/main.c:680
+#: src/main.c:685
 msgid "Server Connectivity"
 msgstr "Server connectiviteit"
 
@@ -2602,7 +2820,7 @@ msgstr "Server connectiviteit"
 msgid "Service"
 msgstr "Service"
 
-#: src/main.c:648
+#: src/main.c:653
 msgid "Service Configuration"
 msgstr "Service configuratie"
 
@@ -2636,15 +2854,19 @@ msgstr "Services"
 msgid "Services Count %zi"
 msgstr "Aantal services %zi"
 
+#: src/epggrab/module.c:110
+msgid "Settings"
+msgstr ""
+
 #: src/epg.c:1983
 msgid "Show"
 msgstr "Show"
 
-#: src/main.c:645
+#: src/main.c:650
 msgid "Show this page"
 msgstr "Laat deze pagina zien"
 
-#: src/main.c:646
+#: src/main.c:651
 msgid "Show version information"
 msgstr "Laat versie informatie zien"
 
@@ -2664,7 +2886,7 @@ msgstr "Site Latitude"
 msgid "Site Longitude"
 msgstr "Site Longitude"
 
-#: src/dvr/dvr_config.c:882
+#: src/dvr/dvr_config.c:883
 msgid "Skip Commercials"
 msgstr "Sla reclame over"
 
@@ -2720,27 +2942,27 @@ msgstr "Bron hergeconfigureerd"
 msgid "Special events (Olympic Games, World Cup, etc.)"
 msgstr "Speciale gebeurtenisses (Olympische spelen, WK, etc.)"
 
-#: src/main.c:691
+#: src/main.c:696
 msgid "Specify User-Agent header for the http client"
 msgstr "Specificeer User-Agent header voor HTTP client"
 
-#: src/main.c:687
+#: src/main.c:692
 msgid "Specify alternative htsp port"
 msgstr "Specificeer alternative htsp poort"
 
-#: src/main.c:683
+#: src/main.c:688
 msgid "Specify alternative http port"
 msgstr "Specificeer alternative http poort"
 
-#: src/main.c:685
+#: src/main.c:690
 msgid "Specify alternative http webroot"
 msgstr "Specificeer alternatieve HTTP webroot"
 
-#: src/main.c:682
+#: src/main.c:687
 msgid "Specify bind address"
 msgstr "Specificeer bind adres"
 
-#: src/main.c:689
+#: src/main.c:694
 msgid "Specify extra htsp port"
 msgstr "Specificeer extra htsp poort"
 
@@ -2760,11 +2982,11 @@ msgstr "Sport tijdschriften"
 msgid "Squash"
 msgstr "Squash"
 
-#: src/input/mpegts/mpegts_mux.c:477
+#: src/input/mpegts/mpegts_mux.c:476
 msgid "Standard"
 msgstr "Standaard"
 
-#: src/dvr/dvr_timerec.c:591
+#: src/dvr/dvr_timerec.c:592
 msgid "Start"
 msgstr "Start"
 
@@ -2776,11 +2998,11 @@ msgstr "Start na"
 msgid "Start Before"
 msgstr "Start voor"
 
-#: src/dvr/dvr_db.c:1994
+#: src/dvr/dvr_db.c:1998
 msgid "Start Time"
 msgstr "Start tijd"
 
-#: src/dvr/dvr_db.c:2270 src/descrambler/caclient.c:281
+#: src/dvr/dvr_db.c:2274 src/descrambler/caclient.c:281
 msgid "Status"
 msgstr "Status"
 
@@ -2792,20 +3014,24 @@ msgstr "Status Periode (ms)"
 msgid "Stereo"
 msgstr "Stereo"
 
-#: src/dvr/dvr_timerec.c:601
+#: src/dvr/dvr_timerec.c:602
 msgid "Stop"
 msgstr "Stop"
 
-#: src/dvr/dvr_db.c:2019
+#: src/dvr/dvr_db.c:2023
 msgid "Stop Time"
 msgstr "Stop tijd"
+
+#: src/timeshift.c:162
+msgid "Storage Path"
+msgstr ""
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
 msgstr "Stream Index"
 
-#: src/profile.c:275 src/dvr/dvr_config.c:790
+#: src/profile.c:275 src/dvr/dvr_config.c:791
 msgid "Stream Profile"
 msgstr "Stream profiel"
 
@@ -2814,32 +3040,36 @@ msgstr "Stream profiel"
 msgid "Stream Type"
 msgstr "Stream type"
 
-#: src/access.c:1276 src/access.c:1346
+#: src/access.c:1273 src/access.c:1343
 msgid "Streaming"
 msgstr "Streaming"
 
-#: src/input/mpegts/mpegts_input.c:240 src/input/mpegts/iptv/iptv.c:460
+#: src/input/mpegts/mpegts_input.c:241 src/input/mpegts/iptv/iptv.c:460
 #: src/input/mpegts/iptv/iptv_mux.c:105
 msgid "Streaming Priority"
 msgstr "Streaming prioriteit"
 
-#: src/access.c:1365
+#: src/access.c:1362
 msgid "Streaming Profiles"
 msgstr "Streaming profielen"
 
-#: src/dvr/dvr_config.c:743
+#: src/dvr/dvr_config.c:744
 msgid "Subdirectory Options"
 msgstr "Directory opties"
 
-#: src/main.c:717
+#: src/main.c:722
 msgid "Subscribe to a service permanently"
 msgstr "Permanent aanmelden bij service"
+
+#: src/satip/server.c:584
+msgid "Subscription Weight"
+msgstr ""
 
 #: src/streaming.c:410
 msgid "Subscription overridden"
 msgstr "Aanmelding overschreven"
 
-#: src/dvr/dvr_db.c:2089 src/dvr/dvr_db.c:2096
+#: src/dvr/dvr_db.c:2093 src/dvr/dvr_db.c:2100
 msgid "Subtitle"
 msgstr "Ondertiteling"
 
@@ -2876,19 +3106,19 @@ msgstr "Switch: %s"
 msgid "Symbol Rate (Sym/s)"
 msgstr "Symbol Rate (Sym/s)"
 
-#: src/dvr/dvr_config.c:685
+#: src/dvr/dvr_config.c:686
 msgid "Sync"
 msgstr "Sync"
 
-#: src/dvr/dvr_config.c:686
+#: src/dvr/dvr_config.c:687
 msgid "Sync + Don't keep"
 msgstr "Sync + niet houden"
 
-#: src/dvr/dvr_config.c:683
+#: src/dvr/dvr_config.c:684
 msgid "System"
 msgstr "Systeem"
 
-#: src/dvr/dvr_config.c:874
+#: src/dvr/dvr_config.c:875
 msgid "Tag Files With Metadata"
 msgstr "Voeg meta-data label toe aan bestanden"
 
@@ -2918,7 +3148,7 @@ msgstr "Teletext Stream Filter"
 msgid "Tennis"
 msgstr "Tennis"
 
-#: src/main.c:722
+#: src/main.c:727
 msgid "Testing options"
 msgstr "Test opties"
 
@@ -2934,11 +3164,15 @@ msgstr "Thriller"
 msgid "Thu"
 msgstr "Do"
 
+#: src/config.c:1722
+msgid "Time Update"
+msgstr ""
+
 #: src/dvr/dvr_db.c:316
 msgid "Time missed"
 msgstr "Tijd gemist"
 
-#: src/dvr/dvr_timerec.c:153
+#: src/dvr/dvr_timerec.c:154
 #, c-format
 msgid "Time recording%s%s"
 msgstr "Tijd opname%s%s"
@@ -2951,11 +3185,15 @@ msgstr "Timout (sec) (0=oneindig)"
 msgid "Timeout (seconds)"
 msgstr "Timeout (seconden)"
 
+#: src/timeshift.c:142
+msgid "Timeshift"
+msgstr ""
+
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
 msgstr "Timeout (secs)"
 
-#: src/dvr/dvr_db.c:2074 src/dvr/dvr_db.c:2081 src/dvr/dvr_timerec.c:569
+#: src/dvr/dvr_db.c:2078 src/dvr/dvr_db.c:2085 src/dvr/dvr_timerec.c:570
 msgid "Title"
 msgstr "Titel"
 
@@ -2963,7 +3201,7 @@ msgstr "Titel"
 msgid "Title (Regexp)"
 msgstr "Titel (Regexp)"
 
-#: src/webui/extjs.c:227
+#: src/webui/extjs.c:211
 msgid "Toggle details"
 msgstr "Toggle details"
 
@@ -2974,6 +3212,10 @@ msgstr "Tone Burst"
 #: src/epg.c:2085
 msgid "Tourism / Travel"
 msgstr "Reizen"
+
+#: src/tvhlog.c:617
+msgid "Trace subsystems"
+msgstr ""
 
 #: src/epg.c:2045
 msgid "Traditional arts"
@@ -2995,7 +3237,7 @@ msgstr "Transmission Mode"
 msgid "Transponder ID"
 msgstr "Transponder ID"
 
-#: src/input/mpegts/mpegts_mux.c:541
+#: src/input/mpegts/mpegts_mux.c:540
 msgid "Transport Stream ID"
 msgstr "Transport Stream ID"
 
@@ -3027,15 +3269,23 @@ msgstr "Tuning faalde"
 msgid "Turn off LNB when idle"
 msgstr "Zet LNB uit wanneer in rust"
 
+#: src/config.c:1751
+msgid "Tvheadend server name"
+msgstr ""
+
+#: src/epggrab/module.c:127
+msgid "Type"
+msgstr ""
+
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
 msgstr "UDP RTP Port Nummer (2 poorten)"
 
-#: src/dvr/dvr_db.c:2256 src/input/mpegts/iptv/iptv_mux.c:113
+#: src/dvr/dvr_db.c:2260 src/input/mpegts/iptv/iptv_mux.c:113
 msgid "URL"
 msgstr "URL"
 
-#: src/main.c:677
+#: src/main.c:682
 msgid "URL with the SAT>IP server XML location"
 msgstr "URL met de SAT>IP server XML locatie"
 
@@ -3072,7 +3322,7 @@ msgstr "Unicable Switch (Universal LNB, experimenteel)"
 msgid "Unicable Type"
 msgstr "Unicable Type"
 
-#: src/profile.c:251 src/dvr/dvr_db.c:1617
+#: src/profile.c:251 src/dvr/dvr_db.c:1621
 msgid "Unimportant"
 msgstr "Niet belangrijk"
 
@@ -3080,7 +3330,7 @@ msgstr "Niet belangrijk"
 msgid "Universal LNB only"
 msgstr "Alleen universele LNB"
 
-#: src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:682
+#: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:683
 msgid "Unknown"
 msgstr "Onbekend"
 
@@ -3088,6 +3338,14 @@ msgstr "Onbekend"
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Onbekende oorzaak (%i)"
+
+#: src/timeshift.c:194
+msgid "Unlimited Size"
+msgstr ""
+
+#: src/timeshift.c:174
+msgid "Unlimited Time"
+msgstr ""
 
 #: src/profile.c:246
 msgid "Unset (default)"
@@ -3097,22 +3355,46 @@ msgstr "Niet geconfigureerd (standaard)"
 msgid "Update Card (EMM)"
 msgstr "Update kaart (EMM)"
 
-#: src/dvr/dvr_config.c:703
+#: src/dvr/dvr_config.c:704
 msgid "Update Disabled"
 msgstr "Updates uit"
+
+#: src/epggrab.c:258
+msgid "Update channel icon"
+msgstr ""
+
+#: src/epggrab.c:244
+msgid "Update channel name"
+msgstr ""
+
+#: src/epggrab.c:251
+msgid "Update channel number"
+msgstr ""
+
+#: src/config.c:1776
+msgid "Update time"
+msgstr ""
+
+#: src/config.c:1790
+msgid "Update tolerance (ms)"
+msgstr ""
 
 #: src/main.c:449
 #, c-format
 msgid "Usage: %s [OPTIONS]\n"
 msgstr "Gebruik: %s [OPTIONS]\n"
 
-#: src/dvr/dvr_config.c:983
+#: src/dvr/dvr_config.c:984
 msgid "Use Windows-compatible filenames"
 msgstr "Gebruik Windows-compatible bestandsnamen"
 
-#: src/main.c:693
+#: src/main.c:698
 msgid "Use XSPF playlist instead of M3U"
 msgstr "Gebruik een XSPD playlist in plaats van M3U"
+
+#: src/timeshift.c:200
+msgid "Use only RAM"
+msgstr ""
 
 #: src/profile.c:1394
 msgid "Use original"
@@ -3138,7 +3420,7 @@ msgstr "Gebruikers toegangsfout"
 msgid "User limit reached"
 msgstr "Gebruikerslimiet bereikt"
 
-#: src/access.c:1318 src/access.c:1686 src/descrambler/cwc.c:1730
+#: src/access.c:1315 src/access.c:1679 src/descrambler/cwc.c:1730
 msgid "Username"
 msgstr "Gebruikersnaam"
 
@@ -3158,7 +3440,7 @@ msgstr "Video bandbreedte (kb/s) (0=Auto)"
 msgid "Video CODEC"
 msgstr "Video CODEC"
 
-#: src/access.c:1374
+#: src/access.c:1371
 msgid "Video Recorder"
 msgstr "Video Recorder"
 
@@ -3214,11 +3496,11 @@ msgstr "Watersport"
 msgid "Weather report"
 msgstr "Weer"
 
-#: src/access.c:1415
+#: src/access.c:1412
 msgid "Web Interface"
 msgstr "Web Interface"
 
-#: src/access.c:1338
+#: src/access.c:1335
 msgid "Web Interface Language"
 msgstr "Web Interface Taal"
 
@@ -3242,29 +3524,29 @@ msgstr "addpids/delpids ondersteund"
 msgid "en50494"
 msgstr "en50494"
 
-#: src/dvr/dvr_db.c:1938
+#: src/dvr/dvr_db.c:1942
 msgid "hrs"
 msgstr "uren"
 
-#: src/main.c:752
+#: src/main.c:757
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr "verkeerde optie opgegeven [%s]"
 
-#: src/dvr/dvr_db.c:1939
+#: src/dvr/dvr_db.c:1943
 msgid "min"
 msgstr "minuut"
 
-#: src/dvr/dvr_db.c:1940
+#: src/dvr/dvr_db.c:1944
 msgid "mins"
 msgstr "minuten"
 
-#: src/main.c:759
+#: src/main.c:764
 #, c-format
 msgid "option %s requires a value"
 msgstr "optie %s vereist een waarde"
 
-#: src/main.c:724
+#: src/main.c:729
 msgid "tsfile input (mux file)"
 msgstr "tsfile input (mux bestand)"
 
