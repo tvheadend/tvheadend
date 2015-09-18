@@ -38,6 +38,7 @@
 #include "access.h"
 #include "notify.h"
 #include "channels.h"
+#include "config.h"
 
 #if ENABLE_ANDROID
 #include <sys/socket.h>
@@ -237,9 +238,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   if (hc->hc_version != RTSP_VERSION_1_0){
     htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
-    htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: *\r\n");
-    htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET\r\n");
-    htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
+    if (config.cors_origin && config.cors_origin[0]) {
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET\r\n");
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
+    }
   }
   
   if(maxage == 0) {

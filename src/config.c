@@ -1646,6 +1646,7 @@ void config_done ( void )
   free(config.muxconf_path);
   free(config.chicon_path);
   free(config.picon_path);
+  free(config.cors_origin);
   file_unlock(config_lock, config_lock_fd);
 }
 
@@ -1667,6 +1668,38 @@ void config_save ( void )
 static void config_class_save(idnode_t *self)
 {
   config_save();
+}
+
+static int
+config_class_cors_origin_set ( void *o, const void *v )
+{
+  const char *s = v;
+  url_t u;
+
+  while (s && *s && *s <= ' ')
+    s++;
+  if (*s == '*') {
+    prop_sbuf[0] = '*';
+    prop_sbuf[1] = '\0';
+  } else {
+    memset(&u, 0, sizeof(u));
+    urlparse(s, &u);
+    if (u.scheme && (!strcmp(u.scheme, "http") || !strcmp(u.scheme, "https")) && u.host) {
+      if (u.port)
+        snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s:%d", u.scheme, u.host, u.port);
+      else
+        snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s", u.scheme, u.host);
+    } else {
+      prop_sbuf[0] = '\0';
+    }
+    urlreset(&u);
+  }
+  if (strcmp(prop_sbuf, config.cors_origin ?: "")) {
+    free(config.cors_origin);
+    config.cors_origin = strdup(prop_sbuf);
+    return 1;
+  }
+  return 0;
 }
 
 static const void *
@@ -1750,6 +1783,14 @@ const idclass_t config_class = {
       .id     = "server_name",
       .name   = N_("Tvheadend server name"),
       .off    = offsetof(config_t, server_name),
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "cors_origin",
+      .name   = N_("HTTP CORS Origin"),
+      .set    = config_class_cors_origin_set,
+      .off    = offsetof(config_t, cors_origin),
       .group  = 1
     },
     {
