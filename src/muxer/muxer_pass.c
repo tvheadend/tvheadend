@@ -46,6 +46,9 @@ typedef struct pass_muxer {
   streaming_start_t *pm_ss;
 
   /* TS muxing */
+  uint8_t  pm_rewrite_sdt;
+  uint8_t  pm_rewrite_eit;
+
   uint16_t pm_pmt_pid;
   uint16_t pm_service_id;
 
@@ -299,9 +302,28 @@ static int
 pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
+  const streaming_start_component_t *ssc;
+  int i;
 
   pm->pm_service_id = ss->ss_service_id;
   pm->pm_pmt_pid    = ss->ss_pmt_pid;
+  pm->pm_rewrite_sdt = !!pm->m_config.m_rewrite_sdt;
+  pm->pm_rewrite_eit = !!pm->m_config.m_rewrite_eit;
+
+  for(i=0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+    if (!SCT_ISVIDEO(ssc->ssc_type) && !SCT_ISAUDIO(ssc->ssc_type))
+      continue;
+    if (ssc->ssc_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
+      tvhwarn("pass", "SDT PID shared with A/V, rewrite disabled");
+      pm->pm_rewrite_sdt = 0;
+    }
+    if (ssc->ssc_pid == DVB_EIT_PID && pm->pm_rewrite_eit) {
+      tvhwarn("pass", "EIT PID shared with A/V, rewrite disabled");
+      pm->pm_rewrite_eit = 0;
+    }
+  }
+
 
   if (pm->m_config.m_rewrite_pmt) {
 
@@ -419,7 +441,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   
   /* Rewrite PAT/PMT in operation */
   if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt ||
-      pm->m_config.m_rewrite_sdt || pm->m_config.m_rewrite_eit) {
+      pm->pm_rewrite_sdt || pm->pm_rewrite_eit) {
 
     for (tsb = pb->pb_data, len2 = pb->pb_size, len = 0;
          len2 > 0; tsb += l, len2 -= l) {
@@ -430,8 +452,8 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       /* Process */
       if ( (pm->m_config.m_rewrite_pat && pid == DVB_PAT_PID) ||
            (pm->m_config.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
-           (pm->m_config.m_rewrite_sdt && pid == DVB_SDT_PID) ||
-           (pm->m_config.m_rewrite_eit && pid == DVB_EIT_PID) ) {
+           (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
+           (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
 
         /* Flush */
         if (len)
