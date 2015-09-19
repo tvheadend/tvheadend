@@ -467,14 +467,14 @@ tvhlog_class_path_set ( void *o, const void *v )
 {
   const char *s = v;
   if (strcmp(s ?: "", tvhlog_path ?: "")) {
-    pthread_mutex_unlock(&tvhlog_mutex);
+    pthread_mutex_lock(&tvhlog_mutex);
     free(tvhlog_path);
     tvhlog_path = strdup(s ?: "");
     if (tvhlog_path && tvhlog_path[0])
       tvhlog_options |= TVHLOG_OPT_DBG_FILE;
     else
       tvhlog_options &= ~TVHLOG_OPT_DBG_FILE;
-    pthread_mutex_lock(&tvhlog_mutex);
+    pthread_mutex_unlock(&tvhlog_mutex);
     return 1;
   }
   return 0;
