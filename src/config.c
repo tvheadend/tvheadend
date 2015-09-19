@@ -24,6 +24,7 @@
 #include "settings.h"
 #include "config.h"
 #include "uuid.h"
+#include "access.h"
 #include "htsbuf.h"
 #include "spawn.h"
 #include "lock.h"
