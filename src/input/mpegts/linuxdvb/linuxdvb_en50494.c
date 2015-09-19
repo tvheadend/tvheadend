@@ -181,7 +181,7 @@ linuxdvb_en50494_freq
 
   if (linuxdvb_en50494_freq0(le, freq, &rfreq, &t))
     return -1;
-  return freq;
+  return rfreq;
 }
 
 static int
