@@ -32,6 +32,7 @@
 
 #include "tvheadend.h"
 #include "http.h"
+#include "tcp.h"
 #include "webui.h"
 #include "dvr/dvr.h"
 #include "filebundle.h"
