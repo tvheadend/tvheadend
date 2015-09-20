@@ -513,77 +513,87 @@ tvheadend.log = function(msg, style) {
 /**
  *
  */
+tvheadend.RootTabExtraComponent = Ext.extend(Ext.Component, {
+   
+    onRender1: function(tab, before) {
+        if (!this.componentTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-extra-comp" id="{id}">',
+                '<span class="x-tab-strip-extra-comp {iconCls} x-tab-strip-text">{text}</span></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabExtraComponent.prototype.componentTpl = tt;
+        }
+        var p = tab.getTemplateArgs(this);
+        var el = this.componentTpl.insertBefore(before, p);
+        this.tabEl = Ext.get(el);
+    }
+
+});
+
+tvheadend.RootTabExtraClickComponent = Ext.extend(Ext.Component, {
+   
+    onRender1: function(tab, before, click_cb) {
+        if (!this.componentTpl) {
+            var tt = new Ext.Template(
+                '<li class="x-tab-extra-comp" id="{id}"><a href="#">',
+                '<span class="x-tab-strip-extra-click-comp {iconCls} x-tab-strip-text">{text}</span></a></li>'
+            );
+            tt.disableFormats = true;
+            tt.compile();
+            tvheadend.RootTabExtraClickComponent.prototype.componentTpl = tt;
+        }
+        var p = tab.getTemplateArgs(this);
+        var el = this.componentTpl.insertBefore(before, p);
+        this.tabEl = Ext.get(el);
+        this.tabEl.select('a').on('click', click_cb, tab, {preventDefault: true});
+    }
+
+});
+
 tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
+
+    extra: {},
 
     onRender: function(ct, position) {
         tvheadend.RootTabPanel.superclass.onRender.call(this, ct, position);
 
+        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
+
         /* Create login components */
-        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
-
-        if (!this.loginTpl) {
-            var tt = new Ext.Template(
-                '<li class="x-tab-login" id="{id}">',
-                '<span class="x-tab-strip-login {iconCls} x-tab-strip-text">{text}</span></li>'
-            );
-            tt.disableFormats = true;
-            tt.compile();
-            tvheadend.RootTabPanel.prototype.loginTpl = tt;
+        if (!this.extra.login) {
+          this.extra.login = new tvheadend.RootTabExtraComponent();
+          this.extra.login.onRender1(this, before);
         }
-        var item = new Ext.Component();
-        var p = this.getTemplateArgs(item);
-        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
-        item.tabEl = this.loginTpl.insertBefore(before, p);
-        this.loginItem = item;
-
-        if (!this.loginCmdTpl) {
-            var tt = new Ext.Template(
-                '<li class="x-tab-login" id="{id}"><a href="#">',
-                '<span class="x-tab-strip-login-cmd x-tab-strip-text"></span></a></li>'
-            );
-            tt.disableFormats = true;
-            tt.compile();
-            tvheadend.RootTabPanel.prototype.loginCmdTpl = tt;
+        if (!this.extra.loginCmd) {
+          this.extra.loginCmd = new tvheadend.RootTabExtraClickComponent();
+          this.extra.loginCmd.onRender1(this, before, this.onLoginCmdClicked);
         }
-        var item = new Ext.Component();
-        var p = this.getTemplateArgs(item);
-        var el = this.loginCmdTpl.insertBefore(before, p);
-        item.tabEl = Ext.get(el);
-        item.tabEl.select('a').on('click', this.onLoginCmdClicked, this, {preventDefault: true});
-        this.loginCmdItem = item;
-
-        if (!this.diskSpaceTpl) {
-            var tt = new Ext.Template(
-                '<li class="x-tab-login" id="{id}">',
-                '<span class="x-tab-diskspace x-tab-strip-text"></span></li>'
-            );
-            tt.disableFormats = true;
-            tt.compile();
-            tvheadend.RootTabPanel.prototype.diskSpaceTpl = tt;
+        if (!this.extra.storage) {
+          this.extra.storage = new tvheadend.RootTabExtraComponent();
+          this.extra.storage.onRender1(this, before);
         }
-        var item = new Ext.Component();
-        var p = this.getTemplateArgs(item);
-        var el = this.diskSpaceTpl.insertBefore(before, p);
-        item.tabEl = Ext.get(el);
-        this.diskSpaceItem = item;
 
         this.on('beforetabchange', function(tp, p) {
-            if (p == this.loginItem || p == this.loginCmdItem || p == this.diskSpaceItem)
-                return false;
+            for (var k in this.extra)
+                if (p == this.extra[k])
+                    return false;
         });
     },
 
     getComponent: function(comp) {
-        if (comp === this.loginItem.id || comp == this.loginItem)
-            return this.loginItem;
-        if (comp === this.loginCmdItem.id || comp == this.loginCmdItem)
-            return this.loginCmdItem;
-        if (comp === this.diskSpaceItem.id || comp == this.diskSpaceItem)
-            return this.diskSpaceItem;
+        for (var k in this.extra) {
+            var comp2 = this.extra[k];
+            if (comp === comp2.id || comp == comp2)
+                return comp2;
+        }
         return tvheadend.RootTabPanel.superclass.getComponent.call(this, comp);
     },
 
     setLogin: function(login) {
+        if (!'login' in this.extra)
+            return;
         this.login = login;
         if (login) {
             text = _('Logged in as') + ' <b>' + login + '</b>';
@@ -592,18 +602,17 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             text = _('No verified access');
             cmd = '(' + _('login') + ')';
         }
-        var el = this.loginItem.tabEl;
-        var fly = Ext.fly(this.loginItem.tabEl);
-        var t = fly.child('span.x-tab-strip-login', true);
-        Ext.fly(this.loginItem.tabEl).child('span.x-tab-strip-login', true).innerHTML = text;
-        Ext.fly(this.loginCmdItem.tabEl).child('span.x-tab-strip-login-cmd', true).innerHTML = cmd;
+        Ext.get(this.extra.login.tabEl).child('span.x-tab-strip-extra-comp', true).innerHTML = text;
+        Ext.get(this.extra.loginCmd.tabEl).child('span.x-tab-strip-extra-click-comp', true).innerHTML = cmd;
     },
 
     setAddress: function(addr) {
-        Ext.get(this.loginItem.tabEl).child('span.x-tab-strip-login', true).qtip = addr;
+        if ('login' in this.extra)
+            Ext.get(this.extra.login.tabEl).child('span.x-tab-strip-extra-comp', true).qtip = addr;
     },
 
     setDiskSpace: function(bfree, btotal) {
+        if (!'storage' in this.extra) return;
         human = function(val) {
           if (val > 1000000000)
             val = parseInt(val / 1000000000) + _('GB');
@@ -613,8 +622,8 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             val = parseInt(val / 1000) + _('KB');
           return val;
         };
-        text = _('Disc space') + ':&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
-        var el = Ext.get(this.diskSpaceItem.tabEl).child('span.x-tab-diskspace', true);
+        text = _('Storage space') + ':&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
+        var el = Ext.get(this.extra.storage.tabEl).child('span.x-tab-strip-extra-comp', true);
         el.innerHTML = text;
         el.qtip = _('Free') + ': ' + human(bfree) + ' ' + _('Total') + ': ' + human(btotal);
     },

@@ -25,27 +25,22 @@
 }
 
 
-.x-tab-strip li.x-tab-login {
+.x-tab-strip li.x-tab-extra-comp {
     margin-left: 16px;
 }
 
-.x-tab-strip span.x-tab-strip-login {
+.x-tab-strip span.x-tab-strip-extra-comp {
     vertical-align: middle;
+    cursor: default;
     white-space: nowrap;
-    padding:4px 0px;
+    padding: 4px 0;
 }
 
-.x-tab-strip span.x-tab-strip-login-cmd {
+.x-tab-strip span.x-tab-strip-extra-click-comp {
     vertical-align: middle;
-    cursor:pointer;
-    padding:4px 0;
+    cursor: pointer;
+    padding: 4px 0;
     float: right;
-}
-
-.x-tab-strip span.x-tab-diskspace {
-    vertical-align: middle;
-    white-space: nowrap;
-    padding:4px 0px;
 }
 
 .x-tree-col {
