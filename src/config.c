@@ -1544,6 +1544,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 
   memset(&config, 0, sizeof(config));
   config.idnode.in_class = &config_class;
+  config.info_area = strdup("login,storage,time");
 
   /* Generate default */
   if (!path) {
@@ -1645,6 +1646,7 @@ void config_done ( void )
   free(config.full_version);
   free(config.server_name);
   free(config.language);
+  free(config.info_area);
   free(config.muxconf_path);
   free(config.chicon_path);
   free(config.picon_path);
@@ -1733,6 +1735,45 @@ config_class_language_list ( void *o, const char *lang )
   return m;
 }
 
+static const void *
+config_class_info_area_get ( void *o )
+{
+  return htsmsg_csv_2_list(config.info_area, ',');
+}
+
+static int
+config_class_info_area_set ( void *o, const void *v )
+{
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  if (strcmp(s ?: "", config.info_area ?: "")) {
+    free(config.info_area);
+    config.info_area = s;
+    return 1;
+  }
+  if (s)
+    free(s);
+  return 0;
+}
+
+static void
+config_class_info_area_list1 ( htsmsg_t *m, const char *key, const char *val )
+{
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_str(e, "key", key);
+  htsmsg_add_str(e, "val", val);
+  htsmsg_add_msg(m, NULL, e);
+}
+
+static htsmsg_t *
+config_class_info_area_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  config_class_info_area_list1(m, "login", N_("Login/Logout"));
+  config_class_info_area_list1(m, "storage", N_("Storage space"));
+  config_class_info_area_list1(m, "time", N_("Time"));
+  return m;
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -1750,16 +1791,20 @@ const idclass_t config_class = {
          .number = 2,
       },
       {
-         .name   = N_("DVB Scan Files"),
+         .name   = N_("Web User Interface"),
          .number = 3,
       },
       {
-         .name   = N_("Time Update"),
+         .name   = N_("DVB Scan Files"),
          .number = 4,
       },
       {
-         .name   = N_("Picon"),
+         .name   = N_("Time Update"),
          .number = 5,
+      },
+      {
+         .name   = N_("Picon"),
+         .number = 6,
       },
       {}
   },
@@ -1808,52 +1853,63 @@ const idclass_t config_class = {
     },
     {
       .type   = PT_STR,
+      .islist = 1,
+      .id     = "info_area",
+      .name   = N_("Information Area"),
+      .set    = config_class_info_area_set,
+      .get    = config_class_info_area_get,
+      .list   = config_class_info_area_list,
+      .opts   = PO_LORDER,
+      .group  = 3
+    },
+    {
+      .type   = PT_STR,
       .id     = "muxconfpath",
       .name   = N_("DVB scan files path"),
       .off    = offsetof(config_t, muxconf_path),
-      .group  = 3
+      .group  = 4
     },
     {
       .type   = PT_BOOL,
       .id     = "tvhtime_update_enabled",
       .name   = N_("Update time"),
       .off    = offsetof(config_t, tvhtime_update_enabled),
-      .group  = 4,
+      .group  = 5,
     },
     {
       .type   = PT_BOOL,
       .id     = "tvhtime_ntp_enabled",
       .name   = N_("Enable NTP driver"),
       .off    = offsetof(config_t, tvhtime_update_enabled),
-      .group  = 4,
+      .group  = 5,
     },
     {
       .type   = PT_U32,
       .id     = "tvhtime_tolerance",
       .name   = N_("Update tolerance (ms)"),
       .off    = offsetof(config_t, tvhtime_tolerance),
-      .group  = 4,
+      .group  = 5,
     },
     {
       .type   = PT_BOOL,
       .id     = "prefer_picon",
       .name   = N_("Prefer picons over channel name"),
       .off    = offsetof(config_t, prefer_picon),
-      .group  = 5,
+      .group  = 6,
     },
     {
       .type   = PT_STR,
       .id     = "chiconpath",
       .name   = N_("Channel icon path (see Help)"),
       .off    = offsetof(config_t, chicon_path),
-      .group  = 5,
+      .group  = 6,
     },
     {
       .type   = PT_STR,
       .id     = "piconpath",
       .name   = N_("Picon path (see Help)"),
       .off    = offsetof(config_t, picon_path),
-      .group  = 5,
+      .group  = 6,
     },
     {}
   }

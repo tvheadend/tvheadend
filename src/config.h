@@ -33,6 +33,7 @@ typedef struct config {
   char *full_version;
   char *server_name;
   char *language;
+  char *info_area;
   char *muxconf_path;
   int prefer_picon;
   char *chicon_path;

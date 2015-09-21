@@ -1,4 +1,3 @@
-
 tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
@@ -350,6 +349,8 @@ function accessUpdate(o) {
     if (!tvheadend.capabilities)
         return;
 
+    if ('info_area' in o)
+      tvheadend.rootTabPanel.setInfoArea(o.info_area);
     if ('username' in o)
       tvheadend.rootTabPanel.setLogin(o.username);
     if ('address' in o)
@@ -554,33 +555,8 @@ tvheadend.RootTabExtraClickComponent = Ext.extend(Ext.Component, {
 
 tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
 
-    extra: {},
-
-    onRender: function(ct, position) {
-        tvheadend.RootTabPanel.superclass.onRender.call(this, ct, position);
-
-        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
-
-        /* Create login components */
-        if (!this.extra.login) {
-          this.extra.login = new tvheadend.RootTabExtraComponent();
-          this.extra.login.onRender1(this, before);
-        }
-        if (!this.extra.loginCmd) {
-          this.extra.loginCmd = new tvheadend.RootTabExtraClickComponent();
-          this.extra.loginCmd.onRender1(this, before, this.onLoginCmdClicked);
-        }
-        if (!this.extra.storage) {
-          this.extra.storage = new tvheadend.RootTabExtraComponent();
-          this.extra.storage.onRender1(this, before);
-        }
-
-        this.on('beforetabchange', function(tp, p) {
-            for (var k in this.extra)
-                if (p == this.extra[k])
-                    return false;
-        });
-    },
+    extra: [],
+    info_area: [],
 
     getComponent: function(comp) {
         for (var k in this.extra) {
@@ -591,9 +567,35 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         return tvheadend.RootTabPanel.superclass.getComponent.call(this, comp);
     },
 
+    setInfoArea: function(info_area) {
+        this.info_area = info_area.split(',');
+        this.on('beforetabchange', function(tp, p) {
+            for (var k in this.extra)
+                if (p == this.extra[k])
+                    return false;
+        });
+
+        var before = this.strip.dom.childNodes[this.strip.dom.childNodes.length-1];
+
+        /* Create extra components */
+        for (var itm in this.info_area) {
+            var nm = this.info_area[itm];
+            if (!(nm in this.extra)) {
+                this.extra[nm] = new tvheadend.RootTabExtraComponent();
+                this.extra[nm].onRender1(this, before);
+                if (nm == 'login') {
+                    this.extra.loginCmd = new tvheadend.RootTabExtraClickComponent();
+                    this.extra.loginCmd.onRender1(this, before, this.onLoginCmdClicked);
+                }
+            }
+        }
+        
+        if (this.extra.time)
+            window.setInterval(this.setTime, 1000);
+    },
+
     setLogin: function(login) {
-        if (!'login' in this.extra)
-            return;
+        if (!('login' in this.extra)) return;
         this.login = login;
         if (login) {
             text = _('Logged in as') + ' <b>' + login + '</b>';
@@ -612,7 +614,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     },
 
     setDiskSpace: function(bfree, btotal) {
-        if (!'storage' in this.extra) return;
+        if (!('storage' in this.extra)) return;
         human = function(val) {
           if (val > 1000000000)
             val = parseInt(val / 1000000000) + _('GB');
@@ -626,6 +628,15 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
         var el = Ext.get(this.extra.storage.tabEl).child('span.x-tab-strip-extra-comp', true);
         el.innerHTML = text;
         el.qtip = _('Free') + ': ' + human(bfree) + ' ' + _('Total') + ': ' + human(btotal);
+    },
+
+    setTime: function(stime) {
+        var panel = tvheadend.rootTabPanel;
+        if (!('time' in panel.extra)) return;
+        var d = stime ? new Date(stime) : new Date();
+        var el = Ext.get(panel.extra.time.tabEl).child('span.x-tab-strip-extra-comp', true);
+        el.innerHTML = '<b>' + d.toLocaleTimeString() + '</b>';
+        el.qtip = d.toLocaleString();
     },
 
     onLoginCmdClicked: function(e) {
