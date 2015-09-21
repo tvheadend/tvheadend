@@ -641,11 +641,10 @@ _eit_callback
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid);
 
   } else {
-    if (mm->mm_tsid != tsid ||
-        mm->mm_onid != onid) {
+    if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&
+        !mm->mm_eit_tsid_nocheck) {
       if (mm->mm_onid != MPEGTS_ONID_NONE &&
-          mm->mm_tsid != MPEGTS_TSID_NONE &&
-          !mm->mm_eit_tsid_nocheck)
+          mm->mm_tsid != MPEGTS_TSID_NONE)
         tvhtrace("eit",
                 "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
                 tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
