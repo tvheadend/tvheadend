@@ -594,6 +594,14 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
+      .opts     = PO_HIDDEN | PO_ADVANCED
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "eit_tsid_nocheck",
+      .name     = N_("EIT - skip TSID check"),
+      .off      = offsetof(mpegts_mux_t, mm_eit_tsid_nocheck),
+      .opts     = PO_HIDDEN | PO_ADVANCED
     },
     {}
   }

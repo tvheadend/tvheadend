@@ -480,6 +480,7 @@ struct mpegts_mux
   int   mm_epg;
   char *mm_charset;
   int   mm_pmt_ac3;
+  int   mm_eit_tsid_nocheck;
 
   /*
    * TSDEBUG
