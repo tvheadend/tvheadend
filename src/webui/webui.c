@@ -527,13 +527,11 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
 
     htsbuf_qprintf(hq, "#EXTM3U\n");
     http_m3u_playlist_add(hq, hostpath, buf, profile, name, hc->hc_access);
-    http_output_content(hc, MIME_M3U);
 
   } else if (pltype == PLAYLIST_E2) {
 
     htsbuf_qprintf(hq, "#NAME %s\n", name);
     http_e2_playlist_add(hq, hostpath, buf, profile, name);
-    http_output_content(hc, MIME_E2);
 
   }
 
@@ -604,8 +602,6 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
   }
 
   free(chlist);
-
-  http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
 
   free(hostpath);
   free(profile);
@@ -697,8 +693,6 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
   free(ctlist);
   free(chlist);
 
-  http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
-
   free(hostpath);
   free(profile);
   return 0;
@@ -761,8 +755,6 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
 
   free(chlist);
 
-  http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
-
   free(hostpath);
   free(profile);
   return 0;
@@ -817,8 +809,6 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
        access_ticket_create(buf, hc->hc_access));
   }
 
-  http_output_content(hc, MIME_M3U);
-
   free(hostpath);
   return 0;
 }
@@ -866,8 +856,6 @@ http_dvr_playlist(http_connection_t *hc, int pltype, dvr_entry_t *de)
     snprintf(buf, sizeof(buf), "/dvrfile/%s", uuid);
     ticket_id = access_ticket_create(buf, hc->hc_access);
     htsbuf_qprintf(hq, "%s%s?ticket=%s\n", hostpath, buf, ticket_id);
-
-    http_output_content(hc, MIME_M3U);
   } else {
     ret = HTTP_STATUS_NOT_FOUND;
   }
@@ -961,6 +949,9 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   pthread_mutex_unlock(&global_lock);
+
+  if (r == 0)
+    http_output_content(hc, pltype == PLAYLIST_E2 ? MIME_E2 : MIME_M3U);
 
   return r;
 }
