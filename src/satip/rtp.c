@@ -20,9 +20,11 @@
 #include <signal.h>
 #include <ctype.h>
 #include "tvheadend.h"
+#include "config.h"
 #include "input.h"
 #include "streaming.h"
 #include "satip/server.h"
+#include <netinet/ip.h>
 #if ENABLE_ANDROID
 #include <sys/socket.h>
 #endif
@@ -274,6 +276,14 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   rtp->dmc = *dmc;
   rtp->source = source;
   pthread_mutex_init(&rtp->lock, NULL);
+
+  if (config.dscp >= 0) {
+    socket_set_dscp(rtp->fd_rtp, config.dscp, NULL, 0);
+    socket_set_dscp(rtp->fd_rtcp, config.dscp, NULL, 0);
+  } else {
+    socket_set_dscp(rtp->fd_rtp, IPTOS_DSCP_EF, NULL, 0);
+    socket_set_dscp(rtp->fd_rtcp, IPTOS_DSCP_EF, NULL, 0);
+  }
 
   pthread_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);

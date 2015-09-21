@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 
 #include "tvheadend.h"
+#include "config.h"
 #include "http.h"
 #include "tcp.h"
 #include "webui.h"
@@ -317,6 +318,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   tp.tv_sec  = 5;
   tp.tv_usec = 0;
   setsockopt(hc->hc_fd, SOL_SOCKET, SO_SNDTIMEO, &tp, sizeof(tp));
+  if (config.dscp >= 0)
+    socket_set_dscp(hc->hc_fd, config.dscp, NULL, 0);
 
   lastpkt = dispatch_clock;
   ptimeout = prch->prch_pro ? prch->prch_pro->pro_timeout : 5;

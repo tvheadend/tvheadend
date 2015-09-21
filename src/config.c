@@ -33,6 +33,8 @@
 #include "url.h"
 #include "satip/server.h"
 
+#include <netinet/ip.h>
+
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 
@@ -1546,6 +1548,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.idnode.in_class = &config_class;
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
+  config.dscp = -1;
 
   /* Generate default */
   if (!path) {
@@ -1775,6 +1778,36 @@ config_class_info_area_list ( void *o, const char *lang )
   return m;
 }
 
+static htsmsg_t *
+config_class_dscp_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Default"), -1 },
+    { N_("CS0"),  IPTOS_CLASS_CS0 },
+    { N_("CS1"),  IPTOS_CLASS_CS1 },
+    { N_("AF11"), IPTOS_DSCP_AF11 },
+    { N_("AF12"), IPTOS_DSCP_AF12 },
+    { N_("AF13"), IPTOS_DSCP_AF13 },
+    { N_("CS2"),  IPTOS_CLASS_CS2 },
+    { N_("AF21"), IPTOS_DSCP_AF21 },
+    { N_("AF22"), IPTOS_DSCP_AF22 },
+    { N_("AF23"), IPTOS_DSCP_AF23 },
+    { N_("CS3"),  IPTOS_CLASS_CS3 },
+    { N_("AF31"), IPTOS_DSCP_AF31 },
+    { N_("AF32"), IPTOS_DSCP_AF32 },
+    { N_("AF33"), IPTOS_DSCP_AF33 },
+    { N_("CS4"),  IPTOS_CLASS_CS4 },
+    { N_("AF41"), IPTOS_DSCP_AF41 },
+    { N_("AF42"), IPTOS_DSCP_AF42 },
+    { N_("AF43"), IPTOS_DSCP_AF43 },
+    { N_("CS5"),  IPTOS_CLASS_CS5 },
+    { N_("EF"),   IPTOS_DSCP_EF },
+    { N_("CS6"),  IPTOS_CLASS_CS6 },
+    { N_("CS7"),  IPTOS_CLASS_CS7 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -1846,6 +1879,14 @@ const idclass_t config_class = {
       .name   = N_("HTTP CORS Origin"),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
+      .group  = 1
+    },
+    {
+      .type   = PT_INT,
+      .id     = "dscp",
+      .name   = N_("DSCP/TOS for streaming"),
+      .off    = offsetof(config_t, dscp),
+      .list   = config_class_dscp_list,
       .group  = 1
     },
     {

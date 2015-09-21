@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
+#include <netinet/ip.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -48,6 +49,24 @@
 int tcp_preferred_address_family = AF_INET;
 int tcp_server_running;
 th_pipe_t tcp_server_pipe;
+
+/**
+ *
+ */
+int
+socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
+{
+  int r, v;
+
+  v = dscp & IPTOS_DSCP_MASK;
+  r = setsockopt(sockfd, IPPROTO_IP, IP_TOS, &v, sizeof(v));
+  if (r < 0) {
+    if (errbuf && errbufsize)
+      snprintf(errbuf, errbufsize, "IP_TOS failed: %s", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
 
 /**
  *
