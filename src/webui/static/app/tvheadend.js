@@ -2,11 +2,13 @@ tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
 
+tvheadend.cookieProvider = new Ext.state.CookieProvider({
+  // 7 days from now
+  expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7))
+});
+
 /* State Provider */
-Ext.state.Manager.setProvider(new Ext.state.CookieProvider({
-    // 7 days from now
-    expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7))
-}));
+Ext.state.Manager.setProvider(tvheadend.cookieProvider);
 
 tvheadend.regexEscape = function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -350,13 +352,17 @@ function accessUpdate(o) {
         return;
 
     if ('info_area' in o)
-      tvheadend.rootTabPanel.setInfoArea(o.info_area);
+        tvheadend.rootTabPanel.setInfoArea(o.info_area);
     if ('username' in o)
-      tvheadend.rootTabPanel.setLogin(o.username);
+        tvheadend.rootTabPanel.setLogin(o.username);
     if ('address' in o)
-      tvheadend.rootTabPanel.setAddress(o.address);
+        tvheadend.rootTabPanel.setAddress(o.address);
     if ('freediskspace' in o && 'totaldiskspace' in o)
-      tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
+        tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
+
+    if ('cookie_expires' in o && o.cookie_expires > 0)
+        tvheadend.cookieProvider.expires =
+            new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * o.cookie_expires));
 
     if (tvheadend.autorecButton)
         tvheadend.autorecButton.setDisabled(o.dvr != true);

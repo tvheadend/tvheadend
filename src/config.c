@@ -1545,6 +1545,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   memset(&config, 0, sizeof(config));
   config.idnode.in_class = &config_class;
   config.info_area = strdup("login,storage,time");
+  config.cookie_expires = 7;
 
   /* Generate default */
   if (!path) {
@@ -1830,6 +1831,13 @@ const idclass_t config_class = {
       .id     = "server_name",
       .name   = N_("Tvheadend server name"),
       .off    = offsetof(config_t, server_name),
+      .group  = 1
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cookie_expires",
+      .name   = N_("Cookie expiration (days)"),
+      .off    = offsetof(config_t, cookie_expires),
       .group  = 1
     },
     {

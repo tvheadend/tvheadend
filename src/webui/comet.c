@@ -158,6 +158,9 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   htsmsg_add_s64(m, "time",     time(NULL));
 
+  if (config.cookie_expires)
+    htsmsg_add_u32(m, "cookie_expires", config.cookie_expires);
+
   if (config.info_area && config.info_area[0])
     htsmsg_add_str(m, "info_area", config.info_area);
 
