@@ -239,6 +239,14 @@
     background-image: url(../icons/group.png) !important;
 }
 
+.acl {
+    background-image: url(../icons/acl.png) !important;
+}
+
+.ip_block {
+    background-image: url(../icons/ip_block.png) !important;
+}
+
 .hardware {
     background-image: url(../icons/pci.png) !important;
 }
