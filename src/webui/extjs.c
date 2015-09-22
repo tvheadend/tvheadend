@@ -31,6 +31,7 @@
 #include "htsmsg_json.h"
 
 #include "tvheadend.h"
+#include "config.h"
 #include "http.h"
 #include "webui.h"
 
@@ -132,12 +133,12 @@ Ext.onReady(tvheadend.app.init, tvheadend.app);\
 		 "\tmargin:5px;\n"
 		 "}\n"
 		 "</style>\n"
-		 "<title>HTS Tvheadend %s</title>\n"
+		 "<title>%s</title>\n"
 		 "</head>\n"
 		 "<body>\n"
 		 "<div id=\"systemlog\"></div>\n"
 		 "</body></html>\n",
-		 tvheadend_version);
+		 config.server_name);
 
   http_output_html(hc);
   return 0;
@@ -155,7 +156,7 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<!DOCTYPE html>\n");
   htsbuf_qprintf(hq, "<html>\n");
   htsbuf_qprintf(hq, "<head>\n");
-  htsbuf_qprintf(hq, "<title>HTS Tvheadend %s</title>\n", tvheadend_version);
+  htsbuf_qprintf(hq, "<title>%s</title>\n", config.server_name);
 
   if (tvheadend_webui_debug) {
 
