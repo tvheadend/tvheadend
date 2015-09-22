@@ -408,6 +408,7 @@ function accessUpdate(o) {
 
         tvheadend.acleditor(users);
         tvheadend.passwdeditor(users);
+        tvheadend.ipblockeditor(users);
         
         cp.add(users);
 

@@ -58,6 +58,38 @@ api_passwd_entry_create
  */
 
 static void
+api_ipblock_entry_grid
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  ipblock_entry_t *ib;
+
+  TAILQ_FOREACH(ib, &ipblock_entries, ib_link)
+    idnode_set_add(ins, (idnode_t*)ib, &conf->filter, perm->aa_lang);
+}
+
+static int
+api_ipblock_entry_create
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+  ipblock_entry_t *ib;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  if ((ib = ipblock_entry_create(NULL, conf)) != NULL)
+    ipblock_entry_save(ib);
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+/*
+ *
+ */
+
+static void
 api_access_entry_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
@@ -91,6 +123,10 @@ void api_access_init ( void )
     { "passwd/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&passwd_entry_class },
     { "passwd/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_passwd_entry_grid },
     { "passwd/entry/create", ACCESS_ADMIN, api_passwd_entry_create, NULL },
+
+    { "ipblock/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&ipblock_entry_class },
+    { "ipblock/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_ipblock_entry_grid },
+    { "ipblock/entry/create", ACCESS_ADMIN, api_ipblock_entry_create, NULL },
 
     { "access/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&access_entry_class },
     { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },

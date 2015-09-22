@@ -26,6 +26,24 @@ struct profile;
 struct dvr_config;
 struct channel_tag;
 
+TAILQ_HEAD(access_ipmask_queue, access_ipmask);
+
+TAILQ_HEAD(ipblock_entry_queue, ipblock_entry);
+
+extern struct ipblock_entry_queue ipblock_entries;
+
+typedef struct ipblock_entry {
+  idnode_t ib_id;
+
+  TAILQ_ENTRY(ipblock_entry) ib_link;
+
+  int   ib_enabled;
+  struct access_ipmask_queue ib_ipmasks;
+  char *ib_comment;
+} ipblock_entry_t;
+
+extern const idclass_t ipblock_entry_class;
+
 TAILQ_HEAD(passwd_entry_queue, passwd_entry);
 
 extern struct passwd_entry_queue passwd_entries;
@@ -109,7 +127,7 @@ typedef struct access_entry {
 
   uint32_t ae_rights;
 
-  TAILQ_HEAD(, access_ipmask) ae_ipmasks;
+  struct access_ipmask_queue ae_ipmasks;
 } access_entry_t;
 
 extern const idclass_t access_entry_class;
@@ -265,6 +283,14 @@ passwd_entry_t *
 passwd_entry_create(const char *uuid, htsmsg_t *conf);
 void
 passwd_entry_save(passwd_entry_t *pw);
+
+/**
+ *
+ */
+ipblock_entry_t *
+ipblock_entry_create(const char *uuid, htsmsg_t *conf);
+void
+ipblock_entry_save(ipblock_entry_t *pw);
 
 /**
  *
