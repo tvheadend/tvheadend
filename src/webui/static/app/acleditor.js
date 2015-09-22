@@ -24,7 +24,7 @@ tvheadend.acleditor = function(panel, index)
         url: 'api/access/entry',
         titleS: _('Access Entry'),
         titleP: _('Access Entries'),
-        iconCls: 'group',
+        iconCls: 'acl',
         columns: {
             enabled:        { width: 120 },
             username:       { width: 250 },
@@ -118,7 +118,7 @@ tvheadend.ipblockeditor = function(panel, index)
         url: 'api/ipblock/entry',
         titleS: _('IP Blocking Record'),
         titleP: _('IP Blocking Records'),
-        iconCls: 'exclamation',
+        iconCls: 'ip_block',
         columns: {
             enabled: { width: 120 },
             prefix:  { width: 350 },
