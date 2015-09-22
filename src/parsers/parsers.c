@@ -38,28 +38,6 @@
 #define PTS_MASK 0x1ffffffffLL
 //#define PTS_MASK 0x7ffffLL
 
-#define getu32(b, l) ({                                      \
-  uint32_t x = (b[0] << 24 | b[1] << 16 | b[2] << 8 | b[3]); \
-  b+=4;                                                      \
-  l-=4;                                                      \
-  x;                                                         \
-})
-
-#define getu16(b, l) ({            \
-  uint16_t x = (b[0] << 8 | b[1]); \
-  b+=2;                            \
-  l-=2;                            \
-  x;                               \
-})
-
-#define getu8(b, l) ({ \
-  uint8_t x = b[0];    \
-  b+=1;                \
-  l-=1;                \
-  x;                   \
-})
-
-
 static int64_t 
 getpts(const uint8_t *p)
 {
@@ -176,44 +154,6 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   case SCT_TELETEXT:
     parse_teletext(t, st, data, len, start);
-    break;
-
-  default:
-    break;
-  }
-}
-
-/**
- * Parse program stream, as from V4L2, etc.
- *
- * Note: data does not include startcode and packet length
- */
-void
-parse_mpeg_ps(service_t *t, elementary_stream_t *st, uint8_t *data, int len)
-{
-  int hlen;
-
-  hlen = parse_pes_header(t, st, data, len);
-#if 0
-  int i;
-  for(i = 0; i < 16; i++)
-    printf("%02x.", data[i]);
-  printf(" %d\n", hlen);
-#endif
-  data += hlen;
-  len  -= hlen;
-
-  if(len < 1)
-    return;
-
-  switch(st->es_type) {
-  case SCT_MPEG2AUDIO:
-    sbuf_append(&st->es_buf_a, data, len);
-    parse_mpa2(t, st);
-    break;
-
-  case SCT_MPEG2VIDEO:
-    parse_sc(t, st, data, len, parse_mpeg2video);
     break;
 
   default:
@@ -849,9 +789,14 @@ parse_pes_header(service_t *t, elementary_stream_t *st,
   int64_t dts, pts, d;
   int hdr, flags, hlen;
 
-  hdr   = getu8(buf, len);
-  flags = getu8(buf, len);
-  hlen  = getu8(buf, len);
+  if (len < 3)
+    return -1;
+
+  hdr   = buf[0];
+  flags = buf[1];
+  hlen  = buf[2];
+  buf  += 3;
+  len  -= 3;
 
   if(len < hlen || (hdr & 0xc0) != 0x80)
     goto err;
