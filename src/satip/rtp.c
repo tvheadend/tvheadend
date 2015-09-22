@@ -210,6 +210,7 @@ satip_rtp_thread(void *aux)
 
     case SMT_START:
     case SMT_STOP:
+    case SMT_NOSTART_WARN:
     case SMT_PACKET:
     case SMT_GRACE:
     case SMT_SKIP:

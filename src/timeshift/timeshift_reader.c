@@ -135,6 +135,7 @@ static ssize_t _read_msg ( timeshift_file_t *tsf, int fd, streaming_message_t **
     /* Unhandled */
     case SMT_START:
     case SMT_NOSTART:
+    case SMT_NOSTART_WARN:
     case SMT_SERVICE_STATUS:
       return -1;
       break;

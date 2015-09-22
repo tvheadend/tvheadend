@@ -425,6 +425,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       }
       break;
 
+    case SMT_NOSTART_WARN:
     case SMT_SKIP:
     case SMT_SPEED:
     case SMT_SIGNAL_STATUS:

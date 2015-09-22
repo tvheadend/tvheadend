@@ -270,6 +270,7 @@ streaming_msg_clone(streaming_message_t *src)
   case SMT_STOP:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
     dst->sm_code = src->sm_code;
     break;
 
@@ -331,6 +332,7 @@ streaming_msg_free(streaming_message_t *sm)
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
   case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
   case SMT_SPEED:
     break;
 

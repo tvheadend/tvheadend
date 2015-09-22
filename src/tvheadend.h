@@ -390,6 +390,13 @@ typedef enum {
   SMT_NOSTART,
 
   /**
+   * Streaming unable to start (non-fatal).
+   *
+   * sm_code indicates reason. Scheduler will try to restart
+   */
+  SMT_NOSTART_WARN,
+
+  /**
    * Raw MPEG TS data
    */
   SMT_MPEGTS,

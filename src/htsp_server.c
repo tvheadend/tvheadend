@@ -3798,6 +3798,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
     htsp_subscription_status(hs,  streaming_code2txt(sm->sm_code),
         sm->sm_code ? _htsp_get_subscription_status(sm->sm_code) : NULL);
     break;
