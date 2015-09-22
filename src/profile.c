@@ -1510,7 +1510,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "resolution",
-      .name     = N_("Resolution"),
+      .name     = N_("Resolution (height)"),
       .off      = offsetof(profile_transcode_t, pro_resolution),
       .def.u32  = 384,
     },
