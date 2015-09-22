@@ -312,6 +312,8 @@ typedef struct service {
 
   void (*s_delete)(struct service *t, int delconf);
 
+  int (*s_satip_source)(struct service *t);
+
   /**
    * Channel info
    */

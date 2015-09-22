@@ -580,6 +580,14 @@ mpegts_service_delete ( service_t *t, int delconf )
   //       is done in service_destroy
 }
 
+static int
+mpegts_service_satip_source ( service_t *t )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+  mpegts_network_t *mn = ms->s_dvb_mux ? ms->s_dvb_mux->mm_network : NULL;
+  return mn ? mn->mn_satip_source : -1;
+}
+
 /* **************************************************************************
  * Creation/Location
  * *************************************************************************/
@@ -630,6 +638,7 @@ mpegts_service_create0
   s->s_provider_name  = mpegts_service_provider_name;
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;
+  s->s_satip_source   = mpegts_service_satip_source;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);
@@ -854,6 +863,7 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_update_pids    = mpegts_service_raw_update_pids;
   s->s_link           = mpegts_service_link;
   s->s_unlink         = mpegts_service_unlink;
+  s->s_satip_source   = mpegts_service_satip_source;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   free(s->s_nicename);

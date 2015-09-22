@@ -103,6 +103,7 @@ satip_server_http_xml(http_connection_t *hc)
 </iconList>\n\
 <presentationURL>http://%s:%d</presentationURL>\n\
 <satip:X_SATIPCAP xmlns:satip=\"urn:ses-com:satip\">%s</satip:X_SATIPCAP>\n\
+<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/playlist/satip/channels</satip:X_SATIPM3U>\n\
 </device>\n\
 </root>\n"
 

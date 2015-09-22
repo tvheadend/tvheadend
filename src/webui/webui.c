@@ -65,7 +65,8 @@
 
 enum {
   PLAYLIST_M3U,
-  PLAYLIST_E2
+  PLAYLIST_E2,
+  PLAYLIST_SATIP_M3U\
 };
 
 static int webui_xspf;
@@ -500,6 +501,35 @@ http_e2_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   htsbuf_qprintf(hq, "#DESCRIPTION %s\n", svcname);
 }
 
+/*
+ *
+ */
+static void
+http_satip_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
+                            channel_t *ch)
+{
+  char buf[64];
+  const char *name;
+  idnode_list_mapping_t *ilm;
+  service_t *s = NULL;
+  int src;
+
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    /* cannot handle channels with more services for SAT>IP */
+    if (s)
+      return;
+    s = (service_t *)ilm->ilm_in1;
+  }
+  src = (s && s->s_satip_source) ? s->s_satip_source(s) : -1;
+  if (src < 1)
+    return;
+  name = channel_get_name(ch);
+  snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
+  htsbuf_qprintf(hq, "#EXTINF:-1,%s\n", name);
+  htsbuf_qprintf(hq, "%s%s", hostpath, buf);
+  htsbuf_qprintf(hq, "?profile=pass\n");
+}
+
 /**
  * Output a playlist containing a single channel
  */
@@ -532,6 +562,10 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
 
     htsbuf_qprintf(hq, "#NAME %s\n", name);
     http_e2_playlist_add(hq, hostpath, buf, profile, name);
+
+  } else if (pltype == PLAYLIST_SATIP_M3U) {
+
+    http_satip_m3u_playlist_add(hq, hostpath, channel);
 
   }
 
@@ -598,6 +632,8 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
     } else if (pltype == PLAYLIST_E2) {
       htsbuf_qprintf(hq, "#NAME %s\n", name);
       http_e2_playlist_add(hq, hostpath, buf, profile, name);
+    } else if (pltype == PLAYLIST_SATIP_M3U) {
+      http_satip_m3u_playlist_add(hq, hostpath, ch);
     }
   }
 
@@ -650,7 +686,7 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
 
   qsort(ctlist, count, sizeof(channel_tag_t *), http_channel_tag_playlist_cmp);
 
-  if (pltype == PLAYLIST_E2) {
+  if (pltype == PLAYLIST_E2 || pltype == PLAYLIST_SATIP_M3U) {
     CHANNEL_FOREACH(ch)
       if (ch->ch_enabled)
         chcount++;
@@ -686,6 +722,13 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
             http_e2_playlist_add(hq, hostpath, buf, profile, channel_get_name(ch));
             break;
           }
+      }
+    } else if (pltype == PLAYLIST_SATIP_M3U) {
+      for (chidx = 0; chidx < chcount; chidx++) {
+        ch = chlist[chidx];
+        LIST_FOREACH(ilm, &ct->ct_ctms, ilm_in1_link)
+          if (ch == (channel_t *)ilm->ilm_in2)
+            http_satip_m3u_playlist_add(hq, hostpath, ch);
       }
     }
   }
@@ -746,10 +789,12 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
     name = channel_get_name(ch);
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
 
-    if (pltype != PLAYLIST_E2) {
+    if (pltype == PLAYLIST_M3U) {
       http_m3u_playlist_add(hq, hostpath, buf, profile, name, hc->hc_access);
-    } else {
+    } else if (pltype == PLAYLIST_E2) {
       http_e2_playlist_add(hq, hostpath, buf, profile, name);
+    } else if (pltype == PLAYLIST_SATIP_M3U) {
+      http_satip_m3u_playlist_add(hq, hostpath, ch);
     }
   }
 
@@ -882,15 +927,27 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     remain = NULL;
   }
 
+  if (remain && !strcmp(remain, "satip")) {
+    pltype = PLAYLIST_SATIP_M3U;
+    remain = NULL;
+  }
+
   if (remain && !strncmp(remain, "e2/", 3)) {
     pltype = PLAYLIST_E2;
     remain += 3;
   }
 
+  if (remain && !strncmp(remain, "satip/", 6)) {
+    pltype = PLAYLIST_SATIP_M3U;
+    remain += 6;
+  }
+
   if(!remain || *remain == '\0') {
     http_redirect(hc, pltype == PLAYLIST_E2 ? "/playlist/e2/channels" :
-                                              "/playlist/channels",
-                                              &hc->hc_req_args, 0);
+                      (pltype == PLAYLIST_SATIP_M3U ?
+                        "/playlist/satip/channels" :
+                        "/playlist/channels"),
+                      &hc->hc_req_args, 0);
     return HTTP_STATUS_FOUND;
   }
 
@@ -912,7 +969,7 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
   else if(nc == 2 && !strcmp(components[0], "channelname"))
     ch = channel_find_by_name(components[1]);
   else if(nc == 2 && !strcmp(components[0], "channel"))
-    ch = channel_find(components[1]);
+   ch = channel_find(components[1]);
   else if(nc == 2 && !strcmp(components[0], "dvrid"))
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))
@@ -924,9 +981,12 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     r = http_channel_playlist(hc, pltype, ch);
   else if(tag)
     r = http_tag_playlist(hc, pltype, tag);
-  else if(de)
-    r = http_dvr_playlist(hc, pltype, de);
-  else {
+  else if(de) {
+    if (pltype == PLAYLIST_SATIP_M3U)
+      r = HTTP_STATUS_BAD_REQUEST;
+    else
+      r = http_dvr_playlist(hc, pltype, de);
+  } else {
     cmd = s = tvh_strdupa(components[0]);
     while (*s && *s != '.') s++;
     if (*s == '.') {
@@ -939,9 +999,8 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
       r = http_tag_list_playlist(hc, pltype);
     else if(!strcmp(cmd, "channels"))
       r = http_channel_list_playlist(hc, pltype);
-    else if(!strcmp(cmd, "channels.m3u"))
-      r = http_channel_list_playlist(hc, pltype);
-    else if(!strcmp(cmd, "recordings"))
+    else if(pltype != PLAYLIST_SATIP_M3U &&
+            !strcmp(cmd, "recordings"))
       r = http_dvr_list_playlist(hc, pltype);
     else {
       r = HTTP_STATUS_BAD_REQUEST;
