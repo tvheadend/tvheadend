@@ -391,15 +391,25 @@ function accessUpdate(o) {
             items: []
         });
 
-
         tvheadend.baseconf(general);
         tvheadend.imgcacheconf(general);
         tvheadend.satipsrvconf(general);
         
         cp.add(general);
 
-        tvheadend.acleditor(cp);
-        tvheadend.passwdeditor(cp);
+        /* Users */
+        var users = new Ext.TabPanel({
+            activeTab: 0,
+            autoScroll: true,
+            title: _('Users'),
+            iconCls: 'group',
+            items: []
+        });
+
+        tvheadend.acleditor(users);
+        tvheadend.passwdeditor(users);
+        
+        cp.add(users);
 
         /* DVB inputs, networks, muxes, services */
         var dvbin = new Ext.TabPanel({
