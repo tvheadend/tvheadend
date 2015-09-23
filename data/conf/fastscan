@@ -83,19 +83,19 @@
   {
     "name": "Canal Digitaal HD",
     "position": 235,
-    "frequency": 12187000,
+    "frequency": 12070000,
     "symbolrate" : 27500000,
     "polarisation" : "H",
-    "delsys" : "dvbs2",
+    "delsys" : "dvbs",
     "pid": 901
   },
   {
     "name": "TV Vlaanderen HD",
     "position": 235,
-    "frequency": 12187000,
+    "frequency": 12070000,
     "symbolrate" : 27500000,
     "polarisation" : "H",
-    "delsys" : "dvbs2",
+    "delsys" : "dvbs",
     "pid": 911
   },
     {
