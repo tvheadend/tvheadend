@@ -187,11 +187,14 @@ pktbuf_alloc(const void *data, size_t size)
   pktbuf_t *pb = malloc(sizeof(pktbuf_t));
   pb->pb_refcount = 1;
   pb->pb_size = size;
+  pb->pb_err = 0;
 
   if(size > 0) {
     pb->pb_data = malloc(size);
     if(data != NULL)
       memcpy(pb->pb_data, data, size);
+  } else {
+    pb->pb_data = NULL;
   }
   return pb;
 }
