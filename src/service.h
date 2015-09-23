@@ -73,6 +73,9 @@ typedef struct elementary_stream {
 
   sbuf_t es_buf;
 
+  uint8_t  es_incomplete;
+  uint8_t  es_header_mode;
+  uint32_t es_header_offset;
   uint32_t es_startcond;
   uint32_t es_startcode;
   uint32_t es_startcode_offset;
@@ -80,15 +83,10 @@ typedef struct elementary_stream {
   int es_parser_ptr;
   void *es_priv;          /* Parser private data */
 
-  sbuf_t es_buf_ps;       // program stream reassembly (analogue adapters)
   sbuf_t es_buf_a;        // Audio packet reassembly
 
   uint8_t *es_global_data;
   int es_global_data_len;
-  int es_incomplete;
-  int es_ssc_intercept;
-  int es_ssc_ptr;
-  uint8_t es_ssc_buf[32];
 
   struct th_pkt *es_curpkt;
   int64_t es_curpts;

@@ -38,6 +38,13 @@
 #define PTS_MASK 0x1ffffffffLL
 //#define PTS_MASK 0x7ffffLL
 
+/* parser states */
+#define PARSER_APPEND 0
+#define PARSER_RESET  1
+#define PARSER_DROP   2
+#define PARSER_SKIP   3
+#define PARSER_HEADER 4
+
 static int64_t 
 getpts(const uint8_t *p)
 {
@@ -71,8 +78,8 @@ typedef int (packet_parser_t)(service_t *t, elementary_stream_t *st, size_t len,
 
 typedef void (aparser_t)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
 
-static void parse_sc(service_t *t, elementary_stream_t *st, const uint8_t *data,
-                     int len, packet_parser_t *vp);
+static void parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data,
+                      int len, int start, packet_parser_t *vp);
 
 static void parse_mp4a_data(service_t *t, elementary_stream_t *st, int skip_next_check);
 
@@ -121,27 +128,27 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   switch(st->es_type) {
   case SCT_MPEG2VIDEO:
-    parse_sc(t, st, data, len, parse_mpeg2video);
+    parse_pes(t, st, data, len, start, parse_mpeg2video);
     break;
 
   case SCT_H264:
-    parse_sc(t, st, data, len, parse_h264);
+    parse_pes(t, st, data, len, start, parse_h264);
     break;
 
   case SCT_MPEG2AUDIO:
-    parse_sc(t, st, data, len, parse_mpa);
+    parse_pes(t, st, data, len, start, parse_mpa);
     break;
 
   case SCT_AC3:
-    parse_sc(t, st, data, len, parse_ac3);
+    parse_pes(t, st, data, len, start, parse_ac3);
     break;
 
   case SCT_EAC3:
-    parse_sc(t, st, data, len, parse_eac3);
+    parse_pes(t, st, data, len, start, parse_eac3);
     break;
 
   case SCT_MP4A:
-    parse_sc(t, st, data, len, parse_mp4a);
+    parse_pes(t, st, data, len, start, parse_mp4a);
     break;
 
   case SCT_DVBSUB:
@@ -255,104 +262,138 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
 
 /**
- * Generic video parser
+ * Generic PES parser
  *
  * We scan for startcodes a'la 0x000001xx and let a specific parser
  * derive further information.
  */
 static void
-parse_sc(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
-         packet_parser_t *vp)
+parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
+          int start, packet_parser_t *vp)
 {
-  uint32_t sc = st->es_startcond;
-  int i, r;
-  sbuf_alloc(&st->es_buf, len);
+  uint_fast32_t sc = st->es_startcond;
+  uint16_t plen;
+  int i, j, r, hlen, tmp, off;
 
-  for(i = 0; i < len; i++) {
-    if(st->es_ssc_intercept == 1) {
-      if(st->es_ssc_ptr < sizeof(st->es_ssc_buf))
-        st->es_ssc_buf[st->es_ssc_ptr] = data[i];
+  if (start) {
+    st->es_parser_state = 1;
+    if (data[0] != 0 && data[1] != 0 && data[2] != 1)
+      if (tvhlog_limit(&st->es_pes_log, 10))
+        tvhwarn("TS", "%s: Invalid start code %02x:%02x:%02x",
+                service_component_nicename(st),
+                data[0], data[1], data[2]);
+    st->es_incomplete = 0;
+    if (st->es_header_mode) {
+      st->es_buf.sb_ptr = st->es_header_offset;
+      st->es_header_mode = 0;
+    }
+  }
 
-      st->es_ssc_ptr++;
+  if(st->es_parser_state == 0)
+    return;
 
-      if(st->es_ssc_ptr < 5)
-        continue;
+  for(i = 0; i < len; ) {
 
-      uint16_t plen = st->es_ssc_buf[0] << 8 | st->es_ssc_buf[1];
+    if(st->es_header_mode) {
+      r = len - i;
+      off = st->es_header_offset;
+      j = st->es_buf.sb_ptr - off;
+      if (j < 5) {
+        tmp = MIN(r, 5 - j);
+        sbuf_append(&st->es_buf, data + i, tmp);
+        j += tmp;
+        r -= tmp;
+        i += tmp;
+      }
+      if (j < 5)
+        break;
+
+      plen = st->es_buf.sb_data[off] << 8 | st->es_buf.sb_data[off+1];
       st->es_incomplete = plen >= 0xffdf;
-      int hlen = st->es_ssc_buf[4];
+      hlen = st->es_buf.sb_data[off+4];
 
-      if(st->es_ssc_ptr < hlen + 5)
-        continue;
+      if(j < hlen + 5) {
+        tmp = MIN(r, hlen);
+        sbuf_append(&st->es_buf, data + i, tmp);
+        j += tmp;
+        r -= tmp;
+        i += tmp;
+      }
+      if(j < hlen + 5)
+        break;
       
-      parse_pes_header(t, st, st->es_ssc_buf + 2, hlen + 3);
-      st->es_ssc_intercept = 0;
+      r = parse_pes_header(t, st, st->es_buf.sb_data + off + 2, hlen + 3);
 
-      if(st->es_buf.sb_ptr > 2)
-        sc = st->es_buf.sb_data[st->es_buf.sb_ptr-3] << 16 |
-             st->es_buf.sb_data[st->es_buf.sb_ptr-2] << 8 |
-             st->es_buf.sb_data[st->es_buf.sb_ptr-1];
+      st->es_header_mode = 0;
+      st->es_buf.sb_ptr = off;
+      if(off > 2)
+        sc = st->es_buf.sb_data[off-3] << 16 |
+             st->es_buf.sb_data[off-2] << 8 |
+             st->es_buf.sb_data[off-1];
 
       continue;
     }
 
-    st->es_buf.sb_data[st->es_buf.sb_ptr++] = data[i];
-    sc = sc << 8 | data[i];
-    if((sc & 0xffffff00) != 0x00000100)
-      continue;
+    /* quick loop to find startcode */
+    j = i;
+    do {
+      sc = (sc << 8) | data[i++];
+      if((sc & 0xffffff00) == 0x00000100)
+        goto found;
+    } while (i < len);
+    sbuf_append(&st->es_buf, data + j, len - j);
+    break;
 
-    if(sc == 0x100 && (len-i)>3) {
-      uint32_t tempsc = data[i+1] << 16 | data[i+2] << 8 | data[i+3];
+found:
+    sbuf_append(&st->es_buf, data + j, i - j);
 
-      if(tempsc == 0x1e0)
+    if(sc == 0x100 && (len-i)>2) {
+      if (data[0] == 0 && data[i+1] == 0x01 && data[i+2] == 0xe0)
         continue;
     }
 
     r = st->es_buf.sb_ptr - st->es_startcode_offset - 4;
     if(r > 0 && st->es_startcode != 0) {
       r = vp(t, st, r, sc, st->es_startcode_offset);
-
-      if(r == 3)
+      
+      if(r == PARSER_SKIP)
         continue;
 
-      if(r == 4) {
+      if(r == PARSER_HEADER) {
         st->es_buf.sb_ptr -= 4;
-        st->es_ssc_intercept = 1;
-        st->es_ssc_ptr = 0;
+        st->es_header_mode = 1;
+        st->es_header_offset = st->es_buf.sb_ptr;
         sc = -1;
         continue;
       }
     } else
-      r = 1;
+      r = PARSER_RESET;
 
-    if(r == 2) {
+    if(r == PARSER_DROP) {
+
       assert(st->es_buf.sb_data != NULL);
 
-      // Drop packet
+      /* Drop packet */
       st->es_buf.sb_ptr = st->es_startcode_offset;
-
-      st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 24;
-      st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 16;
-      st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 8;
-      st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc;
+      sbuf_put_be32(&st->es_buf, sc);
       st->es_startcode = sc;
 
-    } else {
-      if(r == 1) {
+    } else /* APPEND or RESET */ {
+
+      if(r == PARSER_RESET) {
         /* Reset packet parser upon length error or if parser
            tells us so */
         parser_deliver_error(t, st);
         sbuf_reset_and_alloc(&st->es_buf, 256);
-        st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 24;
-        st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 16;
-        st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc >> 8;
-        st->es_buf.sb_data[st->es_buf.sb_ptr++] = sc;
+        sbuf_put_be32(&st->es_buf, sc);
       }
       assert(st->es_buf.sb_data != NULL);
       st->es_startcode = sc;
       st->es_startcode_offset = st->es_buf.sb_ptr - 4;
+
     }
   }
+
   st->es_startcond = sc;  
 }
 
@@ -369,15 +410,15 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
   int hlen, plen;
 
   if((sc != 0x1bd && (sc & ~0x1f) != 0x1c0) || len < 9)
-    return 1;
+    return PARSER_RESET;
 
   plen = (buf[4] << 8) | buf[5];
 
   if(plen + 6 > len)
-    return 3;
+    return PARSER_SKIP;
 
   if(plen + 6 < len)
-    return 1;
+    return PARSER_RESET;
 
   buf += 6;
   len -= 6;
@@ -385,7 +426,7 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
   hlen = parse_pes_header(t, st, buf, len);
 
   if(hlen < 0)
-    return 1;
+    return PARSER_RESET;
 
   buf += hlen;
   len -= hlen;
@@ -393,7 +434,7 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
   st->es_buf_a.sb_err = st->es_buf.sb_err;
 
   sbuf_append(&st->es_buf_a, buf, len);
-  return 0;
+  return PARSER_APPEND;
 }
 
 
@@ -500,7 +541,7 @@ static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
     return r;
 
   parse_mp4a_data(t, st, 0);
-  return 1;
+  return PARSER_RESET;
 }
 
 const static int mpa_br[16] = {
@@ -561,7 +602,7 @@ parse_mpa2(service_t *t, elementary_stream_t *st)
       }
     }
   }
-  return 1;
+  return PARSER_RESET;
 }
 
 /**
@@ -573,7 +614,7 @@ parse_mpa(service_t *t, elementary_stream_t *st, size_t ilen,
 {
   int r;
   
-  if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+  if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return r;
   return parse_mpa2(t, st);
 }
@@ -646,7 +687,7 @@ parse_ac3(service_t *t, elementary_stream_t *st, size_t ilen,
   int i, len;
   const uint8_t *buf;
 
-  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return i;
 
  again:
@@ -703,7 +744,7 @@ parse_ac3(service_t *t, elementary_stream_t *st, size_t ilen,
       }
     }
   }
-  return 1;
+  return PARSER_RESET;
 }
 
 
@@ -727,7 +768,7 @@ parse_eac3(service_t *t, elementary_stream_t *st, size_t ilen,
   int i, len;
   const uint8_t *buf;
 
-  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
+  if((i = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return i;
 
  again:
@@ -773,7 +814,7 @@ parse_eac3(service_t *t, elementary_stream_t *st, size_t ilen,
       }
     }
   }
-  return 1;
+  return PARSER_RESET;
 }
 
 
@@ -864,7 +905,7 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
   int v, pct;
 
   if(bs->len < 29)
-    return 1;
+    return PARSER_RESET;
 
   skip_bits(bs, 10); /* temporal reference */
 
@@ -1015,7 +1056,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
   int frametype;
 
   if(next_startcode == 0x1e0)
-    return 4;
+    return PARSER_HEADER;
 
   init_rbits(&bs, buf + 4, (len - 4) * 8);
 
@@ -1023,7 +1064,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
   case 0x000001e0 ... 0x000001ef:
     /* System start codes for video */
     if(len < 9)
-      return 1;
+      return PARSER_RESET;
 
     parse_pes_header(t, st, buf + 6, len - 6);
     return 1;
@@ -1031,10 +1072,10 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
   case 0x00000100:
     /* Picture start code */
     if(st->es_frame_duration == 0)
-      return 1;
+      return PARSER_RESET;
 
-    if(parse_mpeg2video_pic_start(t, st, &frametype, &bs))
-      return 1;
+    if(parse_mpeg2video_pic_start(t, st, &frametype, &bs) != PARSER_APPEND)
+      return PARSER_RESET;
 
     if(st->es_curpkt != NULL)
       pkt_ref_dec(st->es_curpkt);
@@ -1057,10 +1098,10 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     /* Sequence start code */
     if(!st->es_buf.sb_err) {
       if(parse_mpeg2video_seq_start(t, st, &bs))
-        return 1;
+        return PARSER_RESET;
       parser_global_data_move(st, buf, len);
     }
-    return 2;
+    return PARSER_DROP;
 
   case 0x000001b5:
     if(len < 5)
@@ -1070,12 +1111,12 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       // Sequence Extension
       if(!st->es_buf.sb_err)
         parser_global_data_move(st, buf, len);
-      return 2;
+      return PARSER_DROP;
     case 0x2:
       // Sequence Display Extension
       if(!st->es_buf.sb_err)
         parser_global_data_move(st, buf, len);
-      return 2;
+      return PARSER_DROP;
     }
     break;
 
@@ -1117,7 +1158,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       parser_deliver(t, st, pkt);
       st->es_curpkt = NULL;
 
-      return 1;
+      return PARSER_RESET;
     }
     break;
 
@@ -1125,7 +1166,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     // GOP header
     if(!st->es_buf.sb_err)
       parser_global_data_move(st, buf, len);
-    return 2;
+    return PARSER_DROP;
 
   case 0x000001b2:
     // User data
@@ -1135,7 +1176,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     break;
   }
 
-  return 0;
+  return PARSER_APPEND;
 }
 
 
@@ -1166,7 +1207,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       pkt_ref_dec(st->es_curpkt);
       st->es_curpkt = NULL;
     }
-    return 1;
+    return PARSER_RESET;
   }
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
@@ -1190,14 +1231,14 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       }
     }
     st->es_prevdts = st->es_curdts;
-    return 1;
+    return PARSER_RESET;
   }
   
   if(sc == 0x10c) {
     // Padding
 
     st->es_buf.sb_ptr -= len;
-    ret = 2;
+    ret = PARSER_DROP;
 
   } else {
 
@@ -1210,7 +1251,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
         free(f);
         parser_global_data_move(st, buf, len);
       }
-      ret = 2;
+      ret = PARSER_DROP;
       break;
 
     case 8:
@@ -1220,7 +1261,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
         free(f);
         parser_global_data_move(st, buf, len);
       }
-      ret = 2;
+      ret = PARSER_DROP;
       break;
 
     case 5: /* IDR+SLICE */
@@ -1231,7 +1272,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
       if(h264_decode_slice_header(st, &bs, &pkttype, &isfield)) {
         free(f);
-        return 1;
+        return PARSER_RESET;
       }
       free(f);
 
@@ -1254,7 +1295,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
      (next_startcode & 0x1f) == 9) {
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
-      return 4;
+      return PARSER_HEADER;
     th_pkt_t *pkt = st->es_curpkt;
     size_t metalen = 0;
 
@@ -1281,7 +1322,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
         sbuf_steal_data(&st->es_buf);
       }
     }
-    return 1;
+    return PARSER_RESET;
   }
 
   return ret;
@@ -1298,6 +1339,7 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
   int psize, hlen;
   const uint8_t *buf;
   const uint8_t *d;
+
   if(start) {
     /* Payload unit start */
     st->es_parser_state = 1;
@@ -1363,6 +1405,7 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   int psize, hlen;
   const uint8_t *buf;
   const uint8_t *d;
+
   if(start) {
     st->es_parser_state = 1;
     st->es_parser_ptr = 0;
