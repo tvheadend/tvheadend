@@ -1060,8 +1060,8 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 
   init_rbits(&bs, buf + 4, (len - 4) * 8);
 
-  switch(st->es_startcode) {
-  case 0x000001e0 ... 0x000001ef:
+  switch(st->es_startcode & 0xff) {
+  case 0xe0 ... 0xef:
     /* System start codes for video */
     if(len < 9)
       return PARSER_RESET;
@@ -1069,7 +1069,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     parse_pes_header(t, st, buf + 6, len - 6);
     return 1;
 
-  case 0x00000100:
+  case 0x00:
     /* Picture start code */
     if(st->es_frame_duration == 0)
       return PARSER_RESET;
@@ -1094,7 +1094,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 
     break;
 
-  case 0x000001b3:
+  case 0xb3:
     /* Sequence start code */
     if(!st->es_buf.sb_err) {
       if(parse_mpeg2video_seq_start(t, st, &bs))
@@ -1103,7 +1103,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     }
     return PARSER_DROP;
 
-  case 0x000001b5:
+  case 0xb5:
     if(len < 5)
       return 1;
     switch(buf[4] >> 4) {
@@ -1120,7 +1120,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     }
     break;
 
-  case 0x00000101 ... 0x000001af:
+  case 0x01 ... 0xaf:
     /* Slices */
 
     if(next_startcode == 0x100 || next_startcode > 0x1af) {
@@ -1162,13 +1162,13 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     }
     break;
 
-  case 0x000001b8:
+  case 0xb8:
     // GOP header
     if(!st->es_buf.sb_err)
       parser_global_data_move(st, buf, len);
     return PARSER_DROP;
 
-  case 0x000001b2:
+  case 0xb2:
     // User data
     break;
 
