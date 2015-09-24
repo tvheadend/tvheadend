@@ -46,8 +46,7 @@ h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size)
 
   /* Escape 0x000003 into 0x0000 */
 
-  rbsp_size = 0;
-  for(i = 1; i < size; i++) {
+  for(i = rbsp_size = 0; i < size; i++) {
     if(i + 2 < size && data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 3) {
       d[rbsp_size++] = 0;
       d[rbsp_size++] = 0;
@@ -133,24 +132,6 @@ static const uint16_t h264_aspect[17][2] = {
 };
 
 
-static uint32_t
-gcd(uint32_t a, uint32_t b)
-{
-  uint32_t r;
-  if(a < b) {
-    r = a;
-    a = b;
-    b = r;
-  }
-
-  while((r = a % b) != 0) {
-    a = b;
-    b = r;
-  }
-  return b;
-}
-
-
 static int 
 decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
 {
@@ -165,7 +146,7 @@ decode_vui(h264_private_t *p, bitstream_t *bs, int sps_id)
       uint16_t den = read_bits(bs, 16);
       p->sps[sps_id].aspect_num = num;
       p->sps[sps_id].aspect_den = den;
-    } else if(aspect < 17) {
+    } else if(aspect < ARRAY_SIZE(h264_aspect)) {
       p->sps[sps_id].aspect_num =  h264_aspect[aspect][0];
       p->sps[sps_id].aspect_den =  h264_aspect[aspect][1];
     }
@@ -407,16 +388,16 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 
   *isfield = field;
 
-  int d = 0;
+  uint64_t d = 0;
   if(p->sps[sps_id].time_scale != 0)
-    d = timebase * p->sps[sps_id].units_in_tick / p->sps[sps_id].time_scale;
+    d = timebase * (uint64_t)p->sps[sps_id].units_in_tick / (uint64_t)p->sps[sps_id].time_scale;
 
   if(p->sps[sps_id].cbpsize != 0)
     st->es_vbv_size = p->sps[sps_id].cbpsize;
 
   st->es_vbv_delay = -1;
 
-  if(p->sps[sps_id].width && p->sps[sps_id].height && d && !st->es_buf.sb_err)
+  if(p->sps[sps_id].width && p->sps[sps_id].height && d)
     parser_set_stream_vparam(st, p->sps[sps_id].width,
                              p->sps[sps_id].height *
                              (2 - p->sps[sps_id].mbs_only_flag),
@@ -428,7 +409,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
     int h = p->sps[sps_id].aspect_den * st->es_height;
 
     if(w && h) { 
-      int d = gcd(w, h);
+      uint32_t d = gcdU32(w, h);
       st->es_aspect_num = w / d;
       st->es_aspect_den = h / d;
     }

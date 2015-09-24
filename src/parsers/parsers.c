@@ -29,6 +29,7 @@
 #include "service.h"
 #include "parsers.h"
 #include "parser_h264.h"
+#include "parser_hevc.h"
 #include "parser_latm.h"
 #include "parser_teletext.h"
 #include "bitstream.h"
@@ -71,6 +72,9 @@ static int parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
                             uint32_t next_startcode, int sc_offset);
 
 static int parse_h264(service_t *t, elementary_stream_t *st, size_t len,
+                      uint32_t next_startcode, int sc_offset);
+
+static int parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
                       uint32_t next_startcode, int sc_offset);
 
 typedef int (packet_parser_t)(service_t *t, elementary_stream_t *st, size_t len,
@@ -133,6 +137,10 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   case SCT_H264:
     parse_pes(t, st, data, len, start, parse_h264);
+    break;
+
+  case SCT_HEVC:
+    parse_pes(t, st, data, len, start, parse_hevc);
     break;
 
   case SCT_MPEG2AUDIO:
@@ -1147,7 +1155,6 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
         pkt->pkt_payload = pktbuf_alloc(NULL, metalen + st->es_buf.sb_ptr - 4);
         memcpy(pktbuf_ptr(pkt->pkt_payload), pktbuf_ptr(pkt->pkt_meta), metalen);
         memcpy(pktbuf_ptr(pkt->pkt_payload) + metalen, st->es_buf.sb_data, st->es_buf.sb_ptr - 4);
-        sbuf_reset(&st->es_buf, 16000);
       } else {
         pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
                                        st->es_buf.sb_ptr - 4);
@@ -1181,7 +1188,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 
 
 /**
- * H.264 parser
+ * H.264 (AVC) parser
  */
 static int
 parse_h264(service_t *t, elementary_stream_t *st, size_t len, 
@@ -1191,7 +1198,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
   uint32_t sc = st->es_startcode;
   int l2, pkttype, isfield;
   bitstream_t bs;
-  int ret = 0;
+  int ret = PARSER_APPEND;
 
   /* delimiter - finished frame */
   if ((sc & 0x1f) == 9 && st->es_curpkt && st->es_curpkt->pkt_payload) {
@@ -1246,7 +1253,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
     case 7:
       if(!st->es_buf.sb_err) {
-        void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+        void *f = h264_nal_deescape(&bs, buf + 4, len - 4);
         h264_decode_seq_parameter_set(st, &bs);
         free(f);
         parser_global_data_move(st, buf, len);
@@ -1256,7 +1263,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
     case 8:
       if(!st->es_buf.sb_err) {
-        void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+        void *f = h264_nal_deescape(&bs, buf + 4, len - 4);
         h264_decode_pic_parameter_set(st, &bs);
         free(f);
         parser_global_data_move(st, buf, len);
@@ -1266,8 +1273,8 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
     case 5: /* IDR+SLICE */
     case 1:
-      l2 = len - 3 > 64 ? 64 : len - 3;
-      void *f = h264_nal_deescape(&bs, buf + 3, l2);
+      l2 = len - 4 > 64 ? 64 : len - 4;
+      void *f = h264_nal_deescape(&bs, buf + 4, l2);
       /* we just want the first stuff */
 
       if(h264_decode_slice_header(st, &bs, &pkttype, &isfield)) {
@@ -1299,7 +1306,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     th_pkt_t *pkt = st->es_curpkt;
     size_t metalen = 0;
 
-    if(pkt != NULL) {
+    if(pkt != NULL && pkt->pkt_payload == NULL) {
       if(st->es_global_data) {
         pkt->pkt_meta = pktbuf_make(st->es_global_data,
                                     metalen = st->es_global_data_len);
@@ -1315,7 +1322,161 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
         pkt->pkt_payload = pktbuf_alloc(NULL, metalen + st->es_buf.sb_ptr - 4);
         memcpy(pktbuf_ptr(pkt->pkt_payload), pktbuf_ptr(pkt->pkt_meta), metalen);
         memcpy(pktbuf_ptr(pkt->pkt_payload) + metalen, st->es_buf.sb_data, st->es_buf.sb_ptr - 4);
-        sbuf_reset(&st->es_buf, 16000);
+      } else {
+        pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
+                                       st->es_buf.sb_ptr - 4);
+        sbuf_steal_data(&st->es_buf);
+      }
+    }
+    return PARSER_RESET;
+  }
+
+  return ret;
+}
+
+/**
+ * H.265 (HEVC) parser
+ */
+static int
+parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
+           uint32_t next_startcode, int sc_offset)
+{
+  const uint8_t *buf = st->es_buf.sb_data + sc_offset;
+  uint32_t sc = st->es_startcode;
+  int nal_type = (sc >> 1) & 0x3f;
+  int l2, pkttype, r;
+  bitstream_t bs;
+  int ret = PARSER_APPEND;
+
+  if(sc >= 0x000001e0 && sc <= 0x000001ef) {
+    /* System start codes for video */
+    if(len >= 9) {
+      uint16_t plen = buf[4] << 8 | buf[5];
+      th_pkt_t *pkt = st->es_curpkt;
+      if(plen >= 0xffe9) st->es_incomplete = 1;
+      l2 = parse_pes_header(t, st, buf + 6, len - 6);
+
+      if (pkt) {
+        if (l2 + 1 <= len - 6) {
+          /* This is the rest of this frame. */
+          /* Do not include trailing zero. */
+          pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2 - 1);
+        }
+
+        parser_deliver(t, st, pkt);
+
+        st->es_curpkt = NULL;
+      }
+    }
+    st->es_prevdts = st->es_curdts;
+    return PARSER_RESET;
+  }
+
+  if (sc & 0x80)
+    return PARSER_DROP;
+
+  switch (nal_type) {
+  case HEVC_NAL_TRAIL_N:
+  case HEVC_NAL_TRAIL_R:
+  case HEVC_NAL_TSA_N:
+  case HEVC_NAL_TSA_R:
+  case HEVC_NAL_STSA_N:
+  case HEVC_NAL_STSA_R:
+  case HEVC_NAL_RADL_N:
+  case HEVC_NAL_RADL_R:
+  case HEVC_NAL_RASL_N:
+  case HEVC_NAL_RASL_R:
+  case HEVC_NAL_BLA_W_LP:
+  case HEVC_NAL_BLA_W_RADL:
+  case HEVC_NAL_BLA_N_LP:
+  case HEVC_NAL_IDR_W_RADL:
+  case HEVC_NAL_IDR_N_LP:
+  case HEVC_NAL_CRA_NUT:
+    l2 = len - 3 > 64 ? 64 : len - 3;
+    void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+    r = hevc_decode_slice_header(st, &bs, &pkttype);
+    free(f);
+    if (r < 0)
+      return PARSER_RESET;
+    if (r > 0)
+      return PARSER_APPEND;
+
+    st->es_curpkt = pkt_alloc(NULL, 0, st->es_curpts, st->es_curdts);
+    st->es_curpkt->pkt_frametype = pkttype;
+    st->es_curpkt->pkt_field = 0;
+    st->es_curpkt->pkt_duration = st->es_frame_duration;
+    st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
+    break;
+
+  case HEVC_NAL_VPS:
+    if(!st->es_buf.sb_err) {
+      void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+      hevc_decode_vps(st, &bs);
+      free(f);
+      parser_global_data_move(st, buf, len);
+    }
+    ret = PARSER_DROP;
+    break;
+
+  case HEVC_NAL_SPS:
+    if(!st->es_buf.sb_err) {
+      void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+      hevc_decode_sps(st, &bs);
+      free(f);
+      parser_global_data_move(st, buf, len);
+    }
+    ret = PARSER_DROP;
+    break;
+
+  case HEVC_NAL_PPS:
+    if(!st->es_buf.sb_err) {
+      void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+      hevc_decode_pps(st, &bs);
+      free(f);
+      parser_global_data_move(st, buf, len);
+    }
+    ret = PARSER_DROP;
+    break;
+
+#if 0
+  case HEVC_NAL_SEI_PREFIX:
+  case HEVC_NAL_SEI_SUFFIX:
+    if(!st->es_buf.sb_err) {
+      /* FIXME: only declarative messages */
+      parser_global_data_move(st, buf, len);
+    }
+    ret = PARSER_DROP;
+    break;
+#endif
+
+  default:
+    break;
+  }
+
+  if((next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) ||
+     ((next_startcode >> 1) & 0x3f) == 1) {
+    /* Complete frame - new start code or delimiter */
+    if (st->es_incomplete)
+      return PARSER_HEADER;
+    th_pkt_t *pkt = st->es_curpkt;
+    size_t metalen = 0;
+
+    if(pkt != NULL && pkt->pkt_payload == NULL) {
+      if(st->es_global_data) {
+        pkt->pkt_meta = pktbuf_make(st->es_global_data,
+                                    metalen = st->es_global_data_len);
+        st->es_global_data = NULL;
+        st->es_global_data_len = 0;
+      }
+
+      if (st->es_buf.sb_err) {
+        pkt->pkt_err = st->es_buf.sb_err;
+        st->es_buf.sb_err = 0;
+      }
+      if (metalen) {
+        pkt->pkt_payload = pktbuf_alloc(NULL, metalen + st->es_buf.sb_ptr - 4);
+        memcpy(pktbuf_ptr(pkt->pkt_payload), pktbuf_ptr(pkt->pkt_meta), metalen);
+        memcpy(pktbuf_ptr(pkt->pkt_payload) + metalen, st->es_buf.sb_data, st->es_buf.sb_ptr - 4);
       } else {
         pkt->pkt_payload = pktbuf_make(st->es_buf.sb_data,
                                        st->es_buf.sb_ptr - 4);

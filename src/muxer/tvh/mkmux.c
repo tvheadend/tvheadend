@@ -355,6 +355,7 @@ mk_build_tracks(mk_mux_t *mkm, const streaming_start_t *ss)
       ebml_append_string(t, 0x22b59c, ssc->ssc_lang);
     
     switch(ssc->ssc_type) {
+    case SCT_HEVC:
     case SCT_H264:
     case SCT_MPEG2VIDEO:
     case SCT_MP4A:
@@ -1242,7 +1243,10 @@ mk_mux_write_pkt(mk_mux_t *mkm, th_pkt_t *pkt)
   if(mark)
     mk_mux_insert_chapter(mkm);
 
-  if(t->avc) {
+  if(t->hevc) {
+    pkt = hevc_convert_pkt(opkt = pkt);
+    pkt_ref_dec(opkt);
+  } else if(t->avc) {
     pkt = avc_convert_pkt(opkt = pkt);
     pkt_ref_dec(opkt);
   }

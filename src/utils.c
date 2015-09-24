@@ -743,3 +743,22 @@ sha1_calc(uint8_t *dst,
     SHA1_Update(&shactx, d2, d2_len);
   SHA1_Final(dst, &shactx);
 }
+
+uint32_t
+gcdU32(uint32_t a, uint32_t b)
+{
+  uint32_t r;
+  if (a < b) {
+    while((r = b % a) != 0) {
+      b = a;
+      a = r;
+    }
+    return a;
+  } else {
+    while((r = a % b) != 0) {
+      a = b;
+      b = r;
+    }
+    return b;
+  }
+}

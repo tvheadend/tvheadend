@@ -43,7 +43,8 @@ typedef struct globalheaders {
 static inline int
 gh_require_meta(int type)
 {
-  return type == SCT_H264 ||
+  return type == SCT_HEVC ||
+         type == SCT_H264 ||
          type == SCT_MPEG2VIDEO ||
          type == SCT_MP4A ||
          type == SCT_AAC ||
