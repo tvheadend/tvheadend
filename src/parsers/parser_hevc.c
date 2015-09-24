@@ -3,6 +3,24 @@
  *
  * This file is part of FFmpeg.
  *
+ * VPS/SPS/PPS decoders
+ *
+ * Based on hevc_ps.c from ffmpeg (www.ffmpeg.org)
+ *
+ * Copyright (C) 2012 - 2103 Guillaume Martres
+ * Copyright (C) 2012 - 2103 Mickael Raulet
+ * Copyright (C) 2012 - 2013 Gildas Cocherel
+ * Copyright (C) 2013 Vittorio Giovara
+ *
+ * This file is part of FFmpeg.
+ *
+ * slice header decoder
+ *
+ * Copyright (C) 2012 - 2013 Guillaume Martres
+ *
+ * This file is part of FFmpeg.
+ *
+ *
  * FFmpeg is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -1179,33 +1197,37 @@ hevc_convert_pkt(th_pkt_t *src)
  *
  */
 
+typedef struct hevc_vps {
+  uint8_t valid: 1;
+  uint32_t num_units_in_tick;
+  uint32_t time_scale;
+} hevc_vps_t;
+
+typedef struct hevc_sps {
+  uint8_t valid: 1;
+  uint8_t vps_id;
+  uint32_t width;
+  uint32_t height;
+  uint32_t ctb_width;
+  uint32_t ctb_height;
+  struct {
+    uint32_t num;
+    uint32_t den;
+  } sar;
+} hevc_sps_t;
+
+typedef struct hevc_pps {
+  uint8_t valid: 1;
+  uint8_t dependent_slice_segments: 1;
+  uint8_t sps_id;
+  uint8_t num_extra_slice_header_bits;
+} hevc_pps_t;
+
 typedef struct hevc_private {
 
-  struct {
-    uint8_t valid: 1;
-    uint32_t num_units_in_tick;
-    uint32_t time_scale;
-  } vps[MAX_VPS_COUNT];
-
-  struct {
-    uint8_t valid: 1;
-    uint8_t vps_id;
-    uint32_t width;
-    uint32_t height;
-    uint32_t ctb_width;
-    uint32_t ctb_height;
-    struct {
-      uint32_t num;
-      uint32_t den;
-    } sar;
-  } sps[MAX_SPS_COUNT];
-
-  struct {
-    uint8_t valid: 1;
-    uint8_t dependent_slice_segments: 1;
-    uint8_t sps_id;
-    uint8_t num_extra_slice_header_bits;
-  } pps[MAX_PPS_COUNT];
+  hevc_vps_t vps[MAX_VPS_COUNT];
+  hevc_sps_t sps[MAX_SPS_COUNT];
+  hevc_pps_t pps[MAX_PPS_COUNT];
 
 } hevc_private_t;
 
@@ -1253,6 +1275,7 @@ void
 hevc_decode_vps(elementary_stream_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
+  hevc_vps_t *vps;
   uint32_t vps_id, max_sub_layers;
   uint32_t sub_layer_ordering_info_present;
   uint32_t max_layer_id, num_layer_sets;
@@ -1269,11 +1292,10 @@ hevc_decode_vps(elementary_stream_t *st, bitstream_t *bs)
   vps_id = read_bits(bs, 4);
   if (vps_id >= MAX_VPS_COUNT)
     return;
+  vps = &p->vps[vps_id];
 
   if (read_bits(bs, 2) != 3) /* vps_reserved_three_2bits */
     return;
-
-  p->vps[vps_id].valid = 0;
 
   skip_bits(bs, 6); /* vps_max_sublayers */
   max_sub_layers = read_bits(bs, 3) + 1;
@@ -1308,17 +1330,19 @@ hevc_decode_vps(elementary_stream_t *st, bitstream_t *bs)
   if (!read_bits1(bs)) /* vps_timing_info_present */
     return;
 
-  p->vps[vps_id].num_units_in_tick = read_bits(bs, 32);
-  p->vps[vps_id].time_scale        = read_bits(bs, 32);
+  vps->num_units_in_tick = read_bits(bs, 32);
+  vps->time_scale        = read_bits(bs, 32);
 
-  p->vps[vps_id].valid = 1;
+  vps->valid = 1;
 }
 
 void
 hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
+  hevc_sps_t *sps;
   uint32_t vps_id, sps_id, max_sub_layers, u, v, i;
+  uint32_t width, height, sar_num, sar_den;
   uint32_t chroma_format_idc, bit_depth, bit_depth_chroma;
   uint32_t log2_max_poc_lsb;
   uint32_t log2_min_cb_size, log2_min_tb_size;
@@ -1335,9 +1359,7 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
   skip_bits(bs, 15);  /* NAL type, Layer ID, Temporal ID */
 
   vps_id = read_bits(bs, 4);
-  if (vps_id >= MAX_VPS_COUNT)
-    return;
-  if (!p->vps[vps_id].valid)
+  if (vps_id >= MAX_VPS_COUNT || !p->vps[vps_id].valid)
     return;
 
   max_sub_layers = read_bits(bs, 3) + 1;
@@ -1350,18 +1372,15 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
   sps_id = read_golomb_ue(bs);
   if (sps_id >= MAX_SPS_COUNT)
     return;
-
-  p->sps[sps_id].valid = 0;
+  sps = &p->sps[sps_id];
 
   chroma_format_idc = read_golomb_ue(bs);
   if (chroma_format_idc == 3)
     if (read_bits1(bs))   /* separate_colour_plane */
       chroma_format_idc = 0;
-  p->sps[sps_id].width  = read_golomb_ue(bs);
-  if (check_width(p->sps[sps_id].width))
-    return;
-  p->sps[sps_id].height = read_golomb_ue(bs);
-  if (check_height(p->sps[sps_id].height))
+  width  = read_golomb_ue(bs);
+  height = read_golomb_ue(bs);
+  if (check_width(width) || check_height(height))
     return;
 
   if (read_bits1(bs)) { /* pic_conformance */
@@ -1469,36 +1488,43 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
   skip_bits1(bs); /* sps_temporal_mvp_enabled_flag */
   skip_bits1(bs); /* sps_strong_intra_smoothing_enable_flag */
 
-  p->sps[sps_id].sar.num = 0;
-  p->sps[sps_id].sar.den = 1;
+  sar_num = 0;
+  sar_den = 1;
   if (read_bits1(bs)) { /* vui_present */
     if (read_bits1(bs)) { /* sar_present */
       u = read_bits(bs, 8);
       if (u < ARRAY_SIZE(vui_sar)) {
-        p->sps[sps_id].sar.num = vui_sar[u][0];
-        p->sps[sps_id].sar.den = vui_sar[u][1];
+        sar_num = vui_sar[u][0];
+        sar_den = vui_sar[u][1];
       } else if (u == 255) {
-        p->sps[sps_id].sar.num = read_bits(bs, 16);
-        p->sps[sps_id].sar.den = read_bits(bs, 16);
+        sar_num = read_bits(bs, 16);
+        sar_den = read_bits(bs, 16);
       } else
         return;
     }
   }
 
+  sps->width = width;
+  sps->height = height;
+
+  sps->sar.num = sar_num;
+  sps->sar.den = sar_den;
+
   log2_ctb_size = log2_min_cb_size +
                   log2_diff_max_min_coding_block_size;
 
-  p->sps[sps_id].ctb_width  = (p->sps[sps_id].width  + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
-  p->sps[sps_id].ctb_height = (p->sps[sps_id].height + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
+  sps->ctb_width  = (width  + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
+  sps->ctb_height = (height + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
 
-  p->sps[sps_id].vps_id = vps_id;
-  p->sps[sps_id].valid = 1;
+  sps->vps_id = vps_id;
+  sps->valid = 1;
 }
 
 void
 hevc_decode_pps(elementary_stream_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
+  hevc_pps_t *pps;
   uint32_t pps_id, sps_id;
 
   if (read_bits1(bs)) /* zero bit */
@@ -1512,19 +1538,18 @@ hevc_decode_pps(elementary_stream_t *st, bitstream_t *bs)
   pps_id = read_golomb_ue(bs);
   if (pps_id >= MAX_PPS_COUNT)
     return;
+  pps = &p->pps[pps_id];
 
   sps_id = read_golomb_ue(bs);
-  if (sps_id >= MAX_SPS_COUNT)
+  if (sps_id >= MAX_SPS_COUNT || !p->sps[sps_id].valid)
     return;
 
-  p->pps[pps_id].valid = 0;
-
-  p->pps[pps_id].sps_id = sps_id;
-  p->pps[pps_id].dependent_slice_segments = read_bits1(bs);
+  pps->sps_id = sps_id;
+  pps->dependent_slice_segments = read_bits1(bs);
   skip_bits1(bs); /* output_flag_present */
-  p->pps[pps_id].num_extra_slice_header_bits = read_bits(bs, 3);
+  pps->num_extra_slice_header_bits = read_bits(bs, 3);
 
-  p->pps[pps_id].valid = 1;
+  pps->valid = 1;
 }
 
 int
@@ -1532,6 +1557,9 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
                          int *pkttype)
 {
   hevc_private_t *p;
+  hevc_vps_t *vps;
+  hevc_sps_t *sps;
+  hevc_pps_t *pps;
   int nal_type;
   int first_slice_in_pic, dependent_slice_segment;
   uint32_t pps_id, sps_id, vps_id, u, v, width, height;
@@ -1553,18 +1581,24 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
     skip_bits1(bs);  /* no_output_of_prior_pics_flag */
 
   pps_id = read_golomb_ue(bs);
-  if (pps_id >= MAX_PPS_COUNT || !p->pps[pps_id].valid)
+  if (pps_id >= MAX_PPS_COUNT)
+    return -1;
+  pps = &p->pps[pps_id];
+  if (!pps->valid)
     return -1;
 
-  sps_id = p->pps[pps_id].sps_id;
-  if (sps_id >= MAX_SPS_COUNT || !p->sps[sps_id].valid)
+  sps_id = pps->sps_id;
+  if (sps_id >= MAX_SPS_COUNT)
+    return -1;
+  sps = &p->sps[sps_id];
+  if (!sps->valid)
     return -1;
 
   dependent_slice_segment = 0;
   if (!first_slice_in_pic) {
-    if (p->pps[pps_id].dependent_slice_segments)
+    if (pps->dependent_slice_segments)
       dependent_slice_segment = read_bits1(bs);
-    v = p->sps[sps_id].ctb_width * p->sps[sps_id].ctb_height;
+    v = sps->ctb_width * sps->ctb_height;
     u = ilog2((v - 1) << 1);
     if (u >= v)
       return -1;
@@ -1573,7 +1607,7 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
   if (dependent_slice_segment)
     return 1; /* append */
 
-  for (u = 0, v = p->pps[pps_id].num_extra_slice_header_bits; u < v; u++)
+  for (u = 0, v = pps->num_extra_slice_header_bits; u < v; u++)
     skip_bits1(bs);
 
   switch (read_golomb_ue(bs)) {
@@ -1583,18 +1617,20 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
   default: return -1;
   }
 
-  vps_id = p->sps[sps_id].vps_id;
-  width  = p->sps[sps_id].width;
-  height = p->sps[sps_id].height;
+  vps_id = sps->vps_id;
+  width  = sps->width;
+  height = sps->height;
 
-  d = 180000 * (uint64_t)p->vps[vps_id].num_units_in_tick / (uint64_t)p->vps[vps_id].time_scale;
+  vps = &p->vps[vps_id];
+
+  d = 180000 * (uint64_t)vps->num_units_in_tick / (uint64_t)vps->time_scale;
 
   if (width && height && d)
     parser_set_stream_vparam(st, width, height, d);
 
-  if (p->sps[sps_id].sar.num && p->sps[sps_id].sar.den) {
-    width  = p->sps[sps_id].sar.num * width;
-    height = p->sps[sps_id].sar.den * height;
+  if (sps->sar.num && sps->sar.den) {
+    width  = sps->sar.num * width;
+    height = sps->sar.den * height;
     if (width && height) {
       v = gcdU32(width, height);
       st->es_aspect_num = width / v;
