@@ -72,10 +72,17 @@ LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbisenc.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbis.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libogg.a
-ifeq ($(CONFIG_LIBFFMPEG_STATIC_X264),yes)
+ifeq ($(CONFIG_LIBX264_STATIC),yes)
 LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a
 else
 LDFLAGS += -lx264
+endif
+ifeq ($(CONFIG_LIBX265),yes)
+ifeq ($(CONFIG_LIBX265_STATIC),yes)
+LDFLAGS += ${LDFLAGS_FFDIR}/libx265.a -lstdc++
+else
+LDFLAGS += -lx265
+endif
 endif
 LDFLAGS += ${LDFLAGS_FFDIR}/libvpx.a
 endif
@@ -642,7 +649,9 @@ ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec
 	@touch $@
 
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
-	CONFIG_LIBFFMPEG_STATIC_X264=$(CONFIG_LIBFFMPEG_STATIC_X264) \
+	CONFIG_LIBX264_STATIC=$(CONFIG_LIBX264_STATIC) \
+	CONFIG_LIBX265=$(CONFIG_LIBX265) \
+	CONFIG_LIBX265_STATIC=$(CONFIG_LIBX265_STATIC) \
 	  $(MAKE) -f Makefile.ffmpeg build
 
 # Static HDHOMERUN library
