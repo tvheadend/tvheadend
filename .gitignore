@@ -26,6 +26,8 @@ nbproject
 *.pyc
 .*.sw[op]
 *.bak
+*.orig
+*.patch
 
 debian/changelog
 debian/files
@@ -36,6 +38,12 @@ debian/tvheadend*.debhelper*
 
 rpm/tvheadend.spec
 rpm/test.patch
+
+intl/tvheadend.en_CZ.po
+intl/*.new
+intl/js/tvheadend.js.en_CZ.po
+intl/js/*.new
+src/webui/static/intl
 
 #############
 ###Windows###
