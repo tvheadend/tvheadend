@@ -1629,8 +1629,8 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
     parser_set_stream_vparam(st, width, height, d);
 
   if (sps->sar.num && sps->sar.den) {
-    width  = sps->sar.num * width;
-    height = sps->sar.den * height;
+    width  *= sps->sar.num;
+    height *= sps->sar.den;
     if (width && height) {
       v = gcdU32(width, height);
       st->es_aspect_num = width / v;

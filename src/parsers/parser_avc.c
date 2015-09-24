@@ -20,6 +20,7 @@
  */
 
 #include "parser_avc.h"
+#include "parser_h264.h"
 #include "bitstream.h"
 
 static const uint8_t *
@@ -132,13 +133,13 @@ isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
     buf += 4;
     nal_type = buf[0] & 0x1f;
 
-    if ((nal_type == 7) && (size >= 4) && (size <= UINT16_MAX)) { /* SPS */
+    if ((nal_type == H264_NAL_SPS) && (size >= 4) && (size <= UINT16_MAX)) {
       sps_array = realloc(sps_array,sizeof(uint8_t*)*(sps_count+1));
       sps_size_array = realloc(sps_size_array,sizeof(uint32_t)*(sps_count+1));
       sps_array[sps_count] = buf;
       sps_size_array[sps_count] = size;
       sps_count++;
-    } else if ((nal_type == 8) && (size <= UINT16_MAX)) { /* PPS */
+    } else if ((nal_type == H264_NAL_PPS) && (size <= UINT16_MAX)) {
       pps_size_array = realloc(pps_size_array,sizeof(uint32_t)*(pps_count+1));
       pps_array = realloc(pps_array,sizeof (uint8_t*)*(pps_count+1));
       pps_array[pps_count] = buf;
