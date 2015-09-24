@@ -43,35 +43,38 @@
 void *
 h264_nal_deescape(bitstream_t *bs, const uint8_t *data, int size)
 {
-  int_fast32_t i = 0;
   uint_fast8_t c;
   uint8_t *d;
+  const uint8_t *end, *end2;
 
   bs->rdata = d = malloc(size);
   bs->offset = 0;
 
+  end2 = data + size;
+
   if (size > 2) {
 
-  /* Escape 0x000003 into 0x0000 */
+    /* Escape 0x000003 into 0x0000 */
 
-    for( ; i < size - 2; i++) {
+    end = end2 - 2;
+    while (data < end) {
       c = *data++;
-      if (c || data[1] || data[2] != 3) {
+      if (c || *data || *(data + 1) != 3) {
         *d++ = c;
-        continue;
+      } else {
+        *d++ = 0;
+        *d++ = 0;
+        data += 2;
       }
-      *d++ = 0;
-      *d++ = 0;
-      i+= 2;
     }
 
   }
 
-  for (; i < size; i++)
+  while (data < end2)
     *d++ = *data++;
 
   bs->len = (d - bs->rdata) * 8;
-  return d;
+  return (void *)bs->rdata;
 }
 
 
