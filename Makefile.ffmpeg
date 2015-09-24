@@ -187,7 +187,7 @@ $(LIBAVDIR)/$(LIBVORBIS)/.tvh_build: \
 # libx264
 #
 
-ifneq (yes,$(CONFIG_LIBFFMPEG_STATIC_X264))
+ifneq (yes,$(CONFIG_LIBX264_STATIC))
 
 $(LIBAVDIR)/$(LIBX264)/.tvh_download:
 	@echo "***** LIBX264 STATIC BUILD IS DISABLED, USING INSTALLED PACKAGE *****"
@@ -229,6 +229,16 @@ endif
 # libx265
 #
 
+ifeq (yes,$(CONFIG_LIBX265))
+
+EXTLIBS  += libx265
+ENCODERS += libx265
+
+endif
+
+
+ifeq (yes,$(CONFIG_LIBX265_STATIC))
+
 $(LIBAVDIR)/$(LIBX265)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX265_URL),$(LIBAVDIR)/$(LIBX265_TB),$(LIBX265_SHA1))
 	$(call UNTAR,$(LIBX265_TB),z)
@@ -237,19 +247,25 @@ $(LIBAVDIR)/$(LIBX265)/.tvh_download:
 $(LIBAVDIR)/$(LIBX265)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBX265)/.tvh_download \
 		$(LIBAVDIR)/$(YASM)/.tvh_build
-	cd $(LIBAVDIR)/$(LIBX265) && $(CONFIGURE) \
-		--prefix=/ffmpeg \
-		--enable-static \
-		--disable-shared \
-		--disable-avs \
-		--disable-swscale \
-		--disable-lavf \
-		--disable-ffms \
-		--disable-gpac \
-		--disable-lsmash
+	cd $(LIBAVDIR)/$(LIBX265)/build/linux && cmake \
+		-G "Unix Makefiles" \
+		-DCMAKE_INSTALL_PREFIX="/ffmpeg" \
+		-DENABLE_SHARED:bool=off \
+		../../source
 	DESTDIR=$(LIBAVDIR)/build \
-		$(MAKE) -C $(LIBAVDIR)/$(LIBX265) install
+		$(MAKE) -C $(LIBAVDIR)/$(LIBX265)/build/linux install
 	@touch $@
+
+else
+
+$(LIBAVDIR)/$(LIBX265)/.tvh_download:
+	@mkdir -p $(LIBAVDIR)/$(LIBX265)
+	@touch $@
+
+$(LIBAVDIR)/$(LIBX265)/.tvh_build: $(LIBAVDIR)/$(LIBX265)/.tvh_download
+	@touch $@
+
+endif
 
 #
 # libvpx (VP8)
@@ -286,6 +302,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBVORBIS)/.tvh_build \
 		$(LIBAVDIR)/$(LIBX264)/.tvh_build \
+		$(LIBAVDIR)/$(LIBX265)/.tvh_build \
 		$(LIBAVDIR)/$(LIBVPX)/.tvh_build \
 		$(LIBAVDIR)/$(FFMPEG)/.tvh_download
 	cd $(LIBAVDIR)/$(FFMPEG) && $(CONFIGURE) \
@@ -296,6 +313,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		--enable-gpl \
 		--extra-cflags="$(ECFLAGS)" \
 		--extra-libs="$(ELIBS)" \
+		--pkg-config-flags="--static" \
 		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
 		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
