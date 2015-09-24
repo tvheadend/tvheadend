@@ -23,6 +23,8 @@
 #include "api.h"
 #include "timeshift.h"
 
+#if ENABLE_TIMESHIFT
+
 void
 api_timeshift_init ( void )
 {
@@ -34,3 +36,12 @@ api_timeshift_init ( void )
 
   api_register_all(ah);
 }
+
+#else
+
+void
+api_timeshift_init ( void )
+{
+}
+
+#endif
