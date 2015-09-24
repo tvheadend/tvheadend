@@ -1117,9 +1117,11 @@ int ff_hevc_annexb2mp4_buf(const uint8_t *buf_in, uint8_t **buf_out,
 int isom_write_hvcc(sbuf_t *pb, const uint8_t *data, int size)
 {
     int ret = 0;
-    uint8_t *buf, *end, *start = NULL;
+    sbuf_t sb;
+    uint8_t *buf, *end;
     HEVCDecoderConfigurationRecord hvcc;
 
+    sbuf_init(&sb);
     hvcc_init(&hvcc);
 
     if (size < 6) {
@@ -1136,12 +1138,10 @@ int isom_write_hvcc(sbuf_t *pb, const uint8_t *data, int size)
         goto end;
     }
 
-    ret = avc_parse_nal_units_buf(data, &start, &size);
-    if (ret < 0)
-        goto end;
+    size = avc_parse_nal_units(&sb, data, size);
 
-    buf = start;
-    end = start + size;
+    buf = sb.sb_data;
+    end = buf + size;
 
     while (end - buf > 4) {
         uint32_t len = MIN(RB32(buf), end - buf - 4);
@@ -1170,7 +1170,7 @@ int isom_write_hvcc(sbuf_t *pb, const uint8_t *data, int size)
 
 end:
     hvcc_close(&hvcc);
-    free(start);
+    sbuf_free(&sb);
     return ret;
 }
 
