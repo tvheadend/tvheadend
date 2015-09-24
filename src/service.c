@@ -220,6 +220,8 @@ stream_init(elementary_stream_t *st)
 {
   st->es_cc = -1;
 
+  st->es_incomplete = 0;
+  st->es_header_mode = 0;
   st->es_parser_state = 0;
   st->es_startcond = 0xffffffff;
   st->es_curdts = PTS_UNSET;
@@ -244,7 +246,6 @@ stream_clean(elementary_stream_t *st)
   st->es_startcode = 0;
   
   sbuf_free(&st->es_buf);
-  sbuf_free(&st->es_buf_ps);
   sbuf_free(&st->es_buf_a);
 
   if(st->es_curpkt != NULL) {

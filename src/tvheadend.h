@@ -230,7 +230,7 @@ typedef enum {
   SCT_VORBIS,
   SCT_HEVC,
   SCT_VP9,
-  SCT_LAST = SCT_HEVC
+  SCT_LAST = SCT_VP9
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))
@@ -735,6 +735,7 @@ int deferred_unlink(const char *filename, const char *rootdir);
 
 void sha1_calc(uint8_t *dst, const uint8_t *d1, size_t d1_len, const uint8_t *d2, size_t d2_len);
 
+uint32_t gcdU32(uint32_t a, uint32_t b);
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }
   
