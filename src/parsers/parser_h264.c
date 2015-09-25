@@ -152,22 +152,19 @@ static const uint16_t h264_aspect[17][2] = {
 
 
 static int 
-decode_vui(h264_sps_t *sps, bitstream_t *bs, int sps_id)
+decode_vui(h264_sps_t *sps, bitstream_t *bs)
 {
   sps->aspect_num = 0;
   sps->aspect_den = 1;
 
   if (read_bits1(bs)) {
-    int aspect = read_bits(bs, 8);
-
+    uint32_t aspect = read_bits(bs, 8);
     if(aspect == 255) {
-      uint16_t num = read_bits(bs, 16);
-      uint16_t den = read_bits(bs, 16);
-      sps->aspect_num = num;
-      sps->aspect_den = den;
+      sps->aspect_num = read_bits(bs, 16);
+      sps->aspect_den = read_bits(bs, 16);
     } else if(aspect < ARRAY_SIZE(h264_aspect)) {
-      sps->aspect_num =  h264_aspect[aspect][0];
-      sps->aspect_den =  h264_aspect[aspect][1];
+      sps->aspect_num = h264_aspect[aspect][0];
+      sps->aspect_den = h264_aspect[aspect][1];
     }
   }
 
@@ -224,6 +221,7 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
   uint32_t sps_id, tmp, i, width, height;
   uint32_t cbpsize, mbs_only_flag, aff;
   uint32_t max_frame_num_bits;
+  uint32_t crop_left, crop_right, crop_top, crop_bottom;
   h264_private_t *p;
   h264_sps_t *sps;
 
@@ -309,12 +307,8 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
   read_bits1(bs);
 
-  int crop_left   = 0;
-  int crop_right  = 0;
-  int crop_top    = 0;
-  int crop_bottom = 0;
-
   /* CROP */
+  crop_left = crop_right = crop_top = crop_bottom = 0;
   if (read_bits1(bs)){
     crop_left   = read_golomb_ue(bs) * 2;
     crop_right  = read_golomb_ue(bs) * 2;
@@ -325,7 +319,7 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
   if (!read_bits1(bs)) /* vui present */
     return -1;
 
-  decode_vui(sps, bs, sps_id);
+  decode_vui(sps, bs);
 
   sps->max_frame_num_bits = max_frame_num_bits;
   sps->mbs_only_flag = mbs_only_flag;
@@ -369,6 +363,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
 			 int *isfield)
 {
   h264_private_t *p;
+  h264_pps_t *pps;
   h264_sps_t *sps;
   uint32_t slice_type, pps_id, width, height, v;
   uint64_t d;
@@ -379,18 +374,24 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   if ((p = st->es_priv) == NULL)
     return -1;
 
+  read_golomb_ue(bs); /* first_mb_in_slice */
+  slice_type = read_golomb_ue(bs);
+
+  if (slice_type > 4)
+    slice_type -= 5;  /* Fixed slice type per frame */
+
   pps_id = read_golomb_ue(bs);
   if (pps_id >= MAX_PPS_COUNT)
     return -1;
-  if (!p->pps[pps_id].valid)
+  pps = &p->pps[pps_id];
+  if (!pps->valid)
     return -1;
-  sps = &p->sps[p->pps[pps_id].sps_id];
+  sps = &p->sps[pps->sps_id];
+  if (!sps->valid)
+    return -1;
 
-  read_golomb_ue(bs); /* first_mb_in_slice */
-  slice_type = read_golomb_ue(bs);
-  
-  if (slice_type > 4)
-    slice_type -= 5;  /* Fixed slice type per frame */
+  if (!sps->max_frame_num_bits)
+    return -1;
 
   switch(slice_type) {
   case 0:
@@ -405,9 +406,6 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   default:
     return -1;
   }
-
-  if (!sps->max_frame_num_bits)
-    return -1;
 
   skip_bits(bs, sps->max_frame_num_bits);
 
@@ -427,12 +425,10 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   st->es_vbv_delay = -1;
 
   width  = sps->width;
-  height = sps->height;
+  height = sps->height * (2 - sps->mbs_only_flag);
 
   if (width && height && d)
-    parser_set_stream_vparam(st, width,
-                             height * (2 - sps->mbs_only_flag),
-                             d);
+    parser_set_stream_vparam(st, width, height, d);
 
   if (sps->aspect_num && sps->aspect_den) {
     width  *= sps->aspect_num;
