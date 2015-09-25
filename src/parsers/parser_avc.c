@@ -107,7 +107,7 @@ isom_write_avcc(sbuf_t *sb, const uint8_t *data, int len)
   if (len <= 6)
     return 0;
 
-  if (RB32(data) != 0x00000001 ||
+  if (RB32(data) != 0x00000001 &&
       RB24(data) != 0x000001) {
     sbuf_append(sb, data, len);
     return 0;
