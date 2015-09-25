@@ -1154,6 +1154,8 @@ dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
 
+  if (e->channel && !e->channel->ch_enabled)
+    return;
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
     if(autorec_cmp(dae, e))
       dvr_entry_create_by_autorec(e, dae);
