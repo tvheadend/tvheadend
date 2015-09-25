@@ -1201,7 +1201,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
   int ret = PARSER_APPEND;
 
   /* delimiter - finished frame */
-  if ((sc & 0x1f) == 9 && st->es_curpkt && st->es_curpkt->pkt_payload) {
+  if ((sc & 0x1f) == H264_NAL_AUD && st->es_curpkt && st->es_curpkt->pkt_payload) {
     if (st->es_curdts != PTS_UNSET && st->es_frame_duration) {
       parser_deliver(t, st, st->es_curpkt);
       st->es_curpkt = NULL;
@@ -1251,7 +1251,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
     switch(sc & 0x1f) {
 
-    case 7:
+    case H264_NAL_SPS:
       if(!st->es_buf.sb_err) {
         void *f = h264_nal_deescape(&bs, buf + 4, len - 4);
         h264_decode_seq_parameter_set(st, &bs);
@@ -1261,7 +1261,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       ret = PARSER_DROP;
       break;
 
-    case 8:
+    case H264_NAL_PPS:
       if(!st->es_buf.sb_err) {
         void *f = h264_nal_deescape(&bs, buf + 4, len - 4);
         h264_decode_pic_parameter_set(st, &bs);
@@ -1271,8 +1271,8 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       ret = PARSER_DROP;
       break;
 
-    case 5: /* IDR+SLICE */
-    case 1:
+    case H264_NAL_IDR_SLICE:
+    case H264_NAL_SLICE:
       l2 = len - 4 > 64 ? 64 : len - 4;
       void *f = h264_nal_deescape(&bs, buf + 4, l2);
       /* we just want the first stuff */
@@ -1299,7 +1299,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
   }
 
   if((next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) ||
-     (next_startcode & 0x1f) == 9) {
+     (next_startcode & 0x1f) == H264_NAL_AUD) {
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return PARSER_HEADER;

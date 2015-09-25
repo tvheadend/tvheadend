@@ -618,7 +618,7 @@ _eit_callback
   // TODO: extra ID should probably include onid
 
   /* Register interest */
-  if (tableid >= 0x50)
+  if (tableid == 0x4e || tableid >= 0x50)
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */

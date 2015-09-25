@@ -27,8 +27,6 @@
 
 int avc_parse_nal_units(sbuf_t *sb, const uint8_t *buf_in, int size);
 
-int avc_parse_nal_units_buf(const uint8_t *buf_in, uint8_t **buf, int *size);
-
 int isom_write_avcc(sbuf_t *sb, const uint8_t *src, int len);
 
 th_pkt_t *avc_convert_pkt(th_pkt_t *src);
