@@ -212,7 +212,7 @@ api_dvr_entry_create_by_event
   htsmsg_t *entries, *entries2 = NULL, *m;
   htsmsg_field_t *f;
   const char *s;
-  int count = 0;
+  int count = 0, enabled;
   char ubuf[UUID_HEX_SIZE];
 
   if (!(entries = htsmsg_get_list(args, "entries"))) {
@@ -227,6 +227,7 @@ api_dvr_entry_create_by_event
     if (!(s = htsmsg_get_str(m, "event_id")))
       continue;
 
+    enabled = htsmsg_get_u32_or_default(m, "enabled", 1);
     config_uuid = htsmsg_get_str(m, "config_uuid");
     comment = htsmsg_get_str(m, "comment");
 
@@ -234,7 +235,8 @@ api_dvr_entry_create_by_event
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
-        de = dvr_entry_create_by_event(idnode_uuid_as_str(&cfg->dvr_id, ubuf),
+        de = dvr_entry_create_by_event(enabled,
+                                       idnode_uuid_as_str(&cfg->dvr_id, ubuf),
                                        e, 0, 0,
                                        perm->aa_username,
                                        perm->aa_representative,

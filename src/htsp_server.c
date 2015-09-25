@@ -65,7 +65,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 22
+#define HTSP_PROTO_VERSION 23
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -706,6 +706,7 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
   int64_t fsize = -1;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
+  htsmsg_add_u32(out, "enabled", de->de_enabled);
   if (de->de_channel)
     htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
 
@@ -1518,8 +1519,10 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   int64_t start, stop, start_extra, stop_extra;
   uint32_t u32, priority, retention;
   channel_t *ch = NULL;
+  int enabled;
 
   /* Options */
+  enabled = htsmsg_get_u32_or_default(in, "enabled", 1);
   dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   if(htsmsg_get_s64(in, "startExtra", &start_extra))
     start_extra = 0;
@@ -1563,7 +1566,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       desc = "";
 
     // create the dvr entry
-    de = dvr_entry_create_htsp(dvr_config_name, ch, start, stop,
+    de = dvr_entry_create_htsp(enabled, dvr_config_name, ch, start, stop,
                                start_extra, stop_extra,
                                title, subtitle, desc, lang, 0,
                                htsp->htsp_granted_access->aa_username,
@@ -1572,7 +1575,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Event timer */
   } else {
-    de = dvr_entry_create_by_event(dvr_config_name, e, 
+    de = dvr_entry_create_by_event(enabled, dvr_config_name, e,
                                    start_extra, stop_extra,
                                    htsp->htsp_granted_access->aa_username,
                                    htsp->htsp_granted_access->aa_representative,
@@ -1612,6 +1615,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   time_t start, stop, start_extra, stop_extra, priority, retention;
   const char *title, *subtitle, *desc, *lang;
   channel_t *channel = NULL;
+  int enabled;
 
   if(htsmsg_get_u32(in, "id", &dvrEntryId))
     return htsp_error("Missing argument 'id'");
@@ -1631,6 +1635,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (!htsp_user_access_channel(htsp, channel))
     return htsp_error("User does not have access to channel");
 
+  enabled     = htsmsg_get_s64_or_default(in, "enabled",    -1);
   start       = htsmsg_get_s64_or_default(in, "start",      0);
   stop        = htsmsg_get_s64_or_default(in, "stop",       0);
   start_extra = htsmsg_get_s64_or_default(in, "startExtra", 0);
@@ -1642,7 +1647,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  de = dvr_entry_update(de, channel, title, subtitle, desc, lang, start, stop,
+  de = dvr_entry_update(de, enabled, channel, title, subtitle, desc, lang, start, stop,
                         start_extra, stop_extra, priority, retention);
 
   //create response

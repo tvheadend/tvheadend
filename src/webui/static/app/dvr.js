@@ -157,7 +157,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var actions = tvheadend.dvrRowActions();
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
                'channel,config_name,comment';
-    var elist = tvheadend.accessUpdate.admin ? list + ',owner,creator' : list;
+    var elist = 'enabled,' +
+                (tvheadend.accessUpdate.admin ? list + ',owner,creator' : list);
 
     var stopButton = {
         name: 'stop',
@@ -254,8 +255,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
             }
         },
         del: true,
-        list: 'duplicate,disp_title,disp_subtitle,episode,pri,start_real,stop_real,' +
-              'duration,filesize,channel,owner,creator,config_name,' +
+        list: 'enabled,duplicate,disp_title,disp_subtitle,episode,pri,start_real,' +
+              'stop_real,duration,filesize,channel,owner,creator,config_name,' +
               'sched_status,errors,data_errors,comment',
         columns: {
             filesize: {

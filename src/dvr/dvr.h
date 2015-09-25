@@ -139,6 +139,8 @@ typedef struct dvr_entry {
   dvr_config_t *de_config;
   LIST_ENTRY(dvr_entry) de_config_link;
 
+  int de_enabled;
+
   time_t de_start;
   time_t de_stop;
 
@@ -426,7 +428,8 @@ dvr_entry_create ( const char *uuid, htsmsg_t *conf );
 
 
 dvr_entry_t *
-dvr_entry_create_by_event( const char *dvr_config_uuid,
+dvr_entry_create_by_event( int enabled,
+                           const char *dvr_config_uuid,
                            epg_broadcast_t *e,
                            time_t start_extra, time_t stop_extra,
                            const char *owner, const char *creator,
@@ -435,7 +438,7 @@ dvr_entry_create_by_event( const char *dvr_config_uuid,
                            const char *comment );
 
 dvr_entry_t *
-dvr_entry_create_htsp( const char *dvr_config_uuid,
+dvr_entry_create_htsp( int enabled, const char *dvr_config_uuid,
                        channel_t *ch, time_t start, time_t stop,
                        time_t start_extra, time_t stop_extra,
                        const char *title, const char *subtitle,
@@ -447,7 +450,7 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
                        const char *comment );
 
 dvr_entry_t *
-dvr_entry_update( dvr_entry_t *de, channel_t *ch,
+dvr_entry_update( dvr_entry_t *de, int enabled, channel_t *ch,
                   const char *title, const char *subtitle,
                   const char *desc, const char *lang,
                   time_t start, time_t stop,
@@ -510,7 +513,7 @@ dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
 
 dvr_entry_t *
-dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
+dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
                   channel_t *ch, time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
                   const char *title, const char* subtitle, const char *description,
