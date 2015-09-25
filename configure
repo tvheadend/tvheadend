@@ -35,7 +35,7 @@ OPTIONS=(
   "zlib:auto"
   "libav:auto"
   "libffmpeg_static:no"
-  "libffmpeg_static_x264:yes"
+  "libx264_static:yes"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"
@@ -50,6 +50,8 @@ OPTIONS=(
   "tsdebug:no"
   "gtimer_check:no"
   "libsystemd_daemon:no"
+  "libx265:no"
+  "libx265_static:yes"
 )
 
 #
@@ -376,6 +378,24 @@ if enabled libffmpeg_static; then
 
   enable libav
   has_libav=true
+
+  # libx264
+  if disabled libx264_static; then
+    check_cc_lib x264 || die "libx264 not found"
+  fi
+
+  # libx265
+  if enabled libx265; then
+    if enabled libx265_static; then
+      check_bin cmake || die "cmake not found (needed for building libx265)"
+      check_cc_lib stdc++ stdcpp ||\
+        die "libstdc++ not found (needed for building libx265)"
+    else
+      check_cc_lib x265 || die "libx265 not found"
+    fi
+  else
+    disable libx265_static
+  fi
 
 else
 
