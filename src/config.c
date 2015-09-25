@@ -1954,6 +1954,13 @@ const idclass_t config_class = {
       .group  = 6,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "chiconlowercase",
+      .name   = N_("Channel icon name lower-case"),
+      .off    = offsetof(config_t, chicon_lowercase),
+      .group  = 6,
+    },
+    {
       .type   = PT_STR,
       .id     = "piconpath",
       .name   = N_("Picon path (see Help)"),

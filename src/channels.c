@@ -595,6 +595,8 @@ channel_get_icon ( channel_t *ch )
           if (*s <= ' ' || *s > 122 ||
               strchr("/:\\<>|*?'\"", *s) != NULL)
             *(char *)s = '_';
+          else if (config.chicon_lowercase && *s >= 'A' && *s <= 'Z')
+            *(char *)s = *s - 'A' + 'a';
           s++;
         }
       }

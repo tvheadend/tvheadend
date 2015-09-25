@@ -37,6 +37,7 @@ typedef struct config {
   char *muxconf_path;
   int prefer_picon;
   char *chicon_path;
+  int chicon_lowercase;
   char *picon_path;
   int tvhtime_update_enabled;
   int tvhtime_ntp_enabled;
