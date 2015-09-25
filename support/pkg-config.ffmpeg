@@ -1,0 +1,60 @@
+#!/bin/bash
+
+if test -z "$TVHEADEND_LIBAV_BUILD"; then
+  exit 1
+fi
+if test "$1" = "--version"; then
+  echo "0.28"
+  exit 0
+fi
+
+cmd=
+brk=
+while test "$brk" = ""; do
+  case "$1" in
+    --exists|--cflags|--libs)
+      cmd=${1:2}
+      shift
+      ;;
+    --print-errors)
+      shift
+      ;;
+    *)
+      brk=t
+      ;;
+  esac
+done
+
+pkg="$1"
+if test -z "$pkg"; then
+  exit 1
+fi
+
+case "$pkg" in
+x264)
+  cflags_="-I$TVHEADEND_LIBAV_BUILD/include"
+  libs_="-L$TVHEADEND_LIBAV_BUILD/lib -lx264"
+  ;;
+x265)
+  cflags_="-I$TVHEADEND_LIBAV_BUILD/include"
+  libs_="-L$TVHEADEND_LIBAV_BUILD/lib -lx265 -lstdc++"
+  ;;
+esac
+
+case "$cmd" in
+exists)
+  if test -z "$cflags_"; then exit 1; fi
+  exit 0
+  ;;
+cflags)
+  if test -z "$cflags_"; then exit 1; fi
+  echo $cflags_
+  exit 0
+  ;;
+libs)
+  if test -z "$libs_"; then exit 1; fi
+  echo $libs_
+  exit 0
+  ;;
+esac
+exit 1

@@ -36,6 +36,8 @@ OPTIONS=(
   "libav:auto"
   "libffmpeg_static:no"
   "libx264_static:yes"
+  "libx265:no"
+  "libx265_static:yes"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"
@@ -50,8 +52,6 @@ OPTIONS=(
   "tsdebug:no"
   "gtimer_check:no"
   "libsystemd_daemon:no"
-  "libx265:no"
-  "libx265_static:yes"
 )
 
 #

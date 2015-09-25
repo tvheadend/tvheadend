@@ -52,7 +52,8 @@ export PATH := $(LIBAVDIR)/build/ffmpeg/bin:$(PATH)
 ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
 ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
 
-CONFIGURE       = PKG_CONFIG=/tmp/nobin/pkg-config ./configure
+CONFIGURE       = TVHEADEND_LIBAV_BUILD=$(LIBAVDIR)/ffmpeg \
+                  PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg ./configure
 
 FFMPEG          = ffmpeg-2.8
 FFMPEG_TB       = $(FFMPEG).tar.bz2
@@ -313,7 +314,7 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		--enable-gpl \
 		--extra-cflags="$(ECFLAGS)" \
 		--extra-libs="$(ELIBS)" \
-		--pkg-config-flags="--static" \
+                --pkg-config="$(ROOTDIR)/support/pkg-config.ffmpeg" \
 		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
 		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
