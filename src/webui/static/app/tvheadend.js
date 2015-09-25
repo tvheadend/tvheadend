@@ -313,6 +313,15 @@ tvheadend.VideoPlayer = function(url) {
             selectProfile,
             '-',
             {
+                iconCls: 'control_mute',
+                tooltip: _('Toggle mute'),
+                handler: function() {
+                    var muted = videoPlayer.muteToggle();
+                    slider.setDisabled(muted);
+                    sliderLabel.setDisabled(muted);
+                }
+            },
+            {
                 iconCls: 'control_volume',
                 tooltip: _('Volume'),
                 disabled: true

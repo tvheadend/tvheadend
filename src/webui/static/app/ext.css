@@ -271,6 +271,10 @@
     background-image: url(../icons/control_stop.png) !important;
 }
 
+.control_mute {
+    background-image: url(../icons/sound_mute.png) !important;
+}
+
 .control_volume {
     background-image: url(../icons/sound.png) !important;
 }

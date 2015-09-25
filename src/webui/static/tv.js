@@ -238,6 +238,11 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
             this.video.dom.pause();
         },
 
+        muteToggle: function() {
+            this.video.dom.muted = !this.video.dom.muted;
+            return this.video.dom.muted;
+        },
+
         setVolume: function(vol) {
             this.video.dom.volume = vol / 100.0;
         },
