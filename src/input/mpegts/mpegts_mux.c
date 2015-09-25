@@ -1290,7 +1290,7 @@ mpegts_mux_find_service ( mpegts_mux_t *mm, uint16_t sid )
 {
   mpegts_service_t *ms;
   LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link)
-    if (ms->s_dvb_service_id == sid)
+    if (ms->s_dvb_service_id == sid && ms->s_enabled)
       break;
   return ms;
 }
