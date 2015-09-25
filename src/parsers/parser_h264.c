@@ -154,7 +154,7 @@ static const uint16_t h264_aspect[17][2] = {
 static int 
 decode_vui(h264_sps_t *sps, bitstream_t *bs)
 {
-  sps->aspect_num = 0;
+  sps->aspect_num = 1;
   sps->aspect_den = 1;
 
   if (read_bits1(bs)) {

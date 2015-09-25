@@ -1203,6 +1203,15 @@ typedef struct hevc_vps {
   uint32_t time_scale;
 } hevc_vps_t;
 
+typedef struct hevc_vui {
+  struct {
+    uint32_t num;
+    uint32_t den;
+  } sar;
+  uint32_t num_units_in_tick;
+  uint32_t time_scale;
+} hevc_vui_t;
+
 typedef struct hevc_sps {
   uint8_t valid: 1;
   uint8_t vps_id;
@@ -1210,10 +1219,7 @@ typedef struct hevc_sps {
   uint32_t height;
   uint32_t ctb_width;
   uint32_t ctb_height;
-  struct {
-    uint32_t num;
-    uint32_t den;
-  } sar;
+  hevc_vui_t vui;
 } hevc_sps_t;
 
 typedef struct hevc_pps {
@@ -1327,22 +1333,91 @@ hevc_decode_vps(elementary_stream_t *st, bitstream_t *bs)
     for (v = 0; v < max_layer_id; v++)
       skip_bits1(bs);  /* layer_id_included */
 
-  if (!read_bits1(bs)) /* vps_timing_info_present */
-    return;
-
-  vps->num_units_in_tick = read_bits(bs, 32);
-  vps->time_scale        = read_bits(bs, 32);
-
   vps->valid = 1;
+
+  if (!read_bits1(bs)) { /* vps_timing_info_present */
+    vps->num_units_in_tick = read_bits(bs, 32);
+    vps->time_scale        = read_bits(bs, 32);
+  }
+}
+
+static int
+hevc_decode_vui(hevc_vui_t *vui, bitstream_t *bs)
+{
+  uint32_t u, sar_num, sar_den;
+  bitstream_t backup;
+
+  sar_num = 1;
+  sar_den = 1;
+  if (read_bits1(bs)) { /* sar_present */
+    u = read_bits(bs, 8);
+    if (u < ARRAY_SIZE(vui_sar)) {
+      sar_num = vui_sar[u][0];
+      sar_den = vui_sar[u][1];
+    } else if (u == 255) {
+      sar_num = read_bits(bs, 16);
+      sar_den = read_bits(bs, 16);
+    } else
+      return -1;
+  }
+  vui->sar.num = sar_num;
+  vui->sar.den = sar_den;
+
+  if (read_bits1(bs)) /* overscan_info_present */
+    skip_bits1(bs);   /* overscan_appropriate */
+
+  if (read_bits1(bs)) { /* video_signal_type_present */
+    skip_bits(bs, 3);   /* video_format */
+    skip_bits1(bs);     /* video_full_range */
+    if (read_bits1(bs)) { /* colour_description_present */
+      skip_bits(bs, 8); /* colour_primaries */
+      skip_bits(bs, 8); /* transfer_characteristic */
+      skip_bits(bs, 8); /* matrix_coeffs */
+    }
+  }
+
+  if (read_bits1(bs)) { /* chroma_loc_info_present */
+    read_golomb_ue(bs); /* chroma_sample_loc_type_top_field */
+    read_golomb_ue(bs); /* chroma_sample_loc_type_bottom_field */
+  }
+
+  skip_bits1(bs); /* neutra_chroma_indication_flag */
+  skip_bits1(bs); /* field_seq_flag */
+  skip_bits1(bs); /* frame_field_info_present_flag */
+
+  if (remaining_bits(bs) >= 68 && show_bits(bs, 21) == 0x100000)
+    u = 0; /* Invalid default display window */
+  else
+    u = read_bits1(bs); /* default_display_window */
+  /* Backup context in case an alternate header is detected */
+  memcpy(&backup, bs, sizeof(backup));
+  if (u) { /* default_display_window */
+    read_golomb_ue(bs); /* left_offset */
+    read_golomb_ue(bs); /* right_offset */
+    read_golomb_ue(bs); /* top_offset */
+    read_golomb_ue(bs); /* bottom_offset */
+  }
+
+  if (read_bits1(bs)) { /* vui_timing_info_present */
+    if (remaining_bits(bs) < 66) {
+      /* Strange VUI timing information */
+      memcpy(bs, &backup, sizeof(backup));
+    }
+    vui->num_units_in_tick = read_bits(bs, 32);
+    vui->time_scale        = read_bits(bs, 32);
+  }
+
+  return 0;
 }
 
 void
 hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
 {
   hevc_private_t *p;
+  hevc_vps_t *vps;
   hevc_sps_t *sps;
   uint32_t vps_id, sps_id, max_sub_layers, u, v, i;
-  uint32_t width, height, sar_num, sar_den;
+  uint32_t width, height;
   uint32_t chroma_format_idc, bit_depth, bit_depth_chroma;
   uint32_t log2_max_poc_lsb;
   uint32_t log2_min_cb_size, log2_min_tb_size;
@@ -1359,7 +1434,10 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
   skip_bits(bs, 15);  /* NAL type, Layer ID, Temporal ID */
 
   vps_id = read_bits(bs, 4);
-  if (vps_id >= MAX_VPS_COUNT || !p->vps[vps_id].valid)
+  if (vps_id >= MAX_VPS_COUNT)
+    return;
+  vps = &p->vps[vps_id];
+  if (!vps->valid)
     return;
 
   max_sub_layers = read_bits(bs, 3) + 1;
@@ -1488,27 +1566,16 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
   skip_bits1(bs); /* sps_temporal_mvp_enabled_flag */
   skip_bits1(bs); /* sps_strong_intra_smoothing_enable_flag */
 
-  sar_num = 0;
-  sar_den = 1;
-  if (read_bits1(bs)) { /* vui_present */
-    if (read_bits1(bs)) { /* sar_present */
-      u = read_bits(bs, 8);
-      if (u < ARRAY_SIZE(vui_sar)) {
-        sar_num = vui_sar[u][0];
-        sar_den = vui_sar[u][1];
-      } else if (u == 255) {
-        sar_num = read_bits(bs, 16);
-        sar_den = read_bits(bs, 16);
-      } else
-        return;
-    }
-  }
+  if (read_bits1(bs))  /* vui_present */
+    if (hevc_decode_vui(&sps->vui, bs))
+      return;
+
+  if (!vps->num_units_in_tick && !vps->time_scale &&
+      !sps->vui.num_units_in_tick && !sps->vui.time_scale)
+    return;
 
   sps->width = width;
   sps->height = height;
-
-  sps->sar.num = sar_num;
-  sps->sar.den = sar_den;
 
   log2_ctb_size = log2_min_cb_size +
                   log2_diff_max_min_coding_block_size;
@@ -1623,14 +1690,19 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
 
   vps = &p->vps[vps_id];
 
-  d = 180000 * (uint64_t)vps->num_units_in_tick / (uint64_t)vps->time_scale;
+  d = 0;
+  if (sps->vui.time_scale) {
+    d = 180000 * (uint64_t)sps->vui.num_units_in_tick / (uint64_t)sps->vui.time_scale;
+  } else if (vps->time_scale) {
+    d = 180000 * (uint64_t)vps->num_units_in_tick / (uint64_t)vps->time_scale;
+  }
 
   if (width && height && d)
     parser_set_stream_vparam(st, width, height, d);
 
-  if (sps->sar.num && sps->sar.den) {
-    width  *= sps->sar.num;
-    height *= sps->sar.den;
+  if (sps->vui.sar.num && sps->vui.sar.den) {
+    width  *= sps->vui.sar.num;
+    height *= sps->vui.sar.den;
     if (width && height) {
       v = gcdU32(width, height);
       st->es_aspect_num = width / v;
