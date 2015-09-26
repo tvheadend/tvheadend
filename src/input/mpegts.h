@@ -343,8 +343,12 @@ typedef enum mpegts_mux_scan_result
 {
   MM_SCAN_NONE,
   MM_SCAN_OK,
-  MM_SCAN_FAIL
+  MM_SCAN_FAIL,
+  MM_SCAN_PARTIAL
 } mpegts_mux_scan_result_t;
+
+#define MM_SCAN_CHECK_OK(mm) \
+  ((mm)->mm_scan_result == MM_SCAN_OK || (mm)->mm_scan_result == MM_SCAN_PARTIAL)
 
 enum mpegts_mux_epg_flag
 {
