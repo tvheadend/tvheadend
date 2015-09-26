@@ -796,7 +796,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
  *
  */
 void
-dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
+dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
   char buf[200];
   char ubuf[UUID_HEX_SIZE];
@@ -813,7 +813,7 @@ dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae)
            dae->dae_comment ? ": " : "",
            dae->dae_comment ?: "");
 
-  dvr_entry_create_by_event(1, idnode_uuid_as_str(&dae->dae_config->dvr_id, ubuf),
+  dvr_entry_create_by_event(enabled, idnode_uuid_as_str(&dae->dae_config->dvr_id, ubuf),
                             e, dae->dae_start_extra, dae->dae_stop_extra,
                             dae->dae_owner, dae->dae_creator,
                             dae, dae->dae_pri, dae->dae_retention, buf);
