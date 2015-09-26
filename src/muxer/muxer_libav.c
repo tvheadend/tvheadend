@@ -193,6 +193,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
   case MC_MPEGTS:
     ret |= (type == SCT_MPEG2VIDEO);
     ret |= (type == SCT_H264);
+    ret |= (type == SCT_HEVC);
 
     ret |= (type == SCT_MPEG2AUDIO);
     ret |= (type == SCT_AC3);
@@ -527,6 +528,9 @@ lav_muxer_destroy(muxer_t *m)
 
   if(lm->lm_h264_filter)
     av_bitstream_filter_close(lm->lm_h264_filter);
+
+  if(lm->lm_hevc_filter)
+    av_bitstream_filter_close(lm->lm_hevc_filter);
 
   if (lm->lm_oc) {
     for(i=0; i<lm->lm_oc->nb_streams; i++)

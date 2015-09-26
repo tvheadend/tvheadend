@@ -1917,7 +1917,7 @@ transcoder_get_capabilities(int experimental)
       continue;
 
     sct = codec_id2streaming_component_type(p->id);
-    if (sct == SCT_NONE)
+    if (sct == SCT_NONE || sct == SCT_UNKNOWN)
       continue;
 
     m = htsmsg_create_map();
