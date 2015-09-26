@@ -34,8 +34,6 @@
 #include "epg.h"
 #include "htsp_server.h"
 
-static int dvr_autorec_in_init = 0;
-
 struct dvr_autorec_entry_queue autorec_entries;
 
 /**
@@ -1114,7 +1112,6 @@ dvr_autorec_init(void)
   htsmsg_field_t *f;
 
   TAILQ_INIT(&autorec_entries);
-  dvr_autorec_in_init = 1;
   if((l = hts_settings_load("dvr/autorec")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
@@ -1123,7 +1120,6 @@ dvr_autorec_init(void)
     }
     htsmsg_destroy(l);
   }
-  dvr_autorec_in_init = 0;
 }
 
 void
