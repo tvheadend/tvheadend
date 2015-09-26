@@ -132,7 +132,7 @@ typedef struct transcoder {
 #define WORKING_ENCODER(x) \
   ((x) == AV_CODEC_ID_H264 || (x) == AV_CODEC_ID_MPEG2VIDEO || \
    (x) == AV_CODEC_ID_VP8  || /* (x) == AV_CODEC_ID_VP9 || */ \
-   (x) == AV_CODEC_ID_AAC  || \
+   (x) == AV_CODEC_ID_HEVC || (x) == AV_CODEC_ID_AAC || \
    (x) == AV_CODEC_ID_MP2  || (x) == AV_CODEC_ID_VORBIS)
 
 /**
@@ -1196,6 +1196,16 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         // use gop size of 5 seconds
         octx->gop_size       *= 5;
       }
+
+      break;
+
+    case SCT_HEVC:
+      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
+      av_dict_set(&opts, "crf", "25", 0);
+      av_dict_set(&opts, "preset", "ultrafast", 0);
+      av_dict_set(&opts, "tune", "fastdecode", 0);
 
       break;
 
