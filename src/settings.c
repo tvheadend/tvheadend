@@ -197,7 +197,7 @@ hts_settings_load_one(const char *filename)
   /* Open */
   if (!(fp = fb_open(filename, 1, 0))) return NULL;
   size = fb_size(fp);
-  
+
   /* Load data */
   mem    = malloc(size+1);
   n      = fb_read(fp, mem, size);
@@ -353,6 +353,7 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
   char path[PATH_MAX];
   struct stat st;
   mode_t mode;
+  int flags;
   va_list ap;
 
   /* Build path */
@@ -365,7 +366,7 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
     if (hts_settings_makedirs(path)) return -1;
 
   /* Open file */
-  int flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
+  flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
 
   /* Set permissions */
   stat(path, &st);
