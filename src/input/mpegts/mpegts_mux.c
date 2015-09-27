@@ -177,7 +177,7 @@ mpegts_mux_subscribe_linked
   LIST_FOREACH(mnl2, &mi2->mi_networks, mnl_mi_link)
     if (mnl2->mnl_network == mm->mm_network)
       LIST_FOREACH(mm2, &mnl2->mnl_network->mn_muxes, mm_network_link)
-        if (!mm2->mm_active && mm->mm_scan_result == MM_SCAN_OK &&
+        if (!mm2->mm_active && MM_SCAN_CHECK_OK(mm) &&
             !LIST_EMPTY(&mm2->mm_services))
           if (!mpegts_mux_subscribe_keep(mm2, mi2))
             return;
@@ -186,7 +186,7 @@ mpegts_mux_subscribe_linked
   LIST_FOREACH(mnl2, &mi2->mi_networks, mnl_mi_link)
     if (mnl2->mnl_network != mm->mm_network)
       LIST_FOREACH(mm2, &mnl2->mnl_network->mn_muxes, mm_network_link)
-        if (!mm2->mm_active && mm->mm_scan_result == MM_SCAN_OK &&
+        if (!mm2->mm_active && MM_SCAN_CHECK_OK(mm) &&
             !LIST_EMPTY(&mm2->mm_services))
           if (!mpegts_mux_subscribe_keep(mm2, mi2))
             return;
@@ -385,9 +385,10 @@ scan_state_tab[] = {
 
 static struct strtab
 scan_result_tab[] = {
- { N_("NONE"),    MM_SCAN_NONE },
- { N_("OK"),      MM_SCAN_OK   },
- { N_("FAIL"),    MM_SCAN_FAIL },
+ { N_("NONE"),         MM_SCAN_NONE },
+ { N_("OK"),           MM_SCAN_OK   },
+ { N_("FAIL"),         MM_SCAN_FAIL },
+ { N_("OK (partial)"), MM_SCAN_PARTIAL },
 };
 
 int
@@ -960,6 +961,7 @@ void
 mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 {
   mpegts_table_t *mt;
+  int total = 0, incomplete = 0;
 
   assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
 
@@ -969,20 +971,36 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (mt->mt_flags & MT_QUICKREQ) {
       const char *s = "not found";
-      if (mt->mt_complete)
+      if (mt->mt_complete) {
         s = "complete";
-      else if (mt->mt_count)
+        total++;
+      } else if (mt->mt_count) {
         s = "incomplete";
+        total++;
+        incomplete++;
+      }
       tvhdebug("mpegts", "%s - %04X (%d) %s %s", buf, mt->mt_pid, mt->mt_pid, mt->mt_name, s);
     }
   }
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
-  if (res) {
+  if (res < 0) {
+    /* is threshold 3 missing tables enough? */
+    if (incomplete > 0 && total > incomplete && incomplete <= 3) {
+      tvhinfo("mpegts", "%s - scan complete (partial - %d/%d tables)", buf, total, incomplete);
+      mpegts_network_scan_mux_partial(mm);
+    } else {
+      tvhinfo("mpegts", "%s - scan timed out (%d/%d tables)", buf, total, incomplete);
+      mpegts_network_scan_mux_fail(mm);
+    }
+  } else if (res) {
+    tvhinfo("mpegts", "%s scan complete", buf);
     mpegts_network_scan_mux_done(mm);
     mpegts_mux_scan_service_check(mm);
-  } else
+  } else {
+    tvhinfo("mpegts", "%s - scan no data, failed", buf);
     mpegts_network_scan_mux_fail(mm);
+  }
 }
 
 static void
@@ -996,8 +1014,7 @@ mpegts_mux_scan_timeout ( void *aux )
 
   /* Timeout */
   if (mm->mm_scan_init) {
-    tvhinfo("mpegts", "%s - scan timed out", buf);
-    mpegts_mux_scan_done(mm, buf, 0);
+    mpegts_mux_scan_done(mm, buf, -1);
     return;
   }
   mm->mm_scan_init = 1;
@@ -1027,7 +1044,6 @@ again:
       
   /* No DATA - give up now */
   if (!c) {
-    tvhinfo("mpegts", "%s - scan no data, failed", buf);
     mpegts_mux_scan_done(mm, buf, 0);
 
   /* Pending tables (another 20s or 30s - bit arbitrary) */
@@ -1038,7 +1054,6 @@ again:
 
   /* Complete */
   } else {
-    tvhinfo("mpegts", "%s - scan complete", buf);
     mpegts_mux_scan_done(mm, buf, 1);
   }
 }
