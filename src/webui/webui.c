@@ -1305,28 +1305,37 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t maxlen;
   char *buf, *hostpath = http_get_hostpath(hc);
-  const char *title, *profile, *image;
+  const char *title, *profile, *ticket, *image;
   size_t len;
 
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
   profile = http_arg_get(&hc->hc_req_args, "profile");
+  ticket  = http_arg_get(&hc->hc_req_args, "ticket");
   image   = http_arg_get(&hc->hc_req_args, "image");
 
   maxlen = strlen(remain) + strlen(title) + 512;
   buf = alloca(maxlen);
 
+  pthread_mutex_lock(&global_lock);
+  if (ticket == NULL) {
+    snprintf(buf, maxlen, "/%s", remain);
+    ticket = access_ticket_create(buf, hc->hc_access);
+  }
   snprintf(buf, maxlen, "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n\
 <playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">\r\n\
   <trackList>\r\n\
      <track>\r\n\
        <title>%s</title>\r\n\
-       <location>%s/%s%s%s</location>\r\n%s%s%s\
+       <location>%s/%s%s%s%s%s</location>\r\n%s%s%s\
      </track>\r\n\
   </trackList>\r\n\
-</playlist>\r\n", title, hostpath, remain, profile ? "?profile=" : "", profile ?: "",
-  image ? "       <image>" : "", image ?: "", image ? "</image>\r\n" : "");
+</playlist>\r\n", title, hostpath, remain,
+    profile ? "?profile=" : "", profile ?: "",
+    profile ? "&ticket=" : "?ticket=", ticket,
+    image ? "       <image>" : "", image ?: "", image ? "</image>\r\n" : "");
+  pthread_mutex_unlock(&global_lock);
 
   len = strlen(buf);
   http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL, NULL);
@@ -1345,20 +1354,29 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
 {
   size_t maxlen;
   char *buf, *hostpath = http_get_hostpath(hc);
-  const char *title, *profile;
+  const char *title, *profile, *ticket;
   size_t len;
 
   if ((title = http_arg_get(&hc->hc_req_args, "title")) == NULL)
     title = "TVHeadend Stream";
   profile = http_arg_get(&hc->hc_req_args, "profile");
+  ticket = http_arg_get(&hc->hc_req_args, "ticket");
 
   maxlen = strlen(remain) + strlen(title) + 256;
   buf = alloca(maxlen);
 
+  pthread_mutex_lock(&global_lock);
+  if (ticket == NULL) {
+    snprintf(buf, maxlen, "/%s", remain);
+    ticket = access_ticket_create(buf, hc->hc_access);
+  }
   snprintf(buf, maxlen, "\
 #EXTM3U\r\n\
 #EXTINF:-1,%s\r\n\
-%s/%s%s%s\r\n", title, hostpath, remain, profile ? "?profile=" : "", profile ?: "");
+%s/%s%s%s%s%s\r\n", title, hostpath, remain,
+    profile ? "?profile=" : "", profile ?: "",
+    profile ? "&ticket=" : "?ticket=", ticket);
+  pthread_mutex_unlock(&global_lock);
 
   len = strlen(buf);
   http_send_header(hc, 200, MIME_M3U, len, 0, NULL, 10, 0, NULL, NULL);
@@ -1781,7 +1799,7 @@ webui_init(int xspf)
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
-  http_path_add("/stream",  NULL, http_stream,  ACCESS_STREAMING);
+  http_path_add("/stream",  NULL, http_stream,  ACCESS_ANONYMOUS);
 
   http_path_add("/imagecache", NULL, page_imagecache, ACCESS_ANONYMOUS);
 
