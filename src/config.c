@@ -1913,10 +1913,10 @@ const idclass_t config_class = {
     },
     {
       .type   = PT_STR,
-      .id     = "ulanguage",
+      .id     = "language_ui",
       .name   = N_("User language"),
       .list   = language_get_list,
-      .off    = offsetof(config_t, ulanguage),
+      .off    = offsetof(config_t, language_ui),
       .group  = 3
     },
     {
@@ -1996,9 +1996,9 @@ const char *config_get_language ( void )
   return s;
 }
 
-const char *config_get_ulanguage ( void )
+const char *config_get_language_ui ( void )
 {
-  const char *s = config.ulanguage;
+  const char *s = config.language_ui;
   if (s == NULL || *s == '\0')
     return NULL;
   return s;

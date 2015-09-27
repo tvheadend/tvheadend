@@ -187,7 +187,7 @@ static int
 page_about(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
-  const char *lang = hc->hc_access->aa_lang;
+  const char *lang = hc->hc_access->aa_lang_ui;
 
   htsbuf_qprintf(hq, "<center>\n\
 <div class=\"about-title\">HTS Tvheadend %s</div>\n\

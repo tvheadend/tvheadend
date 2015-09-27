@@ -31,6 +31,7 @@
 #include <sys/socket.h>
 
 #include "tvheadend.h"
+#include "config.h"
 #include "access.h"
 #include "settings.h"
 #include "channels.h"
@@ -495,6 +496,7 @@ static void
 access_update(access_t *a, access_entry_t *ae)
 {
   idnode_list_mapping_t *ilm;
+  const char *s;
 
   switch (ae->ae_conn_limit_type) {
   case ACCESS_CONN_LIMIT_TYPE_ALL:
@@ -567,8 +569,12 @@ access_update(access_t *a, access_entry_t *ae)
   if (!a->aa_lang && ae->ae_lang && ae->ae_lang[0])
     a->aa_lang = lang_code_user(ae->ae_lang);
 
-  if (!a->aa_lang_ui && ae->ae_lang_ui && ae->ae_lang_ui[0])
-    a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
+  if (!a->aa_lang_ui) {
+    if (ae->ae_lang_ui && ae->ae_lang_ui[0])
+      a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
+    else if ((s = config_get_language_ui()) != NULL)
+      a->aa_lang_ui = lang_code_user(s);
+  }
 
   a->aa_rights |= ae->ae_rights;
 }

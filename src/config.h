@@ -34,7 +34,7 @@ typedef struct config {
   char *server_name;
   char *language;
   char *info_area;
-  char *ulanguage;
+  char *language_ui;
   char *muxconf_path;
   int prefer_picon;
   char *chicon_path;
@@ -58,6 +58,6 @@ void        config_save    ( void );
 
 const char *config_get_server_name ( void );
 const char *config_get_language    ( void );
-const char *config_get_ulanguage   ( void );
+const char *config_get_language_ui ( void );
 
 #endif /* __TVH_CONFIG__H__ */
