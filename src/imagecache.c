@@ -581,9 +581,9 @@ imagecache_get_id ( const char *url )
   if (!i) {
     i = imagecache_skel;
     i->url = strdup(url);
-    imagecache_new_id(i);
     SKEL_USED(imagecache_skel);
 #if ENABLE_IMAGECACHE
+    imagecache_new_id(i);
     imagecache_image_add(i);
 #endif
     imagecache_image_save(i);
