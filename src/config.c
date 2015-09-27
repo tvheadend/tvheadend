@@ -1904,11 +1904,19 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .islist = 1,
       .id     = "info_area",
-      .name   = N_("Information Area"),
+      .name   = N_("Information area"),
       .set    = config_class_info_area_set,
       .get    = config_class_info_area_get,
       .list   = config_class_info_area_list,
       .opts   = PO_LORDER,
+      .group  = 3
+    },
+    {
+      .type   = PT_STR,
+      .id     = "ulanguage",
+      .name   = N_("User language"),
+      .list   = language_get_list,
+      .off    = offsetof(config_t, ulanguage),
       .group  = 3
     },
     {
@@ -1985,5 +1993,13 @@ const char *config_get_language ( void )
   const char *s = config.language;
   if (s == NULL || *s == '\0')
     return "eng";
+  return s;
+}
+
+const char *config_get_ulanguage ( void )
+{
+  const char *s = config.ulanguage;
+  if (s == NULL || *s == '\0')
+    return NULL;
   return s;
 }

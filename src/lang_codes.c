@@ -698,26 +698,33 @@ const char *lang_code_preferred( void )
 
 char *lang_code_user( const char *ucode )
 {
-  const char *codes = config_get_language(), *s;
+  const char *pucode = config_get_ulanguage(), *s;
+  const char *codes = config_get_language();
   char *ret;
 
-  if (!codes)
+  if (!pucode && !codes)
     return ucode ? strdup(ucode) : NULL;
-  if (!ucode)
-    return codes ? strdup(codes) : NULL;
-  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 1);
+  ret = malloc(strlen(pucode ?: "") + strlen(codes ?: "") +
+               strlen(ucode ?: "") + 3);
   strcpy(ret, ucode);
-  while (codes && *codes) {
-    s = codes;
-    while (*s && *s != ',')
-      s++;
-    if (strncmp(codes, ucode ?: "", s - codes)) {
-      strcat(ret, ",");
-      strncat(ret, codes, s - codes);
+  if (pucode && strcmp(ret, pucode)) {
+    strcat(ret, ",");
+    strcat(ret, pucode);
+  }
+  if (codes) {
+    while (codes && *codes) {
+      s = codes;
+      while (*s && *s != ',')
+        s++;
+      if (strncmp(codes, ucode ?: "", s - codes) &&
+          strncmp(codes, pucode ?: "", s - codes)) {
+        strcat(ret, ",");
+        strncat(ret, codes, s - codes);
+      }
+      if (*s && *s == ',')
+        s++;
+      codes = s;
     }
-    if (*s && *s == ',')
-      s++;
-    codes = s;
   }
   return ret;
 }

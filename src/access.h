@@ -298,4 +298,9 @@ ipblock_entry_save(ipblock_entry_t *pw);
 void access_init(int createdefault, int noacl);
 void access_done(void);
 
+/**
+ *
+ */
+htsmsg_t *language_get_list ( void *obj, const char *lang );
+
 #endif /* ACCESS_H_ */

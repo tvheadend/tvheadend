@@ -1311,7 +1311,7 @@ access_entry_conn_limit_type_enum ( void *p, const char *lang )
   return strtab2htsmsg(conn_limit_type_tab, 1, lang);
 }
 
-static htsmsg_t *
+htsmsg_t *
 language_get_list ( void *obj, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
