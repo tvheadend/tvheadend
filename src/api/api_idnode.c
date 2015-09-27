@@ -104,7 +104,7 @@ api_idnode_grid_conf
   }
 
   /* Sort */
-  conf->sort.lang = perm->aa_lang;
+  conf->sort.lang = perm->aa_lang_ui;
   if ((str = htsmsg_get_str(args, "sort"))) {
     conf->sort.key = str;
     if ((str = htsmsg_get_str(args, "dir")) && !strcasecmp(str, "DESC"))
@@ -146,7 +146,7 @@ api_idnode_grid
     htsmsg_add_str(e, "uuid", idnode_uuid_as_sstr(in));
     if (idnode_perm(in, perm, NULL))
       continue;
-    idnode_read0(in, e, flist, 0, perm->aa_lang);
+    idnode_read0(in, e, flist, 0, conf.sort.lang);
     idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
     if (conf.limit > 0) conf.limit--;
@@ -196,12 +196,12 @@ api_idnode_load_by_class0
       if (_enum) {
         e = htsmsg_create_map();
         htsmsg_add_str(e, "key", idnode_uuid_as_sstr(in));
-        htsmsg_add_str(e, "val", idnode_get_title(in, perm->aa_lang));
+        htsmsg_add_str(e, "val", idnode_get_title(in, perm->aa_lang_ui));
 
       /* Full record */
       } else {
         htsmsg_t *flist = api_idnode_flist_conf(args, "list");
-        e = idnode_serialize0(in, flist, 0, perm->aa_lang);
+        e = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
         htsmsg_destroy(flist);
       }
 
@@ -278,9 +278,9 @@ api_idnode_load
         err = EPERM;
         continue;
       }
-      m = idnode_serialize0(in, flist, 0, perm->aa_lang);
+      m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
       if (meta > 0)
-        htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang));
+        htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
       htsmsg_add_msg(l, NULL, m);
       count++;
       idnode_perm_unset(in);
@@ -298,9 +298,9 @@ api_idnode_load
         err = EPERM;
       } else {
         l = htsmsg_create_list();
-        m = idnode_serialize0(in, flist, 0, perm->aa_lang);
+        m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
         if (meta > 0)
-          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang));
+          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
         htsmsg_add_msg(l, NULL, m);
         idnode_perm_unset(in);
       }
@@ -345,9 +345,9 @@ api_idnode_load_simple
 
   if (!idnode_perm(in, perm, NULL)) {
     l = htsmsg_create_list();
-    m = idnode_serialize0(in, flist, 0, perm->aa_lang);
+    m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
     if (meta > 0)
-      htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang));
+      htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
     htsmsg_add_msg(l, NULL, m);
   } else {
     err = EPERM;
@@ -481,7 +481,7 @@ api_idnode_tree
   if (isroot && !(root || rootfn))
     return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
+ pthread_mutex_lock(&global_lock);
 
   if (!isroot || root) {
     if (!(node = idnode_find(isroot ? root : uuid, NULL, NULL))) {
@@ -499,7 +499,7 @@ api_idnode_tree
       pthread_mutex_unlock(&global_lock);
       return EINVAL;
     }
-    m = idnode_serialize(node, perm->aa_lang);
+    m = idnode_serialize(node, perm->aa_lang_ui);
     idnode_perm_unset(node);
     htsmsg_add_u32(m, "leaf", idnode_is_leaf(node));
     htsmsg_add_msg(*resp, NULL, m);
@@ -509,13 +509,13 @@ api_idnode_tree
     idnode_set_t *v = node ? idnode_get_childs(node) : rootfn(perm);
     if (v) {
       int i;
-      idnode_set_sort_by_title(v, perm->aa_lang);
+      idnode_set_sort_by_title(v, perm->aa_lang_ui);
       for(i = 0; i < v->is_count; i++) {
         idnode_t *in = v->is_array[i];
         htsmsg_t *m;
         if (idnode_perm(in, perm, NULL))
           continue;
-        m = idnode_serialize(v->is_array[i], perm->aa_lang);
+        m = idnode_serialize(v->is_array[i], perm->aa_lang_ui);
         idnode_perm_unset(in);
         htsmsg_add_u32(m, "leaf", idnode_is_leaf(v->is_array[i]));
         htsmsg_add_msg(*resp, NULL, m);
@@ -551,7 +551,7 @@ api_idnode_class
   }
 
   err   = 0;
-  *resp = idclass_serialize0(idc, flist, 0, perm->aa_lang);
+  *resp = idclass_serialize0(idc, flist, 0, perm->aa_lang_ui);
 
 exit:
   pthread_mutex_unlock(&global_lock);

@@ -38,7 +38,7 @@ api_caclient_list
   TAILQ_FOREACH(cac, &caclients, cac_link) {
     e = htsmsg_create_map();
     htsmsg_add_str(e, "uuid", idnode_uuid_as_sstr(&cac->cac_id));
-    htsmsg_add_str(e, "title", idnode_get_title(&cac->cac_id, perm->aa_lang));
+    htsmsg_add_str(e, "title", idnode_get_title(&cac->cac_id, perm->aa_lang_ui));
     htsmsg_add_str(e, "status", caclient_get_status(cac));
     htsmsg_add_msg(l, NULL, e);
   }
@@ -58,7 +58,7 @@ api_caclient_builders
   /* List of available builder classes */
   l = htsmsg_create_list();
   for (r = caclient_classes; *r; r++)
-    if ((e = idclass_serialize(*r, perm->aa_lang)))
+    if ((e = idclass_serialize(*r, perm->aa_lang_ui)))
       htsmsg_add_msg(l, NULL, e);
 
   /* Output */

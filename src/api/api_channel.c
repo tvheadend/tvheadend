@@ -78,7 +78,7 @@ api_channel_grid
 
   CHANNEL_FOREACH(ch)
     if (cfg || channel_access(ch, perm, 0))
-      idnode_set_add(ins, (idnode_t*)ch, &conf->filter, perm->aa_lang);
+      idnode_set_add(ins, (idnode_t*)ch, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -135,7 +135,7 @@ api_channel_tag_grid
 
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if (cfg || channel_tag_access(ct, perm, 0))
-      idnode_set_add(ins, (idnode_t*)ct, &conf->filter, perm->aa_lang);
+      idnode_set_add(ins, (idnode_t*)ct, &conf->filter, perm->aa_lang_ui);
 }
 
 static int

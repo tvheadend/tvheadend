@@ -582,6 +582,21 @@ access_update(access_t *a, access_entry_t *ae)
 /**
  *
  */
+static void
+access_set_lang_ui(access_t *a)
+{
+  const char *s;
+  if (!a->aa_lang_ui) {
+    if ((s = config_get_language_ui()) != NULL)
+      a->aa_lang_ui = lang_code_user(s);
+    if (a->aa_lang)
+      a->aa_lang_ui = strdup(a->aa_lang);
+  }
+}
+
+/**
+ *
+ */
 access_t *
 access_get(const char *username, const char *password, struct sockaddr *src)
 {
@@ -643,6 +658,8 @@ access_get(const char *username, const char *password, struct sockaddr *src)
     if (!nouser)
       a->aa_rights = 0;
   }
+
+  access_set_lang_ui(a);
 
   if (tvhtrace_enabled())
     access_dump_a(a);
@@ -714,6 +731,8 @@ access_get_hashed(const char *username, const uint8_t digest[20],
       a->aa_rights = 0;
   }
 
+  access_set_lang_ui(a);
+
   if (tvhtrace_enabled())
     access_dump_a(a);
   return a;
@@ -749,6 +768,8 @@ access_get_by_username(const char *username)
 
     access_update(a, ae);
   }
+
+  access_set_lang_ui(a);
 
   return a;
 }
@@ -786,6 +807,8 @@ access_get_by_addr(struct sockaddr *src)
 
     access_update(a, ae);
   }
+
+  access_set_lang_ui(a);
 
   return a;
 }
