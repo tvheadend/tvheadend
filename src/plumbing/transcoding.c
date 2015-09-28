@@ -939,7 +939,8 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
   if (!octx->coded_frame)
     return;
 
-  if (ts->ts_type == SCT_H264 && octx->extradata_size &&
+  if ((ts->ts_type == SCT_H264 || ts->ts_type == SCT_HEVC) &&
+      octx->extradata_size &&
       (ts->ts_first || octx->coded_frame->pict_type == AV_PICTURE_TYPE_I)) {
     n = pkt_alloc(NULL, octx->extradata_size + epkt->size, epkt->pts, epkt->dts);
     memcpy(pktbuf_ptr(n->pkt_payload), octx->extradata, octx->extradata_size);
