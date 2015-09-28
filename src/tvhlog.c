@@ -582,6 +582,12 @@ const idclass_t tvhlog_conf_class = {
   .ic_event      = "tvhlog_conf",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = tvhlog_class_save,
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Settings"),
+      .number = 1,
+    },
+  },
   .ic_properties = (const property_t[]){
     {
       .type   = PT_STR,
@@ -589,6 +595,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug log path"),
       .get    = tvhlog_class_path_get,
       .set    = tvhlog_class_path_set,
+      .group  = 1,
     },
     {
       .type   = PT_BOOL,
@@ -596,6 +603,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug to syslog"),
       .get    = tvhlog_class_syslog_get,
       .set    = tvhlog_class_syslog_set,
+      .group  = 1,
     },
     {
       .type   = PT_STR,
@@ -603,6 +611,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug subsystems"),
       .get    = tvhlog_class_debugsubs_get,
       .set    = tvhlog_class_debugsubs_set,
+      .group  = 1,
     },
     {
       .type   = PT_BOOL,
@@ -610,6 +619,10 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug trace (low-level)"),
       .get    = tvhlog_class_trace_get,
       .set    = tvhlog_class_trace_set,
+#if !ENABLE_TRACE
+      .opts   = PO_RDONLY | PO_HIDDEN,
+#endif
+      .group  = 1,
     },
     {
       .type   = PT_STR,
@@ -617,6 +630,10 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Trace subsystems"),
       .get    = tvhlog_class_tracesubs_get,
       .set    = tvhlog_class_tracesubs_set,
+#if !ENABLE_TRACE
+      .opts   = PO_RDONLY | PO_HIDDEN,
+#endif
+      .group  = 1,
     },
     {
       .type   = PT_BOOL,
@@ -624,6 +641,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug libav log"),
       .get    = tvhlog_class_libav_get,
       .set    = tvhlog_class_libav_set,
+      .group  = 1,
     },
     {}
   }
