@@ -606,7 +606,7 @@ api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
   htsmsg_get_bool(args, "full", &full);
 
   *resp = htsmsg_create_map();
-  array = epg_genres_list_all(full ? 0 : 1, 0, perm->aa_lang);
+  array = epg_genres_list_all(full ? 0 : 1, 0, perm->aa_lang_ui);
   htsmsg_add_msg(*resp, "entries", array);
   return 0;
 }

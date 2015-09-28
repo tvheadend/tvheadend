@@ -175,6 +175,25 @@ imagecache_image_add ( imagecache_image_t *img )
 }
 
 static int
+imagecache_update_sha1 ( imagecache_image_t *img,
+                         const char *path )
+{
+  int fd;
+  uint8_t sha1[20];
+  sbuf_t sb;
+
+  sbuf_init(&sb);
+  if ((fd = tvh_open(path, O_RDONLY, 0)) < 0)
+    return 0;
+  while (sbuf_read(&sb, fd) < 0 && ERRNO_AGAIN(errno));
+  close(fd);
+  sha1_calc(sha1, sb.sb_data, sb.sb_ptr, NULL, 0);
+  memcpy(img->sha1, sha1, 20);
+  sbuf_free(&sb);
+  return 1;
+}
+
+static int
 imagecache_new_contents ( imagecache_image_t *img,
                           const char *tpath, char *path,
                           const uint8_t *data, size_t dsize )
@@ -185,6 +204,8 @@ imagecache_new_contents ( imagecache_image_t *img,
 
   sha1_calc(sha1, data, dsize, NULL, 0);
   empty = sha1_empty(img->sha1);
+  if (empty && imagecache_update_sha1(img, path))
+    empty = 0;
   if (!empty && memcmp(sha1, img->sha1, 20) == 0)
     return 0; /* identical */
 
@@ -581,9 +602,9 @@ imagecache_get_id ( const char *url )
   if (!i) {
     i = imagecache_skel;
     i->url = strdup(url);
-    imagecache_new_id(i);
     SKEL_USED(imagecache_skel);
 #if ENABLE_IMAGECACHE
+    imagecache_new_id(i);
     imagecache_image_add(i);
 #endif
     imagecache_image_save(i);

@@ -1134,7 +1134,7 @@ add_params
 #if 0
   if(TAILQ_FIRST(&p->hm_fields) != NULL) {
     htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_str(m, "caption",  gettext(ic->ic_caption) ?: ic->ic_class);
+    htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, ic->ic_caption) ?: ic->ic_class);
     htsmsg_add_str(m, "type",     "separator");
     htsmsg_add_msg(p, NULL, m);
   }

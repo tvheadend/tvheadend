@@ -216,6 +216,9 @@ static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
 #define idnode_lang(self) \
   (((idnode_t *)self)->in_access ? \
    ((idnode_t *)self)->in_access->aa_lang : NULL)
+#define idnode_lang_ui(self) \
+  (((idnode_t *)self)->in_access ? \
+   ((idnode_t *)self)->in_access->aa_lang_ui : NULL)
 
 idnode_list_mapping_t * idnode_list_link
                        ( idnode_t *in1, idnode_list_head_t *in1_list,

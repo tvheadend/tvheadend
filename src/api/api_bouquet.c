@@ -54,7 +54,7 @@ api_bouquet_grid
   bouquet_t *bq;
 
   RB_FOREACH(bq, &bouquets, bq_link)
-    idnode_set_add(ins, (idnode_t*)bq, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)bq, &conf->filter, perm->aa_lang_ui);
 }
 
 static int

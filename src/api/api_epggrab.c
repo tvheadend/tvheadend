@@ -46,7 +46,7 @@ api_epggrab_module_list
     m = htsmsg_create_map();
     htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&mod->idnode));
     htsmsg_add_str(m, "status", epggrab_module_get_status(mod));
-    htsmsg_add_str(m, "title", idnode_get_title(&mod->idnode, perm->aa_lang));
+    htsmsg_add_str(m, "title", idnode_get_title(&mod->idnode, perm->aa_lang_ui));
     htsmsg_add_msg(l, NULL, m);
   }
   pthread_mutex_unlock(&global_lock);
