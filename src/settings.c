@@ -129,6 +129,8 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 {
   char path[PATH_MAX];
   char tmppath[PATH_MAX];
+  struct stat st;
+  mode_t mode;
   int fd;
   va_list ap;
   htsbuf_queue_t hq;
@@ -150,7 +152,9 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 
   /* Create tmp file */
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
-  if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, 0700)) < 0) {
+  stat(tmppath, &st);
+  mode = S_IRUSR | S_IWUSR | (S_ISDIR(st.st_mode) ? S_IXUSR : 0);
+  if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, mode)) < 0) {
     tvhlog(LOG_ALERT, "settings", "Unable to create \"%s\" - %s",
 	    tmppath, strerror(errno));
     return;
@@ -193,7 +197,7 @@ hts_settings_load_one(const char *filename)
   /* Open */
   if (!(fp = fb_open(filename, 1, 0))) return NULL;
   size = fb_size(fp);
-  
+
   /* Load data */
   mem    = malloc(size+1);
   n      = fb_read(fp, mem, size);
@@ -347,6 +351,9 @@ int
 hts_settings_open_file(int for_write, const char *pathfmt, ...)
 {
   char path[PATH_MAX];
+  struct stat st;
+  mode_t mode;
+  int flags;
   va_list ap;
 
   /* Build path */
@@ -359,9 +366,13 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
     if (hts_settings_makedirs(path)) return -1;
 
   /* Open file */
-  int flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
+  flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
 
-  return tvh_open(path, flags, 0700);
+  /* Set permissions */
+  stat(path, &st);
+  mode = S_IRUSR | S_IWUSR | (S_ISDIR(st.st_mode) ? S_IXUSR : 0);
+
+  return tvh_open(path, flags, mode);
 }
 
 /*

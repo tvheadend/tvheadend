@@ -76,12 +76,14 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
             char *errbuf, size_t errbufsize, int timeout)
 {
   int fd, r, res, err;
-  struct addrinfo *ai;
+  struct addrinfo *ai, hints;
   char portstr[6];
   socklen_t errlen = sizeof(err);
 
   snprintf(portstr, 6, "%u", port);
-  res = getaddrinfo(hostname, portstr, NULL, &ai);
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;
+  res = getaddrinfo(hostname, portstr, &hints, &ai);
   
   if (res != 0) {
     snprintf(errbuf, errbufsize, "%s", gai_strerror(res));
