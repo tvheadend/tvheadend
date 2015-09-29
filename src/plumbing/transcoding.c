@@ -132,7 +132,7 @@ typedef struct transcoder {
 #define WORKING_ENCODER(x) \
   ((x) == AV_CODEC_ID_H264 || (x) == AV_CODEC_ID_MPEG2VIDEO || \
    (x) == AV_CODEC_ID_VP8  || /* (x) == AV_CODEC_ID_VP9 || */ \
-   (x) == AV_CODEC_ID_AAC  || \
+   (x) == AV_CODEC_ID_HEVC || (x) == AV_CODEC_ID_AAC || \
    (x) == AV_CODEC_ID_MP2  || (x) == AV_CODEC_ID_VORBIS)
 
 /**
@@ -939,7 +939,8 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
   if (!octx->coded_frame)
     return;
 
-  if (ts->ts_type == SCT_H264 && octx->extradata_size &&
+  if ((ts->ts_type == SCT_H264 || ts->ts_type == SCT_HEVC) &&
+      octx->extradata_size &&
       (ts->ts_first || octx->coded_frame->pict_type == AV_PICTURE_TYPE_I)) {
     n = pkt_alloc(NULL, octx->extradata_size + epkt->size, epkt->pts, epkt->dts);
     memcpy(pktbuf_ptr(n->pkt_payload), octx->extradata, octx->extradata_size);
@@ -1196,6 +1197,20 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         // use gop size of 5 seconds
         octx->gop_size       *= 5;
       }
+
+      break;
+
+    case SCT_HEVC:
+      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
+      av_dict_set(&opts, "preset",    "superfast",       0);
+      av_dict_set(&opts, "tune",      "fastdecode",      0);
+      av_dict_set(&opts, "crf",       "18",              0);
+      // decrease latency as much as possible
+      av_dict_set(&opts, "x265_opts", "bframes=0",       0);
+      av_dict_set(&opts, "x265_opts", ":rc-lookahead=0", AV_DICT_APPEND);
+      av_dict_set(&opts, "x265_opts", ":scenecut=0",     AV_DICT_APPEND);
 
       break;
 
