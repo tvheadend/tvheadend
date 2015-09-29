@@ -127,13 +127,13 @@ dvr_rec_subscribe(dvr_entry_t *de)
              pro->pro_name, channel_get_name(de->de_channel));
     pro = profile_find_by_name(NULL, NULL);
     profile_chain_init(prch, pro, de->de_channel);
-  }
-  if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
-    tvherror("dvr", "unable to create channel streaming default chain '%s' for '%s'",
-             pro->pro_name, channel_get_name(de->de_channel));
-    profile_chain_close(prch);
-    free(prch);
-    return -EINVAL;
+    if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
+      tvherror("dvr", "unable to create channel streaming default chain '%s' for '%s'",
+               pro->pro_name, channel_get_name(de->de_channel));
+      profile_chain_close(prch);
+      free(prch);
+      return -EINVAL;
+    }
   }
 
   de->de_s = subscription_create_from_channel(prch, NULL, weight,
