@@ -573,6 +573,14 @@ const idclass_t satip_server_class = {
   },
   .ic_properties = (const property_t[]){
     {
+      .type   = PT_STR,
+      .id     = "satip_uuid",
+      .name   = N_("Server UUID"),
+      .off    = offsetof(struct satip_server_conf, satip_uuid),
+      .opts   = PO_RDONLY,
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_rtsp",
       .name   = N_("RTSP Port (554 or 9983), 0 = disable"),
