@@ -204,17 +204,21 @@ FamFamFam</a>\n\
     tvh_gettext_lang(lang, N_("Based on software from")),
     tvh_gettext_lang(lang, N_("Icons from")));
 
-  htsbuf_qprintf(hq, "<p>%s: %s (%s) <a href=\"javascript:void(0)\"\
- onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">%s</a></p>\n",
+  htsbuf_qprintf(hq, "<p>%s: %s (%s)",
     tvh_gettext_lang(lang, N_("Build")),
     tvheadend_version,
-    build_timestamp,
-    tvh_gettext_lang(lang, N_("Toggle details")));
-
-  htsbuf_qprintf(hq,
-"<textarea id=\"textarea_build_config\" rows=\"20\" cols=\"80\" readonly \
+    build_timestamp);
+  if (!http_access_verify(hc, ACCESS_ADMIN)) {
+    htsbuf_qprintf(hq,
+" <a href=\"javascript:void(0)\"\
+ onclick=\"Ext.get('textarea_build_config').setVisibilityMode(Ext.Element.DISPLAY).toggle()\">%s</a>\
+</p>\n<textarea id=\"textarea_build_config\" rows=\"20\" cols=\"80\" readonly \
  style=\"display: none; margin: 5px auto 10px\">\n%s\n</textarea>\n",
+    tvh_gettext_lang(lang, N_("Toggle details")),
     build_config_str);
+  } else {
+    htsbuf_qprintf(hq, "</p>\n");
+  }
 
   htsbuf_qprintf(hq, "<p>\n\
 %s<br/>\n\
