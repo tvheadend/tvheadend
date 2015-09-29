@@ -152,8 +152,10 @@ static void _epggrab_load ( void )
     free(epggrab_conf.cron);
     epggrab_conf.cron = strdup("# Default config (00:04 and 12:04 everyday)\n4 */12 * * *");
     LIST_FOREACH(mod, &epggrab_modules, link) // enable all OTA by default
-      if (mod->type == EPGGRAB_OTA)
+      if (mod->type == EPGGRAB_OTA) {
+        mod->enabled = 1;
         epggrab_activate_module(mod, 1);
+      }
   }
 
   idnode_notify_changed(&epggrab_conf.idnode);
