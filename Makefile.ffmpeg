@@ -52,6 +52,7 @@ export PATH := $(LIBAVDIR)/build/ffmpeg/bin:$(PATH)
 ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
 ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
 
+EXTRAENV        =
 CONFIGURE       = TVHEADEND_LIBAV_BUILD=$(LIBAVDIR)/ffmpeg \
                   PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg ./configure
 
@@ -98,11 +99,11 @@ YASM_TB         = $(YASM).tar.gz
 YASM_URL        = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
 YASM_SHA1       = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
-MFXDIS_HASH     = 1582088ee7670ab1c96cefe844d9647274c0c841
-MFXDIS          = mfx_dispatch-$(MFXDIS_HASH)
-MFXDIS_TB       = $(MFXDIS_HASH).tar.gz
-MFXDIS_URL      = https://github.com/lu-zero/mfx_dispatch/archive/$(MFXDIS_TB)
-MFXDIS_SHA1     = 5a1f0cab45d675eb6a29f3dd38676f1e343e6ef1
+LIBMFX_HASH     = 1582088ee7670ab1c96cefe844d9647274c0c841
+LIBMFX          = mfx_dispatch-$(LIBMFX_HASH)
+LIBMFX_TB       = $(LIBMFX_HASH).tar.gz
+LIBMFX_URL      = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
+LIBMFX_SHA1     = 5a1f0cab45d675eb6a29f3dd38676f1e343e6ef1
 
 
 .PHONY: build
@@ -111,7 +112,6 @@ build: $(LIBAVDIR)/$(FFMPEG)/.tvh_build
 #
 # YASM
 #
-
 $(LIBAVDIR)/$(YASM)/.tvh_download:
 	$(call DOWNLOAD,$(YASM_URL),$(LIBAVDIR)/$(YASM_TB),$(YASM_SHA1))
 	$(call UNTAR,$(YASM_TB),z)
@@ -126,24 +126,51 @@ $(LIBAVDIR)/$(YASM)/.tvh_build: \
 	@touch $@
 
 #
-# MFX Dispatcher
+# MFX Dispatcher (libmfx)
 #
 
-$(LIBAVDIR)/$(MFXDIS)/.tvh_download:
-	$(call DOWNLOAD,$(MFXDIS_URL),$(LIBAVDIR)/$(MFXDIS_TB),$(MFXDIS_SHA1))
-	$(call UNTAR,$(MFXDIS_TB),z)
+ifeq (yes,$(CONFIG_LIBMFX))
+
+EXTLIBS  += libmfx
+
+DECODERS += mpeg2_qsv h264_qsv hevc_qsv
+ENCODERS += mpeg2_qsv h264_qsv hevc_qsv
+
+endif
+
+ifeq (yes,$(CONFIG_LIBMFX_STATIC))
+
+$(LIBAVDIR)/$(LIBMFX)/.tvh_download:
+	$(call DOWNLOAD,$(LIBMFX_URL),$(LIBAVDIR)/$(LIBMFX_TB),$(LIBMFX_SHA1))
+	$(call UNTAR,$(LIBMFX_TB),z)
 	@touch $@
 
-$(LIBAVDIR)/$(MFXDIS)/.tvh_build: \
-		$(LIBAVDIR)/$(MFXDIS)/.tvh_download
-	cd $(LIBAVDIR)/$(MFXDIS) && libtoolize --force --copy --automake
-	cd $(LIBAVDIR)/$(MFXDIS) && aclocal
-	cd $(LIBAVDIR)/$(MFXDIS) && automake --foreign --copy --add-missing
-	cd $(LIBAVDIR)/$(MFXDIS) && $(CONFIGURE) \
+$(LIBAVDIR)/$(LIBMFX)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBMFX)/.tvh_download
+	cd $(LIBAVDIR)/$(LIBMFX) && autoreconf -i
+	cd $(LIBAVDIR)/$(LIBMFX) && ./configure \
+                --with-libva_drm \
                 --prefix=/ffmpeg
 	DESTDIR=$(LIBAVDIR)/build \
-		$(MAKE) -C $(LIBAVDIR)/$(MFXDIS) install
+		$(MAKE) -C $(LIBAVDIR)/$(LIBMFX) install
 	@touch $@
+
+else
+
+LIBMFX_CFLAGS = $(shell $(PKG_CONFIG) --cflags libmfx)
+LIBMFX_LIBS   = $(shell $(PKG_CONFIG) --libs libmfx)
+
+EXTRAENV += TVHEADEND_LIBMFX_CFLAGS="$(LIBMFX_CFLAGS)" TVHEADEND_LIBMFX_LIBS="$(LIBMFX_LIBS)"
+
+$(LIBAVDIR)/$(LIBMFX)/.tvh_download:
+	@mkdir -p $(LIBAVDIR)/$(LIBMFX)
+	@touch $@
+
+$(LIBAVDIR)/$(LIBMFX)/.tvh_build: \
+		$(LIBAVDIR)/$(LIBMFX)/.tvh_download
+	@touch $@
+
+endif
 
 #
 # libogg & libvorbis
@@ -240,6 +267,8 @@ endif
 
 ifeq (yes,$(CONFIG_LIBX265_STATIC))
 
+ELIBS += -lva-drm -lva
+
 $(LIBAVDIR)/$(LIBX265)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX265_URL),$(LIBAVDIR)/$(LIBX265_TB),$(LIBX265_SHA1))
 	$(call UNTAR,$(LIBX265_TB),z)
@@ -305,8 +334,9 @@ $(LIBAVDIR)/$(FFMPEG)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBX264)/.tvh_build \
 		$(LIBAVDIR)/$(LIBX265)/.tvh_build \
 		$(LIBAVDIR)/$(LIBVPX)/.tvh_build \
+		$(LIBAVDIR)/$(LIBMFX)/.tvh_build \
 		$(LIBAVDIR)/$(FFMPEG)/.tvh_download
-	cd $(LIBAVDIR)/$(FFMPEG) && $(CONFIGURE) \
+	cd $(LIBAVDIR)/$(FFMPEG) && $(EXTRAENV) $(CONFIGURE) \
                 --prefix=/ffmpeg \
 		--disable-all \
 		--enable-static \

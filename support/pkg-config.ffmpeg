@@ -39,6 +39,15 @@ x265)
   cflags_="-I$TVHEADEND_LIBAV_BUILD/include"
   libs_="-L$TVHEADEND_LIBAV_BUILD/lib -lx265 -lstdc++"
   ;;
+libmfx)
+  if test -z "$TVHEADEND_LIBMFX_CFLAGS" -a -z "$TVHEADEND_LIBMFX_LIBS"; then
+  cflags_="-I$TVHEADEND_LIBAV_BUILD/include"
+  libs_="-L$TVHEADEND_LIBAV_BUILD/lib -lmfx -lstdc++"
+  else
+    cflags_="$TVHEADEND_LIBMFX_CFLAGS"
+    libs_="$TVHEADEND_LIBMFX_LIBS"
+  fi
+  ;;
 esac
 
 case "$cmd" in

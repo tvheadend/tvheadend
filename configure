@@ -38,6 +38,8 @@ OPTIONS=(
   "libx264_static:yes"
   "libx265:no"
   "libx265_static:yes"
+  "libmfx:no"
+  "libmfx_static:no"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"
@@ -395,6 +397,12 @@ if enabled libffmpeg_static; then
     fi
   else
     disable libx265_static
+  fi
+
+  # libmfx
+  if enabled libmfxdis; then
+    check_cc_lib libva-drm || die "libva-drm not found"
+    check_cc_lib mfx || die "libmfx not found"
   fi
 
 else
