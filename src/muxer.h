@@ -70,31 +70,31 @@ struct epg_broadcast;
 struct service;
 
 typedef struct muxer {
-  int         (*m_open_stream)(struct muxer *, int fd);                 // Open for socket streaming
-  int         (*m_open_file)  (struct muxer *, const char *filename);   // Open for file storage
-  const char* (*m_mime)       (struct muxer *,                          // Figure out the mimetype
+  int         (*m_open_stream)(struct muxer *, int fd);                 /* Open for socket streaming */
+  int         (*m_open_file)  (struct muxer *, const char *filename);   /* Open for file storage */
+  const char* (*m_mime)       (struct muxer *,                          /* Figure out the mimetype */
 			       const struct streaming_start *);
-  int         (*m_init)       (struct muxer *,                          // Init The muxer with streams
+  int         (*m_init)       (struct muxer *,                          /* Init The muxer with streams */
 			       const struct streaming_start *,
 			       const char *);
-  int         (*m_reconfigure)(struct muxer *,                          // Reconfigure the muxer on
-			       const struct streaming_start *);         // stream changes
-  int         (*m_close)      (struct muxer *);                         // Close the muxer
-  void        (*m_destroy)    (struct muxer *);                         // Free the memory
+  int         (*m_reconfigure)(struct muxer *,                          /* Reconfigure the muxer on */
+			       const struct streaming_start *);           /* stream changes */
+  int         (*m_close)      (struct muxer *);                         /* Close the muxer */
+  void        (*m_destroy)    (struct muxer *);                         /* Free the memory */
   int         (*m_write_meta) (struct muxer *, struct epg_broadcast *,
-                               const char *comment);                    // Append epg data
-  int         (*m_write_pkt)  (struct muxer *,                          // Append a media packet
+                               const char *comment);                    /* Append epg data */
+  int         (*m_write_pkt)  (struct muxer *,                          /* Append a media packet */
 			       streaming_message_type_t,
 			       void *);
-  int         (*m_add_marker) (struct muxer *);                         // Add a marker (or chapter)
+  int         (*m_add_marker) (struct muxer *);                         /* Add a marker (or chapter) */
 
-  int                    m_eos;        // End of stream
-  int                    m_errors;     // Number of errors
-  muxer_config_t         m_config;     // general configuration
+  int                    m_eos;        /* End of stream */
+  int                    m_errors;     /* Number of errors */
+  muxer_config_t         m_config;     /* general configuration */
 } muxer_t;
 
 
-// type <==> string converters
+/* type <==> string converters */
 const char *           muxer_container_type2txt  (muxer_container_type_t mc);
 const char*            muxer_container_type2mime (muxer_container_type_t mc, int video);
 
@@ -103,12 +103,10 @@ muxer_container_type_t muxer_container_mime2type (const char *str);
 
 const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
 
-//int muxer_container_list(htsmsg_t *array);
-
-// Muxer factory
+/* Muxer factory */
 muxer_t *muxer_create(const muxer_config_t *m_cfg);
 
-// Wrapper functions
+/* Wrapper functions */
 static inline int muxer_open_file (muxer_t *m, const char *filename)
   { if(m && filename) return m->m_open_file(m, filename); return -1; }
 
@@ -141,7 +139,7 @@ static inline const char* muxer_mime (muxer_t *m, const struct streaming_start *
 
 const char* muxer_suffix      (muxer_t *m, const struct streaming_start *ss);
 
-// Cache
+/* Cache */
 const char *       muxer_cache_type2txt(muxer_cache_type_t t);
 muxer_cache_type_t muxer_cache_txt2type(const char *str);
 void               muxer_cache_update(muxer_t *m, int fd, off_t off, size_t size);
