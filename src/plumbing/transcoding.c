@@ -1204,13 +1204,14 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
-      av_dict_set(&opts, "preset",    "superfast",       0);
-      av_dict_set(&opts, "tune",      "fastdecode",      0);
-      av_dict_set(&opts, "crf",       "18",              0);
-      // decrease latency as much as possible
-      av_dict_set(&opts, "x265_opts", "bframes=0",       0);
-      av_dict_set(&opts, "x265_opts", ":rc-lookahead=0", AV_DICT_APPEND);
-      av_dict_set(&opts, "x265_opts", ":scenecut=0",     AV_DICT_APPEND);
+      av_dict_set(&opts, "preset",    "ultrafast",        0);
+      av_dict_set(&opts, "tune",      "fastdecode",       0);
+      av_dict_set(&opts, "crf",       "18",               0);
+      // the following is equivalent to tune=zerolatency for presets: ultra/superfast
+      av_dict_set(&opts, "x265_opts", "bframes=0",        0);
+      av_dict_set(&opts, "x265_opts", ":rc-lookahead=0",  AV_DICT_APPEND);
+      av_dict_set(&opts, "x265_opts", ":scenecut=0",      AV_DICT_APPEND);
+      av_dict_set(&opts, "x265_opts", ":frame-threads=1", AV_DICT_APPEND);
 
       break;
 
