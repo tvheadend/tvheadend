@@ -53,7 +53,6 @@
  *
  */
 static void *dvr_thread(void *aux);
-static void dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc);
 static void dvr_thread_epilog(dvr_entry_t *de);
 
 
@@ -1132,9 +1131,11 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
     return;
   }
 
+  pthread_mutex_unlock(&global_lock);
   spawnv(args[0], (void *)args, NULL, 1, 1);
     
   htsstr_argsplit_free(args);
+  pthread_mutex_lock(&global_lock);
 }
 
 /**
@@ -1144,14 +1145,17 @@ static void
 dvr_thread_epilog(dvr_entry_t *de)
 {
   profile_chain_t *prch = de->de_chain;
+  dvr_config_t *cfg;
 
   muxer_close(prch->prch_muxer);
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
 
-  dvr_config_t *cfg = de->de_config;
+  pthread_mutex_lock(&global_lock);
+  cfg = de->de_config;
   if(cfg && cfg->dvr_postproc)
-    dvr_spawn_postproc(de,cfg->dvr_postproc);
+    dvr_spawn_postproc(de, cfg->dvr_postproc);
+  pthread_mutex_unlock(&global_lock);
 }
 
 /**
