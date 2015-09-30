@@ -53,7 +53,7 @@ ECFLAGS         = -I$(LIBAVDIR)/build/ffmpeg/include
 ELIBS           = -L$(LIBAVDIR)/build/ffmpeg/lib -ldl
 
 EXTRAENV        =
-CONFIGURE       = TVHEADEND_LIBAV_BUILD=$(LIBAVDIR)/ffmpeg \
+CONFIGURE       = TVHEADEND_LIBAV_BUILD=$(LIBAVDIR)/build/ffmpeg \
                   PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg ./configure
 
 FFMPEG          = ffmpeg-2.8
@@ -136,6 +136,8 @@ EXTLIBS  += libmfx
 DECODERS += mpeg2_qsv h264_qsv hevc_qsv
 ENCODERS += mpeg2_qsv h264_qsv hevc_qsv
 
+ELIBS += $(CONFIG_LIBMFX_VA_LIBS)
+
 endif
 
 ifeq (yes,$(CONFIG_LIBMFX_STATIC))
@@ -149,8 +151,9 @@ $(LIBAVDIR)/$(LIBMFX)/.tvh_build: \
 		$(LIBAVDIR)/$(LIBMFX)/.tvh_download
 	cd $(LIBAVDIR)/$(LIBMFX) && autoreconf -i
 	cd $(LIBAVDIR)/$(LIBMFX) && ./configure \
-                --with-libva_drm \
-                --prefix=/ffmpeg
+		--prefix=/ffmpeg \
+		--enable-static \
+		--disable-shared
 	DESTDIR=$(LIBAVDIR)/build \
 		$(MAKE) -C $(LIBAVDIR)/$(LIBMFX) install
 	@touch $@
@@ -185,7 +188,7 @@ $(LIBAVDIR)/$(LIBOGG)/.tvh_build: \
 		$(LIBAVDIR)/$(YASM)/.tvh_build \
 		$(LIBAVDIR)/$(LIBOGG)/.tvh_download
 	cd $(LIBAVDIR)/$(LIBOGG) && $(CONFIGURE) \
-                --prefix=/ffmpeg \
+		--prefix=/ffmpeg \
 		--enable-static \
 		--disable-shared
 	DESTDIR=$(LIBAVDIR)/build \
@@ -266,8 +269,6 @@ endif
 
 
 ifeq (yes,$(CONFIG_LIBX265_STATIC))
-
-ELIBS += -lva-drm -lva
 
 $(LIBAVDIR)/$(LIBX265)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX265_URL),$(LIBAVDIR)/$(LIBX265_TB),$(LIBX265_SHA1))
