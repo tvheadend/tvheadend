@@ -170,7 +170,7 @@ api_dvr_entry_create
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "subtitle", m);
     }
-    if ((de = dvr_entry_create(NULL, conf)))
+    if ((de = dvr_entry_create(NULL, conf, 0)))
       dvr_entry_save(de);
 
     res = 0;

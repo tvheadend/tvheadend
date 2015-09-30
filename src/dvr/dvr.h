@@ -39,6 +39,7 @@ typedef struct dvr_config {
   char *dvr_comment;
   profile_t *dvr_profile;
   char *dvr_storage;
+  int dvr_clone;
   uint32_t dvr_retention_days;
   char *dvr_charset;
   char *dvr_charset_id;
@@ -424,7 +425,10 @@ void dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_en
 void dvr_entry_created(dvr_entry_t *de);
 
 dvr_entry_t *
-dvr_entry_create ( const char *uuid, htsmsg_t *conf );
+dvr_entry_clone ( dvr_entry_t *de );
+
+dvr_entry_t *
+dvr_entry_create ( const char *uuid, htsmsg_t *conf, int clone );
 
 
 dvr_entry_t *
@@ -459,11 +463,13 @@ dvr_entry_update( dvr_entry_t *de, int enabled, channel_t *ch,
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
-void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf);
+void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone);
 
 int dvr_rec_subscribe(dvr_entry_t *de);
 
 void dvr_rec_unsubscribe(dvr_entry_t *de);
+
+void dvr_rec_migrate(dvr_entry_t *de_old, dvr_entry_t *de_new);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 

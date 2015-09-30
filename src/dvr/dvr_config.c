@@ -177,6 +177,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_enabled = 1;
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = 31;
+  cfg->dvr_clone = 1;
   cfg->dvr_tag_files = 1;
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
@@ -810,6 +811,14 @@ const idclass_t dvr_config_class = {
       .name     = N_("DVR Log Retention Time (days)"),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = 31,
+      .group    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "clone",
+      .name     = N_("Clone Scheduled Entry On Error"),
+      .off      = offsetof(dvr_config_t, dvr_clone),
+      .def.u32  = 1,
       .group    = 1,
     },
     {

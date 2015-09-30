@@ -164,7 +164,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   assert(prch != NULL);
 
   streaming_target_deliver(prch->prch_st, streaming_msg_create(SMT_EXIT));
-  
+
   pthread_join(de->de_thread, NULL);
 
   subscription_unsubscribe(de->de_s, 0);
@@ -175,6 +175,21 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   free(prch);
 }
 
+/**
+ *
+ */
+void
+dvr_rec_migrate(dvr_entry_t *de_old, dvr_entry_t *de_new)
+{
+  lock_assert(&global_lock);
+
+  de_new->de_s = de_old->de_s;
+  de_new->de_chain = de_old->de_chain;
+  de_new->de_thread = de_old->de_thread;
+  de_old->de_s = NULL;
+  de_old->de_chain = NULL;
+  de_old->de_thread = 0;
+}
 
 /**
  * Replace various chars with a dash
@@ -916,16 +931,17 @@ static void *
 dvr_thread(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_config_t *cfg = de->de_config;
   profile_chain_t *prch = de->de_chain;
   streaming_queue_t *sq = &prch->prch_sq;
   streaming_message_t *sm;
   th_subscription_t *ts;
   th_pkt_t *pkt;
-  int run = 1;
-  int started = 0;
-  int comm_skip = cfg->dvr_skip_commercials;
+  int run = 1, started = 0, comm_skip;
   int commercial = COMMERCIAL_UNKNOWN;
+
+  pthread_mutex_lock(&global_lock);
+  comm_skip = de->de_config->dvr_skip_commercials;
+  pthread_mutex_unlock(&global_lock);
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -1003,6 +1019,10 @@ dvr_thread(void *aux)
 	// support reconfiguration of the streams.
 	dvr_thread_epilog(de);
 	started = 0;
+	pthread_mutex_lock(&global_lock);
+	if (de->de_config->dvr_clone)
+	  de = dvr_entry_clone(de);
+        pthread_mutex_unlock(&global_lock);
       }
 
       if(!started) {
@@ -1011,7 +1031,7 @@ dvr_thread(void *aux)
         if(dvr_rec_start(de, sm->sm_data) == 0)
           started = 1;
         else
-          dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1);
+          dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1, 0);
         pthread_mutex_unlock(&global_lock);
       } 
       break;
