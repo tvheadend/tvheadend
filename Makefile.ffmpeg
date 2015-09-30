@@ -126,6 +126,18 @@ $(LIBAVDIR)/$(YASM)/.tvh_build: \
 	@touch $@
 
 #
+# VDPAU library
+#
+
+ifeq (yes,$(CONFIG_VDPAU))
+
+EXTRAARG += --enable-vdpau
+
+DECODERS += h264_vdpau
+
+endif
+
+#
 # MFX Dispatcher (libmfx)
 #
 

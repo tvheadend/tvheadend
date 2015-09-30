@@ -38,6 +38,7 @@ OPTIONS=(
   "libx264_static:yes"
   "libx265:no"
   "libx265_static:yes"
+  "vdpau:auto"
   "libmfx:no"
   "libmfx_static:yes"
   "inotify:auto"
@@ -397,6 +398,15 @@ if enabled libffmpeg_static; then
     fi
   else
     disable libx265_static
+  fi
+
+  # vdpau
+  if enabled_or_auto vdpau; then
+    if check_pkg vdpau; then
+      enable vdpau
+    elif enabled vdpau; then
+      die "vdpau (Video API library) not found"
+    fi
   fi
 
   # libmfx
