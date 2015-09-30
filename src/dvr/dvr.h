@@ -213,6 +213,7 @@ typedef struct dvr_entry {
    * Fields for recording
    */
   pthread_t de_thread;
+  uint8_t de_thread_shutdown;
 
   th_subscription_t *de_s;
 
