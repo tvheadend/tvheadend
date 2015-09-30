@@ -16,11 +16,11 @@
  *  along with this program.  If not, see <htmlui://www.gnu.org/licenses/>.
  */
 
-#ifndef TVH_MUXER_H_
-#define TVH_MUXER_H_
+#ifndef MUXER_MKV_H_
+#define MUXER_MKV_H_
 
 #include "muxer.h"
 
-muxer_t* tvh_muxer_create (const muxer_config_t* m_cfg);
+muxer_t* mkv_muxer_create (const muxer_config_t* m_cfg);
 
-#endif
+#endif /* MUXER_MKV_H_ */
