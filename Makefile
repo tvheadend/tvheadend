@@ -85,12 +85,21 @@ LDFLAGS += -lx265
 endif
 endif
 LDFLAGS += ${LDFLAGS_FFDIR}/libvpx.a
+CONFIG_LIBMFX_VA_LIBS =
 ifeq ($(CONFIG_LIBMFX),yes)
+CONFIG_LIBMFX_VA_LIBS += -lva
+ifeq ($(CONFIG_VA_DRM),yes)
+CONFIG_LIBMFX_VA_LIBS += -lva-drm
+endif
+ifeq ($(CONFIG_VA_X11),yes)
+CONFIG_LIBMFX_VA_LIBS += -lva-x11
+endif
 ifeq ($(CONFIG_LIBMFX_STATIC),yes)
-LDFLAGS += ${LDFLAGS_FFDIR}/libmfx.a -lstdc++ -lva-drm -lva
+LDFLAGS += ${LDFLAGS_FFDIR}/libmfx.a -lstdc++
 else
 LDFLAGS += -lmfx
 endif
+LDFLAGS += ${CONFIG_LIBMFX_VA_LIBS}
 endif
 endif
 
@@ -661,6 +670,7 @@ ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
 	CONFIG_LIBX265_STATIC=$(CONFIG_LIBX265_STATIC) \
 	CONFIG_LIBMFX=$(CONFIG_LIBMFX) \
 	CONFIG_LIBMFX_STATIC=$(CONFIG_LIBMFX_STATIC) \
+	CONFIG_LIBMFX_VA_LIBS="$(CONFIG_LIBMFX_VA_LIBS)" \
 	  $(MAKE) -f Makefile.ffmpeg build
 
 # Static HDHOMERUN library

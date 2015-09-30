@@ -39,7 +39,7 @@ OPTIONS=(
   "libx265:no"
   "libx265_static:yes"
   "libmfx:no"
-  "libmfx_static:no"
+  "libmfx_static:yes"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"
@@ -400,9 +400,27 @@ if enabled libffmpeg_static; then
   fi
 
   # libmfx
-  if enabled libmfxdis; then
-    check_cc_lib libva-drm || die "libva-drm not found"
-    check_cc_lib mfx || die "libmfx not found"
+  if enabled libmfx; then
+    check_cc_lib va || die "libva not found"
+    check_cc_lib va-drm va_drm || disable va_drm
+    check_cc_lib va-x11 va_x11 || disable va_x11
+    if disabled va_drm && disabled va_x11; then
+      die "neither libva-drm nor libva-x11 was found"
+    fi
+    if enabled libmfx_static; then
+      check_bin autoreconf ||\
+        die "autoreconf not found (needed for building libmfx)"
+      check_bin libtool ||\
+        die "libtool not found (needed for building libmfx)"
+      check_bin libtoolize ||\
+        die "libtoolize not found (needed for building libmfx)"
+      check_cc_lib stdc++ stdcpp ||\
+        die "libstdc++ not found (needed for building libmfx)"
+    else
+      check_cc_lib mfx || die "libmfx not found"
+    fi
+  else
+    disable libmfx_static
   fi
 
 else
