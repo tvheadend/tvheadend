@@ -20,6 +20,7 @@
 
 #include "tvheadend.h"
 #include "config.h"
+#include "settings.h"
 #include "descrambler.h"
 #include "caid.h"
 #include "caclient.h"
@@ -28,9 +29,19 @@
 #include "input/mpegts/tsdemux.h"
 #include "dvbcam.h"
 
+#define MAX_QUICK_ECM_ENTRIES 100
+
+uint16_t *quick_ecm_table = NULL;
+
 void
 descrambler_init ( void )
 {
+  htsmsg_t *c, *e, *q;
+  htsmsg_field_t *f;
+  const char *s;
+  uint32_t caid;
+  int idx;
+
 #if (ENABLE_CWC || ENABLE_CAPMT) && !ENABLE_DVBCSA
   ffdecsa_init();
 #endif
@@ -38,12 +49,55 @@ descrambler_init ( void )
 #if ENABLE_LINUXDVB_CA
   dvbcam_init();
 #endif
+
+  if ((c = hts_settings_load("descrambler")) != NULL) {
+    idx = 0;
+    if ((q = htsmsg_get_list(c, "quick_ecm")) != NULL) {
+      HTSMSG_FOREACH(f, q) {
+        if (!(e = htsmsg_field_get_map(f))) continue;
+        if (idx + 1 >= MAX_QUICK_ECM_ENTRIES) continue;
+        if ((s = htsmsg_get_str(e, "caid")) == NULL) continue;
+        caid = strtol(s, NULL, 16);
+        tvhinfo("descrambler", "adding CAID %04X as quick ECM (%s)", caid, htsmsg_get_str(e, "name") ?: "unknown");
+        if (!quick_ecm_table)
+          quick_ecm_table = malloc(sizeof(uint16_t) * MAX_QUICK_ECM_ENTRIES);
+        quick_ecm_table[idx++] = caid;
+      }
+      if (quick_ecm_table)
+        quick_ecm_table[idx] = 0;
+    }
+    htsmsg_destroy(c);
+  }
 }
 
 void
 descrambler_done ( void )
 {
   caclient_done();
+  free(quick_ecm_table);
+  quick_ecm_table = NULL;
+}
+
+/*
+ * Decide, if we should work in "quick ECM" mode
+ */
+static int
+descrambler_quick_ecm ( mpegts_service_t *t, int pid )
+{
+  elementary_stream_t *st;
+  caid_t *ca;
+  uint16_t *p;
+
+  if (!quick_ecm_table)
+    return 0;
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    if (st->es_pid != pid) continue;
+    LIST_FOREACH(ca, &st->es_caids, link)
+      for (p = quick_ecm_table; *p; p++)
+        if (ca->caid == *p)
+          return 1;
+  }
+  return 0;
 }
 
 /*
@@ -56,17 +110,12 @@ descrambler_service_start ( service_t *t )
 {
   th_descrambler_runtime_t *dr;
   elementary_stream_t *st;
-  caid_t *ca;
-  int quick_ecm = 0;
 
   if (!((mpegts_service_t *)t)->s_dvb_forcecaid) {
 
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
-      if ((ca = LIST_FIRST(&st->es_caids)) != NULL) {
-        if (detect_card_type(ca->caid) == CARD_NDS)
-          quick_ecm = 1;
+      if (LIST_FIRST(&st->es_caids) == NULL)
         break;
-      }
 
     /* Do not run descrambler on FTA channels */
     if (!st)
@@ -77,11 +126,6 @@ descrambler_service_start ( service_t *t )
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
   if (t->s_descramble == NULL) {
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
-    if (quick_ecm) {
-      tvhdebug("descrambler", "quick ECM enabled for service '%s'",
-               ((mpegts_service_t *)t)->s_dvb_svcname);
-      dr->dr_quick_ecm = 1;
-    }
     sbuf_init(&dr->dr_buf);
     dr->dr_key_index = 0xff;
     tvhcsa_init(&dr->dr_csa);
@@ -562,6 +606,13 @@ descrambler_table_callback
           /* The keys are requested from this moment */
           dr = t->s_descramble;
           if (dr) {
+            if (!dr->dr_quick_ecm && !ds->quick_ecm_called) {
+              ds->quick_ecm_called = 1;
+              dr->dr_quick_ecm = descrambler_quick_ecm(mt->mt_service, mt->mt_pid);
+              if (dr->dr_quick_ecm)
+                tvhdebug("descrambler", "quick ECM enabled for service '%s'",
+                         t->s_dvb_svcname);
+            }
             if ((ptr[0] & 0xfe) == 0x80) { /* 0x80 = even, 0x81 = odd */
               dr->dr_ecm_start[ptr[0] & 1] = dispatch_clock;
               if (dr->dr_quick_ecm)

@@ -97,6 +97,7 @@ typedef struct descrambler_section {
   descrambler_section_callback_t callback;
   void     *opaque;
   LIST_HEAD(, descrambler_ecmsec) ecmsecs;
+  uint8_t   quick_ecm_called;
 } descrambler_section_t;
 
 typedef struct descrambler_table {
