@@ -187,7 +187,8 @@ htsstr_argsplit_free(char **argv) {
 
 char *
 htsstr_substitute(const char *src, char *dst, size_t dstlen,
-                  int first, htsstr_substitute_t *sub, const void *aux)
+                  int first, htsstr_substitute_t *sub, const void *aux,
+                  char *tmp, size_t tmplen)
 {
   htsstr_substitute_t *s;
   const char *p, *x, *v;
@@ -219,7 +220,7 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
       if (*p == '\0') {
         src = x;
         if ((l = dstlen) > 0) {
-          v = s->getval(s->id, aux);
+          v = s->getval(s->id, aux, tmp, tmplen);
           strncpy(dst, v, l);
           l = MIN(strlen(v), l);
           dst += l;
