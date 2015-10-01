@@ -222,9 +222,9 @@ mk_build_segment_info(mk_muxer_t *mk)
  *
  */
 static htsbuf_queue_t *
-mk_build_tracks(mk_muxer_t *mk, const streaming_start_t *ss)
+mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
 {
-  const streaming_start_component_t *ssc;
+  streaming_start_component_t *ssc;
   const char *codec_id;
   int i, tracktype;
   htsbuf_queue_t *q = htsbuf_queue_alloc(0), *t;
@@ -323,6 +323,7 @@ mk_build_tracks(mk_muxer_t *mk, const streaming_start_t *ss)
       break;
 
     default:
+      ssc->ssc_muxer_disabled = 1;
       tr->disabled = 1;
       continue;
     }
@@ -866,7 +867,7 @@ mk_write_metaseek(mk_muxer_t *mk, int first)
  */
 static htsbuf_queue_t *
 mk_build_segment(mk_muxer_t *mk,
-		 const streaming_start_t *ss)
+		 streaming_start_t *ss)
 {
   htsbuf_queue_t *p = htsbuf_queue_alloc(0);
 
@@ -1232,7 +1233,7 @@ mkv_muxer_mime(muxer_t* m, const struct streaming_start *ss)
  * Init the muxer with a title and some tracks
  */
 static int
-mkv_muxer_init(muxer_t *m, const streaming_start_t *ss, const char *name)
+mkv_muxer_init(muxer_t *m, streaming_start_t *ss, const char *name)
 {
   mk_muxer_t *mk = (mk_muxer_t *)m;
   htsbuf_queue_t q, *a;

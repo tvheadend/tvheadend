@@ -796,11 +796,15 @@ static int
 dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 {
   const source_info_t *si = &ss->ss_si;
+  streaming_start_t *ss_copy;
   const streaming_start_component_t *ssc;
-  int i;
+  char res[11], asp[6], sr[6], ch[7];
   dvr_config_t *cfg = de->de_config;
   profile_chain_t *prch = de->de_chain;
+  htsmsg_t *info, *e;
+  htsmsg_field_t *f;
   muxer_t *muxer;
+  int i;
 
   if (!cfg) {
     dvr_rec_fatal_error(de, "Unable to determine config profile");
@@ -835,15 +839,17 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
   }
 
-  if(muxer_init(muxer, ss, lang_str_get(de->de_title, NULL))) {
+  ss_copy = streaming_start_copy(ss);
+
+  if(muxer_init(muxer, ss_copy, lang_str_get(de->de_title, NULL))) {
     dvr_rec_fatal_error(de, "Unable to init file");
-    return -1;
+    goto _err;
   }
 
   if(cfg->dvr_tag_files) {
     if(muxer_write_meta(muxer, de->de_bcast, de->de_comment)) {
       dvr_rec_fatal_error(de, "Unable to write meta data");
-      return -1;
+      goto _err;
     }
   }
 
@@ -869,15 +875,20 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	 "sample rate",
 	 "channels");
 
-  for(i = 0; i < ss->ss_num_components; i++) {
-    ssc = &ss->ss_components[i];
+  info = htsmsg_create_list();
+  for(i = 0; i < ss_copy->ss_num_components; i++) {
+    ssc = &ss_copy->ss_components[i];
 
-    char res[11];
-    char asp[6];
-    char sr[6];
-    char ch[7];
+    if(ssc->ssc_muxer_disabled)
+      continue;
+
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "type", streaming_component_type2txt(ssc->ssc_type));
+    if (ssc->ssc_lang && ssc->ssc_lang[0])
+       htsmsg_add_str(e, "language", ssc->ssc_lang);
 
     if(SCT_ISAUDIO(ssc->ssc_type)) {
+      htsmsg_add_u32(e, "audio_type", ssc->ssc_audio_type);
       if(ssc->ssc_sri)
 	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
       else
@@ -890,8 +901,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
       else
 	snprintf(ch, sizeof(ch), "%d", ssc->ssc_channels);
     } else {
-      sr[0] = 0;
-      ch[0] = 0;
+      sr[0] = ch[0] = 0;
     }
 
     if(SCT_ISVIDEO(ssc->ssc_type)) {
@@ -900,18 +910,25 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 		 ssc->ssc_width, ssc->ssc_height);
       else
 	strcpy(res, "?");
-    } else {
-      res[0] = 0;
-    }
 
-    if(SCT_ISVIDEO(ssc->ssc_type)) {
       if(ssc->ssc_aspect_num &&  ssc->ssc_aspect_den)
 	snprintf(asp, sizeof(asp), "%d:%d",
 		 ssc->ssc_aspect_num, ssc->ssc_aspect_den);
       else
 	strcpy(asp, "?");
+
+      htsmsg_add_u32(e, "width",      ssc->ssc_width);
+      htsmsg_add_u32(e, "height",     ssc->ssc_height);
+      htsmsg_add_u32(e, "duration",   ssc->ssc_frameduration);
+      htsmsg_add_u32(e, "aspect_num", ssc->ssc_aspect_num);
+      htsmsg_add_u32(e, "aspect_den", ssc->ssc_aspect_den);
     } else {
-      asp[0] = 0;
+      res[0] = asp[0] = 0;
+    }
+
+    if (SCT_ISSUBTITLE(ssc->ssc_type)) {
+      htsmsg_add_u32(e, "composition_id", ssc->ssc_composition_id);
+      htsmsg_add_u32(e, "ancillary_id",   ssc->ssc_ancillary_id);
     }
 
     tvhlog(LOG_INFO, "dvr",
@@ -924,9 +941,23 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	   sr,
 	   ch,
 	   ssc->ssc_disabled ? "<disabled, no valid input>" : "");
+    htsmsg_add_msg(info, NULL, e);
   }
 
+  streaming_start_unref(ss_copy);
+
+  /* update the info field for a filename */
+  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+      (e = htsmsg_field_get_map(f)) != NULL) {
+    htsmsg_set_msg(e, "info", info);
+  } else {
+    htsmsg_destroy(info);
+  }
   return 0;
+
+_err:
+  streaming_start_unref(ss_copy);
+  return -1;
 }
 
 

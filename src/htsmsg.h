@@ -174,6 +174,11 @@ int  htsmsg_field_set_str(htsmsg_field_t *f, const char *str);
 htsmsg_t *htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);
 
 /**
+ * Add/update an field where source is a list or map message.
+ */
+htsmsg_t *htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub);
+
+/**
  * Add an field where source is a double
  */
 void htsmsg_add_dbl(htsmsg_t *msg, const char *name, double dbl);

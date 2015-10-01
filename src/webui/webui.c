@@ -310,6 +310,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   struct timeval  tp;
   int err = 0;
   socklen_t errlen = sizeof(err);
+  streaming_start_t *ss_copy;
   int64_t mono;
 
   if(muxer_open_stream(mux, hc->hc_fd))
@@ -396,8 +397,10 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           return;
         }
 
-        if(muxer_init(mux, sm->sm_data, name) < 0)
+        ss_copy = streaming_start_copy((streaming_start_t *)sm->sm_data);
+        if(muxer_init(mux, ss_copy, name) < 0)
           run = 0;
+        streaming_start_unref(ss_copy);
 
         started = 1;
       } else if(muxer_reconfigure(mux, sm->sm_data) < 0) {

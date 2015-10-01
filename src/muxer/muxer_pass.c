@@ -343,7 +343,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
  * Init the passthrough muxer with streams
  */
 static int
-pass_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+pass_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 {
   return pass_muxer_reconfigure(m, ss);
 }

@@ -259,10 +259,10 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
  * Init the muxer with streams
  */
 static int
-lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 {
   int i;
-  const streaming_start_component_t *ssc;
+  streaming_start_component_t *ssc;
   AVFormatContext *oc;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   char app[128];
@@ -292,12 +292,14 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
       tvhlog(LOG_WARNING, "libav",  "%s is not supported in %s", 
 	     streaming_component_type2txt(ssc->ssc_type), 
 	     muxer_container_type2txt(lm->m_config.m_type));
+      ssc->ssc_muxer_disabled = 1;
       continue;
     }
 
     if(lav_muxer_add_stream(lm, ssc)) {
       tvhlog(LOG_ERR, "libav",  "Failed to add %s stream", 
 	     streaming_component_type2txt(ssc->ssc_type));
+      ssc->ssc_muxer_disabled = 1;
       continue;
     }
   }

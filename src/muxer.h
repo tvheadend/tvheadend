@@ -75,7 +75,7 @@ typedef struct muxer {
   const char* (*m_mime)       (struct muxer *,                          /* Figure out the mimetype */
 			       const struct streaming_start *);
   int         (*m_init)       (struct muxer *,                          /* Init The muxer with streams */
-			       const struct streaming_start *,
+			       struct streaming_start *,
 			       const char *);
   int         (*m_reconfigure)(struct muxer *,                          /* Reconfigure the muxer on */
 			       const struct streaming_start *);           /* stream changes */
@@ -113,7 +113,7 @@ static inline int muxer_open_file (muxer_t *m, const char *filename)
 static inline int muxer_open_stream (muxer_t *m, int fd)
   { if(m && fd >= 0) return m->m_open_stream(m, fd); return -1; }
 
-static inline int muxer_init (muxer_t *m, const struct streaming_start *ss, const char *name)
+static inline int muxer_init (muxer_t *m, struct streaming_start *ss, const char *name)
   { if(m && ss) return m->m_init(m, ss, name); return -1; }
 
 static inline int muxer_reconfigure (muxer_t *m, const struct streaming_start *ss)

@@ -39,6 +39,7 @@ typedef struct streaming_start_component {
   uint8_t ssc_ext_sri;
   uint8_t ssc_channels;
   uint8_t ssc_disabled;
+  uint8_t ssc_muxer_disabled;
   
   pktbuf_t *ssc_gh;
 
