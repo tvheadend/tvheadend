@@ -1651,6 +1651,7 @@ void config_done ( void )
   free(config.full_version);
   free(config.server_name);
   free(config.language);
+  free(config.language_ui);
   free(config.info_area);
   free(config.muxconf_path);
   free(config.chicon_path);
