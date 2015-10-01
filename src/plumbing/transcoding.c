@@ -1031,6 +1031,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   video_stream_t *vs = (video_stream_t*)ts;
   streaming_message_t *sm;
   th_pkt_t *pkt2;
+  static int max_bitrate = (INT_MAX / 3000) * 0.8;
 
   av_init_packet(&packet);
   av_init_packet(&packet2);
@@ -1204,13 +1205,44 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->pix_fmt        = PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
-      av_dict_set(&opts, "preset",    "superfast",       0);
-      av_dict_set(&opts, "tune",      "fastdecode",      0);
-      av_dict_set(&opts, "crf",       "18",              0);
-      // decrease latency as much as possible
-      av_dict_set(&opts, "x265_opts", "bframes=0",       0);
-      av_dict_set(&opts, "x265_opts", ":rc-lookahead=0", AV_DICT_APPEND);
-      av_dict_set(&opts, "x265_opts", ":scenecut=0",     AV_DICT_APPEND);
+      // on all hardware ultrafast (or maybe superfast) should be safe
+      av_dict_set(&opts, "preset", "ultrafast",  0);
+      // disables encoder features which tend to be bottlenecks for the decoder/player
+      av_dict_set(&opts, "tune",   "fastdecode", 0);
+
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality
+        // valid values for crf are 1-51, smaller means better quality
+        // use 18 as default
+        char crf[3];
+        snprintf(crf, sizeof (crf), "%d",
+                 t->t_props.tp_vbitrate == 0 ? 18 : MIN(51, t->t_props.tp_vbitrate));
+        av_dict_set(&opts, "crf", crf, 0);
+
+        // the following is equivalent to tune=zerolatency for presets: ultra/superfast
+        av_dict_set(&opts, "x265_opts", "bframes=0",        0);
+        av_dict_set(&opts, "x265_opts", ":rc-lookahead=0",  AV_DICT_APPEND);
+        av_dict_set(&opts, "x265_opts", ":scenecut=0",      AV_DICT_APPEND);
+        av_dict_set(&opts, "x265_opts", ":frame-threads=1", AV_DICT_APPEND);
+      } else {
+        int bitrate, maxrate, bufsize;
+        bitrate = (t->t_props.tp_vbitrate > max_bitrate) ? max_bitrate : t->t_props.tp_vbitrate;
+        maxrate = ceil(bitrate * 1.25);
+        bufsize = maxrate * 3;
+
+        tvhdebug("transcode", "tuning HEVC encoder for ABR rate control, "
+                 "bitrate: %dkbps, vbv-bufsize: %dkbits, vbv-maxrate: %dkbps",
+                 bitrate, bufsize, maxrate);
+
+        // this is the same as setting --bitrate=bitrate
+        octx->bit_rate = bitrate * 1000;
+
+        av_dict_set(&opts,     "x265_opts", "vbv-bufsize=",  0);
+        av_dict_set_int(&opts, "x265_opts", bufsize,         AV_DICT_APPEND);
+        av_dict_set(&opts,     "x265_opts", ":vbv-maxrate=", AV_DICT_APPEND);
+        av_dict_set_int(&opts, "x265_opts", maxrate,         AV_DICT_APPEND);
+        av_dict_set(&opts,     "x265_opts", ":strict-cbr=1", AV_DICT_APPEND);
+      }
 
       break;
 
