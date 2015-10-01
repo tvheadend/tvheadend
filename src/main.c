@@ -483,7 +483,23 @@ show_usage
   exit(0);
 }
 
+/**
+ *
+ */
+void
+dispatch_clock_update(struct timespec *ts)
+{
+  struct timespec ts1;
+  if (ts == NULL)
+    ts = &ts1;
+  clock_gettime(CLOCK_REALTIME, ts);
 
+  /* 1sec stuff */
+  if (ts->tv_sec > dispatch_clock) {
+    dispatch_clock = ts->tv_sec;
+    comet_flush(); /* Flush idle comet mailboxes */
+  }
+}
 
 /**
  *
@@ -501,14 +517,7 @@ mainloop(void)
 #endif
 
   while(tvheadend_running) {
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    /* 1sec stuff */
-    if (ts.tv_sec > dispatch_clock) {
-      dispatch_clock = ts.tv_sec;
-
-      comet_flush(); /* Flush idle comet mailboxes */
-    }
+    dispatch_clock_update(&ts);
 
     /* Global timers */
     pthread_mutex_lock(&global_lock);

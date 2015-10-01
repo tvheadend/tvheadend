@@ -109,6 +109,7 @@ tvh_write(int fd, const void *buf, size_t len)
         if (dispatch_clock > next)
           break;
         usleep(100);
+        dispatch_clock_update(NULL);
         continue;
       }
       break;
