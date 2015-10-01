@@ -521,6 +521,32 @@ static htsstr_substitute_t dvr_subs_postproc_filename[] = {
   { .id = NULL, .getval = NULL }
 };
 
+static const char *dvr_sub_basic_info(const char *id, const void *aux)
+{
+  htsmsg_t *info = (htsmsg_t *)aux, *e;
+  htsmsg_field_t *f;
+  const char *s;
+  size_t l = 0;
+
+  if (info)
+    info = htsmsg_get_list(info, "info");
+  if (!info)
+    return "";
+
+  dvrbuf[0] = '\0';
+  HTSMSG_FOREACH(f, info) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    if ((s = htsmsg_get_str(e, "type")) != NULL) continue;
+    tvh_strlcatf(dvrbuf, sizeof(dvrbuf), l, "%s%s", l > 0 ? "," : "", s);
+  }
+  return dvrbuf;
+}
+
+static htsstr_substitute_t dvr_subs_postproc_info[] = {
+  { .id = "i",  .getval = dvr_sub_basic_info },
+  { .id = NULL, .getval = NULL }
+};
+
 static char *dvr_find_last_path_component(char *path)
 {
   char *res, *p;
@@ -1175,17 +1201,27 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
 {
   char buf1[2048], *buf2;
   const char *filename;
+  htsmsg_t *info, *e;
+  htsmsg_field_t *f;
   char **args;
 
-  filename = dvr_get_filename(de);
-  if (filename == NULL)
+  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+      (e = htsmsg_field_get_map(f)) != NULL) {
+    filename = htsmsg_get_str(e, "filename");
+    if (filename == NULL)
+      return;
+    info = htsmsg_get_list(e, "info");
+  } else {
     return;
+  }
 
   /* Substitute DVR entry formatters */
   htsstr_substitute(dvr_postproc, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de);
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename);
+  /* Substitute info formatters */
+  htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_info, info);
 
   args = htsstr_argsplit(buf1);
   /* no arguments at all */
