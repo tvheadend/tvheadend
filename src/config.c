@@ -1549,6 +1549,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
   config.dscp = -1;
+  config.descrambler_buffer = 9000;
 
   /* Generate default */
   if (!path) {
@@ -1887,6 +1888,13 @@ const idclass_t config_class = {
       .name   = N_("DSCP/TOS for streaming"),
       .off    = offsetof(config_t, dscp),
       .list   = config_class_dscp_list,
+      .group  = 1
+    },
+    {
+      .type   = PT_U32,
+      .id     = "descrambler_buffer",
+      .name   = N_("Descrambler buffer (TS packets)"),
+      .off    = offsetof(config_t, descrambler_buffer),
       .group  = 1
     },
     {

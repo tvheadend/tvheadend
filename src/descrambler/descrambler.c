@@ -1,6 +1,8 @@
 /*
  *  Tvheadend
  *  Copyright (C) 2013 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
+ *
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +19,9 @@
  */
 
 #include "tvheadend.h"
+#include "config.h"
 #include "descrambler.h"
+#include "caid.h"
 #include "caclient.h"
 #include "ffdecsa/FFdecsa.h"
 #include "input.h"
@@ -52,12 +56,17 @@ descrambler_service_start ( service_t *t )
 {
   th_descrambler_runtime_t *dr;
   elementary_stream_t *st;
+  caid_t *ca;
+  int quick_ecm = 0;
 
   if (!((mpegts_service_t *)t)->s_dvb_forcecaid) {
 
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
-      if (LIST_FIRST(&st->es_caids))
+      if ((ca = LIST_FIRST(&st->es_caids)) != NULL) {
+        if (detect_card_type(ca->caid) == CARD_NDS)
+          quick_ecm = 1;
         break;
+      }
 
     /* Do not run descrambler on FTA channels */
     if (!st)
@@ -68,6 +77,11 @@ descrambler_service_start ( service_t *t )
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
   if (t->s_descramble == NULL) {
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
+    if (quick_ecm) {
+      tvhdebug("descrambler", "quick ECM enabled for service '%s'",
+               ((mpegts_service_t *)t)->s_dvb_svcname);
+      dr->dr_quick_ecm = 1;
+    }
     sbuf_init(&dr->dr_buf);
     dr->dr_key_index = 0xff;
     tvhcsa_init(&dr->dr_csa);
@@ -199,7 +213,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
       tvhtrace("descrambler", "Unknown keys from %s for for service \"%s\"",
                td->td_nicename, ((mpegts_service_t *)t)->s_dvb_svcname);
     }
-    dr->dr_ecm_key_time = dispatch_clock;
+    dr->dr_ecm_last_key_time = dispatch_clock;
     td->td_keystate = DS_RESOLVED;
   } else {
     tvhlog(LOG_DEBUG, "descrambler",
@@ -305,7 +319,15 @@ key_late( th_descrambler_runtime_t *dr, uint8_t ki )
       return 1;
   }
   /* ECM was sent, but no new key was received */
-  return dr->dr_ecm_key_time + 2 < dr->dr_key_start;
+  return dr->dr_ecm_last_key_time + 2 < dr->dr_key_start &&
+         (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + 4 < dr->dr_key_start);
+}
+
+static inline int
+key_started( th_descrambler_runtime_t *dr, uint8_t ki )
+{
+  uint8_t kidx = (ki & 0x40) >> 6;
+  return (int64_t)dispatch_clock - (int64_t)dr->dr_ecm_start[kidx] < 5;
 }
 
 static int
@@ -333,6 +355,7 @@ descrambler_descramble ( service_t *t,
   th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
   int count, failed, resolved, off, len2, len3, flush_data = 0;
+  uint32_t dbuflen;
   const uint8_t *tsb2;
   uint8_t ki;
 
@@ -382,7 +405,6 @@ descrambler_descramble ( service_t *t,
         if ((ki & 0x80) != 0x00) {
           if (key_valid(dr, ki) == 0) {
             sbuf_cut(&dr->dr_buf, tsb2 - dr->dr_buf.sb_data);
-            flush_data = 1;
             goto next;
           }
           if (dr->dr_key_index != (ki & 0x40) &&
@@ -412,7 +434,7 @@ descrambler_descramble ( service_t *t,
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
       if (key_valid(dr, ki) == 0) {
-        if (tvhlog_limit(&dr->dr_loglimit_key, 10))
+        if (!key_started(dr, ki) && tvhlog_limit(&dr->dr_loglimit_key, 10))
           tvhwarn("descrambler", "%s %s",
                    ((mpegts_service_t *)t)->s_dvb_svcname,
                    (ki & 0x40) ? "odd stream key is not valid" :
@@ -426,7 +448,7 @@ descrambler_descramble ( service_t *t,
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         if (key_late(dr, ki)) {
           tvherror("descrambler", "ECM late (%ld seconds) for service \"%s\"",
-                                  dispatch_clock - dr->dr_ecm_key_time,
+                                  dispatch_clock - dr->dr_ecm_last_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           if (ecm_reset(t, dr)) {
             flush_data = 1;
@@ -441,7 +463,7 @@ descrambler_descramble ( service_t *t,
     return 1;
   }
 next:
-  if (dr->dr_ecm_start) { /* ECM sent */
+  if (dr->dr_ecm_start[0] || dr->dr_ecm_start[1]) { /* ECM sent */
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
       if (dr->dr_key_start == 0) {
@@ -472,8 +494,9 @@ next:
        * Fill a temporary buffer until the keys are known to make
        * streaming faster.
        */
-      if (dr->dr_buf.sb_ptr >= 3000 * 188) {
-        sbuf_cut(&dr->dr_buf, 300 * 188);
+      dbuflen = MAX(300, config.descrambler_buffer);
+      if (dr->dr_buf.sb_ptr >= dbuflen * 188) {
+        sbuf_cut(&dr->dr_buf, MAX((dbuflen / 10) * 188, len));
         if (dr->dr_last_err + 10 < dispatch_clock) {
           dr->dr_last_err = dispatch_clock;
           tvherror("descrambler", "cannot decode packets for service \"%s\"",
@@ -539,7 +562,11 @@ descrambler_table_callback
           /* The keys are requested from this moment */
           dr = t->s_descramble;
           if (dr) {
-            dr->dr_ecm_start = dispatch_clock;
+            if ((ptr[0] & 0xfe) == 0x80) { /* 0x80 = even, 0x81 = odd */
+              dr->dr_ecm_start[ptr[0] & 1] = dispatch_clock;
+              if (dr->dr_quick_ecm)
+                dr->dr_key_valid &= ~(1 << ((ptr[0] & 1) + 6)); /* 0x40 = even, 0x80 = odd */
+            }
             tvhtrace("descrambler", "ECM message %02x (section %d, len %d, pid %d) for service \"%s\"",
                      ptr[0], des->number, len, mt->mt_pid, t->s_dvb_svcname);
           }
