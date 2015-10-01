@@ -136,7 +136,13 @@ EXTLIBS  += libmfx
 DECODERS += mpeg2_qsv h264_qsv hevc_qsv
 ENCODERS += mpeg2_qsv h264_qsv hevc_qsv
 
-ELIBS += $(CONFIG_LIBMFX_VA_LIBS)
+ELIBS += -lva
+ifeq ($(CONFIG_VA_DRM),yes)
+ELIBS += -lva-drm
+endif
+ifeq ($(CONFIG_VA_X11),yes)
+ELIBS += -lva-x11
+endif
 
 endif
 
