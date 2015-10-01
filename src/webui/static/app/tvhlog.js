@@ -4,7 +4,7 @@ tvheadend.tvhlog = function(panel, index) {
        var f = form.getForm();
        var trace = f.findField('trace');
        var tracesubs = f.findField('tracesubs');
-       tracesubs.setDisabled(!trace.getValue() || tracesubs.disabled);
+       tracesubs.setDisabled(!trace.getValue() || trace.disabled);
     }
 
     tvheadend.idnode_simple(panel, {
