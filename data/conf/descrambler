@@ -1,0 +1,12 @@
+{
+  "quick_ecm" : [
+    {
+      "name" : "Sky DE",
+      "caid" : "09C4"
+    },
+    {
+      "name" : "Sky IT",
+      "caid" : "09CD"
+    }
+  ]
+}
