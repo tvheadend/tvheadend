@@ -29,6 +29,7 @@
 #include "libav.h"
 #include "muxer_libav.h"
 #include "parsers/parser_avc.h"
+#include "parsers/parser_hevc.h"
 
 typedef struct lav_muxer {
   muxer_t;
@@ -108,11 +109,16 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   }
 
   if(ssc->ssc_gh) {
-    if (ssc->ssc_type == SCT_H264) {
+    if (ssc->ssc_type == SCT_H264 || ssc->ssc_type == SCT_HEVC) {
       sbuf_t hdr;
       sbuf_init(&hdr);
-      isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
-                      pktbuf_len(ssc->ssc_gh));
+      if (ssc->ssc_type == SCT_H264) {
+          isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                          pktbuf_len(ssc->ssc_gh));
+      } else {
+          isom_write_hvcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                          pktbuf_len(ssc->ssc_gh));
+      }
       c->extradata_size = hdr.sb_ptr;
       c->extradata = av_malloc(hdr.sb_ptr);
       memcpy(c->extradata, hdr.sb_data, hdr.sb_ptr);
