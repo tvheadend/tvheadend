@@ -36,7 +36,7 @@ int spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int red
 
 int spawn_reap(pid_t pid, char *stxt, size_t stxtlen);
 
-int spawn_kill(pid_t pid, int sig);
+int spawn_kill(pid_t pid, int sig, int timeout);
 
 void spawn_init(void);
 

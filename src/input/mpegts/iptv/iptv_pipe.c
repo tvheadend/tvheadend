@@ -76,13 +76,26 @@ err:
   return -1;
 }
 
+static int
+iptv_pipe_kill_sig(iptv_mux_t *im)
+{
+  switch (im->mm_iptv_kill) {
+  case IPTV_KILL_TERM: return SIGTERM;
+  case IPTV_KILL_INT:  return SIGINT;
+  case IPTV_KILL_HUP:  return SIGHUP;
+  case IPTV_KILL_USR1: return SIGUSR1;
+  case IPTV_KILL_USR2: return SIGUSR2;
+  }
+  return SIGKILL;
+}
+
 static void
 iptv_pipe_stop
   ( iptv_mux_t *im )
 {
   int rd = im->mm_iptv_fd;
   pid_t pid = (intptr_t)im->im_data;
-  spawn_kill(pid, SIGKILL);
+  spawn_kill(pid, iptv_pipe_kill_sig(im), im->mm_iptv_kill_timeout);
   if (rd > 0)
     close(rd);
   im->mm_iptv_fd = -1;
@@ -107,7 +120,7 @@ iptv_pipe_read ( iptv_mux_t *im )
     if (r <= 0) {
       close(rd);
       pid = (intptr_t)im->im_data;
-      spawn_kill(pid, SIGKILL);
+      spawn_kill(pid, iptv_pipe_kill_sig(im), im->mm_iptv_kill_timeout);
       im->mm_iptv_fd = -1;
       im->im_data = NULL;
       if (dispatch_clock < im->mm_iptv_respawn_last + 2) {

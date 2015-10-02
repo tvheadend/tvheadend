@@ -129,6 +129,6 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 #define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
 #define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
 
-void dispatch_clock_update(struct timespec *ts);
+time_t dispatch_clock_update(struct timespec *ts);
 
 #endif /* __TVH_LOGGING_H__ */

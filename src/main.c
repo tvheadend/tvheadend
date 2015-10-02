@@ -486,7 +486,7 @@ show_usage
 /**
  *
  */
-void
+time_t
 dispatch_clock_update(struct timespec *ts)
 {
   struct timespec ts1;
@@ -499,6 +499,7 @@ dispatch_clock_update(struct timespec *ts)
     dispatch_clock = ts->tv_sec;
     comet_flush(); /* Flush idle comet mailboxes */
   }
+  return dispatch_clock;
 }
 
 /**
