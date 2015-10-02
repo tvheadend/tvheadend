@@ -184,6 +184,14 @@ transcode_opt_set_int(transcoder_t *t, transcoder_stream_t *ts,
   return 0;
 }
 
+static void
+av_dict_set_int__(AVDictionary **opts, const char *key, int64_t val, int flags)
+{
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%"PRId64, val);
+  av_dict_set(opts, key, buf, flags);
+}
+
 /**
  * get best effort sample rate
  */
@@ -1154,9 +1162,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 1-63, smaller means better quality, use 15 as default
-        char valuestr[3];
-        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate);
-        av_dict_set(&opts,      "crf", valuestr, 0);
+        av_dict_set_int__(&opts,      "crf", t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate, 0);
         // bitrate setting is still required, as it's used as max rate in CQ mode
         // and set to a very low value by default
         octx->bit_rate        = 25000000;
@@ -1183,9 +1189,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 1-51, smaller means better quality, use 15 as default
-        char valuestr[3];
-        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate));
-        av_dict_set(&opts,      "crf", valuestr, 0);
+        av_dict_set_int__(&opts,      "crf", t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate), 0);
         // tune "zerolatency" removes as much encoder latency as possible
         av_dict_set(&opts,      "tune", "zerolatency", 0);
       } else {
@@ -1214,10 +1218,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         // encode with specified quality
         // valid values for crf are 1-51, smaller means better quality
         // use 18 as default
-        char crf[3];
-        snprintf(crf, sizeof (crf), "%d",
-                 t->t_props.tp_vbitrate == 0 ? 18 : MIN(51, t->t_props.tp_vbitrate));
-        av_dict_set(&opts, "crf", crf, 0);
+        av_dict_set_int__(&opts, "crf", t->t_props.tp_vbitrate == 0 ? 18 : MIN(51, t->t_props.tp_vbitrate), 0);
 
         // the following is equivalent to tune=zerolatency for presets: ultra/superfast
         av_dict_set(&opts, "x265_opts", "bframes=0",        0);
@@ -1237,11 +1238,11 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         // this is the same as setting --bitrate=bitrate
         octx->bit_rate = bitrate * 1000;
 
-        av_dict_set(&opts,     "x265_opts", "vbv-bufsize=",  0);
-        av_dict_set_int(&opts, "x265_opts", bufsize,         AV_DICT_APPEND);
-        av_dict_set(&opts,     "x265_opts", ":vbv-maxrate=", AV_DICT_APPEND);
-        av_dict_set_int(&opts, "x265_opts", maxrate,         AV_DICT_APPEND);
-        av_dict_set(&opts,     "x265_opts", ":strict-cbr=1", AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265_opts", "vbv-bufsize=",  0);
+        av_dict_set_int__(&opts, "x265_opts", bufsize,         AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265_opts", ":vbv-maxrate=",AV_DICT_APPEND);
+        av_dict_set_int__(&opts, "x265_opts", maxrate,         AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265_opts", ":strict-cbr=1", AV_DICT_APPEND);
       }
 
       break;
