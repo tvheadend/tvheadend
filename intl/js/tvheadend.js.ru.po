@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-17 21:18+0200\n"
-"PO-Revision-Date: 2015-09-18 05:33+0000\n"
+"POT-Creation-Date: 2015-10-02 13:59+0200\n"
+"PO-Revision-Date: 2015-09-28 06:47+0000\n"
 "Last-Translator: Mihail <sovaby@gmail.com>\n"
 "Language-Team: Russian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/ru/)\n"
 "MIME-Version: 1.0\n"
@@ -111,15 +111,15 @@ msgstr "8 #месяцЧисло"
 msgid "9 #monthNumber"
 msgstr "9 #месяцЧисло"
 
-#: src/webui/static/app/dvr.js:198
+#: src/webui/static/app/dvr.js:199
 msgid "Abort"
 msgstr "Отмена"
 
-#: src/webui/static/app/dvr.js:196
+#: src/webui/static/app/dvr.js:197
 msgid "Abort the selected recording"
 msgstr "Отмена выбранной записи"
 
-#: src/webui/static/app/tvheadend.js:480
+#: src/webui/static/app/tvheadend.js:510
 msgid "About"
 msgstr "О программе"
 
@@ -139,11 +139,11 @@ msgstr "Запись доступа"
 msgid "Active"
 msgstr "Активный"
 
-#: src/webui/static/app/idnode.js:1246 src/webui/static/app/idnode.js:1727
+#: src/webui/static/app/idnode.js:1246 src/webui/static/app/idnode.js:1729
 msgid "Add"
 msgstr "Добавить"
 
-#: src/webui/static/app/idnode.js:1244 src/webui/static/app/idnode.js:1725
+#: src/webui/static/app/idnode.js:1244 src/webui/static/app/idnode.js:1727
 msgid "Add a new entry"
 msgstr "Добавить новую запись"
 
@@ -171,7 +171,7 @@ msgstr "Возраст"
 msgid "Age Rating"
 msgstr "Возрастной рэйтинг"
 
-#: src/webui/static/app/idnode.js:1412 src/webui/static/app/idnode.js:1451
+#: src/webui/static/app/idnode.js:1414 src/webui/static/app/idnode.js:1453
 msgid "All"
 msgstr "Все"
 
@@ -219,7 +219,7 @@ msgstr "Август"
 msgid "Auto Recorder"
 msgstr "Автоматический рекордер"
 
-#: src/webui/static/app/tvheadend.js:110
+#: src/webui/static/app/tvheadend.js:112
 msgid "Auto-refresh"
 msgstr "Авто обновление"
 
@@ -326,7 +326,7 @@ msgstr "Отменить подключение"
 msgid "Channel"
 msgstr "Канал"
 
-#: src/webui/static/app/tvheadend.js:419
+#: src/webui/static/app/tvheadend.js:449
 msgid "Channel / EPG"
 msgstr "Канал / ЕПГ"
 
@@ -390,7 +390,7 @@ msgstr "Степень сжатия"
 msgid "Conditional Access Client"
 msgstr "Клиент условного доступа"
 
-#: src/webui/static/app/tvheadend.js:373
+#: src/webui/static/app/tvheadend.js:392
 msgid "Configuration"
 msgstr "Конфигурация"
 
@@ -442,39 +442,39 @@ msgstr "Создано из запроса ЕПГ"
 msgid "Currently this will match (and record) %d events."
 msgstr "В настоящее время (и запись) это будет %d события."
 
-#: src/webui/static/app/tvheadend.js:401
+#: src/webui/static/app/tvheadend.js:431
 msgid "DVB Inputs"
 msgstr "DVB Inputs"
 
-#: src/webui/static/app/epg.js:305 src/webui/static/app/dvr.js:462
+#: src/webui/static/app/epg.js:305 src/webui/static/app/dvr.js:464
 msgid "DVR"
 msgstr "DVR"
 
-#: src/webui/static/app/dvr.js:436
+#: src/webui/static/app/dvr.js:438
 msgid "DVR - Failed Recordings"
 msgstr "DVR - Неудавшиеся записи"
 
-#: src/webui/static/app/dvr.js:355
+#: src/webui/static/app/dvr.js:357
 msgid "DVR - Finished Recordings"
 msgstr "DVR - Законченные записи"
 
-#: src/webui/static/app/dvr.js:275
+#: src/webui/static/app/dvr.js:276
 msgid "DVR - Upcoming/Current Recordings"
 msgstr "DVR - Текущие записи"
 
-#: src/webui/static/app/dvr.js:525
+#: src/webui/static/app/dvr.js:527
 msgid "DVR Autorec"
 msgstr "DVR Автозапись"
 
-#: src/webui/static/app/dvr.js:478
+#: src/webui/static/app/dvr.js:480
 msgid "DVR Autorec Entries"
 msgstr "DVR Autorec Entries"
 
-#: src/webui/static/app/dvr.js:477
+#: src/webui/static/app/dvr.js:479
 msgid "DVR Autorec Entry"
 msgstr "DVR Autorec Entry"
 
-#: src/webui/static/app/dvr.js:576
+#: src/webui/static/app/dvr.js:578
 msgid "DVR Timerec"
 msgstr "DVR Запись по времени"
 
@@ -494,7 +494,7 @@ msgstr "Дек."
 msgid "December"
 msgstr "Декабрь"
 
-#: src/webui/static/app/idnode.js:1260 src/webui/static/app/idnode.js:1739
+#: src/webui/static/app/idnode.js:1260 src/webui/static/app/idnode.js:1741
 msgid "Delete"
 msgstr "Удалить"
 
@@ -506,7 +506,7 @@ msgstr "Удалить запись"
 msgid "Delete scheduled recording of this program"
 msgstr "Удаление расписания записи программы"
 
-#: src/webui/static/app/idnode.js:1258 src/webui/static/app/idnode.js:1737
+#: src/webui/static/app/idnode.js:1258 src/webui/static/app/idnode.js:1739
 msgid "Delete selected entries"
 msgstr "Удалить выбранные записи"
 
@@ -520,25 +520,21 @@ msgstr "Детальная информация о потоке"
 msgid "Details"
 msgstr "Детали"
 
-#: src/webui/static/app/dvr.js:591
+#: src/webui/static/app/dvr.js:593
 msgid "Digital Video Recorder"
 msgstr "Цифровой Видео Рекордер"
 
-#: src/webui/static/app/dvr.js:451
+#: src/webui/static/app/dvr.js:453
 msgid "Digital Video Recorder Profile"
 msgstr "Профиль Цифрового Видео рекордера"
 
-#: src/webui/static/app/dvr.js:452
+#: src/webui/static/app/dvr.js:454
 msgid "Digital Video Recorder Profiles"
 msgstr "Профили Цифрового Видео Рекордера"
 
 #: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 msgid "Disabled"
 msgstr "Отключено"
-
-#: src/webui/static/app/tvheadend.js:616
-msgid "Disc space"
-msgstr "Дисковое пространство"
 
 #: src/webui/static/app/config.js:95
 msgid "Discover SAT>IP servers"
@@ -548,19 +544,19 @@ msgstr "Обнаружить SAT>IP серверы"
 msgid "Displaying {0} - {1} of {2}"
 msgstr "Отобразить {0} - {1} из {2}"
 
-#: src/webui/static/app/dvr.js:216
+#: src/webui/static/app/dvr.js:217
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Вы действительно хотите прервать выбранное?"
 
-#: src/webui/static/app/dvr.js:323 src/webui/static/app/dvr.js:404
+#: src/webui/static/app/dvr.js:325 src/webui/static/app/dvr.js:406
 msgid "Do you really want to delete the selected recordings?"
 msgstr "Вы действительно хотите удалить выбранные записи?"
 
-#: src/webui/static/app/tvheadend.js:82
+#: src/webui/static/app/tvheadend.js:84
 msgid "Do you really want to delete the selection?"
 msgstr "Вы действительно хотите удалить выбранное?"
 
-#: src/webui/static/app/dvr.js:186
+#: src/webui/static/app/dvr.js:187
 msgid "Do you really want to gracefully stop/unschedule the selection?"
 msgstr "Вы действительно хотите красиво остановить выбранное?"
 
@@ -578,11 +574,11 @@ msgstr "Вы действительно хотите удалить эту за�
 msgid "Don't care"
 msgstr "Все равно"
 
-#: src/webui/static/app/dvr.js:295 src/webui/static/app/dvr.js:375
+#: src/webui/static/app/dvr.js:296 src/webui/static/app/dvr.js:377
 msgid "Download"
 msgstr "Загрузка"
 
-#: src/webui/static/app/dvr.js:293 src/webui/static/app/dvr.js:373
+#: src/webui/static/app/dvr.js:294 src/webui/static/app/dvr.js:375
 msgid "Download the selected recording"
 msgstr "Загрузка выбранной записи"
 
@@ -616,15 +612,15 @@ msgstr "EPG Grabber Name"
 msgid "EPG Update"
 msgstr "Обновление ЕПГ "
 
-#: src/webui/static/app/idnode.js:1345
+#: src/webui/static/app/idnode.js:1347
 msgid "Edit"
 msgstr "Правка"
 
-#: src/webui/static/app/idnode.js:1343
+#: src/webui/static/app/idnode.js:1345
 msgid "Edit selected entry"
 msgstr "Правка выбранной записи"
 
-#: src/webui/static/app/idnode.js:1359 src/webui/static/app/idnode.js:1383
+#: src/webui/static/app/idnode.js:1361 src/webui/static/app/idnode.js:1385
 msgid "Edit {0}"
 msgstr "Правка {0}"
 
@@ -638,7 +634,7 @@ msgstr "Электронный Программный Гид"
 msgid "Elementary Stream Filter"
 msgstr "Простой фильтр потока"
 
-#: src/webui/static/app/tvheadend.js:671
+#: src/webui/static/app/tvheadend.js:720
 msgid "Enable debug output"
 msgstr "Включить отладочный вывод"
 
@@ -671,11 +667,11 @@ msgstr "Каждый день"
 msgid "Failed"
 msgstr "Неудачно"
 
-#: src/webui/static/app/dvr.js:399
+#: src/webui/static/app/dvr.js:400
 msgid "Failed Recording"
 msgstr "Неудачная запись"
 
-#: src/webui/static/app/dvr.js:400
+#: src/webui/static/app/dvr.js:401
 msgid "Failed Recordings"
 msgstr "Неудачные записи"
 
@@ -711,11 +707,11 @@ msgstr "Фильтр меток..."
 msgid "Filters"
 msgstr "Фильтры"
 
-#: src/webui/static/app/dvr.js:318
+#: src/webui/static/app/dvr.js:319
 msgid "Finished Recording"
 msgstr "Законченная запись"
 
-#: src/webui/static/app/dvr.js:319
+#: src/webui/static/app/dvr.js:320
 msgid "Finished Recordings"
 msgstr "Законченные записи"
 
@@ -731,7 +727,7 @@ msgstr "Ускоренное Сканирование"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "Принудительное сканирование (всех муксов) для выбранной сети"
 
-#: src/webui/static/app/tvheadend.js:619
+#: src/webui/static/app/tvheadend.js:659
 msgid "Free"
 msgstr "Свободно"
 
@@ -743,7 +739,7 @@ msgstr "Пятн."
 msgid "Friday"
 msgstr "Пятница"
 
-#: src/webui/static/app/tvheadend.js:306
+#: src/webui/static/app/tvheadend.js:308
 msgid "Fullscreen"
 msgstr "Полный экран"
 
@@ -751,11 +747,11 @@ msgstr "Полный экран"
 msgid "Fulltext"
 msgstr "Полнотекстный"
 
-#: src/webui/static/app/tvheadend.js:609
+#: src/webui/static/app/tvheadend.js:649
 msgid "GB"
 msgstr "GB"
 
-#: src/webui/static/app/tvheadend.js:382
+#: src/webui/static/app/tvheadend.js:401
 msgid "General"
 msgstr "Главная"
 
@@ -771,21 +767,21 @@ msgstr "Жанр"
 msgid "Group By This Field"
 msgstr "Сгруппировать по полю"
 
-#: src/webui/static/app/idnode.js:905 src/webui/static/app/idnode.js:1498
-#: src/webui/static/app/idnode.js:1846 src/webui/static/app/idnode.js:2204
+#: src/webui/static/app/idnode.js:905 src/webui/static/app/idnode.js:1500
+#: src/webui/static/app/idnode.js:1848 src/webui/static/app/idnode.js:2206
 #: src/webui/static/app/epg.js:866
 msgid "Help"
 msgstr "Помощь"
 
-#: src/webui/static/app/tvheadend.js:32
+#: src/webui/static/app/tvheadend.js:34
 msgid "Help for"
 msgstr "Помощь для"
 
-#: src/webui/static/app/idnode.js:1428
+#: src/webui/static/app/idnode.js:1430
 msgid "Hide"
 msgstr "Скрыть"
 
-#: src/webui/static/app/idnode.js:1814
+#: src/webui/static/app/idnode.js:1816
 msgid "Hide passwords"
 msgstr "Скрыть пароли"
 
@@ -800,6 +796,18 @@ msgstr "ID"
 #: src/webui/static/app/status.js:554
 msgid "IP Address"
 msgstr "IP адрес"
+
+#: src/webui/static/app/acleditor.js:143
+msgid "IP Blocking Entries"
+msgstr "Записи блокировок IP"
+
+#: src/webui/static/app/acleditor.js:119
+msgid "IP Blocking Record"
+msgstr "IP Blocking Record"
+
+#: src/webui/static/app/acleditor.js:120
+msgid "IP Blocking Records"
+msgstr "IP Blocking Records"
 
 #: src/webui/static/app/servicemapper.js:19
 msgid "Ignored"
@@ -849,7 +857,7 @@ msgstr "Июнь"
 msgid "June"
 msgstr "Июнь"
 
-#: src/webui/static/app/tvheadend.js:613
+#: src/webui/static/app/tvheadend.js:653
 msgid "KB"
 msgstr "КБ"
 
@@ -857,23 +865,23 @@ msgstr "КБ"
 msgid "Last Page"
 msgstr "Последняя страница"
 
-#: src/webui/static/app/tvheadend.js:262
+#: src/webui/static/app/tvheadend.js:264
 msgid "Live TV Player"
 msgstr "Плеер прямого эфира"
 
-#: src/webui/static/app/tvheadend.js:92
+#: src/webui/static/app/tvheadend.js:94
 msgid "Loading, please wait..."
 msgstr "Загрузка, подождите..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:618
 #: src/webui/static/app/epg.js:641 src/webui/static/app/epg.js:665
-#: src/webui/static/app/epg.js:686 src/webui/static/app/tvheadend.js:200
-#: src/webui/static/app/tvheadend.js:238
+#: src/webui/static/app/epg.js:686 src/webui/static/app/tvheadend.js:202
+#: src/webui/static/app/tvheadend.js:240
 msgid "Loading..."
 msgstr "Загрузка..."
 
-#: src/webui/static/app/tvheadend.js:589
+#: src/webui/static/app/tvheadend.js:630
 msgid "Logged in as"
 msgstr "Вы вошли как"
 
@@ -881,7 +889,7 @@ msgstr "Вы вошли как"
 msgid "Look for new SAT>IP servers"
 msgstr "Обзор новых SAT>IP серверов"
 
-#: src/webui/static/app/tvheadend.js:611
+#: src/webui/static/app/tvheadend.js:651
 msgid "MB"
 msgstr "МБ"
 
@@ -933,7 +941,7 @@ msgstr "May#ShortNameForMay"
 msgid "Merge same name"
 msgstr "Слияние имени"
 
-#: src/webui/static/app/tvheadend.js:81
+#: src/webui/static/app/tvheadend.js:83
 msgid "Message"
 msgstr "Сообщение"
 
@@ -945,11 +953,11 @@ msgstr "Пнд."
 msgid "Monday"
 msgstr "Понедельник"
 
-#: src/webui/static/app/idnode.js:1316 src/webui/static/app/idnode.js:1786
+#: src/webui/static/app/idnode.js:1316 src/webui/static/app/idnode.js:1788
 msgid "Move Down"
 msgstr "Переместить вниз"
 
-#: src/webui/static/app/idnode.js:1291 src/webui/static/app/idnode.js:1765
+#: src/webui/static/app/idnode.js:1291 src/webui/static/app/idnode.js:1767
 msgid "Move Up"
 msgstr "Переместить вверх"
 
@@ -969,11 +977,11 @@ msgstr "Переместить выбранные позиции вниз"
 msgid "Move selected entries up"
 msgstr "Переместить выбранные позиции вверх"
 
-#: src/webui/static/app/idnode.js:1784
+#: src/webui/static/app/idnode.js:1786
 msgid "Move selected entry down"
 msgstr "Переместить выбранное вниз"
 
-#: src/webui/static/app/idnode.js:1763
+#: src/webui/static/app/idnode.js:1765
 msgid "Move selected entry up"
 msgstr "Переместить выбранное вверх"
 
@@ -1022,16 +1030,16 @@ msgstr "Нет данных к отображению"
 msgid "No days"
 msgstr "Нет дней"
 
-#: src/webui/static/app/tvheadend.js:592
+#: src/webui/static/app/tvheadend.js:633
 msgid "No verified access"
 msgstr "Не проверенный доступ"
 
 #. / {0} title (lowercase), {1} title
-#: src/webui/static/app/tvheadend.js:105
+#: src/webui/static/app/tvheadend.js:107
 msgid "No {0} to display"
 msgstr "Не отображается {0}"
 
-#: src/webui/static/app/idnode.js:1413 src/webui/static/app/mpegts.js:208
+#: src/webui/static/app/idnode.js:1415 src/webui/static/app/mpegts.js:208
 #: src/webui/static/app/mpegts.js:218
 msgid "None"
 msgstr "Нет"
@@ -1100,11 +1108,11 @@ msgstr "PER"
 msgid "Page"
 msgstr "Страница"
 
-#: src/webui/static/app/idnode.js:1873 src/webui/static/app/idnode.js:2059
+#: src/webui/static/app/idnode.js:1875 src/webui/static/app/idnode.js:2061
 msgid "Parameters"
 msgstr "Параметры"
 
-#: src/webui/static/app/idnode.js:1411
+#: src/webui/static/app/idnode.js:1413
 msgid "Parent disabled"
 msgstr "Родитель заблокирован"
 
@@ -1120,11 +1128,11 @@ msgstr "Управление паролями"
 msgid "Passwords"
 msgstr "Пароли"
 
-#: src/webui/static/app/tvheadend.js:291
+#: src/webui/static/app/tvheadend.js:293
 msgid "Pause"
 msgstr "Пауза"
 
-#: src/webui/static/app/tvheadend.js:116
+#: src/webui/static/app/tvheadend.js:118
 msgid "Per page"
 msgstr "Постранично"
 
@@ -1132,10 +1140,10 @@ msgstr "Постранично"
 #: src/webui/static/app/mpegts.js:131 src/webui/static/app/mpegts.js:307
 #: src/webui/static/app/mpegts.js:308 src/webui/static/app/mpegts.js:312
 #: src/webui/static/app/chconf.js:237 src/webui/static/app/chconf.js:238
-#: src/webui/static/app/chconf.js:245 src/webui/static/app/dvr.js:342
-#: src/webui/static/app/dvr.js:343 src/webui/static/app/dvr.js:349
-#: src/webui/static/app/dvr.js:423 src/webui/static/app/dvr.js:424
-#: src/webui/static/app/dvr.js:430 src/webui/static/app/tvheadend.js:274
+#: src/webui/static/app/chconf.js:245 src/webui/static/app/dvr.js:344
+#: src/webui/static/app/dvr.js:345 src/webui/static/app/dvr.js:351
+#: src/webui/static/app/dvr.js:425 src/webui/static/app/dvr.js:426
+#: src/webui/static/app/dvr.js:432 src/webui/static/app/tvheadend.js:276
 msgid "Play"
 msgstr "Проигрывание"
 
@@ -1159,7 +1167,7 @@ msgstr "Предыдущий месяц (Control+Left)"
 msgid "Previous Page"
 msgstr "Предыдущая страница "
 
-#: src/webui/static/app/dvr.js:453
+#: src/webui/static/app/dvr.js:455
 msgid "Profile Name"
 msgstr "Имя Профиля"
 
@@ -1191,7 +1199,7 @@ msgstr "Запись серии"
 msgid "Record this program now"
 msgstr "Записать программу снова"
 
-#: src/webui/static/app/tvheadend.js:447
+#: src/webui/static/app/tvheadend.js:477
 msgid "Recording"
 msgstr "Запись"
 
@@ -1219,8 +1227,8 @@ msgstr "Сбросить иконки"
 msgid "Reset all filters (show all)"
 msgstr "Сбросить все фильтры (показать всё)"
 
-#: src/webui/static/app/idnode.js:1230 src/webui/static/app/idnode.js:1712
-#: src/webui/static/app/idnode.js:2169
+#: src/webui/static/app/idnode.js:1230 src/webui/static/app/idnode.js:1714
+#: src/webui/static/app/idnode.js:2171
 msgid "Revert pending changes (marked with red border)"
 msgstr "Revert pending changes (marked with red border)"
 
@@ -1245,12 +1253,12 @@ msgid "Saturday"
 msgstr "Суббота"
 
 #: src/webui/static/app/idnode.js:884 src/webui/static/app/idnode.js:1205
-#: src/webui/static/app/idnode.js:1692 src/webui/static/app/idnode.js:2152
+#: src/webui/static/app/idnode.js:1694 src/webui/static/app/idnode.js:2154
 msgid "Save"
 msgstr "Сохранить"
 
-#: src/webui/static/app/idnode.js:1203 src/webui/static/app/idnode.js:1690
-#: src/webui/static/app/idnode.js:2150
+#: src/webui/static/app/idnode.js:1203 src/webui/static/app/idnode.js:1692
+#: src/webui/static/app/idnode.js:2152
 msgid "Save pending changes (marked with red border)"
 msgstr "Сохранение ожидаемых изменений (отмеченных красной рамкой)"
 
@@ -1274,11 +1282,11 @@ msgstr "Поиск в IMDB (по названию)"
 msgid "Search title..."
 msgstr "Поиск названия..."
 
-#: src/webui/static/app/tvheadend.js:207
+#: src/webui/static/app/tvheadend.js:209
 msgid "Select channel..."
 msgstr "Выбор канала..."
 
-#: src/webui/static/app/tvheadend.js:244
+#: src/webui/static/app/tvheadend.js:246
 msgid "Select stream profile..."
 msgstr "Выбор профиля потока..."
 
@@ -1326,11 +1334,11 @@ msgstr "Настройки"
 msgid "Show in Groups"
 msgstr "Показать в группах"
 
-#: src/webui/static/app/idnode.js:1808
+#: src/webui/static/app/idnode.js:1810
 msgid "Show or hide passwords"
 msgstr "Показать или скрыть пароли"
 
-#: src/webui/static/app/idnode.js:1810 src/webui/static/app/idnode.js:1814
+#: src/webui/static/app/idnode.js:1812 src/webui/static/app/idnode.js:1816
 msgid "Show passwords"
 msgstr "Показать пароли"
 
@@ -1375,7 +1383,7 @@ msgstr "Состояние"
 msgid "Status"
 msgstr "Статус"
 
-#: src/webui/static/app/dvr.js:168 src/webui/static/app/tvheadend.js:298
+#: src/webui/static/app/dvr.js:169 src/webui/static/app/tvheadend.js:300
 msgid "Stop"
 msgstr "Стоп"
 
@@ -1387,12 +1395,16 @@ msgstr "Остановить запись"
 msgid "Stop recording of this program"
 msgstr "Остановка записи этой программы"
 
-#: src/webui/static/app/dvr.js:166
+#: src/webui/static/app/dvr.js:167
 msgid "Stop the selected recording"
 msgstr "Остановить выбранную запись"
 
+#: src/webui/static/app/tvheadend.js:656
+msgid "Storage space"
+msgstr "Ёмкость накопителя"
+
 #: src/webui/static/app/status.js:336 src/webui/static/app/status.js:466
-#: src/webui/static/app/tvheadend.js:435
+#: src/webui/static/app/tvheadend.js:465
 msgid "Stream"
 msgstr "Поток"
 
@@ -1445,7 +1457,7 @@ msgstr "Обмен Номерами"
 msgid "Swap the numbers for the two selected channels"
 msgstr "Обмен номерами двух выбранных каналов"
 
-#: src/webui/static/app/tvheadend.js:667
+#: src/webui/static/app/tvheadend.js:716
 msgid "System log"
 msgstr "Системный лог"
 
@@ -1465,7 +1477,7 @@ msgstr "Фильтр Потока Телетекста"
 msgid "Teletext Stream Filters"
 msgstr "Фильтры Потока Телетекста"
 
-#: src/webui/static/app/dvr.js:324 src/webui/static/app/dvr.js:405
+#: src/webui/static/app/dvr.js:326 src/webui/static/app/dvr.js:407
 msgid "The associated file will be removed from storage."
 msgstr "Соответствующий файл будет удален с носителя."
 
@@ -1537,11 +1549,11 @@ msgstr "Четв."
 msgid "Thursday"
 msgstr "Четверг"
 
-#: src/webui/static/app/dvr.js:540
+#: src/webui/static/app/dvr.js:542
 msgid "Time Schedule"
 msgstr "Время расписания"
 
-#: src/webui/static/app/dvr.js:541
+#: src/webui/static/app/dvr.js:543
 msgid "Time Schedules"
 msgstr "Время Расписаний"
 
@@ -1562,7 +1574,11 @@ msgstr "Название"
 msgid "Today"
 msgstr "Сегодня"
 
-#: src/webui/static/app/tvheadend.js:619
+#: src/webui/static/app/tvheadend.js:318
+msgid "Toggle mute"
+msgstr "Переключиться в беззвучный"
+
+#: src/webui/static/app/tvheadend.js:659
 msgid "Total"
 msgstr "Всего"
 
@@ -1586,7 +1602,7 @@ msgstr "Вторник"
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr "Tune to the over-the-air EPG muxes to grab new events now"
 
-#: src/webui/static/app/tvheadend.js:646
+#: src/webui/static/app/tvheadend.js:695
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend Web-Panel"
 
@@ -1599,8 +1615,8 @@ msgstr "Тип"
 msgid "Uncorrected Blocks"
 msgstr "Неисправимые Блоки"
 
-#: src/webui/static/app/idnode.js:1232 src/webui/static/app/idnode.js:1714
-#: src/webui/static/app/idnode.js:2171
+#: src/webui/static/app/idnode.js:1232 src/webui/static/app/idnode.js:1716
+#: src/webui/static/app/idnode.js:2173
 msgid "Undo"
 msgstr "Отмена"
 
@@ -1608,17 +1624,21 @@ msgstr "Отмена"
 msgid "Unknown"
 msgstr "Неизвестно"
 
-#: src/webui/static/app/dvr.js:241
+#: src/webui/static/app/dvr.js:242
 msgid "Upcoming / Current Recordings"
 msgstr "Предстоящие / Текущие Записи"
 
-#: src/webui/static/app/dvr.js:240
+#: src/webui/static/app/dvr.js:241
 msgid "Upcoming Recording"
 msgstr "Предстоящая Запись"
 
 #: src/webui/static/app/status.js:90 src/webui/static/app/status.js:559
 msgid "Username"
 msgstr "Имя пользователя"
+
+#: src/webui/static/app/tvheadend.js:416
+msgid "Users"
+msgstr "Пользователи"
 
 #: src/webui/static/app/esfilter.js:51
 msgid "Video Stream Filter"
@@ -1628,7 +1648,7 @@ msgstr "Фильтр Видео Потока"
 msgid "Video Stream Filters"
 msgstr "Фильтры Видео Потока"
 
-#: src/webui/static/app/tvheadend.js:316
+#: src/webui/static/app/tvheadend.js:327
 msgid "Volume"
 msgstr "Громкость"
 
@@ -1695,11 +1715,11 @@ msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H
 msgid "hrs"
 msgstr "часов"
 
-#: src/webui/static/app/tvheadend.js:593
+#: src/webui/static/app/tvheadend.js:634
 msgid "login"
 msgstr "логин"
 
-#: src/webui/static/app/tvheadend.js:590
+#: src/webui/static/app/tvheadend.js:631
 msgid "logout"
 msgstr "выход"
 
@@ -1762,6 +1782,6 @@ msgid "{0} selected row{1}"
 msgstr "{0} выбранный ряд{1}"
 
 #. / {0} start, {1} end, {2} total, {3} title
-#: src/webui/static/app/tvheadend.js:103
+#: src/webui/static/app/tvheadend.js:105
 msgid "{3} {0} - {1} of {2}"
 msgstr "{3} {0} - {1} из {2}"

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-09-17 21:18+0200\n"
-"PO-Revision-Date: 2015-09-17 19:19+0000\n"
+"POT-Creation-Date: 2015-10-02 13:59+0200\n"
+"PO-Revision-Date: 2015-10-02 12:15+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -25,7 +25,7 @@ msgid ""
 "https://tvheadend.org\n"
 msgstr "\nPro získání více informací navštivte webovou stránku programu Tvheadend:\nhttps://tvheadend.org\n"
 
-#: src/input/mpegts/mpegts_mux.c:586
+#: src/input/mpegts/mpegts_mux.c:587
 msgid "# Channels"
 msgstr "# Programů"
 
@@ -38,7 +38,7 @@ msgid "# Muxes"
 msgstr "# Muxů"
 
 #: src/bouquet.c:891 src/input/mpegts/mpegts_network.c:224
-#: src/input/mpegts/mpegts_mux.c:579
+#: src/input/mpegts/mpegts_mux.c:580
 msgid "# Services"
 msgstr "# Služeb"
 
@@ -46,7 +46,7 @@ msgstr "# Služeb"
 msgid "# Services Seen"
 msgstr "# Viděných služeb"
 
-#: src/dvr/dvr_config.c:660
+#: src/dvr/dvr_config.c:661
 msgid "(Default Profile)"
 msgstr "(Výchozí profil)"
 
@@ -86,7 +86,7 @@ msgstr "15"
 msgid "2"
 msgstr "2"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:590
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:591
 msgid "2-Port Switch (Universal LNB)"
 msgstr "2-portový přepínač (Univerzální LNB)"
 
@@ -98,7 +98,7 @@ msgstr "3"
 msgid "4"
 msgstr "4"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:596
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:597
 msgid "4-Port Switch (Universal LNB)"
 msgstr "4-portový přepínač (Univerzální LNB)"
 
@@ -138,26 +138,26 @@ msgstr "8"
 msgid "9"
 msgstr "9"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:356
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:357
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "A"
 msgstr "A"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:391
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:392
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:56
 msgid "AA"
 msgstr "AA"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:402
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:403
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:57
 msgid "AB"
 msgstr "AB"
 
-#: src/input/mpegts/mpegts_mux.c:477
+#: src/input/mpegts/mpegts_mux.c:478
 msgid "AC-3 = descriptor 6"
 msgstr "AC-3 = deskriptor 6"
 
-#: src/input/mpegts/mpegts_mux.c:593
+#: src/input/mpegts/mpegts_mux.c:594
 msgid "AC-3 Detection"
 msgstr "AC-3 detekce"
 
@@ -169,12 +169,60 @@ msgstr "AKTIVNÍ"
 msgid "AES Constant Code Word Client"
 msgstr "AES Constant Code Word Client"
 
+#: src/config.c:1790
+msgid "AF11"
+msgstr "AF11"
+
+#: src/config.c:1791
+msgid "AF12"
+msgstr "AF12"
+
+#: src/config.c:1792
+msgid "AF13"
+msgstr "AF13"
+
+#: src/config.c:1794
+msgid "AF21"
+msgstr "AF21"
+
+#: src/config.c:1795
+msgid "AF22"
+msgstr "AF22"
+
+#: src/config.c:1796
+msgid "AF23"
+msgstr "AF23"
+
+#: src/config.c:1798
+msgid "AF31"
+msgstr "AF31"
+
+#: src/config.c:1799
+msgid "AF32"
+msgstr "AF32"
+
+#: src/config.c:1800
+msgid "AF33"
+msgstr "AF33"
+
+#: src/config.c:1802
+msgid "AF41"
+msgstr "AF41"
+
+#: src/config.c:1803
+msgid "AF42"
+msgstr "AF42"
+
+#: src/config.c:1804
+msgid "AF43"
+msgstr "AF43"
+
 #: src/esfilter.c:313 src/esfilter.c:370
 msgid "ANY"
 msgstr "Jakýkoliv"
 
-#: src/satip/server.c:648 src/input/mpegts/mpegts_mux_dvb.c:642
-#: src/input/mpegts/iptv/iptv_mux.c:126
+#: src/satip/server.c:657 src/input/mpegts/mpegts_mux_dvb.c:642
+#: src/input/mpegts/iptv/iptv_mux.c:141
 msgid "ATSC"
 msgstr "ATSC"
 
@@ -190,11 +238,11 @@ msgstr "Síť ATSC"
 msgid "AUTO"
 msgstr "AUTO"
 
-#: src/streaming.c:436
+#: src/streaming.c:438
 msgid "Aborted by user"
 msgstr "Zrušeno uživatelem"
 
-#: src/access.c:1290
+#: src/access.c:1373
 msgid "Access"
 msgstr "Přístup"
 
@@ -203,19 +251,19 @@ msgstr "Přístup"
 msgid "Action"
 msgstr "Akce"
 
-#: src/streaming.c:423
+#: src/streaming.c:425
 msgid "Adapter in use by another subscription"
 msgstr "Adaptéry používané jiným odběratelem"
 
-#: src/main.c:710
+#: src/main.c:720
 msgid "Add file and line numbers to debug"
 msgstr "Přidá název souboru a řádek do ladícího výstupu"
 
-#: src/main.c:711
+#: src/main.c:721
 msgid "Add the thread ID to debug"
 msgstr "Přidá identifikaci vlákna do ladícího výstupu"
 
-#: src/access.c:1418
+#: src/access.c:1501
 msgid "Admin"
 msgstr "Administrátor"
 
@@ -224,11 +272,11 @@ msgstr "Administrátor"
 msgid "Adult movie"
 msgstr "Film pro dospělé"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:608
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:609
 msgid "Advanced (Non-Universal LNBs, Rotors, etc.)"
 msgstr "Pokročílé (neuniverzální LNB, rotory, apod.)"
 
-#: src/access.c:1349
+#: src/access.c:1432
 msgid "Advanced Streaming"
 msgstr "Pokročilé streamování"
 
@@ -240,33 +288,33 @@ msgstr "Dobrodružství"
 msgid "Advertisement / Shopping"
 msgstr "Reklama / Nakupování"
 
-#: src/access.c:1272
+#: src/access.c:1345
 msgid "All (Streaming plus DVR)"
 msgstr "Vše (streamování plus DVR)"
 
-#: src/access.c:1383
+#: src/access.c:1466
 msgid "All DVR"
 msgstr "Vše DVR"
 
-#: src/access.c:1389
+#: src/access.c:1472
 msgid "All DVR (rw)"
 msgstr "Vše DVR (rw)"
 
-#: src/webui/extjs.c:225
+#: src/webui/extjs.c:230
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
 msgstr "Všechny příspěvky jsou použity pro serverovou infrastrukturu a pro nákup testovacího vybavení."
 
-#: src/main.c:659
+#: src/main.c:669
 msgid "Alternate PID path"
 msgstr "Alternativní cesta k PID"
 
-#: src/main.c:654
+#: src/main.c:664
 msgid "Alternate configuration path"
 msgstr "Alternativní cesta ke konfiguraci"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:305
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:306
 msgid "Altitude (metres)"
 msgstr "Výška (metry)"
 
@@ -274,8 +322,8 @@ msgstr "Výška (metry)"
 msgid "Animals"
 msgstr "Zvířata"
 
-#: src/dvr/dvr_autorec.c:568 src/dvr/dvr_autorec.c:604
-#: src/dvr/dvr_autorec.c:618 src/dvr/dvr_autorec.c:625
+#: src/dvr/dvr_autorec.c:583 src/dvr/dvr_autorec.c:619
+#: src/dvr/dvr_autorec.c:633 src/dvr/dvr_autorec.c:640
 #: src/dvr/dvr_timerec.c:432
 msgid "Any"
 msgstr "Libovolný"
@@ -300,7 +348,7 @@ msgstr "Audio kodek"
 msgid "Audio Stream Filter"
 msgstr "Filtr audio streamu"
 
-#: src/satip/server.c:548
+#: src/satip/server.c:549
 msgid "Auto"
 msgstr "Automatické"
 
@@ -316,11 +364,11 @@ msgstr "Povolena automatická kontrola"
 msgid "Auto EPG Channel"
 msgstr "Automatický EPG program"
 
-#: src/dvr/dvr_db.c:2221
+#: src/dvr/dvr_db.c:2290
 msgid "Auto Record"
 msgstr "Automatický rekordér"
 
-#: src/dvr/dvr_db.c:2229
+#: src/dvr/dvr_db.c:2298
 msgid "Auto Time Record"
 msgstr "Automatický časový rekordér"
 
@@ -332,17 +380,17 @@ msgstr "Automatické mapování do programů"
 msgid "Automatic Checking"
 msgstr "Automatická kontrola"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:367
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:368
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:95
 msgid "B"
 msgstr "B"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:413
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:414
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:58
 msgid "BA"
 msgstr "BA"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:424
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:425
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:59
 msgid "BB"
 msgstr "BB"
@@ -355,7 +403,7 @@ msgstr "Balet"
 msgid "Bandwidth"
 msgstr "Šířka pásma"
 
-#: src/webui/extjs.c:203
+#: src/webui/extjs.c:204
 msgid "Based on software from"
 msgstr "Použitý software od"
 
@@ -371,11 +419,11 @@ msgstr "Buket"
 msgid "Bouquet (auto)"
 msgstr "Buket (automatický)"
 
-#: src/dvr/dvr_autorec.c:1062
+#: src/dvr/dvr_autorec.c:1077
 msgid "Brand"
 msgstr "Značka"
 
-#: src/dvr/dvr_db.c:2245
+#: src/dvr/dvr_db.c:2314
 msgid "Broadcast"
 msgstr "Vysílání"
 
@@ -412,7 +460,7 @@ msgstr "Filtr CA streamu"
 msgid "CAID"
 msgstr "CAID"
 
-#: src/descrambler/capmt.c:2176
+#: src/descrambler/capmt.c:2180
 msgid "CAPMT (Linux DVBAPI)"
 msgstr "CAPMT (Linux DVBAPI)"
 
@@ -424,15 +472,47 @@ msgstr "CAPMT Interval (ms)"
 msgid "CAPMT Query Interval (ms)"
 msgstr "CAPMT interval dotazů (ms)"
 
-#: src/input/mpegts/mpegts_mux.c:547 src/input/mpegts/mpegts_service.c:157
+#: src/input/mpegts/mpegts_mux.c:548 src/input/mpegts/mpegts_service.c:157
 msgid "CRID Authority"
 msgstr "CRID autorita"
 
-#: src/dvr/dvr_config.c:801
+#: src/config.c:1788
+msgid "CS0"
+msgstr "CS0"
+
+#: src/config.c:1789
+msgid "CS1"
+msgstr "CS1"
+
+#: src/config.c:1793
+msgid "CS2"
+msgstr "CS2"
+
+#: src/config.c:1797
+msgid "CS3"
+msgstr "CS3"
+
+#: src/config.c:1801
+msgid "CS4"
+msgstr "CS4"
+
+#: src/config.c:1805
+msgid "CS5"
+msgstr "CS5"
+
+#: src/config.c:1807
+msgid "CS6"
+msgstr "CS6"
+
+#: src/config.c:1808
+msgid "CS7"
+msgstr "CS7"
+
+#: src/dvr/dvr_config.c:802
 msgid "Cache Scheme"
 msgstr "Schéma mezipaměti"
 
-#: src/descrambler/capmt.c:2189
+#: src/descrambler/capmt.c:2193
 msgid "Camd.socket Filename / IP Address (TCP mode)"
 msgstr "Camd.socket soubor / IP adresa (TCP mód)"
 
@@ -441,16 +521,16 @@ msgstr "Camd.socket soubor / IP adresa (TCP mód)"
 msgid "Cartoons"
 msgstr "Animované pohádky"
 
-#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2052
-#: src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:583
+#: src/channels.c:287 src/service.c:173 src/dvr/dvr_db.c:2120
+#: src/dvr/dvr_autorec.c:962 src/dvr/dvr_timerec.c:583
 msgid "Channel"
 msgstr "Program"
 
-#: src/dvr/dvr_db.c:2062
+#: src/dvr/dvr_db.c:2130
 msgid "Channel Icon"
 msgstr "Ikona programu"
 
-#: src/dvr/dvr_db.c:2069
+#: src/dvr/dvr_db.c:2137
 msgid "Channel Name"
 msgstr "Název programu"
 
@@ -458,7 +538,7 @@ msgstr "Název programu"
 msgid "Channel Number Offset"
 msgstr "Přidej k číslu programu"
 
-#: src/channels.c:1083 src/dvr/dvr_autorec.c:956
+#: src/channels.c:1085 src/dvr/dvr_autorec.c:971
 msgid "Channel Tag"
 msgstr "Štítek programu"
 
@@ -466,11 +546,15 @@ msgstr "Štítek programu"
 msgid "Channel Tag Reference"
 msgstr "Reference štítku programu"
 
-#: src/access.c:1458
+#: src/access.c:1541
 msgid "Channel Tags"
 msgstr "Štítky programů"
 
-#: src/config.c:1804
+#: src/config.c:1976
+msgid "Channel icon name lower-case"
+msgstr "Názvy souborů pro ikony programu malými písmeny"
+
+#: src/config.c:1969
 msgid "Channel icon path (see Help)"
 msgstr "Cesta k ikoně programu (viz. nápověda)"
 
@@ -478,7 +562,7 @@ msgstr "Cesta k ikoně programu (viz. nápověda)"
 msgid "Channels"
 msgstr "Programy"
 
-#: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:571
+#: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:572
 #: src/input/mpegts/mpegts_service.c:178
 msgid "Character Set"
 msgstr "Znaková sada"
@@ -503,13 +587,17 @@ msgstr "Klasické"
 msgid "Classical music"
 msgstr "Klasická hudba"
 
-#: src/streaming.c:538
+#: src/streaming.c:540
 msgid "Clean effects"
 msgstr "Čisté efekty"
 
 #: src/descrambler/caclient.c:268
 msgid "Client Name"
 msgstr "Název klienta"
+
+#: src/dvr/dvr_config.c:819
+msgid "Clone Scheduled Entry On Error"
+msgstr "Klonovat naplánovaný záznam při chybě"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
 msgid "Cmd Delay Time (ms) (10-500)"
@@ -523,15 +611,15 @@ msgstr "Code Word Client (newcamd)"
 msgid "Comedy"
 msgstr "Komedie"
 
-#: src/access.c:1467 src/access.c:1701 src/channels.c:1142 src/esfilter.c:688
-#: src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889 src/esfilter.c:964
-#: src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
-#: src/dvr/dvr_db.c:2295 src/dvr/dvr_autorec.c:1100 src/dvr/dvr_timerec.c:661
-#: src/dvr/dvr_config.c:784 src/descrambler/caclient.c:275
+#: src/access.c:1550 src/access.c:1784 src/access.c:1908 src/channels.c:1144
+#: src/esfilter.c:688 src/esfilter.c:755 src/esfilter.c:822 src/esfilter.c:889
+#: src/esfilter.c:964 src/esfilter.c:1025 src/profile.c:315 src/bouquet.c:898
+#: src/dvr/dvr_db.c:2364 src/dvr/dvr_autorec.c:1115 src/dvr/dvr_timerec.c:661
+#: src/dvr/dvr_config.c:785 src/descrambler/caclient.c:275
 msgid "Comment"
 msgstr "Komentář"
 
-#: src/dvr/dvr_db.c:290
+#: src/dvr/dvr_db.c:291
 msgid "Commercial break"
 msgstr "Komerční přestávka"
 
@@ -539,7 +627,7 @@ msgstr "Komerční přestávka"
 msgid "Committed"
 msgstr "Committed"
 
-#: src/dvr/dvr_db.c:313
+#: src/dvr/dvr_db.c:314
 msgid "Completed OK"
 msgstr "Dokončeno v pořádku"
 
@@ -547,7 +635,7 @@ msgstr "Dokončeno v pořádku"
 msgid "Conditional Access Client"
 msgstr "Klient podmíněného přístupu"
 
-#: src/config.c:1704
+#: src/config.c:1816
 msgid "Configuration"
 msgstr "Konfigurace"
 
@@ -555,15 +643,15 @@ msgstr "Konfigurace"
 msgid "Configuration ID"
 msgstr "ID konfigurace"
 
-#: src/dvr/dvr_config.c:774
+#: src/dvr/dvr_config.c:775
 msgid "Configuration Name"
 msgstr "Název konfigurace"
 
-#: src/config.c:1735
+#: src/config.c:1851
 msgid "Configuration version"
 msgstr "Verze konfigurace"
 
-#: src/access.c:1424
+#: src/access.c:1507
 msgid "Connection Limit Type"
 msgstr "Typ limitu pro spojení"
 
@@ -571,11 +659,11 @@ msgstr "Typ limitu pro spojení"
 msgid "Constellation"
 msgstr "Konstelace"
 
-#: src/profile.c:1505 src/dvr/dvr_db.c:2139
+#: src/profile.c:1505 src/dvr/dvr_db.c:2207
 msgid "Container"
 msgstr "Kontejner"
 
-#: src/dvr/dvr_db.c:2237 src/dvr/dvr_autorec.c:1024
+#: src/dvr/dvr_db.c:2306 src/dvr/dvr_autorec.c:1039
 msgid "Content Type"
 msgstr "Typ obsahu"
 
@@ -586,6 +674,10 @@ msgstr "Soutěž"
 #: src/profile.c:350
 msgid "Continue On Access Error"
 msgstr "Pokračuj při chybě přístupu"
+
+#: src/config.c:1874
+msgid "Cookie expiration (days)"
+msgstr "Expirace cookie (dny)"
 
 #: src/epg.c:2089
 msgid "Cooking"
@@ -607,7 +699,7 @@ msgstr "Vytvoř štítek"
 msgid "Created"
 msgstr "Vytvořeno"
 
-#: src/dvr/dvr_db.c:2166 src/dvr/dvr_autorec.c:1093 src/dvr/dvr_timerec.c:654
+#: src/dvr/dvr_db.c:2235 src/dvr/dvr_autorec.c:1108 src/dvr/dvr_timerec.c:654
 msgid "Creator"
 msgstr "Vytvořil"
 
@@ -615,7 +707,7 @@ msgstr "Vytvořil"
 msgid "Cron"
 msgstr "Cron"
 
-#: src/epggrab.c:272
+#: src/epggrab.c:278
 msgid "Cron multi-line"
 msgstr "Víceřádkový cron"
 
@@ -627,7 +719,7 @@ msgstr "Kultura (bez hudby)"
 msgid "Current affairs"
 msgstr "Aktuální události"
 
-#: src/main.c:669
+#: src/main.c:679
 msgid "DBus - use the session message bus instead of the system one"
 msgstr "DBUs - použije se 'session' sběrnice pro zprávy místo systémové"
 
@@ -639,19 +731,23 @@ msgstr "DES Constant Code Word klient"
 msgid "DES Key"
 msgstr "Klíč DES"
 
-#: src/dvr/dvr_db.c:2208
+#: src/config.c:1889
+msgid "DSCP/TOS for streaming"
+msgstr "DSCP/TOS pro streamování"
+
+#: src/dvr/dvr_db.c:2277
 msgid "DVB EPG ID"
 msgstr "DVB EPG ID"
 
-#: src/config.c:1718
+#: src/config.c:1834
 msgid "DVB Scan Files"
 msgstr "DVB scan soubory"
 
-#: src/config.c:1769
+#: src/config.c:1934
 msgid "DVB scan files path"
 msgstr "Cesta k souborům pro DVB scan"
 
-#: src/satip/server.c:634
+#: src/satip/server.c:643
 msgid "DVB-C"
 msgstr "DVB-C"
 
@@ -659,27 +755,27 @@ msgstr "DVB-C"
 msgid "DVB-C Network"
 msgstr "DVB-C síť"
 
-#: src/satip/server.c:641
+#: src/satip/server.c:650
 msgid "DVB-C2"
 msgstr "DVB-C2"
 
-#: src/satip/server.c:655
+#: src/satip/server.c:664
 msgid "DVB-Cable/AnnexB"
 msgstr "DVB-Cable/AnnexB"
 
-#: src/satip/server.c:606
+#: src/satip/server.c:615
 msgid "DVB-S"
 msgstr "DVB-S"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:386
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:387
 msgid "DVB-S 4-port"
 msgstr "DVB-S 4-portový"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:561
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:562
 msgid "DVB-S Advanced"
 msgstr "DVB-S rozšířený"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:500
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:501
 msgid "DVB-S EN50494 (UniCable, experimental)"
 msgstr "DVB-S EN50494 (UniCable, experimentální)"
 
@@ -687,23 +783,23 @@ msgstr "DVB-S EN50494 (UniCable, experimentální)"
 msgid "DVB-S Network"
 msgstr "DVB-S síť"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:213
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:214
 msgid "DVB-S Satconf"
 msgstr "DVB-S Sat.konf."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:327
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:328
 msgid "DVB-S Simple"
 msgstr "DVB-S jednoduchý"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:351
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:352
 msgid "DVB-S Toneburst"
 msgstr "DVB-S Toneburst"
 
-#: src/satip/server.c:613
+#: src/satip/server.c:622
 msgid "DVB-S2"
 msgstr "DVB-S2"
 
-#: src/satip/server.c:620 src/input/mpegts/mpegts_mux_dvb.c:210
+#: src/satip/server.c:629 src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
 msgstr "DVB-T"
 
@@ -711,7 +807,7 @@ msgstr "DVB-T"
 msgid "DVB-T Network"
 msgstr "DVB-T síť"
 
-#: src/satip/server.c:627
+#: src/satip/server.c:636
 msgid "DVB-T2"
 msgstr "DVB-T2"
 
@@ -719,35 +815,35 @@ msgstr "DVB-T2"
 msgid "DVBC_ANNEX_AC"
 msgstr "DVBC_ANNEX_AC"
 
-#: src/access.c:1274
+#: src/access.c:1347
 msgid "DVR"
 msgstr "DVR"
 
-#: src/dvr/dvr_autorec.c:906
+#: src/dvr/dvr_autorec.c:921
 msgid "DVR Auto-Record Entry"
 msgstr "Položka DVR auto-rekordéru"
 
-#: src/dvr/dvr_config.c:732
+#: src/dvr/dvr_config.c:733
 msgid "DVR Behaviour"
 msgstr "Chování DVR"
 
-#: src/dvr/dvr_db.c:2149 src/dvr/dvr_autorec.c:1053 src/dvr/dvr_timerec.c:638
+#: src/dvr/dvr_db.c:2217 src/dvr/dvr_autorec.c:1068 src/dvr/dvr_timerec.c:638
 msgid "DVR Configuration"
 msgstr "Konfigurace DVR"
 
-#: src/dvr/dvr_config.c:724
+#: src/dvr/dvr_config.c:725
 msgid "DVR Configuration Profile"
 msgstr "Konfigurační profil DVR"
 
-#: src/access.c:1403
+#: src/access.c:1486
 msgid "DVR Configuration Profiles"
 msgstr "Konfigurační profily DVR"
 
-#: src/dvr/dvr_db.c:1988
+#: src/dvr/dvr_db.c:2050
 msgid "DVR Entry"
 msgstr "Položka DVR"
 
-#: src/dvr/dvr_config.c:810
+#: src/dvr/dvr_config.c:811
 msgid "DVR Log Retention Time (days)"
 msgstr "Čas držení DVR logů (dny)"
 
@@ -787,11 +883,11 @@ msgstr "Time-rekordér položka"
 msgid "Dance"
 msgstr "Tanec"
 
-#: src/dvr/dvr_db.c:2201
+#: src/dvr/dvr_db.c:2270
 msgid "Data Errors"
 msgstr "Chyby v datech"
 
-#: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:613
+#: src/dvr/dvr_autorec.c:1015 src/dvr/dvr_timerec.c:613
 msgid "Days of Week"
 msgstr "Dny v týdnu"
 
@@ -800,27 +896,27 @@ msgstr "Dny v týdnu"
 msgid "Debate"
 msgstr "Debata"
 
-#: src/main.c:701
+#: src/main.c:711
 msgid "Debug Options"
 msgstr "Ladící možnosti"
 
-#: src/tvhlog.c:624
+#: src/tvhlog.c:641
 msgid "Debug libav log"
 msgstr "Ladící výstup z libav"
 
-#: src/tvhlog.c:589
+#: src/tvhlog.c:595
 msgid "Debug log path"
 msgstr "Soubor pro ladící výstup"
 
-#: src/tvhlog.c:603
+#: src/tvhlog.c:611
 msgid "Debug subsystems"
 msgstr "Povolit ladící podsystémy"
 
-#: src/tvhlog.c:596
+#: src/tvhlog.c:603
 msgid "Debug to syslog"
 msgstr "Povolit ladící výstop pro syslog"
 
-#: src/tvhlog.c:610
+#: src/tvhlog.c:619
 msgid "Debug trace (low-level)"
 msgstr "Povol trasování (velmi podrobné)"
 
@@ -828,7 +924,7 @@ msgstr "Povol trasování (velmi podrobné)"
 msgid "Debugging"
 msgstr "Ladění"
 
-#: src/profile.c:300
+#: src/config.c:1787 src/profile.c:300
 msgid "Default"
 msgstr "Standardní"
 
@@ -836,7 +932,7 @@ msgstr "Standardní"
 msgid "Default Priority"
 msgstr "Standardní priorita"
 
-#: src/config.c:1759
+#: src/config.c:1905
 msgid "Default language(s)"
 msgstr "Výchozí jazyk(y)"
 
@@ -849,11 +945,15 @@ msgstr "Systém doručení"
 msgid "Demux Path"
 msgstr "Cesta k demuxu"
 
-#: src/satip/server.c:591
+#: src/satip/server.c:600
 msgid "Descramble Services (Limit Per Mux)"
 msgstr "Dekóduj služby (limit pro mux)"
 
-#: src/dvr/dvr_db.c:2108 src/dvr/dvr_db.c:2115
+#: src/config.c:1897
+msgid "Descrambler buffer (TS packets)"
+msgstr "Vyrovnávací paměť dekódéru (TS pakety)"
+
+#: src/dvr/dvr_db.c:2176 src/dvr/dvr_db.c:2183
 msgid "Description"
 msgstr "Popis"
 
@@ -865,7 +965,7 @@ msgstr "Detektivka"
 msgid "Device ID"
 msgstr "ID zařízení"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:165
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:170
 msgid "Device Model"
 msgstr "Model zařízení"
 
@@ -874,23 +974,23 @@ msgstr "Model zařízení"
 msgid "Device Path"
 msgstr "Cesta k zařízení"
 
-#: src/dvr/dvr_db.c:2180 src/dvr/dvr_autorec.c:928 src/dvr/dvr_timerec.c:577
+#: src/dvr/dvr_db.c:2249 src/dvr/dvr_autorec.c:943 src/dvr/dvr_timerec.c:577
 msgid "Directory"
 msgstr "Adresář"
 
-#: src/dvr/dvr_config.c:899
+#: src/dvr/dvr_config.c:908
 msgid "Directory Permissions (octal, e.g. 0775)"
 msgstr "Práva k adresáři (osmičkové, např. 0775)"
 
-#: src/input/mpegts/mpegts_mux.c:457
+#: src/input/mpegts/mpegts_mux.c:458
 msgid "Disable"
 msgstr "Zakázat"
 
-#: src/main.c:720
+#: src/main.c:730
 msgid "Disable DVB bouquets"
 msgstr "Zakázat DVB bukety"
 
-#: src/main.c:718
+#: src/main.c:728
 msgid "Disable all access control checks"
 msgstr "Zakázat veškeré přístupové kontroly"
 
@@ -898,7 +998,7 @@ msgstr "Zakázat veškeré přístupové kontroly"
 msgid "Disable device/firmware-specific workarounds"
 msgstr "Zakaž specifické workaroundy pro zařízení/firmware"
 
-#: src/main.c:704
+#: src/main.c:714
 msgid "Disable syslog (all messages)"
 msgstr "Zakázat veškerý výstup pro syslog"
 
@@ -907,7 +1007,7 @@ msgstr "Zakázat veškerý výstup pro syslog"
 msgid "Discussion"
 msgstr "Diskuze"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1362
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1376
 msgid "DiseqC"
 msgstr "DiseqC"
 
@@ -915,7 +1015,7 @@ msgstr "DiseqC"
 msgid "DiseqC Rotor"
 msgstr "DiseqC Rotor"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:229
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:230
 msgid "DiseqC repeats"
 msgstr "DiseqC opakování"
 
@@ -931,19 +1031,19 @@ msgstr "Nepoužívat"
 msgid "Documentary"
 msgstr "Dokumentární"
 
-#: src/dvr/dvr_config.c:963
+#: src/dvr/dvr_config.c:972
 msgid "Don't Include Title In Filename"
 msgstr "Nevkládat název vysílání do jména souboru"
 
-#: src/dvr/dvr_db.c:2215
+#: src/dvr/dvr_db.c:2284
 msgid "Don't Reschedule"
 msgstr "Nepřeplánovávat"
 
-#: src/main.c:655
+#: src/main.c:665
 msgid "Don't backup configuration tree at upgrade"
 msgstr "Nezálohovat konfigurační strom při aktualizaci"
 
-#: src/dvr/dvr_config.c:685
+#: src/dvr/dvr_config.c:686
 msgid "Don't keep"
 msgstr "Nezanechávej"
 
@@ -952,27 +1052,35 @@ msgstr "Nezanechávej"
 msgid "Drama"
 msgstr "Drama"
 
-#: src/dvr/dvr_autorec.c:1039
+#: src/dvr/dvr_autorec.c:1054
 msgid "Duplicate Handling"
 msgstr "Zacházení s duplicitami"
 
-#: src/dvr/dvr_db.c:2045
+#: src/dvr/dvr_db.c:2113
 msgid "Duration"
 msgstr "Doba"
+
+#: src/config.c:1806
+msgid "EF"
+msgstr "EF"
+
+#: src/input/mpegts/mpegts_mux.c:603
+msgid "EIT - skip TSID check"
+msgstr "EIT - nekotrolovat TSID"
 
 #: src/input/mpegts/mpegts_network.c:210
 msgid "EIT Local Time"
 msgstr "EIT lokální čas"
 
-#: src/epggrab/module.c:103
+#: src/epggrab/module.c:108
 msgid "EPG Grabber"
 msgstr "EPG graber"
 
-#: src/epggrab.c:221
+#: src/epggrab.c:227
 msgid "EPG Grabber Configuration"
 msgstr "Konfigurace EPG graberu"
 
-#: src/input/mpegts/mpegts_mux.c:504
+#: src/input/mpegts/mpegts_mux.c:505
 msgid "EPG Scan"
 msgstr "EPG scan"
 
@@ -980,11 +1088,11 @@ msgstr "EPG scan"
 msgid "EPG Source"
 msgstr "Zdroj EPG"
 
-#: src/dvr/dvr_config.c:834
+#: src/dvr/dvr_config.c:843
 msgid "EPG Update Window"
 msgstr "EPG časové okno aktualizace"
 
-#: src/epggrab.c:297
+#: src/epggrab.c:303
 msgid "EPG scan timeout in seconds (30-7200)"
 msgstr "Timeout pro EPG scan v sekundách (30-7200)"
 
@@ -1004,53 +1112,54 @@ msgstr "Vzdělávací"
 msgid "Elementary Stream Filter"
 msgstr "Filtr elementárního streamu"
 
-#: src/input/mpegts/mpegts_mux.c:458
+#: src/input/mpegts/mpegts_mux.c:459
 msgid "Enable (auto)"
 msgstr "Povolit (auto)"
 
-#: src/main.c:667
+#: src/main.c:677
 msgid "Enable DBus"
 msgstr "Povolit DBus"
 
-#: src/config.c:1783
+#: src/config.c:1948
 msgid "Enable NTP driver"
 msgstr "Povolit NTP ovladač"
 
-#: src/main.c:717
+#: src/main.c:727
 msgid "Enable coredumps for daemon"
 msgstr "Povolit coredump pro démona"
 
-#: src/main.c:702
+#: src/main.c:712
 msgid "Enable debug on stderr"
 msgstr "Povolit výstup na stderr"
 
-#: src/main.c:706
+#: src/main.c:716
 msgid "Enable debug subsystems"
 msgstr "Povolit ladící podsystémy"
 
-#: src/main.c:705
+#: src/main.c:715
 msgid "Enable debug to file"
 msgstr "Povolit ladící výstup do souboru"
 
-#: src/main.c:703
+#: src/main.c:713
 msgid "Enable debug to syslog"
 msgstr "Povolit ladící výstop pro syslog"
 
-#: src/main.c:708
+#: src/main.c:718
 msgid "Enable trace subsystems"
 msgstr "Povolit trasovací subsystémy"
 
-#: src/main.c:715
+#: src/main.c:725
 msgid "Enable webUI debug (non-minified JS)"
 msgstr "Povolit ladění webUI (neminimalizované JS)"
 
-#: src/access.c:1309 src/access.c:1673 src/channels.c:296 src/channels.c:1092
-#: src/service.c:158 src/imagecache.c:84 src/esfilter.c:621 src/profile.c:293
-#: src/bouquet.c:802 src/epggrab/module.c:135 src/dvr/dvr_autorec.c:916
-#: src/dvr/dvr_timerec.c:558 src/dvr/dvr_config.c:764
+#: src/access.c:1392 src/access.c:1756 src/access.c:1895 src/channels.c:296
+#: src/channels.c:1094 src/service.c:158 src/imagecache.c:84
+#: src/esfilter.c:621 src/profile.c:293 src/bouquet.c:802
+#: src/epggrab/module.c:141 src/dvr/dvr_db.c:2060 src/dvr/dvr_autorec.c:931
+#: src/dvr/dvr_timerec.c:558 src/dvr/dvr_config.c:765
 #: src/descrambler/caclient.c:262 src/input/mpegts/mpegts_input.c:225
-#: src/input/mpegts/mpegts_mux.c:496 src/input/mpegts/mpegts_mux_sched.c:126
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1196
+#: src/input/mpegts/mpegts_mux.c:497 src/input/mpegts/mpegts_mux_sched.c:126
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1210
 #: src/input/mpegts/satip/satip_satconf.c:188 src/timeshift.c:150
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
@@ -1072,24 +1181,24 @@ msgstr "Zábavné programy od 6 do 14"
 msgid "Environment"
 msgstr "Životní prostředí"
 
-#: src/input/mpegts/iptv/iptv_mux.c:151
+#: src/input/mpegts/iptv/iptv_mux.c:182
 msgid "Environment (pipe)"
 msgstr "Prostředí (roura)"
 
-#: src/dvr/dvr_db.c:2253
+#: src/dvr/dvr_db.c:2322
 msgid "Episode"
 msgstr "Epizoda"
 
-#: src/dvr/dvr_db.c:422
+#: src/dvr/dvr_db.c:427
 #, c-format
 msgid "Episode %d"
 msgstr "Epizoda %d"
 
-#: src/dvr/dvr_db.c:2187
+#: src/dvr/dvr_db.c:2256
 msgid "Error Code"
 msgstr "Kód chyby"
 
-#: src/dvr/dvr_db.c:2194
+#: src/dvr/dvr_db.c:2263
 msgid "Errors"
 msgstr "Chyby"
 
@@ -1097,11 +1206,11 @@ msgstr "Chyby"
 msgid "Even Key"
 msgstr "Sudý klíč"
 
-#: src/dvr/dvr_autorec.c:735
+#: src/dvr/dvr_autorec.c:750
 msgid "Every day"
 msgstr "Každý den"
 
-#: src/access.c:1451
+#: src/access.c:1534
 msgid "Exclude Channel Tags"
 msgstr "Vyjmout štítky programů"
 
@@ -1113,7 +1222,7 @@ msgstr "Expedice"
 msgid "Experimental film"
 msgstr "Experimentální film"
 
-#: src/satip/server.c:568
+#: src/satip/server.c:569
 msgid "Exported Tuners"
 msgstr "Exportované tunery"
 
@@ -1121,23 +1230,23 @@ msgstr "Exportované tunery"
 msgid "External"
 msgstr "Externí"
 
-#: src/epggrab/module.c:162
+#: src/epggrab/module.c:168
 msgid "External EPG Grabber"
 msgstr "Externí EPG graber"
 
-#: src/dvr/dvr_db.c:2006 src/dvr/dvr_autorec.c:983
+#: src/dvr/dvr_db.c:2074 src/dvr/dvr_autorec.c:998
 msgid "Extra Start Time"
 msgstr "Extra začáteční čas"
 
-#: src/dvr/dvr_db.c:2030 src/dvr/dvr_autorec.c:991
+#: src/dvr/dvr_db.c:2098 src/dvr/dvr_autorec.c:1006
 msgid "Extra Stop Time"
 msgstr "Extra koncový čas "
 
-#: src/dvr/dvr_config.c:826
+#: src/dvr/dvr_config.c:835
 msgid "Extra Time After Recordings (minutes)"
 msgstr "Extra koncový čas pro záznamy (minuty)"
 
-#: src/dvr/dvr_config.c:818
+#: src/dvr/dvr_config.c:827
 msgid "Extra Time Before Recordings (minutes)"
 msgstr "Extra začáteční čas pro záznamy (minuty)"
 
@@ -1161,7 +1270,7 @@ msgstr "FEC Low"
 msgid "Factual topics"
 msgstr "Fakta"
 
-#: src/access.c:1395
+#: src/access.c:1478
 msgid "Failed DVR"
 msgstr "Neuspěšné DVR"
 
@@ -1169,31 +1278,31 @@ msgstr "Neuspěšné DVR"
 msgid "Fantasy"
 msgstr "Fantasy"
 
-#: src/dvr/dvr_db.c:309
+#: src/dvr/dvr_db.c:310
 msgid "File Missing"
 msgstr "Soubor chybí"
 
-#: src/dvr/dvr_db.c:300
+#: src/dvr/dvr_db.c:301
 msgid "File Not Created"
 msgstr "Soubor nebyl vytvořen"
 
-#: src/dvr/dvr_config.c:857
+#: src/dvr/dvr_config.c:866
 msgid "File Permissions (octal, e.g. 0664)"
 msgstr "Práva souboru (osmičkové, např. 0664)"
 
-#: src/dvr/dvr_db.c:2267
+#: src/dvr/dvr_db.c:2336
 msgid "File Size"
 msgstr "Velikost souboru"
 
-#: src/dvr/dvr_db.c:2173
+#: src/dvr/dvr_db.c:2242
 msgid "Filename"
 msgstr "Jméno souboru"
 
-#: src/dvr/dvr_config.c:865
+#: src/dvr/dvr_config.c:874
 msgid "Filename Character Set"
 msgstr "Znaková sada jména souboru"
 
-#: src/dvr/dvr_config.c:748
+#: src/dvr/dvr_config.c:749
 msgid "Filename Options"
 msgstr "Volby pro jméno souboru"
 
@@ -1221,7 +1330,7 @@ msgstr "Folkról"
 msgid "Football"
 msgstr "Fotbal"
 
-#: src/input/mpegts/mpegts_mux.c:459
+#: src/input/mpegts/mpegts_mux.c:460
 msgid "Force (auto)"
 msgstr "Vynutit (auto)"
 
@@ -1237,7 +1346,7 @@ msgstr "Vynutit starý status"
 msgid "Force Priority"
 msgstr "Vynutit prioritu"
 
-#: src/epggrab.c:281
+#: src/epggrab.c:287
 msgid "Force initial EPG scan at startup"
 msgstr "Vynutit počáteční EPG scan po startu"
 
@@ -1253,11 +1362,11 @@ msgstr "Vynutit zpoždění teardown"
 msgid "Foreign countries"
 msgstr "Cizí země"
 
-#: src/main.c:656
+#: src/main.c:666
 msgid "Fork and run as daemon"
 msgstr "Démon mód"
 
-#: src/dvr/dvr_config.c:891
+#: src/dvr/dvr_config.c:900
 msgid "Format String"
 msgstr "Řetězec formátu"
 
@@ -1270,7 +1379,7 @@ msgstr "Frekvence"
 msgid "Frequency (Hz)"
 msgstr "Frekvence (Hz)"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:523
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:524
 msgid "Frequency (MHz)"
 msgstr "Frekvence (MHz)"
 
@@ -1278,12 +1387,12 @@ msgstr "Frekvence (MHz)"
 msgid "Frequency (kHz)"
 msgstr "Frekvence (kHz)"
 
-#: src/dvr/dvr_autorec.c:717
+#: src/dvr/dvr_autorec.c:732
 msgid "Fri"
 msgstr "Pát"
 
 #: src/input/mpegts/satip/satip.c:303
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:158
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:163
 msgid "Friendly Name"
 msgstr "Přátelské jméno"
 
@@ -1297,7 +1406,7 @@ msgstr "Číslo frontendu"
 msgid "Frontend Path"
 msgstr "Cesta k frontendu"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:237
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:238
 msgid "Full DiseqC"
 msgstr "Celý DiseqC"
 
@@ -1305,11 +1414,11 @@ msgstr "Celý DiseqC"
 msgid "Full Mux Rx mode supported"
 msgstr "Podporován plný mux rx mód"
 
-#: src/dvr/dvr_config.c:740
+#: src/dvr/dvr_config.c:741
 msgid "Full Pathname Specification"
 msgstr "Plná specifikace cesty"
 
-#: src/dvr/dvr_autorec.c:941
+#: src/dvr/dvr_autorec.c:956
 msgid "Full-text"
 msgstr "Full-text"
 
@@ -1338,20 +1447,20 @@ msgstr "Herní show"
 msgid "Gardening"
 msgstr "Zahradničení"
 
-#: src/satip/server.c:564
+#: src/satip/server.c:565
 msgid "General"
 msgstr "Základní"
 
-#: src/epggrab.c:227
+#: src/epggrab.c:233
 msgid "General Config"
 msgstr "Základní konfigurace"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:253
-#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:272
+#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:297
 msgid "Generic"
 msgstr "Obecný"
 
-#: src/main.c:649
+#: src/main.c:659
 msgid "Generic Options"
 msgstr "Generické možnosti"
 
@@ -1379,7 +1488,7 @@ msgstr "HDHomeRun DVB-C Frontend"
 msgid "HDHomeRun DVB-T Frontend"
 msgstr "HDHomeRun DVB-T Frontend"
 
-#: src/access.c:1377
+#: src/access.c:1460
 msgid "HTSP DVR"
 msgstr "HTSP DVR"
 
@@ -1391,15 +1500,19 @@ msgstr "HTSP standardní nastavení streamu"
 msgid "HTSP Stream Profile"
 msgstr "HTSP profil streamu"
 
-#: src/access.c:1355
+#: src/access.c:1438
 msgid "HTSP Streaming"
 msgstr "HTSP streamování"
+
+#: src/config.c:1881
+msgid "HTTP CORS Origin"
+msgstr "HTTP CORS Origin"
 
 #: src/epg.c:2086
 msgid "Handicraft"
 msgstr "Řemeslo"
 
-#: src/streaming.c:539
+#: src/streaming.c:541
 msgid "Hearing impaired"
 msgstr "Zhoršený sluch"
 
@@ -1407,7 +1520,7 @@ msgstr "Zhoršený sluch"
 msgid "Hierarchy"
 msgstr "Hierarchie"
 
-#: src/profile.c:248 src/dvr/dvr_db.c:1618
+#: src/profile.c:248 src/dvr/dvr_db.c:1680
 msgid "High"
 msgstr "Vysoká"
 
@@ -1432,9 +1545,13 @@ msgid "IDLE"
 msgstr "NEČINNÝ"
 
 #: src/input/mpegts/satip/satip.c:282
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:144
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:149
 msgid "IP Address"
 msgstr "IP adresa"
+
+#: src/access.c:1856 src/access.c:1885
+msgid "IP Blocking"
+msgstr "Blokování IP"
 
 #: src/input/mpegts/iptv/iptv.c:89
 msgid "IPTV"
@@ -1444,7 +1561,7 @@ msgstr "IPTV"
 msgid "IPTV Input"
 msgstr "IPTV vstup"
 
-#: src/input/mpegts/iptv/iptv_mux.c:92
+#: src/input/mpegts/iptv/iptv_mux.c:106
 msgid "IPTV Multiplex"
 msgstr "IPTV Multiplex"
 
@@ -1456,19 +1573,19 @@ msgstr "IPTV síť"
 msgid "ISI (Stream ID)"
 msgstr "ISI (Stream ID)"
 
-#: src/channels.c:1122
+#: src/channels.c:1124
 msgid "Icon (full URL)"
 msgstr "Ikona (celé URL)"
 
-#: src/channels.c:325 src/channels.c:1129
+#: src/channels.c:325 src/channels.c:1131
 msgid "Icon URL"
 msgstr "URL ikony"
 
-#: src/channels.c:1136
+#: src/channels.c:1138
 msgid "Icon has title"
 msgstr "Ikona má název"
 
-#: src/webui/extjs.c:204
+#: src/webui/extjs.c:205
 msgid "Icons from"
 msgstr "Ikony jsou od"
 
@@ -1480,7 +1597,7 @@ msgstr "Vyhledávání při nečinnosti"
 msgid "Idle Scan Muxes"
 msgstr "Vyhledávání muxů při nečinnosti"
 
-#: src/main.c:660
+#: src/main.c:670
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -1489,7 +1606,7 @@ msgid ""
 "the access control from within the Tvheadend web interface."
 msgstr "Pokud není vytvořený žádný uživatelský účet,\ntak se vytvoří účet bez uživatelského jména\na hesla. Je doporučené tento administrátorský\núčet okamžitě změnit (uživatelské jméno a heslo)"
 
-#: src/webui/extjs.c:224
+#: src/webui/extjs.c:229
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "Pokud se Vám tento projekt líbí, prosíme, zvažte příspěvek."
 
@@ -1501,7 +1618,7 @@ msgstr "Ignorovat EPG (EIT)"
 msgid "Ignore Provider's Channel Numbers"
 msgstr "Ignorovat čísla programů od poskytovatele"
 
-#: src/input/mpegts/mpegts_mux.c:478
+#: src/input/mpegts/mpegts_mux.c:479
 msgid "Ignore descriptor 5"
 msgstr "Igoruj deskritor 5"
 
@@ -1513,43 +1630,47 @@ msgstr "Ignorovat neplatné SSL certifikáty"
 msgid "Image Cache"
 msgstr "Mezipaměť pro obrázky"
 
-#: src/main.c:716
+#: src/main.c:726
 msgid "Immediately abort"
 msgstr "Okamžitě ukonči činnost"
 
-#: src/profile.c:247 src/dvr/dvr_db.c:1617
+#: src/profile.c:247 src/dvr/dvr_db.c:1679
 msgid "Important"
 msgstr "Důležíté"
 
-#: src/dvr/dvr_config.c:928
+#: src/dvr/dvr_config.c:937
 msgid "Include Channel Name In Filename"
 msgstr "Vložit název programu do jména souboru"
 
-#: src/dvr/dvr_config.c:935
+#: src/dvr/dvr_config.c:944
 msgid "Include Date In Filename"
 msgstr "Vložit datum do jména souboru"
 
-#: src/dvr/dvr_config.c:949
+#: src/dvr/dvr_config.c:958
 msgid "Include Episode In Filename"
 msgstr "Vložit epizodu do jména souboru"
 
-#: src/dvr/dvr_config.c:956
+#: src/dvr/dvr_config.c:965
 msgid "Include Subtitle In Filename"
 msgstr "Vložit podtitulek do jména souboru"
 
-#: src/dvr/dvr_config.c:942
+#: src/dvr/dvr_config.c:951
 msgid "Include Time In Filename"
 msgstr "Vložit čas do jména souboru"
 
-#: src/access.c:1302 src/esfilter.c:614 src/descrambler/caclient.c:255
+#: src/access.c:1385 src/esfilter.c:614 src/descrambler/caclient.c:255
 msgid "Index"
 msgstr "Index"
+
+#: src/config.c:1916
+msgid "Information area"
+msgstr "Informační oblast"
 
 #: src/epg.c:2014
 msgid "Informational"
 msgstr "Informační"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:260
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:261
 msgid "Init Rotor Time (seconds)"
 msgstr "Počateční čas rotoru (sekundy)"
 
@@ -1569,19 +1690,19 @@ msgstr "Instance vstupu"
 msgid "Input Path"
 msgstr "Cesta k zařízení"
 
-#: src/input/mpegts/iptv/iptv_mux.c:120
+#: src/input/mpegts/iptv/iptv_mux.c:135
 msgid "Interface"
 msgstr "Interfejs"
 
-#: src/channels.c:1110 src/epggrab/module.c:58
+#: src/channels.c:1112 src/epggrab/module.c:58
 msgid "Internal"
 msgstr "Interní"
 
-#: src/epggrab/module.c:153
+#: src/epggrab/module.c:159
 msgid "Internal EPG Grabber"
 msgstr "Interní EPG graber"
 
-#: src/epggrab.c:231
+#: src/epggrab.c:237
 msgid "Internal Grabber"
 msgstr "Interní graber"
 
@@ -1590,16 +1711,16 @@ msgstr "Interní graber"
 msgid "Interview"
 msgstr "Interview"
 
-#: src/dvr/dvr_db.c:294 src/dvr/dvr_db.c:319 src/dvr/dvr_timerec.c:454
+#: src/dvr/dvr_db.c:295 src/dvr/dvr_db.c:320 src/dvr/dvr_timerec.c:454
 msgid "Invalid"
 msgstr "Chybný"
 
-#: src/main.c:797
+#: src/main.c:807
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr "Chybné číslo adaptéru '%s'\n"
 
-#: src/streaming.c:412
+#: src/streaming.c:414
 msgid "Invalid target"
 msgstr "Chybný cíl"
 
@@ -1607,9 +1728,17 @@ msgstr "Chybný cíl"
 msgid "Jazz"
 msgstr "Jazz"
 
-#: src/satip/server.c:549
+#: src/satip/server.c:550
 msgid "Keep"
 msgstr "Zachovat"
+
+#: src/input/mpegts/iptv/iptv_mux.c:166
+msgid "Kill signal (pipe)"
+msgstr "Signál pro kill (roura)"
+
+#: src/input/mpegts/iptv/iptv_mux.c:174
+msgid "Kill timeout (pipe/secs)"
+msgstr "Timeout pro kill (roura/sek)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
@@ -1619,16 +1748,16 @@ msgstr "LNA (Low Noise Amplifier)"
 msgid "LNB"
 msgstr "LNB"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1227
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1241
 msgid "LNB Type"
 msgstr "Typ LNB"
 
-#: src/access.c:1328 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
+#: src/access.c:1411 src/esfilter.c:646 src/esfilter.c:713 src/esfilter.c:780
 #: src/esfilter.c:847 src/esfilter.c:989 src/profile.c:1528
 msgid "Language"
 msgstr "Jazyk"
 
-#: src/config.c:1714
+#: src/config.c:1826
 msgid "Language Settings"
 msgstr "Jazykové nastavení"
 
@@ -1641,11 +1770,11 @@ msgstr "Jazyky"
 msgid "Last Seen"
 msgstr "Naposledy viděn"
 
-#: src/config.c:1743
+#: src/config.c:1859
 msgid "Last updated from"
 msgstr "Naposledy aktualizováno z"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:290
 msgid "Latitude Direction South"
 msgstr "Směr zeměpisné šířky - jih"
 
@@ -1653,7 +1782,7 @@ msgstr "Směr zeměpisné šířky - jih"
 msgid "Leisure hobbies"
 msgstr "Volný čas / koníčky"
 
-#: src/access.c:1431
+#: src/access.c:1514
 msgid "Limit Connections"
 msgstr "Limit spojení"
 
@@ -1713,11 +1842,11 @@ msgstr "LinuxDVB adaptér"
 msgid "LinuxDVB Network"
 msgstr "LinuxDVB síť"
 
-#: src/main.c:686
+#: src/main.c:696
 msgid "Listen on IPv6"
 msgstr "Poslouchej na IPv6"
 
-#: src/descrambler/capmt.c:2196
+#: src/descrambler/capmt.c:2200
 msgid "Listen/Connect Port"
 msgstr "Port pro příjem/vysílání"
 
@@ -1754,15 +1883,19 @@ msgstr "Pouze preferovaná CA PID"
 msgid "Log"
 msgstr "Log"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:297
+#: src/config.c:1777
+msgid "Login/Logout"
+msgstr "Přihlášení/Odhlášení"
+
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:298
 msgid "Longtitude Direction West"
 msgstr "Směr zeměpisné délky - západ"
 
-#: src/profile.c:250 src/dvr/dvr_db.c:1620
+#: src/profile.c:250 src/dvr/dvr_db.c:1682
 msgid "Low"
 msgstr "Nízká"
 
-#: src/dvr/dvr_db.c:1649
+#: src/dvr/dvr_db.c:1711
 msgid "MPEG-PS (DVD)"
 msgstr "MPEG-PS (DVD)"
 
@@ -1770,7 +1903,7 @@ msgstr "MPEG-PS (DVD)"
 msgid "MPEG-PS (DVD)/av-lib"
 msgstr "MPEG-PS (DVD)/av-lib"
 
-#: src/dvr/dvr_db.c:1648
+#: src/dvr/dvr_db.c:1710
 msgid "MPEG-TS"
 msgstr "MPEG-TS"
 
@@ -1778,7 +1911,7 @@ msgstr "MPEG-TS"
 msgid "MPEG-TS Input"
 msgstr "MPEG-TS vstup"
 
-#: src/input/mpegts/mpegts_mux.c:486
+#: src/input/mpegts/mpegts_mux.c:487
 msgid "MPEG-TS Multiplex"
 msgstr "MPEG-TS multiplex"
 
@@ -1798,7 +1931,7 @@ msgstr "MPEG-TS Pass-through"
 msgid "MPEG-TS Pass-through/built-in"
 msgstr "MPEG-TS Pass-through/build-in"
 
-#: src/input/mpegts/mpegts_service.c:725
+#: src/input/mpegts/mpegts_service.c:734
 msgid "MPEG-TS Raw Service"
 msgstr "MPEG-TS holá služba"
 
@@ -1814,15 +1947,15 @@ msgstr "MPEG-TS/av-lib"
 msgid "Magazines"
 msgstr "Magazíny"
 
-#: src/dvr/dvr_config.c:914
+#: src/dvr/dvr_config.c:923
 msgid "Make Subdirectories Per Channel"
 msgstr "Vytvořit podadresáře pro každý programu"
 
-#: src/dvr/dvr_config.c:907
+#: src/dvr/dvr_config.c:916
 msgid "Make Subdirectories Per Day"
 msgstr "Vytvořit podadresáře pro každý den"
 
-#: src/dvr/dvr_config.c:921
+#: src/dvr/dvr_config.c:930
 msgid "Make Subdirectories Per Title"
 msgstr "Vytvořit podadresáře pro každý název"
 
@@ -1855,7 +1988,7 @@ msgstr "Hlavní tuner"
 msgid "Matroska"
 msgstr "Matroska"
 
-#: src/dvr/dvr_db.c:1645
+#: src/dvr/dvr_db.c:1707
 msgid "Matroska (mkv)"
 msgstr "Matroska (mkv)"
 
@@ -1875,11 +2008,11 @@ msgstr "Matroska/av-lib"
 msgid "Maximum Bandwidth (Kbps)"
 msgstr "Maximální šířka pásma (Kbps)"
 
-#: src/access.c:1445
+#: src/access.c:1528
 msgid "Maximum Channel Num"
 msgstr "Maximální číslo programu"
 
-#: src/dvr/dvr_autorec.c:1017
+#: src/dvr/dvr_autorec.c:1032
 msgid "Maximum Duration"
 msgstr "Maximální doba"
 
@@ -1920,15 +2053,15 @@ msgstr "Lékařství"
 msgid "Melodrama"
 msgstr "Melodrama"
 
-#: src/access.c:1438
+#: src/access.c:1521
 msgid "Min Channel Num"
 msgstr "Min. číslo programu"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:268
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:269
 msgid "Min Rotor Time (seconds)"
 msgstr "Min. čas rotoru (sekundy)"
 
-#: src/dvr/dvr_autorec.c:1010
+#: src/dvr/dvr_autorec.c:1025
 msgid "Minimum Duration"
 msgstr "Minimální doba"
 
@@ -1936,7 +2069,7 @@ msgstr "Minimální doba"
 msgid "Missing In PAT/SDT"
 msgstr "Chybí v PAT/SDT"
 
-#: src/descrambler/capmt.c:2181
+#: src/descrambler/capmt.c:2185
 msgid "Mode"
 msgstr "Mód"
 
@@ -1956,7 +2089,7 @@ msgstr "Číslo modelu"
 msgid "Modulation"
 msgstr "Modulace"
 
-#: src/dvr/dvr_autorec.c:713
+#: src/dvr/dvr_autorec.c:728
 msgid "Mon"
 msgstr "Pon"
 
@@ -1964,11 +2097,11 @@ msgstr "Pon"
 msgid "Mono"
 msgstr "Mono"
 
-#: src/main.c:713
+#: src/main.c:723
 msgid "More verbose libav log"
 msgstr "Více upovídaný log pro libav"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:313
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:314
 msgid "Motor Rate (millis/deg)"
 msgstr "Rychlost motoru (ms/stupeň)"
 
@@ -1998,11 +2131,11 @@ msgstr "Muzikál"
 msgid "Mux"
 msgstr "Mux"
 
-#: src/satip/server.c:598
+#: src/satip/server.c:607
 msgid "Mux Handling"
 msgstr "Zacházení s muxy"
 
-#: src/input/mpegts/iptv/iptv_mux.c:132
+#: src/input/mpegts/iptv/iptv_mux.c:147
 msgid "Mux Name"
 msgstr "Jméno muxu"
 
@@ -2014,7 +2147,7 @@ msgstr "Položka plánovače muxů"
 msgid "Mux UUID"
 msgstr "UUID muxu"
 
-#: src/streaming.c:421
+#: src/streaming.c:423
 msgid "Mux not enabled"
 msgstr "Mux není povolen"
 
@@ -2025,11 +2158,11 @@ msgstr "Mux není povolen"
 msgid "NONE"
 msgstr "NIC"
 
-#: src/channels.c:302 src/channels.c:1104 src/bouquet.c:861
-#: src/epggrab/module.c:119 src/dvr/dvr_autorec.c:922
+#: src/channels.c:302 src/channels.c:1106 src/bouquet.c:861
+#: src/epggrab/module.c:124 src/dvr/dvr_autorec.c:937
 #: src/dvr/dvr_timerec.c:564 src/input/mpegts/mpegts_input.c:249
-#: src/input/mpegts/mpegts_mux.c:526
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1202
+#: src/input/mpegts/mpegts_mux.c:527
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1216
 #: src/input/mpegts/satip/satip_satconf.c:194
 msgid "Name"
 msgstr "Název"
@@ -2042,16 +2175,16 @@ msgstr "Přírodní vědy"
 msgid "Nature"
 msgstr "Příroda"
 
-#: src/input/mpegts/mpegts_mux.c:512 src/input/mpegts/mpegts_service.c:94
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:137
+#: src/input/mpegts/mpegts_mux.c:513 src/input/mpegts/mpegts_service.c:94
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:142
 msgid "Network"
 msgstr "Síť"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:531
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:532
 msgid "Network A"
 msgstr "Síť A"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:542
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:543
 msgid "Network B"
 msgstr "Síť B"
 
@@ -2069,21 +2202,21 @@ msgstr "Název sítě"
 
 #: src/input/mpegts/satip/satip_frontend.c:197
 #: src/input/mpegts/satip/satip_frontend.c:336
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:172
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:177
 msgid "Network Type"
 msgstr "Typ sítě"
 
-#: src/input/mpegts/mpegts_mux.c:519
+#: src/input/mpegts/mpegts_mux.c:520
 msgid "Network UUID"
 msgstr "UUID sítě"
 
-#: src/access.c:1321
+#: src/access.c:1404 src/access.c:1901
 msgid "Network prefix"
 msgstr "Prefix sítě"
 
 #: src/input/mpegts/mpegts_input.c:279
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:332
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1217
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:333
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1231
 #: src/input/mpegts/satip/satip_satconf.c:224
 msgid "Networks"
 msgstr "Sítě"
@@ -2104,49 +2237,49 @@ msgstr "Zpoždění pro další ladění v ms (0-2000)"
 msgid "No PIN"
 msgstr "Žádný PIN"
 
-#: src/streaming.c:441
+#: src/streaming.c:443
 msgid "No access"
 msgstr "Přístup nepovolen"
 
-#: src/main.c:806
+#: src/main.c:816
 msgid "No adapters specified!\n"
 msgstr "Žádné adaptéry nebyly specifikovány!\n"
 
-#: src/dvr/dvr_autorec.c:737
+#: src/dvr/dvr_autorec.c:752
 msgid "No days"
 msgstr "Žádné dny"
 
-#: src/streaming.c:439
+#: src/streaming.c:441
 msgid "No descrambler"
 msgstr "Žádný dešifrátor"
 
-#: src/streaming.c:419
+#: src/streaming.c:421
 msgid "No free adapter"
 msgstr "Žádný adaptér není volný"
 
-#: src/streaming.c:443
+#: src/streaming.c:445
 msgid "No input detected"
 msgstr "Žádný vstup nebyl detekován"
 
-#: src/streaming.c:433
+#: src/streaming.c:435
 msgid "No service assigned to channel"
 msgstr "Žádná služba není přiřazena programu"
 
-#: src/streaming.c:427
+#: src/streaming.c:429
 msgid "No service enabled"
 msgstr "Žádná služba není povolená"
 
-#: src/streaming.c:431
+#: src/streaming.c:433
 msgid "No source available"
 msgstr "Žádný zdroj není dostupný"
 
 #: src/profile.c:265 src/input/mpegts/linuxdvb/linuxdvb_switch.c:252
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:458
-#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:271
+#: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:296
 msgid "None"
 msgstr "Žádný"
 
-#: src/profile.c:249 src/dvr/dvr_db.c:1619
+#: src/profile.c:249 src/dvr/dvr_db.c:1681
 msgid "Normal"
 msgstr "Standardní"
 
@@ -2154,15 +2287,15 @@ msgstr "Standardní"
 msgid "Not Linked"
 msgstr "Nespojeno"
 
-#: src/profile.c:1355 src/dvr/dvr_db.c:1616 src/dvr/dvr_db.c:1644
+#: src/profile.c:1355 src/dvr/dvr_db.c:1678 src/dvr/dvr_db.c:1706
 msgid "Not set"
 msgstr "Nenastaveno"
 
-#: src/dvr/dvr_config.c:696
+#: src/dvr/dvr_config.c:697
 msgid "Not set (none or channel configuration)"
 msgstr "Nenastaveno (žádný nebo z konfigurace programu)"
 
-#: src/dvr/dvr_db.c:1973 src/dvr/dvr_autorec.c:611
+#: src/dvr/dvr_db.c:2035 src/dvr/dvr_autorec.c:626
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Nenastaveno (použij konfiguraci programu nebo DVR)"
 
@@ -2170,27 +2303,31 @@ msgstr "Nenastaveno (použij konfiguraci programu nebo DVR)"
 msgid "Number"
 msgstr "Číslo"
 
-#: src/main.c:728
+#: src/main.c:738
 msgid "Number of tsfile tuners"
 msgstr "Počet tsfile tunerů"
 
-#: src/streaming.c:401 src/input/mpegts/mpegts_mux.c:389
+#: src/streaming.c:403 src/input/mpegts/mpegts_mux.c:389
 msgid "OK"
 msgstr "OK"
 
-#: src/descrambler/capmt.c:2165
+#: src/input/mpegts/mpegts_mux.c:391
+msgid "OK (partial)"
+msgstr "OK (částečný)"
+
+#: src/descrambler/capmt.c:2169
 msgid "OSCam (rev >= 9095)"
 msgstr "OSCam (rev >= 9095)"
 
-#: src/descrambler/capmt.c:2164
+#: src/descrambler/capmt.c:2168
 msgid "OSCam TCP (rev >= 9574)"
 msgstr "OSCam TCP (rev >= 9574)"
 
-#: src/descrambler/capmt.c:2162
+#: src/descrambler/capmt.c:2166
 msgid "OSCam net protocol (rev >= 10389)"
 msgstr "OSCam net protokol (rev >= 10389)"
 
-#: src/descrambler/capmt.c:2163
+#: src/descrambler/capmt.c:2167
 msgid "OSCam pc-nodmx (rev >= 9756)"
 msgstr "OSCam pc-nodmx (rev >= 9756)"
 
@@ -2202,7 +2339,7 @@ msgstr "Lichý klíč"
 msgid "Off"
 msgstr "Vypnuto"
 
-#: src/descrambler/capmt.c:2166
+#: src/descrambler/capmt.c:2170
 msgid "Older OSCam"
 msgstr "Starší OSCam"
 
@@ -2218,23 +2355,23 @@ msgstr "Na požádání"
 msgid "One Mux (EMM)"
 msgstr "Jeden mux (EMM)"
 
-#: src/input/mpegts/mpegts_mux.c:464
+#: src/input/mpegts/mpegts_mux.c:465
 msgid "Only Bulsatcom 39E"
 msgstr "Pouze Bulsatcom 39E"
 
-#: src/input/mpegts/mpegts_mux.c:460
+#: src/input/mpegts/mpegts_mux.c:461
 msgid "Only EIT"
 msgstr "Pouze EIT"
 
-#: src/input/mpegts/mpegts_mux.c:467
+#: src/input/mpegts/mpegts_mux.c:468
 msgid "Only OpenTV Sky Ausat"
 msgstr "Pouze OpenTV Sky Ausat"
 
-#: src/input/mpegts/mpegts_mux.c:466
+#: src/input/mpegts/mpegts_mux.c:467
 msgid "Only OpenTV Sky Italia"
 msgstr "Pouze OpenTV Sky Italia"
 
-#: src/input/mpegts/mpegts_mux.c:465
+#: src/input/mpegts/mpegts_mux.c:466
 msgid "Only OpenTV Sky UK"
 msgstr "Pouze OpenTV Sky UK"
 
@@ -2242,19 +2379,19 @@ msgstr "Pouze OpenTV Sky UK"
 msgid "Only Preferred CA PID"
 msgstr "Pouze preferovaná CA PID"
 
-#: src/input/mpegts/mpegts_mux.c:461
+#: src/input/mpegts/mpegts_mux.c:462
 msgid "Only UK Freesat"
 msgstr "Pouze UK Freesat"
 
-#: src/input/mpegts/mpegts_mux.c:462
+#: src/input/mpegts/mpegts_mux.c:463
 msgid "Only UK Freeview"
 msgstr "Pouze UK Freeview"
 
-#: src/input/mpegts/mpegts_mux.c:463
+#: src/input/mpegts/mpegts_mux.c:464
 msgid "Only Viasat Baltic"
 msgstr "Pouze Viasat Baltic"
 
-#: src/main.c:673
+#: src/main.c:683
 msgid "Only use specified DVB adapters (comma separated)"
 msgstr "Použij pouze specifikované DVB adaptéry (oddělené čárkou)"
 
@@ -2272,11 +2409,11 @@ msgstr "Opera"
 msgid "Orbital Position"
 msgstr "Orbitální pozice"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:567
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:568
 msgid "Orbital Positions"
 msgstr "Orbitální pozice"
 
-#: src/input/mpegts/mpegts_mux.c:533
+#: src/input/mpegts/mpegts_mux.c:534
 msgid "Original Network ID"
 msgstr "Originální ID sítě"
 
@@ -2284,7 +2421,7 @@ msgstr "Originální ID sítě"
 msgid "Other Stream Filter"
 msgstr "Filtr jiného streamu"
 
-#: src/main.c:732
+#: src/main.c:742
 msgid "Output directory for tsdebug"
 msgstr "Výstupní adresář pro tsdebug"
 
@@ -2292,7 +2429,7 @@ msgstr "Výstupní adresář pro tsdebug"
 msgid "Over-the-air"
 msgstr "Over-the-air"
 
-#: src/epggrab.c:288
+#: src/epggrab.c:294
 msgid "Over-the-air Cron multi-line"
 msgstr "Over-the-air víceřádkový cron"
 
@@ -2300,15 +2437,15 @@ msgstr "Over-the-air víceřádkový cron"
 msgid "Over-the-air EPG"
 msgstr "Over-the-air EPG"
 
-#: src/epggrab/module.c:179
+#: src/epggrab/module.c:185
 msgid "Over-the-air EPG Grabber"
 msgstr "Over-the-air EPG graber"
 
-#: src/epggrab.c:235
+#: src/epggrab.c:241
 msgid "Over-the-air Grabbers"
 msgstr "Over-the-air grabery"
 
-#: src/dvr/dvr_db.c:2159 src/dvr/dvr_autorec.c:1086 src/dvr/dvr_timerec.c:647
+#: src/dvr/dvr_db.c:2227 src/dvr/dvr_autorec.c:1101 src/dvr/dvr_timerec.c:647
 msgid "Owner"
 msgstr "Majitel"
 
@@ -2329,7 +2466,7 @@ msgstr "PID číslo 21 v setup příkazu"
 msgid "PIDs in setup"
 msgstr "PID čísla v setup příkazu"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:514
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:515
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:146
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:209
 msgid "PIN"
@@ -2351,19 +2488,19 @@ msgstr "PLS Code"
 msgid "PLS Mode"
 msgstr "PLS Mode"
 
-#: src/access.c:1685 src/descrambler/cwc.c:1736
+#: src/access.c:1768 src/descrambler/cwc.c:1736
 msgid "Password"
 msgstr "Heslo"
 
-#: src/access.c:1693
+#: src/access.c:1776
 msgid "Password2"
 msgstr "Heslo2"
 
-#: src/access.c:1663
+#: src/access.c:1746
 msgid "Passwords"
 msgstr "Hesla"
 
-#: src/epggrab/module.c:167
+#: src/epggrab/module.c:173
 msgid "Path"
 msgstr "Cesta"
 
@@ -2371,7 +2508,7 @@ msgstr "Cesta"
 msgid "Performing arts"
 msgstr "Múzických umění"
 
-#: src/epggrab.c:265
+#: src/epggrab.c:271
 msgid "Periodic save EPG to disk"
 msgstr "Periodické ukládáni EPG na disk"
 
@@ -2379,11 +2516,11 @@ msgstr "Periodické ukládáni EPG na disk"
 msgid "Physiology"
 msgstr "Fyziologie"
 
-#: src/config.c:1726
+#: src/config.c:1842
 msgid "Picon"
 msgstr "Picon"
 
-#: src/config.c:1811
+#: src/config.c:1983
 msgid "Picon path (see Help)"
 msgstr "Cesta pro pikony (viz. nápověda)"
 
@@ -2416,7 +2553,7 @@ msgstr "Port"
 msgid "Position"
 msgstr "Pozice"
 
-#: src/dvr/dvr_config.c:843
+#: src/dvr/dvr_config.c:852
 msgid "Post-Processor Command"
 msgstr "Příkaz pro další zpracování"
 
@@ -2435,7 +2572,7 @@ msgstr "Předdefinované muxy"
 msgid "Pre-school children's programmes"
 msgstr "Programy pro předškolní děti"
 
-#: src/config.c:1797
+#: src/config.c:1962
 msgid "Prefer picons over channel name"
 msgstr "Preferuj picony před názvy programů"
 
@@ -2455,11 +2592,11 @@ msgstr "Prezentace"
 msgid "Press"
 msgstr "Tisk"
 
-#: src/epggrab/module.c:142 src/dvr/dvr_db.c:2122 src/dvr/dvr_autorec.c:1031
+#: src/epggrab/module.c:148 src/dvr/dvr_db.c:2190 src/dvr/dvr_autorec.c:1046
 #: src/dvr/dvr_timerec.c:623 src/input/mpegts/mpegts_input.c:233
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1209
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1223
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:452
-#: src/input/mpegts/iptv/iptv_mux.c:97
+#: src/input/mpegts/iptv/iptv_mux.c:111
 msgid "Priority"
 msgstr "Priorita"
 
@@ -2467,7 +2604,7 @@ msgstr "Priorita"
 msgid "Priority (-10..10)"
 msgstr "Priorita (-10..10)"
 
-#: src/channels.c:1116
+#: src/channels.c:1118
 msgid "Private"
 msgstr "Privátní"
 
@@ -2504,7 +2641,7 @@ msgstr "Kvíz"
 msgid "RTSP Port"
 msgstr "RTSP Port"
 
-#: src/satip/server.c:577
+#: src/satip/server.c:586
 msgid "RTSP Port (554 or 9983), 0 = disable"
 msgstr "RTSP Port (554 or 9983), 0 = zakázat"
 
@@ -2516,39 +2653,39 @@ msgstr "Perioda opětovního načtení (v hodinách)"
 msgid "Re-try period (hours)"
 msgstr "Perioda pro nový pokus (v hodinách)"
 
-#: src/dvr/dvr_autorec.c:878
+#: src/dvr/dvr_autorec.c:893
 msgid "Record all"
 msgstr "Zaznamenat vše"
 
-#: src/dvr/dvr_autorec.c:884
+#: src/dvr/dvr_autorec.c:899
 msgid "Record if different description"
 msgstr "Zaznamenat pokud je jiný popis"
 
-#: src/dvr/dvr_autorec.c:880
+#: src/dvr/dvr_autorec.c:895
 msgid "Record if different episode number"
 msgstr "Zaznamenat pokud je jiné číslo epizody"
 
-#: src/dvr/dvr_autorec.c:882
+#: src/dvr/dvr_autorec.c:897
 msgid "Record if different subtitle"
 msgstr "Zaznamenat pokud je jiný podtitulek"
 
-#: src/dvr/dvr_autorec.c:888
+#: src/dvr/dvr_autorec.c:903
 msgid "Record once per day"
 msgstr "Zaznamenat jednou denně"
 
-#: src/dvr/dvr_autorec.c:886
+#: src/dvr/dvr_autorec.c:901
 msgid "Record once per week"
 msgstr "Zaznamenat jednou týdně"
 
-#: src/dvr/dvr_config.c:736
+#: src/dvr/dvr_config.c:737
 msgid "Recording File Options"
 msgstr "Volby souboru pro záznam"
 
-#: src/dvr/dvr_config.c:850
+#: src/dvr/dvr_config.c:859
 msgid "Recording System Path"
 msgstr "Systémový adresář pro záznamy"
 
-#: src/satip/server.c:550
+#: src/satip/server.c:551
 msgid "Reject"
 msgstr "Odmítnout"
 
@@ -2566,11 +2703,11 @@ msgstr "Náboženský"
 msgid "Remarkable people"
 msgstr "Pozoruhodní lidé"
 
-#: src/dvr/dvr_config.c:970
+#: src/dvr/dvr_config.c:979
 msgid "Remove All Unsafe Characters From Filename"
 msgstr "Odebrat všechny nebezpečné znaky z jména souboru"
 
-#: src/dvr/dvr_config.c:977
+#: src/dvr/dvr_config.c:986
 msgid "Replace Whitespace In Title with '-'"
 msgstr "Nahradit mezery v názvu znakem '-'"
 
@@ -2582,7 +2719,7 @@ msgstr "Odpovědět na CAM PIN dotazy"
 msgid "Reports"
 msgstr "Zprávy"
 
-#: src/dvr/dvr_db.c:2288
+#: src/dvr/dvr_db.c:2357
 msgid "Rerun of"
 msgstr "Opakovaní"
 
@@ -2590,15 +2727,15 @@ msgstr "Opakovaní"
 msgid "Rescan"
 msgstr "Nový scan"
 
-#: src/streaming.c:543
+#: src/streaming.c:545
 msgid "Reserved"
 msgstr "Rezervováno"
 
 #: src/profile.c:1513
-msgid "Resolution"
-msgstr "Rozlišení"
+msgid "Resolution (height)"
+msgstr "Rozlišení (výška)"
 
-#: src/input/mpegts/iptv/iptv_mux.c:144
+#: src/input/mpegts/iptv/iptv_mux.c:159
 msgid "Respawn (pipe)"
 msgstr "Znovu spustit (roura)"
 
@@ -2606,7 +2743,7 @@ msgstr "Znovu spustit (roura)"
 msgid "Restart On Error"
 msgstr "Restartuj při chybě"
 
-#: src/dvr/dvr_db.c:2132 src/dvr/dvr_autorec.c:1047 src/dvr/dvr_timerec.c:632
+#: src/dvr/dvr_db.c:2200 src/dvr/dvr_autorec.c:1062 src/dvr/dvr_timerec.c:632
 msgid "Retention"
 msgstr "Zadržení"
 
@@ -2638,19 +2775,19 @@ msgstr "Rolloff"
 msgid "Romance"
 msgstr "Romance"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1245
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1259
 msgid "Rotor Type"
 msgstr "Typ rotoru"
 
-#: src/main.c:658
+#: src/main.c:668
 msgid "Run as group"
 msgstr "Skupina pro běh"
 
-#: src/main.c:657
+#: src/main.c:667
 msgid "Run as user"
 msgstr "Uživatel pro běh"
 
-#: src/dvr/dvr_db.c:288
+#: src/dvr/dvr_db.c:289
 msgid "Running"
 msgstr "Běží"
 
@@ -2682,13 +2819,13 @@ msgstr "SAT>IP DVB-S Slave Frontend"
 msgid "SAT>IP DVB-T Frontend"
 msgstr "SAT>IP DVB-T Frontend"
 
-#: src/main.c:677
+#: src/main.c:687
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
 msgstr "SAT>IP RTSP číslo portu pro server\n(defaultní: -1 = disable, 0 = webová konfigurace, standardní port je 554)"
 
-#: src/satip/server.c:558
+#: src/satip/server.c:559
 msgid "SAT>IP Server"
 msgstr "SAT>IP Server"
 
@@ -2696,7 +2833,7 @@ msgstr "SAT>IP Server"
 msgid "SAT>IP Source Number"
 msgstr "SAT>IP číslo zdroje"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:505
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:506
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:139
 msgid "SCR (ID)"
 msgstr "SCR (ID)"
@@ -2705,11 +2842,35 @@ msgstr "SCR (ID)"
 msgid "SD: Standard Definition"
 msgstr "SD: standardní rozlišení"
 
-#: src/dvr/dvr_db.c:1646
+#: src/input/mpegts/iptv/iptv_mux.c:95
+msgid "SIGHUP"
+msgstr "SIGHUP"
+
+#: src/input/mpegts/iptv/iptv_mux.c:94
+msgid "SIGINT"
+msgstr "SIGINT"
+
+#: src/input/mpegts/iptv/iptv_mux.c:92
+msgid "SIGKILL"
+msgstr "SIGKILL"
+
+#: src/input/mpegts/iptv/iptv_mux.c:93
+msgid "SIGTERM"
+msgstr "SIGTERM"
+
+#: src/input/mpegts/iptv/iptv_mux.c:96
+msgid "SIGUSR1"
+msgstr "SIGUSR1"
+
+#: src/input/mpegts/iptv/iptv_mux.c:97
+msgid "SIGUSR2"
+msgstr "SIGUSR2"
+
+#: src/dvr/dvr_db.c:1708
 msgid "Same as source (pass through)"
 msgstr "Stejný jako zdroj (pass through)"
 
-#: src/dvr/dvr_autorec.c:718
+#: src/dvr/dvr_autorec.c:733
 msgid "Sat"
 msgstr "Sat"
 
@@ -2717,7 +2878,7 @@ msgstr "Sat"
 msgid "SatConfig"
 msgstr "Sat.konfig."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1187
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1201
 #: src/input/mpegts/satip/satip_satconf.c:180
 msgid "Satconf"
 msgstr "Sat.konf."
@@ -2735,27 +2896,27 @@ msgstr "Satelitní pozice"
 msgid "Scan Queue length"
 msgstr "Velikost fronty skenu"
 
-#: src/input/mpegts/mpegts_mux.c:563
+#: src/input/mpegts/mpegts_mux.c:564
 msgid "Scan Result"
 msgstr "Výsledek scanu"
 
-#: src/input/mpegts/mpegts_mux.c:554
+#: src/input/mpegts/mpegts_mux.c:555
 msgid "Scan Status"
 msgstr "Stav scanu"
 
-#: src/dvr/dvr_db.c:2281
+#: src/dvr/dvr_db.c:2350
 msgid "Schedule Status"
 msgstr "Stav plánovače"
 
-#: src/dvr/dvr_db.c:2016
+#: src/dvr/dvr_db.c:2084
 msgid "Scheduled Start Time"
 msgstr "Naplánovaný čas začátku"
 
-#: src/dvr/dvr_db.c:2038
+#: src/dvr/dvr_db.c:2106
 msgid "Scheduled Stop Time"
 msgstr "Naplánovaný čas konce"
 
-#: src/dvr/dvr_db.c:278
+#: src/dvr/dvr_db.c:279
 msgid "Scheduled for recording"
 msgstr "Naplánované k záznamu"
 
@@ -2771,11 +2932,11 @@ msgstr "Věda"
 msgid "Science fiction"
 msgstr "Sci-fi"
 
-#: src/dvr/dvr_autorec.c:1070
+#: src/dvr/dvr_autorec.c:1085
 msgid "Season"
 msgstr "Sezóna"
 
-#: src/dvr/dvr_db.c:422
+#: src/dvr/dvr_db.c:427
 #, c-format
 msgid "Season %d"
 msgstr "Sezóna %d"
@@ -2792,7 +2953,7 @@ msgstr "Poslat plný PLAY příkaz"
 msgid "Serial Number"
 msgstr "Sériové číslo"
 
-#: src/dvr/dvr_autorec.c:1078
+#: src/dvr/dvr_autorec.c:1093
 msgid "Series Link"
 msgstr "Odkaz série"
 
@@ -2804,20 +2965,24 @@ msgstr "Vážný"
 msgid "Serious music"
 msgstr "Vážná hudba"
 
-#: src/config.c:1710 src/input/mpegts/satip/satip.c:394
+#: src/config.c:1822 src/input/mpegts/satip/satip.c:394
 msgid "Server"
 msgstr "Server"
 
-#: src/main.c:685
+#: src/main.c:695
 msgid "Server Connectivity"
 msgstr "Konektivita serveru"
+
+#: src/satip/server.c:578
+msgid "Server UUID"
+msgstr "UUID serveru"
 
 #: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
 msgid "Service"
 msgstr "Služba"
 
-#: src/main.c:653
+#: src/main.c:663
 msgid "Service Configuration"
 msgstr "Konfigurace služeb"
 
@@ -2830,7 +2995,7 @@ msgstr "ID služby"
 msgid "Service IDs as Channel Numbers"
 msgstr "ID služby jako čísla programů"
 
-#: src/input/mpegts/mpegts_service.c:143 src/input/mpegts/iptv/iptv_mux.c:138
+#: src/input/mpegts/mpegts_service.c:143 src/input/mpegts/iptv/iptv_mux.c:153
 msgid "Service Name"
 msgstr "Název služby"
 
@@ -2851,7 +3016,7 @@ msgstr "Služby"
 msgid "Services Count %zi"
 msgstr "Počet služeb %zi"
 
-#: src/epggrab/module.c:110
+#: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
 msgstr "Nastavení"
 
@@ -2859,15 +3024,15 @@ msgstr "Nastavení"
 msgid "Show"
 msgstr "Show"
 
-#: src/main.c:650
+#: src/main.c:660
 msgid "Show this page"
 msgstr "Ukaž tuto stránku"
 
-#: src/main.c:651
+#: src/main.c:661
 msgid "Show version information"
 msgstr "Ukaž informace o verzi"
 
-#: src/streaming.c:429
+#: src/streaming.c:431
 msgid "Signal quality too poor"
 msgstr "Kvalita signálu je velmi nízká"
 
@@ -2875,15 +3040,15 @@ msgstr "Kvalita signálu je velmi nízká"
 msgid "Signal scale (240 or 100)"
 msgstr "Škála signálu (240 nebo 100)"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:275
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:276
 msgid "Site Latitude"
 msgstr "Zeměpisná šířka umistění"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:282
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:283
 msgid "Site Longitude"
 msgstr "Zeměpisná délka umístění"
 
-#: src/dvr/dvr_config.c:883
+#: src/dvr/dvr_config.c:892
 msgid "Skip Commercials"
 msgstr "Přeskočit reklamy"
 
@@ -2915,7 +3080,7 @@ msgstr "Sociální"
 msgid "Social advisory"
 msgstr "Sociální poradenství"
 
-#: src/channels.c:1098
+#: src/channels.c:1100
 msgid "Sort Index"
 msgstr "Index třídění"
 
@@ -2923,15 +3088,15 @@ msgstr "Index třídění"
 msgid "Source"
 msgstr "Zdroj"
 
-#: src/streaming.c:408
+#: src/streaming.c:410
 msgid "Source deleted"
 msgstr "Zdroj smazán"
 
-#: src/streaming.c:406
+#: src/streaming.c:408
 msgid "Source quality is bad"
 msgstr "Kvalita zdroje je špatná"
 
-#: src/streaming.c:404
+#: src/streaming.c:406
 msgid "Source reconfigured"
 msgstr "Zdroj byl rekonfigurován"
 
@@ -2939,27 +3104,27 @@ msgstr "Zdroj byl rekonfigurován"
 msgid "Special events (Olympic Games, World Cup, etc.)"
 msgstr "Speciální události (Olympijské hry, Světový pohár, apod.)"
 
-#: src/main.c:696
+#: src/main.c:706
 msgid "Specify User-Agent header for the http client"
 msgstr "Specifikuj hlavičku User-Agent pro http klienta"
 
-#: src/main.c:692
+#: src/main.c:702
 msgid "Specify alternative htsp port"
 msgstr "Specifikuj alternativní htsp port"
 
-#: src/main.c:688
+#: src/main.c:698
 msgid "Specify alternative http port"
 msgstr "Specifikuj alternativní http port"
 
-#: src/main.c:690
+#: src/main.c:700
 msgid "Specify alternative http webroot"
 msgstr "Specifikuj alternativní http webroot"
 
-#: src/main.c:687
+#: src/main.c:697
 msgid "Specify bind address"
 msgstr "Specifikuj IP adresu pro příjem"
 
-#: src/main.c:694
+#: src/main.c:704
 msgid "Specify extra htsp port"
 msgstr "Specifikuj extra htsp port"
 
@@ -2979,7 +3144,7 @@ msgstr "Sportovní magazíny"
 msgid "Squash"
 msgstr "Squash"
 
-#: src/input/mpegts/mpegts_mux.c:476
+#: src/input/mpegts/mpegts_mux.c:477
 msgid "Standard"
 msgstr "Standardní"
 
@@ -2987,19 +3152,19 @@ msgstr "Standardní"
 msgid "Start"
 msgstr "Začátek"
 
-#: src/dvr/dvr_autorec.c:965
+#: src/dvr/dvr_autorec.c:980
 msgid "Start After"
 msgstr "Začátek za"
 
-#: src/dvr/dvr_autorec.c:974
+#: src/dvr/dvr_autorec.c:989
 msgid "Start Before"
 msgstr "Začátek před"
 
-#: src/dvr/dvr_db.c:1998
+#: src/dvr/dvr_db.c:2066
 msgid "Start Time"
 msgstr "Začátek"
 
-#: src/dvr/dvr_db.c:2274 src/descrambler/caclient.c:281
+#: src/dvr/dvr_db.c:2343 src/descrambler/caclient.c:281
 msgid "Status"
 msgstr "Stav"
 
@@ -3015,7 +3180,7 @@ msgstr "Stereo"
 msgid "Stop"
 msgstr "Zastavit"
 
-#: src/dvr/dvr_db.c:2023
+#: src/dvr/dvr_db.c:2091
 msgid "Stop Time"
 msgstr "Konec"
 
@@ -3023,12 +3188,16 @@ msgstr "Konec"
 msgid "Storage Path"
 msgstr "Cesta k úložišti"
 
+#: src/config.c:1778
+msgid "Storage space"
+msgstr "Místo na úložišti"
+
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
 msgid "Stream Index"
 msgstr "Index streamu"
 
-#: src/profile.c:275 src/dvr/dvr_config.c:791
+#: src/profile.c:275 src/dvr/dvr_config.c:792
 msgid "Stream Profile"
 msgstr "Profil streamu"
 
@@ -3037,36 +3206,36 @@ msgstr "Profil streamu"
 msgid "Stream Type"
 msgstr "Typ streamu"
 
-#: src/access.c:1273 src/access.c:1343
+#: src/access.c:1346 src/access.c:1426
 msgid "Streaming"
 msgstr "Streamování"
 
 #: src/input/mpegts/mpegts_input.c:241 src/input/mpegts/iptv/iptv.c:460
-#: src/input/mpegts/iptv/iptv_mux.c:105
+#: src/input/mpegts/iptv/iptv_mux.c:119
 msgid "Streaming Priority"
 msgstr "Priorita streamu"
 
-#: src/access.c:1362
+#: src/access.c:1445
 msgid "Streaming Profiles"
 msgstr "Profily streamů"
 
-#: src/dvr/dvr_config.c:744
+#: src/dvr/dvr_config.c:745
 msgid "Subdirectory Options"
 msgstr "Volby podadresáře"
 
-#: src/main.c:722
+#: src/main.c:732
 msgid "Subscribe to a service permanently"
 msgstr "Odebírej tuto službu permanentně"
 
-#: src/satip/server.c:584
+#: src/satip/server.c:593
 msgid "Subscription Weight"
 msgstr "Váha odběru"
 
-#: src/streaming.c:410
+#: src/streaming.c:412
 msgid "Subscription overridden"
 msgstr "Odběr přehlasován jiným požadavkem"
 
-#: src/dvr/dvr_db.c:2093 src/dvr/dvr_db.c:2100
+#: src/dvr/dvr_db.c:2161 src/dvr/dvr_db.c:2168
 msgid "Subtitle"
 msgstr "Podtitulek"
 
@@ -3078,7 +3247,7 @@ msgstr "Kodek podtitulků"
 msgid "Subtitle Stream Filter"
 msgstr "Filtr streamu podtitilků"
 
-#: src/dvr/dvr_autorec.c:719
+#: src/dvr/dvr_autorec.c:734
 msgid "Sun"
 msgstr "Ned"
 
@@ -3086,11 +3255,11 @@ msgstr "Ned"
 msgid "Surround (2 Front, Rear Mono)"
 msgstr "Surround (2 přední, zadní mono)"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:253
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:254
 msgid "Switch Then Rotor"
 msgstr "Přepínač pak rotor"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1236
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1250
 msgid "Switch Type"
 msgstr "Typ přepínače"
 
@@ -3103,19 +3272,19 @@ msgstr "Přepínač: %s"
 msgid "Symbol Rate (Sym/s)"
 msgstr "Symbol Rate (Sym/s)"
 
-#: src/dvr/dvr_config.c:686
+#: src/dvr/dvr_config.c:687
 msgid "Sync"
 msgstr "Synchronizovat"
 
-#: src/dvr/dvr_config.c:687
+#: src/dvr/dvr_config.c:688
 msgid "Sync + Don't keep"
 msgstr "Synch. ₊ nezanechávej"
 
-#: src/dvr/dvr_config.c:684
+#: src/dvr/dvr_config.c:685
 msgid "System"
 msgstr "Systém"
 
-#: src/dvr/dvr_config.c:875
+#: src/dvr/dvr_config.c:884
 msgid "Tag Files With Metadata"
 msgstr "Vlož metadata do souborů"
 
@@ -3145,7 +3314,7 @@ msgstr "Filtr streamu teletextu"
 msgid "Tennis"
 msgstr "Tenis"
 
-#: src/main.c:727
+#: src/main.c:737
 msgid "Testing options"
 msgstr "Testovací volby"
 
@@ -3157,15 +3326,19 @@ msgstr "Tento tuner"
 msgid "Thriller"
 msgstr "Thriller"
 
-#: src/dvr/dvr_autorec.c:716
+#: src/dvr/dvr_autorec.c:731
 msgid "Thu"
 msgstr "Čtv"
 
-#: src/config.c:1722
+#: src/config.c:1779
+msgid "Time"
+msgstr "Čas"
+
+#: src/config.c:1838
 msgid "Time Update"
 msgstr "Aktualizace času"
 
-#: src/dvr/dvr_db.c:316
+#: src/dvr/dvr_db.c:317
 msgid "Time missed"
 msgstr "Čas byl zmeškán"
 
@@ -3190,15 +3363,15 @@ msgstr "Timeshift"
 msgid "Timout (secs)"
 msgstr "Časový limit (sek.)"
 
-#: src/dvr/dvr_db.c:2078 src/dvr/dvr_db.c:2085 src/dvr/dvr_timerec.c:570
+#: src/dvr/dvr_db.c:2146 src/dvr/dvr_db.c:2153 src/dvr/dvr_timerec.c:570
 msgid "Title"
 msgstr "Název"
 
-#: src/dvr/dvr_autorec.c:934
+#: src/dvr/dvr_autorec.c:949
 msgid "Title (Regexp)"
 msgstr "Název (regexp)"
 
-#: src/webui/extjs.c:211
+#: src/webui/extjs.c:217
 msgid "Toggle details"
 msgstr "Přepnout detaily"
 
@@ -3210,7 +3383,7 @@ msgstr "Tone Burst"
 msgid "Tourism / Travel"
 msgstr "Turismus / Cestování"
 
-#: src/tvhlog.c:617
+#: src/tvhlog.c:630
 msgid "Trace subsystems"
 msgstr "Subsystémy pro trasování"
 
@@ -3234,15 +3407,15 @@ msgstr "Mód vysílání"
 msgid "Transponder ID"
 msgstr "ID transpodéru"
 
-#: src/input/mpegts/mpegts_mux.c:540
+#: src/input/mpegts/mpegts_mux.c:541
 msgid "Transport Stream ID"
 msgstr "ID streamu transpondéru"
 
-#: src/dvr/dvr_autorec.c:714
+#: src/dvr/dvr_autorec.c:729
 msgid "Tue"
 msgstr "Úte"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:221
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:222
 msgid "Tune Before DiseqC"
 msgstr "Ladit před DiseqC"
 
@@ -3258,19 +3431,19 @@ msgstr "Konfigurace tuneru"
 msgid "Tuner bind IP address"
 msgstr "IP adresa pro komunikaci s tunerem"
 
-#: src/streaming.c:425
+#: src/streaming.c:427
 msgid "Tuning failed"
 msgstr "Ladění selhalo"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:245
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:246
 msgid "Turn off LNB when idle"
 msgstr "Vypni LNB při nečinnosti"
 
-#: src/config.c:1751
+#: src/config.c:1867
 msgid "Tvheadend server name"
 msgstr "Jméno Tvheadend serveru"
 
-#: src/epggrab/module.c:127
+#: src/epggrab/module.c:132
 msgid "Type"
 msgstr "Typ"
 
@@ -3278,11 +3451,11 @@ msgstr "Typ"
 msgid "UDP RTP Port Number (2 ports)"
 msgstr "UDP RTP číslo portu (2 porty)"
 
-#: src/dvr/dvr_db.c:2260 src/input/mpegts/iptv/iptv_mux.c:113
+#: src/dvr/dvr_db.c:2329 src/input/mpegts/iptv/iptv_mux.c:127
 msgid "URL"
 msgstr "URL"
 
-#: src/main.c:682
+#: src/main.c:692
 msgid "URL with the SAT>IP server XML location"
 msgstr "URL s umístěním XML souboru na SAT>IP serveru"
 
@@ -3295,7 +3468,7 @@ msgid "USALS Rotor"
 msgstr "USALS Rotor"
 
 #: src/input/mpegts/satip/satip.c:296
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:151
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:156
 msgid "UUID"
 msgstr "UUID"
 
@@ -3311,27 +3484,27 @@ msgstr "Uncommitted"
 msgid "Unicable"
 msgstr "Unicable"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:602
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:603
 msgid "Unicable Switch (Universal LNB, experimental)"
 msgstr "Unicable přepínač (univerzální LNB, experimentální)"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1254
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1268
 msgid "Unicable Type"
 msgstr "Typ unicable"
 
-#: src/profile.c:251 src/dvr/dvr_db.c:1621
+#: src/profile.c:251 src/dvr/dvr_db.c:1683
 msgid "Unimportant"
 msgstr "Nedůležité"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:584
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:585
 msgid "Universal LNB only"
 msgstr "Pouze univerzální LNB"
 
-#: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:683
+#: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:684
 msgid "Unknown"
 msgstr "Neznámé"
 
-#: src/streaming.c:446
+#: src/streaming.c:448
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Neznámá příčina (%i)"
@@ -3352,27 +3525,27 @@ msgstr "Nenastaveno (standardní)"
 msgid "Update Card (EMM)"
 msgstr "Aktualizovat kartu (EMM)"
 
-#: src/dvr/dvr_config.c:704
+#: src/dvr/dvr_config.c:705
 msgid "Update Disabled"
 msgstr "Aktualizace zakázána"
 
-#: src/epggrab.c:258
+#: src/epggrab.c:264
 msgid "Update channel icon"
 msgstr "Aktualizovat ikonu programu"
 
-#: src/epggrab.c:244
+#: src/epggrab.c:250
 msgid "Update channel name"
 msgstr "Aktualizovat název programu"
 
-#: src/epggrab.c:251
+#: src/epggrab.c:257
 msgid "Update channel number"
 msgstr "Aktualizovat číslo programu"
 
-#: src/config.c:1776
+#: src/config.c:1941
 msgid "Update time"
 msgstr "Aktualizovat čas"
 
-#: src/config.c:1790
+#: src/config.c:1955
 msgid "Update tolerance (ms)"
 msgstr "Tolerance aktualizace (ms)"
 
@@ -3381,11 +3554,11 @@ msgstr "Tolerance aktualizace (ms)"
 msgid "Usage: %s [OPTIONS]\n"
 msgstr "Použití: %s [VOLBY]\n"
 
-#: src/dvr/dvr_config.c:984
+#: src/dvr/dvr_config.c:993
 msgid "Use Windows-compatible filenames"
 msgstr "Použij názvy souborů kompatibilní s Windows"
 
-#: src/main.c:698
+#: src/main.c:708
 msgid "Use XSPF playlist instead of M3U"
 msgstr "Použít XSPF playlist místo M3U"
 
@@ -3397,7 +3570,7 @@ msgstr "Používat pouze RAM"
 msgid "Use original"
 msgstr "Použít originál"
 
-#: src/dvr/dvr_db.c:302
+#: src/dvr/dvr_db.c:303
 msgid "User Access Error"
 msgstr "Chyba přístupu uživatele"
 
@@ -3405,19 +3578,23 @@ msgstr "Chyba přístupu uživatele"
 msgid "User Icon"
 msgstr "Uživatelská ikona"
 
-#: src/dvr/dvr_db.c:304
+#: src/dvr/dvr_db.c:305
 msgid "User Limit Reached"
 msgstr "Dosažen limit uživatele"
 
-#: src/streaming.c:414
+#: src/streaming.c:416
 msgid "User access error"
 msgstr "Chyba přístupu uživatele"
 
-#: src/streaming.c:416
+#: src/config.c:1926
+msgid "User language"
+msgstr "Jazyk uživatele"
+
+#: src/streaming.c:418
 msgid "User limit reached"
 msgstr "Dosažen limit uživatele"
 
-#: src/access.c:1315 src/access.c:1679 src/descrambler/cwc.c:1730
+#: src/access.c:1398 src/access.c:1762 src/descrambler/cwc.c:1730
 msgid "Username"
 msgstr "Uživatelské jméno"
 
@@ -3437,7 +3614,7 @@ msgstr "Šířka pásma pro video (kb/s) (0=Auto)"
 msgid "Video CODEC"
 msgstr "Video kodek"
 
-#: src/access.c:1371
+#: src/access.c:1454
 msgid "Video Recorder"
 msgstr "Video rekordér"
 
@@ -3445,7 +3622,7 @@ msgstr "Video rekordér"
 msgid "Video Stream Filter"
 msgstr "Filtr video streamu"
 
-#: src/streaming.c:540
+#: src/streaming.c:542
 msgid "Visually impaired commentary/audio description"
 msgstr "Komentář pro zrakově postižené"
 
@@ -3473,11 +3650,11 @@ msgstr "WEBTV profil H264/AAC/Matroska"
 msgid "WEBTV profile VP8/Vorbis/WEBM"
 msgstr "WEBTV profil VP8/Vorbis/WEBM"
 
-#: src/dvr/dvr_db.c:286
+#: src/dvr/dvr_db.c:287
 msgid "Waiting for program start"
 msgstr "Čekám na start programu"
 
-#: src/dvr/dvr_db.c:284
+#: src/dvr/dvr_db.c:285
 msgid "Waiting for stream"
 msgstr "Čekám na stream"
 
@@ -3493,15 +3670,19 @@ msgstr "Vodní sporty"
 msgid "Weather report"
 msgstr "Zprávy o počasí"
 
-#: src/access.c:1412
+#: src/access.c:1495
 msgid "Web Interface"
 msgstr "Webové rozhraní"
 
-#: src/access.c:1335
+#: src/access.c:1418
 msgid "Web Interface Language"
 msgstr "Jazyk pro webové rozhraní"
 
-#: src/dvr/dvr_autorec.c:715
+#: src/config.c:1830
+msgid "Web User Interface"
+msgstr "Uživatelské webové rozhraní"
+
+#: src/dvr/dvr_autorec.c:730
 msgid "Wed"
 msgstr "Stř"
 
@@ -3509,7 +3690,7 @@ msgstr "Stř"
 msgid "Western"
 msgstr "Western"
 
-#: src/descrambler/capmt.c:2167
+#: src/descrambler/capmt.c:2171
 msgid "Wrapper (capmt_ca.so)"
 msgstr "Wrapper (capmt_ca.so)"
 
@@ -3521,32 +3702,32 @@ msgstr "podpora addpids/delpids"
 msgid "en50494"
 msgstr "en50494"
 
-#: src/dvr/dvr_db.c:1942
+#: src/dvr/dvr_db.c:2004
 msgid "hrs"
 msgstr "hod"
 
-#: src/main.c:757
+#: src/main.c:767
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr "specifikována chybná volba [%s]"
 
-#: src/dvr/dvr_db.c:1943
+#: src/dvr/dvr_db.c:2005
 msgid "min"
 msgstr "min"
 
-#: src/dvr/dvr_db.c:1944
+#: src/dvr/dvr_db.c:2006
 msgid "mins"
 msgstr "min"
 
-#: src/main.c:764
+#: src/main.c:774
 #, c-format
 msgid "option %s requires a value"
 msgstr "volba %s vyžaduje argument"
 
-#: src/main.c:729
+#: src/main.c:739
 msgid "tsfile input (mux file)"
 msgstr "tsfile vstup (mux soubor)"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:129
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:134
 msgid "tvhdhomerun Client"
 msgstr "Klient tvhdhomerun"
