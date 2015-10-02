@@ -1202,10 +1202,19 @@ static const char *
 access_entry_class_get_title (idnode_t *self, const char *lang)
 {
   access_entry_t *ae = (access_entry_t *)self;
+  const char *s = ae->ae_username;
 
-  if (ae->ae_comment && ae->ae_comment[0] != '\0')
-    return ae->ae_comment;
-  return ae->ae_username ?: "";
+  if (ae->ae_comment && ae->ae_comment[0] != '\0') {
+    if (ae->ae_username && ae->ae_username[0]) {
+      snprintf(prop_sbuf, PROP_SBUF_LEN, "%s (%s)", ae->ae_username, ae->ae_comment);
+      s = prop_sbuf;
+    } else {
+      s = ae->ae_comment;
+    }
+  }
+  if (s == NULL || *s == '\0')
+    s = "";
+  return s;
 }
 
 static int
@@ -1346,6 +1355,16 @@ language_get_list ( void *obj, const char *lang )
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "language/locale");
+  return m;
+}
+
+htsmsg_t *
+user_get_userlist ( void *obj, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "access/entry/userlist");
+  htsmsg_add_str(m, "event", "access");
   return m;
 }
 

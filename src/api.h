@@ -97,6 +97,9 @@ typedef void (*api_idnode_grid_callback_t)
 typedef idnode_set_t *(*api_idnode_tree_callback_t)
   (access_t *perm);
 
+htsmsg_t *api_idnode_flist_conf
+  ( htsmsg_t *args, const char *name );
+
 int api_idnode_grid
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp );
 

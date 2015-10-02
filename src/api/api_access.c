@@ -89,6 +89,45 @@ api_ipblock_entry_create
  *
  */
 
+static int
+api_access_entry_userlist
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int i;
+  idnode_set_t    *is;
+  idnode_t        *in;
+  access_entry_t  *ae;
+  htsmsg_t        *l, *e;
+
+  l = htsmsg_create_list();
+  if ((is = idnode_find_all(&access_entry_class, NULL))) {
+    for (i = 0; i < is->is_count; i++) {
+      in = is->is_array[i];
+
+      if (idnode_perm(in, perm, NULL))
+        continue;
+
+      ae = (access_entry_t *)in;
+      if (ae->ae_username != NULL && ae->ae_username[0] != '\0' &&
+          ae->ae_username[0] != '*') {
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "key", ae->ae_username);
+        htsmsg_add_str(e, "val", ae->ae_username);
+        htsmsg_add_msg(l, NULL, e);
+      }
+
+      idnode_perm_unset(in);
+    }
+    free(is->is_array);
+    free(is);
+  }
+
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+
+  return 0;
+}
+
 static void
 api_access_entry_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -129,6 +168,7 @@ void api_access_init ( void )
     { "ipblock/entry/create", ACCESS_ADMIN, api_ipblock_entry_create, NULL },
 
     { "access/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&access_entry_class },
+    { "access/entry/userlist", ACCESS_ADMIN, api_access_entry_userlist, NULL },
     { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },
     { "access/entry/create", ACCESS_ADMIN, api_access_entry_create, NULL },
 

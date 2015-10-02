@@ -2226,6 +2226,7 @@ const idclass_t dvr_entry_class = {
       .id       = "owner",
       .name     = N_("Owner"),
       .off      = offsetof(dvr_entry_t, de_owner),
+      .list     = user_get_userlist,
       .get_opts = dvr_entry_class_owner_opts,
     },
     {

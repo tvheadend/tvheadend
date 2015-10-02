@@ -23,7 +23,7 @@
 #include "htsmsg.h"
 #include "api.h"
 
-static htsmsg_t *
+htsmsg_t *
 api_idnode_flist_conf( htsmsg_t *args, const char *name )
 {
   htsmsg_t *m = NULL;

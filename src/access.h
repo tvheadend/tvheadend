@@ -302,5 +302,6 @@ void access_done(void);
  *
  */
 htsmsg_t *language_get_list ( void *obj, const char *lang );
+htsmsg_t *user_get_userlist ( void *obj, const char *lang );
 
 #endif /* ACCESS_H_ */

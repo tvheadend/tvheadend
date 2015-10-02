@@ -1339,6 +1339,8 @@ tvheadend.idnode_grid = function(panel, conf)
         if (!conf.readonly) {
             if (buttons.length > 0)
                 buttons.push('-');
+        }
+        if (!conf.readonly || conf.edit) {
             abuttons.edit = new Ext.Toolbar.Button({
                 tooltip: _('Edit selected entry'),
                 iconCls: 'edit',

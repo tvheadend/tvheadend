@@ -320,6 +320,7 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
+        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
@@ -395,12 +396,12 @@ tvheadend.dvr_failed = function(panel, index) {
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_failed',
-        comet: 'dvrentry',
         readonly: true,
         titleS: _('Failed Recording'),
         titleP: _('Failed Recordings'),
         iconCls: 'exclamation',
         tabIndex: index,
+        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),

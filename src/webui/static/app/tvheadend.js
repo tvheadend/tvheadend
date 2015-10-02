@@ -1,6 +1,7 @@
 tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
+tvheadend.admin = false;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -359,6 +360,8 @@ function accessUpdate(o) {
     tvheadend.accessUpdate = o;
     if (!tvheadend.capabilities)
         return;
+
+    tvheadend.admin = o.admin == true;
 
     if ('info_area' in o)
         tvheadend.rootTabPanel.setInfoArea(o.info_area);
