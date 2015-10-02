@@ -457,7 +457,8 @@ _xmltv_parse_lang_str ( lang_str_t **ls, htsmsg_t *tags, const char *tname )
  */
 static int _xmltv_parse_programme_tags
   (epggrab_module_t *mod, channel_t *ch, htsmsg_t *tags, 
-   time_t start, time_t stop, epggrab_stats_t *stats)
+   time_t start, time_t stop, const char *icon,
+   epggrab_stats_t *stats)
 {
   int save = 0, save2 = 0, save3 = 0;
   epg_episode_t *ee = NULL;
@@ -551,6 +552,9 @@ static int _xmltv_parse_programme_tags
     save3 |= _xmltv_parse_star_rating(mod, ee, tags);
 
     save3 |= _xmltv_parse_age_rating(mod, ee, tags);
+
+    if (icon)
+      save3 |= epg_episode_set_image(ee, icon, mod);
   }
 
   /* Stats */
@@ -573,8 +577,8 @@ static int _xmltv_parse_programme
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
   int save = 0;
-  htsmsg_t *attribs, *tags;
-  const char *s, *chid;
+  htsmsg_t *attribs, *tags, *subtag;
+  const char *s, *chid, *icon = NULL;
   time_t start, stop;
   epggrab_channel_t *ch;
   epggrab_channel_link_t *ecl;
@@ -591,11 +595,15 @@ static int _xmltv_parse_programme
   if((s       = htsmsg_get_str(attribs, "stop"))    == NULL) return 0;
   stop  = _xmltv_str2time(s);
 
+  if((subtag  = htsmsg_get_map(tags,    "icon"))   != NULL &&
+     (attribs = htsmsg_get_map(subtag,  "attrib")) != NULL)
+    icon = htsmsg_get_str(attribs, "src");
+
   if(stop <= start || stop <= dispatch_clock) return 0;
 
   LIST_FOREACH(ecl, &ch->channels, ecl_epg_link)
     save |= _xmltv_parse_programme_tags(mod, ecl->ecl_channel, tags,
-                                        start, stop, stats);
+                                        start, stop, icon, stats);
   return save;
 }
 
