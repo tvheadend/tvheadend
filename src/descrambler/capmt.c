@@ -2074,9 +2074,13 @@ capmt_service_start(caclient_t *cac, service_t *s)
   }
 
   td = (th_descrambler_t *)ct;
-  snprintf(buf, sizeof(buf), "capmt-%s-%i",
-                             capmt->capmt_sockfile,
-                             capmt->capmt_port);
+  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP || capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+    snprintf(buf, sizeof(buf), "capmt-%s-%i",
+                               capmt->capmt_sockfile,
+                               capmt->capmt_port);
+  } else {
+    snprintf(buf, sizeof(buf), "capmt-%s", capmt->capmt_sockfile);
+  }
   td->td_nicename    = strdup(buf);
   td->td_service     = s;
   td->td_stop        = capmt_service_destroy;
