@@ -216,9 +216,15 @@ linuxdvb_adapter_new(const char *path, int a, const char *name,
 /*
  *
  */
+static int force_dvbs;
+
 static dvb_fe_type_t
 linuxdvb_get_type(int linux_type)
 {
+  /* useful for debugging with DVB-T */
+  if (force_dvbs)
+    return DVB_TYPE_S;
+
   switch (linux_type) {
   case FE_QPSK:
     return DVB_TYPE_S;
@@ -587,6 +593,8 @@ static fsmonitor_t devmon = {
 void
 linuxdvb_adapter_init ( void )
 {
+  force_dvbs = getenv("TVHEADEND_DEBUG_FORCE_DVBS") != NULL;
+
   /* Install monitor on /dev */
   (void)fsmonitor_add("/dev", &devmon);
 
