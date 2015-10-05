@@ -37,7 +37,8 @@
     "[0-9]+'?a? Stagione -? ?Puntata ?[0-9]+[A-Za-z]? \"\" *([^\"]+) *\"\""
   ],
   "cleanup_title": [
-    "^ *(.*) *- *1\\^TV *$"
+    "^ *(.*) *- *1\\^TV *$",
+    "^ *(.*) *$"
   ],
   "__title_references": [
     "The Big Bang Theory - 1^TV "
