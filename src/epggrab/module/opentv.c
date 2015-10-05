@@ -87,6 +87,7 @@ typedef struct opentv_module_t
   opentv_pattern_list_t  p_enum;
   opentv_pattern_list_t  p_pnum;
   opentv_pattern_list_t  p_subt;
+  opentv_pattern_list_t  p_cleanup_title;
 } opentv_module_t;
 
 /*
@@ -319,6 +320,7 @@ opentv_parse_event_section_one
   epg_episode_t *ee;
   epg_serieslink_t *es;
   opentv_event_t ev;
+  char buffer[2048];
 
   /* Loop around event entries */
   i = 7;
@@ -375,14 +377,14 @@ opentv_parse_event_section_one
     if ((ee = epg_broadcast_get_episode(ebc, 1, &save))) {
       tvhdebug("opentv", "  find episode %p", ee);
       if (ev.title) {
-        int size;
-
-        size = strlen(ev.title);
-        while (size > 0 && isspace(ev.title[size - 1]))
-          ev.title[--size] = '\0';
-
         tvhdebug("opentv", "    title '%s'", ev.title);
-        save |= epg_episode_set_title(ee, ev.title, lang, src);
+
+        /* try to cleanup the title */
+        if (_opentv_apply_pattern_list(buffer, sizeof(buffer), ev.title, &mod->p_cleanup_title)) {
+          tvhtrace("opentv", "  clean title '%s'", buffer);
+          save |= epg_episode_set_title(ee, buffer, lang, src);
+        } else
+          save |= epg_episode_set_title(ee, ev.title, lang, src);
       }
       if (ev.cat) {
         epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
@@ -391,25 +393,24 @@ opentv_parse_event_section_one
         epg_genre_list_destroy(egl);
       }
       if (ev.summary) {
-        char buf[1024];
         epg_episode_num_t en;
 
         memset(&en, 0, sizeof(en));
         /* search for season number */
-        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, &mod->p_snum))
-          if ((en.s_num = atoi(buf)))
+        if (_opentv_apply_pattern_list(buffer, sizeof(buffer), ev.summary, &mod->p_snum))
+          if ((en.s_num = atoi(buffer)))
             tvhtrace("opentv","  extract season number %d", en.s_num);
         /* ...for episode number */
-        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, &mod->p_enum))
-          if ((en.e_num = atoi(buf)))
+        if (_opentv_apply_pattern_list(buffer, sizeof(buffer), ev.summary, &mod->p_enum))
+          if ((en.e_num = atoi(buffer)))
             tvhtrace("opentv","  extract episode number %d", en.e_num);
         /* ...for part number */
-        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, &mod->p_pnum)) {
-          if (buf[0] >= 'a' && buf[0] <= 'z')
-            en.p_num = buf[0] - 'a' + 1;
+        if (_opentv_apply_pattern_list(buffer, sizeof(buffer), ev.summary, &mod->p_pnum)) {
+          if (buffer[0] >= 'a' && buffer[0] <= 'z')
+            en.p_num = buffer[0] - 'a' + 1;
           else
-            if (buf[0] >= 'A' && buf[0] <= 'Z')
-              en.p_num = buf[0] - 'A' + 1;
+            if (buffer[0] >= 'A' && buffer[0] <= 'Z')
+              en.p_num = buffer[0] - 'A' + 1;
           if (en.p_num)
             tvhtrace("opentv","  extract part number %d", en.p_num);
         }
@@ -418,9 +419,9 @@ opentv_parse_event_section_one
           save |= epg_episode_set_epnum(ee, &en, src);
 
         /* ...for subtitle */
-        if (_opentv_apply_pattern_list(buf, sizeof(buf), ev.summary, &mod->p_subt)) {
-          tvhtrace("opentv", "  extract subtitle '%s'", buf);
-          save |= epg_episode_set_subtitle(ee, buf, lang, src);
+        if (_opentv_apply_pattern_list(buffer, sizeof(buffer), ev.summary, &mod->p_subt)) {
+          tvhtrace("opentv", "  extract subtitle '%s'", buffer);
+          save |= epg_episode_set_subtitle(ee, buffer, lang, src);
         }
       }
     }
@@ -885,6 +886,7 @@ static void _opentv_done( void *m )
   _opentv_free_pattern_list(&mod->p_enum);
   _opentv_free_pattern_list(&mod->p_pnum);
   _opentv_free_pattern_list(&mod->p_subt);
+  _opentv_free_pattern_list(&mod->p_cleanup_title);
 }
 
 static int _opentv_tune
@@ -962,6 +964,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   _opentv_compile_pattern_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
   _opentv_compile_pattern_list(&mod->p_pnum, htsmsg_get_list(m, "part_num"));
   _opentv_compile_pattern_list(&mod->p_subt, htsmsg_get_list(m, "subtitle"));
+  _opentv_compile_pattern_list(&mod->p_cleanup_title, htsmsg_get_list(m, "cleanup_title"));
 
   return 1;
 }

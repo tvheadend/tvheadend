@@ -36,7 +36,13 @@
     "[0-9]+'?a? Stagione -? ?'(([^']*(' [^A-Z0-9-])?('[^ '])?)+)'",
     "[0-9]+'?a? Stagione -? ?Puntata ?[0-9]+[A-Za-z]? \"\" *([^\"]+) *\"\""
   ],
-  "__reference": [
+  "cleanup_title": [
+    "^ *(.*) *- *1\\^TV *$"
+  ],
+  "__title_references": [
+    "The Big Bang Theory - 1^TV "
+  ],
+  "__summary_references": [
     "4' Stagione Ep.9B - 'L'Hub' Gli agenti ...: sara' Ward ...",
     "3a Stagione - Puntata 1 ...",
     "4' Stagione - 'Title' ...",
