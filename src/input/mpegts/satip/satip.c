@@ -208,6 +208,13 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "fast_switch",
+      .name     = N_("Fast input switch"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_fast_switch),
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "fullmux_ok",
       .name     = N_("Full Mux Rx mode supported"),
       .opts     = PO_ADVANCED,
@@ -480,6 +487,7 @@ satip_device_create( satip_device_info_t *info )
   conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
 
   /* some sane defaults */
+  sd->sd_fast_switch = 1;
   sd->sd_fullmux_ok  = 1;
   sd->sd_pids_len    = 127;
   sd->sd_pids_max    = 32;

@@ -1022,6 +1022,9 @@ new_tune:
   rtcp = rtp = NULL;
   lfe_master = NULL;
 
+  if (rtsp && !lfe->sf_device->sd_fast_switch)
+    satip_frontend_close_rtsp(lfe, efd, &rtsp);
+
   memset(ev, 0, sizeof(ev));
   ev[0].events             = TVHPOLL_IN;
   ev[0].fd                 = lfe->sf_dvr_pipe.rd;
