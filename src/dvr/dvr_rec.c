@@ -1237,17 +1237,13 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename, tmp, sizeof(tmp));
+  buf2 = tvh_strdupa(buf1);
   /* Substitute info formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_info, info, tmp, sizeof(tmp));
 
   args = htsstr_argsplit(buf1);
-  /* no arguments at all */
-  if(!args[0]) {
-    htsstr_argsplit_free(args);
-    return;
-  }
-
-  spawnv(args[0], (void *)args, NULL, 1, 1);
+  if(args[0])
+    spawnv(args[0], (void *)args, NULL, 1, 1);
     
   htsstr_argsplit_free(args);
 }
