@@ -1099,13 +1099,18 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     return 4 + 2 + 60 + adapter_byte + (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ? -2 : 0);
   else if (oscam_new && cmd == DMX_STOP)
     return 4 + 4 + adapter_byte;
-  else if (oscam_new && cmd == DVBAPI_SERVER_INFO && sb->sb_ptr > 6)
-    return 4 + 2 + 1 + sbuf_peek_u8(sb, 6);
-  else if (oscam_new && cmd == DVBAPI_ECM_INFO && sb->sb_ptr > 14) {
+  else if (oscam_new && cmd == DVBAPI_SERVER_INFO)
+    return sb->sb_ptr < 7 ? 0 : 4 + 2 + 1 + sbuf_peek_u8(sb, 6);
+  else if (oscam_new && cmd == DVBAPI_ECM_INFO) {
+    if (sb->sb_ptr < 15)
+      return 0;
     int len = 4 + adapter_byte + 2 + 2 + 2 + 4 + 4;
     int i;
-    for (i=0; i<4; i++)
+    for (i=0; i<4; i++) {
+      if (len >= sb->sb_ptr)
+        return 0;
       len += sbuf_peek_u8(sb, len) + 1;
+    }
     len += 1;
     return len;
   }
@@ -1458,20 +1463,20 @@ handle_single(capmt_t *capmt)
       adapter = -1;
       offset = 0;
       while (buffer.sb_ptr > 0) {
-       if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
-         buffer.sb_bswap = 1;
-       } else {
-        adapter = buffer.sb_data[0];
-        offset = 1;
-       }
+        if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+          buffer.sb_bswap = 1;
+        } else {
+          adapter = buffer.sb_data[0];
+          offset = 1;
+        }
         if (adapter < MAX_CA) {
           cmd_size = capmt_msg_size(capmt, &buffer, offset);
-          if (cmd_size > 0)
+          if (cmd_size >= 0)
             break;
         }
         sbuf_cut(&buffer, 1);
       }
-      if (cmd_size + offset <= buffer.sb_ptr) {
+      if (cmd_size > 0 && cmd_size + offset <= buffer.sb_ptr) {
         capmt_analyze_cmd(capmt, adapter, &buffer, offset);
         sbuf_cut(&buffer, cmd_size + offset);
       } else {
