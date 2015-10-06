@@ -70,6 +70,7 @@ static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static int rtsp_port = -1;
 static int rtsp_descramble = 1;
+static int rtsp_rewrite_pmt = 0;
 static int rtsp_muxcnf = MUXCNF_AUTO;
 static void *rtsp_server = NULL;
 static TAILQ_HEAD(,session) rtsp_sessions;
@@ -404,6 +405,8 @@ rtsp_manage_descramble(session_t *rs)
   idnode_set_t *found;
   mpegts_service_t *s, *snext;
   mpegts_service_t *master = (mpegts_service_t *)rs->subs->ths_raw_service;
+  slave_subscription_t *sub;
+  mpegts_apids_t pmt_pids;
   size_t si;
   int i, used = 0;
 
@@ -450,6 +453,18 @@ rtsp_manage_descramble(session_t *rs)
   
 end:
   idnode_set_free(found);
+
+  if (rtsp_rewrite_pmt) {
+    /* handle PMT rewrite */
+    mpegts_pid_init(&pmt_pids);
+    LIST_FOREACH(sub, &rs->slaves, link) {
+      if ((s = sub->service) == NULL) continue;
+      if (s->s_pmt_pid <= 0 || s->s_pmt_pid >= 8191) continue;
+      mpegts_pid_add(&pmt_pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+    }
+    satip_rtp_update_pmt_pids((void *)(intptr_t)rs->stream, &pmt_pids);
+    mpegts_pid_done(&pmt_pids);
+  }
 }
 
 /*
@@ -1521,7 +1536,7 @@ rtsp_close_sessions(void)
  *
  */
 void satip_server_rtsp_init
-  (const char *bindaddr, int port, int descramble, int muxcnf)
+  (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1547,6 +1562,7 @@ void satip_server_rtsp_init
   rtsp_ip = strdup(bindaddr);
   rtsp_port = port;
   rtsp_descramble = descramble;
+  rtsp_rewrite_pmt = rewrite_pmt;
   rtsp_muxcnf = muxcnf;
   if (!rtsp_server)
     rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
