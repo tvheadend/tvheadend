@@ -137,6 +137,7 @@ static ssize_t _read_msg ( timeshift_file_t *tsf, int fd, streaming_message_t **
     case SMT_NOSTART:
     case SMT_NOSTART_WARN:
     case SMT_SERVICE_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       return -1;
       break;
 

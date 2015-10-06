@@ -432,6 +432,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_SKIP:
     case SMT_SPEED:
     case SMT_SIGNAL_STATUS:
+    case SMT_DESCRAMBLE_INFO:
     case SMT_TIMESHIFT_STATUS:
       break;
 

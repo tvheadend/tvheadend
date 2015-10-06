@@ -271,6 +271,21 @@ typedef struct signal_status {
 } signal_status_t;
 
 /**
+ * Descramble info
+ */
+typedef struct descramble_info {
+  uint16_t pid;
+  uint16_t caid;
+  uint32_t provid;
+  uint32_t ecmtime;
+  uint16_t hops;
+  char cardsystem[128];
+  char reader    [128];
+  char from      [128];
+  char protocol  [128];
+} descramble_info_t;
+
+/**
  * Streaming skip
  */
 typedef struct streaming_skip
@@ -354,6 +369,13 @@ typedef enum {
    * Notification about frontend signal status
    */
   SMT_SIGNAL_STATUS,
+
+  /**
+   * Descrambler info message
+   *
+   * Notification about descrambler
+   */
+  SMT_DESCRAMBLE_INFO,
 
   /**
    * Streaming stop.

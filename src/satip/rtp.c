@@ -316,6 +316,7 @@ satip_rtp_thread(void *aux)
     case SMT_SPEED:
     case SMT_SERVICE_STATUS:
     case SMT_TIMESHIFT_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       break;
     }
 

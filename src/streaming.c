@@ -260,6 +260,11 @@ streaming_msg_clone(streaming_message_t *src)
     memcpy(dst->sm_data, src->sm_data, sizeof(signal_status_t));
     break;
 
+  case SMT_DESCRAMBLE_INFO:
+    dst->sm_data = malloc(sizeof(descramble_info_t));
+    memcpy(dst->sm_data, src->sm_data, sizeof(descramble_info_t));
+    break;
+
   case SMT_TIMESHIFT_STATUS:
     dst->sm_data = malloc(sizeof(timeshift_status_t));
     memcpy(dst->sm_data, src->sm_data, sizeof(timeshift_status_t));
@@ -338,6 +343,7 @@ streaming_msg_free(streaming_message_t *sm)
 
   case SMT_SKIP:
   case SMT_SIGNAL_STATUS:
+  case SMT_DESCRAMBLE_INFO:
 #if ENABLE_TIMESHIFT
   case SMT_TIMESHIFT_STATUS:
 #endif

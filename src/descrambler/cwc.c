@@ -102,6 +102,8 @@ typedef struct ecm_section {
 
   int es_section;
   int es_channel;
+  uint16_t es_caid;
+  uint16_t es_provid;
 
   uint16_t es_seq;
   char es_nok;
@@ -654,7 +656,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
   cwc_t *cwc = ct->cs_cwc;
   ecm_pid_t *ep;
   ecm_section_t *es2;
-  char chaninfo[32];
+  char chaninfo[128];
   int i;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
 
@@ -794,6 +796,13 @@ forbid:
       descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_AES, msg + 3, msg + 3 + 16);
       pthread_mutex_lock(&cwc->cwc_mutex);
     }
+
+    snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cwc->cwc_hostname, cwc->cwc_port);
+    descrambler_notify((th_descrambler_t *)ct,
+                       es->es_caid, es->es_provid,
+                       caid2name(es->es_caid),
+                       es->es_channel, delay,
+                       1, "", chaninfo, "newcamd");
   }
 }
 
@@ -1265,7 +1274,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   struct cs_card_data *pcard = NULL;
   caid_t *c;
   uint16_t caid;
-  uint32_t providerid;
+  uint32_t provid;
 
   if (data == NULL)
     return;
@@ -1337,7 +1346,7 @@ prefcapid_ok:
 
 found:
   caid = c->caid;
-  providerid = c->providerid;
+  provid = c->providerid;
 
   switch(data[0]) {
     case 0x80:
@@ -1374,6 +1383,8 @@ found:
       if (es->es_keystate == ES_FORBIDDEN || es->es_keystate == ES_IDLE)
         break;
 
+      es->es_caid = caid;
+      es->es_provid = provid;
       es->es_channel = channel;
       es->es_pending = 1;
       es->es_resolved = 0;
@@ -1384,7 +1395,7 @@ found:
         goto end;
       }
 
-      es->es_seq = cwc_send_msg(cwc, data, len, sid, 1, caid, providerid);
+      es->es_seq = cwc_send_msg(cwc, data, len, sid, 1, caid, provid);
       
       tvhlog(LOG_DEBUG, "cwc",
              "Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",

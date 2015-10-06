@@ -28,6 +28,7 @@
 #include "input.h"
 #include "input/mpegts/tsdemux.h"
 #include "dvbcam.h"
+#include "streaming.h"
 
 #define MAX_QUICK_ECM_ENTRIES 100
 
@@ -166,6 +167,41 @@ descrambler_caid_changed ( service_t *t )
     if (td->td_caid_change)
       td->td_caid_change(td);
   }
+}
+
+void
+descrambler_notify( th_descrambler_t *td,
+                    uint16_t caid, uint32_t provid,
+                    const char *cardsystem, uint16_t pid, uint32_t ecmtime,
+                    uint16_t hops, const char *reader, const char *from,
+                    const char *protocol )
+{
+  mpegts_service_t *t = (mpegts_service_t *)td->td_service;
+  streaming_message_t *sm;
+  descramble_info_t *di;
+
+  tvhlog(LOG_DEBUG, "descrambler", "info - service='%s' caid=%04X(%s) "
+                                   "provid=%06X ecmtime=%d hops=%d "
+                                   "reader=%s from=%s protocol=%s",
+         t->s_dvb_svcname, caid, cardsystem, provid,
+         ecmtime, hops, reader, from, protocol);
+
+  sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
+  sm->sm_data = di = calloc(1, sizeof(*di));
+
+  di->pid     = pid;
+  di->caid    = caid;
+  di->provid  = provid;
+  di->ecmtime = ecmtime;
+  di->hops    = hops;
+  strncpy(di->cardsystem, cardsystem, sizeof(di->cardsystem)-1);
+  strncpy(di->reader, reader, sizeof(di->reader)-1);
+  strncpy(di->from, from, sizeof(di->protocol)-1);
+  strncpy(di->protocol, protocol, sizeof(di->protocol)-1);
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 int

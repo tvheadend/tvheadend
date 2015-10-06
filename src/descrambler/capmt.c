@@ -1063,6 +1063,32 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
+static void
+capmt_process_notify(capmt_t *capmt, uint8_t adapter,
+                     uint16_t sid, uint16_t caid, uint32_t provid,
+                     const char *cardsystem, uint16_t pid, uint32_t ecmtime,
+                     uint16_t hops, const char *reader, const char *from,
+                     const char *protocol )
+{
+  mpegts_service_t *t;
+  capmt_service_t *ct;
+
+  pthread_mutex_lock(&capmt->capmt_mutex);
+  LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
+    t = (mpegts_service_t *)ct->td_service;
+
+    if (sid != t->s_dvb_service_id)
+      continue;
+    if (adapter != ct->ct_adapter)
+      continue;
+
+    descrambler_notify((th_descrambler_t *)ct, caid, provid,
+                       cardsystem, pid, ecmtime, hops, reader, from,
+                       protocol);
+  }
+  pthread_mutex_unlock(&capmt->capmt_mutex);
+}                     
+
 static int
 capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
 {
@@ -1245,6 +1271,10 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     char *protocol   = capmt_peek_str(sb, &offset2);
     uint8_t hops     = sbuf_peek_u8(sb, offset2);
 
+    capmt_process_notify(capmt, adapter, sid, caid, provid,
+                         cardsystem, pid, ecmtime, hops, reader,
+                         from, protocol);
+                         
     tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X provid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
                       capmt_name(capmt), adapter, sid, caid, cardsystem, pid, provid, ecmtime, hops, reader, from, protocol);
 
