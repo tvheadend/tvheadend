@@ -604,6 +604,7 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
+  int             mmi_start_weight;
   int             mmi_tune_failed;
 };
 

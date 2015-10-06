@@ -130,6 +130,12 @@ const idclass_t iptv_mux_class =
       .opts     = PO_MULTILINE
     },
     {
+      .type     = PT_BOOL,
+      .id       = "iptv_substitute",
+      .name     = N_("Substitute formatters"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_substitute),
+    },
+    {
       .type     = PT_STR,
       .id       = "iptv_interface",
       .name     = N_("Interface"),
@@ -202,7 +208,7 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url, *url_sane, *muxname;
+  char *url, *url_sane, *url_raw, *muxname;
   iptv_mux_t *im = (iptv_mux_t*)mm;
   char ubuf[UUID_HEX_SIZE];
 
@@ -213,6 +219,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   url = im->mm_iptv_url; // Workaround for silly printing error
   url_sane = im->mm_iptv_url_sane;
+  url_raw = im->mm_iptv_url_raw;
   muxname = im->mm_iptv_muxname;
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
@@ -220,6 +227,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
   mpegts_mux_delete(mm, delconf);
   free(url);
   free(url_sane);
+  free(url_raw);
   free(muxname);
 }
 

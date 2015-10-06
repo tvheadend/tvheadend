@@ -94,8 +94,10 @@ struct iptv_mux
   udp_connection_t     *mm_iptv_connection2;
   char                 *mm_iptv_url;
   char                 *mm_iptv_url_sane;
+  char                 *mm_iptv_url_raw;
   char                 *mm_iptv_interface;
 
+  int                   mm_iptv_substitute;
   int                   mm_iptv_atsc;
 
   char                 *mm_iptv_muxname;

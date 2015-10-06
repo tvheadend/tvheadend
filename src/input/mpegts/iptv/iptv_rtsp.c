@@ -79,7 +79,7 @@ iptv_rtsp_header ( http_client_t *hc )
   }
 
   if (hc->hc_code != HTTP_STATUS_OK) {
-    tvherror("iptv", "invalid error code %d for '%s'", hc->hc_code, im->mm_iptv_url);
+    tvherror("iptv", "invalid error code %d for '%s'", hc->hc_code, im->mm_iptv_url_raw);
     return 0;
   }
 
@@ -126,7 +126,7 @@ iptv_rtsp_data
     return 0;
 
   if (len > 0)
-    tvherror("iptv", "unknown data %zd received for '%s'", len, im->mm_iptv_url);
+    tvherror("iptv", "unknown data %zd received for '%s'", len, im->mm_iptv_url_raw);
 
   return 0;
 }

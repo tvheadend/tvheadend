@@ -727,7 +727,7 @@ char *regexp_escape ( const char *str );
 
 /* URL decoding */
 char to_hex(char code);
-char *url_encode(char *str);
+char *url_encode(const char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 

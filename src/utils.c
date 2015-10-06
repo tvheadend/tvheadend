@@ -593,16 +593,17 @@ char to_hex(char code) {
 /* Returns a url-encoded version of str
    IMPORTANT: be sure to free() the returned string after use
    http://www.geekhideout.com/urlcode.shtml */
-char *url_encode(char *str) {
-  char *pstr = str, *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
-  while (*pstr) {
-    if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~') 
-      *pbuf++ = *pstr;
-    /*else if (*pstr == ' ') 
+char *url_encode(const char *str)
+{
+  char *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
+  while (*str) {
+    if (isalnum(*str) || *str == '-' || *str == '_' || *str == '.' || *str == '~')
+      *pbuf++ = *str;
+    /*else if (*str == ' ')
       *pbuf++ = '+';*/
     else 
-      *pbuf++ = '%', *pbuf++ = to_hex(*pstr >> 4), *pbuf++ = to_hex(*pstr & 15);
-    pstr++;
+      *pbuf++ = '%', *pbuf++ = to_hex(*str >> 4), *pbuf++ = to_hex(*str & 15);
+    str++;
   }
   *pbuf = '\0';
   return buf;

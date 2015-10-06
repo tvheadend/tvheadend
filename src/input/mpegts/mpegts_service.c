@@ -300,7 +300,7 @@ mpegts_service_enlist(service_t *t, tvh_input_t *ti,
  * Start service
  */
 static int
-mpegts_service_start(service_t *t, int instance, int flags)
+mpegts_service_start(service_t *t, int instance, int weight, int flags)
 {
   int r;
   mpegts_service_t      *s = (mpegts_service_t*)t;
@@ -321,6 +321,7 @@ mpegts_service_start(service_t *t, int instance, int flags)
     return SM_CODE_UNDEFINED_ERROR;
 
   /* Start Mux */
+  mmi->mmi_start_weight = weight;
   r = mpegts_mux_instance_start(&mmi, t);
 
   /* Start */

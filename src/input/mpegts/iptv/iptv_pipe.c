@@ -132,8 +132,8 @@ iptv_pipe_read ( iptv_mux_t *im )
         pthread_mutex_lock(&global_lock);
         pthread_mutex_lock(&iptv_lock);
         if (im->mm_active) {
-          if (iptv_pipe_start(im, im->mm_iptv_url, NULL)) {
-            tvherror("iptv", "unable to respawn %s", im->mm_iptv_url);
+          if (iptv_pipe_start(im, im->mm_iptv_url_raw, NULL)) {
+            tvherror("iptv", "unable to respawn %s", im->mm_iptv_url_raw);
           } else {
             iptv_input_fd_started(im);
             im->mm_iptv_respawn_last = dispatch_clock;

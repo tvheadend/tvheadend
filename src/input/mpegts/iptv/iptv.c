@@ -21,6 +21,7 @@
 #include "tvhpoll.h"
 #include "tcp.h"
 #include "settings.h"
+#include "htsstr.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -198,13 +199,57 @@ iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   return 0;
 }
 
+static const char *
+iptv_sub_url_encode(iptv_mux_t *im, const char *s, char *tmp, size_t tmplen)
+{
+  char *p;
+  if (im->mm_iptv_url && !strncmp(im->mm_iptv_url, "pipe://", 7))
+    return s;
+  p = url_encode(s);
+  strncpy(tmp, p, tmplen-1);
+  tmp[tmplen-1] = '\0';
+  free(p);
+  return tmp;
+}
+
+static const char *
+iptv_sub_mux_name(const char *id, const void *aux, char *tmp, size_t tmplen)
+{
+  const mpegts_mux_instance_t *mmi = aux;
+  iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
+  return iptv_sub_url_encode(im, im->mm_iptv_muxname, tmp, tmplen);
+}
+
+static const char *
+iptv_sub_service_name(const char *id, const void *aux, char *tmp, size_t tmplen)
+{
+  const mpegts_mux_instance_t *mmi = aux;
+  iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
+  return iptv_sub_url_encode(im, im->mm_iptv_svcname, tmp, tmplen);
+}
+
+static const char *
+iptv_sub_weight(const char *id, const void *aux, char *tmp, size_t tmplen)
+{
+  const mpegts_mux_instance_t *mmi = aux;
+  snprintf(tmp, tmplen, "%d", mmi->mmi_start_weight);
+  return tmp;
+}
+
+static htsstr_substitute_t iptv_input_subst[] = {
+  { .id = "m",  .getval = iptv_sub_mux_name },
+  { .id = "n",  .getval = iptv_sub_service_name },
+  { .id = "w",  .getval = iptv_sub_weight },
+  { .id = NULL, .getval = NULL }
+};
+
 static int
 iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   int ret = SM_CODE_TUNING_FAILED;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
   iptv_handler_t *ih;
-  char buf[256];
+  char buf[256], rawbuf[512], *raw = im->mm_iptv_url, *s;
   const char *scheme;
   url_t url;
 
@@ -212,18 +257,24 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (im->mm_active)
     return 0;
 
+  /* Substitute things */
+  if (im->mm_iptv_substitute && raw) {
+    htsstr_substitute(raw, rawbuf, sizeof(rawbuf), '$', iptv_input_subst, mmi, buf, sizeof(buf));
+    raw = rawbuf;
+  }
+
   /* Parse URL */
   mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
   memset(&url, 0, sizeof(url));
 
-  if (im->mm_iptv_url && !strncmp(im->mm_iptv_url, "pipe://", 7)) {
+  if (raw && !strncmp(raw, "pipe://", 7)) {
 
     scheme = "pipe";
 
   } else {
 
-    if (urlparse(im->mm_iptv_url ?: "", &url)) {
-      tvherror("iptv", "%s - invalid URL [%s]", buf, im->mm_iptv_url);
+    if (urlparse(raw ?: "", &url)) {
+      tvherror("iptv", "%s - invalid URL [%s]", buf, raw);
       return ret;
     }
     scheme = url.scheme;
@@ -239,9 +290,11 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Start */
   pthread_mutex_lock(&iptv_lock);
+  s = im->mm_iptv_url_raw;
+  im->mm_iptv_url_raw = strdup(raw);
   im->mm_active = mmi; // Note: must set here else mux_started call
                        // will not realise we're ready to accept pid open calls
-  ret            = ih->start(im, im->mm_iptv_url, &url);
+  ret = ih->start(im, raw, &url);
   if (!ret)
     im->im_handler = ih;
   else
@@ -249,6 +302,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   pthread_mutex_unlock(&iptv_lock);
 
   urlreset(&url);
+  free(s);
   return ret;
 }
 
