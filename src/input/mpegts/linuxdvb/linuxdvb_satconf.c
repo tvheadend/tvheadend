@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <math.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <linux/dvb/dmx.h>
@@ -843,11 +844,24 @@ linuxdvb_satconf_start_mux
   //       the en50494 have to skip this test
   if (!lse->lse_lnb)
     return SM_CODE_TUNING_FAILED;
-  f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
-  if (f == (uint32_t)-1)
-    return SM_CODE_TUNING_FAILED;
 
-  if (ls->ls_early_tune && !lse->lse_en50494) {
+  if (ls->ls_early_tune) {
+
+    f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
+    if (f == (uint32_t)-1)
+      return SM_CODE_TUNING_FAILED;
+
+    /* calculate tuning frequency for en50494 */
+    if (lse->lse_en50494) {
+      r = lse->lse_en50494->ld_freq(lse->lse_en50494, lm, f);
+      if (r < 0) {
+        tvherror("en50494", "invalid tuning freq");
+        return -1;
+      }
+      /* tune frequency for the frontend */
+      f = r;
+    }
+
     r = linuxdvb_frontend_tune0(lfe, mmi, f);
     if (r) return r;
   } else {
@@ -967,7 +981,7 @@ linuxdvb_satconf_save ( linuxdvb_satconf_t *ls, htsmsg_t *m )
   TAILQ_FOREACH(lse, &ls->ls_elements, lse_link){ 
     e = htsmsg_create_map();
     idnode_save(&lse->lse_id, e);
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&lse->lse_id));
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_sstr(&lse->lse_id));
     if (lse->lse_lnb) {
       c = htsmsg_create_map();
       idnode_save(&lse->lse_lnb->ld_id, c);
@@ -1042,7 +1056,7 @@ linuxdvb_satconf_ele_class_network_set( void *o, const void *p )
     TAILQ_FOREACH(lse, &sc->ls_elements, lse_link) {
       for (i = 0; i < lse->lse_networks->is_count; i++)
         htsmsg_add_str(l, NULL,
-                       idnode_uuid_as_str(lse->lse_networks->is_array[i]));
+                       idnode_uuid_as_sstr(lse->lse_networks->is_array[i]));
     }
     mpegts_input_class_network_set(ls->lse_parent->ls_frontend, l);
     htsmsg_destroy(l);
@@ -1064,7 +1078,7 @@ linuxdvb_satconf_ele_class_network_rend( void *o, const char *lang )
 {
   linuxdvb_satconf_ele_t *ls  = o;
   htsmsg_t               *l   = idnode_set_as_htsmsg(ls->lse_networks);
-  char                   *str = htsmsg_list_2_csv(l);
+  char                   *str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }
@@ -1326,9 +1340,8 @@ void
 linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
 {
   linuxdvb_satconf_ele_t *lse, *nxt;
-  const char *uuid = idnode_uuid_as_str(&ls->ls_id);
   if (delconf)
-    hts_settings_remove("input/linuxdvb/satconfs/%s", uuid);
+    hts_settings_remove("input/linuxdvb/satconfs/%s", idnode_uuid_as_sstr(&ls->ls_id));
   gtimer_disarm(&ls->ls_diseqc_timer);
   for (lse = TAILQ_FIRST(&ls->ls_elements); lse != NULL; lse = nxt) {
     nxt = TAILQ_NEXT(lse, lse_link);

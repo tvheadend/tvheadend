@@ -29,10 +29,6 @@
 #define RTP_BUFSIZE  (256*1024)
 #define RTCP_BUFSIZE (16*1024)
 
-#define MUXCNF_AUTO   0
-#define MUXCNF_KEEP   1
-#define MUXCNF_REJECT 2
-
 #define STATE_DESCRIBE 0
 #define STATE_SETUP    1
 #define STATE_PLAY     2
@@ -74,6 +70,7 @@ static uint16_t stream_id;
 static char *rtsp_ip = NULL;
 static int rtsp_port = -1;
 static int rtsp_descramble = 1;
+static int rtsp_rewrite_pmt = 0;
 static int rtsp_muxcnf = MUXCNF_AUTO;
 static void *rtsp_server = NULL;
 static TAILQ_HEAD(,session) rtsp_sessions;
@@ -94,49 +91,49 @@ rtsp_delsys(int fe, int *findex)
   if (fe < 1)
     return DVB_SYS_NONE;
   pthread_mutex_lock(&global_lock);
-  i = config_get_int("satip_dvbs", 0);
+  i = satip_server_conf.satip_dvbs;
   if (fe <= i) {
     res = DVB_SYS_DVBS;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbs2", 0);
+  i = satip_server_conf.satip_dvbs2;
   if (fe <= i) {
     res = DVB_SYS_DVBS;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbt", 0);
+  i = satip_server_conf.satip_dvbt;
   if (fe <= i) {
     res = DVB_SYS_DVBT;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbt2", 0);
+  i = satip_server_conf.satip_dvbt2;
   if (fe <= i) {
     res = DVB_SYS_DVBT;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbc", 0);
+  i = satip_server_conf.satip_dvbc;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbc2", 0);
+  i = satip_server_conf.satip_dvbc2;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_atsc", 0);
+  i = satip_server_conf.satip_atsc;
   if (fe <= i) {
     res = DVB_SYS_ATSC;
     goto result;
   }
   fe -= i;
-  i = config_get_int("satip_dvbcb", 0);
+  i = satip_server_conf.satip_dvbcb;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_B;
     goto result;
@@ -408,6 +405,8 @@ rtsp_manage_descramble(session_t *rs)
   idnode_set_t *found;
   mpegts_service_t *s, *snext;
   mpegts_service_t *master = (mpegts_service_t *)rs->subs->ths_raw_service;
+  slave_subscription_t *sub;
+  mpegts_apids_t pmt_pids;
   size_t si;
   int i, used = 0;
 
@@ -454,6 +453,18 @@ rtsp_manage_descramble(session_t *rs)
   
 end:
   idnode_set_free(found);
+
+  if (rtsp_rewrite_pmt) {
+    /* handle PMT rewrite */
+    mpegts_pid_init(&pmt_pids);
+    LIST_FOREACH(sub, &rs->slaves, link) {
+      if ((s = sub->service) == NULL) continue;
+      if (s->s_pmt_pid <= 0 || s->s_pmt_pid >= 8191) continue;
+      mpegts_pid_add(&pmt_pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+    }
+    satip_rtp_update_pmt_pids((void *)(intptr_t)rs->stream, &pmt_pids);
+    mpegts_pid_done(&pmt_pids);
+  }
 }
 
 /*
@@ -512,7 +523,7 @@ rtsp_start
     if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize, 0))
       goto endclean;
     rs->subs = subscription_create_from_mux(&rs->prch, NULL,
-                                   config_get_int("satip_weight", 100),
+                                   satip_server_conf.satip_weight,
                                    "SAT>IP",
                                    rs->prch.prch_flags |
                                    SUBSCRIPTION_STREAMING,
@@ -1133,12 +1144,12 @@ rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
 
   pthread_mutex_lock(&global_lock);
   htsbuf_qprintf(q, "s=SatIPServer:1 %d",
-                 config_get_int("satip_dvbs", 0) +
-                 config_get_int("satip_dvbs2", 0));
-  dvbt = config_get_int("satip_dvbt", 0) +
-         config_get_int("satip_dvbt2", 0);
-  dvbc = config_get_int("satip_dvbc", 0) +
-         config_get_int("satip_dvbc2", 0);
+                 satip_server_conf.satip_dvbs +
+                 satip_server_conf.satip_dvbs2);
+  dvbt = satip_server_conf.satip_dvbt +
+         satip_server_conf.satip_dvbt2;
+  dvbc = satip_server_conf.satip_dvbc +
+         satip_server_conf.satip_dvbc2;
   if (dvbc)
     htsbuf_qprintf(q, " %d %d\r\n", dvbt, dvbc);
   else if (dvbt)
@@ -1525,7 +1536,7 @@ rtsp_close_sessions(void)
  *
  */
 void satip_server_rtsp_init
-  (const char *bindaddr, int port, int descramble, int muxcnf)
+  (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1551,6 +1562,7 @@ void satip_server_rtsp_init
   rtsp_ip = strdup(bindaddr);
   rtsp_port = port;
   rtsp_descramble = descramble;
+  rtsp_rewrite_pmt = rewrite_pmt;
   rtsp_muxcnf = muxcnf;
   if (!rtsp_server)
     rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);

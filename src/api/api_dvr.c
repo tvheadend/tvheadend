@@ -35,7 +35,7 @@ api_dvr_config_grid
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
     if (!idnode_perm((idnode_t *)cfg, perm, NULL)) {
-      idnode_set_add(ins, (idnode_t*)cfg, &conf->filter, perm->aa_lang);
+      idnode_set_add(ins, (idnode_t*)cfg, &conf->filter, perm->aa_lang_ui);
       idnode_perm_unset((idnode_t *)cfg);
     }
 }
@@ -91,7 +91,7 @@ api_dvr_entry_grid
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
 static void
@@ -102,7 +102,7 @@ api_dvr_entry_grid_upcoming
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_upcoming(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
 static void
@@ -113,7 +113,7 @@ api_dvr_entry_grid_finished
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_finished(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
 static void
@@ -124,7 +124,7 @@ api_dvr_entry_grid_failed
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (is_dvr_entry_failed(de))
-      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang);
+      idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -145,7 +145,7 @@ api_dvr_entry_create
   s1 = htsmsg_get_str(conf, "config_name");
   cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
   if (cfg) {
-    htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
+    htsmsg_set_str(conf, "config_name", idnode_uuid_as_sstr(&cfg->dvr_id));
     htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
     htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
@@ -170,7 +170,7 @@ api_dvr_entry_create
       htsmsg_add_str(m, lang, s1);
       htsmsg_add_msg(conf, "subtitle", m);
     }
-    if ((de = dvr_entry_create(NULL, conf)))
+    if ((de = dvr_entry_create(NULL, conf, 0)))
       dvr_entry_save(de);
 
     res = 0;
@@ -212,7 +212,8 @@ api_dvr_entry_create_by_event
   htsmsg_t *entries, *entries2 = NULL, *m;
   htsmsg_field_t *f;
   const char *s;
-  int count = 0;
+  int count = 0, enabled;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!(entries = htsmsg_get_list(args, "entries"))) {
     entries = entries2 = api_dvr_entry_create_from_single(args);
@@ -226,6 +227,7 @@ api_dvr_entry_create_by_event
     if (!(s = htsmsg_get_str(m, "event_id")))
       continue;
 
+    enabled = htsmsg_get_u32_or_default(m, "enabled", 1);
     config_uuid = htsmsg_get_str(m, "config_uuid");
     comment = htsmsg_get_str(m, "comment");
 
@@ -233,7 +235,8 @@ api_dvr_entry_create_by_event
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
-        de = dvr_entry_create_by_event(idnode_uuid_as_str(&cfg->dvr_id),
+        de = dvr_entry_create_by_event(enabled,
+                                       idnode_uuid_as_str(&cfg->dvr_id, ubuf),
                                        e, 0, 0,
                                        perm->aa_username,
                                        perm->aa_representative,
@@ -284,7 +287,7 @@ api_dvr_autorec_grid
   dvr_autorec_entry_t *dae;
 
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    idnode_set_add(ins, (idnode_t*)dae, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)dae, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -309,7 +312,7 @@ api_dvr_autorec_create
   pthread_mutex_lock(&global_lock);
   cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
   if (cfg) {
-    htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id));
+    htsmsg_set_str(conf, "config_name", idnode_uuid_as_sstr(&cfg->dvr_id));
     dae = dvr_autorec_create(NULL, conf);
     if (dae) {
       dvr_autorec_save(dae);
@@ -331,6 +334,7 @@ api_dvr_autorec_create_by_series
   htsmsg_field_t *f;
   const char *config_uuid, *s;
   int count = 0;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!(entries = htsmsg_get_list(args, "entries"))) {
     entries = entries2 = api_dvr_entry_create_from_single(args);
@@ -350,7 +354,7 @@ api_dvr_autorec_create_by_series
     if ((e = epg_broadcast_find_by_id(strtoll(s, NULL, 10)))) {
       dvr_config_t *cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, config_uuid);
       if (cfg) {
-        dae = dvr_autorec_add_series_link(idnode_uuid_as_str(&cfg->dvr_id),
+        dae = dvr_autorec_add_series_link(idnode_uuid_as_str(&cfg->dvr_id, ubuf),
                                           e,
                                           perm->aa_username,
                                           perm->aa_representative,
@@ -377,7 +381,7 @@ api_dvr_timerec_grid
   dvr_timerec_entry_t *dte;
 
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    idnode_set_add(ins, (idnode_t*)dte, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)dte, &conf->filter, perm->aa_lang_ui);
 }
 
 static int

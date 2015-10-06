@@ -26,33 +26,32 @@
 #if ENABLE_IMAGECACHE
 
 static int
-api_imagecache_load
+api_imagecache_clean
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  htsmsg_t *l;
-  pthread_mutex_lock(&global_lock);
-  *resp = htsmsg_create_map();
-  l     = htsmsg_create_list();
-  htsmsg_add_msg(l, NULL, imagecache_get_config());
-  htsmsg_add_msg(*resp, "entries", l);
-  pthread_mutex_unlock(&global_lock);
+  int b;
+  if (htsmsg_get_bool(args, "clean", &b))
+    return EINVAL;
+  if (b) {
+    pthread_mutex_lock(&global_lock);
+    imagecache_clean();
+    pthread_mutex_unlock(&global_lock);
+  }
   return 0;
 }
 
 static int
-api_imagecache_save
+api_imagecache_trigger
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int b;
-
-  pthread_mutex_lock(&global_lock);
-  if (imagecache_set_config(args))
-    imagecache_save();
-  if (!htsmsg_get_bool(args, "clean", &b) && b)
-    imagecache_clean();
-  pthread_mutex_unlock(&global_lock);
-  *resp = htsmsg_create_map();
-  htsmsg_add_u32(*resp, "success", 1);
+  if (htsmsg_get_bool(args, "trigger", &b))
+    return EINVAL;
+  if (b) {
+    pthread_mutex_lock(&global_lock);
+    imagecache_trigger();
+    pthread_mutex_unlock(&global_lock);
+  }
   return 0;
 }
 
@@ -60,8 +59,10 @@ void
 api_imagecache_init ( void )
 {
   static api_hook_t ah[] = {
-    { "imagecache/config/load", ACCESS_ADMIN, api_imagecache_load, NULL },
-    { "imagecache/config/save", ACCESS_ADMIN, api_imagecache_save, NULL },
+    { "imagecache/config/load",    ACCESS_ADMIN, api_idnode_load_simple, &imagecache_conf },
+    { "imagecache/config/save",    ACCESS_ADMIN, api_idnode_save_simple, &imagecache_conf },
+    { "imagecache/config/clean"  , ACCESS_ADMIN, api_imagecache_clean, NULL },
+    { "imagecache/config/trigger", ACCESS_ADMIN, api_imagecache_trigger, NULL },
     { NULL },
   };
 

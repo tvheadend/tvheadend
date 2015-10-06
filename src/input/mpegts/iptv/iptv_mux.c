@@ -85,6 +85,20 @@ iptv_mux_url_set ( void *p, const void *v )
   return 0;
 }                                              
 
+static htsmsg_t *
+iptv_muxdvr_class_kill_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("SIGKILL"),   IPTV_KILL_KILL },
+    { N_("SIGTERM"),   IPTV_KILL_TERM },
+    { N_("SIGINT"),    IPTV_KILL_INT, },
+    { N_("SIGHUP"),    IPTV_KILL_HUP },
+    { N_("SIGUSR1"),   IPTV_KILL_USR1 },
+    { N_("SIGUSR2"),   IPTV_KILL_USR2 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t iptv_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -113,6 +127,13 @@ const idclass_t iptv_mux_class =
       .name     = N_("URL"),
       .off      = offsetof(iptv_mux_t, mm_iptv_url),
       .set      = iptv_mux_url_set,
+      .opts     = PO_MULTILINE
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "iptv_substitute",
+      .name     = N_("Substitute formatters"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_substitute),
     },
     {
       .type     = PT_STR,
@@ -143,14 +164,30 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_respawn",
       .name     = N_("Respawn (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_respawn),
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_INT,
+      .id       = "iptv_kill",
+      .name     = N_("Kill signal (pipe)"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_kill),
+      .list     = iptv_muxdvr_class_kill_list,
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_INT,
+      .id       = "iptv_kill_timeout",
+      .name     = N_("Kill timeout (pipe/secs)"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_kill_timeout),
       .opts     = PO_ADVANCED,
+      .def.i    = 5
     },
     {
       .type     = PT_STR,
       .id       = "iptv_env",
       .name     = N_("Environment (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_env),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_MULTILINE
     },
     {}
   }
@@ -159,27 +196,30 @@ const idclass_t iptv_mux_class =
 static void
 iptv_mux_config_save ( mpegts_mux_t *mm )
 {
+  char ubuf[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
   mpegts_mux_save(mm, c);
   hts_settings_save(c, "input/iptv/networks/%s/muxes/%s/config",
-                    idnode_uuid_as_str(&mm->mm_network->mn_id),
-                    idnode_uuid_as_str(&mm->mm_id));
+                    idnode_uuid_as_sstr(&mm->mm_network->mn_id),
+                    idnode_uuid_as_str(&mm->mm_id, ubuf));
   htsmsg_destroy(c);
 }
 
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url, *url_sane, *muxname;
+  char *url, *url_sane, *url_raw, *muxname;
   iptv_mux_t *im = (iptv_mux_t*)mm;
+  char ubuf[UUID_HEX_SIZE];
 
   if (delconf)
     hts_settings_remove("input/iptv/networks/%s/muxes/%s/config",
-                        idnode_uuid_as_str(&mm->mm_network->mn_id),
-                        idnode_uuid_as_str(&mm->mm_id));
+                        idnode_uuid_as_sstr(&mm->mm_network->mn_id),
+                        idnode_uuid_as_str(&mm->mm_id, ubuf));
 
   url = im->mm_iptv_url; // Workaround for silly printing error
   url_sane = im->mm_iptv_url_sane;
+  url_raw = im->mm_iptv_url_raw;
   muxname = im->mm_iptv_muxname;
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
@@ -187,6 +227,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
   mpegts_mux_delete(mm, delconf);
   free(url);
   free(url_sane);
+  free(url_raw);
   free(muxname);
 }
 
@@ -212,6 +253,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Create Mux */
   iptv_mux_t *im =
@@ -223,6 +265,9 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
   im->mm_config_save      = iptv_mux_config_save;
   im->mm_delete           = iptv_mux_delete;
 
+  if (!im->mm_iptv_kill_timeout)
+    im->mm_iptv_kill_timeout = 5;
+
   /* Create Instance */
   (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
                                    (mpegts_input_t*)iptv_input,
@@ -230,8 +275,8 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
 
   /* Services */
   c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes/%s/services",
-                          idnode_uuid_as_str(&in->mn_id),
-                          idnode_uuid_as_str(&im->mm_id));
+                          idnode_uuid_as_sstr(&in->mn_id),
+                          idnode_uuid_as_str(&im->mm_id, ubuf));
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_field_get_map(f))) continue;

@@ -72,12 +72,35 @@ LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbisenc.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbis.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libogg.a
-ifeq ($(CONFIG_LIBFFMPEG_STATIC_X264),yes)
+ifeq ($(CONFIG_LIBX264_STATIC),yes)
 LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a
 else
 LDFLAGS += -lx264
 endif
+ifeq ($(CONFIG_LIBX265),yes)
+ifeq ($(CONFIG_LIBX265_STATIC),yes)
+LDFLAGS += ${LDFLAGS_FFDIR}/libx265.a -lstdc++
+else
+LDFLAGS += -lx265
+endif
+endif
 LDFLAGS += ${LDFLAGS_FFDIR}/libvpx.a
+CONFIG_LIBMFX_VA_LIBS =
+ifeq ($(CONFIG_LIBMFX),yes)
+CONFIG_LIBMFX_VA_LIBS += -lva
+ifeq ($(CONFIG_VA_DRM),yes)
+CONFIG_LIBMFX_VA_LIBS += -lva-drm
+endif
+ifeq ($(CONFIG_VA_X11),yes)
+CONFIG_LIBMFX_VA_LIBS += -lva-x11
+endif
+ifeq ($(CONFIG_LIBMFX_STATIC),yes)
+LDFLAGS += ${LDFLAGS_FFDIR}/libmfx.a -lstdc++
+else
+LDFLAGS += -lmfx
+endif
+LDFLAGS += ${CONFIG_LIBMFX_VA_LIBS}
+endif
 endif
 
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
@@ -193,6 +216,7 @@ I18N-C += $(SRCS-SATIP-SERVER)
 
 SRCS-2 = \
 	src/api.c \
+	src/api/api_config.c \
 	src/api/api_status.c \
 	src/api/api_idnode.c \
 	src/api/api_input.c \
@@ -210,12 +234,14 @@ SRCS-2 = \
 	src/api/api_profile.c \
 	src/api/api_bouquet.c \
 	src/api/api_language.c \
-	src/api/api_satip.c
+	src/api/api_satip.c \
+	src/api/api_timeshift.c
 
 SRCS-2 += \
 	src/parsers/parsers.c \
 	src/parsers/bitstream.c \
 	src/parsers/parser_h264.c \
+	src/parsers/parser_hevc.c \
 	src/parsers/parser_latm.c \
 	src/parsers/parser_avc.c \
 	src/parsers/parser_teletext.c \
@@ -250,9 +276,8 @@ SRCS-2 += \
 SRCS-2 += \
 	src/muxer.c \
 	src/muxer/muxer_pass.c \
-	src/muxer/muxer_tvh.c \
-	src/muxer/tvh/ebml.c \
-	src/muxer/tvh/mkmux.c \
+	src/muxer/ebml.c \
+	src/muxer/muxer_mkv.c
 
 SRCS += $(SRCS-2)
 I18N-C += $(SRCS-2)
@@ -639,8 +664,7 @@ ${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec
 	@touch $@
 
 ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
-	CONFIG_LIBFFMPEG_STATIC_X264=$(CONFIG_LIBFFMPEG_STATIC_X264) \
-	  $(MAKE) -f Makefile.ffmpeg build
+	$(MAKE) -f Makefile.ffmpeg build
 
 # Static HDHOMERUN library
 

@@ -586,6 +586,7 @@ _eit_callback
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_psi_table_state_t *st;
   th_subscription_t    *ths;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!epggrab_ota_running)
     return -1;
@@ -617,7 +618,7 @@ _eit_callback
   // TODO: extra ID should probably include onid
 
   /* Register interest */
-  if (tableid >= 0x50)
+  if (tableid == 0x4e || tableid >= 0x50)
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
@@ -640,8 +641,8 @@ _eit_callback
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid);
 
   } else {
-    if (mm->mm_tsid != tsid ||
-        mm->mm_onid != onid) {
+    if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&
+        !mm->mm_eit_tsid_nocheck) {
       if (mm->mm_onid != MPEGTS_ONID_NONE &&
           mm->mm_tsid != MPEGTS_TSID_NONE)
         tvhtrace("eit",
@@ -667,7 +668,7 @@ _eit_callback
 
   /* Register this */
   if (ota)
-    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id), 1);
+    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id, ubuf), 1);
 
   /* No point processing */
   if (!LIST_FIRST(&svc->s_channels))

@@ -39,6 +39,7 @@ typedef struct dvr_config {
   char *dvr_comment;
   profile_t *dvr_profile;
   char *dvr_storage;
+  int dvr_clone;
   uint32_t dvr_retention_days;
   char *dvr_charset;
   char *dvr_charset_id;
@@ -139,6 +140,8 @@ typedef struct dvr_entry {
   dvr_config_t *de_config;
   LIST_ENTRY(dvr_entry) de_config_link;
 
+  int de_enabled;
+
   time_t de_start;
   time_t de_stop;
 
@@ -210,6 +213,7 @@ typedef struct dvr_entry {
    * Fields for recording
    */
   pthread_t de_thread;
+  uint8_t de_thread_shutdown;
 
   th_subscription_t *de_s;
 
@@ -417,16 +421,20 @@ const char *dvr_entry_status(dvr_entry_t *de);
 
 const char *dvr_entry_schedstatus(dvr_entry_t *de);
 
-void dvr_entry_create_by_autorec(epg_broadcast_t *e, dvr_autorec_entry_t *dae);
+void dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t *dae);
 
 void dvr_entry_created(dvr_entry_t *de);
 
 dvr_entry_t *
-dvr_entry_create ( const char *uuid, htsmsg_t *conf );
+dvr_entry_clone ( dvr_entry_t *de );
+
+dvr_entry_t *
+dvr_entry_create ( const char *uuid, htsmsg_t *conf, int clone );
 
 
 dvr_entry_t *
-dvr_entry_create_by_event( const char *dvr_config_uuid,
+dvr_entry_create_by_event( int enabled,
+                           const char *dvr_config_uuid,
                            epg_broadcast_t *e,
                            time_t start_extra, time_t stop_extra,
                            const char *owner, const char *creator,
@@ -435,7 +443,7 @@ dvr_entry_create_by_event( const char *dvr_config_uuid,
                            const char *comment );
 
 dvr_entry_t *
-dvr_entry_create_htsp( const char *dvr_config_uuid,
+dvr_entry_create_htsp( int enabled, const char *dvr_config_uuid,
                        channel_t *ch, time_t start, time_t stop,
                        time_t start_extra, time_t stop_extra,
                        const char *title, const char *subtitle,
@@ -447,7 +455,7 @@ dvr_entry_create_htsp( const char *dvr_config_uuid,
                        const char *comment );
 
 dvr_entry_t *
-dvr_entry_update( dvr_entry_t *de, channel_t *ch,
+dvr_entry_update( dvr_entry_t *de, int enabled, channel_t *ch,
                   const char *title, const char *subtitle,
                   const char *desc, const char *lang,
                   time_t start, time_t stop,
@@ -456,11 +464,13 @@ dvr_entry_update( dvr_entry_t *de, channel_t *ch,
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
-void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf);
+void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone);
 
 int dvr_rec_subscribe(dvr_entry_t *de);
 
 void dvr_rec_unsubscribe(dvr_entry_t *de);
+
+void dvr_rec_migrate(dvr_entry_t *de_old, dvr_entry_t *de_new);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 
@@ -510,7 +520,7 @@ dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
 
 dvr_entry_t *
-dvr_entry_create_(const char *config_uuid, epg_broadcast_t *e,
+dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
                   channel_t *ch, time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
                   const char *title, const char* subtitle, const char *description,

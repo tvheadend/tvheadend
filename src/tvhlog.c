@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#include "libav.h"
 #include "webui/webui.h"
 
 time_t                   dispatch_clock;
@@ -446,3 +447,202 @@ tvhlog_end ( void )
   htsmsg_destroy(tvhlog_trace);
   closelog();
 }
+
+/*
+ * Configuration
+ */
+
+static void tvhlog_class_save(idnode_t *self)
+{
+}
+
+static const void *
+tvhlog_class_path_get ( void *o )
+{
+  return &tvhlog_path;
+}
+
+static int
+tvhlog_class_path_set ( void *o, const void *v )
+{
+  const char *s = v;
+  if (strcmp(s ?: "", tvhlog_path ?: "")) {
+    pthread_mutex_lock(&tvhlog_mutex);
+    free(tvhlog_path);
+    tvhlog_path = strdup(s ?: "");
+    if (tvhlog_path && tvhlog_path[0])
+      tvhlog_options |= TVHLOG_OPT_DBG_FILE;
+    else
+      tvhlog_options &= ~TVHLOG_OPT_DBG_FILE;
+    pthread_mutex_unlock(&tvhlog_mutex);
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+tvhlog_class_debugsubs_get ( void *o )
+{
+  static char *p = prop_sbuf;
+  tvhlog_get_debug(prop_sbuf, PROP_SBUF_LEN);
+  return &p;
+}
+
+static int
+tvhlog_class_debugsubs_set ( void *o, const void *v )
+{
+  tvhlog_set_debug((const char *)v);
+  return 1;
+}
+
+static const void *
+tvhlog_class_tracesubs_get ( void *o )
+{
+  static char *p = prop_sbuf;
+  tvhlog_get_trace(prop_sbuf, PROP_SBUF_LEN);
+  return &p;
+}
+
+static int
+tvhlog_class_tracesubs_set ( void *o, const void *v )
+{
+  tvhlog_set_trace((const char *)v);
+  return 1;
+}
+
+static const void *
+tvhlog_class_syslog_get ( void *o )
+{
+  static int si;
+  si = (tvhlog_options & TVHLOG_OPT_DBG_SYSLOG) ? 1 : 0;
+  return &si;
+}
+
+static int
+tvhlog_class_syslog_set ( void *o, const void *v )
+{
+  pthread_mutex_lock(&tvhlog_mutex);
+  if (*(int *)v)
+    tvhlog_options |= TVHLOG_OPT_DBG_SYSLOG;
+  else
+    tvhlog_options &= ~TVHLOG_OPT_DBG_SYSLOG;
+  pthread_mutex_unlock(&tvhlog_mutex);
+  return 1;
+}
+
+static const void *
+tvhlog_class_trace_get ( void *o )
+{
+  static int si;
+  si = tvhlog_level >= LOG_TRACE;
+  return &si;
+}
+
+static int
+tvhlog_class_trace_set ( void *o, const void *v )
+{
+  pthread_mutex_lock(&tvhlog_mutex);
+  if (*(int *)v)
+    tvhlog_level = LOG_TRACE;
+  else
+    tvhlog_level = LOG_DEBUG;
+  pthread_mutex_unlock(&tvhlog_mutex);
+  return 1;
+}
+
+static const void *
+tvhlog_class_libav_get ( void *o )
+{
+  static int si;
+  si = (tvhlog_options & TVHLOG_OPT_LIBAV) ? 1 : 0;
+  return &si;
+}
+
+static int
+tvhlog_class_libav_set ( void *o, const void *v )
+{
+  pthread_mutex_lock(&tvhlog_mutex);
+  if (*(int *)v)
+    tvhlog_options |= TVHLOG_OPT_LIBAV;
+  else
+    tvhlog_options &= ~TVHLOG_OPT_LIBAV;
+  libav_set_loglevel();
+  pthread_mutex_unlock(&tvhlog_mutex);
+  return 1;
+}
+
+idnode_t tvhlog_conf = {
+  .in_class      = &tvhlog_conf_class
+};
+
+const idclass_t tvhlog_conf_class = {
+  .ic_snode      = &tvhlog_conf,
+  .ic_class      = "tvhlog_conf",
+  .ic_caption    = N_("Debugging"),
+  .ic_event      = "tvhlog_conf",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = tvhlog_class_save,
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Settings"),
+      .number = 1,
+    },
+  },
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "path",
+      .name   = N_("Debug log path"),
+      .get    = tvhlog_class_path_get,
+      .set    = tvhlog_class_path_set,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "syslog",
+      .name   = N_("Debug to syslog"),
+      .get    = tvhlog_class_syslog_get,
+      .set    = tvhlog_class_syslog_set,
+      .group  = 1,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "debugsubs",
+      .name   = N_("Debug subsystems"),
+      .get    = tvhlog_class_debugsubs_get,
+      .set    = tvhlog_class_debugsubs_set,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "trace",
+      .name   = N_("Debug trace (low-level)"),
+      .get    = tvhlog_class_trace_get,
+      .set    = tvhlog_class_trace_set,
+#if !ENABLE_TRACE
+      .opts   = PO_RDONLY | PO_HIDDEN,
+#endif
+      .group  = 1,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "tracesubs",
+      .name   = N_("Trace subsystems"),
+      .get    = tvhlog_class_tracesubs_get,
+      .set    = tvhlog_class_tracesubs_set,
+#if !ENABLE_TRACE
+      .opts   = PO_RDONLY | PO_HIDDEN,
+#endif
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "libav",
+      .name   = N_("Debug libav log"),
+      .get    = tvhlog_class_libav_get,
+      .set    = tvhlog_class_libav_set,
+      .group  = 1,
+    },
+    {}
+  }
+};

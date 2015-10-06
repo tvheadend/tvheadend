@@ -36,7 +36,7 @@ api_bouquet_list
   pthread_mutex_lock(&global_lock);
   RB_FOREACH(bq, &bouquets, bq_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&bq->bq_id));
+    htsmsg_add_str(e, "key", idnode_uuid_as_sstr(&bq->bq_id));
     htsmsg_add_str(e, "val", bq->bq_name ?: "");
     htsmsg_add_msg(l, NULL, e);
   }
@@ -54,7 +54,7 @@ api_bouquet_grid
   bouquet_t *bq;
 
   RB_FOREACH(bq, &bouquets, bq_link)
-    idnode_set_add(ins, (idnode_t*)bq, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)bq, &conf->filter, perm->aa_lang_ui);
 }
 
 static int

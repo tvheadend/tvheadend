@@ -51,7 +51,7 @@ mpegts_service_class_get_mux_uuid ( void *ptr )
   static char buf[UUID_HEX_SIZE], *s = buf;
   mpegts_service_t *ms = ptr;
   if (ms && ms->s_dvb_mux)
-    strcpy(buf, idnode_uuid_as_str(&ms->s_dvb_mux->mm_id) ?: "");
+    strcpy(buf, idnode_uuid_as_sstr(&ms->s_dvb_mux->mm_id) ?: "");
   else
     *buf = 0;
   return &s;
@@ -243,11 +243,13 @@ mpegts_service_config_save ( service_t *t )
 {
   htsmsg_t *c = htsmsg_create_map();
   mpegts_service_t *s = (mpegts_service_t*)t;
+  char ubuf1[UUID_HEX_SIZE];
+  char ubuf2[UUID_HEX_SIZE];
   service_save(t, c);
   hts_settings_save(c, "input/dvb/networks/%s/muxes/%s/services/%s",
-                    idnode_uuid_as_str(&s->s_dvb_mux->mm_network->mn_id),
-                    idnode_uuid_as_str(&s->s_dvb_mux->mm_id),
-                    idnode_uuid_as_str(&s->s_id));
+                    idnode_uuid_as_sstr(&s->s_dvb_mux->mm_network->mn_id),
+                    idnode_uuid_as_str(&s->s_dvb_mux->mm_id, ubuf1),
+                    idnode_uuid_as_str(&s->s_id, ubuf2));
   htsmsg_destroy(c);
 }
 
@@ -298,7 +300,7 @@ mpegts_service_enlist(service_t *t, tvh_input_t *ti,
  * Start service
  */
 static int
-mpegts_service_start(service_t *t, int instance, int flags)
+mpegts_service_start(service_t *t, int instance, int weight, int flags)
 {
   int r;
   mpegts_service_t      *s = (mpegts_service_t*)t;
@@ -319,6 +321,7 @@ mpegts_service_start(service_t *t, int instance, int flags)
     return SM_CODE_UNDEFINED_ERROR;
 
   /* Start Mux */
+  mmi->mmi_start_weight = weight;
   r = mpegts_mux_instance_start(&mmi, t);
 
   /* Start */
@@ -547,13 +550,15 @@ mpegts_service_delete ( service_t *t, int delconf )
 {
   mpegts_service_t *ms = (mpegts_service_t*)t;
   mpegts_mux_t     *mm = ms->s_dvb_mux;
+  char ubuf1[UUID_HEX_SIZE];
+  char ubuf2[UUID_HEX_SIZE];
 
   /* Remove config */
   if (delconf && t->s_type == STYPE_STD)
     hts_settings_remove("input/dvb/networks/%s/muxes/%s/services/%s",
-                      idnode_uuid_as_str(&mm->mm_network->mn_id),
-                      idnode_uuid_as_str(&mm->mm_id),
-                      idnode_uuid_as_str(&t->s_id));
+                      idnode_uuid_as_sstr(&mm->mm_network->mn_id),
+                      idnode_uuid_as_str(&mm->mm_id, ubuf1),
+                      idnode_uuid_as_str(&t->s_id, ubuf2));
 
   /* Free memory */
   free(ms->s_dvb_svcname);
@@ -574,6 +579,14 @@ mpegts_service_delete ( service_t *t, int delconf )
 
   // Note: the ultimate deletion and removal from the idnode list
   //       is done in service_destroy
+}
+
+static int
+mpegts_service_satip_source ( service_t *t )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+  mpegts_network_t *mn = ms->s_dvb_mux ? ms->s_dvb_mux->mm_network : NULL;
+  return mn ? mn->mn_satip_source : -1;
 }
 
 /* **************************************************************************
@@ -626,6 +639,7 @@ mpegts_service_create0
   s->s_provider_name  = mpegts_service_provider_name;
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;
+  s->s_satip_source   = mpegts_service_satip_source;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);
@@ -850,6 +864,7 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_update_pids    = mpegts_service_raw_update_pids;
   s->s_link           = mpegts_service_link;
   s->s_unlink         = mpegts_service_unlink;
+  s->s_satip_source   = mpegts_service_satip_source;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   free(s->s_nicename);

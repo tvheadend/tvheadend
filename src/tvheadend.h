@@ -51,22 +51,7 @@
 
 #define ERRNO_AGAIN(e) ((e) == EAGAIN || (e) == EINTR || (e) == EWOULDBLOCK)
 
-#if ENABLE_ANDROID
-#define S_IEXEC S_IXUSR
-#include <time64.h>
-// 32-bit Android has only timegm64() and not timegm().
-// We replicate the behaviour of timegm() when the result overflows time_t.
-static inline time_t timegm(struct tm* const t);
-time_t timegm(struct tm* const t) {
-  // time_t is signed on Android.
-  static const time_t kTimeMax = ~(1L << (sizeof(time_t) * CHAR_BIT - 1));
-  static const time_t kTimeMin = (1L << (sizeof(time_t) * CHAR_BIT - 1));
-  time64_t result = timegm64(t);
-  if (result < kTimeMin || result > kTimeMax)
-    return -1;
-  return result;
-}
-#endif
+#include "compat.h"
 
 typedef struct {
   const char     *name;
@@ -78,19 +63,7 @@ extern const char      *tvheadend_cwd;
 extern const char      *tvheadend_webroot;
 extern const tvh_caps_t tvheadend_capabilities[];
 
-static inline htsmsg_t *tvheadend_capabilities_list(int check)
-{
-  int i = 0;
-  htsmsg_t *r = htsmsg_create_list();
-  while (tvheadend_capabilities[i].name) {
-    if (!check ||
-        !tvheadend_capabilities[i].enabled ||
-        *tvheadend_capabilities[i].enabled)
-      htsmsg_add_str(r, NULL, tvheadend_capabilities[i].name);
-    i++;
-  }
-  return r;
-}
+htsmsg_t *tvheadend_capabilities_list(int check);
 
 typedef struct str_list
 {
@@ -257,7 +230,7 @@ typedef enum {
   SCT_VORBIS,
   SCT_HEVC,
   SCT_VP9,
-  SCT_LAST = SCT_HEVC
+  SCT_LAST = SCT_VP9
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))
@@ -398,6 +371,13 @@ typedef enum {
    * sm_code indicates reason. Scheduler will try to restart
    */
   SMT_NOSTART,
+
+  /**
+   * Streaming unable to start (non-fatal).
+   *
+   * sm_code indicates reason. Scheduler will try to restart
+   */
+  SMT_NOSTART_WARN,
 
   /**
    * Raw MPEG TS data
@@ -747,12 +727,15 @@ char *regexp_escape ( const char *str );
 
 /* URL decoding */
 char to_hex(char code);
-char *url_encode(char *str);
+char *url_encode(const char *str);
 
 int mpegts_word_count(const uint8_t *tsb, int len, uint32_t mask);
 
 int deferred_unlink(const char *filename, const char *rootdir);
 
+void sha1_calc(uint8_t *dst, const uint8_t *d1, size_t d1_len, const uint8_t *d2, size_t d2_len);
+
+uint32_t gcdU32(uint32_t a, uint32_t b);
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }
   
@@ -785,4 +768,4 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #define PRItime_t       "ld"
 #endif
 
-#endif /* TV_HEAD_H */
+#endif /* TVHEADEND_H */

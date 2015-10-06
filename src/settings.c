@@ -150,7 +150,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 
   /* Create tmp file */
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
-  if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, 0700)) < 0) {
+  if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
     tvhlog(LOG_ALERT, "settings", "Unable to create \"%s\" - %s",
 	    tmppath, strerror(errno));
     return;
@@ -361,7 +361,7 @@ hts_settings_open_file(int for_write, const char *pathfmt, ...)
   /* Open file */
   int flags = for_write ? O_CREAT | O_TRUNC | O_WRONLY : O_RDONLY;
 
-  return tvh_open(path, flags, 0700);
+  return tvh_open(path, flags, S_IRUSR | S_IWUSR);
 }
 
 /*

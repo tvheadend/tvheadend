@@ -32,7 +32,7 @@ api_passwd_entry_grid
   passwd_entry_t *pw;
 
   TAILQ_FOREACH(pw, &passwd_entries, pw_link)
-    idnode_set_add(ins, (idnode_t*)pw, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)pw, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -58,13 +58,84 @@ api_passwd_entry_create
  */
 
 static void
+api_ipblock_entry_grid
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  ipblock_entry_t *ib;
+
+  TAILQ_FOREACH(ib, &ipblock_entries, ib_link)
+    idnode_set_add(ins, (idnode_t*)ib, &conf->filter, perm->aa_lang_ui);
+}
+
+static int
+api_ipblock_entry_create
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_t *conf;
+  ipblock_entry_t *ib;
+
+  if (!(conf  = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+
+  pthread_mutex_lock(&global_lock);
+  if ((ib = ipblock_entry_create(NULL, conf)) != NULL)
+    ipblock_entry_save(ib);
+  pthread_mutex_unlock(&global_lock);
+
+  return 0;
+}
+
+/*
+ *
+ */
+
+static int
+api_access_entry_userlist
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int i;
+  idnode_set_t    *is;
+  idnode_t        *in;
+  access_entry_t  *ae;
+  htsmsg_t        *l, *e;
+
+  l = htsmsg_create_list();
+  if ((is = idnode_find_all(&access_entry_class, NULL))) {
+    for (i = 0; i < is->is_count; i++) {
+      in = is->is_array[i];
+
+      if (idnode_perm(in, perm, NULL))
+        continue;
+
+      ae = (access_entry_t *)in;
+      if (ae->ae_username != NULL && ae->ae_username[0] != '\0' &&
+          ae->ae_username[0] != '*') {
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "key", ae->ae_username);
+        htsmsg_add_str(e, "val", ae->ae_username);
+        htsmsg_add_msg(l, NULL, e);
+      }
+
+      idnode_perm_unset(in);
+    }
+    free(is->is_array);
+    free(is);
+  }
+
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+
+  return 0;
+}
+
+static void
 api_access_entry_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   access_entry_t *ae;
 
   TAILQ_FOREACH(ae, &access_entries, ae_link)
-    idnode_set_add(ins, (idnode_t*)ae, &conf->filter, perm->aa_lang);
+    idnode_set_add(ins, (idnode_t*)ae, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -92,7 +163,12 @@ void api_access_init ( void )
     { "passwd/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_passwd_entry_grid },
     { "passwd/entry/create", ACCESS_ADMIN, api_passwd_entry_create, NULL },
 
+    { "ipblock/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&ipblock_entry_class },
+    { "ipblock/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_ipblock_entry_grid },
+    { "ipblock/entry/create", ACCESS_ADMIN, api_ipblock_entry_create, NULL },
+
     { "access/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&access_entry_class },
+    { "access/entry/userlist", ACCESS_ADMIN, api_access_entry_userlist, NULL },
     { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },
     { "access/entry/create", ACCESS_ADMIN, api_access_entry_create, NULL },
 

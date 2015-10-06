@@ -91,7 +91,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     if (uuids) {
       htsmsg_field_t *f;
       const char *str;
-      const char *uuid = idnode_uuid_as_str(&s->s_id);
+      const char *uuid = idnode_uuid_as_sstr(&s->s_id);
       HTSMSG_FOREACH(f, uuids) {
         if (!(str = htsmsg_field_get_str(f))) continue;
         if (!strcmp(str, uuid)) break;
@@ -99,7 +99,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
       if (!f) continue;
     }
     tvhtrace("service_mapper", "check service %s (%s)",
-             s->s_nicename, idnode_uuid_as_str(&s->s_id));
+             s->s_nicename, idnode_uuid_as_sstr(&s->s_id));
 
     /* Already mapped (or in progress) */
     if (s->s_sm_onqueue) continue;

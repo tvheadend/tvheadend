@@ -24,17 +24,25 @@
 #include "settings.h"
 #include "config.h"
 #include "uuid.h"
+#include "access.h"
 #include "htsbuf.h"
 #include "spawn.h"
 #include "lock.h"
 #include "profile.h"
 #include "avahi.h"
+#include "url.h"
+#include "satip/server.h"
+
+#include <netinet/ip.h>
+
+void tvh_str_set(char **strp, const char *src);
+int tvh_str_update(char **strp, const char *src);
 
 /* *************************************************************************
  * Global data
  * ************************************************************************/
 
-static htsmsg_t *config;
+struct config config;
 static char config_lock[PATH_MAX];
 static int config_lock_fd;
 
@@ -1281,6 +1289,44 @@ config_migrate_v20 ( void )
 }
 
 /*
+ * v20 -> v21 : epggrab changes
+ */
+static void
+config_migrate_v21 ( void )
+{
+  htsmsg_t *c, *m, *e, *a;
+  htsmsg_field_t *f;
+  const char *str;
+  int64_t s64;
+
+  if ((c = hts_settings_load_r(1, "epggrab/config")) != NULL) {
+    str = htsmsg_get_str(c, "module");
+    m = htsmsg_get_map(c, "mod_enabled");
+    e = htsmsg_create_map();
+    if (m) {
+      HTSMSG_FOREACH(f, m) {
+        s64 = 0;
+        htsmsg_field_get_s64(f, &s64);
+        if ((s64 || !strcmp(str ?: "", f->hmf_name)) &&
+            f->hmf_name && f->hmf_name[0]) {
+          a = htsmsg_create_map();
+          htsmsg_add_bool(a, "enabled", 1);
+          htsmsg_add_msg(e, f->hmf_name, a);
+        }
+      }
+    }
+    htsmsg_delete_field(c, "mod_enabled");
+    htsmsg_delete_field(c, "module");
+    htsmsg_add_msg(c, "modules", e);
+    hts_settings_save(c, "epggrab/config");
+    htsmsg_destroy(c);
+  }
+}
+
+
+
+
+/*
  * Perform backup
  */
 static void
@@ -1396,7 +1442,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v17,
   config_migrate_v18,
   config_migrate_v19,
-  config_migrate_v20
+  config_migrate_v20,
+  config_migrate_v21
 };
 
 /*
@@ -1409,8 +1456,8 @@ config_migrate ( int backup )
   const char *s;
 
   /* Get the current version */
-  v = htsmsg_get_u32_or_default(config, "version", 0);
-  s = htsmsg_get_str(config, "fullversion") ?: "unknown";
+  v = config.version;
+  s = config.full_version ?: "unknown";
 
   if (backup && strcmp(s, tvheadend_version))
     dobackup(s);
@@ -1440,8 +1487,8 @@ config_migrate ( int backup )
 
   /* Update */
 update:
-  htsmsg_set_u32(config, "version", v);
-  htsmsg_set_str(config, "fullversion", tvheadend_version);
+  config.version = v;
+  tvh_str_set(&config.full_version, tvheadend_version);
   config_save();
   return 1;
 }
@@ -1495,8 +1542,14 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   struct stat st;
   char buf[1024];
   htsmsg_t *config2;
+  const char *s;
 
-  config = htsmsg_create_map();
+  memset(&config, 0, sizeof(config));
+  config.idnode.in_class = &config_class;
+  config.info_area = strdup("login,storage,time");
+  config.cookie_expires = 7;
+  config.dscp = -1;
+  config.descrambler_buffer = 9000;
 
   /* Generate default */
   if (!path) {
@@ -1544,9 +1597,24 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
   } else {
-    htsmsg_destroy(config);
-    config = config2;
+    s = htsmsg_get_str(config2, "language");
+    if (s) {
+      htsmsg_t *m = htsmsg_csv_2_list(s, ',');
+      htsmsg_delete_field(config2, "language");
+      htsmsg_add_msg(config2, "language", m);
+    }
+    config.version = htsmsg_get_u32_or_default(config2, "config", 0);
+    s = htsmsg_get_str(config2, "full_version");
+    if (s)
+      config.full_version = strdup(s);
+    idnode_load(&config.idnode, config2);
+#if ENABLE_SATIP_SERVER
+    idnode_load(&satip_server_conf.idnode, config2);
+#endif
   }
+  htsmsg_destroy(config2);
+  if (config.server_name == NULL || config.server_name[0] == '\0')
+    config.server_name = strdup("Tvheadend");
 }
 
 void
@@ -1564,9 +1632,9 @@ config_init ( int backup )
 
   /* Store version number */
   if (config_newcfg) {
-    htsmsg_set_u32(config, "version", ARRAY_SIZE(config_migrate_table));
-    htsmsg_set_str(config, "fullversion", tvheadend_version);
-    htsmsg_set_str(config, "server_name", "Tvheadend");
+    config.version = ARRAY_SIZE(config_migrate_table);
+    tvh_str_set(&config.full_version, tvheadend_version);
+    tvh_str_set(&config.server_name, "Tvheadend");
     config_save();
   
   /* Perform migrations */
@@ -1580,156 +1648,367 @@ config_init ( int backup )
 void config_done ( void )
 {
   /* note: tvhlog is inactive !!! */
-  htsmsg_destroy(config);
+  free(config.full_version);
+  free(config.server_name);
+  free(config.language);
+  free(config.language_ui);
+  free(config.info_area);
+  free(config.muxconf_path);
+  free(config.chicon_path);
+  free(config.picon_path);
+  free(config.cors_origin);
   file_unlock(config_lock, config_lock_fd);
 }
 
 void config_save ( void )
 {
-  hts_settings_save(config, "config");
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&config.idnode, c);
+#if ENABLE_SATIP_SERVER
+  idnode_save(&satip_server_conf.idnode, c);
+#endif
+  hts_settings_save(c, "config");
+  htsmsg_destroy(c);
 }
 
 /* **************************************************************************
- * Access / Update routines
+ * Config Class
  * *************************************************************************/
 
-htsmsg_t *config_get_all ( int satip )
+static void config_class_save(idnode_t *self)
 {
-  htsmsg_field_t *f;
-  htsmsg_t *r;
-  const char *s;
-  int64_t s64;
-  int m, b;
+  config_save();
+}
 
-  r = htsmsg_create_map();
-  HTSMSG_FOREACH(f, config) {
-    m = strncmp(f->hmf_name, "satip_", 6);
-    if (satip && m) continue;
-    if (!satip && !m) continue;
-    switch (f->hmf_type) {
-    case HMF_STR:
-      s = htsmsg_field_get_str(f);
-      if (s)
-        htsmsg_add_str(r, f->hmf_name, s);
-      break;
-    case HMF_S64:
-      if (!htsmsg_field_get_s64(f, &s64))
-        htsmsg_add_s64(r, f->hmf_name, s64);
-      break;
-    case HMF_BOOL:
-      if (!htsmsg_field_get_bool(f, &b))
-        htsmsg_add_bool(r, f->hmf_name, b);
-      break;
-    default: abort();
+static int
+config_class_cors_origin_set ( void *o, const void *v )
+{
+  const char *s = v;
+  url_t u;
+
+  while (s && *s && *s <= ' ')
+    s++;
+  if (*s == '*') {
+    prop_sbuf[0] = '*';
+    prop_sbuf[1] = '\0';
+  } else {
+    memset(&u, 0, sizeof(u));
+    urlparse(s, &u);
+    if (u.scheme && (!strcmp(u.scheme, "http") || !strcmp(u.scheme, "https")) && u.host) {
+      if (u.port)
+        snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s:%d", u.scheme, u.host, u.port);
+      else
+        snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s", u.scheme, u.host);
+    } else {
+      prop_sbuf[0] = '\0';
     }
+    urlreset(&u);
   }
-  return r;
-}
-
-const char *
-config_get_str ( const char *fld )
-{
-  return htsmsg_get_str(config, fld);
-}
-
-int
-config_set_str ( const char *fld, const char *val )
-{
-  const char *c = htsmsg_get_str(config, fld);
-  if (!c || strcmp(c, val)) {
-    if (c) htsmsg_delete_field(config, fld);
-    htsmsg_add_str(config, fld, val);
+  if (strcmp(prop_sbuf, config.cors_origin ?: "")) {
+    free(config.cors_origin);
+    config.cors_origin = strdup(prop_sbuf);
     return 1;
   }
   return 0;
 }
 
-int
-config_get_int ( const char *fld, int deflt )
+static const void *
+config_class_language_get ( void *o )
 {
-  return htsmsg_get_s32_or_default(config, fld, deflt);
+  return htsmsg_csv_2_list(config.language, ',');
 }
 
-int
-config_set_int ( const char *fld, int val )
+static int
+config_class_language_set ( void *o, const void *v )
 {
-  const char *c = htsmsg_get_str(config, fld);
-  char buf[16];
-  snprintf(buf, sizeof(buf), "%d", val);
-  if (!c || strcmp(c, buf)) {
-    if (c) htsmsg_delete_field(config, fld);
-    htsmsg_add_s32(config, fld, val);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  if (strcmp(s ?: "", config.language ?: "")) {
+    free(config.language);
+    config.language = s;
     return 1;
   }
+  if (s)
+    free(s);
   return 0;
 }
+
+static htsmsg_t *
+config_class_language_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "language/list");
+  return m;
+}
+
+static const void *
+config_class_info_area_get ( void *o )
+{
+  return htsmsg_csv_2_list(config.info_area, ',');
+}
+
+static int
+config_class_info_area_set ( void *o, const void *v )
+{
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  if (strcmp(s ?: "", config.info_area ?: "")) {
+    free(config.info_area);
+    config.info_area = s;
+    return 1;
+  }
+  if (s)
+    free(s);
+  return 0;
+}
+
+static void
+config_class_info_area_list1 ( htsmsg_t *m, const char *key, const char *val )
+{
+  htsmsg_t *e = htsmsg_create_map();
+  htsmsg_add_str(e, "key", key);
+  htsmsg_add_str(e, "val", val);
+  htsmsg_add_msg(m, NULL, e);
+}
+
+static htsmsg_t *
+config_class_info_area_list ( void *o, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_list();
+  config_class_info_area_list1(m, "login", N_("Login/Logout"));
+  config_class_info_area_list1(m, "storage", N_("Storage space"));
+  config_class_info_area_list1(m, "time", N_("Time"));
+  return m;
+}
+
+static htsmsg_t *
+config_class_dscp_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Default"), -1 },
+    { N_("CS0"),  IPTOS_CLASS_CS0 },
+    { N_("CS1"),  IPTOS_CLASS_CS1 },
+    { N_("AF11"), IPTOS_DSCP_AF11 },
+    { N_("AF12"), IPTOS_DSCP_AF12 },
+    { N_("AF13"), IPTOS_DSCP_AF13 },
+    { N_("CS2"),  IPTOS_CLASS_CS2 },
+    { N_("AF21"), IPTOS_DSCP_AF21 },
+    { N_("AF22"), IPTOS_DSCP_AF22 },
+    { N_("AF23"), IPTOS_DSCP_AF23 },
+    { N_("CS3"),  IPTOS_CLASS_CS3 },
+    { N_("AF31"), IPTOS_DSCP_AF31 },
+    { N_("AF32"), IPTOS_DSCP_AF32 },
+    { N_("AF33"), IPTOS_DSCP_AF33 },
+    { N_("CS4"),  IPTOS_CLASS_CS4 },
+    { N_("AF41"), IPTOS_DSCP_AF41 },
+    { N_("AF42"), IPTOS_DSCP_AF42 },
+    { N_("AF43"), IPTOS_DSCP_AF43 },
+    { N_("CS5"),  IPTOS_CLASS_CS5 },
+    { N_("EF"),   IPTOS_DSCP_EF },
+    { N_("CS6"),  IPTOS_CLASS_CS6 },
+    { N_("CS7"),  IPTOS_CLASS_CS7 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+const idclass_t config_class = {
+  .ic_snode      = &config.idnode,
+  .ic_class      = "config",
+  .ic_caption    = N_("Configuration"),
+  .ic_event      = "config",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = config_class_save,
+  .ic_groups     = (const property_group_t[]) {
+      {
+         .name   = N_("Server"),
+         .number = 1,
+      },
+      {
+         .name   = N_("Language Settings"),
+         .number = 2,
+      },
+      {
+         .name   = N_("Web User Interface"),
+         .number = 3,
+      },
+      {
+         .name   = N_("DVB Scan Files"),
+         .number = 4,
+      },
+      {
+         .name   = N_("Time Update"),
+         .number = 5,
+      },
+      {
+         .name   = N_("Picon"),
+         .number = 6,
+      },
+      {}
+  },
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_U32,
+      .id     = "version",
+      .name   = N_("Configuration version"),
+      .off    = offsetof(config_t, version),
+      .opts   = PO_RDONLY | PO_HIDDEN,
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "full_version",
+      .name   = N_("Last updated from"),
+      .off    = offsetof(config_t, full_version),
+      .opts   = PO_RDONLY | PO_HIDDEN,
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "server_name",
+      .name   = N_("Tvheadend server name"),
+      .off    = offsetof(config_t, server_name),
+      .group  = 1
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cookie_expires",
+      .name   = N_("Cookie expiration (days)"),
+      .off    = offsetof(config_t, cookie_expires),
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "cors_origin",
+      .name   = N_("HTTP CORS Origin"),
+      .set    = config_class_cors_origin_set,
+      .off    = offsetof(config_t, cors_origin),
+      .group  = 1
+    },
+    {
+      .type   = PT_INT,
+      .id     = "dscp",
+      .name   = N_("DSCP/TOS for streaming"),
+      .off    = offsetof(config_t, dscp),
+      .list   = config_class_dscp_list,
+      .group  = 1
+    },
+    {
+      .type   = PT_U32,
+      .id     = "descrambler_buffer",
+      .name   = N_("Descrambler buffer (TS packets)"),
+      .off    = offsetof(config_t, descrambler_buffer),
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .islist = 1,
+      .id     = "language",
+      .name   = N_("Default language(s)"),
+      .set    = config_class_language_set,
+      .get    = config_class_language_get,
+      .list   = config_class_language_list,
+      .opts   = PO_LORDER,
+      .group  = 2
+    },
+    {
+      .type   = PT_STR,
+      .islist = 1,
+      .id     = "info_area",
+      .name   = N_("Information area"),
+      .set    = config_class_info_area_set,
+      .get    = config_class_info_area_get,
+      .list   = config_class_info_area_list,
+      .opts   = PO_LORDER,
+      .group  = 3
+    },
+    {
+      .type   = PT_STR,
+      .id     = "language_ui",
+      .name   = N_("User language"),
+      .list   = language_get_list,
+      .off    = offsetof(config_t, language_ui),
+      .group  = 3
+    },
+    {
+      .type   = PT_STR,
+      .id     = "muxconfpath",
+      .name   = N_("DVB scan files path"),
+      .off    = offsetof(config_t, muxconf_path),
+      .group  = 4
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "tvhtime_update_enabled",
+      .name   = N_("Update time"),
+      .off    = offsetof(config_t, tvhtime_update_enabled),
+      .group  = 5,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "tvhtime_ntp_enabled",
+      .name   = N_("Enable NTP driver"),
+      .off    = offsetof(config_t, tvhtime_update_enabled),
+      .group  = 5,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "tvhtime_tolerance",
+      .name   = N_("Update tolerance (ms)"),
+      .off    = offsetof(config_t, tvhtime_tolerance),
+      .group  = 5,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "prefer_picon",
+      .name   = N_("Prefer picons over channel name"),
+      .off    = offsetof(config_t, prefer_picon),
+      .group  = 6,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "chiconpath",
+      .name   = N_("Channel icon path (see Help)"),
+      .off    = offsetof(config_t, chicon_path),
+      .group  = 6,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "chiconlowercase",
+      .name   = N_("Channel icon name lower-case"),
+      .off    = offsetof(config_t, chicon_lowercase),
+      .group  = 6,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "piconpath",
+      .name   = N_("Picon path (see Help)"),
+      .off    = offsetof(config_t, picon_path),
+      .group  = 6,
+    },
+    {}
+  }
+};
+
+/* **************************************************************************
+ * Access routines
+ * *************************************************************************/
 
 const char *config_get_server_name ( void )
 {
-  const char *s = htsmsg_get_str(config, "server_name");
-  if (s == NULL || *s == '\0')
-    return "Tvheadend";
-  return s;
-}
-
-int config_set_server_name ( const char *name )
-{
-  int r = config_set_str("server_name", name);
-  avahi_restart();
-  return r;
+  return config.server_name;
 }
 
 const char *config_get_language ( void )
 {
-  const char *s = htsmsg_get_str(config, "language");
+  const char *s = config.language;
   if (s == NULL || *s == '\0')
     return "eng";
   return s;
 }
 
-int config_set_language ( const char *lang )
+const char *config_get_language_ui ( void )
 {
-  return config_set_str("language", lang);
-}
-
-const char *config_get_muxconfpath ( void )
-{
-  return htsmsg_get_str(config, "muxconfpath");
-}
-
-int config_set_muxconfpath ( const char *path )
-{
-  return config_set_str("muxconfpath", path);
-}
-
-int config_get_prefer_picon ( void )
-{
-  int b = 0;
-  htsmsg_get_bool(config, "prefer_picon", &b);
-  return b;
-}
-
-int config_set_prefer_picon ( const char *str )
-{
-  return config_set_str("prefer_picon", str);
-}
-
-const char *config_get_chicon_path ( void )
-{
-  return htsmsg_get_str(config, "chiconpath");
-}
-
-int config_set_chicon_path ( const char *str )
-{
-  return config_set_str("chiconpath", str);
-}
-
-const char *config_get_picon_path ( void )
-{
-  return htsmsg_get_str(config, "piconpath");
-}
-
-int config_set_picon_path ( const char *str )
-{
-  return config_set_str("piconpath", str);
+  const char *s = config.language_ui;
+  if (s == NULL || *s == '\0')
+    return NULL;
+  return s;
 }

@@ -46,7 +46,7 @@ dvb_network_class_delete ( idnode_t *in )
 
   /* remove config */
   hts_settings_remove("input/dvb/networks/%s", 
-                      idnode_uuid_as_str(in));
+                      idnode_uuid_as_sstr(in));
 
   /* Parent delete */
   mpegts_network_delete(mn, 1);
@@ -394,7 +394,7 @@ dvb_network_config_save ( mpegts_network_t *mn )
   idnode_save(&mn->mn_id, c);
   htsmsg_add_str(c, "class", mn->mn_id.in_class->ic_class);
   hts_settings_save(c, "input/dvb/networks/%s/config",
-                    idnode_uuid_as_str(&mn->mn_id));
+                    idnode_uuid_as_sstr(&mn->mn_id));
   htsmsg_destroy(c);
 }
 

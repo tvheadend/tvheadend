@@ -366,6 +366,8 @@ subscription_reschedule(void)
         s->ths_testing_error = 0;
         s->ths_current_instance = NULL;
         service_instance_list_clear(&s->ths_instances);
+        sm = streaming_msg_create_code(SMT_NOSTART_WARN, error);
+        streaming_target_deliver(s->ths_output, sm);
         continue;
       }
       /* No service available */

@@ -343,8 +343,12 @@ typedef enum mpegts_mux_scan_result
 {
   MM_SCAN_NONE,
   MM_SCAN_OK,
-  MM_SCAN_FAIL
+  MM_SCAN_FAIL,
+  MM_SCAN_PARTIAL
 } mpegts_mux_scan_result_t;
+
+#define MM_SCAN_CHECK_OK(mm) \
+  ((mm)->mm_scan_result == MM_SCAN_OK || (mm)->mm_scan_result == MM_SCAN_PARTIAL)
 
 enum mpegts_mux_epg_flag
 {
@@ -480,6 +484,7 @@ struct mpegts_mux
   int   mm_epg;
   char *mm_charset;
   int   mm_pmt_ac3;
+  int   mm_eit_tsid_nocheck;
 
   /*
    * TSDEBUG
@@ -599,6 +604,7 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
+  int             mmi_start_weight;
   int             mmi_tune_failed;
 };
 

@@ -29,6 +29,13 @@
 #define IPTV_PKTS        32
 #define IPTV_PKT_PAYLOAD 1472
 
+#define IPTV_KILL_KILL   0
+#define IPTV_KILL_TERM   1
+#define IPTV_KILL_INT    2
+#define IPTV_KILL_HUP    3
+#define IPTV_KILL_USR1   4
+#define IPTV_KILL_USR2   5
+
 extern pthread_mutex_t iptv_lock;
 
 typedef struct iptv_input   iptv_input_t;
@@ -87,8 +94,10 @@ struct iptv_mux
   udp_connection_t     *mm_iptv_connection2;
   char                 *mm_iptv_url;
   char                 *mm_iptv_url_sane;
+  char                 *mm_iptv_url_raw;
   char                 *mm_iptv_interface;
 
+  int                   mm_iptv_substitute;
   int                   mm_iptv_atsc;
 
   char                 *mm_iptv_muxname;
@@ -96,6 +105,8 @@ struct iptv_mux
 
   int                   mm_iptv_respawn;
   time_t                mm_iptv_respawn_last;
+  int                   mm_iptv_kill;
+  int                   mm_iptv_kill_timeout;
   char                 *mm_iptv_env;
 
   uint32_t              mm_iptv_rtp_seq;

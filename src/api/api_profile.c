@@ -37,7 +37,7 @@ api_profile_list
   pthread_mutex_lock(&global_lock);
   TAILQ_FOREACH(pro, &profiles, pro_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_str(&pro->pro_id));
+    htsmsg_add_str(e, "key", idnode_uuid_as_sstr(&pro->pro_id));
     htsmsg_add_str(e, "val", profile_get_name(pro));
     htsmsg_add_msg(l, NULL, e);
   }
@@ -59,7 +59,7 @@ api_profile_builders
   pthread_mutex_lock(&global_lock);
   /* List of available builder classes */
   LIST_FOREACH(pb, &profile_builders, link)
-    if ((e = idclass_serialize(pb->clazz, perm->aa_lang)))
+    if ((e = idclass_serialize(pb->clazz, perm->aa_lang_ui)))
       htsmsg_add_msg(l, NULL, e);
   pthread_mutex_unlock(&global_lock);
 

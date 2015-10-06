@@ -29,9 +29,8 @@ api_esfilter_grid
 {
   esfilter_t *esf;
 
-  TAILQ_FOREACH(esf, &esfilters[cls], esf_link) {
-    idnode_set_add(ins, (idnode_t*)esf, &conf->filter, perm->aa_lang);
-  }
+  TAILQ_FOREACH(esf, &esfilters[cls], esf_link)
+    idnode_set_add(ins, (idnode_t*)esf, &conf->filter, perm->aa_lang_ui);
 }
 
 static int

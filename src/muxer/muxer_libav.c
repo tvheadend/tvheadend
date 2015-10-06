@@ -29,11 +29,13 @@
 #include "libav.h"
 #include "muxer_libav.h"
 #include "parsers/parser_avc.h"
+#include "parsers/parser_hevc.h"
 
 typedef struct lav_muxer {
   muxer_t;
   AVFormatContext *lm_oc;
   AVBitStreamFilterContext *lm_h264_filter;
+  AVBitStreamFilterContext *lm_hevc_filter;
   int lm_fd;
   int lm_init;
 } lav_muxer_t;
@@ -107,11 +109,16 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   }
 
   if(ssc->ssc_gh) {
-    if (ssc->ssc_type == SCT_H264) {
+    if (ssc->ssc_type == SCT_H264 || ssc->ssc_type == SCT_HEVC) {
       sbuf_t hdr;
       sbuf_init(&hdr);
-      isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
-                      pktbuf_len(ssc->ssc_gh));
+      if (ssc->ssc_type == SCT_H264) {
+          isom_write_avcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                          pktbuf_len(ssc->ssc_gh));
+      } else {
+          isom_write_hvcc(&hdr, pktbuf_ptr(ssc->ssc_gh),
+                          pktbuf_len(ssc->ssc_gh));
+      }
       c->extradata_size = hdr.sb_ptr;
       c->extradata = av_malloc(hdr.sb_ptr);
       memcpy(c->extradata, hdr.sb_data, hdr.sb_ptr);
@@ -192,6 +199,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
   case MC_MPEGTS:
     ret |= (type == SCT_MPEG2VIDEO);
     ret |= (type == SCT_H264);
+    ret |= (type == SCT_HEVC);
 
     ret |= (type == SCT_MPEG2AUDIO);
     ret |= (type == SCT_AC3);
@@ -257,10 +265,10 @@ lav_muxer_mime(muxer_t* m, const struct streaming_start *ss)
  * Init the muxer with streams
  */
 static int
-lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
+lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 {
   int i;
-  const streaming_start_component_t *ssc;
+  streaming_start_component_t *ssc;
   AVFormatContext *oc;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   char app[128];
@@ -273,8 +281,10 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
   av_dict_set(&oc->metadata, "service_name", name, 0);
   av_dict_set(&oc->metadata, "service_provider", app, 0);
 
-  if(lm->m_config.m_type == MC_MPEGTS)
+  if(lm->m_config.m_type == MC_MPEGTS) {
     lm->lm_h264_filter = av_bitstream_filter_init("h264_mp4toannexb");
+    lm->lm_hevc_filter = av_bitstream_filter_init("hevc_mp4toannexb");
+  }
 
   oc->max_delay = 0.7 * AV_TIME_BASE;
 
@@ -288,12 +298,14 @@ lav_muxer_init(muxer_t* m, const struct streaming_start *ss, const char *name)
       tvhlog(LOG_WARNING, "libav",  "%s is not supported in %s", 
 	     streaming_component_type2txt(ssc->ssc_type), 
 	     muxer_container_type2txt(lm->m_config.m_type));
+      ssc->ssc_muxer_disabled = 1;
       continue;
     }
 
     if(lav_muxer_add_stream(lm, ssc)) {
       tvhlog(LOG_ERR, "libav",  "Failed to add %s stream", 
 	     streaming_component_type2txt(ssc->ssc_type));
+      ssc->ssc_muxer_disabled = 1;
       continue;
     }
   }
@@ -419,10 +431,12 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
     tofree = NULL;
     av_init_packet(&packet);
 
-    if(lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) {
+    if((lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) ||
+       (lm->lm_hevc_filter && st->codec->codec_id == AV_CODEC_ID_HEVC)) {
       pkt = avc_convert_pkt(opkt = pkt);
       pkt_ref_dec(opkt);
-      if(av_bitstream_filter_filter(lm->lm_h264_filter,
+      if(av_bitstream_filter_filter(st->codec->codec_id == AV_CODEC_ID_H264 ?
+                                      lm->lm_h264_filter : lm->lm_hevc_filter,
 				    st->codec, 
 				    NULL, 
 				    &packet.data, 
@@ -522,6 +536,9 @@ lav_muxer_destroy(muxer_t *m)
 
   if(lm->lm_h264_filter)
     av_bitstream_filter_close(lm->lm_h264_filter);
+
+  if(lm->lm_hevc_filter)
+    av_bitstream_filter_close(lm->lm_hevc_filter);
 
   if (lm->lm_oc) {
     for(i=0; i<lm->lm_oc->nb_streams; i++)

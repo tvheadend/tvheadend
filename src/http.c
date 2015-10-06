@@ -38,6 +38,11 @@
 #include "access.h"
 #include "notify.h"
 #include "channels.h"
+#include "config.h"
+
+#if ENABLE_ANDROID
+#include <sys/socket.h>
+#endif
 
 void *http_server;
 
@@ -231,9 +236,15 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   htsbuf_qprintf(&hdrs, "%s %d %s\r\n", 
 		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
-  if (hc->hc_version != RTSP_VERSION_1_0)
+  if (hc->hc_version != RTSP_VERSION_1_0){
     htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
-
+    if (config.cors_origin && config.cors_origin[0]) {
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET\r\n");
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
+    }
+  }
+  
   if(maxage == 0) {
     if (hc->hc_version != RTSP_VERSION_1_0)
       htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
@@ -458,10 +469,11 @@ http_redirect(http_connection_t *hc, const char *location,
     if (!external && tvheadend_webroot && location[0] == '/')
       htsbuf_append(&hq, tvheadend_webroot, strlen(tvheadend_webroot));
     htsbuf_append(&hq, location, strlen(location));
-    htsbuf_append(&hq, "?", 1);
     TAILQ_FOREACH(ra, req_args, link) {
       if (!first)
         htsbuf_append(&hq, "&", 1);
+      else
+        htsbuf_append(&hq, "?", 1);
       first = 0;
       htsbuf_append_and_escape_url(&hq, ra->key);
       htsbuf_append(&hq, "=", 1);

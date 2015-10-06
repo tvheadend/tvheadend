@@ -26,6 +26,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+
+#include <openssl/sha.h>
+
 #include "tvheadend.h"
 #include "tvh_endian.h"
 
@@ -565,6 +568,7 @@ regexp_escape(const char* str)
       case '[':
       case ']':
       case '*':
+      case '^':
         *b = '\\';
         b++;
         /* -fallthrough */
@@ -589,16 +593,17 @@ char to_hex(char code) {
 /* Returns a url-encoded version of str
    IMPORTANT: be sure to free() the returned string after use
    http://www.geekhideout.com/urlcode.shtml */
-char *url_encode(char *str) {
-  char *pstr = str, *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
-  while (*pstr) {
-    if (isalnum(*pstr) || *pstr == '-' || *pstr == '_' || *pstr == '.' || *pstr == '~') 
-      *pbuf++ = *pstr;
-    /*else if (*pstr == ' ') 
+char *url_encode(const char *str)
+{
+  char *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
+  while (*str) {
+    if (isalnum(*str) || *str == '-' || *str == '_' || *str == '.' || *str == '~')
+      *pbuf++ = *str;
+    /*else if (*str == ' ')
       *pbuf++ = '+';*/
     else 
-      *pbuf++ = '%', *pbuf++ = to_hex(*pstr >> 4), *pbuf++ = to_hex(*pstr & 15);
-    pstr++;
+      *pbuf++ = '%', *pbuf++ = to_hex(*str >> 4), *pbuf++ = to_hex(*str & 15);
+    str++;
   }
   *pbuf = '\0';
   return buf;
@@ -723,4 +728,38 @@ deferred_unlink(const char *filename, const char *rootdir)
     tasklet_arm_alloc(deferred_unlink_dir_cb, du);
   }
   return 0;
+}
+
+void
+sha1_calc(uint8_t *dst,
+          const uint8_t *d1, size_t d1_len,
+          const uint8_t *d2, size_t d2_len)
+{
+  SHA_CTX shactx;
+
+  SHA1_Init(&shactx);
+  if (d1)
+    SHA1_Update(&shactx, d1, d1_len);
+  if (d2)
+    SHA1_Update(&shactx, d2, d2_len);
+  SHA1_Final(dst, &shactx);
+}
+
+uint32_t
+gcdU32(uint32_t a, uint32_t b)
+{
+  uint32_t r;
+  if (a < b) {
+    while((r = b % a) != 0) {
+      b = a;
+      a = r;
+    }
+    return a;
+  } else {
+    while((r = a % b) != 0) {
+      a = b;
+      b = r;
+    }
+    return b;
+  }
 }

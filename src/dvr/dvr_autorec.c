@@ -34,27 +34,42 @@
 #include "epg.h"
 #include "htsp_server.h"
 
-static int dvr_autorec_in_init = 0;
-
 struct dvr_autorec_entry_queue autorec_entries;
 
 /**
  * Unlink - and remove any unstarted
  */
-static void
-dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del)
+static epg_broadcast_t **
+dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del, int disabled)
 {
   dvr_entry_t *de;
+  epg_broadcast_t **bcast = NULL, **nbcast;
+  int i = 0, size = 0;
 
   while((de = LIST_FIRST(&dae->dae_spawns)) != NULL) {
     LIST_REMOVE(de, de_autorec_link);
     de->de_autorec = NULL;
     if (!del) continue;
-    if (de->de_sched_state == DVR_SCHEDULED)
+    if (de->de_sched_state == DVR_SCHEDULED) {
+      if (disabled && !de->de_enabled && de->de_bcast) {
+        if (i >= size - 1) {
+          nbcast = realloc(bcast, (size + 16) * sizeof(epg_broadcast_t *));
+          if (nbcast != NULL) {
+            bcast = nbcast;
+            size += 16;
+            bcast[i++] = de->de_bcast;
+          }
+        } else {
+          bcast[i++] = de->de_bcast;
+        }
+      }
       dvr_entry_cancel(de);
-    else
+    } else
       dvr_entry_save(de);
   }
+  if (bcast)
+    bcast[i] = NULL;
+  return bcast;
 }
 
 /**
@@ -260,7 +275,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
   if (start_window >= 0)
     htsmsg_add_s32(conf, "start_window", start_window);
   if (ch)
-    htsmsg_add_str(conf, "channel", idnode_uuid_as_str(&ch->ch_id));
+    htsmsg_add_str(conf, "channel", idnode_uuid_as_sstr(&ch->ch_id));
 
   int i;
   for (i = 0; i < 7; i++)
@@ -317,10 +332,10 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 static void
 autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 {
-  dvr_autorec_purge_spawns(dae, delconf);
+  dvr_autorec_purge_spawns(dae, delconf, 0);
 
   if (delconf)
-    hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
+    hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_sstr(&dae->dae_id));
 
   htsp_autorec_entry_delete(dae);
 
@@ -368,7 +383,7 @@ dvr_autorec_save(dvr_autorec_entry_t *dae)
   lock_assert(&global_lock);
 
   idnode_save(&dae->dae_id, m);
-  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id));
+  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_sstr(&dae->dae_id));
   htsmsg_destroy(m);
 }
 
@@ -444,7 +459,7 @@ dvr_autorec_entry_class_channel_get(void *o)
   static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
-    ret = idnode_uuid_as_str(&dae->dae_channel->ch_id);
+    ret = idnode_uuid_as_sstr(&dae->dae_channel->ch_id);
   else
     ret = "";
   return &ret;
@@ -505,7 +520,7 @@ dvr_autorec_entry_class_tag_get(void *o)
   static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel_tag)
-    ret = idnode_uuid_as_str(&dae->dae_channel_tag->ct_id);
+    ret = idnode_uuid_as_sstr(&dae->dae_channel_tag->ct_id);
   else
     ret = "";
   return &ret;
@@ -652,7 +667,7 @@ dvr_autorec_entry_class_config_name_get(void *o)
   static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_config)
-    ret = idnode_uuid_as_str(&dae->dae_config->dvr_id);
+    ret = idnode_uuid_as_sstr(&dae->dae_config->dvr_id);
   else
     ret = "";
   return &ret;
@@ -1114,7 +1129,6 @@ dvr_autorec_init(void)
   htsmsg_field_t *f;
 
   TAILQ_INIT(&autorec_entries);
-  dvr_autorec_in_init = 1;
   if((l = hts_settings_load("dvr/autorec")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
@@ -1123,7 +1137,6 @@ dvr_autorec_init(void)
     }
     htsmsg_destroy(l);
   }
-  dvr_autorec_in_init = 0;
 }
 
 void
@@ -1154,9 +1167,11 @@ dvr_autorec_check_event(epg_broadcast_t *e)
 {
   dvr_autorec_entry_t *dae;
 
+  if (e->channel && !e->channel->ch_enabled)
+    return;
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
     if(autorec_cmp(dae, e))
-      dvr_entry_create_by_autorec(e, dae);
+      dvr_entry_create_by_autorec(1, e, dae);
   // Note: no longer updating event here as it will be done from EPG
   //       anyway
 }
@@ -1186,18 +1201,27 @@ void
 dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
 {
   channel_t *ch;
-  epg_broadcast_t *e;
+  epg_broadcast_t *e, **disabled = NULL, **p;
+  int enabled;
 
   if (purge)
-    dvr_autorec_purge_spawns(dae, 1);
+    disabled = dvr_autorec_purge_spawns(dae, 1, 1);
 
   CHANNEL_FOREACH(ch) {
     if (!ch->ch_enabled) continue;
     RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
-      if(autorec_cmp(dae, e))
-        dvr_entry_create_by_autorec(e, dae);
+      if(autorec_cmp(dae, e)) {
+        enabled = 1;
+        if (disabled) {
+          for (p = disabled; *p && *p != e; p++);
+          enabled = *p != NULL;
+        }
+        dvr_entry_create_by_autorec(enabled, e, dae);
+      }
     }
   }
+
+  free(disabled);
 
   htsp_autorec_entry_update(dae);
 }

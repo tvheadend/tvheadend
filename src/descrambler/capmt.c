@@ -617,7 +617,7 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
   res = send(fd, buf, len, MSG_DONTWAIT);
   if (res < len) {
 #if ENABLE_ANDROID
-    tvhlog(LOG_DEBUG, "capmt", "%s: Message send failed to socket %i (%li)", capmt_name(capmt), fd, res); // Android bug, ssize_t is long int
+    tvhlog(LOG_DEBUG, "capmt", "%s: Message send failed to socket %i (%li)", capmt_name(capmt), fd, (long int)res); // Android bug, ssize_t is long int
 #else
     tvhlog(LOG_DEBUG, "capmt", "%s: Message send failed to socket %i (%zi)", capmt_name(capmt), fd, res);
 #endif
@@ -2074,9 +2074,13 @@ capmt_service_start(caclient_t *cac, service_t *s)
   }
 
   td = (th_descrambler_t *)ct;
-  snprintf(buf, sizeof(buf), "capmt-%s-%i",
-                             capmt->capmt_sockfile,
-                             capmt->capmt_port);
+  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP || capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+    snprintf(buf, sizeof(buf), "capmt-%s-%i",
+                               capmt->capmt_sockfile,
+                               capmt->capmt_port);
+  } else {
+    snprintf(buf, sizeof(buf), "capmt-%s", capmt->capmt_sockfile);
+  }
   td->td_nicename    = strdup(buf);
   td->td_service     = s;
   td->td_stop        = capmt_service_destroy;

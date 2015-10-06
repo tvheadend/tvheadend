@@ -22,42 +22,43 @@
 #define __TVH_CONFIG__H__
 
 #include <unistd.h>
+
+#include "build.h"
 #include "htsmsg.h"
+#include "idnode.h"
+
+typedef struct config {
+  idnode_t idnode;
+  uint32_t version;
+  char *full_version;
+  char *server_name;
+  char *language;
+  char *info_area;
+  char *language_ui;
+  char *muxconf_path;
+  int prefer_picon;
+  char *chicon_path;
+  int chicon_lowercase;
+  char *picon_path;
+  int tvhtime_update_enabled;
+  int tvhtime_ntp_enabled;
+  uint32_t tvhtime_tolerance;
+  char *cors_origin;
+  uint32_t cookie_expires;
+  int dscp;
+  uint32_t descrambler_buffer;
+} config_t;
+
+extern const idclass_t config_class;
+extern config_t config;
 
 void        config_boot    ( const char *path, gid_t gid, uid_t uid );
 void        config_init    ( int backup );
 void        config_done    ( void );
 void        config_save    ( void );
 
-htsmsg_t   *config_get_all ( int satip );
-
-const char *config_get_str ( const char *fld );
-int         config_set_str ( const char *fld, const char *val );
-int         config_get_int ( const char *fld, int dflt );
-int         config_set_int ( const char *fld, int val );
-
 const char *config_get_server_name ( void );
-int         config_set_server_name ( const char *str )
-  __attribute__((warn_unused_result));
-
-const char *config_get_muxconfpath ( void );
-int         config_set_muxconfpath ( const char *str )
-  __attribute__((warn_unused_result));
-
 const char *config_get_language    ( void );
-int         config_set_language    ( const char *str )
-  __attribute__((warn_unused_result));
-
-int         config_get_prefer_picon ( void );
-int         config_set_prefer_picon ( const char *str )
-  __attribute__((warn_unused_result));
-
-const char *config_get_chicon_path  ( void );
-int         config_set_chicon_path  ( const char *str )
-  __attribute__((warn_unused_result));
-
-const char *config_get_picon_path  ( void );
-int         config_set_picon_path  ( const char *str )
-  __attribute__((warn_unused_result));
+const char *config_get_language_ui ( void );
 
 #endif /* __TVH_CONFIG__H__ */

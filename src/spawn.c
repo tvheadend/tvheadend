@@ -58,6 +58,7 @@ typedef struct spawn {
   LIST_ENTRY(spawn) link;
   pid_t pid;
   const char *name;
+  time_t killed;
 } spawn_t;
 
 static void spawn_reaper(void);
@@ -287,6 +288,7 @@ static void
 spawn_reaper(void)
 {
   int r;
+  spawn_t *s;
 
   do {
     r = spawn_reap(-1, NULL, 0);
@@ -295,13 +297,22 @@ spawn_reaper(void)
     if (r <= 0)
       break;
   } while (1);
+
+  /* forced kill for expired PIDs */
+  pthread_mutex_lock(&spawn_mutex);
+  LIST_FOREACH(s, &spawns, link)
+    if (s->killed && s->killed < dispatch_clock) {
+      /* kill the whole process group */
+      kill(-(s->pid), SIGKILL);
+    }
+  pthread_mutex_unlock(&spawn_mutex);
 }
 
 /**
  * Kill the pid (only if waiting)
  */
 int
-spawn_kill(pid_t pid, int sig)
+spawn_kill(pid_t pid, int sig, int timeout)
 {
   int r = -ESRCH;
   spawn_t *s;
@@ -314,6 +325,8 @@ spawn_kill(pid_t pid, int sig)
       if(s->pid == pid)
         break;
     if (s) {
+      if (!s->killed)
+        s->killed = dispatch_clock_update(NULL) + MAX(MIN(5, timeout), 3600);
       /* kill the whole process group */
       r = kill(-pid, sig);
       if (r < 0)

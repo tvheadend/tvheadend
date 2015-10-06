@@ -23,6 +23,7 @@
 #include "config.h"
 #include "settings.h"
 #include "atomic.h"
+#include "access.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -34,24 +35,15 @@
 
 static int timeshift_index = 0;
 
-uint32_t  timeshift_enabled;
-int       timeshift_ondemand;
-char     *timeshift_path;
-int       timeshift_unlimited_period;
-uint32_t  timeshift_max_period;
-int       timeshift_unlimited_size;
-uint64_t  timeshift_max_size;
-uint64_t  timeshift_ram_size;
-uint64_t  timeshift_ram_segment_size;
-int       timeshift_ram_only;
+struct timeshift_conf timeshift_conf;
 
 /*
  * Safe values for RAM configuration
  */
 static void timeshift_fixup ( void )
 {
-  if (timeshift_ram_only)
-    timeshift_max_size = timeshift_ram_size;
+  if (timeshift_conf.ram_only)
+    timeshift_conf.max_size = timeshift_conf.ram_size;
 }
 
 /*
@@ -60,43 +52,18 @@ static void timeshift_fixup ( void )
 void timeshift_init ( void )
 {
   htsmsg_t *m;
-  const char *str;
-  uint32_t u32;
 
   timeshift_filemgr_init();
 
   /* Defaults */
-  timeshift_enabled          = 0;                       // Disabled
-  timeshift_ondemand         = 0;                       // Permanent
-  timeshift_path             = NULL;                    // setting dir
-  timeshift_unlimited_period = 0;
-  timeshift_max_period       = 3600;                    // 1Hr
-  timeshift_unlimited_size   = 0;
-  timeshift_max_size         = 10000 * (size_t)1048576; // 10G
-  timeshift_ram_size         = 0;
-  timeshift_ram_segment_size = 0;
+  memset(&timeshift_conf, 0, sizeof(timeshift_conf));
+  timeshift_conf.idnode.in_class = &timeshift_conf_class;
+  timeshift_conf.max_period       = 3600;                    // 1Hr
+  timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
 
   /* Load settings */
   if ((m = hts_settings_load("timeshift/config"))) {
-    if (!htsmsg_get_u32(m, "enabled", &u32))
-      timeshift_enabled = u32 ? 1 : 0;
-    if (!htsmsg_get_u32(m, "ondemand", &u32))
-      timeshift_ondemand = u32 ? 1 : 0;
-    if ((str = htsmsg_get_str(m, "path")))
-      timeshift_path = strdup(str);
-    if (!htsmsg_get_u32(m, "unlimited_period", &u32))
-      timeshift_unlimited_period = u32 ? 1 : 0;
-    htsmsg_get_u32(m, "max_period", &timeshift_max_period);
-    if (!htsmsg_get_u32(m, "unlimited_size", &u32))
-      timeshift_unlimited_size = u32 ? 1 : 0;
-    if (!htsmsg_get_u32(m, "max_size", &u32))
-      timeshift_max_size = 1048576LL * u32;
-    if (!htsmsg_get_u32(m, "ram_size", &u32)) {
-      timeshift_ram_size = 1048576LL * u32;
-      timeshift_ram_segment_size = timeshift_ram_size / 10;
-    }
-    if (!htsmsg_get_u32(m, "ram_only", &u32))
-      timeshift_ram_only = u32 ? 1 : 0;
+    idnode_load(&timeshift_conf.idnode, m);
     htsmsg_destroy(m);
     timeshift_fixup();
   }
@@ -108,33 +75,134 @@ void timeshift_init ( void )
 void timeshift_term ( void )
 {
   timeshift_filemgr_term();
-  free(timeshift_path);
-  timeshift_path = NULL;
+  free(timeshift_conf.path);
+  timeshift_conf.path = NULL;
 }
 
 /*
  * Save settings
  */
-void timeshift_save ( void )
+static void timeshift_conf_class_save ( idnode_t *self )
 {
   htsmsg_t *m;
 
   timeshift_fixup();
 
   m = htsmsg_create_map();
-  htsmsg_add_u32(m, "enabled", timeshift_enabled);
-  htsmsg_add_u32(m, "ondemand", timeshift_ondemand);
-  if (timeshift_path)
-    htsmsg_add_str(m, "path", timeshift_path);
-  htsmsg_add_u32(m, "unlimited_period", timeshift_unlimited_period);
-  htsmsg_add_u32(m, "max_period", timeshift_max_period);
-  htsmsg_add_u32(m, "unlimited_size", timeshift_unlimited_size);
-  htsmsg_add_u32(m, "max_size", timeshift_max_size / 1048576);
-  htsmsg_add_u32(m, "ram_size", timeshift_ram_size / 1048576);
-  htsmsg_add_u32(m, "ram_only", timeshift_ram_only);
-
+  idnode_save(&timeshift_conf.idnode, m);
   hts_settings_save(m, "timeshift/config");
+  htsmsg_destroy(m);
 }
+
+/*
+ * Class
+ */
+static const void *
+timeshift_conf_class_max_size_get ( void *o )
+{
+  static uint64_t r;
+  r = timeshift_conf.max_size / 1048576LL;
+  return &r;
+}
+
+static int
+timeshift_conf_class_max_size_set ( void *o, const void *v )
+{
+  uint64_t u64 = *(uint64_t *)v * 1048576LL;
+  if (u64 != timeshift_conf.max_size) {
+    timeshift_conf.max_size = u64;
+    return 1;
+  }
+  return 0;
+}
+
+static const void *
+timeshift_conf_class_ram_size_get ( void *o )
+{
+  static uint64_t r;
+  r = timeshift_conf.ram_size / 1048576LL;
+  return &r;
+}
+
+static int
+timeshift_conf_class_ram_size_set ( void *o, const void *v )
+{
+  uint64_t u64 = *(uint64_t *)v * 1048576LL;
+  timeshift_conf.ram_segment_size = u64 / 10;
+  if (u64 != timeshift_conf.ram_size) {
+    timeshift_conf.ram_size = u64;
+    return 1;
+  }
+  return 0;
+}
+
+const idclass_t timeshift_conf_class = {
+  .ic_snode      = &timeshift_conf.idnode,
+  .ic_class      = "timeshift",
+  .ic_caption    = N_("Timeshift"),
+  .ic_event      = "timeshift",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = timeshift_conf_class_save,
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_BOOL,
+      .id     = "enabled",
+      .name   = N_("Enabled"),
+      .off    = offsetof(timeshift_conf_t, enabled),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "ondemand",
+      .name   = N_("On-Demand"),
+      .off    = offsetof(timeshift_conf_t, ondemand),
+    },
+    {
+      .type   = PT_STR,
+      .id     = "path",
+      .name   = N_("Storage Path"),
+      .off    = offsetof(timeshift_conf_t, path),
+    },
+    {
+      .type   = PT_U32,
+      .id     = "max_period",
+      .name   = N_("Maximum Period (mins)"),
+      .off    = offsetof(timeshift_conf_t, max_period),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "unlimited_period",
+      .name   = N_("Unlimited Time"),
+      .off    = offsetof(timeshift_conf_t, unlimited_period),
+    },
+    {
+      .type   = PT_S64,
+      .id     = "max_size",
+      .name   = N_("Maximum Size (MB)"),
+      .set    = timeshift_conf_class_max_size_set,
+      .get    = timeshift_conf_class_max_size_get,
+    },
+    {
+      .type   = PT_S64,
+      .id     = "ram_size",
+      .name   = N_("Maximum RAM Size (MB)"),
+      .set    = timeshift_conf_class_ram_size_set,
+      .get    = timeshift_conf_class_ram_size_get,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "unlimited_size",
+      .name   = N_("Unlimited Size"),
+      .off    = offsetof(timeshift_conf_t, unlimited_size),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "ram_only",
+      .name   = N_("Use only RAM"),
+      .off    = offsetof(timeshift_conf_t, ram_only),
+    },
+    {}
+  }
+};
 
 /*
  * Decode initial time diff
@@ -326,7 +394,7 @@ streaming_target_t *timeshift_create
   ts->full       = 0;
   ts->vididx     = -1;
   ts->id         = timeshift_index;
-  ts->ondemand   = timeshift_ondemand;
+  ts->ondemand   = timeshift_conf.ondemand;
   ts->pts_delta  = PTS_UNSET;
   for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++)
     ts->pts_val[i] = PTS_UNSET;

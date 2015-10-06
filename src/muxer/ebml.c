@@ -65,7 +65,7 @@ ebml_append_size(htsbuf_queue_t *q, uint32_t size)
 }
 
 
-void 
+void
 ebml_append_xiph_size(htsbuf_queue_t *q, int size)
 {
   int i;
@@ -95,7 +95,7 @@ ebml_append_string(htsbuf_queue_t *q, unsigned id, const char *str)
 void
 ebml_append_uint(htsbuf_queue_t *q, unsigned id, int64_t ui)
 {
-  uint8_t u8[8] = {ui >> 56, ui >> 48, ui >> 40, ui >> 32, 
+  uint8_t u8[8] = {ui >> 56, ui >> 48, ui >> 40, ui >> 32,
 		   ui >> 24, ui >> 16, ui >>  8, ui };
   int i = 0;
   while( i < 7 && !u8[i] )

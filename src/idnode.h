@@ -64,6 +64,7 @@ struct idclass {
   const property_t       *ic_properties;   ///< Property list
   const char             *ic_event;        ///< Events to fire on add/delete/title
   uint32_t                ic_perm_def;     ///< Default permissions
+  idnode_t               *ic_snode;        ///< Simple node
 
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs) (idnode_t *self);
@@ -160,6 +161,11 @@ typedef struct idnode_filter_ele
 
 typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 
+extern char idnode_uuid_static[UUID_HEX_SIZE];
+
+extern idnode_t tvhlog_conf;
+extern const idclass_t tvhlog_conf_class;
+
 void idnode_init(void);
 void idnode_done(void);
 
@@ -169,7 +175,9 @@ int  idnode_insert(idnode_t *in, const char *uuid, const idclass_t *idc, int fla
 void idnode_unlink(idnode_t *in);
 
 uint32_t      idnode_get_short_uuid (const idnode_t *in);
-const char   *idnode_uuid_as_str  (const idnode_t *in);
+const char   *idnode_uuid_as_str  (const idnode_t *in, char *buf);
+static inline const char *idnode_uuid_as_sstr(const idnode_t *in)
+  { return idnode_uuid_as_str(in, idnode_uuid_static); }
 idnode_set_t *idnode_get_childs   (idnode_t *in);
 const char   *idnode_get_title    (idnode_t *in, const char *lang);
 int           idnode_is_leaf      (idnode_t *in);
@@ -208,6 +216,9 @@ static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
 #define idnode_lang(self) \
   (((idnode_t *)self)->in_access ? \
    ((idnode_t *)self)->in_access->aa_lang : NULL)
+#define idnode_lang_ui(self) \
+  (((idnode_t *)self)->in_access ? \
+   ((idnode_t *)self)->in_access->aa_lang_ui : NULL)
 
 idnode_list_mapping_t * idnode_list_link
                        ( idnode_t *in1, idnode_list_head_t *in1_list,

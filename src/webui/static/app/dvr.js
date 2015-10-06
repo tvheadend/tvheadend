@@ -56,8 +56,8 @@ tvheadend.dvrDetails = function(uuid) {
             title: title,
             iconCls: 'info',
             layout: 'fit',
-            width: 500,
-            height: 400,
+            width: 650,
+            height: 450,
             constrainHeader: true,
             buttonAlign: 'center',
             html: content
@@ -157,7 +157,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var actions = tvheadend.dvrRowActions();
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
                'channel,config_name,comment';
-    var elist = tvheadend.accessUpdate.admin ? list + ',owner,creator' : list;
+    var elist = 'enabled,' +
+                (tvheadend.accessUpdate.admin ? list + ',owner,creator' : list);
 
     var stopButton = {
         name: 'stop',
@@ -254,8 +255,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
             }
         },
         del: true,
-        list: 'duplicate,disp_title,disp_subtitle,episode,pri,start_real,stop_real,' +
-              'duration,filesize,channel,owner,creator,config_name,' +
+        list: 'enabled,duplicate,disp_title,disp_subtitle,episode,pri,start_real,' +
+              'stop_real,duration,filesize,channel,owner,creator,config_name,' +
               'sched_status,errors,data_errors,comment',
         columns: {
             filesize: {
@@ -319,6 +320,7 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
+        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
@@ -394,12 +396,12 @@ tvheadend.dvr_failed = function(panel, index) {
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_failed',
-        comet: 'dvrentry',
         readonly: true,
         titleS: _('Failed Recording'),
         titleP: _('Failed Recordings'),
         iconCls: 'exclamation',
         tabIndex: index,
+        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),

@@ -73,6 +73,9 @@ typedef struct elementary_stream {
 
   sbuf_t es_buf;
 
+  uint8_t  es_incomplete;
+  uint8_t  es_header_mode;
+  uint32_t es_header_offset;
   uint32_t es_startcond;
   uint32_t es_startcode;
   uint32_t es_startcode_offset;
@@ -80,15 +83,10 @@ typedef struct elementary_stream {
   int es_parser_ptr;
   void *es_priv;          /* Parser private data */
 
-  sbuf_t es_buf_ps;       // program stream reassembly (analogue adapters)
   sbuf_t es_buf_a;        // Audio packet reassembly
 
   uint8_t *es_global_data;
   int es_global_data_len;
-  int es_incomplete;
-  int es_ssc_intercept;
-  int es_ssc_ptr;
-  uint8_t es_ssc_buf[32];
 
   struct th_pkt *es_curpkt;
   int64_t es_curpts;
@@ -298,7 +296,7 @@ typedef struct service {
   void (*s_enlist)(struct service *s, struct tvh_input *ti,
                    service_instance_list_t *sil, int flags);
 
-  int (*s_start_feed)(struct service *s, int instance, int flags);
+  int (*s_start_feed)(struct service *s, int instance, int weight, int flags);
 
   void (*s_refresh_feed)(struct service *t);
 
@@ -311,6 +309,8 @@ typedef struct service {
   int (*s_grace_period)(struct service *t);
 
   void (*s_delete)(struct service *t, int delconf);
+
+  int (*s_satip_source)(struct service *t);
 
   /**
    * Channel info
@@ -479,7 +479,8 @@ typedef struct service {
 void service_init(void);
 void service_done(void);
 
-int service_start(service_t *t, int instance, int flags, int timeout, int postpone);
+int service_start(service_t *t, int instance, int weight, int flags,
+                  int timeout, int postpone);
 void service_stop(service_t *t);
 
 void service_build_filter(service_t *t);

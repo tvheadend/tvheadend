@@ -27,6 +27,11 @@
 #include <arpa/inet.h>
 #include <openssl/sha.h>
 
+#ifdef HDHOMERUN_TAG_DEVICE_AUTH_BIN
+#define hdhomerun_discover_find_devices_custom \
+           hdhomerun_discover_find_devices_custom_v2
+#endif
+
 static void tvhdhomerun_device_discovery( void );
 
 static void
@@ -198,7 +203,7 @@ tvhdhomerun_device_save( tvhdhomerun_device_t *hd )
   htsmsg_add_str(m, "fe_override", hd->hd_override_type);
 
   hts_settings_save(m, "input/tvhdhomerun/adapters/%s",
-                    idnode_uuid_as_str(&hd->th_id));
+                    idnode_uuid_as_sstr(&hd->th_id));
   htsmsg_destroy(m);
 }
 

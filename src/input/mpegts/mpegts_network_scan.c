@@ -147,11 +147,11 @@ mpegts_network_scan_mux_done    ( mpegts_mux_t *mm )
   mpegts_network_scan_mux_done0(mm, MM_SCAN_OK, 0);
 }
 
-/* Failed - no input */
+/* Partially completed (not all tables were read) */
 void
-mpegts_network_scan_mux_timeout ( mpegts_mux_t *mm )
+mpegts_network_scan_mux_partial ( mpegts_mux_t *mm )
 {
-  mpegts_network_scan_mux_done0(mm, MM_SCAN_FAIL, 0);
+  mpegts_network_scan_mux_done0(mm, MM_SCAN_PARTIAL, 0);
 }
 
 /* Interrupted (re-add) */

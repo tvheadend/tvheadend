@@ -154,7 +154,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
   { "imagecache", (uint32_t*)&imagecache_conf.enabled },
 #endif
 #if ENABLE_TIMESHIFT
-  { "timeshift", &timeshift_enabled },
+  { "timeshift", (uint32_t *)&timeshift_conf.enabled },
 #endif
 #if ENABLE_TRACE
   { "trace",     NULL },
@@ -483,7 +483,24 @@ show_usage
   exit(0);
 }
 
+/**
+ *
+ */
+time_t
+dispatch_clock_update(struct timespec *ts)
+{
+  struct timespec ts1;
+  if (ts == NULL)
+    ts = &ts1;
+  clock_gettime(CLOCK_REALTIME, ts);
 
+  /* 1sec stuff */
+  if (ts->tv_sec > dispatch_clock) {
+    dispatch_clock = ts->tv_sec;
+    comet_flush(); /* Flush idle comet mailboxes */
+  }
+  return dispatch_clock;
+}
 
 /**
  *
@@ -501,14 +518,7 @@ mainloop(void)
 #endif
 
   while(tvheadend_running) {
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    /* 1sec stuff */
-    if (ts.tv_sec > dispatch_clock) {
-      dispatch_clock = ts.tv_sec;
-
-      comet_flush(); /* Flush idle comet mailboxes */
-    }
+    dispatch_clock_update(&ts);
 
     /* Global timers */
     pthread_mutex_lock(&global_lock);
@@ -580,6 +590,11 @@ main(int argc, char **argv)
   uid_t uid = -1;
   char buf[512];
   FILE *pidfile = NULL;
+  static struct {
+    pid_t pid;
+    struct timeval tv;
+    uint8_t ru[32];
+  } randseed;
   extern int dvb_bouquets_parse;
 
   main_tid = pthread_self();
@@ -960,6 +975,11 @@ main(int argc, char **argv)
   OPENSSL_config(NULL);
   SSL_load_error_strings();
   SSL_library_init();
+  /* Rand seed */
+  randseed.pid = main_tid;
+  gettimeofday(&randseed.tv, NULL);
+  uuid_random(randseed.ru, sizeof(randseed.ru));
+  RAND_seed(&randseed, sizeof(randseed));
 
   /* Initialise configuration */
   notify_init();
@@ -1204,4 +1224,20 @@ void
 scopedunlock(pthread_mutex_t **mtxp)
 {
   pthread_mutex_unlock(*mtxp);
+}
+
+
+/**
+ *
+ */
+htsmsg_t *tvheadend_capabilities_list(int check)
+{
+  const tvh_caps_t *tc = tvheadend_capabilities;
+  htsmsg_t *r = htsmsg_create_list();
+  while (tc->name) {
+    if (!check || !tc->enabled || *tc->enabled)
+      htsmsg_add_str(r, NULL, tc->name);
+    tc++;
+  }
+  return r;
 }

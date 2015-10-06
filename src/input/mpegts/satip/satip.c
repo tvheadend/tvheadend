@@ -52,7 +52,7 @@ satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
   htsmsg_add_str(msg, NULL, sd->sd_info.location);
   htsmsg_add_str(msg, NULL, sd->sd_info.server);
   htsmsg_add_s64(msg, NULL, sd->sd_info.rtsp_port);
-  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_str(&sd->th_id));
+  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_sstr(&sd->th_id));
   dbus_emit_signal(buf, sig_name, msg);
 #endif
 }
@@ -205,6 +205,13 @@ const idclass_t satip_device_class =
       .list     = satip_device_class_tunercfg_list,
       .notify   = satip_device_class_tunercfg_notify,
       .def.s    = "Auto"
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fast_switch",
+      .name     = N_("Fast input switch"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_fast_switch),
     },
     {
       .type     = PT_BOOL,
@@ -424,7 +431,7 @@ satip_device_calc_uuid( tvh_uuid_t *uuid, const char *satip_uuid )
 {
   uint8_t uuidbin[20];
 
-  satip_device_calc_bin_uuid(uuidbin, satip_uuid);
+  sha1_calc(uuidbin, (const uint8_t *)satip_uuid, strlen(satip_uuid), NULL, 0);
   bin2hex(uuid->hex, sizeof(uuid->hex), uuidbin, sizeof(uuidbin));
 }
 
@@ -480,6 +487,7 @@ satip_device_create( satip_device_info_t *info )
   conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
 
   /* some sane defaults */
+  sd->sd_fast_switch = 1;
   sd->sd_fullmux_ok  = 1;
   sd->sd_pids_len    = 127;
   sd->sd_pids_max    = 32;
@@ -644,7 +652,7 @@ satip_device_save( satip_device_t *sd )
   htsmsg_add_msg(m, "frontends", l);
 
   hts_settings_save(m, "input/satip/adapters/%s",
-                    idnode_uuid_as_str(&sd->th_id));
+                    idnode_uuid_as_sstr(&sd->th_id));
   htsmsg_destroy(m);
 }
 

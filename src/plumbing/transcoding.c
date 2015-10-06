@@ -132,7 +132,7 @@ typedef struct transcoder {
 #define WORKING_ENCODER(x) \
   ((x) == AV_CODEC_ID_H264 || (x) == AV_CODEC_ID_MPEG2VIDEO || \
    (x) == AV_CODEC_ID_VP8  || /* (x) == AV_CODEC_ID_VP9 || */ \
-   (x) == AV_CODEC_ID_AAC  || \
+   (x) == AV_CODEC_ID_HEVC || (x) == AV_CODEC_ID_AAC || \
    (x) == AV_CODEC_ID_MP2  || (x) == AV_CODEC_ID_VORBIS)
 
 /**
@@ -182,6 +182,14 @@ transcode_opt_set_int(transcoder_t *t, transcoder_stream_t *ts,
     return -1;
   }
   return 0;
+}
+
+static void
+av_dict_set_int__(AVDictionary **opts, const char *key, int64_t val, int flags)
+{
+  char buf[32];
+  snprintf(buf, sizeof(buf), "%"PRId64, val);
+  av_dict_set(opts, key, buf, flags);
 }
 
 /**
@@ -858,13 +866,6 @@ scleanup:
 /**
  * Parse MPEG2 header, simplifier version (we know what ffmpeg/libav generates
  */
-static inline uint32_t
-RB32(const uint8_t *d)
-{
-  return (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | d[3];
-}
-
-
 static void
 extract_mpeg2_global_data(th_pkt_t *n, uint8_t *data, int len)
 {
@@ -946,7 +947,8 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
   if (!octx->coded_frame)
     return;
 
-  if (ts->ts_type == SCT_H264 && octx->extradata_size &&
+  if ((ts->ts_type == SCT_H264 || ts->ts_type == SCT_HEVC) &&
+      octx->extradata_size &&
       (ts->ts_first || octx->coded_frame->pict_type == AV_PICTURE_TYPE_I)) {
     n = pkt_alloc(NULL, octx->extradata_size + epkt->size, epkt->pts, epkt->dts);
     memcpy(pktbuf_ptr(n->pkt_payload), octx->extradata, octx->extradata_size);
@@ -1037,6 +1039,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   video_stream_t *vs = (video_stream_t*)ts;
   streaming_message_t *sm;
   th_pkt_t *pkt2;
+  static int max_bitrate = (INT_MAX / 3000) * 0.8;
 
   av_init_packet(&packet);
   av_init_packet(&packet2);
@@ -1159,9 +1162,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 1-63, smaller means better quality, use 15 as default
-        char valuestr[3];
-        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate);
-        av_dict_set(&opts,      "crf", valuestr, 0);
+        av_dict_set_int__(&opts,      "crf", t->t_props.tp_vbitrate == 0 ? 15 : t->t_props.tp_vbitrate, 0);
         // bitrate setting is still required, as it's used as max rate in CQ mode
         // and set to a very low value by default
         octx->bit_rate        = 25000000;
@@ -1188,9 +1189,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       if (t->t_props.tp_vbitrate < 64) {
         // encode with specified quality and optimize for low latency
         // valid values for quality are 1-51, smaller means better quality, use 15 as default
-        char valuestr[3];
-        snprintf(valuestr, sizeof (valuestr), "%d", t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate));
-        av_dict_set(&opts,      "crf", valuestr, 0);
+        av_dict_set_int__(&opts,      "crf", t->t_props.tp_vbitrate == 0 ? 15 : MIN(51, t->t_props.tp_vbitrate), 0);
         // tune "zerolatency" removes as much encoder latency as possible
         av_dict_set(&opts,      "tune", "zerolatency", 0);
       } else {
@@ -1202,6 +1201,48 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         av_dict_set(&opts,      "x264opts", "force-cfr=1", 0);
         // use gop size of 5 seconds
         octx->gop_size       *= 5;
+      }
+
+      break;
+
+    case SCT_HEVC:
+      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
+
+      // on all hardware ultrafast (or maybe superfast) should be safe
+      av_dict_set(&opts, "preset", "ultrafast",  0);
+      // disables encoder features which tend to be bottlenecks for the decoder/player
+      av_dict_set(&opts, "tune",   "fastdecode", 0);
+
+      if (t->t_props.tp_vbitrate < 64) {
+        // encode with specified quality
+        // valid values for crf are 1-51, smaller means better quality
+        // use 18 as default
+        av_dict_set_int__(&opts, "crf", t->t_props.tp_vbitrate == 0 ? 18 : MIN(51, t->t_props.tp_vbitrate), 0);
+
+        // the following is equivalent to tune=zerolatency for presets: ultra/superfast
+        av_dict_set(&opts, "x265_opts", "bframes=0",        0);
+        av_dict_set(&opts, "x265_opts", ":rc-lookahead=0",  AV_DICT_APPEND);
+        av_dict_set(&opts, "x265_opts", ":scenecut=0",      AV_DICT_APPEND);
+        av_dict_set(&opts, "x265_opts", ":frame-threads=1", AV_DICT_APPEND);
+      } else {
+        int bitrate, maxrate, bufsize;
+        bitrate = (t->t_props.tp_vbitrate > max_bitrate) ? max_bitrate : t->t_props.tp_vbitrate;
+        maxrate = ceil(bitrate * 1.25);
+        bufsize = maxrate * 3;
+
+        tvhdebug("transcode", "tuning HEVC encoder for ABR rate control, "
+                 "bitrate: %dkbps, vbv-bufsize: %dkbits, vbv-maxrate: %dkbps",
+                 bitrate, bufsize, maxrate);
+
+        // this is the same as setting --bitrate=bitrate
+        octx->bit_rate = bitrate * 1000;
+
+        av_dict_set(&opts,       "x265_opts", "vbv-bufsize=",  0);
+        av_dict_set_int__(&opts, "x265_opts", bufsize,         AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265_opts", ":vbv-maxrate=",AV_DICT_APPEND);
+        av_dict_set_int__(&opts, "x265_opts", maxrate,         AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265_opts", ":strict-cbr=1", AV_DICT_APPEND);
       }
 
       break;
@@ -1839,6 +1880,7 @@ transcoder_input(void *opaque, streaming_message_t *sm)
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:
   case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
   case SMT_MPEGTS:
     streaming_target_deliver2(t->t_output, sm);
     break;
@@ -1923,7 +1965,7 @@ transcoder_get_capabilities(int experimental)
       continue;
 
     sct = codec_id2streaming_component_type(p->id);
-    if (sct == SCT_NONE)
+    if (sct == SCT_NONE || sct == SCT_UNKNOWN)
       continue;
 
     m = htsmsg_create_map();

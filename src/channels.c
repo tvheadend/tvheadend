@@ -261,7 +261,7 @@ channel_class_bouquet_get ( void *o )
   static const char *sbuf;
   channel_t *ch = o;
   if (ch->ch_bouquet)
-    sbuf = idnode_uuid_as_str(&ch->ch_bouquet->bq_id);
+    sbuf = idnode_uuid_as_sstr(&ch->ch_bouquet->bq_id);
   else
     sbuf = "";
   return &sbuf;
@@ -466,7 +466,7 @@ channel_access(channel_t *ch, access_t *a, int disabled)
     HTSMSG_FOREACH(f, a->aa_chtags) {
       LIST_FOREACH(ilm, &ch->ch_ctms, ilm_in2_link) {
         if (!strcmp(htsmsg_field_get_str(f) ?: "",
-                    idnode_uuid_as_str(ilm->ilm_in1)))
+                    idnode_uuid_as_sstr(ilm->ilm_in1)))
           goto chtags_ok;
       }
     }
@@ -557,11 +557,11 @@ channel_get_icon ( channel_t *ch )
 {
   static char buf[512], buf2[512];
   idnode_list_mapping_t *ilm;
-  const char *chicon = config_get_chicon_path(),
-             *picon  = config_get_picon_path(),
+  const char *chicon = config.chicon_path,
+             *picon  = config.picon_path,
              *icon   = ch->ch_icon,
              *chname;
-  uint32_t id, i, pick, prefer = config_get_prefer_picon() ? 1 : 0;
+  uint32_t id, i, pick, prefer = config.prefer_picon ? 1 : 0;
 
   if (icon && *icon == '\0')
     icon = NULL;
@@ -595,6 +595,8 @@ channel_get_icon ( channel_t *ch )
           if (*s <= ' ' || *s > 122 ||
               strchr("/:\\<>|*?'\"", *s) != NULL)
             *(char *)s = '_';
+          else if (config.chicon_lowercase && *s >= 'A' && *s <= 'Z')
+            *(char *)s = *s - 'A' + 'a';
           s++;
         }
       }
@@ -778,7 +780,7 @@ channel_delete ( channel_t *ch, int delconf )
 
   /* Settings */
   if (delconf)
-    hts_settings_remove("channel/config/%s", idnode_uuid_as_str(&ch->ch_id));
+    hts_settings_remove("channel/config/%s", idnode_uuid_as_sstr(&ch->ch_id));
 
   /* Free memory */
   RB_REMOVE(&channels, ch, ch_link);
@@ -796,7 +798,7 @@ channel_save ( channel_t *ch )
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ch->ch_id, c);
-  hts_settings_save(c, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id));
+  hts_settings_save(c, "channel/config/%s", idnode_uuid_as_sstr(&ch->ch_id));
   htsmsg_destroy(c);
 }
 
@@ -948,7 +950,7 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
     channel_tag_mapping_destroy(ilm, delconf ? ilm->ilm_in1 : NULL);
 
   if (delconf)
-    hts_settings_remove("channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
+    hts_settings_remove("channel/tag/%s", idnode_uuid_as_sstr(&ct->ct_id));
 
   if(ct->ct_enabled && !ct->ct_internal)
     htsp_tag_delete(ct);
@@ -974,7 +976,7 @@ channel_tag_save(channel_tag_t *ct)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ct->ct_id, c);
-  hts_settings_save(c, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id));
+  hts_settings_save(c, "channel/tag/%s", idnode_uuid_as_sstr(&ct->ct_id));
   htsmsg_destroy(c);
   htsp_tag_update(ct);
 }
@@ -1016,7 +1018,7 @@ channel_tag_access(channel_tag_t *ct, access_t *a, int disabled)
   /* Channel tag check */
   if (a->aa_chtags) {
     htsmsg_field_t *f;
-    const char *uuid = idnode_uuid_as_str(&ct->ct_id);
+    const char *uuid = idnode_uuid_as_sstr(&ct->ct_id);
     HTSMSG_FOREACH(f, a->aa_chtags)
       if (!strcmp(htsmsg_field_get_str(f) ?: "", uuid))
         goto chtags_ok;

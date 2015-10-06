@@ -34,11 +34,9 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist );
 /**
  *
  */
-void
-htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
+static void
+htsmsg_field_data_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 {
-  TAILQ_REMOVE(&msg->hm_fields, f, hmf_link);
-
   switch(f->hmf_type) {
   case HMF_MAP:
   case HMF_LIST:
@@ -57,6 +55,19 @@ htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
   default:
     break;
   }
+  f->hmf_flags &= ~HMF_ALLOCED;
+}
+
+/**
+ *
+ */
+void
+htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
+{
+  TAILQ_REMOVE(&msg->hm_fields, f, hmf_link);
+
+  htsmsg_field_data_destroy(msg, f);
+
   if(f->hmf_flags & HMF_NAME_ALLOCED)
     free((void *)f->hmf_name);
   free(f);
@@ -340,14 +351,9 @@ htsmsg_add_binptr(htsmsg_t *msg, const char *name, const void *bin, size_t len)
 /*
  *
  */
-htsmsg_t *
-htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
+static htsmsg_t *
+htsmsg_field_set_msg(htsmsg_field_t *f, htsmsg_t *sub)
 {
-  htsmsg_field_t *f;
-
-  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP,
-		       HMF_NAME_ALLOCED);
-
   assert(sub->hm_data == NULL);
   f->hmf_msg.hm_islist = sub->hm_islist;
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
@@ -357,6 +363,32 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
     return &f->hmf_msg;
 
   return NULL;
+}
+
+/*
+ *
+ */
+htsmsg_t *
+htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
+{
+  htsmsg_field_t *f;
+
+  f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP,
+		       HMF_NAME_ALLOCED);
+  return htsmsg_field_set_msg(f, sub);
+}
+
+/*
+ *
+ */
+htsmsg_t *
+htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
+{
+  htsmsg_field_t *f = htsmsg_field_find(msg, name);
+  if (!f)
+    return htsmsg_add_msg(msg, name, sub);
+  htsmsg_field_data_destroy(msg, f);
+  return htsmsg_field_set_msg(f, sub);
 }
 
 
@@ -950,12 +982,13 @@ htsmsg_get_cdata(htsmsg_t *m, const char *field)
  * Note: this will NOT work for lists of complex types
  */
 char *
-htsmsg_list_2_csv(htsmsg_t *m)
+htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
 {
   int alloc, used, first = 1;
   char *ret;
   htsmsg_field_t *f;
-  const char *sep = ", ";
+  char sep[3];
+  const char *ssep;
   if (!m->hm_islist) return NULL;
 
 #define MAX(a,b) ((a) < (b)) ? (a) : (b)
@@ -968,15 +1001,25 @@ htsmsg_list_2_csv(htsmsg_t *m)
   ret  = malloc(alloc = 512);
   *ret = 0;
   used = 0;
+  if (human) {
+    sep[0] = delim;
+    sep[1] = ' ';
+    sep[2] = '\0';
+    ssep = "\"";
+  } else {
+    sep[0] = delim;
+    sep[1] = '\0';
+    ssep = "";
+  }
   HTSMSG_FOREACH(f, m) {
     if (f->hmf_type == HMF_STR) {
-      REALLOC(2 + strlen(f->hmf_str));
-      used += sprintf(ret+used, "%s%s", !first ? sep : "", f->hmf_str);
+      REALLOC(4 + strlen(f->hmf_str));
+      used += sprintf(ret+used, "%s%s%s%s", !first ? sep : "", ssep, f->hmf_str, ssep);
     } else if (f->hmf_type == HMF_S64) {
       REALLOC(34); // max length is actually 20 chars + 2
       used += sprintf(ret+used, "%s%"PRId64, !first ? sep : "", f->hmf_s64);
     } else if (f->hmf_type == HMF_BOOL) {
-      REALLOC(2); // max length is actually 20 chars + 2
+      REALLOC(12); // max length is actually 10 chars + 2
       used += sprintf(ret+used, "%s%d", !first ? sep : "", f->hmf_bool);
     } else {
       // TODO: handle doubles
@@ -987,4 +1030,36 @@ htsmsg_list_2_csv(htsmsg_t *m)
   }
 
   return ret;
+}
+
+htsmsg_t *
+htsmsg_csv_2_list(const char *str, char delim)
+{
+  char *tokbuf, *tok, *saveptr = NULL, *p;
+  const char d[2] = { delim, '\0' };
+  htsmsg_t *m = htsmsg_create_list();
+
+  if (str) {
+    tokbuf = strdup(str);
+    tok = strtok_r(tokbuf, d, &saveptr);
+    while (tok) {
+      if (tok[0] == '"') {
+        p = ++tok;
+        while (*p && *p != '"') {
+          if (*p == '\\') {
+            p++;
+            if (*p)
+              p++;
+            continue;
+          }
+          p++;
+        }
+        *p = '\0';
+      }
+      htsmsg_add_str(m, NULL, tok);
+      tok = strtok_r(NULL, ",", &saveptr);
+    }
+    free(tokbuf);
+  }
+  return m;
 }

@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <signal.h>
+#include <netinet/ip.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
@@ -53,16 +54,36 @@ th_pipe_t tcp_server_pipe;
  *
  */
 int
+socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
+{
+  int r, v;
+
+  v = dscp & IPTOS_DSCP_MASK;
+  r = setsockopt(sockfd, IPPROTO_IP, IP_TOS, &v, sizeof(v));
+  if (r < 0) {
+    if (errbuf && errbufsize)
+      snprintf(errbuf, errbufsize, "IP_TOS failed: %s", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
+/**
+ *
+ */
+int
 tcp_connect(const char *hostname, int port, const char *bindaddr,
             char *errbuf, size_t errbufsize, int timeout)
 {
   int fd, r, res, err;
-  struct addrinfo *ai;
+  struct addrinfo *ai, hints;
   char portstr[6];
   socklen_t errlen = sizeof(err);
 
   snprintf(portstr, 6, "%u", port);
-  res = getaddrinfo(hostname, portstr, NULL, &ai);
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;
+  res = getaddrinfo(hostname, portstr, &hints, &ai);
   
   if (res != 0) {
     snprintf(errbuf, errbufsize, "%s", gai_strerror(res));
@@ -779,19 +800,6 @@ tcp_server_create
 }
 
 #if ENABLE_LIBSYSTEMD_DAEMON
-
-inline static int
-ip6_addr_cmp(unsigned char a1[16], unsigned char a2[16])
-{
-  int i;
-  int ret = 0;
-
-  for (i = 0; i < 16 && !ret; i++)
-    if (a1[i] != a2[i])
-      ret = 1;
-  return ret;
-}
-
 /**
  *
  */
@@ -833,7 +841,7 @@ tcp_server_create
         break;
       case AF_INET6:
         s_addr6 = (struct sockaddr_in6 *) &bound;
-        if (ip6_addr_cmp(addr6.s6_addr, s_addr6->sin6_addr.s6_addr) == 0
+        if (memcmp(addr6.s6_addr, s_addr6->sin6_addr.s6_addr, 16) == 0
             && htons(port) == s_addr6->sin6_port)
           found = 1;
         break;

@@ -45,13 +45,7 @@ static pthread_cond_t epggrab_cond;
 int                   epggrab_running;
 
 /* Config */
-char                 *epggrab_cron;
-epggrab_module_int_t* epggrab_module;
 epggrab_module_list_t epggrab_modules;
-uint32_t              epggrab_channel_rename;
-uint32_t              epggrab_channel_renumber;
-uint32_t              epggrab_channel_reicon;
-uint32_t              epggrab_epgdb_periodicsave;
 
 gtimer_t              epggrab_save_timer;
 
@@ -68,6 +62,9 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
 {
   time_t tm1, tm2;
   htsmsg_t *data;
+
+  if (!mod->enabled)
+    return;
 
   /* Grab */
   time(&tm1);
@@ -88,40 +85,38 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
  */
 static void* _epggrab_internal_thread ( void* p )
 {
+  epggrab_module_t *mod;
   int err, confver = -1; // force first run
   struct timespec ts;
-  epggrab_module_int_t *mod;
   time_t t;
 
   /* Setup timeout */
   ts.tv_nsec = 0; 
   time(&ts.tv_sec);
 
-  while ( 1 ) {
+  while (epggrab_running) {
 
     /* Check for config change */
     pthread_mutex_lock(&epggrab_mutex);
-    while ( epggrab_running && confver == epggrab_confver ) {
-      if (epggrab_module) {
-        err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
-      } else {
-        err = pthread_cond_wait(&epggrab_cond, &epggrab_mutex);
-      }
-      if ( err == ETIMEDOUT ) break;
+    while (epggrab_running && confver == epggrab_confver) {
+      err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
+      if (err == ETIMEDOUT) break;
     }
     confver    = epggrab_confver;
-    mod        = epggrab_module;
     if (!cron_multi_next(epggrab_cron_multi, time(NULL), &t))
       ts.tv_sec = t;
     else
       ts.tv_sec += 60;
     pthread_mutex_unlock(&epggrab_mutex);
 
-    if ( !epggrab_running)
-      break;
-
-    /* Run grabber */
-    if (mod) _epggrab_module_grab(mod);
+    /* Run grabber(s) */
+    /* Note: this loop is not protected, assuming static boot allocation */
+    LIST_FOREACH(mod, &epggrab_modules, link) {
+      if (!epggrab_running)
+        break;
+      if (mod->type == EPGGRAB_INT)
+         _epggrab_module_grab((epggrab_module_int_t *)mod);
+    }
   }
 
   return NULL;
@@ -133,71 +128,40 @@ static void* _epggrab_internal_thread ( void* p )
 
 static void _epggrab_load ( void )
 {
-  epggrab_module_t *mod;
+  htsmsg_t *m, *a, *map;
   htsmsg_field_t *f;
-  htsmsg_t *m, *a;
-  uint32_t enabled = 1;
-  const char *str;
+  epggrab_module_t *mod;
 
   /* Load settings */
   m = hts_settings_load("epggrab/config");
-
-  /* Process */
   if (m) {
-    htsmsg_get_u32(m, "channel_rename",   &epggrab_channel_rename);
-    htsmsg_get_u32(m, "channel_renumber", &epggrab_channel_renumber);
-    htsmsg_get_u32(m, "channel_reicon",   &epggrab_channel_reicon);
-    htsmsg_get_u32(m, "epgdb_periodicsave", &epggrab_epgdb_periodicsave);
-    if (epggrab_epgdb_periodicsave) {
-      epggrab_epgdb_periodicsave = MAX(epggrab_epgdb_periodicsave, 3600);
-      gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
-                 epggrab_epgdb_periodicsave);
-    }
-    if ((str = htsmsg_get_str(m, "cron")) != NULL)
-      epggrab_set_cron(str);
-    htsmsg_get_u32(m, "grab-enabled", &enabled);
-    if (enabled) {
-      if ( (str = htsmsg_get_str(m, "module")) ) {
-        mod = epggrab_module_find_by_id(str);
-        if (mod && mod->type == EPGGRAB_INT) {
-          epggrab_module = (epggrab_module_int_t*)mod;
-        }
-      }
-      if ( (a = htsmsg_get_map(m, "mod_enabled")) ) {
-        LIST_FOREACH(mod, &epggrab_modules, link) {
-          if (htsmsg_get_u32_or_default(a, mod->id, 0)) {
-            epggrab_enable_module(mod, 1);
-          }
-        }
-      }
-      if ( (a = htsmsg_get_list(m, "mod_priority")) ) {
-        int prio = 1;
-        LIST_FOREACH(mod, &epggrab_modules, link)
-          mod->priority = 0;
-        HTSMSG_FOREACH(f, a) {
-          mod = epggrab_module_find_by_id(f->hmf_str);
-          if (mod) mod->priority = prio++;
+    idnode_load(&epggrab_conf.idnode, m);
+    if ((a = htsmsg_get_map(m, "modules"))) {
+      HTSMSG_FOREACH(f, a) {
+        mod = epggrab_module_find_by_id(f->hmf_name);
+        map = htsmsg_field_get_map(f);
+        if (mod && map) {
+          idnode_load(&mod->idnode, map);
+          epggrab_activate_module(mod, mod->enabled);
         }
       }
     }
-    htsmsg_get_u32(m, "ota_timeout", &epggrab_ota_timeout);
-    htsmsg_get_u32(m, "ota_initial", &epggrab_ota_initial);
-    if ((str = htsmsg_get_str(m, "ota_cron")) != NULL)
-      epggrab_ota_set_cron(str, 0);
     htsmsg_destroy(m);
-
   /* Defaults */
   } else {
-    free(epggrab_cron);
-    epggrab_cron       = strdup("# Default config (00:04 and 12:04 everyday)\n4 */12 * * *");
-    epggrab_module     = NULL;              // disabled
+    free(epggrab_conf.cron);
+    epggrab_conf.cron = strdup("# Default config (00:04 and 12:04 everyday)\n4 */12 * * *");
     LIST_FOREACH(mod, &epggrab_modules, link) // enable all OTA by default
-      if (mod->type == EPGGRAB_OTA)
-        epggrab_enable_module(mod, 1);
+      if (mod->type == EPGGRAB_OTA) {
+        mod->enabled = 1;
+        epggrab_activate_module(mod, 1);
+      }
   }
+
+  idnode_notify_changed(&epggrab_conf.idnode);
  
   /* Load module config (channels) */
-#if 0 //ENABLE_MPEGTS
+#if 0
   eit_load();
   opentv_load();
 #endif
@@ -216,131 +180,150 @@ void epggrab_save ( void )
 
   /* Save */
   m = htsmsg_create_map();
-  htsmsg_add_u32(m, "channel_rename", epggrab_channel_rename);
-  htsmsg_add_u32(m, "channel_renumber", epggrab_channel_renumber);
-  htsmsg_add_u32(m, "channel_reicon", epggrab_channel_reicon);
-  htsmsg_add_u32(m, "epgdb_periodicsave", epggrab_epgdb_periodicsave);
-  htsmsg_add_str(m, "cron", epggrab_cron);
-  htsmsg_add_str(m, "ota_cron", epggrab_ota_cron);
-  htsmsg_add_u32(m, "ota_timeout", epggrab_ota_timeout);
-  htsmsg_add_u32(m, "ota_initial", epggrab_ota_initial);
-  if ( epggrab_module )
-    htsmsg_add_str(m, "module", epggrab_module->id);
-  a = NULL;
+  idnode_save(&epggrab_conf.idnode, m);
+  a = htsmsg_create_map();
   LIST_FOREACH(mod, &epggrab_modules, link) {
-    if (mod->enabled) {
-      if (!a) a = htsmsg_create_map();
-      htsmsg_add_u32(a, mod->id, 1);
-    } 
+    htsmsg_t *m = htsmsg_create_map();
+    htsmsg_add_str(m, "class", mod->idnode.in_class->ic_class);
+    idnode_save(&mod->idnode, m);
+    htsmsg_add_msg(a, mod->id, m);
   }
-  if (a) htsmsg_add_msg(m, "mod_enabled", a);
+  htsmsg_add_msg(m, "modules", a);
   hts_settings_save(m, "epggrab/config");
   htsmsg_destroy(m);
 }
 
-int epggrab_set_cron ( const char *cron )
+/* **************************************************************************
+ * Class
+ * *************************************************************************/
+
+static void epggrab_class_save(idnode_t *self)
 {
-  int save = 0;
-  if ( epggrab_cron == NULL || strcmp(epggrab_cron, cron) ) {
-    save = 1;
-    free(epggrab_cron);
-    epggrab_cron       = strdup(cron);
-    free(epggrab_cron_multi);
-    epggrab_cron_multi = cron_multi_set(cron);
+  epggrab_save();
+}
+
+epggrab_conf_t epggrab_conf = {
+  .idnode.in_class = &epggrab_class
+};
+
+static void
+epggrab_class_cron_notify(void *self, const char *lang)
+{
+  pthread_mutex_lock(&epggrab_mutex);
+  free(epggrab_cron_multi);
+  epggrab_cron_multi = cron_multi_set(epggrab_conf.cron);
+  pthread_mutex_unlock(&epggrab_mutex);
+}
+
+static void
+epggrab_class_ota_cron_notify(void *self, const char *lang)
+{
+  epggrab_ota_set_cron();
+}
+
+const idclass_t epggrab_class = {
+  .ic_snode      = &epggrab_conf.idnode,
+  .ic_class      = "epggrab",
+  .ic_caption    = N_("EPG Grabber Configuration"),
+  .ic_event      = "epggrab",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = epggrab_class_save,
+  .ic_groups     = (const property_group_t[]) {
+      {
+         .name   = N_("General Config"),
+         .number = 1,
+      },
+      {
+         .name   = N_("Internal Grabber"),
+         .number = 2,
+      },
+      {
+         .name   = N_("Over-the-air Grabbers"),
+         .number = 3,
+      },
+      {}
+  },
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_BOOL,
+      .id     = "channel_rename",
+      .name   = N_("Update channel name"),
+      .off    = offsetof(epggrab_conf_t, channel_rename),
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "channel_renumber",
+      .name   = N_("Update channel number"),
+      .off    = offsetof(epggrab_conf_t, channel_renumber),
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "channel_reicon",
+      .name   = N_("Update channel icon"),
+      .off    = offsetof(epggrab_conf_t, channel_reicon),
+      .group  = 1,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "epgdb_periodicsave",
+      .name   = N_("Periodic save EPG to disk"),
+      .off    = offsetof(epggrab_conf_t, epgdb_periodicsave),
+      .group  = 1,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "cron",
+      .name   = N_("Cron multi-line"),
+      .off    = offsetof(epggrab_conf_t, cron),
+      .notify = epggrab_class_cron_notify,
+      .opts   = PO_MULTILINE,
+      .group  = 2,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "ota_initial",
+      .name   = N_("Force initial EPG scan at startup"),
+      .off    = offsetof(epggrab_conf_t, ota_initial),
+      .group  = 3,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "ota_cron",
+      .name   = N_("Over-the-air Cron multi-line"),
+      .off    = offsetof(epggrab_conf_t, ota_cron),
+      .notify = epggrab_class_ota_cron_notify,
+      .opts   = PO_MULTILINE,
+      .group  = 3,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "ota_timeout",
+      .name   = N_("EPG scan timeout in seconds (30-7200)"),
+      .off    = offsetof(epggrab_conf_t, ota_timeout),
+      .group  = 3,
+    },
+    {}
   }
-  return save;
-}
-
-int epggrab_set_module ( epggrab_module_t *m )
-{
-  int save = 0;
-  epggrab_module_int_t *mod;
-  if (m && m->type != EPGGRAB_INT) return 0;
-  mod = (epggrab_module_int_t*)m;
-  if ( epggrab_module != mod ) {
-    epggrab_enable_module((epggrab_module_t*)epggrab_module, 0);
-    epggrab_module = (epggrab_module_int_t*)mod;
-    epggrab_enable_module((epggrab_module_t*)epggrab_module, 1);
-    save           = 1;
-  }
-  return save;
-}
-
-int epggrab_set_module_by_id ( const char *id )
-{
-  return epggrab_set_module(epggrab_module_find_by_id(id));
-}
-
-int epggrab_set_channel_rename ( uint32_t e )
-{
-  int save = 0;
-  if ( e != epggrab_channel_rename ) {
-    epggrab_channel_rename = e;
-    save = 1;
-  }
-  return save;
-}
-
-int epggrab_set_channel_renumber ( uint32_t e )
-{
-  int save = 0;
-  if ( e != epggrab_channel_renumber ) {
-    epggrab_channel_renumber = e;
-    save = 1;
-  }
-  return save;
-}
-
-/*
- * Config from the webui for period save of db to disk
- */
-int epggrab_set_periodicsave ( uint32_t e )
-{
-  int save = 0;
-  pthread_mutex_lock(&global_lock);
-  if ( e != epggrab_epgdb_periodicsave ) {
-    epggrab_epgdb_periodicsave = e ? MAX(e, 3600) : 0;
-    if (!e)
-      gtimer_disarm(&epggrab_save_timer);
-    else
-      epg_save(); // will arm the timer
-    save = 1;
-  }
-  pthread_mutex_unlock(&global_lock);
-  return save;
-}
-
-int epggrab_set_channel_reicon ( uint32_t e )
-{
-  int save = 0;
-  if ( e != epggrab_channel_reicon ) {
-    epggrab_channel_reicon = e;
-    save = 1;
-  }
-  return save;
-}
-
-int epggrab_enable_module ( epggrab_module_t *mod, uint8_t e )
-{
-  int save = 0;
-  if (!mod) return 0;
-  if (mod->enable) {
-    save         = mod->enable(mod, e);
-  } else if ( e != mod->enabled ) {
-    mod->enabled = e;
-    save         = 1;
-  }
-  return save;
-}
-
-int epggrab_enable_module_by_id ( const char *id, uint8_t e )
-{
-  return epggrab_enable_module(epggrab_module_find_by_id(id), e);
-}
+};
 
 /* **************************************************************************
  * Initialisation
  * *************************************************************************/
+
+int epggrab_activate_module ( epggrab_module_t *mod, int a )
+{
+  int save = 0;
+  if (!mod) return 0;
+  if (mod->activate) {
+    save         = mod->activate(mod, a);
+  } else if (a != mod->active) {
+    mod->active  = a;
+    save         = 1;
+  }
+  return save;
+}
 
 /*
  * TODO: implement this
@@ -357,14 +340,13 @@ pthread_t      epggrab_tid;
 void epggrab_init ( void )
 {
   /* Defaults */
-  epggrab_cron               = NULL;
-  epggrab_module             = NULL;
-  epggrab_channel_rename     = 0;
-  epggrab_channel_renumber   = 0;
-  epggrab_channel_reicon     = 0;
-  epggrab_epgdb_periodicsave = 0;
+  epggrab_conf.cron               = NULL;
+  epggrab_conf.channel_rename     = 0;
+  epggrab_conf.channel_renumber   = 0;
+  epggrab_conf.channel_reicon     = 0;
+  epggrab_conf.epgdb_periodicsave = 0;
 
-  epggrab_cron_multi         = NULL;
+  epggrab_cron_multi              = NULL;
 
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
@@ -404,6 +386,7 @@ void epggrab_done ( void )
 
   pthread_mutex_lock(&global_lock);
   while ((mod = LIST_FIRST(&epggrab_modules)) != NULL) {
+    idnode_unlink(&mod->idnode);
     LIST_REMOVE(mod, link);
     pthread_mutex_unlock(&global_lock);
     if (mod->done)
@@ -419,9 +402,11 @@ void epggrab_done ( void )
   opentv_done();
   pyepg_done();
   xmltv_done();
-  free(epggrab_cron);
-  epggrab_cron = NULL;
+  free(epggrab_conf.cron);
+  epggrab_conf.cron = NULL;
   free(epggrab_cron_multi);
   epggrab_cron_multi = NULL;
+  free(epggrab_conf.ota_cron);
+  epggrab_conf.ota_cron = NULL;
   epggrab_channel_done();
 }

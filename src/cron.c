@@ -163,7 +163,7 @@ cron_multi_t *
 cron_multi_set ( const char *str )
 {
   char *s = str ? alloca(strlen(str) + 1) : NULL;
-  char *line, *sptr;
+  char *line, *sptr = NULL;
   cron_t cron;
   cron_multi_t *cm = NULL, *cm2;
   int count = 0;

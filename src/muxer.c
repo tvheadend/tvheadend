@@ -22,7 +22,7 @@
 #include "tvheadend.h"
 #include "service.h"
 #include "muxer.h"
-#include "muxer/muxer_tvh.h"
+#include "muxer/muxer_mkv.h"
 #include "muxer/muxer_pass.h"
 #if CONFIG_LIBAV
 #include "muxer/muxer_libav.h"
@@ -223,7 +223,7 @@ muxer_create(const muxer_config_t *m_cfg)
   m = pass_muxer_create(m_cfg);
 
   if(!m)
-    m = tvh_muxer_create(m_cfg);
+    m = mkv_muxer_create(m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)

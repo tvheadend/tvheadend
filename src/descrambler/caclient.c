@@ -140,7 +140,7 @@ caclient_delete(caclient_t *cac, int delconf)
   cac->cac_enabled = 0;
   cac->cac_conf_changed(cac);
   if (delconf)
-    hts_settings_remove("caclient/%s", idnode_uuid_as_str(&cac->cac_id));
+    hts_settings_remove("caclient/%s", idnode_uuid_as_sstr(&cac->cac_id));
   pthread_mutex_lock(&caclients_mutex);
   TAILQ_REMOVE(&caclients, cac, cac_link);
   pthread_mutex_unlock(&caclients_mutex);
@@ -158,7 +158,7 @@ caclient_class_save ( idnode_t *in )
   caclient_t *cac = (caclient_t *)in;
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(in, c);
-  hts_settings_save(c, "caclient/%s", idnode_uuid_as_str(in));
+  hts_settings_save(c, "caclient/%s", idnode_uuid_as_sstr(in));
   htsmsg_destroy(c);
   cac->cac_conf_changed(cac);
 }

@@ -35,7 +35,12 @@ OPTIONS=(
   "zlib:auto"
   "libav:auto"
   "libffmpeg_static:no"
-  "libffmpeg_static_x264:yes"
+  "libx264_static:yes"
+  "libx265:no"
+  "libx265_static:yes"
+  "vdpau:auto"
+  "libmfx:no"
+  "libmfx_static:yes"
   "inotify:auto"
   "epoll:auto"
   "uriparser:auto"
@@ -184,6 +189,17 @@ int test(void)
   return 0;
 }
 '
+
+check_cc_snippet gmtoff '
+#include <time.h>
+#define TEST test
+int test(void)
+{
+  struct tm x;
+  x.tm_gmtoff = 0;
+  return 0;
+}
+' -DHAS_GMTOFF
 
 check_cc_snippet recvmmsg '
 #define _GNU_SOURCE
@@ -365,6 +381,57 @@ if enabled libffmpeg_static; then
 
   enable libav
   has_libav=true
+
+  # libx264
+  if disabled libx264_static; then
+    check_cc_lib x264 || die "libx264 not found"
+  fi
+
+  # libx265
+  if enabled libx265; then
+    if enabled libx265_static; then
+      check_bin cmake || die "cmake not found (needed for building libx265)"
+      check_cc_lib stdc++ stdcpp ||\
+        die "libstdc++ not found (needed for building libx265)"
+    else
+      check_cc_lib x265 || die "libx265 not found"
+    fi
+  else
+    disable libx265_static
+  fi
+
+  # vdpau
+  if enabled_or_auto vdpau; then
+    if check_pkg vdpau; then
+      enable vdpau
+    elif enabled vdpau; then
+      die "vdpau (Video API library) not found"
+    fi
+  fi
+
+  # libmfx
+  if enabled libmfx; then
+    check_cc_lib va || die "libva not found"
+    check_cc_lib va-drm va_drm || disable va_drm
+    check_cc_lib va-x11 va_x11 || disable va_x11
+    if disabled va_drm && disabled va_x11; then
+      die "neither libva-drm nor libva-x11 was found"
+    fi
+    if enabled libmfx_static; then
+      check_bin autoreconf ||\
+        die "autoreconf not found (needed for building libmfx)"
+      check_bin libtool ||\
+        die "libtool not found (needed for building libmfx)"
+      check_bin libtoolize ||\
+        die "libtoolize not found (needed for building libmfx)"
+      check_cc_lib stdc++ stdcpp ||\
+        die "libstdc++ not found (needed for building libmfx)"
+    else
+      check_cc_lib mfx || die "libmfx not found"
+    fi
+  else
+    disable libmfx_static
+  fi
 
 else
 

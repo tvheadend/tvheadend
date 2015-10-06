@@ -62,6 +62,7 @@ typedef struct th_descrambler {
 
 typedef struct th_descrambler_runtime {
   tvhcsa_t dr_csa;
+  uint32_t dr_quick_ecm:1;
   uint32_t dr_key:1;
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
@@ -69,8 +70,8 @@ typedef struct th_descrambler_runtime {
   uint8_t  dr_key_changed;
   time_t   dr_key_start;
   time_t   dr_key_timestamp[2];
-  time_t   dr_ecm_start;
-  time_t   dr_ecm_key_time;
+  time_t   dr_ecm_start[2];
+  time_t   dr_ecm_last_key_time;
   time_t   dr_last_err;
   sbuf_t   dr_buf;
   tvhlog_limit_t dr_loglimit_key;
@@ -96,6 +97,7 @@ typedef struct descrambler_section {
   descrambler_section_callback_t callback;
   void     *opaque;
   LIST_HEAD(, descrambler_ecmsec) ecmsecs;
+  uint8_t   quick_ecm_called;
 } descrambler_section_t;
 
 typedef struct descrambler_table {

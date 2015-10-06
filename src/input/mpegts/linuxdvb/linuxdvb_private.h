@@ -309,6 +309,7 @@ struct linuxdvb_diseqc
   const char           *ld_type;
   linuxdvb_satconf_ele_t   *ld_satconf;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
+  int (*ld_freq)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm, int freq);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
                    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls,
                    int vol, int pol, int band, int freq);
@@ -328,7 +329,7 @@ struct linuxdvb_en50494
 {
   linuxdvb_diseqc_t;
 
-  /* en50494 configuration*/
+  /* en50494 configuration */
   uint16_t  le_position;  /* satelitte A(0) or B(1) */
   uint16_t  le_frequency; /* user band frequency in MHz */
   uint16_t  le_id;        /* user band id 0-7 */

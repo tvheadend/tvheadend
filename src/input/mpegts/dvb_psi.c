@@ -28,6 +28,7 @@
 #include "fastscan.h"
 #include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
+#include "config.h"
 #include "tvhtime.h"
 
 #include <assert.h>
@@ -139,7 +140,7 @@ dvb_fs_mux_add ( mpegts_table_t *mt, mpegts_mux_t *mm, mpegts_mux_t *mux )
   char *s;
   int i;
 
-  uuid = idnode_uuid_as_str(&mux->mm_id);
+  uuid = idnode_uuid_as_sstr(&mux->mm_id);
   if (mm->mm_fastscan_muxes == NULL)
     mm->mm_fastscan_muxes = calloc(DVB_FASTSCAN_MUXES, UUID_HEX_SIZE);
   for (i = 0; i < DVB_FASTSCAN_MUXES * UUID_HEX_SIZE; i += UUID_HEX_SIZE) {
@@ -2447,7 +2448,7 @@ psi_tables_dvb ( mpegts_mux_t *mm )
                    DVB_SDT_PID, MPS_WEIGHT_SDT);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
                    NULL, "bat", MT_CRC, DVB_BAT_PID, MPS_WEIGHT_BAT);
-  if (tvhtime_update_enabled) {
+  if (config.tvhtime_update_enabled) {
     mpegts_table_add(mm, DVB_TDT_BASE, DVB_TDT_MASK, dvb_tdt_callback,
                      NULL, "tdt", MT_ONESHOT | MT_QUICKREQ | MT_RECORD,
                      DVB_TDT_PID, MPS_WEIGHT_TDT);

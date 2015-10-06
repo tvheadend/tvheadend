@@ -29,6 +29,33 @@
 #include "udp.h"
 #include "http.h"
 
+#define MUXCNF_AUTO   0
+#define MUXCNF_KEEP   1
+#define MUXCNF_REJECT 2
+
+struct satip_server_conf {
+  idnode_t idnode;
+  int satip_deviceid;
+  char *satip_uuid;
+  int satip_rtsp;
+  int satip_weight;
+  int satip_descramble;
+  int satip_rewrite_pmt;
+  int satip_muxcnf;
+  int satip_dvbs;
+  int satip_dvbs2;
+  int satip_dvbt;
+  int satip_dvbt2;
+  int satip_dvbc;
+  int satip_dvbc2;
+  int satip_atsc;
+  int satip_dvbcb;
+};
+
+extern struct satip_server_conf satip_server_conf;
+
+extern const idclass_t satip_server_class;
+
 void satip_rtp_queue(void *id, th_subscription_t *subs,
                      streaming_queue_t *sq,
                      struct sockaddr_storage *peer, int port,
@@ -40,8 +67,10 @@ void satip_rtp_update(void *id, th_subscription_t *subs,
                       streaming_queue_t *sq,
                       int frontend, int source,
                       dvb_mux_conf_t *dmc,
-                      mpegts_apids_t *pids);
+                      mpegts_apids_t *pids,
+                      mpegts_apids_t *pmt_pids);
 void satip_rtp_update_pids(void *id, mpegts_apids_t *pids);
+void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids);
 int satip_rtp_status(void *id, char *buf, int len);
 void satip_rtp_close(void *id);
 
@@ -49,7 +78,7 @@ void satip_rtp_init(void);
 void satip_rtp_done(void);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
-                            int descramble, int muxcnf);
+                            int descramble, int rewrite_pmt, int muxcnf);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);
 
@@ -57,10 +86,6 @@ int satip_server_http_page(http_connection_t *hc,
                            const char *remain, void *opaque);
 
 int satip_server_match_uuid(const char *uuid);
-
-void satip_server_save(void);
-htsmsg_t *satip_server_get_config(void);
-int satip_server_set_config(htsmsg_t *conf);
 
 void satip_server_init(int rtsp_port);
 void satip_server_register(void);

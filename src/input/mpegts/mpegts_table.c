@@ -74,7 +74,6 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s scan complete", buf);
   mpegts_mux_scan_done(mm, buf, 1);
 }
 

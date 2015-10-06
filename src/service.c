@@ -220,6 +220,8 @@ stream_init(elementary_stream_t *st)
 {
   st->es_cc = -1;
 
+  st->es_incomplete = 0;
+  st->es_header_mode = 0;
   st->es_parser_state = 0;
   st->es_startcond = 0xffffffff;
   st->es_curdts = PTS_UNSET;
@@ -244,7 +246,6 @@ stream_clean(elementary_stream_t *st)
   st->es_startcode = 0;
   
   sbuf_free(&st->es_buf);
-  sbuf_free(&st->es_buf_ps);
   sbuf_free(&st->es_buf_a);
 
   if(st->es_curpkt != NULL) {
@@ -439,7 +440,7 @@ filter:
             strncmp(esf->esf_language, st->es_lang, 4))
           continue;
         if (esf->esf_service[0]) {
-          if (strcmp(esf->esf_service, idnode_uuid_as_str(&t->s_id)))
+          if (strcmp(esf->esf_service, idnode_uuid_as_sstr(&t->s_id)))
             continue;
           if (esf->esf_pid && esf->esf_pid != st->es_pid)
             continue;
@@ -593,7 +594,8 @@ ignore:
  *
  */
 int
-service_start(service_t *t, int instance, int flags, int timeout, int postpone)
+service_start(service_t *t, int instance, int weight, int flags,
+              int timeout, int postpone)
 {
   elementary_stream_t *st;
   int r, stimeout = 10;
@@ -613,7 +615,7 @@ service_start(service_t *t, int instance, int flags, int timeout, int postpone)
   descrambler_caid_changed(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
 
-  if((r = t->s_start_feed(t, instance, flags)))
+  if((r = t->s_start_feed(t, instance, weight, flags)))
     return r;
 
   descrambler_service_start(t);
@@ -748,7 +750,7 @@ service_find_instance
 
   /* Start */
   tvhtrace("service", "will start new instance %d", si->si_instance);
-  if (service_start(si->si_s, si->si_instance, flags, timeout, postpone)) {
+  if (service_start(si->si_s, si->si_instance, weight, flags, timeout, postpone)) {
     tvhtrace("service", "tuning failed");
     si->si_error = SM_CODE_TUNING_FAILED;
     if (*error < SM_CODE_TUNING_FAILED)

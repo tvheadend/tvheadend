@@ -121,7 +121,7 @@ satip_satconf_class_network_set( void *o, const void *p )
     TAILQ_FOREACH(sfc2, &lfe->sf_satconf, sfc_link) {
       for (i = 0; i < sfc2->sfc_networks->is_count; i++)
         htsmsg_add_str(l, NULL,
-                       idnode_uuid_as_str(sfc2->sfc_networks->is_array[i]));
+                       idnode_uuid_as_sstr(sfc2->sfc_networks->is_array[i]));
     }
     mpegts_input_class_network_set(lfe, l);
     /* update the slave tuners, too */
@@ -156,7 +156,7 @@ satip_satconf_class_network_rend( void *o, const char *lang )
 {
   satip_satconf_t *sfc  = o;
   htsmsg_t               *l   = idnode_set_as_htsmsg(sfc->sfc_networks);
-  char                   *str = htsmsg_list_2_csv(l);
+  char                   *str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }

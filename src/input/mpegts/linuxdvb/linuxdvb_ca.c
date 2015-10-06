@@ -904,7 +904,7 @@ void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )
   char id[8];
   htsmsg_t *m = htsmsg_create_map();
 
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lca->lca_id));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&lca->lca_id));
   idnode_save(&lca->lca_id, m);
 
   /* Add to list */

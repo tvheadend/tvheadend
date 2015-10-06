@@ -20,9 +20,10 @@
 #define __IMAGE_CACHE_H__
 
 #include <pthread.h>
+#include "idnode.h"
 
 struct imagecache_config {
-  int       __unused__;   // to avoid assert in prop.c (first member should be idnode_t)
+  idnode_t  idnode;
   int       enabled;
   int       ignore_sslcert;
   uint32_t  ok_period;
@@ -30,16 +31,15 @@ struct imagecache_config {
 };
 
 extern struct imagecache_config imagecache_conf;
+extern const idclass_t imagecache_class;
 
 extern pthread_mutex_t imagecache_mutex;
 
 void     imagecache_init     ( void );
 void	 imagecache_done     ( void );
 
-htsmsg_t *imagecache_get_config ( void );
-int       imagecache_set_config ( htsmsg_t *c );
-void      imagecache_save       ( void );
-void      imagecache_clean      ( void );
+void     imagecache_clean    ( void );
+void     imagecache_trigger  ( void );
 
 // Note: will return 0 if invalid (must serve original URL)
 uint32_t imagecache_get_id  ( const char *url );

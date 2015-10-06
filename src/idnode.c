@@ -47,6 +47,8 @@ static RB_HEAD(,idclass_link) idrootclasses;
 
 SKEL_DECLARE(idclasses_skel, idclass_link_t);
 
+char idnode_uuid_static[UUID_HEX_SIZE];
+
 /* **************************************************************************
  * Utilities
  * *************************************************************************/
@@ -154,7 +156,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     abort();
   }
-  tvhtrace("idnode", "insert node %s", idnode_uuid_as_str(in));
+  tvhtrace("idnode", "insert node %s", idnode_uuid_as_sstr(in));
 
   /* Register the class */
   idclass_register(class); // Note: we never actually unregister
@@ -178,7 +180,7 @@ idnode_unlink(idnode_t *in)
   lock_assert(&global_lock);
   RB_REMOVE(&idnodes, in, in_link);
   RB_REMOVE(in->in_domain, in, in_domain_link);
-  tvhtrace("idnode", "unlink node %s", idnode_uuid_as_str(in));
+  tvhtrace("idnode", "unlink node %s", idnode_uuid_as_sstr(in));
   idnode_notify(in, "delete");
 }
 
@@ -237,14 +239,10 @@ idnode_get_short_uuid (const idnode_t *in)
  *
  */
 const char *
-idnode_uuid_as_str(const idnode_t *in)
+idnode_uuid_as_str(const idnode_t *in, char *uuid)
 {
-  static tvh_uuid_t __thread ret[16];
-  static uint8_t p = 0;
-  bin2hex(ret[p].hex, sizeof(ret[p].hex), in->in_uuid, sizeof(in->in_uuid));
-  const char *s = ret[p].hex;
-  p = (p + 1) % 16;
-  return s;
+  bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid, sizeof(in->in_uuid));
+  return uuid;
 }
 
 /**
@@ -258,7 +256,7 @@ idnode_get_title(idnode_t *in, const char *lang)
     if(ic->ic_get_title != NULL)
       return ic->ic_get_title(in, lang);
   }
-  return idnode_uuid_as_str(in);
+  return idnode_uuid_as_sstr(in);
 }
 
 
@@ -333,7 +331,7 @@ idnode_get_display
     else if (p->islist) {
       htsmsg_t *l = (htsmsg_t*)p->get(self);
       if (l)
-        return htsmsg_list_2_csv(l);
+        return htsmsg_list_2_csv(l, ',', 1);
     } else if (p->list) {
       htsmsg_t *l = p->list(self, lang), *m;
       htsmsg_field_t *f;
@@ -639,7 +637,7 @@ idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
       ic = in->in_class;
       while (ic) {
         if (ic == idc) {
-          tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
+          tvhtrace("idnode", "  add node %s", idnode_uuid_as_sstr(in));
           idnode_set_add(is, in, NULL, NULL);
           break;
         }
@@ -651,7 +649,7 @@ idnode_find_all ( const idclass_t *idc, const idnodes_rb_t *domain )
       ic = in->in_class;
       while (ic) {
         if (ic == idc) {
-          tvhtrace("idnode", "  add node %s", idnode_uuid_as_str(in));
+          tvhtrace("idnode", "  add node %s", idnode_uuid_as_sstr(in));
           idnode_set_add(is, in, NULL, NULL);
           break;
         }
@@ -1043,7 +1041,7 @@ idnode_set_as_htsmsg
   htsmsg_t *l = htsmsg_create_list();
   int i;
   for (i = 0; i < is->is_count; i++)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(is->is_array[i]));
+    htsmsg_add_str(l, NULL, idnode_uuid_as_sstr(is->is_array[i]));
   return l;
 }
 
@@ -1136,7 +1134,7 @@ add_params
 #if 0
   if(TAILQ_FIRST(&p->hm_fields) != NULL) {
     htsmsg_t *m = htsmsg_create_map();
-    htsmsg_add_str(m, "caption",  gettext(ic->ic_caption) ?: ic->ic_class);
+    htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, ic->ic_caption) ?: ic->ic_class);
     htsmsg_add_str(m, "type",     "separator");
     htsmsg_add_msg(p, NULL, m);
   }
@@ -1316,9 +1314,11 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask, const char *lang)
   const char *uuid, *s;
 
   htsmsg_t *m = htsmsg_create_map();
-  uuid = idnode_uuid_as_str(self);
-  htsmsg_add_str(m, "uuid", uuid);
-  htsmsg_add_str(m, "id",   uuid);
+  if (!idc->ic_snode) {
+    uuid = idnode_uuid_as_sstr(self);
+    htsmsg_add_str(m, "uuid", uuid);
+    htsmsg_add_str(m, "id",   uuid);
+  }
   htsmsg_add_str(m, "text", idnode_get_title(self, lang) ?: "");
   if ((s = idclass_get_caption(idc, lang)))
     htsmsg_add_str(m, "caption", s);
@@ -1404,18 +1404,33 @@ idnode_list_destroy(idnode_list_head_t *ilh, void *origin)
 }
 
 static int
-idnode_list_clean
-  ( idnode_t *in1, idnode_list_head_t *in1_list,
-    idnode_t *in2, idnode_list_head_t *in2_list,
-    void *origin )
+idnode_list_clean1
+  ( idnode_t *in1, idnode_list_head_t *in1_list )
 {
   int save = 0;
   idnode_list_mapping_t *ilm, *n;
 
-  for (ilm = LIST_FIRST(in1 ? in1_list : in2_list); ilm != NULL; ilm = n) {
-    n = in1 ? LIST_NEXT(ilm, ilm_in1_link) : LIST_NEXT(ilm, ilm_in2_link);
+  for (ilm = LIST_FIRST(in1_list); ilm != NULL; ilm = n) {
+    n = LIST_NEXT(ilm, ilm_in1_link);
     if (ilm->ilm_mark) {
-      idnode_list_unlink(ilm, origin);
+      idnode_list_unlink(ilm, in1);
+      save = 1;
+    }
+  }
+  return save;
+}
+
+static int
+idnode_list_clean2
+  ( idnode_t *in2, idnode_list_head_t *in2_list )
+{
+  int save = 0;
+  idnode_list_mapping_t *ilm, *n;
+
+  for (ilm = LIST_FIRST(in2_list); ilm != NULL; ilm = n) {
+    n = LIST_NEXT(ilm, ilm_in2_link);
+    if (ilm->ilm_mark) {
+      idnode_list_unlink(ilm, in2);
       save = 1;
     }
   }
@@ -1430,7 +1445,7 @@ idnode_list_get1
   htsmsg_t *l = htsmsg_create_list();
 
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in2));
+    htsmsg_add_str(l, NULL, idnode_uuid_as_sstr(ilm->ilm_in2));
   return l;
 }
 
@@ -1442,7 +1457,7 @@ idnode_list_get2
   htsmsg_t *l = htsmsg_create_list();
 
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_str(ilm->ilm_in1));
+    htsmsg_add_str(l, NULL, idnode_uuid_as_sstr(ilm->ilm_in1));
   return l;
 }
 
@@ -1457,7 +1472,7 @@ idnode_list_get_csv1
   LIST_FOREACH(ilm, in1_list, ilm_in1_link)
     htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in2, lang));
 
-  str = htsmsg_list_2_csv(l);
+  str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }
@@ -1473,7 +1488,7 @@ idnode_list_get_csv2
   LIST_FOREACH(ilm, in2_list, ilm_in2_link)
     htsmsg_add_str(l, NULL, idnode_get_title(ilm->ilm_in1, lang));
 
-  str = htsmsg_list_2_csv(l);
+  str = htsmsg_list_2_csv(l, ',', 1);
   htsmsg_destroy(l);
   return str;
 }
@@ -1502,7 +1517,7 @@ idnode_list_set1
           save = 1;
 
   /* Delete unlinked */
-  if (idnode_list_clean(in1, in1_list, NULL, NULL, in1))
+  if (idnode_list_clean1(in1, in1_list))
     save = 1;
 
   /* Change notification */
@@ -1541,7 +1556,7 @@ idnode_list_set2
           save = 1;
 
   /* Delete unlinked */
-  if (idnode_list_clean(in2, in2_list, NULL, NULL, in2))
+  if (idnode_list_clean2(in2, in2_list))
     save = 1;
 
   /* Change notification */
@@ -1568,14 +1583,18 @@ void
 idnode_notify ( idnode_t *in, const char *action )
 {
   const idclass_t *ic = in->in_class;
-  const char *uuid = idnode_uuid_as_str(in);
+  const char *uuid = idnode_uuid_as_sstr(in);
 
   if (!tvheadend_running)
     return;
 
   while (ic) {
-    if (ic->ic_event)
-      notify_delayed(uuid, ic->ic_event, action);
+    if (ic->ic_event) {
+      if (!ic->ic_snode)
+        notify_delayed(uuid, ic->ic_event, action);
+      else
+        notify_reload(ic->ic_event);
+    }
     ic = ic->ic_super;
   }
 }
@@ -1590,7 +1609,7 @@ void
 idnode_notify_title_changed (void *in, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
   htsmsg_add_str(m, "text", idnode_get_title(in, lang));
   notify_by_msg("title", m);
   idnode_notify_changed(in);

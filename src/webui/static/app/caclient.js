@@ -27,7 +27,6 @@ tvheadend.caclient = function(panel, index) {
                'key_even,key_odd,comment';
 
     tvheadend.idnode_form_grid(panel, {
-        url: 'api/caclient',
         clazz: 'caclient',
         comet: 'caclient',
         titleS: _('CA'),

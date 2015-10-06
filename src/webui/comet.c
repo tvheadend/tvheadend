@@ -30,6 +30,7 @@
 #include "htsmsg_json.h"
 
 #include "tvheadend.h"
+#include "config.h"
 #include "http.h"
 #include "dvr/dvr.h"
 #include "webui/webui.h"
@@ -154,6 +155,14 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
     htsmsg_add_str(m, "address", hc->hc_peer_ipstr);
   htsmsg_add_u32(m, "dvr",      dvr);
   htsmsg_add_u32(m, "admin",    !http_access_verify(hc, ACCESS_ADMIN));
+
+  htsmsg_add_s64(m, "time",     time(NULL));
+
+  if (config.cookie_expires)
+    htsmsg_add_u32(m, "cookie_expires", config.cookie_expires);
+
+  if (config.info_area && config.info_area[0])
+    htsmsg_add_str(m, "info_area", config.info_area);
 
   if (dvr && !dvr_get_disk_space(&bfree, &btotal)) {
     htsmsg_add_s64(m, "freediskspace", bfree);

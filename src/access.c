@@ -30,10 +30,8 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include <openssl/sha.h>
-#include <openssl/rand.h>
-
 #include "tvheadend.h"
+#include "config.h"
 #include "access.h"
 #include "settings.h"
 #include "channels.h"
@@ -44,6 +42,7 @@
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
 struct passwd_entry_queue passwd_entries;
+struct ipblock_entry_queue ipblock_entries;
 
 const char *superuser_username;
 const char *superuser_password;
@@ -116,7 +115,7 @@ access_ticket_create(const char *resource, access_t *a)
 
   at = calloc(1, sizeof(access_ticket_t));
 
-  RAND_bytes(buf, 20);
+  uuid_random(buf, 20);
 
   //convert to hexstring
   for(i=0; i<sizeof(buf); i++){
@@ -265,7 +264,7 @@ access_destroy(access_t *a)
  *
  */
 static int
-netmask_verify(access_entry_t *ae, struct sockaddr *src)
+netmask_verify(struct access_ipmask_queue *ais, struct sockaddr *src)
 {
   access_ipmask_t *ai;
   int isv4v6 = 0;
@@ -280,7 +279,7 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
     }
   }
 
-  TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link) {
+  TAILQ_FOREACH(ai, ais, ai_link) {
 
     if (ai->ai_family == AF_INET && src->sa_family == AF_INET) {
 
@@ -332,6 +331,20 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
 /**
  *
  */
+static inline int
+access_ip_blocked(struct sockaddr *src)
+{
+  ipblock_entry_t *ib;
+
+  TAILQ_FOREACH(ib, &ipblock_entries, ib_link)
+    if (netmask_verify(&ib->ib_ipmasks, src))
+      return 1;
+  return 0;
+}
+
+/**
+ *
+ */
 int
 access_verify(const char *username, const char *password,
 	      struct sockaddr *src, uint32_t mask)
@@ -342,6 +355,9 @@ access_verify(const char *username, const char *password,
 
   if (access_noacl)
     return 0;
+
+  if (access_ip_blocked(src))
+    return -1;
 
   if (!passwd_verify2(username, password,
                       superuser_username, superuser_password))
@@ -361,7 +377,7 @@ access_verify(const char *username, const char *password,
 	continue; /* Didn't get one */
     }
 
-    if(!netmask_verify(ae, src))
+    if(!netmask_verify(&ae->ae_ipmasks, src))
       continue; /* IP based access mismatches */
 
     if (ae->ae_username[0] != '*')
@@ -480,6 +496,7 @@ static void
 access_update(access_t *a, access_entry_t *ae)
 {
   idnode_list_mapping_t *ilm;
+  const char *s;
 
   switch (ae->ae_conn_limit_type) {
   case ACCESS_CONN_LIMIT_TYPE_ALL:
@@ -510,7 +527,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(pro && pro->pro_name[0] != '\0') {
       if (a->aa_profiles == NULL)
         a->aa_profiles = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id));
+      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_sstr(&pro->pro_id));
     }
   }
 
@@ -519,7 +536,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(dvr && dvr->dvr_config_name[0] != '\0') {
       if (a->aa_dvrcfgs == NULL)
         a->aa_dvrcfgs = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id));
+      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_sstr(&dvr->dvr_id));
      }
   }
 
@@ -534,7 +551,7 @@ access_update(access_t *a, access_entry_t *ae)
         if (ilm == NULL) {
           if (a->aa_chtags == NULL)
             a->aa_chtags = htsmsg_create_list();
-          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_sstr(&ct->ct_id));
         }
       }
     }
@@ -544,7 +561,7 @@ access_update(access_t *a, access_entry_t *ae)
       if(ct && ct->ct_name[0] != '\0') {
         if (a->aa_chtags == NULL)
           a->aa_chtags = htsmsg_create_list();
-        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id));
+        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_sstr(&ct->ct_id));
       }
     }
   }
@@ -552,10 +569,29 @@ access_update(access_t *a, access_entry_t *ae)
   if (!a->aa_lang && ae->ae_lang && ae->ae_lang[0])
     a->aa_lang = lang_code_user(ae->ae_lang);
 
-  if (!a->aa_lang_ui && ae->ae_lang_ui && ae->ae_lang_ui[0])
-    a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
+  if (!a->aa_lang_ui) {
+    if (ae->ae_lang_ui && ae->ae_lang_ui[0])
+      a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
+    else if ((s = config_get_language_ui()) != NULL)
+      a->aa_lang_ui = lang_code_user(s);
+  }
 
   a->aa_rights |= ae->ae_rights;
+}
+
+/**
+ *
+ */
+static void
+access_set_lang_ui(access_t *a)
+{
+  const char *s;
+  if (!a->aa_lang_ui) {
+    if ((s = config_get_language_ui()) != NULL)
+      a->aa_lang_ui = lang_code_user(s);
+    if (a->aa_lang)
+      a->aa_lang_ui = strdup(a->aa_lang);
+  }
 }
 
 /**
@@ -567,6 +603,9 @@ access_get(const char *username, const char *password, struct sockaddr *src)
   access_t *a = access_alloc();
   access_entry_t *ae;
   int nouser = username == NULL || username[0] == '\0';
+
+  if (!access_noacl && access_ip_blocked(src))
+    return a;
 
   if (!passwd_verify(username, password)) {
     a->aa_username = strdup(username);
@@ -603,7 +642,7 @@ access_get(const char *username, const char *password, struct sockaddr *src)
 	continue; /* Didn't get one */
     }
 
-    if(!netmask_verify(ae, src))
+    if(!netmask_verify(&ae->ae_ipmasks, src))
       continue; /* IP based access mismatches */
 
     if(ae->ae_username[0] != '*')
@@ -620,6 +659,8 @@ access_get(const char *username, const char *password, struct sockaddr *src)
       a->aa_rights = 0;
   }
 
+  access_set_lang_ui(a);
+
   if (tvhtrace_enabled())
     access_dump_a(a);
   return a;
@@ -635,6 +676,9 @@ access_get_hashed(const char *username, const uint8_t digest[20],
   access_t *a = access_alloc();
   access_entry_t *ae;
   int nouser = username == NULL || username[0] == '\0';
+
+  if (!access_noacl && access_ip_blocked(src))
+    return a;
 
   if (!passwd_verify_digest(username, digest, challenge)) {
     a->aa_username = strdup(username);
@@ -665,7 +709,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if(!ae->ae_enabled)
       continue;
 
-    if(!netmask_verify(ae, src))
+    if(!netmask_verify(&ae->ae_ipmasks, src))
       continue; /* IP based access mismatches */
 
     if(ae->ae_username[0] != '*') {
@@ -686,6 +730,8 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     if (!nouser)
       a->aa_rights = 0;
   }
+
+  access_set_lang_ui(a);
 
   if (tvhtrace_enabled())
     access_dump_a(a);
@@ -723,6 +769,8 @@ access_get_by_username(const char *username)
     access_update(a, ae);
   }
 
+  access_set_lang_ui(a);
+
   return a;
 }
 
@@ -743,6 +791,9 @@ access_get_by_addr(struct sockaddr *src)
     return a;
   }
 
+  if (access_ip_blocked(src))
+    return a;
+
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
     if(!ae->ae_enabled)
@@ -751,11 +802,13 @@ access_get_by_addr(struct sockaddr *src)
     if(ae->ae_username[0] != '*')
       continue;
 
-    if(!netmask_verify(ae, src))
+    if(!netmask_verify(&ae->ae_ipmasks, src))
       continue; /* IP based access mismatches */
 
     access_update(a, ae);
   }
+
+  access_set_lang_ui(a);
 
   return a;
 }
@@ -764,17 +817,17 @@ access_get_by_addr(struct sockaddr *src)
  *
  */
 static void
-access_set_prefix_default(access_entry_t *ae)
+access_set_prefix_default(struct access_ipmask_queue *ais)
 {
   access_ipmask_t *ai;
 
   ai = calloc(1, sizeof(access_ipmask_t));
   ai->ai_family = AF_INET6;
-  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+  TAILQ_INSERT_HEAD(ais, ai, ai_link);
 
   ai = calloc(1, sizeof(access_ipmask_t));
   ai->ai_family = AF_INET;
-  TAILQ_INSERT_HEAD(&ae->ae_ipmasks, ai, ai_link);
+  TAILQ_INSERT_HEAD(ais, ai, ai_link);
 }
 
 /**
@@ -823,7 +876,7 @@ static int access_addr6_empty(const char *s)
  *
  */
 static void
-access_set_prefix(access_entry_t *ae, const char *prefix)
+access_set_prefix(struct access_ipmask_queue *ais, const char *prefix, int dflt)
 {
   static const char *delim = ",;| ";
   char buf[100];
@@ -833,8 +886,8 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
   in_addr_t s_addr;
   access_ipmask_t *ai = NULL;
 
-  while((ai = TAILQ_FIRST(&ae->ae_ipmasks)) != NULL) {
-    TAILQ_REMOVE(&ae->ae_ipmasks, ai, ai_link);
+  while((ai = TAILQ_FIRST(ais)) != NULL) {
+    TAILQ_REMOVE(ais, ai, ai_link);
     free(ai);
   }
 
@@ -888,7 +941,7 @@ access_set_prefix(access_entry_t *ae, const char *prefix)
       ai->ai_network   = ntohl(s_addr) & ai->ai_netmask;
     }
 
-    TAILQ_INSERT_TAIL(&ae->ae_ipmasks, ai, ai_link);
+    TAILQ_INSERT_TAIL(ais, ai, ai_link);
     ai = NULL;
 
     tok = strtok_r(NULL, delim, &saveptr);
@@ -902,8 +955,33 @@ fnext:
     }
   }
 
-  if (!TAILQ_FIRST(&ae->ae_ipmasks))
-    access_set_prefix_default(ae);
+  if (dflt && !TAILQ_FIRST(ais))
+    access_set_prefix_default(ais);
+}
+
+/**
+ *
+ */
+static const char *access_get_prefix(struct access_ipmask_queue *ais)
+{
+  char addrbuf[50];
+  access_ipmask_t *ai;
+  size_t pos = 0;
+  uint32_t s_addr;
+
+  prop_sbuf[0] = prop_sbuf[1] = '\0';
+  TAILQ_FOREACH(ai, ais, ai_link)   {
+    if(PROP_SBUF_LEN-pos <= 0)
+      break;
+    if(ai->ai_family == AF_INET6) {
+      inet_ntop(AF_INET6, &ai->ai_ip6, addrbuf, sizeof(addrbuf));
+    } else {
+      s_addr = htonl(ai->ai_network);
+      inet_ntop(AF_INET, &s_addr, addrbuf, sizeof(addrbuf));
+    }
+    tvh_strlcatf(prop_sbuf, PROP_SBUF_LEN, pos, ",%s/%d", addrbuf, ai->ai_prefixlen);
+  }
+  return prop_sbuf + 1;
 }
 
 /**
@@ -986,7 +1064,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
   if (ae->ae_comment == NULL)
     ae->ae_comment = strdup("New entry");
   if (TAILQ_FIRST(&ae->ae_ipmasks) == NULL)
-    access_set_prefix_default(ae);
+    access_set_prefix_default(&ae->ae_ipmasks);
 
   return ae;
 }
@@ -1054,7 +1132,7 @@ access_entry_save(access_entry_t *ae)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&ae->ae_id, c);
-  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id));
+  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_sstr(&ae->ae_id));
   htsmsg_destroy(c);
 }
 
@@ -1092,7 +1170,7 @@ access_entry_class_delete(idnode_t *self)
 {
   access_entry_t *ae = (access_entry_t *)self;
 
-  hts_settings_remove("accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id));
+  hts_settings_remove("accesscontrol/%s", idnode_uuid_as_sstr(&ae->ae_id));
   access_entry_destroy(ae);
 }
 
@@ -1124,41 +1202,33 @@ static const char *
 access_entry_class_get_title (idnode_t *self, const char *lang)
 {
   access_entry_t *ae = (access_entry_t *)self;
+  const char *s = ae->ae_username;
 
-  if (ae->ae_comment && ae->ae_comment[0] != '\0')
-    return ae->ae_comment;
-  return ae->ae_username ?: "";
+  if (ae->ae_comment && ae->ae_comment[0] != '\0') {
+    if (ae->ae_username && ae->ae_username[0]) {
+      snprintf(prop_sbuf, PROP_SBUF_LEN, "%s (%s)", ae->ae_username, ae->ae_comment);
+      s = prop_sbuf;
+    } else {
+      s = ae->ae_comment;
+    }
+  }
+  if (s == NULL || *s == '\0')
+    s = "";
+  return s;
 }
 
 static int
 access_entry_class_prefix_set(void *o, const void *v)
 {
-  access_set_prefix((access_entry_t *)o, (const char *)v);
+  access_set_prefix(&((access_entry_t *)o)->ae_ipmasks, (const char *)v, 1);
   return 1;
 }
 
 static const void *
 access_entry_class_prefix_get(void *o)
 {
-  static char buf[4096], addrbuf[50], *ret = buf+1;
-  access_entry_t *ae = (access_entry_t *)o;
-  access_ipmask_t *ai;
-  size_t pos = 0;
-  uint32_t s_addr;
-
-  buf[0] = buf[1] = '\0';
-  TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link)   {
-    if(sizeof(buf)-pos <= 0)
-      break;
-
-    if(ai->ai_family == AF_INET6) {
-      inet_ntop(AF_INET6, &ai->ai_ip6, addrbuf, sizeof(addrbuf));
-    } else {
-      s_addr = htonl(ai->ai_network);
-      inet_ntop(AF_INET, &s_addr, addrbuf, sizeof(addrbuf));
-    }
-    tvh_strlcatf(buf, sizeof(buf), pos, ",%s/%d", addrbuf, ai->ai_prefixlen);
-  }
+  static const char *ret;
+  ret = access_get_prefix(&((access_entry_t *)o)->ae_ipmasks);
   return &ret;
 }
 
@@ -1279,12 +1349,22 @@ access_entry_conn_limit_type_enum ( void *p, const char *lang )
   return strtab2htsmsg(conn_limit_type_tab, 1, lang);
 }
 
-static htsmsg_t *
+htsmsg_t *
 language_get_list ( void *obj, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "language/locale");
+  return m;
+}
+
+htsmsg_t *
+user_get_userlist ( void *obj, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "access/entry/userlist");
+  htsmsg_add_str(m, "event", "access");
   return m;
 }
 
@@ -1438,14 +1518,14 @@ const idclass_t access_entry_class = {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_min",
-      .name     = N_("Min Channel Num"),
+      .name     = N_("Minimal Channel Number"),
       .off      = offsetof(access_entry_t, ae_chmin),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
-      .name     = N_("Maximum Channel Num"),
+      .name     = N_("Maximal Channel Number"),
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
@@ -1485,7 +1565,6 @@ passwd_verify_digest2(const char *username, const uint8_t *digest,
                       const uint8_t *challenge,
                       const char *username2, const char *passwd2)
 {
-  SHA_CTX shactx;
   uint8_t d[20];
 
   if (username == NULL || username[0] == '\0' ||
@@ -1496,10 +1575,7 @@ passwd_verify_digest2(const char *username, const uint8_t *digest,
   if (strcmp(username, username2))
     return -1;
 
-  SHA1_Init(&shactx);
-  SHA1_Update(&shactx, (const uint8_t *)passwd2, strlen(passwd2));
-  SHA1_Update(&shactx, challenge, 32);
-  SHA1_Final(d, &shactx);
+  sha1_calc(d, (uint8_t *)passwd2, strlen(passwd2), challenge, 32);
 
   return memcmp(d, digest, 20) ? -1 : 0;
 }
@@ -1595,7 +1671,7 @@ passwd_entry_save(passwd_entry_t *pw)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&pw->pw_id, c);
-  hts_settings_save(c, "passwd/%s", idnode_uuid_as_str(&pw->pw_id));
+  hts_settings_save(c, "passwd/%s", idnode_uuid_as_sstr(&pw->pw_id));
   htsmsg_destroy(c);
 }
 
@@ -1610,7 +1686,7 @@ passwd_entry_class_delete(idnode_t *self)
 {
   passwd_entry_t *pw = (passwd_entry_t *)self;
 
-  hts_settings_remove("passwd/%s", idnode_uuid_as_str(&pw->pw_id));
+  hts_settings_remove("passwd/%s", idnode_uuid_as_sstr(&pw->pw_id));
   passwd_entry_destroy(pw);
 }
 
@@ -1713,6 +1789,130 @@ const idclass_t passwd_entry_class = {
 };
 
 /**
+ * IP block list
+ */
+
+ipblock_entry_t *
+ipblock_entry_create(const char *uuid, htsmsg_t *conf)
+{
+  ipblock_entry_t *ib;
+
+  lock_assert(&global_lock);
+
+  ib = calloc(1, sizeof(ipblock_entry_t));
+
+  TAILQ_INIT(&ib->ib_ipmasks);
+
+  if (idnode_insert(&ib->ib_id, uuid, &ipblock_entry_class, 0)) {
+    if (uuid)
+      tvherror("access", "invalid uuid '%s'", uuid);
+    free(ib);
+    return NULL;
+  }
+
+  if (conf) {
+    ib->ib_enabled = 1;
+    idnode_load(&ib->ib_id, conf);
+  }
+
+  TAILQ_INSERT_TAIL(&ipblock_entries, ib, ib_link);
+
+  return ib;
+}
+
+static void
+ipblock_entry_destroy(ipblock_entry_t *ib)
+{
+  if (ib == NULL)
+    return;
+  TAILQ_REMOVE(&ipblock_entries, ib, ib_link);
+  idnode_unlink(&ib->ib_id);
+  free(ib->ib_comment);
+  free(ib);
+}
+
+void
+ipblock_entry_save(ipblock_entry_t *ib)
+{
+  htsmsg_t *c = htsmsg_create_map();
+  idnode_save(&ib->ib_id, c);
+  hts_settings_save(c, "ipblock/%s", idnode_uuid_as_sstr(&ib->ib_id));
+  htsmsg_destroy(c);
+}
+
+static void
+ipblock_entry_class_save(idnode_t *self)
+{
+  ipblock_entry_save((ipblock_entry_t *)self);
+}
+
+static const char *
+ipblock_entry_class_get_title (idnode_t *self, const char *lang)
+{
+  ipblock_entry_t *ib = (ipblock_entry_t *)self;
+
+  if (ib->ib_comment && ib->ib_comment[0] != '\0')
+    return ib->ib_comment;
+  return N_("IP Blocking");
+}
+
+static void
+ipblock_entry_class_delete(idnode_t *self)
+{
+  ipblock_entry_t *ib = (ipblock_entry_t *)self;
+
+  hts_settings_remove("passwd/%s", idnode_uuid_as_sstr(&ib->ib_id));
+  ipblock_entry_destroy(ib);
+}
+
+static int
+ipblock_entry_class_prefix_set(void *o, const void *v)
+{
+  access_set_prefix(&((ipblock_entry_t *)o)->ib_ipmasks, (const char *)v, 0);
+  return 1;
+}
+
+static const void *
+ipblock_entry_class_prefix_get(void *o)
+{
+  static const char *ret;
+  ret = access_get_prefix(&((ipblock_entry_t *)o)->ib_ipmasks);
+  return &ret;
+}
+
+const idclass_t ipblock_entry_class = {
+  .ic_class      = "ipblocking",
+  .ic_caption    = N_("IP Blocking"),
+  .ic_event      = "ipblocking",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = ipblock_entry_class_save,
+  .ic_get_title  = ipblock_entry_class_get_title,
+  .ic_delete     = ipblock_entry_class_delete,
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "enabled",
+      .name     = N_("Enabled"),
+      .off      = offsetof(ipblock_entry_t, ib_enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "prefix",
+      .name     = N_("Network prefix"),
+      .set      = ipblock_entry_class_prefix_set,
+      .get      = ipblock_entry_class_prefix_get,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "comment",
+      .name     = N_("Comment"),
+      .off      = offsetof(ipblock_entry_t, ib_comment),
+    },
+    {}
+  }
+};
+
+/**
  *
  */
 void
@@ -1723,22 +1923,23 @@ access_init(int createdefault, int noacl)
   access_entry_t *ae;
   const char *s;
 
-  static struct {
-    pid_t pid;
-    struct timeval tv;
-  } randseed;
-
   access_noacl = noacl;
   if (noacl)
     tvhlog(LOG_WARNING, "access", "Access control checking disabled");
 
-  randseed.pid = getpid();
-  gettimeofday(&randseed.tv, NULL);
-  RAND_seed(&randseed, sizeof(randseed));
-
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
   TAILQ_INIT(&passwd_entries);
+  TAILQ_INIT(&ipblock_entries);
+
+  /* Load ipblock entries */
+  if ((c = hts_settings_load("ipblock")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(m = htsmsg_field_get_map(f))) continue;
+      (void)ipblock_entry_create(f->hmf_name, m);
+    }
+    htsmsg_destroy(c);
+  }
 
   /* Load passwd entries */
   if ((c = hts_settings_load("passwd")) != NULL) {
@@ -1781,7 +1982,7 @@ access_init(int createdefault, int noacl)
 
     TAILQ_INIT(&ae->ae_ipmasks);
 
-    access_set_prefix_default(ae);
+    access_set_prefix_default(&ae->ae_ipmasks);
 
     access_entry_save(ae);
 
@@ -1809,6 +2010,7 @@ access_done(void)
   access_entry_t *ae;
   access_ticket_t *at;
   passwd_entry_t *pw;
+  ipblock_entry_t *ib;
 
   pthread_mutex_lock(&global_lock);
   while ((ae = TAILQ_FIRST(&access_entries)) != NULL)
@@ -1817,6 +2019,8 @@ access_done(void)
     access_ticket_destroy(at);
   while ((pw = TAILQ_FIRST(&passwd_entries)) != NULL)
     passwd_entry_destroy(pw);
+  while ((ib = TAILQ_FIRST(&ipblock_entries)) != NULL)
+    ipblock_entry_destroy(ib);
   free((void *)superuser_username);
   superuser_username = NULL;
   free((void *)superuser_password);

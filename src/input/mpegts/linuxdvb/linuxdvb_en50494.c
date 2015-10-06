@@ -156,23 +156,48 @@ const idclass_t linuxdvb_en50494_class =
  * *************************************************************************/
 
 static int
-linuxdvb_en50494_tune
-  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
-    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc,
-    int vol, int pol, int band, int freq )
+linuxdvb_en50494_freq0
+  ( linuxdvb_en50494_t *le, int freq, int *rfreq, uint16_t *t )
 {
-  int ret = 0, i, fd = linuxdvb_satconf_fe_fd(lsp);
-  linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
-
-  /* transponder value - t*/
-  uint16_t t = round((( (freq / 1000) + 2 + le->le_frequency) / 4) - 350);
-  if ( t > 1024) {
+  /* transponder value - t */
+  *t = round((((freq / 1000) + 2 + le->le_frequency) / 4) - 350);
+  if (*t > 1024) {
     tvherror("en50494", "transponder value bigger then 1024");
     return -1;
   }
 
   /* tune frequency for the frontend */
-  le->le_tune_freq = (t + 350) * 4000 - freq;
+  *rfreq = (*t + 350) * 4000 - freq;
+  return 0;
+}
+
+static int
+linuxdvb_en50494_freq
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm, int freq )
+{
+  linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
+  int rfreq;
+  uint16_t t;
+
+  if (linuxdvb_en50494_freq0(le, freq, &rfreq, &t))
+    return -1;
+  return rfreq;
+}
+
+static int
+linuxdvb_en50494_tune
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
+    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc,
+    int vol, int pol, int band, int freq )
+{
+  int ret = 0, i, fd = linuxdvb_satconf_fe_fd(lsp), rfreq;
+  linuxdvb_en50494_t *le = (linuxdvb_en50494_t*) ld;
+  uint16_t t;
+
+  /* tune frequency for the frontend */
+  if (linuxdvb_en50494_freq0(le, freq, &rfreq, &t))
+    return -1;
+  le->le_tune_freq = rfreq;
 
   /* 2 data fields (16bit) */
   uint8_t data1, data2;
@@ -295,6 +320,7 @@ linuxdvb_en50494_create0
   le->le_id        = 0;
   le->le_frequency = 0;
   le->le_pin       = LINUXDVB_EN50494_NOPIN;
+  le->ld_freq      = linuxdvb_en50494_freq;
 
   ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)le,
                                NULL, &linuxdvb_en50494_class, conf,

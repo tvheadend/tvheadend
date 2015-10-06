@@ -44,19 +44,21 @@ typedef enum {
 /*
  * Property options
  */
-#define PO_NONE     0x0000
-#define PO_RDONLY   0x0001  // Property is read-only
-#define PO_NOSAVE   0x0002  // Property is transient (not saved)
-#define PO_WRONCE   0x0004  // Property is write-once (i.e. on creation)
-#define PO_ADVANCED 0x0008  // Property is advanced
-#define PO_HIDDEN   0x0010  // Property is hidden (by default)
-#define PO_USERAW   0x0020  // Only save the RAW (off) value if it exists
-#define PO_SORTKEY  0x0040  // Sort using key (not display value)
-#define PO_PASSWORD 0x0080  // String is a password
-#define PO_DURATION 0x0100  // For PT_TIME - differentiate between duration and datetime
-#define PO_HEXA     0x0200  // Hexadecimal value
-#define PO_DATE     0x0400  // Show date only
-#define PO_LOCALE   0x0800  // Call tvh_locale_lang on string
+#define PO_NONE      0x0000
+#define PO_RDONLY    0x0001  // Property is read-only
+#define PO_NOSAVE    0x0002  // Property is transient (not saved)
+#define PO_WRONCE    0x0004  // Property is write-once (i.e. on creation)
+#define PO_ADVANCED  0x0008  // Property is advanced
+#define PO_HIDDEN    0x0010  // Property is hidden (by default)
+#define PO_USERAW    0x0020  // Only save the RAW (off) value if it exists
+#define PO_SORTKEY   0x0040  // Sort using key (not display value)
+#define PO_PASSWORD  0x0080  // String is a password
+#define PO_DURATION  0x0100  // For PT_TIME - differentiate between duration and datetime
+#define PO_HEXA      0x0200  // Hexadecimal value
+#define PO_DATE      0x0400  // Show date only
+#define PO_LOCALE    0x0800  // Call tvh_locale_lang on string
+#define PO_LORDER    0x1000  // Manage order in lists
+#define PO_MULTILINE 0x2000  // Multiline string
 
 /*
  * Property definition
@@ -99,6 +101,9 @@ typedef struct property {
   void        (*notify)   (void *ptr, const char *lang);
 
 } property_t;
+
+#define PROP_SBUF_LEN 4096
+extern char prop_sbuf[PROP_SBUF_LEN];
 
 const property_t *prop_find(const property_t *p, const char *name);
 

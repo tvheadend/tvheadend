@@ -121,6 +121,7 @@ void api_init ( void )
 
   /* Subsystems */
   api_idnode_init();
+  api_config_init();
   api_input_init();
   api_mpegts_init();
   api_service_init();
@@ -138,6 +139,7 @@ void api_init ( void )
   api_profile_init();
   api_language_init();
   api_satip_server_init();
+  api_timeshift_init();
 }
 
 void api_done ( void )
