@@ -1236,7 +1236,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     uint16_t sid     = sbuf_peek_u16(sb, offset + 4);
     uint16_t caid    = sbuf_peek_u16(sb, offset + 6);
     uint16_t pid     = sbuf_peek_u16(sb, offset + 8);
-    uint32_t prid    = sbuf_peek_u32(sb, offset + 10);
+    uint32_t provid  = sbuf_peek_u32(sb, offset + 10);
     uint32_t ecmtime = sbuf_peek_u32(sb, offset + 14);
     int offset2      = offset + 18;
     char *cardsystem = capmt_peek_str(sb, &offset2);
@@ -1245,8 +1245,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     char *protocol   = capmt_peek_str(sb, &offset2);
     uint8_t hops     = sbuf_peek_u8(sb, offset2);
 
-    tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X prid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
-                      capmt_name(capmt), adapter, sid, caid, cardsystem, pid, prid, ecmtime, hops, reader, from, protocol);
+    tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X provid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
+                      capmt_name(capmt), adapter, sid, caid, cardsystem, pid, provid, ecmtime, hops, reader, from, protocol);
 
     free(protocol);
     free(from);
