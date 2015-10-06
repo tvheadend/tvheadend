@@ -73,9 +73,9 @@ LDFLAGS += ${LDFLAGS_FFDIR}/libvorbisenc.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbis.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libogg.a
 ifeq ($(CONFIG_LIBX264_STATIC),yes)
-LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a -ldl
 else
-LDFLAGS += -lx264
+LDFLAGS += -lx264 -ldl
 endif
 ifeq ($(CONFIG_LIBX265),yes)
 ifeq ($(CONFIG_LIBX265_STATIC),yes)
