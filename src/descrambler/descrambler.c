@@ -182,7 +182,7 @@ descrambler_notify( th_descrambler_t *td,
 
   tvhlog(LOG_DEBUG, "descrambler", "info - service='%s' caid=%04X(%s) "
                                    "provid=%06X ecmtime=%d hops=%d "
-                                   "reader=%s from=%s protocol=%s",
+                                   "reader='%s' from='%s' protocol='%s'",
          t->s_dvb_svcname, caid, cardsystem, provid,
          ecmtime, hops, reader, from, protocol);
 

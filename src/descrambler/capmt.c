@@ -1248,15 +1248,6 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
     capmt_stop_filter(capmt, adapter, sb, offset);
 
-
-    uint16_t protocol_version = sbuf_peek_u16(sb, offset + 4);
-    uint8_t len = sbuf_peek_u8(sb, offset + 4 + 2);
-    unsigned char oscam_info[len+1];
-    memcpy(&oscam_info, sbuf_peek(sb, offset + 4 + 2 + 1), len);
-    oscam_info[len] = 0; //null-terminating the string
-
-    tvhlog(LOG_INFO, "capmt", "%s: connected to %s, using network protocol_version = %d", capmt_name(capmt), oscam_info, protocol_version);
-
   } else if (cmd == DVBAPI_ECM_INFO) {
 
     uint16_t sid     = sbuf_peek_u16(sb, offset + 4);
