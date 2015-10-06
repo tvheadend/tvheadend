@@ -717,7 +717,6 @@ void satip_server_init(int rtsp_port)
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
-  satip_server_conf.satip_uuid = NULL;
   satip_server_conf.satip_deviceid = 1;
 
   if (tcp_server_bound(http_server, &http) < 0) {
