@@ -1111,9 +1111,11 @@ static char *
 capmt_peek_str(sbuf_t *sb, int *offset)
 {
   uint8_t len = sbuf_peek_u8(sb, *offset);
-  char *str = malloc(len + 1);
+  char *str = malloc(len + 1), *p;
   memcpy(str, sbuf_peek(sb, *offset + 1), len);
   str[len] = '\0';
+  for (p = str; *p; p++)
+    if (*p < ' ') *p = ' ';
   *offset += len + 1;
   return str;
 }
@@ -1237,6 +1239,16 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     free(from);
     free(reader);
     free(cardsystem);
+
+  } else if (cmd == DVBAPI_SERVER_INFO) {
+
+    uint16_t protover = sbuf_peek_u16(sb, offset + 4);
+    int offset2       = offset + 6;
+    char *info        = capmt_peek_str(sb, &offset2);
+
+    tvhlog(LOG_INFO, "capmt", "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
+
+    free(info);
 
   } else {
     tvhlog(LOG_ERR, "capmt", "%s: unknown command %08X", capmt_name(capmt), cmd);
