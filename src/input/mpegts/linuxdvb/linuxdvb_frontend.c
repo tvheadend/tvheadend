@@ -365,7 +365,7 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
   if (!mpegts_input_is_enabled(mi, mm, flags)) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
   if (lfe->lfe_in_setup) return 0;
-  if (lfe->lfe_type != DVB_TYPE_S) return 0;
+  if (lfe->lfe_type != DVB_TYPE_S) return 1;
 
   /* check if any "blocking" tuner is running */
   LIST_FOREACH(th, &tvh_hardware, th_link) {
