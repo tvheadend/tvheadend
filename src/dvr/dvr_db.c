@@ -381,11 +381,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
   start = dvr_entry_get_start_time(de);
   stop  = dvr_entry_get_stop_time(de);
 
-  if(!de->de_enabled) {
-
-    dvr_entry_completed(de, de->de_last_error);
-
-  } else if(now >= stop || de->de_dont_reschedule) {
+  if (now >= stop || de->de_dont_reschedule) {
 
     if(htsmsg_is_empty(de->de_files))
       dvr_entry_missed_time(de, de->de_last_error);
@@ -1275,6 +1271,11 @@ static void
 dvr_entry_start_recording(dvr_entry_t *de, int clone)
 {
   int r;
+
+  if (!de->de_enabled) {
+    dvr_entry_missed_time(de, SM_CODE_SVC_NOT_ENABLED);
+    return;
+  }
 
   dvr_entry_set_state(de, DVR_RECORDING, DVR_RS_PENDING, SM_CODE_OK);
 
