@@ -1107,6 +1107,17 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   }
 }
 
+static char *
+capmt_peek_str(sbuf_t *sb, int *offset)
+{
+  uint8_t len = sbuf_peek_u8(sb, *offset);
+  char *str = malloc(len + 1);
+  memcpy(str, sbuf_peek(sb, *offset + 1), len);
+  str[len] = '\0';
+  *offset += len + 1;
+  return str;
+}
+
 static void
 capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
@@ -1196,7 +1207,6 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
     capmt_stop_filter(capmt, adapter, sb, offset);
 
-  } else if (cmd == DVBAPI_SERVER_INFO) {
 
     uint16_t protocol_version = sbuf_peek_u16(sb, offset + 4);
     uint8_t len = sbuf_peek_u8(sb, offset + 4 + 2);
@@ -1207,50 +1217,27 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     tvhlog(LOG_INFO, "capmt", "%s: connected to %s, using network protocol_version = %d", capmt_name(capmt), oscam_info, protocol_version);
 
   } else if (cmd == DVBAPI_ECM_INFO) {
-    int offset2 = 4;
-    uint16_t sid = sbuf_peek_u16(sb, offset + offset2);
-    offset2 += 2;
-    uint16_t caid = sbuf_peek_u16(sb, offset + offset2);
-    offset2 += 2;
-    uint16_t pid = sbuf_peek_u16(sb, offset + offset2);
-    offset2 += 2;
-    uint32_t prid = sbuf_peek_u32(sb, offset + offset2);
-    offset2 += 4;
-    uint32_t ecmtime = sbuf_peek_u32(sb, offset + offset2);
-    offset2 += 4;
 
-    uint8_t len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char cardsystem[len+1];
-    memcpy(&cardsystem, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    cardsystem[len] = 0;
-
-    len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char reader[len+1];
-    memcpy(&reader, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    reader[len] = 0;
-
-    len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char from[len+1];
-    memcpy(&from, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    from[len] = 0;
-
-    len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char protocol[len+1];
-    memcpy(&protocol, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    protocol[len] = 0;
-
-    uint8_t hops = sbuf_peek_u8(sb, offset + offset2);
+    uint16_t sid     = sbuf_peek_u16(sb, offset + 4);
+    uint16_t caid    = sbuf_peek_u16(sb, offset + 6);
+    uint16_t pid     = sbuf_peek_u16(sb, offset + 8);
+    uint32_t prid    = sbuf_peek_u32(sb, offset + 10);
+    uint32_t ecmtime = sbuf_peek_u32(sb, offset + 14);
+    int offset2      = offset + 18;
+    char *cardsystem = capmt_peek_str(sb, &offset2);
+    char *reader     = capmt_peek_str(sb, &offset2);
+    char *from       = capmt_peek_str(sb, &offset2);
+    char *protocol   = capmt_peek_str(sb, &offset2);
+    uint8_t hops     = sbuf_peek_u8(sb, offset2);
 
     tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X prid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
                       capmt_name(capmt), adapter, sid, caid, cardsystem, pid, prid, ecmtime, hops, reader, from, protocol);
+
+    free(protocol);
+    free(from);
+    free(reader);
+    free(cardsystem);
+
   } else {
     tvhlog(LOG_ERR, "capmt", "%s: unknown command %08X", capmt_name(capmt), cmd);
   }
