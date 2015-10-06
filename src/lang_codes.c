@@ -705,7 +705,7 @@ char *lang_code_user( const char *ucode )
     return ucode ? strdup(ucode) : NULL;
   if (!ucode)
     return codes ? strdup(codes) : NULL;
-  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 1);
+  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 2);
   strcpy(ret, ucode);
   while (codes && *codes) {
     s = codes;
