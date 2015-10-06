@@ -107,6 +107,7 @@ typedef struct dmx_filter {
 // message type
 #define CAPMT_MSG_FAST     0x01
 #define CAPMT_MSG_CLEAR    0x02
+#define CAPMT_MSG_NODUP    0x04
 
 // limits
 #define MAX_CA       16
@@ -647,6 +648,12 @@ capmt_queue_msg
       free(msg);
     }
   }
+  if (flags & CAPMT_MSG_NODUP) {
+    TAILQ_FOREACH(msg, &capmt->capmt_writeq, cm_link)
+      if (msg->cm_sb.sb_ptr == len &&
+          memcmp(msg->cm_sb.sb_data, buf, len) == 0)
+        return;
+  }
   msg = malloc(sizeof(*msg));
   sbuf_init_fixed(&msg->cm_sb, len);
   sbuf_append(&msg->cm_sb, buf, len);
@@ -820,15 +827,16 @@ static void
 capmt_send_client_info(capmt_t *capmt)
 {
   char buf[MAX_INFO_LEN + 7];
+  int len;
 
   *(uint32_t *)(buf + 0) = htonl(DVBAPI_CLIENT_INFO);
   *(uint16_t *)(buf + 4) = htons(DVBAPI_PROTOCOL_VERSION); //supported protocol version
-  int len = snprintf(buf + 7, sizeof(buf) - 7, "Tvheadend %s", tvheadend_version);
+  len = snprintf(buf + 7, sizeof(buf) - 7, "Tvheadend %s", tvheadend_version);
   if (len >= sizeof(buf) - 7)
     len = sizeof(buf) - 7 - 1;
   buf[6] = len;
 
-  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST);
+  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST|CAPMT_MSG_NODUP);
 }
 
 static void
