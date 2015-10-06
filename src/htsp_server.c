@@ -649,12 +649,11 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
     t = (service_t *)ilm->ilm_in1;
     htsmsg_t *svcmsg = htsmsg_create_map();
-    uint16_t caid;
     htsmsg_add_str(svcmsg, "name", service_nicename(t));
     htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
-    if((caid = service_get_encryption(t)) != 0) {
-      htsmsg_add_u32(svcmsg, "caid", caid);
-      htsmsg_add_str(svcmsg, "caname", caid2name(caid));
+    if (service_is_encrypted(t)) {
+      htsmsg_add_u32(svcmsg, "caid", 65535);
+      htsmsg_add_str(svcmsg, "caname", tvh_gettext_lang(htsp->htsp_language, N_("Encrypted service")));
     }
     htsmsg_add_msg(services, NULL, svcmsg);
   }

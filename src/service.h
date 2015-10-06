@@ -591,8 +591,6 @@ void service_refresh_channel(service_t *t);
 
 int tss2errcode(int tss);
 
-uint16_t service_get_encryption(service_t *t);
-
 htsmsg_t *servicetype_list (void);
 
 void service_load ( service_t *s, htsmsg_t *c );

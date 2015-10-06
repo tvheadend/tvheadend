@@ -1650,30 +1650,6 @@ service_get_channel_icon ( service_t *s )
   return r;
 }
 
-/**
- * Get the encryption CAID from a service
- * only the first CA stream in a service is returned
- */
-uint16_t
-service_get_encryption(service_t *t)
-{
-  elementary_stream_t *st;
-  caid_t *c;
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    switch(st->es_type) {
-    case SCT_CA:
-      LIST_FOREACH(c, &st->es_caids, link)
-	if(c->caid != 0)
-	  return c->caid;
-      break;
-    default:
-      break;
-    }
-  }
-  return 0;
-}
-
 /*
  *
  */
