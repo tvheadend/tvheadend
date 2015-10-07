@@ -208,6 +208,13 @@ const idclass_t satip_device_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "tcp_mode",
+      .name     = N_("RTSP/TCP (embedded data)"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_tcp_mode),
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "fast_switch",
       .name     = N_("Fast input switch"),
       .opts     = PO_ADVANCED,

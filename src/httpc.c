@@ -209,6 +209,7 @@ http_client_flush( http_client_t *hc, int result )
   if (result < 0)
     http_client_shutdown(hc, 0, 0);
   hc->hc_in_data      = 0;
+  hc->hc_in_rtp_data  = 0;
   hc->hc_hsize        = 0;
   hc->hc_csize        = 0;
   hc->hc_rpos         = 0;
@@ -642,7 +643,11 @@ http_client_finish( http_client_t *hc )
     tvhtrace("httpc", "%04X: received %s data", shortid(hc), http_ver2str(hc->hc_version));
     tvhlog_hexdump("httpc", hc->hc_data, hc->hc_csize);
   }
-  if (hc->hc_data_complete) {
+  if (hc->hc_in_rtp_data && hc->hc_rtp_data_complete) {
+    res = hc->hc_rtp_data_complete(hc);
+    if (res < 0)
+      return http_client_flush(hc, res);
+  } else if (hc->hc_data_complete) {
     res = hc->hc_data_complete(hc);
     if (res < 0)
       return http_client_flush(hc, res);
@@ -863,7 +868,7 @@ http_client_run( http_client_t *hc )
   char *buf, *saveptr, *argv[3], *d, *p;
   int ver, res, delimsize = 4;
   ssize_t r;
-  size_t len;
+  size_t len, limit;
 
   if (hc == NULL)
     return 0;
@@ -891,9 +896,10 @@ http_client_run( http_client_t *hc )
   }
 
   buf = alloca(hc->hc_io_size);
-
-  if (!hc->hc_in_data && hc->hc_rpos > 3) {
-    if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL)
+  if (!hc->hc_in_data && !hc->hc_in_rtp_data && hc->hc_rpos > 3) {
+    if (hc->hc_version == RTSP_VERSION_1_0 && hc->hc_rbuf[0] == '$')
+      goto rtsp_data;
+    else if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL)
       goto header;
     if ((d = strstr(hc->hc_rbuf, "\n\n")) != NULL) {
       delimsize = 2;
@@ -906,7 +912,6 @@ retry:
     r = http_client_ssl_recv(hc, buf, hc->hc_io_size);
   else
     r = recv(hc->hc_fd, buf, hc->hc_io_size, MSG_DONTWAIT);
-  tvhtrace("httpc", "%04X: recv %zi", shortid(hc), r);
   if (r == 0) {
     if (hc->hc_in_data && !hc->hc_keepalive)
       return http_client_finish(hc);
@@ -920,11 +925,12 @@ retry:
     return http_client_flush(hc, -errno);
   }
   if (r > 0 && tvhtrace_enabled()) {
-    tvhtrace("httpc", "%04X: received %s answer", shortid(hc), http_ver2str(hc->hc_version));
-    tvhlog_hexdump("httpc", buf, r);
+    tvhtrace("httpc", "%04X: received %s answer (len = %zd)", shortid(hc), http_ver2str(hc->hc_version), r);
+    tvhlog_hexdump("httpc", buf, MIN(64, r));
   }
 
-  if (hc->hc_in_data) {
+  limit = hc->hc_version == RTSP_VERSION_1_0 ? hc->hc_io_size * 2 : 16*1024;
+  if (hc->hc_in_data && !hc->hc_in_rtp_data) {
     res = http_client_data_received(hc, buf, r, 0);
     if (res < 0)
       return http_client_flush(hc, res);
@@ -936,7 +942,7 @@ retry:
   }
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
-    if (hc->hc_rsize + r > 16*1024)
+    if (hc->hc_rsize + r > limit)
       return http_client_flush(hc, -EMSGSIZE);
     hc->hc_rsize += r;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
@@ -948,6 +954,8 @@ retry:
 next_header:
   if (hc->hc_rpos < 3)
     return HTTP_CON_RECEIVING;
+  if (hc->hc_version == RTSP_VERSION_1_0 && hc->hc_rbuf[0] == '$')
+    goto rtsp_data;
   if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) == NULL) {
     delimsize = 2;
     if ((d = strstr(hc->hc_rbuf, "\n\n")) == NULL)
@@ -983,6 +991,7 @@ header:
     if (res < 0)
       return http_client_flush(hc, -EINVAL);
   }
+  tvhtrace("httpc", "header parse1");
   p = http_arg_get(&hc->hc_args, "Content-Length");
   if (p) {
     hc->hc_csize = atoll(p);
@@ -1011,16 +1020,19 @@ header:
     if (res < 0)
       return http_client_flush(hc, res);
   }
-  hc->hc_rpos -= hc->hc_hsize;
-  len = hc->hc_rpos;
+  len = hc->hc_rpos - hc->hc_hsize;
+  hc->hc_rpos = 0;
   if (hc->hc_code == HTTP_STATUS_CONTINUE) {
     memmove(hc->hc_rbuf, hc->hc_rbuf + hc->hc_hsize, len);
+    hc->hc_rpos = len;
     goto next_header;
   }
-  hc->hc_rpos = 0;
   if (hc->hc_version == RTSP_VERSION_1_0 && !hc->hc_csize) {
     hc->hc_csize = -1;
     hc->hc_in_data = 0;
+    memmove(hc->hc_rbuf, hc->hc_rbuf + hc->hc_hsize, len);
+    hc->hc_rpos = len;
+    return http_client_finish(hc);
   } else {
     hc->hc_in_data = 1;
   }
@@ -1030,6 +1042,47 @@ header:
   if (res > 0)
     return http_client_finish(hc);
   goto retry;
+
+rtsp_data:
+  /* RTSP embedded data */
+  r = 0;
+  res = HTTP_CON_RECEIVING;
+  hc->hc_in_data = 0;
+  hc->hc_in_rtp_data = 0;
+  while (hc->hc_rpos > r + 3) {
+    hc->hc_csize = 4 + ((hc->hc_rbuf[r+2] << 8) | hc->hc_rbuf[r+3]);
+    hc->hc_chunked = 0;
+    if (r + hc->hc_csize > hc->hc_rpos) {
+      memmove(hc->hc_rbuf, hc->hc_rbuf + r, hc->hc_rpos - r);
+      hc->hc_rpos -= r;
+      hc->hc_in_rtp_data = 1;
+      if (r == 0)
+        goto retry;
+      return HTTP_CON_RECEIVING;
+    }
+    if (hc->hc_rtp_data_received) {
+      res = hc->hc_rtp_data_received(hc, hc->hc_rbuf + r, hc->hc_csize);
+      if (res < 0)
+        return res;
+    } else {
+      res = 0;
+    }
+    r += hc->hc_csize;
+    if (res < 0)
+      return http_client_flush(hc, res);
+    hc->hc_in_rtp_data = 1;
+    res = http_client_finish(hc);
+    hc->hc_in_rtp_data = 0;
+    if (res < 0)
+      return http_client_flush(hc, res);
+    res = HTTP_CON_RECEIVING;
+    if (hc->hc_rpos < r + 4 || hc->hc_rbuf[r] != '$') {
+      memcpy(hc->hc_rbuf, hc->hc_rbuf + r, hc->hc_rpos - r);
+      hc->hc_rpos -= r;
+      goto next_header;
+    }
+  }
+  return res;
 }
 
 /*

@@ -906,7 +906,7 @@ static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
 {
 #if ENABLE_TSDEBUG
-  if (mm->mm_tsdebug_fd2 >= 0)
+  if (mm && mm->mm_tsdebug_fd2 >= 0)
     if (write(mm->mm_tsdebug_fd2, buf, len) != len)
       tvherror("tsdebug", "unable to write input data (%i)", errno);
 #endif

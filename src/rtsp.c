@@ -145,41 +145,67 @@ rtsp_setup_decode( http_client_t *hc, int satip )
   if (p == NULL)
     return -EIO;
   n = http_tokenize(p, argv, 32, ';');
-  if (n < 3)
+  if (n < 2)
     return -EIO;
-  if (strcasecmp(argv[0], "RTP/AVP"))
-    return -EIO;
-  hc->hc_rtp_multicast = strcasecmp(argv[1], "multicast") == 0;
-  if (strcasecmp(argv[1], "unicast") && !hc->hc_rtp_multicast)
-    return -EIO;
-  for (i = 2; i < n; i++) {
-    if (strncmp(argv[i], "destination=", 12) == 0)
-      hc->hc_rtp_dest = strdup(argv[i] + 12);
-    else if (strncmp(argv[i], "client_port=", 12) == 0) {
-      j = http_tokenize(argv[i] + 12, argv2, 2, '-');
-      if (j > 0) {
-        hc->hc_rtp_port = atoi(argv2[0]);
-        if (hc->hc_rtp_port <= 0)
-          return -EIO;
-        if (j > 1) {
-          hc->hc_rtpc_port = atoi(argv2[1]);
-          if (hc->hc_rtpc_port <= 0)
+  hc->hc_rtp_tcp = -1;
+  hc->hc_rtcp_tcp = -1;
+  hc->hc_rtp_port = -1;
+  hc->hc_rtpc_port = -1;
+  if (!strcasecmp(argv[0], "RTP/AVP/TCP")) {
+    for (i = 1; i < n; i++) {
+      if (strncmp(argv[i], "interleaved=", 12) == 0) {
+        j = http_tokenize(argv[i] + 12, argv2, 2, '-');
+        if (j > 0) {
+          hc->hc_rtp_tcp = atoi(argv2[0]);
+          if (hc->hc_rtp_tcp < 0)
             return -EIO;
-        }
-      } else {
-        return -EIO;
-      }
-    }
-    else if (strncmp(argv[i], "server_port=", 12) == 0) {
-      j = http_tokenize(argv[i] + 12, argv2, 2, '-');
-      if (j > 1) {
-        hc->hc_rtcp_server_port = atoi(argv2[1]);
-        if (hc->hc_rtcp_server_port <= 0)
+          if (j > 1) {
+            hc->hc_rtcp_tcp = atoi(argv2[1]);
+            if (hc->hc_rtcp_tcp < 0)
+              return -EIO;
+          }
+        } else {
           return -EIO;
-      } else {
-        return -EIO;
+        }
       }
     }
+  } else if (!strcasecmp(argv[0], "RTP/AVP")) {
+    if (n < 3)
+      return -EIO;
+    hc->hc_rtp_multicast = strcasecmp(argv[1], "multicast") == 0;
+    if (strcasecmp(argv[1], "unicast") && !hc->hc_rtp_multicast)
+      return -EIO;
+    for (i = 2; i < n; i++) {
+      if (strncmp(argv[i], "destination=", 12) == 0)
+        hc->hc_rtp_dest = strdup(argv[i] + 12);
+      else if (strncmp(argv[i], "client_port=", 12) == 0) {
+        j = http_tokenize(argv[i] + 12, argv2, 2, '-');
+        if (j > 0) {
+          hc->hc_rtp_port = atoi(argv2[0]);
+          if (hc->hc_rtp_port <= 0)
+            return -EIO;
+          if (j > 1) {
+            hc->hc_rtpc_port = atoi(argv2[1]);
+            if (hc->hc_rtpc_port <= 0)
+              return -EIO;
+          }
+        } else {
+          return -EIO;
+        }
+      }
+      else if (strncmp(argv[i], "server_port=", 12) == 0) {
+        j = http_tokenize(argv[i] + 12, argv2, 2, '-');
+        if (j > 1) {
+          hc->hc_rtcp_server_port = atoi(argv2[1]);
+          if (hc->hc_rtcp_server_port <= 0)
+            return -EIO;
+        } else {
+          return -EIO;
+        }
+      }
+    }
+  } else {
+    return -EIO;
   }
   return HTTP_CON_OK;
 }
@@ -193,7 +219,10 @@ rtsp_setup( http_client_t *hc,
   http_arg_list_t h;
   char transport[256];
 
-  if (multicast_addr) {
+  if (rtpc_port < 0) {
+    snprintf(transport, sizeof(transport),
+      "RTP/AVP/TCP;interleaved=%d-%d", rtp_port, rtp_port + 1);
+  } else if (multicast_addr) {
     snprintf(transport, sizeof(transport),
       "RTP/AVP;multicast;destination=%s;ttl=1;client_port=%i-%i",
       multicast_addr, rtp_port, rtpc_port);
