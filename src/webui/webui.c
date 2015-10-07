@@ -1552,8 +1552,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   content_len = file_end - file_start+1;
   
-  sprintf(range_buf, "bytes %jd-%jd/%zd",
-    file_start, file_end, (size_t)st.st_size);
+  sprintf(range_buf, "bytes %jd-%jd/%jd",
+    file_start, file_end, (intmax_t)st.st_size);
 
   if(file_start > 0)
     if (lseek(fd, file_start, SEEK_SET) != file_start) {
