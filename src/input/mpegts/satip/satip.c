@@ -191,6 +191,7 @@ satip_device_class_tunercfg_notify ( void *o )
 const idclass_t satip_device_class =
 {
   .ic_class      = "satip_client",
+  .ic_event      = "satip_client",
   .ic_caption    = "SAT>IP Client",
   .ic_save       = satip_device_class_save,
   .ic_get_childs = satip_device_class_get_childs,

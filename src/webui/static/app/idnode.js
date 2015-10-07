@@ -1901,7 +1901,7 @@ tvheadend.idnode_tree = function(panel, conf)
     }
 
     function updatenode(o) {
-        if (o.uuid) {
+        if ('change' in o || 'delete' in o) {
             tree.getRootNode().reload();
             tree.expandAll();
         }
