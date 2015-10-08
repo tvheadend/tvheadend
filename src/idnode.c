@@ -564,7 +564,7 @@ idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write)
     if (ic->ic_perm)
       return self->in_class->ic_perm(self, a, msg_to_write);
     if (ic->ic_perm_def)
-      return access_verify2(a, self->in_class->ic_perm_def);
+      return access_verify2(a, ic->ic_perm_def);
     ic = ic->ic_super;
   }
   return 0;
