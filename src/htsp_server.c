@@ -722,7 +722,8 @@ htsp_build_dvrentry(dvr_entry_t *de, const char *method, const char *lang)
   htsmsg_add_s64(out, "stop",        de->de_stop);
   htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de));
   htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de));
-  htsmsg_add_u32(out, "retention",   dvr_entry_get_retention(de));
+  htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de));
+  htsmsg_add_u32(out, "removal",     dvr_entry_get_removal_days(de));
   htsmsg_add_u32(out, "priority",    de->de_pri);
   htsmsg_add_u32(out, "contentType", de->de_content_type);
 
@@ -820,7 +821,8 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_u32(out, "enabled",     dae->dae_enabled);
   htsmsg_add_u32(out, "maxDuration", dae->dae_maxduration);
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
-  htsmsg_add_u32(out, "retention",   dvr_autorec_get_retention(dae));
+  htsmsg_add_u32(out, "retention",   dvr_autorec_get_retention_days(dae));
+  htsmsg_add_u32(out, "removal",     dvr_autorec_get_removal_days(dae));
   htsmsg_add_u32(out, "daysOfWeek",  dae->dae_weekdays);
   if (dae->dae_start >= 0 && dae->dae_start_window >= 0) {
     if (dae->dae_start > dae->dae_start_window)
@@ -871,7 +873,8 @@ htsp_build_timerecentry(dvr_timerec_entry_t *dte, const char *method)
   htsmsg_add_str(out, "id",          idnode_uuid_as_sstr(&dte->dte_id));
   htsmsg_add_u32(out, "enabled",     dte->dte_enabled);
   htsmsg_add_u32(out, "daysOfWeek",  dte->dte_weekdays);
-  htsmsg_add_u32(out, "retention",   dvr_timerec_get_retention(dte));
+  htsmsg_add_u32(out, "retention",   dvr_timerec_get_retention_days(dte));
+  htsmsg_add_u32(out, "removal",     dvr_timerec_get_removal_days(dte));
   htsmsg_add_u32(out, "priority",    dte->dte_pri);
   htsmsg_add_s32(out, "start",       dte->dte_start);
   htsmsg_add_s32(out, "stop",        dte->dte_stop);
@@ -1516,7 +1519,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_entry_sched_state_t dvr_status;
   const char *dvr_config_name, *title, *desc, *subtitle, *lang, *comment;
   int64_t start, stop, start_extra, stop_extra;
-  uint32_t u32, priority, retention;
+  uint32_t u32, priority, retention, removal;
   channel_t *ch = NULL;
   int enabled;
 
@@ -1537,6 +1540,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;
+  if(htsmsg_get_u32(in, "removal", &removal))
+    removal = 0;
   comment = htsmsg_get_str(in, "comment");
   if (!(lang  = htsmsg_get_str(in, "language")))
     lang = htsp->htsp_language;
@@ -1570,7 +1575,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
                                title, subtitle, desc, lang, 0,
                                htsp->htsp_granted_access->aa_username,
                                htsp->htsp_granted_access->aa_representative,
-                               NULL, priority, retention, comment);
+                               NULL, priority, retention, removal, comment);
 
   /* Event timer */
   } else {
@@ -1578,7 +1583,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
                                    start_extra, stop_extra,
                                    htsp->htsp_granted_access->aa_username,
                                    htsp->htsp_granted_access->aa_representative,
-                                   NULL, priority, retention, comment);
+                                   NULL, priority, retention, removal, comment);
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
@@ -1611,7 +1616,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   uint32_t dvrEntryId, u32;
   dvr_entry_t *de;
-  time_t start, stop, start_extra, stop_extra, priority, retention;
+  time_t start, stop, start_extra, stop_extra, priority, retention, removal;
   const char *title, *subtitle, *desc, *lang;
   channel_t *channel = NULL;
   int enabled;
@@ -1640,6 +1645,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   start_extra = htsmsg_get_s64_or_default(in, "startExtra", 0);
   stop_extra  = htsmsg_get_s64_or_default(in, "stopExtra",  0);
   retention   = htsmsg_get_u32_or_default(in, "retention",  0);
+  removal     = htsmsg_get_u32_or_default(in, "removal",    0);
   priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
   subtitle    = htsmsg_get_str(in, "subtitle");
@@ -1647,7 +1653,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   de = dvr_entry_update(de, enabled, channel, title, subtitle, desc, lang, start, stop,
-                        start_extra, stop_extra, priority, retention);
+                        start_extra, stop_extra, priority, retention, removal);
 
   //create response
   out = htsmsg_create_map();
@@ -1731,7 +1737,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   const char *dvr_config_name, *title, *comment, *name, *directory;
   int64_t start_extra, stop_extra;
   uint32_t u32, days_of_week, priority, min_duration, max_duration, dup_detect;
-  uint32_t retention, enabled, fulltext;
+  uint32_t retention, removal, enabled, fulltext;
   int32_t approx_time, start, start_window;
   channel_t *ch = NULL;
 
@@ -1749,6 +1755,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     min_duration = 0;    // 0 = any
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;       // 0 = dvr config
+  if(htsmsg_get_u32(in, "removal", &retention))
+    removal = 0;         // 0 = dvr config
   if(htsmsg_get_u32(in, "daysOfWeek", &days_of_week))
     days_of_week = 0x7f; // all days
   if(htsmsg_get_u32(in, "priority", &priority))
@@ -1790,7 +1798,8 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   dae = dvr_autorec_create_htsp(dvr_config_name, title, fulltext,
       ch, enabled, start, start_window, days_of_week,
-      start_extra, stop_extra, priority, retention, min_duration, max_duration, dup_detect,
+      start_extra, stop_extra, priority, retention, removal,
+      min_duration, max_duration, dup_detect,
       htsp->htsp_granted_access->aa_username, htsp->htsp_granted_access->aa_representative,
       comment, name, directory);
 
@@ -1849,7 +1858,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out;
   dvr_timerec_entry_t *dte;
   const char *dvr_config_name, *title, *comment, *name, *directory;
-  uint32_t u32, days_of_week, priority, retention, start = 0, stop = 0, enabled;
+  uint32_t u32, days_of_week, priority, retention, removal, start = 0, stop = 0, enabled;
   channel_t *ch = NULL;
 
   /* Options */
@@ -1867,6 +1876,8 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;       // 0 = dvr config
+  if(htsmsg_get_u32(in, "removal", &removal))
+    removal = 0;         // 0 = dvr config
   if(htsmsg_get_u32(in, "daysOfWeek", &days_of_week))
     days_of_week = 0x7f; // all days
   if(htsmsg_get_u32(in, "priority", &priority))
@@ -1887,7 +1898,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Add actual timerec */
   dte = dvr_timerec_create_htsp(dvr_config_name, title, ch, enabled, start, stop, days_of_week,
-      priority, retention, htsp->htsp_granted_access->aa_username,
+      priority, retention, removal, htsp->htsp_granted_access->aa_username,
       htsp->htsp_granted_access->aa_representative, comment, name, directory);
 
   /* create response */

@@ -158,7 +158,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
                'channel,config_name,comment';
     var elist = 'enabled,' +
-                (tvheadend.accessUpdate.admin ? list + ',owner,creator' : list);
+                (tvheadend.accessUpdate.admin ?
+                  list + ',retention,removal,owner,creator' : list);
 
     var stopButton = {
         name: 'stop',
@@ -320,7 +321,7 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
+        edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
@@ -503,6 +504,7 @@ tvheadend.autorec_editor = function(panel, index) {
             pri:          { width: 80 },
             dedup:        { width: 160 },
             retention:    { width: 80 },
+            removal:      { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
@@ -556,6 +558,8 @@ tvheadend.timerec_editor = function(panel, index) {
             start:        { width: 120 },
             stop:         { width: 120 },
             pri:          { width: 80 },
+            retention:    { width: 80 },
+            removal:      { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
