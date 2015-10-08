@@ -61,7 +61,7 @@ rtsp_clear_session( http_client_t *hc )
   free(hc->hc_rtsp_session);
   free(hc->hc_rtp_dest);
   hc->hc_rtp_port       = 0;
-  hc->hc_rtpc_port      = 0;
+  hc->hc_rtcp_port      = 0;
   hc->hc_rtsp_session   = NULL;
   hc->hc_rtp_dest       = NULL;
   hc->hc_rtp_multicast  = 0;
@@ -150,7 +150,7 @@ rtsp_setup_decode( http_client_t *hc, int satip )
   hc->hc_rtp_tcp = -1;
   hc->hc_rtcp_tcp = -1;
   hc->hc_rtp_port = -1;
-  hc->hc_rtpc_port = -1;
+  hc->hc_rtcp_port = -1;
   if (!strcasecmp(argv[0], "RTP/AVP/TCP")) {
     for (i = 1; i < n; i++) {
       if (strncmp(argv[i], "interleaved=", 12) == 0) {
@@ -185,8 +185,8 @@ rtsp_setup_decode( http_client_t *hc, int satip )
           if (hc->hc_rtp_port <= 0)
             return -EIO;
           if (j > 1) {
-            hc->hc_rtpc_port = atoi(argv2[1]);
-            if (hc->hc_rtpc_port <= 0)
+            hc->hc_rtcp_port = atoi(argv2[1]);
+            if (hc->hc_rtcp_port <= 0)
               return -EIO;
           }
         } else {
@@ -214,21 +214,21 @@ int
 rtsp_setup( http_client_t *hc,
             const char *path, const char *query,
             const char *multicast_addr,
-            int rtp_port, int rtpc_port )
+            int rtp_port, int rtcp_port )
 {
   http_arg_list_t h;
   char transport[256];
 
-  if (rtpc_port < 0) {
+  if (rtcp_port < 0) {
     snprintf(transport, sizeof(transport),
       "RTP/AVP/TCP;interleaved=%d-%d", rtp_port, rtp_port + 1);
   } else if (multicast_addr) {
     snprintf(transport, sizeof(transport),
       "RTP/AVP;multicast;destination=%s;ttl=1;client_port=%i-%i",
-      multicast_addr, rtp_port, rtpc_port);
+      multicast_addr, rtp_port, rtcp_port);
   } else {
     snprintf(transport, sizeof(transport),
-      "RTP/AVP;unicast;client_port=%i-%i", rtp_port, rtpc_port);
+      "RTP/AVP;unicast;client_port=%i-%i", rtp_port, rtcp_port);
   }
 
   http_arg_init(&h);

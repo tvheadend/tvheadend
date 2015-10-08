@@ -1179,7 +1179,7 @@ new_tune:
 
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
     if (udp_bind_double(&rtp, &rtcp,
-                        "satip", "rtp", "rtpc",
+                        "satip", "rtp", "rtcp",
                         satip_frontend_bindaddr(lfe), lfe->sf_udp_rtp_port,
                         NULL, SATIP_BUF_SIZE, 16384, 4*1024, 4*1024) < 0) {
       satip_frontend_tuning_error(lfe, tr);
@@ -1423,7 +1423,7 @@ new_tune:
             break;
           if (r < 0 || ((rtsp_flags & SATIP_SETUP_TCP) == 0 &&
                          (rtsp->hc_rtp_port  != rtp_port ||
-                          rtsp->hc_rtpc_port != rtp_port + 1)) ||
+                          rtsp->hc_rtcp_port != rtp_port + 1)) ||
                        ((rtsp_flags & SATIP_SETUP_TCP) != 0 &&
                          (rtsp->hc_rtp_tcp < 0 || rtsp->hc_rtcp_tcp < 0))) {
             tvhlog(LOG_ERR, "satip", "%s - RTSP SETUP error %d (%s) [%i-%i]",

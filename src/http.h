@@ -319,7 +319,7 @@ struct http_client {
   char        *hc_rtsp_session;
   char        *hc_rtp_dest;
   int          hc_rtp_port;
-  int          hc_rtpc_port;
+  int          hc_rtcp_port;
   int          hc_rtp_tcp;
   int          hc_rtcp_tcp;
   int          hc_rtcp_server_port;
@@ -377,7 +377,7 @@ static inline int rtsp_options( http_client_t *hc ) {
 
 int rtsp_setup_decode( http_client_t *hc, int satip );
 int rtsp_setup( http_client_t *hc, const char *path, const char *query,
-                const char *multicast_addr, int rtp_port, int rtpc_port );
+                const char *multicast_addr, int rtp_port, int rtcp_port );
 
 static inline int
 rtsp_play( http_client_t *hc, const char *path, const char *query ) {
