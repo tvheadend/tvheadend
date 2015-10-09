@@ -737,6 +737,7 @@ typedef struct satip_discovery {
 
 TAILQ_HEAD(satip_discovery_queue, satip_discovery);
 
+static int satip_enabled;
 static int satip_discoveries_count;
 static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
@@ -1199,6 +1200,8 @@ satip_discovery_timer_cb(void *aux)
 void
 satip_device_discovery_start( void )
 {
+  if (!satip_enabled)
+    return;
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
   gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 1);
 }
@@ -1207,12 +1210,15 @@ satip_device_discovery_start( void )
  * Initialization
  */
 
-void satip_init ( str_list_t *clients )
+void satip_init ( int nosatip, str_list_t *clients )
 {
+  satip_enabled = !nosatip;
   TAILQ_INIT(&satip_discoveries);
   satip_static_clients = clients;
-  dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
-  satip_device_discovery_start();
+  if (satip_enabled) {
+    dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
+    satip_device_discovery_start();
+  }
 }
 
 void satip_done ( void )

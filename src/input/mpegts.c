@@ -20,7 +20,7 @@
 #include "mpegts/fastscan.h"
 
 void
-mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
+mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
               str_list_t *tsfiles, int tstuners )
 {
   /* Register classes (avoid API 400 errors due to not yet defined) */
@@ -63,7 +63,7 @@ mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
 
   /* SAT>IP DVB client */
 #if ENABLE_SATIP_CLIENT
-  satip_init(satip_client);
+  satip_init(nosatip, satip_client);
 #endif
 
  /* HDHomerun client */

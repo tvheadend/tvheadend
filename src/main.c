@@ -630,6 +630,7 @@ main(int argc, char **argv)
               opt_threadid     = 0,
               opt_libav        = 0,
               opt_ipv6         = 0,
+              opt_nosatip      = 0,
               opt_satip_rtsp   = 0,
 #if ENABLE_TSFILE
               opt_tsfile_tuner = 0,
@@ -689,7 +690,9 @@ main(int argc, char **argv)
       OPT_INT, &opt_satip_rtsp },
 #endif
 #if ENABLE_SATIP_CLIENT
-    {   0, "satip_xml", N_("URL with the SAT>IP server XML location"),
+    {   0, "nosatip",    N_("Disable SAT>IP client"),
+      OPT_BOOL, &opt_nosatip },
+    {   0, "satip_xml",  N_("URL with the SAT>IP server XML location"),
       OPT_STR_LIST, &opt_satip_xml },
 #endif
     {   0, NULL,         N_("Server Connectivity"),    OPT_BOOL, NULL         },
@@ -1026,7 +1029,8 @@ main(int argc, char **argv)
   dvb_init();
 
 #if ENABLE_MPEGTS
-  mpegts_init(adapter_mask, &opt_satip_xml, &opt_tsfile, opt_tsfile_tuner);
+  mpegts_init(adapter_mask, opt_nosatip, &opt_satip_xml,
+              &opt_tsfile, opt_tsfile_tuner);
 #endif
 
   channel_init();
