@@ -100,6 +100,9 @@ ts_recv_packet0
     if (st->es_type == SCT_CA)
       continue;
 
+    if (tsb[3] & 0xc0) /* scrambled */
+      continue;
+
     if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
       continue;
 
@@ -172,8 +175,9 @@ ts_recv_packet1
 
   avgstat_add(&t->s_rate, len, dispatch_clock);
 
-  if((tsb[3] & 0xc0) ||
-      (t->s_scrambled_seen && st && st->es_type != SCT_CA)) {
+  if(!t->s_scrambled_pass &&
+     ((tsb[3] & 0xc0) ||
+       (t->s_scrambled_seen && st && st->es_type != SCT_CA))) {
 
     /**
      * Lock for descrambling, but only if packet was not in error

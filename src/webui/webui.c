@@ -1052,14 +1052,21 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *name;
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
+  int flags, eflags = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  if ((str = http_arg_get(&hc->hc_req_args, "descramble")))
+    if (strcmp(str ?: "", "0") == 0)
+      eflags |= SUBSCRIPTION_NODESCR;
+
+  flags = SUBSCRIPTION_MPEGTS | eflags;
+  if ((eflags & SUBSCRIPTION_NODESCR) == 0)
+    flags |= SUBSCRIPTION_PACKET;
   if(!(pro = profile_find_by_list(hc->hc_access->aa_profiles,
                                   http_arg_get(&hc->hc_req_args, "profile"),
-                                  "service",
-                                  SUBSCRIPTION_PACKET | SUBSCRIPTION_MPEGTS)))
+                                  "service", flags)))
     return HTTP_STATUS_NOT_ALLOWED;
 
   if((tcp_id = http_stream_preop(hc)) == NULL)
@@ -1074,7 +1081,8 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
     s = subscription_create_from_service(&prch, NULL, weight, "HTTP",
-                                         prch.prch_flags | SUBSCRIPTION_STREAMING,
+                                         prch.prch_flags | SUBSCRIPTION_STREAMING |
+                                           eflags,
                                          hc->hc_peer_ipstr,
 				         hc->hc_username,
 				         http_arg_get(&hc->hc_args, "User-Agent"),

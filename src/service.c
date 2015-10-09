@@ -608,6 +608,7 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_streaming_status = 0;
   t->s_streaming_live   = 0;
   t->s_scrambled_seen   = 0;
+  t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
   t->s_start_time       = dispatch_clock;
 
   pthread_mutex_lock(&t->s_stream_mutex);

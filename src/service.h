@@ -445,7 +445,8 @@ typedef struct service {
    */
 
   struct th_descrambler_list s_descramblers;
-  uint16_t s_scrambled_seen;
+  uint8_t s_scrambled_seen;
+  uint8_t s_scrambled_pass;
   th_descrambler_runtime_t *s_descramble;
 
   /**

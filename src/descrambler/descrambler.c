@@ -112,6 +112,9 @@ descrambler_service_start ( service_t *t )
   th_descrambler_runtime_t *dr;
   elementary_stream_t *st;
 
+  if (t->s_scrambled_pass)
+    return;
+
   if (!((mpegts_service_t *)t)->s_dvb_forcecaid) {
 
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
