@@ -671,7 +671,8 @@ http_client_finish( http_client_t *hc )
       return HTTP_CON_RECEIVING;
     }
   }
-  if (TAILQ_FIRST(&hc->hc_wqueue) && hc->hc_code == HTTP_STATUS_OK) {
+  if (TAILQ_FIRST(&hc->hc_wqueue) && hc->hc_code == HTTP_STATUS_OK &&
+      !hc->hc_in_rtp_data) {
     hc->hc_code = 0;
     return http_client_send_partial(hc);
   }
@@ -972,7 +973,9 @@ header:
   p = strtok_r(hc->hc_rbuf, "\r\n", &saveptr);
   if (p == NULL)
     return http_client_flush(hc, -EINVAL);
-  tvhtrace("httpc", "%04X: %s answer '%s'", shortid(hc), http_ver2str(hc->hc_version), p);
+  tvhtrace("httpc", "%04X: %s answer '%s' (rcseq: %d)",
+           shortid(hc), http_ver2str(hc->hc_version), p, hc->hc_rcseq);
+  tvhlog_hexdump("httpc", hc->hc_rbuf, hc->hc_hsize);
   if (http_tokenize(p, argv, 3, -1) != 3)
     return http_client_flush(hc, -EINVAL);
   if ((ver = http_str2ver(argv[0])) < 0)
@@ -991,7 +994,6 @@ header:
     if (res < 0)
       return http_client_flush(hc, -EINVAL);
   }
-  tvhtrace("httpc", "header parse1");
   p = http_arg_get(&hc->hc_args, "Content-Length");
   if (p) {
     hc->hc_csize = atoll(p);
@@ -1071,6 +1073,7 @@ rtsp_data:
     if (res < 0)
       return http_client_flush(hc, res);
     hc->hc_in_rtp_data = 1;
+    hc->hc_code = 0;
     res = http_client_finish(hc);
     hc->hc_in_rtp_data = 0;
     if (res < 0)
