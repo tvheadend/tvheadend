@@ -670,7 +670,7 @@ main(int argc, char **argv)
       OPT_BOOL, &opt_dbus_session },
 #endif
 #if ENABLE_LINUXDVB
-    { 'a', "adapters",  "Only use specified DVB adapters (comma separated)",
+    { 'a', "adapters",  "Only use specified DVB adapters (comma separated, -1 = none)",
       OPT_STR, &opt_dvb_adapters },
 #endif
 #if ENABLE_SATIP_SERVER
@@ -787,19 +787,24 @@ main(int argc, char **argv)
     char *r = NULL;
     char *dvb_adapters = strdup(opt_dvb_adapters);
     adapter_mask = 0x0;
+    i = 0;
     p = strtok_r(dvb_adapters, ",", &r);
     while (p) {
       int a = strtol(p, &e, 10);
-      if (*e != 0 || a < 0 || a > 31) {
-        tvhlog(LOG_ERR, "START", "Invalid adapter number '%s'", p);
+      if (*e != 0 || a > 31) {
+        fprintf(stderr, _("Invalid adapter number '%s'\n"), p);
         free(dvb_adapters);
         return 1;
       }
-      adapter_mask |= (1 << a);
+      i = 1;
+      if (a < 0)
+        adapter_mask = 0;
+      else
+        adapter_mask |= (1 << a);
       p = strtok_r(NULL, ",", &r);
     }
     free(dvb_adapters);
-    if (!adapter_mask) {
+    if (!i) {
       tvhlog(LOG_ERR, "START", "No adapters specified!");
       return 1;
     }
