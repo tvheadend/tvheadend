@@ -702,13 +702,20 @@ deferred_unlink(const char *filename, const char *rootdir)
   char *s;
   size_t l;
   int r;
+  long max;
 
   l = strlen(filename);
   s = malloc(l + 9 + 1);
   if (s == NULL)
     return -ENOMEM;
+  max = pathconf(filename, _PC_NAME_MAX);
   strcpy(s, filename);
-  strcpy(s + l, ".removing");
+  if (l + 10 < max) {
+    s[0] = '.';
+    strcpy(s + l, ".removing");
+  } else {
+    memcpy(s, ".rm.", 4);
+  }
   r = rename(filename, s);
   if (r) {
     r = -errno;
