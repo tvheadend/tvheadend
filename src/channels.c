@@ -68,13 +68,33 @@ ch_id_cmp ( channel_t *a, channel_t *b )
 static void
 channel_class_save ( idnode_t *self )
 {
-  channel_save((channel_t*)self);
+  channel_save((channel_t *)self);
 }
 
 static void
 channel_class_delete ( idnode_t *self )
 {
   channel_delete((channel_t*)self, 1);
+}
+
+static int
+channel_class_autoname_set ( void *obj, const void *p )
+{
+  channel_t *ch = (channel_t *)obj;
+  const char *s;
+  int b = *(int *)p;
+  if (ch->ch_autoname != b) {
+    if (b == 0 && (!ch->ch_name || *ch->ch_name == '\0')) {
+      s = channel_get_name(ch);
+      free(ch->ch_name);
+      ch->ch_name = strdup(s);
+    } else if (b) {
+      ch->ch_name[0] = '\0';
+    }
+    ch->ch_autoname = b;
+    return 1;
+  }
+  return 0;
 }
 
 static const void *
@@ -178,19 +198,34 @@ channel_class_get_list(void *o, const char *lang)
   return m;
 }
 
+static int
+channel_class_set_name ( void *o, const void *p )
+{
+  channel_t *ch = o;
+  const char *s = p;
+  if (ch->ch_load)
+    ch->ch_autoname = p == NULL || *s == 0;
+  if (strcmp(s ?: "", ch->ch_name ?: "")) {
+    free(ch->ch_name);
+    ch->ch_name = s ? strdup(s) : NULL;
+    return 1;
+  }
+  return 0;
+}
+
 static const void *
-channel_class_get_name ( void *p )
+channel_class_get_name ( void *o )
 {
   static const char *s;
-  s = channel_get_name(p);
+  s = channel_get_name(o);
   return &s;
 }
 
 static const void *
-channel_class_get_number ( void *p )
+channel_class_get_number ( void *o )
 {
   static int64_t i;
-  i = channel_get_number(p);
+  i = channel_get_number(o);
   return &i;
 }
 
@@ -297,10 +332,19 @@ const idclass_t channel_class = {
       .off      = offsetof(channel_t, ch_enabled),
     },
     {
+      .type     = PT_BOOL,
+      .id       = "autoname",
+      .name     = N_("Auto Name"),
+      .off      = offsetof(channel_t, ch_autoname),
+      .set      = channel_class_autoname_set,
+      .opts     = PO_NOSAVE,
+    },
+    {
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Name"),
       .off      = offsetof(channel_t, ch_name),
+      .set      = channel_class_set_name,
       .get      = channel_class_get_name,
       .notify   = channel_class_icon_notify, /* try to re-render default icon path */
     },
@@ -714,8 +758,9 @@ channel_create0
   }
 
   /* Defaults */
-  ch->ch_enabled = 1;
-  ch->ch_epgauto = 1;
+  ch->ch_enabled  = 1;
+  ch->ch_autoname = 1;
+  ch->ch_epgauto  = 1;
 
   if (conf) {
     ch->ch_load = 1;
