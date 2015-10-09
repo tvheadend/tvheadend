@@ -612,7 +612,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   struct tm tm;
   dvr_config_t *cfg;
   htsmsg_t *m;
-  size_t l, j;
+  size_t l, j, k;
   long max;
   int dir_dosubs;
 
@@ -719,6 +719,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   max = pathconf(filename, _PC_NAME_MAX);
   if (max < 8)
     max = NAME_MAX;
+  max -= 2;
   j = strlen(filename);
   snprintf(filename + j, sizeof(filename) - j, "/%s", dirsep);
   if (filename[j] == '/')
@@ -735,12 +736,24 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     }
     /* Check the maximum filename length */
     l = strlen(number);
-    if (l + strlen(filename + j) > max) {
-      l = j + (max - l);
-      if (filename[l - 1] == '$') /* not optimal */
-        filename[l + 1] = '\0';
-      else
-        filename[l] = '\0';
+    k = strlen(filename + j);
+    if (l + k > max) {
+      s = (char *)htsstr_substitute_find(filename + j, '$');
+      if (s == NULL || s - (filename + j) < (l + k) - max) {
+cut1:
+        l = j + (max - l);
+        if (filename[l - 1] == '$') /* not optimal */
+          filename[l + 1] = '\0';
+        else
+          filename[l] = '\0';
+      } else {
+        x = (char *)htsstr_escape_find(filename + j, s - (filename + j) - ((l + k) - max));
+        if (x == NULL)
+          goto cut1;
+        k = strlen(s);
+        memmove(x, s, k);
+        x[k] = '\0';
+      }
     }
 
     htsstr_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number, tmp, sizeof(tmp));
