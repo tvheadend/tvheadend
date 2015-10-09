@@ -93,6 +93,7 @@ struct satip_device
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
   int                        sd_dbus_allow;
+  int                        sd_skip_ts;
   int                        sd_disable_workarounds;
   pthread_mutex_t            sd_tune_mutex;
 };
@@ -145,6 +146,7 @@ struct satip_frontend
   satip_tune_req_t          *sf_req;
   satip_tune_req_t          *sf_req_thread;
   sbuf_t                     sf_sbuf;
+  int                        sf_skip_ts;
   const char *               sf_display_name;
   uint32_t                   sf_seq;
   dvb_mux_t                 *sf_curmux;

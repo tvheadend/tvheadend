@@ -285,6 +285,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_bindaddr),
     },
     {
+      .type     = PT_INT,
+      .id       = "skip_ts",
+      .name     = N_("Skip TS packets (0-200)"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_skip_ts),
+    },
+    {
       .type     = PT_BOOL,
       .id       = "disableworkarounds",
       .name     = N_("Disable device/firmware-specific workarounds"),

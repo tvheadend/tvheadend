@@ -971,7 +971,7 @@ satip_frontend_close_rtsp
 static int
 satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
 {
-  int c, pos;
+  int c, pos, r;
   uint32_t nseq, unc;
   uint8_t *b = buf, *p;
   satip_frontend_t *lfe = hc->hc_aux;
@@ -998,7 +998,8 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
         return 0;
       pos += (((p[pos+2] << 8) | p[pos+3]) + 1) * 4;
     }
-    if (c <= pos || ((c - pos) % 188) != 0)
+    r = c - pos;
+    if (c <= pos || (r % 188) != 0)
       return 0;
     /* Use uncorrectable value to notify RTP delivery issues */
     nseq = (p[2] << 8) | p[3];
@@ -1012,8 +1013,19 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
     lfe->sf_seq = nseq;
 
     /* Process */
-    tsdebug_write((mpegts_mux_t *)lfe->sf_curmux, p + pos, c - pos);
-    sbuf_append(&lfe->sf_sbuf, p + pos, c - pos);
+    if (lfe->sf_skip_ts > 0) {
+      if (lfe->sf_skip_ts < r) {
+        pos += lfe->sf_skip_ts;
+        lfe->sf_skip_ts = 0;
+        goto wrdata;
+      } else {
+        lfe->sf_skip_ts -= r;
+      }
+    } else {
+wrdata:
+      tsdebug_write((mpegts_mux_t *)lfe->sf_curmux, p + pos, c - pos);
+      sbuf_append(&lfe->sf_sbuf, p + pos, c - pos);
+    }
 
     if (lfe->sf_sbuf.sb_ptr > 64 * 1024 ||
         lfe->sf_last_data_tstamp != dispatch_clock) {
@@ -1344,6 +1356,7 @@ new_tune:
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
   sbuf_init_fixed(sb, RTP_PKTS * RTP_PKT_SIZE);
+  lfe->sf_skip_ts = MIN(200, MAX(0, lfe->sf_device->sd_skip_ts)) * 188;
   
   while ((reply || running) && !fatal) {
 
@@ -1539,7 +1552,8 @@ new_tune:
           continue;
         pos += (((p[pos+2] << 8) | p[pos+3]) + 1) * 4;
       }
-      if (c <= pos || ((c - pos) % 188) != 0)
+      r = c - pos;
+      if (c <= pos || (r % 188) != 0)
         continue;
       /* Use uncorrectable value to notify RTP delivery issues */
       nseq = (p[2] << 8) | p[3];
@@ -1551,8 +1565,19 @@ new_tune:
       }
       seq = nseq;
       /* Process */
-      tsdebug_write((mpegts_mux_t *)lm, p + pos, c - pos);
-      sbuf_append(sb, p + pos, c - pos);
+      if (lfe->sf_skip_ts > 0) {
+        if (lfe->sf_skip_ts < r) {
+          pos += lfe->sf_skip_ts;
+          lfe->sf_skip_ts = 0;
+          goto wrdata;
+        } else {
+          lfe->sf_skip_ts -= r;
+        }
+      } else {
+wrdata:
+        tsdebug_write((mpegts_mux_t *)lm, p + pos, c - pos);
+        sbuf_append(sb, p + pos, c - pos);
+      }
     }
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread) {
