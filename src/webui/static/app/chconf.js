@@ -45,48 +45,38 @@ tvheadend.channel_tab = function(panel, index)
         return a;
     }
 
-    function assign_low_number(ctx, e, store, sm) {
-        if (sm.getCount() !== 1)
-            return;
-
-        var nums = [];
-        store.each(function() {
-            var number = this.data.number;
-            if (typeof number === "number" && number > 0)
-                nums.push(number);
-        });
-
-        if (nums.length === 0)
-        {
-            sm.getSelected().set('number', 1);
-            return;
-        }
-
-        nums.sort(function(a, b) {
-            return (a - b);
-        });
-
+    function get_lowest_number(nums) {
+        nums.sort(function(a, b) { return (a - b); });
         var max = nums[nums.length - 1];
         var low = max + 1;
-
         for (var i = 1; i <= max; ++i)
-        {
-            var ct = false;
-            for (var j = 0; j < nums.length; ++j)
-                if (nums[j] === i)
-                {
-                    ct = true;
-                    break
-                }
-            if (!ct)
-            {
-                low = i;
-                break;
-            }
-        }
+            if (nums.indexOf(i) < 0)
+                return i;
+        return low;
+    }
 
-        sm.getSelected().set('number', low);
-        sm.selectNext();
+    function assign_low_number(ctx, e, store, sm) {
+        var nums = [];
+        store.each(function(rec) {
+            var number = rec.get('number');
+            if (typeof number === 'number' && number > 0)
+                nums.push(number);
+        });
+        if (nums.length === 0)
+            nums.push(0);
+
+        if (sm.getCount() === 1) {
+            sm.getSelected().set('number', get_lowest_number(nums));
+            sm.selectNext();
+        } else {
+            var sel = sm.getSelections();
+            var low = sel[0].get('number');
+            low = low ? low : get_lowest_number(nums);
+            Ext.each(sel, function(s) {
+                while (nums.indexOf(low) >= 0) low++;
+                s.set('number', low++);
+            });
+        }
     }
 
     function move_number_up(ctx, e, store, sm) {
