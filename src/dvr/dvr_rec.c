@@ -367,6 +367,22 @@ dvr_sub_start(const char *id, const void *aux, char *tmp, size_t tmplen)
 }
 
 static const char *
+dvr_sub_errors(const char *id, const void *aux, char *tmp, size_t tmplen)
+{
+  char buf[16];
+  snprintf(buf, sizeof(buf), "%"PRIu32, (uint32_t)((dvr_entry_t *)aux)->de_errors);
+  return dvr_do_prefix(id, buf, tmp, tmplen);
+}
+
+static const char *
+dvr_sub_data_errors(const char *id, const void *aux, char *tmp, size_t tmplen)
+{
+  char buf[16];
+  snprintf(buf, sizeof(buf), "%"PRIu32, (uint32_t)((dvr_entry_t *)aux)->de_data_errors);
+  return dvr_do_prefix(id, buf, tmp, tmplen);
+}
+
+static const char *
 dvr_sub_stop(const char *id, const void *aux, char *tmp, size_t tmplen)
 {
   char buf[16];
@@ -518,6 +534,8 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "O",  .getval = dvr_sub_owner },
   { .id = "S",  .getval = dvr_sub_start },
   { .id = "E",  .getval = dvr_sub_stop },
+  { .id = "r",  .getval = dvr_sub_errors },
+  { .id = "R",  .getval = dvr_sub_data_errors },
   { .id = NULL, .getval = NULL }
 };
 
