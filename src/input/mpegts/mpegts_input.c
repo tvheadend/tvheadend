@@ -580,6 +580,8 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
     mpegts_input_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
     mpegts_pid_add(pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
     mpegts_pid_add(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
+    if (s->s_scrambled_pass)
+      mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
       if (s->s_scrambled_pass || st->es_type != SCT_CA) {
