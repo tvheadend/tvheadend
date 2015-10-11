@@ -22,10 +22,6 @@ tvheadend.comet.on('channeltags', function(m) {
 /**
  * Channels
  */
-tvheadend.channelrec = new Ext.data.Record.create(
-        ['name', 'chid', 'epggrabsrc', 'tags', 'ch_icon', 'epg_pre_start',
-            'epg_post_end', 'number']);
-
 insertChannelClearOption = function( scope, records, options ){
     var placeholder = Ext.data.Record.create(['key', 'val']);
     scope.insert(0,new placeholder({key: '-1', val: _('(Clear filter)')}));

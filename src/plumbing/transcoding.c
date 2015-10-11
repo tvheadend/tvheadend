@@ -24,7 +24,6 @@
 #include <libavutil/opt.h>
 #include <libavutil/audio_fifo.h>
 #include <libavutil/dict.h>
-#include <libavutil/audioconvert.h>
 
 #if LIBAVUTIL_VERSION_MICRO >= 100 /* FFMPEG */
 #define USING_FFMPEG 1
@@ -1879,6 +1878,7 @@ transcoder_input(void *opaque, streaming_message_t *sm)
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:
+  case SMT_DESCRAMBLE_INFO:
   case SMT_NOSTART:
   case SMT_NOSTART_WARN:
   case SMT_MPEGTS:

@@ -612,7 +612,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   struct tm tm;
   dvr_config_t *cfg;
   htsmsg_t *m;
-  size_t l, j;
+  size_t l, j, k;
   long max;
   int dir_dosubs;
 
@@ -719,6 +719,7 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   max = pathconf(filename, _PC_NAME_MAX);
   if (max < 8)
     max = NAME_MAX;
+  max -= 2;
   j = strlen(filename);
   snprintf(filename + j, sizeof(filename) - j, "/%s", dirsep);
   if (filename[j] == '/')
@@ -735,12 +736,24 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     }
     /* Check the maximum filename length */
     l = strlen(number);
-    if (l + strlen(filename + j) > max) {
-      l = j + (max - l);
-      if (filename[l - 1] == '$') /* not optimal */
-        filename[l + 1] = '\0';
-      else
-        filename[l] = '\0';
+    k = strlen(filename + j);
+    if (l + k > max) {
+      s = (char *)htsstr_substitute_find(filename + j, '$');
+      if (s == NULL || s - (filename + j) < (l + k) - max) {
+cut1:
+        l = j + (max - l);
+        if (filename[l - 1] == '$') /* not optimal */
+          filename[l + 1] = '\0';
+        else
+          filename[l] = '\0';
+      } else {
+        x = (char *)htsstr_escape_find(filename + j, s - (filename + j) - ((l + k) - max));
+        if (x == NULL)
+          goto cut1;
+        k = strlen(s);
+        memmove(x, s, k);
+        x[k] = '\0';
+      }
     }
 
     htsstr_substitute(filename + j, ptmp, sizeof(ptmp), '$', dvr_subs_tally, number, tmp, sizeof(tmp));
@@ -1190,6 +1203,7 @@ dvr_thread(void *aux)
     case SMT_SKIP:
     case SMT_SIGNAL_STATUS:
     case SMT_TIMESHIFT_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       break;
 
     case SMT_EXIT:
@@ -1237,17 +1251,13 @@ dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename, tmp, sizeof(tmp));
+  buf2 = tvh_strdupa(buf1);
   /* Substitute info formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_info, info, tmp, sizeof(tmp));
 
   args = htsstr_argsplit(buf1);
-  /* no arguments at all */
-  if(!args[0]) {
-    htsstr_argsplit_free(args);
-    return;
-  }
-
-  spawnv(args[0], (void *)args, NULL, 1, 1);
+  if(args[0])
+    spawnv(args[0], (void *)args, NULL, 1, 1);
     
   htsstr_argsplit_free(args);
 }

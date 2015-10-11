@@ -68,6 +68,8 @@ typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satc
 typedef TAILQ_HEAD(linuxdvb_ca_capmt_queue,linuxdvb_ca_capmt) linuxdvb_ca_capmt_queue_t;
 #endif
 
+extern const idclass_t linuxdvb_adapter_class;
+
 struct linuxdvb_adapter
 {
   tvh_hardware_t;
@@ -131,6 +133,7 @@ struct linuxdvb_frontend
   /*
    * Tuning
    */
+  int                       lfe_refcount;
   int                       lfe_ready;
   int                       lfe_in_setup;
   int                       lfe_locked;
@@ -146,6 +149,7 @@ struct linuxdvb_frontend
   /*
    * Configuration
    */
+  char                     *lfe_master;
   int                       lfe_powersave;
   int                       lfe_tune_repeats;
   uint32_t                  lfe_skip_bytes;
@@ -310,6 +314,7 @@ struct linuxdvb_diseqc
   linuxdvb_satconf_ele_t   *ld_satconf;
   int (*ld_grace) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm);
   int (*ld_freq)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm, int freq);
+  int (*ld_match) (linuxdvb_diseqc_t *ld, dvb_mux_t *lm1, dvb_mux_t *lm2);
   int (*ld_tune)  (linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
                    linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *ls,
                    int vol, int pol, int band, int freq);
@@ -320,9 +325,10 @@ struct linuxdvb_diseqc
 struct linuxdvb_lnb
 {
   linuxdvb_diseqc_t;
-  uint32_t  (*lnb_freq)(linuxdvb_lnb_t*, dvb_mux_t*);
-  int       (*lnb_band)(linuxdvb_lnb_t*, dvb_mux_t*);
-  int       (*lnb_pol) (linuxdvb_lnb_t*, dvb_mux_t*);
+  uint32_t  (*lnb_freq) (linuxdvb_lnb_t*, dvb_mux_t*);
+  int       (*lnb_match)(linuxdvb_lnb_t*, dvb_mux_t*, dvb_mux_t*);
+  int       (*lnb_band) (linuxdvb_lnb_t*, dvb_mux_t*);
+  int       (*lnb_pol)  (linuxdvb_lnb_t*, dvb_mux_t*);
 };
 
 struct linuxdvb_en50494
@@ -455,11 +461,17 @@ int linuxdvb_satconf_get_priority
 
 int linuxdvb_satconf_get_grace
   ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
-  
+
+int linuxdvb_satconf_lnb_freq
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
+
 void linuxdvb_satconf_post_stop_mux( linuxdvb_satconf_t *ls );
 
 int linuxdvb_satconf_start_mux
-  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi );
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi, int skip_diseqc );
+
+int linuxdvb_satconf_match_mux
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm );
 
 int linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol );
 

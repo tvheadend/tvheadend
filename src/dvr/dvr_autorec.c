@@ -242,7 +242,7 @@ dvr_autorec_entry_t*
 dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int fulltext,
                             channel_t *ch, uint32_t enabled, int32_t start, int32_t start_window,
                             uint32_t weekdays, time_t start_extra, time_t stop_extra,
-                            dvr_prio_t pri, int retention,
+                            dvr_prio_t pri, int retention, int removal,
                             int min_duration, int max_duration, dvr_autorec_dedup_t dup_detect,
                             const char *owner, const char *creator, const char *comment, 
                             const char *name, const char *directory)
@@ -255,6 +255,7 @@ dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int full
 
   htsmsg_add_u32(conf, "enabled",     enabled > 0 ? 1 : 0);
   htsmsg_add_u32(conf, "retention",   retention);
+  htsmsg_add_u32(conf, "removal",     removal);
   htsmsg_add_u32(conf, "pri",         pri);
   htsmsg_add_u32(conf, "minduration", min_duration);
   htsmsg_add_u32(conf, "maxduration", max_duration);
@@ -1057,10 +1058,18 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_autorec_entry_class_dedup_list,
     },
     {
-      .type     = PT_INT,
+      .type     = PT_U32,
       .id       = "retention",
-      .name     = N_("Retention"),
+      .name     = N_("DVR Log Retention (days)"),
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
+      .opts     = PO_HIDDEN,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "removal",
+      .name     = N_("File removal (days)"),
+      .off      = offsetof(dvr_autorec_entry_t, dae_removal),
+      .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_STR,
@@ -1332,10 +1341,21 @@ dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae )
 /**
  *
  */
-int
-dvr_autorec_get_retention( dvr_autorec_entry_t *dae )
+uint32_t
+dvr_autorec_get_retention_days( dvr_autorec_entry_t *dae )
 {
   if (dae->dae_retention > 0)
     return dae->dae_retention;
-  return dae->dae_config->dvr_retention_days;
+  return dvr_retention_cleanup(dae->dae_config->dvr_retention_days);
+}
+
+/**
+ *
+ */
+uint32_t
+dvr_autorec_get_removal_days( dvr_autorec_entry_t *dae )
+{
+  if (dae->dae_removal > 0)
+    return dae->dae_removal;
+  return dvr_retention_cleanup(dae->dae_config->dvr_removal_days);
 }

@@ -70,7 +70,7 @@ extern const idclass_t mpegts_input_class;
  * Setup / Tear down
  * *************************************************************************/
 
-void mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
+void mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
                    str_list_t *tsfiles, int tstuners );
 void mpegts_done ( void );
 
@@ -604,6 +604,7 @@ struct mpegts_mux_instance
   mpegts_mux_t   *mmi_mux;
   mpegts_input_t *mmi_input;
 
+  int             mmi_start_weight;
   int             mmi_tune_failed;
 };
 
@@ -905,7 +906,7 @@ static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
 {
 #if ENABLE_TSDEBUG
-  if (mm->mm_tsdebug_fd2 >= 0)
+  if (mm && mm->mm_tsdebug_fd2 >= 0)
     if (write(mm->mm_tsdebug_fd2, buf, len) != len)
       tvherror("tsdebug", "unable to write input data (%i)", errno);
 #endif

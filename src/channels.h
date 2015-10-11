@@ -49,6 +49,7 @@ typedef struct channel
 
   /* Channel info */
   int     ch_enabled;
+  int     ch_autoname;
   char   *ch_name; // Note: do not access directly!
   int64_t ch_number;
   char   *ch_icon;

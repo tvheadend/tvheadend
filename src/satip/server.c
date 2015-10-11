@@ -602,6 +602,13 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_rewrite_pmt",
+      .name   = N_("Rewrite PMT"),
+      .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
       .name   = N_("Mux Handling"),
@@ -674,16 +681,17 @@ const idclass_t satip_server_class = {
  */
 static void satip_server_save(void)
 {
-  int descramble, muxcnf;
+  int descramble, rewrite_pmt, muxcnf;
 
   config_save();
   if (!satip_server_rtsp_port_locked) {
     satips_rtsp_port(0);
     if (satip_server_rtsp_port > 0) {
       descramble = satip_server_conf.satip_descramble;
+      rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
       muxcnf = satip_server_conf.satip_muxcnf;
       pthread_mutex_unlock(&global_lock);
-      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, muxcnf);
+      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf);
       satip_server_info("re", descramble, muxcnf);
       satips_upnp_send_announce();
       pthread_mutex_lock(&global_lock);
@@ -705,11 +713,10 @@ void satip_server_init(int rtsp_port)
 {
   struct sockaddr_storage http;
   char http_ip[128];
-  int descramble, muxcnf;
+  int descramble, rewrite_pmt, muxcnf;
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
-  satip_server_conf.satip_uuid = NULL;
   satip_server_conf.satip_deviceid = 1;
 
   if (tcp_server_bound(http_server, &http) < 0) {
@@ -728,9 +735,10 @@ void satip_server_init(int rtsp_port)
     return;
 
   descramble = satip_server_conf.satip_descramble;
+  rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
   muxcnf = satip_server_conf.satip_muxcnf;
 
-  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, muxcnf);
+  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf);
 
   satip_server_info("", descramble, muxcnf);
 }

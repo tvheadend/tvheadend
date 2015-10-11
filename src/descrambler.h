@@ -150,6 +150,11 @@ void descrambler_caid_changed  ( struct service *t );
 int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
 void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
+void descrambler_notify        ( th_descrambler_t *t,
+                                 uint16_t caid, uint32_t provid,
+                                 const char *cardsystem, uint16_t pid, uint32_t ecmtime,
+                                 uint16_t hops, const char *reader, const char *from,
+                                 const char *protocol );
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb, int len );

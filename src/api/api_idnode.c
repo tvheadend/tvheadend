@@ -375,6 +375,7 @@ api_idnode_save
   htsmsg_field_t *f;
   const char *uuid;
   int count = 0;
+  const idnodes_rb_t *domain = NULL;
 
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
@@ -384,23 +385,49 @@ api_idnode_save
 
   pthread_mutex_lock(&global_lock);
 
-  /* Single */
+  /* Single or Foreach */
   if (!msg->hm_islist) {
-    if (!(uuid = htsmsg_get_str(msg, "uuid")))
-      goto exit;
-    if (!(in = idnode_find(uuid, NULL, NULL)))
-      goto exit;
-    if (idnode_perm(in, perm, msg)) {
-      err = EPERM;
-      goto exit;
+
+    if (!(uuid = htsmsg_get_str(msg, "uuid"))) {
+
+      /* Foreach */
+      f = htsmsg_field_find(msg, "uuid");
+      if (!(conf = htsmsg_field_get_list(f)))
+        goto exit;
+      HTSMSG_FOREACH(f, conf) {
+        if (!(uuid = htsmsg_field_get_str(f)))
+          continue;
+        if (!(in = idnode_find(uuid, NULL, domain)))
+          continue;
+        domain = in->in_domain;
+        if (idnode_perm(in, perm, msg)) {
+          err = EPERM;
+          continue;
+        }
+        count++;
+        idnode_update(in, msg);
+        idnode_perm_unset(in);
+      }
+      if (count)
+        err = 0;
+
+    } else {
+
+      if (!(in = idnode_find(uuid, NULL, NULL)))
+        goto exit;
+      if (idnode_perm(in, perm, msg)) {
+        err = EPERM;
+        goto exit;
+      }
+      idnode_update(in, msg);
+      idnode_perm_unset(in);
+      err = 0;
+
     }
-    idnode_update(in, msg);
-    idnode_perm_unset(in);
-    err = 0;
 
   /* Multiple */
   } else {
-    const idnodes_rb_t *domain = NULL;
+
     HTSMSG_FOREACH(f, msg) {
       if (!(conf = htsmsg_field_get_map(f)))
         continue;
@@ -419,6 +446,7 @@ api_idnode_save
     }
     if (count)
       err = 0;
+
   }
 
   // TODO: return updated UUIDs?

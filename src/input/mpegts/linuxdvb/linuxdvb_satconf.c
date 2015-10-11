@@ -665,6 +665,7 @@ void
 linuxdvb_satconf_post_stop_mux
   ( linuxdvb_satconf_t *ls )
 {
+  ls->ls_mmi = NULL;
   gtimer_disarm(&ls->ls_diseqc_timer);
   if (ls->ls_frontend && ls->ls_lnb_poweroff) {
     linuxdvb_diseqc_set_volt(ls, -1);
@@ -825,14 +826,39 @@ linuxdvb_satconf_ele_tune_cb ( void *o )
 }
 
 int
-linuxdvb_satconf_start_mux
+linuxdvb_satconf_lnb_freq
   ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi )
+{
+  int f;
+  linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
+  dvb_mux_t              *lm  = (dvb_mux_t*)mmi->mmi_mux;
+
+  if (!lse->lse_lnb)
+    return -1;
+
+  f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
+  if (f == (uint32_t)-1)
+    return -1;
+
+  /* calculate tuning frequency for en50494 */
+  if (lse->lse_en50494) {
+    f = lse->lse_en50494->ld_freq(lse->lse_en50494, lm, f);
+    if (f < 0) {
+      tvherror("en50494", "invalid tuning freq");
+      return -1;
+    }
+  }
+  return f;
+}
+
+int
+linuxdvb_satconf_start_mux
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi, int skip_diseqc )
 {
   int r;
   uint32_t f;
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
   linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
-  dvb_mux_t              *lm  = (dvb_mux_t*)mmi->mmi_mux;
 
   /* Not fully configured */
   if (!lse) return SM_CODE_TUNING_FAILED;
@@ -845,23 +871,16 @@ linuxdvb_satconf_start_mux
   if (!lse->lse_lnb)
     return SM_CODE_TUNING_FAILED;
 
-  if (ls->ls_early_tune) {
-
-    f = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
-    if (f == (uint32_t)-1)
+  if (skip_diseqc) {
+    f = linuxdvb_satconf_lnb_freq(ls, mmi);
+    if (f < 0)
       return SM_CODE_TUNING_FAILED;
-
-    /* calculate tuning frequency for en50494 */
-    if (lse->lse_en50494) {
-      r = lse->lse_en50494->ld_freq(lse->lse_en50494, lm, f);
-      if (r < 0) {
-        tvherror("en50494", "invalid tuning freq");
-        return -1;
-      }
-      /* tune frequency for the frontend */
-      f = r;
-    }
-
+    return linuxdvb_frontend_tune1(lfe, mmi, f);
+  }
+  if (ls->ls_early_tune) {
+    f = linuxdvb_satconf_lnb_freq(ls, mmi);
+    if (f < 0)
+      return SM_CODE_TUNING_FAILED;
     r = linuxdvb_frontend_tune0(lfe, mmi, f);
     if (r) return r;
   } else {
@@ -887,6 +906,47 @@ linuxdvb_satconf_reset
   ls->ls_last_vol = 0;
   ls->ls_last_toneburst = 0;
   ls->ls_last_tone_off = 0;
+}
+
+/*
+ * return 0 if passed mux cannot be used simultanously with given
+ * diseqc config
+ */
+int
+linuxdvb_satconf_match_mux
+  ( linuxdvb_satconf_t *ls, mpegts_mux_t *mm )
+{
+  mpegts_mux_instance_t *mmi = ls->ls_mmi;
+
+  if (mmi == NULL || mmi->mmi_mux == NULL)
+    return 1;
+
+  linuxdvb_satconf_ele_t *lse1 = linuxdvb_satconf_find_ele(ls, mm);
+  linuxdvb_satconf_ele_t *lse2 = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
+  dvb_mux_t *lm1 = (dvb_mux_t*)mmi->mmi_mux;
+  dvb_mux_t *lm2 = (dvb_mux_t*)mm;
+
+#if ENABLE_TRACE
+  char buf1[256], buf2[256];
+  dvb_mux_conf_str(&lm1->lm_tuning, buf1, sizeof(buf1));
+  dvb_mux_conf_str(&lm2->lm_tuning, buf2, sizeof(buf2));
+  tvhtrace("diseqc", "match mux 1 - %s", buf1);
+  tvhtrace("diseqc", "match mux 2 - %s", buf2);
+#endif
+
+  if (lse1 != lse2) {
+    tvhtrace("diseqc", "match position failed");
+    return 0;
+  }
+  if (!lse1->lse_lnb->lnb_match(lse1->lse_lnb, lm1, lm2)) {
+    tvhtrace("diseqc", "match LNB failed");
+    return 0;
+  }
+  if (lse1->lse_en50494 && !lse1->lse_en50494->ld_match(lse1->lse_en50494, lm1, lm2)) {
+    tvhtrace("diseqc", "match en50494 failed");
+    return 0;
+  }
+  return 1;
 }
 
 /* **************************************************************************

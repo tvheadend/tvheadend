@@ -102,8 +102,8 @@ read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
     return -1;
 
   aot = read_aot(bs);
-  sr                    = read_sr(bs, &latm->sri);
-  latm->channel_config  = read_bits(bs, 4);
+  sr = read_sr(bs, &latm->sri);
+  latm->channel_config = read_bits(bs, 4);
 
   if (sr < 7350 || sr > 96000 ||
       latm->channel_config == 0 || latm->channel_config > 7)
@@ -123,16 +123,13 @@ read_audio_specific_config(elementary_stream_t *st, latm_private_t *latm,
 
   /* it's really unusual to use lower sample rates than 32000Hz */
   /* for the professional broadcasting, assume the SBR extension */
-  if (aot == AOT_AAC_LC && latm->ext_sri == 0 && sr <= 24000) {
+  if (latm->ext_sri == 0 && sr <= 24000) {
     sri = rate_to_sri(sr * 2);
     if (sri < 0)
       return -1;
     latm->ext_sri = sri + 1;
   }
 
-  if (aot != AOT_AAC_MAIN && aot != AOT_AAC_LC &&
-      aot != AOT_AAC_SSR  && aot != AOT_AAC_LTP)
-    return -1;
   latm->aot = aot;
 
   if (read_bits1(bs))   // framelen_flag
@@ -151,10 +148,10 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
 {
   int audio_mux_version = read_bits1(bs);
   latm->audio_mux_version_A = 0;
-  if(audio_mux_version)                     // audioMuxVersion
+  if (audio_mux_version)                     // audioMuxVersion
     latm->audio_mux_version_A = read_bits1(bs);
-  
-  if(latm->audio_mux_version_A)
+
+  if (latm->audio_mux_version_A)
     return 0;
 
   if(audio_mux_version)
@@ -169,7 +166,7 @@ read_stream_mux_config(elementary_stream_t *st, latm_private_t *latm, bitstream_
   // for each program (only one in DVB)
   if (read_bits(bs, 3))                     // numLayer = 0
     return -1;
-    
+
   // for each layer (which there is only one in DVB)
   if(!audio_mux_version) {
     if (read_audio_specific_config(st, latm, bs) < 0)

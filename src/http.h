@@ -302,6 +302,7 @@ struct http_client {
   int          hc_reconnected:1;
   int          hc_keepalive:1;
   int          hc_in_data:1;
+  int          hc_in_rtp_data:1;
   int          hc_chunked:1;
   int          hc_chunk_trails:1;
   int          hc_running:1;
@@ -318,7 +319,9 @@ struct http_client {
   char        *hc_rtsp_session;
   char        *hc_rtp_dest;
   int          hc_rtp_port;
-  int          hc_rtpc_port;
+  int          hc_rtcp_port;
+  int          hc_rtp_tcp;
+  int          hc_rtcp_tcp;
   int          hc_rtcp_server_port;
   int          hc_rtp_multicast:1;
   long         hc_rtsp_stream_id;
@@ -334,6 +337,8 @@ struct http_client {
   int     (*hc_hdr_received) (http_client_t *hc);
   int     (*hc_data_received)(http_client_t *hc, void *buf, size_t len);
   int     (*hc_data_complete)(http_client_t *hc);
+  int     (*hc_rtp_data_received)(http_client_t *hc, void *buf, size_t len);
+  int     (*hc_rtp_data_complete)(http_client_t *hc);
   void    (*hc_conn_closed)  (http_client_t *hc, int err);
 };
 
@@ -372,7 +377,7 @@ static inline int rtsp_options( http_client_t *hc ) {
 
 int rtsp_setup_decode( http_client_t *hc, int satip );
 int rtsp_setup( http_client_t *hc, const char *path, const char *query,
-                const char *multicast_addr, int rtp_port, int rtpc_port );
+                const char *multicast_addr, int rtp_port, int rtcp_port );
 
 static inline int
 rtsp_play( http_client_t *hc, const char *path, const char *query ) {

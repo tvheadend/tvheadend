@@ -512,6 +512,8 @@ dvr_config_save(dvr_config_t *cfg)
   lock_assert(&global_lock);
 
   dvr_config_storage_check(cfg);
+  if (cfg->dvr_removal_days > cfg->dvr_retention_days)
+    cfg->dvr_removal_days = cfg->dvr_retention_days;
   idnode_save(&cfg->dvr_id, m);
   hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
   htsmsg_destroy(m);
@@ -811,6 +813,13 @@ const idclass_t dvr_config_class = {
       .name     = N_("DVR Log Retention Time (days)"),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = 31,
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "removal-days",
+      .name     = N_("DVR File Removal Time (days)"),
+      .off      = offsetof(dvr_config_t, dvr_removal_days),
       .group    = 1,
     },
     {

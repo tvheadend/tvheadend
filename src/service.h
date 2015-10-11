@@ -296,7 +296,7 @@ typedef struct service {
   void (*s_enlist)(struct service *s, struct tvh_input *ti,
                    service_instance_list_t *sil, int flags);
 
-  int (*s_start_feed)(struct service *s, int instance, int flags);
+  int (*s_start_feed)(struct service *s, int instance, int weight, int flags);
 
   void (*s_refresh_feed)(struct service *t);
 
@@ -445,7 +445,8 @@ typedef struct service {
    */
 
   struct th_descrambler_list s_descramblers;
-  uint16_t s_scrambled_seen;
+  uint8_t s_scrambled_seen;
+  uint8_t s_scrambled_pass;
   th_descrambler_runtime_t *s_descramble;
 
   /**
@@ -479,7 +480,8 @@ typedef struct service {
 void service_init(void);
 void service_done(void);
 
-int service_start(service_t *t, int instance, int flags, int timeout, int postpone);
+int service_start(service_t *t, int instance, int weight, int flags,
+                  int timeout, int postpone);
 void service_stop(service_t *t);
 
 void service_build_filter(service_t *t);
@@ -589,8 +591,6 @@ static inline int service_tss_is_error(int flags)
 void service_refresh_channel(service_t *t);
 
 int tss2errcode(int tss);
-
-uint16_t service_get_encryption(service_t *t);
 
 htsmsg_t *servicetype_list (void);
 

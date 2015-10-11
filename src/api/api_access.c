@@ -100,6 +100,10 @@ api_access_entry_userlist
   htsmsg_t        *l, *e;
 
   l = htsmsg_create_list();
+
+  if (!access_verify2(perm, ACCESS_ADMIN))
+    goto empty;
+
   if ((is = idnode_find_all(&access_entry_class, NULL))) {
     for (i = 0; i < is->is_count; i++) {
       in = is->is_array[i];
@@ -122,6 +126,7 @@ api_access_entry_userlist
     free(is);
   }
 
+empty:
   *resp = htsmsg_create_map();
   htsmsg_add_msg(*resp, "entries", l);
 
@@ -168,7 +173,7 @@ void api_access_init ( void )
     { "ipblock/entry/create", ACCESS_ADMIN, api_ipblock_entry_create, NULL },
 
     { "access/entry/class",  ACCESS_ADMIN, api_idnode_class, (void*)&access_entry_class },
-    { "access/entry/userlist", ACCESS_ADMIN, api_access_entry_userlist, NULL },
+    { "access/entry/userlist", ACCESS_ANONYMOUS, api_access_entry_userlist, NULL },
     { "access/entry/grid",   ACCESS_ADMIN, api_idnode_grid,  api_access_entry_grid },
     { "access/entry/create", ACCESS_ADMIN, api_access_entry_create, NULL },
 

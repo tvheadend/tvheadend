@@ -40,6 +40,7 @@ struct satip_server_conf {
   int satip_rtsp;
   int satip_weight;
   int satip_descramble;
+  int satip_rewrite_pmt;
   int satip_muxcnf;
   int satip_dvbs;
   int satip_dvbs2;
@@ -66,8 +67,10 @@ void satip_rtp_update(void *id, th_subscription_t *subs,
                       streaming_queue_t *sq,
                       int frontend, int source,
                       dvb_mux_conf_t *dmc,
-                      mpegts_apids_t *pids);
+                      mpegts_apids_t *pids,
+                      mpegts_apids_t *pmt_pids);
 void satip_rtp_update_pids(void *id, mpegts_apids_t *pids);
+void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids);
 int satip_rtp_status(void *id, char *buf, int len);
 void satip_rtp_close(void *id);
 
@@ -75,7 +78,7 @@ void satip_rtp_init(void);
 void satip_rtp_done(void);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
-                            int descramble, int muxcnf);
+                            int descramble, int rewrite_pmt, int muxcnf);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);
 

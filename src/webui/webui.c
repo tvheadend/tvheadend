@@ -432,6 +432,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_SKIP:
     case SMT_SPEED:
     case SMT_SIGNAL_STATUS:
+    case SMT_DESCRAMBLE_INFO:
     case SMT_TIMESHIFT_STATUS:
       break;
 
@@ -1051,14 +1052,21 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *name;
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
+  int flags, eflags = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  if ((str = http_arg_get(&hc->hc_req_args, "descramble")))
+    if (strcmp(str ?: "", "0") == 0)
+      eflags |= SUBSCRIPTION_NODESCR;
+
+  flags = SUBSCRIPTION_MPEGTS | eflags;
+  if ((eflags & SUBSCRIPTION_NODESCR) == 0)
+    flags |= SUBSCRIPTION_PACKET;
   if(!(pro = profile_find_by_list(hc->hc_access->aa_profiles,
                                   http_arg_get(&hc->hc_req_args, "profile"),
-                                  "service",
-                                  SUBSCRIPTION_PACKET | SUBSCRIPTION_MPEGTS)))
+                                  "service", flags)))
     return HTTP_STATUS_NOT_ALLOWED;
 
   if((tcp_id = http_stream_preop(hc)) == NULL)
@@ -1073,7 +1081,8 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
     s = subscription_create_from_service(&prch, NULL, weight, "HTTP",
-                                         prch.prch_flags | SUBSCRIPTION_STREAMING,
+                                         prch.prch_flags | SUBSCRIPTION_STREAMING |
+                                           eflags,
                                          hc->hc_peer_ipstr,
 				         hc->hc_username,
 				         http_arg_get(&hc->hc_args, "User-Agent"),
@@ -1551,8 +1560,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   content_len = file_end - file_start+1;
   
-  sprintf(range_buf, "bytes %jd-%jd/%zd",
-    file_start, file_end, (size_t)st.st_size);
+  sprintf(range_buf, "bytes %jd-%jd/%jd",
+    file_start, file_end, (intmax_t)st.st_size);
 
   if(file_start > 0)
     if (lseek(fd, file_start, SEEK_SET) != file_start) {

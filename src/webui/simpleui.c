@@ -319,7 +319,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
     de = dvr_entry_create_by_event(1, NULL, e, 0, 0, hc->hc_username ?: NULL,
                                    hc->hc_representative ?: NULL, NULL,
-				   DVR_PRIO_NORMAL, 0, "simpleui");
+				   DVR_PRIO_NORMAL, 0, 0, "simpleui");
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
     de = dvr_entry_cancel(de);
   }

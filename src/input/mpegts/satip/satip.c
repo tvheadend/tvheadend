@@ -191,6 +191,7 @@ satip_device_class_tunercfg_notify ( void *o, const char *lang )
 const idclass_t satip_device_class =
 {
   .ic_class      = "satip_client",
+  .ic_event      = "satip_client",
   .ic_caption    = N_("SAT>IP Client"),
   .ic_save       = satip_device_class_save,
   .ic_get_childs = satip_device_class_get_childs,
@@ -205,6 +206,20 @@ const idclass_t satip_device_class =
       .list     = satip_device_class_tunercfg_list,
       .notify   = satip_device_class_tunercfg_notify,
       .def.s    = "Auto"
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "tcp_mode",
+      .name     = N_("RTSP/TCP (embedded data)"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_tcp_mode),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fast_switch",
+      .name     = N_("Fast input switch"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_fast_switch),
     },
     {
       .type     = PT_BOOL,
@@ -268,6 +283,13 @@ const idclass_t satip_device_class =
       .name     = N_("Local bind IP address"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_bindaddr),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "skip_ts",
+      .name     = N_("Skip TS packets (0-200)"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_skip_ts),
     },
     {
       .type     = PT_BOOL,
@@ -480,6 +502,7 @@ satip_device_create( satip_device_info_t *info )
   conf = hts_settings_load("input/satip/adapters/%s", uuid.hex);
 
   /* some sane defaults */
+  sd->sd_fast_switch = 1;
   sd->sd_fullmux_ok  = 1;
   sd->sd_pids_len    = 127;
   sd->sd_pids_max    = 32;
@@ -721,6 +744,7 @@ typedef struct satip_discovery {
 
 TAILQ_HEAD(satip_discovery_queue, satip_discovery);
 
+static int satip_enabled;
 static int satip_discoveries_count;
 static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
@@ -1183,6 +1207,8 @@ satip_discovery_timer_cb(void *aux)
 void
 satip_device_discovery_start( void )
 {
+  if (!satip_enabled)
+    return;
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
   gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 1);
 }
@@ -1191,12 +1217,15 @@ satip_device_discovery_start( void )
  * Initialization
  */
 
-void satip_init ( str_list_t *clients )
+void satip_init ( int nosatip, str_list_t *clients )
 {
+  satip_enabled = !nosatip;
   TAILQ_INIT(&satip_discoveries);
   satip_static_clients = clients;
-  dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
-  satip_device_discovery_start();
+  if (satip_enabled) {
+    dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
+    satip_device_discovery_start();
+  }
 }
 
 void satip_done ( void )

@@ -101,6 +101,26 @@ htsstr_unescape_to(const char *src, char *dst, size_t dstlen)
   return res;
 }
 
+const char *
+htsstr_escape_find(const char *src, size_t upto_index)
+{
+  while (upto_index && *src) {
+    if (*src == '\\') {
+      src++;
+      upto_index--;
+      if (*src == '\0' || upto_index == 0) {
+        src--;
+        break;
+      }
+    }
+    src++;
+    upto_index--;
+  }
+  if (*src)
+    return src;
+  return NULL;
+}
+
 static void
 htsstr_argsplit_add(char ***argv, int *argc, char *s)
 {
@@ -183,6 +203,21 @@ htsstr_argsplit_free(char **argv) {
     free(argv[i]);
   
   free(argv);
+}
+
+const char *
+htsstr_substitute_find(const char *src, int first)
+{
+  while (*src) {
+    if (*src == '\\') {
+      src++;
+      if (*src == '\0')
+        break;
+    } else if (*src == first)
+      return src;
+    src++;
+  }
+  return NULL;
 }
 
 char *

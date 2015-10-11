@@ -594,7 +594,8 @@ ignore:
  *
  */
 int
-service_start(service_t *t, int instance, int flags, int timeout, int postpone)
+service_start(service_t *t, int instance, int weight, int flags,
+              int timeout, int postpone)
 {
   elementary_stream_t *st;
   int r, stimeout = 10;
@@ -607,6 +608,7 @@ service_start(service_t *t, int instance, int flags, int timeout, int postpone)
   t->s_streaming_status = 0;
   t->s_streaming_live   = 0;
   t->s_scrambled_seen   = 0;
+  t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
   t->s_start_time       = dispatch_clock;
 
   pthread_mutex_lock(&t->s_stream_mutex);
@@ -614,7 +616,7 @@ service_start(service_t *t, int instance, int flags, int timeout, int postpone)
   descrambler_caid_changed(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
 
-  if((r = t->s_start_feed(t, instance, flags)))
+  if((r = t->s_start_feed(t, instance, weight, flags)))
     return r;
 
   descrambler_service_start(t);
@@ -749,7 +751,7 @@ service_find_instance
 
   /* Start */
   tvhtrace("service", "will start new instance %d", si->si_instance);
-  if (service_start(si->si_s, si->si_instance, flags, timeout, postpone)) {
+  if (service_start(si->si_s, si->si_instance, weight, flags, timeout, postpone)) {
     tvhtrace("service", "tuning failed");
     si->si_error = SM_CODE_TUNING_FAILED;
     if (*error < SM_CODE_TUNING_FAILED)
@@ -1647,30 +1649,6 @@ service_get_channel_icon ( service_t *s )
   const char *r = NULL;
   if (s->s_channel_icon) r = s->s_channel_icon(s);
   return r;
-}
-
-/**
- * Get the encryption CAID from a service
- * only the first CA stream in a service is returned
- */
-uint16_t
-service_get_encryption(service_t *t)
-{
-  elementary_stream_t *st;
-  caid_t *c;
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    switch(st->es_type) {
-    case SCT_CA:
-      LIST_FOREACH(c, &st->es_caids, link)
-	if(c->caid != 0)
-	  return c->caid;
-      break;
-    default:
-      break;
-    }
-  }
-  return 0;
 }
 
 /*

@@ -1518,14 +1518,14 @@ const idclass_t access_entry_class = {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_min",
-      .name     = N_("Min Channel Num"),
+      .name     = N_("Minimal Channel Number"),
       .off      = offsetof(access_entry_t, ae_chmin),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
-      .name     = N_("Maximum Channel Num"),
+      .name     = N_("Maximal Channel Number"),
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
