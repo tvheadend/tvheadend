@@ -792,7 +792,7 @@ main(int argc, char **argv)
     while (p) {
       int a = strtol(p, &e, 10);
       if (*e != 0 || a > 31) {
-        fprintf(stderr, _("Invalid adapter number '%s'\n"), p);
+        fprintf(stderr, "Invalid adapter number '%s'\n", p);
         free(dvb_adapters);
         return 1;
       }
