@@ -664,6 +664,8 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
     mpegts_input_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
     mpegts_pid_del(pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
     mpegts_pid_del(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
+    if (s->s_scrambled_pass)
+      mpegts_input_close_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s);
     /* Close all opened PIDs (the component filter may be changed at runtime) */
     TAILQ_FOREACH(st, &s->s_components, es_link) {
       if (st->es_pid_opened) {
