@@ -699,7 +699,7 @@ int
 deferred_unlink(const char *filename, const char *rootdir)
 {
   deferred_unlink_t *du;
-  char *s;
+  char *s, *p;
   size_t l;
   int r;
   long max;
@@ -711,7 +711,9 @@ deferred_unlink(const char *filename, const char *rootdir)
   max = pathconf(filename, _PC_NAME_MAX);
   strcpy(s, filename);
   if (l + 10 < max) {
-    s[0] = '.';
+    p = strrchr(s, '/');
+    if (p && p[1])
+      p[1] = '.';
     strcpy(s + l, ".removing");
   } else {
     memcpy(s, ".rm.", 4);
