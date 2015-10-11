@@ -582,14 +582,15 @@ mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, 
     mpegts_pid_add(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
-      if (st->es_type != SCT_CA) {
+      if (s->s_scrambled_pass || st->es_type != SCT_CA) {
         st->es_pid_opened = 1;
         mpegts_input_open_pid(mi, mm, st->es_pid, MPS_SERVICE, mps_weight(st), s);
       }
 
     /* Ensure that filtered PIDs are not send in ts_recv_raw */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
-      if (st->es_type != SCT_CA && st->es_pid >= 0 && st->es_pid < 8192)
+      if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
+          st->es_pid >= 0 && st->es_pid < 8192)
         mpegts_pid_add(pids, st->es_pid, mps_weight(st));
 
     LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
