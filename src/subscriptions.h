@@ -36,6 +36,7 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_TABLES     0x100
 #define SUBSCRIPTION_MINIMAL    0x200
 #define SUBSCRIPTION_NODESCR    0x400 ///< no decramble
+#define SUBSCRIPTION_EMM        0x800 ///< add EMM PIDs for no descramble subscription
 #define SUBSCRIPTION_INITSCAN  0x1000 ///< for mux subscriptions
 #define SUBSCRIPTION_IDLESCAN  0x2000 ///< for mux subscriptions
 #define SUBSCRIPTION_USERSCAN  0x4000 ///< for mux subscriptions

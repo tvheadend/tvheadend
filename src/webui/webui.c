@@ -1061,6 +1061,10 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
     if (strcmp(str ?: "", "0") == 0)
       eflags |= SUBSCRIPTION_NODESCR;
 
+  if ((str = http_arg_get(&hc->hc_req_args, "emm")))
+    if (strcmp(str ?: "", "1") == 0)
+      eflags |= SUBSCRIPTION_EMM;
+
   flags = SUBSCRIPTION_MPEGTS | eflags;
   if ((eflags & SUBSCRIPTION_NODESCR) == 0)
     flags |= SUBSCRIPTION_PACKET;

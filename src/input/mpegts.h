@@ -580,10 +580,11 @@ struct mpegts_service
   int64_t  s_pcr_drift;
 
   /**
-   * PMT monitoring
+   * PMT/CAT monitoring
    */
 
   mpegts_table_t *s_pmt_mon; ///< Table entry for monitoring PMT
+  mpegts_table_t *s_cat_mon; ///< Table entry for monitoring CAT
 
 };
 
