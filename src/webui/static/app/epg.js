@@ -911,13 +911,12 @@ tvheadend.epg = function() {
     tvheadend.comet.on('epg', function(m) {
         if (!panel.isVisible())
             return;
-        if ('delete' in m) {
-            for (var i = 0; i < m['delete'].length; i++) {
-                var r = epgStore.getById(m['delete'][i]);
+        if ('delete' in m)
+            Ext.each(m['delete'], function(d) {
+                var r = epgStore.getById(d);
                 if (r)
                   epgStore.remove(r);
-            }
-        }
+            });
         if (m.update || m.dvr_update || m.dvr_delete) {
             var a = m.update || m.dvr_update || m.dvr_delete;
             if (m.update && m.dvr_update)
@@ -925,11 +924,11 @@ tvheadend.epg = function() {
             if (m.update || m.dvr_update)
                 a = a.concat(m.dvr_delete);
             var ids = [];
-            for (var i = 0; i < a.length; i++) {
-                var r = epgStore.getById(a[i]);
+            Ext.each(a, function (id) {
+                var r = epgStore.getById(id);
                 if (r)
                   ids.push(r.id);
-            }
+            });
             if (ids) {
                 Ext.Ajax.request({
                     url: 'api/epg/events/load',

@@ -169,13 +169,28 @@ tvheadend.doQueryAnyMatch = function(q, forceAll) {
  */
 
 tvheadend.replace_entry = function(r, d) {
-  if (!r) return;
-  r.store.fields.each(function (n) {
-    var v = d[n.name];
-    r.data[n.name] = n.convert((v !== undefined) ? v : n.defaultValue, v);
-  });
-  r.json = d;
-  r.commit();
+    if (!r) return;
+    var dst = r.data;
+    var src = d.params instanceof Array ? d.params : d;
+    var lookup = src instanceof Array;
+    r.store.fields.each(function (n) {
+        if (lookup) {
+            for (var i = 0; i < src.length; i++) {
+                if (src[i].id == n.name) {
+                    var v = src[i].value;
+                    break;
+                }
+            }
+        } else {
+            var v = src[n.name];
+        }
+        var x = v;
+        if (typeof v === 'undefined')
+            x = typeof n.defaultValue === 'undefined' ? '' : n.defaultValue;
+        dst[n.name] = n.convert(x, v);
+    });
+    r.json = src;
+    r.commit();
 }
 
 /*

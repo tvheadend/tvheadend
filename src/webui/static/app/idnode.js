@@ -1137,7 +1137,38 @@ tvheadend.idnode_grid = function(panel, conf)
     var idnode = null;
 
     var update = function(o) {
-        if (auto.getValue())
+        if ('delete' in o)
+            Ext.each(o['delete'], function (d) {
+                var r = store.getById(d);
+                if (r)
+                    store.remove(r);
+            });
+        if (o.change) {
+            var ids = [];
+            Ext.each(o.change, function(id) {
+                var r = store.getById(id);
+                if (r)
+                    ids.push(r.id);
+            });
+            if (ids) {
+                var p = { uuid: ids };
+                if (conf.list) p.list = conf.list;
+                Ext.Ajax.request({
+                    url: 'api/idnode/load',
+                    params: p,
+                    success: function (d) {
+                        d = json_decode(d);
+                        Ext.each(d, function(jd) {
+                            tvheadend.replace_entry(store.getById(jd.uuid), jd);
+                        });
+                    },
+                    failure: function(response, options) {
+                        Ext.MessageBox.alert(_('Grid Update'), response.statusText);
+                    }
+                });
+            }
+        }
+        if (o.create && auto.getValue())
             store.reload();
     };
 
