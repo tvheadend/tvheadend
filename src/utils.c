@@ -716,7 +716,9 @@ deferred_unlink(const char *filename, const char *rootdir)
       p[1] = '.';
     strcpy(s + l, ".removing");
   } else {
-    memcpy(s, ".rm.", 4);
+    p = strrchr(s, '/');
+    p = p && p[1] ? p + 1 : s;
+    memcpy(p, ".rm.", 4);
   }
   r = rename(filename, s);
   if (r) {
