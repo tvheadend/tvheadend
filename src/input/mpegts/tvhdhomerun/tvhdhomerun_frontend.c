@@ -680,6 +680,7 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   hfe->mi_stop_mux       = tvhdhomerun_frontend_stop_mux;
   hfe->mi_network_list   = tvhdhomerun_frontend_network_list;
   hfe->mi_update_pids    = tvhdhomerun_frontend_update_pids;
+  hfe->mi_empty_status   = mpegts_input_empty_status;
 
   /* Adapter link */
   hfe->hf_device = hd;

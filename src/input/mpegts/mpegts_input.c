@@ -213,6 +213,7 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
 
 const idclass_t mpegts_input_class =
 {
+  .ic_super      = &tvh_input_class,
   .ic_class      = "mpegts_input",
   .ic_caption    = N_("MPEG-TS Input"),
   .ic_event      = "mpegts_input",
@@ -1498,11 +1499,32 @@ mpegts_input_stream_status
   st->stats.bps   = atomic_exchange(&mmi->tii_stats.bps, 0) * 8;
 }
 
+void
+mpegts_input_empty_status
+  ( mpegts_input_t *mi, tvh_input_stream_t *st )
+{
+  char buf[512];
+  tvh_input_instance_t *mmi_;
+  mpegts_mux_instance_t *mmi;
+
+  st->uuid        = strdup(idnode_uuid_as_sstr(&mi->ti_id));
+  mi->mi_display_name(mi, buf, sizeof(buf));
+  st->input_name  = strdup(buf);
+  LIST_FOREACH(mmi_, &mi->mi_mux_instances, tii_input_link) {
+    mmi = (mpegts_mux_instance_t *)mmi_;
+    st->stats.unc += mmi->tii_stats.unc;
+    st->stats.cc += mmi->tii_stats.cc;
+    st->stats.te += mmi->tii_stats.te;
+    st->stats.ec_block += mmi->tii_stats.ec_block;
+    st->stats.tc_block += mmi->tii_stats.tc_block;
+  }
+}
+
 static void
 mpegts_input_get_streams
   ( tvh_input_t *i, tvh_input_stream_list_t *isl )
 {
-  tvh_input_stream_t *st;
+  tvh_input_stream_t *st = NULL;
   mpegts_input_t *mi = (mpegts_input_t*)i;
   mpegts_mux_instance_t *mmi;
 
@@ -1510,6 +1532,11 @@ mpegts_input_get_streams
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
     st = calloc(1, sizeof(tvh_input_stream_t));
     mpegts_input_stream_status(mmi, st);
+    LIST_INSERT_HEAD(isl, st, link);
+  }
+  if (st == NULL && mi->mi_empty_status) {
+    st = calloc(1, sizeof(tvh_input_stream_t));
+    mi->mi_empty_status(mi, st);
     LIST_INSERT_HEAD(isl, st, link);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);

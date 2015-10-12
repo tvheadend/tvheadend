@@ -1638,6 +1638,7 @@ linuxdvb_frontend_tune1
   return r;
 }
 
+
 /* **************************************************************************
  * Creation/Config
  * *************************************************************************/
@@ -1733,6 +1734,7 @@ linuxdvb_frontend_create
   lfe->mi_network_list    = linuxdvb_frontend_network_list;
   lfe->mi_update_pids     = linuxdvb_frontend_update_pids;
   lfe->mi_enabled_updated = linuxdvb_frontend_enabled_updated;
+  lfe->mi_empty_status    = mpegts_input_empty_status;
 
   /* Adapter link */
   lfe->lfe_adapter = la;

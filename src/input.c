@@ -23,6 +23,13 @@
 tvh_input_list_t    tvh_inputs;
 tvh_hardware_list_t tvh_hardware;
 
+const idclass_t tvh_input_class =
+{
+  .ic_class      = "tvh_input",
+  .ic_caption    = N_("Input Base"),
+  .ic_perm_def   = ACCESS_ADMIN
+};
+
 const idclass_t tvh_input_instance_class =
 {
   .ic_class      = "tvh_input_instance",

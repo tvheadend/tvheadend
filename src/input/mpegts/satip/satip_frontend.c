@@ -1770,6 +1770,7 @@ satip_frontend_create
   lfe->mi_stop_mux       = satip_frontend_stop_mux;
   lfe->mi_network_list   = satip_frontend_network_list;
   lfe->mi_update_pids    = satip_frontend_update_pids;
+  lfe->mi_empty_status   = mpegts_input_empty_status;
 
   /* Adapter link */
   lfe->sf_device = sd;

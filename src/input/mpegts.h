@@ -701,7 +701,8 @@ struct mpegts_input
   void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
-  void (*mi_tuning_error)   (mpegts_input_t*,mpegts_mux_t *);
+  void (*mi_tuning_error)   (mpegts_input_t*, mpegts_mux_t *);
+  void (*mi_empty_status)   (mpegts_input_t*, tvh_input_stream_t *);
   idnode_set_t *(*mi_network_list) (mpegts_input_t*);
 };
 
@@ -757,6 +758,9 @@ void mpegts_input_status_timer ( void *p );
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
 
 int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags );
+
+void mpegts_input_empty_status ( mpegts_input_t *mi, tvh_input_stream_t *st );
+
 
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );
