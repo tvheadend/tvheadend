@@ -166,7 +166,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   assert(c == NULL);
 
   /* Fire event */
-  idnode_notify_changed(in);
+  idnode_notify(in, "create");
 
   return 0;
 }
