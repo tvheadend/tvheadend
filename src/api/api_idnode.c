@@ -235,7 +235,7 @@ static int
 api_idnode_load
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  int err = 0, meta, count = 0;
+  int err = 0, meta, grid, count = 0;
   idnode_t *in;
   htsmsg_t *uuids, *l = NULL, *m, *flist;
   htsmsg_field_t *f;
@@ -260,7 +260,11 @@ api_idnode_load
   if (!(uuids = htsmsg_field_get_list(f)))
     if (!(uuid = htsmsg_field_get_str(f)))
       return EINVAL;
+
   meta = htsmsg_get_s32_or_default(args, "meta", 0);
+  grid = htsmsg_get_s32_or_default(args, "grid", 0);
+  if (grid > 0 && meta > 0)
+    return -EINVAL;
 
   flist = api_idnode_flist_conf(args, "list");
 
@@ -278,9 +282,15 @@ api_idnode_load
         err = EPERM;
         continue;
       }
-      m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
-      if (meta > 0)
-        htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+      if (grid > 0) {
+        m = htsmsg_create_map();
+        htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
+        idnode_read0(in, m, flist, 0, perm->aa_lang_ui);
+      } else {
+        m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
+        if (meta > 0)
+          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+      }
       htsmsg_add_msg(l, NULL, m);
       count++;
       idnode_perm_unset(in);
@@ -298,9 +308,15 @@ api_idnode_load
         err = EPERM;
       } else {
         l = htsmsg_create_list();
-        m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
-        if (meta > 0)
-          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+        if (grid > 0) {
+          m = htsmsg_create_map();
+          htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
+          idnode_read0(in, m, flist, 0, perm->aa_lang_ui);
+        } else {
+          m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
+          if (meta > 0)
+            htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+        }
         htsmsg_add_msg(l, NULL, m);
         idnode_perm_unset(in);
       }
