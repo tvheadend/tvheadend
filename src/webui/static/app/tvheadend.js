@@ -165,6 +165,20 @@ tvheadend.doQueryAnyMatch = function(q, forceAll) {
 }
 
 /*
+ * Replace one entry
+ */
+
+tvheadend.replace_entry = function(r, d) {
+  if (!r) return;
+  r.store.fields.each(function (n) {
+    var v = d[n.name];
+    r.data[n.name] = n.convert((v !== undefined) ? v : n.defaultValue, v);
+  });
+  r.json = d;
+  r.commit();
+}
+
+/*
  * General capabilities
  */
 Ext.Ajax.request({
