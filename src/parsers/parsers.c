@@ -107,9 +107,6 @@ static int parse_ac3(service_t *t, elementary_stream_t *st, size_t len,
 static int parse_eac3(service_t *t, elementary_stream_t *st, size_t len,
                       uint32_t next_startcode, int sc_offset);
 
-static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
-                      uint32_t next_startcode, int sc_offset);
-
 static void parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
 
 static void parser_deliver_error(service_t *t, elementary_stream_t *st);
@@ -155,15 +152,12 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
     parse_pes(t, st, data, len, start, parse_eac3);
     break;
 
-  case SCT_MP4A:
-    parse_pes(t, st, data, len, start, parse_mp4a);
-    break;
-
   case SCT_DVBSUB:
     parse_subtitles(t, st, data, len, start);
     break;
     
   case SCT_AAC:
+  case SCT_MP4A:
     parse_aac(t, st, data, len, start);
     break;
 
@@ -204,6 +198,12 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     if(len < 9)
       return;
 
+    if((data[0] != 0 && data[1] != 0 && data[2] != 1) ||
+       (data[3] != 0xbd && (data[3] & ~0x1f) != 0xc0)) { /* startcode */
+      sbuf_reset(&st->es_buf, 4000);
+      return;
+    }
+
     olddts = st->es_curdts;
     oldpts = st->es_curpts;
     hlen = parse_pes_header(t, st, data + 6, len - 6);
@@ -225,8 +225,11 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   while((l = st->es_buf.sb_ptr - p) > 3) {
     const uint8_t *d = st->es_buf.sb_data + p;
+    /* Startcode check */
+    if(d[0] == 0 || d[1] == 0 || d[2] == 1) {
+      p += 4;
     /* LATM */
-    if(d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
+    } else if(d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
       muxlen = (d[1] & 0x1f) << 8 | d[2];
 
       if(l < muxlen + 3)
@@ -538,18 +541,6 @@ static void parse_mp4a_data(service_t *t, elementary_stream_t *st,
       }
     }
   }
-}
-
-static int parse_mp4a(service_t *t, elementary_stream_t *st, size_t ilen,
-                      uint32_t next_startcode, int sc_offset)
-{
-  int r;
-
-  if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != 0)
-    return r;
-
-  parse_mp4a_data(t, st, 0);
-  return PARSER_RESET;
 }
 
 const static int mpa_br[16] = {
