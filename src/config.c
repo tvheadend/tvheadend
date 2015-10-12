@@ -1323,6 +1323,28 @@ config_migrate_v21 ( void )
   }
 }
 
+/*
+ * v21 -> v22 : epggrab missing changes
+ */
+static void
+config_migrate_v22 ( void )
+{
+  htsmsg_t *c;
+  uint32_t u32;
+
+  if ((c = hts_settings_load("epggrab/config")) != NULL) {
+    if (htsmsg_get_u32(c, "epgdb_periodicsave", &u32) == 0)
+      htsmsg_set_u32(c, "epgdb_periodicsave", (u32 + 3600 - 1) / 3600);
+    hts_settings_save(c, "epggrab/config");
+    htsmsg_destroy(c);
+  }
+  if ((c = hts_settings_load("timeshift/config")) != NULL) {
+    if (htsmsg_get_u32(c, "max_period", &u32) == 0)
+      htsmsg_set_u32(c, "max_period", (u32 + 60 - 1) / 60);
+    hts_settings_save(c, "timeshift/config");
+    htsmsg_destroy(c);
+  }
+}
 
 
 
@@ -1443,7 +1465,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v18,
   config_migrate_v19,
   config_migrate_v20,
-  config_migrate_v21
+  config_migrate_v21,
+  config_migrate_v22
 };
 
 /*

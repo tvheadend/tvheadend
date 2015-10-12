@@ -2083,7 +2083,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   if (timeshift_conf.enabled) {
     timeshiftPeriod = htsmsg_get_u32_or_default(in, "timeshiftPeriod", 0);
     if (!timeshift_conf.unlimited_period)
-      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period);
+      timeshiftPeriod = MIN(timeshiftPeriod, timeshift_conf.max_period * 60);
   }
 #endif
 
