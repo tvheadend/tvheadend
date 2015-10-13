@@ -1137,12 +1137,17 @@ tvheadend.idnode_grid = function(panel, conf)
     var idnode = null;
 
     var update = function(o) {
-        if ('delete' in o)
+        if ((o.create || 'delete' in o) && auto.getValue()) {
+            store.reload();
+            return;
+        }
+        if ('delete' in o) {
             Ext.each(o['delete'], function (d) {
                 var r = store.getById(d);
                 if (r)
                     store.remove(r);
             });
+        }
         if (o.change) {
             var ids = [];
             Ext.each(o.change, function(id) {
@@ -1168,8 +1173,6 @@ tvheadend.idnode_grid = function(panel, conf)
                 });
             }
         }
-        if (o.create && auto.getValue())
-            store.reload();
     };
 
     var update2 = function(o) {
