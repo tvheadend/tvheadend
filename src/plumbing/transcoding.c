@@ -135,7 +135,7 @@ typedef struct transcoder {
    (x) == AV_CODEC_ID_MP2  || (x) == AV_CODEC_ID_VORBIS)
 
 /**
- * 
+ *
  */
 static inline int
 shortid(transcoder_t *t)
@@ -347,7 +347,7 @@ transcoder_get_decoder(transcoder_t *t, streaming_component_type_t ty)
 
 
 /**
- * 
+ *
  */
 static AVCodec *
 transcoder_get_encoder(transcoder_t *t, const char *codec_name)
@@ -823,13 +823,13 @@ scleanup:
     } else if (got_packet_ptr && packet.pts >= 0) {
 
       int extra_size = 0;
-      
+
       if (ts->ts_type == SCT_AAC) {
         /* only if ADTS header is missing, create it */
         if (packet.size < 2 || packet.data[0] != 0xff || (packet.data[1] & 0xf0) != 0xf0)
           extra_size = 7;
       }
-      
+
       n = pkt_alloc(NULL, packet.size + extra_size, packet.pts, packet.pts);
       memcpy(pktbuf_ptr(n->pkt_payload) + extra_size, packet.data, packet.size);
 
@@ -980,7 +980,7 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
   n->pkt_field          = pkt->pkt_field;
   n->pkt_aspect_num     = pkt->pkt_aspect_num;
   n->pkt_aspect_den     = pkt->pkt_aspect_den;
-  
+
   if(octx->coded_frame && octx->coded_frame->pts != AV_NOPTS_VALUE) {
     if(n->pkt_dts != PTS_UNSET)
       n->pkt_dts -= n->pkt_pts;
@@ -1262,9 +1262,9 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   deint = av_malloc(len);
 
   avpicture_fill(&deint_pic,
-		 deint, 
-		 ictx->pix_fmt, 
-		 ictx->width, 
+		 deint,
+		 ictx->pix_fmt,
+		 ictx->width,
 		 ictx->height);
 
   if (avpicture_deinterlace(&deint_pic,
@@ -1281,12 +1281,12 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   buf = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
   memset(buf, 0, len);
 
-  avpicture_fill((AVPicture *)vs->vid_enc_frame, 
-                 buf, 
+  avpicture_fill((AVPicture *)vs->vid_enc_frame,
+                 buf,
                  octx->pix_fmt,
-                 octx->width, 
+                 octx->width,
                  octx->height);
- 
+
   vs->vid_scaler = sws_getCachedContext(vs->vid_scaler,
 				    ictx->width,
 				    ictx->height,
@@ -1298,13 +1298,13 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 				    NULL,
 				    NULL,
 				    NULL);
- 
-  if (sws_scale(vs->vid_scaler, 
-		(const uint8_t * const*)deint_pic.data, 
-		deint_pic.linesize, 
-		0, 
-		ictx->height, 
-		vs->vid_enc_frame->data, 
+
+  if (sws_scale(vs->vid_scaler,
+		(const uint8_t * const*)deint_pic.data,
+		deint_pic.linesize,
+		0,
+		ictx->height,
+		vs->vid_enc_frame->data,
 		vs->vid_enc_frame->linesize) < 0) {
     tvherror("transcode", "%04X: Cannot scale frame", shortid(t));
     transcoder_stream_invalidate(ts);
@@ -1356,7 +1356,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
@@ -1381,7 +1381,7 @@ transcoder_packet(transcoder_t *t, th_pkt_t *pkt)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_destroy_stream(transcoder_t *t, transcoder_stream_t *ts)
@@ -1391,7 +1391,7 @@ transcoder_destroy_stream(transcoder_t *t, transcoder_stream_t *ts)
 
 
 /**
- * 
+ *
  */
 static int
 transcoder_init_stream(transcoder_t *t, streaming_start_component_t *ssc)
@@ -1418,7 +1418,7 @@ transcoder_init_stream(transcoder_t *t, streaming_start_component_t *ssc)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_destroy_subtitle(transcoder_t *t, transcoder_stream_t *ts)
@@ -1442,7 +1442,7 @@ transcoder_destroy_subtitle(transcoder_t *t, transcoder_stream_t *ts)
 
 
 /**
- * 
+ *
  */
 static int
 transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
@@ -1499,7 +1499,7 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_destroy_audio(transcoder_t *t, transcoder_stream_t *ts)
@@ -1529,7 +1529,7 @@ transcoder_destroy_audio(transcoder_t *t, transcoder_stream_t *ts)
 
 
 /**
- * 
+ *
  */
 static int
 transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
@@ -1589,7 +1589,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
   ssc->ssc_gh       = NULL;
 
   if(tp->tp_channels > 0)
-    as->aud_channels = tp->tp_channels; 
+    as->aud_channels = tp->tp_channels;
   if(tp->tp_abitrate > 0)
     as->aud_bitrate = tp->tp_abitrate * 1000;
 
@@ -1602,7 +1602,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_destroy_video(transcoder_t *t, transcoder_stream_t *ts)
@@ -1638,7 +1638,7 @@ transcoder_destroy_video(transcoder_t *t, transcoder_stream_t *ts)
 
 
 /**
- * 
+ *
  */
 static int
 transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
@@ -1772,7 +1772,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
 
 
 /**
- * 
+ *
  */
 static streaming_start_t *
 transcoder_start(transcoder_t *t, streaming_start_t *src)
@@ -1795,13 +1795,13 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
   for (i = j = 0; i < src->ss_num_components && j < n; i++) {
     streaming_start_component_t *ssc_src = &src->ss_components[i];
     streaming_start_component_t *ssc = &ss->ss_components[j];
-    
+
     if (ssc_src->ssc_disabled)
       continue;
 
     *ssc = *ssc_src;
 
-    if (SCT_ISVIDEO(ssc->ssc_type)) 
+    if (SCT_ISVIDEO(ssc->ssc_type))
       rc = transcoder_init_video(t, ssc);
 
     else if (SCT_ISAUDIO(ssc->ssc_type))
@@ -1825,13 +1825,13 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_stop(transcoder_t *t)
 {
   transcoder_stream_t *ts;
-  
+
   while ((ts = LIST_FIRST(&t->t_stream_list))) {
     LIST_REMOVE(ts, ts_link);
 
@@ -1842,7 +1842,7 @@ transcoder_stop(transcoder_t *t)
 
 
 /**
- * 
+ *
  */
 static void
 transcoder_input(void *opaque, streaming_message_t *sm)
@@ -1908,10 +1908,10 @@ transcoder_create(streaming_target_t *output)
 
 
 /**
- * 
+ *
  */
 void
-transcoder_set_properties(streaming_target_t *st, 
+transcoder_set_properties(streaming_target_t *st,
 			  transcoder_props_t *props)
 {
   transcoder_t *t = (transcoder_t *)st;
@@ -1930,7 +1930,7 @@ transcoder_set_properties(streaming_target_t *st,
 
 
 /**
- * 
+ *
  */
 void
 transcoder_destroy(streaming_target_t *st)
@@ -1943,8 +1943,8 @@ transcoder_destroy(streaming_target_t *st)
 
 
 /**
- * 
- */ 
+ *
+ */
 htsmsg_t *
 transcoder_get_capabilities(int experimental)
 {
@@ -1985,7 +1985,7 @@ transcoder_get_capabilities(int experimental)
 
 
 /*
- * 
+ *
  */
 void transcoding_init(void)
 {
