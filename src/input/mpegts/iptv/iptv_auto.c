@@ -30,6 +30,7 @@
  */
 static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
+                                   const char *last_url,
                                    const http_arg_list_t *remove_args,
                                    const char *url, const char *name,
                                    int64_t chnum, int *total, int *count)
@@ -43,7 +44,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
   size_t l = 0;
-  char url2[512];
+  char url2[512], name2[128], *n;
 
   if (url == NULL ||
       (strncmp(url, "file://", 7) &&
@@ -101,6 +102,12 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     url = url2;
   }
 
+  if (last_url) {
+    snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
+  } else {
+    n = (char *)name;
+  }
+
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link) {
     im = (iptv_mux_t *)mm;
     if (strcmp(im->mm_iptv_url ?: "", url) == 0) {
@@ -112,6 +119,11 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       }
       if (im->mm_iptv_chnum != chnum) {
         im->mm_iptv_chnum = chnum;
+        change = 1;
+      }
+      if ((1 || im->mm_iptv_muxname == NULL || im->mm_iptv_muxname[0] == '\0') && n && *n) {
+        free(im->mm_iptv_muxname);
+        im->mm_iptv_muxname = strdup(n);
         change = 1;
       }
       if (change)
@@ -141,6 +153,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
  */
 static int
 iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
+                              const char *last_url,
                               http_arg_list_t *remove_args,
                               int64_t chnum)
 {
@@ -169,7 +182,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     while (*data && *data != '\n') data++;
     if (*data) { *data = '\0'; data++; }
     if (*url)
-      iptv_auto_network_process_m3u_item(in, remove_args, url, name,
+      iptv_auto_network_process_m3u_item(in, last_url, remove_args, url, name,
                                          chnum, &total, &count);
   }
 
@@ -184,7 +197,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
  *
  */
 static int
-iptv_auto_network_process(iptv_network_t *in, char *data, size_t len)
+iptv_auto_network_process(iptv_network_t *in, const char *last_url, char *data, size_t len)
 {
   mpegts_mux_t *mm;
   int r = -1, count, n, i;
@@ -209,7 +222,7 @@ iptv_auto_network_process(iptv_network_t *in, char *data, size_t len)
   while (*data && *data <= ' ') data++;
 
   if (!strncmp(data, "#EXTM3U", 7))
-    r = iptv_auto_network_process_m3u(in, data, &remove_args, in->in_channel_number);
+    r = iptv_auto_network_process_m3u(in, data, last_url, &remove_args, in->in_channel_number);
 
   if (r == 0) {
     count = 0;
@@ -236,7 +249,7 @@ iptv_auto_network_file(iptv_network_t *in, const char *filename)
 {
   int fd;
   struct stat st;
-  char *data;
+  char *data, *last_url;
   size_t r;
   off_t off;
 
@@ -267,7 +280,10 @@ iptv_auto_network_file(iptv_network_t *in, const char *filename)
 
   if (off == st.st_size) {
     data[off] = '\0';
-    return iptv_auto_network_process(in, data, off);
+    last_url = strrchr(filename, '/');
+    if (last_url)
+      last_url++;
+    return iptv_auto_network_process(in, last_url, data, off);
   }
   return -1;
 }
@@ -293,6 +309,8 @@ static int
 iptv_auto_network_fetch_complete(http_client_t *hc)
 {
   iptv_network_t *in = hc->hc_aux;
+  char *last_url = NULL;
+  url_t u;
 
   switch (hc->hc_code) {
   case HTTP_STATUS_MOVED:
@@ -302,10 +320,17 @@ iptv_auto_network_fetch_complete(http_client_t *hc)
     return 0;
   }
 
+  memset(&u, 0, sizeof(u));
+  if (!urlparse(in->in_url, &u)) {
+    last_url = strrchr(u.path, '/');
+    if (last_url)
+      last_url++;
+  }
+
   pthread_mutex_lock(&global_lock);
 
   if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
-    iptv_auto_network_process(in, hc->hc_data, hc->hc_data_size);
+    iptv_auto_network_process(in, last_url, hc->hc_data, hc->hc_data_size);
   else
     tvherror("iptv", "unable to fetch data from url for network '%s' [%d-%d/%zd]",
              in->mn_network_name, hc->hc_code, hc->hc_result, hc->hc_data_size);
