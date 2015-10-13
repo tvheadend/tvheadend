@@ -448,6 +448,8 @@ typedef struct service {
   uint8_t s_scrambled_seen;
   uint8_t s_scrambled_pass;
   th_descrambler_runtime_t *s_descramble;
+  void *s_descrambler; /* last active descrambler */
+  descramble_info_t *s_descramble_info;
 
   /**
    * List of all and filtered components.

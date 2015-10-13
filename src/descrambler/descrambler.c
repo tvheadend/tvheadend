@@ -146,6 +146,7 @@ descrambler_service_stop ( service_t *t )
 {
   th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
+  void *p;
 
 #if ENABLE_LINUXDVB_CA
   dvbcam_service_stop(t);
@@ -154,6 +155,10 @@ descrambler_service_stop ( service_t *t )
   while ((td = LIST_FIRST(&t->s_descramblers)) != NULL)
     td->td_stop(td);
   t->s_descramble = NULL;
+  t->s_descrambler = NULL;
+  p = t->s_descramble_info;
+  t->s_descramble_info = NULL;
+  free(p);
   if (dr) {
     tvhcsa_destroy(&dr->dr_csa);
     sbuf_free(&dr->dr_buf);
@@ -185,9 +190,13 @@ descrambler_notify( th_descrambler_t *td,
 
   tvhlog(LOG_DEBUG, "descrambler", "info - service='%s' caid=%04X(%s) "
                                    "provid=%06X ecmtime=%d hops=%d "
-                                   "reader='%s' from='%s' protocol='%s'",
+                                   "reader='%s' from='%s' protocol='%s'%s",
          t->s_dvb_svcname, caid, cardsystem, provid,
-         ecmtime, hops, reader, from, protocol);
+         ecmtime, hops, reader, from, protocol,
+         t->s_descrambler != td ? " (inactive)" : "");
+
+  if (t->s_descrambler != td)
+    return;
 
   sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
   sm->sm_data = di = calloc(1, sizeof(*di));
@@ -201,6 +210,10 @@ descrambler_notify( th_descrambler_t *td,
   strncpy(di->reader, reader, sizeof(di->reader)-1);
   strncpy(di->from, from, sizeof(di->protocol)-1);
   strncpy(di->protocol, protocol, sizeof(di->protocol)-1);
+
+  if (!t->s_descramble_info)
+    t->s_descramble_info = calloc(1, sizeof(*di));
+  memcpy(t->s_descramble_info, di, sizeof(*di));
 
   pthread_mutex_lock(&t->s_stream_mutex);
   streaming_pad_deliver(&t->s_streaming_pad, sm);
@@ -298,6 +311,7 @@ descrambler_keys ( th_descrambler_t *td, int type,
     }
     dr->dr_ecm_last_key_time = dispatch_clock;
     td->td_keystate = DS_RESOLVED;
+    td->td_service->s_descrambler = td;
   } else {
     tvhlog(LOG_DEBUG, "descrambler",
                       "Empty keys received from %s for service \"%s\"",

@@ -844,6 +844,8 @@ htsmsg_t *
 subscription_create_msg(th_subscription_t *s)
 {
   htsmsg_t *m = htsmsg_create_map();
+  descramble_info_t *di;
+  char buf[256];
 
   htsmsg_add_u32(m, "id", s->ths_id);
   htsmsg_add_u32(m, "start", s->ths_start);
@@ -885,10 +887,17 @@ subscription_create_msg(th_subscription_t *s)
   if(s->ths_channel != NULL)
     htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel));
   
-  if(s->ths_service != NULL)
+  if(s->ths_service != NULL) {
     htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");
 
-  else if(s->ths_dvrfile != NULL)
+    if ((di = s->ths_service->s_descramble_info) != NULL) {
+      snprintf(buf, sizeof(buf), "%04X:%06X(%ums)-%s%s%s",
+               di->caid, di->provid, di->ecmtime, di->from,
+               di->reader[0] ? "/" : "", di->reader);
+      htsmsg_add_str(m, "descramble", buf);
+    }
+
+  } else if(s->ths_dvrfile != NULL)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
 
   htsmsg_add_u32(m, "in", s->ths_bytes_in_avg);
