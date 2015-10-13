@@ -42,7 +42,7 @@
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
-static void ts_remux(mpegts_service_t *t, const uint8_t *tsb, int len, int error);
+static void ts_remux(mpegts_service_t *t, const uint8_t *tsb, int len, int errors);
 
 /**
  * Continue processing of transport stream packets
@@ -52,7 +52,7 @@ ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
 {
   mpegts_service_t *m;
-  int off, pusi, cc, error;
+  int off, pusi, cc, error, errors;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
@@ -62,21 +62,11 @@ ts_recv_packet0
     return;
   }
 
-  error = !!(tsb[1] & 0x80);
+  for (errors = 0; len > 0; tsb += 188, len -= 188) {
 
-  if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
-    ts_remux(t, tsb, len, error);
-
-  LIST_FOREACH(m, &t->s_masters, s_masters_link) {
-    pthread_mutex_lock(&m->s_stream_mutex);
-    if(streaming_pad_probe_type(&m->s_streaming_pad, SMT_MPEGTS))
-      ts_remux(m, tsb, len, error);
-    pthread_mutex_unlock(&m->s_stream_mutex);
-  }
-
-  for ( ; len > 0; tsb += 188, len -= 188) {
-
-    pusi  = !!(tsb[1] & 0x40);
+    pusi    = (tsb[1] >> 6) & 1; /* 0x40 */
+    error   = (tsb[1] >> 7) & 1; /* 0x80 */
+    errors += error;
 
     /* Check CC */
 
@@ -90,12 +80,15 @@ ts_recv_packet0
                         service_component_nicename(st), st->es_cc_log.count);
         avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
         avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
+        if (!error)
+          errors++;
         error |= 2;
       }
       st->es_cc = (cc + 1) & 0xf;
     }
 
-    off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
+    if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+      continue;
 
     if (st->es_type == SCT_CA)
       continue;
@@ -103,12 +96,21 @@ ts_recv_packet0
     if (tsb[3] & 0xc0) /* scrambled */
       continue;
 
-    if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
-      continue;
+    off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
 
     if(off <= 188 && t->s_status == SERVICE_RUNNING)
       parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
 
+  }
+
+  if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+    ts_remux(t, tsb, len, errors);
+
+  LIST_FOREACH(m, &t->s_masters, s_masters_link) {
+    pthread_mutex_lock(&m->s_stream_mutex);
+    if(streaming_pad_probe_type(&m->s_streaming_pad, SMT_MPEGTS))
+      ts_remux(m, tsb, len, errors);
+    pthread_mutex_unlock(&m->s_stream_mutex);
   }
 }
 
@@ -260,7 +262,7 @@ ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb, int len)
  *
  */
 static void
-ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int error)
+ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
 {
   streaming_message_t sm;
   pktbuf_t *pb;
@@ -270,9 +272,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int error)
     sbuf_init_fixed(sb, TS_REMUX_BUFSIZE);
 
   sbuf_append(sb, src, len);
-
-  if (error)
-    sb->sb_err++;
+  sb->sb_err += errors;
 
   if(dispatch_clock == t->s_tsbuf_last && sb->sb_ptr < TS_REMUX_BUFSIZE)
     return;
