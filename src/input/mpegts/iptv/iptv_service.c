@@ -67,6 +67,16 @@ iptv_service_channel_name ( service_t *s )
   return is->s_dvb_svcname;
 }
 
+static int64_t
+iptv_service_channel_number ( service_t *s )
+{
+  iptv_service_t   *is = (iptv_service_t *)s;
+  iptv_mux_t       *im = (iptv_mux_t *)is->s_dvb_mux;
+  if (im->mm_iptv_chnum)
+    return im->mm_iptv_chnum;
+  return mpegts_service_channel_number(s);
+}
+
 /*
  * Create
  */
@@ -80,9 +90,10 @@ iptv_service_create0
                            &mpegts_service_class, uuid,
                            (mpegts_mux_t*)im, sid, pmt, conf);
   
-  is->s_config_save  = iptv_service_config_save;
-  is->s_delete       = iptv_service_delete;
-  is->s_channel_name = iptv_service_channel_name;
+  is->s_config_save    = iptv_service_config_save;
+  is->s_delete         = iptv_service_delete;
+  is->s_channel_name   = iptv_service_channel_name;
+  is->s_channel_number = iptv_service_channel_number;
 
   /* Set default service name */
   if (!is->s_dvb_svcname || !*is->s_dvb_svcname)

@@ -19,6 +19,7 @@
 
 #include "iptv_private.h"
 #include "settings.h"
+#include "channels.h"
 
 /*
  * Class
@@ -152,6 +153,13 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_muxname",
       .name     = N_("Mux Name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
+    },
+    {
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
+      .id       = "channel_number",
+      .name     = N_("Channel number"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_chnum),
     },
     {
       .type     = PT_STR,

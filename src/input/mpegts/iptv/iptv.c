@@ -22,6 +22,7 @@
 #include "tcp.h"
 #include "settings.h"
 #include "htsstr.h"
+#include "channels.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -558,6 +559,13 @@ const idclass_t iptv_auto_network_class = {
       .id       = "url",
       .name     = N_("URL"),
       .off      = offsetof(iptv_network_t, in_url),
+    },
+    {
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
+      .id       = "channel_number",
+      .name     = N_("Channel numbers from"),
+      .off      = offsetof(iptv_network_t, in_channel_number),
     },
     {
       .type     = PT_U32,

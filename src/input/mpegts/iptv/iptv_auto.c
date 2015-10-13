@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "http.h"
 #include "iptv_private.h"
+#include "channels.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -31,7 +32,7 @@ static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
                                    const http_arg_list_t *remove_args,
                                    const char *url, const char *name,
-                                   int *total, int *count)
+                                   int64_t chnum, int *total, int *count)
 {
   htsmsg_t *conf;
   mpegts_mux_t *mm;
@@ -49,6 +50,13 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
        strncmp(url, "http://", 7) &&
        strncmp(url, "https://", 8)))
     return;
+
+  if (chnum) {
+    if (chnum % CHANNEL_SPLIT)
+      chnum += *total;
+    else
+      chnum += (int64_t)*total * CHANNEL_SPLIT;
+  }
 
   memset(&u, 0, sizeof(u));
   if (urlparse(url, &u))
@@ -102,6 +110,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
         im->mm_iptv_svcname = name ? strdup(name) : NULL;
         change = 1;
       }
+      if (im->mm_iptv_chnum != chnum) {
+        im->mm_iptv_chnum = chnum;
+        change = 1;
+      }
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
@@ -129,7 +141,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
  */
 static int
 iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
-                              http_arg_list_t *remove_args)
+                              http_arg_list_t *remove_args,
+                              int64_t chnum)
 {
   char *url, *name = NULL;
   int total = 0, count = 0;
@@ -156,7 +169,8 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     while (*data && *data != '\n') data++;
     if (*data) { *data = '\0'; data++; }
     if (*url)
-      iptv_auto_network_process_m3u_item(in, remove_args, url, name, &total, &count);
+      iptv_auto_network_process_m3u_item(in, remove_args, url, name,
+                                         chnum, &total, &count);
   }
 
   if (total == 0)
@@ -195,7 +209,7 @@ iptv_auto_network_process(iptv_network_t *in, char *data, size_t len)
   while (*data && *data <= ' ') data++;
 
   if (!strncmp(data, "#EXTM3U", 7))
-    r = iptv_auto_network_process_m3u(in, data, &remove_args);
+    r = iptv_auto_network_process_m3u(in, data, &remove_args, in->in_channel_number);
 
   if (r == 0) {
     count = 0;

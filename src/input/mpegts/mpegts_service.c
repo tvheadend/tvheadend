@@ -439,7 +439,7 @@ mpegts_service_grace_period(service_t *t)
 /*
  * Channel number
  */
-static int64_t
+int64_t
 mpegts_service_channel_number ( service_t *s )
 {
   mpegts_service_t *ms = (mpegts_service_t*)s;
