@@ -358,6 +358,7 @@ int http_client_send( http_client_t *hc, http_cmd_t cmd,
                       http_arg_list_t *header, void *body, size_t body_size );
 void http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
                              const char *user, const char *pass );
+int http_client_simple_reconnect ( http_client_t *hc, const url_t *u );
 int http_client_simple( http_client_t *hc, const url_t *url);
 int http_client_clear_state( http_client_t *hc );
 int http_client_run( http_client_t *hc );

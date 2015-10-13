@@ -1140,12 +1140,48 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
   http_client_basic_auth(hc, h, url->user, url->pass);
 }
 
+int
+http_client_simple_reconnect ( http_client_t *hc, const url_t *u )
+{
+  http_arg_list_t h;
+  tvhpoll_t *efd;
+  int r;
+
+  if (strcmp(u->scheme, hc->hc_scheme) ||
+      strcmp(u->host, hc->hc_host) ||
+      http_port(hc, u->scheme, u->port) != hc->hc_port ||
+      !hc->hc_keepalive) {
+    efd = hc->hc_efd;
+    http_client_shutdown(hc, 1, 1);
+    r = http_client_reconnect(hc, hc->hc_version,
+                              u->scheme, u->host, u->port);
+    if (r < 0)
+      return r;
+    r = hc->hc_verify_peer;
+    hc->hc_verify_peer = -1;
+    http_client_ssl_peer_verify(hc, r);
+    hc->hc_efd = efd;
+  }
+
+  http_client_flush(hc, 0);
+
+  http_client_basic_args(hc, &h, u, hc->hc_keepalive);
+  hc->hc_reconnected = 1;
+  hc->hc_shutdown    = 0;
+  hc->hc_pevents     = 0;
+
+  r = http_client_send(hc, hc->hc_cmd, u->path, u->query, &h, NULL, 0);
+  if (r < 0)
+    return r;
+
+  hc->hc_reconnected = 1;
+  return HTTP_CON_RECEIVING;
+}
+
 static int
 http_client_redirected ( http_client_t *hc )
 {
   char *location, *location2;
-  http_arg_list_t h;
-  tvhpoll_t *efd;
   url_t u;
   int r;
 
@@ -1172,40 +1208,10 @@ http_client_redirected ( http_client_t *hc )
   }
   free(location);
 
-  if (strcmp(u.scheme, hc->hc_scheme) ||
-      strcmp(u.host, hc->hc_host) ||
-      http_port(hc, u.scheme, u.port) != hc->hc_port ||
-      !hc->hc_keepalive) {
-    efd = hc->hc_efd;
-    http_client_shutdown(hc, 1, 1);
-    r = http_client_reconnect(hc, hc->hc_version,
-                              u.scheme, u.host, u.port);
-    if (r < 0) {
-      urlreset(&u);
-      return r;
-    }
-    r = hc->hc_verify_peer;
-    hc->hc_verify_peer = -1;
-    http_client_ssl_peer_verify(hc, r);
-    hc->hc_efd = efd;
-  }
+  r = http_client_simple_reconnect(hc, &u);
 
-  http_client_flush(hc, 0);
-
-  http_client_basic_args(hc, &h, &u, hc->hc_keepalive);
-  hc->hc_reconnected = 1;
-  hc->hc_shutdown    = 0;
-  hc->hc_pevents     = 0;
-
-  r = http_client_send(hc, hc->hc_cmd, u.path, u.query, &h, NULL, 0);
-  if (r < 0) {
-    urlreset(&u);
-    return r;
-  }
-
-  hc->hc_reconnected = 1;
   urlreset(&u);
-  return 1;
+  return r;
 }
 
 int

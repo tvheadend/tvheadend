@@ -22,20 +22,68 @@
 #include "http.h"
 
 /*
+ * M3U parser
+ */
+static char *
+iptv_http_m3u(char *data)
+{
+  char *url;
+
+  while (*data && *data != '\n') data++;
+  if (*data) data++;
+  while (*data) {
+    if (strncmp(data, "#EXTINF:", 8) == 0) {
+      while (*data && *data != '\n') data++;
+      if (*data) { *data = '\0'; data++; }
+      continue;
+    }
+    while (*data && *data <= ' ') data++;
+    url = data;
+    while (*data && *data != '\n') data++;
+    if (*data) { *data = '\0'; data++; }
+    if (*url)
+      return strdup(url);
+  }
+  return NULL;
+}
+
+/*
  * Connected
  */
 static int
 iptv_http_header ( http_client_t *hc )
 {
+  iptv_mux_t *im = hc->hc_aux;
+  char *argv[3], *s;
+  int n;
+
   if (hc->hc_aux == NULL)
     return 0;
 
   /* multiple headers for redirections */
-  if (hc->hc_code == HTTP_STATUS_OK) {
-    pthread_mutex_lock(&global_lock);
-    iptv_input_mux_started(hc->hc_aux);
-    pthread_mutex_unlock(&global_lock);
+  if (hc->hc_code != HTTP_STATUS_OK)
+    return 0;
+
+  s = http_arg_get(&hc->hc_args, "Content-Type");
+  if (s) {
+    n = http_tokenize(s, argv, ARRAY_SIZE(argv), ';');
+    printf("mime: '%s'\n", s);
+    if (n > 0 &&
+        (strcasecmp(s, "audio/mpegurl") == 0 ||
+         strcasecmp(s, "audio/x-mpegurl") == 0)) {
+      if (im->im_m3u_header > 10) {
+        im->im_m3u_header = 0;
+        return 0;
+      }
+      im->im_m3u_header++;
+      return 0;
+    }
   }
+
+  im->im_m3u_header = 0;
+  pthread_mutex_lock(&global_lock);
+  iptv_input_mux_started(hc->hc_aux);
+  pthread_mutex_unlock(&global_lock);
   return 0;
 }
 
@@ -48,19 +96,59 @@ iptv_http_data
 {
   iptv_mux_t *im = hc->hc_aux;
 
-  if (im == NULL)
+  if (im == NULL || hc->hc_code != HTTP_STATUS_OK)
     return 0;
+
+  if (im->im_m3u_header) {
+    sbuf_append(&im->mm_iptv_buffer, buf, len);
+    return 0;
+  }
 
   pthread_mutex_lock(&iptv_lock);
 
-  tsdebug_write((mpegts_mux_t *)im, buf, len);
   sbuf_append(&im->mm_iptv_buffer, buf, len);
+  tsdebug_write((mpegts_mux_t *)im, buf, len);
 
   if (len > 0)
     iptv_input_recv_packets(im, len);
 
   pthread_mutex_unlock(&iptv_lock);
 
+  return 0;
+}
+
+/*
+ * Complete data
+ */
+static int
+iptv_http_complete
+  ( http_client_t *hc )
+{
+  iptv_mux_t *im = hc->hc_aux;
+  char *url;
+  url_t u;
+  int r;
+
+  if (im->im_m3u_header) {
+    im->im_m3u_header = 0;
+    sbuf_append(&im->mm_iptv_buffer, "", 1);
+    url = iptv_http_m3u((char *)im->mm_iptv_buffer.sb_data);
+    if (url == NULL) {
+      tvherror("iptv", "m3u contents parsing failed");
+      return 0;
+    }
+    memset(&u, 0, sizeof(u));
+    if (!urlparse(url, &u)) {
+      hc->hc_keepalive = 0;
+      r = http_client_simple_reconnect(hc, &u);
+      if (r < 0)
+        tvherror("iptv", "cannot reopen http client: %d'", r);
+    } else {
+      tvherror("iptv", "m3u url invalid '%s'", url);
+    }
+    free(url);
+    return 0;
+  }
   return 0;
 }
 
@@ -79,6 +167,7 @@ iptv_http_start
     return SM_CODE_TUNING_FAILED;
   hc->hc_hdr_received    = iptv_http_header;
   hc->hc_data_received   = iptv_http_data;
+  hc->hc_data_complete   = iptv_http_complete;
   hc->hc_handle_location = 1;        /* allow redirects */
   hc->hc_io_size         = 128*1024; /* increase buffering */
   http_client_register(hc);          /* register to the HTTP thread */
