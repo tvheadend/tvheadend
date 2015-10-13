@@ -38,6 +38,8 @@
 
 extern pthread_mutex_t iptv_lock;
 
+struct http_client;
+
 typedef struct iptv_input   iptv_input_t;
 typedef struct iptv_network iptv_network_t;
 typedef struct iptv_mux     iptv_mux_t;
@@ -78,9 +80,16 @@ struct iptv_network
   uint32_t in_max_streams;
   uint32_t in_max_bandwidth;
   uint32_t in_max_timeout;
+
+  char *in_url;
+  uint32_t in_refetch_period;
+  int      in_ssl_peer_verify;
+  gtimer_t in_auto_timer;
+  gtimer_t in_fetch_timer;
+  struct http_client *in_http_client;
 };
 
-iptv_network_t *iptv_network_create0 ( const char *uuid, htsmsg_t *conf );
+iptv_network_t *iptv_network_create0 ( const char *uuid, htsmsg_t *conf, const idclass_t *idc );
 
 struct iptv_mux
 {
@@ -117,6 +126,8 @@ struct iptv_mux
 
   void                 *im_data;
 
+  int                   im_delete_flag;
+
 };
 
 iptv_mux_t* iptv_mux_create0
@@ -125,16 +136,23 @@ iptv_mux_t* iptv_mux_create0
 struct iptv_service
 {
   mpegts_service_t;
+  char * s_iptv_svcname;
 };
 
 iptv_service_t *iptv_service_create0
   ( iptv_mux_t *im, uint16_t sid, uint16_t pmt_pid,
     const char *uuid, htsmsg_t *conf );
 
+extern const idclass_t iptv_network_class;
+extern const idclass_t iptv_auto_network_class;
+
 extern iptv_input_t   *iptv_input;
 extern iptv_network_t *iptv_network;
 
 void iptv_mux_load_all ( void );
+
+void iptv_auto_network_init( iptv_network_t *in );
+void iptv_auto_network_done( iptv_network_t *in );
 
 void iptv_http_init    ( void );
 void iptv_udp_init     ( void );

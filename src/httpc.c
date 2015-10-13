@@ -1414,7 +1414,7 @@ http_client_connect
 void
 http_client_register( http_client_t *hc )
 {
-  assert(hc->hc_data_received || hc->hc_conn_closed);
+  assert(hc->hc_data_received || hc->hc_conn_closed || hc->hc_data_complete);
   assert(hc->hc_efd == NULL);
   
   pthread_mutex_lock(&http_lock);
@@ -1507,7 +1507,6 @@ http_client_done ( void )
   http_running = 0;
   tvh_write(http_pipe.wr, "", 1);
   pthread_join(http_client_tid, NULL);
-  assert(TAILQ_FIRST(&http_clients) == NULL);
   tvh_pipe_close(&http_pipe);
   tvhpoll_destroy(http_poll);
   free(http_user_agent);

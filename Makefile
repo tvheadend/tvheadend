@@ -364,7 +364,8 @@ SRCS-IPTV = \
         src/input/mpegts/iptv/iptv_udp.c \
         src/input/mpegts/iptv/iptv_rtsp.c \
         src/input/mpegts/iptv/iptv_rtcp.c \
-        src/input/mpegts/iptv/iptv_pipe.c
+        src/input/mpegts/iptv/iptv_pipe.c \
+	src/input/mpegts/iptv/iptv_auto.c
 SRCS-${CONFIG_IPTV} += $(SRCS-IPTV)
 I18N-C += $(SRCS-IPTV)
 

@@ -41,7 +41,8 @@ iptv_service_config_save ( service_t *s )
 static void
 iptv_service_delete ( service_t *s, int delconf )
 {
-  mpegts_mux_t     *mm = ((mpegts_service_t *)s)->s_dvb_mux;
+  iptv_service_t   *is = (iptv_service_t *)s;
+  mpegts_mux_t     *mm = is->s_dvb_mux;
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
 
@@ -54,6 +55,16 @@ iptv_service_delete ( service_t *s, int delconf )
 
   /* Note - do no pass the delconf flag - another file location */
   mpegts_service_delete(s, 0);
+}
+
+static const char *
+iptv_service_channel_name ( service_t *s )
+{
+  iptv_service_t   *is = (iptv_service_t *)s;
+  iptv_mux_t       *im = (iptv_mux_t *)is->s_dvb_mux;
+  if (im->mm_iptv_svcname && im->mm_iptv_svcname[0])
+    return im->mm_iptv_svcname;
+  return is->s_dvb_svcname;
 }
 
 /*
@@ -69,8 +80,9 @@ iptv_service_create0
                            &mpegts_service_class, uuid,
                            (mpegts_mux_t*)im, sid, pmt, conf);
   
-  is->s_config_save = iptv_service_config_save;
-  is->s_delete      = iptv_service_delete;
+  is->s_config_save  = iptv_service_config_save;
+  is->s_delete       = iptv_service_delete;
+  is->s_channel_name = iptv_service_channel_name;
 
   /* Set default service name */
   if (!is->s_dvb_svcname || !*is->s_dvb_svcname)
