@@ -180,6 +180,8 @@ char *http_arg_get_remove(struct http_arg_list *list, const char *name);
 
 void http_arg_set(struct http_arg_list *list, const char *key, const char *val);
 
+static inline int http_args_empty(const struct http_arg_list *list) { return TAILQ_EMPTY(list); }
+
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
 void http_error(http_connection_t *hc, int error);
@@ -236,7 +238,7 @@ int http_access_verify_channel(http_connection_t *hc, int mask,
 
 void http_deescape(char *s);
 
-void http_parse_get_args(http_connection_t *hc, char *args);
+void http_parse_args(http_arg_list_t *list, char *args);
 
 /*
  * HTTP/RTSP Client

@@ -274,7 +274,7 @@ rtsp_parse_args(http_connection_t *hc, char *u)
       return -1;
     u++;
   }
-  http_parse_get_args(hc, u);
+  http_parse_args(&hc->hc_req_args, u);
   return stream;
 }
 

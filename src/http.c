@@ -640,7 +640,7 @@ http_cmd_get(http_connection_t *hc)
   }
 
   if(args != NULL)
-    http_parse_get_args(hc, args);
+    http_parse_args(&hc->hc_req_args, args);
 
   return http_exec(hc, hp, remain);
 }
@@ -694,7 +694,7 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
     }
 
     if(!strcmp(argv[0], "application/x-www-form-urlencoded"))
-      http_parse_get_args(hc, hc->hc_post_data);
+      http_parse_args(&hc->hc_req_args, hc->hc_post_data);
   }
 
   if (tvhtrace_enabled())
@@ -1008,7 +1008,7 @@ http_deescape(char *s)
  * Parse arguments of a HTTP GET url, not perfect, but works for us
  */
 void
-http_parse_get_args(http_connection_t *hc, char *args)
+http_parse_args(http_arg_list_t *list, char *args)
 {
   char *k, *v;
 
@@ -1028,7 +1028,7 @@ http_parse_get_args(http_connection_t *hc, char *args)
     http_deescape(k);
     http_deescape(v);
     //    printf("%s = %s\n", k, v);
-    http_arg_set(&hc->hc_req_args, k, v);
+    http_arg_set(list, k, v);
   }
 }
 

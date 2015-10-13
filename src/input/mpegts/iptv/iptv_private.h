@@ -81,9 +81,10 @@ struct iptv_network
   uint32_t in_max_bandwidth;
   uint32_t in_max_timeout;
 
-  char *in_url;
+  char    *in_url;
   uint32_t in_refetch_period;
   int      in_ssl_peer_verify;
+  char    *in_remove_args;
   gtimer_t in_auto_timer;
   gtimer_t in_fetch_timer;
   struct http_client *in_http_client;

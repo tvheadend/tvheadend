@@ -483,7 +483,8 @@ iptv_input_mux_started ( iptv_mux_t *im )
 static void
 iptv_network_class_delete ( idnode_t *in )
 {
-  mpegts_network_t *mn = (mpegts_network_t*)in;
+  iptv_network_t *mn = (iptv_network_t*)in;
+  char *s = mn->in_url;
 
   if (in->in_class == &iptv_auto_network_class)
     iptv_auto_network_done((iptv_network_t *)in);
@@ -493,7 +494,10 @@ iptv_network_class_delete ( idnode_t *in )
                       idnode_uuid_as_sstr(in));
 
   /* delete */
-  mpegts_network_delete(mn, 1);
+  free(mn->in_remove_args);
+  mpegts_network_delete((mpegts_network_t *)mn, 1);
+
+  free(s);
 }
 
 extern const idclass_t mpegts_network_class;
@@ -568,6 +572,13 @@ const idclass_t iptv_auto_network_class = {
       .name     = N_("SSL verify peer"),
       .off      = offsetof(iptv_network_t, in_ssl_peer_verify),
     },
+    {
+      .type     = PT_STR,
+      .id       = "remove_args",
+      .name     = N_("Remove HTTP arguments"),
+      .off      = offsetof(iptv_network_t, in_remove_args),
+      .def.s    = "ticket"
+    },
     {}
   }
 };
@@ -614,6 +625,8 @@ iptv_network_create0
   /* Init Network */
   in->in_priority       = 1;
   in->in_streaming_priority = 1;
+  if (idc == &iptv_auto_network_class)
+    in->in_remove_args = strdup("ticket");
   if (!mpegts_network_create0((mpegts_network_t *)in, idc,
                               uuid, NULL, conf)) {
     free(in);
