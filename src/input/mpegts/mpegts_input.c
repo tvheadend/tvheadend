@@ -1534,7 +1534,7 @@ mpegts_input_get_streams
     mpegts_input_stream_status(mmi, st);
     LIST_INSERT_HEAD(isl, st, link);
   }
-  if (st == NULL && mi->mi_empty_status) {
+  if (st == NULL && mi->mi_empty_status && mi->mi_enabled) {
     st = calloc(1, sizeof(tvh_input_stream_t));
     mi->mi_empty_status(mi, st);
     LIST_INSERT_HEAD(isl, st, link);
