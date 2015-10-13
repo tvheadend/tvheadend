@@ -301,13 +301,11 @@ api_idnode_load
 
   /* Single */
   } else {
-    if (!(in = idnode_find(uuid, NULL, NULL)))
-      err = ENOENT;
-    else {
+    l = htsmsg_create_list();
+    if ((in = idnode_find(uuid, NULL, NULL)) != NULL) {
       if (idnode_perm(in, perm, NULL)) {
         err = EPERM;
       } else {
-        l = htsmsg_create_list();
         if (grid > 0) {
           m = htsmsg_create_map();
           htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
@@ -323,9 +321,11 @@ api_idnode_load
     }
   }
 
-  if (l) {
+  if (l && err == 0) {
     *resp = htsmsg_create_map();
     htsmsg_add_msg(*resp, "entries", l);
+  } else {
+    htsmsg_destroy(l);
   }
 
   pthread_mutex_unlock(&global_lock);
