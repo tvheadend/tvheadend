@@ -52,7 +52,8 @@ ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
 {
   mpegts_service_t *m;
-  int off, pusi, cc, error, errors;
+  int len2, off, pusi, cc, error, errors;
+  const uint8_t *tsb2;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
@@ -62,16 +63,16 @@ ts_recv_packet0
     return;
   }
 
-  for (errors = 0; len > 0; tsb += 188, len -= 188) {
+  for (errors = 0, tsb2 = tsb, len2 = len; len2 > 0; tsb2 += 188, len2 -= 188) {
 
-    pusi    = (tsb[1] >> 6) & 1; /* 0x40 */
-    error   = (tsb[1] >> 7) & 1; /* 0x80 */
+    pusi    = (tsb2[1] >> 6) & 1; /* 0x40 */
+    error   = (tsb2[1] >> 7) & 1; /* 0x80 */
     errors += error;
 
     /* Check CC */
 
-    if(tsb[3] & 0x10) {
-      cc = tsb[3] & 0xf;
+    if(tsb2[3] & 0x10) {
+      cc = tsb2[3] & 0xf;
       if(st->es_cc != -1 && cc != st->es_cc) {
         /* Let the hardware to stabilize and don't flood the log */
         if (t->s_start_time + 1 < dispatch_clock &&
@@ -93,13 +94,13 @@ ts_recv_packet0
     if (st->es_type == SCT_CA)
       continue;
 
-    if (tsb[3] & 0xc0) /* scrambled */
+    if (tsb2[3] & 0xc0) /* scrambled */
       continue;
 
-    off = tsb[3] & 0x20 ? tsb[4] + 5 : 4;
+    off = tsb2[3] & 0x20 ? tsb2[4] + 5 : 4;
 
     if(off <= 188 && t->s_status == SERVICE_RUNNING)
-      parse_mpeg_ts((service_t*)t, st, tsb + off, 188 - off, pusi, error);
+      parse_mpeg_ts((service_t*)t, st, tsb2 + off, 188 - off, pusi, error);
 
   }
 
