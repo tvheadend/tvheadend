@@ -64,7 +64,7 @@ iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int
     iptv_url_set0(url, sane_url, str, str);
     return 1;
   }
-  memset(&u, 0, sizeof(u));
+  urlinit(&u);
   if (!urlparse(str, &u)) {
     len = (u.scheme ? strlen(u.scheme) + 3 : 0) +
           (u.host ? strlen(u.host) + 1 : 0) +

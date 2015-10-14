@@ -248,7 +248,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   if (img->url == NULL || img->url[0] == '\0')
     return res;
 
-  memset(&url, 0, sizeof(url));
+  urlinit(&url);
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",

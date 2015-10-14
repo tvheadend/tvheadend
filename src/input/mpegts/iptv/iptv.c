@@ -266,7 +266,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Parse URL */
   mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
-  memset(&url, 0, sizeof(url));
+  urlinit(&url);
 
   if (raw && !strncmp(raw, "pipe://", 7)) {
 

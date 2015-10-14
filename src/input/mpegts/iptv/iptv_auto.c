@@ -85,7 +85,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       chnum += (int64_t)*total * CHANNEL_SPLIT;
   }
 
-  memset(&u, 0, sizeof(u));
+  urlinit(&u);
   if (urlparse(url, &u))
     return;
   if (u.host == NULL || u.host[0] == '\0')
@@ -373,7 +373,7 @@ iptv_auto_network_fetch_complete(http_client_t *hc)
     return 0;
   }
 
-  memset(&u, 0, sizeof(u));
+  urlinit(&u);
   if (!urlparse(in->in_url, &u)) {
     last_url = strrchr(u.path, '/');
     if (last_url)
@@ -411,7 +411,7 @@ iptv_auto_network_fetch(void *aux)
   http_client_t *hc;
   url_t u;
 
-  memset(&u, 0, sizeof(u));
+  urlinit(&u);
 
   if (in->in_url == NULL)
     goto done;

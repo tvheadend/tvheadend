@@ -139,7 +139,7 @@ iptv_http_complete
       tvherror("iptv", "m3u contents parsing failed");
       return 0;
     }
-    memset(&u, 0, sizeof(u));
+    urlinit(&u);
     if (!urlparse(url, &u)) {
       hc->hc_keepalive = 0;
       r = http_client_simple_reconnect(hc, &u);

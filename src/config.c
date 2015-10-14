@@ -1715,7 +1715,7 @@ config_class_cors_origin_set ( void *o, const void *v )
     prop_sbuf[0] = '*';
     prop_sbuf[1] = '\0';
   } else {
-    memset(&u, 0, sizeof(u));
+    urlinit(&u);
     urlparse(s, &u);
     if (u.scheme && (!strcmp(u.scheme, "http") || !strcmp(u.scheme, "https")) && u.host) {
       if (u.port)

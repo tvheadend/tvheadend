@@ -1199,7 +1199,7 @@ http_client_redirected ( http_client_t *hc )
         hc->hc_scheme, hc->hc_host, hc->hc_port, location);
   }
 
-  memset(&u, 0, sizeof(u));
+  urlinit(&u);
   if (urlparse(location2 ? location2 : location, &u)) {
     tvherror("httpc", "%04X: redirection - cannot parse url '%s'",
              shortid(hc), location2 ? location2 : location);
@@ -1740,8 +1740,8 @@ http_client_testsuite_run( void )
     tvhlog(LOG_NOTICE, "httpc", "Test: unable to open '%s': %s", path, strerror(errno));
     return;
   }
-  memset(&u1, 0, sizeof(u1));
-  memset(&u2, 0, sizeof(u2));
+  urlinit(&u1);
+  urlinit(&u2);
   http_arg_init(&args);
   efd = tvhpoll_create(1);
   while (fgets(line, sizeof(line), fp) != NULL && tvheadend_running) {

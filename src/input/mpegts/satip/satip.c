@@ -1119,6 +1119,7 @@ satip_discovery_static(const char *descurl)
   if (satip_device_find_by_descurl(descurl))
     return;
   d = calloc(1, sizeof(satip_discovery_t));
+  urlinit(&d->url);
   if (urlparse(descurl, &d->url)) {
     satip_discovery_destroy(d, 0);
     return;
