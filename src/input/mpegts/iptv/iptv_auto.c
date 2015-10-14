@@ -21,9 +21,16 @@
 #include "http.h"
 #include "iptv_private.h"
 #include "channels.h"
+#include "download.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
+
+typedef struct auto_private {
+  iptv_network_t *in_network;
+  download_t      in_download;
+  gtimer_t        in_auto_timer;
+} auto_private_t;
 
 /*
  *
@@ -253,8 +260,10 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
  *
  */
 static int
-iptv_auto_network_process(iptv_network_t *in, const char *last_url, char *data, size_t len)
+iptv_auto_network_process(void *aux, const char *last_url, char *data, size_t len)
 {
+  auto_private_t *ap = aux;
+  iptv_network_t *in = ap->in_network;
   mpegts_mux_t *mm;
   int r = -1, count, n, i;
   http_arg_list_t remove_args;
@@ -302,165 +311,25 @@ iptv_auto_network_process(iptv_network_t *in, const char *last_url, char *data, 
 /*
  *
  */
-static int
-iptv_auto_network_file(iptv_network_t *in, const char *filename)
+static void
+iptv_auto_network_stop( void *aux )
 {
-  int fd, res;
-  struct stat st;
-  char *data, *last_url;
-  size_t r;
-  off_t off;
-
-  fd = tvh_open(filename, O_RDONLY, 0);
-  if (fd < 0) {
-    tvherror("iptv", "unable to open file '%s' (network '%s'): %s",
-             filename, in->mn_network_name, strerror(errno));
-    return -1;
-  }
-  if (fstat(fd, &st) || st.st_size == 0) {
-    tvherror("iptv", "unable to stat file '%s' (network '%s'): %s",
-             filename, in->mn_network_name, strerror(errno));
-    close(fd);
-    return -1;
-  }
-  data = malloc(st.st_size+1);
-  off = 0;
-  do {
-    r = read(fd, data + off, st.st_size - off);
-    if (r < 0) {
-      if (ERRNO_AGAIN(errno))
-        continue;
-      break;
-    }
-    off += r;
-  } while (off != st.st_size);
-  close(fd);
-
-  if (off == st.st_size) {
-    data[off] = '\0';
-    last_url = strrchr(filename, '/');
-    if (last_url)
-      last_url++;
-    res = iptv_auto_network_process(in, last_url, data, off);
-  } else {
-    res = -1;
-  }
-  free(data);
-  return res;
+  auto_private_t *ap = aux;
+  gtimer_disarm(&ap->in_auto_timer);
 }
 
 /*
  *
  */
 static void
-iptv_auto_network_fetch_done(void *aux)
+iptv_auto_network_trigger0(void *aux)
 {
-  http_client_t *hc = aux;
-  iptv_network_t *in = hc->hc_aux;
-  if (in->in_http_client) {
-    in->in_http_client = NULL;
-    http_client_close((http_client_t *)aux);
-  }
-}
+  auto_private_t *ap = aux;
+  iptv_network_t *in = ap->in_network;
 
-/*
- *
- */
-static int
-iptv_auto_network_fetch_complete(http_client_t *hc)
-{
-  iptv_network_t *in = hc->hc_aux;
-  char *last_url = NULL;
-  url_t u;
-
-  switch (hc->hc_code) {
-  case HTTP_STATUS_MOVED:
-  case HTTP_STATUS_FOUND:
-  case HTTP_STATUS_SEE_OTHER:
-  case HTTP_STATUS_NOT_MODIFIED:
-    return 0;
-  }
-
-  urlinit(&u);
-  if (!urlparse(in->in_url, &u)) {
-    last_url = strrchr(u.path, '/');
-    if (last_url)
-      last_url++;
-  }
-
-  pthread_mutex_lock(&global_lock);
-
-  if (in->in_http_client == NULL)
-    goto out;
-
-  if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
-    iptv_auto_network_process(in, last_url, hc->hc_data, hc->hc_data_size);
-  else
-    tvherror("iptv", "unable to fetch data from url for network '%s' [%d-%d/%zd]",
-             in->mn_network_name, hc->hc_code, hc->hc_result, hc->hc_data_size);
-
-  /* note: http_client_close must be called outside http_client callbacks */
-  gtimer_arm(&in->in_fetch_timer, iptv_auto_network_fetch_done, hc, 0);
-
-out:
-  pthread_mutex_unlock(&global_lock);
-
-  urlreset(&u);
-  return 0;
-}
-
-/*
- *
- */
-static void
-iptv_auto_network_fetch(void *aux)
-{
-  iptv_network_t *in = aux;
-  http_client_t *hc;
-  url_t u;
-
-  urlinit(&u);
-
-  if (in->in_url == NULL)
-    goto done;
-
-  if (strncmp(in->in_url, "file://", 7) == 0) {
-    iptv_auto_network_file(in, in->in_url + 7);
-    goto done;
-  }
-
-  gtimer_disarm(&in->in_auto_timer);
-  if (in->in_http_client) {
-    http_client_close(in->in_http_client);
-    in->in_http_client = NULL;
-  }
-
-  if (urlparse(in->in_url, &u) < 0) {
-    tvherror("iptv", "wrong url for network '%s'", in->mn_network_name);
-    goto done;
-  }
-  hc = http_client_connect(in, HTTP_VERSION_1_1, u.scheme, u.host, u.port, NULL);
-  if (hc == NULL) {
-    tvherror("iptv", "unable to open http client for network '%s'", in->mn_network_name);
-    goto done;
-  }
-  hc->hc_handle_location = 1;
-  hc->hc_data_limit = 1024*1024;
-  hc->hc_data_complete = iptv_auto_network_fetch_complete;
-  http_client_register(hc);
-  http_client_ssl_peer_verify(hc, in->in_ssl_peer_verify);
-  if (http_client_simple(hc, &u) < 0) {
-    http_client_close(hc);
-    tvherror("iptv", "unable to send http command for network '%s'", in->mn_network_name);
-    goto done;
-  }
-
-  in->in_http_client = hc;
-
-  gtimer_arm(&in->in_auto_timer, iptv_auto_network_fetch, in,
+  download_start(&ap->in_download, in->in_url, ap);
+  gtimer_arm(&ap->in_auto_timer, iptv_auto_network_trigger0, in,
              MAX(1, in->in_refetch_period) * 60);
-done:
-  urlreset(&u);
 }
 
 /*
@@ -469,7 +338,11 @@ done:
 void
 iptv_auto_network_trigger( iptv_network_t *in )
 {
-  gtimer_arm(&in->in_auto_timer, iptv_auto_network_fetch, in, 0);
+  auto_private_t *ap = in->in_auto;
+  if (ap) {
+    ap->in_download.ssl_peer_verify = in->in_ssl_peer_verify;
+    iptv_auto_network_trigger0(ap);
+  }
 }
 
 /*
@@ -478,6 +351,12 @@ iptv_auto_network_trigger( iptv_network_t *in )
 void
 iptv_auto_network_init( iptv_network_t *in )
 {
+  auto_private_t *ap = calloc(1, sizeof(auto_private_t));
+  ap->in_network = in;
+  in->in_auto = ap;
+  download_init(&ap->in_download, "iptv");
+  ap->in_download.process = iptv_auto_network_process;
+  ap->in_download.stop = iptv_auto_network_stop;
   iptv_auto_network_trigger(in);
 }
 
@@ -487,10 +366,9 @@ iptv_auto_network_init( iptv_network_t *in )
 void
 iptv_auto_network_done( iptv_network_t *in )
 {
-  if (in->in_http_client) {
-    http_client_close(in->in_http_client);
-    in->in_http_client = NULL;
-  }
-  gtimer_disarm(&in->in_auto_timer);
-  gtimer_disarm(&in->in_fetch_timer);
+  auto_private_t *ap = in->in_auto;
+  in->in_auto = NULL;
+  gtimer_disarm(&ap->in_auto_timer);
+  download_done(&ap->in_download);
+  free(ap);
 }

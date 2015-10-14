@@ -38,8 +38,6 @@
 
 extern pthread_mutex_t iptv_lock;
 
-struct http_client;
-
 typedef struct iptv_input   iptv_input_t;
 typedef struct iptv_network iptv_network_t;
 typedef struct iptv_mux     iptv_mux_t;
@@ -89,9 +87,8 @@ struct iptv_network
   char    *in_icon_url_sane;
   int      in_ssl_peer_verify;
   char    *in_remove_args;
-  gtimer_t in_auto_timer;
-  gtimer_t in_fetch_timer;
-  struct http_client *in_http_client;
+
+  void    *in_auto; /* private structure for auto-network */
 };
 
 iptv_network_t *iptv_network_create0 ( const char *uuid, htsmsg_t *conf, const idclass_t *idc );

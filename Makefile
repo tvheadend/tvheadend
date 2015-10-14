@@ -191,6 +191,7 @@ SRCS-1 = \
 	src/input.c \
 	src/httpc.c \
 	src/rtsp.c \
+	src/download.c \
 	src/fsmonitor.c \
 	src/cron.c \
 	src/esfilter.c \
