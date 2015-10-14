@@ -67,10 +67,11 @@ iptv_http_header ( http_client_t *hc )
   s = http_arg_get(&hc->hc_args, "Content-Type");
   if (s) {
     n = http_tokenize(s, argv, ARRAY_SIZE(argv), ';');
-    printf("mime: '%s'\n", s);
     if (n > 0 &&
         (strcasecmp(s, "audio/mpegurl") == 0 ||
-         strcasecmp(s, "audio/x-mpegurl") == 0)) {
+         strcasecmp(s, "audio/x-mpegurl") == 0 ||
+         strcasecmp(s, "application/apple.vnd.mpegurl") == 0 ||
+         strcasecmp(s, "application/vnd.apple.mpegurl") == 0)) {
       if (im->im_m3u_header > 10) {
         im->im_m3u_header = 0;
         return 0;
@@ -133,6 +134,7 @@ iptv_http_complete
     im->im_m3u_header = 0;
     sbuf_append(&im->mm_iptv_buffer, "", 1);
     url = iptv_http_m3u((char *)im->mm_iptv_buffer.sb_data);
+    sbuf_reset(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
     if (url == NULL) {
       tvherror("iptv", "m3u contents parsing failed");
       return 0;
@@ -178,6 +180,7 @@ iptv_http_start
     return SM_CODE_TUNING_FAILED;
   }
   im->im_data = hc;
+  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   return 0;
 }

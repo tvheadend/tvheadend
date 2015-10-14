@@ -464,8 +464,7 @@ void
 iptv_input_mux_started ( iptv_mux_t *im )
 {
   /* Allocate input buffer */
-  sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
-  im->mm_iptv_rtp_seq = -1;
+  sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   if (iptv_input_fd_started(im))
     return;
@@ -481,7 +480,8 @@ static void
 iptv_network_delete ( mpegts_network_t *mn, int delconf )
 {
   iptv_network_t *in = (iptv_network_t*)mn;
-  char *s = in->in_url;
+  char *url = in->in_url;
+  char *sane_url = in->in_url_sane;
 
   if (in->mn_id.in_class == &iptv_auto_network_class)
     iptv_auto_network_done(in);
@@ -495,7 +495,8 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   free(in->in_remove_args);
   mpegts_network_delete(mn, delconf);
 
-  free(s);
+  free(sane_url);
+  free(url);
 }
 
 /* **************************************************************************
@@ -556,6 +557,19 @@ const idclass_t iptv_network_class = {
   }
 };
 
+static int
+iptv_auto_network_class_url_set( void *in, const void *v )
+{
+  iptv_network_t *mn = in;
+  return iptv_url_set(&mn->in_url, &mn->in_url_sane, v, 1, 0);
+}
+
+static void
+iptv_auto_network_class_notify_url( void *in, const char *lang )
+{
+  iptv_auto_network_trigger(in);
+}
+
 const idclass_t iptv_auto_network_class = {
   .ic_super      = &iptv_network_class,
   .ic_class      = "iptv_auto_network",
@@ -566,6 +580,9 @@ const idclass_t iptv_auto_network_class = {
       .id       = "url",
       .name     = N_("URL"),
       .off      = offsetof(iptv_network_t, in_url),
+      .set      = iptv_auto_network_class_url_set,
+      .notify   = iptv_auto_network_class_notify_url,
+      .opts     = PO_MULTILINE
     },
     {
       .type     = PT_S64,

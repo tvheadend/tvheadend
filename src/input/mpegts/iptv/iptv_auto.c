@@ -369,9 +369,12 @@ iptv_auto_network_fetch(void *aux)
 
   memset(&u, 0, sizeof(u));
 
+  if (in->in_url == NULL)
+    goto done;
+
   if (strncmp(in->in_url, "file://", 7) == 0) {
     iptv_auto_network_file(in, in->in_url + 7);
-    goto arm;
+    goto done;
   }
 
   gtimer_disarm(&in->in_auto_timer);
@@ -382,12 +385,12 @@ iptv_auto_network_fetch(void *aux)
 
   if (urlparse(in->in_url, &u) < 0) {
     tvherror("iptv", "wrong url for network '%s'", in->mn_network_name);
-    goto arm;
+    goto done;
   }
   hc = http_client_connect(in, HTTP_VERSION_1_1, u.scheme, u.host, u.port, NULL);
   if (hc == NULL) {
     tvherror("iptv", "unable to open http client for network '%s'", in->mn_network_name);
-    goto arm;
+    goto done;
   }
   hc->hc_handle_location = 1;
   hc->hc_data_limit = 1024*1024;
@@ -397,15 +400,24 @@ iptv_auto_network_fetch(void *aux)
   if (http_client_simple(hc, &u) < 0) {
     http_client_close(hc);
     tvherror("iptv", "unable to send http command for network '%s'", in->mn_network_name);
-    goto arm;
+    goto done;
   }
 
   in->in_http_client = hc;
 
-arm:
-  urlreset(&u);
   gtimer_arm(&in->in_auto_timer, iptv_auto_network_fetch, in,
              MAX(1, in->in_refetch_period) * 60);
+done:
+  urlreset(&u);
+}
+
+/*
+ *
+ */
+void
+iptv_auto_network_trigger( iptv_network_t *in )
+{
+  gtimer_arm(&in->in_auto_timer, iptv_auto_network_fetch, in, 0);
 }
 
 /*
@@ -414,7 +426,7 @@ arm:
 void
 iptv_auto_network_init( iptv_network_t *in )
 {
-  gtimer_arm(&in->in_auto_timer, iptv_auto_network_fetch, in, 0);
+  iptv_auto_network_trigger(in);
 }
 
 /*

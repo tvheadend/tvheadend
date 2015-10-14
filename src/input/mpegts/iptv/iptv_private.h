@@ -82,6 +82,7 @@ struct iptv_network
   uint32_t in_max_timeout;
 
   char    *in_url;
+  char    *in_url_sane;
   int64_t  in_channel_number;
   uint32_t in_refetch_period;
   int      in_ssl_peer_verify;
@@ -152,8 +153,11 @@ extern const idclass_t iptv_auto_network_class;
 extern iptv_input_t   *iptv_input;
 extern iptv_network_t *iptv_network;
 
+int iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int allow_pipe );
+
 void iptv_mux_load_all ( void );
 
+void iptv_auto_network_trigger( iptv_network_t *in );
 void iptv_auto_network_init( iptv_network_t *in );
 void iptv_auto_network_done( iptv_network_t *in );
 
