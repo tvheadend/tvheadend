@@ -82,7 +82,11 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   if (url == NULL ||
       (strncmp(url, "file://", 7) &&
        strncmp(url, "http://", 7) &&
-       strncmp(url, "https://", 8)))
+       strncmp(url, "https://", 8) &&
+       strncmp(url, "rtsp://", 7) &&
+       strncmp(url, "rtsps://", 8) &&
+       strncmp(url, "udp://", 6) &&
+       strncmp(url, "rtp://", 6)))
     return;
 
   if (chnum) {
