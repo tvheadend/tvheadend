@@ -236,14 +236,19 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
           name = data;
       }
       while (*data && *data != '\n') data++;
-      if (*data) { *data = '\0'; data++; }
+      if (*data) data++;
+      continue;
+    } else if (strncmp(data, "#EXT", 4) == 0) {
+      data += 4;
+      while (*data && *data != '\n') data++;
+      if (*data) data++;
       continue;
     }
     while (*data && *data <= ' ') data++;
     url = data;
     while (*data && *data != '\n') data++;
     if (*data) { *data = '\0'; data++; }
-    if (*url)
+    if (*url && *url > ' ')
       iptv_auto_network_process_m3u_item(in, last_url, remove_args,
                                          url, name, logo, epgid,
                                          chnum, &total, &count);

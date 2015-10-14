@@ -32,16 +32,16 @@ iptv_http_m3u(char *data)
   while (*data && *data != '\n') data++;
   if (*data) data++;
   while (*data) {
-    if (strncmp(data, "#EXTINF:", 8) == 0) {
+    if (strncmp(data, "#EXT", 4) == 0) {
       while (*data && *data != '\n') data++;
-      if (*data) { *data = '\0'; data++; }
+      if (*data) data++;
       continue;
     }
     while (*data && *data <= ' ') data++;
     url = data;
     while (*data && *data != '\n') data++;
     if (*data) { *data = '\0'; data++; }
-    if (*url)
+    if (*url && *url > ' ')
       return strdup(url);
   }
   return NULL;
