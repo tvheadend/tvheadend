@@ -171,6 +171,12 @@ const idclass_t iptv_mux_class =
     },
     {
       .type     = PT_STR,
+      .id       = "iptv_icon",
+      .name     = N_("Icon URL"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_icon),
+    },
+    {
+      .type     = PT_STR,
       .id       = "iptv_sname",
       .name     = N_("Service Name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
@@ -240,6 +246,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
   free(im->mm_iptv_env);
+  free(im->mm_iptv_icon);
   mpegts_mux_delete(mm, delconf);
   free(url);
   free(url_sane);

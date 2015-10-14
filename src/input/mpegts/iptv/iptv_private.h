@@ -85,6 +85,8 @@ struct iptv_network
   char    *in_url_sane;
   int64_t  in_channel_number;
   uint32_t in_refetch_period;
+  char    *in_icon_url;
+  char    *in_icon_url_sane;
   int      in_ssl_peer_verify;
   char    *in_remove_args;
   gtimer_t in_auto_timer;
@@ -115,6 +117,7 @@ struct iptv_mux
   char                 *mm_iptv_muxname;
   char                 *mm_iptv_svcname;
   int64_t               mm_iptv_chnum;
+  char                 *mm_iptv_icon;
 
   int                   mm_iptv_respawn;
   time_t                mm_iptv_respawn_last;

@@ -604,11 +604,27 @@ channel_get_icon ( channel_t *ch )
   const char *chicon = config.chicon_path,
              *picon  = config.picon_path,
              *icon   = ch->ch_icon,
-             *chname;
+             *chname, *icn;
   uint32_t id, i, pick, prefer = config.prefer_picon ? 1 : 0;
 
   if (icon && *icon == '\0')
     icon = NULL;
+
+  /*
+   * Initial lookup - for services with predefined icons (like M3U sources)
+   */
+  if (icon == NULL) {
+    LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+      if (!(icn = service_get_channel_icon((service_t *)ilm->ilm_in1))) continue;
+      if (strncmp(icn, "picon://", 8) == 0) continue;
+      if (check_file(icn)) {
+        icon = ch->ch_icon = strdup(icn);
+        channel_save(ch);
+        idnode_notify_changed(&ch->ch_id);
+        goto found;
+      }
+    }
+  }
 
   /*
    * 4 iterations:
@@ -679,7 +695,6 @@ channel_get_icon ( channel_t *ch )
     /* No user icon - try access from services */
     if (pick && picon) {
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
-        const char *icn;
         if (!(icn = service_get_channel_icon((service_t *)ilm->ilm_in1))) continue;
         if (strncmp(icn, "picon://", 8))
           continue;
@@ -694,6 +709,8 @@ channel_get_icon ( channel_t *ch )
     }
 
   }
+
+found:
 
   /* Nothing */
   if (!icon || !*icon)

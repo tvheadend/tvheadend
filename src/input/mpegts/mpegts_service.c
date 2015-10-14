@@ -497,7 +497,6 @@ mpegts_service_channel_icon ( service_t *s )
   if (ms->s_dvb_mux &&
       idnode_is_instance(&ms->s_dvb_mux->mm_id, &dvb_mux_class)) {
     int32_t hash = 0;
-    static char buf[128];
     dvb_mux_t *mmd = (dvb_mux_t*)ms->s_dvb_mux;
     int pos;
 
@@ -525,14 +524,14 @@ mpegts_service_channel_icon ( service_t *s )
         return NULL;
     }
 
-    snprintf(buf, sizeof(buf),
+    snprintf(prop_sbuf, PROP_SBUF_LEN,
              "picon://1_0_%X_%X_%X_%X_%X_0_0_0.png",
              ms->s_dvb_servicetype,
              ms->s_dvb_service_id,
              ms->s_dvb_mux->mm_tsid,
              ms->s_dvb_mux->mm_onid,
              hash);
-    return buf;
+    return prop_sbuf;
   }
 #endif
 

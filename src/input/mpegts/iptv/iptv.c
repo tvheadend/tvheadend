@@ -482,6 +482,8 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   iptv_network_t *in = (iptv_network_t*)mn;
   char *url = in->in_url;
   char *sane_url = in->in_url_sane;
+  char *icon_url = in->in_icon_url;
+  char *icon_url_sane = in->in_icon_url_sane;
 
   if (in->mn_id.in_class == &iptv_auto_network_class)
     iptv_auto_network_done(in);
@@ -495,6 +497,8 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   free(in->in_remove_args);
   mpegts_network_delete(mn, delconf);
 
+  free(icon_url_sane);
+  free(icon_url);
   free(sane_url);
   free(url);
 }
@@ -507,6 +511,13 @@ static void
 iptv_network_class_delete ( idnode_t *in )
 {
   return iptv_network_delete((mpegts_network_t *)in, 1);
+}
+
+static int
+iptv_network_class_icon_url_set( void *in, const void *v )
+{
+  iptv_network_t *mn = in;
+  return iptv_url_set(&mn->in_icon_url, &mn->in_icon_url_sane, v, 1, 0);
 }
 
 extern const idclass_t mpegts_network_class;
@@ -552,6 +563,14 @@ const idclass_t iptv_network_class = {
       .name     = N_("Maximum timeout (seconds)"),
       .off      = offsetof(iptv_network_t, in_max_timeout),
       .def.i    = 15,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "icon_url",
+      .name     = N_("Icon base URL"),
+      .off      = offsetof(iptv_network_t, in_icon_url),
+      .set      = iptv_network_class_icon_url_set,
+      .opts     = PO_MULTILINE
     },
     {}
   }

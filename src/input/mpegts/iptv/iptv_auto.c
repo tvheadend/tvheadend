@@ -28,11 +28,37 @@
 /*
  *
  */
+static char *get_m3u_str(char *data, char **res)
+{
+  char *p = data, first = *data;
+  
+  if (first == '"' || first == '\'') {
+    data++;
+    p = data;
+    while (*data && *data != first)
+      data++;
+  } else {
+    p = data;
+    while (*data && *data != ',' && *data > ' ')
+      data++;
+  }
+  *res = data;
+  if (*data) {
+    *data = '\0';
+    (*res)++;
+  }
+  return p;
+}
+
+/*
+ *
+ */
 static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
                                    const char *last_url,
                                    const http_arg_list_t *remove_args,
                                    const char *url, const char *name,
+                                   const char *logo,
                                    int64_t chnum, int *total, int *count)
 {
   htsmsg_t *conf;
@@ -122,9 +148,14 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
         im->mm_iptv_chnum = chnum;
         change = 1;
       }
-      if ((1 || im->mm_iptv_muxname == NULL || im->mm_iptv_muxname[0] == '\0') && n && *n) {
+      if ((im->mm_iptv_muxname == NULL || im->mm_iptv_muxname[0] == '\0') && n && *n) {
         free(im->mm_iptv_muxname);
         im->mm_iptv_muxname = strdup(n);
+        change = 1;
+      }
+      if (strcmp(im->mm_iptv_icon ?: "", logo ?: "")) {
+        free(im->mm_iptv_icon);
+        im->mm_iptv_icon = logo ? strdup(logo) : NULL;
         change = 1;
       }
       if (change)
@@ -161,7 +192,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
                               http_arg_list_t *remove_args,
                               int64_t chnum)
 {
-  char *url, *name = NULL;
+  char *url, *name = NULL, *logo = NULL;
   int total = 0, count = 0;
 
   while (*data && *data != '\n') data++;
@@ -169,8 +200,20 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
   while (*data) {
     if (strncmp(data, "#EXTINF:", 8) == 0) {
       name = NULL;
+      logo = NULL;
       data += 8;
-      while (*data && *data != ',') data++;
+      while (1) {
+        while (*data && *data <= ' ') data++;
+        if (*data == ',') break;
+        if (strncmp(data, "tvg-logo=", 9) == 0)
+          logo = get_m3u_str(data + 9, &data);
+        else if (strncmp(data, "logo=", 5) == 0)
+          logo = get_m3u_str(data + 5, &data);
+        else {
+          data++;
+          while (*data && *data != ',' && *data > ' ') data++;
+        }
+      }
       if (*data == ',') {
         data++;
         while (*data && *data <= ' ') data++;
@@ -186,7 +229,8 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     while (*data && *data != '\n') data++;
     if (*data) { *data = '\0'; data++; }
     if (*url)
-      iptv_auto_network_process_m3u_item(in, last_url, remove_args, url, name,
+      iptv_auto_network_process_m3u_item(in, last_url, remove_args,
+                                         url, name, logo,
                                          chnum, &total, &count);
   }
 
