@@ -933,7 +933,7 @@ tvheadend.epg = function() {
                 Ext.Ajax.request({
                     url: 'api/epg/events/load',
                     params: {
-                        eventId: ids
+                        eventId: Ext.encode(ids)
                     },
                     success: function(d) {
                         d = json_decode(d);

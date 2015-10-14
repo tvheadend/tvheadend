@@ -1156,7 +1156,7 @@ tvheadend.idnode_grid = function(panel, conf)
                     ids.push(r.id);
             });
             if (ids) {
-                var p = { uuid: ids, grid: 1 };
+                var p = { uuid: Ext.encode(ids), grid: 1 };
                 if (conf.list) p.list = conf.list;
                 Ext.Ajax.request({
                     url: 'api/idnode/load',
