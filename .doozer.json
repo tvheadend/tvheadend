@@ -38,7 +38,7 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-	"libx264-dev",
+        "libx264-dev",
         "python"
       ],
 
@@ -85,7 +85,54 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-	"libx264-dev",
+        "libx264-dev",
+        "python"
+      ],
+
+      "buildcmd": [
+        "./configure --disable-dvbscan --enable-libffmpeg_static --disable-libx264_static --enable-hdhomerun_static",
+        "make -j ${PARALLEL}"
+      ]
+    },
+
+    "vivid-amd64": {
+      "buildenv": "vivid-amd64",
+      "builddeps": [
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "python"
+      ],
+
+      "buildcmd": [
+        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "make -j ${PARALLEL}"
+      ]
+    },
+
+    "vivid-i386": {
+      "buildenv": "vivid-i386",
+      "builddeps": [
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "libavahi-client-dev",
+        "libssl-dev",
+        "zlib1g-dev",
+        "wget",
+        "bzip2",
+        "git-core",
+        "liburiparser-dev",
+        "libx264-dev",
         "python"
       ],
 
