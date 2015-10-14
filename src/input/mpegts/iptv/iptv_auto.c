@@ -63,7 +63,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   if (urlparse(url, &u))
     return;
   if (u.host == NULL || u.host[0] == '\0')
-    return;
+    goto end;
 
   /* remove requested arguments */
   if (!http_args_empty(remove_args)) {
@@ -73,7 +73,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       for (ra2 = TAILQ_FIRST(&args); ra2; ra2 = ra2_next) {
         ra2_next = TAILQ_NEXT(ra2, link);
         if (strcmp(ra1->key, ra2->key) == 0)
-          TAILQ_REMOVE(&args, ra2, link);
+          http_arg_remove(&args, ra2);
       }
     free(u.query);
     u.query = NULL;
@@ -90,6 +90,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       u.query = htsbuf_to_string(&q);
       htsbuf_queue_flush(&q);
     }
+    http_arg_flush(&args);
     tvh_strlcatf(url2, sizeof(url2), l, "%s://", u.scheme);
     if (u.user && u.user[0] && u.pass && u.pass[0])
       tvh_strlcatf(url2, sizeof(url2), l, "%s:%s@", u.user, u.pass);
@@ -129,7 +130,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
-      return;
+      goto end;
     }
   }
 
@@ -146,6 +147,9 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     (*total)++;
     (*count)++;
   }
+
+end:
+  urlreset(&u);
 }
 
 /*
@@ -224,6 +228,8 @@ iptv_auto_network_process(iptv_network_t *in, const char *last_url, char *data, 
   if (!strncmp(data, "#EXTM3U", 7))
     r = iptv_auto_network_process_m3u(in, data, last_url, &remove_args, in->in_channel_number);
 
+  http_arg_flush(&remove_args);
+
   if (r == 0) {
     count = 0;
     LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
@@ -247,7 +253,7 @@ iptv_auto_network_process(iptv_network_t *in, const char *last_url, char *data, 
 static int
 iptv_auto_network_file(iptv_network_t *in, const char *filename)
 {
-  int fd;
+  int fd, res;
   struct stat st;
   char *data, *last_url;
   size_t r;
@@ -283,9 +289,12 @@ iptv_auto_network_file(iptv_network_t *in, const char *filename)
     last_url = strrchr(filename, '/');
     if (last_url)
       last_url++;
-    return iptv_auto_network_process(in, last_url, data, off);
+    res = iptv_auto_network_process(in, last_url, data, off);
+  } else {
+    res = -1;
   }
-  return -1;
+  free(data);
+  return res;
 }
 
 /*
@@ -329,6 +338,9 @@ iptv_auto_network_fetch_complete(http_client_t *hc)
 
   pthread_mutex_lock(&global_lock);
 
+  if (in->in_http_client == NULL)
+    goto out;
+
   if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
     iptv_auto_network_process(in, last_url, hc->hc_data, hc->hc_data_size);
   else
@@ -338,8 +350,10 @@ iptv_auto_network_fetch_complete(http_client_t *hc)
   /* note: http_client_close must be called outside http_client callbacks */
   gtimer_arm(&in->in_fetch_timer, iptv_auto_network_fetch_done, hc, 0);
 
+out:
   pthread_mutex_unlock(&global_lock);
 
+  urlreset(&u);
   return 0;
 }
 
@@ -353,6 +367,8 @@ iptv_auto_network_fetch(void *aux)
   http_client_t *hc;
   url_t u;
 
+  memset(&u, 0, sizeof(u));
+
   if (strncmp(in->in_url, "file://", 7) == 0) {
     iptv_auto_network_file(in, in->in_url + 7);
     goto arm;
@@ -364,7 +380,6 @@ iptv_auto_network_fetch(void *aux)
     in->in_http_client = NULL;
   }
 
-  memset(&u, 0, sizeof(u));
   if (urlparse(in->in_url, &u) < 0) {
     tvherror("iptv", "wrong url for network '%s'", in->mn_network_name);
     goto arm;
@@ -388,6 +403,7 @@ iptv_auto_network_fetch(void *aux)
   in->in_http_client = hc;
 
 arm:
+  urlreset(&u);
   gtimer_arm(&in->in_auto_timer, iptv_auto_network_fetch, in,
              MAX(1, in->in_refetch_period) * 60);
 }
@@ -407,10 +423,10 @@ iptv_auto_network_init( iptv_network_t *in )
 void
 iptv_auto_network_done( iptv_network_t *in )
 {
-  gtimer_disarm(&in->in_auto_timer);
-  gtimer_disarm(&in->in_fetch_timer);
   if (in->in_http_client) {
     http_client_close(in->in_http_client);
     in->in_http_client = NULL;
   }
+  gtimer_disarm(&in->in_auto_timer);
+  gtimer_disarm(&in->in_fetch_timer);
 }

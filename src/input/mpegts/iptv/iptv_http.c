@@ -146,6 +146,7 @@ iptv_http_complete
     } else {
       tvherror("iptv", "m3u url invalid '%s'", url);
     }
+    urlreset(&u);
     free(url);
     return 0;
   }

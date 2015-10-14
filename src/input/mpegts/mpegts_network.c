@@ -357,6 +357,7 @@ mpegts_network_create0
   mn->mn_create_service = mpegts_network_create_service;
   mn->mn_mux_class      = mpegts_network_mux_class;
   mn->mn_mux_create2    = mpegts_network_mux_create2;
+  mn->mn_delete         = mpegts_network_delete;
 
   /* Add to global list */
   LIST_INSERT_HEAD(&mpegts_network_all, mn, mn_global_link);
@@ -389,7 +390,7 @@ mpegts_network_class_delete(const idclass_t *idc, int delconf)
   for (mn = LIST_FIRST(&mpegts_network_all); mn != NULL; mn = n) {
     n = LIST_NEXT(mn, mn_global_link);
     if (mn->mn_id.in_class == idc)
-      mpegts_network_delete(mn, delconf);
+      mn->mn_delete(mn, delconf);
   }
 }
 

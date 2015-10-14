@@ -823,18 +823,27 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
 
 /*
+ * Delete one argument
+ */
+void
+http_arg_remove(struct http_arg_list *list, struct http_arg *arg)
+{
+  TAILQ_REMOVE(list, arg, link);
+  free(arg->key);
+  free(arg->val);
+  free(arg);
+}
+
+
+/*
  * Delete all arguments associated with a connection
  */
 void
 http_arg_flush(struct http_arg_list *list)
 {
   http_arg_t *ra;
-  while((ra = TAILQ_FIRST(list)) != NULL) {
-    TAILQ_REMOVE(list, ra, link);
-    free(ra->key);
-    free(ra->val);
-    free(ra);
-  }
+  while((ra = TAILQ_FIRST(list)) != NULL)
+    http_arg_remove(list, ra);
 }
 
 

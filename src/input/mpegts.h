@@ -307,6 +307,7 @@ struct mpegts_network
   /*
    * Functions
    */
+  void              (*mn_delete)       (mpegts_network_t*, int delconf);
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
   void              (*mn_config_save)  (mpegts_network_t*);
   mpegts_mux_t*     (*mn_create_mux)

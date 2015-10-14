@@ -173,6 +173,7 @@ static inline void http_arg_init(struct http_arg_list *list)
   TAILQ_INIT(list);
 }
 
+void http_arg_remove(struct http_arg_list *list, struct http_arg *arg);
 void http_arg_flush(struct http_arg_list *list);
 
 char *http_arg_get(struct http_arg_list *list, const char *name);

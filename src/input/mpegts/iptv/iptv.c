@@ -477,6 +477,27 @@ iptv_input_mux_started ( iptv_mux_t *im )
                        im->mm_iptv_atsc ? DVB_SYS_ATSC_ALL : DVB_SYS_DVBT);
 }
 
+static void
+iptv_network_delete ( mpegts_network_t *mn, int delconf )
+{
+  iptv_network_t *in = (iptv_network_t*)mn;
+  char *s = in->in_url;
+
+  if (in->mn_id.in_class == &iptv_auto_network_class)
+    iptv_auto_network_done(in);
+
+  /* Remove config */
+  if (delconf)
+    hts_settings_remove("input/iptv/networks/%s",
+                        idnode_uuid_as_sstr(&in->mn_id));
+
+  /* delete */
+  free(in->in_remove_args);
+  mpegts_network_delete(mn, delconf);
+
+  free(s);
+}
+
 /* **************************************************************************
  * IPTV network
  * *************************************************************************/
@@ -484,21 +505,7 @@ iptv_input_mux_started ( iptv_mux_t *im )
 static void
 iptv_network_class_delete ( idnode_t *in )
 {
-  iptv_network_t *mn = (iptv_network_t*)in;
-  char *s = mn->in_url;
-
-  if (in->in_class == &iptv_auto_network_class)
-    iptv_auto_network_done((iptv_network_t *)in);
-
-  /* Remove config */
-  hts_settings_remove("input/iptv/networks/%s",
-                      idnode_uuid_as_sstr(in));
-
-  /* delete */
-  free(mn->in_remove_args);
-  mpegts_network_delete((mpegts_network_t *)mn, 1);
-
-  free(s);
+  return iptv_network_delete((mpegts_network_t *)in, 1);
 }
 
 extern const idclass_t mpegts_network_class;
@@ -640,6 +647,7 @@ iptv_network_create0
     free(in);
     return NULL;
   }
+  in->mn_delete         = iptv_network_delete;
   in->mn_create_service = iptv_network_create_service;
   in->mn_mux_class      = iptv_network_mux_class;
   in->mn_mux_create2    = iptv_network_create_mux2;
@@ -747,7 +755,9 @@ void iptv_done ( void )
   pthread_join(iptv_thread, NULL);
   tvhpoll_destroy(iptv_poll);
   pthread_mutex_lock(&global_lock);
+  mpegts_network_unregister_builder(&iptv_auto_network_class);
   mpegts_network_unregister_builder(&iptv_network_class);
+  mpegts_network_class_delete(&iptv_auto_network_class, 0);
   mpegts_network_class_delete(&iptv_network_class, 0);
   mpegts_input_stop_all((mpegts_input_t*)iptv_input);
   mpegts_input_delete((mpegts_input_t *)iptv_input, 0);
