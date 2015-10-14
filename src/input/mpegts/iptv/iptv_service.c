@@ -100,6 +100,14 @@ iptv_service_channel_icon ( service_t *s )
   return NULL;
 }
 
+static const char *
+iptv_service_channel_epgid ( service_t *s )
+{
+  iptv_service_t   *is = (iptv_service_t *)s;
+  iptv_mux_t       *im = (iptv_mux_t *)is->s_dvb_mux;
+  return im->mm_iptv_epgid;
+}
+
 /*
  * Create
  */
@@ -118,6 +126,7 @@ iptv_service_create0
   is->s_channel_name   = iptv_service_channel_name;
   is->s_channel_number = iptv_service_channel_number;
   is->s_channel_icon   = iptv_service_channel_icon;
+  is->s_channel_epgid  = iptv_service_channel_epgid;
 
   /* Set default service name */
   if (!is->s_dvb_svcname || !*is->s_dvb_svcname)

@@ -118,6 +118,7 @@ struct iptv_mux
   char                 *mm_iptv_svcname;
   int64_t               mm_iptv_chnum;
   char                 *mm_iptv_icon;
+  char                 *mm_iptv_epgid;
 
   int                   mm_iptv_respawn;
   time_t                mm_iptv_respawn_last;

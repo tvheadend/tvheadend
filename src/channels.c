@@ -746,6 +746,17 @@ int channel_set_icon ( channel_t *ch, const char *icon )
   return save;
 }
 
+const char *
+channel_get_epgid ( channel_t *ch )
+{
+  const char *s;
+  idnode_list_mapping_t *ilm;
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
+    if ((s = service_get_channel_epgid((service_t *)ilm->ilm_in1)))
+      return s;
+  return channel_get_name(ch);
+}
+
 /* **************************************************************************
  * Creation/Deletion
  * *************************************************************************/

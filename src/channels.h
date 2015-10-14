@@ -175,6 +175,8 @@ int channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor );
 const char *channel_get_icon ( channel_t *ch );
 int channel_set_icon ( channel_t *ch, const char *icon );
 
+const char *channel_get_epgid ( channel_t *ch );
+
 #define channel_get_suuid(ch) idnode_uuid_as_sstr(&(ch)->ch_id)
 
 #define channel_get_id(ch)    idnode_get_short_uuid((&(ch)->ch_id))

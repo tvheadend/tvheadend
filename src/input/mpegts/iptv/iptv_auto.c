@@ -58,7 +58,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
                                    const char *last_url,
                                    const http_arg_list_t *remove_args,
                                    const char *url, const char *name,
-                                   const char *logo,
+                                   const char *logo, const char *epgid,
                                    int64_t chnum, int *total, int *count)
 {
   htsmsg_t *conf;
@@ -158,6 +158,11 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
         im->mm_iptv_icon = logo ? strdup(logo) : NULL;
         change = 1;
       }
+      if (strcmp(im->mm_iptv_epgid ?: "", epgid ?: "")) {
+        free(im->mm_iptv_epgid);
+        im->mm_iptv_epgid = epgid ? strdup(epgid) : NULL;
+        change = 1;
+      }
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
@@ -192,7 +197,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
                               http_arg_list_t *remove_args,
                               int64_t chnum)
 {
-  char *url, *name = NULL, *logo = NULL;
+  char *url, *name = NULL, *logo = NULL, *epgid = NULL;
   int total = 0, count = 0;
 
   while (*data && *data != '\n') data++;
@@ -201,12 +206,15 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     if (strncmp(data, "#EXTINF:", 8) == 0) {
       name = NULL;
       logo = NULL;
+      epgid = NULL;
       data += 8;
       while (1) {
         while (*data && *data <= ' ') data++;
         if (*data == ',') break;
         if (strncmp(data, "tvg-logo=", 9) == 0)
           logo = get_m3u_str(data + 9, &data);
+        else if (strncmp(data, "tvg-id=", 7) == 0)
+          epgid = get_m3u_str(data + 7, &data);
         else if (strncmp(data, "logo=", 5) == 0)
           logo = get_m3u_str(data + 5, &data);
         else {
@@ -230,7 +238,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     if (*data) { *data = '\0'; data++; }
     if (*url)
       iptv_auto_network_process_m3u_item(in, last_url, remove_args,
-                                         url, name, logo,
+                                         url, name, logo, epgid,
                                          chnum, &total, &count);
   }
 

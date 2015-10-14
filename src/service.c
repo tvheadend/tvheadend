@@ -1652,6 +1652,16 @@ service_get_channel_icon ( service_t *s )
 }
 
 /*
+ * Get EPG ID for channel from service
+ */
+const char *
+service_get_channel_epgid ( service_t *s )
+{
+  if (s->s_channel_epgid) return s->s_channel_epgid(s);
+  return NULL;
+}
+
+/*
  *
  */
 void
