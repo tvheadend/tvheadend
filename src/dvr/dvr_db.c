@@ -1797,6 +1797,24 @@ dvr_entry_class_autorec_get(void *o)
   return &ret;
 }
 
+static const void *
+dvr_entry_class_autorec_caption_get(void *o)
+{
+  static const char *ret;
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  dvr_autorec_entry_t *dae = de->de_autorec;
+  if (dae) {
+    ret = prop_sbuf;
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%s%s%s%s",
+             dae->dae_name ?: "",
+             dae->dae_comment ? " (" : "",
+             dae->dae_comment,
+             dae->dae_comment ? ")" : "");
+  } else
+    ret = "";
+  return &ret;
+}
+
 static int
 dvr_entry_class_timerec_set(void *o, const void *v)
 {
@@ -1827,6 +1845,24 @@ dvr_entry_class_timerec_get(void *o)
   if (de->de_timerec)
     ret = idnode_uuid_as_sstr(&de->de_timerec->dte_id);
   else
+    ret = "";
+  return &ret;
+}
+
+static const void *
+dvr_entry_class_timerec_caption_get(void *o)
+{
+  static const char *ret;
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  dvr_timerec_entry_t *dte = de->de_timerec;
+  if (dte) {
+    ret = prop_sbuf;
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%s%s%s%s",
+             dte->dte_name ?: "",
+             dte->dte_comment ? " (" : "",
+             dte->dte_comment,
+             dte->dte_comment ? ")" : "");
+  } else
     ret = "";
   return &ret;
 }
@@ -2352,11 +2388,25 @@ const idclass_t dvr_entry_class = {
     },
     {
       .type     = PT_STR,
+      .id       = "autorec_caption",
+      .name     = N_("Auto Recorrd Caption"),
+      .get      = dvr_entry_class_autorec_caption_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+    },
+    {
+      .type     = PT_STR,
       .id       = "timerec",
       .name     = N_("Auto Time Record"),
       .set      = dvr_entry_class_timerec_set,
       .get      = dvr_entry_class_timerec_get,
       .opts     = PO_RDONLY,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "timerec_caption",
+      .name     = N_("Time Record Caption"),
+      .get      = dvr_entry_class_timerec_caption_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
       .type     = PT_U32,

@@ -21,6 +21,8 @@ tvheadend.dvrDetails = function(uuid) {
         var filesize = params[9].value;
         var comment = params[10].value;
         var duplicate = params[11].value;
+        var autorec_caption = params[12].value;
+        var timerec_caption = params[13].value;
         var content = '';
         var but;
 
@@ -51,6 +53,10 @@ tvheadend.dvrDetails = function(uuid) {
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('File size') + ':</div> ' + parseInt(filesize / 1000000) + ' MB</div>';
         if (comment)
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Comment') + ':</div> ' + comment + '</div>';
+        if (autorec_caption)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Autorec') + ':</div> ' + autorec_caption + '</div>';
+        if (timerec_caption)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Time Scheduler') + ':</div> ' + timerec_caption + '</div>';
 
         var win = new Ext.Window({
             title: title,
@@ -72,7 +78,8 @@ tvheadend.dvrDetails = function(uuid) {
         params: {
             uuid: uuid,
             list: 'channel_icon,disp_title,disp_subtitle,episode,start_real,stop_real,' +
-                  'duration,disp_description,status,filesize,comment,duplicate'
+                  'duration,disp_description,status,filesize,comment,duplicate,' +
+                  'autorec_caption,timerec_caption'
         },
         success: function(d) {
             d = json_decode(d);
