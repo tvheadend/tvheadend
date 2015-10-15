@@ -930,7 +930,7 @@ channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin)
   idnode_list_mapping_t *ilm;
 
   if (ct == NULL || ch == NULL)
-    return NULL;
+    return 0;
 
   ilm = idnode_list_link(&ct->ct_id, &ct->ct_ctms,
                          &ch->ch_id, &ch->ch_ctms,
