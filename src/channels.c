@@ -873,6 +873,9 @@ channel_save ( channel_t *ch )
   idnode_save(&ch->ch_id, c);
   hts_settings_save(c, "channel/config/%s", idnode_uuid_as_sstr(&ch->ch_id));
   htsmsg_destroy(c);
+  /* update the EPG channel <-> channel mapping here */
+  if (ch->ch_enabled && ch->ch_epgauto)
+    epggrab_channel_add(ch);
 }
 
 /**
