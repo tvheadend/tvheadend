@@ -504,6 +504,25 @@ bouquet_get_tag_number(bouquet_t *bq, service_t *t)
  *
  */
 void
+bouquet_delete(bouquet_t *bq)
+{
+  if (bq == NULL) return;
+  bq->bq_enabled = 0;
+  bouquet_map_to_channels(bq);
+  if (!bq->bq_shield) {
+    hts_settings_remove("bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
+    bouquet_destroy(bq);
+  } else {
+    idnode_set_free(bq->bq_services);
+    bq->bq_services = idnode_set_create(1);
+    bouquet_save(bq, 1);
+  }
+}
+
+/**
+ *
+ */
+void
 bouquet_save(bouquet_t *bq, int notify)
 {
   htsmsg_t *c = htsmsg_create_map();
@@ -530,18 +549,7 @@ bouquet_class_save(idnode_t *self)
 static void
 bouquet_class_delete(idnode_t *self)
 {
-  bouquet_t *bq = (bouquet_t *)self;
-
-  bq->bq_enabled = 0;
-  bouquet_map_to_channels(bq);
-  if (!bq->bq_shield) {
-    hts_settings_remove("bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
-    bouquet_destroy(bq);
-  } else {
-    idnode_set_free(bq->bq_services);
-    bq->bq_services = idnode_set_create(1);
-    bouquet_save(bq, 1);
-  }
+  bouquet_delete((bouquet_t *)self);
 }
 
 static const char *

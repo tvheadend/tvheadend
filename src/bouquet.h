@@ -70,6 +70,8 @@ htsmsg_t * bouquet_class_get_list(void *o, const char *lang);
 bouquet_t * bouquet_create(const char *uuid, htsmsg_t *conf,
                            const char *name, const char *src);
 
+void bouquet_delete(bouquet_t *bq);
+
 void bouquet_destroy_by_service(service_t *t);
 void bouquet_destroy_by_channel_tag(channel_tag_t *ct);
 

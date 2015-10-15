@@ -190,6 +190,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
         change = 1;
       }
       if (im->mm_iptv_chnum != chnum) {
+        iptv_bouquet_trigger(in, 0); /* propagate LCN change */
         im->mm_iptv_chnum = chnum;
         change = 1;
       }

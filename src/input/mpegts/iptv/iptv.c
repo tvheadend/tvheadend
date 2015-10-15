@@ -23,6 +23,7 @@
 #include "settings.h"
 #include "htsstr.h"
 #include "channels.h"
+#include "bouquet.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -82,6 +83,43 @@ iptv_handler_find ( const char *scheme )
 }
 
 /* **************************************************************************
+ * IPTV bouquet
+ * *************************************************************************/
+
+static bouquet_t *
+iptv_bouquet_get (iptv_network_t *in, int create)
+{
+  char buf[128];
+  snprintf(buf, sizeof(buf), "iptv-network://%s", idnode_uuid_as_sstr(&in->mn_id));
+  return bouquet_find_by_source(in->in_url, buf, create);
+}
+
+static void
+iptv_bouquet_update(void *aux)
+{
+  iptv_network_t *in = aux;
+  mpegts_mux_t *mm;
+  mpegts_service_t *ms;
+  bouquet_t *bq = in->in_bouquet ? iptv_bouquet_get(in, 1) : NULL;
+  uint32_t seen = 0;
+  if (bq == NULL)
+    return;
+  LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
+    LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+      bouquet_add_service(bq, (service_t *)ms, ((iptv_mux_t *)mm)->mm_iptv_chnum, 0);
+      seen++;
+    }
+  bouquet_completed(bq, seen);
+}
+
+void
+iptv_bouquet_trigger(iptv_network_t *in, int timeout)
+{
+  gtimer_arm(&in->in_bouquet_timer, iptv_bouquet_update, in, timeout);
+}
+
+
+/* **************************************************************************
  * IPTV input
  * *************************************************************************/
 
@@ -90,6 +128,7 @@ iptv_input_class_get_title ( idnode_t *self, const char *lang )
 {
   return tvh_gettext_lang(lang, N_("IPTV"));
 }
+
 extern const idclass_t mpegts_input_class;
 const idclass_t iptv_input_class = {
   .ic_super      = &mpegts_input_class,
@@ -485,13 +524,17 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   char *icon_url = in->in_icon_url;
   char *icon_url_sane = in->in_icon_url_sane;
 
+  gtimer_disarm(&in->in_bouquet_timer);
+
   if (in->mn_id.in_class == &iptv_auto_network_class)
     iptv_auto_network_done(in);
 
   /* Remove config */
-  if (delconf)
+  if (delconf) {
     hts_settings_remove("input/iptv/networks/%s",
                         idnode_uuid_as_sstr(&in->mn_id));
+    bouquet_delete(iptv_bouquet_get(in, 0));
+  }
 
   /* delete */
   free(in->in_remove_args);
@@ -594,6 +637,22 @@ iptv_auto_network_class_notify_url( void *in, const char *lang )
   iptv_auto_network_trigger(in);
 }
 
+static void
+iptv_auto_network_class_notify_bouquet( void *in, const char *lang )
+{
+  iptv_network_t *mn = in;
+  bouquet_t *bq;
+  if (mn->in_bouquet) {
+    iptv_bouquet_trigger(mn, 0);
+  } else {
+    if (mn->in_bouquet) {
+      bq = iptv_bouquet_get(mn, 0);
+      if (bq)
+        bouquet_delete(bq);
+    }
+  }
+}
+
 static htsmsg_t *
 iptv_auto_network_class_charset_list(void *o, const char *lang)
 {
@@ -616,6 +675,13 @@ const idclass_t iptv_auto_network_class = {
       .set      = iptv_auto_network_class_url_set,
       .notify   = iptv_auto_network_class_notify_url,
       .opts     = PO_MULTILINE
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "bouquet",
+      .name     = N_("Create bouquet"),
+      .off      = offsetof(iptv_network_t, in_bouquet),
+      .notify   = iptv_auto_network_class_notify_bouquet,
     },
     {
       .type     = PT_STR,
