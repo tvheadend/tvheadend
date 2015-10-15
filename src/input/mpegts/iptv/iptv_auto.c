@@ -337,7 +337,7 @@ iptv_auto_network_trigger0(void *aux)
   iptv_network_t *in = ap->in_network;
 
   download_start(&ap->in_download, in->in_url, ap);
-  gtimer_arm(&ap->in_auto_timer, iptv_auto_network_trigger0, in,
+  gtimer_arm(&ap->in_auto_timer, iptv_auto_network_trigger0, ap,
              MAX(1, in->in_refetch_period) * 60);
 }
 
