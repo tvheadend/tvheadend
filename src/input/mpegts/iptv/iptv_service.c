@@ -93,7 +93,7 @@ iptv_service_channel_icon ( service_t *s )
     if (strncmp(ic, "file://", 7) == 0)
       ic += 7;
     if (in && in->in_icon_url && in->in_icon_url[0]) {
-      snprintf(prop_sbuf, PROP_SBUF_LEN, "%s/%s", in->in_icon_url, ic + 7);
+      snprintf(prop_sbuf, PROP_SBUF_LEN, "%s/%s", in->in_icon_url, ic);
       return prop_sbuf;
     }
   }
