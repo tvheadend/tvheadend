@@ -573,6 +573,10 @@ const idclass_t iptv_network_class = {
       .set      = iptv_network_class_icon_url_set,
       .opts     = PO_MULTILINE
     },
+    {
+      .id       = "autodiscovery",
+      .type     = PT_NONE,
+    },
     {}
   }
 };
@@ -708,6 +712,7 @@ iptv_network_create0
   in->mn_config_save    = iptv_network_config_save;
  
   /* Defaults */
+  in->mn_autodiscovery  = 0;
   if (!conf) {
     in->mn_skipinitscan = 1;
   }
