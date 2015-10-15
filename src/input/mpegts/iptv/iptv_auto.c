@@ -40,21 +40,30 @@ static char *get_m3u_str(char *data, char **res)
   char *p = data, first = *data;
   
   if (first == '"' || first == '\'') {
-    data++;
-    p = data;
+    data++; p++;
     while (*data && *data != first)
       data++;
   } else {
-    p = data;
     while (*data && *data != ',' && *data > ' ')
       data++;
   }
-  *res = data;
   if (*data) {
     *data = '\0';
-    (*res)++;
+    data++;
   }
+  *res = data;
   return p;
+}
+
+/*
+ *
+ */
+static char *until_eol(char *d)
+{
+  while (*d && *d != '\r' && *d != '\n') d++;
+  if (*d) { *d = '\0'; d++; }
+  while (*d && (*d == '\r' || *d == '\n')) d++;
+  return d;
 }
 
 /*
@@ -219,18 +228,21 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
       logo = NULL;
       epgid = NULL;
       data += 8;
+      while (*data > ' ' && *data != ',') data++;
       while (1) {
         while (*data && *data <= ' ') data++;
         if (*data == ',') break;
-        if (strncmp(data, "tvg-logo=", 9) == 0)
-          logo = get_m3u_str(data + 9, &data);
-        else if (strncmp(data, "tvg-id=", 7) == 0)
-          epgid = get_m3u_str(data + 7, &data);
-        else if (strncmp(data, "logo=", 5) == 0)
-          logo = get_m3u_str(data + 5, &data);
-        else {
+        if (strncmp(data, "tvg-logo=", 9) == 0) {
+          logo = get_m3u_str(data + 9, &data); continue;
+        } else if (strncmp(data, "tvg-id=", 7) == 0) {
+          epgid = get_m3u_str(data + 7, &data); continue;
+        } else if (strncmp(data, "logo=", 5) == 0) {
+          logo = get_m3u_str(data + 5, &data); continue;
+        } else {
           data++;
-          while (*data && *data != ',' && *data > ' ') data++;
+          while (*data && *data != ',' && *data != '=') data++;
+          if (*data == '=')
+            get_m3u_str(data + 1, &data);
         }
       }
       if (*data == ',') {
@@ -239,8 +251,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
         if (*data)
           name = data;
       }
-      while (*data && *data != '\n') data++;
-      if (*data) data++;
+      data = until_eol(data);
       continue;
     } else if (strncmp(data, "#EXT", 4) == 0) {
       data += 4;
@@ -250,8 +261,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     }
     while (*data && *data <= ' ') data++;
     url = data;
-    while (*data && *data != '\n') data++;
-    if (*data) { *data = '\0'; data++; }
+    data = until_eol(data);
     if (*url && *url > ' ')
       iptv_auto_network_process_m3u_item(in, last_url, remove_args,
                                          url, name, logo, epgid,

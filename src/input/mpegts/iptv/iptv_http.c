@@ -24,6 +24,14 @@
 /*
  * M3U parser
  */
+static char *until_eol(char *d)
+{
+  while (*d && *d != '\r' && *d != '\n') d++;
+  if (*d) { *d = '\0'; d++; }
+  while (*d && (*d == '\r' || *d == '\n')) d++;
+  return d;
+}          
+
 static char *
 iptv_http_m3u(char *data)
 {
@@ -33,14 +41,12 @@ iptv_http_m3u(char *data)
   if (*data) data++;
   while (*data) {
     if (strncmp(data, "#EXT", 4) == 0) {
-      while (*data && *data != '\n') data++;
-      if (*data) data++;
+      data = until_eol(data);
       continue;
     }
     while (*data && *data <= ' ') data++;
     url = data;
-    while (*data && *data != '\n') data++;
-    if (*data) { *data = '\0'; data++; }
+    data = until_eol(data);
     if (*url && *url > ' ')
       return strdup(url);
   }
