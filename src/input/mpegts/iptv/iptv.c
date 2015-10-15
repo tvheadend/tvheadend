@@ -495,6 +495,7 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
 
   /* delete */
   free(in->in_remove_args);
+  free(in->in_ctx_charset);
   mpegts_network_delete(mn, delconf);
 
   free(icon_url_sane);
@@ -589,6 +590,15 @@ iptv_auto_network_class_notify_url( void *in, const char *lang )
   iptv_auto_network_trigger(in);
 }
 
+static htsmsg_t *
+iptv_auto_network_class_charset_list(void *o, const char *lang)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "intlconv/charsets");
+  return m;
+}
+
 const idclass_t iptv_auto_network_class = {
   .ic_super      = &iptv_network_class,
   .ic_class      = "iptv_auto_network",
@@ -602,6 +612,14 @@ const idclass_t iptv_auto_network_class = {
       .set      = iptv_auto_network_class_url_set,
       .notify   = iptv_auto_network_class_notify_url,
       .opts     = PO_MULTILINE
+    },
+    {
+      .type     = PT_STR,
+      .id       = "ctx_charset",
+      .name     = N_("Contents character set"),
+      .off      = offsetof(iptv_network_t, in_ctx_charset),
+      .list     = iptv_auto_network_class_charset_list,
+      .notify   = iptv_auto_network_class_notify_url,
     },
     {
       .type     = PT_S64,

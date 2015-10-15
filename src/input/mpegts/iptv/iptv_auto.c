@@ -22,6 +22,7 @@
 #include "iptv_private.h"
 #include "channels.h"
 #include "download.h"
+#include "intlconv.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -69,9 +70,29 @@ static char *until_eol(char *d)
 /*
  *
  */
+static int replace_string(char **s, const char *n, const char *charset_id)
+{
+  char *c;
+
+  if (charset_id && n) {
+    c = intlconv_to_utf8safestr(charset_id, n, strlen(n)*2);
+  } else
+    c = n ? strdup(n) : NULL;
+  if (strcmp(*s ?: "", n ?: "") == 0) {
+    free(c);
+    return 0;
+  }
+  free(*s);
+  *s = c;
+  return 1;
+}
+
+/*
+ *
+ */
 static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
-                                   const char *last_url,
+                                   const char *last_url, const char *charset_id,
                                    const http_arg_list_t *remove_args,
                                    const char *url, const char *name,
                                    const char *logo, const char *epgid,
@@ -86,7 +107,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
   size_t l = 0;
-  char url2[512], name2[128], *n;
+  char url2[512], name2[128], *n, *x = NULL;
 
   if (url == NULL ||
       (strncmp(url, "file://", 7) &&
@@ -150,6 +171,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   }
 
   if (last_url) {
+    if (charset_id) {
+      x = intlconv_to_utf8safestr(charset_id, name, strlen(name)*2);
+      name = x;
+    }
     snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
   } else {
     n = (char *)name;
@@ -161,7 +186,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       im->im_delete_flag = 0;
       if (strcmp(im->mm_iptv_svcname ?: "", name ?: "")) {
         free(im->mm_iptv_svcname);
-        im->mm_iptv_svcname = name ? strdup(name) : NULL;
+        im->mm_iptv_svcname = strdup(name);
         change = 1;
       }
       if (im->mm_iptv_chnum != chnum) {
@@ -178,11 +203,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
         im->mm_iptv_icon = logo ? strdup(logo) : NULL;
         change = 1;
       }
-      if (strcmp(im->mm_iptv_epgid ?: "", epgid ?: "")) {
-        free(im->mm_iptv_epgid);
-        im->mm_iptv_epgid = epgid ? strdup(epgid) : NULL;
-        change = 1;
-      }
+      change |= replace_string(&im->mm_iptv_epgid, epgid, charset_id);
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
@@ -205,6 +226,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   }
 
 end:
+  free(x);
   urlreset(&u);
 }
 
@@ -218,6 +240,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
                               int64_t chnum)
 {
   char *url, *name = NULL, *logo = NULL, *epgid = NULL;
+  char *charset_id = intlconv_charset_id(in->in_ctx_charset, 0, 1);
   int total = 0, count = 0;
 
   while (*data && *data != '\n') data++;
@@ -263,8 +286,9 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
     url = data;
     data = until_eol(data);
     if (*url && *url > ' ')
-      iptv_auto_network_process_m3u_item(in, last_url, remove_args,
-                                         url, name, logo, epgid,
+      iptv_auto_network_process_m3u_item(in, last_url, charset_id,
+                                         remove_args, url, name,
+                                         logo, epgid,
                                          chnum, &total, &count);
   }
 
@@ -317,7 +341,8 @@ iptv_auto_network_process(void *aux, const char *last_url, char *data, size_t le
         mm->mm_delete(mm, 1);
         count++;
       }
-    tvhinfo("iptv", "removed %d mux(es) from network '%s'", count, in->mn_network_name);
+    if (count > 0)
+      tvhinfo("iptv", "removed %d mux(es) from network '%s'", count, in->mn_network_name);
   } else {
     LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
       ((iptv_mux_t *)mm)->im_delete_flag = 0;

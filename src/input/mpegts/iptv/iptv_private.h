@@ -81,6 +81,7 @@ struct iptv_network
 
   char    *in_url;
   char    *in_url_sane;
+  char    *in_ctx_charset;
   int64_t  in_channel_number;
   uint32_t in_refetch_period;
   char    *in_icon_url;
