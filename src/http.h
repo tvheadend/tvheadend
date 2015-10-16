@@ -112,6 +112,8 @@ typedef enum http_cmd {
   RTSP_CMD_PAUSE,
 } http_cmd_t;
 
+#define HTTP_CMD_OPTIONS RTSP_CMD_OPTIONS
+
 typedef enum http_ver {
   HTTP_VERSION_1_0,
   HTTP_VERSION_1_1,
