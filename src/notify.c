@@ -127,7 +127,7 @@ void notify_init( void )
   notify_queue = NULL;
   pthread_mutex_init(&notify_mutex, NULL);
   pthread_cond_init(&notify_cond, NULL);
-  tvhthread_create(&notify_tid, NULL, notify_thread, NULL);
+  tvhthread_create(&notify_tid, NULL, notify_thread, NULL, "notify");
 }
 
 void notify_done( void )

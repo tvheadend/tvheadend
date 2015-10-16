@@ -1794,7 +1794,7 @@ satip_frontend_create
 
   tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
   tvhthread_create(&lfe->sf_dvr_thread, NULL,
-                   satip_frontend_input_thread, lfe);
+                   satip_frontend_input_thread, lfe, "satip-front");
 
   return lfe;
 }

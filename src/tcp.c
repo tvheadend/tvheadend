@@ -706,7 +706,7 @@ next:
       pthread_mutex_lock(&global_lock);
       LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
       pthread_mutex_unlock(&global_lock);
-      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl);
+      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, "tcp-start");
     }
   }
   tvhtrace("tcp", "server thread finished");
@@ -1050,7 +1050,7 @@ tcp_server_init(void)
   tvhpoll_add(tcp_server_poll, &ev, 1);
 
   tcp_server_running = 1;
-  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL);
+  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, "tcp-loop");
 }
 
 void

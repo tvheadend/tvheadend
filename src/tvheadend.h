@@ -638,12 +638,10 @@ static inline void mystrset(char **p, const char *s)
 
 void doexit(int x);
 
-int tvhthread_create0
+int tvhthread_create
   (pthread_t *thread, const pthread_attr_t *attr,
    void *(*start_routine) (void *), void *arg,
    const char *name);
-
-#define tvhthread_create(a, b, c, d)  tvhthread_create0(a, b, c, d, #c)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

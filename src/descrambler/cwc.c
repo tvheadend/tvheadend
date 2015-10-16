@@ -1082,7 +1082,7 @@ cwc_session(cwc_t *cwc)
   pthread_cond_init(&cwc->cwc_writer_cond, NULL);
   pthread_mutex_init(&cwc->cwc_writer_mutex, NULL);
   TAILQ_INIT(&cwc->cwc_writeq);
-  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc);
+  tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc, "cwc-writer");
 
   /**
    * Mainloop
@@ -1654,7 +1654,7 @@ cwc_conf_changed(caclient_t *cac)
     }
     if (!cwc->cwc_running) {
       cwc->cwc_running = 1;
-      tvhthread_create(&cwc->cwc_tid, NULL, cwc_thread, cwc);
+      tvhthread_create(&cwc->cwc_tid, NULL, cwc_thread, cwc, "cwc");
       return;
     }
     pthread_mutex_lock(&cwc->cwc_mutex);

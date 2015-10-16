@@ -254,7 +254,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
       /* start input thread */
       tvh_pipe(O_NONBLOCK, &hfe->hf_input_thread_pipe);
       pthread_mutex_lock(&hfe->hf_input_thread_mutex);
-      tvhthread_create(&hfe->hf_input_thread, NULL, tvhdhomerun_frontend_input_thread, hfe);
+      tvhthread_create(&hfe->hf_input_thread, NULL, tvhdhomerun_frontend_input_thread, hfe, "hdhm-front");
       pthread_cond_wait(&hfe->hf_input_thread_cond, &hfe->hf_input_thread_mutex);
       pthread_mutex_unlock(&hfe->hf_input_thread_mutex);
 

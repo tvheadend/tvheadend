@@ -2168,7 +2168,7 @@ capmt_conf_changed(caclient_t *cac)
     if (!capmt->capmt_running) {
       capmt->capmt_running = 1;
       capmt->capmt_reconfigure = 0;
-      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
+      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, "capmt");
       return;
     }
     pthread_mutex_lock(&capmt->capmt_mutex);

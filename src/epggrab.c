@@ -370,7 +370,7 @@ void epggrab_init ( void )
 
   /* Start internal grab thread */
   epggrab_running = 1;
-  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL);
+  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, "epggrabi");
 }
 
 /*

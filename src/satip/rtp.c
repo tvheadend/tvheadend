@@ -389,7 +389,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
 
   pthread_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
-  tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp);
+  tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
   pthread_mutex_unlock(&satip_rtp_lock);
 }
 
@@ -785,7 +785,7 @@ void satip_rtp_init(void)
   pthread_mutex_init(&satip_rtp_lock, NULL);
 
   satip_rtcp_run = 1;
-  tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL);
+  tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
 }
 
 /*

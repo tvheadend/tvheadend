@@ -1501,7 +1501,7 @@ http_client_init ( const char *user_agent )
 
   /* Setup thread */
   http_running = 1;
-  tvhthread_create(&http_client_tid, NULL, http_client_thread, NULL);
+  tvhthread_create(&http_client_tid, NULL, http_client_thread, NULL, "httpc");
 #if HTTPCLIENT_TESTSUITE
   http_client_testsuite_run();
 #endif

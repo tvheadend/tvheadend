@@ -1001,7 +1001,7 @@ main(int argc, char **argv)
 
   epg_in_load = 1;
 
-  tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL);
+  tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
   dbus_server_init(opt_dbus, opt_dbus_session);
 

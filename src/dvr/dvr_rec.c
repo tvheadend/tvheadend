@@ -149,7 +149,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   de->de_chain = prch;
 
   de->de_thread_shutdown = 0;
-  tvhthread_create(&de->de_thread, NULL, dvr_thread, de);
+  tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
   return 0;
 }
 

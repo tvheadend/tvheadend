@@ -303,7 +303,7 @@ pthread_t avahi_tid;
 void
 avahi_init(void)
 {
-  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL);
+  tvhthread_create(&avahi_tid, NULL, avahi_thread, NULL, "avahi");
 }
 
 void
