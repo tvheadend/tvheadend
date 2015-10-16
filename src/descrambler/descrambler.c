@@ -413,11 +413,16 @@ key_late( th_descrambler_runtime_t *dr, uint8_t ki )
   if (dr->dr_key_timestamp[kidx] < dr->dr_key_timestamp[kidx^1]) {
     /* but don't take in account the keys modified just now */
     if (dr->dr_key_timestamp[kidx^1] + 2 < dispatch_clock)
-      return 1;
+      goto late;
   }
   /* ECM was sent, but no new key was received */
-  return dr->dr_ecm_last_key_time + 2 < dr->dr_key_start &&
-         (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + 4 < dr->dr_key_start);
+  if (dr->dr_ecm_last_key_time + 2 < dr->dr_key_start &&
+      (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + 4 < dr->dr_key_start)) {
+late:
+    dr->dr_key_valid &= ~((ki & 0x40) + 0x40);
+    return 1;
+  }
+  return 0;
 }
 
 static inline int
@@ -565,7 +570,7 @@ next:
     if ((ki & 0x80) != 0x00) {
       if (dr->dr_key_start == 0) {
         /* do not use the first TS packet to decide - it may be wrong */
-        if (dr->dr_buf.sb_ptr > 20 * 188) {
+        while (dr->dr_buf.sb_ptr > 20 * 188) {
           for (off = 0; off < 20 * 188; off += 188)
             if ((dr->dr_buf.sb_data[off + 3] & 0xc0) != (ki & 0xc0))
               break;
@@ -574,6 +579,7 @@ next:
                                     (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             key_update(dr, ki);
+            break;
           } else {
             sbuf_cut(&dr->dr_buf, 188);
           }
