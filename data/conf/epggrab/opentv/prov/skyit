@@ -24,7 +24,8 @@
     "[0-9]+'?a? Stagione +Ep\\. ?([0-9]+)[a-z]?",
     "[0-9]+'?a? Stagione -? ?Puntata ?([0-9]+)",
     "^ *Ep\\. ?([0-9]+)[a-z]?",
-    "^ *Puntata ?([0-9]+)"
+    "^ *Puntata ?([0-9]+)",
+    " Ep\\. ?([0-9]+) -"
   ],
   "part_num": [
     "[0-9]+'?a? Stagione +Ep\\. ?[0-9]+([a-z]?)",
@@ -38,10 +39,12 @@
   ],
   "cleanup_title": [
     "^ *(.*) *- *1\\^TV *$",
+    "^ *(.*) *\\(diretta\\) *$",
     "^ *(.*) *$"
   ],
   "__title_references": [
-    "The Big Bang Theory - 1^TV "
+    "The Big Bang Theory - 1^TV ",
+    "X Factor 2015 (diretta) "
   ],
   "__summary_references": [
     "4' Stagione Ep.9B - 'L'Hub' Gli agenti ...: sara' Ward ...",
@@ -50,6 +53,7 @@
     "Ep.9A ...",
     "Puntata 5 ...",
     "Ep.4 - 'Title' ...",
-    "7 Stagione Puntata 8 \"\" Title \"\" ..."
+    "7 Stagione Puntata 8 \"\" Title \"\" ...",
+    "In diretta, Ep.1 - Prossimo Ep. Gio 29 OTT 21:10. ..."
   ]
 }
