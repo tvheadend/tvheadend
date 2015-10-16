@@ -532,10 +532,10 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   lock = rtp->sig_lock;
   switch (rtp->sig.signal_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
-    level = MIN(240, MAX(0, (rtp->sig.signal * 245) / 0xffff));
+    level = MINMAX((rtp->sig.signal * 245) / 0xffff, 0, 240);
     break;
   case SIGNAL_STATUS_SCALE_DECIBEL:
-    level = MIN(240, MAX(0, (rtp->sig.signal + 90000) / 375));
+    level = MINMAX((rtp->sig.signal + 90000) / 375, 0, 240);
     break;
   default:
     level = lock ? 10 : 0;
@@ -543,10 +543,10 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   }
   switch (rtp->sig.snr_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
-    quality = MIN(15, MAX(0, (rtp->sig.snr * 16) / 0xffff));
+    quality = MINMAX((rtp->sig.snr * 16) / 0xffff, 0, 15);
     break;
   case SIGNAL_STATUS_SCALE_DECIBEL:
-    quality = MIN(15, MAX(0, (rtp->sig.snr / 2000)));
+    quality = MINMAX(rtp->sig.snr / 2000, 0, 15);
     break;
   default:
     quality = lock ? 1 : 0;

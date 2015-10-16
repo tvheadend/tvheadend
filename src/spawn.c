@@ -326,7 +326,7 @@ spawn_kill(pid_t pid, int sig, int timeout)
         break;
     if (s) {
       if (!s->killed)
-        s->killed = dispatch_clock_update(NULL) + MAX(MIN(5, timeout), 3600);
+        s->killed = dispatch_clock_update(NULL) + MINMAX(timeout, 5, 3600);
       /* kill the whole process group */
       r = kill(-pid, sig);
       if (r < 0)
