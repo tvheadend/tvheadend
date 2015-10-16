@@ -572,6 +572,22 @@ const idclass_t iptv_network_class = {
   .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
     {
+      .type     = PT_BOOL,
+      .id       = "scan_create",
+      .name     = N_("Scan After Create"),
+      .off      = offsetof(iptv_network_t, in_scan_create),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_U16,
+      .id       = "service_sid",
+      .name     = N_("Service ID"),
+      .off      = offsetof(iptv_network_t, in_service_id),
+      .def.i    = 0,
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_INT,
       .id       = "priority",
       .name     = N_("Priority"),
@@ -762,7 +778,8 @@ iptv_network_create0
   htsmsg_t *c;
 
   /* Init Network */
-  in->in_priority       = 1;
+  in->in_scan_create        = 1;
+  in->in_priority           = 1;
   in->in_streaming_priority = 1;
   if (idc == &iptv_auto_network_class)
     in->in_remove_args = strdup("ticket");
