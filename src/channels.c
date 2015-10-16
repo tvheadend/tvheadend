@@ -934,9 +934,8 @@ channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin)
 
   ilm = idnode_list_link(&ct->ct_id, &ct->ct_ctms,
                          &ch->ch_id, &ch->ch_ctms,
-                         origin);
+                         origin, 2);
   if (ilm) {
-    ilm->ilm_in2_save = 1; /* channel */
     if(ct->ct_enabled && !ct->ct_internal) {
       htsp_tag_update(ct);
       htsp_channel_update(ch);

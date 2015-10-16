@@ -1359,7 +1359,7 @@ idnode_list_notify ( idnode_list_mapping_t *ilm, void *origin )
 idnode_list_mapping_t *
 idnode_list_link ( idnode_t *in1, idnode_list_head_t *in1_list,
                    idnode_t *in2, idnode_list_head_t *in2_list,
-                   void *origin )
+                   void *origin, uint32_t savemask )
 {
   idnode_list_mapping_t *ilm;
 
@@ -1381,6 +1381,8 @@ idnode_list_link ( idnode_t *in1, idnode_list_head_t *in1_list,
   ilm->ilm_in2 = in2;
   LIST_INSERT_HEAD(in1_list, ilm, ilm_in1_link);
   LIST_INSERT_HEAD(in2_list, ilm, ilm_in2_link);
+  ilm->ilm_in1_save = savemask & 1;
+  ilm->ilm_in2_save = (savemask >> 1) & 1;
   idnode_list_notify(ilm, origin);
   return ilm;
 }

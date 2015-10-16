@@ -223,7 +223,7 @@ static inline void idnode_perm_unset(idnode_t *self) { self->in_access = NULL; }
 idnode_list_mapping_t * idnode_list_link
                        ( idnode_t *in1, idnode_list_head_t *in1_list,
                          idnode_t *in2, idnode_list_head_t *in2_list,
-                         void *origin );
+                         void *origin, uint32_t savemask );
 void idnode_list_unlink ( idnode_list_mapping_t *ilm, void *origin );
 void idnode_list_destroy ( idnode_list_head_t *ilh, void *origin );
 htsmsg_t * idnode_list_get1 ( idnode_list_head_t *in1_list );

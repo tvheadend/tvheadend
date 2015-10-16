@@ -1238,12 +1238,8 @@ access_entry_chtag_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
   access_entry_t *ae = (access_entry_t *)in1;
   idnode_list_mapping_t *ilm;
   channel_tag_t *ct = (channel_tag_t *)in2;
-  ilm = idnode_list_link(in1, &ae->ae_chtags, in2, &ct->ct_accesses, origin);
-  if (ilm) {
-    ilm->ilm_in1_save = 1;
-    return 1;
-  }
-  return 0;
+  ilm = idnode_list_link(in1, &ae->ae_chtags, in2, &ct->ct_accesses, origin, 1);
+  return ilm ? 1 : 0;
 }
 
 static int
@@ -1273,12 +1269,8 @@ access_entry_dvr_config_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
   access_entry_t *ae = (access_entry_t *)in1;
   idnode_list_mapping_t *ilm;
   dvr_config_t *dvr = (dvr_config_t *)in2;
-  ilm = idnode_list_link(in1, &ae->ae_dvr_configs, in2, &dvr->dvr_accesses, origin);
-  if (ilm) {
-    ilm->ilm_in1_save = 1;
-    return 1;
-  }
-  return 0;
+  ilm = idnode_list_link(in1, &ae->ae_dvr_configs, in2, &dvr->dvr_accesses, origin, 1);
+  return ilm ? 1 : 0;
 }
 
 static int
@@ -1308,12 +1300,8 @@ access_entry_profile_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
   access_entry_t *ae = (access_entry_t *)in1;
   idnode_list_mapping_t *ilm;
   profile_t *pro = (profile_t *)in2;
-  ilm = idnode_list_link(in1, &ae->ae_profiles, in2, &pro->pro_accesses, origin);
-  if (ilm) {
-    ilm->ilm_in1_save = 1;
-    return 1;
-  }
-  return 0;
+  ilm = idnode_list_link(in1, &ae->ae_profiles, in2, &pro->pro_accesses, origin, 1);
+  return ilm ? 1 : 0;
 }
 
 static int
