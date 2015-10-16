@@ -101,7 +101,6 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   htsmsg_t *conf;
   mpegts_mux_t *mm;
   iptv_mux_t *im;
-  iptv_service_t *ms;
   url_t u;
   int change;
   http_arg_list_t args;
@@ -229,16 +228,6 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     im->mm_config_save((mpegts_mux_t *)im);
     (*total)++;
     (*count)++;
-  }
-
-  if (in->in_service_id) {
-    conf = htsmsg_create_map();
-    htsmsg_add_u32(conf, "sid", in->in_service_id);
-    htsmsg_add_u32(conf, "dvb_servicetype", 1); /* SDTV */
-    ms = iptv_service_create0(im, 0, 0, NULL, conf);
-    htsmsg_destroy(conf);
-    if (ms)
-      iptv_bouquet_trigger(in, 0);
   }
 
 end:
