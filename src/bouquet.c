@@ -536,6 +536,20 @@ bouquet_save(bouquet_t *bq, int notify)
     idnode_notify_changed(&bq->bq_id);
 }
 
+/**
+ *
+ */
+
+void
+bouquet_change_comment ( bouquet_t *bq, const char *comment, int replace )
+{
+  if (!replace && (bq->bq_comment || bq->bq_comment[0]))
+    return;
+  free(bq->bq_comment);
+  bq->bq_comment = strdup(comment);
+  bq->bq_saveflag = 1;
+}
+
 /* **************************************************************************
  * Class definition
  * **************************************************************************/
@@ -577,6 +591,11 @@ static void
 bouquet_class_rescan_notify0 ( bouquet_t *bq, const char *lang )
 {
   void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+  void iptv_bouquet_trigger_by_uuid( const char *uuid );
+#if ENABLE_IPTV
+  if (bq->bq_src && strncmp(bq->bq_src, "iptv-network://", 15) == 0)
+    return iptv_bouquet_trigger_by_uuid(bq->bq_src + 15);
+#endif
   mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
   bq->bq_rescan = 0;
 }

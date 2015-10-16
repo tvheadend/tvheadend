@@ -106,10 +106,8 @@ dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
 
   if (bq->bq_comment && bq->bq_comment[0])
     return;
-  free(bq->bq_comment);
   mpegts_mux_nice_name(mm, comment, sizeof(comment));
-  bq->bq_comment = strdup(comment);
-  bq->bq_saveflag = 1;
+  bouquet_change_comment(bq, comment, 0);
 }
 
 #if ENABLE_MPEGTS_DVB

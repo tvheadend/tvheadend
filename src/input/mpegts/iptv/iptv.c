@@ -91,7 +91,7 @@ iptv_bouquet_get (iptv_network_t *in, int create)
 {
   char buf[128];
   snprintf(buf, sizeof(buf), "iptv-network://%s", idnode_uuid_as_sstr(&in->mn_id));
-  return bouquet_find_by_source(in->in_url, buf, create);
+  return bouquet_find_by_source(in->mn_network_name, buf, create);
 }
 
 static void
@@ -104,6 +104,7 @@ iptv_bouquet_update(void *aux)
   uint32_t seen = 0;
   if (bq == NULL)
     return;
+  bouquet_change_comment(bq, in->in_url, 1);
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
     LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
       bouquet_add_service(bq, (service_t *)ms, ((iptv_mux_t *)mm)->mm_iptv_chnum, 0);
@@ -116,6 +117,13 @@ void
 iptv_bouquet_trigger(iptv_network_t *in, int timeout)
 {
   gtimer_arm(&in->in_bouquet_timer, iptv_bouquet_update, in, timeout);
+}
+
+void
+iptv_bouquet_trigger_by_uuid(const char *uuid)
+{
+  iptv_network_t *in = (iptv_network_t *)idnode_find(uuid, &iptv_network_class, NULL);
+  iptv_bouquet_trigger(in, 0);
 }
 
 
