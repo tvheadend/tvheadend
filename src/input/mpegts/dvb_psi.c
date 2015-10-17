@@ -872,12 +872,6 @@ dvb_pat_callback
       tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
       int save = 0;
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
-        if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
-          tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in PAT)",
-                  s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id);
-          service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
-        }
-        s->s_dvb_check_seen = dispatch_clock;
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
                          NULL, "pmt",
                          MT_CRC | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
@@ -2358,6 +2352,15 @@ psi_parse_pmt
     // notify descrambler that we found another CAIDs
     if (update & PMT_UPDATE_NEW_CAID)
       descrambler_caid_changed((service_t *)t);
+
+    if (service_has_audio_or_video((service_t *)t)) {
+      t->s_dvb_check_seen = dispatch_clock;
+      if (!t->s_enabled && t->s_auto == SERVICE_AUTO_PAT_MISSING) {
+        tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in PAT and PMT)",
+                t->s_nicename, t->s_dvb_service_id, t->s_dvb_service_id);
+        service_set_enabled((service_t *)t, 1, SERVICE_AUTO_NORMAL);
+      }
+    }
   }
   return ret;
 }

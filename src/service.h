@@ -530,6 +530,7 @@ void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
+int service_has_audio_or_video(service_t *t);
 int service_is_sdtv(service_t *t);
 int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);

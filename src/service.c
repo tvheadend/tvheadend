@@ -1072,6 +1072,16 @@ service_data_timeout(void *aux)
  *
  */
 int
+service_has_audio_or_video(service_t *t)
+{
+  elementary_stream_t *st;
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if (SCT_ISVIDEO(st->es_type) || SCT_ISAUDIO(st->es_type))
+      return 1;
+  return 0;
+}
+
+int
 service_is_sdtv(service_t *t)
 {
   if (t->s_servicetype == ST_SDTV)
