@@ -1147,6 +1147,12 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u )
   tvhpoll_t *efd;
   int r;
 
+  if (u->scheme == NULL || u->scheme[0] == '\0' ||
+      u->host == NULL || u->host[0] == '\0' ||
+      u->port <= 0) {
+    tvherror("httpc", "Invalid url '%s'", u->raw);
+    return -EINVAL;
+  }
   if (strcmp(u->scheme, hc->hc_scheme) ||
       strcmp(u->host, hc->hc_host) ||
       http_port(hc, u->scheme, u->port) != hc->hc_port ||
