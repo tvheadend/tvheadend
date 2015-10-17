@@ -188,7 +188,7 @@ tvhthread_create
   int r;
   struct thread_state *ts = calloc(1, sizeof(struct thread_state));
   strncpy(ts->name, "tvh:", 4);
-  strncpy(ts->name+4, name, sizeof(ts->name));
+  strncpy(ts->name+4, name, sizeof(ts->name)-4);
   ts->name[sizeof(ts->name)-1] = '\0';
   ts->run  = start_routine;
   ts->arg  = arg;
