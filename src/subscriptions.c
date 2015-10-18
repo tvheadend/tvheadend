@@ -553,12 +553,16 @@ subscription_input(void *opauqe, streaming_message_t *sm)
 void
 subscription_unsubscribe(th_subscription_t *s, int quiet)
 {
-  service_t *t = s->ths_service;
+  service_t *t;
   char buf[512];
   size_t l = 0;
+  service_t *raw;
 
   if (s == NULL)
     return;
+
+  t = s->ths_service;
+  raw = s->ths_raw_service;
 
   lock_assert(&global_lock);
 
@@ -570,7 +574,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   LIST_SAFE_REMOVE(s, ths_remove_link);
 
 #if ENABLE_MPEGTS
-  if (s->ths_raw_service)
+  if (raw)
     LIST_REMOVE(s, ths_mux_link);
 #endif
 
@@ -596,7 +600,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   }
 
 #if ENABLE_MPEGTS
-  if (s->ths_raw_service)
+  if (raw)
     service_remove_raw(s->ths_raw_service);
 #endif
 
