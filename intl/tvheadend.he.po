@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Ben Efrati <ben1189@gmail.com>, 2015
 # dhead666 <myfoolishgames@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-10-15 19:25+0000\n"
+"Last-Translator: Ben Efrati <ben1189@gmail.com>\n"
 "Language-Team: Hebrew (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -48,7 +49,7 @@ msgstr "# שירותים אותרו"
 
 #: src/dvr/dvr_config.c:661
 msgid "(Default Profile)"
-msgstr ""
+msgstr "(פרופיל ברירת מחדל)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 msgid "0"
@@ -366,7 +367,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2290
 msgid "Auto Record"
-msgstr ""
+msgstr "הקלטה אוטומטית"
 
 #: src/dvr/dvr_db.c:2298
 msgid "Auto Time Record"
@@ -374,11 +375,11 @@ msgstr ""
 
 #: src/bouquet.c:817
 msgid "Auto-Map to Channels"
-msgstr ""
+msgstr "מיפוי ערוצים אוטומטי"
 
 #: src/service.c:165
 msgid "Automatic Checking"
-msgstr ""
+msgstr "בדיקה אוטומטית"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:368
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:95
@@ -621,7 +622,7 @@ msgstr "הערה"
 
 #: src/dvr/dvr_db.c:291
 msgid "Commercial break"
-msgstr ""
+msgstr "הפסקת פרסומות"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:121
 msgid "Committed"
@@ -637,7 +638,7 @@ msgstr ""
 
 #: src/config.c:1816
 msgid "Configuration"
-msgstr ""
+msgstr "הגדרות"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
@@ -753,7 +754,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:220
 msgid "DVB-C Network"
-msgstr "רשת "
+msgstr "רשת DVB-C"
 
 #: src/satip/server.c:650
 msgid "DVB-C2"
@@ -817,7 +818,7 @@ msgstr ""
 
 #: src/access.c:1347
 msgid "DVR"
-msgstr ""
+msgstr "הקלטה"
 
 #: src/dvr/dvr_autorec.c:921
 msgid "DVR Auto-Record Entry"
@@ -963,7 +964,7 @@ msgstr "בלשי"
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "Device ID"
-msgstr ""
+msgstr "מזהה מכשיר"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:170
 msgid "Device Model"
@@ -980,7 +981,7 @@ msgstr "תיקיה"
 
 #: src/dvr/dvr_config.c:908
 msgid "Directory Permissions (octal, e.g. 0775)"
-msgstr ""
+msgstr "הרשאות ספריה (למשל 0775)"
 
 #: src/input/mpegts/mpegts_mux.c:458
 msgid "Disable"
@@ -1284,15 +1285,15 @@ msgstr "קובץ חסר"
 
 #: src/dvr/dvr_db.c:301
 msgid "File Not Created"
-msgstr ""
+msgstr "קובץ לא נוצר"
 
 #: src/dvr/dvr_config.c:866
 msgid "File Permissions (octal, e.g. 0664)"
-msgstr ""
+msgstr "השראות קובץ (למשל 0664)"
 
 #: src/dvr/dvr_db.c:2336
 msgid "File Size"
-msgstr ""
+msgstr "גודל קובץ"
 
 #: src/dvr/dvr_db.c:2242
 msgid "Filename"
@@ -1449,7 +1450,7 @@ msgstr "גינון"
 
 #: src/satip/server.c:565
 msgid "General"
-msgstr ""
+msgstr "כללי"
 
 #: src/epggrab.c:233
 msgid "General Config"
@@ -1534,7 +1535,7 @@ msgstr ""
 
 #: src/epg.c:1954
 msgid "Horror"
-msgstr ""
+msgstr "אימה"
 
 #: src/descrambler/cwc.c:1743
 msgid "Hostname/IP"
@@ -1551,7 +1552,7 @@ msgstr "כתובת IP"
 
 #: src/access.c:1856 src/access.c:1885
 msgid "IP Blocking"
-msgstr ""
+msgstr "חסימת IP"
 
 #: src/input/mpegts/iptv/iptv.c:89
 msgid "IPTV"
@@ -1713,7 +1714,7 @@ msgstr "ראיון"
 
 #: src/dvr/dvr_db.c:295 src/dvr/dvr_db.c:320 src/dvr/dvr_timerec.c:454
 msgid "Invalid"
-msgstr ""
+msgstr "לא תקין"
 
 #: src/main.c:807
 #, c-format
@@ -1759,7 +1760,7 @@ msgstr "שפה"
 
 #: src/config.c:1826
 msgid "Language Settings"
-msgstr ""
+msgstr "הגדרות שפה"
 
 #: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
 #: src/epg.c:2080 src/epg.c:2081
@@ -1772,7 +1773,7 @@ msgstr "נצפה לאחרונה"
 
 #: src/config.c:1859
 msgid "Last updated from"
-msgstr ""
+msgstr "עדכון אחרון מ:"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:290
 msgid "Latitude Direction South"
@@ -1784,7 +1785,7 @@ msgstr ""
 
 #: src/access.c:1514
 msgid "Limit Connections"
-msgstr ""
+msgstr "הגבל חיבורים"
 
 #: src/input/mpegts/mpegts_input.c:289
 msgid "Linked Input"
@@ -1881,7 +1882,7 @@ msgstr ""
 #: src/esfilter.c:682 src/esfilter.c:749 src/esfilter.c:816 src/esfilter.c:883
 #: src/esfilter.c:958 src/esfilter.c:1019
 msgid "Log"
-msgstr ""
+msgstr "יומן"
 
 #: src/config.c:1777
 msgid "Login/Logout"
@@ -2006,7 +2007,7 @@ msgstr "Matroska/av-lib"
 
 #: src/input/mpegts/iptv/iptv.c:475
 msgid "Maximum Bandwidth (Kbps)"
-msgstr ""
+msgstr "רוחב פס מקסימלי (Kbps)"
 
 #: src/access.c:1528
 msgid "Maximum Channel Num"
@@ -2014,7 +2015,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1032
 msgid "Maximum Duration"
-msgstr ""
+msgstr "משך מקסימלי"
 
 #: src/input/mpegts/iptv/iptv.c:468
 msgid "Maximum Input Streams"
@@ -2063,7 +2064,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1025
 msgid "Minimum Duration"
-msgstr ""
+msgstr "משך מינימלי"
 
 #: src/service.c:141
 msgid "Missing In PAT/SDT"
@@ -2255,11 +2256,11 @@ msgstr ""
 
 #: src/streaming.c:421
 msgid "No free adapter"
-msgstr ""
+msgstr "אין מתאם פנוי"
 
 #: src/streaming.c:445
 msgid "No input detected"
-msgstr ""
+msgstr "לא זוהה מתאם"
 
 #: src/streaming.c:435
 msgid "No service assigned to channel"
@@ -2271,7 +2272,7 @@ msgstr ""
 
 #: src/streaming.c:433
 msgid "No source available"
-msgstr ""
+msgstr "אין מקור זמין"
 
 #: src/profile.c:265 src/input/mpegts/linuxdvb/linuxdvb_switch.c:252
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:458
@@ -2289,7 +2290,7 @@ msgstr ""
 
 #: src/profile.c:1355 src/dvr/dvr_db.c:1678 src/dvr/dvr_db.c:1706
 msgid "Not set"
-msgstr ""
+msgstr "לא מוגדר"
 
 #: src/dvr/dvr_config.c:697
 msgid "Not set (none or channel configuration)"
@@ -2502,7 +2503,7 @@ msgstr "סיסמאות"
 
 #: src/epggrab/module.c:173
 msgid "Path"
-msgstr ""
+msgstr "נתיב"
 
 #: src/epg.c:2042
 msgid "Performing arts"
@@ -2559,7 +2560,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:100
 msgid "Power Save"
-msgstr ""
+msgstr "חסכון בחשמל"
 
 #: src/input/mpegts/mpegts_network_dvb.c:206
 #: src/input/mpegts/mpegts_network_dvb.c:225
@@ -2602,7 +2603,7 @@ msgstr "קדימות"
 
 #: src/service.c:183
 msgid "Priority (-10..10)"
-msgstr ""
+msgstr "עדיפות (10...10-)"
 
 #: src/channels.c:1118
 msgid "Private"
@@ -2655,7 +2656,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:893
 msgid "Record all"
-msgstr ""
+msgstr "הקלט הכל"
 
 #: src/dvr/dvr_autorec.c:899
 msgid "Record if different description"
@@ -2663,19 +2664,19 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:895
 msgid "Record if different episode number"
-msgstr ""
+msgstr "הקלט אם מספר הפרק שונה"
 
 #: src/dvr/dvr_autorec.c:897
 msgid "Record if different subtitle"
-msgstr ""
+msgstr "הקלט אם הכתוביות שונות"
 
 #: src/dvr/dvr_autorec.c:903
 msgid "Record once per day"
-msgstr ""
+msgstr "הקלט פעם ביום"
 
 #: src/dvr/dvr_autorec.c:901
 msgid "Record once per week"
-msgstr ""
+msgstr "הקלט פעם בשבוע"
 
 #: src/dvr/dvr_config.c:737
 msgid "Recording File Options"
@@ -2709,7 +2710,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:986
 msgid "Replace Whitespace In Title with '-'"
-msgstr ""
+msgstr "החלף רווחים בכותרת עם '-'"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:202
 msgid "Reply to CAM PIN Enquiries"
@@ -2717,7 +2718,7 @@ msgstr ""
 
 #: src/epg.c:2053
 msgid "Reports"
-msgstr ""
+msgstr "דוחות"
 
 #: src/dvr/dvr_db.c:2357
 msgid "Rerun of"
@@ -2725,7 +2726,7 @@ msgstr ""
 
 #: src/bouquet.c:809
 msgid "Rescan"
-msgstr ""
+msgstr "סרוק מחדש"
 
 #: src/streaming.c:545
 msgid "Reserved"
@@ -2733,7 +2734,7 @@ msgstr ""
 
 #: src/profile.c:1513
 msgid "Resolution (height)"
-msgstr ""
+msgstr "רזולוציה (גובה)"
 
 #: src/input/mpegts/iptv/iptv_mux.c:159
 msgid "Respawn (pipe)"
@@ -2827,7 +2828,7 @@ msgstr ""
 
 #: src/satip/server.c:559
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "שרת SAT>IP"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2898,11 +2899,11 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:564
 msgid "Scan Result"
-msgstr "תוצאות חיפוש"
+msgstr "תוצאות סריקה"
 
 #: src/input/mpegts/mpegts_mux.c:555
 msgid "Scan Status"
-msgstr "מצב חיפוש"
+msgstr "מצב סריקה"
 
 #: src/dvr/dvr_db.c:2350
 msgid "Schedule Status"
@@ -2910,15 +2911,15 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2084
 msgid "Scheduled Start Time"
-msgstr ""
+msgstr "זמן התחלה מתוכנן"
 
 #: src/dvr/dvr_db.c:2106
 msgid "Scheduled Stop Time"
-msgstr ""
+msgstr "זמן סיום מתוכנן"
 
 #: src/dvr/dvr_db.c:279
 msgid "Scheduled for recording"
-msgstr ""
+msgstr "תזמון הקלטה"
 
 #: src/epg.c:2014
 msgid "School programmes"
@@ -2971,7 +2972,7 @@ msgstr "שרת"
 
 #: src/main.c:695
 msgid "Server Connectivity"
-msgstr ""
+msgstr "קישוריות שרת"
 
 #: src/satip/server.c:578
 msgid "Server UUID"
@@ -3018,7 +3019,7 @@ msgstr ""
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "הגדרות"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3034,7 +3035,7 @@ msgstr ""
 
 #: src/streaming.c:431
 msgid "Signal quality too poor"
-msgstr ""
+msgstr "איכות אות גרועה"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"
@@ -3050,7 +3051,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:892
 msgid "Skip Commercials"
-msgstr ""
+msgstr "דילוג על פרסומות"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:113
 msgid "Skip Initial Bytes"
@@ -3058,7 +3059,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:164
 msgid "Skip Initial Scan"
-msgstr ""
+msgstr "דלג על סריקה ראשונית"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:255
 msgid "Slot State"
@@ -3110,11 +3111,11 @@ msgstr ""
 
 #: src/main.c:702
 msgid "Specify alternative htsp port"
-msgstr ""
+msgstr "הגדר פורט htsp חלופי"
 
 #: src/main.c:698
 msgid "Specify alternative http port"
-msgstr ""
+msgstr "הגדר פורט http חלופי"
 
 #: src/main.c:700
 msgid "Specify alternative http webroot"
@@ -3126,7 +3127,7 @@ msgstr ""
 
 #: src/main.c:704
 msgid "Specify extra htsp port"
-msgstr ""
+msgstr "הגדר פורט htsp נוסף"
 
 #: src/epg.c:2073
 msgid "Spiritual sciences"
@@ -3190,7 +3191,7 @@ msgstr ""
 
 #: src/config.c:1778
 msgid "Storage space"
-msgstr ""
+msgstr "שטח אחסון"
 
 #: src/esfilter.c:662 src/esfilter.c:729 src/esfilter.c:796 src/esfilter.c:863
 #: src/esfilter.c:938
@@ -3199,7 +3200,7 @@ msgstr ""
 
 #: src/profile.c:275 src/dvr/dvr_config.c:792
 msgid "Stream Profile"
-msgstr ""
+msgstr "פרופיל הזרמה"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
@@ -3217,7 +3218,7 @@ msgstr ""
 
 #: src/access.c:1445
 msgid "Streaming Profiles"
-msgstr ""
+msgstr "פרופילי הזרמה"
 
 #: src/dvr/dvr_config.c:745
 msgid "Subdirectory Options"
@@ -3425,7 +3426,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip.c:202 src/input/mpegts/satip/satip.c:317
 msgid "Tuner Configuration"
-msgstr ""
+msgstr "הגדרות מקלט"
 
 #: src/input/mpegts/satip/satip_frontend.c:180
 msgid "Tuner bind IP address"
@@ -3433,7 +3434,7 @@ msgstr ""
 
 #: src/streaming.c:427
 msgid "Tuning failed"
-msgstr ""
+msgstr "כוונון נכשל"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:246
 msgid "Turn off LNB when idle"
@@ -3441,7 +3442,7 @@ msgstr ""
 
 #: src/config.c:1867
 msgid "Tvheadend server name"
-msgstr ""
+msgstr "שם שרת Tvheadend"
 
 #: src/epggrab/module.c:132
 msgid "Type"
@@ -3511,11 +3512,11 @@ msgstr ""
 
 #: src/timeshift.c:194
 msgid "Unlimited Size"
-msgstr ""
+msgstr "גודל לא מוגבל"
 
 #: src/timeshift.c:174
 msgid "Unlimited Time"
-msgstr ""
+msgstr "זמן לא מוגבל"
 
 #: src/profile.c:246
 msgid "Unset (default)"
@@ -3531,19 +3532,19 @@ msgstr ""
 
 #: src/epggrab.c:264
 msgid "Update channel icon"
-msgstr ""
+msgstr "עדכן סמל ערוץ"
 
 #: src/epggrab.c:250
 msgid "Update channel name"
-msgstr ""
+msgstr "עדכן שם ערוץ"
 
 #: src/epggrab.c:257
 msgid "Update channel number"
-msgstr ""
+msgstr "עדכן מספר ערוץ"
 
 #: src/config.c:1941
 msgid "Update time"
-msgstr ""
+msgstr "עדכן זמן"
 
 #: src/config.c:1955
 msgid "Update tolerance (ms)"
@@ -3564,7 +3565,7 @@ msgstr ""
 
 #: src/timeshift.c:200
 msgid "Use only RAM"
-msgstr ""
+msgstr "השתמש ב RAM בלבד"
 
 #: src/profile.c:1394
 msgid "Use original"
@@ -3588,7 +3589,7 @@ msgstr ""
 
 #: src/config.c:1926
 msgid "User language"
-msgstr ""
+msgstr "שפת משתמש"
 
 #: src/streaming.c:418
 msgid "User limit reached"
@@ -3652,7 +3653,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:287
 msgid "Waiting for program start"
-msgstr ""
+msgstr "ממתין לתחילת התוכנית"
 
 #: src/dvr/dvr_db.c:285
 msgid "Waiting for stream"
@@ -3680,7 +3681,7 @@ msgstr "שפת ממשק דפדפן"
 
 #: src/config.c:1830
 msgid "Web User Interface"
-msgstr ""
+msgstr "ממשק משתמש"
 
 #: src/dvr/dvr_autorec.c:730
 msgid "Wed"

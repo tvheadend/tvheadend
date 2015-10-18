@@ -8,6 +8,7 @@
 # bigbig6 <bigbig6@hotmail.fr>, 2015
 # Frédéric Ethève <portab2fred@mail.com>, 2015
 # Frédéric Ethève <portab2fred@mail.com>, 2015
+# Philippe Teissier <philippe.teissier@gmail.com>, 2015
 # The Troll <trolldev@gmail.com>, 2015
 # Tuxa <tuxa@galaxie.eu.org>, 2015
 msgid ""
@@ -15,8 +16,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-10-09 17:22+0000\n"
+"Last-Translator: Tuxa <tuxa@galaxie.eu.org>\n"
 "Language-Team: French (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -29,7 +30,7 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr "\nPour plus d'information visitez le site :\nhttps://tvheadend.org\n"
+msgstr "\nPour plus d'informations, visitez le site :\nhttps://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_mux.c:587
 msgid "# Channels"
@@ -50,7 +51,7 @@ msgstr "# Services"
 
 #: src/bouquet.c:884
 msgid "# Services Seen"
-msgstr "# Services vu"
+msgstr "# Services vus"
 
 #: src/dvr/dvr_config.c:661
 msgid "(Default Profile)"
@@ -603,7 +604,7 @@ msgstr "Nom du client"
 
 #: src/dvr/dvr_config.c:819
 msgid "Clone Scheduled Entry On Error"
-msgstr ""
+msgstr "Dupliquer l'entrée en cas d'erreur"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:148
 msgid "Cmd Delay Time (ms) (10-500)"
@@ -908,11 +909,11 @@ msgstr "Options de debug"
 
 #: src/tvhlog.c:641
 msgid "Debug libav log"
-msgstr "Log de debug libav"
+msgstr "Traces de debug libav"
 
 #: src/tvhlog.c:595
 msgid "Debug log path"
-msgstr "Répertoire des logs de debug"
+msgstr "Répertoire des traces de debug"
 
 #: src/tvhlog.c:611
 msgid "Debug subsystems"
@@ -957,7 +958,7 @@ msgstr "Service de décryptage (max par multiplex)"
 
 #: src/config.c:1897
 msgid "Descrambler buffer (TS packets)"
-msgstr ""
+msgstr "Taille du Tampon du Débrouilleur (Paquets venant d'un flux de transport MPEG)"
 
 #: src/dvr/dvr_db.c:2176 src/dvr/dvr_db.c:2183
 msgid "Description"
@@ -1047,7 +1048,7 @@ msgstr "Ne pas reprogrammer"
 
 #: src/main.c:665
 msgid "Don't backup configuration tree at upgrade"
-msgstr "Ne pas sauvegarder la config a l'upgrade"
+msgstr "Ne pas sauvegarder la configuration durant la mise à jour"
 
 #: src/dvr/dvr_config.c:686
 msgid "Don't keep"
@@ -1346,15 +1347,15 @@ msgstr "Forcer l'ID du CA (par ex. 0x2600)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:134
 msgid "Force Old Status"
-msgstr "Forcer l'ancien état"
+msgstr "Forcer l'état précédent"
 
 #: src/profile.c:330
 msgid "Force Priority"
-msgstr "Force la priorité"
+msgstr "Forcer la priorité"
 
 #: src/epggrab.c:287
 msgid "Force initial EPG scan at startup"
-msgstr "Forcer le premier scan de l'EPG au démarrage"
+msgstr "Forcer le scan de l'EPG au démarrage"
 
 #: src/input/mpegts/satip/satip.c:254
 msgid "Force pilot for DVB-S2"
@@ -1370,7 +1371,7 @@ msgstr "Pays étrangers"
 
 #: src/main.c:666
 msgid "Fork and run as daemon"
-msgstr "Duplique et lance comme un démon"
+msgstr "Dupliquer le processus en tant que service"
 
 #: src/dvr/dvr_config.c:900
 msgid "Format String"
@@ -1740,11 +1741,11 @@ msgstr "Garder"
 
 #: src/input/mpegts/iptv/iptv_mux.c:166
 msgid "Kill signal (pipe)"
-msgstr ""
+msgstr "Signal de Fermeture (pipe)"
 
 #: src/input/mpegts/iptv/iptv_mux.c:174
 msgid "Kill timeout (pipe/secs)"
-msgstr ""
+msgstr "Durée avant Fermeture (pipe/secs)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:151
 msgid "LNA (Low Noise Amplifier)"
@@ -2303,7 +2304,7 @@ msgstr "non défini (rien ou config de chaine)"
 
 #: src/dvr/dvr_db.c:2035 src/dvr/dvr_autorec.c:626
 msgid "Not set (use channel or DVR configuration)"
-msgstr "non défini (utiliser chaine ou la config du DVR)"
+msgstr "Non défini (utiliser la configuration de la chaine ou de l'enregistreur)"
 
 #: src/channels.c:311
 msgid "Number"
@@ -2850,27 +2851,27 @@ msgstr "SD: Définition Standard"
 
 #: src/input/mpegts/iptv/iptv_mux.c:95
 msgid "SIGHUP"
-msgstr ""
+msgstr "SIGHUP"
 
 #: src/input/mpegts/iptv/iptv_mux.c:94
 msgid "SIGINT"
-msgstr ""
+msgstr "SIGINT"
 
 #: src/input/mpegts/iptv/iptv_mux.c:92
 msgid "SIGKILL"
-msgstr ""
+msgstr "SIGKILL"
 
 #: src/input/mpegts/iptv/iptv_mux.c:93
 msgid "SIGTERM"
-msgstr ""
+msgstr "SIGTERM"
 
 #: src/input/mpegts/iptv/iptv_mux.c:96
 msgid "SIGUSR1"
-msgstr ""
+msgstr "SIGUSR1"
 
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "SIGUSR2"
-msgstr ""
+msgstr "SIGUSR2"
 
 #: src/dvr/dvr_db.c:1708
 msgid "Same as source (pass through)"
@@ -2981,7 +2982,7 @@ msgstr "Connectivité du serveur"
 
 #: src/satip/server.c:578
 msgid "Server UUID"
-msgstr ""
+msgstr "Serveur UUID"
 
 #: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
@@ -3036,11 +3037,11 @@ msgstr "Montre cette page"
 
 #: src/main.c:661
 msgid "Show version information"
-msgstr "Information de la version"
+msgstr "Information de version"
 
 #: src/streaming.c:431
 msgid "Signal quality too poor"
-msgstr "Signal trop faible"
+msgstr "Signal de trop faible qualité"
 
 #: src/input/mpegts/satip/satip.c:219
 msgid "Signal scale (240 or 100)"

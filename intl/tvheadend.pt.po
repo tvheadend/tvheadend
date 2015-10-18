@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-10-12 03:05+0000\n"
+"Last-Translator: Orlando Rocha <ornrocha@gmail.com>\n"
 "Language-Team: Portuguese (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -171,51 +171,51 @@ msgstr "AES Constant Code Word Client"
 
 #: src/config.c:1790
 msgid "AF11"
-msgstr ""
+msgstr "AF11"
 
 #: src/config.c:1791
 msgid "AF12"
-msgstr ""
+msgstr "AF12"
 
 #: src/config.c:1792
 msgid "AF13"
-msgstr ""
+msgstr "AF13"
 
 #: src/config.c:1794
 msgid "AF21"
-msgstr ""
+msgstr "AF21"
 
 #: src/config.c:1795
 msgid "AF22"
-msgstr ""
+msgstr "AF22"
 
 #: src/config.c:1796
 msgid "AF23"
-msgstr ""
+msgstr "AF23"
 
 #: src/config.c:1798
 msgid "AF31"
-msgstr ""
+msgstr "AF31"
 
 #: src/config.c:1799
 msgid "AF32"
-msgstr ""
+msgstr "AF32"
 
 #: src/config.c:1800
 msgid "AF33"
-msgstr ""
+msgstr "AF33"
 
 #: src/config.c:1802
 msgid "AF41"
-msgstr ""
+msgstr "AF41"
 
 #: src/config.c:1803
 msgid "AF42"
-msgstr ""
+msgstr "AF42"
 
 #: src/config.c:1804
 msgid "AF43"
-msgstr ""
+msgstr "AF43"
 
 #: src/esfilter.c:313 src/esfilter.c:370
 msgid "ANY"
@@ -350,7 +350,7 @@ msgstr "Filtro do fluxo de áudio"
 
 #: src/satip/server.c:549
 msgid "Auto"
-msgstr ""
+msgstr "Auto"
 
 #: src/service.c:140
 msgid "Auto Check Disabled"
@@ -478,35 +478,35 @@ msgstr "Autoridade CRID"
 
 #: src/config.c:1788
 msgid "CS0"
-msgstr ""
+msgstr "CS0"
 
 #: src/config.c:1789
 msgid "CS1"
-msgstr ""
+msgstr "CS1"
 
 #: src/config.c:1793
 msgid "CS2"
-msgstr ""
+msgstr "CS2"
 
 #: src/config.c:1797
 msgid "CS3"
-msgstr ""
+msgstr "CS3"
 
 #: src/config.c:1801
 msgid "CS4"
-msgstr ""
+msgstr "CS4"
 
 #: src/config.c:1805
 msgid "CS5"
-msgstr ""
+msgstr "CS5"
 
 #: src/config.c:1807
 msgid "CS6"
-msgstr ""
+msgstr "CS6"
 
 #: src/config.c:1808
 msgid "CS7"
-msgstr ""
+msgstr "CS7"
 
 #: src/dvr/dvr_config.c:802
 msgid "Cache Scheme"
@@ -765,7 +765,7 @@ msgstr ""
 
 #: src/satip/server.c:615
 msgid "DVB-S"
-msgstr ""
+msgstr "DVB-S"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:387
 msgid "DVB-S 4-port"
@@ -797,7 +797,7 @@ msgstr "DVB-S Toneburst"
 
 #: src/satip/server.c:622
 msgid "DVB-S2"
-msgstr ""
+msgstr "DVB-S2"
 
 #: src/satip/server.c:629 src/input/mpegts/mpegts_mux_dvb.c:210
 msgid "DVB-T"
@@ -809,7 +809,7 @@ msgstr "Rede DVB-T"
 
 #: src/satip/server.c:636
 msgid "DVB-T2"
-msgstr ""
+msgstr "DVB-T2"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:282
 msgid "DVBC_ANNEX_AC"
@@ -1062,7 +1062,7 @@ msgstr "Duração"
 
 #: src/config.c:1806
 msgid "EF"
-msgstr ""
+msgstr "EF"
 
 #: src/input/mpegts/mpegts_mux.c:603
 msgid "EIT - skip TSID check"
@@ -2852,19 +2852,19 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:92
 msgid "SIGKILL"
-msgstr ""
+msgstr "SIGKILL"
 
 #: src/input/mpegts/iptv/iptv_mux.c:93
 msgid "SIGTERM"
-msgstr ""
+msgstr "SIGTERM"
 
 #: src/input/mpegts/iptv/iptv_mux.c:96
 msgid "SIGUSR1"
-msgstr ""
+msgstr "SIGUSR1"
 
 #: src/input/mpegts/iptv/iptv_mux.c:97
 msgid "SIGUSR2"
-msgstr ""
+msgstr "SIGUSR2"
 
 #: src/dvr/dvr_db.c:1708
 msgid "Same as source (pass through)"

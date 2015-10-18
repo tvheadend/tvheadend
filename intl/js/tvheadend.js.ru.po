@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-09-28 06:47+0000\n"
+"PO-Revision-Date: 2015-10-16 08:36+0000\n"
 "Last-Translator: Mihail <sovaby@gmail.com>\n"
 "Language-Team: Russian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/ru/)\n"
 "MIME-Version: 1.0\n"
@@ -799,15 +799,15 @@ msgstr "IP адрес"
 
 #: src/webui/static/app/acleditor.js:143
 msgid "IP Blocking Entries"
-msgstr "Записи блокировок IP"
+msgstr "Записи блокировок по IP"
 
 #: src/webui/static/app/acleditor.js:119
 msgid "IP Blocking Record"
-msgstr "IP Blocking Record"
+msgstr "Запись блокировки по IP"
 
 #: src/webui/static/app/acleditor.js:120
 msgid "IP Blocking Records"
-msgstr "IP Blocking Records"
+msgstr "Записи блокировок по IP"
 
 #: src/webui/static/app/servicemapper.js:19
 msgid "Ignored"
