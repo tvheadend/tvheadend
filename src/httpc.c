@@ -1149,7 +1149,7 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u )
 
   if (u->scheme == NULL || u->scheme[0] == '\0' ||
       u->host == NULL || u->host[0] == '\0' ||
-      u->port <= 0) {
+      u->port < 0) {
     tvherror("httpc", "Invalid url '%s'", u->raw);
     return -EINVAL;
   }
