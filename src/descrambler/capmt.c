@@ -413,36 +413,42 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
 }
 
 static void
-capmt_pid_flush(capmt_t *capmt)
+capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
 {
   capmt_adapter_t *ca;
   mpegts_mux_instance_t *mmi;
   mpegts_input_t *tuner;
   mpegts_mux_t *mux;
   capmt_opaque_t *o;
-  int adapter, pid, i;
+  int pid, i;
 
-  for (adapter = 0; adapter < MAX_CA; adapter++) {
-    tuner = capmt->capmt_adapters[adapter].ca_tuner;
-    if (tuner == NULL)
-      continue;
-    ca = &capmt->capmt_adapters[adapter];
-    mmi = LIST_FIRST(&tuner->mi_mux_active);
-    mux = mmi ? mmi->mmi_mux : NULL;
-    for (i = 0; i < MAX_PIDS; i++) {
-      o = &ca->ca_pids[i];
-      if ((pid = o->pid) > 0) {
-        o->pid = -1; /* block for new registrations */
-        o->pid_refs = 0;
-        if (mux) {
-          pthread_mutex_unlock(&capmt->capmt_mutex);
-          descrambler_close_pid(mux, &ca->ca_pids[i], pid);
-          pthread_mutex_lock(&capmt->capmt_mutex);
-        }
-        o->pid = 0;
+  tuner = capmt->capmt_adapters[adapter].ca_tuner;
+  if (tuner == NULL)
+    return;
+  ca = &capmt->capmt_adapters[adapter];
+  mmi = LIST_FIRST(&tuner->mi_mux_active);
+  mux = mmi ? mmi->mmi_mux : NULL;
+  for (i = 0; i < MAX_PIDS; i++) {
+    o = &ca->ca_pids[i];
+    if ((pid = o->pid) > 0) {
+      o->pid = -1; /* block for new registrations */
+      o->pid_refs = 0;
+      if (mux) {
+        pthread_mutex_unlock(&capmt->capmt_mutex);
+        descrambler_close_pid(mux, &ca->ca_pids[i], pid);
+        pthread_mutex_lock(&capmt->capmt_mutex);
       }
+      o->pid = 0;
     }
   }
+}
+
+static void
+capmt_pid_flush(capmt_t *capmt)
+{
+  int adapter;
+  for (adapter = 0; adapter < MAX_CA; adapter++)
+    capmt_pid_flush_adapter(capmt, adapter);
 }
 
 /*
@@ -813,6 +819,7 @@ capmt_service_destroy(th_descrambler_t *td)
     capmt_enumerate_services(capmt, 1);
 
   if (LIST_EMPTY(&capmt->capmt_services)) {
+    capmt_pid_flush_adapter(capmt, ct->ct_adapter);
     capmt->capmt_adapters[ct->ct_adapter].ca_tuner = NULL;
     memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
   }
