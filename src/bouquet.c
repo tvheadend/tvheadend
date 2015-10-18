@@ -539,11 +539,10 @@ bouquet_save(bouquet_t *bq, int notify)
 /**
  *
  */
-
 void
 bouquet_change_comment ( bouquet_t *bq, const char *comment, int replace )
 {
-  if (!replace && (bq->bq_comment || bq->bq_comment[0]))
+  if (!replace && bq->bq_comment && bq->bq_comment[0])
     return;
   free(bq->bq_comment);
   bq->bq_comment = strdup(comment);
