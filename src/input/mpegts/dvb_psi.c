@@ -2352,14 +2352,14 @@ psi_parse_pmt
     // notify descrambler that we found another CAIDs
     if (update & PMT_UPDATE_NEW_CAID)
       descrambler_caid_changed((service_t *)t);
+  }
 
-    if (service_has_audio_or_video((service_t *)t)) {
-      t->s_dvb_check_seen = dispatch_clock;
-      if (!t->s_enabled && t->s_auto == SERVICE_AUTO_PAT_MISSING) {
-        tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in PAT and PMT)",
-                t->s_nicename, t->s_dvb_service_id, t->s_dvb_service_id);
-        service_set_enabled((service_t *)t, 1, SERVICE_AUTO_NORMAL);
-      }
+  if (service_has_audio_or_video((service_t *)t)) {
+    t->s_dvb_check_seen = dispatch_clock;
+    if (!t->s_enabled && t->s_auto == SERVICE_AUTO_PAT_MISSING) {
+      tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in PAT and PMT)",
+              t->s_nicename, t->s_dvb_service_id, t->s_dvb_service_id);
+      service_set_enabled((service_t *)t, 1, SERVICE_AUTO_NORMAL);
     }
   }
   return ret;
