@@ -29,6 +29,7 @@ extern const idclass_t service_raw_class;
 
 extern struct service_queue service_all;
 extern struct service_queue service_raw_all;
+extern struct service_queue service_raw_remove;
 
 struct channel;
 struct tvh_input;
@@ -240,7 +241,8 @@ typedef struct service {
    */
   enum {
     STYPE_STD,
-    STYPE_RAW
+    STYPE_RAW,
+    STYPE_RAW_REMOVED
   } s_type;
 
   /**
@@ -542,6 +544,8 @@ int service_is_encrypted ( service_t *t );
 void service_set_enabled ( service_t *t, int enabled, int _auto );
 
 void service_destroy(service_t *t, int delconf);
+
+void service_remove_raw(service_t *);
 
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);
