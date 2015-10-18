@@ -305,7 +305,7 @@ void
 service_stop(service_t *t)
 {
   elementary_stream_t *st;
- 
+
   gtimer_disarm(&t->s_receive_timer);
 
   t->s_stop_feed(t);
