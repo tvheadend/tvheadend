@@ -107,7 +107,7 @@ iptv_bouquet_update(void *aux)
   bouquet_change_comment(bq, in->in_url, 1);
   LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
     LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
-      bouquet_add_service(bq, (service_t *)ms, ((iptv_mux_t *)mm)->mm_iptv_chnum, 0);
+      bouquet_add_service(bq, (service_t *)ms, ((iptv_mux_t *)mm)->mm_iptv_chnum, NULL);
       seen++;
     }
   bouquet_completed(bq, seen);

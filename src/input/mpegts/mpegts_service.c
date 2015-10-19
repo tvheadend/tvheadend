@@ -538,6 +538,64 @@ mpegts_service_channel_icon ( service_t *s )
   return NULL;
 }
 
+#if ENABLE_MPEGTS_DVB
+static int
+mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash)
+{
+  int pos = hash >> 16, pos2;
+
+  pos = hash >> 16;
+  if (pos > 3600 || pos < 0) return 0;
+  pos = pos <= 1800 ? pos : pos - 3600;
+  if ((pos2 = dvb_network_get_orbital_pos(mn)) == INT_MAX) return 0;
+  return deltaI32(pos, pos2) <= 20;
+}
+#endif
+
+#if ENABLE_MPEGTS_DVB
+static int
+mpegts_service_match_mux(dvb_mux_t *mm, uint32_t hash)
+{
+  extern const idclass_t dvb_mux_dvbs_class;
+  dvb_mux_t *mmd;
+  int freq, pol;
+
+  if ((hash & 0xffff) == 0) return 1;
+  if (!idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) return 0;
+  freq = (hash & 0x7fff) * 1000;
+  pol = (hash & 0x8000) ? DVB_POLARISATION_HORIZONTAL : DVB_POLARISATION_VERTICAL;
+  mmd = mm;
+  return mmd->lm_tuning.u.dmc_fe_qpsk.orbital_pos == pol &&
+         deltaU32(mmd->lm_tuning.dmc_fe_freq, freq) < 2000;
+}
+#endif
+
+service_t *
+mpegts_service_find_e2(uint32_t stype, uint32_t sid, uint32_t tsid,
+                       uint32_t onid, uint32_t hash)
+{
+#if ENABLE_MPEGTS_DVB
+  mpegts_network_t *mn;
+  mpegts_mux_t *mm;
+  mpegts_service_t *s;
+
+  lock_assert(&global_lock);
+
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    if (!idnode_is_instance(&mn->mn_id, &dvb_network_class)) continue;
+    if (!mpegts_service_match_network(mn, hash)) continue;
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      if (mm->mm_tsid != tsid || mm->mm_onid != onid) continue;
+      if (!mpegts_service_match_mux((dvb_mux_t *)mm, hash)) continue;
+      LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+        if (s->s_dvb_service_id == sid)
+          return (service_t *)s;
+    }
+  }
+#endif
+  return NULL;
+}
+
 static void
 mpegts_service_mapped ( service_t *t )
 {

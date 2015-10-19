@@ -35,6 +35,8 @@ tvheadend.bouquet = function(panel, index)
 {
     var list = 'enabled,rescan,name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
                'chtag,source,services_count,services_seen,comment';
+    var alist = 'enabled,ext_url,name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
+                'chtag,comment';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/bouquet',
@@ -58,6 +60,11 @@ tvheadend.bouquet = function(panel, index)
             comment:        { width: 200 }
         },
         list: list,
+        add: {
+            url: 'api/bouquet',
+            params: { list: alist },
+            create: { }
+        },
         del: true,
         edit: { params: { list: list } },
         sort: {

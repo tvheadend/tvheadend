@@ -1008,6 +1008,10 @@ mpegts_service_t *mpegts_service_create_raw(mpegts_mux_t *mm);
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
 
+service_t *
+mpegts_service_find_e2
+  ( uint32_t stype, uint32_t sid, uint32_t tsid, uint32_t onid, uint32_t hash);
+
 mpegts_service_t *
 mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
 

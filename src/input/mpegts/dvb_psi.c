@@ -589,7 +589,7 @@ dvb_freesat_add_service
     snprintf(name, sizeof(name), "%s: %s", bi->name, fr->name);
     fr->bouquet = bouquet_find_by_source(name, src, 1);
   }
-  bouquet_add_service(fr->bouquet, (service_t *)s, (int64_t)lcn * CHANNEL_SPLIT, 0);
+  bouquet_add_service(fr->bouquet, (service_t *)s, (int64_t)lcn * CHANNEL_SPLIT, NULL);
   return fr->bouquet->bq_enabled;
 }
 
@@ -1088,7 +1088,7 @@ dvb_bat_completed
       services_count++;
       if (bq->bq_enabled)
         bouquet_add_service(bq, (service_t *)bs->svc,
-                            (int64_t)bs->lcn * CHANNEL_SPLIT, 0);
+                            (int64_t)bs->lcn * CHANNEL_SPLIT, NULL);
     }
 
     bouquet_completed(bq, services_count);

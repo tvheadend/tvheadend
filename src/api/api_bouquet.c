@@ -64,7 +64,7 @@ api_bouquet_create
   htsmsg_t *conf;
   bouquet_t *bq;
 
-  if (!(conf  = htsmsg_get_map(args, "conf")))
+  if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
   pthread_mutex_lock(&global_lock);

@@ -23,10 +23,20 @@
 #include "service.h"
 #include "channels.h"
 #include "service_mapper.h"
+#include "download.h"
+
+typedef struct bouquet_download {
+  bouquet_t  *bq;
+  download_t  download;
+  gtimer_t    timer;
+} bouquet_download_t;
 
 bouquet_tree_t bouquets;
 
 static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
+static void bouquet_download_trigger(bouquet_t *bq);
+static void bouquet_download_stop(void *aux);
+static int bouquet_download_process(void *aux, const char *last_url, char *data, size_t len);
 
 /**
  *
@@ -45,6 +55,8 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
                const char *name, const char *src)
 {
   bouquet_t *bq, *bq2;
+  bouquet_download_t *bqd;
+  char buf[128];
   int i;
 
   lock_assert(&global_lock);
@@ -52,6 +64,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   bq = calloc(1, sizeof(bouquet_t));
   bq->bq_services = idnode_set_create(1);
   bq->bq_active_services = idnode_set_create(1);
+  bq->bq_ext_url_period = 60;
 
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
@@ -78,10 +91,25 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
     bq->bq_src = strdup(src);
   }
 
+  if (bq->bq_ext_url) {
+    free(bq->bq_src);
+    snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_sstr(&bq->bq_id));
+    bq->bq_src = strdup(buf);
+    bq->bq_download = bqd = calloc(1, sizeof(*bqd));
+    bqd->bq = bq;
+    download_init(&bqd->download, "bouquet");
+    bqd->download.process = bouquet_download_process;
+    bqd->download.stop = bouquet_download_stop;
+    bouquet_change_comment(bq, bq->bq_ext_url, 0);
+  }
+
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
   assert(bq2 == NULL);
 
   bq->bq_saveflag = 1;
+
+  if (bq->bq_ext_url)
+    bouquet_download_trigger(bq);
 
   return bq;
 }
@@ -92,17 +120,25 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 static void
 bouquet_destroy(bouquet_t *bq)
 {
+  bouquet_download_t *bqd;
+
   if (!bq)
     return;
 
   RB_REMOVE(&bouquets, bq, bq_link);
   idnode_unlink(&bq->bq_id);
 
+  if ((bqd = bq->bq_download) != NULL) {
+    download_done(&bqd->download);
+    free(bqd);
+  }
+
   idnode_set_free(bq->bq_active_services);
   idnode_set_free(bq->bq_services);
   assert(bq->bq_services_waiting == NULL);
   free((char *)bq->bq_chtag_waiting);
   free(bq->bq_name);
+  free(bq->bq_ext_url);
   free(bq->bq_src);
   free(bq->bq_comment);
   free(bq);
@@ -254,7 +290,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
  *
  */
 void
-bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
+bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
 {
   service_lcn_t *tl;
   idnode_list_mapping_t *ilm;
@@ -494,8 +530,8 @@ bouquet_get_channel_number(bouquet_t *bq, service_t *t)
 /*
  *
  */
-static uint32_t
-bouquet_get_tag_number(bouquet_t *bq, service_t *t)
+static const char *
+bouquet_get_tag_name(bouquet_t *bq, service_t *t)
 {
   return 0;
 }
@@ -763,7 +799,7 @@ bouquet_class_services_get ( void *obj )
   bouquet_t *bq = obj;
   service_t *t;
   int64_t lcn;
-  uint32_t tag;
+  const char *tag;
   size_t z;
 
   /* Add all */
@@ -772,8 +808,8 @@ bouquet_class_services_get ( void *obj )
     e = htsmsg_create_map();
     if ((lcn = bouquet_get_channel_number0(bq, t)) != 0)
       htsmsg_add_s64(e, "lcn", lcn);
-    if ((tag = bouquet_get_tag_number(bq, t)) != 0)
-      htsmsg_add_s64(e, "tag", lcn);
+    if ((tag = bouquet_get_tag_name(bq, t)) != NULL)
+      htsmsg_add_str(e, "tag", tag);
     htsmsg_add_msg(m, idnode_uuid_as_sstr(&t->s_id), e);
   }
 
@@ -811,6 +847,12 @@ bouquet_class_services_count_get ( void *obj )
 
   u32 = bq->bq_services->is_count;
   return &u32;
+}
+
+static void
+bouquet_class_ext_url_notify ( void *obj, const char *lang )
+{
+  bouquet_download_trigger((bouquet_t *)obj);
 }
 
 const idclass_t bouquet_class = {
@@ -889,6 +931,30 @@ const idclass_t bouquet_class = {
     },
     {
       .type     = PT_STR,
+      .id       = "ext_url",
+      .name     = N_("External URL"),
+      .off      = offsetof(bouquet_t, bq_ext_url),
+      .opts     = PO_HIDDEN | PO_MULTILINE,
+      .notify   = bouquet_class_ext_url_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "ssl_peer_verify",
+      .name     = N_("ssl_peer_verify"),
+      .off      = offsetof(bouquet_t, bq_ssl_peer_verify),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .notify   = bouquet_class_ext_url_notify,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "ext_url_period",
+      .name     = N_("Re-fetch period (mins)"),
+      .off      = offsetof(bouquet_t, bq_ext_url_period),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .def.i    = 60
+    },
+    {
+      .type     = PT_STR,
       .id       = "source",
       .name     = N_("Source"),
       .off      = offsetof(bouquet_t, bq_src),
@@ -938,6 +1004,100 @@ const idclass_t bouquet_class = {
 /**
  *
  */
+static void
+bouquet_download_trigger0(void *aux)
+{
+  bouquet_download_t *bqd = aux;
+  bouquet_t *bq = bqd->bq;
+
+  download_start(&bqd->download, bq->bq_ext_url, bqd);
+  gtimer_arm(&bqd->timer, bouquet_download_trigger0, bqd,
+             MAX(1, bq->bq_ext_url_period) * 60);
+}
+
+static void
+bouquet_download_trigger(bouquet_t *bq)
+{
+  bouquet_download_t *bqd = bq->bq_download;
+  if (bqd) {
+    bqd->download.ssl_peer_verify = bq->bq_ssl_peer_verify;
+    bouquet_download_trigger0(bqd);
+  }
+}
+
+static void
+bouquet_download_stop(void *aux)
+{
+  bouquet_download_t *bqd = aux;
+  gtimer_disarm(&bqd->timer);
+}
+
+static int
+parse_enigma2(bouquet_t *bq, char *data)
+{
+  extern service_t *mpegts_service_find_e2(uint32_t stype, uint32_t sid,
+                                           uint32_t tsid, uint32_t onid,
+                                           uint32_t hash);
+  char *argv[11], *p, *tagname = NULL, *name;
+  long lv, stype, sid, tsid, onid, hash;
+  uint32_t seen = 0;
+  int n;
+
+  while (*data) {
+    if (strncmp(data, "#NAME ", 6) == 0) {
+      for (data += 6, p = data; *data && *data != '\r' && *data != '\n'; data++);
+      if (*data) { *data = '\0'; data++; }
+      if (bq->bq_name == NULL || bq->bq_name[0] == '\0')
+        bq->bq_name = strdup(p);
+    } if (strncmp(data, "#SERVICE ", 9) == 0) {
+      data += 9, p = data;
+      while (*data && *data != '\r' && *data != '\n') data++;
+      if (*data) { *data = '\0'; data++; }
+      n = http_tokenize(p, argv, ARRAY_SIZE(argv), ':');
+      if (n >= 10) {
+        if (strtol(argv[0], NULL, 0) != 1) goto next;  /* item type */
+        lv = strtol(argv[1], NULL, 16);                /* service flags? */
+        if (lv != 0 && lv != 0x64) goto next;
+        stype = strtol(argv[2], NULL, 16);             /* DVB service type */
+        sid   = strtol(argv[3], NULL, 16);             /* DVB service ID */
+        tsid  = strtol(argv[4], NULL, 16);
+        onid  = strtol(argv[5], NULL, 16);
+        hash  = strtol(argv[6], NULL, 16);
+        name  = n > 10 ? argv[10] : NULL;
+        if (lv == 0) {
+          service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
+          if (s)
+            bouquet_add_service(bq, s, ++seen, tagname);
+        } else if (lv == 64) {
+          tagname = name;
+        }
+      }
+    } else {
+      while (*data && *data != '\r' && *data != '\n') data++;
+    }
+next:
+    while (*data && (*data == '\r' || *data == '\n')) data++;
+  }
+  bouquet_completed(bq, seen);
+  tvhinfo("bouquet", "parsed Enigma2 bouquet %s (%d services)", bq->bq_name, seen);
+  return 0;
+}
+
+static int
+bouquet_download_process(void *aux, const char *last_url, char *data, size_t len)
+{
+  bouquet_download_t *bqd = aux;
+  while (*data) {
+    while (*data && *data < ' ') data++;
+    if (*data && !strncmp(data, "#NAME ", 6))
+      return parse_enigma2(bqd->bq, data);
+  }
+  return 0;
+}
+
+/**
+ *
+ */
 void
 bouquet_init(void)
 {
@@ -966,7 +1126,7 @@ bouquet_service_resolve(void)
   htsmsg_field_t *f;
   service_t *s;
   int64_t lcn;
-  uint32_t tag;
+  const char *tag;
   int saveflag;
 
   lock_assert(&global_lock);
@@ -979,7 +1139,7 @@ bouquet_service_resolve(void)
       HTSMSG_FOREACH(f, bq->bq_services_waiting) {
         if ((e = htsmsg_field_get_map(f)) == NULL) continue;
         lcn = htsmsg_get_s64_or_default(e, "lcn", 0);
-        tag = htsmsg_get_u32_or_default(e, "tag", 0);
+        tag = htsmsg_get_str(e, "tag");
         s = service_find_by_identifier(f->hmf_name);
         if (s)
           bouquet_add_service(bq, s, lcn, tag);
