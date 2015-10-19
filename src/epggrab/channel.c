@@ -270,7 +270,7 @@ htsmsg_t *epggrab_channel_list ( int ota )
         snprintf(name, sizeof(name), "%s|%s", mod->id, ec->id);
         htsmsg_add_str(e, "key", name);
         snprintf(name, sizeof(name), "%s: %s (%s)",
-                 mod->name, ec->name, ec->id);
+                 mod->name, ec->name ?: ec->id, ec->id);
         htsmsg_add_str(e, "val", name);
         htsmsg_add_msg(m, NULL, e);
       }

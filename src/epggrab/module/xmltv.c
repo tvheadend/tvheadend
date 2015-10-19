@@ -576,7 +576,7 @@ static int _xmltv_parse_programme_tags
 static int _xmltv_parse_programme
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
-  int save = 0;
+  int chsave = 0, save = 0;
   htsmsg_t *attribs, *tags, *subtag;
   const char *s, *chid, *icon = NULL;
   time_t start, stop;
@@ -588,7 +588,12 @@ static int _xmltv_parse_programme
   if((attribs = htsmsg_get_map(body,    "attrib"))  == NULL) return 0;
   if((tags    = htsmsg_get_map(body,    "tags"))    == NULL) return 0;
   if((chid    = htsmsg_get_str(attribs, "channel")) == NULL) return 0;
-  if((ch      = _xmltv_channel_find(chid, 0, NULL))   == NULL) return 0;
+  if((ch      = _xmltv_channel_find(chid, 1, &chsave)) == NULL) return 0;
+  if (chsave) {
+    epggrab_channel_updated(ch);
+    stats->channels.created++;
+    stats->channels.modified++;
+  }
   if (!LIST_FIRST(&ch->channels)) return 0;
   if((s       = htsmsg_get_str(attribs, "start"))   == NULL) return 0;
   start = _xmltv_str2time(s);
