@@ -92,15 +92,20 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   }
 
   if (bq->bq_ext_url) {
-    free(bq->bq_src);
-    snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_sstr(&bq->bq_id));
-    bq->bq_src = strdup(buf);
-    bq->bq_download = bqd = calloc(1, sizeof(*bqd));
-    bqd->bq = bq;
-    download_init(&bqd->download, "bouquet");
-    bqd->download.process = bouquet_download_process;
-    bqd->download.stop = bouquet_download_stop;
-    bouquet_change_comment(bq, bq->bq_ext_url, 0);
+    if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) != 0) {
+      free(bq->bq_ext_url);
+      bq->bq_ext_url = NULL;
+    } else {
+      free(bq->bq_src);
+      snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_sstr(&bq->bq_id));
+      bq->bq_src = strdup(buf);
+      bq->bq_download = bqd = calloc(1, sizeof(*bqd));
+      bqd->bq = bq;
+      download_init(&bqd->download, "bouquet");
+      bqd->download.process = bouquet_download_process;
+      bqd->download.stop = bouquet_download_stop;
+      bouquet_change_comment(bq, bq->bq_ext_url, 0);
+    }
   }
 
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
@@ -951,6 +956,7 @@ const idclass_t bouquet_class = {
       .name     = N_("Re-fetch period (mins)"),
       .off      = offsetof(bouquet_t, bq_ext_url_period),
       .opts     = PO_ADVANCED | PO_HIDDEN,
+      .notify   = bouquet_class_ext_url_notify,
       .def.i    = 60
     },
     {
@@ -1041,7 +1047,7 @@ parse_enigma2(bouquet_t *bq, char *data)
   char *argv[11], *p, *tagname = NULL, *name;
   long lv, stype, sid, tsid, onid, hash;
   uint32_t seen = 0;
-  int n;
+  int n, ver = 2;
 
   while (*data) {
     if (strncmp(data, "#NAME ", 6) == 0) {
@@ -1051,6 +1057,7 @@ parse_enigma2(bouquet_t *bq, char *data)
         bq->bq_name = strdup(p);
     } if (strncmp(data, "#SERVICE ", 9) == 0) {
       data += 9, p = data;
+service:
       while (*data && *data != '\r' && *data != '\n') data++;
       if (*data) { *data = '\0'; data++; }
       n = http_tokenize(p, argv, ARRAY_SIZE(argv), ':');
@@ -1072,6 +1079,9 @@ parse_enigma2(bouquet_t *bq, char *data)
           tagname = name;
         }
       }
+    } else if (strncmp(data, "#SERVICE: ", 10) == 0) {
+      ver = 1, data += 10, p = data;
+      goto service;
     } else {
       while (*data && *data != '\r' && *data != '\n') data++;
     }
@@ -1079,7 +1089,7 @@ next:
     while (*data && (*data == '\r' || *data == '\n')) data++;
   }
   bouquet_completed(bq, seen);
-  tvhinfo("bouquet", "parsed Enigma2 bouquet %s (%d services)", bq->bq_name, seen);
+  tvhinfo("bouquet", "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
   return 0;
 }
 
