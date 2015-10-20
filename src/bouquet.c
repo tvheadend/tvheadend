@@ -134,7 +134,7 @@ bouquet_destroy(bouquet_t *bq)
   idnode_unlink(&bq->bq_id);
 
   if ((bqd = bq->bq_download) != NULL) {
-    bouquet_download_stop(bq);
+    bouquet_download_stop(bqd);
     download_done(&bqd->download);
     free(bqd);
   }
