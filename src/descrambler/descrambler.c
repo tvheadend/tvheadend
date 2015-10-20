@@ -61,6 +61,17 @@ descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd
 }
 
 static void
+descrambler_data_time_flush(th_descrambler_runtime_t *dr, time_t oldest)
+{
+  th_descrambler_data_t *dd;
+
+  while ((dd = TAILQ_FIRST(&dr->dr_queue)) != NULL) {
+    if (dd->dd_timestamp >= oldest) break;
+    descrambler_data_destroy(dr, dd);
+  }
+}
+
+static void
 descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int len)
 {
   th_descrambler_data_t *dd;
@@ -222,6 +233,7 @@ descrambler_service_start ( service_t *t )
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
     TAILQ_INIT(&dr->dr_queue);
     dr->dr_key_index = 0xff;
+    dr->dr_key_interval = 10;
     tvhcsa_init(&dr->dr_csa);
   }
   caclient_start(t);
@@ -482,11 +494,14 @@ key_update( th_descrambler_runtime_t *dr, uint8_t key, time_t timestamp )
 {
   /* set the even (0) or odd (0x40) key index */
   dr->dr_key_index = key & 0x40;
-  if (dr->dr_key_start)
+  if (dr->dr_key_start) {
+    dr->dr_key_interval = dr->dr_key_start + 50 < timestamp ?
+                          10 : timestamp - dr->dr_key_start;
     dr->dr_key_start = timestamp;
-  else
+  } else {
     /* We don't know the exact start key switch time */
     dr->dr_key_start = timestamp - 60;
+  }
 }
 
 static inline int
@@ -602,6 +617,7 @@ descrambler_descramble ( service_t *t,
 
     /* process the queued TS packets */
     if (dr->dr_queue_total > 0) {
+      descrambler_data_time_flush(dr, dispatch_clock - (dr->dr_key_interval - 2));
       for (dd = TAILQ_FIRST(&dr->dr_queue); dd; dd = dd_next) {
         dd_next = TAILQ_NEXT(dd, dd_link);
         sb = &dd->dd_sbuf;
