@@ -49,6 +49,9 @@ static void
 descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd)
 {
   if (dd) {
+    if (dr->dr_skip)
+      ts_skip_packet2((mpegts_service_t *)dr->dr_service,
+                      dd->dd_sbuf.sb_data, dd->dd_sbuf.sb_ptr);
     dr->dr_queue_total -= dd->dd_sbuf.sb_ptr;
     TAILQ_REMOVE(&dr->dr_queue, dd, dd_link);
     sbuf_free(&dd->dd_sbuf);
@@ -100,6 +103,8 @@ descrambler_data_cut(th_descrambler_runtime_t *dr, int len)
 
   while (len > 0 && (dd = TAILQ_FIRST(&dr->dr_queue)) != NULL) {
     if (len < dd->dd_sbuf.sb_ptr) {
+      if (dr->dr_skip)
+        ts_skip_packet2((mpegts_service_t *)dr->dr_service, dd->dd_sbuf.sb_data, len);
       sbuf_cut(&dd->dd_sbuf, len);
       dr->dr_queue_total -= len;
       break;
@@ -231,9 +236,11 @@ descrambler_service_start ( service_t *t )
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
   if (t->s_descramble == NULL) {
     t->s_descramble = dr = calloc(1, sizeof(th_descrambler_runtime_t));
+    dr->dr_service = t;
     TAILQ_INIT(&dr->dr_queue);
     dr->dr_key_index = 0xff;
     dr->dr_key_interval = 10;
+    dr->dr_skip = 0;
     tvhcsa_init(&dr->dr_csa);
   }
   caclient_start(t);
@@ -680,6 +687,7 @@ descrambler_descramble ( service_t *t,
         key_update(dr, ki, dispatch_clock);
       }
     }
+    dr->dr_skip = 1;
     dr->dr_csa.csa_descramble(&dr->dr_csa, (mpegts_service_t *)t, tsb, len);
     service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
     return 1;

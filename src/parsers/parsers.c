@@ -171,6 +171,18 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 }
 
 /**
+ * Skip raw mpeg data
+ */
+void
+skip_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data, int len)
+{
+  if(len >= 188)
+    sbuf_err(&st->es_buf, len / 188);
+  if(st->es_buf.sb_err > 1000)
+    parser_deliver_error(t, st);
+}
+
+/**
  * Parse AAC LATM and ADTS
  */
 static void 

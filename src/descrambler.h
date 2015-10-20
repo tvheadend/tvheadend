@@ -62,7 +62,9 @@ typedef struct th_descrambler {
 } th_descrambler_t;
 
 typedef struct th_descrambler_runtime {
+  struct service *dr_service;
   tvhcsa_t dr_csa;
+  uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
   uint32_t dr_key:1;
   uint32_t dr_key_first:1;
