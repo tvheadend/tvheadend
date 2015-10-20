@@ -177,7 +177,7 @@ static void
 parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
           int len, int start)
 {
-  int l, muxlen, p;
+  int l, muxlen, p, latm;
   th_pkt_t *pkt;
   int64_t olddts = PTS_UNSET, oldpts = PTS_UNSET;
 
@@ -222,6 +222,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
   sbuf_append(&st->es_buf, data, len);
 
   p = 0;
+  latm = -1;
 
   while((l = st->es_buf.sb_ptr - p) > 3) {
     const uint8_t *d = st->es_buf.sb_data + p;
@@ -229,12 +230,13 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     if(d[0] == 0 || d[1] == 0 || d[2] == 1) {
       p += 4;
     /* LATM */
-    } else if(d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
+    } else if(latm != 0 && d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
       muxlen = (d[1] & 0x1f) << 8 | d[2];
 
       if(l < muxlen + 3)
         break;
 
+      latm = 1;
       pkt = parse_latm_audio_mux_element(t, st, d + 3, muxlen);
 
       if(pkt != NULL) {
@@ -245,7 +247,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
       p += muxlen + 3;
     /* ADTS */
-    } else if(p == 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
+    } else if(latm <= 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
 
       if (l < 7)
         break;
@@ -254,6 +256,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
       if (l < muxlen)
         break;
 
+      latm = 0;
       sbuf_reset(&st->es_buf_a, 4000);
       sbuf_append(&st->es_buf_a, d, muxlen);
       parse_mp4a_data(t, st, 1);
