@@ -447,8 +447,6 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
 
   st->es_buf_a.sb_err = st->es_buf.sb_err;
 
-  tvhtrace("parser", "depacketize add %zd", len);
-  tvhlog_hexdump("parser", buf, len);
   sbuf_append(&st->es_buf_a, buf, len);
   return PARSER_APPEND;
 }
