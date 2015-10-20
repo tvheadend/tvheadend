@@ -408,7 +408,7 @@ const lang_code_t lang_codes[] = {
   { "sog", NULL, NULL , "Sogdian" },
   { "som", "so", NULL , "Somali" },
   { "son", NULL, NULL , "Songhai languages" },
-  { "spa", "es", NULL , "Spanish; Castilian" },
+  { "spa", "es", NULL , "Spanish" },
   { "srd", "sc", NULL , "Sardinian" },
   { "srn", NULL, NULL , "Sranan Tongo" },
   { "srp", "sr", NULL , "Serbian" },
