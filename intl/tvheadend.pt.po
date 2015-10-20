@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-12 03:05+0000\n"
-"Last-Translator: Orlando Rocha <ornrocha@gmail.com>\n"
+"PO-Revision-Date: 2015-10-20 12:29+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Portuguese (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -637,7 +637,7 @@ msgstr "Cliente de acesso condicional"
 
 #: src/config.c:1816
 msgid "Configuration"
-msgstr ""
+msgstr "Configuração"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
@@ -922,7 +922,7 @@ msgstr ""
 
 #: src/tvhlog.c:581
 msgid "Debugging"
-msgstr ""
+msgstr "Depuração"
 
 #: src/config.c:1787 src/profile.c:300
 msgid "Default"
@@ -1074,7 +1074,7 @@ msgstr "Tempo Local EIT"
 
 #: src/epggrab/module.c:108
 msgid "EPG Grabber"
-msgstr ""
+msgstr "Capturador EPG"
 
 #: src/epggrab.c:227
 msgid "EPG Grabber Configuration"
@@ -1449,7 +1449,7 @@ msgstr "Jardinagem"
 
 #: src/satip/server.c:565
 msgid "General"
-msgstr ""
+msgstr "Geral"
 
 #: src/epggrab.c:233
 msgid "General Config"
@@ -2827,7 +2827,7 @@ msgstr "SAT>IP número da porta RTSP do servidor\n(padrão: -1 = inactivo, 0 = w
 
 #: src/satip/server.c:559
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "Servidor SAT>IP"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -3018,7 +3018,7 @@ msgstr "Contagem dos Serviços %zi"
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "Configurações"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3357,7 +3357,7 @@ msgstr "Tempo limite (segundos)"
 
 #: src/timeshift.c:142
 msgid "Timeshift"
-msgstr ""
+msgstr "Gravação em tempo real"
 
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
@@ -3445,7 +3445,7 @@ msgstr ""
 
 #: src/epggrab/module.c:132
 msgid "Type"
-msgstr ""
+msgstr "Tipo"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"

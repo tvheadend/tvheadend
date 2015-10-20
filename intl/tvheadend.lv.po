@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
+"PO-Revision-Date: 2015-10-20 12:29+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Latvian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/lv/)\n"
 "MIME-Version: 1.0\n"
@@ -540,7 +540,7 @@ msgstr ""
 
 #: src/channels.c:1085 src/dvr/dvr_autorec.c:971
 msgid "Channel Tag"
-msgstr ""
+msgstr "Kanāla Birka"
 
 #: src/bouquet.c:852
 msgid "Channel Tag Reference"
@@ -548,7 +548,7 @@ msgstr ""
 
 #: src/access.c:1541
 msgid "Channel Tags"
-msgstr ""
+msgstr "Kanāla Birkas"
 
 #: src/config.c:1976
 msgid "Channel icon name lower-case"
@@ -1058,7 +1058,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2113
 msgid "Duration"
-msgstr ""
+msgstr "Ilgums"
 
 #: src/config.c:1806
 msgid "EF"
@@ -1547,7 +1547,7 @@ msgstr ""
 #: src/input/mpegts/satip/satip.c:282
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:149
 msgid "IP Address"
-msgstr ""
+msgstr "IP Adrese"
 
 #: src/access.c:1856 src/access.c:1885
 msgid "IP Blocking"
@@ -2219,7 +2219,7 @@ msgstr ""
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1231
 #: src/input/mpegts/satip/satip_satconf.c:224
 msgid "Networks"
-msgstr ""
+msgstr "Tīkli"
 
 #: src/epg.c:1967 src/epg.c:1968
 msgid "News"
@@ -2872,7 +2872,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:733
 msgid "Sat"
-msgstr ""
+msgstr "Se"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:202
 msgid "SatConfig"
@@ -3018,7 +3018,7 @@ msgstr ""
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "Iestatījumi"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3249,7 +3249,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:734
 msgid "Sun"
-msgstr ""
+msgstr "Sv"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
@@ -3328,7 +3328,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:731
 msgid "Thu"
-msgstr ""
+msgstr "Cet"
 
 #: src/config.c:1779
 msgid "Time"
@@ -3413,7 +3413,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:729
 msgid "Tue"
-msgstr ""
+msgstr "Otr"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:222
 msgid "Tune Before DiseqC"
@@ -3445,7 +3445,7 @@ msgstr ""
 
 #: src/epggrab/module.c:132
 msgid "Type"
-msgstr ""
+msgstr "Tips"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
@@ -3684,7 +3684,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:730
 msgid "Wed"
-msgstr ""
+msgstr "Tr"
 
 #: src/epg.c:1953
 msgid "Western"

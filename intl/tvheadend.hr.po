@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
+"PO-Revision-Date: 2015-10-20 12:29+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Croatian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hr/)\n"
 "MIME-Version: 1.0\n"
@@ -637,7 +637,7 @@ msgstr "Uvjetovani pristup klijenta"
 
 #: src/config.c:1816
 msgid "Configuration"
-msgstr ""
+msgstr "Podešavanje"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
@@ -922,7 +922,7 @@ msgstr ""
 
 #: src/tvhlog.c:581
 msgid "Debugging"
-msgstr ""
+msgstr "Otklanjanje greške"
 
 #: src/config.c:1787 src/profile.c:300
 msgid "Default"
@@ -1074,7 +1074,7 @@ msgstr "EIT Lokalno vrijeme"
 
 #: src/epggrab/module.c:108
 msgid "EPG Grabber"
-msgstr ""
+msgstr "EPG sakupljač"
 
 #: src/epggrab.c:227
 msgid "EPG Grabber Configuration"
@@ -1449,7 +1449,7 @@ msgstr "Vrtlarstvo"
 
 #: src/satip/server.c:565
 msgid "General"
-msgstr ""
+msgstr "Općenito"
 
 #: src/epggrab.c:233
 msgid "General Config"
@@ -2247,7 +2247,7 @@ msgstr "Nema određenog adapters!\n"
 
 #: src/dvr/dvr_autorec.c:752
 msgid "No days"
-msgstr ""
+msgstr "Nema dana"
 
 #: src/streaming.c:441
 msgid "No descrambler"
@@ -2289,7 +2289,7 @@ msgstr ""
 
 #: src/profile.c:1355 src/dvr/dvr_db.c:1678 src/dvr/dvr_db.c:1706
 msgid "Not set"
-msgstr ""
+msgstr "Nije postavljeno"
 
 #: src/dvr/dvr_config.c:697
 msgid "Not set (none or channel configuration)"
@@ -2610,7 +2610,7 @@ msgstr "Privatno"
 
 #: src/profile.c:307
 msgid "Profile Name"
-msgstr ""
+msgstr "Naziv profila"
 
 #: src/input/mpegts/mpegts_service.c:150
 msgid "Provider"
@@ -2827,7 +2827,7 @@ msgstr ""
 
 #: src/satip/server.c:559
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "SAT>IP poslužitelj"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2872,7 +2872,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:733
 msgid "Sat"
-msgstr ""
+msgstr "Sub"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:202
 msgid "SatConfig"
@@ -3018,7 +3018,7 @@ msgstr "Broj usluge %zi"
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "Postavke"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3199,7 +3199,7 @@ msgstr ""
 
 #: src/profile.c:275 src/dvr/dvr_config.c:792
 msgid "Stream Profile"
-msgstr ""
+msgstr "Profil strujanja"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
@@ -3357,7 +3357,7 @@ msgstr ""
 
 #: src/timeshift.c:142
 msgid "Timeshift"
-msgstr ""
+msgstr "Premotavanje"
 
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
@@ -3445,7 +3445,7 @@ msgstr ""
 
 #: src/epggrab/module.c:132
 msgid "Type"
-msgstr ""
+msgstr "Vrsta"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
@@ -3502,7 +3502,7 @@ msgstr ""
 
 #: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:684
 msgid "Unknown"
-msgstr ""
+msgstr "Nepoznato"
 
 #: src/streaming.c:448
 #, c-format

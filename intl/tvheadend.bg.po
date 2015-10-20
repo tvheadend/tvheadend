@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
+"PO-Revision-Date: 2015-10-20 12:29+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
@@ -639,7 +639,7 @@ msgstr "Условен достъп клиент"
 
 #: src/config.c:1816
 msgid "Configuration"
-msgstr ""
+msgstr "Настройки"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
@@ -924,7 +924,7 @@ msgstr ""
 
 #: src/tvhlog.c:581
 msgid "Debugging"
-msgstr ""
+msgstr "Дебъгване"
 
 #: src/config.c:1787 src/profile.c:300
 msgid "Default"
@@ -1076,7 +1076,7 @@ msgstr "EIT локално време"
 
 #: src/epggrab/module.c:108
 msgid "EPG Grabber"
-msgstr ""
+msgstr "EPG грабер"
 
 #: src/epggrab.c:227
 msgid "EPG Grabber Configuration"
@@ -1451,7 +1451,7 @@ msgstr "Градинарство"
 
 #: src/satip/server.c:565
 msgid "General"
-msgstr ""
+msgstr "Основни"
 
 #: src/epggrab.c:233
 msgid "General Config"
@@ -2829,7 +2829,7 @@ msgstr "SAT>IP RTSP номер на порта за сървър\n(по подр
 
 #: src/satip/server.c:559
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "SAT>IP сървър"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -3020,7 +3020,7 @@ msgstr "Преброени услуги %zi"
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "Настройки"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3359,7 +3359,7 @@ msgstr "Таймаут (sec)"
 
 #: src/timeshift.c:142
 msgid "Timeshift"
-msgstr ""
+msgstr "ТаймШифт"
 
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
@@ -3447,7 +3447,7 @@ msgstr ""
 
 #: src/epggrab/module.c:132
 msgid "Type"
-msgstr ""
+msgstr "Вид"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"

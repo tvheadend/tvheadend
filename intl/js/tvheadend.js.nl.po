@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-09-27 17:43+0000\n"
+"PO-Revision-Date: 2015-10-20 12:30+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Dutch (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/nl/)\n"
 "MIME-Version: 1.0\n"
@@ -664,7 +664,7 @@ msgstr "Gebeurtenissen"
 
 #: src/webui/static/app/dvr.js:116
 msgid "Every day"
-msgstr ""
+msgstr "Elke dag"
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
@@ -1434,7 +1434,7 @@ msgstr "Abonnementen"
 
 #: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
 msgid "Subtitle"
-msgstr ""
+msgstr "Ondertiteling"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"

@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-09-27 17:43+0000\n"
+"PO-Revision-Date: 2015-10-20 12:29+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Latvian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/lv/)\n"
 "MIME-Version: 1.0\n"
@@ -1381,7 +1381,7 @@ msgstr "Stāvoklis"
 
 #: src/webui/static/app/dvr.js:49 src/webui/static/app/status.js:611
 msgid "Status"
-msgstr ""
+msgstr "Statuss"
 
 #: src/webui/static/app/dvr.js:169 src/webui/static/app/tvheadend.js:300
 msgid "Stop"
@@ -1431,7 +1431,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:488 src/webui/static/app/epg.js:489
 msgid "Subtitle"
-msgstr ""
+msgstr "Subtitri"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"

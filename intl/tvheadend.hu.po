@@ -11,7 +11,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
+"PO-Revision-Date: 2015-10-20 12:29+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
@@ -639,7 +639,7 @@ msgstr "Conditional Access Client"
 
 #: src/config.c:1816
 msgid "Configuration"
-msgstr ""
+msgstr "Beállítás"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
@@ -924,7 +924,7 @@ msgstr ""
 
 #: src/tvhlog.c:581
 msgid "Debugging"
-msgstr ""
+msgstr "Nyomkövetés"
 
 #: src/config.c:1787 src/profile.c:300
 msgid "Default"
@@ -1076,7 +1076,7 @@ msgstr ""
 
 #: src/epggrab/module.c:108
 msgid "EPG Grabber"
-msgstr ""
+msgstr "EPG letöltő"
 
 #: src/epggrab.c:227
 msgid "EPG Grabber Configuration"
@@ -1451,7 +1451,7 @@ msgstr "Kertészkedés"
 
 #: src/satip/server.c:565
 msgid "General"
-msgstr ""
+msgstr "Általános"
 
 #: src/epggrab.c:233
 msgid "General Config"
@@ -2421,7 +2421,7 @@ msgstr "Eredeti hálózat ID"
 
 #: src/esfilter.c:974
 msgid "Other Stream Filter"
-msgstr ""
+msgstr "Egyéb stream szűrő"
 
 #: src/main.c:742
 msgid "Output directory for tsdebug"
@@ -2829,7 +2829,7 @@ msgstr ""
 
 #: src/satip/server.c:559
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "SAT>IP szerver"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -2912,11 +2912,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2084
 msgid "Scheduled Start Time"
-msgstr ""
+msgstr "Időzített kezdési időpont"
 
 #: src/dvr/dvr_db.c:2106
 msgid "Scheduled Stop Time"
-msgstr ""
+msgstr "Időzített leállítási időpont"
 
 #: src/dvr/dvr_db.c:279
 msgid "Scheduled for recording"
@@ -2982,7 +2982,7 @@ msgstr ""
 #: src/service.c:148 src/esfilter.c:654 src/esfilter.c:721 src/esfilter.c:788
 #: src/esfilter.c:855 src/esfilter.c:930 src/esfilter.c:997
 msgid "Service"
-msgstr ""
+msgstr "Szolgáltatás"
 
 #: src/main.c:663
 msgid "Service Configuration"
@@ -3011,7 +3011,7 @@ msgstr ""
 
 #: src/channels.c:363 src/bouquet.c:875
 msgid "Services"
-msgstr ""
+msgstr "Szolgáltatások"
 
 #: src/bouquet.c:761
 #, c-format
@@ -3020,7 +3020,7 @@ msgstr ""
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "Beállítások"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3152,7 +3152,7 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:592
 msgid "Start"
-msgstr ""
+msgstr "Kezdés"
 
 #: src/dvr/dvr_autorec.c:980
 msgid "Start After"
@@ -3164,11 +3164,11 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2066
 msgid "Start Time"
-msgstr ""
+msgstr "Kezdés Időpontja"
 
 #: src/dvr/dvr_db.c:2343 src/descrambler/caclient.c:281
 msgid "Status"
-msgstr ""
+msgstr "Állapot"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:127
 msgid "Status Period (ms)"
@@ -3180,7 +3180,7 @@ msgstr ""
 
 #: src/dvr/dvr_timerec.c:602
 msgid "Stop"
-msgstr ""
+msgstr "Leállítás"
 
 #: src/dvr/dvr_db.c:2091
 msgid "Stop Time"
@@ -3201,7 +3201,7 @@ msgstr ""
 
 #: src/profile.c:275 src/dvr/dvr_config.c:792
 msgid "Stream Profile"
-msgstr ""
+msgstr "Stream-profil"
 
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
@@ -3247,11 +3247,11 @@ msgstr ""
 
 #: src/esfilter.c:832
 msgid "Subtitle Stream Filter"
-msgstr ""
+msgstr "Stream-felirat szűrő"
 
 #: src/dvr/dvr_autorec.c:734
 msgid "Sun"
-msgstr ""
+msgstr "Vas"
 
 #: src/profile.c:1373
 msgid "Surround (2 Front, Rear Mono)"
@@ -3310,7 +3310,7 @@ msgstr ""
 
 #: src/esfilter.c:765
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Teletext stream-szűrő"
 
 #: src/epg.c:2003
 msgid "Tennis"
@@ -3330,7 +3330,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:731
 msgid "Thu"
-msgstr ""
+msgstr "Csüt"
 
 #: src/config.c:1779
 msgid "Time"
@@ -3359,7 +3359,7 @@ msgstr ""
 
 #: src/timeshift.c:142
 msgid "Timeshift"
-msgstr ""
+msgstr "Időeltolás"
 
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
@@ -3367,7 +3367,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2146 src/dvr/dvr_db.c:2153 src/dvr/dvr_timerec.c:570
 msgid "Title"
-msgstr ""
+msgstr "Cím"
 
 #: src/dvr/dvr_autorec.c:949
 msgid "Title (Regexp)"
@@ -3415,7 +3415,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:729
 msgid "Tue"
-msgstr ""
+msgstr "Ke"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:222
 msgid "Tune Before DiseqC"
@@ -3447,7 +3447,7 @@ msgstr ""
 
 #: src/epggrab/module.c:132
 msgid "Type"
-msgstr ""
+msgstr "Típus"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
@@ -3504,7 +3504,7 @@ msgstr ""
 
 #: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:684
 msgid "Unknown"
-msgstr ""
+msgstr "Ismeretlen"
 
 #: src/streaming.c:448
 #, c-format
@@ -3598,7 +3598,7 @@ msgstr ""
 
 #: src/access.c:1398 src/access.c:1762 src/descrambler/cwc.c:1730
 msgid "Username"
-msgstr ""
+msgstr "Felhasználónév"
 
 #: src/epg.c:1985
 msgid "Variety show"
@@ -3622,7 +3622,7 @@ msgstr "Videó-felvevő"
 
 #: src/esfilter.c:631
 msgid "Video Stream Filter"
-msgstr ""
+msgstr "Videó Folyam Szűrő"
 
 #: src/streaming.c:542
 msgid "Visually impaired commentary/audio description"

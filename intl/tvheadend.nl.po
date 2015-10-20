@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-02 12:00+0000\n"
+"PO-Revision-Date: 2015-10-20 12:30+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Dutch (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/nl/)\n"
 "MIME-Version: 1.0\n"
@@ -640,7 +640,7 @@ msgstr "Conditional Access Client"
 
 #: src/config.c:1816
 msgid "Configuration"
-msgstr ""
+msgstr "Configuratie"
 
 #: src/input/mpegts/satip/satip.c:366
 msgid "Configuration ID"
@@ -925,7 +925,7 @@ msgstr ""
 
 #: src/tvhlog.c:581
 msgid "Debugging"
-msgstr ""
+msgstr "Debugging"
 
 #: src/config.c:1787 src/profile.c:300
 msgid "Default"
@@ -1077,7 +1077,7 @@ msgstr "EIT lokale tijd"
 
 #: src/epggrab/module.c:108
 msgid "EPG Grabber"
-msgstr ""
+msgstr "EPG grabber"
 
 #: src/epggrab.c:227
 msgid "EPG Grabber Configuration"
@@ -1452,7 +1452,7 @@ msgstr "Tuinieren"
 
 #: src/satip/server.c:565
 msgid "General"
-msgstr ""
+msgstr "Algemeen"
 
 #: src/epggrab.c:233
 msgid "General Config"
@@ -2830,7 +2830,7 @@ msgstr "SAT>IP RTSP port number for server\n(default: -1 = disable, 0 = webconfi
 
 #: src/satip/server.c:559
 msgid "SAT>IP Server"
-msgstr ""
+msgstr "SAT>IP Server"
 
 #: src/input/mpegts/mpegts_network.c:195
 msgid "SAT>IP Source Number"
@@ -3021,7 +3021,7 @@ msgstr "Aantal services %zi"
 
 #: src/tvhlog.c:587 src/epggrab/module.c:115
 msgid "Settings"
-msgstr ""
+msgstr "Instellingen"
 
 #: src/epg.c:1983
 msgid "Show"
@@ -3360,7 +3360,7 @@ msgstr "Timeout (seconden)"
 
 #: src/timeshift.c:142
 msgid "Timeshift"
-msgstr ""
+msgstr "Timeshift"
 
 #: src/input/mpegts/mpegts_mux_sched.c:147
 msgid "Timout (secs)"
@@ -3448,7 +3448,7 @@ msgstr ""
 
 #: src/epggrab/module.c:132
 msgid "Type"
-msgstr ""
+msgstr "Type"
 
 #: src/input/mpegts/satip/satip_frontend.c:153
 msgid "UDP RTP Port Number (2 ports)"
