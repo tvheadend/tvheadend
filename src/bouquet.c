@@ -637,6 +637,8 @@ bouquet_class_rescan_notify0 ( bouquet_t *bq, const char *lang )
   if (bq->bq_src && strncmp(bq->bq_src, "iptv-network://", 15) == 0)
     return iptv_bouquet_trigger_by_uuid(bq->bq_src + 15);
 #endif
+  if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) == 0)
+    return bouquet_download_trigger(bq);
   mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
   bq->bq_rescan = 0;
 }
@@ -1075,7 +1077,7 @@ service:
         if (lv == 0) {
           service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
           if (s)
-            bouquet_add_service(bq, s, ++seen, tagname);
+            bouquet_add_service(bq, s, ((int64_t)++seen) * CHANNEL_SPLIT, tagname);
         } else if (lv == 64) {
           tagname = name;
         }
