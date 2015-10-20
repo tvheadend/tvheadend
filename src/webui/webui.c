@@ -308,8 +308,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   int ptimeout, grace = 20;
   struct timespec ts;
   struct timeval  tp;
-  int err = 0;
-  socklen_t errlen = sizeof(err);
   streaming_start_t *ss_copy;
   int64_t mono;
 
@@ -343,7 +341,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
 
         /* Check socket status */
-        if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err) {
+        if (tcp_socket_dead(hc->hc_fd)) {
           tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
           run = 0;
         } else if((!started && dispatch_clock - lastpkt > grace) ||
@@ -364,7 +362,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_PACKET:
       lastpkt = dispatch_clock;
       if(started) {
-        pktbuf_t *pb;;
+        pktbuf_t *pb;
         if (sm->sm_type == SMT_PACKET)
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
@@ -390,7 +388,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           streaming_msg_free(sm);
           mono = getmonoclock() + 2000000;
           while (getmonoclock() < mono) {
-            if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err)
+            if (tcp_socket_dead(hc->hc_fd))
               break;
             usleep(50000);
           }
@@ -417,7 +415,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_SERVICE_STATUS:
-      if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen) || err) {
+      if(tcp_socket_dead(hc->hc_fd)) {
         tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
                hc->hc_url_orig);
         run = 0;

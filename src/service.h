@@ -550,6 +550,9 @@ void service_remove_raw(service_t *);
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);
 
+
+void service_send_streaming_status(service_t *t);
+
 void service_set_streaming_status_flags_(service_t *t, int flag);
 
 static inline void
@@ -567,6 +570,7 @@ service_reset_streaming_status_flags(service_t *t, int flag)
   if ((n & flag) != 0)
     service_set_streaming_status_flags_(t, n & ~flag);
 }
+
 
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);

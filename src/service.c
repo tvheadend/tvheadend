@@ -1187,6 +1187,21 @@ service_servicetype_txt ( service_t *s )
  *
  */
 void
+service_send_streaming_status(service_t *t)
+{
+  lock_assert(&t->s_stream_mutex);
+
+  streaming_pad_deliver(&t->s_streaming_pad,
+                        streaming_msg_create_code(SMT_SERVICE_STATUS,
+                                                  t->s_streaming_status));
+
+  pthread_cond_broadcast(&t->s_tss_cond);
+}
+
+/**
+ *
+ */
+void
 service_set_streaming_status_flags_(service_t *t, int set)
 {
   lock_assert(&t->s_stream_mutex);
@@ -1208,13 +1223,8 @@ service_set_streaming_status_flags_(service_t *t, int set)
 	 set & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
 	 set & TSS_TIMEOUT        ? "[Data timeout] " : "");
 
-  streaming_pad_deliver(&t->s_streaming_pad,
-                        streaming_msg_create_code(SMT_SERVICE_STATUS,
-                                                  t->s_streaming_status));
-
-  pthread_cond_broadcast(&t->s_tss_cond);
+  service_send_streaming_status(t);
 }
-
 
 /**
  * Restart output on a service.

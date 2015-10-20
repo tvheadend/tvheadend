@@ -377,6 +377,24 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 /**
  *
  */
+int
+tcp_socket_dead(int fd)
+{
+  int err = 0;
+  socklen_t errlen = sizeof(err);
+
+  if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &errlen))
+    return -errno;
+  if (err)
+    return -err;
+  if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) == 0)
+    return -EIO;
+  return 0;
+}
+
+/**
+ *
+ */
 char *
 tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen)
 {

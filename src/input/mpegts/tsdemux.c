@@ -395,6 +395,7 @@ ts_skip(mpegts_service_t *t, const uint8_t *src, int len)
     return;
 
   ts_flush(t, sb);
+  service_send_streaming_status((service_t *)t);
 }
 
 /*
