@@ -1021,7 +1021,7 @@ tvheadend.epg = function() {
                 + '<div class="x-smallhdr">' + _('Genre') + ':</div>' + contentType + '<br>'
                 + '<div class="x-smallhdr">' + _('Duration') + ':</div>' + duration + '<br>'
                 + '<br><br>'
-                + sprintf(_('Currently this will match (and record) %d events.'), epgStore.GetTotalCount())
+                + sprintf(_('Currently this will match (and record) %d events.'), epgStore.getTotalCount())
                 + ' ' + 'Are you sure?',
             function(button) {
                 if (button === 'no')
