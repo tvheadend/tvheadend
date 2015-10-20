@@ -53,6 +53,10 @@ descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd
     TAILQ_REMOVE(&dr->dr_queue, dd, dd_link);
     sbuf_free(&dd->dd_sbuf);
     free(dd);
+#if ENABLE_TRACE
+    if (TAILQ_EMPTY(&dr->dr_queue))
+      assert(dr->dr_queue_total == 0);
+#endif
   }
 }
 
@@ -600,7 +604,7 @@ descrambler_descramble ( service_t *t,
           ki = tsb2[3];
           if ((ki & 0x80) != 0x00) {
             if (key_valid(dr, ki) == 0) {
-              sbuf_cut(sb, tsb2 - sb->sb_data);
+              descrambler_data_cut(dr, tsb2 - sb->sb_data);
               goto next;
             }
             if (dr->dr_key_index != (ki & 0x40) &&
@@ -610,7 +614,7 @@ descrambler_descramble ( service_t *t,
                                       ((mpegts_service_t *)t)->s_dvb_svcname);
               if (key_late(dr, ki)) {
                 if (ecm_reset(t, dr)) {
-                  sbuf_cut(sb, tsb2 - sb->sb_data);
+                  descrambler_data_cut(dr, tsb2 - sb->sb_data);
                   flush_data = 1;
                   goto next;
                 }
