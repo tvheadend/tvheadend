@@ -546,9 +546,9 @@ mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash, const idclass_
 
   pos = hash >> 16;
   switch (pos) {
-  case 0xFFFF: *idc = &dvb_mux_dvbc_class; break;
-  case 0xEEEE: *idc = &dvb_mux_dvbt_class; break;
-  case 0xDDDD: *idc = &dvb_mux_dvbt_class; break;
+  case 0xFFFF: *idc = &dvb_mux_dvbc_class; return 1;
+  case 0xEEEE: *idc = &dvb_mux_dvbt_class; return 1;
+  case 0xDDDD: *idc = &dvb_mux_dvbt_class; return 1;
   default:     *idc = &dvb_mux_dvbs_class; break;
   }
   if (pos > 3600 || pos < 0) return 0;
@@ -566,8 +566,8 @@ mpegts_service_match_mux(dvb_mux_t *mm, uint32_t hash, const idclass_t *idc)
   dvb_mux_t *mmd;
   int freq, pol;
 
-  if (idc == &dvb_mux_dvbc_class || idc == &dvb_mux_dvbt_class)
-    return (hash & 0xffff) == 0;
+  if ((hash & 0xffff) == 0) return 1;
+  if (idc != &dvb_mux_dvbs_class) return 0;
   freq = (hash & 0x7fff) * 1000;
   pol = (hash & 0x8000) ? DVB_POLARISATION_HORIZONTAL : DVB_POLARISATION_VERTICAL;
   mmd = mm;
