@@ -540,11 +540,17 @@ mpegts_service_channel_icon ( service_t *s )
 
 #if ENABLE_MPEGTS_DVB
 static int
-mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash)
+mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash, const idclass_t **idc)
 {
   int pos = hash >> 16, pos2;
 
   pos = hash >> 16;
+  switch (pos) {
+  case 0xFFFF: *idc = &dvb_mux_dvbc_class; break;
+  case 0xEEEE: *idc = &dvb_mux_dvbt_class; break;
+  case 0xDDDD: *idc = &dvb_mux_dvbt_class; break;
+  default:     *idc = &dvb_mux_dvbs_class; break;
+  }
   if (pos > 3600 || pos < 0) return 0;
   pos = pos <= 1800 ? pos : pos - 3600;
   if ((pos2 = dvb_network_get_orbital_pos(mn)) == INT_MAX) return 0;
@@ -554,14 +560,14 @@ mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash)
 
 #if ENABLE_MPEGTS_DVB
 static int
-mpegts_service_match_mux(dvb_mux_t *mm, uint32_t hash)
+mpegts_service_match_mux(dvb_mux_t *mm, uint32_t hash, const idclass_t *idc)
 {
   extern const idclass_t dvb_mux_dvbs_class;
   dvb_mux_t *mmd;
   int freq, pol;
 
-  if ((hash & 0xffff) == 0) return 1;
-  if (!idnode_is_instance(&mm->mm_id, &dvb_mux_dvbs_class)) return 0;
+  if (idc == &dvb_mux_dvbc_class || idc == &dvb_mux_dvbt_class)
+    return (hash & 0xffff) == 0;
   freq = (hash & 0x7fff) * 1000;
   pol = (hash & 0x8000) ? DVB_POLARISATION_HORIZONTAL : DVB_POLARISATION_VERTICAL;
   mmd = mm;
@@ -578,15 +584,17 @@ mpegts_service_find_e2(uint32_t stype, uint32_t sid, uint32_t tsid,
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
   mpegts_service_t *s;
+  const idclass_t *idc;
 
   lock_assert(&global_lock);
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (!idnode_is_instance(&mn->mn_id, &dvb_network_class)) continue;
-    if (!mpegts_service_match_network(mn, hash)) continue;
+    if (!mpegts_service_match_network(mn, hash, &idc)) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      if (!idnode_is_instance(&mm->mm_id, idc)) continue;
       if (mm->mm_tsid != tsid || mm->mm_onid != onid) continue;
-      if (!mpegts_service_match_mux((dvb_mux_t *)mm, hash)) continue;
+      if (!mpegts_service_match_mux((dvb_mux_t *)mm, hash, idc)) continue;
       LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
         if (s->s_dvb_service_id == sid)
           return (service_t *)s;
