@@ -503,7 +503,7 @@ capmt_connect(capmt_t *capmt, int i)
 
   }
 
-  if (fd) {
+  if (fd >= 0) {
     tvhlog(LOG_DEBUG, "capmt", "%s: Created socket %d", capmt_name(capmt), fd);
     capmt->capmt_sock[i] = fd;
     capmt->capmt_sock_reconnect[i]++;
@@ -766,18 +766,16 @@ capmt_send_stop(capmt_service_t *t)
 static void
 capmt_send_stop_descrambling(capmt_t *capmt)
 {
-  uint8_t buf[8];
-
-  buf[0] = 0x9F;
-  buf[1] = 0x80;
-  buf[2] = 0x3F;
-  buf[3] = 0x04;
-
-  buf[4] = 0x83;
-  buf[5] = 0x02;
-  buf[6] = 0x00;
-  buf[7] = 0xFF; //wildcard demux id
-
+  static uint8_t buf[8] = {
+    0x9F,
+    0x80,
+    0x3F,
+    0x04,
+    0x83,
+    0x02,
+    0x00,
+    0xFF, /* wildcard demux id */
+  };
   capmt_write_msg(capmt, 0, 0, buf, 8);
 }
 
@@ -1605,7 +1603,6 @@ capmt_thread(void *aux)
       capmt->capmt_adapters[i].ca_sock = -1;
     for (i = 0; i < MAX_SOCKETS; i++) {
       capmt->sids[i] = 0;
-      capmt->adps[i] = -1;
       capmt->capmt_sock[i] = -1;
       capmt->capmt_sock_reconnect[i] = 0;
     }
