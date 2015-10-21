@@ -35,12 +35,14 @@
 #include "notify.h"
 
 struct dvr_entry_list dvrentries;
+static int dvr_in_init;
 
 #if ENABLE_DBUS_1
 static gtimer_t dvr_dbus_timer;
 #endif
 
 static void dvr_entry_destroy(dvr_entry_t *de, int delconf);
+static void dvr_entry_set_timer(dvr_entry_t *de);
 static void dvr_timer_rerecord(void *aux);
 static void dvr_timer_expire(void *aux);
 static void dvr_timer_remove_files(void *aux);
@@ -419,6 +421,13 @@ dvr_usage_count(access_t *aa)
 }
 
 static void
+dvr_entry_set_timer_cb(void *aux)
+{
+  dvr_entry_t *de = aux;
+  dvr_entry_set_timer(de);
+}
+
+static void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
   time_t now, start, stop;
@@ -435,7 +444,10 @@ dvr_entry_set_timer(dvr_entry_t *de)
     else
       dvr_entry_completed(de, de->de_last_error);
 
-    dvr_entry_rerecord(de);
+    if (!dvr_in_init)
+      dvr_entry_rerecord(de);
+    else
+      gtimer_arm(&de->de_timer, dvr_entry_set_timer_cb, de, 0);
 
   } else if (de->de_sched_state == DVR_RECORDING)  {
 
@@ -496,7 +508,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
 
   /* Wrong length (+/-20%) */
   t1 = de->de_stop - de->de_start;
-  t2  = e->stop - e->start;
+  t2 = e->stop - e->start;
   if ( abs(t2 - t1) > (t1 / 5) )
     return 0;
 
@@ -789,6 +801,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
   epg_broadcast_t *e, *ev;
   dvr_entry_t *de2;
   char cfg_uuid[UUID_HEX_SIZE];
+  char buf[512];
   int64_t fsize1, fsize2;
 
   if (rerecord == 0)
@@ -824,11 +837,12 @@ not_so_good:
     return;
   /* rerecord if - DVR_NOSTATE, DVR_MISSED_TIME */
   if (de->de_sched_state == DVR_COMPLETED &&
-      rerecord < de->de_data_errors && de->de_errors <= 0)
+      rerecord > de->de_data_errors && de->de_errors <= 0)
     return;
 
   e = NULL;
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
+    if (de->de_bcast == ev) continue;
     if (dvr_entry_fuzzy_match(de, ev))
       if (!e || e->start > ev->start)
         e = ev;
@@ -844,11 +858,14 @@ not_so_good:
                    e->start, e->stop);
 
   idnode_uuid_as_str(&de->de_config->dvr_id, cfg_uuid);
+  snprintf(buf, sizeof(buf), "Re-record%s%s",
+           de->de_comment ? ": " : "", de->de_comment ?: "");
+
   de2 = dvr_entry_create_by_event(1, cfg_uuid, e,
                                   de->de_start_extra, de->de_stop_extra,
                                   de->de_owner, de->de_creator, NULL,
                                   de->de_pri, de->de_retention, de->de_removal,
-                                  de->de_comment);
+                                  buf);
   if (de2) {
     de->de_slave = de2;
     de2->de_parent = de;
@@ -955,7 +972,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
 void
 dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t *dae)
 {
-  char buf[200];
+  char buf[512];
   char ubuf[UUID_HEX_SIZE];
 
   /* Identical duplicate detection
@@ -2047,7 +2064,7 @@ dvr_entry_class_slave_get(void *o)
 {
   static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  if (de->de_parent)
+  if (de->de_slave)
     ret = idnode_uuid_as_sstr(&de->de_slave->de_id);
   else
     ret = "";
@@ -2890,6 +2907,7 @@ dvr_entry_init(void)
   htsmsg_t *l, *c;
   htsmsg_field_t *f;
 
+  dvr_in_init = 1;
   if((l = hts_settings_load("dvr/log")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
@@ -2898,6 +2916,7 @@ dvr_entry_init(void)
     }
     htsmsg_destroy(l);
   }
+  dvr_in_init = 0;
 }
 
 void
