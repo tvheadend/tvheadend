@@ -298,6 +298,7 @@ typedef struct dvr_autorec_entry {
   int dae_maxduration;
   uint32_t dae_retention;
   uint32_t dae_removal;
+  uint32_t dae_max_count;
 
   time_t dae_start_extra;
   time_t dae_stop_extra;
@@ -607,6 +608,8 @@ uint32_t dvr_autorec_get_removal_days( dvr_autorec_entry_t *dae );
 int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
 
 int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
+
+void dvr_autorec_completed( dvr_entry_t *de, int error_code );
 
 /**
  *
