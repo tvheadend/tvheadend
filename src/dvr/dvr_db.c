@@ -1059,10 +1059,12 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
 
-  if (de->de_parent)
-    de->de_parent->de_slave = NULL;
   if (de->de_slave)
     de->de_slave->de_parent = NULL;
+  if (de->de_parent) {
+    de->de_parent->de_slave = NULL;
+    gtimer_arm(&de->de_parent->de_timer, dvr_entry_set_timer_cb, de->de_parent, 0);
+  }
 
   dvr_entry_dec_ref(de);
 }
