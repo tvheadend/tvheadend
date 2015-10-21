@@ -46,10 +46,10 @@ uint16_t *quick_ecm_table = NULL;
  *
  */
 static void
-descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd)
+descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd, int skip)
 {
   if (dd) {
-    if (dr->dr_skip)
+    if (skip && dr->dr_skip)
       ts_skip_packet2((mpegts_service_t *)dr->dr_service,
                       dd->dd_sbuf.sb_data, dd->dd_sbuf.sb_ptr);
     dr->dr_queue_total -= dd->dd_sbuf.sb_ptr;
@@ -70,7 +70,7 @@ descrambler_data_time_flush(th_descrambler_runtime_t *dr, time_t oldest)
 
   while ((dd = TAILQ_FIRST(&dr->dr_queue)) != NULL) {
     if (dd->dd_timestamp >= oldest) break;
-    descrambler_data_destroy(dr, dd);
+    descrambler_data_destroy(dr, dd, 1);
   }
 }
 
@@ -110,7 +110,7 @@ descrambler_data_cut(th_descrambler_runtime_t *dr, int len)
       break;
     }
     len -= dd->dd_sbuf.sb_ptr;
-    descrambler_data_destroy(dr, dd);
+    descrambler_data_destroy(dr, dd, 1);
   }
 }
 
@@ -272,7 +272,7 @@ descrambler_service_stop ( service_t *t )
   if (dr) {
     tvhcsa_destroy(&dr->dr_csa);
     while ((dd = TAILQ_FIRST(&dr->dr_queue)) != NULL)
-      descrambler_data_destroy(dr, dd);
+      descrambler_data_destroy(dr, dd, 0);
     free(dr);
   }
 }
@@ -633,10 +633,8 @@ descrambler_descramble ( service_t *t,
         for (; len2 > 0; tsb2 += len3, len2 -= len3) {
           ki = tsb2[3];
           if ((ki & 0x80) != 0x00) {
-            if (key_valid(dr, ki) == 0) {
-              descrambler_data_cut(dr, tsb2 - sb->sb_data);
+            if (key_valid(dr, ki) == 0)
               goto next;
-            }
             if (key_changed(dr, ki, dd->dd_timestamp)) {
               tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
                                       (ki & 0x40) ? "odd" : "even",
@@ -656,7 +654,7 @@ descrambler_descramble ( service_t *t,
         }
         if (len2 == 0)
           service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
-        descrambler_data_destroy(dr, dd);
+        descrambler_data_destroy(dr, dd, 0);
       }
     }
 
