@@ -40,6 +40,7 @@ typedef struct dvr_config {
   profile_t *dvr_profile;
   char *dvr_storage;
   int dvr_clone;
+  uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
   uint32_t dvr_removal_days;
   char *dvr_charset;
@@ -210,6 +211,12 @@ typedef struct dvr_entry {
    * Timerec linkage
    */
   struct dvr_timerec_entry *de_timerec;
+
+  /**
+   * Parent/slave
+   */
+  struct dvr_entry *de_parent;
+  struct dvr_entry *de_slave;
 
   /**
    * Fields for recording
@@ -409,6 +416,8 @@ int dvr_entry_get_mc(dvr_entry_t *de);
 uint32_t dvr_entry_get_retention_days( dvr_entry_t *de );
 
 uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
+
+uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
 int dvr_entry_get_start_time( dvr_entry_t *de );
 

@@ -832,6 +832,13 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_U32,
+      .id       = "rerecord-errors",
+      .name     = N_("Re-record When Errors (0=off)"),
+      .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
       .id       = "pre-extra-time",
       .name     = N_("Extra Time Before Recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),

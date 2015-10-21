@@ -442,6 +442,7 @@ typedef enum {
 #define SM_CODE_INVALID_TARGET            104
 #define SM_CODE_USER_ACCESS               105
 #define SM_CODE_USER_LIMIT                106
+#define SM_CODE_WEAK_STREAM               107
 
 #define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201

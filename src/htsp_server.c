@@ -3692,6 +3692,8 @@ _htsp_get_subscription_status(int smcode)
     return "userAccess";
   case SM_CODE_USER_LIMIT:
     return "userLimit";
+  case SM_CODE_WEAK_STREAM:
+    return "weakStream";
   default:
     return streaming_code2txt(smcode);
   }
