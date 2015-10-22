@@ -402,7 +402,7 @@ atsc_get_string
   int outputbytes = 0;
 
   stringcount = src[0];
-  tvhdebug("mss", "%d strings", stringcount);
+  tvhtrace("atsc-str", "%d strings", stringcount);
 
   src++;
   srclen--;
@@ -417,7 +417,7 @@ atsc_get_string
     langcode[2] = src[2];
     segmentcount = src[3];
 
-    tvhdebug("mss", "  %d: lang '%c%c%c', segments %d",
+    tvhtrace("atsc-str", "  %d: lang '%c%c%c', segments %d",
               i, langcode[0], langcode[1], langcode[2], segmentcount);
 
     langok = (lang == NULL || memcmp(langcode, lang, 3) == 0);
@@ -436,7 +436,7 @@ atsc_get_string
       srclen -= 3;
 
       if (mode == 0 && compressiontype == 0) {
-        tvhdebug("mss", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
+        tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
             j, compressiontype, mode, bytecount, bytecount, src);
         if (langok) {
           if (dstlen > bytecount) {
@@ -445,12 +445,12 @@ atsc_get_string
             dstlen -= bytecount;
             outputbytes += bytecount;
           } else {
-            tvhwarn("mss", "destination buffer too small, %d bytes needed", bytecount);
+            tvhwarn("atsc-str", "destination buffer too small, %d bytes needed", bytecount);
           }
         }
       } else {
-        tvhdebug("mss", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
-            j, compressiontype, mode, bytecount);
+        tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
+                 j, compressiontype, mode, bytecount);
       }
 
       /* FIXME: read compressed bytes */

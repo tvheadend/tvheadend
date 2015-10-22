@@ -100,7 +100,7 @@ _psip_eit_callback
       break;
   }
   if (!svc) {
-    tvhwarn("psip", "EIT with no associated channel found (tsid 0x%04x)", tsid);
+    tvhtrace("psip", "EIT with no associated channel found (tsid 0x%04x)", tsid);
     return -1;
   }
 
@@ -111,12 +111,12 @@ _psip_eit_callback
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
-  tvhdebug("psip", "0x%04x: EIT tsid %04X (%s), ver %d",
+  tvhtrace("psip", "0x%04x: EIT tsid %04X (%s), ver %d",
 		  mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
 
   /* # events */
   count = ptr[6];
-  tvhdebug("eit", "event count %d", count);
+  tvhtrace("psip", "event count %d", count);
   ptr  += 7;
   len  -= 7;
 
@@ -148,17 +148,17 @@ _psip_eit_callback
     stop = start + length;
     titlelen = ptr[9];
     dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
-    // tvhdebug("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
+    // tvhtrace("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
 
     if (titlelen + dlen + 12 > len) return -1;
 
     atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
 
-    tvhdebug("eit", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
+    tvhtrace("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
       i, eventid, start, length, buf, titlelen);
 
     ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
-    tvhdebug("eit", "  svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
+    tvhtrace("psip", "  svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
         " stop=%"PRItime_t", ebc=%p",
         svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
         eventid, start, stop, ebc);
@@ -230,7 +230,7 @@ _psip_ett_callback
       break;
   }
   if (!svc) {
-    tvhwarn("psip", "ETT with no associated channel found (sourceid 0x%04x)", sourceid);
+    tvhtrace("psip", "ETT with no associated channel found (sourceid 0x%04x)", sourceid);
     return -1;
   }
 
@@ -241,7 +241,7 @@ _psip_ett_callback
   atsc_get_string(buf, sizeof(buf), &ptr[10], len-4, "eng"); // FIXME: len does not account for previous bytes
 
   if (!isevent) {
-    tvhdebug("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
+    tvhtrace("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
     channel_t *ch = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
     epg_broadcast_t *ebc;
@@ -252,13 +252,13 @@ _psip_ett_callback
       lang_str_add(description, buf, "eng", 0);
       save |= epg_broadcast_set_description2(ebc, description, mod);
       lang_str_destroy(description);
-      tvhinfo("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, lang_str_get(ebc->episode->title, "eng"), ver);
+      tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, lang_str_get(ebc->episode->title, "eng"), ver);
     } else {
-      tvhdebug("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver);
+      tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver);
     }
   }
 
-  tvhdebug("psip", "        text message: '%s'", buf);
+  tvhtrace("psip", "        text message: '%s'", buf);
 
   if (save)
     epg_updated();
@@ -292,11 +292,11 @@ _psip_mgt_callback
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
-  tvhdebug("psip", "0x%04x: MGT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
+  tvhtrace("psip", "0x%04x: MGT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
 
   /* # tables */
   count = ptr[6] << 9 | ptr[7];
-  tvhdebug("psip", "table count %d", count);
+  tvhtrace("psip", "table count %d", count);
   ptr  += 8;
   len  -= 8;
 
@@ -311,24 +311,24 @@ _psip_mgt_callback
     tablever = ptr[4] & 0x1f;
     tablesize = ptr[5] << 24 | ptr[6] << 16 | ptr[7] << 8 | ptr[8];
 
-    tvhdebug("psip", "table %d", i);
-    tvhdebug("psip", "  type 0x%04X", type);
-    tvhdebug("psip", "  pid  0x%04X", tablepid);
-    tvhdebug("psip", "  ver  0x%04X", tablever);
-    tvhdebug("psip", "  size 0x%08X", tablesize);
+    tvhdebug("psip", "table %d - type 0x%04X, pid 0x%04X, ver 0x%04X, size 0x%08X",
+             i, type, tablepid, tablever, tablesize);
 
     if (type >= 0x100 && type <= 0x17f) {
       /* This is an EIT table */
-      tvhdebug("psip", "  EIT-%d", type-0x100);
-      mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback, map, "eit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid, MPS_WEIGHT_EIT);
+      mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback,
+                       map, "aeit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
+                       MPS_WEIGHT_EIT);
     } else if (type >= 0x200 && type <= 0x27f) {
       /* This is an ETT table */
-      tvhdebug("psip", "  ETT-%d", type-0x200);
-      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid, MPS_WEIGHT_ETT);
+      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback,
+                       map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
+                       MPS_WEIGHT_ETT);
     } else if (type == 0x04) {
       /* This is channel ETT */
-      tvhdebug("psip", "  ETT-channel");
-      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback, map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid, MPS_WEIGHT_ETT);
+      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback,
+                       map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
+                       MPS_WEIGHT_ETT);
     } else {
       /* Skip this table */
       goto next;
@@ -360,7 +360,8 @@ static int _psip_start
   opts = MT_QUICKREQ | MT_RECORD;
 
   /* Listen for Master Guide Table */
-  mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback, map, "mgt", MT_CRC | opts, pid, MPS_WEIGHT_MGT);
+  mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback,
+                   map, "mgt", MT_CRC | opts, pid, MPS_WEIGHT_MGT);
 
   tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;
