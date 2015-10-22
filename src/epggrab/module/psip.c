@@ -319,13 +319,8 @@ _psip_mgt_callback
       mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback,
                        map, "aeit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
                        MPS_WEIGHT_EIT);
-    } else if (type >= 0x200 && type <= 0x27f) {
+    } else if (type == 0x04 || (type >= 0x200 && type <= 0x27f)) {
       /* This is an ETT table */
-      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback,
-                       map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
-                       MPS_WEIGHT_ETT);
-    } else if (type == 0x04) {
-      /* This is channel ETT */
       mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback,
                        map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
                        MPS_WEIGHT_ETT);
