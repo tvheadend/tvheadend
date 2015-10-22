@@ -2595,7 +2595,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_STR,
       .id       = "autorec_caption",
-      .name     = N_("Auto Recorrd Caption"),
+      .name     = N_("Auto Record Caption"),
       .get      = dvr_entry_class_autorec_caption_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
