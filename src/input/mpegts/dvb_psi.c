@@ -1622,9 +1622,10 @@ int
 atsc_vct_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int i, r, sect, last, ver, extraid, save, dlen;
+  int i, j, r, sect, last, ver, extraid, save, dlen;
   int maj, min, count;
   uint16_t tsid, sid, type;
+  uint16_t srcid;
   char chname[256];
   mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm;
   mpegts_network_t *mn = mm->mm_network;
@@ -1660,11 +1661,14 @@ atsc_vct_callback
     tsid = (ptr[22]) << 8 | ptr[23];
     sid  = (ptr[24]) << 8 | ptr[25];
     type = ptr[27] & 0x3f;
+    srcid  = (ptr[28]) << 8 | ptr[29];
     tvhdebug("vct", "tsid   %04X (%d)", tsid, tsid);
     tvhdebug("vct", "sid    %04X (%d)", sid, sid);
     tvhdebug("vct", "chname %s",    chname);
     tvhdebug("vct", "chnum  %d.%d", maj, min);
     tvhdebug("vct", "type   %02X (%d)", type, type);
+    tvhdebug("vct", "srcid  %04X (%d)", srcid, srcid);
+    tvhdebug("vct", "dlen   %d", dlen);
 
     /* Skip */
     if (type > 3)
@@ -1687,6 +1691,25 @@ atsc_vct_callback
           s->s_dvb_channel_minor = min;
           save = 1;
         }
+        if (s->s_atsc_source_id != srcid) {
+          s->s_atsc_source_id = srcid;
+          save = 1;
+        }
+        
+        for (j=0; j < dlen; ) {
+          unsigned int len, tag;
+          tag = ptr[32+j];
+          len = ptr[33+j];
+          if (tag == ATSC_DESC_EXT_CHANNEL_NAME) {
+            char extname[512];
+            atsc_get_string(extname, sizeof(extname), &ptr[34+j], len, "eng");
+            tvhdebug("vct", "  extended channel name: '%s' (%d bytes)", extname, len);
+          } else {
+            tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
+          }
+          j += len + 2;
+        }
+
         /* Save */
         if (save)
           s->s_config_save((service_t*)s);
@@ -1701,6 +1724,39 @@ next:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
+/*
+ * ATSC STT processing
+ */
+int
+atsc_stt_callback
+  (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
+{
+  int r, sect, last, ver, extraid;
+  uint32_t systemtime, gps_utc_offset;
+  int is_dst;
+  mpegts_psi_table_state_t *st  = NULL;
+
+  /* Validate */
+  if (tableid != DVB_ATSC_STT_BASE) return -1;
+
+  /* Extra ID */
+  extraid = ptr[0] << 8 | ptr[1];
+
+  /* Begin */
+  r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
+                      &st, &sect, &last, &ver);
+  if (r != 1) return r;
+
+  /* Parse fields */
+  systemtime = ptr[6] << 24 | ptr[7] << 16 | ptr[8] << 8 | ptr[9];
+  gps_utc_offset = ptr[10];
+  is_dst = ptr[11] >> 7;
+
+  tvhdebug("stt", "system_time %d, gps_utc_offset %d, is DST %d",
+      systemtime, gps_utc_offset, is_dst);
+
+  return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+}
 
 /*
  * DVB BAT processing
@@ -2473,6 +2529,9 @@ psi_tables_atsc_c ( mpegts_mux_t *mm )
   mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
+  mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
+                   NULL, "stt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
 }
 
 static void
@@ -2481,6 +2540,9 @@ psi_tables_atsc_t ( mpegts_mux_t *mm )
   mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
                    NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
+  mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
+                   NULL, "stt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
 }
 
 void

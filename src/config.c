@@ -596,6 +596,7 @@ config_migrate_v6 ( void )
         m = htsmsg_get_map(c, "mod_enabled");
       }
       htsmsg_add_u32(m, "eit", 1);
+      htsmsg_add_u32(m, "psip", 1);
       htsmsg_add_u32(m, "uk_freesat", 1);
       htsmsg_add_u32(m, "uk_freeview", 1);
       htsmsg_add_u32(m, "viasat_baltic", 1);

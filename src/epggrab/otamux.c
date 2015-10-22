@@ -465,6 +465,7 @@ epggrab_ota_kick_cb ( void *p )
     [MM_EPG_ENABLE]                  = NULL,
     [MM_EPG_FORCE]                   = NULL,
     [MM_EPG_ONLY_EIT]                = "eit",
+    [MM_EPG_ONLY_PSIP]               = "psip",
     [MM_EPG_ONLY_UK_FREESAT]         = "uk_freesat",
     [MM_EPG_ONLY_UK_FREEVIEW]        = "uk_freeview",
     [MM_EPG_ONLY_VIASAT_BALTIC]      = "viasat_baltic",
