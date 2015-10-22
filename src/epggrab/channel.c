@@ -217,6 +217,8 @@ epggrab_channel_t *epggrab_channel_create
 {
   epggrab_channel_t *ec;
 
+  assert(owner->channels);
+
   if (htsmsg_get_str(conf, "id") == NULL)
     return NULL;
 
@@ -337,9 +339,10 @@ void epggrab_channel_add ( channel_t *ch )
   epggrab_channel_t *egc;
 
   LIST_FOREACH(mod, &epggrab_modules, link)
-    RB_FOREACH(egc, mod->channels, link)
-      if (epggrab_channel_match_and_link(egc, ch))
-        break;
+    if (mod->channels)
+      RB_FOREACH(egc, mod->channels, link)
+        if (epggrab_channel_match_and_link(egc, ch))
+          break;
 }
 
 void epggrab_channel_rem ( channel_t *ch )
