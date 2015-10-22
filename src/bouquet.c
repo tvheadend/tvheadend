@@ -948,7 +948,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_BOOL,
       .id       = "ssl_peer_verify",
-      .name     = N_("ssl_peer_verify"),
+      .name     = N_("SSL verify peer"),
       .off      = offsetof(bouquet_t, bq_ssl_peer_verify),
       .opts     = PO_ADVANCED | PO_HIDDEN,
       .notify   = bouquet_class_ext_url_notify,
