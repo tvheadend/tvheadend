@@ -36,7 +36,7 @@ typedef struct psip_event
 {
   char              uri[257];
   char              suri[257];
-  
+
   lang_str_t       *title;
   lang_str_t       *summary;
   lang_str_t       *desc;
@@ -85,6 +85,7 @@ _psip_eit_callback
   epggrab_ota_mux_t    *ota = NULL;
   mpegts_service_t     *svc;
   mpegts_psi_table_state_t *st;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Validate */
   if (tableid != 0xcb) return -1;
@@ -121,7 +122,7 @@ _psip_eit_callback
 
   /* Register this */
   if (ota)
-    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id), 1);
+    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id, ubuf), 1);
 
   /* No point processing */
   if (!LIST_FIRST(&svc->s_channels))
@@ -271,19 +272,6 @@ static int
 _psip_mgt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-#if 0
-  int r;
-  int sect, last, ver, save, resched;
-  uint8_t  seg;
-  uint16_t onid, tsid, sid;
-  uint32_t extraid;
-  mpegts_service_t     *svc;
-  mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
-  epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
-  epggrab_ota_mux_t    *ota = NULL;
-  mpegts_table_state_t *st;
-#endif
   int r;
   int sect, last, ver;
   int count, i;

@@ -459,6 +459,7 @@ mpegts_mux_epg_list ( void *o, const char *lang )
     { N_("Enable (auto)"),            MM_EPG_ENABLE },
     { N_("Force (auto)"),             MM_EPG_FORCE },
     { N_("Only EIT"),                 MM_EPG_ONLY_EIT },
+    { N_("Only PSIP (ATSC)"),         MM_EPG_ONLY_PSIP },
     { N_("Only UK Freesat"),          MM_EPG_ONLY_UK_FREESAT },
     { N_("Only UK Freeview"),         MM_EPG_ONLY_UK_FREEVIEW },
     { N_("Only Viasat Baltic"),       MM_EPG_ONLY_VIASAT_BALTIC },
