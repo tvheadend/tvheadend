@@ -1603,6 +1603,7 @@ capmt_thread(void *aux)
       capmt->capmt_adapters[i].ca_sock = -1;
     for (i = 0; i < MAX_SOCKETS; i++) {
       capmt->sids[i] = 0;
+      capmt->adps[i] = -1;
       capmt->capmt_sock[i] = -1;
       capmt->capmt_sock_reconnect[i] = 0;
     }
