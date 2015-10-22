@@ -355,6 +355,8 @@ void epggrab_init ( void )
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
 
+  epggrab_channel_init();
+
   /* Initialise modules */
 #if ENABLE_MPEGTS
   eit_init();
@@ -395,12 +397,12 @@ void epggrab_done ( void )
     pthread_mutex_unlock(&global_lock);
     if (mod->done)
       mod->done(mod);
+    pthread_mutex_lock(&global_lock);
+    epggrab_channel_flush(mod->channels, 0);
     free((void *)mod->id);
     free((void *)mod->name);
     free(mod);
-    pthread_mutex_lock(&global_lock);
   }
-  pthread_mutex_unlock(&global_lock);
   epggrab_ota_shutdown();
   eit_done();
   opentv_done();
@@ -413,4 +415,5 @@ void epggrab_done ( void )
   free(epggrab_conf.ota_cron);
   epggrab_conf.ota_cron = NULL;
   epggrab_channel_done();
+  pthread_mutex_unlock(&global_lock);
 }

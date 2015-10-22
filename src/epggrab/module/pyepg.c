@@ -354,7 +354,7 @@ static int _pyepg_parse_schedule
   htsmsg_field_t *f;
   epggrab_channel_t *ec;
   const char *str;
-  epggrab_channel_link_t *ecl;
+  idnode_list_mapping_t *ilm;
 
   if ( data == NULL ) return 0;
 
@@ -365,9 +365,9 @@ static int _pyepg_parse_schedule
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      LIST_FOREACH(ecl, &ec->channels, ecl_epg_link)
+      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
         save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
-                                       ecl->ecl_channel, stats);
+                                       (channel_t *)ilm->ilm_in2, stats);
     }
   }
 

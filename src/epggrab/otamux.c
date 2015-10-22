@@ -880,7 +880,6 @@ epggrab_ota_shutdown ( void )
 {
   epggrab_ota_mux_t *ota;
 
-  pthread_mutex_lock(&global_lock);
   epggrab_ota_running = 0;
   while ((ota = TAILQ_FIRST(&epggrab_ota_active)) != NULL)
     epggrab_ota_free(&epggrab_ota_active, ota);
@@ -888,7 +887,6 @@ epggrab_ota_shutdown ( void )
     epggrab_ota_free(&epggrab_ota_pending, ota);
   while ((ota = RB_FIRST(&epggrab_ota_all)) != NULL)
     epggrab_ota_free(NULL, ota);
-  pthread_mutex_unlock(&global_lock);
   SKEL_FREE(epggrab_ota_mux_skel);
   SKEL_FREE(epggrab_svc_link_skel);
   free(epggrab_ota_cron_multi);

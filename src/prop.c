@@ -26,6 +26,7 @@
 #include "lang_str.h"
 
 char prop_sbuf[PROP_SBUF_LEN];
+char *prop_sbuf_ptr = prop_sbuf;
 
 /* **************************************************************************
  * Utilities

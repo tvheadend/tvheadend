@@ -50,7 +50,7 @@ typedef struct channel
   /* Channel info */
   int     ch_enabled;
   int     ch_autoname;
-  char   *ch_name; // Note: do not access directly!
+  char   *ch_name;                                 /* Note: do not access directly! */
   int64_t ch_number;
   char   *ch_icon;
   idnode_list_head_t ch_ctms;
@@ -69,7 +69,7 @@ typedef struct channel
   gtimer_t              ch_epg_timer_current;
 
   int ch_epgauto;
-  LIST_HEAD(,epggrab_channel_link) ch_epggrab;
+  idnode_list_head_t    ch_epggrab;                /* 1 = epggrab channel, 2 = channel */
 
   /* DVR */
   int                   ch_dvr_extra_time_pre;

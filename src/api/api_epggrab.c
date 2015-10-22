@@ -22,17 +22,14 @@
 #include "api.h"
 #include "epggrab.h"
 
-static int
-api_epggrab_channel_list
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+static void
+api_epggrab_channel_grid
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
-  htsmsg_t *m;
-  pthread_mutex_lock(&global_lock);
-  m = epggrab_channel_list(0);
-  pthread_mutex_unlock(&global_lock);
-  *resp = htsmsg_create_map();
-  htsmsg_add_msg(*resp, "entries", m);
-  return 0;
+  epggrab_channel_t *ec;
+
+  TAILQ_FOREACH(ec, &epggrab_channel_entries, all_link)
+    idnode_set_add(ins, (idnode_t*)ec, &conf->filter, perm->aa_lang_ui);
 }
 
 static int
@@ -73,7 +70,10 @@ api_epggrab_ota_trigger
 void api_epggrab_init ( void )
 {
   static api_hook_t ah[] = {
-    { "epggrab/channel/list", ACCESS_ANONYMOUS, api_epggrab_channel_list, NULL },
+    { "epggrab/channel/list", ACCESS_ANONYMOUS, api_idnode_load_by_class, (void*)&epggrab_channel_class },
+    { "epggrab/channel/class", ACCESS_ADMIN, api_idnode_class, (void*)&epggrab_channel_class },
+    { "epggrab/channel/grid", ACCESS_ADMIN, api_idnode_grid, api_epggrab_channel_grid },
+
     { "epggrab/module/list",  ACCESS_ADMIN, api_epggrab_module_list, NULL },
     { "epggrab/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &epggrab_conf.idnode },
     { "epggrab/config/save",  ACCESS_ADMIN, api_idnode_save_simple, &epggrab_conf.idnode },

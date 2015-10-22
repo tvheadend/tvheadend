@@ -443,7 +443,7 @@ opentv_parse_event_section
 {
   opentv_module_t *mod = sta->os_mod;
   epggrab_channel_t *ec;
-  epggrab_channel_link_t *ecl;
+  idnode_list_mapping_t *ilm;
   const char *lang = NULL;
   int save = 0;
 
@@ -456,8 +456,10 @@ opentv_parse_event_section
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
 
   /* Iterate all channels */
-  LIST_FOREACH(ecl, &ec->channels, ecl_epg_link)
-    save |= opentv_parse_event_section_one(sta, cid, mjd, ecl->ecl_channel, lang, buf, len);
+  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
+    save |= opentv_parse_event_section_one(sta, cid, mjd,
+                                           (channel_t *)ilm->ilm_in2,
+                                           lang, buf, len);
 
   /* Update EPG */
   if (save) epg_updated();
@@ -476,7 +478,7 @@ opentv_desc_channels
   opentv_status_t *sta = mt->mt_opaque;
   opentv_module_t *mod = sta->os_mod;
   epggrab_channel_t *ec;
-  epggrab_channel_link_t *ecl;
+  idnode_list_mapping_t *ilm;
   mpegts_service_t *svc;
   channel_t *ch;
   int sid, cid, cnum, unk;
@@ -516,17 +518,17 @@ opentv_desc_channels
 skip_chnum:
     if (svc && LIST_FIRST(&svc->s_channels)) {
       ec  =_opentv_find_epggrab_channel(mod, cid, 1, &save);
-      ecl = LIST_FIRST(&ec->channels);
+      ilm = LIST_FIRST(&ec->channels);
       ch  = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
-      tvhtrace(mt->mt_name, "       ec = %p, ecl = %p", ec, ecl);
+      tvhtrace(mt->mt_name, "       ec = %p, ilm = %p", ec, ilm);
 
-      if (ecl && ecl->ecl_channel != ch) {
-        epggrab_channel_link_delete(ecl, 1);
-        ecl = NULL;
+      if (ilm && ilm->ilm_in2 != &ch->ch_id) {
+        epggrab_channel_link_delete(ec, ch, 1);
+        ilm = NULL;
       }
       
-      if (!ecl)
-        epggrab_channel_link(ec, ch);
+      if (!ilm)
+        epggrab_channel_link(ec, ch, NULL);
       save |= epggrab_channel_set_number(ec, cnum, 0);
     }
     i += 9;
@@ -959,7 +961,6 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   mod->title    = _pid_list_to_array(tl);
   mod->summary  = _pid_list_to_array(sl);
   mod->channels = &_opentv_channels;
-  mod->ch_rem   = epggrab_module_ch_rem;
   _opentv_compile_pattern_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
   _opentv_compile_pattern_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
   _opentv_compile_pattern_list(&mod->p_pnum, htsmsg_get_list(m, "part_num"));

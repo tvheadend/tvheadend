@@ -1723,25 +1723,6 @@ service_mapped(service_t *s)
 }
 
 /*
- * Find the primary EPG service (to stop EPG trying to update
- * from multiple OTA sources)
- */
-#ifdef MOVE_TO_MPEGTS
-int
-service_is_primary_epg(service_t *svc)
-{
-  service_t *ret = NULL, *t;
-  if (!svc || !svc->s_ch) return 0;
-  LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
-    if (!t->s_is_enabled(t) || !t->s_dvb_eit_enable) continue;
-    if (!ret)
-      ret = t;
-  }
-  return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);
-}
-#endif
-
-/*
  * list of known service types
  */
 htsmsg_t *servicetype_list ( void )
