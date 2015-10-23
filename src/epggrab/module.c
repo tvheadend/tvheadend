@@ -227,12 +227,9 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
 
   /* Parse */
   memset(&stats, 0, sizeof(stats));
-  pthread_mutex_lock(&global_lock);
   time(&tm1);
   save |= mod->parse(mod, data, &stats);
   time(&tm2);
-  if (save) epg_updated();  
-  pthread_mutex_unlock(&global_lock);
   htsmsg_destroy(data);
 
   /* Debug stats */

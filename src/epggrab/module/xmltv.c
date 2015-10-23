@@ -654,7 +654,7 @@ static int _xmltv_parse_channel
 static int _xmltv_parse_tv
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
-  int save = 0;
+  int gsave = 0, save;
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
@@ -662,13 +662,20 @@ static int _xmltv_parse_tv
     return 0;
 
   HTSMSG_FOREACH(f, tags) {
+    save = 0;
     if(!strcmp(f->hmf_name, "channel")) {
-      save |= _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_unlock(&global_lock);
     } else if(!strcmp(f->hmf_name, "programme")) {
-      save |= _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     }
+    gsave |= save;
   }
-  return save;
+  return gsave;
 }
 
 static int _xmltv_parse

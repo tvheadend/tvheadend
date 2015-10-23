@@ -377,27 +377,43 @@ static int _pyepg_parse_schedule
 static int _pyepg_parse_epg 
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0;
+  int gsave = 0, save;
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   HTSMSG_FOREACH(f, tags) {
+    save = 0;
     if (strcmp(f->hmf_name, "channel") == 0 ) {
-      save |= _pyepg_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "brand") == 0 ) {
-      save |= _pyepg_parse_brand(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_brand(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "series") == 0 ) {
-      save |= _pyepg_parse_season(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_season(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "episode") == 0 ) {
-      save |= _pyepg_parse_episode(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_episode(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "schedule") == 0 ) {
-      save |= _pyepg_parse_schedule(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_schedule(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     }
+    gsave |= save;
   }
 
-  return save;
+  return gsave;
 }
 
 static int _pyepg_parse 

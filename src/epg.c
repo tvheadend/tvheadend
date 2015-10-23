@@ -117,6 +117,8 @@ void epg_updated ( void )
 {
   epg_object_t *eo;
 
+  lock_assert(&global_lock);
+
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
     tvhtrace("epg",
