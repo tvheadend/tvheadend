@@ -858,7 +858,7 @@ not_so_good:
                    e->start, e->stop);
 
   idnode_uuid_as_str(&de->de_config->dvr_id, cfg_uuid);
-  snprintf(buf, sizeof(buf), "Re-record%s%s",
+  snprintf(buf, sizeof(buf), _("Re-record%s%s"),
            de->de_comment ? ": " : "", de->de_comment ?: "");
 
   de2 = dvr_entry_create_by_event(1, cfg_uuid, e,
@@ -983,7 +983,7 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
       return;
   }
 
-  snprintf(buf, sizeof(buf), "Auto recording%s%s",
+  snprintf(buf, sizeof(buf), _("Auto recording%s%s"),
            dae->dae_comment ? ": " : "",
            dae->dae_comment ?: "");
 
