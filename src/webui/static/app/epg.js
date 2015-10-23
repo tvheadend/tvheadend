@@ -225,7 +225,7 @@ tvheadend.epgDetails = function(event) {
 
         buttons.push(new Ext.Button({
             handler: function() { win.close(); },
-            text: "Close"
+            text: _("Close")
         }));
 
     }
