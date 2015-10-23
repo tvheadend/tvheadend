@@ -158,6 +158,10 @@ static void _epggrab_load ( void )
       }
   }
 
+  if (epggrab_conf.epgdb_periodicsave)
+    gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
+               epggrab_conf.epgdb_periodicsave * 3600);
+
   idnode_notify_changed(&epggrab_conf.idnode);
  
   /* Load module config (channels) */
@@ -351,9 +355,12 @@ void epggrab_init ( void )
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
 
+  epggrab_channel_init();
+
   /* Initialise modules */
 #if ENABLE_MPEGTS
   eit_init();
+  psip_init();
   opentv_init();
 #endif
   pyepg_init();
@@ -370,7 +377,7 @@ void epggrab_init ( void )
 
   /* Start internal grab thread */
   epggrab_running = 1;
-  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL);
+  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, "epggrabi");
 }
 
 /*
@@ -391,12 +398,12 @@ void epggrab_done ( void )
     pthread_mutex_unlock(&global_lock);
     if (mod->done)
       mod->done(mod);
+    pthread_mutex_lock(&global_lock);
+    epggrab_channel_flush(mod->channels, 0);
     free((void *)mod->id);
     free((void *)mod->name);
     free(mod);
-    pthread_mutex_lock(&global_lock);
   }
-  pthread_mutex_unlock(&global_lock);
   epggrab_ota_shutdown();
   eit_done();
   opentv_done();
@@ -409,4 +416,5 @@ void epggrab_done ( void )
   free(epggrab_conf.ota_cron);
   epggrab_conf.ota_cron = NULL;
   epggrab_channel_done();
+  pthread_mutex_unlock(&global_lock);
 }

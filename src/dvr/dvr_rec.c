@@ -149,7 +149,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   de->de_chain = prch;
 
   de->de_thread_shutdown = 0;
-  tvhthread_create(&de->de_thread, NULL, dvr_thread, de);
+  tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
   return 0;
 }
 
@@ -330,7 +330,7 @@ dvr_sub_episode(const char *id, const void *aux, char *tmp, size_t tmplen)
     return "";
   epg_episode_number_format(de->de_bcast->episode,
                             buf, sizeof(buf),
-                            ".", "S%02d", NULL, "E%02d", NULL);
+                            NULL, "S%02d", NULL, "E%02d", NULL);
   return dvr_do_prefix(id, buf, tmp, tmplen);
 }
 

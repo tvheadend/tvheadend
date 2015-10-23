@@ -33,6 +33,29 @@ tvheadend.epggrab_base = function(panel, index) {
 
 }
 
+tvheadend.epggrab_map = function(panel, index) {
+
+    tvheadend.idnode_grid(panel, {
+        url: 'api/epggrab/channel',
+        all: 1,
+        titleS: _('EPG Grabber Channel'),
+        titleP: _('EPG Grabber Channels'),
+        iconCls: 'baseconf',
+        tabIndex: index,
+        del: true,
+        sort: {
+          field: 'name',
+          direction: 'ASC'
+        },
+        help: function() {
+            new tvheadend.help(_('EPG Grabber Channels'), 'config_epggrab.html');
+        }
+    });
+
+    return panel;
+
+}
+
 tvheadend.epggrab_mod = function(panel, index) {
 
     var actions = new Ext.ux.grid.RowActions({

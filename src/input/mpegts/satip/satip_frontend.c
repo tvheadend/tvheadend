@@ -378,7 +378,7 @@ satip_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   int r = 5;
   if (lfe->sf_positions || lfe->sf_master)
-    r = MIN(60, MAX(r, satip_satconf_get_grace(lfe, mm) ?: 10));
+    r = MINMAX(satip_satconf_get_grace(lfe, mm) ?: 10, r, 60);
   return r;
 }
 
@@ -1356,7 +1356,7 @@ new_tune:
 
   udp_multirecv_init(&um, RTP_PKTS, RTP_PKT_SIZE);
   sbuf_init_fixed(sb, RTP_PKTS * RTP_PKT_SIZE);
-  lfe->sf_skip_ts = MIN(200, MAX(0, lfe->sf_device->sd_skip_ts)) * 188;
+  lfe->sf_skip_ts = MINMAX(lfe->sf_device->sd_skip_ts, 0, 200) * 188;
   
   while ((reply || running) && !fatal) {
 
@@ -1794,7 +1794,7 @@ satip_frontend_create
 
   tvh_pipe(O_NONBLOCK, &lfe->sf_dvr_pipe);
   tvhthread_create(&lfe->sf_dvr_thread, NULL,
-                   satip_frontend_input_thread, lfe);
+                   satip_frontend_input_thread, lfe, "satip-front");
 
   return lfe;
 }

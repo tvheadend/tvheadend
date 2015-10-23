@@ -116,16 +116,14 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 /**
  * Called from service code
  */
-static void
+static int
 subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 {
   streaming_message_t *sm;
-  service_t *t = s->ths_service;
+  service_t *t = s->ths_service, *tr = s->ths_raw_service;
 
   /* Ignore - not actually linked */
-  if (!s->ths_current_instance) return;
-
-  tvhtrace("subscription", "%04X: unlinking sub %p from svc %p", shortid(s), s, t);
+  if (!s->ths_current_instance) goto stop;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
@@ -142,9 +140,19 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 
   LIST_REMOVE(s, ths_service_link);
   s->ths_service = NULL;
+  s->ths_raw_service = NULL;
 
-  if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
+  if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0) {
+    if (tr)
+      LIST_REMOVE(s, ths_mux_link);
     subscription_unsubscribe(s, 0);
+    service_remove_raw(tr);
+  }
+
+stop:
+  if(LIST_FIRST(&t->s_subscriptions) == NULL)
+    service_stop(t);
+  return 1;
 }
 
 void
@@ -329,11 +337,7 @@ subscription_reschedule(void)
 
       subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
 
-      if(t && LIST_FIRST(&t->s_subscriptions) == NULL)
-        service_stop(t);
-
       si = s->ths_current_instance;
-
       assert(si != NULL);
       si->si_error = s->ths_testing_error;
       time(&si->si_error_time);
@@ -554,11 +558,13 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   service_t *t;
   char buf[512];
   size_t l = 0;
+  service_t *raw;
 
   if (s == NULL)
     return;
 
   t = s->ths_service;
+  raw = s->ths_raw_service;
 
   lock_assert(&global_lock);
 
@@ -570,7 +576,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   LIST_SAFE_REMOVE(s, ths_remove_link);
 
 #if ENABLE_MPEGTS
-  if (s->ths_raw_service)
+  if (raw)
     LIST_REMOVE(s, ths_mux_link);
 #endif
 
@@ -596,8 +602,8 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   }
 
 #if ENABLE_MPEGTS
-  if (s->ths_raw_service)
-    service_destroy(s->ths_raw_service, 0);
+  if (raw)
+    service_remove_raw(s->ths_raw_service);
 #endif
 
   streaming_msg_free(s->ths_start_message);

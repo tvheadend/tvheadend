@@ -50,15 +50,20 @@ int  epggrab_channel_match ( epggrab_channel_t *ec, struct channel *ch );
 int  epggrab_channel_match_and_link
   ( epggrab_channel_t *ec, struct channel *ch );
 
+epggrab_channel_t *epggrab_channel_create
+  ( epggrab_module_t *owner, htsmsg_t *conf, const char *uuid );
+
 epggrab_channel_t *epggrab_channel_find
   ( epggrab_channel_tree_t *chs, const char *id, int create, int *save,
     epggrab_module_t *owner );
 
+void epggrab_channel_save ( epggrab_channel_t *ec );
 void epggrab_channel_destroy
-  ( epggrab_channel_tree_t *tree, epggrab_channel_t *ec, int delconf );
+  ( epggrab_channel_t *ec, int delconf );
 void epggrab_channel_flush
   ( epggrab_channel_tree_t *tree, int delconf );
 
+void epggrab_channel_init(void);
 void epggrab_channel_done(void);
 
 /* **************************************************************************
@@ -197,5 +202,10 @@ void pyepg_load  ( void );
 void xmltv_init  ( void );
 void xmltv_done  ( void );
 void xmltv_load  ( void );
+
+/* PSIP module */
+void psip_init  ( void );
+void psip_done  ( void );
+void psip_load  ( void );
 
 #endif /* __EPGGRAB_PRIVATE_H__ */

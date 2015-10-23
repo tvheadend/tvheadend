@@ -1548,9 +1548,9 @@ mpegts_input_thread_start ( mpegts_input_t *mi )
   mi->mi_running = 1;
   
   tvhthread_create(&mi->mi_table_tid, NULL,
-                   mpegts_input_table_thread, mi);
+                   mpegts_input_table_thread, mi, "mi-table");
   tvhthread_create(&mi->mi_input_tid, NULL,
-                   mpegts_input_thread, mi);
+                   mpegts_input_thread, mi, "mi-main");
 }
 
 static void

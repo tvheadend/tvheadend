@@ -512,6 +512,7 @@ tvheadend.autorec_editor = function(panel, index) {
             dedup:        { width: 160 },
             retention:    { width: 80 },
             removal:      { width: 80 },
+            maxcount:     { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
@@ -521,7 +522,8 @@ tvheadend.autorec_editor = function(panel, index) {
             url: 'api/dvr/autorec',
             params: {
                list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
-                     'maxduration,weekdays,start,start_window,pri,dedup,config_name,comment'
+                     'maxduration,weekdays,start,start_window,pri,dedup,retention,removal,' +
+                     'maxcount,config_name,comment'
             },
             create: { }
         },

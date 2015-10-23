@@ -377,6 +377,24 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
 /**
  *
  */
+int
+tcp_socket_dead(int fd)
+{
+  int err = 0;
+  socklen_t errlen = sizeof(err);
+
+  if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &errlen))
+    return -errno;
+  if (err)
+    return -err;
+  if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) == 0)
+    return -EIO;
+  return 0;
+}
+
+/**
+ *
+ */
 char *
 tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen)
 {
@@ -706,7 +724,7 @@ next:
       pthread_mutex_lock(&global_lock);
       LIST_INSERT_HEAD(&tcp_server_active, tsl, alink);
       pthread_mutex_unlock(&global_lock);
-      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl);
+      tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, "tcp-start");
     }
   }
   tvhtrace("tcp", "server thread finished");
@@ -1050,7 +1068,7 @@ tcp_server_init(void)
   tvhpoll_add(tcp_server_poll, &ev, 1);
 
   tcp_server_running = 1;
-  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL);
+  tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, "tcp-loop");
 }
 
 void

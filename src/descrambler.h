@@ -29,6 +29,7 @@ struct elementary_stream;
 struct tvhcsa;
 struct mpegts_table;
 struct mpegts_mux;
+struct th_descrambler_data;
 
 #define DESCRAMBLER_NONE 0
 #define DESCRAMBLER_DES  1
@@ -61,19 +62,23 @@ typedef struct th_descrambler {
 } th_descrambler_t;
 
 typedef struct th_descrambler_runtime {
+  struct service *dr_service;
   tvhcsa_t dr_csa;
+  uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
   uint32_t dr_key:1;
   uint32_t dr_key_first:1;
   uint8_t  dr_key_index;
   uint8_t  dr_key_valid;
   uint8_t  dr_key_changed;
+  uint32_t dr_key_interval;
   time_t   dr_key_start;
   time_t   dr_key_timestamp[2];
   time_t   dr_ecm_start[2];
   time_t   dr_ecm_last_key_time;
   time_t   dr_last_err;
-  sbuf_t   dr_buf;
+  TAILQ_HEAD(, th_descrambler_data) dr_queue;
+  uint32_t dr_queue_total;
   tvhlog_limit_t dr_loglimit_key;
   uint8_t  dr_key_even[16];
   uint8_t  dr_key_odd[16];

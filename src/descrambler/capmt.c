@@ -413,36 +413,42 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
 }
 
 static void
-capmt_pid_flush(capmt_t *capmt)
+capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
 {
   capmt_adapter_t *ca;
   mpegts_mux_instance_t *mmi;
   mpegts_input_t *tuner;
   mpegts_mux_t *mux;
   capmt_opaque_t *o;
-  int adapter, pid, i;
+  int pid, i;
 
-  for (adapter = 0; adapter < MAX_CA; adapter++) {
-    tuner = capmt->capmt_adapters[adapter].ca_tuner;
-    if (tuner == NULL)
-      continue;
-    ca = &capmt->capmt_adapters[adapter];
-    mmi = LIST_FIRST(&tuner->mi_mux_active);
-    mux = mmi ? mmi->mmi_mux : NULL;
-    for (i = 0; i < MAX_PIDS; i++) {
-      o = &ca->ca_pids[i];
-      if ((pid = o->pid) > 0) {
-        o->pid = -1; /* block for new registrations */
-        o->pid_refs = 0;
-        if (mux) {
-          pthread_mutex_unlock(&capmt->capmt_mutex);
-          descrambler_close_pid(mux, &ca->ca_pids[i], pid);
-          pthread_mutex_lock(&capmt->capmt_mutex);
-        }
-        o->pid = 0;
+  tuner = capmt->capmt_adapters[adapter].ca_tuner;
+  if (tuner == NULL)
+    return;
+  ca = &capmt->capmt_adapters[adapter];
+  mmi = LIST_FIRST(&tuner->mi_mux_active);
+  mux = mmi ? mmi->mmi_mux : NULL;
+  for (i = 0; i < MAX_PIDS; i++) {
+    o = &ca->ca_pids[i];
+    if ((pid = o->pid) > 0) {
+      o->pid = -1; /* block for new registrations */
+      o->pid_refs = 0;
+      if (mux) {
+        pthread_mutex_unlock(&capmt->capmt_mutex);
+        descrambler_close_pid(mux, &ca->ca_pids[i], pid);
+        pthread_mutex_lock(&capmt->capmt_mutex);
       }
+      o->pid = 0;
     }
   }
+}
+
+static void
+capmt_pid_flush(capmt_t *capmt)
+{
+  int adapter;
+  for (adapter = 0; adapter < MAX_CA; adapter++)
+    capmt_pid_flush_adapter(capmt, adapter);
 }
 
 /*
@@ -497,7 +503,7 @@ capmt_connect(capmt_t *capmt, int i)
 
   }
 
-  if (fd) {
+  if (fd >= 0) {
     tvhlog(LOG_DEBUG, "capmt", "%s: Created socket %d", capmt_name(capmt), fd);
     capmt->capmt_sock[i] = fd;
     capmt->capmt_sock_reconnect[i]++;
@@ -760,18 +766,16 @@ capmt_send_stop(capmt_service_t *t)
 static void
 capmt_send_stop_descrambling(capmt_t *capmt)
 {
-  uint8_t buf[8];
-
-  buf[0] = 0x9F;
-  buf[1] = 0x80;
-  buf[2] = 0x3F;
-  buf[3] = 0x04;
-
-  buf[4] = 0x83;
-  buf[5] = 0x02;
-  buf[6] = 0x00;
-  buf[7] = 0xFF; //wildcard demux id
-
+  static uint8_t buf[8] = {
+    0x9F,
+    0x80,
+    0x3F,
+    0x04,
+    0x83,
+    0x02,
+    0x00,
+    0xFF, /* wildcard demux id */
+  };
   capmt_write_msg(capmt, 0, 0, buf, 8);
 }
 
@@ -813,6 +817,7 @@ capmt_service_destroy(th_descrambler_t *td)
     capmt_enumerate_services(capmt, 1);
 
   if (LIST_EMPTY(&capmt->capmt_services)) {
+    capmt_pid_flush_adapter(capmt, ct->ct_adapter);
     capmt->capmt_adapters[ct->ct_adapter].ca_tuner = NULL;
     memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
   }
@@ -2168,7 +2173,7 @@ capmt_conf_changed(caclient_t *cac)
     if (!capmt->capmt_running) {
       capmt->capmt_running = 1;
       capmt->capmt_reconfigure = 0;
-      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
+      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, "capmt");
       return;
     }
     pthread_mutex_lock(&capmt->capmt_mutex);

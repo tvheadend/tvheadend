@@ -2935,7 +2935,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   pthread_mutex_unlock(&global_lock);
 
   tvhthread_create(&htsp.htsp_writer_thread, NULL,
-                   htsp_write_scheduler, &htsp);
+                   htsp_write_scheduler, &htsp, "htsp-write");
 
   /**
    * Reader loop
@@ -3692,6 +3692,8 @@ _htsp_get_subscription_status(int smcode)
     return "userAccess";
   case SM_CODE_USER_LIMIT:
     return "userLimit";
+  case SM_CODE_WEAK_STREAM:
+    return "weakStream";
   default:
     return streaming_code2txt(smcode);
   }

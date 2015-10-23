@@ -245,7 +245,7 @@ upnp_server_init(const char *bindaddr)
   TAILQ_INIT(&upnp_data_write);
   TAILQ_INIT(&upnp_services);
   upnp_running = 1;
-  tvhthread_create(&upnp_tid, NULL, upnp_thread, (char *)bindaddr);
+  tvhthread_create(&upnp_tid, NULL, upnp_thread, (char *)bindaddr, "upnp");
 }
 
 void

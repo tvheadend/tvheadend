@@ -43,6 +43,7 @@
 #define TS_REMUX_BUFSIZE (188 * 100)
 
 static void ts_remux(mpegts_service_t *t, const uint8_t *tsb, int len, int errors);
+static void ts_skip(mpegts_service_t *t, const uint8_t *tsb, int len);
 
 /**
  * Continue processing of transport stream packets
@@ -111,6 +112,58 @@ ts_recv_packet0
     pthread_mutex_lock(&m->s_stream_mutex);
     if(streaming_pad_probe_type(&m->s_streaming_pad, SMT_MPEGTS))
       ts_remux(m, tsb, len, errors);
+    pthread_mutex_unlock(&m->s_stream_mutex);
+  }
+}
+
+/**
+ * Continue processing of skipped packets
+ */
+static void
+ts_recv_skipped0
+  (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
+{
+  mpegts_service_t *m;
+  int len2, cc;
+  const uint8_t *tsb2;
+
+  if (!st) {
+    if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+      ts_skip(t, tsb, len);
+    return;
+  }
+
+  for (tsb2 = tsb, len2 = len; len2 > 0; tsb2 += 188, len2 -= 188) {
+
+    /* Check CC */
+
+    if(tsb2[3] & 0x10) {
+      cc = tsb2[3] & 0xf;
+      if(st->es_cc != -1 && cc != st->es_cc) {
+        /* Let the hardware to stabilize and don't flood the log */
+        if (t->s_start_time + 1 < dispatch_clock &&
+            tvhlog_limit(&st->es_cc_log, 10))
+          tvhwarn("TS", "%s Continuity counter error (total %zi)",
+                        service_component_nicename(st), st->es_cc_log.count);
+        avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
+        avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
+      }
+      st->es_cc = (cc + 1) & 0xf;
+    }
+
+  }
+
+  if(st->es_type != SCT_CA &&
+     streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+    skip_mpeg_ts((service_t*)t, st, tsb, len);
+
+  if(streaming_pad_probe_type(&t->s_streaming_pad, SMT_MPEGTS))
+    ts_skip(t, tsb, len);
+
+  LIST_FOREACH(m, &t->s_masters, s_masters_link) {
+    pthread_mutex_lock(&m->s_stream_mutex);
+    if(streaming_pad_probe_type(&m->s_streaming_pad, SMT_MPEGTS))
+      ts_skip(m, tsb, len);
     pthread_mutex_unlock(&m->s_stream_mutex);
   }
 }
@@ -229,6 +282,23 @@ ts_recv_packet2(mpegts_service_t *t, const uint8_t *tsb, int len)
 }
 
 /*
+ * Process transport stream packets, simple version
+ */
+void
+ts_skip_packet2(mpegts_service_t *t, const uint8_t *tsb, int len)
+{
+  elementary_stream_t *st;
+  int pid, len2;
+
+  for ( ; len > 0; tsb += len2, len -= len2 ) {
+    len2 = mpegts_word_count(tsb, len, 0xFF9FFFD0);
+    pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+    if((st = service_stream_find((service_t*)t, pid)) != NULL)
+      ts_recv_skipped0(t, st, tsb, len2);
+  }
+}
+
+/*
  *
  */
 void
@@ -263,20 +333,10 @@ ts_recv_raw(mpegts_service_t *t, const uint8_t *tsb, int len)
  *
  */
 static void
-ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
+ts_flush(mpegts_service_t *t, sbuf_t *sb)
 {
   streaming_message_t sm;
   pktbuf_t *pb;
-  sbuf_t *sb = &t->s_tsbuf;
-
-  if (sb->sb_data == NULL)
-    sbuf_init_fixed(sb, TS_REMUX_BUFSIZE);
-
-  sbuf_append(sb, src, len);
-  sb->sb_err += errors;
-
-  if(dispatch_clock == t->s_tsbuf_last && sb->sb_ptr < TS_REMUX_BUFSIZE)
-    return;
 
   t->s_tsbuf_last = dispatch_clock;
 
@@ -293,6 +353,49 @@ ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
   t->s_streaming_live |= TSS_LIVE;
 
   sbuf_reset(sb, 2*TS_REMUX_BUFSIZE);
+}
+
+/**
+ *
+ */
+static void
+ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
+{
+  sbuf_t *sb = &t->s_tsbuf;
+
+  if (sb->sb_data == NULL)
+    sbuf_init_fixed(sb, TS_REMUX_BUFSIZE);
+
+  sbuf_append(sb, src, len);
+  sb->sb_err += errors;
+
+  if(dispatch_clock == t->s_tsbuf_last && sb->sb_ptr < TS_REMUX_BUFSIZE)
+    return;
+
+  ts_flush(t, sb);
+}
+
+/**
+ *
+ */
+static void
+ts_skip(mpegts_service_t *t, const uint8_t *src, int len)
+{
+  sbuf_t *sb = &t->s_tsbuf;
+
+  if (len < 188)
+    return;
+
+  if (sb->sb_data == NULL)
+    sbuf_init_fixed(sb, TS_REMUX_BUFSIZE);
+
+  sb->sb_err += len / 188;
+
+  if(dispatch_clock == t->s_tsbuf_last && sb->sb_err < (TS_REMUX_BUFSIZE / 188))
+    return;
+
+  ts_flush(t, sb);
+  service_send_streaming_status((service_t *)t);
 }
 
 /*

@@ -442,6 +442,7 @@ typedef enum {
 #define SM_CODE_INVALID_TARGET            104
 #define SM_CODE_USER_ACCESS               105
 #define SM_CODE_USER_LIMIT                106
+#define SM_CODE_WEAK_STREAM               107
 
 #define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201
@@ -558,6 +559,7 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MINMAX(a,mi,ma) MAX(mi, MIN(ma, a))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 void tvh_str_set(char **strp, const char *src);
@@ -637,12 +639,10 @@ static inline void mystrset(char **p, const char *s)
 
 void doexit(int x);
 
-int tvhthread_create0
+int tvhthread_create
   (pthread_t *thread, const pthread_attr_t *attr,
    void *(*start_routine) (void *), void *arg,
    const char *name);
-
-#define tvhthread_create(a, b, c, d)  tvhthread_create0(a, b, c, d, #c)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

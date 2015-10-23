@@ -63,8 +63,12 @@ api_bouquet_create
 {
   htsmsg_t *conf;
   bouquet_t *bq;
+  const char *s;
 
-  if (!(conf  = htsmsg_get_map(args, "conf")))
+  if (!(conf = htsmsg_get_map(args, "conf")))
+    return EINVAL;
+  s = htsmsg_get_str(conf, "ext_url");
+  if (s == NULL || *s == '\0')
     return EINVAL;
 
   pthread_mutex_lock(&global_lock);

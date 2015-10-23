@@ -204,12 +204,6 @@ epggrab_module_t *epggrab_module_create
   skel->name     = strdup(name);
   skel->priority = priority;
   skel->channels = channels;
-  if (channels) {
-    skel->ch_save = epggrab_module_ch_save;
-    skel->ch_add  = epggrab_module_ch_add;
-    skel->ch_mod  = epggrab_module_ch_mod;
-    skel->ch_rem  = epggrab_module_ch_rem;
-  }
 
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
@@ -264,96 +258,15 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
  * Module channel routines
  * *************************************************************************/
 
-void epggrab_module_ch_save ( void *_m, epggrab_channel_t *ch )
-{
-  htsmsg_t *a = NULL, *m = htsmsg_create_map();
-  epggrab_module_t *mod = _m;
-  epggrab_channel_link_t *ecl;
-
-  if (ch->name)
-    htsmsg_add_str(m, "name", ch->name);
-  if (ch->icon)
-    htsmsg_add_str(m, "icon", ch->icon);
-  LIST_FOREACH(ecl, &ch->channels, ecl_epg_link) {
-    if (!a) a = htsmsg_create_list();
-    htsmsg_add_str(a, NULL, channel_get_suuid(ecl->ecl_channel));
-  }
-  if (a) htsmsg_add_msg(m, "channels", a);
-  if (ch->major)
-    htsmsg_add_u32(m, "major", ch->major);
-  if (ch->minor)
-    htsmsg_add_u32(m, "minor", ch->minor);
-
-  hts_settings_save(m, "epggrab/%s/channels/%s", mod->id, ch->id);
-  htsmsg_destroy(m);
-}
-
-void epggrab_module_ch_add ( void *m, channel_t *ch )
-{
-  epggrab_channel_t *egc;
-  epggrab_module_int_t *mod = m;
-  RB_FOREACH(egc, mod->channels, link) {
-    if (epggrab_channel_match_and_link(egc, ch)) break;
-  }
-}
-
-void epggrab_module_ch_rem ( void *m, channel_t *ch )
-{
-  epggrab_channel_link_t *ecl;
-  while ((ecl = LIST_FIRST(&ch->ch_epggrab)))
-    epggrab_channel_link_delete(ecl, 1);
-}
-
-void epggrab_module_ch_mod ( void *mod, channel_t *ch )
-{
-  return epggrab_module_ch_add(mod, ch);
-}
-
-static void _epggrab_module_channel_load 
-  ( epggrab_module_t *mod, htsmsg_t *m, const char *id )
-{
-  int save = 0;
-  const char *str;
-  uint32_t u32;
-  htsmsg_t *a;
-  htsmsg_field_t *f;
-  channel_t *ch;
-  epggrab_channel_t *egc;
-  
-  egc  = epggrab_channel_find(mod->channels, id, 1, &save, mod);
-
-  if ((str = htsmsg_get_str(m, "name")))
-    egc->name = strdup(str);
-  if ((str = htsmsg_get_str(m, "icon")))
-    egc->icon = strdup(str);
-  if(!htsmsg_get_u32(m, "major", &u32))
-    egc->major = u32;
-  if(!htsmsg_get_u32(m, "minor", &u32))
-    egc->minor = u32;
-  if ((a = htsmsg_get_list(m, "channels"))) {
-    HTSMSG_FOREACH(f, a) {
-      if ((str = htsmsg_field_get_str(f))) {
-        if ((ch = channel_find_by_uuid(str)))
-          epggrab_channel_link(egc, ch);
-      }
-    }
-
-  /* Compat with older 3.1 code */
-  } else if (!htsmsg_get_u32(m, "channel", &u32)) {
-    if ((ch = channel_find_by_id(u32)))
-      epggrab_channel_link(egc, ch);
-  }
-}
-
 void epggrab_module_channels_load ( epggrab_module_t *mod )
 {
   htsmsg_t *m, *e;
   htsmsg_field_t *f;
   if (!mod || !mod->channels) return;
-  if ((m = hts_settings_load("epggrab/%s/channels", mod->id))) {
+  if ((m = hts_settings_load_r(1, "epggrab/%s/channels", mod->id))) {
     HTSMSG_FOREACH(f, m) {
       if ((e = htsmsg_get_map_by_field(f)))
-        _epggrab_module_channel_load(mod, e, f->hmf_name);
+        epggrab_channel_create(mod, e, f->hmf_name);
     }
     htsmsg_destroy(m);
   }
@@ -583,7 +496,7 @@ epggrab_module_activate_socket ( void *m, int a )
     tvhlog(LOG_DEBUG, mod->id, "starting socket thread");
     pthread_attr_init(&tattr);
     mod->active = 1;
-    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod);
+    tvhthread_create(&mod->tid, &tattr, _epggrab_socket_thread, mod, "epggrabso");
   }
   return 1;
 }

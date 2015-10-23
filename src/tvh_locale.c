@@ -181,7 +181,7 @@ static void tvh_gettext_default_init(void)
   if (p == NULL)
     p = getenv("LANGUAGE");
   if (p == NULL)
-    p = (char *)"en";
+    p = (char *)"en_US";
 
   strncpy(dflt, p, sizeof(dflt)-1);
   dflt[sizeof(dflt)-1] = '\0';
@@ -231,9 +231,9 @@ void tvh_gettext_init(void)
     "bul",    "bg",
     "cze",    "cs",
     "ger",    "de",
-    "eng",    "en",
+    "eng",    "en_US",
     "eng_GB", "en_GB",
-    "eng_US", "en",
+    "eng_US", "en_US",
     "spa",    "es",
     "per",    "fa",
     "fre",    "fr",

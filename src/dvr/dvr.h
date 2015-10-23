@@ -40,6 +40,7 @@ typedef struct dvr_config {
   profile_t *dvr_profile;
   char *dvr_storage;
   int dvr_clone;
+  uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
   uint32_t dvr_removal_days;
   char *dvr_charset;
@@ -212,6 +213,12 @@ typedef struct dvr_entry {
   struct dvr_timerec_entry *de_timerec;
 
   /**
+   * Parent/slave
+   */
+  struct dvr_entry *de_parent;
+  struct dvr_entry *de_slave;
+
+  /**
    * Fields for recording
    */
   pthread_t de_thread;
@@ -298,6 +305,7 @@ typedef struct dvr_autorec_entry {
   int dae_maxduration;
   uint32_t dae_retention;
   uint32_t dae_removal;
+  uint32_t dae_max_count;
 
   time_t dae_start_extra;
   time_t dae_stop_extra;
@@ -408,6 +416,8 @@ int dvr_entry_get_mc(dvr_entry_t *de);
 uint32_t dvr_entry_get_retention_days( dvr_entry_t *de );
 
 uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
+
+uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
 int dvr_entry_get_start_time( dvr_entry_t *de );
 
@@ -608,6 +618,8 @@ int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
 
 int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
 
+void dvr_autorec_completed( dvr_entry_t *de, int error_code );
+
 /**
  *
  */
@@ -673,6 +685,7 @@ void dvr_inotify_init ( void );
 void dvr_inotify_done ( void );
 void dvr_inotify_add  ( dvr_entry_t *de );
 void dvr_inotify_del  ( dvr_entry_t *de );
+int  dvr_inotify_count( void );
 
 /**
  * Cutpoints support

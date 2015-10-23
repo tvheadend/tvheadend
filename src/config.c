@@ -32,6 +32,7 @@
 #include "avahi.h"
 #include "url.h"
 #include "satip/server.h"
+#include "channels.h"
 
 #include <netinet/ip.h>
 
@@ -595,6 +596,7 @@ config_migrate_v6 ( void )
         m = htsmsg_get_map(c, "mod_enabled");
       }
       htsmsg_add_u32(m, "eit", 1);
+      htsmsg_add_u32(m, "psip", 1);
       htsmsg_add_u32(m, "uk_freesat", 1);
       htsmsg_add_u32(m, "uk_freeview", 1);
       htsmsg_add_u32(m, "viasat_baltic", 1);
@@ -1346,6 +1348,39 @@ config_migrate_v22 ( void )
   }
 }
 
+/*
+ * v21 -> v23 : epggrab xmltv channels
+ */
+static void
+config_migrate_v23 ( void )
+{
+  htsmsg_t *c, *m, *n;
+  htsmsg_field_t *f;
+  uint32_t maj, min;
+  int64_t num;
+  tvh_uuid_t u;
+
+  if ((c = hts_settings_load_r(1, "epggrab/xmltv/channels")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      m = htsmsg_field_get_map(f);
+      n = htsmsg_copy(m);
+      htsmsg_add_str(n, "id", f->hmf_name);
+      maj = htsmsg_get_u32_or_default(m, "major", 0);
+      min = htsmsg_get_u32_or_default(m, "minor", 0);
+      num = (maj * CHANNEL_SPLIT) + min;
+      if (num > 0)
+        htsmsg_add_s64(n, "lcn", num);
+      htsmsg_delete_field(n, "major");
+      htsmsg_delete_field(n, "minor");
+      uuid_init_hex(&u, NULL);
+      hts_settings_remove("epggrab/xmltv/channels/%s", f->hmf_name);
+      hts_settings_save(n, "epggrab/xmltv/channels/%s", u.hex);
+      htsmsg_destroy(n);
+    }
+    htsmsg_destroy(c);
+  }
+}
+
 
 
 /*
@@ -1466,7 +1501,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v19,
   config_migrate_v20,
   config_migrate_v21,
-  config_migrate_v22
+  config_migrate_v22,
+  config_migrate_v23
 };
 
 /*

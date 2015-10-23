@@ -1137,7 +1137,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         // valid values for quality are 2-31, smaller means better quality, use 5 as default
         octx->flags          |= CODEC_FLAG_QSCALE;
         octx->global_quality  = FF_QP2LAMBDA *
-            (t->t_props.tp_vbitrate == 0 ? 5 : MAX(2, MIN(31, t->t_props.tp_vbitrate)));
+            (t->t_props.tp_vbitrate == 0 ? 5 : MINMAX(t->t_props.tp_vbitrate, 2, 31));
       } else {
         // encode with specified bitrate and optimize for high compression
         octx->bit_rate        = t->t_props.tp_vbitrate * 1000;

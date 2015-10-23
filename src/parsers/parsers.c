@@ -99,7 +99,7 @@ static void parse_teletext(service_t *t, elementary_stream_t *st,
 static int parse_mpa(service_t *t, elementary_stream_t *st, size_t len,
                      uint32_t next_startcode, int sc_offset);
 
-static int parse_mpa2(service_t *t, elementary_stream_t *st);
+static int parse_mpa123(service_t *t, elementary_stream_t *st);
 
 static int parse_ac3(service_t *t, elementary_stream_t *st, size_t len,
                      uint32_t next_startcode, int sc_offset);
@@ -171,13 +171,27 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 }
 
 /**
+ * Skip raw mpeg data
+ */
+void
+skip_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data, int len)
+{
+  if(len >= 188)
+    sbuf_err(&st->es_buf, len / 188);
+  if(st->es_buf.sb_err > 1000) {
+    parser_deliver_error(t, st);
+    service_send_streaming_status((service_t *)t);
+  }
+}
+
+/**
  * Parse AAC LATM and ADTS
  */
 static void 
 parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
           int len, int start)
 {
-  int l, muxlen, p;
+  int l, muxlen, p, latm;
   th_pkt_t *pkt;
   int64_t olddts = PTS_UNSET, oldpts = PTS_UNSET;
 
@@ -222,6 +236,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
   sbuf_append(&st->es_buf, data, len);
 
   p = 0;
+  latm = -1;
 
   while((l = st->es_buf.sb_ptr - p) > 3) {
     const uint8_t *d = st->es_buf.sb_data + p;
@@ -229,12 +244,13 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
     if(d[0] == 0 || d[1] == 0 || d[2] == 1) {
       p += 4;
     /* LATM */
-    } else if(d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
+    } else if(latm != 0 && d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
       muxlen = (d[1] & 0x1f) << 8 | d[2];
 
       if(l < muxlen + 3)
         break;
 
+      latm = 1;
       pkt = parse_latm_audio_mux_element(t, st, d + 3, muxlen);
 
       if(pkt != NULL) {
@@ -245,7 +261,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
       p += muxlen + 3;
     /* ADTS */
-    } else if(p == 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
+    } else if(latm <= 0 && d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
 
       if (l < 7)
         break;
@@ -254,6 +270,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
       if (l < muxlen)
         break;
 
+      latm = 0;
       sbuf_reset(&st->es_buf_a, 4000);
       sbuf_append(&st->es_buf_a, d, muxlen);
       parse_mp4a_data(t, st, 1);
@@ -543,64 +560,93 @@ static void parse_mp4a_data(service_t *t, elementary_stream_t *st,
   }
 }
 
-const static int mpa_br[16] = {
-    0,  32,  48,  56,
-   64,  80,  96, 112, 
-  128, 160, 192, 224,
-  256, 320, 384, 0
+const static int mpa_br[2][3][16] = {
+{
+  {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0},
+  {0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, 0},
+  {0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 0},
+},
+{
+  {0, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, 0},
+  {0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0},
+  {0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, 0},
+}
 };
 
 const static int mpa_sr[4]  = {44100, 48000, 32000, 0};
 const static int mpa_sri[4] = {4,     3,     5,     0};
 
-static int
-mpa_valid_frame(const uint8_t *buf)
+static inline int
+mpa_valid_frame(uint32_t h)
 {
-  return buf[0] == 0xff && (buf[1] & 0xfe) == 0xfc;
+  if ((h & 0xffe00000) != 0xffe00000) return 0; /* start bits */
+  if ((h & (3<<17)) == 0) return 0;             /* unknown MPEG audio layer */
+  if ((h & (15<<12)) == (15<<12)) return 0;     /* invalid bitrate */
+  if ((h & (3<<10)) == (3<<10)) return 0;             /* invalid frequency */
+  return 1;
 }
-
 
 /**
  *
  */
 static int
-parse_mpa2(service_t *t, elementary_stream_t *st)
+parse_mpa123(service_t *t, elementary_stream_t *st)
 {
-  int i, len;
+  int i, len, layer, lsf, mpeg25, br, sr, pad, fsize, channels, duration;
+  int64_t dts;
+  uint32_t h;
   const uint8_t *buf;
 
  again:
   buf = st->es_buf_a.sb_data;
   len = st->es_buf_a.sb_ptr;
 
-  for(i = 0; i < len - 4; i++) {
-    if(mpa_valid_frame(buf + i)) {
-      int br = mpa_br[ buf[i+2] >> 4     ];
-      int sr = mpa_sr[(buf[i+2] >> 2) & 3];
-      int pad =       (buf[i+2] >> 1) & 1;
+  for (i = 0; i < len - 4; i++) {
+    if (!mpa_valid_frame(h = RB32(buf + i))) continue;
 
-      if(br && sr) {
-        int fsize = 144000 * br / sr + pad;
-        int duration = 90000 * 1152 / sr;
-        int64_t dts = st->es_curdts;
-        int channels = (buf[i + 3] & 0xc0) == 0xc0 ? 1 : 2;
-        if(dts == PTS_UNSET)
-          dts = st->es_nextdts;
+    layer = 4 - ((h >> 17) & 3);
+    lsf = mpeg25 = 1;
+    pad = (h >> 9) & 1;
+    if (h & (1<<20)) {
+      lsf = ((h >> 19) & 1) ^ 1;
+      mpeg25 = 0;
+    }
+    sr = mpa_sr[(h >> 10) & 3] >> (lsf + mpeg25);
+    br = (h >> 12) & 0xf;
 
-        if(dts != PTS_UNSET &&
-           len >= i + fsize + 4 &&
-           mpa_valid_frame(buf + i + fsize)) {
+    if (br == 0 || sr == 0) continue;
 
-          makeapkt(t, st, buf + i, fsize, dts, duration,
-                   channels, mpa_sri[(buf[i+2] >> 2) & 3],
-                   st->es_buf_a.sb_err);
-          st->es_buf_a.sb_err = 0;
-          sbuf_cut(&st->es_buf_a, i + fsize);
-          goto again;
-        }
-      }
+    br = mpa_br[lsf][layer - 1][br];
+    if (br == 0) continue;
+
+    switch (layer) {
+    case 1:  fsize = (((br * 12000) / sr) + pad) * 4; break;
+    case 2:  fsize = ((br * 144000) / sr) + pad; break;
+    case 3:  fsize = ((br * 144000) / (sr << lsf)) + pad; break;
+    default: fsize = 0;
+    }
+
+    duration = 90000 * 1152 / sr;
+    channels = ((h >> 6) & 3) == 3 ? 1 : 2;
+    dts = st->es_curdts;
+    if (dts == PTS_UNSET) {
+      dts = st->es_nextdts;
+      if(dts == PTS_UNSET) continue;
+    }
+
+    if(len < i + fsize + 4) continue;
+
+    h = RB32(buf + i + fsize);
+    if(mpa_valid_frame(h)) {
+      makeapkt(t, st, buf + i, fsize, dts, duration,
+               channels, mpa_sri[(buf[i+2] >> 2) & 3],
+               st->es_buf_a.sb_err);
+      st->es_buf_a.sb_err = 0;
+      sbuf_cut(&st->es_buf_a, i + fsize);
+      goto again;
     }
   }
+
   return PARSER_RESET;
 }
 
@@ -615,7 +661,7 @@ parse_mpa(service_t *t, elementary_stream_t *st, size_t ilen,
   
   if((r = depacketize(t, st, ilen, next_startcode, sc_offset)) != PARSER_APPEND)
     return r;
-  return parse_mpa2(t, st);
+  return parse_mpa123(t, st);
 }
 
 

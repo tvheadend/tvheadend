@@ -240,7 +240,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
     if (config.cors_origin && config.cors_origin[0]) {
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
-      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET\r\n");
+      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
     }
   }
@@ -248,7 +248,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(maxage == 0) {
     if (hc->hc_version != RTSP_VERSION_1_0)
       htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
-  } else {
+  } else if (maxage > 0) {
     time(&t);
 
     tm = gmtime_r(&t, &tm0);
@@ -293,6 +293,8 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 
   if(contentlen > 0)
     htsbuf_qprintf(&hdrs, "Content-Length: %"PRId64"\r\n", contentlen);
+  else if(contentlen == INT64_MIN)
+    htsbuf_qprintf(&hdrs, "Content-Length: 0\r\n");
 
   if(range) {
     htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
@@ -624,6 +626,17 @@ dump_request(http_connection_t *hc)
  * HTTP GET
  */
 static int
+http_cmd_options(http_connection_t *hc)
+{
+  http_send_header(hc, HTTP_STATUS_OK, NULL, INT64_MIN,
+		   NULL, NULL, -1, 0, NULL, NULL);
+  return 0;
+}
+
+/**
+ * HTTP GET
+ */
+static int
 http_cmd_get(http_connection_t *hc)
 {
   http_path_t *hp;
@@ -719,6 +732,8 @@ http_process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   default:
     http_error(hc, HTTP_STATUS_BAD_REQUEST);
     return 0;
+  case HTTP_CMD_OPTIONS:
+    return http_cmd_options(hc);
   case HTTP_CMD_GET:
     return http_cmd_get(hc);
   case HTTP_CMD_HEAD:

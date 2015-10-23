@@ -579,7 +579,7 @@ linuxdvb_frontend_monitor ( void *aux )
   streaming_message_t sm;
   service_t *s;
   int logit = 0, retune;
-  uint32_t period = MIN(MAX(250, lfe->lfe_status_period), 8000);
+  uint32_t period = MINMAX(lfe->lfe_status_period, 250, 8000);
 #if DVB_VER_ATLEAST(5,10)
   struct dtv_property fe_properties[6];
   struct dtv_properties dtv_prop;
@@ -675,7 +675,7 @@ linuxdvb_frontend_monitor ( void *aux )
       tvh_pipe(O_NONBLOCK, &lfe->lfe_dvr_pipe);
       pthread_mutex_lock(&lfe->lfe_dvr_lock);
       tvhthread_create(&lfe->lfe_dvr_thread, NULL,
-                       linuxdvb_frontend_input_thread, lfe);
+                       linuxdvb_frontend_input_thread, lfe, "lnxdvb-front");
       pthread_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
       pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
@@ -1092,7 +1092,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   tvhpoll_add(efd, ev, 2);
 
   /* Allocate memory */
-  sbuf_init_fixed(&sb, MIN(MAX(18800, lfe->lfe_ibuf_size), 1880000));
+  sbuf_init_fixed(&sb, MINMAX(lfe->lfe_ibuf_size, 18800, 1880000));
 
   /* Subscribe PIDs */
   linuxdvb_update_pids(lfe, name, &tuned, pids, ARRAY_SIZE(pids));

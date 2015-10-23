@@ -260,9 +260,10 @@ check_py_import gzip
 #
 # Binaries
 #
-check_bin ${XGETTEXT} || die 'WARN: no gettext binaries found'
-check_bin ${MSGMERGE} || die 'WARN: no gettext binaries found'
-check_bin ${GZIPCMD} || die 'WARN: no gzip binary found'
+check_bin ${PKG_CONFIG} bin_pkg_config || die 'no pkg-config binaries found'
+check_bin ${XGETTEXT} || die 'no gettext binaries found'
+check_bin ${MSGMERGE} || die 'no gettext binaries found'
+check_bin ${GZIPCMD} || die 'no gzip binary found'
 check_bin ${BZIP2} || echo 'WARN: no bzip2 binary found'
 
 #

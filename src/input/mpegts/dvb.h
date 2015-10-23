@@ -48,6 +48,8 @@ struct mpegts_mux;
 #define DVB_DIT_PID                   0x1E
 #define DVB_SIT_PID                   0x1F
 #define DVB_VCT_PID                   0x1FFB
+#define DVB_ATSC_STT_PID              0x1FFB
+#define DVB_ATSC_MGT_PID              0x1FFB
 
 /* Tables */
 
@@ -82,6 +84,18 @@ struct mpegts_mux;
 #define DVB_VCT_T_BASE                0xC8
 #define DVB_VCT_C_BASE                0xC9
 #define DVB_VCT_MASK                  0xFF
+
+#define DVB_ATSC_MGT_BASE             0xC7
+#define DVB_ATSC_MGT_MASK             0xFF
+
+#define DVB_ATSC_EIT_BASE             0xCB
+#define DVB_ATSC_EIT_MASK             0xFF
+
+#define DVB_ATSC_ETT_BASE             0xCC
+#define DVB_ATSC_ETT_MASK             0xFF
+
+#define DVB_ATSC_STT_BASE             0xCD
+#define DVB_ATSC_STT_MASK             0xFF
 
 #define DVB_TELETEXT_BASE             0x2000
 
@@ -153,6 +167,22 @@ struct mpegts_mux;
 #define DVB_DESC_FREESAT_LCN          0xD3
 #define DVB_DESC_FREESAT_REGIONS      0xD4
 
+/* Descriptors defined in A/65:2009 */
+
+#define ATSC_DESC_STUFFING            0x80
+#define ATSC_DESC_AC3                 0x81
+#define ATSC_DESC_CAPTION             0x86
+#define ATSC_DESC_CONTENT_ADVISORY    0x87
+#define ATSC_DESC_EXT_CHANNEL_NAME    0xA0
+#define ATSC_DESC_SERVICE_LOCATION    0xA1
+#define ATSC_DESC_TIMESHIFTED_SVC     0xA2
+#define ATSC_DESC_COMPONENT_NAME      0xA3
+#define ATSC_DESC_DCC_DEPARTING       0xA8
+#define ATSC_DESC_DCC_ARRIVING        0xA9
+#define ATSC_DESC_REDISTRIB_CTRL      0xAA
+#define ATSC_DESC_GENRE               0xAB
+#define ATSC_DESC_PRIVATE_INFO        0xAD
+
 /* Service type lookup */
 
 int dvb_servicetype_lookup ( int t );
@@ -174,12 +204,16 @@ int dvb_get_string_with_len
   (char *dst, size_t dstlen, const uint8_t *buf, size_t buflen,
    const char *dvb_charset, dvb_string_conv_t *conv);
 
+int atsc_get_string
+  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen,
+   const char *lang);
+
 /* Conversion */
 
 #define bcdtoint(i) ((((i & 0xf0) >> 4) * 10) + (i & 0x0f))
 
 time_t dvb_convert_date(const uint8_t *dvb_buf, int local);
-
+time_t atsc_convert_gpstime(uint32_t gpstime);
 void atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen);
 
 /*

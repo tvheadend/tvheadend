@@ -106,7 +106,7 @@ fsmonitor_init ( void )
 {
   /* Intialise inotify */
   fsmonitor_fd = inotify_init1(IN_CLOEXEC);
-  tvhthread_create0(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
+  tvhthread_create(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
 }
 
 /*

@@ -745,7 +745,7 @@ linuxdvb_ca_monitor ( void *aux )
     {
       lca->lca_en50221_thread_running = 1;
       tvhthread_create(&lca->lca_en50221_thread, NULL,
-                       linuxdvb_ca_en50221_thread, lca);
+                       linuxdvb_ca_en50221_thread, lca, "lnxdvb-ca");
     } else if (lca->lca_en50221_thread_running &&
                (state != CA_SLOT_STATE_MODULE_READY))
     {

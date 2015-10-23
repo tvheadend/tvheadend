@@ -308,8 +308,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   int ptimeout, grace = 20;
   struct timespec ts;
   struct timeval  tp;
-  int err = 0;
-  socklen_t errlen = sizeof(err);
   streaming_start_t *ss_copy;
   int64_t mono;
 
@@ -343,7 +341,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
 
         /* Check socket status */
-        if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err) {
+        if (tcp_socket_dead(hc->hc_fd)) {
           tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
           run = 0;
         } else if((!started && dispatch_clock - lastpkt > grace) ||
@@ -364,7 +362,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_PACKET:
       lastpkt = dispatch_clock;
       if(started) {
-        pktbuf_t *pb;;
+        pktbuf_t *pb;
         if (sm->sm_type == SMT_PACKET)
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
@@ -390,7 +388,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           streaming_msg_free(sm);
           mono = getmonoclock() + 2000000;
           while (getmonoclock() < mono) {
-            if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err)
+            if (tcp_socket_dead(hc->hc_fd))
               break;
             usleep(50000);
           }
@@ -417,7 +415,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_SERVICE_STATUS:
-      if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen) || err) {
+      if(tcp_socket_dead(hc->hc_fd)) {
         tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
                hc->hc_url_orig);
         run = 0;
@@ -1468,7 +1466,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   struct stat st;
   const char *content = NULL, *range, *filename;
   dvr_entry_t *de;
-  char *fname;
+  char *fname, *charset;
   char *basename;
   char *str, *str0;
   char range_buf[255];
@@ -1510,6 +1508,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   fname = tvh_strdupa(filename);
   content = muxer_container_type2mime(de->de_mc, 1);
+  charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
 
   pthread_mutex_unlock(&global_lock);
 
@@ -1585,10 +1584,17 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       http_stream_postop(tcp_id);
       tcp_id = NULL;
     } else {
-      basename = malloc(strlen(fname) + 7 + 1);
+      str = intlconv_to_utf8safestr(charset, fname, strlen(fname) * 3);
+      if (str == NULL)
+        str = intlconv_to_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                      fname, strlen(fname) * 3);
+      if (str == NULL)
+        str = strdup("error");
+      basename = malloc(strlen(str) + 7 + 1);
       strcpy(basename, "file://");
-      strcat(basename, fname);
+      strcat(basename, str);
       sub->ths_dvrfile = basename;
+      free(str);
     }
   }
   pthread_mutex_unlock(&global_lock);

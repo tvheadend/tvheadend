@@ -29,6 +29,7 @@ extern const idclass_t service_raw_class;
 
 extern struct service_queue service_all;
 extern struct service_queue service_raw_all;
+extern struct service_queue service_raw_remove;
 
 struct channel;
 struct tvh_input;
@@ -240,7 +241,8 @@ typedef struct service {
    */
   enum {
     STYPE_STD,
-    STYPE_RAW
+    STYPE_RAW,
+    STYPE_RAW_REMOVED
   } s_type;
 
   /**
@@ -530,6 +532,7 @@ void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
+int service_has_audio_or_video(service_t *t);
 int service_is_sdtv(service_t *t);
 int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);
@@ -542,8 +545,13 @@ void service_set_enabled ( service_t *t, int enabled, int _auto );
 
 void service_destroy(service_t *t, int delconf);
 
+void service_remove_raw(service_t *);
+
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);
+
+
+void service_send_streaming_status(service_t *t);
 
 void service_set_streaming_status_flags_(service_t *t, int flag);
 
@@ -562,6 +570,7 @@ service_reset_streaming_status_flags(service_t *t, int flag)
   if ((n & flag) != 0)
     service_set_streaming_status_flags_(t, n & ~flag);
 }
+
 
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);
