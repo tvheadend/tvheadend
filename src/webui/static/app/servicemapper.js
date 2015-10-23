@@ -116,14 +116,14 @@ tvheadend.service_mapper = function(t, e, store, select)
 
     /* Form */
     var undoBtn = new Ext.Button({
-        text: 'Cancel',
+        text: _('Cancel'),
         handler: function() {
             win.close();
         }
     });
 
     var saveBtn = new Ext.Button({
-        text: 'Map',
+        text: _('Map'),
         tooltip: _('Begin mapping'),
         handler: function() {
             p = null;
