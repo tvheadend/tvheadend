@@ -178,7 +178,7 @@ tvhlog_process
     snprintf(buf, sizeof(buf), "%s %s", t, msg->msg);
     htsmsg_add_str(m, "notificationClass", "logmessage");
     htsmsg_add_str(m, "logtxt", buf);
-    comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG);
+    comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG, 0);
     htsmsg_destroy(m);
   }
 

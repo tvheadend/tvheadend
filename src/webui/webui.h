@@ -49,7 +49,7 @@ void comet_init(void);
 
 void comet_done(void);
 
-void comet_mailbox_add_message(htsmsg_t *m, int isdebug);
+void comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite);
 
 void comet_flush(void);
 

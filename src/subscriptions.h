@@ -215,6 +215,6 @@ static inline int subscriptions_active(void)
   { return LIST_FIRST(&subscriptions) != NULL; }
 
 struct htsmsg;
-struct htsmsg *subscription_create_msg(th_subscription_t *s);
+struct htsmsg *subscription_create_msg(th_subscription_t *s, const char *lang);
 
 #endif /* SUBSCRIPTIONS_H */

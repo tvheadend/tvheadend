@@ -847,7 +847,7 @@ static gtimer_t subscription_status_timer;
  * Serialize info about subscription
  */
 htsmsg_t *
-subscription_create_msg(th_subscription_t *s)
+subscription_create_msg(th_subscription_t *s, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   descramble_info_t *di;
@@ -860,24 +860,24 @@ subscription_create_msg(th_subscription_t *s)
   const char *state;
   switch(s->ths_state) {
   default:
-    state = "Idle";
+    state = N_("Idle");
     break;
 
   case SUBSCRIPTION_TESTING_SERVICE:
-    state = "Testing";
+    state = N_("Testing");
     break;
     
   case SUBSCRIPTION_GOT_SERVICE:
-    state = "Running";
+    state = N_("Running");
     break;
 
   case SUBSCRIPTION_BAD_SERVICE:
-    state = "Bad";
+    state = N_("Bad");
     break;
   }
 
 
-  htsmsg_add_str(m, "state", state);
+  htsmsg_add_str(m, "state", lang ? tvh_gettext_lang(lang, state) : state);
 
   if(s->ths_hostname != NULL)
     htsmsg_add_str(m, "hostname", s->ths_hostname);
@@ -939,9 +939,9 @@ subscription_status_callback ( void *p )
     s->ths_bytes_out_avg = (int)(out_curr - out_prev);
     s->ths_total_bytes_out_prev = s->ths_total_bytes_out;
 
-    htsmsg_t *m = subscription_create_msg(s);
+    htsmsg_t *m = subscription_create_msg(s, NULL);
     htsmsg_add_u32(m, "updateEntry", 1);
-    notify_by_msg("subscriptions", m);
+    notify_by_msg("subscriptions", m, NOTIFY_REWRITE_SUBSCRIPTIONS);
     count++;
   }
   if (old_count != count) {

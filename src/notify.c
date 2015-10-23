@@ -33,10 +33,10 @@ static pthread_t              notify_tid;
 static void*                  notify_thread(void* p);
 
 void
-notify_by_msg(const char *class, htsmsg_t *m)
+notify_by_msg(const char *class, htsmsg_t *m, int rewrite)
 {
   htsmsg_add_str(m, "notificationClass", class);
-  comet_mailbox_add_message(m, 0);
+  comet_mailbox_add_message(m, 0, rewrite);
   htsmsg_destroy(m);
 }
 
@@ -46,7 +46,7 @@ notify_reload(const char *class)
 {
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "reload", 1);
-  notify_by_msg(class, m);
+  notify_by_msg(class, m, 0);
 }
 
 void
@@ -103,7 +103,7 @@ notify_thread ( void *p )
     pthread_mutex_lock(&global_lock);
 
     HTSMSG_FOREACH(f, q)
-      notify_by_msg(f->hmf_name, htsmsg_detach_submsg(f));
+      notify_by_msg(f->hmf_name, htsmsg_detach_submsg(f), 0);
 
     /* Finished */
     pthread_mutex_unlock(&global_lock);

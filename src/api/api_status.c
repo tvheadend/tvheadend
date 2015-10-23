@@ -71,7 +71,7 @@ api_status_subscriptions
   c = 0;
   pthread_mutex_lock(&global_lock);
   LIST_FOREACH(ths, &subscriptions, ths_global_link) {
-    e = subscription_create_msg(ths);
+    e = subscription_create_msg(ths, perm->aa_lang_ui);
     htsmsg_add_msg(l, NULL, e);
     c++;
   }

@@ -1613,7 +1613,7 @@ idnode_notify_title_changed (void *in, const char *lang)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
   htsmsg_add_str(m, "text", idnode_get_title(in, lang));
-  notify_by_msg("title", m);
+  notify_by_msg("title", m, 0);
   idnode_notify_changed(in);
 }
 

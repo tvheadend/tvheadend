@@ -1821,11 +1821,12 @@ config_class_info_area_set ( void *o, const void *v )
 }
 
 static void
-config_class_info_area_list1 ( htsmsg_t *m, const char *key, const char *val )
+config_class_info_area_list1 ( htsmsg_t *m, const char *key,
+                               const char *val, const char *lang )
 {
   htsmsg_t *e = htsmsg_create_map();
   htsmsg_add_str(e, "key", key);
-  htsmsg_add_str(e, "val", val);
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, val));
   htsmsg_add_msg(m, NULL, e);
 }
 
@@ -1833,9 +1834,9 @@ static htsmsg_t *
 config_class_info_area_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  config_class_info_area_list1(m, "login", N_("Login/Logout"));
-  config_class_info_area_list1(m, "storage", N_("Storage space"));
-  config_class_info_area_list1(m, "time", N_("Time"));
+  config_class_info_area_list1(m, "login", N_("Login/Logout"), lang);
+  config_class_info_area_list1(m, "storage", N_("Storage space"), lang);
+  config_class_info_area_list1(m, "time", N_("Time"), lang);
   return m;
 }
 
