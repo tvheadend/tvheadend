@@ -1259,15 +1259,20 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     if(len >= 9) {
       uint16_t plen = buf[4] << 8 | buf[5];
       th_pkt_t *pkt = st->es_curpkt;
-      if(plen >= 0xffe9) st->es_incomplete = 1;
+      if (plen >= 0xffe9) st->es_incomplete = 1;
       l2 = parse_pes_header(t, st, buf + 6, len - 6);
+      if (l2 < 0)
+        return PARSER_DROP;
 
       if (pkt) {
-        if (l2 + 1 <= len - 6) {
+        if (l2 < len - 6 && l2 + 7 != len) {
           /* This is the rest of this frame. */
           /* Do not include trailing zero. */
-          pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2 - 1);
+          pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2);
         }
+
+        if (next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef)
+          return PARSER_RESET;
 
         parser_deliver(t, st, pkt);
 
@@ -1390,15 +1395,20 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
     if(len >= 9) {
       uint16_t plen = buf[4] << 8 | buf[5];
       th_pkt_t *pkt = st->es_curpkt;
-      if(plen >= 0xffe9) st->es_incomplete = 1;
+      if (plen >= 0xffe9) st->es_incomplete = 1;
       l2 = parse_pes_header(t, st, buf + 6, len - 6);
+      if (l2 < 0)
+        return PARSER_DROP;
 
       if (pkt) {
-        if (l2 + 1 <= len - 6) {
+        if (l2 < len - 6 && l2 + 7 != len) {
           /* This is the rest of this frame. */
           /* Do not include trailing zero. */
-          pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2 - 1);
+          pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2);
         }
+
+        if (next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef)
+          return PARSER_RESET;
 
         parser_deliver(t, st, pkt);
 
