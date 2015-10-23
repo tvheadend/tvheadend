@@ -463,7 +463,7 @@ tv.app = function() {
     // Play button that calls the "I've pressed Enter!" event when clicked
 
             var playButton = new Ext.Button({
-                text: 'Play Selected Channel',
+                text: _('Play Selected Channel'),
                 handler: function() {
                     chList.fireEvent('naventer');
                 }
