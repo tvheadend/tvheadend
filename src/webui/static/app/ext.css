@@ -578,8 +578,9 @@
 
 .x-nice-time {
     display: inline-block;
-    width: 4em;
+    width: 6em;
     text-align: right;
+    white-space: nowrap;
 }
 
 .x-epg-title {
