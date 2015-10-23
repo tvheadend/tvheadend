@@ -1399,6 +1399,7 @@ const idclass_t access_entry_class = {
       .name     = N_("Language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -1406,7 +1407,6 @@ const idclass_t access_entry_class = {
       .name     = N_("Web Interface Language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
-      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
