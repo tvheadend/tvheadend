@@ -550,7 +550,7 @@ const idclass_t dvb_mux_dvbs_class =
       .set      = dvb_mux_dvbs_class_symbol_rate_set,
     },
     {
-      MUX_PROP_STR("polarisation", N_("Polarisation"), dvbs, polarity, NULL)
+      MUX_PROP_STR("polarisation", N_("Polarization"), dvbs, polarity, NULL)
     },
     {
       .type     = PT_STR,

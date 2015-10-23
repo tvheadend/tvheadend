@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-02 13:59+0200\n"
-"PO-Revision-Date: 2015-10-20 12:29+0000\n"
+"POT-Creation-Date: 2015-10-22 21:37+0200\n"
+"PO-Revision-Date: 2015-10-22 20:38+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Hebrew (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/he/)\n"
 "MIME-Version: 1.0\n"
@@ -27,7 +27,7 @@ msgstr "&#160;אישור&#160;"
 msgid "(?:st|nd|rd|th)#parseCodes.S.s"
 msgstr ""
 
-#: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:31
+#: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
 msgstr "(הסרת מסנן)"
@@ -112,15 +112,15 @@ msgstr "8 #monthNumber"
 msgid "9 #monthNumber"
 msgstr "9 #monthNumber"
 
-#: src/webui/static/app/dvr.js:199
+#: src/webui/static/app/dvr.js:207
 msgid "Abort"
 msgstr "ביטול"
 
-#: src/webui/static/app/dvr.js:197
+#: src/webui/static/app/dvr.js:205
 msgid "Abort the selected recording"
 msgstr "ביטול הקלטה נבחרת"
 
-#: src/webui/static/app/tvheadend.js:510
+#: src/webui/static/app/tvheadend.js:540
 msgid "About"
 msgstr "אודות"
 
@@ -140,19 +140,19 @@ msgstr ""
 msgid "Active"
 msgstr "פעיל"
 
-#: src/webui/static/app/idnode.js:1246 src/webui/static/app/idnode.js:1729
+#: src/webui/static/app/idnode.js:1324 src/webui/static/app/idnode.js:1823
 msgid "Add"
 msgstr "הוספה"
 
-#: src/webui/static/app/idnode.js:1244 src/webui/static/app/idnode.js:1727
+#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1821
 msgid "Add a new entry"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:993 src/webui/static/app/idnode.js:1023
+#: src/webui/static/app/idnode.js:1037 src/webui/static/app/idnode.js:1067
 msgid "Add {0}"
 msgstr "הוספה {0}"
 
-#: src/webui/static/app/idnode.js:866
+#: src/webui/static/app/idnode.js:893
 msgid "Advanced Settings"
 msgstr "הגדרות מתקדמות"
 
@@ -172,7 +172,7 @@ msgstr "גיל"
 msgid "Age Rating"
 msgstr "הגבלת גיל"
 
-#: src/webui/static/app/idnode.js:1414 src/webui/static/app/idnode.js:1453
+#: src/webui/static/app/idnode.js:1508 src/webui/static/app/idnode.js:1547
 msgid "All"
 msgstr "הכל"
 
@@ -192,11 +192,11 @@ msgstr "אפר"
 msgid "April"
 msgstr "אפריל"
 
-#: src/webui/static/app/chconf.js:158
+#: src/webui/static/app/chconf.js:144
 msgid "Assign Number"
 msgstr "הקצאת מספר"
 
-#: src/webui/static/app/chconf.js:156
+#: src/webui/static/app/chconf.js:142
 msgid "Assign lowest free channel number"
 msgstr "הקצה את מספר הערוץ הנמוך ביותר"
 
@@ -216,7 +216,7 @@ msgstr "אוג"
 msgid "August"
 msgstr "אוגוסט"
 
-#: src/webui/static/app/epg.js:1025
+#: src/webui/static/app/epg.js:1015
 msgid "Auto Recorder"
 msgstr ""
 
@@ -224,7 +224,7 @@ msgstr ""
 msgid "Auto-refresh"
 msgstr "עדכון אוטומטי"
 
-#: src/webui/static/app/epg.js:221
+#: src/webui/static/app/epg.js:221 src/webui/static/app/dvr.js:57
 msgid "Autorec"
 msgstr "הקלטה אוטמטית"
 
@@ -232,15 +232,15 @@ msgstr "הקלטה אוטמטית"
 msgid "Available"
 msgstr "זמין"
 
-#: src/webui/static/app/status.js:358
+#: src/webui/static/app/status.js:366
 msgid "BER"
 msgstr "BER"
 
-#: src/webui/static/app/status.js:351
+#: src/webui/static/app/status.js:359
 msgid "Bandwidth (kb/s)"
 msgstr "רוחב פס (kb/s)"
 
-#: src/webui/static/app/status.js:660 src/webui/static/app/status.js:753
+#: src/webui/static/app/status.js:668 src/webui/static/app/status.js:761
 msgid "Bandwidth monitor"
 msgstr ""
 
@@ -248,7 +248,7 @@ msgstr ""
 msgid "Base"
 msgstr "בסיס"
 
-#: src/webui/static/app/idnode.js:864
+#: src/webui/static/app/idnode.js:891
 msgid "Basic Settings"
 msgstr "הגדרות בסיסיות"
 
@@ -260,11 +260,11 @@ msgstr "לפני"
 msgid "Begin mapping"
 msgstr "התחלת מיפוי"
 
-#: src/webui/static/app/cteditor.js:41
+#: src/webui/static/app/cteditor.js:44
 msgid "Bouquet"
 msgstr "סל ערוצים"
 
-#: src/webui/static/app/cteditor.js:42 src/webui/static/app/cteditor.js:68
+#: src/webui/static/app/cteditor.js:45 src/webui/static/app/cteditor.js:76
 msgid "Bouquets"
 msgstr "סלי ערוצים"
 
@@ -301,33 +301,33 @@ msgid "CAs"
 msgstr "CAs"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:969
+#: src/webui/static/app/idnode.js:1013
 msgid "Cancel"
 msgstr "ביטול"
 
-#: src/webui/static/app/status.js:500
+#: src/webui/static/app/status.js:508
 msgid "Cancel Connection"
 msgstr "ביטול חיבור"
 
-#: src/webui/static/app/idnode.js:968
+#: src/webui/static/app/idnode.js:1012
 msgid "Cancel operation"
 msgstr "ביטול פעולה"
 
-#: src/webui/static/app/status.js:501
+#: src/webui/static/app/status.js:509
 msgid "Cancel the selected connection?"
 msgstr "האם לבטל חיבור נבחר?"
 
-#: src/webui/static/app/status.js:497
+#: src/webui/static/app/status.js:505
 msgid "Cancel this connection"
 msgstr "ביטול חיבור זה"
 
-#: src/webui/static/app/chconf.js:221 src/webui/static/app/epg.js:537
-#: src/webui/static/app/epg.js:538 src/webui/static/app/epg.js:1029
-#: src/webui/static/app/status.js:102
+#: src/webui/static/app/chconf.js:207 src/webui/static/app/epg.js:537
+#: src/webui/static/app/epg.js:538 src/webui/static/app/epg.js:1019
+#: src/webui/static/app/status.js:104
 msgid "Channel"
 msgstr "ערוץ"
 
-#: src/webui/static/app/tvheadend.js:449
+#: src/webui/static/app/tvheadend.js:478
 msgid "Channel / EPG"
 msgstr "ערוץ / לוח שידורים"
 
@@ -339,7 +339,7 @@ msgstr "תגית ערוץ"
 msgid "Channel Tags"
 msgstr "תגיות ערוצים"
 
-#: src/webui/static/app/chconf.js:222 src/webui/static/app/chconf.js:226
+#: src/webui/static/app/chconf.js:208 src/webui/static/app/chconf.js:212
 msgid "Channels"
 msgstr "ערוצים"
 
@@ -359,11 +359,11 @@ msgstr "ניקוי מטמון תמונות (סמלים)"
 msgid "Clean image cache on storage"
 msgstr ""
 
-#: src/webui/static/app/status.js:250 src/webui/static/app/status.js:253
+#: src/webui/static/app/status.js:258 src/webui/static/app/status.js:261
 msgid "Clear statistics"
 msgstr "נקה סטטיסטיקות"
 
-#: src/webui/static/app/status.js:254
+#: src/webui/static/app/status.js:262
 msgid "Clear statistics for selected input?"
 msgstr "האם למחוק סטטיסטיקות לקלט הנבחר?"
 
@@ -375,15 +375,15 @@ msgstr "שם לקוח"
 msgid "Columns"
 msgstr "עמודות"
 
-#: src/webui/static/app/comet.js:54
+#: src/webui/static/app/comet.js:55
 msgid "Comet failure"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:53
+#: src/webui/static/app/dvr.js:55
 msgid "Comment"
 msgstr "הערה"
 
-#: src/webui/static/app/status.js:709
+#: src/webui/static/app/status.js:717
 msgid "Compression ratio"
 msgstr "יחס דחיסה"
 
@@ -391,11 +391,11 @@ msgstr "יחס דחיסה"
 msgid "Conditional Access Client"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:392
+#: src/webui/static/app/tvheadend.js:421
 msgid "Configuration"
 msgstr "הגדרות"
 
-#: src/webui/static/app/status.js:601
+#: src/webui/static/app/status.js:609
 msgid "Connections"
 msgstr "חיבורים"
 
@@ -404,11 +404,11 @@ msgstr "חיבורים"
 msgid "Content Type"
 msgstr "סוג תוכן"
 
-#: src/webui/static/app/status.js:380
+#: src/webui/static/app/status.js:388
 msgid "Continuity Errors"
 msgstr "שגיאות רציפות"
 
-#: src/webui/static/app/idnode.js:948
+#: src/webui/static/app/idnode.js:992
 msgid "Create"
 msgstr "יצירה"
 
@@ -426,7 +426,7 @@ msgstr "צור כלל להקלטה אוטומטית לכל התוכניות המ
 msgid "Create network tags"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:947
+#: src/webui/static/app/idnode.js:991
 msgid "Create new entry"
 msgstr ""
 
@@ -434,48 +434,48 @@ msgstr ""
 msgid "Create provider tags"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1047
+#: src/webui/static/app/epg.js:1037
 msgid "Created from EPG query"
 msgstr ""
 
-#: src/webui/static/app/epg.js:1034
+#: src/webui/static/app/epg.js:1024
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:431
+#: src/webui/static/app/tvheadend.js:460
 msgid "DVB Inputs"
 msgstr "כניסות DVB"
 
-#: src/webui/static/app/epg.js:305 src/webui/static/app/dvr.js:464
+#: src/webui/static/app/epg.js:305 src/webui/static/app/dvr.js:472
 msgid "DVR"
 msgstr "הקלטה"
 
-#: src/webui/static/app/dvr.js:438
+#: src/webui/static/app/dvr.js:446
 msgid "DVR - Failed Recordings"
 msgstr "הקלטות שנכשלו"
 
-#: src/webui/static/app/dvr.js:357
+#: src/webui/static/app/dvr.js:365
 msgid "DVR - Finished Recordings"
 msgstr "הקלטות שהסתיימו"
 
-#: src/webui/static/app/dvr.js:276
+#: src/webui/static/app/dvr.js:284
 msgid "DVR - Upcoming/Current Recordings"
 msgstr "הקלטות הבאות/נוכחיות"
 
-#: src/webui/static/app/dvr.js:527
+#: src/webui/static/app/dvr.js:538
 msgid "DVR Autorec"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:480
+#: src/webui/static/app/dvr.js:488
 msgid "DVR Autorec Entries"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:479
+#: src/webui/static/app/dvr.js:487
 msgid "DVR Autorec Entry"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:578
+#: src/webui/static/app/dvr.js:591
 msgid "DVR Timerec"
 msgstr ""
 
@@ -495,7 +495,7 @@ msgstr "דצמ"
 msgid "December"
 msgstr "דצמבר"
 
-#: src/webui/static/app/idnode.js:1260 src/webui/static/app/idnode.js:1741
+#: src/webui/static/app/idnode.js:1338 src/webui/static/app/idnode.js:1835
 msgid "Delete"
 msgstr "מחיקה"
 
@@ -507,29 +507,33 @@ msgstr "מחיקת הקלטה"
 msgid "Delete scheduled recording of this program"
 msgstr "מחק תזמון הקלטה לתכנית זו"
 
-#: src/webui/static/app/idnode.js:1258 src/webui/static/app/idnode.js:1739
+#: src/webui/static/app/idnode.js:1336 src/webui/static/app/idnode.js:1833
 msgid "Delete selected entries"
 msgstr "מחק רשומות נבחרות"
+
+#: src/webui/static/app/status.js:132
+msgid "Descramble"
+msgstr ""
 
 #: src/webui/static/app/mpegts.js:264
 msgid "Detailed stream info"
 msgstr ""
 
 #: src/webui/static/app/mpegts.js:260 src/webui/static/app/epg.js:320
-#: src/webui/static/app/epg.js:321 src/webui/static/app/dvr.js:91
-#: src/webui/static/app/dvr.js:92
+#: src/webui/static/app/epg.js:321 src/webui/static/app/dvr.js:98
+#: src/webui/static/app/dvr.js:99
 msgid "Details"
 msgstr "פרטים"
 
-#: src/webui/static/app/dvr.js:593
+#: src/webui/static/app/dvr.js:606
 msgid "Digital Video Recorder"
 msgstr "הקלטות"
 
-#: src/webui/static/app/dvr.js:453
+#: src/webui/static/app/dvr.js:461
 msgid "Digital Video Recorder Profile"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:454
+#: src/webui/static/app/dvr.js:462
 msgid "Digital Video Recorder Profiles"
 msgstr ""
 
@@ -545,11 +549,11 @@ msgstr "גילוי שרתי SAT>IP"
 msgid "Displaying {0} - {1} of {2}"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:217
+#: src/webui/static/app/dvr.js:225
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:325 src/webui/static/app/dvr.js:406
+#: src/webui/static/app/dvr.js:333 src/webui/static/app/dvr.js:414
 msgid "Do you really want to delete the selected recordings?"
 msgstr "האם אתה רוצה למחוק את ההקלטות הנבחרות?"
 
@@ -557,7 +561,7 @@ msgstr "האם אתה רוצה למחוק את ההקלטות הנבחרות?"
 msgid "Do you really want to delete the selection?"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:187
+#: src/webui/static/app/dvr.js:195
 msgid "Do you really want to gracefully stop/unschedule the selection?"
 msgstr ""
 
@@ -569,27 +573,27 @@ msgstr ""
 msgid "Do you really want to remove this recording?"
 msgstr "האם אתה רוצה למחוק את ההקלטה הזו?"
 
-#: src/webui/static/app/epg.js:1008 src/webui/static/app/epg.js:1014
-#: src/webui/static/app/epg.js:1017 src/webui/static/app/epg.js:1020
-#: src/webui/static/app/epg.js:1023
+#: src/webui/static/app/epg.js:998 src/webui/static/app/epg.js:1004
+#: src/webui/static/app/epg.js:1007 src/webui/static/app/epg.js:1010
+#: src/webui/static/app/epg.js:1013
 msgid "Don't care"
 msgstr "לא משנה"
 
-#: src/webui/static/app/dvr.js:296 src/webui/static/app/dvr.js:377
+#: src/webui/static/app/dvr.js:304 src/webui/static/app/dvr.js:385
 msgid "Download"
 msgstr "הורדה"
 
-#: src/webui/static/app/dvr.js:294 src/webui/static/app/dvr.js:375
+#: src/webui/static/app/dvr.js:302 src/webui/static/app/dvr.js:383
 msgid "Download the selected recording"
 msgstr "הורד הקלטות נבחרות"
 
 #: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:521
-#: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:1032
-#: src/webui/static/app/dvr.js:44
+#: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:1022
+#: src/webui/static/app/dvr.js:46
 msgid "Duration"
 msgstr "משך"
 
-#: src/webui/static/app/epggrab.js:30 src/webui/static/app/epggrab.js:61
+#: src/webui/static/app/epggrab.js:30 src/webui/static/app/epggrab.js:84
 msgid "EPG Grab Configuration"
 msgstr ""
 
@@ -597,33 +601,45 @@ msgstr ""
 msgid "EPG Grabber"
 msgstr ""
 
-#: src/webui/static/app/epggrab.js:50
+#: src/webui/static/app/epggrab.js:41
+msgid "EPG Grabber Channel"
+msgstr ""
+
+#: src/webui/static/app/epggrab.js:42 src/webui/static/app/epggrab.js:51
+msgid "EPG Grabber Channels"
+msgstr ""
+
+#: src/webui/static/app/epggrab.js:73
 msgid "EPG Grabber Module"
 msgstr ""
 
-#: src/webui/static/app/epggrab.js:51
+#: src/webui/static/app/epggrab.js:74
 msgid "EPG Grabber Modules"
 msgstr ""
 
-#: src/webui/static/app/epggrab.js:52
+#: src/webui/static/app/epggrab.js:75
 msgid "EPG Grabber Name"
 msgstr ""
 
-#: src/webui/static/app/epg.js:955
+#: src/webui/static/app/epg.js:945
 msgid "EPG Update"
 msgstr "עדכון מדריך שידורים"
 
-#: src/webui/static/app/idnode.js:1347
+#: src/webui/static/app/idnode.js:1425
 msgid "Edit"
 msgstr "עריכה"
 
-#: src/webui/static/app/idnode.js:1345
+#: src/webui/static/app/idnode.js:1423
 msgid "Edit selected entry"
 msgstr "ערוך רשומה נבחרת"
 
-#: src/webui/static/app/idnode.js:1361 src/webui/static/app/idnode.js:1385
+#: src/webui/static/app/idnode.js:1439 src/webui/static/app/idnode.js:1472
 msgid "Edit {0}"
 msgstr "עריכה {0}"
+
+#: src/webui/static/app/idnode.js:1468
+msgid "Edit {0} ({1} entries)"
+msgstr ""
 
 #: src/webui/static/app/epg.js:869 src/webui/static/app/epg.js:880
 msgid "Electronic Program Guide"
@@ -635,7 +651,7 @@ msgstr "מדריך שידורים"
 msgid "Elementary Stream Filter"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:720
+#: src/webui/static/app/tvheadend.js:750
 msgid "Enable debug output"
 msgstr ""
 
@@ -652,7 +668,7 @@ msgstr ""
 msgid "Episode"
 msgstr "פרק"
 
-#: src/webui/static/app/status.js:130
+#: src/webui/static/app/status.js:138
 msgid "Errors"
 msgstr "שגיאות"
 
@@ -660,7 +676,7 @@ msgstr "שגיאות"
 msgid "Events"
 msgstr "אירועים"
 
-#: src/webui/static/app/dvr.js:116
+#: src/webui/static/app/dvr.js:123
 msgid "Every day"
 msgstr "כל יום"
 
@@ -668,11 +684,11 @@ msgstr "כל יום"
 msgid "Failed"
 msgstr "נכשל"
 
-#: src/webui/static/app/dvr.js:400
+#: src/webui/static/app/dvr.js:408
 msgid "Failed Recording"
 msgstr "הקלטה נכשלה"
 
-#: src/webui/static/app/dvr.js:401
+#: src/webui/static/app/dvr.js:409
 msgid "Failed Recordings"
 msgstr "הקלטות שנכשלו"
 
@@ -684,7 +700,7 @@ msgstr "פבר"
 msgid "February"
 msgstr "פברואר"
 
-#: src/webui/static/app/dvr.js:51
+#: src/webui/static/app/dvr.js:53
 msgid "File size"
 msgstr "גודל קובץ"
 
@@ -708,11 +724,11 @@ msgstr "סינון תגית..."
 msgid "Filters"
 msgstr "פילטרים"
 
-#: src/webui/static/app/dvr.js:319
+#: src/webui/static/app/dvr.js:327
 msgid "Finished Recording"
 msgstr "הקלטה הסתיימה"
 
-#: src/webui/static/app/dvr.js:320
+#: src/webui/static/app/dvr.js:328
 msgid "Finished Recordings"
 msgstr "הקלטות שהסתיימו"
 
@@ -728,7 +744,7 @@ msgstr "אילוץ סריקה"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:659
+#: src/webui/static/app/tvheadend.js:689
 msgid "Free"
 msgstr ""
 
@@ -740,19 +756,19 @@ msgstr "שישי"
 msgid "Friday"
 msgstr "שישי"
 
-#: src/webui/static/app/tvheadend.js:308
+#: src/webui/static/app/tvheadend.js:337
 msgid "Fullscreen"
 msgstr "מסך מלא"
 
-#: src/webui/static/app/epg.js:842 src/webui/static/app/epg.js:1010
+#: src/webui/static/app/epg.js:842 src/webui/static/app/epg.js:1000
 msgid "Fulltext"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:649
+#: src/webui/static/app/tvheadend.js:679
 msgid "GB"
 msgstr "GB"
 
-#: src/webui/static/app/tvheadend.js:401
+#: src/webui/static/app/tvheadend.js:430
 msgid "General"
 msgstr "כללי"
 
@@ -760,16 +776,20 @@ msgstr "כללי"
 msgid "General Configuration"
 msgstr "הגדרות כלליות"
 
-#: src/webui/static/app/epg.js:1031
+#: src/webui/static/app/epg.js:1021
 msgid "Genre"
 msgstr "סגנון"
+
+#: src/webui/static/app/idnode.js:1171
+msgid "Grid Update"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
 msgstr "קיבוץ לפי שדה זה"
 
-#: src/webui/static/app/idnode.js:905 src/webui/static/app/idnode.js:1500
-#: src/webui/static/app/idnode.js:1848 src/webui/static/app/idnode.js:2206
+#: src/webui/static/app/idnode.js:946 src/webui/static/app/idnode.js:1594
+#: src/webui/static/app/idnode.js:1942 src/webui/static/app/idnode.js:2300
 #: src/webui/static/app/epg.js:866
 msgid "Help"
 msgstr "עזרה"
@@ -778,23 +798,23 @@ msgstr "עזרה"
 msgid "Help for"
 msgstr "עזרה עבור"
 
-#: src/webui/static/app/idnode.js:1430
+#: src/webui/static/app/idnode.js:1524
 msgid "Hide"
 msgstr "הסתרה"
 
-#: src/webui/static/app/idnode.js:1816
+#: src/webui/static/app/idnode.js:1910
 msgid "Hide passwords"
 msgstr "הסתרת סיסמאות"
 
-#: src/webui/static/app/status.js:84
+#: src/webui/static/app/status.js:86
 msgid "Hostname"
 msgstr "שם מארח"
 
-#: src/webui/static/app/status.js:74
+#: src/webui/static/app/status.js:76
 msgid "ID"
-msgstr ""
+msgstr "מזהה"
 
-#: src/webui/static/app/status.js:554
+#: src/webui/static/app/status.js:562
 msgid "IP Address"
 msgstr "כתובת IP"
 
@@ -818,7 +838,7 @@ msgstr ""
 msgid "Image cache"
 msgstr "מטמון תמונות"
 
-#: src/webui/static/app/status.js:707
+#: src/webui/static/app/status.js:715
 msgid "In"
 msgstr "בתוך"
 
@@ -826,11 +846,11 @@ msgstr "בתוך"
 msgid "Include encrypted services"
 msgstr "כלול ערוצים מוצפנים"
 
-#: src/webui/static/app/status.js:331 src/webui/static/app/status.js:797
+#: src/webui/static/app/status.js:339 src/webui/static/app/status.js:805
 msgid "Input"
 msgstr "כניסה"
 
-#: src/webui/static/app/status.js:136
+#: src/webui/static/app/status.js:144
 msgid "Input (kb/s)"
 msgstr "כניסה (kb/s)"
 
@@ -858,7 +878,7 @@ msgstr "יונ"
 msgid "June"
 msgstr "יוני"
 
-#: src/webui/static/app/tvheadend.js:653
+#: src/webui/static/app/tvheadend.js:683
 msgid "KB"
 msgstr "KB"
 
@@ -866,7 +886,7 @@ msgstr "KB"
 msgid "Last Page"
 msgstr "עמוד אחרון"
 
-#: src/webui/static/app/tvheadend.js:264
+#: src/webui/static/app/tvheadend.js:293
 msgid "Live TV Player"
 msgstr "נגן שידור חי"
 
@@ -877,12 +897,12 @@ msgstr "טוען, יש להמתין..."
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:618
 #: src/webui/static/app/epg.js:641 src/webui/static/app/epg.js:665
-#: src/webui/static/app/epg.js:686 src/webui/static/app/tvheadend.js:202
-#: src/webui/static/app/tvheadend.js:240
+#: src/webui/static/app/epg.js:686 src/webui/static/app/tvheadend.js:231
+#: src/webui/static/app/tvheadend.js:269
 msgid "Loading..."
 msgstr "טוען..."
 
-#: src/webui/static/app/tvheadend.js:630
+#: src/webui/static/app/tvheadend.js:660
 msgid "Logged in as"
 msgstr "מחובר בתור"
 
@@ -890,7 +910,7 @@ msgstr "מחובר בתור"
 msgid "Look for new SAT>IP servers"
 msgstr "חיפוש שרתי SAT>IP חדשים"
 
-#: src/webui/static/app/tvheadend.js:651
+#: src/webui/static/app/tvheadend.js:681
 msgid "MB"
 msgstr "MB"
 
@@ -902,7 +922,7 @@ msgstr "מיפוי הכל"
 msgid "Map Selected"
 msgstr "מיפוי נבחר"
 
-#: src/webui/static/app/chconf.js:145
+#: src/webui/static/app/chconf.js:131
 msgid "Map Services"
 msgstr "מיפוי שירותים"
 
@@ -910,7 +930,7 @@ msgstr "מיפוי שירותים"
 msgid "Map services"
 msgstr "מיפוי שירותים"
 
-#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:143
+#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:129
 msgid "Map services to channels"
 msgstr "מיפוי שירותים לערוצים"
 
@@ -954,35 +974,35 @@ msgstr "שני"
 msgid "Monday"
 msgstr "שני"
 
-#: src/webui/static/app/idnode.js:1316 src/webui/static/app/idnode.js:1788
+#: src/webui/static/app/idnode.js:1394 src/webui/static/app/idnode.js:1882
 msgid "Move Down"
 msgstr "הזזה מטה"
 
-#: src/webui/static/app/idnode.js:1291 src/webui/static/app/idnode.js:1767
+#: src/webui/static/app/idnode.js:1369 src/webui/static/app/idnode.js:1861
 msgid "Move Up"
 msgstr "הזזה מעלה"
 
-#: src/webui/static/app/chconf.js:182
+#: src/webui/static/app/chconf.js:168
 msgid "Move channel one number down"
 msgstr ""
 
-#: src/webui/static/app/chconf.js:169
+#: src/webui/static/app/chconf.js:155
 msgid "Move channel one number up"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1314
+#: src/webui/static/app/idnode.js:1392
 msgid "Move selected entries down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1289
+#: src/webui/static/app/idnode.js:1367
 msgid "Move selected entries up"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1786
+#: src/webui/static/app/idnode.js:1880
 msgid "Move selected entry down"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1765
+#: src/webui/static/app/idnode.js:1859
 msgid "Move selected entry up"
 msgstr ""
 
@@ -1027,11 +1047,11 @@ msgstr "לא"
 msgid "No data to display"
 msgstr "אין מידע להצגה"
 
-#: src/webui/static/app/dvr.js:118
+#: src/webui/static/app/dvr.js:125
 msgid "No days"
 msgstr "אין ימים"
 
-#: src/webui/static/app/tvheadend.js:633
+#: src/webui/static/app/tvheadend.js:663
 msgid "No verified access"
 msgstr ""
 
@@ -1040,7 +1060,7 @@ msgstr ""
 msgid "No {0} to display"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1415 src/webui/static/app/mpegts.js:208
+#: src/webui/static/app/idnode.js:1509 src/webui/static/app/mpegts.js:208
 #: src/webui/static/app/mpegts.js:218
 msgid "None"
 msgstr "ללא"
@@ -1061,11 +1081,11 @@ msgstr "נובמבר"
 msgid "Number"
 msgstr "מספר"
 
-#: src/webui/static/app/chconf.js:184
+#: src/webui/static/app/chconf.js:170
 msgid "Number Down"
 msgstr "מספר מטה"
 
-#: src/webui/static/app/chconf.js:171
+#: src/webui/static/app/chconf.js:157
 msgid "Number Up"
 msgstr "מספר מעלה"
 
@@ -1093,15 +1113,15 @@ msgstr ""
 msgid "Other Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/status.js:708
+#: src/webui/static/app/status.js:716
 msgid "Out"
 msgstr ""
 
-#: src/webui/static/app/status.js:144
+#: src/webui/static/app/status.js:152
 msgid "Output (kb/s)"
 msgstr ""
 
-#: src/webui/static/app/status.js:364
+#: src/webui/static/app/status.js:372
 msgid "PER"
 msgstr ""
 
@@ -1109,11 +1129,11 @@ msgstr ""
 msgid "Page"
 msgstr "עמוד"
 
-#: src/webui/static/app/idnode.js:1875 src/webui/static/app/idnode.js:2061
+#: src/webui/static/app/idnode.js:1969 src/webui/static/app/idnode.js:2155
 msgid "Parameters"
 msgstr "מאפיינים"
 
-#: src/webui/static/app/idnode.js:1413
+#: src/webui/static/app/idnode.js:1507
 msgid "Parent disabled"
 msgstr ""
 
@@ -1129,7 +1149,7 @@ msgstr ""
 msgid "Passwords"
 msgstr "סיסמאות"
 
-#: src/webui/static/app/tvheadend.js:293
+#: src/webui/static/app/tvheadend.js:322
 msgid "Pause"
 msgstr "השהיה"
 
@@ -1140,11 +1160,11 @@ msgstr "לכל עמוד"
 #: src/webui/static/app/mpegts.js:126 src/webui/static/app/mpegts.js:127
 #: src/webui/static/app/mpegts.js:131 src/webui/static/app/mpegts.js:307
 #: src/webui/static/app/mpegts.js:308 src/webui/static/app/mpegts.js:312
-#: src/webui/static/app/chconf.js:237 src/webui/static/app/chconf.js:238
-#: src/webui/static/app/chconf.js:245 src/webui/static/app/dvr.js:344
-#: src/webui/static/app/dvr.js:345 src/webui/static/app/dvr.js:351
-#: src/webui/static/app/dvr.js:425 src/webui/static/app/dvr.js:426
-#: src/webui/static/app/dvr.js:432 src/webui/static/app/tvheadend.js:276
+#: src/webui/static/app/chconf.js:223 src/webui/static/app/chconf.js:224
+#: src/webui/static/app/chconf.js:231 src/webui/static/app/dvr.js:352
+#: src/webui/static/app/dvr.js:353 src/webui/static/app/dvr.js:359
+#: src/webui/static/app/dvr.js:433 src/webui/static/app/dvr.js:434
+#: src/webui/static/app/dvr.js:440 src/webui/static/app/tvheadend.js:305
 msgid "Play"
 msgstr "ניגון"
 
@@ -1168,7 +1188,7 @@ msgstr ""
 msgid "Previous Page"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:455
+#: src/webui/static/app/dvr.js:463
 msgid "Profile Name"
 msgstr "שם פרופיל"
 
@@ -1180,7 +1200,7 @@ msgstr "התקדמות"
 msgid "Re-fetch images"
 msgstr "טען תמונות מחדש"
 
-#: src/webui/static/app/idnode.js:868
+#: src/webui/static/app/idnode.js:895
 msgid "Read-only Info"
 msgstr ""
 
@@ -1200,11 +1220,11 @@ msgstr "הקלטת סדרה"
 msgid "Record this program now"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:477
+#: src/webui/static/app/tvheadend.js:507
 msgid "Recording"
 msgstr "הקלטה"
 
-#: src/webui/static/app/dvr.js:100
+#: src/webui/static/app/dvr.js:107
 msgid "Recording details"
 msgstr "פרטי הקלטה"
 
@@ -1212,7 +1232,7 @@ msgstr "פרטי הקלטה"
 msgid "Refresh"
 msgstr "רענון"
 
-#: src/webui/static/app/chconf.js:208
+#: src/webui/static/app/chconf.js:194
 msgid "Reset (clear) the selected icon URLs"
 msgstr ""
 
@@ -1220,7 +1240,7 @@ msgstr ""
 msgid "Reset All"
 msgstr "איפוס הכל"
 
-#: src/webui/static/app/chconf.js:210
+#: src/webui/static/app/chconf.js:196
 msgid "Reset Icon"
 msgstr "איפוס סמל"
 
@@ -1228,8 +1248,8 @@ msgstr "איפוס סמל"
 msgid "Reset all filters (show all)"
 msgstr "איפוס כל הפילטרים (הצג הכל)"
 
-#: src/webui/static/app/idnode.js:1230 src/webui/static/app/idnode.js:1714
-#: src/webui/static/app/idnode.js:2171
+#: src/webui/static/app/idnode.js:1308 src/webui/static/app/idnode.js:1808
+#: src/webui/static/app/idnode.js:2265
 msgid "Revert pending changes (marked with red border)"
 msgstr ""
 
@@ -1241,7 +1261,7 @@ msgstr "שרת SAT>IP"
 msgid "SAT>IP Server Configuration"
 msgstr "הגדרת שרת SAT>IP"
 
-#: src/webui/static/app/status.js:394
+#: src/webui/static/app/status.js:402
 msgid "SNR"
 msgstr "SNR"
 
@@ -1253,21 +1273,21 @@ msgstr "שבת"
 msgid "Saturday"
 msgstr "שבת"
 
-#: src/webui/static/app/idnode.js:884 src/webui/static/app/idnode.js:1205
-#: src/webui/static/app/idnode.js:1694 src/webui/static/app/idnode.js:2154
+#: src/webui/static/app/idnode.js:925 src/webui/static/app/idnode.js:1283
+#: src/webui/static/app/idnode.js:1788 src/webui/static/app/idnode.js:2248
 msgid "Save"
 msgstr "שמירה"
 
-#: src/webui/static/app/idnode.js:1203 src/webui/static/app/idnode.js:1692
-#: src/webui/static/app/idnode.js:2152
+#: src/webui/static/app/idnode.js:1281 src/webui/static/app/idnode.js:1786
+#: src/webui/static/app/idnode.js:2246
 msgid "Save pending changes (marked with red border)"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:40
+#: src/webui/static/app/dvr.js:42
 msgid "Scheduled Start Time"
 msgstr "זמן התחלה מתוכנן"
 
-#: src/webui/static/app/dvr.js:42
+#: src/webui/static/app/dvr.js:44
 msgid "Scheduled Stop Time"
 msgstr "זמן סיום מתוכנן"
 
@@ -1283,11 +1303,11 @@ msgstr ""
 msgid "Search title..."
 msgstr "חיפוש כותרת..."
 
-#: src/webui/static/app/tvheadend.js:209
+#: src/webui/static/app/tvheadend.js:238
 msgid "Select channel..."
 msgstr "בחירת ערוץ..."
 
-#: src/webui/static/app/tvheadend.js:246
+#: src/webui/static/app/tvheadend.js:275
 msgid "Select stream profile..."
 msgstr "בחר פרופיל הזרמה..."
 
@@ -1307,7 +1327,7 @@ msgstr "ספט"
 msgid "September"
 msgstr "ספטמבר"
 
-#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:108
+#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:110
 msgid "Service"
 msgstr "שירות"
 
@@ -1327,7 +1347,7 @@ msgstr ""
 msgid "Services"
 msgstr "שירותים"
 
-#: src/webui/static/app/idnode.js:826
+#: src/webui/static/app/idnode.js:853
 msgid "Settings"
 msgstr "הגדרות"
 
@@ -1335,15 +1355,15 @@ msgstr "הגדרות"
 msgid "Show in Groups"
 msgstr "הצג בקבוצות"
 
-#: src/webui/static/app/idnode.js:1810
+#: src/webui/static/app/idnode.js:1904
 msgid "Show or hide passwords"
 msgstr "הצג או הסתר סיסמאות"
 
-#: src/webui/static/app/idnode.js:1812 src/webui/static/app/idnode.js:1816
+#: src/webui/static/app/idnode.js:1906 src/webui/static/app/idnode.js:1910
 msgid "Show passwords"
 msgstr "הצג סיסמאות"
 
-#: src/webui/static/app/status.js:414
+#: src/webui/static/app/status.js:422
 msgid "Signal Strength"
 msgstr "עוצמת אות"
 
@@ -1363,7 +1383,7 @@ msgstr "דירוג כוכבים"
 msgid "Stars"
 msgstr "כוכבים"
 
-#: src/webui/static/app/status.js:114
+#: src/webui/static/app/status.js:116
 msgid "Start"
 msgstr "התחלה"
 
@@ -1372,19 +1392,19 @@ msgstr "התחלה"
 msgid "Start Time"
 msgstr "זמן התחלה"
 
-#: src/webui/static/app/status.js:564
+#: src/webui/static/app/status.js:572
 msgid "Started"
 msgstr "התחיל"
 
-#: src/webui/static/app/status.js:124
+#: src/webui/static/app/status.js:126
 msgid "State"
 msgstr "מצב"
 
-#: src/webui/static/app/dvr.js:49 src/webui/static/app/status.js:611
+#: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:619
 msgid "Status"
 msgstr "מצב"
 
-#: src/webui/static/app/dvr.js:169 src/webui/static/app/tvheadend.js:300
+#: src/webui/static/app/dvr.js:177 src/webui/static/app/tvheadend.js:329
 msgid "Stop"
 msgstr "עצירה"
 
@@ -1396,16 +1416,16 @@ msgstr "עצירת הקלטה"
 msgid "Stop recording of this program"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:167
+#: src/webui/static/app/dvr.js:175
 msgid "Stop the selected recording"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:656
+#: src/webui/static/app/tvheadend.js:686
 msgid "Storage space"
 msgstr "שטח אחסון"
 
-#: src/webui/static/app/status.js:336 src/webui/static/app/status.js:466
-#: src/webui/static/app/tvheadend.js:465
+#: src/webui/static/app/status.js:344 src/webui/static/app/status.js:474
+#: src/webui/static/app/tvheadend.js:495
 msgid "Stream"
 msgstr "הזרמה"
 
@@ -1422,11 +1442,11 @@ msgstr "שם פרופיל הזרמה"
 msgid "Stream Profiles"
 msgstr "פרופילי הזרמה"
 
-#: src/webui/static/app/status.js:341
+#: src/webui/static/app/status.js:349
 msgid "Subs No."
 msgstr ""
 
-#: src/webui/static/app/status.js:191
+#: src/webui/static/app/status.js:199
 msgid "Subscriptions"
 msgstr "מנויים"
 
@@ -1450,15 +1470,15 @@ msgstr "שבת"
 msgid "Sunday"
 msgstr "שבת"
 
-#: src/webui/static/app/chconf.js:197
+#: src/webui/static/app/chconf.js:183
 msgid "Swap Numbers"
 msgstr "החלף מספרים"
 
-#: src/webui/static/app/chconf.js:195
+#: src/webui/static/app/chconf.js:181
 msgid "Swap the numbers for the two selected channels"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:716
+#: src/webui/static/app/tvheadend.js:746
 msgid "System log"
 msgstr "יומן רישום"
 
@@ -1466,7 +1486,7 @@ msgstr "יומן רישום"
 msgid "TV adapters"
 msgstr "מקלטים"
 
-#: src/webui/static/app/epg.js:1030
+#: src/webui/static/app/epg.js:1020
 msgid "Tag"
 msgstr "תגית"
 
@@ -1478,7 +1498,7 @@ msgstr ""
 msgid "Teletext Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:326 src/webui/static/app/dvr.js:407
+#: src/webui/static/app/dvr.js:334 src/webui/static/app/dvr.js:415
 msgid "The associated file will be removed from storage."
 msgstr ""
 
@@ -1536,7 +1556,7 @@ msgstr ""
 msgid "This field is required"
 msgstr "שדה זה נדרש"
 
-#: src/webui/static/app/epg.js:1025
+#: src/webui/static/app/epg.js:1015
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
@@ -1550,11 +1570,15 @@ msgstr "חמישי"
 msgid "Thursday"
 msgstr "חמישי"
 
-#: src/webui/static/app/dvr.js:542
+#: src/webui/static/app/dvr.js:553
 msgid "Time Schedule"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:543
+#: src/webui/static/app/dvr.js:59
+msgid "Time Scheduler"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:554
 msgid "Time Schedules"
 msgstr ""
 
@@ -1567,7 +1591,7 @@ msgid "Timeshift Configuration"
 msgstr ""
 
 #: src/webui/static/app/epg.js:474 src/webui/static/app/epg.js:475
-#: src/webui/static/app/epg.js:1028 src/webui/static/app/status.js:96
+#: src/webui/static/app/epg.js:1018 src/webui/static/app/status.js:98
 msgid "Title"
 msgstr "כותרת"
 
@@ -1575,15 +1599,15 @@ msgstr "כותרת"
 msgid "Today"
 msgstr "היום"
 
-#: src/webui/static/app/tvheadend.js:318
+#: src/webui/static/app/tvheadend.js:347
 msgid "Toggle mute"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:659
+#: src/webui/static/app/tvheadend.js:689
 msgid "Total"
 msgstr ""
 
-#: src/webui/static/app/status.js:375
+#: src/webui/static/app/status.js:383
 msgid "Transport Errors"
 msgstr ""
 
@@ -1603,41 +1627,41 @@ msgstr "שלישי"
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:695
+#: src/webui/static/app/tvheadend.js:725
 msgid "Tvheadend Web-Panel"
 msgstr ""
 
 #: src/webui/static/app/caclient.js:46 src/webui/static/app/esfilter.js:32
-#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:549
+#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:557
 msgid "Type"
 msgstr "סוג"
 
-#: src/webui/static/app/status.js:370
+#: src/webui/static/app/status.js:378
 msgid "Uncorrected Blocks"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1232 src/webui/static/app/idnode.js:1716
-#: src/webui/static/app/idnode.js:2173
+#: src/webui/static/app/idnode.js:1310 src/webui/static/app/idnode.js:1810
+#: src/webui/static/app/idnode.js:2267
 msgid "Undo"
 msgstr "בטל"
 
-#: src/webui/static/app/status.js:407 src/webui/static/app/status.js:427
+#: src/webui/static/app/status.js:415 src/webui/static/app/status.js:435
 msgid "Unknown"
 msgstr "לא ידוע"
 
-#: src/webui/static/app/dvr.js:242
+#: src/webui/static/app/dvr.js:250
 msgid "Upcoming / Current Recordings"
 msgstr "הקלטות הבאות/נוכחיות"
 
-#: src/webui/static/app/dvr.js:241
+#: src/webui/static/app/dvr.js:249
 msgid "Upcoming Recording"
 msgstr "הקלטות הבאות"
 
-#: src/webui/static/app/status.js:90 src/webui/static/app/status.js:559
+#: src/webui/static/app/status.js:92 src/webui/static/app/status.js:567
 msgid "Username"
 msgstr "שם משתמש"
 
-#: src/webui/static/app/tvheadend.js:416
+#: src/webui/static/app/tvheadend.js:445
 msgid "Users"
 msgstr "משתמשים"
 
@@ -1649,7 +1673,7 @@ msgstr ""
 msgid "Video Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:327
+#: src/webui/static/app/tvheadend.js:356
 msgid "Volume"
 msgstr "עוצמת שמע"
 
@@ -1669,11 +1693,11 @@ msgstr "רביעי"
 msgid "Wednesday"
 msgstr "רביעי"
 
-#: src/webui/static/app/status.js:346
+#: src/webui/static/app/status.js:354
 msgid "Weight"
 msgstr "משקל"
 
-#: src/webui/static/app/dvr.js:31
+#: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"
 msgstr ""
 
@@ -1693,7 +1717,7 @@ msgstr ""
 msgid "You must select one item in this group"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:31
+#: src/webui/static/app/dvr.js:33
 msgid "because it is a rerun of:"
 msgstr ""
 
@@ -1716,11 +1740,11 @@ msgstr ""
 msgid "hrs"
 msgstr "שע'"
 
-#: src/webui/static/app/tvheadend.js:634
+#: src/webui/static/app/tvheadend.js:664
 msgid "login"
 msgstr "חיבור"
 
-#: src/webui/static/app/tvheadend.js:631
+#: src/webui/static/app/tvheadend.js:661
 msgid "logout"
 msgstr "ניתוק"
 
@@ -1750,7 +1774,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:350 src/webui/static/app/idnode.js:352
 #: src/webui/static/app/epg.js:420 src/webui/static/app/epg.js:423
-#: src/webui/static/app/dvr.js:44
+#: src/webui/static/app/dvr.js:46
 msgid "min"
 msgstr "דק'"
 

@@ -710,7 +710,7 @@ const idclass_t iptv_auto_network_class = {
     {
       .type     = PT_STR,
       .id       = "ctx_charset",
-      .name     = N_("Contents character set"),
+      .name     = N_("Content character set"),
       .off      = offsetof(iptv_network_t, in_ctx_charset),
       .list     = iptv_auto_network_class_charset_list,
       .notify   = iptv_auto_network_class_notify_url,

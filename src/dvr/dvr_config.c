@@ -732,7 +732,7 @@ const idclass_t dvr_config_class = {
   .ic_perm       = dvr_config_class_perm,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("DVR Behaviour"),
+         .name   = N_("DVR Behavior"),
          .number = 1,
       },
       {
@@ -833,7 +833,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "rerecord-errors",
-      .name     = N_("Re-record When Errors (0=off)"),
+      .name     = N_("Schedule a re-recording if more errors than (0=off)"),
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
       .group    = 1,
     },
