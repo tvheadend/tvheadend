@@ -712,9 +712,10 @@ linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol )
     }
     ls->ls_last_tone_off = 1;
   }
-  if (delay) {
+  /* the linuxdvb_diseqc_set_volt() fcn already sleeps for 15ms */
+  if (delay > 15) {
     tvhtrace("diseqc", "initial sleep %dms", delay);
-    usleep(delay*1000);
+    usleep((delay-15)*1000);
   }
   return 0;
 }
