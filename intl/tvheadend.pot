@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-22 20:48+0200\n"
+"POT-Creation-Date: 2015-10-22 21:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -372,7 +372,7 @@ msgid "Auto Record"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2598
-msgid "Auto Recorrd Caption"
+msgid "Auto Record Caption"
 msgstr ""
 
 #: src/dvr/dvr_db.c:2605
@@ -467,7 +467,7 @@ msgstr ""
 msgid "CAID"
 msgstr ""
 
-#: src/descrambler/capmt.c:2217
+#: src/descrambler/capmt.c:2218
 msgid "CAPMT (Linux DVBAPI)"
 msgstr ""
 
@@ -519,7 +519,7 @@ msgstr ""
 msgid "Cache Scheme"
 msgstr ""
 
-#: src/descrambler/capmt.c:2230
+#: src/descrambler/capmt.c:2231
 msgid "Camd.socket Filename / IP Address (TCP mode)"
 msgstr ""
 
@@ -1935,7 +1935,7 @@ msgstr ""
 msgid "Listen on IPv6"
 msgstr ""
 
-#: src/descrambler/capmt.c:2237
+#: src/descrambler/capmt.c:2238
 msgid "Listen/Connect Port"
 msgstr ""
 
@@ -2164,7 +2164,7 @@ msgstr ""
 msgid "Missing In PAT/SDT"
 msgstr ""
 
-#: src/descrambler/capmt.c:2222
+#: src/descrambler/capmt.c:2223
 msgid "Mode"
 msgstr ""
 
@@ -2414,19 +2414,19 @@ msgstr ""
 msgid "OK (partial)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2206
+#: src/descrambler/capmt.c:2207
 msgid "OSCam (rev >= 9095)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2205
+#: src/descrambler/capmt.c:2206
 msgid "OSCam TCP (rev >= 9574)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2203
+#: src/descrambler/capmt.c:2204
 msgid "OSCam net protocol (rev >= 10389)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2204
+#: src/descrambler/capmt.c:2205
 msgid "OSCam pc-nodmx (rev >= 9756)"
 msgstr ""
 
@@ -2438,7 +2438,7 @@ msgstr ""
 msgid "Off"
 msgstr ""
 
-#: src/descrambler/capmt.c:2207
+#: src/descrambler/capmt.c:2208
 msgid "Older OSCam"
 msgstr ""
 
@@ -2990,7 +2990,7 @@ msgstr ""
 msgid "SIGUSR2"
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:735
+#: src/bouquet.c:951 src/input/mpegts/iptv/iptv.c:735
 msgid "SSL verify peer"
 msgstr ""
 
@@ -3844,7 +3844,7 @@ msgstr ""
 msgid "Western"
 msgstr ""
 
-#: src/descrambler/capmt.c:2208
+#: src/descrambler/capmt.c:2209
 msgid "Wrapper (capmt_ca.so)"
 msgstr ""
 
@@ -3876,10 +3876,6 @@ msgstr ""
 #: src/main.c:777
 #, c-format
 msgid "option %s requires a value"
-msgstr ""
-
-#: src/bouquet.c:951
-msgid "ssl_peer_verify"
 msgstr ""
 
 #: src/main.c:742
