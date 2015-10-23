@@ -146,7 +146,7 @@ const idclass_t linuxdvb_switch_class =
     {
       .type    = PT_U32,
       .id      = "poweruptime",
-      .name    = N_("Powerup Time (ms) (10-200)"),
+      .name    = N_("Powerup Time (ms) (0-200)"),
       .off     = offsetof(linuxdvb_switch_t, ls_powerup_time),
       .def.u32 = 100,
     },
@@ -181,7 +181,7 @@ linuxdvb_switch_tune
 
     lsp->ls_last_switch = NULL;
 
-    if (linuxdvb_satconf_start(lsp, MINMAX(ls->ls_powerup_time, 10, 200), pol))
+    if (linuxdvb_satconf_start(lsp, MINMAX(ls->ls_powerup_time, 0, 200), pol))
       return -1;
 
     com = 0xF0 | (ls->ls_committed << 2) | (pol << 1) | band;
@@ -232,7 +232,7 @@ linuxdvb_switch_tune
   if (ls->ls_toneburst >= 0 &&
       (lsp->ls_diseqc_full || lsp->ls_last_toneburst != ls->ls_toneburst + 1)) {
 
-    if (linuxdvb_satconf_start(lsp, MINMAX(ls->ls_powerup_time, 10, 200), vol))
+    if (linuxdvb_satconf_start(lsp, MINMAX(ls->ls_powerup_time, 0, 200), vol))
       return -1;
 
     lsp->ls_last_toneburst = 0;
@@ -282,7 +282,7 @@ linuxdvb_switch_create0
           ld->ls_uncommitted = u;
       }
       if (ld->ls_powerup_time == 0)
-        ld->ls_powerup_time = 100;
+        ld->ls_powerup_time = 85;
       if (ld->ls_sleep_time == 0)
         ld->ls_sleep_time = 25;
     }

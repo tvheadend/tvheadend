@@ -712,8 +712,10 @@ linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol )
     }
     ls->ls_last_tone_off = 1;
   }
-  if (delay)
+  if (delay) {
+    tvhtrace("diseqc", "initial sleep %dms", delay);
     usleep(delay*1000);
+  }
   return 0;
 }
 

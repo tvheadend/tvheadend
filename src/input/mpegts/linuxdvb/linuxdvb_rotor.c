@@ -95,7 +95,7 @@ const idclass_t linuxdvb_rotor_class = {
     {
       .type    = PT_U32,
       .id      = "powerup_time",
-      .name    = N_("Powerup Time (ms) (10-200)"),
+      .name    = N_("Powerup Time (ms) (0-200)"),
       .off     = offsetof(linuxdvb_rotor_t, lr_powerup_time),
       .def.u32 = 100,
     },
@@ -430,7 +430,7 @@ linuxdvb_rotor_tune
     return 0;
 
   /* Force to 18v (quicker movement) */
-  if (linuxdvb_satconf_start(lsp, MINMAX(lr->lr_powerup_time, 10, 200), 1))
+  if (linuxdvb_satconf_start(lsp, MINMAX(lr->lr_powerup_time, 0, 200), 1))
     return -1;
 
   /* GotoX */
@@ -501,7 +501,7 @@ linuxdvb_rotor_create0
       }
       lr = (linuxdvb_rotor_t *)ld;
       if (lr->lr_powerup_time == 0)
-        lr->lr_powerup_time = 100;
+        lr->lr_powerup_time = 85;
       if (lr->lr_cmd_time == 0)
         lr->lr_cmd_time = 25;
     }
