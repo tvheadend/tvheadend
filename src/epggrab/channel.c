@@ -217,8 +217,6 @@ epggrab_channel_t *epggrab_channel_create
 {
   epggrab_channel_t *ec;
 
-  assert(owner->channels);
-
   if (htsmsg_get_str(conf, "id") == NULL)
     return NULL;
 
@@ -232,21 +230,19 @@ epggrab_channel_t *epggrab_channel_create
 
   ec->mod = owner;
   ec->enabled = 1;
-  ec->tree = owner->channels;
 
   if (conf)
     idnode_load(&ec->idnode, conf);
 
   TAILQ_INSERT_TAIL(&epggrab_channel_entries, ec, all_link);
-  if (RB_INSERT_SORTED(owner->channels, ec, link, _ch_id_cmp)) abort();
+  if (RB_INSERT_SORTED(&owner->channels, ec, link, _ch_id_cmp)) abort();
 
   return ec;
 }
 
 /* Find/Create channel in the list */
 epggrab_channel_t *epggrab_channel_find
-  ( epggrab_channel_tree_t *tree, const char *id, int create, int *save,
-    epggrab_module_t *owner )
+  ( epggrab_module_t *mod, const char *id, int create, int *save )
 {
   char *s;
   epggrab_channel_t *ec;
@@ -263,19 +259,17 @@ epggrab_channel_t *epggrab_channel_find
 
   /* Find */
   if (!create) {
-    ec = RB_FIND(tree, epggrab_channel_skel, link, _ch_id_cmp);
+    ec = RB_FIND(&mod->channels, epggrab_channel_skel, link, _ch_id_cmp);
 
   /* Find/Create */
   } else {
-    ec = RB_INSERT_SORTED(tree, epggrab_channel_skel, link, _ch_id_cmp);
+    ec = RB_INSERT_SORTED(&mod->channels, epggrab_channel_skel, link, _ch_id_cmp);
     if (!ec) {
-      assert(owner);
       ec       = epggrab_channel_skel;
       SKEL_USED(epggrab_channel_skel);
       ec->enabled = 1;
-      ec->tree = tree;
       ec->id   = strdup(ec->id);
-      ec->mod  = owner;
+      ec->mod  = mod;
       TAILQ_INSERT_TAIL(&epggrab_channel_entries, ec, all_link);
 
       if (idnode_insert(&ec->idnode, NULL, &epggrab_channel_class, 0))
@@ -302,7 +296,7 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
 
   /* Already linked */
   epggrab_channel_links_delete(ec, 0);
-  RB_REMOVE(ec->tree, ec, link);
+  RB_REMOVE(&ec->mod->channels, ec, link);
   TAILQ_REMOVE(&epggrab_channel_entries, ec, all_link);
   idnode_unlink(&ec->idnode);
 
@@ -318,15 +312,11 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
 }
 
 void epggrab_channel_flush
-  ( epggrab_channel_tree_t *tree, int delconf )
+  ( epggrab_module_t *mod, int delconf )
 {
   epggrab_channel_t *ec;
-  if (tree == NULL)
-    return;
-  while ((ec = RB_FIRST(tree)) != NULL) {
-    assert(tree == ec->tree);
+  while ((ec = RB_FIRST(&mod->channels)) != NULL)
     epggrab_channel_destroy(ec, delconf);
-  }
 }
 
 /* **************************************************************************
@@ -339,10 +329,9 @@ void epggrab_channel_add ( channel_t *ch )
   epggrab_channel_t *egc;
 
   LIST_FOREACH(mod, &epggrab_modules, link)
-    if (mod->channels)
-      RB_FOREACH(egc, mod->channels, link)
-        if (epggrab_channel_match_and_link(egc, ch))
-          break;
+    RB_FOREACH(egc, &mod->channels, link)
+      if (epggrab_channel_match_and_link(egc, ch))
+        break;
 }
 
 void epggrab_channel_rem ( channel_t *ch )
@@ -376,8 +365,8 @@ epggrab_channel_find_by_id ( const char *id )
   strncpy(buf, id, sizeof(buf));
   buf[sizeof(buf)-1] = '\0';
   if ((mid = strtok_r(buf, "|", &cid)) && cid)
-    if ((mod = epggrab_module_find_by_id(mid)) && mod->channels)
-      return epggrab_channel_find(mod->channels, cid, 0, NULL, NULL);
+    if ((mod = epggrab_module_find_by_id(mid)) != NULL)
+      return epggrab_channel_find(mod, cid, 0, NULL);
   return NULL;
 }
 
@@ -418,6 +407,17 @@ epggrab_channel_class_module_get ( void *obj )
 {
   epggrab_channel_t *ec = obj;
   snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", ec->mod->name ?: "");
+  return &prop_sbuf_ptr;
+}
+
+static const void *
+epggrab_channel_class_path_get ( void *obj )
+{
+  epggrab_channel_t *ec = obj;
+  if (ec->mod->type == EPGGRAB_INT || ec->mod->type == EPGGRAB_EXT)
+    snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", ((epggrab_module_int_t *)ec->mod)->path ?: "");
+  else
+    prop_sbuf[0] = '\0';
   return &prop_sbuf_ptr;
 }
 
@@ -465,6 +465,13 @@ const idclass_t epggrab_channel_class = {
       .id       = "module",
       .name     = N_("Module"),
       .get      = epggrab_channel_class_module_get,
+      .opts     = PO_RDONLY | PO_NOSAVE,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "path",
+      .name     = N_("Path"),
+      .get      = epggrab_channel_class_path_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {

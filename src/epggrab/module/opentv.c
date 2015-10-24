@@ -34,8 +34,6 @@
 #include "settings.h"
 #include "input.h"
 
-static epggrab_channel_tree_t _opentv_channels;
-
 #define OPENTV_TITLE_BASE   0xA0
 #define OPENTV_SUMMARY_BASE 0xA8
 #define OPENTV_TABLE_MASK   0xFC
@@ -170,8 +168,7 @@ static epggrab_channel_t *_opentv_find_epggrab_channel
 {
   char chid[256];
   snprintf(chid, sizeof(chid), "%s-%d", mod->id, cid);
-  return epggrab_channel_find(&_opentv_channels, chid, create, save,
-                              (epggrab_module_t*)mod);
+  return epggrab_channel_find((epggrab_module_t*)mod, chid, create, save);
 }
 
 /* ************************************************************************
@@ -945,9 +942,9 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
 
   /* Create */
   sprintf(nbuf, "OpenTV: %s", name);
-  mod = (opentv_module_t*)
+  mod = (opentv_module_t *)
     epggrab_module_ota_create(calloc(1, sizeof(opentv_module_t)),
-                              ibuf, nbuf, 2, &ops, NULL);
+                              ibuf, nbuf, 2, &ops);
 
   /* Add provider details */
   mod->dict     = dict;
@@ -960,7 +957,6 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   mod->channel  = _pid_list_to_array(cl);
   mod->title    = _pid_list_to_array(tl);
   mod->summary  = _pid_list_to_array(sl);
-  mod->channels = &_opentv_channels;
   _opentv_compile_pattern_list(&mod->p_snum, htsmsg_get_list(m, "season_num"));
   _opentv_compile_pattern_list(&mod->p_enum, htsmsg_get_list(m, "episode_num"));
   _opentv_compile_pattern_list(&mod->p_pnum, htsmsg_get_list(m, "part_num"));
@@ -996,8 +992,6 @@ void opentv_init ( void )
 {
   htsmsg_t *m;
 
-  RB_INIT(&_opentv_channels);
-
   /* Load dictionaries */
   if ((m = hts_settings_load("epggrab/opentv/dict")))
     _opentv_dict_load(m);
@@ -1019,7 +1013,6 @@ void opentv_done ( void )
   opentv_dict_t *dict;
   opentv_genre_t *genre;
 
-  epggrab_channel_flush(&_opentv_channels, 0);
   while ((dict = RB_FIRST(&_opentv_dicts)) != NULL) {
     RB_REMOVE(&_opentv_dicts, dict, h_link);
     huffman_tree_destroy(dict->codes);

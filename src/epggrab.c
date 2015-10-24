@@ -399,7 +399,7 @@ void epggrab_done ( void )
     if (mod->done)
       mod->done(mod);
     pthread_mutex_lock(&global_lock);
-    epggrab_channel_flush(mod->channels, 0);
+    epggrab_channel_flush(mod, 0);
     free((void *)mod->id);
     free((void *)mod->name);
     free(mod);

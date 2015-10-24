@@ -29,16 +29,6 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
-static epggrab_channel_tree_t _pyepg_channels;
-static epggrab_module_t      *_pyepg_module;   // primary module
-
-static epggrab_channel_t *_pyepg_channel_find
-  ( const char *id, int create, int *save )
-{
-  return epggrab_channel_find(&_pyepg_channels, id, create, save,
-                              _pyepg_module);
-}
-
 /* **************************************************************************
  * Parsing
  * *************************************************************************/
@@ -84,7 +74,7 @@ static int _pyepg_parse_channel
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str     = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  if (!(ch     = _pyepg_channel_find(str, 1, &save))) return 0;
+  if (!(ch     = epggrab_channel_find(mod, str, 1, &save))) return 0;
   stats->channels.total++;
   if (save) stats->channels.created++;
 
@@ -360,7 +350,7 @@ static int _pyepg_parse_schedule
 
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "channel")) == NULL) return 0;
-  if ((ec   = _pyepg_channel_find(str, 0, NULL)) == NULL) return 0;
+  if ((ec   = epggrab_channel_find(mod, str, 0, NULL)) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   HTSMSG_FOREACH(f, tags) {
@@ -438,24 +428,19 @@ void pyepg_init ( void )
 {
   char buf[256];
 
-  RB_INIT(&_pyepg_channels);
-
   /* Internal module */
   if (find_exec("pyepg", buf, sizeof(buf)-1))
     epggrab_module_int_create(NULL, NULL,
                               "pyepg-internal", "PyEPG", 4, buf,
-                              NULL, _pyepg_parse, NULL, NULL);
+                              NULL, _pyepg_parse, NULL);
 
   /* External module */
-  _pyepg_module = (epggrab_module_t*)
-    epggrab_module_ext_create(NULL, "pyepg", "PyEPG", 4, "pyepg",
-                              _pyepg_parse, NULL,
-                              &_pyepg_channels);
+  epggrab_module_ext_create(NULL, "pyepg", "PyEPG", 4, "pyepg",
+                            _pyepg_parse, NULL);
 }
 
 void pyepg_done ( void )
 {
-  epggrab_channel_flush(&_pyepg_channels, 0);
 }
 
 void pyepg_load ( void )

@@ -43,16 +43,6 @@
 #define XMLTV_FIND "tv_find_grabbers"
 #define XMLTV_GRAB "tv_grab_"
 
-static epggrab_channel_tree_t _xmltv_channels;
-static epggrab_module_t      *_xmltv_module;
-
-static epggrab_channel_t *_xmltv_channel_find
-  ( const char *id, int create, int *save )
-{
-  return epggrab_channel_find(&_xmltv_channels, id, create, save,
-                              _xmltv_module);
-}
-
 /* **************************************************************************
  * Parsing
  * *************************************************************************/
@@ -588,7 +578,7 @@ static int _xmltv_parse_programme
   if((attribs = htsmsg_get_map(body,    "attrib"))  == NULL) return 0;
   if((tags    = htsmsg_get_map(body,    "tags"))    == NULL) return 0;
   if((chid    = htsmsg_get_str(attribs, "channel")) == NULL) return 0;
-  if((ec      = _xmltv_channel_find(chid, 1, &chsave)) == NULL) return 0;
+  if((ec      = epggrab_channel_find(mod, chid, 1, &chsave)) == NULL) return 0;
   if (chsave) {
     epggrab_channel_updated(ec);
     stats->channels.created++;
@@ -628,7 +618,7 @@ static int _xmltv_parse_channel
   if((attribs = htsmsg_get_map(body, "attrib"))  == NULL) return 0;
   if((id      = htsmsg_get_str(attribs, "id"))   == NULL) return 0;
   if((tags    = htsmsg_get_map(body, "tags"))    == NULL) return 0;
-  if((ch      = _xmltv_channel_find(id, 1, &save)) == NULL) return 0;
+  if((ch      = epggrab_channel_find(mod, id, 1, &save)) == NULL) return 0;
   stats->channels.total++;
   if (save) stats->channels.created++;
   
@@ -718,7 +708,7 @@ static void _xmltv_load_grabbers ( void )
         outbuf[i] = '\0';
         sprintf(name, "XMLTV: %s", &outbuf[n]);
         epggrab_module_int_create(NULL, NULL, &outbuf[p], name, 3, &outbuf[p],
-                                  NULL, _xmltv_parse, NULL, NULL);
+                                  NULL, _xmltv_parse, NULL);
         p = n = i + 1;
       } else if ( outbuf[i] == '\\') {
         memmove(outbuf, outbuf + 1, strlen(outbuf));
@@ -751,6 +741,7 @@ static void _xmltv_load_grabbers ( void )
       if ((dir = opendir(tmp))) {
         while ((de = readdir(dir))) {
           if (strstr(de->d_name, XMLTV_GRAB) != de->d_name) continue;
+          if (de->d_name[0] && de->d_name[strlen(de->d_name)-1] == '~') continue;
           snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
           if (epggrab_module_find_by_id(bin)) continue;
           if (stat(bin, &st)) continue;
@@ -763,7 +754,7 @@ static void _xmltv_load_grabbers ( void )
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
             epggrab_module_int_create(NULL, NULL, bin, name, 3, bin,
-                                      NULL, _xmltv_parse, NULL, NULL);
+                                      NULL, _xmltv_parse, NULL);
             free(outbuf);
           } else {
             if (rd >= 0)
@@ -780,13 +771,9 @@ static void _xmltv_load_grabbers ( void )
 
 void xmltv_init ( void )
 {
-  RB_INIT(&_xmltv_channels);
-
   /* External module */
-  _xmltv_module = (epggrab_module_t*)
-    epggrab_module_ext_create(NULL, "xmltv", "XMLTV", 3, "xmltv",
-                              _xmltv_parse, NULL,
-                              &_xmltv_channels);
+  epggrab_module_ext_create(NULL, "xmltv", "XMLTV", 3, "xmltv",
+                            _xmltv_parse, NULL);
 
   /* Standard modules */
   _xmltv_load_grabbers();
@@ -794,7 +781,6 @@ void xmltv_init ( void )
 
 void xmltv_done ( void )
 {
-  epggrab_channel_flush(&_xmltv_channels, 0);
 }
 
 void xmltv_load ( void )

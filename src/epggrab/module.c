@@ -158,6 +158,14 @@ const idclass_t epggrab_class_mod_int = {
   .ic_class      = "epggrab_mod_int",
   .ic_caption    = N_("Internal EPG Grabber"),
   .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .id     = "path",
+      .name   = N_("Path"),
+      .off    = offsetof(epggrab_module_int_t, path),
+      .opts   = PO_RDONLY | PO_NOSAVE,
+      .group  = 1
+    },
     {}
   }
 };
@@ -194,8 +202,7 @@ const idclass_t epggrab_class_mod_ota = {
 
 epggrab_module_t *epggrab_module_create
   ( epggrab_module_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority,
-    epggrab_channel_tree_t *channels )
+    const char *id, const char *name, int priority )
 {
   assert(skel);
 
@@ -203,7 +210,7 @@ epggrab_module_t *epggrab_module_create
   skel->id       = strdup(id);
   skel->name     = strdup(name);
   skel->priority = priority;
-  skel->channels = channels;
+  RB_INIT(&skel->channels);
 
   /* Insert */
   assert(!epggrab_module_find_by_id(id));
@@ -259,7 +266,7 @@ void epggrab_module_channels_load ( epggrab_module_t *mod )
 {
   htsmsg_t *m, *e;
   htsmsg_field_t *f;
-  if (!mod || !mod->channels) return;
+  if (!mod) return;
   if ((m = hts_settings_load_r(1, "epggrab/%s/channels", mod->id))) {
     HTSMSG_FOREACH(f, m) {
       if ((e = htsmsg_get_map_by_field(f)))
@@ -288,8 +295,7 @@ epggrab_module_int_t *epggrab_module_int_create
     const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data),
-    epggrab_channel_tree_t *channels )
+    htsmsg_t* (*trans) (void *mod, char *data) )
 {
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
@@ -297,12 +303,11 @@ epggrab_module_int_t *epggrab_module_int_create
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         cls ?: &epggrab_class_mod_int,
-                        id, name, priority, channels);
+                        id, name, priority);
 
   /* Int data */
   skel->type     = EPGGRAB_INT;
   skel->path     = strdup(path);
-  skel->channels = channels;
   skel->grab     = grab  ?: epggrab_module_grab_spawn;
   skel->trans    = trans ?: epggrab_module_trans_xml;
   skel->parse    = parse;
@@ -505,8 +510,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   ( epggrab_module_ext_t *skel,
     const char *id, const char *name, int priority, const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data),
-    epggrab_channel_tree_t *channels )
+    htsmsg_t* (*trans) (void *mod, char *data) )
 {
   char path[512];
 
@@ -518,8 +522,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   epggrab_module_int_create((epggrab_module_int_t*)skel,
                             &epggrab_class_mod_ext,
                             id, name, priority, path,
-                            NULL, parse, trans,
-                            channels);
+                            NULL, parse, trans);
 
   /* Local */
   skel->type     = EPGGRAB_EXT;
@@ -536,15 +539,14 @@ epggrab_module_ext_t *epggrab_module_ext_create
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
     const char *id, const char *name, int priority,
-    epggrab_ota_module_ops_t *ops,
-    epggrab_channel_tree_t *channels )
+    epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
   
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         &epggrab_class_mod_ota,
-                        id, name, priority, channels);
+                        id, name, priority);
 
   /* Setup */
   skel->type     = EPGGRAB_OTA;
@@ -552,7 +554,6 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->start    = ops->start;
   skel->done     = ops->done;
   skel->tune     = ops->tune;
-  //TAILQ_INIT(&skel->muxes);
 
   return skel;
 }

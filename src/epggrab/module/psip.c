@@ -405,7 +405,7 @@ void psip_init ( void )
     .tune  = _psip_tune,
   };
 
-  epggrab_module_ota_create(NULL, "psip", "PSIP: ATSC Grabber", 1, &ops, NULL);
+  epggrab_module_ota_create(NULL, "psip", "PSIP: ATSC Grabber", 1, &ops);
 }
 
 void psip_done ( void )
