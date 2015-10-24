@@ -1427,6 +1427,8 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
 	 dvr_entry_status(de));
 
+  dvr_entry_rerecord(de);
+
   if (saveconf)
     dvr_entry_save(de);
 
