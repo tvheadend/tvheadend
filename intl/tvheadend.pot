@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-23 08:33+0200\n"
+"POT-Creation-Date: 2015-10-24 21:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -168,51 +168,51 @@ msgstr ""
 msgid "AES Constant Code Word Client"
 msgstr ""
 
-#: src/config.c:1849
+#: src/config.c:1850
 msgid "AF11"
 msgstr ""
 
-#: src/config.c:1850
+#: src/config.c:1851
 msgid "AF12"
 msgstr ""
 
-#: src/config.c:1851
+#: src/config.c:1852
 msgid "AF13"
 msgstr ""
 
-#: src/config.c:1853
+#: src/config.c:1854
 msgid "AF21"
 msgstr ""
 
-#: src/config.c:1854
+#: src/config.c:1855
 msgid "AF22"
 msgstr ""
 
-#: src/config.c:1855
+#: src/config.c:1856
 msgid "AF23"
 msgstr ""
 
-#: src/config.c:1857
+#: src/config.c:1858
 msgid "AF31"
 msgstr ""
 
-#: src/config.c:1858
+#: src/config.c:1859
 msgid "AF32"
 msgstr ""
 
-#: src/config.c:1859
+#: src/config.c:1860
 msgid "AF33"
 msgstr ""
 
-#: src/config.c:1861
+#: src/config.c:1862
 msgid "AF41"
 msgstr ""
 
-#: src/config.c:1862
+#: src/config.c:1863
 msgid "AF42"
 msgstr ""
 
-#: src/config.c:1863
+#: src/config.c:1864
 msgid "AF43"
 msgstr ""
 
@@ -266,8 +266,8 @@ msgstr ""
 msgid "Admin"
 msgstr ""
 
-#: src/epg.c:1959 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
-#: src/epg.c:1964
+#: src/epg.c:1961 src/epg.c:1962 src/epg.c:1963 src/epg.c:1964 src/epg.c:1965
+#: src/epg.c:1966
 msgid "Adult movie"
 msgstr ""
 
@@ -279,11 +279,11 @@ msgstr ""
 msgid "Advanced Streaming"
 msgstr ""
 
-#: src/epg.c:1953
+#: src/epg.c:1955
 msgid "Adventure"
 msgstr ""
 
-#: src/epg.c:2090
+#: src/epg.c:2092
 msgid "Advertisement / Shopping"
 msgstr ""
 
@@ -317,7 +317,7 @@ msgstr ""
 msgid "Altitude (meters)"
 msgstr ""
 
-#: src/epg.c:2069
+#: src/epg.c:2071
 msgid "Animals"
 msgstr ""
 
@@ -327,11 +327,11 @@ msgstr ""
 msgid "Any"
 msgstr ""
 
-#: src/epg.c:2041
+#: src/epg.c:2043
 msgid "Arts"
 msgstr ""
 
-#: src/epg.c:2005
+#: src/epg.c:2007
 msgid "Athletics"
 msgstr ""
 
@@ -379,6 +379,11 @@ msgstr ""
 msgid "Auto Time Record"
 msgstr ""
 
+#: src/dvr/dvr_db.c:986
+#, c-format
+msgid "Auto recording%s%s"
+msgstr ""
+
 #: src/bouquet.c:893
 msgid "Auto-Map to Channels"
 msgstr ""
@@ -402,7 +407,11 @@ msgstr ""
 msgid "BB"
 msgstr ""
 
-#: src/epg.c:2026
+#: src/subscriptions.c:875
+msgid "Bad"
+msgstr ""
+
+#: src/epg.c:2028
 msgid "Ballet"
 msgstr ""
 
@@ -434,7 +443,7 @@ msgstr ""
 msgid "Broadcast"
 msgstr ""
 
-#: src/epg.c:2049
+#: src/epg.c:2051
 msgid "Broadcasting"
 msgstr ""
 
@@ -483,35 +492,35 @@ msgstr ""
 msgid "CRID Authority"
 msgstr ""
 
-#: src/config.c:1847
+#: src/config.c:1848
 msgid "CS0"
 msgstr ""
 
-#: src/config.c:1848
+#: src/config.c:1849
 msgid "CS1"
 msgstr ""
 
-#: src/config.c:1852
+#: src/config.c:1853
 msgid "CS2"
 msgstr ""
 
-#: src/config.c:1856
+#: src/config.c:1857
 msgid "CS3"
 msgstr ""
 
-#: src/config.c:1860
+#: src/config.c:1861
 msgid "CS4"
 msgstr ""
 
-#: src/config.c:1864
+#: src/config.c:1865
 msgid "CS5"
 msgstr ""
 
-#: src/config.c:1866
+#: src/config.c:1867
 msgid "CS6"
 msgstr ""
 
-#: src/config.c:1867
+#: src/config.c:1868
 msgid "CS7"
 msgstr ""
 
@@ -523,8 +532,8 @@ msgstr ""
 msgid "Camd.socket Filename / IP Address (TCP mode)"
 msgstr ""
 
-#: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
-#: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
+#: src/epg.c:2017 src/epg.c:2018 src/epg.c:2019 src/epg.c:2020 src/epg.c:2021
+#: src/epg.c:2022 src/epg.c:2023 src/epg.c:2024 src/epg.c:2025
 msgid "Cartoons"
 msgstr ""
 
@@ -557,11 +566,11 @@ msgstr ""
 msgid "Channel Tags"
 msgstr ""
 
-#: src/config.c:2035
+#: src/config.c:2036
 msgid "Channel icon name lower-case"
 msgstr ""
 
-#: src/config.c:2028
+#: src/config.c:2029
 msgid "Channel icon path (see Help)"
 msgstr ""
 
@@ -582,11 +591,11 @@ msgstr ""
 msgid "Character Set"
 msgstr ""
 
-#: src/epg.c:2010
+#: src/epg.c:2012
 msgid "Children's / Youth programmes"
 msgstr ""
 
-#: src/epg.c:2047
+#: src/epg.c:2049
 msgid "Cinema"
 msgstr ""
 
@@ -594,11 +603,11 @@ msgstr ""
 msgid "Class"
 msgstr ""
 
-#: src/epg.c:1958
+#: src/epg.c:1960
 msgid "Classical"
 msgstr ""
 
-#: src/epg.c:2028
+#: src/epg.c:2030
 msgid "Classical music"
 msgstr ""
 
@@ -622,7 +631,7 @@ msgstr ""
 msgid "Code Word Client (newcamd)"
 msgstr ""
 
-#: src/epg.c:1955
+#: src/epg.c:1957
 msgid "Comedy"
 msgstr ""
 
@@ -655,7 +664,7 @@ msgstr ""
 msgid "Conditional Access Client"
 msgstr ""
 
-#: src/config.c:1875
+#: src/config.c:1876
 msgid "Configuration"
 msgstr ""
 
@@ -667,7 +676,7 @@ msgstr ""
 msgid "Configuration Name"
 msgstr ""
 
-#: src/config.c:1910
+#: src/config.c:1911
 msgid "Configuration version"
 msgstr ""
 
@@ -691,7 +700,7 @@ msgstr ""
 msgid "Content character set"
 msgstr ""
 
-#: src/epg.c:1984
+#: src/epg.c:1986
 msgid "Contest"
 msgstr ""
 
@@ -699,11 +708,11 @@ msgstr ""
 msgid "Continue On Access Error"
 msgstr ""
 
-#: src/config.c:1933
+#: src/config.c:1934
 msgid "Cookie expiration (days)"
 msgstr ""
 
-#: src/epg.c:2089
+#: src/epg.c:2091
 msgid "Cooking"
 msgstr ""
 
@@ -739,11 +748,11 @@ msgstr ""
 msgid "Cron multi-line"
 msgstr ""
 
-#: src/epg.c:2041
+#: src/epg.c:2043
 msgid "Culture (without music)"
 msgstr ""
 
-#: src/epg.c:1967
+#: src/epg.c:1969
 msgid "Current affairs"
 msgstr ""
 
@@ -759,7 +768,7 @@ msgstr ""
 msgid "DES Key"
 msgstr ""
 
-#: src/config.c:1948
+#: src/config.c:1949
 msgid "DSCP/TOS for streaming"
 msgstr ""
 
@@ -767,11 +776,11 @@ msgstr ""
 msgid "DVB EPG ID"
 msgstr ""
 
-#: src/config.c:1893
+#: src/config.c:1894
 msgid "DVB Scan Files"
 msgstr ""
 
-#: src/config.c:1993
+#: src/config.c:1994
 msgid "DVB scan files path"
 msgstr ""
 
@@ -915,7 +924,7 @@ msgstr ""
 msgid "DVR Time-Record Entry"
 msgstr ""
 
-#: src/epg.c:2026
+#: src/epg.c:2028
 msgid "Dance"
 msgstr ""
 
@@ -927,8 +936,8 @@ msgstr ""
 msgid "Days of Week"
 msgstr ""
 
-#: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
-#: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
+#: src/epg.c:1973 src/epg.c:1974 src/epg.c:1975 src/epg.c:1976 src/epg.c:1977
+#: src/epg.c:1978 src/epg.c:1979 src/epg.c:1980 src/epg.c:1981 src/epg.c:1982
 msgid "Debate"
 msgstr ""
 
@@ -960,7 +969,7 @@ msgstr ""
 msgid "Debugging"
 msgstr ""
 
-#: src/config.c:1846 src/profile.c:300
+#: src/config.c:1847 src/profile.c:300
 msgid "Default"
 msgstr ""
 
@@ -968,7 +977,7 @@ msgstr ""
 msgid "Default Priority"
 msgstr ""
 
-#: src/config.c:1964
+#: src/config.c:1965
 msgid "Default language(s)"
 msgstr ""
 
@@ -985,7 +994,7 @@ msgstr ""
 msgid "Descramble Services (Limit Per Mux)"
 msgstr ""
 
-#: src/config.c:1956
+#: src/config.c:1957
 msgid "Descrambler buffer (TS packets)"
 msgstr ""
 
@@ -993,7 +1002,7 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: src/epg.c:1952
+#: src/epg.c:1954
 msgid "Detective"
 msgstr ""
 
@@ -1042,12 +1051,12 @@ msgstr ""
 msgid "Disable syslog (all messages)"
 msgstr ""
 
-#: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
-#: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
+#: src/epg.c:1973 src/epg.c:1974 src/epg.c:1975 src/epg.c:1976 src/epg.c:1977
+#: src/epg.c:1978 src/epg.c:1979 src/epg.c:1980 src/epg.c:1981 src/epg.c:1982
 msgid "Discussion"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1436
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1439
 msgid "DiseqC"
 msgstr ""
 
@@ -1067,7 +1076,7 @@ msgstr ""
 msgid "Do not use"
 msgstr ""
 
-#: src/epg.c:1970 src/epg.c:2053
+#: src/epg.c:1972 src/epg.c:2055
 msgid "Documentary"
 msgstr ""
 
@@ -1087,8 +1096,8 @@ msgstr ""
 msgid "Don't keep"
 msgstr ""
 
-#: src/epg.c:1951 src/epg.c:1958 src/epg.c:1959 src/epg.c:1960 src/epg.c:1961
-#: src/epg.c:1962 src/epg.c:1963 src/epg.c:1964
+#: src/epg.c:1953 src/epg.c:1960 src/epg.c:1961 src/epg.c:1962 src/epg.c:1963
+#: src/epg.c:1964 src/epg.c:1965 src/epg.c:1966
 msgid "Drama"
 msgstr ""
 
@@ -1100,7 +1109,7 @@ msgstr ""
 msgid "Duration"
 msgstr ""
 
-#: src/config.c:1865
+#: src/config.c:1866
 msgid "EF"
 msgstr ""
 
@@ -1144,15 +1153,15 @@ msgstr ""
 msgid "EPG scan timeout in seconds (30-7200)"
 msgstr ""
 
-#: src/epg.c:2052 src/epg.c:2054
+#: src/epg.c:2054 src/epg.c:2056
 msgid "Economics"
 msgstr ""
 
-#: src/epg.c:2068
+#: src/epg.c:2070
 msgid "Education"
 msgstr ""
 
-#: src/epg.c:2014
+#: src/epg.c:2016
 msgid "Educational"
 msgstr ""
 
@@ -1168,7 +1177,7 @@ msgstr ""
 msgid "Enable DBus"
 msgstr ""
 
-#: src/config.c:2007
+#: src/config.c:2008
 msgid "Enable NTP driver"
 msgstr ""
 
@@ -1208,7 +1217,7 @@ msgstr ""
 #: src/dvr/dvr_config.c:767 src/descrambler/caclient.c:262
 #: src/input/mpegts/mpegts_input.c:226 src/input/mpegts/mpegts_mux.c:498
 #: src/input/mpegts/mpegts_mux_sched.c:126
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1270
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1273
 #: src/input/mpegts/satip/satip_satconf.c:188 src/timeshift.c:150
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:188
 msgid "Enabled"
@@ -1222,15 +1231,15 @@ msgstr ""
 msgid "Encrypted service"
 msgstr ""
 
-#: src/epg.c:2013
+#: src/epg.c:2015
 msgid "Entertainment programmes for 10 to 16"
 msgstr ""
 
-#: src/epg.c:2012
+#: src/epg.c:2014
 msgid "Entertainment programmes for 6 to 14"
 msgstr ""
 
-#: src/epg.c:2069
+#: src/epg.c:2071
 msgid "Environment"
 msgstr ""
 
@@ -1267,11 +1276,11 @@ msgstr ""
 msgid "Exclude Channel Tags"
 msgstr ""
 
-#: src/epg.c:2072
+#: src/epg.c:2074
 msgid "Expeditions"
 msgstr ""
 
-#: src/epg.c:2048
+#: src/epg.c:2050
 msgid "Experimental film"
 msgstr ""
 
@@ -1323,7 +1332,7 @@ msgstr ""
 msgid "FEC Low"
 msgstr ""
 
-#: src/epg.c:2068
+#: src/epg.c:2070
 msgid "Factual topics"
 msgstr ""
 
@@ -1331,7 +1340,7 @@ msgstr ""
 msgid "Failed DVR"
 msgstr ""
 
-#: src/epg.c:1954
+#: src/epg.c:1956
 msgid "Fantasy"
 msgstr ""
 
@@ -1371,27 +1380,27 @@ msgstr ""
 msgid "Filename Options"
 msgstr ""
 
-#: src/epg.c:2047
+#: src/epg.c:2049
 msgid "Film"
 msgstr ""
 
-#: src/epg.c:2043
+#: src/epg.c:2045
 msgid "Fine arts"
 msgstr ""
 
-#: src/epg.c:2088
+#: src/epg.c:2090
 msgid "Fitness and health"
 msgstr ""
 
-#: src/epg.c:2029
+#: src/epg.c:2031
 msgid "Folk"
 msgstr ""
 
-#: src/epg.c:1956
+#: src/epg.c:1958
 msgid "Folkloric"
 msgstr ""
 
-#: src/epg.c:2002
+#: src/epg.c:2004
 msgid "Football"
 msgstr ""
 
@@ -1423,7 +1432,7 @@ msgstr ""
 msgid "Force teardown delay"
 msgstr ""
 
-#: src/epg.c:2072
+#: src/epg.c:2074
 msgid "Foreign countries"
 msgstr ""
 
@@ -1487,7 +1496,7 @@ msgstr ""
 msgid "Full-text"
 msgstr ""
 
-#: src/epg.c:2074
+#: src/epg.c:2076
 msgid "Further education"
 msgstr ""
 
@@ -1503,12 +1512,12 @@ msgstr ""
 msgid "GOTOX Rotor"
 msgstr ""
 
-#: src/epg.c:1983 src/epg.c:1984
+#: src/epg.c:1985 src/epg.c:1986
 msgid "Game show"
 msgstr ""
 
-#: src/epg.c:2091 src/epg.c:2092 src/epg.c:2093 src/epg.c:2094 src/epg.c:2095
-#: src/epg.c:2096 src/epg.c:2097
+#: src/epg.c:2093 src/epg.c:2094 src/epg.c:2095 src/epg.c:2096 src/epg.c:2097
+#: src/epg.c:2098 src/epg.c:2099
 msgid "Gardening"
 msgstr ""
 
@@ -1569,11 +1578,11 @@ msgstr ""
 msgid "HTSP Streaming"
 msgstr ""
 
-#: src/config.c:1940
+#: src/config.c:1941
 msgid "HTTP CORS Origin"
 msgstr ""
 
-#: src/epg.c:2086
+#: src/epg.c:2088
 msgid "Handicraft"
 msgstr ""
 
@@ -1593,11 +1602,11 @@ msgstr ""
 msgid "High Bitrate Mode (CI+ CAMs Only)"
 msgstr ""
 
-#: src/epg.c:1958
+#: src/epg.c:1960
 msgid "Historical movie"
 msgstr ""
 
-#: src/epg.c:1954
+#: src/epg.c:1956
 msgid "Horror"
 msgstr ""
 
@@ -1668,6 +1677,10 @@ msgstr ""
 
 #: src/webui/extjs.c:205
 msgid "Icons from"
+msgstr ""
+
+#: src/subscriptions.c:863
+msgid "Idle"
 msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:272
@@ -1743,11 +1756,11 @@ msgstr ""
 msgid "Index"
 msgstr ""
 
-#: src/config.c:1975
+#: src/config.c:1976
 msgid "Information area"
 msgstr ""
 
-#: src/epg.c:2014
+#: src/epg.c:2016
 msgid "Informational"
 msgstr ""
 
@@ -1791,8 +1804,8 @@ msgstr ""
 msgid "Internal Grabber"
 msgstr ""
 
-#: src/epg.c:1971 src/epg.c:1972 src/epg.c:1973 src/epg.c:1974 src/epg.c:1975
-#: src/epg.c:1976 src/epg.c:1977 src/epg.c:1978 src/epg.c:1979 src/epg.c:1980
+#: src/epg.c:1973 src/epg.c:1974 src/epg.c:1975 src/epg.c:1976 src/epg.c:1977
+#: src/epg.c:1978 src/epg.c:1979 src/epg.c:1980 src/epg.c:1981 src/epg.c:1982
 msgid "Interview"
 msgstr ""
 
@@ -1809,7 +1822,7 @@ msgstr ""
 msgid "Invalid target"
 msgstr ""
 
-#: src/epg.c:2030
+#: src/epg.c:2032
 msgid "Jazz"
 msgstr ""
 
@@ -1833,7 +1846,7 @@ msgstr ""
 msgid "LNB"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1301
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1304
 msgid "LNB Type"
 msgstr ""
 
@@ -1842,12 +1855,12 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#: src/config.c:1885
+#: src/config.c:1886
 msgid "Language Settings"
 msgstr ""
 
-#: src/epg.c:2075 src/epg.c:2076 src/epg.c:2077 src/epg.c:2078 src/epg.c:2079
-#: src/epg.c:2080 src/epg.c:2081
+#: src/epg.c:2077 src/epg.c:2078 src/epg.c:2079 src/epg.c:2080 src/epg.c:2081
+#: src/epg.c:2082 src/epg.c:2083
 msgid "Languages"
 msgstr ""
 
@@ -1855,7 +1868,7 @@ msgstr ""
 msgid "Last Seen"
 msgstr ""
 
-#: src/config.c:1918
+#: src/config.c:1919
 msgid "Last updated from"
 msgstr ""
 
@@ -1863,7 +1876,7 @@ msgstr ""
 msgid "Latitude Direction South"
 msgstr ""
 
-#: src/epg.c:2084
+#: src/epg.c:2086
 msgid "Leisure hobbies"
 msgstr ""
 
@@ -1939,7 +1952,7 @@ msgstr ""
 msgid "Listen/Connect Port"
 msgstr ""
 
-#: src/epg.c:2046
+#: src/epg.c:2048
 msgid "Literature"
 msgstr ""
 
@@ -1972,7 +1985,7 @@ msgstr ""
 msgid "Log"
 msgstr ""
 
-#: src/config.c:1836
+#: src/config.c:1837
 msgid "Login/Logout"
 msgstr ""
 
@@ -2032,7 +2045,7 @@ msgstr ""
 msgid "MPEG-TS/av-lib"
 msgstr ""
 
-#: src/epg.c:2053
+#: src/epg.c:2055
 msgid "Magazines"
 msgstr ""
 
@@ -2140,11 +2153,11 @@ msgstr ""
 msgid "Maximum timeout (seconds)"
 msgstr ""
 
-#: src/epg.c:2071
+#: src/epg.c:2073
 msgid "Medicine"
 msgstr ""
 
-#: src/epg.c:1956
+#: src/epg.c:1958
 msgid "Melodrama"
 msgstr ""
 
@@ -2204,24 +2217,24 @@ msgstr ""
 msgid "Motor Rate (millis/deg)"
 msgstr ""
 
-#: src/epg.c:2006
+#: src/epg.c:2008
 msgid "Motor sport"
 msgstr ""
 
-#: src/epg.c:2087
+#: src/epg.c:2089
 msgid "Motoring"
 msgstr ""
 
-#: src/epg.c:1951
+#: src/epg.c:1953
 msgid "Movie"
 msgstr ""
 
-#: src/epg.c:2026
+#: src/epg.c:2028
 msgid "Music"
 msgstr ""
 
-#: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
-#: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
+#: src/epg.c:2033 src/epg.c:2034 src/epg.c:2035 src/epg.c:2036 src/epg.c:2037
+#: src/epg.c:2038 src/epg.c:2039 src/epg.c:2040
 msgid "Musical"
 msgstr ""
 
@@ -2261,16 +2274,16 @@ msgstr ""
 #: src/epggrab/module.c:124 src/epggrab/channel.c:479
 #: src/dvr/dvr_autorec.c:972 src/dvr/dvr_timerec.c:565
 #: src/input/mpegts/mpegts_input.c:250 src/input/mpegts/mpegts_mux.c:528
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1276
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1279
 #: src/input/mpegts/satip/satip_satconf.c:194
 msgid "Name"
 msgstr ""
 
-#: src/epg.c:2070
+#: src/epg.c:2072
 msgid "Natural sciences"
 msgstr ""
 
-#: src/epg.c:2069
+#: src/epg.c:2071
 msgid "Nature"
 msgstr ""
 
@@ -2315,16 +2328,16 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_input.c:280
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:333
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1291
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1294
 #: src/input/mpegts/satip/satip_satconf.c:224
 msgid "Networks"
 msgstr ""
 
-#: src/epg.c:1967 src/epg.c:1968
+#: src/epg.c:1969 src/epg.c:1970
 msgid "News"
 msgstr ""
 
-#: src/epg.c:1969
+#: src/epg.c:1971
 msgid "News magazine"
 msgstr ""
 
@@ -2502,8 +2515,8 @@ msgstr ""
 msgid "OpenTV Channel Number"
 msgstr ""
 
-#: src/epg.c:2031 src/epg.c:2032 src/epg.c:2033 src/epg.c:2034 src/epg.c:2035
-#: src/epg.c:2036 src/epg.c:2037 src/epg.c:2038
+#: src/epg.c:2033 src/epg.c:2034 src/epg.c:2035 src/epg.c:2036 src/epg.c:2037
+#: src/epg.c:2038 src/epg.c:2039 src/epg.c:2040
 msgid "Opera"
 msgstr ""
 
@@ -2611,7 +2624,7 @@ msgstr ""
 msgid "Path"
 msgstr ""
 
-#: src/epg.c:2042
+#: src/epg.c:2044
 msgid "Performing arts"
 msgstr ""
 
@@ -2619,15 +2632,15 @@ msgstr ""
 msgid "Periodic save EPG to disk"
 msgstr ""
 
-#: src/epg.c:2071
+#: src/epg.c:2073
 msgid "Physiology"
 msgstr ""
 
-#: src/config.c:1901
+#: src/config.c:1902
 msgid "Picon"
 msgstr ""
 
-#: src/config.c:2042
+#: src/config.c:2043
 msgid "Picon path (see Help)"
 msgstr ""
 
@@ -2639,15 +2652,15 @@ msgstr ""
 msgid "Polarization"
 msgstr ""
 
-#: src/epg.c:2052
+#: src/epg.c:2054
 msgid "Political issues"
 msgstr ""
 
-#: src/epg.c:2027
+#: src/epg.c:2029
 msgid "Pop"
 msgstr ""
 
-#: src/epg.c:2045
+#: src/epg.c:2047
 msgid "Popular culture"
 msgstr ""
 
@@ -2670,7 +2683,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:149
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:98
-msgid "Powerup Time (ms) (10-200)"
+msgid "Powerup Time (ms) (15-200)"
 msgstr ""
 
 #: src/input/mpegts/mpegts_network_dvb.c:206
@@ -2680,11 +2693,11 @@ msgstr ""
 msgid "Pre-defined Muxes"
 msgstr ""
 
-#: src/epg.c:2011
+#: src/epg.c:2013
 msgid "Pre-school children's programmes"
 msgstr ""
 
-#: src/config.c:2021
+#: src/config.c:2022
 msgid "Prefer picons over channel name"
 msgstr ""
 
@@ -2700,13 +2713,13 @@ msgstr ""
 msgid "Presentation"
 msgstr ""
 
-#: src/epg.c:2049
+#: src/epg.c:2051
 msgid "Press"
 msgstr ""
 
 #: src/epggrab/module.c:148 src/dvr/dvr_db.c:2481 src/dvr/dvr_autorec.c:1081
 #: src/dvr/dvr_timerec.c:624 src/input/mpegts/mpegts_input.c:234
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1283
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1286
 #: src/input/mpegts/satip/satip_satconf.c:201 src/input/mpegts/iptv/iptv.c:601
 #: src/input/mpegts/iptv/iptv_mux.c:120
 msgid "Priority"
@@ -2732,12 +2745,12 @@ msgstr ""
 msgid "Provider ID"
 msgstr ""
 
-#: src/epg.c:2071
+#: src/epg.c:2073
 msgid "Psychology"
 msgstr ""
 
-#: src/epg.c:2015 src/epg.c:2016 src/epg.c:2017 src/epg.c:2018 src/epg.c:2019
-#: src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
+#: src/epg.c:2017 src/epg.c:2018 src/epg.c:2019 src/epg.c:2020 src/epg.c:2021
+#: src/epg.c:2022 src/epg.c:2023 src/epg.c:2024 src/epg.c:2025
 msgid "Puppets"
 msgstr ""
 
@@ -2745,7 +2758,7 @@ msgstr ""
 msgid "Quad (4.0)"
 msgstr ""
 
-#: src/epg.c:1984
+#: src/epg.c:1986
 msgid "Quiz"
 msgstr ""
 
@@ -2767,6 +2780,11 @@ msgstr ""
 
 #: src/bouquet.c:959 src/input/mpegts/iptv/iptv.c:728
 msgid "Re-fetch period (mins)"
+msgstr ""
+
+#: src/dvr/dvr_db.c:861
+#, c-format
+msgid "Re-record%s%s"
 msgstr ""
 
 #: src/imagecache.c:102
@@ -2809,17 +2827,17 @@ msgstr ""
 msgid "Reject"
 msgstr ""
 
-#: src/epg.c:2044
+#: src/epg.c:2046
 msgid "Religion"
 msgstr ""
 
-#: src/epg.c:1958
+#: src/epg.c:1960
 msgid "Religious"
 msgstr ""
 
-#: src/epg.c:2055 src/epg.c:2056 src/epg.c:2057 src/epg.c:2058 src/epg.c:2059
-#: src/epg.c:2060 src/epg.c:2061 src/epg.c:2062 src/epg.c:2063 src/epg.c:2064
-#: src/epg.c:2065
+#: src/epg.c:2057 src/epg.c:2058 src/epg.c:2059 src/epg.c:2060 src/epg.c:2061
+#: src/epg.c:2062 src/epg.c:2063 src/epg.c:2064 src/epg.c:2065 src/epg.c:2066
+#: src/epg.c:2067
 msgid "Remarkable people"
 msgstr ""
 
@@ -2839,7 +2857,7 @@ msgstr ""
 msgid "Reply to CAM PIN Enquiries"
 msgstr ""
 
-#: src/epg.c:2053
+#: src/epg.c:2055
 msgid "Reports"
 msgstr ""
 
@@ -2883,7 +2901,7 @@ msgstr ""
 msgid "Rewrite SDT"
 msgstr ""
 
-#: src/epg.c:2027
+#: src/epg.c:2029
 msgid "Rock"
 msgstr ""
 
@@ -2891,11 +2909,11 @@ msgstr ""
 msgid "Rolloff"
 msgstr ""
 
-#: src/epg.c:1957
+#: src/epg.c:1959
 msgid "Romance"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1319
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1322
 msgid "Rotor Type"
 msgstr ""
 
@@ -2907,7 +2925,7 @@ msgstr ""
 msgid "Run as user"
 msgstr ""
 
-#: src/dvr/dvr_db.c:338
+#: src/subscriptions.c:871 src/dvr/dvr_db.c:338
 msgid "Running"
 msgstr ""
 
@@ -3002,7 +3020,7 @@ msgstr ""
 msgid "SatConfig"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1261
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1264
 #: src/input/mpegts/satip/satip_satconf.c:180
 msgid "Satconf"
 msgstr ""
@@ -3052,15 +3070,15 @@ msgstr ""
 msgid "Scheduled for recording"
 msgstr ""
 
-#: src/epg.c:2014
+#: src/epg.c:2016
 msgid "School programmes"
 msgstr ""
 
-#: src/epg.c:2068
+#: src/epg.c:2070
 msgid "Science"
 msgstr ""
 
-#: src/epg.c:1954
+#: src/epg.c:1956
 msgid "Science fiction"
 msgstr ""
 
@@ -3089,15 +3107,15 @@ msgstr ""
 msgid "Series Link"
 msgstr ""
 
-#: src/epg.c:1958
+#: src/epg.c:1960
 msgid "Serious"
 msgstr ""
 
-#: src/epg.c:2028
+#: src/epg.c:2030
 msgid "Serious music"
 msgstr ""
 
-#: src/config.c:1881 src/input/mpegts/satip/satip.c:416
+#: src/config.c:1882 src/input/mpegts/satip/satip.c:416
 msgid "Server"
 msgstr ""
 
@@ -3152,7 +3170,7 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/epg.c:1983
+#: src/epg.c:1985
 msgid "Show"
 msgstr ""
 
@@ -3204,19 +3222,19 @@ msgstr ""
 msgid "Slot State"
 msgstr ""
 
-#: src/epg.c:1956
+#: src/epg.c:1958
 msgid "Soap"
 msgstr ""
 
-#: src/epg.c:2002
+#: src/epg.c:2004
 msgid "Soccer"
 msgstr ""
 
-#: src/epg.c:2052 src/epg.c:2073
+#: src/epg.c:2054 src/epg.c:2075
 msgid "Social"
 msgstr ""
 
-#: src/epg.c:2054
+#: src/epg.c:2056
 msgid "Social advisory"
 msgstr ""
 
@@ -3240,7 +3258,7 @@ msgstr ""
 msgid "Source reconfigured"
 msgstr ""
 
-#: src/epg.c:2000
+#: src/epg.c:2002
 msgid "Special events (Olympic Games, World Cup, etc.)"
 msgstr ""
 
@@ -3268,19 +3286,19 @@ msgstr ""
 msgid "Specify extra htsp port"
 msgstr ""
 
-#: src/epg.c:2073
+#: src/epg.c:2075
 msgid "Spiritual sciences"
 msgstr ""
 
-#: src/epg.c:1999
+#: src/epg.c:2001
 msgid "Sports"
 msgstr ""
 
-#: src/epg.c:2001
+#: src/epg.c:2003
 msgid "Sports magazines"
 msgstr ""
 
-#: src/epg.c:2003
+#: src/epg.c:2005
 msgid "Squash"
 msgstr ""
 
@@ -3328,7 +3346,7 @@ msgstr ""
 msgid "Storage Path"
 msgstr ""
 
-#: src/config.c:1837
+#: src/config.c:1838
 msgid "Storage space"
 msgstr ""
 
@@ -3403,7 +3421,7 @@ msgstr ""
 msgid "Switch Then Rotor"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1310
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1313
 msgid "Switch Type"
 msgstr ""
 
@@ -3436,17 +3454,17 @@ msgstr ""
 msgid "Tags"
 msgstr ""
 
-#: src/epg.c:1986 src/epg.c:1987 src/epg.c:1988 src/epg.c:1989 src/epg.c:1990
-#: src/epg.c:1991 src/epg.c:1992 src/epg.c:1993 src/epg.c:1994 src/epg.c:1995
-#: src/epg.c:1996
+#: src/epg.c:1988 src/epg.c:1989 src/epg.c:1990 src/epg.c:1991 src/epg.c:1992
+#: src/epg.c:1993 src/epg.c:1994 src/epg.c:1995 src/epg.c:1996 src/epg.c:1997
+#: src/epg.c:1998
 msgid "Talk show"
 msgstr ""
 
-#: src/epg.c:2004
+#: src/epg.c:2006
 msgid "Team sports (excluding football)"
 msgstr ""
 
-#: src/epg.c:2070
+#: src/epg.c:2072
 msgid "Technology"
 msgstr ""
 
@@ -3454,8 +3472,12 @@ msgstr ""
 msgid "Teletext Stream Filter"
 msgstr ""
 
-#: src/epg.c:2003
+#: src/epg.c:2005
 msgid "Tennis"
+msgstr ""
+
+#: src/subscriptions.c:867
+msgid "Testing"
 msgstr ""
 
 #: src/main.c:740
@@ -3467,7 +3489,7 @@ msgstr ""
 msgid "This Tuner"
 msgstr ""
 
-#: src/epg.c:1952
+#: src/epg.c:1954
 msgid "Thriller"
 msgstr ""
 
@@ -3475,7 +3497,7 @@ msgstr ""
 msgid "Thu"
 msgstr ""
 
-#: src/config.c:1838
+#: src/config.c:1839
 msgid "Time"
 msgstr ""
 
@@ -3483,7 +3505,7 @@ msgstr ""
 msgid "Time Record Caption"
 msgstr ""
 
-#: src/config.c:1897
+#: src/config.c:1898
 msgid "Time Update"
 msgstr ""
 
@@ -3528,7 +3550,7 @@ msgstr ""
 msgid "Tone Burst"
 msgstr ""
 
-#: src/epg.c:2085
+#: src/epg.c:2087
 msgid "Tourism / Travel"
 msgstr ""
 
@@ -3536,11 +3558,11 @@ msgstr ""
 msgid "Trace subsystems"
 msgstr ""
 
-#: src/epg.c:2045
+#: src/epg.c:2047
 msgid "Traditional arts"
 msgstr ""
 
-#: src/epg.c:2029
+#: src/epg.c:2031
 msgid "Traditional music"
 msgstr ""
 
@@ -3588,7 +3610,7 @@ msgstr ""
 msgid "Turn off LNB when idle"
 msgstr ""
 
-#: src/config.c:1926
+#: src/config.c:1927
 msgid "Tvheadend server name"
 msgstr ""
 
@@ -3638,7 +3660,7 @@ msgstr ""
 msgid "Unicable Switch (Universal LNB, experimental)"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1328
+#: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1331
 msgid "Unicable Type"
 msgstr ""
 
@@ -3691,11 +3713,11 @@ msgstr ""
 msgid "Update channel number"
 msgstr ""
 
-#: src/config.c:2000
+#: src/config.c:2001
 msgid "Update time"
 msgstr ""
 
-#: src/config.c:2014
+#: src/config.c:2015
 msgid "Update tolerance (ms)"
 msgstr ""
 
@@ -3736,7 +3758,7 @@ msgstr ""
 msgid "User access error"
 msgstr ""
 
-#: src/config.c:1985
+#: src/config.c:1986
 msgid "User language"
 msgstr ""
 
@@ -3748,11 +3770,11 @@ msgstr ""
 msgid "Username"
 msgstr ""
 
-#: src/epg.c:1985
+#: src/epg.c:1987
 msgid "Variety show"
 msgstr ""
 
-#: src/epg.c:2048
+#: src/epg.c:2050
 msgid "Video"
 msgstr ""
 
@@ -3808,11 +3830,11 @@ msgstr ""
 msgid "Waiting for stream"
 msgstr ""
 
-#: src/epg.c:1953
+#: src/epg.c:1955
 msgid "War"
 msgstr ""
 
-#: src/epg.c:2007
+#: src/epg.c:2009
 msgid "Water sport"
 msgstr ""
 
@@ -3820,7 +3842,7 @@ msgstr ""
 msgid "Weak stream"
 msgstr ""
 
-#: src/epg.c:1968
+#: src/epg.c:1970
 msgid "Weather report"
 msgstr ""
 
@@ -3828,11 +3850,11 @@ msgstr ""
 msgid "Web Interface"
 msgstr ""
 
-#: src/access.c:1406
+#: src/access.c:1407
 msgid "Web Interface Language"
 msgstr ""
 
-#: src/config.c:1889
+#: src/config.c:1890
 msgid "Web User Interface"
 msgstr ""
 
@@ -3840,7 +3862,7 @@ msgstr ""
 msgid "Wed"
 msgstr ""
 
-#: src/epg.c:1953
+#: src/epg.c:1955
 msgid "Western"
 msgstr ""
 

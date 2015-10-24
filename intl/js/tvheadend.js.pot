@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-23 08:33+0200\n"
+"POT-Creation-Date: 2015-10-24 21:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -300,6 +300,7 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:1013
+#: src/webui/static/app/servicemapper.js:119
 msgid "Cancel"
 msgstr ""
 
@@ -367,6 +368,10 @@ msgstr ""
 
 #: src/webui/static/app/caclient.js:34
 msgid "Client Name"
+msgstr ""
+
+#: src/webui/static/app/epg.js:228
+msgid "Close"
 msgstr ""
 
 #: src/webui/static/app/i18n-post.js:205
@@ -912,6 +917,10 @@ msgstr ""
 msgid "MB"
 msgstr ""
 
+#: src/webui/static/app/servicemapper.js:126
+msgid "Map"
+msgstr ""
+
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/mpegts.js:256
 msgid "Map All"
 msgstr ""
@@ -1164,6 +1173,10 @@ msgstr ""
 #: src/webui/static/app/dvr.js:433 src/webui/static/app/dvr.js:434
 #: src/webui/static/app/dvr.js:440 src/webui/static/app/tvheadend.js:305
 msgid "Play"
+msgstr ""
+
+#: src/webui/static/tv.js:466
+msgid "Play Selected Channel"
 msgstr ""
 
 #: src/webui/static/app/epg.js:158
