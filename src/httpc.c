@@ -1029,7 +1029,8 @@ header:
     hc->hc_rpos = len;
     goto next_header;
   }
-  if (hc->hc_version == RTSP_VERSION_1_0 && !hc->hc_csize) {
+  if (hc->hc_version == RTSP_VERSION_1_0 &&
+     (hc->hc_csize == -1 || !hc->hc_csize)) {
     hc->hc_csize = -1;
     hc->hc_in_data = 0;
     memmove(hc->hc_rbuf, hc->hc_rbuf + hc->hc_hsize, len);
