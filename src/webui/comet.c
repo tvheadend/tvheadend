@@ -342,9 +342,12 @@ comet_done(void)
 static void
 comet_mailbox_rewrite_str(htsmsg_t *m, const char *key, const char *lang)
 {
-  const char *s = htsmsg_get_str(m, key);
-  if (s)
-    htsmsg_set_str(m, key, tvh_gettext_lang(lang, s));
+  const char *s = htsmsg_get_str(m, key), *p;
+  if (s) {
+    p = tvh_gettext_lang(lang, s);
+    if (p != s)
+      htsmsg_set_str(m, key, p);
+  }
 }
 
 static void
