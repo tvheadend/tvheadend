@@ -124,6 +124,63 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
 }
 
 /*
+ *
+ */
+static int
+dvr_entry_change_parent_slave(dvr_entry_t *parent, dvr_entry_t *slave, void *origin, int save)
+{
+  dvr_entry_t *p;
+
+  if (parent == NULL && slave == NULL)
+    return 0;
+  if (parent && parent->de_slave == slave) {
+    assert(slave == NULL || slave->de_parent == parent);
+    return 0;
+  }
+  if (slave && slave->de_parent == parent) {
+    assert(parent == NULL || parent->de_slave == slave);
+    return 0;
+  }
+  if (slave == NULL) {
+    if (parent->de_slave) {
+      p = parent->de_slave->de_parent;
+      parent->de_slave->de_parent = NULL;
+      if (save && p) dvr_entry_save(p);
+      parent->de_slave = NULL;
+      if (save && origin != parent) dvr_entry_save(parent);
+      return 1;
+    }
+    return 0;
+  }
+  if (parent == NULL) {
+    if (slave->de_parent) {
+      p = slave->de_parent->de_slave;
+      slave->de_parent->de_slave = NULL;
+      if (save && p) dvr_entry_save(p);
+      slave->de_parent = NULL;
+      if (save && origin != slave) dvr_entry_save(slave);
+      return 1;
+    }
+    return 0;
+  }
+  if (parent->de_slave) {
+    p = parent->de_slave->de_parent;
+    parent->de_slave->de_parent = NULL;
+    if (save && p) dvr_entry_save(p);
+  }
+  if (slave->de_parent) {
+    p = slave->de_parent->de_slave;
+    slave->de_parent->de_slave = NULL;
+    if (save && p) dvr_entry_save(p);
+  }
+  parent->de_slave = slave;
+  slave->de_parent = parent;
+  if (save && origin != parent) dvr_entry_save(parent);
+  if (save && origin != slave) dvr_entry_save(slave);
+  return 1;
+}
+
+/*
  * Start / stop time calculators
  */
 static inline int extra_valid(time_t extra)
@@ -820,8 +877,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
     } else if (de->de_sched_state == DVR_COMPLETED) {
 not_so_good:
       de->de_retention = 1;
-      de->de_parent->de_slave = NULL;
-      de->de_parent = NULL;
+      dvr_entry_change_parent_slave(de->de_parent, NULL, NULL, 1);
       dvr_entry_completed(de, SM_CODE_WEAK_STREAM);
       return;
     }
@@ -834,6 +890,9 @@ not_so_good:
     return;
   if (de->de_sched_state == DVR_SCHEDULED ||
       de->de_sched_state == DVR_RECORDING)
+    return;
+  if (de->de_sched_state == DVR_COMPLETED &&
+      de->de_last_error == SM_CODE_WEAK_STREAM)
     return;
   /* rerecord if - DVR_NOSTATE, DVR_MISSED_TIME */
   if (de->de_sched_state == DVR_COMPLETED &&
@@ -866,12 +925,8 @@ not_so_good:
                                   de->de_owner, de->de_creator, NULL,
                                   de->de_pri, de->de_retention, de->de_removal,
                                   buf);
-  if (de2) {
-    de->de_slave = de2;
-    de2->de_parent = de;
-    dvr_entry_save(de);
-    dvr_entry_save(de2);
-  }
+  if (de2)
+    dvr_entry_change_parent_slave(de, de2, NULL, 1);
 }
 
 /**
@@ -1040,6 +1095,8 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 static void
 dvr_entry_destroy(dvr_entry_t *de, int delconf)
 {
+  dvr_entry_t *parent;
+
   if (delconf)
     hts_settings_remove("dvr/log/%s", idnode_uuid_as_sstr(&de->de_id));
 
@@ -1059,12 +1116,12 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
 
+  parent = de->de_parent;
+  if (parent)
+    if (dvr_entry_change_parent_slave(NULL, de, de, delconf))
+      gtimer_arm(&parent->de_timer, dvr_entry_set_timer_cb, parent, 0);
   if (de->de_slave)
-    de->de_slave->de_parent = NULL;
-  if (de->de_parent) {
-    de->de_parent->de_slave = NULL;
-    gtimer_arm(&de->de_parent->de_timer, dvr_entry_set_timer_cb, de->de_parent, 0);
-  }
+    dvr_entry_change_parent_slave(de, NULL, de, delconf);
 
   dvr_entry_dec_ref(de);
 }
@@ -2016,18 +2073,7 @@ dvr_entry_class_parent_set(void *o, const void *v)
   if (!dvr_entry_is_editable(de))
     return 0;
   de2 = v ? dvr_entry_find_by_uuid(v) : NULL;
-  if (de2 == NULL) {
-    if (de->de_parent) {
-      de->de_parent->de_slave = NULL;
-      de->de_parent = NULL;
-      return 1;
-    }
-  } else if (de->de_parent != de2) {
-    de->de_parent = de2;
-    de2->de_slave = de;
-    return 1;
-  }
-  return 0;
+  return dvr_entry_change_parent_slave(de2, de, de, 1);
 }
 
 static const void *
@@ -2049,18 +2095,7 @@ dvr_entry_class_slave_set(void *o, const void *v)
   if (!dvr_entry_is_editable(de))
     return 0;
   de2 = v ? dvr_entry_find_by_uuid(v) : NULL;
-  if (de2 == NULL) {
-    if (de->de_slave) {
-      de->de_slave->de_parent = NULL;
-      de->de_slave = NULL;
-      return 1;
-    }
-  } else if (de->de_slave != de2) {
-    de->de_slave = de2;
-    de2->de_parent = de;
-    return 1;
-  }
-  return 0;
+  return dvr_entry_change_parent_slave(de, de2, de, 1);
 }
 
 static const void *
