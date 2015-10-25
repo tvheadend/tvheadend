@@ -353,7 +353,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
   if (tvhtrace_enabled()) {
     tcp_get_str_from_ip((struct sockaddr *)dst, buf, sizeof(buf));
     tvhtrace("satips", "sending discover reply to %s:%d%s%s",
-             buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
+             buf, ntohs(IP_PORT(*dst)), deviceid ? " device: " : "", deviceid ?: "");
   }
 
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
