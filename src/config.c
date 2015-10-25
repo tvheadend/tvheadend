@@ -1349,10 +1349,10 @@ config_migrate_v22 ( void )
 }
 
 /*
- * v21 -> v23 : epggrab xmltv channels
+ * v21 -> v23 : epggrab xmltv/pyepg channels
  */
 static void
-config_migrate_v23 ( void )
+config_migrate_v23_one ( const char *modname )
 {
   htsmsg_t *c, *m, *n;
   htsmsg_field_t *f;
@@ -1360,7 +1360,7 @@ config_migrate_v23 ( void )
   int64_t num;
   tvh_uuid_t u;
 
-  if ((c = hts_settings_load_r(1, "epggrab/xmltv/channels")) != NULL) {
+  if ((c = hts_settings_load_r(1, "epggrab/%s/channels", modname)) != NULL) {
     HTSMSG_FOREACH(f, c) {
       m = htsmsg_field_get_map(f);
       n = htsmsg_copy(m);
@@ -1373,12 +1373,19 @@ config_migrate_v23 ( void )
       htsmsg_delete_field(n, "major");
       htsmsg_delete_field(n, "minor");
       uuid_init_hex(&u, NULL);
-      hts_settings_remove("epggrab/xmltv/channels/%s", f->hmf_name);
-      hts_settings_save(n, "epggrab/xmltv/channels/%s", u.hex);
+      hts_settings_remove("epggrab/%s/channels/%s", modname, f->hmf_name);
+      hts_settings_save(n, "epggrab/%s/channels/%s", modname, u.hex);
       htsmsg_destroy(n);
     }
     htsmsg_destroy(c);
   }
+}
+
+static void
+config_migrate_v23 ( void )
+{
+  config_migrate_v23_one("xmltv");
+  config_migrate_v23_one("pyepg");
 }
 
 
