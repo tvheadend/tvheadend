@@ -63,7 +63,7 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del, int disabled)
           bcast[i++] = de->de_bcast;
         }
       }
-      dvr_entry_cancel(de);
+      dvr_entry_cancel(de, 0);
     } else
       dvr_entry_save(de);
   }
@@ -101,7 +101,7 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
     if (de_prev) {
       tvhinfo("dvr", "autorec %s removing recordings %s (allowed count %u total %u)",
               dae->dae_name, idnode_uuid_as_sstr(&de_prev->de_id), dae->dae_max_count, total);
-      dvr_entry_cancel_delete(de_prev);
+      dvr_entry_cancel_delete(de_prev, 0);
     }
   }
 }

@@ -270,7 +270,7 @@ api_dvr_entry_stop
 static void
 api_dvr_cancel(access_t *perm, idnode_t *self)
 {
-  dvr_entry_cancel((dvr_entry_t *)self);
+  dvr_entry_cancel((dvr_entry_t *)self, 0);
 }
 
 static int

@@ -478,13 +478,6 @@ dvr_usage_count(access_t *aa)
 }
 
 static void
-dvr_entry_set_timer_cb(void *aux)
-{
-  dvr_entry_t *de = aux;
-  dvr_entry_set_timer(de);
-}
-
-static void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
   time_t now, start, stop;
@@ -873,12 +866,12 @@ dvr_entry_rerecord(dvr_entry_t *de)
       if (fsize1 / 5 < fsize2 / 6) {
         goto not_so_good;
       } else {
-        dvr_entry_cancel_delete(de2);
+        dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
       if(dvr_get_filesize(de) == -1) {
 delete_me:
-        dvr_entry_cancel_delete(de);
+        dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
         return 1;
       }
@@ -1106,8 +1099,6 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 static void
 dvr_entry_destroy(dvr_entry_t *de, int delconf)
 {
-  dvr_entry_t *parent;
-
   if (delconf)
     hts_settings_remove("dvr/log/%s", idnode_uuid_as_sstr(&de->de_id));
 
@@ -1127,10 +1118,8 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   LIST_REMOVE(de, de_global_link);
   de->de_channel = NULL;
 
-  parent = de->de_parent;
-  if (parent)
-    if (dvr_entry_change_parent_child(NULL, de, de, delconf))
-      gtimer_arm(&parent->de_timer, dvr_entry_set_timer_cb, parent, 0);
+  if (de->de_parent)
+    dvr_entry_change_parent_child(NULL, de, de, delconf);
   if (de->de_child)
     dvr_entry_change_parent_child(de, NULL, de, delconf);
 
@@ -1562,7 +1551,7 @@ dvr_timer_start_recording(void *aux)
 
   // if duplicate, then delete it now, don't record!
   if (_dvr_duplicate_event(de)) {
-    dvr_entry_cancel_delete(de);
+    dvr_entry_cancel_delete(de, 1);
     return;
   }
 
@@ -1645,7 +1634,7 @@ dvr_entry_class_save(idnode_t *self)
 static void
 dvr_entry_class_delete(idnode_t *self)
 {
-  dvr_entry_cancel_delete((dvr_entry_t *)self);
+  dvr_entry_cancel_delete((dvr_entry_t *)self, 0);
 }
 
 static int
@@ -2898,18 +2887,17 @@ dvr_entry_stop(dvr_entry_t *de)
  *
  */
 dvr_entry_t *
-dvr_entry_cancel(dvr_entry_t *de)
+dvr_entry_cancel(dvr_entry_t *de, int rerecord)
 {
-  switch(de->de_sched_state) {
-  case DVR_SCHEDULED:
-    dvr_entry_destroy(de, 1);
-    return NULL;
+  dvr_entry_t *parent = de->de_parent;
 
+  switch(de->de_sched_state) {
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
     return de;
 
+  case DVR_SCHEDULED:
   case DVR_COMPLETED:
   case DVR_MISSED_TIME:
   case DVR_NOSTATE:
@@ -2919,19 +2907,20 @@ dvr_entry_cancel(dvr_entry_t *de)
   default:
     abort();
   }
+
+  if (rerecord && parent)
+    dvr_entry_rerecord(parent);
 }
 
 /**
  *
  */
 void
-dvr_entry_cancel_delete(dvr_entry_t *de)
+dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
 {
-  switch(de->de_sched_state) {
-  case DVR_SCHEDULED:
-    dvr_entry_destroy(de, 1);
-    break;
+  dvr_entry_t *parent = de->de_parent;
 
+  switch(de->de_sched_state) {
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
@@ -2940,6 +2929,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
     dvr_entry_destroy(de, 1);
     break;
 
+  case DVR_SCHEDULED:
   case DVR_MISSED_TIME:
   case DVR_NOSTATE:
     dvr_entry_destroy(de, 1);
@@ -2948,6 +2938,9 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
   default:
     abort();
   }
+
+  if (rerecord && parent)
+    dvr_entry_rerecord(parent);
 }
 
 /**

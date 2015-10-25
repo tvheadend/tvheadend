@@ -321,7 +321,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
                                    hc->hc_representative ?: NULL, NULL,
 				   DVR_PRIO_NORMAL, 0, 0, "simpleui");
   } else if(de != NULL && (http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
-    de = dvr_entry_cancel(de);
+    de = dvr_entry_cancel(de, 0);
   }
 
   htsbuf_qprintf(hq, "<html>");
@@ -402,9 +402,9 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
   if((http_arg_get(&hc->hc_req_args, "clear")) != NULL) {
-    de = dvr_entry_cancel(de);
+    de = dvr_entry_cancel(de, 0);
   } else if((http_arg_get(&hc->hc_req_args, "cancel")) != NULL) {
-    de = dvr_entry_cancel(de);
+    de = dvr_entry_cancel(de, 0);
   }
 
   if(de == NULL) {

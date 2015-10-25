@@ -75,7 +75,7 @@ dvr_timerec_purge_spawn(dvr_timerec_entry_t *dte, int delconf)
     de->de_timerec = NULL;
     if (delconf) {
       if (de->de_sched_state == DVR_SCHEDULED)
-        dvr_entry_cancel(de);
+        dvr_entry_cancel(de, 0);
       else
         dvr_entry_save(de);
     }
