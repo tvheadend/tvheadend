@@ -1705,7 +1705,7 @@ linuxdvb_frontend_create
   lfe->lfe_master = muuid ? strdup(muuid) : NULL;
   strncpy(lfe->lfe_name, name, sizeof(lfe->lfe_name));
   lfe->lfe_name[sizeof(lfe->lfe_name)-1] = '\0';
-  lfe->lfe_ibuf_size = 18800;
+  lfe->lfe_ibuf_size = 188000;
   lfe->lfe_status_period = 1000;
   lfe->lfe_pids_max = 32;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
