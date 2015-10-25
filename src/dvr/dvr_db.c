@@ -126,6 +126,21 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
 /*
  *
  */
+static void
+dvr_entry_dont_rerecord(dvr_entry_t *de, int dont_rerecord)
+{
+  dont_rerecord = dont_rerecord ? 1 : 0;
+  if (de->de_dont_rerecord ? 1 : 0 != dont_rerecord) {
+    de->de_dont_rerecord = dont_rerecord;
+    dvr_entry_save(de);
+    idnode_notify_changed(&de->de_id);
+    htsp_dvr_entry_update(de);
+  }
+}
+
+/*
+ *
+ */
 static int
 dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *origin, int save)
 {
@@ -145,7 +160,7 @@ dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *ori
     if (parent->de_child) {
       p = parent->de_child->de_parent;
       parent->de_child->de_parent = NULL;
-      if (save && p) dvr_entry_save(p);
+      if (save && p && p != origin) dvr_entry_save(p);
       parent->de_child = NULL;
       if (save && origin != parent) dvr_entry_save(parent);
       return 1;
@@ -156,7 +171,7 @@ dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *ori
     if (child->de_parent) {
       p = child->de_parent->de_child;
       child->de_parent->de_child = NULL;
-      if (save && p) dvr_entry_save(p);
+      if (save && p && p != origin) dvr_entry_save(p);
       child->de_parent = NULL;
       if (save && origin != child) dvr_entry_save(child);
       return 1;
@@ -450,7 +465,7 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     s = "completed";
     if(de->de_last_error || dvr_get_filesize(de) == -1)
       s = "completedError";
-    rerecord = dvr_entry_get_rerecord_errors(de);
+    rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
       s = "completedRerecord";
     break;
@@ -864,6 +879,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
   char cfg_uuid[UUID_HEX_SIZE];
   char buf[512];
   int64_t fsize1, fsize2;
+  time_t pre;
 
   if (dvr_in_init || de->de_dont_rerecord)
     return 0;
@@ -915,8 +931,10 @@ not_so_good:
     return 0;
 
   e = NULL;
+  pre = (60 * dvr_entry_get_extra_time_pre(de)) - 30;
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
+    if (ev->start - pre < dispatch_clock) continue;
     if (dvr_entry_fuzzy_match(de, ev, INT64_MAX))
       if (!e || e->start > ev->start)
         e = ev;
@@ -1132,7 +1150,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   de->de_channel = NULL;
 
   if (de->de_parent)
-    dvr_entry_change_parent_child(NULL, de, de, delconf);
+    dvr_entry_change_parent_child(de->de_parent, NULL, de, delconf);
   if (de->de_child)
     dvr_entry_change_parent_child(de, NULL, de, delconf);
 
@@ -2931,7 +2949,7 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
 
   if (parent) {
     if (!rerecord)
-      parent->de_dont_rerecord = 1;
+      dvr_entry_dont_rerecord(parent, 1);
     else
       dvr_entry_rerecord(parent);
   }
@@ -2966,7 +2984,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
 
   if (parent) {
     if (!rerecord)
-      parent->de_dont_rerecord = 1;
+      dvr_entry_dont_rerecord(parent, 1);
     else
       dvr_entry_rerecord(parent);
   }
@@ -3014,8 +3032,10 @@ dvr_entry_init(void)
   }
   htsmsg_destroy(rere);
   /* update the entry timers, call rerecord */
-  LIST_FOREACH(de1, &dvrentries, de_global_link)
+  for (de1 = LIST_FIRST(&dvrentries); de1; de1 = de2) {
+    de2 = LIST_NEXT(de1, de_global_link);
     dvr_entry_set_timer(de1);
+  }
 }
 
 void
