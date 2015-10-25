@@ -401,6 +401,7 @@ void epggrab_done ( void )
     pthread_mutex_lock(&global_lock);
     epggrab_channel_flush(mod, 0);
     free((void *)mod->id);
+    free((void *)mod->saveid);
     free((void *)mod->name);
     free(mod);
   }

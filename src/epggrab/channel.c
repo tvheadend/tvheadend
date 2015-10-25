@@ -286,7 +286,7 @@ void epggrab_channel_save( epggrab_channel_t *ec )
   htsmsg_t *m = htsmsg_create_map();
   idnode_save(&ec->idnode, m);
   hts_settings_save(m, "epggrab/%s/channels/%s",
-                    ec->mod->id, idnode_uuid_as_sstr(&ec->idnode));
+                    ec->mod->saveid, idnode_uuid_as_sstr(&ec->idnode));
   htsmsg_destroy(m);
 }
 
@@ -302,7 +302,7 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
 
   if (delconf)
     hts_settings_remove("epggrab/%s/channels/%s",
-                        ec->mod->id, idnode_uuid_as_sstr(&ec->idnode));
+                        ec->mod->saveid, idnode_uuid_as_sstr(&ec->idnode));
 
   free(ec->comment);
   free(ec->name);
@@ -386,7 +386,7 @@ epggrab_channel_class_get_title(idnode_t *self, const char *lang)
   epggrab_channel_t *ec = (epggrab_channel_t*)self;
 
   snprintf(prop_sbuf, PROP_SBUF_LEN, "%s: %s (%s)",
-           ec->mod->name, ec->name ?: ec->id, ec->id);
+           ec->name ?: ec->id, ec->id, ec->mod->name);
   return prop_sbuf;
 }
 
@@ -400,6 +400,20 @@ static void
 epggrab_channel_class_delete(idnode_t *self)
 {
   epggrab_channel_destroy((epggrab_channel_t *)self, 1);
+}
+
+static const void *
+epggrab_channel_class_modid_get ( void *obj )
+{
+  epggrab_channel_t *ec = obj;
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", ec->mod->id ?: "");
+  return &prop_sbuf_ptr;
+}
+
+static int
+epggrab_channel_class_modid_set ( void *obj, const void *p )
+{
+  return 0;
 }
 
 static const void *
@@ -459,6 +473,14 @@ const idclass_t epggrab_channel_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .off      = offsetof(epggrab_channel_t, enabled),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "modid",
+      .name     = N_("Module ID"),
+      .get      = epggrab_channel_class_modid_get,
+      .set      = epggrab_channel_class_modid_set,
+      .opts     = PO_RDONLY | PO_HIDDEN,
     },
     {
       .type     = PT_STR,

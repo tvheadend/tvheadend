@@ -202,12 +202,14 @@ const idclass_t epggrab_class_mod_ota = {
 
 epggrab_module_t *epggrab_module_create
   ( epggrab_module_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority )
+    const char *id, const char *saveid,
+    const char *name, int priority )
 {
   assert(skel);
 
   /* Setup */
   skel->id       = strdup(id);
+  skel->saveid   = strdup(saveid ?: id);
   skel->name     = strdup(name);
   skel->priority = priority;
   RB_INIT(&skel->channels);
@@ -262,15 +264,22 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
  * Module channel routines
  * *************************************************************************/
 
-void epggrab_module_channels_load ( epggrab_module_t *mod )
+void epggrab_module_channels_load ( const char *modid )
 {
+  epggrab_module_t *mod = NULL;
   htsmsg_t *m, *e;
   htsmsg_field_t *f;
-  if (!mod) return;
-  if ((m = hts_settings_load_r(1, "epggrab/%s/channels", mod->id))) {
+  const char *id;
+  if (!modid) return;
+  if ((m = hts_settings_load_r(1, "epggrab/%s/channels", modid))) {
     HTSMSG_FOREACH(f, m) {
-      if ((e = htsmsg_get_map_by_field(f)))
-        epggrab_channel_create(mod, e, f->hmf_name);
+      if ((e = htsmsg_get_map_by_field(f))) {
+        id = htsmsg_get_str(e, "modid") ?: modid;
+        if (mod == NULL ||  strcmp(mod->id, id))
+          mod = epggrab_module_find_by_id(id);
+        if (mod)
+          epggrab_channel_create(mod, e, f->hmf_name);
+      }
     }
     htsmsg_destroy(m);
   }
@@ -291,7 +300,8 @@ epggrab_module_int_done( void *m )
 
 epggrab_module_int_t *epggrab_module_int_create
   ( epggrab_module_int_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
@@ -303,7 +313,7 @@ epggrab_module_int_t *epggrab_module_int_create
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         cls ?: &epggrab_class_mod_int,
-                        id, name, priority);
+                        id, saveid, name, priority);
 
   /* Int data */
   skel->type     = EPGGRAB_INT;
@@ -508,7 +518,8 @@ epggrab_module_activate_socket ( void *m, int a )
  */
 epggrab_module_ext_t *epggrab_module_ext_create
   ( epggrab_module_ext_t *skel,
-    const char *id, const char *name, int priority, const char *sockid,
+    const char *id, const char *saveid,
+    const char *name, int priority, const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
     htsmsg_t* (*trans) (void *mod, char *data) )
 {
@@ -521,7 +532,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
                             &epggrab_class_mod_ext,
-                            id, name, priority, path,
+                            id, saveid, name, priority, path,
                             NULL, parse, trans);
 
   /* Local */
@@ -538,7 +549,8 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
@@ -546,7 +558,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         &epggrab_class_mod_ota,
-                        id, name, priority);
+                        id, saveid, name, priority);
 
   /* Setup */
   skel->type     = EPGGRAB_OTA;

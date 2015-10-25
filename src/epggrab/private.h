@@ -27,7 +27,8 @@ struct mpegts_mux;
 
 epggrab_module_t *epggrab_module_create
   ( epggrab_module_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority );
+    const char *id, const char *saveid,
+    const char *name, int priority );
 
 char     *epggrab_module_grab_spawn ( void *m );
 htsmsg_t *epggrab_module_trans_xml  ( void *m, char *data );
@@ -39,7 +40,7 @@ void      epggrab_module_ch_save ( void *m, epggrab_channel_t *ec );
 
 void      epggrab_module_parse ( void *m, htsmsg_t *data );
 
-void      epggrab_module_channels_load ( epggrab_module_t *m );
+void      epggrab_module_channels_load ( const char *modid );
 
 /* **************************************************************************
  * Channel processing
@@ -70,7 +71,8 @@ void epggrab_channel_done(void);
 
 epggrab_module_int_t *epggrab_module_int_create
   ( epggrab_module_int_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
@@ -82,7 +84,8 @@ epggrab_module_int_t *epggrab_module_int_create
 
 epggrab_module_ext_t *epggrab_module_ext_create
   ( epggrab_module_ext_t *skel,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
     htsmsg_t* (*trans) (void *mod, char *data) );
@@ -101,7 +104,8 @@ typedef struct epggrab_ota_module_ops {
 
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     epggrab_ota_module_ops_t *ops );
 
 /* **************************************************************************

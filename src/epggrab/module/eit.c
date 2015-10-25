@@ -789,11 +789,11 @@ void eit_init ( void )
     .tune  = _eit_tune,
   };
 
-  epggrab_module_ota_create(NULL, "eit", "EIT: DVB Grabber", 1, &ops);
-  epggrab_module_ota_create(NULL, "uk_freesat", "UK: Freesat", 5, &ops);
-  epggrab_module_ota_create(NULL, "uk_freeview", "UK: Freeview", 5, &ops);
-  epggrab_module_ota_create(NULL, "viasat_baltic", "VIASAT: Baltic", 5, &ops);
-  epggrab_module_ota_create(NULL, "Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops);
+  epggrab_module_ota_create(NULL, "eit", NULL, "EIT: DVB Grabber", 1, &ops);
+  epggrab_module_ota_create(NULL, "uk_freesat", NULL, "UK: Freesat", 5, &ops);
+  epggrab_module_ota_create(NULL, "uk_freeview", NULL, "UK: Freeview", 5, &ops);
+  epggrab_module_ota_create(NULL, "viasat_baltic", NULL, "VIASAT: Baltic", 5, &ops);
+  epggrab_module_ota_create(NULL, "Bulsatcom_39E", NULL, "Bulsatcom: Bula 39E", 5, &ops);
 }
 
 void eit_done ( void )

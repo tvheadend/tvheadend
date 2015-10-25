@@ -707,7 +707,8 @@ static void _xmltv_load_grabbers ( void )
       if ( outbuf[i] == '\n' || outbuf[i] == '\0' ) {
         outbuf[i] = '\0';
         sprintf(name, "XMLTV: %s", &outbuf[n]);
-        epggrab_module_int_create(NULL, NULL, &outbuf[p], name, 3, &outbuf[p],
+        epggrab_module_int_create(NULL, NULL, &outbuf[p], "xmltv",
+                                  name, 3, &outbuf[p],
                                   NULL, _xmltv_parse, NULL);
         p = n = i + 1;
       } else if ( outbuf[i] == '\\') {
@@ -753,7 +754,7 @@ static void _xmltv_load_grabbers ( void )
             close(rd);
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
-            epggrab_module_int_create(NULL, NULL, bin, name, 3, bin,
+            epggrab_module_int_create(NULL, NULL, bin, "xmltv", name, 3, bin,
                                       NULL, _xmltv_parse, NULL);
             free(outbuf);
           } else {
@@ -772,7 +773,8 @@ static void _xmltv_load_grabbers ( void )
 void xmltv_init ( void )
 {
   /* External module */
-  epggrab_module_ext_create(NULL, "xmltv", "XMLTV", 3, "xmltv",
+  epggrab_module_ext_create(NULL, "xmltv", "xmltv",
+                            "XMLTV", 3, "xmltv",
                             _xmltv_parse, NULL);
 
   /* Standard modules */
@@ -785,5 +787,5 @@ void xmltv_done ( void )
 
 void xmltv_load ( void )
 {
-  epggrab_module_channels_load(epggrab_module_find_by_id("xmltv"));
+  epggrab_module_channels_load("xmltv");
 }
