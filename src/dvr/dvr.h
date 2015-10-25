@@ -213,10 +213,10 @@ typedef struct dvr_entry {
   struct dvr_timerec_entry *de_timerec;
 
   /**
-   * Parent/slave
+   * Parent/child
    */
   struct dvr_entry *de_parent;
-  struct dvr_entry *de_slave;
+  struct dvr_entry *de_child;
 
   /**
    * Fields for recording

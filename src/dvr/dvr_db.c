@@ -49,7 +49,7 @@ static void dvr_timer_remove_files(void *aux);
 static void dvr_entry_start_recording(dvr_entry_t *de, int clone);
 static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
-static void dvr_entry_rerecord(dvr_entry_t *de);
+static int dvr_entry_rerecord(dvr_entry_t *de);
 
 /*
  *
@@ -127,56 +127,56 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
  *
  */
 static int
-dvr_entry_change_parent_slave(dvr_entry_t *parent, dvr_entry_t *slave, void *origin, int save)
+dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *origin, int save)
 {
   dvr_entry_t *p;
 
-  if (parent == NULL && slave == NULL)
+  if (parent == NULL && child == NULL)
     return 0;
-  if (parent && parent->de_slave == slave) {
-    assert(slave == NULL || slave->de_parent == parent);
-    return 0;
-  }
-  if (slave && slave->de_parent == parent) {
-    assert(parent == NULL || parent->de_slave == slave);
+  if (parent && parent->de_child == child) {
+    assert(child == NULL || child->de_parent == parent);
     return 0;
   }
-  if (slave == NULL) {
-    if (parent->de_slave) {
-      p = parent->de_slave->de_parent;
-      parent->de_slave->de_parent = NULL;
+  if (child && child->de_parent == parent) {
+    assert(parent == NULL || parent->de_child == child);
+    return 0;
+  }
+  if (child == NULL) {
+    if (parent->de_child) {
+      p = parent->de_child->de_parent;
+      parent->de_child->de_parent = NULL;
       if (save && p) dvr_entry_save(p);
-      parent->de_slave = NULL;
+      parent->de_child = NULL;
       if (save && origin != parent) dvr_entry_save(parent);
       return 1;
     }
     return 0;
   }
   if (parent == NULL) {
-    if (slave->de_parent) {
-      p = slave->de_parent->de_slave;
-      slave->de_parent->de_slave = NULL;
+    if (child->de_parent) {
+      p = child->de_parent->de_child;
+      child->de_parent->de_child = NULL;
       if (save && p) dvr_entry_save(p);
-      slave->de_parent = NULL;
-      if (save && origin != slave) dvr_entry_save(slave);
+      child->de_parent = NULL;
+      if (save && origin != child) dvr_entry_save(child);
       return 1;
     }
     return 0;
   }
-  if (parent->de_slave) {
-    p = parent->de_slave->de_parent;
-    parent->de_slave->de_parent = NULL;
+  if (parent->de_child) {
+    p = parent->de_child->de_parent;
+    parent->de_child->de_parent = NULL;
     if (save && p) dvr_entry_save(p);
   }
-  if (slave->de_parent) {
-    p = slave->de_parent->de_slave;
-    slave->de_parent->de_slave = NULL;
+  if (child->de_parent) {
+    p = child->de_parent->de_child;
+    child->de_parent->de_child = NULL;
     if (save && p) dvr_entry_save(p);
   }
-  parent->de_slave = slave;
-  slave->de_parent = parent;
+  parent->de_child = child;
+  child->de_parent = parent;
   if (save && origin != parent) dvr_entry_save(parent);
-  if (save && origin != slave) dvr_entry_save(slave);
+  if (save && origin != child) dvr_entry_save(child);
   return 1;
 }
 
@@ -489,6 +489,9 @@ dvr_entry_set_timer(dvr_entry_t *de)
 {
   time_t now, start, stop;
 
+  if (dvr_in_init)
+    return;
+
   time(&now);
 
   start = dvr_entry_get_start_time(de);
@@ -501,10 +504,8 @@ dvr_entry_set_timer(dvr_entry_t *de)
     else
       dvr_entry_completed(de, de->de_last_error);
 
-    if (!dvr_in_init)
-      dvr_entry_rerecord(de);
-    else
-      gtimer_arm(&de->de_timer, dvr_entry_set_timer_cb, de, 0);
+    if(dvr_entry_rerecord(de))
+      return;
 
   } else if (de->de_sched_state == DVR_RECORDING)  {
 
@@ -547,7 +548,7 @@ dvr_entry_get_episode(epg_broadcast_t *bcast, char *buf, int len)
  * Find dvr entry using 'fuzzy' search
  */
 static int
-dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
+dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, int64_t time_window)
 {
   time_t t1, t2;
   const char *title1, *title2;
@@ -570,7 +571,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e)
     return 0;
 
   /* Outside of window */
-  if (abs(e->start - de->de_start) > de->de_config->dvr_update_window)
+  if ((int64_t)llabs(e->start - de->de_start) > time_window)
     return 0;
   
   /* Title match (or contains?) */
@@ -851,7 +852,7 @@ dvr_entry_clone(dvr_entry_t *de)
 /**
  *
  */
-static void
+static int
 dvr_entry_rerecord(dvr_entry_t *de)
 {
   uint32_t rerecord = dvr_entry_get_rerecord_errors(de);
@@ -861,54 +862,62 @@ dvr_entry_rerecord(dvr_entry_t *de)
   char buf[512];
   int64_t fsize1, fsize2;
 
-  if (rerecord == 0)
-    return;
-  if (de->de_parent) {
+  if (rerecord == 0 || dvr_in_init)
+    return 0;
+  if ((de2 = de->de_parent) != NULL) {
     if (de->de_sched_state == DVR_COMPLETED &&
         de->de_errors == 0 &&
         de->de_data_errors < de->de_parent->de_data_errors) {
       fsize1 = dvr_get_filesize(de);
-      fsize2 = dvr_get_filesize(de->de_parent);
+      fsize2 = dvr_get_filesize(de2);
       if (fsize1 / 5 < fsize2 / 6) {
         goto not_so_good;
       } else {
-        dvr_entry_cancel_delete(de->de_parent);
+        dvr_entry_cancel_delete(de2);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
+      if(dvr_get_filesize(de) == -1) {
+delete_me:
+        dvr_entry_cancel_delete(de);
+        dvr_entry_rerecord(de2);
+        return 1;
+      }
 not_so_good:
       de->de_retention = 1;
-      dvr_entry_change_parent_slave(de->de_parent, NULL, NULL, 1);
+      dvr_entry_change_parent_child(de->de_parent, NULL, NULL, 1);
       dvr_entry_completed(de, SM_CODE_WEAK_STREAM);
-      return;
+      return 0;
+    } else if (de->de_sched_state == DVR_MISSED_TIME) {
+      goto delete_me;
     }
   }
-  if (de->de_slave)
-    return;
+  if (de->de_child)
+    return 0;
   if (de->de_enabled == 0)
-    return;
+    return 0;
   if (de->de_channel == NULL)
-    return;
+    return 0;
   if (de->de_sched_state == DVR_SCHEDULED ||
       de->de_sched_state == DVR_RECORDING)
-    return;
+    return 0;
   if (de->de_sched_state == DVR_COMPLETED &&
       de->de_last_error == SM_CODE_WEAK_STREAM)
-    return;
+    return 0;
   /* rerecord if - DVR_NOSTATE, DVR_MISSED_TIME */
   if (de->de_sched_state == DVR_COMPLETED &&
       rerecord > de->de_data_errors && de->de_errors <= 0)
-    return;
+    return 0;
 
   e = NULL;
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
-    if (dvr_entry_fuzzy_match(de, ev))
+    if (dvr_entry_fuzzy_match(de, ev, INT64_MAX))
       if (!e || e->start > ev->start)
         e = ev;
   }
 
   if (e == NULL)
-    return;
+    return 0;
 
   tvhtrace("dvr", "  rerecord event %s on %s @ %"PRItime_t
                    " to %"PRItime_t,
@@ -926,7 +935,9 @@ not_so_good:
                                   de->de_pri, de->de_retention, de->de_removal,
                                   buf);
   if (de2)
-    dvr_entry_change_parent_slave(de, de2, NULL, 1);
+    dvr_entry_change_parent_child(de, de2, NULL, 1);
+
+  return 0;
 }
 
 /**
@@ -1118,10 +1129,10 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
 
   parent = de->de_parent;
   if (parent)
-    if (dvr_entry_change_parent_slave(NULL, de, de, delconf))
+    if (dvr_entry_change_parent_child(NULL, de, de, delconf))
       gtimer_arm(&parent->de_timer, dvr_entry_set_timer_cb, parent, 0);
-  if (de->de_slave)
-    dvr_entry_change_parent_slave(de, NULL, de, delconf);
+  if (de->de_child)
+    dvr_entry_change_parent_child(de, NULL, de, delconf);
 
   dvr_entry_dec_ref(de);
 }
@@ -1172,7 +1183,8 @@ static void
 dvr_timer_rerecord(void *aux)
 {
   dvr_entry_t *de = aux;
-  dvr_entry_rerecord(de);
+  if (dvr_entry_rerecord(de))
+    return;
   dvr_entry_retention_timer(de);
 }
 
@@ -1416,7 +1428,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     /* Find match */
     } else {
       RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
-        if (dvr_entry_fuzzy_match(de, e)) {
+        if (dvr_entry_fuzzy_match(de, e, de->de_config->dvr_update_window)) {
           tvhtrace("dvr",
                    "  replacement event %s on %s @ %"PRItime_t
                    " to %"PRItime_t,
@@ -1444,7 +1456,7 @@ void dvr_event_updated ( epg_broadcast_t *e )
       if (de->de_sched_state != DVR_SCHEDULED) continue;
       if (de->de_bcast) continue;
       if (de->de_channel != e->channel) continue;
-      if (dvr_entry_fuzzy_match(de, e)) {
+      if (dvr_entry_fuzzy_match(de, e, de->de_config->dvr_update_window)) {
         tvhtrace("dvr",
                  "dvr entry %s link to event %s on %s @ %"PRItime_t
                  " to %"PRItime_t,
@@ -1484,7 +1496,8 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
 	 dvr_entry_status(de));
 
-  dvr_entry_rerecord(de);
+  if (dvr_entry_rerecord(de))
+    return;
 
   if (saveconf)
     dvr_entry_save(de);
@@ -2073,7 +2086,7 @@ dvr_entry_class_parent_set(void *o, const void *v)
   if (!dvr_entry_is_editable(de))
     return 0;
   de2 = v ? dvr_entry_find_by_uuid(v) : NULL;
-  return dvr_entry_change_parent_slave(de2, de, de, 1);
+  return dvr_entry_change_parent_child(de2, de, de, 1);
 }
 
 static const void *
@@ -2089,22 +2102,22 @@ dvr_entry_class_parent_get(void *o)
 }
 
 static int
-dvr_entry_class_slave_set(void *o, const void *v)
+dvr_entry_class_child_set(void *o, const void *v)
 {
   dvr_entry_t *de = (dvr_entry_t *)o, *de2;
   if (!dvr_entry_is_editable(de))
     return 0;
   de2 = v ? dvr_entry_find_by_uuid(v) : NULL;
-  return dvr_entry_change_parent_slave(de, de2, de, 1);
+  return dvr_entry_change_parent_child(de, de2, de, 1);
 }
 
 static const void *
-dvr_entry_class_slave_get(void *o)
+dvr_entry_class_child_get(void *o)
 {
   static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  if (de->de_slave)
-    ret = idnode_uuid_as_sstr(&de->de_slave->de_id);
+  if (de->de_child)
+    ret = idnode_uuid_as_sstr(&de->de_child->de_id);
   else
     ret = "";
   return &ret;
@@ -2661,10 +2674,10 @@ const idclass_t dvr_entry_class = {
     },
     {
       .type     = PT_STR,
-      .id       = "slave",
+      .id       = "child",
       .name     = N_("Slave Entry"),
-      .set      = dvr_entry_class_slave_set,
-      .get      = dvr_entry_class_slave_get,
+      .set      = dvr_entry_class_child_set,
+      .get      = dvr_entry_class_child_get,
       .opts     = PO_RDONLY,
     },
     {
@@ -2943,19 +2956,44 @@ dvr_entry_cancel_delete(dvr_entry_t *de)
 void
 dvr_entry_init(void)
 {
-  htsmsg_t *l, *c;
+  htsmsg_t *l, *c, *rere;
   htsmsg_field_t *f;
+  const char *parent, *child;
+  dvr_entry_t *de1, *de2;
 
   dvr_in_init = 1;
+  rere = htsmsg_create_map();
+  /* load config, but remove parent/child fields */
   if((l = hts_settings_load("dvr/log")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)
 	continue;
+      parent = htsmsg_get_str(c, "parent");
+      child = htsmsg_get_str(c, "child");
+      if (parent && parent[0])
+        htsmsg_set_str(rere, parent, f->hmf_name);
+      if (child && child[0])
+        htsmsg_set_str(rere, f->hmf_name, child);
+      htsmsg_delete_field(c, "parent");
+      htsmsg_delete_field(c, "child");
       (void)dvr_entry_create(f->hmf_name, c, 0);
     }
     htsmsg_destroy(l);
   }
   dvr_in_init = 0;
+  /* process parent/child mapping */
+  HTSMSG_FOREACH(f, rere) {
+    if((child = htsmsg_field_get_str(f)) == NULL)
+      continue;
+    parent = f->hmf_name;
+    de1 = dvr_entry_find_by_uuid(parent);
+    de2 = dvr_entry_find_by_uuid(child);
+    dvr_entry_change_parent_child(de1, de2, NULL, 0);
+  }
+  htsmsg_destroy(rere);
+  /* update the entry timers, call rerecord */
+  LIST_FOREACH(de1, &dvrentries, de_global_link)
+    dvr_entry_set_timer(de1);
 }
 
 void
