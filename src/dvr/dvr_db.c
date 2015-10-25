@@ -848,14 +848,17 @@ dvr_entry_clone(dvr_entry_t *de)
 static int
 dvr_entry_rerecord(dvr_entry_t *de)
 {
-  uint32_t rerecord = dvr_entry_get_rerecord_errors(de);
+  uint32_t rerecord;
   epg_broadcast_t *e, *ev;
   dvr_entry_t *de2;
   char cfg_uuid[UUID_HEX_SIZE];
   char buf[512];
   int64_t fsize1, fsize2;
 
-  if (rerecord == 0 || dvr_in_init)
+  if (dvr_in_init || de->de_dont_rerecord)
+    return 0;
+  rerecord = dvr_entry_get_rerecord_errors(de);
+  if (rerecord == 0)
     return 0;
   if ((de2 = de->de_parent) != NULL) {
     if (de->de_sched_state == DVR_COMPLETED &&
@@ -2621,7 +2624,15 @@ const idclass_t dvr_entry_class = {
       .type     = PT_BOOL,
       .id       = "noresched",
       .name     = N_("Don't Reschedule"),
-      .off      = offsetof(dvr_entry_t, de_dont_reschedule)
+      .off      = offsetof(dvr_entry_t, de_dont_reschedule),
+      .opts     = PO_HIDDEN,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "norerecord",
+      .name     = N_("Don't re-record"),
+      .off      = offsetof(dvr_entry_t, de_dont_rerecord),
+      .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_STR,
@@ -2908,8 +2919,12 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
     abort();
   }
 
-  if (rerecord && parent)
-    dvr_entry_rerecord(parent);
+  if (parent) {
+    if (!rerecord)
+      parent->de_dont_rerecord = 1;
+    else
+      dvr_entry_rerecord(parent);
+  }
 }
 
 /**
@@ -2939,8 +2954,12 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
     abort();
   }
 
-  if (rerecord && parent)
-    dvr_entry_rerecord(parent);
+  if (parent) {
+    if (!rerecord)
+      parent->de_dont_rerecord = 1;
+    else
+      dvr_entry_rerecord(parent);
+  }
 }
 
 /**
