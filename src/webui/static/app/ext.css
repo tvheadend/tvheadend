@@ -332,6 +332,14 @@
     background-image: url(../icons/accept.png) !important;
 }
 
+.completedRerecord {
+    background-image: url(../icons/add.png) !important;
+}
+
+.completedWarning {
+    background-image: url(../icons/bell.png) !important;
+}
+
 .completedError {
     background-image: url(../icons/exclamation.png) !important;
 }

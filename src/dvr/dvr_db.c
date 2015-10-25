@@ -420,6 +420,8 @@ dvr_entry_status(dvr_entry_t *de)
       return N_("Completed OK");
 
   case DVR_MISSED_TIME:
+    if (de->de_last_error == SM_CODE_SVC_NOT_ENABLED)
+      return streaming_code2txt(de->de_last_error);
     return N_("Time missed");
 
   default:
@@ -434,24 +436,32 @@ dvr_entry_status(dvr_entry_t *de)
 const char *
 dvr_entry_schedstatus(dvr_entry_t *de)
 {
+  const char *s;
+  uint32_t rerecord;
+
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
-    return "scheduled";
+    s = "scheduled";
+    break;
   case DVR_RECORDING:
-    if(de->de_last_error)
-      return "recordingError";
-    else
-      return "recording";
+    s = de->de_last_error ? "recordingError" : "recording";
+    break;
   case DVR_COMPLETED:
+    s = "completed";
     if(de->de_last_error || dvr_get_filesize(de) == -1)
-      return "completedError";
-    else
-      return "completed";
+      s = "completedError";
+    rerecord = dvr_entry_get_rerecord_errors(de);
+    if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
+      s = "completedRerecord";
+    break;
   case DVR_MISSED_TIME:
-    return "completedError";
+    s = de->de_last_error == SM_CODE_SVC_NOT_ENABLED ?
+          "completedWarning" : "completedError";
+    break;
   default:
-    return "unknown";
+    s = "unknown";
   }
+  return s;
 }
 
 /**
