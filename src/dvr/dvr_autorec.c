@@ -1113,6 +1113,13 @@ const idclass_t dvr_autorec_entry_class = {
       .opts     = PO_HIDDEN,
     },
     {
+      .type     = PT_U32,
+      .id       = "max_sched_count",
+      .name     = N_("Maximum schedules limit (0=unlimited)"),
+      .off      = offsetof(dvr_autorec_entry_t, dae_max_sched_count),
+      .opts     = PO_HIDDEN,
+    },
+    {
       .type     = PT_STR,
       .id       = "config_name",
       .name     = N_("DVR Configuration"),
@@ -1264,7 +1271,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
         enabled = 1;
         if (disabled) {
           for (p = disabled; *p && *p != e; p++);
-          enabled = *p != NULL;
+          enabled = *p == NULL;
         }
         dvr_entry_create_by_autorec(enabled, e, dae);
       }
