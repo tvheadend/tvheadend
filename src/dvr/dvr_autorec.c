@@ -1264,7 +1264,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
         enabled = 1;
         if (disabled) {
           for (p = disabled; *p && *p != e; p++);
-          enabled = *p != NULL;
+          enabled = *p == NULL;
         }
         dvr_entry_create_by_autorec(enabled, e, dae);
       }
