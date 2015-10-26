@@ -348,6 +348,10 @@
     background-image: url(../icons/rec.png) !important;
 }
 
+.rerecord {
+    background-image: url(../icons/arrow_branch.png) !important;
+}
+
 .bullet_add {
     background-image: url(../icons/bullet_add.png) !important;
 }

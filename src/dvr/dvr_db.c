@@ -476,8 +476,12 @@ dvr_entry_schedstatus(dvr_entry_t *de)
       s = "completedRerecord";
     break;
   case DVR_MISSED_TIME:
-    s = de->de_last_error == SM_CODE_SVC_NOT_ENABLED ?
-          "completedWarning" : "completedError";
+    s = "completedError";
+    if (de->de_last_error == SM_CODE_SVC_NOT_ENABLED)
+      s = "completedWarning";
+    rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
+    if(rerecord)
+      s = "completedRerecord";
     break;
   default:
     s = "unknown";
@@ -2938,6 +2942,26 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
 /**
  *
  */
+void
+dvr_entry_set_rerecord(dvr_entry_t *de, int cmd)
+{
+  if (cmd < 0) { /* toggle */
+    if (de->de_parent) return;
+    cmd = de->de_dont_rerecord ? 1 : 0;
+  }
+  if (cmd == 0 && !de->de_dont_rerecord) {
+    de->de_dont_rerecord = 1;
+    if (de->de_child)
+      dvr_entry_cancel_delete(de->de_child, 0);
+  } else {
+    de->de_dont_rerecord = 0;
+    dvr_entry_rerecord(de);
+  }
+}
+
+/**
+ *
+ */
 dvr_entry_t *
 dvr_entry_stop(dvr_entry_t *de)
 {
@@ -2962,14 +2986,15 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
   case DVR_RECORDING:
     de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
-    return de;
+    break;
 
   case DVR_SCHEDULED:
   case DVR_COMPLETED:
   case DVR_MISSED_TIME:
   case DVR_NOSTATE:
     dvr_entry_destroy(de, 1);
-    return NULL;
+    de = NULL;
+    break;
 
   default:
     abort();
@@ -2981,6 +3006,8 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
     else
       dvr_entry_rerecord(parent);
   }
+
+  return de;
 }
 
 /**
