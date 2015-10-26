@@ -572,14 +572,14 @@ dvr_entry_get_episode(epg_broadcast_t *bcast, char *buf, int len)
  * Find dvr entry using 'fuzzy' search
  */
 static int
-dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, int64_t time_window)
+dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t time_window)
 {
   time_t t1, t2;
   const char *title1, *title2;
   char buf[64];
 
   /* Matching ID */
-  if (de->de_dvb_eid && de->de_dvb_eid == e->dvb_eid)
+  if (de->de_dvb_eid && eid && de->de_dvb_eid == eid)
     return 1;
 
   /* No title */
@@ -941,7 +941,7 @@ not_so_good:
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
     if (ev->start - pre < dispatch_clock) continue;
-    if (dvr_entry_fuzzy_match(de, ev, INT64_MAX))
+    if (dvr_entry_fuzzy_match(de, ev, 0, INT64_MAX))
       if (!e || e->start > ev->start)
         e = ev;
   }
@@ -1469,7 +1469,8 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     /* Find match */
     } else {
       RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
-        if (dvr_entry_fuzzy_match(de, e, de->de_config->dvr_update_window)) {
+        if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
+                                  de->de_config->dvr_update_window)) {
           tvhtrace("dvr",
                    "  replacement event %s on %s @ %"PRItime_t
                    " to %"PRItime_t,
@@ -1497,7 +1498,8 @@ void dvr_event_updated ( epg_broadcast_t *e )
       if (de->de_sched_state != DVR_SCHEDULED) continue;
       if (de->de_bcast) continue;
       if (de->de_channel != e->channel) continue;
-      if (dvr_entry_fuzzy_match(de, e, de->de_config->dvr_update_window)) {
+      if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
+                                de->de_config->dvr_update_window)) {
         tvhtrace("dvr",
                  "dvr entry %s link to event %s on %s @ %"PRItime_t
                  " to %"PRItime_t,
