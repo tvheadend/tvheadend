@@ -61,6 +61,10 @@ void epggrab_channel_destroy
   ( epggrab_channel_t *ec, int delconf );
 void epggrab_channel_flush
   ( epggrab_module_t *mod, int delconf );
+void epggrab_channel_begin_scan
+  ( epggrab_module_t *mod );
+void epggrab_channel_end_scan
+  ( epggrab_module_t *mod );
 
 void epggrab_channel_init(void);
 void epggrab_channel_done(void);

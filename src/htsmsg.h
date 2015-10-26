@@ -389,6 +389,11 @@ htsmsg_field_t *htsmsg_field_last(htsmsg_t *msg);
  */
 htsmsg_t *htsmsg_copy(htsmsg_t *src);
 
+/**
+ * Compare a message.
+ */
+int htsmsg_cmp(htsmsg_t *m1, htsmsg_t *m2);
+
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 
 

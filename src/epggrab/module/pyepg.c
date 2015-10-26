@@ -373,6 +373,10 @@ static int _pyepg_parse_epg
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
+  pthread_mutex_lock(&global_lock);
+  epggrab_channel_begin_scan(mod);
+  pthread_mutex_unlock(&global_lock);
+
   HTSMSG_FOREACH(f, tags) {
     save = 0;
     if (strcmp(f->hmf_name, "channel") == 0 ) {
@@ -402,6 +406,10 @@ static int _pyepg_parse_epg
     }
     gsave |= save;
   }
+
+  pthread_mutex_lock(&global_lock);
+  epggrab_channel_end_scan(mod);
+  pthread_mutex_unlock(&global_lock);
 
   return gsave;
 }

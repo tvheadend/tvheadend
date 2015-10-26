@@ -940,6 +940,71 @@ htsmsg_copy(htsmsg_t *src)
 /**
  *
  */
+int
+htsmsg_cmp(htsmsg_t *m1, htsmsg_t *m2)
+{
+  htsmsg_field_t *f1, *f2;
+
+  if (m1 == NULL && m2 == NULL)
+    return 0;
+  if (m1 == NULL || m2 == NULL)
+    return 1;
+
+  f2 = TAILQ_FIRST(&m2->hm_fields);
+  TAILQ_FOREACH(f1, &m1->hm_fields, hmf_link) {
+
+    if (f1->hmf_type != f2->hmf_type)
+      return 1;
+    if (strcmp(f1->hmf_name ?: "", f2->hmf_name ?: ""))
+      return 1;
+
+    switch(f1->hmf_type) {
+
+    case HMF_MAP:
+    case HMF_LIST:
+      if (htsmsg_cmp(&f1->hmf_msg, &f2->hmf_msg))
+        return 1;
+      break;
+      
+    case HMF_STR:
+      if (strcmp(f1->hmf_str, f2->hmf_str))
+        return 1;
+      break;
+
+    case HMF_S64:
+      if (f1->hmf_s64 != f2->hmf_s64)
+        return 1;
+      break;
+
+    case HMF_BOOL:
+      if (f1->hmf_bool != f2->hmf_bool)
+        return 1;
+      break;
+
+    case HMF_BIN:
+      if (f1->hmf_binsize != f2->hmf_binsize)
+        return 1;
+      if (memcmp(f1->hmf_bin, f2->hmf_bin, f1->hmf_binsize))
+        return 1;
+      break;
+
+    case HMF_DBL:
+      if (f1->hmf_dbl != f2->hmf_dbl)
+        return 1;
+      break;
+    }
+
+    f2 = TAILQ_NEXT(f2, hmf_link);
+  }
+
+  if (f2)
+    return 1;
+  return 0;
+}
+
+/**
+ *
+ */
 htsmsg_t *
 htsmsg_get_map_in_list(htsmsg_t *m, int num)
 {
@@ -1004,12 +1069,11 @@ htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
   if (human) {
     sep[0] = delim;
     sep[1] = ' ';
-    sep[2] = '\0';
-    ssep = "\"";
+    ssep = "";
   } else {
     sep[0] = delim;
     sep[1] = '\0';
-    ssep = "";
+    ssep = "\"";
   }
   HTSMSG_FOREACH(f, m) {
     if (f->hmf_type == HMF_STR) {

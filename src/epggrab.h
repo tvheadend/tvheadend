@@ -88,6 +88,8 @@ typedef struct epggrab_channel
   char                      *id;      ///< Grabber's ID
 
   char                      *name;    ///< Channel name
+  htsmsg_t                  *names;   ///< List of all channel names for grabber's ID
+  htsmsg_t                  *newnames;///< List of all channel names for grabber's ID (scan)
   char                      *icon;    ///< Channel icon
   char                      *comment; ///< Channel comment (EPG)
   int64_t                   lcn;      ///< Channel number (split)

@@ -39,10 +39,18 @@ SKEL_DECLARE(epggrab_channel_skel, epggrab_channel_t);
 /* Check if channels match */
 int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
 {
+  const char *chid, *s;
+  htsmsg_field_t *f;
+
   if (!ec || !ch || !ch->ch_epgauto || !ch->ch_enabled || !ec->enabled) return 0;
   if (LIST_FIRST(&ec->channels)) return 0; // ignore already paired
 
-  if (ec->name && !strcmp(ec->name, channel_get_epgid(ch))) return 1;
+  chid = channel_get_epgid(ch);
+  if (ec->name && !strcmp(ec->name, chid)) return 1;
+  if (ec->names)
+    HTSMSG_FOREACH(f, ec->names)
+      if ((s = htsmsg_field_get_str(f)) != NULL)
+        if (!strcmp(s, chid)) return 1;
   if (ec->lcn && ec->lcn == channel_get_number(ch)) return 1;
   return 0;
 }
@@ -127,7 +135,7 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
   channel_t *ch;
   int save = 0;
   if (!ec || !name) return 0;
-  if (!ec->name || strcmp(ec->name, name)) {
+  if (!ec->newnames && (!ec->name || strcmp(ec->name, name))) {
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
     if (epggrab_conf.channel_rename) {
@@ -139,6 +147,9 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
     }
     save = 1;
   }
+  if (ec->newnames == NULL)
+    ec->newnames = htsmsg_create_list();
+  htsmsg_add_str(ec->newnames, NULL, name);
   return save;
 }
 
@@ -304,6 +315,8 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
     hts_settings_remove("epggrab/%s/channels/%s",
                         ec->mod->saveid, idnode_uuid_as_sstr(&ec->idnode));
 
+  htsmsg_destroy(ec->newnames);
+  htsmsg_destroy(ec->names);
   free(ec->comment);
   free(ec->name);
   free(ec->icon);
@@ -317,6 +330,29 @@ void epggrab_channel_flush
   epggrab_channel_t *ec;
   while ((ec = RB_FIRST(&mod->channels)) != NULL)
     epggrab_channel_destroy(ec, delconf);
+}
+
+void epggrab_channel_begin_scan ( epggrab_module_t *mod )
+{
+  epggrab_channel_t *ec;
+  lock_assert(&global_lock);
+  RB_FOREACH(ec, &mod->channels, link)
+    if (ec->newnames) {
+      htsmsg_destroy(ec->newnames);
+      ec->newnames = NULL;
+    }
+}
+
+void epggrab_channel_end_scan ( epggrab_module_t *mod )
+{
+  epggrab_channel_t *ec;
+  lock_assert(&global_lock);
+  RB_FOREACH(ec, &mod->channels, link)
+    if (ec->newnames) {
+      htsmsg_destroy(ec->names);
+      ec->names = ec->newnames;
+      ec->newnames = NULL;
+    }
 }
 
 /* **************************************************************************
@@ -436,6 +472,30 @@ epggrab_channel_class_path_get ( void *obj )
 }
 
 static const void *
+epggrab_channel_class_names_get ( void *obj )
+{
+  epggrab_channel_t *ec = obj;
+  char *s = ec->names ? htsmsg_list_2_csv(ec->names, ',', 0) : NULL;
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", s ?: "");
+  free(s);
+  return &prop_sbuf_ptr;
+}
+
+static int
+epggrab_channel_class_names_set ( void *obj, const void *p )
+{
+  htsmsg_t *m = htsmsg_csv_2_list(p, ',');
+  epggrab_channel_t *ec = obj;
+  if (htsmsg_cmp(ec->names, m)) {
+    htsmsg_destroy(ec->names);
+    ec->names = m;
+  } else {
+    htsmsg_destroy(m);
+  }
+  return 0;
+}
+
+static const void *
 epggrab_channel_class_channels_get ( void *obj )
 {
   epggrab_channel_t *ec = obj;
@@ -507,6 +567,13 @@ const idclass_t epggrab_channel_class = {
       .id       = "name",
       .name     = N_("Name"),
       .off      = offsetof(epggrab_channel_t, name),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "names",
+      .name     = N_("Names"),
+      .get      = epggrab_channel_class_names_get,
+      .set      = epggrab_channel_class_names_set,
     },
     {
       .type     = PT_S64,
