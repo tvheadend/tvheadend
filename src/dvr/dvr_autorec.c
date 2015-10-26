@@ -1113,6 +1113,13 @@ const idclass_t dvr_autorec_entry_class = {
       .opts     = PO_HIDDEN,
     },
     {
+      .type     = PT_U32,
+      .id       = "maxsched",
+      .name     = N_("Maximum schedules limit (0=unlimited)"),
+      .off      = offsetof(dvr_autorec_entry_t, dae_max_sched_count),
+      .opts     = PO_HIDDEN,
+    },
+    {
       .type     = PT_STR,
       .id       = "config_name",
       .name     = N_("DVR Configuration"),
