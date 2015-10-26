@@ -84,6 +84,7 @@ typedef struct epggrab_channel
   RB_ENTRY(epggrab_channel) link;     ///< Global tree link
   epggrab_module_t          *mod;     ///< Linked module
 
+  int                       updated;  ///< EPG channel was updated
   int                       enabled;  ///< Enabled/disabled
   char                      *id;      ///< Grabber's ID
 
@@ -94,6 +95,7 @@ typedef struct epggrab_channel
   char                      *comment; ///< Channel comment (EPG)
   int64_t                   lcn;      ///< Channel number (split)
 
+  int                       only_one; ///< Map to only one channel (auto)
   idnode_list_head_t        channels; ///< Mapped channels (1 = epggrab channel, 2 = channel)
 } epggrab_channel_t;
 

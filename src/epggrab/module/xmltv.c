@@ -580,7 +580,6 @@ static int _xmltv_parse_programme
   if((chid    = htsmsg_get_str(attribs, "channel")) == NULL) return 0;
   if((ec      = epggrab_channel_find(mod, chid, 1, &chsave)) == NULL) return 0;
   if (chsave) {
-    epggrab_channel_updated(ec);
     stats->channels.created++;
     stats->channels.modified++;
   }
@@ -631,10 +630,8 @@ static int _xmltv_parse_channel
      (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
     save |= epggrab_channel_set_icon(ch, icon);
   }
-  if (save) {
-    epggrab_channel_updated(ch);
+  if (save)
     stats->channels.modified++;
-  }
   return save;
 }
 

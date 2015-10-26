@@ -87,10 +87,8 @@ static int _pyepg_parse_channel
     save |= epggrab_channel_set_number(ch, u32, 0);
   
   /* Update */
-  if (save) {
-    epggrab_channel_updated(ch);
+  if (save)
     stats->channels.modified++;
-  }
 
   return save;
 }
