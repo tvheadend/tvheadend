@@ -148,7 +148,7 @@ iptv_http_complete
     urlinit(&u);
     if (!urlparse(url, &u)) {
       hc->hc_keepalive = 0;
-      r = http_client_simple_reconnect(hc, &u);
+      r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
       if (r < 0)
         tvherror("iptv", "cannot reopen http client: %d'", r);
     } else {
