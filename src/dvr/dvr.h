@@ -306,6 +306,8 @@ typedef struct dvr_autorec_entry {
   uint32_t dae_retention;
   uint32_t dae_removal;
   uint32_t dae_max_count;
+  uint32_t dae_max_sched_count;
+
 
   time_t dae_start_extra;
   time_t dae_stop_extra;

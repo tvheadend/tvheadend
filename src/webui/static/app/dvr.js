@@ -513,6 +513,7 @@ tvheadend.autorec_editor = function(panel, index) {
             retention:    { width: 80 },
             removal:      { width: 80 },
             maxcount:     { width: 80 },
+            max_sched_count: { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
@@ -523,7 +524,7 @@ tvheadend.autorec_editor = function(panel, index) {
             params: {
                list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
                      'maxduration,weekdays,start,start_window,pri,dedup,retention,removal,' +
-                     'maxcount,config_name,comment'
+                     'maxcount,max_sched_count,config_name,comment'
             },
             create: { }
         },
