@@ -611,13 +611,14 @@ http_dvr_list_playlist(http_connection_t *hc)
   char buf[255];
   dvr_entry_t *de;
   const char *uuid;
-  char *hostpath = http_get_hostpath(hc);
+  char *hostpath;
   off_t fsize;
   time_t durration;
   struct tm tm;
   int bandwidth;
 
   hq = &hc->hc_reply;
+  hostpath = http_get_hostpath(hc);
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {

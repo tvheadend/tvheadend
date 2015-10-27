@@ -65,7 +65,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   }
 
   fd = tvh_socket(ai->ai_family, SOCK_STREAM, 0);
-  if(fd == -1) {
+  if(fd < 0) {
     snprintf(errbuf, errbufsize, "Unable to create socket: %s",
 	     strerror(errno));
     freeaddrinfo(ai);
@@ -88,6 +88,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
                                      ai->ai_family == AF_INET6 ? "6" : "4",
                                      bindaddr);
         freeaddrinfo(ai);
+        close(fd);
         return -1;
       }
     }
@@ -100,7 +101,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   r = connect(fd, ai->ai_addr, ai->ai_addrlen);
   freeaddrinfo(ai);
 
-  if(r == -1) {
+  if(r < 0) {
     /* timeout < 0 - do not wait at all */
     if(errno == EINPROGRESS && timeout < 0) {
       err = 0;
