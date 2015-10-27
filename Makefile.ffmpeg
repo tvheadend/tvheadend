@@ -82,10 +82,10 @@ LIBX264_TB      = $(LIBX264).tar.bz2
 LIBX264_URL     = http://ftp.via.ecp.fr/pub/videolan/x264/snapshots/$(LIBX264_TB)
 LIBX264_SHA1    = 24a3b20e2c49a112e40df9f64885cbd81250298a
 
-LIBVPX          = libvpx-v1.3.0
+LIBVPX          = libvpx-1.4.0
 LIBVPX_TB       = $(LIBVPX).tar.bz2
-LIBVPX_URL      = https://webm.googlecode.com/files/$(LIBVPX_TB)
-LIBVPX_SHA1     = 191b95817aede8c136cc3f3745fb1b8c50e6d5dc
+LIBVPX_URL      = http://storage.googleapis.com/downloads.webmproject.org/releases/webm/$(LIBVPX_TB)
+LIBVPX_SHA1     = d05f4e9a9878886282ac9c9246f8fac080c94c8f
 
 YASM            = yasm-1.3.0
 YASM_TB         = $(YASM).tar.gz
