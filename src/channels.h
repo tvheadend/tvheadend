@@ -44,8 +44,8 @@ typedef struct channel
   RB_ENTRY(channel)   ch_link;
 
   int ch_refcount;
-  int ch_zombie;
   int ch_load;
+  int ch_dont_save;
 
   /* Channel info */
   int     ch_enabled;
