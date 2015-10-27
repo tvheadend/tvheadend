@@ -189,6 +189,9 @@ decode_vui(h264_sps_t *sps, bitstream_t *bs)
   if (!read_bits1(bs))   /* We need timing info */
     return 0;
 
+  if (remaining_bits(bs) < 65)
+    return 0;
+
   sps->units_in_tick = read_bits(bs, 32);
   sps->time_scale    = read_bits(bs, 32);
   sps->fixed_rate    = read_bits1(bs);
@@ -254,11 +257,12 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
     return -1;
 
   if (profile_idc >= 100){ //high profile
-    if(read_golomb_ue(bs) == 3) //chroma_format_idc
-      read_bits1(bs);  //residual_color_transform_flag
-    read_golomb_ue(bs);  //bit_depth_luma_minus8
-    read_golomb_ue(bs);  //bit_depth_chroma_minus8
-    read_bits1(bs);
+    tmp = read_golomb_ue(bs);
+    if (tmp == 3)          //chroma_format_idc
+      read_bits1(bs);      //residual_color_transform_flag
+    read_golomb_ue(bs);    //bit_depth_luma_minus8
+    read_golomb_ue(bs);    //bit_depth_chroma_minus8
+    read_bits1(bs);        //transform_bypass
 
     if(read_bits1(bs)) {
       /* Scaling matrices */
@@ -276,11 +280,11 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
   }
 
   max_frame_num_bits = read_golomb_ue(bs) + 4;
-  poc_type = read_golomb_ue(bs);
- 
-  if(poc_type == 0){ //FIXME #define
+  poc_type = read_golomb_ue(bs); // pic_order_cnt_type
+
+  if(poc_type == 0){
     read_golomb_ue(bs);
-  } else if(poc_type == 1){//FIXME #define
+  } else if(poc_type == 1){
     skip_bits1(bs);
     read_golomb_se(bs);
     read_golomb_se(bs);
