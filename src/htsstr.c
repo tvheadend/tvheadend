@@ -237,8 +237,9 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
       if (dstlen < 2)
         break;
       *dst = '\\'; src++; dst++; dstlen--;
-      if (*src)
+      if (*src) {
         *dst = *src; src++; dst++; dstlen--;
+      }
       continue;
     }
     if (first >= 0) {

@@ -765,9 +765,11 @@ main(int argc, char **argv)
     /* Find option */
     cmdline_opt_t *opt
       = cmdline_opt_find(cmdline_opts, ARRAY_SIZE(cmdline_opts), argv[i]);
-    if (!opt)
+    if (!opt) {
       show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts),
                  _("invalid option specified [%s]"), argv[i]);
+      continue;
+    }
 
     /* Process */
     if (opt->type == OPT_BOOL)

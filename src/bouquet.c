@@ -1078,7 +1078,7 @@ service:
           service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
           if (s)
             bouquet_add_service(bq, s, ((int64_t)++seen) * CHANNEL_SPLIT, tagname);
-        } else if (lv == 64) {
+        } else if (lv == 0x64) {
           tagname = name;
         }
       }

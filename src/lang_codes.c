@@ -704,14 +704,14 @@ char *lang_code_user( const char *ucode )
   if (!codes)
     return ucode ? strdup(ucode) : NULL;
   if (!ucode)
-    return codes ? strdup(codes) : NULL;
-  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 2);
+    return strdup(codes);
+  ret = malloc(strlen(codes) + strlen(ucode) + 2);
   strcpy(ret, ucode);
   while (codes && *codes) {
     s = codes;
     while (*s && *s != ',')
       s++;
-    if (strncmp(codes, ucode ?: "", s - codes)) {
+    if (strncmp(codes, ucode, s - codes)) {
       strcat(ret, ",");
       strncat(ret, codes, s - codes);
     }

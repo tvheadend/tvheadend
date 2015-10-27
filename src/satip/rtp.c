@@ -429,12 +429,15 @@ void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids)
         tbl = calloc(1, sizeof(*tbl));
         dvb_table_parse_init(&tbl->tbl, "satip-pmt", pid, rtp);
         tbl->pid = pid;
+        TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
       }
     }
     for (tbl = TAILQ_FIRST(&rtp->pmt_tables); tbl; tbl = tbl_next){
       tbl_next = TAILQ_NEXT(tbl, link);
-      if (tbl->remove_mark)
+      if (tbl->remove_mark) {
         TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+        free(tbl);
+      }
     }
     pthread_mutex_unlock(&rtp->lock);
   }
@@ -463,6 +466,7 @@ void satip_rtp_close(void *id)
     while ((tbl = TAILQ_FIRST(&rtp->pmt_tables)) != NULL) {
       dvb_table_parse_done(&tbl->tbl);
       TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+      free(tbl);
     }
     pthread_mutex_destroy(&rtp->lock);
     free(rtp);

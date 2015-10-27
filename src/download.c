@@ -32,7 +32,7 @@ download_file(download_t *dn, const char *filename)
   int fd, res;
   struct stat st;
   char *data, *last_url;
-  size_t r;
+  ssize_t r;
   off_t off;
 
   fd = tvh_open(filename, O_RDONLY, 0);

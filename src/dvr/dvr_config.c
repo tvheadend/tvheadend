@@ -123,7 +123,7 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
       }
     }
   } else {
-    if (cfg->dvr_enabled)
+    if (cfg && cfg->dvr_enabled)
       res = cfg;
   }
   if (!res)

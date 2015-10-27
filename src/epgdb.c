@@ -172,17 +172,17 @@ void epg_init ( void )
   /* Map file to memory */
   if ( fstat(fd, &st) != 0 ) {
     tvhlog(LOG_ERR, "epgdb", "failed to detect database size");
-    return;
+    goto end;
   }
   if ( !st.st_size ) {
     tvhlog(LOG_DEBUG, "epgdb", "database is empty");
-    return;
+    goto end;
   }
   remain   = st.st_size;
   rp = mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if ( mem == MAP_FAILED ) {
     tvhlog(LOG_ERR, "epgdb", "failed to mmap database");
-    return;
+    goto end;
   }
 
   /* Process */
@@ -244,6 +244,7 @@ void epg_init ( void )
 
   /* Close file */
   munmap(mem, st.st_size);
+end:
   close(fd);
 }
 

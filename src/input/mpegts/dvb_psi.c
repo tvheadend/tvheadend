@@ -2431,8 +2431,10 @@ static void dvb_time_update(const uint8_t *ptr, const char *srcname)
   time_t t;
   if (dvb_last_update + 1800 < dispatch_clock) {
     t = dvb_convert_date(ptr, 0);
-    tvhtime_update(t, srcname);
-    dvb_last_update = dispatch_clock;
+    if (t > 0) {
+      tvhtime_update(t, srcname);
+      dvb_last_update = dispatch_clock;
+    }
   }
 }
 

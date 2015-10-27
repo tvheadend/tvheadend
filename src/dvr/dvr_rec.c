@@ -112,6 +112,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
                       "(limit %u, dvr limit %u, active DVR %u, streaming %u)",
                aa->aa_username ?: "", aa->aa_representative ?: "",
                aa->aa_conn_limit, aa->aa_conn_limit_dvr, rec_count, net_count);
+      access_destroy(aa);
       return -EOVERFLOW;
     }
   }
@@ -957,7 +958,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
     e = htsmsg_create_map();
     htsmsg_add_str(e, "type", streaming_component_type2txt(ssc->ssc_type));
-    if (ssc->ssc_lang && ssc->ssc_lang[0])
+    if (ssc->ssc_lang[0])
        htsmsg_add_str(e, "language", ssc->ssc_lang);
 
     if(SCT_ISAUDIO(ssc->ssc_type)) {

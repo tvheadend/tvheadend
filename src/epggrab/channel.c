@@ -62,8 +62,10 @@ epggrab_channel_link_delete
 {
   idnode_list_mapping_t *ilm;
   LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
-    if (ilm->ilm_in1 == &ec->idnode && ilm->ilm_in2 == &ch->ch_id)
+    if (ilm->ilm_in1 == &ec->idnode && ilm->ilm_in2 == &ch->ch_id) {
       idnode_list_unlink(ilm, NULL);
+      return;
+    }
 }
 
 /* Destroy all links */
@@ -544,7 +546,7 @@ epggrab_channel_class_only_one_notify ( void *obj, const char *lang )
       ilm2 = LIST_NEXT(ilm1, ilm_in2_link);
       ch = (channel_t *)ilm1->ilm_in2;
       if (!first)
-        ch = first;
+        first = ch;
       else if (ch->ch_epgauto && first)
         idnode_list_unlink(ilm1, ec);
     }

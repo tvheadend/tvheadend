@@ -837,7 +837,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
   char buf[255];
   dvr_entry_t *de;
   const char *uuid;
-  char *hostpath = http_get_hostpath(hc);
+  char *hostpath;
   off_t fsize;
   time_t durration;
   struct tm tm;
@@ -847,6 +847,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
     return HTTP_STATUS_BAD_REQUEST;
 
   hq = &hc->hc_reply;
+  hostpath = http_get_hostpath(hc);
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
@@ -1056,11 +1057,11 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
     return HTTP_STATUS_UNAUTHORIZED;
 
   if ((str = http_arg_get(&hc->hc_req_args, "descramble")))
-    if (strcmp(str ?: "", "0") == 0)
+    if (strcmp(str, "0") == 0)
       eflags |= SUBSCRIPTION_NODESCR;
 
   if ((str = http_arg_get(&hc->hc_req_args, "emm")))
-    if (strcmp(str ?: "", "1") == 0)
+    if (strcmp(str, "1") == 0)
       eflags |= SUBSCRIPTION_EMM;
 
   flags = SUBSCRIPTION_MPEGTS | eflags;
@@ -1517,6 +1518,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     basename++; /* Skip '/' */
     str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                 basename, strlen(basename) * 3);
+    if (str0 == NULL)
+      return HTTP_STATUS_INTERNAL;
     htsbuf_queue_init(&q, 0);
     htsbuf_append_and_escape_url(&q, basename);
     str = htsbuf_to_string(&q);

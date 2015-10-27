@@ -408,7 +408,7 @@ api_idnode_save
 
       /* Foreach */
       f = htsmsg_field_find(msg, "uuid");
-      if (!(conf = htsmsg_field_get_list(f)))
+      if (!f || !(conf = htsmsg_field_get_list(f)))
         goto exit;
       HTSMSG_FOREACH(f, conf) {
         if (!(uuid = htsmsg_field_get_str(f)))

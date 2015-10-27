@@ -858,8 +858,7 @@ int
 linuxdvb_satconf_start_mux
   ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi, int skip_diseqc )
 {
-  int r;
-  uint32_t f;
+  int r, f;
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
   linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
 

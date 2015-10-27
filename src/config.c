@@ -1363,6 +1363,7 @@ config_migrate_v23_one ( const char *modname )
   if ((c = hts_settings_load_r(1, "epggrab/%s/channels", modname)) != NULL) {
     HTSMSG_FOREACH(f, c) {
       m = htsmsg_field_get_map(f);
+      if (m == NULL) continue;
       n = htsmsg_copy(m);
       htsmsg_add_str(n, "id", f->hmf_name);
       maj = htsmsg_get_u32_or_default(m, "major", 0);
@@ -1759,13 +1760,15 @@ config_class_cors_origin_set ( void *o, const void *v )
     prop_sbuf[1] = '\0';
   } else {
     urlinit(&u);
-    urlparse(s, &u);
+    if (urlparse(s, &u))
+      goto wrong;
     if (u.scheme && (!strcmp(u.scheme, "http") || !strcmp(u.scheme, "https")) && u.host) {
       if (u.port)
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s:%d", u.scheme, u.host, u.port);
       else
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s", u.scheme, u.host);
     } else {
+wrong:
       prop_sbuf[0] = '\0';
     }
     urlreset(&u);

@@ -350,7 +350,7 @@ parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
       if(j < hlen + 5)
         break;
       
-      r = parse_pes_header(t, st, st->es_buf.sb_data + off + 2, hlen + 3);
+      parse_pes_header(t, st, st->es_buf.sb_data + off + 2, hlen + 3);
 
       st->es_header_mode = 0;
       st->es_buf.sb_ptr = off;

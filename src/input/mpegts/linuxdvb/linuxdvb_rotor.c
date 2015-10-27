@@ -498,12 +498,12 @@ linuxdvb_rotor_create0
         ld->ld_tune  = linuxdvb_rotor_tune;
         ld->ld_grace = linuxdvb_rotor_grace;
         ld->ld_post  = linuxdvb_rotor_post;
+        lr = (linuxdvb_rotor_t *)ld;
+        if (lr->lr_powerup_time == 0)
+          lr->lr_powerup_time = 100;
+        if (lr->lr_cmd_time == 0)
+          lr->lr_cmd_time = 25;
       }
-      lr = (linuxdvb_rotor_t *)ld;
-      if (lr->lr_powerup_time == 0)
-        lr->lr_powerup_time = 100;
-      if (lr->lr_cmd_time == 0)
-        lr->lr_cmd_time = 25;
     }
   }
                                  
