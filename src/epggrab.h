@@ -95,6 +95,8 @@ typedef struct epggrab_channel
   char                      *comment; ///< Channel comment (EPG)
   int64_t                   lcn;      ///< Channel number (split)
 
+  time_t                    laststamp;///< Last update timestamp
+
   int                       only_one; ///< Map to only one channel (auto)
   idnode_list_head_t        channels; ///< Mapped channels (1 = epggrab channel, 2 = channel)
 } epggrab_channel_t;

@@ -353,6 +353,7 @@ static int _pyepg_parse_schedule
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
+      ec->laststamp = dispatch_clock;
       LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
         save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
                                        (channel_t *)ilm->ilm_in2, stats);

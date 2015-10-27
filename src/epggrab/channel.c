@@ -591,6 +591,13 @@ const idclass_t epggrab_channel_class = {
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {
+      .type     = PT_TIME,
+      .id       = "updated",
+      .name     = N_("Updated"),
+      .off      = offsetof(epggrab_channel_t, laststamp),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+    },
+    {
       .type     = PT_STR,
       .id       = "id",
       .name     = N_("ID"),
