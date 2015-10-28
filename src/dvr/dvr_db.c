@@ -1280,6 +1280,8 @@ dvr_entry_class_save(idnode_t *self)
   dvr_entry_save(de);
   if (dvr_entry_is_valid(de))
     dvr_entry_set_timer(de);
+
+  htsp_dvr_entry_update(de);
 }
 
 static void
