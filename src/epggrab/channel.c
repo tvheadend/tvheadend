@@ -42,7 +42,8 @@ int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
   const char *chid, *s;
   htsmsg_field_t *f;
 
-  if (!ec || !ch || !ch->ch_epgauto || !ch->ch_enabled || !ec->enabled) return 0;
+  if (!ec || !ch || !ch->ch_epgauto || !ch->ch_enabled || ch->ch_epg_parent ||
+      !ec->enabled) return 0;
   if (ec->only_one && LIST_FIRST(&ec->channels)) return 0; // ignore already paired
 
   chid = channel_get_epgid(ch);

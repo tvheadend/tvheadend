@@ -70,12 +70,69 @@ typedef struct psip_event
  * ***********************************************************************/
 
 static int
+_psip_eit_callback_channel
+  (epggrab_module_t *mod, channel_t *ch, const uint8_t *ptr, int count)
+{
+  uint16_t eventid;
+  uint32_t starttime, length;
+  time_t start, stop;
+  int save = 0, save2, i;
+  uint8_t titlelen;
+  unsigned int dlen;
+  char buf[512];
+  epg_broadcast_t *ebc;
+  epg_episode_t *ee;
+  lang_str_t *title;
+
+  for (i = 0; i < count && count >= 12; ) {
+    eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
+    starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
+    start = atsc_convert_gpstime(starttime);
+    length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
+    stop = start + length;
+    titlelen = ptr[9];
+    dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
+    // tvhtrace("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
+
+    if (titlelen + dlen + 12 > count) break;
+
+    atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
+
+    tvhtrace("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
+      i, eventid, start, length, buf, titlelen);
+
+    ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
+    tvhtrace("psip", "  ch='%s', eid=%5d, start=%"PRItime_t","
+        " stop=%"PRItime_t", ebc=%p",
+        ch ? channel_get_name(ch) : "(null)",
+        eventid, start, stop, ebc);
+    if (!ebc) goto next;
+    save |= save2;
+
+    title = lang_str_create();
+    lang_str_add(title, buf, "eng", 0);
+
+    ee = epg_broadcast_get_episode(ebc, 1, &save2);
+    save2 |= epg_episode_set_title2(ee, title, mod);
+    save |= save2;
+
+    lang_str_destroy(title);
+
+    /* Move on */
+next:
+    ptr += titlelen + dlen + 12;
+    i   += titlelen + dlen + 12;
+  }
+  return save;
+}
+
+static int
 _psip_eit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
   int r;
   int sect, last, ver;
-  int count, i;
+  int count;
   int save = 0;
   uint16_t tsid;
   uint32_t extraid;
@@ -83,8 +140,10 @@ _psip_eit_callback
   epggrab_ota_map_t    *map = mt->mt_opaque;
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   epggrab_ota_mux_t    *ota = NULL;
+  channel_t            *ch;
   mpegts_service_t     *svc;
   mpegts_psi_table_state_t *st;
+  idnode_list_mapping_t *ilm;
   char ubuf[UUID_HEX_SIZE];
 
   /* Validate */
@@ -120,64 +179,18 @@ _psip_eit_callback
   ptr  += 7;
   len  -= 7;
 
+  /* Sanity check */
+  if (count > len) goto done;
+
   /* Register this */
   if (ota)
     epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id, ubuf), 1);
 
-  /* No point processing */
-  if (!LIST_FIRST(&svc->s_channels))
-    goto done;
-
-  for (i = 0; i < count && len >= 12; i++) {
-    uint16_t eventid;
-    uint32_t starttime, length;
-    time_t start, stop;
-    int save2 = 0;
-    uint8_t titlelen;
-    unsigned int dlen;
-    char buf[512];
-    epg_broadcast_t *ebc;
-    epg_episode_t *ee;
-    channel_t *ch = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
-    lang_str_t       *title;
-
-    eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
-    starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
-    start = atsc_convert_gpstime(starttime);
-    length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
-    stop = start + length;
-    titlelen = ptr[9];
-    dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
-    // tvhtrace("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
-
-    if (titlelen + dlen + 12 > len) return -1;
-
-    atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
-
-    tvhtrace("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
-      i, eventid, start, length, buf, titlelen);
-
-    ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
-    tvhtrace("psip", "  svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
-        " stop=%"PRItime_t", ebc=%p",
-        svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
-        eventid, start, stop, ebc);
-    if (!ebc) goto next;
-
-    title = lang_str_create();
-    lang_str_add(title, buf, "eng", 0);
-
-    ee = epg_broadcast_get_episode(ebc, 1, &save2);
-    save2 |= epg_episode_set_title2(ee, title, mod);
-
-    lang_str_destroy(title);
-
-    save |= save2;
-
-    /* Move on */
-next:
-    ptr += titlelen + dlen + 12;
-    len -= titlelen + dlen + 12;
+  /* For each associated channels */
+  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
+    ch = (channel_t *)ilm->ilm_in2;
+    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+    save |= _psip_eit_callback_channel(mod, ch, ptr, count);
   }
 
   if (save)

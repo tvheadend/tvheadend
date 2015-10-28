@@ -570,6 +570,7 @@ static int _xmltv_parse_programme
   htsmsg_t *attribs, *tags, *subtag;
   const char *s, *chid, *icon = NULL;
   time_t start, stop;
+  channel_t *ch;
   epggrab_channel_t *ec;
   idnode_list_mapping_t *ilm;
 
@@ -596,9 +597,12 @@ static int _xmltv_parse_programme
   if(stop <= start || stop <= dispatch_clock) return 0;
 
   ec->laststamp = dispatch_clock;
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
-    save |= _xmltv_parse_programme_tags(mod, (channel_t *)ilm->ilm_in2, tags,
+  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+    ch = (channel_t *)ilm->ilm_in2;
+    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+    save |= _xmltv_parse_programme_tags(mod, ch, tags,
                                         start, stop, icon, stats);
+  }
   return save;
 }
 

@@ -558,14 +558,17 @@ static int _eit_process_event
     int local, int *resched, int *save )
 {
   idnode_list_mapping_t *ilm;
+  channel_t *ch;
   int ret = 0;
 
   if ( len < 12 ) return -1;
 
-  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link)
-    ret = _eit_process_event_one(mod, tableid, svc,
-                                 (channel_t *)ilm->ilm_in2,
+  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
+    ch = (channel_t *)ilm->ilm_in2;
+    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+    ret = _eit_process_event_one(mod, tableid, svc, ch,
                                  ptr, len, local, resched, save);
+  }
   return ret;
 }
 
