@@ -61,6 +61,7 @@ typedef struct channel
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
+  char                 *ch_epg_parent;
   epg_broadcast_tree_t  ch_epg_schedule;
   epg_broadcast_t      *ch_epg_now;
   epg_broadcast_t      *ch_epg_next;
@@ -68,7 +69,7 @@ typedef struct channel
   gtimer_t              ch_epg_timer_head;
   gtimer_t              ch_epg_timer_current;
 
-  int ch_epgauto;
+  int                   ch_epgauto;
   idnode_list_head_t    ch_epggrab;                /* 1 = epggrab channel, 2 = channel */
 
   /* DVR */
@@ -180,5 +181,21 @@ const char *channel_get_epgid ( channel_t *ch );
 #define channel_get_suuid(ch) idnode_uuid_as_sstr(&(ch)->ch_id)
 
 #define channel_get_id(ch)    idnode_get_short_uuid((&(ch)->ch_id))
+
+static inline channel_t *channel_epg_parent(channel_t *ch)
+{
+  if (ch->ch_epg_parent != NULL)
+    return channel_find_by_uuid(ch->ch_epg_parent);
+  return NULL;
+}
+
+static inline epg_broadcast_tree_t *channel_epg_schedule(channel_t *ch)
+{
+  if (ch->ch_epg_parent != NULL) {
+    channel_t *ch2 = channel_find_by_uuid(ch->ch_epg_parent);
+    if (ch2) return &ch2->ch_epg_schedule;
+  }
+  return &ch->ch_epg_schedule;
+}
 
 #endif /* CHANNELS_H */

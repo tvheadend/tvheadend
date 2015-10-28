@@ -587,6 +587,7 @@ static htsmsg_t *
 htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 {
   idnode_list_mapping_t *ilm;
+  channel_t *src = channel_epg_parent(ch) ?: ch;
   channel_tag_t *ct;
   service_t *t;
   epg_broadcast_t *now, *next = NULL;
@@ -635,8 +636,8 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     }
   }
 
-  now  = ch->ch_epg_now;
-  next = ch->ch_epg_next;
+  now  = src->ch_epg_now;
+  next = src->ch_epg_next;
   htsmsg_add_u32(out, "eventId", now ? now->id : 0);
   htsmsg_add_u32(out, "nextEventId", next ? next->id : 0);
 
@@ -1197,7 +1198,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   if (epg) {
     CHANNEL_FOREACH(ch) {
       if (!htsp_user_access_channel(htsp, ch)) continue;
-      RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
+      RB_FOREACH(ebc, channel_epg_schedule(ch), sched_link) {
         if (epgMaxTime && ebc->start > epgMaxTime) break;
         htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate, htsp);
         if (e) htsp_send_message(htsp, e, NULL);
@@ -1285,6 +1286,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Use event as starting point */
   if (e || ch) {
+    ch = channel_epg_parent(ch) ?: ch;
     if (!e) e = ch->ch_epg_now ?: ch->ch_epg_next;
 
     /* Output */
@@ -1302,7 +1304,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
     events = htsmsg_create_list();
     CHANNEL_FOREACH(ch) {
       int num = numFollowing;
-      RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
+      RB_FOREACH(e, channel_epg_schedule(ch), sched_link) {
         if (maxTime && e->start > maxTime) break;
         htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0, htsp));
         if (num == 1) break;

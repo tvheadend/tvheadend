@@ -397,6 +397,14 @@ const idclass_t channel_class = {
       .list     = bouquet_class_get_list,
       .opts     = PO_RDONLY
     },
+    {
+      .type     = PT_STR,
+      .id       = "epg_parent",
+      .name     = N_("Reuse EPG from"),
+      .list     = channel_class_get_list,
+      .off      = offsetof(channel_t, ch_epg_parent),
+      .opts     = PO_ADVANCED
+    },
     {}
   }
 };
@@ -782,6 +790,18 @@ channel_create0
   return ch;
 }
 
+static void
+channel_epg_parent_unlink ( channel_t *ch )
+{
+  char uuid[UUID_HEX_SIZE];
+  idnode_uuid_as_str(&ch->ch_id, uuid);
+  RB_FOREACH(ch, &channels, ch_link)
+    if (ch->ch_epg_parent && !strcmp(ch->ch_epg_parent, uuid)) {
+      free(ch->ch_epg_parent);
+      ch->ch_epg_parent = NULL;
+    }
+}
+
 void
 channel_delete ( channel_t *ch, int delconf )
 {
@@ -815,6 +835,7 @@ channel_delete ( channel_t *ch, int delconf )
   /* EPG */
   epggrab_channel_rem(ch);
   epg_channel_unlink(ch);
+  channel_epg_parent_unlink(ch);
 
   /* HTSP */
   htsp_channel_delete(ch);
@@ -826,6 +847,7 @@ channel_delete ( channel_t *ch, int delconf )
   /* Free memory */
   RB_REMOVE(&channels, ch, ch_link);
   idnode_unlink(&ch->ch_id);
+  free(ch->ch_epg_parent);
   free(ch->ch_name);
   free(ch->ch_icon);
   free(ch);

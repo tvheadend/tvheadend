@@ -942,7 +942,7 @@ not_so_good:
 
   e = NULL;
   pre = (60 * dvr_entry_get_extra_time_pre(de)) - 30;
-  RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
+  RB_FOREACH(ev, channel_epg_schedule(de->de_channel), sched_link) {
     if (de->de_bcast == ev) continue;
     if (ev->start - pre < dispatch_clock) continue;
     if (dvr_entry_fuzzy_match(de, ev, 0, INT64_MAX))
@@ -1472,7 +1472,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 
     /* Find match */
     } else {
-      RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
+      RB_FOREACH(e, channel_epg_schedule(e->channel), sched_link) {
         if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
                                   de->de_config->dvr_update_window)) {
           tvhtrace("dvr",

@@ -2389,7 +2389,7 @@ static void
 _eq_add_channel ( epg_query_t *eq, channel_t *ch )
 {
   epg_broadcast_t *ebc;
-  RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
+  RB_FOREACH(ebc, channel_epg_schedule(ch), sched_link) {
     if (ebc->episode)
       _eq_add(eq, ebc);
   }
