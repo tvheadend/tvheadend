@@ -243,6 +243,8 @@ void http_deescape(char *s);
 
 void http_parse_args(http_arg_list_t *list, char *args);
 
+char *http_get_hostpath(http_connection_t *hc);
+
 /*
  * HTTP/RTSP Client
  */

@@ -273,6 +273,7 @@ SRCS-2 += \
 	src/webui/statedump.c \
 	src/webui/html.c\
 	src/webui/webui_api.c\
+	src/webui/xmltv.c
 
 SRCS-2 += \
 	src/muxer.c \

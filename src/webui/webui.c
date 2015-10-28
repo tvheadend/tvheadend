@@ -1,6 +1,7 @@
 /*
  *  tvheadend, WEBUI / HTML user interface
  *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -458,21 +459,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
 
   if(started)
     muxer_close(mux);
-}
-
-/*
- *
- */
-static char *
-http_get_hostpath(http_connection_t *hc)
-{  
-  char buf[255];
-  const char *host = http_arg_get(&hc->hc_args, "Host") ?: http_arg_get(&hc->hc_args, "X-Forwarded-Host");
-  const char *proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
-
-  snprintf(buf, sizeof(buf), "%s://%s%s", proto ?: "http", host, tvheadend_webroot ?: "");
-
-  return strdup(buf);
 }
 
 /*
@@ -1818,6 +1804,7 @@ webui_init(int xspf)
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_ANONYMOUS);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
   http_path_add("/playlist", NULL, page_http_playlist, ACCESS_ANONYMOUS);
+  http_path_add("/xmltv", NULL, page_xmltv, ACCESS_ANONYMOUS);
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 
