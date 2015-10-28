@@ -370,6 +370,8 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
   *argv = calloc(argc, sizeof(char *));
 
   while (*s && i < argc - 1) {
+    while (*s == ' ')
+      s++;
     f = s;
     while (*s && *s != ' ') {
       while (*s && *s != ' ' && *s != '\\')
