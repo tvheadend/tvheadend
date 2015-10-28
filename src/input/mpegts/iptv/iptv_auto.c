@@ -107,7 +107,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
   size_t l = 0;
-  char url2[512], name2[128], *n, *x = NULL;
+  char url2[512], name2[128], buf[32], *n, *x = NULL;
 
   if (url == NULL ||
       (strncmp(url, "file://", 7) &&
@@ -219,6 +219,15 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     htsmsg_add_str(conf, "iptv_muxname", n);
   if (name)
     htsmsg_add_str(conf, "iptv_sname", name);
+  if (chnum) {
+    snprintf(buf, sizeof(buf), "%ld.%ld",
+             (long)(chnum / CHANNEL_SPLIT), (long)(chnum % CHANNEL_SPLIT));
+    htsmsg_add_str(conf, "channel_number", buf);
+  }
+  if (logo)
+    htsmsg_add_str(conf, "iptv_icon", logo);
+  if (epgid)
+    htsmsg_add_str(conf, "iptv_epgid", epgid);
   if (!in->in_scan_create)
     htsmsg_add_s32(conf, "scan_result", MM_SCAN_OK);
   im = iptv_mux_create0(in, NULL, conf);
