@@ -981,8 +981,14 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))
     tag = channel_tag_find_by_identifier(atoi(components[1]));
-  else if(nc == 2 && !strcmp(components[0], "tag"))
+  else if(nc == 2 && !strcmp(components[0], "tagname"))
     tag = channel_tag_find_by_name(components[1], 0);
+  else if(nc == 2 && !strcmp(components[0], "tag")) {
+    if (uuid_hexvalid(components[1]))
+      tag = channel_tag_find_by_uuid(components[1]);
+    else
+      tag = channel_tag_find_by_name(components[1], 0);
+  }
 
   if(ch)
     r = http_channel_playlist(hc, pltype, ch);

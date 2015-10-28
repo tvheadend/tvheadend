@@ -229,8 +229,8 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
 
-  if (nc == 2 && !strcmp(components[0], "channeluuid"))
-    ch = channel_find_by_uuid(components[1]);
+  if (nc == 2 && !strcmp(components[0], "channelid"))
+    ch = channel_find_by_id(atoi(components[1]));
   else if (nc == 2 && !strcmp(components[0], "channelnumber"))
     ch = channel_find_by_number(components[1]);
   else if (nc == 2 && !strcmp(components[0], "channelname"))
@@ -239,8 +239,10 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
     ch = channel_find(components[1]);
   else if (nc == 2 && !strcmp(components[0], "tagid"))
     tag = channel_tag_find_by_identifier(atoi(components[1]));
-  else if (nc == 2 && !strcmp(components[0], "tag"))
+  else if (nc == 2 && !strcmp(components[0], "tagname"))
     tag = channel_tag_find_by_name(components[1], 0);
+  else if (nc == 2 && !strcmp(components[0], "tag"))
+    tag = channel_tag_find_by_uuid(components[1]);
 
   if (ch) {
     r = http_xmltv_channel(hc, ch);
