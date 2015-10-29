@@ -128,6 +128,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   }
 
   urlinit(&u);
+
+  if (strncmp(url, "pipe://", 7) == 0)
+    goto skip_url;
+
   if (urlparse(url, &u))
     return;
   if (u.host == NULL || u.host[0] == '\0')
@@ -171,6 +175,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     url = url2;
   }
 
+skip_url:
   if (last_url) {
     if (charset_id) {
       x = intlconv_to_utf8safestr(charset_id, name, strlen(name)*2);
