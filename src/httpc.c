@@ -1174,8 +1174,10 @@ http_client_add_args ( http_client_t *hc, http_arg_list_t *h, const char *args )
     v = strstrip(v);
     if (v && *v && *k &&
         strcasecmp(k, "Connection") != 0 &&
-        strcasecmp(k, "Host") != 0)
+        strcasecmp(k, "Host") != 0) {
+      http_arg_get_remove(h, k);
       http_arg_set(h, k, v);
+    }
   }
 }
 
