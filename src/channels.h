@@ -61,6 +61,9 @@ typedef struct channel
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
+  char                 *ch_epg_parent;
+  LIST_HEAD(, channel)  ch_epg_slaves;
+  LIST_ENTRY(channel)   ch_epg_slave_link;
   epg_broadcast_tree_t  ch_epg_schedule;
   epg_broadcast_t      *ch_epg_now;
   epg_broadcast_t      *ch_epg_next;
@@ -68,7 +71,7 @@ typedef struct channel
   gtimer_t              ch_epg_timer_head;
   gtimer_t              ch_epg_timer_current;
 
-  int ch_epgauto;
+  int                   ch_epgauto;
   idnode_list_head_t    ch_epggrab;                /* 1 = epggrab channel, 2 = channel */
 
   /* DVR */
@@ -153,6 +156,8 @@ htsmsg_t * channel_tag_class_get_list(void *o, const char *lang);
 const char * channel_tag_get_icon(channel_tag_t *ct);
 
 int channel_access(channel_t *ch, struct access *a, int disabled);
+
+void channel_event_updated(epg_broadcast_t *e);
 
 int channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin);
 void channel_tag_unmap(channel_t *ch, void *origin);

@@ -362,6 +362,7 @@ void epg_save ( void )
   }
   if ( _epg_write_sect(sb, "broadcasts") ) goto error;
   CHANNEL_FOREACH(ch) {
+    if (ch->ch_epg_parent) continue;
     RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
       if (_epg_write(sb, epg_broadcast_serialize(ebc))) goto error;
       stats.broadcasts.total++;

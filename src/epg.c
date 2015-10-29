@@ -210,7 +210,7 @@ static void _epg_object_create ( void *o )
   }
 }
 
-static epg_object_t *_epg_object_find_by_uri 
+static epg_object_t *_epg_object_find_by_uri
   ( const char *uri, int create, int *save,
     epg_object_tree_t *tree, epg_object_t **skel )
 {
@@ -1599,6 +1599,7 @@ static void _epg_broadcast_updated ( void *eo )
   }
   dvr_event_updated(eo);
   dvr_autorec_check_event(eo);
+  channel_event_updated(eo);
 }
 
 static epg_broadcast_t **_epg_broadcast_skel ( void )
@@ -1628,6 +1629,33 @@ epg_broadcast_t* epg_broadcast_find_by_time
   (*ebc)->dvb_eid = eid;
 
   return _epg_channel_add_broadcast(channel, ebc, create, save);
+}
+
+epg_broadcast_t *epg_broadcast_clone
+  ( channel_t *channel, epg_broadcast_t *src, int *save )
+{
+  epg_broadcast_t *ebc;
+
+  if ( !src ) return NULL;
+  ebc = epg_broadcast_find_by_time(channel, src->start, src->stop,
+                                   src->dvb_eid, 1, save);
+  if (ebc) {
+    /* Copy metadata */
+    *save |= epg_broadcast_set_is_widescreen(ebc, src->is_widescreen, NULL);
+    *save |= epg_broadcast_set_is_hd(ebc, src->is_hd, NULL);
+    *save |= epg_broadcast_set_lines(ebc, src->lines, NULL);
+    *save |= epg_broadcast_set_aspect(ebc, src->aspect, NULL);
+    *save |= epg_broadcast_set_is_deafsigned(ebc, src->is_deafsigned, NULL);
+    *save |= epg_broadcast_set_is_subtitled(ebc, src->is_subtitled, NULL);
+    *save |= epg_broadcast_set_is_audio_desc(ebc, src->is_audio_desc, NULL);
+    *save |= epg_broadcast_set_is_new(ebc, src->is_new, NULL);
+    *save |= epg_broadcast_set_is_repeat(ebc, src->is_repeat, NULL);
+    *save |= epg_broadcast_set_summary2(ebc, src->summary, NULL);
+    *save |= epg_broadcast_set_description2(ebc, src->description, NULL);
+    *save |= epg_broadcast_set_serieslink(ebc, src->serieslink, NULL);
+    *save |= epg_broadcast_set_episode(ebc, src->episode, NULL);
+  }
+  return ebc;
 }
 
 epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id )
