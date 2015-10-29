@@ -1543,6 +1543,25 @@ mpegts_input_get_streams
 }
 
 static void
+mpegts_input_clear_stats ( tvh_input_t *i )
+{
+  mpegts_input_t *mi = (mpegts_input_t*)i;
+  tvh_input_instance_t *mmi_;
+  mpegts_mux_instance_t *mmi;
+
+  pthread_mutex_lock(&mi->mi_output_lock);
+  LIST_FOREACH(mmi_, &mi->mi_mux_instances, tii_input_link) {
+    mmi = (mpegts_mux_instance_t *)mmi_;
+    mmi->tii_stats.unc = 0;
+    mmi->tii_stats.cc = 0;
+    mmi->tii_stats.te = 0;
+    mmi->tii_stats.ec_block = 0;
+    mmi->tii_stats.tc_block = 0;
+  }
+  pthread_mutex_unlock(&mi->mi_output_lock);
+}
+
+static void
 mpegts_input_thread_start ( mpegts_input_t *mi )
 {
   mi->mi_running = 1;
@@ -1641,6 +1660,7 @@ mpegts_input_create0
   mi->mi_has_subscription     = mpegts_input_has_subscription;
   mi->mi_tuning_error         = mpegts_input_tuning_error;
   mi->ti_get_streams          = mpegts_input_get_streams;
+  mi->ti_clear_stats          = mpegts_input_clear_stats;
 
   /* Index */
   mi->mi_instance             = ++mpegts_input_idx;
