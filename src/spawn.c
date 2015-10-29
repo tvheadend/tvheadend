@@ -374,8 +374,6 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
       s++;
     f = s;
     while (*s && *s != ' ') {
-      while (*s && *s != ' ' && *s != '\\')
-        s++;
       if (*s == '\\') {
         l = *(s + 1);
         if (l == 'b')
@@ -390,11 +388,16 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
           l = '\t';
         else
           l = 0;
-        if (l)
+        if (l) {
           *s++ = l;
-        memmove(s, s + 1, strlen(s) - 1);
-        if (*s)
-          s++;
+          memmove(s, s + 1, strlen(s));
+        } else {
+          memmove(s, s + 1, strlen(s));
+          if (*s)
+            s++;
+        }
+      } else {
+        s++;
       }
     }
     if (f != s) {
