@@ -76,6 +76,7 @@ iptv_http_header ( http_client_t *hc )
     if (n > 0 &&
         (strcasecmp(s, "audio/mpegurl") == 0 ||
          strcasecmp(s, "audio/x-mpegurl") == 0 ||
+         strcasecmp(s, "application/x-mpegurl") == 0 ||
          strcasecmp(s, "application/apple.vnd.mpegurl") == 0 ||
          strcasecmp(s, "application/vnd.apple.mpegurl") == 0)) {
       if (im->im_m3u_header > 10) {
