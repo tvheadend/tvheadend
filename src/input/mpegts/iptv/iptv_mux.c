@@ -217,6 +217,13 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_env),
       .opts     = PO_ADVANCED | PO_MULTILINE
     },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_hdr",
+      .name     = N_("Custom HTTP headers"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_hdr),
+      .opts     = PO_ADVANCED | PO_MULTILINE
+    },
     {}
   }
 };
@@ -252,6 +259,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
   free(im->mm_iptv_interface);
   free(im->mm_iptv_svcname);
   free(im->mm_iptv_env);
+  free(im->mm_iptv_hdr);
   free(im->mm_iptv_icon);
   free(im->mm_iptv_epgid);
   mpegts_mux_delete(mm, delconf);

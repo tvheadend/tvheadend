@@ -1117,7 +1117,7 @@ http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
 /*
  * Redirected
  */
-static void
+void
 http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
 {
   char buf[256];
@@ -1141,8 +1141,47 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
   http_client_basic_auth(hc, h, url->user, url->pass);
 }
 
+static char *
+strstrip(char *s)
+{
+  size_t l;
+  if (s != NULL) {
+    while (*s && *s <= ' ') s++;
+    l = *s ? 0 : strlen(s) - 1;
+    while (*s && s[l] <= ' ') s[l--] = '\0';
+  }
+  return s;
+}
+
+void
+http_client_add_args ( http_client_t *hc, http_arg_list_t *h, const char *args )
+{
+  char *p, *k, *v;
+
+  if (args == NULL)
+    return;
+  p = strdupa(args);
+  while (*p) {
+    while (*p && *p <= ' ') p++;
+    if (*p == '\0') break;
+    k = p;
+    while (*p && *p != '\r' && *p != '\n' && *p != ':' && *p != '=') p++;
+    v = NULL;
+    if (*p == '=' || *p == ':') { *p = '\0'; p++; v = p; }
+    while (*p && *p != '\r' && *p != '\n') p++;
+    if (*p) { *p = '\0'; p++; }
+    k = strstrip(k);
+    v = strstrip(v);
+    if (v && *v && *k &&
+        strcasecmp(k, "Connection") != 0 &&
+        strcasecmp(k, "Host") != 0)
+      http_arg_set(h, k, v);
+  }
+}
+
 int
-http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver )
+http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
+                               http_ver_t ver )
 {
   http_arg_list_t h;
   tvhpoll_t *efd;
@@ -1172,7 +1211,7 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver
 
   http_client_flush(hc, 0);
 
-  http_client_basic_args(hc, &h, u, hc->hc_keepalive);
+  hc->hc_hdr_create(hc, &h, u, 0);
   hc->hc_reconnected = 1;
   hc->hc_shutdown    = 0;
   hc->hc_pevents     = 0;
@@ -1227,7 +1266,7 @@ http_client_simple( http_client_t *hc, const url_t *url )
 {
   http_arg_list_t h;
 
-  http_client_basic_args(hc, &h, url, 0);
+  hc->hc_hdr_create(hc, &h, url, 0);
   return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
                           &h, NULL, 0);
 }
@@ -1414,6 +1453,8 @@ http_client_connect
 
   TAILQ_INIT(&hc->hc_args);
   TAILQ_INIT(&hc->hc_wqueue);
+
+  hc->hc_hdr_create = http_client_basic_args;
 
   if (http_client_reconnect(hc, ver, scheme, host, port) < 0) {
     free(hc);

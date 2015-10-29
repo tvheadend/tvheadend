@@ -162,6 +162,19 @@ iptv_http_complete
 }
 
 /*
+ * Custom headers
+ */
+static void
+iptv_http_create_header
+  ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
+{
+  iptv_mux_t *im = hc->hc_aux;
+
+  http_client_basic_args(hc, h, url, keepalive);
+  http_client_add_args(hc, h, im->mm_iptv_hdr);
+}
+
+/*
  * Setup HTTP(S) connection
  */
 static int
@@ -174,6 +187,7 @@ iptv_http_start
   if (!(hc = http_client_connect(im, HTTP_VERSION_1_1, u->scheme,
                                  u->host, u->port, NULL)))
     return SM_CODE_TUNING_FAILED;
+  hc->hc_hdr_create      = iptv_http_create_header;
   hc->hc_hdr_received    = iptv_http_header;
   hc->hc_data_received   = iptv_http_data;
   hc->hc_data_complete   = iptv_http_complete;
