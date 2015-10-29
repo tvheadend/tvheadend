@@ -1755,7 +1755,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     min_duration = 0;    // 0 = any
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = 0;       // 0 = dvr config
-  if(htsmsg_get_u32(in, "removal", &retention))
+  if(htsmsg_get_u32(in, "removal", &removal))
     removal = 0;         // 0 = dvr config
   if(htsmsg_get_u32(in, "daysOfWeek", &days_of_week))
     days_of_week = 0x7f; // all days
