@@ -1266,7 +1266,7 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
 
   CHANNEL_FOREACH(ch) {
     if (!ch->ch_enabled) continue;
-    RB_FOREACH(e, channel_epg_schedule(ch), sched_link) {
+    RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
       if(autorec_cmp(dae, e)) {
         enabled = 1;
         if (disabled) {
