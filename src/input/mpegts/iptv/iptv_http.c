@@ -133,7 +133,7 @@ iptv_http_complete
   ( http_client_t *hc )
 {
   iptv_mux_t *im = hc->hc_aux;
-  char *url, sbuf[512], *s, *p;
+  char *url, *url2, *s, *p;
   url_t u;
   int r;
 
@@ -153,13 +153,16 @@ iptv_http_complete
         *p = '\0';
       if (!urlparse(s, &u))
         goto invalid;
+      url2 = malloc(512);
+      url2[0] = '\0';
       if ((s = http_arg_get(&hc->hc_args, "Host")) != NULL) {
-        snprintf(sbuf, sizeof(sbuf), "%s://%s%s",
+        snprintf(url2, 512, "%s://%s%s",
                  hc->hc_ssl ? "https" : "http", s, url);
       } else if (im->mm_iptv_url_raw) {
-        snprintf(sbuf, sizeof(sbuf), "%s%s", s, url);
+        snprintf(url2, 512, "%s%s", s, url);
       }
-      url = sbuf;
+      free(url);
+      url = url2;
       urlinit(&u);
     }
     if (!urlparse(url, &u)) {
