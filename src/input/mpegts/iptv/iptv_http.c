@@ -155,9 +155,9 @@ iptv_http_complete
         goto invalid;
       url2 = malloc(512);
       url2[0] = '\0';
-      if ((s = http_arg_get(&hc->hc_args, "Host")) != NULL) {
+      if ((p = http_arg_get(&hc->hc_args, "Host")) != NULL) {
         snprintf(url2, 512, "%s://%s%s",
-                 hc->hc_ssl ? "https" : "http", s, url);
+                 hc->hc_ssl ? "https" : "http", p, url);
       } else if (im->mm_iptv_url_raw) {
         snprintf(url2, 512, "%s%s", s, url);
       }
