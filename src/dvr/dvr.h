@@ -497,6 +497,8 @@ void dvr_rec_migrate(dvr_entry_t *de_old, dvr_entry_t *de_new);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 
+void dvr_event_removed(epg_broadcast_t *e);
+
 void dvr_event_updated(epg_broadcast_t *e);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);

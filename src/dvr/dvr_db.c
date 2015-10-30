@@ -111,6 +111,7 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
       de->de_bcast->putref((epg_object_t*)de->de_bcast);
       notify_delayed(id, "epg", "dvr_delete");
       de->de_bcast = NULL;
+      de->de_dvb_eid = 0;
     }
     if (bcast) {
       bcast->getref((epg_object_t*)bcast);
@@ -582,6 +583,12 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
   const char *title1, *title2;
   char buf[64];
 
+  /* Wrong length (+/-20%) */
+  t1 = de->de_stop - de->de_start;
+  t2 = e->stop - e->start;
+  if (abs(t2 - t1) > (t1 / 5))
+    return 0;
+
   /* Matching ID */
   if (de->de_dvb_eid && eid && de->de_dvb_eid == eid)
     return 1;
@@ -590,12 +597,6 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
   if (!(title1 = epg_broadcast_get_title(e, NULL)))
     return 0;
   if (!(title2 = lang_str_get(de->de_title, NULL)))
-    return 0;
-
-  /* Wrong length (+/-20%) */
-  t1 = de->de_stop - de->de_start;
-  t2 = e->stop - e->start;
-  if ( abs(t2 - t1) > (t1 / 5) )
     return 0;
 
   /* Outside of window */
@@ -1448,7 +1449,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
   assert(new_e != NULL);
 
   /* Ignore */
-  if ( e == new_e ) return;
+  if (e == new_e) return;
 
   /* Existing entry */
   if ((de = dvr_entry_find_by_event(e))) {
@@ -1472,6 +1473,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 
     /* Find match */
     } else {
+
       RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
         if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
                                   de->de_config->dvr_update_window)) {
@@ -1481,17 +1483,34 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                    epg_broadcast_get_title(e, NULL),
                    channel_get_name(e->channel),
                    e->start, e->stop);
-          dvr_entry_assign_broadcast(de, e);
-          _dvr_entry_update(de, -1, e, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
+          _dvr_entry_update(de, -1, e, NULL, NULL, NULL, NULL, NULL,
+                            0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
           return;
         }
       }
       dvr_entry_assign_broadcast(de, NULL);
+
     }
   }
 }
 
-void dvr_event_updated ( epg_broadcast_t *e )
+/**
+ * Used to notify the DVR that an event has been removed
+ */
+void
+dvr_event_removed(epg_broadcast_t *e)
+{
+  dvr_entry_t *de = dvr_entry_find_by_event(e);
+  if (de) {
+    dvr_entry_assign_broadcast(de, NULL);
+    dvr_entry_save(de);
+  }
+}
+
+/**
+ * Event was updated in epg
+ */
+void dvr_event_updated(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
   de = dvr_entry_find_by_event(e);
@@ -1511,7 +1530,6 @@ void dvr_event_updated ( epg_broadcast_t *e )
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel),
                  e->start, e->stop);
-        dvr_entry_assign_broadcast(de, e);
         _dvr_entry_update(de, -1, e, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
         break;
       }

@@ -1397,12 +1397,16 @@ epg_serieslink_t *epg_serieslink_deserialize
  * *************************************************************************/
 
 static void _epg_channel_rem_broadcast 
-  ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *new )
+  ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *ebc_new )
 {
-  if (new) dvr_event_replaced(ebc, new);
   RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
   if (ch->ch_epg_now  == ebc) ch->ch_epg_now  = NULL;
   if (ch->ch_epg_next == ebc) ch->ch_epg_next = NULL;
+  if (ebc_new) {
+    dvr_event_replaced(ebc, ebc_new);
+  } else {
+    dvr_event_removed(ebc);
+  }
   _epg_object_putref(ebc);
 }
 
