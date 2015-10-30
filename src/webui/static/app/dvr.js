@@ -58,6 +58,30 @@ tvheadend.dvrDetails = function(uuid) {
         if (timerec_caption)
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Time Scheduler') + ':</div> ' + timerec_caption + '</div>';
 
+        var buttons = [];
+
+        buttons.push(new Ext.Button({
+            handler: searchIMDB,
+            iconCls: 'imdb',
+            tooltip: _('Search IMDB (for title)'),
+        }));
+
+        buttons.push(new Ext.Button({
+            handler:searchTheTVDB,
+            iconCls:'thetvdb',
+            tooltip:_('Search TheTVDB (for title)'),
+        }));
+
+        function searchIMDB() {
+            window.open('http://akas.imdb.com/find?q=' +
+                        encodeURIComponent(title), '_blank');
+        }
+
+        function searchTheTVDB(){
+            window.open('http://thetvdb.com/?string='+
+                        encodeURIComponent(title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
+        }
+
         var win = new Ext.Window({
             title: title,
             iconCls: 'info',
@@ -65,6 +89,7 @@ tvheadend.dvrDetails = function(uuid) {
             width: 650,
             height: 450,
             constrainHeader: true,
+            buttons: buttons,
             buttonAlign: 'center',
             html: content
         });
