@@ -148,17 +148,22 @@ iptv_http_complete
     }
     urlinit(&u);
     if (url[0] == '/') {
-      s = strdupa(im->mm_iptv_url_raw);
-      if ((p = strchr(s, '/')) != NULL)
-        *p = '\0';
-      if (!urlparse(s, &u))
-        goto invalid;
       url2 = malloc(512);
       url2[0] = '\0';
       if ((p = http_arg_get(&hc->hc_args, "Host")) != NULL) {
         snprintf(url2, 512, "%s://%s%s",
                  hc->hc_ssl ? "https" : "http", p, url);
       } else if (im->mm_iptv_url_raw) {
+        s = strdupa(im->mm_iptv_url_raw);
+        if ((p = strchr(s, '/')) != NULL) {
+          p++;
+          if (*p == '/')
+            p++;
+          if ((p = strchr(s, '/')) != NULL)
+            *p = '\0';
+        }
+        if (!urlparse(s, &u))
+          goto invalid;
         snprintf(url2, 512, "%s%s", s, url);
       }
       free(url);
