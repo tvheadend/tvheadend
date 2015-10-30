@@ -159,7 +159,7 @@ iptv_http_complete
           p++;
           if (*p == '/')
             p++;
-          if ((p = strchr(s, '/')) != NULL)
+          if ((p = strchr(p, '/')) != NULL)
             *p = '\0';
         }
         if (!urlparse(s, &u))
