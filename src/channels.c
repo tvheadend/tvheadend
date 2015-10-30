@@ -711,6 +711,11 @@ channel_get_icon ( channel_t *ch )
         if (aname == NULL)
           aname = strdup(chname);
 
+        if (config.chicon_lowercase)
+          for (s = aname; *s; s++)
+            if (*s >= 'A' && *s <= 'Z')
+              *(char *)s = *s - 'A' + 'a';
+
         sname = url_encode(aname);
         free((char *)aname);
       }
