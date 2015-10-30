@@ -1031,7 +1031,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 	 htsp->htsp_logname, name, v);
 
   htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
-  htsmsg_add_str(r, "servername", "HTS Tvheadend");
+  htsmsg_add_str(r, "servername", config_get_server_name());
   htsmsg_add_str(r, "serverversion", tvheadend_version);
   htsmsg_add_bin(r, "challenge", htsp->htsp_challenge, 32);
   if (tvheadend_webroot)
