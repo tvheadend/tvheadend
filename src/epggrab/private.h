@@ -46,9 +46,9 @@ void      epggrab_module_channels_load ( const char *modid );
  * Channel processing
  * *************************************************************************/
 
-int  epggrab_channel_match ( epggrab_channel_t *ec, struct channel *ch );
-int  epggrab_channel_match_and_link
-  ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_epgid ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_name ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_number ( epggrab_channel_t *ec, struct channel *ch );
 
 epggrab_channel_t *epggrab_channel_create
   ( epggrab_module_t *owner, htsmsg_t *conf, const char *uuid );
