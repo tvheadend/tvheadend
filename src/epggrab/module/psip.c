@@ -76,7 +76,7 @@ _psip_eit_callback_channel
   uint16_t eventid;
   uint32_t starttime, length;
   time_t start, stop;
-  int save = 0, save2, i;
+  int save = 0, save2, i, size;
   uint8_t titlelen;
   unsigned int dlen;
   char buf[512];
@@ -84,7 +84,7 @@ _psip_eit_callback_channel
   epg_episode_t *ee;
   lang_str_t *title;
 
-  for (i = 0; i < count && count >= 12; ) {
+  for (i = 0; i + 12 <= count; i += size, ptr += size) {
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
     starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
     start = atsc_convert_gpstime(starttime);
@@ -92,9 +92,10 @@ _psip_eit_callback_channel
     stop = start + length;
     titlelen = ptr[9];
     dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
+    size = titlelen + dlen + 12;
     // tvhtrace("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
 
-    if (titlelen + dlen + 12 > count) break;
+    if (size > count) break;
 
     atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
 
@@ -106,22 +107,16 @@ _psip_eit_callback_channel
         " stop=%"PRItime_t", ebc=%p",
         ch ? channel_get_name(ch) : "(null)",
         eventid, start, stop, ebc);
-    if (!ebc) goto next;
+    if (!ebc) continue;
     save |= save2;
 
     title = lang_str_create();
     lang_str_add(title, buf, "eng", 0);
 
     ee = epg_broadcast_get_episode(ebc, 1, &save2);
-    save2 |= epg_episode_set_title2(ee, title, mod);
-    save |= save2;
+    save |= epg_episode_set_title2(ee, title, mod);
 
     lang_str_destroy(title);
-
-    /* Move on */
-next:
-    ptr += titlelen + dlen + 12;
-    i   += titlelen + dlen + 12;
   }
   return save;
 }
