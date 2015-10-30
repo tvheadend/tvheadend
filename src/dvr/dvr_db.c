@@ -204,20 +204,20 @@ static inline int extra_valid(time_t extra)
   return extra != 0 && extra != (time_t)-1;
 }
 
-int
+time_t
 dvr_entry_get_start_time( dvr_entry_t *de )
 {
   /* Note 30 seconds might not be enough (rotors) */
   return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) - 30;
 }
 
-int
+time_t
 dvr_entry_get_stop_time( dvr_entry_t *de )
 {
   return de->de_stop + (60 * dvr_entry_get_extra_time_post(de));
 }
 
-int
+time_t
 dvr_entry_get_extra_time_pre( dvr_entry_t *de )
 {
   time_t extra = de->de_start_extra;
@@ -233,7 +233,7 @@ dvr_entry_get_extra_time_pre( dvr_entry_t *de )
   return extra;
 }
 
-int
+time_t
 dvr_entry_get_extra_time_post( dvr_entry_t *de )
 {
   time_t extra = de->de_stop_extra;
@@ -419,6 +419,8 @@ dvr_entry_status(dvr_entry_t *de)
       return N_("Commercial break");
     case DVR_RS_ERROR:
       return streaming_code2txt(de->de_last_error);
+    case DVR_RS_EPG_WAIT:
+      return N_("Waiting for EPG running flag");
     default:
       return N_("Invalid");
     }
@@ -513,7 +515,7 @@ dvr_usage_count(access_t *aa)
   return used;
 }
 
-static void
+void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
   time_t now, start, stop;
@@ -528,6 +530,12 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   if (now >= stop || de->de_dont_reschedule) {
 
+    /* EPG thinks that the program is running */
+    if(de->de_running_start > de->de_running_stop) {
+      stop = dispatch_clock + 10;
+      goto recording;
+    }
+
     if(htsmsg_is_empty(de->de_files))
       dvr_entry_missed_time(de, de->de_last_error);
     else
@@ -538,6 +546,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   } else if (de->de_sched_state == DVR_RECORDING)  {
 
+recording:
     gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, stop);
 
   } else if (de->de_channel && de->de_channel->ch_enabled) {
@@ -1538,6 +1547,58 @@ void dvr_event_updated(epg_broadcast_t *e)
 }
 
 /**
+ * Event running status is updated
+ */
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
+{
+  dvr_entry_t *de;
+
+  if (esrc != EPG_SOURCE_EIT)
+    return;
+  de = dvr_entry_find_by_event(e);
+  if (de == NULL)
+    return;
+  if (!de->de_config->dvr_running) {
+    de->de_running_start = de->de_running_stop = 0;
+    return;
+  }
+  if (running) {
+    if (!de->de_running_start)
+      tvhdebug("dvr", "dvr entry %s event %s on %s - EPG marking start",
+               idnode_uuid_as_sstr(&de->de_id),
+               epg_broadcast_get_title(e, NULL),
+               channel_get_name(e->channel));
+    de->de_running_start = dispatch_clock;
+    if (dvr_entry_get_start_time(de) > dispatch_clock) {
+      de->de_start = dispatch_clock;
+      dvr_entry_set_timer(de);
+      tvhdebug("dvr", "dvr entry %s event %s on %s - EPG start",
+               idnode_uuid_as_sstr(&de->de_id),
+               epg_broadcast_get_title(e, NULL),
+               channel_get_name(e->channel));
+    }
+  } else {
+    if (!de->de_running_stop ||
+        de->de_running_start > de->de_running_stop)
+      tvhdebug("dvr", "dvr entry %s event %s on %s - EPG marking stop",
+               idnode_uuid_as_sstr(&de->de_id),
+               epg_broadcast_get_title(e, NULL),
+               channel_get_name(e->channel));
+    de->de_running_stop = dispatch_clock;
+    if (de->de_sched_state == DVR_RECORDING) {
+      if (dvr_entry_get_stop_time(de) > dispatch_clock) {
+        de->de_dont_reschedule = 1;
+        dvr_entry_set_timer(de);
+        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG stop",
+               idnode_uuid_as_sstr(&de->de_id),
+               epg_broadcast_get_title(e, NULL),
+               channel_get_name(e->channel));
+      }
+    }
+  }
+}
+
+/**
  *
  */
 void
@@ -1582,6 +1643,12 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
 static void
 dvr_timer_stop_recording(void *aux)
 {
+  dvr_entry_t *de = aux;
+  /* EPG thinks that the program is running */
+  if (de->de_running_start > de->de_running_stop) {
+    gtimer_arm(&de->de_timer, dvr_timer_stop_recording, de, 10);
+    return;
+  }
   dvr_stop_recording(aux, SM_CODE_OK, 1, 0);
 }
 

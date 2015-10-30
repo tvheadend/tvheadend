@@ -49,6 +49,7 @@ typedef struct dvr_config {
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
+  int dvr_running;
 
   muxer_config_t dvr_muxcnf;
 
@@ -111,6 +112,7 @@ typedef enum {
   DVR_RS_RUNNING,
   DVR_RS_COMMERCIAL,
   DVR_RS_ERROR,
+  DVR_RS_EPG_WAIT,
 } dvr_rs_state_t;
   
 
@@ -149,6 +151,9 @@ typedef struct dvr_entry {
 
   time_t de_start_extra;
   time_t de_stop_extra;
+
+  time_t de_running_start;
+  time_t de_running_stop;
 
   char *de_owner;
   char *de_creator;
@@ -421,13 +426,13 @@ uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
 
 uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
-int dvr_entry_get_start_time( dvr_entry_t *de );
+time_t dvr_entry_get_start_time( dvr_entry_t *de );
 
-int dvr_entry_get_stop_time( dvr_entry_t *de );
+time_t dvr_entry_get_stop_time( dvr_entry_t *de );
 
-int dvr_entry_get_extra_time_post( dvr_entry_t *de );
+time_t dvr_entry_get_extra_time_post( dvr_entry_t *de );
 
-int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
+time_t dvr_entry_get_extra_time_pre( dvr_entry_t *de );
 
 void dvr_entry_init(void);
 
@@ -500,6 +505,8 @@ void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 void dvr_event_removed(epg_broadcast_t *e);
 
 void dvr_event_updated(epg_broadcast_t *e);
+
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 

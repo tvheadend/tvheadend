@@ -182,6 +182,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
   cfg->dvr_update_window = 24 * 3600;
+  cfg->dvr_running = 1;
   cfg->dvr_pathname = strdup("$t$n.$x");
 
   /* Muxer config */
@@ -860,6 +861,14 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_update_window),
       .list     = dvr_config_entry_class_update_window_list,
       .def.u32  = 24*3600,
+      .group    = 1,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "epg-running",
+      .name     = N_("Use EPG Running State"),
+      .off      = offsetof(dvr_config_t, dvr_running),
+      .def.u32  = 1,
       .group    = 1,
     },
     {

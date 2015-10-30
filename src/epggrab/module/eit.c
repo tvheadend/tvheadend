@@ -26,6 +26,7 @@
 #include "epggrab/private.h"
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
+#include "dvr/dvr.h"
 
 /* ************************************************************************
  * Status handling
@@ -396,16 +397,15 @@ static int _eit_desc_crid
  * ***********************************************************************/
 
 static int _eit_process_event_one
-  ( epggrab_module_t *mod, int tableid,
+  ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, channel_t *ch,
     const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
-  int save2 = 0;
-  int dllen;
+  int dllen, save2 = 0;
   time_t start, stop;
   uint16_t eid;
-  uint8_t dtag, dlen;
+  uint8_t dtag, dlen, running;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   epg_serieslink_t *es;
@@ -417,6 +417,7 @@ static int _eit_process_event_one
   stop  = start + bcdtoint(ptr[7] & 0xff) * 3600 +
                   bcdtoint(ptr[8] & 0xff) * 60 +
                   bcdtoint(ptr[9] & 0xff);
+  running = (ptr[10] >> 5) & 0x07;
   dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
 
   len -= 12;
@@ -546,11 +547,15 @@ static int _eit_process_event_one
   if (ev.summary) lang_str_destroy(ev.summary);
   if (ev.desc)    lang_str_destroy(ev.desc);
 
+  /* use running flag only for current broadcast */
+  if (running && tableid == 0x4e && sect == 0)
+    epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, running == 4);
+
   return 0;
 }
 
 static int _eit_process_event
-  ( epggrab_module_t *mod, int tableid,
+  ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
@@ -562,7 +567,7 @@ static int _eit_process_event
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
-    if (_eit_process_event_one(mod, tableid, svc, ch,
+    if (_eit_process_event_one(mod, tableid, sect, svc, ch,
                                ptr, len, local, resched, save) < 0)
       return -1;
   }
@@ -683,7 +688,7 @@ _eit_callback
   ptr += 11;
   while (len) {
     int r;
-    if ((r = _eit_process_event(mod, tableid, svc, ptr, len,
+    if ((r = _eit_process_event(mod, tableid, sect, svc, ptr, len,
                                 mm->mm_network->mn_localtime,
                                 &resched, &save)) < 0)
       break;

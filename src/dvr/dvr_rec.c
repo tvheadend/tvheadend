@@ -1047,8 +1047,9 @@ dvr_thread(void *aux)
   streaming_message_t *sm;
   th_subscription_t *ts;
   th_pkt_t *pkt;
-  int run = 1, started = 0, comm_skip;
+  int run = 1, started = 0, comm_skip, epg_running, rs;
   int commercial = COMMERCIAL_UNKNOWN;
+  int64_t packets = 0;
   char *postproc;
 
   pthread_mutex_lock(&global_lock);
@@ -1089,42 +1090,57 @@ dvr_thread(void *aux)
     /* we don't want to start new recordings at this point */
     if (sm->sm_type == SMT_START && de->de_thread_shutdown)
       break;
+    epg_running = de->de_running_start > de->de_running_stop ||
+                  (de->de_running_start == 0 && de->de_running_stop == 0);
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
 
     case SMT_PACKET:
       pkt = sm->sm_data;
-      if(pkt->pkt_commercial == COMMERCIAL_YES)
-	dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
-      else
-	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
-      if(pkt->pkt_commercial == COMMERCIAL_YES && comm_skip)
+      rs = DVR_RS_RUNNING;
+      if (!epg_running)
+        rs = DVR_RS_EPG_WAIT;
+      else if (pkt->pkt_commercial == COMMERCIAL_YES)
+        rs = DVR_RS_COMMERCIAL;
+      dvr_rec_set_state(de, rs, 0);
+
+      if (rs == DVR_RS_COMMERCIAL && comm_skip)
 	break;
+      if (!epg_running)
+        break;
 
-      if(commercial != pkt->pkt_commercial)
+      if (commercial != pkt->pkt_commercial)
 	muxer_add_marker(prch->prch_muxer);
 
       commercial = pkt->pkt_commercial;
 
-      if(started) {
+      if (started) {
+	if (!epg_running && packets)
+	  goto restart;
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
 	dvr_notify(de);
+	packets++;
       }
       break;
 
     case SMT_MPEGTS:
       if(started) {
-	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
+	dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
+	if (!epg_running && packets)
+	  goto restart;
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
 	dvr_notify(de);
+	packets++;
       }
       break;
 
     case SMT_START:
+restart:
+      packets = 0;
       if(started &&
 	 muxer_reconfigure(prch->prch_muxer, sm->sm_data) < 0) {
 	tvhlog(LOG_WARNING,
@@ -1135,10 +1151,12 @@ dvr_thread(void *aux)
 	// support reconfiguration of the streams.
 	dvr_thread_epilog(de, postproc);
 	started = 0;
-	pthread_mutex_lock(&global_lock);
-	if (de->de_config->dvr_clone)
-	  de = dvr_entry_clone(de);
-	pthread_mutex_unlock(&global_lock);
+	if (epg_running) {
+	  pthread_mutex_lock(&global_lock);
+	  if (de->de_config->dvr_clone)
+	    de = dvr_entry_clone(de);
+	  pthread_mutex_unlock(&global_lock);
+        }
       }
 
       if(!started) {
