@@ -133,7 +133,7 @@ iptv_http_complete
   ( http_client_t *hc )
 {
   iptv_mux_t *im = hc->hc_aux;
-  char *url;
+  char *url, sbuf[512], *s, *p;
   url_t u;
   int r;
 
@@ -147,12 +147,28 @@ iptv_http_complete
       return 0;
     }
     urlinit(&u);
+    if (url[0] == '/') {
+      s = strdupa(im->mm_iptv_url_raw);
+      if ((p = strchr(s, '/')) != NULL)
+        *p = '\0';
+      if (!urlparse(s, &u))
+        goto invalid;
+      if ((s = http_arg_get(&hc->hc_args, "Host")) != NULL) {
+        snprintf(sbuf, sizeof(sbuf), "%s://%s%s",
+                 hc->hc_ssl ? "https" : "http", s, url);
+      } else if (im->mm_iptv_url_raw) {
+        snprintf(sbuf, sizeof(sbuf), "%s%s", s, url);
+      }
+      url = sbuf;
+      urlinit(&u);
+    }
     if (!urlparse(url, &u)) {
       hc->hc_keepalive = 0;
       r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
       if (r < 0)
         tvherror("iptv", "cannot reopen http client: %d'", r);
     } else {
+invalid:
       tvherror("iptv", "m3u url invalid '%s'", url);
     }
     urlreset(&u);
