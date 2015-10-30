@@ -402,7 +402,7 @@ static int _eit_process_event_one
     int local, int *resched, int *save )
 {
   int save2 = 0;
-  int ret, dllen;
+  int dllen;
   time_t start, stop;
   uint16_t eid;
   uint8_t dtag, dlen;
@@ -410,8 +410,6 @@ static int _eit_process_event_one
   epg_episode_t *ee;
   epg_serieslink_t *es;
   eit_event_t ev;
-
-  if ( len < 12 ) return -1;
 
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
@@ -424,7 +422,6 @@ static int _eit_process_event_one
   len -= 12;
   ptr += 12;
   if ( len < dllen ) return -1;
-  ret  = 12 + dllen;
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, start, stop, eid, 1, &save2);
@@ -432,7 +429,7 @@ static int _eit_process_event_one
                   " stop=%"PRItime_t", ebc=%p",
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
            eid, start, stop, ebc);
-  if (!ebc) return dllen + 12;
+  if (!ebc) return 0;
 
   /* Mark re-schedule detect (only now/next) */
   if (save2 && tableid < 0x50) *resched = 1;
@@ -549,7 +546,7 @@ static int _eit_process_event_one
   if (ev.summary) lang_str_destroy(ev.summary);
   if (ev.desc)    lang_str_destroy(ev.desc);
 
-  return ret;
+  return 0;
 }
 
 static int _eit_process_event
@@ -562,12 +559,14 @@ static int _eit_process_event
   int ret = 0;
 
   if ( len < 12 ) return -1;
+  ret = 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
 
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
-    ret = _eit_process_event_one(mod, tableid, svc, ch,
-                                 ptr, len, local, resched, save);
+    if (_eit_process_event_one(mod, tableid, svc, ch,
+                               ptr, len, local, resched, save) < 0)
+      return -1;
   }
   return ret;
 }
@@ -690,6 +689,7 @@ _eit_callback
                                 mm->mm_network->mn_localtime,
                                 &resched, &save)) < 0)
       break;
+    assert(r > 0);
     len -= r;
     ptr += r;
   }
