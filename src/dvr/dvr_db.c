@@ -1585,10 +1585,10 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
                epg_broadcast_get_title(e, NULL),
                channel_get_name(e->channel));
     de->de_running_stop = dispatch_clock;
-    if (de->de_sched_state == DVR_RECORDING) {
+    if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
       if (dvr_entry_get_stop_time(de) > dispatch_clock) {
         de->de_dont_reschedule = 1;
-        dvr_entry_set_timer(de);
+        dvr_stop_recording(de, SM_CODE_OK, 0, 0);
         tvhdebug("dvr", "dvr entry %s event %s on %s - EPG stop",
                idnode_uuid_as_sstr(&de->de_id),
                epg_broadcast_get_title(e, NULL),

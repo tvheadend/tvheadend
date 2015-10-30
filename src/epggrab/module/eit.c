@@ -550,6 +550,8 @@ static int _eit_process_event_one
   /* use running flag only for current broadcast */
   if (running && tableid == 0x4e && sect == 0)
     epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, running == 4);
+  if (running && running != 4 && tableid == 0x4e && sect == 1)
+    epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, 0);
 
   return 0;
 }
