@@ -39,7 +39,7 @@ SKEL_DECLARE(epggrab_channel_skel, epggrab_channel_t);
 static inline int
 is_paired( epggrab_channel_t *ec )
 {
-  return !ec->only_one || !LIST_FIRST(&ec->channels);
+  return ec->only_one && LIST_FIRST(&ec->channels);
 }
 
 static inline int
