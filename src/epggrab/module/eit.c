@@ -556,10 +556,8 @@ static int _eit_process_event
 {
   idnode_list_mapping_t *ilm;
   channel_t *ch;
-  int ret = 0;
 
   if ( len < 12 ) return -1;
-  ret = 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
 
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
@@ -568,7 +566,7 @@ static int _eit_process_event
                                ptr, len, local, resched, save) < 0)
       return -1;
   }
-  return ret;
+  return 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
 }
 
 
