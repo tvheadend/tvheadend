@@ -49,6 +49,8 @@
 #include <sys/statvfs.h>
 #endif
 
+static pthread_mutex_t dvr_thread_mutex;
+
 /**
  *
  */
@@ -161,16 +163,17 @@ void
 dvr_rec_unsubscribe(dvr_entry_t *de)
 {
   profile_chain_t *prch = de->de_chain;
-  streaming_queue_t *sq = &prch->prch_sq;
 
   assert(de->de_s != NULL);
   assert(prch != NULL);
 
   streaming_target_deliver(prch->prch_st, streaming_msg_create(SMT_EXIT));
 
-  pthread_mutex_lock(&sq->sq_mutex);
+  pthread_mutex_unlock(&global_lock);
+  pthread_mutex_lock(&dvr_thread_mutex);
   de->de_thread_shutdown = 1;
-  pthread_mutex_unlock(&sq->sq_mutex);
+  pthread_mutex_unlock(&dvr_thread_mutex);
+  pthread_mutex_lock(&global_lock);
 
   pthread_join(de->de_thread, NULL);
 
@@ -1034,6 +1037,43 @@ _err:
   return -1;
 }
 
+/**
+ *
+ */
+static int
+dvr_thread_global_lock(dvr_entry_t *de, int *run)
+{
+  pthread_mutex_lock(&dvr_thread_mutex);
+  if (de->de_thread_shutdown) {
+    pthread_mutex_unlock(&dvr_thread_mutex);
+    *run = 0;
+    return 0;
+  }
+  pthread_mutex_lock(&global_lock);
+  return 1;
+}
+
+/**
+ *
+ */
+static void
+dvr_thread_global_unlock(dvr_entry_t *de)
+{
+  pthread_mutex_unlock(&global_lock);
+  pthread_mutex_unlock(&dvr_thread_mutex);
+}
+
+/**
+ *
+ */
+static void
+dvr_streaming_restart(dvr_entry_t *de, int *run)
+{
+  if (dvr_thread_global_lock(de, run)) {
+    service_restart(de->de_s->ths_service);
+    dvr_thread_global_unlock(de);
+  }
+}
 
 /**
  *
@@ -1052,10 +1092,11 @@ dvr_thread(void *aux)
   int64_t packets = 0;
   char *postproc;
 
-  pthread_mutex_lock(&global_lock);
+  if (!dvr_thread_global_lock(de, &run))
+    return NULL;
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
-  pthread_mutex_unlock(&global_lock);
+  dvr_thread_global_unlock(de);
 
   pthread_mutex_lock(&sq->sq_mutex);
 
@@ -1087,9 +1128,7 @@ dvr_thread(void *aux)
     }
 
     streaming_queue_remove(sq, sm);
-    /* we don't want to start new recordings at this point */
-    if (sm->sm_type == SMT_START && de->de_thread_shutdown)
-      break;
+
     epg_running = de->de_running_start > de->de_running_stop ||
                   (de->de_running_start == 0 && de->de_running_stop == 0);
     pthread_mutex_unlock(&sq->sq_mutex);
@@ -1108,8 +1147,14 @@ dvr_thread(void *aux)
 
       if (rs == DVR_RS_COMMERCIAL && comm_skip)
 	break;
-      if (!epg_running)
+      if (!epg_running) {
+        if (started && packets) {
+          dvr_streaming_restart(de, &run);
+          packets = 0;
+          started = 0;
+        }
         break;
+      }
 
       if (commercial != pkt->pkt_commercial)
 	muxer_add_marker(prch->prch_muxer);
@@ -1117,8 +1162,6 @@ dvr_thread(void *aux)
       commercial = pkt->pkt_commercial;
 
       if (started) {
-	if (!epg_running && packets)
-	  goto restart;
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
 	dvr_notify(de);
@@ -1127,10 +1170,16 @@ dvr_thread(void *aux)
       break;
 
     case SMT_MPEGTS:
+      dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
       if(started) {
-	dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
-	if (!epg_running && packets)
-	  goto restart;
+	if (!epg_running) {
+	  if (packets) {
+	    dvr_streaming_restart(de, &run);
+	    packets = 0;
+	    started = 0;
+          }
+          break;
+        }
 	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
 	sm->sm_data = NULL;
 	dvr_notify(de);
@@ -1139,7 +1188,6 @@ dvr_thread(void *aux)
       break;
 
     case SMT_START:
-restart:
       packets = 0;
       if(started &&
 	 muxer_reconfigure(prch->prch_muxer, sm->sm_data) < 0) {
@@ -1152,21 +1200,23 @@ restart:
 	dvr_thread_epilog(de, postproc);
 	started = 0;
 	if (epg_running) {
-	  pthread_mutex_lock(&global_lock);
+	  if (!dvr_thread_global_lock(de, &run))
+	    break;
 	  if (de->de_config->dvr_clone)
 	    de = dvr_entry_clone(de);
-	  pthread_mutex_unlock(&global_lock);
+	  dvr_thread_global_unlock(de);
         }
       }
 
       if(!started) {
-        pthread_mutex_lock(&global_lock);
+        if (!dvr_thread_global_lock(de, &run))
+          break;
         dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
         if(dvr_rec_start(de, sm->sm_data) == 0)
           started = 1;
         else
           dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1, 0);
-        pthread_mutex_unlock(&global_lock);
+        dvr_thread_global_unlock(de);
       } 
       break;
 
@@ -1382,6 +1432,7 @@ void
 dvr_disk_space_init(void)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
+  pthread_mutex_init(&dvr_thread_mutex, NULL);
   pthread_mutex_init(&dvr_disk_space_mutex, NULL);
   dvr_get_disk_space_update(cfg->dvr_storage);
   gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 60);
