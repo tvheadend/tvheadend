@@ -56,10 +56,10 @@ EXTRAENV        =
 CONFIGURE       = TVHEADEND_LIBAV_BUILD=$(LIBAVDIR)/build/ffmpeg \
                   PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg ./configure
 
-FFMPEG          = ffmpeg-2.8
+FFMPEG          = ffmpeg-2.8.1
 FFMPEG_TB       = $(FFMPEG).tar.bz2
 FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1     = b57cbd0d6c9e6ae48edcfce9a46765eeb7291efc
+FFMPEG_SHA1     = 95046cd9251b69c61b11ebcd1e163ac14d0fc2c6
 
 EXTLIBS         = libx264 libvorbis libvpx
 COMPONENTS      = avutil avformat avcodec swresample swscale avresample
@@ -99,11 +99,11 @@ YASM_TB         = $(YASM).tar.gz
 YASM_URL        = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
 YASM_SHA1       = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
-LIBMFX_HASH     = 1582088ee7670ab1c96cefe844d9647274c0c841
+LIBMFX_HASH     = 8220f463a97b098d9e37bbfa2110b117700d1205
 LIBMFX          = mfx_dispatch-$(LIBMFX_HASH)
 LIBMFX_TB       = $(LIBMFX_HASH).tar.gz
 LIBMFX_URL      = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
-LIBMFX_SHA1     = 5a1f0cab45d675eb6a29f3dd38676f1e343e6ef1
+LIBMFX_SHA1     = e7905a4e18f8d3933f23ed5cf5a96a40a31c76a8
 
 
 .PHONY: build
