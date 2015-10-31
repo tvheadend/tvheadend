@@ -1582,7 +1582,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
   de = dvr_entry_find_by_event(e);
   if (de == NULL)
     return;
-  if (!de->de_config->dvr_running) {
+  if (!de->de_channel->ch_epg_running || !de->de_config->dvr_running) {
     de->de_running_start = de->de_running_stop = 0;
     return;
   }

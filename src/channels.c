@@ -411,6 +411,13 @@ const idclass_t channel_class = {
       .opts     = PO_ADVANCED
     },
     {
+      .type     = PT_BOOL,
+      .id       = "epg_running",
+      .name     = N_("Use EPG Running State"),
+      .off      = offsetof(channel_t, ch_epg_running),
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "services",
@@ -838,6 +845,7 @@ channel_create0
   ch->ch_enabled  = 1;
   ch->ch_autoname = 1;
   ch->ch_epgauto  = 1;
+  ch->ch_epg_running = 1;
 
   if (conf) {
     ch->ch_load = 1;

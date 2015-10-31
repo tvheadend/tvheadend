@@ -77,6 +77,7 @@ typedef struct channel
   /* DVR */
   int                   ch_dvr_extra_time_pre;
   int                   ch_dvr_extra_time_post;
+  int                   ch_epg_running;
   struct dvr_entry_list ch_dvrs;
   struct dvr_autorec_entry_list ch_autorecs;
   struct dvr_timerec_entry_list ch_timerecs;
