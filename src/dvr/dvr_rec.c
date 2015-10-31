@@ -49,8 +49,6 @@
 #include <sys/statvfs.h>
 #endif
 
-static pthread_mutex_t dvr_thread_mutex;
-
 /**
  *
  */
@@ -151,7 +149,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   de->de_chain = prch;
 
-  de->de_thread_shutdown = 0;
+  atomic_exchange(&de->de_thread_shutdown, 0);
   tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
   return 0;
 }
@@ -169,11 +167,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 
   streaming_target_deliver(prch->prch_st, streaming_msg_create(SMT_EXIT));
 
-  pthread_mutex_unlock(&global_lock);
-  pthread_mutex_lock(&dvr_thread_mutex);
-  de->de_thread_shutdown = 1;
-  pthread_mutex_unlock(&dvr_thread_mutex);
-  pthread_mutex_lock(&global_lock);
+  atomic_add(&de->de_thread_shutdown, 1);
 
   pthread_join(de->de_thread, NULL);
 
@@ -1040,12 +1034,10 @@ _err:
 /**
  *
  */
-static int
+static inline int
 dvr_thread_global_lock(dvr_entry_t *de, int *run)
 {
-  pthread_mutex_lock(&dvr_thread_mutex);
-  if (de->de_thread_shutdown) {
-    pthread_mutex_unlock(&dvr_thread_mutex);
+  if (atomic_add(&de->de_thread_shutdown, 1) > 0) {
     *run = 0;
     return 0;
   }
@@ -1056,11 +1048,11 @@ dvr_thread_global_lock(dvr_entry_t *de, int *run)
 /**
  *
  */
-static void
+static inline void
 dvr_thread_global_unlock(dvr_entry_t *de)
 {
   pthread_mutex_unlock(&global_lock);
-  pthread_mutex_unlock(&dvr_thread_mutex);
+  atomic_dec(&de->de_thread_shutdown, 1);
 }
 
 /**
@@ -1492,6 +1484,9 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
 {
   profile_chain_t *prch = de->de_chain;
 
+  if (prch == NULL)
+    return;
+
   muxer_close(prch->prch_muxer);
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
@@ -1567,7 +1562,6 @@ void
 dvr_disk_space_init(void)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
-  pthread_mutex_init(&dvr_thread_mutex, NULL);
   pthread_mutex_init(&dvr_disk_space_mutex, NULL);
   dvr_get_disk_space_update(cfg->dvr_storage);
   gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 60);
