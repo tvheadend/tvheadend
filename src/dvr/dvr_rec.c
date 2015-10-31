@@ -1113,15 +1113,15 @@ dvr_thread_mpegts_stats(dvr_entry_t *de, void *sm_data)
  *
  */
 static int
-dvr_thread_rec_start(dvr_entry_t *de, int started,
-                     streaming_start_t *ss, int *run,
-                     int64_t *dts_offset,
+dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
+                     int *run, int *started, int64_t *dts_offset,
                      int epg_running, const char *postproc)
 {
+  dvr_entry_t *de = *_de;
   profile_chain_t *prch = de->de_chain;
   int ret = 0;
 
-  if (started &&
+  if (*started &&
       muxer_reconfigure(prch->prch_muxer, ss) < 0) {
     tvhlog(LOG_WARNING,
            "dvr", "Unable to reconfigure \"%s\"",
@@ -1130,24 +1130,26 @@ dvr_thread_rec_start(dvr_entry_t *de, int started,
     // Try to restart the recording if the muxer doesn't
     // support reconfiguration of the streams.
     dvr_thread_epilog(de, postproc);
-    started = 0;
     *dts_offset = PTS_UNSET;
+    *started = 0;
     if (epg_running) {
       if (!dvr_thread_global_lock(de, run))
         return 0;
       if (de->de_config->dvr_clone)
-        de = dvr_entry_clone(de);
+        *_de = dvr_entry_clone(de);
       dvr_thread_global_unlock(de);
+      de = *_de;
     }
   }
 
-  if (!started) {
+  if (!*started) {
     if (!dvr_thread_global_lock(de, run))
       return 0;
     dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-    if(dvr_rec_start(de, ss) == 0)
+    if(dvr_rec_start(de, ss) == 0) {
       ret = 1;
-    else
+      *started = 1;
+    } else
       dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1, 0);
     dvr_thread_global_unlock(de);
   }
@@ -1238,7 +1240,7 @@ dvr_thread(void *aux)
       if (rs == DVR_RS_COMMERCIAL && comm_skip)
 	break;
       if (!epg_running) {
-        if (started && packets) {
+        if (ss && packets) {
           dvr_streaming_restart(de, &run);
           packets = 0;
           started = 0;
@@ -1251,11 +1253,11 @@ dvr_thread(void *aux)
 
       commercial = pkt->pkt_commercial;
 
-      if (!started)
+      if (ss == NULL)
         break;
 
       if (muxing == 0 &&
-          !dvr_thread_rec_start(de, started, ss, &run, &dts_offset,
+          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset,
                                 epg_running, postproc))
         break;
 
@@ -1301,7 +1303,7 @@ dvr_thread(void *aux)
     case SMT_MPEGTS:
       dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
 
-      if (!started)
+      if (ss == NULL)
         break;
 
       if (!epg_running) {
@@ -1314,7 +1316,7 @@ dvr_thread(void *aux)
       }
 
       if (muxing == 0 &&
-          !dvr_thread_rec_start(de, started, ss, &run, &dts_offset,
+          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset,
                                 epg_running, postproc))
         break;
 
@@ -1336,7 +1338,6 @@ dvr_thread(void *aux)
     case SMT_START:
       start_time = dispatch_clock;
       packets = 0;
-      started = 1;
       ss = streaming_start_copy((streaming_start_t *)sm->sm_data);
       break;
 
