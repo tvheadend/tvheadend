@@ -1255,7 +1255,7 @@ dvr_thread(void *aux)
       if (rs == DVR_RS_COMMERCIAL && comm_skip)
 	break;
       if (!epg_running) {
-        if (ss && packets) {
+        if (ss && packets && de->de_running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
           started = 0;
@@ -1321,7 +1321,7 @@ dvr_thread(void *aux)
         break;
 
       if (!epg_running) {
-        if (packets) {
+        if (ss && packets && de->de_running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
           started = 0;
