@@ -162,7 +162,7 @@ iptv_http_complete
           if ((p = strchr(p, '/')) != NULL)
             *p = '\0';
         }
-        if (!urlparse(s, &u))
+        if (urlparse(s, &u))
           goto invalid;
         snprintf(url2, 512, "%s%s", s, url);
       }
