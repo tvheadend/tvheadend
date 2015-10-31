@@ -1172,6 +1172,21 @@ dvr_thread_backlog_free(struct streaming_message_queue *backlog)
 /**
  *
  */
+static inline int
+dts_pts_valid(th_pkt_t *pkt, int64_t dts_offset)
+{
+  if (pkt->pkt_dts == PTS_UNSET ||
+      pkt->pkt_pts == PTS_UNSET ||
+      dts_offset == PTS_UNSET ||
+      pkt->pkt_dts < dts_offset ||
+      pkt->pkt_pts < dts_offset)
+    return 0;
+  return 1;
+}
+
+/**
+ *
+ */
 static void *
 dvr_thread(void *aux)
 {
@@ -1270,7 +1285,7 @@ dvr_thread(void *aux)
             dts_offset = pkt2->pkt_dts;
           }
           pkt3 = (th_pkt_t *)sm2->sm_data;
-          if (dts_offset != PTS_UNSET && pkt->pkt_dts >= dts_offset) {
+          if (dts_pts_valid(pkt3, dts_offset)) {
             pkt3 = pkt_copy_shallow(pkt3);
             pkt3->pkt_dts -= dts_offset;
             if (pkt3->pkt_pts != PTS_UNSET)
@@ -1285,8 +1300,7 @@ dvr_thread(void *aux)
       }
       if (dts_offset == PTS_UNSET && pkt->pkt_dts != PTS_UNSET)
         dts_offset = pkt->pkt_dts;
-      if (pkt->pkt_dts != PTS_UNSET && dts_offset != PTS_UNSET &&
-          pkt->pkt_dts >= dts_offset) {
+      if (dts_pts_valid(pkt, dts_offset)) {
         pkt3 = pkt_copy_shallow(pkt);
         pkt3->pkt_dts -= dts_offset;
         if (pkt3->pkt_pts != PTS_UNSET)
