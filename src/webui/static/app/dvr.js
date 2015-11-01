@@ -67,9 +67,9 @@ tvheadend.dvrDetails = function(uuid) {
         }));
 
         buttons.push(new Ext.Button({
-            handler:searchTheTVDB,
+            handler: searchTheTVDB,
             iconCls: 'thetvdb',
-            tooltip:_('Search TheTVDB (for title)'),
+            tooltip: _('Search TheTVDB (for title)'),
         }));
 
         function searchIMDB() {
