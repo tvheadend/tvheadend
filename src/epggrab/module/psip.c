@@ -71,7 +71,7 @@ typedef struct psip_event
 
 static int
 _psip_eit_callback_channel
-  (epggrab_module_t *mod, channel_t *ch, const uint8_t *ptr, int count)
+  (epggrab_module_t *mod, channel_t *ch, const uint8_t *ptr, int len, int count)
 {
   uint16_t eventid;
   uint32_t starttime, length;
@@ -84,7 +84,7 @@ _psip_eit_callback_channel
   epg_episode_t *ee;
   lang_str_t *title;
 
-  for (i = 0; i + 12 <= count; i += size, ptr += size) {
+  for (i = 0; len >= 12 && i < count; len -= size, ptr += size, i++) {
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
     starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
     start = atsc_convert_gpstime(starttime);
@@ -95,7 +95,7 @@ _psip_eit_callback_channel
     size = titlelen + dlen + 12;
     // tvhtrace("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
 
-    if (size > count) break;
+    if (size > len) break;
 
     atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
 
@@ -175,7 +175,7 @@ _psip_eit_callback
   len  -= 7;
 
   /* Sanity check */
-  if (count > len) goto done;
+  if (len < 12) goto done;
 
   /* Register this */
   if (ota)
@@ -185,7 +185,7 @@ _psip_eit_callback
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
-    save |= _psip_eit_callback_channel(mod, ch, ptr, count);
+    save |= _psip_eit_callback_channel(mod, ch, ptr, len, count);
   }
 
   if (save)
