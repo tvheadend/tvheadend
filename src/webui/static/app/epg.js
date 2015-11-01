@@ -148,10 +148,10 @@ tvheadend.epgDetails = function(event) {
     }));
 
     buttons.push(new Ext.Button({
-        disabled:!event.title,
-        handler:searchTheTVDB,
-        iconCls:'thetvdb',
-        tooltip:_('Search TheTVDB (for title)'),
+        disabled: !event.title,
+        handler: searchTheTVDB,
+        iconCls: 'thetvdb',
+        tooltip: _('Search TheTVDB (for title)'),
     }));
 
     buttons.push(new Ext.Button({

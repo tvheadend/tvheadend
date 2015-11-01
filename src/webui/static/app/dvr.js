@@ -68,7 +68,7 @@ tvheadend.dvrDetails = function(uuid) {
 
         buttons.push(new Ext.Button({
             handler:searchTheTVDB,
-            iconCls:'thetvdb',
+            iconCls: 'thetvdb',
             tooltip:_('Search TheTVDB (for title)'),
         }));
 
