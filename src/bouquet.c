@@ -33,6 +33,7 @@ typedef struct bouquet_download {
 
 bouquet_tree_t bouquets;
 
+static void bouquet_remove_service(bouquet_t *bq, service_t *s);
 static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
 static void bouquet_download_trigger(bouquet_t *bq);
 static void bouquet_download_stop(void *aux);
@@ -163,7 +164,7 @@ bouquet_destroy_by_service(service_t *t)
 
   RB_FOREACH(bq, &bouquets, bq_link)
     if (idnode_set_exists(bq->bq_services, &t->s_id))
-      idnode_set_remove(bq->bq_services, &t->s_id);
+      bouquet_remove_service(bq, t);
   while ((sl = LIST_FIRST(&t->s_lcns)) != NULL) {
     LIST_REMOVE(sl, sl_link);
     free(sl);
@@ -395,6 +396,7 @@ bouquet_remove_service(bouquet_t *bq, service_t *s)
   tvhtrace("bouquet", "remove service %s from %s",
            s->s_nicename, bq->bq_name ?: "<unknown>");
   idnode_set_remove(bq->bq_services, &s->s_id);
+  bouquet_unmap_channel(bq, s);
 }
 
 /*
