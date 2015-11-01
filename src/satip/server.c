@@ -264,7 +264,7 @@ CONFIGID.UPNP.ORG: 0\r\n\
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append(&q, buf, strlen(buf));
-    upnp_send(&q, NULL, attempt * 11);
+    upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -322,7 +322,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append(&q, buf, strlen(buf));
-    upnp_send(&q, NULL, attempt * 11);
+    upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -330,7 +330,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
 
 static void
 satips_upnp_send_discover_reply
-  (struct sockaddr_storage *dst, const char *deviceid)
+  (struct sockaddr_storage *dst, const char *deviceid, int from_multicast)
 {
 #define MSG "\
 HTTP/1.1 200 OK\r\n\
@@ -366,7 +366,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
     htsbuf_qprintf(&q, "DEVICEID.SES.COM: %s", deviceid);
   htsbuf_append(&q, "\r\n", 2);
   storage = *dst;
-  upnp_send(&q, &storage, 0);
+  upnp_send(&q, &storage, 0, from_multicast);
   htsbuf_queue_flush(&q);
 #undef MSG
 }
@@ -471,14 +471,14 @@ satips_upnp_discovery_received
       tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
       tvhwarn("satips", "received duplicate SAT>IP DeviceID %s from %s:%d, using %d",
               deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
-      satips_upnp_send_discover_reply(storage, deviceid);
+      satips_upnp_send_discover_reply(storage, deviceid, 0);
       satips_upnp_send_byebye();
       satips_upnp_send_announce();
     } else {
-      satips_upnp_send_discover_reply(storage, NULL);
+      satips_upnp_send_discover_reply(storage, NULL, 0);
     }
   } else {
-    satips_upnp_send_discover_reply(storage, NULL);
+    satips_upnp_send_discover_reply(storage, NULL, 1);
   }
 }
 
