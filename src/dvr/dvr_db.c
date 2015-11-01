@@ -1577,7 +1577,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
 {
   dvr_entry_t *de, *de2;
 
-  if (esrc != EPG_SOURCE_EIT)
+  if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0)
     return;
   de = dvr_entry_find_by_event(e);
   if (de == NULL)
@@ -1594,10 +1594,15 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
   assert(e->channel == de->de_channel);
   LIST_FOREACH(de, &de->de_channel->ch_dvrs, de_channel_link) {
     if (de != de2) {
+      if (de->de_dvb_eid == 0)
+        continue;
+      if (de->de_dvb_eid == e->dvb_eid)
+        goto running;
       dvr_entry_not_running(de, "other running event",
                             epg_broadcast_get_title(e, NULL));
       continue;
     }
+running:
     if (!de->de_running_start)
       tvhdebug("dvr", "dvr entry %s event %s on %s - EPG marking start",
                idnode_uuid_as_sstr(&de->de_id),
