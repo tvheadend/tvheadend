@@ -141,6 +141,7 @@ iptv_http_complete
     im->im_m3u_header = 0;
     sbuf_append(&im->mm_iptv_buffer, "", 1);
     url = iptv_http_m3u((char *)im->mm_iptv_buffer.sb_data);
+    tvhtrace("iptv", "m3u url: '%s'", url);
     sbuf_reset(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
     if (url == NULL) {
       tvherror("iptv", "m3u contents parsing failed");
