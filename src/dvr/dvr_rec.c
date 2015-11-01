@@ -1199,6 +1199,7 @@ dvr_thread(void *aux)
   streaming_start_t *ss = NULL;
   int run = 1, started = 0, muxing = 0, comm_skip, epg_running = 0, rs;
   int commercial = COMMERCIAL_UNKNOWN;
+  int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
   time_t start_time = 0;
   char *postproc;
@@ -1207,6 +1208,7 @@ dvr_thread(void *aux)
     return NULL;
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
+  running_disabled = !de->de_channel->ch_epg_running || !de->de_config->dvr_running;
   dvr_thread_global_unlock(de);
 
   TAILQ_INIT(&backlog);
@@ -1221,7 +1223,7 @@ dvr_thread(void *aux)
     streaming_queue_remove(sq, sm);
 
     if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
-      if (de->de_running_start > de->de_running_stop) {
+      if (de->de_running_start > de->de_running_stop || running_disabled) {
         epg_running = 1;
       } else if (de->de_running_start == 0 && de->de_running_stop == 0) {
         if (start_time + 2 >= dispatch_clock) {
