@@ -143,7 +143,7 @@ tvheadend.epgDetails = function(event) {
     buttons.push(new Ext.Button({
         disabled: !event.title,
         handler: searchIMDB,
-        iconCls: 'find',
+        iconCls: 'imdb',
         tooltip: _('Search IMDB (for title)'),
     }));
 
