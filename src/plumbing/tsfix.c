@@ -460,7 +460,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
         if(tfs2->tfs_audio && tfs2->tfs_last_dts_in != PTS_UNSET) {
           diff = tsfix_ts_diff(tfs2->tfs_last_dts_in, pkt->pkt_dts);
-          if (diff > 2 * 90000) {
+          if (diff > 3 * 90000) {
             tvhwarn("parser", "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
             tfs->tfs_parent = tfs2;
             tfs->tfs_local_ref = tfs2->tfs_local_ref;
