@@ -1609,6 +1609,14 @@ tvheadend.idnode_grid = function(panel, conf)
             viewConfig: {
                 forceFit: true
             },
+            keys: {
+                key: 'a',
+                ctrl: true,
+                stopEvent: true,
+                handler: function() {
+                    grid.getSelectionModel().selectAll();
+                }
+            },
             tbar: buttons,
             bbar: page
         };
