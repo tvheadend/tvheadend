@@ -106,6 +106,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_list_t args;
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
+  int delim;
   size_t l;
   char url2[512], custom[512], name2[128], buf[32], *n, *x = NULL, *y;
 
@@ -136,13 +137,14 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   if (strncmp(url, "http://", 7) == 0 ||
       strncmp(url, "https://", 8) == 0) {
     url = n = strdupa(url);
+    delim = 0;
     while (*n && *n != ' ' && *n != '|') n++;
-    if (*n) { *n = '\0'; n++; }
+    if (*n) { delim = *n; *n = '\0'; n++; }
     l = 0;
     while (*n) {
       while (*n && *n <= ' ') n++;
       y = n;
-      while (*n && *n != ' ' && *n != '|') n++;
+      while (*n && *n != delim) n++;
       if (*n) { *n = '\0'; n++; }
       if (*y)
         tvh_strlcatf(custom, sizeof(custom), l, "%s\n", y);
