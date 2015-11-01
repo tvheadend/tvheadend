@@ -144,7 +144,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     while (*n) {
       while (*n && *n <= ' ') n++;
       y = n;
-      while (*n && *n != delim) n++;
+      while (*n && *n != delim && *n != '&') n++;
       if (*n) { *n = '\0'; n++; }
       if (*y)
         tvh_strlcatf(custom, sizeof(custom), l, "%s\n", y);
