@@ -460,8 +460,7 @@ void epggrab_channel_add ( channel_t *ch )
   LIST_FOREACH(mod, &epggrab_modules, link)
     RB_FOREACH(ec, &mod->channels, link) {
       if (!is_paired(ec))
-        if (epggrab_channel_autolink_one(ec, ch))
-          break;
+        epggrab_channel_autolink_one(ec, ch);
     }
 }
 
