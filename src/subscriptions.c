@@ -603,7 +603,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
 
 #if ENABLE_MPEGTS
   if (raw)
-    service_remove_raw(s->ths_raw_service);
+    service_remove_raw(raw);
 #endif
 
   streaming_msg_free(s->ths_start_message);
@@ -830,6 +830,8 @@ subscription_create_from_mux(profile_chain_t *prch,
 
   if (!s)
     return NULL;
+
+  assert((flags & SUBSCRIPTION_ONESHOT) != 0);
 
   return subscription_create_from_channel_or_service
     (prch, ti, weight, name, flags, hostname, username, client,
