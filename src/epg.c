@@ -1607,9 +1607,11 @@ static void _epg_broadcast_updated ( void *eo )
     htsp_event_add(eo);
     notify_delayed(id, "epg", "create");
   }
-  dvr_event_updated(eo);
-  dvr_autorec_check_event(eo);
-  channel_event_updated(eo);
+  if (ebc->channel) {
+    dvr_event_updated(eo);
+    dvr_autorec_check_event(eo);
+    channel_event_updated(eo);
+  }
 }
 
 static epg_broadcast_t **_epg_broadcast_skel ( void )

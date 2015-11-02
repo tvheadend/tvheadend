@@ -208,8 +208,10 @@ download_start( download_t *dn, const char *url, void *aux )
     http_client_close(dn->http_client);
     dn->http_client = NULL;
   }
-  if (url)
+  if (url) {
+    free(dn->url);
     dn->url = strdup(url);
+  }
   dn->aux = aux;
   gtimer_arm(&dn->fetch_timer, download_fetch, dn, 0);
 }
