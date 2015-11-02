@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Tvheadend - structures
  *  Copyright (C) 2007 Andreas Öman
  *
@@ -34,6 +34,17 @@
 #include <limits.h>
 #if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
+#if ENABLE_ANDROID
+#ifndef strdupa
+#define strdupa(s)                                                            \
+    ({                                                                        \
+      const char *__old = (s);                                                \
+      size_t __len = strlen(__old) + 1;                                       \
+      char *__new = (char *) alloca(__len);                                   \
+      (char *) memcpy(__new, __old, __len);                                   \
+    })
+#endif
+#endif
 #endif
 #include "queue.h"
 #include "avg.h"
