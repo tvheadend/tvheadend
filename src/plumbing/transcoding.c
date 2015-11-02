@@ -24,6 +24,7 @@
 #include <libavutil/opt.h>
 #include <libavutil/audio_fifo.h>
 #include <libavutil/dict.h>
+#include <libavutil/imgutils.h>
 
 #if LIBAVUTIL_VERSION_MICRO >= 100 /* FFMPEG */
 #define USING_FFMPEG 1
@@ -1032,8 +1033,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   AVCodecContext *ictx, *octx;
   AVDictionary *opts;
   AVPacket packet, packet2;
-  AVPicture deint_pic;
-  uint8_t *buf, *deint;
+  uint8_t *buf;
   int length, len, ret, got_picture, got_output, got_ref;
   video_stream_t *vs = (video_stream_t*)ts;
   streaming_message_t *sm;
@@ -1051,7 +1051,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   icodec = vs->vid_icodec;
   ocodec = vs->vid_ocodec;
 
-  buf = deint = NULL;
+  buf = NULL;
   opts = NULL;
 
   got_ref = 0;
@@ -1129,7 +1129,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
     switch (ts->ts_type) {
     case SCT_MPEG2VIDEO:
-      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->pix_fmt        = AV_PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       if (t->t_props.tp_vbitrate < 64) {
@@ -1152,7 +1152,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_VP8:
-      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->pix_fmt        = AV_PIX_FMT_YUV420P;
 
       // setting quality to realtime will use as much CPU for transcoding as possible,
       // while still encoding in realtime
@@ -1176,7 +1176,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_H264:
-      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->pix_fmt        = AV_PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
@@ -1205,7 +1205,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       break;
 
     case SCT_HEVC:
-      octx->pix_fmt        = PIX_FMT_YUV420P;
+      octx->pix_fmt        = AV_PIX_FMT_YUV420P;
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       // on all hardware ultrafast (or maybe superfast) should be safe
@@ -1258,34 +1258,17 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     }
   }
 
-  len = avpicture_get_size(ictx->pix_fmt, ictx->width, ictx->height);
-  deint = av_malloc(len);
-
-  avpicture_fill(&deint_pic,
-		 deint,
-		 ictx->pix_fmt,
-		 ictx->width,
-		 ictx->height);
-
-  if (avpicture_deinterlace(&deint_pic,
-			    (AVPicture *)vs->vid_dec_frame,
-			    ictx->pix_fmt,
-			    ictx->width,
-			    ictx->height) < 0) {
-    tvherror("transcode", "%04X: Cannot deinterlace frame", shortid(t));
-    transcoder_stream_invalidate(ts);
-    goto cleanup;
-  }
-
-  len = avpicture_get_size(octx->pix_fmt, octx->width, octx->height);
+  len = av_image_get_buffer_size(octx->pix_fmt, octx->width, octx->height, 1);
   buf = av_malloc(len + FF_INPUT_BUFFER_PADDING_SIZE);
   memset(buf, 0, len);
 
-  avpicture_fill((AVPicture *)vs->vid_enc_frame,
-                 buf,
-                 octx->pix_fmt,
-                 octx->width,
-                 octx->height);
+  av_image_fill_arrays(vs->vid_enc_frame->data,
+                       vs->vid_enc_frame->linesize,
+                       buf,
+                       octx->pix_fmt,
+                       octx->width,
+                       octx->height,
+                       1);
 
   vs->vid_scaler = sws_getCachedContext(vs->vid_scaler,
 				    ictx->width,
@@ -1300,8 +1283,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 				    NULL);
 
   if (sws_scale(vs->vid_scaler,
-		(const uint8_t * const*)deint_pic.data,
-		deint_pic.linesize,
+		(const uint8_t * const*)vs->vid_dec_frame->data,
+		vs->vid_dec_frame->linesize,
 		0,
 		ictx->height,
 		vs->vid_enc_frame->data,
@@ -1344,9 +1327,6 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   if(buf)
     av_free(buf);
-
-  if(deint)
-    av_free(deint);
 
   if(opts)
     av_dict_free(&opts);
@@ -1679,11 +1659,11 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   if (t->t_props.tp_nrprocessors)
     vs->vid_octx->thread_count = t->t_props.tp_nrprocessors;
 
-  vs->vid_dec_frame = avcodec_alloc_frame();
-  vs->vid_enc_frame = avcodec_alloc_frame();
+  vs->vid_dec_frame = av_frame_alloc();
+  vs->vid_enc_frame = av_frame_alloc();
 
-  avcodec_get_frame_defaults(vs->vid_dec_frame);
-  avcodec_get_frame_defaults(vs->vid_enc_frame);
+  av_frame_unref(vs->vid_dec_frame);
+  av_frame_unref(vs->vid_enc_frame);
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)vs, ts_link);
 
