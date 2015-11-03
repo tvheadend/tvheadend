@@ -101,7 +101,9 @@ LDFLAGS += -lmfx
 endif
 LDFLAGS += ${CONFIG_LIBMFX_VA_LIBS}
 endif
+ifneq ($(CONFIG_LIBMFX_STATIC),yes)
 LDFLAGS += -lavfilter
+endif
 endif
 
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
