@@ -62,7 +62,7 @@ FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
 FFMPEG_SHA1     = 95046cd9251b69c61b11ebcd1e163ac14d0fc2c6
 
 EXTLIBS         = libx264 libvorbis libvpx
-COMPONENTS      = avutil avformat avcodec swresample swscale avresample
+COMPONENTS      = avutil avformat avcodec swresample avfilter avresample
 PROTOCOLS       = file
 DECODERS        = mpeg2video mp2 ac3 eac3 h264 h264_vdpau hevc aac aac_latm vorbis libvorbis
 ENCODERS        = mpeg2video mp2 libx264 libvpx_vp8 libvpx_vp9 aac libaacplus vorbis libvorbis
