@@ -21,6 +21,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <signal.h>
+#include <setjmp.h>
 
 #include "tvheadend.h"
 #include "queue.h"
@@ -144,6 +146,16 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
 }
 
 /*
+ * Recovery
+ */
+static sigjmp_buf epg_mmap_env;
+
+static void epg_mmap_sigbus (int sig, siginfo_t *siginfo, void *ptr)
+{
+  siglongjmp(epg_mmap_env, 1);
+}
+
+/*
  * Load data
  */
 void epg_init ( void )
@@ -154,6 +166,7 @@ void epg_init ( void )
   uint8_t *mem, *rp;
   epggrab_stats_t stats;
   int ver = EPG_DB_VERSION;
+  struct sigaction act, oldact;
   char *sect = NULL;
 
   /* Find the right file (and version) */
@@ -166,6 +179,15 @@ void epg_init ( void )
     fd = hts_settings_open_file(0, "epgdb");
   if ( fd < 0 ) {
     tvhlog(LOG_DEBUG, "epgdb", "database does not exist");
+    return;
+  }
+
+  memset (&act, 0, sizeof(act));
+  act.sa_sigaction = epg_mmap_sigbus;
+  act.sa_flags = SA_SIGINFO;
+  if (sigaction(SIGBUS, &act, &oldact)) {
+    tvhlog(LOG_ERR, "epgdb", "failed to install SIGBUS handler");
+    close(fd);
     return;
   }
   
@@ -182,6 +204,13 @@ void epg_init ( void )
   rp = mem = mmap(NULL, st.st_size, PROT_READ, MAP_SHARED, fd, 0);
   if ( mem == MAP_FAILED ) {
     tvhlog(LOG_ERR, "epgdb", "failed to mmap database");
+    goto end;
+  }
+
+  if (sigsetjmp(epg_mmap_env, 1)) {
+    tvhlog(LOG_ERR, "epgdb", "failed to read from mapped file");
+    if (mem)
+      munmap(mem, st.st_size);
     goto end;
   }
 
@@ -245,6 +274,7 @@ void epg_init ( void )
   /* Close file */
   munmap(mem, st.st_size);
 end:
+  sigaction(SIGBUS, &oldact, NULL);
   close(fd);
 }
 
