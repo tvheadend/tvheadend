@@ -66,6 +66,7 @@ LDFLAGS_FFDIR = ${ROOTDIR}/libav_static/build/ffmpeg/lib
 LDFLAGS += ${LDFLAGS_FFDIR}/libavresample.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libswresample.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavfilter.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libswscale.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavformat.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavcodec.a
