@@ -36,6 +36,18 @@
 
 #include <netinet/ip.h>
 
+#ifndef IPTOS_CLASS_CS0
+#define IPTOS_CLASS_CS0                 0x00
+#define IPTOS_CLASS_CS1                 0x20
+#define IPTOS_CLASS_CS2                 0x40
+#define IPTOS_CLASS_CS3                 0x60
+#define IPTOS_CLASS_CS4                 0x80
+#define IPTOS_CLASS_CS5                 0xa0
+#define IPTOS_CLASS_CS6                 0xc0
+#define IPTOS_CLASS_CS7                 0xe0
+#endif
+
+
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 
