@@ -1601,7 +1601,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
       }
-    } else {
+    } else if ((!running && de->de_dvb_eid == e->dvb_eid) || running) {
       srcname = de->de_dvb_eid == e->dvb_eid ? "event" : "other running event";
       if (!de->de_running_stop ||
           de->de_running_start > de->de_running_stop) {
