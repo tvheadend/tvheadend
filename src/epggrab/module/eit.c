@@ -631,8 +631,9 @@ _eit_callback
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 11, &st, &sect, &last, &ver);
-  if (r != 1) return r;
-  if (st) {
+  if (r < 0) return r;
+  if (tableid != 0x4e && r != 1) return r;
+  if (st && r > 0) {
     uint32_t mask;
     int sa = seg & 0xF8;
     int sb = 7 - (seg & 0x07);
