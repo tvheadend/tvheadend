@@ -1208,7 +1208,7 @@ dvr_thread(void *aux)
     return NULL;
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
-  running_disabled = !de->de_channel->ch_epg_running || !de->de_config->dvr_running;
+  running_disabled = dvr_entry_get_epg_running(de) <= 0;
   dvr_thread_global_unlock(de);
 
   TAILQ_INIT(&backlog);

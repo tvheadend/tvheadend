@@ -279,6 +279,14 @@ dvr_entry_get_rerecord_errors( dvr_entry_t *de )
   return de->de_config->dvr_rerecord_errors;
 }
 
+int
+dvr_entry_get_epg_running( dvr_entry_t *de )
+{
+  if (de->de_channel->ch_epg_running < 0)
+    return de->de_config->dvr_running;
+  return de->de_channel->ch_epg_running > 0;
+}
+
 /*
  * DBUS next dvr start notifications
  */
@@ -1574,9 +1582,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
   if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0 || e->channel == NULL)
     return;
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
-    if (de->de_dvb_eid == 0 ||
-        !de->de_channel->ch_epg_running ||
-        !de->de_config->dvr_running) {
+    if (de->de_dvb_eid == 0 || !dvr_entry_get_epg_running(de)) {
       de->de_running_start = de->de_running_stop = 0;
       continue;
     }

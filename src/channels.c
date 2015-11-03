@@ -327,6 +327,17 @@ channel_class_epg_parent_set ( void *o, const void *v )
   return save;
 }
 
+static htsmsg_t *
+channel_class_epg_running_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Not set"),   -1 },
+    { N_("Disabled"),   0 },
+    { N_("Enabled"),    1 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t channel_class = {
   .ic_class      = "channel",
   .ic_caption    = N_("Channel"),
@@ -411,10 +422,11 @@ const idclass_t channel_class = {
       .opts     = PO_ADVANCED
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "epg_running",
       .name     = N_("Use EPG Running State"),
       .off      = offsetof(channel_t, ch_epg_running),
+      .list     = channel_class_epg_running_list,
       .opts     = PO_ADVANCED
     },
     {
@@ -845,7 +857,7 @@ channel_create0
   ch->ch_enabled  = 1;
   ch->ch_autoname = 1;
   ch->ch_epgauto  = 1;
-  ch->ch_epg_running = 1;
+  ch->ch_epg_running = -1;
 
   if (conf) {
     ch->ch_load = 1;

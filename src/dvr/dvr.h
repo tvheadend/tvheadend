@@ -426,6 +426,8 @@ uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
 
 uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
+int dvr_entry_get_epg_running( dvr_entry_t *de );
+
 time_t dvr_entry_get_start_time( dvr_entry_t *de );
 
 time_t dvr_entry_get_stop_time( dvr_entry_t *de );
