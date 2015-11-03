@@ -1489,14 +1489,17 @@ void
 dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 {
   dvr_entry_t *de;
+  channel_t *ch = e->channel;
+  epg_broadcast_t *e2;
+
   assert(e != NULL);
   assert(new_e != NULL);
 
   /* Ignore */
-  if (e->channel == NULL || e == new_e) return;
+  if (ch == NULL || e == new_e) return;
 
   /* Existing entry */
-  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
 
     if (de->de_bcast != e)
       continue;
@@ -1506,7 +1509,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
              " to %"PRItime_t,
              idnode_uuid_as_sstr(&de->de_id),
              epg_broadcast_get_title(e, NULL),
-             channel_get_name(e->channel),
+             channel_get_name(ch),
              e->start, e->stop);
 
     /* Ignore - already in progress */
@@ -1522,16 +1525,16 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     /* Find match */
     } else {
 
-      RB_FOREACH(e, &e->channel->ch_epg_schedule, sched_link) {
-        if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
+      RB_FOREACH(e2, &ch->ch_epg_schedule, sched_link) {
+        if (dvr_entry_fuzzy_match(de, e2, e2->dvb_eid,
                                   de->de_config->dvr_update_window)) {
           tvhtrace("dvr",
                    "  replacement event %s on %s @ %"PRItime_t
                    " to %"PRItime_t,
-                   epg_broadcast_get_title(e, NULL),
-                   channel_get_name(e->channel),
-                   e->start, e->stop);
-          _dvr_entry_update(de, -1, e, NULL, NULL, NULL, NULL, NULL,
+                   epg_broadcast_get_title(e2, NULL),
+                   channel_get_name(ch),
+                   e2->start, e2->stop);
+          _dvr_entry_update(de, -1, e2, NULL, NULL, NULL, NULL, NULL,
                             0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
           return;
         }
