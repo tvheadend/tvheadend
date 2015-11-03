@@ -831,8 +831,6 @@ subscription_create_from_mux(profile_chain_t *prch,
   if (!s)
     return NULL;
 
-  assert((flags & SUBSCRIPTION_ONESHOT) != 0);
-
   return subscription_create_from_channel_or_service
     (prch, ti, weight, name, flags, hostname, username, client,
      error, (service_t *)s);
