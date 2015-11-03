@@ -602,7 +602,7 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   }
 
 #if ENABLE_MPEGTS
-  if (raw)
+  if (raw && t == raw)
     service_remove_raw(raw);
 #endif
 
