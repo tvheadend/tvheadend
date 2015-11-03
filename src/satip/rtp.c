@@ -746,10 +746,11 @@ satip_rtcp_thread(void *aux)
 {
   satip_rtp_session_t *rtp;
   struct timespec ts;
-  uint8_t msg[RTCP_PAYLOAD];
+  uint8_t msg[RTCP_PAYLOAD+1];
   char addrbuf[50];
   int r, len, err;
 
+  tvhtrace("satips", "starting rtcp thread");
   while (satip_rtcp_run) {
     ts.tv_sec  = 0;
     ts.tv_nsec = 150000000;
@@ -763,6 +764,11 @@ satip_rtcp_thread(void *aux)
       if (rtp->sq == NULL) continue;
       len = satip_rtcp_build(rtp, msg);
       if (len <= 0) continue;
+      if (tvhtrace_enabled()) {
+        msg[len] = '\0';
+        tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
+        tvhtrace("satips", "RTCP send to %s:%d : %s", addrbuf, IP_PORT(rtp->peer2), msg + 16);
+      }
       r = sendto(rtp->fd_rtcp, msg, len, 0,
                  (struct sockaddr*)&rtp->peer2,
                  rtp->peer2.ss_family == AF_INET6 ?
