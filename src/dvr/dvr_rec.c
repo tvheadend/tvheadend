@@ -1386,8 +1386,10 @@ fin:
 	start_time = 0;
 	started = 0;
 	muxing = 0;
-	streaming_start_unref(ss);
-	ss = NULL;
+	if (ss) {
+	  streaming_start_unref(ss);
+	  ss = NULL;
+        }
       }
       break;
 
@@ -1449,6 +1451,9 @@ fin:
 
   if (prch->prch_muxer)
     dvr_thread_epilog(de, postproc);
+
+  if (ss)
+    streaming_start_unref(ss);
 
   free(postproc);
   return NULL;
