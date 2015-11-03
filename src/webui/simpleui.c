@@ -112,6 +112,23 @@ dvr_query_free(dvr_query_result_t *dqr)
 }
 
 /**
+ *
+ */
+static dvr_entry_t *
+dvr_find_by_event(epg_broadcast_t *e)
+{
+  dvr_entry_t *de;
+
+  if (e->channel == NULL)
+    return NULL;
+
+  LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link)
+    if (de->de_bcast == e)
+      return de;
+  return NULL;
+}
+
+/**
  * Sorting functions
  */
 static int
@@ -223,7 +240,7 @@ page_simple(http_connection_t *hc,
 		      days[day.tm_wday], day.tm_mday, day.tm_mon + 1);
 	}
 
-	de = dvr_entry_find_by_event(e);
+	de = dvr_find_by_event(e);
 	rstatus = de != NULL ? val2str(de->de_sched_state,
 				       recstatustxt) : NULL;
 
@@ -314,7 +331,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
     return 404;
   }
 
-  de = dvr_entry_find_by_event(e);
+  de = dvr_find_by_event(e);
 
   if((http_arg_get(&hc->hc_req_args, "rec")) != NULL) {
     de = dvr_entry_create_by_event(1, NULL, e, 0, 0, hc->hc_username ?: NULL,

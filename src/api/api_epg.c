@@ -164,12 +164,18 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
   }
 
   /* Recording */
-  if (!access_verify2(perm, ACCESS_RECORDER) &&
-      (de = dvr_entry_find_by_event(eb)) &&
-      !access_verify_list(perm->aa_dvrcfgs,
-                          idnode_uuid_as_sstr(&de->de_config->dvr_id))) {
-    htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_sstr(&de->de_id));
-    htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
+  if (eb->channel && !access_verify2(perm, ACCESS_RECORDER)) {
+    /* Note: only first hit is matched */
+    LIST_FOREACH(de, &eb->channel->ch_dvrs, de_channel_link) {
+      if (de->de_bcast != eb)
+        continue;
+      if (access_verify_list(perm->aa_dvrcfgs,
+                             idnode_uuid_as_sstr(&de->de_config->dvr_id)))
+        continue;
+      htsmsg_add_str(m, "dvrUuid", idnode_uuid_as_sstr(&de->de_id));
+      htsmsg_add_str(m, "dvrState", dvr_entry_schedstatus(de));
+      break;
+    }
   }
 
   /* Next event */

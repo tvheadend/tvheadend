@@ -513,11 +513,7 @@ dvr_entry_t *dvr_entry_find_by_id(int id);
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
   { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class, NULL); }
 
-dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
-
 dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
-
-dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
 const char *dvr_get_filename(dvr_entry_t *de);
 

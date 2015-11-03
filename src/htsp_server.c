@@ -992,9 +992,15 @@ htsp_build_event
       htsmsg_add_str(out, "image", ee->image);
   }
 
-  if((de = dvr_entry_find_by_event(e)) != NULL &&
-     !dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
-    htsmsg_add_u32(out, "dvrId", idnode_get_short_uuid(&de->de_id));
+  if (e->channel) {
+    LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
+      if (de->de_bcast != e)
+        continue;
+      if (dvr_entry_verify(de, htsp->htsp_granted_access, 1))
+        continue;
+      htsmsg_add_u32(out, "dvrId", idnode_get_short_uuid(&de->de_id));
+      break;
+    }
   }
 
   if ((n = epg_broadcast_get_next(e)))
