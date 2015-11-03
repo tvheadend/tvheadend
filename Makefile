@@ -60,6 +60,7 @@ CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
 endif
 
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
+
 CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
 LDFLAGS_FFDIR = ${ROOTDIR}/libav_static/build/ffmpeg/lib
 LDFLAGS += ${LDFLAGS_FFDIR}/libavresample.a
@@ -72,11 +73,13 @@ LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbisenc.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbis.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libogg.a
+
 ifeq ($(CONFIG_LIBX264_STATIC),yes)
 LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a -ldl
 else
 LDFLAGS += -lx264 -ldl
 endif
+
 ifeq ($(CONFIG_LIBX265),yes)
 ifeq ($(CONFIG_LIBX265_STATIC),yes)
 LDFLAGS += ${LDFLAGS_FFDIR}/libx265.a -lstdc++
@@ -84,8 +87,11 @@ else
 LDFLAGS += -lx265
 endif
 endif
+
 LDFLAGS += ${LDFLAGS_FFDIR}/libvpx.a
+
 CONFIG_LIBMFX_VA_LIBS =
+
 ifeq ($(CONFIG_LIBMFX),yes)
 CONFIG_LIBMFX_VA_LIBS += -lva
 ifeq ($(CONFIG_VA_DRM),yes)
@@ -101,10 +107,8 @@ LDFLAGS += -lmfx
 endif
 LDFLAGS += ${CONFIG_LIBMFX_VA_LIBS}
 endif
-ifneq ($(CONFIG_LIBMFX_STATIC),yes)
-LDFLAGS += -lavfilter
-endif
-endif
+
+endif # CONFIG_LIBFFMPEG_STATIC
 
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
