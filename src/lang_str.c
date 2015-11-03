@@ -161,6 +161,49 @@ int lang_str_append
   return _lang_str_add(ls, str, lang, 0, 1);
 }
 
+/* Set new string with update check */
+int lang_str_set
+  ( lang_str_t **dst, const char *str, const char *lang )
+{
+  lang_str_ele_t *e;
+  int found;
+  if (*dst == NULL) goto change1;
+  if (!lang) lang = lang_code_preferred();
+  if (!(lang = lang_code_get(lang))) return 0;
+  if (*dst) {
+    found = 0;
+    RB_FOREACH(e, *dst, link) {
+      if (found)
+        goto change;
+      found = strcmp(e->lang, lang) == 0 &&
+              strcmp(e->str, str) == 0;
+      if (!found)
+        goto change;
+    }
+    if (found)
+      return 0;
+  }
+change:
+  lang_str_destroy(*dst);
+change1:
+  *dst = lang_str_create();
+  lang_str_add(*dst, str, lang, 1);
+  return 1;
+}
+
+/* Set new strings with update check */
+int lang_str_set2
+  ( lang_str_t **dst, lang_str_t *src )
+{
+  if (*dst) {
+    if (!lang_str_compare(*dst, src))
+      return 0;
+    lang_str_destroy(*dst);
+  }
+  *dst = lang_str_copy(src);
+  return 1;
+}
+
 /* Serialize  map */
 htsmsg_t *lang_str_serialize_map ( lang_str_t *ls )
 {

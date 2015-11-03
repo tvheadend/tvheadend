@@ -45,6 +45,10 @@ int             lang_str_add
   ( lang_str_t *ls, const char *str, const char *lang, int update );
 int             lang_str_append  
   ( lang_str_t *ls, const char *str, const char *lang );
+int             lang_str_set
+  ( lang_str_t **dst, const char *str, const char *lang );
+int             lang_str_set2
+  ( lang_str_t **dst, lang_str_t *src );
 
 /* Serialize/Deserialize */
 htsmsg_t       *lang_str_serialize_map

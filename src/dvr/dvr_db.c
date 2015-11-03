@@ -1273,6 +1273,43 @@ dvr_timer_remove_files(void *aux)
   dvr_entry_retention_timer(de);
 }
 
+/**
+ *
+ */
+
+#define DVR_UPDATED_ENABLED      (1<<0)
+#define DVR_UPDATED_CHANNEL      (1<<1)
+#define DVR_UPDATED_STOP         (1<<2)
+#define DVR_UPDATED_STOP_EXTRA   (1<<3)
+#define DVR_UPDATED_START        (1<<4)
+#define DVR_UPDATED_START_EXTRA  (1<<5)
+#define DVR_UPDATED_TITLE        (1<<6)
+#define DVR_UPDATED_SUBTITLE     (1<<7)
+#define DVR_UPDATED_SUMMARY      (1<<8)
+#define DVR_UPDATED_DESCRIPTION  (1<<9)
+#define DVR_UPDATED_PRIO         (1<<10)
+#define DVR_UPDATED_GENRE        (1<<11)
+#define DVR_UPDATED_RETENTION    (1<<12)
+#define DVR_UPDATED_REMOVAL      (1<<13)
+#define DVR_UPDATED_EID          (1<<14)
+#define DVR_UPDATED_BROADCAST    (1<<15)
+#define DVR_UPDATED_EPISODE      (1<<16)
+
+static char *dvr_updated_str(char *buf, size_t buflen, int flags)
+{
+  static const char *x = "ecoOsStumdpgrviBE";
+  const char *p = x;
+  char *w = buf, *end = buf + buflen;
+
+  for (p = x; *p && flags && w != end; p++, flags >>= 1)
+    if (flags & 1)
+      *w++ = *p;
+  if (w == end)
+    *(w - 1) = '\0';
+  else
+    *w ='\0';
+  return buf;
+}
 
 /**
  *
@@ -1291,7 +1328,7 @@ static dvr_entry_t *_dvr_entry_update
     enabled = !!enabled;
     if (de->de_enabled != enabled) {
       de->de_enabled = enabled;
-      save = 1;
+      save |= DVR_UPDATED_ENABLED;
     }
   }
 
@@ -1303,12 +1340,12 @@ static dvr_entry_t *_dvr_entry_update
         stop = de->de_start;
       if (stop != de->de_stop) {
         de->de_stop = stop;
-        save = 1;
+        save |= DVR_UPDATED_STOP;
       }
     }
     if (stop_extra && (stop_extra != de->de_stop_extra)) {
       de->de_stop_extra = stop_extra;
-      save = 1;
+      save |= DVR_UPDATED_STOP_EXTRA;
     }
     goto dosave;
   }
@@ -1316,7 +1353,7 @@ static dvr_entry_t *_dvr_entry_update
   /* Channel */
   if (ch && (ch != de->de_channel)) {
     de->de_channel = ch;
-    save = 1;
+    save |= DVR_UPDATED_CHANNEL;
   }
 
   /* Start/Stop */
@@ -1326,31 +1363,31 @@ static dvr_entry_t *_dvr_entry_update
   }
   if (start && (start != de->de_start)) {
     de->de_start = start;
-    save = 1;
+    save |= DVR_UPDATED_START;
   }
   if (stop && (stop != de->de_stop)) {
     de->de_stop = stop;
-    save = 1;
+    save |= DVR_UPDATED_STOP;
   }
   if (start_extra && (start_extra != de->de_start_extra)) {
     de->de_start_extra = start_extra;
-    save = 1;
+    save |= DVR_UPDATED_START_EXTRA;
   }
   if (stop_extra && (stop_extra != de->de_stop_extra)) {
     de->de_stop_extra = stop_extra;
-    save = 1;
+    save |= DVR_UPDATED_STOP_EXTRA;
   }
   if (pri != DVR_PRIO_NOTSET && (pri != de->de_pri)) {
     de->de_pri = pri;
-    save = 1;
+    save |= DVR_UPDATED_PRIO;
   }
   if (retention && (retention != de->de_retention)) {
     de->de_retention = retention;
-    save = 1;
+    save |= DVR_UPDATED_RETENTION;
   }
   if (removal && (removal != de->de_removal)) {
     de->de_removal = removal;
-    save = 1;
+    save |= DVR_UPDATED_REMOVAL;
   }
   if (save) {
     updated = 1;
@@ -1359,46 +1396,35 @@ static dvr_entry_t *_dvr_entry_update
 
   /* Title */ 
   if (e && e->episode && e->episode->title) {
-    if (de->de_title) lang_str_destroy(de->de_title);
-    de->de_title = lang_str_copy(e->episode->title);
-    save = 1;
+    save |= lang_str_set2(&de->de_title, e->episode->title) ? DVR_UPDATED_TITLE : 0;
   } else if (title) {
-    if (!de->de_title) de->de_title = lang_str_create();
-    save = lang_str_add(de->de_title, title, lang, 1);
+    save |= lang_str_set(&de->de_title, title, lang) ? DVR_UPDATED_TITLE : 0;
   }
 
   /* Subtitle*/
   if (e && e->episode && e->episode->subtitle) {
-    if (de->de_subtitle) lang_str_destroy(de->de_subtitle);
-    de->de_subtitle = lang_str_copy(e->episode->subtitle);
-    save = 1;
+    save |= lang_str_set2(&de->de_subtitle, e->episode->subtitle) ? DVR_UPDATED_SUBTITLE : 0;
   } else if (subtitle) {
-    if (!de->de_subtitle) de->de_subtitle = lang_str_create();
-    save = lang_str_add(de->de_subtitle, subtitle, lang, 1);
+    save |= lang_str_set(&de->de_title, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
   }
 
   /* EID */
   if (e && e->dvb_eid != de->de_dvb_eid) {
     de->de_dvb_eid = e->dvb_eid;
-    save = 1;
+    save |= DVR_UPDATED_EID;
   }
 
   /* Description */
   if (e && e->description) {
-    if (de->de_desc) lang_str_destroy(de->de_desc);
-    de->de_desc = lang_str_copy(e->description);
+    save |= lang_str_set2(&de->de_desc, e->description) ? DVR_UPDATED_DESCRIPTION : 0;
   } else if (e && e->episode && e->episode->description) {
-    if (de->de_desc) lang_str_destroy(de->de_desc);
-    de->de_desc = lang_str_copy(e->episode->description);
+    save |= lang_str_set2(&de->de_desc, e->episode->description) ? DVR_UPDATED_DESCRIPTION : 0;
   } else if (e && e->summary) {
-    if (de->de_desc) lang_str_destroy(de->de_desc);
-    de->de_desc = lang_str_copy(e->summary);
+    save |= lang_str_set2(&de->de_desc, e->summary) ? DVR_UPDATED_DESCRIPTION : 0;
   } else if (e && e->episode && e->episode->summary) {
-    if (de->de_desc) lang_str_destroy(de->de_desc);
-    de->de_desc = lang_str_copy(e->episode->summary);
+    save |= lang_str_set2(&de->de_desc, e->episode->summary) ? DVR_UPDATED_DESCRIPTION : 0;
   } else if (desc) {
-    if (!de->de_desc) de->de_desc = lang_str_create();
-    save = lang_str_add(de->de_desc, desc, lang, 1);
+    save |= lang_str_set(&de->de_desc, desc, lang) ? DVR_UPDATED_DESCRIPTION : 0;
   }
 
   /* Genre */
@@ -1406,14 +1432,14 @@ static dvr_entry_t *_dvr_entry_update
     epg_genre_t *g = LIST_FIRST(&e->episode->genre);
     if (g && (g->code / 16) != de->de_content_type) {
       de->de_content_type = g->code / 16;
-      save = 1;
+      save |= DVR_UPDATED_GENRE;
     }
   }
 
   /* Broadcast */
   if (e && (de->de_bcast != e)) {
     dvr_entry_assign_broadcast(de, e);
-    save = 1;
+    save |= DVR_UPDATED_BROADCAST;
   }
 
   /* Episode */
@@ -1421,7 +1447,7 @@ static dvr_entry_t *_dvr_entry_update
     if (strcmp(de->de_episode ?: "", buf)) {
       free(de->de_episode);
       de->de_episode = strdup(buf);
-      save = 1;
+      save |= DVR_UPDATED_EPISODE;
     }
   }
 
@@ -1430,9 +1456,10 @@ dosave:
   if (save) {
     idnode_changed(&de->de_id);
     htsp_dvr_entry_update(de);
-    tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated%s",
+    tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated%s (%s)",
              lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
-             updated ? " Timer" : "");
+             updated ? " Timer" : "",
+             dvr_updated_str(buf, sizeof(buf), save));
   }
 
   return de;
@@ -2290,9 +2317,7 @@ dvr_entry_class_disp_title_set(void *o, const void *v)
   if (de->de_title)
     s = lang_str_get(de->de_title, lang);
   if (strcmp(s, v)) {
-    lang_str_destroy(de->de_title);
-    de->de_title = lang_str_create();
-    lang_str_add(de->de_title, v, lang, 0);
+    lang_str_set(&de->de_title, v, lang);
     return 1;
   }
   return 0;
@@ -2323,9 +2348,7 @@ dvr_entry_class_disp_subtitle_set(void *o, const void *v)
   if (de->de_subtitle)
     s = lang_str_get(de->de_subtitle, lang);
   if (strcmp(s, v)) {
-    lang_str_destroy(de->de_subtitle);
-    de->de_subtitle = lang_str_create();
-    lang_str_add(de->de_subtitle, v, lang, 0);
+    lang_str_set(&de->de_subtitle, v, lang);
     return 1;
   }
   return 0;
