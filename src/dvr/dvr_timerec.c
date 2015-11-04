@@ -202,52 +202,30 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
 }
 
 dvr_timerec_entry_t*
-dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t enabled, uint32_t start, uint32_t stop,
-                            uint32_t weekdays, dvr_prio_t pri, int retention, int removal,
-                            const char *owner, const char *creator, const char *comment, 
-                            const char *name, const char *directory)
+dvr_timerec_create_htsp(htsmsg_t *conf)
 {
   dvr_timerec_entry_t *dte;
-  htsmsg_t *conf, *days;
-
-  conf = htsmsg_create_map();
-  days = htsmsg_create_list();
-
-  htsmsg_add_u32(conf, "enabled",     enabled > 0 ? 1 : 0);
-  htsmsg_add_u32(conf, "retention",   retention);
-  htsmsg_add_u32(conf, "removal",     removal);
-  htsmsg_add_u32(conf, "pri",         pri);
-  htsmsg_add_str(conf, "title",       title);
-  htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
-  htsmsg_add_str(conf, "owner",       owner ?: "");
-  htsmsg_add_str(conf, "creator",     creator ?: "");
-  htsmsg_add_str(conf, "comment",     comment ?: "");
-  htsmsg_add_str(conf, "name",        name ?: "");
-  htsmsg_add_str(conf, "directory",   directory ?: "");
-  htsmsg_add_u32(conf, "start",       start);
-  htsmsg_add_u32(conf, "stop",        stop);
-
-  if (ch)
-    htsmsg_add_str(conf, "channel", idnode_uuid_as_sstr(&ch->ch_id));
-
-  int i;
-  for (i = 0; i < 7; i++)
-    if (weekdays & (1 << i))
-      htsmsg_add_u32(days, NULL, i + 1);
-
-  htsmsg_add_msg(conf, "weekdays", days);
 
   dte = dvr_timerec_create(NULL, conf);
   htsmsg_destroy(conf);
 
-  if (dte)
-  {
+  if (dte) {
     dvr_timerec_save(dte);
     dvr_timerec_check(dte);
   }
 
   return dte;
+}
+
+void
+dvr_timerec_update_htsp (dvr_timerec_entry_t *dte, htsmsg_t *conf)
+{
+  idnode_update(&dte->dte_id, conf);
+  dvr_timerec_save(dte);
+  dvr_timerec_check(dte);
+  htsp_timerec_entry_update(dte);
+  tvhlog(LOG_INFO, "timerec", "\"%s\" on \"%s\": Updated", dte->dte_title ? dte->dte_title : "",
+      (dte->dte_channel && dte->dte_channel->ch_name) ? dte->dte_channel->ch_name : "any channel");
 }
 
 /**
