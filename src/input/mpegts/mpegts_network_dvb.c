@@ -430,6 +430,7 @@ dvb_network_create_mux
     satpos = dvb_network_get_orbital_pos(mn);
     if (dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos)) {
       LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+        if (!idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) continue;
         satpos = dvb_network_get_orbital_pos(mn);
         if (satpos == INT_MAX) continue;
         if (!dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos))
