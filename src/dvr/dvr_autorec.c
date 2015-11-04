@@ -400,6 +400,7 @@ dvr_autorec_entry_class_save(idnode_t *self)
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
   dvr_autorec_save(dae);
   dvr_autorec_changed(dae, 1);
+  htsp_autorec_entry_update(dae);
 }
 
 static void
@@ -1247,8 +1248,6 @@ dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge)
   }
 
   free(disabled);
-
-  htsp_autorec_entry_update(dae);
 }
 
 
