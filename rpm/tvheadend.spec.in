@@ -2,6 +2,10 @@
 %global commit @COMMIT@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
+#Allow static builds on Fedora >= 23
+#see https://fedoraproject.org/wiki/Changes/Harden_All_Packages
+%undefine _hardened_build
+
 Name:           tvheadend
 Summary:        TV streaming server and Digital Video Recorder
 Version:        @VERSION@
