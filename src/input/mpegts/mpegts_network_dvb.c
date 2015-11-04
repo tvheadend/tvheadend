@@ -398,7 +398,7 @@ dvb_network_config_save ( mpegts_network_t *mn )
   htsmsg_destroy(c);
 }
 
-static const idclass_t *
+const idclass_t *
 dvb_network_mux_class
   ( mpegts_network_t *mn )
 {
@@ -449,6 +449,7 @@ dvb_network_create_mux
     satpos = dvb_network_get_orbital_pos(mn);
     if (dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos)) {
       LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+        if (!idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) continue;
         satpos = dvb_network_get_orbital_pos(mn);
         if (satpos == INT_MAX) continue;
         if (!dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos))
@@ -724,6 +725,12 @@ int dvb_network_get_orbital_pos(mpegts_network_t *mn)
 
   if (!ln)
     return INT_MAX;
+  if (tvhtrace_enabled()) {
+    if (!idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) {
+      tvhinfo("mpegts", "wrong dvb_network_get_orbital_pos() call");
+      return INT_MAX;
+    }
+  }
   if (ln->mn_satpos != INT_MAX)
     return ln->mn_satpos;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {

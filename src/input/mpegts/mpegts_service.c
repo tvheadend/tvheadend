@@ -547,17 +547,12 @@ mpegts_service_channel_icon ( service_t *s )
 
 #if ENABLE_MPEGTS_DVB
 static int
-mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash, const idclass_t **idc)
+mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash, const idclass_t *idc)
 {
-  int pos = hash >> 16, pos2;
+  int pos, pos2;
 
+  if (idc != &dvb_mux_dvbs_class) return 1;
   pos = hash >> 16;
-  switch (pos) {
-  case 0xFFFF: *idc = &dvb_mux_dvbc_class; return 1;
-  case 0xEEEE: *idc = &dvb_mux_dvbt_class; return 1;
-  case 0xDDDD: *idc = &dvb_mux_dvbt_class; return 1;
-  default:     *idc = &dvb_mux_dvbs_class; break;
-  }
   if (pos > 3600 || pos < 0) return 0;
   pos = pos <= 1800 ? pos : pos - 3600;
   if ((pos2 = dvb_network_get_orbital_pos(mn)) == INT_MAX) return 0;
@@ -595,9 +590,16 @@ mpegts_service_find_e2(uint32_t stype, uint32_t sid, uint32_t tsid,
 
   lock_assert(&global_lock);
 
+  switch (hash & 0xFFFF0000) {
+  case 0xFFFF0000: idc = &dvb_mux_dvbc_class; break;
+  case 0xEEEE0000: idc = &dvb_mux_dvbt_class; break;
+  case 0xDDDD0000: idc = &dvb_mux_dvbt_class; break;
+  default:         idc = &dvb_mux_dvbs_class; break;
+  }
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (!idnode_is_instance(&mn->mn_id, &dvb_network_class)) continue;
-    if (!mpegts_service_match_network(mn, hash, &idc)) continue;
+    if (dvb_network_mux_class(mn) != idc) continue;
+    if (!mpegts_service_match_network(mn, hash, idc)) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (!idnode_is_instance(&mm->mm_id, idc)) continue;
       if (mm->mm_tsid != tsid || mm->mm_onid != onid) continue;
