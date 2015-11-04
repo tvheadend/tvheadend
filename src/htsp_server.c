@@ -1750,13 +1750,17 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(dvr_entry_verify(de, htsp->htsp_granted_access, 1))
     return htsp_error("User does not have access");
 
+  /* Check access old channel */
+  if (de->de_channel && !htsp_user_access_channel(htsp, de->de_channel))
+    return htsp_error("User does not have access to channel");
+
   if(!htsmsg_get_u32(in, "channelId", &u32))
     channel = channel_find_by_id(u32);
   if (!channel)
     channel = de->de_channel;
 
-  /* Check access */
-  if (!htsp_user_access_channel(htsp, channel))
+  /* Check access new channel */
+  if (channel && !htsp_user_access_channel(htsp, channel))
     return htsp_error("User does not have access to channel");
 
   enabled     = htsmsg_get_s64_or_default(in, "enabled",    -1);
