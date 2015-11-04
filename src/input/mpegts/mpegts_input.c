@@ -1559,6 +1559,7 @@ mpegts_input_clear_stats ( tvh_input_t *i )
     mmi->tii_stats.tc_block = 0;
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
+  notify_reload("input_status");
 }
 
 static void
