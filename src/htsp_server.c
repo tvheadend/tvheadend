@@ -2337,7 +2337,7 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error("Missing argument 'subscriptionId'");
 
-  weight = htsmsg_get_u32_or_default(in, "weight", 150);
+  weight = htsmsg_get_u32_or_default(in, "weight", 0);
 
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
