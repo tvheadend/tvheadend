@@ -2277,6 +2277,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_u32(rep, "90khz", 1);
   if(hs->hs_prch.prch_sharer->prsh_tsfix)
     htsmsg_add_u32(rep, "normts", 1);
+  if(hs->hs_s)
+    htsmsg_add_u32(rep, "weight", hs->hs_s->ths_weight >= 0 ? hs->hs_s->ths_weight : 0);
 
 #if ENABLE_TIMESHIFT
   if(timeshiftPeriod)
