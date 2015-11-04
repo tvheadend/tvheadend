@@ -550,6 +550,8 @@ serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int autor
       htsmsg_add_u32(conf, "fulltext", !retval ? u32 : 0);     // 0 = off
     if (!(retval = htsmsg_get_u32(in, "dupDetect", &u32)) || add)
       htsmsg_add_u32(conf, "record", !retval ? u32 : DVR_AUTOREC_RECORD_ALL);
+    if (!(retval = htsmsg_get_u32(in, "maxCount", &u32)) || add)
+      htsmsg_add_u32(conf, "maxcount", !retval ? u32 : 0);     // 0 = unlimited
     if (!(retval = htsmsg_get_s64(in, "startExtra", &s64)) || add)
       htsmsg_add_s64(conf, "start_extra", !retval ? (s64 < 0 ? 0 : s64)  : 0); // 0 = dvr config
     if (!(retval = htsmsg_get_s64(in, "stopExtra", &s64)) || add)
@@ -985,6 +987,7 @@ htsp_build_autorecentry(dvr_autorec_entry_t *dae, const char *method)
   htsmsg_add_s64(out, "startExtra",  dvr_autorec_get_extra_time_pre(dae));
   htsmsg_add_s64(out, "stopExtra",   dvr_autorec_get_extra_time_post(dae));
   htsmsg_add_u32(out, "dupDetect",   dae->dae_record);
+  htsmsg_add_u32(out, "maxCount",    dae->dae_max_count);
 
   if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
