@@ -114,19 +114,17 @@ typedef int32_t x86_reg;
 typedef int x86_reg;
 #endif
 
-
-
-/* ebx saving is necessary for PIC. gcc seems unable to see it alone */
-#define cpuid(index,eax,ebx,ecx,edx)\
-    __asm__ volatile\
-        ("mov %%"REG_b", %%"REG_S"\n\t"\
-         "cpuid\n\t"\
-         "xchg %%"REG_b", %%"REG_S\
-         : "=a" (eax), "=S" (ebx),\
-           "=c" (ecx), "=d" (edx)\
-         : "0" (index));
-
-
+static inline void
+native_cpuid(unsigned int *eax, unsigned int *ebx,
+             unsigned int *ecx, unsigned int *edx)
+{
+  asm volatile("cpuid"
+               : "=a" (*eax),
+                 "=b" (*ebx),
+                 "=c" (*ecx),
+                 "=d" (*edx)
+               : "0" (*eax), "2" (*ecx));
+}
 
 void
 ffdecsa_init(void)
@@ -136,8 +134,8 @@ ffdecsa_init(void)
 
 #if defined(__i386__) || defined(__x86_64__)
 
-  int eax, ebx, ecx, edx;
-  int max_std_level, std_caps=0;
+  unsigned int eax, ebx, ecx, edx;
+  unsigned int max_std_level, std_caps;
   
 #if defined(__i386__)
 
@@ -165,10 +163,14 @@ ffdecsa_init(void)
 
   if (a != c) {
 #endif
-    cpuid(0, max_std_level, ebx, ecx, edx);
+    eax = ebx = ecx = edx = 0;
+    native_cpuid(&eax, &ebx, &ecx, &edx);
+    max_std_level = eax;
 
     if(max_std_level >= 1){
-      cpuid(1, eax, ebx, ecx, std_caps);
+      eax = 1;
+      native_cpuid(&eax, &ebx, &ecx, &edx);
+      std_caps = edx;
 
 #ifdef CONFIG_SSE2
       if (std_caps & (1<<26)) {
