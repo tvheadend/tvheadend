@@ -555,13 +555,9 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
                   dvr_prio_t pri, int retention, int removal, const char *comment);
 
 dvr_autorec_entry_t *
-dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int fulltext,
-                            channel_t *ch, uint32_t enabled, int32_t start,
-                            int32_t start_window, uint32_t days, time_t start_extra,
-                            time_t stop_extra, dvr_prio_t pri, int retention, int removal,
-                            int min_duration, int max_duration, dvr_autorec_dedup_t dup_detect,
-                            const char *owner, const char *creator,
-                            const char *comment, const char *name, const char *directory);
+dvr_autorec_create_htsp(htsmsg_t *conf);
+
+void dvr_autorec_update_htsp(dvr_autorec_entry_t *dae, htsmsg_t *conf);
 
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
@@ -632,11 +628,9 @@ dvr_timerec_entry_t *
 dvr_timerec_create(const char *uuid, htsmsg_t *conf);
 
 dvr_timerec_entry_t*
-dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t enabled, uint32_t start, uint32_t stop,
-                            uint32_t weekdays, dvr_prio_t pri, int retention, int removal,
-                            const char *owner, const char *creator, const char *comment, 
-                            const char *name, const char *directory);
+dvr_timerec_create_htsp(htsmsg_t *conf);
+
+void dvr_timerec_update_htsp(dvr_timerec_entry_t *dte, htsmsg_t *conf);
 
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)
