@@ -169,7 +169,7 @@ constcw_free(caclient_t *cac)
   while((ct = LIST_FIRST(&ccw->ccw_services)) != NULL) {
     service_t *t = ct->td_service;
     pthread_mutex_lock(&t->s_stream_mutex);
-    constcw_service_destroy((th_descrambler_t *)&ct);
+    constcw_service_destroy((th_descrambler_t *)ct);
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
 }
