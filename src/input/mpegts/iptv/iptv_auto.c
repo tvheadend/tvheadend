@@ -128,6 +128,9 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       chnum += (int64_t)*total * CHANNEL_SPLIT;
   }
 
+  if (name == NULL)
+    name = "";
+
   urlinit(&u);
   custom[0] = '\0';
 
