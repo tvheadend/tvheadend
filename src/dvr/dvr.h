@@ -249,6 +249,11 @@ typedef struct dvr_entry {
    */
   time_t de_last_notify;
 
+  /**
+   * Update notification limit
+   */
+  tvhlog_limit_t de_update_limit;
+
 } dvr_entry_t;
 
 #define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel))

@@ -1456,10 +1456,17 @@ dosave:
   if (save) {
     idnode_changed(&de->de_id);
     htsp_dvr_entry_update(de);
-    tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated%s (%s)",
+    if (tvhlog_limit(&de->de_update_limit, 60)) {
+      tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated%s (%s)",
              lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
              updated ? " Timer" : "",
              dvr_updated_str(buf, sizeof(buf), save));
+    } else {
+      tvhtrace("dvr", "\"%s\" on \"%s\": Updated%s (%s)",
+               lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+               updated ? " Timer" : "",
+               dvr_updated_str(buf, sizeof(buf), save));
+    }
   }
 
   return de;
