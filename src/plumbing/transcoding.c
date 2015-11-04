@@ -1035,6 +1035,7 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
 {
   AVFilterInOut *flt_inputs, *flt_outputs;
   AVFilter *flt_bufsrc, *flt_bufsink;
+  enum AVPixelFormat pix_fmts[] = { 0, AV_PIX_FMT_NONE };
   char opt[128];
   int err;
 
@@ -1085,6 +1086,15 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
                                      "out", NULL, NULL, vs->flt_graph);
   if (err < 0) {
     tvherror("transcode", "%04X: fltchain OUT init error", shortid(t));
+    goto out_err;
+  }
+
+  pix_fmts[0] = octx->pix_fmt;
+  err = av_opt_set_int_list(vs->flt_bufsinkctx, "pix_fmts", pix_fmts,
+                            AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
+  if (err < 0) {
+    tvherror("transcode", "%08X: fltchain cannot set output pixfmt",
+             shortid(t));
     goto out_err;
   }
 
