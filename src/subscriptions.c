@@ -1004,7 +1004,11 @@ subscription_change_weight(th_subscription_t *s, int weight)
 
   LIST_REMOVE(s, ths_global_link);
 
-  s->ths_weight = weight;
+  if (s->ths_prch)
+    s->ths_weight = profile_chain_weight(s->ths_prch, weight);
+  else
+    s->ths_weight = weight;
+
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
   gtimer_arm(&subscription_reschedule_timer, 
