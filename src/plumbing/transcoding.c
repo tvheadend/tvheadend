@@ -684,14 +684,14 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       tvhdebug("transcode", "%04X: starting audio resampling", shortid(t));
 
       av_get_channel_layout_string(layout_buf, sizeof (layout_buf), ictx->channels, ictx->channel_layout);
-      tvhdebug("transcode", "%04X: IN : channel_layout=%s, rate=%d, fmt=%s, bitrate=%d",
+      tvhdebug("transcode", "%04X: IN : channel_layout=%s, rate=%d, fmt=%s, bitrate=%"PRId64,
                shortid(t), layout_buf, ictx->sample_rate,
-               av_get_sample_fmt_name(ictx->sample_fmt), ictx->bit_rate);
+               av_get_sample_fmt_name(ictx->sample_fmt), (int64_t)ictx->bit_rate);
 
       av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
-      tvhdebug("transcode", "%04X: OUT: channel_layout=%s, rate=%d, fmt=%s, bitrate=%d",
+      tvhdebug("transcode", "%04X: OUT: channel_layout=%s, rate=%d, fmt=%s, bitrate=%"PRId64,
                shortid(t), layout_buf, octx->sample_rate,
-               av_get_sample_fmt_name(octx->sample_fmt), octx->bit_rate);
+               av_get_sample_fmt_name(octx->sample_fmt), (int64_t)octx->bit_rate);
 
       if (transcode_opt_set_int(t, ts, as->resample_context,
                                 "in_channel_layout", ictx->channel_layout, 1))
