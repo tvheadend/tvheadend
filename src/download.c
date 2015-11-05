@@ -65,7 +65,7 @@ download_file(download_t *dn, const char *filename)
     last_url = strrchr(filename, '/');
     if (last_url)
       last_url++;
-    res = dn->process(dn->aux, last_url, data, off);
+    res = dn->process(dn->aux, last_url, NULL, data, off);
   } else {
     res = -1;
   }
@@ -95,7 +95,9 @@ download_fetch_complete(http_client_t *hc)
 {
   download_t *dn = hc->hc_aux;
   char *last_url = NULL;
-  url_t u;
+  char host_url[512];
+  char *s, *p;
+  url_t u, u2;
 
   switch (hc->hc_code) {
   case HTTP_STATUS_MOVED:
@@ -111,6 +113,25 @@ download_fetch_complete(http_client_t *hc)
     if (last_url)
       last_url++;
   }
+  if ((p = http_arg_get(&hc->hc_args, "Host")) != NULL) {
+    snprintf(host_url, sizeof(host_url), "%s://%s",
+             hc->hc_ssl ? "https" : "http", p);
+  } else if (dn->url) {
+    s = strdupa(dn->url);
+    if ((p = strchr(s, '/')) != NULL) {
+      p++;
+      if (*p == '/')
+        p++;
+      if ((p = strchr(p, '/')) != NULL)
+        *p = '\0';
+    }
+    urlinit(&u2);
+    if (!urlparse(s, &u2))
+      snprintf(host_url, sizeof(host_url), "%s", s);
+    urlreset(&u2);
+  } else {
+    host_url[0] = '\0';
+  }
 
   pthread_mutex_lock(&global_lock);
 
@@ -118,7 +139,7 @@ download_fetch_complete(http_client_t *hc)
     goto out;
 
   if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
-    dn->process(dn->aux, last_url, hc->hc_data, hc->hc_data_size);
+    dn->process(dn->aux, last_url, host_url, hc->hc_data, hc->hc_data_size);
   else
     tvherror(dn->log, "unable to fetch data from url [%d-%d/%zd]",
              hc->hc_code, hc->hc_result, hc->hc_data_size);

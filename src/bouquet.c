@@ -37,7 +37,7 @@ static void bouquet_remove_service(bouquet_t *bq, service_t *s);
 static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
 static void bouquet_download_trigger(bouquet_t *bq);
 static void bouquet_download_stop(void *aux);
-static int bouquet_download_process(void *aux, const char *last_url, char *data, size_t len);
+static int bouquet_download_process(void *aux, const char *last_url, const char *host_url, char *data, size_t len);
 
 /**
  *
@@ -1099,7 +1099,8 @@ next:
 }
 
 static int
-bouquet_download_process(void *aux, const char *last_url, char *data, size_t len)
+bouquet_download_process(void *aux, const char *last_url, const char *host_url,
+                         char *data, size_t len)
 {
   bouquet_download_t *bqd = aux;
   while (*data) {

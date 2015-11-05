@@ -27,7 +27,8 @@ typedef struct download {
   char *url;
   void *aux;
   int ssl_peer_verify;
-  int (*process)(void *aux, const char *last_url, char *data, size_t len);
+  int (*process)(void *aux, const char *last_url, const char *host_url,
+                 char *data, size_t len);
   void (*stop)(void *aux);
   /* internal members */
   http_client_t *http_client;

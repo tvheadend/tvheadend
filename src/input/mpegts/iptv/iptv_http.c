@@ -20,38 +20,7 @@
 #include "tvheadend.h"
 #include "iptv_private.h"
 #include "http.h"
-
-/*
- * M3U parser
- */
-static char *until_eol(char *d)
-{
-  while (*d && *d != '\r' && *d != '\n') d++;
-  if (*d) { *d = '\0'; d++; }
-  while (*d && (*d == '\r' || *d == '\n')) d++;
-  return d;
-}          
-
-static char *
-iptv_http_m3u(char *data)
-{
-  char *url;
-
-  while (*data && *data != '\n') data++;
-  if (*data) data++;
-  while (*data) {
-    if (strncmp(data, "#EXT", 4) == 0) {
-      data = until_eol(data);
-      continue;
-    }
-    while (*data && *data <= ' ') data++;
-    url = data;
-    data = until_eol(data);
-    if (*url && *url > ' ')
-      return strdup(url);
-  }
-  return NULL;
-}
+#include "misc/m3u.h"
 
 /*
  * Connected
@@ -133,56 +102,68 @@ iptv_http_complete
   ( http_client_t *hc )
 {
   iptv_mux_t *im = hc->hc_aux;
-  char *url, *url2, *s, *p;
+  const char *url, *host_url;
+  char *p;
+  htsmsg_t *m, *items, *item;
+  htsmsg_field_t *f;
   url_t u;
+  size_t l;
   int r;
 
   if (im->im_m3u_header) {
     im->im_m3u_header = 0;
+
     sbuf_append(&im->mm_iptv_buffer, "", 1);
-    url = iptv_http_m3u((char *)im->mm_iptv_buffer.sb_data);
+
+    if ((p = http_arg_get(&hc->hc_args, "Host")) != NULL) {
+      l = strlen(p) + 16;
+      host_url = alloca(l);
+      snprintf((char *)host_url, l, "%s://%s", hc->hc_ssl ? "https" : "http", p);
+    } else if (im->mm_iptv_url_raw) {
+      host_url = strdupa(im->mm_iptv_url_raw);
+      if ((p = strchr(host_url, '/')) != NULL) {
+        p++;
+        if (*p == '/')
+          p++;
+        if ((p = strchr(p, '/')) != NULL)
+          *p = '\0';
+      }
+      urlinit(&u);
+      r = urlparse(host_url, &u);
+      urlreset(&u);
+      if (r)
+        goto end;
+    } else {
+      host_url = NULL;
+    }
+
+    m = parse_m3u((char *)im->mm_iptv_buffer.sb_data, NULL, host_url);
+    items = htsmsg_get_list(m, "items");
+    url = NULL;
+    HTSMSG_FOREACH(f, items) {
+      if ((item = htsmsg_field_get_map(f)) == NULL) continue;
+      url = htsmsg_get_str(items, "m3u-url");
+      if (url && url[0]) break;
+    }
     tvhtrace("iptv", "m3u url: '%s'", url);
-    sbuf_reset(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
     if (url == NULL) {
       tvherror("iptv", "m3u contents parsing failed");
-      return 0;
+      goto fin;
     }
     urlinit(&u);
-    if (url[0] == '/') {
-      url2 = malloc(512);
-      url2[0] = '\0';
-      if ((p = http_arg_get(&hc->hc_args, "Host")) != NULL) {
-        snprintf(url2, 512, "%s://%s%s",
-                 hc->hc_ssl ? "https" : "http", p, url);
-      } else if (im->mm_iptv_url_raw) {
-        s = strdupa(im->mm_iptv_url_raw);
-        if ((p = strchr(s, '/')) != NULL) {
-          p++;
-          if (*p == '/')
-            p++;
-          if ((p = strchr(p, '/')) != NULL)
-            *p = '\0';
-        }
-        if (urlparse(s, &u))
-          goto invalid;
-        snprintf(url2, 512, "%s%s", s, url);
-      }
-      free(url);
-      url = url2;
-      urlinit(&u);
-    }
     if (!urlparse(url, &u)) {
       hc->hc_keepalive = 0;
       r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
       if (r < 0)
         tvherror("iptv", "cannot reopen http client: %d'", r);
     } else {
-invalid:
       tvherror("iptv", "m3u url invalid '%s'", url);
     }
     urlreset(&u);
-    free(url);
-    return 0;
+fin:
+    htsmsg_destroy(m);
+end:
+    sbuf_reset(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
   }
   return 0;
 }

@@ -22,7 +22,7 @@
 #include "iptv_private.h"
 #include "channels.h"
 #include "download.h"
-#include "intlconv.h"
+#include "misc/m3u.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -36,67 +36,12 @@ typedef struct auto_private {
 /*
  *
  */
-static char *get_m3u_str(char *data, char **res)
-{
-  char *p = data, first = *data;
-  
-  if (first == '"' || first == '\'') {
-    data++; p++;
-    while (*data && *data != first)
-      data++;
-  } else {
-    while (*data && *data != ',' && *data > ' ')
-      data++;
-  }
-  if (*data) {
-    *data = '\0';
-    data++;
-  }
-  *res = data;
-  return p;
-}
-
-/*
- *
- */
-static char *until_eol(char *d)
-{
-  while (*d && *d != '\r' && *d != '\n') d++;
-  if (*d) { *d = '\0'; d++; }
-  while (*d && (*d == '\r' || *d == '\n')) d++;
-  return d;
-}
-
-/*
- *
- */
-static int replace_string(char **s, const char *n, const char *charset_id)
-{
-  char *c;
-
-  if (charset_id && n) {
-    c = intlconv_to_utf8safestr(charset_id, n, strlen(n)*2);
-  } else
-    c = n ? strdup(n) : NULL;
-  if (strcmp(*s ?: "", n ?: "") == 0) {
-    free(c);
-    return 0;
-  }
-  free(*s);
-  *s = c;
-  return 1;
-}
-
-/*
- *
- */
 static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
-                                   const char *last_url, const char *charset_id,
+                                   const char *last_url,
                                    const http_arg_list_t *remove_args,
-                                   const char *url, const char *name,
-                                   const char *logo, const char *epgid,
-                                   int64_t chnum, int *total, int *count)
+                                   int64_t chnum, htsmsg_t *item,
+                                   int *total, int *count)
 {
   htsmsg_t *conf;
   mpegts_mux_t *mm;
@@ -108,7 +53,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   htsbuf_queue_t q;
   int delim;
   size_t l;
-  char url2[512], custom[512], name2[128], buf[32], *n, *x = NULL, *y;
+  const char *url, *name, *logo, *epgid;
+  char url2[512], custom[512], name2[128], buf[32], *n, *y;
+
+  url = htsmsg_get_str(item, "m3u-url");
 
   if (url == NULL ||
       (strncmp(url, "file://", 7) &&
@@ -128,8 +76,15 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       chnum += (int64_t)*total * CHANNEL_SPLIT;
   }
 
+  name = htsmsg_get_str(item, "m3u-name");
   if (name == NULL)
     name = "";
+
+  logo = htsmsg_get_str(item, "tvg-logo");
+  if (logo == NULL)
+    logo = htsmsg_get_str(item, "logo");
+
+  epgid = htsmsg_get_str(item, "tvg-id");
 
   urlinit(&u);
   custom[0] = '\0';
@@ -199,12 +154,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   }
 
 skip_url:
-  x = NULL;
   if (last_url) {
-    if (charset_id) {
-      x = intlconv_to_utf8safestr(charset_id, name, strlen(name)*2);
-      name = x;
-    }
     snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
   } else {
     n = (char *)name;
@@ -234,7 +184,11 @@ skip_url:
         im->mm_iptv_icon = logo ? strdup(logo) : NULL;
         change = 1;
       }
-      change |= replace_string(&im->mm_iptv_epgid, epgid, charset_id);
+      if (strcmp(im->mm_iptv_epgid ?: "", epgid ?: "")) {
+        free(im->mm_iptv_epgid);
+        im->mm_iptv_epgid = epgid ? strdup(epgid) : NULL;
+        change = 1;
+      }
       if (strcmp(im->mm_iptv_hdr ?: "", custom)) {
         free(im->mm_iptv_hdr);
         im->mm_iptv_hdr = strdup(custom);
@@ -277,7 +231,6 @@ skip_url:
   }
 
 end:
-  free(x);
   urlreset(&u);
 }
 
@@ -287,74 +240,40 @@ end:
 static int
 iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
                               const char *last_url,
+                              const char *host_url,
                               http_arg_list_t *remove_args,
                               int64_t chnum)
 {
-  char *url, *name = NULL, *logo = NULL, *epgid = NULL;
-  char *charset_id = intlconv_charset_id(in->in_ctx_charset, 0, 1);
   int total = 0, count = 0;
+  htsmsg_t *m, *items, *item;
+  htsmsg_field_t *f;
+  int ret = 0;
 
-  while (*data && *data != '\n') data++;
-  if (*data) data++;
-  while (*data) {
-    if (strncmp(data, "#EXTINF:", 8) == 0) {
-      name = NULL;
-      logo = NULL;
-      epgid = NULL;
-      data += 8;
-      while (*data > ' ' && *data != ',') data++;
-      while (1) {
-        while (*data && *data <= ' ') data++;
-        if (*data == ',') break;
-        if (strncmp(data, "tvg-logo=", 9) == 0) {
-          logo = get_m3u_str(data + 9, &data); continue;
-        } else if (strncmp(data, "tvg-id=", 7) == 0) {
-          epgid = get_m3u_str(data + 7, &data); continue;
-        } else if (strncmp(data, "logo=", 5) == 0) {
-          logo = get_m3u_str(data + 5, &data); continue;
-        } else {
-          data++;
-          while (*data && *data != ',' && *data != '=') data++;
-          if (*data == '=')
-            get_m3u_str(data + 1, &data);
-        }
-      }
-      if (*data == ',') {
-        data++;
-        while (*data && *data <= ' ') data++;
-        if (*data)
-          name = data;
-      }
-      data = until_eol(data);
-      continue;
-    } else if (strncmp(data, "#EXT", 4) == 0) {
-      data += 4;
-      while (*data && *data != '\n') data++;
-      if (*data) data++;
-      continue;
-    }
-    while (*data && *data <= ' ') data++;
-    url = data;
-    data = until_eol(data);
-    if (*url && *url > ' ')
-      iptv_auto_network_process_m3u_item(in, last_url, charset_id,
-                                         remove_args, url, name,
-                                         logo, epgid,
-                                         chnum, &total, &count);
+  m = parse_m3u(data, in->in_ctx_charset, host_url);
+  items = htsmsg_get_list(m, "items");
+  HTSMSG_FOREACH(f, items) {
+    if ((item = htsmsg_field_get_map(f)) == NULL) continue;
+    iptv_auto_network_process_m3u_item(in, last_url,
+                                       remove_args, chnum,
+                                       item,
+                                       &total, &count);
+    
   }
-
+  htsmsg_destroy(m);
   if (total == 0)
-    return -1;
-  tvhinfo("iptv", "m3u parse: %d new mux(es) in network '%s' (total %d)",
-          count, in->mn_network_name, total);
-  return 0;
+    ret = -1;
+  else
+    tvhinfo("iptv", "m3u parse: %d new mux(es) in network '%s' (total %d)",
+            count, in->mn_network_name, total);
+  return ret;
 }
 
 /*
  *
  */
 static int
-iptv_auto_network_process(void *aux, const char *last_url, char *data, size_t len)
+iptv_auto_network_process(void *aux, const char *last_url,
+                          const char *host_url, char *data, size_t len)
 {
   auto_private_t *ap = aux;
   iptv_network_t *in = ap->in_network;
@@ -381,7 +300,8 @@ iptv_auto_network_process(void *aux, const char *last_url, char *data, size_t le
   while (*data && *data <= ' ') data++;
 
   if (!strncmp(data, "#EXTM3U", 7))
-    r = iptv_auto_network_process_m3u(in, data, last_url, &remove_args, in->in_channel_number);
+    r = iptv_auto_network_process_m3u(in, data, last_url, host_url,
+                                      &remove_args, in->in_channel_number);
 
   http_arg_flush(&remove_args);
 

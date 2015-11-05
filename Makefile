@@ -182,6 +182,7 @@ SRCS-1 = \
 	src/htsmsg_xml.c \
 	src/misc/dbl.c \
 	src/misc/json.c \
+	src/misc/m3u.c \
 	src/settings.c \
 	src/htsbuf.c \
 	src/trap.c \
