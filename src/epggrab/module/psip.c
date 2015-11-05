@@ -170,7 +170,7 @@ _psip_eit_callback
 
   /* # events */
   count = ptr[6];
-  tvhtrace("psip", "event count %d", count);
+  tvhtrace("psip", "event count %d data len %d", count, len);
   ptr  += 7;
   len  -= 7;
 
