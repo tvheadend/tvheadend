@@ -1689,16 +1689,18 @@ void epg_broadcast_notify_running
 {
   channel_t *ch;
   epg_broadcast_t *now;
+  int orunning = broadcast->running;
 
   broadcast->running = !!running;
+  ch = broadcast->channel;
+  now = ch ? ch->ch_epg_now : NULL;
   if (!running) {
-    broadcast->stop = dispatch_clock - 1;
+    if (now == broadcast && orunning == broadcast->running)
+      broadcast->stop = dispatch_clock - 1;
   } else {
-    ch = broadcast->channel;
-    now = ch ? ch->ch_epg_now : NULL;
     if (broadcast != now && now) {
       now->running = 0;
-      dvr_event_running(ch->ch_epg_now, esrc, 0);
+      dvr_event_running(now, esrc, 0);
     }
   }
   dvr_event_running(broadcast, esrc, running);
