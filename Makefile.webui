@@ -137,6 +137,7 @@ JAVASCRIPT += $(ROOTPATH)/app/tvheadend.js
 CSS_TV += $(ROOTPATH)/tv.css
 JAVASCRIPT_TV += $(EXTJSPATH)/adapter/ext/ext-base$(DEBUG).js
 JAVASCRIPT_TV += $(EXTJSPATH)/ext-all$(DEBUG).js
+JAVASCRIPT_TV += $(ROOTPATH)/app/i18n.js
 JAVASCRIPT_TV += $(ROOTPATH)/tv.js
 
 #
@@ -217,10 +218,12 @@ $(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
 
 $(WEBDIR)/extjs-tv-std.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
 	$(VV)printf 'extjs_lcss(hq, "static/tvh-tv.css.gz");' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
 	$(VV)printf 'extjs_load(hq, "static/tvh-tv.js.gz");' >> $@
 
 $(WEBDIR)/extjs-tv-debug.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
 	$(VV)printf '$(foreach f,$(CSS_TV),extjs_lcss(hq, "$(f)");\r\n)' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
 	$(VV)printf '$(foreach f,$(JAVASCRIPT_TV),extjs_load(hq, "$(f)");\r\n)' >> $@
 
 $(WEBDIR)/$(ROOTPATH)/tvh.js.gz: $(JAVASCRIPT_SRC)
