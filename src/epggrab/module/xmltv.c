@@ -597,7 +597,7 @@ static int _xmltv_parse_programme
   if(stop <= start || stop <= dispatch_clock) return 0;
 
   ec->laststamp = dispatch_clock;
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+  LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
     save |= _xmltv_parse_programme_tags(mod, ch, tags,

@@ -107,6 +107,16 @@ int epggrab_channel_match_number ( epggrab_channel_t *ec, channel_t *ch )
   return 0;
 }
 
+/* Delete ilm */
+static void
+_epgggrab_channel_link_delete(idnode_list_mapping_t *ilm, int delconf)
+{
+  epggrab_channel_t *ec = (epggrab_channel_t *)ilm->ilm_in1;
+  channel_t *ch = (channel_t *)ilm->ilm_in2;
+  tvhdebug(ec->mod->id, "unlinking %s from %s",
+           ec->id, channel_get_name(ch));
+  idnode_list_unlink(ilm, delconf ? ec : NULL);
+}
 
 /* Destroy */
 void
@@ -114,9 +124,9 @@ epggrab_channel_link_delete
   ( epggrab_channel_t *ec, channel_t *ch, int delconf )
 {
   idnode_list_mapping_t *ilm;
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
+  LIST_FOREACH(ilm, &ec->channels, ilm_in1_link)
     if (ilm->ilm_in1 == &ec->idnode && ilm->ilm_in2 == &ch->ch_id) {
-      idnode_list_unlink(ilm, NULL);
+      _epgggrab_channel_link_delete(ilm, delconf);
       return;
     }
 }
@@ -126,7 +136,7 @@ static void epggrab_channel_links_delete( epggrab_channel_t *ec, int delconf )
 {
   idnode_list_mapping_t *ilm;
   while ((ilm = LIST_FIRST(&ec->channels)))
-    idnode_list_unlink(ilm, delconf ? ec : NULL);
+    _epgggrab_channel_link_delete(ilm, delconf);
 }
 
 /* Link epggrab channel to real channel */
@@ -140,7 +150,7 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch, void *origin )
   if (!ch || !ch->ch_enabled) return 0;
 
   /* Already linked */
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
+  LIST_FOREACH(ilm, &ec->channels, ilm_in1_link)
     if (ilm->ilm_in2 == &ch->ch_id)
       return 0;
 
@@ -185,7 +195,7 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
     if (epggrab_conf.channel_rename) {
-      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_name(ch, name))
           channel_save(ch);
@@ -211,7 +221,7 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
     if (epggrab_conf.channel_reicon) {
-      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_icon(ch, icon))
           channel_save(ch);
@@ -235,7 +245,7 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int major, int minor )
   if (ec->lcn != lcn) {
     ec->lcn = lcn;
     if (epggrab_conf.channel_renumber) {
-      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_number(ch,
                                lcn / CHANNEL_SPLIT,
@@ -620,7 +630,7 @@ epggrab_channel_class_only_one_notify ( void *obj, const char *lang )
   idnode_list_mapping_t *ilm1, *ilm2;
   if (ec->only_one) {
     for(ilm1 = LIST_FIRST(&ec->channels); ilm1; ilm1 = ilm2) {
-      ilm2 = LIST_NEXT(ilm1, ilm_in2_link);
+      ilm2 = LIST_NEXT(ilm1, ilm_in1_link);
       ch = (channel_t *)ilm1->ilm_in2;
       if (!first)
         first = ch;
