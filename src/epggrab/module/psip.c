@@ -29,15 +29,22 @@
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
 
+#define PSIP_EPG_TABLE_LIMIT 5
+
+static int _psip_eit_callback(mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid);
+static int _psip_ett_callback(mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid);
+
 /* ************************************************************************
  * Status handling
  * ***********************************************************************/
 
 typedef struct psip_table {
   TAILQ_ENTRY(psip_table) pt_link;
-  uint16_t                pt_pid;
-  uint8_t                 pt_complete;
   mpegts_table_t         *pt_table;
+  time_t                  pt_start;
+  uint16_t                pt_pid;
+  uint16_t                pt_type;
+  uint8_t                 pt_complete;
 } psip_table_t;
 
 typedef struct psip_desc {
@@ -52,8 +59,12 @@ typedef struct psip_status {
   epggrab_ota_map_t       *ps_map;
   int                      ps_refcount;
   epggrab_ota_mux_t       *ps_ota;
+  mpegts_mux_t            *ps_mm;
   TAILQ_HEAD(, psip_table) ps_tables;
   RB_HEAD(, psip_desc)     ps_descs;
+  gtimer_t                 ps_reschedule_timer;
+  uint8_t                  ps_complete;
+  uint8_t                  ps_armed;
 } psip_status_t;
 
 static void
@@ -76,6 +87,7 @@ psip_status_destroy ( mpegts_table_t *mt )
       free(pd->pd_data);
       free(pd);
     }
+    gtimer_disarm(&st->ps_reschedule_timer);
     free(st);
   } else {
     TAILQ_FOREACH(pt, &st->ps_tables, pt_link)
@@ -84,6 +96,172 @@ psip_status_destroy ( mpegts_table_t *mt )
         break;
       }
   }
+}
+
+/* ************************************************************************
+ * Table routines
+ * ***********************************************************************/
+
+#define IS_EIT(t) ((t) >= 0x100 && (t) <= 0x17f)
+#define IS_ETT(t) ((t) == 0x04 || ((t) >= 0x200 && (t) <= 0x27f))
+
+static psip_table_t *
+psip_find_table(psip_status_t *ps, uint16_t pid)
+{
+  psip_table_t *pt;
+  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link)
+    if (pt->pt_pid == pid)
+      return pt;
+  return pt;
+}
+
+static psip_table_t *
+psip_update_table(psip_status_t *ps, uint16_t pid, int type)
+{
+  psip_table_t *pt;
+
+  if (!IS_EIT(type) && !IS_ETT(type))
+    return NULL;
+  pt = psip_find_table(ps, pid);
+  if (pt) {
+    if (pt->pt_type != type && pt->pt_table) {
+      mpegts_table_destroy(pt->pt_table);
+      pt->pt_table = NULL;
+      ps->ps_refcount--;
+      goto assign;
+    }
+    return pt;
+  }
+  pt = calloc(1, sizeof(*pt));
+  TAILQ_INSERT_TAIL(&ps->ps_tables, pt, pt_link);
+  ps->ps_refcount++;
+  pt->pt_pid = pid;
+assign:
+  pt->pt_type = type;
+  pt->pt_complete = 0;
+  return pt;
+}
+
+static mpegts_table_t *
+psip_activate_table(psip_status_t *ps, psip_table_t *pt)
+{
+  mpegts_table_t *mt;
+
+  if (IS_EIT(pt->pt_type)) {
+    /* This is an EIT table */
+    mt =  mpegts_table_add(ps->ps_mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK,
+                          _psip_eit_callback, ps, "aeit",
+                          MT_QUICKREQ | MT_CRC | MT_RECORD, pt->pt_pid,
+                          MPS_WEIGHT_EIT);
+  } else if (IS_ETT(pt->pt_type)) {
+    /* This is an ETT table */
+    mt = mpegts_table_add(ps->ps_mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK,
+                          _psip_ett_callback, ps, "ett",
+                          MT_QUICKREQ | MT_CRC | MT_RECORD, pt->pt_pid,
+                          MPS_WEIGHT_ETT);
+  } else {
+    abort();
+  }
+  pt->pt_start = dispatch_clock;
+  tvhtrace("psip", "table activated - pid 0x%04X", mt->mt_pid);
+  return mt;
+}
+
+#define safecmp(a, b) ((a) > (b) ? 1 : ((a) < (b) ? -1 : 0))
+
+static int
+_reschedule_cmp(const void *_a, const void *_b)
+{
+  const psip_table_t *a = _a, *b = _b;
+  int res = 0, va, vb;
+  if (a->pt_table && b->pt_table)
+    res = safecmp(a->pt_start, b->pt_start);
+  else if (a->pt_table)
+    res = -1;
+  else {
+    res = safecmp(a->pt_start, b->pt_start);
+    if (res == 0) {
+      va = (IS_ETT(a->pt_type) ? 0x10000 : 0) | a->pt_pid;
+      vb = (IS_ETT(b->pt_type) ? 0x10000 : 0) | b->pt_pid;
+      res = va - vb;
+    }
+  }
+  return res;
+}
+
+static void
+psip_reschedule_tables(psip_status_t *ps)
+{
+  psip_table_t **tables, *pt;
+  int total, i;
+
+  ps->ps_armed = 0;
+
+  total = 0;
+  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link)
+    total++;
+  tables = malloc(total * sizeof(psip_table_t *));
+
+  tvhtrace("psip", "reschedule tables, total %d", total);
+
+  i = 0;
+  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link)
+    tables[i++] = pt;
+
+  qsort(tables, total, sizeof(psip_table_t *), _reschedule_cmp);
+
+  for (i = 0; i < total && i < PSIP_EPG_TABLE_LIMIT; i++) {
+    pt = tables[i];
+    if (pt->pt_table)
+      continue;
+    pt->pt_table = psip_activate_table(ps, pt);
+  }
+
+  free(tables);
+}
+
+static void
+psip_reschedule_tables_cb(void *aux)
+{
+  psip_reschedule_tables((psip_status_t *)aux);
+}
+
+static void
+psip_complete_table(psip_status_t *ps, mpegts_table_t *mt)
+{
+  psip_table_t *pt = NULL;
+
+  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link)
+    if (pt->pt_table == mt) {
+      pt->pt_table = NULL;
+      pt->pt_complete = 1;
+      break;
+    }
+
+  tvhtrace("psip", "pid 0x%04X completed, found = %d", mt->mt_pid, pt != NULL);
+
+  mpegts_table_destroy(mt);
+
+  if (pt)
+    gtimer_arm(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, 0);
+
+  if (ps->ps_ota == NULL)
+    return;
+
+  if (ps->ps_complete) {
+    if (!ps->ps_armed) {
+      ps->ps_armed = 1;
+      gtimer_arm(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, 10);
+    }
+    return;
+  }
+
+  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link)
+    if (!pt->pt_complete)
+      return;
+
+  ps->ps_complete = 1;
+  epggrab_ota_complete(ps->ps_mod, ps->ps_ota);
 }
 
 /* ************************************************************************
@@ -232,7 +410,6 @@ _psip_eit_callback
   psip_status_t        *ps  = mt->mt_opaque;
   epggrab_ota_map_t    *map = ps->ps_map;
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
-  epggrab_ota_mux_t    *ota = NULL;
   channel_t            *ch;
   mpegts_service_t     *svc;
   mpegts_psi_table_state_t *st;
@@ -265,7 +442,8 @@ _psip_eit_callback
   }
 
   /* Register interest */
-  ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
+  if (ps->ps_ota == NULL)
+    ps->ps_ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
@@ -284,8 +462,9 @@ _psip_eit_callback
   if (len < 12) goto done;
 
   /* Register this */
-  if (ota)
-    epggrab_ota_service_add(map, ota, idnode_uuid_as_str(&svc->s_id, ubuf), 1);
+  if (ps->ps_ota)
+    epggrab_ota_service_add(map, ps->ps_ota,
+                            idnode_uuid_as_str(&svc->s_id, ubuf), 1);
 
   /* For each associated channels */
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
@@ -300,8 +479,8 @@ _psip_eit_callback
 
 done:
   r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
-  if (ota && !r)
-    epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
+  if (!r)
+    psip_complete_table(ps, mt);
 
   return r;
 }
@@ -383,7 +562,10 @@ _psip_ett_callback
     epg_updated();
 
 done:
-  return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+  r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+  if (!r)
+    psip_complete_table(ps, mt);
+  return r;
 }
 
 
@@ -441,32 +623,14 @@ _psip_mgt_callback
     tvhdebug("psip", "table %d - type 0x%04X, pid 0x%04X, ver 0x%04X, size 0x%08X",
              i, type, tablepid, tablever, tablesize);
 
-    mt = NULL;
-    if (type >= 0x100 && type <= 0x17f) {
-      /* This is an EIT table */
-      mt = mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK,
-                            _psip_eit_callback, ps, "aeit",
-                            MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
-                            MPS_WEIGHT_EIT);
-    } else if (type == 0x04 || (type >= 0x200 && type <= 0x27f)) {
-      /* This is an ETT table */
-      mt = mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK,
-                            _psip_ett_callback, ps, "ett",
-                            MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
-                            MPS_WEIGHT_ETT);
-    } else {
-      /* Skip this table */
-    }
-
-    if (mt && !mt->mt_destroy) {
-      ps->ps_refcount++;
-      mt->mt_destroy = psip_status_destroy;
-    }
+    psip_update_table(ps, tablepid, type);
 
     /* Move on */
     ptr += dlen + 11;
     len -= dlen + 11;
   }
+
+  psip_reschedule_tables(ps);
 
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
@@ -490,6 +654,7 @@ static int _psip_start
   TAILQ_INIT(&ps->ps_tables);
   ps->ps_mod      = map->om_module;
   ps->ps_map      = map;
+  ps->ps_mm       = dm;
 
   pid  = DVB_ATSC_MGT_PID;
   opts = MT_QUICKREQ | MT_RECORD;
