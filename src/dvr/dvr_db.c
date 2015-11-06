@@ -2584,7 +2584,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_TIME,
       .id       = "start_extra",
-      .name     = N_("Extra start time"),
+      .name     = N_("Pre-recording padding"),
       .off      = offsetof(dvr_entry_t, de_start_extra),
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
@@ -2608,7 +2608,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_TIME,
       .id       = "stop_extra",
-      .name     = N_("Extra stop time"),
+      .name     = N_("Post-recording padding"),
       .off      = offsetof(dvr_entry_t, de_stop_extra),
       .list     = dvr_entry_class_extra_list,
       .opts     = PO_SORTKEY,
@@ -2710,7 +2710,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_U32,
       .id       = "retention",
-      .name     = N_("DVR Log retention (days)"),
+      .name     = N_("DVR log retention (days)"),
       .off      = offsetof(dvr_entry_t, de_retention),
       .set      = dvr_entry_class_retention_set,
       .opts     = PO_HIDDEN
