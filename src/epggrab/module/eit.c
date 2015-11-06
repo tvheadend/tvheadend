@@ -625,12 +625,13 @@ _eit_callback
   // TODO: extra ID should probably include onid
 
   /* Register interest */
-  if (tableid == 0x4e || tableid >= 0x50)
+  if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60))
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 11, &st, &sect, &last, &ver);
+  if (r == 0) goto complete;
   if (r < 0) return r;
   if (tableid != 0x4e && r != 1) return r;
   if (st && r > 0) {
@@ -706,7 +707,8 @@ _eit_callback
   
 done:
   r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
-  if (ota && !r)
+complete:
+  if (ota && !r && (tableid >= 0x50 && tableid < 0x60))
     epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
   
   return r;
