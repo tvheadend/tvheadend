@@ -199,7 +199,7 @@ const idclass_t linuxdvb_ca_class =
     {
       .type     = PT_BOOL,
       .id       = "pin_reply",
-      .name     = N_("Reply to CAM PIN enquiries"),
+      .name     = N_("Reply to CAM PIN inquiries"),
       .off      = offsetof(linuxdvb_ca_t, lca_pin_reply),
       .opts     = PO_ADVANCED,
     },
@@ -214,7 +214,7 @@ const idclass_t linuxdvb_ca_class =
     {
       .type     = PT_STR,
       .id       = "pin_match",
-      .name     = N_("PIN enquiry match string"),
+      .name     = N_("PIN inquiry match string"),
       .off      = offsetof(linuxdvb_ca_t, lca_pin_match_str),
       .opts     = PO_ADVANCED,
       .def.s    = "PIN",
