@@ -1680,6 +1680,7 @@ atsc_vct_callback
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
       if (mm->mm_tsid == tsid && (mm == mm_orig || mpegts_mux_alive(mm))) {
         /* Find the service */
+        save = 0;
         if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
           continue;
 

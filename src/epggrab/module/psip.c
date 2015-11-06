@@ -134,7 +134,6 @@ psip_update_table(psip_status_t *ps, uint16_t pid, int type)
   }
   pt = calloc(1, sizeof(*pt));
   TAILQ_INSERT_TAIL(&ps->ps_tables, pt, pt_link);
-  ps->ps_refcount++;
   pt->pt_pid = pid;
 assign:
   pt->pt_type = type;
@@ -162,8 +161,11 @@ psip_activate_table(psip_status_t *ps, psip_table_t *pt)
   } else {
     abort();
   }
+  ps->ps_refcount++;
+  mt->mt_destroy = psip_status_destroy;
   pt->pt_start = dispatch_clock;
-  tvhtrace("psip", "table activated - pid 0x%04X", mt->mt_pid);
+  pt->pt_table = mt;
+  tvhtrace("psip", "table activated - pid 0x%04X type 0x%04X", mt->mt_pid, pt->pt_type);
   return mt;
 }
 
@@ -172,7 +174,8 @@ psip_activate_table(psip_status_t *ps, psip_table_t *pt)
 static int
 _reschedule_cmp(const void *_a, const void *_b)
 {
-  const psip_table_t *a = _a, *b = _b;
+  const psip_table_t *a = *(psip_table_t **)_a;
+  const psip_table_t *b = *(psip_table_t **)_b;
   int res = 0, va, vb;
   if (a->pt_table && b->pt_table)
     res = safecmp(a->pt_start, b->pt_start);
@@ -198,8 +201,14 @@ psip_reschedule_tables(psip_status_t *ps)
   ps->ps_armed = 0;
 
   total = 0;
-  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link)
+  TAILQ_FOREACH(pt, &ps->ps_tables, pt_link) {
     total++;
+    if (pt->pt_start + 10 < dispatch_clock && pt->pt_table) {
+      tvhtrace("psip", "table late: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
+      mpegts_table_destroy(pt->pt_table);
+      pt->pt_table = NULL;
+    }
+  }
   tables = malloc(total * sizeof(psip_table_t *));
 
   tvhtrace("psip", "reschedule tables, total %d", total);
@@ -210,11 +219,16 @@ psip_reschedule_tables(psip_status_t *ps)
 
   qsort(tables, total, sizeof(psip_table_t *), _reschedule_cmp);
 
+  for (i = 0; i < total; i++) {
+    pt = tables[i];
+    tvhtrace("psip", "sorted: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
+  }
+
   for (i = 0; i < total && i < PSIP_EPG_TABLE_LIMIT; i++) {
     pt = tables[i];
     if (pt->pt_table)
       continue;
-    pt->pt_table = psip_activate_table(ps, pt);
+    psip_activate_table(ps, pt);
   }
 
   free(tables);
@@ -357,7 +371,7 @@ _psip_eit_callback_channel
         " stop=%"PRItime_t", ebc=%p",
         ch ? channel_get_name(ch) : "(null)",
         eventid, start, stop, ebc);
-    if (!ebc) continue;
+    if (!ebc) goto next;
     save |= save2;
 
     pd = psip_find_desc(ps, eventid);
@@ -372,6 +386,7 @@ _psip_eit_callback_channel
     ee = epg_broadcast_get_episode(ebc, 1, &save2);
     save |= epg_episode_set_title2(ee, title, mod);
 
+next:
     lang_str_destroy(title);
   }
   return save;
@@ -448,6 +463,7 @@ _psip_eit_callback
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
+  if (r == 0) goto complete;
   if (r != 1) return r;
   tvhtrace("psip", "0x%04x: EIT tsid %04X (%s), ver %d",
 		  mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
@@ -479,6 +495,7 @@ _psip_eit_callback
 
 done:
   r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+complete:
   if (!r)
     psip_complete_table(ps, mt);
 
@@ -521,6 +538,7 @@ _psip_ett_callback
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
+  if (r == 0) goto complete;
   if (r != 1) return r;
 
   sourceid = ptr[6] << 8 | ptr[7];
@@ -563,6 +581,7 @@ _psip_ett_callback
 
 done:
   r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+complete:
   if (!r)
     psip_complete_table(ps, mt);
   return r;
