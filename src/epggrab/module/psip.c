@@ -150,13 +150,13 @@ psip_activate_table(psip_status_t *ps, psip_table_t *pt)
     /* This is an EIT table */
     mt =  mpegts_table_add(ps->ps_mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK,
                           _psip_eit_callback, ps, "aeit",
-                          MT_QUICKREQ | MT_CRC | MT_RECORD, pt->pt_pid,
+                          MT_CRC | MT_RECORD, pt->pt_pid,
                           MPS_WEIGHT_EIT);
   } else if (IS_ETT(pt->pt_type)) {
     /* This is an ETT table */
     mt = mpegts_table_add(ps->ps_mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK,
                           _psip_ett_callback, ps, "ett",
-                          MT_QUICKREQ | MT_CRC | MT_RECORD, pt->pt_pid,
+                          MT_CRC | MT_RECORD, pt->pt_pid,
                           MPS_WEIGHT_ETT);
   } else {
     abort();
@@ -664,7 +664,6 @@ static int _psip_start
   epggrab_module_ota_t *m = map->om_module;
   mpegts_table_t *mt;
   psip_status_t *ps;
-  int pid, opts = 0;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
@@ -675,12 +674,11 @@ static int _psip_start
   ps->ps_map      = map;
   ps->ps_mm       = dm;
 
-  pid  = DVB_ATSC_MGT_PID;
-  opts = MT_QUICKREQ | MT_RECORD;
-
   /* Listen for Master Guide Table */
-  mt = mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback,
-                        ps, "mgt", MT_CRC | opts, pid, MPS_WEIGHT_MGT);
+  mt = mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK,
+                        _psip_mgt_callback, ps, "mgt",
+                        MT_CRC | MT_QUICKREQ | MT_RECORD,
+                        DVB_ATSC_MGT_PID, MPS_WEIGHT_MGT);
   if (mt && !mt->mt_destroy) {
     ps->ps_refcount++;
     mt->mt_destroy = psip_status_destroy;
