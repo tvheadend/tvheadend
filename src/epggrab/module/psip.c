@@ -203,7 +203,7 @@ psip_reschedule_tables(psip_status_t *ps)
   total = 0;
   TAILQ_FOREACH(pt, &ps->ps_tables, pt_link) {
     total++;
-    if (pt->pt_start + 10 < dispatch_clock && pt->pt_table) {
+    if (pt->pt_table && pt->pt_start + 10 < dispatch_clock) {
       tvhtrace("psip", "table late: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
       mpegts_table_destroy(pt->pt_table);
       pt->pt_table = NULL;
@@ -219,10 +219,13 @@ psip_reschedule_tables(psip_status_t *ps)
 
   qsort(tables, total, sizeof(psip_table_t *), _reschedule_cmp);
 
+#if 0
   for (i = 0; i < total; i++) {
     pt = tables[i];
-    tvhtrace("psip", "sorted: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
+    tvhtrace("psip", "sorted: pid = 0x%04X, type = 0x%04X, time = %"PRItime_t", complete %d\n",
+             pt->pt_pid, pt->pt_type, pt->pt_start, pt->pt_complete);
   }
+#endif
 
   for (i = 0; i < total && i < PSIP_EPG_TABLE_LIMIT; i++) {
     pt = tables[i];
@@ -351,6 +354,17 @@ _psip_eit_callback_channel
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
     starttime = ptr[2] << 24 | ptr[3] << 16 | ptr[4] << 8 | ptr[5];
     start = atsc_convert_gpstime(starttime);
+#if 0
+    {
+      static time_t debug_start = 0;
+      static time_t debug_off;
+      if (debug_start == 0) {
+        debug_start = dispatch_clock;
+        debug_off = start - (10 * 24 * 3600ULL);
+      }
+      start = debug_start + (start - debug_off);
+    }
+#endif
     length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
     stop = start + length;
     titlelen = ptr[9];
@@ -363,14 +377,13 @@ _psip_eit_callback_channel
     title = atsc_get_string(ptr+10, titlelen);
     if (title == NULL) continue;
 
-    tvhtrace("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
-      i, eventid, start, length, lang_str_get(title, NULL), titlelen);
+    tvhtrace("psip", "  %03d: [%s] eventid 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
+             i, ch ? channel_get_name(ch) : "(null)", eventid, start, length,
+             lang_str_get(title, NULL), titlelen);
 
     ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
-    tvhtrace("psip", "  ch='%s', eid=%5d, start=%"PRItime_t","
-        " stop=%"PRItime_t", ebc=%p",
-        ch ? channel_get_name(ch) : "(null)",
-        eventid, start, stop, ebc);
+    tvhtrace("psip", "  eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
+             eventid, start, stop, ebc);
     if (!ebc) goto next;
     save |= save2;
 
@@ -508,7 +521,7 @@ _psip_ett_callback
 {
   int r;
   int sect, last, ver;
-  int save = 0;
+  int save = 0, found = 0;
   uint16_t tsid;
   uint32_t extraid, sourceid, eventid;
   int isevent;
@@ -520,6 +533,8 @@ _psip_ett_callback
   mpegts_psi_table_state_t *st;
   th_subscription_t    *ths;
   lang_str_t *description;
+  idnode_list_mapping_t *ilm;
+  channel_t            *ch;
 
   /* Validate */
   if (tableid != 0xcc) return -1;
@@ -541,8 +556,8 @@ _psip_ett_callback
   if (r == 0) goto complete;
   if (r != 1) return r;
 
-  sourceid = ptr[6] << 8 | ptr[7];
-  eventid = ptr[8] << 8 | ptr[9] >> 2;
+  sourceid = (ptr[6] << 8) | ptr[7];
+  eventid = (ptr[8] << 8)  | ((ptr[9] >> 2) & 0x3f);
   isevent = (ptr[9] & 0x2) >> 1;
 
   /* Look up channel based on the source id */
@@ -562,18 +577,27 @@ _psip_ett_callback
   if (!isevent) {
     tvhtrace("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
-    channel_t *ch = (channel_t *)LIST_FIRST(&svc->s_channels)->ilm_in2;
-    epg_broadcast_t *ebc;
-    ebc = epg_broadcast_find_by_eid(ch, eventid);
-    if (ebc) {
-      description = atsc_get_string(ptr+10, len-10);
-      save |= epg_broadcast_set_description2(ebc, description, mod);
-      lang_str_destroy(description);
-      tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, lang_str_get(ebc->episode->title, "eng"), ver);
-    } else {
-      tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver);
+    found = 1;
+    description = atsc_get_string(ptr+10, len-10);
+    LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
+      ch = (channel_t *)ilm->ilm_in2;
+      epg_broadcast_t *ebc;
+      ebc = epg_broadcast_find_by_eid(ch, eventid);
+      if (ebc) {
+        save |= epg_broadcast_set_description2(ebc, description, mod);
+        tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d",
+                 mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid,
+                 lang_str_get(ebc->episode->title, "eng"), ver);
+      } else {
+        found = 0;
+      }
+    }
+    if (found == 0) {
+      tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found [%.80s]",
+               mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver, lang_str_get(description, NULL));
       psip_add_desc(ps, eventid, ptr+10, len-10);
     }
+    lang_str_destroy(description);
   }
 
   if (save)
