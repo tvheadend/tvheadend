@@ -2,6 +2,7 @@
  *  Electronic Program Guide - psip grabber
  *  Copyright (C) 2012 Adam Sutton
  *                2014 Lauri Mylläri
+ *                2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,12 +40,20 @@ typedef struct psip_table {
   mpegts_table_t         *pt_table;
 } psip_table_t;
 
+typedef struct psip_desc {
+  RB_ENTRY(psip_desc)     pd_link;
+  uint16_t                pd_eventid;
+  uint8_t                *pd_data;
+  uint32_t                pd_datalen;
+} psip_desc_t;
+
 typedef struct psip_status {
   epggrab_module_ota_t    *ps_mod;
   epggrab_ota_map_t       *ps_map;
   int                      ps_refcount;
   epggrab_ota_mux_t       *ps_ota;
   TAILQ_HEAD(, psip_table) ps_tables;
+  RB_HEAD(, psip_desc)     ps_descs;
 } psip_status_t;
 
 static void
@@ -52,6 +61,7 @@ psip_status_destroy ( mpegts_table_t *mt )
 {
   psip_status_t *st = mt->mt_opaque;
   psip_table_t *pt;
+  psip_desc_t *pd;
 
   lock_assert(&global_lock);
   assert(st->ps_refcount > 0);
@@ -60,6 +70,11 @@ psip_status_destroy ( mpegts_table_t *mt )
     while ((pt = TAILQ_FIRST(&st->ps_tables)) != NULL) {
       TAILQ_REMOVE(&st->ps_tables, pt, pt_link);
       free(pt);
+    }
+    while ((pd = RB_FIRST(&st->ps_descs)) != NULL) {
+      RB_REMOVE(&st->ps_descs, pd, pd_link);
+      free(pd->pd_data);
+      free(pd);
     }
     free(st);
   } else {
@@ -72,12 +87,61 @@ psip_status_destroy ( mpegts_table_t *mt )
 }
 
 /* ************************************************************************
+ * Description routines
+ * ***********************************************************************/
+
+/* Compare language codes */
+static int _desc_cmp ( void *a, void *b )
+{
+  return (int)(((psip_desc_t*)a)->pd_eventid) -
+         (int)(((psip_desc_t*)b)->pd_eventid);
+}
+
+static psip_desc_t *psip_find_desc(psip_status_t *ps, uint16_t eventid)
+{
+  psip_desc_t *pd, _tmp;
+
+  _tmp.pd_eventid = eventid;
+  pd = RB_FIND(&ps->ps_descs, &_tmp, pd_link, _desc_cmp);
+  return pd;
+}
+
+static void psip_remove_desc(psip_status_t *ps, uint16_t eventid)
+{
+  psip_desc_t *pd = psip_find_desc(ps, eventid);
+  if (pd) {
+    RB_REMOVE(&ps->ps_descs, pd, pd_link);
+    free(pd->pd_data);
+    free(pd);
+  }
+}
+
+static void psip_add_desc
+  (psip_status_t *ps, uint16_t eventid, const uint8_t *data, uint32_t datalen)
+{
+  psip_desc_t *pc, *pd = calloc(1, sizeof(*pd));
+
+  pd->pd_eventid = eventid;
+  pc = RB_INSERT_SORTED(&ps->ps_descs, pd, pd_link, _desc_cmp);
+  if (pc) {
+    free(pd);
+    pd = pc;
+    if (pd->pd_datalen == datalen && memcmp(pd->pd_data, data, datalen) == 0)
+      return;
+    free(pd->pd_data);
+  }
+  pd->pd_data = malloc(datalen);
+  memcpy(pd->pd_data, data, datalen);
+  pd->pd_datalen = datalen;
+}
+
+/* ************************************************************************
  * EIT Event
  * ***********************************************************************/
 
 static int
 _psip_eit_callback_channel
-  (epggrab_module_t *mod, channel_t *ch, const uint8_t *ptr, int len, int count)
+  (psip_status_t *ps, channel_t *ch, const uint8_t *ptr, int len, int count)
 {
   uint16_t eventid;
   uint32_t starttime, length;
@@ -88,7 +152,9 @@ _psip_eit_callback_channel
   char buf[512];
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
-  lang_str_t *title;
+  lang_str_t *title, *description;
+  psip_desc_t *pd;
+  epggrab_module_t *mod = (epggrab_module_t *)ps->ps_mod;
 
   for (i = 0; len >= 12 && i < count; len -= size, ptr += size, i++) {
     eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
@@ -103,7 +169,7 @@ _psip_eit_callback_channel
 
     if (size > len) break;
 
-    atsc_get_string(buf, sizeof(buf), &ptr[10], titlelen, "eng");
+    atsc_get_string(buf, sizeof(buf), ptr+10, titlelen, "eng");
 
     tvhtrace("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
       i, eventid, start, length, buf, titlelen);
@@ -119,12 +185,40 @@ _psip_eit_callback_channel
     title = lang_str_create();
     lang_str_add(title, buf, "eng", 0);
 
+    pd = psip_find_desc(ps, eventid);
+    if (pd) {
+      description = lang_str_create();
+      atsc_get_string(buf, sizeof(buf), pd->pd_data, pd->pd_datalen, "eng");
+      lang_str_add(description, buf, "eng", 0);
+      save |= epg_broadcast_set_description2(ebc, description, mod);
+      lang_str_destroy(description);
+    }
+
     ee = epg_broadcast_get_episode(ebc, 1, &save2);
     save |= epg_episode_set_title2(ee, title, mod);
 
     lang_str_destroy(title);
   }
   return save;
+}
+
+static void
+_psip_eit_callback_cleanup
+  (psip_status_t *ps, const uint8_t *ptr, int len, int count)
+{
+  uint16_t eventid;
+  int i, size;
+  uint8_t titlelen;
+  unsigned int dlen;
+
+  for (i = 0; len >= 12 && i < count; len -= size, ptr += size, i++) {
+    eventid = (ptr[0] & 0x3f) << 8 | ptr[1];
+    titlelen = ptr[9];
+    dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
+    size = titlelen + dlen + 12;
+    if (size > len) break;
+    psip_remove_desc(ps, eventid);
+  }
 }
 
 static int
@@ -138,7 +232,8 @@ _psip_eit_callback
   uint16_t tsid;
   uint32_t extraid;
   mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
+  psip_status_t        *ps  = mt->mt_opaque;
+  epggrab_ota_map_t    *map = ps->ps_map;
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   epggrab_ota_mux_t    *ota = NULL;
   channel_t            *ch;
@@ -199,8 +294,9 @@ _psip_eit_callback
   LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
-    save |= _psip_eit_callback_channel(mod, ch, ptr, len, count);
+    save |= _psip_eit_callback_channel(ps, ch, ptr, len, count);
   }
+  _psip_eit_callback_cleanup(ps, ptr, len, count);
 
   if (save)
     epg_updated();
@@ -269,8 +365,6 @@ _psip_ett_callback
   if (!LIST_FIRST(&svc->s_channels))
     goto done;
 
-  atsc_get_string(buf, sizeof(buf), ptr+10, len-4, "eng"); // FIXME: len does not account for previous bytes
-
   if (!isevent) {
     tvhtrace("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
   } else {
@@ -280,16 +374,16 @@ _psip_ett_callback
     if (ebc) {
       lang_str_t *description;
       description = lang_str_create();
+      atsc_get_string(buf, sizeof(buf), ptr+10, len-10, "eng");
       lang_str_add(description, buf, "eng", 0);
       save |= epg_broadcast_set_description2(ebc, description, mod);
       lang_str_destroy(description);
       tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, lang_str_get(ebc->episode->title, "eng"), ver);
     } else {
       tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d), ver %d - no matching broadcast found", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, ver);
+      psip_add_desc(ps, eventid, ptr+10, len-10);
     }
   }
-
-  tvhtrace("psip", "        text message: '%s'", buf);
 
   if (save)
     epg_updated();
