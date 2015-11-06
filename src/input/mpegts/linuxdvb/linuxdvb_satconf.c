@@ -211,7 +211,7 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
 const idclass_t linuxdvb_satconf_class =
 {
   .ic_class      = "linuxdvb_satconf",
-  .ic_caption    = N_("DVB-S sat configuration"),
+  .ic_caption    = N_("DVB-S satellite configuration"),
   .ic_event      = "linuxdvb_satconf",
   .ic_get_title  = linuxdvb_satconf_class_get_title,
   .ic_save       = linuxdvb_satconf_class_save,
