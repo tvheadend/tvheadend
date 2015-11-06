@@ -38,7 +38,7 @@ const idclass_t mpegts_mux_instance_class =
 {
   .ic_super      = &tvh_input_instance_class,
   .ic_class      = "mpegts_mux_instance",
-  .ic_caption    = N_("MPEG-TS Multiplex Phy"),
+  .ic_caption    = N_("MPEG-TS multiplex PHY"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 
@@ -485,7 +485,7 @@ mpegts_mux_ac3_list ( void *o, const char *lang )
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
-  .ic_caption    = N_("MPEG-TS Multiplex"),
+  .ic_caption    = N_("MPEG-TS multiplex"),
   .ic_event      = "mpegts_mux",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_mux_class_save,
@@ -503,7 +503,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "epg",
-      .name     = N_("EPG Scan"),
+      .name     = N_("EPG scan"),
       .off      = offsetof(mpegts_mux_t, mm_epg),
       .def.i    = MM_EPG_ENABLE,
       .list     = mpegts_mux_epg_list,
@@ -532,28 +532,28 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_U16,
       .id       = "onid",
-      .name     = N_("Original Network ID"),
+      .name     = N_("Original network ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_onid),
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
-      .name     = N_("Transport Stream ID"),
+      .name     = N_("Transport stream ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_mux_t, mm_tsid),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
-      .name     = N_("CRID Authority"),
+      .name     = N_("CRID authority"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {
       .type     = PT_INT,
       .id       = "scan_state",
-      .name     = N_("Scan Status"),
+      .name     = N_("Scan status"),
       .off      = offsetof(mpegts_mux_t, mm_scan_state),
       .set      = mpegts_mux_class_scan_state_set,
       .list     = mpegts_mux_class_scan_state_enum,
@@ -562,7 +562,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "scan_result",
-      .name     = N_("Scan Result"),
+      .name     = N_("Scan result"),
       .off      = offsetof(mpegts_mux_t, mm_scan_result),
       .opts     = PO_RDONLY | PO_SORTKEY,
       .list     = mpegts_mux_class_scan_result_enum,
@@ -570,7 +570,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = N_("Character Set"),
+      .name     = N_("Character set"),
       .off      = offsetof(mpegts_mux_t, mm_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -592,7 +592,7 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "pmt_06_ac3",
-      .name     = N_("AC-3 Detection"),
+      .name     = N_("AC-3 detection"),
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,

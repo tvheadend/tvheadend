@@ -922,7 +922,7 @@ dvr_autorec_entry_class_owner_opts(void *o)
 
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
-  .ic_caption    = N_("DVR Auto-Record Entry"),
+  .ic_caption    = N_("DVR Auto-record entry"),
   .ic_event      = "dvrautorec",
   .ic_save       = dvr_autorec_entry_class_save,
   .ic_get_title  = dvr_autorec_entry_class_get_title,
@@ -972,7 +972,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "tag",
-      .name     = N_("Channel Tag"),
+      .name     = N_("Channel tag"),
       .set      = dvr_autorec_entry_class_tag_set,
       .get      = dvr_autorec_entry_class_tag_get,
       .rend     = dvr_autorec_entry_class_tag_rend,
@@ -981,7 +981,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start",
-      .name     = N_("Start After"),
+      .name     = N_("Start after"),
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -990,7 +990,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "start_window",
-      .name     = N_("Start Before"),
+      .name     = N_("Start before"),
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -999,7 +999,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_TIME,
       .id       = "start_extra",
-      .name     = N_("Extra Start Time"),
+      .name     = N_("Extra start time"),
       .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
       .list     = dvr_autorec_entry_class_extra_list,
       .opts     = PO_DURATION | PO_SORTKEY
@@ -1007,7 +1007,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_TIME,
       .id       = "stop_extra",
-      .name     = N_("Extra Stop Time"),
+      .name     = N_("Extra stop time"),
       .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
       .list     = dvr_autorec_entry_class_extra_list,
       .opts     = PO_DURATION | PO_SORTKEY
@@ -1026,21 +1026,21 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_INT,
       .id       = "minduration",
-      .name     = N_("Minimum Duration"),
+      .name     = N_("Minimum duration"),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
     },
     {
       .type     = PT_INT,
       .id       = "maxduration",
-      .name     = N_("Maximum Duration"),
+      .name     = N_("Maximum duration"),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
     },
     {
       .type     = PT_U32,
       .id       = "content_type",
-      .name     = N_("Content Type"),
+      .name     = N_("Content type"),
       .list     = dvr_autorec_entry_class_content_type_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
     },
@@ -1055,7 +1055,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "record",
-      .name     = N_("Duplicate Handling"),
+      .name     = N_("Duplicate handling"),
       .def.i    = DVR_AUTOREC_RECORD_ALL,
       .off      = offsetof(dvr_autorec_entry_t, dae_record),
       .list     = dvr_autorec_entry_class_dedup_list,
@@ -1063,7 +1063,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "retention",
-      .name     = N_("DVR Log Retention (days)"),
+      .name     = N_("DVR Log retention (days)"),
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
       .opts     = PO_HIDDEN,
     },
@@ -1091,7 +1091,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "config_name",
-      .name     = N_("DVR Configuration"),
+      .name     = N_("DVR configuration"),
       .set      = dvr_autorec_entry_class_config_name_set,
       .get      = dvr_autorec_entry_class_config_name_get,
       .rend     = dvr_autorec_entry_class_config_name_rend,
@@ -1116,7 +1116,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "serieslink",
-      .name     = N_("Series Link"),
+      .name     = N_("Series link"),
       .set      = dvr_autorec_entry_class_series_link_set,
       .get      = dvr_autorec_entry_class_series_link_get,
       .opts     = PO_RDONLY,

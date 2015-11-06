@@ -125,7 +125,7 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = N_("Streaming Priority"),
+      .name     = N_("Streaming priority"),
       .off      = offsetof(iptv_mux_t, mm_iptv_streaming_priority),
       .def.i    = 0,
       .opts     = PO_ADVANCED
@@ -159,7 +159,7 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_STR,
       .id       = "iptv_muxname",
-      .name     = N_("Mux Name"),
+      .name     = N_("Mux name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
     },
     {
@@ -172,13 +172,13 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_STR,
       .id       = "iptv_sname",
-      .name     = N_("Service Name"),
+      .name     = N_("Service name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
     },
     {
       .type     = PT_STR,
       .id       = "iptv_epgid",
-      .name     = N_("EPG Name"),
+      .name     = N_("EPG name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_epgid),
     },
     {

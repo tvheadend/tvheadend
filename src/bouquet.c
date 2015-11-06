@@ -830,7 +830,7 @@ static char *
 bouquet_class_services_rend ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
-  const char *sc = N_("Services Count %zi");
+  const char *sc = N_("Services count %zi");
   char buf[32];
   snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, sc), bq->bq_services->is_count);
   return strdup(buf);
@@ -892,42 +892,42 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_BOOL,
       .id       = "maptoch",
-      .name     = N_("Auto-Map to Channels"),
+      .name     = N_("Auto-Map to channels"),
       .off      = offsetof(bouquet_t, bq_maptoch),
       .notify   = bouquet_class_maptoch_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapnolcn",
-      .name     = N_("Map Zero Numbers"),
+      .name     = N_("Map zero numbers"),
       .off      = offsetof(bouquet_t, bq_mapnolcn),
       .notify   = bouquet_class_mapnolcn_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapnoname",
-      .name     = N_("Map No Name"),
+      .name     = N_("Map no name"),
       .off      = offsetof(bouquet_t, bq_mapnoname),
       .notify   = bouquet_class_mapnoname_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapradio",
-      .name     = N_("Map Radio"),
+      .name     = N_("Map radio"),
       .off      = offsetof(bouquet_t, bq_mapradio),
       .notify   = bouquet_class_mapradio_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "chtag",
-      .name     = N_("Create Tag"),
+      .name     = N_("Create tag"),
       .off      = offsetof(bouquet_t, bq_chtag),
       .notify   = bouquet_class_chtag_notify,
     },
     {
       .type     = PT_STR,
       .id       = "chtag_ref",
-      .name     = N_("Channel Tag Reference"),
+      .name     = N_("Channel tag reference"),
       .get      = bouquet_class_chtag_ref_get,
       .set      = bouquet_class_chtag_ref_set,
       .rend     = bouquet_class_chtag_ref_rend,
@@ -984,7 +984,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "services_seen",
-      .name     = N_("# Services Seen"),
+      .name     = N_("# Services seen"),
       .off      = offsetof(bouquet_t, bq_services_seen),
       .opts     = PO_RDONLY,
     },
@@ -1004,7 +1004,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "lcn_off",
-      .name     = N_("Channel Number Offset"),
+      .name     = N_("Channel number offset"),
       .off      = offsetof(bouquet_t, bq_lcn_offset),
       .notify   = bouquet_class_lcn_offset_notify,
     },

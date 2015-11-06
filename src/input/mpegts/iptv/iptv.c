@@ -141,7 +141,7 @@ extern const idclass_t mpegts_input_class;
 const idclass_t iptv_input_class = {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "iptv_input",
-  .ic_caption    = N_("IPTV Input"),
+  .ic_caption    = N_("IPTV input"),
   .ic_get_title  = iptv_input_class_get_title,
   .ic_properties = (const property_t[]){
     {}
@@ -576,13 +576,13 @@ extern const idclass_t mpegts_network_class;
 const idclass_t iptv_network_class = {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "iptv_network",
-  .ic_caption    = N_("IPTV Network"),
+  .ic_caption    = N_("IPTV network"),
   .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "scan_create",
-      .name     = N_("Scan After Create"),
+      .name     = N_("Scan after create"),
       .off      = offsetof(iptv_network_t, in_scan_create),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -606,7 +606,7 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = N_("Streaming Priority"),
+      .name     = N_("Streaming priority"),
       .off      = offsetof(iptv_network_t, in_streaming_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -614,14 +614,14 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_U32,
       .id       = "max_streams",
-      .name     = N_("Maximum Input Streams"),
+      .name     = N_("Maximum input streams"),
       .off      = offsetof(iptv_network_t, in_max_streams),
       .def.i    = 0,
     },
     {
       .type     = PT_U32,
       .id       = "max_bandwidth",
-      .name     = N_("Maximum Bandwidth (Kbps)"),
+      .name     = N_("Maximum bandwidth (Kbps)"),
       .off      = offsetof(iptv_network_t, in_max_bandwidth),
       .def.i    = 0,
     },

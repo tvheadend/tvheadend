@@ -170,7 +170,7 @@ caclient_class_get_title ( idnode_t *in, const char *lang )
   static char buf[32];
   if (cac->cac_name && cac->cac_name[0])
     return cac->cac_name;
-  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("CA Client %i")), cac->cac_index);
+  snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, N_("CA client %i")), cac->cac_index);
   return buf;
 }
 
@@ -233,7 +233,7 @@ caclient_class_status_get(void *o)
 const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
-  .ic_caption    = N_("Conditional Access Client"),
+  .ic_caption    = N_("Conditional access client"),
   .ic_save       = caclient_class_save,
   .ic_event      = "caclient",
   .ic_get_title  = caclient_class_get_title,
@@ -265,7 +265,7 @@ const idclass_t caclient_class =
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = N_("Client Name"),
+      .name     = N_("Client name"),
       .off      = offsetof(caclient_t, cac_name),
       .notify   = idnode_notify_title_changed,
     },

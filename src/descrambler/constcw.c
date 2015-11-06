@@ -282,7 +282,7 @@ const idclass_t caclient_ccw_des_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_des",
-  .ic_caption    = N_("DES Constant Code Word Client"),
+  .ic_caption    = N_("DES constant code word client"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
@@ -319,7 +319,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_STR,
       .id       = "key_even",
-      .name     = N_("Even Key"),
+      .name     = N_("Even key"),
       .set      = constcw_class_key_even_set,
       .get      = constcw_class_key_even_get,
       .opts     = PO_PASSWORD,
@@ -328,7 +328,7 @@ const idclass_t caclient_ccw_des_class =
     {
       .type     = PT_STR,
       .id       = "key_odd",
-      .name     = N_("Odd Key"),
+      .name     = N_("Odd key"),
       .set      = constcw_class_key_odd_set,
       .get      = constcw_class_key_odd_get,
       .opts     = PO_PASSWORD,
@@ -342,7 +342,7 @@ const idclass_t caclient_ccw_aes_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_aes",
-  .ic_caption    = N_("AES Constant Code Word Client"),
+  .ic_caption    = N_("AES constant code word client"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
@@ -379,7 +379,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_STR,
       .id       = "key_even",
-      .name     = N_("Even Key"),
+      .name     = N_("Even key"),
       .set      = constcw_class_key_even_set,
       .get      = constcw_class_key_even_get,
       .opts     = PO_PASSWORD,
@@ -388,7 +388,7 @@ const idclass_t caclient_ccw_aes_class =
     {
       .type     = PT_STR,
       .id       = "key_odd",
-      .name     = N_("Odd Key"),
+      .name     = N_("Odd key"),
       .set      = constcw_class_key_odd_set,
       .get      = constcw_class_key_odd_get,
       .opts     = PO_PASSWORD,

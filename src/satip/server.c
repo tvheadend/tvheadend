@@ -556,7 +556,7 @@ static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
 const idclass_t satip_server_class = {
   .ic_snode      = (idnode_t *)&satip_server_conf,
   .ic_class      = "satip_server",
-  .ic_caption    = N_("SAT>IP Server"),
+  .ic_caption    = N_("SAT>IP server"),
   .ic_event      = "satip_server",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = satip_server_class_save,
@@ -566,7 +566,7 @@ const idclass_t satip_server_class = {
          .number = 1,
       },
       {
-         .name   = N_("Exported Tuners"),
+         .name   = N_("Exported tuners"),
          .number = 2,
       },
       {}
@@ -590,14 +590,14 @@ const idclass_t satip_server_class = {
     {
       .type   = PT_INT,
       .id     = "satip_weight",
-      .name   = N_("Subscription Weight"),
+      .name   = N_("Subscription weight"),
       .off    = offsetof(struct satip_server_conf, satip_weight),
       .group  = 1,
     },
     {
       .type   = PT_INT,
       .id     = "satip_descramble",
-      .name   = N_("Descramble Services (Limit Per Mux)"),
+      .name   = N_("Descramble services (limit per mux)"),
       .off    = offsetof(struct satip_server_conf, satip_descramble),
       .group  = 1,
     },
@@ -611,7 +611,7 @@ const idclass_t satip_server_class = {
     {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
-      .name   = N_("Mux Handling"),
+      .name   = N_("Mux handling"),
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
       .group  = 1,

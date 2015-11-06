@@ -1909,19 +1909,19 @@ const idclass_t config_class = {
          .number = 1,
       },
       {
-         .name   = N_("Language Settings"),
+         .name   = N_("Language settings"),
          .number = 2,
       },
       {
-         .name   = N_("Web User Interface"),
+         .name   = N_("Web user interface"),
          .number = 3,
       },
       {
-         .name   = N_("DVB Scan Files"),
+         .name   = N_("DVB scan files"),
          .number = 4,
       },
       {
-         .name   = N_("Time Update"),
+         .name   = N_("Time update"),
          .number = 5,
       },
       {
@@ -1964,7 +1964,7 @@ const idclass_t config_class = {
     {
       .type   = PT_STR,
       .id     = "cors_origin",
-      .name   = N_("HTTP CORS Origin"),
+      .name   = N_("HTTP CORS origin"),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .group  = 1

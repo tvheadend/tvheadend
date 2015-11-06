@@ -105,7 +105,7 @@ static int epggrab_mod_class_type_set(void *o, const void *v)
 
 const idclass_t epggrab_mod_class = {
   .ic_class      = "epggrab_mod",
-  .ic_caption    = N_("EPG Grabber"),
+  .ic_caption    = N_("EPG grabber"),
   .ic_event      = "epggrab_mod",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = epggrab_mod_class_title,
@@ -156,7 +156,7 @@ const idclass_t epggrab_mod_class = {
 const idclass_t epggrab_class_mod_int = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_int",
-  .ic_caption    = N_("Internal EPG Grabber"),
+  .ic_caption    = N_("Internal EPG grabber"),
   .ic_properties = (const property_t[]){
     {
       .type   = PT_STR,
@@ -180,7 +180,7 @@ const idclass_t epggrab_class_mod_int = {
 const idclass_t epggrab_class_mod_ext = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ext",
-  .ic_caption    = N_("External EPG Grabber"),
+  .ic_caption    = N_("External EPG grabber"),
   .ic_properties = (const property_t[]){
     {
       .type   = PT_STR,
@@ -197,7 +197,7 @@ const idclass_t epggrab_class_mod_ext = {
 const idclass_t epggrab_class_mod_ota = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ota",
-  .ic_caption    = N_("Over-the-air EPG Grabber"),
+  .ic_caption    = N_("Over-the-air EPG grabber"),
   .ic_properties = (const property_t[]){
     {}
   }

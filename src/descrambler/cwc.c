@@ -1733,7 +1733,7 @@ const idclass_t caclient_cwc_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_cwc",
-  .ic_caption    = N_("Code Word Client (newcamd)"),
+  .ic_caption    = N_("Code word client (newcamd)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -1751,7 +1751,7 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_STR,
       .id       = "hostname",
-      .name     = N_("Hostname/IP"),
+      .name     = N_("Host name/IP"),
       .off      = offsetof(cwc_t, cwc_hostname),
       .def.s    = "localhost",
     },
@@ -1773,14 +1773,14 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_BOOL,
       .id       = "emm",
-      .name     = N_("Update Card (EMM)"),
+      .name     = N_("Update card (EMM)"),
       .off      = offsetof(cwc_t, cwc_emm),
       .def.i    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "emmex",
-      .name     = N_("One Mux (EMM)"),
+      .name     = N_("One mux (EMM)"),
       .off      = offsetof(cwc_t, cwc_emmex),
       .def.i    = 1
     },

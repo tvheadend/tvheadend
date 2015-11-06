@@ -73,7 +73,7 @@ static void imagecache_save(idnode_t *self);
 const idclass_t imagecache_class = {
   .ic_snode      = (idnode_t *)&imagecache_conf,
   .ic_class      = "imagecache",
-  .ic_caption    = N_("Image Cache"),
+  .ic_caption    = N_("Image cache"),
   .ic_event      = "imagecache",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = imagecache_save,

@@ -89,20 +89,20 @@ extern const idclass_t linuxdvb_diseqc_class;
 const idclass_t linuxdvb_rotor_class = {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_rotor",
-  .ic_caption     = N_("DiseqC Rotor"),
+  .ic_caption     = N_("DiseqC rotor"),
   .ic_get_title   = linuxdvb_rotor_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
       .type    = PT_U32,
       .id      = "powerup_time",
-      .name    = N_("Powerup Time (ms) (15-200)"),
+      .name    = N_("Power-up time (ms) (15-200)"),
       .off     = offsetof(linuxdvb_rotor_t, lr_powerup_time),
       .def.u32 = 100,
     },
     {
       .type    = PT_U32,
       .id      = "cmd_time",
-      .name    = N_("Command Time (ms) (10-100)"),
+      .name    = N_("Command time (ms) (10-100)"),
       .off     = offsetof(linuxdvb_rotor_t, lr_cmd_time),
       .def.u32 = 25
     },
@@ -114,18 +114,18 @@ const idclass_t linuxdvb_rotor_gotox_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_gotox",
-  .ic_caption     = N_("GOTOX Rotor"),
+  .ic_caption     = N_("GOTOX rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
       .id     = "position",
-      .name   = N_("GOTOX Position"),
+      .name   = N_("GOTOX position"),
       .off    = offsetof(linuxdvb_rotor_t, lr_position),
     },
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
-      .name   = N_("Satellite Longitude"),
+      .name   = N_("Satellite longitude"),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {}

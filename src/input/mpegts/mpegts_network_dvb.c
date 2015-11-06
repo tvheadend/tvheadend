@@ -187,7 +187,7 @@ const idclass_t dvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "dvb_network",
-  .ic_caption    = N_("LinuxDVB Network"),
+  .ic_caption    = N_("LinuxDVB network"),
   .ic_delete     = dvb_network_class_delete,
   .ic_properties = (const property_t[]){
     {}
@@ -198,12 +198,12 @@ const idclass_t dvb_network_dvbt_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbt",
-  .ic_caption    = N_("DVB-T Network"),
+  .ic_caption    = N_("DVB-T network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbt_class_scanfile_list,
@@ -217,12 +217,12 @@ const idclass_t dvb_network_dvbc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbc",
-  .ic_caption    = N_("DVB-C Network"),
+  .ic_caption    = N_("DVB-C network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbc_class_scanfile_list,
@@ -236,12 +236,12 @@ const idclass_t dvb_network_dvbs_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbs",
-  .ic_caption    = N_("DVB-S Network"),
+  .ic_caption    = N_("DVB-S network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbs_class_scanfile_list,
@@ -250,7 +250,7 @@ const idclass_t dvb_network_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "orbital_pos",
-      .name     = N_("Orbital Position"),
+      .name     = N_("Orbital position"),
       .set      = dvb_network_class_orbital_pos_set,
       .get      = dvb_network_class_orbital_pos_get,
       .list     = dvb_network_class_orbital_pos_list,
@@ -263,12 +263,12 @@ const idclass_t dvb_network_atsc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc",
-  .ic_caption    = N_("ATSC Network"),
+  .ic_caption    = N_("ATSC network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_atsc_class_scanfile_list,

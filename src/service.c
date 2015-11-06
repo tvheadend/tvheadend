@@ -139,8 +139,8 @@ static htsmsg_t *
 service_class_auto_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Auto Check Enabled"),  0 },
-    { N_("Auto Check Disabled"), 1 },
+    { N_("Auto check enabled"),  0 },
+    { N_("Auto check disabled"), 1 },
     { N_("Missing In PAT/SDT"),  2 }
   };
   return strtab2htsmsg(tab, 1, lang);
@@ -165,7 +165,7 @@ const idclass_t service_class = {
     {
       .type     = PT_INT,
       .id       = "auto",
-      .name     = N_("Automatic Checking"),
+      .name     = N_("Automatic checking"),
       .list     = service_class_auto_list,
       .off      = offsetof(service_t, s_auto),
     },
@@ -206,7 +206,7 @@ const idclass_t service_class = {
 
 const idclass_t service_raw_class = {
   .ic_class      = "service_raw",
-  .ic_caption    = N_("Service Raw"),
+  .ic_caption    = N_("Service raw"),
   .ic_event      = "service_raw",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_delete     = service_class_delete,
