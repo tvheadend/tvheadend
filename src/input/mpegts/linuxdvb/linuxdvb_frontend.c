@@ -103,7 +103,7 @@ const idclass_t linuxdvb_frontend_class =
     {
       .type     = PT_U32,
       .id       = "tune_repeats",
-      .name     = N_("Tune repeats"),
+      .name     = N_("# tune repeats"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_tune_repeats),
     },
