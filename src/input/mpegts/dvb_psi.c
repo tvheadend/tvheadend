@@ -1627,10 +1627,12 @@ atsc_vct_callback
   uint16_t tsid, sid, type;
   uint16_t srcid;
   char chname[256];
+  const char *x;
   mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm;
   mpegts_network_t *mn = mm->mm_network;
   mpegts_service_t *s;
   mpegts_psi_table_state_t *st  = NULL;
+  lang_str_t *ls;
 
   /* Validate */
   if (tableid != 0xc8 && tableid != 0xc9) return -1;
@@ -1681,6 +1683,27 @@ atsc_vct_callback
         if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
           continue;
 
+        for (j=0; j < dlen; ) {
+          unsigned int len, tag;
+          tag = ptr[32+j];
+          len = ptr[33+j];
+          if (tag == ATSC_DESC_EXT_CHANNEL_NAME) {
+            ls = atsc_get_string(ptr + 34 + j, len);
+            if (ls) {
+              x = lang_str_get(ls, NULL);
+              if (x == NULL)
+                x = lang_str_get(ls, "eng");
+              if (x)
+                snprintf(chname, sizeof(chname), "%s", x);
+              tvhdebug("vct", "  extended channel name: '%s' (%d bytes)", x, len);
+              lang_str_destroy(ls);
+            }
+          } else {
+            tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
+          }
+          j += len + 2;
+        }
+
         /* Update */
         if (strcmp(s->s_dvb_svcname ?: "", chname)) {
           tvh_str_set(&s->s_dvb_svcname, chname);
@@ -1694,20 +1717,6 @@ atsc_vct_callback
         if (s->s_atsc_source_id != srcid) {
           s->s_atsc_source_id = srcid;
           save = 1;
-        }
-        
-        for (j=0; j < dlen; ) {
-          unsigned int len, tag;
-          tag = ptr[32+j];
-          len = ptr[33+j];
-          if (tag == ATSC_DESC_EXT_CHANNEL_NAME) {
-            char extname[512];
-            atsc_get_string(extname, sizeof(extname), &ptr[34+j], len, "eng");
-            tvhdebug("vct", "  extended channel name: '%s' (%d bytes)", extname, len);
-          } else {
-            tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
-          }
-          j += len + 2;
         }
 
         /* Save */

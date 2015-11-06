@@ -149,7 +149,6 @@ _psip_eit_callback_channel
   int save = 0, save2, i, size;
   uint8_t titlelen;
   unsigned int dlen;
-  char buf[512];
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   lang_str_t *title, *description;
@@ -169,10 +168,11 @@ _psip_eit_callback_channel
 
     if (size > len) break;
 
-    atsc_get_string(buf, sizeof(buf), ptr+10, titlelen, "eng");
+    title = atsc_get_string(ptr+10, titlelen);
+    if (title == NULL) continue;
 
     tvhtrace("psip", "  %03d: 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
-      i, eventid, start, length, buf, titlelen);
+      i, eventid, start, length, lang_str_get(title, NULL), titlelen);
 
     ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
     tvhtrace("psip", "  ch='%s', eid=%5d, start=%"PRItime_t","
@@ -182,16 +182,13 @@ _psip_eit_callback_channel
     if (!ebc) continue;
     save |= save2;
 
-    title = lang_str_create();
-    lang_str_add(title, buf, "eng", 0);
-
     pd = psip_find_desc(ps, eventid);
     if (pd) {
-      description = lang_str_create();
-      atsc_get_string(buf, sizeof(buf), pd->pd_data, pd->pd_datalen, "eng");
-      lang_str_add(description, buf, "eng", 0);
-      save |= epg_broadcast_set_description2(ebc, description, mod);
-      lang_str_destroy(description);
+      description = atsc_get_string(pd->pd_data, pd->pd_datalen);
+      if (description) {
+        save |= epg_broadcast_set_description2(ebc, description, mod);
+        lang_str_destroy(description);
+      }
     }
 
     ee = epg_broadcast_get_episode(ebc, 1, &save2);
@@ -326,7 +323,7 @@ _psip_ett_callback
   mpegts_service_t     *svc;
   mpegts_psi_table_state_t *st;
   th_subscription_t    *ths;
-  char buf[4096];
+  lang_str_t *description;
 
   /* Validate */
   if (tableid != 0xcc) return -1;
@@ -372,10 +369,7 @@ _psip_ett_callback
     epg_broadcast_t *ebc;
     ebc = epg_broadcast_find_by_eid(ch, eventid);
     if (ebc) {
-      lang_str_t *description;
-      description = lang_str_create();
-      atsc_get_string(buf, sizeof(buf), ptr+10, len-10, "eng");
-      lang_str_add(description, buf, "eng", 0);
+      description = atsc_get_string(ptr+10, len-10);
       save |= epg_broadcast_set_description2(ebc, description, mod);
       lang_str_destroy(description);
       tvhtrace("psip", "0x%04x: ETT tableid 0x%04X [%s], eventid 0x%04X (%d) ['%s'], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, eventid, eventid, lang_str_get(ebc->episode->title, "eng"), ver);
