@@ -201,6 +201,8 @@ mpegts_table_add
     } else if (pid >= 0) {
       if (mt->mt_pid != pid)
         continue;
+      if (mt->mt_table != tableid)
+        continue;
       if (mt->mt_callback != callback)
         continue;
     } else {
