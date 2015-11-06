@@ -32,38 +32,44 @@
  * Status handling
  * ***********************************************************************/
 
-typedef struct psip_event
+typedef struct psip_table {
+  TAILQ_ENTRY(psip_table) pt_link;
+  uint16_t                pt_pid;
+  uint8_t                 pt_complete;
+  mpegts_table_t         *pt_table;
+} psip_table_t;
+
+typedef struct psip_status {
+  epggrab_module_ota_t    *ps_mod;
+  epggrab_ota_map_t       *ps_map;
+  int                      ps_refcount;
+  epggrab_ota_mux_t       *ps_ota;
+  TAILQ_HEAD(, psip_table) ps_tables;
+} psip_status_t;
+
+static void
+psip_status_destroy ( mpegts_table_t *mt )
 {
-  char              uri[257];
-  char              suri[257];
+  psip_status_t *st = mt->mt_opaque;
+  psip_table_t *pt;
 
-  lang_str_t       *title;
-  lang_str_t       *summary;
-  lang_str_t       *desc;
-
-  const char       *default_charset;
-
-  htsmsg_t         *extra;
-
-  epg_genre_list_t *genre;
-
-  uint8_t           hd, ws;
-  uint8_t           ad, st, ds;
-  uint8_t           bw;
-
-  uint8_t           parental;
-
-} psip_event_t;
-
-/* ************************************************************************
- * Diagnostics
- * ***********************************************************************/
-
-
-/* ************************************************************************
- * EIT Event descriptors
- * ***********************************************************************/
-
+  lock_assert(&global_lock);
+  assert(st->ps_refcount > 0);
+  --st->ps_refcount;
+  if (!st->ps_refcount) {
+    while ((pt = TAILQ_FIRST(&st->ps_tables)) != NULL) {
+      TAILQ_REMOVE(&st->ps_tables, pt, pt_link);
+      free(pt);
+    }
+    free(st);
+  } else {
+    TAILQ_FOREACH(pt, &st->ps_tables, pt_link)
+      if (pt->pt_table == mt) {
+        pt->pt_table = NULL;
+        break;
+      }
+  }
+}
 
 /* ************************************************************************
  * EIT Event
@@ -139,10 +145,18 @@ _psip_eit_callback
   mpegts_service_t     *svc;
   mpegts_psi_table_state_t *st;
   idnode_list_mapping_t *ilm;
+  th_subscription_t    *ths;
   char ubuf[UUID_HEX_SIZE];
 
   /* Validate */
   if (tableid != 0xcb) return -1;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
+  if (ths) {
+    subscription_add_bytes_in(ths, len);
+    subscription_add_bytes_out(ths, len);
+  }
 
   /* Extra ID - this identified the channel */
   tsid    = ptr[0] << 8 | ptr[1];
@@ -210,14 +224,23 @@ _psip_ett_callback
   uint32_t extraid, sourceid, eventid;
   int isevent;
   mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
+  psip_status_t        *ps  = mt->mt_opaque;
+  epggrab_ota_map_t    *map = ps->ps_map;
   epggrab_module_t     *mod = (epggrab_module_t *)map->om_module;
   mpegts_service_t     *svc;
   mpegts_psi_table_state_t *st;
+  th_subscription_t    *ths;
   char buf[4096];
 
   /* Validate */
   if (tableid != 0xcc) return -1;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
+  if (ths) {
+    subscription_add_bytes_in(ths, len);
+    subscription_add_bytes_out(ths, len);
+  }
 
   /* Extra ID */
   tsid    = ptr[0] << 8 | ptr[1];
@@ -246,7 +269,7 @@ _psip_ett_callback
   if (!LIST_FIRST(&svc->s_channels))
     goto done;
 
-  atsc_get_string(buf, sizeof(buf), &ptr[10], len-4, "eng"); // FIXME: len does not account for previous bytes
+  atsc_get_string(buf, sizeof(buf), ptr+10, len-4, "eng"); // FIXME: len does not account for previous bytes
 
   if (!isevent) {
     tvhtrace("psip", "0x%04x: channel ETT tableid 0x%04X [%s], ver %d", mt->mt_pid, tsid, svc->s_dvb_svcname, ver);
@@ -286,11 +309,19 @@ _psip_mgt_callback
   uint16_t tsid;
   uint32_t extraid;
   mpegts_mux_t         *mm  = mt->mt_mux;
-  epggrab_ota_map_t    *map = mt->mt_opaque;
+  psip_status_t        *ps  = mt->mt_opaque;
   mpegts_psi_table_state_t *st;
+  th_subscription_t    *ths;
 
   /* Validate */
   if (tableid != 0xc7) return -1;
+
+  /* Statistics */
+  ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
+  if (ths) {
+    subscription_add_bytes_in(ths, len);
+    subscription_add_bytes_out(ths, len);
+  }
 
   /* Extra ID */
   tsid    = ptr[0] << 8 | ptr[1];
@@ -300,13 +331,13 @@ _psip_mgt_callback
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len, tableid, extraid, 7,
                       &st, &sect, &last, &ver);
   if (r != 1) return r;
-  tvhtrace("psip", "0x%04x: MGT tsid %04X (%d), ver %d", mt->mt_pid, tsid, tsid, ver);
 
   /* # tables */
   count = ptr[6] << 9 | ptr[7];
-  tvhtrace("psip", "table count %d", count);
   ptr  += 8;
   len  -= 8;
+
+  tvhtrace("psip", "0x%04x: MGT tsid %04X (%d), ver %d, count %d", mt->mt_pid, tsid, tsid, ver, count);
 
   for (i = 0; i < count && len >= 11; i++) {
     unsigned int type, tablepid, tablever, tablesize;
@@ -322,23 +353,29 @@ _psip_mgt_callback
     tvhdebug("psip", "table %d - type 0x%04X, pid 0x%04X, ver 0x%04X, size 0x%08X",
              i, type, tablepid, tablever, tablesize);
 
+    mt = NULL;
     if (type >= 0x100 && type <= 0x17f) {
       /* This is an EIT table */
-      mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK, _psip_eit_callback,
-                       map, "aeit", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
-                       MPS_WEIGHT_EIT);
+      mt = mpegts_table_add(mm, DVB_ATSC_EIT_BASE, DVB_ATSC_EIT_MASK,
+                            _psip_eit_callback, ps, "aeit",
+                            MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
+                            MPS_WEIGHT_EIT);
     } else if (type == 0x04 || (type >= 0x200 && type <= 0x27f)) {
       /* This is an ETT table */
-      mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK, _psip_ett_callback,
-                       map, "ett", MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
-                       MPS_WEIGHT_ETT);
+      mt = mpegts_table_add(mm, DVB_ATSC_ETT_BASE, DVB_ATSC_ETT_MASK,
+                            _psip_ett_callback, ps, "ett",
+                            MT_QUICKREQ | MT_CRC | MT_RECORD, tablepid,
+                            MPS_WEIGHT_ETT);
     } else {
       /* Skip this table */
-      goto next;
+    }
+
+    if (mt && !mt->mt_destroy) {
+      ps->ps_refcount++;
+      mt->mt_destroy = psip_status_destroy;
     }
 
     /* Move on */
-next:
     ptr += dlen + 11;
     len -= dlen + 11;
   }
@@ -354,19 +391,32 @@ static int _psip_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
   epggrab_module_ota_t *m = map->om_module;
+  mpegts_table_t *mt;
+  psip_status_t *ps;
   int pid, opts = 0;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
 
+  ps = calloc(1, sizeof(*ps));
+  TAILQ_INIT(&ps->ps_tables);
+  ps->ps_mod      = map->om_module;
+  ps->ps_map      = map;
+
   pid  = DVB_ATSC_MGT_PID;
   opts = MT_QUICKREQ | MT_RECORD;
 
   /* Listen for Master Guide Table */
-  mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback,
-                   map, "mgt", MT_CRC | opts, pid, MPS_WEIGHT_MGT);
+  mt = mpegts_table_add(dm, DVB_ATSC_MGT_BASE, DVB_ATSC_MGT_MASK, _psip_mgt_callback,
+                        ps, "mgt", MT_CRC | opts, pid, MPS_WEIGHT_MGT);
+  if (mt && !mt->mt_destroy) {
+    ps->ps_refcount++;
+    mt->mt_destroy = psip_status_destroy;
+    tvhlog(LOG_DEBUG, m->id, "installed table handlers");
+  }
+  if (!ps->ps_refcount)
+    free(ps);
 
-  tvhlog(LOG_DEBUG, m->id, "installed table handlers");
   return 0;
 }
 
