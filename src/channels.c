@@ -355,7 +355,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_BOOL,
       .id       = "autoname",
-      .name     = N_("Auto name"),
+      .name     = N_("Auto name from network"),
       .off      = offsetof(channel_t, ch_autoname),
       .set      = channel_class_autoname_set,
       .opts     = PO_NOSAVE,
@@ -394,7 +394,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_BOOL,
       .id       = "epgauto",
-      .name     = N_("Auto EPG channel"),
+      .name     = N_("Automatically map to EPG source"),
       .off      = offsetof(channel_t, ch_epgauto),
     },
     {
@@ -410,21 +410,21 @@ const idclass_t channel_class = {
     {
       .type     = PT_INT,
       .id       = "dvr_pre_time",
-      .name     = N_("DVR start padding"), // TODO: better text?
+      .name     = N_("Pre-recording padding"), // TODO: better text?
       .off      = offsetof(channel_t, ch_dvr_extra_time_pre),
       .opts     = PO_ADVANCED
     },
     {
       .type     = PT_INT,
       .id       = "dvr_pst_time",
-      .name     = N_("DVR end padding"), // TODO: better text?
+      .name     = N_("Post-recording padding"), // TODO: better text?
       .off      = offsetof(channel_t, ch_dvr_extra_time_post),
       .opts     = PO_ADVANCED
     },
     {
       .type     = PT_INT,
       .id       = "epg_running",
-      .name     = N_("Use EPG running state (accurate recordings)"),
+      .name     = N_("Use EPG running state"),
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,
       .opts     = PO_ADVANCED
