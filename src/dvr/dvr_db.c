@@ -369,7 +369,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
 static void
 dvr_entry_nostate(dvr_entry_t *de, int error_code)
 {
-  dvr_entry_set_state(de, DVR_NOSTATE, DVR_RS_PENDING, error_code);
+  dvr_entry_set_state(de, DVR_NOSTATE, DVR_RS_FINISHED, error_code);
   dvr_entry_retention_timer(de);
 }
 
@@ -381,7 +381,7 @@ dvr_entry_missed_time(dvr_entry_t *de, int error_code)
 {
   dvr_autorec_entry_t *dae = de->de_autorec;
 
-  dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, error_code);
+  dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_FINISHED, error_code);
   dvr_entry_retention_timer(de);
 
   // Trigger autorec update in case of max schedules limit
@@ -395,7 +395,7 @@ dvr_entry_missed_time(dvr_entry_t *de, int error_code)
 static void
 dvr_entry_completed(dvr_entry_t *de, int error_code)
 {
-  dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_PENDING, error_code);
+  dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_FINISHED, error_code);
 #if ENABLE_INOTIFY
   dvr_inotify_add(de);
 #endif
@@ -429,6 +429,8 @@ dvr_entry_status(dvr_entry_t *de)
       return streaming_code2txt(de->de_last_error);
     case DVR_RS_EPG_WAIT:
       return N_("Waiting for EPG running flag");
+    case DVR_RS_FINISHED:
+      return N_("Finished");
     default:
       return N_("Invalid");
     }

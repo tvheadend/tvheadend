@@ -113,6 +113,7 @@ typedef enum {
   DVR_RS_COMMERCIAL,
   DVR_RS_ERROR,
   DVR_RS_EPG_WAIT,
+  DVR_RS_FINISHED
 } dvr_rs_state_t;
   
 
