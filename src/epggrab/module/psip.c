@@ -557,7 +557,7 @@ _psip_ett_callback
   if (r != 1) return r;
 
   sourceid = (ptr[6] << 8) | ptr[7];
-  eventid = (ptr[8] << 8)  | ((ptr[9] >> 2) & 0x3f);
+  eventid = (ptr[8] << 6) | ((ptr[9] >> 2) & 0x3f);
   isevent = (ptr[9] & 0x2) >> 1;
 
   /* Look up channel based on the source id */
