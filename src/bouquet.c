@@ -830,7 +830,7 @@ static char *
 bouquet_class_services_rend ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
-  const char *sc = N_("Services count %zi");
+  const char *sc = N_("Service count %zi");
   char buf[32];
   snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, sc), bq->bq_services->is_count);
   return strdup(buf);
