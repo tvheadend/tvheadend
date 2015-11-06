@@ -906,14 +906,14 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_BOOL,
       .id       = "mapnoname",
-      .name     = N_("Map no name"),
+      .name     = N_("Map unnamed channels"),
       .off      = offsetof(bouquet_t, bq_mapnoname),
       .notify   = bouquet_class_mapnoname_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapradio",
-      .name     = N_("Map radio"),
+      .name     = N_("Map radio channels"),
       .off      = offsetof(bouquet_t, bq_mapradio),
       .notify   = bouquet_class_mapradio_notify,
     },
