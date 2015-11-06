@@ -1185,9 +1185,9 @@ mpegts_input_process
       if ((pid & 0x1FFF) != 0x1FFF)
         ++mmi->tii_stats.te;
     }
-    
+
     pid &= 0x1FFF;
-    
+
     /* Ignore NUL packets */
     if (pid == 0x1FFF) {
 #if ENABLE_TSDEBUG
