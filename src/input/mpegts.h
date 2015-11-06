@@ -153,7 +153,6 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_NIT      999
 #define MPS_WEIGHT_BAT      999
 #define MPS_WEIGHT_VCT      999
-#define MPS_WEIGHT_STT      999
 #define MPS_WEIGHT_EIT      999
 #define MPS_WEIGHT_ETT      999
 #define MPS_WEIGHT_MGT      999
@@ -168,6 +167,7 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_NIT2     300
 #define MPS_WEIGHT_SDT2     300
 #define MPS_WEIGHT_TDT      101
+#define MPS_WEIGHT_STT      101
 #define MPS_WEIGHT_PMT_SCAN 100
   int   mps_weight;
   void *mps_owner;
