@@ -249,11 +249,11 @@ profile_class_priority_list ( void *o, const char *lang )
     { N_("Normal"),                   PROFILE_SPRIO_NORMAL },
     { N_("Low"),                      PROFILE_SPRIO_LOW },
     { N_("Unimportant"),              PROFILE_SPRIO_UNIMPORTANT },
-    { N_("DVR Override important"),   PROFILE_SPRIO_DVR_IMPORTANT },
-    { N_("DVR Override high"),        PROFILE_SPRIO_DVR_HIGH },
-    { N_("DVR Override normal"),      PROFILE_SPRIO_DVR_NORMAL },
-    { N_("DVR Override low"),         PROFILE_SPRIO_DVR_LOW },
-    { N_("DVR Override unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
+    { N_("DVR Override: important"),   PROFILE_SPRIO_DVR_IMPORTANT },
+    { N_("DVR Override: high"),        PROFILE_SPRIO_DVR_HIGH },
+    { N_("DVR Override: normal"),      PROFILE_SPRIO_DVR_NORMAL },
+    { N_("DVR Override: low"),         PROFILE_SPRIO_DVR_LOW },
+    { N_("DVR Override: unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -1532,7 +1532,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "vcodec",
-      .name     = N_("Video codec"),
+      .name     = N_("Video Codec"),
       .off      = offsetof(profile_transcode_t, pro_vcodec),
       .def.s    = "libx264",
       .list     = profile_class_vcodec_list,
@@ -1547,7 +1547,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "acodec",
-      .name     = N_("Audio codec"),
+      .name     = N_("Audio Codec"),
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,
