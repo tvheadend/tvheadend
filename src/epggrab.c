@@ -234,7 +234,7 @@ const idclass_t epggrab_class = {
   .ic_save       = epggrab_class_save,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("General config"),
+         .name   = N_("General configuration"),
          .number = 1,
       },
       {
@@ -279,7 +279,7 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_STR,
       .id     = "cron",
-      .name   = N_("CRON multi-line"),
+      .name   = N_("Cron multi-line"),
       .off    = offsetof(epggrab_conf_t, cron),
       .notify = epggrab_class_cron_notify,
       .opts   = PO_MULTILINE,
@@ -295,7 +295,7 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_STR,
       .id     = "ota_cron",
-      .name   = N_("Over-the-air CRON multi-line"),
+      .name   = N_("Over-the-air Cron multi-line"),
       .off    = offsetof(epggrab_conf_t, ota_cron),
       .notify = epggrab_class_ota_cron_notify,
       .opts   = PO_MULTILINE,
