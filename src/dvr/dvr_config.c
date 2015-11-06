@@ -856,7 +856,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "epg-update-window",
-      .name     = N_("EPG Update window"),
+      .name     = N_("EPG update window"),
       .off      = offsetof(dvr_config_t, dvr_update_window),
       .list     = dvr_config_entry_class_update_window_list,
       .def.u32  = 24*3600,
