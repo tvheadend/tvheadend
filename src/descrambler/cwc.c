@@ -1751,7 +1751,7 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_STR,
       .id       = "hostname",
-      .name     = N_("Host name/IP"),
+      .name     = N_("Hostname/IP"),
       .off      = offsetof(cwc_t, cwc_hostname),
       .def.s    = "localhost",
     },
