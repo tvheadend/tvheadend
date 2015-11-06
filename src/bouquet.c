@@ -899,7 +899,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_BOOL,
       .id       = "mapnolcn",
-      .name     = N_("Map zero numbers"),
+      .name     = N_("Map zero-numbered channels"),
       .off      = offsetof(bouquet_t, bq_mapnolcn),
       .notify   = bouquet_class_mapnolcn_notify,
     },
