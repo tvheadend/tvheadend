@@ -249,11 +249,11 @@ profile_class_priority_list ( void *o, const char *lang )
     { N_("Normal"),                   PROFILE_SPRIO_NORMAL },
     { N_("Low"),                      PROFILE_SPRIO_LOW },
     { N_("Unimportant"),              PROFILE_SPRIO_UNIMPORTANT },
-    { N_("DVR Override Important"),   PROFILE_SPRIO_DVR_IMPORTANT },
-    { N_("DVR Override High"),        PROFILE_SPRIO_DVR_HIGH },
-    { N_("DVR Override Normal"),      PROFILE_SPRIO_DVR_NORMAL },
-    { N_("DVR Override Low"),         PROFILE_SPRIO_DVR_LOW },
-    { N_("DVR Override Unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
+    { N_("DVR Override important"),   PROFILE_SPRIO_DVR_IMPORTANT },
+    { N_("DVR Override high"),        PROFILE_SPRIO_DVR_HIGH },
+    { N_("DVR Override normal"),      PROFILE_SPRIO_DVR_NORMAL },
+    { N_("DVR Override low"),         PROFILE_SPRIO_DVR_LOW },
+    { N_("DVR Override unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -263,8 +263,8 @@ profile_class_svfilter_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("None"),                    PROFILE_SVF_NONE },
-    { N_("SD: Standard Definition"), PROFILE_SVF_SD },
-    { N_("HD: High Definition"),     PROFILE_SVF_HD },
+    { N_("SD: Standard definition"), PROFILE_SVF_SD },
+    { N_("HD: High definition"),     PROFILE_SVF_HD },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -272,7 +272,7 @@ profile_class_svfilter_list ( void *o, const char *lang )
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
-  .ic_caption    = N_("Stream Profile"),
+  .ic_caption    = N_("Stream profile"),
   .ic_event      = "profile",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = profile_class_save,
@@ -304,7 +304,7 @@ const idclass_t profile_class =
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = N_("Profile Name"),
+      .name     = N_("Profile name"),
       .off      = offsetof(profile_t, pro_name),
       .get_opts = profile_class_name_opts,
       .notify   = idnode_notify_title_changed,
@@ -318,7 +318,7 @@ const idclass_t profile_class =
     {
       .type     = PT_INT,
       .id       = "priority",
-      .name     = N_("Default Priority"),
+      .name     = N_("Default priority"),
       .list     = profile_class_priority_list,
       .off      = offsetof(profile_t, pro_prio),
       .opts     = PO_SORTKEY,
@@ -327,7 +327,7 @@ const idclass_t profile_class =
     {
       .type     = PT_INT,
       .id       = "fpriority",
-      .name     = N_("Force Priority"),
+      .name     = N_("Force priority"),
       .off      = offsetof(profile_t, pro_fprio),
     },
     {
@@ -340,21 +340,21 @@ const idclass_t profile_class =
     {
       .type     = PT_BOOL,
       .id       = "restart",
-      .name     = N_("Restart On Error"),
+      .name     = N_("Restart on error"),
       .off      = offsetof(profile_t, pro_restart),
       .def.i    = 0,
     },
     {
       .type     = PT_BOOL,
       .id       = "contaccess",
-      .name     = N_("Continue On Access Error"),
+      .name     = N_("Continue even if descrambling fails"),
       .off      = offsetof(profile_t, pro_contaccess),
       .def.i    = 1,
     },
     {
       .type     = PT_INT,
       .id       = "svfilter",
-      .name     = N_("Preferred Service Video Type"),
+      .name     = N_("Preferred service video type"),
       .list     = profile_class_svfilter_list,
       .off      = offsetof(profile_t, pro_svfilter),
       .opts     = PO_SORTKEY,
@@ -925,7 +925,7 @@ const idclass_t profile_htsp_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-htsp",
-  .ic_caption    = N_("HTSP Stream Profile"),
+  .ic_caption    = N_("HTSP stream profile"),
   .ic_properties = (const property_t[]){
     /* Ready for future extensions */
     { }
@@ -1532,7 +1532,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "vcodec",
-      .name     = N_("Video CODEC"),
+      .name     = N_("Video codec"),
       .off      = offsetof(profile_transcode_t, pro_vcodec),
       .def.s    = "libx264",
       .list     = profile_class_vcodec_list,
@@ -1540,14 +1540,14 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "vbitrate",
-      .name     = N_("Video Bitrate (kb/s) (0=Auto)"),
+      .name     = N_("Video bitrate (kb/s) (0=auto)"),
       .off      = offsetof(profile_transcode_t, pro_vbitrate),
       .def.u32  = 0,
     },
     {
       .type     = PT_STR,
       .id       = "acodec",
-      .name     = N_("Audio CODEC"),
+      .name     = N_("Audio codec"),
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,
@@ -1562,7 +1562,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "scodec",
-      .name     = N_("Subtitle CODEC"),
+      .name     = N_("Subtitle codec"),
       .off      = offsetof(profile_transcode_t, pro_scodec),
       .def.s    = "",
       .list     = profile_class_scodec_list,

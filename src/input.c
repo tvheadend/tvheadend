@@ -26,14 +26,14 @@ tvh_hardware_list_t tvh_hardware;
 const idclass_t tvh_input_class =
 {
   .ic_class      = "tvh_input",
-  .ic_caption    = N_("Input Base"),
+  .ic_caption    = N_("Input base"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 
 const idclass_t tvh_input_instance_class =
 {
   .ic_class      = "tvh_input_instance",
-  .ic_caption    = N_("Input Instance"),
+  .ic_caption    = N_("Input instance"),
   .ic_perm_def   = ACCESS_ADMIN
 };
 

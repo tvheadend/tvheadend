@@ -115,7 +115,7 @@ mpegts_mux_sched_class_cron_set ( void *p, const void *v )
 const idclass_t mpegts_mux_sched_class =
 {
   .ic_class      = "mpegts_mux_sched",
-  .ic_caption    = N_("Mux Sched Entry"),
+  .ic_caption    = N_("Mux schedule entry"),
   .ic_event      = "mpegts_mux_sched",
   .ic_save       = mpegts_mux_sched_class_save,
   .ic_delete     = mpegts_mux_sched_class_delete,

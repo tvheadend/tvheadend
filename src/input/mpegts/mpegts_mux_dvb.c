@@ -132,7 +132,7 @@ const idclass_t dvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
   .ic_class      = "dvb_mux",
-  .ic_caption    = N_("Linux DVB Multiplex"),
+  .ic_caption    = N_("Linux DVB multiplex"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -204,10 +204,10 @@ const idclass_t dvb_mux_dvbt_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_dvbt",
-  .ic_caption    = N_("Linux DVB-T Multiplex"),
+  .ic_caption    = N_("Linux DVB-T multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery System"), dvbt, delsys, N_("DVB-T")),
+      MUX_PROP_STR("delsys", N_("Delivery system"), dvbt, delsys, N_("DVB-T")),
     },
     {
       .type     = PT_U32,
@@ -223,19 +223,19 @@ const idclass_t dvb_mux_dvbt_class =
       MUX_PROP_STR("constellation", N_("Constellation"), dvbt, qam, N_("AUTO"))
     },
     {
-      MUX_PROP_STR("transmission_mode", N_("Transmission Mode"), dvbt, mode, N_("AUTO"))
+      MUX_PROP_STR("transmission_mode", N_("Transmission mode"), dvbt, mode, N_("AUTO"))
     },
     {
-      MUX_PROP_STR("guard_interval", N_("Guard Interval"), dvbt, guard, N_("AUTO"))
+      MUX_PROP_STR("guard_interval", N_("Guard interval"), dvbt, guard, N_("AUTO"))
     },
     {
       MUX_PROP_STR("hierarchy", N_("Hierarchy"), dvbt, hier, N_("AUTO")),
     },
     {
-      MUX_PROP_STR("fec_hi", N_("FEC High"), dvbt, fechi, N_("AUTO")),
+      MUX_PROP_STR("fec_hi", N_("FEC high"), dvbt, fechi, N_("AUTO")),
     },
     {
-      MUX_PROP_STR("fec_lo", N_("FEC Low"), dvbt, feclo, N_("AUTO")),
+      MUX_PROP_STR("fec_lo", N_("FEC low"), dvbt, feclo, N_("AUTO")),
     },
     {
       .type     = PT_INT,
@@ -276,10 +276,10 @@ const idclass_t dvb_mux_dvbc_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_dvbc",
-  .ic_caption    = N_("Linux DVB-C Multiplex"),
+  .ic_caption    = N_("Linux DVB-C multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery System"), dvbc, delsys, N_("DVBC_ANNEX_AC")),
+      MUX_PROP_STR("delsys", N_("Delivery system"), dvbc, delsys, N_("DVBC_ANNEX_AC")),
     },
     {
       .type     = PT_U32,
@@ -291,7 +291,7 @@ const idclass_t dvb_mux_dvbc_class =
     {
       .type     = PT_U32,
       .id       = "symbolrate",
-      .name     = N_("Symbol Rate (Sym/s)"),
+      .name     = N_("Symbol rate (Sym/s)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qam.symbol_rate),
     },
     {
@@ -530,10 +530,10 @@ const idclass_t dvb_mux_dvbs_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_dvbs",
-  .ic_caption    = N_("Linux DVB-S Multiplex"),
+  .ic_caption    = N_("Linux DVB-S multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery System"), dvbs, delsys, "DVBS"),
+      MUX_PROP_STR("delsys", N_("Delivery system"), dvbs, delsys, "DVBS"),
     },
     {
       .type     = PT_U32,
@@ -545,7 +545,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_U32,
       .id       = "symbolrate",
-      .name     = N_("Symbol Rate (Sym/s)"),
+      .name     = N_("Symbol rate (Sym/s)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qpsk.symbol_rate),
       .set      = dvb_mux_dvbs_class_symbol_rate_set,
     },
@@ -592,7 +592,7 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "pls_mode",
-      .name     = N_("PLS Mode"),
+      .name     = N_("PLS mode"),
       .set      = dvb_mux_dvbs_class_pls_mode_set,
       .get      = dvb_mux_dvbs_class_pls_mode_get,
       .list     = dvb_mux_dvbs_class_pls_mode_list,
@@ -601,14 +601,14 @@ const idclass_t dvb_mux_dvbs_class =
     {
       .type     = PT_U32,
       .id       = "pls_code",
-      .name     = N_("PLS Code"),
+      .name     = N_("PLS code"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
       .def.u32	= 1,
     },
     {
       .type     = PT_STR,
       .id       = "orbital",
-      .name     = N_("Orbital Position"),
+      .name     = N_("Orbital position"),
       .set      = dvb_mux_dvbs_class_orbital_set,
       .get      = dvb_mux_dvbs_class_orbital_get,
       .opts     = PO_ADVANCED | PO_RDONLY
@@ -636,10 +636,10 @@ const idclass_t dvb_mux_atsc_class =
 {
   .ic_super      = &dvb_mux_class,
   .ic_class      = "dvb_mux_atsc",
-  .ic_caption    = N_("Linux ATSC Multiplex"),
+  .ic_caption    = N_("Linux ATSC multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery System"), atsc, delsys, N_("ATSC")),
+      MUX_PROP_STR("delsys", N_("Delivery system"), atsc, delsys, N_("ATSC")),
     },
     {
       .type     = PT_U32,

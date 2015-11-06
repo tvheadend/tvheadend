@@ -659,11 +659,11 @@ main(int argc, char **argv)
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
-    {   0, NULL,        N_("Generic Options"),         OPT_BOOL, NULL         },
+    {   0, NULL,        N_("Generic options"),         OPT_BOOL, NULL         },
     { 'h', "help",      N_("Show this page"),          OPT_BOOL, &opt_help    },
     { 'v', "version",   N_("Show version information"),OPT_BOOL, &opt_version },
 
-    {   0, NULL,        N_("Service Configuration"),   OPT_BOOL, NULL         },
+    {   0, NULL,        N_("Service configuration"),   OPT_BOOL, NULL         },
     { 'c', "config",    N_("Alternate configuration path"), OPT_STR,  &opt_config  },
     { 'B', "nobackup",  N_("Don't backup configuration tree at upgrade"), OPT_BOOL, &opt_nobackup },
     { 'f', "fork",      N_("Fork and run as daemon"),  OPT_BOOL, &opt_fork    },
@@ -697,7 +697,7 @@ main(int argc, char **argv)
     {   0, "satip_xml",  N_("URL with the SAT>IP server XML location"),
       OPT_STR_LIST, &opt_satip_xml },
 #endif
-    {   0, NULL,         N_("Server Connectivity"),    OPT_BOOL, NULL         },
+    {   0, NULL,         N_("Server connectivity"),    OPT_BOOL, NULL         },
     { '6', "ipv6",       N_("Listen on IPv6"),         OPT_BOOL, &opt_ipv6    },
     { 'b', "bindaddr",   N_("Specify bind address"),   OPT_STR,  &opt_bindaddr},
     {   0, "http_port",  N_("Specify alternative http port"),
@@ -713,7 +713,7 @@ main(int argc, char **argv)
     {   0, "xspf",       N_("Use XSPF playlist instead of M3U"),
       OPT_BOOL, &opt_xspf },
 
-    {   0, NULL,        N_("Debug Options"),           OPT_BOOL, NULL         },
+    {   0, NULL,        N_("Debug options"),           OPT_BOOL, NULL         },
     { 'd', "stderr",    N_("Enable debug on stderr"),  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    N_("Enable debug to syslog"),  OPT_BOOL, &opt_syslog  },
     { 'S', "nosyslog",  N_("Disable syslog (all messages)"), OPT_BOOL, &opt_nosyslog },
@@ -727,7 +727,7 @@ main(int argc, char **argv)
 #if ENABLE_LIBAV
     {   0, "libav",     N_("More verbose libav log"),  OPT_BOOL, &opt_libav },
 #endif
-    {   0, "uidebug",   N_("Enable webUI debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
+    {   0, "uidebug",   N_("Enable webui debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     N_("Immediately abort"),       OPT_BOOL, &opt_abort   },
     { 'D', "dump",      N_("Enable coredumps for daemon"), OPT_BOOL, &opt_dump },
     {   0, "noacl",     N_("Disable all access control checks"),

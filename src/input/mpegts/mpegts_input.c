@@ -215,7 +215,7 @@ const idclass_t mpegts_input_class =
 {
   .ic_super      = &tvh_input_class,
   .ic_class      = "mpegts_input",
-  .ic_caption    = N_("MPEG-TS Input"),
+  .ic_caption    = N_("MPEG-TS input"),
   .ic_event      = "mpegts_input",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = mpegts_input_class_get_title,
@@ -239,7 +239,7 @@ const idclass_t mpegts_input_class =
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = N_("Streaming Priority"),
+      .name     = N_("Streaming priority"),
       .off      = offsetof(mpegts_input_t, mi_streaming_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -261,7 +261,7 @@ const idclass_t mpegts_input_class =
     {
       .type     = PT_BOOL,
       .id       = "initscan",
-      .name     = N_("Initial Scan"),
+      .name     = N_("Initial scan"),
       .off      = offsetof(mpegts_input_t, mi_initscan),
       .def.i    = 1,
       .opts     = PO_ADVANCED,
@@ -269,7 +269,7 @@ const idclass_t mpegts_input_class =
     {
       .type     = PT_BOOL,
       .id       = "idlescan",
-      .name     = N_("Idle Scan"),
+      .name     = N_("Idle scan"),
       .off      = offsetof(mpegts_input_t, mi_idlescan),
       .def.i    = 1,
       .opts     = PO_ADVANCED,
@@ -287,7 +287,7 @@ const idclass_t mpegts_input_class =
     {
       .type     = PT_STR,
       .id       = "linked",
-      .name     = N_("Linked Input"),
+      .name     = N_("Linked input"),
       .set      = mpegts_input_class_linked_set,
       .get      = mpegts_input_class_linked_get,
       .list     = mpegts_input_class_linked_enum,
