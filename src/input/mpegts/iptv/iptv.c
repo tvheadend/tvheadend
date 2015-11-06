@@ -582,7 +582,7 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_BOOL,
       .id       = "scan_create",
-      .name     = N_("Scan after create"),
+      .name     = N_("Scan after creation"),
       .off      = offsetof(iptv_network_t, in_scan_create),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -614,7 +614,7 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_U32,
       .id       = "max_streams",
-      .name     = N_("Maximum input streams"),
+      .name     = N_("Maximum # input streams"),
       .off      = offsetof(iptv_network_t, in_max_streams),
       .def.i    = 0,
     },
