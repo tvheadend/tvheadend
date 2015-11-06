@@ -2151,7 +2151,7 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Motoring"), NULL },
     C_{ N_("Fitness and health"), NULL },
     C_{ N_("Cooking"), NULL },
-    C_{ N_("Advertisement/Shopping"), NULL },
+    C_{ N_("Advertisement / Shopping"), NULL },
     C_{ N_("Gardening"), NULL },
     C_{ N_("Gardening"), NULL },
     C_{ N_("Gardening"), NULL },
