@@ -153,7 +153,7 @@ const idclass_t linuxdvb_switch_class =
     {
       .type    = PT_U32,
       .id      = "sleeptime",
-      .name    = N_("Cmd delay time (ms) (10-200)"),
+      .name    = N_("Command delay time (ms) (10-200)"),
       .off     = offsetof(linuxdvb_switch_t, ls_sleep_time),
       .def.u32 = 25
     },
