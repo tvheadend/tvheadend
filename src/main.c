@@ -727,7 +727,7 @@ main(int argc, char **argv)
 #if ENABLE_LIBAV
     {   0, "libav",     N_("More verbose libav log"),  OPT_BOOL, &opt_libav },
 #endif
-    {   0, "uidebug",   N_("Enable webui debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
+    {   0, "uidebug",   N_("Enable web UI debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     N_("Immediately abort"),       OPT_BOOL, &opt_abort   },
     { 'D', "dump",      N_("Enable coredumps for daemon"), OPT_BOOL, &opt_dump },
     {   0, "noacl",     N_("Disable all access control checks"),
