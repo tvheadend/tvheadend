@@ -865,7 +865,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "epg-running",
-      .name     = N_("Use EPG running state (accurate recording)"),
+      .name     = N_("Use EPG running state"),
       .off      = offsetof(dvr_config_t, dvr_running),
       .def.u32  = 1,
       .group    = 1,
