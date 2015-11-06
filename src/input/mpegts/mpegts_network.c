@@ -177,7 +177,7 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_BOOL,
       .id       = "sid_chnum",
-      .name     = N_("Service IDs as channel numbers"),
+      .name     = N_("Use service IDs as channel numbers"),
       .off      = offsetof(mpegts_network_t, mn_sid_chnum),
       .def.i    = 0,
     },
@@ -207,7 +207,7 @@ const idclass_t mpegts_network_class =
     {
       .type     = PT_BOOL,
       .id       = "localtime",
-      .name     = N_("EIT local time"),
+      .name     = N_("EIT broadcast in local time"),
       .off      = offsetof(mpegts_network_t, mn_localtime),
       .opts     = PO_ADVANCED,
     },
