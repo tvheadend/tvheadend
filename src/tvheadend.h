@@ -1,4 +1,4 @@
-﻿/*
+/*
  *  Tvheadend - structures
  *  Copyright (C) 2007 Andreas Öman
  *
