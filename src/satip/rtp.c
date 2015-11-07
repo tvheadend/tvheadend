@@ -789,13 +789,18 @@ end:
 /*
  *
  */
-void satip_rtp_init(void)
+void satip_rtp_init(int boot)
 {
   TAILQ_INIT(&satip_rtp_sessions);
   pthread_mutex_init(&satip_rtp_lock, NULL);
 
-  satip_rtcp_run = 1;
-  tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
+  if (boot)
+    satip_rtcp_run = 0;
+
+  if (!boot && !satip_rtcp_run) {
+    satip_rtcp_run = 1;
+    tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
+  }
 }
 
 /*

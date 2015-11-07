@@ -74,7 +74,7 @@ void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids);
 int satip_rtp_status(void *id, char *buf, int len);
 void satip_rtp_close(void *id);
 
-void satip_rtp_init(void);
+void satip_rtp_init(int boot);
 void satip_rtp_done(void);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
