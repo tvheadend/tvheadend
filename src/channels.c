@@ -355,7 +355,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_BOOL,
       .id       = "autoname",
-      .name     = N_("Auto name from network"),
+      .name     = N_("Automatically name from network"),
       .off      = offsetof(channel_t, ch_autoname),
       .set      = channel_class_autoname_set,
       .opts     = PO_NOSAVE,
@@ -394,7 +394,7 @@ const idclass_t channel_class = {
     {
       .type     = PT_BOOL,
       .id       = "epgauto",
-      .name     = N_("Automatically map to EPG source"),
+      .name     = N_("Automatically map EPG source"),
       .off      = offsetof(channel_t, ch_epgauto),
     },
     {
