@@ -487,6 +487,8 @@ rtsp_start
     mux = NULL;
     mn2 = NULL;
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+      if (!idnode_is_instance(&mn->mn_id, &dvb_network_class))
+        continue;
       ln = (dvb_network_t *)mn;
       if (ln->ln_type == rs->dmc.dmc_fe_type &&
           mn->mn_satip_source == rs->src) {
