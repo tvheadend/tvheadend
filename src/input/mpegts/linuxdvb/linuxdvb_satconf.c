@@ -311,7 +311,7 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_U32,
       .id       = "motor_rate",
-      .name     = N_("Motor rate (millisecond/deg)"),
+      .name     = N_("Motor rate (milliseconds/deg)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_motor_rate),
     },
     {}
