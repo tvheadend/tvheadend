@@ -958,7 +958,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "channel-in-title",
-      .name     = N_("Include channelname In filename"),
+      .name     = N_("Include channel name in filename"),
       .off      = offsetof(dvr_config_t, dvr_channel_in_title),
       .group    = 5,
     },
