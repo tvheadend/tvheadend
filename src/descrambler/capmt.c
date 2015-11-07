@@ -2236,7 +2236,7 @@ const idclass_t caclient_capmt_class =
     {
       .type     = PT_STR,
       .id       = "camdfilename",
-      .name     = N_("Camd.socket file name / IP Address (TCP mode)"),
+      .name     = N_("Camd.socket filename / IP Address (TCP mode)"),
       .off      = offsetof(capmt_t, capmt_sockfile),
       .def.s    = "/tmp/camd.socket",
     },
