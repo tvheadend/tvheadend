@@ -1077,6 +1077,7 @@ end:
     rtsp_rearm_session_timer(rs);
   mpegts_pid_done(&addpids);
   mpegts_pid_done(&delpids);
+  mpegts_pid_done(&pids);
   return errcode;
 
 eargs:
