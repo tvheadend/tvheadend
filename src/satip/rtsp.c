@@ -1542,7 +1542,7 @@ void satip_server_rtsp_init
     session_number = *(uint32_t *)rnd;
     TAILQ_INIT(&rtsp_sessions);
     pthread_mutex_init(&rtsp_lock, NULL);
-    satip_rtp_init();
+    satip_rtp_init(1);
   }
   if (rtsp_port != port && rtsp_server) {
     rtsp_close_sessions();
@@ -1564,6 +1564,7 @@ void satip_server_rtsp_init
 void satip_server_rtsp_register(void)
 {
   tcp_server_register(rtsp_server);
+  satip_rtp_init(0);
 }
 
 void satip_server_rtsp_done(void)
