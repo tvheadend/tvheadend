@@ -1621,6 +1621,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   struct stat st;
   char buf[1024];
   htsmsg_t *config2;
+  htsmsg_field_t *f;
   const char *s;
 
   memset(&config, 0, sizeof(config));
@@ -1676,11 +1677,14 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
   } else {
-    s = htsmsg_get_str(config2, "language");
-    if (s) {
-      htsmsg_t *m = htsmsg_csv_2_list(s, ',');
-      htsmsg_delete_field(config2, "language");
-      htsmsg_add_msg(config2, "language", m);
+    f = htsmsg_field_find(config2, "language");
+    if (f && f->hmf_type == HMF_STR) {
+      s = htsmsg_get_str(config2, "language");
+      if (s) {
+        htsmsg_t *m = htsmsg_csv_2_list(s, ',');
+        htsmsg_delete_field(config2, "language");
+        htsmsg_add_msg(config2, "language", m);
+      }
     }
     config.version = htsmsg_get_u32_or_default(config2, "config", 0);
     s = htsmsg_get_str(config2, "full_version");
@@ -1802,7 +1806,7 @@ config_class_language_get ( void *o )
 static int
 config_class_language_set ( void *o, const void *v )
 {
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
   if (strcmp(s ?: "", config.language ?: "")) {
     free(config.language);
     config.language = s;
@@ -1831,7 +1835,7 @@ config_class_info_area_get ( void *o )
 static int
 config_class_info_area_set ( void *o, const void *v )
 {
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
   if (strcmp(s ?: "", config.info_area ?: "")) {
     free(config.info_area);
     config.info_area = s;

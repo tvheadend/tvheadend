@@ -1068,8 +1068,12 @@ htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
   used = 0;
   if (human) {
     sep[0] = delim;
-    sep[1] = ' ';
-    sep[2] = '\0';
+    if (human & 2) {
+      sep[1] = '\0';
+    } else {
+      sep[1] = ' ';
+      sep[2] = '\0';
+    }
     ssep = "";
   } else {
     sep[0] = delim;
