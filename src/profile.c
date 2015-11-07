@@ -1532,7 +1532,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "vcodec",
-      .name     = N_("Video Codec"),
+      .name     = N_("Video codec"),
       .off      = offsetof(profile_transcode_t, pro_vcodec),
       .def.s    = "libx264",
       .list     = profile_class_vcodec_list,
@@ -1547,7 +1547,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_STR,
       .id       = "acodec",
-      .name     = N_("Audio Codec"),
+      .name     = N_("Audio codec"),
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,
