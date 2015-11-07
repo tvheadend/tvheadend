@@ -2763,7 +2763,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_STR,
       .id       = "filename",
-      .name     = N_("File name"),
+      .name     = N_("Filename"),
       .get      = dvr_entry_class_filename_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
