@@ -818,7 +818,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "removal-days",
-      .name     = N_("DVR file removal period (days)"),
+      .name     = N_("DVR file retention period (days)"),
       .off      = offsetof(dvr_config_t, dvr_removal_days),
       .group    = 1,
     },
