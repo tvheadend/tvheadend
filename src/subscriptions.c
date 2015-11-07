@@ -51,6 +51,11 @@ static int                  subscription_postpone;
 /**
  *
  */
+static void subscription_unsubscribe_cb(void *aux);
+
+/**
+ *
+ */
 static inline int
 shortid(th_subscription_t *s)
 {
@@ -120,7 +125,7 @@ static int
 subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 {
   streaming_message_t *sm;
-  service_t *t = s->ths_service, *tr = s->ths_raw_service;
+  service_t *t = s->ths_service;
 
   /* Ignore - not actually linked */
   if (!s->ths_current_instance) goto stop;
@@ -139,15 +144,9 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
   pthread_mutex_unlock(&t->s_stream_mutex);
 
   LIST_REMOVE(s, ths_service_link);
-  s->ths_service = NULL;
-  s->ths_raw_service = NULL;
 
-  if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0) {
-    if (tr)
-      LIST_REMOVE(s, ths_mux_link);
-    subscription_unsubscribe(s, 0);
-    service_remove_raw(tr);
-  }
+  if (stop && s-(s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
+    gtimer_arm(&s->ths_remove_timer, subscription_unsubscribe_cb, s, 0);
 
 stop:
   if(LIST_FIRST(&t->s_subscriptions) == NULL)
@@ -552,6 +551,12 @@ subscription_input(void *opauqe, streaming_message_t *sm)
 /**
  * Delete
  */
+static void
+subscription_unsubscribe_cb(void *aux)
+{
+  subscription_unsubscribe((th_subscription_t *)aux, 0);
+}
+
 void
 subscription_unsubscribe(th_subscription_t *s, int quiet)
 {
@@ -563,11 +568,12 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   if (s == NULL)
     return;
 
-  t = s->ths_service;
-  raw = s->ths_raw_service;
-
   lock_assert(&global_lock);
 
+  t   = s->ths_service;
+  raw = s->ths_raw_service;
+
+  assert(s->ths_state != SUBSCRIPTION_ZOMBIE);
   s->ths_state = SUBSCRIPTION_ZOMBIE;
 
   service_instance_list_clear(&s->ths_instances);
@@ -576,8 +582,10 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   LIST_SAFE_REMOVE(s, ths_remove_link);
 
 #if ENABLE_MPEGTS
-  if (raw)
+  if (raw && t == raw) {
     LIST_REMOVE(s, ths_mux_link);
+    service_remove_raw(raw);
+  }
 #endif
 
   if (s->ths_channel != NULL) {
@@ -596,23 +604,16 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
     tvh_strlcatf(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
   tvhlog(quiet ? LOG_TRACE : LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
 
-  if (t) {
-    s->ths_flags &= ~SUBSCRIPTION_ONESHOT;
+  if (t)
     service_remove_subscriber(t, s, SM_CODE_OK);
-  }
 
-#if ENABLE_MPEGTS
-  if (raw && t == raw) {
-    LIST_REMOVE(s, ths_mux_link);
-    service_remove_raw(raw);
-  }
-#endif
+  gtimer_disarm(&s->ths_remove_timer);
 
   streaming_msg_free(s->ths_start_message);
 
   if(s->ths_output->st_cb == subscription_input_null)
    free(s->ths_output);
- 
+
   free(s->ths_title);
   free(s->ths_hostname);
   free(s->ths_username);

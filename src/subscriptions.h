@@ -74,6 +74,8 @@ typedef struct th_subscription {
 
   int ths_testing_error;
 
+  gtimer_t ths_remove_timer;
+
   LIST_ENTRY(th_subscription) ths_channel_link;
   struct channel *ths_channel;          /* May be NULL if channel has been
 					   destroyed during the
