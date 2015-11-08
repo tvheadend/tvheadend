@@ -224,7 +224,7 @@ descrambler_service_start ( service_t *t )
   if (!((mpegts_service_t *)t)->s_dvb_forcecaid) {
 
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
-      if (LIST_FIRST(&st->es_caids) == NULL)
+      if (LIST_FIRST(&st->es_caids) != NULL)
         break;
 
     /* Do not run descrambler on FTA channels */
