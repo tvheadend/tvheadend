@@ -166,6 +166,13 @@ const idclass_t epggrab_class_mod_int = {
       .opts   = PO_RDONLY | PO_NOSAVE,
       .group  = 1
     },
+    {
+      .type   = PT_STR,
+      .id     = "args",
+      .name   = N_("Extra arguments"),
+      .off    = offsetof(epggrab_module_int_t, args),
+      .group  = 1
+    },
     {}
   }
 };
@@ -318,6 +325,7 @@ epggrab_module_int_t *epggrab_module_int_create
   /* Int data */
   skel->type     = EPGGRAB_INT;
   skel->path     = strdup(path);
+  skel->args     = strdup("--quiet");
   skel->grab     = grab  ?: epggrab_module_grab_spawn;
   skel->trans    = trans ?: epggrab_module_trans_xml;
   skel->parse    = parse;
@@ -331,19 +339,30 @@ char *epggrab_module_grab_spawn ( void *m )
   int        rd = -1, outlen;
   char       *outbuf;
   epggrab_module_int_t *mod = m;
-  char **argv = NULL;
+  char      **argv = NULL;
+  char       *path;
 
   /* Debug */
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
+  /* Quiet */
+  if (mod->args) {
+    path = alloca(strlen(mod->path) + strlen(mod->args) + 2);
+    strcpy(path, mod->path);
+    strcat(path, " ");
+    strcat(path, mod->args);
+  } else {
+    path = (char *)mod->path;
+  }
+
   /* Arguments */
-  if (spawn_parse_args(&argv, 64, mod->path, NULL)) {
+  if (spawn_parse_args(&argv, 64, path, NULL)) {
     tvhlog(LOG_ERR, mod->id, "unable to parse arguments");
     return NULL;
   }
 
   /* Grab */
-  outlen = spawn_and_give_stdout(argv[0], (char **)argv, NULL, &rd, NULL, 1);
+  outlen = spawn_and_give_stdout(argv[0], argv, NULL, &rd, NULL, 1);
 
   spawn_free_args(argv);
 

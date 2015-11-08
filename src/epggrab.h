@@ -170,6 +170,7 @@ struct epggrab_module_int
   epggrab_module_t             ;          ///< Parent object
 
   const char                   *path;     ///< Path for the command
+  const char                   *args;     ///< Extra arguments
 
   /* Handle data */
   char*     (*grab)   ( void *mod );
