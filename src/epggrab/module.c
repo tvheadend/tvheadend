@@ -303,6 +303,8 @@ epggrab_module_int_done( void *m )
   mod->active = 0;
   free((char *)mod->path);
   mod->path = NULL;
+  free((char *)mod->args);
+  mod->args = NULL;
 }
 
 epggrab_module_int_t *epggrab_module_int_create
@@ -345,7 +347,7 @@ char *epggrab_module_grab_spawn ( void *m )
   /* Debug */
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
-  /* Quiet */
+  /* Extra arguments */
   if (mod->args) {
     path = alloca(strlen(mod->path) + strlen(mod->args) + 2);
     strcpy(path, mod->path);
