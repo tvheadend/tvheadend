@@ -423,8 +423,15 @@ capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
   int pid, i;
 
   tuner = capmt->capmt_adapters[adapter].ca_tuner;
-  if (tuner == NULL)
+  if (tuner == NULL) {
+    /* clean all pids (to be sure) */
+    for (i = 0; i < MAX_PIDS; i++) {
+      o = &ca->ca_pids[i];
+      o->pid = 0;
+      o->pid_refs = 0;
+    }
     return;
+  }
   ca = &capmt->capmt_adapters[adapter];
   mmi = LIST_FIRST(&tuner->mi_mux_active);
   mux = mmi ? mmi->mmi_mux : NULL;
