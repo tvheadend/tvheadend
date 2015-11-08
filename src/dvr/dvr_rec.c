@@ -171,7 +171,7 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
 
   pthread_join(de->de_thread, NULL);
 
-  subscription_unsubscribe(de->de_s, 0);
+  subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
   de->de_s = NULL;
 
   de->de_chain = NULL;

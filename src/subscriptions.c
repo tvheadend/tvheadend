@@ -145,7 +145,7 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 
   LIST_REMOVE(s, ths_service_link);
 
-  if (stop && s-(s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
+  if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
     gtimer_arm(&s->ths_remove_timer, subscription_unsubscribe_cb, s, 0);
 
 stop:
@@ -554,11 +554,28 @@ subscription_input(void *opauqe, streaming_message_t *sm)
 static void
 subscription_unsubscribe_cb(void *aux)
 {
-  subscription_unsubscribe((th_subscription_t *)aux, 0);
+  subscription_unsubscribe((th_subscription_t *)aux, UNSUBSCRIBE_FINAL);
+}
+
+static void
+subscription_destroy(th_subscription_t *s)
+{
+  streaming_msg_free(s->ths_start_message);
+
+  if(s->ths_output->st_cb == subscription_input_null)
+   free(s->ths_output);
+
+  free(s->ths_title);
+  free(s->ths_hostname);
+  free(s->ths_username);
+  free(s->ths_client);
+  free(s->ths_dvrfile);
+  free(s);
+
 }
 
 void
-subscription_unsubscribe(th_subscription_t *s, int quiet)
+subscription_unsubscribe(th_subscription_t *s, int flags)
 {
   service_t *t;
   char buf[512];
@@ -573,7 +590,13 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
   t   = s->ths_service;
   raw = s->ths_raw_service;
 
-  assert(s->ths_state != SUBSCRIPTION_ZOMBIE);
+  if (s->ths_state == SUBSCRIPTION_ZOMBIE) {
+    if ((flags & UNSUBSCRIBE_FINAL) != 0) {
+      subscription_destroy(s);
+      return;
+    }
+    abort();
+  }
   s->ths_state = SUBSCRIPTION_ZOMBIE;
 
   service_instance_list_clear(&s->ths_instances);
@@ -602,24 +625,17 @@ subscription_unsubscribe(th_subscription_t *s, int quiet)
     tvh_strlcatf(buf, sizeof(buf), l, ", username=\"%s\"", s->ths_username);
   if (s->ths_client)
     tvh_strlcatf(buf, sizeof(buf), l, ", client=\"%s\"", s->ths_client);
-  tvhlog(quiet ? LOG_TRACE : LOG_INFO, "subscription", "%04X: %s", shortid(s), buf);
+  tvhlog((flags & UNSUBSCRIBE_QUIET) != 0 ? LOG_TRACE : LOG_INFO,
+         "subscription", "%04X: %s", shortid(s), buf);
 
   if (t)
     service_remove_subscriber(t, s, SM_CODE_OK);
 
   gtimer_disarm(&s->ths_remove_timer);
 
-  streaming_msg_free(s->ths_start_message);
-
-  if(s->ths_output->st_cb == subscription_input_null)
-   free(s->ths_output);
-
-  free(s->ths_title);
-  free(s->ths_hostname);
-  free(s->ths_username);
-  free(s->ths_client);
-  free(s->ths_dvrfile);
-  free(s);
+  if ((flags & UNSUBSCRIBE_FINAL) != 0 ||
+      (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
+    subscription_destroy(s);
 
   gtimer_arm(&subscription_reschedule_timer, 
             subscription_reschedule_cb, NULL, 0);
@@ -763,7 +779,7 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
 
   if (flags & SUBSCRIPTION_ONESHOT) {
     if ((si = subscription_start_instance(s, error)) == NULL) {
-      subscription_unsubscribe(s, 1);
+      subscription_unsubscribe(s, UNSUBSCRIBE_QUIET | UNSUBSCRIBE_FINAL);
       return NULL;
     }
     subscription_link_service(s, si->si_s);

@@ -210,7 +210,7 @@ mpegts_mux_unsubscribe_linked
       ths_next = LIST_NEXT(ths, ths_global_link);
       if (ths->ths_source == (tvh_input_t *)mi && !strcmp(ths->ths_title, "keep") &&
           ths->ths_service != t)
-        subscription_unsubscribe(ths, 0);
+        subscription_unsubscribe(ths, UNSUBSCRIBE_FINAL);
     }
   }
 }
@@ -1256,7 +1256,7 @@ mpegts_mux_unsubscribe_by_name
     n = LIST_NEXT(s, ths_mux_link);
     t = s->ths_service;
     if (t && t->s_type == STYPE_RAW && !strcmp(s->ths_title, name))
-      subscription_unsubscribe(s, 0);
+      subscription_unsubscribe(s, UNSUBSCRIBE_FINAL);
     s = n;
   }
 }

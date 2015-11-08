@@ -335,7 +335,7 @@ rtsp_slave_remove
           rs->frontend, rs->session, rs->stream, slave->s_nicename);
   master->s_unlink(master, slave);
   if (sub->ths)
-    subscription_unsubscribe(sub->ths, 0);
+    subscription_unsubscribe(sub->ths, UNSUBSCRIBE_FINAL);
   if (sub->prch.prch_id)
     profile_chain_close(&sub->prch);
   LIST_REMOVE(sub, link);
@@ -358,7 +358,7 @@ rtsp_clean(session_t *rs)
     while ((sub = LIST_FIRST(&rs->slaves)) != NULL)
       rtsp_slave_remove(rs, (mpegts_service_t *)rs->subs->ths_raw_service,
                         sub->service);
-    subscription_unsubscribe(rs->subs, 0);
+    subscription_unsubscribe(rs->subs, UNSUBSCRIBE_FINAL);
     rs->subs = NULL;
   }
   if (rs->prch.prch_id)

@@ -53,6 +53,10 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_PRIO_MAPPER      7 ///< Channel mapper
 #define SUBSCRIPTION_PRIO_MIN        10 ///< User defined / Normal levels
 
+/* Unsubscribe flags */
+#define UNSUBSCRIBE_QUIET     0x01
+#define UNSUBSCRIBE_FINAL     0x02
+
 typedef struct th_subscription {
 
   int ths_id;
@@ -144,7 +148,7 @@ void subscription_init(void);
 
 void subscription_done(void);
 
-void subscription_unsubscribe(th_subscription_t *s, int quiet);
+void subscription_unsubscribe(th_subscription_t *s, int flags);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
