@@ -348,7 +348,7 @@ char *epggrab_module_grab_spawn ( void *m )
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
   /* Extra arguments */
-  if (mod->args) {
+  if (mod->args && mod->args[0]) {
     path = alloca(strlen(mod->path) + strlen(mod->args) + 2);
     strcpy(path, mod->path);
     strcat(path, " ");
