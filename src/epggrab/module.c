@@ -327,7 +327,7 @@ epggrab_module_int_t *epggrab_module_int_create
   /* Int data */
   skel->type     = EPGGRAB_INT;
   skel->path     = strdup(path);
-  skel->args     = strdup("--quiet");
+  skel->args     = NULL;
   skel->grab     = grab  ?: epggrab_module_grab_spawn;
   skel->trans    = trans ?: epggrab_module_trans_xml;
   skel->parse    = parse;
