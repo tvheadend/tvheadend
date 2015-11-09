@@ -91,13 +91,13 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   /* first setup a local socket for the device to stream to */
   sockfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd == -1) {
-    tvherror("stvhdhomerun", "failed to open socket (%d)", errno);
+    tvherror("tvhdhomerun", "failed to open socket (%d)", errno);
     return NULL;
   }
 
   if(fcntl(sockfd, F_SETFL, O_NONBLOCK) != 0) {
     close(sockfd);
-    tvherror("stvhdhomerun", "failed to set socket nonblocking (%d)", errno);
+    tvherror("tvhdhomerun", "failed to set socket nonblocking (%d)", errno);
     return NULL;
   }
 
@@ -623,7 +623,7 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
 
   /* Class */
   if (!(idc = dvb_network_class_by_fe_type(type))) {
-    tvherror("stvhdhomerun", "unknown FE type %d", type);
+    tvherror("tvhdhomerun", "unknown FE type %d", type);
     return NULL;
   }
 
