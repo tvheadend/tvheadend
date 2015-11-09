@@ -574,20 +574,8 @@ static idnode_set_t *
 satip_frontend_network_list ( mpegts_input_t *mi )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
-  const idclass_t     *idc;
 
-  if (lfe->sf_type == DVB_TYPE_T)
-    idc = &dvb_network_dvbt_class;
-  else if (lfe->sf_type == DVB_TYPE_S)
-    idc = &dvb_network_dvbs_class;
-  else if (lfe->sf_type == DVB_TYPE_C)
-    idc = &dvb_network_dvbc_class;
-  else if (lfe->sf_type == DVB_TYPE_ATSC)
-    idc = &dvb_network_atsc_class;
-  else
-    return NULL;
-
-  return idnode_find_all(idc, NULL);
+  return dvb_network_list_by_fe_type(lfe->sf_type);
 }
 
 /* **************************************************************************
