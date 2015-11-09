@@ -541,20 +541,19 @@ SRCS += build.c timestamp.c
 all: $(ALL-yes) ${PROG}
 
 # Special
-.PHONY:	clean distclean check_config reconfigure
+.PHONY:	clean distclean reconfigure
 
 # Check configure output is valid
-check_config:
-	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure\
-		|| echo "./configure output is old, please re-run"
-	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure
+.config.mk: configure
+	@echo "./configure output is old, please re-run"
+	@false
 
 # Recreate configuration
 reconfigure:
 	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: check_config make_webui $(OBJS)
+${PROG}: .config.mk make_webui $(OBJS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
