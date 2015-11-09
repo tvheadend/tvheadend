@@ -148,7 +148,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
   int nframes = backtrace(frames, MAXFRAMES);
   Dl_info dli;
 #endif
-#if defined(NGREG) || defined(ENABLE_EXECINFO)
+#if defined(NGREG) || ENABLE_EXECINFO
   int i;
 #endif
   const char *reason = NULL;
