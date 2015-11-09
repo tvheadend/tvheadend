@@ -118,9 +118,12 @@ static inline void
 native_cpuid(unsigned int *eax, unsigned int *ebx,
              unsigned int *ecx, unsigned int *edx)
 {
-  asm volatile("cpuid"
+  /* saving ebx is necessary for PIC compatibility */
+  asm volatile("mov %%"REG_b", %%"REG_S"\n\t"
+               "cpuid\n\t"
+               "xchg %%"REG_b", %%"REG_S
                : "=a" (*eax),
-                 "=b" (*ebx),
+                 "=S" (*ebx),
                  "=c" (*ecx),
                  "=d" (*edx)
                : "0" (*eax), "2" (*ecx));
