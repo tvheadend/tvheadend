@@ -543,7 +543,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
   char *profile, *hostpath;
   const char *name;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
     return HTTP_STATUS_UNAUTHORIZED;
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
@@ -626,7 +626,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
     htsbuf_qprintf(hq, "#NAME %s\n", tag->ct_name);
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
     name = channel_get_name(ch);
@@ -788,7 +788,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
 
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
 
     name = channel_get_name(ch);
@@ -842,7 +842,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
       continue;
 
     if (de->de_channel &&
-        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel, 0))
+        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
     durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
@@ -1194,7 +1194,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
     return HTTP_STATUS_UNAUTHORIZED;
 
   if(!(pro = profile_find_by_list(hc->hc_access->aa_profiles,

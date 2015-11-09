@@ -567,15 +567,13 @@ http_access_verify(http_connection_t *hc, int mask)
  */
 int
 http_access_verify_channel(http_connection_t *hc, int mask,
-                           struct channel *ch, int ticket)
+                           struct channel *ch)
 {
   int res = -1;
 
   assert(ch);
 
-  if (ticket)
-    http_access_verify_ticket(hc);
-
+  http_access_verify_ticket(hc);
   if (hc->hc_access) {
     res = access_verify2(hc->hc_access, mask);
 

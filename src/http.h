@@ -237,7 +237,7 @@ void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
 int http_access_verify_channel(http_connection_t *hc, int mask,
-                               struct channel *ch, int ticket);
+                               struct channel *ch);
 
 void http_deescape(char *s);
 
