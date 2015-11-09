@@ -122,7 +122,7 @@ http_xmltv_channel(http_connection_t *hc, channel_t *channel)
 {
   char *hostpath;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
     return HTTP_STATUS_UNAUTHORIZED;
 
   hostpath = http_get_hostpath(hc);
@@ -154,13 +154,13 @@ http_xmltv_tag(http_connection_t *hc, channel_tag_t *tag)
   http_xmltv_begin(&hc->hc_reply);
   LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     http_xmltv_channel_add(&hc->hc_reply, hostpath, ch);
   }
   LIST_FOREACH(ilm, &tag->ct_ctms, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     http_xmltv_programme_add(&hc->hc_reply, hostpath, ch);
   }
@@ -187,12 +187,12 @@ http_xmltv_channel_list(http_connection_t *hc)
 
   http_xmltv_begin(&hc->hc_reply);
   CHANNEL_FOREACH(ch) {
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     http_xmltv_channel_add(&hc->hc_reply, hostpath, ch);
   }
   CHANNEL_FOREACH(ch) {
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     http_xmltv_programme_add(&hc->hc_reply, hostpath, ch);
   }
