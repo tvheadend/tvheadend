@@ -604,14 +604,7 @@ dvb_network_create0
   const char *s;
 
   ln = calloc(1, sizeof(dvb_network_t));
-  if (idc == &dvb_network_dvbt_class)
-    ln->ln_type = DVB_TYPE_T;
-  else if (idc == &dvb_network_dvbc_class)
-    ln->ln_type = DVB_TYPE_C;
-  else if (idc == &dvb_network_dvbs_class)
-    ln->ln_type = DVB_TYPE_S;
-  else
-    ln->ln_type = DVB_TYPE_ATSC;
+  ln->ln_type = dvb_fe_type_by_network_class(idc);
 
   /* Create */
   if (!(ln = (dvb_network_t*)mpegts_network_create0((void*)ln,
@@ -716,6 +709,34 @@ void dvb_network_done ( void )
 /* ****************************************************************************
  * Search
  * ***************************************************************************/
+
+const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type)
+{
+  if (type == DVB_TYPE_T)
+    return &dvb_network_dvbt_class;
+  else if (type == DVB_TYPE_C)
+    return &dvb_network_dvbc_class;
+  else if (type == DVB_TYPE_S)
+    return &dvb_network_dvbs_class;
+  else if (type == DVB_TYPE_ATSC)
+    return &dvb_network_atsc_class;
+
+  return NULL;
+}
+
+dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc)
+{
+  if (idc == &dvb_network_dvbt_class)
+    return DVB_TYPE_T;
+  else if (idc == &dvb_network_dvbc_class)
+    return DVB_TYPE_C;
+  else if (idc == &dvb_network_dvbs_class)
+    return DVB_TYPE_S;
+  else if (idc == &dvb_network_atsc_class)
+    return DVB_TYPE_ATSC;
+
+  return DVB_TYPE_NONE;
+}
 
 int dvb_network_get_orbital_pos(mpegts_network_t *mn)
 {
