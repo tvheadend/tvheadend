@@ -89,7 +89,7 @@ uint8_t *gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));
-  inflateInit2(&zstr, 31);
+  inflateInit2(&zstr, MAX_WBITS + 16 /* gzip */);
   zstr.avail_in  = size;
   zstr.next_in   = (z_const uint8_t *)data;
   zstr.avail_out = orig;
@@ -119,7 +119,7 @@ uint8_t *gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
 
   /* Setup zlib */
   memset(&zstr, 0, sizeof(zstr));
-  err = deflateInit2(&zstr, 9, Z_DEFLATED, 31, 9, Z_DEFAULT_STRATEGY);
+  err = deflateInit2(&zstr, Z_BEST_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16 /* gzip */, MAX_MEM_LEVEL, Z_DEFAULT_STRATEGY);
   zstr.avail_in  = orig;
   zstr.next_in   = (z_const uint8_t *)data;
   zstr.avail_out = orig;
