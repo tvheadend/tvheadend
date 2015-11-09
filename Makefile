@@ -211,6 +211,10 @@ SRCS-1 = \
 SRCS = $(SRCS-1)
 I18N-C = $(SRCS-1)
 
+SRCS-ZLIB = \
+	src/zlib.c
+SRCS-${CONFIG_ZLIB} += $(SRCS-ZLIB)
+
 SRCS-UPNP = \
 	src/upnp.c
 SRCS-${CONFIG_UPNP} += $(SRCS-UPNP)

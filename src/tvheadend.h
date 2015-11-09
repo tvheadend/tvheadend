@@ -758,6 +758,11 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
+#if ENABLE_ZLIB
+uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig );
+uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size );
+#endif
+
 /* URL decoding */
 char to_hex(char code);
 char *url_encode(const char *str);
