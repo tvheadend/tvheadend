@@ -56,6 +56,9 @@ void dvb_network_done ( void );
 static inline dvb_network_t *dvb_network_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &dvb_network_class, NULL); }
 
+const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type);
+dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc);
+
 dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
