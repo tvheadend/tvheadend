@@ -34,7 +34,6 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "http.h"
-#include "filebundle.h"
 #include "access.h"
 #include "notify.h"
 #include "channels.h"
@@ -373,7 +372,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 #if ENABLE_ZLIB
   if (http_encoding_valid(hc, "gzip") && encoding == NULL && size > 256) {
     uint8_t *data2 = (uint8_t *)htsbuf_to_string(&hc->hc_reply);
-    data = gzip_deflate(data2, size, &size);
+    data = tvh_gzip_deflate(data2, size, &size);
     free(data2);
     encoding = "gzip";
   }
