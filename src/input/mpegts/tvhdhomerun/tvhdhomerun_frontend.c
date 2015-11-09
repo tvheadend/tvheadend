@@ -507,18 +507,8 @@ static idnode_set_t *
 tvhdhomerun_frontend_network_list ( mpegts_input_t *mi )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
-  const idclass_t     *idc;
 
-  if (hfe->hf_type == DVB_TYPE_T)
-    idc = &dvb_network_dvbt_class;
-  else if (hfe->hf_type == DVB_TYPE_C)
-    idc = &dvb_network_dvbc_class;
-  else if (hfe->hf_type == DVB_TYPE_ATSC)
-    idc = &dvb_network_atsc_class;
-  else
-    return NULL;
-
-  return idnode_find_all(idc, NULL);
+  return dvb_network_list_by_fe_type(hfe->hf_type);
 }
 
 static void

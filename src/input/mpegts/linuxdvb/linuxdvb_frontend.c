@@ -529,23 +529,11 @@ static idnode_set_t *
 linuxdvb_frontend_network_list ( mpegts_input_t *mi )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
-  const idclass_t     *idc;
 
   tvhtrace("linuxdvb", "%s: network list for %s",
            mi->mi_name ?: "", dvb_type2str(lfe->lfe_type));
 
-  if (lfe->lfe_type == DVB_TYPE_T)
-    idc = &dvb_network_dvbt_class;
-  else if (lfe->lfe_type == DVB_TYPE_C)
-    idc = &dvb_network_dvbc_class;
-  else if (lfe->lfe_type == DVB_TYPE_S)
-    idc = &dvb_network_dvbs_class;
-  else if (lfe->lfe_type == DVB_TYPE_ATSC)
-    idc = &dvb_network_atsc_class;
-  else
-    return NULL;
-
-  return idnode_find_all(idc, NULL);
+  return dvb_network_list_by_fe_type(lfe->lfe_type);
 }
 
 /* **************************************************************************
