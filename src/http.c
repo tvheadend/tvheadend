@@ -587,7 +587,7 @@ http_access_verify_channel(http_connection_t *hc, int mask,
       res = access_verify2(hc->hc_access, mask);
   }
 
-  if (!channel_access(ch, hc->hc_access, 0))
+  if (!res && !channel_access(ch, hc->hc_access, 0))
     res = -1;
 
   return res;
