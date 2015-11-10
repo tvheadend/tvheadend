@@ -484,8 +484,11 @@ prop_serialize_value
     htsmsg_add_bool(m, "multiline", 1);
 
   /* Enum list */
-  if (pl->list)
-    htsmsg_add_msg(m, "enum", pl->list(obj, lang));
+  if (pl->list) {
+    htsmsg_t *list = pl->list(obj, lang);
+    if (list)
+      htsmsg_add_msg(m, "enum", list);
+  }
 
   /* Visual group */
   if (pl->group)

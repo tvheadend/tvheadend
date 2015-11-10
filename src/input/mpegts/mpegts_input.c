@@ -96,6 +96,9 @@ mpegts_input_class_network_enum ( void *obj, const char *lang )
 {
   htsmsg_t *p, *m;
 
+  if (!obj)
+    return NULL;
+
   p = htsmsg_create_map();
   htsmsg_add_str (p, "uuid",    idnode_uuid_as_sstr((idnode_t*)obj));
   htsmsg_add_bool(p, "enum",    1);
