@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-02 17:30+0100\n"
-"PO-Revision-Date: 2015-11-02 16:31+0000\n"
+"PO-Revision-Date: 2015-11-02 18:46+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -374,7 +374,7 @@ msgstr "Název klienta"
 
 #: src/webui/static/app/epg.js:228
 msgid "Close"
-msgstr ""
+msgstr "Zavřít"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
@@ -921,7 +921,7 @@ msgstr "MB"
 
 #: src/webui/static/app/servicemapper.js:126
 msgid "Map"
-msgstr ""
+msgstr "Mapovat"
 
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/mpegts.js:256
 msgid "Map All"
@@ -1179,7 +1179,7 @@ msgstr "Přehrát"
 
 #: src/webui/static/tv.js:466
 msgid "Play Selected Channel"
-msgstr ""
+msgstr "Přehrát vybraný program"
 
 #: src/webui/static/app/epg.js:158
 msgid "Play program"
@@ -1215,7 +1215,7 @@ msgstr "Opětovné načtení obrázků"
 
 #: src/webui/static/app/dvr.js:323 src/webui/static/app/dvr.js:434
 msgid "Re-record"
-msgstr ""
+msgstr "Znovu zaznamenat"
 
 #: src/webui/static/app/idnode.js:895
 msgid "Read-only Info"
@@ -1622,7 +1622,7 @@ msgstr "Přepnout ztlumení"
 
 #: src/webui/static/app/dvr.js:321 src/webui/static/app/dvr.js:432
 msgid "Toggle re-record functionality"
-msgstr ""
+msgstr "Přepnout opětovný záznam"
 
 #: src/webui/static/app/tvheadend.js:702
 msgid "Total"

@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-02 17:30+0100\n"
-"PO-Revision-Date: 2015-11-02 16:31+0000\n"
+"PO-Revision-Date: 2015-11-02 16:42+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -384,7 +384,7 @@ msgstr "Automatický časový rekordér"
 #: src/dvr/dvr_db.c:1111
 #, c-format
 msgid "Auto recording%s%s"
-msgstr ""
+msgstr "Automatický rekordér%s%s"
 
 #: src/bouquet.c:895
 msgid "Auto-Map to Channels"
@@ -411,7 +411,7 @@ msgstr "BB"
 
 #: src/subscriptions.c:877
 msgid "Bad"
-msgstr ""
+msgstr "Špatný"
 
 #: src/epg.c:2088
 msgid "Ballet"
@@ -760,7 +760,7 @@ msgstr "Aktuální události"
 
 #: src/input/mpegts/iptv/iptv_mux.c:223
 msgid "Custom HTTP headers"
-msgstr ""
+msgstr "Zvláštní HTTP hlavičky"
 
 #: src/main.c:680
 msgid "DBus - use the session message bus instead of the system one"
@@ -1104,7 +1104,7 @@ msgstr "Nezanechávej"
 
 #: src/dvr/dvr_db.c:2802
 msgid "Don't re-record"
-msgstr ""
+msgstr "Nezaznamenávej znovu"
 
 #: src/epg.c:2013 src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 #: src/epg.c:2024 src/epg.c:2025 src/epg.c:2026
@@ -1691,7 +1691,7 @@ msgstr "Ikony jsou od"
 
 #: src/subscriptions.c:865
 msgid "Idle"
-msgstr ""
+msgstr "Nečinný"
 
 #: src/input/mpegts/mpegts_input.c:272
 msgid "Idle Scan"
@@ -2161,7 +2161,7 @@ msgstr "Maximální velikost PID"
 
 #: src/dvr/dvr_autorec.c:1118
 msgid "Maximum schedules limit (0=unlimited)"
-msgstr ""
+msgstr "Maximálni počet časovačů (0=neomezeno)"
 
 #: src/input/mpegts/iptv/iptv.c:631
 msgid "Maximum timeout (seconds)"
@@ -2217,7 +2217,7 @@ msgstr "Modul"
 
 #: src/epggrab/channel.c:653
 msgid "Module ID"
-msgstr ""
+msgstr "ID modulu"
 
 #: src/dvr/dvr_autorec.c:763
 msgid "Mon"
@@ -2299,7 +2299,7 @@ msgstr "Název"
 
 #: src/epggrab/channel.c:694
 msgid "Names"
-msgstr ""
+msgstr "Jména"
 
 #: src/epg.c:2132
 msgid "Natural sciences"
@@ -2531,7 +2531,7 @@ msgstr "Pouze Viasat Baltic"
 
 #: src/epggrab/channel.c:724
 msgid "Only one auto channel"
-msgstr ""
+msgstr "Pouze jeden automatický program"
 
 #: src/main.c:684
 msgid "Only use specified DVB adapters (comma separated, -1 = none)"
@@ -2710,7 +2710,7 @@ msgstr "Úspora energie"
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:149
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:98
 msgid "Powerup Time (ms) (15-200)"
-msgstr ""
+msgstr "Startovací čas (ms) (15-200)"
 
 #: src/input/mpegts/mpegts_network_dvb.c:206
 #: src/input/mpegts/mpegts_network_dvb.c:225
@@ -2811,7 +2811,7 @@ msgstr "Perioda pro nový pokus (v minutách)"
 #: src/dvr/dvr_db.c:973
 #, c-format
 msgid "Re-record%s%s"
-msgstr ""
+msgstr "Opětovný rekordér%s%s"
 
 #: src/imagecache.c:102
 msgid "Re-try period (hours)"
@@ -2913,7 +2913,7 @@ msgstr "Restartuj při chybě"
 
 #: src/channels.c:452
 msgid "Reuse EPG from"
-msgstr ""
+msgstr "Použij EPG z"
 
 #: src/profile.c:1027
 msgid "Rewrite EIT"
@@ -3508,7 +3508,7 @@ msgstr "Tenis"
 
 #: src/subscriptions.c:869
 msgid "Testing"
-msgstr ""
+msgstr "Testování"
 
 #: src/main.c:740
 msgid "Testing options"
@@ -3753,7 +3753,7 @@ msgstr "Tolerance aktualizace (ms)"
 
 #: src/epggrab/channel.c:675
 msgid "Updated"
-msgstr ""
+msgstr "Aktualizováno"
 
 #: src/main.c:449
 #, c-format
@@ -3762,7 +3762,7 @@ msgstr "Použití: %s [VOLBY]\n"
 
 #: src/channels.c:416 src/dvr/dvr_config.c:869
 msgid "Use EPG Running State"
-msgstr ""
+msgstr "Použít stav vysílání z EPG "
 
 #: src/dvr/dvr_config.c:1018
 msgid "Use Windows-compatible filenames"
@@ -3862,7 +3862,7 @@ msgstr "WEBTV profil VP8/Vorbis/WEBM"
 
 #: src/dvr/dvr_db.c:423
 msgid "Waiting for EPG running flag"
-msgstr ""
+msgstr "Čekám na stav vysílání z EPG"
 
 #: src/dvr/dvr_db.c:415
 msgid "Waiting for program start"

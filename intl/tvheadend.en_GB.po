@@ -12,8 +12,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-02 17:30+0100\n"
-"PO-Revision-Date: 2015-11-02 16:31+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-11-02 16:51+0000\n"
+"Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United Kingdom) (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/en_GB/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -386,7 +386,7 @@ msgstr "Auto Time Record"
 #: src/dvr/dvr_db.c:1111
 #, c-format
 msgid "Auto recording%s%s"
-msgstr ""
+msgstr "Auto recording%s%s"
 
 #: src/bouquet.c:895
 msgid "Auto-Map to Channels"
@@ -413,7 +413,7 @@ msgstr "BB"
 
 #: src/subscriptions.c:877
 msgid "Bad"
-msgstr ""
+msgstr "Bad"
 
 #: src/epg.c:2088
 msgid "Ballet"
@@ -762,7 +762,7 @@ msgstr "Current affairs"
 
 #: src/input/mpegts/iptv/iptv_mux.c:223
 msgid "Custom HTTP headers"
-msgstr ""
+msgstr "Custom HTTP headers"
 
 #: src/main.c:680
 msgid "DBus - use the session message bus instead of the system one"
@@ -1106,7 +1106,7 @@ msgstr "Don't keep"
 
 #: src/dvr/dvr_db.c:2802
 msgid "Don't re-record"
-msgstr ""
+msgstr "Don't re-record"
 
 #: src/epg.c:2013 src/epg.c:2020 src/epg.c:2021 src/epg.c:2022 src/epg.c:2023
 #: src/epg.c:2024 src/epg.c:2025 src/epg.c:2026
@@ -1693,7 +1693,7 @@ msgstr "Icons from"
 
 #: src/subscriptions.c:865
 msgid "Idle"
-msgstr ""
+msgstr "Idle"
 
 #: src/input/mpegts/mpegts_input.c:272
 msgid "Idle Scan"
@@ -2163,7 +2163,7 @@ msgstr "Maximum length of PIDs"
 
 #: src/dvr/dvr_autorec.c:1118
 msgid "Maximum schedules limit (0=unlimited)"
-msgstr ""
+msgstr "Maximum schedule limit (0=unlimited)"
 
 #: src/input/mpegts/iptv/iptv.c:631
 msgid "Maximum timeout (seconds)"
@@ -2219,7 +2219,7 @@ msgstr "Module"
 
 #: src/epggrab/channel.c:653
 msgid "Module ID"
-msgstr ""
+msgstr "Module ID"
 
 #: src/dvr/dvr_autorec.c:763
 msgid "Mon"
@@ -2301,7 +2301,7 @@ msgstr "Name"
 
 #: src/epggrab/channel.c:694
 msgid "Names"
-msgstr ""
+msgstr "Names"
 
 #: src/epg.c:2132
 msgid "Natural sciences"
@@ -2533,7 +2533,7 @@ msgstr "Only Viasat Baltic"
 
 #: src/epggrab/channel.c:724
 msgid "Only one auto channel"
-msgstr ""
+msgstr "Only one auto channel"
 
 #: src/main.c:684
 msgid "Only use specified DVB adapters (comma separated, -1 = none)"
@@ -2712,7 +2712,7 @@ msgstr "Power Save"
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:149
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:98
 msgid "Powerup Time (ms) (15-200)"
-msgstr ""
+msgstr "Power-up Time (ms) (15-200)"
 
 #: src/input/mpegts/mpegts_network_dvb.c:206
 #: src/input/mpegts/mpegts_network_dvb.c:225
@@ -2813,7 +2813,7 @@ msgstr "Re-fetch period (mins)"
 #: src/dvr/dvr_db.c:973
 #, c-format
 msgid "Re-record%s%s"
-msgstr ""
+msgstr "Re-record%s%s"
 
 #: src/imagecache.c:102
 msgid "Re-try period (hours)"
@@ -2915,7 +2915,7 @@ msgstr "Restart On Error"
 
 #: src/channels.c:452
 msgid "Reuse EPG from"
-msgstr ""
+msgstr "Reuse EPG from"
 
 #: src/profile.c:1027
 msgid "Rewrite EIT"
@@ -3510,7 +3510,7 @@ msgstr "Tennis"
 
 #: src/subscriptions.c:869
 msgid "Testing"
-msgstr ""
+msgstr "Testing"
 
 #: src/main.c:740
 msgid "Testing options"
@@ -3755,7 +3755,7 @@ msgstr "Update tolerance (ms)"
 
 #: src/epggrab/channel.c:675
 msgid "Updated"
-msgstr ""
+msgstr "Updated"
 
 #: src/main.c:449
 #, c-format
@@ -3764,7 +3764,7 @@ msgstr "Usage: %s [OPTIONS]\n"
 
 #: src/channels.c:416 src/dvr/dvr_config.c:869
 msgid "Use EPG Running State"
-msgstr ""
+msgstr "Use EPG Running State"
 
 #: src/dvr/dvr_config.c:1018
 msgid "Use Windows-compatible filenames"
@@ -3864,7 +3864,7 @@ msgstr "WEBTV profile VP8/Vorbis/WEBM"
 
 #: src/dvr/dvr_db.c:423
 msgid "Waiting for EPG running flag"
-msgstr ""
+msgstr "Waiting for EPG running flag"
 
 #: src/dvr/dvr_db.c:415
 msgid "Waiting for program start"
