@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-10 09:31+0100\n"
+"POT-Creation-Date: 2015-11-10 09:50+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -868,44 +868,16 @@ msgstr ""
 msgid "DVR Auto-record entry"
 msgstr ""
 
-#: src/dvr/dvr_timerec.c:623
-msgid "DVR Configuration"
-msgstr ""
-
-#: src/dvr/dvr_config.c:727
-msgid "DVR Configuration profile"
-msgstr ""
-
-#: src/dvr/dvr_autorec.c:1066
-msgid "DVR Log retention (days)"
-msgstr ""
-
-#: src/profile.c:253
-msgid "DVR Override: high"
-msgstr ""
-
-#: src/profile.c:252
-msgid "DVR Override: important"
-msgstr ""
-
-#: src/profile.c:255
-msgid "DVR Override: low"
-msgstr ""
-
-#: src/profile.c:254
-msgid "DVR Override: normal"
-msgstr ""
-
-#: src/profile.c:256
-msgid "DVR Override: unimportant"
-msgstr ""
-
 #: src/dvr/dvr_config.c:735
 msgid "DVR behavior"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2741 src/dvr/dvr_autorec.c:1094
+#: src/dvr/dvr_db.c:2741 src/dvr/dvr_autorec.c:1094 src/dvr/dvr_timerec.c:623
 msgid "DVR configuration"
+msgstr ""
+
+#: src/dvr/dvr_config.c:727
+msgid "DVR configuration profile"
 msgstr ""
 
 #: src/access.c:1474
@@ -916,16 +888,37 @@ msgstr ""
 msgid "DVR entry"
 msgstr ""
 
+#: src/dvr/dvr_db.c:2723 src/dvr/dvr_autorec.c:1073 src/dvr/dvr_timerec.c:617
 #: src/dvr/dvr_config.c:821
 msgid "DVR file retention period (days)"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2715 src/dvr/dvr_timerec.c:611
+#: src/dvr/dvr_db.c:2715 src/dvr/dvr_autorec.c:1066 src/dvr/dvr_timerec.c:611
 msgid "DVR log retention (days)"
 msgstr ""
 
 #: src/dvr/dvr_config.c:813
 msgid "DVR log retention period (days)"
+msgstr ""
+
+#: src/profile.c:253
+msgid "DVR override: high"
+msgstr ""
+
+#: src/profile.c:252
+msgid "DVR override: important"
+msgstr ""
+
+#: src/profile.c:255
+msgid "DVR override: low"
+msgstr ""
+
+#: src/profile.c:254
+msgid "DVR override: normal"
+msgstr ""
+
+#: src/profile.c:256
+msgid "DVR override: unimportant"
 msgstr ""
 
 #: src/dvr/dvr_timerec.c:527
@@ -1384,10 +1377,6 @@ msgstr ""
 msgid "File permissions (octal, e.g. 0664)"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2723 src/dvr/dvr_autorec.c:1073 src/dvr/dvr_timerec.c:617
-msgid "File removal (days)"
-msgstr ""
-
 #: src/dvr/dvr_db.c:2766
 msgid "Filename"
 msgstr ""
@@ -1567,7 +1556,7 @@ msgid "Guard interval"
 msgstr ""
 
 #: src/profile.c:267
-msgid "HD: High definition"
+msgid "HD: high definition"
 msgstr ""
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:580
@@ -3026,7 +3015,7 @@ msgid "SCR (ID)"
 msgstr ""
 
 #: src/profile.c:266
-msgid "SD: Standard definition"
+msgid "SD: standard definition"
 msgstr ""
 
 #: src/input/mpegts/iptv/iptv_mux.c:104
