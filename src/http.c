@@ -576,19 +576,25 @@ http_access_verify_channel(http_connection_t *hc, int mask,
   if (ticket)
     http_access_verify_ticket(hc);
 
-  if (hc->hc_access)
+  if (hc->hc_access) {
     res = access_verify2(hc->hc_access, mask);
+
+    if (!res && !channel_access(ch, hc->hc_access, 0))
+      res = -1;
+  }
 
   if (res) {
     access_destroy(hc->hc_access);
     hc->hc_access = access_get(hc->hc_username, hc->hc_password,
                                (struct sockaddr *)hc->hc_peer);
-    if (hc->hc_access)
+    if (hc->hc_access) {
       res = access_verify2(hc->hc_access, mask);
+
+      if (!res && !channel_access(ch, hc->hc_access, 0))
+        res = -1;
+    }
   }
 
-  if (!res && !channel_access(ch, hc->hc_access, 0))
-    res = -1;
 
   return res;
 }
