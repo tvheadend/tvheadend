@@ -114,6 +114,7 @@ typedef int32_t x86_reg;
 typedef int x86_reg;
 #endif
 
+#if defined(__i386__) || defined(__x86_64__)
 static inline void
 native_cpuid(unsigned int *eax, unsigned int *ebx,
              unsigned int *ecx, unsigned int *edx)
@@ -128,6 +129,7 @@ native_cpuid(unsigned int *eax, unsigned int *ebx,
                  "=d" (*edx)
                : "0" (*eax), "2" (*ecx));
 }
+#endif
 
 void
 ffdecsa_init(void)
