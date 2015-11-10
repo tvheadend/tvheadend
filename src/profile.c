@@ -249,11 +249,11 @@ profile_class_priority_list ( void *o, const char *lang )
     { N_("Normal"),                   PROFILE_SPRIO_NORMAL },
     { N_("Low"),                      PROFILE_SPRIO_LOW },
     { N_("Unimportant"),              PROFILE_SPRIO_UNIMPORTANT },
-    { N_("DVR Override: important"),   PROFILE_SPRIO_DVR_IMPORTANT },
-    { N_("DVR Override: high"),        PROFILE_SPRIO_DVR_HIGH },
-    { N_("DVR Override: normal"),      PROFILE_SPRIO_DVR_NORMAL },
-    { N_("DVR Override: low"),         PROFILE_SPRIO_DVR_LOW },
-    { N_("DVR Override: unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
+    { N_("DVR override: important"),   PROFILE_SPRIO_DVR_IMPORTANT },
+    { N_("DVR override: high"),        PROFILE_SPRIO_DVR_HIGH },
+    { N_("DVR override: normal"),      PROFILE_SPRIO_DVR_NORMAL },
+    { N_("DVR override: low"),         PROFILE_SPRIO_DVR_LOW },
+    { N_("DVR override: unimportant"), PROFILE_SPRIO_DVR_UNIMPORTANT },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -263,8 +263,8 @@ profile_class_svfilter_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("None"),                    PROFILE_SVF_NONE },
-    { N_("SD: Standard definition"), PROFILE_SVF_SD },
-    { N_("HD: High definition"),     PROFILE_SVF_HD },
+    { N_("SD: standard definition"), PROFILE_SVF_SD },
+    { N_("HD: high definition"),     PROFILE_SVF_HD },
   };
   return strtab2htsmsg(tab, 1, lang);
 }

@@ -2720,7 +2720,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_U32,
       .id       = "removal",
-      .name     = N_("File removal (days)"),
+      .name     = N_("DVR file retention period (days)"),
       .off      = offsetof(dvr_entry_t, de_removal),
       .set      = dvr_entry_class_removal_set,
       .opts     = PO_HIDDEN

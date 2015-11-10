@@ -1063,14 +1063,14 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "retention",
-      .name     = N_("DVR Log retention (days)"),
+      .name     = N_("DVR log retention (days)"),
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
       .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_U32,
       .id       = "removal",
-      .name     = N_("File removal (days)"),
+      .name     = N_("DVR file retention period (days)"),
       .off      = offsetof(dvr_autorec_entry_t, dae_removal),
       .opts     = PO_HIDDEN,
     },

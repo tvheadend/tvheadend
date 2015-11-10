@@ -724,7 +724,7 @@ dvr_config_class_pathname_set(void *o, const void *v)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
-  .ic_caption    = N_("DVR Configuration profile"),
+  .ic_caption    = N_("DVR configuration profile"),
   .ic_event      = "dvrconfig",
   .ic_save       = dvr_config_class_save,
   .ic_get_title  = dvr_config_class_get_title,

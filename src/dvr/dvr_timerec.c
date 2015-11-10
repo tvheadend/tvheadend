@@ -614,13 +614,13 @@ const idclass_t dvr_timerec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "removal",
-      .name     = N_("File removal (days)"),
+      .name     = N_("DVR file retention period (days)"),
       .off      = offsetof(dvr_timerec_entry_t, dte_removal),
     },
     {
       .type     = PT_STR,
       .id       = "config_name",
-      .name     = N_("DVR Configuration"),
+      .name     = N_("DVR configuration"),
       .set      = dvr_timerec_entry_class_config_name_set,
       .get      = dvr_timerec_entry_class_config_name_get,
       .rend     = dvr_timerec_entry_class_config_name_rend,
