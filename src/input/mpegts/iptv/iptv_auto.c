@@ -53,6 +53,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   htsbuf_queue_t q;
   int delim;
   size_t l;
+  int64_t chnum2;
   const char *url, *name, *logo, *epgid;
   char url2[512], custom[512], name2[128], buf[32], *n, *y;
 
@@ -69,7 +70,11 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
        strncmp(url, "rtp://", 6)))
     return;
 
-  if (chnum) {
+  epgid = htsmsg_get_str(item, "tvh-chnum");
+  chnum2 = epgid ? prop_intsplit_from_str(epgid, CHANNEL_SPLIT) : 0;
+  if (chnum2) {
+    chnum += chnum2;
+  } else if (chnum) {
     if (chnum % CHANNEL_SPLIT)
       chnum += *total;
     else

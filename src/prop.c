@@ -155,12 +155,9 @@ prop_write_values
       }
       case PT_S64: {
         if (p->intsplit) {
-          char *s;
           if (!(new = htsmsg_field_get_str(f)))
             continue;
-          s64 = (int64_t)atol(new) * p->intsplit;
-          if ((s = strchr(new, '.')) != NULL)
-            s64 += (atol(s + 1) % p->intsplit);
+          s64 = prop_intsplit_from_str(new, p->intsplit);
         } else {
           if (htsmsg_field_get_s64(f, &s64))
             continue;
