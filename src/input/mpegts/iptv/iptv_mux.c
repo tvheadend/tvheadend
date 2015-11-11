@@ -152,6 +152,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_interface",
       .name     = N_("Interface"),
       .off      = offsetof(iptv_mux_t, mm_iptv_interface),
+      .list     = network_interfaces_enum,
     },
     {
       .type     = PT_BOOL,
