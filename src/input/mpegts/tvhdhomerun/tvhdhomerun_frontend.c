@@ -622,8 +622,14 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
     uuid = htsmsg_get_str(conf, "uuid");
 
   /* Class */
-  if (!(idc = dvb_network_class_by_fe_type(type)) || type == DVB_TYPE_S) {
-    tvherror("tvhdhomerun", "unknown FE type %d", type);
+  if (type == DVB_TYPE_T)
+    idc = &tvhdhomerun_frontend_dvbt_class;
+  else if (type == DVB_TYPE_C)
+    idc = &tvhdhomerun_frontend_dvbc_class;
+  else if (type == DVB_TYPE_ATSC) {
+    idc = &tvhdhomerun_frontend_atsc_class;
+  } else {
+    tvherror("stvhdhomerun", "unknown FE type %d", type);
     return NULL;
   }
 

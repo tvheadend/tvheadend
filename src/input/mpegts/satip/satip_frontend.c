@@ -1705,7 +1705,13 @@ satip_frontend_create
   if (type == DVB_TYPE_S)
     idc = master ? &satip_frontend_dvbs_slave_class :
                    &satip_frontend_dvbs_class;
-  else if (!(idc = dvb_network_class_by_fe_type(type))) {
+  else if (type == DVB_TYPE_T)
+    idc = &satip_frontend_dvbt_class;
+  else if (type == DVB_TYPE_C)
+    idc = &satip_frontend_dvbc_class;
+  else if (type == DVB_TYPE_ATSC)
+    idc = &satip_frontend_atsc_class;
+  else {
     tvherror("satip", "unknown FE type %d", type);
     return NULL;
   }
