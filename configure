@@ -251,6 +251,16 @@ if enabled_or_auto dvben50221; then
   fi
 fi
 
+check_cc_snippet ifnames '
+#include <net/if.h>
+int test(void)
+{
+  struct if_nameindex *ifnames = if_nameindex();
+  if_freenameindex(ifnames);
+  return 0;
+}
+'
+
 #
 # Python
 #

@@ -783,6 +783,8 @@ static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - 
 #define SKEL_USED(name) do { name = NULL; } while (0)
 #define SKEL_FREE(name) do { free(name); name = NULL; } while (0)
 
+htsmsg_t *network_interfaces_enum(void *obj, const char *lang);
+
 /* glibc wrapper */
 #if ! ENABLE_QSORT_R
 void

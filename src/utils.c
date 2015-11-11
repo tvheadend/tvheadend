@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <net/if.h>
 
 #include <openssl/sha.h>
 
@@ -773,4 +774,27 @@ gcdU32(uint32_t a, uint32_t b)
     }
     return b;
   }
+}
+
+htsmsg_t *network_interfaces_enum(void *obj, const char *lang)
+{
+#if ENABLE_IFNAMES
+  htsmsg_t *list = htsmsg_create_list();
+  struct if_nameindex *ifnames = if_nameindex();
+
+  if (ifnames) {
+    struct if_nameindex *ifname;
+    for (ifname = ifnames; ifname->if_name; ifname++) {
+      htsmsg_t *entry = htsmsg_create_map();
+      htsmsg_add_str(entry, "key", ifname->if_name);
+      htsmsg_add_str(entry, "val", ifname->if_name);
+      htsmsg_add_msg(list, NULL, entry);
+    }
+    if_freenameindex(ifnames);
+  }
+
+  return list;
+#else
+  return NULL;
+#endif
 }
