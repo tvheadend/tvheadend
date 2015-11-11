@@ -605,6 +605,7 @@ dvb_network_create0
 
   ln = calloc(1, sizeof(dvb_network_t));
   ln->ln_type = dvb_fe_type_by_network_class(idc);
+  assert(ln->ln_type != DVB_TYPE_NONE);
 
   /* Create */
   if (!(ln = (dvb_network_t*)mpegts_network_create0((void*)ln,
