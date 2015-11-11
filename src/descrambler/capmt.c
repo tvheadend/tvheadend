@@ -422,6 +422,7 @@ capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
   capmt_opaque_t *o;
   int pid, i;
 
+  ca = &capmt->capmt_adapters[adapter];
   tuner = capmt->capmt_adapters[adapter].ca_tuner;
   if (tuner == NULL) {
     /* clean all pids (to be sure) */
@@ -432,7 +433,6 @@ capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
     }
     return;
   }
-  ca = &capmt->capmt_adapters[adapter];
   mmi = LIST_FIRST(&tuner->mi_mux_active);
   mux = mmi ? mmi->mmi_mux : NULL;
   for (i = 0; i < MAX_PIDS; i++) {
