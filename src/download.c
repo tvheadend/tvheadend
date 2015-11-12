@@ -232,7 +232,7 @@ download_pipe(download_t *dn, const char *args)
   /* Arguments */
   if (spawn_parse_args(&argv, 64, args, NULL)) {
     tvherror(dn->log, "pipe: unable to parse arguments (%s)", args);
-    return NULL;
+    return -1;
   }
 
   /* Grab */
@@ -243,7 +243,7 @@ download_pipe(download_t *dn, const char *args)
   if (r < 0) {
     dn->pipe_fd = -1;
     dn->pipe_pid = 0;
-    tvherror(LOG_ERR, dn->log, "pipe: cannot start (%s)", args);
+    tvherror(dn->log, "pipe: cannot start (%s)", args);
     return -1;
   }
 
