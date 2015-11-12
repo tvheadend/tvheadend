@@ -346,7 +346,6 @@ typedef struct service {
    * Service mapping, see service_mapper.c form details
    */
   int s_sm_onqueue;
-  TAILQ_ENTRY(service) s_sm_link;
 
   /**
    * Pending save.

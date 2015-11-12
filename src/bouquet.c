@@ -268,6 +268,13 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
 {
   channel_t *ch = NULL;
   idnode_list_mapping_t *ilm;
+  static service_mapper_conf_t sm_conf = {
+    .check_availability = 0,
+    .encrypted          = 1,
+    .merge_same_name    = 0,
+    .provider_tags      = 0,
+    .network_tags       = 0
+  };
 
   if (!t->s_enabled)
     return;
@@ -283,7 +290,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
       break;
   if (!ilm)
-    ch = service_mapper_process(t, bq);
+    ch = service_mapper_process(&sm_conf, t, bq);
   else
     ch = (channel_t *)ilm->ilm_in2;
   if (ch && bq->bq_chtag)
