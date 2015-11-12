@@ -320,6 +320,7 @@ typedef struct service {
   int64_t     (*s_channel_number) (struct service *);
   const char *(*s_channel_name)   (struct service *);
   const char *(*s_channel_epgid)  (struct service *);
+  htsmsg_t   *(*s_channel_tags)   (struct service *);
   const char *(*s_provider_name)  (struct service *);
   const char *(*s_channel_icon)   (struct service *);
   void        (*s_mapped)         (struct service *);

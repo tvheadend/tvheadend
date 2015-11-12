@@ -108,6 +108,27 @@ iptv_service_channel_epgid ( service_t *s )
   return im->mm_iptv_epgid;
 }
 
+static htsmsg_t *
+iptv_service_channel_tags ( service_t *s )
+{
+  iptv_service_t   *is = (iptv_service_t *)s;
+  iptv_mux_t       *im = (iptv_mux_t *)is->s_dvb_mux;
+  char             *p = im->mm_iptv_tags, *x;
+  htsmsg_t         *r = NULL;
+  if (p) {
+    r = htsmsg_create_list();
+    while (*p) {
+      while (*p && *p <= ' ') p++;
+      x = p;
+      while (*p && *p >= ' ') p++;
+      if (*p) { *p = '\0'; p++; }
+      if (*x)
+        htsmsg_add_str(r, NULL, x);
+    }
+  }
+  return r;
+}
+
 /*
  * Create
  */
@@ -128,6 +149,7 @@ iptv_service_create0
   is->s_channel_number = iptv_service_channel_number;
   is->s_channel_icon   = iptv_service_channel_icon;
   is->s_channel_epgid  = iptv_service_channel_epgid;
+  is->s_channel_tags   = iptv_service_channel_tags;
 
   /* Set default service name */
   if (!is->s_dvb_svcname || !*is->s_dvb_svcname)

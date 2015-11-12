@@ -209,7 +209,9 @@ channel_t *
 service_mapper_process ( service_t *s, bouquet_t *bq )
 {
   channel_t *chn = NULL;
-  const char *name;
+  const char *name, *tagname;
+  htsmsg_field_t *f;
+  htsmsg_t *m;
 
   /* Ignore */
   if (s->s_status == SERVICE_ZOMBIE) {
@@ -248,6 +250,12 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
     } else if (service_is_radio(s)) {
       channel_tag_map(channel_tag_find_by_name("Radio", 1), chn, chn);
     }
+
+    /* Custom tags */
+    if (s->s_channel_tags && (m = s->s_channel_tags(s)) != NULL)
+      HTSMSG_FOREACH(f, m)
+        if ((tagname = htsmsg_field_get_str(f)) != NULL)
+          channel_tag_map(channel_tag_find_by_name(tagname, 1), chn, chn);
 
     /* Provider */
     if (service_mapper_conf.provider_tags)

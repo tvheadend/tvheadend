@@ -131,6 +131,7 @@ struct iptv_mux
   int                   mm_iptv_kill_timeout;
   char                 *mm_iptv_env;
   char                 *mm_iptv_hdr;
+  char                 *mm_iptv_tags;
 
   uint32_t              mm_iptv_rtp_seq;
 

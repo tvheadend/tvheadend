@@ -54,7 +54,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   int delim;
   size_t l;
   int64_t chnum2;
-  const char *url, *name, *logo, *epgid;
+  const char *url, *name, *logo, *epgid, *tags;
   char url2[512], custom[512], name2[128], buf[32], *n, *y;
 
   url = htsmsg_get_str(item, "m3u-url");
@@ -90,6 +90,15 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     logo = htsmsg_get_str(item, "logo");
 
   epgid = htsmsg_get_str(item, "tvg-id");
+  tags  = htsmsg_get_str(item, "tvh-tags");
+  if (tags) {
+    tags = n = strdupa(tags);
+    while (*n) {
+      if (*n == '|')
+        *n = '\n';
+      n++;
+    }
+  }
 
   urlinit(&u);
   custom[0] = '\0';
@@ -199,6 +208,11 @@ skip_url:
         im->mm_iptv_hdr = strdup(custom);
         change = 1;
       }
+      if (strcmp(im->mm_iptv_tags ?: "", tags ?: "")) {
+        free(im->mm_iptv_tags);
+        im->mm_iptv_tags = strdup(tags);
+        change = 1;
+      }
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
@@ -222,6 +236,8 @@ skip_url:
     htsmsg_add_str(conf, "iptv_icon", logo);
   if (epgid)
     htsmsg_add_str(conf, "iptv_epgid", epgid);
+  if (tags)
+    htsmsg_add_str(conf, "iptv_tags", tags);
   if (!in->in_scan_create)
     htsmsg_add_s32(conf, "scan_result", MM_SCAN_OK);
   if (custom[0])
