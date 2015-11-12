@@ -951,13 +951,10 @@ htsmsg_cmp(htsmsg_t *m1, htsmsg_t *m2)
     return 1;
 
   f2 = TAILQ_FIRST(&m2->hm_fields);
-  if (f2 == NULL) {
-    if (TAILQ_FIRST(&m1->hm_fields) == NULL)
-      return 0;
-    return 1;
-  }
-
   TAILQ_FOREACH(f1, &m1->hm_fields, hmf_link) {
+
+    if (f2 == NULL)
+      return 1;
 
     if (f1->hmf_type != f2->hmf_type)
       return 1;
