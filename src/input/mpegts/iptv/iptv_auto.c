@@ -44,6 +44,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
                                    int *total, int *count)
 {
   htsmsg_t *conf;
+  htsmsg_field_t *f;
   mpegts_mux_t *mm;
   iptv_mux_t *im;
   url_t u;
@@ -51,11 +52,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_list_t args;
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
-  int delim;
   size_t l;
   int64_t chnum2;
   const char *url, *name, *logo, *epgid, *tags;
-  char url2[512], custom[512], name2[128], buf[32], *n, *y;
+  char url2[512], custom[512], name2[128], buf[32], *n;
 
   url = htsmsg_get_str(item, "m3u-url");
 
@@ -108,18 +108,12 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
   if (strncmp(url, "http://", 7) == 0 ||
       strncmp(url, "https://", 8) == 0) {
-    url = n = strdupa(url);
-    delim = 0;
-    while (*n && *n != ' ' && *n != '|') n++;
-    if (*n) { delim = *n; *n = '\0'; n++; }
-    l = 0;
-    while (*n) {
-      while (*n && *n <= ' ') n++;
-      y = n;
-      while (*n && *n != delim && *n != '&') n++;
-      if (*n) { *n = '\0'; n++; }
-      if (*y)
-        tvh_strlcatf(custom, sizeof(custom), l, "%s\n", y);
+    conf = htsmsg_get_list(item, "m3u-http-headers");
+    if (conf) {
+      l = 0;
+      HTSMSG_FOREACH(f, conf)
+        if ((n = (char *)htsmsg_field_get_str(f)) != NULL)
+          tvh_strlcatf(custom, sizeof(custom), l, "%s\n", n);
     }
   }
 
