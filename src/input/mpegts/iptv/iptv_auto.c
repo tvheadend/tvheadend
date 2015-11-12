@@ -72,7 +72,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
   epgid = htsmsg_get_str(item, "tvh-chnum");
   chnum2 = epgid ? prop_intsplit_from_str(epgid, CHANNEL_SPLIT) : 0;
-  if (chnum2) {
+  if (chnum2 > 0) {
     chnum += chnum2;
   } else if (chnum) {
     if (chnum % CHANNEL_SPLIT)

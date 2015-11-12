@@ -143,7 +143,10 @@ htsmsg_t *parse_m3u
       }
       p = NULL;
       if (*data == ',') {
+        delim = ',';
         data++;
+      }
+      if (delim == ',') {
         while (*data && *data <= ' ' && *data != '\n' && *data != '\r') data++;
         if (*data)
           p = data;
