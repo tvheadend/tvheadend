@@ -806,6 +806,8 @@ service_destroy(service_t *t, int delconf)
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL)
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
 
+  bouquet_destroy_by_service(t, delconf);
+
   while ((ilm = LIST_FIRST(&t->s_channels)))
     idnode_list_unlink(ilm, delconf ? t : NULL);
 
@@ -814,8 +816,6 @@ service_destroy(service_t *t, int delconf)
   assert(t->s_status == SERVICE_IDLE);
 
   t->s_status = SERVICE_ZOMBIE;
-
-  bouquet_destroy_by_service(t);
 
   TAILQ_INIT(&t->s_filt_components);
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)

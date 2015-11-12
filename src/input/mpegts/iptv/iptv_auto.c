@@ -298,7 +298,7 @@ iptv_auto_network_process(void *aux, const char *last_url,
 {
   auto_private_t *ap = aux;
   iptv_network_t *in = ap->in_network;
-  mpegts_mux_t *mm;
+  mpegts_mux_t *mm, *mm2;
   int r = -1, count, n, i;
   http_arg_list_t remove_args;
   char *argv[10];
@@ -328,11 +328,13 @@ iptv_auto_network_process(void *aux, const char *last_url,
 
   if (r == 0) {
     count = 0;
-    LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
+    for (mm = LIST_FIRST(&in->mn_muxes); mm; mm = mm2) {
+      mm2 = LIST_NEXT(mm, mm_network_link);
       if (((iptv_mux_t *)mm)->im_delete_flag) {
         mm->mm_delete(mm, 1);
         count++;
       }
+    }
     if (count > 0)
       tvhinfo("iptv", "removed %d mux(es) from network '%s'", count, in->mn_network_name);
   } else {

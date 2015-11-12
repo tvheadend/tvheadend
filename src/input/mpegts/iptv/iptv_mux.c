@@ -250,8 +250,7 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url, *url_sane, *url_raw, *muxname;
-  iptv_mux_t *im = (iptv_mux_t*)mm;
+  iptv_mux_t *im = (iptv_mux_t*)mm, copy;
   char ubuf[UUID_HEX_SIZE];
 
   if (delconf)
@@ -259,22 +258,19 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
                         idnode_uuid_as_sstr(&mm->mm_network->mn_id),
                         idnode_uuid_as_str(&mm->mm_id, ubuf));
 
-  url = im->mm_iptv_url; // Workaround for silly printing error
-  url_sane = im->mm_iptv_url_sane;
-  url_raw = im->mm_iptv_url_raw;
-  muxname = im->mm_iptv_muxname;
-  free(im->mm_iptv_interface);
-  free(im->mm_iptv_svcname);
-  free(im->mm_iptv_env);
-  free(im->mm_iptv_hdr);
-  free(im->mm_iptv_tags);
-  free(im->mm_iptv_icon);
-  free(im->mm_iptv_epgid);
+  copy = *im; /* keep pointers */
   mpegts_mux_delete(mm, delconf);
-  free(url);
-  free(url_sane);
-  free(url_raw);
-  free(muxname);
+  free(copy.mm_iptv_url);
+  free(copy.mm_iptv_url_sane);
+  free(copy.mm_iptv_url_raw);
+  free(copy.mm_iptv_muxname);
+  free(copy.mm_iptv_interface);
+  free(copy.mm_iptv_svcname);
+  free(copy.mm_iptv_env);
+  free(copy.mm_iptv_hdr);
+  free(copy.mm_iptv_tags);
+  free(copy.mm_iptv_icon);
+  free(copy.mm_iptv_epgid);
 }
 
 static void
