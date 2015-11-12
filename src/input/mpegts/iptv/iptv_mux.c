@@ -82,6 +82,9 @@ iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int
     iptv_url_set0(url, sane_url, str, buf);
     urlreset(&u);
     return 1;
+  } else {
+    if (*url == NULL || **url == '\0')
+      iptv_url_set0(url, sane_url, "?", "?");
   }
 
   return 0;

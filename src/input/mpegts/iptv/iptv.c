@@ -652,7 +652,7 @@ static int
 iptv_auto_network_class_url_set( void *in, const void *v )
 {
   iptv_network_t *mn = in;
-  return iptv_url_set(&mn->in_url, &mn->in_url_sane, v, 1, 0);
+  return iptv_url_set(&mn->in_url, &mn->in_url_sane, v, 1, 1);
 }
 
 static void

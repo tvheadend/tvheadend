@@ -19,7 +19,9 @@
 
 #include "tvheadend.h"
 #include "download.h"
+#include "spawn.h"
 
+#include <signal.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
@@ -158,6 +160,103 @@ out:
  *
  */
 static void
+download_pipe_close(download_t *dn)
+{
+  if (dn->pipe_fd >= 0) {
+    close(dn->pipe_fd);
+    if (dn->pipe_pid)
+      kill(-(dn->pipe_pid), SIGKILL); /* kill whole process group */
+    dn->pipe_fd = -1;
+    dn->pipe_pid = 0;
+  }
+  sbuf_free(&dn->pipe_sbuf);
+}
+
+/*
+ *
+ */
+static void
+download_pipe_read(void *aux)
+{
+  download_t *dn = aux;
+  ssize_t len;
+  char *s, *p;
+
+  if (dn->pipe_fd < 0 || dn->pipe_pid == 0)
+    return;
+
+  while (1) {
+    if (dn->pipe_sbuf.sb_ptr > 50*1024*1024) {
+      errno = EMSGSIZE;
+      goto failed;
+    }
+    sbuf_alloc(&dn->pipe_sbuf, 2048);
+    len = sbuf_read(&dn->pipe_sbuf, dn->pipe_fd);
+    if (len == 0) {
+      s = dn->url ? strdupa(dn->url) : strdupa("");
+      p = strchr(s, ' ');
+      if (p)
+        *p = '\0';
+      p = strrchr(s, '/');
+      if (p)
+        p++;
+      sbuf_append(&dn->pipe_sbuf, "", 1);
+      dn->process(dn->aux, p, NULL, (char *)dn->pipe_sbuf.sb_data, (size_t)dn->pipe_sbuf.sb_ptr);
+      download_pipe_close(dn);
+      return;
+    } else if (len < 0) {
+      if (ERRNO_AGAIN(errno))
+        break;
+failed:
+      tvherror(dn->log, "pipe: read failed: %d", errno);
+      download_pipe_close(dn);
+      return;
+    }
+  }
+
+  gtimer_arm_ms(&dn->pipe_read_timer, download_pipe_read, dn, 250);
+}
+
+/*
+ *
+ */
+static int
+download_pipe(download_t *dn, const char *args)
+{
+  char **argv = NULL;
+  int r;
+
+  download_pipe_close(dn);
+  gtimer_disarm(&dn->pipe_read_timer);
+
+  /* Arguments */
+  if (spawn_parse_args(&argv, 64, args, NULL)) {
+    tvherror(dn->log, "pipe: unable to parse arguments (%s)", args);
+    return NULL;
+  }
+
+  /* Grab */
+  r = spawn_and_give_stdout(argv[0], argv, NULL, &dn->pipe_fd, &dn->pipe_pid, 1);
+
+  spawn_free_args(argv);
+
+  if (r < 0) {
+    dn->pipe_fd = -1;
+    dn->pipe_pid = 0;
+    tvherror(LOG_ERR, dn->log, "pipe: cannot start (%s)", args);
+    return -1;
+  }
+
+  fcntl(dn->pipe_fd, F_SETFL, fcntl(dn->pipe_fd, F_GETFL) | O_NONBLOCK);
+
+  gtimer_arm_ms(&dn->pipe_read_timer, download_pipe_read, dn, 250);
+  return 0;
+}
+
+/*
+ *
+ */
+static void
 download_fetch(void *aux)
 {
   download_t *dn = aux;
@@ -171,6 +270,11 @@ download_fetch(void *aux)
 
   if (strncmp(dn->url, "file://", 7) == 0) {
     download_file(dn, dn->url + 7);
+    goto done;
+  }
+
+  if (strncmp(dn->url, "pipe://", 7) == 0) {
+    download_pipe(dn, dn->url + 7);
     goto done;
   }
 
@@ -217,6 +321,8 @@ download_init( download_t *dn, const char *log )
 {
   memset(dn, 0, sizeof(*dn));
   dn->log = strdup(log);
+  dn->pipe_fd = -1;
+  sbuf_init(&dn->pipe_sbuf);
 }
 
 /*
@@ -247,7 +353,9 @@ download_done( download_t *dn )
     http_client_close(dn->http_client);
     dn->http_client = NULL;
   }
+  download_pipe_close(dn);
   gtimer_disarm(&dn->fetch_timer);
+  gtimer_disarm(&dn->pipe_read_timer);
   free(dn->log); dn->log = NULL;
   free(dn->url); dn->url = NULL;
 }

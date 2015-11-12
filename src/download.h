@@ -26,13 +26,17 @@ typedef struct download {
   char *log;
   char *url;
   void *aux;
-  int ssl_peer_verify;
+  int   ssl_peer_verify;
   int (*process)(void *aux, const char *last_url, const char *host_url,
                  char *data, size_t len);
   void (*stop)(void *aux);
   /* internal members */
   http_client_t *http_client;
-  gtimer_t fetch_timer;
+  gtimer_t       fetch_timer;
+  gtimer_t       pipe_read_timer;
+  sbuf_t         pipe_sbuf;
+  int            pipe_fd;
+  pid_t          pipe_pid;
 } download_t;
 
 void download_init ( download_t *dn, const char *log );
