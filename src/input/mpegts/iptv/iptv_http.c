@@ -142,7 +142,7 @@ iptv_http_complete
     url = NULL;
     HTSMSG_FOREACH(f, items) {
       if ((item = htsmsg_field_get_map(f)) == NULL) continue;
-      url = htsmsg_get_str(items, "m3u-url");
+      url = htsmsg_get_str(item, "m3u-url");
       if (url && url[0]) break;
     }
     tvhtrace("iptv", "m3u url: '%s'", url);
