@@ -519,7 +519,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
       im->im_pcr_start += s64;
       im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
       im->im_pcr &= PTS_MASK;
-      tvhtrace("iptv-pcr", "pcr: updated %ld, time start %ld", im->im_pcr, im->im_pcr_start);
+      tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64, im->im_pcr, im->im_pcr_start);
     }
     if (iptv_input_pause_check(im)) {
       tvhtrace("iptv-pcr", "pcr: paused");
@@ -535,14 +535,14 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
           im->im_pcr = pcr_first;
           im->im_pcr_start = getmonoclock();
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace("iptv-pcr", "pcr: first %ld last %ld, time start %ld, end %ld",
+          tvhtrace("iptv-pcr", "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
                    pcr_first, pcr_last, im->im_pcr_start, im->im_pcr_end);
         }
       } else {
         s64 = pts_diff(im->im_pcr, pcr_last);
         if (s64 != PTS_UNSET) {
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace("iptv-pcr", "pcr: last %ld, time end %ld", pcr_last, im->im_pcr_end);
+          tvhtrace("iptv-pcr", "pcr: last %"PRId64", time end %"PRId64, pcr_last, im->im_pcr_end);
         }
       }
       if (iptv_input_pause_check(im)) {
