@@ -87,7 +87,8 @@ iptv_http_data
   tsdebug_write((mpegts_mux_t *)im, buf, len);
 
   if (len > 0)
-    iptv_input_recv_packets(im, len);
+    if (iptv_input_recv_packets(im, len) == 1)
+      hc->hc_pause = 1;
 
   pthread_mutex_unlock(&iptv_lock);
 
@@ -229,6 +230,19 @@ iptv_http_stop
 
 
 /*
+ * Pause/Unpause
+ */
+static void
+iptv_http_pause
+  ( iptv_mux_t *im, int pause )
+{
+  http_client_t *hc = im->im_data;
+
+  assert(pause == 0);
+  http_client_unpause(hc);
+}
+
+/*
  * Initialise HTTP handler
  */
 
@@ -240,11 +254,13 @@ iptv_http_init ( void )
       .scheme = "http",
       .start  = iptv_http_start,
       .stop   = iptv_http_stop,
+      .pause  = iptv_http_pause
     },
     {
       .scheme  = "https",
       .start  = iptv_http_start,
       .stop   = iptv_http_stop,
+      .pause  = iptv_http_pause
     }
   };
   iptv_handler_register(ih, 2);

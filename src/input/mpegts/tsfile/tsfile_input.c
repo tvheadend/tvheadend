@@ -44,7 +44,7 @@ tsfile_input_thread ( void *aux )
   tvhpoll_event_t ev;
   struct stat st;
   sbuf_t buf;
-  int64_t pcr, pcr_last = PTS_UNSET;
+  int64_t pcr, pcr2, pcr_last = PTS_UNSET;
 #if PLATFORM_LINUX
   int64_t pcr_last_realtime = 0;
 #endif
@@ -132,7 +132,7 @@ tsfile_input_thread ( void *aux )
     if (c > 0) {
       pcr = PTS_UNSET;
       mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf,
-                                &pcr, &tmi->mmi_tsfile_pcr_pid);
+                                &pcr, &pcr2, &tmi->mmi_tsfile_pcr_pid);
 
       /* Delay */
       if (pcr != PTS_UNSET) {

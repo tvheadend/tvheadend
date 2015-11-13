@@ -36,9 +36,6 @@
 #include "packet.h"
 #include "streaming.h"
 
-#define PTS_MASK 0x1ffffffffLL
-//#define PTS_MASK 0x7ffffLL
-
 /* parser states */
 #define PARSER_APPEND 0
 #define PARSER_RESET  1

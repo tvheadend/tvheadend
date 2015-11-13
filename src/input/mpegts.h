@@ -894,7 +894,7 @@ void mpegts_mux_update_pids ( mpegts_mux_t *mm );
 
 void mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
-   int64_t *pcr, uint16_t *pcr_pid);
+   int64_t *pcr_first, int64_t *pcr_last, uint16_t *pcr_pid);
 
 int mpegts_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );
 int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );

@@ -974,7 +974,7 @@ ts_sync_count ( const uint8_t *tsb, int len )
 void
 mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
-    int64_t *pcr, uint16_t *pcr_pid )
+    int64_t *pcr_first, int64_t *pcr_last, uint16_t *pcr_pid )
 {
   int len2 = 0, off = 0;
   mpegts_packet_t *mp;
@@ -1005,14 +1005,26 @@ mpegts_input_recv_packets
   //       require per mmi buffers, where this is generally not required)
 
   /* Extract PCR on demand */
-  if (pcr && pcr_pid) {
-    uint8_t *tmp;
-    for (tmp = tsb + len2 - 188; tmp >= tsb; tmp -= 188) {
-      uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
+  if (pcr_first && pcr_last && pcr_pid) {
+    uint8_t *tmp, *end;
+    uint16_t pid;
+    for (tmp = tsb, end = tsb + len2; tmp < end; tmp += 188) {
+      pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
-        if (get_pcr(tmp, pcr)) {
-          if (*pcr != PTS_UNSET) *pcr_pid = pid;
+        if (get_pcr(tmp, pcr_first)) {
+          *pcr_pid = pid;
           break;
+        }
+      }
+    }
+    if (*pcr_pid != MPEGTS_PID_NONE) {
+      for (tmp = tsb + len2 - 188; tmp >= tsb; tmp -= 188) {
+        pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
+        if (*pcr_pid == pid) {
+          if (get_pcr(tmp, pcr_last)) {
+            *pcr_pid = pid;
+            break;
+          }
         }
       }
     }

@@ -84,6 +84,7 @@ typedef struct str_list
 } str_list_t;
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
+#define PTS_MASK  INT64_C(0x00000001ffffffff)
 
 extern int tvheadend_running;
 

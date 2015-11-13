@@ -1022,7 +1022,7 @@ wrdata:
         mmi = lfe->sf_req->sf_mmi;
         mmi->tii_stats.unc += unc;
         mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                                  &lfe->sf_sbuf, NULL, NULL);
+                                  &lfe->sf_sbuf, NULL, NULL, NULL);
       }
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
       lfe->sf_last_data_tstamp = dispatch_clock;
@@ -1571,7 +1571,7 @@ wrdata:
     if (lfe->sf_req == lfe->sf_req_thread) {
       mmi->tii_stats.unc += unc;
       mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                                sb, NULL, NULL);
+                                sb, NULL, NULL, NULL);
     } else
       fatal = 1;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);

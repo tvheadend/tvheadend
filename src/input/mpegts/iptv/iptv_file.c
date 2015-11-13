@@ -25,23 +25,76 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <signal.h>
+
+typedef struct file_priv {
+  int fd;
+  int shutdown;
+  pthread_t tid;
+  pthread_cond_t cond;
+} file_priv_t;
 
 /*
- * Connect UDP/RTP
+ * Read thread
+ */
+static void *
+iptv_file_thread ( void *aux )
+{
+  iptv_mux_t *im = aux;
+  file_priv_t *fp = im->im_data;
+  struct timespec ts;
+  int r, fd = fp->fd, pause = 0;
+  char buf[32*1024];
+
+  pthread_mutex_lock(&iptv_lock);
+  while (!fp->shutdown && fd > 0) {
+    while (!fp->shutdown && pause) {
+      clock_gettime(CLOCK_REALTIME, &ts);
+      ts.tv_sec += 1;
+      if (pthread_cond_timedwait(&fp->cond, &iptv_lock, &ts) == ETIMEDOUT)
+        break;
+    }
+    if (fp->shutdown)
+      break;
+    pause = 0;
+    pthread_mutex_unlock(&iptv_lock);
+    r = read(fd, buf, sizeof(buf));
+    pthread_mutex_lock(&iptv_lock);
+    if (r == 0)
+      break;
+    if (r < 0) {
+      if (ERRNO_AGAIN(errno))
+        continue;
+      break;
+    }
+    sbuf_append(&im->mm_iptv_buffer, buf, r);
+    if (iptv_input_recv_packets(im, r) == 1)
+      pause = 1;
+  }
+  pthread_mutex_unlock(&iptv_lock);
+  return NULL;
+}
+
+/*
+ * Open file
  */
 static int
 iptv_file_start ( iptv_mux_t *im, const char *raw, const url_t *url )
 {
-  int fd = tvh_open(raw + 7, O_RDONLY | O_DIRECT, 0);
+  file_priv_t *fp;
+  int fd = tvh_open(raw + 7, O_RDONLY | O_NONBLOCK, 0);
 
   if (fd < 0) {
     tvherror("iptv", "unable to open file '%s'", raw + 7);
     return -1;
   }
 
-  im->mm_iptv_fd = fd;
-
+  fp = calloc(1, sizeof(*fp));
+  fp->fd = fd;
+  pthread_cond_init(&fp->cond, NULL);
+  im->im_data = fp;
   iptv_input_mux_started(im);
+  tvhthread_create(&fp->tid, NULL, iptv_file_thread, im, "iptvfile");
   return 0;
 }
 
@@ -49,40 +102,22 @@ static void
 iptv_file_stop
   ( iptv_mux_t *im )
 {
-  int rd = im->mm_iptv_fd;
+  file_priv_t *fp = im->im_data;
+  int rd = fp->fd;
   if (rd > 0)
     close(rd);
-  im->mm_iptv_fd = -1;
-}
-
-static ssize_t
-iptv_file_read ( iptv_mux_t *im )
-{
-  int r, fd = im->mm_iptv_fd;
-  ssize_t res = 0;
-
-  while (fd > 0) {
-    sbuf_alloc(&im->mm_iptv_buffer, 32*1024);
-    r = sbuf_read(&im->mm_iptv_buffer, fd);
-    if (r == 0) {
-      close(fd);
-      im->mm_iptv_fd = -1;
-      break;
-    }
-    if (r < 0) {
-      if (errno == EAGAIN)
-        break;
-      if (ERRNO_AGAIN(errno))
-        continue;
-    }
-    res += r;
-  }
-
-  return res;
+  fp->shutdown = 1;
+  pthread_cond_signal(&fp->cond);
+  pthread_mutex_unlock(&iptv_lock);
+  pthread_join(fp->tid, NULL);
+  pthread_cond_destroy(&fp->cond);
+  pthread_mutex_lock(&iptv_lock);
+  free(im->im_data);
+  im->im_data = NULL;
 }
 
 /*
- * Initialise pipe handler
+ * Initialise file handler
  */
 
 void
@@ -92,8 +127,7 @@ iptv_file_init ( void )
     {
       .scheme = "file",
       .start  = iptv_file_start,
-      .stop   = iptv_file_stop,
-      .read   = iptv_file_read,
+      .stop   = iptv_file_stop
     },
   };
   iptv_handler_register(ih, ARRAY_SIZE(ih));

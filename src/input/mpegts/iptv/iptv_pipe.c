@@ -165,6 +165,7 @@ iptv_pipe_init ( void )
       .start  = iptv_pipe_start,
       .stop   = iptv_pipe_stop,
       .read   = iptv_pipe_read,
+      .pause  = iptv_input_pause_handler
     },
   };
   iptv_handler_register(ih, ARRAY_SIZE(ih));

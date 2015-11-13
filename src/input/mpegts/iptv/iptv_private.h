@@ -52,6 +52,7 @@ struct iptv_handler
   int     (*start) ( iptv_mux_t *im, const char *raw, const url_t *url );
   void    (*stop)  ( iptv_mux_t *im );
   ssize_t (*read)  ( iptv_mux_t *im );
+  void    (*pause) ( iptv_mux_t *im, int pause );
   
   RB_ENTRY(iptv_handler) link;
 };
@@ -65,7 +66,8 @@ struct iptv_input
 
 int  iptv_input_fd_started ( iptv_mux_t *im );
 void iptv_input_mux_started ( iptv_mux_t *im );
-void iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len );
+int  iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len );
+void iptv_input_pause_handler ( iptv_mux_t *im, int pause );
 
 struct iptv_network
 {
@@ -138,6 +140,12 @@ struct iptv_mux
   sbuf_t                mm_iptv_buffer;
 
   iptv_handler_t       *im_handler;
+  gtimer_t              im_pause_timer;
+
+  int64_t               im_pcr;
+  int64_t               im_pcr_start;
+  int64_t               im_pcr_end;
+  uint16_t              im_pcr_pid;
 
   void                 *im_data;
 

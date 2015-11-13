@@ -24,6 +24,7 @@
 #include "htsstr.h"
 #include "channels.h"
 #include "bouquet.h"
+#include "packet.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -368,6 +369,8 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   pthread_mutex_lock(&iptv_lock);
 
+  gtimer_disarm(&im->im_pause_timer);
+
   /* Stop */
   if (im->im_handler->stop)
     im->im_handler->stop(im);
@@ -404,10 +407,20 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
   snprintf(buf, len, "IPTV");
 }
 
+static void
+iptv_input_unpause ( void *aux )
+{
+  iptv_mux_t *im = aux;
+  pthread_mutex_lock(&iptv_lock);
+  tvhtrace("iptv-pcr", "unpause timer callback");
+  im->im_handler->pause(im, 0);
+  pthread_mutex_unlock(&iptv_lock);
+}
+
 static void *
 iptv_input_thread ( void *aux )
 {
-  int nfds;
+  int nfds, r;
   ssize_t n;
   iptv_mux_t *im;
   tvhpoll_event_t ev;
@@ -425,6 +438,7 @@ iptv_input_thread ( void *aux )
       continue;
     }
     im = ev.data.ptr;
+    r  = 0;
 
     pthread_mutex_lock(&iptv_lock);
 
@@ -436,20 +450,51 @@ iptv_input_thread ( void *aux )
         im->im_handler->stop(im);
         break;
       }
-      iptv_input_recv_packets(im, n);
+      r = iptv_input_recv_packets(im, n);
+      if (r == 1)
+        im->im_handler->pause(im, 1);
     }
 
     pthread_mutex_unlock(&iptv_lock);
+
+    if (r == 1) {
+      pthread_mutex_lock(&global_lock);
+      if (im->mm_active)
+        gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+      pthread_mutex_unlock(&global_lock);
+    }
   }
   return NULL;
 }
 
 void
+iptv_input_pause_handler ( iptv_mux_t *im, int pause )
+{
+  tvhpoll_event_t ev = { 0 };
+
+  ev.fd       = im->mm_iptv_fd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = im;
+  if (pause)
+    tvhpoll_rem(iptv_poll, &ev, 1);
+  else
+    tvhpoll_add(iptv_poll, &ev, 1);
+}
+
+static inline int
+iptv_input_pause_check ( iptv_mux_t *im )
+{
+  /* queued more than 3 seconds? trigger the pause */
+  return im->im_pcr_end - im->im_pcr_start >= 3000000LL;
+}
+
+int
 iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
   static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
   mpegts_mux_instance_t *mmi;
+  int64_t pcr_first = PTS_UNSET, pcr_last = PTS_UNSET, s64;
 
   in->in_bps += len * 8;
   time(&t2);
@@ -466,12 +511,49 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
     t1 = t2;
   }
 
-  /* Pass on */
+  /* Pass on, but with timing */
   mmi = im->mm_active;
-  if (mmi)
+  if (mmi) {
+    if (im->im_pcr != PTS_UNSET) {
+      s64 = getmonoclock() - im->im_pcr_start;
+      im->im_pcr_start += s64;
+      im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
+      im->im_pcr &= PTS_MASK;
+      tvhtrace("iptv-pcr", "pcr: updated %ld, time start %ld", im->im_pcr, im->im_pcr_start);
+    }
+    if (iptv_input_pause_check(im)) {
+      tvhtrace("iptv-pcr", "pcr: paused");
+      return 1;
+    }
     mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
-                              &im->mm_iptv_buffer, NULL, NULL);
+                              &im->mm_iptv_buffer,
+                              &pcr_first, &pcr_last, &im->im_pcr_pid);
+    if (pcr_first != PTS_UNSET && pcr_last != PTS_UNSET) {
+      if (im->im_pcr == PTS_UNSET) {
+        s64 = pts_diff(pcr_first, pcr_last);
+        if (s64 != PTS_UNSET) {
+          im->im_pcr = pcr_first;
+          im->im_pcr_start = getmonoclock();
+          im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
+          tvhtrace("iptv-pcr", "pcr: first %ld last %ld, time start %ld, end %ld",
+                   pcr_first, pcr_last, im->im_pcr_start, im->im_pcr_end);
+        }
+      } else {
+        s64 = pts_diff(im->im_pcr, pcr_last);
+        if (s64 != PTS_UNSET) {
+          im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
+          tvhtrace("iptv-pcr", "pcr: last %ld, time end %ld", pcr_last, im->im_pcr_end);
+        }
+      }
+      if (iptv_input_pause_check(im)) {
+        tvhtrace("iptv-pcr", "pcr: paused");
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
+
 
 int
 iptv_input_fd_started ( iptv_mux_t *im )
@@ -518,6 +600,9 @@ iptv_input_mux_started ( iptv_mux_t *im )
 {
   /* Allocate input buffer */
   sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+
+  im->im_pcr = PTS_UNSET;
+  im->im_pcr_pid = MPEGTS_PID_NONE;
 
   if (iptv_input_fd_started(im))
     return;

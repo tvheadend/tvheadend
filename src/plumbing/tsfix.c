@@ -20,8 +20,6 @@
 #include "streaming.h"
 #include "tsfix.h"
 
-#define PTS_MASK 0x1ffffffffLL
-
 #define tsfixprintf(fmt...) // printf(fmt)
 
 LIST_HEAD(tfstream_list, tfstream);
