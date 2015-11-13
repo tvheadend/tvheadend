@@ -94,7 +94,7 @@ static int
 iptv_mux_url_set ( void *p, const void *v )
 {
   iptv_mux_t *im = p;
-  return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 0, 1);
+  return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
 }
 
 static htsmsg_t *

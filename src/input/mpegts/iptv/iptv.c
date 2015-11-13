@@ -251,7 +251,9 @@ static const char *
 iptv_sub_url_encode(iptv_mux_t *im, const char *s, char *tmp, size_t tmplen)
 {
   char *p;
-  if (im->mm_iptv_url && !strncmp(im->mm_iptv_url, "pipe://", 7))
+  if (im->mm_iptv_url &&
+      (!strncmp(im->mm_iptv_url, "pipe://", 7) ||
+       !strncmp(im->mm_iptv_url, "file://", 7)))
     return s;
   p = url_encode(s);
   strncpy(tmp, p, tmplen-1);
@@ -318,6 +320,10 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (raw && !strncmp(raw, "pipe://", 7)) {
 
     scheme = "pipe";
+
+  } else if (raw && !strncmp(raw, "file://", 7)) {
+
+    scheme = "file";
 
   } else {
 
@@ -875,6 +881,7 @@ void iptv_init ( void )
   iptv_udp_init();
   iptv_rtsp_init();
   iptv_pipe_init();
+  iptv_file_init();
 
   iptv_input = calloc(1, sizeof(iptv_input_t));
 
