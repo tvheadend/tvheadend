@@ -110,6 +110,17 @@ dvb_bouquet_comment ( bouquet_t *bq, mpegts_mux_t *mm )
   bouquet_change_comment(bq, comment, 0);
 }
 
+static void
+dvb_service_autoenable( mpegts_service_t *s, const char *where )
+{
+  if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
+    tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in %s)",
+            s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id, where);
+    service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
+  }
+  s->s_dvb_check_seen = dispatch_clock;
+}
+
 #if ENABLE_MPEGTS_DVB
 static mpegts_mux_t *
 dvb_fs_mux_find ( mpegts_mux_t *mm, uint16_t onid, uint16_t tsid )
@@ -1464,14 +1475,8 @@ dvb_sdt_mux
     s       = mpegts_service_find(mm, service_id, 0, 1, &save);
     charset = dvb_charset_find(mn, mm, s);
 
-    if (s) {
-      if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
-        tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in SDT)",
-                s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id);
-        service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
-      }
-      s->s_dvb_check_seen = dispatch_clock;
-    }
+    if (s)
+      dvb_service_autoenable(s, "SDT");
 
     /* Descriptor loop */
     DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
@@ -2420,14 +2425,9 @@ psi_parse_pmt
       descrambler_caid_changed((service_t *)t);
   }
 
-  if (service_has_audio_or_video((service_t *)t)) {
-    t->s_dvb_check_seen = dispatch_clock;
-    if (!t->s_enabled && t->s_auto == SERVICE_AUTO_PAT_MISSING) {
-      tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in PAT and PMT)",
-              t->s_nicename, t->s_dvb_service_id, t->s_dvb_service_id);
-      service_set_enabled((service_t *)t, 1, SERVICE_AUTO_NORMAL);
-    }
-  }
+  if (service_has_audio_or_video((service_t *)t))
+    dvb_service_autoenable(t, "PAT and PMT");
+
   return ret;
 }
 
