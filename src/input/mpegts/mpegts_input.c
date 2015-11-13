@@ -927,6 +927,28 @@ mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
  * *************************************************************************/
 
 static int inline
+get_pcr ( const uint8_t *tsb, int64_t *rpcr )
+{
+  int_fast64_t pcr;
+
+  if (tsb[1] & 0x80) /* error bit */
+    return 0;
+
+  if ((tsb[3] & 0x20) == 0 ||
+      tsb[4] <= 5 ||
+      (tsb[5] & 0x10) == 0)
+    return 0;
+
+  pcr  = (uint64_t)tsb[6] << 25;
+  pcr |= (uint64_t)tsb[7] << 17;
+  pcr |= (uint64_t)tsb[8] << 9;
+  pcr |= (uint64_t)tsb[9] << 1;
+  pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
+  *rpcr = pcr;
+  return 1;
+}
+
+static int inline
 ts_sync_count ( const uint8_t *tsb, int len )
 {
   const uint8_t *start = tsb;
@@ -982,14 +1004,16 @@ mpegts_input_recv_packets
   //       without the potential need to buffer data (since that would
   //       require per mmi buffers, where this is generally not required)
 
-  /* Extract PCR (used for tsfile playback) */
+  /* Extract PCR on demand */
   if (pcr && pcr_pid) {
-    uint8_t *tmp, *end;
-    for (tmp = tsb, end = tsb + len2; tmp < end; tmp += 188) {
+    uint8_t *tmp;
+    for (tmp = tsb + len2 - 188; tmp >= tsb; tmp -= 188) {
       uint16_t pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
       if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
-        ts_recv_packet1(NULL, tmp, 188, pcr, 0);
-       if (*pcr != PTS_UNSET) *pcr_pid = pid;
+        if (get_pcr(tmp, pcr)) {
+          if (*pcr != PTS_UNSET) *pcr_pid = pid;
+          break;
+        }
       }
     }
   }
@@ -1232,7 +1256,7 @@ mpegts_input_process
           s = mps->mps_owner;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, NULL, f);
+          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, f);
         }
       } else
       /* Stream table data */
@@ -1241,7 +1265,7 @@ mpegts_input_process
           if (s->s_type != STYPE_STD) continue;
           f = (type & (MPS_TABLE|MPS_FTABLE)) ||
               (pid == s->s_pmt_pid) || (pid == s->s_pcr_pid);
-          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, NULL, f);
+          ts_recv_packet1((mpegts_service_t*)s, tsb, llen, f);
         }
       }
 

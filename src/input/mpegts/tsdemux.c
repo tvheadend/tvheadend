@@ -173,12 +173,11 @@ ts_recv_skipped0
  */
 int
 ts_recv_packet1
-  (mpegts_service_t *t, const uint8_t *tsb, int len, int64_t *pcrp, int table)
+  (mpegts_service_t *t, const uint8_t *tsb, int len, int table)
 {
   elementary_stream_t *st;
   int pid, r;
   int error = 0;
-  int64_t pcr = PTS_UNSET;
   
   /* Error */
   if (tsb[1] & 0x80)
@@ -188,19 +187,6 @@ ts_recv_packet1
   printf("%02X %02X %02X %02X %02X %02X\n",
          tsb[0], tsb[1], tsb[2], tsb[3], tsb[4], tsb[5]);
 #endif
-
-  /* Extract PCR (do this early for tsfile) */
-  if((tsb[3] & 0x20) && (tsb[4] > 5) && (tsb[5] & 0x10) && !error) {
-    pcr  = (uint64_t)tsb[6] << 25;
-    pcr |= (uint64_t)tsb[7] << 17;
-    pcr |= (uint64_t)tsb[8] << 9;
-    pcr |= (uint64_t)tsb[9] << 1;
-    pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
-    if (pcrp) *pcrp = pcr;
-  }
-
-  /* Nothing - special case for tsfile to get PCR */
-  if (!t) return 0;
 
   /* Service inactive - ignore */
   if(t->s_status != SERVICE_RUNNING)
