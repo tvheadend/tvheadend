@@ -168,17 +168,37 @@ static void
 http_client_poll_dir ( http_client_t *hc, int in, int out )
 {
   int events = (in ? TVHPOLL_IN : 0) | (out ? TVHPOLL_OUT : 0);
-  if (hc->hc_efd && hc->hc_pevents != events) {
-    tvhpoll_event_t ev;
-    memset(&ev, 0, sizeof(ev));
-    ev.fd       = hc->hc_fd;
-    ev.events   = events | TVHPOLL_IN;
-    ev.data.ptr = hc;  
-    tvhpoll_add(hc->hc_efd, &ev, 1);
+  tvhpoll_event_t ev;
+  if (hc->hc_efd) {
+    if (events == 0 && hc->hc_pause) {
+      if (hc->hc_pevents_pause == 0)
+        hc->hc_pevents_pause = hc->hc_pevents;
+      memset(&ev, 0, sizeof(ev));
+      ev.fd       = hc->hc_fd;
+      ev.data.ptr = hc;
+      tvhpoll_rem(hc->hc_efd, &ev, 1);
+    } else if (hc->hc_pevents != events) {
+      memset(&ev, 0, sizeof(ev));
+      ev.fd       = hc->hc_fd;
+      ev.events   = events | TVHPOLL_IN;
+      ev.data.ptr = hc;
+      tvhpoll_add(hc->hc_efd, &ev, 1);
+    }
   }
   hc->hc_pevents = events;
   /* make sure to se the correct errno for our SSL routines */
   errno = EAGAIN;
+}
+
+void
+http_client_unpause( http_client_t *hc )
+{
+  if (hc->hc_pause) {
+    http_client_poll_dir(hc, hc->hc_pevents_pause & TVHPOLL_IN,
+                             hc->hc_pevents_pause & TVHPOLL_OUT);
+    hc->hc_pause = 0;
+    hc->hc_pevents_pause = 0;
+  }
 }
 
 static void
@@ -909,6 +929,10 @@ http_client_run( http_client_t *hc )
   }
 
 retry:
+  if (hc->hc_pause) {
+    http_client_poll_dir(hc, 0, 0);
+    return HTTP_CON_RECEIVING;
+  }
   if (hc->hc_ssl)
     r = http_client_ssl_recv(hc, buf, hc->hc_io_size);
   else

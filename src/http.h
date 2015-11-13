@@ -275,6 +275,7 @@ struct http_client {
   char        *hc_bindaddr;
   tvhpoll_t   *hc_efd;
   int          hc_pevents;
+  int          hc_pevents_pause;
 
   int          hc_code;
   http_ver_t   hc_version;
@@ -316,6 +317,7 @@ struct http_client {
   int          hc_running:1;
   int          hc_shutdown_wait:1;
   int          hc_handle_location:1; /* handle the redirection (location) requests */
+  int          hc_pause:1;
 
   http_client_wcmd_t            *hc_wcmd;
   TAILQ_HEAD(,http_client_wcmd)  hc_wqueue;
@@ -375,6 +377,7 @@ int http_client_simple( http_client_t *hc, const url_t *url);
 int http_client_clear_state( http_client_t *hc );
 int http_client_run( http_client_t *hc );
 void http_client_ssl_peer_verify( http_client_t *hc, int verify );
+void http_client_unpause( http_client_t *hc );
 
 /*
  * RTSP helpers
