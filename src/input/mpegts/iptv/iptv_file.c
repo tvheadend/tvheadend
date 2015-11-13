@@ -43,9 +43,14 @@ iptv_file_thread ( void *aux )
   iptv_mux_t *im = aux;
   file_priv_t *fp = im->im_data;
   struct timespec ts;
-  int r, fd = fp->fd, pause = 0;
+  ssize_t r;
+  int fd = fp->fd, pause = 0;
   char buf[32*1024];
+  off_t off = 0;
 
+#if defined(PLATFORM_DARWIN)
+  fcntl(fd, F_NOCACHE, 1);
+#endif
   pthread_mutex_lock(&iptv_lock);
   while (!fp->shutdown && fd > 0) {
     while (!fp->shutdown && pause) {
@@ -70,6 +75,12 @@ iptv_file_thread ( void *aux )
     sbuf_append(&im->mm_iptv_buffer, buf, r);
     if (iptv_input_recv_packets(im, r) == 1)
       pause = 1;
+#ifndef PLATFORM_DARWIN
+#if !ENABLE_ANDROID
+    posix_fadvise(fd, off, r, POSIX_FADV_DONTNEED);
+#endif
+#endif
+    off += r;
   }
   pthread_mutex_unlock(&iptv_lock);
   return NULL;
