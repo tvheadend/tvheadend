@@ -92,7 +92,8 @@ channel_class_autoname_set ( void *obj, const void *p )
       free(ch->ch_name);
       ch->ch_name = strdup(s);
     } else if (b) {
-      ch->ch_name[0] = '\0';
+      if (ch->ch_name)
+        ch->ch_name[0] = '\0';
     }
     ch->ch_autoname = b;
     return 1;
