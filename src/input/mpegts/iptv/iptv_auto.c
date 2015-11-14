@@ -155,7 +155,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     tvh_strlcatf(url2, sizeof(url2), l, "%s", u.host);
     if (u.port > 0)
       tvh_strlcatf(url2, sizeof(url2), l, ":%d", u.port);
-    tvh_strlcatf(url2, sizeof(url2), l, "%s", u.path);
+    if (u.path)
+      tvh_strlcatf(url2, sizeof(url2), l, "%s", u.path);
     if (u.query)
       tvh_strlcatf(url2, sizeof(url2), l, "?%s", u.query);
     url = url2;
