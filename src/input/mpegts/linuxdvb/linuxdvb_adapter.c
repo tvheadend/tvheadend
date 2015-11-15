@@ -80,7 +80,7 @@ linuxdvb_adapter_class_get_title ( idnode_t *in, const char *lang )
 const idclass_t linuxdvb_adapter_class =
 {
   .ic_class      = "linuxdvb_adapter",
-  .ic_caption    = N_("LinuxDVB Adapter"),
+  .ic_caption    = N_("LinuxDVB adapter"),
   .ic_event      = "linuxdvb_adapter",
   .ic_save       = linuxdvb_adapter_class_save,
   .ic_get_childs = linuxdvb_adapter_class_get_childs,
@@ -89,7 +89,7 @@ const idclass_t linuxdvb_adapter_class =
     {
       .type     = PT_STR,
       .id       = "rootpath",
-      .name     = N_("Device Path"),
+      .name     = N_("Device path"),
       .opts     = PO_RDONLY,
       .off      = offsetof(linuxdvb_adapter_t, la_rootpath),
     },

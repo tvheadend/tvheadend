@@ -19,6 +19,7 @@
 
 #include "iptv_private.h"
 #include "settings.h"
+#include "channels.h"
 
 /*
  * Class
@@ -26,64 +27,75 @@
 extern const idclass_t mpegts_mux_class;
 extern const idclass_t mpegts_mux_instance_class;
 
+static inline void
+iptv_url_set0 ( char **url, char **sane_url,
+                const char *url1, const char *sane_url1 )
+{
+  free(*url);
+  free(*sane_url);
+  *url = url1 ? strdup(url1) : NULL;
+  *sane_url = sane_url1 ? strdup(sane_url1) : NULL;
+}
+
+int
+iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int allow_pipe )
+{
+  const char *x;
+  char *buf, port[16] = "";
+  size_t len;
+  url_t u;
+
+  if (strcmp(str ?: "", *url ?: "") == 0)
+    return 0;
+
+  if (str == NULL || *str == '\0') {
+    iptv_url_set0(url, sane_url, NULL, NULL);
+    return 1;
+  }
+  if (allow_file && !strncmp(str, "file://", 7)) {
+    iptv_url_set0(url, sane_url, str, str);
+    return 1;
+  }
+  if (allow_pipe && !strncmp(str, "pipe://", 7)) {
+    x = str + strlen(str);
+    while (x != str && *x <= ' ')
+      x--;
+    ((char *)x)[1] = '\0';
+    iptv_url_set0(url, sane_url, str, str);
+    return 1;
+  }
+  urlinit(&u);
+  if (!urlparse(str, &u)) {
+    len = (u.scheme ? strlen(u.scheme) + 3 : 0) +
+          (u.host ? strlen(u.host) + 1 : 0) +
+          /* port */ 16 +
+          (u.path ? strlen(u.path) + 1 : 0) +
+          (u.query ? strlen(u.query) + 2 : 0);
+    buf = alloca(len);
+    if (u.port > 0 && u.port <= 65535)
+      snprintf(port, sizeof(port), ":%d", u.port);
+    snprintf(buf, len, "%s%s%s%s%s%s%s",
+             u.scheme ?: "", u.scheme ? "://" : "",
+             u.host ?: "", port,
+             u.path ?: "", (u.query && u.query[0]) ? "?" : "",
+             u.query ?: "");
+    iptv_url_set0(url, sane_url, str, buf);
+    urlreset(&u);
+    return 1;
+  } else {
+    if (*url == NULL || **url == '\0')
+      iptv_url_set0(url, sane_url, "?", "?");
+  }
+
+  return 0;
+}                                              
+
 static int
 iptv_mux_url_set ( void *p, const void *v )
 {
   iptv_mux_t *im = p;
-  const char *str = v, *x;
-  char *buf, port[16] = "";
-  size_t len;
-  url_t url;
-
-  if (strcmp(str ?: "", im->mm_iptv_url ?: "")) {
-    if (str == NULL || *str == '\0') {
-      free(im->mm_iptv_url);
-      free(im->mm_iptv_url_sane);
-      im->mm_iptv_url = NULL;
-      im->mm_iptv_url_sane = NULL;
-      return 1;
-    }
-    if (!strncmp(str, "pipe://", 7)) {
-      x = str + strlen(str);
-      while (x != str && *x <= ' ')
-        x--;
-      ((char *)x)[1] = '\0';
-      free(im->mm_iptv_url);
-      free(im->mm_iptv_url_sane);
-      im->mm_iptv_url = strdup(str);
-      im->mm_iptv_url_sane = strdup(str);
-      return 1;
-    }
-    memset(&url, 0, sizeof(url));
-    if (!urlparse(str, &url)) {
-      free(im->mm_iptv_url);
-      free(im->mm_iptv_url_sane);
-      im->mm_iptv_url = strdup(str);
-      if (im->mm_iptv_url) {
-        len = (url.scheme ? strlen(url.scheme) + 3 : 0) +
-              (url.host ? strlen(url.host) + 1 : 0) +
-              /* port */ 16 +
-              (url.path ? strlen(url.path) + 1 : 0) +
-              (url.query ? strlen(url.query) + 2 : 0);
-        buf = alloca(len);
-        if (url.port > 0 && url.port <= 65535)
-          snprintf(port, sizeof(port), ":%d", url.port);
-        snprintf(buf, len, "%s%s%s%s%s%s%s",
-                 url.scheme ?: "", url.scheme ? "://" : "",
-                 url.host ?: "", port,
-                 url.path ?: "", url.query ? "?" : "",
-                 url.query ?: "");
-        im->mm_iptv_url_sane = strdup(buf);
-      } else {
-        im->mm_iptv_url_sane = NULL;
-      }
-      urlreset(&url);
-      return 1;
-    }
-    urlreset(&url);
-  }
-  return 0;
-}                                              
+  return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
+}
 
 static htsmsg_t *
 iptv_muxdvr_class_kill_list ( void *o, const char *lang )
@@ -116,7 +128,7 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = N_("Streaming Priority"),
+      .name     = N_("Streaming priority"),
       .off      = offsetof(iptv_mux_t, mm_iptv_streaming_priority),
       .def.i    = 0,
       .opts     = PO_ADVANCED
@@ -140,6 +152,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_interface",
       .name     = N_("Interface"),
       .off      = offsetof(iptv_mux_t, mm_iptv_interface),
+      .list     = network_interfaces_enum,
     },
     {
       .type     = PT_BOOL,
@@ -150,14 +163,33 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_STR,
       .id       = "iptv_muxname",
-      .name     = N_("Mux Name"),
+      .name     = N_("Mux name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
+    },
+    {
+      .type     = PT_S64,
+      .intsplit = CHANNEL_SPLIT,
+      .id       = "channel_number",
+      .name     = N_("Channel number"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_chnum),
     },
     {
       .type     = PT_STR,
       .id       = "iptv_sname",
-      .name     = N_("Service Name"),
+      .name     = N_("Service name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_epgid",
+      .name     = N_("EPG name"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_epgid),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_icon",
+      .name     = N_("Icon URL"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_icon),
     },
     {
       .type     = PT_BOOL,
@@ -189,6 +221,20 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_env),
       .opts     = PO_ADVANCED | PO_MULTILINE
     },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_hdr",
+      .name     = N_("Custom HTTP headers"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_hdr),
+      .opts     = PO_ADVANCED | PO_MULTILINE
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_tags",
+      .name     = N_("Channel tags"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_tags),
+      .opts     = PO_ADVANCED | PO_MULTILINE
+    },
     {}
   }
 };
@@ -208,8 +254,7 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url, *url_sane, *url_raw, *muxname;
-  iptv_mux_t *im = (iptv_mux_t*)mm;
+  iptv_mux_t *im = (iptv_mux_t*)mm, copy;
   char ubuf[UUID_HEX_SIZE];
 
   if (delconf)
@@ -217,18 +262,19 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
                         idnode_uuid_as_sstr(&mm->mm_network->mn_id),
                         idnode_uuid_as_str(&mm->mm_id, ubuf));
 
-  url = im->mm_iptv_url; // Workaround for silly printing error
-  url_sane = im->mm_iptv_url_sane;
-  url_raw = im->mm_iptv_url_raw;
-  muxname = im->mm_iptv_muxname;
-  free(im->mm_iptv_interface);
-  free(im->mm_iptv_svcname);
-  free(im->mm_iptv_env);
+  copy = *im; /* keep pointers */
   mpegts_mux_delete(mm, delconf);
-  free(url);
-  free(url_sane);
-  free(url_raw);
-  free(muxname);
+  free(copy.mm_iptv_url);
+  free(copy.mm_iptv_url_sane);
+  free(copy.mm_iptv_url_raw);
+  free(copy.mm_iptv_muxname);
+  free(copy.mm_iptv_interface);
+  free(copy.mm_iptv_svcname);
+  free(copy.mm_iptv_env);
+  free(copy.mm_iptv_hdr);
+  free(copy.mm_iptv_tags);
+  free(copy.mm_iptv_icon);
+  free(copy.mm_iptv_epgid);
 }
 
 static void
@@ -253,6 +299,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  iptv_service_t *ms;
   char ubuf[UUID_HEX_SIZE];
 
   /* Create Mux */
@@ -268,6 +315,8 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
   if (!im->mm_iptv_kill_timeout)
     im->mm_iptv_kill_timeout = 5;
 
+  sbuf_init(&im->mm_iptv_buffer);
+
   /* Create Instance */
   (void)mpegts_mux_instance_create(mpegts_mux_instance, NULL,
                                    (mpegts_input_t*)iptv_input,
@@ -282,6 +331,14 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
       if (!(e = htsmsg_field_get_map(f))) continue;
       (void)iptv_service_create0(im, 0, 0, f->hmf_name, e);
     }
+  } else if (in->in_service_id) {
+    conf = htsmsg_create_map();
+    htsmsg_add_u32(conf, "sid", in->in_service_id);
+    htsmsg_add_u32(conf, "dvb_servicetype", 1); /* SDTV */
+    ms = iptv_service_create0(im, 0, 0, NULL, conf);
+    htsmsg_destroy(conf);
+    if (ms)
+      iptv_bouquet_trigger(in, 0);
   }
   htsmsg_destroy(c);
 

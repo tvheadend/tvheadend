@@ -40,13 +40,16 @@ typedef struct dvr_config {
   profile_t *dvr_profile;
   char *dvr_storage;
   int dvr_clone;
+  uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
+  uint32_t dvr_removal_days;
   char *dvr_charset;
   char *dvr_charset_id;
   char *dvr_postproc;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
+  int dvr_running;
 
   muxer_config_t dvr_muxcnf;
 
@@ -109,6 +112,8 @@ typedef enum {
   DVR_RS_RUNNING,
   DVR_RS_COMMERCIAL,
   DVR_RS_ERROR,
+  DVR_RS_EPG_WAIT,
+  DVR_RS_FINISHED
 } dvr_rs_state_t;
   
 
@@ -148,6 +153,9 @@ typedef struct dvr_entry {
   time_t de_start_extra;
   time_t de_stop_extra;
 
+  time_t de_running_start;
+  time_t de_running_stop;
+
   char *de_owner;
   char *de_creator;
   char *de_comment;
@@ -163,8 +171,10 @@ typedef struct dvr_entry {
 
   int de_pri;
   int de_dont_reschedule;
+  int de_dont_rerecord;
   int de_mc;
-  int de_retention;
+  uint32_t de_retention;
+  uint32_t de_removal;
 
   /**
    * EPG information / links
@@ -210,10 +220,16 @@ typedef struct dvr_entry {
   struct dvr_timerec_entry *de_timerec;
 
   /**
+   * Parent/child
+   */
+  struct dvr_entry *de_parent;
+  struct dvr_entry *de_child;
+
+  /**
    * Fields for recording
    */
   pthread_t de_thread;
-  uint8_t de_thread_shutdown;
+  int de_thread_shutdown;
 
   th_subscription_t *de_s;
 
@@ -233,6 +249,11 @@ typedef struct dvr_entry {
    * Entry change notification timer
    */
   time_t de_last_notify;
+
+  /**
+   * Update notification limit
+   */
+  tvhlog_limit_t de_update_limit;
 
 } dvr_entry_t;
 
@@ -294,7 +315,10 @@ typedef struct dvr_autorec_entry {
 
   int dae_minduration;
   int dae_maxduration;
-  int dae_retention;
+  uint32_t dae_retention;
+  uint32_t dae_removal;
+  uint32_t dae_max_count;
+  uint32_t dae_max_sched_count;
 
   time_t dae_start_extra;
   time_t dae_stop_extra;
@@ -339,7 +363,8 @@ typedef struct dvr_timerec_entry {
 
   dvr_entry_t *dte_spawn;
 
-  int dte_retention;
+  uint32_t dte_retention;
+  uint32_t dte_removal;
 } dvr_timerec_entry_t;
 
 TAILQ_HEAD(dvr_timerec_entry_queue, dvr_timerec_entry);
@@ -382,6 +407,11 @@ void dvr_config_save(dvr_config_t *cfg);
 
 void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
+static inline uint32_t dvr_retention_cleanup(uint32_t val)
+{
+  return (val > 0xffffffff - 86400) ? (0xffffffff - 86400) : val;
+}
+
 /*
  *
  */
@@ -396,15 +426,21 @@ static inline int dvr_entry_is_valid(dvr_entry_t *de)
 
 int dvr_entry_get_mc(dvr_entry_t *de);
 
-int dvr_entry_get_retention( dvr_entry_t *de );
+uint32_t dvr_entry_get_retention_days( dvr_entry_t *de );
 
-int dvr_entry_get_start_time( dvr_entry_t *de );
+uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
 
-int dvr_entry_get_stop_time( dvr_entry_t *de );
+uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
-int dvr_entry_get_extra_time_post( dvr_entry_t *de );
+int dvr_entry_get_epg_running( dvr_entry_t *de );
 
-int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
+time_t dvr_entry_get_start_time( dvr_entry_t *de );
+
+time_t dvr_entry_get_stop_time( dvr_entry_t *de );
+
+time_t dvr_entry_get_extra_time_post( dvr_entry_t *de );
+
+time_t dvr_entry_get_extra_time_pre( dvr_entry_t *de );
 
 void dvr_entry_init(void);
 
@@ -439,7 +475,7 @@ dvr_entry_create_by_event( int enabled,
                            time_t start_extra, time_t stop_extra,
                            const char *owner, const char *creator,
                            dvr_autorec_entry_t *dae,
-                           dvr_prio_t pri, int retention,
+                           dvr_prio_t pri, int retention, int removal,
                            const char *comment );
 
 dvr_entry_t *
@@ -451,7 +487,7 @@ dvr_entry_create_htsp( int enabled, const char *dvr_config_uuid,
                        const char *lang, epg_genre_t *content_type,
                        const char *owner, const char *creator,
                        dvr_autorec_entry_t *dae,
-                       dvr_prio_t pri, int retention,
+                       dvr_prio_t pri, int retention, int removal,
                        const char *comment );
 
 dvr_entry_t *
@@ -460,7 +496,7 @@ dvr_entry_update( dvr_entry_t *de, int enabled, channel_t *ch,
                   const char *desc, const char *lang,
                   time_t start, time_t stop,
                   time_t start_extra, time_t stop_extra,
-                  dvr_prio_t pri, int retention );
+                  dvr_prio_t pri, int retention, int removal );
 
 void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
@@ -474,32 +510,34 @@ void dvr_rec_migrate(dvr_entry_t *de_old, dvr_entry_t *de_new);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 
+void dvr_event_removed(epg_broadcast_t *e);
+
 void dvr_event_updated(epg_broadcast_t *e);
+
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
   { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class, NULL); }
 
-dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
-
 dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
-
-dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
 const char *dvr_get_filename(dvr_entry_t *de);
 
 int64_t dvr_get_filesize(dvr_entry_t *de);
 
+void dvr_entry_set_rerecord(dvr_entry_t *de, int cmd);
+
 dvr_entry_t *dvr_entry_stop(dvr_entry_t *de);
 
-dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de);
+dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de, int rerecord);
 
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
-void dvr_entry_delete(dvr_entry_t *de);
+void dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched);
 
-void dvr_entry_cancel_delete(dvr_entry_t *de);
+void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 
 htsmsg_t *dvr_entry_class_mc_list (void *o, const char *lang);
 htsmsg_t *dvr_entry_class_pri_list(void *o, const char *lang);
@@ -527,16 +565,12 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
                   const char *lang, epg_genre_t *content_type,
                   const char *owner, const char *creator,
                   dvr_autorec_entry_t *dae, dvr_timerec_entry_t *tae,
-                  dvr_prio_t pri, int retention, const char *comment);
+                  dvr_prio_t pri, int retention, int removal, const char *comment);
 
 dvr_autorec_entry_t *
-dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int fulltext,
-                            channel_t *ch, uint32_t enabled, int32_t start,
-                            int32_t start_window, uint32_t days, time_t start_extra,
-                            time_t stop_extra, dvr_prio_t pri, int retention,
-                            int min_duration, int max_duration, dvr_autorec_dedup_t dup_detect,
-                            const char *owner, const char *creator,
-                            const char *comment, const char *name, const char *directory);
+dvr_autorec_create_htsp(htsmsg_t *conf);
+
+void dvr_autorec_update_htsp(dvr_autorec_entry_t *dae, htsmsg_t *conf);
 
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
@@ -589,11 +623,15 @@ static inline int
   return 0;
 }
 
-int dvr_autorec_get_retention( dvr_autorec_entry_t *dae );
+uint32_t dvr_autorec_get_retention_days( dvr_autorec_entry_t *dae );
+
+uint32_t dvr_autorec_get_removal_days( dvr_autorec_entry_t *dae );
 
 int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
 
 int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
+
+void dvr_autorec_completed( dvr_entry_t *de, int error_code );
 
 /**
  *
@@ -603,11 +641,9 @@ dvr_timerec_entry_t *
 dvr_timerec_create(const char *uuid, htsmsg_t *conf);
 
 dvr_timerec_entry_t*
-dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t enabled, uint32_t start, uint32_t stop,
-                            uint32_t weekdays, dvr_prio_t pri, int retention,
-                            const char *owner, const char *creator, const char *comment, 
-                            const char *name, const char *directory);
+dvr_timerec_create_htsp(htsmsg_t *conf);
+
+void dvr_timerec_update_htsp(dvr_timerec_entry_t *dte, htsmsg_t *conf);
 
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)
@@ -642,7 +678,9 @@ static inline int dvr_timerec_entry_verify
   return 0;
 }
 
-int dvr_timerec_get_retention( dvr_timerec_entry_t *dte );
+uint32_t dvr_timerec_get_retention_days( dvr_timerec_entry_t *dte );
+
+uint32_t dvr_timerec_get_removal_days( dvr_timerec_entry_t *dte );
 
 /**
  *
@@ -658,6 +696,7 @@ void dvr_inotify_init ( void );
 void dvr_inotify_done ( void );
 void dvr_inotify_add  ( dvr_entry_t *de );
 void dvr_inotify_del  ( dvr_entry_t *de );
+int  dvr_inotify_count( void );
 
 /**
  * Cutpoints support

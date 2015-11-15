@@ -43,4 +43,9 @@ intlconv_to_utf8( char *dst, size_t dst_size,
                   const char *src_charset_id,
                   const char *src, size_t src_size );
 
+char *
+intlconv_to_utf8safestr( const char *src_charset_id,
+                         const char *src_str,
+                         size_t max_size );
+
 #endif /* INTLCONV_H_ */

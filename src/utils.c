@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <net/if.h>
 
 #include <openssl/sha.h>
 
@@ -699,16 +700,27 @@ int
 deferred_unlink(const char *filename, const char *rootdir)
 {
   deferred_unlink_t *du;
-  char *s;
+  char *s, *p;
   size_t l;
   int r;
+  long max;
 
   l = strlen(filename);
   s = malloc(l + 9 + 1);
   if (s == NULL)
     return -ENOMEM;
+  max = pathconf(filename, _PC_NAME_MAX);
   strcpy(s, filename);
-  strcpy(s + l, ".removing");
+  if (l + 10 < max) {
+    p = strrchr(s, '/');
+    if (p && p[1])
+      p[1] = '.';
+    strcpy(s + l, ".removing");
+  } else {
+    p = strrchr(s, '/');
+    p = p && p[1] ? p + 1 : s;
+    memcpy(p, ".rm.", 4);
+  }
   r = rename(filename, s);
   if (r) {
     r = -errno;
@@ -762,4 +774,27 @@ gcdU32(uint32_t a, uint32_t b)
     }
     return b;
   }
+}
+
+htsmsg_t *network_interfaces_enum(void *obj, const char *lang)
+{
+#if ENABLE_IFNAMES
+  htsmsg_t *list = htsmsg_create_list();
+  struct if_nameindex *ifnames = if_nameindex();
+
+  if (ifnames) {
+    struct if_nameindex *ifname;
+    for (ifname = ifnames; ifname->if_name; ifname++) {
+      htsmsg_t *entry = htsmsg_create_map();
+      htsmsg_add_str(entry, "key", ifname->if_name);
+      htsmsg_add_str(entry, "val", ifname->if_name);
+      htsmsg_add_msg(list, NULL, entry);
+    }
+    if_freenameindex(ifnames);
+  }
+
+  return list;
+#else
+  return NULL;
+#endif
 }

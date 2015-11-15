@@ -22,7 +22,7 @@
 
 IAM=$(lastword $(MAKEFILE_LIST))
 WEBDIR ?= src/webui
-LANGUAGES ?= bg cs de en en_GB es fa fr he hr hu it lv nl pl pt ru sv
+LANGUAGES ?= bg cs de en_US en_GB es fa fr he hr hu it lv nl pl pt ru sv
 ROOTPATH = static
 
 ifneq ($(WEBUI),)
@@ -137,6 +137,7 @@ JAVASCRIPT += $(ROOTPATH)/app/tvheadend.js
 CSS_TV += $(ROOTPATH)/tv.css
 JAVASCRIPT_TV += $(EXTJSPATH)/adapter/ext/ext-base$(DEBUG).js
 JAVASCRIPT_TV += $(EXTJSPATH)/ext-all$(DEBUG).js
+JAVASCRIPT_TV += $(ROOTPATH)/app/i18n.js
 JAVASCRIPT_TV += $(ROOTPATH)/tv.js
 
 #
@@ -217,10 +218,12 @@ $(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
 
 $(WEBDIR)/extjs-tv-std.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
 	$(VV)printf 'extjs_lcss(hq, "static/tvh-tv.css.gz");' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
 	$(VV)printf 'extjs_load(hq, "static/tvh-tv.js.gz");' >> $@
 
 $(WEBDIR)/extjs-tv-debug.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
 	$(VV)printf '$(foreach f,$(CSS_TV),extjs_lcss(hq, "$(f)");\r\n)' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
 	$(VV)printf '$(foreach f,$(JAVASCRIPT_TV),extjs_load(hq, "$(f)");\r\n)' >> $@
 
 $(WEBDIR)/$(ROOTPATH)/tvh.js.gz: $(JAVASCRIPT_SRC)
@@ -254,7 +257,7 @@ intl:
 
 intl/js/tvheadend.js.pot:
 
-#intl/js/tvheadend.js.en.po: intl/js/tvheadend.js.pot
+#intl/js/tvheadend.js.en_US.po: intl/js/tvheadend.js.pot
 #	$(call merge-po,$@,$<)
 
 #intl/js/tvheadend.js.en_GB.po: intl/js/tvheadend.js.pot
@@ -284,7 +287,7 @@ intl/js/tvheadend.js.pot:
 #intl/js/tvheadend.js.it.po: intl/js/tvheadend.js.pot
 #	$(call merge-po,$@,$<)
 
-src/webui/static/intl/tvh.en.js.gz: intl/js/tvheadend.js.en.po
+src/webui/static/intl/tvh.en_US.js.gz: intl/js/tvheadend.js.en_US.po
 	$(call go-po,$@,$<)
 
 src/webui/static/intl/tvh.en_GB.js.gz: intl/js/tvheadend.js.en_GB.po

@@ -44,11 +44,11 @@ typedef struct filebundle_entry
 {
   enum filebundle_type     type;
   const char              *name;
-  struct filebundle_entry *next;
+  const struct filebundle_entry *next;
   union {
     struct {
       size_t count;
-      struct filebundle_entry *child;
+      const struct filebundle_entry *child;
     } d;
     struct {
       const uint8_t *data;
@@ -78,14 +78,10 @@ typedef struct filebundle_dir  fb_dir;
 typedef struct filebundle_file fb_file;
 
 /* Root of bundle */
-extern filebundle_entry_t *filebundle_root;
+extern const filebundle_entry_t * const filebundle_root;
 
 /* Miscellaneous */
 int fb_stat ( const char *path, struct filebundle_stat *st );
-#if ENABLE_ZLIB
-uint8_t *gzip_deflate ( const uint8_t *data, size_t orig, size_t *size );
-uint8_t *gzip_inflate ( const uint8_t *data, size_t size, size_t orig );
-#endif
 
 /* Directory processing wrappers */
 fb_dir    *fb_opendir  ( const char *path );

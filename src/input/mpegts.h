@@ -70,7 +70,7 @@ extern const idclass_t mpegts_input_class;
  * Setup / Tear down
  * *************************************************************************/
 
-void mpegts_init ( int linuxdvb_mask, str_list_t *satip_client,
+void mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
                    str_list_t *tsfiles, int tstuners );
 void mpegts_done ( void );
 
@@ -154,6 +154,8 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_BAT      999
 #define MPS_WEIGHT_VCT      999
 #define MPS_WEIGHT_EIT      999
+#define MPS_WEIGHT_ETT      999
+#define MPS_WEIGHT_MGT      999
 #define MPS_WEIGHT_PMT      998
 #define MPS_WEIGHT_PCR      997
 #define MPS_WEIGHT_CA       996
@@ -165,6 +167,7 @@ typedef struct mpegts_pid_sub
 #define MPS_WEIGHT_NIT2     300
 #define MPS_WEIGHT_SDT2     300
 #define MPS_WEIGHT_TDT      101
+#define MPS_WEIGHT_STT      101
 #define MPS_WEIGHT_PMT_SCAN 100
   int   mps_weight;
   void *mps_owner;
@@ -307,6 +310,7 @@ struct mpegts_network
   /*
    * Functions
    */
+  void              (*mn_delete)       (mpegts_network_t*, int delconf);
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
   void              (*mn_config_save)  (mpegts_network_t*);
   mpegts_mux_t*     (*mn_create_mux)
@@ -363,6 +367,7 @@ enum mpegts_mux_epg_flag
   MM_EPG_ONLY_OPENTV_SKY_ITALIA,
   MM_EPG_ONLY_OPENTV_SKY_AUSAT,
   MM_EPG_ONLY_BULSATCOM_39E,
+  MM_EPG_ONLY_PSIP,
 };
 #define MM_EPG_LAST MM_EPG_ONLY_OPENTV_SKY_AUSAT
 
@@ -547,6 +552,7 @@ struct mpegts_service
   int      s_dvb_eit_enable;
   uint64_t s_dvb_opentv_chnum;
   uint16_t s_dvb_opentv_id;
+  uint16_t s_atsc_source_id;
 
   /*
    * Link to carrying multiplex and active adapter
@@ -580,10 +586,11 @@ struct mpegts_service
   int64_t  s_pcr_drift;
 
   /**
-   * PMT monitoring
+   * PMT/CAT monitoring
    */
 
   mpegts_table_t *s_pmt_mon; ///< Table entry for monitoring PMT
+  mpegts_table_t *s_cat_mon; ///< Table entry for monitoring CAT
 
 };
 
@@ -700,7 +707,8 @@ struct mpegts_input
   void (*mi_stopping_mux)   (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_stopped_mux)    (mpegts_input_t*,mpegts_mux_instance_t*);
   int  (*mi_has_subscription) (mpegts_input_t*, mpegts_mux_t *mm);
-  void (*mi_tuning_error)   (mpegts_input_t*,mpegts_mux_t *);
+  void (*mi_tuning_error)   (mpegts_input_t*, mpegts_mux_t *);
+  void (*mi_empty_status)   (mpegts_input_t*, tvh_input_stream_t *);
   idnode_set_t *(*mi_network_list) (mpegts_input_t*);
 };
 
@@ -756,6 +764,9 @@ void mpegts_input_status_timer ( void *p );
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
 
 int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags );
+
+void mpegts_input_empty_status ( mpegts_input_t *mi, tvh_input_stream_t *st );
+
 
 /* TODO: exposing these class methods here is a bit of a hack */
 const void *mpegts_input_class_network_get  ( void *o );
@@ -883,7 +894,7 @@ void mpegts_mux_update_pids ( mpegts_mux_t *mm );
 
 void mpegts_input_recv_packets
   (mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
-   int64_t *pcr, uint16_t *pcr_pid);
+   int64_t *pcr_first, int64_t *pcr_last, uint16_t *pcr_pid);
 
 int mpegts_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );
 int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );
@@ -906,7 +917,7 @@ static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
 {
 #if ENABLE_TSDEBUG
-  if (mm->mm_tsdebug_fd2 >= 0)
+  if (mm && mm->mm_tsdebug_fd2 >= 0)
     if (write(mm->mm_tsdebug_fd2, buf, len) != len)
       tvherror("tsdebug", "unable to write input data (%i)", errno);
 #endif
@@ -981,6 +992,8 @@ int dvb_tot_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 int atsc_vct_callback
   (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
+int atsc_stt_callback
+  (struct mpegts_table *mt, const uint8_t *ptr, int len, int tableid);
 
 void psi_tables_install
   (mpegts_input_t *mi, mpegts_mux_t *mm, dvb_fe_delivery_system_t delsys);
@@ -1001,6 +1014,10 @@ mpegts_service_t *mpegts_service_create_raw(mpegts_mux_t *mm);
 
 mpegts_service_t *mpegts_service_find 
   ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid, int create, int *save );
+
+service_t *
+mpegts_service_find_e2
+  ( uint32_t stype, uint32_t sid, uint32_t tsid, uint32_t onid, uint32_t hash);
 
 mpegts_service_t *
 mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );

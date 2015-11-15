@@ -458,7 +458,7 @@ void
 dbus_server_start(void)
 {
   if (dbus_pipe.wr > 0)
-    tvhthread_create(&dbus_tid, NULL, dbus_server_thread, NULL);
+    tvhthread_create(&dbus_tid, NULL, dbus_server_thread, NULL, "dbus");
 }
 
 void

@@ -311,6 +311,7 @@ static void _process_msg
     case SMT_NOSTART_WARN:
     case SMT_SERVICE_STATUS:
     case SMT_TIMESHIFT_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       break;
 
     /* Store */

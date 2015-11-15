@@ -6,8 +6,8 @@ tvheadend \ - Advanced TV streaming server/relay
 [\fIOPTIONS\fR]
 .SH DESCRIPTION
 .B Tvheadend
-is a streaming server/relay supporing a variety of sources and multiple
-output formats. It is primarily inteded to be used in together with the
+is a streaming server/relay supporting a variety of sources and multiple
+output formats. It is primarily intended to be used in together with the
 .B Showtime
 Media player.
 .SH OPTIONS
@@ -23,7 +23,7 @@ Show built-in help information (may be more up to date).
 Specify an alternate config path; the default is \fI${HOME}/.hts\fR
 .TP
 \fB\-f
-Fork and become a background process (deamon). Default no.
+Fork and become a background process (daemon). Default no.
 .TP
 \fB\-u\fR \fIusername\fR, \fB\-\-user\fR \fIusername\fR
 Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
@@ -36,7 +36,7 @@ Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to u
 Specify alternative PID path file (default /var/run/tvheadend.pid).
 .TP
 \fB\-C\fR, \fB\-\-firstrun\fR
-If no useraccount exist then create one with no username and no
+If no user account exist then create one with no username and no
 password. Use with care as it will allow world-wide administrative
 access to your Tvheadend installation until you edit the
 access-control from within the Tvheadend UI.
@@ -58,10 +58,10 @@ Specify alternative http port (default 9881).
 Specify alternative http webroot.
 .TP
 \fB\-\-htsp_port
-Specify alternative htsp port (default 9882).
+Specify alternative HTSP port (default 9882).
 .TP
 \fB\-\-htsp_port2
-Specify extra htsp port.
+Specify extra HTSP port.
 .TP
 \fB\-d\fR, \fB\-\-debug\fR
 Enable all debug.
@@ -97,11 +97,11 @@ All activity inside tvheadend is logged to syslog using log facility
 In order for Tvheadend to control the video adapters on the system it
 must be granted access to those devices. Most systems have a 'video'
 group with write access to the video adapter devices. When Tvheadend
-is started as a daemon it will automatcially change its primary group
+is started as a daemon it will automatically change its primary group
 to 'video' in order to access these groups. If your system is configured
 in a different way you can either change the group membership of the
 video adapters (/dev/dvb, etc) or reconfigure the Tvheadend startup
-parameters. This is most likely the behaviour if you have installed
+parameters. This is most likely the behavior if you have installed
 Tvheadend from a distribution package.
 .PP
 If Tvheadend is started without the '-f' argument it will not daemonize
@@ -119,7 +119,7 @@ By default \fIeveryone (also from remote hosts)\fR is allowed \fIfull\fR
 access to \fIall\fR features / settings in the web user interface. If
 this is the first time you setup Tvheadend you are most encouraged to
 enter the web user interface, selected the 'Configuration' + 'Access Control'
-tab and make reasonable changes. Futher help / documentationcan be obtained
+tab and make reasonable changes. Further help / documentation can be obtained
 inside the web interface.
 .SS "Settings"
 Settings are stored in the current users home directory. Thus, if Tvheadend

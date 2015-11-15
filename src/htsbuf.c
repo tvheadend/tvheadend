@@ -475,4 +475,3 @@ htsbuf_to_string(htsbuf_queue_t *hq)
   htsbuf_read(hq, r, hq->hq_size);
   return r;
 }
-

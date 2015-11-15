@@ -240,7 +240,7 @@ api_dvr_entry_create_by_event
                                        e, 0, 0,
                                        perm->aa_username,
                                        perm->aa_representative,
-                                       NULL, DVR_PRIO_NORMAL, 0, comment);
+                                       NULL, DVR_PRIO_NORMAL, 0, 0, comment);
         if (de)
           dvr_entry_save(de);
       }
@@ -252,6 +252,45 @@ api_dvr_entry_create_by_event
   htsmsg_destroy(entries2);
 
   return !count ? EINVAL : 0;
+}
+
+static void
+api_dvr_rerecord_toggle(access_t *perm, idnode_t *self)
+{
+  dvr_entry_set_rerecord((dvr_entry_t *)self, -1);
+}
+
+static int
+api_dvr_entry_rerecord_toggle
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_toggle, "rerecord");
+}
+
+static void
+api_dvr_rerecord_deny(access_t *perm, idnode_t *self)
+{
+  dvr_entry_set_rerecord((dvr_entry_t *)self, 0);
+}
+
+static int
+api_dvr_entry_rerecord_deny
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_deny, "rerecord");
+}
+
+static void
+api_dvr_rerecord_allow(access_t *perm, idnode_t *self)
+{
+  dvr_entry_set_rerecord((dvr_entry_t *)self, 1);
+}
+
+static int
+api_dvr_entry_rerecord_allow
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_allow, "rerecord");
 }
 
 static void
@@ -270,7 +309,7 @@ api_dvr_entry_stop
 static void
 api_dvr_cancel(access_t *perm, idnode_t *self)
 {
-  dvr_entry_cancel((dvr_entry_t *)self);
+  dvr_entry_cancel((dvr_entry_t *)self, 0);
 }
 
 static int
@@ -424,6 +463,9 @@ void api_dvr_init ( void )
     { "dvr/entry/grid_failed",     ACCESS_RECORDER, api_idnode_grid, api_dvr_entry_grid_failed },
     { "dvr/entry/create",          ACCESS_RECORDER, api_dvr_entry_create, NULL },
     { "dvr/entry/create_by_event", ACCESS_RECORDER, api_dvr_entry_create_by_event, NULL },
+    { "dvr/entry/rerecord/toggle", ACCESS_RECORDER, api_dvr_entry_rerecord_toggle, NULL },
+    { "dvr/entry/rerecord/deny",   ACCESS_RECORDER, api_dvr_entry_rerecord_deny, NULL },
+    { "dvr/entry/rerecord/allow",  ACCESS_RECORDER, api_dvr_entry_rerecord_allow, NULL },
     { "dvr/entry/stop",            ACCESS_RECORDER, api_dvr_entry_stop, NULL },
     { "dvr/entry/cancel",          ACCESS_RECORDER, api_dvr_entry_cancel, NULL },
 

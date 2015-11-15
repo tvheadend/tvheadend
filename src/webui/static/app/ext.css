@@ -100,6 +100,11 @@
     cursor: pointer;
 }
 
+.ux-filtered-column {
+  font-style: italic !important;
+  font-weight: bold !important;
+}
+
 .x-view-drag-insert-above {
     border-top: 1px dotted #3366cc;
 }
@@ -161,6 +166,14 @@
 
 .find {
     background-image: url(../icons/find.png) !important;
+}
+
+.imdb {
+    background-image: url(../icons/imdb.png) !important;
+}
+
+.thetvdb {
+    background-image: url(../icons/thetvdb.png) !important;
 }
 
 .add {
@@ -327,12 +340,24 @@
     background-image: url(../icons/accept.png) !important;
 }
 
+.completedRerecord {
+    background-image: url(../icons/add.png) !important;
+}
+
+.completedWarning {
+    background-image: url(../icons/bell.png) !important;
+}
+
 .completedError {
     background-image: url(../icons/exclamation.png) !important;
 }
 
 .recording {
     background-image: url(../icons/rec.png) !important;
+}
+
+.rerecord {
+    background-image: url(../icons/arrow_branch.png) !important;
 }
 
 .bullet_add {
@@ -565,8 +590,9 @@
 
 .x-nice-time {
     display: inline-block;
-    width: 4em;
+    width: 6em;
     text-align: right;
+    white-space: nowrap;
 }
 
 .x-epg-title {

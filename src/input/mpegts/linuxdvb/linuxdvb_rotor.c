@@ -65,6 +65,9 @@ typedef struct linuxdvb_rotor
   linuxdvb_diseqc_t;
 #endif
 
+  uint32_t  lr_powerup_time;
+  uint32_t  lr_cmd_time;
+
   double    lr_sat_lon;
   uint32_t  lr_position;
 
@@ -86,26 +89,43 @@ extern const idclass_t linuxdvb_diseqc_class;
 const idclass_t linuxdvb_rotor_class = {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_rotor",
-  .ic_caption     = N_("DiseqC Rotor"),
+  .ic_caption     = N_("DiseqC rotor"),
   .ic_get_title   = linuxdvb_rotor_class_get_title,
+  .ic_properties  = (const property_t[]) {
+    {
+      .type    = PT_U32,
+      .id      = "powerup_time",
+      .name    = N_("Power-up time (ms) (15-200)"),
+      .off     = offsetof(linuxdvb_rotor_t, lr_powerup_time),
+      .def.u32 = 100,
+    },
+    {
+      .type    = PT_U32,
+      .id      = "cmd_time",
+      .name    = N_("Command time (ms) (10-100)"),
+      .off     = offsetof(linuxdvb_rotor_t, lr_cmd_time),
+      .def.u32 = 25
+    },
+    {}
+  }
 };
 
 const idclass_t linuxdvb_rotor_gotox_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_gotox",
-  .ic_caption     = N_("GOTOX Rotor"),
+  .ic_caption     = N_("GOTOX rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
       .id     = "position",
-      .name   = N_("GOTOX Position"),
+      .name   = N_("GOTOX position"),
       .off    = offsetof(linuxdvb_rotor_t, lr_position),
     },
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
-      .name   = N_("Satellite Longitude"),
+      .name   = N_("Satellite longitude"),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {}
@@ -356,7 +376,7 @@ linuxdvb_rotor_gotox_tune
       tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
       return -1;
     }
-    usleep(25000);
+    usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
   }
 
   tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
@@ -392,7 +412,7 @@ linuxdvb_rotor_usals_tune
       tvherror("diseqc", "failed to send USALS command");
       return -1;
     }
-    usleep(25000);
+    usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
   }
 
   return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);
@@ -410,7 +430,7 @@ linuxdvb_rotor_tune
     return 0;
 
   /* Force to 18v (quicker movement) */
-  if (linuxdvb_satconf_start(lsp, 1, 1))
+  if (linuxdvb_satconf_start(lsp, MINMAX(lr->lr_powerup_time, 15, 200), 1))
     return -1;
 
   /* GotoX */
@@ -467,6 +487,7 @@ linuxdvb_rotor_create0
 {
   int i;
   linuxdvb_diseqc_t *ld = NULL;
+  linuxdvb_rotor_t *lr;
 
   for (i = 0; i < ARRAY_SIZE(linuxdvb_rotor_all); i++) {
     if (!strcmp(name ?: "", linuxdvb_rotor_all[i].name)) {
@@ -477,6 +498,11 @@ linuxdvb_rotor_create0
         ld->ld_tune  = linuxdvb_rotor_tune;
         ld->ld_grace = linuxdvb_rotor_grace;
         ld->ld_post  = linuxdvb_rotor_post;
+        lr = (linuxdvb_rotor_t *)ld;
+        if (lr->lr_powerup_time == 0)
+          lr->lr_powerup_time = 100;
+        if (lr->lr_cmd_time == 0)
+          lr->lr_cmd_time = 25;
       }
     }
   }

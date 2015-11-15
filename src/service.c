@@ -55,6 +55,9 @@ static void service_class_save(struct idnode *self);
 
 struct service_queue service_all;
 struct service_queue service_raw_all;
+struct service_queue service_raw_remove;
+
+static gtimer_t service_raw_remove_timer;
 
 static void
 service_class_notify_enabled ( void *obj, const char *lang )
@@ -136,8 +139,8 @@ static htsmsg_t *
 service_class_auto_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Auto Check Enabled"),  0 },
-    { N_("Auto Check Disabled"), 1 },
+    { N_("Auto check enabled"),  0 },
+    { N_("Auto check disabled"), 1 },
     { N_("Missing In PAT/SDT"),  2 }
   };
   return strtab2htsmsg(tab, 1, lang);
@@ -162,7 +165,7 @@ const idclass_t service_class = {
     {
       .type     = PT_INT,
       .id       = "auto",
-      .name     = N_("Automatic Checking"),
+      .name     = N_("Automatic checking"),
       .list     = service_class_auto_list,
       .off      = offsetof(service_t, s_auto),
     },
@@ -203,7 +206,7 @@ const idclass_t service_class = {
 
 const idclass_t service_raw_class = {
   .ic_class      = "service_raw",
-  .ic_caption    = N_("Service Raw"),
+  .ic_caption    = N_("Service raw"),
   .ic_event      = "service_raw",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_delete     = service_class_delete,
@@ -302,7 +305,7 @@ void
 service_stop(service_t *t)
 {
   elementary_stream_t *st;
- 
+
   gtimer_disarm(&t->s_receive_timer);
 
   t->s_stop_feed(t);
@@ -349,9 +352,6 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
   } else {
     subscription_unlink_service(s, reason);
   }
-
-  if(LIST_FIRST(&t->s_subscriptions) == NULL)
-    service_stop(t);
 }
 
 
@@ -608,6 +608,7 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_streaming_status = 0;
   t->s_streaming_live   = 0;
   t->s_scrambled_seen   = 0;
+  t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
   t->s_start_time       = dispatch_clock;
 
   pthread_mutex_lock(&t->s_stream_mutex);
@@ -805,17 +806,16 @@ service_destroy(service_t *t, int delconf)
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL)
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
 
+  bouquet_destroy_by_service(t, delconf);
+
   while ((ilm = LIST_FIRST(&t->s_channels)))
     idnode_list_unlink(ilm, delconf ? t : NULL);
 
   idnode_unlink(&t->s_id);
 
-  if(t->s_status != SERVICE_IDLE)
-    service_stop(t);
+  assert(t->s_status == SERVICE_IDLE);
 
   t->s_status = SERVICE_ZOMBIE;
-
-  bouquet_destroy_by_service(t);
 
   TAILQ_INIT(&t->s_filt_components);
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)
@@ -823,12 +823,37 @@ service_destroy(service_t *t, int delconf)
 
   avgstat_flush(&t->s_rate);
 
-  if (t->s_type == STYPE_RAW)
+  switch (t->s_type) {
+  case STYPE_RAW:
     TAILQ_REMOVE(&service_raw_all, t, s_all_link);
-  else
+    break;
+  case STYPE_RAW_REMOVED:
+    TAILQ_REMOVE(&service_raw_remove, t, s_all_link);
+    break;
+  default:
     TAILQ_REMOVE(&service_all, t, s_all_link);
+  }
 
   service_unref(t);
+}
+
+static void
+service_remove_raw_timer_cb(void *aux)
+{
+  service_t *t;
+  while ((t = TAILQ_FIRST(&service_raw_remove)) != NULL)
+    service_destroy(t, 0);
+}
+
+void
+service_remove_raw(service_t *t)
+{
+  if (t == NULL) return;
+  assert(t->s_type == STYPE_RAW);
+  t->s_type = STYPE_RAW_REMOVED;
+  TAILQ_REMOVE(&service_raw_all, t, s_all_link);
+  TAILQ_INSERT_TAIL(&service_raw_remove, t, s_all_link);
+  gtimer_arm(&service_raw_remove_timer, service_remove_raw_timer_cb, NULL, 0);
 }
 
 void
@@ -1071,6 +1096,16 @@ service_data_timeout(void *aux)
  *
  */
 int
+service_has_audio_or_video(service_t *t)
+{
+  elementary_stream_t *st;
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if (SCT_ISVIDEO(st->es_type) || SCT_ISAUDIO(st->es_type))
+      return 1;
+  return 0;
+}
+
+int
 service_is_sdtv(service_t *t)
 {
   if (t->s_servicetype == ST_SDTV)
@@ -1152,6 +1187,21 @@ service_servicetype_txt ( service_t *s )
  *
  */
 void
+service_send_streaming_status(service_t *t)
+{
+  lock_assert(&t->s_stream_mutex);
+
+  streaming_pad_deliver(&t->s_streaming_pad,
+                        streaming_msg_create_code(SMT_SERVICE_STATUS,
+                                                  t->s_streaming_status));
+
+  pthread_cond_broadcast(&t->s_tss_cond);
+}
+
+/**
+ *
+ */
+void
 service_set_streaming_status_flags_(service_t *t, int set)
 {
   lock_assert(&t->s_stream_mutex);
@@ -1173,13 +1223,8 @@ service_set_streaming_status_flags_(service_t *t, int set)
 	 set & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
 	 set & TSS_TIMEOUT        ? "[Data timeout] " : "");
 
-  streaming_pad_deliver(&t->s_streaming_pad,
-                        streaming_msg_create_code(SMT_SERVICE_STATUS,
-                                                  t->s_streaming_status));
-
-  pthread_cond_broadcast(&t->s_tss_cond);
+  service_send_streaming_status(t);
 }
-
 
 /**
  * Restart output on a service.
@@ -1382,16 +1427,24 @@ service_init(void)
   TAILQ_INIT(&pending_save_queue);
   TAILQ_INIT(&service_all);
   TAILQ_INIT(&service_raw_all);
+  TAILQ_INIT(&service_raw_remove);
   pthread_mutex_init(&pending_save_mutex, NULL);
   pthread_cond_init(&pending_save_cond, NULL);
-  tvhthread_create(&service_saver_tid, NULL, service_saver, NULL);
+  tvhthread_create(&service_saver_tid, NULL, service_saver, NULL, "service");
 }
 
 void
 service_done(void)
 {
+  service_t *t;
+
   pthread_cond_signal(&pending_save_cond);
   pthread_join(service_saver_tid, NULL);
+
+  pthread_mutex_lock(&global_lock);
+  while ((t = TAILQ_FIRST(&service_raw_remove)) != NULL)
+    service_destroy(t, 0);
+  pthread_mutex_unlock(&global_lock);
 }
 
 /**
@@ -1650,28 +1703,14 @@ service_get_channel_icon ( service_t *s )
   return r;
 }
 
-/**
- * Get the encryption CAID from a service
- * only the first CA stream in a service is returned
+/*
+ * Get EPG ID for channel from service
  */
-uint16_t
-service_get_encryption(service_t *t)
+const char *
+service_get_channel_epgid ( service_t *s )
 {
-  elementary_stream_t *st;
-  caid_t *c;
-
-  TAILQ_FOREACH(st, &t->s_components, es_link) {
-    switch(st->es_type) {
-    case SCT_CA:
-      LIST_FOREACH(c, &st->es_caids, link)
-	if(c->caid != 0)
-	  return c->caid;
-      break;
-    default:
-      break;
-    }
-  }
-  return 0;
+  if (s->s_channel_epgid) return s->s_channel_epgid(s);
+  return NULL;
 }
 
 /*
@@ -1682,25 +1721,6 @@ service_mapped(service_t *s)
 {
   if (s->s_mapped) s->s_mapped(s);
 }
-
-/*
- * Find the primary EPG service (to stop EPG trying to update
- * from multiple OTA sources)
- */
-#ifdef MOVE_TO_MPEGTS
-int
-service_is_primary_epg(service_t *svc)
-{
-  service_t *ret = NULL, *t;
-  if (!svc || !svc->s_ch) return 0;
-  LIST_FOREACH(t, &svc->s_ch->ch_services, s_ch_link) {
-    if (!t->s_is_enabled(t) || !t->s_dvb_eit_enable) continue;
-    if (!ret)
-      ret = t;
-  }
-  return !ret ? 0 : (ret->s_dvb_service_id == svc->s_dvb_service_id);
-}
-#endif
 
 /*
  * list of known service types

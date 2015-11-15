@@ -22,7 +22,7 @@
 
 include $(dir $(lastword $(MAKEFILE_LIST))).config.mk
 PROG    := $(BUILDDIR)/tvheadend
-LANGUAGES ?= bg cs de en en_GB es fa fr he hr hu it lv nl pl pt ru sv
+LANGUAGES ?= bg cs de en_US en_GB es fa fr he hr hu it lv nl pl pt ru sv
 
 #
 # Common compiler flags
@@ -60,10 +60,12 @@ CFLAGS  += -Wno-parentheses-equality -Wno-incompatible-pointer-types
 endif
 
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
+
 CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
 LDFLAGS_FFDIR = ${ROOTDIR}/libav_static/build/ffmpeg/lib
 LDFLAGS += ${LDFLAGS_FFDIR}/libavresample.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libswresample.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libavfilter.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libswscale.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavformat.a
@@ -72,11 +74,13 @@ LDFLAGS += ${LDFLAGS_FFDIR}/libavutil.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbisenc.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libvorbis.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libogg.a
+
 ifeq ($(CONFIG_LIBX264_STATIC),yes)
-LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a
+LDFLAGS += ${LDFLAGS_FFDIR}/libx264.a -ldl
 else
-LDFLAGS += -lx264
+LDFLAGS += -lx264 -ldl
 endif
+
 ifeq ($(CONFIG_LIBX265),yes)
 ifeq ($(CONFIG_LIBX265_STATIC),yes)
 LDFLAGS += ${LDFLAGS_FFDIR}/libx265.a -lstdc++
@@ -84,8 +88,11 @@ else
 LDFLAGS += -lx265
 endif
 endif
+
 LDFLAGS += ${LDFLAGS_FFDIR}/libvpx.a
+
 CONFIG_LIBMFX_VA_LIBS =
+
 ifeq ($(CONFIG_LIBMFX),yes)
 CONFIG_LIBMFX_VA_LIBS += -lva
 ifeq ($(CONFIG_VA_DRM),yes)
@@ -101,7 +108,8 @@ LDFLAGS += -lmfx
 endif
 LDFLAGS += ${CONFIG_LIBMFX_VA_LIBS}
 endif
-endif
+
+endif # CONFIG_LIBFFMPEG_STATIC
 
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
@@ -174,6 +182,7 @@ SRCS-1 = \
 	src/htsmsg_xml.c \
 	src/misc/dbl.c \
 	src/misc/json.c \
+	src/misc/m3u.c \
 	src/settings.c \
 	src/htsbuf.c \
 	src/trap.c \
@@ -191,6 +200,7 @@ SRCS-1 = \
 	src/input.c \
 	src/httpc.c \
 	src/rtsp.c \
+	src/download.c \
 	src/fsmonitor.c \
 	src/cron.c \
 	src/esfilter.c \
@@ -200,6 +210,10 @@ SRCS-1 = \
 	src/lock.c
 SRCS = $(SRCS-1)
 I18N-C = $(SRCS-1)
+
+SRCS-ZLIB = \
+	src/zlib.c
+SRCS-${CONFIG_ZLIB} += $(SRCS-ZLIB)
 
 SRCS-UPNP = \
 	src/upnp.c
@@ -272,6 +286,7 @@ SRCS-2 += \
 	src/webui/statedump.c \
 	src/webui/html.c\
 	src/webui/webui_api.c\
+	src/webui/xmltv.c
 
 SRCS-2 += \
 	src/muxer.c \
@@ -321,6 +336,7 @@ I18N-C += $(SRCS-MPEGTS-DVB)
 SRCS-MPEGTS-EPG = \
 	src/epggrab/otamux.c\
 	src/epggrab/module/eit.c \
+	src/epggrab/module/psip.c \
 	src/epggrab/support/freesat_huffman.c \
 	src/epggrab/module/opentv.c
 SRCS-$(CONFIG_MPEGTS) += $(SRCS-MPEGTS-EPG)
@@ -364,7 +380,9 @@ SRCS-IPTV = \
         src/input/mpegts/iptv/iptv_udp.c \
         src/input/mpegts/iptv/iptv_rtsp.c \
         src/input/mpegts/iptv/iptv_rtcp.c \
-        src/input/mpegts/iptv/iptv_pipe.c
+        src/input/mpegts/iptv/iptv_pipe.c \
+        src/input/mpegts/iptv/iptv_file.c \
+	src/input/mpegts/iptv/iptv_auto.c
 SRCS-${CONFIG_IPTV} += $(SRCS-IPTV)
 I18N-C += $(SRCS-IPTV)
 
@@ -528,20 +546,19 @@ SRCS += build.c timestamp.c
 all: $(ALL-yes) ${PROG}
 
 # Special
-.PHONY:	clean distclean check_config reconfigure
+.PHONY:	clean distclean reconfigure
 
 # Check configure output is valid
-check_config:
-	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure\
-		|| echo "./configure output is old, please re-run"
-	@test $(ROOTDIR)/.config.mk -nt $(ROOTDIR)/configure
+.config.mk: configure
+	@echo "./configure output is old, please re-run"
+	@false
 
 # Recreate configuration
 reconfigure:
 	$(ROOTDIR)/configure $(CONFIGURE_ARGS)
 
 # Binary
-${PROG}: check_config make_webui $(OBJS)
+${PROG}: .config.mk make_webui $(OBJS)
 	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object

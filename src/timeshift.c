@@ -58,7 +58,7 @@ void timeshift_init ( void )
   /* Defaults */
   memset(&timeshift_conf, 0, sizeof(timeshift_conf));
   timeshift_conf.idnode.in_class = &timeshift_conf_class;
-  timeshift_conf.max_period       = 3600;                    // 1Hr
+  timeshift_conf.max_period       = 60;                      // Hr (60mins)
   timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
 
   /* Load settings */
@@ -153,51 +153,51 @@ const idclass_t timeshift_conf_class = {
     {
       .type   = PT_BOOL,
       .id     = "ondemand",
-      .name   = N_("On-Demand"),
+      .name   = N_("On-demand"),
       .off    = offsetof(timeshift_conf_t, ondemand),
     },
     {
       .type   = PT_STR,
       .id     = "path",
-      .name   = N_("Storage Path"),
+      .name   = N_("Storage path"),
       .off    = offsetof(timeshift_conf_t, path),
     },
     {
       .type   = PT_U32,
       .id     = "max_period",
-      .name   = N_("Maximum Period (mins)"),
+      .name   = N_("Maximum period (mins)"),
       .off    = offsetof(timeshift_conf_t, max_period),
     },
     {
       .type   = PT_BOOL,
       .id     = "unlimited_period",
-      .name   = N_("Unlimited Time"),
+      .name   = N_("Unlimited time"),
       .off    = offsetof(timeshift_conf_t, unlimited_period),
     },
     {
       .type   = PT_S64,
       .id     = "max_size",
-      .name   = N_("Maximum Size (MB)"),
+      .name   = N_("Maximum size (MB)"),
       .set    = timeshift_conf_class_max_size_set,
       .get    = timeshift_conf_class_max_size_get,
     },
     {
       .type   = PT_S64,
       .id     = "ram_size",
-      .name   = N_("Maximum RAM Size (MB)"),
+      .name   = N_("Maximum RAM size (MB)"),
       .set    = timeshift_conf_class_ram_size_set,
       .get    = timeshift_conf_class_ram_size_get,
     },
     {
       .type   = PT_BOOL,
       .id     = "unlimited_size",
-      .name   = N_("Unlimited Size"),
+      .name   = N_("Unlimited size"),
       .off    = offsetof(timeshift_conf_t, unlimited_size),
     },
     {
       .type   = PT_BOOL,
       .id     = "ram_only",
-      .name   = N_("Use only RAM"),
+      .name   = N_("RAM only"),
       .off    = offsetof(timeshift_conf_t, ram_only),
     },
     {}
@@ -407,8 +407,8 @@ streaming_target_t *timeshift_create
   /* Initialise input */
   streaming_queue_init(&ts->wr_queue, 0, 0);
   streaming_target_init(&ts->input, timeshift_input, ts, 0);
-  tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts);
-  tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts);
+  tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts, "tshift-wr");
+  tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts, "tshift-rd");
 
   /* Update index */
   timeshift_index++;

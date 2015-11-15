@@ -1238,12 +1238,8 @@ access_entry_chtag_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
   access_entry_t *ae = (access_entry_t *)in1;
   idnode_list_mapping_t *ilm;
   channel_tag_t *ct = (channel_tag_t *)in2;
-  ilm = idnode_list_link(in1, &ae->ae_chtags, in2, &ct->ct_accesses, origin);
-  if (ilm) {
-    ilm->ilm_in1_save = 1;
-    return 1;
-  }
-  return 0;
+  ilm = idnode_list_link(in1, &ae->ae_chtags, in2, &ct->ct_accesses, origin, 1);
+  return ilm ? 1 : 0;
 }
 
 static int
@@ -1273,12 +1269,8 @@ access_entry_dvr_config_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
   access_entry_t *ae = (access_entry_t *)in1;
   idnode_list_mapping_t *ilm;
   dvr_config_t *dvr = (dvr_config_t *)in2;
-  ilm = idnode_list_link(in1, &ae->ae_dvr_configs, in2, &dvr->dvr_accesses, origin);
-  if (ilm) {
-    ilm->ilm_in1_save = 1;
-    return 1;
-  }
-  return 0;
+  ilm = idnode_list_link(in1, &ae->ae_dvr_configs, in2, &dvr->dvr_accesses, origin, 1);
+  return ilm ? 1 : 0;
 }
 
 static int
@@ -1308,12 +1300,8 @@ access_entry_profile_set_cb ( idnode_t *in1, idnode_t *in2, void *origin )
   access_entry_t *ae = (access_entry_t *)in1;
   idnode_list_mapping_t *ilm;
   profile_t *pro = (profile_t *)in2;
-  ilm = idnode_list_link(in1, &ae->ae_profiles, in2, &pro->pro_accesses, origin);
-  if (ilm) {
-    ilm->ilm_in1_save = 1;
-    return 1;
-  }
-  return 0;
+  ilm = idnode_list_link(in1, &ae->ae_profiles, in2, &pro->pro_accesses, origin, 1);
+  return ilm ? 1 : 0;
 }
 
 static int
@@ -1411,14 +1399,14 @@ const idclass_t access_entry_class = {
       .name     = N_("Language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "langui",
-      .name     = N_("Web Interface Language"),
+      .name     = N_("Web interface language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
-      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -1429,20 +1417,20 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "adv_streaming",
-      .name     = N_("Advanced Streaming"),
+      .name     = N_("Advanced streaming"),
       .off      = offsetof(access_entry_t, ae_adv_streaming),
     },
     {
       .type     = PT_BOOL,
       .id       = "htsp_streaming",
-      .name     = N_("HTSP Streaming"),
+      .name     = N_("HTSP streaming"),
       .off      = offsetof(access_entry_t, ae_htsp_streaming),
     },
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "profile",
-      .name     = N_("Streaming Profiles"),
+      .name     = N_("Streaming profiles"),
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
@@ -1451,7 +1439,7 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "dvr",
-      .name     = N_("Video Recorder"),
+      .name     = N_("Video recorder"),
       .off      = offsetof(access_entry_t, ae_dvr),
     },
     {
@@ -1483,7 +1471,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "dvr_config",
-      .name     = N_("DVR Configuration Profiles"),
+      .name     = N_("DVR configuration profiles"),
       .set      = access_entry_dvr_config_set,
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
@@ -1492,7 +1480,7 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_BOOL,
       .id       = "webui",
-      .name     = N_("Web Interface"),
+      .name     = N_("Web interface"),
       .off      = offsetof(access_entry_t, ae_webui),
     },
     {
@@ -1504,41 +1492,41 @@ const idclass_t access_entry_class = {
     {
       .type     = PT_INT,
       .id       = "conn_limit_type",
-      .name     = N_("Connection Limit Type"),
+      .name     = N_("Connection limit type"),
       .off      = offsetof(access_entry_t, ae_conn_limit_type),
       .list     = access_entry_conn_limit_type_enum,
     },
     {
       .type     = PT_U32,
       .id       = "conn_limit",
-      .name     = N_("Limit Connections"),
+      .name     = N_("Limit connections"),
       .off      = offsetof(access_entry_t, ae_conn_limit),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_min",
-      .name     = N_("Minimal Channel Number"),
+      .name     = N_("Minimal channel number"),
       .off      = offsetof(access_entry_t, ae_chmin),
     },
     {
       .type     = PT_S64,
       .intsplit = CHANNEL_SPLIT,
       .id       = "channel_max",
-      .name     = N_("Maximal Channel Number"),
+      .name     = N_("Maximal channel number"),
       .off      = offsetof(access_entry_t, ae_chmax),
     },
     {
       .type     = PT_BOOL,
       .id       = "channel_tag_exclude",
-      .name     = N_("Exclude Channel Tags"),
+      .name     = N_("Exclude channel tags"),
       .off      = offsetof(access_entry_t, ae_chtags_exclude),
     },
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "channel_tag",
-      .name     = N_("Channel Tags"),
+      .name     = N_("Channel tags"),
       .set      = access_entry_chtag_set,
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,
@@ -1853,7 +1841,7 @@ ipblock_entry_class_get_title (idnode_t *self, const char *lang)
 
   if (ib->ib_comment && ib->ib_comment[0] != '\0')
     return ib->ib_comment;
-  return N_("IP Blocking");
+  return N_("IP blocking");
 }
 
 static void
@@ -1882,7 +1870,7 @@ ipblock_entry_class_prefix_get(void *o)
 
 const idclass_t ipblock_entry_class = {
   .ic_class      = "ipblocking",
-  .ic_caption    = N_("IP Blocking"),
+  .ic_caption    = N_("IP blocking"),
   .ic_event      = "ipblocking",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = ipblock_entry_class_save,

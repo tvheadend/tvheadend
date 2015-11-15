@@ -70,11 +70,9 @@ dumpchannels(htsbuf_queue_t *hq)
       snprintf(chbuf, sizeof(chbuf), "%u", channel_get_major(chnum));
     htsbuf_qprintf(hq,
 		   "  refcount = %d\n"
-		   "  zombie = %d\n"
 		   "  number = %s\n"
 		   "  icon = %s\n\n",
 		   ch->ch_refcount,
-		   ch->ch_zombie,
 		   chbuf,
 		   channel_get_icon(ch) ?: "<none set>");
   }

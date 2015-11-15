@@ -232,6 +232,8 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
              hc->hc_rtsp_stream_id);
   if (flags & SATIP_SETUP_PLAY)
     return rtsp_play(hc, stream, buf);
+  if (flags & SATIP_SETUP_TCP)
+    return rtsp_setup(hc, stream, buf, NULL, 0, -1);
   return rtsp_setup(hc, stream, buf, NULL, udp_port, udp_port + 1);
 }
 

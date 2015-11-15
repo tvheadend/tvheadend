@@ -4,12 +4,11 @@ host = https://www.transifex.com
 [tvheadend.c]
 file_filter = intl/tvheadend.<lang>.po
 source_file = intl/tvheadend.pot
-source_lang = en_US
+source_lang = en
 type = PO
 
 [tvheadend.js]
 file_filter = intl/js/tvheadend.js.<lang>.po
 source_file = intl/js/tvheadend.js.pot
-source_lang = en_US
+source_lang = en
 type = PO
-

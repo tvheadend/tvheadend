@@ -91,6 +91,8 @@ char *tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen);
 
 struct sockaddr *tcp_get_ip_from_str(const char *str, struct sockaddr *sa);
 
+int tcp_socket_dead(int fd);
+
 struct access;
 
 uint32_t tcp_connection_count(struct access *aa);

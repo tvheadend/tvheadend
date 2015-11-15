@@ -35,6 +35,7 @@
 #include "dvr/dvr.h"
 #include "webui/webui.h"
 #include "access.h"
+#include "notify.h"
 #include "tcp.h"
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -54,6 +55,7 @@ int comet_running;
 
 typedef struct comet_mailbox {
   char *cmb_boxid; /* SHA-1 hash */
+  char *cmb_lang;  /* UI language */
   htsmsg_t *cmb_messages; /* A vector */
   time_t cmb_last_used;
   LIST_ENTRY(comet_mailbox) cmb_link;
@@ -74,6 +76,7 @@ cmb_destroy(comet_mailbox_t *cmb)
 
   LIST_REMOVE(cmb, cmb_link);
 
+  free(cmb->cmb_lang);
   free(cmb->cmb_boxid);
   free(cmb);
 }
@@ -103,7 +106,7 @@ comet_flush(void)
  *
  */
 static comet_mailbox_t *
-comet_mailbox_create(void)
+comet_mailbox_create(const char *lang)
 {
   comet_mailbox_t *cmb = calloc(1, sizeof(comet_mailbox_t));
 
@@ -127,6 +130,7 @@ comet_mailbox_create(void)
   id[40] = 0;
 
   cmb->cmb_boxid = strdup(id);
+  cmb->cmb_lang = lang ? strdup(lang) : NULL;
   time(&cmb->cmb_last_used);
   mailbox_tally++;
 
@@ -234,7 +238,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 	break;
     
   if(cmb == NULL) {
-    cmb = comet_mailbox_create();
+    cmb = comet_mailbox_create(hc->hc_access->aa_lang_ui);
     comet_access_update(hc, cmb);
     comet_serverIpPort(hc, cmb);
   }
@@ -335,10 +339,35 @@ comet_done(void)
 /**
  *
  */
+static void
+comet_mailbox_rewrite_str(htsmsg_t *m, const char *key, const char *lang)
+{
+  const char *s = htsmsg_get_str(m, key), *p;
+  if (s) {
+    p = tvh_gettext_lang(lang, s);
+    if (p != s)
+      htsmsg_set_str(m, key, p);
+  }
+}
+
+static void
+comet_mailbox_rewrite_msg(int rewrite, htsmsg_t *m, const char *lang)
+{
+  switch (rewrite) {
+  case NOTIFY_REWRITE_SUBSCRIPTIONS:
+    comet_mailbox_rewrite_str(m, "state", lang);
+    break;
+  }
+}
+
+/**
+ *
+ */
 void
-comet_mailbox_add_message(htsmsg_t *m, int isdebug)
+comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
 {
   comet_mailbox_t *cmb;
+  htsmsg_t *e;
 
   pthread_mutex_lock(&comet_mutex);
 
@@ -350,7 +379,10 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug)
 
       if(cmb->cmb_messages == NULL)
         cmb->cmb_messages = htsmsg_create_list();
-      htsmsg_add_msg(cmb->cmb_messages, NULL, htsmsg_copy(m));
+      e = htsmsg_copy(m);
+      if (cmb->cmb_lang && rewrite)
+        comet_mailbox_rewrite_msg(rewrite, e, cmb->cmb_lang);
+      htsmsg_add_msg(cmb->cmb_messages, NULL, e);
     }
   }
 

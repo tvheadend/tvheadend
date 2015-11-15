@@ -71,7 +71,7 @@ api_status_subscriptions
   c = 0;
   pthread_mutex_lock(&global_lock);
   LIST_FOREACH(ths, &subscriptions, ths_global_link) {
-    e = subscription_create_msg(ths);
+    e = subscription_create_msg(ths, perm->aa_lang_ui);
     htsmsg_add_msg(l, NULL, e);
     c++;
   }
@@ -128,11 +128,15 @@ static void
 input_clear_stats(const char *uuid)
 {
   tvh_input_instance_t *tii;
+  tvh_input_t *ti;
 
   pthread_mutex_lock(&global_lock);
   if ((tii = tvh_input_instance_find_by_uuid(uuid)) != NULL)
     if (tii->tii_clear_stats)
       tii->tii_clear_stats(tii);
+  if ((ti = tvh_input_find_by_uuid(uuid)) != NULL)
+    if (ti->ti_clear_stats)
+      ti->ti_clear_stats(ti);
   pthread_mutex_unlock(&global_lock);
 }
 

@@ -185,6 +185,13 @@ linuxdvb_en50494_freq
 }
 
 static int
+linuxdvb_en50494_match
+  ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm1, dvb_mux_t *lm2 )
+{
+  return lm1 == lm2;
+}
+
+static int
 linuxdvb_en50494_tune
   ( linuxdvb_diseqc_t *ld, dvb_mux_t *lm,
     linuxdvb_satconf_t *lsp, linuxdvb_satconf_ele_t *sc,
@@ -321,6 +328,7 @@ linuxdvb_en50494_create0
   le->le_frequency = 0;
   le->le_pin       = LINUXDVB_EN50494_NOPIN;
   le->ld_freq      = linuxdvb_en50494_freq;
+  le->ld_match     = linuxdvb_en50494_match;
 
   ld = linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)le,
                                NULL, &linuxdvb_en50494_class, conf,

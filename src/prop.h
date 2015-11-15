@@ -104,6 +104,7 @@ typedef struct property {
 
 #define PROP_SBUF_LEN 4096
 extern char prop_sbuf[PROP_SBUF_LEN];
+extern char *prop_sbuf_ptr;
 
 const property_t *prop_find(const property_t *p, const char *name);
 
@@ -117,6 +118,14 @@ void prop_read_values
 void prop_serialize
   (void *obj, const property_t *pl, htsmsg_t *m, htsmsg_t *list,
    int optmask, const char *lang);
+
+static inline int64_t prop_intsplit_from_str(const char *s, int64_t intsplit)
+{
+  int64_t s64 = (int64_t)atol(s) * intsplit;
+  if ((s = strchr(s, '.')) != NULL)
+    s64 += (atol(s + 1) % intsplit);
+  return s64;
+}
 
 #endif /* __TVH_PROP_H__ */
 

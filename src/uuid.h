@@ -60,6 +60,11 @@ int uuid_bin2hex  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 int uuid_hex2bin  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 
 /**
+ * Valid hex uuid
+ */
+int uuid_hexvalid ( const char *uuid );
+
+/**
  * Hex string to binary
  */
 int hex2bin ( uint8_t *buf, size_t buflen, const char *hex );

@@ -107,6 +107,7 @@ typedef struct dmx_filter {
 // message type
 #define CAPMT_MSG_FAST     0x01
 #define CAPMT_MSG_CLEAR    0x02
+#define CAPMT_MSG_NODUP    0x04
 
 // limits
 #define MAX_CA       16
@@ -122,7 +123,8 @@ typedef enum {
     CAPMT_OSCAM_MULTILIST,
     CAPMT_OSCAM_TCP,
     CAPMT_OSCAM_UNIX_SOCKET,
-    CAPMT_OSCAM_NET_PROTO
+    CAPMT_OSCAM_NET_PROTO,
+    CAPMT_OSCAM_UNIX_SOCKET_NP /* NET_PROTO through socket */
 } capmt_oscam_mode_t;
 
 /**
@@ -309,6 +311,14 @@ capmt_oscam_new(capmt_t *capmt)
          oscam != CAPMT_OSCAM_OLD;
 }
 
+static inline int
+capmt_oscam_netproto(capmt_t *capmt)
+{
+  int oscam = capmt->capmt_oscam;
+  return oscam == CAPMT_OSCAM_NET_PROTO ||
+         oscam == CAPMT_OSCAM_UNIX_SOCKET_NP;
+}
+
 static void
 capmt_poll_add(capmt_t *capmt, int fd, uint32_t u32)
 {
@@ -412,36 +422,49 @@ capmt_pid_remove(capmt_t *capmt, int adapter, int pid, uint32_t flags)
 }
 
 static void
-capmt_pid_flush(capmt_t *capmt)
+capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
 {
   capmt_adapter_t *ca;
   mpegts_mux_instance_t *mmi;
   mpegts_input_t *tuner;
   mpegts_mux_t *mux;
   capmt_opaque_t *o;
-  int adapter, pid, i;
+  int pid, i;
 
-  for (adapter = 0; adapter < MAX_CA; adapter++) {
-    tuner = capmt->capmt_adapters[adapter].ca_tuner;
-    if (tuner == NULL)
-      continue;
-    ca = &capmt->capmt_adapters[adapter];
-    mmi = LIST_FIRST(&tuner->mi_mux_active);
-    mux = mmi ? mmi->mmi_mux : NULL;
+  ca = &capmt->capmt_adapters[adapter];
+  tuner = capmt->capmt_adapters[adapter].ca_tuner;
+  if (tuner == NULL) {
+    /* clean all pids (to be sure) */
     for (i = 0; i < MAX_PIDS; i++) {
       o = &ca->ca_pids[i];
-      if ((pid = o->pid) > 0) {
-        o->pid = -1; /* block for new registrations */
-        o->pid_refs = 0;
-        if (mux) {
-          pthread_mutex_unlock(&capmt->capmt_mutex);
-          descrambler_close_pid(mux, &ca->ca_pids[i], pid);
-          pthread_mutex_lock(&capmt->capmt_mutex);
-        }
-        o->pid = 0;
+      o->pid = 0;
+      o->pid_refs = 0;
+    }
+    return;
+  }
+  mmi = LIST_FIRST(&tuner->mi_mux_active);
+  mux = mmi ? mmi->mmi_mux : NULL;
+  for (i = 0; i < MAX_PIDS; i++) {
+    o = &ca->ca_pids[i];
+    if ((pid = o->pid) > 0) {
+      o->pid = -1; /* block for new registrations */
+      o->pid_refs = 0;
+      if (mux) {
+        pthread_mutex_unlock(&capmt->capmt_mutex);
+        descrambler_close_pid(mux, &ca->ca_pids[i], pid);
+        pthread_mutex_lock(&capmt->capmt_mutex);
       }
+      o->pid = 0;
     }
   }
+}
+
+static void
+capmt_pid_flush(capmt_t *capmt)
+{
+  int adapter;
+  for (adapter = 0; adapter < MAX_CA; adapter++)
+    capmt_pid_flush_adapter(capmt, adapter);
 }
 
 /*
@@ -496,11 +519,11 @@ capmt_connect(capmt_t *capmt, int i)
 
   }
 
-  if (fd) {
+  if (fd >= 0) {
     tvhlog(LOG_DEBUG, "capmt", "%s: Created socket %d", capmt_name(capmt), fd);
     capmt->capmt_sock[i] = fd;
     capmt->capmt_sock_reconnect[i]++;
-    if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
+    if (capmt_oscam_netproto(capmt))
       capmt_send_client_info(capmt);
     capmt_poll_add(capmt, fd, i + 1);
   }
@@ -647,6 +670,12 @@ capmt_queue_msg
       free(msg);
     }
   }
+  if (flags & CAPMT_MSG_NODUP) {
+    TAILQ_FOREACH(msg, &capmt->capmt_writeq, cm_link)
+      if (msg->cm_sb.sb_ptr == len &&
+          memcmp(msg->cm_sb.sb_data, buf, len) == 0)
+        return;
+  }
   msg = malloc(sizeof(*msg));
   sbuf_init_fixed(&msg->cm_sb, len);
   sbuf_append(&msg->cm_sb, buf, len);
@@ -753,18 +782,16 @@ capmt_send_stop(capmt_service_t *t)
 static void
 capmt_send_stop_descrambling(capmt_t *capmt)
 {
-  uint8_t buf[8];
-
-  buf[0] = 0x9F;
-  buf[1] = 0x80;
-  buf[2] = 0x3F;
-  buf[3] = 0x04;
-
-  buf[4] = 0x83;
-  buf[5] = 0x02;
-  buf[6] = 0x00;
-  buf[7] = 0xFF; //wildcard demux id
-
+  static uint8_t buf[8] = {
+    0x9F,
+    0x80,
+    0x3F,
+    0x04,
+    0x83,
+    0x02,
+    0x00,
+    0xFF, /* wildcard demux id */
+  };
   capmt_write_msg(capmt, 0, 0, buf, 8);
 }
 
@@ -806,6 +833,7 @@ capmt_service_destroy(th_descrambler_t *td)
     capmt_enumerate_services(capmt, 1);
 
   if (LIST_EMPTY(&capmt->capmt_services)) {
+    capmt_pid_flush_adapter(capmt, ct->ct_adapter);
     capmt->capmt_adapters[ct->ct_adapter].ca_tuner = NULL;
     memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
   }
@@ -820,15 +848,16 @@ static void
 capmt_send_client_info(capmt_t *capmt)
 {
   char buf[MAX_INFO_LEN + 7];
+  int len;
 
   *(uint32_t *)(buf + 0) = htonl(DVBAPI_CLIENT_INFO);
   *(uint16_t *)(buf + 4) = htons(DVBAPI_PROTOCOL_VERSION); //supported protocol version
-  int len = snprintf(buf + 7, sizeof(buf) - 7, "Tvheadend %s", tvheadend_version);
+  len = snprintf(buf + 7, sizeof(buf) - 7, "Tvheadend %s", tvheadend_version);
   if (len >= sizeof(buf) - 7)
     len = sizeof(buf) - 7 - 1;
   buf[6] = len;
 
-  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST);
+  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST|CAPMT_MSG_NODUP);
 }
 
 static void
@@ -935,7 +964,7 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
 
-  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
+  if (capmt_oscam_netproto(capmt))
     pid          = sbuf_peek_s16  (sb, offset + 6);
   else
     pid          = sbuf_peek_s16be(sb, offset + 6);
@@ -970,7 +999,7 @@ static void
 capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
 {
   /* flush out the greeting */
-  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO)
+  if (capmt_oscam_netproto(capmt))
     capmt_flush_queue(capmt, 0);
 
   pthread_mutex_lock(&capmt->capmt_mutex);
@@ -1055,6 +1084,32 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint16_t seq,
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
+static void
+capmt_process_notify(capmt_t *capmt, uint8_t adapter,
+                     uint16_t sid, uint16_t caid, uint32_t provid,
+                     const char *cardsystem, uint16_t pid, uint32_t ecmtime,
+                     uint16_t hops, const char *reader, const char *from,
+                     const char *protocol )
+{
+  mpegts_service_t *t;
+  capmt_service_t *ct;
+
+  pthread_mutex_lock(&capmt->capmt_mutex);
+  LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
+    t = (mpegts_service_t *)ct->td_service;
+
+    if (sid != t->s_dvb_service_id)
+      continue;
+    if (adapter != ct->ct_adapter)
+      continue;
+
+    descrambler_notify((th_descrambler_t *)ct, caid, provid,
+                       cardsystem, pid, ecmtime, hops, reader, from,
+                       protocol);
+  }
+  pthread_mutex_unlock(&capmt->capmt_mutex);
+}                     
+
 static int
 capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
 {
@@ -1065,7 +1120,7 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   if (sb->sb_ptr - offset < 4)
     return 0;
   cmd = sbuf_peek_u32(sb, offset);
-  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+  if (capmt_oscam_netproto(capmt))  {
     adapter_byte = 1; //we need to take into account the adapter index byte which is now after the cmd
   } else {
     if (!sb->sb_bswap && !sb->sb_err) {
@@ -1088,16 +1143,21 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     return 4 + 32;
   else if (oscam_new && cmd == DMX_SET_FILTER)
     //when using network protocol the dmx_sct_filter_params fields are added seperately to avoid padding problems, so we substract 2 bytes:
-    return 4 + 2 + 60 + adapter_byte + (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ? -2 : 0);
+    return 4 + 2 + 60 + adapter_byte + (capmt_oscam_netproto(capmt) ? -2 : 0);
   else if (oscam_new && cmd == DMX_STOP)
     return 4 + 4 + adapter_byte;
-  else if (oscam_new && cmd == DVBAPI_SERVER_INFO && sb->sb_ptr > 6)
-    return 4 + 2 + 1 + sbuf_peek_u8(sb, 6);
-  else if (oscam_new && cmd == DVBAPI_ECM_INFO && sb->sb_ptr > 14) {
+  else if (oscam_new && cmd == DVBAPI_SERVER_INFO)
+    return sb->sb_ptr < 7 ? 0 : 4 + 2 + 1 + sbuf_peek_u8(sb, 6);
+  else if (oscam_new && cmd == DVBAPI_ECM_INFO) {
+    if (sb->sb_ptr < 15)
+      return 0;
     int len = 4 + adapter_byte + 2 + 2 + 2 + 4 + 4;
     int i;
-    for (i=0; i<4; i++)
+    for (i=0; i<4; i++) {
+      if (len >= sb->sb_ptr)
+        return 0;
       len += sbuf_peek_u8(sb, len) + 1;
+    }
     len += 1;
     return len;
   }
@@ -1105,6 +1165,19 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     sb->sb_err = 0;
     return -1; /* fatal */
   }
+}
+
+static char *
+capmt_peek_str(sbuf_t *sb, int *offset)
+{
+  uint8_t len = sbuf_peek_u8(sb, *offset);
+  char *str = malloc(len + 1), *p;
+  memcpy(str, sbuf_peek(sb, *offset + 1), len);
+  str[len] = '\0';
+  for (p = str; *p; p++)
+    if (*p < ' ') *p = ' ';
+  *offset += len + 1;
+  return str;
 }
 
 static void
@@ -1115,7 +1188,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   cmd = sbuf_peek_u32(sb, offset);
 
-  if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO && cmd != DVBAPI_SERVER_INFO) {
+  if (capmt_oscam_netproto(capmt) && cmd != DVBAPI_SERVER_INFO) {
     adapter = sbuf_peek_u8(sb, 4);
     offset = 1;
   }
@@ -1196,61 +1269,42 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
     capmt_stop_filter(capmt, adapter, sb, offset);
 
+  } else if (cmd == DVBAPI_ECM_INFO) {
+
+    uint16_t sid     = sbuf_peek_u16(sb, offset + 4);
+    uint16_t caid    = sbuf_peek_u16(sb, offset + 6);
+    uint16_t pid     = sbuf_peek_u16(sb, offset + 8);
+    uint32_t provid  = sbuf_peek_u32(sb, offset + 10);
+    uint32_t ecmtime = sbuf_peek_u32(sb, offset + 14);
+    int offset2      = offset + 18;
+    char *cardsystem = capmt_peek_str(sb, &offset2);
+    char *reader     = capmt_peek_str(sb, &offset2);
+    char *from       = capmt_peek_str(sb, &offset2);
+    char *protocol   = capmt_peek_str(sb, &offset2);
+    uint8_t hops     = sbuf_peek_u8(sb, offset2);
+
+    capmt_process_notify(capmt, adapter, sid, caid, provid,
+                         cardsystem, pid, ecmtime, hops, reader,
+                         from, protocol);
+                         
+    tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X provid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
+                      capmt_name(capmt), adapter, sid, caid, cardsystem, pid, provid, ecmtime, hops, reader, from, protocol);
+
+    free(protocol);
+    free(from);
+    free(reader);
+    free(cardsystem);
+
   } else if (cmd == DVBAPI_SERVER_INFO) {
 
-    uint16_t protocol_version = sbuf_peek_u16(sb, offset + 4);
-    uint8_t len = sbuf_peek_u8(sb, offset + 4 + 2);
-    unsigned char oscam_info[len+1];
-    memcpy(&oscam_info, sbuf_peek(sb, offset + 4 + 2 + 1), len);
-    oscam_info[len] = 0; //null-terminating the string
+    uint16_t protover = sbuf_peek_u16(sb, offset + 4);
+    int offset2       = offset + 6;
+    char *info        = capmt_peek_str(sb, &offset2);
 
-    tvhlog(LOG_INFO, "capmt", "%s: connected to %s, using network protocol_version = %d", capmt_name(capmt), oscam_info, protocol_version);
+    tvhlog(LOG_INFO, "capmt", "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
 
-  } else if (cmd == DVBAPI_ECM_INFO) {
-    int offset2 = 4;
-    uint16_t sid = sbuf_peek_u16(sb, offset + offset2);
-    offset2 += 2;
-    uint16_t caid = sbuf_peek_u16(sb, offset + offset2);
-    offset2 += 2;
-    uint16_t pid = sbuf_peek_u16(sb, offset + offset2);
-    offset2 += 2;
-    uint32_t prid = sbuf_peek_u32(sb, offset + offset2);
-    offset2 += 4;
-    uint32_t ecmtime = sbuf_peek_u32(sb, offset + offset2);
-    offset2 += 4;
+    free(info);
 
-    uint8_t len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char cardsystem[len+1];
-    memcpy(&cardsystem, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    cardsystem[len] = 0;
-
-    len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char reader[len+1];
-    memcpy(&reader, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    reader[len] = 0;
-
-    len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char from[len+1];
-    memcpy(&from, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    from[len] = 0;
-
-    len = sbuf_peek_u8(sb, offset + offset2);
-    offset2 += 1;
-    unsigned char protocol[len+1];
-    memcpy(&protocol, sbuf_peek(sb, offset + offset2), len);
-    offset2 += len;
-    protocol[len] = 0;
-
-    uint8_t hops = sbuf_peek_u8(sb, offset + offset2);
-
-    tvhlog(LOG_DEBUG, "capmt", "%s: ECM_INFO: adapter=%d sid=%d caid=%04X(%s) pid=%04X prid=%06X ecmtime=%d hops=%d reader=%s from=%s protocol=%s",
-                      capmt_name(capmt), adapter, sid, caid, cardsystem, pid, prid, ecmtime, hops, reader, from, protocol);
   } else {
     tvhlog(LOG_ERR, "capmt", "%s: unknown command %08X", capmt_name(capmt), cmd);
   }
@@ -1266,7 +1320,8 @@ show_connection(capmt_t *capmt, const char *what)
            capmt->capmt_oscam,
            capmt->capmt_sockfile, capmt->capmt_port,
            what);
-  } else if (capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET) {
+  } else if (capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET ||
+             capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET_NP) {
     tvhlog(LOG_INFO, "capmt",
            "%s: mode %i sockfile %s got connection from client (%s)",
            capmt_name(capmt),
@@ -1451,20 +1506,20 @@ handle_single(capmt_t *capmt)
       adapter = -1;
       offset = 0;
       while (buffer.sb_ptr > 0) {
-       if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
-         buffer.sb_bswap = 1;
-       } else {
-        adapter = buffer.sb_data[0];
-        offset = 1;
-       }
+        if (capmt_oscam_netproto(capmt)) {
+          buffer.sb_bswap = 1;
+        } else {
+          adapter = buffer.sb_data[0];
+          offset = 1;
+        }
         if (adapter < MAX_CA) {
           cmd_size = capmt_msg_size(capmt, &buffer, offset);
-          if (cmd_size > 0)
+          if (cmd_size >= 0)
             break;
         }
         sbuf_cut(&buffer, 1);
       }
-      if (cmd_size + offset <= buffer.sb_ptr) {
+      if (cmd_size > 0 && cmd_size + offset <= buffer.sb_ptr) {
         capmt_analyze_cmd(capmt, adapter, &buffer, offset);
         sbuf_cut(&buffer, cmd_size + offset);
       } else {
@@ -1632,7 +1687,8 @@ capmt_thread(void *aux)
 #else
      if (capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
          capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ||
-         capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET) {
+         capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET ||
+         capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET_NP) {
        handle_single(capmt);
      } else {
        tvhlog(LOG_ERR, "capmt", "%s: Only modes 3 and 4 are supported for non-linuxdvb devices", capmt_name(capmt));
@@ -1650,16 +1706,17 @@ capmt_thread(void *aux)
       pthread_mutex_unlock(&capmt->capmt_mutex);
       continue;
     }
-    pthread_mutex_unlock(&capmt->capmt_mutex);
 
     /* close opened sockets */
     for (i = 0; i < MAX_SOCKETS; i++)
-        capmt_socket_close_lock(capmt, i);
-    for (i = 0; i < MAX_CA; i++)
+      capmt_socket_close(capmt, i);
+
+    /* close all tuners */
+    for (i = 0; i < MAX_CA; i++) {
       if (capmt->capmt_adapters[i].ca_sock >= 0)
         close(capmt->capmt_adapters[i].ca_sock);
-
-    pthread_mutex_lock(&capmt->capmt_mutex);
+      capmt->capmt_adapters[i].ca_tuner = NULL;
+    }
 
     if (!capmt->capmt_running) {
       pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -1673,8 +1730,8 @@ capmt_thread(void *aux)
       d = 60;
     }
 
-    ts.tv_sec = time(NULL) + d;
-    ts.tv_nsec = 0;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += d;
 
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id, NULL), d);
 
@@ -1944,7 +2001,7 @@ capmt_enumerate_services(capmt_t *capmt, int force)
     tvhlog(LOG_DEBUG, "capmt", "%s: %s: no subscribed services, closing socket, fd=%d", capmt_name(capmt), __FUNCTION__, capmt->capmt_sock[0]);
     if (capmt->capmt_sock[0] >= 0)
       caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
-    if (capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+    if (capmt_oscam_netproto(capmt)) {
       capmt_send_stop_descrambling(capmt);
       capmt_pid_flush(capmt);
     }
@@ -2004,9 +2061,10 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
                    capmt->capmt_oscam != CAPMT_OSCAM_NET_PROTO &&
-                   capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET) {
+                   capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET &&
+                   capmt->capmt_oscam != CAPMT_OSCAM_UNIX_SOCKET_NP) {
     tvhlog(LOG_WARNING, "capmt",
-           "%s: Virtual adapters are supported only in modes 3 and 4 (service \"%s\")",
+           "%s: Virtual adapters are supported only in modes 3, 4, 5 and 6 (service \"%s\")",
            capmt_name(capmt), t->s_dvb_svcname);
     goto fin;
   }
@@ -2074,7 +2132,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
   }
 
   td = (th_descrambler_t *)ct;
-  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP || capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
+      capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
     snprintf(buf, sizeof(buf), "capmt-%s-%i",
                                capmt->capmt_sockfile,
                                capmt->capmt_port);
@@ -2112,7 +2171,8 @@ capmt_free(caclient_t *cac)
   tvhlog(LOG_INFO, "capmt", "%s: mode %i %s %s port %i destroyed",
          capmt_name(capmt),
          capmt->capmt_oscam,
-         capmt->capmt_oscam == CAPMT_OSCAM_TCP || capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ? "IP address" : "sockfile",
+         capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
+           capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ? "IP address" : "sockfile",
          capmt->capmt_sockfile, capmt->capmt_port);
   capmt_flush_queue(capmt, 1);
   free(capmt->capmt_sockfile);
@@ -2135,7 +2195,7 @@ capmt_conf_changed(caclient_t *cac)
     if (!capmt->capmt_running) {
       capmt->capmt_running = 1;
       capmt->capmt_reconfigure = 0;
-      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt);
+      tvhthread_create(&capmt->capmt_tid, NULL, capmt_thread, capmt, "capmt");
       return;
     }
     pthread_mutex_lock(&capmt->capmt_mutex);
@@ -2163,6 +2223,7 @@ static htsmsg_t *
 caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
+    { N_("OSCam new pc-nodmx (rev >= 10389)"), CAPMT_OSCAM_UNIX_SOCKET_NP },
     { N_("OSCam net protocol (rev >= 10389)"), CAPMT_OSCAM_NET_PROTO },
     { N_("OSCam pc-nodmx (rev >= 9756)"),      CAPMT_OSCAM_UNIX_SOCKET },
     { N_("OSCam TCP (rev >= 9574)"),           CAPMT_OSCAM_TCP },
@@ -2190,14 +2251,14 @@ const idclass_t caclient_capmt_class =
     {
       .type     = PT_STR,
       .id       = "camdfilename",
-      .name     = N_("Camd.socket Filename / IP Address (TCP mode)"),
+      .name     = N_("Camd.socket filename / IP Address (TCP mode)"),
       .off      = offsetof(capmt_t, capmt_sockfile),
       .def.s    = "/tmp/camd.socket",
     },
     {
       .type     = PT_INT,
       .id       = "port",
-      .name     = N_("Listen/Connect Port"),
+      .name     = N_("Listen / Connect port"),
       .off      = offsetof(capmt_t, capmt_port),
       .def.i    = 9000
     },

@@ -33,8 +33,11 @@ tvheadend.cteditor = function(panel, index)
  */
 tvheadend.bouquet = function(panel, index)
 {
-    var list = 'enabled,rescan,name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
-               'chtag,source,services_count,services_seen,comment';
+    var list0 = 'name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
+                'chtag,source,services_count,services_seen,comment';
+    var list  = 'enabled,rescan,' + list0;
+    var elist = 'enabled,rescan,ext_url,' + list0;
+    var alist = 'enabled,ext_url,' + list0;
 
     tvheadend.idnode_grid(panel, {
         url: 'api/bouquet',
@@ -58,8 +61,13 @@ tvheadend.bouquet = function(panel, index)
             comment:        { width: 200 }
         },
         list: list,
+        add: {
+            url: 'api/bouquet',
+            params: { list: alist },
+            create: { }
+        },
         del: true,
-        edit: { params: { list: list } },
+        edit: { params: { list: elist } },
         sort: {
           field: 'name',
           direction: 'ASC'

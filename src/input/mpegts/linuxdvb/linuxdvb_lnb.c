@@ -84,6 +84,25 @@ linuxdvb_lnb_standard_freq
 }
 
 static int
+linuxdvb_lnb_standard_match
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm1, dvb_mux_t *lm2 )
+{
+  linuxdvb_lnb_conf_t *lnb = (linuxdvb_lnb_conf_t*)l;
+  dvb_mux_conf_t      *dmc1 = &lm1->lm_tuning;
+  dvb_mux_conf_t      *dmc2 = &lm2->lm_tuning;
+
+  if (lnb->lnb_switch) {
+    uint32_t hi1 = dmc1->dmc_fe_freq > lnb->lnb_switch;
+    uint32_t hi2 = dmc2->dmc_fe_freq > lnb->lnb_switch;
+    if (hi1 != hi2)
+      return 0;
+  }
+  if (dmc1->u.dmc_fe_qpsk.polarisation != dmc2->u.dmc_fe_qpsk.polarisation)
+    return 0;
+  return 1;
+}
+
+static int
 linuxdvb_lnb_standard_band
   ( linuxdvb_lnb_t *l, dvb_mux_t *lm )
 {
@@ -165,6 +184,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -178,6 +198,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -191,6 +212,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -204,6 +226,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -217,6 +240,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -230,6 +254,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -243,6 +268,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_inverted_pol,
     },
@@ -256,6 +282,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -269,6 +296,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -282,6 +310,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_standard_band,
       .lnb_pol    = linuxdvb_lnb_standard_pol,
     },
@@ -295,6 +324,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_bandstack_freq,
+      .lnb_match  = linuxdvb_lnb_standard_match,
       .lnb_band   = linuxdvb_lnb_bandstack_band,
       .lnb_pol    = linuxdvb_lnb_bandstack_pol,
     },

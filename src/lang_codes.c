@@ -408,7 +408,7 @@ const lang_code_t lang_codes[] = {
   { "sog", NULL, NULL , "Sogdian" },
   { "som", "so", NULL , "Somali" },
   { "son", NULL, NULL , "Songhai languages" },
-  { "spa", "es", NULL , "Spanish; Castilian" },
+  { "spa", "es", NULL , "Spanish" },
   { "srd", "sc", NULL , "Sardinian" },
   { "srn", NULL, NULL , "Sranan Tongo" },
   { "srp", "sr", NULL , "Serbian" },
@@ -704,14 +704,14 @@ char *lang_code_user( const char *ucode )
   if (!codes)
     return ucode ? strdup(ucode) : NULL;
   if (!ucode)
-    return codes ? strdup(codes) : NULL;
-  ret = malloc(strlen(codes) + strlen(ucode ?: "") + 1);
+    return strdup(codes);
+  ret = malloc(strlen(codes) + strlen(ucode) + 2);
   strcpy(ret, ucode);
   while (codes && *codes) {
     s = codes;
     while (*s && *s != ',')
       s++;
-    if (strncmp(codes, ucode ?: "", s - codes)) {
+    if (strncmp(codes, ucode, s - codes)) {
       strcat(ret, ",");
       strncat(ret, codes, s - codes);
     }

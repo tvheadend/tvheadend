@@ -181,13 +181,14 @@ thread_wrapper ( void *p )
 }
 
 int
-tvhthread_create0
+tvhthread_create
   (pthread_t *thread, const pthread_attr_t *attr,
    void *(*start_routine) (void *), void *arg, const char *name)
 {
   int r;
   struct thread_state *ts = calloc(1, sizeof(struct thread_state));
-  strncpy(ts->name, name, sizeof(ts->name));
+  strncpy(ts->name, "tvh:", 4);
+  strncpy(ts->name+4, name, sizeof(ts->name)-4);
   ts->name[sizeof(ts->name)-1] = '\0';
   ts->run  = start_routine;
   ts->arg  = arg;

@@ -15,6 +15,19 @@ tvheadend.regexEscape = function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+tvheadend.fromCSV = function(s) {
+  var a = s.split(',');
+  var r = [];
+  for (var i in a) {
+    var v = a[i];
+    if (v[0] == '"' && v[v.length-1] == '"')
+      r.push(v.substring(1, v.length - 1));
+    else
+      r.push(v);
+  }
+  return r;
+}
+
 /**
  * Displays a help popup window
  */
@@ -162,6 +175,35 @@ tvheadend.doQueryAnyMatch = function(q, forceAll) {
             this.onLoad();
         }
     }
+}
+
+/*
+ * Replace one entry
+ */
+
+tvheadend.replace_entry = function(r, d) {
+    if (!r) return;
+    var dst = r.data;
+    var src = d.params instanceof Array ? d.params : d;
+    var lookup = src instanceof Array;
+    r.store.fields.each(function (n) {
+        if (lookup) {
+            for (var i = 0; i < src.length; i++) {
+                if (src[i].id == n.name) {
+                    var v = src[i].value;
+                    break;
+                }
+            }
+        } else {
+            var v = src[n.name];
+        }
+        var x = v;
+        if (typeof v === 'undefined')
+            x = typeof n.defaultValue === 'undefined' ? '' : n.defaultValue;
+        dst[n.name] = n.convert(x, v);
+    });
+    r.json = src;
+    r.commit();
 }
 
 /*
@@ -453,6 +495,7 @@ function accessUpdate(o) {
         tvheadend.channel_tab(chepg);
         tvheadend.cteditor(chepg);
         tvheadend.bouquet(chepg);
+        tvheadend.epggrab_map(chepg);
         tvheadend.epggrab_base(chepg);
         tvheadend.epggrab_mod(chepg);
 
@@ -597,7 +640,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     },
 
     setInfoArea: function(info_area) {
-        this.info_area = info_area.split(',');
+        this.info_area = tvheadend.fromCSV(info_area);
         this.on('beforetabchange', function(tp, p) {
             for (var k in this.extra)
                 if (p == this.extra[k])

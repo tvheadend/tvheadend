@@ -131,7 +131,7 @@ tvhdhomerun_device_class_override_notify( void * obj, const char *lang )
 const idclass_t tvhdhomerun_device_class =
 {
   .ic_class      = "tvhdhomerun_client",
-  .ic_caption    = N_("tvhdhomerun Client"),
+  .ic_caption    = N_("tvhdhomerun client"),
   .ic_save       = tvhdhomerun_device_class_save,
   .ic_get_childs = tvhdhomerun_device_class_get_childs,
   .ic_get_title  = tvhdhomerun_device_class_get_title,
@@ -146,7 +146,7 @@ const idclass_t tvhdhomerun_device_class =
     {
       .type     = PT_STR,
       .id       = "ip_address",
-      .name     = N_("IP Address"),
+      .name     = N_("IP address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.ip_address),
     },
@@ -160,21 +160,21 @@ const idclass_t tvhdhomerun_device_class =
     {
       .type     = PT_STR,
       .id       = "friendly",
-      .name     = N_("Friendly Name"),
+      .name     = N_("Friendly name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.friendlyname),
     },
     {
       .type     = PT_STR,
       .id       = "deviceModel",
-      .name     = N_("Device Model"),
+      .name     = N_("Device model"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.deviceModel),
     },
     {
       .type     = PT_STR,
       .id       = "fe_override",
-      .name     = N_("Network Type"),
+      .name     = N_("Network type"),
       .opts     = PO_ADVANCED,
       .set      = tvhdhomerun_device_class_override_set,
       .notify   = tvhdhomerun_device_class_override_notify,

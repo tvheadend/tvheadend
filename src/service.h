@@ -29,6 +29,7 @@ extern const idclass_t service_raw_class;
 
 extern struct service_queue service_all;
 extern struct service_queue service_raw_all;
+extern struct service_queue service_raw_remove;
 
 struct channel;
 struct tvh_input;
@@ -240,7 +241,8 @@ typedef struct service {
    */
   enum {
     STYPE_STD,
-    STYPE_RAW
+    STYPE_RAW,
+    STYPE_RAW_REMOVED
   } s_type;
 
   /**
@@ -317,6 +319,8 @@ typedef struct service {
    */
   int64_t     (*s_channel_number) (struct service *);
   const char *(*s_channel_name)   (struct service *);
+  const char *(*s_channel_epgid)  (struct service *);
+  htsmsg_t   *(*s_channel_tags)   (struct service *);
   const char *(*s_provider_name)  (struct service *);
   const char *(*s_channel_icon)   (struct service *);
   void        (*s_mapped)         (struct service *);
@@ -342,7 +346,6 @@ typedef struct service {
    * Service mapping, see service_mapper.c form details
    */
   int s_sm_onqueue;
-  TAILQ_ENTRY(service) s_sm_link;
 
   /**
    * Pending save.
@@ -445,8 +448,11 @@ typedef struct service {
    */
 
   struct th_descrambler_list s_descramblers;
-  uint16_t s_scrambled_seen;
+  uint8_t s_scrambled_seen;
+  uint8_t s_scrambled_pass;
   th_descrambler_runtime_t *s_descramble;
+  void *s_descrambler; /* last active descrambler */
+  descramble_info_t *s_descramble_info;
 
   /**
    * List of all and filtered components.
@@ -526,6 +532,7 @@ void service_settings_write(service_t *t);
 
 const char *service_servicetype_txt(service_t *t);
 
+int service_has_audio_or_video(service_t *t);
 int service_is_sdtv(service_t *t);
 int service_is_hdtv(service_t *t);
 int service_is_radio(service_t *t);
@@ -538,8 +545,13 @@ void service_set_enabled ( service_t *t, int enabled, int _auto );
 
 void service_destroy(service_t *t, int delconf);
 
+void service_remove_raw(service_t *);
+
 void service_remove_subscriber(service_t *t, struct th_subscription *s,
 			       int reason);
+
+
+void service_send_streaming_status(service_t *t);
 
 void service_set_streaming_status_flags_(service_t *t, int flag);
 
@@ -558,6 +570,7 @@ service_reset_streaming_status_flags(service_t *t, int flag)
   if ((n & flag) != 0)
     service_set_streaming_status_flags_(t, n & ~flag);
 }
+
 
 struct streaming_start;
 struct streaming_start *service_build_stream_start(service_t *t);
@@ -591,8 +604,6 @@ void service_refresh_channel(service_t *t);
 
 int tss2errcode(int tss);
 
-uint16_t service_get_encryption(service_t *t);
-
 htsmsg_t *servicetype_list (void);
 
 void service_load ( service_t *s, htsmsg_t *c );
@@ -605,6 +616,7 @@ const char *service_get_channel_name (service_t *s);
 const char *service_get_full_channel_name (service_t *s);
 int64_t     service_get_channel_number (service_t *s);
 const char *service_get_channel_icon (service_t *s);
+const char *service_get_channel_epgid (service_t *s);
 
 void service_mapped (service_t *s);
 

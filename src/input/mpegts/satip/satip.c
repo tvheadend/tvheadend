@@ -191,7 +191,8 @@ satip_device_class_tunercfg_notify ( void *o, const char *lang )
 const idclass_t satip_device_class =
 {
   .ic_class      = "satip_client",
-  .ic_caption    = N_("SAT>IP Client"),
+  .ic_event      = "satip_client",
+  .ic_caption    = N_("SAT>IP client"),
   .ic_save       = satip_device_class_save,
   .ic_get_childs = satip_device_class_get_childs,
   .ic_get_title  = satip_device_class_get_title,
@@ -199,12 +200,19 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "tunercfgu",
-      .name     = N_("Tuner Configuration"),
+      .name     = N_("Tuner configuration"),
       .opts     = PO_SORTKEY,
       .off      = offsetof(satip_device_t, sd_tunercfg),
       .list     = satip_device_class_tunercfg_list,
       .notify   = satip_device_class_tunercfg_notify,
       .def.s    = "Auto"
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "tcp_mode",
+      .name     = N_("RTSP/TCP (embedded data)"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_tcp_mode),
     },
     {
       .type     = PT_BOOL,
@@ -216,7 +224,7 @@ const idclass_t satip_device_class =
     {
       .type     = PT_BOOL,
       .id       = "fullmux_ok",
-      .name     = N_("Full Mux Rx mode supported"),
+      .name     = N_("Full mux RX mode supported"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_fullmux_ok),
     },
@@ -277,6 +285,13 @@ const idclass_t satip_device_class =
       .off      = offsetof(satip_device_t, sd_bindaddr),
     },
     {
+      .type     = PT_INT,
+      .id       = "skip_ts",
+      .name     = N_("Skip TS packets (0-200)"),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_device_t, sd_skip_ts),
+    },
+    {
       .type     = PT_BOOL,
       .id       = "disableworkarounds",
       .name     = N_("Disable device/firmware-specific workarounds"),
@@ -286,14 +301,14 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "addr",
-      .name     = N_("IP Address"),
+      .name     = N_("IP address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.addr),
     },
     {
       .type     = PT_INT,
       .id       = "rtsp",
-      .name     = N_("RTSP Port"),
+      .name     = N_("RTSP port"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.rtsp_port),
     },
@@ -307,21 +322,21 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "friendly",
-      .name     = N_("Friendly Name"),
+      .name     = N_("Friendly name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.friendlyname),
     },
     {
       .type     = PT_STR,
       .id       = "serialnum",
-      .name     = N_("Serial Number"),
+      .name     = N_("Serial number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.serialnum),
     },
     {
       .type     = PT_STR,
       .id       = "tunercfg",
-      .name     = N_("Tuner Configuration"),
+      .name     = N_("Tuner configuration"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.tunercfg),
     },
@@ -342,21 +357,21 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "modeldesc",
-      .name     = N_("Model Description"),
+      .name     = N_("Model description"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.modeldesc),
     },
     {
       .type     = PT_STR,
       .id       = "modelname",
-      .name     = N_("Model Name"),
+      .name     = N_("Model name"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.modelname),
     },
     {
       .type     = PT_STR,
       .id       = "modelnum",
-      .name     = N_("Model Number"),
+      .name     = N_("Model number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.modelnum),
     },
@@ -405,7 +420,7 @@ const idclass_t satip_device_class =
     {
       .type     = PT_STR,
       .id       = "myaddr",
-      .name     = N_("Local Discovery IP Address"),
+      .name     = N_("Local discovery IP address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.myaddr),
     },
@@ -729,6 +744,7 @@ typedef struct satip_discovery {
 
 TAILQ_HEAD(satip_discovery_queue, satip_discovery);
 
+static int satip_enabled;
 static int satip_discoveries_count;
 static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
@@ -1103,6 +1119,7 @@ satip_discovery_static(const char *descurl)
   if (satip_device_find_by_descurl(descurl))
     return;
   d = calloc(1, sizeof(satip_discovery_t));
+  urlinit(&d->url);
   if (urlparse(descurl, &d->url)) {
     satip_discovery_destroy(d, 0);
     return;
@@ -1147,7 +1164,7 @@ ST: urn:ses-com:device:SatIPServer:1\r\n"
   htsbuf_append(&q, MSG, sizeof(MSG)-1);
   htsbuf_qprintf(&q, "USER-AGENT: unix/1.0 UPnP/1.1 TVHeadend/%s\r\n", tvheadend_version);
   htsbuf_append(&q, "\r\n", 2);
-  upnp_send(&q, NULL, 0);
+  upnp_send(&q, NULL, 0, 0);
   htsbuf_queue_flush(&q);
 
   gtimer_arm_ms(&satip_discovery_msearch_timer, satip_discovery_send_msearch,
@@ -1191,6 +1208,8 @@ satip_discovery_timer_cb(void *aux)
 void
 satip_device_discovery_start( void )
 {
+  if (!satip_enabled)
+    return;
   gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
   gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 1);
 }
@@ -1199,12 +1218,15 @@ satip_device_discovery_start( void )
  * Initialization
  */
 
-void satip_init ( str_list_t *clients )
+void satip_init ( int nosatip, str_list_t *clients )
 {
+  satip_enabled = !nosatip;
   TAILQ_INIT(&satip_discoveries);
   satip_static_clients = clients;
-  dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
-  satip_device_discovery_start();
+  if (satip_enabled) {
+    dbus_register_rpc_str("satip_addr", NULL, satip_device_addr);
+    satip_device_discovery_start();
+  }
 }
 
 void satip_done ( void )

@@ -218,10 +218,10 @@ dvbcam_service_start(service_t *t)
 void
 dvbcam_service_stop(service_t *t)
 {
-	dvbcam_active_service_t *as, *as_tmp;
+  dvbcam_active_service_t *as, *as_tmp;
   linuxdvb_ca_t *ca = NULL;
   dvbcam_active_cam_t *ac2;
-  uint8_t slot;
+  uint8_t slot = -1;
 
   tvhtrace("dvbcam", "stop service %p", t);
 

@@ -764,13 +764,40 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
     var rf = [];
     var df = [];
     var groups = null;
+    var width = 0;
 
     /* Fields */
     for (var i = 0; i < d.length; i++) {
         var p = d[i];
+        if (conf.uuids && p.rdonly)
+            continue;
         var f = tvheadend.idnode_editor_field(p, conf);
         if (!f)
             continue;
+        if (conf.uuids) {
+            var label = f.fieldLabel;
+            f.fieldLabel = null;
+            var w = 15 + 10 + conf.labelWidth + 10 +
+                    (f.initialConfig.width ? f.initialConfig.width : 100) + 10;
+            if (w > width)
+                width = w;
+            f = new Ext.form.CompositeField({
+                items: [
+                    new Ext.ux.form.XCheckbox({
+                        width: 15,
+                        height: 12,
+                        name: '_x_' + f.name
+                    }),
+                    {
+                        xtype: 'displayfield',
+                        width: conf.labelWidth,
+                        height: 12,
+                        value: label
+                    },
+                    f
+                ]
+            });
+        }
         if (p.group && meta.groups) {
             if (!groups)
                 groups = {};
@@ -868,6 +895,20 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
             panel.add(newFieldSet({ title: _("Read-only Info"), items: rf, collapsed: 'true'}));
     }
     panel.doLayout();
+    if (width)
+        panel.fixedWidth = width + 50;
+    if (conf.uuids) {
+        panel.getForm().getFieldValues = function(dirtyOnly) {
+            o = {};
+            this.items.each(function(f) {
+                var cbox = f.items.itemAt(0);
+                var field = f.items.itemAt(2);
+                if (cbox.getValue())
+                    o[field.getName()] = field.getValue();
+            });
+            return o;
+        }
+    }
 };
 
 /*
@@ -885,7 +926,7 @@ tvheadend.idnode_editor = function(item, conf)
             iconCls: 'save',
             handler: function() {
                 var node = panel.getForm().getFieldValues();
-                node.uuid = item.uuid;
+                node.uuid = conf.uuids ? conf.uuids : item.uuid;
                 tvheadend.Ajax({
                     url: 'api/idnode/save',
                     params: {
@@ -916,7 +957,7 @@ tvheadend.idnode_editor = function(item, conf)
         border: conf.inTabPanel ? false : true,
         bodyStyle: 'padding: 5px',
         labelAlign: 'left',
-        labelWidth: conf.labelWidth || 200,
+        labelWidth: conf.uuids ? 1 : (conf.labelWidth || 200),
         autoWidth: conf.noautoWidth ? false : true,
         autoHeight: !conf.fixedHeight,
         width: conf.nowidth ? null : (conf.width || 600),
@@ -926,9 +967,12 @@ tvheadend.idnode_editor = function(item, conf)
         buttons: buttons
     });
 
-    tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel,
-                                 { showpwd: conf.showpwd });
-
+    var c = {
+        showpwd: conf.showpwd,
+        uuids: conf.uuids,
+        labelWidth: conf.labelWidth || 200
+    };
+    tvheadend.idnode_editor_form(item.props || item.params, item.meta, panel, c);
     return panel;
 };
 
@@ -1093,8 +1137,42 @@ tvheadend.idnode_grid = function(panel, conf)
     var idnode = null;
 
     var update = function(o) {
-        if (auto.getValue())
+        if ((o.create || 'delete' in o) && auto.getValue()) {
             store.reload();
+            return;
+        }
+        if ('delete' in o) {
+            Ext.each(o['delete'], function (d) {
+                var r = store.getById(d);
+                if (r)
+                    store.remove(r);
+            });
+        }
+        if (o.change) {
+            var ids = [];
+            Ext.each(o.change, function(id) {
+                var r = store.getById(id);
+                if (r)
+                    ids.push(r.id);
+            });
+            if (ids) {
+                var p = { uuid: Ext.encode(ids), grid: 1 };
+                if (conf.list) p.list = conf.list;
+                Ext.Ajax.request({
+                    url: 'api/idnode/load',
+                    params: p,
+                    success: function (d) {
+                        d = json_decode(d);
+                        Ext.each(d, function(jd) {
+                            tvheadend.replace_entry(store.getById(jd.uuid), jd);
+                        });
+                    },
+                    failure: function(response, options) {
+                        Ext.MessageBox.alert(_('Grid Update'), response.statusText);
+                    }
+                });
+            }
+        }
     };
 
     var update2 = function(o) {
@@ -1192,7 +1270,7 @@ tvheadend.idnode_grid = function(panel, conf)
                 abuttons.down.setDisabled(count === 0);
             }
             if (abuttons.edit)
-                abuttons.edit.setDisabled(count !== 1);
+                abuttons.edit.setDisabled(count === 0);
             if (conf.selected)
                 conf.selected(s, abuttons);
         });
@@ -1347,9 +1425,9 @@ tvheadend.idnode_grid = function(panel, conf)
                 text: _('Edit'),
                 disabled: true,
                 handler: function() {
-                    var r = select.getSelected();
-                    if (r) {
-                        if (conf.edittree) {
+                    if (conf.edittree) {
+                        var r = select.getSelected();
+                        if (r) {
                             var p = tvheadend.idnode_tree({
                                 url: 'api/idnode/tree',
                                 params: {
@@ -1367,11 +1445,17 @@ tvheadend.idnode_grid = function(panel, conf)
                                 items: p
                             });
                             w.show();
-                        } else {
+                        }
+                    } else {
+                        var r = select.getSelections();
+                        if (r && r.length > 0) {
+                            var uuids = [];
+                            for (var i = 0; i < r.length; i++)
+                                uuids.push(r[i].id);
                             var params = {};
                             if (conf.edit && conf.edit.params)
-                              params = conf.edit.params;
-                            params['uuid'] = r.id;
+                                params = conf.edit.params;
+                            params['uuid'] = r[0].id;
                             params['meta'] = 1;
                             tvheadend.Ajax({
                                 url: 'api/idnode/load',
@@ -1380,16 +1464,26 @@ tvheadend.idnode_grid = function(panel, conf)
                                     d = json_decode(d);
                                     var w = null;
                                     var c = {win: w};
+                                    if (uuids.length > 1) {
+                                        var title = String.format(_('Edit {0} ({1} entries)'),
+                                                                  conf.titleS, uuids.length);
+                                        c.uuids = uuids;
+                                    } else {
+                                        var title = String.format(_('Edit {0}'), conf.titleS);
+                                    }
                                     var p = tvheadend.idnode_editor(d[0], c);
+                                    var width = p.fixedWidth;
                                     w = new Ext.Window({
-                                        title: String.format(_('Edit {0}'), conf.titleS),
+                                        title: title,
                                         iconCls: 'edit',
                                         layout: 'fit',
-                                        autoWidth: true,
+                                        autoWidth: width ? false : true,
                                         autoHeight: true,
                                         plain: true,
                                         items: p
                                     });
+                                    if (width)
+                                        w.setWidth(width);
                                     c.win = w;
                                     w.show();
                                 }
@@ -1514,6 +1608,14 @@ tvheadend.idnode_grid = function(panel, conf)
             plugins: plugins,
             viewConfig: {
                 forceFit: true
+            },
+            keys: {
+                key: 'a',
+                ctrl: true,
+                stopEvent: true,
+                handler: function() {
+                    grid.getSelectionModel().selectAll();
+                }
             },
             tbar: buttons,
             bbar: page
@@ -1983,7 +2085,7 @@ tvheadend.idnode_tree = function(panel, conf)
     }
 
     function updatenode(o) {
-        if (o.uuid) {
+        if ('change' in o || 'delete' in o) {
             tree.getRootNode().reload();
             tree.expandAll();
         }

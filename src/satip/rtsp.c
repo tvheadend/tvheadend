@@ -274,7 +274,7 @@ rtsp_parse_args(http_connection_t *hc, char *u)
       return -1;
     u++;
   }
-  http_parse_get_args(hc, u);
+  http_parse_args(&hc->hc_req_args, u);
   return stream;
 }
 
@@ -335,7 +335,7 @@ rtsp_slave_remove
           rs->frontend, rs->session, rs->stream, slave->s_nicename);
   master->s_unlink(master, slave);
   if (sub->ths)
-    subscription_unsubscribe(sub->ths, 0);
+    subscription_unsubscribe(sub->ths, UNSUBSCRIBE_FINAL);
   if (sub->prch.prch_id)
     profile_chain_close(&sub->prch);
   LIST_REMOVE(sub, link);
@@ -358,7 +358,7 @@ rtsp_clean(session_t *rs)
     while ((sub = LIST_FIRST(&rs->slaves)) != NULL)
       rtsp_slave_remove(rs, (mpegts_service_t *)rs->subs->ths_raw_service,
                         sub->service);
-    subscription_unsubscribe(rs->subs, 0);
+    subscription_unsubscribe(rs->subs, UNSUBSCRIBE_FINAL);
     rs->subs = NULL;
   }
   if (rs->prch.prch_id)
@@ -487,6 +487,8 @@ rtsp_start
     mux = NULL;
     mn2 = NULL;
     LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+      if (!idnode_is_instance(&mn->mn_id, &dvb_network_class))
+        continue;
       ln = (dvb_network_t *)mn;
       if (ln->ln_type == rs->dmc.dmc_fe_type &&
           mn->mn_satip_source == rs->src) {
@@ -1075,6 +1077,7 @@ end:
     rtsp_rearm_session_timer(rs);
   mpegts_pid_done(&addpids);
   mpegts_pid_done(&delpids);
+  mpegts_pid_done(&pids);
   return errcode;
 
 eargs:
@@ -1550,7 +1553,7 @@ void satip_server_rtsp_init
     session_number = *(uint32_t *)rnd;
     TAILQ_INIT(&rtsp_sessions);
     pthread_mutex_init(&rtsp_lock, NULL);
-    satip_rtp_init();
+    satip_rtp_init(1);
   }
   if (rtsp_port != port && rtsp_server) {
     rtsp_close_sessions();
@@ -1573,6 +1576,7 @@ void satip_server_rtsp_init
 void satip_server_rtsp_register(void)
 {
   tcp_server_register(rtsp_server);
+  satip_rtp_init(0);
 }
 
 void satip_server_rtsp_done(void)

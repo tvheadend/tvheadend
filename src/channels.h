@@ -44,12 +44,13 @@ typedef struct channel
   RB_ENTRY(channel)   ch_link;
 
   int ch_refcount;
-  int ch_zombie;
   int ch_load;
+  int ch_dont_save;
 
   /* Channel info */
   int     ch_enabled;
-  char   *ch_name; // Note: do not access directly!
+  int     ch_autoname;
+  char   *ch_name;                                 /* Note: do not access directly! */
   int64_t ch_number;
   char   *ch_icon;
   idnode_list_head_t ch_ctms;
@@ -60,6 +61,9 @@ typedef struct channel
   LIST_HEAD(, th_subscription) ch_subscriptions;
 
   /* EPG fields */
+  char                 *ch_epg_parent;
+  LIST_HEAD(, channel)  ch_epg_slaves;
+  LIST_ENTRY(channel)   ch_epg_slave_link;
   epg_broadcast_tree_t  ch_epg_schedule;
   epg_broadcast_t      *ch_epg_now;
   epg_broadcast_t      *ch_epg_next;
@@ -67,12 +71,13 @@ typedef struct channel
   gtimer_t              ch_epg_timer_head;
   gtimer_t              ch_epg_timer_current;
 
-  int ch_epgauto;
-  LIST_HEAD(,epggrab_channel_link) ch_epggrab;
+  int                   ch_epgauto;
+  idnode_list_head_t    ch_epggrab;                /* 1 = epggrab channel, 2 = channel */
 
   /* DVR */
   int                   ch_dvr_extra_time_pre;
   int                   ch_dvr_extra_time_post;
+  int                   ch_epg_running;
   struct dvr_entry_list ch_dvrs;
   struct dvr_autorec_entry_list ch_autorecs;
   struct dvr_timerec_entry_list ch_timerecs;
@@ -153,6 +158,8 @@ const char * channel_tag_get_icon(channel_tag_t *ct);
 
 int channel_access(channel_t *ch, struct access *a, int disabled);
 
+void channel_event_updated(epg_broadcast_t *e);
+
 int channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin);
 void channel_tag_unmap(channel_t *ch, void *origin);
 
@@ -163,7 +170,7 @@ void channel_save(channel_t *ch);
 const char *channel_get_name ( channel_t *ch );
 int channel_set_name ( channel_t *ch, const char *name );
 
-#define CHANNEL_SPLIT 1000000
+#define CHANNEL_SPLIT ((int64_t)1000000)
 
 static inline uint32_t channel_get_major ( int64_t chnum ) { return chnum / CHANNEL_SPLIT; }
 static inline uint32_t channel_get_minor ( int64_t chnum ) { return chnum % CHANNEL_SPLIT; }
@@ -173,6 +180,8 @@ int channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor );
 
 const char *channel_get_icon ( channel_t *ch );
 int channel_set_icon ( channel_t *ch, const char *icon );
+
+const char *channel_get_epgid ( channel_t *ch );
 
 #define channel_get_suuid(ch) idnode_uuid_as_sstr(&(ch)->ch_id)
 

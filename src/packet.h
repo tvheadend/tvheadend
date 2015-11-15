@@ -120,4 +120,16 @@ pktbuf_t *pktbuf_append(pktbuf_t *pb, const void *data, size_t size);
 static inline size_t   pktbuf_len(pktbuf_t *pb) { return pb ? pb->pb_size : 0; }
 static inline uint8_t *pktbuf_ptr(pktbuf_t *pb) { return pb->pb_data; }
 
+static inline int64_t pts_diff(int64_t a, int64_t b)
+{
+  a &= PTS_MASK;
+  b &= PTS_MASK;
+  if (b < (PTS_MASK / 4) && a > (PTS_MASK / 2))
+    return b + PTS_MASK + 1 - a;
+  else if (b > a)
+    return b - a;
+  else
+    return PTS_UNSET;
+}
+
 #endif /* PACKET_H_ */

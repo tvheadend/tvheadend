@@ -235,7 +235,7 @@ static int
 api_idnode_load
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  int err = 0, meta, count = 0;
+  int err = 0, meta, grid, count = 0;
   idnode_t *in;
   htsmsg_t *uuids, *l = NULL, *m, *flist;
   htsmsg_field_t *f;
@@ -260,7 +260,11 @@ api_idnode_load
   if (!(uuids = htsmsg_field_get_list(f)))
     if (!(uuid = htsmsg_field_get_str(f)))
       return EINVAL;
+
   meta = htsmsg_get_s32_or_default(args, "meta", 0);
+  grid = htsmsg_get_s32_or_default(args, "grid", 0);
+  if (grid > 0 && meta > 0)
+    return -EINVAL;
 
   flist = api_idnode_flist_conf(args, "list");
 
@@ -278,9 +282,15 @@ api_idnode_load
         err = EPERM;
         continue;
       }
-      m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
-      if (meta > 0)
-        htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+      if (grid > 0) {
+        m = htsmsg_create_map();
+        htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
+        idnode_read0(in, m, flist, 0, perm->aa_lang_ui);
+      } else {
+        m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
+        if (meta > 0)
+          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+      }
       htsmsg_add_msg(l, NULL, m);
       count++;
       idnode_perm_unset(in);
@@ -291,25 +301,31 @@ api_idnode_load
 
   /* Single */
   } else {
-    if (!(in = idnode_find(uuid, NULL, NULL)))
-      err = ENOENT;
-    else {
+    l = htsmsg_create_list();
+    if ((in = idnode_find(uuid, NULL, NULL)) != NULL) {
       if (idnode_perm(in, perm, NULL)) {
         err = EPERM;
       } else {
-        l = htsmsg_create_list();
-        m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
-        if (meta > 0)
-          htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+        if (grid > 0) {
+          m = htsmsg_create_map();
+          htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
+          idnode_read0(in, m, flist, 0, perm->aa_lang_ui);
+        } else {
+          m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
+          if (meta > 0)
+            htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
+        }
         htsmsg_add_msg(l, NULL, m);
         idnode_perm_unset(in);
       }
     }
   }
 
-  if (l) {
+  if (l && err == 0) {
     *resp = htsmsg_create_map();
     htsmsg_add_msg(*resp, "entries", l);
+  } else {
+    htsmsg_destroy(l);
   }
 
   pthread_mutex_unlock(&global_lock);
@@ -375,6 +391,7 @@ api_idnode_save
   htsmsg_field_t *f;
   const char *uuid;
   int count = 0;
+  const idnodes_rb_t *domain = NULL;
 
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
@@ -384,23 +401,49 @@ api_idnode_save
 
   pthread_mutex_lock(&global_lock);
 
-  /* Single */
+  /* Single or Foreach */
   if (!msg->hm_islist) {
-    if (!(uuid = htsmsg_get_str(msg, "uuid")))
-      goto exit;
-    if (!(in = idnode_find(uuid, NULL, NULL)))
-      goto exit;
-    if (idnode_perm(in, perm, msg)) {
-      err = EPERM;
-      goto exit;
+
+    if (!(uuid = htsmsg_get_str(msg, "uuid"))) {
+
+      /* Foreach */
+      f = htsmsg_field_find(msg, "uuid");
+      if (!f || !(conf = htsmsg_field_get_list(f)))
+        goto exit;
+      HTSMSG_FOREACH(f, conf) {
+        if (!(uuid = htsmsg_field_get_str(f)))
+          continue;
+        if (!(in = idnode_find(uuid, NULL, domain)))
+          continue;
+        domain = in->in_domain;
+        if (idnode_perm(in, perm, msg)) {
+          err = EPERM;
+          continue;
+        }
+        count++;
+        idnode_update(in, msg);
+        idnode_perm_unset(in);
+      }
+      if (count)
+        err = 0;
+
+    } else {
+
+      if (!(in = idnode_find(uuid, NULL, NULL)))
+        goto exit;
+      if (idnode_perm(in, perm, msg)) {
+        err = EPERM;
+        goto exit;
+      }
+      idnode_update(in, msg);
+      idnode_perm_unset(in);
+      err = 0;
+
     }
-    idnode_update(in, msg);
-    idnode_perm_unset(in);
-    err = 0;
 
   /* Multiple */
   } else {
-    const idnodes_rb_t *domain = NULL;
+
     HTSMSG_FOREACH(f, msg) {
       if (!(conf = htsmsg_field_get_map(f)))
         continue;
@@ -419,6 +462,7 @@ api_idnode_save
     }
     if (count)
       err = 0;
+
   }
 
   // TODO: return updated UUIDs?

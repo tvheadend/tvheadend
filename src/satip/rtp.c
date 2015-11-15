@@ -316,6 +316,7 @@ satip_rtp_thread(void *aux)
     case SMT_SPEED:
     case SMT_SERVICE_STATUS:
     case SMT_TIMESHIFT_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       break;
     }
 
@@ -388,7 +389,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
 
   pthread_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
-  tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp);
+  tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
   pthread_mutex_unlock(&satip_rtp_lock);
 }
 
@@ -428,12 +429,15 @@ void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids)
         tbl = calloc(1, sizeof(*tbl));
         dvb_table_parse_init(&tbl->tbl, "satip-pmt", pid, rtp);
         tbl->pid = pid;
+        TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
       }
     }
     for (tbl = TAILQ_FIRST(&rtp->pmt_tables); tbl; tbl = tbl_next){
       tbl_next = TAILQ_NEXT(tbl, link);
-      if (tbl->remove_mark)
+      if (tbl->remove_mark) {
         TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+        free(tbl);
+      }
     }
     pthread_mutex_unlock(&rtp->lock);
   }
@@ -462,6 +466,7 @@ void satip_rtp_close(void *id)
     while ((tbl = TAILQ_FIRST(&rtp->pmt_tables)) != NULL) {
       dvb_table_parse_done(&tbl->tbl);
       TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+      free(tbl);
     }
     pthread_mutex_destroy(&rtp->lock);
     free(rtp);
@@ -531,10 +536,10 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   lock = rtp->sig_lock;
   switch (rtp->sig.signal_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
-    level = MIN(240, MAX(0, (rtp->sig.signal * 245) / 0xffff));
+    level = MINMAX((rtp->sig.signal * 245) / 0xffff, 0, 240);
     break;
   case SIGNAL_STATUS_SCALE_DECIBEL:
-    level = MIN(240, MAX(0, (rtp->sig.signal + 90000) / 375));
+    level = MINMAX((rtp->sig.signal + 90000) / 375, 0, 240);
     break;
   default:
     level = lock ? 10 : 0;
@@ -542,10 +547,10 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   }
   switch (rtp->sig.snr_scale) {
   case SIGNAL_STATUS_SCALE_RELATIVE:
-    quality = MIN(15, MAX(0, (rtp->sig.snr * 16) / 0xffff));
+    quality = MINMAX((rtp->sig.snr * 16) / 0xffff, 0, 15);
     break;
   case SIGNAL_STATUS_SCALE_DECIBEL:
-    quality = MIN(15, MAX(0, (rtp->sig.snr / 2000)));
+    quality = MINMAX(rtp->sig.snr / 2000, 0, 15);
     break;
   default:
     quality = lock ? 1 : 0;
@@ -741,10 +746,11 @@ satip_rtcp_thread(void *aux)
 {
   satip_rtp_session_t *rtp;
   struct timespec ts;
-  uint8_t msg[RTCP_PAYLOAD];
+  uint8_t msg[RTCP_PAYLOAD+1];
   char addrbuf[50];
   int r, len, err;
 
+  tvhtrace("satips", "starting rtcp thread");
   while (satip_rtcp_run) {
     ts.tv_sec  = 0;
     ts.tv_nsec = 150000000;
@@ -758,6 +764,11 @@ satip_rtcp_thread(void *aux)
       if (rtp->sq == NULL) continue;
       len = satip_rtcp_build(rtp, msg);
       if (len <= 0) continue;
+      if (tvhtrace_enabled()) {
+        msg[len] = '\0';
+        tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
+        tvhtrace("satips", "RTCP send to %s:%d : %s", addrbuf, IP_PORT(rtp->peer2), msg + 16);
+      }
       r = sendto(rtp->fd_rtcp, msg, len, 0,
                  (struct sockaddr*)&rtp->peer2,
                  rtp->peer2.ss_family == AF_INET6 ?
@@ -778,13 +789,18 @@ end:
 /*
  *
  */
-void satip_rtp_init(void)
+void satip_rtp_init(int boot)
 {
   TAILQ_INIT(&satip_rtp_sessions);
   pthread_mutex_init(&satip_rtp_lock, NULL);
 
-  satip_rtcp_run = 1;
-  tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL);
+  if (boot)
+    satip_rtcp_run = 0;
+
+  if (!boot && !satip_rtcp_run) {
+    satip_rtcp_run = 1;
+    tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
+  }
 }
 
 /*

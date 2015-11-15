@@ -121,7 +121,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   tvh_uuid_t u;
   int retries = 5;
   uint32_t u32;
-  const idclass_t *idc;;
+  const idclass_t *idc;
 
   lock_assert(&global_lock);
 
@@ -152,6 +152,8 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   } while (c != NULL && --retries > 0);
 
   if(c != NULL) {
+    tvherror("idnode", "Id node collission (%s) %s\n",
+             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     fprintf(stderr, "Id node collision (%s) %s\n",
             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     abort();
@@ -166,7 +168,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   assert(c == NULL);
 
   /* Fire event */
-  idnode_notify_changed(in);
+  idnode_notify(in, "create");
 
   return 0;
 }
@@ -563,7 +565,7 @@ idnode_perm(idnode_t *self, struct access *a, htsmsg_t *msg_to_write)
     if (ic->ic_perm)
       r = self->in_class->ic_perm(self, a, msg_to_write);
     else if (ic->ic_perm_def)
-      r = access_verify2(a, self->in_class->ic_perm_def);
+      r = access_verify2(a, ic->ic_perm_def);
     else {
       ic = ic->ic_super;
       continue;
@@ -1359,7 +1361,7 @@ idnode_list_notify ( idnode_list_mapping_t *ilm, void *origin )
 idnode_list_mapping_t *
 idnode_list_link ( idnode_t *in1, idnode_list_head_t *in1_list,
                    idnode_t *in2, idnode_list_head_t *in2_list,
-                   void *origin )
+                   void *origin, uint32_t savemask )
 {
   idnode_list_mapping_t *ilm;
 
@@ -1381,6 +1383,8 @@ idnode_list_link ( idnode_t *in1, idnode_list_head_t *in1_list,
   ilm->ilm_in2 = in2;
   LIST_INSERT_HEAD(in1_list, ilm, ilm_in1_link);
   LIST_INSERT_HEAD(in2_list, ilm, ilm_in2_link);
+  ilm->ilm_in1_save = savemask & 1;
+  ilm->ilm_in2_save = (savemask >> 1) & 1;
   idnode_list_notify(ilm, origin);
   return ilm;
 }
@@ -1611,7 +1615,7 @@ idnode_notify_title_changed (void *in, const char *lang)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
   htsmsg_add_str(m, "text", idnode_get_title(in, lang));
-  notify_by_msg("title", m);
+  notify_by_msg("title", m, 0);
   idnode_notify_changed(in);
 }
 

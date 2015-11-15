@@ -29,16 +29,6 @@
 #include "epggrab.h"
 #include "epggrab/private.h"
 
-static epggrab_channel_tree_t _pyepg_channels;
-static epggrab_module_t      *_pyepg_module;   // primary module
-
-static epggrab_channel_t *_pyepg_channel_find
-  ( const char *id, int create, int *save )
-{
-  return epggrab_channel_find(&_pyepg_channels, id, create, save,
-                              _pyepg_module);
-}
-
 /* **************************************************************************
  * Parsing
  * *************************************************************************/
@@ -84,7 +74,7 @@ static int _pyepg_parse_channel
   if ((attr    = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str     = htsmsg_get_str(attr, "id")) == NULL) return 0;
   if ((tags    = htsmsg_get_map(data, "tags")) == NULL) return 0;
-  if (!(ch     = _pyepg_channel_find(str, 1, &save))) return 0;
+  if (!(ch     = epggrab_channel_find(mod, str, 1, &save))) return 0;
   stats->channels.total++;
   if (save) stats->channels.created++;
 
@@ -97,10 +87,8 @@ static int _pyepg_parse_channel
     save |= epggrab_channel_set_number(ch, u32, 0);
   
   /* Update */
-  if (save) {
-    epggrab_channel_updated(ch);
+  if (save)
     stats->channels.modified++;
-  }
 
   return save;
 }
@@ -352,22 +340,27 @@ static int _pyepg_parse_schedule
   int save = 0;
   htsmsg_t *attr, *tags;
   htsmsg_field_t *f;
+  channel_t *ch;
   epggrab_channel_t *ec;
   const char *str;
-  epggrab_channel_link_t *ecl;
+  idnode_list_mapping_t *ilm;
 
   if ( data == NULL ) return 0;
 
   if ((attr = htsmsg_get_map(data, "attrib")) == NULL) return 0;
   if ((str  = htsmsg_get_str(attr, "channel")) == NULL) return 0;
-  if ((ec   = _pyepg_channel_find(str, 0, NULL)) == NULL) return 0;
+  if ((ec   = epggrab_channel_find(mod, str, 0, NULL)) == NULL) return 0;
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
   HTSMSG_FOREACH(f, tags) {
     if (strcmp(f->hmf_name, "broadcast") == 0) {
-      LIST_FOREACH(ecl, &ec->channels, ecl_epg_link)
+      ec->laststamp = dispatch_clock;
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
+        ch = (channel_t *)ilm->ilm_in2;
+        if (!ch->ch_enabled || ch->ch_epg_parent) continue;
         save |= _pyepg_parse_broadcast(mod, htsmsg_get_map_by_field(f),
-                                       ecl->ecl_channel, stats);
+                                       ch, stats);
+      }
     }
   }
 
@@ -377,27 +370,51 @@ static int _pyepg_parse_schedule
 static int _pyepg_parse_epg 
   ( epggrab_module_t *mod, htsmsg_t *data, epggrab_stats_t *stats )
 {
-  int save = 0;
+  int gsave = 0, save;
   htsmsg_t *tags;
   htsmsg_field_t *f;
 
   if ((tags = htsmsg_get_map(data, "tags")) == NULL) return 0;
 
+  pthread_mutex_lock(&global_lock);
+  epggrab_channel_begin_scan(mod);
+  pthread_mutex_unlock(&global_lock);
+
   HTSMSG_FOREACH(f, tags) {
+    save = 0;
     if (strcmp(f->hmf_name, "channel") == 0 ) {
-      save |= _pyepg_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "brand") == 0 ) {
-      save |= _pyepg_parse_brand(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_brand(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "series") == 0 ) {
-      save |= _pyepg_parse_season(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_season(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "episode") == 0 ) {
-      save |= _pyepg_parse_episode(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_episode(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     } else if (strcmp(f->hmf_name, "schedule") == 0 ) {
-      save |= _pyepg_parse_schedule(mod, htsmsg_get_map_by_field(f), stats);
+      pthread_mutex_lock(&global_lock);
+      save = _pyepg_parse_schedule(mod, htsmsg_get_map_by_field(f), stats);
+      if (save) epg_updated();
+      pthread_mutex_unlock(&global_lock);
     }
+    gsave |= save;
   }
 
-  return save;
+  pthread_mutex_lock(&global_lock);
+  epggrab_channel_end_scan(mod);
+  pthread_mutex_unlock(&global_lock);
+
+  return gsave;
 }
 
 static int _pyepg_parse 
@@ -422,27 +439,22 @@ void pyepg_init ( void )
 {
   char buf[256];
 
-  RB_INIT(&_pyepg_channels);
-
   /* Internal module */
   if (find_exec("pyepg", buf, sizeof(buf)-1))
     epggrab_module_int_create(NULL, NULL,
-                              "pyepg-internal", "PyEPG", 4, buf,
-                              NULL, _pyepg_parse, NULL, NULL);
+                              "pyepg-internal", "pyepg", "PyEPG", 4, buf,
+                              NULL, _pyepg_parse, NULL);
 
   /* External module */
-  _pyepg_module = (epggrab_module_t*)
-    epggrab_module_ext_create(NULL, "pyepg", "PyEPG", 4, "pyepg",
-                              _pyepg_parse, NULL,
-                              &_pyepg_channels);
+  epggrab_module_ext_create(NULL, "pyepg", "pyepg", "PyEPG", 4, "pyepg",
+                            _pyepg_parse, NULL);
 }
 
 void pyepg_done ( void )
 {
-  epggrab_channel_flush(&_pyepg_channels, 0);
 }
 
 void pyepg_load ( void )
 {
-  epggrab_module_channels_load(epggrab_module_find_by_id("pyepg"));
+  epggrab_module_channels_load("pyepg");
 }

@@ -21,6 +21,8 @@ tvheadend.dvrDetails = function(uuid) {
         var filesize = params[9].value;
         var comment = params[10].value;
         var duplicate = params[11].value;
+        var autorec_caption = params[12].value;
+        var timerec_caption = params[13].value;
         var content = '';
         var but;
 
@@ -51,6 +53,34 @@ tvheadend.dvrDetails = function(uuid) {
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('File size') + ':</div> ' + parseInt(filesize / 1000000) + ' MB</div>';
         if (comment)
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Comment') + ':</div> ' + comment + '</div>';
+        if (autorec_caption)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Autorec') + ':</div> ' + autorec_caption + '</div>';
+        if (timerec_caption)
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Time Scheduler') + ':</div> ' + timerec_caption + '</div>';
+
+        var buttons = [];
+
+        buttons.push(new Ext.Button({
+            handler: searchIMDB,
+            iconCls: 'imdb',
+            tooltip: _('Search IMDB (for title)'),
+        }));
+
+        buttons.push(new Ext.Button({
+            handler: searchTheTVDB,
+            iconCls: 'thetvdb',
+            tooltip: _('Search TheTVDB (for title)'),
+        }));
+
+        function searchIMDB() {
+            window.open('http://akas.imdb.com/find?q=' +
+                        encodeURIComponent(title), '_blank');
+        }
+
+        function searchTheTVDB(){
+            window.open('http://thetvdb.com/?string='+
+                        encodeURIComponent(title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
+        }
 
         var win = new Ext.Window({
             title: title,
@@ -60,6 +90,7 @@ tvheadend.dvrDetails = function(uuid) {
             height: 450,
             constrainHeader: true,
             buttonAlign: 'center',
+            buttons: buttons,
             html: content
         });
 
@@ -72,7 +103,8 @@ tvheadend.dvrDetails = function(uuid) {
         params: {
             uuid: uuid,
             list: 'channel_icon,disp_title,disp_subtitle,episode,start_real,stop_real,' +
-                  'duration,disp_description,status,filesize,comment,duplicate'
+                  'duration,disp_description,status,filesize,comment,duplicate,' +
+                  'autorec_caption,timerec_caption'
         },
         success: function(d) {
             d = json_decode(d);
@@ -158,7 +190,8 @@ tvheadend.dvr_upcoming = function(panel, index) {
     var list = 'disp_title,start,start_extra,stop,stop_extra,' +
                'channel,config_name,comment';
     var elist = 'enabled,' +
-                (tvheadend.accessUpdate.admin ? list + ',owner,creator' : list);
+                (tvheadend.accessUpdate.admin ?
+                  list + ',retention,removal,owner,creator' : list);
 
     var stopButton = {
         name: 'stop',
@@ -306,10 +339,40 @@ tvheadend.dvr_finished = function(panel, index) {
         }
     };
 
+    var rerecordButton = {
+        name: 'rerecord',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Toggle re-record functionality'),
+                iconCls: 'rerecord',
+                text: _('Re-record'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/dvr/entry/rerecord/toggle',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+
     function selected(s, abuttons) {
         var r = s.getSelections();
         var b = r.length > 0 && r[0].data.filesize > 0;
         abuttons.download.setDisabled(!b);
+        abuttons.rerecord.setDisabled(!b);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -320,7 +383,7 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
+        edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
@@ -351,7 +414,7 @@ tvheadend.dvr_finished = function(panel, index) {
                            '?title=' + encodeURIComponent(title) + '">' + _('Play') + '</a>';
                 }
             }],
-        tbar: [downloadButton],
+        tbar: [downloadButton, rerecordButton],
         selected: selected,
         help: function() {
             new tvheadend.help(_('DVR - Finished Recordings'), 'dvr_finished.html');
@@ -387,10 +450,40 @@ tvheadend.dvr_failed = function(panel, index) {
         }
     };
 
+    var rerecordButton = {
+        name: 'rerecord',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Toggle re-record functionality'),
+                iconCls: 'rerecord',
+                text: _('Re-record'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/dvr/entry/rerecord/toggle',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+
     function selected(s, abuttons) {
         var r = s.getSelections();
         var b = r.length > 0 && r[0].data.filesize > 0;
         abuttons.download.setDisabled(!b);
+        abuttons.rerecord.setDisabled(r.length <= 0);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -432,7 +525,7 @@ tvheadend.dvr_failed = function(panel, index) {
                            '?title=' + encodeURIComponent(title) + '">' + _('Play') + '</a>';
                 }
             }],
-        tbar: [downloadButton],
+        tbar: [downloadButton, rerecordButton],
         selected: selected,
         help: function() {
             new tvheadend.help(_('DVR - Failed Recordings'), 'dvr_failed.html');
@@ -503,6 +596,9 @@ tvheadend.autorec_editor = function(panel, index) {
             pri:          { width: 80 },
             dedup:        { width: 160 },
             retention:    { width: 80 },
+            removal:      { width: 80 },
+            maxcount:     { width: 80 },
+            maxsched:     { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },
@@ -512,7 +608,8 @@ tvheadend.autorec_editor = function(panel, index) {
             url: 'api/dvr/autorec',
             params: {
                list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
-                     'maxduration,weekdays,start,start_window,pri,dedup,config_name,comment'
+                     'maxduration,weekdays,start,start_window,pri,dedup,retention,removal,' +
+                     'maxcount,maxsched,config_name,comment'
             },
             create: { }
         },
@@ -556,6 +653,8 @@ tvheadend.timerec_editor = function(panel, index) {
             start:        { width: 120 },
             stop:         { width: 120 },
             pri:          { width: 80 },
+            retention:    { width: 80 },
+            removal:      { width: 80 },
             config_name:  { width: 120 },
             owner:        { width: 100 },
             creator:      { width: 200 },

@@ -39,7 +39,7 @@ mpegts_mux_sched_set_timer ( mpegts_mux_sched_t *mms )
   /* Upate timer */
   if (!mms->mms_enabled) {
     if (mms->mms_sub)
-      subscription_unsubscribe(mms->mms_sub, 0);
+      subscription_unsubscribe(mms->mms_sub, UNSUBSCRIBE_FINAL);
     mms->mms_sub    = NULL;
     mms->mms_active = 0;
     gtimer_disarm(&mms->mms_timer);
@@ -115,7 +115,7 @@ mpegts_mux_sched_class_cron_set ( void *p, const void *v )
 const idclass_t mpegts_mux_sched_class =
 {
   .ic_class      = "mpegts_mux_sched",
-  .ic_caption    = N_("Mux Sched Entry"),
+  .ic_caption    = N_("Mux schedule entry"),
   .ic_event      = "mpegts_mux_sched",
   .ic_save       = mpegts_mux_sched_class_save,
   .ic_delete     = mpegts_mux_sched_class_delete,
@@ -232,7 +232,7 @@ mpegts_mux_sched_timer ( void *p )
   /* Cancel sub */
   } else {
     if (mms->mms_sub) {
-      subscription_unsubscribe(mms->mms_sub, 0);
+      subscription_unsubscribe(mms->mms_sub, UNSUBSCRIBE_FINAL);
       mms->mms_sub = NULL;
     }
     mms->mms_active = 0;
@@ -310,7 +310,7 @@ mpegts_mux_sched_delete ( mpegts_mux_sched_t *mms, int delconf )
   if (delconf)
     hts_settings_remove("muxsched/%s", idnode_uuid_as_sstr(&mms->mms_id));
   if (mms->mms_sub)
-    subscription_unsubscribe(mms->mms_sub, 0);
+    subscription_unsubscribe(mms->mms_sub, UNSUBSCRIBE_FINAL);
   gtimer_disarm(&mms->mms_timer);
   idnode_unlink(&mms->mms_id);
   free(mms->mms_cronstr);

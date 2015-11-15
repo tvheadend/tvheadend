@@ -34,10 +34,15 @@
 #include "bouquet.h"
 #include "api.h"
 
+typedef struct service_mapper_item {
+  TAILQ_ENTRY(service_mapper_item) link;
+  service_t *s;
+  service_mapper_conf_t conf;
+} service_mapper_item_t;
+
 static service_mapper_status_t service_mapper_stat; 
 static pthread_cond_t          service_mapper_cond;
-static struct service_queue    service_mapper_queue;
-static service_mapper_conf_t   service_mapper_conf;
+static TAILQ_HEAD(, service_mapper_item) service_mapper_queue;
 
 static void *service_mapper_thread ( void *p );
 
@@ -51,7 +56,7 @@ service_mapper_init ( void )
 {
   TAILQ_INIT(&service_mapper_queue);
   pthread_cond_init(&service_mapper_cond, NULL);
-  tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL);
+  tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL, "svcmap");
 }
 
 void
@@ -77,14 +82,12 @@ void
 service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
 {
   int e, tr, qd = 0;
+  service_mapper_item_t *smi;
   service_t *s;
 
   /* Reset stat counters */
   if (TAILQ_EMPTY(&service_mapper_queue))
     service_mapper_reset_stats();
-
-  /* Store config */
-  service_mapper_conf = *conf;
 
   /* Check each service */
   TAILQ_FOREACH(s, &service_all, s_all_link) {
@@ -130,13 +133,16 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     if (conf->check_availability) {
       tvhtrace("service_mapper", "  queue for checking");
       qd = 1;
-      TAILQ_INSERT_TAIL(&service_mapper_queue, s, s_sm_link);
+      smi = malloc(sizeof(*smi));
+      smi->s = s;
+      smi->conf = *conf;
+      TAILQ_INSERT_TAIL(&service_mapper_queue, smi, link);
       s->s_sm_onqueue = 1;
     
     /* Process */
     } else {
       tvhtrace("service_mapper", "  process");
-      service_mapper_process(s, NULL);
+      service_mapper_process(conf, s, NULL);
     }
   }
   
@@ -153,10 +159,11 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
 void
 service_mapper_stop ( void )
 {
-  service_t *s;
-  while ((s = TAILQ_FIRST(&service_mapper_queue))) {
+  service_mapper_item_t *smi;
+  while ((smi = TAILQ_FIRST(&service_mapper_queue))) {
     service_mapper_stat.total--;
-    service_mapper_remove(s);
+    TAILQ_REMOVE(&service_mapper_queue, smi, link);
+    free(smi);
   }
 
   /* Notify */
@@ -169,8 +176,14 @@ service_mapper_stop ( void )
 void
 service_mapper_remove ( service_t *s )
 {
+  service_mapper_item_t *smi;
+
   if (s->s_sm_onqueue) {
-    TAILQ_REMOVE(&service_mapper_queue, s, s_sm_link);
+    TAILQ_FOREACH(smi, &service_mapper_queue, link)
+      if (smi->s == s) break;
+    assert(smi);
+    TAILQ_REMOVE(&service_mapper_queue, smi, link);
+    free(smi);
     s->s_sm_onqueue = 0;
   }
 
@@ -188,10 +201,9 @@ service_mapper_link ( service_t *s, channel_t *c, void *origin )
 
   ilm = idnode_list_link(&s->s_id, &s->s_channels,
                          &c->ch_id, &c->ch_services,
-                         origin);
+                         origin, 2);
   if (ilm) {
     service_mapped(s);
-    ilm->ilm_in2_save = 1; /* channel */
     return 1;
   }
   return 0;
@@ -207,10 +219,13 @@ service_mapper_create ( idnode_t *s, idnode_t *c, void *origin )
  * Process a service 
  */
 channel_t *
-service_mapper_process ( service_t *s, bouquet_t *bq )
+service_mapper_process
+  ( const service_mapper_conf_t *conf, service_t *s, bouquet_t *bq )
 {
   channel_t *chn = NULL;
-  const char *name;
+  const char *name, *tagname;
+  htsmsg_field_t *f;
+  htsmsg_t *m;
 
   /* Ignore */
   if (s->s_status == SERVICE_ZOMBIE) {
@@ -227,7 +242,7 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
 
   /* Find existing channel */
   name = service_get_channel_name(s);
-  if (!bq && service_mapper_conf.merge_same_name && name && *name)
+  if (!bq && conf->merge_same_name && name && *name)
     chn = channel_find_by_name(name);
   if (!chn) {
     chn = channel_create(NULL, NULL, NULL);
@@ -250,13 +265,19 @@ service_mapper_process ( service_t *s, bouquet_t *bq )
       channel_tag_map(channel_tag_find_by_name("Radio", 1), chn, chn);
     }
 
+    /* Custom tags */
+    if (s->s_channel_tags && (m = s->s_channel_tags(s)) != NULL)
+      HTSMSG_FOREACH(f, m)
+        if ((tagname = htsmsg_field_get_str(f)) != NULL)
+          channel_tag_map(channel_tag_find_by_name(tagname, 1), chn, chn);
+
     /* Provider */
-    if (service_mapper_conf.provider_tags)
+    if (conf->provider_tags)
       if ((prov = s->s_provider_name(s)))
         channel_tag_map(channel_tag_find_by_name(prov, 1), chn, chn);
 
     /* Network */
-    if (service_mapper_conf.network_tags) {
+    if (conf->network_tags) {
       source_info_t si;
       s->s_setsourceinfo(s, &si);
       channel_tag_map(channel_tag_find_by_name(si.si_network, 1), chn, chn);
@@ -286,6 +307,7 @@ static void *
 service_mapper_thread ( void *aux )
 {
   service_t *s;
+  service_mapper_item_t *smi;
   profile_chain_t prch;
   th_subscription_t *sub;
   int run, working = 0;
@@ -302,7 +324,7 @@ service_mapper_thread ( void *aux )
   while (tvheadend_running) {
     
     /* Wait for work */
-    while (!(s = TAILQ_FIRST(&service_mapper_queue))) {
+    while (!(smi = TAILQ_FIRST(&service_mapper_queue))) {
       if (working) {
         working = 0;
         tvhinfo("service_mapper", "idle");
@@ -313,6 +335,7 @@ service_mapper_thread ( void *aux )
     }
     if (!tvheadend_running)
       break;
+    s = smi->s;
     service_mapper_remove(s);
 
     if (!working) {
@@ -383,13 +406,13 @@ service_mapper_thread ( void *aux )
     pthread_mutex_unlock(&sq->sq_mutex);
  
     pthread_mutex_lock(&global_lock);
-    subscription_unsubscribe(sub, 0);
+    subscription_unsubscribe(sub, UNSUBSCRIBE_FINAL);
 
     if(err) {
       tvhinfo("service_mapper", "%s: failed [err %s]", s->s_nicename, err);
       service_mapper_stat.fail++;
     } else
-      service_mapper_process(s, NULL);
+      service_mapper_process(&smi->conf, s, NULL);
 
     service_unref(s);
     service_mapper_stat.active = NULL;

@@ -25,8 +25,8 @@ void parse_mpeg_ts(struct service *t, struct elementary_stream *st,
 		   const uint8_t *data, 
 		   int len, int start, int err);
 
-void parse_mpeg_ps(struct service *t, struct elementary_stream *st,
-		   uint8_t *data, int len);
+void skip_mpeg_ts(struct service *t, struct elementary_stream *st,
+                  const uint8_t *data, int len);
 
 void parser_enqueue_packet(struct service *t, struct elementary_stream *st,
 			   th_pkt_t *pkt);

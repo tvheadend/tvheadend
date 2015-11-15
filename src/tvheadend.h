@@ -34,6 +34,17 @@
 #include <limits.h>
 #if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
+#if ENABLE_ANDROID
+#ifndef strdupa
+#define strdupa(s)                                                            \
+    ({                                                                        \
+      const char *__old = (s);                                                \
+      size_t __len = strlen(__old) + 1;                                       \
+      char *__new = (char *) alloca(__len);                                   \
+      (char *) memcpy(__new, __old, __len);                                   \
+    })
+#endif
+#endif
 #endif
 #include "queue.h"
 #include "avg.h"
@@ -73,6 +84,7 @@ typedef struct str_list
 } str_list_t;
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
+#define PTS_MASK  INT64_C(0x00000001ffffffff)
 
 extern int tvheadend_running;
 
@@ -271,6 +283,21 @@ typedef struct signal_status {
 } signal_status_t;
 
 /**
+ * Descramble info
+ */
+typedef struct descramble_info {
+  uint16_t pid;
+  uint16_t caid;
+  uint32_t provid;
+  uint32_t ecmtime;
+  uint16_t hops;
+  char cardsystem[128];
+  char reader    [128];
+  char from      [128];
+  char protocol  [128];
+} descramble_info_t;
+
+/**
  * Streaming skip
  */
 typedef struct streaming_skip
@@ -356,6 +383,13 @@ typedef enum {
   SMT_SIGNAL_STATUS,
 
   /**
+   * Descrambler info message
+   *
+   * Notification about descrambler
+   */
+  SMT_DESCRAMBLE_INFO,
+
+  /**
    * Streaming stop.
    *
    * End of streaming. If sm_code is 0 this was a result to an
@@ -420,6 +454,7 @@ typedef enum {
 #define SM_CODE_INVALID_TARGET            104
 #define SM_CODE_USER_ACCESS               105
 #define SM_CODE_USER_LIMIT                106
+#define SM_CODE_WEAK_STREAM               107
 
 #define SM_CODE_NO_FREE_ADAPTER           200
 #define SM_CODE_MUX_NOT_ENABLED           201
@@ -536,6 +571,7 @@ static inline unsigned int tvh_strhash(const char *s, unsigned int mod)
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MINMAX(a,mi,ma) MAX(mi, MIN(ma, a))
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 void tvh_str_set(char **strp, const char *src);
@@ -615,12 +651,10 @@ static inline void mystrset(char **p, const char *s)
 
 void doexit(int x);
 
-int tvhthread_create0
+int tvhthread_create
   (pthread_t *thread, const pthread_attr_t *attr,
    void *(*start_routine) (void *), void *arg,
    const char *name);
-
-#define tvhthread_create(a, b, c, d)  tvhthread_create0(a, b, c, d, #c)
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
@@ -725,6 +759,11 @@ int rmtree ( const char *path );
 
 char *regexp_escape ( const char *str );
 
+#if ENABLE_ZLIB
+uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig );
+uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size );
+#endif
+
 /* URL decoding */
 char to_hex(char code);
 char *url_encode(const char *str);
@@ -743,6 +782,8 @@ static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - 
 #define SKEL_ALLOC(name) do { if (!name) name = calloc(1, sizeof(*name)); } while (0)
 #define SKEL_USED(name) do { name = NULL; } while (0)
 #define SKEL_FREE(name) do { free(name); name = NULL; } while (0)
+
+htsmsg_t *network_interfaces_enum(void *obj, const char *lang);
 
 /* glibc wrapper */
 #if ! ENABLE_QSORT_R

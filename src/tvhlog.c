@@ -178,7 +178,7 @@ tvhlog_process
     snprintf(buf, sizeof(buf), "%s %s", t, msg->msg);
     htsmsg_add_str(m, "notificationClass", "logmessage");
     htsmsg_add_str(m, "logtxt", buf);
-    comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG);
+    comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG, 0);
     htsmsg_destroy(m);
   }
 
@@ -420,7 +420,7 @@ tvhlog_init ( int level, int options, const char *path )
 void
 tvhlog_start ( void )
 {
-  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL);
+  tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, "log");
 }
 
 void

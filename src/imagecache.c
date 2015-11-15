@@ -73,7 +73,7 @@ static void imagecache_save(idnode_t *self);
 const idclass_t imagecache_class = {
   .ic_snode      = (idnode_t *)&imagecache_conf,
   .ic_class      = "imagecache",
-  .ic_caption    = N_("Image Cache"),
+  .ic_caption    = N_("Image cache"),
   .ic_event      = "imagecache",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = imagecache_save,
@@ -248,7 +248,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   if (img->url == NULL || img->url[0] == '\0')
     return res;
 
-  memset(&url, 0, sizeof(url));
+  urlinit(&url);
 
   /* Open file  */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data/%d",
@@ -445,7 +445,7 @@ imagecache_init ( void )
 
   /* Start threads */
 #if ENABLE_IMAGECACHE
-  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL);
+  tvhthread_create(&imagecache_tid, NULL, imagecache_thread, NULL, "imagecache");
 
   /* Re-try timer */
   // TODO: this could be more efficient by being targetted, however

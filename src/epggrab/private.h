@@ -27,8 +27,8 @@ struct mpegts_mux;
 
 epggrab_module_t *epggrab_module_create
   ( epggrab_module_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority,
-    epggrab_channel_tree_t *channels );
+    const char *id, const char *saveid,
+    const char *name, int priority );
 
 char     *epggrab_module_grab_spawn ( void *m );
 htsmsg_t *epggrab_module_trans_xml  ( void *m, char *data );
@@ -40,25 +40,33 @@ void      epggrab_module_ch_save ( void *m, epggrab_channel_t *ec );
 
 void      epggrab_module_parse ( void *m, htsmsg_t *data );
 
-void      epggrab_module_channels_load ( epggrab_module_t *m );
+void      epggrab_module_channels_load ( const char *modid );
 
 /* **************************************************************************
  * Channel processing
  * *************************************************************************/
 
-int  epggrab_channel_match ( epggrab_channel_t *ec, struct channel *ch );
-int  epggrab_channel_match_and_link
-  ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_epgid ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_name ( epggrab_channel_t *ec, struct channel *ch );
+int  epggrab_channel_match_number ( epggrab_channel_t *ec, struct channel *ch );
+
+epggrab_channel_t *epggrab_channel_create
+  ( epggrab_module_t *owner, htsmsg_t *conf, const char *uuid );
 
 epggrab_channel_t *epggrab_channel_find
-  ( epggrab_channel_tree_t *chs, const char *id, int create, int *save,
-    epggrab_module_t *owner );
+  ( epggrab_module_t *mod, const char *id, int create, int *save );
 
+void epggrab_channel_save ( epggrab_channel_t *ec );
 void epggrab_channel_destroy
-  ( epggrab_channel_tree_t *tree, epggrab_channel_t *ec, int delconf );
+  ( epggrab_channel_t *ec, int delconf );
 void epggrab_channel_flush
-  ( epggrab_channel_tree_t *tree, int delconf );
+  ( epggrab_module_t *mod, int delconf );
+void epggrab_channel_begin_scan
+  ( epggrab_module_t *mod );
+void epggrab_channel_end_scan
+  ( epggrab_module_t *mod );
 
+void epggrab_channel_init(void);
 void epggrab_channel_done(void);
 
 /* **************************************************************************
@@ -67,12 +75,12 @@ void epggrab_channel_done(void);
 
 epggrab_module_int_t *epggrab_module_int_create
   ( epggrab_module_int_t *skel, const idclass_t *cls,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     const char *path,
     char* (*grab) (void*m),
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data),
-    epggrab_channel_tree_t *channels );
+    htsmsg_t* (*trans) (void *mod, char *data) );
 
 /* **************************************************************************
  * External module routines
@@ -80,11 +88,11 @@ epggrab_module_int_t *epggrab_module_int_create
 
 epggrab_module_ext_t *epggrab_module_ext_create
   ( epggrab_module_ext_t *skel,
-    const char *id, const char *name, int priority,
+    const char *id, const char *saveid,
+    const char *name, int priority,
     const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
-    htsmsg_t* (*trans) (void *mod, char *data),
-    epggrab_channel_tree_t *channels );
+    htsmsg_t* (*trans) (void *mod, char *data) );
 
 /* **************************************************************************
  * OTA module routines
@@ -100,9 +108,9 @@ typedef struct epggrab_ota_module_ops {
 
 epggrab_module_ota_t *epggrab_module_ota_create
   ( epggrab_module_ota_t *skel,
-    const char *id, const char *name, int priority,
-    epggrab_ota_module_ops_t *ops,
-    epggrab_channel_tree_t *channels );
+    const char *id, const char *saveid,
+    const char *name, int priority,
+    epggrab_ota_module_ops_t *ops );
 
 /* **************************************************************************
  * OTA mux link routines
@@ -197,5 +205,10 @@ void pyepg_load  ( void );
 void xmltv_init  ( void );
 void xmltv_done  ( void );
 void xmltv_load  ( void );
+
+/* PSIP module */
+void psip_init  ( void );
+void psip_done  ( void );
+void psip_load  ( void );
 
 #endif /* __EPGGRAB_PRIVATE_H__ */

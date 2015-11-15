@@ -264,7 +264,7 @@ CONFIGID.UPNP.ORG: 0\r\n\
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append(&q, buf, strlen(buf));
-    upnp_send(&q, NULL, attempt * 11);
+    upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -296,7 +296,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
 
   tvhtrace("satips", "sending announce");
 
-  for (attempt = 1; attempt < 3; attempt++) {
+  for (attempt = 1; attempt <= 3; attempt++) {
     switch (attempt) {
     case 1:
       nt = "upnp:rootdevice";
@@ -322,7 +322,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
 
     htsbuf_queue_init(&q, 0);
     htsbuf_append(&q, buf, strlen(buf));
-    upnp_send(&q, NULL, attempt * 11);
+    upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
 #undef MSG
@@ -330,7 +330,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
 
 static void
 satips_upnp_send_discover_reply
-  (struct sockaddr_storage *dst, const char *deviceid)
+  (struct sockaddr_storage *dst, const char *deviceid, int from_multicast)
 {
 #define MSG "\
 HTTP/1.1 200 OK\r\n\
@@ -353,7 +353,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
   if (tvhtrace_enabled()) {
     tcp_get_str_from_ip((struct sockaddr *)dst, buf, sizeof(buf));
     tvhtrace("satips", "sending discover reply to %s:%d%s%s",
-             buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
+             buf, ntohs(IP_PORT(*dst)), deviceid ? " device: " : "", deviceid ?: "");
   }
 
   snprintf(buf, sizeof(buf), MSG, UPNP_MAX_AGE,
@@ -366,7 +366,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
     htsbuf_qprintf(&q, "DEVICEID.SES.COM: %s", deviceid);
   htsbuf_append(&q, "\r\n", 2);
   storage = *dst;
-  upnp_send(&q, &storage, 0);
+  upnp_send(&q, &storage, 0, from_multicast);
   htsbuf_queue_flush(&q);
 #undef MSG
 }
@@ -471,14 +471,14 @@ satips_upnp_discovery_received
       tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
       tvhwarn("satips", "received duplicate SAT>IP DeviceID %s from %s:%d, using %d",
               deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
-      satips_upnp_send_discover_reply(storage, deviceid);
+      satips_upnp_send_discover_reply(storage, deviceid, 0);
       satips_upnp_send_byebye();
       satips_upnp_send_announce();
     } else {
-      satips_upnp_send_discover_reply(storage, NULL);
+      satips_upnp_send_discover_reply(storage, NULL, 0);
     }
   } else {
-    satips_upnp_send_discover_reply(storage, NULL);
+    satips_upnp_send_discover_reply(storage, NULL, 1);
   }
 }
 
@@ -556,7 +556,7 @@ static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
 const idclass_t satip_server_class = {
   .ic_snode      = (idnode_t *)&satip_server_conf,
   .ic_class      = "satip_server",
-  .ic_caption    = N_("SAT>IP Server"),
+  .ic_caption    = N_("SAT>IP server"),
   .ic_event      = "satip_server",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = satip_server_class_save,
@@ -566,7 +566,7 @@ const idclass_t satip_server_class = {
          .number = 1,
       },
       {
-         .name   = N_("Exported Tuners"),
+         .name   = N_("Exported tuners"),
          .number = 2,
       },
       {}
@@ -590,14 +590,14 @@ const idclass_t satip_server_class = {
     {
       .type   = PT_INT,
       .id     = "satip_weight",
-      .name   = N_("Subscription Weight"),
+      .name   = N_("Subscription weight"),
       .off    = offsetof(struct satip_server_conf, satip_weight),
       .group  = 1,
     },
     {
       .type   = PT_INT,
       .id     = "satip_descramble",
-      .name   = N_("Descramble Services (Limit Per Mux)"),
+      .name   = N_("Descramble services (limit per mux)"),
       .off    = offsetof(struct satip_server_conf, satip_descramble),
       .group  = 1,
     },
@@ -611,7 +611,7 @@ const idclass_t satip_server_class = {
     {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
-      .name   = N_("Mux Handling"),
+      .name   = N_("Mux handling"),
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
       .group  = 1,
@@ -717,7 +717,6 @@ void satip_server_init(int rtsp_port)
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
-  satip_server_conf.satip_uuid = NULL;
   satip_server_conf.satip_deviceid = 1;
 
   if (tcp_server_bound(http_server, &http) < 0) {

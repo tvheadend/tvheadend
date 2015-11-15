@@ -31,6 +31,7 @@
 #include "dvb_charset_tables.h"
 #include "input.h"
 #include "intlconv.h"
+#include "lang_str.h"
 #include "settings.h"
 
 static int convert_iso_8859[16] = {
@@ -392,6 +393,64 @@ atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen)
   *buf = 0;
 }
 
+lang_str_t *
+atsc_get_string
+  (const uint8_t *src, size_t srclen)
+{
+  lang_str_t *ls = NULL;
+  int i, j, stringcount, segmentcount;
+  int compressiontype, mode, bytecount;
+  char langcode[4];
+  char buf[256];
+
+  stringcount = src[0];
+  tvhtrace("atsc-str", "%d strings", stringcount);
+
+  src++;
+  srclen--;
+
+  langcode[3] = '\0';
+
+  for (i = 0; i < stringcount && srclen >= 4; i++) {
+    langcode[0]  = src[0];
+    langcode[1]  = src[1];
+    langcode[2]  = src[2];
+    segmentcount = src[3];
+
+    tvhtrace("atsc-str", "  %d: lang '%s', segments %d", i, langcode, segmentcount);
+
+    src    += 4;
+    srclen -= 4;
+
+    for (j = 0; j < segmentcount && srclen >= 3; j++) {
+      compressiontype = src[0];
+      mode            = src[1];
+      bytecount       = src[2];
+
+      src    += 3;
+      srclen -= 3;
+
+      if (mode == 0 && compressiontype == 0) {
+        tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
+                 j, compressiontype, mode, bytecount, bytecount, src);
+        memcpy(buf, src, bytecount);
+        buf[bytecount] = '\0';
+        if (ls == NULL)
+          ls = lang_str_create();
+        lang_str_append(ls, buf, langcode);
+      } else {
+        tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
+                 j, compressiontype, mode, bytecount);
+      }
+
+      /* FIXME: read compressed bytes */
+      src += bytecount; srclen -= bytecount; // skip for now
+    }
+  }
+
+  return ls;
+}
+
 /*
  * DVB time and date functions
  */
@@ -434,6 +493,42 @@ dvb_convert_date(const uint8_t *dvb_buf, int local)
   dvb_time.tm_wday = 0;
   dvb_time.tm_yday = 0;
   return local ? mktime(&dvb_time) : timegm(&dvb_time);
+}
+
+static time_t _gps_leap_seconds[17] = {
+	362793600,
+	394329600,
+	425865600,
+	489024000,
+	567993600,
+	631152000,
+	662688000,
+	709948800,
+	741484800,
+	773020800,
+	820454400,
+	867715200,
+	915148800,
+	1136073600,
+	1230768000,
+	1341100800,
+	1435708800,
+};
+
+time_t
+atsc_convert_gpstime(uint32_t gpstime)
+{
+  int i;
+  time_t out = gpstime + 315964800; // Add Unix - GPS epoch
+
+  for (i = (sizeof(_gps_leap_seconds)/sizeof(time_t)) - 1; i >= 0; i--) {
+    if (out > _gps_leap_seconds[i]) {
+      out -= i+1;
+      break;
+    }
+  }
+
+  return out;
 }
 
 /*

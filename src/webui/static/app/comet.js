@@ -48,6 +48,7 @@ tvheadend.cometPoller = function() {
         tvheadend.boxid = response.boxid;
         for (x = 0; x < response.messages.length; x++) {
             m = response.messages[x];
+            if (0) console.log(JSON.stringify(m), null, " ");
             try {
                 tvheadend.comet.fireEvent(m.notificationClass, m);
             } catch (e) {

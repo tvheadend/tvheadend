@@ -20,6 +20,7 @@ tvheadend.status_subs = function(panel, index)
             r.data.channel = m.channel;
             r.data.service = m.service;
             r.data.state = m.state;
+            if (m.descramble) r.data.descramble = m.descramble;
             r.data.errors = m.errors;
             r.data['in'] = m['in'];
             r.data.out = m.out;
@@ -44,6 +45,7 @@ tvheadend.status_subs = function(panel, index)
                 { name: 'channel' },
                 { name: 'service' },
                 { name: 'state' },
+                { name: 'descramble' },
                 { name: 'errors' },
                 { name: 'in' },
                 { name: 'out' },
@@ -123,6 +125,12 @@ tvheadend.status_subs = function(panel, index)
                 id: 'state',
                 header: _("State"),
                 dataIndex: 'state'
+            },
+            {
+                width: 80,
+                id: 'descramble',
+                header: _("Descramble"),
+                dataIndex: 'descramble'
             },
             {
                 width: 50,

@@ -158,6 +158,10 @@ static void _epggrab_load ( void )
       }
   }
 
+  if (epggrab_conf.epgdb_periodicsave)
+    gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
+               epggrab_conf.epgdb_periodicsave * 3600);
+
   idnode_notify_changed(&epggrab_conf.idnode);
  
   /* Load module config (channels) */
@@ -224,21 +228,21 @@ epggrab_class_ota_cron_notify(void *self, const char *lang)
 const idclass_t epggrab_class = {
   .ic_snode      = &epggrab_conf.idnode,
   .ic_class      = "epggrab",
-  .ic_caption    = N_("EPG Grabber Configuration"),
+  .ic_caption    = N_("EPG grabber configuration"),
   .ic_event      = "epggrab",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = epggrab_class_save,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("General Config"),
+         .name   = N_("General configuration"),
          .number = 1,
       },
       {
-         .name   = N_("Internal Grabber"),
+         .name   = N_("Internal grabber"),
          .number = 2,
       },
       {
-         .name   = N_("Over-the-air Grabbers"),
+         .name   = N_("Over-the-air grabbers"),
          .number = 3,
       },
       {}
@@ -268,7 +272,7 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_INT,
       .id     = "epgdb_periodicsave",
-      .name   = N_("Periodic save EPG to disk"),
+      .name   = N_("Periodically save EPG to disk (hours)"),
       .off    = offsetof(epggrab_conf_t, epgdb_periodicsave),
       .group  = 1,
     },
@@ -284,7 +288,7 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_BOOL,
       .id     = "ota_initial",
-      .name   = N_("Force initial EPG scan at startup"),
+      .name   = N_("Force initial EPG scan at start-up"),
       .off    = offsetof(epggrab_conf_t, ota_initial),
       .group  = 3,
     },
@@ -351,9 +355,12 @@ void epggrab_init ( void )
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
 
+  epggrab_channel_init();
+
   /* Initialise modules */
 #if ENABLE_MPEGTS
   eit_init();
+  psip_init();
   opentv_init();
 #endif
   pyepg_init();
@@ -370,7 +377,7 @@ void epggrab_init ( void )
 
   /* Start internal grab thread */
   epggrab_running = 1;
-  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL);
+  tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, "epggrabi");
 }
 
 /*
@@ -391,12 +398,13 @@ void epggrab_done ( void )
     pthread_mutex_unlock(&global_lock);
     if (mod->done)
       mod->done(mod);
+    pthread_mutex_lock(&global_lock);
+    epggrab_channel_flush(mod, 0);
     free((void *)mod->id);
+    free((void *)mod->saveid);
     free((void *)mod->name);
     free(mod);
-    pthread_mutex_lock(&global_lock);
   }
-  pthread_mutex_unlock(&global_lock);
   epggrab_ota_shutdown();
   eit_done();
   opentv_done();
@@ -409,4 +417,5 @@ void epggrab_done ( void )
   free(epggrab_conf.ota_cron);
   epggrab_conf.ota_cron = NULL;
   epggrab_channel_done();
+  pthread_mutex_unlock(&global_lock);
 }

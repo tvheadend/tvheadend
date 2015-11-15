@@ -39,6 +39,7 @@ LIST_HEAD(epggrab_module_list, epggrab_module);
 typedef struct epggrab_module_list epggrab_module_list_t;
 
 struct mpegts_mux;
+struct channel;
 
 /* **************************************************************************
  * Grabber Stats
@@ -71,37 +72,39 @@ typedef struct epggrab_stats
 RB_HEAD(epggrab_channel_tree, epggrab_channel);
 typedef struct epggrab_channel_tree epggrab_channel_tree_t;
 
+TAILQ_HEAD(epggrab_channel_queue, epggrab_channel);
+
 /*
  * Grab channel
  */
 typedef struct epggrab_channel
 {
-  RB_ENTRY(epggrab_channel) link;     ///< Global link
+  idnode_t                  idnode;
+  TAILQ_ENTRY(epggrab_channel) all_link; ///< Global link
+  RB_ENTRY(epggrab_channel) link;     ///< Global tree link
   epggrab_module_t          *mod;     ///< Linked module
 
+  int                       updated;  ///< EPG channel was updated
+  int                       enabled;  ///< Enabled/disabled
   char                      *id;      ///< Grabber's ID
 
   char                      *name;    ///< Channel name
+  htsmsg_t                  *names;   ///< List of all channel names for grabber's ID
+  htsmsg_t                  *newnames;///< List of all channel names for grabber's ID (scan)
   char                      *icon;    ///< Channel icon
-  int                       major;    ///< Channel major number
-  int                       minor;    ///< Channel minor number
+  char                      *comment; ///< Channel comment (EPG)
+  int64_t                   lcn;      ///< Channel number (split)
 
-  LIST_HEAD(,epggrab_channel_link) channels; ///< Mapped channels
+  time_t                    laststamp;///< Last update timestamp
+
+  int                       only_one; ///< Map to only one channel (auto)
+  idnode_list_head_t        channels; ///< Mapped channels (1 = epggrab channel, 2 = channel)
 } epggrab_channel_t;
-
-typedef struct epggrab_channel_link
-{
-  int                               ecl_mark;
-  struct channel                    *ecl_channel;
-  struct epggrab_channel            *ecl_epggrab;
-  LIST_ENTRY(epggrab_channel_link)  ecl_chn_link;
-  LIST_ENTRY(epggrab_channel_link)  ecl_epg_link;
-} epggrab_channel_link_t;
 
 /*
  * Access functions
  */
-htsmsg_t*         epggrab_channel_list      ( int ota );
+htsmsg_t *epggrab_channel_list      ( int ota );
 
 /*
  * Mutators
@@ -114,8 +117,9 @@ int epggrab_channel_set_number   ( epggrab_channel_t *ch, int major, int minor )
  * Updated/link
  */
 void epggrab_channel_updated     ( epggrab_channel_t *ch );
-void epggrab_channel_link_delete ( epggrab_channel_link_t *ecl, int delconf );
-int  epggrab_channel_link        ( epggrab_channel_t *ec, struct channel *ch );
+void epggrab_channel_link_delete ( epggrab_channel_t *ec, struct channel *ch, int delconf );
+int  epggrab_channel_link        ( epggrab_channel_t *ec, struct channel *ch, void *origin );
+int  epggrab_channel_map         ( idnode_t *ec, idnode_t *ch, void *origin );
 
 /* ID */
 const char *epggrab_channel_get_id ( epggrab_channel_t *ch );
@@ -144,23 +148,18 @@ struct epggrab_module
     EPGGRAB_EXT,
   }                            type;      ///< Grabber type
   const char                   *id;       ///< Module identifier
+  const char                   *saveid;   ///< Module save identifier
   const char                   *name;     ///< Module name (for display)
   int                          enabled;   ///< Whether the module is enabled
   int                          active;    ///< Whether the module is active
   int                          priority;  ///< Priority of the module
-  epggrab_channel_tree_t       *channels; ///< Channel list
+  epggrab_channel_tree_t       channels;  ///< Channel list
 
   /* Activate */
   int       (*activate) ( void *m, int activate );
 
   /* Free */
   void      (*done)    ( void *m );
-
-  /* Channel listings */
-  void      (*ch_add)  ( void *m, struct channel *ch );
-  void      (*ch_rem)  ( void *m, struct channel *ch );
-  void      (*ch_mod)  ( void *m, struct channel *ch );
-  void      (*ch_save) ( void *m, epggrab_channel_t *ch );
 };
 
 /*
@@ -171,6 +170,7 @@ struct epggrab_module_int
   epggrab_module_t             ;          ///< Parent object
 
   const char                   *path;     ///< Path for the command
+  const char                   *args;     ///< Extra arguments
 
   /* Handle data */
   char*     (*grab)   ( void *mod );
@@ -246,8 +246,6 @@ struct epggrab_module_ota
 {
   epggrab_module_t               ;      ///< Parent object
 
-  //TAILQ_HEAD(, epggrab_ota_mux)  muxes; ///< List of related muxes
-
   /* Transponder tuning */
   int  (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
@@ -278,6 +276,8 @@ extern const idclass_t epggrab_class_mod;
 extern const idclass_t epggrab_class_mod_int;
 extern const idclass_t epggrab_class_mod_ext;
 extern const idclass_t epggrab_class_mod_ota;
+extern const idclass_t epggrab_channel_class;
+extern struct epggrab_channel_queue epggrab_channel_entries;
 
 /*
  * Access the Module list

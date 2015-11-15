@@ -20,7 +20,7 @@ It supports the following inputs:
     * UDP
     * HTTP
 
-It support the following outputs:
+It supports the following outputs:
 
   * HTTP
   * HTSP (own protocol)

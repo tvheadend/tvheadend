@@ -44,6 +44,9 @@ typedef struct bouquet {
   channel_tag_t*bq_chtag_ptr;
   const char   *bq_chtag_waiting;
   char         *bq_name;
+  char         *bq_ext_url;
+  int           bq_ssl_peer_verify;
+  int           bq_ext_url_period;
   char         *bq_src;
   char         *bq_comment;
   idnode_set_t *bq_services;
@@ -52,6 +55,8 @@ typedef struct bouquet {
   uint32_t      bq_services_seen;
   uint32_t      bq_lcn_offset;
   uint64_t      bq_last_lcn;
+
+  void         *bq_download;
 
 } bouquet_t;
 
@@ -70,7 +75,9 @@ htsmsg_t * bouquet_class_get_list(void *o, const char *lang);
 bouquet_t * bouquet_create(const char *uuid, htsmsg_t *conf,
                            const char *name, const char *src);
 
-void bouquet_destroy_by_service(service_t *t);
+void bouquet_delete(bouquet_t *bq);
+
+void bouquet_destroy_by_service(service_t *t, int delconf);
 void bouquet_destroy_by_channel_tag(channel_tag_t *ct);
 
 void bouquet_notify_service_enabled(service_t *t);
@@ -83,8 +90,9 @@ bouquet_t * bouquet_find_by_source(const char *name, const char *src, int create
 
 void bouquet_map_to_channels(bouquet_t *bq);
 void bouquet_notify_channels(bouquet_t *bq);
-void bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag);
+void bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag);
 void bouquet_completed(bouquet_t *bq, uint32_t seen);
+void bouquet_change_comment(bouquet_t *bq, const char *comment, int replace);
 
 uint64_t bouquet_get_channel_number(bouquet_t *bq, service_t *t);
 

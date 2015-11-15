@@ -187,7 +187,7 @@ const idclass_t dvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "dvb_network",
-  .ic_caption    = N_("LinuxDVB Network"),
+  .ic_caption    = N_("LinuxDVB network"),
   .ic_delete     = dvb_network_class_delete,
   .ic_properties = (const property_t[]){
     {}
@@ -198,12 +198,12 @@ const idclass_t dvb_network_dvbt_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbt",
-  .ic_caption    = N_("DVB-T Network"),
+  .ic_caption    = N_("DVB-T network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbt_class_scanfile_list,
@@ -217,12 +217,12 @@ const idclass_t dvb_network_dvbc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbc",
-  .ic_caption    = N_("DVB-C Network"),
+  .ic_caption    = N_("DVB-C network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbc_class_scanfile_list,
@@ -236,12 +236,12 @@ const idclass_t dvb_network_dvbs_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbs",
-  .ic_caption    = N_("DVB-S Network"),
+  .ic_caption    = N_("DVB-S network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbs_class_scanfile_list,
@@ -250,7 +250,7 @@ const idclass_t dvb_network_dvbs_class =
     {
       .type     = PT_STR,
       .id       = "orbital_pos",
-      .name     = N_("Orbital Position"),
+      .name     = N_("Orbital position"),
       .set      = dvb_network_class_orbital_pos_set,
       .get      = dvb_network_class_orbital_pos_get,
       .list     = dvb_network_class_orbital_pos_list,
@@ -263,12 +263,12 @@ const idclass_t dvb_network_atsc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc",
-  .ic_caption    = N_("ATSC Network"),
+  .ic_caption    = N_("ATSC network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
-      .name     = N_("Pre-defined Muxes"),
+      .name     = N_("Pre-defined muxes"),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_atsc_class_scanfile_list,
@@ -398,7 +398,7 @@ dvb_network_config_save ( mpegts_network_t *mn )
   htsmsg_destroy(c);
 }
 
-static const idclass_t *
+const idclass_t *
 dvb_network_mux_class
   ( mpegts_network_t *mn )
 {
@@ -412,6 +412,25 @@ dvb_network_mux_class
     return &dvb_mux_atsc_class;
   return NULL;
 }
+
+#define CBIT_ORBITAL_POS        (1<<0)
+#define CBIT_POLARISATION       (1<<1)
+#define CBIT_FREQ               (1<<2)
+#define CBIT_RATE               (1<<3)
+#define CBIT_RATE_HP            (1<<4)
+#define CBIT_RATE_LP            (1<<5)
+#define CBIT_MODULATION         (1<<6)
+#define CBIT_INVERSION          (1<<7)
+#define CBIT_ROLLOFF            (1<<8)
+#define CBIT_PILOT              (1<<9)
+#define CBIT_STREAM_ID          (1<<10)
+#define CBIT_BANDWIDTH          (1<<11)
+#define CBIT_TRANS_MODE         (1<<12)
+#define CBIT_GUARD              (1<<13)
+#define CBIT_HIERARCHY          (1<<14)
+#define CBIT_PLS_MODE           (1<<15)
+#define CBIT_PLS_CODE           (1<<16)
+#define CBIT_FEC_INNER          (1<<17)
 
 static mpegts_mux_t *
 dvb_network_create_mux
@@ -430,6 +449,7 @@ dvb_network_create_mux
     satpos = dvb_network_get_orbital_pos(mn);
     if (dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos)) {
       LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+        if (!idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) continue;
         satpos = dvb_network_get_orbital_pos(mn);
         if (satpos == INT_MAX) continue;
         if (!dvb_network_check_orbital_pos(satpos, dmc->u.dmc_fe_qpsk.orbital_pos))
@@ -469,20 +489,20 @@ dvb_network_create_mux
     /* accept information only from one origin mux */
     if (mm->mm_dmc_origin_expire > dispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
       goto noop;
-    #define COMPARE(x) ({ \
+    #define COMPARE(x, cbit) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
       if (xr) { \
         tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
         lm->lm_tuning.x = dmc->x; \
-      } xr; })
-    #define COMPAREN(x) ({ \
+      } xr ? cbit : 0; })
+    #define COMPAREN(x, cbit) ({ \
       int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != lm->lm_tuning.x; \
       if (xr) { \
         tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)lm->lm_tuning.x); \
         lm->lm_tuning.x = dmc->x; \
-      } xr; })
+      } xr ? cbit : 0; })
     dvb_mux_conf_t tuning_old;
     char buf[128];
     tuning_old = lm->lm_tuning;
@@ -491,7 +511,7 @@ dvb_network_create_mux
       if (lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos == INT_MAX ||
           dvb_network_check_orbital_pos(lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos,
                                         dmc->u.dmc_fe_qpsk.orbital_pos))
-        save |= COMPARE(u.dmc_fe_qpsk.orbital_pos);
+        save |= COMPARE(u.dmc_fe_qpsk.orbital_pos, CBIT_ORBITAL_POS);
     }
     /* Do not change anything else without autodiscovery flag */
     if (!ln->mn_autodiscovery)
@@ -499,46 +519,48 @@ dvb_network_create_mux
     /* Handle big diffs that have been allowed through for DVB-S */
     if (deltaU32(dmc->dmc_fe_freq, lm->lm_tuning.dmc_fe_freq) > 4000) {
       lm->lm_tuning.dmc_fe_freq = dmc->dmc_fe_freq;
-      save = 1;
+      save |= CBIT_FREQ;
     }
-    save |= COMPAREN(dmc_fe_modulation);
-    save |= COMPAREN(dmc_fe_inversion);
-    save |= COMPAREN(dmc_fe_rolloff);
-    save |= COMPAREN(dmc_fe_pilot);
+    save |= COMPAREN(dmc_fe_modulation, CBIT_MODULATION);
+    save |= COMPAREN(dmc_fe_inversion, CBIT_INVERSION);
+    save |= COMPAREN(dmc_fe_rolloff, CBIT_ROLLOFF);
+    save |= COMPAREN(dmc_fe_pilot, CBIT_PILOT);
     switch (dmc->dmc_fe_type) {
     case DVB_TYPE_T:
-      save |= COMPARE(dmc_fe_stream_id);
-      save |= COMPAREN(u.dmc_fe_ofdm.bandwidth);
-      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_HP);
-      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_LP);
-      save |= COMPAREN(u.dmc_fe_ofdm.transmission_mode);
-      save |= COMPAREN(u.dmc_fe_ofdm.guard_interval);
-      save |= COMPAREN(u.dmc_fe_ofdm.hierarchy_information);
+      save |= COMPARE(dmc_fe_stream_id, CBIT_STREAM_ID);
+      save |= COMPAREN(u.dmc_fe_ofdm.bandwidth, CBIT_BANDWIDTH);
+      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_HP, CBIT_RATE_HP);
+      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_LP, CBIT_RATE_LP);
+      save |= COMPAREN(u.dmc_fe_ofdm.transmission_mode, CBIT_TRANS_MODE);
+      save |= COMPAREN(u.dmc_fe_ofdm.guard_interval, CBIT_GUARD);
+      save |= COMPAREN(u.dmc_fe_ofdm.hierarchy_information, CBIT_HIERARCHY);
       break;
     case DVB_TYPE_S:
-      save |= COMPARE(u.dmc_fe_qpsk.polarisation);
-      save |= COMPARE(u.dmc_fe_qpsk.symbol_rate);
-      save |= COMPARE(dmc_fe_stream_id);
-      save |= COMPAREN(dmc_fe_pls_mode);
-      save |= COMPAREN(dmc_fe_pls_code);
-      save |= COMPAREN(u.dmc_fe_qpsk.fec_inner);
+      save |= COMPARE(u.dmc_fe_qpsk.polarisation, CBIT_POLARISATION);
+      save |= COMPARE(u.dmc_fe_qpsk.symbol_rate, CBIT_RATE);
+      save |= COMPARE(dmc_fe_stream_id, CBIT_STREAM_ID);
+      save |= COMPAREN(dmc_fe_pls_mode, CBIT_PLS_MODE);
+      save |= COMPAREN(dmc_fe_pls_code, CBIT_PLS_CODE);
+      save |= COMPAREN(u.dmc_fe_qpsk.fec_inner, CBIT_FEC_INNER);
       break;
     case DVB_TYPE_C:
-      save |= COMPARE(u.dmc_fe_qam.symbol_rate);
-      save |= COMPAREN(u.dmc_fe_qam.fec_inner);
+      save |= COMPARE(u.dmc_fe_qam.symbol_rate, CBIT_RATE);
+      save |= COMPAREN(u.dmc_fe_qam.fec_inner, CBIT_FEC_INNER);
       break;
     default:
       abort();
     }
     #undef COMPARE
     #undef COMPAREN
+    /* ignore rolloff only changes (don't save) */
+    save &= ~CBIT_ROLLOFF;
     if (save) {
       char muxname[128];
       mpegts_mux_nice_name((mpegts_mux_t *)mm, muxname, sizeof(muxname));
       dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
-      tvhwarn("mpegts", "mux %s changed from %s", muxname, buf);
+      tvhwarn("mpegts", "mux %s changed from %s (%08x)", muxname, buf, save);
       dvb_mux_conf_str(&lm->lm_tuning, buf, sizeof(buf));
-      tvhwarn("mpegts", "mux %s changed to   %s", muxname, buf);
+      tvhwarn("mpegts", "mux %s changed to   %s (%08x)", muxname, buf, save);
     }
   }
 save:
@@ -582,14 +604,8 @@ dvb_network_create0
   const char *s;
 
   ln = calloc(1, sizeof(dvb_network_t));
-  if (idc == &dvb_network_dvbt_class)
-    ln->ln_type = DVB_TYPE_T;
-  else if (idc == &dvb_network_dvbc_class)
-    ln->ln_type = DVB_TYPE_C;
-  else if (idc == &dvb_network_dvbs_class)
-    ln->ln_type = DVB_TYPE_S;
-  else
-    ln->ln_type = DVB_TYPE_ATSC;
+  ln->ln_type = dvb_fe_type_by_network_class(idc);
+  assert(ln->ln_type != DVB_TYPE_NONE);
 
   /* Create */
   if (!(ln = (dvb_network_t*)mpegts_network_create0((void*)ln,
@@ -695,6 +711,44 @@ void dvb_network_done ( void )
  * Search
  * ***************************************************************************/
 
+const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type)
+{
+  if (type == DVB_TYPE_T)
+    return &dvb_network_dvbt_class;
+  else if (type == DVB_TYPE_C)
+    return &dvb_network_dvbc_class;
+  else if (type == DVB_TYPE_S)
+    return &dvb_network_dvbs_class;
+  else if (type == DVB_TYPE_ATSC)
+    return &dvb_network_atsc_class;
+
+  return NULL;
+}
+
+dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc)
+{
+  if (idc == &dvb_network_dvbt_class)
+    return DVB_TYPE_T;
+  else if (idc == &dvb_network_dvbc_class)
+    return DVB_TYPE_C;
+  else if (idc == &dvb_network_dvbs_class)
+    return DVB_TYPE_S;
+  else if (idc == &dvb_network_atsc_class)
+    return DVB_TYPE_ATSC;
+
+  return DVB_TYPE_NONE;
+}
+
+idnode_set_t *dvb_network_list_by_fe_type(dvb_fe_type_t type)
+{
+  const idclass_t *idc = dvb_network_class_by_fe_type(type);
+
+  if (!idc)
+    return NULL;
+
+  return idnode_find_all(idc, NULL);
+}
+
 int dvb_network_get_orbital_pos(mpegts_network_t *mn)
 {
   dvb_network_t *ln = (dvb_network_t *)mn;
@@ -703,6 +757,12 @@ int dvb_network_get_orbital_pos(mpegts_network_t *mn)
 
   if (!ln)
     return INT_MAX;
+  if (tvhtrace_enabled()) {
+    if (!idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) {
+      tvhinfo("mpegts", "wrong dvb_network_get_orbital_pos() call");
+      return INT_MAX;
+    }
+  }
   if (ln->mn_satpos != INT_MAX)
     return ln->mn_satpos;
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {

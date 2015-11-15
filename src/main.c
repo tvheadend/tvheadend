@@ -421,6 +421,8 @@ tasklet_thread ( void *aux )
       tsk->tsk_callback = NULL;
     }
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
+    if (tsk->tsk_allocated)
+      free(tsk);
   }
   pthread_mutex_unlock(&tasklet_lock);
 
@@ -630,6 +632,7 @@ main(int argc, char **argv)
               opt_threadid     = 0,
               opt_libav        = 0,
               opt_ipv6         = 0,
+              opt_nosatip      = 0,
               opt_satip_rtsp   = 0,
 #if ENABLE_TSFILE
               opt_tsfile_tuner = 0,
@@ -656,11 +659,11 @@ main(int argc, char **argv)
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
-    {   0, NULL,        N_("Generic Options"),         OPT_BOOL, NULL         },
+    {   0, NULL,        N_("Generic options"),         OPT_BOOL, NULL         },
     { 'h', "help",      N_("Show this page"),          OPT_BOOL, &opt_help    },
     { 'v', "version",   N_("Show version information"),OPT_BOOL, &opt_version },
 
-    {   0, NULL,        N_("Service Configuration"),   OPT_BOOL, NULL         },
+    {   0, NULL,        N_("Service configuration"),   OPT_BOOL, NULL         },
     { 'c', "config",    N_("Alternate configuration path"), OPT_STR,  &opt_config  },
     { 'B', "nobackup",  N_("Don't backup configuration tree at upgrade"), OPT_BOOL, &opt_nobackup },
     { 'f', "fork",      N_("Fork and run as daemon"),  OPT_BOOL, &opt_fork    },
@@ -680,7 +683,7 @@ main(int argc, char **argv)
       OPT_BOOL, &opt_dbus_session },
 #endif
 #if ENABLE_LINUXDVB
-    { 'a', "adapters",  N_("Only use specified DVB adapters (comma separated)"),
+    { 'a', "adapters",  N_("Only use specified DVB adapters (comma separated, -1 = none)"),
       OPT_STR, &opt_dvb_adapters },
 #endif
 #if ENABLE_SATIP_SERVER
@@ -689,10 +692,12 @@ main(int argc, char **argv)
       OPT_INT, &opt_satip_rtsp },
 #endif
 #if ENABLE_SATIP_CLIENT
-    {   0, "satip_xml", N_("URL with the SAT>IP server XML location"),
+    {   0, "nosatip",    N_("Disable SAT>IP client"),
+      OPT_BOOL, &opt_nosatip },
+    {   0, "satip_xml",  N_("URL with the SAT>IP server XML location"),
       OPT_STR_LIST, &opt_satip_xml },
 #endif
-    {   0, NULL,         N_("Server Connectivity"),    OPT_BOOL, NULL         },
+    {   0, NULL,         N_("Server connectivity"),    OPT_BOOL, NULL         },
     { '6', "ipv6",       N_("Listen on IPv6"),         OPT_BOOL, &opt_ipv6    },
     { 'b', "bindaddr",   N_("Specify bind address"),   OPT_STR,  &opt_bindaddr},
     {   0, "http_port",  N_("Specify alternative http port"),
@@ -708,7 +713,7 @@ main(int argc, char **argv)
     {   0, "xspf",       N_("Use XSPF playlist instead of M3U"),
       OPT_BOOL, &opt_xspf },
 
-    {   0, NULL,        N_("Debug Options"),           OPT_BOOL, NULL         },
+    {   0, NULL,        N_("Debug options"),           OPT_BOOL, NULL         },
     { 'd', "stderr",    N_("Enable debug on stderr"),  OPT_BOOL, &opt_stderr  },
     { 's', "syslog",    N_("Enable debug to syslog"),  OPT_BOOL, &opt_syslog  },
     { 'S', "nosyslog",  N_("Disable syslog (all messages)"), OPT_BOOL, &opt_nosyslog },
@@ -722,7 +727,7 @@ main(int argc, char **argv)
 #if ENABLE_LIBAV
     {   0, "libav",     N_("More verbose libav log"),  OPT_BOOL, &opt_libav },
 #endif
-    {   0, "uidebug",   N_("Enable webUI debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
+    {   0, "uidebug",   N_("Enable web UI debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     N_("Immediately abort"),       OPT_BOOL, &opt_abort   },
     { 'D', "dump",      N_("Enable coredumps for daemon"), OPT_BOOL, &opt_dump },
     {   0, "noacl",     N_("Disable all access control checks"),
@@ -762,9 +767,11 @@ main(int argc, char **argv)
     /* Find option */
     cmdline_opt_t *opt
       = cmdline_opt_find(cmdline_opts, ARRAY_SIZE(cmdline_opts), argv[i]);
-    if (!opt)
+    if (!opt) {
       show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts),
                  _("invalid option specified [%s]"), argv[i]);
+      continue;
+    }
 
     /* Process */
     if (opt->type == OPT_BOOL)
@@ -800,19 +807,24 @@ main(int argc, char **argv)
     char *r = NULL;
     char *dvb_adapters = strdup(opt_dvb_adapters);
     adapter_mask = 0x0;
+    i = 0;
     p = strtok_r(dvb_adapters, ",", &r);
     while (p) {
       int a = strtol(p, &e, 10);
-      if (*e != 0 || a < 0 || a > 31) {
+      if (*e != 0 || a > 31) {
         fprintf(stderr, _("Invalid adapter number '%s'\n"), p);
         free(dvb_adapters);
         return 1;
       }
-      adapter_mask |= (1 << a);
+      i = 1;
+      if (a < 0)
+        adapter_mask = 0;
+      else
+        adapter_mask |= (1 << a);
       p = strtok_r(NULL, ",", &r);
     }
     free(dvb_adapters);
-    if (!adapter_mask) {
+    if (!i) {
       fprintf(stderr, "%s", _("No adapters specified!\n"));
       return 1;
     }
@@ -993,7 +1005,7 @@ main(int argc, char **argv)
 
   epg_in_load = 1;
 
-  tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL);
+  tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
   dbus_server_init(opt_dbus, opt_dbus_session);
 
@@ -1021,7 +1033,8 @@ main(int argc, char **argv)
   dvb_init();
 
 #if ENABLE_MPEGTS
-  mpegts_init(adapter_mask, &opt_satip_xml, &opt_tsfile, opt_tsfile_tuner);
+  mpegts_init(adapter_mask, opt_nosatip, &opt_satip_xml,
+              &opt_tsfile, opt_tsfile_tuner);
 #endif
 
   channel_init();

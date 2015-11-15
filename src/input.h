@@ -85,7 +85,8 @@ struct tvh_input {
 
   LIST_ENTRY(tvh_input) ti_link;
 
-  void (*ti_get_streams) (struct tvh_input *, tvh_input_stream_list_t*);
+  void (*ti_get_streams) (tvh_input_t *, tvh_input_stream_list_t*);
+  void (*ti_clear_stats) (tvh_input_t *);
 };
 
 /*
@@ -135,6 +136,10 @@ void input_init ( void );
 htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
 
 void tvh_input_stream_destroy ( tvh_input_stream_t *st );
+
+static inline tvh_input_t *
+tvh_input_find_by_uuid(const char *uuid)
+  { return (tvh_input_t*)idnode_find(uuid, &tvh_input_class, NULL); }
 
 static inline tvh_input_instance_t *
 tvh_input_instance_find_by_uuid(const char *uuid)

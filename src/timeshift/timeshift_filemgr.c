@@ -410,7 +410,7 @@ void timeshift_filemgr_init ( void )
   pthread_cond_init(&timeshift_reaper_cond, NULL);
   TAILQ_INIT(&timeshift_reaper_list);
   tvhthread_create(&timeshift_reaper_thread, NULL,
-                   timeshift_reaper_callback, NULL);
+                   timeshift_reaper_callback, NULL, "tshift-reap");
 }
 
 /*

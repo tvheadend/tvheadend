@@ -140,15 +140,19 @@ tvheadend.epgDetails = function(event) {
     var recording = event.dvrState.indexOf('recording') === 0;
     var scheduled = event.dvrState.indexOf('scheduled') === 0;
 
-    if (!recording && !scheduled) {
-        buttons.push(new Ext.Button({
-            disabled: !event.title,
-            handler: searchIMDB,
-            iconCls: 'find',
-            tooltip: _('Search IMDB (for title)'),
-            text: _("Search IMDB")
-        }));
-    }
+    buttons.push(new Ext.Button({
+        disabled: !event.title,
+        handler: searchIMDB,
+        iconCls: 'imdb',
+        tooltip: _('Search IMDB (for title)'),
+    }));
+
+    buttons.push(new Ext.Button({
+        disabled: !event.title,
+        handler: searchTheTVDB,
+        iconCls: 'thetvdb',
+        tooltip: _('Search TheTVDB (for title)'),
+    }));
 
     buttons.push(new Ext.Button({
         disabled: event.start > now || event.stop < now,
@@ -225,7 +229,7 @@ tvheadend.epgDetails = function(event) {
 
         buttons.push(new Ext.Button({
             handler: function() { win.close(); },
-            text: "Close"
+            text: _("Close")
         }));
 
     }
@@ -234,7 +238,7 @@ tvheadend.epgDetails = function(event) {
         title: _('Broadcast Details'),
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 650,
+        width: 675,
         height: 450,
         constrainHeader: true,
         buttons: buttons,
@@ -247,6 +251,11 @@ tvheadend.epgDetails = function(event) {
     function searchIMDB() {
         window.open('http://akas.imdb.com/find?q=' +
                     encodeURIComponent(event.title), '_blank');
+    }
+
+    function searchTheTVDB(){
+        window.open('http://thetvdb.com/?string='+
+                    encodeURIComponent(event.title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
     }
 
     function playProgram() {
@@ -911,13 +920,12 @@ tvheadend.epg = function() {
     tvheadend.comet.on('epg', function(m) {
         if (!panel.isVisible())
             return;
-        if ('delete' in m) {
-            for (var i = 0; i < m['delete'].length; i++) {
-                var r = epgStore.getById(m['delete'][i]);
+        if ('delete' in m)
+            Ext.each(m['delete'], function(d) {
+                var r = epgStore.getById(d);
                 if (r)
                   epgStore.remove(r);
-            }
-        }
+            });
         if (m.update || m.dvr_update || m.dvr_delete) {
             var a = m.update || m.dvr_update || m.dvr_delete;
             if (m.update && m.dvr_update)
@@ -925,31 +933,22 @@ tvheadend.epg = function() {
             if (m.update || m.dvr_update)
                 a = a.concat(m.dvr_delete);
             var ids = [];
-            for (var i = 0; i < a.length; i++) {
-                var r = epgStore.getById(a[i]);
+            Ext.each(a, function (id) {
+                var r = epgStore.getById(id);
                 if (r)
                   ids.push(r.id);
-            }
+            });
             if (ids) {
                 Ext.Ajax.request({
                     url: 'api/epg/events/load',
                     params: {
-                        eventId: ids
+                        eventId: Ext.encode(ids)
                     },
                     success: function(d) {
                         d = json_decode(d);
-                        for (var i = 0; i < d.length; i++) {
-                            var r = epgStore.getById(d[i].eventId);
-                            if (r) {
-                                for (var j = 0; j < r.store.fields.items.length; j++) {
-                                    var n = r.store.fields.items[j];
-                                    var v = d[i][n.name];
-                                    r.data[n.name] = n.convert((v !== undefined) ? v : n.defaultValue, v);
-                                }
-                                r.json = d[i];
-                                r.commit();
-                            }
-                        }
+                        Ext.each(d, function(jd) {
+                            tvheadend.replace_entry(epgStore.getById(jd.eventId), jd);
+                        });
                     },
                     failure: function(response, options) {
                         Ext.MessageBox.alert(_('EPG Update'), response.statusText);
@@ -1031,7 +1030,7 @@ tvheadend.epg = function() {
                 + '<div class="x-smallhdr">' + _('Genre') + ':</div>' + contentType + '<br>'
                 + '<div class="x-smallhdr">' + _('Duration') + ':</div>' + duration + '<br>'
                 + '<br><br>'
-                + sprintf(_('Currently this will match (and record) %d events.'), epgStore.GetTotalCount())
+                + sprintf(_('Currently this will match (and record) %d events.'), epgStore.getTotalCount())
                 + ' ' + 'Are you sure?',
             function(button) {
                 if (button === 'no')

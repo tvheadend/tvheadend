@@ -32,8 +32,21 @@
 #include "avahi.h"
 #include "url.h"
 #include "satip/server.h"
+#include "channels.h"
 
 #include <netinet/ip.h>
+
+#ifndef IPTOS_CLASS_CS0
+#define IPTOS_CLASS_CS0                 0x00
+#define IPTOS_CLASS_CS1                 0x20
+#define IPTOS_CLASS_CS2                 0x40
+#define IPTOS_CLASS_CS3                 0x60
+#define IPTOS_CLASS_CS4                 0x80
+#define IPTOS_CLASS_CS5                 0xa0
+#define IPTOS_CLASS_CS6                 0xc0
+#define IPTOS_CLASS_CS7                 0xe0
+#endif
+
 
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
@@ -595,6 +608,7 @@ config_migrate_v6 ( void )
         m = htsmsg_get_map(c, "mod_enabled");
       }
       htsmsg_add_u32(m, "eit", 1);
+      htsmsg_add_u32(m, "psip", 1);
       htsmsg_add_u32(m, "uk_freesat", 1);
       htsmsg_add_u32(m, "uk_freeview", 1);
       htsmsg_add_u32(m, "viasat_baltic", 1);
@@ -1323,6 +1337,69 @@ config_migrate_v21 ( void )
   }
 }
 
+/*
+ * v21 -> v22 : epggrab missing changes
+ */
+static void
+config_migrate_v22 ( void )
+{
+  htsmsg_t *c;
+  uint32_t u32;
+
+  if ((c = hts_settings_load("epggrab/config")) != NULL) {
+    if (htsmsg_get_u32(c, "epgdb_periodicsave", &u32) == 0)
+      htsmsg_set_u32(c, "epgdb_periodicsave", (u32 + 3600 - 1) / 3600);
+    hts_settings_save(c, "epggrab/config");
+    htsmsg_destroy(c);
+  }
+  if ((c = hts_settings_load("timeshift/config")) != NULL) {
+    if (htsmsg_get_u32(c, "max_period", &u32) == 0)
+      htsmsg_set_u32(c, "max_period", (u32 + 60 - 1) / 60);
+    hts_settings_save(c, "timeshift/config");
+    htsmsg_destroy(c);
+  }
+}
+
+/*
+ * v21 -> v23 : epggrab xmltv/pyepg channels
+ */
+static void
+config_migrate_v23_one ( const char *modname )
+{
+  htsmsg_t *c, *m, *n;
+  htsmsg_field_t *f;
+  uint32_t maj, min;
+  int64_t num;
+  tvh_uuid_t u;
+
+  if ((c = hts_settings_load_r(1, "epggrab/%s/channels", modname)) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      m = htsmsg_field_get_map(f);
+      if (m == NULL) continue;
+      n = htsmsg_copy(m);
+      htsmsg_add_str(n, "id", f->hmf_name);
+      maj = htsmsg_get_u32_or_default(m, "major", 0);
+      min = htsmsg_get_u32_or_default(m, "minor", 0);
+      num = (maj * CHANNEL_SPLIT) + min;
+      if (num > 0)
+        htsmsg_add_s64(n, "lcn", num);
+      htsmsg_delete_field(n, "major");
+      htsmsg_delete_field(n, "minor");
+      uuid_init_hex(&u, NULL);
+      hts_settings_remove("epggrab/%s/channels/%s", modname, f->hmf_name);
+      hts_settings_save(n, "epggrab/%s/channels/%s", modname, u.hex);
+      htsmsg_destroy(n);
+    }
+    htsmsg_destroy(c);
+  }
+}
+
+static void
+config_migrate_v23 ( void )
+{
+  config_migrate_v23_one("xmltv");
+  config_migrate_v23_one("pyepg");
+}
 
 
 
@@ -1443,7 +1520,9 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v18,
   config_migrate_v19,
   config_migrate_v20,
-  config_migrate_v21
+  config_migrate_v21,
+  config_migrate_v22,
+  config_migrate_v23
 };
 
 /*
@@ -1542,6 +1621,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   struct stat st;
   char buf[1024];
   htsmsg_t *config2;
+  htsmsg_field_t *f;
   const char *s;
 
   memset(&config, 0, sizeof(config));
@@ -1597,11 +1677,14 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
   } else {
-    s = htsmsg_get_str(config2, "language");
-    if (s) {
-      htsmsg_t *m = htsmsg_csv_2_list(s, ',');
-      htsmsg_delete_field(config2, "language");
-      htsmsg_add_msg(config2, "language", m);
+    f = htsmsg_field_find(config2, "language");
+    if (f && f->hmf_type == HMF_STR) {
+      s = htsmsg_get_str(config2, "language");
+      if (s) {
+        htsmsg_t *m = htsmsg_csv_2_list(s, ',');
+        htsmsg_delete_field(config2, "language");
+        htsmsg_add_msg(config2, "language", m);
+      }
     }
     config.version = htsmsg_get_u32_or_default(config2, "config", 0);
     s = htsmsg_get_str(config2, "full_version");
@@ -1692,14 +1775,16 @@ config_class_cors_origin_set ( void *o, const void *v )
     prop_sbuf[0] = '*';
     prop_sbuf[1] = '\0';
   } else {
-    memset(&u, 0, sizeof(u));
-    urlparse(s, &u);
+    urlinit(&u);
+    if (urlparse(s, &u))
+      goto wrong;
     if (u.scheme && (!strcmp(u.scheme, "http") || !strcmp(u.scheme, "https")) && u.host) {
       if (u.port)
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s:%d", u.scheme, u.host, u.port);
       else
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s", u.scheme, u.host);
     } else {
+wrong:
       prop_sbuf[0] = '\0';
     }
     urlreset(&u);
@@ -1721,7 +1806,7 @@ config_class_language_get ( void *o )
 static int
 config_class_language_set ( void *o, const void *v )
 {
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
   if (strcmp(s ?: "", config.language ?: "")) {
     free(config.language);
     config.language = s;
@@ -1750,7 +1835,7 @@ config_class_info_area_get ( void *o )
 static int
 config_class_info_area_set ( void *o, const void *v )
 {
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
   if (strcmp(s ?: "", config.info_area ?: "")) {
     free(config.info_area);
     config.info_area = s;
@@ -1762,11 +1847,12 @@ config_class_info_area_set ( void *o, const void *v )
 }
 
 static void
-config_class_info_area_list1 ( htsmsg_t *m, const char *key, const char *val )
+config_class_info_area_list1 ( htsmsg_t *m, const char *key,
+                               const char *val, const char *lang )
 {
   htsmsg_t *e = htsmsg_create_map();
   htsmsg_add_str(e, "key", key);
-  htsmsg_add_str(e, "val", val);
+  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, val));
   htsmsg_add_msg(m, NULL, e);
 }
 
@@ -1774,9 +1860,9 @@ static htsmsg_t *
 config_class_info_area_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  config_class_info_area_list1(m, "login", N_("Login/Logout"));
-  config_class_info_area_list1(m, "storage", N_("Storage space"));
-  config_class_info_area_list1(m, "time", N_("Time"));
+  config_class_info_area_list1(m, "login", N_("Login/Logout"), lang);
+  config_class_info_area_list1(m, "storage", N_("Storage space"), lang);
+  config_class_info_area_list1(m, "time", N_("Time"), lang);
   return m;
 }
 
@@ -1823,19 +1909,19 @@ const idclass_t config_class = {
          .number = 1,
       },
       {
-         .name   = N_("Language Settings"),
+         .name   = N_("Language settings"),
          .number = 2,
       },
       {
-         .name   = N_("Web User Interface"),
+         .name   = N_("Web user interface"),
          .number = 3,
       },
       {
-         .name   = N_("DVB Scan Files"),
+         .name   = N_("DVB scan files"),
          .number = 4,
       },
       {
-         .name   = N_("Time Update"),
+         .name   = N_("Time update"),
          .number = 5,
       },
       {
@@ -1878,7 +1964,7 @@ const idclass_t config_class = {
     {
       .type   = PT_STR,
       .id     = "cors_origin",
-      .name   = N_("HTTP CORS Origin"),
+      .name   = N_("HTTP CORS origin"),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .group  = 1

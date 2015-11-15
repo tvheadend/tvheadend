@@ -35,6 +35,8 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_ONESHOT    0x080
 #define SUBSCRIPTION_TABLES     0x100
 #define SUBSCRIPTION_MINIMAL    0x200
+#define SUBSCRIPTION_NODESCR    0x400 ///< no decramble
+#define SUBSCRIPTION_EMM        0x800 ///< add EMM PIDs for no descramble subscription
 #define SUBSCRIPTION_INITSCAN  0x1000 ///< for mux subscriptions
 #define SUBSCRIPTION_IDLESCAN  0x2000 ///< for mux subscriptions
 #define SUBSCRIPTION_USERSCAN  0x4000 ///< for mux subscriptions
@@ -50,6 +52,10 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_PRIO_SCAN_USER   6 ///< User defined scan
 #define SUBSCRIPTION_PRIO_MAPPER      7 ///< Channel mapper
 #define SUBSCRIPTION_PRIO_MIN        10 ///< User defined / Normal levels
+
+/* Unsubscribe flags */
+#define UNSUBSCRIBE_QUIET     0x01
+#define UNSUBSCRIBE_FINAL     0x02
 
 typedef struct th_subscription {
 
@@ -71,6 +77,8 @@ typedef struct th_subscription {
   } ths_state;
 
   int ths_testing_error;
+
+  gtimer_t ths_remove_timer;
 
   LIST_ENTRY(th_subscription) ths_channel_link;
   struct channel *ths_channel;          /* May be NULL if channel has been
@@ -140,7 +148,7 @@ void subscription_init(void);
 
 void subscription_done(void);
 
-void subscription_unsubscribe(th_subscription_t *s, int quiet);
+void subscription_unsubscribe(th_subscription_t *s, int flags);
 
 void subscription_set_weight(th_subscription_t *s, unsigned int weight);
 
@@ -213,6 +221,6 @@ static inline int subscriptions_active(void)
   { return LIST_FIRST(&subscriptions) != NULL; }
 
 struct htsmsg;
-struct htsmsg *subscription_create_msg(th_subscription_t *s);
+struct htsmsg *subscription_create_msg(th_subscription_t *s, const char *lang);
 
 #endif /* SUBSCRIPTIONS_H */

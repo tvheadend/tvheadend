@@ -112,6 +112,8 @@ typedef enum http_cmd {
   RTSP_CMD_PAUSE,
 } http_cmd_t;
 
+#define HTTP_CMD_OPTIONS RTSP_CMD_OPTIONS
+
 typedef enum http_ver {
   HTTP_VERSION_1_0,
   HTTP_VERSION_1_1,
@@ -173,12 +175,15 @@ static inline void http_arg_init(struct http_arg_list *list)
   TAILQ_INIT(list);
 }
 
+void http_arg_remove(struct http_arg_list *list, struct http_arg *arg);
 void http_arg_flush(struct http_arg_list *list);
 
 char *http_arg_get(struct http_arg_list *list, const char *name);
 char *http_arg_get_remove(struct http_arg_list *list, const char *name);
 
 void http_arg_set(struct http_arg_list *list, const char *key, const char *val);
+
+static inline int http_args_empty(const struct http_arg_list *list) { return TAILQ_EMPTY(list); }
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
@@ -232,11 +237,13 @@ void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
 int http_access_verify_channel(http_connection_t *hc, int mask,
-                               struct channel *ch, int ticket);
+                               struct channel *ch);
 
 void http_deescape(char *s);
 
-void http_parse_get_args(http_connection_t *hc, char *args);
+void http_parse_args(http_arg_list_t *list, char *args);
+
+char *http_get_hostpath(http_connection_t *hc);
 
 /*
  * HTTP/RTSP Client
@@ -268,9 +275,11 @@ struct http_client {
   char        *hc_bindaddr;
   tvhpoll_t   *hc_efd;
   int          hc_pevents;
+  int          hc_pevents_pause;
 
   int          hc_code;
   http_ver_t   hc_version;
+  http_ver_t   hc_redirv;
   http_cmd_t   hc_cmd;
 
   struct http_arg_list hc_args; /* header */
@@ -302,11 +311,13 @@ struct http_client {
   int          hc_reconnected:1;
   int          hc_keepalive:1;
   int          hc_in_data:1;
+  int          hc_in_rtp_data:1;
   int          hc_chunked:1;
   int          hc_chunk_trails:1;
   int          hc_running:1;
   int          hc_shutdown_wait:1;
   int          hc_handle_location:1; /* handle the redirection (location) requests */
+  int          hc_pause:1;
 
   http_client_wcmd_t            *hc_wcmd;
   TAILQ_HEAD(,http_client_wcmd)  hc_wqueue;
@@ -318,7 +329,9 @@ struct http_client {
   char        *hc_rtsp_session;
   char        *hc_rtp_dest;
   int          hc_rtp_port;
-  int          hc_rtpc_port;
+  int          hc_rtcp_port;
+  int          hc_rtp_tcp;
+  int          hc_rtcp_tcp;
   int          hc_rtcp_server_port;
   int          hc_rtp_multicast:1;
   long         hc_rtsp_stream_id;
@@ -331,9 +344,13 @@ struct http_client {
   gtimer_t     hc_close_timer;
 
   /* callbacks */
+  void    (*hc_hdr_create)   (http_client_t *hc, http_arg_list_t *h,
+                              const url_t *url, int keepalive);
   int     (*hc_hdr_received) (http_client_t *hc);
   int     (*hc_data_received)(http_client_t *hc, void *buf, size_t len);
   int     (*hc_data_complete)(http_client_t *hc);
+  int     (*hc_rtp_data_received)(http_client_t *hc, void *buf, size_t len);
+  int     (*hc_rtp_data_complete)(http_client_t *hc);
   void    (*hc_conn_closed)  (http_client_t *hc, int err);
 };
 
@@ -351,10 +368,16 @@ int http_client_send( http_client_t *hc, http_cmd_t cmd,
                       http_arg_list_t *header, void *body, size_t body_size );
 void http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
                              const char *user, const char *pass );
+void http_client_basic_args ( http_client_t *hc, http_arg_list_t *h,
+                              const url_t *url, int keepalive );
+void http_client_add_args ( http_client_t *hc, http_arg_list_t *h,
+                            const char *args );
+int http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver );
 int http_client_simple( http_client_t *hc, const url_t *url);
 int http_client_clear_state( http_client_t *hc );
 int http_client_run( http_client_t *hc );
 void http_client_ssl_peer_verify( http_client_t *hc, int verify );
+void http_client_unpause( http_client_t *hc );
 
 /*
  * RTSP helpers
@@ -372,7 +395,7 @@ static inline int rtsp_options( http_client_t *hc ) {
 
 int rtsp_setup_decode( http_client_t *hc, int satip );
 int rtsp_setup( http_client_t *hc, const char *path, const char *query,
-                const char *multicast_addr, int rtp_port, int rtpc_port );
+                const char *multicast_addr, int rtp_port, int rtcp_port );
 
 static inline int
 rtsp_play( http_client_t *hc, const char *path, const char *query ) {

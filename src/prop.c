@@ -26,6 +26,7 @@
 #include "lang_str.h"
 
 char prop_sbuf[PROP_SBUF_LEN];
+char *prop_sbuf_ptr = prop_sbuf;
 
 /* **************************************************************************
  * Utilities
@@ -154,12 +155,9 @@ prop_write_values
       }
       case PT_S64: {
         if (p->intsplit) {
-          char *s;
           if (!(new = htsmsg_field_get_str(f)))
             continue;
-          s64 = (int64_t)atol(new) * p->intsplit;
-          if ((s = strchr(new, '.')) != NULL)
-            s64 += (atol(s + 1) % p->intsplit);
+          s64 = prop_intsplit_from_str(new, p->intsplit);
         } else {
           if (htsmsg_field_get_s64(f, &s64))
             continue;
@@ -486,8 +484,11 @@ prop_serialize_value
     htsmsg_add_bool(m, "multiline", 1);
 
   /* Enum list */
-  if (pl->list)
-    htsmsg_add_msg(m, "enum", pl->list(obj, lang));
+  if (pl->list) {
+    htsmsg_t *list = pl->list(obj, lang);
+    if (list)
+      htsmsg_add_msg(m, "enum", list);
+  }
 
   /* Visual group */
   if (pl->group)

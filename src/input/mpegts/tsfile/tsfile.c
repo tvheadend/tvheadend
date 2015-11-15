@@ -38,6 +38,12 @@ tsfile_service_config_save ( service_t *s )
 {
 }
 
+static void
+tsfile_service_delete ( service_t *s, int delconf )
+{
+  mpegts_service_delete(s, 0);
+}
+
 /*
  * Network definition
  */
@@ -51,9 +57,13 @@ tsfile_network_create_service
   // TODO: HACK: REMOVE ME
   if (s) {
     s->s_config_save = tsfile_service_config_save;
+    s->s_delete = tsfile_service_delete;
     pthread_mutex_unlock(&tsfile_lock);
     channel_t *c = channel_create(NULL, NULL, NULL);
-    service_mapper_link((service_t*)s, c, NULL);
+    if (c) {
+      c->ch_dont_save = 1;
+      service_mapper_link((service_t*)s, c, NULL);
+    }
   }
   else
     pthread_mutex_unlock(&tsfile_lock);

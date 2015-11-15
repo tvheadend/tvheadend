@@ -20,6 +20,7 @@
 #ifndef __TVH_SATIP_PRIVATE_H__
 #define __TVH_SATIP_PRIVATE_H__
 
+#include "tvheadend.h"
 #include "input.h"
 #include "htsbuf.h"
 #include "udp.h"
@@ -79,6 +80,7 @@ struct satip_device
    * RTSP
    */
   char                      *sd_bindaddr;
+  int                        sd_tcp_mode;
   int                        sd_fast_switch;
   int                        sd_fullmux_ok;
   int                        sd_pids_max;
@@ -91,6 +93,7 @@ struct satip_device
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
   int                        sd_dbus_allow;
+  int                        sd_skip_ts;
   int                        sd_disable_workarounds;
   pthread_mutex_t            sd_tune_mutex;
 };
@@ -142,6 +145,12 @@ struct satip_frontend
   uint64_t                   sf_last_tune;
   satip_tune_req_t          *sf_req;
   satip_tune_req_t          *sf_req_thread;
+  sbuf_t                     sf_sbuf;
+  int                        sf_skip_ts;
+  const char *               sf_display_name;
+  uint32_t                   sf_seq;
+  dvb_mux_t                 *sf_curmux;
+  time_t                     sf_last_data_tstamp;
  
   /*
    * Configuration
@@ -225,10 +234,11 @@ int satip_satconf_get_position
  * RTSP part
  */
 
-#define SATIP_SETUP_PLAY     (1<<0)
-#define SATIP_SETUP_PIDS0    (1<<1)
-#define SATIP_SETUP_PILOT_ON (1<<2)
-#define SATIP_SETUP_PIDS21   (1<<3)
+#define SATIP_SETUP_TCP      (1<<0)
+#define SATIP_SETUP_PLAY     (1<<1)
+#define SATIP_SETUP_PIDS0    (1<<2)
+#define SATIP_SETUP_PILOT_ON (1<<3)
+#define SATIP_SETUP_PIDS21   (1<<4)
 
 int
 satip_rtsp_setup( http_client_t *hc,

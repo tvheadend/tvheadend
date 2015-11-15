@@ -1,6 +1,7 @@
 /*
  *  tvheadend, WEBUI / HTML user interface
  *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -308,8 +309,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   int ptimeout, grace = 20;
   struct timespec ts;
   struct timeval  tp;
-  int err = 0;
-  socklen_t errlen = sizeof(err);
   streaming_start_t *ss_copy;
   int64_t mono;
 
@@ -343,7 +342,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
 
         /* Check socket status */
-        if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err) {
+        if (tcp_socket_dead(hc->hc_fd)) {
           tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
           run = 0;
         } else if((!started && dispatch_clock - lastpkt > grace) ||
@@ -364,7 +363,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_PACKET:
       lastpkt = dispatch_clock;
       if(started) {
-        pktbuf_t *pb;;
+        pktbuf_t *pb;
         if (sm->sm_type == SMT_PACKET)
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
@@ -390,7 +389,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           streaming_msg_free(sm);
           mono = getmonoclock() + 2000000;
           while (getmonoclock() < mono) {
-            if (getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, (char *)&err, &errlen) || err)
+            if (tcp_socket_dead(hc->hc_fd))
               break;
             usleep(50000);
           }
@@ -417,7 +416,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_SERVICE_STATUS:
-      if(getsockopt(hc->hc_fd, SOL_SOCKET, SO_ERROR, &err, &errlen) || err) {
+      if(tcp_socket_dead(hc->hc_fd)) {
         tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
                hc->hc_url_orig);
         run = 0;
@@ -432,6 +431,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_SKIP:
     case SMT_SPEED:
     case SMT_SIGNAL_STATUS:
+    case SMT_DESCRAMBLE_INFO:
     case SMT_TIMESHIFT_STATUS:
       break;
 
@@ -459,21 +459,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
 
   if(started)
     muxer_close(mux);
-}
-
-/*
- *
- */
-static char *
-http_get_hostpath(http_connection_t *hc)
-{  
-  char buf[255];
-  const char *host = http_arg_get(&hc->hc_args, "Host") ?: http_arg_get(&hc->hc_args, "X-Forwarded-Host");
-  const char *proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
-
-  snprintf(buf, sizeof(buf), "%s://%s%s", proto ?: "http", host, tvheadend_webroot ?: "");
-
-  return strdup(buf);
 }
 
 /*
@@ -558,7 +543,7 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
   char *profile, *hostpath;
   const char *name;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel, 1))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, channel))
     return HTTP_STATUS_UNAUTHORIZED;
 
   profile = profile_validate_name(http_arg_get(&hc->hc_req_args, "profile"));
@@ -641,7 +626,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
     htsbuf_qprintf(hq, "#NAME %s\n", tag->ct_name);
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
     snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
     name = channel_get_name(ch);
@@ -803,7 +788,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
 
-    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 0))
+    if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
       continue;
 
     name = channel_get_name(ch);
@@ -838,7 +823,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
   char buf[255];
   dvr_entry_t *de;
   const char *uuid;
-  char *hostpath = http_get_hostpath(hc);
+  char *hostpath;
   off_t fsize;
   time_t durration;
   struct tm tm;
@@ -848,6 +833,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
     return HTTP_STATUS_BAD_REQUEST;
 
   hq = &hc->hc_reply;
+  hostpath = http_get_hostpath(hc);
 
   htsbuf_qprintf(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
@@ -856,7 +842,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
       continue;
 
     if (de->de_channel &&
-        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel, 0))
+        http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
     durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
@@ -995,8 +981,14 @@ page_http_playlist(http_connection_t *hc, const char *remain, void *opaque)
     de = dvr_entry_find_by_id(atoi(components[1]));
   else if(nc == 2 && !strcmp(components[0], "tagid"))
     tag = channel_tag_find_by_identifier(atoi(components[1]));
-  else if(nc == 2 && !strcmp(components[0], "tag"))
+  else if(nc == 2 && !strcmp(components[0], "tagname"))
     tag = channel_tag_find_by_name(components[1], 0);
+  else if(nc == 2 && !strcmp(components[0], "tag")) {
+    if (uuid_hexvalid(components[1]))
+      tag = channel_tag_find_by_uuid(components[1]);
+    else
+      tag = channel_tag_find_by_name(components[1], 0);
+  }
 
   if(ch)
     r = http_channel_playlist(hc, pltype, ch);
@@ -1051,14 +1043,25 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   const char *name;
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
+  int flags, eflags = 0;
 
   if(http_access_verify(hc, ACCESS_ADVANCED_STREAMING))
     return HTTP_STATUS_UNAUTHORIZED;
 
+  if ((str = http_arg_get(&hc->hc_req_args, "descramble")))
+    if (strcmp(str, "0") == 0)
+      eflags |= SUBSCRIPTION_NODESCR;
+
+  if ((str = http_arg_get(&hc->hc_req_args, "emm")))
+    if (strcmp(str, "1") == 0)
+      eflags |= SUBSCRIPTION_EMM;
+
+  flags = SUBSCRIPTION_MPEGTS | eflags;
+  if ((eflags & SUBSCRIPTION_NODESCR) == 0)
+    flags |= SUBSCRIPTION_PACKET;
   if(!(pro = profile_find_by_list(hc->hc_access->aa_profiles,
                                   http_arg_get(&hc->hc_req_args, "profile"),
-                                  "service",
-                                  SUBSCRIPTION_PACKET | SUBSCRIPTION_MPEGTS)))
+                                  "service", flags)))
     return HTTP_STATUS_NOT_ALLOWED;
 
   if((tcp_id = http_stream_preop(hc)) == NULL)
@@ -1073,7 +1076,8 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
   if (!profile_chain_open(&prch, NULL, 0, qsize)) {
 
     s = subscription_create_from_service(&prch, NULL, weight, "HTTP",
-                                         prch.prch_flags | SUBSCRIPTION_STREAMING,
+                                         prch.prch_flags | SUBSCRIPTION_STREAMING |
+                                           eflags,
                                          hc->hc_peer_ipstr,
 				         hc->hc_username,
 				         http_arg_get(&hc->hc_args, "User-Agent"),
@@ -1083,7 +1087,7 @@ http_stream_service(http_connection_t *hc, service_t *service, int weight)
       pthread_mutex_unlock(&global_lock);
       http_stream_run(hc, &prch, name, s);
       pthread_mutex_lock(&global_lock);
-      subscription_unsubscribe(s, 0);
+      subscription_unsubscribe(s, UNSUBSCRIBE_FINAL);
       res = 0;
     }
   }
@@ -1163,7 +1167,7 @@ http_stream_mux(http_connection_t *hc, mpegts_mux_t *mm, int weight)
         http_stream_run(hc, &prch, name, s);
         pthread_mutex_lock(&global_lock);
       }
-      subscription_unsubscribe(s, 0);
+      subscription_unsubscribe(s, UNSUBSCRIBE_FINAL);
       res = 0;
     }
   }
@@ -1190,7 +1194,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
   void *tcp_id;
   int res = HTTP_STATUS_SERVICE;
 
-  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch, 1))
+  if (http_access_verify_channel(hc, ACCESS_STREAMING, ch))
     return HTTP_STATUS_UNAUTHORIZED;
 
   if(!(pro = profile_find_by_list(hc->hc_access->aa_profiles,
@@ -1222,7 +1226,7 @@ http_stream_channel(http_connection_t *hc, channel_t *ch, int weight)
       pthread_mutex_unlock(&global_lock);
       http_stream_run(hc, &prch, name, s);
       pthread_mutex_lock(&global_lock);
-      subscription_unsubscribe(s, 0);
+      subscription_unsubscribe(s, UNSUBSCRIBE_FINAL);
       res = 0;
     }
   }
@@ -1455,11 +1459,11 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   struct stat st;
   const char *content = NULL, *range, *filename;
   dvr_entry_t *de;
-  char *fname;
+  char *fname, *charset;
   char *basename;
   char *str, *str0;
   char range_buf[255];
-  char disposition[512];
+  char *disposition = NULL;
   off_t content_len, chunk;
   intmax_t file_start, file_end;
   void *tcp_id;
@@ -1492,11 +1496,12 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
   if(dvr_entry_verify(de, hc->hc_access, 1)) {
     pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_NOT_FOUND;
+    return HTTP_STATUS_UNAUTHORIZED;
   }
 
   fname = tvh_strdupa(filename);
   content = muxer_container_type2mime(de->de_mc, 1);
+  charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
 
   pthread_mutex_unlock(&global_lock);
 
@@ -1505,17 +1510,19 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     basename++; /* Skip '/' */
     str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                 basename, strlen(basename) * 3);
+    if (str0 == NULL)
+      return HTTP_STATUS_INTERNAL;
     htsbuf_queue_init(&q, 0);
     htsbuf_append_and_escape_url(&q, basename);
     str = htsbuf_to_string(&q);
-    snprintf(disposition, sizeof(disposition),
+    r = 50 + strlen(str0) + strlen(str);
+    disposition = alloca(r);
+    snprintf(disposition, r,
              "attachment; filename=\"%s\"; filename*=UTF-8''%s",
              str0, str);
     htsbuf_queue_flush(&q);
     free(str);
     free(str0);
-  } else {
-    disposition[0] = 0;
   }
 
   fd = tvh_open(fname, O_RDONLY, 0);
@@ -1551,8 +1558,8 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   content_len = file_end - file_start+1;
   
-  sprintf(range_buf, "bytes %jd-%jd/%zd",
-    file_start, file_end, (size_t)st.st_size);
+  sprintf(range_buf, "bytes %jd-%jd/%jd",
+    file_start, file_end, (intmax_t)st.st_size);
 
   if(file_start > 0)
     if (lseek(fd, file_start, SEEK_SET) != file_start) {
@@ -1572,10 +1579,17 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       http_stream_postop(tcp_id);
       tcp_id = NULL;
     } else {
-      basename = malloc(strlen(fname) + 7 + 1);
+      str = intlconv_to_utf8safestr(charset, fname, strlen(fname) * 3);
+      if (str == NULL)
+        str = intlconv_to_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                      fname, strlen(fname) * 3);
+      if (str == NULL)
+        str = strdup("error");
+      basename = malloc(strlen(str) + 7 + 1);
       strcpy(basename, "file://");
-      strcat(basename, fname);
+      strcat(basename, str);
       sub->ths_dvrfile = basename;
+      free(str);
     }
   }
   pthread_mutex_unlock(&global_lock);
@@ -1586,8 +1600,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
        content, content_len, NULL, NULL, 10, 
-       range ? range_buf : NULL,
-       disposition[0] ? disposition : NULL, NULL);
+       range ? range_buf : NULL, disposition, NULL);
 
   ret = 0;
   if(!hc->hc_no_output) {
@@ -1616,7 +1629,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 
   pthread_mutex_lock(&global_lock);
   if (sub)
-    subscription_unsubscribe(sub, 0);
+    subscription_unsubscribe(sub, UNSUBSCRIBE_FINAL);
   http_stream_postop(tcp_id);
   pthread_mutex_unlock(&global_lock);
   return ret;
@@ -1797,6 +1810,7 @@ webui_init(int xspf)
   http_path_add("/dvrfile", NULL, page_dvrfile, ACCESS_ANONYMOUS);
   http_path_add("/favicon.ico", NULL, favicon, ACCESS_WEB_INTERFACE);
   http_path_add("/playlist", NULL, page_http_playlist, ACCESS_ANONYMOUS);
+  http_path_add("/xmltv", NULL, page_xmltv, ACCESS_ANONYMOUS);
 
   http_path_add("/state", NULL, page_statedump, ACCESS_ADMIN);
 

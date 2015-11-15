@@ -23,10 +23,21 @@
 #include "service.h"
 #include "channels.h"
 #include "service_mapper.h"
+#include "download.h"
+
+typedef struct bouquet_download {
+  bouquet_t  *bq;
+  download_t  download;
+  gtimer_t    timer;
+} bouquet_download_t;
 
 bouquet_tree_t bouquets;
 
+static void bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf);
 static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
+static void bouquet_download_trigger(bouquet_t *bq);
+static void bouquet_download_stop(void *aux);
+static int bouquet_download_process(void *aux, const char *last_url, const char *host_url, char *data, size_t len);
 
 /**
  *
@@ -45,6 +56,8 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
                const char *name, const char *src)
 {
   bouquet_t *bq, *bq2;
+  bouquet_download_t *bqd;
+  char buf[128];
   int i;
 
   lock_assert(&global_lock);
@@ -52,6 +65,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   bq = calloc(1, sizeof(bouquet_t));
   bq->bq_services = idnode_set_create(1);
   bq->bq_active_services = idnode_set_create(1);
+  bq->bq_ext_url_period = 60;
 
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
@@ -78,10 +92,30 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
     bq->bq_src = strdup(src);
   }
 
+  if (bq->bq_ext_url) {
+    if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) != 0) {
+      free(bq->bq_ext_url);
+      bq->bq_ext_url = NULL;
+    } else {
+      free(bq->bq_src);
+      snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_sstr(&bq->bq_id));
+      bq->bq_src = strdup(buf);
+      bq->bq_download = bqd = calloc(1, sizeof(*bqd));
+      bqd->bq = bq;
+      download_init(&bqd->download, "bouquet");
+      bqd->download.process = bouquet_download_process;
+      bqd->download.stop = bouquet_download_stop;
+      bouquet_change_comment(bq, bq->bq_ext_url, 0);
+    }
+  }
+
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
   assert(bq2 == NULL);
 
   bq->bq_saveflag = 1;
+
+  if (bq->bq_ext_url)
+    bouquet_download_trigger(bq);
 
   return bq;
 }
@@ -92,17 +126,26 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 static void
 bouquet_destroy(bouquet_t *bq)
 {
+  bouquet_download_t *bqd;
+
   if (!bq)
     return;
 
   RB_REMOVE(&bouquets, bq, bq_link);
   idnode_unlink(&bq->bq_id);
 
+  if ((bqd = bq->bq_download) != NULL) {
+    bouquet_download_stop(bqd);
+    download_done(&bqd->download);
+    free(bqd);
+  }
+
   idnode_set_free(bq->bq_active_services);
   idnode_set_free(bq->bq_services);
   assert(bq->bq_services_waiting == NULL);
   free((char *)bq->bq_chtag_waiting);
   free(bq->bq_name);
+  free(bq->bq_ext_url);
   free(bq->bq_src);
   free(bq->bq_comment);
   free(bq);
@@ -112,7 +155,7 @@ bouquet_destroy(bouquet_t *bq)
  *
  */
 void
-bouquet_destroy_by_service(service_t *t)
+bouquet_destroy_by_service(service_t *t, int delconf)
 {
   bouquet_t *bq;
   service_lcn_t *sl;
@@ -121,7 +164,7 @@ bouquet_destroy_by_service(service_t *t)
 
   RB_FOREACH(bq, &bouquets, bq_link)
     if (idnode_set_exists(bq->bq_services, &t->s_id))
-      idnode_set_remove(bq->bq_services, &t->s_id);
+      bouquet_remove_service(bq, t, delconf);
   while ((sl = LIST_FIRST(&t->s_lcns)) != NULL) {
     LIST_REMOVE(sl, sl_link);
     free(sl);
@@ -225,6 +268,13 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
 {
   channel_t *ch = NULL;
   idnode_list_mapping_t *ilm;
+  static service_mapper_conf_t sm_conf = {
+    .check_availability = 0,
+    .encrypted          = 1,
+    .merge_same_name    = 0,
+    .provider_tags      = 0,
+    .network_tags       = 0
+  };
 
   if (!t->s_enabled)
     return;
@@ -240,7 +290,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
       break;
   if (!ilm)
-    ch = service_mapper_process(t, bq);
+    ch = service_mapper_process(&sm_conf, t, bq);
   else
     ch = (channel_t *)ilm->ilm_in2;
   if (ch && bq->bq_chtag)
@@ -254,7 +304,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
  *
  */
 void
-bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, uint32_t tag)
+bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
 {
   service_lcn_t *tl;
   idnode_list_mapping_t *ilm;
@@ -348,11 +398,13 @@ bouquet_notify_service_enabled(service_t *t)
  *
  */
 static void
-bouquet_remove_service(bouquet_t *bq, service_t *s)
+bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf)
 {
   tvhtrace("bouquet", "remove service %s from %s",
            s->s_nicename, bq->bq_name ?: "<unknown>");
   idnode_set_remove(bq->bq_services, &s->s_id);
+  if (delconf)
+    bouquet_unmap_channel(bq, s);
 }
 
 /*
@@ -387,7 +439,7 @@ bouquet_completed(bouquet_t *bq, uint32_t seen)
     if (!idnode_set_exists(bq->bq_active_services, bq->bq_services->is_array[z]))
       idnode_set_add(remove, bq->bq_services->is_array[z], NULL, NULL);
   for (z = 0; z < remove->is_count; z++)
-    bouquet_remove_service(bq, (service_t *)remove->is_array[z]);
+    bouquet_remove_service(bq, (service_t *)remove->is_array[z], 1);
   idnode_set_free(remove);
 
   /* Remove no longer used LCNs */
@@ -494,10 +546,29 @@ bouquet_get_channel_number(bouquet_t *bq, service_t *t)
 /*
  *
  */
-static uint32_t
-bouquet_get_tag_number(bouquet_t *bq, service_t *t)
+static const char *
+bouquet_get_tag_name(bouquet_t *bq, service_t *t)
 {
   return 0;
+}
+
+/**
+ *
+ */
+void
+bouquet_delete(bouquet_t *bq)
+{
+  if (bq == NULL) return;
+  bq->bq_enabled = 0;
+  bouquet_map_to_channels(bq);
+  if (!bq->bq_shield) {
+    hts_settings_remove("bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
+    bouquet_destroy(bq);
+  } else {
+    idnode_set_free(bq->bq_services);
+    bq->bq_services = idnode_set_create(1);
+    bouquet_save(bq, 1);
+  }
 }
 
 /**
@@ -517,6 +588,19 @@ bouquet_save(bouquet_t *bq, int notify)
     idnode_notify_changed(&bq->bq_id);
 }
 
+/**
+ *
+ */
+void
+bouquet_change_comment ( bouquet_t *bq, const char *comment, int replace )
+{
+  if (!replace && bq->bq_comment && bq->bq_comment[0])
+    return;
+  free(bq->bq_comment);
+  bq->bq_comment = comment ? strdup(comment) : NULL;
+  bq->bq_saveflag = 1;
+}
+
 /* **************************************************************************
  * Class definition
  * **************************************************************************/
@@ -530,18 +614,7 @@ bouquet_class_save(idnode_t *self)
 static void
 bouquet_class_delete(idnode_t *self)
 {
-  bouquet_t *bq = (bouquet_t *)self;
-
-  bq->bq_enabled = 0;
-  bouquet_map_to_channels(bq);
-  if (!bq->bq_shield) {
-    hts_settings_remove("bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
-    bouquet_destroy(bq);
-  } else {
-    idnode_set_free(bq->bq_services);
-    bq->bq_services = idnode_set_create(1);
-    bouquet_save(bq, 1);
-  }
+  bouquet_delete((bouquet_t *)self);
 }
 
 static const char *
@@ -569,6 +642,13 @@ static void
 bouquet_class_rescan_notify0 ( bouquet_t *bq, const char *lang )
 {
   void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+  void iptv_bouquet_trigger_by_uuid( const char *uuid );
+#if ENABLE_IPTV
+  if (bq->bq_src && strncmp(bq->bq_src, "iptv-network://", 15) == 0)
+    return iptv_bouquet_trigger_by_uuid(bq->bq_src + 15);
+#endif
+  if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) == 0)
+    return bouquet_download_trigger(bq);
   mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
   bq->bq_rescan = 0;
 }
@@ -737,7 +817,7 @@ bouquet_class_services_get ( void *obj )
   bouquet_t *bq = obj;
   service_t *t;
   int64_t lcn;
-  uint32_t tag;
+  const char *tag;
   size_t z;
 
   /* Add all */
@@ -746,8 +826,8 @@ bouquet_class_services_get ( void *obj )
     e = htsmsg_create_map();
     if ((lcn = bouquet_get_channel_number0(bq, t)) != 0)
       htsmsg_add_s64(e, "lcn", lcn);
-    if ((tag = bouquet_get_tag_number(bq, t)) != 0)
-      htsmsg_add_s64(e, "tag", lcn);
+    if ((tag = bouquet_get_tag_name(bq, t)) != NULL)
+      htsmsg_add_str(e, "tag", tag);
     htsmsg_add_msg(m, idnode_uuid_as_sstr(&t->s_id), e);
   }
 
@@ -758,7 +838,7 @@ static char *
 bouquet_class_services_rend ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
-  const char *sc = N_("Services Count %zi");
+  const char *sc = N_("Service count %zi");
   char buf[32];
   snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, sc), bq->bq_services->is_count);
   return strdup(buf);
@@ -785,6 +865,12 @@ bouquet_class_services_count_get ( void *obj )
 
   u32 = bq->bq_services->is_count;
   return &u32;
+}
+
+static void
+bouquet_class_ext_url_notify ( void *obj, const char *lang )
+{
+  bouquet_download_trigger((bouquet_t *)obj);
 }
 
 const idclass_t bouquet_class = {
@@ -814,42 +900,42 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_BOOL,
       .id       = "maptoch",
-      .name     = N_("Auto-Map to Channels"),
+      .name     = N_("Auto-Map to channels"),
       .off      = offsetof(bouquet_t, bq_maptoch),
       .notify   = bouquet_class_maptoch_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapnolcn",
-      .name     = N_("Map Zero Numbers"),
+      .name     = N_("Map zero-numbered channels"),
       .off      = offsetof(bouquet_t, bq_mapnolcn),
       .notify   = bouquet_class_mapnolcn_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapnoname",
-      .name     = N_("Map No Name"),
+      .name     = N_("Map unnamed channels"),
       .off      = offsetof(bouquet_t, bq_mapnoname),
       .notify   = bouquet_class_mapnoname_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapradio",
-      .name     = N_("Map Radio"),
+      .name     = N_("Map radio channels"),
       .off      = offsetof(bouquet_t, bq_mapradio),
       .notify   = bouquet_class_mapradio_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "chtag",
-      .name     = N_("Create Tag"),
+      .name     = N_("Create tag"),
       .off      = offsetof(bouquet_t, bq_chtag),
       .notify   = bouquet_class_chtag_notify,
     },
     {
       .type     = PT_STR,
       .id       = "chtag_ref",
-      .name     = N_("Channel Tag Reference"),
+      .name     = N_("Channel tag reference"),
       .get      = bouquet_class_chtag_ref_get,
       .set      = bouquet_class_chtag_ref_set,
       .rend     = bouquet_class_chtag_ref_rend,
@@ -860,6 +946,31 @@ const idclass_t bouquet_class = {
       .id       = "name",
       .name     = N_("Name"),
       .off      = offsetof(bouquet_t, bq_name),
+    },
+    {
+      .type     = PT_STR,
+      .id       = "ext_url",
+      .name     = N_("External URL"),
+      .off      = offsetof(bouquet_t, bq_ext_url),
+      .opts     = PO_HIDDEN | PO_MULTILINE,
+      .notify   = bouquet_class_ext_url_notify,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "ssl_peer_verify",
+      .name     = N_("SSL verify peer"),
+      .off      = offsetof(bouquet_t, bq_ssl_peer_verify),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .notify   = bouquet_class_ext_url_notify,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "ext_url_period",
+      .name     = N_("Re-fetch period (mins)"),
+      .off      = offsetof(bouquet_t, bq_ext_url_period),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .notify   = bouquet_class_ext_url_notify,
+      .def.i    = 60
     },
     {
       .type     = PT_STR,
@@ -881,7 +992,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "services_seen",
-      .name     = N_("# Services Seen"),
+      .name     = N_("# Services seen"),
       .off      = offsetof(bouquet_t, bq_services_seen),
       .opts     = PO_RDONLY,
     },
@@ -901,13 +1012,112 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "lcn_off",
-      .name     = N_("Channel Number Offset"),
+      .name     = N_("Channel number offset"),
       .off      = offsetof(bouquet_t, bq_lcn_offset),
       .notify   = bouquet_class_lcn_offset_notify,
     },
     {}
   }
 };
+
+/**
+ *
+ */
+static void
+bouquet_download_trigger0(void *aux)
+{
+  bouquet_download_t *bqd = aux;
+  bouquet_t *bq = bqd->bq;
+
+  download_start(&bqd->download, bq->bq_ext_url, bqd);
+  gtimer_arm(&bqd->timer, bouquet_download_trigger0, bqd,
+             MAX(1, bq->bq_ext_url_period) * 60);
+}
+
+static void
+bouquet_download_trigger(bouquet_t *bq)
+{
+  bouquet_download_t *bqd = bq->bq_download;
+  if (bqd) {
+    bqd->download.ssl_peer_verify = bq->bq_ssl_peer_verify;
+    bouquet_download_trigger0(bqd);
+  }
+}
+
+static void
+bouquet_download_stop(void *aux)
+{
+  bouquet_download_t *bqd = aux;
+  gtimer_disarm(&bqd->timer);
+}
+
+static int
+parse_enigma2(bouquet_t *bq, char *data)
+{
+  extern service_t *mpegts_service_find_e2(uint32_t stype, uint32_t sid,
+                                           uint32_t tsid, uint32_t onid,
+                                           uint32_t hash);
+  char *argv[11], *p, *tagname = NULL, *name;
+  long lv, stype, sid, tsid, onid, hash;
+  uint32_t seen = 0;
+  int n, ver = 2;
+
+  while (*data) {
+    if (strncmp(data, "#NAME ", 6) == 0) {
+      for (data += 6, p = data; *data && *data != '\r' && *data != '\n'; data++);
+      if (*data) { *data = '\0'; data++; }
+      if (bq->bq_name == NULL || bq->bq_name[0] == '\0')
+        bq->bq_name = strdup(p);
+    } if (strncmp(data, "#SERVICE ", 9) == 0) {
+      data += 9, p = data;
+service:
+      while (*data && *data != '\r' && *data != '\n') data++;
+      if (*data) { *data = '\0'; data++; }
+      n = http_tokenize(p, argv, ARRAY_SIZE(argv), ':');
+      if (n >= 10) {
+        if (strtol(argv[0], NULL, 0) != 1) goto next;  /* item type */
+        lv = strtol(argv[1], NULL, 16);                /* service flags? */
+        if (lv != 0 && lv != 0x64) goto next;
+        stype = strtol(argv[2], NULL, 16);             /* DVB service type */
+        sid   = strtol(argv[3], NULL, 16);             /* DVB service ID */
+        tsid  = strtol(argv[4], NULL, 16);
+        onid  = strtol(argv[5], NULL, 16);
+        hash  = strtol(argv[6], NULL, 16);
+        name  = n > 10 ? argv[10] : NULL;
+        if (lv == 0) {
+          service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
+          if (s)
+            bouquet_add_service(bq, s, ((int64_t)++seen) * CHANNEL_SPLIT, tagname);
+        } else if (lv == 0x64) {
+          tagname = name;
+        }
+      }
+    } else if (strncmp(data, "#SERVICE: ", 10) == 0) {
+      ver = 1, data += 10, p = data;
+      goto service;
+    } else {
+      while (*data && *data != '\r' && *data != '\n') data++;
+    }
+next:
+    while (*data && (*data == '\r' || *data == '\n')) data++;
+  }
+  bouquet_completed(bq, seen);
+  tvhinfo("bouquet", "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
+  return 0;
+}
+
+static int
+bouquet_download_process(void *aux, const char *last_url, const char *host_url,
+                         char *data, size_t len)
+{
+  bouquet_download_t *bqd = aux;
+  while (*data) {
+    while (*data && *data < ' ') data++;
+    if (*data && !strncmp(data, "#NAME ", 6))
+      return parse_enigma2(bqd->bq, data);
+  }
+  return 0;
+}
 
 /**
  *
@@ -940,7 +1150,7 @@ bouquet_service_resolve(void)
   htsmsg_field_t *f;
   service_t *s;
   int64_t lcn;
-  uint32_t tag;
+  const char *tag;
   int saveflag;
 
   lock_assert(&global_lock);
@@ -953,7 +1163,7 @@ bouquet_service_resolve(void)
       HTSMSG_FOREACH(f, bq->bq_services_waiting) {
         if ((e = htsmsg_field_get_map(f)) == NULL) continue;
         lcn = htsmsg_get_s64_or_default(e, "lcn", 0);
-        tag = htsmsg_get_u32_or_default(e, "tag", 0);
+        tag = htsmsg_get_str(e, "tag");
         s = service_find_by_identifier(f->hmf_name);
         if (s)
           bouquet_add_service(bq, s, lcn, tag);

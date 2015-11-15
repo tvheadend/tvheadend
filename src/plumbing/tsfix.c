@@ -20,8 +20,6 @@
 #include "streaming.h"
 #include "tsfix.h"
 
-#define PTS_MASK 0x1ffffffffLL
-
 #define tsfixprintf(fmt...) // printf(fmt)
 
 LIST_HEAD(tfstream_list, tfstream);
@@ -456,20 +454,22 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         tfs->tfs_local_ref = tf->tf_tsref;
       }
     } else if (tfs->tfs_type == SCT_DVBSUB) {
-      diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
-      if (diff > 2 * 90000) {
-        LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link) {
-          if(tfs2->tfs_audio && tfs2->tfs_local_ref != PTS_UNSET) {
+      /* find first valid audio stream and check the dts timediffs */
+      LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
+        if(tfs2->tfs_audio && tfs2->tfs_last_dts_in != PTS_UNSET) {
+          diff = tsfix_ts_diff(tfs2->tfs_last_dts_in, pkt->pkt_dts);
+          if (diff > 3 * 90000) {
             tvhwarn("parser", "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
             tfs->tfs_parent = tfs2;
-            break;
+            tfs->tfs_local_ref = tfs2->tfs_local_ref;
+          } else {
+            tfs->tfs_local_ref = tf->tf_tsref;
           }
+          break;
         }
-        if (tfs2 == NULL) {
-          pkt_ref_dec(pkt);
-          return;
-        }
-        tfs->tfs_local_ref = tfs2->tfs_local_ref;
+      if (tfs2 == NULL) {
+        pkt_ref_dec(pkt);
+        return;
       }
     } else if (tfs->tfs_type == SCT_TELETEXT) {
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
@@ -548,6 +548,7 @@ tsfix_input(void *opaque, streaming_message_t *sm)
   case SMT_EXIT:
   case SMT_SERVICE_STATUS:
   case SMT_SIGNAL_STATUS:
+  case SMT_DESCRAMBLE_INFO:
   case SMT_NOSTART:
   case SMT_NOSTART_WARN:
   case SMT_MPEGTS:
