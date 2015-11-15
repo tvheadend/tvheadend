@@ -146,6 +146,12 @@ uint64_t test(uint64_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet atomic_time_t '#include <stdint.h>
+#include <time.h>
+uint64_t test(time_t *ptr){
+return __sync_fetch_and_add(ptr, 1);
+}'
+
 check_cc_snippet lockowner '
 #include <sys/syscall.h>
 #include <unistd.h>

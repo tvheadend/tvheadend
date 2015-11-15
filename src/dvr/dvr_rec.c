@@ -1199,7 +1199,7 @@ dvr_thread(void *aux)
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
-  time_t start_time = 0;
+  time_t start_time = 0, running_start = 0, running_stop = 0;
   char *postproc;
 
   if (!dvr_thread_global_lock(de, &run))
@@ -1223,9 +1223,11 @@ dvr_thread(void *aux)
     if (running_disabled) {
       epg_running = 1;
     } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
-      if (de->de_running_start > 0) {
-        epg_running = de->de_running_start >= de->de_running_stop;
-      } else if (de->de_running_stop == 0) {
+      running_start = atomic_add_time_t(&de->de_running_start, 0);
+      running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
+      if (running_start > 0) {
+        epg_running = running_start >= running_stop;
+      } else if (running_stop == 0) {
         if (start_time + 2 >= dispatch_clock) {
           TAILQ_INSERT_TAIL(&backlog, sm, sm_link);
           continue;
@@ -1254,7 +1256,7 @@ dvr_thread(void *aux)
       dvr_rec_set_state(de, rs, 0);
 
       if ((rs == DVR_RS_COMMERCIAL && comm_skip) || !epg_running) {
-        if (ss && packets && de->de_running_start == 0) {
+        if (ss && packets && running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
           started = 0;
@@ -1319,7 +1321,7 @@ dvr_thread(void *aux)
         break;
 
       if (!epg_running) {
-        if (packets && de->de_running_start == 0) {
+        if (packets && running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
           started = 0;
