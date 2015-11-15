@@ -1115,7 +1115,7 @@ dvr_thread_mpegts_stats(dvr_entry_t *de, void *sm_data)
 static int
 dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
                      int *run, int *started, int64_t *dts_offset,
-                     int epg_running, const char *postproc)
+                     const char *postproc)
 {
   dvr_entry_t *de = *_de;
   profile_chain_t *prch = de->de_chain;
@@ -1132,14 +1132,12 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
     dvr_thread_epilog(de, postproc);
     *dts_offset = PTS_UNSET;
     *started = 0;
-    if (epg_running) {
-      if (!dvr_thread_global_lock(de, run))
-        return 0;
-      if (de->de_config->dvr_clone)
-        *_de = dvr_entry_clone(de);
-      dvr_thread_global_unlock(de);
-      de = *_de;
-    }
+    if (!dvr_thread_global_lock(de, run))
+      return 0;
+    if (de->de_config->dvr_clone)
+      *_de = dvr_entry_clone(de);
+    dvr_thread_global_unlock(de);
+    de = *_de;
   }
 
   if (!*started) {
@@ -1222,12 +1220,13 @@ dvr_thread(void *aux)
     }
     streaming_queue_remove(sq, sm);
 
-    if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
-      if (de->de_running_start > de->de_running_stop || running_disabled) {
-        epg_running = 1;
-      } else if (de->de_running_start == 0 && de->de_running_stop == 0) {
+    if (running_disabled) {
+      epg_running = 1;
+    } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
+      if (de->de_running_start > 0) {
+        epg_running = de->de_running_start >= de->de_running_stop;
+      } else if (de->de_running_stop == 0) {
         if (start_time + 2 >= dispatch_clock) {
-          epg_running = 0;
           TAILQ_INSERT_TAIL(&backlog, sm, sm_link);
           continue;
         } else {
@@ -1254,9 +1253,7 @@ dvr_thread(void *aux)
         rs = DVR_RS_COMMERCIAL;
       dvr_rec_set_state(de, rs, 0);
 
-      if (rs == DVR_RS_COMMERCIAL && comm_skip)
-	break;
-      if (!epg_running) {
+      if ((rs == DVR_RS_COMMERCIAL && comm_skip) || !epg_running) {
         if (ss && packets && de->de_running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
@@ -1274,8 +1271,7 @@ dvr_thread(void *aux)
         break;
 
       if (muxing == 0 &&
-          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset,
-                                epg_running, postproc))
+          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
         break;
 
       muxing = 1;
@@ -1323,7 +1319,7 @@ dvr_thread(void *aux)
         break;
 
       if (!epg_running) {
-        if (ss && packets && de->de_running_start == 0) {
+        if (packets && de->de_running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
           started = 0;
@@ -1332,8 +1328,7 @@ dvr_thread(void *aux)
       }
 
       if (muxing == 0 &&
-          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset,
-                                epg_running, postproc))
+          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
         break;
 
       muxing = 1;
