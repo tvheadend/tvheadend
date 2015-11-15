@@ -599,8 +599,6 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
   }
   s->ths_state = SUBSCRIPTION_ZOMBIE;
 
-  service_instance_list_clear(&s->ths_instances);
-
   LIST_REMOVE(s, ths_global_link);
   LIST_SAFE_REMOVE(s, ths_remove_link);
 
@@ -630,6 +628,8 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
 
   if (t)
     service_remove_subscriber(t, s, SM_CODE_OK);
+
+  service_instance_list_clear(&s->ths_instances);
 
   gtimer_disarm(&s->ths_remove_timer);
 
