@@ -249,6 +249,7 @@ void tvh_gettext_init(void)
     "rus",    "ru",
     "srp",    "sr",
     "swe",    "sv",
+    "ukr",    "uk",
     NULL, NULL
   };
   const char **p;
