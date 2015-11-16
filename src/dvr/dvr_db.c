@@ -282,6 +282,8 @@ dvr_entry_get_rerecord_errors( dvr_entry_t *de )
 int
 dvr_entry_get_epg_running( dvr_entry_t *de )
 {
+  if (de->de_dvb_eid == 0)
+    return 0;
   if (de->de_channel->ch_epg_running < 0)
     return de->de_config->dvr_running;
   return de->de_channel->ch_epg_running > 0;
@@ -1621,7 +1623,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
   if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0 || e->channel == NULL)
     return;
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
-    if (de->de_dvb_eid == 0 || !dvr_entry_get_epg_running(de)) {
+    if (!dvr_entry_get_epg_running(de)) {
       atomic_exchange_time_t(&de->de_running_start, 0);
       atomic_exchange_time_t(&de->de_running_stop, 0);
       continue;
