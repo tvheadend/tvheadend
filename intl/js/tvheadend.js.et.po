@@ -3,21 +3,19 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Miroslav Diviqm <diviqm@mail.bg>, 2015
-# Peter <zinonino91@gmail.com>, 2015
-# saen acro <saentist@gmail.com>, 2015
+# Anti <anti.siidiratsep@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-10 09:50+0100\n"
-"PO-Revision-Date: 2015-11-14 13:46+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
-"Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
+"PO-Revision-Date: 2015-11-15 22:06+0000\n"
+"Last-Translator: Anti <anti.siidiratsep@gmail.com>\n"
+"Language-Team: Estonian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: bg\n"
+"Language: et\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/webui/static/app/i18n-post.js:137
@@ -31,23 +29,23 @@ msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
-msgstr "(Изчисти филтъра)"
+msgstr "(Puhasta filter)"
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
-msgstr "(Празно)"
+msgstr "(Ei midagi)"
 
 #: src/webui/static/app/epg.js:209
 msgid "(default DVR Profile)"
-msgstr "DVR профил по подразбиране"
+msgstr "(vaikimisi DVR profiil)"
 
 #: src/webui/static/app/i18n-post.js:59
 msgid "0 #monthNumber"
-msgstr "0 #месец номер"
+msgstr "0 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:224
 msgid "0,000.00#NumberColumn"
-msgstr "0,000.00#Колона номер"
+msgstr "0,000.00#NumberVeerg"
 
 #: src/webui/static/app/epg.js:69
 msgid "00:00:00 - 00:15:00"
@@ -67,171 +65,171 @@ msgstr "01:30:00 - 03:00:00"
 
 #: src/webui/static/app/epg.js:73
 msgid "03:00:00 - No maximum"
-msgstr "03:00:00 - Без ограничение"
+msgstr "03:00:00 - maksimum määramata"
 
 #: src/webui/static/app/i18n-post.js:60
 msgid "1 #monthNumber"
-msgstr "1 #месец номер"
+msgstr "1 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:69
 msgid "10 #monthNumber"
-msgstr "10 #месец номер"
+msgstr "10 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:70
 msgid "11 #monthNumber"
-msgstr "11 #месец номер"
+msgstr "11 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:61
 msgid "2 #monthNumber"
-msgstr "2 #месец номер"
+msgstr "2 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:62
 msgid "3 #monthNumber"
-msgstr "3 #месец номер"
+msgstr "3 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:63
 msgid "4 #monthNumber"
-msgstr "4 #месец номер"
+msgstr "4 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:64
 msgid "5 #monthNumber"
-msgstr "5 #месец номер"
+msgstr "5 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:65
 msgid "6 #monthNumber"
-msgstr "6 #месец номер"
+msgstr "6 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:66
 msgid "7 #monthNumber"
-msgstr "7 #месец номер"
+msgstr "7 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:67
 msgid "8 #monthNumber"
-msgstr "8 #месец номер"
+msgstr "8 #kuuNumber"
 
 #: src/webui/static/app/i18n-post.js:68
 msgid "9 #monthNumber"
-msgstr "9 #месец номер"
+msgstr "9 #kuuNumber"
 
 #: src/webui/static/app/dvr.js:232
 msgid "Abort"
-msgstr "Отказ"
+msgstr "Katkesta"
 
 #: src/webui/static/app/dvr.js:230
 msgid "Abort the selected recording"
-msgstr "Откажи избрания запис"
+msgstr "Katkesta valitud salvestamine"
 
 #: src/webui/static/app/tvheadend.js:553
 msgid "About"
-msgstr "За програмата"
+msgstr "Üldnfo"
 
 #: src/webui/static/app/acleditor.js:64
 msgid "Access Control Entries"
-msgstr "Влизания с достъп контрол"
+msgstr "Juurdepääsu kirjed"
 
 #: src/webui/static/app/acleditor.js:26
 msgid "Access Entries"
-msgstr "Влизания с достъп"
+msgstr "Kasutajate haldamine"
 
 #: src/webui/static/app/acleditor.js:25
 msgid "Access Entry"
-msgstr "Влизане с достъп"
+msgstr "kasutamise kirje"
 
 #: src/webui/static/app/servicemapper.js:24
 msgid "Active"
-msgstr "Активен"
+msgstr "Aktiivne"
 
 #: src/webui/static/app/idnode.js:1324 src/webui/static/app/idnode.js:1831
 msgid "Add"
-msgstr "Добави"
+msgstr "Lisa"
 
 #: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1829
 msgid "Add a new entry"
-msgstr "Добави нов запис"
+msgstr "Lisa uus kirje"
 
 #: src/webui/static/app/idnode.js:1037 src/webui/static/app/idnode.js:1067
 msgid "Add {0}"
-msgstr "Добави {0}"
+msgstr "Lisa {0}"
 
 #: src/webui/static/app/idnode.js:893
 msgid "Advanced Settings"
-msgstr "Разширени Настройки"
+msgstr "Täpsemad seaded"
 
 #: src/webui/static/app/i18n-post.js:279
 msgid "After"
-msgstr "След"
+msgstr "Pärast"
 
 #: src/webui/static/app/mpegts.js:211
 msgid "After filtering and reordering (without PCR and PMT)"
-msgstr "След филтриране и пренереждане (без PCR и PMT"
+msgstr "Pärast filtreerimist ja uuesti järjestamist (ilma PCR ja PMT)"
 
 #: src/webui/static/app/epg.js:568 src/webui/static/app/epg.js:569
 msgid "Age"
-msgstr "Възраст"
+msgstr "Vanus"
 
 #: src/webui/static/app/epg.js:121
 msgid "Age Rating"
-msgstr "Възрастова Граница"
+msgstr "Vanusepiirang"
 
 #: src/webui/static/app/idnode.js:1508 src/webui/static/app/idnode.js:1547
 msgid "All"
-msgstr "Всички"
+msgstr "Kõik"
 
 #: src/webui/static/app/tvhlog.js:20
 msgid "Apply any changes made below to the run-time configuration."
-msgstr "Приложи всички промени направени до сега към run-time конфигурацията"
+msgstr "Rakenda tehtud muudatused hetkel toimivasse konfiguratsiooni."
 
 #: src/webui/static/app/tvhlog.js:19
 msgid "Apply configuration (run-time only)"
-msgstr "Приложи конфигурацията"
+msgstr "Rakenda seaded (ainult hetkel toimivasse konfiguratsiooni)"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
-msgstr "Април"
+msgstr "Apr"
 
 #: src/webui/static/app/i18n-post.js:23
 msgid "April"
-msgstr "Април"
+msgstr "Aprill"
 
 #: src/webui/static/app/chconf.js:144
 msgid "Assign Number"
-msgstr "Зададен Номер"
+msgstr "Määra number"
 
 #: src/webui/static/app/chconf.js:142
 msgid "Assign lowest free channel number"
-msgstr "Задай най-малкия свободен номер"
+msgstr "Määra madalaim vaba kanali number"
 
 #: src/webui/static/app/esfilter.js:70
 msgid "Audio Stream Filter"
-msgstr "Аудио стриим филтър"
+msgstr "Audio voogedastuse filter"
 
 #: src/webui/static/app/esfilter.js:71
 msgid "Audio Stream Filters"
-msgstr "Аудио стриим филтъри"
+msgstr "Audio voogedastuse filtrid"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
-msgstr "Август"
+msgstr "Aug"
 
 #: src/webui/static/app/i18n-post.js:27
 msgid "August"
-msgstr "Август"
+msgstr "August"
 
 #: src/webui/static/app/epg.js:1024
 msgid "Auto Recorder"
-msgstr "Автоматично Записване"
+msgstr "Automaatsalvestaja"
 
 #: src/webui/static/app/tvheadend.js:125
 msgid "Auto-refresh"
-msgstr "Авто-обновяване"
+msgstr "Automaatvärskendus"
 
 #: src/webui/static/app/epg.js:225 src/webui/static/app/dvr.js:57
 msgid "Autorec"
-msgstr "Автоматичен запис"
+msgstr "Automaatsalvestus"
 
 #: src/webui/static/app/idnode.js:432 src/webui/static/app/idnode.js:595
 msgid "Available"
-msgstr "Наличен"
+msgstr "Saadaval"
 
 #: src/webui/static/app/status.js:366
 msgid "BER"
@@ -239,47 +237,47 @@ msgstr "BER"
 
 #: src/webui/static/app/status.js:359
 msgid "Bandwidth (kb/s)"
-msgstr "Скорост на данните (kb/s)"
+msgstr "Võrguühendus (kb/s)"
 
 #: src/webui/static/app/status.js:668 src/webui/static/app/status.js:761
 msgid "Bandwidth monitor"
-msgstr "Монитор на скоростта на данните"
+msgstr "Võrguühenduse jälgija"
 
 #: src/webui/static/app/config.js:9
 msgid "Base"
-msgstr "Основни"
+msgstr "Alus"
 
 #: src/webui/static/app/idnode.js:891
 msgid "Basic Settings"
-msgstr "Основни Настройки"
+msgstr "Põhiseaded"
 
 #: src/webui/static/app/i18n-post.js:280
 msgid "Before"
-msgstr "Преди"
+msgstr "Ennem"
 
 #: src/webui/static/app/servicemapper.js:127
 msgid "Begin mapping"
-msgstr "Започни мапването"
+msgstr "Alusta ühendamist"
 
 #: src/webui/static/app/cteditor.js:44
 msgid "Bouquet"
-msgstr "Букет"
+msgstr "Bouquet"
 
 #: src/webui/static/app/cteditor.js:45 src/webui/static/app/cteditor.js:76
 msgid "Bouquets"
-msgstr "Букети"
+msgstr "Bouquet'id"
 
 #: src/webui/static/app/epg.js:238
 msgid "Broadcast Details"
-msgstr "Детайли на предаването"
+msgstr "Levi detailid"
 
 #: src/webui/static/app/epg.js:343
 msgid "Broadcast details"
-msgstr "Детайли за предаването"
+msgstr "Levi detailid"
 
 #: src/webui/static/app/epg.js:831
 msgid "Buffering. Please wait..."
-msgstr "Буфериране. Моля изчакайте..."
+msgstr "Puhverdamas. Palun oota ..."
 
 #: src/webui/static/app/caclient.js:32
 msgid "CA"
@@ -287,171 +285,171 @@ msgstr "CA"
 
 #: src/webui/static/app/esfilter.js:127
 msgid "CA Stream Filter"
-msgstr "CA филтър"
+msgstr "CA voogedastuse filter"
 
 #: src/webui/static/app/esfilter.js:128
 msgid "CA Stream Filters"
-msgstr "CA филтъри"
+msgstr "CA voogedastuse filtrid"
 
 #: src/webui/static/app/mpegts.js:190
 msgid "CAIDS: "
-msgstr "CAIDS: "
+msgstr "CAIDS:"
 
 #: src/webui/static/app/caclient.js:33
 msgid "CAs"
-msgstr "CAs"
+msgstr "CA'd"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
 #: src/webui/static/app/idnode.js:1013
 #: src/webui/static/app/servicemapper.js:119
 msgid "Cancel"
-msgstr "Отмени"
+msgstr "Loobu"
 
 #: src/webui/static/app/status.js:508
 msgid "Cancel Connection"
-msgstr "Оттказ на свързването"
+msgstr "Katkesta ühendus"
 
 #: src/webui/static/app/idnode.js:1012
 msgid "Cancel operation"
-msgstr "Отмени действието"
+msgstr "Katkesta tegevus"
 
 #: src/webui/static/app/status.js:509
 msgid "Cancel the selected connection?"
-msgstr "Отказ на избраната връзка"
+msgstr "Katkestada valitud ühendus?"
 
 #: src/webui/static/app/status.js:505
 msgid "Cancel this connection"
-msgstr "Откажи тази връзка"
+msgstr "Katkesta see ühendus"
 
 #: src/webui/static/app/chconf.js:207 src/webui/static/app/epg.js:546
 #: src/webui/static/app/epg.js:547 src/webui/static/app/epg.js:1028
 #: src/webui/static/app/status.js:104
 msgid "Channel"
-msgstr "Канал"
+msgstr "Kanal"
 
 #: src/webui/static/app/tvheadend.js:491
 msgid "Channel / EPG"
-msgstr "Канал / ЕПУ"
+msgstr "Kanal / EPG"
 
 #: src/webui/static/app/cteditor.js:10
 msgid "Channel Tag"
-msgstr "Категория на Канала"
+msgstr "Kanali märge"
 
 #: src/webui/static/app/cteditor.js:11 src/webui/static/app/cteditor.js:24
 msgid "Channel Tags"
-msgstr "Категории на Канала"
+msgstr "Kanali märked"
 
 #: src/webui/static/app/chconf.js:208 src/webui/static/app/chconf.js:212
 msgid "Channels"
-msgstr "Канали"
+msgstr "Kanalid"
 
 #: src/webui/static/app/servicemapper.js:89
 msgid "Check availability"
-msgstr "Проверете за наличие"
+msgstr "Kontrolli saadavust"
 
 #: src/webui/static/app/i18n-post.js:134
 msgid "Choose a month (Control+Up/Down to move years)"
-msgstr "Избери месец (Контрол+Нагоре/Надолу за да местите годината)"
+msgstr "Vali kuu (CRTL+Üles/Alla aastate muutmiseks)"
 
 #: src/webui/static/app/config.js:36
 msgid "Clean image (icon) cache"
-msgstr "Изчисти кеша на изображенията (логотата)"
+msgstr "Puhasta pildi (ikooni) vahemälu"
 
 #: src/webui/static/app/config.js:34
 msgid "Clean image cache on storage"
-msgstr "Изчисти кеша на изображенията от диска"
+msgstr "Puhasta pildi vahemälu andmekandjal"
 
 #: src/webui/static/app/status.js:258 src/webui/static/app/status.js:261
 msgid "Clear statistics"
-msgstr "Изчисти статистиката"
+msgstr "Nullida statistika"
 
 #: src/webui/static/app/status.js:262
 msgid "Clear statistics for selected input?"
-msgstr "Изчисти статистиката за избрания вход"
+msgstr "Kas nullida valitud sisendi statistika?"
 
 #: src/webui/static/app/caclient.js:34
 msgid "Client Name"
-msgstr "Име на клиента"
+msgstr "Kliendi nimi"
 
 #: src/webui/static/app/epg.js:232
 msgid "Close"
-msgstr ""
+msgstr "Sulge"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
-msgstr "Колони"
+msgstr "Veerud"
 
 #: src/webui/static/app/comet.js:55
 msgid "Comet failure"
-msgstr "Comet неуспешно"
+msgstr "Comet'i viga"
 
 #: src/webui/static/app/dvr.js:55
 msgid "Comment"
-msgstr "Коментар"
+msgstr "Kommentaar"
 
 #: src/webui/static/app/status.js:717
 msgid "Compression ratio"
-msgstr "Съотношение на копресията"
+msgstr "Kompressioon"
 
 #: src/webui/static/app/caclient.js:44 src/webui/static/app/caclient.js:61
 msgid "Conditional Access Client"
-msgstr "Условен достъп за клиент"
+msgstr "Conditional Access Client"
 
 #: src/webui/static/app/tvheadend.js:434
 msgid "Configuration"
-msgstr "Настройки"
+msgstr "Seaded"
 
 #: src/webui/static/app/status.js:609
 msgid "Connections"
-msgstr "Връзки"
+msgstr "Ühendused"
 
 #: src/webui/static/app/epg.js:132 src/webui/static/app/epg.js:575
 #: src/webui/static/app/epg.js:576
 msgid "Content Type"
-msgstr "Съдържание Тип"
+msgstr "Sisu tüüp"
 
 #: src/webui/static/app/status.js:388
 msgid "Continuity Errors"
-msgstr "Загубените пакети"
+msgstr "Continuity Errors"
 
 #: src/webui/static/app/idnode.js:992
 msgid "Create"
-msgstr "Създай"
+msgstr "Loo uus"
 
 #: src/webui/static/app/epg.js:844
 msgid "Create AutoRec"
-msgstr "Създай АвтоЗапис"
+msgstr "Loo automaatsalvestus"
 
 #: src/webui/static/app/epg.js:224 src/webui/static/app/epg.js:846
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
-msgstr "Създаване на правило за автоматичен запис за всички програмикоито отговарят на търсенето"
+msgstr "Loo uus automaatsalvestuse reegel salvestamaks edaspidi kõik  tulevikus saadaval olevad saated, mis vastavad praegusele päringule."
 
 #: src/webui/static/app/servicemapper.js:110
 msgid "Create network tags"
-msgstr "Създай етикет за мрежата"
+msgstr "Loo uusi võrgu märkeid"
 
 #: src/webui/static/app/idnode.js:991
 msgid "Create new entry"
-msgstr "Създай ново въвеждане"
+msgstr "Loo uus kirje"
 
 #: src/webui/static/app/servicemapper.js:105
 msgid "Create provider tags"
-msgstr "Създай категории на доставчика"
+msgstr "Loo uusi teenusepakkuja märkeid"
 
 #: src/webui/static/app/epg.js:1046
 msgid "Created from EPG query"
-msgstr "Създадено от търсенето в EPG"
+msgstr "Loodud EPG päringust"
 
 #: src/webui/static/app/epg.js:1033
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
-msgstr "Точно това отговаря (и се записва) на %d събитията"
+msgstr "Hetkel valib (ja salvestab) see %d juhtumit."
 
 #: src/webui/static/app/tvheadend.js:473
 msgid "DVB Inputs"
-msgstr "DVB входове"
+msgstr "DVB sisendid"
 
 #: src/webui/static/app/epg.js:314 src/webui/static/app/dvr.js:557
 msgid "DVR"
@@ -459,316 +457,316 @@ msgstr "DVR"
 
 #: src/webui/static/app/dvr.js:531
 msgid "DVR - Failed Recordings"
-msgstr "DVR-неуспешни записи"
+msgstr "DVR - Ebaõnnestunud salvestused"
 
 #: src/webui/static/app/dvr.js:420
 msgid "DVR - Finished Recordings"
-msgstr "DVR- завършени записи"
+msgstr "DVR - Lõpetatud salvestused"
 
 #: src/webui/static/app/dvr.js:309
 msgid "DVR - Upcoming/Current Recordings"
-msgstr "DVR-предстоящи/текущи записи"
+msgstr "DVR - Tulevased/käimasolevad salvestused"
 
 #: src/webui/static/app/dvr.js:624
 msgid "DVR Autorec"
-msgstr "DVR автоматично записване"
+msgstr "DVR automaatsalvestus"
 
 #: src/webui/static/app/dvr.js:573
 msgid "DVR Autorec Entries"
-msgstr "DVR автоматични записи(въведени)"
+msgstr "DVR automaatsalvestuse kirjed"
 
 #: src/webui/static/app/dvr.js:572
 msgid "DVR Autorec Entry"
-msgstr "DVR автоматичен запис(въведен)"
+msgstr "DVR automaatsalvestuse kirje"
 
 #: src/webui/static/app/dvr.js:677
 msgid "DVR Timerec"
-msgstr "DVR време за запис"
+msgstr "DVR Timerec"
 
 #: src/webui/static/app/tvhlog.js:23
 msgid "Debug Configuration"
-msgstr "Дебъг конфигурация"
+msgstr "Debugimise seaded"
 
 #: src/webui/static/app/tvhlog.js:12
 msgid "Debugging"
-msgstr "Дебъгване"
+msgstr "Debugimine"
 
 #: src/webui/static/app/i18n-post.js:46
 msgid "Dec"
-msgstr "Дек"
+msgstr "Dets"
 
 #: src/webui/static/app/i18n-post.js:31
 msgid "December"
-msgstr "Декември"
+msgstr "Detsember"
 
 #: src/webui/static/app/idnode.js:1338 src/webui/static/app/idnode.js:1843
 msgid "Delete"
-msgstr "Изтрий "
+msgstr "Kustuta"
 
 #: src/webui/static/app/epg.js:198
 msgid "Delete recording"
-msgstr "Изтрий записа"
+msgstr "Kustuta salvestus"
 
 #: src/webui/static/app/epg.js:197
 msgid "Delete scheduled recording of this program"
-msgstr "Изтрии задачите за записване на тази програма"
+msgstr "Kustuta selle saate ajastatud salvestamine"
 
 #: src/webui/static/app/idnode.js:1336 src/webui/static/app/idnode.js:1841
 msgid "Delete selected entries"
-msgstr "Изтрий избраното"
+msgstr "Kustuta valitud kirjed"
 
 #: src/webui/static/app/status.js:132
 msgid "Descramble"
-msgstr ""
+msgstr "Lahtikodeerimine"
 
 #: src/webui/static/app/mpegts.js:264
 msgid "Detailed stream info"
-msgstr "Детайлна информация за Потока"
+msgstr "Detailne voo info"
 
 #: src/webui/static/app/mpegts.js:260 src/webui/static/app/epg.js:329
 #: src/webui/static/app/epg.js:330 src/webui/static/app/dvr.js:123
 #: src/webui/static/app/dvr.js:124
 msgid "Details"
-msgstr "Детайли"
+msgstr "Detailid"
 
 #: src/webui/static/app/dvr.js:692
 msgid "Digital Video Recorder"
-msgstr "Цифров Видео Рекордер"
+msgstr "Digitaalse video salvestaja"
 
 #: src/webui/static/app/dvr.js:546
 msgid "Digital Video Recorder Profile"
-msgstr "Профил на цифровия видео рекордер"
+msgstr "Digitaalse video salvestaja profiil"
 
 #: src/webui/static/app/dvr.js:547
 msgid "Digital Video Recorder Profiles"
-msgstr "Профили на цифровия видео рекордер"
+msgstr "Digitaalse video salvestaja profiilid"
 
 #: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 msgid "Disabled"
-msgstr "Изключен"
+msgstr "Väljalülitatud"
 
 #: src/webui/static/app/config.js:95
 msgid "Discover SAT>IP servers"
-msgstr "Открий SAT>IP сървъри"
+msgstr "Avasta SAT>IP servereid"
 
 #: src/webui/static/app/i18n-post.js:151
 msgid "Displaying {0} - {1} of {2}"
-msgstr "Показва {0} - {1} of {2}"
+msgstr "Kuvamas {0} - {1} / {2}st"
 
 #: src/webui/static/app/dvr.js:250
 msgid "Do you really want to abort/unschedule the selection?"
-msgstr "Наистина ли искате да прекратите(отложите задачата) избраното"
+msgstr "Oled Sa kindel, et valitu katkestada/mitteajastada?"
 
 #: src/webui/static/app/dvr.js:388 src/webui/static/app/dvr.js:499
 msgid "Do you really want to delete the selected recordings?"
-msgstr "Наистина ли искате да изтриете избраните записи"
+msgstr "Oled Sa kindel, et kustutada valitud salvestused?"
 
 #: src/webui/static/app/tvheadend.js:97
 msgid "Do you really want to delete the selection?"
-msgstr "Сигурни ли сте, че искате да изтриете избраното?"
+msgstr "Oled Sa kindel, et see valik tuleb kustutada?"
 
 #: src/webui/static/app/dvr.js:220
 msgid "Do you really want to gracefully stop/unschedule the selection?"
-msgstr "Наистина ли искате внимателно да прекратите(отложите задачата) избраното"
+msgstr "Oled Sa kindel, et valitu viisakalt peatada/mitteajastada?"
 
 #: src/webui/static/app/epg.js:286
 msgid "Do you really want to gracefully stop/unschedule this recording?"
-msgstr "Наистина ли искате внимателно да прекратите(отложите задачата) записването"
+msgstr "Oled Sa kindel, et see salvestamine viisakalt peatada/mitteajastada?"
 
 #: src/webui/static/app/epg.js:299
 msgid "Do you really want to remove this recording?"
-msgstr "Сигурни ли сте, че искате да премахнете този запис?"
+msgstr "Oled Sa kindel, et see salvestamine tuleb eemaldada?"
 
 #: src/webui/static/app/epg.js:1007 src/webui/static/app/epg.js:1013
 #: src/webui/static/app/epg.js:1016 src/webui/static/app/epg.js:1019
 #: src/webui/static/app/epg.js:1022
 msgid "Don't care"
-msgstr "Не ме е грижа"
+msgstr "Ei hooli"
 
 #: src/webui/static/app/dvr.js:329 src/webui/static/app/dvr.js:440
 msgid "Download"
-msgstr "Изтегли"
+msgstr "Allalaadimine"
 
 #: src/webui/static/app/dvr.js:327 src/webui/static/app/dvr.js:438
 msgid "Download the selected recording"
-msgstr "Изтегли избраният запис"
+msgstr "Valitud salvestuse allalaadimine"
 
 #: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:530
 #: src/webui/static/app/epg.js:531 src/webui/static/app/epg.js:1031
 #: src/webui/static/app/dvr.js:46
 msgid "Duration"
-msgstr "Продължителност"
+msgstr "Kestvus"
 
 #: src/webui/static/app/epggrab.js:30 src/webui/static/app/epggrab.js:84
 msgid "EPG Grab Configuration"
-msgstr "EPG Grab конфигурация"
+msgstr "EPG hankimise seaded"
 
 #: src/webui/static/app/epggrab.js:22
 msgid "EPG Grabber"
-msgstr "EPG грабер"
+msgstr "EPG hankija"
 
 #: src/webui/static/app/epggrab.js:41
 msgid "EPG Grabber Channel"
-msgstr ""
+msgstr "EPG hankija kanal"
 
 #: src/webui/static/app/epggrab.js:42 src/webui/static/app/epggrab.js:51
 msgid "EPG Grabber Channels"
-msgstr ""
+msgstr "EPG hankija kanalid"
 
 #: src/webui/static/app/epggrab.js:73
 msgid "EPG Grabber Module"
-msgstr ""
+msgstr "EPG hankija moodul"
 
 #: src/webui/static/app/epggrab.js:74
 msgid "EPG Grabber Modules"
-msgstr ""
+msgstr "EPG hankija moodulid"
 
 #: src/webui/static/app/epggrab.js:75
 msgid "EPG Grabber Name"
-msgstr ""
+msgstr "EPG hankija nimi"
 
 #: src/webui/static/app/epg.js:954
 msgid "EPG Update"
-msgstr "EPG ъпдейт"
+msgstr "EPG uuendus"
 
 #: src/webui/static/app/idnode.js:1425
 msgid "Edit"
-msgstr "Редакция"
+msgstr "Korrigeeri"
 
 #: src/webui/static/app/idnode.js:1423
 msgid "Edit selected entry"
-msgstr "Редактиране на избрания запис"
+msgstr "Korrigeeri valitud kirjet"
 
 #: src/webui/static/app/idnode.js:1439 src/webui/static/app/idnode.js:1472
 msgid "Edit {0}"
-msgstr "Редактирай {0}"
+msgstr "Korrigeeri {0}"
 
 #: src/webui/static/app/idnode.js:1468
 msgid "Edit {0} ({1} entries)"
-msgstr ""
+msgstr "Edit {0} ({1} kirjet)"
 
 #: src/webui/static/app/epg.js:878 src/webui/static/app/epg.js:889
 msgid "Electronic Program Guide"
-msgstr "Електронен Програмен Указател"
+msgstr "Elektrooniline saatekava"
 
 #: src/webui/static/app/esfilter.js:64 src/webui/static/app/esfilter.js:83
 #: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
 #: src/webui/static/app/esfilter.js:158
 msgid "Elementary Stream Filter"
-msgstr "филтър на елементарния стриим"
+msgstr "Elementary Stream filter"
 
 #: src/webui/static/app/tvheadend.js:763
 msgid "Enable debug output"
-msgstr "Разреши изходни данни от дебъг"
+msgstr "Lülita sisse debugimise väljund"
 
 #: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:522
 #: src/webui/static/app/epg.js:523
 msgid "End Time"
-msgstr "Време за край"
+msgstr "Lõpuaeg"
 
 #: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
 msgid "Enter Filter Text..."
-msgstr "Въведи Филтриращ текст..."
+msgstr "Sisesta filtri tekst..."
 
 #: src/webui/static/app/epg.js:505 src/webui/static/app/epg.js:506
 msgid "Episode"
-msgstr "Епизод"
+msgstr "Osa"
 
 #: src/webui/static/app/status.js:138
 msgid "Errors"
-msgstr "Грешки"
+msgstr "Vigu"
 
 #: src/webui/static/app/epg.js:896
 msgid "Events"
-msgstr "Събития"
+msgstr "Juhtumid"
 
 #: src/webui/static/app/dvr.js:148
 msgid "Every day"
-msgstr "Всеки ден"
+msgstr "Iga päev"
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
-msgstr "Провален"
+msgstr "Ebaõnnestunud"
 
 #: src/webui/static/app/dvr.js:493
 msgid "Failed Recording"
-msgstr "Неуспешен запис"
+msgstr "Ebaõnnestunud salvestus"
 
 #: src/webui/static/app/dvr.js:494
 msgid "Failed Recordings"
-msgstr "Неуспешни записи"
+msgstr "Ebaõnnestunud salvestused"
 
 #: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
-msgstr "Фев"
+msgstr "Veebr"
 
 #: src/webui/static/app/i18n-post.js:21
 msgid "February"
-msgstr "Февруари"
+msgstr "Veebruar"
 
 #: src/webui/static/app/dvr.js:53
 msgid "File size"
-msgstr "Размер на файла"
+msgstr "Faili suurus"
 
 #: src/webui/static/app/epg.js:636
 msgid "Filter channel..."
-msgstr "Филтър канал..."
+msgstr "Filtreeri kanal..."
 
 #: src/webui/static/app/epg.js:683
 msgid "Filter content type..."
-msgstr "Филрът вид съдържание..."
+msgstr "Filtreeri sisu tüüp..."
 
 #: src/webui/static/app/epg.js:704
 msgid "Filter duration..."
-msgstr "Филтър продължителност..."
+msgstr "Filtreeri kestvus..."
 
 #: src/webui/static/app/epg.js:659
 msgid "Filter tag..."
-msgstr "Етикет на филтъра..."
+msgstr "Filtreeri märge..."
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
-msgstr "Филтри"
+msgstr "Filtrid"
 
 #: src/webui/static/app/dvr.js:382
 msgid "Finished Recording"
-msgstr "Приключил запис"
+msgstr "Lõppenud salvestus"
 
 #: src/webui/static/app/dvr.js:383
 msgid "Finished Recordings"
-msgstr "Приключили записи"
+msgstr "Lõppenud salvestused"
 
 #: src/webui/static/app/i18n-post.js:146
 msgid "First Page"
-msgstr "Първа Страница"
+msgstr "Esimene lehekülg"
 
 #: src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
-msgstr "Принудително Сканиране"
+msgstr "Sunni skaneerima"
 
 #: src/webui/static/app/mpegts.js:34
 msgid "Force new scan (all muxes) for selected networks"
-msgstr "Принудително сканиране (всички муксове) за избраната мрежа"
+msgstr "Sunni skaneerima valituid võrke (kõik muxid) "
 
 #: src/webui/static/app/tvheadend.js:702
 msgid "Free"
-msgstr "Свободни"
+msgstr "Vaba"
 
 #: src/webui/static/app/i18n-post.js:98
 msgid "Fri"
-msgstr "Пет"
+msgstr "R"
 
 #: src/webui/static/app/i18n-post.js:88
 msgid "Friday"
-msgstr "Петък"
+msgstr "Reede"
 
 #: src/webui/static/app/tvheadend.js:350
 msgid "Fullscreen"
-msgstr "Цял екран"
+msgstr "Täisekraan"
 
 #: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1009
 msgid "Fulltext"
-msgstr "Пълен текст"
+msgstr "Täistekst"
 
 #: src/webui/static/app/tvheadend.js:692
 msgid "GB"
@@ -776,45 +774,45 @@ msgstr "GB"
 
 #: src/webui/static/app/tvheadend.js:443
 msgid "General"
-msgstr "Основни"
+msgstr "Üldine"
 
 #: src/webui/static/app/config.js:15 src/webui/static/app/config.js:74
 msgid "General Configuration"
-msgstr "Основни Конфигурации"
+msgstr "Üldised seaded"
 
 #: src/webui/static/app/epg.js:1030
 msgid "Genre"
-msgstr "Категория"
+msgstr "Žanr"
 
 #: src/webui/static/app/idnode.js:1171
 msgid "Grid Update"
-msgstr ""
+msgstr "Grid Update"
 
 #: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
-msgstr "Групирай според Това поле"
+msgstr "Grupeeri selle välja alusel"
 
 #: src/webui/static/app/idnode.js:946 src/webui/static/app/idnode.js:1594
 #: src/webui/static/app/idnode.js:1950 src/webui/static/app/idnode.js:2308
 #: src/webui/static/app/epg.js:875
 msgid "Help"
-msgstr "Помощ"
+msgstr "Abi"
 
 #: src/webui/static/app/tvheadend.js:47
 msgid "Help for"
-msgstr "Помощ за"
+msgstr "Abi"
 
 #: src/webui/static/app/idnode.js:1524
 msgid "Hide"
-msgstr "Скрий "
+msgstr "Peida"
 
 #: src/webui/static/app/idnode.js:1918
 msgid "Hide passwords"
-msgstr "Скрий паролите"
+msgstr "Peida salasõnad"
 
 #: src/webui/static/app/status.js:86
 msgid "Hostname"
-msgstr "Название"
+msgstr "Hosti nimi"
 
 #: src/webui/static/app/status.js:76
 msgid "ID"
@@ -822,67 +820,67 @@ msgstr "ID"
 
 #: src/webui/static/app/status.js:562
 msgid "IP Address"
-msgstr "IP Адрес"
+msgstr "IP aadress"
 
 #: src/webui/static/app/acleditor.js:143
 msgid "IP Blocking Entries"
-msgstr ""
+msgstr "IP blokeerimise kirjed"
 
 #: src/webui/static/app/acleditor.js:119
 msgid "IP Blocking Record"
-msgstr ""
+msgstr "IP Blocking Record"
 
 #: src/webui/static/app/acleditor.js:120
 msgid "IP Blocking Records"
-msgstr ""
+msgstr "IP Blocking Records"
 
 #: src/webui/static/app/servicemapper.js:19
 msgid "Ignored"
-msgstr "Игнориран"
+msgstr "Ignoreeritud"
 
 #: src/webui/static/app/config.js:66
 msgid "Image cache"
-msgstr "Вземи картина"
+msgstr "Pildi vahemälu"
 
 #: src/webui/static/app/status.js:715
 msgid "In"
-msgstr "Вход"
+msgstr "In"
 
 #: src/webui/static/app/servicemapper.js:94
 msgid "Include encrypted services"
-msgstr "Включи криптираните услуги"
+msgstr "Kaasa krüpteeritud teenused"
 
 #: src/webui/static/app/status.js:339 src/webui/static/app/status.js:805
 msgid "Input"
-msgstr "Входящ"
+msgstr "Sisend"
 
 #: src/webui/static/app/status.js:144
 msgid "Input (kb/s)"
-msgstr "Входящ (kb/s)"
+msgstr "Sissetulev (kb/s)"
 
 #: src/webui/static/app/i18n-post.js:35
 msgid "Jan"
-msgstr "Яну"
+msgstr "Jaan"
 
 #: src/webui/static/app/i18n-post.js:20
 msgid "January"
-msgstr "Януари"
+msgstr "Jaanuar"
 
 #: src/webui/static/app/i18n-post.js:41
 msgid "Jul"
-msgstr "Юли"
+msgstr "Juuli"
 
 #: src/webui/static/app/i18n-post.js:26
 msgid "July"
-msgstr "Юли"
+msgstr "Juuli"
 
 #: src/webui/static/app/i18n-post.js:40
 msgid "Jun"
-msgstr "Юни"
+msgstr "Juuni"
 
 #: src/webui/static/app/i18n-post.js:25
 msgid "June"
-msgstr "Юни"
+msgstr "Juuni"
 
 #: src/webui/static/app/tvheadend.js:696
 msgid "KB"
@@ -890,15 +888,15 @@ msgstr "KB"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
-msgstr "Последна Страница"
+msgstr "Viimane lehekülg"
 
 #: src/webui/static/app/tvheadend.js:306
 msgid "Live TV Player"
-msgstr "Лайв ТВ плейър"
+msgstr "Live TV Player"
 
 #: src/webui/static/app/tvheadend.js:107
 msgid "Loading, please wait..."
-msgstr "Зарежда, моля изчакайте..."
+msgstr "Laadimas, palun oota..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:627
@@ -906,15 +904,15 @@ msgstr "Зарежда, моля изчакайте..."
 #: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:244
 #: src/webui/static/app/tvheadend.js:282
 msgid "Loading..."
-msgstr "Зарежда..."
+msgstr "Laadimas..."
 
 #: src/webui/static/app/tvheadend.js:673
 msgid "Logged in as"
-msgstr "Вписан като"
+msgstr "Sisse loginud kui"
 
 #: src/webui/static/app/config.js:93
 msgid "Look for new SAT>IP servers"
-msgstr "Виж за нови SAT>IP сървъри"
+msgstr "Otsi uusi SAT>IP servereid"
 
 #: src/webui/static/app/tvheadend.js:694
 msgid "MB"
@@ -922,182 +920,182 @@ msgstr "MB"
 
 #: src/webui/static/app/servicemapper.js:126
 msgid "Map"
-msgstr ""
+msgstr "Seosta"
 
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/mpegts.js:256
 msgid "Map All"
-msgstr "Мапни всички"
+msgstr "Seosta kõik"
 
 #: src/webui/static/app/mpegts.js:254
 msgid "Map Selected"
-msgstr "Мапни избраното"
+msgstr "Seosta valitud"
 
 #: src/webui/static/app/chconf.js:131
 msgid "Map Services"
-msgstr "Мапни услугите"
+msgstr "Seosta teenused"
 
 #: src/webui/static/app/servicemapper.js:181
 msgid "Map services"
-msgstr "Мапни услугите"
+msgstr "Seosta teenused"
 
 #: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:129
 msgid "Map services to channels"
-msgstr "Мапни услугите към каналите"
+msgstr "Seosta teenused kanaliteks"
 
 #: src/webui/static/app/servicemapper.js:11
 msgid "Mapped"
-msgstr "Селектирани"
+msgstr "Seostatud"
 
 #: src/webui/static/app/servicemapper.js:143
 msgid "Mapping services..."
-msgstr "Мапване на услугите..."
+msgstr "Seostan teenuseid..."
 
 #: src/webui/static/app/i18n-post.js:37
 msgid "Mar"
-msgstr "Мар"
+msgstr "Mär"
 
 #: src/webui/static/app/i18n-post.js:22
 msgid "March"
-msgstr "Март"
+msgstr "Märts"
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
-msgstr "Май"
+msgstr "Mai"
 
 #: src/webui/static/app/i18n-post.js:39
 msgid "May#ShortNameForMay"
-msgstr "Май#КъсоИмеЗаМай"
+msgstr "May#ShortNameForMay"
 
 #: src/webui/static/app/servicemapper.js:100
 msgid "Merge same name"
-msgstr "Обедини с еднакви имена"
+msgstr "Liida samanimelised üheks kokku"
 
 #: src/webui/static/app/tvheadend.js:96
 msgid "Message"
-msgstr "Съобщение"
+msgstr "Sõnum"
 
 #: src/webui/static/app/i18n-post.js:94
 msgid "Mon"
-msgstr "Пон"
+msgstr "E"
 
 #: src/webui/static/app/i18n-post.js:84
 msgid "Monday"
-msgstr "Понеделник"
+msgstr "Esmaspäev"
 
 #: src/webui/static/app/idnode.js:1394 src/webui/static/app/idnode.js:1890
 msgid "Move Down"
-msgstr "Премести Надолу "
+msgstr "Liiguta alla"
 
 #: src/webui/static/app/idnode.js:1369 src/webui/static/app/idnode.js:1869
 msgid "Move Up"
-msgstr "Премести Нагоре"
+msgstr "Liiguta üles"
 
 #: src/webui/static/app/chconf.js:168
 msgid "Move channel one number down"
-msgstr "Премести канала с един номер надолу"
+msgstr "Liiguta kanali number ühe võrra väiksemaks"
 
 #: src/webui/static/app/chconf.js:155
 msgid "Move channel one number up"
-msgstr "Премести канала с един номер нагоре"
+msgstr "Liiguta kanali number ühe võrra suuremaks"
 
 #: src/webui/static/app/idnode.js:1392
 msgid "Move selected entries down"
-msgstr "Премести избраните вписвания надолу"
+msgstr "Liiguta valitud kirjed allapoole"
 
 #: src/webui/static/app/idnode.js:1367
 msgid "Move selected entries up"
-msgstr "Премести избраните вписвания нагоре"
+msgstr "Liiguta valitud kirjed ülespoole"
 
 #: src/webui/static/app/idnode.js:1888
 msgid "Move selected entry down"
-msgstr "Премести избраното вписване надолу"
+msgstr "Liiguta valitud kirje allapoole"
 
 #: src/webui/static/app/idnode.js:1867
 msgid "Move selected entry up"
-msgstr "Премести избраното вписване нагоре"
+msgstr "Liiguta valitud kirje ülespoole"
 
 #: src/webui/static/app/mpegts.js:99 src/webui/static/app/mpegts.js:108
 msgid "Mux"
-msgstr "Мукс"
+msgstr "Mux"
 
 #: src/webui/static/app/mpegts.js:332 src/webui/static/app/mpegts.js:342
 msgid "Mux Scheduler"
-msgstr "Mux задаване на задача"
+msgstr "Mux ajastaja"
 
 #: src/webui/static/app/mpegts.js:333 src/webui/static/app/mpegts.js:337
 msgid "Mux Schedulers"
-msgstr "Mux задаване на задачи"
+msgstr "Mux ajastajad"
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:105
 msgid "Muxes"
-msgstr "Муксове"
+msgstr "Muxid"
 
 #: src/webui/static/app/mpegts.js:65 src/webui/static/app/mpegts.js:74
 #: src/webui/static/app/mpegts.js:110
 msgid "Network"
-msgstr "Мрежа"
+msgstr "Võrk"
 
 #: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:70
 msgid "Networks"
-msgstr "Мрежи"
+msgstr "Võrgud"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
-msgstr "Следващ Месец (Контрол+Дясно)"
+msgstr "Järgmine kuu (CRTL+Paremale)"
 
 #: src/webui/static/app/i18n-post.js:148
 msgid "Next Page"
-msgstr "Следваща Страница"
+msgstr "Järgmine lehekülg"
 
 #: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
 msgid "No"
-msgstr "Не"
+msgstr "Ei"
 
 #: src/webui/static/app/i18n-post.js:152
 msgid "No data to display"
-msgstr "Няма данни за показване"
+msgstr "Pole datat kuvada"
 
 #: src/webui/static/app/dvr.js:150
 msgid "No days"
-msgstr "Няма дни"
+msgstr "Pole päevi"
 
 #: src/webui/static/app/tvheadend.js:676
 msgid "No verified access"
-msgstr "Не проверен достъп"
+msgstr "Pole kinnitatud juurdepääsu"
 
 #. / {0} title (lowercase), {1} title
 #: src/webui/static/app/tvheadend.js:120
 msgid "No {0} to display"
-msgstr "Няма {0} за показване"
+msgstr "Ei saa kuvada: {0}"
 
 #: src/webui/static/app/idnode.js:1509 src/webui/static/app/mpegts.js:208
 #: src/webui/static/app/mpegts.js:218
 msgid "None"
-msgstr "Празно"
+msgstr "Ei midagi"
 
 #: src/webui/static/app/idnode.js:341
 msgid "Not set"
-msgstr "Не зададен"
+msgstr "Pole seadistatud"
 
 #: src/webui/static/app/i18n-post.js:45
 msgid "Nov"
-msgstr "Ное"
+msgstr "Nov"
 
 #: src/webui/static/app/i18n-post.js:30
 msgid "November"
-msgstr "Ноември"
+msgstr "November"
 
 #: src/webui/static/app/epg.js:537 src/webui/static/app/epg.js:538
 msgid "Number"
-msgstr "Номер"
+msgstr "Number"
 
 #: src/webui/static/app/chconf.js:170
 msgid "Number Down"
-msgstr "Номер Надолу "
+msgstr "Number alla"
 
 #: src/webui/static/app/chconf.js:157
 msgid "Number Up"
-msgstr "Номер Нагоре"
+msgstr "Number üles"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
@@ -1105,31 +1103,31 @@ msgstr "OK"
 
 #: src/webui/static/app/i18n-post.js:44
 msgid "Oct"
-msgstr "Окт"
+msgstr "Okt"
 
 #: src/webui/static/app/i18n-post.js:29
 msgid "October"
-msgstr "Октомври"
+msgstr "Oktoober"
 
 #: src/webui/static/app/i18n-post.js:281
 msgid "On#DateFilter"
-msgstr "Включен#ДатаФилтър"
+msgstr "On#DateFilter"
 
 #: src/webui/static/app/esfilter.js:145
 msgid "Other Stream Filter"
-msgstr "Филтър друг стриим"
+msgstr "Muu voogedastuse filter"
 
 #: src/webui/static/app/esfilter.js:146
 msgid "Other Stream Filters"
-msgstr "Филтри друг стриим"
+msgstr "Muud voogedastuse filtrid"
 
 #: src/webui/static/app/status.js:716
 msgid "Out"
-msgstr "Изход"
+msgstr "Välja"
 
 #: src/webui/static/app/status.js:152
 msgid "Output (kb/s)"
-msgstr "Изходящ (kb/s)"
+msgstr "Väljaminev (kb/s)"
 
 #: src/webui/static/app/status.js:372
 msgid "PER"
@@ -1137,35 +1135,35 @@ msgstr "PER"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
-msgstr "Страница"
+msgstr "Lehekülg"
 
 #: src/webui/static/app/idnode.js:1977 src/webui/static/app/idnode.js:2163
 msgid "Parameters"
-msgstr "Параметри"
+msgstr "Parameetrid"
 
 #: src/webui/static/app/idnode.js:1507
 msgid "Parent disabled"
-msgstr "Изкл'чен родителски контрол"
+msgstr "Parent disabled"
 
 #: src/webui/static/app/acleditor.js:79
 msgid "Password"
-msgstr "Парола"
+msgstr "Salasõna"
 
 #: src/webui/static/app/acleditor.js:104
 msgid "Password Control Entries"
-msgstr "Записи за контрол на паролата"
+msgstr "Password Control Entries"
 
 #: src/webui/static/app/acleditor.js:80
 msgid "Passwords"
-msgstr "Пароли"
+msgstr "Salasõnad"
 
 #: src/webui/static/app/tvheadend.js:335
 msgid "Pause"
-msgstr "Пауза"
+msgstr "Paus"
 
 #: src/webui/static/app/tvheadend.js:131
 msgid "Per page"
-msgstr "На страница"
+msgstr "Per lehekülg"
 
 #: src/webui/static/app/mpegts.js:126 src/webui/static/app/mpegts.js:127
 #: src/webui/static/app/mpegts.js:131 src/webui/static/app/mpegts.js:307
@@ -1176,108 +1174,108 @@ msgstr "На страница"
 #: src/webui/static/app/dvr.js:518 src/webui/static/app/dvr.js:519
 #: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:318
 msgid "Play"
-msgstr "Пусни"
+msgstr "Vaata"
 
 #: src/webui/static/tv.js:466
 msgid "Play Selected Channel"
-msgstr ""
+msgstr "Vaata valitud kanalit"
 
 #: src/webui/static/app/epg.js:162
 msgid "Play program"
-msgstr "Пусни програмата"
+msgstr "Vaata saadet"
 
 #: src/webui/static/app/epg.js:161
 msgid "Play this program"
-msgstr "Изпълни тази програма"
+msgstr "Vaata seda saadet"
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
-msgstr "Моля изчакайте..."
+msgstr "Palun oota..."
 
 #: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
-msgstr "Предишен Месец (Контрол+Ляво)"
+msgstr "Eelmine kuu (CRTL+Vasakule)"
 
 #: src/webui/static/app/i18n-post.js:147
 msgid "Previous Page"
-msgstr "Предишна Страница"
+msgstr "Eelmine lehekülg"
 
 #: src/webui/static/app/dvr.js:548
 msgid "Profile Name"
-msgstr "Име на профила"
+msgstr "Profiili nimi"
 
 #: src/webui/static/app/epg.js:460 src/webui/static/app/epg.js:461
 msgid "Progress"
-msgstr "Прогрес"
+msgstr "Edenemine"
 
 #: src/webui/static/app/config.js:51 src/webui/static/app/config.js:53
 msgid "Re-fetch images"
-msgstr ""
+msgstr "Taastõmba pildid"
 
 #: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:459
 msgid "Re-record"
-msgstr ""
+msgstr "Taassalvesta"
 
 #: src/webui/static/app/idnode.js:895
 msgid "Read-only Info"
-msgstr "Информация само за четене"
+msgstr "Mittemuudetav info"
 
 #: src/webui/static/app/comet.js:28
 msgid "Reconnected to Tvheadend"
-msgstr "Свържи се отново с Tvheadend"
+msgstr "Taasühendatud Tvheadend'iga"
 
 #: src/webui/static/app/epg.js:219
 msgid "Record program"
-msgstr "Запис на програма"
+msgstr "Salvesta saade"
 
 #: src/webui/static/app/epg.js:225
 msgid "Record series"
-msgstr "Запис на серии"
+msgstr "Salvesta seeriad"
 
 #: src/webui/static/app/epg.js:218
 msgid "Record this program now"
-msgstr "Запиши тази програма сега"
+msgstr "Pane see saade salvestamiseks"
 
 #: src/webui/static/app/tvheadend.js:520
 msgid "Recording"
-msgstr "Записване"
+msgstr "Salvestamine"
 
 #: src/webui/static/app/dvr.js:132
 msgid "Recording details"
-msgstr "Детайли на записа"
+msgstr "Salvestamise detailid"
 
 #: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
-msgstr "Опресни"
+msgstr "Värskenda"
 
 #: src/webui/static/app/chconf.js:194
 msgid "Reset (clear) the selected icon URLs"
-msgstr "Нулирай (изчисти) избраните икони на адреси"
+msgstr "Puhasta (võta ära) valitud ikooni URL"
 
 #: src/webui/static/app/epg.js:857
 msgid "Reset All"
-msgstr "Нулирай всичко"
+msgstr "Puhasta kõik"
 
 #: src/webui/static/app/chconf.js:196
 msgid "Reset Icon"
-msgstr "Нулирай иконите"
+msgstr "Puhasta ikoon"
 
 #: src/webui/static/app/epg.js:859
 msgid "Reset all filters (show all)"
-msgstr "Нулирай всички филтри (покажи всички)"
+msgstr "Puhasta kõik filtrid (näita kõike)"
 
 #: src/webui/static/app/idnode.js:1308 src/webui/static/app/idnode.js:1816
 #: src/webui/static/app/idnode.js:2273
 msgid "Revert pending changes (marked with red border)"
-msgstr "Връщане предстоящите промени (маркирани с червен шрифт)"
+msgstr "Võta tagasi ootel muudatused (märgitud punase nurgaga)"
 
 #: src/webui/static/app/config.js:108
 msgid "SAT>IP Server"
-msgstr "SAT>IP сървър"
+msgstr "SAT>IP server"
 
 #: src/webui/static/app/config.js:116
 msgid "SAT>IP Server Configuration"
-msgstr ""
+msgstr "SAT>IP serveri seaded"
 
 #: src/webui/static/app/status.js:402
 msgid "SNR"
@@ -1285,467 +1283,467 @@ msgstr "SNR"
 
 #: src/webui/static/app/i18n-post.js:99
 msgid "Sat"
-msgstr "Съб"
+msgstr "Lau"
 
 #: src/webui/static/app/i18n-post.js:89
 msgid "Saturday"
-msgstr "Събота"
+msgstr "Laupäev"
 
 #: src/webui/static/app/idnode.js:925 src/webui/static/app/idnode.js:1283
 #: src/webui/static/app/idnode.js:1796 src/webui/static/app/idnode.js:2256
 msgid "Save"
-msgstr "Съхрани"
+msgstr "Salvesta"
 
 #: src/webui/static/app/idnode.js:1281 src/webui/static/app/idnode.js:1794
 #: src/webui/static/app/idnode.js:2254
 msgid "Save pending changes (marked with red border)"
-msgstr "Запиши бъдещите промени (маркирани с червен шрифт)"
+msgstr "Salvesta ootel muudatused (märgitud punase nurgaga)"
 
 #: src/webui/static/app/dvr.js:42
 msgid "Scheduled Start Time"
-msgstr "Старт време на планираната задача"
+msgstr "Ajastatud algusaeg"
 
 #: src/webui/static/app/dvr.js:44
 msgid "Scheduled Stop Time"
-msgstr "Стоп време на планираната задача"
+msgstr "Ajastatud lõpuaeg"
 
 #: src/webui/static/app/epg.js:147 src/webui/static/app/dvr.js:66
 msgid "Search IMDB (for title)"
-msgstr "Търси в IMDB (за заглавие)"
+msgstr "Otsi IMDB'st (pealkirja)"
 
 #: src/webui/static/app/epg.js:154 src/webui/static/app/dvr.js:72
 msgid "Search TheTVDB (for title)"
-msgstr ""
+msgstr "Otsi TheTVDB'st (pealkirja)"
 
 #: src/webui/static/app/epg.js:616
 msgid "Search title..."
-msgstr "Търси заглавие..."
+msgstr "Otsi pealkirja..."
 
 #: src/webui/static/app/tvheadend.js:251
 msgid "Select channel..."
-msgstr "Избери канал..."
+msgstr "Vali kanal..."
 
 #: src/webui/static/app/tvheadend.js:288
 msgid "Select stream profile..."
-msgstr "Избери стрийм профил..."
+msgstr "Vali voogedastuse profiil..."
 
 #: src/webui/static/app/idnode.js:447 src/webui/static/app/idnode.js:618
 msgid "Select {0} ..."
-msgstr "Избери {0} ..."
+msgstr "Vali {0} ..."
 
 #: src/webui/static/app/idnode.js:431 src/webui/static/app/idnode.js:594
 msgid "Selected"
-msgstr "Избрано"
+msgstr "Valitud"
 
 #: src/webui/static/app/i18n-post.js:43
 msgid "Sep"
-msgstr "Сеп"
+msgstr "Sept"
 
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
-msgstr "Септември"
+msgstr "September"
 
 #: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:110
 msgid "Service"
-msgstr "Услуга"
+msgstr "Teenus"
 
 #: src/webui/static/app/servicemapper.js:34
 msgid "Service Mapper"
-msgstr "Мапер за услугите"
+msgstr "Teenuse ühendaja"
 
 #: src/webui/static/app/servicemapper.js:151
 msgid "Service Mapper Status"
-msgstr "Статус на мапера за услуги"
+msgstr "Teenuse ühendaja staatus"
 
 #: src/webui/static/app/mpegts.js:221
 msgid "Service details for"
-msgstr "Детайли на услугата за"
+msgstr "Teenuse detailid"
 
 #: src/webui/static/app/mpegts.js:295 src/webui/static/app/mpegts.js:302
 msgid "Services"
-msgstr "Услуги"
+msgstr "Teenused"
 
 #: src/webui/static/app/idnode.js:853
 msgid "Settings"
-msgstr "Настройки"
+msgstr "Seaded"
 
 #: src/webui/static/app/i18n-post.js:212
 msgid "Show in Groups"
-msgstr "Покажи в групи"
+msgstr "Näite gruppidena"
 
 #: src/webui/static/app/idnode.js:1912
 msgid "Show or hide passwords"
-msgstr "Покажи или скрий паролите"
+msgstr "Näita või peida salasõnad"
 
 #: src/webui/static/app/idnode.js:1914 src/webui/static/app/idnode.js:1918
 msgid "Show passwords"
-msgstr "Покажи  паролите"
+msgstr "Näita salasõnu"
 
 #: src/webui/static/app/status.js:422
 msgid "Signal Strength"
-msgstr "Сила на сигнала"
+msgstr "Signaali tugevus"
 
 #: src/webui/static/app/i18n-post.js:203
 msgid "Sort Ascending"
-msgstr "Сортирай по Възходящ ред"
+msgstr "Sordi suurenevas järjekorras"
 
 #: src/webui/static/app/i18n-post.js:204
 msgid "Sort Descending"
-msgstr "Сортирай по Низходящ ред"
+msgstr "Sordi kahanevas järjekorras"
 
 #: src/webui/static/app/epg.js:119
 msgid "Star Rating"
-msgstr "Рейтинг"
+msgstr "Tähtede reiting"
 
 #: src/webui/static/app/epg.js:560 src/webui/static/app/epg.js:561
 msgid "Stars"
-msgstr "Звезди"
+msgstr "Tähti"
 
 #: src/webui/static/app/status.js:116
 msgid "Start"
-msgstr "Старт"
+msgstr "Algus"
 
 #: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:513
 #: src/webui/static/app/epg.js:514
 msgid "Start Time"
-msgstr "Време за старт"
+msgstr "Algusaeg"
 
 #: src/webui/static/app/status.js:572
 msgid "Started"
-msgstr "Стартирани"
+msgstr "Alustatud"
 
 #: src/webui/static/app/status.js:126
 msgid "State"
-msgstr "Състояние"
+msgstr "Staatus"
 
 #: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:619
 msgid "Status"
-msgstr "Състояние"
+msgstr "Staatus"
 
 #: src/webui/static/app/dvr.js:202 src/webui/static/app/tvheadend.js:342
 msgid "Stop"
-msgstr "Спри"
+msgstr "Seiska"
 
 #: src/webui/static/app/epg.js:189
 msgid "Stop recording"
-msgstr "Край на записа"
+msgstr "Lõpeta salvestamine"
 
 #: src/webui/static/app/epg.js:188
 msgid "Stop recording of this program"
-msgstr "Спри записването на тази програма"
+msgstr "Lõpeta selle saate salvestamine"
 
 #: src/webui/static/app/dvr.js:200
 msgid "Stop the selected recording"
-msgstr "Спри избрания запис"
+msgstr "Lõpeta valitu salvestamine"
 
 #: src/webui/static/app/tvheadend.js:699
 msgid "Storage space"
-msgstr ""
+msgstr "Andmekandja ruum"
 
 #: src/webui/static/app/status.js:344 src/webui/static/app/status.js:474
 #: src/webui/static/app/tvheadend.js:508
 msgid "Stream"
-msgstr "Поток"
+msgstr "Voogedastus"
 
 #: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
 #: src/webui/static/app/esfilter.js:43
 msgid "Stream Profile"
-msgstr "Профил на стриима"
+msgstr "Voogedastuse profiilid"
 
 #: src/webui/static/app/esfilter.js:25
 msgid "Stream Profile Name"
-msgstr "Име на профила на стриима"
+msgstr "Voogedastuse profiili nimi"
 
 #: src/webui/static/app/esfilter.js:24
 msgid "Stream Profiles"
-msgstr "Профили за сртиим"
+msgstr "Voogedastuse profiilid"
 
 #: src/webui/static/app/status.js:349
 msgid "Subs No."
-msgstr "Abonament No."
+msgstr "Subtiitreid"
 
 #: src/webui/static/app/status.js:199
 msgid "Subscriptions"
-msgstr "Абонаменти"
+msgstr "Liitumised"
 
 #: src/webui/static/app/epg.js:497 src/webui/static/app/epg.js:498
 msgid "Subtitle"
-msgstr "Субтитри"
+msgstr "Subtiiter"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
-msgstr "Филтър за субтитрите на стриима"
+msgstr "Subtiitrite voogedastuse filter"
 
 #: src/webui/static/app/esfilter.js:109
 msgid "Subtitle Stream Filters"
-msgstr "Филтри за субтитрите на стриима"
+msgstr "Subtiitrite voogedastuse filtrid"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
-msgstr "Нед"
+msgstr "Püh"
 
 #: src/webui/static/app/i18n-post.js:83
 msgid "Sunday"
-msgstr "Неделя"
+msgstr "Pühapäev"
 
 #: src/webui/static/app/chconf.js:183
 msgid "Swap Numbers"
-msgstr "Размени Номерата"
+msgstr "Vaheta numbrid"
 
 #: src/webui/static/app/chconf.js:181
 msgid "Swap the numbers for the two selected channels"
-msgstr "Разменени номерата за двата избрани канала"
+msgstr "Vaheta kahe valitud kanali numbrid"
 
 #: src/webui/static/app/tvheadend.js:759
 msgid "System log"
-msgstr "Системен лог"
+msgstr "Süsteemi logi"
 
 #: src/webui/static/app/tvadapters.js:5 src/webui/static/app/tvadapters.js:10
 msgid "TV adapters"
-msgstr "ТВ Адаптери"
+msgstr "TV adapterid"
 
 #: src/webui/static/app/epg.js:1029
 msgid "Tag"
-msgstr "Таг (бележка,маркер"
+msgstr "Märge"
 
 #: src/webui/static/app/esfilter.js:89
 msgid "Teletext Stream Filter"
-msgstr "Филтър за телетекста на стриима"
+msgstr "Teleteksti voogedastuse filter"
 
 #: src/webui/static/app/esfilter.js:90
 msgid "Teletext Stream Filters"
-msgstr "Филтри за телетекста на стриима"
+msgstr "Teleteksti voogedastuse filtrid"
 
 #: src/webui/static/app/dvr.js:389 src/webui/static/app/dvr.js:500
 msgid "The associated file will be removed from storage."
-msgstr "Свързания файл ще бъде изтрит от диска"
+msgstr "Seotud fail eemaldatakse andmekandjalt."
 
 #: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
-msgstr "Датата в това поле трябва да е след {0}"
+msgstr "Aeg sellel väljal peab olema pärast {0}"
 
 #: src/webui/static/app/i18n-post.js:188
 msgid "The date in this field must be before {0}"
-msgstr "Датата в това поле трябва да е преди {0}"
+msgstr "Aeg sellel väljal peab olema enne {0}"
 
 #: src/webui/static/app/i18n-post.js:169
 msgid "The maximum length for this field is {0}"
-msgstr "Максималната дължина на това поле е {0}"
+msgstr "Selle välja maksimaalne pikkus on {0}"
 
 #: src/webui/static/app/i18n-post.js:179
 msgid "The maximum value for this field is {0}"
-msgstr "Максималната стйност на това поле е {0}"
+msgstr "Selle välja maksimaalne väärtus on {0}"
 
 #: src/webui/static/app/i18n-post.js:168
 msgid "The minimum length for this field is {0}"
-msgstr "Минималната дължина на това поле е {0}"
+msgstr "Selle välja minimaalne pikkus on {0}"
 
 #: src/webui/static/app/i18n-post.js:234
 msgid "The time in this field must be equal to or after {0}"
-msgstr "Времето в това поле трябва да е равно или след {0}"
+msgstr "Aeg sellel väljal peab kas võrduma või olema pärast {0}"
 
 #: src/webui/static/app/i18n-post.js:235
 msgid "The time in this field must be equal to or before {0}"
-msgstr "Времето в това поле трябва да е равно или преди {0}"
+msgstr "Aeg sellel väljal peab kas võrduma või olema ennem {0}"
 
 #: src/webui/static/app/i18n-post.js:164
 msgid "The value in this field is invalid"
-msgstr "Стойността в това поле е невалидна"
+msgstr "Selle välja väärtus on ebakorrektne"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
 " to reconnect..."
-msgstr "Изглежда има проблем с ъпдейтването от сайта на  Tvheadend.опитайте да се свържете отново...."
+msgstr "Paistab, et Tvheadend'ist edastusega on probleeme. Üritan uuesti ühenduda..."
 
 #: src/webui/static/app/tvhlog.js:21
 msgid "They will be lost when the application next restarts."
-msgstr "Те ще бъдат загубени при следващо рестартиране на програмата"
+msgstr "Need lähevad kaduma kui rakendus järgnevalt taaskäivitub"
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
-msgstr "Тази дата е над максимално допустимата"
+msgstr "See aeg on pärast maksimaalset võimalikku"
 
 #: src/webui/static/app/i18n-post.js:126
 msgid "This date is before the minimum date"
-msgstr "Тази дата е преди минимално допустимата"
+msgstr "See aeg on ennem minimaalset võimalikku"
 
 #: src/webui/static/app/i18n-post.js:170
 msgid "This field is required"
-msgstr "Това поле е необходимо"
+msgstr "See väli on kohustuslik"
 
 #: src/webui/static/app/epg.js:1024
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr "Това ще създаде автоматично правило което постоянно ще сканира EPG за отговарящи програми които да записва."
+msgstr "See tekitab automaatse reegli, mis järjepidevalt skännib elektroonilist saatekava salvestamaks kõiki saated, mis vastavad sellele päringule"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
-msgstr "Чет"
+msgstr "Nel"
 
 #: src/webui/static/app/i18n-post.js:87
 msgid "Thursday"
-msgstr "Четвъртък"
+msgstr "Neljapäev"
 
 #: src/webui/static/app/dvr.js:639
 msgid "Time Schedule"
-msgstr "Планирано време"
+msgstr "Ajastamine"
 
 #: src/webui/static/app/dvr.js:59
 msgid "Time Scheduler"
-msgstr ""
+msgstr "Ajastaja"
 
 #: src/webui/static/app/dvr.js:640
 msgid "Time Schedules"
-msgstr "Планирани времена"
+msgstr "Ajastamised"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
-msgstr "ТаймШифт"
+msgstr "Ajanihe"
 
 #: src/webui/static/app/timeshift.js:24
 msgid "Timeshift Configuration"
-msgstr "ТаймШифт Конфигурация"
+msgstr "Ajanihke seaded"
 
 #: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
 #: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:98
 msgid "Title"
-msgstr "Заглавие"
+msgstr "Saate nimi"
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
-msgstr "Днес"
+msgstr "Täna"
 
 #: src/webui/static/app/tvheadend.js:360
 msgid "Toggle mute"
-msgstr ""
+msgstr "Lülita heli summutamist"
 
 #: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:457
 msgid "Toggle re-record functionality"
-msgstr ""
+msgstr "Lülita taassalvestamist"
 
 #: src/webui/static/app/tvheadend.js:702
 msgid "Total"
-msgstr "Общо"
+msgstr "Kokku"
 
 #: src/webui/static/app/status.js:383
 msgid "Transport Errors"
-msgstr "Транспортни Грешки"
+msgstr "Transportimise vead"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Trigger OTA EPG Grabber"
-msgstr "Превключване на OTA EPG грабер"
+msgstr "Käivita OTA EPG hankija"
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
-msgstr "Вто"
+msgstr "Tei"
 
 #: src/webui/static/app/i18n-post.js:85
 msgid "Tuesday"
-msgstr "Вторник"
+msgstr "Teisipäev"
 
 #: src/webui/static/app/epggrab.js:8
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
-msgstr "Настройване към EPG муксове в ефир за да вземете новите събития сега"
+msgstr "Pöördu nüüd kohe üle-õhu EPG muxide poole haaramaks uusi sündmusi"
 
 #: src/webui/static/app/tvheadend.js:738
 msgid "Tvheadend Web-Panel"
-msgstr "Tvheadend Уеб-Панел"
+msgstr "Tvheadend veebipaneel"
 
 #: src/webui/static/app/caclient.js:46 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:557
 msgid "Type"
-msgstr "Вид"
+msgstr "Tüüp"
 
 #: src/webui/static/app/status.js:378
 msgid "Uncorrected Blocks"
-msgstr "Некоригирани блокове"
+msgstr "Korrigeerimata plokid"
 
 #: src/webui/static/app/idnode.js:1310 src/webui/static/app/idnode.js:1818
 #: src/webui/static/app/idnode.js:2275
 msgid "Undo"
-msgstr "Върни"
+msgstr "Võta tagasi"
 
 #: src/webui/static/app/status.js:415 src/webui/static/app/status.js:435
 msgid "Unknown"
-msgstr "Неизвестен"
+msgstr "Tundmatu"
 
 #: src/webui/static/app/dvr.js:275
 msgid "Upcoming / Current Recordings"
-msgstr "Предстоящи / Текущи Записи"
+msgstr "Tulevased / Käimasolevad salvestused"
 
 #: src/webui/static/app/dvr.js:274
 msgid "Upcoming Recording"
-msgstr "Предстоящи  Записи"
+msgstr "Tulevased salvestused"
 
 #: src/webui/static/app/status.js:92 src/webui/static/app/status.js:567
 msgid "Username"
-msgstr "Потребителско име"
+msgstr "Kasutajanimi"
 
 #: src/webui/static/app/tvheadend.js:458
 msgid "Users"
-msgstr ""
+msgstr "Kasutajad"
 
 #: src/webui/static/app/esfilter.js:51
 msgid "Video Stream Filter"
-msgstr "Филтър на видео стриима"
+msgstr "Video voogedastuse filter"
 
 #: src/webui/static/app/esfilter.js:52
 msgid "Video Stream Filters"
-msgstr "Филтри на видео стриима"
+msgstr "Video voogedastuse filtrid"
 
 #: src/webui/static/app/tvheadend.js:369
 msgid "Volume"
-msgstr "Сила на звука"
+msgstr "Helitugevus"
 
 #: src/webui/static/app/epg.js:864
 msgid "Watch TV"
-msgstr "Гледай TV"
+msgstr "TV vaatamine"
 
 #: src/webui/static/app/epg.js:866
 msgid "Watch live TV in a new browser window."
-msgstr "Гледай лайф ТВ в нов прозорец на браузера"
+msgstr "TV vaatamine uues brauseri aknas"
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
-msgstr "Сря"
+msgstr "Kol"
 
 #: src/webui/static/app/i18n-post.js:86
 msgid "Wednesday"
-msgstr "Сряда"
+msgstr "Kolmapäev"
 
 #: src/webui/static/app/status.js:354
 msgid "Weight"
-msgstr "Тежест"
+msgstr "Kaalukus"
 
 #: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"
-msgstr "Ще бъде скрито"
+msgstr "Jäetakse vahele"
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
-msgstr "Да"
+msgstr "Jah"
 
 #: src/webui/static/app/idnode.js:459 src/webui/static/app/idnode.js:740
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
-msgstr "трябва да дадете стойност - използвайте осмична система, като 0664"
+msgstr "Pead pakkuma väärtuse - kasuta numbrilist chmod'i, nt 0664"
 
 #: src/webui/static/app/i18n-post.js:243
 msgid "You must select at least one item in this group"
-msgstr "Трябва да изберете поне един артикул от групата"
+msgstr "Pead valima vähemalt ühe siit grupist"
 
 #: src/webui/static/app/i18n-post.js:248
 msgid "You must select one item in this group"
-msgstr "Трябва да изберете един артикул от групата"
+msgstr "Pead valima ühe siit grupist"
 
 #: src/webui/static/app/dvr.js:33
 msgid "because it is a rerun of:"
-msgstr "защото това е рестарт на:"
+msgstr "Sest tegu on selle taasesitusega:"
 
 #: src/webui/static/app/i18n-post.js:218
 msgid "false"
-msgstr "грешно"
+msgstr "väär"
 
 #: src/webui/static/app/i18n-post.js:237
 msgid "g:i A#TimeField"
@@ -1760,27 +1758,27 @@ msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H
 #: src/webui/static/app/idnode.js:349 src/webui/static/app/idnode.js:350
 #: src/webui/static/app/epg.js:427 src/webui/static/app/epg.js:429
 msgid "hrs"
-msgstr "часа"
+msgstr "t"
 
 #: src/webui/static/app/tvheadend.js:677
 msgid "login"
-msgstr "вход"
+msgstr "sisse logimine"
 
 #: src/webui/static/app/tvheadend.js:674
 msgid "logout"
-msgstr "изход"
+msgstr "välja logimine"
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
-msgstr "м/д/г#колона за времето"
+msgstr "m/d/Y#DateColumn"
 
 #: src/webui/static/app/i18n-post.js:282
 msgid "m/d/Y#DateFilter"
-msgstr "м/д/г#ФилтърДата"
+msgstr "m/d/Y#DateFilter"
 
 #: src/webui/static/app/i18n-post.js:120
 msgid "m/d/Y#Format.date"
-msgstr "м/д/г#ФорматНаДатата"
+msgstr "m/d/Y#Format.date"
 
 #: src/webui/static/app/i18n-post.js:191
 msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
@@ -1788,47 +1786,47 @@ msgstr "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
 
 #: src/webui/static/app/i18n-post.js:190
 msgid "m/d/y#DateField"
-msgstr "м/д/г#ПолеЗаДатата"
+msgstr "m/d/y#DateField"
 
 #: src/webui/static/app/i18n-post.js:136
 msgid "m/d/y#DatePicker"
-msgstr "m/d/y#ДатаПосочване"
+msgstr "m/d/y#DatePicker"
 
 #: src/webui/static/app/idnode.js:350 src/webui/static/app/idnode.js:352
 #: src/webui/static/app/epg.js:429 src/webui/static/app/epg.js:432
 #: src/webui/static/app/dvr.js:46
 msgid "min"
-msgstr "мин"
+msgstr "min"
 
 #: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
-msgstr "от {0}"
+msgstr "{0}st"
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"
-msgstr "вярно"
+msgstr "tõene"
 
 #: src/webui/static/app/i18n-post.js:135
 msgid "{0} (Spacebar)"
-msgstr "{0} (Интервал)"
+msgstr "{0} (Tühik)"
 
 #: src/webui/static/app/i18n-post.js:189
 msgid "{0} is not a valid date - it must be in the format {1}"
-msgstr "{0} не е валидна дата -неправилен формат"
+msgstr "{0} pole korrektne aeg - peab olema formaadis {1}"
 
 #: src/webui/static/app/i18n-post.js:180
 msgid "{0} is not a valid number"
-msgstr "{0} не е валиден номер"
+msgstr "{0} pole korrektne number"
 
 #: src/webui/static/app/i18n-post.js:236
 msgid "{0} is not a valid time"
-msgstr "{0} не е валидно време"
+msgstr "{0} pole korrektne aeg"
 
 #: src/webui/static/app/i18n-post.js:14
 msgid "{0} selected row{1}"
-msgstr "{0} избран ред{1}"
+msgstr "{0} valitud rida{1}"
 
 #. / {0} start, {1} end, {2} total, {3} title
 #: src/webui/static/app/tvheadend.js:118
 msgid "{3} {0} - {1} of {2}"
-msgstr "{3} {0} - {1} от {2}"
+msgstr "{3} {0} - {1} / {2}st"

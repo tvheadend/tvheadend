@@ -235,6 +235,7 @@ void tvh_gettext_init(void)
     "eng_GB", "en_GB",
     "eng_US", "en_US",
     "spa",    "es",
+    "est",    "et",
     "per",    "fa",
     "fre",    "fr",
     "heb",    "he",
