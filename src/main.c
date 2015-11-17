@@ -593,7 +593,7 @@ main(int argc, char **argv)
   char buf[512];
   FILE *pidfile = NULL;
   static struct {
-    pid_t pid;
+    void *thread_id;
     struct timeval tv;
     uint8_t ru[32];
   } randseed;
@@ -988,7 +988,7 @@ main(int argc, char **argv)
   SSL_load_error_strings();
   SSL_library_init();
   /* Rand seed */
-  randseed.pid = main_tid;
+  randseed.thread_id = (void *)main_tid;
   gettimeofday(&randseed.tv, NULL);
   uuid_random(randseed.ru, sizeof(randseed.ru));
   RAND_seed(&randseed, sizeof(randseed));
