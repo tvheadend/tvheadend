@@ -1105,7 +1105,7 @@ rtsp_data:
       return http_client_flush(hc, res);
     res = HTTP_CON_RECEIVING;
     if (hc->hc_rpos < r + 4 || hc->hc_rbuf[r] != '$') {
-      memcpy(hc->hc_rbuf, hc->hc_rbuf + r, hc->hc_rpos - r);
+      memmove(hc->hc_rbuf, hc->hc_rbuf + r, hc->hc_rpos - r);
       hc->hc_rpos -= r;
       goto next_header;
     }
