@@ -1585,11 +1585,19 @@ http_client_init ( const char *user_agent )
 void
 http_client_done ( void )
 {
+  http_client_t *hc;
+
   http_running = 0;
   tvh_write(http_pipe.wr, "", 1);
   pthread_join(http_client_tid, NULL);
   tvh_pipe_close(&http_pipe);
+  pthread_mutex_lock(&http_lock);
+  TAILQ_FOREACH(hc, &http_clients, hc_link)
+    if (hc->hc_efd == http_poll)
+      hc->hc_efd = NULL;
   tvhpoll_destroy(http_poll);
+  http_poll = NULL;
+  pthread_mutex_unlock(&http_lock);
   free(http_user_agent);
 }
 
