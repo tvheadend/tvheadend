@@ -35,7 +35,7 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist );
  *
  */
 static void
-htsmsg_field_data_destroy(htsmsg_t *msg, htsmsg_field_t *f)
+htsmsg_field_data_destroy(htsmsg_field_t *f)
 {
   switch(f->hmf_type) {
   case HMF_MAP:
@@ -66,7 +66,7 @@ htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 {
   TAILQ_REMOVE(&msg->hm_fields, f, hmf_link);
 
-  htsmsg_field_data_destroy(msg, f);
+  htsmsg_field_data_destroy(f);
 
   if(f->hmf_flags & HMF_NAME_ALLOCED)
     free((void *)f->hmf_name);
@@ -387,7 +387,7 @@ htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
   if (!f)
     return htsmsg_add_msg(msg, name, sub);
-  htsmsg_field_data_destroy(msg, f);
+  htsmsg_field_data_destroy(f);
   return htsmsg_field_set_msg(f, sub);
 }
 
