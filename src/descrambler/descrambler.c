@@ -175,6 +175,7 @@ descrambler_init ( void )
       if (quick_ecm_table)
         quick_ecm_table[idx] = 0;
     }
+    idx = 0;
     if ((q = htsmsg_get_list(c, "const_cw")) != NULL) {
       HTSMSG_FOREACH(f, q) {
         if (!(e = htsmsg_field_get_map(f))) continue;
