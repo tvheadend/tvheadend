@@ -199,6 +199,10 @@ multi:
       data += 13;
       multi_name = "x-media";
       goto multi;
+    } else if (strncmp(data, "#EXT-X-ENDLIST", 14) == 0) {
+      htsmsg_add_bool(m, "x-endlist", 1);
+      data = until_eol(data + 14);
+      continue;
     } else if (strncmp(data, "#EXT", 4) == 0) {
       data = until_eol(data + 4);
       continue;
