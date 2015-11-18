@@ -889,7 +889,7 @@ http_client_run( http_client_t *hc )
   char *buf, *saveptr, *argv[3], *d, *p;
   int ver, res, delimsize = 4;
   ssize_t r;
-  size_t len, limit;
+  size_t len;
 
   if (hc == NULL)
     return 0;
@@ -954,7 +954,6 @@ retry:
     tvhlog_hexdump("httpc", buf, MIN(64, r));
   }
 
-  limit = hc->hc_version == RTSP_VERSION_1_0 ? hc->hc_io_size * 2 : 16*1024;
   if (hc->hc_in_data && !hc->hc_in_rtp_data) {
     res = http_client_data_received(hc, buf, r, 0);
     if (res < 0)
@@ -967,7 +966,7 @@ retry:
   }
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
-    if (hc->hc_rsize + r > limit)
+    if (hc->hc_rsize + r > hc->hc_io_size + 16*1024)
       return http_client_flush(hc, -EMSGSIZE);
     hc->hc_rsize += r;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
