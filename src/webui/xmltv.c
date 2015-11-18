@@ -40,7 +40,7 @@ static void
 http_xmltv_begin(htsbuf_queue_t *hq)
 {
   htsbuf_qprintf(hq, "\
-<?xml version=\"1.0\" ?>\n\
+<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n\
 <!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\
 <tv generator-info-name=\"TVHeadend-%s\" source-info-name=\"tvh-%s\">\n\
 ", tvheadend_version, config.server_name);
@@ -89,7 +89,7 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
   if (e == NULL || e->title == NULL) return;
   http_xmltv_time(start, ebc->start);
   http_xmltv_time(stop, ebc->stop);
-  htsbuf_qprintf(hq, "<programe start=\"%s\" stop=\"%s\" channel=\"%s\">\n",
+  htsbuf_qprintf(hq, "<programme start=\"%s\" stop=\"%s\" channel=\"%s\">\n",
                  start, stop, idnode_uuid_as_sstr(&ch->ch_id));
   RB_FOREACH(lse, e->title, link)
     htsbuf_qprintf(hq, "  <title lang=\"%s\">%s</title>\n", lse->lang, lse->str);
@@ -99,7 +99,7 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
   if (ebc->description)
     RB_FOREACH(lse, ebc->description, link)
       htsbuf_qprintf(hq, "  <desc lang=\"%s\">%s</desc>\n", lse->lang, lse->str);
-  htsbuf_qprintf(hq, "</programe>\n");
+  htsbuf_qprintf(hq, "</programme>\n");
 }
 
 /*
