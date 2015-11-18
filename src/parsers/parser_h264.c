@@ -126,6 +126,8 @@ typedef struct h264_private {
   h264_sps_t sps[MAX_SPS_COUNT];
   h264_pps_t pps[MAX_PPS_COUNT];
 
+  time_t start;
+
 } h264_private_t;
 
 
@@ -228,8 +230,10 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
   h264_private_t *p;
   h264_sps_t *sps;
 
-  if ((p = st->es_priv) == NULL)
+  if ((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
+    p->start = dispatch_clock;
+  }
 
   profile_idc = read_bits(bs, 8);
   skip_bits1(bs);   //constraint_set0_flag
@@ -320,10 +324,9 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
     crop_bottom = read_golomb_ue(bs) * 2;
   }
 
-  if (!read_bits1(bs)) /* vui present */
-    return -1;
-
-  decode_vui(sps, bs);
+  if (read_bits1(bs)) /* vui present */
+    if (decode_vui(sps, bs))
+      return -1;
 
   sps->max_frame_num_bits = max_frame_num_bits;
   sps->mbs_only_flag = mbs_only_flag;
@@ -343,8 +346,10 @@ h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
   h264_private_t *p;
   uint32_t pps_id, sps_id;
 
-  if((p = st->es_priv) == NULL)
+  if((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
+    p->start = dispatch_clock;
+  }
   
   pps_id = read_golomb_ue(bs);
   if(pps_id >= MAX_PPS_COUNT)
@@ -422,6 +427,10 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   d = 0;
   if (sps->time_scale)
     d = 180000 * (uint64_t)sps->units_in_tick / (uint64_t)sps->time_scale;
+  if (d == 0 && st->es_frame_duration == 0 && p->start + 4 < dispatch_clock) {
+    tvhwarn("parser", "H264 stream has not timing information, using 30fps");
+    d = 3000; /* 30fps */
+  }
 
   if (sps->cbpsize)
     st->es_vbv_size = sps->cbpsize;
