@@ -298,6 +298,7 @@ htsmsg_add_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
 		       HMF_NAME_ALLOCED);
 
   assert(sub->hm_data == NULL);
+  f->hmf_msg.hm_data = NULL;
   f->hmf_msg.hm_islist = sub->hm_islist;
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   free(sub);
@@ -321,6 +322,7 @@ htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP, 0);
 
   assert(sub->hm_data == NULL);
+  f->hmf_msg.hm_data = NULL;
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   f->hmf_msg.hm_islist = sub->hm_islist;
   free(sub);
@@ -711,6 +713,7 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
       free((void*)f->hmf_str);
       f->hmf_type          = m->hm_islist ? HMF_LIST : HMF_MAP;
       f->hmf_msg.hm_islist = m->hm_islist;
+      f->hmf_msg.hm_data   = NULL;
       TAILQ_MOVE(&f->hmf_msg.hm_fields, &m->hm_fields, hmf_link);
       free(m);
     }
