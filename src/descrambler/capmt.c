@@ -195,7 +195,6 @@ typedef struct capmt_service {
 
   /* list of used ca-systems with ids and last ecm */
   struct capmt_caid_ecm_list ct_caid_ecm;
-  int ct_constcw; /* fast flag */
 
   /* current sequence number */
   uint16_t ct_seq;
@@ -1046,8 +1045,6 @@ capmt_ecm_reset(th_descrambler_t *th)
 {
   capmt_service_t *ct = (capmt_service_t *)th;
 
-  if (ct->ct_constcw)
-    return 1; /* keys will not change */
   ct->td_keystate = DS_UNKNOWN;
   return 0;
 }
@@ -1836,7 +1833,6 @@ capmt_caid_change(th_descrambler_t *td)
       cce->cce_providerid = c->providerid;
       cce->cce_service = t;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
-      ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
       change = 1;
     }
   }
@@ -2126,7 +2122,6 @@ capmt_service_start(caclient_t *cac, service_t *s)
       cce->cce_providerid = c->providerid;
       cce->cce_service = t;
       LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
-      ct->ct_constcw |= c->caid == 0x2600 ? 1 : 0;
       change = 1;
     }
   }
