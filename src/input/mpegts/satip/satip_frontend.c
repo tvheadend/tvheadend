@@ -882,7 +882,8 @@ done:
 }
 
 static void
-satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd )
+satip_frontend_shutdown
+  ( satip_frontend_t *lfe, http_client_t *rtsp, tvhpoll_t *efd )
 {
   char b[32];
   tvhpoll_event_t ev;
@@ -912,6 +913,7 @@ satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd )
         break;
     }
   }
+  sbuf_free(&lfe->sf_sbuf);
 }
 
 static void
@@ -944,7 +946,7 @@ satip_frontend_close_rtsp
   ev.data.ptr = NULL;
   tvhpoll_rem(efd, &ev, 1);
 
-  satip_frontend_shutdown(*rtsp, efd);
+  satip_frontend_shutdown(lfe, *rtsp, efd);
 
   memset(&ev, 0, sizeof(ev));
   ev.events   = TVHPOLL_IN;
@@ -1602,7 +1604,7 @@ wrdata:
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {
-    satip_frontend_shutdown(rtsp, efd);
+    satip_frontend_shutdown(lfe, rtsp, efd);
     http_client_close(rtsp);
     rtsp = NULL;
   }
