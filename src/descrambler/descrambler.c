@@ -248,7 +248,7 @@ descrambler_service_start ( service_t *t )
     count = 0;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
       LIST_FOREACH(ca, &st->es_caids, link)
-        for (p = quick_ecm_table; *p; p++)
+        for (p = constcw_table; *p; p++)
           if (ca->caid == *p) {
             constcw = 1;
             break;
