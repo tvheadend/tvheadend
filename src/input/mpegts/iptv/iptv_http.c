@@ -22,17 +22,27 @@
 #include "http.h"
 #include "misc/m3u.h"
 
+typedef struct http_priv {
+  iptv_mux_t    *im;
+  http_client_t *hc;
+  int            m3u_header;
+} http_priv_t;
+
 /*
  * Connected
  */
 static int
 iptv_http_header ( http_client_t *hc )
 {
-  iptv_mux_t *im = hc->hc_aux;
+  http_priv_t *hp = hc->hc_aux;
+  iptv_mux_t *im;
   char *argv[3], *s;
   int n;
 
-  if (hc->hc_aux == NULL)
+  if (hp == NULL)
+    return 0;
+  im = hp->im;
+  if (im == NULL)
     return 0;
 
   /* multiple headers for redirections */
@@ -48,18 +58,18 @@ iptv_http_header ( http_client_t *hc )
          strcasecmp(s, "application/x-mpegurl") == 0 ||
          strcasecmp(s, "application/apple.vnd.mpegurl") == 0 ||
          strcasecmp(s, "application/vnd.apple.mpegurl") == 0)) {
-      if (im->im_m3u_header > 10) {
-        im->im_m3u_header = 0;
+      if (hp->m3u_header > 10) {
+        hp->m3u_header = 0;
         return 0;
       }
-      im->im_m3u_header++;
+      hp->m3u_header++;
       return 0;
     }
   }
 
-  im->im_m3u_header = 0;
+  hp->m3u_header = 0;
   pthread_mutex_lock(&global_lock);
-  iptv_input_mux_started(hc->hc_aux);
+  iptv_input_mux_started(hp->im);
   pthread_mutex_unlock(&global_lock);
   return 0;
 }
@@ -71,12 +81,15 @@ static int
 iptv_http_data
   ( http_client_t *hc, void *buf, size_t len )
 {
-  iptv_mux_t *im = hc->hc_aux;
+  http_priv_t *hp = hc->hc_aux;
+  iptv_mux_t *im;
 
-  if (im == NULL || hc->hc_code != HTTP_STATUS_OK)
+  if (hp == NULL || hp->im == NULL || hc->hc_code != HTTP_STATUS_OK)
     return 0;
 
-  if (im->im_m3u_header) {
+  im = hp->im;
+
+  if (hp->m3u_header) {
     sbuf_append(&im->mm_iptv_buffer, buf, len);
     return 0;
   }
@@ -102,7 +115,8 @@ static int
 iptv_http_complete
   ( http_client_t *hc )
 {
-  iptv_mux_t *im = hc->hc_aux;
+  http_priv_t *hp = hc->hc_aux;
+  iptv_mux_t *im = hp->im;
   const char *url, *host_url;
   char *p;
   htsmsg_t *m, *items, *item;
@@ -111,8 +125,8 @@ iptv_http_complete
   size_t l;
   int r;
 
-  if (im->im_m3u_header) {
-    im->im_m3u_header = 0;
+  if (hp->m3u_header) {
+    hp->m3u_header = 0;
 
     sbuf_append(&im->mm_iptv_buffer, "", 1);
 
@@ -176,10 +190,10 @@ static void
 iptv_http_create_header
   ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
 {
-  iptv_mux_t *im = hc->hc_aux;
+  http_priv_t *hp = hc->hc_aux;
 
   http_client_basic_args(hc, h, url, keepalive);
-  http_client_add_args(hc, h, im->mm_iptv_hdr);
+  http_client_add_args(hc, h, hp->im->mm_iptv_hdr);
 }
 
 /*
@@ -189,12 +203,17 @@ static int
 iptv_http_start
   ( iptv_mux_t *im, const char *raw, const url_t *u )
 {
+  http_priv_t *hp;
   http_client_t *hc;
   int r;
 
-  if (!(hc = http_client_connect(im, HTTP_VERSION_1_1, u->scheme,
-                                 u->host, u->port, NULL)))
+  hp = calloc(1, sizeof(*hp));
+  hp->im = im;
+  if (!(hc = http_client_connect(hp, HTTP_VERSION_1_1, u->scheme,
+                                 u->host, u->port, NULL))) {
+    free(hp);
     return SM_CODE_TUNING_FAILED;
+  }
   hc->hc_hdr_create      = iptv_http_create_header;
   hc->hc_hdr_received    = iptv_http_header;
   hc->hc_data_received   = iptv_http_data;
@@ -205,9 +224,11 @@ iptv_http_start
   r = http_client_simple(hc, u);
   if (r < 0) {
     http_client_close(hc);
+    free(hp);
     return SM_CODE_TUNING_FAILED;
   }
-  im->im_data = hc;
+  hp->hc = hc;
+  im->im_data = hp;
   sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
 
   return 0;
@@ -220,12 +241,14 @@ static void
 iptv_http_stop
   ( iptv_mux_t *im )
 {
-  http_client_t *hc = im->im_data;
+  http_priv_t *hp = im->im_data;
 
-  hc->hc_aux = NULL;
+  hp->hc->hc_aux = NULL;
   pthread_mutex_unlock(&iptv_lock);
-  http_client_close(hc);
+  http_client_close(hp->hc);
   pthread_mutex_lock(&iptv_lock);
+  im->im_data = NULL;
+  free(hp);
 }
 
 
@@ -236,10 +259,10 @@ static void
 iptv_http_pause
   ( iptv_mux_t *im, int pause )
 {
-  http_client_t *hc = im->im_data;
+  http_priv_t *hp = im->im_data;
 
   assert(pause == 0);
-  http_client_unpause(hc);
+  http_client_unpause(hp->hc);
 }
 
 /*

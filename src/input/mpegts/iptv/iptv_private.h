@@ -150,7 +150,6 @@ struct iptv_mux
   void                 *im_data;
 
   int                   im_delete_flag;
-  int                   im_m3u_header;
 };
 
 iptv_mux_t* iptv_mux_create0
