@@ -91,7 +91,7 @@ static const char *get_url
   if (rel[0] == '/') {
     snprintf(buf, buflen, "%s%s", url, rel + 1);
   } else {
-    url2 = strdup(url);
+    url2 = strdupa(url);
     p = strrchr(url2, '/');
     if (p == NULL)
       return rel;
