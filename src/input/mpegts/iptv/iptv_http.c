@@ -210,7 +210,7 @@ iptv_http_data
 
   pthread_mutex_lock(&iptv_lock);
 
-  if (dispatch_clock != hp->hls_last_si) {
+  if (dispatch_clock != hp->hls_last_si && hp->hls_si) {
     /* do rounding to next MPEG-TS packet */
     rem = 188 - (hp->off % 188);
     if (rem < 188) {
