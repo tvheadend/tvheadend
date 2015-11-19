@@ -71,6 +71,22 @@ static char *until_eol(char *d)
 /*
  *
  */
+static int is_full_url(const char *url)
+{
+  return
+    strncmp(url, "file://", 7) == 0 ||
+    strncmp(url, "pipe://", 7) == 0 ||
+    strncmp(url, "http://", 7) == 0 ||
+    strncmp(url, "https://", 8) == 0 ||
+    strncmp(url, "rtsp://", 7) == 0 ||
+    strncmp(url, "rtsps://", 8) == 0 ||
+    strncmp(url, "udp://", 6) == 0 ||
+    strncmp(url, "rtp://", 6);
+}
+
+/*
+ *
+ */
 static const char *get_url
   (char *buf, size_t buflen, const char *rel, const char *url)
 {
@@ -78,14 +94,7 @@ static const char *get_url
 
   if (url == NULL)
     return rel;
-  if (strncmp(url, "file://", 7) &&
-      strncmp(url, "pipe://", 7) &&
-      strncmp(url, "http://", 7) &&
-      strncmp(url, "https://", 8) &&
-      strncmp(url, "rtsp://", 7) &&
-      strncmp(url, "rtsps://", 8) &&
-      strncmp(url, "udp://", 6) &&
-      strncmp(url, "rtp://", 6))
+  if (!is_full_url(url) || is_full_url(rel))
     return rel;
 
   if (rel[0] == '/') {
