@@ -471,6 +471,8 @@ mk_write_to_fd(mk_muxer_t *mk, htsbuf_queue_t *hq)
     ssize_t r;
     int iovcnt = i < dvr_iov_max ? i : dvr_iov_max;
     if((r = writev(mk->fd, iov, iovcnt)) == -1) {
+      if (ERRNO_AGAIN(errno))
+        continue;
       mk->error = errno;
       return -1;
     }
