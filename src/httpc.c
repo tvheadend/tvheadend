@@ -1247,6 +1247,8 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
     return r;
 
   hc->hc_reconnected = 1;
+  free(hc->hc_url);
+  hc->hc_url = u->raw ? strdup(u->raw) : NULL;
   return HTTP_CON_RECEIVING;
 }
 
@@ -1278,6 +1280,8 @@ http_client_redirected ( http_client_t *hc )
     free(location);
     return -EIO;
   }
+  free(hc->hc_url);
+  hc->hc_url = u.raw ? strdup(u.raw) : NULL;
   free(location);
 
   r = http_client_simple_reconnect(hc, &u, hc->hc_redirv);
@@ -1292,6 +1296,8 @@ http_client_simple( http_client_t *hc, const url_t *url )
   http_arg_list_t h;
 
   hc->hc_hdr_create(hc, &h, url, 0);
+  free(hc->hc_url);
+  hc->hc_url = url->raw ? strdup(url->raw) : NULL;
   return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
                           &h, NULL, 0);
 }
@@ -1535,6 +1541,7 @@ http_client_close ( http_client_t *hc )
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);
   rtsp_clear_session(hc);
+  free(hc->hc_url);
   free(hc->hc_location);
   free(hc->hc_rbuf);
   free(hc->hc_data);

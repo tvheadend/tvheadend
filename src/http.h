@@ -284,6 +284,8 @@ struct http_client {
 
   struct http_arg_list hc_args; /* header */
 
+  char        *hc_url;
+
   void        *hc_aux;
   size_t       hc_data_limit;
   size_t       hc_io_size;
