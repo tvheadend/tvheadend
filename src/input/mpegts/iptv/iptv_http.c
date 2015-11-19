@@ -258,6 +258,8 @@ iptv_http_complete
   url_t u;
   int r;
 
+  if (hp == NULL || hp->im == NULL)
+    return 0;
   if (hp->m3u_header) {
     hp->m3u_header = 0;
 
@@ -352,17 +354,18 @@ iptv_http_start
   hc->hc_data_complete   = iptv_http_complete;
   hc->hc_handle_location = 1;        /* allow redirects */
   hc->hc_io_size         = 128*1024; /* increase buffering */
-  http_client_register(hc);          /* register to the HTTP thread */
-  r = http_client_simple(hc, u);
-  if (r < 0) {
-    http_client_close(hc);
-    free(hp);
-    return SM_CODE_TUNING_FAILED;
-  }
   hp->hc = hc;
   im->im_data = hp;
   sbuf_init(&hp->m3u_sbuf);
   sbuf_init_fixed(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+  http_client_register(hc);          /* register to the HTTP thread */
+  r = http_client_simple(hc, u);
+  if (r < 0) {
+    http_client_close(hc);
+    im->im_data = NULL;
+    free(hp);
+    return SM_CODE_TUNING_FAILED;
+  }
 
   return 0;
 }
