@@ -71,9 +71,11 @@ static char *until_eol(char *d)
 /*
  *
  */
-static const char *relative_url
+static const char *get_url
   (char *buf, size_t buflen, const char *rel, const char *url)
 {
+  char *url2, *p;
+
   if (url == NULL)
     return rel;
   if (strncmp(url, "file://", 7) &&
@@ -86,7 +88,16 @@ static const char *relative_url
       strncmp(url, "rtp://", 6))
     return rel;
 
-  snprintf(buf, buflen, "%s%s", url, rel);
+  if (rel[0] == '/') {
+    snprintf(buf, buflen, "%s%s", url, rel + 1);
+  } else {
+    url2 = strdup(url);
+    p = strrchr(url2, '/');
+    if (p == NULL)
+      return rel;
+    *(p + 1) = '\0';
+    snprintf(buf, buflen, "%s%s", url2, rel);
+  }
   return buf;
 }
 
@@ -106,8 +117,7 @@ htsmsg_t *parse_m3u
 
   while (*data && *data <= ' ') data++;
   p = data;
-  while (*data && *data != '\n') data++;
-  if (*data) { *data = '\0'; data++; }
+  data = until_eol(data);
   if (strcmp(p, "#EXTM3U")) {
     htsmsg_add_msg(m, "items", htsmsg_create_list());
     return m;
@@ -235,8 +245,7 @@ multi:
           htsmsg_add_msg(item, "m3u-http-headers", t);
       }
 
-      htsmsg_add_str(item, "m3u-url",
-                     p[0] == '/' ? relative_url(buf, sizeof(buf), p, url) : p);
+      htsmsg_add_str(item, "m3u-url", get_url(buf, sizeof(buf), p, url));
     } else if (item) {
       htsmsg_destroy(item);
       free(item);
