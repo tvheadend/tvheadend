@@ -81,7 +81,7 @@ static int is_full_url(const char *url)
     strncmp(url, "rtsp://", 7) == 0 ||
     strncmp(url, "rtsps://", 8) == 0 ||
     strncmp(url, "udp://", 6) == 0 ||
-    strncmp(url, "rtp://", 6);
+    strncmp(url, "rtp://", 6) == 0;
 }
 
 /*
