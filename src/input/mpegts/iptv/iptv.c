@@ -506,14 +506,30 @@ iptv_input_pause_handler ( iptv_mux_t *im, int pause )
     tvhpoll_add(iptv_poll, &ev, 1);
 }
 
+void
+iptv_input_recv_flush ( iptv_mux_t *im )
+{
+  mpegts_mux_instance_t *mmi = im->mm_active;
+
+  if (mmi == NULL)
+    return;
+  mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
+                            &im->mm_iptv_buffer, MPEGTS_DATA_CC_RESTART,
+                            NULL);
+}
+
 int
 iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
   static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
   mpegts_mux_instance_t *mmi;
-  int64_t pcr_first = PTS_UNSET, pcr_last = PTS_UNSET, s64;
+  mpegts_pcr_t pcr;
+  int64_t s64;
 
+  pcr.pcr_first = PTS_UNSET;
+  pcr.pcr_last  = PTS_UNSET;
+  pcr.pcr_pid   = im->im_pcr_pid;
   in->in_bps += len * 8;
   time(&t2);
   if (t2 != t1) {
@@ -537,23 +553,23 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
       return 1;
     }
     mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
-                              &im->mm_iptv_buffer,
-                              &pcr_first, &pcr_last, &im->im_pcr_pid);
-    if (pcr_first != PTS_UNSET && pcr_last != PTS_UNSET) {
+                              &im->mm_iptv_buffer, 0, &pcr);
+    if (pcr.pcr_first != PTS_UNSET && pcr.pcr_last != PTS_UNSET) {
+      im->im_pcr_pid = pcr.pcr_pid;
       if (im->im_pcr == PTS_UNSET) {
-        s64 = pts_diff(pcr_first, pcr_last);
+        s64 = pts_diff(pcr.pcr_first, pcr.pcr_last);
         if (s64 != PTS_UNSET) {
-          im->im_pcr = pcr_first;
+          im->im_pcr = pcr.pcr_first;
           im->im_pcr_start = getmonoclock();
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
           tvhtrace("iptv-pcr", "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
-                   pcr_first, pcr_last, im->im_pcr_start, im->im_pcr_end);
+                   pcr.pcr_first, pcr.pcr_last, im->im_pcr_start, im->im_pcr_end);
         }
       } else {
-        s64 = pts_diff(im->im_pcr, pcr_last);
+        s64 = pts_diff(im->im_pcr, pcr.pcr_last);
         if (s64 != PTS_UNSET) {
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace("iptv-pcr", "pcr: last %"PRId64", time end %"PRId64, pcr_last, im->im_pcr_end);
+          tvhtrace("iptv-pcr", "pcr: last %"PRId64", time end %"PRId64, pcr.pcr_last, im->im_pcr_end);
         }
       }
       if (iptv_input_pause_check(im)) {

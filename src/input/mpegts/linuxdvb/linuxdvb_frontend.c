@@ -1136,7 +1136,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     }
     
     /* Process */
-    mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, &sb, NULL, NULL, NULL);
+    mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, &sb, 0, NULL);
   }
 
   sbuf_free(&sb);

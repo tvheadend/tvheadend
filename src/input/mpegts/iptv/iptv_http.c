@@ -166,11 +166,13 @@ iptv_http_header ( http_client_t *hc )
 
   hp->m3u_header = 0;
   hp->off = 0;
+  pthread_mutex_lock(&global_lock);
   if (!hp->started) {
-    pthread_mutex_lock(&global_lock);
     iptv_input_mux_started(hp->im);
-    pthread_mutex_unlock(&global_lock);
+  } else {
+    iptv_input_recv_flush(hp->im);
   }
+  pthread_mutex_unlock(&global_lock);
   hp->started = 1;
   return 0;
 }

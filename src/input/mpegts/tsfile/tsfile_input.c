@@ -44,7 +44,8 @@ tsfile_input_thread ( void *aux )
   tvhpoll_event_t ev;
   struct stat st;
   sbuf_t buf;
-  int64_t pcr, pcr2, pcr_last = PTS_UNSET;
+  mpegts_pcr_t pcr;
+  int64_t pcr_last = PTS_UNSET;
 #if PLATFORM_LINUX
   int64_t pcr_last_realtime = 0;
 #endif
@@ -130,17 +131,20 @@ tsfile_input_thread ( void *aux )
 
     /* Process */
     if (c > 0) {
-      pcr = PTS_UNSET;
-      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf,
-                                &pcr, &pcr2, &tmi->mmi_tsfile_pcr_pid);
+      pcr.pcr_first = PTS_UNSET;
+      pcr.pcr_last  = PTS_UNSET;
+      pcr.pcr_pid   = tmi->mmi_tsfile_pcr_pid;
+      mpegts_input_recv_packets((mpegts_input_t*)mi, mmi, &buf, 0, &pcr);
+      if (pcr.pcr_pid)
+        tmi->mmi_tsfile_pcr_pid = pcr.pcr_pid;
 
       /* Delay */
-      if (pcr != PTS_UNSET) {
+      if (pcr.pcr_first != PTS_UNSET) {
         if (pcr_last != PTS_UNSET) {
           struct timespec slp;
           int64_t delta;
 
-          delta = pcr - pcr_last;
+          delta = pcr.pcr_first - pcr_last;
 
           if (delta < 0)
             delta = 0;
@@ -159,7 +163,7 @@ tsfile_input_thread ( void *aux )
           nanosleep(&slp, NULL);
 #endif
         }
-        pcr_last          = pcr;
+        pcr_last          = pcr.pcr_first;
 #if PLATFORM_LINUX
         pcr_last_realtime = getmonoclock();
 #endif

@@ -977,7 +977,7 @@ ts_sync_count ( const uint8_t *tsb, int len )
 void
 mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
-    int64_t *pcr_first, int64_t *pcr_last, uint16_t *pcr_pid )
+    int flags, mpegts_pcr_t *pcr )
 {
   int len2 = 0, off = 0;
   mpegts_packet_t *mp;
@@ -986,7 +986,7 @@ mpegts_input_recv_packets
 #define MIN_TS_PKT 100
 #define MIN_TS_SYN (5*188)
 
-  if (len < (MIN_TS_PKT * 188)) {
+  if (len < (MIN_TS_PKT * 188) && (flags & MPEGTS_DATA_CC_RESTART) == 0) {
     /* For slow streams, check also against the clock */
     if (dispatch_clock == mi->mi_last_dispatch)
       return;
@@ -1008,24 +1008,24 @@ mpegts_input_recv_packets
   //       require per mmi buffers, where this is generally not required)
 
   /* Extract PCR on demand */
-  if (pcr_first && pcr_last && pcr_pid) {
+  if (pcr) {
     uint8_t *tmp, *end;
     uint16_t pid;
     for (tmp = tsb, end = tsb + len2; tmp < end; tmp += 188) {
       pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
-      if (*pcr_pid == MPEGTS_PID_NONE || *pcr_pid == pid) {
-        if (get_pcr(tmp, pcr_first)) {
-          *pcr_pid = pid;
+      if (pcr->pcr_pid == MPEGTS_PID_NONE || pcr->pcr_pid == pid) {
+        if (get_pcr(tmp, &pcr->pcr_first)) {
+          pcr->pcr_pid = pid;
           break;
         }
       }
     }
-    if (*pcr_pid != MPEGTS_PID_NONE) {
+    if (pcr->pcr_pid != MPEGTS_PID_NONE) {
       for (tmp = tsb + len2 - 188; tmp >= tsb; tmp -= 188) {
         pid = ((tmp[1] & 0x1f) << 8) | tmp[2];
-        if (*pcr_pid == pid) {
-          if (get_pcr(tmp, pcr_last)) {
-            *pcr_pid = pid;
+        if (pcr->pcr_pid == pid) {
+          if (get_pcr(tmp, &pcr->pcr_last)) {
+            pcr->pcr_pid = pid;
             break;
           }
         }
@@ -1034,10 +1034,11 @@ mpegts_input_recv_packets
   }
 
   /* Pass */
-  if (len2 >= MIN_TS_SYN) {
+  if (len2 >= MIN_TS_SYN || (flags & MPEGTS_DATA_CC_RESTART)) {
     mp = malloc(sizeof(mpegts_packet_t) + len2);
-    mp->mp_mux  = mmi->mmi_mux;
-    mp->mp_len  = len2;
+    mp->mp_mux        = mmi->mmi_mux;
+    mp->mp_len        = len2;
+    mp->mp_cc_restart = (flags & MPEGTS_DATA_CC_RESTART) ? 1 : 0;
     memcpy(mp->mp_data, tsb, len2);
 
     len -= len2;
@@ -1054,7 +1055,7 @@ mpegts_input_recv_packets
   }
 
   /* Adjust buffer */
-  if (len)
+  if (len && (flags & MPEGTS_DATA_CC_RESTART) == 0)
     sbuf_cut(sb, off); // cut off the bottom
   else
     sb->sb_ptr = 0;    // clear
@@ -1183,6 +1184,7 @@ mpegts_input_process
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
   service_t *s;
+  elementary_stream_t *st;
   int table_wakeup = 0;
   mpegts_mux_t *mm = mpkt->mp_mux;
   mpegts_mux_instance_t *mmi;
@@ -1351,6 +1353,12 @@ done:
       tvh_write(mm->mm_tsdebug_fd, mpkt->mp_data + pos, used - pos);
   }
 #endif
+
+  if (mpkt->mp_cc_restart) {
+    LIST_FOREACH(s, &mm->mm_transports, s_active_link)
+      TAILQ_FOREACH(st, &s->s_components, es_link)
+        st->es_cc = -1;
+  }
 
   /* Wake table */
   if (table_wakeup)

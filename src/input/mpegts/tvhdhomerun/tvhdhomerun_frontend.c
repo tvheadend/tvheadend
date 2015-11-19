@@ -196,7 +196,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
     //tvhdebug("tvhdhomerun", "got r=%d (thats %d)", r, (r == 7*188));
 
-    mpegts_input_recv_packets((mpegts_input_t*) hfe, mmi, &sb, NULL, NULL, NULL);
+    mpegts_input_recv_packets((mpegts_input_t*) hfe, mmi, &sb, 0, NULL);
   }
 
   tvhdebug("tvhdhomerun", "setting target to none");
