@@ -407,14 +407,39 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
   snprintf(buf, len, "IPTV");
 }
 
-static void
+static inline int
+iptv_input_pause_check ( iptv_mux_t *im )
+{
+  int64_t s64;
+
+  if (im->im_pcr == PTS_UNSET)
+    return 0;
+  s64 = getmonoclock() - im->im_pcr_start;
+  im->im_pcr_start += s64;
+  im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
+  im->im_pcr &= PTS_MASK;
+  tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64, im->im_pcr, im->im_pcr_start);
+
+  /* queued more than 3 seconds? trigger the pause */
+  return im->im_pcr_end - im->im_pcr_start >= 3000000LL;
+}
+
+void
 iptv_input_unpause ( void *aux )
 {
   iptv_mux_t *im = aux;
+  int pause;
   pthread_mutex_lock(&iptv_lock);
-  tvhtrace("iptv-pcr", "unpause timer callback");
-  im->im_handler->pause(im, 0);
+  if (iptv_input_pause_check(im)) {
+    pause = 1;
+  } else {
+    tvhtrace("iptv-pcr", "unpause timer callback");
+    im->im_handler->pause(im, 0);
+    pause = 0;
+  }
   pthread_mutex_unlock(&iptv_lock);
+  if (pause)
+    gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
 }
 
 static void *
@@ -481,13 +506,6 @@ iptv_input_pause_handler ( iptv_mux_t *im, int pause )
     tvhpoll_add(iptv_poll, &ev, 1);
 }
 
-static inline int
-iptv_input_pause_check ( iptv_mux_t *im )
-{
-  /* queued more than 3 seconds? trigger the pause */
-  return im->im_pcr_end - im->im_pcr_start >= 3000000LL;
-}
-
 int
 iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
@@ -514,13 +532,6 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
   /* Pass on, but with timing */
   mmi = im->mm_active;
   if (mmi) {
-    if (im->im_pcr != PTS_UNSET) {
-      s64 = getmonoclock() - im->im_pcr_start;
-      im->im_pcr_start += s64;
-      im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
-      im->im_pcr &= PTS_MASK;
-      tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64, im->im_pcr, im->im_pcr_start);
-    }
     if (iptv_input_pause_check(im)) {
       tvhtrace("iptv-pcr", "pcr: paused");
       return 1;

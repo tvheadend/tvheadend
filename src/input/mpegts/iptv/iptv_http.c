@@ -26,7 +26,73 @@ typedef struct http_priv {
   iptv_mux_t    *im;
   http_client_t *hc;
   int            m3u_header;
+  uint64_t       off;
+  char          *host_url;
+  char          *hls_url;
+  int            hls_url2;
+  htsmsg_t      *hls_m3u;
+  uint8_t       *hls_si;
+  time_t         hls_last_si;
 } http_priv_t;
+
+/*
+ *
+ */
+static char *
+iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
+{
+  htsmsg_t *items, *item, *inf, *sel = NULL;
+  htsmsg_field_t *f;
+  int64_t bandwidth;
+  int width, height, sel_width = 0, sel_height = 0;
+  const char *s;
+
+  items = htsmsg_get_list(m, "items");
+  HTSMSG_FOREACH(f, items) {
+    if ((item = htsmsg_field_get_map(f)) == NULL) continue;
+    inf = htsmsg_get_map(item, "stream-inf");
+    if (inf) {
+      bandwidth = htsmsg_get_s64_or_default(inf, "BANDWIDTH", 0);
+      s = htsmsg_get_str(inf, "RESOLUTION");
+      width = height = 0;
+      if (s)
+        sscanf(s, "%dx%d", &width, &height);
+      if (htsmsg_get_str(item, "m3u-url") &&
+          bandwidth > 200000 &&
+          sel_width < width &&
+          sel_height < height) {
+        sel = item;
+        sel_width = width;
+        sel_height = height;
+      }
+    } else {
+      s = htsmsg_get_str(item, "m3u-url");
+      if (s && s[0]) {
+        s = strdup(s);
+        htsmsg_field_destroy(items, f);
+        if (hp->hls_url)
+          hp->hls_url2 = 1;
+        return (char *)s;
+      }
+    }
+  }
+  if (sel && hp->hls_url == NULL) {
+    inf = htsmsg_get_map(sel, "stream-inf");
+    bandwidth = htsmsg_get_s64_or_default(inf, "BANDWIDTH", 0);
+    tvhdebug("iptv", "HLS - selected stream %s, %"PRId64"kb/s, %s\n",
+             htsmsg_get_str(inf, "RESOLUTION"),
+             bandwidth / 1024,
+             htsmsg_get_str(inf, "CODECS"));
+    s = htsmsg_get_str(sel, "m3u-url");
+    if (s && s[0]) {
+      free(hp->hls_url);
+      hp->hls_url = strdup(s);
+      return strdup(s);
+    }
+  }
+  return NULL;
+}
+
 
 /*
  * Connected
@@ -68,6 +134,7 @@ iptv_http_header ( http_client_t *hc )
   }
 
   hp->m3u_header = 0;
+  hp->off = 0;
   pthread_mutex_lock(&global_lock);
   iptv_input_mux_started(hp->im);
   pthread_mutex_unlock(&global_lock);
@@ -83,6 +150,7 @@ iptv_http_data
 {
   http_priv_t *hp = hc->hc_aux;
   iptv_mux_t *im;
+  int pause = 0, rem;
 
   if (hp == NULL || hp->im == NULL || hc->hc_code != HTTP_STATUS_OK)
     return 0;
@@ -94,17 +162,46 @@ iptv_http_data
     return 0;
   }
 
+  if (hp->hls_url && hp->off < 2*188 && len >= 2*188) {
+    free(hp->hls_si);
+    hp->hls_si = malloc(2*188);
+    memcpy(hp->hls_si, buf, 2*188);
+  }
+
   pthread_mutex_lock(&iptv_lock);
 
+  if (dispatch_clock != hp->hls_last_si) {
+    /* do rounding to next MPEG-TS packet */
+    rem = 188 - (hp->off % 188);
+    if (rem < 188) {
+      if (len < rem)
+        goto next;
+      sbuf_append(&im->mm_iptv_buffer, buf, rem);
+      buf += rem;
+      len -= rem;
+      hp->off += rem;
+    }
+    sbuf_append(&im->mm_iptv_buffer, hp->hls_si, 2*188);
+    hp->hls_last_si = dispatch_clock;
+  }
+
+next:
+  hp->off += len;
   sbuf_append(&im->mm_iptv_buffer, buf, len);
   tsdebug_write((mpegts_mux_t *)im, buf, len);
 
   if (len > 0)
     if (iptv_input_recv_packets(im, len) == 1)
-      hc->hc_pause = 1;
+      pause = hc->hc_pause = 1;
 
   pthread_mutex_unlock(&iptv_lock);
 
+  if (pause) {
+    pthread_mutex_lock(&global_lock);
+    if (im->mm_active)
+      gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+    pthread_mutex_unlock(&global_lock);
+  }
   return 0;
 }
 
@@ -117,10 +214,10 @@ iptv_http_complete
 {
   http_priv_t *hp = hc->hc_aux;
   iptv_mux_t *im = hp->im;
-  const char *url, *host_url;
+  const char *host_url;
+  char *url;
+  htsmsg_t *m, *m2;
   char *p;
-  htsmsg_t *m, *items, *item;
-  htsmsg_field_t *f;
   url_t u;
   size_t l;
   int r;
@@ -152,19 +249,23 @@ iptv_http_complete
       host_url = NULL;
     }
 
-    m = parse_m3u((char *)im->mm_iptv_buffer.sb_data, NULL, host_url);
-    items = htsmsg_get_list(m, "items");
-    url = NULL;
-    HTSMSG_FOREACH(f, items) {
-      if ((item = htsmsg_field_get_map(f)) == NULL) continue;
-      url = htsmsg_get_str(item, "m3u-url");
-      if (url && url[0]) break;
+    if (host_url) {
+      free(hp->host_url);
+      hp->host_url = strdup(host_url);
+    }
+    m = parse_m3u((char *)im->mm_iptv_buffer.sb_data, NULL, hp->host_url);
+url:
+    url = iptv_http_get_url(hp, m);
+    if (hp->hls_url2) {
+      hp->hls_m3u = m;
+      m = NULL;
     }
     tvhtrace("iptv", "m3u url: '%s'", url);
     if (url == NULL) {
       tvherror("iptv", "m3u contents parsing failed");
       goto fin;
     }
+new_m3u:
     urlinit(&u);
     if (!urlparse(url, &u)) {
       hc->hc_keepalive = 0;
@@ -174,11 +275,27 @@ iptv_http_complete
     } else {
       tvherror("iptv", "m3u url invalid '%s'", url);
     }
+    free(url);
     urlreset(&u);
 fin:
     htsmsg_destroy(m);
 end:
     sbuf_reset(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+  } else {
+    if (hp->hls_url && hp->hls_m3u) {
+      m = hp->hls_m3u;
+      hp->hls_m3u = NULL;
+      m2 = htsmsg_get_list(m, "items");
+      if (m2 && htsmsg_is_empty(m2)) {
+        hp->hls_url2 = 0;
+        if (!htsmsg_get_bool_or_default(m, "x-endlist", 0)) {
+          url = strdup(hp->hls_url);
+          goto new_m3u;
+        }
+      } else {
+        goto url;
+      }
+    }
   }
   return 0;
 }
@@ -248,6 +365,10 @@ iptv_http_stop
   http_client_close(hp->hc);
   pthread_mutex_lock(&iptv_lock);
   im->im_data = NULL;
+  htsmsg_destroy(hp->hls_m3u);
+  free(hp->hls_url);
+  free(hp->hls_si);
+  free(hp->host_url);
   free(hp);
 }
 

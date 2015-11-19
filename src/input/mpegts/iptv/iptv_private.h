@@ -190,6 +190,8 @@ void iptv_file_init    ( void );
 ssize_t iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
                         void (*pkt_cb)(iptv_mux_t *im, uint8_t *buf, int len) );
 
+void iptv_input_unpause ( void *aux );
+
 #endif /* __IPTV_PRIVATE_H__ */
 
 /******************************************************************************
