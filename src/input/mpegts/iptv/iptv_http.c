@@ -83,8 +83,14 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
   /*
    * sequence sync
    */
-  if (hp->hls_url && !hp->hls_url2) {
+  if (!hp->hls_url2) {
     seq = htsmsg_get_s64_or_default(m, "media-sequence", -1);
+    if (seq >= 0) {
+      hp->hls_url2 = 1;
+      hp->hls_m3u = m;
+      if (hp->hls_url == NULL && hp->hc->hc_url != NULL)
+        hp->hls_url = strdup(hp->hc->hc_url);
+    }
     if (seq >= 0 && hp->hls_seq) {
       for (; seq < hp->hls_seq; seq++) {
         if (items) {
@@ -94,9 +100,8 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
         }
       }
     } else {
-      if (seq >= 0) {
+      if (seq >= 0)
         hp->hls_seq = seq;
-      }
     }
     htsmsg_delete_field(m, "media-sequence");
   }
@@ -128,6 +133,7 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
         htsmsg_field_destroy(items, f);
         if (hp->hls_url) {
           hp->hls_url2 = 1;
+          hp->hls_m3u = m;
           hp->hls_seq++;
         }
         return (char *)s;
@@ -304,10 +310,8 @@ iptv_http_complete
     sbuf_free(&hp->m3u_sbuf);
 url:
     url = iptv_http_get_url(hp, m);
-    if (hp->hls_url2) {
-      hp->hls_m3u = m;
+    if (hp->hls_m3u == m)
       m = NULL;
-    }
     tvhtrace("iptv", "m3u url: '%s'", url);
     if (url == NULL) {
       tvherror("iptv", "m3u contents parsing failed");
