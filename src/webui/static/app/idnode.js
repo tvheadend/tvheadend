@@ -941,6 +941,15 @@ tvheadend.idnode_editor = function(item, conf)
         });
         buttons.push(saveBtn);
 
+        if (conf.cancel) {
+            var cancelBtn = new Ext.Button({
+                text: _('Cancel'),
+                iconCls: 'cancel',
+                handler: conf.cancel
+            });
+            buttons.push(cancelBtn);
+        }
+
         if (conf.help) {
             var helpBtn = new Ext.Button({
                 text: _('Help'),
@@ -1008,12 +1017,13 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             });
         }
     });
-    var undoBtn = new Ext.Button({
+    var cancelBtn = new Ext.Button({
         tooltip: _('Cancel operation'),
         text: _('Cancel'),
         iconCls: 'cancelButton',
         handler: function() {
             win.close();
+            win = null;
         }
     });
 
@@ -1029,16 +1039,17 @@ tvheadend.idnode_create = function(conf, onlyDefault)
         defaultType: 'textfield',
         buttonAlign: 'left',
         items: [],
-        buttons: [undoBtn, saveBtn]
+        buttons: [cancelBtn, saveBtn]
     });
 
     /* Create window */
-    win = new Ext.Window({
+    win = new Ext.ux.Window({
         title: String.format(_('Add {0}'), conf.titleS),
         iconCls: 'add',
         layout: 'fit',
         autoWidth: true,
         autoHeight: true,
+        autoScroll: true,
         plain: true,
         items: panel
     });
@@ -1463,7 +1474,13 @@ tvheadend.idnode_grid = function(panel, conf)
                                 success: function(d) {
                                     d = json_decode(d);
                                     var w = null;
-                                    var c = {win: w};
+                                    var c = {
+                                        win: w,
+                                        cancel: function() {
+                                            w.close();
+                                            w = null;
+                                        }
+                                    };
                                     if (uuids.length > 1) {
                                         var title = String.format(_('Edit {0} ({1} entries)'),
                                                                   conf.titleS, uuids.length);
@@ -1473,12 +1490,13 @@ tvheadend.idnode_grid = function(panel, conf)
                                     }
                                     var p = tvheadend.idnode_editor(d[0], c);
                                     var width = p.fixedWidth;
-                                    w = new Ext.Window({
+                                    w = new Ext.ux.Window({
                                         title: title,
                                         iconCls: 'edit',
                                         layout: 'fit',
                                         autoWidth: width ? false : true,
                                         autoHeight: true,
+                                        autoScroll: true,
                                         plain: true,
                                         items: p
                                     });
