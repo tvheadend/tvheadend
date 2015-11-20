@@ -489,6 +489,8 @@ iptv_http_create_header
 {
   http_priv_t *hp = hc->hc_aux;
 
+  if (hp == NULL || hp->im == NULL)
+    return;
   http_client_basic_args(hc, h, url, keepalive);
   http_client_add_args(hc, h, hp->im->mm_iptv_hdr);
 }
