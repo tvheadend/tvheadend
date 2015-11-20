@@ -41,6 +41,8 @@ static char *get_m3u_str(char *data, char **res, int *last)
     *last = *data;
     *data = '\0';
     data++;
+    while (*last && *data == ',')
+      data++;
   }
   *res = data;
   return p;
@@ -121,7 +123,7 @@ htsmsg_t *parse_m3u
   const char *multi_name;
   int delim;
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *item = NULL, *l = NULL, *t;
+  htsmsg_t *item = NULL, *l = NULL, *t, *key = NULL;
   char buf[512];
 
   while (*data && *data <= ' ') data++;
@@ -209,14 +211,23 @@ multi:
           if (*data != ',') break;
         }
       }
-      if (item == NULL)
-        item = htsmsg_create_map();
-      htsmsg_add_msg(item, multi_name, t);
+      if (strcmp(multi_name, "x-key") == 0) {
+        htsmsg_destroy(key);
+        key = t;
+      } else {
+        if (item == NULL)
+          item = htsmsg_create_map();
+        htsmsg_add_msg(item, multi_name, t);
+      }
       data = until_eol(data);
       continue;
     } else if (strncmp(data, "#EXT-X-MEDIA:", 13) == 0) {
       data += 13;
       multi_name = "x-media";
+      goto multi;
+    } else if (strncmp(data, "#EXT-X-KEY:", 11) == 0) {
+      data += 11;
+      multi_name = "x-key";
       goto multi;
     } else if (strncmp(data, "#EXT-X-ENDLIST", 14) == 0) {
       htsmsg_add_bool(m, "x-endlist", 1);
@@ -264,11 +275,14 @@ multi:
     if (item) {
       if (l == NULL)
         l = htsmsg_create_list();
+      if (key)
+        htsmsg_add_msg(item, "x-key", htsmsg_copy(key));
       htsmsg_add_msg(l, NULL, item);
       item = NULL;
     }
   }
 
+  htsmsg_destroy(key);
   if (l == NULL)
     l = htsmsg_create_list();
   htsmsg_add_msg(m, "items", l);
