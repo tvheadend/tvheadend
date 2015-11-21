@@ -1469,7 +1469,7 @@ dobackup(const char *oldver)
     char *s;
     htsbuf_queue_init(&q, 0);
     for (arg = argv; *arg; arg++) {
-      htsbuf_append(&q, *arg, strlen(*arg));
+      htsbuf_append_str(&q, *arg);
       if (arg[1])
         htsbuf_append(&q, " ", 1);
     }

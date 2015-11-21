@@ -72,17 +72,17 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 
     case HMF_BOOL:
       s = f->hmf_bool ? "true" : "false";
-      htsbuf_append(hq, s, strlen(s));
+      htsbuf_append_str(hq, s);
       break;
 
     case HMF_S64:
       snprintf(buf, sizeof(buf), "%" PRId64, f->hmf_s64);
-      htsbuf_append(hq, buf, strlen(buf));
+      htsbuf_append_str(hq, buf);
       break;
 
     case HMF_DBL:
       my_double2str(buf, sizeof(buf), f->hmf_dbl);
-      htsbuf_append(hq, buf, strlen(buf));
+      htsbuf_append_str(hq, buf);
       break;
 
     default:

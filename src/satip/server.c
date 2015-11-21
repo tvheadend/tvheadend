@@ -263,7 +263,7 @@ CONFIGID.UPNP.ORG: 0\r\n\
              usn2, (long)satip_server_bootid);
 
     htsbuf_queue_init(&q, 0);
-    htsbuf_append(&q, buf, strlen(buf));
+    htsbuf_append_str(&q, buf);
     upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
@@ -321,7 +321,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
              satip_server_deviceid);
 
     htsbuf_queue_init(&q, 0);
-    htsbuf_append(&q, buf, strlen(buf));
+    htsbuf_append_str(&q, buf);
     upnp_send(&q, NULL, attempt * 11, 1);
     htsbuf_queue_flush(&q);
   }
@@ -361,7 +361,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
            satip_server_conf.satip_uuid, (long)satip_server_bootid);
 
   htsbuf_queue_init(&q, 0);
-  htsbuf_append(&q, buf, strlen(buf));
+  htsbuf_append_str(&q, buf);
   if (deviceid)
     htsbuf_qprintf(&q, "DEVICEID.SES.COM: %s", deviceid);
   htsbuf_append(&q, "\r\n", 2);

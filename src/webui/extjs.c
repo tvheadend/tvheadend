@@ -44,13 +44,13 @@ static void
 extjs_load(htsbuf_queue_t *hq, const char *script, ...)
 {
   va_list ap;
-  htsbuf_qprintf(hq, "<script type=\"text/javascript\" src=\"");
+  htsbuf_append_str(hq, "<script type=\"text/javascript\" src=\"");
 
   va_start(ap, script);
   htsbuf_vqprintf(hq, script, ap);
   va_end(ap);
 
-  htsbuf_qprintf(hq, "\"></script>\n");
+  htsbuf_append_str(hq, "\"></script>\n");
 }
 
 /**
@@ -61,13 +61,13 @@ extjs_lcss(htsbuf_queue_t *hq, const char *css, ...)
 {
   va_list ap;
 
-  htsbuf_qprintf(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"");
+  htsbuf_append_str(hq, "<link rel=\"stylesheet\" type=\"text/css\" href=\"");
 
   va_start(ap, css);
   htsbuf_vqprintf(hq, css, ap);
   va_end(ap);
 
-  htsbuf_qprintf(hq, "\"/>\n");
+  htsbuf_append_str(hq, "\"/>\n");
 }
 
 /**
@@ -78,13 +78,13 @@ extjs_exec(htsbuf_queue_t *hq, const char *fmt, ...)
 {
   va_list ap;
 
-  htsbuf_qprintf(hq, "<script type=\"text/javascript\">\n");
+  htsbuf_append_str(hq, "<script type=\"text/javascript\">\n");
 
   va_start(ap, fmt);
   htsbuf_vqprintf(hq, fmt, ap);
   va_end(ap);
 
-  htsbuf_qprintf(hq, "\n</script>\n");
+  htsbuf_append_str(hq, "\n</script>\n");
 }
 
 /**
@@ -95,10 +95,10 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-  htsbuf_qprintf(hq, "<html>\n");
-  htsbuf_qprintf(hq, "<head>\n");
+  htsbuf_append_str(hq, "<html>\n");
+  htsbuf_append_str(hq, "<head>\n");
 
-  htsbuf_qprintf(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
+  htsbuf_append_str(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
 
   if (tvheadend_webui_debug) {
   
@@ -116,7 +116,7 @@ Ext.onReady(tvheadend.app.init, tvheadend.app);\
 ");
 
 
-  htsbuf_qprintf(hq,
+  htsbuf_append_str(hq,
 		 "<style type=\"text/css\">\n"
 		 "html, body {\n"
 		 "\tfont:normal 12px verdana;\n"
@@ -133,12 +133,14 @@ Ext.onReady(tvheadend.app.init, tvheadend.app);\
 		 "\tmargin:5px;\n"
 		 "}\n"
 		 "</style>\n"
-		 "<title>%s</title>\n"
+		 "<title>");
+  htsbuf_append_str(hq, config.server_name);
+  htsbuf_append_str(hq,
+		 "</title>\n"
 		 "</head>\n"
 		 "<body>\n"
 		 "<div id=\"systemlog\"></div>\n"
-		 "</body></html>\n",
-		 config.server_name);
+		 "</body></html>\n");
 
   http_output_html(hc);
   return 0;
@@ -153,10 +155,12 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
 {
   htsbuf_queue_t *hq = &hc->hc_reply;
 
-  htsbuf_qprintf(hq, "<!DOCTYPE html>\n");
-  htsbuf_qprintf(hq, "<html>\n");
-  htsbuf_qprintf(hq, "<head>\n");
-  htsbuf_qprintf(hq, "<title>%s</title>\n", config.server_name);
+  htsbuf_append_str(hq, "<!DOCTYPE html>\n");
+  htsbuf_append_str(hq, "<html>\n");
+  htsbuf_append_str(hq, "<head>\n");
+  htsbuf_append_str(hq, "<title>");
+  htsbuf_append_str(hq, config.server_name);
+  htsbuf_append_str(hq, "</title>\n");
 
   if (tvheadend_webui_debug) {
 
@@ -170,9 +174,9 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
 
   extjs_exec(hq, "Ext.onReady(tv.app.init, tv.app);");
 
-  htsbuf_qprintf(hq, "</head>\n");
-  htsbuf_qprintf(hq, "<body></body>\n");
-  htsbuf_qprintf(hq, "</html>\n");
+  htsbuf_append_str(hq, "</head>\n");
+  htsbuf_append_str(hq, "<body></body>\n");
+  htsbuf_append_str(hq, "</html>\n");
 
   http_output_html(hc);
 

@@ -589,14 +589,14 @@ error:
     free(wcmd);
     return -EINVAL;
   }
-  htsbuf_append(&q, s, strlen(s));
+  htsbuf_append_str(&q, s);
   htsbuf_append(&q, " ", 1);
   if (path == NULL || path[0] == '\0')
     path = "/";
-  htsbuf_append(&q, path, strlen(path));
+  htsbuf_append_str(&q, path);
   if (query && query[0] != '\0') {
     htsbuf_append(&q, "?", 1);
-    htsbuf_append(&q, query, strlen(query));
+    htsbuf_append_str(&q, query);
   }
   htsbuf_append(&q, " ", 1);
   s = http_ver2str(hc->hc_version);
@@ -604,14 +604,14 @@ error:
     htsbuf_queue_flush(&q);
     goto error;
   }
-  htsbuf_append(&q, s, strlen(s));
+  htsbuf_append_str(&q, s);
   htsbuf_append(&q, "\r\n", 2);
 
   if (header) {
     TAILQ_FOREACH(h, header, link) {
-      htsbuf_append(&q, h->key, strlen(h->key));
+      htsbuf_append_str(&q, h->key);
       htsbuf_append(&q, ": ", 2);
-      htsbuf_append(&q, h->val, strlen(h->val));
+      htsbuf_append_str(&q, h->val);
       htsbuf_append(&q, "\r\n", 2);
       if (strcasecmp(h->key, "Connection") == 0 &&
           strcasecmp(h->val, "close") == 0)
