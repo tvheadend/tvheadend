@@ -32,17 +32,18 @@ static char *get_m3u_str(char *data, char **res, int *last)
     data++; p++;
     while (*data && *data != first && *data != '\n' && *data != '\r')
       data++;
-  } else {
-    while (*data && *data != ',' && *data > ' ')
+    if (*data == first) {
+      *data = '\0';
       data++;
+    }
   }
+  while (*data && *data != ',' && *data > ' ')
+    data++;
   *last = '\0';
   if (*data) {
     *last = *data;
     *data = '\0';
     data++;
-    while (*last && *data == ',')
-      data++;
   }
   *res = data;
   return p;
