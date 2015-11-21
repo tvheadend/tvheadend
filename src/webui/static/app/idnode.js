@@ -921,6 +921,15 @@ tvheadend.idnode_editor = function(item, conf)
 
     /* Buttons */
     if (!conf.noButtons) {
+        if (conf.cancel) {
+            var cancelBtn = new Ext.Button({
+                text: _('Cancel'),
+                iconCls: 'cancel',
+                handler: conf.cancel
+            });
+            buttons.push(cancelBtn);
+        }
+
         var saveBtn = new Ext.Button({
             text: _('Save'),
             iconCls: 'save',
@@ -940,15 +949,6 @@ tvheadend.idnode_editor = function(item, conf)
             }
         });
         buttons.push(saveBtn);
-
-        if (conf.cancel) {
-            var cancelBtn = new Ext.Button({
-                text: _('Cancel'),
-                iconCls: 'cancel',
-                handler: conf.cancel
-            });
-            buttons.push(cancelBtn);
-        }
 
         if (conf.help) {
             var helpBtn = new Ext.Button({
@@ -993,6 +993,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
 {
     var puuid = null;
     var panel = null;
+    var win   = null;
     var pclass = null;
 
     /* Buttons */
@@ -1079,6 +1080,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                         panel.remove(s);
                         tvheadend.idnode_editor_form(d, null, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
+                        win.setOriginSize(true);
                     }
                 }
             };
@@ -1094,6 +1096,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                         d = json_decode(d);
                         tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
+                        win.setOriginSize(true);
                     }
                 });
             };

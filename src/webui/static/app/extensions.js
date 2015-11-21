@@ -1771,15 +1771,11 @@ Ext.ux.Window = Ext.extend(Ext.Window, {
     var ah = Ext.lib.Dom.getViewHeight();
     var c = 0;
 
-    if (w > 200 && this.originalWidth === 0)
-      this.originalWidth = w;
-    else if (resize && this.originalWidth) {
+    if (resize && this.originalWidth) {
       w = this.originalWidth;
       c = 1;
     }
-    if (h > 100 && this.originalHeight === 0)
-      this.originalHeight = h;
-    else if (resize && this.originalHeight) {
+    if (resize && this.originalHeight) {
       h = this.originalHeight;
       c = 1;
     }
@@ -1801,10 +1797,25 @@ Ext.ux.Window = Ext.extend(Ext.Window, {
       this.center();
     } else if (resize) {
       this.center();
+    } else {
+      return false;
     }
+    return true;
+  },
+
+  setOriginSize : function(force) {
+    var w = this.getWidth();
+    var h = this.getHeight();
+    if (w > 200 && (force || this.originalWidth === 0))
+      this.originalWidth = w;
+    if (h > 100 && (force || this.originalHeight === 0))
+      this.originalHeight = h;
+    if (force && this.keepItVisible() === false)
+      this.center();
   },
 
   onShow : function() {
+    this.setOriginSize(false);
     this.keepItVisible();
   },
 
