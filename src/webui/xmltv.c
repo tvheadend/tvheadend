@@ -39,11 +39,14 @@ http_xmltv_time(char *dst, time_t t)
 static void
 http_xmltv_begin(htsbuf_queue_t *hq)
 {
-  htsbuf_qprintf(hq, "\
+  htsbuf_append_str(hq, "\
 <?xml version=\"1.0\" encoding=\"utf-8\" ?>\n\
 <!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\
-<tv generator-info-name=\"TVHeadend-%s\" source-info-name=\"tvh-%s\">\n\
-", tvheadend_version, config.server_name);
+<tv generator-info-name=\"TVHeadend-");
+  htsbuf_append_and_escape_xml(hq, tvheadend_version);
+  htsbuf_append_str(hq, "\" source-info-name=\"tvh-");
+  htsbuf_append_and_escape_xml(hq, config.server_name);
+  htsbuf_append_str(hq, "\">\n");
 }
 
 /*
@@ -52,7 +55,7 @@ http_xmltv_begin(htsbuf_queue_t *hq)
 static void
 http_xmltv_end(htsbuf_queue_t *hq)
 {
-  htsbuf_qprintf(hq, "</tv>\n");
+  htsbuf_append_str(hq, "</tv>\n");
 }
 
 /*
@@ -62,17 +65,17 @@ static void
 http_xmltv_channel_add(htsbuf_queue_t *hq, const char *hostpath, channel_t *ch)
 {
   const char *icon = channel_get_icon(ch);
-  htsbuf_qprintf(hq, "\
-<channel id=\"%s\">\n\
-  <display-name>%s</display-name>\n\
-", idnode_uuid_as_sstr(&ch->ch_id), channel_get_name(ch));
+  htsbuf_qprintf(hq, "<channel id=\"%s\">\n<display-name>",
+                 idnode_uuid_as_sstr(&ch->ch_id));
+  htsbuf_append_and_escape_xml(hq, channel_get_name(ch));
+  htsbuf_append_str(hq, "</display-name>\n");
   if (icon) {
     if (strncmp(icon, "imagecache/", 11) == 0)
       htsbuf_qprintf(hq, "  <icon src=\"%s/%s\"/>\n", hostpath, icon);
     else
       htsbuf_qprintf(hq, "  <icon src=\"%s\"/>\n", icon);
   }
-  htsbuf_qprintf(hq, "</channel>\n");
+  htsbuf_append_str(hq, "</channel>\n");
 }
 
 /*
@@ -91,15 +94,24 @@ http_xmltv_programme_one(htsbuf_queue_t *hq, const char *hostpath,
   http_xmltv_time(stop, ebc->stop);
   htsbuf_qprintf(hq, "<programme start=\"%s\" stop=\"%s\" channel=\"%s\">\n",
                  start, stop, idnode_uuid_as_sstr(&ch->ch_id));
-  RB_FOREACH(lse, e->title, link)
-    htsbuf_qprintf(hq, "  <title lang=\"%s\">%s</title>\n", lse->lang, lse->str);
+  RB_FOREACH(lse, e->title, link) {
+    htsbuf_qprintf(hq, "  <title lang=\"%s\">", lse->lang);
+    htsbuf_append_and_escape_xml(hq, lse->str);
+    htsbuf_append_str(hq, "</title>\n");
+  }
   if (e->subtitle)
-    RB_FOREACH(lse, e->subtitle, link)
-      htsbuf_qprintf(hq, "  <sub-title lang=\"%s\">%s</sub-title>\n", lse->lang, lse->str);
+    RB_FOREACH(lse, e->subtitle, link) {
+      htsbuf_qprintf(hq, "  <sub-title lang=\"%s\">", lse->lang);
+      htsbuf_append_and_escape_xml(hq, lse->str);
+      htsbuf_append_str(hq, "</sub-title>\n");
+    }
   if (ebc->description)
-    RB_FOREACH(lse, ebc->description, link)
-      htsbuf_qprintf(hq, "  <desc lang=\"%s\">%s</desc>\n", lse->lang, lse->str);
-  htsbuf_qprintf(hq, "</programme>\n");
+    RB_FOREACH(lse, ebc->description, link) {
+      htsbuf_qprintf(hq, "  <desc lang=\"%s\">", lse->lang);
+      htsbuf_append_and_escape_xml(hq, lse->str);
+      htsbuf_append_str(hq, "</desc>\n");
+    }
+  htsbuf_append_str(hq, "</programme>\n");
 }
 
 /*
