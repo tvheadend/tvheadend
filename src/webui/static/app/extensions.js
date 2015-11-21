@@ -1757,11 +1757,16 @@ Ext.ux.Window = Ext.extend(Ext.Window, {
     Ext.EventManager.onWindowResize(this.keepItVisible, this, [true]);
     this.originalWidth = 0;
     this.originalHeight = 0;
+    /* exclusive window */
+    if (tvheadend.dialog)
+      tvheadend.dialog.close();
+    tvheadend.dialog = this;
   },
 
   beforeDestroy : function() {
     Ext.EventManager.removeResizeListener(this.keepItVisible, this);
     Ext.Window.superclass.beforeDestroy.call(this);
+    tvheadend.dialog = null;
   },
 
   keepItVisible : function(resize) {
