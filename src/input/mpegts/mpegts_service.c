@@ -140,7 +140,7 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "srcid",
-      .name     = "ATSC source ID",
+      .name     = N_("ATSC source ID"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_atsc_source_id),
     },
