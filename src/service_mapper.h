@@ -23,11 +23,11 @@ struct bouquet;
 
 typedef struct service_mapper_conf
 {
-  int check_availability; ///< Check service is receivable
-  int encrypted;          ///< Include encrypted services
-  int merge_same_name;    ///< Merge entries with the same name
-  int provider_tags;      ///< Create tags based on provider name
-  int network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
+  uint8_t check_availability; ///< Check service is receivable
+  uint8_t encrypted;          ///< Include encrypted services
+  uint8_t merge_same_name;    ///< Merge entries with the same name
+  uint8_t provider_tags;      ///< Create tags based on provider name
+  uint8_t network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
 } service_mapper_conf_t;
 
 typedef struct service_mapper_status
@@ -62,7 +62,8 @@ int  service_mapper_link   ( struct service *s, struct channel *c, void *origin 
 int service_mapper_create ( idnode_t *s, idnode_t *c, void *origin );
 
 // Process one service
-struct channel *service_mapper_process ( struct service *s, struct bouquet *bq );
+struct channel *service_mapper_process
+  ( const service_mapper_conf_t *conf, struct service *s, struct bouquet *bq );
 
 // Resets the stat counters
 void service_mapper_reset_stats ( void );

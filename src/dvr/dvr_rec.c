@@ -112,6 +112,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
                       "(limit %u, dvr limit %u, active DVR %u, streaming %u)",
                aa->aa_username ?: "", aa->aa_representative ?: "",
                aa->aa_conn_limit, aa->aa_conn_limit_dvr, rec_count, net_count);
+      access_destroy(aa);
       return -EOVERFLOW;
     }
   }
@@ -148,7 +149,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   de->de_chain = prch;
 
-  de->de_thread_shutdown = 0;
+  atomic_exchange(&de->de_thread_shutdown, 0);
   tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
   return 0;
 }
@@ -160,20 +161,17 @@ void
 dvr_rec_unsubscribe(dvr_entry_t *de)
 {
   profile_chain_t *prch = de->de_chain;
-  streaming_queue_t *sq = &prch->prch_sq;
 
   assert(de->de_s != NULL);
   assert(prch != NULL);
 
   streaming_target_deliver(prch->prch_st, streaming_msg_create(SMT_EXIT));
 
-  pthread_mutex_lock(&sq->sq_mutex);
-  de->de_thread_shutdown = 1;
-  pthread_mutex_unlock(&sq->sq_mutex);
+  atomic_add(&de->de_thread_shutdown, 1);
 
   pthread_join(de->de_thread, NULL);
 
-  subscription_unsubscribe(de->de_s, 0);
+  subscription_unsubscribe(de->de_s, UNSUBSCRIBE_FINAL);
   de->de_s = NULL;
 
   de->de_chain = NULL;
@@ -957,7 +955,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
     e = htsmsg_create_map();
     htsmsg_add_str(e, "type", streaming_component_type2txt(ssc->ssc_type));
-    if (ssc->ssc_lang && ssc->ssc_lang[0])
+    if (ssc->ssc_lang[0])
        htsmsg_add_str(e, "language", ssc->ssc_lang);
 
     if(SCT_ISAUDIO(ssc->ssc_type)) {
@@ -1033,6 +1031,156 @@ _err:
   return -1;
 }
 
+/**
+ *
+ */
+static inline int
+dvr_thread_global_lock(dvr_entry_t *de, int *run)
+{
+  if (atomic_add(&de->de_thread_shutdown, 1) > 0) {
+    *run = 0;
+    return 0;
+  }
+  pthread_mutex_lock(&global_lock);
+  return 1;
+}
+
+/**
+ *
+ */
+static inline void
+dvr_thread_global_unlock(dvr_entry_t *de)
+{
+  pthread_mutex_unlock(&global_lock);
+  atomic_dec(&de->de_thread_shutdown, 1);
+}
+
+/**
+ *
+ */
+static void
+dvr_streaming_restart(dvr_entry_t *de, int *run)
+{
+  if (dvr_thread_global_lock(de, run)) {
+    service_restart(de->de_s->ths_service);
+    dvr_thread_global_unlock(de);
+  }
+}
+
+/**
+ *
+ */
+static int
+dvr_thread_pkt_stats(dvr_entry_t *de, th_pkt_t *pkt, int payload)
+{
+  th_subscription_t *ts;
+  int ret = 0;
+
+  if ((ts = de->de_s) != NULL) {
+    if (pkt->pkt_err) {
+      de->de_data_errors += pkt->pkt_err;
+      ret = 1;
+    }
+    if (payload && pkt->pkt_payload)
+      subscription_add_bytes_out(ts, pktbuf_len(pkt->pkt_payload));
+  }
+  return ret;
+}
+
+/**
+ *
+ */
+static int
+dvr_thread_mpegts_stats(dvr_entry_t *de, void *sm_data)
+{
+  th_subscription_t *ts;
+  pktbuf_t *pb = sm_data;
+  int ret;
+
+  if (pb == NULL)
+    return 0;
+  if ((ts = de->de_s) != NULL) {
+    if (pb->pb_err) {
+      de->de_data_errors += pb->pb_err;
+      ret = 1;
+    }
+    subscription_add_bytes_out(ts, pktbuf_len(pb));
+  }
+  return ret;
+}
+
+/**
+ *
+ */
+static int
+dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
+                     int *run, int *started, int64_t *dts_offset,
+                     const char *postproc)
+{
+  dvr_entry_t *de = *_de;
+  profile_chain_t *prch = de->de_chain;
+  int ret = 0;
+
+  if (*started &&
+      muxer_reconfigure(prch->prch_muxer, ss) < 0) {
+    tvhlog(LOG_WARNING,
+           "dvr", "Unable to reconfigure \"%s\"",
+           dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
+
+    // Try to restart the recording if the muxer doesn't
+    // support reconfiguration of the streams.
+    dvr_thread_epilog(de, postproc);
+    *dts_offset = PTS_UNSET;
+    *started = 0;
+    if (!dvr_thread_global_lock(de, run))
+      return 0;
+    if (de->de_config->dvr_clone)
+      *_de = dvr_entry_clone(de);
+    dvr_thread_global_unlock(de);
+    de = *_de;
+  }
+
+  if (!*started) {
+    if (!dvr_thread_global_lock(de, run))
+      return 0;
+    dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
+    if(dvr_rec_start(de, ss) == 0) {
+      ret = 1;
+      *started = 1;
+    } else
+      dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1, 0);
+    dvr_thread_global_unlock(de);
+  }
+  return ret;
+}
+
+/**
+ *
+ */
+static void
+dvr_thread_backlog_free(struct streaming_message_queue *backlog)
+{
+  streaming_message_t *sm;
+  while ((sm = TAILQ_FIRST(backlog)) != NULL) {
+    TAILQ_REMOVE(backlog, sm, sm_link);
+    streaming_msg_free(sm);
+  }
+}
+
+/**
+ *
+ */
+static inline int
+dts_pts_valid(th_pkt_t *pkt, int64_t dts_offset)
+{
+  if (pkt->pkt_dts == PTS_UNSET ||
+      pkt->pkt_pts == PTS_UNSET ||
+      dts_offset == PTS_UNSET ||
+      pkt->pkt_dts < dts_offset ||
+      pkt->pkt_pts < dts_offset)
+    return 0;
+  return 1;
+}
 
 /**
  *
@@ -1043,116 +1191,171 @@ dvr_thread(void *aux)
   dvr_entry_t *de = aux;
   profile_chain_t *prch = de->de_chain;
   streaming_queue_t *sq = &prch->prch_sq;
-  streaming_message_t *sm;
-  th_subscription_t *ts;
-  th_pkt_t *pkt;
-  int run = 1, started = 0, comm_skip;
+  struct streaming_message_queue backlog;
+  streaming_message_t *sm, *sm2;
+  th_pkt_t *pkt, *pkt2, *pkt3;
+  streaming_start_t *ss = NULL;
+  int run = 1, started = 0, muxing = 0, comm_skip, epg_running = 0, rs;
   int commercial = COMMERCIAL_UNKNOWN;
+  int running_disabled;
+  int64_t packets = 0, dts_offset = PTS_UNSET;
+  time_t start_time = 0, running_start = 0, running_stop = 0;
   char *postproc;
 
-  pthread_mutex_lock(&global_lock);
+  if (!dvr_thread_global_lock(de, &run))
+    return NULL;
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
-  pthread_mutex_unlock(&global_lock);
+  running_disabled = dvr_entry_get_epg_running(de) <= 0;
+  dvr_thread_global_unlock(de);
+
+  TAILQ_INIT(&backlog);
 
   pthread_mutex_lock(&sq->sq_mutex);
-
   while(run) {
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {
       pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
+    streaming_queue_remove(sq, sm);
 
-    if ((ts = de->de_s) != NULL && started) {
-      pktbuf_t *pb = NULL;
-      if (sm->sm_type == SMT_PACKET) {
-        pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
-        if (((th_pkt_t*)sm->sm_data)->pkt_err) {
-          de->de_data_errors += ((th_pkt_t*)sm->sm_data)->pkt_err;
-          dvr_notify(de);
+    if (running_disabled) {
+      epg_running = 1;
+    } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
+      running_start = atomic_add_time_t(&de->de_running_start, 0);
+      running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
+      if (running_start > 0) {
+        epg_running = running_start >= running_stop;
+      } else if (running_stop == 0) {
+        if (start_time + 2 >= dispatch_clock) {
+          TAILQ_INSERT_TAIL(&backlog, sm, sm_link);
+          continue;
+        } else {
+          if (TAILQ_FIRST(&backlog))
+            dvr_thread_backlog_free(&backlog);
+          epg_running = 1;
         }
+      } else {
+        epg_running = 0;
       }
-      else if (sm->sm_type == SMT_MPEGTS) {
-        pb = sm->sm_data;
-        if (pb->pb_err) {
-          de->de_data_errors += pb->pb_err;
-          dvr_notify(de);
-        }
-      }
-      if (pb)
-        subscription_add_bytes_out(ts, pktbuf_len(pb));
     }
 
-    streaming_queue_remove(sq, sm);
-    /* we don't want to start new recordings at this point */
-    if (sm->sm_type == SMT_START && de->de_thread_shutdown)
-      break;
     pthread_mutex_unlock(&sq->sq_mutex);
 
     switch(sm->sm_type) {
 
     case SMT_PACKET:
       pkt = sm->sm_data;
-      if(pkt->pkt_commercial == COMMERCIAL_YES)
-	dvr_rec_set_state(de, DVR_RS_COMMERCIAL, 0);
-      else
-	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
 
-      if(pkt->pkt_commercial == COMMERCIAL_YES && comm_skip)
-	break;
+      rs = DVR_RS_RUNNING;
+      if (!epg_running)
+        rs = DVR_RS_EPG_WAIT;
+      else if (pkt->pkt_commercial == COMMERCIAL_YES)
+        rs = DVR_RS_COMMERCIAL;
+      dvr_rec_set_state(de, rs, 0);
 
-      if(commercial != pkt->pkt_commercial)
+      if ((rs == DVR_RS_COMMERCIAL && comm_skip) || !epg_running) {
+        if (ss && packets && running_start == 0) {
+          dvr_streaming_restart(de, &run);
+          packets = 0;
+          started = 0;
+        }
+        break;
+      }
+
+      if (commercial != pkt->pkt_commercial)
 	muxer_add_marker(prch->prch_muxer);
 
       commercial = pkt->pkt_commercial;
 
-      if(started) {
-	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
-	sm->sm_data = NULL;
-	dvr_notify(de);
+      if (ss == NULL)
+        break;
+
+      if (muxing == 0 &&
+          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+        break;
+
+      muxing = 1;
+      while ((sm2 = TAILQ_FIRST(&backlog)) != NULL) {
+        TAILQ_REMOVE(&backlog, sm2, sm_link);
+        if (pkt->pkt_dts != PTS_UNSET) {
+          if (dts_offset == PTS_UNSET) {
+            pkt2 = sm2->sm_data;
+            dts_offset = pkt2->pkt_dts;
+          }
+          pkt3 = (th_pkt_t *)sm2->sm_data;
+          if (dts_pts_valid(pkt3, dts_offset)) {
+            pkt3 = pkt_copy_shallow(pkt3);
+            pkt3->pkt_dts -= dts_offset;
+            if (pkt3->pkt_pts != PTS_UNSET)
+              pkt3->pkt_pts -= dts_offset;
+            dvr_thread_pkt_stats(de, pkt3, 1);
+            muxer_write_pkt(prch->prch_muxer, sm2->sm_type, pkt3);
+          } else {
+            dvr_thread_pkt_stats(de, pkt3, 0);
+          }
+        }
+        streaming_msg_free(sm2);
       }
+      if (dts_offset == PTS_UNSET && pkt->pkt_dts != PTS_UNSET)
+        dts_offset = pkt->pkt_dts;
+      if (dts_pts_valid(pkt, dts_offset)) {
+        pkt3 = pkt_copy_shallow(pkt);
+        pkt3->pkt_dts -= dts_offset;
+        if (pkt3->pkt_pts != PTS_UNSET)
+          pkt3->pkt_pts -= dts_offset;
+        dvr_thread_pkt_stats(de, pkt3, 1);
+        muxer_write_pkt(prch->prch_muxer, sm->sm_type, pkt3);
+      } else {
+        dvr_thread_pkt_stats(de, pkt, 0);
+      }
+      dvr_notify(de);
+      packets++;
       break;
 
     case SMT_MPEGTS:
-      if(started) {
-	dvr_rec_set_state(de, DVR_RS_RUNNING, 0);
-	muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
-	sm->sm_data = NULL;
-	dvr_notify(de);
+      dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
+
+      if (ss == NULL)
+        break;
+
+      if (!epg_running) {
+        if (packets && running_start == 0) {
+          dvr_streaming_restart(de, &run);
+          packets = 0;
+          started = 0;
+        }
+        break;
       }
+
+      if (muxing == 0 &&
+          !dvr_thread_rec_start(&de, ss, &run, &started, &dts_offset, postproc))
+        break;
+
+      muxing = 1;
+      while ((sm2 = TAILQ_FIRST(&backlog)) != NULL) {
+        TAILQ_REMOVE(&backlog, sm2, sm_link);
+        dvr_thread_mpegts_stats(de, sm2->sm_data);
+        muxer_write_pkt(prch->prch_muxer, sm2->sm_type, sm2->sm_data);
+        sm2->sm_data = NULL;
+        streaming_msg_free(sm2);
+      }
+      dvr_thread_mpegts_stats(de, sm->sm_data);
+      muxer_write_pkt(prch->prch_muxer, sm->sm_type, sm->sm_data);
+      sm->sm_data = NULL;
+      dvr_notify(de);
+      packets++;
       break;
 
     case SMT_START:
-      if(started &&
-	 muxer_reconfigure(prch->prch_muxer, sm->sm_data) < 0) {
-	tvhlog(LOG_WARNING,
-	       "dvr", "Unable to reconfigure \"%s\"",
-	       dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
-
-	// Try to restart the recording if the muxer doesn't
-	// support reconfiguration of the streams.
-	dvr_thread_epilog(de, postproc);
-	started = 0;
-	pthread_mutex_lock(&global_lock);
-	if (de->de_config->dvr_clone)
-	  de = dvr_entry_clone(de);
-	pthread_mutex_unlock(&global_lock);
-      }
-
-      if(!started) {
-        pthread_mutex_lock(&global_lock);
-        dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-        if(dvr_rec_start(de, sm->sm_data) == 0)
-          started = 1;
-        else
-          dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1, 0);
-        pthread_mutex_unlock(&global_lock);
-      } 
+      start_time = dispatch_clock;
+      packets = 0;
+      ss = streaming_start_copy((streaming_start_t *)sm->sm_data);
       break;
 
     case SMT_STOP:
-       if(sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+       if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
 	 // Subscription is restarting, wait for SMT_START
 
        } else if(sm->sm_code == 0) {
@@ -1163,27 +1366,34 @@ dvr_thread(void *aux)
 	       "dvr", "Recording completed: \"%s\"",
 	       dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
 
-	dvr_thread_epilog(de, postproc);
-	started = 0;
+        goto fin;
 
-      }else if(de->de_last_error != sm->sm_code) {
+      } else if (de->de_last_error != sm->sm_code) {
 	 // Error during recording
 
-	 dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
-	 tvhlog(LOG_ERR,
-		"dvr", "Recording stopped: \"%s\": %s",
-		dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
-		streaming_code2txt(sm->sm_code));
+	dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+	tvhlog(LOG_ERR,
+               "dvr", "Recording stopped: \"%s\": %s",
+               dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
+               streaming_code2txt(sm->sm_code));
 
-	 dvr_thread_epilog(de, postproc);
-	 started = 0;
+fin:
+        dvr_thread_backlog_free(&backlog);
+	dvr_thread_epilog(de, postproc);
+	start_time = 0;
+	started = 0;
+	muxing = 0;
+	if (ss) {
+	  streaming_start_unref(ss);
+	  ss = NULL;
+        }
       }
       break;
 
     case SMT_SERVICE_STATUS:
-      if(sm->sm_code & TSS_PACKETS) {
+      if (sm->sm_code & TSS_PACKETS) {
 	
-      } else if(sm->sm_code & TSS_ERRORS) {
+      } else if (sm->sm_code & TSS_ERRORS) {
 
 	int code = SM_CODE_UNDEFINED_ERROR;
 
@@ -1205,7 +1415,7 @@ dvr_thread(void *aux)
 
     case SMT_NOSTART:
 
-      if(de->de_last_error != sm->sm_code) {
+      if (de->de_last_error != sm->sm_code) {
 	dvr_rec_set_state(de, DVR_RS_PENDING, sm->sm_code);
 
 	tvhlog(LOG_ERR,
@@ -1234,8 +1444,13 @@ dvr_thread(void *aux)
   }
   pthread_mutex_unlock(&sq->sq_mutex);
 
-  if(prch->prch_muxer)
+  dvr_thread_backlog_free(&backlog);
+
+  if (prch->prch_muxer)
     dvr_thread_epilog(de, postproc);
+
+  if (ss)
+    streaming_start_unref(ss);
 
   free(postproc);
   return NULL;
@@ -1287,6 +1502,9 @@ static void
 dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
 {
   profile_chain_t *prch = de->de_chain;
+
+  if (prch == NULL)
+    return;
 
   muxer_close(prch->prch_muxer);
   muxer_destroy(prch->prch_muxer);

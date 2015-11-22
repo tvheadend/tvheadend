@@ -187,12 +187,14 @@ iptv_udp_init ( void )
       .start  = iptv_udp_start,
       .stop   = iptv_udp_stop,
       .read   = iptv_udp_read,
+      .pause  = iptv_input_pause_handler
     },
     {
       .scheme = "rtp",
       .start  = iptv_udp_start,
       .stop   = iptv_udp_stop,
       .read   = iptv_udp_rtp_read,
+      .pause  = iptv_input_pause_handler
     }
   };
   iptv_handler_register(ih, 2);

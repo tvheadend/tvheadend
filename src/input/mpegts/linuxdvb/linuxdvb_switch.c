@@ -133,27 +133,27 @@ const idclass_t linuxdvb_switch_class =
     {
       .type    = PT_INT,
       .id      = "toneburst",
-      .name    = N_("Tone Burst"),
+      .name    = N_("Tone burst"),
       .off     = offsetof(linuxdvb_switch_t, ls_toneburst),
       .list    = linuxdvb_switch_class_toneburst_list
     },
     {
       .type    = PT_BOOL,
       .id      = "preferun",
-      .name    = N_("Uncommited First"),
+      .name    = N_("Uncommitted first"),
       .off     = offsetof(linuxdvb_switch_t, ls_uncommitted_first),
     },
     {
       .type    = PT_U32,
       .id      = "poweruptime",
-      .name    = N_("Powerup Time (ms) (15-200)"),
+      .name    = N_("Power-up time (ms) (15-200)"),
       .off     = offsetof(linuxdvb_switch_t, ls_powerup_time),
       .def.u32 = 100,
     },
     {
       .type    = PT_U32,
       .id      = "sleeptime",
-      .name    = N_("Cmd Delay Time (ms) (10-200)"),
+      .name    = N_("Command delay time (ms) (10-200)"),
       .off     = offsetof(linuxdvb_switch_t, ls_sleep_time),
       .def.u32 = 25
     },

@@ -151,7 +151,6 @@ typedef struct cwc_service {
   } ecm_state;
 
   LIST_HEAD(, ecm_pid) cs_pids;
-  int cs_constcw;
 
 } cwc_service_t;
 
@@ -618,9 +617,6 @@ cwc_ecm_reset(th_descrambler_t *th)
   cwc_t *cwc = ct->cs_cwc;
   ecm_pid_t *ep;
   ecm_section_t *es;
-
-  if (ct->cs_constcw)
-    return 1;  /* keys will not change */
 
   pthread_mutex_lock(&cwc->cwc_mutex);
   ct->td_keystate = DS_UNKNOWN;
@@ -1515,7 +1511,6 @@ cwc_service_start(caclient_t *cac, service_t *t)
   ct->cs_channel       = -1;
   ct->cs_mux           = ((mpegts_service_t *)t)->s_dvb_mux;
   ct->ecm_state        = ECM_INIT;
-  ct->cs_constcw       = pcard->cs_ra.caid == 0x2600;
 
   td                   = (th_descrambler_t *)ct;
   snprintf(buf, sizeof(buf), "cwc-%s-%i-%04X", cwc->cwc_hostname, cwc->cwc_port, pcard->cs_ra.caid);
@@ -1733,7 +1728,7 @@ const idclass_t caclient_cwc_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_cwc",
-  .ic_caption    = N_("Code Word Client (newcamd)"),
+  .ic_caption    = N_("Code word client (newcamd)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -1773,14 +1768,14 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_BOOL,
       .id       = "emm",
-      .name     = N_("Update Card (EMM)"),
+      .name     = N_("Update card (EMM)"),
       .off      = offsetof(cwc_t, cwc_emm),
       .def.i    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "emmex",
-      .name     = N_("One Mux (EMM)"),
+      .name     = N_("One mux (EMM)"),
       .off      = offsetof(cwc_t, cwc_emmex),
       .def.i    = 1
     },

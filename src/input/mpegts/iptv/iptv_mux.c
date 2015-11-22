@@ -82,6 +82,9 @@ iptv_url_set ( char **url, char **sane_url, const char *str, int allow_file, int
     iptv_url_set0(url, sane_url, str, buf);
     urlreset(&u);
     return 1;
+  } else {
+    if (*url == NULL || **url == '\0')
+      iptv_url_set0(url, sane_url, "?", "?");
   }
 
   return 0;
@@ -91,7 +94,7 @@ static int
 iptv_mux_url_set ( void *p, const void *v )
 {
   iptv_mux_t *im = p;
-  return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 0, 1);
+  return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
 }
 
 static htsmsg_t *
@@ -125,7 +128,7 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = N_("Streaming Priority"),
+      .name     = N_("Streaming priority"),
       .off      = offsetof(iptv_mux_t, mm_iptv_streaming_priority),
       .def.i    = 0,
       .opts     = PO_ADVANCED
@@ -149,6 +152,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_interface",
       .name     = N_("Interface"),
       .off      = offsetof(iptv_mux_t, mm_iptv_interface),
+      .list     = network_interfaces_enum,
     },
     {
       .type     = PT_BOOL,
@@ -159,7 +163,7 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_STR,
       .id       = "iptv_muxname",
-      .name     = N_("Mux Name"),
+      .name     = N_("Mux name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_muxname),
     },
     {
@@ -172,13 +176,13 @@ const idclass_t iptv_mux_class =
     {
       .type     = PT_STR,
       .id       = "iptv_sname",
-      .name     = N_("Service Name"),
+      .name     = N_("Service name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_svcname),
     },
     {
       .type     = PT_STR,
       .id       = "iptv_epgid",
-      .name     = N_("EPG Name"),
+      .name     = N_("EPG name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_epgid),
     },
     {
@@ -217,6 +221,20 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_env),
       .opts     = PO_ADVANCED | PO_MULTILINE
     },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_hdr",
+      .name     = N_("Custom HTTP headers"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_hdr),
+      .opts     = PO_ADVANCED | PO_MULTILINE
+    },
+    {
+      .type     = PT_STR,
+      .id       = "iptv_tags",
+      .name     = N_("Channel tags"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_tags),
+      .opts     = PO_ADVANCED | PO_MULTILINE
+    },
     {}
   }
 };
@@ -236,8 +254,7 @@ iptv_mux_config_save ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  char *url, *url_sane, *url_raw, *muxname;
-  iptv_mux_t *im = (iptv_mux_t*)mm;
+  iptv_mux_t *im = (iptv_mux_t*)mm, copy;
   char ubuf[UUID_HEX_SIZE];
 
   if (delconf)
@@ -245,20 +262,19 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
                         idnode_uuid_as_sstr(&mm->mm_network->mn_id),
                         idnode_uuid_as_str(&mm->mm_id, ubuf));
 
-  url = im->mm_iptv_url; // Workaround for silly printing error
-  url_sane = im->mm_iptv_url_sane;
-  url_raw = im->mm_iptv_url_raw;
-  muxname = im->mm_iptv_muxname;
-  free(im->mm_iptv_interface);
-  free(im->mm_iptv_svcname);
-  free(im->mm_iptv_env);
-  free(im->mm_iptv_icon);
-  free(im->mm_iptv_epgid);
+  copy = *im; /* keep pointers */
   mpegts_mux_delete(mm, delconf);
-  free(url);
-  free(url_sane);
-  free(url_raw);
-  free(muxname);
+  free(copy.mm_iptv_url);
+  free(copy.mm_iptv_url_sane);
+  free(copy.mm_iptv_url_raw);
+  free(copy.mm_iptv_muxname);
+  free(copy.mm_iptv_interface);
+  free(copy.mm_iptv_svcname);
+  free(copy.mm_iptv_env);
+  free(copy.mm_iptv_hdr);
+  free(copy.mm_iptv_tags);
+  free(copy.mm_iptv_icon);
+  free(copy.mm_iptv_epgid);
 }
 
 static void

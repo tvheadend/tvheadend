@@ -19,31 +19,18 @@
 #pragma once
 
 #include <stdint.h>
+#include <time.h>
 
 extern pthread_mutex_t atomic_lock;
+
+/*
+ * Atomic FETCH and ADD operation
+ */
 
 static inline int
 atomic_add(volatile int *ptr, int incr)
 {
   return __sync_fetch_and_add(ptr, incr);
-}
-
-static inline int
-atomic_dec(volatile int *ptr, int decr)
-{
-  return __sync_fetch_and_sub(ptr, decr);
-}
-
-static inline int
-atomic_exchange(volatile int *ptr, int new)
-{
-  return  __sync_lock_test_and_set(ptr, new);
-}
-
-static inline int
-atomic_exchange_u64(volatile uint64_t *ptr, uint64_t new)
-{
-  return  __sync_lock_test_and_set(ptr, new);
 }
 
 static inline uint64_t
@@ -61,6 +48,50 @@ atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
 #endif
 }
 
+static inline time_t
+atomic_add_time_t(volatile time_t *ptr, time_t incr)
+{
+#if ENABLE_ATOMIC_TIME_T
+  return __sync_fetch_and_add(ptr, incr);
+#else
+  time_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr += incr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic ADD and FETCH operation
+ */
+
+static inline uint64_t
+atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_add_and_fetch(ptr, incr);
+#else
+  uint64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  *ptr += incr;
+  ret = *ptr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic DEC operation
+ */
+
+static inline int
+atomic_dec(volatile int *ptr, int decr)
+{
+  return __sync_fetch_and_sub(ptr, decr);
+}
+
 static inline uint64_t
 atomic_dec_u64(volatile uint64_t *ptr, uint64_t decr)
 {
@@ -76,17 +107,24 @@ atomic_dec_u64(volatile uint64_t *ptr, uint64_t decr)
 #endif
 }
 
-static inline uint64_t
-atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
+/*
+ * Atomic EXCHANGE operation
+ */
+
+static inline int
+atomic_exchange(volatile int *ptr, int new)
 {
-#if ENABLE_ATOMIC64
-  return __sync_add_and_fetch(ptr, incr);
-#else
-  uint64_t ret;
-  pthread_mutex_lock(&atomic_lock);
-  *ptr += incr;
-  ret = *ptr;
-  pthread_mutex_unlock(&atomic_lock);
-  return ret;
-#endif
+  return  __sync_lock_test_and_set(ptr, new);
+}
+
+static inline int
+atomic_exchange_u64(volatile uint64_t *ptr, uint64_t new)
+{
+  return  __sync_lock_test_and_set(ptr, new);
+}
+
+static inline int
+atomic_exchange_time_t(volatile time_t *ptr, int new)
+{
+  return  __sync_lock_test_and_set(ptr, new);
 }

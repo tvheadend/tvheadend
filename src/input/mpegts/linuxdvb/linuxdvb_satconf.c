@@ -211,7 +211,7 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
 const idclass_t linuxdvb_satconf_class =
 {
   .ic_class      = "linuxdvb_satconf",
-  .ic_caption    = N_("DVB-S Satconf"),
+  .ic_caption    = N_("DVB-S satellite configuration"),
   .ic_event      = "linuxdvb_satconf",
   .ic_get_title  = linuxdvb_satconf_class_get_title,
   .ic_save       = linuxdvb_satconf_class_save,
@@ -219,7 +219,7 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_BOOL,
       .id       = "early_tune",
-      .name     = N_("Tune Before DiseqC"),
+      .name     = N_("Tune before DiseqC"),
       .off      = offsetof(linuxdvb_satconf_t, ls_early_tune),
       .opts     = PO_ADVANCED,
       .def.i    = 1
@@ -251,14 +251,14 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_BOOL,
       .id       = "switch_rotor",
-      .name     = N_("Switch Then Rotor"),
+      .name     = N_("Switch before rotor"),
       .off      = offsetof(linuxdvb_satconf_t, ls_switch_rotor),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_U32,
       .id       = "max_rotor_move",
-      .name     = N_("Init Rotor Time (seconds)"),
+      .name     = N_("Rotor initialization time (seconds)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_max_rotor_move),
       .opts     = PO_ADVANCED,
       .def.u32  = 120
@@ -266,28 +266,28 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_U32,
       .id       = "min_rotor_move",
-      .name     = N_("Min Rotor Time (seconds)"),
+      .name     = N_("Minimum rotor time (seconds)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_min_rotor_move),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_DBL,
       .id       = "site_lat",
-      .name     = N_("Site Latitude"),
+      .name     = N_("Site latitude"),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lat),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_DBL,
       .id       = "site_lon",
-      .name     = N_("Site Longitude"),
+      .name     = N_("Site longitude"),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lon),
       .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
       .id       = "site_lat_south",
-      .name     = N_("Latitude Direction South"),
+      .name     = N_("Southern hemisphere (latitude direction)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lat_south),
       .opts     = PO_ADVANCED,
       .def.i    = 0
@@ -295,7 +295,7 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_BOOL,
       .id       = "site_lon_west",
-      .name     = N_("Longtitude Direction West"),
+      .name     = N_("Western hemisphere (latitude direction)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lon_west),
       .opts     = PO_ADVANCED,
       .def.i    = 0
@@ -311,7 +311,7 @@ const idclass_t linuxdvb_satconf_class =
     {
       .type     = PT_U32,
       .id       = "motor_rate",
-      .name     = N_("Motor Rate (millis/deg)"),
+      .name     = N_("Motor rate (milliseconds/deg)"),
       .off      = offsetof(linuxdvb_satconf_t, ls_motor_rate),
     },
     {}
@@ -325,7 +325,7 @@ const idclass_t linuxdvb_satconf_lnbonly_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_lnbonly",
-  .ic_caption    = N_("DVB-S Simple"),
+  .ic_caption    = N_("DVB-S simple"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -349,7 +349,7 @@ const idclass_t linuxdvb_satconf_2port_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_2port",
-  .ic_caption    = N_("DVB-S Toneburst"),
+  .ic_caption    = N_("DVB-S tone burst"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -559,13 +559,13 @@ const idclass_t linuxdvb_satconf_advanced_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_advanced",
-  .ic_caption    = N_("DVB-S Advanced"),
+  .ic_caption    = N_("DVB-S advanced"),
   .ic_get_childs = linuxdvb_satconf_class_get_childs,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_INT,
       .id       = "orbital_pos",
-      .name     = N_("Orbital Positions"),
+      .name     = N_("Orbital positions"),
       .get      = linuxdvb_satconf_class_orbitalpos_get,
       .set      = linuxdvb_satconf_class_orbitalpos_set,
     },
@@ -588,25 +588,25 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
   },
   {
     .type  = "2port",
-    .name  = N_("2-Port Switch (Universal LNB)"),
+    .name  = N_("2-Port switch (universal LNB)"),
     .idc   = &linuxdvb_satconf_2port_class,
     .ports = 2, 
   },
   {
     .type  = "4port",
-    .name  = N_("4-Port Switch (Universal LNB)"),
+    .name  = N_("4-Port switch (universal LNB)"),
     .idc   = &linuxdvb_satconf_4port_class,
     .ports = 4, 
   },
   {
     .type  = "en50494",
-    .name  = N_("Unicable Switch (Universal LNB, experimental)"),
+    .name  = N_("Unicable switch (universal LNB, experimental)"),
     .idc   = &linuxdvb_satconf_en50494_class,
     .ports = 2,
   },
   {
     .type  = "advanced",
-    .name  = N_("Advanced (Non-Universal LNBs, Rotors, etc.)"),
+    .name  = N_("Advanced (non-universal LNBs, rotors, etc.)"),
     .idc   = &linuxdvb_satconf_advanced_class,
     .ports = 0, 
   },
@@ -858,8 +858,7 @@ int
 linuxdvb_satconf_start_mux
   ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi, int skip_diseqc )
 {
-  int r;
-  uint32_t f;
+  int r, f;
   linuxdvb_satconf_ele_t *lse = linuxdvb_satconf_find_ele(ls, mmi->mmi_mux);
   linuxdvb_frontend_t    *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
 
@@ -1301,7 +1300,7 @@ const idclass_t linuxdvb_satconf_ele_class =
     {
       .type     = PT_STR,
       .id       = "lnb_type",
-      .name     = N_("LNB Type"),
+      .name     = N_("LNB type"),
       .set      = linuxdvb_satconf_ele_class_lnbtype_set,
       .get      = linuxdvb_satconf_ele_class_lnbtype_get,
       .list     = linuxdvb_lnb_list,
@@ -1310,7 +1309,7 @@ const idclass_t linuxdvb_satconf_ele_class =
     {
       .type     = PT_STR,
       .id       = "switch_type",
-      .name     = N_("Switch Type"),
+      .name     = N_("Switch type"),
       .set      = linuxdvb_satconf_ele_class_switchtype_set,
       .get      = linuxdvb_satconf_ele_class_switchtype_get,
       .list     = linuxdvb_switch_list,
@@ -1319,7 +1318,7 @@ const idclass_t linuxdvb_satconf_ele_class =
     {
       .type     = PT_STR,
       .id       = "rotor_type",
-      .name     = N_("Rotor Type"),
+      .name     = N_("Rotor type"),
       .set      = linuxdvb_satconf_ele_class_rotortype_set,
       .get      = linuxdvb_satconf_ele_class_rotortype_get,
       .list     = linuxdvb_rotor_list,
@@ -1328,7 +1327,7 @@ const idclass_t linuxdvb_satconf_ele_class =
     {
       .type     = PT_STR,
       .id       = "en50494_type",
-      .name     = N_("Unicable Type"),
+      .name     = N_("Unicable type"),
       .set      = linuxdvb_satconf_ele_class_en50494type_set,
       .get      = linuxdvb_satconf_ele_class_en50494type_get,
       .list     = linuxdvb_en50494_list,

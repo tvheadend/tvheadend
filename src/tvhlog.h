@@ -131,4 +131,6 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 
 time_t dispatch_clock_update(struct timespec *ts);
 
+void tvhlog_backtrace_printf(const char *fmt, ...);
+
 #endif /* __TVH_LOGGING_H__ */

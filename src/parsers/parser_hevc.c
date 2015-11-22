@@ -1257,14 +1257,14 @@ static const uint8_t vui_sar[][2] = {
   {  2,   1 },
 };
 
-static uint32_t ilog2(uint32_t v)
+static uint_fast32_t ilog2(uint32_t v)
 {
-  uint32_t r;
+  uint_fast32_t r = 0;
   while (v) {
     v >>= 1;
     r++;
   }
-  return v;
+  return r;
 }
 
 static inline int check_width(uint32_t w)
@@ -1494,7 +1494,7 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
   if (log2_min_tb_size >= log2_min_cb_size || log2_min_tb_size < 2)
     return;
   log2_diff_max_min_transform_block_size = read_golomb_ue(bs);
-  if (log2_diff_max_min_transform_block_size < 0 || log2_diff_max_min_transform_block_size > 30)
+  if (log2_diff_max_min_transform_block_size > 30)
     return;
 
   read_golomb_ue(bs); /* max_transform_hierarchy_depth_inter */
@@ -1557,7 +1557,7 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
     u = read_golomb_ue(bs); /* num_long_term_ref_pics_sps */
     if (u > 31)
       return;
-    for (i = 0; i < u; u++) {
+    for (i = 0; i < u; i++) {
       skip_bits(bs, log2_max_poc_lsb);
       skip_bits1(bs);
     }
@@ -1579,6 +1579,8 @@ hevc_decode_sps(elementary_stream_t *st, bitstream_t *bs)
 
   log2_ctb_size = log2_min_cb_size +
                   log2_diff_max_min_coding_block_size;
+  if (log2_ctb_size > 18)
+    return;
 
   sps->ctb_width  = (width  + (1 << log2_ctb_size) - 1) >> log2_ctb_size;
   sps->ctb_height = (height + (1 << log2_ctb_size) - 1) >> log2_ctb_size;

@@ -23,6 +23,10 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+#if ENABLE_EXECINFO
+#include <execinfo.h>
+#endif
+
 #include "libav.h"
 #include "webui/webui.h"
 
@@ -397,6 +401,27 @@ _tvhlog_hexdump(const char *file, int line,
     len  -= HEXDUMP_WIDTH;
     data += HEXDUMP_WIDTH;
   }
+}
+
+/*
+ *
+ */
+void
+tvhlog_backtrace_printf(const char *fmt, ...)
+{
+#if ENABLE_EXECINFO
+  static void *frames[5];
+  int nframes = backtrace(frames, 5), i;
+  char **strings = backtrace_symbols(frames, nframes);
+  va_list args;
+
+  va_start(args, fmt);
+  vprintf(fmt, args);
+  va_end(args);
+  for (i = 0; i < nframes; i++)
+    printf("  %s\n", strings[i]);
+  free(strings);
+#endif
 }
 
 /*

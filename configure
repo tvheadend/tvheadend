@@ -146,6 +146,12 @@ uint64_t test(uint64_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet atomic_time_t '#include <stdint.h>
+#include <time.h>
+uint64_t test(time_t *ptr){
+return __sync_fetch_and_add(ptr, 1);
+}'
+
 check_cc_snippet lockowner '
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -250,6 +256,16 @@ if enabled_or_auto dvben50221; then
     disable dvben50221
   fi
 fi
+
+check_cc_snippet ifnames '
+#include <net/if.h>
+int test(void)
+{
+  struct if_nameindex *ifnames = if_nameindex();
+  if_freenameindex(ifnames);
+  return 0;
+}
+'
 
 #
 # Python
@@ -467,7 +483,7 @@ else
         has_libav=false
       fi
 
-      if $has_libav && ! check_pkg libswscale ">=2.3.100"; then
+      if $has_libav && ! check_pkg libavfilter ">=4.0.0"; then
         has_libav=false
       fi
 
@@ -493,7 +509,7 @@ else
         has_libav=false
       fi
 
-      if $has_libav && ! check_pkg libswscale ">=2.1.2"; then
+      if $has_libav && ! check_pkg libavfilter ">=4.0.0"; then
         has_libav=false
       fi
 

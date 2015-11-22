@@ -52,8 +52,14 @@ extern const idclass_t dvb_network_atsc_class;
 
 void dvb_network_init ( void );
 void dvb_network_done ( void );
+
 static inline dvb_network_t *dvb_network_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &dvb_network_class, NULL); }
+
+const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type);
+dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc);
+
+idnode_set_t *dvb_network_list_by_fe_type(dvb_fe_type_t type);
 
 dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
@@ -61,6 +67,7 @@ dvb_network_t *dvb_network_create0
 dvb_mux_t *dvb_network_find_mux
   ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid );
 
+const idclass_t *dvb_network_mux_class(mpegts_network_t *mn);
 int dvb_network_get_orbital_pos(mpegts_network_t *mn);
 
 /*

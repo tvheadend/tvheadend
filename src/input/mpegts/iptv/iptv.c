@@ -24,6 +24,7 @@
 #include "htsstr.h"
 #include "channels.h"
 #include "bouquet.h"
+#include "packet.h"
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -141,7 +142,7 @@ extern const idclass_t mpegts_input_class;
 const idclass_t iptv_input_class = {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "iptv_input",
-  .ic_caption    = N_("IPTV Input"),
+  .ic_caption    = N_("IPTV input"),
   .ic_get_title  = iptv_input_class_get_title,
   .ic_properties = (const property_t[]){
     {}
@@ -251,7 +252,9 @@ static const char *
 iptv_sub_url_encode(iptv_mux_t *im, const char *s, char *tmp, size_t tmplen)
 {
   char *p;
-  if (im->mm_iptv_url && !strncmp(im->mm_iptv_url, "pipe://", 7))
+  if (im->mm_iptv_url &&
+      (!strncmp(im->mm_iptv_url, "pipe://", 7) ||
+       !strncmp(im->mm_iptv_url, "file://", 7)))
     return s;
   p = url_encode(s);
   strncpy(tmp, p, tmplen-1);
@@ -319,6 +322,10 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
     scheme = "pipe";
 
+  } else if (raw && !strncmp(raw, "file://", 7)) {
+
+    scheme = "file";
+
   } else {
 
     if (urlparse(raw ?: "", &url)) {
@@ -362,6 +369,8 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   pthread_mutex_lock(&iptv_lock);
 
+  gtimer_disarm(&im->im_pause_timer);
+
   /* Stop */
   if (im->im_handler->stop)
     im->im_handler->stop(im);
@@ -398,10 +407,45 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
   snprintf(buf, len, "IPTV");
 }
 
+static inline int
+iptv_input_pause_check ( iptv_mux_t *im )
+{
+  int64_t s64;
+
+  if (im->im_pcr == PTS_UNSET)
+    return 0;
+  s64 = getmonoclock() - im->im_pcr_start;
+  im->im_pcr_start += s64;
+  im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
+  im->im_pcr &= PTS_MASK;
+  tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64, im->im_pcr, im->im_pcr_start);
+
+  /* queued more than 3 seconds? trigger the pause */
+  return im->im_pcr_end - im->im_pcr_start >= 3000000LL;
+}
+
+void
+iptv_input_unpause ( void *aux )
+{
+  iptv_mux_t *im = aux;
+  int pause;
+  pthread_mutex_lock(&iptv_lock);
+  if (iptv_input_pause_check(im)) {
+    pause = 1;
+  } else {
+    tvhtrace("iptv-pcr", "unpause timer callback");
+    im->im_handler->pause(im, 0);
+    pause = 0;
+  }
+  pthread_mutex_unlock(&iptv_lock);
+  if (pause)
+    gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+}
+
 static void *
 iptv_input_thread ( void *aux )
 {
-  int nfds;
+  int nfds, r;
   ssize_t n;
   iptv_mux_t *im;
   tvhpoll_event_t ev;
@@ -419,6 +463,7 @@ iptv_input_thread ( void *aux )
       continue;
     }
     im = ev.data.ptr;
+    r  = 0;
 
     pthread_mutex_lock(&iptv_lock);
 
@@ -430,21 +475,61 @@ iptv_input_thread ( void *aux )
         im->im_handler->stop(im);
         break;
       }
-      iptv_input_recv_packets(im, n);
+      r = iptv_input_recv_packets(im, n);
+      if (r == 1)
+        im->im_handler->pause(im, 1);
     }
 
     pthread_mutex_unlock(&iptv_lock);
+
+    if (r == 1) {
+      pthread_mutex_lock(&global_lock);
+      if (im->mm_active)
+        gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+      pthread_mutex_unlock(&global_lock);
+    }
   }
   return NULL;
 }
 
 void
+iptv_input_pause_handler ( iptv_mux_t *im, int pause )
+{
+  tvhpoll_event_t ev = { 0 };
+
+  ev.fd       = im->mm_iptv_fd;
+  ev.events   = TVHPOLL_IN;
+  ev.data.ptr = im;
+  if (pause)
+    tvhpoll_rem(iptv_poll, &ev, 1);
+  else
+    tvhpoll_add(iptv_poll, &ev, 1);
+}
+
+void
+iptv_input_recv_flush ( iptv_mux_t *im )
+{
+  mpegts_mux_instance_t *mmi = im->mm_active;
+
+  if (mmi == NULL)
+    return;
+  mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
+                            &im->mm_iptv_buffer, MPEGTS_DATA_CC_RESTART,
+                            NULL);
+}
+
+int
 iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
 {
   static time_t t1 = 0, t2;
   iptv_network_t *in = (iptv_network_t*)im->mm_network;
   mpegts_mux_instance_t *mmi;
+  mpegts_pcr_t pcr;
+  int64_t s64;
 
+  pcr.pcr_first = PTS_UNSET;
+  pcr.pcr_last  = PTS_UNSET;
+  pcr.pcr_pid   = im->im_pcr_pid;
   in->in_bps += len * 8;
   time(&t2);
   if (t2 != t1) {
@@ -460,12 +545,42 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
     t1 = t2;
   }
 
-  /* Pass on */
+  /* Pass on, but with timing */
   mmi = im->mm_active;
-  if (mmi)
+  if (mmi) {
+    if (iptv_input_pause_check(im)) {
+      tvhtrace("iptv-pcr", "pcr: paused");
+      return 1;
+    }
     mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
-                              &im->mm_iptv_buffer, NULL, NULL);
+                              &im->mm_iptv_buffer, 0, &pcr);
+    if (pcr.pcr_first != PTS_UNSET && pcr.pcr_last != PTS_UNSET) {
+      im->im_pcr_pid = pcr.pcr_pid;
+      if (im->im_pcr == PTS_UNSET) {
+        s64 = pts_diff(pcr.pcr_first, pcr.pcr_last);
+        if (s64 != PTS_UNSET) {
+          im->im_pcr = pcr.pcr_first;
+          im->im_pcr_start = getmonoclock();
+          im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
+          tvhtrace("iptv-pcr", "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
+                   pcr.pcr_first, pcr.pcr_last, im->im_pcr_start, im->im_pcr_end);
+        }
+      } else {
+        s64 = pts_diff(im->im_pcr, pcr.pcr_last);
+        if (s64 != PTS_UNSET) {
+          im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
+          tvhtrace("iptv-pcr", "pcr: last %"PRId64", time end %"PRId64, pcr.pcr_last, im->im_pcr_end);
+        }
+      }
+      if (iptv_input_pause_check(im)) {
+        tvhtrace("iptv-pcr", "pcr: paused");
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
+
 
 int
 iptv_input_fd_started ( iptv_mux_t *im )
@@ -512,6 +627,9 @@ iptv_input_mux_started ( iptv_mux_t *im )
 {
   /* Allocate input buffer */
   sbuf_reset_and_alloc(&im->mm_iptv_buffer, IPTV_BUF_SIZE);
+
+  im->im_pcr = PTS_UNSET;
+  im->im_pcr_pid = MPEGTS_PID_NONE;
 
   if (iptv_input_fd_started(im))
     return;
@@ -576,13 +694,13 @@ extern const idclass_t mpegts_network_class;
 const idclass_t iptv_network_class = {
   .ic_super      = &mpegts_network_class,
   .ic_class      = "iptv_network",
-  .ic_caption    = N_("IPTV Network"),
+  .ic_caption    = N_("IPTV network"),
   .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "scan_create",
-      .name     = N_("Scan After Create"),
+      .name     = N_("Scan after creation"),
       .off      = offsetof(iptv_network_t, in_scan_create),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -606,7 +724,7 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_INT,
       .id       = "spriority",
-      .name     = N_("Streaming Priority"),
+      .name     = N_("Streaming priority"),
       .off      = offsetof(iptv_network_t, in_streaming_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -614,14 +732,14 @@ const idclass_t iptv_network_class = {
     {
       .type     = PT_U32,
       .id       = "max_streams",
-      .name     = N_("Maximum Input Streams"),
+      .name     = N_("Maximum # input streams"),
       .off      = offsetof(iptv_network_t, in_max_streams),
       .def.i    = 0,
     },
     {
       .type     = PT_U32,
       .id       = "max_bandwidth",
-      .name     = N_("Maximum Bandwidth (Kbps)"),
+      .name     = N_("Maximum bandwidth (Kbps)"),
       .off      = offsetof(iptv_network_t, in_max_bandwidth),
       .def.i    = 0,
     },
@@ -652,7 +770,7 @@ static int
 iptv_auto_network_class_url_set( void *in, const void *v )
 {
   iptv_network_t *mn = in;
-  return iptv_url_set(&mn->in_url, &mn->in_url_sane, v, 1, 0);
+  return iptv_url_set(&mn->in_url, &mn->in_url_sane, v, 1, 1);
 }
 
 static void
@@ -875,6 +993,7 @@ void iptv_init ( void )
   iptv_udp_init();
   iptv_rtsp_init();
   iptv_pipe_init();
+  iptv_file_init();
 
   iptv_input = calloc(1, sizeof(iptv_input_t));
 

@@ -1737,3 +1737,96 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
   }
 });
 
+
+/**
+ *
+ */
+
+// create namespace
+Ext.ns('Ext.ux');
+
+/**
+ *
+ * @class Ext.ux.Window
+ * @extends Ext.Window
+ */
+Ext.ux.Window = Ext.extend(Ext.Window, {
+
+  initComponent : function() {
+    Ext.Window.superclass.initComponent.call(this);
+    Ext.EventManager.onWindowResize(this.keepItVisible, this, [true]);
+    this.originalWidth = 0;
+    this.originalHeight = 0;
+    /* exclusive window */
+    if (tvheadend.dialog)
+      tvheadend.dialog.close();
+    tvheadend.dialog = this;
+  },
+
+  beforeDestroy : function() {
+    Ext.EventManager.removeResizeListener(this.keepItVisible, this);
+    Ext.Window.superclass.beforeDestroy.call(this);
+    tvheadend.dialog = null;
+  },
+
+  keepItVisible : function(resize) {
+    var w = this.getWidth();
+    var h = this.getHeight();
+    var aw = Ext.lib.Dom.getViewWidth();
+    var ah = Ext.lib.Dom.getViewHeight();
+    var c = 0;
+
+    if (resize && this.originalWidth) {
+      w = this.originalWidth;
+      c = 1;
+    }
+    if (resize && this.originalHeight) {
+      h = this.originalHeight;
+      c = 1;
+    }
+
+    if (w > aw) {
+      w = aw;
+      c = 1;
+    }
+    if (h > ah) {
+      h = ah;
+      c = 1;
+    }
+    if (c) {
+      this.autoWidth = false;
+      this.autoHeight = false;
+      if (w === this.originalWidth)
+        w = w + 15;
+      this.setSize(w, h);
+      this.center();
+    } else if (resize) {
+      this.center();
+    } else {
+      return false;
+    }
+    return true;
+  },
+
+  setOriginSize : function(force) {
+    var w = this.getWidth();
+    var h = this.getHeight();
+    if (w > 200 && (force || this.originalWidth === 0))
+      this.originalWidth = w;
+    if (h > 100 && (force || this.originalHeight === 0))
+      this.originalHeight = h;
+    if (force && this.keepItVisible() === false)
+      this.center();
+  },
+
+  onShow : function() {
+    this.setOriginSize(false);
+    this.keepItVisible();
+  },
+
+  onResize : function() {
+    Ext.Window.superclass.onResize.apply(this, arguments);
+    this.keepItVisible(false);
+  },
+
+});

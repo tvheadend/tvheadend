@@ -230,12 +230,15 @@ void tvh_gettext_init(void)
   static const char *tbl[] = {
     "bul",    "bg",
     "cze",    "cs",
+    "dan",    "da",
     "ger",    "de",
     "eng",    "en_US",
     "eng_GB", "en_GB",
     "eng_US", "en_US",
     "spa",    "es",
+    "est",    "et",
     "per",    "fa",
+    "fin",    "fi",
     "fre",    "fr",
     "heb",    "he",
     "hrv",    "hr",
@@ -248,6 +251,7 @@ void tvh_gettext_init(void)
     "rus",    "ru",
     "srp",    "sr",
     "swe",    "sv",
+    "ukr",    "uk",
     NULL, NULL
   };
   const char **p;

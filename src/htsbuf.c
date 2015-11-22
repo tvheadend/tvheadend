@@ -368,7 +368,7 @@ htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
     
     if(esc != NULL) {
       htsbuf_append(hq, s, c - s - 1);
-      htsbuf_append(hq, esc, strlen(esc));
+      htsbuf_append_str(hq, esc);
       s = c;
     }
     
@@ -416,7 +416,7 @@ htsbuf_append_and_escape_url(htsbuf_queue_t *hq, const char *s)
 
     if(esc != NULL) {
       htsbuf_append(hq, s, c - s - 1);
-      htsbuf_append(hq, esc, strlen(esc));
+      htsbuf_append_str(hq, esc);
       s = c;
     }
     

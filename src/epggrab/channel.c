@@ -36,23 +36,86 @@ SKEL_DECLARE(epggrab_channel_skel, epggrab_channel_t);
  * EPG Grab Channel functions
  * *************************************************************************/
 
-/* Check if channels match */
-int epggrab_channel_match ( epggrab_channel_t *ec, channel_t *ch )
+static inline int
+is_paired( epggrab_channel_t *ec )
 {
-  const char *chid, *s;
+  return ec->only_one && LIST_FIRST(&ec->channels);
+}
+
+static inline int
+epggrab_channel_check ( epggrab_channel_t *ec, channel_t *ch )
+{
+  if (!ec || !ch || !ch->ch_epgauto || !ch->ch_enabled)
+    return 0;
+  if (ch->ch_epg_parent || !ec->enabled)
+    return 0;
+  if (is_paired(ec))
+    return 0; // ignore already paired
+  return 1;
+}
+
+/* Check if channels match by epgid */
+int epggrab_channel_match_epgid ( epggrab_channel_t *ec, channel_t *ch )
+{
+  const char *chid;
+
+  if (ec->id == NULL)
+    return 0;
+  if (!epggrab_channel_check(ec, ch))
+    return 0;
+  chid = channel_get_epgid(ch);
+  if (chid && !strcmp(ec->id, chid))
+    return 1;
+  return 0;
+}
+
+/* Check if channels match by name */
+int epggrab_channel_match_name ( epggrab_channel_t *ec, channel_t *ch )
+{
+  const char *name, *s;
   htsmsg_field_t *f;
 
-  if (!ec || !ch || !ch->ch_epgauto || !ch->ch_enabled || !ec->enabled) return 0;
-  if (ec->only_one && LIST_FIRST(&ec->channels)) return 0; // ignore already paired
+  if (!epggrab_channel_check(ec, ch))
+    return 0;
 
-  chid = channel_get_epgid(ch);
-  if (ec->name && !strcmp(ec->name, chid)) return 1;
+  name = channel_get_name(ch);
+  if (name == NULL)
+    return 0;
+
+  if (ec->name && !strcmp(ec->name, name))
+    return 1;
+
   if (ec->names)
     HTSMSG_FOREACH(f, ec->names)
       if ((s = htsmsg_field_get_str(f)) != NULL)
-        if (!strcmp(s, chid)) return 1;
+        if (!strcmp(s, name))
+          return 1;
+
+  return 0;
+}
+
+/* Check if channels match by number */
+int epggrab_channel_match_number ( epggrab_channel_t *ec, channel_t *ch )
+{
+  if (ec->lcn == 0)
+    return 0;
+
+  if (!epggrab_channel_check(ec, ch))
+    return 0;
+
   if (ec->lcn && ec->lcn == channel_get_number(ch)) return 1;
   return 0;
+}
+
+/* Delete ilm */
+static void
+_epgggrab_channel_link_delete(idnode_list_mapping_t *ilm, int delconf)
+{
+  epggrab_channel_t *ec = (epggrab_channel_t *)ilm->ilm_in1;
+  channel_t *ch = (channel_t *)ilm->ilm_in2;
+  tvhdebug(ec->mod->id, "unlinking %s from %s",
+           ec->id, channel_get_name(ch));
+  idnode_list_unlink(ilm, delconf ? ec : NULL);
 }
 
 /* Destroy */
@@ -61,9 +124,11 @@ epggrab_channel_link_delete
   ( epggrab_channel_t *ec, channel_t *ch, int delconf )
 {
   idnode_list_mapping_t *ilm;
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
-    if (ilm->ilm_in1 == &ec->idnode && ilm->ilm_in2 == &ch->ch_id)
-      idnode_list_unlink(ilm, NULL);
+  LIST_FOREACH(ilm, &ec->channels, ilm_in1_link)
+    if (ilm->ilm_in1 == &ec->idnode && ilm->ilm_in2 == &ch->ch_id) {
+      _epgggrab_channel_link_delete(ilm, delconf);
+      return;
+    }
 }
 
 /* Destroy all links */
@@ -71,7 +136,7 @@ static void epggrab_channel_links_delete( epggrab_channel_t *ec, int delconf )
 {
   idnode_list_mapping_t *ilm;
   while ((ilm = LIST_FIRST(&ec->channels)))
-    idnode_list_unlink(ilm, delconf ? ec : NULL);
+    _epgggrab_channel_link_delete(ilm, delconf);
 }
 
 /* Link epggrab channel to real channel */
@@ -85,7 +150,7 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch, void *origin )
   if (!ch || !ch->ch_enabled) return 0;
 
   /* Already linked */
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
+  LIST_FOREACH(ilm, &ec->channels, ilm_in1_link)
     if (ilm->ilm_in2 == &ch->ch_id)
       return 0;
 
@@ -119,15 +184,6 @@ epggrab_channel_map ( idnode_t *ec, idnode_t *ch, void *origin )
   return epggrab_channel_link((epggrab_channel_t *)ec, (channel_t *)ch, origin);
 }
 
-/* Match and link (basically combines two funcs above for ease) */
-int epggrab_channel_match_and_link ( epggrab_channel_t *ec, channel_t *ch )
-{
-  int r = epggrab_channel_match(ec, ch);
-  if (r)
-    epggrab_channel_link(ec, ch, NULL);
-  return r;
-}
-
 /* Set name */
 int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
 {
@@ -139,7 +195,7 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
     if (ec->name) free(ec->name);
     ec->name = strdup(name);
     if (epggrab_conf.channel_rename) {
-      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_name(ch, name))
           channel_save(ch);
@@ -165,7 +221,7 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
     if (ec->icon) free(ec->icon);
     ec->icon = strdup(icon);
     if (epggrab_conf.channel_reicon) {
-      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_icon(ch, icon))
           channel_save(ch);
@@ -189,7 +245,7 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int major, int minor )
   if (ec->lcn != lcn) {
     ec->lcn = lcn;
     if (epggrab_conf.channel_renumber) {
-      LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+      LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_number(ch,
                                lcn / CHANNEL_SPLIT,
@@ -203,16 +259,48 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int major, int minor )
   return save;
 }
 
+/* Autolink EPG channel to channel */
+static int
+epggrab_channel_autolink_one( epggrab_channel_t *ec, channel_t *ch )
+{
+  if (epggrab_channel_match_epgid(ec, ch))
+    return epggrab_channel_link(ec, ch, NULL);
+  else if (epggrab_channel_match_name(ec, ch))
+    return epggrab_channel_link(ec, ch, NULL);
+  else if (epggrab_channel_match_number(ec, ch))
+    return epggrab_channel_link(ec, ch, NULL);
+  return 0;
+}
+
+/* Autolink EPG channel to channel */
+static int
+epggrab_channel_autolink( epggrab_channel_t *ec )
+{
+  channel_t *ch;
+
+  CHANNEL_FOREACH(ch)
+    if (epggrab_channel_match_epgid(ec, ch))
+      if (epggrab_channel_link(ec, ch, NULL))
+        return 1;
+  CHANNEL_FOREACH(ch)
+    if (epggrab_channel_match_name(ec, ch))
+      if (epggrab_channel_link(ec, ch, NULL))
+        return 1;
+  CHANNEL_FOREACH(ch)
+    if (epggrab_channel_match_number(ec, ch))
+      if (epggrab_channel_link(ec, ch, NULL))
+        return 1;
+  return 0;
+}
+
 /* Channel settings updated */
 void epggrab_channel_updated ( epggrab_channel_t *ec )
 {
-  channel_t *ch;
   if (!ec) return;
 
   /* Find a link */
-  if (!ec->only_one || !LIST_FIRST(&ec->channels))
-    CHANNEL_FOREACH(ch)
-      if (epggrab_channel_match_and_link(ec, ch)) break;
+  if (!is_paired(ec))
+    epggrab_channel_autolink(ec);
 
   /* Save */
   epggrab_channel_save(ec);
@@ -377,12 +465,13 @@ void epggrab_channel_end_scan ( epggrab_module_t *mod )
 void epggrab_channel_add ( channel_t *ch )
 {
   epggrab_module_t *mod;
-  epggrab_channel_t *egc;
+  epggrab_channel_t *ec;
 
   LIST_FOREACH(mod, &epggrab_modules, link)
-    RB_FOREACH(egc, &mod->channels, link)
-      if (epggrab_channel_match_and_link(egc, ch))
-        break;
+    RB_FOREACH(ec, &mod->channels, link) {
+      if (!is_paired(ec))
+        epggrab_channel_autolink_one(ec, ch);
+    }
 }
 
 void epggrab_channel_rem ( channel_t *ch )
@@ -541,10 +630,10 @@ epggrab_channel_class_only_one_notify ( void *obj, const char *lang )
   idnode_list_mapping_t *ilm1, *ilm2;
   if (ec->only_one) {
     for(ilm1 = LIST_FIRST(&ec->channels); ilm1; ilm1 = ilm2) {
-      ilm2 = LIST_NEXT(ilm1, ilm_in2_link);
+      ilm2 = LIST_NEXT(ilm1, ilm_in1_link);
       ch = (channel_t *)ilm1->ilm_in2;
       if (!first)
-        ch = first;
+        first = ch;
       else if (ch->ch_epgauto && first)
         idnode_list_unlink(ilm1, ec);
     }
@@ -588,6 +677,13 @@ const idclass_t epggrab_channel_class = {
       .id       = "path",
       .name     = N_("Path"),
       .get      = epggrab_channel_class_path_get,
+      .opts     = PO_RDONLY | PO_NOSAVE,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "updated",
+      .name     = N_("Updated"),
+      .off      = offsetof(epggrab_channel_t, laststamp),
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {

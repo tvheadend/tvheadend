@@ -160,3 +160,16 @@ uuid_hex2bin ( const tvh_uuid_t *a, tvh_uuid_t *b )
   memcpy(b, &tmp, sizeof(tmp));
   return 0;
 }
+
+/* Validate hex string */
+int
+uuid_hexvalid ( const char *uuid )
+{
+  int i;
+  if (uuid == NULL)
+    return 0;
+  for (i = 0; i < UUID_HEX_SIZE - 1; i++)
+    if (hexnibble(uuid[i]) < 0)
+      return 0;
+  return 1;
+}

@@ -429,12 +429,15 @@ void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids)
         tbl = calloc(1, sizeof(*tbl));
         dvb_table_parse_init(&tbl->tbl, "satip-pmt", pid, rtp);
         tbl->pid = pid;
+        TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
       }
     }
     for (tbl = TAILQ_FIRST(&rtp->pmt_tables); tbl; tbl = tbl_next){
       tbl_next = TAILQ_NEXT(tbl, link);
-      if (tbl->remove_mark)
+      if (tbl->remove_mark) {
         TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+        free(tbl);
+      }
     }
     pthread_mutex_unlock(&rtp->lock);
   }
@@ -463,6 +466,7 @@ void satip_rtp_close(void *id)
     while ((tbl = TAILQ_FIRST(&rtp->pmt_tables)) != NULL) {
       dvb_table_parse_done(&tbl->tbl);
       TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+      free(tbl);
     }
     pthread_mutex_destroy(&rtp->lock);
     free(rtp);
@@ -742,10 +746,11 @@ satip_rtcp_thread(void *aux)
 {
   satip_rtp_session_t *rtp;
   struct timespec ts;
-  uint8_t msg[RTCP_PAYLOAD];
+  uint8_t msg[RTCP_PAYLOAD+1];
   char addrbuf[50];
   int r, len, err;
 
+  tvhtrace("satips", "starting rtcp thread");
   while (satip_rtcp_run) {
     ts.tv_sec  = 0;
     ts.tv_nsec = 150000000;
@@ -759,6 +764,11 @@ satip_rtcp_thread(void *aux)
       if (rtp->sq == NULL) continue;
       len = satip_rtcp_build(rtp, msg);
       if (len <= 0) continue;
+      if (tvhtrace_enabled()) {
+        msg[len] = '\0';
+        tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
+        tvhtrace("satips", "RTCP send to %s:%d : %s", addrbuf, IP_PORT(rtp->peer2), msg + 16);
+      }
       r = sendto(rtp->fd_rtcp, msg, len, 0,
                  (struct sockaddr*)&rtp->peer2,
                  rtp->peer2.ss_family == AF_INET6 ?
@@ -779,13 +789,18 @@ end:
 /*
  *
  */
-void satip_rtp_init(void)
+void satip_rtp_init(int boot)
 {
   TAILQ_INIT(&satip_rtp_sessions);
   pthread_mutex_init(&satip_rtp_lock, NULL);
 
-  satip_rtcp_run = 1;
-  tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
+  if (boot)
+    satip_rtcp_run = 0;
+
+  if (!boot && !satip_rtcp_run) {
+    satip_rtcp_run = 1;
+    tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
+  }
 }
 
 /*

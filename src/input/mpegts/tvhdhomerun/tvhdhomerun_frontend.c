@@ -91,13 +91,13 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   /* first setup a local socket for the device to stream to */
   sockfd = tvh_socket(AF_INET, SOCK_DGRAM, 0);
   if(sockfd == -1) {
-    tvherror("stvhdhomerun", "failed to open socket (%d)", errno);
+    tvherror("tvhdhomerun", "failed to open socket (%d)", errno);
     return NULL;
   }
 
   if(fcntl(sockfd, F_SETFL, O_NONBLOCK) != 0) {
     close(sockfd);
-    tvherror("stvhdhomerun", "failed to set socket nonblocking (%d)", errno);
+    tvherror("tvhdhomerun", "failed to set socket nonblocking (%d)", errno);
     return NULL;
   }
 
@@ -196,7 +196,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
     //tvhdebug("tvhdhomerun", "got r=%d (thats %d)", r, (r == 7*188));
 
-    mpegts_input_recv_packets((mpegts_input_t*) hfe, mmi, &sb, NULL, NULL);
+    mpegts_input_recv_packets((mpegts_input_t*) hfe, mmi, &sb, 0, NULL);
   }
 
   tvhdebug("tvhdhomerun", "setting target to none");
@@ -507,18 +507,8 @@ static idnode_set_t *
 tvhdhomerun_frontend_network_list ( mpegts_input_t *mi )
 {
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)mi;
-  const idclass_t     *idc;
 
-  if (hfe->hf_type == DVB_TYPE_T)
-    idc = &dvb_network_dvbt_class;
-  else if (hfe->hf_type == DVB_TYPE_C)
-    idc = &dvb_network_dvbc_class;
-  else if (hfe->hf_type == DVB_TYPE_ATSC)
-    idc = &dvb_network_atsc_class;
-  else
-    return NULL;
-
-  return idnode_find_all(idc, NULL);
+  return dvb_network_list_by_fe_type(hfe->hf_type);
 }
 
 static void
@@ -549,13 +539,13 @@ const idclass_t tvhdhomerun_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "tvhdhomerun_frontend",
-  .ic_caption    = N_("HDHomeRun DVB Frontend"),
+  .ic_caption    = N_("HDHomeRun DVB frontend"),
   .ic_save       = tvhdhomerun_frontend_class_save,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_INT,
       .id       = "fe_number",
-      .name     = N_("Frontend Number"),
+      .name     = N_("Frontend number"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_frontend_t, hf_tunerNumber),
     },
@@ -567,7 +557,7 @@ const idclass_t tvhdhomerun_frontend_dvbt_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
   .ic_class      = "tvhdhomerun_frontend_dvbt",
-  .ic_caption    = N_("HDHomeRun DVB-T Frontend"),
+  .ic_caption    = N_("HDHomeRun DVB-T frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -577,7 +567,7 @@ const idclass_t tvhdhomerun_frontend_dvbc_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
   .ic_class      = "tvhdhomerun_frontend_dvbc",
-  .ic_caption    = N_("HDHomeRun DVB-C Frontend"),
+  .ic_caption    = N_("HDHomeRun DVB-C frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -587,7 +577,7 @@ const idclass_t tvhdhomerun_frontend_atsc_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
   .ic_class      = "tvhdhomerun_frontend_atsc",
-  .ic_caption    = N_("HDHomeRun ATSC Frontend"),
+  .ic_caption    = N_("HDHomeRun ATSC frontend"),
   .ic_properties = (const property_t[]){
     {}
   }

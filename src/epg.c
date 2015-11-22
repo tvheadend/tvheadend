@@ -210,7 +210,7 @@ static void _epg_object_create ( void *o )
   }
 }
 
-static epg_object_t *_epg_object_find_by_uri 
+static epg_object_t *_epg_object_find_by_uri
   ( const char *uri, int create, int *save,
     epg_object_tree_t *tree, epg_object_t **skel )
 {
@@ -1397,12 +1397,16 @@ epg_serieslink_t *epg_serieslink_deserialize
  * *************************************************************************/
 
 static void _epg_channel_rem_broadcast 
-  ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *new )
+  ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *ebc_new )
 {
-  if (new) dvr_event_replaced(ebc, new);
   RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
   if (ch->ch_epg_now  == ebc) ch->ch_epg_now  = NULL;
   if (ch->ch_epg_next == ebc) ch->ch_epg_next = NULL;
+  if (ebc_new) {
+    dvr_event_replaced(ebc, ebc_new);
+  } else {
+    dvr_event_removed(ebc);
+  }
   _epg_object_putref(ebc);
 }
 
@@ -1413,8 +1417,14 @@ static void _epg_channel_timer_callback ( void *p )
   channel_t *ch = (channel_t*)p;
 
   /* Clear now/next */
-  if ((cur = ch->ch_epg_now))
+  if ((cur = ch->ch_epg_now)) {
+    if (cur->running) {
+      /* running? don't do anything */
+      gtimer_arm(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, 2);
+      return;
+    }
     cur->getref(cur);
+  }
   if ((nxt = ch->ch_epg_next))
     nxt->getref(nxt);
   ch->ch_epg_now = ch->ch_epg_next = NULL;
@@ -1597,8 +1607,11 @@ static void _epg_broadcast_updated ( void *eo )
     htsp_event_add(eo);
     notify_delayed(id, "epg", "create");
   }
-  dvr_event_updated(eo);
-  dvr_autorec_check_event(eo);
+  if (ebc->channel) {
+    dvr_event_updated(eo);
+    dvr_autorec_check_event(eo);
+    channel_event_updated(eo);
+  }
 }
 
 static epg_broadcast_t **_epg_broadcast_skel ( void )
@@ -1630,6 +1643,33 @@ epg_broadcast_t* epg_broadcast_find_by_time
   return _epg_channel_add_broadcast(channel, ebc, create, save);
 }
 
+epg_broadcast_t *epg_broadcast_clone
+  ( channel_t *channel, epg_broadcast_t *src, int *save )
+{
+  epg_broadcast_t *ebc;
+
+  if ( !src ) return NULL;
+  ebc = epg_broadcast_find_by_time(channel, src->start, src->stop,
+                                   src->dvb_eid, 1, save);
+  if (ebc) {
+    /* Copy metadata */
+    *save |= epg_broadcast_set_is_widescreen(ebc, src->is_widescreen, NULL);
+    *save |= epg_broadcast_set_is_hd(ebc, src->is_hd, NULL);
+    *save |= epg_broadcast_set_lines(ebc, src->lines, NULL);
+    *save |= epg_broadcast_set_aspect(ebc, src->aspect, NULL);
+    *save |= epg_broadcast_set_is_deafsigned(ebc, src->is_deafsigned, NULL);
+    *save |= epg_broadcast_set_is_subtitled(ebc, src->is_subtitled, NULL);
+    *save |= epg_broadcast_set_is_audio_desc(ebc, src->is_audio_desc, NULL);
+    *save |= epg_broadcast_set_is_new(ebc, src->is_new, NULL);
+    *save |= epg_broadcast_set_is_repeat(ebc, src->is_repeat, NULL);
+    *save |= epg_broadcast_set_summary2(ebc, src->summary, NULL);
+    *save |= epg_broadcast_set_description2(ebc, src->description, NULL);
+    *save |= epg_broadcast_set_serieslink(ebc, src->serieslink, NULL);
+    *save |= epg_broadcast_set_episode(ebc, src->episode, NULL);
+  }
+  return ebc;
+}
+
 epg_broadcast_t *epg_broadcast_find_by_id ( uint32_t id )
 {
   return (epg_broadcast_t*)epg_object_find_by_id(id, EPG_BROADCAST);
@@ -1642,6 +1682,28 @@ epg_broadcast_t *epg_broadcast_find_by_eid ( channel_t *ch, uint16_t eid )
     if (e->dvb_eid == eid) return e;
   }
   return NULL;
+}
+
+void epg_broadcast_notify_running
+  ( epg_broadcast_t *broadcast, epg_source_t esrc, int running )
+{
+  channel_t *ch;
+  epg_broadcast_t *now;
+  int orunning = broadcast->running;
+
+  broadcast->running = !!running;
+  ch = broadcast->channel;
+  now = ch ? ch->ch_epg_now : NULL;
+  if (!running) {
+    if (now == broadcast && orunning == broadcast->running)
+      broadcast->stop = dispatch_clock - 1;
+  } else {
+    if (broadcast != now && now) {
+      now->running = 0;
+      dvr_event_running(now, esrc, 0);
+    }
+  }
+  dvr_event_running(broadcast, esrc, running);
 }
 
 int epg_broadcast_set_episode 
@@ -2009,11 +2071,11 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Water sport"), NULL },
   },
   { /* 05 */
-    C_{ N_("Children's / Youth programmes"), NULL },
-    C_{ N_("Pre-school children's programmes"), NULL },
-    C_{ N_("Entertainment programmes for 6 to 14"), NULL },
-    C_{ N_("Entertainment programmes for 10 to 16"), NULL },
-    C_{ N_("Informational"), N_("Educational"), N_("School programmes"), NULL },
+    C_{ N_("Children's / Youth programs"), NULL },
+    C_{ N_("Pre-school children's programs"), NULL },
+    C_{ N_("Entertainment programs for 6 to 14"), NULL },
+    C_{ N_("Entertainment programs for 10 to 16"), NULL },
+    C_{ N_("Informational"), N_("Educational"), N_("School programs"), NULL },
     C_{ N_("Cartoons"), N_("Puppets"), NULL },
     C_{ N_("Cartoons"), N_("Puppets"), NULL },
     C_{ N_("Cartoons"), N_("Puppets"), NULL },

@@ -105,7 +105,7 @@ read_golomb_ue(bitstream_t *bs)
   uint32_t b;
   int lzb = -1;
 
-  for(b = 0; !b && !bs_eof(bs); lzb++)
+  for(b = 0; !b && !bs_eof(bs) && lzb < 32; lzb++)
     b = read_bits1(bs);
 
   if (lzb < 0)
@@ -117,14 +117,12 @@ read_golomb_ue(bitstream_t *bs)
 int32_t
 read_golomb_se(bitstream_t *bs)
 {
-  uint32_t v, pos;
+  uint32_t v;
   v = read_golomb_ue(bs);
   if(v == 0)
     return 0;
 
-  pos = v & 1;
-  v = (v + 1) >> 1;
-  return pos ? v : -v;
+  return (v & 1) ? ((v + 1) >> 1) : -(v >> 1);
 }
 
 

@@ -237,11 +237,13 @@ void http_server_done(void);
 
 int http_access_verify(http_connection_t *hc, int mask);
 int http_access_verify_channel(http_connection_t *hc, int mask,
-                               struct channel *ch, int ticket);
+                               struct channel *ch);
 
 void http_deescape(char *s);
 
 void http_parse_args(http_arg_list_t *list, char *args);
+
+char *http_get_hostpath(http_connection_t *hc);
 
 /*
  * HTTP/RTSP Client
@@ -273,6 +275,7 @@ struct http_client {
   char        *hc_bindaddr;
   tvhpoll_t   *hc_efd;
   int          hc_pevents;
+  int          hc_pevents_pause;
 
   int          hc_code;
   http_ver_t   hc_version;
@@ -280,6 +283,8 @@ struct http_client {
   http_cmd_t   hc_cmd;
 
   struct http_arg_list hc_args; /* header */
+
+  char        *hc_url;
 
   void        *hc_aux;
   size_t       hc_data_limit;
@@ -314,6 +319,7 @@ struct http_client {
   int          hc_running:1;
   int          hc_shutdown_wait:1;
   int          hc_handle_location:1; /* handle the redirection (location) requests */
+  int          hc_pause:1;
 
   http_client_wcmd_t            *hc_wcmd;
   TAILQ_HEAD(,http_client_wcmd)  hc_wqueue;
@@ -340,6 +346,8 @@ struct http_client {
   gtimer_t     hc_close_timer;
 
   /* callbacks */
+  void    (*hc_hdr_create)   (http_client_t *hc, http_arg_list_t *h,
+                              const url_t *url, int keepalive);
   int     (*hc_hdr_received) (http_client_t *hc);
   int     (*hc_data_received)(http_client_t *hc, void *buf, size_t len);
   int     (*hc_data_complete)(http_client_t *hc);
@@ -362,11 +370,16 @@ int http_client_send( http_client_t *hc, http_cmd_t cmd,
                       http_arg_list_t *header, void *body, size_t body_size );
 void http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
                              const char *user, const char *pass );
+void http_client_basic_args ( http_client_t *hc, http_arg_list_t *h,
+                              const url_t *url, int keepalive );
+void http_client_add_args ( http_client_t *hc, http_arg_list_t *h,
+                            const char *args );
 int http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver );
 int http_client_simple( http_client_t *hc, const url_t *url);
 int http_client_clear_state( http_client_t *hc );
 int http_client_run( http_client_t *hc );
 void http_client_ssl_peer_verify( http_client_t *hc, int verify );
+void http_client_unpause( http_client_t *hc );
 
 /*
  * RTSP helpers

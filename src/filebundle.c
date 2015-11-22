@@ -23,13 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#if ENABLE_ZLIB
-#define ZLIB_CONST 1
-#include <zlib.h>
-#ifndef z_const
-#define z_const
-#endif
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -50,7 +43,7 @@ struct filebundle_dir
     } d;
     struct {
       const filebundle_entry_t *root;
-      filebundle_entry_t       *cur;
+      const filebundle_entry_t *cur;
     } b;
   };
 };
@@ -72,85 +65,6 @@ struct filebundle_file
     } b;
   };
 };
-
-/* **************************************************************************
- * Compression/Decompression
- * *************************************************************************/
-
-#if ENABLE_ZLIB
-uint8_t *gzip_inflate ( const uint8_t *data, size_t size, size_t orig )
-{
-  int err;
-  z_stream zstr;
-  uint8_t *bufout;
-
-  /* Setup buffers */
-  bufout = malloc(orig);
-
-  /* Setup zlib */
-  memset(&zstr, 0, sizeof(zstr));
-  inflateInit2(&zstr, 31);
-  zstr.avail_in  = size;
-  zstr.next_in   = (z_const uint8_t *)data;
-  zstr.avail_out = orig;
-  zstr.next_out  = bufout;
-    
-  /* Decompress */
-  err = inflate(&zstr, Z_NO_FLUSH);
-  if ( err != Z_STREAM_END || zstr.avail_out != 0 ) {
-    free(bufout);
-    bufout = NULL;
-  }
-  inflateEnd(&zstr);
-  
-  return bufout;
-}
-#endif
-
-#if ENABLE_ZLIB
-uint8_t *gzip_deflate ( const uint8_t *data, size_t orig, size_t *size )
-{
-  int err;
-  z_stream zstr;
-  uint8_t *bufout;
-
-  /* Setup buffers */
-  bufout = malloc(orig);
-
-  /* Setup zlib */
-  memset(&zstr, 0, sizeof(zstr));
-  err = deflateInit2(&zstr, 9, Z_DEFLATED, 31, 9, Z_DEFAULT_STRATEGY);
-  zstr.avail_in  = orig;
-  zstr.next_in   = (z_const uint8_t *)data;
-  zstr.avail_out = orig;
-  zstr.next_out  = bufout;
-    
-  /* Compress */
-  while (1) {
-    err = deflate(&zstr, Z_FINISH);
-
-    /* Need more space */
-    if (err == Z_OK && zstr.avail_out == 0) {
-      bufout         = realloc(bufout, zstr.total_out * 2);
-      zstr.avail_out = zstr.total_out;
-      zstr.next_out  = bufout + zstr.total_out;
-      continue;
-    }
-
-    /* Error */
-    if ( (err != Z_STREAM_END && err != Z_OK) || zstr.total_out == 0 ) {
-      free(bufout);
-      bufout = NULL;
-    } else {
-      *size  = zstr.total_out;
-    }
-    break;
-  }
-  deflateEnd(&zstr);
-  
-  return bufout;
-}
-#endif
 
 /* **************************************************************************
  * Miscellanous
@@ -228,7 +142,7 @@ fb_dir *fb_opendir ( const char *path )
     char *tmp1, *tmp2, *tmp3 = NULL;
     tmp1 = strdup(path);
     tmp2 = strtok_r(tmp1, "/", &tmp3);
-    filebundle_entry_t *fb = filebundle_root;
+    const filebundle_entry_t *fb = filebundle_root;
     while (fb && tmp2) {
       if (fb->type == FB_DIR && !strcmp(fb->name, tmp2)) {
         tmp2 = strtok_r(NULL, "/", &tmp3);
@@ -395,7 +309,7 @@ fb_file *fb_open2
 #if (ENABLE_ZLIB && ENABLE_BUNDLE)
         ret->gzip = 0;
         ret->size = fb->f.orig;
-        ret->buf  = gzip_inflate(fb->f.data, fb->f.size, fb->f.orig);
+        ret->buf  = tvh_gzip_inflate(fb->f.data, fb->f.size, fb->f.orig);
         if (!ret->buf) {
           free(ret);
           ret = NULL;
@@ -432,12 +346,12 @@ fb_file *fb_open2
     if (ret->type == FB_BUNDLE) {
       const uint8_t *data;
       data     = ret->b.root->f.data;
-      ret->buf = gzip_deflate(data, ret->size, &ret->size);
+      ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
     } else {
       uint8_t *data = malloc(ret->size);
       ssize_t c = fread(data, 1, ret->size, ret->d.cur);
       if (c == ret->size)
-        ret->buf = gzip_deflate(data, ret->size, &ret->size);
+        ret->buf = tvh_gzip_deflate(data, ret->size, &ret->size);
       fclose(ret->d.cur);
       ret->d.cur = NULL;
       free(data);

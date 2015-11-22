@@ -184,6 +184,8 @@ udp_bind ( const char *subsystem, const char *name,
     return UDP_FATAL_ERROR;
   }
 
+  uc->fd = fd;
+
   /* Mark reuse address */
   if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) {
     tvherror(subsystem, "%s - failed to reuse address for socket [%s]",
@@ -287,7 +289,6 @@ udp_bind ( const char *subsystem, const char *name,
     tvhwarn(subsystem, "%s - cannot change UDP tx buffer size [%s]",
             name, strerror(errno));
 
-  uc->fd = fd;
   return uc;
 
 error:

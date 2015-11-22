@@ -168,17 +168,37 @@ static void
 http_client_poll_dir ( http_client_t *hc, int in, int out )
 {
   int events = (in ? TVHPOLL_IN : 0) | (out ? TVHPOLL_OUT : 0);
-  if (hc->hc_efd && hc->hc_pevents != events) {
-    tvhpoll_event_t ev;
-    memset(&ev, 0, sizeof(ev));
-    ev.fd       = hc->hc_fd;
-    ev.events   = events | TVHPOLL_IN;
-    ev.data.ptr = hc;  
-    tvhpoll_add(hc->hc_efd, &ev, 1);
+  tvhpoll_event_t ev;
+  if (hc->hc_efd) {
+    if (events == 0 && hc->hc_pause) {
+      if (hc->hc_pevents_pause == 0)
+        hc->hc_pevents_pause = hc->hc_pevents;
+      memset(&ev, 0, sizeof(ev));
+      ev.fd       = hc->hc_fd;
+      ev.data.ptr = hc;
+      tvhpoll_rem(hc->hc_efd, &ev, 1);
+    } else if (hc->hc_pevents != events) {
+      memset(&ev, 0, sizeof(ev));
+      ev.fd       = hc->hc_fd;
+      ev.events   = events | TVHPOLL_IN;
+      ev.data.ptr = hc;
+      tvhpoll_add(hc->hc_efd, &ev, 1);
+    }
   }
   hc->hc_pevents = events;
   /* make sure to se the correct errno for our SSL routines */
   errno = EAGAIN;
+}
+
+void
+http_client_unpause( http_client_t *hc )
+{
+  if (hc->hc_pause) {
+    http_client_poll_dir(hc, hc->hc_pevents_pause & TVHPOLL_IN,
+                             hc->hc_pevents_pause & TVHPOLL_OUT);
+    hc->hc_pause = 0;
+    hc->hc_pevents_pause = 0;
+  }
 }
 
 static void
@@ -569,14 +589,14 @@ error:
     free(wcmd);
     return -EINVAL;
   }
-  htsbuf_append(&q, s, strlen(s));
+  htsbuf_append_str(&q, s);
   htsbuf_append(&q, " ", 1);
   if (path == NULL || path[0] == '\0')
     path = "/";
-  htsbuf_append(&q, path, strlen(path));
+  htsbuf_append_str(&q, path);
   if (query && query[0] != '\0') {
     htsbuf_append(&q, "?", 1);
-    htsbuf_append(&q, query, strlen(query));
+    htsbuf_append_str(&q, query);
   }
   htsbuf_append(&q, " ", 1);
   s = http_ver2str(hc->hc_version);
@@ -584,14 +604,14 @@ error:
     htsbuf_queue_flush(&q);
     goto error;
   }
-  htsbuf_append(&q, s, strlen(s));
+  htsbuf_append_str(&q, s);
   htsbuf_append(&q, "\r\n", 2);
 
   if (header) {
     TAILQ_FOREACH(h, header, link) {
-      htsbuf_append(&q, h->key, strlen(h->key));
+      htsbuf_append_str(&q, h->key);
       htsbuf_append(&q, ": ", 2);
-      htsbuf_append(&q, h->val, strlen(h->val));
+      htsbuf_append_str(&q, h->val);
       htsbuf_append(&q, "\r\n", 2);
       if (strcasecmp(h->key, "Connection") == 0 &&
           strcasecmp(h->val, "close") == 0)
@@ -869,7 +889,7 @@ http_client_run( http_client_t *hc )
   char *buf, *saveptr, *argv[3], *d, *p;
   int ver, res, delimsize = 4;
   ssize_t r;
-  size_t len, limit;
+  size_t len;
 
   if (hc == NULL)
     return 0;
@@ -909,6 +929,10 @@ http_client_run( http_client_t *hc )
   }
 
 retry:
+  if (hc->hc_pause) {
+    http_client_poll_dir(hc, 0, 0);
+    return HTTP_CON_RECEIVING;
+  }
   if (hc->hc_ssl)
     r = http_client_ssl_recv(hc, buf, hc->hc_io_size);
   else
@@ -930,7 +954,6 @@ retry:
     tvhlog_hexdump("httpc", buf, MIN(64, r));
   }
 
-  limit = hc->hc_version == RTSP_VERSION_1_0 ? hc->hc_io_size * 2 : 16*1024;
   if (hc->hc_in_data && !hc->hc_in_rtp_data) {
     res = http_client_data_received(hc, buf, r, 0);
     if (res < 0)
@@ -943,7 +966,7 @@ retry:
   }
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
-    if (hc->hc_rsize + r > limit)
+    if (hc->hc_rsize + r > hc->hc_io_size + 16*1024)
       return http_client_flush(hc, -EMSGSIZE);
     hc->hc_rsize += r;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
@@ -1081,7 +1104,7 @@ rtsp_data:
       return http_client_flush(hc, res);
     res = HTTP_CON_RECEIVING;
     if (hc->hc_rpos < r + 4 || hc->hc_rbuf[r] != '$') {
-      memcpy(hc->hc_rbuf, hc->hc_rbuf + r, hc->hc_rpos - r);
+      memmove(hc->hc_rbuf, hc->hc_rbuf + r, hc->hc_rpos - r);
       hc->hc_rpos -= r;
       goto next_header;
     }
@@ -1117,7 +1140,7 @@ http_client_basic_auth( http_client_t *hc, http_arg_list_t *h,
 /*
  * Redirected
  */
-static void
+void
 http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url, int keepalive )
 {
   char buf[256];
@@ -1141,8 +1164,49 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
   http_client_basic_auth(hc, h, url->user, url->pass);
 }
 
+static char *
+strstrip(char *s)
+{
+  size_t l;
+  if (s != NULL) {
+    while (*s && *s <= ' ') s++;
+    l = *s ? 0 : strlen(s) - 1;
+    while (*s && s[l] <= ' ') s[l--] = '\0';
+  }
+  return s;
+}
+
+void
+http_client_add_args ( http_client_t *hc, http_arg_list_t *h, const char *args )
+{
+  char *p, *k, *v;
+
+  if (args == NULL)
+    return;
+  p = strdupa(args);
+  while (*p) {
+    while (*p && *p <= ' ') p++;
+    if (*p == '\0') break;
+    k = p;
+    while (*p && *p != '\r' && *p != '\n' && *p != ':' && *p != '=') p++;
+    v = NULL;
+    if (*p == '=' || *p == ':') { *p = '\0'; p++; v = p; }
+    while (*p && *p != '\r' && *p != '\n') p++;
+    if (*p) { *p = '\0'; p++; }
+    k = strstrip(k);
+    v = strstrip(v);
+    if (v && *v && *k &&
+        strcasecmp(k, "Connection") != 0 &&
+        strcasecmp(k, "Host") != 0) {
+      http_arg_get_remove(h, k);
+      http_arg_set(h, k, v);
+    }
+  }
+}
+
 int
-http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver )
+http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
+                               http_ver_t ver )
 {
   http_arg_list_t h;
   tvhpoll_t *efd;
@@ -1172,7 +1236,7 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver
 
   http_client_flush(hc, 0);
 
-  http_client_basic_args(hc, &h, u, hc->hc_keepalive);
+  hc->hc_hdr_create(hc, &h, u, 0);
   hc->hc_reconnected = 1;
   hc->hc_shutdown    = 0;
   hc->hc_pevents     = 0;
@@ -1183,6 +1247,8 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u, http_ver_t ver
     return r;
 
   hc->hc_reconnected = 1;
+  free(hc->hc_url);
+  hc->hc_url = u->raw ? strdup(u->raw) : NULL;
   return HTTP_CON_RECEIVING;
 }
 
@@ -1214,6 +1280,8 @@ http_client_redirected ( http_client_t *hc )
     free(location);
     return -EIO;
   }
+  free(hc->hc_url);
+  hc->hc_url = u.raw ? strdup(u.raw) : NULL;
   free(location);
 
   r = http_client_simple_reconnect(hc, &u, hc->hc_redirv);
@@ -1227,7 +1295,9 @@ http_client_simple( http_client_t *hc, const url_t *url )
 {
   http_arg_list_t h;
 
-  http_client_basic_args(hc, &h, url, 0);
+  hc->hc_hdr_create(hc, &h, url, 0);
+  free(hc->hc_url);
+  hc->hc_url = url->raw ? strdup(url->raw) : NULL;
   return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
                           &h, NULL, 0);
 }
@@ -1415,6 +1485,8 @@ http_client_connect
   TAILQ_INIT(&hc->hc_args);
   TAILQ_INIT(&hc->hc_wqueue);
 
+  hc->hc_hdr_create = http_client_basic_args;
+
   if (http_client_reconnect(hc, ver, scheme, host, port) < 0) {
     free(hc);
     return NULL;
@@ -1469,6 +1541,7 @@ http_client_close ( http_client_t *hc )
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);
   rtsp_clear_session(hc);
+  free(hc->hc_url);
   free(hc->hc_location);
   free(hc->hc_rbuf);
   free(hc->hc_data);
@@ -1519,11 +1592,19 @@ http_client_init ( const char *user_agent )
 void
 http_client_done ( void )
 {
+  http_client_t *hc;
+
   http_running = 0;
   tvh_write(http_pipe.wr, "", 1);
   pthread_join(http_client_tid, NULL);
   tvh_pipe_close(&http_pipe);
+  pthread_mutex_lock(&http_lock);
+  TAILQ_FOREACH(hc, &http_clients, hc_link)
+    if (hc->hc_efd == http_poll)
+      hc->hc_efd = NULL;
   tvhpoll_destroy(http_poll);
+  http_poll = NULL;
+  pthread_mutex_unlock(&http_lock);
   free(http_user_agent);
 }
 

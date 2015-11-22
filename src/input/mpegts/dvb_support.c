@@ -31,6 +31,7 @@
 #include "dvb_charset_tables.h"
 #include "input.h"
 #include "intlconv.h"
+#include "lang_str.h"
 #include "settings.h"
 
 static int convert_iso_8859[16] = {
@@ -392,14 +393,15 @@ atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen)
   *buf = 0;
 }
 
-int
+lang_str_t *
 atsc_get_string
-  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen,
-   const char *lang)
+  (const uint8_t *src, size_t srclen)
 {
-  int stringcount;
-  int i, j;
-  int outputbytes = 0;
+  lang_str_t *ls = NULL;
+  int i, j, stringcount, segmentcount;
+  int compressiontype, mode, bytecount;
+  char langcode[4];
+  char buf[256];
 
   stringcount = src[0];
   tvhtrace("atsc-str", "%d strings", stringcount);
@@ -407,47 +409,35 @@ atsc_get_string
   src++;
   srclen--;
 
-  for (i = 0; i < stringcount && srclen >= 4; i++) {
-    char langcode[3];
-    int segmentcount;
-    int langok;
+  langcode[3] = '\0';
 
-    langcode[0] = src[0];
-    langcode[1] = src[1];
-    langcode[2] = src[2];
+  for (i = 0; i < stringcount && srclen >= 4; i++) {
+    langcode[0]  = src[0];
+    langcode[1]  = src[1];
+    langcode[2]  = src[2];
     segmentcount = src[3];
 
-    tvhtrace("atsc-str", "  %d: lang '%c%c%c', segments %d",
-              i, langcode[0], langcode[1], langcode[2], segmentcount);
+    tvhtrace("atsc-str", "  %d: lang '%s', segments %d", i, langcode, segmentcount);
 
-    langok = (lang == NULL || memcmp(langcode, lang, 3) == 0);
-
-    src += 4;
+    src    += 4;
     srclen -= 4;
 
     for (j = 0; j < segmentcount && srclen >= 3; j++) {
-      int compressiontype, mode, bytecount;
-
       compressiontype = src[0];
-      mode = src[1];
-      bytecount = src[2];
+      mode            = src[1];
+      bytecount       = src[2];
 
-      src += 3;
+      src    += 3;
       srclen -= 3;
 
       if (mode == 0 && compressiontype == 0) {
         tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
-            j, compressiontype, mode, bytecount, bytecount, src);
-        if (langok) {
-          if (dstlen > bytecount) {
-            memcpy(dst, src, bytecount);
-            dst += bytecount;
-            dstlen -= bytecount;
-            outputbytes += bytecount;
-          } else {
-            tvhwarn("atsc-str", "destination buffer too small, %d bytes needed", bytecount);
-          }
-        }
+                 j, compressiontype, mode, bytecount, bytecount, src);
+        memcpy(buf, src, bytecount);
+        buf[bytecount] = '\0';
+        if (ls == NULL)
+          ls = lang_str_create();
+        lang_str_append(ls, buf, langcode);
       } else {
         tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
                  j, compressiontype, mode, bytecount);
@@ -457,9 +447,8 @@ atsc_get_string
       src += bytecount; srclen -= bytecount; // skip for now
     }
   }
-  if (dstlen > 0)
-    dst[0] = 0;
-  return outputbytes;
+
+  return ls;
 }
 
 /*

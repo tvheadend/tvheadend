@@ -36,6 +36,18 @@
 
 #include <netinet/ip.h>
 
+#ifndef IPTOS_CLASS_CS0
+#define IPTOS_CLASS_CS0                 0x00
+#define IPTOS_CLASS_CS1                 0x20
+#define IPTOS_CLASS_CS2                 0x40
+#define IPTOS_CLASS_CS3                 0x60
+#define IPTOS_CLASS_CS4                 0x80
+#define IPTOS_CLASS_CS5                 0xa0
+#define IPTOS_CLASS_CS6                 0xc0
+#define IPTOS_CLASS_CS7                 0xe0
+#endif
+
+
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
 
@@ -1363,6 +1375,7 @@ config_migrate_v23_one ( const char *modname )
   if ((c = hts_settings_load_r(1, "epggrab/%s/channels", modname)) != NULL) {
     HTSMSG_FOREACH(f, c) {
       m = htsmsg_field_get_map(f);
+      if (m == NULL) continue;
       n = htsmsg_copy(m);
       htsmsg_add_str(n, "id", f->hmf_name);
       maj = htsmsg_get_u32_or_default(m, "major", 0);
@@ -1456,7 +1469,7 @@ dobackup(const char *oldver)
     char *s;
     htsbuf_queue_init(&q, 0);
     for (arg = argv; *arg; arg++) {
-      htsbuf_append(&q, *arg, strlen(*arg));
+      htsbuf_append_str(&q, *arg);
       if (arg[1])
         htsbuf_append(&q, " ", 1);
     }
@@ -1608,6 +1621,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   struct stat st;
   char buf[1024];
   htsmsg_t *config2;
+  htsmsg_field_t *f;
   const char *s;
 
   memset(&config, 0, sizeof(config));
@@ -1663,11 +1677,14 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
   } else {
-    s = htsmsg_get_str(config2, "language");
-    if (s) {
-      htsmsg_t *m = htsmsg_csv_2_list(s, ',');
-      htsmsg_delete_field(config2, "language");
-      htsmsg_add_msg(config2, "language", m);
+    f = htsmsg_field_find(config2, "language");
+    if (f && f->hmf_type == HMF_STR) {
+      s = htsmsg_get_str(config2, "language");
+      if (s) {
+        htsmsg_t *m = htsmsg_csv_2_list(s, ',');
+        htsmsg_delete_field(config2, "language");
+        htsmsg_add_msg(config2, "language", m);
+      }
     }
     config.version = htsmsg_get_u32_or_default(config2, "config", 0);
     s = htsmsg_get_str(config2, "full_version");
@@ -1759,13 +1776,15 @@ config_class_cors_origin_set ( void *o, const void *v )
     prop_sbuf[1] = '\0';
   } else {
     urlinit(&u);
-    urlparse(s, &u);
+    if (urlparse(s, &u))
+      goto wrong;
     if (u.scheme && (!strcmp(u.scheme, "http") || !strcmp(u.scheme, "https")) && u.host) {
       if (u.port)
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s:%d", u.scheme, u.host, u.port);
       else
         snprintf(prop_sbuf, PROP_SBUF_LEN, "%s://%s", u.scheme, u.host);
     } else {
+wrong:
       prop_sbuf[0] = '\0';
     }
     urlreset(&u);
@@ -1787,7 +1806,7 @@ config_class_language_get ( void *o )
 static int
 config_class_language_set ( void *o, const void *v )
 {
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
   if (strcmp(s ?: "", config.language ?: "")) {
     free(config.language);
     config.language = s;
@@ -1816,7 +1835,7 @@ config_class_info_area_get ( void *o )
 static int
 config_class_info_area_set ( void *o, const void *v )
 {
-  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 0);
+  char *s = htsmsg_list_2_csv((htsmsg_t *)v, ',', 3);
   if (strcmp(s ?: "", config.info_area ?: "")) {
     free(config.info_area);
     config.info_area = s;
@@ -1890,19 +1909,19 @@ const idclass_t config_class = {
          .number = 1,
       },
       {
-         .name   = N_("Language Settings"),
+         .name   = N_("Language settings"),
          .number = 2,
       },
       {
-         .name   = N_("Web User Interface"),
+         .name   = N_("Web user interface"),
          .number = 3,
       },
       {
-         .name   = N_("DVB Scan Files"),
+         .name   = N_("DVB scan files"),
          .number = 4,
       },
       {
-         .name   = N_("Time Update"),
+         .name   = N_("Time update"),
          .number = 5,
       },
       {
@@ -1945,7 +1964,7 @@ const idclass_t config_class = {
     {
       .type   = PT_STR,
       .id     = "cors_origin",
-      .name   = N_("HTTP CORS Origin"),
+      .name   = N_("HTTP CORS origin"),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .group  = 1

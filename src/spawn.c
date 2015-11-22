@@ -370,14 +370,34 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
   *argv = calloc(argc, sizeof(char *));
 
   while (*s && i < argc - 1) {
+    while (*s == ' ')
+      s++;
     f = s;
     while (*s && *s != ' ') {
-      while (*s && *s != ' ' && *s != '\\')
-        s++;
       if (*s == '\\') {
-        memmove(s, s + 1, strlen(s));
-        if (*s)
-          s++;
+        l = *(s + 1);
+        if (l == 'b')
+          l = '\b';
+        else if (l == 'f')
+          l = '\f';
+        else if (l == 'n')
+          l = '\n';
+        else if (l == 'r')
+          l = '\r';
+        else if (l == 't')
+          l = '\t';
+        else
+          l = 0;
+        if (l) {
+          *s++ = l;
+          memmove(s, s + 1, strlen(s));
+        } else {
+          memmove(s, s + 1, strlen(s));
+          if (*s)
+            s++;
+        }
+      } else {
+        s++;
       }
     }
     if (f != s) {

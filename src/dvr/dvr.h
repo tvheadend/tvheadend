@@ -49,6 +49,7 @@ typedef struct dvr_config {
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
+  int dvr_running;
 
   muxer_config_t dvr_muxcnf;
 
@@ -111,6 +112,8 @@ typedef enum {
   DVR_RS_RUNNING,
   DVR_RS_COMMERCIAL,
   DVR_RS_ERROR,
+  DVR_RS_EPG_WAIT,
+  DVR_RS_FINISHED
 } dvr_rs_state_t;
   
 
@@ -149,6 +152,9 @@ typedef struct dvr_entry {
 
   time_t de_start_extra;
   time_t de_stop_extra;
+
+  time_t de_running_start;
+  time_t de_running_stop;
 
   char *de_owner;
   char *de_creator;
@@ -223,7 +229,7 @@ typedef struct dvr_entry {
    * Fields for recording
    */
   pthread_t de_thread;
-  uint8_t de_thread_shutdown;
+  int de_thread_shutdown;
 
   th_subscription_t *de_s;
 
@@ -243,6 +249,11 @@ typedef struct dvr_entry {
    * Entry change notification timer
    */
   time_t de_last_notify;
+
+  /**
+   * Update notification limit
+   */
+  tvhlog_limit_t de_update_limit;
 
 } dvr_entry_t;
 
@@ -421,13 +432,15 @@ uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
 
 uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
-int dvr_entry_get_start_time( dvr_entry_t *de );
+int dvr_entry_get_epg_running( dvr_entry_t *de );
 
-int dvr_entry_get_stop_time( dvr_entry_t *de );
+time_t dvr_entry_get_start_time( dvr_entry_t *de );
 
-int dvr_entry_get_extra_time_post( dvr_entry_t *de );
+time_t dvr_entry_get_stop_time( dvr_entry_t *de );
 
-int dvr_entry_get_extra_time_pre( dvr_entry_t *de );
+time_t dvr_entry_get_extra_time_post( dvr_entry_t *de );
+
+time_t dvr_entry_get_extra_time_pre( dvr_entry_t *de );
 
 void dvr_entry_init(void);
 
@@ -497,22 +510,24 @@ void dvr_rec_migrate(dvr_entry_t *de_old, dvr_entry_t *de_new);
 
 void dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e);
 
+void dvr_event_removed(epg_broadcast_t *e);
+
 void dvr_event_updated(epg_broadcast_t *e);
+
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
 static inline dvr_entry_t *dvr_entry_find_by_uuid(const char *uuid)
   { return (dvr_entry_t*)idnode_find(uuid, &dvr_entry_class, NULL); }
 
-dvr_entry_t *dvr_entry_find_by_event(epg_broadcast_t *e);
-
 dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
-
-dvr_entry_t *dvr_entry_find_by_episode(epg_broadcast_t *e);
 
 const char *dvr_get_filename(dvr_entry_t *de);
 
 int64_t dvr_get_filesize(dvr_entry_t *de);
+
+void dvr_entry_set_rerecord(dvr_entry_t *de, int cmd);
 
 dvr_entry_t *dvr_entry_stop(dvr_entry_t *de);
 
@@ -553,13 +568,9 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
                   dvr_prio_t pri, int retention, int removal, const char *comment);
 
 dvr_autorec_entry_t *
-dvr_autorec_create_htsp(const char *dvr_config_name, const char *title, int fulltext,
-                            channel_t *ch, uint32_t enabled, int32_t start,
-                            int32_t start_window, uint32_t days, time_t start_extra,
-                            time_t stop_extra, dvr_prio_t pri, int retention, int removal,
-                            int min_duration, int max_duration, dvr_autorec_dedup_t dup_detect,
-                            const char *owner, const char *creator,
-                            const char *comment, const char *name, const char *directory);
+dvr_autorec_create_htsp(htsmsg_t *conf);
+
+void dvr_autorec_update_htsp(dvr_autorec_entry_t *dae, htsmsg_t *conf);
 
 dvr_autorec_entry_t *
 dvr_autorec_add_series_link(const char *dvr_config_name,
@@ -630,11 +641,9 @@ dvr_timerec_entry_t *
 dvr_timerec_create(const char *uuid, htsmsg_t *conf);
 
 dvr_timerec_entry_t*
-dvr_timerec_create_htsp(const char *dvr_config_name, const char *title,
-                            channel_t *ch, uint32_t enabled, uint32_t start, uint32_t stop,
-                            uint32_t weekdays, dvr_prio_t pri, int retention, int removal,
-                            const char *owner, const char *creator, const char *comment, 
-                            const char *name, const char *directory);
+dvr_timerec_create_htsp(htsmsg_t *conf);
+
+void dvr_timerec_update_htsp(dvr_timerec_entry_t *dte, htsmsg_t *conf);
 
 static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)

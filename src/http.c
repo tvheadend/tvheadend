@@ -34,7 +34,6 @@
 #include "tvheadend.h"
 #include "tcp.h"
 #include "http.h"
-#include "filebundle.h"
 #include "access.h"
 #include "notify.h"
 #include "channels.h"
@@ -237,17 +236,17 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
   if (hc->hc_version != RTSP_VERSION_1_0){
-    htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
+    htsbuf_append_str(&hdrs, "Server: HTS/tvheadend\r\n");
     if (config.cors_origin && config.cors_origin[0]) {
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
-      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
-      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
+      htsbuf_append_str(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
+      htsbuf_append_str(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
     }
   }
   
   if(maxage == 0) {
     if (hc->hc_version != RTSP_VERSION_1_0)
-      htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
+      htsbuf_append_str(&hdrs, "Cache-Control: no-cache\r\n");
   } else if (maxage > 0) {
     time(&t);
 
@@ -271,11 +270,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   }
 
   if(rc == HTTP_STATUS_UNAUTHORIZED)
-    htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+    htsbuf_append_str(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
   if (hc->hc_logout_cookie == 1) {
-    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
+    htsbuf_append_str(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
   } else if (hc->hc_logout_cookie == 2) {
-    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
+    htsbuf_append_str(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
   }
 
   if (hc->hc_version != RTSP_VERSION_1_0)
@@ -294,7 +293,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(contentlen > 0)
     htsbuf_qprintf(&hdrs, "Content-Length: %"PRId64"\r\n", contentlen);
   else if(contentlen == INT64_MIN)
-    htsbuf_qprintf(&hdrs, "Content-Length: 0\r\n");
+    htsbuf_append_str(&hdrs, "Content-Length: 0\r\n");
 
   if(range) {
     htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
@@ -320,7 +319,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(hc->hc_session && !sess)
     htsbuf_qprintf(&hdrs, "Session: %s\r\n", hc->hc_session);
 
-  htsbuf_qprintf(&hdrs, "\r\n");
+  htsbuf_append_str(&hdrs, "\r\n");
 
   tcp_write_queue(hc->hc_fd, &hdrs);
 }
@@ -373,7 +372,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
 #if ENABLE_ZLIB
   if (http_encoding_valid(hc, "gzip") && encoding == NULL && size > 256) {
     uint8_t *data2 = (uint8_t *)htsbuf_to_string(&hc->hc_reply);
-    data = gzip_deflate(data2, size, &size);
+    data = tvh_gzip_deflate(data2, size, &size);
     free(data2);
     encoding = "gzip";
   }
@@ -423,7 +422,7 @@ http_error(http_connection_t *hc, int error)
       htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"%s/\">Default Login</A></P>",
                      tvheadend_webroot ? tvheadend_webroot : "");
 
-    htsbuf_qprintf(&hc->hc_reply, "</BODY></HTML>\r\n");
+    htsbuf_append_str(&hc->hc_reply, "</BODY></HTML>\r\n");
 
     http_send_reply(hc, error, "text/html", NULL, NULL, 0);
   } else {
@@ -469,8 +468,8 @@ http_redirect(http_connection_t *hc, const char *location,
     int first = 1;
     htsbuf_queue_init(&hq, 0);
     if (!external && tvheadend_webroot && location[0] == '/')
-      htsbuf_append(&hq, tvheadend_webroot, strlen(tvheadend_webroot));
-    htsbuf_append(&hq, location, strlen(location));
+      htsbuf_append_str(&hq, tvheadend_webroot);
+    htsbuf_append_str(&hq, location);
     TAILQ_FOREACH(ra, req_args, link) {
       if (!first)
         htsbuf_append(&hq, "&", 1);
@@ -506,6 +505,25 @@ http_redirect(http_connection_t *hc, const char *location,
 /**
  *
  */
+char *
+http_get_hostpath(http_connection_t *hc)
+{
+  char buf[256];
+  const char *host, *proto;
+
+  host  = http_arg_get(&hc->hc_args, "Host") ?:
+          http_arg_get(&hc->hc_args, "X-Forwarded-Host");
+  proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
+
+  snprintf(buf, sizeof(buf), "%s://%s%s",
+           proto ?: "http", host, tvheadend_webroot ?: "");
+
+  return strdup(buf);
+}
+
+/**
+ *
+ */
 static void
 http_access_verify_ticket(http_connection_t *hc)
 {
@@ -527,16 +545,21 @@ http_access_verify_ticket(http_connection_t *hc)
 int
 http_access_verify(http_connection_t *hc, int mask)
 {
-  http_access_verify_ticket(hc);
+  int res = -1;
 
-  if (hc->hc_access == NULL) {
+  http_access_verify_ticket(hc);
+  if (hc->hc_access)
+    res = access_verify2(hc->hc_access, mask);
+
+  if (res) {
+    access_destroy(hc->hc_access);
     hc->hc_access = access_get(hc->hc_username, hc->hc_password,
                                (struct sockaddr *)hc->hc_peer);
-    if (hc->hc_access == NULL)
-      return -1;
+    if (hc->hc_access)
+      res = access_verify2(hc->hc_access, mask);
   }
 
-  return access_verify2(hc->hc_access, mask);
+  return res;
 }
 
 /**
@@ -544,27 +567,33 @@ http_access_verify(http_connection_t *hc, int mask)
  */
 int
 http_access_verify_channel(http_connection_t *hc, int mask,
-                           struct channel *ch, int ticket)
+                           struct channel *ch)
 {
   int res = -1;
 
   assert(ch);
 
-  if (ticket)
-    http_access_verify_ticket(hc);
+  http_access_verify_ticket(hc);
+  if (hc->hc_access) {
+    res = access_verify2(hc->hc_access, mask);
 
-  if (hc->hc_access == NULL) {
-    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                               (struct sockaddr *)hc->hc_peer);
-    if (hc->hc_access == NULL)
-      return -1;
+    if (!res && !channel_access(ch, hc->hc_access, 0))
+      res = -1;
   }
 
-  if (access_verify2(hc->hc_access, mask))
-    return -1;
+  if (res) {
+    access_destroy(hc->hc_access);
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
+                               (struct sockaddr *)hc->hc_peer);
+    if (hc->hc_access) {
+      res = access_verify2(hc->hc_access, mask);
 
-  if (channel_access(ch, hc->hc_access, 0))
-    res = 0;
+      if (!res && !channel_access(ch, hc->hc_access, 0))
+        res = -1;
+    }
+  }
+
+
   return res;
 }
 

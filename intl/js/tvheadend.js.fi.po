@@ -1,0 +1,1833 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Janne Liukkonen <liukkjan@gmail.com>, 2015
+# Olli Salonen <olli@cabbala.net>, 2015
+msgid ""
+msgstr ""
+"Project-Id-Version: Tvheadend\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-11-10 09:50+0100\n"
+"PO-Revision-Date: 2015-11-10 08:32+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
+"Language-Team: Finnish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/fi/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: fi\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/webui/static/app/i18n-post.js:137
+msgid "&#160;OK&#160;"
+msgstr "&#160;OK&#160;"
+
+#: src/webui/static/app/i18n-post.js:106
+msgid "(?:st|nd|rd|th)#parseCodes.S.s"
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
+
+#: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
+msgid "(Clear filter)"
+msgstr "(Poista suodatin)"
+
+#: src/webui/static/app/i18n-post.js:210
+msgid "(None)"
+msgstr "(Ei mikään)"
+
+#: src/webui/static/app/epg.js:209
+msgid "(default DVR Profile)"
+msgstr "(Oletus DVR-profiili)"
+
+#: src/webui/static/app/i18n-post.js:59
+msgid "0 #monthNumber"
+msgstr "0 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:224
+msgid "0,000.00#NumberColumn"
+msgstr "0,000.00 #SarakeNumero"
+
+#: src/webui/static/app/epg.js:69
+msgid "00:00:00 - 00:15:00"
+msgstr "00:00:00 - 00:15:00"
+
+#: src/webui/static/app/epg.js:70
+msgid "00:15:00 - 00:30:00"
+msgstr "00:15:00 - 00:30:00"
+
+#: src/webui/static/app/epg.js:71
+msgid "00:30:00 - 01:30:00"
+msgstr "00:30:00 - 01:30:00"
+
+#: src/webui/static/app/epg.js:72
+msgid "01:30:00 - 03:00:00"
+msgstr "01:30:00 - 03:00:00"
+
+#: src/webui/static/app/epg.js:73
+msgid "03:00:00 - No maximum"
+msgstr "03:00:00 - Ei lopetusaikaa"
+
+#: src/webui/static/app/i18n-post.js:60
+msgid "1 #monthNumber"
+msgstr "1 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:69
+msgid "10 #monthNumber"
+msgstr "10 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:70
+msgid "11 #monthNumber"
+msgstr "11 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:61
+msgid "2 #monthNumber"
+msgstr "2 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:62
+msgid "3 #monthNumber"
+msgstr "3 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:63
+msgid "4 #monthNumber"
+msgstr "4 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:64
+msgid "5 #monthNumber"
+msgstr "5 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:65
+msgid "6 #monthNumber"
+msgstr "6 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:66
+msgid "7 #monthNumber"
+msgstr "7 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:67
+msgid "8 #monthNumber"
+msgstr "8 #kuukausiNumero"
+
+#: src/webui/static/app/i18n-post.js:68
+msgid "9 #monthNumber"
+msgstr "9 #kuukausiNumero"
+
+#: src/webui/static/app/dvr.js:232
+msgid "Abort"
+msgstr "Poista nauhoitus"
+
+#: src/webui/static/app/dvr.js:230
+msgid "Abort the selected recording"
+msgstr "Pysäytä ja poista valitut nauhoitukset"
+
+#: src/webui/static/app/tvheadend.js:553
+msgid "About"
+msgstr "Tietoja"
+
+#: src/webui/static/app/acleditor.js:64
+msgid "Access Control Entries"
+msgstr "Lista käyttäjistä"
+
+#: src/webui/static/app/acleditor.js:26
+msgid "Access Entries"
+msgstr "Käyttäjätilit"
+
+#: src/webui/static/app/acleditor.js:25
+msgid "Access Entry"
+msgstr "Käyttäjätili"
+
+#: src/webui/static/app/servicemapper.js:24
+msgid "Active"
+msgstr "Aktiivinen"
+
+#: src/webui/static/app/idnode.js:1324 src/webui/static/app/idnode.js:1831
+msgid "Add"
+msgstr "Lisää"
+
+#: src/webui/static/app/idnode.js:1322 src/webui/static/app/idnode.js:1829
+msgid "Add a new entry"
+msgstr "Lisää uusi"
+
+#: src/webui/static/app/idnode.js:1037 src/webui/static/app/idnode.js:1067
+msgid "Add {0}"
+msgstr "Lisää {0}"
+
+#: src/webui/static/app/idnode.js:893
+msgid "Advanced Settings"
+msgstr "Lisäasetukset"
+
+#: src/webui/static/app/i18n-post.js:279
+msgid "After"
+msgstr "Jälkeen"
+
+#: src/webui/static/app/mpegts.js:211
+msgid "After filtering and reordering (without PCR and PMT)"
+msgstr "Suodatuksen ja järjestämisen jälkeen (ilman PCR ja PMT)"
+
+#: src/webui/static/app/epg.js:568 src/webui/static/app/epg.js:569
+msgid "Age"
+msgstr "Ikä"
+
+#: src/webui/static/app/epg.js:121
+msgid "Age Rating"
+msgstr "Ikäraja"
+
+#: src/webui/static/app/idnode.js:1508 src/webui/static/app/idnode.js:1547
+msgid "All"
+msgstr "Kaikki"
+
+#: src/webui/static/app/tvhlog.js:20
+msgid "Apply any changes made below to the run-time configuration."
+msgstr "Hyväksy muutokset ajoaikaisiin asetuksiin"
+
+#: src/webui/static/app/tvhlog.js:19
+msgid "Apply configuration (run-time only)"
+msgstr "Hyväksy asetukset (suoritusajon ajaksi)"
+
+#: src/webui/static/app/i18n-post.js:38
+msgid "Apr"
+msgstr "Huht"
+
+#: src/webui/static/app/i18n-post.js:23
+msgid "April"
+msgstr "Huhtikuu"
+
+#: src/webui/static/app/chconf.js:144
+msgid "Assign Number"
+msgstr "Määritä kanavapaikka"
+
+#: src/webui/static/app/chconf.js:142
+msgid "Assign lowest free channel number"
+msgstr "Määritä alin mahdollinen vapaa kanavapaikka"
+
+#: src/webui/static/app/esfilter.js:70
+msgid "Audio Stream Filter"
+msgstr "Äänitoiston suodatin"
+
+#: src/webui/static/app/esfilter.js:71
+msgid "Audio Stream Filters"
+msgstr "Äänitoiston suodattimet"
+
+#: src/webui/static/app/i18n-post.js:42
+msgid "Aug"
+msgstr "Elok"
+
+#: src/webui/static/app/i18n-post.js:27
+msgid "August"
+msgstr "Elokuu"
+
+#: src/webui/static/app/epg.js:1024
+msgid "Auto Recorder"
+msgstr "Automaattinen nauhoitus"
+
+#: src/webui/static/app/tvheadend.js:125
+msgid "Auto-refresh"
+msgstr "Automaattinen päivitys"
+
+#: src/webui/static/app/epg.js:225 src/webui/static/app/dvr.js:57
+msgid "Autorec"
+msgstr "Automaattinen nauhoitus"
+
+#: src/webui/static/app/idnode.js:432 src/webui/static/app/idnode.js:595
+msgid "Available"
+msgstr "Saatavilla"
+
+#: src/webui/static/app/status.js:366
+msgid "BER"
+msgstr "BER"
+
+#: src/webui/static/app/status.js:359
+msgid "Bandwidth (kb/s)"
+msgstr "Kaistanleveys (kb/s)"
+
+#: src/webui/static/app/status.js:668 src/webui/static/app/status.js:761
+msgid "Bandwidth monitor"
+msgstr "Kaistanleveyden seuranta"
+
+#: src/webui/static/app/config.js:9
+msgid "Base"
+msgstr "Perusta"
+
+#: src/webui/static/app/idnode.js:891
+msgid "Basic Settings"
+msgstr "Perusasetukset"
+
+#: src/webui/static/app/i18n-post.js:280
+msgid "Before"
+msgstr "Ennen"
+
+#: src/webui/static/app/servicemapper.js:127
+msgid "Begin mapping"
+msgstr "Ennen kartoitusta"
+
+#: src/webui/static/app/cteditor.js:44
+msgid "Bouquet"
+msgstr "Kimppu"
+
+#: src/webui/static/app/cteditor.js:45 src/webui/static/app/cteditor.js:76
+msgid "Bouquets"
+msgstr "Kimput"
+
+#: src/webui/static/app/epg.js:238
+msgid "Broadcast Details"
+msgstr "Lähetyksen tiedot"
+
+#: src/webui/static/app/epg.js:343
+msgid "Broadcast details"
+msgstr "Lähetyksen tiedot"
+
+#: src/webui/static/app/epg.js:831
+msgid "Buffering. Please wait..."
+msgstr "Puskuroidaan. Ole hyvä ja odota"
+
+#: src/webui/static/app/caclient.js:32
+msgid "CA"
+msgstr "CA"
+
+#: src/webui/static/app/esfilter.js:127
+msgid "CA Stream Filter"
+msgstr "CA suoratoiston suodatin"
+
+#: src/webui/static/app/esfilter.js:128
+msgid "CA Stream Filters"
+msgstr "CA suoratoiston suodattimet"
+
+#: src/webui/static/app/mpegts.js:190
+msgid "CAIDS: "
+msgstr "CAIDS:"
+
+#: src/webui/static/app/caclient.js:33
+msgid "CAs"
+msgstr "CAs"
+
+#: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
+#: src/webui/static/app/idnode.js:1013
+#: src/webui/static/app/servicemapper.js:119
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: src/webui/static/app/status.js:508
+msgid "Cancel Connection"
+msgstr "Peruuta yhdistäminen"
+
+#: src/webui/static/app/idnode.js:1012
+msgid "Cancel operation"
+msgstr "Peruuta toimenpide"
+
+#: src/webui/static/app/status.js:509
+msgid "Cancel the selected connection?"
+msgstr "Katkaise valittu yhteys?"
+
+#: src/webui/static/app/status.js:505
+msgid "Cancel this connection"
+msgstr "Katkaise tämä yhteys"
+
+#: src/webui/static/app/chconf.js:207 src/webui/static/app/epg.js:546
+#: src/webui/static/app/epg.js:547 src/webui/static/app/epg.js:1028
+#: src/webui/static/app/status.js:104
+msgid "Channel"
+msgstr "Kanava"
+
+#: src/webui/static/app/tvheadend.js:491
+msgid "Channel / EPG"
+msgstr "Kanava / EPG"
+
+#: src/webui/static/app/cteditor.js:10
+msgid "Channel Tag"
+msgstr "Kanavan nimi"
+
+#: src/webui/static/app/cteditor.js:11 src/webui/static/app/cteditor.js:24
+msgid "Channel Tags"
+msgstr "Kanavan nimet"
+
+#: src/webui/static/app/chconf.js:208 src/webui/static/app/chconf.js:212
+msgid "Channels"
+msgstr "Kanavat"
+
+#: src/webui/static/app/servicemapper.js:89
+msgid "Check availability"
+msgstr "Tarkista saatavuus"
+
+#: src/webui/static/app/i18n-post.js:134
+msgid "Choose a month (Control+Up/Down to move years)"
+msgstr "Valitse kuukausi (Control+ylös/alas liikkuaksesi vuosissa)"
+
+#: src/webui/static/app/config.js:36
+msgid "Clean image (icon) cache"
+msgstr "Poista kuvat (ikonit) välimuistista"
+
+#: src/webui/static/app/config.js:34
+msgid "Clean image cache on storage"
+msgstr "Poista kuvat välimuistista"
+
+#: src/webui/static/app/status.js:258 src/webui/static/app/status.js:261
+msgid "Clear statistics"
+msgstr "Pyyhi tilastot"
+
+#: src/webui/static/app/status.js:262
+msgid "Clear statistics for selected input?"
+msgstr "Pyyhi tilastot valituille DVB-syötteille"
+
+#: src/webui/static/app/caclient.js:34
+msgid "Client Name"
+msgstr "Asiakkaan nimi"
+
+#: src/webui/static/app/epg.js:232
+msgid "Close"
+msgstr "Sulje"
+
+#: src/webui/static/app/i18n-post.js:205
+msgid "Columns"
+msgstr "Sarakkeet"
+
+#: src/webui/static/app/comet.js:55
+msgid "Comet failure"
+msgstr "Comet epäonnistuminen"
+
+#: src/webui/static/app/dvr.js:55
+msgid "Comment"
+msgstr "Kommentti"
+
+#: src/webui/static/app/status.js:717
+msgid "Compression ratio"
+msgstr "Pakkaussuhde"
+
+#: src/webui/static/app/caclient.js:44 src/webui/static/app/caclient.js:61
+msgid "Conditional Access Client"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:434
+msgid "Configuration"
+msgstr "Asetukset"
+
+#: src/webui/static/app/status.js:609
+msgid "Connections"
+msgstr "Yhteydet"
+
+#: src/webui/static/app/epg.js:132 src/webui/static/app/epg.js:575
+#: src/webui/static/app/epg.js:576
+msgid "Content Type"
+msgstr "Sisältötyyppi"
+
+#: src/webui/static/app/status.js:388
+msgid "Continuity Errors"
+msgstr "Jatkuvuusvirheitä"
+
+#: src/webui/static/app/idnode.js:992
+msgid "Create"
+msgstr "Luo"
+
+#: src/webui/static/app/epg.js:844
+msgid "Create AutoRec"
+msgstr "Luo automaattitallennus"
+
+#: src/webui/static/app/epg.js:224 src/webui/static/app/epg.js:846
+msgid ""
+"Create an automatic recording rule to record all future programs that match "
+"the current query."
+msgstr "Tee sääntö, joka automaattisesti tallentaa kaikki tulevat ohjelmat, jotka vastaavat sääntöä."
+
+#: src/webui/static/app/servicemapper.js:110
+msgid "Create network tags"
+msgstr "Luo verkkotageja."
+
+#: src/webui/static/app/idnode.js:991
+msgid "Create new entry"
+msgstr "Luo uusi syöttö"
+
+#: src/webui/static/app/servicemapper.js:105
+msgid "Create provider tags"
+msgstr "Luo palveluntarjoaja merkintä"
+
+#: src/webui/static/app/epg.js:1046
+msgid "Created from EPG query"
+msgstr "Luotu ohjelmaoppaasta"
+
+#: src/webui/static/app/epg.js:1033
+#, javascript-format
+msgid "Currently this will match (and record) %d events."
+msgstr "Tällä hetkellä nauhoitetaan %d tapahtumia."
+
+#: src/webui/static/app/tvheadend.js:473
+msgid "DVB Inputs"
+msgstr "Digiviritin sisääntulot"
+
+#: src/webui/static/app/epg.js:314 src/webui/static/app/dvr.js:557
+msgid "DVR"
+msgstr "DVR"
+
+#: src/webui/static/app/dvr.js:531
+msgid "DVR - Failed Recordings"
+msgstr "DVR - Epäonnistuneet tallenteet"
+
+#: src/webui/static/app/dvr.js:420
+msgid "DVR - Finished Recordings"
+msgstr "DVR - Valmiit tallenteet"
+
+#: src/webui/static/app/dvr.js:309
+msgid "DVR - Upcoming/Current Recordings"
+msgstr "DVR - Tulevat/Nykyiset nauhoitukset"
+
+#: src/webui/static/app/dvr.js:624
+msgid "DVR Autorec"
+msgstr "DVR automaattinen tallennus"
+
+#: src/webui/static/app/dvr.js:573
+msgid "DVR Autorec Entries"
+msgstr "DVR automaattisen tallennuksen syötteet"
+
+#: src/webui/static/app/dvr.js:572
+msgid "DVR Autorec Entry"
+msgstr "DVR automaattisen tallennuksen syöte"
+
+#: src/webui/static/app/dvr.js:677
+msgid "DVR Timerec"
+msgstr "DVR Timerec"
+
+#: src/webui/static/app/tvhlog.js:23
+msgid "Debug Configuration"
+msgstr "Debug konfiguraati"
+
+#: src/webui/static/app/tvhlog.js:12
+msgid "Debugging"
+msgstr "Debugging"
+
+#: src/webui/static/app/i18n-post.js:46
+msgid "Dec"
+msgstr "joulukuu"
+
+#: src/webui/static/app/i18n-post.js:31
+msgid "December"
+msgstr "Joulukuu"
+
+#: src/webui/static/app/idnode.js:1338 src/webui/static/app/idnode.js:1843
+msgid "Delete"
+msgstr "Poista"
+
+#: src/webui/static/app/epg.js:198
+msgid "Delete recording"
+msgstr "Poista tallenne"
+
+#: src/webui/static/app/epg.js:197
+msgid "Delete scheduled recording of this program"
+msgstr "Poista tämän ohjelman ajastettu tallennus"
+
+#: src/webui/static/app/idnode.js:1336 src/webui/static/app/idnode.js:1841
+msgid "Delete selected entries"
+msgstr "Poista valitut"
+
+#: src/webui/static/app/status.js:132
+msgid "Descramble"
+msgstr "salauksenpurku"
+
+#: src/webui/static/app/mpegts.js:264
+msgid "Detailed stream info"
+msgstr "Yksityiskohtaiset tiedot lähetyksest"
+
+#: src/webui/static/app/mpegts.js:260 src/webui/static/app/epg.js:329
+#: src/webui/static/app/epg.js:330 src/webui/static/app/dvr.js:123
+#: src/webui/static/app/dvr.js:124
+msgid "Details"
+msgstr "Lisätietoja"
+
+#: src/webui/static/app/dvr.js:692
+msgid "Digital Video Recorder"
+msgstr "Digitaalinen Video Tallennin"
+
+#: src/webui/static/app/dvr.js:546
+msgid "Digital Video Recorder Profile"
+msgstr "Digitaalinen Video Tallennin profiili"
+
+#: src/webui/static/app/dvr.js:547
+msgid "Digital Video Recorder Profiles"
+msgstr "Digitaalinen Video Tallennin profiilit"
+
+#: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
+msgid "Disabled"
+msgstr "Pois päältä"
+
+#: src/webui/static/app/config.js:95
+msgid "Discover SAT>IP servers"
+msgstr "Hae SAT>IP-palvelimia"
+
+#: src/webui/static/app/i18n-post.js:151
+msgid "Displaying {0} - {1} of {2}"
+msgstr "Näytetään {0} - {1} {2}:sta"
+
+#: src/webui/static/app/dvr.js:250
+msgid "Do you really want to abort/unschedule the selection?"
+msgstr "Haluatko varmasti peruuttaa valitut?"
+
+#: src/webui/static/app/dvr.js:388 src/webui/static/app/dvr.js:499
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Haluatko varmasti poistaa valitut tallenteet?"
+
+#: src/webui/static/app/tvheadend.js:97
+msgid "Do you really want to delete the selection?"
+msgstr "Haluatko varmasti poistaa valitut?"
+
+#: src/webui/static/app/dvr.js:220
+msgid "Do you really want to gracefully stop/unschedule the selection?"
+msgstr "Haluatko varmasti pysäyttää nauhoituksen?"
+
+#: src/webui/static/app/epg.js:286
+msgid "Do you really want to gracefully stop/unschedule this recording?"
+msgstr "Haluatko varmasti pysäyttää tämän nauhoituksen?"
+
+#: src/webui/static/app/epg.js:299
+msgid "Do you really want to remove this recording?"
+msgstr "Haluatko varmasti poistaa tämän nauhoituksen?"
+
+#: src/webui/static/app/epg.js:1007 src/webui/static/app/epg.js:1013
+#: src/webui/static/app/epg.js:1016 src/webui/static/app/epg.js:1019
+#: src/webui/static/app/epg.js:1022
+msgid "Don't care"
+msgstr "Älä välitä"
+
+#: src/webui/static/app/dvr.js:329 src/webui/static/app/dvr.js:440
+msgid "Download"
+msgstr "Lataa"
+
+#: src/webui/static/app/dvr.js:327 src/webui/static/app/dvr.js:438
+msgid "Download the selected recording"
+msgstr "Lataa valittu tallennus"
+
+#: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:530
+#: src/webui/static/app/epg.js:531 src/webui/static/app/epg.js:1031
+#: src/webui/static/app/dvr.js:46
+msgid "Duration"
+msgstr "Kesto"
+
+#: src/webui/static/app/epggrab.js:30 src/webui/static/app/epggrab.js:84
+msgid "EPG Grab Configuration"
+msgstr "EPG tiedonhaku konfiguraatio"
+
+#: src/webui/static/app/epggrab.js:22
+msgid "EPG Grabber"
+msgstr "EPG tiedonhakija"
+
+#: src/webui/static/app/epggrab.js:41
+msgid "EPG Grabber Channel"
+msgstr "EPG tiedonhaku kanava"
+
+#: src/webui/static/app/epggrab.js:42 src/webui/static/app/epggrab.js:51
+msgid "EPG Grabber Channels"
+msgstr "EPG tiedonhaku kanavat"
+
+#: src/webui/static/app/epggrab.js:73
+msgid "EPG Grabber Module"
+msgstr "EPG tiedonhaku moduuli"
+
+#: src/webui/static/app/epggrab.js:74
+msgid "EPG Grabber Modules"
+msgstr "EPG tiedonhaku moduulit"
+
+#: src/webui/static/app/epggrab.js:75
+msgid "EPG Grabber Name"
+msgstr "EPG tiedonhaun nimi"
+
+#: src/webui/static/app/epg.js:954
+msgid "EPG Update"
+msgstr "EPG päivitys"
+
+#: src/webui/static/app/idnode.js:1425
+msgid "Edit"
+msgstr "Muokkaa"
+
+#: src/webui/static/app/idnode.js:1423
+msgid "Edit selected entry"
+msgstr "Muokkaa valittua"
+
+#: src/webui/static/app/idnode.js:1439 src/webui/static/app/idnode.js:1472
+msgid "Edit {0}"
+msgstr "Muokkaa {0}"
+
+#: src/webui/static/app/idnode.js:1468
+msgid "Edit {0} ({1} entries)"
+msgstr "Muokkaa {0} ({1} syötteitä)"
+
+#: src/webui/static/app/epg.js:878 src/webui/static/app/epg.js:889
+msgid "Electronic Program Guide"
+msgstr "Ohjelmaopas (EPG)"
+
+#: src/webui/static/app/esfilter.js:64 src/webui/static/app/esfilter.js:83
+#: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
+#: src/webui/static/app/esfilter.js:158
+msgid "Elementary Stream Filter"
+msgstr "Elementary Stream Filter"
+
+#: src/webui/static/app/tvheadend.js:763
+msgid "Enable debug output"
+msgstr "Kytke debuggaaminen päälle"
+
+#: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:522
+#: src/webui/static/app/epg.js:523
+msgid "End Time"
+msgstr "Päättymisaika"
+
+#: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
+msgid "Enter Filter Text..."
+msgstr "Syötä hakuteksti"
+
+#: src/webui/static/app/epg.js:505 src/webui/static/app/epg.js:506
+msgid "Episode"
+msgstr "Jakso"
+
+#: src/webui/static/app/status.js:138
+msgid "Errors"
+msgstr "Virheitä"
+
+#: src/webui/static/app/epg.js:896
+msgid "Events"
+msgstr "Tapahtumat"
+
+#: src/webui/static/app/dvr.js:148
+msgid "Every day"
+msgstr "Joka päivä"
+
+#: src/webui/static/app/servicemapper.js:15
+msgid "Failed"
+msgstr "Epäonnistunut"
+
+#: src/webui/static/app/dvr.js:493
+msgid "Failed Recording"
+msgstr "Epäonnistunut tallenne"
+
+#: src/webui/static/app/dvr.js:494
+msgid "Failed Recordings"
+msgstr "Epäonnistuneet tallenteet"
+
+#: src/webui/static/app/i18n-post.js:36
+msgid "Feb"
+msgstr "Helmi"
+
+#: src/webui/static/app/i18n-post.js:21
+msgid "February"
+msgstr "Helmikuu"
+
+#: src/webui/static/app/dvr.js:53
+msgid "File size"
+msgstr "Tiedostokoko"
+
+#: src/webui/static/app/epg.js:636
+msgid "Filter channel..."
+msgstr "Hae kanavaa"
+
+#: src/webui/static/app/epg.js:683
+msgid "Filter content type..."
+msgstr "Hae tyyppiä"
+
+#: src/webui/static/app/epg.js:704
+msgid "Filter duration..."
+msgstr "Hae kestoa"
+
+#: src/webui/static/app/epg.js:659
+msgid "Filter tag..."
+msgstr "Hae tagilla"
+
+#: src/webui/static/app/i18n-post.js:253
+msgid "Filters"
+msgstr "Kriteeri"
+
+#: src/webui/static/app/dvr.js:382
+msgid "Finished Recording"
+msgstr "Päättynyt tallennus"
+
+#: src/webui/static/app/dvr.js:383
+msgid "Finished Recordings"
+msgstr "Päättyneet tallennukset"
+
+#: src/webui/static/app/i18n-post.js:146
+msgid "First Page"
+msgstr "Ensimmäinen sivu"
+
+#: src/webui/static/app/mpegts.js:36
+msgid "Force Scan"
+msgstr "Pakota haku"
+
+#: src/webui/static/app/mpegts.js:34
+msgid "Force new scan (all muxes) for selected networks"
+msgstr "Pakota uusi skannaus (kaikki niput) valituille verkoille"
+
+#: src/webui/static/app/tvheadend.js:702
+msgid "Free"
+msgstr "Vapaa"
+
+#: src/webui/static/app/i18n-post.js:98
+msgid "Fri"
+msgstr "Pe"
+
+#: src/webui/static/app/i18n-post.js:88
+msgid "Friday"
+msgstr "Perjantai"
+
+#: src/webui/static/app/tvheadend.js:350
+msgid "Fullscreen"
+msgstr "Koko näyttö"
+
+#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1009
+msgid "Fulltext"
+msgstr "Tarkka teksti"
+
+#: src/webui/static/app/tvheadend.js:692
+msgid "GB"
+msgstr "GB"
+
+#: src/webui/static/app/tvheadend.js:443
+msgid "General"
+msgstr "Yleinen"
+
+#: src/webui/static/app/config.js:15 src/webui/static/app/config.js:74
+msgid "General Configuration"
+msgstr "Yleiset asetukset"
+
+#: src/webui/static/app/epg.js:1030
+msgid "Genre"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1171
+msgid "Grid Update"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:211
+msgid "Group By This Field"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:946 src/webui/static/app/idnode.js:1594
+#: src/webui/static/app/idnode.js:1950 src/webui/static/app/idnode.js:2308
+#: src/webui/static/app/epg.js:875
+msgid "Help"
+msgstr "Apua"
+
+#: src/webui/static/app/tvheadend.js:47
+msgid "Help for"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1524
+msgid "Hide"
+msgstr "Piilota"
+
+#: src/webui/static/app/idnode.js:1918
+msgid "Hide passwords"
+msgstr "Piilota salasanat"
+
+#: src/webui/static/app/status.js:86
+msgid "Hostname"
+msgstr ""
+
+#: src/webui/static/app/status.js:76
+msgid "ID"
+msgstr ""
+
+#: src/webui/static/app/status.js:562
+msgid "IP Address"
+msgstr "IP-osoite"
+
+#: src/webui/static/app/acleditor.js:143
+msgid "IP Blocking Entries"
+msgstr ""
+
+#: src/webui/static/app/acleditor.js:119
+msgid "IP Blocking Record"
+msgstr ""
+
+#: src/webui/static/app/acleditor.js:120
+msgid "IP Blocking Records"
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:19
+msgid "Ignored"
+msgstr ""
+
+#: src/webui/static/app/config.js:66
+msgid "Image cache"
+msgstr ""
+
+#: src/webui/static/app/status.js:715
+msgid "In"
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:94
+msgid "Include encrypted services"
+msgstr ""
+
+#: src/webui/static/app/status.js:339 src/webui/static/app/status.js:805
+msgid "Input"
+msgstr ""
+
+#: src/webui/static/app/status.js:144
+msgid "Input (kb/s)"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:35
+msgid "Jan"
+msgstr "Tammi"
+
+#: src/webui/static/app/i18n-post.js:20
+msgid "January"
+msgstr "Tammikuu"
+
+#: src/webui/static/app/i18n-post.js:41
+msgid "Jul"
+msgstr "Heinä"
+
+#: src/webui/static/app/i18n-post.js:26
+msgid "July"
+msgstr "Heinäkuu"
+
+#: src/webui/static/app/i18n-post.js:40
+msgid "Jun"
+msgstr "Kesä"
+
+#: src/webui/static/app/i18n-post.js:25
+msgid "June"
+msgstr "Kesäkuu"
+
+#: src/webui/static/app/tvheadend.js:696
+msgid "KB"
+msgstr "KB"
+
+#: src/webui/static/app/i18n-post.js:149
+msgid "Last Page"
+msgstr "Viimeinen sivu"
+
+#: src/webui/static/app/tvheadend.js:306
+msgid "Live TV Player"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:107
+msgid "Loading, please wait..."
+msgstr "Ladataan, pieni hetki..."
+
+#: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:627
+#: src/webui/static/app/epg.js:650 src/webui/static/app/epg.js:674
+#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:244
+#: src/webui/static/app/tvheadend.js:282
+msgid "Loading..."
+msgstr "Ladataan..."
+
+#: src/webui/static/app/tvheadend.js:673
+msgid "Logged in as"
+msgstr "Kirjautuneena"
+
+#: src/webui/static/app/config.js:93
+msgid "Look for new SAT>IP servers"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:694
+msgid "MB"
+msgstr "MB"
+
+#: src/webui/static/app/servicemapper.js:126
+msgid "Map"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:244 src/webui/static/app/mpegts.js:256
+msgid "Map All"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:254
+msgid "Map Selected"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:131
+msgid "Map Services"
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:181
+msgid "Map services"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:129
+msgid "Map services to channels"
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:11
+msgid "Mapped"
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:143
+msgid "Mapping services..."
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:37
+msgid "Mar"
+msgstr "Maalis"
+
+#: src/webui/static/app/i18n-post.js:22
+msgid "March"
+msgstr "Maaliskuu"
+
+#: src/webui/static/app/i18n-post.js:24
+msgid "May"
+msgstr "Toukokuu"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr "Touko"
+
+#: src/webui/static/app/servicemapper.js:100
+msgid "Merge same name"
+msgstr "Yhdistä samannimiset"
+
+#: src/webui/static/app/tvheadend.js:96
+msgid "Message"
+msgstr "Viesti"
+
+#: src/webui/static/app/i18n-post.js:94
+msgid "Mon"
+msgstr "Ma"
+
+#: src/webui/static/app/i18n-post.js:84
+msgid "Monday"
+msgstr "Maanantai"
+
+#: src/webui/static/app/idnode.js:1394 src/webui/static/app/idnode.js:1890
+msgid "Move Down"
+msgstr "Siirry alas"
+
+#: src/webui/static/app/idnode.js:1369 src/webui/static/app/idnode.js:1869
+msgid "Move Up"
+msgstr "Siirry ylös"
+
+#: src/webui/static/app/chconf.js:168
+msgid "Move channel one number down"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:155
+msgid "Move channel one number up"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1392
+msgid "Move selected entries down"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1367
+msgid "Move selected entries up"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1888
+msgid "Move selected entry down"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1867
+msgid "Move selected entry up"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:99 src/webui/static/app/mpegts.js:108
+msgid "Mux"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:332 src/webui/static/app/mpegts.js:342
+msgid "Mux Scheduler"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:333 src/webui/static/app/mpegts.js:337
+msgid "Mux Schedulers"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:105
+msgid "Muxes"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:65 src/webui/static/app/mpegts.js:74
+#: src/webui/static/app/mpegts.js:110
+msgid "Network"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:70
+msgid "Networks"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:132
+msgid "Next Month (Control+Right)"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:148
+msgid "Next Page"
+msgstr "Seuraava sivu"
+
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
+msgid "No"
+msgstr "Ei"
+
+#: src/webui/static/app/i18n-post.js:152
+msgid "No data to display"
+msgstr "Ei näytettävää"
+
+#: src/webui/static/app/dvr.js:150
+msgid "No days"
+msgstr "Ei päiviä"
+
+#: src/webui/static/app/tvheadend.js:676
+msgid "No verified access"
+msgstr ""
+
+#. / {0} title (lowercase), {1} title
+#: src/webui/static/app/tvheadend.js:120
+msgid "No {0} to display"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1509 src/webui/static/app/mpegts.js:208
+#: src/webui/static/app/mpegts.js:218
+msgid "None"
+msgstr "Ei mitään"
+
+#: src/webui/static/app/idnode.js:341
+msgid "Not set"
+msgstr "Ei asetettu"
+
+#: src/webui/static/app/i18n-post.js:45
+msgid "Nov"
+msgstr "Marras"
+
+#: src/webui/static/app/i18n-post.js:30
+msgid "November"
+msgstr "Marraskuu"
+
+#: src/webui/static/app/epg.js:537 src/webui/static/app/epg.js:538
+msgid "Number"
+msgstr "Numero"
+
+#: src/webui/static/app/chconf.js:170
+msgid "Number Down"
+msgstr "Numero alas"
+
+#: src/webui/static/app/chconf.js:157
+msgid "Number Up"
+msgstr "Numero ylös"
+
+#: src/webui/static/app/i18n-post.js:110
+msgid "OK"
+msgstr "OK"
+
+#: src/webui/static/app/i18n-post.js:44
+msgid "Oct"
+msgstr "Loka"
+
+#: src/webui/static/app/i18n-post.js:29
+msgid "October"
+msgstr "Lokakuu"
+
+#: src/webui/static/app/i18n-post.js:281
+msgid "On#DateFilter"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:145
+msgid "Other Stream Filter"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:146
+msgid "Other Stream Filters"
+msgstr ""
+
+#: src/webui/static/app/status.js:716
+msgid "Out"
+msgstr "Ulos"
+
+#: src/webui/static/app/status.js:152
+msgid "Output (kb/s)"
+msgstr ""
+
+#: src/webui/static/app/status.js:372
+msgid "PER"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:144
+msgid "Page"
+msgstr "Sivu"
+
+#: src/webui/static/app/idnode.js:1977 src/webui/static/app/idnode.js:2163
+msgid "Parameters"
+msgstr "Parametrit"
+
+#: src/webui/static/app/idnode.js:1507
+msgid "Parent disabled"
+msgstr ""
+
+#: src/webui/static/app/acleditor.js:79
+msgid "Password"
+msgstr "Salasana"
+
+#: src/webui/static/app/acleditor.js:104
+msgid "Password Control Entries"
+msgstr ""
+
+#: src/webui/static/app/acleditor.js:80
+msgid "Passwords"
+msgstr "Salasanat"
+
+#: src/webui/static/app/tvheadend.js:335
+msgid "Pause"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:131
+msgid "Per page"
+msgstr "Per sivu"
+
+#: src/webui/static/app/mpegts.js:126 src/webui/static/app/mpegts.js:127
+#: src/webui/static/app/mpegts.js:131 src/webui/static/app/mpegts.js:307
+#: src/webui/static/app/mpegts.js:308 src/webui/static/app/mpegts.js:312
+#: src/webui/static/app/chconf.js:223 src/webui/static/app/chconf.js:224
+#: src/webui/static/app/chconf.js:231 src/webui/static/app/dvr.js:407
+#: src/webui/static/app/dvr.js:408 src/webui/static/app/dvr.js:414
+#: src/webui/static/app/dvr.js:518 src/webui/static/app/dvr.js:519
+#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:318
+msgid "Play"
+msgstr ""
+
+#: src/webui/static/tv.js:466
+msgid "Play Selected Channel"
+msgstr ""
+
+#: src/webui/static/app/epg.js:162
+msgid "Play program"
+msgstr ""
+
+#: src/webui/static/app/epg.js:161
+msgid "Play this program"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:161
+msgid "Please Wait..."
+msgstr "Odota..."
+
+#: src/webui/static/app/i18n-post.js:133
+msgid "Previous Month (Control+Left)"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:147
+msgid "Previous Page"
+msgstr "Edellinen sivu"
+
+#: src/webui/static/app/dvr.js:548
+msgid "Profile Name"
+msgstr "Profiilin nimi"
+
+#: src/webui/static/app/epg.js:460 src/webui/static/app/epg.js:461
+msgid "Progress"
+msgstr ""
+
+#: src/webui/static/app/config.js:51 src/webui/static/app/config.js:53
+msgid "Re-fetch images"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:459
+msgid "Re-record"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:895
+msgid "Read-only Info"
+msgstr ""
+
+#: src/webui/static/app/comet.js:28
+msgid "Reconnected to Tvheadend"
+msgstr ""
+
+#: src/webui/static/app/epg.js:219
+msgid "Record program"
+msgstr "Tallenna ohjelma"
+
+#: src/webui/static/app/epg.js:225
+msgid "Record series"
+msgstr "Tallenna sarja"
+
+#: src/webui/static/app/epg.js:218
+msgid "Record this program now"
+msgstr "Tallenna tämä ohjelma nyt"
+
+#: src/webui/static/app/tvheadend.js:520
+msgid "Recording"
+msgstr "Tallennetaan"
+
+#: src/webui/static/app/dvr.js:132
+msgid "Recording details"
+msgstr "Tallenteen tiedot"
+
+#: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
+msgid "Refresh"
+msgstr "Päivitä"
+
+#: src/webui/static/app/chconf.js:194
+msgid "Reset (clear) the selected icon URLs"
+msgstr ""
+
+#: src/webui/static/app/epg.js:857
+msgid "Reset All"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:196
+msgid "Reset Icon"
+msgstr ""
+
+#: src/webui/static/app/epg.js:859
+msgid "Reset all filters (show all)"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1308 src/webui/static/app/idnode.js:1816
+#: src/webui/static/app/idnode.js:2273
+msgid "Revert pending changes (marked with red border)"
+msgstr ""
+
+#: src/webui/static/app/config.js:108
+msgid "SAT>IP Server"
+msgstr "SAT>IP-palvelin"
+
+#: src/webui/static/app/config.js:116
+msgid "SAT>IP Server Configuration"
+msgstr ""
+
+#: src/webui/static/app/status.js:402
+msgid "SNR"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:99
+msgid "Sat"
+msgstr "La"
+
+#: src/webui/static/app/i18n-post.js:89
+msgid "Saturday"
+msgstr "Lauantai"
+
+#: src/webui/static/app/idnode.js:925 src/webui/static/app/idnode.js:1283
+#: src/webui/static/app/idnode.js:1796 src/webui/static/app/idnode.js:2256
+msgid "Save"
+msgstr "Tallenna"
+
+#: src/webui/static/app/idnode.js:1281 src/webui/static/app/idnode.js:1794
+#: src/webui/static/app/idnode.js:2254
+msgid "Save pending changes (marked with red border)"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:42
+msgid "Scheduled Start Time"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:44
+msgid "Scheduled Stop Time"
+msgstr ""
+
+#: src/webui/static/app/epg.js:147 src/webui/static/app/dvr.js:66
+msgid "Search IMDB (for title)"
+msgstr ""
+
+#: src/webui/static/app/epg.js:154 src/webui/static/app/dvr.js:72
+msgid "Search TheTVDB (for title)"
+msgstr ""
+
+#: src/webui/static/app/epg.js:616
+msgid "Search title..."
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:251
+msgid "Select channel..."
+msgstr "Valitse kanava..."
+
+#: src/webui/static/app/tvheadend.js:288
+msgid "Select stream profile..."
+msgstr ""
+
+#: src/webui/static/app/idnode.js:447 src/webui/static/app/idnode.js:618
+msgid "Select {0} ..."
+msgstr ""
+
+#: src/webui/static/app/idnode.js:431 src/webui/static/app/idnode.js:594
+msgid "Selected"
+msgstr "Valittu"
+
+#: src/webui/static/app/i18n-post.js:43
+msgid "Sep"
+msgstr "Syys"
+
+#: src/webui/static/app/i18n-post.js:28
+msgid "September"
+msgstr "Syyskuu"
+
+#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:110
+msgid "Service"
+msgstr "Palvelu"
+
+#: src/webui/static/app/servicemapper.js:34
+msgid "Service Mapper"
+msgstr ""
+
+#: src/webui/static/app/servicemapper.js:151
+msgid "Service Mapper Status"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:221
+msgid "Service details for"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:295 src/webui/static/app/mpegts.js:302
+msgid "Services"
+msgstr "Palvelut"
+
+#: src/webui/static/app/idnode.js:853
+msgid "Settings"
+msgstr "Asetukset"
+
+#: src/webui/static/app/i18n-post.js:212
+msgid "Show in Groups"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1912
+msgid "Show or hide passwords"
+msgstr "Näytä tai piilota salasanat"
+
+#: src/webui/static/app/idnode.js:1914 src/webui/static/app/idnode.js:1918
+msgid "Show passwords"
+msgstr "Näytä salasanat"
+
+#: src/webui/static/app/status.js:422
+msgid "Signal Strength"
+msgstr "Signaalin voimakkuus"
+
+#: src/webui/static/app/i18n-post.js:203
+msgid "Sort Ascending"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:204
+msgid "Sort Descending"
+msgstr ""
+
+#: src/webui/static/app/epg.js:119
+msgid "Star Rating"
+msgstr ""
+
+#: src/webui/static/app/epg.js:560 src/webui/static/app/epg.js:561
+msgid "Stars"
+msgstr ""
+
+#: src/webui/static/app/status.js:116
+msgid "Start"
+msgstr ""
+
+#: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:513
+#: src/webui/static/app/epg.js:514
+msgid "Start Time"
+msgstr ""
+
+#: src/webui/static/app/status.js:572
+msgid "Started"
+msgstr ""
+
+#: src/webui/static/app/status.js:126
+msgid "State"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:619
+msgid "Status"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:202 src/webui/static/app/tvheadend.js:342
+msgid "Stop"
+msgstr ""
+
+#: src/webui/static/app/epg.js:189
+msgid "Stop recording"
+msgstr ""
+
+#: src/webui/static/app/epg.js:188
+msgid "Stop recording of this program"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:200
+msgid "Stop the selected recording"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:699
+msgid "Storage space"
+msgstr ""
+
+#: src/webui/static/app/status.js:344 src/webui/static/app/status.js:474
+#: src/webui/static/app/tvheadend.js:508
+msgid "Stream"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
+#: src/webui/static/app/esfilter.js:43
+msgid "Stream Profile"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:25
+msgid "Stream Profile Name"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:24
+msgid "Stream Profiles"
+msgstr ""
+
+#: src/webui/static/app/status.js:349
+msgid "Subs No."
+msgstr ""
+
+#: src/webui/static/app/status.js:199
+msgid "Subscriptions"
+msgstr ""
+
+#: src/webui/static/app/epg.js:497 src/webui/static/app/epg.js:498
+msgid "Subtitle"
+msgstr "Tekstitys"
+
+#: src/webui/static/app/esfilter.js:108
+msgid "Subtitle Stream Filter"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:109
+msgid "Subtitle Stream Filters"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:93
+msgid "Sun"
+msgstr "Su"
+
+#: src/webui/static/app/i18n-post.js:83
+msgid "Sunday"
+msgstr "Sunnuntai"
+
+#: src/webui/static/app/chconf.js:183
+msgid "Swap Numbers"
+msgstr "Vaihda päittäin"
+
+#: src/webui/static/app/chconf.js:181
+msgid "Swap the numbers for the two selected channels"
+msgstr "Vaihda kahden valitun kanavan numerot päittäin"
+
+#: src/webui/static/app/tvheadend.js:759
+msgid "System log"
+msgstr "Järjestelmäloki"
+
+#: src/webui/static/app/tvadapters.js:5 src/webui/static/app/tvadapters.js:10
+msgid "TV adapters"
+msgstr "TV-sovittimet"
+
+#: src/webui/static/app/epg.js:1029
+msgid "Tag"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:89
+msgid "Teletext Stream Filter"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:90
+msgid "Teletext Stream Filters"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:389 src/webui/static/app/dvr.js:500
+msgid "The associated file will be removed from storage."
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:187
+msgid "The date in this field must be after {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:188
+msgid "The date in this field must be before {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:169
+msgid "The maximum length for this field is {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:179
+msgid "The maximum value for this field is {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:168
+msgid "The minimum length for this field is {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:234
+msgid "The time in this field must be equal to or after {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:235
+msgid "The time in this field must be equal to or before {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:164
+msgid "The value in this field is invalid"
+msgstr ""
+
+#: src/webui/static/app/comet.js:36
+msgid ""
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr ""
+
+#: src/webui/static/app/tvhlog.js:21
+msgid "They will be lost when the application next restarts."
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:127
+msgid "This date is after the maximum date"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:126
+msgid "This date is before the minimum date"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:170
+msgid "This field is required"
+msgstr ""
+
+#: src/webui/static/app/epg.js:1024
+msgid ""
+"This will create an automatic rule that continuously scans the EPG for "
+"programs to record that match this query"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:97
+msgid "Thu"
+msgstr "To"
+
+#: src/webui/static/app/i18n-post.js:87
+msgid "Thursday"
+msgstr "Torstai"
+
+#: src/webui/static/app/dvr.js:639
+msgid "Time Schedule"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:59
+msgid "Time Scheduler"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:640
+msgid "Time Schedules"
+msgstr ""
+
+#: src/webui/static/app/timeshift.js:16
+msgid "Timeshift"
+msgstr ""
+
+#: src/webui/static/app/timeshift.js:24
+msgid "Timeshift Configuration"
+msgstr ""
+
+#: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
+#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:98
+msgid "Title"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:125
+msgid "Today"
+msgstr "Tänään"
+
+#: src/webui/static/app/tvheadend.js:360
+msgid "Toggle mute"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:457
+msgid "Toggle re-record functionality"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:702
+msgid "Total"
+msgstr "Yhteensä"
+
+#: src/webui/static/app/status.js:383
+msgid "Transport Errors"
+msgstr "Siirtovirheitä"
+
+#: src/webui/static/app/epggrab.js:7
+msgid "Trigger OTA EPG Grabber"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:95
+msgid "Tue"
+msgstr "Ti"
+
+#: src/webui/static/app/i18n-post.js:85
+msgid "Tuesday"
+msgstr "Tiistai"
+
+#: src/webui/static/app/epggrab.js:8
+msgid "Tune to the over-the-air EPG muxes to grab new events now"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:738
+msgid "Tvheadend Web-Panel"
+msgstr ""
+
+#: src/webui/static/app/caclient.js:46 src/webui/static/app/esfilter.js:32
+#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:557
+msgid "Type"
+msgstr ""
+
+#: src/webui/static/app/status.js:378
+msgid "Uncorrected Blocks"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1310 src/webui/static/app/idnode.js:1818
+#: src/webui/static/app/idnode.js:2275
+msgid "Undo"
+msgstr "Peru"
+
+#: src/webui/static/app/status.js:415 src/webui/static/app/status.js:435
+msgid "Unknown"
+msgstr "Tuntematon"
+
+#: src/webui/static/app/dvr.js:275
+msgid "Upcoming / Current Recordings"
+msgstr "Tulevat / Nykyiset tallennukset"
+
+#: src/webui/static/app/dvr.js:274
+msgid "Upcoming Recording"
+msgstr "Tuleva tallennus"
+
+#: src/webui/static/app/status.js:92 src/webui/static/app/status.js:567
+msgid "Username"
+msgstr "Käyttäjänimi"
+
+#: src/webui/static/app/tvheadend.js:458
+msgid "Users"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:51
+msgid "Video Stream Filter"
+msgstr ""
+
+#: src/webui/static/app/esfilter.js:52
+msgid "Video Stream Filters"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:369
+msgid "Volume"
+msgstr ""
+
+#: src/webui/static/app/epg.js:864
+msgid "Watch TV"
+msgstr "Katso TV"
+
+#: src/webui/static/app/epg.js:866
+msgid "Watch live TV in a new browser window."
+msgstr "Katso TV:tä uudessa selainikkunassa."
+
+#: src/webui/static/app/i18n-post.js:96
+msgid "Wed"
+msgstr "Ke"
+
+#: src/webui/static/app/i18n-post.js:86
+msgid "Wednesday"
+msgstr "Keskiviikko"
+
+#: src/webui/static/app/status.js:354
+msgid "Weight"
+msgstr "Painoarvo"
+
+#: src/webui/static/app/dvr.js:33
+msgid "Will be skipped"
+msgstr "Hypätään yli"
+
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
+msgid "Yes"
+msgstr "Kyllä"
+
+#: src/webui/static/app/idnode.js:459 src/webui/static/app/idnode.js:740
+msgid "You must provide a value - use octal chmod notation, e.g. 0664"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:243
+msgid "You must select at least one item in this group"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:248
+msgid "You must select one item in this group"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:33
+msgid "because it is a rerun of:"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:218
+msgid "false"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:237
+msgid "g:i A#TimeField"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:238
+msgid ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:349 src/webui/static/app/idnode.js:350
+#: src/webui/static/app/epg.js:427 src/webui/static/app/epg.js:429
+msgid "hrs"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:677
+msgid "login"
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:674
+msgid "logout"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:229
+msgid "m/d/Y#DateColumn"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:282
+msgid "m/d/Y#DateFilter"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:120
+msgid "m/d/Y#Format.date"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:191
+msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:190
+msgid "m/d/y#DateField"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:136
+msgid "m/d/y#DatePicker"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:350 src/webui/static/app/idnode.js:352
+#: src/webui/static/app/epg.js:429 src/webui/static/app/epg.js:432
+#: src/webui/static/app/dvr.js:46
+msgid "min"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:145
+msgid "of {0}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:217
+msgid "true"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:135
+msgid "{0} (Spacebar)"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:189
+msgid "{0} is not a valid date - it must be in the format {1}"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:180
+msgid "{0} is not a valid number"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:236
+msgid "{0} is not a valid time"
+msgstr ""
+
+#: src/webui/static/app/i18n-post.js:14
+msgid "{0} selected row{1}"
+msgstr ""
+
+#. / {0} start, {1} end, {2} total, {3} title
+#: src/webui/static/app/tvheadend.js:118
+msgid "{3} {0} - {1} of {2}"
+msgstr ""

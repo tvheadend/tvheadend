@@ -105,7 +105,7 @@ static int epggrab_mod_class_type_set(void *o, const void *v)
 
 const idclass_t epggrab_mod_class = {
   .ic_class      = "epggrab_mod",
-  .ic_caption    = N_("EPG Grabber"),
+  .ic_caption    = N_("EPG grabber"),
   .ic_event      = "epggrab_mod",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = epggrab_mod_class_title,
@@ -156,7 +156,7 @@ const idclass_t epggrab_mod_class = {
 const idclass_t epggrab_class_mod_int = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_int",
-  .ic_caption    = N_("Internal EPG Grabber"),
+  .ic_caption    = N_("Internal EPG grabber"),
   .ic_properties = (const property_t[]){
     {
       .type   = PT_STR,
@@ -166,6 +166,13 @@ const idclass_t epggrab_class_mod_int = {
       .opts   = PO_RDONLY | PO_NOSAVE,
       .group  = 1
     },
+    {
+      .type   = PT_STR,
+      .id     = "args",
+      .name   = N_("Extra arguments"),
+      .off    = offsetof(epggrab_module_int_t, args),
+      .group  = 1
+    },
     {}
   }
 };
@@ -173,7 +180,7 @@ const idclass_t epggrab_class_mod_int = {
 const idclass_t epggrab_class_mod_ext = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ext",
-  .ic_caption    = N_("External EPG Grabber"),
+  .ic_caption    = N_("External EPG grabber"),
   .ic_properties = (const property_t[]){
     {
       .type   = PT_STR,
@@ -190,7 +197,7 @@ const idclass_t epggrab_class_mod_ext = {
 const idclass_t epggrab_class_mod_ota = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ota",
-  .ic_caption    = N_("Over-the-air EPG Grabber"),
+  .ic_caption    = N_("Over-the-air EPG grabber"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -296,6 +303,8 @@ epggrab_module_int_done( void *m )
   mod->active = 0;
   free((char *)mod->path);
   mod->path = NULL;
+  free((char *)mod->args);
+  mod->args = NULL;
 }
 
 epggrab_module_int_t *epggrab_module_int_create
@@ -318,6 +327,7 @@ epggrab_module_int_t *epggrab_module_int_create
   /* Int data */
   skel->type     = EPGGRAB_INT;
   skel->path     = strdup(path);
+  skel->args     = NULL;
   skel->grab     = grab  ?: epggrab_module_grab_spawn;
   skel->trans    = trans ?: epggrab_module_trans_xml;
   skel->parse    = parse;
@@ -331,19 +341,30 @@ char *epggrab_module_grab_spawn ( void *m )
   int        rd = -1, outlen;
   char       *outbuf;
   epggrab_module_int_t *mod = m;
-  char **argv = NULL;
+  char      **argv = NULL;
+  char       *path;
 
   /* Debug */
   tvhlog(LOG_INFO, mod->id, "grab %s", mod->path);
 
+  /* Extra arguments */
+  if (mod->args && mod->args[0]) {
+    path = alloca(strlen(mod->path) + strlen(mod->args) + 2);
+    strcpy(path, mod->path);
+    strcat(path, " ");
+    strcat(path, mod->args);
+  } else {
+    path = (char *)mod->path;
+  }
+
   /* Arguments */
-  if (spawn_parse_args(&argv, 64, mod->path, NULL)) {
+  if (spawn_parse_args(&argv, 64, path, NULL)) {
     tvhlog(LOG_ERR, mod->id, "unable to parse arguments");
     return NULL;
   }
 
   /* Grab */
-  outlen = spawn_and_give_stdout(argv[0], (char **)argv, NULL, &rd, NULL, 1);
+  outlen = spawn_and_give_stdout(argv[0], argv, NULL, &rd, NULL, 1);
 
   spawn_free_args(argv);
 

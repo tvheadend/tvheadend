@@ -228,21 +228,21 @@ epggrab_class_ota_cron_notify(void *self, const char *lang)
 const idclass_t epggrab_class = {
   .ic_snode      = &epggrab_conf.idnode,
   .ic_class      = "epggrab",
-  .ic_caption    = N_("EPG Grabber Configuration"),
+  .ic_caption    = N_("EPG grabber configuration"),
   .ic_event      = "epggrab",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = epggrab_class_save,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("General Config"),
+         .name   = N_("General configuration"),
          .number = 1,
       },
       {
-         .name   = N_("Internal Grabber"),
+         .name   = N_("Internal grabber"),
          .number = 2,
       },
       {
-         .name   = N_("Over-the-air Grabbers"),
+         .name   = N_("Over-the-air grabbers"),
          .number = 3,
       },
       {}
@@ -272,7 +272,7 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_INT,
       .id     = "epgdb_periodicsave",
-      .name   = N_("Periodic save EPG to disk"),
+      .name   = N_("Periodically save EPG to disk (hours)"),
       .off    = offsetof(epggrab_conf_t, epgdb_periodicsave),
       .group  = 1,
     },
@@ -288,7 +288,7 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_BOOL,
       .id     = "ota_initial",
-      .name   = N_("Force initial EPG scan at startup"),
+      .name   = N_("Force initial EPG scan at start-up"),
       .off    = offsetof(epggrab_conf_t, ota_initial),
       .group  = 3,
     },

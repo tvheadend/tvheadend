@@ -123,7 +123,7 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
       }
     }
   } else {
-    if (cfg->dvr_enabled)
+    if (cfg && cfg->dvr_enabled)
       res = cfg;
   }
   if (!res)
@@ -660,7 +660,7 @@ dvr_config_class_get_title (idnode_t *self, const char *lang)
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (!dvr_config_is_default(cfg))
     return cfg->dvr_config_name;
-  return N_("(Default Profile)");
+  return N_("(Default profile)");
 }
 
 static int
@@ -704,7 +704,7 @@ static htsmsg_t *
 dvr_config_entry_class_update_window_list(void *o, const char *lang)
 {
   return dvr_entry_class_duration_list(o,
-           tvh_gettext_lang(lang, N_("Update Disabled")),
+           tvh_gettext_lang(lang, N_("Update disabled")),
            24*3600, 60, lang);
 }
 
@@ -724,7 +724,7 @@ dvr_config_class_pathname_set(void *o, const void *v)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
-  .ic_caption    = N_("DVR Configuration Profile"),
+  .ic_caption    = N_("DVR configuration profile"),
   .ic_event      = "dvrconfig",
   .ic_save       = dvr_config_class_save,
   .ic_get_title  = dvr_config_class_get_title,
@@ -732,19 +732,19 @@ const idclass_t dvr_config_class = {
   .ic_perm       = dvr_config_class_perm,
   .ic_groups     = (const property_group_t[]) {
       {
-         .name   = N_("DVR Behavior"),
+         .name   = N_("DVR behavior"),
          .number = 1,
       },
       {
-         .name   = N_("Recording File Options"),
+         .name   = N_("Recording file options"),
          .number = 2,
       },
       {
-         .name   = N_("Full Pathname Specification"),
+         .name   = N_("Full pathname specification"),
          .number = 3,
       },
       {
-         .name   = N_("Subdirectory Options"),
+         .name   = N_("Subdirectory options"),
          .number = 4,
       },
       {
@@ -810,7 +810,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "retention-days",
-      .name     = N_("DVR Log Retention Time (days)"),
+      .name     = N_("DVR log retention period (days)"),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = 31,
       .group    = 1,
@@ -818,14 +818,14 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "removal-days",
-      .name     = N_("DVR File Removal Time (days)"),
+      .name     = N_("DVR file retention period (days)"),
       .off      = offsetof(dvr_config_t, dvr_removal_days),
       .group    = 1,
     },
     {
       .type     = PT_BOOL,
       .id       = "clone",
-      .name     = N_("Clone Scheduled Entry On Error"),
+      .name     = N_("Clone scheduled entry on error"),
       .off      = offsetof(dvr_config_t, dvr_clone),
       .def.u32  = 1,
       .group    = 1,
@@ -840,7 +840,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "pre-extra-time",
-      .name     = N_("Extra Time Before Recordings (minutes)"),
+      .name     = N_("Extra padding before recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),
       .list     = dvr_config_class_extra_list,
       .group    = 1,
@@ -848,7 +848,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "post-extra-time",
-      .name     = N_("Extra Time After Recordings (minutes)"),
+      .name     = N_("Extra padding after recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_post),
       .list     = dvr_config_class_extra_list,
       .group    = 1,
@@ -856,30 +856,38 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "epg-update-window",
-      .name     = N_("EPG Update Window"),
+      .name     = N_("EPG update window"),
       .off      = offsetof(dvr_config_t, dvr_update_window),
       .list     = dvr_config_entry_class_update_window_list,
       .def.u32  = 24*3600,
       .group    = 1,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "epg-running",
+      .name     = N_("Use EPG running state"),
+      .off      = offsetof(dvr_config_t, dvr_running),
+      .def.u32  = 1,
+      .group    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "postproc",
-      .name     = N_("Post-Processor Command"),
+      .name     = N_("Post-processor command"),
       .off      = offsetof(dvr_config_t, dvr_postproc),
       .group    = 1,
     },
     {
       .type     = PT_STR,
       .id       = "storage",
-      .name     = N_("Recording System Path"),
+      .name     = N_("Recording system path"),
       .off      = offsetof(dvr_config_t, dvr_storage),
       .group    = 2,
     },
     {
       .type     = PT_PERM,
       .id       = "file-permissions",
-      .name     = N_("File Permissions (octal, e.g. 0664)"),
+      .name     = N_("File permissions (octal, e.g. 0664)"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_file_permissions),
       .def.u32  = 0664,
       .group    = 2,
@@ -887,7 +895,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = N_("Filename Character Set"),
+      .name     = N_("Filename character set"),
       .off      = offsetof(dvr_config_t, dvr_charset),
       .set      = dvr_config_class_charset_set,
       .list     = dvr_config_class_charset_list,
@@ -897,7 +905,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "tag-files",
-      .name     = N_("Tag Files With Metadata"),
+      .name     = N_("Tag files with metadata"),
       .off      = offsetof(dvr_config_t, dvr_tag_files),
       .def.i    = 1,
       .group    = 2,
@@ -905,7 +913,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "skip-commercials",
-      .name     = N_("Skip Commercials"),
+      .name     = N_("Skip commercials"),
       .off      = offsetof(dvr_config_t, dvr_skip_commercials),
       .def.i    = 1,
       .group    = 2,
@@ -921,7 +929,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_PERM,
       .id       = "directory-permissions",
-      .name     = N_("Directory Permissions (octal, e.g. 0775)"),
+      .name     = N_("Directory permissions (octal, e.g. 0775)"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_directory_permissions),
       .def.u32  = 0775,
       .group    = 4,
@@ -929,77 +937,77 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "day-dir",
-      .name     = N_("Make Subdirectories Per Day"),
+      .name     = N_("Make subdirectories per day"),
       .off      = offsetof(dvr_config_t, dvr_dir_per_day),
       .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "channel-dir",
-      .name     = N_("Make Subdirectories Per Channel"),
+      .name     = N_("Make subdirectories per channel"),
       .off      = offsetof(dvr_config_t, dvr_channel_dir),
       .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "title-dir",
-      .name     = N_("Make Subdirectories Per Title"),
+      .name     = N_("Make subdirectories per title"),
       .off      = offsetof(dvr_config_t, dvr_title_dir),
       .group    = 4,
     },
     {
       .type     = PT_BOOL,
       .id       = "channel-in-title",
-      .name     = N_("Include Channel Name In Filename"),
+      .name     = N_("Include channel name in filename"),
       .off      = offsetof(dvr_config_t, dvr_channel_in_title),
       .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "date-in-title",
-      .name     = N_("Include Date In Filename"),
+      .name     = N_("Include date In filename"),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
       .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "time-in-title",
-      .name     = N_("Include Time In Filename"),
+      .name     = N_("Include time In filename"),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
       .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "episode-in-title",
-      .name     = N_("Include Episode In Filename"),
+      .name     = N_("Include episode in filename"),
       .off      = offsetof(dvr_config_t, dvr_episode_in_title),
       .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "subtitle-in-title",
-      .name     = N_("Include Subtitle In Filename"),
+      .name     = N_("Include subtitle in filename"),
       .off      = offsetof(dvr_config_t, dvr_subtitle_in_title),
       .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "omit-title",
-      .name     = N_("Don't Include Title In Filename"),
+      .name     = N_("Don't include title in filename"),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
       .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "clean-title",
-      .name     = N_("Remove All Unsafe Characters From Filename"),
+      .name     = N_("Remove all unsafe characters from filename"),
       .off      = offsetof(dvr_config_t, dvr_clean_title),
       .group    = 6,
     },
     {
       .type     = PT_BOOL,
       .id       = "whitespace-in-title",
-      .name     = N_("Replace Whitespace In Title with '-'"),
+      .name     = N_("Replace whitespace in title with '-'"),
       .off      = offsetof(dvr_config_t, dvr_whitespace_in_title),
       .group    = 6,
     },

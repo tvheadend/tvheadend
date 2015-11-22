@@ -439,6 +439,7 @@ opentv_parse_event_section
     const uint8_t *buf, int len )
 {
   opentv_module_t *mod = sta->os_mod;
+  channel_t *ch;
   epggrab_channel_t *ec;
   idnode_list_mapping_t *ilm;
   const char *lang = NULL;
@@ -453,10 +454,12 @@ opentv_parse_event_section
   if (!(ec = _opentv_find_epggrab_channel(mod, cid, 0, NULL))) return 0;
 
   /* Iterate all channels */
-  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link)
-    save |= opentv_parse_event_section_one(sta, cid, mjd,
-                                           (channel_t *)ilm->ilm_in2,
+  LIST_FOREACH(ilm, &ec->channels, ilm_in2_link) {
+    ch = (channel_t *)ilm->ilm_in2;
+    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+    save |= opentv_parse_event_section_one(sta, cid, mjd, ch,
                                            lang, buf, len);
+  }
 
   /* Update EPG */
   if (save) epg_updated();

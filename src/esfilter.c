@@ -592,7 +592,7 @@ esfilter_class_action_enum(void *o, const char *lang)
 
 const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
-  .ic_caption    = N_("Elementary Stream Filter"),
+  .ic_caption    = N_("Elementary stream filter"),
   .ic_event      = "esfilter",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = esfilter_class_save,
@@ -628,13 +628,13 @@ const idclass_t esfilter_class = {
 const idclass_t esfilter_class_video = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_video",
-  .ic_caption    = N_("Video Stream Filter"),
+  .ic_caption    = N_("Video stream filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = N_("Stream Type"),
+      .name     = N_("Stream type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_video,
       .list     = esfilter_class_type_enum_video,
@@ -659,7 +659,7 @@ const idclass_t esfilter_class_video = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = N_("Stream Index"),
+      .name     = N_("Stream index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
@@ -695,13 +695,13 @@ const idclass_t esfilter_class_video = {
 const idclass_t esfilter_class_audio = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_audio",
-  .ic_caption    = N_("Audio Stream Filter"),
+  .ic_caption    = N_("Audio stream filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = N_("Stream Type"),
+      .name     = N_("Stream type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_audio,
       .list     = esfilter_class_type_enum_audio,
@@ -726,7 +726,7 @@ const idclass_t esfilter_class_audio = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = N_("Stream Index"),
+      .name     = N_("Stream index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
@@ -762,13 +762,13 @@ const idclass_t esfilter_class_audio = {
 const idclass_t esfilter_class_teletext = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_teletext",
-  .ic_caption    = N_("Teletext Stream Filter"),
+  .ic_caption    = N_("Teletext stream filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = N_("Stream Type"),
+      .name     = N_("Stream type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_teletext,
       .list     = esfilter_class_type_enum_teletext,
@@ -793,7 +793,7 @@ const idclass_t esfilter_class_teletext = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = N_("Stream Index"),
+      .name     = N_("Stream index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
@@ -829,13 +829,13 @@ const idclass_t esfilter_class_teletext = {
 const idclass_t esfilter_class_subtit = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_subtit",
-  .ic_caption    = N_("Subtitle Stream Filter"),
+  .ic_caption    = N_("Subtitle stream filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = N_("Stream Type"),
+      .name     = N_("Stream type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_subtit,
       .list     = esfilter_class_type_enum_subtit,
@@ -860,7 +860,7 @@ const idclass_t esfilter_class_subtit = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = N_("Stream Index"),
+      .name     = N_("Stream index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
@@ -896,13 +896,13 @@ const idclass_t esfilter_class_subtit = {
 const idclass_t esfilter_class_ca = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_ca",
-  .ic_caption    = N_("CA Stream Filter"),
+  .ic_caption    = N_("CA stream filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = N_("Stream Type"),
+      .name     = N_("Stream type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_ca,
       .list     = esfilter_class_type_enum_ca,
@@ -911,7 +911,7 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_STR,
       .id       = "CAid",
-      .name     = N_("CA Identification"),
+      .name     = N_("CA identification"),
       .get      = esfilter_class_caid_get,
       .set      = esfilter_class_caid_set,
       .list     = esfilter_class_caid_enum,
@@ -919,7 +919,7 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_STR,
       .id       = "CAprovider",
-      .name     = N_("CA Provider"),
+      .name     = N_("CA provider"),
       .get      = esfilter_class_caprovider_get,
       .set      = esfilter_class_caprovider_set,
       .list     = esfilter_class_caprovider_enum,
@@ -935,7 +935,7 @@ const idclass_t esfilter_class_ca = {
     {
       .type     = PT_INT,
       .id       = "sindex",
-      .name     = N_("Stream Index"),
+      .name     = N_("Stream index"),
       .off      = offsetof(esfilter_t, esf_sindex),
     },
     {
@@ -971,13 +971,13 @@ const idclass_t esfilter_class_ca = {
 const idclass_t esfilter_class_other = {
   .ic_super      = &esfilter_class,
   .ic_class      = "esfilter_other",
-  .ic_caption    = N_("Other Stream Filter"),
+  .ic_caption    = N_("Other stream filter"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "type",
-      .name     = N_("Stream Type"),
+      .name     = N_("Stream type"),
       .get      = esfilter_class_type_get,
       .set      = esfilter_class_type_set_other,
       .list     = esfilter_class_type_enum_other,

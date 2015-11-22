@@ -35,7 +35,7 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist );
  *
  */
 static void
-htsmsg_field_data_destroy(htsmsg_t *msg, htsmsg_field_t *f)
+htsmsg_field_data_destroy(htsmsg_field_t *f)
 {
   switch(f->hmf_type) {
   case HMF_MAP:
@@ -66,7 +66,7 @@ htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f)
 {
   TAILQ_REMOVE(&msg->hm_fields, f, hmf_link);
 
-  htsmsg_field_data_destroy(msg, f);
+  htsmsg_field_data_destroy(f);
 
   if(f->hmf_flags & HMF_NAME_ALLOCED)
     free((void *)f->hmf_name);
@@ -355,6 +355,7 @@ static htsmsg_t *
 htsmsg_field_set_msg(htsmsg_field_t *f, htsmsg_t *sub)
 {
   assert(sub->hm_data == NULL);
+  f->hmf_msg.hm_data = NULL;
   f->hmf_msg.hm_islist = sub->hm_islist;
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   free(sub);
@@ -387,7 +388,7 @@ htsmsg_set_msg(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
   if (!f)
     return htsmsg_add_msg(msg, name, sub);
-  htsmsg_field_data_destroy(msg, f);
+  htsmsg_field_data_destroy(f);
   return htsmsg_field_set_msg(f, sub);
 }
 
@@ -404,6 +405,7 @@ htsmsg_add_msg_extname(htsmsg_t *msg, const char *name, htsmsg_t *sub)
   f = htsmsg_field_add(msg, name, sub->hm_islist ? HMF_LIST : HMF_MAP, 0);
 
   assert(sub->hm_data == NULL);
+  f->hmf_msg.hm_data = NULL;
   TAILQ_MOVE(&f->hmf_msg.hm_fields, &sub->hm_fields, hmf_link);
   f->hmf_msg.hm_islist = sub->hm_islist;
   free(sub);
@@ -794,6 +796,7 @@ htsmsg_field_get_msg ( htsmsg_field_t *f, int islist )
       free((void*)f->hmf_str);
       f->hmf_type          = m->hm_islist ? HMF_LIST : HMF_MAP;
       f->hmf_msg.hm_islist = m->hm_islist;
+      f->hmf_msg.hm_data   = NULL;
       TAILQ_MOVE(&f->hmf_msg.hm_fields, &m->hm_fields, hmf_link);
       free(m);
     }
@@ -953,6 +956,9 @@ htsmsg_cmp(htsmsg_t *m1, htsmsg_t *m2)
   f2 = TAILQ_FIRST(&m2->hm_fields);
   TAILQ_FOREACH(f1, &m1->hm_fields, hmf_link) {
 
+    if (f2 == NULL)
+      return 1;
+
     if (f1->hmf_type != f2->hmf_type)
       return 1;
     if (strcmp(f1->hmf_name ?: "", f2->hmf_name ?: ""))
@@ -1068,7 +1074,12 @@ htsmsg_list_2_csv(htsmsg_t *m, char delim, int human)
   used = 0;
   if (human) {
     sep[0] = delim;
-    sep[1] = ' ';
+    if (human & 2) {
+      sep[1] = '\0';
+    } else {
+      sep[1] = ' ';
+      sep[2] = '\0';
+    }
     ssep = "";
   } else {
     sep[0] = delim;

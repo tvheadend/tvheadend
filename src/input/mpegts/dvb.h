@@ -29,6 +29,7 @@
 struct mpegts_table;
 struct mpegts_table_state;
 struct mpegts_mux;
+struct lang_str;
 
 /* PIDs */
 
@@ -204,9 +205,8 @@ int dvb_get_string_with_len
   (char *dst, size_t dstlen, const uint8_t *buf, size_t buflen,
    const char *dvb_charset, dvb_string_conv_t *conv);
 
-int atsc_get_string
-  (char *dst, size_t dstlen, const uint8_t *src, size_t srclen,
-   const char *lang);
+struct lang_str *atsc_get_string
+  (const uint8_t *src, size_t srclen);
 
 /* Conversion */
 

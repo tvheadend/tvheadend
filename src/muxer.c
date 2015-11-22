@@ -306,7 +306,7 @@ muxer_cache_update(muxer_t *m, int fd, off_t pos, size_t size)
   case MC_CACHE_DONTKEEP:
 #if defined(PLATFORM_DARWIN)
     fcntl(fd, F_NOCACHE, 1);
-#elif !defined(ENABLE_ANDROID)
+#elif !ENABLE_ANDROID
     posix_fadvise(fd, pos, size, POSIX_FADV_DONTNEED);
 #endif
     break;

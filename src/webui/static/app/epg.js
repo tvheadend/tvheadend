@@ -140,15 +140,19 @@ tvheadend.epgDetails = function(event) {
     var recording = event.dvrState.indexOf('recording') === 0;
     var scheduled = event.dvrState.indexOf('scheduled') === 0;
 
-    if (!recording && !scheduled) {
-        buttons.push(new Ext.Button({
-            disabled: !event.title,
-            handler: searchIMDB,
-            iconCls: 'find',
-            tooltip: _('Search IMDB (for title)'),
-            text: _("Search IMDB")
-        }));
-    }
+    buttons.push(new Ext.Button({
+        disabled: !event.title,
+        handler: searchIMDB,
+        iconCls: 'imdb',
+        tooltip: _('Search IMDB (for title)'),
+    }));
+
+    buttons.push(new Ext.Button({
+        disabled: !event.title,
+        handler: searchTheTVDB,
+        iconCls: 'thetvdb',
+        tooltip: _('Search TheTVDB (for title)'),
+    }));
 
     buttons.push(new Ext.Button({
         disabled: event.start > now || event.stop < now,
@@ -234,7 +238,7 @@ tvheadend.epgDetails = function(event) {
         title: _('Broadcast Details'),
         iconCls: 'broadcast_details',
         layout: 'fit',
-        width: 650,
+        width: 675,
         height: 450,
         constrainHeader: true,
         buttons: buttons,
@@ -247,6 +251,11 @@ tvheadend.epgDetails = function(event) {
     function searchIMDB() {
         window.open('http://akas.imdb.com/find?q=' +
                     encodeURIComponent(event.title), '_blank');
+    }
+
+    function searchTheTVDB(){
+        window.open('http://thetvdb.com/?string='+
+                    encodeURIComponent(event.title)+'&searchseriesid=&tab=listseries&function=Search','_blank');
     }
 
     function playProgram() {

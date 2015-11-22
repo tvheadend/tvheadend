@@ -76,7 +76,7 @@ mpegts_service_pref_capid_lock_list ( void *o, const char *lang )
   static const struct strtab tab[] = {
     { N_("Off"),                    0 },
     { N_("On"),                     1 },
-    { N_("Only Preferred CA PID"),  2 },
+    { N_("Only preferred CA PID"),  2 },
   };
    return strtab2htsmsg(tab, 1, lang);
 }
@@ -85,7 +85,7 @@ const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
-  .ic_caption    = N_("MPEG-TS Service"),
+  .ic_caption    = N_("MPEG-TS service"),
   .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){
     {
@@ -119,35 +119,35 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_U16,
       .id       = "lcn",
-      .name     = N_("Local Channel Number"),
+      .name     = N_("Local channel number"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_num),
     },
     {
       .type     = PT_U16,
       .id       = "lcn_minor",
-      .name     = N_("Local Channel Minor"),
+      .name     = N_("Local channel minor"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_channel_minor),
     },
     {
       .type     = PT_U16,
       .id       = "lcn2",
-      .name     = N_("OpenTV Channel Number"),
+      .name     = N_("OpenTV channel number"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_opentv_chnum),
     },
     {
       .type     = PT_U16,
       .id       = "srcid",
-      .name     = "ATSC Source ID",
+      .name     = "ATSC source ID",
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_atsc_source_id),
     },
     {
       .type     = PT_STR,
       .id       = "svcname",
-      .name     = N_("Service Name"),
+      .name     = N_("Service name"),
       .opts     = PO_RDONLY,
       .off      = offsetof(mpegts_service_t, s_dvb_svcname),
     },
@@ -161,14 +161,14 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_STR,
       .id       = "cridauth",
-      .name     = N_("CRID Authority"),
+      .name     = N_("CRID authority"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_cridauth),
     },
     {
       .type     = PT_U16,
       .id       = "dvb_servicetype",
-      .name     = N_("Service Type"),
+      .name     = N_("Service type"),
       .opts     = PO_RDONLY | PO_HIDDEN,
       .off      = offsetof(mpegts_service_t, s_dvb_servicetype),
     },
@@ -182,7 +182,7 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_STR,
       .id       = "charset",
-      .name     = N_("Character Set"),
+      .name     = N_("Character set"),
       .off      = offsetof(mpegts_service_t, s_dvb_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -197,7 +197,7 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_INT,
       .id       = "prefcapid_lock",
-      .name     = N_("Lock Preferred CA PID"),
+      .name     = N_("Lock preferred CA PID"),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
       .opts     = PO_ADVANCED,
       .list     = mpegts_service_pref_capid_lock_list,
@@ -219,7 +219,7 @@ const idclass_t mpegts_service_class =
     {
       .type     = PT_TIME,
       .id       = "last_seen",
-      .name     = N_("Last Seen"),
+      .name     = N_("Last seen"),
       .off      = offsetof(mpegts_service_t, s_dvb_last_seen),
       .opts     = PO_ADVANCED | PO_RDONLY,
     },
@@ -547,17 +547,12 @@ mpegts_service_channel_icon ( service_t *s )
 
 #if ENABLE_MPEGTS_DVB
 static int
-mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash, const idclass_t **idc)
+mpegts_service_match_network(mpegts_network_t *mn, uint32_t hash, const idclass_t *idc)
 {
-  int pos = hash >> 16, pos2;
+  int pos, pos2;
 
+  if (idc != &dvb_mux_dvbs_class) return 1;
   pos = hash >> 16;
-  switch (pos) {
-  case 0xFFFF: *idc = &dvb_mux_dvbc_class; return 1;
-  case 0xEEEE: *idc = &dvb_mux_dvbt_class; return 1;
-  case 0xDDDD: *idc = &dvb_mux_dvbt_class; return 1;
-  default:     *idc = &dvb_mux_dvbs_class; break;
-  }
   if (pos > 3600 || pos < 0) return 0;
   pos = pos <= 1800 ? pos : pos - 3600;
   if ((pos2 = dvb_network_get_orbital_pos(mn)) == INT_MAX) return 0;
@@ -595,9 +590,16 @@ mpegts_service_find_e2(uint32_t stype, uint32_t sid, uint32_t tsid,
 
   lock_assert(&global_lock);
 
+  switch (hash & 0xFFFF0000) {
+  case 0xFFFF0000: idc = &dvb_mux_dvbc_class; break;
+  case 0xEEEE0000: idc = &dvb_mux_dvbt_class; break;
+  case 0xDDDD0000: idc = &dvb_mux_dvbt_class; break;
+  default:         idc = &dvb_mux_dvbs_class; break;
+  }
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (!idnode_is_instance(&mn->mn_id, &dvb_network_class)) continue;
-    if (!mpegts_service_match_network(mn, hash, &idc)) continue;
+    if (dvb_network_mux_class(mn) != idc) continue;
+    if (!mpegts_service_match_network(mn, hash, idc)) continue;
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (!idnode_is_instance(&mm->mm_id, idc)) continue;
       if (mm->mm_tsid != tsid || mm->mm_onid != onid) continue;
@@ -804,7 +806,7 @@ const idclass_t mpegts_service_raw_class =
 {
   .ic_super      = &service_raw_class,
   .ic_class      = "mpegts_raw_service",
-  .ic_caption    = N_("MPEG-TS Raw Service"),
+  .ic_caption    = N_("MPEG-TS raw service"),
   .ic_properties = NULL
 };
 

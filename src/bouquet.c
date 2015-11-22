@@ -33,10 +33,11 @@ typedef struct bouquet_download {
 
 bouquet_tree_t bouquets;
 
+static void bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf);
 static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
 static void bouquet_download_trigger(bouquet_t *bq);
 static void bouquet_download_stop(void *aux);
-static int bouquet_download_process(void *aux, const char *last_url, char *data, size_t len);
+static int bouquet_download_process(void *aux, const char *last_url, const char *host_url, char *data, size_t len);
 
 /**
  *
@@ -154,7 +155,7 @@ bouquet_destroy(bouquet_t *bq)
  *
  */
 void
-bouquet_destroy_by_service(service_t *t)
+bouquet_destroy_by_service(service_t *t, int delconf)
 {
   bouquet_t *bq;
   service_lcn_t *sl;
@@ -163,7 +164,7 @@ bouquet_destroy_by_service(service_t *t)
 
   RB_FOREACH(bq, &bouquets, bq_link)
     if (idnode_set_exists(bq->bq_services, &t->s_id))
-      idnode_set_remove(bq->bq_services, &t->s_id);
+      bouquet_remove_service(bq, t, delconf);
   while ((sl = LIST_FIRST(&t->s_lcns)) != NULL) {
     LIST_REMOVE(sl, sl_link);
     free(sl);
@@ -267,6 +268,13 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
 {
   channel_t *ch = NULL;
   idnode_list_mapping_t *ilm;
+  static service_mapper_conf_t sm_conf = {
+    .check_availability = 0,
+    .encrypted          = 1,
+    .merge_same_name    = 0,
+    .provider_tags      = 0,
+    .network_tags       = 0
+  };
 
   if (!t->s_enabled)
     return;
@@ -282,7 +290,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
       break;
   if (!ilm)
-    ch = service_mapper_process(t, bq);
+    ch = service_mapper_process(&sm_conf, t, bq);
   else
     ch = (channel_t *)ilm->ilm_in2;
   if (ch && bq->bq_chtag)
@@ -390,11 +398,13 @@ bouquet_notify_service_enabled(service_t *t)
  *
  */
 static void
-bouquet_remove_service(bouquet_t *bq, service_t *s)
+bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf)
 {
   tvhtrace("bouquet", "remove service %s from %s",
            s->s_nicename, bq->bq_name ?: "<unknown>");
   idnode_set_remove(bq->bq_services, &s->s_id);
+  if (delconf)
+    bouquet_unmap_channel(bq, s);
 }
 
 /*
@@ -429,7 +439,7 @@ bouquet_completed(bouquet_t *bq, uint32_t seen)
     if (!idnode_set_exists(bq->bq_active_services, bq->bq_services->is_array[z]))
       idnode_set_add(remove, bq->bq_services->is_array[z], NULL, NULL);
   for (z = 0; z < remove->is_count; z++)
-    bouquet_remove_service(bq, (service_t *)remove->is_array[z]);
+    bouquet_remove_service(bq, (service_t *)remove->is_array[z], 1);
   idnode_set_free(remove);
 
   /* Remove no longer used LCNs */
@@ -828,7 +838,7 @@ static char *
 bouquet_class_services_rend ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
-  const char *sc = N_("Services Count %zi");
+  const char *sc = N_("Service count %zi");
   char buf[32];
   snprintf(buf, sizeof(buf), tvh_gettext_lang(lang, sc), bq->bq_services->is_count);
   return strdup(buf);
@@ -890,42 +900,42 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_BOOL,
       .id       = "maptoch",
-      .name     = N_("Auto-Map to Channels"),
+      .name     = N_("Auto-Map to channels"),
       .off      = offsetof(bouquet_t, bq_maptoch),
       .notify   = bouquet_class_maptoch_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapnolcn",
-      .name     = N_("Map Zero Numbers"),
+      .name     = N_("Map zero-numbered channels"),
       .off      = offsetof(bouquet_t, bq_mapnolcn),
       .notify   = bouquet_class_mapnolcn_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapnoname",
-      .name     = N_("Map No Name"),
+      .name     = N_("Map unnamed channels"),
       .off      = offsetof(bouquet_t, bq_mapnoname),
       .notify   = bouquet_class_mapnoname_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "mapradio",
-      .name     = N_("Map Radio"),
+      .name     = N_("Map radio channels"),
       .off      = offsetof(bouquet_t, bq_mapradio),
       .notify   = bouquet_class_mapradio_notify,
     },
     {
       .type     = PT_BOOL,
       .id       = "chtag",
-      .name     = N_("Create Tag"),
+      .name     = N_("Create tag"),
       .off      = offsetof(bouquet_t, bq_chtag),
       .notify   = bouquet_class_chtag_notify,
     },
     {
       .type     = PT_STR,
       .id       = "chtag_ref",
-      .name     = N_("Channel Tag Reference"),
+      .name     = N_("Channel tag reference"),
       .get      = bouquet_class_chtag_ref_get,
       .set      = bouquet_class_chtag_ref_set,
       .rend     = bouquet_class_chtag_ref_rend,
@@ -982,7 +992,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "services_seen",
-      .name     = N_("# Services Seen"),
+      .name     = N_("# Services seen"),
       .off      = offsetof(bouquet_t, bq_services_seen),
       .opts     = PO_RDONLY,
     },
@@ -1002,7 +1012,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "lcn_off",
-      .name     = N_("Channel Number Offset"),
+      .name     = N_("Channel number offset"),
       .off      = offsetof(bouquet_t, bq_lcn_offset),
       .notify   = bouquet_class_lcn_offset_notify,
     },
@@ -1078,7 +1088,7 @@ service:
           service_t *s = mpegts_service_find_e2(stype, sid, tsid, onid, hash);
           if (s)
             bouquet_add_service(bq, s, ((int64_t)++seen) * CHANNEL_SPLIT, tagname);
-        } else if (lv == 64) {
+        } else if (lv == 0x64) {
           tagname = name;
         }
       }
@@ -1097,7 +1107,8 @@ next:
 }
 
 static int
-bouquet_download_process(void *aux, const char *last_url, char *data, size_t len)
+bouquet_download_process(void *aux, const char *last_url, const char *host_url,
+                         char *data, size_t len)
 {
   bouquet_download_t *bqd = aux;
   while (*data) {

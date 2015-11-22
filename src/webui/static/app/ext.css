@@ -168,6 +168,14 @@
     background-image: url(../icons/find.png) !important;
 }
 
+.imdb {
+    background-image: url(../icons/imdb.png) !important;
+}
+
+.thetvdb {
+    background-image: url(../icons/thetvdb.png) !important;
+}
+
 .add {
     background-image: url(../icons/add.png) !important;
 }
@@ -346,6 +354,10 @@
 
 .recording {
     background-image: url(../icons/rec.png) !important;
+}
+
+.rerecord {
+    background-image: url(../icons/arrow_branch.png) !important;
 }
 
 .bullet_add {

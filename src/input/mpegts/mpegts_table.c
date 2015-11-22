@@ -154,7 +154,8 @@ mpegts_table_destroy ( mpegts_table_t *mt )
   mpegts_mux_t *mm = mt->mt_mux;
 
   pthread_mutex_lock(&mm->mm_tables_lock);
-  mpegts_table_destroy_(mt);
+  if (!mt->mt_destroyed)
+    mpegts_table_destroy_(mt);
   pthread_mutex_unlock(&mm->mm_tables_lock);
 }
 
@@ -200,6 +201,8 @@ mpegts_table_add
       mm->mm_open_table(mm, mt, 1);
     } else if (pid >= 0) {
       if (mt->mt_pid != pid)
+        continue;
+      if (mt->mt_table != tableid)
         continue;
       if (mt->mt_callback != callback)
         continue;

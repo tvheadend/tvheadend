@@ -26,6 +26,7 @@
 #include "epggrab/private.h"
 #include "input.h"
 #include "input/mpegts/dvb_charset.h"
+#include "dvr/dvr.h"
 
 /* ************************************************************************
  * Status handling
@@ -396,22 +397,19 @@ static int _eit_desc_crid
  * ***********************************************************************/
 
 static int _eit_process_event_one
-  ( epggrab_module_t *mod, int tableid,
+  ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, channel_t *ch,
     const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
-  int save2 = 0;
-  int ret, dllen;
+  int dllen, save2 = 0;
   time_t start, stop;
   uint16_t eid;
-  uint8_t dtag, dlen;
+  uint8_t dtag, dlen, running;
   epg_broadcast_t *ebc;
   epg_episode_t *ee;
   epg_serieslink_t *es;
   eit_event_t ev;
-
-  if ( len < 12 ) return -1;
 
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
@@ -419,12 +417,12 @@ static int _eit_process_event_one
   stop  = start + bcdtoint(ptr[7] & 0xff) * 3600 +
                   bcdtoint(ptr[8] & 0xff) * 60 +
                   bcdtoint(ptr[9] & 0xff);
+  running = (ptr[10] >> 5) & 0x07;
   dllen = ((ptr[10] & 0x0f) << 8) | ptr[11];
 
   len -= 12;
   ptr += 12;
   if ( len < dllen ) return -1;
-  ret  = 12 + dllen;
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, start, stop, eid, 1, &save2);
@@ -432,7 +430,7 @@ static int _eit_process_event_one
                   " stop=%"PRItime_t", ebc=%p",
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
            eid, start, stop, ebc);
-  if (!ebc) return dllen + 12;
+  if (!ebc) return 0;
 
   /* Mark re-schedule detect (only now/next) */
   if (save2 && tableid < 0x50) *resched = 1;
@@ -549,24 +547,33 @@ static int _eit_process_event_one
   if (ev.summary) lang_str_destroy(ev.summary);
   if (ev.desc)    lang_str_destroy(ev.desc);
 
-  return ret;
+  /* use running flag only for current broadcast */
+  if (running && tableid == 0x4e && sect == 0)
+    epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, running == 4);
+  if (running && running != 4 && tableid == 0x4e && sect == 1)
+    epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, 0);
+
+  return 0;
 }
 
 static int _eit_process_event
-  ( epggrab_module_t *mod, int tableid,
+  ( epggrab_module_t *mod, int tableid, int sect,
     mpegts_service_t *svc, const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
   idnode_list_mapping_t *ilm;
-  int ret = 0;
+  channel_t *ch;
 
   if ( len < 12 ) return -1;
 
-  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link)
-    ret = _eit_process_event_one(mod, tableid, svc,
-                                 (channel_t *)ilm->ilm_in2,
-                                 ptr, len, local, resched, save);
-  return ret;
+  LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
+    ch = (channel_t *)ilm->ilm_in2;
+    if (!ch->ch_enabled || ch->ch_epg_parent) continue;
+    if (_eit_process_event_one(mod, tableid, sect, svc, ch,
+                               ptr, len, local, resched, save) < 0)
+      return -1;
+  }
+  return 12 + (((ptr[10] & 0x0f) << 8) | ptr[11]);
 }
 
 
@@ -618,14 +625,16 @@ _eit_callback
   // TODO: extra ID should probably include onid
 
   /* Register interest */
-  if (tableid == 0x4e || tableid >= 0x50)
+  if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60))
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 11, &st, &sect, &last, &ver);
-  if (r != 1) return r;
-  if (st) {
+  if (r == 0) goto complete;
+  if (r < 0) return r;
+  if (tableid != 0x4e && r != 1) return r;
+  if (st && r > 0) {
     uint32_t mask;
     int sa = seg & 0xF8;
     int sb = 7 - (seg & 0x07);
@@ -683,10 +692,11 @@ _eit_callback
   ptr += 11;
   while (len) {
     int r;
-    if ((r = _eit_process_event(mod, tableid, svc, ptr, len,
+    if ((r = _eit_process_event(mod, tableid, sect, svc, ptr, len,
                                 mm->mm_network->mn_localtime,
                                 &resched, &save)) < 0)
       break;
+    assert(r > 0);
     len -= r;
     ptr += r;
   }
@@ -697,7 +707,8 @@ _eit_callback
   
 done:
   r = dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
-  if (ota && !r)
+complete:
+  if (ota && !r && (tableid >= 0x50 && tableid < 0x60))
     epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
   
   return r;

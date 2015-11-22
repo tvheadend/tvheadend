@@ -56,6 +56,14 @@ typedef struct epg_serieslink      epg_serieslink_t;
 
 extern int epg_in_load;
 
+/*
+ *
+ */
+typedef enum {
+  EPG_SOURCE_NONE = 0,
+  EPG_SOURCE_EIT = 1,
+} epg_source_t;
+
 /* ************************************************************************
  * Genres
  * ***********************************************************************/
@@ -436,6 +444,7 @@ struct epg_broadcast
   /* Misc flags */
   uint8_t                    is_new;           ///< New series / file premiere
   uint8_t                    is_repeat;        ///< Repeat screening
+  uint8_t                    running;          ///< EPG running flag
 
   /* Broadcast level text */
   lang_str_t                *summary;          ///< Summary
@@ -456,6 +465,12 @@ epg_broadcast_t *epg_broadcast_find_by_time
     uint16_t eid, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
 epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id );
+
+/* Special */
+epg_broadcast_t *epg_broadcast_clone
+  ( struct channel *channel, epg_broadcast_t *src, int *save );
+void epg_broadcast_notify_running
+  ( epg_broadcast_t *b, epg_source_t esrc, int running );
 
 /* Mutators */
 int epg_broadcast_set_episode

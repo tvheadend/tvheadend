@@ -2,6 +2,7 @@ tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
 tvheadend.admin = false;
+tvheadend.dialog = null;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -13,6 +14,19 @@ Ext.state.Manager.setProvider(tvheadend.cookieProvider);
 
 tvheadend.regexEscape = function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+tvheadend.fromCSV = function(s) {
+  var a = s.split(',');
+  var r = [];
+  for (var i in a) {
+    var v = a[i];
+    if (v[0] == '"' && v[v.length-1] == '"')
+      r.push(v.substring(1, v.length - 1));
+    else
+      r.push(v);
+  }
+  return r;
 }
 
 /**
@@ -627,7 +641,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     },
 
     setInfoArea: function(info_area) {
-        this.info_area = info_area.split(',');
+        this.info_area = tvheadend.fromCSV(info_area);
         this.on('beforetabchange', function(tp, p) {
             for (var k in this.extra)
                 if (p == this.extra[k])

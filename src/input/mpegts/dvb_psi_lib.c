@@ -469,6 +469,10 @@ int dvb_table_remux
     buf += l;
   }
 
+  if (ol <= 0) {
+    free(obuf);
+    return 0;
+  }
   *out = obuf;
   return ol;
 }

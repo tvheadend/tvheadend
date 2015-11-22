@@ -121,7 +121,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   tvh_uuid_t u;
   int retries = 5;
   uint32_t u32;
-  const idclass_t *idc;;
+  const idclass_t *idc;
 
   lock_assert(&global_lock);
 
@@ -152,6 +152,8 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   } while (c != NULL && --retries > 0);
 
   if(c != NULL) {
+    tvherror("idnode", "Id node collission (%s) %s\n",
+             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     fprintf(stderr, "Id node collision (%s) %s\n",
             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     abort();
