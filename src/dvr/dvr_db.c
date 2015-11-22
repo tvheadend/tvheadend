@@ -387,7 +387,7 @@ dvr_entry_missed_time(dvr_entry_t *de, int error_code)
   dvr_entry_retention_timer(de);
 
   // Trigger autorec update in case of max schedules limit
-  if (dae && dae->dae_max_sched_count > 0)
+  if (dae && dvr_autorec_get_max_sched_count(dae) > 0)
     dvr_autorec_changed(dae, 0);
 }
 
@@ -1097,7 +1097,7 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
   dvr_entry_t *de;
-  uint32_t count = 0;
+  uint32_t count = 0, max_count;
 
   /* Identical duplicate detection
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
@@ -1107,13 +1107,13 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   }
 
   /* Handle max schedules limit for autorrecord */
-  if (dae->dae_max_sched_count > 0){
+  if ((max_count = dvr_autorec_get_max_sched_count(dae)) > 0){
     count = 0;
     LIST_FOREACH(de, &dae->dae_spawns, de_autorec_link)
       if ((de->de_sched_state == DVR_SCHEDULED) ||
           (de->de_sched_state == DVR_RECORDING)) count++;
 
-    if (count >= dae->dae_max_sched_count) {
+    if (count >= max_count) {
       tvhlog(LOG_DEBUG, "dvr", "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
              dae->dae_name, lang_str_get(e->episode->title, NULL));
       return;
@@ -1726,7 +1726,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
   dvr_entry_retention_timer(de);
 
   // Trigger autorecord update in case of schedules limit
-  if (dae && dae->dae_max_sched_count > 0)
+  if (dae && dvr_autorec_get_max_sched_count(dae) > 0)
     dvr_autorec_changed(de->de_autorec, 0);
 }
 

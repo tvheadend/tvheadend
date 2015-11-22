@@ -871,6 +871,20 @@ const idclass_t dvr_config_class = {
       .group    = 1,
     },
     {
+      .type     = PT_U32,
+      .id       = "autorec-maxcount",
+      .name     = N_("Autorec maximum count (0=unlimited)"),
+      .off      = offsetof(dvr_config_t, dvr_autorec_max_count),
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "autorec-maxsched",
+      .name     = N_("Autorec maximum schedules limit (0=unlimited)"),
+      .off      = offsetof(dvr_config_t, dvr_autorec_max_sched_count),
+      .group    = 1,
+    },
+    {
       .type     = PT_STR,
       .id       = "postproc",
       .name     = N_("Post-processor command"),

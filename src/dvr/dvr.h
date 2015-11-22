@@ -43,6 +43,8 @@ typedef struct dvr_config {
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
   uint32_t dvr_removal_days;
+  uint32_t dvr_autorec_max_count;
+  uint32_t dvr_autorec_max_sched_count;
   char *dvr_charset;
   char *dvr_charset_id;
   char *dvr_postproc;
@@ -633,6 +635,8 @@ int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
 int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
 
 void dvr_autorec_completed( dvr_entry_t *de, int error_code );
+
+uint32_t dvr_autorec_get_max_sched_count(dvr_autorec_entry_t *dae);
 
 /**
  *
