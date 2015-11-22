@@ -155,6 +155,7 @@ typedef struct dvr_entry {
 
   time_t de_running_start;
   time_t de_running_stop;
+  time_t de_running_pause;
 
   char *de_owner;
   char *de_creator;
@@ -514,7 +515,7 @@ void dvr_event_removed(epg_broadcast_t *e);
 
 void dvr_event_updated(epg_broadcast_t *e);
 
-void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running);
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 

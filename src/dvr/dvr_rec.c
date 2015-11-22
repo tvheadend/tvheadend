@@ -1195,7 +1195,8 @@ dvr_thread(void *aux)
   streaming_message_t *sm, *sm2;
   th_pkt_t *pkt, *pkt2, *pkt3;
   streaming_start_t *ss = NULL;
-  int run = 1, started = 0, muxing = 0, comm_skip, epg_running = 0, rs;
+  int run = 1, started = 0, muxing = 0, comm_skip, rs;
+  int epg_running = 0, epg_pause = 0;
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
@@ -1226,7 +1227,9 @@ dvr_thread(void *aux)
       running_start = atomic_add_time_t(&de->de_running_start, 0);
       running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
       if (running_start > 0) {
-        epg_running = running_start >= running_stop;
+        epg_running = running_start >= running_stop ? 1 : 0;
+        if (epg_running && atomic_add_time_t(&de->de_running_pause, 0) >= running_start)
+          epg_running = 2;
       } else if (running_stop == 0) {
         if (start_time + 2 >= dispatch_clock) {
           TAILQ_INSERT_TAIL(&backlog, sm, sm_link);
@@ -1251,7 +1254,7 @@ dvr_thread(void *aux)
       rs = DVR_RS_RUNNING;
       if (!epg_running)
         rs = DVR_RS_EPG_WAIT;
-      else if (pkt->pkt_commercial == COMMERCIAL_YES)
+      else if (pkt->pkt_commercial == COMMERCIAL_YES || epg_running == 2)
         rs = DVR_RS_COMMERCIAL;
       dvr_rec_set_state(de, rs, 0);
 
@@ -1264,8 +1267,12 @@ dvr_thread(void *aux)
         break;
       }
 
-      if (commercial != pkt->pkt_commercial)
+      if (epg_pause != (epg_running == 2)) {
+        epg_pause = epg_running == 2;
 	muxer_add_marker(prch->prch_muxer);
+      } else if (commercial != pkt->pkt_commercial) {
+        muxer_add_marker(prch->prch_muxer);
+      }
 
       commercial = pkt->pkt_commercial;
 
@@ -1313,12 +1320,17 @@ dvr_thread(void *aux)
       break;
 
     case SMT_MPEGTS:
-      dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
+      rs = DVR_RS_RUNNING;
+      if (!epg_running)
+        rs = DVR_RS_EPG_WAIT;
+      else if (epg_running == 2)
+        rs = DVR_RS_COMMERCIAL;
+      dvr_rec_set_state(de, rs, 0);
 
       if (ss == NULL)
         break;
 
-      if (!epg_running) {
+      if ((rs == DVR_RS_COMMERCIAL && comm_skip) || !epg_running) {
         if (packets && running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
