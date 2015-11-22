@@ -1279,21 +1279,19 @@ dvr_thread(void *aux)
       muxing = 1;
       while ((sm2 = TAILQ_FIRST(&backlog)) != NULL) {
         TAILQ_REMOVE(&backlog, sm2, sm_link);
-        if (pkt->pkt_dts != PTS_UNSET) {
-          if (dts_offset == PTS_UNSET) {
-            pkt2 = sm2->sm_data;
+        pkt2 = sm2->sm_data;
+        if (pkt2->pkt_dts != PTS_UNSET) {
+          if (dts_offset == PTS_UNSET)
             dts_offset = pkt2->pkt_dts;
-          }
-          pkt3 = (th_pkt_t *)sm2->sm_data;
-          if (dts_pts_valid(pkt3, dts_offset)) {
-            pkt3 = pkt_copy_shallow(pkt3);
+          if (dts_pts_valid(pkt2, dts_offset)) {
+            pkt3 = pkt_copy_shallow(pkt2);
             pkt3->pkt_dts -= dts_offset;
             if (pkt3->pkt_pts != PTS_UNSET)
               pkt3->pkt_pts -= dts_offset;
             dvr_thread_pkt_stats(de, pkt3, 1);
             muxer_write_pkt(prch->prch_muxer, sm2->sm_type, pkt3);
           } else {
-            dvr_thread_pkt_stats(de, pkt3, 0);
+            dvr_thread_pkt_stats(de, pkt2, 0);
           }
         }
         streaming_msg_free(sm2);
