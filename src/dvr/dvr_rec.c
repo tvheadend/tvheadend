@@ -1157,19 +1157,6 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
 /**
  *
  */
-static void
-dvr_thread_backlog_free(struct streaming_message_queue *backlog)
-{
-  streaming_message_t *sm;
-  while ((sm = TAILQ_FIRST(backlog)) != NULL) {
-    TAILQ_REMOVE(backlog, sm, sm_link);
-    streaming_msg_free(sm);
-  }
-}
-
-/**
- *
- */
 static inline int
 dts_pts_valid(th_pkt_t *pkt, int64_t dts_offset)
 {
@@ -1236,7 +1223,7 @@ dvr_thread(void *aux)
           continue;
         } else {
           if (TAILQ_FIRST(&backlog))
-            dvr_thread_backlog_free(&backlog);
+            streaming_queue_clear(&backlog);
           epg_running = 1;
         }
       } else {
@@ -1388,7 +1375,7 @@ dvr_thread(void *aux)
                streaming_code2txt(sm->sm_code));
 
 fin:
-        dvr_thread_backlog_free(&backlog);
+        streaming_queue_clear(&backlog);
 	dvr_thread_epilog(de, postproc);
 	start_time = 0;
 	started = 0;
@@ -1454,7 +1441,7 @@ fin:
   }
   pthread_mutex_unlock(&sq->sq_mutex);
 
-  dvr_thread_backlog_free(&backlog);
+  streaming_queue_clear(&backlog);
 
   if (prch->prch_muxer)
     dvr_thread_epilog(de, postproc);
