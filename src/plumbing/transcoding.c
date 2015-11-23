@@ -1354,10 +1354,10 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         av_dict_set_int__(&opts, "crf", t->t_props.tp_vbitrate == 0 ? 18 : MIN(51, t->t_props.tp_vbitrate), 0);
 
         // the following is equivalent to tune=zerolatency for presets: ultra/superfast
-        av_dict_set(&opts, "x265_opts", "bframes=0",        0);
-        av_dict_set(&opts, "x265_opts", ":rc-lookahead=0",  AV_DICT_APPEND);
-        av_dict_set(&opts, "x265_opts", ":scenecut=0",      AV_DICT_APPEND);
-        av_dict_set(&opts, "x265_opts", ":frame-threads=1", AV_DICT_APPEND);
+        av_dict_set(&opts, "x265-params", "bframes=0",        0);
+        av_dict_set(&opts, "x265-params", ":rc-lookahead=0",  AV_DICT_APPEND);
+        av_dict_set(&opts, "x265-params", ":scenecut=0",      AV_DICT_APPEND);
+        av_dict_set(&opts, "x265-params", ":frame-threads=1", AV_DICT_APPEND);
       } else {
         int bitrate, maxrate, bufsize;
         bitrate = (t->t_props.tp_vbitrate > max_bitrate) ? max_bitrate : t->t_props.tp_vbitrate;
@@ -1371,11 +1371,11 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         // this is the same as setting --bitrate=bitrate
         octx->bit_rate = bitrate * 1000;
 
-        av_dict_set(&opts,       "x265_opts", "vbv-bufsize=",  0);
-        av_dict_set_int__(&opts, "x265_opts", bufsize,         AV_DICT_APPEND);
-        av_dict_set(&opts,       "x265_opts", ":vbv-maxrate=",AV_DICT_APPEND);
-        av_dict_set_int__(&opts, "x265_opts", maxrate,         AV_DICT_APPEND);
-        av_dict_set(&opts,       "x265_opts", ":strict-cbr=1", AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265-params", "vbv-bufsize=",  0);
+        av_dict_set_int__(&opts, "x265-params", bufsize,         AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265-params", ":vbv-maxrate=", AV_DICT_APPEND);
+        av_dict_set_int__(&opts, "x265-params", maxrate,         AV_DICT_APPEND);
+        av_dict_set(&opts,       "x265-params", ":strict-cbr=1", AV_DICT_APPEND);
       }
 
       break;
