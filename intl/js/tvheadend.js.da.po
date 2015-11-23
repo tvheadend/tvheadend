@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Poul Kalff <poulkalff@gmail.com>, 2015
 # Thomas Saabye <t.saabye@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-10 09:50+0100\n"
-"PO-Revision-Date: 2015-11-10 08:32+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-11-23 11:06+0000\n"
+"Last-Translator: Poul Kalff <poulkalff@gmail.com>\n"
 "Language-Team: Danish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -373,7 +374,7 @@ msgstr "Klient navn"
 
 #: src/webui/static/app/epg.js:232
 msgid "Close"
-msgstr ""
+msgstr "Luk"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
@@ -517,7 +518,7 @@ msgstr "Slet valgte indtastninger"
 
 #: src/webui/static/app/status.js:132
 msgid "Descramble"
-msgstr ""
+msgstr "Descramble"
 
 #: src/webui/static/app/mpegts.js:264
 msgid "Detailed stream info"
@@ -607,23 +608,23 @@ msgstr "EPG Grabber"
 
 #: src/webui/static/app/epggrab.js:41
 msgid "EPG Grabber Channel"
-msgstr ""
+msgstr "EPG Kanal-grabber"
 
 #: src/webui/static/app/epggrab.js:42 src/webui/static/app/epggrab.js:51
 msgid "EPG Grabber Channels"
-msgstr ""
+msgstr "EPG Multikanal-grabber"
 
 #: src/webui/static/app/epggrab.js:73
 msgid "EPG Grabber Module"
-msgstr ""
+msgstr "EPG Modul-Grabber"
 
 #: src/webui/static/app/epggrab.js:74
 msgid "EPG Grabber Modules"
-msgstr ""
+msgstr "EPG Multimodul-grabber"
 
 #: src/webui/static/app/epggrab.js:75
 msgid "EPG Grabber Name"
-msgstr ""
+msgstr "EPG Navne-grabber"
 
 #: src/webui/static/app/epg.js:954
 msgid "EPG Update"
@@ -643,7 +644,7 @@ msgstr "Rediger {0}"
 
 #: src/webui/static/app/idnode.js:1468
 msgid "Edit {0} ({1} entries)"
-msgstr ""
+msgstr "Rediger {0} ({1} Poster)"
 
 #: src/webui/static/app/epg.js:878 src/webui/static/app/epg.js:889
 msgid "Electronic Program Guide"
@@ -786,7 +787,7 @@ msgstr "Genre"
 
 #: src/webui/static/app/idnode.js:1171
 msgid "Grid Update"
-msgstr ""
+msgstr "Opdatér Gitter"
 
 #: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
@@ -824,15 +825,15 @@ msgstr "IP adresse"
 
 #: src/webui/static/app/acleditor.js:143
 msgid "IP Blocking Entries"
-msgstr ""
+msgstr "IP Blokerings-Post"
 
 #: src/webui/static/app/acleditor.js:119
 msgid "IP Blocking Record"
-msgstr ""
+msgstr "IP Blokerings-Liste"
 
 #: src/webui/static/app/acleditor.js:120
 msgid "IP Blocking Records"
-msgstr ""
+msgstr "IP Blokerings-Lister"
 
 #: src/webui/static/app/servicemapper.js:19
 msgid "Ignored"
@@ -920,7 +921,7 @@ msgstr "MB"
 
 #: src/webui/static/app/servicemapper.js:126
 msgid "Map"
-msgstr ""
+msgstr "Kortlæg"
 
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/mpegts.js:256
 msgid "Map All"
@@ -1178,7 +1179,7 @@ msgstr "Afspil"
 
 #: src/webui/static/tv.js:466
 msgid "Play Selected Channel"
-msgstr ""
+msgstr "Afspil Valgte Kanal"
 
 #: src/webui/static/app/epg.js:162
 msgid "Play program"
@@ -1210,11 +1211,11 @@ msgstr "Fremgang"
 
 #: src/webui/static/app/config.js:51 src/webui/static/app/config.js:53
 msgid "Re-fetch images"
-msgstr ""
+msgstr "Hent Billeder Igen"
 
 #: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:459
 msgid "Re-record"
-msgstr ""
+msgstr "Genoptag"
 
 #: src/webui/static/app/idnode.js:895
 msgid "Read-only Info"
@@ -1275,7 +1276,7 @@ msgstr "SAT>IP Server"
 
 #: src/webui/static/app/config.js:116
 msgid "SAT>IP Server Configuration"
-msgstr ""
+msgstr "SAT>IP Server-konfiguration"
 
 #: src/webui/static/app/status.js:402
 msgid "SNR"
@@ -1313,7 +1314,7 @@ msgstr "Søg på IMDB (for titel)"
 
 #: src/webui/static/app/epg.js:154 src/webui/static/app/dvr.js:72
 msgid "Search TheTVDB (for title)"
-msgstr ""
+msgstr "Søg på TheTVDB (titel)"
 
 #: src/webui/static/app/epg.js:616
 msgid "Search title..."
@@ -1438,7 +1439,7 @@ msgstr "Stop den valgte optagelse"
 
 #: src/webui/static/app/tvheadend.js:699
 msgid "Storage space"
-msgstr ""
+msgstr "Diskplads"
 
 #: src/webui/static/app/status.js:344 src/webui/static/app/status.js:474
 #: src/webui/static/app/tvheadend.js:508
@@ -1592,7 +1593,7 @@ msgstr "Tidsplanlægning"
 
 #: src/webui/static/app/dvr.js:59
 msgid "Time Scheduler"
-msgstr ""
+msgstr "Planlægger (Tid)"
 
 #: src/webui/static/app/dvr.js:640
 msgid "Time Schedules"
@@ -1617,11 +1618,11 @@ msgstr "I dag"
 
 #: src/webui/static/app/tvheadend.js:360
 msgid "Toggle mute"
-msgstr ""
+msgstr "Slå lyd til/fra"
 
 #: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:457
 msgid "Toggle re-record functionality"
-msgstr ""
+msgstr "Slå genoptagelse til/fra"
 
 #: src/webui/static/app/tvheadend.js:702
 msgid "Total"
@@ -1683,7 +1684,7 @@ msgstr "Brugernavn"
 
 #: src/webui/static/app/tvheadend.js:458
 msgid "Users"
-msgstr ""
+msgstr "Brugere"
 
 #: src/webui/static/app/esfilter.js:51
 msgid "Video Stream Filter"

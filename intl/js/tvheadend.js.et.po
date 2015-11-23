@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-10 09:50+0100\n"
-"PO-Revision-Date: 2015-11-15 22:06+0000\n"
+"PO-Revision-Date: 2015-11-19 21:15+0000\n"
 "Last-Translator: Anti <anti.siidiratsep@gmail.com>\n"
 "Language-Team: Estonian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/et/)\n"
 "MIME-Version: 1.0\n"
@@ -257,7 +257,7 @@ msgstr "Ennem"
 
 #: src/webui/static/app/servicemapper.js:127
 msgid "Begin mapping"
-msgstr "Alusta ühendamist"
+msgstr "Alusta seostamist"
 
 #: src/webui/static/app/cteditor.js:44
 msgid "Bouquet"
@@ -531,15 +531,15 @@ msgstr "Detailid"
 
 #: src/webui/static/app/dvr.js:692
 msgid "Digital Video Recorder"
-msgstr "Digitaalse video salvestaja"
+msgstr "Digitaalne videosalvestaja"
 
 #: src/webui/static/app/dvr.js:546
 msgid "Digital Video Recorder Profile"
-msgstr "Digitaalse video salvestaja profiil"
+msgstr "Digitaalse videosalvestaja profiil"
 
 #: src/webui/static/app/dvr.js:547
 msgid "Digital Video Recorder Profiles"
-msgstr "Digitaalse video salvestaja profiilid"
+msgstr "Digitaalse videosalvestaja profiilid"
 
 #: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
 msgid "Disabled"
@@ -742,7 +742,7 @@ msgstr "Esimene lehekülg"
 
 #: src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
-msgstr "Sunni skaneerima"
+msgstr "Sunni peale skaneerimine"
 
 #: src/webui/static/app/mpegts.js:34
 msgid "Force new scan (all muxes) for selected networks"
@@ -1230,11 +1230,11 @@ msgstr "Salvesta saade"
 
 #: src/webui/static/app/epg.js:225
 msgid "Record series"
-msgstr "Salvesta seeriad"
+msgstr "Salvesta seriaale"
 
 #: src/webui/static/app/epg.js:218
 msgid "Record this program now"
-msgstr "Pane see saade salvestamiseks"
+msgstr "Hakka kohe seda saadet salvestama"
 
 #: src/webui/static/app/tvheadend.js:520
 msgid "Recording"
@@ -1349,11 +1349,11 @@ msgstr "Teenus"
 
 #: src/webui/static/app/servicemapper.js:34
 msgid "Service Mapper"
-msgstr "Teenuse ühendaja"
+msgstr "Teenuse seostaja"
 
 #: src/webui/static/app/servicemapper.js:151
 msgid "Service Mapper Status"
-msgstr "Teenuse ühendaja staatus"
+msgstr "Teenuse seostaja staatus"
 
 #: src/webui/static/app/mpegts.js:221
 msgid "Service details for"
@@ -1460,7 +1460,7 @@ msgstr "Voogedastuse profiilid"
 
 #: src/webui/static/app/status.js:349
 msgid "Subs No."
-msgstr "Subtiitreid"
+msgstr "Subtiitrite arv"
 
 #: src/webui/static/app/status.js:199
 msgid "Subscriptions"
@@ -1468,7 +1468,7 @@ msgstr "Liitumised"
 
 #: src/webui/static/app/epg.js:497 src/webui/static/app/epg.js:498
 msgid "Subtitle"
-msgstr "Subtiiter"
+msgstr "Alampealkiri"
 
 #: src/webui/static/app/esfilter.js:108
 msgid "Subtitle Stream Filter"
@@ -1520,11 +1520,11 @@ msgstr "Seotud fail eemaldatakse andmekandjalt."
 
 #: src/webui/static/app/i18n-post.js:187
 msgid "The date in this field must be after {0}"
-msgstr "Aeg sellel väljal peab olema pärast {0}"
+msgstr "Kuupäev sellel väljal peab olema pärast {0}"
 
 #: src/webui/static/app/i18n-post.js:188
 msgid "The date in this field must be before {0}"
-msgstr "Aeg sellel väljal peab olema enne {0}"
+msgstr "Kuupäev sellel väljal peab olema enne {0}"
 
 #: src/webui/static/app/i18n-post.js:169
 msgid "The maximum length for this field is {0}"
@@ -1540,15 +1540,15 @@ msgstr "Selle välja minimaalne pikkus on {0}"
 
 #: src/webui/static/app/i18n-post.js:234
 msgid "The time in this field must be equal to or after {0}"
-msgstr "Aeg sellel väljal peab kas võrduma või olema pärast {0}"
+msgstr "Kellaaeg sellel väljal peab kas võrduma või olema pärast {0}"
 
 #: src/webui/static/app/i18n-post.js:235
 msgid "The time in this field must be equal to or before {0}"
-msgstr "Aeg sellel väljal peab kas võrduma või olema ennem {0}"
+msgstr "Kellaaeg sellel väljal peab kas võrduma või olema ennem {0}"
 
 #: src/webui/static/app/i18n-post.js:164
 msgid "The value in this field is invalid"
-msgstr "Selle välja väärtus on ebakorrektne"
+msgstr "Selle välja väärtus pole korrektne"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
@@ -1562,11 +1562,11 @@ msgstr "Need lähevad kaduma kui rakendus järgnevalt taaskäivitub"
 
 #: src/webui/static/app/i18n-post.js:127
 msgid "This date is after the maximum date"
-msgstr "See aeg on pärast maksimaalset võimalikku"
+msgstr "See kuupäev on pärast maksimaalset võimalikku"
 
 #: src/webui/static/app/i18n-post.js:126
 msgid "This date is before the minimum date"
-msgstr "See aeg on ennem minimaalset võimalikku"
+msgstr "See kuupäev on ennem minimaalset võimalikku"
 
 #: src/webui/static/app/i18n-post.js:170
 msgid "This field is required"
@@ -1812,7 +1812,7 @@ msgstr "{0} (Tühik)"
 
 #: src/webui/static/app/i18n-post.js:189
 msgid "{0} is not a valid date - it must be in the format {1}"
-msgstr "{0} pole korrektne aeg - peab olema formaadis {1}"
+msgstr "{0} pole korrektne kuupäev - peab olema formaadis {1}"
 
 #: src/webui/static/app/i18n-post.js:180
 msgid "{0} is not a valid number"
