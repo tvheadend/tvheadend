@@ -103,9 +103,6 @@ typedef struct elementary_stream {
   /* CA ID's on this stream */
   struct caid_list es_caids;
 
-  int es_vbv_size;        /* Video buffer size (in bytes) */
-  int es_vbv_delay;       /* -1 if CBR */
-
   /* */
 
   int es_delete_me;      /* Temporary flag for deleting streams */

@@ -944,7 +944,7 @@ static int
 parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype,
                            bitstream_t *bs)
 {
-  int v, pct;
+  int pct;
 
   if(bs->len < 29)
     return PARSER_RESET;
@@ -957,11 +957,13 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
 
   *frametype = pct;
 
-  v = read_bits(bs, 16); /* vbv_delay */
+#if 0
+  int v = read_bits(bs, 16); /* vbv_delay */
   if(v == 0xffff)
     st->es_vbv_delay = -1;
   else
     st->es_vbv_delay = v;
+#endif
   return 0;
 }
 
@@ -1025,7 +1027,7 @@ static int
 parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
                            bitstream_t *bs)
 {
-  int v, width, height, aspect;
+  int width, height, aspect, duration;
 
   if(bs->len < 61)
     return 1;
@@ -1037,13 +1039,15 @@ parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
   st->es_aspect_num = mpeg2_aspect[aspect][0];
   st->es_aspect_den = mpeg2_aspect[aspect][1];
 
-  int duration = mpeg2video_framedurations[read_bits(bs, 4)];
+  duration = mpeg2video_framedurations[read_bits(bs, 4)];
 
-  v = read_bits(bs, 18) * 400;
+  skip_bits(bs, 18);
   skip_bits(bs, 1);
   
-  v = read_bits(bs, 10) * 16 * 1024 / 8;
+#if 0
+  int v = read_bits(bs, 10) * 16 * 1024 / 8;
   st->es_vbv_size = v;
+#endif
 
   parser_set_stream_vparam(st, width, height, duration);
   return 0;
