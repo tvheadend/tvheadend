@@ -50,6 +50,7 @@ static void dvr_entry_start_recording(dvr_entry_t *de, int clone);
 static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_rerecord(dvr_entry_t *de);
+static void dvr_delete_edl_file(const char *filename, const char *rdir);
 
 /*
  *
@@ -3073,6 +3074,8 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
       if(r && r != -ENOENT)
         tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
   	       filename, strerror(-errno));
+
+      dvr_delete_edl_file(filename,rdir); // Try and delete EDL file
       htsmsg_delete_field(m, "filename");
     }
   }
@@ -3249,4 +3252,45 @@ dvr_entry_done(void)
   lock_assert(&global_lock);
   while ((de = LIST_FIRST(&dvrentries)) != NULL)
       dvr_entry_destroy(de, 0);
+}
+/*
+ *
+ */
+static void dvr_delete_edl_file(const char *filename, const char *rdir)
+{
+  // Try and delete EDL files supported by KODI
+  int r;
+  char *tfilename, *lastdot;
+  static const int nextensions=4;
+  const char *extensions[nextensions];
+  extensions[0]=".edl";  //MPlayer EDL
+  extensions[1]=".VPrj"; //VideoReDo
+  extensions[2]=".txt";  //Comskip
+  extensions[3]=".chapters.xml";  //SnapStream BeyondTV
+
+  tfilename= malloc((strlen(filename)*sizeof(char))+20*sizeof(char));
+  strcpy(tfilename,filename);
+  lastdot = strrchr(tfilename,'.');
+  if(lastdot != NULL){
+    for ( int i=0; i<nextensions; i++){
+      // If SnapStream BeyondTV then append to file name and
+      // do not change extension
+      if(strcmp(extensions[i],".chapters.xml") == 0){
+	strcpy(tfilename,filename);
+      } else {
+	*lastdot = '\0';
+      }
+      strcat(tfilename,extensions[i]);
+      tvhlog(LOG_DEBUG, "dvr-edl", "Check EDL file '%s'",tfilename);
+      if(access(tfilename, F_OK)!=-1){
+	tvhlog(LOG_INFO, "dvr-edl", "Delete EDL file '%s'",tfilename);
+	r = deferred_unlink(tfilename, rdir);
+	if(r && r != -ENOENT){
+	  tvhlog(LOG_WARNING, "dvr-edl", "Unable to delete file '%s' -- %s",
+	  filename, strerror(-errno));
+	}
+      }
+    }
+  }
+  free(tfilename);
 }
