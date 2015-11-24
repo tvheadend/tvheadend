@@ -1398,6 +1398,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         av_dict_set_int__(&opts, "x265-params", maxrate,         AV_DICT_APPEND);
         av_dict_set(&opts,       "x265-params", ":strict-cbr=1", AV_DICT_APPEND);
       }
+      // reduce key frame interface for live streaming
+      av_dict_set(&opts, "x265-params", ":keyint=49:min-keyint=15", AV_DICT_APPEND);
 
       break;
 
