@@ -1,6 +1,7 @@
 /*
  *  Digital Video Recorder
  *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -181,6 +182,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_tag_files = 1;
   cfg->dvr_skip_commercials = 1;
   dvr_charset_update(cfg, intlconv_filesystem_charset());
+  cfg->dvr_warm_time = 30;
   cfg->dvr_update_window = 24 * 3600;
   cfg->dvr_pathname = strdup("$t$n.$x");
 
@@ -836,6 +838,14 @@ const idclass_t dvr_config_class = {
       .name     = N_("Schedule a re-recording if more errors than (0=off)"),
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
       .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "warm-time",
+      .name     = N_("Extra warming up time (seconds)"),
+      .off      = offsetof(dvr_config_t, dvr_warm_time),
+      .group    = 1,
+      .def.u32  = 30
     },
     {
       .type     = PT_U32,

@@ -49,6 +49,7 @@ typedef struct dvr_config {
   char *dvr_charset_id;
   char *dvr_postproc;
   char *dvr_postremove;
+  uint32_t dvr_warm_time;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;

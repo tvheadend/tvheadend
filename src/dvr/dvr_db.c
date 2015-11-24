@@ -1,6 +1,7 @@
 /*
  *  Digital Video Recorder
  *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -204,11 +205,17 @@ static inline int extra_valid(time_t extra)
   return extra != 0 && extra != (time_t)-1;
 }
 
+static uint32_t
+dvr_entry_warm_time( dvr_entry_t *de )
+{
+  return MIN(de->de_config->dvr_warm_time, 240);
+}
+
 time_t
 dvr_entry_get_start_time( dvr_entry_t *de )
 {
-  /* Note 30 seconds might not be enough (rotors) */
-  return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) - 30;
+  return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) -
+         dvr_entry_warm_time(de);
 }
 
 time_t
@@ -963,7 +970,8 @@ not_so_good:
     return 0;
 
   e = NULL;
-  pre = (60 * dvr_entry_get_extra_time_pre(de)) - 30;
+  pre = (60 * dvr_entry_get_extra_time_pre(de)) -
+        dvr_entry_warm_time(de);
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
     if (ev->start - pre < dispatch_clock) continue;
