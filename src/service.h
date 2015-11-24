@@ -90,6 +90,7 @@ typedef struct elementary_stream {
   int es_global_data_len;
 
   struct th_pkt *es_curpkt;
+  struct streaming_message_queue es_backlog;
   int64_t es_curpts;
   int64_t es_curdts;
   int64_t es_prevdts;
