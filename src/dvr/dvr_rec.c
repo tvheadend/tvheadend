@@ -1172,6 +1172,30 @@ dts_pts_valid(th_pkt_t *pkt, int64_t dts_offset)
 /**
  *
  */
+static int64_t
+get_dts_ref(th_pkt_t *pkt, streaming_start_t *ss)
+{
+  const streaming_start_component_t *ssc;
+  int64_t audio = PTS_UNSET;
+  int i;
+
+  if (pkt->pkt_dts == PTS_UNSET)
+    return PTS_UNSET;
+  for (i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+    if (ssc->ssc_index == pkt->pkt_componentindex) {
+      if (SCT_ISVIDEO(ssc->ssc_type))
+        return pkt->pkt_dts;
+      if (audio == PTS_UNSET && SCT_ISAUDIO(ssc->ssc_type))
+        audio = pkt->pkt_dts;
+    }
+  }
+  return audio;
+}
+
+/**
+ *
+ */
 static void *
 dvr_thread(void *aux)
 {
@@ -1276,7 +1300,7 @@ dvr_thread(void *aux)
         pkt2 = sm2->sm_data;
         if (pkt2->pkt_dts != PTS_UNSET) {
           if (dts_offset == PTS_UNSET)
-            dts_offset = pkt2->pkt_dts;
+            dts_offset = get_dts_ref(pkt2, ss);
           if (dts_pts_valid(pkt2, dts_offset)) {
             pkt3 = pkt_copy_shallow(pkt2);
             pkt3->pkt_dts -= dts_offset;
@@ -1290,8 +1314,8 @@ dvr_thread(void *aux)
         }
         streaming_msg_free(sm2);
       }
-      if (dts_offset == PTS_UNSET && pkt->pkt_dts != PTS_UNSET)
-        dts_offset = pkt->pkt_dts;
+      if (dts_offset == PTS_UNSET)
+        dts_offset = get_dts_ref(pkt, ss);
       if (dts_pts_valid(pkt, dts_offset)) {
         pkt3 = pkt_copy_shallow(pkt);
         pkt3->pkt_dts -= dts_offset;
