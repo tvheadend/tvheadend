@@ -361,7 +361,7 @@ static const char *
 dvr_sub_start(const char *id, const void *aux, char *tmp, size_t tmplen)
 {
   char buf[16];
-  snprintf(buf, sizeof(buf), "%"PRItime_t, (time_t)dvr_entry_get_start_time((dvr_entry_t *)aux));
+  snprintf(buf, sizeof(buf), "%"PRItime_t, (time_t)dvr_entry_get_start_time((dvr_entry_t *)aux, 0));
   return dvr_do_prefix(id, buf, tmp, tmplen);
 }
 
@@ -1212,7 +1212,7 @@ dvr_thread(void *aux)
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
-  time_t start_time = 0, running_start = 0, running_stop = 0;
+  time_t real_start, start_time = 0, running_start = 0, running_stop = 0;
   char *postproc;
 
   if (!dvr_thread_global_lock(de, &run))
@@ -1220,6 +1220,7 @@ dvr_thread(void *aux)
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
   running_disabled = dvr_entry_get_epg_running(de) <= 0;
+  real_start = dvr_entry_get_start_time(de, 0);
   dvr_thread_global_unlock(de);
 
   TAILQ_INIT(&backlog);
@@ -1234,7 +1235,7 @@ dvr_thread(void *aux)
     streaming_queue_remove(sq, sm);
 
     if (running_disabled) {
-      epg_running = 1;
+      epg_running = real_start <= dispatch_clock;
     } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
       running_start = atomic_add_time_t(&de->de_running_start, 0);
       running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
@@ -1249,7 +1250,7 @@ dvr_thread(void *aux)
         } else {
           if (TAILQ_FIRST(&backlog))
             streaming_queue_clear(&backlog);
-          epg_running = 1;
+          epg_running = real_start <= dispatch_clock;
         }
       } else {
         epg_running = 0;

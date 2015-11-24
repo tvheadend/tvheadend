@@ -853,7 +853,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
         http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
-    durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
+    durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
     bandwidth = ((8*fsize) / (durration*1024.0));
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
@@ -898,7 +898,7 @@ http_dvr_playlist(http_connection_t *hc, int pltype, dvr_entry_t *de)
     return HTTP_STATUS_NOT_FOUND;
 
   hostpath  = http_get_hostpath(hc);
-  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
+  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
   fsize = dvr_get_filesize(de);
 
   if(fsize) {

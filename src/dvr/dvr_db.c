@@ -212,10 +212,10 @@ dvr_entry_warm_time( dvr_entry_t *de )
 }
 
 time_t
-dvr_entry_get_start_time( dvr_entry_t *de )
+dvr_entry_get_start_time( dvr_entry_t *de, int warm )
 {
   return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) -
-         dvr_entry_warm_time(de);
+         (warm ? dvr_entry_warm_time(de) : 0);
 }
 
 time_t
@@ -313,7 +313,7 @@ dvr_dbus_timer_cb( void *aux )
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_sched_state != DVR_SCHEDULED)
       continue;
-    start = dvr_entry_get_start_time(de);
+    start = dvr_entry_get_start_time(de, 1);
     if (dispatch_clock < start && start > max)
       max = start;
   }
@@ -322,7 +322,7 @@ dvr_dbus_timer_cb( void *aux )
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_sched_state != DVR_SCHEDULED)
       continue;
-    start = dvr_entry_get_start_time(de);
+    start = dvr_entry_get_start_time(de, 1);
     if (dispatch_clock < start && start < result)
       result = start;
   }
@@ -544,7 +544,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   time(&now);
 
-  start = dvr_entry_get_start_time(de);
+  start = dvr_entry_get_start_time(de, 1);
   stop  = dvr_entry_get_stop_time(de);
 
   if (now >= stop || de->de_dont_reschedule) {
@@ -809,7 +809,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
   if (de == NULL)
     return NULL;
 
-  t = dvr_entry_get_start_time(de);
+  t = dvr_entry_get_start_time(de, 1);
   localtime_r(&t, &tm);
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
@@ -1652,7 +1652,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  channel_get_name(e->channel));
         atomic_exchange_time_t(&de->de_running_start, dispatch_clock);
       }
-      if (dvr_entry_get_start_time(de) > dispatch_clock) {
+      if (dvr_entry_get_start_time(de, 1) > dispatch_clock) {
         atomic_exchange_time_t(&de->de_start, dispatch_clock);
         dvr_entry_set_timer(de);
         tvhdebug("dvr", "dvr entry %s event %s on %s - EPG start",
@@ -2465,7 +2465,7 @@ dvr_entry_class_start_real_get(void *o)
 {
   static time_t tm;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  tm = dvr_entry_get_start_time(de);
+  tm = dvr_entry_get_start_time(de, 1);
   return &tm;
 }
 
@@ -2484,7 +2484,7 @@ dvr_entry_class_duration_get(void *o)
   static time_t tm;
   time_t start, stop;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  start = dvr_entry_get_start_time(de);
+  start = dvr_entry_get_start_time(de, 0);
   stop  = dvr_entry_get_stop_time(de);
   if (stop > start)
     tm = stop - start;
@@ -3051,7 +3051,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
   char tbuf[64], *rdir, *postcmd;
   int r;
 
-  t = dvr_entry_get_start_time(de);
+  t = dvr_entry_get_start_time(de, 1);
   localtime_r(&t, &tm);
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
