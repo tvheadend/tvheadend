@@ -893,6 +893,13 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_STR,
+      .id       = "postremove",
+      .name     = N_("Post-remove command"),
+      .off      = offsetof(dvr_config_t, dvr_postremove),
+      .group    = 1,
+    },
+    {
+      .type     = PT_STR,
       .id       = "storage",
       .name     = N_("Recording system path"),
       .off      = offsetof(dvr_config_t, dvr_storage),

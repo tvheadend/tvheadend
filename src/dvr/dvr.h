@@ -48,6 +48,7 @@ typedef struct dvr_config {
   char *dvr_charset;
   char *dvr_charset_id;
   char *dvr_postproc;
+  char *dvr_postremove;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
@@ -548,6 +549,8 @@ htsmsg_t *dvr_entry_class_config_name_list(void *o, const char *lang);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang);
 
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
+
+void dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename);
 
 void dvr_disk_space_init(void);
 void dvr_disk_space_done(void);

@@ -1480,28 +1480,29 @@ fin:
 /**
  *
  */
-static void
-dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
+void
+dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename)
 {
   char buf1[2048], *buf2;
   char tmp[MAX(PATH_MAX, 512)];
-  const char *filename;
   htsmsg_t *info, *e;
   htsmsg_field_t *f;
   char **args;
 
   if ((f = htsmsg_field_last(de->de_files)) != NULL &&
       (e = htsmsg_field_get_map(f)) != NULL) {
-    filename = htsmsg_get_str(e, "filename");
-    if (filename == NULL)
-      return;
+    if (filename == NULL) {
+      filename = htsmsg_get_str(e, "filename");
+      if (filename == NULL)
+        return;
+    }
     info = htsmsg_get_list(e, "info");
   } else {
     return;
   }
 
   /* Substitute DVR entry formatters */
-  htsstr_substitute(dvr_postproc, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de, tmp, sizeof(tmp));
+  htsstr_substitute(postcmd, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de, tmp, sizeof(tmp));
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename, tmp, sizeof(tmp));
@@ -1531,8 +1532,8 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
 
-  if(dvr_postproc)
-    dvr_spawn_postproc(de, dvr_postproc);
+  if(dvr_postproc && dvr_postproc[0])
+    dvr_spawn_postcmd(de, dvr_postproc, NULL);
 }
 
 /**

@@ -3040,7 +3040,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
   time_t t;
   struct tm tm;
   const char *filename;
-  char tbuf[64], *rdir;
+  char tbuf[64], *rdir, *postcmd;
   int r;
 
   t = dvr_entry_get_start_time(de);
@@ -3073,6 +3073,10 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
       if(r && r != -ENOENT)
         tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
   	       filename, strerror(-errno));
+
+      postcmd = de->de_config->dvr_postremove;
+      if (postcmd && postcmd[0])
+        dvr_spawn_postcmd(de, postcmd, filename);
       htsmsg_delete_field(m, "filename");
     }
   }
