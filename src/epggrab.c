@@ -94,6 +94,14 @@ static void* _epggrab_internal_thread ( void* p )
   ts.tv_nsec = 0; 
   time(&ts.tv_sec);
 
+  /* Time for other jobs */
+  t = dispatch_clock + 120;
+  while (epggrab_running) {
+    if (t < dispatch_clock)
+      break;
+    usleep(200000);
+  }
+
   while (epggrab_running) {
 
     /* Check for config change */
