@@ -757,7 +757,7 @@ const idclass_t dvr_config_class = {
       {
          .name   = "",
          .number = 6,
-         .parent = 4,
+         .parent = 5,
          .column = 2,
       },
       {}
