@@ -92,15 +92,21 @@ static void* _epggrab_internal_thread ( void* p )
 
   /* Setup timeout */
   ts.tv_nsec = 0; 
-  time(&ts.tv_sec);
+  ts.tv_sec  = time(NULL) + 120;
 
   /* Time for other jobs */
-  t = dispatch_clock + 120;
   while (epggrab_running) {
-    if (t < dispatch_clock)
-      break;
-    usleep(200000);
+    pthread_mutex_lock(&epggrab_mutex);
+    err = ETIMEDOUT;
+    while (epggrab_running) {
+      err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
+      if (err == ETIMEDOUT) break;
+    }
+    pthread_mutex_unlock(&epggrab_mutex);
+    if (err == ETIMEDOUT) break;
   }
+
+  time(&ts.tv_sec);
 
   while (epggrab_running) {
 
