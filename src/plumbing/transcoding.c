@@ -1178,6 +1178,18 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   got_ref = 0;
 
   if (!avcodec_is_open(ictx)) {
+    if (icodec->id == AV_CODEC_ID_H264) {
+      if (pkt->pkt_meta) {
+        ictx->extradata_size = pktbuf_len(pkt->pkt_meta);
+        ictx->extradata = av_malloc(ictx->extradata_size);
+        memcpy(ictx->extradata,
+               pktbuf_ptr(pkt->pkt_meta), pktbuf_len(pkt->pkt_meta));
+      } else {
+        /* wait for metadata */
+        return;
+      }
+    }
+
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder", shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
