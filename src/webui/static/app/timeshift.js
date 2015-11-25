@@ -21,7 +21,7 @@ tvheadend.timeshift = function(panel, index) {
         width: 570,
         onchange: onchange,
         help: function() {
-            new tvheadend.help(_('Timeshift Configuration'), 'config_timeshift.html');
+            new tvheadend.help(_('Timeshift configuration'), 'config_timeshift.html');
         }
     });
 

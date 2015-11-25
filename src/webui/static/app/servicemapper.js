@@ -148,7 +148,7 @@ tvheadend.service_mapper = function(t, e, store, select)
 
             /* Dialog */
             win = new Ext.Window({
-                title: _('Service Mapper Status'),
+                title: _('Service mapper status'),
                 iconCls: 'clone',
                 layout: 'fit',
                 autoWidth: true,

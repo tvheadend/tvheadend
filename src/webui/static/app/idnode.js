@@ -1422,7 +1422,7 @@ tvheadend.idnode_grid = function(panel, conf)
             abuttons.up = new Ext.Toolbar.Button({
                 tooltip: _('Move selected entries up'),
                 iconCls: 'moveup',
-                text: _('Move Up'),
+                text: _('Move up'),
                 disabled: true,
                 handler: function() {
                     var r = select.getSelections();
@@ -1447,7 +1447,7 @@ tvheadend.idnode_grid = function(panel, conf)
             abuttons.down = new Ext.Toolbar.Button({
                 tooltip: _('Move selected entries down'),
                 iconCls: 'movedown',
-                text: _('Move Down'),
+                text: _('Move down'),
                 disabled: true,
                 handler: function() {
                     var r = select.getSelections();

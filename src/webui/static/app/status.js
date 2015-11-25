@@ -502,11 +502,11 @@ tvheadend.status_conns = function(panel, index) {
             actions: [
                 {
                     iconCls: 'cancel',
-                    qtip: _('Cancel this connection'),
+                    qtip: _('Close this connection'),
                     cb: function(grid, rec, act, row) {
                         var id = grid.getStore().getAt(row).data.id;
-                        Ext.MessageBox.confirm(_('Cancel Connection'),
-                            _('Cancel the selected connection?'),
+                        Ext.MessageBox.confirm(_('Close connection'),
+                            _('Close the selected connection?'),
                             function(button) {
                                 if (button === 'no')
                                     return;

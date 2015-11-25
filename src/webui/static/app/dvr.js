@@ -39,9 +39,9 @@ tvheadend.dvrDetails = function(uuid) {
         if (episode)
           content += '<div class="x-epg-title">' + episode + '</div>';
         if (start_real)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled Start Time') + ':</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
+          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled start time') + ':</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
         if (stop_real)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
+          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled stop time') + ':</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
         if (duration)
           content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Duration') + ':</div> ' + parseInt(duration / 60) + ' ' + _('min') + '</div>';
         if (desc)
@@ -56,7 +56,7 @@ tvheadend.dvrDetails = function(uuid) {
         if (autorec_caption)
           content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Autorec') + ':</div> ' + autorec_caption + '</div>';
         if (timerec_caption)
-          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Time Scheduler') + ':</div> ' + timerec_caption + '</div>';
+          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Time scheduler') + ':</div> ' + timerec_caption + '</div>';
 
         var buttons = [];
 
@@ -271,8 +271,11 @@ tvheadend.dvr_upcoming = function(panel, index) {
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_upcoming',
-        titleS: _('Upcoming Recording'),
-        titleP: _('Upcoming / Current Recordings'),
+        titleS: _('Upcoming recording'),
+        titleP: _('Current and upcoming recordings'), 
+        /* Was "Current / Upcoming Recordings" this change makes more 
+         * sense as current recordings are first in the list.
+        */ 
         iconCls: 'upcomingRec',
         tabIndex: index,
         add: {
@@ -306,7 +309,10 @@ tvheadend.dvr_upcoming = function(panel, index) {
         selected: selected,
         beforeedit: beforeedit,
         help: function() {
-            new tvheadend.help(_('DVR - Upcoming/Current Recordings'), 'dvr_upcoming.html');
+            new tvheadend.help(_('Current and upcoming recordings'), 'dvr_upcoming.html');
+            /* Was "DVR - Upcoming/Current Recordings"
+             * Do we really need "DVR - " here?
+             */
         }
     });
 
@@ -379,8 +385,8 @@ tvheadend.dvr_finished = function(panel, index) {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_finished',
         readonly: true,
-        titleS: _('Finished Recording'),
-        titleP: _('Finished Recordings'),
+        titleS: _('Finished recording'),
+        titleP: _('Finished recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
         edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment" : "comment" } },
@@ -418,6 +424,8 @@ tvheadend.dvr_finished = function(panel, index) {
         selected: selected,
         help: function() {
             new tvheadend.help(_('DVR - Finished Recordings'), 'dvr_finished.html');
+            // Was "DVR - Finished Recordings" is "DVR - " really needed?
+
         }
     });
 
@@ -490,8 +498,8 @@ tvheadend.dvr_failed = function(panel, index) {
         url: 'api/dvr/entry',
         gridURL: 'api/dvr/entry/grid_failed',
         readonly: true,
-        titleS: _('Failed Recording'),
-        titleP: _('Failed Recordings'),
+        titleS: _('Failed recording'),
+        titleP: _('Failed recordings'),
         iconCls: 'exclamation',
         tabIndex: index,
         edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
@@ -528,7 +536,7 @@ tvheadend.dvr_failed = function(panel, index) {
         tbar: [downloadButton, rerecordButton],
         selected: selected,
         help: function() {
-            new tvheadend.help(_('DVR - Failed Recordings'), 'dvr_failed.html');
+            new tvheadend.help(_('Failed recordings'), 'dvr_failed.html');
         }
     });
 
@@ -543,9 +551,9 @@ tvheadend.dvr_settings = function(panel, index) {
         url: 'api/dvr/config',
         clazz: 'dvrconfig',
         comet: 'dvrconfig',
-        titleS: _('Digital Video Recorder Profile'),
-        titleP: _('Digital Video Recorder Profiles'),
-        titleC: _('Profile Name'),
+        titleS: _('Digital video recorder profile'),
+        titleP: _('Digital video recorder profiles'),
+        titleC: _('Profile name'),
         iconCls: 'dvrprofiles',
         tabIndex: index,
         add: {
@@ -569,8 +577,8 @@ tvheadend.autorec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
-        titleS: _('DVR Autorec Entry'),
-        titleP: _('DVR Autorec Entries'),
+        titleS: _('DVR autorec entry'),
+        titleP: _('DVR autorec entries'),
         iconCls: 'autoRec',
         tabIndex: index,
         columns: {
@@ -621,7 +629,7 @@ tvheadend.autorec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Autorec'), 'dvr_autorec.html');
+            new tvheadend.help(_('Autorecording'), 'dvr_autorec.html');
         }
     });
 
@@ -636,8 +644,9 @@ tvheadend.timerec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/timerec',
-        titleS: _('Time Schedule'),
-        titleP: _('Time Schedules'),
+        titleS: _('Timer recording'),
+        titleP: _('Timer recordings'),
+        // "Timer recordings" or "time schedule"?
         iconCls: 'time_schedules',
         tabIndex: index,
         columns: {
@@ -674,7 +683,7 @@ tvheadend.timerec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Timerec'), 'dvr_timerec.html');
+            new tvheadend.help(_('Timer recordings'), 'dvr_timerec.html');
         }
     });
 
@@ -689,7 +698,7 @@ tvheadend.dvr = function(panel, index) {
     var p = new Ext.TabPanel({
         activeTab: 0,
         autoScroll: true,
-        title: _('Digital Video Recorder'),
+        title: _('Digital video recorder'),
         iconCls: 'dvr',
         items: []
     });

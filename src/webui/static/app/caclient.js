@@ -41,7 +41,7 @@ tvheadend.caclient = function(panel, index) {
         edit: { params: { list: list } },
         add: {
             url: 'api/caclient',
-            titleS: _('Conditional Access Client'),
+            titleS: _('Conditional access client'),
             select: {
                 label: _('Type'),
                 store: tvheadend.caclient_builders,
@@ -58,7 +58,7 @@ tvheadend.caclient = function(panel, index) {
         lcol: [actions],
         plugins: [actions],
         help: function() {
-            new tvheadend.help(_('Conditional Access Client'), 'config_caclient.html');
+            new tvheadend.help(_('Conditional access client'), 'config_caclient.html');
         }
     });
 
