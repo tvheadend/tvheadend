@@ -1849,7 +1849,7 @@ ipblock_entry_class_delete(idnode_t *self)
 {
   ipblock_entry_t *ib = (ipblock_entry_t *)self;
 
-  hts_settings_remove("passwd/%s", idnode_uuid_as_sstr(&ib->ib_id));
+  hts_settings_remove("ipblock/%s", idnode_uuid_as_sstr(&ib->ib_id));
   ipblock_entry_destroy(ib);
 }
 
