@@ -129,8 +129,8 @@ if(Ext.DatePicker)
     disabledDatesText : "",
     monthNames        : Date.monthNames,
     dayNames          : Date.dayNames,
-    nextText          : _('Next Month (Control+Right)'),
-    prevText          : _('Previous Month (Control+Left)'),
+    nextText          : _('Next month (Control+Right)'),
+    prevText          : _('Previous month (Control+Left)'),
     monthYearText     : _('Choose a month (Control+Up/Down to move years)'),
     todayTip          : _("{0} (Spacebar)"),
     format            : _("m/d/y#DatePicker").split('#')[0],
@@ -143,10 +143,10 @@ if(Ext.PagingToolbar)
   Ext.apply(Ext.PagingToolbar.prototype, {
     beforePageText : _("Page"),
     afterPageText  : _("of {0}"),
-    firstText      : _("First Page"),
-    prevText       : _("Previous Page"),
-    nextText       : _("Next Page"),
-    lastText       : _("Last Page"),
+    firstText      : _("First page"),
+    prevText       : _("Previous page"),
+    nextText       : _("Next page"),
+    lastText       : _("Last page"),
     refreshText    : _("Refresh"),
     displayMsg     : _("Displaying {0} - {1} of {2}"),
     emptyMsg       : _('No data to display')
@@ -208,8 +208,8 @@ if(Ext.grid.GridView)
 if(Ext.grid.GroupingView)
   Ext.apply(Ext.grid.GroupingView.prototype, {
     emptyGroupText : _('(None)'),
-    groupByText    : _('Group By This Field'),
-    showGroupsText : _('Show in Groups')
+    groupByText    : _('Group by this field'),
+    showGroupsText : _('Show in groups')
   });
 
 if(Ext.grid.BooleanColumn)
@@ -261,13 +261,13 @@ if(Ext.ux.grid.filter.BoolFilter)
 
 if(Ext.ux.grid.filter.StringFilter)
   Ext.apply(Ext.ux.grid.filter.StringFilter.prototype, {
-    emptyText: _('Enter Filter Text...')
+    emptyText: _('Enter filter text...')
   });
 
 if(Ext.ux.grid.filter.NumericFilter) {
   Ext.apply(Ext.ux.grid.filter.NumericFilter.prototype, {
     menuItemCfgs: {
-      emptyText: _('Enter Filter Text...'),
+      emptyText: _('Enter filter text...'),
       selectOnFocus: true,
       width: 125
     }

@@ -471,7 +471,7 @@ function accessUpdate(o) {
         var dvbin = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: _('DVB Inputs'),
+            title: _('DVB inputs'),
             iconCls: 'hardware',
             items: []
         });
@@ -489,7 +489,7 @@ function accessUpdate(o) {
         var chepg = new Ext.TabPanel({
             activeTab: 0,
             autoScroll: true,
-            title: _('Channel / EPG'),
+            title: _('Channel list'),
             iconCls: 'television',
             items: []
         });

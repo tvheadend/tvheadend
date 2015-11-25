@@ -7,8 +7,8 @@ tvheadend.cteditor = function(panel, index)
     tvheadend.idnode_grid(panel, {
         url: 'api/channeltag',
         all: 1,
-        titleS: _('Channel Tag'),
-        titleP: _('Channel Tags'),
+        titleS: _('Channel tag'),
+        titleP: _('Channel tags'),
         iconCls: 'channelTags',
         tabIndex: index,
         add: {
@@ -21,7 +21,7 @@ tvheadend.cteditor = function(panel, index)
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('Channel Tags'), 'config_tags.html');
+            new tvheadend.help(_('Channel tags'), 'config_tags.html');
         }
     });
 

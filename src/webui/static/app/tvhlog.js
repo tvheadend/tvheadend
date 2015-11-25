@@ -20,7 +20,7 @@ tvheadend.tvhlog = function(panel, index) {
         saveTooltip: _('Apply any changes made below to the run-time configuration.') + '<br/>' +
                      _('They will be lost when the application next restarts.'),
         help: function() {
-            new tvheadend.help(_('Debug Configuration'), 'config_debug.html');
+            new tvheadend.help(_('Debug configuration'), 'config_debug.html');
         }
     });
 

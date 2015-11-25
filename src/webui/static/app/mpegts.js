@@ -33,7 +33,7 @@ tvheadend.networks = function(panel, index)
             return new Ext.Toolbar.Button({
                 tooltip: _('Force new scan (all muxes) for selected networks'),
                 iconCls: 'find',
-                text: _('Force Scan'),
+                text: _('Force scan'),
                 disabled: true
             });
         },
@@ -251,9 +251,9 @@ tvheadend.services = function(panel, index)
         var selected = function(s, abuttons)
         {
             if (s.getCount() > 0)
-                abuttons.map.setText(_('Map Selected'));
+                abuttons.map.setText(_('Map selected'));
             else
-                abuttons.map.setText(_('Map All'));
+                abuttons.map.setText(_('Map all'));
         };
 
         var actions = new Ext.ux.grid.RowActions({
@@ -329,17 +329,17 @@ tvheadend.mux_sched = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/mpegts/mux_sched',
-        titleS: _('Mux Scheduler'),
-        titleP: _('Mux Schedulers'),
+        titleS: _('Mux scheduler'),
+        titleP: _('Mux schedulers'),
         iconCls: 'muxSchedulers',
         tabIndex: index,
         help: function() {
-            new tvheadend.help(_('Mux Schedulers'), 'config_muxsched.html');
+            new tvheadend.help(_('Mux schedulers'), 'config_muxsched.html');
         },          
         hidemode: true,
         add: {
             url: 'api/mpegts/mux_sched',
-            titleS: _('Mux Scheduler'),
+            titleS: _('Mux scheduler'),
             create: {
                 url: 'api/mpegts/mux_sched/create'
             }

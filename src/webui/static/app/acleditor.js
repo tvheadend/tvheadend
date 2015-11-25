@@ -22,8 +22,8 @@ tvheadend.acleditor = function(panel, index)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/access/entry',
-        titleS: _('Access Entry'),
-        titleP: _('Access Entries'),
+        titleS: _('Access entry'),
+        titleP: _('Access entries'),
         iconCls: 'acl',
         columns: {
             enabled:        { width: 120 },
@@ -61,7 +61,7 @@ tvheadend.acleditor = function(panel, index)
         move: true,
         list: list,
         help: function() {
-            new tvheadend.help(_('Access Control Entries'), 'config_access.html');
+            new tvheadend.help(_('Access control entries'), 'config_access.html');
         }
     });
 };
@@ -101,7 +101,7 @@ tvheadend.passwdeditor = function(panel, index)
         move: true,
         list: list,
         help: function() {
-            new tvheadend.help(_('Password Control Entries'), 'config_passwords.html');
+            new tvheadend.help(_('Password control entries'), 'config_passwords.html');
         }
     });
 };
@@ -116,8 +116,8 @@ tvheadend.ipblockeditor = function(panel, index)
 
     tvheadend.idnode_grid(panel, {
         url: 'api/ipblock/entry',
-        titleS: _('IP Blocking Record'),
-        titleP: _('IP Blocking Records'),
+        titleS: _('IP blocking record'),
+        titleP: _('IP blocking records'),
         iconCls: 'ip_block',
         columns: {
             enabled: { width: 120 },
@@ -140,7 +140,7 @@ tvheadend.ipblockeditor = function(panel, index)
         del: true,
         list: list,
         help: function() {
-            new tvheadend.help(_('IP Blocking Entries'), 'config_ipblock.html');
+            new tvheadend.help(_('IP blocking entries'), 'config_ipblock.html');
         }
     });
 };

@@ -19,7 +19,7 @@ tvheadend.epggrab_base = function(panel, index) {
 
     tvheadend.idnode_simple(panel, {
         url: 'api/epggrab/config',
-        title: _('EPG Grabber'),
+        title: _('EPG grabber'),
         iconCls: 'baseconf',
         comet: 'epggrab',
         tabIndex: index,
@@ -27,7 +27,7 @@ tvheadend.epggrab_base = function(panel, index) {
         labelWidth: 200,
         tbar: [triggerButton],
         help: function() {
-            new tvheadend.help(_('EPG Grab Configuration'), 'config_epggrab.html');
+            new tvheadend.help(_('EPG grabber configuration'), 'config_epggrab.html');
         }
     });
 
@@ -38,8 +38,8 @@ tvheadend.epggrab_map = function(panel, index) {
     tvheadend.idnode_grid(panel, {
         url: 'api/epggrab/channel',
         all: 1,
-        titleS: _('EPG Grabber Channel'),
-        titleP: _('EPG Grabber Channels'),
+        titleS: _('EPG grabber channel'),
+        titleP: _('EPG grabber channels'),
         iconCls: 'baseconf',
         tabIndex: index,
         del: true,
@@ -48,7 +48,7 @@ tvheadend.epggrab_map = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('EPG Grabber Channels'), 'config_epggrab.html');
+            new tvheadend.help(_('EPG grabber channels'), 'config_epggrab.html');
         }
     });
 
@@ -70,9 +70,9 @@ tvheadend.epggrab_mod = function(panel, index) {
         tabIndex: index,
         clazz: 'epggrab_mod',
         comet: 'epggrab_mod',
-        titleS: _('EPG Grabber Module'),
-        titleP: _('EPG Grabber Modules'),
-        titleC: _('EPG Grabber Name'),
+        titleS: _('EPG grabber module'),
+        titleP: _('EPG grabber modules'),
+        titleC: _('EPG grabber name'),
         iconCls: 'baseconf',
         key: 'uuid',
         val: 'title',
@@ -81,7 +81,7 @@ tvheadend.epggrab_mod = function(panel, index) {
         lcol: [actions],
         plugins: [actions],
         help: function() {
-            new tvheadend.help(_('EPG Grab Configuration'), 'config_epggrab.html');
+            new tvheadend.help(_('EPG grabber configuration'), 'config_epggrab.html');
         }
     });
 

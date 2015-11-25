@@ -12,7 +12,7 @@ tvheadend.baseconf = function(panel, index) {
         comet: 'config',
         labelWidth: 250,
         help: function() {
-            new tvheadend.help(_('General Configuration'), 'config_general.html');
+            new tvheadend.help(_('General configuration'), 'config_general.html');
         }
     });
 
@@ -33,7 +33,7 @@ tvheadend.imgcacheconf = function(panel, index) {
             return new Ext.Toolbar.Button({
                 tooltip: _('Clean image cache on storage'),
                 iconCls: 'clean',
-                text: _('Clean image (icon) cache')
+                text: _('Clean cache')
             });
         },
         callback: function(conf) {
@@ -71,7 +71,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         labelWidth: 200,
         tbar: [cleanButton, triggerButton],
         help: function() {
-            new tvheadend.help(_('General Configuration'), 'config_general.html');
+            new tvheadend.help(_('General configuration'), 'config_general.html');
         }
     });
 
@@ -105,7 +105,7 @@ tvheadend.satipsrvconf = function(panel, index) {
 
     tvheadend.idnode_simple(panel, {
         url: 'api/satips/config',
-        title: _('SAT>IP Server'),
+        title: _('SAT>IP server'),
         iconCls: 'satipsrvconf',
         tabIndex: index,
         comet: 'satip_server',
@@ -113,7 +113,7 @@ tvheadend.satipsrvconf = function(panel, index) {
         labelWidth: 250,
         tbar: [discoverButton],
         help: function() {
-            new tvheadend.help(_('SAT>IP Server Configuration'), 'config_satips.html');
+            new tvheadend.help(_('SAT>IP server configuration'), 'config_satips.html');
         }
     });
 };
