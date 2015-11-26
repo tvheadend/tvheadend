@@ -361,14 +361,16 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      lastpkt = dispatch_clock;
       if(started) {
         pktbuf_t *pb;
+        int len;
         if (sm->sm_type == SMT_PACKET)
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
           pb = sm->sm_data;
-        subscription_add_bytes_out(s, pktbuf_len(pb));
+        subscription_add_bytes_out(s, len = pktbuf_len(pb));
+        if (len > 0)
+          lastpkt = dispatch_clock;
         muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
         sm->sm_data = NULL;
       }
