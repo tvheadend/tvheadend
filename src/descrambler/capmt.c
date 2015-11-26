@@ -110,6 +110,7 @@ typedef struct dmx_filter {
 #define CAPMT_MSG_FAST     0x01
 #define CAPMT_MSG_CLEAR    0x02
 #define CAPMT_MSG_NODUP    0x04
+#define CAPMT_MSG_HELLO    0x08
 
 // limits
 #define MAX_CA       16
@@ -226,6 +227,7 @@ typedef struct capmt_message {
   TAILQ_ENTRY(capmt_message) cm_link;
   int cm_adapter;
   int cm_sid;
+  int cm_flags;
   sbuf_t cm_sb;
 } capmt_message_t;
 
@@ -664,7 +666,7 @@ capmt_queue_msg
   (capmt_t *capmt, int adapter, int sid,
    const uint8_t *buf, size_t len, int flags)
 {
-  capmt_message_t *msg;
+  capmt_message_t *msg, *msg2;
 
   if (flags & CAPMT_MSG_CLEAR) {
     while ((msg = TAILQ_FIRST(&capmt->capmt_writeq)) != NULL) {
@@ -684,9 +686,15 @@ capmt_queue_msg
   sbuf_append(&msg->cm_sb, buf, len);
   msg->cm_adapter = adapter;
   msg->cm_sid     = sid;
-  if (flags & CAPMT_MSG_FAST)
+  msg->cm_flags   = flags;
+  if (flags & CAPMT_MSG_FAST) {
+    msg2 = TAILQ_FIRST(&capmt->capmt_writeq);
     TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
-  else
+    if (msg2 && (msg2->cm_flags & CAPMT_MSG_HELLO) != 0) {
+      TAILQ_REMOVE(&capmt->capmt_writeq, msg2, cm_link);
+      TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg2, cm_link);
+    }
+  } else
     TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
   tvh_write(capmt->capmt_pipe.wr, "c", 1);
 }
@@ -860,7 +868,8 @@ capmt_send_client_info(capmt_t *capmt)
     len = sizeof(buf) - 7 - 1;
   buf[6] = len;
 
-  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7, CAPMT_MSG_FAST|CAPMT_MSG_NODUP);
+  capmt_queue_msg(capmt, 0, 0, (uint8_t *)&buf, len + 7,
+                  CAPMT_MSG_FAST|CAPMT_MSG_NODUP|CAPMT_MSG_HELLO);
 }
 
 static void
