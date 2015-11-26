@@ -241,6 +241,8 @@ multi:
     while (*data && *data <= ' ') data++;
     p = data;
     data = until_eol(data);
+    if (*p == '#')
+      continue;
     if (*p && *p > ' ') {
       if (item == NULL)
         item = htsmsg_create_map();
