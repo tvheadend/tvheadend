@@ -623,6 +623,7 @@ main(int argc, char **argv)
               opt_fork         = 0,
               opt_firstrun     = 0,
               opt_stderr       = 0,
+              opt_nostderr     = 0,
               opt_syslog       = 0,
               opt_nosyslog     = 0,
               opt_uidebug      = 0,
@@ -715,6 +716,7 @@ main(int argc, char **argv)
 
     {   0, NULL,        N_("Debug options"),           OPT_BOOL, NULL         },
     { 'd', "stderr",    N_("Enable debug on stderr"),  OPT_BOOL, &opt_stderr  },
+    { 'n', "nostderr",  N_("Disable debug on stderr"), OPT_BOOL, &opt_nostderr },
     { 's', "syslog",    N_("Enable debug to syslog"),  OPT_BOOL, &opt_syslog  },
     { 'S', "nosyslog",  N_("Disable syslog (all messages)"), OPT_BOOL, &opt_nosyslog },
     { 'l', "logfile",   N_("Enable debug to file"),    OPT_STR,  &opt_logpath },
@@ -859,6 +861,8 @@ main(int argc, char **argv)
     if (opt_logpath)
       log_options   |= TVHLOG_OPT_DBG_FILE;
   }
+  if (opt_nostderr)
+    log_options &= ~(TVHLOG_OPT_DECORATE|TVHLOG_OPT_STDERR|TVHLOG_OPT_DBG_STDERR);
   if (opt_nosyslog)
     log_options &= ~(TVHLOG_OPT_SYSLOG|TVHLOG_OPT_DBG_SYSLOG);
   if (opt_fileline)
