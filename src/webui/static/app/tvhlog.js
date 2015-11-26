@@ -2,6 +2,9 @@ tvheadend.tvhlog = function(panel, index) {
 
     function onchange(form, field, nval, oval) {
        var f = form.getForm();
+       var enable_syslog = f.findField('enable_syslog');
+       var debug_syslog = f.findField('syslog');
+       debug_syslog.setDisabled(!enable_syslog.getValue() || enable_syslog.disabled);
        var trace = f.findField('trace');
        var tracesubs = f.findField('tracesubs');
        tracesubs.setDisabled(!trace.getValue() || trace.disabled);
