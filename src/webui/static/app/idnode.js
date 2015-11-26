@@ -850,7 +850,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
                         columns = met[k].column;
             met[number].columns = columns;
             if (columns) {
-                var p = newFieldSet({ title: m.name || _("Settings"), layout: 'column', border: false });
+                var p = newFieldSet({ title: m.name || _("Settings"), layout: 'column2', border: false });
                 cfs[number] = newFieldSet({ nocollapse: true, style: 'border-width: 0px', bodyStyle: ' ' });
                 p.add(cfs[number]);
                 fs[number] = p;
