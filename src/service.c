@@ -232,6 +232,8 @@ stream_init(elementary_stream_t *st)
   st->es_prevdts = PTS_UNSET;
 
   st->es_blank = 0;
+
+  TAILQ_INIT(&st->es_backlog);
 }
 
 
@@ -245,6 +247,8 @@ stream_clean(elementary_stream_t *st)
   st->es_priv = NULL;
 
   /* Clear reassembly buffers */
+
+  streaming_queue_clear(&st->es_backlog);
 
   st->es_startcode = 0;
   

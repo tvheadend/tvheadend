@@ -12,8 +12,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-10 09:50+0100\n"
-"PO-Revision-Date: 2015-11-10 08:50+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2015-11-14 14:02+0000\n"
+"Last-Translator: saen acro <saentist@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -34,7 +34,7 @@ msgstr "#Канали"
 
 #: src/input/mpegts/mpegts_network.c:231
 msgid "# Mapped channels"
-msgstr ""
+msgstr "# Селектирани Канали"
 
 #: src/input/mpegts/mpegts_network.c:217
 msgid "# Muxes"
@@ -311,7 +311,7 @@ msgstr "Всички DVR презаписваеми"
 msgid ""
 "All proceeds are used to support server infrastructure and buy test "
 "equipment."
-msgstr "Всички постъпления се използват за потдръйка на сървърната инфраструктура, тестове и оборудване"
+msgstr "Всички постъпления се използват за потдръжка на сървърната инфраструктура, тестове и оборудване"
 
 #: src/main.c:672
 msgid "Alternate PID path"
@@ -597,11 +597,11 @@ msgstr "Канали"
 #: src/input/mpegts/mpegts_network.c:202 src/input/mpegts/mpegts_mux.c:573
 #: src/input/mpegts/mpegts_service.c:185
 msgid "Character set"
-msgstr ""
+msgstr "Енкодинг"
 
 #: src/epg.c:2074
 msgid "Children's / Youth programs"
-msgstr ""
+msgstr "Детски / Младежки "
 
 #: src/epg.c:2111
 msgid "Cinema"
@@ -625,7 +625,7 @@ msgstr "Изчистване ефекти"
 
 #: src/descrambler/caclient.c:268
 msgid "Client name"
-msgstr ""
+msgstr "Име на клиента"
 
 #: src/dvr/dvr_config.c:828
 msgid "Clone scheduled entry on error"
@@ -670,7 +670,7 @@ msgstr "Завършено ОК"
 
 #: src/descrambler/caclient.c:236
 msgid "Conditional access client"
-msgstr ""
+msgstr "Клиент на Условен достъп "
 
 #: src/config.c:1902
 msgid "Configuration"
@@ -690,7 +690,7 @@ msgstr "Версия на конфигурацията"
 
 #: src/access.c:1495
 msgid "Connection limit type"
-msgstr ""
+msgstr "Тип на ограничение на връзката"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:223 src/input/mpegts/mpegts_mux_dvb.c:298
 msgid "Constellation"
@@ -706,7 +706,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2868 src/dvr/dvr_autorec.c:1043
 msgid "Content type"
-msgstr ""
+msgstr "Съдържание Тип"
 
 #: src/epg.c:2048
 msgid "Contest"
@@ -738,7 +738,7 @@ msgstr ""
 
 #: src/bouquet.c:923
 msgid "Create tag"
-msgstr ""
+msgstr "Създаване на маркер"
 
 #: src/input/mpegts/mpegts_service.c:215
 msgid "Created"
@@ -984,12 +984,12 @@ msgstr ""
 
 #: src/profile.c:321
 msgid "Default priority"
-msgstr ""
+msgstr "Приоритет По подразбиране"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:210 src/input/mpegts/mpegts_mux_dvb.c:282
 #: src/input/mpegts/mpegts_mux_dvb.c:536 src/input/mpegts/mpegts_mux_dvb.c:642
 msgid "Delivery system"
-msgstr ""
+msgstr "Система за доставка"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:78
 msgid "Demux path"
@@ -1017,12 +1017,12 @@ msgstr "Устройство ID"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:170
 msgid "Device model"
-msgstr ""
+msgstr "Устройство Модел"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:92
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:248
 msgid "Device path"
-msgstr ""
+msgstr "Път до устройството"
 
 #: src/dvr/dvr_db.c:2773 src/dvr/dvr_autorec.c:947 src/dvr/dvr_timerec.c:556
 msgid "Directory"
@@ -1058,7 +1058,7 @@ msgstr "Изключи системния лог"
 
 #: src/channels.c:335
 msgid "Disabled"
-msgstr ""
+msgstr "Изключен"
 
 #: src/epg.c:2035 src/epg.c:2036 src/epg.c:2037 src/epg.c:2038 src/epg.c:2039
 #: src/epg.c:2040 src/epg.c:2041 src/epg.c:2042 src/epg.c:2043 src/epg.c:2044
@@ -1136,7 +1136,7 @@ msgstr ""
 
 #: src/epggrab/module.c:108
 msgid "EPG grabber"
-msgstr ""
+msgstr "EPG грабер"
 
 #: src/epggrab/channel.c:647
 msgid "EPG grabber channel"
@@ -1152,7 +1152,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:506
 msgid "EPG scan"
-msgstr ""
+msgstr "Сканиране на EPG"
 
 #: src/epggrab.c:307
 msgid "EPG scan timeout in seconds (30-7200)"
@@ -1160,7 +1160,7 @@ msgstr ""
 
 #: src/channels.c:404
 msgid "EPG source"
-msgstr ""
+msgstr "EPG източник"
 
 #: src/dvr/dvr_config.c:859
 msgid "EPG update window"
@@ -1371,11 +1371,11 @@ msgstr "Размер на файла"
 
 #: src/dvr/dvr_db.c:450
 msgid "File missing"
-msgstr ""
+msgstr "Файла Отсъства"
 
 #: src/dvr/dvr_db.c:441
 msgid "File not created"
-msgstr ""
+msgstr "Файла не е създаден"
 
 #: src/dvr/dvr_config.c:890
 msgid "File permissions (octal, e.g. 0664)"
@@ -1443,7 +1443,7 @@ msgstr "Принудително пилот за DVB-S2"
 
 #: src/profile.c:330
 msgid "Force priority"
-msgstr ""
+msgstr "Принудителен приоритет"
 
 #: src/input/mpegts/satip/satip_frontend.c:173
 msgid "Force teardown delay"
@@ -1485,7 +1485,7 @@ msgstr "Пет"
 #: src/input/mpegts/satip/satip.c:325
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:163
 msgid "Friendly name"
-msgstr ""
+msgstr "Кратко име"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:85
 #: src/input/mpegts/satip/satip_frontend.c:146
@@ -1553,7 +1553,7 @@ msgstr "Общ"
 
 #: src/main.c:662
 msgid "Generic options"
-msgstr ""
+msgstr "Основно настройки"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:229
 msgid "Guard interval"
@@ -1589,7 +1589,7 @@ msgstr "HTSP основни стриим настройки"
 
 #: src/profile.c:928
 msgid "HTSP stream profile"
-msgstr ""
+msgstr "HTSP стриим профил"
 
 #: src/access.c:1426
 msgid "HTSP streaming"
@@ -1642,11 +1642,11 @@ msgstr "ПРЕСТОЙ"
 #: src/input/mpegts/satip/satip.c:304
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:149
 msgid "IP address"
-msgstr ""
+msgstr "IP Адрес"
 
 #: src/access.c:1844 src/access.c:1873
 msgid "IP blocking"
-msgstr ""
+msgstr "ИП блокиране"
 
 #: src/input/mpegts/iptv/iptv.c:137
 msgid "IPTV"
@@ -1715,7 +1715,7 @@ msgid ""
 "it will allow world-wide administrative access\n"
 "to your Tvheadend installation until you create or edit\n"
 "the access control from within the Tvheadend web interface."
-msgstr "Ако няма съществъващ акаунт, тогава създайте един безпарола и юзер.Използвайте го внимателно тъй като тойще даде административен достъп на всички по светадо вашата Tvheadend инсталация след като я създадете и редактирате, чрез уеб интерфейса."
+msgstr "Ако няма съществуващ акаунт, тогава създайте един без потребител и парола. Използвайте го внимателно тъй като той ще даде административен достъп на всички по света до вашата Tvheadend инсталация след като я създадете и редактирате, чрез уеб интерфейса."
 
 #: src/webui/extjs.c:229
 msgid "If you'd like to support the project, please consider a donation."
@@ -1783,7 +1783,7 @@ msgstr "Информационни"
 
 #: src/input/mpegts/mpegts_input.c:264
 msgid "Initial scan"
-msgstr ""
+msgstr "Начално сканиране"
 
 #: src/input.c:29
 msgid "Input base"
@@ -1879,7 +1879,7 @@ msgstr "Езици"
 
 #: src/input/mpegts/mpegts_service.c:222
 msgid "Last seen"
-msgstr ""
+msgstr "Последно видян"
 
 #: src/config.c:1945
 msgid "Last updated from"
@@ -1891,7 +1891,7 @@ msgstr "услуги за свободното време хобита"
 
 #: src/access.c:1502
 msgid "Limit connections"
-msgstr ""
+msgstr "Ограничение на връзките"
 
 #: src/input/mpegts/mpegts_input.c:290
 msgid "Linked input"
@@ -1975,7 +1975,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:122
 msgid "Local channel number"
-msgstr ""
+msgstr "Локален номер на канал"
 
 #: src/input/mpegts/satip/satip.c:423
 msgid "Local discovery IP address"
@@ -1996,7 +1996,7 @@ msgstr "Лог"
 
 #: src/config.c:1863
 msgid "Login/Logout"
-msgstr ""
+msgstr "Вписване/Отписване"
 
 #: src/profile.c:250 src/dvr/dvr_db.c:2114
 msgid "Low"
@@ -2132,7 +2132,7 @@ msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:624
 msgid "Maximum bandwidth (Kbps)"
-msgstr ""
+msgstr "Максимална честотна лента(Kbps)"
 
 #: src/dvr/dvr_autorec.c:1080
 msgid "Maximum count (0=unlimited)"
@@ -2192,15 +2192,15 @@ msgstr "Режим"
 
 #: src/input/mpegts/satip/satip.c:360
 msgid "Model description"
-msgstr ""
+msgstr "Описание на Модела"
 
 #: src/input/mpegts/satip/satip.c:367
 msgid "Model name"
-msgstr ""
+msgstr "Име на Модела"
 
 #: src/input/mpegts/satip/satip.c:374
 msgid "Model number"
-msgstr ""
+msgstr "Номер на Модела"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:558 src/input/mpegts/mpegts_mux_dvb.c:652
 msgid "Modulation"
@@ -2327,11 +2327,11 @@ msgstr "UUID Мрежа"
 
 #: src/input/mpegts/mpegts_network.c:157
 msgid "Network discovery"
-msgstr ""
+msgstr "Мрежово сканиране"
 
 #: src/input/mpegts/mpegts_network.c:143
 msgid "Network name"
-msgstr ""
+msgstr "Име на мрежата"
 
 #: src/access.c:1392 src/access.c:1889
 msgid "Network prefix"
@@ -2341,7 +2341,7 @@ msgstr "Мрежов префикс"
 #: src/input/mpegts/satip/satip_frontend.c:336
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:177
 msgid "Network type"
-msgstr ""
+msgstr "Вид на мрежата"
 
 #: src/input/mpegts/mpegts_input.c:280
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:333
@@ -2765,7 +2765,7 @@ msgstr "Лично"
 
 #: src/profile.c:307
 msgid "Profile name"
-msgstr ""
+msgstr "Име на профила"
 
 #: src/input/mpegts/mpegts_service.c:157
 msgid "Provider"
@@ -3411,7 +3411,7 @@ msgstr ""
 #: src/esfilter.c:637 src/esfilter.c:704 src/esfilter.c:771 src/esfilter.c:838
 #: src/esfilter.c:905 src/esfilter.c:980
 msgid "Stream type"
-msgstr ""
+msgstr "Тип на стриима"
 
 #: src/access.c:1334 src/access.c:1414
 msgid "Streaming"

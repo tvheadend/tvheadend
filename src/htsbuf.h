@@ -58,6 +58,9 @@ void htsbuf_append(htsbuf_queue_t *hq, const void *buf, size_t len);
 
 void htsbuf_append_prealloc(htsbuf_queue_t *hq, const void *buf, size_t len);
 
+static inline void htsbuf_append_str(htsbuf_queue_t *hq, const char *str)
+  { htsbuf_append(hq, str, strlen(str)); }
+
 void htsbuf_data_free(htsbuf_queue_t *hq, htsbuf_data_t *hd);
 
 static inline int htsbuf_empty(htsbuf_queue_t *hq) { return hq->hq_size == 0; }

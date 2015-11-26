@@ -337,7 +337,7 @@ access_ip_blocked(struct sockaddr *src)
   ipblock_entry_t *ib;
 
   TAILQ_FOREACH(ib, &ipblock_entries, ib_link)
-    if (netmask_verify(&ib->ib_ipmasks, src))
+    if (ib->ib_enabled && netmask_verify(&ib->ib_ipmasks, src))
       return 1;
   return 0;
 }
@@ -1849,7 +1849,7 @@ ipblock_entry_class_delete(idnode_t *self)
 {
   ipblock_entry_t *ib = (ipblock_entry_t *)self;
 
-  hts_settings_remove("passwd/%s", idnode_uuid_as_sstr(&ib->ib_id));
+  hts_settings_remove("ipblock/%s", idnode_uuid_as_sstr(&ib->ib_id));
   ipblock_entry_destroy(ib);
 }
 

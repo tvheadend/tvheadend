@@ -43,9 +43,13 @@ typedef struct dvr_config {
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
   uint32_t dvr_removal_days;
+  uint32_t dvr_autorec_max_count;
+  uint32_t dvr_autorec_max_sched_count;
   char *dvr_charset;
   char *dvr_charset_id;
   char *dvr_postproc;
+  char *dvr_postremove;
+  uint32_t dvr_warm_time;
   uint32_t dvr_extra_time_pre;
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
@@ -155,6 +159,7 @@ typedef struct dvr_entry {
 
   time_t de_running_start;
   time_t de_running_stop;
+  time_t de_running_pause;
 
   char *de_owner;
   char *de_creator;
@@ -434,7 +439,7 @@ uint32_t dvr_entry_get_rerecord_errors( dvr_entry_t *de );
 
 int dvr_entry_get_epg_running( dvr_entry_t *de );
 
-time_t dvr_entry_get_start_time( dvr_entry_t *de );
+time_t dvr_entry_get_start_time( dvr_entry_t *de, int warm );
 
 time_t dvr_entry_get_stop_time( dvr_entry_t *de );
 
@@ -514,7 +519,7 @@ void dvr_event_removed(epg_broadcast_t *e);
 
 void dvr_event_updated(epg_broadcast_t *e);
 
-void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running);
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running);
 
 dvr_entry_t *dvr_entry_find_by_id(int id);
 
@@ -545,6 +550,8 @@ htsmsg_t *dvr_entry_class_config_name_list(void *o, const char *lang);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang);
 
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
+
+void dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename);
 
 void dvr_disk_space_init(void);
 void dvr_disk_space_done(void);
@@ -632,6 +639,8 @@ int dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae );
 int dvr_autorec_get_extra_time_pre( dvr_autorec_entry_t *dae );
 
 void dvr_autorec_completed( dvr_entry_t *de, int error_code );
+
+uint32_t dvr_autorec_get_max_sched_count(dvr_autorec_entry_t *dae);
 
 /**
  *

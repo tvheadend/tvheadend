@@ -1,6 +1,7 @@
 /*
  *  Digital Video Recorder
  *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -360,7 +361,7 @@ static const char *
 dvr_sub_start(const char *id, const void *aux, char *tmp, size_t tmplen)
 {
   char buf[16];
-  snprintf(buf, sizeof(buf), "%"PRItime_t, (time_t)dvr_entry_get_start_time((dvr_entry_t *)aux));
+  snprintf(buf, sizeof(buf), "%"PRItime_t, (time_t)dvr_entry_get_start_time((dvr_entry_t *)aux, 0));
   return dvr_do_prefix(id, buf, tmp, tmplen);
 }
 
@@ -1157,19 +1158,6 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
 /**
  *
  */
-static void
-dvr_thread_backlog_free(struct streaming_message_queue *backlog)
-{
-  streaming_message_t *sm;
-  while ((sm = TAILQ_FIRST(backlog)) != NULL) {
-    TAILQ_REMOVE(backlog, sm, sm_link);
-    streaming_msg_free(sm);
-  }
-}
-
-/**
- *
- */
 static inline int
 dts_pts_valid(th_pkt_t *pkt, int64_t dts_offset)
 {
@@ -1185,6 +1173,30 @@ dts_pts_valid(th_pkt_t *pkt, int64_t dts_offset)
 /**
  *
  */
+static int64_t
+get_dts_ref(th_pkt_t *pkt, streaming_start_t *ss)
+{
+  const streaming_start_component_t *ssc;
+  int64_t audio = PTS_UNSET;
+  int i;
+
+  if (pkt->pkt_dts == PTS_UNSET)
+    return PTS_UNSET;
+  for (i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+    if (ssc->ssc_index == pkt->pkt_componentindex) {
+      if (SCT_ISVIDEO(ssc->ssc_type))
+        return pkt->pkt_dts;
+      if (audio == PTS_UNSET && SCT_ISAUDIO(ssc->ssc_type))
+        audio = pkt->pkt_dts;
+    }
+  }
+  return audio;
+}
+
+/**
+ *
+ */
 static void *
 dvr_thread(void *aux)
 {
@@ -1195,11 +1207,12 @@ dvr_thread(void *aux)
   streaming_message_t *sm, *sm2;
   th_pkt_t *pkt, *pkt2, *pkt3;
   streaming_start_t *ss = NULL;
-  int run = 1, started = 0, muxing = 0, comm_skip, epg_running = 0, rs;
+  int run = 1, started = 0, muxing = 0, comm_skip, rs;
+  int epg_running = 0, epg_pause = 0;
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
   int64_t packets = 0, dts_offset = PTS_UNSET;
-  time_t start_time = 0, running_start = 0, running_stop = 0;
+  time_t real_start, start_time = 0, running_start = 0, running_stop = 0;
   char *postproc;
 
   if (!dvr_thread_global_lock(de, &run))
@@ -1207,6 +1220,7 @@ dvr_thread(void *aux)
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
   running_disabled = dvr_entry_get_epg_running(de) <= 0;
+  real_start = dvr_entry_get_start_time(de, 0);
   dvr_thread_global_unlock(de);
 
   TAILQ_INIT(&backlog);
@@ -1221,20 +1235,22 @@ dvr_thread(void *aux)
     streaming_queue_remove(sq, sm);
 
     if (running_disabled) {
-      epg_running = 1;
+      epg_running = real_start <= dispatch_clock;
     } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
       running_start = atomic_add_time_t(&de->de_running_start, 0);
       running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
       if (running_start > 0) {
-        epg_running = running_start >= running_stop;
+        epg_running = running_start >= running_stop ? 1 : 0;
+        if (epg_running && atomic_add_time_t(&de->de_running_pause, 0) >= running_start)
+          epg_running = 2;
       } else if (running_stop == 0) {
         if (start_time + 2 >= dispatch_clock) {
           TAILQ_INSERT_TAIL(&backlog, sm, sm_link);
           continue;
         } else {
           if (TAILQ_FIRST(&backlog))
-            dvr_thread_backlog_free(&backlog);
-          epg_running = 1;
+            streaming_queue_clear(&backlog);
+          epg_running = real_start <= dispatch_clock;
         }
       } else {
         epg_running = 0;
@@ -1251,7 +1267,7 @@ dvr_thread(void *aux)
       rs = DVR_RS_RUNNING;
       if (!epg_running)
         rs = DVR_RS_EPG_WAIT;
-      else if (pkt->pkt_commercial == COMMERCIAL_YES)
+      else if (pkt->pkt_commercial == COMMERCIAL_YES || epg_running == 2)
         rs = DVR_RS_COMMERCIAL;
       dvr_rec_set_state(de, rs, 0);
 
@@ -1264,8 +1280,12 @@ dvr_thread(void *aux)
         break;
       }
 
-      if (commercial != pkt->pkt_commercial)
+      if (epg_pause != (epg_running == 2)) {
+        epg_pause = epg_running == 2;
 	muxer_add_marker(prch->prch_muxer);
+      } else if (commercial != pkt->pkt_commercial) {
+        muxer_add_marker(prch->prch_muxer);
+      }
 
       commercial = pkt->pkt_commercial;
 
@@ -1279,27 +1299,25 @@ dvr_thread(void *aux)
       muxing = 1;
       while ((sm2 = TAILQ_FIRST(&backlog)) != NULL) {
         TAILQ_REMOVE(&backlog, sm2, sm_link);
-        if (pkt->pkt_dts != PTS_UNSET) {
-          if (dts_offset == PTS_UNSET) {
-            pkt2 = sm2->sm_data;
-            dts_offset = pkt2->pkt_dts;
-          }
-          pkt3 = (th_pkt_t *)sm2->sm_data;
-          if (dts_pts_valid(pkt3, dts_offset)) {
-            pkt3 = pkt_copy_shallow(pkt3);
+        pkt2 = sm2->sm_data;
+        if (pkt2->pkt_dts != PTS_UNSET) {
+          if (dts_offset == PTS_UNSET)
+            dts_offset = get_dts_ref(pkt2, ss);
+          if (dts_pts_valid(pkt2, dts_offset)) {
+            pkt3 = pkt_copy_shallow(pkt2);
             pkt3->pkt_dts -= dts_offset;
             if (pkt3->pkt_pts != PTS_UNSET)
               pkt3->pkt_pts -= dts_offset;
             dvr_thread_pkt_stats(de, pkt3, 1);
             muxer_write_pkt(prch->prch_muxer, sm2->sm_type, pkt3);
           } else {
-            dvr_thread_pkt_stats(de, pkt3, 0);
+            dvr_thread_pkt_stats(de, pkt2, 0);
           }
         }
         streaming_msg_free(sm2);
       }
-      if (dts_offset == PTS_UNSET && pkt->pkt_dts != PTS_UNSET)
-        dts_offset = pkt->pkt_dts;
+      if (dts_offset == PTS_UNSET)
+        dts_offset = get_dts_ref(pkt, ss);
       if (dts_pts_valid(pkt, dts_offset)) {
         pkt3 = pkt_copy_shallow(pkt);
         pkt3->pkt_dts -= dts_offset;
@@ -1315,12 +1333,17 @@ dvr_thread(void *aux)
       break;
 
     case SMT_MPEGTS:
-      dvr_rec_set_state(de, !epg_running ? DVR_RS_EPG_WAIT : DVR_RS_RUNNING, 0);
+      rs = DVR_RS_RUNNING;
+      if (!epg_running)
+        rs = DVR_RS_EPG_WAIT;
+      else if (epg_running == 2)
+        rs = DVR_RS_COMMERCIAL;
+      dvr_rec_set_state(de, rs, 0);
 
       if (ss == NULL)
         break;
 
-      if (!epg_running) {
+      if ((rs == DVR_RS_COMMERCIAL && comm_skip) || !epg_running) {
         if (packets && running_start == 0) {
           dvr_streaming_restart(de, &run);
           packets = 0;
@@ -1378,7 +1401,7 @@ dvr_thread(void *aux)
                streaming_code2txt(sm->sm_code));
 
 fin:
-        dvr_thread_backlog_free(&backlog);
+        streaming_queue_clear(&backlog);
 	dvr_thread_epilog(de, postproc);
 	start_time = 0;
 	started = 0;
@@ -1444,7 +1467,7 @@ fin:
   }
   pthread_mutex_unlock(&sq->sq_mutex);
 
-  dvr_thread_backlog_free(&backlog);
+  streaming_queue_clear(&backlog);
 
   if (prch->prch_muxer)
     dvr_thread_epilog(de, postproc);
@@ -1459,28 +1482,29 @@ fin:
 /**
  *
  */
-static void
-dvr_spawn_postproc(dvr_entry_t *de, const char *dvr_postproc)
+void
+dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename)
 {
   char buf1[2048], *buf2;
   char tmp[MAX(PATH_MAX, 512)];
-  const char *filename;
   htsmsg_t *info, *e;
   htsmsg_field_t *f;
   char **args;
 
   if ((f = htsmsg_field_last(de->de_files)) != NULL &&
       (e = htsmsg_field_get_map(f)) != NULL) {
-    filename = htsmsg_get_str(e, "filename");
-    if (filename == NULL)
-      return;
+    if (filename == NULL) {
+      filename = htsmsg_get_str(e, "filename");
+      if (filename == NULL)
+        return;
+    }
     info = htsmsg_get_list(e, "info");
   } else {
     return;
   }
 
   /* Substitute DVR entry formatters */
-  htsstr_substitute(dvr_postproc, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de, tmp, sizeof(tmp));
+  htsstr_substitute(postcmd, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de, tmp, sizeof(tmp));
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
   htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename, tmp, sizeof(tmp));
@@ -1510,8 +1534,8 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
 
-  if(dvr_postproc)
-    dvr_spawn_postproc(de, dvr_postproc);
+  if(dvr_postproc && dvr_postproc[0])
+    dvr_spawn_postcmd(de, dvr_postproc, NULL);
 }
 
 /**

@@ -7,7 +7,6 @@ import sys, os
 
 VERBOSE = 'V' in os.environ and len(os.environ['V']) > 0
 TVHDIR = os.path.realpath('.')
-PWD = os.path.realpath(os.environ['PWD'])
 
 def info(fmt, *msg):
   sys.stderr.write(" [INFO ] " + (fmt % msg) + '\n')
@@ -34,7 +33,7 @@ def url(fn):
 
   f = utf8open(fn, 'r')
   if fn[0] != '/':
-    fn = os.path.join(PWD, fn)
+    fn = os.path.join(TVHDIR, fn)
   fn = os.path.normpath(fn)
   if VERBOSE:
     info('css: %s', fn)
@@ -74,7 +73,7 @@ def url(fn):
 def utf_check(fn):
   f = utf8open(fn, 'r')
   if fn[0] != '/':
-    fn = os.path.join(PWD, fn)
+    fn = os.path.join(TVHDIR, fn)
   fn = os.path.normpath(fn)
   if VERBOSE:
     info('utf-check: %s', fn)

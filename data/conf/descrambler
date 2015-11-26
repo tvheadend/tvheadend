@@ -1,4 +1,10 @@
 {
+  "const_cw" : [
+    {
+      "name" : "BISS",
+      "caid" : "2600"
+    }
+  ],
   "quick_ecm" : [
     {
       "name" : "Sky UK",

@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-11-10 09:50+0100\n"
-"PO-Revision-Date: 2015-11-12 16:30+0000\n"
+"PO-Revision-Date: 2015-11-22 18:06+0000\n"
 "Last-Translator: Mario Di Raimondo <mario.diraimondo@gmail.com>\n"
 "Language-Team: Italian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/it/)\n"
 "MIME-Version: 1.0\n"
@@ -269,7 +269,7 @@ msgstr "Aggiungi l'ID del thread per il debug"
 
 #: src/access.c:1489
 msgid "Admin"
-msgstr "Amministratore"
+msgstr "Amministrazione"
 
 #: src/epg.c:2023 src/epg.c:2024 src/epg.c:2025 src/epg.c:2026 src/epg.c:2027
 #: src/epg.c:2028
@@ -892,7 +892,7 @@ msgstr "Voce DVR"
 #: src/dvr/dvr_db.c:2723 src/dvr/dvr_autorec.c:1073 src/dvr/dvr_timerec.c:617
 #: src/dvr/dvr_config.c:821
 msgid "DVR file retention period (days)"
-msgstr "Tempo di conservazione nel registro DVR (giorni)"
+msgstr "Tempo di conservazione del file DVR (giorni)"
 
 #: src/dvr/dvr_db.c:2715 src/dvr/dvr_autorec.c:1066 src/dvr/dvr_timerec.c:611
 msgid "DVR log retention (days)"
@@ -3802,7 +3802,7 @@ msgstr "Icona dell'utente"
 
 #: src/config.c:2012
 msgid "User language"
-msgstr "Linguaggio utente"
+msgstr "Lingua dell'utente"
 
 #: src/streaming.c:424 src/dvr/dvr_db.c:445
 msgid "User limit reached"

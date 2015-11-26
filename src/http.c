@@ -236,17 +236,17 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
   if (hc->hc_version != RTSP_VERSION_1_0){
-    htsbuf_qprintf(&hdrs, "Server: HTS/tvheadend\r\n");
+    htsbuf_append_str(&hdrs, "Server: HTS/tvheadend\r\n");
     if (config.cors_origin && config.cors_origin[0]) {
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
-      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
-      htsbuf_qprintf(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
+      htsbuf_append_str(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
+      htsbuf_append_str(&hdrs, "Access-Control-Allow-Headers: x-requested-with\r\n");
     }
   }
   
   if(maxage == 0) {
     if (hc->hc_version != RTSP_VERSION_1_0)
-      htsbuf_qprintf(&hdrs, "Cache-Control: no-cache\r\n");
+      htsbuf_append_str(&hdrs, "Cache-Control: no-cache\r\n");
   } else if (maxage > 0) {
     time(&t);
 
@@ -270,11 +270,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   }
 
   if(rc == HTTP_STATUS_UNAUTHORIZED)
-    htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+    htsbuf_append_str(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
   if (hc->hc_logout_cookie == 1) {
-    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
+    htsbuf_append_str(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
   } else if (hc->hc_logout_cookie == 2) {
-    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
+    htsbuf_append_str(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
   }
 
   if (hc->hc_version != RTSP_VERSION_1_0)
@@ -293,7 +293,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(contentlen > 0)
     htsbuf_qprintf(&hdrs, "Content-Length: %"PRId64"\r\n", contentlen);
   else if(contentlen == INT64_MIN)
-    htsbuf_qprintf(&hdrs, "Content-Length: 0\r\n");
+    htsbuf_append_str(&hdrs, "Content-Length: 0\r\n");
 
   if(range) {
     htsbuf_qprintf(&hdrs, "Accept-Ranges: %s\r\n", "bytes");
@@ -319,7 +319,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   if(hc->hc_session && !sess)
     htsbuf_qprintf(&hdrs, "Session: %s\r\n", hc->hc_session);
 
-  htsbuf_qprintf(&hdrs, "\r\n");
+  htsbuf_append_str(&hdrs, "\r\n");
 
   tcp_write_queue(hc->hc_fd, &hdrs);
 }
@@ -422,7 +422,7 @@ http_error(http_connection_t *hc, int error)
       htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"%s/\">Default Login</A></P>",
                      tvheadend_webroot ? tvheadend_webroot : "");
 
-    htsbuf_qprintf(&hc->hc_reply, "</BODY></HTML>\r\n");
+    htsbuf_append_str(&hc->hc_reply, "</BODY></HTML>\r\n");
 
     http_send_reply(hc, error, "text/html", NULL, NULL, 0);
   } else {
@@ -468,8 +468,8 @@ http_redirect(http_connection_t *hc, const char *location,
     int first = 1;
     htsbuf_queue_init(&hq, 0);
     if (!external && tvheadend_webroot && location[0] == '/')
-      htsbuf_append(&hq, tvheadend_webroot, strlen(tvheadend_webroot));
-    htsbuf_append(&hq, location, strlen(location));
+      htsbuf_append_str(&hq, tvheadend_webroot);
+    htsbuf_append_str(&hq, location);
     TAILQ_FOREACH(ra, req_args, link) {
       if (!first)
         htsbuf_append(&hq, "&", 1);

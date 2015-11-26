@@ -2,6 +2,7 @@ tvheadend.dynamic = true;
 tvheadend.accessupdate = null;
 tvheadend.capabilities = null;
 tvheadend.admin = false;
+tvheadend.dialog = null;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now

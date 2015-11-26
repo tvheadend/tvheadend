@@ -1,6 +1,7 @@
 /*
  *  Digital Video Recorder
  *  Copyright (C) 2008 Andreas Öman
+ *  Copyright (C) 2014,2015 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -204,11 +205,17 @@ static inline int extra_valid(time_t extra)
   return extra != 0 && extra != (time_t)-1;
 }
 
-time_t
-dvr_entry_get_start_time( dvr_entry_t *de )
+static uint32_t
+dvr_entry_warm_time( dvr_entry_t *de )
 {
-  /* Note 30 seconds might not be enough (rotors) */
-  return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) - 30;
+  return MIN(de->de_config->dvr_warm_time, 240);
+}
+
+time_t
+dvr_entry_get_start_time( dvr_entry_t *de, int warm )
+{
+  return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) -
+         (warm ? dvr_entry_warm_time(de) : 0);
 }
 
 time_t
@@ -282,6 +289,8 @@ dvr_entry_get_rerecord_errors( dvr_entry_t *de )
 int
 dvr_entry_get_epg_running( dvr_entry_t *de )
 {
+  if (de->de_dvb_eid == 0)
+    return 0;
   if (de->de_channel->ch_epg_running < 0)
     return de->de_config->dvr_running;
   return de->de_channel->ch_epg_running > 0;
@@ -304,7 +313,7 @@ dvr_dbus_timer_cb( void *aux )
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_sched_state != DVR_SCHEDULED)
       continue;
-    start = dvr_entry_get_start_time(de);
+    start = dvr_entry_get_start_time(de, 1);
     if (dispatch_clock < start && start > max)
       max = start;
   }
@@ -313,7 +322,7 @@ dvr_dbus_timer_cb( void *aux )
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_sched_state != DVR_SCHEDULED)
       continue;
-    start = dvr_entry_get_start_time(de);
+    start = dvr_entry_get_start_time(de, 1);
     if (dispatch_clock < start && start < result)
       result = start;
   }
@@ -385,7 +394,7 @@ dvr_entry_missed_time(dvr_entry_t *de, int error_code)
   dvr_entry_retention_timer(de);
 
   // Trigger autorec update in case of max schedules limit
-  if (dae && dae->dae_max_sched_count > 0)
+  if (dae && dvr_autorec_get_max_sched_count(dae) > 0)
     dvr_autorec_changed(dae, 0);
 }
 
@@ -535,7 +544,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   time(&now);
 
-  start = dvr_entry_get_start_time(de);
+  start = dvr_entry_get_start_time(de, 1);
   stop  = dvr_entry_get_stop_time(de);
 
   if (now >= stop || de->de_dont_reschedule) {
@@ -800,7 +809,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
   if (de == NULL)
     return NULL;
 
-  t = dvr_entry_get_start_time(de);
+  t = dvr_entry_get_start_time(de, 1);
   localtime_r(&t, &tm);
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
@@ -961,7 +970,8 @@ not_so_good:
     return 0;
 
   e = NULL;
-  pre = (60 * dvr_entry_get_extra_time_pre(de)) - 30;
+  pre = (60 * dvr_entry_get_extra_time_pre(de)) -
+        dvr_entry_warm_time(de);
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
     if (ev->start - pre < dispatch_clock) continue;
@@ -1095,7 +1105,7 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
   dvr_entry_t *de;
-  uint32_t count = 0;
+  uint32_t count = 0, max_count;
 
   /* Identical duplicate detection
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
@@ -1105,13 +1115,13 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   }
 
   /* Handle max schedules limit for autorrecord */
-  if (dae->dae_max_sched_count > 0){
+  if ((max_count = dvr_autorec_get_max_sched_count(dae)) > 0){
     count = 0;
     LIST_FOREACH(de, &dae->dae_spawns, de_autorec_link)
       if ((de->de_sched_state == DVR_SCHEDULED) ||
           (de->de_sched_state == DVR_RECORDING)) count++;
 
-    if (count >= dae->dae_max_sched_count) {
+    if (count >= max_count) {
       tvhlog(LOG_DEBUG, "dvr", "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
              dae->dae_name, lang_str_get(e->episode->title, NULL));
       return;
@@ -1613,7 +1623,7 @@ void dvr_event_updated(epg_broadcast_t *e)
 /**
  * Event running status is updated
  */
-void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
+void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t running)
 {
   dvr_entry_t *de;
   const char *srcname;
@@ -1621,12 +1631,20 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
   if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0 || e->channel == NULL)
     return;
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
-    if (de->de_dvb_eid == 0 || !dvr_entry_get_epg_running(de)) {
+    if (!dvr_entry_get_epg_running(de)) {
       atomic_exchange_time_t(&de->de_running_start, 0);
       atomic_exchange_time_t(&de->de_running_stop, 0);
+      atomic_exchange_time_t(&de->de_running_pause, 0);
       continue;
     }
-    if (running && de->de_dvb_eid == e->dvb_eid) {
+    if (running == EPG_RUNNING_NOW && de->de_dvb_eid == e->dvb_eid) {
+      if (de->de_running_pause) {
+        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG unpause",
+                 idnode_uuid_as_sstr(&de->de_id),
+                 epg_broadcast_get_title(e, NULL),
+                 channel_get_name(e->channel));
+        atomic_exchange_time_t(&de->de_running_pause, 0);
+      }
       if (!de->de_running_start) {
         tvhdebug("dvr", "dvr entry %s event %s on %s - EPG marking start",
                  idnode_uuid_as_sstr(&de->de_id),
@@ -1634,7 +1652,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
                  channel_get_name(e->channel));
         atomic_exchange_time_t(&de->de_running_start, dispatch_clock);
       }
-      if (dvr_entry_get_start_time(de) > dispatch_clock) {
+      if (dvr_entry_get_start_time(de, 1) > dispatch_clock) {
         atomic_exchange_time_t(&de->de_start, dispatch_clock);
         dvr_entry_set_timer(de);
         tvhdebug("dvr", "dvr entry %s event %s on %s - EPG start",
@@ -1642,7 +1660,8 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
       }
-    } else if ((!running && de->de_dvb_eid == e->dvb_eid) || running) {
+    } else if ((running == EPG_RUNNING_STOP && de->de_dvb_eid == e->dvb_eid) ||
+                running == EPG_RUNNING_NOW) {
       /*
        * make checking more robust
        * sometimes, the running bits are parsed randomly for a few moments
@@ -1660,6 +1679,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
                  channel_get_name(de->de_channel));
       }
       atomic_exchange_time_t(&de->de_running_stop, dispatch_clock);
+      atomic_exchange_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
         de->de_dont_reschedule = 1;
         dvr_stop_recording(de, SM_CODE_OK, 0, 0);
@@ -1667,6 +1687,14 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, int running)
                  idnode_uuid_as_sstr(&de->de_id), srcname,
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(de->de_channel));
+      }
+    } else if (running == EPG_RUNNING_PAUSE && de->de_dvb_eid == e->dvb_eid) {
+      if (!de->de_running_pause) {
+        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG pause",
+                 idnode_uuid_as_sstr(&de->de_id),
+                 epg_broadcast_get_title(e, NULL),
+                 channel_get_name(e->channel));
+        atomic_exchange_time_t(&de->de_running_pause, dispatch_clock);
       }
     }
   }
@@ -1706,7 +1734,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
   dvr_entry_retention_timer(de);
 
   // Trigger autorecord update in case of schedules limit
-  if (dae && dae->dae_max_sched_count > 0)
+  if (dae && dvr_autorec_get_max_sched_count(dae) > 0)
     dvr_autorec_changed(de->de_autorec, 0);
 }
 
@@ -2437,7 +2465,7 @@ dvr_entry_class_start_real_get(void *o)
 {
   static time_t tm;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  tm = dvr_entry_get_start_time(de);
+  tm = dvr_entry_get_start_time(de, 1);
   return &tm;
 }
 
@@ -2456,7 +2484,7 @@ dvr_entry_class_duration_get(void *o)
   static time_t tm;
   time_t start, stop;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  start = dvr_entry_get_start_time(de);
+  start = dvr_entry_get_start_time(de, 0);
   stop  = dvr_entry_get_stop_time(de);
   if (stop > start)
     tm = stop - start;
@@ -3020,10 +3048,10 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
   time_t t;
   struct tm tm;
   const char *filename;
-  char tbuf[64], *rdir;
+  char tbuf[64], *rdir, *postcmd;
   int r;
 
-  t = dvr_entry_get_start_time(de);
+  t = dvr_entry_get_start_time(de, 1);
   localtime_r(&t, &tm);
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
@@ -3053,6 +3081,10 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
       if(r && r != -ENOENT)
         tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
   	       filename, strerror(-errno));
+
+      postcmd = de->de_config->dvr_postremove;
+      if (postcmd && postcmd[0])
+        dvr_spawn_postcmd(de, postcmd, filename);
       htsmsg_delete_field(m, "filename");
     }
   }

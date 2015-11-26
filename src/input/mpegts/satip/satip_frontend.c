@@ -882,7 +882,8 @@ done:
 }
 
 static void
-satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd )
+satip_frontend_shutdown
+  ( satip_frontend_t *lfe, http_client_t *rtsp, tvhpoll_t *efd )
 {
   char b[32];
   tvhpoll_event_t ev;
@@ -912,6 +913,7 @@ satip_frontend_shutdown ( http_client_t *rtsp, tvhpoll_t *efd )
         break;
     }
   }
+  sbuf_free(&lfe->sf_sbuf);
 }
 
 static void
@@ -944,7 +946,7 @@ satip_frontend_close_rtsp
   ev.data.ptr = NULL;
   tvhpoll_rem(efd, &ev, 1);
 
-  satip_frontend_shutdown(*rtsp, efd);
+  satip_frontend_shutdown(lfe, *rtsp, efd);
 
   memset(&ev, 0, sizeof(ev));
   ev.events   = TVHPOLL_IN;
@@ -1022,7 +1024,7 @@ wrdata:
         mmi = lfe->sf_req->sf_mmi;
         mmi->tii_stats.unc += unc;
         mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                                  &lfe->sf_sbuf, NULL, NULL, NULL);
+                                  &lfe->sf_sbuf, 0, NULL);
       }
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
       lfe->sf_last_data_tstamp = dispatch_clock;
@@ -1570,8 +1572,7 @@ wrdata:
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread) {
       mmi->tii_stats.unc += unc;
-      mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
-                                sb, NULL, NULL, NULL);
+      mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, sb, 0, NULL);
     } else
       fatal = 1;
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
@@ -1602,7 +1603,7 @@ wrdata:
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {
-    satip_frontend_shutdown(rtsp, efd);
+    satip_frontend_shutdown(lfe, rtsp, efd);
     http_client_close(rtsp);
     rtsp = NULL;
   }

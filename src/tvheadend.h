@@ -254,6 +254,8 @@ typedef enum {
                         (t) == SCT_AAC  || (t) == SCT_MP4A ||	   \
 			(t) == SCT_EAC3 || (t) == SCT_VORBIS)
 
+#define SCT_ISAV(t) (SCT_ISVIDEO(t) || SCT_ISAUDIO(t))
+
 #define SCT_ISSUBTITLE(t) ((t) == SCT_TEXTSUB || (t) == SCT_DVBSUB)
 
 /*

@@ -36,6 +36,28 @@
 
 struct dvr_autorec_entry_queue autorec_entries;
 
+/*
+ *
+ */
+static uint32_t dvr_autorec_get_max_count(dvr_autorec_entry_t *dae)
+{
+  uint32_t max_count = dae->dae_max_count;
+  if (max_count == 0)
+    max_count = dae->dae_config ? dae->dae_config->dvr_autorec_max_count : 0;
+  return max_count;
+}
+
+/*
+ *
+ */
+uint32_t dvr_autorec_get_max_sched_count(dvr_autorec_entry_t *dae)
+{
+  uint32_t max_count = dae->dae_max_sched_count;
+  if (max_count == 0)
+    max_count = dae->dae_config ? dae->dae_config->dvr_autorec_max_sched_count : 0;
+  return max_count;
+}
+
 /**
  * Unlink - and remove any unstarted
  */
@@ -81,9 +103,10 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
   uint32_t count, total = 0;
   dvr_entry_t *de_prev;
   dvr_autorec_entry_t *dae = de->de_autorec;
+  uint32_t max_count = dvr_autorec_get_max_count(dae);
 
   if (dae == NULL) return;
-  if (dae->dae_max_count <= 0) return;
+  if (max_count <= 0) return;
   while (1) {
     count = 0;
     de_prev = NULL;
@@ -96,11 +119,11 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
     }
     if (total == 0)
       total = count;
-    if (count < dae->dae_max_count)
+    if (count < max_count)
       break;
     if (de_prev) {
       tvhinfo("dvr", "autorec %s removing recordings %s (allowed count %u total %u)",
-              dae->dae_name, idnode_uuid_as_sstr(&de_prev->de_id), dae->dae_max_count, total);
+              dae->dae_name, idnode_uuid_as_sstr(&de_prev->de_id), max_count, total);
       dvr_entry_cancel_delete(de_prev, 0);
     }
   }
@@ -1077,14 +1100,14 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "maxcount",
-      .name     = N_("Maximum count (0=unlimited)"),
+      .name     = N_("Maximum count (0=default)"),
       .off      = offsetof(dvr_autorec_entry_t, dae_max_count),
       .opts     = PO_HIDDEN,
     },
     {
       .type     = PT_U32,
       .id       = "maxsched",
-      .name     = N_("Maximum schedules limit (0=unlimited)"),
+      .name     = N_("Maximum schedules limit (0=default)"),
       .off      = offsetof(dvr_autorec_entry_t, dae_max_sched_count),
       .opts     = PO_HIDDEN,
     },

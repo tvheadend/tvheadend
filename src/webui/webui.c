@@ -468,15 +468,17 @@ static void
 http_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
                       const char *url_remain, const char *profile,
                       const char *svcname, const char *logo,
-                      access_t *access)
+                      const char *epgid, access_t *access)
 {
-  htsbuf_qprintf(hq, "#EXTINF:-1");
+  htsbuf_append_str(hq, "#EXTINF:-1");
   if (logo) {
     if (strncmp(logo, "imagecache/", 11) == 0)
-      htsbuf_qprintf(hq, " logo=%s/%s", hostpath, logo);
+      htsbuf_qprintf(hq, " logo=\"%s/%s\"", hostpath, logo);
     else
-      htsbuf_qprintf(hq, " logo=%s", logo);
+      htsbuf_qprintf(hq, " logo=\"%s\"", logo);
   }
+  if (epgid)
+    htsbuf_qprintf(hq, " tvg-id=\"%s\"", epgid);
   htsbuf_qprintf(hq, ",%s\n%s%s?ticket=%s", svcname, hostpath, url_remain,
                      access_ticket_create(url_remain, access));
   htsbuf_qprintf(hq, "&profile=%s\n", profile);
@@ -490,7 +492,7 @@ http_e2_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
                      const char *url_remain, const char *profile,
                      const char *svcname)
 {
-  htsbuf_qprintf(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
+  htsbuf_append_str(hq, "#SERVICE 1:0:0:0:0:0:0:0:0:0:");
   htsbuf_append_and_escape_url(hq, hostpath);
   htsbuf_append_and_escape_url(hq, url_remain);
   htsbuf_qprintf(hq, "&profile=%s:%s\n", profile, svcname);
@@ -522,7 +524,7 @@ http_satip_m3u_playlist_add(htsbuf_queue_t *hq, const char *hostpath,
   name = channel_get_name(ch);
   logo = channel_get_icon(ch);
   snprintf(buf, sizeof(buf), "/stream/channelid/%d", channel_get_id(ch));
-  htsbuf_qprintf(hq, "#EXTINF:-1");
+  htsbuf_append_str(hq, "#EXTINF:-1");
   if (logo) {
     if (strncmp(logo, "imagecache/", 11) == 0)
       htsbuf_qprintf(hq, " logo=%s/%s", hostpath, logo);
@@ -557,9 +559,11 @@ http_channel_playlist(http_connection_t *hc, int pltype, channel_t *channel)
 
   if (pltype == PLAYLIST_M3U) {
 
-    htsbuf_qprintf(hq, "#EXTM3U\n");
+    htsbuf_append_str(hq, "#EXTM3U\n");
     http_m3u_playlist_add(hq, hostpath, buf, profile, name,
-                          channel_get_icon(channel), hc->hc_access);
+                          channel_get_icon(channel),
+                          channel_get_suuid(channel),
+                          hc->hc_access);
 
   } else if (pltype == PLAYLIST_E2) {
 
@@ -621,7 +625,7 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
   qsort(chlist, count, sizeof(channel_t *), http_channel_playlist_cmp);
 
   if (pltype == PLAYLIST_M3U)
-    htsbuf_qprintf(hq, "#EXTM3U\n");
+    htsbuf_append_str(hq, "#EXTM3U\n");
   else if (pltype == PLAYLIST_E2)
     htsbuf_qprintf(hq, "#NAME %s\n", tag->ct_name);
   for (idx = 0; idx < count; idx++) {
@@ -632,7 +636,9 @@ http_tag_playlist(http_connection_t *hc, int pltype, channel_tag_t *tag)
     name = channel_get_name(ch);
     if (pltype == PLAYLIST_M3U) {
       http_m3u_playlist_add(hq, hostpath, buf, profile, name,
-                            channel_get_icon(ch), hc->hc_access);
+                            channel_get_icon(ch),
+                            channel_get_suuid(ch),
+                            hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       htsbuf_qprintf(hq, "#NAME %s\n", name);
       http_e2_playlist_add(hq, hostpath, buf, profile, name);
@@ -708,14 +714,14 @@ http_tag_list_playlist(http_connection_t *hc, int pltype)
     chlist = NULL;
   }
 
-  htsbuf_qprintf(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
+  htsbuf_append_str(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ct = ctlist[idx];
 
     if (pltype == PLAYLIST_M3U) {
       snprintf(buf, sizeof(buf), "/playlist/tagid/%d", idnode_get_short_uuid(&ct->ct_id));
       http_m3u_playlist_add(hq, hostpath, buf, profile, ct->ct_name,
-                            channel_tag_get_icon(ct), hc->hc_access);
+                            channel_tag_get_icon(ct), NULL, hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       htsbuf_qprintf(hq, "#SERVICE 1:64:%d:0:0:0:0:0:0:0::%s\n", labelidx++, ct->ct_name);
       htsbuf_qprintf(hq, "#DESCRIPTION %s\n", ct->ct_name);
@@ -784,7 +790,7 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
 
   qsort(chlist, count, sizeof(channel_t *), http_channel_playlist_cmp);
 
-  htsbuf_qprintf(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
+  htsbuf_append_str(hq, pltype == PLAYLIST_E2 ? "#NAME Tvheadend Channels\n" : "#EXTM3U\n");
   for (idx = 0; idx < count; idx++) {
     ch = chlist[idx];
 
@@ -796,7 +802,9 @@ http_channel_list_playlist(http_connection_t *hc, int pltype)
 
     if (pltype == PLAYLIST_M3U) {
       http_m3u_playlist_add(hq, hostpath, buf, profile, name,
-                            channel_get_icon(ch), hc->hc_access);
+                            channel_get_icon(ch),
+                            channel_get_suuid(ch),
+                            hc->hc_access);
     } else if (pltype == PLAYLIST_E2) {
       http_e2_playlist_add(hq, hostpath, buf, profile, name);
     } else if (pltype == PLAYLIST_SATIP_M3U) {
@@ -835,7 +843,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
   hq = &hc->hc_reply;
   hostpath = http_get_hostpath(hc);
 
-  htsbuf_qprintf(hq, "#EXTM3U\n");
+  htsbuf_append_str(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     fsize = dvr_get_filesize(de);
     if(!fsize)
@@ -845,7 +853,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
         http_access_verify_channel(hc, ACCESS_RECORDER, de->de_channel))
       continue;
 
-    durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
+    durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
     bandwidth = ((8*fsize) / (durration*1024.0));
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
@@ -890,14 +898,14 @@ http_dvr_playlist(http_connection_t *hc, int pltype, dvr_entry_t *de)
     return HTTP_STATUS_NOT_FOUND;
 
   hostpath  = http_get_hostpath(hc);
-  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de);
+  durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
   fsize = dvr_get_filesize(de);
 
   if(fsize) {
     bandwidth = ((8*fsize) / (durration*1024.0));
     strftime(buf, sizeof(buf), "%FT%T%z", localtime_r(&(de->de_start), &tm));
 
-    htsbuf_qprintf(hq, "#EXTM3U\n");
+    htsbuf_append_str(hq, "#EXTM3U\n");
     htsbuf_qprintf(hq, "#EXTINF:%"PRItime_t",%s\n", durration, lang_str_get(de->de_title, NULL));
     
     htsbuf_qprintf(hq, "#EXT-X-TARGETDURATION:%"PRItime_t"\n", durration);

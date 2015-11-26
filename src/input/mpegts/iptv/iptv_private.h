@@ -67,6 +67,7 @@ struct iptv_input
 int  iptv_input_fd_started ( iptv_mux_t *im );
 void iptv_input_mux_started ( iptv_mux_t *im );
 int  iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len );
+void iptv_input_recv_flush ( iptv_mux_t *im );
 void iptv_input_pause_handler ( iptv_mux_t *im, int pause );
 
 struct iptv_network
@@ -150,7 +151,6 @@ struct iptv_mux
   void                 *im_data;
 
   int                   im_delete_flag;
-  int                   im_m3u_header;
 };
 
 iptv_mux_t* iptv_mux_create0
@@ -190,6 +190,8 @@ void iptv_file_init    ( void );
 
 ssize_t iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
                         void (*pkt_cb)(iptv_mux_t *im, uint8_t *buf, int len) );
+
+void iptv_input_unpause ( void *aux );
 
 #endif /* __IPTV_PRIVATE_H__ */
 

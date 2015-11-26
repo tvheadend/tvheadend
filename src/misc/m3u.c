@@ -32,10 +32,13 @@ static char *get_m3u_str(char *data, char **res, int *last)
     data++; p++;
     while (*data && *data != first && *data != '\n' && *data != '\r')
       data++;
-  } else {
-    while (*data && *data != ',' && *data > ' ')
+    if (*data == first) {
+      *data = '\0';
       data++;
+    }
   }
+  while (*data && *data != ',' && *data > ' ')
+    data++;
   *last = '\0';
   if (*data) {
     *last = *data;
@@ -71,22 +74,42 @@ static char *until_eol(char *d)
 /*
  *
  */
-static const char *relative_url
+static int is_full_url(const char *url)
+{
+  return
+    strncmp(url, "file://", 7) == 0 ||
+    strncmp(url, "pipe://", 7) == 0 ||
+    strncmp(url, "http://", 7) == 0 ||
+    strncmp(url, "https://", 8) == 0 ||
+    strncmp(url, "rtsp://", 7) == 0 ||
+    strncmp(url, "rtsps://", 8) == 0 ||
+    strncmp(url, "udp://", 6) == 0 ||
+    strncmp(url, "rtp://", 6) == 0;
+}
+
+/*
+ *
+ */
+static const char *get_url
   (char *buf, size_t buflen, const char *rel, const char *url)
 {
+  char *url2, *p;
+
   if (url == NULL)
     return rel;
-  if (strncmp(url, "file://", 7) &&
-      strncmp(url, "pipe://", 7) &&
-      strncmp(url, "http://", 7) &&
-      strncmp(url, "https://", 8) &&
-      strncmp(url, "rtsp://", 7) &&
-      strncmp(url, "rtsps://", 8) &&
-      strncmp(url, "udp://", 6) &&
-      strncmp(url, "rtp://", 6))
+  if (!is_full_url(url) || is_full_url(rel))
     return rel;
 
-  snprintf(buf, buflen, "%s%s", url, rel);
+  if (rel[0] == '/') {
+    snprintf(buf, buflen, "%s%s", url, rel + 1);
+  } else {
+    url2 = strdupa(url);
+    p = strrchr(url2, '/');
+    if (p == NULL)
+      return rel;
+    *(p + 1) = '\0';
+    snprintf(buf, buflen, "%s%s", url2, rel);
+  }
   return buf;
 }
 
@@ -101,13 +124,12 @@ htsmsg_t *parse_m3u
   const char *multi_name;
   int delim;
   htsmsg_t *m = htsmsg_create_map();
-  htsmsg_t *item = NULL, *l = NULL, *t;
+  htsmsg_t *item = NULL, *l = NULL, *t, *key = NULL;
   char buf[512];
 
   while (*data && *data <= ' ') data++;
   p = data;
-  while (*data && *data != '\n') data++;
-  if (*data) { *data = '\0'; data++; }
+  data = until_eol(data);
   if (strcmp(p, "#EXTM3U")) {
     htsmsg_add_msg(m, "items", htsmsg_create_list());
     return m;
@@ -190,15 +212,28 @@ multi:
           if (*data != ',') break;
         }
       }
-      if (item == NULL)
-        item = htsmsg_create_map();
-      htsmsg_add_msg(item, multi_name, t);
+      if (strcmp(multi_name, "x-key") == 0) {
+        htsmsg_destroy(key);
+        key = t;
+      } else {
+        if (item == NULL)
+          item = htsmsg_create_map();
+        htsmsg_add_msg(item, multi_name, t);
+      }
       data = until_eol(data);
       continue;
     } else if (strncmp(data, "#EXT-X-MEDIA:", 13) == 0) {
       data += 13;
       multi_name = "x-media";
       goto multi;
+    } else if (strncmp(data, "#EXT-X-KEY:", 11) == 0) {
+      data += 11;
+      multi_name = "x-key";
+      goto multi;
+    } else if (strncmp(data, "#EXT-X-ENDLIST", 14) == 0) {
+      htsmsg_add_bool(m, "x-endlist", 1);
+      data = until_eol(data + 14);
+      continue;
     } else if (strncmp(data, "#EXT", 4) == 0) {
       data = until_eol(data + 4);
       continue;
@@ -206,6 +241,8 @@ multi:
     while (*data && *data <= ' ') data++;
     p = data;
     data = until_eol(data);
+    if (*p == '#')
+      continue;
     if (*p && *p > ' ') {
       if (item == NULL)
         item = htsmsg_create_map();
@@ -231,8 +268,7 @@ multi:
           htsmsg_add_msg(item, "m3u-http-headers", t);
       }
 
-      htsmsg_add_str(item, "m3u-url",
-                     p[0] == '/' ? relative_url(buf, sizeof(buf), p, url) : p);
+      htsmsg_add_str(item, "m3u-url", get_url(buf, sizeof(buf), p, url));
     } else if (item) {
       htsmsg_destroy(item);
       free(item);
@@ -242,11 +278,14 @@ multi:
     if (item) {
       if (l == NULL)
         l = htsmsg_create_list();
+      if (key)
+        htsmsg_add_msg(item, "x-key", htsmsg_copy(key));
       htsmsg_add_msg(l, NULL, item);
       item = NULL;
     }
   }
 
+  htsmsg_destroy(key);
   if (l == NULL)
     l = htsmsg_create_list();
   htsmsg_add_msg(m, "items", l);
