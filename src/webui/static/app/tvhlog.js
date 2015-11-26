@@ -4,10 +4,12 @@ tvheadend.tvhlog = function(panel, index) {
        var f = form.getForm();
        var enable_syslog = f.findField('enable_syslog');
        var debug_syslog = f.findField('syslog');
-       debug_syslog.setDisabled(!enable_syslog.getValue() || enable_syslog.disabled);
+       if (debug_syslog.cbEl)
+         debug_syslog.setDisabled(!enable_syslog.getValue() || enable_syslog.disabled);
        var trace = f.findField('trace');
        var tracesubs = f.findField('tracesubs');
-       tracesubs.setDisabled(!trace.getValue() || trace.disabled);
+       if (tracesubs.cbEl)
+         tracesubs.setDisabled(!trace.getValue() || trace.disabled);
     }
 
     tvheadend.idnode_simple(panel, {
