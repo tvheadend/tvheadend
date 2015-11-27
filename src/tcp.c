@@ -756,7 +756,7 @@ tcp_server_delete(void *server)
  *
  */
 int
-tcp_default_ip_addr ( struct sockaddr_storage *deflt )
+tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
 {
 
   struct sockaddr_storage ss;
@@ -764,7 +764,7 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt )
   int sock;
 
   memset(&ss, 0, sizeof(ss));
-  ss.ss_family = tcp_preferred_address_family;
+  ss.ss_family = family == PF_UNSPEC ? tcp_preferred_address_family : family;
   if (inet_pton(ss.ss_family,
                 ss.ss_family == AF_INET ?
                   /* Google name servers */
@@ -805,7 +805,7 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt )
  *
  */
 int
-tcp_server_bound ( void *server, struct sockaddr_storage *bound )
+tcp_server_bound ( void *server, struct sockaddr_storage *bound, int family )
 {
   tcp_server_t *ts = server;
   int i, len, port;
@@ -828,7 +828,7 @@ tcp_server_bound ( void *server, struct sockaddr_storage *bound )
   port = IP_PORT(ts->bound);
 
   /* no bind address was set, try to find one */
-  if (tcp_default_ip_addr(bound) < 0)
+  if (tcp_default_ip_addr(bound, family) < 0)
     return -1;
   if (bound->ss_family == AF_INET)
     IP_AS_V4(*bound, port) = port;

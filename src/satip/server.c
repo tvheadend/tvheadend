@@ -567,7 +567,7 @@ void satip_server_init(int rtsp_port)
   satip_server_uuid = NULL;
   satip_server_deviceid = 1;
 
-  if (tcp_server_bound(http_server, &http) < 0) {
+  if (tcp_server_bound(http_server, &http, PF_INET) < 0) {
     tvherror("satips", "Unable to determine the HTTP/RTSP address");
     return;
   }
