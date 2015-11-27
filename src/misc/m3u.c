@@ -135,7 +135,10 @@ htsmsg_t *parse_m3u
     return m;
   }
   while (*data) {
-    if (strncmp(data, "#EXTINF:", 8) == 0) {
+    if (strncmp(data, "##", 2) == 0) {
+      data = until_eol(data + 2);
+      continue;
+    } else if (strncmp(data, "#EXTINF:", 8) == 0) {
       if (item == NULL)
         item = htsmsg_create_map();
       data += 8;
