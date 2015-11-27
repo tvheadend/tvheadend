@@ -21,6 +21,7 @@ tvheadend.status_subs = function(panel, index)
             r.data.service = m.service;
             r.data.state = m.state;
             if (m.descramble) r.data.descramble = m.descramble;
+            if (m.profile) r.data.profile = m.profile;
             r.data.errors = m.errors;
             r.data['in'] = m['in'];
             r.data.out = m.out;
@@ -44,6 +45,7 @@ tvheadend.status_subs = function(panel, index)
                 { name: 'title' },
                 { name: 'channel' },
                 { name: 'service' },
+                { name: 'profile' },
                 { name: 'state' },
                 { name: 'descramble' },
                 { name: 'errors' },
@@ -109,6 +111,12 @@ tvheadend.status_subs = function(panel, index)
                 id: 'service',
                 header: _("Service"),
                 dataIndex: 'service'
+            }, 
+            {
+                width: 50,
+                id: 'profile',
+                header: _("Profile"),
+                dataIndex: 'profile'
             }, 
             {
                 width: 50,

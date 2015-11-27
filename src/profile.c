@@ -165,11 +165,10 @@ static const char *
 profile_class_get_title ( idnode_t *in, const char *lang )
 {
   profile_t *pro = (profile_t *)in;
-  static char buf[32];
   if (pro->pro_name && pro->pro_name[0])
     return pro->pro_name;
-  snprintf(buf, sizeof(buf), "%s", idclass_get_caption(in->in_class, lang));
-  return buf;
+  snprintf(prop_sbuf, sizeof(prop_sbuf), "%s", idclass_get_caption(in->in_class, lang));
+  return prop_sbuf;
 }
 
 static void
