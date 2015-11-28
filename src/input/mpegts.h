@@ -299,6 +299,7 @@ struct mpegts_network
    * Identification
    */
   char                    *mn_network_name;
+  char                    *mn_provider_network_name;
 
   /*
    * Inputs
