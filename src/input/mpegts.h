@@ -652,6 +652,7 @@ struct mpegts_input
 
   int mi_initscan;
   int mi_idlescan;
+  uint32_t mi_free_weight;
 
   char *mi_linked;
 
