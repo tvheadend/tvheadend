@@ -1301,7 +1301,7 @@ rtsp_process_play(http_connection_t *hc, int setup)
     }
   }
 
-  if ((errcode = rtsp_start(hc, rs, hc->hc_peer_ipstr, valid, setup, oldstate)) < 0)
+  if ((errcode = rtsp_start(hc, rs, hc->hc_peer_ipstr, valid, setup, oldstate)) != 0)
     goto error;
 
   if (setup) {
