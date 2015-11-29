@@ -353,7 +353,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
                      struct sockaddr_storage *peer, int port,
                      int fd_rtp, int fd_rtcp,
                      int frontend, int source, dvb_mux_conf_t *dmc,
-                     mpegts_apids_t *pids)
+                     mpegts_apids_t *pids, int perm_lock)
 {
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
 
@@ -385,6 +385,13 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   } else {
     socket_set_dscp(rtp->fd_rtp, IPTOS_DSCP_EF, NULL, 0);
     socket_set_dscp(rtp->fd_rtcp, IPTOS_DSCP_EF, NULL, 0);
+  }
+
+  if (perm_lock) {
+    rtp->sig.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
+    rtp->sig.signal = 0xa000;
+    rtp->sig.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
+    rtp->sig.snr = 28000;
   }
 
   pthread_mutex_lock(&satip_rtp_lock);

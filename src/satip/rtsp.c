@@ -50,6 +50,7 @@ typedef struct session {
   int src;
   int state;
   int shutdown_on_close;
+  int perm_lock;
   uint32_t nsession;
   char session[9];
   dvb_mux_conf_t dmc;
@@ -501,6 +502,7 @@ rtsp_start
                                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
           if (mux) {
             dmc = ((dvb_mux_t *)mux)->lm_tuning;
+            rs->perm_lock = 0;
             break;
           }
         }
@@ -511,6 +513,7 @@ rtsp_start
             break;
         if (mux) {
           dmc = rs->dmc;
+          rs->perm_lock = 1;
           break;
         }
       }
@@ -524,8 +527,10 @@ rtsp_start
         mn2->mn_create_mux(mn2, (void *)(intptr_t)rs->nsession,
                            MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
                            &rs->dmc, 1);
-      if (mux)
+      if (mux) {
         created = 1;
+        rs->perm_lock = 1;
+      }
     }
     if (mux == NULL) {
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
@@ -577,7 +582,7 @@ pids:
                     hc->hc_peer, rs->rtp_peer_port,
                     rs->udp_rtp->fd, rs->udp_rtcp->fd,
                     rs->frontend, rs->findex, &rs->dmc_tuned,
-                    &rs->pids);
+                    &rs->pids, rs->perm_lock);
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
