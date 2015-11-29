@@ -235,6 +235,13 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_tags),
       .opts     = PO_ADVANCED | PO_MULTILINE
     },
+    {
+      .type     = PT_U32,
+      .id       = "iptv_satip_dvbt_freq",
+      .name     = N_("SAT>IP DVB-T frequency (Hz)"),
+      .off      = offsetof(iptv_mux_t, mm_iptv_satip_dvbt_freq),
+      .opts     = PO_ADVANCED
+    },
     {}
   }
 };
