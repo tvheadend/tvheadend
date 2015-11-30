@@ -456,7 +456,8 @@ epggrab_ota_kick_cb ( void *p )
   mpegts_mux_t *mm;
   struct {
     mpegts_network_t *net;
-    int failed;
+    uint8_t failed;
+    uint8_t fatal;
   } networks[64], *net;	/* more than 64 networks? - you're a king */
   int i, r, networks_count = 0, epg_flag, kick = 1;
   const char *modname;
@@ -498,6 +499,8 @@ next_one:
   for (i = 0, net = NULL; i < networks_count; i++) {
     net = &networks[i];
     if (net->net == mm->mm_network) {
+      if (net->fatal)
+        goto done;
       if (net->failed) {
         TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
         om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
@@ -561,11 +564,11 @@ next_one:
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
       if (r == SM_CODE_NO_FREE_ADAPTER)
         net->failed = 1;
+      if (first == NULL)
+        first = om;
     } else {
-      net->failed = 1;
+      net->fatal = 1;
     }
-    if (first == NULL)
-      first = om;
   } else {
     tvhtrace("epggrab", "mux %p started", mm);
     kick = 0;
