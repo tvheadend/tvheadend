@@ -580,12 +580,14 @@ satip_frontend_update_pids
 }
 
 static void
-satip_frontend_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init )
+satip_frontend_open_service
+  ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init, int weight )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_tune_req_t *tr;
+  int w;
 
-  mpegts_input_open_service(mi, s, flags, init);
+  mpegts_input_open_service(mi, s, flags, init, weight);
 
   if (!lfe->sf_device->sd_can_weight)
     return;
@@ -593,7 +595,8 @@ satip_frontend_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   if ((tr = lfe->sf_req) != NULL && tr->sf_mmi != NULL) {
     pthread_mutex_lock(&mi->mi_output_lock);
-    tr->sf_weight = mpegts_mux_instance_weight(tr->sf_mmi);
+    w = mpegts_mux_instance_weight(tr->sf_mmi);
+    tr->sf_weight = MAX(w, weight);
     pthread_mutex_unlock(&mi->mi_output_lock);
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);

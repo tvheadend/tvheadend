@@ -630,7 +630,8 @@ mpegts_input_cat_pass_callback
 }
 
 void
-mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init )
+mpegts_input_open_service
+  ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init, int weight )
 {
   mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *st;

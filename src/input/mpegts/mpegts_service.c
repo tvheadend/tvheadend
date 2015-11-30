@@ -338,7 +338,8 @@ mpegts_service_start(service_t *t, int instance, int weight, int flags)
 
     /* Open service */
     s->s_dvb_subscription_flags = flags;
-    mmi->mmi_input->mi_open_service(mmi->mmi_input, s, flags, 1);
+    s->s_dvb_subscription_weight = weight;
+    mmi->mmi_input->mi_open_service(mmi->mmi_input, s, flags, 1, weight);
   }
 
   return r;
@@ -380,7 +381,7 @@ mpegts_service_refresh(service_t *t)
   lock_assert(&global_lock);
 
   /* Re-open */
-  i->mi_open_service(i, s, s->s_dvb_subscription_flags, 0);
+  i->mi_open_service(i, s, s->s_dvb_subscription_flags, 0, s->s_dvb_subscription_weight);
 }
 
 /*
