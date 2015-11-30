@@ -50,7 +50,7 @@ typedef struct session {
   int findex;
   int src;
   int state;
-  int shutdown_on_close;
+  http_connection_t *shutdown_on_close;
   int perm_lock;
   uint32_t nsession;
   char session[9];
@@ -1080,7 +1080,7 @@ rtsp_parse_cmd
   rs->src = src;
 
   if (cmd < 0)
-    rs->shutdown_on_close = 1;
+    rs->shutdown_on_close = hc;
 
 play:
   if (pids.count > 0)
@@ -1460,9 +1460,12 @@ rtsp_flush_requests(http_connection_t *hc)
   pthread_mutex_lock(&rtsp_lock);
   for (rs = TAILQ_FIRST(&rtsp_sessions); rs; rs = rs_next) {
     rs_next = TAILQ_NEXT(rs, link);
-    if (rs->shutdown_on_close) {
+    if (rs->shutdown_on_close == hc) {
       rtsp_close_session(rs);
       rtsp_free_session(rs);
+    } else {
+      if (rs->rtp_peer_port == RTSP_TCP_DATA)
+        satip_rtp_close((void *)(intptr_t)rs->stream);
     }
   }
   pthread_mutex_unlock(&rtsp_lock);

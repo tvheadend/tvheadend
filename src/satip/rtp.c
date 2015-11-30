@@ -559,9 +559,11 @@ void satip_rtp_close(void *id)
     pthread_cond_signal(&sq->sq_cond);
     pthread_mutex_unlock(&sq->sq_mutex);
     pthread_mutex_unlock(&satip_rtp_lock);
-    pthread_mutex_lock(rtp->tcp_lock);
+    if (rtp->port == RTSP_TCP_DATA)
+      pthread_mutex_lock(rtp->tcp_lock);
     pthread_join(rtp->tid, NULL);
-    pthread_mutex_unlock(rtp->tcp_lock);
+    if (rtp->port == RTSP_TCP_DATA)
+      pthread_mutex_unlock(rtp->tcp_lock);
     udp_multisend_free(&rtp->um);
     mpegts_pid_done(&rtp->pids);
     while ((tbl = TAILQ_FIRST(&rtp->pmt_tables)) != NULL) {
