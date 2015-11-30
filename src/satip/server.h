@@ -41,6 +41,7 @@ struct satip_server_conf {
   char *satip_uuid;
   int satip_rtsp;
   int satip_weight;
+  int satip_allow_remote_weight;
   int satip_descramble;
   int satip_rewrite_pmt;
   int satip_muxcnf;

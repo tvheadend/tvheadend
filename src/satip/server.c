@@ -68,7 +68,7 @@ satip_server_http_xml(http_connection_t *hc)
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
 <modelDescription>TVHeadend %s</modelDescription>\n\
 <modelName>TVHeadend SAT>IP</modelName>\n\
-<modelNumber>1.0</modelNumber>\n\
+<modelNumber>1.1</modelNumber>\n\
 <modelURL></modelURL>\n\
 <serialNumber>123456</serialNumber>\n\
 <UDN>uuid:%s</UDN>\n\
@@ -544,7 +544,8 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 struct satip_server_conf satip_server_conf = {
   .idnode.in_class = &satip_server_class,
   .satip_descramble = 1,
-  .satip_weight = 100
+  .satip_weight = 100,
+  .satip_allow_remote_weight = 1
 };
 
 static void satip_server_class_save(idnode_t *self)
@@ -602,6 +603,13 @@ const idclass_t satip_server_class = {
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
       .off    = offsetof(struct satip_server_conf, satip_weight),
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_remote_weight",
+      .name   = N_("Allow remote subscription weight"),
+      .off    = offsetof(struct satip_server_conf, satip_allow_remote_weight),
       .group  = 1,
     },
     {

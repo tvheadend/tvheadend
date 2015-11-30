@@ -50,6 +50,7 @@ typedef struct session {
   int findex;
   int src;
   int state;
+  int weight;
   http_connection_t *shutdown_on_close;
   int perm_lock;
   uint32_t nsession;
@@ -487,7 +488,7 @@ rtsp_start
   mpegts_service_t *svc;
   dvb_mux_conf_t dmc;
   char buf[384];
-  int res = HTTP_STATUS_SERVICE, qsize = 3000000, created = 0;
+  int res = HTTP_STATUS_SERVICE, qsize = 3000000, created = 0, weight;
 
   pthread_mutex_lock(&global_lock);
   dmc = rs->dmc_tuned;
@@ -550,8 +551,11 @@ rtsp_start
     rs->mux_created = created;
     if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize, 0))
       goto endclean;
+    weight = satip_server_conf.satip_weight;
+    if (satip_server_conf.satip_allow_remote_weight && rs->weight)
+      weight = rs->weight;
     rs->subs = subscription_create_from_mux(&rs->prch, NULL,
-                                   satip_server_conf.satip_weight,
+                                   weight,
                                    "SAT>IP",
                                    rs->prch.prch_flags |
                                    SUBSCRIPTION_STREAMING,
@@ -835,7 +839,7 @@ rtsp_parse_cmd
    session_t **rrs, int *valid, int *oldstate)
 {
   session_t *rs = NULL;
-  int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 0, has_args;
+  int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 0, has_args, weight = 0;
   int delsys = DVB_SYS_NONE, msys, fe, src, freq, pol, sr;
   int fec, ro, plts, bw, tmode, mtype, gi, plp, t2id, sm, c2tft, ds, specinv;
   char *s;
@@ -870,6 +874,7 @@ rtsp_parse_cmd
   msys = msys_to_tvh(hc);
   freq = atof(http_arg_get_remove(&hc->hc_req_args, "freq")) * 1000;
   *valid = freq >= 10000;
+  weight = atoi(http_arg_get_remove(&hc->hc_req_args, "tvhweight"));
 
   if (addpids.count > 0 || delpids.count > 0) {
     if (cmd)
@@ -1069,6 +1074,7 @@ rtsp_parse_cmd
   rs->delsys = delsys;
   rs->frontend = fe;
   rs->findex = findex;
+  rs->weight = weight > 0 ? weight : 0;
   rs->old_hc = hc;
 
   if (cmd) {
