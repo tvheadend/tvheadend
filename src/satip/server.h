@@ -50,6 +50,7 @@ struct satip_server_conf {
   int satip_dvbc2;
   int satip_atsc;
   int satip_dvbcb;
+  char *satip_nat_ip;
 };
 
 extern struct satip_server_conf satip_server_conf;
@@ -78,7 +79,8 @@ void satip_rtp_init(int boot);
 void satip_rtp_done(void);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
-                            int descramble, int rewrite_pmt, int muxcnf);
+                            int descramble, int rewrite_pmt, int muxcnf,
+                            const char *nat_ip);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);
 

@@ -626,6 +626,13 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_STR,
+      .id     = "satip_nat_ip",
+      .name   = N_("External IP (NAT)"),
+      .off    = offsetof(struct satip_server_conf, satip_nat_ip),
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_dvbs",
       .name   = N_("DVB-S"),
@@ -691,6 +698,7 @@ const idclass_t satip_server_class = {
 static void satip_server_save(void)
 {
   int descramble, rewrite_pmt, muxcnf;
+  char *nat_ip;
 
   config_save();
   if (!satip_server_rtsp_port_locked) {
@@ -699,11 +707,13 @@ static void satip_server_save(void)
       descramble = satip_server_conf.satip_descramble;
       rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
       muxcnf = satip_server_conf.satip_muxcnf;
+      nat_ip = satip_server_conf.satip_nat_ip ? strdup(satip_server_conf.satip_nat_ip) : NULL;
       pthread_mutex_unlock(&global_lock);
-      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf);
+      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, nat_ip);
       satip_server_info("re", descramble, muxcnf);
       satips_upnp_send_announce();
       pthread_mutex_lock(&global_lock);
+      free(nat_ip);
     } else {
       pthread_mutex_unlock(&global_lock);
       tvhinfo("satips", "SAT>IP Server shutdown");
@@ -723,6 +733,7 @@ void satip_server_init(int rtsp_port)
   struct sockaddr_storage http;
   char http_ip[128];
   int descramble, rewrite_pmt, muxcnf;
+  char *nat_ip;
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
@@ -746,8 +757,9 @@ void satip_server_init(int rtsp_port)
   descramble = satip_server_conf.satip_descramble;
   rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
   muxcnf = satip_server_conf.satip_muxcnf;
+  nat_ip = satip_server_conf.satip_nat_ip;
 
-  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf);
+  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, nat_ip);
 
   satip_server_info("", descramble, muxcnf);
 }

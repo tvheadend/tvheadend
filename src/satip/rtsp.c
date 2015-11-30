@@ -71,6 +71,7 @@ typedef struct session {
 static uint32_t session_number;
 static uint16_t stream_id;
 static char *rtsp_ip = NULL;
+static char *rtsp_nat_ip = NULL;
 static int rtsp_port = -1;
 static int rtsp_descramble = 1;
 static int rtsp_rewrite_pmt = 0;
@@ -248,7 +249,8 @@ rtsp_check_urlbase(char *u)
 #endif
   }
   if (strcmp(u, rtsp_ip))
-    return NULL;
+    if (rtsp_nat_ip == NULL || rtsp_nat_ip[0] == '\0' || strcmp(u, rtsp_nat_ip))
+      return NULL;
   return p ? p + 1 : u + strlen(u);
 }
 
@@ -1562,7 +1564,8 @@ rtsp_close_sessions(void)
  *
  */
 void satip_server_rtsp_init
-  (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf)
+  (const char *bindaddr, int port, int descramble, int rewrite_pmt, int muxcnf,
+   const char *nat_ip)
 {
   static tcp_server_ops_t ops = {
     .start  = rtsp_serve,
@@ -1571,6 +1574,7 @@ void satip_server_rtsp_init
   };
   int reg = 0;
   uint8_t rnd[4];
+  char *s;
   if (!rtsp_server) {
     uuid_random(rnd, sizeof(rnd));
     session_number = *(uint32_t *)rnd;
@@ -1584,12 +1588,16 @@ void satip_server_rtsp_init
     rtsp_server = NULL;
     reg = 1;
   }
-  free(rtsp_ip);
-  rtsp_ip = strdup(bindaddr);
+  if ((s = rtsp_ip) != NULL)
+    rtsp_ip = strdup(bindaddr);
+  free(s);
   rtsp_port = port;
   rtsp_descramble = descramble;
   rtsp_rewrite_pmt = rewrite_pmt;
   rtsp_muxcnf = muxcnf;
+  if ((s = rtsp_nat_ip) != NULL)
+    rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
+  free(s);
   if (!rtsp_server)
     rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
   if (reg)
@@ -1613,6 +1621,7 @@ void satip_server_rtsp_done(void)
   rtsp_server = NULL;
   rtsp_port = -1;
   free(rtsp_ip);
+  free(rtsp_nat_ip);
   rtsp_ip = NULL;
   satip_rtp_done();
   pthread_mutex_unlock(&global_lock);
