@@ -583,7 +583,7 @@ pids:
     satip_rtp_queue((void *)(intptr_t)rs->stream,
                     rs->subs, &rs->prch.prch_sq,
                     &hc->hc_fd_lock, hc->hc_peer, rs->rtp_peer_port,
-                    rs->udp_rtp ? rs->udp_rtp->fd : -1,
+                    rs->udp_rtp ? rs->udp_rtp->fd : hc->hc_fd,
                     rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                     rs->frontend, rs->findex, &rs->dmc_tuned,
                     &rs->pids, rs->perm_lock);
@@ -1355,7 +1355,11 @@ rtsp_process_play(http_connection_t *hc, int setup)
     snprintf(buf, sizeof(buf), "%s;timeout=%d", rs->session, RTSP_TIMEOUT);
     http_arg_set(&args, "Session", buf);
     i = rs->rtp_peer_port;
-    snprintf(buf, sizeof(buf), "RTP/AVP;unicast;client_port=%d-%d", i, i+1);
+    if (i == RTSP_TCP_DATA) {
+      snprintf(buf, sizeof(buf), "RTP/AVP/TCP;interleaved=0-1");
+    } else {
+      snprintf(buf, sizeof(buf), "RTP/AVP;unicast;client_port=%d-%d", i, i+1);
+    }
     http_arg_set(&args, "Transport", buf);
     snprintf(buf, sizeof(buf), "%d", rs->stream);
     http_arg_set(&args, "com.ses.streamID", buf);
