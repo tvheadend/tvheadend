@@ -332,6 +332,7 @@ mpegts_network_delete
   /* Free memory */
   idnode_unlink(&mn->mn_id);
   free(mn->mn_network_name);
+  free(mn->mn_provider_network_name);
   free(mn->mn_charset);
   free(mn);
 }
