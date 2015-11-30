@@ -553,7 +553,6 @@ void satip_rtp_close(void *id)
   if (rtp) {
     TAILQ_REMOVE(&satip_rtp_sessions, rtp, link);
     sq = rtp->sq;
-    pthread_mutex_lock(rtp->tcp_lock);
     pthread_mutex_lock(&sq->sq_mutex);
     rtp->sq = NULL;
     pthread_cond_signal(&sq->sq_cond);
