@@ -706,6 +706,12 @@ service_find_instance
       service_instance_destroy(sil, si);
   }
   
+  if (TAILQ_EMPTY(sil)) {
+    if (*error < SM_CODE_NO_ADAPTERS)
+      *error = SM_CODE_NO_ADAPTERS;
+    return NULL;
+  }
+
   /* Debug */
   TAILQ_FOREACH(si, sil, si_link) {
     const char *name = ch ? channel_get_name(ch) : NULL;

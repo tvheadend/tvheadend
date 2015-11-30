@@ -66,7 +66,7 @@ mpegts_network_scan_timer_cb ( void *p )
     assert(mm->mm_scan_state == MM_SCAN_STATE_PEND);
 
     /* No free tuners - stop */
-    if (r == SM_CODE_NO_FREE_ADAPTER)
+    if (r == SM_CODE_NO_FREE_ADAPTER || r == SM_CODE_NO_ADAPTERS)
       break;
 
     /* No valid tuners (subtly different, might be able to tuner a later

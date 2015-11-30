@@ -556,10 +556,14 @@ next_one:
                                 SUBSCRIPTION_EPG |
                                 SUBSCRIPTION_ONESHOT |
                                 SUBSCRIPTION_TABLES))) {
-    TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
-    om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
-    if (r == SM_CODE_NO_FREE_ADAPTER)
+    if (r != SM_CODE_NO_ADAPTERS) {
+      TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+      om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
+      if (r == SM_CODE_NO_FREE_ADAPTER)
+        net->failed = 1;
+    } else {
       net->failed = 1;
+    }
     if (first == NULL)
       first = om;
   } else {

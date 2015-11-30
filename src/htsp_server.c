@@ -3872,6 +3872,7 @@ _htsp_get_subscription_status(int smcode)
   {
   case SM_CODE_NOT_FREE:
   case SM_CODE_NO_FREE_ADAPTER:
+  case SM_CODE_NO_ADAPTERS:
     return "noFreeAdapter";
   case SM_CODE_NO_DESCRAMBLER:
     return "scrambled";
