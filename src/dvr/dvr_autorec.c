@@ -973,7 +973,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "title",
-      .name     = N_("Title (Regexp)"),
+      .name     = N_("Title (regexp)"),
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
     },
@@ -1040,7 +1040,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .islist   = 1,
       .id       = "weekdays",
-      .name     = N_("Days of Week"),
+      .name     = N_("Days of week"),
       .set      = dvr_autorec_entry_class_weekdays_set,
       .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,

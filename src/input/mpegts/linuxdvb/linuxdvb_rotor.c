@@ -136,12 +136,12 @@ const idclass_t linuxdvb_rotor_usals_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_usals",
-  .ic_caption     = N_("USALS Rotor"),
+  .ic_caption     = N_("USALS rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
-      .name   = N_("Satellite Longitude"),
+      .name   = N_("Satellite longitude"),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
  

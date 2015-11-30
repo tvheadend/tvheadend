@@ -802,7 +802,7 @@ const idclass_t dvr_config_class = {
          .number = 4,
       },
       {
-         .name   = N_("Filename Options"),
+         .name   = N_("Filename options"),
          .number = 5,
          .column = 1,
       },
@@ -828,7 +828,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "name",
-      .name     = N_("Configuration Name"),
+      .name     = N_("Configuration name"),
       .set      = dvr_config_class_name_set,
       .off      = offsetof(dvr_config_t, dvr_config_name),
       .def.s    = "! New config",
@@ -845,7 +845,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "profile",
-      .name     = N_("Stream Profile"),
+      .name     = N_("Stream profile"),
       .set      = dvr_config_class_profile_set,
       .get      = dvr_config_class_profile_get,
       .rend     = dvr_config_class_profile_rend,
@@ -855,7 +855,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_INT,
       .id       = "cache",
-      .name     = N_("Cache Scheme"),
+      .name     = N_("Cache scheme"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
       .list     = dvr_config_class_cache_list,
@@ -1039,7 +1039,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_STR,
       .id       = "pathname",
-      .name     = N_("Format String"),
+      .name     = N_("Format string"),
       .set      = dvr_config_class_pathname_set,
       .off      = offsetof(dvr_config_t, dvr_pathname),
       .opts     = PO_EXPERT,
@@ -1089,7 +1089,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "date-in-title",
-      .name     = N_("Include date In filename"),
+      .name     = N_("Include date in filename"),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
       .opts     = PO_EXPERT,
       .group    = 5,
@@ -1097,7 +1097,7 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "time-in-title",
-      .name     = N_("Include time In filename"),
+      .name     = N_("Include time in filename"),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
       .opts     = PO_EXPERT,
       .group    = 5,
