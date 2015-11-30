@@ -1603,15 +1603,15 @@ void satip_server_rtsp_init
     rtsp_server = NULL;
     reg = 1;
   }
-  if ((s = rtsp_ip) != NULL)
-    rtsp_ip = strdup(bindaddr);
+  s = rtsp_ip;
+  rtsp_ip = strdup(bindaddr);
   free(s);
   rtsp_port = port;
   rtsp_descramble = descramble;
   rtsp_rewrite_pmt = rewrite_pmt;
   rtsp_muxcnf = muxcnf;
-  if ((s = rtsp_nat_ip) != NULL)
-    rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
+  s = rtsp_nat_ip;
+  rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
   free(s);
   if (!rtsp_server)
     rtsp_server = tcp_server_create("satips", "SAT>IP RTSP", bindaddr, port, &ops, NULL);
