@@ -21,6 +21,7 @@
 #include "htsbuf.h"
 #include "config.h"
 #include "profile.h"
+#include "streaming.h"
 #include "satip/server.h"
 #include "input/mpegts/iptv/iptv_private.h"
 
@@ -581,8 +582,9 @@ pids:
       goto endclean;
     satip_rtp_queue((void *)(intptr_t)rs->stream,
                     rs->subs, &rs->prch.prch_sq,
-                    hc->hc_peer, rs->rtp_peer_port,
-                    rs->udp_rtp->fd, rs->udp_rtcp->fd,
+                    &hc->hc_fd_lock, hc->hc_peer, rs->rtp_peer_port,
+                    rs->udp_rtp ? rs->udp_rtp->fd : -1,
+                    rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                     rs->frontend, rs->findex, &rs->dmc_tuned,
                     &rs->pids, rs->perm_lock);
     if (!rs->pids.all && rs->pids.count == 0)
@@ -804,19 +806,24 @@ parse_transport(http_connection_t *hc)
   const char *s = http_arg_get(&hc->hc_args, "Transport");
   const char *u;
   int a, b;
-  if (!s || strncmp(s, "RTP/AVP;unicast;client_port=", 28))
+  if (!s)
     return -1;
-  for (s += 28, u = s; isdigit(*u); u++);
-  if (*u != '-')
-    return -1;
-  a = atoi(s);
-  for (s = ++u; isdigit(*s); s++);
-  if (*s != '\0' && *s != ';')
-    return -1;
-  b = atoi(u);
-  if (a + 1 != b)
-    return -1;
-  return a;
+  if (strncmp(s, "RTP/AVP;unicast;client_port=", 28) == 0) {
+    for (s += 28, u = s; isdigit(*u); u++);
+    if (*u != '-')
+      return -1;
+    a = atoi(s);
+    for (s = ++u; isdigit(*s); s++);
+    if (*s != '\0' && *s != ';')
+      return -1;
+    b = atoi(u);
+    if (a + 1 != b)
+      return -1;
+    return a;
+  } else if (strncmp(s, "RTP/AVP/TCP;interleaved=0-1", 27) == 0) {
+    return RTSP_TCP_DATA;
+  }
+  return -1;
 }
 
 /*
@@ -1145,7 +1152,9 @@ rtsp_process_options(http_connection_t *hc)
   http_arg_set(&args, "Public", "OPTIONS,DESCRIBE,SETUP,PLAY,TEARDOWN");
   if (hc->hc_session)
     http_arg_set(&args, "Session", hc->hc_session);
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, &args);
+  pthread_mutex_unlock(&hc->hc_fd_lock);
   http_arg_flush(&args);
   return 0;
 
@@ -1283,9 +1292,11 @@ rtsp_process_describe(http_connection_t *hc)
   else
     snprintf(buf, sizeof(buf), "rtsp://%s", rtsp_ip);
   http_arg_set(&args, "Content-Base", buf);
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, HTTP_STATUS_OK, "application/sdp", q.hq_size,
                    NULL, NULL, 0, NULL, NULL, &args);
   tcp_write_queue(hc->hc_fd, &q);
+  pthread_mutex_unlock(&hc->hc_fd_lock);
   http_arg_flush(&args);
   htsbuf_queue_flush(&q);
   return 0;
@@ -1321,7 +1332,7 @@ rtsp_process_play(http_connection_t *hc, int setup)
 
   if (errcode) goto error;
 
-  if (setup) {
+  if (setup && rs->rtp_peer_port != RTSP_TCP_DATA) {
     if (udp_bind_double(&rs->udp_rtp, &rs->udp_rtcp,
                         "satips", "rtsp", "rtcp",
                         rtsp_ip, 0, NULL,
@@ -1358,7 +1369,9 @@ rtsp_process_play(http_connection_t *hc, int setup)
 
   pthread_mutex_unlock(&rtsp_lock);
 
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, &args);
+  pthread_mutex_unlock(&hc->hc_fd_lock);
 
   goto end;
 
@@ -1406,7 +1419,9 @@ rtsp_process_teardown(http_connection_t *hc)
     pthread_mutex_unlock(&rtsp_lock);
     http_arg_init(&args);
     http_arg_set(&args, "Session", session);
+    pthread_mutex_lock(&hc->hc_fd_lock);
     http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, NULL);
+    pthread_mutex_unlock(&hc->hc_fd_lock);
     http_arg_flush(&args);
   }
   return 0;

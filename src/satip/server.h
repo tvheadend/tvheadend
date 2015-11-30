@@ -33,6 +33,8 @@
 #define MUXCNF_KEEP   1
 #define MUXCNF_REJECT 2
 
+#define RTSP_TCP_DATA 1000000
+
 struct satip_server_conf {
   idnode_t idnode;
   int satip_deviceid;
@@ -59,6 +61,7 @@ extern const idclass_t satip_server_class;
 
 void satip_rtp_queue(void *id, th_subscription_t *subs,
                      streaming_queue_t *sq,
+                     pthread_mutex_t *tcp_lock,
                      struct sockaddr_storage *peer, int port,
                      int fd_rtp, int fd_rtcp,
                      int frontend, int source,
