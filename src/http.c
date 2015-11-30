@@ -1222,7 +1222,7 @@ http_server_init(const char *bindaddr)
     .stop   = NULL,
     .cancel = http_cancel
   };
-  http_server = tcp_server_create(bindaddr, tvheadend_webui_port, &ops, NULL);
+  http_server = tcp_server_create("http", "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
 }
 
 void

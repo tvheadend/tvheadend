@@ -738,20 +738,18 @@ next:
  *
  */
 #if ENABLE_LIBSYSTEMD_DAEMON
-static void *
-tcp_server_create_new
-  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+static void *tcp_server_create_new
 #else
-void *
-tcp_server_create
-  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+void *tcp_server_create
 #endif
+  (const char *subsystem, const char *name, const char *bindaddr,
+   int port, tcp_server_ops_t *ops, void *opaque)
 {
   int fd, x;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
   struct sockaddr_storage bound;
-  char port_buf[6];
+  char port_buf[6], buf[50];
   int one = 1;
   int zero = 0;
 
@@ -815,6 +813,10 @@ tcp_server_create
   ts->bound  = bound;
   ts->ops    = *ops;
   ts->opaque = opaque;
+
+  tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
+  tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d", name, buf, htons(IP_PORT(bound)));
+
   return ts;
 }
 
@@ -824,13 +826,15 @@ tcp_server_create
  */
 void *
 tcp_server_create
-  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+  (const char *subsystem, const char *name, const char *bindaddr,
+   int port, tcp_server_ops_t *ops, void *opaque)
 {
   int sd_fds_num, i, fd;
   struct sockaddr_storage bound;
   tcp_server_t *ts;
   struct in_addr addr4;
   struct in6_addr addr6;
+  char buf[50];
   int found = 0;
 
   sd_fds_num = sd_listen_fds(0);
@@ -876,6 +880,8 @@ tcp_server_create
     ts->bound  = bound;
     ts->ops    = *ops;
     ts->opaque = opaque;
+    tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
+    tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d (systemd)", subsystem, name, buf, htons(IP_PORT(bound)));
   } else {
     /* no systemd-managed socket found, create a new one */
     tvhlog(LOG_INFO, "tcp", "No systemd socket: creating a new one");

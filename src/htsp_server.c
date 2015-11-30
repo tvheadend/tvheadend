@@ -3224,9 +3224,9 @@ htsp_init(const char *bindaddr)
     .stop   = NULL,
     .cancel = htsp_server_cancel
   };
-  htsp_server = tcp_server_create(bindaddr, tvheadend_htsp_port, &ops, NULL);
+  htsp_server = tcp_server_create("htsp", "HTSP", bindaddr, tvheadend_htsp_port, &ops, NULL);
   if(tvheadend_htsp_port_extra)
-    htsp_server_2 = tcp_server_create(bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
+    htsp_server_2 = tcp_server_create("htsp", "HTSP2", bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
 }
 
 /*

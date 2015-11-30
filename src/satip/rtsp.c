@@ -1614,7 +1614,7 @@ void satip_server_rtsp_init
     rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
   free(s);
   if (!rtsp_server)
-    rtsp_server = tcp_server_create(bindaddr, port, &ops, NULL);
+    rtsp_server = tcp_server_create("satips", "SAT>IP RTSP", bindaddr, port, &ops, NULL);
   if (reg)
     tcp_server_register(rtsp_server);
 }
