@@ -1352,9 +1352,11 @@ new_tune:
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
 
-    if (!tvheadend_running) {
+    if (!tvheadend_running || exit_flag) {
       exit_flag = 1;
       running = 0;
+      if (reply++ > 5)
+        break;
     }
 
     if (nfds > 0 && ev[0].data.ptr == NULL) {
