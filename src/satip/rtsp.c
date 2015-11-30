@@ -1074,7 +1074,10 @@ rtsp_parse_cmd
   rs->delsys = delsys;
   rs->frontend = fe;
   rs->findex = findex;
-  rs->weight = weight > 0 ? weight : 0;
+  if (weight > 0)
+    rs->weight = weight;
+  else if (cmd == 1)
+    rs->weight = 0;
   rs->old_hc = hc;
 
   if (cmd) {
