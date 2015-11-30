@@ -569,8 +569,8 @@ tvheadend.autorec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
-        titleS: _('DVR Autorec Entry'),
-        titleP: _('DVR Autorec Entries'),
+        titleS: _('Automatic Schedule'),
+        titleP: _('Automatic Schedules'),
         iconCls: 'autoRec',
         tabIndex: index,
         columns: {
@@ -621,7 +621,7 @@ tvheadend.autorec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Autorec'), 'dvr_autorec.html');
+            new tvheadend.help(_('Automatic Scheduling'), 'dvr_autorec.html');
         }
     });
 
