@@ -60,9 +60,16 @@ extern int epg_in_load;
  *
  */
 typedef enum {
-  EPG_SOURCE_NONE = 0,
-  EPG_SOURCE_EIT = 1,
+  EPG_SOURCE_NONE   = 0,
+  EPG_SOURCE_EIT    = 1,
 } epg_source_t;
+
+typedef enum {
+  EPG_RUNNING_STOP  = 0,
+  EPG_RUNNING_WARM  = 1,
+  EPG_RUNNING_NOW   = 2,
+  EPG_RUNNING_PAUSE = 3,
+} epg_running_t;
 
 /* ************************************************************************
  * Genres
@@ -470,7 +477,7 @@ epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id );
 epg_broadcast_t *epg_broadcast_clone
   ( struct channel *channel, epg_broadcast_t *src, int *save );
 void epg_broadcast_notify_running
-  ( epg_broadcast_t *b, epg_source_t esrc, int running );
+  ( epg_broadcast_t *b, epg_source_t esrc, epg_running_t running );
 
 /* Mutators */
 int epg_broadcast_set_episode

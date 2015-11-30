@@ -299,6 +299,7 @@ struct mpegts_network
    * Identification
    */
   char                    *mn_network_name;
+  char                    *mn_provider_network_name;
 
   /*
    * Inputs
@@ -404,7 +405,8 @@ struct mpegts_mux
    */
   
   LIST_ENTRY(mpegts_mux)  mm_network_link;
-  mpegts_network_t        *mm_network;
+  mpegts_network_t       *mm_network;
+  char                   *mm_provider_network_name;
   uint16_t                mm_onid;
   uint16_t                mm_tsid;
 
@@ -650,6 +652,7 @@ struct mpegts_input
 
   int mi_initscan;
   int mi_idlescan;
+  uint32_t mi_free_weight;
 
   char *mi_linked;
 
@@ -862,6 +865,7 @@ int mpegts_mux_instance_start
 
 int mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi );
 
+int mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name );
 int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );

@@ -850,7 +850,7 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
                         columns = met[k].column;
             met[number].columns = columns;
             if (columns) {
-                var p = newFieldSet({ title: m.name || _("Settings"), layout: 'column', border: false });
+                var p = newFieldSet({ title: m.name || _("Settings"), layout: 'column2', border: false });
                 cfs[number] = newFieldSet({ nocollapse: true, style: 'border-width: 0px', bodyStyle: ' ' });
                 p.add(cfs[number]);
                 fs[number] = p;
@@ -943,12 +943,30 @@ tvheadend.idnode_editor = function(item, conf)
                     },
                     success: function(d) {
                         if (conf.win)
-                            conf.win.hide();
+                            conf.win.close();
                     }
                 });
             }
         });
         buttons.push(saveBtn);
+
+        var applyBtn = new Ext.Button({
+            text: _('Apply'),
+            iconCls: 'apply',
+            handler: function() {
+                var node = panel.getForm().getFieldValues();
+                node.uuid = conf.uuids ? conf.uuids : item.uuid;
+                tvheadend.Ajax({
+                    url: 'api/idnode/save',
+                    params: {
+                        node: Ext.encode(node)
+                    },
+                    success: function(d) {
+                    }
+                });
+            }
+        });
+        buttons.push(applyBtn);
 
         if (conf.help) {
             var helpBtn = new Ext.Button({
@@ -1018,6 +1036,26 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             });
         }
     });
+    var applyBtn = new Ext.Button({
+        tooltip: _('Apply settings'),
+        text: _('Apply'),
+        iconCls: 'apply',
+        hidden: true,
+        handler: function() {
+            var params = conf.create.params || {};
+            if (puuid)
+                params['uuid'] = puuid;
+            if (pclass)
+                params['class'] = pclass;
+            params['conf'] = Ext.encode(panel.getForm().getFieldValues());
+            tvheadend.Ajax({
+                url: conf.create.url || conf.url + '/create',
+                params: params,
+                success: function(d) {
+                }
+            });
+        }
+    });
     var cancelBtn = new Ext.Button({
         tooltip: _('Cancel operation'),
         text: _('Cancel'),
@@ -1040,7 +1078,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
         defaultType: 'textfield',
         buttonAlign: 'left',
         items: [],
-        buttons: [cancelBtn, saveBtn]
+        buttons: [cancelBtn, saveBtn, applyBtn]
     });
 
     /* Create window */
@@ -1080,6 +1118,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                         panel.remove(s);
                         tvheadend.idnode_editor_form(d, null, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
+                        applyBtn.setVisible(true);
                         win.setOriginSize(true);
                     }
                 }
@@ -1096,6 +1135,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                         d = json_decode(d);
                         tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
+                        applyBtn.setVisible(true);
                         win.setOriginSize(true);
                     }
                 });
@@ -1127,12 +1167,14 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             success: function(d) {
                 d = json_decode(d);
                 tvheadend.idnode_editor_form(d.props, d, panel, { create: true, showpwd: true });
-                saveBtn.setVisible(true);
                 if (onlyDefault) {
                     saveBtn.handler();
                     panel.destroy();
-                } else
+                } else {
+                    saveBtn.setVisible(true);
+                    applyBtn.setVisible(true);
                     win.show();
+                }
             }
         });
     }

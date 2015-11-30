@@ -885,50 +885,50 @@ static int hvcc_write(sbuf_t *pb, HEVCDecoderConfigurationRecord *hvcc)
     hvcc->avgFrameRate      = 0;
     hvcc->constantFrameRate = 0;
 
-    tvhtrace("hevc", "configurationVersion:                %"PRIu8"\n",
+    tvhtrace("hevc", "configurationVersion:                %"PRIu8,
             hvcc->configurationVersion);
-    tvhtrace("hevc", "general_profile_space:               %"PRIu8"\n",
+    tvhtrace("hevc", "general_profile_space:               %"PRIu8,
             hvcc->general_profile_space);
-    tvhtrace("hevc",  "general_tier_flag:                   %"PRIu8"\n",
+    tvhtrace("hevc",  "general_tier_flag:                   %"PRIu8,
             hvcc->general_tier_flag);
-    tvhtrace("hevc",  "general_profile_idc:                 %"PRIu8"\n",
+    tvhtrace("hevc",  "general_profile_idc:                 %"PRIu8,
             hvcc->general_profile_idc);
-    tvhtrace("hevc", "general_profile_compatibility_flags: 0x%08"PRIx32"\n",
+    tvhtrace("hevc", "general_profile_compatibility_flags: 0x%08"PRIx32,
             hvcc->general_profile_compatibility_flags);
-    tvhtrace("hevc", "general_constraint_indicator_flags:  0x%012"PRIx64"\n",
+    tvhtrace("hevc", "general_constraint_indicator_flags:  0x%012"PRIx64,
             hvcc->general_constraint_indicator_flags);
-    tvhtrace("hevc",  "general_level_idc:                   %"PRIu8"\n",
+    tvhtrace("hevc",  "general_level_idc:                   %"PRIu8,
             hvcc->general_level_idc);
-    tvhtrace("hevc",  "min_spatial_segmentation_idc:        %"PRIu16"\n",
+    tvhtrace("hevc",  "min_spatial_segmentation_idc:        %"PRIu16,
             hvcc->min_spatial_segmentation_idc);
-    tvhtrace("hevc",  "parallelismType:                     %"PRIu8"\n",
+    tvhtrace("hevc",  "parallelismType:                     %"PRIu8,
             hvcc->parallelismType);
-    tvhtrace("hevc",  "chromaFormat:                        %"PRIu8"\n",
+    tvhtrace("hevc",  "chromaFormat:                        %"PRIu8,
             hvcc->chromaFormat);
-    tvhtrace("hevc",  "bitDepthLumaMinus8:                  %"PRIu8"\n",
+    tvhtrace("hevc",  "bitDepthLumaMinus8:                  %"PRIu8,
             hvcc->bitDepthLumaMinus8);
-    tvhtrace("hevc",  "bitDepthChromaMinus8:                %"PRIu8"\n",
+    tvhtrace("hevc",  "bitDepthChromaMinus8:                %"PRIu8,
             hvcc->bitDepthChromaMinus8);
-    tvhtrace("hevc",  "avgFrameRate:                        %"PRIu16"\n",
+    tvhtrace("hevc",  "avgFrameRate:                        %"PRIu16,
             hvcc->avgFrameRate);
-    tvhtrace("hevc",  "constantFrameRate:                   %"PRIu8"\n",
+    tvhtrace("hevc",  "constantFrameRate:                   %"PRIu8,
             hvcc->constantFrameRate);
-    tvhtrace("hevc",  "numTemporalLayers:                   %"PRIu8"\n",
+    tvhtrace("hevc",  "numTemporalLayers:                   %"PRIu8,
             hvcc->numTemporalLayers);
-    tvhtrace("hevc",  "temporalIdNested:                    %"PRIu8"\n",
+    tvhtrace("hevc",  "temporalIdNested:                    %"PRIu8,
             hvcc->temporalIdNested);
-    tvhtrace("hevc",  "lengthSizeMinusOne:                  %"PRIu8"\n",
+    tvhtrace("hevc",  "lengthSizeMinusOne:                  %"PRIu8,
             hvcc->lengthSizeMinusOne);
-    tvhtrace("hevc",  "numOfArrays:                         %"PRIu8"\n",
+    tvhtrace("hevc",  "numOfArrays:                         %"PRIu8,
             hvcc->numOfArrays);
     for (i = 0; i < hvcc->numOfArrays; i++) {
-        tvhtrace("hevc", "NAL_unit_type[%"PRIu8"]:                    %"PRIu8"\n",
+        tvhtrace("hevc", "NAL_unit_type[%"PRIu8"]:                    %"PRIu8,
                 i, hvcc->array[i].NAL_unit_type);
-        tvhtrace("hevc", "numNalus[%"PRIu8"]:                         %"PRIu16"\n",
+        tvhtrace("hevc", "numNalus[%"PRIu8"]:                         %"PRIu16,
                 i, hvcc->array[i].numNalus);
         for (j = 0; j < hvcc->array[i].numNalus; j++)
             tvhtrace("hevc",
-                    "nalUnitLength[%"PRIu8"][%"PRIu16"]:                 %"PRIu16"\n",
+                    "nalUnitLength[%"PRIu8"][%"PRIu16"]:                 %"PRIu16,
                     i, j, hvcc->array[i].nalUnitLength[j]);
     }
 

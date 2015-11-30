@@ -530,6 +530,13 @@ const idclass_t mpegts_mux_class =
       .get      = mpegts_mux_class_get_name,
     },
     {
+      .type     = PT_STR,
+      .id       = "pnetwork_name",
+      .name     = N_("Provider network name"),
+      .off      = offsetof(mpegts_mux_t, mm_provider_network_name),
+      .opts     = PO_RDONLY | PO_HIDDEN,
+    },
+    {
       .type     = PT_U16,
       .id       = "onid",
       .name     = N_("Original network ID"),
@@ -1136,6 +1143,16 @@ void
 mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c )
 {
   idnode_save(&mm->mm_id, c);
+}
+
+int
+mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name )
+{
+  if (strcmp(mm->mm_provider_network_name ?: "", name ?: "")) {
+    tvh_str_update(&mm->mm_provider_network_name, name ?: "");
+    return 1;
+  }
+  return 0;
 }
 
 int

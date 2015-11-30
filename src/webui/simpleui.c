@@ -531,7 +531,7 @@ page_status(http_connection_t *hc,
 
     if (DVR_SCHEDULED == de->de_sched_state)
     {
-      timelefttemp = (int) ((dvr_entry_get_start_time(de) - now) / 60); // output minutes
+      timelefttemp = (int) ((dvr_entry_get_start_time(de, 0) - now) / 60); // output minutes
       if (timelefttemp < timeleft)
         timeleft = timelefttemp;
     }

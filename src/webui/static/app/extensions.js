@@ -1830,3 +1830,19 @@ Ext.ux.Window = Ext.extend(Ext.Window, {
   },
 
 });
+
+// create namespace
+Ext.ns('Ext.ux');
+
+Ext.layout.Column2Layout = Ext.extend(Ext.layout.ColumnLayout, {
+
+  getLayoutTargetSize : function() {
+    var ret = Ext.layout.ColumnLayout.prototype.getLayoutTargetSize.call(this);
+    if (ret && ret.width > 20)
+      ret.width -= 20;
+    return ret;
+  }
+
+});
+
+Ext.Container.LAYOUTS['column2'] = Ext.layout.Column2Layout;

@@ -278,6 +278,14 @@ const idclass_t mpegts_input_class =
       .opts     = PO_ADVANCED,
     },
     {
+      .type     = PT_U32,
+      .id       = "free_weight",
+      .name     = N_("Free weight"),
+      .off      = offsetof(mpegts_input_t, mi_free_weight),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .id       = "networks",
       .name     = N_("Networks"),

@@ -432,10 +432,10 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
     d = 3000; /* 90000/30 = 3000 : 30fps */
   }
 
+#if 0
   if (sps->cbpsize)
     st->es_vbv_size = sps->cbpsize;
-
-  st->es_vbv_delay = -1;
+#endif
 
   width  = sps->width;
   height = sps->height * (2 - sps->mbs_only_flag);

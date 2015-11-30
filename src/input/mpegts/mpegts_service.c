@@ -297,6 +297,8 @@ mpegts_service_enlist(service_t *t, tvh_input_t *ti,
     } else {
       w = mi->mi_get_weight(mi, mmi->mmi_mux, flags);
       p = mi->mi_get_priority(mi, mmi->mmi_mux, flags);
+      if (w > 0 && mi->mi_free_weight && w < mi->mi_free_weight)
+        w = 0;
     }
 
     service_instance_add(sil, t, mi->mi_instance, mi->mi_name, p, w);

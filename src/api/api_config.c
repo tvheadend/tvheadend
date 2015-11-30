@@ -35,7 +35,7 @@ void
 api_config_init ( void )
 {
   static api_hook_t ah[] = {
-    { "config/capabilities", ACCESS_WEB_INTERFACE, api_config_capabilities, NULL },
+    { "config/capabilities", ACCESS_OR|ACCESS_WEB_INTERFACE|ACCESS_HTSP_INTERFACE, api_config_capabilities, NULL },
     { "config/load",         ACCESS_ADMIN, api_idnode_load_simple, &config },
     { "config/save",         ACCESS_ADMIN, api_idnode_save_simple, &config },
     { "tvhlog/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &tvhlog_conf },

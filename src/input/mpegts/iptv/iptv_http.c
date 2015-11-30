@@ -403,7 +403,8 @@ url:
       memset(&hp->hls_aes128.iv, 0, sizeof(hp->hls_aes128.iv));
       s = htsmsg_get_str(hp->hls_key, "IV");
       if (s != NULL) {
-        if (s[0] != '0' || s[1] != 'x' || strlen(s) != (AES_BLOCK_SIZE * 2) + 2) {
+        if (s[0] != '0' || (s[1] != 'x' && s[1] != 'X') ||
+            strlen(s) != (AES_BLOCK_SIZE * 2) + 2) {
           tvherror("iptv", "unknown IV type or length (%s)", s);
           goto end;
         }

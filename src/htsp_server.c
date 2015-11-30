@@ -19,6 +19,7 @@
 #include "tvheadend.h"
 #include "atomic.h"
 #include "config.h"
+#include "api.h"
 #include "channels.h"
 #include "subscriptions.h"
 #include "tcp.h"
@@ -1195,6 +1196,7 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Capabilities */
   htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
+  htsmsg_add_u32(r, "api_version", TVH_API_VERSION);
 
   /* Set version to lowest num */
   htsp->htsp_version = MIN(HTSP_PROTO_VERSION, v);
@@ -1215,6 +1217,50 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_u32(r, "noaccess", 1);
   
   return r;
+}
+
+/**
+ * Try to authenticate
+ */
+static htsmsg_t *
+htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *resp = NULL, *ret = htsmsg_create_map();
+  htsmsg_t *args, *args2 = NULL;
+  const char *remain;
+  int r;
+
+  args   = htsmsg_get_map(in, "args");
+  remain = htsmsg_get_str(in, "path");
+
+  if (args == NULL)
+    args = args2 = htsmsg_create_map();
+
+  /* Call */
+  r = api_exec(htsp->htsp_granted_access, remain, args, &resp);
+
+  /* Convert error */
+  if (r) {
+    switch (r) {
+      case EPERM:
+      case EACCES:
+        htsmsg_add_u32(ret, "noaccess", 1);
+        break;
+      case ENOENT:
+      case ENOSYS:
+        break;
+      default:
+        htsmsg_destroy(args2);
+        htsmsg_destroy(ret);
+        return htsp_error("Bad request");
+    }
+  } else if (resp) {
+    /* Output response */
+    htsmsg_add_msg(ret, "response", resp);
+  }
+
+  htsmsg_destroy(args2);
+  return ret;
 }
 
 /**
@@ -2716,6 +2762,7 @@ struct {
 } htsp_methods[] = {
   { "hello",                    htsp_method_hello,              ACCESS_ANONYMOUS},
   { "authenticate",             htsp_method_authenticate,       ACCESS_ANONYMOUS},
+  { "api",                      htsp_method_api,                ACCESS_ANONYMOUS},
   { "getDiskSpace",             htsp_method_getDiskSpace,       ACCESS_HTSP_STREAMING},
   { "getSysTime",               htsp_method_getSysTime,         ACCESS_HTSP_STREAMING},
   { "enableAsyncMetadata",      htsp_method_async,              ACCESS_HTSP_STREAMING},
@@ -2785,6 +2832,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
       return 0;
     }
 
+    rights->aa_rights |= ACCESS_HTSP_INTERFACE;
     privgain = (rights->aa_rights |
                 htsp->htsp_granted_access->aa_rights) !=
                   htsp->htsp_granted_access->aa_rights;
@@ -2899,6 +2947,7 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   htsp->htsp_granted_access = 
     access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
+  htsp->htsp_granted_access->aa_rights |= ACCESS_HTSP_INTERFACE;
 
   tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
                                  htsp->htsp_granted_access);

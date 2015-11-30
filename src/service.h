@@ -90,6 +90,7 @@ typedef struct elementary_stream {
   int es_global_data_len;
 
   struct th_pkt *es_curpkt;
+  struct streaming_message_queue es_backlog;
   int64_t es_curpts;
   int64_t es_curdts;
   int64_t es_prevdts;
@@ -102,9 +103,6 @@ typedef struct elementary_stream {
 
   /* CA ID's on this stream */
   struct caid_list es_caids;
-
-  int es_vbv_size;        /* Video buffer size (in bytes) */
-  int es_vbv_delay;       /* -1 if CBR */
 
   /* */
 

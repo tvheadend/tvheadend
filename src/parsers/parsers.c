@@ -29,6 +29,7 @@
 #include "service.h"
 #include "parsers.h"
 #include "parser_h264.h"
+#include "parser_avc.h"
 #include "parser_hevc.h"
 #include "parser_latm.h"
 #include "parser_teletext.h"
@@ -42,6 +43,21 @@
 #define PARSER_DROP   2
 #define PARSER_SKIP   3
 #define PARSER_HEADER 4
+
+/* backlog special mask */
+#define PTS_BACKLOG (PTS_MASK + 1)
+
+static inline int
+pts_is_backlog(int64_t pts)
+{
+  return pts != PTS_UNSET && (pts & PTS_BACKLOG) != 0;
+}
+
+static inline int64_t
+pts_no_backlog(int64_t pts)
+{
+  return pts_is_backlog(pts) ? (pts & ~PTS_BACKLOG) : pts;
+}
 
 static int64_t 
 getpts(const uint8_t *p)
@@ -110,6 +126,12 @@ static void parser_deliver_error(service_t *t, elementary_stream_t *st);
 
 static int parse_pes_header(service_t *t, elementary_stream_t *st,
                             const uint8_t *buf, size_t len);
+
+static void parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt);
+
+static void parser_do_backlog(service_t *t, elementary_stream_t *st,
+                  void (*pkt_cb)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt),
+                  pktbuf_t *meta);
 
 /**
  * Parse raw mpeg data
@@ -421,7 +443,6 @@ found:
 
   st->es_startcond = sc;  
 }
-
 
 /**
  *
@@ -944,7 +965,7 @@ static int
 parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype,
                            bitstream_t *bs)
 {
-  int v, pct;
+  int pct;
 
   if(bs->len < 29)
     return PARSER_RESET;
@@ -957,11 +978,13 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
 
   *frametype = pct;
 
-  v = read_bits(bs, 16); /* vbv_delay */
+#if 0
+  int v = read_bits(bs, 16); /* vbv_delay */
   if(v == 0xffff)
     st->es_vbv_delay = -1;
   else
     st->es_vbv_delay = v;
+#endif
   return 0;
 }
 
@@ -1025,7 +1048,7 @@ static int
 parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
                            bitstream_t *bs)
 {
-  int v, width, height, aspect;
+  int width, height, aspect, duration;
 
   if(bs->len < 61)
     return 1;
@@ -1037,13 +1060,15 @@ parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
   st->es_aspect_num = mpeg2_aspect[aspect][0];
   st->es_aspect_den = mpeg2_aspect[aspect][1];
 
-  int duration = mpeg2video_framedurations[read_bits(bs, 4)];
+  duration = mpeg2video_framedurations[read_bits(bs, 4)];
 
-  v = read_bits(bs, 18) * 400;
+  skip_bits(bs, 18);
   skip_bits(bs, 1);
   
-  v = read_bits(bs, 10) * 16 * 1024 / 8;
+#if 0
+  int v = read_bits(bs, 10) * 16 * 1024 / 8;
   st->es_vbv_size = v;
+#endif
 
   parser_set_stream_vparam(st, width, height, duration);
   return 0;
@@ -1224,6 +1249,68 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 /**
  * H.264 (AVC) parser
  */
+static void
+parse_h264_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+{
+  int len, l2, pkttype = 0, isfield = 0, nal_type;
+  const uint8_t *end, *nal_start, *nal_end;
+  bitstream_t bs;
+  void *f;
+
+  if (pkt->pkt_payload == NULL)
+    return;
+  len = pktbuf_len(pkt->pkt_payload);
+  if (len <= 1)
+    return;
+  nal_start = pktbuf_ptr(pkt->pkt_payload);
+  end = nal_start + len;
+  while (1) {
+    while (nal_start < end && !*(nal_start++));
+    if (nal_start == end)
+      break;
+    nal_end = avc_find_startcode(nal_start, end);
+    len = nal_end - nal_start;
+    if (len > 3) {
+      nal_type = nal_start[0] & 0x1f;
+      if (nal_type == H264_NAL_IDR_SLICE || nal_type == H264_NAL_SLICE) {
+        l2 = len - 1 > 64 ? 64 : len - 1;
+        f = h264_nal_deescape(&bs, nal_start + 1, l2);
+        if(h264_decode_slice_header(st, &bs, &pkttype, &isfield))
+          pkttype = isfield = 0;
+        free(f);
+        if (pkttype > 0)
+          break;
+      }
+    }
+    nal_start = nal_end;
+  }
+
+  pkt->pkt_frametype = pkttype;
+  pkt->pkt_field = isfield;
+  pkt->pkt_duration = st->es_frame_duration;
+}
+
+static void
+parse_h264_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+{
+  if (pkt->pkt_frametype > 0) {
+    if (TAILQ_EMPTY(&st->es_backlog)) {
+      if (pkt->pkt_frametype > 0) {
+deliver:
+        parser_deliver(t, st, pkt);
+        return;
+      }
+    } else if (pkt->pkt_frametype > 0 &&
+         (st->es_curdts != PTS_UNSET && (st->es_curdts & PTS_BACKLOG) == 0) &&
+         (st->es_curpts != PTS_UNSET && (st->es_curpts & PTS_BACKLOG) == 0) &&
+         st->es_frame_duration > 1) {
+      parser_do_backlog(t, st, parse_h264_backlog, pkt ? pkt->pkt_meta : NULL);
+      goto deliver;
+    }
+  }
+  parser_backlog(t, st, pkt);
+}
+
 static int
 parse_h264(service_t *t, elementary_stream_t *st, size_t len, 
            uint32_t next_startcode, int sc_offset)
@@ -1233,29 +1320,34 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
   int l2, pkttype, isfield;
   bitstream_t bs;
   int ret = PARSER_APPEND;
+  th_pkt_t *pkt = st->es_curpkt;
 
   /* delimiter - finished frame */
-  if ((sc & 0x1f) == H264_NAL_AUD && st->es_curpkt && st->es_curpkt->pkt_payload) {
-    if (st->es_curdts != PTS_UNSET && st->es_frame_duration) {
-      parser_deliver(t, st, st->es_curpkt);
-      st->es_curpkt = NULL;
-
-      st->es_curdts += st->es_frame_duration;
-      if (st->es_curpts != PTS_UNSET)
-        st->es_curpts += st->es_frame_duration;
-      st->es_prevdts = st->es_curdts;
-    } else {
+  if ((sc & 0x1f) == H264_NAL_AUD && pkt) {
+    if (pkt->pkt_payload == NULL || pkt->pkt_dts == PTS_UNSET) {
       pkt_ref_dec(st->es_curpkt);
       st->es_curpkt = NULL;
+    } else {
+      parse_h264_deliver(t, st, pkt);
+      st->es_curpkt = NULL;
+      st->es_curdts += st->es_frame_duration;
+      if (st->es_frame_duration < 2)
+        st->es_curdts |= PTS_BACKLOG;
+      if (st->es_curpts != PTS_UNSET) {
+        st->es_curpts += st->es_frame_duration;
+        if (st->es_frame_duration < 2)
+          st->es_curpts |= PTS_BACKLOG;
+      }
+      st->es_prevdts = st->es_curdts;
+      return PARSER_RESET;
     }
-    return PARSER_RESET;
   }
 
   if(sc >= 0x000001e0 && sc <= 0x000001ef) {
     /* System start codes for video */
     if(len >= 9) {
       uint16_t plen = buf[4] << 8 | buf[5];
-      th_pkt_t *pkt = st->es_curpkt;
+      pkt = st->es_curpkt;
       if (plen >= 0xffe9) st->es_incomplete = 1;
       l2 = parse_pes_header(t, st, buf + 6, len - 6);
       if (l2 < 0)
@@ -1271,7 +1363,11 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
         if (next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef)
           return PARSER_RESET;
 
-        parser_deliver(t, st, pkt);
+        if (pkt->pkt_payload == NULL || pkt->pkt_dts == PTS_UNSET) {
+          pkt_ref_dec(pkt);
+        } else {
+          parse_h264_deliver(t, st, pkt);
+        }
 
         st->es_curpkt = NULL;
       }
@@ -1312,24 +1408,25 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
 
     case H264_NAL_IDR_SLICE:
     case H264_NAL_SLICE:
-      l2 = len - 4 > 64 ? 64 : len - 4;
-      void *f = h264_nal_deescape(&bs, buf + 4, l2);
-      /* we just want the first stuff */
-
-      if(h264_decode_slice_header(st, &bs, &pkttype, &isfield)) {
-        free(f);
-        return PARSER_RESET;
-      }
-      free(f);
-
-      if(st->es_curpkt != NULL || st->es_frame_duration == 0)
+      if (st->es_curpkt != NULL)
         break;
 
-      st->es_curpkt = pkt_alloc(NULL, 0, st->es_curpts, st->es_curdts);
-      st->es_curpkt->pkt_frametype = pkttype;
-      st->es_curpkt->pkt_field = isfield;
-      st->es_curpkt->pkt_duration = st->es_frame_duration;
-      st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
+      /* we just want the first stuff */
+      l2 = len - 4 > 64 ? 64 : len - 4;
+      void *f = h264_nal_deescape(&bs, buf + 4, l2);
+      if(h264_decode_slice_header(st, &bs, &pkttype, &isfield))
+        pkttype = isfield = 0;
+      free(f);
+
+      if (st->es_frame_duration == 0)
+        st->es_frame_duration = 1;
+
+      pkt = pkt_alloc(NULL, 0, st->es_curpts, st->es_curdts);
+      pkt->pkt_frametype = pkttype;
+      pkt->pkt_field = isfield;
+      pkt->pkt_duration = st->es_frame_duration;
+      pkt->pkt_commercial = t->s_tt_commercial_advice;
+      st->es_curpkt = pkt;
       break;
 
     default:
@@ -1342,7 +1439,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return PARSER_HEADER;
-    th_pkt_t *pkt = st->es_curpkt;
+    pkt = st->es_curpkt;
     size_t metalen = 0;
 
     if(pkt != NULL && pkt->pkt_payload == NULL) {
@@ -1669,9 +1766,9 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
            st->es_index,
            streaming_component_type2txt(st->es_type),
            pkt_frametype_to_char(pkt->pkt_frametype),
-           ts_rescale(pkt->pkt_pts, 1000000),
-           pkt->pkt_dts,
            ts_rescale(pkt->pkt_dts, 1000000),
+           pkt->pkt_dts,
+           ts_rescale(pkt->pkt_pts, 1000000),
            pkt->pkt_pts,
            pkt->pkt_duration,
            pktbuf_len(pkt->pkt_payload),
@@ -1714,4 +1811,110 @@ parser_deliver_error(service_t *t, elementary_stream_t *st)
   pkt->pkt_err = st->es_buf.sb_err;
   parser_deliver(t, st, pkt);
   st->es_buf.sb_err = 0;
+}
+
+/**
+ * Do backlog (fix DTS & PTS and reparse slices - frame type, field etc.)
+ */
+static void
+parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
+{
+  streaming_message_t *sm = streaming_msg_create_pkt(pkt);
+  TAILQ_INSERT_TAIL(&st->es_backlog, sm, sm_link);
+  pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
+
+#if ENABLE_TRACE
+  int64_t dts = pts_no_backlog(pkt->pkt_dts);
+  int64_t pts = pts_no_backlog(pkt->pkt_pts);
+  tvhtrace("parser",
+           "pkt bcklog %2d %-12s type %c"
+           " dts%s%10"PRId64" (%10"PRId64") pts%s%10"PRId64" (%10"PRId64")"
+           " dur %10d len %10zu err %i",
+           st->es_index,
+           streaming_component_type2txt(st->es_type),
+           pkt_frametype_to_char(pkt->pkt_frametype),
+           pts_is_backlog(pkt->pkt_dts) ? "+" : " ",
+           ts_rescale(dts, 1000000),
+           dts,
+           pts_is_backlog(pkt->pkt_pts) ? "+" : " ",
+           ts_rescale(pts, 1000000),
+           pts,
+           pkt->pkt_duration,
+           pktbuf_len(pkt->pkt_payload),
+           pkt->pkt_err);
+#endif
+}
+
+static void
+parser_do_backlog(service_t *t, elementary_stream_t *st,
+                  void (*pkt_cb)(service_t *t, elementary_stream_t *st, th_pkt_t *pkt),
+                  pktbuf_t *meta)
+{
+  streaming_message_t *sm;
+  int64_t prevdts = PTS_UNSET, absdts = PTS_UNSET;
+  int64_t prevpts = PTS_UNSET, abspts = PTS_UNSET;
+  th_pkt_t *pkt;
+
+  tvhtrace("parser",
+           "pkt bcklog %2d %-12s - backlog flush start -",
+           st->es_index,
+           streaming_component_type2txt(st->es_type));
+  TAILQ_FOREACH(sm, &st->es_backlog, sm_link) {
+    pkt = sm->sm_data;
+    if (pkt->pkt_meta) {
+      meta = pkt->pkt_meta;
+      break;
+    }
+  }
+  while ((sm = TAILQ_FIRST(&st->es_backlog)) != NULL) {
+    pkt = sm->sm_data;
+    TAILQ_REMOVE(&st->es_backlog, sm, sm_link);
+
+    if (pkt->pkt_dts != PTS_UNSET)
+      pkt->pkt_dts &= ~PTS_BACKLOG;
+    if (pkt->pkt_pts != PTS_UNSET)
+      pkt->pkt_pts &= ~PTS_BACKLOG;
+
+    if (prevdts != PTS_UNSET && pkt->pkt_dts != PTS_UNSET &&
+        pkt->pkt_dts == ((prevdts + 1) & PTS_MASK))
+      pkt->pkt_dts = absdts;
+    if (prevpts != PTS_UNSET && pkt->pkt_pts != PTS_UNSET &&
+        pkt->pkt_pts == ((prevpts + 1) & PTS_MASK))
+      pkt->pkt_pts = abspts;
+
+    if (meta) {
+      if (pkt->pkt_meta == NULL) {
+        pktbuf_ref_inc(meta);
+        pkt->pkt_meta = meta;
+      }
+      meta = NULL;
+    }
+
+    pkt_cb(t, st, pkt);
+
+    if (absdts == PTS_UNSET) {
+      absdts = pkt->pkt_dts;
+    } else {
+      absdts += st->es_frame_duration;
+      absdts &= PTS_MASK;
+    }
+
+    if (abspts == PTS_UNSET) {
+      abspts = pkt->pkt_pts;
+    } else {
+      abspts += st->es_frame_duration;
+      abspts &= PTS_MASK;
+    }
+
+    prevdts = pkt->pkt_dts;
+    prevpts = pkt->pkt_pts;
+
+    parser_deliver(t, st, pkt);
+    sm->sm_data = NULL;
+    streaming_msg_free(sm);
+  }
+  tvhtrace("parser",
+           "pkt bcklog %2d %-12s - backlog flush end -",
+           st->es_index,
+           streaming_component_type2txt(st->es_type));
 }

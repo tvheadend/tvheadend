@@ -1394,6 +1394,8 @@ dvb_nit_callback
     save |= mpegts_network_set_network_name(mn, name);
     if (save)
       mn->mn_config_save(mn);
+    if (mpegts_mux_set_network_name(mm, name))
+      mm->mm_config_save(mm);
   }
 
   /* Transport length */

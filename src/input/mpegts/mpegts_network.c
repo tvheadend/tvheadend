@@ -145,6 +145,13 @@ const idclass_t mpegts_network_class =
       .notify   = idnode_notify_title_changed,
     },
     {
+      .type     = PT_STR,
+      .id       = "pnetworkname",
+      .name     = N_("Provider network name"),
+      .off      = offsetof(mpegts_network_t, mn_provider_network_name),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+    },
+    {
       .type     = PT_U16,
       .id       = "nid",
       .name     = N_("Network ID (limit scanning)"),
@@ -412,13 +419,20 @@ mpegts_network_set_network_name
   ( mpegts_network_t *mn, const char *name )
 {
   char buf[256];
-  if (mn->mn_network_name) return 0;
-  if (!name || name[0] == '\0' || !strcmp(name, mn->mn_network_name ?: ""))
-    return 0;
-  tvh_str_update(&mn->mn_network_name, name);
-  mn->mn_display_name(mn, buf, sizeof(buf));
-  tvhdebug("mpegts", "%s - set name %s", buf, name);
-  return 1;
+  int save = 0;
+  if (mn->mn_network_name == NULL || mn->mn_network_name[0] == '\0') {
+    if (name && name[0] && strcmp(name, mn->mn_network_name ?: "")) {
+      tvh_str_update(&mn->mn_network_name, name);
+      mn->mn_display_name(mn, buf, sizeof(buf));
+      tvhdebug("mpegts", "%s - set name %s", buf, name);
+      save = 1;
+    }
+  }
+  if (strcmp(name ?: "", mn->mn_network_name ?: "")) {
+    tvh_str_update(&mn->mn_provider_network_name, name ?: "");
+    save = 1;
+  }
+  return save;
 }
 
 void
