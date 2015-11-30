@@ -1676,6 +1676,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config2 = hts_settings_load("config");
   if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
+    config_newcfg = 1;
   } else {
     f = htsmsg_field_find(config2, "language");
     if (f && f->hmf_type == HMF_STR) {
