@@ -710,7 +710,7 @@ struct mpegts_input
   int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   int  (*mi_get_grace)      (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_warm_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
-  int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
+  int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*, int weight);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
   void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int flags, int first);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
@@ -861,7 +861,7 @@ mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
 void mpegts_mux_instance_delete ( tvh_input_instance_t *tii );
 
 int mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr, service_t *t );
+  ( mpegts_mux_instance_t **mmiptr, service_t *t, int weight );
 
 int mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi );
 

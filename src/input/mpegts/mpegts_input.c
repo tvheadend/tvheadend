@@ -384,7 +384,7 @@ mpegts_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 }
 
 static int
-mpegts_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+mpegts_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   return SM_CODE_TUNING_FAILED;
 }

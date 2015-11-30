@@ -217,7 +217,7 @@ mpegts_mux_unsubscribe_linked
 
 int
 mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr, service_t *t )
+  ( mpegts_mux_instance_t **mmiptr, service_t *t, int weight )
 {
   int r;
   char buf[256], buf2[256];
@@ -248,7 +248,7 @@ mpegts_mux_instance_start
 
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
-  r = mi->mi_start_mux(mi, mmi);
+  r = mi->mi_start_mux(mi, mmi, weight);
   if (r) return r;
 
   /* Start */

@@ -295,7 +295,7 @@ static htsstr_substitute_t iptv_input_subst[] = {
 };
 
 static int
-iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   int ret = SM_CODE_TUNING_FAILED;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;

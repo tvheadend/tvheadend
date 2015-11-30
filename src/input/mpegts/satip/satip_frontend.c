@@ -486,7 +486,7 @@ satip_frontend_stop_mux
 
 static int
 satip_frontend_start_mux
-  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   dvb_mux_t *lm = (dvb_mux_t *)mmi->mmi_mux;
@@ -519,11 +519,8 @@ satip_frontend_start_mux
 
   mpegts_pid_init(&tr->sf_pids);
   mpegts_pid_init(&tr->sf_pids_tuned);
-  if (lfe->sf_device->sd_can_weight) {
-    pthread_mutex_lock(&mi->mi_output_lock);
-    tr->sf_weight = mpegts_mux_instance_weight(mmi);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-  }
+  if (lfe->sf_device->sd_can_weight)
+    tr->sf_weight = weight;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   lfe->sf_req       = tr;
