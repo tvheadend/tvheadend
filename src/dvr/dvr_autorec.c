@@ -973,7 +973,7 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_STR,
       .id       = "title",
-      .name     = N_("Title (Regexp)"),
+      .name     = N_("Title (regexp)"),
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
     },
