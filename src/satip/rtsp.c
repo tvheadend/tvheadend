@@ -51,6 +51,7 @@ typedef struct session {
   int src;
   int state;
   int weight;
+  int used_weight;
   http_connection_t *shutdown_on_close;
   int perm_lock;
   uint32_t nsession;
@@ -491,6 +492,9 @@ rtsp_start
   int res = HTTP_STATUS_SERVICE, qsize = 3000000, created = 0, weight;
 
   pthread_mutex_lock(&global_lock);
+  weight = satip_server_conf.satip_weight;
+  if (satip_server_conf.satip_allow_remote_weight && rs->weight)
+    weight = rs->weight;
   dmc = rs->dmc_tuned;
   if (newmux) {
     mux = NULL;
@@ -551,9 +555,7 @@ rtsp_start
     rs->mux_created = created;
     if (profile_chain_raw_open(&rs->prch, (mpegts_mux_t *)rs->mux, qsize, 0))
       goto endclean;
-    weight = satip_server_conf.satip_weight;
-    if (satip_server_conf.satip_allow_remote_weight && rs->weight)
-      weight = rs->weight;
+    rs->used_weight = weight;
     rs->subs = subscription_create_from_mux(&rs->prch, NULL,
                                    weight,
                                    "SAT>IP",
@@ -580,6 +582,8 @@ pids:
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     satip_rtp_update_pids((void *)(intptr_t)rs->stream, &rs->pids);
+    if (rs->used_weight != weight && weight > 0)
+      subscription_set_weight(rs->subs, rs->used_weight = weight);
   }
   if (!setup && rs->state != STATE_PLAY) {
     if (rs->mux == NULL)

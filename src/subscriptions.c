@@ -398,6 +398,16 @@ subscription_reschedule(void)
 /**
  *
  */
+void
+subscription_set_weight(th_subscription_t *s, unsigned int weight)
+{
+  lock_assert(&global_lock);
+  s->ths_weight = weight;
+}
+
+/**
+ *
+ */
 static int64_t
 subscription_set_postpone(void *aux, const char *path, int64_t postpone)
 {
