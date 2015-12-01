@@ -135,6 +135,14 @@ typedef enum {
 
 
 /*
+ *
+ */
+#define UILEVEL_DEFAULT  (-1)
+#define UILEVEL_BASIC    0
+#define UILEVEL_ADVANCED 1
+#define UILEVEL_EXPERT   2
+
+/*
  * global timer
  */
 

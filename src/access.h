@@ -98,6 +98,7 @@ typedef struct access_entry {
 
   int ae_index;
   int ae_enabled;
+  int ae_uilevel;
 
   int ae_streaming;
   int ae_adv_streaming;
@@ -149,6 +150,7 @@ typedef struct access {
   uint32_t  aa_conn_limit_dvr;
   uint32_t  aa_conn_streaming;
   uint32_t  aa_conn_dvr;
+  int       aa_uilevel;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);

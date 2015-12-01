@@ -1897,6 +1897,17 @@ config_class_dscp_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+config_class_uilevel ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Basic"),    UILEVEL_BASIC },
+    { N_("Advanced"), UILEVEL_ADVANCED },
+    { N_("Expert"),   UILEVEL_EXPERT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -1953,6 +1964,14 @@ const idclass_t config_class = {
       .id     = "server_name",
       .name   = N_("Tvheadend server name"),
       .off    = offsetof(config_t, server_name),
+      .group  = 1
+    },
+    {
+      .type   = PT_INT,
+      .id     = "uilevel",
+      .name   = N_("User interface level"),
+      .off    = offsetof(config_t, uilevel),
+      .list   = config_class_uilevel,
       .group  = 1
     },
     {

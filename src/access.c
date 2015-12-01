@@ -407,7 +407,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u:l%u%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -423,6 +423,7 @@ access_dump_a(access_t *a)
     a->aa_conn_limit,
     a->aa_conn_limit_streaming,
     a->aa_conn_limit_dvr,
+    a->aa_uilevel,
     a->aa_match ? ", matched" : "");
 
   if (a->aa_profiles) {
@@ -486,7 +487,19 @@ access_dump_a(access_t *a)
  */
 static access_t *access_alloc(void)
 {
-  return calloc(1, sizeof(access_t));
+  access_t *a = calloc(1, sizeof(access_t));
+  a->aa_uilevel = -1;
+  return a;
+}
+
+/*
+ *
+ */
+static access_t *access_full(access_t *a)
+{
+  a->aa_rights = ACCESS_FULL;
+  a->aa_uilevel = UILEVEL_EXPERT;
+  return a;
 }
 
 /*
@@ -512,6 +525,9 @@ access_update(access_t *a, access_entry_t *ae)
       a->aa_conn_limit_dvr = ae->ae_conn_limit;
     break;
   }
+
+  if(ae->ae_uilevel > a->aa_uilevel)
+    a->aa_uilevel = ae->ae_uilevel;
 
   if(ae->ae_chmin || ae->ae_chmax) {
     uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
@@ -592,6 +608,8 @@ access_set_lang_ui(access_t *a)
     if (a->aa_lang)
       a->aa_lang_ui = strdup(a->aa_lang);
   }
+  if (a->aa_uilevel < 0)
+    a->aa_uilevel = config.uilevel;
 }
 
 /**
@@ -611,25 +629,19 @@ access_get(const char *username, const char *password, struct sockaddr *src)
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
     if(!passwd_verify2(username, password,
-                       superuser_username, superuser_password)) {
-      a->aa_rights = ACCESS_FULL;
-      return a;
-    }
+                       superuser_username, superuser_password))
+      return access_full(a);
   } else {
     a->aa_representative = malloc(50);
     tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
     if(!passwd_verify2(username, password,
-                       superuser_username, superuser_password)) {
-      a->aa_rights = ACCESS_FULL;
-      return a;
-    }
+                       superuser_username, superuser_password))
+      return access_full(a);
     username = NULL;
   }
 
-  if (access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
+  if (access_noacl)
+    return access_full(a);
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -684,25 +696,19 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
     if(!passwd_verify_digest2(username, digest, challenge,
-                              superuser_username, superuser_password)) {
-      a->aa_rights = ACCESS_FULL;
-      return a;
-    }
+                              superuser_username, superuser_password))
+      return access_full(a);
   } else {
     a->aa_representative = malloc(50);
     tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
     if(!passwd_verify_digest2(username, digest, challenge,
-                              superuser_username, superuser_password)) {
-      a->aa_rights = ACCESS_FULL;
-      return a;
-    }
+                              superuser_username, superuser_password))
+      return access_full(a);
     username = NULL;
   }
 
-  if(access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
+  if(access_noacl)
+    return access_full(a);
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
 
@@ -750,10 +756,8 @@ access_get_by_username(const char *username)
   a->aa_username = strdup(username);
   a->aa_representative = strdup(username);
 
-  if(access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
+  if(access_noacl)
+    return access_full(a);
 
   if (username[0] == '\0')
     return a;
@@ -786,10 +790,8 @@ access_get_by_addr(struct sockaddr *src)
   a->aa_representative = malloc(50);
   tcp_get_str_from_ip(src, a->aa_representative, 50);
 
-  if(access_noacl) {
-    a->aa_rights = ACCESS_FULL;
-    return a;
-  }
+  if(access_noacl)
+    return access_full(a);
 
   if (access_ip_blocked(src))
     return a;
@@ -1356,6 +1358,18 @@ user_get_userlist ( void *obj, const char *lang )
   return m;
 }
 
+static htsmsg_t *
+uilevel_get_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Default"),  UILEVEL_DEFAULT },
+    { N_("Basic"),    UILEVEL_BASIC },
+    { N_("Advanced"), UILEVEL_ADVANCED },
+    { N_("Expert"),   UILEVEL_EXPERT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = N_("Access"),
@@ -1392,6 +1406,14 @@ const idclass_t access_entry_class = {
       .name     = N_("Network prefix"),
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "uilevel",
+      .name     = N_("User interface level"),
+      .off      = offsetof(access_entry_t, ae_uilevel),
+      .list     = uilevel_get_list,
+      .opts     = PO_HIDDEN
     },
     {
       .type     = PT_STR,
