@@ -466,7 +466,9 @@ prop_serialize_value
     htsmsg_add_bool(m, "nosave", 1);
   if (opts & PO_WRONCE)
     htsmsg_add_bool(m, "wronce", 1);
-  if (opts & PO_ADVANCED)
+  if (opts & PO_EXPERT)
+    htsmsg_add_bool(m, "expert", 1);
+  else if (opts & PO_ADVANCED)
     htsmsg_add_bool(m, "advanced", 1);
   if (opts & PO_HIDDEN)
     htsmsg_add_bool(m, "hidden", 1);

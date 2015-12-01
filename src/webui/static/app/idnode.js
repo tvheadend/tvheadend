@@ -761,6 +761,7 @@ tvheadend.idnode_editor_field = function(f, conf)
 tvheadend.idnode_editor_form = function(d, meta, panel, conf)
 {
     var af = [];
+    var ef = [];
     var rf = [];
     var df = [];
     var groups = null;
@@ -808,6 +809,8 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
         } else {
             if (p.rdonly)
                 rf.push(f);
+            else if (p.expert)
+                ef.push(f);
             else if (p.advanced)
                 af.push(f);
             else
@@ -891,6 +894,8 @@ tvheadend.idnode_editor_form = function(d, meta, panel, conf)
             panel.add(newFieldSet({ title: _("Basic Settings"), items: df }));
         if (af.length)
             panel.add(newFieldSet({ title: _("Advanced Settings"), items: af }));
+        if (ef.length)
+            panel.add(newFieldSet({ title: _("Expert Settings"), items: ef }));
         if (rf.length)
             panel.add(newFieldSet({ title: _("Read-only Info"), items: rf, collapsed: 'true'}));
     }
