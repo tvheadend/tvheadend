@@ -1089,7 +1089,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             build();
             panel.getForm().setValues(values);
         });
-        buttons.push('-');
+        buttons.push('->');
         buttons.push(uilevelBtn);
 
         if (conf.help) {
@@ -1788,12 +1788,12 @@ tvheadend.idnode_grid = function(panel, conf)
                 model.setHidden(model.findColumnIndex(ifields[i].id), h);
             }
         });
-        buttons.push('-');
+        buttons.push('->');
         buttons.push(abuttons.uilevel);
 
         /* Help */
         if (conf.help) {
-            buttons.push('->');
+            buttons.push('-');
             buttons.push({
                 text: _('Help'),
                 iconCls: 'help',
@@ -2158,12 +2158,12 @@ tvheadend.idnode_form_grid = function(panel, conf)
             if (values && current)
                 current.editor.getForm().setValues(values);
         });
-        buttons.push('-');
+        buttons.push('->');
         buttons.push(abuttons.uilevel);
 
         /* Help */
         if (conf.help) {
-            buttons.push('->');
+            buttons.push('-');
             buttons.push({
                 text: _('Help'),
                 iconCls: 'help',
@@ -2548,27 +2548,6 @@ tvheadend.idnode_simple = function(panel, conf)
         });
         buttons.push(abuttons.undo);
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l, refresh) {
-            uilevel = l;
-            if (!refresh)
-                return;
-            var values = null;
-            if (current)
-                values = current.getForm().getFieldValues();
-            form_destroy();
-            if (lastdata) {
-                current = form_build(lastdata);
-                if (values && current)
-                     current.getForm().setValues(values);
-                if (current) {
-                     mpanel.add(current);
-                     mpanel.doLayout();
-                }
-            }
-        });
-        buttons.push('-');
-        buttons.push(abuttons.uilevel);
-
         /* Extra buttons */
         if (conf.tbar) {
             buttons.push('-');
@@ -2589,9 +2568,30 @@ tvheadend.idnode_simple = function(panel, conf)
             }
         }
 
+        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l, refresh) {
+            uilevel = l;
+            if (!refresh)
+                return;
+            var values = null;
+            if (current)
+                values = current.getForm().getFieldValues();
+            form_destroy();
+            if (lastdata) {
+                current = form_build(lastdata);
+                if (values && current)
+                     current.getForm().setValues(values);
+                if (current) {
+                     mpanel.add(current);
+                     mpanel.doLayout();
+                }
+            }
+        });
+        buttons.push('->');
+        buttons.push(abuttons.uilevel);
+
         /* Help */
         if (conf.help) {
-            buttons.push('->');
+            buttons.push('-');
             buttons.push({
                 text: _('Help'),
                 iconCls: 'help',
