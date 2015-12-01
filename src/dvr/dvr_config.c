@@ -996,14 +996,14 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_BOOL,
       .id       = "date-in-title",
-      .name     = N_("Include date In filename"),
+      .name     = N_("Include date in filename"),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
       .group    = 5,
     },
     {
       .type     = PT_BOOL,
       .id       = "time-in-title",
-      .name     = N_("Include time In filename"),
+      .name     = N_("Include time in filename"),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
       .group    = 5,
     },
