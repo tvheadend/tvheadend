@@ -807,6 +807,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
       .list     = dvr_config_class_cache_list,
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -829,6 +830,7 @@ const idclass_t dvr_config_class = {
       .id       = "clone",
       .name     = N_("Clone scheduled entry on error"),
       .off      = offsetof(dvr_config_t, dvr_clone),
+      .opts     = PO_ADVANCED,
       .def.u32  = 1,
       .group    = 1,
     },
@@ -837,6 +839,7 @@ const idclass_t dvr_config_class = {
       .id       = "rerecord-errors",
       .name     = N_("Schedule a re-recording if more errors than (0=off)"),
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -844,6 +847,7 @@ const idclass_t dvr_config_class = {
       .id       = "warm-time",
       .name     = N_("Extra warming up time (seconds)"),
       .off      = offsetof(dvr_config_t, dvr_warm_time),
+      .opts     = PO_ADVANCED,
       .group    = 1,
       .def.u32  = 30
     },
@@ -853,6 +857,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Extra padding before recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),
       .list     = dvr_config_class_extra_list,
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -861,6 +866,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Extra padding after recordings (minutes)"),
       .off      = offsetof(dvr_config_t, dvr_extra_time_post),
       .list     = dvr_config_class_extra_list,
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -870,6 +876,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_update_window),
       .list     = dvr_config_entry_class_update_window_list,
       .def.u32  = 24*3600,
+      .opts     = PO_EXPERT,
       .group    = 1,
     },
     {
@@ -877,6 +884,7 @@ const idclass_t dvr_config_class = {
       .id       = "epg-running",
       .name     = N_("Use EPG running state"),
       .off      = offsetof(dvr_config_t, dvr_running),
+      .opts     = PO_ADVANCED,
       .def.u32  = 1,
       .group    = 1,
     },
@@ -885,6 +893,7 @@ const idclass_t dvr_config_class = {
       .id       = "autorec-maxcount",
       .name     = N_("Autorec maximum count (0=unlimited)"),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_count),
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -892,6 +901,7 @@ const idclass_t dvr_config_class = {
       .id       = "autorec-maxsched",
       .name     = N_("Autorec maximum schedules limit (0=unlimited)"),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_sched_count),
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -899,6 +909,7 @@ const idclass_t dvr_config_class = {
       .id       = "postproc",
       .name     = N_("Post-processor command"),
       .off      = offsetof(dvr_config_t, dvr_postproc),
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -906,6 +917,7 @@ const idclass_t dvr_config_class = {
       .id       = "postremove",
       .name     = N_("Post-remove command"),
       .off      = offsetof(dvr_config_t, dvr_postremove),
+      .opts     = PO_EXPERT,
       .group    = 1,
     },
     {
@@ -920,6 +932,7 @@ const idclass_t dvr_config_class = {
       .id       = "file-permissions",
       .name     = N_("File permissions (octal, e.g. 0664)"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_file_permissions),
+      .opts     = PO_EXPERT,
       .def.u32  = 0664,
       .group    = 2,
     },
@@ -930,6 +943,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_charset),
       .set      = dvr_config_class_charset_set,
       .list     = dvr_config_class_charset_list,
+      .opts     = PO_ADVANCED,
       .def.s    = "UTF-8",
       .group    = 2,
     },
@@ -938,6 +952,7 @@ const idclass_t dvr_config_class = {
       .id       = "tag-files",
       .name     = N_("Tag files with metadata"),
       .off      = offsetof(dvr_config_t, dvr_tag_files),
+      .opts     = PO_ADVANCED,
       .def.i    = 1,
       .group    = 2,
     },
@@ -946,6 +961,7 @@ const idclass_t dvr_config_class = {
       .id       = "skip-commercials",
       .name     = N_("Skip commercials"),
       .off      = offsetof(dvr_config_t, dvr_skip_commercials),
+      .opts     = PO_ADVANCED,
       .def.i    = 1,
       .group    = 2,
     },
@@ -955,6 +971,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Format String"),
       .set      = dvr_config_class_pathname_set,
       .off      = offsetof(dvr_config_t, dvr_pathname),
+      .opts     = PO_EXPERT,
       .group    = 3,
     },
     {
@@ -962,6 +979,7 @@ const idclass_t dvr_config_class = {
       .id       = "directory-permissions",
       .name     = N_("Directory permissions (octal, e.g. 0775)"),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_directory_permissions),
+      .opts     = PO_EXPERT,
       .def.u32  = 0775,
       .group    = 4,
     },
@@ -970,6 +988,7 @@ const idclass_t dvr_config_class = {
       .id       = "day-dir",
       .name     = N_("Make subdirectories per day"),
       .off      = offsetof(dvr_config_t, dvr_dir_per_day),
+      .opts     = PO_EXPERT,
       .group    = 4,
     },
     {
@@ -977,6 +996,7 @@ const idclass_t dvr_config_class = {
       .id       = "channel-dir",
       .name     = N_("Make subdirectories per channel"),
       .off      = offsetof(dvr_config_t, dvr_channel_dir),
+      .opts     = PO_EXPERT,
       .group    = 4,
     },
     {
@@ -984,6 +1004,7 @@ const idclass_t dvr_config_class = {
       .id       = "title-dir",
       .name     = N_("Make subdirectories per title"),
       .off      = offsetof(dvr_config_t, dvr_title_dir),
+      .opts     = PO_EXPERT,
       .group    = 4,
     },
     {
@@ -991,6 +1012,7 @@ const idclass_t dvr_config_class = {
       .id       = "channel-in-title",
       .name     = N_("Include channel name in filename"),
       .off      = offsetof(dvr_config_t, dvr_channel_in_title),
+      .opts     = PO_EXPERT,
       .group    = 5,
     },
     {
@@ -998,6 +1020,7 @@ const idclass_t dvr_config_class = {
       .id       = "date-in-title",
       .name     = N_("Include date In filename"),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
+      .opts     = PO_EXPERT,
       .group    = 5,
     },
     {
@@ -1005,6 +1028,7 @@ const idclass_t dvr_config_class = {
       .id       = "time-in-title",
       .name     = N_("Include time In filename"),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
+      .opts     = PO_EXPERT,
       .group    = 5,
     },
     {
@@ -1012,6 +1036,7 @@ const idclass_t dvr_config_class = {
       .id       = "episode-in-title",
       .name     = N_("Include episode in filename"),
       .off      = offsetof(dvr_config_t, dvr_episode_in_title),
+      .opts     = PO_EXPERT,
       .group    = 5,
     },
     {
@@ -1019,6 +1044,7 @@ const idclass_t dvr_config_class = {
       .id       = "subtitle-in-title",
       .name     = N_("Include subtitle in filename"),
       .off      = offsetof(dvr_config_t, dvr_subtitle_in_title),
+      .opts     = PO_EXPERT,
       .group    = 6,
     },
     {
@@ -1026,6 +1052,7 @@ const idclass_t dvr_config_class = {
       .id       = "omit-title",
       .name     = N_("Don't include title in filename"),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
+      .opts     = PO_EXPERT,
       .group    = 6,
     },
     {
@@ -1033,6 +1060,7 @@ const idclass_t dvr_config_class = {
       .id       = "clean-title",
       .name     = N_("Remove all unsafe characters from filename"),
       .off      = offsetof(dvr_config_t, dvr_clean_title),
+      .opts     = PO_EXPERT,
       .group    = 6,
     },
     {
@@ -1040,6 +1068,7 @@ const idclass_t dvr_config_class = {
       .id       = "whitespace-in-title",
       .name     = N_("Replace whitespace in title with '-'"),
       .off      = offsetof(dvr_config_t, dvr_whitespace_in_title),
+      .opts     = PO_EXPERT,
       .group    = 6,
     },
     {
@@ -1047,6 +1076,7 @@ const idclass_t dvr_config_class = {
       .id       = "windows-compatible-filenames",
       .name     = N_("Use Windows-compatible filenames"),
       .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
+      .opts     = PO_EXPERT,
       .group    = 6,
     },
     {}

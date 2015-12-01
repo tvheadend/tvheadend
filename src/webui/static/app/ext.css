@@ -168,6 +168,10 @@
     background-image: url(../icons/find.png) !important;
 }
 
+.uilevel {
+    background-image: url(../icons/application_form.png) !important;
+}
+
 .imdb {
     background-image: url(../icons/imdb.png) !important;
 }
