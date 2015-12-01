@@ -1041,6 +1041,8 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   TAILQ_INIT(&ae->ae_ipmasks);
 
+  ae->ae_uilevel = UILEVEL_DEFAULT;
+
   if (conf) {
     /* defaults */
     ae->ae_htsp_streaming = 1;
