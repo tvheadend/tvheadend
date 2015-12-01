@@ -934,18 +934,23 @@ tvheadend.idnode_editor = function(item, conf)
             text: _('Save'),
             iconCls: 'save',
             handler: function() {
-                var node = panel.getForm().getFieldValues();
-                node.uuid = conf.uuids ? conf.uuids : item.uuid;
-                tvheadend.Ajax({
-                    url: 'api/idnode/save',
-                    params: {
-                        node: Ext.encode(node)
-                    },
-                    success: function(d) {
-                        if (conf.win)
-                            conf.win.close();
-                    }
-                });
+                if (panel.getForm().isDirty()) {
+                    var node = panel.getForm().getFieldValues();
+                    node.uuid = conf.uuids ? conf.uuids : item.uuid;
+                    tvheadend.Ajax({
+                        url: 'api/idnode/save',
+                        params: {
+                            node: Ext.encode(node)
+                        },
+                        success: function(d) {
+                            if (conf.win)
+                                conf.win.close();
+                        }
+                    });
+                } else {
+                    if (conf.win)
+                        conf.win.close();
+                }
             }
         });
         buttons.push(saveBtn);
@@ -955,16 +960,19 @@ tvheadend.idnode_editor = function(item, conf)
                 text: _('Apply'),
                 iconCls: 'apply',
                 handler: function() {
-                    var node = panel.getForm().getFieldValues();
-                    node.uuid = conf.uuids ? conf.uuids : item.uuid;
-                    tvheadend.Ajax({
-                        url: 'api/idnode/save',
-                        params: {
-                            node: Ext.encode(node)
-                        },
-                        success: function(d) {
-                        }
-                    });
+                    if (panel.getForm().isDirty()) {
+                        var node = panel.getForm().getFieldValues();
+                        node.uuid = conf.uuids ? conf.uuids : item.uuid;
+                        tvheadend.Ajax({
+                            url: 'api/idnode/save',
+                            params: {
+                                node: Ext.encode(node)
+                            },
+                            success: function(d) {
+                                panel.getForm().reset();
+                            }
+                        });
+                    }
                 }
             });
             buttons.push(applyBtn);
@@ -1023,19 +1031,23 @@ tvheadend.idnode_create = function(conf, onlyDefault)
         iconCls: 'add',
         hidden: true,
         handler: function() {
-            var params = conf.create.params || {};
-            if (puuid)
-                params['uuid'] = puuid;
-            if (pclass)
-                params['class'] = pclass;
-            params['conf'] = Ext.encode(panel.getForm().getFieldValues());
-            tvheadend.Ajax({
-                url: conf.create.url || conf.url + '/create',
-                params: params,
-                success: function(d) {
-                    win.close();
-                }
-            });
+            if (panel.getForm().isDirty()) {
+                var params = conf.create.params || {};
+                if (puuid)
+                    params['uuid'] = puuid;
+                if (pclass)
+                    params['class'] = pclass;
+                params['conf'] = Ext.encode(panel.getForm().getFieldValues());
+                tvheadend.Ajax({
+                    url: conf.create.url || conf.url + '/create',
+                    params: params,
+                    success: function(d) {
+                        win.close();
+                    }
+                });
+            } else {
+                win.close();
+            }
         }
     });
     var applyBtn = new Ext.Button({
@@ -1044,18 +1056,21 @@ tvheadend.idnode_create = function(conf, onlyDefault)
         iconCls: 'apply',
         hidden: true,
         handler: function() {
-            var params = conf.create.params || {};
-            if (puuid)
-                params['uuid'] = puuid;
-            if (pclass)
-                params['class'] = pclass;
-            params['conf'] = Ext.encode(panel.getForm().getFieldValues());
-            tvheadend.Ajax({
-                url: conf.create.url || conf.url + '/create',
-                params: params,
-                success: function(d) {
-                }
-            });
+            if (panel.getForm().isDirty()) {
+                var params = conf.create.params || {};
+                if (puuid)
+                    params['uuid'] = puuid;
+                if (pclass)
+                    params['class'] = pclass;
+                params['conf'] = Ext.encode(panel.getForm().getFieldValues());
+                tvheadend.Ajax({
+                    url: conf.create.url || conf.url + '/create',
+                    params: params,
+                    success: function(d) {
+                        panel.getForm().reset();
+                    }
+                });
+            }
         }
     });
     var cancelBtn = new Ext.Button({
