@@ -1554,7 +1554,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "abitrate",
-      .name     = N_("Audio Bitrate (kb/s) (0=Auto)"),
+      .name     = N_("Audio bitrate (kb/s) (0=auto)"),
       .off      = offsetof(profile_transcode_t, pro_abitrate),
       .def.u32  = 0,
     },
