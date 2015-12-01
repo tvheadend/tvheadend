@@ -881,7 +881,7 @@ tcp_server_create
     ts->ops    = *ops;
     ts->opaque = opaque;
     tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
-    tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d (systemd)", subsystem, name, buf, htons(IP_PORT(bound)));
+    tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d (systemd)", name, buf, htons(IP_PORT(bound)));
   } else {
     /* no systemd-managed socket found, create a new one */
     tvhlog(LOG_INFO, "tcp", "No systemd socket: creating a new one");
