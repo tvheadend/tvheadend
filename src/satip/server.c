@@ -588,7 +588,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_uuid",
       .name   = N_("Server UUID"),
       .off    = offsetof(struct satip_server_conf, satip_uuid),
-      .opts   = PO_RDONLY,
+      .opts   = PO_RDONLY | PO_EXPERT,
       .group  = 1,
     },
     {
@@ -603,6 +603,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
       .off    = offsetof(struct satip_server_conf, satip_weight),
+      .opts   = PO_ADVANCED,
       .group  = 1,
     },
     {
@@ -610,6 +611,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_remote_weight",
       .name   = N_("Allow remote subscription weight"),
       .off    = offsetof(struct satip_server_conf, satip_allow_remote_weight),
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -617,6 +619,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_descramble",
       .name   = N_("Descramble services (limit per mux)"),
       .off    = offsetof(struct satip_server_conf, satip_descramble),
+      .opts   = PO_ADVANCED,
       .group  = 1,
     },
     {
@@ -624,6 +627,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_rewrite_pmt",
       .name   = N_("Rewrite PMT"),
       .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -632,6 +636,7 @@ const idclass_t satip_server_class = {
       .name   = N_("Mux handling"),
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -639,6 +644,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_nat_ip",
       .name   = N_("External IP (NAT)"),
       .off    = offsetof(struct satip_server_conf, satip_nat_ip),
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {

@@ -519,7 +519,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "network_uuid",
       .name     = N_("Network UUID"),
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_EXPERT,
       .get      = mpegts_mux_class_get_network_uuid,
     },
     {
@@ -534,27 +534,27 @@ const idclass_t mpegts_mux_class =
       .id       = "pnetwork_name",
       .name     = N_("Provider network name"),
       .off      = offsetof(mpegts_mux_t, mm_provider_network_name),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
     },
     {
       .type     = PT_U16,
       .id       = "onid",
       .name     = N_("Original network ID"),
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_ADVANCED,
       .off      = offsetof(mpegts_mux_t, mm_onid),
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
       .name     = N_("Transport stream ID"),
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_ADVANCED,
       .off      = offsetof(mpegts_mux_t, mm_tsid),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
       .name     = N_("CRID authority"),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {
@@ -603,14 +603,14 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
-      .opts     = PO_HIDDEN | PO_ADVANCED
+      .opts     = PO_HIDDEN | PO_EXPERT
     },
     {
       .type     = PT_BOOL,
       .id       = "eit_tsid_nocheck",
       .name     = N_("EIT - skip TSID check"),
       .off      = offsetof(mpegts_mux_t, mm_eit_tsid_nocheck),
-      .opts     = PO_HIDDEN | PO_ADVANCED
+      .opts     = PO_HIDDEN | PO_EXPERT
     },
     {}
   }

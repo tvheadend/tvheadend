@@ -1406,6 +1406,7 @@ const idclass_t access_entry_class = {
       .name     = N_("Network prefix"),
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_INT,
@@ -1429,6 +1430,7 @@ const idclass_t access_entry_class = {
       .name     = N_("Web interface language"),
       .list     = language_get_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -1457,6 +1459,7 @@ const idclass_t access_entry_class = {
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
       .rend     = access_entry_profile_rend,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -1498,6 +1501,7 @@ const idclass_t access_entry_class = {
       .get      = access_entry_dvr_config_get,
       .list     = dvr_entry_class_config_name_list,
       .rend     = access_entry_dvr_config_rend,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -1517,12 +1521,14 @@ const idclass_t access_entry_class = {
       .name     = N_("Connection limit type"),
       .off      = offsetof(access_entry_t, ae_conn_limit_type),
       .list     = access_entry_conn_limit_type_enum,
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_U32,
       .id       = "conn_limit",
       .name     = N_("Limit connections"),
       .off      = offsetof(access_entry_t, ae_conn_limit),
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_S64,
@@ -1543,6 +1549,7 @@ const idclass_t access_entry_class = {
       .id       = "channel_tag_exclude",
       .name     = N_("Exclude channel tags"),
       .off      = offsetof(access_entry_t, ae_chtags_exclude),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -1553,6 +1560,7 @@ const idclass_t access_entry_class = {
       .get      = access_entry_chtag_get,
       .list     = channel_tag_class_get_list,
       .rend     = access_entry_chtag_rend,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -1785,7 +1793,7 @@ const idclass_t passwd_entry_class = {
       .id       = "password2",
       .name     = N_("Password2"),
       .off      = offsetof(passwd_entry_t, pw_password2),
-      .opts     = PO_PASSWORD | PO_HIDDEN | PO_ADVANCED | PO_WRONCE,
+      .opts     = PO_PASSWORD | PO_HIDDEN | PO_EXPERT | PO_WRONCE,
       .set      = passwd_entry_class_password2_set,
     },
     {
