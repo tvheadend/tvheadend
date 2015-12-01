@@ -1369,7 +1369,7 @@ profile_class_channels_list ( void *o, const char *lang )
     { N_("Copy layout"),                   0 },
     { N_("Mono"),                          1 },
     { N_("Stereo"),                        2 },
-    { N_("Surround (2 Front, Rear Mono)"), 3 },
+    { N_("Surround (2 front, rear mono)"), 3 },
     { N_("Quad (4.0)"),                    4 },
     { N_("5.0"),                           5 },
     { N_("5.1"),                           6 },
