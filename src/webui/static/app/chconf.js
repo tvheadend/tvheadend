@@ -142,25 +142,25 @@ tvheadend.channel_tab = function(panel, index)
             m.add({
                 name: 'lowno',
                 tooltip: _('Assign lowest free channel number'),
-                iconCls: 'bullet_add',
+                iconCls: 'chnumops_low',
                 text: _('Assign Number')
             });
             m.add({
                 name: 'noup',
                 tooltip: _('Move channel one number up'),
-                iconCls: 'arrow_up',
+                iconCls: 'chnumops_up',
                 text: _('Number Up')
             });
             m.add({
                 name: 'nodown',
                 tooltip: _('Move channel one number down'),
-                iconCls: 'arrow_down',
+                iconCls: 'chnumops_down',
                 text: _('Number Down')
             });
             m.add({
                 name: 'swap',
                 tooltip: _('Swap the numbers for the two selected channels'),
-                iconCls: 'arrow_switch',
+                iconCls: 'chnumops_swap',
                 text: _('Swap Numbers')
             });
             return new Ext.Toolbar.Button({
