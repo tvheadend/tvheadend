@@ -168,8 +168,24 @@
     background-image: url(../icons/find.png) !important;
 }
 
+.chnumops {
+    background-image: url(../icons/brick.png) !important;
+}
+
 .uilevel {
     background-image: url(../icons/application_form.png) !important;
+}
+
+.uilevel_basic {
+    background-image: url(../icons/award_star_bronze_3.png) !important;
+}
+
+.uilevel_advanced {
+    background-image: url(../icons/award_star_silver_3.png) !important;
+}
+
+.uilevel_expert {
+    background-image: url(../icons/award_star_gold_3.png) !important;
 }
 
 .imdb {

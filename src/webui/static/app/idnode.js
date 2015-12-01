@@ -594,16 +594,19 @@ tvheadend.idnode_uilevel_menu = function(uilevel, handler)
     var m = new Ext.menu.Menu();
     m.add({
         text: _('Basic'),
+        iconCls: 'uilevel_basic',
         tvh_uilevel: 'basic',
         handler: selected
     });
     m.add({
         text: _('Advanced'),
+        iconCls: 'uilevel_advanced',
         tvh_uilevel: 'advanced',
         handler: selected
     });
     m.add({
         text: _('Expert'),
+        iconCls: 'uilevel_expert',
         tvh_uilevel: 'expert',
         handler: selected
     });

@@ -165,7 +165,7 @@ tvheadend.channel_tab = function(panel, index)
             });
             return new Ext.Toolbar.Button({
                 tooltip: _('Channel number operations'),
-                iconCls: 'bullet_add',
+                iconCls: 'chnumops',
                 text: _('Number operations'),
                 menu: m,
                 disabled: false
