@@ -1768,7 +1768,14 @@ tvheadend.idnode_grid = function(panel, conf)
                 var t = conf.tbar[i];
                 if (t.name && t.builder) {
                     var b = t.builder();
-                    if (t.callback) {
+                    if (b.menu) {
+                        b.menu.items.each(function(mi) {
+                            mi.callback = t.callback[mi.name];
+                            mi.setHandler(function(m, e) {
+                                this.callback(this, e, store, select);
+                            });
+                        });
+                    } else if (t.callback) {
                         b.callback = t.callback;
                         b.handler = function(b, e) {
                             this.callback(this, e, store, select);
