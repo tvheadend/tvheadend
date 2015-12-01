@@ -950,23 +950,25 @@ tvheadend.idnode_editor = function(item, conf)
         });
         buttons.push(saveBtn);
 
-        var applyBtn = new Ext.Button({
-            text: _('Apply'),
-            iconCls: 'apply',
-            handler: function() {
-                var node = panel.getForm().getFieldValues();
-                node.uuid = conf.uuids ? conf.uuids : item.uuid;
-                tvheadend.Ajax({
-                    url: 'api/idnode/save',
-                    params: {
-                        node: Ext.encode(node)
-                    },
-                    success: function(d) {
-                    }
-                });
-            }
-        });
-        buttons.push(applyBtn);
+        if (!conf.noApply) {
+            var applyBtn = new Ext.Button({
+                text: _('Apply'),
+                iconCls: 'apply',
+                handler: function() {
+                    var node = panel.getForm().getFieldValues();
+                    node.uuid = conf.uuids ? conf.uuids : item.uuid;
+                    tvheadend.Ajax({
+                        url: 'api/idnode/save',
+                        params: {
+                            node: Ext.encode(node)
+                        },
+                        success: function(d) {
+                        }
+                    });
+                }
+            });
+            buttons.push(applyBtn);
+        }
 
         if (conf.help) {
             var helpBtn = new Ext.Button({
@@ -2227,6 +2229,7 @@ tvheadend.idnode_tree = function(panel, conf)
                             width: 550,
                             noautoWidth: true,
                             fixedHeight: true,
+                            noApply: true,
                             help: conf.help || null
                         });
                         mpanel.add(current);
