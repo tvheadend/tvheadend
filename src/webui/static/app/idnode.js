@@ -278,7 +278,6 @@ tvheadend.IdNodeField = function(conf)
 
     this.get_hidden = function(uilevel) {
         var hidden = this.hidden;
-        console.log('init hidden for', this.id, ' is ', hidden);
         if (uilevel !== 'expert') {
             if (uilevel === 'advanced' && this.uilevel === 'expert')
                 hidden = true;
@@ -576,37 +575,48 @@ tvheadend.IdNode = function(conf)
 /*
  *
  */
-tvheadend.idnode_uilevel_text = function(uilevel)
+tvheadend.idnode_uilevel_menu = function(uilevel, handler)
 {
-    if (uilevel === 'basic')
-        return _('Basic');
-    if (uilevel === 'advanced')
-        return _('Advanced');
-    return _('Expert');
-}
+    var b;
 
-tvheadend.idnode_uilevel_change = function(button, uilevel)
-{
-    if (uilevel == 'basic')
-        uilevel = 'advanced';
-    else if (uilevel == 'advanced')
-        uilevel = 'expert';
-    else
-        uilevel = 'basic';
-    button.setText(tvheadend.idnode_uilevel_text(uilevel));
-    return uilevel;
-}
+    var text = function(uilevel) {
+        if (uilevel === 'basic')
+            return _('Basic');
+        if (uilevel === 'advanced')
+            return _('Advanced');
+        return _('Expert');
+    }
 
-tvheadend.idnode_uilevel_button = function(uilevel, handler)
-{
-    var b = new Ext.Toolbar.Button({
+    function selected(m) {
+        b.tvh_uilevel_set(m.initialConfig.tvh_uilevel, 1);
+    }
+
+    var m = new Ext.menu.Menu();
+    m.add({
+        text: _('Basic'),
+        tvh_uilevel: 'basic',
+        handler: selected
+    });
+    m.add({
+        text: _('Advanced'),
+        tvh_uilevel: 'advanced',
+        handler: selected
+    });
+    m.add({
+        text: _('Expert'),
+        tvh_uilevel: 'expert',
+        handler: selected
+    });
+    b = new Ext.Toolbar.Button({
         tooltip: _('Change the user interface level (basic, advanced, expert)'),
         iconCls: 'uilevel',
-        text: tvheadend.idnode_uilevel_text(uilevel),
-        disabled: true,
-        handler: handler
+        text: _('View level: ') + text(uilevel),
+        menu: m,
+        tvh_uilevel_set: function (l, refresh) {
+            b.setText(_('View level: ') + text(l));
+            handler(l, refresh);
+        }
     });
-    b.setDisabled(false);
     return b;
 }
 
@@ -1072,8 +1082,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             buttons.push(applyBtn);
         }
 
-        var uilevelBtn = tvheadend.idnode_uilevel_button(uilevel, function() {
-            uilevel = tvheadend.idnode_uilevel_change(uilevelBtn, uilevel);
+        var uilevelBtn = tvheadend.idnode_uilevel_menu(uilevel, function(l) {
+            uilevel = l;
             var values = panel.getForm().getFieldValues();
             destroy();
             build();
@@ -1771,11 +1781,10 @@ tvheadend.idnode_grid = function(panel, conf)
             }
         }
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_button(uilevel, function () {
-            uilevel = tvheadend.idnode_uilevel_change(abuttons.uilevel, uilevel);
+        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
+            uilevel = l;
             for (var i = 0; i < ifields.length; i++) {
                 var h = ifields[i].get_hidden(uilevel);
-                console.log('idx', i, 'hidden', h);
                 model.setHidden(model.findColumnIndex(ifields[i].id), h);
             }
         });
@@ -2139,8 +2148,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
             }
         }
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_button(uilevel, function () {
-            uilevel = tvheadend.idnode_uilevel_change(abuttons.uilevel, uilevel);
+        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
+            uilevel = l;
             var values = null;
             if (current)
                 values = current.editor.getForm().getFieldValues();
@@ -2519,6 +2528,8 @@ tvheadend.idnode_simple = function(panel, conf)
                         node: Ext.encode(node)
                     },
                     success: function() {
+                        if (conf.postsave)
+                            conf.postsave(node, abuttons);
                         form_load(true);
                     }
                 });
@@ -2537,8 +2548,10 @@ tvheadend.idnode_simple = function(panel, conf)
         });
         buttons.push(abuttons.undo);
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_button(uilevel, function () {
-            uilevel = tvheadend.idnode_uilevel_change(abuttons.uilevel, uilevel);
+        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l, refresh) {
+            uilevel = l;
+            if (!refresh)
+                return;
             var values = null;
             if (current)
                 values = current.getForm().getFieldValues();
