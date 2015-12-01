@@ -1759,7 +1759,7 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_STR,
       .id       = "deskey",
-      .name     = N_("DES Key"),
+      .name     = N_("DES key"),
       .set      = caclient_cwc_class_deskey_set,
       .get      = caclient_cwc_class_deskey_get,
       .opts     = PO_PASSWORD,
