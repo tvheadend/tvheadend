@@ -1078,15 +1078,18 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             buttons.push(applyBtn);
         }
 
-        var uilevelBtn = tvheadend.idnode_uilevel_menu(uilevel, function(l) {
-            uilevel = l;
-            var values = panel.getForm().getFieldValues();
-            destroy();
-            build();
-            panel.getForm().setValues(values);
-        });
-        buttons.push('->');
-        buttons.push(uilevelBtn);
+        var uilevelBtn = null;
+        if (!conf.uilevel || conf.uilevel !== 'expert') {
+            uilevelBtn = tvheadend.idnode_uilevel_menu(uilevel, function(l) {
+                uilevel = l;
+                var values = panel.getForm().getFieldValues();
+                destroy();
+                build();
+                panel.getForm().setValues(values);
+            });
+            buttons.push('->');
+            buttons.push(uilevelBtn);
+        }
 
         if (conf.help) {
             var helpBtn = new Ext.Button({
@@ -1094,7 +1097,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                 iconCls: 'help',
                 handler: conf.help
             });
-            buttons.push('-');
+            buttons.push(uilevelBtn ? '-' : '->');
             buttons.push(helpBtn);
         }
     }
@@ -1814,19 +1817,21 @@ tvheadend.idnode_grid = function(panel, conf)
             }
         }
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
-            uilevel = l;
-            for (var i = 0; i < ifields.length; i++) {
-                var h = ifields[i].get_hidden(uilevel);
-                model.setHidden(model.findColumnIndex(ifields[i].id), h);
-            }
-        });
-        buttons.push('->');
-        buttons.push(abuttons.uilevel);
+        if (!conf.uilevel || conf.uilevel !== 'expert') {
+            abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
+                uilevel = l;
+                for (var i = 0; i < ifields.length; i++) {
+                    var h = ifields[i].get_hidden(uilevel);
+                    model.setHidden(model.findColumnIndex(ifields[i].id), h);
+                }
+            });
+            buttons.push('->');
+            buttons.push(abuttons.uilevel);
+        }
 
         /* Help */
         if (conf.help) {
-            buttons.push('-');
+            buttons.push(abuttons.uilevel ? '-' : '->');
             buttons.push({
                 text: _('Help'),
                 iconCls: 'help',
@@ -2180,22 +2185,24 @@ tvheadend.idnode_form_grid = function(panel, conf)
             }
         }
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
-            uilevel = l;
-            var values = null;
-            if (current)
-                values = current.editor.getForm().getFieldValues();
-            roweditor_destroy();
-            roweditor(select.getSelected());
-            if (values && current)
-                current.editor.getForm().setValues(values);
-        });
-        buttons.push('->');
-        buttons.push(abuttons.uilevel);
+        if (!conf.uilevel || conf.uilevel !== 'expert') {
+            abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
+                uilevel = l;
+                var values = null;
+                if (current)
+                    values = current.editor.getForm().getFieldValues();
+                roweditor_destroy();
+                roweditor(select.getSelected());
+                if (values && current)
+                    current.editor.getForm().setValues(values);
+            });
+            buttons.push('->');
+            buttons.push(abuttons.uilevel);
+        }
 
         /* Help */
         if (conf.help) {
-            buttons.push('-');
+            buttons.push(abuttons.uilevel ? '-' : '->');
             buttons.push({
                 text: _('Help'),
                 iconCls: 'help',
@@ -2619,13 +2626,15 @@ tvheadend.idnode_simple = function(panel, conf)
             }
         }
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, uilevel_change);
-        buttons.push('->');
-        buttons.push(abuttons.uilevel);
+        if (!conf.uilevel || conf.uilevel !== 'expert') {
+            abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, uilevel_change);
+            buttons.push('->');
+            buttons.push(abuttons.uilevel);
+        }
 
         /* Help */
         if (conf.help) {
-            buttons.push('-');
+            buttons.push(abuttons.uilevel ? '-' : '->');
             buttons.push({
                 text: _('Help'),
                 iconCls: 'help',
