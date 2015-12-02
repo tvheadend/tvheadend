@@ -2066,7 +2066,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "tvhtime_ntp_enabled",
       .name   = N_("Enable NTP driver"),
-      .off    = offsetof(config_t, tvhtime_update_enabled),
+      .off    = offsetof(config_t, tvhtime_ntp_enabled),
       .opts   = PO_EXPERT,
       .group  = 5,
     },
