@@ -152,6 +152,7 @@ const idclass_t satip_frontend_class =
       .id       = "udp_rtp_port",
       .name     = N_("UDP RTP port number (2 ports)"),
       .off      = offsetof(satip_frontend_t, sf_udp_rtp_port),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,

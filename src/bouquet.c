@@ -910,6 +910,7 @@ const idclass_t bouquet_class = {
       .name     = N_("Map zero-numbered channels"),
       .off      = offsetof(bouquet_t, bq_mapnolcn),
       .notify   = bouquet_class_mapnolcn_notify,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -917,6 +918,7 @@ const idclass_t bouquet_class = {
       .name     = N_("Map unnamed channels"),
       .off      = offsetof(bouquet_t, bq_mapnoname),
       .notify   = bouquet_class_mapnoname_notify,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -924,6 +926,7 @@ const idclass_t bouquet_class = {
       .name     = N_("Map radio channels"),
       .off      = offsetof(bouquet_t, bq_mapradio),
       .notify   = bouquet_class_mapradio_notify,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -931,6 +934,7 @@ const idclass_t bouquet_class = {
       .name     = N_("Create tag"),
       .off      = offsetof(bouquet_t, bq_chtag),
       .notify   = bouquet_class_chtag_notify,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -939,7 +943,7 @@ const idclass_t bouquet_class = {
       .get      = bouquet_class_chtag_ref_get,
       .set      = bouquet_class_chtag_ref_set,
       .rend     = bouquet_class_chtag_ref_rend,
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
     },
     {
       .type     = PT_STR,
@@ -960,7 +964,7 @@ const idclass_t bouquet_class = {
       .id       = "ssl_peer_verify",
       .name     = N_("SSL verify peer"),
       .off      = offsetof(bouquet_t, bq_ssl_peer_verify),
-      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .opts     = PO_ADVANCED | PO_HIDDEN | PO_EXPERT,
       .notify   = bouquet_class_ext_url_notify,
     },
     {
@@ -977,7 +981,7 @@ const idclass_t bouquet_class = {
       .id       = "source",
       .name     = N_("Source"),
       .off      = offsetof(bouquet_t, bq_src),
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -1015,6 +1019,7 @@ const idclass_t bouquet_class = {
       .name     = N_("Channel number offset"),
       .off      = offsetof(bouquet_t, bq_lcn_offset),
       .notify   = bouquet_class_lcn_offset_notify,
+      .opts     = PO_ADVANCED
     },
     {}
   }

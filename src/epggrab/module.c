@@ -147,6 +147,7 @@ const idclass_t epggrab_mod_class = {
       .id     = "priority",
       .name   = N_("Priority"),
       .off    = offsetof(epggrab_module_t, priority),
+      .opts   = PO_ADVANCED,
       .group  = 1
     },
     {}
@@ -171,6 +172,7 @@ const idclass_t epggrab_class_mod_int = {
       .id     = "args",
       .name   = N_("Extra arguments"),
       .off    = offsetof(epggrab_module_int_t, args),
+      .opts   = PO_ADVANCED,
       .group  = 1
     },
     {}

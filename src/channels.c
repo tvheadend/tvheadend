@@ -453,7 +453,6 @@ const idclass_t channel_class = {
       .set      = channel_class_tags_set,
       .list     = channel_tag_class_get_list,
       .rend     = channel_class_tags_rend,
-      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
