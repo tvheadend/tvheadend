@@ -177,7 +177,6 @@ typedef struct dvr_entry {
   int de_pri;
   int de_dont_reschedule;
   int de_dont_rerecord;
-  int de_mc;
   uint32_t de_retention;
   uint32_t de_removal;
 

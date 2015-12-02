@@ -518,8 +518,8 @@ dvr_timerec_entry_class_owner_opts(void *o)
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte && dte->dte_id.in_access &&
       !access_verify2(dte->dte_id.in_access, ACCESS_ADMIN))
-    return 0;
-  return PO_RDONLY;
+    return PO_ADVANCED;
+  return PO_RDONLY | PO_ADVANCED;
 }
 
 const idclass_t dvr_timerec_entry_class = {
@@ -555,6 +555,7 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "directory",
       .name     = N_("Directory"),
       .off      = offsetof(dvr_timerec_entry_t, dte_directory),
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
@@ -603,19 +604,21 @@ const idclass_t dvr_timerec_entry_class = {
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_timerec_entry_t, dte_pri),
-      .opts     = PO_SORTKEY,
+      .opts     = PO_SORTKEY | PO_ADVANCED,
     },
     {
       .type     = PT_U32,
       .id       = "retention",
       .name     = N_("DVR log retention (days)"),
       .off      = offsetof(dvr_timerec_entry_t, dte_retention),
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_U32,
       .id       = "removal",
       .name     = N_("DVR file retention period (days)"),
       .off      = offsetof(dvr_timerec_entry_t, dte_removal),
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
@@ -625,6 +628,7 @@ const idclass_t dvr_timerec_entry_class = {
       .get      = dvr_timerec_entry_class_config_name_get,
       .rend     = dvr_timerec_entry_class_config_name_rend,
       .list     = dvr_entry_class_config_name_list,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,

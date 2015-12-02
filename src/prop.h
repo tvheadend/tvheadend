@@ -50,16 +50,17 @@ typedef enum {
 #define PO_WRONCE    (1<<3)  // Property is write-once (i.e. on creation)
 #define PO_ADVANCED  (1<<4)  // Property is advanced
 #define PO_EXPERT    (1<<5)  // Property is for experts
-#define PO_HIDDEN    (1<<6)  // Property is hidden (by default)
-#define PO_USERAW    (1<<7)  // Only save the RAW (off) value if it exists
-#define PO_SORTKEY   (1<<8)  // Sort using key (not display value)
-#define PO_PASSWORD  (1<<9)  // String is a password
-#define PO_DURATION  (1<<10) // For PT_TIME - differentiate between duration and datetime
-#define PO_HEXA      (1<<11) // Hexadecimal value
-#define PO_DATE      (1<<12) // Show date only
-#define PO_LOCALE    (1<<13) // Call tvh_locale_lang on string
-#define PO_LORDER    (1<<14) // Manage order in lists
-#define PO_MULTILINE (1<<15) // Multiline string
+#define PO_NOUI      (1<<6)  // Property should not be presented in the user interface
+#define PO_HIDDEN    (1<<7)  // Property is hidden (by default)
+#define PO_USERAW    (1<<8)  // Only save the RAW (off) value if it exists
+#define PO_SORTKEY   (1<<9)  // Sort using key (not display value)
+#define PO_PASSWORD  (1<<10) // String is a password
+#define PO_DURATION  (1<<11) // For PT_TIME - differentiate between duration and datetime
+#define PO_HEXA      (1<<12) // Hexadecimal value
+#define PO_DATE      (1<<13) // Show date only
+#define PO_LOCALE    (1<<14) // Call tvh_locale_lang on string
+#define PO_LORDER    (1<<15) // Manage order in lists
+#define PO_MULTILINE (1<<16) // Multiline string
 
 /*
  * Property definition

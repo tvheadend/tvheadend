@@ -135,6 +135,31 @@ muxer_container_type2mime(muxer_container_type_t mc, int video)
 
 
 /**
+ * Get the mime type for a filename
+ */
+const char*
+muxer_container_filename2mime(const char *filename, int video)
+{
+  int mc = MC_UNKNOWN;
+  const char *suffix;
+  
+  if(filename) {
+    suffix = strrchr(filename, '.');
+    if (suffix == NULL)
+      suffix = filename;
+    else
+      suffix++;
+    if(video)
+      mc = str2val(suffix, container_video_file_suffix);
+    else
+      mc = str2val(suffix, container_audio_file_suffix);
+  }
+
+  return muxer_container_type2mime(mc, 1);
+}
+
+
+/**
  * Get the suffix used in file names
  */
 const char*

@@ -1516,7 +1516,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   fname = tvh_strdupa(filename);
-  content = muxer_container_type2mime(de->de_mc, 1);
+  content = muxer_container_filename2mime(fname, 1);
   charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
 
   pthread_mutex_unlock(&global_lock);

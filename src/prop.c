@@ -470,6 +470,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "expert", 1);
   else if (opts & PO_ADVANCED)
     htsmsg_add_bool(m, "advanced", 1);
+  if (opts & PO_NOUI)
+    htsmsg_add_bool(m, "noui", 1);
   if (opts & PO_HIDDEN)
     htsmsg_add_bool(m, "hidden", 1);
   if (opts & PO_PASSWORD)

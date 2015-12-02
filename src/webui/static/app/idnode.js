@@ -240,6 +240,7 @@ tvheadend.IdNodeField = function(conf)
     this.rdonly = conf.rdonly;
     this.wronly = conf.wronly;
     this.wronce = conf.wronce;
+    this.noui = conf.noui;
     this.hidden = conf.hidden;
     this.uilevel = conf.expert ? 'expert' : (conf.advanced ? 'advanced' : 'basic');
     this.password = conf.showpwd ? false : conf.password;
@@ -277,7 +278,7 @@ tvheadend.IdNodeField = function(conf)
     }
 
     this.get_hidden = function(uilevel) {
-        var hidden = this.hidden;
+        var hidden = this.hidden || this.noui;
         if (uilevel !== 'expert') {
             if (uilevel === 'advanced' && this.uilevel === 'expert')
                 hidden = true;
@@ -833,6 +834,8 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
     for (var i = 0; i < d.length; i++) {
         var p = d[i];
         if (conf.uuids && p.rdonly)
+            continue;
+        if (conf.noui)
             continue;
         var f = tvheadend.idnode_editor_field(p, conf);
         if (!f)
@@ -1395,13 +1398,15 @@ tvheadend.idnode_grid = function(panel, conf)
         for (var i = 0; i < idnode.length(); i++) {
             var f = idnode.field(i);
             var c = f.column(uilevel, conf.columns);
-            fields.push(f.id);
-            ifields.push(f);
-            c['tooltip'] = f.text;
-            columns.push(c);
-            if (c.filter)
-                filters.push(c.filter);
-            f.onrefresh(update2);
+            if (!f.noui) {
+                fields.push(f.id);
+                ifields.push(f);
+                c['tooltip'] = f.text;
+                columns.push(c);
+                if (c.filter)
+                    filters.push(c.filter);
+                f.onrefresh(update2);
+            }
         }
 
         /* Right-hand columns */
