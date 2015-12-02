@@ -1092,15 +1092,19 @@ const idclass_t dvr_autorec_entry_class = {
     {
       .type     = PT_U32,
       .id       = "retention",
-      .name     = N_("DVR log retention (days)"),
+      .name     = N_("DVR log retention"),
+      .def.i    = DVR_RET_DVRCONFIG,
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
+      .list     = dvr_entry_class_retention_list,
       .opts     = PO_HIDDEN | PO_EXPERT,
     },
     {
       .type     = PT_U32,
       .id       = "removal",
-      .name     = N_("DVR file retention period (days)"),
+      .name     = N_("DVR file retention period"),
+      .def.i    = DVR_RET_DVRCONFIG,
       .off      = offsetof(dvr_autorec_entry_t, dae_removal),
+      .list     = dvr_entry_class_removal_list,
       .opts     = PO_HIDDEN | PO_EXPERT,
     },
     {
@@ -1389,8 +1393,14 @@ dvr_autorec_get_extra_time_post( dvr_autorec_entry_t *dae )
 uint32_t
 dvr_autorec_get_retention_days( dvr_autorec_entry_t *dae )
 {
-  if (dae->dae_retention > 0)
+  if (dae->dae_retention > 0) {
+    /* As we need the db entry when deleting the file on disk */
+    if (dvr_autorec_get_removal_days(dae) != DVR_RET_FOREVER &&
+        dvr_autorec_get_removal_days(dae) > dae->dae_retention)
+      return DVR_RET_ONREMOVE;
+
     return dae->dae_retention;
+  }
   return dvr_retention_cleanup(dae->dae_config->dvr_retention_days);
 }
 
