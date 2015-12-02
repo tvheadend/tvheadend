@@ -885,7 +885,7 @@ tcp_server_create
   } else {
     /* no systemd-managed socket found, create a new one */
     tvhlog(LOG_INFO, "tcp", "No systemd socket: creating a new one");
-    ts =  tcp_server_create_new(bindaddr, port, ops, opaque);
+    ts =  tcp_server_create_new(subsystem, name, bindaddr, port, ops, opaque);
   }
 
   return ts;
