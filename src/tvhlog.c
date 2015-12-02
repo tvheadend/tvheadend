@@ -632,6 +632,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Settings"),
       .number = 1,
     },
+    {}
   },
   .ic_properties = (const property_t[]){
     {
