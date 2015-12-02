@@ -1975,6 +1975,14 @@ const idclass_t config_class = {
       .group  = 1
     },
     {
+      .type   = PT_BOOL,
+      .id     = "uilevel_nochange",
+      .name   = N_("Persistent user interface level"),
+      .off    = offsetof(config_t, uilevel_nochange),
+      .opts   = PO_ADVANCED,
+      .group  = 1
+    },
+    {
       .type   = PT_U32,
       .id     = "cookie_expires",
       .name   = N_("Cookie expiration (days)"),

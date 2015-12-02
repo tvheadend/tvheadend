@@ -160,8 +160,11 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   case UILEVEL_EXPERT:   s = "expert";   break;
   default:               s = NULL;       break;
   }
-  if (s)
+  if (s) {
     htsmsg_add_str(m, "uilevel", s);
+    if (config.uilevel_nochange)
+      htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
+  }
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
   if (hc->hc_peer_ipstr)

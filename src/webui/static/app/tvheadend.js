@@ -4,6 +4,7 @@ tvheadend.capabilities = null;
 tvheadend.admin = false;
 tvheadend.dialog = null;
 tvheadend.uilevel = 'expert';
+tvheadend.uilevel_nochange = false;
 tvheadend.uilevel_cb = [];
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
@@ -428,6 +429,9 @@ function accessUpdate(o) {
         return;
 
     tvheadend.admin = o.admin == true;
+
+    if (o.uilevel_nochange)
+        tvheadend.uilevel_nochange = true;
 
     if ('info_area' in o)
         tvheadend.rootTabPanel.setInfoArea(o.info_area);

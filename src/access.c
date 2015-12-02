@@ -489,6 +489,7 @@ static access_t *access_alloc(void)
 {
   access_t *a = calloc(1, sizeof(access_t));
   a->aa_uilevel = -1;
+  a->aa_uilevel_nochange = -1;
   return a;
 }
 
@@ -499,6 +500,7 @@ static access_t *access_full(access_t *a)
 {
   a->aa_rights = ACCESS_FULL;
   a->aa_uilevel = UILEVEL_EXPERT;
+  a->aa_uilevel_nochange = config.uilevel_nochange;
   return a;
 }
 
@@ -528,6 +530,9 @@ access_update(access_t *a, access_entry_t *ae)
 
   if(ae->ae_uilevel > a->aa_uilevel)
     a->aa_uilevel = ae->ae_uilevel;
+
+  if(ae->ae_uilevel_nochange > a->aa_uilevel_nochange)
+    a->aa_uilevel_nochange = ae->ae_uilevel_nochange;
 
   if(ae->ae_chmin || ae->ae_chmax) {
     uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
@@ -610,6 +615,8 @@ access_set_lang_ui(access_t *a)
   }
   if (a->aa_uilevel < 0)
     a->aa_uilevel = config.uilevel;
+  if (a->aa_uilevel_nochange < 0)
+    a->aa_uilevel_nochange = config.uilevel_nochange;
 }
 
 /**
@@ -1042,6 +1049,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
   TAILQ_INIT(&ae->ae_ipmasks);
 
   ae->ae_uilevel = UILEVEL_DEFAULT;
+  ae->ae_uilevel_nochange = -1;
 
   if (conf) {
     /* defaults */
@@ -1372,6 +1380,17 @@ uilevel_get_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+uilevel_nochange_get_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Default"),  -1 },
+    { N_("No"),        0 },
+    { N_("Yes"),       1 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = N_("Access"),
@@ -1416,6 +1435,14 @@ const idclass_t access_entry_class = {
       .name     = N_("User interface level"),
       .off      = offsetof(access_entry_t, ae_uilevel),
       .list     = uilevel_get_list,
+      .opts     = PO_EXPERT
+    },
+    {
+      .type     = PT_INT,
+      .id       = "uilevel_nochange",
+      .name     = N_("Persistent user interface level"),
+      .off      = offsetof(access_entry_t, ae_uilevel_nochange),
+      .list     = uilevel_nochange_get_list,
       .opts     = PO_EXPERT
     },
     {

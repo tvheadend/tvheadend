@@ -1079,7 +1079,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         }
 
         var uilevelBtn = null;
-        if (!conf.uilevel || conf.uilevel !== 'expert') {
+        if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
             uilevelBtn = tvheadend.idnode_uilevel_menu(uilevel, function(l) {
                 uilevel = l;
                 var values = panel.getForm().getFieldValues();
@@ -1817,7 +1817,7 @@ tvheadend.idnode_grid = function(panel, conf)
             }
         }
 
-        if (!conf.uilevel || conf.uilevel !== 'expert') {
+        if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
             abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
                 uilevel = l;
                 for (var i = 0; i < ifields.length; i++) {
@@ -2185,7 +2185,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             }
         }
 
-        if (!conf.uilevel || conf.uilevel !== 'expert') {
+        if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
             abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
                 uilevel = l;
                 var values = null;
@@ -2626,7 +2626,7 @@ tvheadend.idnode_simple = function(panel, conf)
             }
         }
 
-        if (!conf.uilevel || conf.uilevel !== 'expert') {
+        if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
             abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, uilevel_change);
             buttons.push('->');
             buttons.push(abuttons.uilevel);
