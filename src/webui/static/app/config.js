@@ -16,9 +16,14 @@ tvheadend.baseconf = function(panel, index) {
             if (l >= 0) {
                 var tr = {0:'basic',1:'advanced',2:'expert'};
                 l = (l in tr) ? tr[l] : 'basic';
-                tvheadend.change_uilevel(l);
-                abuttons.uilevel.initialConfig.tvh_uilevel_set(l);
+                if (l !== tvheadend.uilevel) {
+                    window.location.reload();
+                    return;
+                }
             }
+            var n = data['uilevel_nochange'] ? true : false;
+            if (n !== tvheadend.uilevel_nochange)
+                window.location.reload();
         },
         help: function() {
             new tvheadend.help(_('General Configuration'), 'config_general.html');

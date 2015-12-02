@@ -1316,24 +1316,6 @@ tvheadend.idnode_panel = function(conf, panel, dpanel, builder, destroyer)
         tvheadend.paneladd(panel, dpanel, conf.tabIndex);
         tvheadend.panelreg(panel, dpanel, builder, destroyer);
     }
-
-    if (conf.uilevel) {
-        var f = function(l) {
-           var d = panel.findById(dpanel.id);
-           if (!tvheadend.uilevel_match(conf.uilevel, l)) {
-               if (d) {
-                   panel.remove(dpanel);
-                   destroyer();
-               }
-           } else {
-               if (!d) {
-                   tvheadend.paneladd(panel, dpanel, conf.tabIndex);
-                   tvheadend.panelreg(panel, dpanel, builder, destroyer);
-               }
-           }
-        }
-        tvheadend.uilevel_cb.push(f);
-    }
 }
 
 /*

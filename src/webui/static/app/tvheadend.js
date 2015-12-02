@@ -5,7 +5,6 @@ tvheadend.admin = false;
 tvheadend.dialog = null;
 tvheadend.uilevel = 'expert';
 tvheadend.uilevel_nochange = false;
-tvheadend.uilevel_cb = [];
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -43,14 +42,6 @@ tvheadend.uilevel_match = function(target, current) {
             return false;
     }
     return true;
-}
-
-tvheadend.change_uilevel = function(uilevel) {
-   if (tvheadend.uilevel !== uilevel) {
-       tvheadend.uilevel = uilevel;
-       for (var i = 0; i < tvheadend.uilevel_cb.length; i++)
-           tvheadend.uilevel_cb[i](uilevel);
-   }
 }
 
 /**
@@ -430,6 +421,9 @@ function accessUpdate(o) {
 
     tvheadend.admin = o.admin == true;
 
+    if (o.uilevel)
+        tvheadend.uilevel = o.uilevel;
+
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;
 
@@ -576,9 +570,6 @@ function accessUpdate(o) {
         /* Force to change uilevel (callback!) */
         tvheadend.uilevel = '';
     }
-
-    if (o.uilevel)
-        tvheadend.change_uilevel(o.uilevel);
 
     if (o.admin == true && tvheadend.statuspanel == null) {
         tvheadend.statuspanel = new tvheadend.status;
