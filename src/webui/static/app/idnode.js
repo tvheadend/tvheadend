@@ -1401,9 +1401,9 @@ tvheadend.idnode_grid = function(panel, conf)
         for (var i = 0; i < idnode.length(); i++) {
             var f = idnode.field(i);
             var c = f.column(uilevel, conf.columns);
+            fields.push(f.id);
+            ifields.push(f);
             if (!f.noui) {
-                fields.push(f.id);
-                ifields.push(f);
                 c['tooltip'] = f.text;
                 columns.push(c);
                 if (c.filter)
@@ -1802,10 +1802,11 @@ tvheadend.idnode_grid = function(panel, conf)
         if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
             abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
                 uilevel = l;
-                for (var i = 0; i < ifields.length; i++) {
-                    var h = ifields[i].get_hidden(uilevel);
-                    model.setHidden(model.findColumnIndex(ifields[i].id), h);
-                }
+                for (var i = 0; i < ifields.length; i++)
+                    if (!ifields[i].noui) {
+                        var h = ifields[i].get_hidden(uilevel);
+                        model.setHidden(model.findColumnIndex(ifields[i].id), h);
+                    }
             });
             buttons.push('->');
             buttons.push(abuttons.uilevel);
