@@ -168,6 +168,7 @@ const idclass_t service_class = {
       .name     = N_("Automatic checking"),
       .list     = service_class_auto_list,
       .off      = offsetof(service_t, s_auto),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -185,6 +186,7 @@ const idclass_t service_class = {
       .id       = "priority",
       .name     = N_("Priority (-10..10)"),
       .off      = offsetof(service_t, s_prio),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_BOOL,
@@ -198,7 +200,7 @@ const idclass_t service_class = {
       .id       = "caid",
       .name     = N_("CAID"),
       .get      = service_class_caid_get,
-      .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN | PO_EXPERT,
     },
     {}
   }

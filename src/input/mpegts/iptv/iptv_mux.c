@@ -146,6 +146,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_substitute",
       .name     = N_("Substitute formatters"),
       .off      = offsetof(iptv_mux_t, mm_iptv_substitute),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -153,6 +154,7 @@ const idclass_t iptv_mux_class =
       .name     = N_("Interface"),
       .off      = offsetof(iptv_mux_t, mm_iptv_interface),
       .list     = network_interfaces_enum,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_BOOL,
@@ -184,19 +186,21 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_epgid",
       .name     = N_("EPG name"),
       .off      = offsetof(iptv_mux_t, mm_iptv_epgid),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
       .id       = "iptv_icon",
       .name     = N_("Icon URL"),
       .off      = offsetof(iptv_mux_t, mm_iptv_icon),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_BOOL,
       .id       = "iptv_respawn",
       .name     = N_("Respawn (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_respawn),
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_INT,
@@ -204,14 +208,14 @@ const idclass_t iptv_mux_class =
       .name     = N_("Kill signal (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_kill),
       .list     = iptv_muxdvr_class_kill_list,
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_INT,
       .id       = "iptv_kill_timeout",
       .name     = N_("Kill timeout (pipe/secs)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_kill_timeout),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .def.i    = 5
     },
     {
@@ -219,14 +223,14 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_env",
       .name     = N_("Environment (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_env),
-      .opts     = PO_ADVANCED | PO_MULTILINE
+      .opts     = PO_EXPERT | PO_MULTILINE
     },
     {
       .type     = PT_STR,
       .id       = "iptv_hdr",
       .name     = N_("Custom HTTP headers"),
       .off      = offsetof(iptv_mux_t, mm_iptv_hdr),
-      .opts     = PO_ADVANCED | PO_MULTILINE
+      .opts     = PO_EXPERT | PO_MULTILINE
     },
     {
       .type     = PT_STR,

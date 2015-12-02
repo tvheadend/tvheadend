@@ -588,6 +588,7 @@ const idclass_t dvb_mux_dvbs_class =
       .name     = N_("ISI (Stream ID)"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -597,6 +598,7 @@ const idclass_t dvb_mux_dvbs_class =
       .get      = dvb_mux_dvbs_class_pls_mode_get,
       .list     = dvb_mux_dvbs_class_pls_mode_list,
       .def.s    = "ROOT",
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_U32,
@@ -604,6 +606,7 @@ const idclass_t dvb_mux_dvbs_class =
       .name     = N_("PLS code"),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
       .def.u32	= 1,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
