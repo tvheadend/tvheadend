@@ -2583,7 +2583,9 @@ tvheadend.idnode_simple = function(panel, conf)
             }
         }
 
-        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l, refresh) {
+        function uilevel_change(l, refresh) {
+            if (l === uilevel)
+                return;
             uilevel = l;
             if (!refresh)
                 return;
@@ -2600,7 +2602,9 @@ tvheadend.idnode_simple = function(panel, conf)
                      mpanel.doLayout();
                 }
             }
-        });
+        }
+
+        abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, uilevel_change);
         buttons.push('->');
         buttons.push(abuttons.uilevel);
 
@@ -2634,7 +2638,7 @@ tvheadend.idnode_simple = function(panel, conf)
             });
         }
 
-        var mpanel = new Ext.Panel({
+        mpanel = new Ext.Panel({
             tbar: buttons,
             layout: 'hbox',
             padding: 5,
@@ -2646,6 +2650,10 @@ tvheadend.idnode_simple = function(panel, conf)
         
         dpanel.add(mpanel);
         dpanel.doLayout(false, true);
+
+        mpanel.on('uilevel', function() {
+            uilevel_change(tvheadend.uilevel, 1);
+        });
 
         if (conf.comet) {
             update_cb = form_load;
@@ -2663,6 +2671,7 @@ tvheadend.idnode_simple = function(panel, conf)
             tvheadend.comet.un(conf.comet, update);
         }
         dpanel.removeAll(true);
+        mpanel.purgeListeners();
         mpanel = null;
         if (conf.destroyer)
             conf.destroyer(conf);
@@ -2676,6 +2685,10 @@ tvheadend.idnode_simple = function(panel, conf)
         iconCls: conf.iconCls || ''
     });
 
+    dpanel.on('show', function() {
+        if (mpanel)
+            mpanel.fireEvent('uilevel');
+    });
     tvheadend.paneladd(panel, dpanel, conf.tabIndex);
     tvheadend.panelreg(panel, dpanel, builder, destroyer);
 };
