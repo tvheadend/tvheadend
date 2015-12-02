@@ -1416,7 +1416,7 @@ const idclass_t access_entry_class = {
       .name     = N_("User interface level"),
       .off      = offsetof(access_entry_t, ae_uilevel),
       .list     = uilevel_get_list,
-      .opts     = PO_HIDDEN
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
