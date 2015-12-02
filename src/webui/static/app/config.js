@@ -16,7 +16,7 @@ tvheadend.baseconf = function(panel, index) {
             if (l >= 0) {
                 var tr = {0:'basic',1:'advanced',2:'expert'};
                 l = (l in tr) ? tr[l] : 'basic';
-                tvheadend.uilevel = l;
+                tvheadend.change_uilevel(l);
                 abuttons.uilevel.initialConfig.tvh_uilevel_set(l);
             }
         },

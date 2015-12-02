@@ -279,12 +279,8 @@ tvheadend.IdNodeField = function(conf)
 
     this.get_hidden = function(uilevel) {
         var hidden = this.hidden || this.noui;
-        if (uilevel !== 'expert') {
-            if (uilevel === 'advanced' && this.uilevel === 'expert')
-                hidden = true;
-            else if (uilevel === 'basic' && this.uilevel !== 'basic')
-                hidden = true;
-        }
+        if (!tvheadend.uilevel_match(this.uilevel, uilevel))
+            hidden = true;
         return hidden;
     }
 
@@ -955,13 +951,7 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
             var cnt = 0;
             for (var i = 0; i < g.length; i++) {
                 var f = g[i];
-                var hide = false;
-                if (uilevel == 'basic') {
-                    hide = f.tvh_uilevel !== 'basic';
-                } else if (uilevel == 'advanced') {
-                    hide = f.tvh_uilevel === 'expert';
-                }
-                if (hide)
+                if (!tvheadend.uilevel_match(f.tvh_uilevel, uilevel))
                     f.setVisible(false);
                 else
                     cnt++;
@@ -1314,6 +1304,34 @@ tvheadend.idnode_create = function(conf, onlyDefault)
     }
 };
 
+/*
+ *
+ */
+tvheadend.idnode_panel = function(conf, panel, dpanel, builder, destroyer)
+{
+    if (!conf.uilevel || tvheadend.uilevel_match(conf.uilevel, tvheadend.uilevel)) {
+        tvheadend.paneladd(panel, dpanel, conf.tabIndex);
+        tvheadend.panelreg(panel, dpanel, builder, destroyer);
+    }
+
+    if (conf.uilevel) {
+        var f = function(l) {
+           var d = panel.findById(dpanel.id);
+           if (!tvheadend.uilevel_match(conf.uilevel, l)) {
+               if (d) {
+                   panel.remove(dpanel);
+                   destroyer();
+               }
+           } else {
+               if (!d) {
+                   tvheadend.paneladd(panel, dpanel, conf.tabIndex);
+                   tvheadend.panelreg(panel, dpanel, builder, destroyer);
+               }
+           }
+        }
+        tvheadend.uilevel_cb.push(f);
+    }
+}
 
 /*
  * IDnode grid
@@ -1912,8 +1930,7 @@ tvheadend.idnode_grid = function(panel, conf)
         iconCls: conf.iconCls || ''
     });
 
-    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
-    tvheadend.panelreg(panel, dpanel, builder, destroyer);
+    tvheadend.idnode_panel(conf, panel, dpanel, builder, destroyer);
 };
 
 /*
@@ -2298,8 +2315,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
         iconCls: conf.iconCls || ''
     });
 
-    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
-    tvheadend.panelreg(panel, dpanel, builder, destroyer);
+    tvheadend.idnode_panel(conf, panel, dpanel, builder, destroyer);
 };
 
 /*
@@ -2456,8 +2472,7 @@ tvheadend.idnode_tree = function(panel, conf)
         iconCls: conf.iconCls || ''
     });
 
-    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
-    tvheadend.panelreg(panel, dpanel, builder, destroyer);
+    tvheadend.idnode_panel(conf, panel, dpanel, builder, destroyer);
 };
 
 /*
@@ -2689,6 +2704,6 @@ tvheadend.idnode_simple = function(panel, conf)
         if (mpanel)
             mpanel.fireEvent('uilevel');
     });
-    tvheadend.paneladd(panel, dpanel, conf.tabIndex);
-    tvheadend.panelreg(panel, dpanel, builder, destroyer);
+
+    tvheadend.idnode_panel(conf, panel, dpanel, builder, destroyer);
 };

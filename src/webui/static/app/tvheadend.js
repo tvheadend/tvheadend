@@ -4,6 +4,7 @@ tvheadend.capabilities = null;
 tvheadend.admin = false;
 tvheadend.dialog = null;
 tvheadend.uilevel = 'expert';
+tvheadend.uilevel_cb = [];
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -18,16 +19,37 @@ tvheadend.regexEscape = function(s) {
 }
 
 tvheadend.fromCSV = function(s) {
-  var a = s.split(',');
-  var r = [];
-  for (var i in a) {
-    var v = a[i];
-    if (v[0] == '"' && v[v.length-1] == '"')
-      r.push(v.substring(1, v.length - 1));
-    else
-      r.push(v);
-  }
-  return r;
+    var a = s.split(',');
+    var r = [];
+    for (var i in a) {
+        var v = a[i];
+        if (v[0] == '"' && v[v.length-1] == '"')
+            r.push(v.substring(1, v.length - 1));
+        else
+            r.push(v);
+    }
+    return r;
+}
+
+/**
+ * Change uilevel
+ */
+tvheadend.uilevel_match = function(target, current) {
+    if (current !== 'expert') {
+        if (current === 'advanced' && target === 'expert')
+            return false;
+        else if (current === 'basic' && target !== 'basic')
+            return false;
+    }
+    return true;
+}
+
+tvheadend.change_uilevel = function(uilevel) {
+   if (tvheadend.uilevel !== uilevel) {
+       tvheadend.uilevel = uilevel;
+       for (var i = 0; i < tvheadend.uilevel_cb.length; i++)
+           tvheadend.uilevel_cb[i](uilevel);
+   }
 }
 
 /**
@@ -406,8 +428,6 @@ function accessUpdate(o) {
         return;
 
     tvheadend.admin = o.admin == true;
-    if (o.uilevel)
-        tvheadend.uilevel = o.uilevel;
 
     if ('info_area' in o)
         tvheadend.rootTabPanel.setInfoArea(o.info_area);
@@ -442,6 +462,7 @@ function accessUpdate(o) {
 
         /* General */
         var general = new Ext.TabPanel({
+            tabIndex: 0,
             activeTab: 0,
             autoScroll: true,
             title: _('General'),
@@ -457,6 +478,7 @@ function accessUpdate(o) {
 
         /* Users */
         var users = new Ext.TabPanel({
+            tabIndex: 1,
             activeTab: 0,
             autoScroll: true,
             title: _('Users'),
@@ -472,6 +494,7 @@ function accessUpdate(o) {
 
         /* DVB inputs, networks, muxes, services */
         var dvbin = new Ext.TabPanel({
+            tabIndex: 2,
             activeTab: 0,
             autoScroll: true,
             title: _('DVB Inputs'),
@@ -490,6 +513,7 @@ function accessUpdate(o) {
 
         /* Channel / EPG */
         var chepg = new Ext.TabPanel({
+            tabIndex: 3,
             activeTab: 0,
             autoScroll: true,
             title: _('Channel / EPG'),
@@ -507,6 +531,7 @@ function accessUpdate(o) {
 
         /* Stream Config */
         var stream = new Ext.TabPanel({
+            tabIndex: 4,
             activeTab: 0,
             autoScroll: true,
             title: _('Stream'),
@@ -519,6 +544,7 @@ function accessUpdate(o) {
 
         /* DVR / Timeshift */
         var tsdvr = new Ext.TabPanel({
+            tabIndex: 5,
             activeTab: 0,
             autoScroll: true,
             title: _('Recording'),
@@ -533,16 +559,22 @@ function accessUpdate(o) {
 
         /* CSA */
         if (tvheadend.capabilities.indexOf('caclient') !== -1)
-            tvheadend.caclient(cp, null);
+            tvheadend.caclient(cp, 6);
 
         /* Debug */
-        tvheadend.tvhlog(cp);
+        tvheadend.tvhlog(cp, 7);
 
         /* Finish */
         tvheadend.rootTabPanel.add(cp);
         tvheadend.confpanel = cp;
         cp.doLayout();
+
+        /* Force to change uilevel (callback!) */
+        tvheadend.uilevel = '';
     }
+
+    if (o.uilevel)
+        tvheadend.change_uilevel(o.uilevel);
 
     if (o.admin == true && tvheadend.statuspanel == null) {
         tvheadend.statuspanel = new tvheadend.status;

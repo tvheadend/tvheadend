@@ -52,6 +52,7 @@ tvheadend.esfilter_tab = function(panel)
         titleP: _('Video Stream Filters'),
         iconCls: 'film_edit',
         tabIndex: 1,
+        uilevel: 'expert',
         edit: { params: { list: eslist } },
         add: {
             params: { list: eslist },
@@ -71,6 +72,7 @@ tvheadend.esfilter_tab = function(panel)
         titleP: _('Audio Stream Filters'),
         iconCls: 'control_volume',
         tabIndex: 2,
+        uilevel: 'expert',
         edit: { params: { list: eslist } },
         add: {
             params: { list: eslist },
@@ -90,6 +92,7 @@ tvheadend.esfilter_tab = function(panel)
         titleP: _('Teletext Stream Filters'),
         iconCls: 'teletext',
         tabIndex: 3,
+        uilevel: 'expert',
         edit: { params: { list: eslist } },
         add: {
             params: { list: eslist },
@@ -109,6 +112,7 @@ tvheadend.esfilter_tab = function(panel)
         titleP: _('Subtitle Stream Filters'),
         iconCls: 'subtitle',
         tabIndex: 4,
+        uilevel: 'expert',
         edit: { params: { list: eslist } },
         add: {
             params: { list: eslist },
@@ -128,6 +132,7 @@ tvheadend.esfilter_tab = function(panel)
         titleP: _('CA Stream Filters'),
         iconCls: 'film_key',
         tabIndex: 5,
+        uilevel: 'expert',
         add: {
             params: { list: eslist },
             url: 'api/esfilter/ca',
@@ -146,6 +151,7 @@ tvheadend.esfilter_tab = function(panel)
         titleP: _('Other Stream Filters'),
         iconCls: 'otherFilters',
         tabIndex: 6,
+        uilevel: 'expert',
         edit: { params: { list: eslist } },
         add: {
             params: { list: eslist },
