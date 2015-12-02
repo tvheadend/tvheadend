@@ -566,9 +566,6 @@ function accessUpdate(o) {
         tvheadend.rootTabPanel.add(cp);
         tvheadend.confpanel = cp;
         cp.doLayout();
-
-        /* Force to change uilevel (callback!) */
-        tvheadend.uilevel = '';
     }
 
     if (o.admin == true && tvheadend.statuspanel == null) {
