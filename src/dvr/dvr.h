@@ -54,6 +54,7 @@ typedef struct dvr_config {
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
   int dvr_running;
+  uint32_t dvr_cleanup_threshold;
 
   muxer_config_t dvr_muxcnf;
 
@@ -119,7 +120,24 @@ typedef enum {
   DVR_RS_EPG_WAIT,
   DVR_RS_FINISHED
 } dvr_rs_state_t;
-  
+
+typedef enum {
+  DVR_RET_DVRCONFIG = 0,
+  DVR_RET_1DAY      = 1,
+  DVR_RET_3DAY      = 3,
+  DVR_RET_5DAY      = 5,
+  DVR_RET_1WEEK     = 7,
+  DVR_RET_2WEEK     = 14,
+  DVR_RET_3WEEK     = 21,
+  DVR_RET_1MONTH    = 30,
+  DVR_RET_2MONTH    = 60,
+  DVR_RET_3MONTH    = 90,
+  DVR_RET_6MONTH    = 180,
+  DVR_RET_1YEAR     = 365,
+  DVR_RET_ONREMOVE  = UINT32_MAX-1, // for retention only
+  DVR_RET_SPACENEED = UINT32_MAX-1, // for removal only
+  DVR_RET_FOREVER   = UINT32_MAX
+} dvr_retention_t;
 
 typedef struct dvr_entry {
 
@@ -430,6 +448,10 @@ static inline int dvr_entry_is_valid(dvr_entry_t *de)
 
 int dvr_entry_get_mc(dvr_entry_t *de);
 
+const char *dvr_entry_get_retention_string ( dvr_entry_t *de );
+
+const char *dvr_entry_get_removal_string ( dvr_entry_t *de );
+
 uint32_t dvr_entry_get_retention_days( dvr_entry_t *de );
 
 uint32_t dvr_entry_get_removal_days( dvr_entry_t *de );
@@ -531,6 +553,8 @@ const char *dvr_get_filename(dvr_entry_t *de);
 
 int64_t dvr_get_filesize(dvr_entry_t *de);
 
+int64_t dvr_entry_claenup(dvr_entry_t *de, int64_t requiredBytes);
+
 void dvr_entry_set_rerecord(dvr_entry_t *de, int cmd);
 
 dvr_entry_t *dvr_entry_stop(dvr_entry_t *de);
@@ -543,10 +567,14 @@ void dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 
+void dvr_entry_destroy(dvr_entry_t *de, int delconf);
+
 htsmsg_t *dvr_entry_class_mc_list (void *o, const char *lang);
 htsmsg_t *dvr_entry_class_pri_list(void *o, const char *lang);
 htsmsg_t *dvr_entry_class_config_name_list(void *o, const char *lang);
 htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, int step, const char *lang);
+htsmsg_t *dvr_entry_class_retention_list ( void *o, const char *lang );
+htsmsg_t *dvr_entry_class_removal_list ( void *o, const char *lang );
 
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
