@@ -177,7 +177,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   cfg->dvr_enabled = 1;
   cfg->dvr_config_name = strdup(name);
-  cfg->dvr_retention_days = 31;
+  cfg->dvr_retention_days = DVR_RET_ONREMOVE;
+  cfg->dvr_removal_days = DVR_RET_FOREVER;
   cfg->dvr_clone = 1;
   cfg->dvr_tag_files = 1;
   cfg->dvr_skip_commercials = 1;
@@ -185,6 +186,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_warm_time = 30;
   cfg->dvr_update_window = 24 * 3600;
   cfg->dvr_pathname = strdup("$t$n.$x");
+  cfg->dvr_cleanup_threshold = 2000;
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
@@ -514,8 +516,11 @@ dvr_config_save(dvr_config_t *cfg)
   lock_assert(&global_lock);
 
   dvr_config_storage_check(cfg);
-  if (cfg->dvr_removal_days > cfg->dvr_retention_days)
-    cfg->dvr_removal_days = cfg->dvr_retention_days;
+  if (cfg->dvr_cleanup_threshold < 100)
+    cfg->dvr_cleanup_threshold = 100; // as checking is only periodically, lower is not save
+  if (cfg->dvr_removal_days != DVR_RET_FOREVER &&
+      cfg->dvr_removal_days > cfg->dvr_retention_days)
+    cfg->dvr_retention_days = DVR_RET_ONREMOVE;
   idnode_save(&cfg->dvr_id, m);
   hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
   htsmsg_destroy(m);
@@ -695,6 +700,48 @@ dvr_config_class_cache_list(void *o, const char *lang)
 }
 
 static htsmsg_t *
+dvr_config_class_removal_list ( void *o, const char *lang )
+{
+  static const struct strtab_u32 tab[] = {
+    { N_("1 day"),              DVR_RET_1DAY },
+    { N_("3 days"),             DVR_RET_3DAY },
+    { N_("5 days"),             DVR_RET_5DAY },
+    { N_("1 week"),             DVR_RET_1WEEK },
+    { N_("2 weeks"),            DVR_RET_2WEEK },
+    { N_("3 weeks"),            DVR_RET_3WEEK },
+    { N_("1 month"),            DVR_RET_1MONTH },
+    { N_("2 months"),           DVR_RET_2MONTH },
+    { N_("3 months"),           DVR_RET_3MONTH },
+    { N_("6 months"),           DVR_RET_6MONTH },
+    { N_("1 year"),             DVR_RET_1YEAR },
+    { N_("Until space needed"), DVR_RET_SPACENEED },
+    { N_("Forever"),            DVR_RET_FOREVER },
+  };
+  return strtab2htsmsg_u32(tab, 1, lang);
+}
+
+static htsmsg_t *
+dvr_config_class_retention_list ( void *o, const char *lang )
+{
+  static const struct strtab_u32 tab[] = {
+    { N_("1 day"),              DVR_RET_1DAY },
+    { N_("3 days"),             DVR_RET_3DAY },
+    { N_("5 days"),             DVR_RET_5DAY },
+    { N_("1 week"),             DVR_RET_1WEEK },
+    { N_("2 weeks"),            DVR_RET_2WEEK },
+    { N_("3 weeks"),            DVR_RET_3WEEK },
+    { N_("1 month"),            DVR_RET_1MONTH },
+    { N_("2 months"),           DVR_RET_2MONTH },
+    { N_("3 months"),           DVR_RET_3MONTH },
+    { N_("6 months"),           DVR_RET_6MONTH },
+    { N_("1 year"),             DVR_RET_1YEAR },
+    { N_("On file removal"),    DVR_RET_ONREMOVE },
+    { N_("Forever"),            DVR_RET_FOREVER },
+  };
+  return strtab2htsmsg_u32(tab, 1, lang);
+}
+
+static htsmsg_t *
 dvr_config_class_extra_list(void *o, const char *lang)
 {
   return dvr_entry_class_duration_list(o, 
@@ -813,16 +860,19 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "retention-days",
-      .name     = N_("DVR log retention period (days)"),
+      .name     = N_("DVR log retention period"),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
-      .def.u32  = 31,
+      .def.u32  = DVR_RET_ONREMOVE,
+      .list     = dvr_config_class_retention_list,
       .group    = 1,
     },
     {
       .type     = PT_U32,
       .id       = "removal-days",
-      .name     = N_("DVR file retention period (days)"),
+      .name     = N_("DVR file retention period"),
       .off      = offsetof(dvr_config_t, dvr_removal_days),
+      .def.u32  = DVR_RET_FOREVER,
+      .list     = dvr_config_class_removal_list,
       .group    = 1,
     },
     {
@@ -925,6 +975,14 @@ const idclass_t dvr_config_class = {
       .id       = "storage",
       .name     = N_("Recording system path"),
       .off      = offsetof(dvr_config_t, dvr_storage),
+      .group    = 2,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "storage-cleanup",
+      .name     = N_("\"Until space needed\" cleanup below (MB)"),
+      .off      = offsetof(dvr_config_t, dvr_cleanup_threshold),
+      .def.i    = 2000, //2000 MB
       .group    = 2,
     },
     {
