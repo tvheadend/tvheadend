@@ -277,6 +277,13 @@ const idclass_t profile_class =
   .ic_save       = profile_class_save,
   .ic_get_title  = profile_class_get_title,
   .ic_delete     = profile_class_delete,
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Configuration"),
+      .number = 1,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -285,6 +292,7 @@ const idclass_t profile_class =
       .opts     = PO_RDONLY | PO_HIDDEN,
       .get      = profile_class_class_get,
       .set      = profile_class_class_set,
+      .group    = 1
     },
     {
       .type     = PT_BOOL,
@@ -292,6 +300,7 @@ const idclass_t profile_class =
       .name     = N_("Enabled"),
       .off      = offsetof(profile_t, pro_enabled),
       .get_opts = profile_class_enabled_opts,
+      .group    = 1
     },
     {
       .type     = PT_BOOL,
@@ -299,6 +308,8 @@ const idclass_t profile_class =
       .name     = N_("Default"),
       .set      = profile_class_default_set,
       .get      = profile_class_default_get,
+      .opts     = PO_EXPERT,
+      .group    = 1
     },
     {
       .type     = PT_STR,
@@ -307,12 +318,14 @@ const idclass_t profile_class =
       .off      = offsetof(profile_t, pro_name),
       .get_opts = profile_class_name_opts,
       .notify   = idnode_notify_title_changed,
+      .group    = 1
     },
     {
       .type     = PT_STR,
       .id       = "comment",
       .name     = N_("Comment"),
       .off      = offsetof(profile_t, pro_comment),
+      .group    = 1
     },
     {
       .type     = PT_INT,
@@ -320,14 +333,17 @@ const idclass_t profile_class =
       .name     = N_("Default priority"),
       .list     = profile_class_priority_list,
       .off      = offsetof(profile_t, pro_prio),
-      .opts     = PO_SORTKEY,
-      .def.i    = PROFILE_SPRIO_NORMAL
+      .opts     = PO_SORTKEY | PO_ADVANCED,
+      .def.i    = PROFILE_SPRIO_NORMAL,
+      .group    = 1
     },
     {
       .type     = PT_INT,
       .id       = "fpriority",
       .name     = N_("Force priority"),
       .off      = offsetof(profile_t, pro_fprio),
+      .opts     = PO_EXPERT,
+      .group    = 1
     },
     {
       .type     = PT_INT,
@@ -335,20 +351,25 @@ const idclass_t profile_class =
       .name     = N_("Timeout (sec) (0=infinite)"),
       .off      = offsetof(profile_t, pro_timeout),
       .def.i    = 5,
+      .group    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "restart",
       .name     = N_("Restart on error"),
       .off      = offsetof(profile_t, pro_restart),
+      .opts     = PO_EXPERT,
       .def.i    = 0,
+      .group    = 1
     },
     {
       .type     = PT_BOOL,
       .id       = "contaccess",
       .name     = N_("Continue even if descrambling fails"),
       .off      = offsetof(profile_t, pro_contaccess),
+      .opts     = PO_EXPERT,
       .def.i    = 1,
+      .group    = 1
     },
     {
       .type     = PT_INT,
@@ -356,8 +377,9 @@ const idclass_t profile_class =
       .name     = N_("Preferred service video type"),
       .list     = profile_class_svfilter_list,
       .off      = offsetof(profile_t, pro_svfilter),
-      .opts     = PO_SORTKEY,
-      .def.i    = PROFILE_SVF_NONE
+      .opts     = PO_SORTKEY | PO_ADVANCED,
+      .def.i    = PROFILE_SVF_NONE,
+      .group    = 1
     },
     { }
   }
@@ -998,34 +1020,53 @@ const idclass_t profile_mpegts_pass_class =
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
   .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Configuration"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Rewrite MPEG-TS SI tables"),
+      .number = 2,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "rewrite_pmt",
       .name     = N_("Rewrite PMT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
+      .opts     = PO_ADVANCED,
       .def.i    = 1,
+      .group    = 2
     },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_pat",
       .name     = N_("Rewrite PAT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
+      .opts     = PO_ADVANCED,
       .def.i    = 1,
+      .group    = 2
     },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_sdt",
       .name     = N_("Rewrite SDT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
+      .opts     = PO_ADVANCED,
       .def.i    = 1,
+      .group    = 2
     },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_eit",
       .name     = N_("Rewrite EIT"),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
+      .opts     = PO_ADVANCED,
       .def.i    = 1,
+      .group    = 2
     },
     { }
   }
@@ -1099,13 +1140,26 @@ const idclass_t profile_matroska_class =
   .ic_super      = &profile_class,
   .ic_class      = "profile-matroska",
   .ic_caption    = N_("Matroska (mkv)/built-in"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Configuration"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Matroska specific"),
+      .number = 2,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "webm",
       .name     = N_("WEBM"),
       .off      = offsetof(profile_matroska_t, pro_webm),
+      .opts     = PO_ADVANCED,
       .def.i    = 0,
+      .group    = 2
     },
     { }
   }
@@ -1255,13 +1309,26 @@ const idclass_t profile_libav_matroska_class =
   .ic_super      = &profile_class,
   .ic_class      = "profile-libav-matroska",
   .ic_caption    = N_("Matroska/av-lib"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Configuration"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Matroska specific"),
+      .number = 2,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
       .id       = "webm",
       .name     = N_("WEBM"),
       .off      = offsetof(profile_libav_matroska_t, pro_webm),
+      .opts     = PO_ADVANCED,
       .def.i    = 0,
+      .group    = 2
     },
     { }
   }
@@ -1497,6 +1564,17 @@ const idclass_t profile_transcode_class =
   .ic_super      = &profile_class,
   .ic_class      = "profile-transcode",
   .ic_caption    = N_("Transcode/av-lib"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Configuration"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Transcoding"),
+      .number = 2,
+    },
+    {}
+  },
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -1505,6 +1583,7 @@ const idclass_t profile_transcode_class =
       .off      = offsetof(profile_transcode_t, pro_mc),
       .def.i    = MC_MATROSKA,
       .list     = profile_class_mc_list,
+      .group    = 1
     },
     {
       .type     = PT_U32,
@@ -1512,6 +1591,7 @@ const idclass_t profile_transcode_class =
       .name     = N_("Resolution (height)"),
       .off      = offsetof(profile_transcode_t, pro_resolution),
       .def.u32  = 384,
+      .group    = 2
     },
     {
       .type     = PT_U32,
@@ -1520,6 +1600,8 @@ const idclass_t profile_transcode_class =
       .off      = offsetof(profile_transcode_t, pro_channels),
       .def.u32  = 2,
       .list     = profile_class_channels_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
     },
     {
       .type     = PT_STR,
@@ -1527,6 +1609,8 @@ const idclass_t profile_transcode_class =
       .name     = N_("Language"),
       .off      = offsetof(profile_transcode_t, pro_language),
       .list     = profile_class_language_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
     },
     {
       .type     = PT_STR,
@@ -1535,13 +1619,17 @@ const idclass_t profile_transcode_class =
       .off      = offsetof(profile_transcode_t, pro_vcodec),
       .def.s    = "libx264",
       .list     = profile_class_vcodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
     },
     {
       .type     = PT_U32,
       .id       = "vbitrate",
       .name     = N_("Video bitrate (kb/s) (0=auto)"),
       .off      = offsetof(profile_transcode_t, pro_vbitrate),
+      .opts     = PO_ADVANCED,
       .def.u32  = 0,
+      .group    = 2
     },
     {
       .type     = PT_STR,
@@ -1550,13 +1638,17 @@ const idclass_t profile_transcode_class =
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
     },
     {
       .type     = PT_U32,
       .id       = "abitrate",
       .name     = N_("Audio Bitrate (kb/s) (0=Auto)"),
       .off      = offsetof(profile_transcode_t, pro_abitrate),
+      .opts     = PO_ADVANCED,
       .def.u32  = 0,
+      .group    = 2
     },
     {
       .type     = PT_STR,
@@ -1565,6 +1657,8 @@ const idclass_t profile_transcode_class =
       .off      = offsetof(profile_transcode_t, pro_scodec),
       .def.s    = "",
       .list     = profile_class_scodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
     },
     { }
   }
