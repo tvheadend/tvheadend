@@ -372,7 +372,9 @@ epggrab_ota_complete
   int done = 1;
   epggrab_ota_map_t *map;
   lock_assert(&global_lock);
-  tvhdebug(mod->id, "grab complete");
+
+  if (!ota->om_complete)
+    tvhdebug(mod->id, "grab complete");
 
   /* Test for completion */
   LIST_FOREACH(map, &ota->om_modules, om_link) {
