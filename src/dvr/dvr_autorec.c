@@ -1394,9 +1394,9 @@ uint32_t
 dvr_autorec_get_retention_days( dvr_autorec_entry_t *dae )
 {
   if (dae->dae_retention > 0) {
+    uint32_t removal = dvr_autorec_get_removal_days(dae);
     /* As we need the db entry when deleting the file on disk */
-    if (dvr_autorec_get_removal_days(dae) != DVR_RET_FOREVER &&
-        dvr_autorec_get_removal_days(dae) > dae->dae_retention)
+    if (removal != DVR_RET_FOREVER && removal > dae->dae_retention)
       return DVR_RET_ONREMOVE;
 
     return dae->dae_retention;

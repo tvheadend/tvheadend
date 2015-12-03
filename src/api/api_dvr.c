@@ -240,7 +240,8 @@ api_dvr_entry_create_by_event
                                        e, 0, 0,
                                        perm->aa_username,
                                        perm->aa_representative,
-                                       NULL, DVR_PRIO_NORMAL, DVR_RET_DVRCONFIG, DVR_RET_DVRCONFIG, comment);
+                                       NULL, DVR_PRIO_NORMAL, DVR_RET_DVRCONFIG,
+                                       DVR_RET_DVRCONFIG, comment);
         if (de)
           dvr_entry_save(de);
       }
