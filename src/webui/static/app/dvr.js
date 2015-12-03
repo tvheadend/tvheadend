@@ -569,8 +569,8 @@ tvheadend.autorec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
-        titleS: _('DVR Autorec Entry'),
-        titleP: _('DVR Autorec Entries'),
+        titleS: _('Autorec'),
+        titleP: _('Autorecs'),
         iconCls: 'autoRec',
         tabIndex: index,
         columns: {
@@ -636,9 +636,9 @@ tvheadend.timerec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/timerec',
-        titleS: _('Time Schedule'),
-        titleP: _('Time Schedules'),
-        iconCls: 'time_schedules',
+        titleS: _('Timer'),
+        titleP: _('Timers'),
+        iconCls: 'timers',
         tabIndex: index,
         columns: {
             enabled:      { width: 50 },
@@ -674,7 +674,7 @@ tvheadend.timerec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Timerec'), 'dvr_timerec.html');
+            new tvheadend.help(_('DVR Timers'), 'dvr_timerec.html');
         }
     });
 

@@ -137,9 +137,9 @@ typedef enum {
   DVR_RET_1YEAR     = (365+1),
   DVR_RET_2YEARS    = (2*365+1),
   DVR_RET_3YEARS    = (3*366+1),
-  DVR_RET_ONREMOVE  = UINT32_MAX-1, // for retention only
-  DVR_RET_SPACE     = UINT32_MAX-1, // for removal only
-  DVR_RET_FOREVER   = UINT32_MAX
+  DVR_RET_ONREMOVE  = INT32_MAX-1, // for retention only
+  DVR_RET_SPACE     = INT32_MAX-1, // for removal only
+  DVR_RET_FOREVER   = INT32_MAX
 } dvr_retention_t;
 
 typedef struct dvr_entry {

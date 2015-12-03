@@ -1436,7 +1436,7 @@ profile_class_channels_list ( void *o, const char *lang )
     { N_("Copy layout"),                   0 },
     { N_("Mono"),                          1 },
     { N_("Stereo"),                        2 },
-    { N_("Surround (2 Front, Rear Mono)"), 3 },
+    { N_("Surround (2 front, rear mono)"), 3 },
     { N_("Quad (4.0)"),                    4 },
     { N_("5.0"),                           5 },
     { N_("5.1"),                           6 },
@@ -1644,7 +1644,7 @@ const idclass_t profile_transcode_class =
     {
       .type     = PT_U32,
       .id       = "abitrate",
-      .name     = N_("Audio Bitrate (kb/s) (0=Auto)"),
+      .name     = N_("Audio bitrate (kb/s) (0=auto)"),
       .off      = offsetof(profile_transcode_t, pro_abitrate),
       .opts     = PO_ADVANCED,
       .def.u32  = 0,

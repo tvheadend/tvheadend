@@ -610,7 +610,7 @@ tvheadend.idnode_uilevel_menu = function(uilevel, handler)
     b = new Ext.Toolbar.Button({
         tooltip: _('Change the user interface level (basic, advanced, expert)'),
         iconCls: 'uilevel',
-        text: _('View level: ') + text(uilevel),
+        text: _('View level') + ': ' + text(uilevel),
         menu: m,
         tvh_uilevel_set: function (l, refresh) {
             b.setText(_('View level: ') + text(l));

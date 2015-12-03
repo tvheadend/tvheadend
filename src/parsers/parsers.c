@@ -997,7 +997,7 @@ parser_set_stream_vparam(elementary_stream_t *st, int width, int height,
 {
   int need_save = 0;
 
-  if(st->es_width == 0 && st->es_height == 0 && st->es_frame_duration == 0) {
+  if(st->es_width == 0 && st->es_height == 0 && st->es_frame_duration < 2) {
     need_save = 1;
     st->es_meta_change = 0;
 

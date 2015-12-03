@@ -531,8 +531,10 @@ access_update(access_t *a, access_entry_t *ae)
   if(ae->ae_uilevel > a->aa_uilevel)
     a->aa_uilevel = ae->ae_uilevel;
 
-  if(ae->ae_uilevel_nochange > a->aa_uilevel_nochange)
+  if(a->aa_uilevel_nochange < 0)
     a->aa_uilevel_nochange = ae->ae_uilevel_nochange;
+  else if(a->aa_uilevel_nochange && !ae->ae_uilevel_nochange)
+    a->aa_uilevel_nochange = 0;
 
   if(ae->ae_chmin || ae->ae_chmax) {
     uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));

@@ -594,7 +594,7 @@ const idclass_t satip_server_class = {
     {
       .type   = PT_INT,
       .id     = "satip_rtsp",
-      .name   = N_("RTSP Port (554 or 9983), 0 = disable"),
+      .name   = N_("RTSP port (554 or 9983, 0 = disable)"),
       .off    = offsetof(struct satip_server_conf, satip_rtsp),
       .group  = 1,
     },

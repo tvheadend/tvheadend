@@ -808,7 +808,7 @@ iptv_auto_network_class_charset_list(void *o, const char *lang)
 const idclass_t iptv_auto_network_class = {
   .ic_super      = &iptv_network_class,
   .ic_class      = "iptv_auto_network",
-  .ic_caption    = N_("IPTV Automatic Network"),
+  .ic_caption    = N_("IPTV automatic network"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
