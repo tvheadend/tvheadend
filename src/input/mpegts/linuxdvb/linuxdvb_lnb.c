@@ -334,7 +334,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   },
     {
     { {
-      .ld_type    = "Ku 10700 (Australia)"",
+      .ld_type    = "Ku 10700 (Australia)",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_standard_freq,
