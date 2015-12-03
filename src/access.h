@@ -98,6 +98,8 @@ typedef struct access_entry {
 
   int ae_index;
   int ae_enabled;
+  int ae_uilevel;
+  int ae_uilevel_nochange;
 
   int ae_streaming;
   int ae_adv_streaming;
@@ -149,6 +151,8 @@ typedef struct access {
   uint32_t  aa_conn_limit_dvr;
   uint32_t  aa_conn_streaming;
   uint32_t  aa_conn_dvr;
+  int       aa_uilevel;
+  int       aa_uilevel_nochange;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
@@ -170,12 +174,13 @@ typedef struct access_ticket {
 #define ACCESS_ADVANCED_STREAMING (1<<1)
 #define ACCESS_HTSP_STREAMING     (1<<2)
 #define ACCESS_WEB_INTERFACE      (1<<3)
-#define ACCESS_RECORDER           (1<<4)
-#define ACCESS_HTSP_RECORDER      (1<<5)
-#define ACCESS_ALL_RECORDER       (1<<6)
-#define ACCESS_ALL_RW_RECORDER    (1<<7)
-#define ACCESS_FAILED_RECORDER    (1<<8)
-#define ACCESS_ADMIN              (1<<9)
+#define ACCESS_HTSP_INTERFACE     (1<<4)
+#define ACCESS_RECORDER           (1<<5)
+#define ACCESS_HTSP_RECORDER      (1<<6)
+#define ACCESS_ALL_RECORDER       (1<<7)
+#define ACCESS_ALL_RW_RECORDER    (1<<8)
+#define ACCESS_FAILED_RECORDER    (1<<9)
+#define ACCESS_ADMIN              (1<<10)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \

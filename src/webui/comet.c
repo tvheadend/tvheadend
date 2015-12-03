@@ -150,9 +150,21 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   const char *username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
   int64_t bfree, btotal;
   int dvr = !http_access_verify(hc, ACCESS_RECORDER);
+  const char *s;
 
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
 
+  switch (hc->hc_access->aa_uilevel) {
+  case UILEVEL_BASIC:    s = "basic";    break;
+  case UILEVEL_ADVANCED: s = "advanced"; break;
+  case UILEVEL_EXPERT:   s = "expert";   break;
+  default:               s = NULL;       break;
+  }
+  if (s) {
+    htsmsg_add_str(m, "uilevel", s);
+    if (config.uilevel_nochange)
+      htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
+  }
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
   if (hc->hc_peer_ipstr)

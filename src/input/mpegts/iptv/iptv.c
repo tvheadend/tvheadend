@@ -295,7 +295,7 @@ static htsstr_substitute_t iptv_input_subst[] = {
 };
 
 static int
-iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   int ret = SM_CODE_TUNING_FAILED;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
@@ -711,7 +711,7 @@ const idclass_t iptv_network_class = {
       .name     = N_("Service ID"),
       .off      = offsetof(iptv_network_t, in_service_id),
       .def.i    = 0,
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_INT,
@@ -749,6 +749,7 @@ const idclass_t iptv_network_class = {
       .name     = N_("Maximum timeout (seconds)"),
       .off      = offsetof(iptv_network_t, in_max_timeout),
       .def.i    = 15,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -756,7 +757,7 @@ const idclass_t iptv_network_class = {
       .name     = N_("Icon base URL"),
       .off      = offsetof(iptv_network_t, in_icon_url),
       .set      = iptv_network_class_icon_url_set,
-      .opts     = PO_MULTILINE
+      .opts     = PO_MULTILINE | PO_ADVANCED
     },
     {
       .id       = "autodiscovery",
@@ -832,6 +833,7 @@ const idclass_t iptv_auto_network_class = {
       .off      = offsetof(iptv_network_t, in_ctx_charset),
       .list     = iptv_auto_network_class_charset_list,
       .notify   = iptv_auto_network_class_notify_url,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_S64,
@@ -846,19 +848,22 @@ const idclass_t iptv_auto_network_class = {
       .name     = N_("Re-fetch period (mins)"),
       .off      = offsetof(iptv_network_t, in_refetch_period),
       .def.i    = 60,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_BOOL,
       .id       = "ssl_peer_verify",
       .name     = N_("SSL verify peer"),
       .off      = offsetof(iptv_network_t, in_ssl_peer_verify),
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
       .id       = "remove_args",
       .name     = N_("Remove HTTP arguments"),
       .off      = offsetof(iptv_network_t, in_remove_args),
-      .def.s    = "ticket"
+      .def.s    = "ticket",
+      .opts     = PO_EXPERT
     },
     {}
   }

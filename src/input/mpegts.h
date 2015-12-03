@@ -299,6 +299,7 @@ struct mpegts_network
    * Identification
    */
   char                    *mn_network_name;
+  char                    *mn_provider_network_name;
 
   /*
    * Inputs
@@ -404,7 +405,8 @@ struct mpegts_mux
    */
   
   LIST_ENTRY(mpegts_mux)  mm_network_link;
-  mpegts_network_t        *mm_network;
+  mpegts_network_t       *mm_network;
+  char                   *mm_provider_network_name;
   uint16_t                mm_onid;
   uint16_t                mm_tsid;
 
@@ -526,6 +528,7 @@ struct mpegts_service
   int (*s_unlink)(mpegts_service_t *master, mpegts_service_t *slave);
 
   int      s_dvb_subscription_flags;
+  int      s_dvb_subscription_weight;
 
   mpegts_apids_t             *s_pids;
   LIST_HEAD(, mpegts_service) s_masters;
@@ -650,6 +653,7 @@ struct mpegts_input
 
   int mi_initscan;
   int mi_idlescan;
+  uint32_t mi_free_weight;
 
   char *mi_linked;
 
@@ -707,9 +711,9 @@ struct mpegts_input
   int  (*mi_get_priority)   (mpegts_input_t*, mpegts_mux_t *mm, int flags);
   int  (*mi_get_grace)      (mpegts_input_t*, mpegts_mux_t *mm);
   int  (*mi_warm_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
-  int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*);
+  int  (*mi_start_mux)      (mpegts_input_t*,mpegts_mux_instance_t*, int weight);
   void (*mi_stop_mux)       (mpegts_input_t*,mpegts_mux_instance_t*);
-  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*,int flags, int first);
+  void (*mi_open_service)   (mpegts_input_t*,mpegts_service_t*, int flags, int first, int weight);
   void (*mi_close_service)  (mpegts_input_t*,mpegts_service_t*);
   void (*mi_update_pids)    (mpegts_input_t*,mpegts_mux_t*);
   void (*mi_create_mux_instance) (mpegts_input_t*,mpegts_mux_t*);
@@ -766,7 +770,7 @@ int mpegts_input_set_networks ( mpegts_input_t *mi, htsmsg_t *msg );
 
 int mpegts_input_add_network  ( mpegts_input_t *mi, mpegts_network_t *mn );
 
-void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init );
+void mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init, int weight );
 void mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s );
 
 void mpegts_input_status_timer ( void *p );
@@ -858,10 +862,11 @@ mpegts_service_t *mpegts_mux_find_service(mpegts_mux_t *ms, uint16_t sid);
 void mpegts_mux_instance_delete ( tvh_input_instance_t *tii );
 
 int mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr, service_t *t );
+  ( mpegts_mux_instance_t **mmiptr, service_t *t, int weight );
 
 int mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi );
 
+int mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name );
 int mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force );
 int mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid );
 int mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth );

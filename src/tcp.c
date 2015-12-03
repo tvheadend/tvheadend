@@ -738,20 +738,18 @@ next:
  *
  */
 #if ENABLE_LIBSYSTEMD_DAEMON
-static void *
-tcp_server_create_new
-  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+static void *tcp_server_create_new
 #else
-void *
-tcp_server_create
-  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+void *tcp_server_create
 #endif
+  (const char *subsystem, const char *name, const char *bindaddr,
+   int port, tcp_server_ops_t *ops, void *opaque)
 {
   int fd, x;
   tcp_server_t *ts;
   struct addrinfo hints, *res, *ressave, *use = NULL;
   struct sockaddr_storage bound;
-  char port_buf[6];
+  char port_buf[6], buf[50];
   int one = 1;
   int zero = 0;
 
@@ -815,6 +813,10 @@ tcp_server_create
   ts->bound  = bound;
   ts->ops    = *ops;
   ts->opaque = opaque;
+
+  tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
+  tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d", name, buf, htons(IP_PORT(bound)));
+
   return ts;
 }
 
@@ -824,13 +826,15 @@ tcp_server_create
  */
 void *
 tcp_server_create
-  (const char *bindaddr, int port, tcp_server_ops_t *ops, void *opaque)
+  (const char *subsystem, const char *name, const char *bindaddr,
+   int port, tcp_server_ops_t *ops, void *opaque)
 {
   int sd_fds_num, i, fd;
   struct sockaddr_storage bound;
   tcp_server_t *ts;
   struct in_addr addr4;
   struct in6_addr addr6;
+  char buf[50];
   int found = 0;
 
   sd_fds_num = sd_listen_fds(0);
@@ -876,10 +880,12 @@ tcp_server_create
     ts->bound  = bound;
     ts->ops    = *ops;
     ts->opaque = opaque;
+    tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
+    tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d (systemd)", name, buf, htons(IP_PORT(bound)));
   } else {
     /* no systemd-managed socket found, create a new one */
     tvhlog(LOG_INFO, "tcp", "No systemd socket: creating a new one");
-    ts =  tcp_server_create_new(bindaddr, port, ops, opaque);
+    ts =  tcp_server_create_new(subsystem, name, bindaddr, port, ops, opaque);
   }
 
   return ts;
@@ -929,7 +935,7 @@ tcp_server_delete(void *server)
  *
  */
 int
-tcp_default_ip_addr ( struct sockaddr_storage *deflt )
+tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
 {
 
   struct sockaddr_storage ss;
@@ -937,7 +943,7 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt )
   int sock;
 
   memset(&ss, 0, sizeof(ss));
-  ss.ss_family = tcp_preferred_address_family;
+  ss.ss_family = family == PF_UNSPEC ? tcp_preferred_address_family : family;
   if (inet_pton(ss.ss_family,
                 ss.ss_family == AF_INET ?
                   /* Google name servers */
@@ -978,7 +984,7 @@ tcp_default_ip_addr ( struct sockaddr_storage *deflt )
  *
  */
 int
-tcp_server_bound ( void *server, struct sockaddr_storage *bound )
+tcp_server_bound ( void *server, struct sockaddr_storage *bound, int family )
 {
   tcp_server_t *ts = server;
   int i, len, port;
@@ -1001,7 +1007,7 @@ tcp_server_bound ( void *server, struct sockaddr_storage *bound )
   port = IP_PORT(ts->bound);
 
   /* no bind address was set, try to find one */
-  if (tcp_default_ip_addr(bound) < 0)
+  if (tcp_default_ip_addr(bound, family) < 0)
     return -1;
   if (bound->ss_family == AF_INET)
     IP_AS_V4(*bound, port) = port;

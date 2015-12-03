@@ -97,6 +97,7 @@ typedef struct muxer {
 /* type <==> string converters */
 const char *           muxer_container_type2txt  (muxer_container_type_t mc);
 const char*            muxer_container_type2mime (muxer_container_type_t mc, int video);
+const char*            muxer_container_filename2mime (const char *filename, int video);
 
 muxer_container_type_t muxer_container_txt2type  (const char *str);
 muxer_container_type_t muxer_container_mime2type (const char *str);

@@ -21,6 +21,7 @@
 #include "upnp.h"
 #include "settings.h"
 #include "config.h"
+#include "input/mpegts/iptv/iptv_private.h"
 #include "satip/server.h"
 
 #define UPNP_MAX_AGE 1800
@@ -67,7 +68,7 @@ satip_server_http_xml(http_connection_t *hc)
 <manufacturerURL>http://tvheadend.org</manufacturerURL>\n\
 <modelDescription>TVHeadend %s</modelDescription>\n\
 <modelName>TVHeadend SAT>IP</modelName>\n\
-<modelNumber>1.0</modelNumber>\n\
+<modelNumber>1.1</modelNumber>\n\
 <modelURL></modelURL>\n\
 <serialNumber>123456</serialNumber>\n\
 <UDN>uuid:%s</UDN>\n\
@@ -111,6 +112,7 @@ satip_server_http_xml(http_connection_t *hc)
   char *devicelist = NULL;
   htsbuf_queue_t q;
   mpegts_network_t *mn;
+  mpegts_mux_t *mm;
   int dvbt = 0, dvbs = 0, dvbc = 0, atsc = 0;
   int srcs = 0, delim = 0, tuners = 0, i;
   struct xml_type_xtab *p;
@@ -145,6 +147,13 @@ satip_server_http_xml(http_connection_t *hc)
       dvbc++;
     else if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
       atsc++;
+    else if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
+      LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+        if (((iptv_mux_t *)mm)->mm_iptv_satip_dvbt_freq) {
+          dvbt++;
+          break;
+        }
+    }
   }
   for (p = xtab; p->id; p++) {
     i = *p->cptr;
@@ -195,10 +204,11 @@ satip_server_http_xml(http_connection_t *hc)
     snprintf(buf2, sizeof(buf2), "%d", srcs);
     http_arg_set(&args, "X-SATIP-Sources", buf2);
   }
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, 200, "text/xml", strlen(buf), 0, NULL, 10, 0, NULL, &args);
-  http_arg_flush(&args);
-
   tvh_write(hc->hc_fd, buf, strlen(buf));
+  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_arg_flush(&args);
 
   return 0;
 #undef MSG
@@ -534,7 +544,8 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 struct satip_server_conf satip_server_conf = {
   .idnode.in_class = &satip_server_class,
   .satip_descramble = 1,
-  .satip_weight = 100
+  .satip_weight = 100,
+  .satip_allow_remote_weight = 1
 };
 
 static void satip_server_class_save(idnode_t *self)
@@ -577,7 +588,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_uuid",
       .name   = N_("Server UUID"),
       .off    = offsetof(struct satip_server_conf, satip_uuid),
-      .opts   = PO_RDONLY,
+      .opts   = PO_RDONLY | PO_EXPERT,
       .group  = 1,
     },
     {
@@ -592,6 +603,15 @@ const idclass_t satip_server_class = {
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
       .off    = offsetof(struct satip_server_conf, satip_weight),
+      .opts   = PO_ADVANCED,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_remote_weight",
+      .name   = N_("Allow remote subscription weight"),
+      .off    = offsetof(struct satip_server_conf, satip_allow_remote_weight),
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -599,6 +619,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_descramble",
       .name   = N_("Descramble services (limit per mux)"),
       .off    = offsetof(struct satip_server_conf, satip_descramble),
+      .opts   = PO_ADVANCED,
       .group  = 1,
     },
     {
@@ -606,6 +627,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_rewrite_pmt",
       .name   = N_("Rewrite PMT"),
       .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -614,6 +636,15 @@ const idclass_t satip_server_class = {
       .name   = N_("Mux handling"),
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "satip_nat_ip",
+      .name   = N_("External IP (NAT)"),
+      .off    = offsetof(struct satip_server_conf, satip_nat_ip),
+      .opts   = PO_EXPERT,
       .group  = 1,
     },
     {
@@ -682,6 +713,7 @@ const idclass_t satip_server_class = {
 static void satip_server_save(void)
 {
   int descramble, rewrite_pmt, muxcnf;
+  char *nat_ip;
 
   config_save();
   if (!satip_server_rtsp_port_locked) {
@@ -690,11 +722,13 @@ static void satip_server_save(void)
       descramble = satip_server_conf.satip_descramble;
       rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
       muxcnf = satip_server_conf.satip_muxcnf;
+      nat_ip = satip_server_conf.satip_nat_ip ? strdup(satip_server_conf.satip_nat_ip) : NULL;
       pthread_mutex_unlock(&global_lock);
-      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf);
+      satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, nat_ip);
       satip_server_info("re", descramble, muxcnf);
       satips_upnp_send_announce();
       pthread_mutex_lock(&global_lock);
+      free(nat_ip);
     } else {
       pthread_mutex_unlock(&global_lock);
       tvhinfo("satips", "SAT>IP Server shutdown");
@@ -714,12 +748,13 @@ void satip_server_init(int rtsp_port)
   struct sockaddr_storage http;
   char http_ip[128];
   int descramble, rewrite_pmt, muxcnf;
+  char *nat_ip;
 
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
   satip_server_conf.satip_deviceid = 1;
 
-  if (tcp_server_bound(http_server, &http) < 0) {
+  if (tcp_server_bound(http_server, &http, PF_INET) < 0) {
     tvherror("satips", "Unable to determine the HTTP/RTSP address");
     return;
   }
@@ -737,8 +772,9 @@ void satip_server_init(int rtsp_port)
   descramble = satip_server_conf.satip_descramble;
   rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
   muxcnf = satip_server_conf.satip_muxcnf;
+  nat_ip = satip_server_conf.satip_nat_ip;
 
-  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf);
+  satip_server_rtsp_init(http_server_ip, satip_server_rtsp_port, descramble, rewrite_pmt, muxcnf, nat_ip);
 
   satip_server_info("", descramble, muxcnf);
 }

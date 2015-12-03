@@ -69,7 +69,8 @@ satip_rtsp_add_val(const char *name, char *buf, uint32_t val)
 
 int
 satip_rtsp_setup( http_client_t *hc, int src, int fe,
-                  int udp_port, const dvb_mux_conf_t *dmc, int flags )
+                  int udp_port, const dvb_mux_conf_t *dmc, int flags,
+                  int weight )
 {
   static tvh2satip_t msys[] = {
     { .t = DVB_SYS_DVBT,                      "dvbt"  },
@@ -220,6 +221,8 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       ADD(dmc_fe_modulation, mtype,
           dmc->dmc_fe_delsys == DVB_SYS_ATSC ? "8vsb" : "64qam");
   }
+  if (weight > 0)
+    satip_rtsp_add_val("tvhweight", buf, (uint32_t)weight * 1000);
   if (flags & SATIP_SETUP_PIDS0) {
     strcat(buf, "&pids=0");
     if (flags & SATIP_SETUP_PIDS21)
@@ -260,7 +263,7 @@ satip_rtsp_pids_strip( const char *s, int maxlen )
 int
 satip_rtsp_play( http_client_t *hc, const char *pids,
                  const char *addpids, const char *delpids,
-                 int max_pids_len )
+                 int max_pids_len, int weight )
 {
   htsbuf_queue_t q;
   char *stream = NULL;
@@ -272,7 +275,7 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
   addpids = satip_rtsp_pids_strip(addpids, max_pids_len);
   delpids = satip_rtsp_pids_strip(delpids, max_pids_len);
 
-  if (pids == NULL && addpids == NULL && delpids == NULL)
+  if (pids == NULL && addpids == NULL && delpids == NULL && weight <= 0)
     return -EINVAL;
 
   //printf("pids = '%s' addpids = '%s' delpids = '%s'\n", pids, addpids, delpids);
@@ -296,6 +299,8 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
         htsbuf_qprintf(&q, "addpids=%s", addpids);
     }
   }
+  if (weight)
+    htsbuf_qprintf(&q, "tvhweight=%d", weight);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);

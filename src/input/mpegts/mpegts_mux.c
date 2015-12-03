@@ -217,7 +217,7 @@ mpegts_mux_unsubscribe_linked
 
 int
 mpegts_mux_instance_start
-  ( mpegts_mux_instance_t **mmiptr, service_t *t )
+  ( mpegts_mux_instance_t **mmiptr, service_t *t, int weight )
 {
   int r;
   char buf[256], buf2[256];
@@ -248,7 +248,7 @@ mpegts_mux_instance_start
 
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
-  r = mi->mi_start_mux(mi, mmi);
+  r = mi->mi_start_mux(mi, mmi, weight);
   if (r) return r;
 
   /* Start */
@@ -519,7 +519,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "network_uuid",
       .name     = N_("Network UUID"),
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_EXPERT,
       .get      = mpegts_mux_class_get_network_uuid,
     },
     {
@@ -530,24 +530,31 @@ const idclass_t mpegts_mux_class =
       .get      = mpegts_mux_class_get_name,
     },
     {
+      .type     = PT_STR,
+      .id       = "pnetwork_name",
+      .name     = N_("Provider network name"),
+      .off      = offsetof(mpegts_mux_t, mm_provider_network_name),
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
+    },
+    {
       .type     = PT_U16,
       .id       = "onid",
       .name     = N_("Original network ID"),
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_ADVANCED,
       .off      = offsetof(mpegts_mux_t, mm_onid),
     },
     {
       .type     = PT_U16,
       .id       = "tsid",
       .name     = N_("Transport stream ID"),
-      .opts     = PO_RDONLY,
+      .opts     = PO_RDONLY | PO_ADVANCED,
       .off      = offsetof(mpegts_mux_t, mm_tsid),
     },
     {
       .type     = PT_STR,
       .id       = "cridauth",
       .name     = N_("CRID authority"),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
       .off      = offsetof(mpegts_mux_t, mm_crid_authority),
     },
     {
@@ -596,14 +603,14 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
-      .opts     = PO_HIDDEN | PO_ADVANCED
+      .opts     = PO_HIDDEN | PO_EXPERT
     },
     {
       .type     = PT_BOOL,
       .id       = "eit_tsid_nocheck",
       .name     = N_("EIT - skip TSID check"),
       .off      = offsetof(mpegts_mux_t, mm_eit_tsid_nocheck),
-      .opts     = PO_HIDDEN | PO_ADVANCED
+      .opts     = PO_HIDDEN | PO_EXPERT
     },
     {}
   }
@@ -1136,6 +1143,16 @@ void
 mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c )
 {
   idnode_save(&mm->mm_id, c);
+}
+
+int
+mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name )
+{
+  if (strcmp(mm->mm_provider_network_name ?: "", name ?: "")) {
+    tvh_str_update(&mm->mm_provider_network_name, name ?: "");
+    return 1;
+  }
+  return 0;
 }
 
 int

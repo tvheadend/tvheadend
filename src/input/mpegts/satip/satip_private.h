@@ -92,6 +92,7 @@ struct satip_device
   int                        sd_pids21;
   int                        sd_pilot_on;
   int                        sd_no_univ_lnb;
+  int                        sd_can_weight;
   int                        sd_dbus_allow;
   int                        sd_skip_ts;
   int                        sd_disable_workarounds;
@@ -103,6 +104,9 @@ struct satip_tune_req {
 
   mpegts_apids_t             sf_pids;
   mpegts_apids_t             sf_pids_tuned;
+
+  int                        sf_weight;
+  int                        sf_weight_tuned;
 };
 
 struct satip_frontend
@@ -127,6 +131,7 @@ struct satip_frontend
   int                        sf_play2;
   int                        sf_tdelay;
   int                        sf_teardown_delay;
+  int                        sf_pass_weight;
   char                      *sf_tuner_bindaddr;
 
   /*
@@ -244,11 +249,11 @@ int
 satip_rtsp_setup( http_client_t *hc,
                   int src, int fe, int udp_port,
                   const dvb_mux_conf_t *dmc,
-                  int flags );
+                  int flags, int weight );
 
 int
 satip_rtsp_play( http_client_t *hc, const char *pids,
                  const char *addpids, const char *delpids,
-                 int max_pids_len );
+                 int max_pids_len, int weight );
 
 #endif /* __TVH_SATIP_PRIVATE_H__ */

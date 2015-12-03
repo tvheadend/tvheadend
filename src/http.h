@@ -121,6 +121,7 @@ typedef enum http_ver {
 } http_ver_t;
 
 typedef struct http_connection {
+  pthread_mutex_t hc_fd_lock;
   int hc_fd;
   struct sockaddr_storage *hc_peer;
   char *hc_peer_ipstr;

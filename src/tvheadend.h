@@ -89,6 +89,7 @@ typedef struct str_list
 extern int tvheadend_running;
 
 extern pthread_mutex_t global_lock;
+extern pthread_mutex_t tasklet_lock;
 extern pthread_mutex_t fork_lock;
 
 extern int tvheadend_webui_port;
@@ -133,6 +134,14 @@ typedef enum {
   COMMERCIAL_NO,
 } th_commercial_advice_t;
 
+
+/*
+ *
+ */
+#define UILEVEL_DEFAULT  (-1)
+#define UILEVEL_BASIC    0
+#define UILEVEL_ADVANCED 1
+#define UILEVEL_EXPERT   2
 
 /*
  * global timer
@@ -467,6 +476,7 @@ typedef enum {
 #define SM_CODE_NO_SOURCE                 206
 #define SM_CODE_NO_SERVICE                207
 #define SM_CODE_NO_VALID_ADAPTER          208
+#define SM_CODE_NO_ADAPTERS               209
 
 #define SM_CODE_ABORTED                   300
 

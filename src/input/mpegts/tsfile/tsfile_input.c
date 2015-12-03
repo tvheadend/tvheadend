@@ -200,7 +200,7 @@ tsfile_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 }
 
 static int
-tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t )
+tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weight )
 {
   struct stat st;
   mpegts_mux_t          *mm  = t->mmi_mux;

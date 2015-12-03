@@ -135,56 +135,48 @@ tvheadend.channel_tab = function(panel, index)
         callback: tvheadend.service_mapper
     };
 
-    var lowNoButton = {
-        name: 'lowno',
+    var chopsButton = {
+        name: 'chops',
         builder: function() {
-            return new Ext.Toolbar.Button({
+            var m = new Ext.menu.Menu()
+            m.add({
+                name: 'lowno',
                 tooltip: _('Assign lowest free channel number'),
-                iconCls: 'bullet_add',
-                text: _('Assign Number'),
-                disabled: false
+                iconCls: 'chnumops_low',
+                text: _('Assign Number')
             });
-        },
-        callback: assign_low_number
-    };
-
-    var noUpButton = {
-        name: 'noup',
-        builder: function() {
-            return new Ext.Toolbar.Button({
+            m.add({
+                name: 'noup',
                 tooltip: _('Move channel one number up'),
-                iconCls: 'arrow_up',
-                text: _('Number Up'),
-                disabled: false
+                iconCls: 'chnumops_up',
+                text: _('Number Up')
             });
-        },
-        callback: move_number_up
-    };
-
-    var noDownButton = {
-        name: 'nodown',
-        builder: function() {
-            return new Ext.Toolbar.Button({
+            m.add({
+                name: 'nodown',
                 tooltip: _('Move channel one number down'),
-                iconCls: 'arrow_down',
-                text: _('Number Down'),
-                disabled: false
+                iconCls: 'chnumops_down',
+                text: _('Number Down')
             });
-        },
-        callback: move_number_down
-    };
-
-    var noSwapButton = {
-        name: 'swap',
-        builder: function() {
-            return new Ext.Toolbar.Button({
+            m.add({
+                name: 'swap',
                 tooltip: _('Swap the numbers for the two selected channels'),
-                iconCls: 'arrow_switch',
-                text: _('Swap Numbers'),
+                iconCls: 'chnumops_swap',
+                text: _('Swap Numbers')
+            });
+            return new Ext.Toolbar.Button({
+                tooltip: _('Channel number operations'),
+                iconCls: 'chnumops',
+                text: _('Number operations'),
+                menu: m,
                 disabled: false
             });
         },
-        callback: swap_numbers
+        callback: {
+            lowno: assign_low_number,
+            noup: move_number_up,
+            nodown: move_number_down,
+            swap: swap_numbers
+        }
     };
 
     var iconResetButton = {
@@ -216,7 +208,7 @@ tvheadend.channel_tab = function(panel, index)
             create: {}
         },
         del: true,
-        tbar: [mapButton, lowNoButton, noUpButton, noDownButton, noSwapButton, iconResetButton],
+        tbar: [mapButton, chopsButton, iconResetButton],
         lcol: [
             {
                 width: 50,

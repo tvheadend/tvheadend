@@ -252,6 +252,7 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
   if (!gzip && fb_gzipped(fp))
     gzip = "gzip";
 
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, 200, content, size, gzip, NULL, 10, 0, NULL, NULL);
   while (!fb_eof(fp)) {
     ssize_t c = fb_read(fp, buf, sizeof(buf));
@@ -264,6 +265,7 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
       break;
     }
   }
+  pthread_mutex_unlock(&hc->hc_fd_lock);
   fb_close(fp);
 
   return ret;
@@ -361,14 +363,16 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     switch(sm->sm_type) {
     case SMT_MPEGTS:
     case SMT_PACKET:
-      lastpkt = dispatch_clock;
       if(started) {
         pktbuf_t *pb;
+        int len;
         if (sm->sm_type == SMT_PACKET)
           pb = ((th_pkt_t*)sm->sm_data)->pkt_payload;
         else
           pb = sm->sm_data;
-        subscription_add_bytes_out(s, pktbuf_len(pb));
+        subscription_add_bytes_out(s, len = pktbuf_len(pb));
+        if (len > 0)
+          lastpkt = dispatch_clock;
         muxer_write_pkt(mux, sm->sm_type, sm->sm_data);
         sm->sm_data = NULL;
       }
@@ -1353,8 +1357,10 @@ page_xspf(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_unlock(&global_lock);
 
   len = strlen(buf);
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, 200, "application/xspf+xml", len, 0, NULL, 10, 0, NULL, NULL);
   tvh_write(hc->hc_fd, buf, len);
+  pthread_mutex_unlock(&hc->hc_fd_lock);
 
   free(hostpath);
   return 0;
@@ -1394,8 +1400,10 @@ page_m3u(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_unlock(&global_lock);
 
   len = strlen(buf);
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, 200, MIME_M3U, len, 0, NULL, 10, 0, NULL, NULL);
   tvh_write(hc->hc_fd, buf, len);
+  pthread_mutex_unlock(&hc->hc_fd_lock);
 
   free(hostpath);
   return 0;
@@ -1508,7 +1516,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   fname = tvh_strdupa(filename);
-  content = muxer_container_type2mime(de->de_mc, 1);
+  content = muxer_container_filename2mime(fname, 1);
   charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
 
   pthread_mutex_unlock(&global_lock);
@@ -1606,6 +1614,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_NOT_ALLOWED;
   }
 
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, range ? HTTP_STATUS_PARTIAL_CONTENT : HTTP_STATUS_OK,
        content, content_len, NULL, NULL, 10, 
        range ? range_buf : NULL, disposition, NULL);
@@ -1633,6 +1642,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       }
     }
   }
+  pthread_mutex_unlock(&hc->hc_fd_lock);
   close(fd);
 
   pthread_mutex_lock(&global_lock);
@@ -1687,6 +1697,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_NOT_FOUND;
   }
 
+  pthread_mutex_lock(&hc->hc_fd_lock);
   http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL, NULL);
 
   while (1) {
@@ -1696,6 +1707,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
     if (tvh_write(hc->hc_fd, buf, c))
       break;
   }
+  pthread_mutex_unlock(&hc->hc_fd_lock);
   close(fd);
 
   return 0;
@@ -1764,8 +1776,10 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
         }
       }
       snprintf(buf, sizeof(buf), "tvh_locale={};tvh_locale_lang='';");
+      pthread_mutex_lock(&hc->hc_fd_lock);
       http_send_header(hc, 200, "text/javascript; charset=UTF-8", strlen(buf), 0, NULL, 10, 0, NULL, NULL);
       tvh_write(hc->hc_fd, buf, strlen(buf));
+      pthread_mutex_unlock(&hc->hc_fd_lock);
       return 0;
     }
   }

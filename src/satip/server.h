@@ -33,12 +33,15 @@
 #define MUXCNF_KEEP   1
 #define MUXCNF_REJECT 2
 
+#define RTSP_TCP_DATA 1000000
+
 struct satip_server_conf {
   idnode_t idnode;
   int satip_deviceid;
   char *satip_uuid;
   int satip_rtsp;
   int satip_weight;
+  int satip_allow_remote_weight;
   int satip_descramble;
   int satip_rewrite_pmt;
   int satip_muxcnf;
@@ -50,6 +53,7 @@ struct satip_server_conf {
   int satip_dvbc2;
   int satip_atsc;
   int satip_dvbcb;
+  char *satip_nat_ip;
 };
 
 extern struct satip_server_conf satip_server_conf;
@@ -58,11 +62,12 @@ extern const idclass_t satip_server_class;
 
 void satip_rtp_queue(void *id, th_subscription_t *subs,
                      streaming_queue_t *sq,
+                     pthread_mutex_t *tcp_lock,
                      struct sockaddr_storage *peer, int port,
                      int fd_rtp, int fd_rtcp,
                      int frontend, int source,
                      dvb_mux_conf_t *dmc,
-                     mpegts_apids_t *pids);
+                     mpegts_apids_t *pids, int perm_lock);
 void satip_rtp_update(void *id, th_subscription_t *subs,
                       streaming_queue_t *sq,
                       int frontend, int source,
@@ -78,7 +83,8 @@ void satip_rtp_init(int boot);
 void satip_rtp_done(void);
 
 void satip_server_rtsp_init(const char *bindaddr, int port,
-                            int descramble, int rewrite_pmt, int muxcnf);
+                            int descramble, int rewrite_pmt, int muxcnf,
+                            const char *nat_ip);
 void satip_server_rtsp_register(void);
 void satip_server_rtsp_done(void);
 

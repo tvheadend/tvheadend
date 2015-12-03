@@ -296,7 +296,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Cron multi-line"),
       .off    = offsetof(epggrab_conf_t, cron),
       .notify = epggrab_class_cron_notify,
-      .opts   = PO_MULTILINE,
+      .opts   = PO_MULTILINE | PO_ADVANCED,
       .group  = 2,
     },
     {
@@ -304,6 +304,7 @@ const idclass_t epggrab_class = {
       .id     = "ota_initial",
       .name   = N_("Force initial EPG scan at start-up"),
       .off    = offsetof(epggrab_conf_t, ota_initial),
+      .opts   = PO_ADVANCED,
       .group  = 3,
     },
     {
@@ -312,7 +313,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Over-the-air Cron multi-line"),
       .off    = offsetof(epggrab_conf_t, ota_cron),
       .notify = epggrab_class_ota_cron_notify,
-      .opts   = PO_MULTILINE,
+      .opts   = PO_MULTILINE | PO_ADVANCED,
       .group  = 3,
     },
     {
@@ -320,6 +321,7 @@ const idclass_t epggrab_class = {
       .id     = "ota_timeout",
       .name   = N_("EPG scan timeout in seconds (30-7200)"),
       .off    = offsetof(epggrab_conf_t, ota_timeout),
+      .opts   = PO_ADVANCED,
       .group  = 3,
     },
     {}

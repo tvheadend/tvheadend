@@ -1676,6 +1676,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config2 = hts_settings_load("config");
   if (!config2) {
     tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
+    config_newcfg = 1;
   } else {
     f = htsmsg_field_find(config2, "language");
     if (f && f->hmf_type == HMF_STR) {
@@ -1896,6 +1897,17 @@ config_class_dscp_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+config_class_uilevel ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Basic"),    UILEVEL_BASIC },
+    { N_("Advanced"), UILEVEL_ADVANCED },
+    { N_("Expert"),   UILEVEL_EXPERT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -1936,7 +1948,7 @@ const idclass_t config_class = {
       .id     = "version",
       .name   = N_("Configuration version"),
       .off    = offsetof(config_t, version),
-      .opts   = PO_RDONLY | PO_HIDDEN,
+      .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
       .group  = 1
     },
     {
@@ -1944,7 +1956,7 @@ const idclass_t config_class = {
       .id     = "full_version",
       .name   = N_("Last updated from"),
       .off    = offsetof(config_t, full_version),
-      .opts   = PO_RDONLY | PO_HIDDEN,
+      .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
       .group  = 1
     },
     {
@@ -1955,10 +1967,27 @@ const idclass_t config_class = {
       .group  = 1
     },
     {
+      .type   = PT_INT,
+      .id     = "uilevel",
+      .name   = N_("User interface level"),
+      .off    = offsetof(config_t, uilevel),
+      .list   = config_class_uilevel,
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "uilevel_nochange",
+      .name   = N_("Persistent user interface level"),
+      .off    = offsetof(config_t, uilevel_nochange),
+      .opts   = PO_ADVANCED,
+      .group  = 1
+    },
+    {
       .type   = PT_U32,
       .id     = "cookie_expires",
       .name   = N_("Cookie expiration (days)"),
       .off    = offsetof(config_t, cookie_expires),
+      .opts   = PO_ADVANCED,
       .group  = 1
     },
     {
@@ -1967,6 +1996,7 @@ const idclass_t config_class = {
       .name   = N_("HTTP CORS origin"),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
+      .opts   = PO_EXPERT,
       .group  = 1
     },
     {
@@ -1975,6 +2005,7 @@ const idclass_t config_class = {
       .name   = N_("DSCP/TOS for streaming"),
       .off    = offsetof(config_t, dscp),
       .list   = config_class_dscp_list,
+      .opts   = PO_EXPERT,
       .group  = 1
     },
     {
@@ -1982,6 +2013,7 @@ const idclass_t config_class = {
       .id     = "descrambler_buffer",
       .name   = N_("Descrambler buffer (TS packets)"),
       .off    = offsetof(config_t, descrambler_buffer),
+      .opts   = PO_EXPERT,
       .group  = 1
     },
     {
@@ -2003,7 +2035,7 @@ const idclass_t config_class = {
       .set    = config_class_info_area_set,
       .get    = config_class_info_area_get,
       .list   = config_class_info_area_list,
-      .opts   = PO_LORDER,
+      .opts   = PO_LORDER | PO_ADVANCED,
       .group  = 3
     },
     {
@@ -2019,6 +2051,7 @@ const idclass_t config_class = {
       .id     = "muxconfpath",
       .name   = N_("DVB scan files path"),
       .off    = offsetof(config_t, muxconf_path),
+      .opts   = PO_ADVANCED,
       .group  = 4
     },
     {
@@ -2026,13 +2059,15 @@ const idclass_t config_class = {
       .id     = "tvhtime_update_enabled",
       .name   = N_("Update time"),
       .off    = offsetof(config_t, tvhtime_update_enabled),
+      .opts   = PO_EXPERT,
       .group  = 5,
     },
     {
       .type   = PT_BOOL,
       .id     = "tvhtime_ntp_enabled",
       .name   = N_("Enable NTP driver"),
-      .off    = offsetof(config_t, tvhtime_update_enabled),
+      .off    = offsetof(config_t, tvhtime_ntp_enabled),
+      .opts   = PO_EXPERT,
       .group  = 5,
     },
     {
@@ -2040,6 +2075,7 @@ const idclass_t config_class = {
       .id     = "tvhtime_tolerance",
       .name   = N_("Update tolerance (ms)"),
       .off    = offsetof(config_t, tvhtime_tolerance),
+      .opts   = PO_EXPERT,
       .group  = 5,
     },
     {
@@ -2047,6 +2083,7 @@ const idclass_t config_class = {
       .id     = "prefer_picon",
       .name   = N_("Prefer picons over channel name"),
       .off    = offsetof(config_t, prefer_picon),
+      .opts   = PO_ADVANCED,
       .group  = 6,
     },
     {
@@ -2054,6 +2091,7 @@ const idclass_t config_class = {
       .id     = "chiconpath",
       .name   = N_("Channel icon path (see Help)"),
       .off    = offsetof(config_t, chicon_path),
+      .opts   = PO_ADVANCED,
       .group  = 6,
     },
     {
@@ -2061,6 +2099,7 @@ const idclass_t config_class = {
       .id     = "chiconlowercase",
       .name   = N_("Channel icon name lower-case"),
       .off    = offsetof(config_t, chicon_lowercase),
+      .opts   = PO_ADVANCED,
       .group  = 6,
     },
     {
@@ -2068,6 +2107,7 @@ const idclass_t config_class = {
       .id     = "piconpath",
       .name   = N_("Picon path (see Help)"),
       .off    = offsetof(config_t, picon_path),
+      .opts   = PO_ADVANCED,
       .group  = 6,
     },
     {}

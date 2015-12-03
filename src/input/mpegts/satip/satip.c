@@ -475,6 +475,8 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_max    = 128;
     sd->sd_pids_len    = 2048;
     sd->sd_no_univ_lnb = 1;
+    if (strcmp(sd->sd_info.modelnum ?: "", "1.0"))
+      sd->sd_can_weight  = 1;
   } else if (strstr(sd->sd_info.manufacturer, "AVM Berlin") &&
              strstr(sd->sd_info.modelname, "FRITZ!")) {
     sd->sd_fullmux_ok  = 0;

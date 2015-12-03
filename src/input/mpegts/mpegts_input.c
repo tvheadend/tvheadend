@@ -278,6 +278,14 @@ const idclass_t mpegts_input_class =
       .opts     = PO_ADVANCED,
     },
     {
+      .type     = PT_U32,
+      .id       = "free_weight",
+      .name     = N_("Free weight"),
+      .off      = offsetof(mpegts_input_t, mi_free_weight),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .id       = "networks",
       .name     = N_("Networks"),
@@ -376,7 +384,7 @@ mpegts_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 }
 
 static int
-mpegts_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+mpegts_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
   return SM_CODE_TUNING_FAILED;
 }
@@ -622,7 +630,8 @@ mpegts_input_cat_pass_callback
 }
 
 void
-mpegts_input_open_service ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init )
+mpegts_input_open_service
+  ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int init, int weight )
 {
   mpegts_mux_t *mm = s->s_dvb_mux;
   elementary_stream_t *st;

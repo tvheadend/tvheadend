@@ -359,6 +359,7 @@ const idclass_t channel_class = {
       .name     = N_("Automatically name from network"),
       .off      = offsetof(channel_t, ch_autoname),
       .set      = channel_class_autoname_set,
+      .opts     = PO_ADVANCED,
       .opts     = PO_NOSAVE,
     },
     {
@@ -384,19 +385,21 @@ const idclass_t channel_class = {
       .name     = N_("User icon"),
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
       .id       = "icon_public_url",
       .name     = N_("Icon URL"),
       .get      = channel_class_get_icon,
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_EXPERT,
     },
     {
       .type     = PT_BOOL,
       .id       = "epgauto",
       .name     = N_("Automatically map EPG source"),
       .off      = offsetof(channel_t, ch_epgauto),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -406,7 +409,7 @@ const idclass_t channel_class = {
       .set      = channel_class_epggrab_set,
       .get      = channel_class_epggrab_get,
       .list     = channel_class_epggrab_list,
-      .opts     = PO_NOSAVE,
+      .opts     = PO_NOSAVE | PO_ADVANCED,
     },
     {
       .type     = PT_INT,
@@ -439,6 +442,7 @@ const idclass_t channel_class = {
       .set      = channel_class_services_set,
       .list     = channel_class_services_enum,
       .rend     = channel_class_services_rend,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -448,7 +452,7 @@ const idclass_t channel_class = {
       .get      = channel_class_tags_get,
       .set      = channel_class_tags_set,
       .list     = channel_tag_class_get_list,
-      .rend     = channel_class_tags_rend
+      .rend     = channel_class_tags_rend,
     },
     {
       .type     = PT_STR,
@@ -457,7 +461,7 @@ const idclass_t channel_class = {
       .get      = channel_class_bouquet_get,
       .set      = channel_class_bouquet_set,
       .list     = bouquet_class_get_list,
-      .opts     = PO_RDONLY
+      .opts     = PO_RDONLY | PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -466,7 +470,7 @@ const idclass_t channel_class = {
       .set      = channel_class_epg_parent_set,
       .list     = channel_class_get_list,
       .off      = offsetof(channel_t, ch_epg_parent),
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {}
   }
@@ -1279,6 +1283,7 @@ const idclass_t channel_tag_class = {
       .id       = "index",
       .name     = N_("Sort index"),
       .off      = offsetof(channel_tag_t, ct_index),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -1291,12 +1296,14 @@ const idclass_t channel_tag_class = {
       .id       = "internal",
       .name     = N_("Internal"),
       .off      = offsetof(channel_tag_t, ct_internal),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_BOOL,
       .id       = "private",
       .name     = N_("Private"),
       .off      = offsetof(channel_tag_t, ct_private),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -1304,19 +1311,21 @@ const idclass_t channel_tag_class = {
       .name     = N_("Icon (full URL)"),
       .off      = offsetof(channel_tag_t, ct_icon),
       .notify   = channel_tag_class_icon_notify,
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
       .id       = "icon_public_url",
       .name     = N_("Icon URL"),
       .get      = channel_tag_class_get_icon,
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_EXPERT,
     },
     {
       .type     = PT_BOOL,
       .id       = "titled_icon",
       .name     = N_("Icon has title"),
       .off      = offsetof(channel_tag_t, ct_titled_icon),
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
