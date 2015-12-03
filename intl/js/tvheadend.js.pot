@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-03 14:06+0100\n"
+"POT-Creation-Date: 2015-12-03 14:21+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1729,7 +1729,11 @@ msgstr ""
 msgid "Video Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:613 src/webui/static/app/idnode.js:616
+#: src/webui/static/app/idnode.js:613
+msgid "View level"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:616
 msgid "View level: "
 msgstr ""
 
