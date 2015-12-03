@@ -186,8 +186,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_warm_time = 30;
   cfg->dvr_update_window = 24 * 3600;
   cfg->dvr_pathname = strdup("$t$n.$x");
-  cfg->dvr_cleanup_threshold_low = 200;
-  cfg->dvr_cleanup_threshold_high = 2000;
+  cfg->dvr_cleanup_threshold_free = 200;
+  cfg->dvr_cleanup_threshold_used = 2000;
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
@@ -517,10 +517,10 @@ dvr_config_save(dvr_config_t *cfg)
   lock_assert(&global_lock);
 
   dvr_config_storage_check(cfg);
-  if (cfg->dvr_cleanup_threshold_low < 50)
-    cfg->dvr_cleanup_threshold_low = 50; // as checking is only periodically, lower is not save
-  if (cfg->dvr_cleanup_threshold_high < cfg->dvr_cleanup_threshold_high)
-    cfg->dvr_cleanup_threshold_high = cfg->dvr_cleanup_threshold_low + 50;
+  if (cfg->dvr_cleanup_threshold_free < 50)
+    cfg->dvr_cleanup_threshold_free = 50; // as checking is only periodically, lower is not save
+  if (cfg->dvr_cleanup_threshold_used < cfg->dvr_cleanup_threshold_used)
+    cfg->dvr_cleanup_threshold_used = cfg->dvr_cleanup_threshold_free + 50;
   if (cfg->dvr_removal_days != DVR_RET_FOREVER &&
       cfg->dvr_removal_days > cfg->dvr_retention_days)
     cfg->dvr_retention_days = DVR_RET_ONREMOVE;
@@ -984,17 +984,17 @@ const idclass_t dvr_config_class = {
     },
     {
       .type     = PT_U32,
-      .id       = "storage-cleanup-low",
+      .id       = "storage-mfree",
       .name     = N_("Maintain free storage space (MiB)"),
-      .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_low),
+      .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_free),
       .def.i    = 200,
       .group    = 2,
     },
     {
       .type     = PT_U32,
-      .id       = "storage-cleanup-high",
+      .id       = "storage-mused",
       .name     = N_("Maintain used storage space (MiB)"),
-      .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_high),
+      .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_used),
       .def.i    = 2000,
       .group    = 2,
     },

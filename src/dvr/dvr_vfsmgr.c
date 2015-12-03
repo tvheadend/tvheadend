@@ -73,10 +73,10 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
 
   filesystemId  = diskdata.f_fsid;
   availBytes    = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
-  requiredBytes = MIB(cfg->dvr_cleanup_threshold_low);
+  requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   diskBytes     = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
   usedBytes     = diskBytes - availBytes;
-  maximalBytes  = MIB(cfg->dvr_cleanup_threshold_high);
+  maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
   configName    = cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile";
 
   /* When deleting a file from the disk, the system needs some time to actually do this */
@@ -192,8 +192,8 @@ dvr_disk_space_check()
     {
       availBytes = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
       usedBytes = (diskdata.f_bsize * (int64_t)diskdata.f_blocks) - availBytes;
-      requiredBytes = MIB(cfg->dvr_cleanup_threshold_low);
-      maximalBytes = MIB(cfg->dvr_cleanup_threshold_high);
+      requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
+      maximalBytes = MIB(cfg->dvr_cleanup_threshold_used);
 
       if (availBytes < requiredBytes || maximalBytes > usedBytes) {
         LIST_FOREACH(de, &dvrentries, de_global_link) {

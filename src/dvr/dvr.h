@@ -54,8 +54,8 @@ typedef struct dvr_config {
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
   int dvr_running;
-  uint32_t dvr_cleanup_threshold_low;
-  uint32_t dvr_cleanup_threshold_high;
+  uint32_t dvr_cleanup_threshold_free;
+  uint32_t dvr_cleanup_threshold_used;
 
   muxer_config_t dvr_muxcnf;
 
