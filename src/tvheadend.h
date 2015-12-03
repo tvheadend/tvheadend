@@ -89,6 +89,7 @@ typedef struct str_list
 extern int tvheadend_running;
 
 extern pthread_mutex_t global_lock;
+extern pthread_mutex_t tasklet_lock;
 extern pthread_mutex_t fork_lock;
 
 extern int tvheadend_webui_port;

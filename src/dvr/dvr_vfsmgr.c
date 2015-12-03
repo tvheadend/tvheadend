@@ -168,6 +168,8 @@ dvr_disk_space_check()
   int64_t requiredBytes, availBytes;
   int idx = 0, cleanupDone = 0;
 
+  pthread_mutex_lock(&global_lock);
+
   dvr_disk_space_config_idx++;
   if (dvr_disk_space_config_idx > dvr_disk_space_config_size)
     dvr_disk_space_config_idx = 1;
@@ -213,6 +215,8 @@ dvr_disk_space_check()
     dvr_disk_space_config_idx = 0;
 
   dvr_disk_space_config_size = idx;
+
+  pthread_mutex_unlock(&global_lock);
 }
 
 /**
@@ -226,8 +230,10 @@ dvr_get_disk_space_update(const char *path)
   if(statvfs(path, &diskdata) == -1)
     return;
 
+  pthread_mutex_lock(&dvr_disk_space_mutex);
   dvr_bfree = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
   dvr_btotal = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
+  pthread_mutex_unlock(&dvr_disk_space_mutex);
 }
 
 /**
@@ -238,7 +244,6 @@ dvr_get_disk_space_tcb(void *opaque, int dearmed)
 {
   if (!dearmed) {
     htsmsg_t *m = htsmsg_create_map();
-    pthread_mutex_lock(&dvr_disk_space_mutex);
 
     /* update disk space from default dvr config */
     dvr_get_disk_space_update((char *)opaque);
@@ -246,8 +251,9 @@ dvr_get_disk_space_tcb(void *opaque, int dearmed)
     htsmsg_add_s64(m, "totaldiskspace", dvr_btotal);
 
     /* check free disk space for each dvr config and start cleanup if needed */
+    pthread_mutex_unlock(&tasklet_lock);
     dvr_disk_space_check();
-    pthread_mutex_unlock(&dvr_disk_space_mutex);
+    pthread_mutex_lock(&tasklet_lock);
 
     notify_by_msg("diskspaceUpdate", m, 0);
   }
