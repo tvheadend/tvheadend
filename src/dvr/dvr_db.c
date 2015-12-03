@@ -2960,7 +2960,7 @@ const idclass_t dvr_entry_class = {
     {
       .type     = PT_S64,
       .id       = "filesize",
-      .name     = N_("File Size"),
+      .name     = N_("File size"),
       .get      = dvr_entry_class_filesize_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },

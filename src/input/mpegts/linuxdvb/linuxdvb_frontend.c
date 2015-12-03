@@ -148,7 +148,7 @@ const idclass_t linuxdvb_frontend_dvbt_class =
     {
       .type     = PT_BOOL,
       .id       = "lna",
-      .name     = N_("LNA (Low noise amplifier)"),
+      .name     = N_("LNA (low noise amplifier)"),
       .off      = offsetof(linuxdvb_frontend_t, lfe_lna),
     },
     {}

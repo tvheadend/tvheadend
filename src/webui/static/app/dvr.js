@@ -569,8 +569,8 @@ tvheadend.autorec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
-        titleS: _('DVR Autorec Entry'),
-        titleP: _('DVR Autorec Entries'),
+        titleS: _('EPG Rule'),
+        titleP: _('EPG Rules'),
         iconCls: 'autoRec',
         tabIndex: index,
         columns: {
@@ -621,7 +621,7 @@ tvheadend.autorec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Autorec'), 'dvr_autorec.html');
+            new tvheadend.help(_('DVR - EPG Scheduling'), 'dvr_autorec.html');
         }
     });
 
@@ -636,8 +636,8 @@ tvheadend.timerec_editor = function(panel, index) {
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/timerec',
-        titleS: _('Time Schedule'),
-        titleP: _('Time Schedules'),
+        titleS: _('Time Rule'),
+        titleP: _('Time Rules'),
         iconCls: 'time_schedules',
         tabIndex: index,
         columns: {
@@ -674,7 +674,7 @@ tvheadend.timerec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Timerec'), 'dvr_timerec.html');
+            new tvheadend.help(_('DVR - Time Scheduling'), 'dvr_timerec.html');
         }
     });
 
