@@ -54,7 +54,8 @@ typedef struct dvr_config {
   uint32_t dvr_extra_time_post;
   uint32_t dvr_update_window;
   int dvr_running;
-  uint32_t dvr_cleanup_threshold;
+  uint32_t dvr_cleanup_threshold_low;
+  uint32_t dvr_cleanup_threshold_high;
 
   muxer_config_t dvr_muxcnf;
 
@@ -129,13 +130,15 @@ typedef enum {
   DVR_RET_1WEEK     = 7,
   DVR_RET_2WEEK     = 14,
   DVR_RET_3WEEK     = 21,
-  DVR_RET_1MONTH    = 30,
-  DVR_RET_2MONTH    = 60,
-  DVR_RET_3MONTH    = 90,
-  DVR_RET_6MONTH    = 180,
-  DVR_RET_1YEAR     = 365,
+  DVR_RET_1MONTH    = (30+1),
+  DVR_RET_2MONTH    = (60+1),
+  DVR_RET_3MONTH    = (90+2),
+  DVR_RET_6MONTH    = (180+2),
+  DVR_RET_1YEAR     = (365+1),
+  DVR_RET_2YEARS    = (2*365+1),
+  DVR_RET_3YEARS    = (3*366+1),
   DVR_RET_ONREMOVE  = UINT32_MAX-1, // for retention only
-  DVR_RET_SPACENEED = UINT32_MAX-1, // for removal only
+  DVR_RET_SPACE     = UINT32_MAX-1, // for removal only
   DVR_RET_FOREVER   = UINT32_MAX
 } dvr_retention_t;
 

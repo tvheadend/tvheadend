@@ -277,9 +277,9 @@ dvr_entry_get_removal_string ( dvr_entry_t *de )
   char buf[24];
   uint32_t removal = dvr_entry_get_removal_days(de);
 
-  if (removal < DVR_RET_SPACENEED)
+  if (removal < DVR_RET_SPACE)
     snprintf(buf, sizeof(buf), "%i days", removal);
-  else if (removal == DVR_RET_SPACENEED)
+  else if (removal == DVR_RET_SPACE)
     return strdup("Until space needed");
   else
     return strdup("Forever");
@@ -388,7 +388,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   uint32_t retention = dvr_entry_get_retention_days(de);
 
   stop = de->de_stop + removal * (time_t)86400;
-  if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACENEED) {
+  if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
     if (stop > dispatch_clock) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
       return;
@@ -2219,7 +2219,7 @@ dvr_entry_class_removal_list ( void *o, const char *lang )
     { N_("3 months"),           DVR_RET_3MONTH },
     { N_("6 months"),           DVR_RET_6MONTH },
     { N_("1 year"),             DVR_RET_1YEAR },
-    { N_("Until space needed"), DVR_RET_SPACENEED },
+    { N_("Maintained space"),   DVR_RET_SPACE },
     { N_("Forever"),            DVR_RET_FOREVER },
   };
   return strtab2htsmsg_u32(tab, 1, lang);
