@@ -131,12 +131,12 @@ typedef enum {
   DVR_RET_2WEEK     = 14,
   DVR_RET_3WEEK     = 21,
   DVR_RET_1MONTH    = (30+1),
-  DVR_RET_2MONTH    = (60+1),
+  DVR_RET_2MONTH    = (60+2),
   DVR_RET_3MONTH    = (90+2),
   DVR_RET_6MONTH    = (180+2),
   DVR_RET_1YEAR     = (365+1),
   DVR_RET_2YEARS    = (2*365+1),
-  DVR_RET_3YEARS    = (3*366+1),
+  DVR_RET_3YEARS    = (3*365+1),
   DVR_RET_ONREMOVE  = INT32_MAX-1, // for retention only
   DVR_RET_SPACE     = INT32_MAX-1, // for removal only
   DVR_RET_FOREVER   = INT32_MAX
