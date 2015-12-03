@@ -716,12 +716,12 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     setDiskSpace: function(bfree, btotal) {
         if (!('storage' in this.extra)) return;
         human = function(val) {
-          if (val > 1000000000)
-            val = parseInt(val / 1000000000) + _('GB');
-          if (val > 1000000)
-            val = parseInt(val / 1000000) + _('MB');
-          if (val > 1000)
-            val = parseInt(val / 1000) + _('KB');
+          if (val > 1073741824)
+            val = parseInt(val / 1073741824) + _('GiB');
+          if (val > 1048576)
+            val = parseInt(val / 1048576) + _('MiB');
+          if (val > 1024)
+            val = parseInt(val / 1024) + _('KiB');
           return val;
         };
         text = _('Storage space') + ':&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
