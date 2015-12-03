@@ -1,6 +1,7 @@
 /*
  *  Digital Video Recorder - file system management
  *  Copyright (C) 2015 Jaroslav Kysela
+ *  Copyright (C) 2015 Glenn Christiaensen
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -82,12 +83,12 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
 
   if (diskdata.f_bsize * (int64_t)diskdata.f_blocks < requiredBytes) {
     tvhlog(LOG_WARNING, "dvr","disk space cleanup for config \"%s\", required free space \"%ld MB\" is smaller than the total disk size!",
-        configName, requiredBytes/(int64_t)1024/(int64_t)1024);
+           configName, requiredBytes/(int64_t)1024/(int64_t)1024);
     return -1;
   }
 
   tvhlog(LOG_INFO, "dvr","disk space cleanup for config \"%s\", required free space \"%ld MB\", current free space \"%ld MB\"",
-      configName, requiredBytes/(int64_t)1024/(int64_t)1024, availBytes/(int64_t)1024/(int64_t)1024);
+         configName, requiredBytes/(int64_t)1024/(int64_t)1024, availBytes/(int64_t)1024/(int64_t)1024);
 
   while (availBytes < requiredBytes) {
     oldest = NULL;
@@ -128,29 +129,28 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
         *tbuf = 0;
       tvhlog(LOG_INFO, "dvr","Delete \"until space needed\" recording \"%s\" with stop time \"%s\" and file size \"%ld MB\"",
-          lang_str_get(oldest->de_title, NULL), tbuf, fileSize/(int64_t)1024/(int64_t)1024);
+             lang_str_get(oldest->de_title, NULL), tbuf, fileSize/(int64_t)1024/(int64_t)1024);
 
       dvr_disk_space_config_lastdelete = dispatch_clock;
       dvr_entry_delete(oldest, 1);    // delete actual file
       if (dvr_entry_get_retention_days(oldest) == DVR_RET_ONREMOVE)
         dvr_entry_destroy(oldest, 1); // also delete database entry
-    }
-    else {
-      tvhlog(LOG_WARNING, "dvr","%s \"until space needed\" recordings found for config \"%s\", you are running out of disk space very soon!",
-          loops > 0 ? "Not enough" : "No", configName);
+    } else {
+      tvhlog(LOG_WARNING, "dvr", "%s \"until space needed\" recordings found for config \"%s\", you are running out of disk space very soon!",
+             loops > 0 ? "Not enough" : "No", configName);
       goto finish;
     }
 
     loops++;
     if (loops >= 10) {
-      tvhlog(LOG_WARNING, "dvr","Not able to clear the required disk space after deleting %i \"until space needed\" recordings...", loops);
+      tvhlog(LOG_WARNING, "dvr", "Not able to clear the required disk space after deleting %i \"until space needed\" recordings...", loops);
       goto finish;
     }
   }
 
 finish:
   tvhlog(LOG_INFO, "dvr","disk space cleanup for config \"%s\", cleared \"%ld MB\" of disk space, new free disk space \"%ld MB\"",
-      configName, clearedBytes/(int64_t)1024/(int64_t)1024, availBytes/(int64_t)1024/(int64_t)1024);
+         configName, clearedBytes/(int64_t)1024/(int64_t)1024, availBytes/(int64_t)1024/(int64_t)1024);
 
   return clearedBytes;
 }
@@ -174,8 +174,7 @@ dvr_disk_space_check()
   if (dvr_disk_space_config_idx > dvr_disk_space_config_size)
     dvr_disk_space_config_idx = 1;
 
-  LIST_FOREACH(cfg, &dvrconfigs, config_link)
-  {
+  LIST_FOREACH(cfg, &dvrconfigs, config_link) {
     idx++;
 
     if (cfg->dvr_enabled &&
@@ -200,7 +199,7 @@ dvr_disk_space_check()
           /* only cleanup one directory at the time as the system needs time to delete the actual files */
           dvr_disk_space_cleanup(de->de_config);
           cleanupDone = 1;
-          dvr_disk_space_config_idx = idx;
+          dvr_disk_space_config_idx = idx + 1;
           break;
         }
       }
@@ -249,13 +248,12 @@ dvr_get_disk_space_tcb(void *opaque, int dearmed)
     dvr_get_disk_space_update((char *)opaque);
     htsmsg_add_s64(m, "freediskspace", dvr_bfree);
     htsmsg_add_s64(m, "totaldiskspace", dvr_btotal);
+    notify_by_msg("diskspaceUpdate", m, 0);
 
     /* check free disk space for each dvr config and start cleanup if needed */
     pthread_mutex_unlock(&tasklet_lock);
     dvr_disk_space_check();
     pthread_mutex_lock(&tasklet_lock);
-
-    notify_by_msg("diskspaceUpdate", m, 0);
   }
 
   free(opaque);
