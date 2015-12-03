@@ -32,6 +32,7 @@ typedef struct config {
   uint32_t version;
   int uilevel;
   int uilevel_nochange;
+  char *wizard;
   char *full_version;
   char *server_name;
   char *language;

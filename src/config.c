@@ -1626,6 +1626,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 
   memset(&config, 0, sizeof(config));
   config.idnode.in_class = &config_class;
+  config.wizard = strdup("hello");
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
   config.dscp = -1;
@@ -1732,6 +1733,7 @@ config_init ( int backup )
 void config_done ( void )
 {
   /* note: tvhlog is inactive !!! */
+  free(config.wizard);
   free(config.full_version);
   free(config.server_name);
   free(config.language);
@@ -2109,6 +2111,13 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, picon_path),
       .opts   = PO_ADVANCED,
       .group  = 6,
+    },
+    {
+      .type   = PT_STR,
+      .id     = "wizard",
+      .name   = "Wizard level", /* untranslated */
+      .off    = offsetof(config_t, wizard),
+      .opts   = PO_NOUI,
     },
     {}
   }

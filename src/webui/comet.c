@@ -150,6 +150,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   const char *username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
   int64_t bfree, btotal;
   int dvr = !http_access_verify(hc, ACCESS_RECORDER);
+  int admin = !http_access_verify(hc, ACCESS_ADMIN);
   const char *s;
 
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
@@ -170,7 +171,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   if (hc->hc_peer_ipstr)
     htsmsg_add_str(m, "address", hc->hc_peer_ipstr);
   htsmsg_add_u32(m, "dvr",      dvr);
-  htsmsg_add_u32(m, "admin",    !http_access_verify(hc, ACCESS_ADMIN));
+  htsmsg_add_u32(m, "admin",    admin);
 
   htsmsg_add_s64(m, "time",     time(NULL));
 
@@ -184,6 +185,9 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
     htsmsg_add_s64(m, "freediskspace", bfree);
     htsmsg_add_s64(m, "totaldiskspace", btotal);
   }
+
+  if (admin && config.wizard)
+    htsmsg_add_str(m, "wizard", config.wizard);
 
   if(cmb->cmb_messages == NULL)
     cmb->cmb_messages = htsmsg_create_list();

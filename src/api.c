@@ -140,6 +140,7 @@ void api_init ( void )
   api_language_init();
   api_satip_server_init();
   api_timeshift_init();
+  api_wizard_init();
 }
 
 void api_done ( void )

@@ -125,6 +125,7 @@ JAVASCRIPT += $(ROOTPATH)/app/epggrab.js
 JAVASCRIPT += $(ROOTPATH)/app/config.js
 JAVASCRIPT += $(ROOTPATH)/app/tvhlog.js
 JAVASCRIPT += $(ROOTPATH)/app/status.js
+JAVASCRIPT += $(ROOTPATH)/app/wizard.js
 JAVASCRIPT += $(ROOTPATH)/tv.js
 JAVASCRIPT += $(ROOTPATH)/app/servicemapper.js
 

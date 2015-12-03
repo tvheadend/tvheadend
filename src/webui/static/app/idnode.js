@@ -831,7 +831,7 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
         var p = d[i];
         if (conf.uuids && p.rdonly)
             continue;
-        if (conf.noui)
+        if (p.noui)
             continue;
         var f = tvheadend.idnode_editor_field(p, conf);
         if (!f)
@@ -1025,20 +1025,22 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             var cancelBtn = new Ext.Button({
                 text: _('Cancel'),
                 iconCls: 'cancel',
-                handler: conf.cancel
+                handler: function() {
+                    conf.cancel(conf);
+                }
             });
             buttons.push(cancelBtn);
         }
 
         var saveBtn = new Ext.Button({
-            text: _('Save'),
-            iconCls: 'save',
+            text: conf.saveText || _('Save'),
+            iconCls: conf.saveIconCls || 'save',
             handler: function() {
                 if (panel.getForm().isDirty()) {
                     var node = panel.getForm().getFieldValues();
                     node.uuid = conf.uuids ? conf.uuids : item.uuid;
                     tvheadend.Ajax({
-                        url: 'api/idnode/save',
+                        url: conf.saveURL || 'api/idnode/save',
                         params: {
                             node: Ext.encode(node)
                         },
@@ -1051,6 +1053,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                     if (conf.win)
                         conf.win.close();
                 }
+                if (conf.postsave)
+                    conf.postsave(conf);
             }
         });
         buttons.push(saveBtn);
@@ -1064,7 +1068,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                         var node = panel.getForm().getFieldValues();
                         node.uuid = conf.uuids ? conf.uuids : item.uuid;
                         tvheadend.Ajax({
-                            url: 'api/idnode/save',
+                            url: conf.saveURL || 'api/idnode/save',
                             params: {
                                 node: Ext.encode(node)
                             },
@@ -1078,8 +1082,11 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             buttons.push(applyBtn);
         }
 
+
         var uilevelBtn = null;
-        if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
+        if (!tvheadend.uilevel_nochange &&
+            (!conf.uilevel || conf.uilevel !== 'expert') &&
+            !conf.noUIlevel) {
             uilevelBtn = tvheadend.idnode_uilevel_menu(uilevel, function(l) {
                 uilevel = l;
                 var values = panel.getForm().getFieldValues();
@@ -1100,6 +1107,9 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             buttons.push(uilevelBtn ? '-' : '->');
             buttons.push(helpBtn);
         }
+
+        if (conf.buildbtn)
+            conf.buildbtn(conf, buttons);
     }
 
     panel = new Ext.form.FormPanel({
@@ -1122,6 +1132,29 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
     return panel;
 };
 
+/*
+ *
+ */
+tvheadend.idnode_editor_win = function(_uilevel, item, conf)
+{
+   var p = tvheadend.idnode_editor(_uilevel, item, conf);
+   var width = p.fixedWidth;
+   var w = new Ext.ux.Window({
+       title: conf.winTitle,
+       iconCls: 'edit',
+       layout: 'fit',
+       autoWidth: width ? false : true,
+       autoHeight: true,
+       autoScroll: true,
+       plain: true,
+       items: p
+   });
+   conf.win = w;
+   if (width)
+       w.setWidth(width);
+   w.show();
+   return w;
+}
 
 /*
  * IDnode creation dialog
@@ -1669,28 +1702,13 @@ tvheadend.idnode_grid = function(panel, conf)
                                         }
                                     };
                                     if (uuids.length > 1) {
-                                        var title = String.format(_('Edit {0} ({1} entries)'),
-                                                                  conf.titleS, uuids.length);
+                                        c.winTitle = String.format(_('Edit {0} ({1} entries)'),
+                                                                   conf.titleS, uuids.length);
                                         c.uuids = uuids;
                                     } else {
-                                        var title = String.format(_('Edit {0}'), conf.titleS);
+                                        c.winTitle = String.format(_('Edit {0}'), conf.titleS);
                                     }
-                                    var p = tvheadend.idnode_editor(uilevel, d[0], c);
-                                    var width = p.fixedWidth;
-                                    w = new Ext.ux.Window({
-                                        title: title,
-                                        iconCls: 'edit',
-                                        layout: 'fit',
-                                        autoWidth: width ? false : true,
-                                        autoHeight: true,
-                                        autoScroll: true,
-                                        plain: true,
-                                        items: p
-                                    });
-                                    if (width)
-                                        w.setWidth(width);
-                                    c.win = w;
-                                    w.show();
+                                    tvheadend.idnode_editor_win(uilevel, d[0], c);
                                 }
                             });
                         }

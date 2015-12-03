@@ -5,6 +5,7 @@ tvheadend.admin = false;
 tvheadend.dialog = null;
 tvheadend.uilevel = 'expert';
 tvheadend.uilevel_nochange = false;
+tvheadend.wizard = null;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -586,6 +587,9 @@ function accessUpdate(o) {
     }
 
     tvheadend.rootTabPanel.doLayout();
+
+    if (o.wizard)
+        tvheadend.wizard_start(o.wizard);
 }
 
 /**

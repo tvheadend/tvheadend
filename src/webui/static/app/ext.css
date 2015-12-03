@@ -168,6 +168,10 @@
     background-image: url(../icons/find.png) !important;
 }
 
+.wizard {
+    background-image: url(../icons/wand.png) !important;
+}
+
 .uilevel {
     background-image: url(../icons/application_form.png) !important;
 }
@@ -583,6 +587,15 @@
 .fetch_images {
     background-image: url(../icons/fetch_images.png) !important;
 }
+
+.previous {
+    background-image: url(../icons/arrow_left.png) !important;
+}
+
+.next {
+    background-image: url(../icons/arrow_right.png) !important;
+}
+
 
 .x-linked {
     display: inline-block;
