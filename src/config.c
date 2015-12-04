@@ -2134,6 +2134,8 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "prefer_picon",
       .name   = N_("Prefer picons over channel name"),
+      .desc   = N_("If both a picon and a channel-specific "
+      "(e.g. channelname.jpg) icon are defined, use the picon."),
       .off    = offsetof(config_t, prefer_picon),
       .opts   = PO_ADVANCED,
       .group  = 6,
@@ -2142,6 +2144,10 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "chiconpath",
       .name   = N_("Channel icon path (see Help)"),
+      .desc   = N_("Path to an icon for this channel. This can be "
+                   "named however you wish, as either a local "
+                   "(file://) or remote (http://) image. "
+                   "See Help for more infomation."),
       .off    = offsetof(config_t, chicon_path),
       .opts   = PO_ADVANCED,
       .group  = 6,
@@ -2150,6 +2156,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "chiconlowercase",
       .name   = N_("Channel icon name lower-case"),
+      .desc   = N_("Use icons with lower-case filenames only."),
       .off    = offsetof(config_t, chicon_lowercase),
       .opts   = PO_ADVANCED,
       .group  = 6,
@@ -2158,6 +2165,9 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "piconpath",
       .name   = N_("Picon path (see Help)"),
+      .desc   = N_("Path to a directory (folder) containing your picon "
+                   "collection. See Help for more detailed "
+                   "information."),
       .off    = offsetof(config_t, picon_path),
       .opts   = PO_ADVANCED,
       .group  = 6,
