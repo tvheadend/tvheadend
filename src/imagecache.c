@@ -82,24 +82,34 @@ const idclass_t imagecache_class = {
       .type   = PT_BOOL,
       .id     = "enabled",
       .name   = N_("Enabled"),
+      .desc   = N_("Select whether or not to enable caching. Note: "
+                   "even with this disabled you can still specify "
+                   "local (file://) icons and these will be served by "
+                   "the built-in webserver."),
       .off    = offsetof(struct imagecache_config, enabled),
     },
     {
       .type   = PT_BOOL,
       .id     = "ignore_sslcert",
       .name   = N_("Ignore invalid SSL certificate"),
+      .desc   = N_("Ignore invalid/unverifiable (expired, "
+                   "self-certified, etc.) certificates"),
       .off    = offsetof(struct imagecache_config, ignore_sslcert),
     },
     {
       .type   = PT_U32,
       .id     = "ok_period",
       .name   = N_("Re-fetch period (hours)"),
+      .desc   = N_("How frequently the upstream provider is checked "
+                   "for changes."),
       .off    = offsetof(struct imagecache_config, ok_period),
     },
     {
       .type   = PT_U32,
       .id     = "fail_period",
       .name   = N_("Re-try period (hours)"),
+      .desc   = N_("How frequently it will re-try fetching an image "
+                   "that has failed to be fetched."),
       .off    = offsetof(struct imagecache_config, fail_period),
     },
     {}
