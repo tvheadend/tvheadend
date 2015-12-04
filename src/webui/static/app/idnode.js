@@ -634,6 +634,31 @@ tvheadend.idnode_editor_field = function(f, conf)
     if (value == null)
         value = f['default'];
 
+    function postfield(r, f) {
+        if (f.description) {
+            r.on('render', function(c) {
+                 Ext.QuickTips.register({
+                     target: c.getEl(),
+                     text: f.description
+                 });
+                 Ext.QuickTips.register({
+                     target: c.wrap,
+                     text: f.description
+                 });
+                 Ext.QuickTips.register({
+                     target: c.label,
+                     text: f.description
+                 });
+            });
+            r.on('beforedestroy', function(c) {
+                 Ext.QuickTips.unregister(c.getEl());
+                 Ext.QuickTips.unregister(c.wrap);
+                 Ext.QuickTips.unregister(c.label);
+            });
+        }
+        return r;
+    }
+
     /* Ordered list */
     if (f['enum'] && f.lorder) {
 
@@ -707,6 +732,9 @@ tvheadend.idnode_editor_field = function(f, conf)
          }
          */
     }
+
+    if (r)
+        return postfield(r, f);
 
     /* Singular */
     switch (f.type) {
@@ -820,28 +848,7 @@ tvheadend.idnode_editor_field = function(f, conf)
 
     }
 
-    if (f.description) {
-        r.on('render', function(c) {
-             Ext.QuickTips.register({
-                 target: c.getEl(),
-                 text: f.description
-             });
-             Ext.QuickTips.register({
-                 target: c.wrap,
-                 text: f.description
-             });
-             Ext.QuickTips.register({
-                 target: c.label,
-                 text: f.description
-             });
-        });
-        r.on('beforedestroy', function(c) {
-             Ext.QuickTips.unregister(c.getEl());
-             Ext.QuickTips.unregister(c.wrap);
-             Ext.QuickTips.unregister(c.label);
-        });
-    }
-    return r;
+    return postfield(r, f);
 };
 
 /*

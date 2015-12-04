@@ -1949,6 +1949,7 @@ const idclass_t config_class = {
       .type   = PT_U32,
       .id     = "version",
       .name   = N_("Configuration version"),
+      .desc   = N_("AA"),
       .off    = offsetof(config_t, version),
       .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
       .group  = 1
