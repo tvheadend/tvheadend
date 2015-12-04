@@ -19,6 +19,7 @@
 #include "tvheadend.h"
 #include "access.h"
 #include "settings.h"
+#include "input.h"
 #include "wizard.h"
 
 /*
@@ -64,6 +65,7 @@ static const void *wizard_description_##page(void *o) \
 
 static void page_free(wizard_page_t *page)
 {
+  free(page->aux);
   free((char *)page->idnode.in_class);
   free(page);
 }
@@ -186,35 +188,60 @@ wizard_page_t *wizard_hello(void)
  * Network settings
  */
 
+typedef struct wizard_network {
+  char network_type1[32];
+  char network_type2[32];
+  char network_type3[32];
+  char network_type4[32];
+} wizard_network_t;
+
+#define NETWORK(num, nameval) { \
+  .type = PT_STR, \
+  .id   = "network" STRINGIFY(num), \
+  .name = nameval, \
+  .get  = network_get_value##num, \
+  .set  = hello_set_network, \
+  .list = network_get_list, \
+}
+
+#define NETWORK_FCN(num) \
+static const void *network_get_value##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_network_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->network_type##num); \
+  return &prop_sbuf_ptr; \
+}
+
+NETWORK_FCN(1)
+NETWORK_FCN(2)
+NETWORK_FCN(3)
+NETWORK_FCN(4)
+
 DESCRIPTION_FCN(network, N_("\
 Create networks.\
 "))
 
+static htsmsg_t *network_get_list(void *o, const char *lang)
+{
+  mpegts_network_builder_t *mnb;
+  htsmsg_t *e, *l = htsmsg_create_list();
+  LIST_FOREACH(mnb, &mpegts_network_builders, link) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", mnb->idc->ic_class);
+    htsmsg_add_str(e, "val", idclass_get_caption(mnb->idc, lang));
+    htsmsg_add_msg(l, NULL, e);
+  }
+  return l;
+}
 
 wizard_page_t *wizard_network(void)
 {
   static const property_t props[] = {
-    {
-      .type     = PT_STR,
-      .id       = "network1",
-      .name     = N_("Network 1"),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
-    },
-    {
-      .type     = PT_STR,
-      .id       = "network2",
-      .name     = N_("Network 2"),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
-    },
-    {
-      .type     = PT_STR,
-      .id       = "network3",
-      .name     = N_("Network 3"),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
-    },
+    NETWORK(1, N_("Network 1")),
+    NETWORK(2, N_("Network 2")),
+    NETWORK(3, N_("Network 3")),
+    NETWORK(4, N_("Network 4")),
     ICON(),
     DESCRIPTION(network),
     PREV_BUTTON(hello),
@@ -224,6 +251,7 @@ wizard_page_t *wizard_network(void)
   wizard_page_t *page = page_init("wizard_network", N_("Network settings"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
+  page->aux = calloc(1, sizeof(wizard_network_t));
   return page;
 }
 
