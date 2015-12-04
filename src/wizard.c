@@ -96,8 +96,18 @@ static int hello_set_network(void *o, const void *v)
 }
 
 DESCRIPTION_FCN(hello, N_("\
-Enter allowed network (like 192.168.1.0/24) and user logins for administrator and ordinary user. \
-If the username is empty, anonymous access will be allowed.\
+Enter the access control details to secure your system. \
+The first part of this covers the IPv4 network details \
+for address-based access to the system; for example, \
+192.168.1.0/24 to allow local access only to 192.168.1.x clients, \
+or 0.0.0.0/0 or empty value for access from any system.\n\
+This works alongside the second part, which is a familiar \
+username/password combination, so provide these for both \
+an administrator and regular (day-to-day) user. \
+You can leave the username and password blank if you don't want \
+this part, and would prefer anonymous access to anyone.\n\
+This wizard should be run only on the initial setup. Please, cancel \
+it, if you are not willing to touch the current configuration.\
 "))
 
 wizard_page_t *wizard_hello(void)

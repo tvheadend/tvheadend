@@ -71,7 +71,13 @@ tvheadend.wizard_start = function(page) {
         var text = getvalue(data, 'description');
         var c = '';
         if (icon)
-          c += '<img class="x-wizard-icon" src="' + icon + '"/>';
+            c += '<img class="x-wizard-icon" src="' + icon + '"/>';
+        if (text) {
+            var a = text.split('\n');
+            text = '';
+            for (var i = 0; i < a.length; i++)
+                text += '<p>' + a[i] + '</p>';
+        }
         c += '<div class="x-wizard-description">' + text + '</div>';
         var p = new Ext.Panel({
             width: 570,
