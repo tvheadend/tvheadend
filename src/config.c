@@ -1949,7 +1949,7 @@ const idclass_t config_class = {
       .type   = PT_U32,
       .id     = "version",
       .name   = N_("Configuration version"),
-      .desc   = N_("AA"),
+      .desc   = N_("The current configuration version."),
       .off    = offsetof(config_t, version),
       .opts   = PO_RDONLY | PO_HIDDEN | PO_EXPERT,
       .group  = 1
@@ -1966,6 +1966,8 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "server_name",
       .name   = N_("Tvheadend server name"),
+      .desc   = N_("Set the name of the server so you can distinguish "
+                   "multiple instances apart on your LAN."),
       .off    = offsetof(config_t, server_name),
       .group  = 1
     },
@@ -1973,6 +1975,8 @@ const idclass_t config_class = {
       .type   = PT_INT,
       .id     = "uilevel",
       .name   = N_("User interface level"),
+      .desc   = N_("Sets the default interface view level (next to the "
+                   "help button)."),
       .off    = offsetof(config_t, uilevel),
       .list   = config_class_uilevel,
       .group  = 1
@@ -1981,6 +1985,9 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "uilevel_nochange",
       .name   = N_("Persistent user interface level"),
+      .desc   = N_("Prevents users from overriding the above user "
+                   "interface level setting and removes the view level "
+                   "drop-dowm from the interface."),
       .off    = offsetof(config_t, uilevel_nochange),
       .opts   = PO_ADVANCED,
       .group  = 1
@@ -1989,6 +1996,8 @@ const idclass_t config_class = {
       .type   = PT_U32,
       .id     = "cookie_expires",
       .name   = N_("Cookie expiration (days)"),
+      .desc   = N_("The number of days cookies set by Tvheadend should "
+                   "expire."),
       .off    = offsetof(config_t, cookie_expires),
       .opts   = PO_ADVANCED,
       .group  = 1
@@ -1997,6 +2006,10 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "cors_origin",
       .name   = N_("HTTP CORS origin"),
+      .desc   = N_("HTTP Cross-origin resource sharing. This option is "
+                   "usually set when Tvheadend is behind a proxy. "
+                   "Enter a domain (or IP) to allow cross-domain "
+                   "requests."),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .opts   = PO_EXPERT,
