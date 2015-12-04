@@ -94,10 +94,10 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       return -1;
   }
 
-  tvhlog(LOG_INFO, "dvr","disk space cleanup for config \"%s\", required/current free space \"%"PRId64"/%"PRId64" MiB\", required/current used space \"%"PRId64"/%"PRId64" MB\"",
+  tvhlog(LOG_INFO, "dvr","disk space cleanup for config \"%s\", required/current free space \"%"PRId64"/%"PRId64" MiB\", required/current used space \"%"PRId64"/%"PRId64" MiB\"",
          configName, TOMIB(requiredBytes), TOMIB(availBytes), TOMIB(maximalBytes), TOMIB(usedBytes));
 
-  while (availBytes < requiredBytes || maximalBytes < usedBytes) {
+  while (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
     oldest = NULL;
     stoptime = dispatch_clock;
 
@@ -195,12 +195,12 @@ dvr_disk_space_check()
       requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
       maximalBytes = MIB(cfg->dvr_cleanup_threshold_used);
 
-      if (availBytes < requiredBytes || maximalBytes > usedBytes) {
+      if (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
         LIST_FOREACH(de, &dvrentries, de_global_link) {
 
           /* only start cleanup if we are actually writing files right now */
           if (de->de_sched_state != DVR_RECORDING || !de->de_config || de->de_config != cfg)
-            goto checking;
+            continue;
 
           if (availBytes < requiredBytes) {
             tvhlog(LOG_WARNING, "dvr","running out of free disk space for dvr config \"%s\", required free space \"%"PRId64" MiB\", current free space \"%"PRId64" MiB\"",
@@ -215,9 +215,11 @@ dvr_disk_space_check()
           /* only cleanup one directory at the time as the system needs time to delete the actual files */
           dvr_disk_space_cleanup(de->de_config);
           cleanupDone = 1;
-          dvr_disk_space_config_idx = idx + 1;
+          dvr_disk_space_config_idx = idx;
           break;
         }
+        if (!cleanupDone)
+          goto checking;
       } else {
 checking:
         tvhlog(LOG_DEBUG, "dvr","checking free and used disk space for config \"%s\" : OK",
