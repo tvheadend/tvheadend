@@ -1695,12 +1695,11 @@ tvheadend.idnode_grid = function(panel, conf)
                                 params: params,
                                 success: function(d) {
                                     d = json_decode(d);
-                                    var w = null;
                                     var c = {
-                                        win: w,
-                                        cancel: function() {
-                                            w.close();
-                                            w = null;
+                                        win: null,
+                                        cancel: function(conf) {
+                                            conf.win.close();
+                                            conf.win = null;
                                         }
                                     };
                                     if (uuids.length > 1) {
