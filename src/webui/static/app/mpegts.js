@@ -61,6 +61,7 @@ tvheadend.networks = function(panel, index)
     }
 
     tvheadend.idnode_grid(panel, {
+        id: 'mpegts_network',
         url: 'api/mpegts/network',
         titleS: _('Network'),
         titleP: _('Networks'),

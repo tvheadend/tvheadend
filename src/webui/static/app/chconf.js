@@ -193,6 +193,7 @@ tvheadend.channel_tab = function(panel, index)
     };
 
     tvheadend.idnode_grid(panel, {
+        id: 'channels',
         url: 'api/channel',
         all: 1,
         comet: 'channel',

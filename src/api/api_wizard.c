@@ -49,15 +49,29 @@ wizard_idnode_save_simple
 }
 
 static int
-wizard_cancel
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+wizard_page
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp, const char *page )
 {
   pthread_mutex_lock(&global_lock);
   free(config.wizard);
-  config.wizard = strdup("");
+  config.wizard = strdup(page);
   config_save();
   pthread_mutex_unlock(&global_lock);
   return 0;
+}
+
+static int
+wizard_cancel
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return wizard_page(perm, opaque, op, args, resp, "");
+}
+
+static int
+wizard_start
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return wizard_page(perm, opaque, op, args, resp, "hello");
 }
 
 void
@@ -74,6 +88,7 @@ api_wizard_init ( void )
     { "wizard/status/save",  ACCESS_ADMIN, wizard_idnode_save_simple, wizard_status },
     { "wizard/mapping/load", ACCESS_ADMIN, wizard_idnode_load_simple, wizard_mapping },
     { "wizard/mapping/save", ACCESS_ADMIN, wizard_idnode_save_simple, wizard_mapping },
+    { "wizard/start",        ACCESS_ADMIN, wizard_start, NULL },
     { "wizard/cancel",       ACCESS_ADMIN, wizard_cancel, NULL },
     { NULL },
   };

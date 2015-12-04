@@ -31,17 +31,32 @@ static const void *empty_get(void *o)
   return &prop_sbuf_ptr;
 }
 
-#define SPECIAL_PROP(idval) { \
+static const void *icon_get(void *o)
+{
+  strcpy(prop_sbuf, "docresources/tvheadendlogo.png");
+  return &prop_sbuf_ptr;
+}
+
+#define SPECIAL_PROP(idval, getfcn) { \
   .type = PT_STR, \
   .id   = idval, \
   .name = "", \
-  .get  = empty_get, \
+  .get  = getfcn, \
   .opts = PO_RDONLY | PO_NOUI \
 }
 
-#define PREV_BUTTON(page) SPECIAL_PROP("page_prev_" STRINGIFY(page))
-#define NEXT_BUTTON(page) SPECIAL_PROP("page_next_" STRINGIFY(page))
-#define LAST_BUTTON()     SPECIAL_PROP("page_last")
+#define PREV_BUTTON(page) SPECIAL_PROP("page_prev_" STRINGIFY(page), empty_get)
+#define NEXT_BUTTON(page) SPECIAL_PROP("page_next_" STRINGIFY(page), empty_get)
+#define LAST_BUTTON()     SPECIAL_PROP("page_last", empty_get)
+#define ICON()            SPECIAL_PROP("icon", icon_get)
+#define DESCRIPTION(page) SPECIAL_PROP("description", wizard_description_##page)
+
+#define DESCRIPTION_FCN(page, desc) \
+static const void *wizard_description_##page(void *o) \
+{ \
+  static const char *t = desc; \
+  return &t; \
+}
 
 /*
  *
@@ -80,15 +95,52 @@ static int hello_set_network(void *o, const void *v)
   return 0;
 }
 
+DESCRIPTION_FCN(hello, N_("\
+Enter allowed network (like 192.168.1.0/24) and user logins for administrator and ordinary user. \
+If the username is empty, anonymous access will be allowed.\
+"))
+
 wizard_page_t *wizard_hello(void)
 {
+  static const property_group_t groups[] = {
+    {
+      .name     = N_("Network access"),
+      .number   = 1,
+    },
+    {
+      .name     = N_("Administrator login"),
+      .number   = 2,
+    },
+    {
+      .name     = N_("User login"),
+      .number   = 3,
+    },
+    {}
+  };
   static const property_t props[] = {
     {
       .type     = PT_STR,
       .id       = "network",
-      .name     = N_("Network (like 192.168.1.0/24)"),
+      .name     = N_("Allowed network"),
       .get      = hello_get_network,
       .set      = hello_set_network,
+      .group    = 1
+    },
+    {
+      .type     = PT_STR,
+      .id       = "admin_username",
+      .name     = N_("Admin username"),
+      .get      = hello_get_network,
+      .set      = hello_set_network,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
+      .id       = "admin_password",
+      .name     = N_("Admin password"),
+      .get      = hello_get_network,
+      .set      = hello_set_network,
+      .group    = 2
     },
     {
       .type     = PT_STR,
@@ -96,6 +148,7 @@ wizard_page_t *wizard_hello(void)
       .name     = N_("Username"),
       .get      = hello_get_network,
       .set      = hello_set_network,
+      .group    = 3
     },
     {
       .type     = PT_STR,
@@ -103,19 +156,30 @@ wizard_page_t *wizard_hello(void)
       .name     = N_("Password"),
       .get      = hello_get_network,
       .set      = hello_set_network,
+      .group    = 3
     },
+    ICON(),
+    DESCRIPTION(hello),
     NEXT_BUTTON(network),
     {}
   };
-  wizard_page_t *page = page_init("wizard_hello", N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
+  wizard_page_t *page =
+    page_init("wizard_hello",
+    N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
+  ic->ic_groups = groups;
   return page;
 }
 
 /*
  * Network settings
  */
+
+DESCRIPTION_FCN(network, N_("\
+Create networks.\
+"))
+
 
 wizard_page_t *wizard_network(void)
 {
@@ -141,6 +205,8 @@ wizard_page_t *wizard_network(void)
       .get      = hello_get_network,
       .set      = hello_set_network,
     },
+    ICON(),
+    DESCRIPTION(network),
     PREV_BUTTON(hello),
     NEXT_BUTTON(input),
     {}
@@ -154,6 +220,11 @@ wizard_page_t *wizard_network(void)
 /*
  * Input settings
  */
+
+DESCRIPTION_FCN(input, N_("\
+Assign inputs to networks.\
+"))
+
 
 wizard_page_t *wizard_input(void)
 {
@@ -179,6 +250,8 @@ wizard_page_t *wizard_input(void)
       .get      = hello_get_network,
       .set      = hello_set_network,
     },
+    ICON(),
+    DESCRIPTION(input),
     PREV_BUTTON(network),
     NEXT_BUTTON(status),
     {}
@@ -192,6 +265,11 @@ wizard_page_t *wizard_input(void)
 /*
  * Status
  */
+
+DESCRIPTION_FCN(status, N_("\
+Show the scan status.\
+"))
+
 
 wizard_page_t *wizard_status(void)
 {
@@ -210,6 +288,8 @@ wizard_page_t *wizard_status(void)
       .get      = hello_get_network,
       .set      = hello_set_network,
     },
+    ICON(),
+    DESCRIPTION(status),
     PREV_BUTTON(input),
     NEXT_BUTTON(mapping),
     {}
@@ -224,6 +304,11 @@ wizard_page_t *wizard_status(void)
  * Service Mapping
  */
 
+DESCRIPTION_FCN(mapping, N_("\
+Do the service mapping to channels.\
+"))
+
+
 wizard_page_t *wizard_mapping(void)
 {
   static const property_t props[] = {
@@ -234,6 +319,8 @@ wizard_page_t *wizard_mapping(void)
       .get      = hello_get_network,
       .set      = hello_set_network,
     },
+    ICON(),
+    DESCRIPTION(mapping),
     PREV_BUTTON(status),
     LAST_BUTTON(),
     {}

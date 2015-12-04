@@ -476,6 +476,7 @@ tvheadend.status_streams = function(panel, index)
     }
 
     var dpanel = new Ext.Panel({
+        id: 'status_streams',
         border: false,
         header: false,
         layout: 'fit',

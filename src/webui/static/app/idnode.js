@@ -1129,6 +1129,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
     });
 
     build();
+    if (conf.build)
+        conf.build(conf, panel);
     return panel;
 };
 
@@ -1141,7 +1143,7 @@ tvheadend.idnode_editor_win = function(_uilevel, item, conf)
    var width = p.fixedWidth;
    var w = new Ext.ux.Window({
        title: conf.winTitle,
-       iconCls: 'edit',
+       iconCls: conf.iconCls || 'edit',
        layout: 'fit',
        autoWidth: width ? false : true,
        autoHeight: true,
@@ -1929,6 +1931,7 @@ tvheadend.idnode_grid = function(panel, conf)
     }
 
     var dpanel = new Ext.Panel({
+        id: conf.id || null,
         border: false,
         header: false,
         layout: 'fit',
@@ -2473,6 +2476,7 @@ tvheadend.idnode_tree = function(panel, conf)
     }
 
     var dpanel = new Ext.Panel({
+        id: conf.id || null,
         border: false,
         header: false,
         layout: 'fit',
@@ -2703,6 +2707,7 @@ tvheadend.idnode_simple = function(panel, conf)
     }
 
     var dpanel = new Ext.Panel({
+        id: conf.id || null,
         border: false,
         header: false,
         layout: 'fit',

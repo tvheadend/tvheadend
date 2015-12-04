@@ -596,6 +596,9 @@
     background-image: url(../icons/arrow_right.png) !important;
 }
 
+.finish {
+    background-image: url(../icons/accept.png) !important;
+}
 
 .x-linked {
     display: inline-block;
@@ -680,6 +683,15 @@
     height: 100%;
     background: black;
     color: white;
+}
+
+.x-wizard-icon {
+    float: right;
+}
+
+.x-wizard-description {
+    margin: 5px;
+    font: normal 12px arial, tahoma, helvetica, sans-serif;
 }
 
 /* Table styles for webUI help */

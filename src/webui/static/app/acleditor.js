@@ -21,6 +21,7 @@ tvheadend.acleditor = function(panel, index)
                 'channel_tag_exclude,channel_tag,comment';
 
     tvheadend.idnode_grid(panel, {
+        id: 'access_entry',
         url: 'api/access/entry',
         titleS: _('Access Entry'),
         titleP: _('Access Entries'),
