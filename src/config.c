@@ -2006,10 +2006,10 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "cors_origin",
       .name   = N_("HTTP CORS origin"),
-      .desc   = N_("HTTP Cross-origin resource sharing. This option is "
-                   "usually set when Tvheadend is behind a proxy. "
-                   "Enter a domain (or IP) to allow cross-domain "
-                   "requests."),
+      .desc   = N_("HTTP Cross-origin resource sharing origin. This "
+                   "option is usually set when Tvheadend is behind a "
+                   "proxy. Enter a domain (or IP) to allow "
+                   "cross-domain requests."),
       .set    = config_class_cors_origin_set,
       .off    = offsetof(config_t, cors_origin),
       .opts   = PO_EXPERT,
@@ -2019,6 +2019,14 @@ const idclass_t config_class = {
       .type   = PT_INT,
       .id     = "dscp",
       .name   = N_("DSCP/TOS for streaming"),
+      .desc   = N_("Differentiated Services Code Point / Type of "
+                   "Service: Set the service class Tvheadend sends "
+                   "with each packet. Depending on the option selected "
+                   "this tells your router the prority in which to "
+                   "give packets sent from Tvheadend, this option does "
+                   "not usually need changing. See "
+                   "https://en.wikipedia.org/wiki/"
+                   "Differentiated_services for more information. "),
       .off    = offsetof(config_t, dscp),
       .list   = config_class_dscp_list,
       .opts   = PO_EXPERT,
@@ -2028,6 +2036,11 @@ const idclass_t config_class = {
       .type   = PT_U32,
       .id     = "descrambler_buffer",
       .name   = N_("Descrambler buffer (TS packets)"),
+      .desc   = N_("The number of packets Tvheadend buffers in case "
+                   "there is a delay receiving CA keys. "),
+                   /* Note: I'm not sure I've explained this very well
+                    * ;)
+                    */
       .off    = offsetof(config_t, descrambler_buffer),
       .opts   = PO_EXPERT,
       .group  = 1
@@ -2037,6 +2050,10 @@ const idclass_t config_class = {
       .islist = 1,
       .id     = "language",
       .name   = N_("Default language(s)"),
+      .desc   = N_("Select the list of languages (in order of "
+                   "priority) to be used for supplying EPG information "
+                   "to clients that don’t provide their own "
+                   "configuration."),
       .set    = config_class_language_set,
       .get    = config_class_language_get,
       .list   = config_class_language_list,
@@ -2048,6 +2065,8 @@ const idclass_t config_class = {
       .islist = 1,
       .id     = "info_area",
       .name   = N_("Information area"),
+      .desc   = N_("Show, hide and sort the various details that "
+                   "appear on the interface next to the About tab."),
       .set    = config_class_info_area_set,
       .get    = config_class_info_area_get,
       .list   = config_class_info_area_list,
@@ -2058,6 +2077,8 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "language_ui",
       .name   = N_("User language"),
+      .desc   = N_("The default language to use if the user "
+                   " language isn't set in the Access Entries tab."),
       .list   = language_get_list,
       .off    = offsetof(config_t, language_ui),
       .group  = 3
@@ -2066,6 +2087,10 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "muxconfpath",
       .name   = N_("DVB scan files path"),
+      .desc   = N_("Select the path to use for DVB scan configuration "
+                   "files. Typically dvb-apps stores these in "
+                   "/usr/share/dvb/. Leave blank to use Tvheadend's "
+                   "internal file set."),
       .off    = offsetof(config_t, muxconf_path),
       .opts   = PO_ADVANCED,
       .group  = 4
@@ -2074,6 +2099,9 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "tvhtime_update_enabled",
       .name   = N_("Update time"),
+      .desc   = N_("Enable system time updates. This will only work if "
+                   "the user running Tvheadend has rights to update "
+                   "the system clock (normally only root)."),
       .off    = offsetof(config_t, tvhtime_update_enabled),
       .opts   = PO_EXPERT,
       .group  = 5,
@@ -2082,6 +2110,10 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "tvhtime_ntp_enabled",
       .name   = N_("Enable NTP driver"),
+      .desc   = N_("This will create an NTP driver (using shmem "
+                   "interface) that you can feed into ntpd. This can "
+                   "be run without root privileges, but generally the "
+                   "performance is not that great."),
       .off    = offsetof(config_t, tvhtime_ntp_enabled),
       .opts   = PO_EXPERT,
       .group  = 5,
@@ -2090,6 +2122,10 @@ const idclass_t config_class = {
       .type   = PT_U32,
       .id     = "tvhtime_tolerance",
       .name   = N_("Update tolerance (ms)"),
+      .desc   = N_("Only update the system clock (doesn’t affect NTP "
+                   "driver) if the delta between the system clock and "
+                   "DVB time is greater than this. This can help stop "
+                   "excessive oscillations on the system clock."),
       .off    = offsetof(config_t, tvhtime_tolerance),
       .opts   = PO_EXPERT,
       .group  = 5,
