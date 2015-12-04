@@ -609,7 +609,8 @@ const idclass_t satip_server_class = {
     {
       .type   = PT_BOOL,
       .id     = "satip_remote_weight",
-      .name   = N_("Allow remote subscription weight"),
+      .name   = N_("Accept remote subscription weight"),
+      .desc   = N_("Accept the remote subscription weight (from the SAT>IP client)."),
       .off    = offsetof(struct satip_server_conf, satip_allow_remote_weight),
       .opts   = PO_EXPERT,
       .group  = 1,

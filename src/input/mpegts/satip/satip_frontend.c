@@ -178,7 +178,8 @@ const idclass_t satip_frontend_class =
     {
       .type     = PT_BOOL,
       .id       = "pass_weight",
-      .name     = N_("Pass weight"),
+      .name     = N_("Pass subscription weight"),
+      .desc     = N_("Pass subscription weight to the SAT>IP server (Tvheadend specific extension)"),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_pass_weight),
     },
