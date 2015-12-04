@@ -152,7 +152,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   } while (c != NULL && --retries > 0);
 
   if(c != NULL) {
-    tvherror("idnode", "Id node collission (%s) %s\n",
+    tvherror("idnode", "Id node collission (%s) %s",
              uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
     fprintf(stderr, "Id node collision (%s) %s\n",
             uuid, (flags & IDNODE_SHORT_UUID) ? " (short)" : "");
