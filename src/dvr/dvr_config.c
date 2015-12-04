@@ -186,8 +186,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_warm_time = 30;
   cfg->dvr_update_window = 24 * 3600;
   cfg->dvr_pathname = strdup("$t$n.$x");
-  cfg->dvr_cleanup_threshold_free = 200;
-  cfg->dvr_cleanup_threshold_used = 2000;
+  cfg->dvr_cleanup_threshold_free = 1000; // keep 1000 MiB of free space on disk by default
+  cfg->dvr_cleanup_threshold_used = 0;    // disabled
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
@@ -519,11 +519,13 @@ dvr_config_save(dvr_config_t *cfg)
   dvr_config_storage_check(cfg);
   if (cfg->dvr_cleanup_threshold_free < 50)
     cfg->dvr_cleanup_threshold_free = 50; // as checking is only periodically, lower is not save
-  if (cfg->dvr_cleanup_threshold_used < cfg->dvr_cleanup_threshold_used)
-    cfg->dvr_cleanup_threshold_used = cfg->dvr_cleanup_threshold_free + 50;
   if (cfg->dvr_removal_days != DVR_RET_FOREVER &&
       cfg->dvr_removal_days > cfg->dvr_retention_days)
     cfg->dvr_retention_days = DVR_RET_ONREMOVE;
+  if (cfg->dvr_removal_days > DVR_RET_FOREVER)
+    cfg->dvr_removal_days = DVR_RET_FOREVER;
+  if (cfg->dvr_retention_days > DVR_RET_FOREVER)
+    cfg->dvr_retention_days = DVR_RET_FOREVER;
   idnode_save(&cfg->dvr_id, m);
   hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
   htsmsg_destroy(m);
@@ -717,6 +719,8 @@ dvr_config_class_removal_list ( void *o, const char *lang )
     { N_("3 months"),           DVR_RET_3MONTH },
     { N_("6 months"),           DVR_RET_6MONTH },
     { N_("1 year"),             DVR_RET_1YEAR },
+    { N_("2 years"),            DVR_RET_2YEARS },
+    { N_("3 years"),            DVR_RET_3YEARS },
     { N_("Maintained space"),   DVR_RET_SPACE },
     { N_("Forever"),            DVR_RET_FOREVER },
   };
@@ -869,6 +873,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = DVR_RET_ONREMOVE,
       .list     = dvr_config_class_retention_list,
+      .opts     = PO_EXPERT,
       .group    = 1,
     },
     {
@@ -986,17 +991,19 @@ const idclass_t dvr_config_class = {
     {
       .type     = PT_U32,
       .id       = "storage-mfree",
-      .name     = N_("Maintain free storage space (MiB)"),
+      .name     = N_("Maintain free storage space in MiB"),
       .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_free),
-      .def.i    = 200,
+      .def.i    = 1000,
+      .opts     = PO_ADVANCED,
       .group    = 2,
     },
     {
       .type     = PT_U32,
       .id       = "storage-mused",
-      .name     = N_("Maintain used storage space (MiB)"),
+      .name     = N_("Maintain used storage space in MiB (0=disabled)"),
       .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_used),
-      .def.i    = 2000,
+      .def.i    = 0,
+      .opts     = PO_EXPERT,
       .group    = 2,
     },
     {

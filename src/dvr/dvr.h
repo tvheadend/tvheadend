@@ -133,7 +133,7 @@ typedef enum {
   DVR_RET_1MONTH    = (30+1),
   DVR_RET_2MONTH    = (60+2),
   DVR_RET_3MONTH    = (90+2),
-  DVR_RET_6MONTH    = (180+2),
+  DVR_RET_6MONTH    = (180+3),
   DVR_RET_1YEAR     = (365+1),
   DVR_RET_2YEARS    = (2*365+1),
   DVR_RET_3YEARS    = (3*365+1),
