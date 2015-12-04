@@ -235,6 +235,7 @@ tvheadend.IdNodeField = function(conf)
      */
     this.id = conf.id;
     this.text = conf.caption || this.id;
+    this.description = conf.description || null;
     this.type = conf.type;
     this.list = conf.list;
     this.rdonly = conf.rdonly;
@@ -625,6 +626,7 @@ tvheadend.idnode_uilevel_menu = function(uilevel, handler)
  */
 tvheadend.idnode_editor_field = function(f, conf)
 {
+    var r = null;
     var d = f.rdonly || false;
     if (f.wronly && !conf.create)
         d = false;
@@ -638,7 +640,7 @@ tvheadend.idnode_editor_field = function(f, conf)
         var st = tvheadend.idnode_enum_store(f);
         var fromst = tvheadend.idnode_enum_select_store(f, st, false);
         var tost = tvheadend.idnode_enum_select_store(f, st, true);
-        return new Ext.ux.ItemSelector({
+        r = new Ext.ux.ItemSelector({
             name: f.id,
             fromStore: fromst,
             toStore: tost,
@@ -660,7 +662,7 @@ tvheadend.idnode_editor_field = function(f, conf)
         if (f.list)
             cons = Ext.ux.form.LovCombo;
         var st = tvheadend.idnode_enum_store(f);
-        var r = new cons({
+        r = new cons({
             fieldLabel: f.caption,
             name: f.id,
             value: value,
@@ -692,7 +694,6 @@ tvheadend.idnode_editor_field = function(f, conf)
             st.on('load', fn);
         }
 
-        return r;
         /* TODO: listeners for regexp?
          listeners       : { 
          keyup: function() {
@@ -710,12 +711,13 @@ tvheadend.idnode_editor_field = function(f, conf)
     /* Singular */
     switch (f.type) {
         case 'bool':
-            return new Ext.ux.form.XCheckbox({
+            r = new Ext.ux.form.XCheckbox({
                 fieldLabel: f.caption,
                 name: f.id,
                 checked: value,
                 disabled: d
             });
+            break;
 
         case 'time':
             if (!f.duration) {
@@ -723,15 +725,16 @@ tvheadend.idnode_editor_field = function(f, conf)
                     var dt = new Date(value * 1000);
                     value = f.date ? dt.toLocaleDateString() :
                                      dt.toLocaleString();
-                    return new Ext.form.TextField({
+                    r = new Ext.form.TextField({
                         fieldLabel: f.caption,
                         name: f.id,
                         value: value,
                         disabled: true,
                         width: 300
                     });
+                    break;
                 }
-                return new Ext.ux.form.TwinDateTimeField({
+                r = new Ext.ux.form.TwinDateTimeField({
                     fieldLabel: f.caption,
                     name: f.id,
                     value: value,
@@ -749,6 +752,7 @@ tvheadend.idnode_editor_field = function(f, conf)
                         allowBlank: true
                     }
                 });
+                break;
             }
             /* fall thru!!! */
 
@@ -758,7 +762,7 @@ tvheadend.idnode_editor_field = function(f, conf)
         case 's64':
         case 'dbl':
             if (f.hexa) {
-                return new Ext.form.TextField({
+                r = new Ext.form.TextField({
                     fieldLabel: f.caption,
                     name: f.id,
                     value: '0x' + value.toString(16),
@@ -766,10 +770,11 @@ tvheadend.idnode_editor_field = function(f, conf)
                     width: 300,
                     maskRe: /[xX0-9a-fA-F\.]/
                 });
+                break;
             }
             if (f.intsplit) {
                 /* this should be improved */
-                return new Ext.form.TextField({
+                r = new Ext.form.TextField({
                     fieldLabel: f.caption,
                     name: f.id,
                     value: value,
@@ -777,17 +782,19 @@ tvheadend.idnode_editor_field = function(f, conf)
                     width: 300,
                     maskRe: /[0-9\.]/
                 });
+                break;
             }
-            return new Ext.form.NumberField({
+            r = new Ext.form.NumberField({
                 fieldLabel: f.caption,
                 name: f.id,
                 value: value,
                 disabled: d,
                 width: 300
             });
+            break;
 
         case 'perm':
-            return new Ext.form.TextField({
+            r = new Ext.form.TextField({
                 fieldLabel: f.caption,
                 name: f.id,
                 value: value,
@@ -798,11 +805,11 @@ tvheadend.idnode_editor_field = function(f, conf)
                 allowBlank: false,
                 blankText: _('You must provide a value - use octal chmod notation, e.g. 0664')
             });
-
+            break;
 
         default:
             cons = f.multiline ? Ext.form.TextArea : Ext.form.TextField;
-            return new cons({
+            r = new cons({
                 fieldLabel: f.caption,
                 name: f.id,
                 value: value,
@@ -812,6 +819,29 @@ tvheadend.idnode_editor_field = function(f, conf)
             });
 
     }
+
+    if (f.description) {
+        r.on('render', function(c) {
+             Ext.QuickTips.register({
+                 target: c.getEl(),
+                 text: f.description
+             });
+             Ext.QuickTips.register({
+                 target: c.wrap,
+                 text: f.description
+             });
+             Ext.QuickTips.register({
+                 target: c.label,
+                 text: f.description
+             });
+        });
+        r.on('beforedestroy', function(c) {
+             Ext.QuickTips.unregister(c.getEl());
+             Ext.QuickTips.unregister(c.wrap);
+             Ext.QuickTips.unregister(c.label);
+        });
+    }
+    return r;
 };
 
 /*
@@ -1006,7 +1036,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
     var uilevel = _uilevel;
 
     function destroy() {
-        panel.removeAll();
+        panel.removeAll(true);
     }
     
     function build() {
@@ -2214,8 +2244,10 @@ tvheadend.idnode_form_grid = function(panel, conf)
         }
 
         function roweditor_destroy() {
-            if (current)
+            if (current && current.editor) {
                 mpanel.remove(current.editor);
+                current.editor.destroy();
+            }
             current = null;
         }
 
@@ -2233,21 +2265,19 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 success: function(d) {
                     d = json_decode(d);
                     roweditor_destroy();
-                    var editor = new tvheadend.idnode_editor(uilevel, d[0], {
-                                    title: _('Parameters'),
-                                    labelWidth: 300,
-                                    fixedHeight: true,
-                                    help: conf.help || null,
-                                    inTabPanel: true,
-                                    noButtons: true,
-                                    width: 730,
-                                    noautoWidth: true,
-                                    showpwd: conf.showpwd
-                                });
-                    current = {
-                        uuid: d[0].id,
-                        editor: editor
-                    }
+                    current = new Object();
+                    current.uuid = d[0].id;
+                    current.editor = new tvheadend.idnode_editor(uilevel, d[0], {
+                        title: _('Parameters'),
+                        labelWidth: 300,
+                        fixedHeight: true,
+                        help: conf.help || null,
+                        inTabPanel: true,
+                        noButtons: true,
+                        width: 730,
+                        noautoWidth: true,
+                        showpwd: conf.showpwd
+                    });
                     abuttons.save.setDisabled(false);
                     abuttons.undo.setDisabled(false);
                     if (abuttons.del)
@@ -2256,7 +2286,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
                       abuttons.up.setDisabled(false);
                       abuttons.down.setDisabled(false);
                     }
-                    mpanel.add(editor);
+                    mpanel.add(current.editor);
                     mpanel.doLayout();
                 }
             });
@@ -2286,7 +2316,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             }
         });
 
-        var mpanel = new Ext.Panel({
+        mpanel = new Ext.Panel({
             tbar: buttons,
             layout: 'hbox',
             padding: 5,
@@ -2309,9 +2339,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
             return;
         if (conf.comet)
             tvheadend.comet.un(conf.comet, update);
+        mpanel = null;
         dpanel.removeAll(true);
         store.destroy();
-        mpanel = null;
         store = null;
         if (conf.destroyer)
             conf.destroyer(conf);

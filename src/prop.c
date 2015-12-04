@@ -415,6 +415,8 @@ prop_serialize_value
 
   /* Metadata */
   htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, pl->name));
+  if (pl->desc)
+    htsmsg_add_str(m, "description", tvh_gettext_lang(lang, pl->desc));
   if (pl->islist) {
     htsmsg_add_u32(m, "list", 1);
     if (pl->def.list)

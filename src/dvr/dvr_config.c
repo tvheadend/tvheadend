@@ -938,6 +938,7 @@ const idclass_t dvr_config_class = {
       .type     = PT_BOOL,
       .id       = "epg-running",
       .name     = N_("Use EPG running state"),
+      .desc     = N_("Use EITp/f to decide event start / stop"),
       .off      = offsetof(dvr_config_t, dvr_running),
       .opts     = PO_ADVANCED,
       .def.u32  = 1,

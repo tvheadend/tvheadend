@@ -66,8 +66,9 @@ typedef enum {
  * Property definition
  */
 typedef struct property {
-  const char  *id;        ///< Property Key
+  const char *id;         ///< Property Key
   const char *name;       ///< Textual description
+  const char *desc;       ///< Verbose description (tooltip)
   prop_type_t type;       ///< Type
   uint8_t     islist;     ///< Is a list
   uint8_t     group;      ///< Visual group ID (like ExtJS FieldSet)
