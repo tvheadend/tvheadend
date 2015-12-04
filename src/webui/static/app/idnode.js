@@ -860,7 +860,7 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
                 ]
             });
         }
-        if (p.group && meta.groups) {
+        if (p.group && meta && meta.groups) {
             f.tvh_uilevel = p.expert ? 'expert' : (p.advanced ? 'advanced' : 'basic');
             if (!groups)
                 groups = {};
@@ -1268,17 +1268,17 @@ tvheadend.idnode_create = function(conf, onlyDefault)
             });
         }
         var select = null;
-        if (conf.select.propField) {
+        if (conf.select.fullRecord) {
             select = function(s, n, o) {
                 var r = store.getAt(s.selectedIndex);
                 if (r) {
-                    var d = r.get(conf.select.propField);
+                    var d = r.json.props;
                     if (d) {
                         d = tvheadend.idnode_filter_fields(d, conf.select.list || null);
                         pclass = r.get(conf.select.valueField);
                         win.setTitle(String.format(_('Add {0}'), s.lastSelectionText));
                         panel.remove(s);
-                        tvheadend.idnode_editor_form(uilevel, d, null, panel, { create: true, showpwd: true });
+                        tvheadend.idnode_editor_form(uilevel, d, r.json, panel, { create: true, showpwd: true });
                         saveBtn.setVisible(true);
                         applyBtn.setVisible(true);
                         win.setOriginSize(true);

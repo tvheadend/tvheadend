@@ -8,7 +8,7 @@ tvheadend.caclient = function(panel, index) {
         tvheadend.caclient_builders = new Ext.data.JsonStore({
             url: 'api/caclient/builders',
             root: 'entries',
-            fields: ['class', 'caption', 'props'],
+            fields: ['class', 'caption', 'order', 'groups', 'props'],
             id: 'class',
             autoLoad: true
         });
@@ -46,9 +46,9 @@ tvheadend.caclient = function(panel, index) {
             select: {
                 label: _('Type'),
                 store: tvheadend.caclient_builders,
+                fullRecord: true,
                 displayField: 'caption',
                 valueField: 'class',
-                propField: 'props',
                 list: list
             },
             create: { }

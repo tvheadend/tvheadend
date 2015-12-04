@@ -8,7 +8,7 @@ tvheadend.esfilter_tab = function(panel)
         tvheadend.profile_builders = new Ext.data.JsonStore({
             url: 'api/profile/builders',
             root: 'entries',
-            fields: ['class', 'caption', 'props'],
+            fields: ['class', 'caption', 'order', 'groups', 'params'],
             id: 'class',
             autoLoad: true
         });
@@ -31,9 +31,9 @@ tvheadend.esfilter_tab = function(panel)
             select: {
                 label: _('Type'),
                 store: tvheadend.profile_builders,
+                fullRecord: true,
                 displayField: 'caption',
                 valueField: 'class',
-                propField: 'props',
                 list: list
             },
             create: { }
