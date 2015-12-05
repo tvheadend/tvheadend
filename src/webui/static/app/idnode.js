@@ -1373,6 +1373,8 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                     saveBtn.handler();
                     delete conf.forceSave;
                     panel.destroy();
+                    if (cloneValues)
+                        Ext.MessageBox.alert(_('Clone'), _('The selected entry is the original!'));
                 } else {
                     saveBtn.setVisible(true);
                     applyBtn.setVisible(true);
