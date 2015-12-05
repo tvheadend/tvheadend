@@ -1626,6 +1626,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 
   memset(&config, 0, sizeof(config));
   config.idnode.in_class = &config_class;
+  config.ui_quicktips = 1;
   config.wizard = strdup("hello");
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
@@ -1989,6 +1990,15 @@ const idclass_t config_class = {
                    "interface level setting and removes the view level "
                    "drop-dowm from the interface."),
       .off    = offsetof(config_t, uilevel_nochange),
+      .opts   = PO_ADVANCED,
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "ui_quicktips",
+      .name   = N_("User interface quick tips"),
+      .desc   = N_("Allow to show the quick tips for the form fields."),
+      .off    = offsetof(config_t, ui_quicktips),
       .opts   = PO_ADVANCED,
       .group  = 1
     },
