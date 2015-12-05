@@ -635,7 +635,7 @@ tvheadend.idnode_editor_field = function(f, conf)
         value = f['default'];
 
     function postfield(r, f) {
-        if (f.description) {
+        if (f.description && tvheadend.quicktips) {
             r.on('render', function(c) {
                  Ext.QuickTips.register({
                      target: c.getEl(),

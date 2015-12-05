@@ -5,6 +5,7 @@ tvheadend.admin = false;
 tvheadend.dialog = null;
 tvheadend.uilevel = 'expert';
 tvheadend.uilevel_nochange = false;
+tvheadend.quicktips = true;
 tvheadend.wizard = null;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
@@ -424,6 +425,8 @@ function accessUpdate(o) {
 
     if (o.uilevel)
         tvheadend.uilevel = o.uilevel;
+        
+    tvheadend.quicktips = o.quicktips;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;

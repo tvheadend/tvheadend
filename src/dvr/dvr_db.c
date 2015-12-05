@@ -291,6 +291,9 @@ uint32_t
 dvr_entry_get_retention_days( dvr_entry_t *de )
 {
   if (de->de_retention > 0) {
+    if (de->de_retention > DVR_RET_FOREVER)
+      return DVR_RET_FOREVER;
+
     /* As we need the db entry when deleting the file on disk */
     if (dvr_entry_get_removal_days(de) != DVR_RET_FOREVER &&
         dvr_entry_get_removal_days(de) > de->de_retention)
@@ -304,8 +307,12 @@ dvr_entry_get_retention_days( dvr_entry_t *de )
 uint32_t
 dvr_entry_get_removal_days ( dvr_entry_t *de )
 {
-  if (de->de_removal > 0)
+  if (de->de_removal > 0) {
+    if (de->de_removal > DVR_RET_FOREVER)
+      return DVR_RET_FOREVER;
+
     return de->de_removal;
+  }
   return dvr_retention_cleanup(de->de_config->dvr_removal_days);
 }
 
@@ -2197,6 +2204,8 @@ dvr_entry_class_retention_list ( void *o, const char *lang )
     { N_("3 months"),           DVR_RET_3MONTH },
     { N_("6 months"),           DVR_RET_6MONTH },
     { N_("1 year"),             DVR_RET_1YEAR },
+    { N_("2 years"),            DVR_RET_2YEARS },
+    { N_("3 years"),            DVR_RET_3YEARS },
     { N_("On file removal"),    DVR_RET_ONREMOVE },
     { N_("Forever"),            DVR_RET_FOREVER },
   };
@@ -2219,6 +2228,8 @@ dvr_entry_class_removal_list ( void *o, const char *lang )
     { N_("3 months"),           DVR_RET_3MONTH },
     { N_("6 months"),           DVR_RET_6MONTH },
     { N_("1 year"),             DVR_RET_1YEAR },
+    { N_("2 years"),            DVR_RET_2YEARS },
+    { N_("3 years"),            DVR_RET_3YEARS },
     { N_("Maintained space"),   DVR_RET_SPACE },
     { N_("Forever"),            DVR_RET_FOREVER },
   };
@@ -2789,7 +2800,7 @@ const idclass_t dvr_entry_class = {
       .off      = offsetof(dvr_entry_t, de_retention),
       .def.i    = DVR_RET_DVRCONFIG,
       .list     = dvr_entry_class_retention_list,
-      .opts     = PO_HIDDEN | PO_ADVANCED
+      .opts     = PO_HIDDEN | PO_EXPERT
     },
     {
       .type     = PT_U32,
