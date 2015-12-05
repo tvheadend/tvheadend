@@ -1198,7 +1198,7 @@ tvheadend.idnode_editor_win = function(_uilevel, item, conf)
 /*
  * IDnode creation dialog
  */
-tvheadend.idnode_create = function(conf, onlyDefault)
+tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
 {
     var puuid = null;
     var panel = null;
@@ -1213,7 +1213,7 @@ tvheadend.idnode_create = function(conf, onlyDefault)
         iconCls: 'add',
         hidden: true,
         handler: function() {
-            if (panel.getForm().isDirty()) {
+            if (panel.getForm().isDirty() || conf.forceSave) {
                 var params = conf.create.params || {};
                 if (puuid)
                     params['uuid'] = puuid;
@@ -1367,7 +1367,11 @@ tvheadend.idnode_create = function(conf, onlyDefault)
                 d = json_decode(d);
                 tvheadend.idnode_editor_form(uilevel, d.props, d, panel, { create: true, showpwd: true });
                 if (onlyDefault) {
+                    if (cloneValues)
+                        panel.getForm().setValues(cloneValues);
+                    conf.forceSave = true;
                     saveBtn.handler();
+                    delete conf.forceSave;
                     panel.destroy();
                 } else {
                     saveBtn.setVisible(true);
@@ -2117,6 +2121,17 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 }
             });
             buttons.push(abuttons.add);
+            abuttons.clone = new Ext.Toolbar.Button({
+                tooltip: _('Clone a new entry'),
+                iconCls: 'clone',
+                text: _('Clone'),
+                disabled: false,
+                handler: function() {
+                    if (current)
+                        tvheadend.idnode_create(conf.add, true, current.editor.getForm().getFieldValues());
+                }
+            });
+            buttons.push(abuttons.clone);
         }
         if (conf.del) {
             abuttons.del = new Ext.Toolbar.Button({
