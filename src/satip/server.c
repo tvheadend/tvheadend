@@ -587,6 +587,7 @@ const idclass_t satip_server_class = {
       .type   = PT_STR,
       .id     = "satip_uuid",
       .name   = N_("Server UUID"),
+      .desc   = N_("Universally unique identifier. Read only."),
       .off    = offsetof(struct satip_server_conf, satip_uuid),
       .opts   = PO_RDONLY | PO_EXPERT,
       .group  = 1,
@@ -595,6 +596,9 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_rtsp",
       .name   = N_("RTSP port (554 or 9983, 0 = disable)"),
+      .desc   = N_("Real Time Streaming Protocol (RTSP) port the "
+                   "server should listen on (554 or 9983, 0 = "
+                   "disable)."),
       .off    = offsetof(struct satip_server_conf, satip_rtsp),
       .group  = 1,
     },
@@ -602,6 +606,8 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
+      .desc   = N_("The default subscription weight for each "
+                   "subscription."),
       .off    = offsetof(struct satip_server_conf, satip_weight),
       .opts   = PO_ADVANCED,
       .group  = 1,
@@ -610,7 +616,8 @@ const idclass_t satip_server_class = {
       .type   = PT_BOOL,
       .id     = "satip_remote_weight",
       .name   = N_("Accept remote subscription weight"),
-      .desc   = N_("Accept the remote subscription weight (from the SAT>IP client)."),
+      .desc   = N_("Accept the remote subscription weight "
+                   "(from the SAT>IP client)."),
       .off    = offsetof(struct satip_server_conf, satip_allow_remote_weight),
       .opts   = PO_EXPERT,
       .group  = 1,
@@ -619,6 +626,8 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_descramble",
       .name   = N_("Descramble services (limit per mux)"),
+      .desc   = N_("The maximum number of services to decrypt per "
+                   "mux."),
       .off    = offsetof(struct satip_server_conf, satip_descramble),
       .opts   = PO_ADVANCED,
       .group  = 1,
@@ -627,6 +636,9 @@ const idclass_t satip_server_class = {
       .type   = PT_BOOL,
       .id     = "satip_rewrite_pmt",
       .name   = N_("Rewrite PMT"),
+      .desc   = N_("Rewrite Program Association Table (PMT) packets "
+                   "to only include information about the currently "
+                   "streamed service."),
       .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
       .opts   = PO_EXPERT,
       .group  = 1,
@@ -635,6 +647,11 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
       .name   = N_("Mux handling"),
+      .desc   = N_("Select how Tvheadend should handle muxes. "
+                   "Auto = accept the mux if it "
+                   "doesn't already exist. Keep = Always keep the mux"
+                   "regardless of whether it exists or not. Reject = "
+                   "Always reject."),
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
       .opts   = PO_EXPERT,
@@ -644,6 +661,8 @@ const idclass_t satip_server_class = {
       .type   = PT_STR,
       .id     = "satip_nat_ip",
       .name   = N_("External IP (NAT)"),
+      .desc   = N_("Enter external IP if behind Network address "
+                   "translation (NAT)."),
       .off    = offsetof(struct satip_server_conf, satip_nat_ip),
       .opts   = PO_EXPERT,
       .group  = 1,
@@ -652,6 +671,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbs",
       .name   = N_("DVB-S"),
+      .desc   = N_("The number of DVB-S tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbs),
       .group  = 2,
     },
@@ -659,6 +679,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbs2",
       .name   = N_("DVB-S2"),
+      .desc   = N_("The number of DVB-S2 tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbs2),
       .group  = 2,
     },
@@ -666,6 +687,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbt",
       .name   = N_("DVB-T"),
+      .desc   = N_("The number of DVB-T tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbt),
       .group  = 2,
     },
@@ -673,6 +695,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbt2",
       .name   = N_("DVB-T2"),
+      .desc   = N_("The number of DVB-T2 tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbt2),
       .group  = 2,
     },
@@ -680,6 +703,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbc",
       .name   = N_("DVB-C"),
+      .desc   = N_("The number of DVB-C tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbc),
       .group  = 2,
     },
@@ -687,6 +711,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbc2",
       .name   = N_("DVB-C2"),
+      .desc   = N_("The number of DVB-C2 tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbc2),
       .group  = 2,
     },
@@ -694,6 +719,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_atsc",
       .name   = N_("ATSC"),
+      .desc   = N_("The number of ATSC tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_atsc),
       .group  = 2,
     },
@@ -701,6 +727,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbc2",
       .name   = N_("DVB-Cable/AnnexB"),
+      .desc   = N_("The number of DVB-Cable/AnnexB tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbcb),
       .group  = 2,
     },

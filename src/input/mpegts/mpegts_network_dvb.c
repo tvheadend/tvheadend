@@ -204,6 +204,9 @@ const idclass_t dvb_network_dvbt_class =
       .type     = PT_STR,
       .id       = "scanfile",
       .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of DVB-T muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbt_class_scanfile_list,
@@ -223,6 +226,9 @@ const idclass_t dvb_network_dvbc_class =
       .type     = PT_STR,
       .id       = "scanfile",
       .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of DVB-C muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbc_class_scanfile_list,
@@ -242,6 +248,9 @@ const idclass_t dvb_network_dvbs_class =
       .type     = PT_STR,
       .id       = "scanfile",
       .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of DVB-S/S2 muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_dvbs_class_scanfile_list,
@@ -251,6 +260,8 @@ const idclass_t dvb_network_dvbs_class =
       .type     = PT_STR,
       .id       = "orbital_pos",
       .name     = N_("Orbital position"),
+      .desc     = N_("Select the orbital position of the satellite "
+                     "your dish is pointing at."),
       .set      = dvb_network_class_orbital_pos_set,
       .get      = dvb_network_class_orbital_pos_get,
       .list     = dvb_network_class_orbital_pos_list,
@@ -269,6 +280,9 @@ const idclass_t dvb_network_atsc_class =
       .type     = PT_STR,
       .id       = "scanfile",
       .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of ATSC muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_atsc_class_scanfile_list,
