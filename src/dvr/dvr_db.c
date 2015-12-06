@@ -1992,8 +1992,8 @@ dvr_entry_class_start_extra_opts(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && !dvr_entry_is_editable(de))
-    return PO_RDONLY | PO_DURATION;
-  return PO_DURATION;
+    return PO_RDONLY | PO_DURATION | PO_ADVANCED;
+  return PO_DURATION | PO_ADVANCED;
 }
 
 static int
@@ -2684,7 +2684,6 @@ const idclass_t dvr_entry_class = {
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
       .get_opts = dvr_entry_class_start_extra_opts,
-      .opts     = PO_SORTKEY | PO_ADVANCED,
     },
     {
       .type     = PT_TIME,
