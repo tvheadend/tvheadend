@@ -233,7 +233,7 @@ found:
       TAILQ_FOREACH(tbl, &rtp->pmt_tables, link)
         if (tbl->pid == pid) {
           dvb_table_parse(&tbl->tbl, "-", data, 188, 1, 0, satip_rtp_pmt_cb);
-          if (rtp->table_data_len) {
+          if (rtp->table_data && rtp->table_data_len) {
             for (i = 0; i < rtp->table_data_len; i += 188) {
               r = satip_rtp_append_data(rtp, &v, rtp->table_data + i);
               if (r < 0)
@@ -241,6 +241,7 @@ found:
             }
             free(rtp->table_data);
             rtp->table_data = NULL;
+            rtp->table_data_len = 0;
           }
           break;
         }
@@ -319,10 +320,11 @@ found:
       TAILQ_FOREACH(tbl, &rtp->pmt_tables, link)
         if (tbl->pid == pid) {
           dvb_table_parse(&tbl->tbl, "-", data, 188, 1, 0, satip_rtp_pmt_cb);
-          if (rtp->table_data_len) {
+          if (rtp->table_data && rtp->table_data_len) {
             satip_rtp_append_tcp_data(rtp, rtp->table_data, rtp->table_data_len);
             free(rtp->table_data);
             rtp->table_data = NULL;
+            rtp->table_data_len = 0;
           }
           break;
         }
