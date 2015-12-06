@@ -1964,6 +1964,15 @@ dvr_entry_class_start_opts(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && !dvr_entry_is_editable(de))
+    return PO_RDONLY;
+  return 0;
+}
+
+static uint32_t
+dvr_entry_class_config_name_opts(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  if (de && !dvr_entry_is_editable(de))
     return PO_RDONLY | PO_ADVANCED;
   return PO_ADVANCED;
 }
@@ -2819,7 +2828,7 @@ const idclass_t dvr_entry_class = {
       .get      = dvr_entry_class_config_name_get,
       .list     = dvr_entry_class_config_name_list,
       .rend     = dvr_entry_class_config_name_rend,
-      .get_opts = dvr_entry_class_start_opts,
+      .get_opts = dvr_entry_class_config_name_opts,
     },
     {
       .type     = PT_STR,
