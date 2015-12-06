@@ -1010,6 +1010,8 @@ Ext.ux.form.TwinDateField = Ext.extend(Ext.form.DateField, {
   }),
 
   setValue : Ext.form.DateField.prototype.setValue.createSequence(function(v) {
+    if (!this.triggers)
+      return;
     if (v !== null && v != '') {
       if (this.allowClear)
         this.getTrigger(0).show();
@@ -1591,7 +1593,7 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
       return;
     }
     if ('number' === typeof val) {
-      val = new Date(val);
+      val = new Date(val * 1000);
     } else if ('string' === typeof val && this.hiddenFormat) {
       val = Date.parseDate(val, this.hiddenFormat);
     }
@@ -1613,6 +1615,7 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
       }
     }
     this.updateValue();
+    this.value = this.getValue();
   },
 
   /**
