@@ -870,7 +870,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de));
   htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de));
 
-  if (htsp->htsp_version > 25)
+  if (htsp->htsp_version > 24)
     htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de));
   else
     htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de) == DVR_RET_ONREMOVE ?
@@ -975,7 +975,7 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   htsmsg_add_u32(out, "maxDuration", dae->dae_maxduration);
   htsmsg_add_u32(out, "minDuration", dae->dae_minduration);
 
-  if (htsp->htsp_version > 25)
+  if (htsp->htsp_version > 24)
     htsmsg_add_u32(out, "retention",   dvr_autorec_get_retention_days(dae));
   else
     htsmsg_add_u32(out, "retention",   dvr_autorec_get_retention_days(dae) == DVR_RET_ONREMOVE ?
@@ -1034,7 +1034,7 @@ htsp_build_timerecentry(htsp_connection_t *htsp, dvr_timerec_entry_t *dte, const
   htsmsg_add_u32(out, "enabled",     dte->dte_enabled >= 1 ? 1 : 0);
   htsmsg_add_u32(out, "daysOfWeek",  dte->dte_weekdays);
 
-  if (htsp->htsp_version > 25)
+  if (htsp->htsp_version > 24)
     htsmsg_add_u32(out, "retention",   dvr_timerec_get_retention_days(dte));
   else
     htsmsg_add_u32(out, "retention",   dvr_timerec_get_retention_days(dte) == DVR_RET_ONREMOVE ?
