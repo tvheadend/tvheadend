@@ -320,6 +320,43 @@ descrambler_caid_changed ( service_t *t )
   }
 }
 
+static void
+descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di, int locked )
+{
+  streaming_message_t *sm;
+
+  if (!t->s_descramble_info)
+    t->s_descramble_info = calloc(1, sizeof(*di));
+  if (memcmp(t->s_descramble_info, di, sizeof(*di)) == 0) {
+    free(di);
+    return;
+  }
+  memcpy(t->s_descramble_info, di, sizeof(*di));
+
+  sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
+  sm->sm_data = di;
+
+  if (!locked)
+    pthread_mutex_lock(&t->s_stream_mutex);
+  streaming_pad_deliver(&t->s_streaming_pad, sm);
+  if (!locked)
+    pthread_mutex_unlock(&t->s_stream_mutex);
+}
+
+static void
+descrambler_notify_nokey( th_descrambler_runtime_t *dr )
+{
+  mpegts_service_t *t = (mpegts_service_t *)dr->dr_service;
+  descramble_info_t *di;
+
+  tvhlog(LOG_DEBUG, "descrambler", "no key for service='%s'", t->s_dvb_svcname);
+
+  di = calloc(1, sizeof(*di));
+  di->pid = t->s_pmt_pid;
+
+  descrambler_notify_deliver(t, di, 1);
+}
+
 void
 descrambler_notify( th_descrambler_t *td,
                     uint16_t caid, uint32_t provid,
@@ -328,7 +365,6 @@ descrambler_notify( th_descrambler_t *td,
                     const char *protocol )
 {
   mpegts_service_t *t = (mpegts_service_t *)td->td_service;
-  streaming_message_t *sm;
   descramble_info_t *di;
 
   tvhlog(LOG_DEBUG, "descrambler", "info - service='%s' caid=%04X(%s) "
@@ -341,8 +377,7 @@ descrambler_notify( th_descrambler_t *td,
   if (t->s_descrambler != td)
     return;
 
-  sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
-  sm->sm_data = di = calloc(1, sizeof(*di));
+  di = calloc(1, sizeof(*di));
 
   di->pid     = pid;
   di->caid    = caid;
@@ -354,13 +389,7 @@ descrambler_notify( th_descrambler_t *td,
   strncpy(di->from, from, sizeof(di->protocol)-1);
   strncpy(di->protocol, protocol, sizeof(di->protocol)-1);
 
-  if (!t->s_descramble_info)
-    t->s_descramble_info = calloc(1, sizeof(*di));
-  memcpy(t->s_descramble_info, di, sizeof(*di));
-
-  pthread_mutex_lock(&t->s_stream_mutex);
-  streaming_pad_deliver(&t->s_streaming_pad, sm);
-  pthread_mutex_unlock(&t->s_stream_mutex);
+  descrambler_notify_deliver(t, di, 0);
 }
 
 int
@@ -678,6 +707,7 @@ descrambler_descramble ( service_t *t,
                                       (ki & 0x40) ? "odd" : "even",
                                       ((mpegts_service_t *)t)->s_dvb_svcname);
               if (key_late(dr, ki, dd->dd_timestamp)) {
+                descrambler_notify_nokey(dr);
                 if (ecm_reset(t, dr)) {
                   descrambler_data_cut(dr, tsb2 - sb->sb_data);
                   flush_data = 1;
@@ -715,6 +745,7 @@ descrambler_descramble ( service_t *t,
           tvherror("descrambler", "ECM - key late (%ld seconds) for service \"%s\"",
                                   dispatch_clock - dr->dr_ecm_last_key_time,
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
+          descrambler_notify_nokey(dr);
           if (ecm_reset(t, dr)) {
             flush_data = 1;
             goto next;

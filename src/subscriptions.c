@@ -927,9 +927,13 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");
 
     if ((di = s->ths_service->s_descramble_info) != NULL) {
-      snprintf(buf, sizeof(buf), "%04X:%06X(%ums)-%s%s%s",
-               di->caid, di->provid, di->ecmtime, di->from,
-               di->reader[0] ? "/" : "", di->reader);
+      if (di->caid == 0 && di->ecmtime == 0) {
+        snprintf(buf, sizeof(buf), N_("Failed"));
+      } else {
+        snprintf(buf, sizeof(buf), "%04X:%06X(%ums)-%s%s%s",
+                 di->caid, di->provid, di->ecmtime, di->from,
+                 di->reader[0] ? "/" : "", di->reader);
+      }
       htsmsg_add_str(m, "descramble", buf);
     }
 
