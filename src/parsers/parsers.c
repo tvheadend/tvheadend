@@ -134,6 +134,31 @@ static void parser_do_backlog(service_t *t, elementary_stream_t *st,
                   pktbuf_t *meta);
 
 /**
+ * for debugging
+ */
+#if 0
+static int data_noise(const uint8_t *data, int len)
+{
+  static uint64_t off = 0, win = 4096, limit = 1024*1024;
+  uint32_t i;
+  off += len;
+  if (off >= limit && off < limit + win) {
+    if ((off & 3) == 1)
+      return 1;
+    for (i = 0; i < len; i += 3)
+      ((char *)data)[i] ^= 0xa5;
+  } else if (off >= limit + win) {
+    off = 0;
+    limit = (uint64_t)data[15] * 4 * 1024;
+    win   = (uint64_t)data[16] * 4;
+  }
+  return 0;
+}
+#else
+static inline int data_noise(const uint8_t *data, int len) { return 0; }
+#endif
+
+/**
  * Parse raw mpeg data
  */
 void
@@ -145,6 +170,9 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
       parser_deliver_error(t, st);
     sbuf_err(&st->es_buf, 1);
   }
+
+  if (data_noise(data, len))
+    return;
 
   switch(st->es_type) {
   case SCT_MPEG2VIDEO:
