@@ -126,6 +126,7 @@ api_idnode_grid
   idnode_t *in;
   idnode_set_t ins = { 0 };
   api_idnode_grid_callback_t cb = opaque;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Grid configuration */
   api_idnode_grid_conf(perm, args, &conf);
@@ -143,7 +144,7 @@ api_idnode_grid
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
     in = ins.is_array[i];
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_sstr(in));
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
     if (idnode_perm(in, perm, NULL))
       continue;
     idnode_read0(in, e, flist, 0, conf.sort.lang);
@@ -176,6 +177,7 @@ api_idnode_load_by_class0
   idnode_set_t    *is;
   idnode_t        *in;
   htsmsg_t        *l, *e;
+  char ubuf[UUID_HEX_SIZE];
 
   // TODO: this only works if pass as integer
   _enum = htsmsg_get_bool_or_default(args, "enum", 0);
@@ -195,7 +197,7 @@ api_idnode_load_by_class0
       /* Name/UUID only */
       if (_enum) {
         e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", idnode_uuid_as_sstr(in));
+        htsmsg_add_str(e, "key", idnode_uuid_as_str(in, ubuf));
         htsmsg_add_str(e, "val", idnode_get_title(in, perm->aa_lang_ui));
 
       /* Full record */
@@ -240,6 +242,7 @@ api_idnode_load
   htsmsg_t *uuids, *l = NULL, *m, *flist;
   htsmsg_field_t *f;
   const char *uuid = NULL, *class;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
@@ -284,7 +287,7 @@ api_idnode_load
       }
       if (grid > 0) {
         m = htsmsg_create_map();
-        htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
+        htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
         idnode_read0(in, m, flist, 0, perm->aa_lang_ui);
       } else {
         m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
@@ -308,7 +311,7 @@ api_idnode_load
       } else {
         if (grid > 0) {
           m = htsmsg_create_map();
-          htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(in));
+          htsmsg_add_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
           idnode_read0(in, m, flist, 0, perm->aa_lang_ui);
         } else {
           m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);

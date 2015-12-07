@@ -108,6 +108,7 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
 #if ENABLE_LINUXDVB_CA
   linuxdvb_ca_t *lca;
 #endif
+  char ubuf[UUID_HEX_SIZE];
 
   m = htsmsg_create_map();
   idnode_save(&la->th_id, m);
@@ -128,7 +129,7 @@ linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
 
   /* Save */
   hts_settings_save(m, "input/linuxdvb/adapters/%s",
-                    idnode_uuid_as_sstr(&la->th_id));
+                    idnode_uuid_as_str(&la->th_id, ubuf));
   htsmsg_destroy(m);
 }
 

@@ -90,8 +90,8 @@ iptv_handler_find ( const char *scheme )
 static bouquet_t *
 iptv_bouquet_get (iptv_network_t *in, int create)
 {
-  char buf[128];
-  snprintf(buf, sizeof(buf), "iptv-network://%s", idnode_uuid_as_sstr(&in->mn_id));
+  char buf[128], ubuf[UUID_HEX_SIZE];
+  snprintf(buf, sizeof(buf), "iptv-network://%s", idnode_uuid_as_str(&in->mn_id, ubuf));
   return bouquet_find_by_source(in->mn_network_name, buf, create);
 }
 
@@ -649,6 +649,7 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   char *sane_url = in->in_url_sane;
   char *icon_url = in->in_icon_url;
   char *icon_url_sane = in->in_icon_url_sane;
+  char ubuf[UUID_HEX_SIZE];
 
   gtimer_disarm(&in->in_bouquet_timer);
 
@@ -658,7 +659,7 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   /* Remove config */
   if (delconf) {
     hts_settings_remove("input/iptv/networks/%s",
-                        idnode_uuid_as_sstr(&in->mn_id));
+                        idnode_uuid_as_str(&in->mn_id, ubuf));
     bouquet_delete(iptv_bouquet_get(in, 0));
   }
 
@@ -895,9 +896,10 @@ static void
 iptv_network_config_save ( mpegts_network_t *mn )
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&mn->mn_id, c);
   hts_settings_save(c, "input/iptv/networks/%s/config",
-                    idnode_uuid_as_sstr(&mn->mn_id));
+                    idnode_uuid_as_str(&mn->mn_id, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -907,6 +909,7 @@ iptv_network_create0
 {
   iptv_network_t *in = calloc(1, sizeof(*in));
   htsmsg_t *c;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Init Network */
   in->in_scan_create        = 1;
@@ -936,7 +939,7 @@ iptv_network_create0
 
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes",
-                                idnode_uuid_as_sstr(&in->mn_id)))) {
+                                idnode_uuid_as_str(&in->mn_id, ubuf)))) {
     htsmsg_field_t *f;
     htsmsg_t *e;
     HTSMSG_FOREACH(f, c) {

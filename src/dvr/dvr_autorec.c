@@ -104,6 +104,7 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
   dvr_entry_t *de_prev;
   dvr_autorec_entry_t *dae = de->de_autorec;
   uint32_t max_count = dvr_autorec_get_max_count(dae);
+  char ubuf[UUID_HEX_SIZE];
 
   if (dae == NULL) return;
   if (max_count <= 0) return;
@@ -123,7 +124,7 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
       break;
     if (de_prev) {
       tvhinfo("dvr", "autorec %s removing recordings %s (allowed count %u total %u)",
-              dae->dae_name, idnode_uuid_as_sstr(&de_prev->de_id), max_count, total);
+              dae->dae_name, idnode_uuid_as_str(&de_prev->de_id, ubuf), max_count, total);
       dvr_entry_cancel_delete(de_prev, 0);
     }
   }
@@ -358,10 +359,12 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 static void
 autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 {
+  char ubuf[UUID_HEX_SIZE];
+
   dvr_autorec_purge_spawns(dae, delconf, 0);
 
   if (delconf)
-    hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_sstr(&dae->dae_id));
+    hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
 
   htsp_autorec_entry_delete(dae);
 
@@ -405,11 +408,12 @@ void
 dvr_autorec_save(dvr_autorec_entry_t *dae)
 {
   htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE]; 
 
   lock_assert(&global_lock);
 
   idnode_save(&dae->dae_id, m);
-  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_sstr(&dae->dae_id));
+  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
   htsmsg_destroy(m);
 }
 
@@ -483,13 +487,12 @@ dvr_autorec_entry_class_channel_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_channel_get(void *o)
 {
-  static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
-    ret = idnode_uuid_as_sstr(&dae->dae_channel->ch_id);
+    idnode_uuid_as_str(&dae->dae_channel->ch_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static char *
@@ -544,13 +547,12 @@ dvr_autorec_entry_class_tag_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_tag_get(void *o)
 {
-  static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel_tag)
-    ret = idnode_uuid_as_sstr(&dae->dae_channel_tag->ct_id);
+    idnode_uuid_as_str(&dae->dae_channel_tag->ct_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static char *
@@ -691,13 +693,12 @@ dvr_autorec_entry_class_config_name_set(void *o, const void *v)
 static const void *
 dvr_autorec_entry_class_config_name_get(void *o)
 {
-  static const char *ret;
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_config)
-    ret = idnode_uuid_as_sstr(&dae->dae_config->dvr_id);
+    idnode_uuid_as_str(&dae->dae_config->dvr_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static char *

@@ -118,13 +118,14 @@ epggrab_ota_queue_mux( mpegts_mux_t *mm )
   const char *id;
   epggrab_ota_mux_t *om;
   int epg_flag;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!mm)
     return;
 
   lock_assert(&global_lock);
 
-  id = idnode_uuid_as_sstr(&mm->mm_id);
+  id = idnode_uuid_as_str(&mm->mm_id, ubuf);
   epg_flag = mm->mm_is_epg(mm);
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE)
     return;
@@ -275,7 +276,8 @@ epggrab_mux_start ( mpegts_mux_t *mm, void *p )
 {
   epggrab_module_t  *m;
   epggrab_ota_mux_t *ota;
-  const char *uuid = idnode_uuid_as_sstr(&mm->mm_id);
+  char ubuf[UUID_HEX_SIZE];
+  const char *uuid = idnode_uuid_as_str(&mm->mm_id, ubuf);
 
   /* Already started */
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
@@ -297,7 +299,8 @@ static void
 epggrab_mux_stop ( mpegts_mux_t *mm, void *p, int reason )
 {
   epggrab_ota_mux_t *ota;
-  const char *uuid = idnode_uuid_as_sstr(&mm->mm_id);
+  char ubuf[UUID_HEX_SIZE];
+  const char *uuid = idnode_uuid_as_str(&mm->mm_id, ubuf);
   int done = EPGGRAB_OTA_DONE_STOLEN;
 
   if (reason == SM_CODE_NO_INPUT)

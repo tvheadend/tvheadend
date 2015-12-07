@@ -360,9 +360,9 @@ opentv_parse_event_section_one
      */
 
     if (ev.serieslink) {
-      char suri[257];
+      char suri[257], ubuf[UUID_HEX_SIZE];
       snprintf(suri, 256, "opentv://channel-%s/series-%d",
-               channel_get_suuid(ch), ev.serieslink);
+               channel_get_uuid(ch, ubuf), ev.serieslink);
       if ((es = epg_serieslink_find_by_uri(suri, 1, &save)))
         save |= epg_broadcast_set_serieslink(ebc, es, src);
     }

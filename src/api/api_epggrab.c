@@ -38,10 +38,11 @@ api_epggrab_module_list
 {
   htsmsg_t *l = htsmsg_create_list(), *m;
   epggrab_module_t *mod;
+  char ubuf[UUID_HEX_SIZE];
   pthread_mutex_lock(&global_lock);
   LIST_FOREACH(mod, &epggrab_modules, link) {
     m = htsmsg_create_map();
-    htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&mod->idnode));
+    htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&mod->idnode, ubuf));
     htsmsg_add_str(m, "status", epggrab_module_get_status(mod));
     htsmsg_add_str(m, "title", idnode_get_title(&mod->idnode, perm->aa_lang_ui));
     htsmsg_add_msg(l, NULL, m);

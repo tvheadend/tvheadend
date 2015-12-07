@@ -32,12 +32,13 @@ api_profile_list
 {
   profile_t *pro;
   htsmsg_t *l, *e;
+  char ubuf[UUID_HEX_SIZE];
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
   TAILQ_FOREACH(pro, &profiles, pro_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idnode_uuid_as_sstr(&pro->pro_id));
+    htsmsg_add_str(e, "key", idnode_uuid_as_str(&pro->pro_id, ubuf));
     htsmsg_add_str(e, "val", profile_get_name(pro));
     htsmsg_add_msg(l, NULL, e);
   }

@@ -133,11 +133,12 @@ profile_release_(profile_t *pro)
 static void
 profile_delete(profile_t *pro, int delconf)
 {
+  char ubuf[UUID_HEX_SIZE];
   pro->pro_enabled = 0;
   if (pro->pro_conf_changed)
     pro->pro_conf_changed(pro);
   if (delconf)
-    hts_settings_remove("profile/%s", idnode_uuid_as_sstr(&pro->pro_id));
+    hts_settings_remove("profile/%s", idnode_uuid_as_str(&pro->pro_id, ubuf));
   TAILQ_REMOVE(&profiles, pro, pro_link);
   idnode_unlink(&pro->pro_id);
   dvr_config_destroy_by_profile(pro, delconf);
@@ -150,12 +151,13 @@ profile_class_save ( idnode_t *in )
 {
   profile_t *pro = (profile_t *)in;
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   if (pro == profile_default)
     pro->pro_enabled = 1;
   idnode_save(in, c);
   if (pro->pro_shield)
     htsmsg_add_bool(c, "shield", 1);
-  hts_settings_save(c, "profile/%s", idnode_uuid_as_sstr(in));
+  hts_settings_save(c, "profile/%s", idnode_uuid_as_str(in, ubuf));
   htsmsg_destroy(c);
   if (pro->pro_conf_changed)
     pro->pro_conf_changed(pro);
@@ -466,6 +468,7 @@ profile_find_by_list
   profile_t *pro, *res = NULL;
   htsmsg_field_t *f;
   const char *uuid, *uuid2;
+  char ubuf[UUID_HEX_SIZE];
 
   pro = profile_find_by_uuid(name);
   if (!pro)
@@ -473,7 +476,7 @@ profile_find_by_list
   if (!profile_verify(pro, sflags))
     pro = NULL;
   if (uuids) {
-    uuid = pro ? idnode_uuid_as_sstr(&pro->pro_id) : "";
+    uuid = pro ? idnode_uuid_as_str(&pro->pro_id, ubuf) : "";
     HTSMSG_FOREACH(f, uuids) {
       uuid2 = htsmsg_field_get_str(f) ?: "";
       if (strcmp(uuid, uuid2) == 0 && profile_verify(pro, sflags))
@@ -536,11 +539,12 @@ profile_get_htsp_list(htsmsg_t *array, htsmsg_t *filter)
   htsmsg_t *m;
   htsmsg_field_t *f;
   const char *uuid, *s;
+  char ubuf[UUID_HEX_SIZE];
 
   TAILQ_FOREACH(pro, &profiles, pro_link) {
     if (!pro->pro_work)
       continue;
-    uuid = idnode_uuid_as_sstr(&pro->pro_id);
+    uuid = idnode_uuid_as_str(&pro->pro_id, ubuf);
     if (filter) {
       HTSMSG_FOREACH(f, filter) {
         if (!(s = htsmsg_field_get_str(f)))

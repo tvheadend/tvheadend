@@ -84,6 +84,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
   int e, tr, qd = 0;
   service_mapper_item_t *smi;
   service_t *s;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Reset stat counters */
   if (TAILQ_EMPTY(&service_mapper_queue))
@@ -94,7 +95,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     if (uuids) {
       htsmsg_field_t *f;
       const char *str;
-      const char *uuid = idnode_uuid_as_sstr(&s->s_id);
+      const char *uuid = idnode_uuid_as_str(&s->s_id, ubuf);
       HTSMSG_FOREACH(f, uuids) {
         if (!(str = htsmsg_field_get_str(f))) continue;
         if (!strcmp(str, uuid)) break;
@@ -102,7 +103,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
       if (!f) continue;
     }
     tvhtrace("service_mapper", "check service %s (%s)",
-             s->s_nicename, idnode_uuid_as_sstr(&s->s_id));
+             s->s_nicename, idnode_uuid_as_str(&s->s_id, ubuf));
 
     /* Already mapped (or in progress) */
     if (s->s_sm_onqueue) continue;

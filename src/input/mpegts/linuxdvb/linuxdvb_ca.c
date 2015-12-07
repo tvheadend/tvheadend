@@ -901,10 +901,10 @@ linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
 
 void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )
 {
-  char id[8];
+  char id[8], ubuf[UUID_HEX_SIZE];
   htsmsg_t *m = htsmsg_create_map();
 
-  htsmsg_add_str(m, "uuid", idnode_uuid_as_sstr(&lca->lca_id));
+  htsmsg_add_str(m, "uuid", idnode_uuid_as_str(&lca->lca_id, ubuf));
   idnode_save(&lca->lca_id, m);
 
   /* Add to list */

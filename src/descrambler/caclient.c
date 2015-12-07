@@ -137,10 +137,12 @@ caclient_create
 static void
 caclient_delete(caclient_t *cac, int delconf)
 {
+  char ubuf[UUID_HEX_SIZE];
+
   cac->cac_enabled = 0;
   cac->cac_conf_changed(cac);
   if (delconf)
-    hts_settings_remove("caclient/%s", idnode_uuid_as_sstr(&cac->cac_id));
+    hts_settings_remove("caclient/%s", idnode_uuid_as_str(&cac->cac_id, ubuf));
   pthread_mutex_lock(&caclients_mutex);
   TAILQ_REMOVE(&caclients, cac, cac_link);
   pthread_mutex_unlock(&caclients_mutex);
@@ -155,10 +157,11 @@ caclient_delete(caclient_t *cac, int delconf)
 static void
 caclient_class_save ( idnode_t *in )
 {
+  char ubuf[UUID_HEX_SIZE];
   caclient_t *cac = (caclient_t *)in;
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(in, c);
-  hts_settings_save(c, "caclient/%s", idnode_uuid_as_sstr(in));
+  hts_settings_save(c, "caclient/%s", idnode_uuid_as_str(in, ubuf));
   htsmsg_destroy(c);
   cac->cac_conf_changed(cac);
 }

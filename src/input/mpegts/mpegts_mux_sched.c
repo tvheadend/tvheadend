@@ -298,17 +298,20 @@ void
 mpegts_mux_sched_save ( mpegts_mux_sched_t *mms )
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&mms->mms_id, c);
-  hts_settings_save(c, "muxsched/%s", idnode_uuid_as_sstr(&mms->mms_id));
+  hts_settings_save(c, "muxsched/%s", idnode_uuid_as_str(&mms->mms_id, ubuf));
   htsmsg_destroy(c);
 }
 
 void
 mpegts_mux_sched_delete ( mpegts_mux_sched_t *mms, int delconf )
 {
+  char ubuf[UUID_HEX_SIZE];
+
   LIST_REMOVE(mms, mms_link);
   if (delconf)
-    hts_settings_remove("muxsched/%s", idnode_uuid_as_sstr(&mms->mms_id));
+    hts_settings_remove("muxsched/%s", idnode_uuid_as_str(&mms->mms_id, ubuf));
   if (mms->mms_sub)
     subscription_unsubscribe(mms->mms_sub, UNSUBSCRIBE_FINAL);
   gtimer_disarm(&mms->mms_timer);

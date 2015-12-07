@@ -137,6 +137,7 @@ api_dvr_entry_create
   char *s, *lang;
   const char *s1;
   int res = EPERM;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
@@ -145,7 +146,7 @@ api_dvr_entry_create
   s1 = htsmsg_get_str(conf, "config_name");
   cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
   if (cfg) {
-    htsmsg_set_str(conf, "config_name", idnode_uuid_as_sstr(&cfg->dvr_id));
+    htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
     htsmsg_set_str(conf, "owner", perm->aa_username ?: "");
     htsmsg_set_str(conf, "creator", perm->aa_representative ?: "");
 
@@ -338,6 +339,7 @@ api_dvr_autorec_create
   dvr_config_t *cfg;
   dvr_autorec_entry_t *dae;
   const char *s1;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!(conf  = htsmsg_get_map(args, "conf")))
     return EINVAL;
@@ -352,7 +354,7 @@ api_dvr_autorec_create
   pthread_mutex_lock(&global_lock);
   cfg = dvr_config_find_by_list(perm->aa_dvrcfgs, s1);
   if (cfg) {
-    htsmsg_set_str(conf, "config_name", idnode_uuid_as_sstr(&cfg->dvr_id));
+    htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
     dae = dvr_autorec_create(NULL, conf);
     if (dae) {
       dvr_autorec_save(dae);

@@ -191,6 +191,7 @@ tvhdhomerun_device_save( tvhdhomerun_device_t *hd )
 {
   tvhdhomerun_frontend_t *lfe;
   htsmsg_t *m, *l;
+  char ubuf[UUID_HEX_SIZE];
 
   m = htsmsg_create_map();
   idnode_save(&hd->th_id, m);
@@ -203,7 +204,7 @@ tvhdhomerun_device_save( tvhdhomerun_device_t *hd )
   htsmsg_add_str(m, "fe_override", hd->hd_override_type);
 
   hts_settings_save(m, "input/tvhdhomerun/adapters/%s",
-                    idnode_uuid_as_sstr(&hd->th_id));
+                    idnode_uuid_as_str(&hd->th_id, ubuf));
   htsmsg_destroy(m);
 }
 

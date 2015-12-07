@@ -44,7 +44,7 @@ static void
 mpegts_input_dbus_notify(mpegts_input_t *mi, int64_t subs)
 {
 #if ENABLE_DBUS_1
-  char buf[256];
+  char buf[256], ubuf[UUID_HEX_SIZE];
   htsmsg_t *msg;
 
   if (mi->mi_dbus_subs == subs)
@@ -54,7 +54,7 @@ mpegts_input_dbus_notify(mpegts_input_t *mi, int64_t subs)
   mi->mi_display_name(mi, buf, sizeof(buf));
   htsmsg_add_str(msg, NULL, buf);
   htsmsg_add_s64(msg, NULL, subs);
-  snprintf(buf, sizeof(buf), "/input/mpegts/%s", idnode_uuid_as_sstr(&mi->ti_id));
+  snprintf(buf, sizeof(buf), "/input/mpegts/%s", idnode_uuid_as_str(&mi->ti_id, ubuf));
   dbus_emit_signal(buf, "status", msg);
 #endif
 }
@@ -78,9 +78,10 @@ mpegts_input_class_network_get ( void *obj )
   mpegts_network_link_t *mnl;  
   mpegts_input_t *mi = obj;
   htsmsg_t       *l  = htsmsg_create_list();
+  char ubuf[UUID_HEX_SIZE];
 
   LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link)
-    htsmsg_add_str(l, NULL, idnode_uuid_as_sstr(&mnl->mnl_network->mn_id));
+    htsmsg_add_str(l, NULL, idnode_uuid_as_str(&mnl->mnl_network->mn_id, ubuf));
 
   return l;
 }
@@ -95,12 +96,13 @@ htsmsg_t *
 mpegts_input_class_network_enum ( void *obj, const char *lang )
 {
   htsmsg_t *p, *m;
+  char ubuf[UUID_HEX_SIZE];
 
   if (!obj)
     return NULL;
 
   p = htsmsg_create_map();
-  htsmsg_add_str (p, "uuid",    idnode_uuid_as_sstr((idnode_t*)obj));
+  htsmsg_add_str (p, "uuid",    idnode_uuid_as_str((idnode_t*)obj, ubuf));
   htsmsg_add_bool(p, "enum",    1);
 
   m = htsmsg_create_map();
@@ -147,6 +149,7 @@ static int
 mpegts_input_class_linked_set ( void *self, const void *val )
 {
   mpegts_input_t *mi = self, *mi2;
+  char ubuf[UUID_HEX_SIZE];
 
   if (strcmp(val ?: "", mi->mi_linked ?: "")) {
     mi2 = mpegts_input_find(mi->mi_linked);
@@ -163,7 +166,7 @@ mpegts_input_class_linked_set ( void *self, const void *val )
       mi2 = mpegts_input_find((char *)val);
       if (mi2) {
         free(mi2->mi_linked);
-        mi2->mi_linked = strdup(idnode_uuid_as_sstr(&mi->ti_id));
+        mi2->mi_linked = strdup(idnode_uuid_as_str(&mi->ti_id, ubuf));
       }
     }
     if (mi2)
@@ -176,15 +179,14 @@ mpegts_input_class_linked_set ( void *self, const void *val )
 static const void *
 mpegts_input_class_linked_get ( void *self )
 {
-  static const char *ptr;
   mpegts_input_t *mi = self;
-  ptr = "";
+  prop_sbuf[0] = '\0';
   if (mi->mi_linked) {
     mi = mpegts_input_find(mi->mi_linked);
     if (mi)
-      ptr = idnode_uuid_as_sstr(&mi->ti_id);
+      idnode_uuid_as_str(&mi->ti_id, prop_sbuf);
   }
-  return &ptr;
+  return &prop_sbuf_ptr;
 }
 
 static void
@@ -1537,7 +1539,7 @@ mpegts_input_stream_status
   ( mpegts_mux_instance_t *mmi, tvh_input_stream_t *st )
 {
   int s = 0, w = 0;
-  char buf[512];
+  char buf[512], ubuf[UUID_HEX_SIZE];
   th_subscription_t *ths;
   const service_t *t;
   mpegts_mux_t *mm = mmi->mmi_mux;
@@ -1550,7 +1552,7 @@ mpegts_input_stream_status
         w = MAX(w, ths->ths_weight);
       }
 
-  st->uuid        = strdup(idnode_uuid_as_sstr(&mmi->tii_id));
+  st->uuid        = strdup(idnode_uuid_as_str(&mmi->tii_id, ubuf));
   mi->mi_display_name(mi, buf, sizeof(buf));
   st->input_name  = strdup(buf);
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -1565,11 +1567,11 @@ void
 mpegts_input_empty_status
   ( mpegts_input_t *mi, tvh_input_stream_t *st )
 {
-  char buf[512];
+  char buf[512], ubuf[UUID_HEX_SIZE];
   tvh_input_instance_t *mmi_;
   mpegts_mux_instance_t *mmi;
 
-  st->uuid        = strdup(idnode_uuid_as_sstr(&mi->ti_id));
+  st->uuid        = strdup(idnode_uuid_as_str(&mi->ti_id, ubuf));
   mi->mi_display_name(mi, buf, sizeof(buf));
   st->input_name  = strdup(buf);
   LIST_FOREACH(mmi_, &mi->mi_mux_instances, tii_input_link) {
