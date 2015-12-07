@@ -144,6 +144,7 @@ const idclass_t satip_frontend_class =
       .type     = PT_INT,
       .id       = "fe_number",
       .name     = N_("Frontend number"),
+      .desc     = N_("SAT->IP frontend number."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_number),
     },
@@ -151,6 +152,9 @@ const idclass_t satip_frontend_class =
       .type     = PT_INT,
       .id       = "udp_rtp_port",
       .name     = N_("UDP RTP port number (2 ports)"),
+      .desc     = N_("Force the local UDP Port number here. The number "
+                     "should be even (RTP port). The next odd number "
+                     "(+1) will be used as the RTCP port."),
       .off      = offsetof(satip_frontend_t, sf_udp_rtp_port),
       .opts     = PO_ADVANCED,
     },
@@ -158,6 +162,10 @@ const idclass_t satip_frontend_class =
       .type     = PT_INT,
       .id       = "tdelay",
       .name     = N_("Next tune delay in ms (0-2000)"),
+      .desc     = N_("The minimum delay before tuning in milliseconds "
+                     "after tuner stop. If the time between the "
+                     "previous and next start is greater than this "
+                     "value then the delay is not applied."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_tdelay),
     },
@@ -165,6 +173,9 @@ const idclass_t satip_frontend_class =
       .type     = PT_BOOL,
       .id       = "play2",
       .name     = N_("Send full PLAY cmd"),
+      .desc     = N_("Send the full RTSP PLAY command after full RTSP "
+                     "SETUP command. Some devices firmware require this "
+                     "to get an MPEG-TS stream."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_play2),
     },
@@ -172,6 +183,10 @@ const idclass_t satip_frontend_class =
       .type     = PT_BOOL,
       .id       = "teardown_delay",
       .name     = N_("Force teardown delay"),
+      .desc     = N_("Force the delay between RTSP TEARDOWN and RTSP "
+                     "SETUP command (value from ‘Next tune delay in ms’ "
+                     "is used). Some devices are not able to handle "
+                     "quick continuous tuning."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_teardown_delay),
     },
@@ -179,7 +194,8 @@ const idclass_t satip_frontend_class =
       .type     = PT_BOOL,
       .id       = "pass_weight",
       .name     = N_("Pass subscription weight"),
-      .desc     = N_("Pass subscription weight to the SAT>IP server (Tvheadend specific extension)"),
+      .desc     = N_("Pass subscription weight to the SAT>IP server "
+                     "(Tvheadend specific extension)."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_pass_weight),
     },
@@ -187,6 +203,11 @@ const idclass_t satip_frontend_class =
       .type     = PT_STR,
       .id       = "tunerbindaddr",
       .name     = N_("Tuner bind IP address"),
+      .desc     = N_("Force all network connections to this tuner to be "
+                     "made over the specified IP address, similar to "
+                     "the setting for the SAT>IP device itself. "
+                     "Setting this overrides the device-specific "
+                     "setting."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_frontend_t, sf_tuner_bindaddr),
     },
@@ -290,6 +311,9 @@ const idclass_t satip_frontend_dvbs_class =
       .type     = PT_INT,
       .id       = "positions",
       .name     = N_("Satellite positions"),
+      .desc     = N_("Select the number of satellite positions "
+                     "supported by the SAT>IP hardware and your "
+                     "coaxial cable wiring."),
       .set      = satip_frontend_dvbs_class_positions_set,
       .opts     = PO_NOSAVE,
       .off      = offsetof(satip_frontend_t, sf_positions),
@@ -299,6 +323,16 @@ const idclass_t satip_frontend_dvbs_class =
       .type     = PT_INT,
       .id       = "fe_master",
       .name     = N_("Master tuner"),
+      .desc     = N_("Select the master tuner."
+                     "The signal from the standard universal LNB can be "
+                     "split using a simple coaxial splitter "
+                     "(no multiswitch) to several outputs. In this "
+                     "case, the position, the polarization and low-high "
+                     "band settings must be equal."
+                     "if you set other tuner as master, then this tuner "
+                     "will act like a slave one and tvheadend will "
+                     "assure that this tuner will not use incompatible "
+                     "parameters (position, polarization, lo-hi)."),
       .set      = satip_frontend_dvbs_class_master_set,
       .list     = satip_frontend_dvbs_class_master_enum,
       .off      = offsetof(satip_frontend_t, sf_master),
@@ -321,6 +355,16 @@ const idclass_t satip_frontend_dvbs_slave_class =
       .type     = PT_INT,
       .id       = "fe_master",
       .name     = N_("Master tuner"),
+      .desc     = N_("Select the master tuner."
+                     "The signal from the standard universal LNB can be "
+                     "split using a simple coaxial splitter "
+                     "(no multiswitch) to several outputs. In this "
+                     "case, the position, the polarization and low-high "
+                     "band settings must be equal."
+                     "if you set other tuner as master, then this tuner "
+                     "will act like a slave one and tvheadend will "
+                     "assure that this tuner will not use incompatible "
+                     "parameters (position, polarization, lo-hi)."),
       .set      = satip_frontend_dvbs_class_master_set,
       .list     = satip_frontend_dvbs_class_master_enum,
       .off      = offsetof(satip_frontend_t, sf_master),
@@ -343,6 +387,7 @@ const idclass_t satip_frontend_dvbc_class =
       .type     = PT_STR,
       .id       = "fe_override",
       .name     = N_("Network type"),
+      .desc     = N_("Override the frontend type."),
       .set      = satip_frontend_class_override_set,
       .list     = satip_frontend_class_override_enum,
       .off      = offsetof(satip_frontend_t, sf_type_override),
