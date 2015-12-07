@@ -45,14 +45,14 @@ static void
 satip_device_dbus_notify( satip_device_t *sd, const char *sig_name )
 {
 #if ENABLE_DBUS_1
-  char buf[256];
+  char buf[256], ubuf[UUID_HEX_SIZE];
 
   htsmsg_t *msg = htsmsg_create_list();
   htsmsg_add_str(msg, NULL, sd->sd_info.addr);
   htsmsg_add_str(msg, NULL, sd->sd_info.location);
   htsmsg_add_str(msg, NULL, sd->sd_info.server);
   htsmsg_add_s64(msg, NULL, sd->sd_info.rtsp_port);
-  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_sstr(&sd->th_id));
+  snprintf(buf, sizeof(buf), "/input/mpegts/satip/%s", idnode_uuid_as_str(&sd->th_id, ubuf));
   dbus_emit_signal(buf, sig_name, msg);
 #endif
 }
@@ -700,6 +700,7 @@ satip_device_save( satip_device_t *sd )
 {
   satip_frontend_t *lfe;
   htsmsg_t *m, *l;
+  char ubuf[UUID_HEX_SIZE];
 
   if (sd->sd_nosave)
     return;
@@ -713,7 +714,7 @@ satip_device_save( satip_device_t *sd )
   htsmsg_add_msg(m, "frontends", l);
 
   hts_settings_save(m, "input/satip/adapters/%s",
-                    idnode_uuid_as_sstr(&sd->th_id));
+                    idnode_uuid_as_str(&sd->th_id, ubuf));
   htsmsg_destroy(m);
 }
 

@@ -192,8 +192,9 @@ esfilter_create
 static void
 esfilter_delete(esfilter_t *esf, int delconf)
 {
+  char ubuf[UUID_HEX_SIZE];
   if (delconf)
-    hts_settings_remove("esfilter/%s", idnode_uuid_as_sstr(&esf->esf_id));
+    hts_settings_remove("esfilter/%s", idnode_uuid_as_str(&esf->esf_id, ubuf));
   TAILQ_REMOVE(&esfilters[esf->esf_class], esf, esf_link);
   idnode_unlink(&esf->esf_id);
   free(esf->esf_comment);
@@ -208,8 +209,9 @@ static void
 esfilter_class_save(idnode_t *self)
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(self, c);
-  hts_settings_save(c, "esfilter/%s", idnode_uuid_as_sstr(self));
+  hts_settings_save(c, "esfilter/%s", idnode_uuid_as_str(self, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -217,7 +219,8 @@ static const char *
 esfilter_class_get_title(idnode_t *self, const char *lang)
 {
   esfilter_t *esf = (esfilter_t *)self;
-  return idnode_uuid_as_sstr(&esf->esf_id);
+  char ubuf[UUID_HEX_SIZE];
+  return idnode_uuid_as_str(&esf->esf_id, ubuf);
 }
 
 static void

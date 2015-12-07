@@ -512,6 +512,7 @@ access_update(access_t *a, access_entry_t *ae)
 {
   idnode_list_mapping_t *ilm;
   const char *s;
+  char ubuf[UUID_HEX_SIZE];
 
   switch (ae->ae_conn_limit_type) {
   case ACCESS_CONN_LIMIT_TYPE_ALL:
@@ -550,7 +551,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(pro && pro->pro_name[0] != '\0') {
       if (a->aa_profiles == NULL)
         a->aa_profiles = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_sstr(&pro->pro_id));
+      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id, ubuf));
     }
   }
 
@@ -559,7 +560,7 @@ access_update(access_t *a, access_entry_t *ae)
     if(dvr && dvr->dvr_config_name[0] != '\0') {
       if (a->aa_dvrcfgs == NULL)
         a->aa_dvrcfgs = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_sstr(&dvr->dvr_id));
+      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id, ubuf));
      }
   }
 
@@ -574,7 +575,7 @@ access_update(access_t *a, access_entry_t *ae)
         if (ilm == NULL) {
           if (a->aa_chtags == NULL)
             a->aa_chtags = htsmsg_create_list();
-          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_sstr(&ct->ct_id));
+          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
         }
       }
     }
@@ -584,7 +585,7 @@ access_update(access_t *a, access_entry_t *ae)
       if(ct && ct->ct_name[0] != '\0') {
         if (a->aa_chtags == NULL)
           a->aa_chtags = htsmsg_create_list();
-        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_sstr(&ct->ct_id));
+        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
       }
     }
   }
@@ -1145,8 +1146,9 @@ void
 access_entry_save(access_entry_t *ae)
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&ae->ae_id, c);
-  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_sstr(&ae->ae_id));
+  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -1183,8 +1185,9 @@ static void
 access_entry_class_delete(idnode_t *self)
 {
   access_entry_t *ae = (access_entry_t *)self;
+  char ubuf[UUID_HEX_SIZE];
 
-  hts_settings_remove("accesscontrol/%s", idnode_uuid_as_sstr(&ae->ae_id));
+  hts_settings_remove("accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id, ubuf));
   access_entry_destroy(ae);
 }
 
@@ -1719,8 +1722,9 @@ void
 passwd_entry_save(passwd_entry_t *pw)
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&pw->pw_id, c);
-  hts_settings_save(c, "passwd/%s", idnode_uuid_as_sstr(&pw->pw_id));
+  hts_settings_save(c, "passwd/%s", idnode_uuid_as_str(&pw->pw_id, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -1734,8 +1738,9 @@ static void
 passwd_entry_class_delete(idnode_t *self)
 {
   passwd_entry_t *pw = (passwd_entry_t *)self;
+  char ubuf[UUID_HEX_SIZE];
 
-  hts_settings_remove("passwd/%s", idnode_uuid_as_sstr(&pw->pw_id));
+  hts_settings_remove("passwd/%s", idnode_uuid_as_str(&pw->pw_id, ubuf));
   passwd_entry_destroy(pw);
 }
 
@@ -1884,8 +1889,9 @@ void
 ipblock_entry_save(ipblock_entry_t *ib)
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&ib->ib_id, c);
-  hts_settings_save(c, "ipblock/%s", idnode_uuid_as_sstr(&ib->ib_id));
+  hts_settings_save(c, "ipblock/%s", idnode_uuid_as_str(&ib->ib_id, ubuf));
   htsmsg_destroy(c);
 }
 
@@ -1909,8 +1915,9 @@ static void
 ipblock_entry_class_delete(idnode_t *self)
 {
   ipblock_entry_t *ib = (ipblock_entry_t *)self;
+  char ubuf[UUID_HEX_SIZE];
 
-  hts_settings_remove("ipblock/%s", idnode_uuid_as_sstr(&ib->ib_id));
+  hts_settings_remove("ipblock/%s", idnode_uuid_as_str(&ib->ib_id, ubuf));
   ipblock_entry_destroy(ib);
 }
 

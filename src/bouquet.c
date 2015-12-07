@@ -57,7 +57,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 {
   bouquet_t *bq, *bq2;
   bouquet_download_t *bqd;
-  char buf[128];
+  char buf[128], ubuf[UUID_HEX_SIZE];
   int i;
 
   lock_assert(&global_lock);
@@ -98,7 +98,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
       bq->bq_ext_url = NULL;
     } else {
       free(bq->bq_src);
-      snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_sstr(&bq->bq_id));
+      snprintf(buf, sizeof(buf), "exturl://%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
       bq->bq_src = strdup(buf);
       bq->bq_download = bqd = calloc(1, sizeof(*bqd));
       bqd->bq = bq;
@@ -558,11 +558,12 @@ bouquet_get_tag_name(bouquet_t *bq, service_t *t)
 void
 bouquet_delete(bouquet_t *bq)
 {
+  char ubuf[UUID_HEX_SIZE];
   if (bq == NULL) return;
   bq->bq_enabled = 0;
   bouquet_map_to_channels(bq);
   if (!bq->bq_shield) {
-    hts_settings_remove("bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
+    hts_settings_remove("bouquet/%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
     bouquet_destroy(bq);
   } else {
     idnode_set_free(bq->bq_services);
@@ -578,8 +579,9 @@ void
 bouquet_save(bouquet_t *bq, int notify)
 {
   htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&bq->bq_id, c);
-  hts_settings_save(c, "bouquet/%s", idnode_uuid_as_sstr(&bq->bq_id));
+  hts_settings_save(c, "bouquet/%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
   if (bq->bq_shield)
     htsmsg_add_bool(c, "shield", 1);
   htsmsg_destroy(c);
@@ -780,9 +782,10 @@ bouquet_class_chtag_ref_get ( void *obj )
 {
   static const char *buf;
   bouquet_t *bq = obj;
+  char ubuf[UUID_HEX_SIZE];
 
   if (bq->bq_chtag_ptr)
-    buf = idnode_uuid_as_sstr(&bq->bq_chtag_ptr->ct_id);
+    buf = idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id, ubuf);
   else
     buf = "";
   return &buf;
@@ -819,6 +822,7 @@ bouquet_class_services_get ( void *obj )
   int64_t lcn;
   const char *tag;
   size_t z;
+  char ubuf[UUID_HEX_SIZE];
 
   /* Add all */
   for (z = 0; z < bq->bq_services->is_count; z++) {
@@ -828,7 +832,7 @@ bouquet_class_services_get ( void *obj )
       htsmsg_add_s64(e, "lcn", lcn);
     if ((tag = bouquet_get_tag_name(bq, t)) != NULL)
       htsmsg_add_str(e, "tag", tag);
-    htsmsg_add_msg(m, idnode_uuid_as_sstr(&t->s_id), e);
+    htsmsg_add_msg(m, idnode_uuid_as_str(&t->s_id, ubuf), e);
   }
 
   return m;

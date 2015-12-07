@@ -32,12 +32,13 @@ api_caclient_list
 {
   caclient_t *cac;
   htsmsg_t *l, *e;
+  char ubuf[UUID_HEX_SIZE];
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
   TAILQ_FOREACH(cac, &caclients, cac_link) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_sstr(&cac->cac_id));
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(&cac->cac_id, ubuf));
     htsmsg_add_str(e, "title", idnode_get_title(&cac->cac_id, perm->aa_lang_ui));
     htsmsg_add_str(e, "status", caclient_get_status(cac));
     htsmsg_add_msg(l, NULL, e);

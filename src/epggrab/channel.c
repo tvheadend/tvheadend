@@ -386,14 +386,17 @@ epggrab_channel_t *epggrab_channel_find
 void epggrab_channel_save( epggrab_channel_t *ec )
 {
   htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
   idnode_save(&ec->idnode, m);
   hts_settings_save(m, "epggrab/%s/channels/%s",
-                    ec->mod->saveid, idnode_uuid_as_sstr(&ec->idnode));
+                    ec->mod->saveid, idnode_uuid_as_str(&ec->idnode, ubuf));
   htsmsg_destroy(m);
 }
 
 void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
 {
+  char ubuf[UUID_HEX_SIZE];
+
   if (ec == NULL) return;
 
   /* Already linked */
@@ -404,7 +407,7 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
 
   if (delconf)
     hts_settings_remove("epggrab/%s/channels/%s",
-                        ec->mod->saveid, idnode_uuid_as_sstr(&ec->idnode));
+                        ec->mod->saveid, idnode_uuid_as_str(&ec->idnode, ubuf));
 
   htsmsg_destroy(ec->newnames);
   htsmsg_destroy(ec->names);

@@ -234,9 +234,11 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 static void
 dvr_config_destroy(dvr_config_t *cfg, int delconf)
 {
+  char ubuf[UUID_HEX_SIZE];
+
   if (delconf) {
     tvhinfo("dvr", "Deleting configuration '%s'", cfg->dvr_config_name);
-    hts_settings_remove("dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
+    hts_settings_remove("dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
   }
   LIST_REMOVE(cfg, config_link);
   idnode_unlink(&cfg->dvr_id);
@@ -513,6 +515,7 @@ void
 dvr_config_save(dvr_config_t *cfg)
 {
   htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
 
   lock_assert(&global_lock);
 
@@ -527,7 +530,7 @@ dvr_config_save(dvr_config_t *cfg)
   if (cfg->dvr_retention_days > DVR_RET_FOREVER)
     cfg->dvr_retention_days = DVR_RET_FOREVER;
   idnode_save(&cfg->dvr_id, m);
-  hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_sstr(&cfg->dvr_id));
+  hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
   htsmsg_destroy(m);
 }
 
@@ -565,13 +568,14 @@ dvr_config_class_perm(idnode_t *self, access_t *a, htsmsg_t *msg_to_write)
   dvr_config_t *cfg = (dvr_config_t *)self;
   htsmsg_field_t *f;
   const char *uuid, *my_uuid;
+  char ubuf[UUID_HEX_SIZE];
 
   if (access_verify2(a, ACCESS_OR|ACCESS_ADMIN|ACCESS_RECORDER))
     return -1;
   if (!access_verify2(a, ACCESS_ADMIN))
     return 0;
   if (a->aa_dvrcfgs) {
-    my_uuid = idnode_uuid_as_sstr(&cfg->dvr_id);
+    my_uuid = idnode_uuid_as_str(&cfg->dvr_id, ubuf);
     HTSMSG_FOREACH(f, a->aa_dvrcfgs) {
       uuid = htsmsg_field_get_str(f) ?: "";
       if (!strcmp(uuid, my_uuid))
@@ -648,13 +652,12 @@ dvr_config_class_profile_set(void *o, const void *v)
 static const void *
 dvr_config_class_profile_get(void *o)
 {
-  static const char *ret;
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (cfg->dvr_profile)
-    ret = idnode_uuid_as_sstr(&cfg->dvr_profile->pro_id);
+    idnode_uuid_as_str(&cfg->dvr_profile->pro_id, prop_sbuf);
   else
-    ret = "";
-  return &ret;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static char *

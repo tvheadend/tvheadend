@@ -182,6 +182,7 @@ page_simple(http_connection_t *hc,
   dvr_query_result_t dqr;
   const char *rstatus = NULL;
   const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
+  char ubuf[UUID_HEX_SIZE];
 
   htsbuf_qprintf(hq, "<html>");
   htsbuf_qprintf(hq, "<body>");
@@ -289,7 +290,7 @@ page_simple(http_connection_t *hc,
     rstatus = val2str(de->de_sched_state, recstatustxt);
 
 
-    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_sstr(&de->de_id));
+    htsbuf_qprintf(hq, "<a href=\"/pvrinfo/%s\">", idnode_uuid_as_str(&de->de_id, ubuf));
     
     htsbuf_qprintf(hq, 
 		"%02d:%02d-%02d:%02d&nbsp; %s",
@@ -321,7 +322,7 @@ page_einfo(http_connection_t *hc, const char *remain, void *opaque)
   dvr_entry_t *de;
   const char *rstatus;
   dvr_entry_sched_state_t dvr_status;
-  const char *lang  = http_arg_get(&hc->hc_args, "Accept-Language");
+  const char *lang = http_arg_get(&hc->hc_args, "Accept-Language");
   const char *s;
 
   pthread_mutex_lock(&global_lock);
@@ -412,6 +413,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
   struct tm a, b;
   dvr_entry_t *de;
   const char *rstatus;
+  char ubuf[UUID_HEX_SIZE];
 
   pthread_mutex_lock(&global_lock);
 
@@ -449,7 +451,7 @@ page_pvrinfo(http_connection_t *hc, const char *remain, void *opaque)
     htsbuf_qprintf(hq, "Recording status: %s<br>", rstatus);
 
   htsbuf_qprintf(hq, "<form method=\"post\" action=\"/pvrinfo/%s\">",
-	         idnode_uuid_as_sstr(&de->de_id));
+	         idnode_uuid_as_str(&de->de_id, ubuf));
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:

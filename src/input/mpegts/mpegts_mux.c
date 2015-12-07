@@ -355,13 +355,12 @@ mpegts_mux_class_get_network ( void *ptr )
 static const void *
 mpegts_mux_class_get_network_uuid ( void *ptr )
 {
-  static char buf[UUID_HEX_SIZE], *s = buf;
   mpegts_mux_t *mm = ptr;
   if (mm && mm->mm_network)
-    strcpy(buf, idnode_uuid_as_sstr(&mm->mm_network->mn_id) ?: "");
+    idnode_uuid_as_str(&mm->mm_network->mn_id, prop_sbuf);
   else
-    *buf = 0;
-  return &s;
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
 }
 
 static const void *
@@ -691,6 +690,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   /* Free memory */
   idnode_unlink(&mm->mm_id);
+  free(mm->mm_provider_network_name);
   free(mm->mm_crid_authority);
   free(mm->mm_charset);
   free(mm);

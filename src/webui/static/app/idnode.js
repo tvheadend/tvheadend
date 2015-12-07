@@ -1204,97 +1204,12 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
     var panel = null;
     var win   = null;
     var pclass = null;
+    var buttons = [];
+    var abuttons = {};
     var uilevel = tvheadend.uilevel;
+    var values = null;
 
-    /* Buttons */
-    var saveBtn = new Ext.Button({
-        tooltip: _('Create new entry'),
-        text: _('Create'),
-        iconCls: 'add',
-        hidden: true,
-        handler: function() {
-            if (panel.getForm().isDirty() || conf.forceSave) {
-                var params = conf.create.params || {};
-                if (puuid)
-                    params['uuid'] = puuid;
-                if (pclass)
-                    params['class'] = pclass;
-                params['conf'] = Ext.encode(panel.getForm().getFieldValues());
-                tvheadend.Ajax({
-                    url: conf.create.url || conf.url + '/create',
-                    params: params,
-                    success: function(d) {
-                        win.close();
-                    }
-                });
-            } else {
-                win.close();
-            }
-        }
-    });
-    var applyBtn = new Ext.Button({
-        tooltip: _('Apply settings'),
-        text: _('Apply'),
-        iconCls: 'apply',
-        hidden: true,
-        handler: function() {
-            if (panel.getForm().isDirty()) {
-                var params = conf.create.params || {};
-                if (puuid)
-                    params['uuid'] = puuid;
-                if (pclass)
-                    params['class'] = pclass;
-                params['conf'] = Ext.encode(panel.getForm().getFieldValues());
-                tvheadend.Ajax({
-                    url: conf.create.url || conf.url + '/create',
-                    params: params,
-                    success: function(d) {
-                        panel.getForm().reset();
-                    }
-                });
-            }
-        }
-    });
-    var cancelBtn = new Ext.Button({
-        tooltip: _('Cancel operation'),
-        text: _('Cancel'),
-        iconCls: 'cancelButton',
-        handler: function() {
-            win.close();
-            win = null;
-        }
-    });
-
-    /* Form */
-    panel = new Ext.FormPanel({
-        frame: true,
-        border: true,
-        bodyStyle: 'padding: 5px',
-        labelAlign: 'left',
-        labelWidth: 200,
-        autoWidth: true,
-        autoHeight: true,
-        defaultType: 'textfield',
-        buttonAlign: 'left',
-        items: [],
-        buttons: [cancelBtn, saveBtn, applyBtn]
-    });
-
-    /* Create window */
-    win = new Ext.ux.Window({
-        title: String.format(_('Add {0}'), conf.titleS),
-        iconCls: 'add',
-        layout: 'fit',
-        autoWidth: true,
-        autoHeight: true,
-        autoScroll: true,
-        plain: true,
-        items: panel
-    });
-
-
-    /* Do we need to first select a class? */
-    if (conf.select) {
+    function doselect() {
         var store = conf.select.store;
         if (!store) {
             store = new Ext.data.JsonStore({
@@ -1316,9 +1231,11 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                         win.setTitle(String.format(_('Add {0}'), s.lastSelectionText));
                         panel.remove(s);
                         tvheadend.idnode_editor_form(uilevel, d, r.json, panel, { create: true, showpwd: true });
-                        saveBtn.setVisible(true);
-                        applyBtn.setVisible(true);
+                        abuttons.save.setVisible(true);
+                        abuttons.apply.setVisible(true);
                         win.setOriginSize(true);
+                        if (values)
+                            panel.getForm().setValues(values);
                     }
                 }
             };
@@ -1333,9 +1250,11 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                         panel.remove(s);
                         d = json_decode(d);
                         tvheadend.idnode_editor_form(uilevel, d.props, d, panel, { create: true, showpwd: true });
-                        saveBtn.setVisible(true);
-                        applyBtn.setVisible(true);
+                        abuttons.save.setVisible(true);
+                        abuttons.apply.setVisible(true);
                         win.setOriginSize(true);
+                        if (values)
+                            panel.getForm().setValues(values);
                     }
                 });
             };
@@ -1359,7 +1278,9 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
 
         panel.add(combo);
         win.show();
-    } else {
+    }
+
+    function dodirect() {
         tvheadend.Ajax({
             url: conf.url + '/class',
             params: conf.params,
@@ -1370,19 +1291,143 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                     if (cloneValues)
                         panel.getForm().setValues(cloneValues);
                     conf.forceSave = true;
-                    saveBtn.handler();
+                    abuttons.save.handler();
                     delete conf.forceSave;
                     panel.destroy();
                     if (cloneValues)
                         Ext.MessageBox.alert(_('Clone'), _('The selected entry is the original!'));
                 } else {
-                    saveBtn.setVisible(true);
-                    applyBtn.setVisible(true);
+                    abuttons.save.setVisible(true);
+                    abuttons.apply.setVisible(true);
+                    if (values)
+                        panel.getForm().setValues(values);
                     win.show();
                 }
             }
         });
     }
+
+    function createwin() {
+
+        /* Close previous window */
+        if (win) {
+            win.close();
+            win = null;
+            panel = null;
+            abuttons = {};
+            buttons = [];
+        }
+
+        /* Buttons */
+        abuttons.save = new Ext.Button({
+            tooltip: _('Create new entry'),
+            text: _('Create'),
+            iconCls: 'add',
+            hidden: true,
+            handler: function() {
+                if (panel.getForm().isDirty() || conf.forceSave) {
+                    var params = conf.create.params || {};
+                    if (puuid)
+                        params['uuid'] = puuid;
+                    if (pclass)
+                        params['class'] = pclass;
+                    params['conf'] = Ext.encode(panel.getForm().getFieldValues());
+                    tvheadend.Ajax({
+                        url: conf.create.url || conf.url + '/create',
+                        params: params,
+                        success: function(d) {
+                            win.close();
+                        }
+                    });
+                } else {
+                    win.close();
+                }
+            }
+        });
+        buttons.push(abuttons.save);
+        
+        abuttons.apply = new Ext.Button({
+            tooltip: _('Apply settings'),
+            text: _('Apply'),
+            iconCls: 'apply',
+            hidden: true,
+            handler: function() {
+                if (panel.getForm().isDirty()) {
+                    var params = conf.create.params || {};
+                    if (puuid)
+                        params['uuid'] = puuid;
+                    if (pclass)
+                        params['class'] = pclass;
+                    params['conf'] = Ext.encode(panel.getForm().getFieldValues());
+                    tvheadend.Ajax({
+                        url: conf.create.url || conf.url + '/create',
+                        params: params,
+                        success: function(d) {
+                            panel.getForm().reset();
+                        }
+                    });
+                }
+            }
+        });
+        buttons.push(abuttons.apply);
+
+        abuttons.cancel = new Ext.Button({
+            tooltip: _('Cancel operation'),
+            text: _('Cancel'),
+            iconCls: 'cancelButton',
+            handler: function() {
+                win.close();
+                win = null;
+            }
+        });
+        buttons.push(abuttons.cancel);
+
+        if (!tvheadend.uilevel_nochange && (!conf.uilevel || conf.uilevel !== 'expert')) {
+            abuttons.uilevel = tvheadend.idnode_uilevel_menu(uilevel, function (l) {
+                values = panel.getForm().getFieldValues();
+                uilevel = l;
+                createwin();
+            });
+            buttons.push('->');
+            buttons.push(abuttons.uilevel);
+        }
+
+        /* Form */
+        panel = new Ext.FormPanel({
+            frame: true,
+            border: true,
+            bodyStyle: 'padding: 5px',
+            labelAlign: 'left',
+            labelWidth: 200,
+            autoWidth: true,
+            autoHeight: true,
+            defaultType: 'textfield',
+            buttonAlign: 'left',
+            items: [],
+            buttons: buttons
+        });
+
+        /* Create window */
+        win = new Ext.ux.Window({
+            title: String.format(_('Add {0}'), conf.titleS),
+            iconCls: 'add',
+            layout: 'fit',
+            autoWidth: true,
+            autoHeight: true,
+            autoScroll: true,
+            plain: true,
+            items: panel
+        });
+
+        /* Do we need to first select a class? */
+        if (conf.select) {
+            doselect();
+        } else {
+            dodirect();
+        }
+    }
+
+    createwin();
 };
 
 /*
