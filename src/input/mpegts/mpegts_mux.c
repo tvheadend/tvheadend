@@ -691,6 +691,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   /* Free memory */
   idnode_unlink(&mm->mm_id);
+  free(mm->mm_provider_network_name);
   free(mm->mm_crid_authority);
   free(mm->mm_charset);
   free(mm);
