@@ -334,9 +334,7 @@ const idclass_t satip_device_class =
       .type     = PT_INT,
       .id       = "rtsp",
       .name     = N_("RTSP port"),
-      .desc     = N_("Force the local UDP Port number here. The number "
-                     "should be even (RTP port). The next odd number "
-                     "(+1) will be used as the RTCP port."),
+      .desc     = N_("Current RTSP port."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.rtsp_port),
     },
