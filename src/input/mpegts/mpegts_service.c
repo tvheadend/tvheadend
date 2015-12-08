@@ -547,12 +547,13 @@ mpegts_service_channel_icon ( service_t *s )
                   (mmd->lm_tuning.u.dmc_fe_qpsk.orbital_pos == DVB_POLARISATION_HORIZONTAL ? 0x8000 : 0);
         break;
       case DVB_TYPE_C:
+      case DVB_TYPE_ATSC_C:
         hash = 0xFFFF0000;
         break;
       case DVB_TYPE_T:
         hash = 0xEEEE0000;
         break;
-      case DVB_TYPE_ATSC:
+      case DVB_TYPE_ATSC_T:
         hash = 0xDDDD0000;
         break;
       default:

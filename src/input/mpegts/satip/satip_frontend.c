@@ -351,11 +351,21 @@ const idclass_t satip_frontend_dvbc_class =
   }
 };
 
-const idclass_t satip_frontend_atsc_class =
+const idclass_t satip_frontend_atsc_t_class =
 {
   .ic_super      = &satip_frontend_class,
-  .ic_class      = "satip_frontend_atsc",
-  .ic_caption    = N_("SAT>IP ATSC frontend"),
+  .ic_class      = "satip_frontend_atsc_t",
+  .ic_caption    = N_("SAT>IP ATSC-T frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t satip_frontend_atsc_c_class =
+{
+  .ic_super      = &satip_frontend_class,
+  .ic_class      = "satip_frontend_atsc_c",
+  .ic_caption    = N_("SAT>IP ATSC-C frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -1765,8 +1775,10 @@ satip_frontend_create
     idc = &satip_frontend_dvbt_class;
   else if (type == DVB_TYPE_C)
     idc = &satip_frontend_dvbc_class;
-  else if (type == DVB_TYPE_ATSC)
-    idc = &satip_frontend_atsc_class;
+  else if (type == DVB_TYPE_ATSC_T)
+    idc = &satip_frontend_atsc_t_class;
+  else if (type == DVB_TYPE_ATSC_C)
+    idc = &satip_frontend_atsc_c_class;
   else {
     tvherror("satip", "unknown FE type %d", type);
     return NULL;

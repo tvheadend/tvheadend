@@ -284,13 +284,13 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
     const char *override_type = htsmsg_get_str(conf, "fe_override");
     if ( override_type != NULL) {
       type = dvb_str2type(override_type);
-      if ( ! ( type == DVB_TYPE_C || type == DVB_TYPE_T  || type == DVB_TYPE_ATSC ) ) {
+      if ( ! ( type == DVB_TYPE_C || type == DVB_TYPE_T  || type == DVB_TYPE_ATSC_T ) ) {
         type = DVB_TYPE_C;
       }
     }
   } else {
     if (strstr(hd->hd_info.deviceModel, "_atsc"))
-      type = DVB_TYPE_ATSC;
+      type = DVB_TYPE_ATSC_T;
   }
 
   hd->hd_override_type = strdup(dvb_type2str(type));

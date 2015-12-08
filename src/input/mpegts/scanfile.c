@@ -37,7 +37,8 @@
 scanfile_region_list_t scanfile_regions_DVBC;
 scanfile_region_list_t scanfile_regions_DVBT;
 scanfile_region_list_t scanfile_regions_DVBS;
-scanfile_region_list_t scanfile_regions_ATSC;
+scanfile_region_list_t scanfile_regions_ATSC_T;
+scanfile_region_list_t scanfile_regions_ATSC_C;
 
 /* **************************************************************************
  * Country codes
@@ -279,10 +280,11 @@ scanfile_region_create
 {
   scanfile_region_t *reg;
   scanfile_region_list_t *list = NULL;
-  if      (!strcmp(type, "dvb-s")) list = &scanfile_regions_DVBS;
-  else if (!strcmp(type, "dvb-t")) list = &scanfile_regions_DVBT;
-  else if (!strcmp(type, "dvb-c")) list = &scanfile_regions_DVBC;
-  else if (!strcmp(type, "atsc"))  list = &scanfile_regions_ATSC;
+  if      (!strcmp(type, "dvb-s"))  list = &scanfile_regions_DVBS;
+  else if (!strcmp(type, "dvb-t"))  list = &scanfile_regions_DVBT;
+  else if (!strcmp(type, "dvb-c"))  list = &scanfile_regions_DVBC;
+  else if (!strcmp(type, "atsc-t")) list = &scanfile_regions_ATSC_T;
+  else if (!strcmp(type, "atsc-c")) list = &scanfile_regions_ATSC_C;
   if (!list) return NULL;
 
   LIST_FOREACH(reg, list, sfr_link) {
@@ -301,10 +303,71 @@ scanfile_region_create
 }
 
 /*
+ *
+ */
+static int
+scanfile_create_network
+  ( scanfile_network_t **_net, const char *type, const char *name,
+    dvb_fe_delivery_system_t delsys )
+{
+  scanfile_region_t *reg = NULL;
+  scanfile_network_t *net;
+  char buf[256], buf2[256], buf3[256], *str;
+  int opos;
+
+  /* Region */
+  strncpy(buf, name, sizeof(buf));
+  buf[sizeof(buf)-1] = '\0';
+  if (!strcmp(type, "dvb-s")) {
+    reg = scanfile_region_create(type, "geo", "Geo-synchronous Orbit");
+  } else {
+    str = buf;
+    while (*str) {
+      if (*str == '-') {
+        *str = '\0';
+        if (!strcmp(type, "atsc"))
+          type = delsys == DVB_SYS_ATSC ? "atsc-t" : "atsc-c";
+        reg  = scanfile_region_create(type, buf, tldcode2longname(buf));
+        *str = '-';
+        break;
+      }
+      str++;
+    }
+  }
+  if (!reg)
+    return -1;
+
+  /* Network */
+  str = buf;
+  while (*str) {
+    if (!isprint(*str)) *str = '_';
+    str++;
+  }
+  *str = '\0';
+  opos = INT_MAX;
+  if (!strcmp(type, "dvb-s") && scanfile_network_dvbs_pos(buf, &opos)) {
+    snprintf(buf3, sizeof(buf3), "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
+                                                   abs(opos) / 10, abs(opos) % 10,
+                                                   opos < 0 ? 'W' :'E', buf);
+    strcpy(buf, buf3);
+  }
+  snprintf(buf2, sizeof(buf2), "%s_%s", type, buf);
+  net = calloc(1, sizeof(scanfile_network_t));
+  net->sfn_id   = strdup(buf2);
+  net->sfn_name = strdup(buf);
+  net->sfn_satpos = opos;
+  LIST_INSERT_SORTED(&reg->sfr_networks, net, sfn_link, scanfile_network_cmp);
+
+  *_net = net;
+  return 0;
+}
+
+/*
  * Process mux entry
  */
-static void
-scanfile_load_one ( scanfile_network_t *net, const char *line )
+static int
+scanfile_load_one
+  ( scanfile_network_t **net, const char *type, const char *name, const char *line )
 {
   int r = 1;
   dvb_mux_conf_t *mux = malloc(sizeof(dvb_mux_conf_t));
@@ -328,8 +391,11 @@ scanfile_load_one ( scanfile_network_t *net, const char *line )
   if (r) {
     free(mux);
   } else {
-    LIST_INSERT_HEAD(&net->sfn_muxes, mux, dmc_link);
+    if (*net == NULL && scanfile_create_network(net, type, name, mux->dmc_fe_delsys))
+      return -1;
+    LIST_INSERT_HEAD(&(*net)->sfn_muxes, mux, dmc_link);
   }
+  return 1;
 }
 
 /*
@@ -363,7 +429,9 @@ str_trim(char *s)
 #define mux_ok(r)   ((r) = ((r) > 0) ? 0 : (r))
 
 static int
-scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
+scanfile_load_dvbv5
+  ( scanfile_network_t **net, const char *type, const char *name,
+    char *line, fb_file *fp )
 {
   int res = 1, r = 1;
   char buf[256];
@@ -521,11 +589,10 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
       if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
         mux_fail(r, "wrong inversion '%s'", x);
     if (htsmsg_get_u32(l, "SYMBOL_RATE", &mux->u.dmc_fe_qam.symbol_rate))
-      mux_fail0(r, "dvb-c: undefined symbol rate");
+      mux->u.dmc_fe_qam.symbol_rate = 6900000;
 
   } else if (mux->dmc_fe_delsys == DVB_SYS_ATSC) {
 
-    mux->dmc_fe_type = DVB_TYPE_ATSC;
     mux->dmc_fe_modulation = DVB_MOD_VSB_8;
 
     if ((x = htsmsg_get_str(l, "MODULATION")))
@@ -551,7 +618,10 @@ scanfile_load_dvbv5 ( scanfile_network_t *net, char *line, fb_file *fp )
   } else {
     dvb_mux_conf_str(mux, buf, sizeof(buf));
     tvhtrace("scanfile", "mux %s", buf);
-    LIST_INSERT_HEAD(&net->sfn_muxes, mux, dmc_link);
+    if (*net == NULL)
+      if (scanfile_create_network(net, type, name, mux->dmc_fe_delsys))
+        return -1;
+    LIST_INSERT_HEAD(&(*net)->sfn_muxes, mux, dmc_link);
   }
 
   return res;
@@ -564,85 +634,42 @@ static void
 scanfile_load_file
   ( const char *type, fb_dir *dir, const char *name )
 {
-  int opos, load;
   fb_file *fp;
-  scanfile_region_t *reg = NULL;
-  scanfile_network_t *net;
-  char *str;
-  char buf[256], buf2[256], buf3[256];
+  scanfile_network_t *net = NULL;
+  char *str, buf[256];
+  int load = 0;
+
   tvhtrace("scanfile", "load file %s", name);
 
   fp = fb_open2(dir, name, 1, 0);
   if (!fp) return;
 
-  /* Region */
-  strncpy(buf, name, sizeof(buf));
-  buf[sizeof(buf)-1] = '\0';
-  if (!strcmp(type, "dvb-s")) {
-    reg = scanfile_region_create(type, "geo", "Geo-synchronous Orbit");
-  } else {
-    str = buf;
-    while (*str) {
-      if (*str == '-') {
-        *str = '\0';
-        reg  = scanfile_region_create(type, buf, tldcode2longname(buf));
-        *str = '-';
-        break;
-      }
-      str++;
-    }
-  }
-  if (!reg) {
-    fb_close(fp);
-    return;
-  }
-
-  /* Network */
-  str = buf;
-  while (*str) {
-    if (!isprint(*str)) *str = '_';
-    str++;
-  }
-  *str = '\0';
-  opos = INT_MAX;
-  if (!strcmp(type, "dvb-s") && scanfile_network_dvbs_pos(buf, &opos)) {
-    snprintf(buf3, sizeof(buf3), "%c%3i.%i%c:%s", opos < 0 ? '<' : '>',
-                                                   abs(opos) / 10, abs(opos) % 10,
-                                                   opos < 0 ? 'W' :'E', buf);
-    strcpy(buf, buf3);
-  }
-  snprintf(buf2, sizeof(buf2), "%s_%s", type, buf);
-  net = calloc(1, sizeof(scanfile_network_t));
-  net->sfn_id   = strdup(buf2);
-  net->sfn_name = strdup(buf);
-  net->sfn_satpos = opos;
-  LIST_INSERT_SORTED(&reg->sfr_networks, net, sfn_link, scanfile_network_cmp);
-
   /* Process file */
   load = 1;
-  while (!fb_eof(fp)) {
+  while (!fb_eof(fp) && load >= 0) {
 
     /* Get line */
     if (load) {
       buf[sizeof(buf)-1] = '\0';
       if (!fb_gets(fp, buf, sizeof(buf) - 1)) break;
+      str = buf + strlen(buf) - 1;
       if (buf[0])
-        buf[strlen(buf)-1] = '\0';
-      while (buf[0] && buf[strlen(buf)-1] <= ' ')
-        buf[strlen(buf)-1] = '\0';
+        *(str--) = '\0';
+      while (buf[0] && *str <= ' ')
+        *(str--) = '\0';
     }
-    load = 1;
 
     /* Process mux */
+    load = 1;
     switch (*buf) {
       case 'A':
       case 'C':
       case 'T':
       case 'S':
-        scanfile_load_one(net, buf);
+        load = scanfile_load_one(&net, type, name, buf);
         break;
       case '[':
-        load = scanfile_load_dvbv5(net, buf, fp);
+        load = scanfile_load_dvbv5(&net, type, name, buf, fp);
         break;
       default:
         break;
@@ -722,10 +749,11 @@ scanfile_init ( void )
 #endif
   scanfile_load_dir(path, NULL, 0);
 
-  r += scanfile_stats("DVB-T", &scanfile_regions_DVBT);
-  r += scanfile_stats("DVB-S", &scanfile_regions_DVBS);
-  r += scanfile_stats("DVB-C", &scanfile_regions_DVBC);
-  r += scanfile_stats("ATSC", &scanfile_regions_ATSC);
+  r += scanfile_stats("DVB-T",  &scanfile_regions_DVBT);
+  r += scanfile_stats("DVB-S",  &scanfile_regions_DVBS);
+  r += scanfile_stats("DVB-C",  &scanfile_regions_DVBC);
+  r += scanfile_stats("ATSC-T", &scanfile_regions_ATSC_T);
+  r += scanfile_stats("ATSC-C", &scanfile_regions_ATSC_C);
   if (!r) {
     tvhwarn("scanfile", "no predefined muxes found, check path '%s%s'",
             path[0] == '/' ? path : TVHEADEND_DATADIR "/",
@@ -768,7 +796,8 @@ scanfile_done ( void )
   scanfile_done_region(&scanfile_regions_DVBS);
   scanfile_done_region(&scanfile_regions_DVBT);
   scanfile_done_region(&scanfile_regions_DVBC);
-  scanfile_done_region(&scanfile_regions_ATSC);
+  scanfile_done_region(&scanfile_regions_ATSC_T);
+  scanfile_done_region(&scanfile_regions_ATSC_C);
 }
 
 /*
@@ -792,8 +821,10 @@ scanfile_find ( const char *id )
     l = &scanfile_regions_DVBC;
   else if (!strcasecmp(tok, "dvbs"))
     l = &scanfile_regions_DVBS;
-  else if (!strcasecmp(tok, "atsc"))
-    l = &scanfile_regions_ATSC;
+  else if (!strcasecmp(tok, "atsc-t"))
+    l = &scanfile_regions_ATSC_T;
+  else if (!strcasecmp(tok, "atsc-c"))
+    l = &scanfile_regions_ATSC_C;
   else
     goto fail;
 

@@ -133,9 +133,15 @@ dvb_network_dvbs_class_scanfile_list ( void *o, const char *lang )
   return dvb_network_class_scanfile_list(o, lang, "dvbs");
 }
 static htsmsg_t *
-dvb_network_atsc_class_scanfile_list ( void *o, const char *lang )
+dvb_network_atsc_t_class_scanfile_list ( void *o, const char *lang )
 {
-  return dvb_network_class_scanfile_list(o, lang, "atsc");
+  return dvb_network_class_scanfile_list(o, lang, "atsc-t");
+}
+
+static htsmsg_t *
+dvb_network_atsc_c_class_scanfile_list ( void *o, const char *lang )
+{
+  return dvb_network_class_scanfile_list(o, lang, "atsc-c");
 }
 
 static const void *
@@ -271,22 +277,44 @@ const idclass_t dvb_network_dvbs_class =
   }
 };
 
-const idclass_t dvb_network_atsc_class =
+const idclass_t dvb_network_atsc_t_class =
 {
   .ic_super      = &dvb_network_class,
-  .ic_class      = "dvb_network_atsc",
-  .ic_caption    = N_("ATSC network"),
+  .ic_class      = "dvb_network_atsc_t",
+  .ic_caption    = N_("ATSC-T network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "scanfile",
       .name     = N_("Pre-defined muxes"),
-      .desc     = N_("Use a pre-defined list of ATSC muxes. "
+      .desc     = N_("Use a pre-defined list of ATSC-T muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_atsc_class_scanfile_list,
+      .list     = dvb_network_atsc_t_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
+const idclass_t dvb_network_atsc_c_class =
+{
+  .ic_super      = &dvb_network_class,
+  .ic_class      = "dvb_network_atsc_c",
+  .ic_caption    = N_("ATSC-C network"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of ATSC-C muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
+      .set      = dvb_network_class_scanfile_set,
+      .get      = dvb_network_class_scanfile_get,
+      .list     = dvb_network_atsc_c_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -314,12 +342,13 @@ dvb_network_check_symbol_rate( dvb_mux_t *lm, dvb_mux_conf_t *dmc, int deltar )
     return dvb_network_check_bandwidth(lm->lm_tuning.u.dmc_fe_ofdm.bandwidth,
                                        dmc->u.dmc_fe_ofdm.bandwidth);
   case DVB_TYPE_C:
+  case DVB_TYPE_ATSC_C:
     return deltaU32(lm->lm_tuning.u.dmc_fe_qam.symbol_rate,
                dmc->u.dmc_fe_qam.symbol_rate) > deltar;
   case DVB_TYPE_S:
     return deltaU32(lm->lm_tuning.u.dmc_fe_qpsk.symbol_rate,
                dmc->u.dmc_fe_qpsk.symbol_rate) > deltar;
-  case DVB_TYPE_ATSC:
+  case DVB_TYPE_ATSC_T:
     return 0;
   default:
     return 0;
@@ -424,8 +453,10 @@ dvb_network_mux_class
     return &dvb_mux_dvbc_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class))
     return &dvb_mux_dvbs_class;
-  if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
-    return &dvb_mux_atsc_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_t_class))
+    return &dvb_mux_atsc_t_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_c_class))
+    return &dvb_mux_atsc_c_class;
   return NULL;
 }
 
@@ -483,7 +514,8 @@ dvb_network_create_mux
     save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;
     save |= cls == &dvb_mux_dvbc_class && dmc->dmc_fe_type == DVB_TYPE_C;
     save |= cls == &dvb_mux_dvbs_class && dmc->dmc_fe_type == DVB_TYPE_S;
-    save |= cls == &dvb_mux_atsc_class && dmc->dmc_fe_type == DVB_TYPE_ATSC;
+    save |= cls == &dvb_mux_atsc_t_class && dmc->dmc_fe_type == DVB_TYPE_ATSC_T;
+    save |= cls == &dvb_mux_atsc_c_class && dmc->dmc_fe_type == DVB_TYPE_ATSC_C;
     if (save && dmc->dmc_fe_type == DVB_TYPE_S) {
       satpos = dvb_network_get_orbital_pos(mn);
       /* do not allow to mix satellite positions */
@@ -668,7 +700,8 @@ static  const idclass_t* dvb_network_classes[] = {
   &dvb_network_dvbt_class,
   &dvb_network_dvbc_class,
   &dvb_network_dvbs_class,
-  &dvb_network_atsc_class,
+  &dvb_network_atsc_t_class,
+  &dvb_network_atsc_c_class,
 };
 
 void dvb_network_init ( void )
@@ -735,8 +768,10 @@ const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type)
     return &dvb_network_dvbc_class;
   else if (type == DVB_TYPE_S)
     return &dvb_network_dvbs_class;
-  else if (type == DVB_TYPE_ATSC)
-    return &dvb_network_atsc_class;
+  else if (type == DVB_TYPE_ATSC_T)
+    return &dvb_network_atsc_t_class;
+  else if (type == DVB_TYPE_ATSC_C)
+    return &dvb_network_atsc_c_class;
 
   return NULL;
 }
@@ -749,8 +784,10 @@ dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc)
     return DVB_TYPE_C;
   else if (idc == &dvb_network_dvbs_class)
     return DVB_TYPE_S;
-  else if (idc == &dvb_network_atsc_class)
-    return DVB_TYPE_ATSC;
+  else if (idc == &dvb_network_atsc_t_class)
+    return DVB_TYPE_ATSC_T;
+  else if (idc == &dvb_network_atsc_c_class)
+    return DVB_TYPE_ATSC_C;
 
   return DVB_TYPE_NONE;
 }

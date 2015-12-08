@@ -589,12 +589,12 @@ satip_device_create( satip_device_info_t *info )
     } else if (strncmp(argv[i], "DVBC-", 5) == 0) {
       type = DVB_TYPE_C;
       m = atoi(argv[i] + 5);
-    } else if (strncmp(argv[i], "ATSC-", 5) == 0) {
-      type = DVB_TYPE_ATSC;
+    } else if (strncmp(argv[i], "ATSCT-", 5) == 0) {
+      type = DVB_TYPE_ATSC_T;
       m = atoi(argv[i] + 5);
-    } else if (strncmp(argv[i], "DVBCB-", 6) == 0) {
+    } else if (strncmp(argv[i], "ATSCC-", 6) == 0) {
+      type = DVB_TYPE_ATSC_C;
       m = atoi(argv[i] + 6);
-      v2 = 2;
     }
     if (type == DVB_TYPE_NONE) {
       tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",

@@ -378,8 +378,9 @@ typedef enum dvb_fe_type {
   DVB_TYPE_T = 1,		/* terrestrial */
   DVB_TYPE_C,			/* cable */
   DVB_TYPE_S,			/* satellite */
-  DVB_TYPE_ATSC,		/* terrestrial - north america */
-  DVB_TYPE_LAST = DVB_TYPE_ATSC
+  DVB_TYPE_ATSC_T,		/* terrestrial - north america */
+  DVB_TYPE_ATSC_C,		/* cable - north america */
+  DVB_TYPE_LAST = DVB_TYPE_ATSC_C
 } dvb_fe_type_t;
 
 typedef enum dvb_fe_spectral_inversion {

@@ -387,8 +387,10 @@ api_dvb_scanfile_list
     list = &scanfile_regions_DVBC;
   else if (!strcasecmp(type, "dvbs"))
     list = &scanfile_regions_DVBS;
-  else if (!strcasecmp(type, "atsc"))
-    list = &scanfile_regions_ATSC;
+  else if (!strcasecmp(type, "atsc-t"))
+    list = &scanfile_regions_ATSC_T;
+  else if (!strcasecmp(type, "atsc-c"))
+    list = &scanfile_regions_ATSC_C;
   else
     return -EINVAL;
   

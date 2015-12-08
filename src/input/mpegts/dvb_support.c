@@ -598,22 +598,35 @@ int dvb_str2rolloff(const char *p)
 
 const static struct strtab delsystab[] = {
   { "NONE",         DVB_SYS_NONE },
+  { "DVB-C",        DVB_SYS_DVBC_ANNEX_A },
   { "DVBC/ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
   { "DVBC_ANNEX_A", DVB_SYS_DVBC_ANNEX_A },
+  { "ATSC-C",       DVB_SYS_DVBC_ANNEX_B },
   { "DVBC/ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
   { "DVBC_ANNEX_B", DVB_SYS_DVBC_ANNEX_B },
+  { "DVB-C/ANNEX-C",DVB_SYS_DVBC_ANNEX_C },
   { "DVBC/ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
   { "DVBC_ANNEX_C", DVB_SYS_DVBC_ANNEX_C },
   { "DVBC_ANNEX_AC",DVB_SYS_DVBC_ANNEX_A }, /* for compatibility */
+  { "DVB-T",        DVB_SYS_DVBT },
   { "DVBT",         DVB_SYS_DVBT },
+  { "DVB-T2",       DVB_SYS_DVBT2 },
   { "DVBT2",        DVB_SYS_DVBT2 },
+  { "DVB-S",        DVB_SYS_DVBS },
   { "DVBS",         DVB_SYS_DVBS },
+  { "DVB-S2",       DVB_SYS_DVBS2 },
   { "DVBS2",        DVB_SYS_DVBS2 },
+  { "DVB-H",        DVB_SYS_DVBH },
   { "DVBH",         DVB_SYS_DVBH },
+  { "ISDB-T",       DVB_SYS_ISDBT },
   { "ISDBT",        DVB_SYS_ISDBT },
+  { "ISDB-S",       DVB_SYS_ISDBS },
   { "ISDBS",        DVB_SYS_ISDBS },
+  { "ISDB-C",       DVB_SYS_ISDBC },
   { "ISDBC",        DVB_SYS_ISDBC },
+  { "ATSC-T",       DVB_SYS_ATSC },
   { "ATSC",         DVB_SYS_ATSC },
+  { "ATSCM-H",      DVB_SYS_ATSCMH },
   { "ATSCMH",       DVB_SYS_ATSCMH },
   { "DTMB",         DVB_SYS_DTMB },
   { "DMBTH",        DVB_SYS_DTMB },	/* for compatibility */
@@ -629,7 +642,6 @@ dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
 {
   switch (delsys) {
     case DVB_SYS_DVBC_ANNEX_A:
-    case DVB_SYS_DVBC_ANNEX_B:
     case DVB_SYS_DVBC_ANNEX_C:
     case DVB_SYS_ISDBC:
       return DVB_TYPE_C;
@@ -644,7 +656,9 @@ dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
       return DVB_TYPE_S;
     case DVB_SYS_ATSC:
     case DVB_SYS_ATSCMH:
-      return DVB_TYPE_ATSC;
+      return DVB_TYPE_ATSC_T;
+    case DVB_SYS_DVBC_ANNEX_B:
+      return DVB_TYPE_ATSC_C;
     default:
       return DVB_TYPE_NONE;
   }
@@ -841,10 +855,11 @@ const static struct strtab poltab[] = {
 dvb_str2val(pol);
 
 const static struct strtab typetab[] = {
-  {"DVB-T", DVB_TYPE_T},
-  {"DVB-C", DVB_TYPE_C},
-  {"DVB-S", DVB_TYPE_S},
-  {"ATSC",  DVB_TYPE_ATSC},
+  {"DVB-T",  DVB_TYPE_T},
+  {"DVB-C",  DVB_TYPE_C},
+  {"DVB-S",  DVB_TYPE_S},
+  {"ATSC-T", DVB_TYPE_ATSC_T},
+  {"ATSC-C", DVB_TYPE_ATSC_C}
 };
 dvb_str2val(type);
 
@@ -943,7 +958,7 @@ dvb_mux_conf_str_dvbs ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 }
 
 static int
-dvb_mux_conf_str_atsc ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
+dvb_mux_conf_str_atsc_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
   return
   snprintf(buf, bufsize,
@@ -963,11 +978,12 @@ dvb_mux_conf_str ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
   case DVB_TYPE_T:
     return dvb_mux_conf_str_dvbt(dmc, buf, bufsize);
   case DVB_TYPE_C:
+  case DVB_TYPE_ATSC_C:
     return dvb_mux_conf_str_dvbc(dmc, buf, bufsize);
   case DVB_TYPE_S:
     return dvb_mux_conf_str_dvbs(dmc, buf, bufsize);
-  case DVB_TYPE_ATSC:
-    return dvb_mux_conf_str_atsc(dmc, buf, bufsize);
+  case DVB_TYPE_ATSC_T:
+    return dvb_mux_conf_str_atsc_t(dmc, buf, bufsize);
   default:
     return
       snprintf(buf, bufsize, "UNKNOWN MUX CONFIG");

@@ -234,7 +234,7 @@ linuxdvb_get_type(int linux_type)
   case FE_OFDM:
     return DVB_TYPE_T;
   case FE_ATSC:
-    return DVB_TYPE_ATSC;
+    return DVB_TYPE_ATSC_T;
   default:
     return DVB_TYPE_NONE;
   }
@@ -378,10 +378,8 @@ linuxdvb_adapter_add ( const char *path )
     }
 
     /* Create frontend */
-    linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, dfi.name);
 #if DVB_VER_ATLEAST(5,5)
     memset(fetypes, 0, sizeof(fetypes));
-    fetypes[type] = 1;
     for (j = 0; j < cmd.u.buffer.len; j++) {
       delsys = cmd.u.buffer.data[j];
 
@@ -401,6 +399,8 @@ linuxdvb_adapter_add ( const char *path )
                                type, dfi.name);
       fetypes[type] = 1;
     }
+#else
+    linuxdvb_frontend_create(feconf, la, i, fe_path, dmx_path, dvr_path, type, dfi.name);
 #endif
     pthread_mutex_unlock(&global_lock);
   }
