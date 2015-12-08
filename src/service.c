@@ -686,7 +686,7 @@ service_find_instance
             pro->pro_svfilter == PROFILE_SVF_NONE ||
             (pro->pro_svfilter == PROFILE_SVF_SD && service_is_sdtv(s)) ||
             (pro->pro_svfilter == PROFILE_SVF_HD && service_is_hdtv(s))) {
-          s->s_enlist(s, ti, sil, flags);
+          s->s_enlist(s, ti, sil, flags, weight);
           enlisted++;
         }
       }
@@ -695,11 +695,11 @@ service_find_instance
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
         s = (service_t *)ilm->ilm_in1;
         if (s->s_is_enabled(s, flags))
-          s->s_enlist(s, ti, sil, flags);
+          s->s_enlist(s, ti, sil, flags, weight);
       }
     }
   } else {
-    s->s_enlist(s, ti, sil, flags);
+    s->s_enlist(s, ti, sil, flags, weight);
   }
 
   /* Clean */

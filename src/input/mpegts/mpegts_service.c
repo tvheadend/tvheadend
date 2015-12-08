@@ -289,8 +289,9 @@ mpegts_service_config_save ( service_t *t )
  * Service instance list
  */
 static void
-mpegts_service_enlist(service_t *t, tvh_input_t *ti,
-                      struct service_instance_list *sil, int flags)
+mpegts_service_enlist
+  ( service_t *t, tvh_input_t *ti, struct service_instance_list *sil,
+    int flags, int weight )
 {
   int p = 0, w;
   mpegts_service_t      *s = (mpegts_service_t*)t;
@@ -322,7 +323,8 @@ mpegts_service_enlist(service_t *t, tvh_input_t *ti,
     } else {
       w = mi->mi_get_weight(mi, mmi->mmi_mux, flags);
       p = mi->mi_get_priority(mi, mmi->mmi_mux, flags);
-      if (w > 0 && mi->mi_free_weight && w < mi->mi_free_weight)
+      if (w > 0 && mi->mi_free_weight &&
+          weight >= mi->mi_free_weight && w < mi->mi_free_weight)
         w = 0;
     }
 
