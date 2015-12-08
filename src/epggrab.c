@@ -179,10 +179,8 @@ static void _epggrab_load ( void )
   idnode_notify_changed(&epggrab_conf.idnode);
  
   /* Load module config (channels) */
-#if 0
   eit_load();
   opentv_load();
-#endif
   pyepg_load();
   xmltv_load();
 }

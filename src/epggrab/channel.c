@@ -337,7 +337,11 @@ epggrab_channel_t *epggrab_channel_create
     idnode_load(&ec->idnode, conf);
 
   TAILQ_INSERT_TAIL(&epggrab_channel_entries, ec, all_link);
-  if (RB_INSERT_SORTED(&owner->channels, ec, link, _ch_id_cmp)) abort();
+  if (RB_INSERT_SORTED(&owner->channels, ec, link, _ch_id_cmp)) {
+    tvherror("epggrab", "removing duplicate channel id '%s' (uuid '%s')", ec->id, uuid);
+    epggrab_channel_destroy(ec, 1, 0);
+    return NULL;
+  }
 
   return ec;
 }
@@ -393,7 +397,7 @@ void epggrab_channel_save( epggrab_channel_t *ec )
   htsmsg_destroy(m);
 }
 
-void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
+void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf, int rb_remove )
 {
   char ubuf[UUID_HEX_SIZE];
 
@@ -401,7 +405,8 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf )
 
   /* Already linked */
   epggrab_channel_links_delete(ec, 0);
-  RB_REMOVE(&ec->mod->channels, ec, link);
+  if (rb_remove)
+    RB_REMOVE(&ec->mod->channels, ec, link);
   TAILQ_REMOVE(&epggrab_channel_entries, ec, all_link);
   idnode_unlink(&ec->idnode);
 
@@ -423,7 +428,7 @@ void epggrab_channel_flush
 {
   epggrab_channel_t *ec;
   while ((ec = RB_FIRST(&mod->channels)) != NULL)
-    epggrab_channel_destroy(ec, delconf);
+    epggrab_channel_destroy(ec, delconf, 1);
 }
 
 void epggrab_channel_begin_scan ( epggrab_module_t *mod )
@@ -542,7 +547,7 @@ epggrab_channel_class_save(idnode_t *self)
 static void
 epggrab_channel_class_delete(idnode_t *self)
 {
-  epggrab_channel_destroy((epggrab_channel_t *)self, 1);
+  epggrab_channel_destroy((epggrab_channel_t *)self, 1, 1);
 }
 
 static const void *

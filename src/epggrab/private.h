@@ -58,7 +58,7 @@ epggrab_channel_t *epggrab_channel_find
 
 void epggrab_channel_save ( epggrab_channel_t *ec );
 void epggrab_channel_destroy
-  ( epggrab_channel_t *ec, int delconf );
+  ( epggrab_channel_t *ec, int delconf, int rb_remove );
 void epggrab_channel_flush
   ( epggrab_module_t *mod, int delconf );
 void epggrab_channel_begin_scan
