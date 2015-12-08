@@ -1145,7 +1145,7 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
 {
   char buf[256];
 
-  http_arg_init(h);
+  http_arg_flush(h);
   if (url->port == 0) { /* default port */
     http_arg_set(h, "Host", url->host);
   } else {
@@ -1236,6 +1236,7 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
 
   http_client_flush(hc, 0);
 
+  http_arg_init(&h);
   hc->hc_hdr_create(hc, &h, u, 0);
   hc->hc_reconnected = 1;
   hc->hc_shutdown    = 0;
@@ -1295,6 +1296,7 @@ http_client_simple( http_client_t *hc, const url_t *url )
 {
   http_arg_list_t h;
 
+  http_arg_init(&h);
   hc->hc_hdr_create(hc, &h, url, 0);
   free(hc->hc_url);
   hc->hc_url = url->raw ? strdup(url->raw) : NULL;
