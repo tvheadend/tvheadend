@@ -434,7 +434,7 @@ access_dump_a(access_t *a)
         if (first)
           tvh_strlcatf(buf, sizeof(buf), l, ", profile=");
         tvh_strlcatf(buf, sizeof(buf), l, "%s'%s'",
-                 first ? "" : ",", pro->pro_name ?: "");
+                 first ? "" : ",", profile_get_name(pro));
         first = 0;
       }
     }
