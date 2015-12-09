@@ -77,7 +77,8 @@ tvhdhomerun_device_class_override_enum( void * p, const char *lang )
   htsmsg_t *m = htsmsg_create_list();
   htsmsg_add_str(m, NULL, "DVB-T");
   htsmsg_add_str(m, NULL, "DVB-C");
-  htsmsg_add_str(m, NULL, "ATSC");
+  htsmsg_add_str(m, NULL, "ATSC-T");
+  htsmsg_add_str(m, NULL, "ATSC-C");
   return m;
 }
 
@@ -283,8 +284,11 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   if ( conf != NULL ) {
     const char *override_type = htsmsg_get_str(conf, "fe_override");
     if ( override_type != NULL) {
+      if ( !strcmp(override_type, "ATSC" ) )
+        override_type = "ATSC-T";
       type = dvb_str2type(override_type);
-      if ( ! ( type == DVB_TYPE_C || type == DVB_TYPE_T  || type == DVB_TYPE_ATSC_T ) ) {
+      if ( ! ( type == DVB_TYPE_C || type == DVB_TYPE_T ||
+               type == DVB_TYPE_ATSC_T || type == DVB_TYPE_ATSC_C ) ) {
         type = DVB_TYPE_C;
       }
     }
