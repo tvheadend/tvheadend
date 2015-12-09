@@ -408,9 +408,11 @@ dvr_entry_retention_timer(dvr_entry_t *de)
     }
   }
 
-  if (retention  < DVR_RET_ONREMOVE) {
+  if (retention < DVR_RET_ONREMOVE) {
     stop = de->de_stop + retention * (time_t)86400;
     dvr_entry_retention_arm(de, dvr_timer_expire, stop);
+  } else {
+    gtimer_disarm(&de->de_timer);
   }
 }
 
@@ -1800,6 +1802,8 @@ static void
 dvr_timer_stop_recording(void *aux)
 {
   dvr_entry_t *de = aux;
+  if(de->de_sched_state != DVR_RECORDING)
+    return;
   /* EPG thinks that the program is running */
   if (de->de_running_start > de->de_running_stop) {
     gtimer_arm(&de->de_timer, dvr_timer_stop_recording, de, 10);
