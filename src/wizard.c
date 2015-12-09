@@ -359,7 +359,7 @@ static int network_set_value##num(void *o, const void *v) \
 { \
   wizard_page_t *p = o; \
   wizard_network_t *w = p->aux; \
-  snprintf(w->network_type##num, sizeof(w->network_type##num), v); \
+  snprintf(w->network_type##num, sizeof(w->network_type##num), "%s", (const char *)v); \
   return 1; \
 }
 
