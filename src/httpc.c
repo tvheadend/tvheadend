@@ -1534,11 +1534,13 @@ http_client_close ( http_client_t *hc )
     hc->hc_shutdown_wait = 1;
     while (hc->hc_running)
       pthread_cond_wait(&http_cond, &http_lock);
-    memset(&ev, 0, sizeof(ev));
-    ev.fd = hc->hc_fd;
-    tvhpoll_rem(hc->hc_efd, &ev, 1);
-    TAILQ_REMOVE(&http_clients, hc, hc_link);
-    hc->hc_efd = NULL;
+    if (hc->hc_efd) {
+      memset(&ev, 0, sizeof(ev));
+      ev.fd = hc->hc_fd;
+      tvhpoll_rem(hc->hc_efd, &ev, 1);
+      TAILQ_REMOVE(&http_clients, hc, hc_link);
+      hc->hc_efd = NULL;
+    }
     pthread_mutex_unlock(&http_lock);
   }
   http_client_shutdown(hc, 1, 0);
