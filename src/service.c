@@ -782,6 +782,8 @@ void
 service_unref(service_t *t)
 {
   if((atomic_add(&t->s_refcount, -1)) == 1) {
+    if (t->s_unref)
+      t->s_unref(t);
     free(t->s_nicename);
     free(t);
   }
@@ -809,11 +811,11 @@ service_destroy(service_t *t, int delconf)
   th_subscription_t *s;
   idnode_list_mapping_t *ilm;
 
+  lock_assert(&global_lock);
+
   if(t->s_delete != NULL)
     t->s_delete(t, delconf);
 
-  lock_assert(&global_lock);
-  
   service_mapper_remove(t);
 
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL)

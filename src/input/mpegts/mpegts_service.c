@@ -651,6 +651,17 @@ mpegts_service_mapped ( service_t *t )
 }
 
 void
+mpegts_service_unref ( service_t *t )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+
+  free(ms->s_dvb_svcname);
+  free(ms->s_dvb_provider);
+  free(ms->s_dvb_cridauth);
+  free(ms->s_dvb_charset);
+}
+
+void
 mpegts_service_delete ( service_t *t, int delconf )
 {
   mpegts_service_t *ms = (mpegts_service_t*)t;
@@ -658,6 +669,8 @@ mpegts_service_delete ( service_t *t, int delconf )
   char ubuf0[UUID_HEX_SIZE];
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
+
+  tvherror("service", "mpegts service destroy: %s", t->s_nicename);
 
   /* Remove config */
   if (delconf && t->s_type == STYPE_STD)
@@ -667,10 +680,6 @@ mpegts_service_delete ( service_t *t, int delconf )
                       idnode_uuid_as_str(&t->s_id, ubuf2));
 
   /* Free memory */
-  free(ms->s_dvb_svcname);
-  free(ms->s_dvb_provider);
-  free(ms->s_dvb_cridauth);
-  free(ms->s_dvb_charset);
   if (t->s_type == STYPE_STD)
     LIST_REMOVE(ms, s_dvb_mux_link);
   sbuf_free(&ms->s_tsbuf);
@@ -732,6 +741,7 @@ mpegts_service_create0
   LIST_INSERT_HEAD(&mm->mm_services, s, s_dvb_mux_link);
   
   s->s_delete         = mpegts_service_delete;
+  s->s_unref          = mpegts_service_unref;
   s->s_is_enabled     = mpegts_service_is_enabled;
   s->s_config_save    = mpegts_service_config_save;
   s->s_enlist         = mpegts_service_enlist;

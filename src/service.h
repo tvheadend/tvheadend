@@ -310,6 +310,8 @@ typedef struct service {
 
   void (*s_delete)(struct service *t, int delconf);
 
+  void (*s_unref)(struct service *t);
+
   int (*s_satip_source)(struct service *t);
 
   /**
