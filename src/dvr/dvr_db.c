@@ -1041,8 +1041,13 @@ not_so_good:
                                   de->de_owner, de->de_creator, NULL,
                                   de->de_pri, de->de_retention, de->de_removal,
                                   buf);
-  if (de2)
+  if (de2) {
     dvr_entry_change_parent_child(de, de2, NULL, 1);
+  } else {
+    /* we have already queued similar recordings, mark as resolved */
+    de->de_dont_rerecord = 1;
+    dvr_entry_save(de);
+  }
 
   return 0;
 }
