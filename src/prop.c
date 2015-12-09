@@ -271,7 +271,8 @@ prop_read_value
   /* List */
   if (p->islist) {
     assert(p->get); /* requirement */
-    htsmsg_add_msg(m, name, (htsmsg_t*)val);
+    if (val)
+      htsmsg_add_msg(m, name, (htsmsg_t*)val);
   
   /* Single */
   } else {

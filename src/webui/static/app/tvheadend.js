@@ -46,6 +46,21 @@ tvheadend.uilevel_match = function(target, current) {
     return true;
 }
 
+/*
+ * Select specific tab
+ */
+tvheadend.select_tab = function(id)
+{
+   var i = Ext.getCmp(id);
+   var c = i ? i.ownerCt : null;
+   while (c) {
+      if ('activeTab' in c)
+          c.setActiveTab(i);
+      i = c;
+      c = c.ownerCt;
+   }
+}
+
 /**
  * Displays a help popup window
  */

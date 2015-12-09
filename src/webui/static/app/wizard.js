@@ -119,16 +119,8 @@ tvheadend.wizard_start = function(page) {
 
     tvheadend.wizard = page;
 
-    if (page in tabMapping) {
-        var i = Ext.getCmp(tabMapping[page]);
-        var c = i ? i.ownerCt : null;
-        while (c) {
-            if ('activeTab' in c)
-                c.setActiveTab(i);
-            i = c;
-            c = c.ownerCt;
-        }
-    }
+    if (page in tabMapping)
+        tvheadend.select_tab(tabMapping[page]);
 
     tvheadend.Ajax({
         url: 'api/wizard/' + page + '/load',

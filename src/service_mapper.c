@@ -43,28 +43,9 @@ typedef struct service_mapper_item {
 static service_mapper_status_t service_mapper_stat; 
 static pthread_cond_t          service_mapper_cond;
 static TAILQ_HEAD(, service_mapper_item) service_mapper_queue;
+service_mapper_t               service_mapper_conf;
 
 static void *service_mapper_thread ( void *p );
-
-/**
- * Initialise
- */
-pthread_t service_mapper_tid;
-
-void
-service_mapper_init ( void )
-{
-  TAILQ_INIT(&service_mapper_queue);
-  pthread_cond_init(&service_mapper_cond, NULL);
-  tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL, "svcmap");
-}
-
-void
-service_mapper_done ( void )
-{
-  pthread_cond_signal(&service_mapper_cond);
-  pthread_join(service_mapper_tid, NULL);
-}
 
 /*
  * Get status
@@ -78,7 +59,7 @@ service_mapper_status ( void )
 /*
  * Start a new mapping
  */
-void
+static void
 service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
 {
   int e, tr, qd = 0;
@@ -256,14 +237,16 @@ service_mapper_process
     service_mapper_link(s, chn, chn);
 
     /* Type tags */
-    if (service_is_hdtv(s)) {
-      channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
-      channel_tag_map(channel_tag_find_by_name("HDTV", 1), chn, chn);
-    } else if (service_is_sdtv(s)) {
-      channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
-      channel_tag_map(channel_tag_find_by_name("SDTV", 1), chn, chn);
-    } else if (service_is_radio(s)) {
-      channel_tag_map(channel_tag_find_by_name("Radio", 1), chn, chn);
+    if (conf->type_tags) {
+      if (service_is_hdtv(s)) {
+        channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
+        channel_tag_map(channel_tag_find_by_name("HDTV", 1), chn, chn);
+      } else if (service_is_sdtv(s)) {
+        channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
+        channel_tag_map(channel_tag_find_by_name("SDTV", 1), chn, chn);
+      } else if (service_is_radio(s)) {
+        channel_tag_map(channel_tag_find_by_name("Radio", 1), chn, chn);
+      }
     }
 
     /* Custom tags */
@@ -433,4 +416,159 @@ service_mapper_reset_stats (void)
   service_mapper_stat.ignore = 0;
   service_mapper_stat.fail   = 0;
   service_mapper_stat.active = NULL;
+}
+
+/*
+ * Save settings
+ */
+static void service_mapper_conf_class_save ( idnode_t *self )
+{
+  htsmsg_t *m;
+
+  m = htsmsg_create_map();
+  idnode_save(&service_mapper_conf.idnode, m);
+  hts_settings_save(m, "service_mapper/config");
+  htsmsg_destroy(m);
+
+  if (!htsmsg_is_empty(service_mapper_conf.services))
+    service_mapper_start(&service_mapper_conf.d, service_mapper_conf.services);
+  htsmsg_destroy(service_mapper_conf.services);
+  service_mapper_conf.services = NULL;
+}
+
+/*
+ * Class
+ */
+
+static const void *
+service_mapper_services_get ( void *obj )
+{
+  return NULL;
+}
+
+static char *
+service_mapper_services_rend ( void *obj, const char *lang )
+{
+  return strdup("");
+}
+
+static int
+service_mapper_services_set ( void *obj, const void *p )
+{
+  service_mapper_t *sm = obj;
+  htsmsg_destroy(sm->services);
+  sm->services = htsmsg_copy((htsmsg_t *)p);
+  return 1;
+}
+
+static htsmsg_t *
+service_mapper_services_enum ( void *obj, const char *lang )
+{
+  htsmsg_t *e, *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "service/list");
+  htsmsg_add_str(m, "event", "service");
+  e = htsmsg_create_map();
+  htsmsg_add_bool(e, "enum", 1);
+  htsmsg_add_msg(m, "params", e);
+  return m;
+}
+
+static const idclass_t service_mapper_conf_class = {
+  .ic_snode      = &service_mapper_conf.idnode,
+  .ic_class      = "service_mapper",
+  .ic_caption    = N_("Service mapper"),
+  .ic_event      = "service_mapper",
+  .ic_perm_def   = ACCESS_ADMIN,
+  .ic_save       = service_mapper_conf_class_save,
+  .ic_properties = (const property_t[]){
+    {
+      .type   = PT_STR,
+      .islist = 1,
+      .id     = "services",
+      .name   = N_("Services"),
+      .get    = service_mapper_services_get,
+      .set    = service_mapper_services_set,
+      .list   = service_mapper_services_enum,
+      .rend   = service_mapper_services_rend
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "check_availability",
+      .name   = N_("Check availability"),
+      .off    = offsetof(service_mapper_t, d.check_availability),
+      .opts   = PO_ADVANCED
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "encrypted",
+      .name   = N_("Map encrypted services"),
+      .off    = offsetof(service_mapper_t, d.encrypted),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "merge_same_name",
+      .name   = N_("Merge same name"),
+      .off    = offsetof(service_mapper_t, d.merge_same_name),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "type_tags",
+      .name   = N_("Create type based tags"),
+      .desc   = N_("Create SDTV/HDTV/Radio tags"),
+      .off    = offsetof(service_mapper_t, d.type_tags),
+      .opts   = PO_ADVANCED
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "provider_tags",
+      .name   = N_("Create provider name tags"),
+      .off    = offsetof(service_mapper_t, d.provider_tags),
+      .opts   = PO_ADVANCED
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "network_tags",
+      .name   = N_("Create network name tags"),
+      .off    = offsetof(service_mapper_t, d.network_tags),
+      .opts   = PO_ADVANCED
+    },
+    {}
+  }
+};
+
+/*
+ *
+ */
+
+pthread_t service_mapper_tid;
+
+void service_mapper_init ( void )
+{
+  htsmsg_t *m;
+
+  TAILQ_INIT(&service_mapper_queue);
+  pthread_cond_init(&service_mapper_cond, NULL);
+  tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL, "svcmap");
+
+  /* Defaults */
+  memset(&service_mapper_conf, 0, sizeof(service_mapper_conf));
+  service_mapper_conf.idnode.in_class = &service_mapper_conf_class;
+  service_mapper_conf.d.type_tags = 1;
+  service_mapper_conf.d.encrypted = 1;
+
+  /* Load settings */
+  if ((m = hts_settings_load("service_mapper/config"))) {
+    idnode_load(&service_mapper_conf.idnode, m);
+    htsmsg_destroy(m);
+  }
+}
+
+
+void service_mapper_done ( void )
+{
+  pthread_cond_signal(&service_mapper_cond);
+  pthread_join(service_mapper_tid, NULL);
+  htsmsg_destroy(service_mapper_conf.services);
+  service_mapper_conf.services = NULL;
 }
