@@ -731,6 +731,8 @@ void dvb_network_init ( void )
     if (!(e = htsmsg_get_map(e, "config"))) continue;
     if (!(s = htsmsg_get_str(e, "class")))  continue;
     for (i = 0; i < ARRAY_SIZE(dvb_network_classes); i++) {
+      if (strcmp(s, "dvb_network_atsc") == 0)
+        s = "dvb_network_atsc_t";
       if(!strcmp(dvb_network_classes[i]->ic_class, s)) {
         dvb_network_create0(f->hmf_name, dvb_network_classes[i], e);
         break;
