@@ -1202,6 +1202,11 @@ tvheadend.idnode_editor_win = function(_uilevel, conf)
             conf.win = null;
        }
 
+    if (conf.fullData) {
+       display(conf.fullData, conf, conf.winTitle || _('Edit'));
+       return;
+    }
+
     var params = conf.params || {};
 
     var uuids = null;
@@ -1229,7 +1234,7 @@ tvheadend.idnode_editor_win = function(_uilevel, conf)
             d = d[0];
             if (conf.modifyData)
                 conf.modifyData(conf, d);
-            var title = conf.title;
+            var title = conf.winTitle;
             if (!title) {
                 if (uuids && uuids.length > 1)
                     title = String.format(_('Edit {0} ({1} entries)'),
@@ -1545,8 +1550,10 @@ tvheadend.idnode_grid = function(panel, conf)
             grid.getView().refresh();
     };
 
-    function build(d)
-    {
+    function build(d) {
+        if (grid)
+            return;
+
         if (conf.builder)
             conf.builder(conf);
 
@@ -2483,6 +2490,7 @@ tvheadend.idnode_tree = function(panel, conf)
     function builder() {
         if (tree)
             return;
+
         if (conf.builder)
             conf.builder(conf);
 
