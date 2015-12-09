@@ -859,7 +859,13 @@ const static struct strtab typetab[] = {
   {"DVB-C",  DVB_TYPE_C},
   {"DVB-S",  DVB_TYPE_S},
   {"ATSC-T", DVB_TYPE_ATSC_T},
-  {"ATSC-C", DVB_TYPE_ATSC_C}
+  {"ATSC-C", DVB_TYPE_ATSC_C},
+  {"DVBT",   DVB_TYPE_T},
+  {"DVBC",   DVB_TYPE_C},
+  {"DVBS",   DVB_TYPE_S},
+  {"ATSC",   DVB_TYPE_ATSC_T},
+  {"ATSCT",  DVB_TYPE_ATSC_T},
+  {"ATSCC",  DVB_TYPE_ATSC_C}
 };
 dvb_str2val(type);
 
