@@ -71,7 +71,7 @@ static int wizard_set_value_##field(void *o, const void *v) \
 { \
   wizard_page_t *p = o; \
   stru *w = p->aux; \
-  snprintf(w->field, sizeof(w->field), v); \
+  snprintf(w->field, sizeof(w->field), "%s", (const char *)v); \
   return 1; \
 }
 
