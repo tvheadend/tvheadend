@@ -670,8 +670,6 @@ mpegts_service_delete ( service_t *t, int delconf )
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
 
-  tvherror("service", "mpegts service destroy: %s", t->s_nicename);
-
   /* Remove config */
   if (delconf && t->s_type == STYPE_STD)
     hts_settings_remove("input/dvb/networks/%s/muxes/%s/services/%s",
