@@ -1507,7 +1507,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var idnode = null;
 
     var update = function(o) {
-        if ((o.create || 'delete' in o) && auto.getValue()) {
+        if ((o.create || o.moveup || o.movedown || 'delete' in o) && auto.getValue()) {
             store.reload();
             return;
         }
