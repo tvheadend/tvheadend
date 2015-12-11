@@ -61,7 +61,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   time_t stoptime;
   int64_t requiredBytes, maximalBytes, availBytes, usedBytes, diskBytes;
   int64_t clearedBytes = 0, fileSize;
-  unsigned long int filesystemId;
+  uint64_t filesystemId;
   struct statvfs diskdata;
   struct tm tm;
   int loops = 0;
