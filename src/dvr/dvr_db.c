@@ -599,7 +599,8 @@ dvr_entry_set_timer(dvr_entry_t *de)
       goto recording;
     }
 
-    if(htsmsg_is_empty(de->de_files))
+    /* Files are missing and job was completed */
+    if(htsmsg_is_empty(de->de_files) && !de->de_dont_reschedule)
       dvr_entry_missed_time(de, de->de_last_error);
     else
       dvr_entry_completed(de, de->de_last_error);
