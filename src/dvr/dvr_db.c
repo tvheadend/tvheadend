@@ -755,6 +755,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   if (!clone)
     dvr_entry_set_timer(de);
   htsp_dvr_entry_add(de);
+  dvr_vfs_refresh_entry(de);
 
   return de;
 }
@@ -1291,14 +1292,27 @@ dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf)
 void
 dvr_entry_save(dvr_entry_t *de)
 {
-  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map(), *e, *l, *c;
+  htsmsg_field_t *f;
   char ubuf[UUID_HEX_SIZE];
+  const char *filename;
 
   lock_assert(&global_lock);
 
   idnode_save(&de->de_id, m);
-  if (de->de_files)
-    htsmsg_add_msg(m, "files", htsmsg_copy(de->de_files));
+  if (de->de_files) {
+    l = htsmsg_create_list();
+    HTSMSG_FOREACH(f, de->de_files)
+      if ((e = htsmsg_field_get_map(f)) != NULL) {
+        filename = htsmsg_get_str(e, "filename");
+        if (filename) {
+          c = htsmsg_create_map();
+          htsmsg_add_str(c, "filename", filename);
+          htsmsg_add_msg(l, NULL, c);
+        }
+      }
+    htsmsg_add_msg(m, "files", l);
+  }
   hts_settings_save(m, "dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
   htsmsg_destroy(m);
 }
@@ -3140,6 +3154,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
     if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day || de->de_directory)
       rdir = cfg->dvr_storage;
 
+    dvr_vfs_remove_entry(de);
     HTSMSG_FOREACH(f, de->de_files) {
       m = htsmsg_field_get_map(f);
       if (m == NULL) continue;

@@ -29,30 +29,107 @@
 #include "dvr.h"
 #include "atomic.h"
 #include "notify.h"
-
-#if ENABLE_ANDROID
-#include <sys/vfs.h>
-#define statvfs statfs
-#define fstatvfs fstatfs
-#define tvh_fsid_t uint64_t
-#define tvh_fsid(x) (((uint64_t)x.__val[0] << 32) | (x.__val[1]))
-#else
-#include <sys/statvfs.h>
-#define tvh_fsid_t unsigned long
-#define tvh_fsid(x) (x)
-#endif
+#include "tvhvfs.h"
 
 #define MIB(v)   ((int64_t)v*((int64_t)1024*1024))
 #define TOMIB(v) (v/((int64_t)1024*1024))
+
+struct dvr_vfs_list dvrvfs_list;
 
 static int dvr_disk_space_config_idx;
 static int dvr_disk_space_config_size;
 static time_t dvr_disk_space_config_lastdelete;
 static int64_t dvr_bfree;
 static int64_t dvr_btotal;
+static int64_t dvr_bused;
 static pthread_mutex_t dvr_disk_space_mutex;
 static gtimer_t dvr_disk_space_timer;
 static tasklet_t dvr_disk_space_tasklet;
+
+/*
+ *
+ */
+static dvr_vfs_t *
+dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t id)
+{
+  dvr_vfs_t *dv;
+
+  if (id == 0)
+    return NULL;
+  if (old && old->fsid == id)
+    return old;
+  LIST_FOREACH(dv, &dvrvfs_list, link)
+    if (dv->fsid == id)
+      return dv;
+  dv = calloc(1, sizeof(*dv));
+  dv->fsid = id;
+  LIST_INSERT_HEAD(&dvrvfs_list, dv, link);
+  return dv;
+}
+
+/*
+ *
+ */
+void
+dvr_vfs_refresh_entry(dvr_entry_t *de)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *m;
+  struct statvfs vst;
+  struct stat st;
+  dvr_vfs_t *vfs = NULL;
+  uint64_t size;
+  const char *filename;
+
+  lock_assert(&global_lock);
+  if (de->de_files == NULL)
+    return;
+  HTSMSG_FOREACH(f, de->de_files)
+    if ((m = htsmsg_field_get_map(f)) != NULL) {
+      filename = htsmsg_get_str(m, "filename");
+      vfs = dvr_vfs_find(vfs, htsmsg_get_s64(m, "fsid", 0));
+      if (vfs) {
+        size = htsmsg_get_s64(m, "size", 0);
+        vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
+      }
+      if(statvfs(filename, &vst) < 0 || stat(filename, &st) < 0) {
+        tvhlog(LOG_ERR, "dvr", "unable to stat file '%s'", filename);
+        htsmsg_delete_field(m, "fsid");
+        htsmsg_delete_field(m, "size");
+        continue;
+      }
+      vfs = dvr_vfs_find(vfs, tvh_fsid(vst.f_fsid));
+      if (vfs && st.st_size > 0) {
+        htsmsg_set_s64(m, "fsid", tvh_fsid(vst.f_fsid));
+        htsmsg_set_s64(m, "size", st.st_size);
+        vfs->used_size += st.st_size;
+      }
+    }
+}
+
+/*
+ *
+ */
+void
+dvr_vfs_remove_entry(dvr_entry_t *de)
+{
+  htsmsg_field_t *f;
+  htsmsg_t *m;
+  dvr_vfs_t *vfs = NULL;
+  uint64_t size;
+
+  lock_assert(&global_lock);
+  HTSMSG_FOREACH(f, de->de_files)
+    if ((m = htsmsg_field_get_map(f)) != NULL) {
+      vfs = dvr_vfs_find(vfs, htsmsg_get_s64(m, "fsid", 0));
+      if (vfs) {
+        size = htsmsg_get_s64(m, "size", 0);
+        vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
+      }
+      htsmsg_delete_field(m, "fsid");
+      htsmsg_delete_field(m, "size");
+    }
+}
 
 /**
  * Cleanup old recordings for this config until the dvr_cleanup_threshold is reached
@@ -71,15 +148,18 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   int loops = 0;
   char tbuf[64];
   const char *configName;
+  dvr_vfs_t *dvfs;
 
   if (!cfg || !cfg->dvr_enabled || statvfs(cfg->dvr_storage, &diskdata) == -1)
     return -1;
+
+  dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
 
   filesystemId  = tvh_fsid(diskdata.f_fsid);
   availBytes    = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   diskBytes     = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
-  usedBytes     = diskBytes - availBytes;
+  usedBytes     = dvfs->used_size;
   maximalBytes  = MIB(cfg->dvr_cleanup_threshold_used);
   configName    = cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile";
 
@@ -179,6 +259,7 @@ dvr_disk_space_check()
   struct statvfs diskdata;
   int64_t requiredBytes, maximalBytes, availBytes, usedBytes;
   int idx = 0, cleanupDone = 0;
+  dvr_vfs_t *dvfs;
 
   pthread_mutex_lock(&global_lock);
 
@@ -194,8 +275,10 @@ dvr_disk_space_check()
         idx >= dvr_disk_space_config_idx &&
         statvfs(cfg->dvr_storage, &diskdata) != -1)
     {
+      dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
+
       availBytes = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
-      usedBytes = (diskdata.f_bsize * (int64_t)diskdata.f_blocks) - availBytes;
+      usedBytes = dvfs->used_size;
       requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
       maximalBytes = MIB(cfg->dvr_cleanup_threshold_used);
 
@@ -244,16 +327,24 @@ checking:
  *
  */
 static void
-dvr_get_disk_space_update(const char *path)
+dvr_get_disk_space_update(const char *path, int locked)
 {
   struct statvfs diskdata;
+  dvr_vfs_t *dvfs;
 
   if(statvfs(path, &diskdata) == -1)
     return;
 
+  if (!locked)
+    pthread_mutex_lock(&global_lock);
+  dvfs = dvr_vfs_find(NULL, tvh_fsid(diskdata.f_fsid));
+  if (!locked)
+    pthread_mutex_unlock(&global_lock);
+
   pthread_mutex_lock(&dvr_disk_space_mutex);
   dvr_bfree = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
   dvr_btotal = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
+  dvr_bused = dvfs ? dvfs->used_size : 0;
   pthread_mutex_unlock(&dvr_disk_space_mutex);
 }
 
@@ -263,21 +354,23 @@ dvr_get_disk_space_update(const char *path)
 static void
 dvr_get_disk_space_tcb(void *opaque, int dearmed)
 {
+  pthread_mutex_unlock(&tasklet_lock);
+
   if (!dearmed) {
     htsmsg_t *m = htsmsg_create_map();
 
     /* update disk space from default dvr config */
-    dvr_get_disk_space_update((char *)opaque);
+    dvr_get_disk_space_update((char *)opaque, 0);
     htsmsg_add_s64(m, "freediskspace", dvr_bfree);
+    htsmsg_add_s64(m, "useddiskspace", dvr_bused);
     htsmsg_add_s64(m, "totaldiskspace", dvr_btotal);
     notify_by_msg("diskspaceUpdate", m, 0);
 
     /* check free disk space for each dvr config and start cleanup if needed */
-    pthread_mutex_unlock(&tasklet_lock);
     dvr_disk_space_check();
-    pthread_mutex_lock(&tasklet_lock);
   }
 
+  pthread_mutex_lock(&tasklet_lock);
   free(opaque);
 }
 
@@ -301,11 +394,20 @@ dvr_get_disk_space_cb(void *aux)
  *
  */
 void
+dvr_disk_space_boot(void)
+{
+  LIST_INIT(&dvrvfs_list);
+}
+
+/**
+ *
+ */
+void
 dvr_disk_space_init(void)
 {
   dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
   pthread_mutex_init(&dvr_disk_space_mutex, NULL);
-  dvr_get_disk_space_update(cfg->dvr_storage);
+  dvr_get_disk_space_update(cfg->dvr_storage, 1);
   gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 5);
 }
 
@@ -315,21 +417,28 @@ dvr_disk_space_init(void)
 void
 dvr_disk_space_done(void)
 {
+  dvr_vfs_t *vfs;
+
   tasklet_disarm(&dvr_disk_space_tasklet);
   gtimer_disarm(&dvr_disk_space_timer);
+  while ((vfs = LIST_FIRST(&dvrvfs_list)) != NULL) {
+    LIST_REMOVE(vfs, link);
+    free(vfs);
+  }
 }
 
 /**
  *
  */
 int
-dvr_get_disk_space(int64_t *bfree, int64_t *btotal)
+dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal)
 {
   int res = 0;
 
   pthread_mutex_lock(&dvr_disk_space_mutex);
   if (dvr_bfree || dvr_btotal) {
     *bfree = dvr_bfree;
+    *bused = dvr_bused;
     *btotal = dvr_btotal;
   } else {
     res = -EINVAL;

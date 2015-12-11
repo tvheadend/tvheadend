@@ -1292,13 +1292,14 @@ static htsmsg_t *
 htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  int64_t bfree, btotal;
+  int64_t bfree, bused, btotal;
 
-  if (dvr_get_disk_space(&bfree, &btotal))
+  if (dvr_get_disk_space(&bfree, &bused, &btotal))
     return htsp_error("Unable to stat path");
   
   out = htsmsg_create_map();
   htsmsg_add_s64(out, "freediskspace", bfree);
+  htsmsg_add_s64(out, "useddiskspace", bused);
   htsmsg_add_s64(out, "totaldiskspace", btotal);
   return out;
 }

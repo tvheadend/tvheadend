@@ -422,8 +422,8 @@ tvheadend.VideoPlayer = function(url) {
 };
 
 function diskspaceUpdate(o) {
-  if ('freediskspace' in o && 'totaldiskspace' in o)
-    tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
+  if ('freediskspace' in o && 'useddiskspace' in o && 'totaldiskspace' in o)
+    tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.useddiskspace, o.totaldiskspace);
 }
 
 /**
@@ -453,8 +453,8 @@ function accessUpdate(o) {
         tvheadend.rootTabPanel.setLogin(o.username);
     if ('address' in o)
         tvheadend.rootTabPanel.setAddress(o.address);
-    if ('freediskspace' in o && 'totaldiskspace' in o)
-        tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.totaldiskspace);
+    if ('freediskspace' in o && 'useddiskspace' in o && 'totaldiskspace' in o)
+        tvheadend.rootTabPanel.setDiskSpace(o.freediskspace, o.useddiskspace, o.totaldiskspace);
 
     if ('cookie_expires' in o && o.cookie_expires > 0)
         tvheadend.cookieProvider.expires =
@@ -736,7 +736,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             Ext.get(this.extra.login.tabEl).child('span.x-tab-strip-extra-comp', true).qtip = addr;
     },
 
-    setDiskSpace: function(bfree, btotal) {
+    setDiskSpace: function(bfree, bused, btotal) {
         if (!('storage' in this.extra)) return;
         human = function(val) {
           if (val > 1073741824)
@@ -747,10 +747,10 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
             val = parseInt(val / 1024) + _('KiB');
           return val;
         };
-        text = _('Storage space') + ':&nbsp;<b>' + human(bfree) + '/' + human(btotal) + '</b>';
+        text = _('Storage space') + ':&nbsp;<b>' + human(bfree) + '/' + human(bused) + '/' + human(btotal) + '</b>';
         var el = Ext.get(this.extra.storage.tabEl).child('span.x-tab-strip-extra-comp', true);
         el.innerHTML = text;
-        el.qtip = _('Free') + ': ' + human(bfree) + ' ' + _('Total') + ': ' + human(btotal);
+        el.qtip = _('Free') + ': ' + human(bfree) + ' ' + _('Used by tvheadend') + ': ' + human(bused) + ' ' + _('Total') + ': ' + human(btotal);
     },
 
     setTime: function(stime) {

@@ -168,6 +168,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   de->de_chain = NULL;
   profile_chain_close(prch);
   free(prch);
+
+  dvr_vfs_refresh_entry(de);
 }
 
 /**
@@ -804,6 +806,7 @@ cut1:
   m = htsmsg_create_map();
   htsmsg_add_str(m, "filename", path);
   htsmsg_add_msg(de->de_files, NULL, m);
+  dvr_vfs_refresh_entry(de);
 
   return 0;
 }

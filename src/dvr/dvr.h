@@ -26,6 +26,13 @@
 #include "muxer.h"
 #include "profile.h"
 #include "lang_str.h"
+#include "tvhvfs.h"
+
+typedef struct dvr_vfs {
+  LIST_ENTRY(dvr_vfs) link;
+  tvh_fsid_t fsid;
+  uint64_t used_size;
+} dvr_vfs_t;
 
 typedef struct dvr_config {
   idnode_t dvr_id;
@@ -85,10 +92,6 @@ typedef struct dvr_config {
 
 } dvr_config_t;
 
-extern struct dvr_config_list dvrconfigs;
-
-extern struct dvr_entry_list dvrentries;
-
 typedef enum {
   DVR_PRIO_IMPORTANT   = 0,
   DVR_PRIO_HIGH        = 1,
@@ -97,10 +100,6 @@ typedef enum {
   DVR_PRIO_UNIMPORTANT = 4,
   DVR_PRIO_NOTSET      = 5,
 } dvr_prio_t;
-
-
-LIST_HEAD(dvr_rec_stream_list, dvr_rec_stream);
-
 
 typedef enum {
   DVR_SCHEDULED,         /* Scheduled for recording (in the future) */
@@ -405,6 +404,10 @@ extern const idclass_t dvr_entry_class;
 extern const idclass_t dvr_autorec_entry_class;
 extern const idclass_t dvr_timerec_entry_class;
 
+extern struct dvr_vfs_list dvrvfs_list;
+extern struct dvr_config_list dvrconfigs;
+extern struct dvr_entry_list dvrentries;
+
 /**
  * Prototypes
  */
@@ -583,9 +586,13 @@ int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
 void dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename);
 
+void dvr_vfs_refresh_entry(dvr_entry_t *de);
+void dvr_vfs_remove_entry(dvr_entry_t *de);
+
+void dvr_disk_space_boot(void);
 void dvr_disk_space_init(void);
 void dvr_disk_space_done(void);
-int dvr_get_disk_space(int64_t *bfree, int64_t *btotal);
+int dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal);
 
 /**
  *

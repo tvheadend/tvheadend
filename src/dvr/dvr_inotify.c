@@ -231,6 +231,7 @@ _dvr_inotify_moved
     }
   }
   
+  dvr_vfs_refresh_entry(de);
   htsp_dvr_entry_update(de);
   idnode_notify_changed(&de->de_id);
 }

@@ -148,7 +148,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
 
   htsmsg_t *m = htsmsg_create_map();
   const char *username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
-  int64_t bfree, btotal;
+  int64_t bfree, bused, btotal;
   int dvr = !http_access_verify(hc, ACCESS_RECORDER);
   int admin = !http_access_verify(hc, ACCESS_ADMIN);
   const char *s;
@@ -182,8 +182,9 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   if (config.info_area && config.info_area[0])
     htsmsg_add_str(m, "info_area", config.info_area);
 
-  if (dvr && !dvr_get_disk_space(&bfree, &btotal)) {
+  if (dvr && !dvr_get_disk_space(&bfree, &bused, &btotal)) {
     htsmsg_add_s64(m, "freediskspace", bfree);
+    htsmsg_add_s64(m, "useddiskspace", bused);
     htsmsg_add_s64(m, "totaldiskspace", btotal);
   }
 
