@@ -34,10 +34,12 @@
 #include <sys/vfs.h>
 #define statvfs statfs
 #define fstatvfs fstatfs
-#define tvh_fsid_t fsid_t
+#define tvh_fsid_t uint64_t
+#define tvh_fsid(x) (((uint64_t)x.__val[0] << 32) | (x.__val[1]))
 #else
 #include <sys/statvfs.h>
 #define tvh_fsid_t unsigned long
+#define tvh_fsid(x) (x)
 #endif
 
 #define MIB(v)   ((int64_t)v*((int64_t)1024*1024))
@@ -73,7 +75,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   if (!cfg || !cfg->dvr_enabled || statvfs(cfg->dvr_storage, &diskdata) == -1)
     return -1;
 
-  filesystemId  = diskdata.f_fsid;
+  filesystemId  = tvh_fsid(diskdata.f_fsid);
   availBytes    = diskdata.f_bsize * (int64_t)diskdata.f_bavail;
   requiredBytes = MIB(cfg->dvr_cleanup_threshold_free);
   diskBytes     = diskdata.f_bsize * (int64_t)diskdata.f_blocks;
@@ -122,7 +124,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
 
       /* Checking for the same config is useless as it's storage path might be changed meanwhile */
       /* Check for the same file system instead */
-      if (filesystemId == 0 || diskdata.f_fsid != filesystemId)
+      if (filesystemId == 0 || tvh_fsid(diskdata.f_fsid) != filesystemId)
         continue;
 
       oldest = de; // the oldest one until now
