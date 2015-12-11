@@ -499,7 +499,7 @@ dvr_entry_status(dvr_entry_t *de)
       default:
         break;
     }
-    if(dvr_get_filesize(de) == -1)
+    if(dvr_get_filesize(de, 0) == -1)
       return N_("File missing");
     if(de->de_last_error)
       return streaming_code2txt(de->de_last_error);
@@ -535,7 +535,7 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(de->de_last_error || dvr_get_filesize(de) == -1)
+    if(de->de_last_error || dvr_get_filesize(de, 0) == -1)
       s = "completedError";
     rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
@@ -974,15 +974,15 @@ dvr_entry_rerecord(dvr_entry_t *de)
     if (de->de_sched_state == DVR_COMPLETED &&
         de->de_errors == 0 &&
         de->de_data_errors < de->de_parent->de_data_errors) {
-      fsize1 = dvr_get_filesize(de);
-      fsize2 = dvr_get_filesize(de2);
+      fsize1 = dvr_get_filesize(de, DVR_FILESIZE_TOTAL);
+      fsize2 = dvr_get_filesize(de2, DVR_FILESIZE_TOTAL);
       if (fsize1 / 5 < fsize2 / 6) {
         goto not_so_good;
       } else {
         dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
-      if(dvr_get_filesize(de) == -1) {
+      if(dvr_get_filesize(de, 0) == -1) {
 delete_me:
         dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
@@ -2542,7 +2542,7 @@ dvr_entry_class_filesize_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_sched_state == DVR_COMPLETED ||
       de->de_sched_state == DVR_RECORDING) {
-    size = dvr_get_filesize(de);
+    size = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (size < 0)
       size = 0;
   } else
@@ -3079,20 +3079,31 @@ dvr_get_filename(dvr_entry_t *de)
  *
  */
 int64_t
-dvr_get_filesize(dvr_entry_t *de)
+dvr_get_filesize(dvr_entry_t *de, int flags)
 {
+  htsmsg_field_t *f;
+  htsmsg_t *m;
   const char *filename;
-  struct stat st;
+  int first = 1;
+  int64_t res = 0, size;
 
-  filename = dvr_get_filename(de);
-
-  if(filename == NULL)
+  if (de->de_files == NULL)
     return -1;
 
-  if(stat(filename, &st) != 0)
-    return -1;
+  HTSMSG_FOREACH(f, de->de_files)
+    if ((m = htsmsg_field_get_map(f)) != NULL) {
+      filename = htsmsg_get_str(m, "filename");
+      if (flags & DVR_FILESIZE_UPDATE)
+        size = dvr_vfs_update_filename(filename, m);
+      else
+        size = htsmsg_get_s64_or_default(m, "size", -1);
+      if (filename && size >= 0) {
+        res = (flags & DVR_FILESIZE_TOTAL) ? (res + size) : size;
+        first = 0;
+      }
+    }
 
-  return st.st_size;
+  return first ? -1 : res;
 }
 
 /**

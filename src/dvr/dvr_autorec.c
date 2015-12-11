@@ -113,7 +113,7 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
     de_prev = NULL;
     LIST_FOREACH(de, &dae->dae_spawns, de_autorec_link) {
       if (de->de_sched_state != DVR_COMPLETED) continue;
-      if (dvr_get_filesize(de) < 0) continue;
+      if (dvr_get_filesize(de, 0) < 0) continue;
       if (de_prev && de_prev->de_start > de->de_start)
         de_prev = de;
       count++;

@@ -87,22 +87,24 @@ dvr_vfs_refresh_entry(dvr_entry_t *de)
   HTSMSG_FOREACH(f, de->de_files)
     if ((m = htsmsg_field_get_map(f)) != NULL) {
       filename = htsmsg_get_str(m, "filename");
-      vfs = dvr_vfs_find(vfs, htsmsg_get_s64(m, "fsid", 0));
+      vfs = dvr_vfs_find(vfs, htsmsg_get_s64_or_default(m, "fsid", 0));
       if (vfs) {
-        size = htsmsg_get_s64(m, "size", 0);
+        size = htsmsg_get_s64_or_default(m, "size", 0);
         vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
       }
       if(statvfs(filename, &vst) < 0 || stat(filename, &st) < 0) {
         tvhlog(LOG_ERR, "dvr", "unable to stat file '%s'", filename);
-        htsmsg_delete_field(m, "fsid");
-        htsmsg_delete_field(m, "size");
-        continue;
+        goto rem;
       }
       vfs = dvr_vfs_find(vfs, tvh_fsid(vst.f_fsid));
-      if (vfs && st.st_size > 0) {
+      if (vfs && st.st_size >= 0) {
         htsmsg_set_s64(m, "fsid", tvh_fsid(vst.f_fsid));
         htsmsg_set_s64(m, "size", st.st_size);
         vfs->used_size += st.st_size;
+      } else {
+rem:
+        htsmsg_delete_field(m, "fsid");
+        htsmsg_delete_field(m, "size");
       }
     }
 }
@@ -121,14 +123,40 @@ dvr_vfs_remove_entry(dvr_entry_t *de)
   lock_assert(&global_lock);
   HTSMSG_FOREACH(f, de->de_files)
     if ((m = htsmsg_field_get_map(f)) != NULL) {
-      vfs = dvr_vfs_find(vfs, htsmsg_get_s64(m, "fsid", 0));
+      vfs = dvr_vfs_find(vfs, htsmsg_get_s64_or_default(m, "fsid", 0));
       if (vfs) {
-        size = htsmsg_get_s64(m, "size", 0);
+        size = htsmsg_get_s64_or_default(m, "size", 0);
         vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
       }
       htsmsg_delete_field(m, "fsid");
       htsmsg_delete_field(m, "size");
     }
+}
+
+/*
+ *
+ */
+int64_t
+dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata)
+{
+  dvr_vfs_t *vfs;
+  struct stat st;
+  int64_t size;
+
+  if (filename == NULL || fdata == NULL)
+    return -1;
+  vfs = dvr_vfs_find(NULL, htsmsg_get_s64_or_default(fdata, "fsid", 0));
+  if (vfs) {
+    size = htsmsg_get_s64_or_default(fdata, "size", 0);
+    vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
+    if (stat(filename, &st) >= 0 && st.st_size >= 0) {
+      htsmsg_set_s64(fdata, "size", st.st_size);
+      return st.st_size;
+    }
+  }
+  htsmsg_delete_field(fdata, "fsid");
+  htsmsg_delete_field(fdata, "size");
+  return -1;
 }
 
 /**
@@ -196,7 +224,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       if (dvr_entry_get_removal_days(de) != DVR_RET_SPACE) // only remove the allowed ones
         continue;
 
-      if (dvr_get_filename(de) == NULL || dvr_get_filesize(de) <= 0)
+      if (dvr_get_filename(de) == NULL || dvr_get_filesize(de, DVR_FILESIZE_TOTAL) <= 0)
         continue;
 
       if(statvfs(dvr_get_filename(de), &diskdata) == -1)
@@ -212,7 +240,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
     }
 
     if (oldest) {
-      fileSize = dvr_get_filesize(oldest);
+      fileSize = dvr_get_filesize(oldest, DVR_FILESIZE_TOTAL);
       availBytes += fileSize;
       clearedBytes += fileSize;
       usedBytes -= fileSize;

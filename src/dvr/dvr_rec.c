@@ -806,7 +806,6 @@ cut1:
   m = htsmsg_create_map();
   htsmsg_add_str(m, "filename", path);
   htsmsg_add_msg(de->de_files, NULL, m);
-  dvr_vfs_refresh_entry(de);
 
   return 0;
 }
@@ -903,6 +902,8 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     dvr_rec_fatal_error(de, "Unable to open file");
     return -1;
   }
+
+  dvr_vfs_refresh_entry(de);
 
   ss_copy = streaming_start_copy(ss);
 

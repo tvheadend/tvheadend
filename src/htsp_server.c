@@ -924,7 +924,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     break;
   case DVR_RECORDING:
     s = "recording";
-    fsize = dvr_get_filesize(de);
+    fsize = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (de->de_rec_state == DVR_RS_ERROR ||
        (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
     {
@@ -934,7 +934,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     break;
   case DVR_COMPLETED:
     s = "completed";
-    fsize = dvr_get_filesize(de);
+    fsize = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (fsize < 0)
       error = "File missing";
     else if(de->de_last_error)

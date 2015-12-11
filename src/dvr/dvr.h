@@ -28,6 +28,9 @@
 #include "lang_str.h"
 #include "tvhvfs.h"
 
+#define DVR_FILESIZE_UPDATE     (1<<0)
+#define DVR_FILESIZE_TOTAL      (1<<1)
+
 typedef struct dvr_vfs {
   LIST_ENTRY(dvr_vfs) link;
   tvh_fsid_t fsid;
@@ -557,7 +560,7 @@ dvr_entry_t *dvr_entry_find_by_event_fuzzy(epg_broadcast_t *e);
 
 const char *dvr_get_filename(dvr_entry_t *de);
 
-int64_t dvr_get_filesize(dvr_entry_t *de);
+int64_t dvr_get_filesize(dvr_entry_t *de, int flags);
 
 int64_t dvr_entry_claenup(dvr_entry_t *de, int64_t requiredBytes);
 
@@ -588,6 +591,7 @@ void dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filenam
 
 void dvr_vfs_refresh_entry(dvr_entry_t *de);
 void dvr_vfs_remove_entry(dvr_entry_t *de);
+int64_t dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata);
 
 void dvr_disk_space_boot(void);
 void dvr_disk_space_init(void);
