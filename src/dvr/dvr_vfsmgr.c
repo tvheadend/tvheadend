@@ -151,6 +151,7 @@ dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata)
     vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
     if (stat(filename, &st) >= 0 && st.st_size >= 0) {
       htsmsg_set_s64(fdata, "size", st.st_size);
+      vfs->used_size += st.st_size;
       return st.st_size;
     }
   }
