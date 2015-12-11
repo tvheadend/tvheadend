@@ -34,8 +34,10 @@
 #include <sys/vfs.h>
 #define statvfs statfs
 #define fstatvfs fstatfs
+#define tvh_fsid_t fsid_t
 #else
 #include <sys/statvfs.h>
+#define tvh_fsid_t unsigned long
 #endif
 
 #define MIB(v)   ((int64_t)v*((int64_t)1024*1024))
@@ -61,7 +63,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   time_t stoptime;
   int64_t requiredBytes, maximalBytes, availBytes, usedBytes, diskBytes;
   int64_t clearedBytes = 0, fileSize;
-  uint64_t filesystemId;
+  tvh_fsid_t filesystemId;
   struct statvfs diskdata;
   struct tm tm;
   int loops = 0;
