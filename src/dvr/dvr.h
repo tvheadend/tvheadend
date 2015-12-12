@@ -266,13 +266,6 @@ typedef struct dvr_entry {
   profile_chain_t *de_chain;
 
   /**
-   * Inotify
-   */
-#if ENABLE_INOTIFY
-  LIST_ENTRY(dvr_entry) de_inotify_link;
-#endif
-
-  /**
    * Entry change notification timer
    */
   time_t de_last_notify;
