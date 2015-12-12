@@ -1293,7 +1293,7 @@ dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf)
 void
 dvr_entry_save(dvr_entry_t *de)
 {
-  htsmsg_t *m = htsmsg_create_map(), *e, *l, *c;
+  htsmsg_t *m = htsmsg_create_map(), *e, *l, *c, *info;
   htsmsg_field_t *f;
   char ubuf[UUID_HEX_SIZE];
   const char *filename;
@@ -1306,9 +1306,12 @@ dvr_entry_save(dvr_entry_t *de)
     HTSMSG_FOREACH(f, de->de_files)
       if ((e = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(e, "filename");
+        info = htsmsg_get_list(e, "info");
         if (filename) {
           c = htsmsg_create_map();
           htsmsg_add_str(c, "filename", filename);
+          if (info)
+            htsmsg_add_msg(c, "info", htsmsg_copy(info));
           htsmsg_add_msg(l, NULL, c);
         }
       }
