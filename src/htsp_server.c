@@ -3223,6 +3223,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   free(htsp.htsp_peername);
   free(htsp.htsp_username);
   free(htsp.htsp_clientname);
+  free(htsp.htsp_language);
   access_destroy(htsp.htsp_granted_access);
   *opaque = NULL;
 }
