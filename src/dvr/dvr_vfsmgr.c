@@ -54,8 +54,6 @@ dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t id)
 {
   dvr_vfs_t *dv;
 
-  if (id == 0)
-    return NULL;
   if (old && old->fsid == id)
     return old;
   LIST_FOREACH(dv, &dvrvfs_list, link)
@@ -65,6 +63,16 @@ dvr_vfs_find(dvr_vfs_t *old, tvh_fsid_t id)
   dv->fsid = id;
   LIST_INSERT_HEAD(&dvrvfs_list, dv, link);
   return dv;
+}
+
+static dvr_vfs_t *
+dvr_vfs_find1(dvr_vfs_t *old, htsmsg_t *m)
+{
+  int64_t v;
+
+  if (!htsmsg_get_s64(m, "fsid", &v))
+    return dvr_vfs_find(old, v);
+  return NULL;
 }
 
 /*
@@ -87,7 +95,7 @@ dvr_vfs_refresh_entry(dvr_entry_t *de)
   HTSMSG_FOREACH(f, de->de_files)
     if ((m = htsmsg_field_get_map(f)) != NULL) {
       filename = htsmsg_get_str(m, "filename");
-      vfs = dvr_vfs_find(vfs, htsmsg_get_s64_or_default(m, "fsid", 0));
+      vfs = dvr_vfs_find1(vfs, m);
       if (vfs) {
         size = htsmsg_get_s64_or_default(m, "size", 0);
         vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
@@ -123,7 +131,7 @@ dvr_vfs_remove_entry(dvr_entry_t *de)
   lock_assert(&global_lock);
   HTSMSG_FOREACH(f, de->de_files)
     if ((m = htsmsg_field_get_map(f)) != NULL) {
-      vfs = dvr_vfs_find(vfs, htsmsg_get_s64_or_default(m, "fsid", 0));
+      vfs = dvr_vfs_find1(vfs, m);
       if (vfs) {
         size = htsmsg_get_s64_or_default(m, "size", 0);
         vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
@@ -145,7 +153,7 @@ dvr_vfs_update_filename(const char *filename, htsmsg_t *fdata)
 
   if (filename == NULL || fdata == NULL)
     return -1;
-  vfs = dvr_vfs_find(NULL, htsmsg_get_s64_or_default(fdata, "fsid", 0));
+  vfs = dvr_vfs_find1(NULL, fdata);
   if (vfs) {
     size = htsmsg_get_s64_or_default(fdata, "size", 0);
     vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
