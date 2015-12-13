@@ -44,6 +44,7 @@
 static ssize_t _read_buf ( timeshift_file_t *tsf, int fd, void *buf, size_t size )
 {
   if (tsf && tsf->ram) {
+    if (tsf->roff == tsf->woff) return 0;
     if (tsf->roff + size > tsf->woff) return -1;
     pthread_mutex_lock(&tsf->ram_lock);
     memcpy(buf, tsf->ram + tsf->roff, size);
