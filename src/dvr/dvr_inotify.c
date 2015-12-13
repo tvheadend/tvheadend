@@ -154,7 +154,7 @@ void dvr_inotify_add ( dvr_entry_t *de )
   htsmsg_field_t *f;
   htsmsg_t *m;
 
-  if (_inot_fd < 0)
+  if (_inot_fd < 0 || de->de_files == NULL)
     return;
 
   HTSMSG_FOREACH(f, de->de_files)
