@@ -594,9 +594,10 @@ dvr_entry_set_timer(dvr_entry_t *de)
   if (now >= stop || de->de_dont_reschedule) {
 
     /* EPG thinks that the program is running */
-    if(de->de_running_start > de->de_running_stop) {
+    if(de->de_running_start > de->de_running_stop && !de->de_dont_reschedule) {
       stop = dispatch_clock + 10;
-      goto recording;
+      if (de->de_sched_state == DVR_RECORDING)
+        goto recording;
     }
 
     /* Files are missing and job was completed */
@@ -938,7 +939,6 @@ dvr_entry_clone(dvr_entry_t *de)
 
   if (n) {
     if(de->de_sched_state == DVR_RECORDING) {
-      de->de_dont_reschedule = 1;
       dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 1);
       dvr_rec_migrate(de, n);
       n->de_start = dispatch_clock;
@@ -1755,7 +1755,6 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       atomic_exchange_time_t(&de->de_running_stop, dispatch_clock);
       atomic_exchange_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
-        de->de_dont_reschedule = 1;
         dvr_stop_recording(de, SM_CODE_OK, 0, 0);
         tvhdebug("dvr", "dvr entry %s %s %s on %s - EPG stop",
                  idnode_uuid_as_str(&de->de_id, ubuf), srcname,
@@ -1785,6 +1784,8 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
 
   if (!clone)
     dvr_rec_unsubscribe(de);
+
+  de->de_dont_reschedule = 1;
 
   if (stopcode != SM_CODE_INVALID_TARGET &&
       (rec_state == DVR_RS_PENDING ||
@@ -1905,8 +1906,14 @@ dvr_entry_find_by_id(int id)
 static void
 dvr_entry_purge(dvr_entry_t *de, int delconf)
 {
-  if(de->de_sched_state == DVR_RECORDING)
+  int dont_reschedule;
+
+  if(de->de_sched_state == DVR_RECORDING) {
+    dont_reschedule = de->de_dont_reschedule;
     dvr_stop_recording(de, SM_CODE_SOURCE_DELETED, delconf, 0);
+    if (!delconf)
+      de->de_dont_reschedule = dont_reschedule;
+  }
 }
 
 
@@ -3219,7 +3226,6 @@ dvr_entry_t *
 dvr_entry_stop(dvr_entry_t *de)
 {
   if(de->de_sched_state == DVR_RECORDING) {
-    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_OK, 1, 0);
     return de;
   }
@@ -3237,7 +3243,6 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
 
   switch(de->de_sched_state) {
   case DVR_RECORDING:
-    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
     break;
 
@@ -3274,7 +3279,6 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
 
   switch(de->de_sched_state) {
   case DVR_RECORDING:
-    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
   case DVR_COMPLETED:
     dvr_entry_delete(de, 1);
