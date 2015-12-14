@@ -253,7 +253,7 @@ static int _timeshift_skip
     timeshift_index_iframe_t **iframe )
 {
   timeshift_index_iframe_t *tsi  = *iframe;
-  timeshift_file_t         *tsf  = cur_file;
+  timeshift_file_t         *tsf  = cur_file, *tsf_last;
   int64_t                   sec  = req_time / (1000000 * TIMESHIFT_FILE_PERIOD);
   int                       back = (req_time < cur_time) ? 1 : 0;
   int                       end  = 0;
@@ -306,20 +306,26 @@ static int _timeshift_skip
   /* Find start/end of buffer */
   if (end) {
     if (back) {
-      tsf = timeshift_filemgr_oldest(ts);
+      tsf = tsf_last = timeshift_filemgr_oldest(ts);
       tsi = NULL;
       while (tsf && !tsi) {
+        tsf_last = tsf;
         if (!(tsi = TAILQ_FIRST(&tsf->iframes)))
           tsf = timeshift_filemgr_next(tsf, &end, 0);
       }
+      if (!tsf)
+        tsf = tsf_last;
       end = -1;
     } else {
-      tsf = timeshift_filemgr_get(ts, 0);
+      tsf = tsf_last = timeshift_filemgr_get(ts, 0);
       tsi = NULL;
       while (tsf && !tsi) {
+        tsf_last = tsf;
         if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list)))
           tsf = timeshift_filemgr_prev(tsf, &end, 0);
       }
+      if (!tsf)
+        tsf = tsf_last;
       end = 1;
     }
   }
@@ -501,7 +507,7 @@ void *timeshift_reader ( void *p )
 
           /* Ignore negative */
           if (ts->ondemand && (speed < 0))
-            speed = 0;
+            speed = cur_file ? speed : 0;
 
           /* Process */
           if (cur_speed != speed) {
@@ -756,7 +762,7 @@ void *timeshift_reader ( void *p )
         /* Report error */
         skip->type = SMT_SKIP_ERROR;
         skip       = NULL;
-        tvhlog(LOG_DEBUG, "timeshift", "ts %d skip failed", ts->id);
+        tvhlog(LOG_DEBUG, "timeshift", "ts %d skip failed (%d)", ts->id, sm ? sm->sm_type : -1);
       }
       streaming_target_deliver2(ts->output, ctrl);
       ctrl = NULL;
@@ -828,6 +834,7 @@ void *timeshift_reader ( void *p )
           cur_speed = 0;
           ts->state = TS_PAUSE;
         } else {
+          cur_speed = 100;
           ts->state = TS_PLAY;
           play_time = now;
         }
