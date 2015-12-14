@@ -265,7 +265,8 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
         dvr_entry_delete(oldest, 1);  // delete actual file
         dvr_entry_destroy(oldest, 1); // also delete database entry
       } else {
-        dvr_entry_delete(oldest, 0);  // delete actual file
+        if (dvr_entry_delete(oldest, 0))  // delete actual file
+          dvr_entry_save(oldest);
       }
     } else {
       tvhlog(LOG_WARNING, "dvr", "%s \"until space needed\" recordings found for config \"%s\", you are running out of disk space very soon!",

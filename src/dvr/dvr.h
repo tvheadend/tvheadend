@@ -565,7 +565,7 @@ dvr_entry_t *dvr_entry_cancel(dvr_entry_t *de, int rerecord);
 
 void dvr_entry_dec_ref(dvr_entry_t *de);
 
-void dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched);
+int dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 

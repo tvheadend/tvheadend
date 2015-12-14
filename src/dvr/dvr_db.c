@@ -393,6 +393,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   time_t stop = de->de_stop;
   uint32_t removal = dvr_entry_get_removal_days(de);
   uint32_t retention = dvr_entry_get_retention_days(de);
+  int save;
 
   stop = de->de_stop + removal * (time_t)86400;
   if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
@@ -400,12 +401,15 @@ dvr_entry_retention_timer(dvr_entry_t *de)
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
       return;
     }
+    save = 0;
     if (dvr_get_filename(de))
-      dvr_entry_delete(de, 1);    // delete actual file
+      save = dvr_entry_delete(de, 1);    // delete actual file
     if (retention == DVR_RET_ONREMOVE) {
       dvr_entry_destroy(de, 1);   // also remove database entry
       return;
     }
+    if (save)
+      dvr_entry_save(de);
   }
 
   if (retention < DVR_RET_ONREMOVE) {
@@ -3143,7 +3147,7 @@ dvr_val2pri(dvr_prio_t v)
 /**
  *
  */
-void
+int
 dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
 {
   dvr_config_t *cfg = de->de_config;
@@ -3153,7 +3157,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
   struct tm tm;
   const char *filename;
   char tbuf[64], ubuf[UUID_HEX_SIZE], *rdir, *postcmd;
-  int r;
+  int r, ret = 0;
 
   t = dvr_entry_get_start_time(de, 1);
   localtime_r(&t, &tm);
@@ -3191,12 +3195,14 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
       if (postcmd && postcmd[0])
         dvr_spawn_postcmd(de, postcmd, filename);
       htsmsg_delete_field(m, "filename");
+      ret = 1;
     }
   }
   if (no_missed_time_resched)
     dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, de->de_last_error);
   else
     dvr_entry_missed_time(de, de->de_last_error);
+  return ret;
 }
 
 /**
