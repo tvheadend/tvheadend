@@ -262,10 +262,10 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
 
       dvr_disk_space_config_lastdelete = dispatch_clock;
       if (dvr_entry_get_retention_days(oldest) == DVR_RET_ONREMOVE) {
-        dvr_entry_delete(oldest, 1);  // delete actual file
+        dvr_entry_delete(oldest);     // delete actual file
         dvr_entry_destroy(oldest, 1); // also delete database entry
       } else {
-        if (dvr_entry_delete(oldest, 0))  // delete actual file
+        if (dvr_entry_delete(oldest)) // delete actual file
           dvr_entry_save(oldest);
       }
     } else {

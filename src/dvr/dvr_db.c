@@ -403,7 +403,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
     }
     save = 0;
     if (dvr_get_filename(de))
-      save = dvr_entry_delete(de, 1);    // delete actual file
+      save = dvr_entry_delete(de); // delete actual file
     if (retention == DVR_RET_ONREMOVE) {
       dvr_entry_destroy(de, 1);   // also remove database entry
       return;
@@ -3148,7 +3148,7 @@ dvr_val2pri(dvr_prio_t v)
  *
  */
 int
-dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
+dvr_entry_delete(dvr_entry_t *de)
 {
   dvr_config_t *cfg = de->de_config;
   htsmsg_t *m;
@@ -3198,10 +3198,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
       ret = 1;
     }
   }
-  if (no_missed_time_resched)
-    dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, de->de_last_error);
-  else
-    dvr_entry_missed_time(de, de->de_last_error);
+
   return ret;
 }
 
@@ -3287,7 +3284,7 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
   case DVR_RECORDING:
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
   case DVR_COMPLETED:
-    dvr_entry_delete(de, 1);
+    dvr_entry_delete(de);
     dvr_entry_destroy(de, 1);
     break;
 
