@@ -5,6 +5,7 @@
 # Translators:
 # Alexander Knöbel <alex@belogy.de>, 2015
 # Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
+# Michael Pesch <mr.mytril@posteo.de>, 2015
 # Nilsen <nils.eickelkamp@gmail.com>, 2015
 # Nilsen <nilsen.e@web.de>, 2015
 # stbenz, 2015
@@ -12,9 +13,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-26 20:06+0100\n"
-"PO-Revision-Date: 2015-11-24 13:11+0000\n"
-"Last-Translator: Alexander Knöbel <alex@belogy.de>\n"
+"POT-Creation-Date: 2015-12-03 14:21+0100\n"
+"PO-Revision-Date: 2015-12-05 23:11+0000\n"
+"Last-Translator: Michael Pesch <mr.mytril@posteo.de>\n"
 "Language-Team: German (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -123,7 +124,7 @@ msgstr "Abbrechen"
 msgid "Abort the selected recording"
 msgstr "Ausgewählte Aufnahme abbrechen"
 
-#: src/webui/static/app/tvheadend.js:554
+#: src/webui/static/app/tvheadend.js:581
 msgid "About"
 msgstr "Über"
 
@@ -143,19 +144,23 @@ msgstr "Zugriffseintrag"
 msgid "Active"
 msgstr "Aktiv"
 
-#: src/webui/static/app/idnode.js:1380 src/webui/static/app/idnode.js:1894
+#: src/webui/static/app/idnode.js:1522 src/webui/static/app/idnode.js:2056
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: src/webui/static/app/idnode.js:1378 src/webui/static/app/idnode.js:1892
+#: src/webui/static/app/idnode.js:1520 src/webui/static/app/idnode.js:2054
 msgid "Add a new entry"
 msgstr "Neuen Eintrag hinzufügen"
 
-#: src/webui/static/app/idnode.js:1086 src/webui/static/app/idnode.js:1117
+#: src/webui/static/app/idnode.js:1213 src/webui/static/app/idnode.js:1244
 msgid "Add {0}"
 msgstr "{0} hinzufügen"
 
-#: src/webui/static/app/idnode.js:893
+#: src/webui/static/app/idnode.js:583 src/webui/static/app/idnode.js:599
+msgid "Advanced"
+msgstr "Erweitert"
+
+#: src/webui/static/app/idnode.js:976
 msgid "Advanced Settings"
 msgstr "Erweiterte Einstellungen"
 
@@ -175,11 +180,11 @@ msgstr "Alter"
 msgid "Age Rating"
 msgstr "Altersfreigabe"
 
-#: src/webui/static/app/idnode.js:1571 src/webui/static/app/idnode.js:1610
+#: src/webui/static/app/idnode.js:1713 src/webui/static/app/idnode.js:1752
 msgid "All"
 msgstr "Alle"
 
-#: src/webui/static/app/idnode.js:954 src/webui/static/app/idnode.js:1041
+#: src/webui/static/app/idnode.js:1060 src/webui/static/app/idnode.js:1165
 msgid "Apply"
 msgstr "Anwenden"
 
@@ -191,7 +196,7 @@ msgstr "Unten vorgenommene Änderungen für die Laufzeit anwenden"
 msgid "Apply configuration (run-time only)"
 msgstr "Konfiguration anwenden (nur für Laufzeit)"
 
-#: src/webui/static/app/idnode.js:1040
+#: src/webui/static/app/idnode.js:1164
 msgid "Apply settings"
 msgstr "Einstellungen anwenden"
 
@@ -203,19 +208,19 @@ msgstr "Apr"
 msgid "April"
 msgstr "April"
 
-#: src/webui/static/app/chconf.js:144
+#: src/webui/static/app/chconf.js:146
 msgid "Assign Number"
 msgstr "Nummer zuweisen"
 
-#: src/webui/static/app/chconf.js:142
+#: src/webui/static/app/chconf.js:144
 msgid "Assign lowest free channel number"
 msgstr "Niedrigste Freie Kanalnummer zuweisen"
 
-#: src/webui/static/app/esfilter.js:70
+#: src/webui/static/app/esfilter.js:71
 msgid "Audio Stream Filter"
 msgstr "Audio Streamfilter"
 
-#: src/webui/static/app/esfilter.js:71
+#: src/webui/static/app/esfilter.js:72
 msgid "Audio Stream Filters"
 msgstr "Audio Streamfilter"
 
@@ -231,27 +236,32 @@ msgstr "August"
 msgid "Auto Recorder"
 msgstr "Autorekorder"
 
-#: src/webui/static/app/tvheadend.js:126
+#: src/webui/static/app/tvheadend.js:141
 msgid "Auto-refresh"
 msgstr "Automatische Aktualisierung"
 
 #: src/webui/static/app/epg.js:225 src/webui/static/app/dvr.js:57
+#: src/webui/static/app/dvr.js:572
 msgid "Autorec"
 msgstr "Autoaufnahme"
 
-#: src/webui/static/app/idnode.js:432 src/webui/static/app/idnode.js:595
+#: src/webui/static/app/dvr.js:573
+msgid "Autorecs"
+msgstr "Autoaufnahmen"
+
+#: src/webui/static/app/idnode.js:441 src/webui/static/app/idnode.js:654
 msgid "Available"
 msgstr "Verfügbar"
 
-#: src/webui/static/app/status.js:366
+#: src/webui/static/app/status.js:374
 msgid "BER"
 msgstr "BER"
 
-#: src/webui/static/app/status.js:359
+#: src/webui/static/app/status.js:367
 msgid "Bandwidth (kb/s)"
 msgstr "Bandbreite (kb/s)"
 
-#: src/webui/static/app/status.js:668 src/webui/static/app/status.js:761
+#: src/webui/static/app/status.js:676 src/webui/static/app/status.js:769
 msgid "Bandwidth monitor"
 msgstr "Bandbreitenmonitor"
 
@@ -259,7 +269,11 @@ msgstr "Bandbreitenmonitor"
 msgid "Base"
 msgstr "Basis"
 
-#: src/webui/static/app/idnode.js:891
+#: src/webui/static/app/idnode.js:581 src/webui/static/app/idnode.js:593
+msgid "Basic"
+msgstr "Einfach"
+
+#: src/webui/static/app/idnode.js:974
 msgid "Basic Settings"
 msgstr "Grundeinstellungen"
 
@@ -295,11 +309,11 @@ msgstr "Puffern. Bitte warten..."
 msgid "CA"
 msgstr "CA"
 
-#: src/webui/static/app/esfilter.js:127
+#: src/webui/static/app/esfilter.js:131
 msgid "CA Stream Filter"
 msgstr "CA Streamfilter"
 
-#: src/webui/static/app/esfilter.js:128
+#: src/webui/static/app/esfilter.js:132
 msgid "CA Stream Filters"
 msgstr "CA Streamfilter"
 
@@ -312,34 +326,38 @@ msgid "CAs"
 msgstr "CAs"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:926 src/webui/static/app/idnode.js:1061
+#: src/webui/static/app/idnode.js:1026 src/webui/static/app/idnode.js:1188
 #: src/webui/static/app/servicemapper.js:119
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: src/webui/static/app/status.js:508
+#: src/webui/static/app/status.js:516
 msgid "Cancel Connection"
 msgstr "Verbindung abbrechen"
 
-#: src/webui/static/app/idnode.js:1060
+#: src/webui/static/app/idnode.js:1187
 msgid "Cancel operation"
 msgstr "Operation abbrechen"
 
-#: src/webui/static/app/status.js:509
+#: src/webui/static/app/status.js:517
 msgid "Cancel the selected connection?"
 msgstr "Ausgewählte Verbindung abbrechen?"
 
-#: src/webui/static/app/status.js:505
+#: src/webui/static/app/status.js:513
 msgid "Cancel this connection"
 msgstr "Diese Verbindung abbrechen"
 
-#: src/webui/static/app/chconf.js:207 src/webui/static/app/epg.js:546
+#: src/webui/static/app/idnode.js:611
+msgid "Change the user interface level (basic, advanced, expert)"
+msgstr "UI Modus ändern (Einfach, Erweitert, Experte)"
+
+#: src/webui/static/app/chconf.js:199 src/webui/static/app/epg.js:546
 #: src/webui/static/app/epg.js:547 src/webui/static/app/epg.js:1028
-#: src/webui/static/app/status.js:104
+#: src/webui/static/app/status.js:106
 msgid "Channel"
 msgstr "Kanal"
 
-#: src/webui/static/app/tvheadend.js:492
+#: src/webui/static/app/tvheadend.js:517
 msgid "Channel / EPG"
 msgstr "Kanal / EPG"
 
@@ -351,7 +369,11 @@ msgstr "Kanal-Tag"
 msgid "Channel Tags"
 msgstr "Kanal-Tags"
 
-#: src/webui/static/app/chconf.js:208 src/webui/static/app/chconf.js:212
+#: src/webui/static/app/chconf.js:167
+msgid "Channel number operations"
+msgstr "Kanalnummeroperationen"
+
+#: src/webui/static/app/chconf.js:200 src/webui/static/app/chconf.js:204
 msgid "Channels"
 msgstr "Kanäle"
 
@@ -363,19 +385,19 @@ msgstr "Verfügbarkeit prüfen"
 msgid "Choose a month (Control+Up/Down to move years)"
 msgstr "Monat auswählen (Strg+Hoch/Runter zum Umschalten zwischen Jahren)"
 
-#: src/webui/static/app/config.js:36
+#: src/webui/static/app/config.js:50
 msgid "Clean image (icon) cache"
 msgstr "Lösche Bild (Logo) Cache"
 
-#: src/webui/static/app/config.js:34
+#: src/webui/static/app/config.js:48
 msgid "Clean image cache on storage"
 msgstr "Lösche Bildcache auf Festplatte"
 
-#: src/webui/static/app/status.js:258 src/webui/static/app/status.js:261
+#: src/webui/static/app/status.js:266 src/webui/static/app/status.js:269
 msgid "Clear statistics"
 msgstr "Statistik löschen"
 
-#: src/webui/static/app/status.js:262
+#: src/webui/static/app/status.js:270
 msgid "Clear statistics for selected input?"
 msgstr "Statistik für die ausgewählte Quelle löschen?"
 
@@ -399,19 +421,19 @@ msgstr "comet-Fehler"
 msgid "Comment"
 msgstr "Kommentar"
 
-#: src/webui/static/app/status.js:717
+#: src/webui/static/app/status.js:725
 msgid "Compression ratio"
 msgstr "Kompressionsrate"
 
-#: src/webui/static/app/caclient.js:44 src/webui/static/app/caclient.js:61
+#: src/webui/static/app/caclient.js:45 src/webui/static/app/caclient.js:62
 msgid "Conditional Access Client"
 msgstr "Conditional Access Client"
 
-#: src/webui/static/app/tvheadend.js:435
+#: src/webui/static/app/tvheadend.js:456
 msgid "Configuration"
 msgstr "Konfiguration"
 
-#: src/webui/static/app/status.js:609
+#: src/webui/static/app/status.js:617
 msgid "Connections"
 msgstr "Verbindungen"
 
@@ -420,11 +442,11 @@ msgstr "Verbindungen"
 msgid "Content Type"
 msgstr "Inhaltstyp"
 
-#: src/webui/static/app/status.js:388
+#: src/webui/static/app/status.js:396
 msgid "Continuity Errors"
 msgstr "Kontinuitätsfehler"
 
-#: src/webui/static/app/idnode.js:1020
+#: src/webui/static/app/idnode.js:1140
 msgid "Create"
 msgstr "Anlegen"
 
@@ -442,7 +464,7 @@ msgstr "Erstelle eine automatische Aufnahme, die alle zukünftigen Sendungen auf
 msgid "Create network tags"
 msgstr "Netzwerk-Tags anlegen"
 
-#: src/webui/static/app/idnode.js:1019
+#: src/webui/static/app/idnode.js:1139
 msgid "Create new entry"
 msgstr "Neuen Eintrag anlegen"
 
@@ -459,7 +481,7 @@ msgstr "Von EPG Abfrage erstellt"
 msgid "Currently this will match (and record) %d events."
 msgstr "Momentan wird das %d Ereignissen entsprechen (und aufnehmen)."
 
-#: src/webui/static/app/tvheadend.js:474
+#: src/webui/static/app/tvheadend.js:498
 msgid "DVB Inputs"
 msgstr "DVB-Inputs"
 
@@ -483,17 +505,9 @@ msgstr "DVR Anstehende/Laufende Aufnahmen"
 msgid "DVR Autorec"
 msgstr "DVR Autoaufnahme"
 
-#: src/webui/static/app/dvr.js:573
-msgid "DVR Autorec Entries"
-msgstr "DVR Autoaufnahmeeinträge"
-
-#: src/webui/static/app/dvr.js:572
-msgid "DVR Autorec Entry"
-msgstr "DVR Autoaufnahmeeintrag"
-
 #: src/webui/static/app/dvr.js:677
-msgid "DVR Timerec"
-msgstr "DVR Zeitaufnahme"
+msgid "DVR Timers"
+msgstr "DVR Timer"
 
 #: src/webui/static/app/tvhlog.js:28
 msgid "Debug Configuration"
@@ -511,7 +525,7 @@ msgstr "Dez"
 msgid "December"
 msgstr "Dezember"
 
-#: src/webui/static/app/idnode.js:1394 src/webui/static/app/idnode.js:1906
+#: src/webui/static/app/idnode.js:1536 src/webui/static/app/idnode.js:2068
 msgid "Delete"
 msgstr "Löschen"
 
@@ -523,11 +537,11 @@ msgstr "Aufnahme Löschen"
 msgid "Delete scheduled recording of this program"
 msgstr "Geplante Aufnahme der Sendung löschen"
 
-#: src/webui/static/app/idnode.js:1392 src/webui/static/app/idnode.js:1904
+#: src/webui/static/app/idnode.js:1534 src/webui/static/app/idnode.js:2066
 msgid "Delete selected entries"
 msgstr "Ausgewählte Einträge löschen"
 
-#: src/webui/static/app/status.js:132
+#: src/webui/static/app/status.js:140
 msgid "Descramble"
 msgstr "Entschlüsseln"
 
@@ -557,7 +571,7 @@ msgstr "Digitaler Videorekorder-Profile"
 msgid "Disabled"
 msgstr "Deaktiviert"
 
-#: src/webui/static/app/config.js:95
+#: src/webui/static/app/config.js:109
 msgid "Discover SAT>IP servers"
 msgstr "Suche SAT>IP Server"
 
@@ -573,7 +587,7 @@ msgstr "Wollen Sie die Auswahl wirklich abbrechen/löschen?"
 msgid "Do you really want to delete the selected recordings?"
 msgstr "Wollen Sie die ausgewählten Aufnahmen wirklich löschen?"
 
-#: src/webui/static/app/tvheadend.js:98
+#: src/webui/static/app/tvheadend.js:113
 msgid "Do you really want to delete the selection?"
 msgstr "Wollen Sie die Auswahl wirklich löschen?"
 
@@ -641,19 +655,19 @@ msgstr "EPG-Grabbername"
 msgid "EPG Update"
 msgstr "EPG-Aktualisierung"
 
-#: src/webui/static/app/idnode.js:1481
+#: src/webui/static/app/idnode.js:1623
 msgid "Edit"
 msgstr "Bearbeiten"
 
-#: src/webui/static/app/idnode.js:1479
+#: src/webui/static/app/idnode.js:1621
 msgid "Edit selected entry"
 msgstr "Ausgewählten Eintrag bearbeiten"
 
-#: src/webui/static/app/idnode.js:1495 src/webui/static/app/idnode.js:1534
+#: src/webui/static/app/idnode.js:1637 src/webui/static/app/idnode.js:1676
 msgid "Edit {0}"
 msgstr "{0} bearbeiten"
 
-#: src/webui/static/app/idnode.js:1530
+#: src/webui/static/app/idnode.js:1672
 msgid "Edit {0} ({1} entries)"
 msgstr "{0} bearbeiten ({1} Einträge)"
 
@@ -661,13 +675,13 @@ msgstr "{0} bearbeiten ({1} Einträge)"
 msgid "Electronic Program Guide"
 msgstr "Electronic Program Guide"
 
-#: src/webui/static/app/esfilter.js:64 src/webui/static/app/esfilter.js:83
-#: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
-#: src/webui/static/app/esfilter.js:158
+#: src/webui/static/app/esfilter.js:65 src/webui/static/app/esfilter.js:85
+#: src/webui/static/app/esfilter.js:125 src/webui/static/app/esfilter.js:144
+#: src/webui/static/app/esfilter.js:164
 msgid "Elementary Stream Filter"
 msgstr "Streamkomponentenfilter"
 
-#: src/webui/static/app/tvheadend.js:764
+#: src/webui/static/app/tvheadend.js:791
 msgid "Enable debug output"
 msgstr "Aktiviere Debugausgabe"
 
@@ -684,7 +698,7 @@ msgstr "Filtertext eingeben..."
 msgid "Episode"
 msgstr "Episode"
 
-#: src/webui/static/app/status.js:138
+#: src/webui/static/app/status.js:146
 msgid "Errors"
 msgstr "Fehler"
 
@@ -695,6 +709,14 @@ msgstr "Ereignisse"
 #: src/webui/static/app/dvr.js:148
 msgid "Every day"
 msgstr "Jeden Tag"
+
+#: src/webui/static/app/idnode.js:584 src/webui/static/app/idnode.js:605
+msgid "Expert"
+msgstr "Experte"
+
+#: src/webui/static/app/idnode.js:978
+msgid "Expert Settings"
+msgstr "Experteneinstellungen"
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
@@ -760,7 +782,7 @@ msgstr "Scan erzwingen"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "Erzwinge neue Suche (Alle Muxe) für ausgewählte Netzwerke"
 
-#: src/webui/static/app/tvheadend.js:703
+#: src/webui/static/app/tvheadend.js:730
 msgid "Free"
 msgstr "Frei"
 
@@ -772,7 +794,7 @@ msgstr "Fr"
 msgid "Friday"
 msgstr "Freitag"
 
-#: src/webui/static/app/tvheadend.js:351
+#: src/webui/static/app/tvheadend.js:366
 msgid "Fullscreen"
 msgstr "Vollbild"
 
@@ -780,15 +802,11 @@ msgstr "Vollbild"
 msgid "Fulltext"
 msgstr "Volltext"
 
-#: src/webui/static/app/tvheadend.js:693
-msgid "GB"
-msgstr "GB"
-
-#: src/webui/static/app/tvheadend.js:444
+#: src/webui/static/app/tvheadend.js:466
 msgid "General"
 msgstr "Allgemein"
 
-#: src/webui/static/app/config.js:15 src/webui/static/app/config.js:74
+#: src/webui/static/app/config.js:29 src/webui/static/app/config.js:88
 msgid "General Configuration"
 msgstr "Allgemeine Konfiguration"
 
@@ -796,7 +814,11 @@ msgstr "Allgemeine Konfiguration"
 msgid "Genre"
 msgstr "Genre"
 
-#: src/webui/static/app/idnode.js:1227
+#: src/webui/static/app/tvheadend.js:720
+msgid "GiB"
+msgstr "GiB"
+
+#: src/webui/static/app/idnode.js:1364
 msgid "Grid Update"
 msgstr "Tabellenaktualisierung"
 
@@ -804,33 +826,33 @@ msgstr "Tabellenaktualisierung"
 msgid "Group By This Field"
 msgstr "Nach diesem Feld gruppieren"
 
-#: src/webui/static/app/idnode.js:973 src/webui/static/app/idnode.js:1657
-#: src/webui/static/app/idnode.js:2013 src/webui/static/app/idnode.js:2371
+#: src/webui/static/app/idnode.js:1096 src/webui/static/app/idnode.js:1819
+#: src/webui/static/app/idnode.js:2190 src/webui/static/app/idnode.js:2622
 #: src/webui/static/app/epg.js:875
 msgid "Help"
 msgstr "Hilfe"
 
-#: src/webui/static/app/tvheadend.js:48
+#: src/webui/static/app/tvheadend.js:63
 msgid "Help for"
 msgstr "Hilfe für"
 
-#: src/webui/static/app/idnode.js:1587
+#: src/webui/static/app/idnode.js:1729
 msgid "Hide"
 msgstr "Verstecken"
 
-#: src/webui/static/app/idnode.js:1981
+#: src/webui/static/app/idnode.js:2143
 msgid "Hide passwords"
 msgstr "Passwörter verstecken"
 
-#: src/webui/static/app/status.js:86
+#: src/webui/static/app/status.js:88
 msgid "Hostname"
 msgstr "Hostname"
 
-#: src/webui/static/app/status.js:76
+#: src/webui/static/app/status.js:78
 msgid "ID"
 msgstr "ID"
 
-#: src/webui/static/app/status.js:562
+#: src/webui/static/app/status.js:570
 msgid "IP Address"
 msgstr "IP-Adresse"
 
@@ -850,11 +872,11 @@ msgstr "IP-Sperreneinträge"
 msgid "Ignored"
 msgstr "Ignoriert"
 
-#: src/webui/static/app/config.js:66
+#: src/webui/static/app/config.js:80
 msgid "Image cache"
 msgstr "Bild-Cache"
 
-#: src/webui/static/app/status.js:715
+#: src/webui/static/app/status.js:723
 msgid "In"
 msgstr "Eingang"
 
@@ -862,11 +884,11 @@ msgstr "Eingang"
 msgid "Include encrypted services"
 msgstr "Verschlüsselte Services einschließen"
 
-#: src/webui/static/app/status.js:339 src/webui/static/app/status.js:805
+#: src/webui/static/app/status.js:347 src/webui/static/app/status.js:813
 msgid "Input"
 msgstr "Eingang"
 
-#: src/webui/static/app/status.js:144
+#: src/webui/static/app/status.js:152
 msgid "Input (kb/s)"
 msgstr "Eingang (kb/s)"
 
@@ -894,41 +916,37 @@ msgstr "Jun"
 msgid "June"
 msgstr "Juni"
 
-#: src/webui/static/app/tvheadend.js:697
-msgid "KB"
-msgstr "KB"
+#: src/webui/static/app/tvheadend.js:724
+msgid "KiB"
+msgstr "KiB"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
 msgstr "Letzte Seite"
 
-#: src/webui/static/app/tvheadend.js:307
+#: src/webui/static/app/tvheadend.js:322
 msgid "Live TV Player"
 msgstr "Live TV Player"
 
-#: src/webui/static/app/tvheadend.js:108
+#: src/webui/static/app/tvheadend.js:123
 msgid "Loading, please wait..."
 msgstr "Wird geladen, bitte warten..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:627
 #: src/webui/static/app/epg.js:650 src/webui/static/app/epg.js:674
-#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:245
-#: src/webui/static/app/tvheadend.js:283
+#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:260
+#: src/webui/static/app/tvheadend.js:298
 msgid "Loading..."
 msgstr "Wird geladen..."
 
-#: src/webui/static/app/tvheadend.js:674
+#: src/webui/static/app/tvheadend.js:701
 msgid "Logged in as"
 msgstr "Angemeldet als"
 
-#: src/webui/static/app/config.js:93
+#: src/webui/static/app/config.js:107
 msgid "Look for new SAT>IP servers"
 msgstr "Suche nach neuen SAT>IP Servern"
-
-#: src/webui/static/app/tvheadend.js:695
-msgid "MB"
-msgstr "MB"
 
 #: src/webui/static/app/servicemapper.js:126
 msgid "Map"
@@ -982,9 +1000,13 @@ msgstr "Mai#ShortNameForMay"
 msgid "Merge same name"
 msgstr "Gleiche Namen zusammenführen"
 
-#: src/webui/static/app/tvheadend.js:97
+#: src/webui/static/app/tvheadend.js:112
 msgid "Message"
 msgstr "Nachricht"
+
+#: src/webui/static/app/tvheadend.js:722
+msgid "MiB"
+msgstr "MiB"
 
 #: src/webui/static/app/i18n-post.js:94
 msgid "Mon"
@@ -994,35 +1016,35 @@ msgstr "Mo"
 msgid "Monday"
 msgstr "Montag"
 
-#: src/webui/static/app/idnode.js:1450 src/webui/static/app/idnode.js:1953
+#: src/webui/static/app/idnode.js:1592 src/webui/static/app/idnode.js:2115
 msgid "Move Down"
 msgstr "Nach unten"
 
-#: src/webui/static/app/idnode.js:1425 src/webui/static/app/idnode.js:1932
+#: src/webui/static/app/idnode.js:1567 src/webui/static/app/idnode.js:2094
 msgid "Move Up"
 msgstr "Nach oben"
 
-#: src/webui/static/app/chconf.js:168
+#: src/webui/static/app/chconf.js:156
 msgid "Move channel one number down"
 msgstr "Verschiebe Kanal eine Nummer nach unten"
 
-#: src/webui/static/app/chconf.js:155
+#: src/webui/static/app/chconf.js:150
 msgid "Move channel one number up"
 msgstr "Verschiebe Kanal eine Nummer nach oben"
 
-#: src/webui/static/app/idnode.js:1448
+#: src/webui/static/app/idnode.js:1590
 msgid "Move selected entries down"
 msgstr "Verschiebe ausgewählte Einträge nach unten"
 
-#: src/webui/static/app/idnode.js:1423
+#: src/webui/static/app/idnode.js:1565
 msgid "Move selected entries up"
 msgstr "Verschiebe ausgewählte Einträge nach oben"
 
-#: src/webui/static/app/idnode.js:1951
+#: src/webui/static/app/idnode.js:2113
 msgid "Move selected entry down"
 msgstr "Verschiebe ausgewählten Eintrag nach unten"
 
-#: src/webui/static/app/idnode.js:1930
+#: src/webui/static/app/idnode.js:2092
 msgid "Move selected entry up"
 msgstr "Verschiebe ausgewählten Eintrag nach oben"
 
@@ -1071,21 +1093,21 @@ msgstr "Keine Daten zum Anzeigen"
 msgid "No days"
 msgstr "Kein Tag"
 
-#: src/webui/static/app/tvheadend.js:677
+#: src/webui/static/app/tvheadend.js:704
 msgid "No verified access"
 msgstr "Kein verifizierter Zugriff"
 
 #. / {0} title (lowercase), {1} title
-#: src/webui/static/app/tvheadend.js:121
+#: src/webui/static/app/tvheadend.js:136
 msgid "No {0} to display"
 msgstr "Keine {1} zum Anzeigen"
 
-#: src/webui/static/app/idnode.js:1572 src/webui/static/app/mpegts.js:208
+#: src/webui/static/app/idnode.js:1714 src/webui/static/app/mpegts.js:208
 #: src/webui/static/app/mpegts.js:218
 msgid "None"
 msgstr "Kein"
 
-#: src/webui/static/app/idnode.js:341
+#: src/webui/static/app/idnode.js:350
 msgid "Not set"
 msgstr "Nicht gesetzt"
 
@@ -1101,13 +1123,17 @@ msgstr "November"
 msgid "Number"
 msgstr "Nummer"
 
-#: src/webui/static/app/chconf.js:170
+#: src/webui/static/app/chconf.js:158
 msgid "Number Down"
 msgstr "Nummer runter"
 
-#: src/webui/static/app/chconf.js:157
+#: src/webui/static/app/chconf.js:152
 msgid "Number Up"
 msgstr "Nummer rauf"
+
+#: src/webui/static/app/chconf.js:169
+msgid "Number operations"
+msgstr "Nummernoperationen"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
@@ -1125,23 +1151,23 @@ msgstr "Oktober"
 msgid "On#DateFilter"
 msgstr "Am#DateFilter"
 
-#: src/webui/static/app/esfilter.js:145
+#: src/webui/static/app/esfilter.js:150
 msgid "Other Stream Filter"
 msgstr "Sonstiger Streamfilter"
 
-#: src/webui/static/app/esfilter.js:146
+#: src/webui/static/app/esfilter.js:151
 msgid "Other Stream Filters"
 msgstr "Sonstige Streamfilter"
 
-#: src/webui/static/app/status.js:716
+#: src/webui/static/app/status.js:724
 msgid "Out"
 msgstr "Ausgang"
 
-#: src/webui/static/app/status.js:152
+#: src/webui/static/app/status.js:160
 msgid "Output (kb/s)"
 msgstr "Ausgang (kb/s)"
 
-#: src/webui/static/app/status.js:372
+#: src/webui/static/app/status.js:380
 msgid "PER"
 msgstr "PER"
 
@@ -1149,11 +1175,11 @@ msgstr "PER"
 msgid "Page"
 msgstr "Seite"
 
-#: src/webui/static/app/idnode.js:2040 src/webui/static/app/idnode.js:2226
+#: src/webui/static/app/idnode.js:2217 src/webui/static/app/idnode.js:2403
 msgid "Parameters"
 msgstr "Parameter"
 
-#: src/webui/static/app/idnode.js:1570
+#: src/webui/static/app/idnode.js:1712
 msgid "Parent disabled"
 msgstr "Übergeordnet deaktiviert"
 
@@ -1169,22 +1195,22 @@ msgstr "Passwortkontrolleinträge"
 msgid "Passwords"
 msgstr "Passwörter"
 
-#: src/webui/static/app/tvheadend.js:336
+#: src/webui/static/app/tvheadend.js:351
 msgid "Pause"
 msgstr "Pause"
 
-#: src/webui/static/app/tvheadend.js:132
+#: src/webui/static/app/tvheadend.js:147
 msgid "Per page"
 msgstr "Pro Seite"
 
 #: src/webui/static/app/mpegts.js:126 src/webui/static/app/mpegts.js:127
 #: src/webui/static/app/mpegts.js:131 src/webui/static/app/mpegts.js:307
 #: src/webui/static/app/mpegts.js:308 src/webui/static/app/mpegts.js:312
-#: src/webui/static/app/chconf.js:223 src/webui/static/app/chconf.js:224
-#: src/webui/static/app/chconf.js:231 src/webui/static/app/dvr.js:407
+#: src/webui/static/app/chconf.js:215 src/webui/static/app/chconf.js:216
+#: src/webui/static/app/chconf.js:223 src/webui/static/app/dvr.js:407
 #: src/webui/static/app/dvr.js:408 src/webui/static/app/dvr.js:414
 #: src/webui/static/app/dvr.js:518 src/webui/static/app/dvr.js:519
-#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:319
+#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:334
 msgid "Play"
 msgstr "Play"
 
@@ -1212,6 +1238,10 @@ msgstr "Vorheriger Monat (Strg+Links)"
 msgid "Previous Page"
 msgstr "Vorherige Seite"
 
+#: src/webui/static/app/status.js:118
+msgid "Profile"
+msgstr "Profil"
+
 #: src/webui/static/app/dvr.js:548
 msgid "Profile Name"
 msgstr "Profilname"
@@ -1220,7 +1250,7 @@ msgstr "Profilname"
 msgid "Progress"
 msgstr "Fortschritt"
 
-#: src/webui/static/app/config.js:51 src/webui/static/app/config.js:53
+#: src/webui/static/app/config.js:65 src/webui/static/app/config.js:67
 msgid "Re-fetch images"
 msgstr "Bilder neu abrufen"
 
@@ -1228,7 +1258,7 @@ msgstr "Bilder neu abrufen"
 msgid "Re-record"
 msgstr "Neu-Aufnehmen"
 
-#: src/webui/static/app/idnode.js:895
+#: src/webui/static/app/idnode.js:980
 msgid "Read-only Info"
 msgstr "Schreibgeschützte Informationen"
 
@@ -1248,7 +1278,7 @@ msgstr "Serie aufnehmen"
 msgid "Record this program now"
 msgstr "Diese Sendung jetzt aufnehmen"
 
-#: src/webui/static/app/tvheadend.js:521
+#: src/webui/static/app/tvheadend.js:548
 msgid "Recording"
 msgstr "Aufnahme"
 
@@ -1260,7 +1290,7 @@ msgstr "Aufnahmedetails"
 msgid "Refresh"
 msgstr "Aktualisieren"
 
-#: src/webui/static/app/chconf.js:194
+#: src/webui/static/app/chconf.js:186
 msgid "Reset (clear) the selected icon URLs"
 msgstr "Ausgewählte Logo-URLs zurücksetzen (löschen)"
 
@@ -1268,7 +1298,7 @@ msgstr "Ausgewählte Logo-URLs zurücksetzen (löschen)"
 msgid "Reset All"
 msgstr "Alles zurücksetzen"
 
-#: src/webui/static/app/chconf.js:196
+#: src/webui/static/app/chconf.js:188
 msgid "Reset Icon"
 msgstr "Logo zurücksetzen"
 
@@ -1276,20 +1306,20 @@ msgstr "Logo zurücksetzen"
 msgid "Reset all filters (show all)"
 msgstr "Alle Filter zurücksetzen (zeige alle)"
 
-#: src/webui/static/app/idnode.js:1364 src/webui/static/app/idnode.js:1879
-#: src/webui/static/app/idnode.js:2336
+#: src/webui/static/app/idnode.js:1506 src/webui/static/app/idnode.js:2041
+#: src/webui/static/app/idnode.js:2560
 msgid "Revert pending changes (marked with red border)"
 msgstr "Änderungen zurücknehmen (Markiert mit roter Ecke)"
 
-#: src/webui/static/app/config.js:108
+#: src/webui/static/app/config.js:122
 msgid "SAT>IP Server"
 msgstr "SAT>IP Server"
 
-#: src/webui/static/app/config.js:116
+#: src/webui/static/app/config.js:130
 msgid "SAT>IP Server Configuration"
 msgstr "SAT>IP Server Konfiguration"
 
-#: src/webui/static/app/status.js:402
+#: src/webui/static/app/status.js:410
 msgid "SNR"
 msgstr "SNR"
 
@@ -1301,13 +1331,13 @@ msgstr "Sa"
 msgid "Saturday"
 msgstr "Samstag"
 
-#: src/webui/static/app/idnode.js:934 src/webui/static/app/idnode.js:1339
-#: src/webui/static/app/idnode.js:1859 src/webui/static/app/idnode.js:2319
+#: src/webui/static/app/idnode.js:1034 src/webui/static/app/idnode.js:1481
+#: src/webui/static/app/idnode.js:2021 src/webui/static/app/idnode.js:2541
 msgid "Save"
 msgstr "Speichern"
 
-#: src/webui/static/app/idnode.js:1337 src/webui/static/app/idnode.js:1857
-#: src/webui/static/app/idnode.js:2317
+#: src/webui/static/app/idnode.js:1479 src/webui/static/app/idnode.js:2019
+#: src/webui/static/app/idnode.js:2539
 msgid "Save pending changes (marked with red border)"
 msgstr "Ausstehende Änderungen speichern (markiert mit roter Ecke)"
 
@@ -1331,19 +1361,19 @@ msgstr "Durchsuche TheTVDB (nach Titel)"
 msgid "Search title..."
 msgstr "Suche Titel..."
 
-#: src/webui/static/app/tvheadend.js:252
+#: src/webui/static/app/tvheadend.js:267
 msgid "Select channel..."
 msgstr "Kanal auswählen..."
 
-#: src/webui/static/app/tvheadend.js:289
+#: src/webui/static/app/tvheadend.js:304
 msgid "Select stream profile..."
 msgstr "Streamprofil auswählen..."
 
-#: src/webui/static/app/idnode.js:447 src/webui/static/app/idnode.js:618
+#: src/webui/static/app/idnode.js:456 src/webui/static/app/idnode.js:677
 msgid "Select {0} ..."
 msgstr "{0} auswählen ..."
 
-#: src/webui/static/app/idnode.js:431 src/webui/static/app/idnode.js:594
+#: src/webui/static/app/idnode.js:440 src/webui/static/app/idnode.js:653
 msgid "Selected"
 msgstr "Ausgewählt"
 
@@ -1355,7 +1385,7 @@ msgstr "Sep"
 msgid "September"
 msgstr "September"
 
-#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:110
+#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:112
 msgid "Service"
 msgstr "Service"
 
@@ -1375,7 +1405,7 @@ msgstr "Servicedetails für"
 msgid "Services"
 msgstr "Services"
 
-#: src/webui/static/app/idnode.js:853
+#: src/webui/static/app/idnode.js:924
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -1383,15 +1413,15 @@ msgstr "Einstellungen"
 msgid "Show in Groups"
 msgstr "In Gruppen anzeigen"
 
-#: src/webui/static/app/idnode.js:1975
+#: src/webui/static/app/idnode.js:2137
 msgid "Show or hide passwords"
 msgstr "Passwörter zeigen/verstecken"
 
-#: src/webui/static/app/idnode.js:1977 src/webui/static/app/idnode.js:1981
+#: src/webui/static/app/idnode.js:2139 src/webui/static/app/idnode.js:2143
 msgid "Show passwords"
 msgstr "Zeige Passwörter"
 
-#: src/webui/static/app/status.js:422
+#: src/webui/static/app/status.js:430
 msgid "Signal Strength"
 msgstr "Signalstärke"
 
@@ -1411,7 +1441,7 @@ msgstr "Bewertung"
 msgid "Stars"
 msgstr "Bewertung"
 
-#: src/webui/static/app/status.js:116
+#: src/webui/static/app/status.js:124
 msgid "Start"
 msgstr "Start"
 
@@ -1420,19 +1450,19 @@ msgstr "Start"
 msgid "Start Time"
 msgstr "Startzeit"
 
-#: src/webui/static/app/status.js:572
+#: src/webui/static/app/status.js:580
 msgid "Started"
 msgstr "Gestartet"
 
-#: src/webui/static/app/status.js:126
+#: src/webui/static/app/status.js:134
 msgid "State"
 msgstr "Status"
 
-#: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:619
+#: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:627
 msgid "Status"
 msgstr "Status"
 
-#: src/webui/static/app/dvr.js:202 src/webui/static/app/tvheadend.js:343
+#: src/webui/static/app/dvr.js:202 src/webui/static/app/tvheadend.js:358
 msgid "Stop"
 msgstr "Stop"
 
@@ -1448,12 +1478,12 @@ msgstr "Aufnahme dieser Sendung stoppen"
 msgid "Stop the selected recording"
 msgstr "Ausgewählte Aufnahme stoppen"
 
-#: src/webui/static/app/tvheadend.js:700
+#: src/webui/static/app/tvheadend.js:727
 msgid "Storage space"
 msgstr "Speicherplatz"
 
-#: src/webui/static/app/status.js:344 src/webui/static/app/status.js:474
-#: src/webui/static/app/tvheadend.js:509
+#: src/webui/static/app/status.js:352 src/webui/static/app/status.js:482
+#: src/webui/static/app/tvheadend.js:535
 msgid "Stream"
 msgstr "Stream"
 
@@ -1470,11 +1500,11 @@ msgstr "Streamprofilname"
 msgid "Stream Profiles"
 msgstr "Streamprofile"
 
-#: src/webui/static/app/status.js:349
+#: src/webui/static/app/status.js:357
 msgid "Subs No."
 msgstr "Abo Nr."
 
-#: src/webui/static/app/status.js:199
+#: src/webui/static/app/status.js:207
 msgid "Subscriptions"
 msgstr "Abonnements"
 
@@ -1482,11 +1512,11 @@ msgstr "Abonnements"
 msgid "Subtitle"
 msgstr "Untertitel"
 
-#: src/webui/static/app/esfilter.js:108
+#: src/webui/static/app/esfilter.js:111
 msgid "Subtitle Stream Filter"
 msgstr "Untertitel Streamfilter"
 
-#: src/webui/static/app/esfilter.js:109
+#: src/webui/static/app/esfilter.js:112
 msgid "Subtitle Stream Filters"
 msgstr "Untertitel Streamfilter"
 
@@ -1498,15 +1528,15 @@ msgstr "So"
 msgid "Sunday"
 msgstr "Sonntag"
 
-#: src/webui/static/app/chconf.js:183
+#: src/webui/static/app/chconf.js:164
 msgid "Swap Numbers"
 msgstr "Nummern tauschen"
 
-#: src/webui/static/app/chconf.js:181
+#: src/webui/static/app/chconf.js:162
 msgid "Swap the numbers for the two selected channels"
 msgstr "Tausche die Nummern der zwei ausgewählten Kanäle"
 
-#: src/webui/static/app/tvheadend.js:760
+#: src/webui/static/app/tvheadend.js:787
 msgid "System log"
 msgstr "Systemprotokoll"
 
@@ -1518,11 +1548,11 @@ msgstr "TV-Adapter"
 msgid "Tag"
 msgstr "Tag"
 
-#: src/webui/static/app/esfilter.js:89
+#: src/webui/static/app/esfilter.js:91
 msgid "Teletext Stream Filter"
 msgstr "Videotext Streamfilter"
 
-#: src/webui/static/app/esfilter.js:90
+#: src/webui/static/app/esfilter.js:92
 msgid "Teletext Stream Filters"
 msgstr "Videotext Streamfilter"
 
@@ -1598,17 +1628,17 @@ msgstr "Do"
 msgid "Thursday"
 msgstr "Donnerstag"
 
-#: src/webui/static/app/dvr.js:639
-msgid "Time Schedule"
-msgstr "Zeitaufnahme"
-
 #: src/webui/static/app/dvr.js:59
 msgid "Time Scheduler"
 msgstr "Zeitaufnahmen"
 
+#: src/webui/static/app/dvr.js:639
+msgid "Timer"
+msgstr "Timer"
+
 #: src/webui/static/app/dvr.js:640
-msgid "Time Schedules"
-msgstr "Zeitaufnahmen"
+msgid "Timers"
+msgstr "Timer"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
@@ -1619,7 +1649,7 @@ msgid "Timeshift Configuration"
 msgstr "Timeshift Konfiguration"
 
 #: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
-#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:98
+#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:100
 msgid "Title"
 msgstr "Titel"
 
@@ -1627,7 +1657,7 @@ msgstr "Titel"
 msgid "Today"
 msgstr "Heute"
 
-#: src/webui/static/app/tvheadend.js:361
+#: src/webui/static/app/tvheadend.js:376
 msgid "Toggle mute"
 msgstr "Lautlos umschalten"
 
@@ -1635,11 +1665,11 @@ msgstr "Lautlos umschalten"
 msgid "Toggle re-record functionality"
 msgstr "Neu-Aufnahme-Funktionalität umschalten"
 
-#: src/webui/static/app/tvheadend.js:703
+#: src/webui/static/app/tvheadend.js:730
 msgid "Total"
 msgstr "Gesamt"
 
-#: src/webui/static/app/status.js:383
+#: src/webui/static/app/status.js:391
 msgid "Transport Errors"
 msgstr "Transportfehler"
 
@@ -1659,25 +1689,25 @@ msgstr "Dienstag"
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr "Auf over-the-air EPG Muxes einstellen, um jetzt neue Ereignisse abzurufen"
 
-#: src/webui/static/app/tvheadend.js:739
+#: src/webui/static/app/tvheadend.js:766
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend Weboberfläche"
 
-#: src/webui/static/app/caclient.js:46 src/webui/static/app/esfilter.js:32
-#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:557
+#: src/webui/static/app/caclient.js:47 src/webui/static/app/esfilter.js:32
+#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:565
 msgid "Type"
 msgstr "Typ"
 
-#: src/webui/static/app/status.js:378
+#: src/webui/static/app/status.js:386
 msgid "Uncorrected Blocks"
 msgstr "Unkorrigierte Blocks"
 
-#: src/webui/static/app/idnode.js:1366 src/webui/static/app/idnode.js:1881
-#: src/webui/static/app/idnode.js:2338
+#: src/webui/static/app/idnode.js:1508 src/webui/static/app/idnode.js:2043
+#: src/webui/static/app/idnode.js:2562
 msgid "Undo"
 msgstr "Rückgängig"
 
-#: src/webui/static/app/status.js:415 src/webui/static/app/status.js:435
+#: src/webui/static/app/status.js:423 src/webui/static/app/status.js:443
 msgid "Unknown"
 msgstr "Unbekannt"
 
@@ -1689,11 +1719,11 @@ msgstr "Anstehende / Laufende Aufnahmen"
 msgid "Upcoming Recording"
 msgstr "Anstehende Aufnahmen"
 
-#: src/webui/static/app/status.js:92 src/webui/static/app/status.js:567
+#: src/webui/static/app/status.js:94 src/webui/static/app/status.js:575
 msgid "Username"
 msgstr "Benutzername"
 
-#: src/webui/static/app/tvheadend.js:459
+#: src/webui/static/app/tvheadend.js:482
 msgid "Users"
 msgstr "Benutzer"
 
@@ -1705,7 +1735,15 @@ msgstr "Video Streamfilter"
 msgid "Video Stream Filters"
 msgstr "Video Streamfilter"
 
-#: src/webui/static/app/tvheadend.js:370
+#: src/webui/static/app/idnode.js:613
+msgid "View level"
+msgstr "UI Modus"
+
+#: src/webui/static/app/idnode.js:616
+msgid "View level: "
+msgstr "UI Modus"
+
+#: src/webui/static/app/tvheadend.js:385
 msgid "Volume"
 msgstr "Lautstärke"
 
@@ -1725,7 +1763,7 @@ msgstr "Mi"
 msgid "Wednesday"
 msgstr "Mittwoch"
 
-#: src/webui/static/app/status.js:354
+#: src/webui/static/app/status.js:362
 msgid "Weight"
 msgstr "Gewicht"
 
@@ -1737,7 +1775,7 @@ msgstr "Wird übersprungen"
 msgid "Yes"
 msgstr "Ja"
 
-#: src/webui/static/app/idnode.js:459 src/webui/static/app/idnode.js:740
+#: src/webui/static/app/idnode.js:468 src/webui/static/app/idnode.js:799
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "Sie müssen einen Wert angeben - benutzen Sie chmod Oktalschreibweise, z.B. 0664"
 
@@ -1767,16 +1805,16 @@ msgid ""
 "A|gi|hi|gia|hia|g|H#TimeField"
 msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
-#: src/webui/static/app/idnode.js:349 src/webui/static/app/idnode.js:350
+#: src/webui/static/app/idnode.js:358 src/webui/static/app/idnode.js:359
 #: src/webui/static/app/epg.js:427 src/webui/static/app/epg.js:429
 msgid "hrs"
 msgstr "Std."
 
-#: src/webui/static/app/tvheadend.js:678
+#: src/webui/static/app/tvheadend.js:705
 msgid "login"
 msgstr "Anmelden"
 
-#: src/webui/static/app/tvheadend.js:675
+#: src/webui/static/app/tvheadend.js:702
 msgid "logout"
 msgstr "Abmelden"
 
@@ -1804,7 +1842,7 @@ msgstr "d.m.y#DateField"
 msgid "m/d/y#DatePicker"
 msgstr "d.m.y#DatePicker"
 
-#: src/webui/static/app/idnode.js:350 src/webui/static/app/idnode.js:352
+#: src/webui/static/app/idnode.js:359 src/webui/static/app/idnode.js:361
 #: src/webui/static/app/epg.js:429 src/webui/static/app/epg.js:432
 #: src/webui/static/app/dvr.js:46
 msgid "min"
@@ -1839,6 +1877,6 @@ msgid "{0} selected row{1}"
 msgstr "{0} Zeile(n) ausgewählt"
 
 #. / {0} start, {1} end, {2} total, {3} title
-#: src/webui/static/app/tvheadend.js:119
+#: src/webui/static/app/tvheadend.js:134
 msgid "{3} {0} - {1} of {2}"
 msgstr "{3} {0} - {1} von {2}"
