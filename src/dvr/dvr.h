@@ -645,7 +645,6 @@ void dvr_inotify_init ( void );
 void dvr_inotify_done ( void );
 void dvr_inotify_add  ( dvr_entry_t *de );
 void dvr_inotify_del  ( dvr_entry_t *de );
-int  dvr_inotify_count( void );
 
 /**
  * Cutpoints support

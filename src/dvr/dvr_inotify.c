@@ -56,7 +56,6 @@ static int _str_cmp ( void *a, void *b )
   return strcmp(((dvr_inotify_entry_t*)a)->path, ((dvr_inotify_entry_t*)b)->path);
 }
 
-
 /**
  * Initialise threads
  */
@@ -107,15 +106,12 @@ void dvr_inotify_add ( dvr_entry_t *de )
   dvr_inotify_entry_skel->path = dirname(path);
   
   e = RB_INSERT_SORTED(&_inot_tree, dvr_inotify_entry_skel, link, _str_cmp);
-  if (e) {
-    free(path);
-    return;
+  if (!e) {
+    e       = dvr_inotify_entry_skel;
+    SKEL_USED(dvr_inotify_entry_skel);
+    e->path = strdup(e->path);
+    e->fd   = inotify_add_watch(_inot_fd, e->path, EVENT_MASK);
   }
-
-  e       = dvr_inotify_entry_skel;
-  SKEL_USED(dvr_inotify_entry_skel);
-  e->path = strdup(e->path);
-  e->fd   = inotify_add_watch(_inot_fd, e->path, EVENT_MASK);
 
   LIST_INSERT_HEAD(&e->entries, de, de_inotify_link);
 
@@ -152,21 +148,6 @@ void dvr_inotify_del ( dvr_entry_t *de )
       free(e);
     }
   }
-}
-
-/*
- * return count of registered entries (for debugging)
- */
-int dvr_inotify_count ( void )
-{
-  dvr_entry_t *det = NULL;
-  dvr_inotify_entry_t *e;
-  int count = 0;
-  lock_assert(&global_lock);
-  RB_FOREACH(e, &_inot_tree, link)
-    LIST_FOREACH(det, &e->entries, de_inotify_link)
-      count++;
-  return count;
 }
 
 /*
