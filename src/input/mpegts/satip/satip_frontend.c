@@ -1459,9 +1459,6 @@ new_tune:
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
   }
 
-  /* Do not send the SMT_SIGNAL_STATUS packets - we are out of service */
-  gtimer_disarm(&lfe->sf_monitor_timer);
-
   sbuf_free(&sb);
   udp_multirecv_free(&um);
 
