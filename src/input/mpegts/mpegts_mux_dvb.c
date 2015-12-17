@@ -308,6 +308,7 @@ const idclass_t dvb_mux_dvbc_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dvbc, delsys, "DVB-C"),
+      .desc     = N_("Select the delivery system used by your cable provider."),
     },
     {
       .type     = PT_U32,
@@ -325,10 +326,13 @@ const idclass_t dvb_mux_dvbc_class =
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qam.symbol_rate),
     },
     {
-      MUX_PROP_STR("constellation", N_("Constellation"), dvbc, qam, N_("AUTO"))
+      MUX_PROP_STR("constellation", N_("Constellation"), dvbc, qam, N_("AUTO")),
+      .desc     = N_("Select the quadrature amplitude modulation (QAM) used by the mux. "
+                     "If you're not sure of the value leave as AUTO."),
     },
     {
-      MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO"))
+      MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
+      .desc     = N_("Select the forward error correction used on the mux."),
     },
     {}
   }

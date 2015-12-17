@@ -226,6 +226,7 @@ const idclass_t satip_frontend_dvbt_class =
       .type     = PT_STR,
       .id       = "fe_override",
       .name     = N_("Network type"),
+      .desc     = N_("Override the frontend type."),
       .set      = satip_frontend_class_override_set,
       .list     = satip_frontend_class_override_enum,
       .off      = offsetof(satip_frontend_t, sf_type_override),
