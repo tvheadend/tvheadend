@@ -151,12 +151,21 @@ int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
  */
 void timeshift_filemgr_close ( timeshift_file_t *tsf )
 {
+  uint8_t *ram;
   ssize_t r = timeshift_write_eof(tsf);
   if (r > 0) {
     tsf->size += r;
     atomic_add_u64(&timeshift_total_size, r);
     if (tsf->ram)
       atomic_add_u64(&timeshift_total_ram_size, r);
+  }
+  if (tsf->ram) {
+    /* maintain unused memory block */
+    ram = realloc(tsf->ram, tsf->woff);
+    if (ram) {
+      tsf->ram = ram;
+      tsf->ram_size = tsf->woff;
+    }
   }
   if (tsf->wfd >= 0)
     close(tsf->wfd);
