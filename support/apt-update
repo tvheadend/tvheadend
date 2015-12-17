@@ -5,6 +5,8 @@
 # environment variables
 #
 
+#set -x
+
 # Terminate
 function die
 {
@@ -21,28 +23,23 @@ TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
 
 # Builds
 TVH_BUILD="
-precise:i386
-precise:amd64
-trusty:i386
-trusty:amd64
-utopic:i386
-utopic:amd64
-vivid:i386
-vivid:amd64
-wheezy:i386
-wheezy:amd64
-wheezy:armhf
-jessie:i386
-jessie:amd64
-jessie:armhf
-sid:i386
-sid:amd64
-sid:armhf
+precise:i386:amd64
+trusty:i386:amd64
+vivid:i386:amd64
+wily:i386:amd64
+wheezy:i386:amd64:armhf
+jessie:i386:amd64:armhf
 "
 
 # Options
 [ ! -z "$1" ] && REL=$1 || REL=master
 [ ! -z "$2" ] && PPA=$2 || PPA=unstable
+
+# Set default package
+[ -z "$DEBEMAIL"    ] && DEBEMAIL="apt@tvheadend.org"
+[ -z "$DEBFULLNAME" ] && DEBFULLNAME="Tvheadend (Package Signing Key)"
+export DEBEMAIL
+export DEBFULLNAME
 
 # Setup
 cd "$TVH_ROOT" || exit 1
@@ -68,11 +65,14 @@ cd ..
 
 # For each distro
 for b in $TVH_BUILD; do
+  d=${b%%:*}
+  arch=${b##${d}:}
+  arch=${arch/:/ }
+
+  # Update version
   V=${VER}~${d}
   mv tvheadend "tvheadend-${V}"
   cd "tvheadend-${V}"
-  d=${b%%:*}
-  a=${b##*:}
 
   # Create changelog
   ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
@@ -82,8 +82,9 @@ for b in $TVH_BUILD; do
 
   # Build
   if [ "$CMD" == "pbuilder" ]; then
-  
-    pbuilder-dist $d $a ../tvheadend_${V}.dsc
+    for a in ${arch}; do
+      pbuilder-dist $d $a ../tvheadend_${V}.dsc
+    done
 
   # Upload
   else
