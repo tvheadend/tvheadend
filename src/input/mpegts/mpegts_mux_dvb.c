@@ -212,6 +212,9 @@ const idclass_t dvb_mux_dvbt_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dvbt, delsys, "DVBT"),
+      .desc     = N_("Select the delivery system the mux uses. "
+                     "If you have a DVB-T tuner you must select DVB-T "
+                     "here."),
     },
     {
       .type     = PT_U32,
@@ -222,30 +225,50 @@ const idclass_t dvb_mux_dvbt_class =
       .set      = dvb_mux_dvbt_class_frequency_set,
     },
     {
-      MUX_PROP_STR("bandwidth", N_("Bandwidth"), dvbt, bw, N_("AUTO"))
+      MUX_PROP_STR("bandwidth", N_("Bandwidth"), dvbt, bw, N_("AUTO")),
+      .desc     = N_("Select the bandwidth the mux uses. "
+                     "If you're not sure of the value leave as AUTO "
+                     "but be aware that tuning may fail as some drivers "
+                     "do not like the AUTO setting."),
     },
     {
-      MUX_PROP_STR("constellation", N_("Constellation"), dvbt, qam, N_("AUTO"))
+      MUX_PROP_STR("constellation", N_("Constellation"), dvbt, qam, N_("AUTO")),
+      .desc     = N_("Select the COFDM modulation used by the mux. "
+                     "If you're not sure of the value leave as AUTO."),
     },
     {
-      MUX_PROP_STR("transmission_mode", N_("Transmission mode"), dvbt, mode, N_("AUTO"))
+      MUX_PROP_STR("transmission_mode", N_("Transmission mode"), dvbt, mode, N_("AUTO")),
+      .desc     = N_("Select the transmission/OFDM mode used by the mux. "
+                     "If you're not sure of the value leave as AUTO "
+                     "but be aware that tuning may fail as some drivers "
+                     "do not like the AUTO setting."),
     },
     {
-      MUX_PROP_STR("guard_interval", N_("Guard interval"), dvbt, guard, N_("AUTO"))
+      MUX_PROP_STR("guard_interval", N_("Guard interval"), dvbt, guard, N_("AUTO")),
+      .desc     = N_("Select the guard interval used by the mux. "
+                     "If you're not sure of the value leave as AUTO."),
     },
     {
       MUX_PROP_STR("hierarchy", N_("Hierarchy"), dvbt, hier, N_("AUTO")),
+      .desc     = N_("Select the Hierarchical modulation used by this mux. "
+                     "Most people will not need to change this setting."),
     },
     {
       MUX_PROP_STR("fec_hi", N_("FEC high"), dvbt, fechi, N_("AUTO")),
+      .desc     = N_("Select the forward error correction high value. "
+                     "Most people will not need to change this setting."),
     },
     {
       MUX_PROP_STR("fec_lo", N_("FEC low"), dvbt, feclo, N_("AUTO")),
+      .desc     = N_("Select the forward error correction low value. "
+                     "Most people will not need to change this setting."),
     },
     {
       .type     = PT_INT,
       .id       = "plp_id",
       .name     = N_("PLP ID"),
+      .desc     = N_("Select the physical layer pipe ID. "
+                     "Most people will not need to change this setting."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
     },
