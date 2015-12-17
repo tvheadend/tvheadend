@@ -622,6 +622,7 @@ const idclass_t esfilter_class = {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
+      .desc     = N_("Enable this filter."),
       .off      = offsetof(esfilter_t, esf_enabled),
     },
     {}
