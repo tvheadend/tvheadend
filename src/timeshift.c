@@ -153,7 +153,7 @@ const idclass_t timeshift_conf_class = {
     {
       .type   = PT_BOOL,
       .id     = "ondemand",
-      .name   = N_("On-demand"),
+      .name   = N_("On-demand (no rewind)"),
       .off    = offsetof(timeshift_conf_t, ondemand),
     },
     {
