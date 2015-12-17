@@ -2461,7 +2461,7 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
     skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
-    tvhtrace("htsp-sub", "skip: %s %"PRId64" (%s)\n", abs ? "abs" : "rel",
+    tvhtrace("htsp-sub", "skip: %s %"PRId64" (%s)", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
   } else if (!htsmsg_get_s64(in, "size", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
