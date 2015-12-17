@@ -640,7 +640,7 @@ linuxdvb_frontend_monitor ( void *aux )
              (fe_status & FE_HAS_CARRIER) ? " | CARRIER" : "",
              (fe_status & FE_HAS_VITERBI) ? " | VITERBI" : "",
              (fe_status & FE_HAS_SYNC) ?    " | SYNC"    : "",
-             (fe_status & FE_HAS_LOCK) ?    " | SIGNAL"  : "",
+             (fe_status & FE_HAS_LOCK) ?    " | LOCK"  : "",
              (fe_status & FE_TIMEDOUT) ?    "TIMEOUT" : "");
   } else {
     tvhtrace("linuxdvb", "%s - status %d (%04X)", buf, status, fe_status);
