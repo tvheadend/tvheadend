@@ -201,6 +201,7 @@ const idclass_t satip_device_class =
       .type     = PT_STR,
       .id       = "tunercfgu",
       .name     = N_("Tuner configuration"),
+      .desc     = N_("Tuner configuration."),
       .opts     = PO_SORTKEY,
       .off      = offsetof(satip_device_t, sd_tunercfg),
       .list     = satip_device_class_tunercfg_list,
