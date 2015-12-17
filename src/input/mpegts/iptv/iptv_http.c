@@ -31,6 +31,7 @@
 typedef struct http_priv {
   iptv_mux_t    *im;
   http_client_t *hc;
+  uint8_t        shutdown;
   uint8_t        started;
   sbuf_t         m3u_sbuf;
   sbuf_t         key_sbuf;
@@ -63,12 +64,13 @@ static int iptv_http_complete_key ( http_client_t *hc );
  *
  */
 static int
-iptv_http_safe_global_lock( iptv_mux_t *im )
+iptv_http_safe_global_lock( http_priv_t *hp )
 {
+  iptv_mux_t *im = hp->im;
   int r;
 
   while (1) {
-    if (im->mm_active == NULL)
+    if (im->mm_active == NULL || hp->shutdown)
       return 0;
     r = pthread_mutex_trylock(&global_lock);
     if (r == 0)
@@ -76,7 +78,7 @@ iptv_http_safe_global_lock( iptv_mux_t *im )
     if (r != EBUSY)
       continue;
     sched_yield();
-    if (im->mm_active == NULL)
+    if (im->mm_active == NULL || hp->shutdown)
       return 0;
     r = pthread_mutex_trylock(&global_lock);
     if (r == 0)
@@ -242,7 +244,7 @@ iptv_http_header ( http_client_t *hc )
 
   hp->m3u_header = 0;
   hp->off = 0;
-  if (iptv_http_safe_global_lock(hp->im)) {
+  if (iptv_http_safe_global_lock(hp)) {
     if (!hp->started) {
       iptv_input_mux_started(hp->im);
     } else {
@@ -337,8 +339,8 @@ iptv_http_data
 
   pthread_mutex_unlock(&iptv_lock);
 
-  if (pause && iptv_http_safe_global_lock(im)) {
-    if (im->mm_active)
+  if (pause && iptv_http_safe_global_lock(hp)) {
+    if (im->mm_active && !hp->shutdown)
       gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
     pthread_mutex_unlock(&global_lock);
   }
@@ -547,6 +549,7 @@ iptv_http_stop
   http_priv_t *hp = im->im_data;
 
   hp->hc->hc_aux = NULL;
+  hp->shutdown = 1;
   pthread_mutex_unlock(&iptv_lock);
   http_client_close(hp->hc);
   pthread_mutex_lock(&iptv_lock);

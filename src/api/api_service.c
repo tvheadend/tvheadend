@@ -28,30 +28,6 @@
 #include "notify.h"
 
 static int
-api_mapper_start
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
-{
-  service_mapper_conf_t conf = { 0 };
-  htsmsg_t *uuids;
-#define get_u32(x)\
-  conf.x = htsmsg_get_bool_or_default(args, #x, 0)
-  
-  /* Get config */
-  uuids = htsmsg_get_list(args, "uuids");
-  get_u32(check_availability);
-  get_u32(encrypted);
-  get_u32(merge_same_name);
-  get_u32(provider_tags);
-  get_u32(network_tags);
-  
-  pthread_mutex_lock(&global_lock);
-  service_mapper_start(&conf, uuids);
-  pthread_mutex_unlock(&global_lock);
-
-  return 0;
-}
-
-static int
 api_mapper_stop
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
@@ -188,11 +164,11 @@ void api_service_init ( void )
 {
   extern const idclass_t service_class;
   static api_hook_t ah[] = {
-    { "service/mapper/start",   ACCESS_ADMIN, api_mapper_start,  NULL },
+    { "service/mapper/load",    ACCESS_ADMIN, api_idnode_load_simple, &service_mapper_conf },
+    { "service/mapper/save",    ACCESS_ADMIN, api_idnode_save_simple, &service_mapper_conf },
     { "service/mapper/stop",    ACCESS_ADMIN, api_mapper_stop,   NULL },
     { "service/mapper/status",  ACCESS_ADMIN, api_mapper_status, NULL },
-    { "service/list",           ACCESS_ADMIN, api_idnode_load_by_class,
-      (void*)&service_class },
+    { "service/list",           ACCESS_ADMIN, api_idnode_load_by_class, (void*)&service_class },
     { "service/streams",        ACCESS_ADMIN, api_service_streams, NULL },
     { NULL },
   };

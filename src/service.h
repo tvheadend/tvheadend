@@ -294,7 +294,7 @@ typedef struct service {
   int (*s_is_enabled)(struct service *t, int flags);
 
   void (*s_enlist)(struct service *s, struct tvh_input *ti,
-                   service_instance_list_t *sil, int flags);
+                   service_instance_list_t *sil, int flags, int weight);
 
   int (*s_start_feed)(struct service *s, int instance, int weight, int flags);
 
@@ -309,6 +309,8 @@ typedef struct service {
   int (*s_grace_period)(struct service *t);
 
   void (*s_delete)(struct service *t, int delconf);
+
+  void (*s_unref)(struct service *t);
 
   int (*s_satip_source)(struct service *t);
 

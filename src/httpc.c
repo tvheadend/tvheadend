@@ -126,7 +126,6 @@ static void
 http_client_shutdown ( http_client_t *hc, int force, int reconnect )
 {
   struct http_client_ssl *ssl = hc->hc_ssl;
-  tvhpoll_t *efd = NULL;
 
   hc->hc_shutdown = 1;
   if (ssl) {
@@ -142,7 +141,7 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
     tvhpoll_event_t ev;
     memset(&ev, 0, sizeof(ev));
     ev.fd       = hc->hc_fd;
-    tvhpoll_rem(efd = hc->hc_efd, &ev, 1);
+    tvhpoll_rem(hc->hc_efd, &ev, 1);
     if (hc->hc_efd == http_poll && !reconnect) {
       pthread_mutex_lock(&http_lock);
       TAILQ_REMOVE(&http_clients, hc, hc_link);
@@ -1145,7 +1144,7 @@ http_client_basic_args ( http_client_t *hc, http_arg_list_t *h, const url_t *url
 {
   char buf[256];
 
-  http_arg_init(h);
+  http_arg_flush(h);
   if (url->port == 0) { /* default port */
     http_arg_set(h, "Host", url->host);
   } else {
@@ -1236,6 +1235,7 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
 
   http_client_flush(hc, 0);
 
+  http_arg_init(&h);
   hc->hc_hdr_create(hc, &h, u, 0);
   hc->hc_reconnected = 1;
   hc->hc_shutdown    = 0;
@@ -1295,6 +1295,7 @@ http_client_simple( http_client_t *hc, const url_t *url )
 {
   http_arg_list_t h;
 
+  http_arg_init(&h);
   hc->hc_hdr_create(hc, &h, url, 0);
   free(hc->hc_url);
   hc->hc_url = url->raw ? strdup(url->raw) : NULL;
@@ -1523,6 +1524,7 @@ void
 http_client_close ( http_client_t *hc )
 {
   http_client_wcmd_t *wcmd;
+  tvhpoll_event_t ev;
 
   if (hc == NULL)
     return;
@@ -1532,6 +1534,13 @@ http_client_close ( http_client_t *hc )
     hc->hc_shutdown_wait = 1;
     while (hc->hc_running)
       pthread_cond_wait(&http_cond, &http_lock);
+    if (hc->hc_efd) {
+      memset(&ev, 0, sizeof(ev));
+      ev.fd = hc->hc_fd;
+      tvhpoll_rem(hc->hc_efd, &ev, 1);
+      TAILQ_REMOVE(&http_clients, hc, hc_link);
+      hc->hc_efd = NULL;
+    }
     pthread_mutex_unlock(&http_lock);
   }
   http_client_shutdown(hc, 1, 0);

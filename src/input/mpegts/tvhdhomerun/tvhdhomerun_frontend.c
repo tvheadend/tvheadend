@@ -573,11 +573,21 @@ const idclass_t tvhdhomerun_frontend_dvbc_class =
   }
 };
 
-const idclass_t tvhdhomerun_frontend_atsc_class =
+const idclass_t tvhdhomerun_frontend_atsc_t_class =
 {
   .ic_super      = &tvhdhomerun_frontend_class,
-  .ic_class      = "tvhdhomerun_frontend_atsc",
-  .ic_caption    = N_("HDHomeRun ATSC frontend"),
+  .ic_class      = "tvhdhomerun_frontend_atsc_t",
+  .ic_caption    = N_("HDHomeRun ATSC-T frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t tvhdhomerun_frontend_atsc_c_class =
+{
+  .ic_super      = &tvhdhomerun_frontend_class,
+  .ic_class      = "tvhdhomerun_frontend_atsc_c",
+  .ic_caption    = N_("HDHomeRun ATSC-C frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -626,9 +636,11 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
     idc = &tvhdhomerun_frontend_dvbt_class;
   else if (type == DVB_TYPE_C)
     idc = &tvhdhomerun_frontend_dvbc_class;
-  else if (type == DVB_TYPE_ATSC) {
-    idc = &tvhdhomerun_frontend_atsc_class;
-  } else {
+  else if (type == DVB_TYPE_ATSC_T)
+    idc = &tvhdhomerun_frontend_atsc_t_class;
+  else if (type == DVB_TYPE_ATSC_C)
+    idc = &tvhdhomerun_frontend_atsc_c_class;
+  else {
     tvherror("stvhdhomerun", "unknown FE type %d", type);
     return NULL;
   }

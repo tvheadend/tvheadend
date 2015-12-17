@@ -134,13 +134,13 @@ rtsp_delsys(int fe, int *findex)
     goto result;
   }
   fe -= i;
-  i = satip_server_conf.satip_atsc;
+  i = satip_server_conf.satip_atsc_t;
   if (fe <= i) {
     res = DVB_SYS_ATSC;
     goto result;
   }
   fe -= i;
-  i = satip_server_conf.satip_dvbcb;
+  i = satip_server_conf.satip_atsc_c;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_B;
     goto result;

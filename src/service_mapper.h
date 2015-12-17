@@ -23,12 +23,19 @@ struct bouquet;
 
 typedef struct service_mapper_conf
 {
-  uint8_t check_availability; ///< Check service is receivable
-  uint8_t encrypted;          ///< Include encrypted services
-  uint8_t merge_same_name;    ///< Merge entries with the same name
-  uint8_t provider_tags;      ///< Create tags based on provider name
-  uint8_t network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
+  int check_availability; ///< Check service is receivable
+  int encrypted;          ///< Include encrypted services
+  int merge_same_name;    ///< Merge entries with the same name
+  int type_tags;          ///< Create tags based on the service type (SDTV/HDTV/Radio)
+  int provider_tags;      ///< Create tags based on provider name
+  int network_tags;       ///< Create tags based on network name (useful for multi adapter equipments)
 } service_mapper_conf_t;
+
+typedef struct service_mapper {
+  idnode_t idnode;
+  service_mapper_conf_t d;
+  htsmsg_t *services;
+} service_mapper_t;
 
 typedef struct service_mapper_status
 {
@@ -39,12 +46,10 @@ typedef struct service_mapper_status
   service_t *active;
 } service_mapper_status_t;
 
+extern service_mapper_t service_mapper_conf;
+
 void service_mapper_init   ( void );
 void service_mapper_done   ( void );
-
-// Start new mapping
-void service_mapper_start  
-  ( const service_mapper_conf_t *conf, htsmsg_t *uuids );
 
 // Stop pending services (remove from Q)
 void service_mapper_stop   ( void );

@@ -1153,8 +1153,6 @@ Ext.ux.form.TwinDateTimeField = Ext.extend(Ext.form.Field, {
     // call parent initComponent
     Ext.ux.form.TwinDateTimeField.superclass.initComponent.call(this);
 
-    if (this.value) this.value = this.value * 1000;
-
     // create DateField
     var dateConfig = Ext.apply({}, {
       id : this.id + '-date',

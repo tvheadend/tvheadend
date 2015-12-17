@@ -279,11 +279,21 @@ const idclass_t linuxdvb_frontend_dvbc_class =
   }
 };
 
-const idclass_t linuxdvb_frontend_atsc_class =
+const idclass_t linuxdvb_frontend_atsc_t_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
-  .ic_class      = "linuxdvb_frontend_atsc",
-  .ic_caption    = N_("Linux ATSC frontend"),
+  .ic_class      = "linuxdvb_frontend_atsc_t",
+  .ic_caption    = N_("Linux ATSC-T frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t linuxdvb_frontend_atsc_c_class =
+{
+  .ic_super      = &linuxdvb_frontend_class,
+  .ic_class      = "linuxdvb_frontend_atsc_c",
+  .ic_caption    = N_("Linux ATSC-C frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -1453,6 +1463,7 @@ linuxdvb_frontend_tune0
 #undef _OFDM
     break;
   case DVB_TYPE_C:
+  case DVB_TYPE_ATSC_C:
     p.u.qam.symbol_rate      = dmc->u.dmc_fe_qam.symbol_rate;
     p.u.qam.fec_inner        = TRU(qam.fec_inner, fec_tbl, FEC_AUTO);
     p.u.qam.modulation       = TR(modulation, mod_tbl, QAM_AUTO);
@@ -1461,7 +1472,7 @@ linuxdvb_frontend_tune0
     p.u.qpsk.symbol_rate     = dmc->u.dmc_fe_qpsk.symbol_rate;
     p.u.qpsk.fec_inner       = TRU(qpsk.fec_inner, fec_tbl, FEC_AUTO);
     break;
-  case DVB_TYPE_ATSC:
+  case DVB_TYPE_ATSC_T:
     p.u.vsb.modulation       = TR(modulation, mod_tbl, QAM_AUTO);
     break;
   default:
@@ -1678,8 +1689,10 @@ linuxdvb_frontend_create
     idc = &linuxdvb_frontend_dvbc_class;
   else if (type == DVB_TYPE_T)
     idc = &linuxdvb_frontend_dvbt_class;
-  else if (type == DVB_TYPE_ATSC)
-    idc = &linuxdvb_frontend_atsc_class;
+  else if (type == DVB_TYPE_ATSC_T)
+    idc = &linuxdvb_frontend_atsc_t_class;
+  else if (type == DVB_TYPE_ATSC_C)
+    idc = &linuxdvb_frontend_atsc_c_class;
   else {
     tvherror("linuxdvb", "unknown FE type %d", type);
     return NULL;

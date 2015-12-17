@@ -850,7 +850,7 @@ http_dvr_list_playlist(http_connection_t *hc, int pltype)
 
   htsbuf_append_str(hq, "#EXTM3U\n");
   LIST_FOREACH(de, &dvrentries, de_global_link) {
-    fsize = dvr_get_filesize(de);
+    fsize = dvr_get_filesize(de, 0);
     if(!fsize)
       continue;
 
@@ -904,7 +904,7 @@ http_dvr_playlist(http_connection_t *hc, int pltype, dvr_entry_t *de)
 
   hostpath  = http_get_hostpath(hc);
   durration  = dvr_entry_get_stop_time(de) - dvr_entry_get_start_time(de, 0);
-  fsize = dvr_get_filesize(de);
+  fsize = dvr_get_filesize(de, 0);
 
   if(fsize) {
     bandwidth = ((8*fsize) / (durration*1024.0));

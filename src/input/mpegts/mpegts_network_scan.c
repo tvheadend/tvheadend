@@ -339,9 +339,9 @@ tsid_lookup:
     pol[1] = '\0';
     src += l;
 
-    if ((l = startswith(src, "DVBS2,")) > 0)
+    if ((l = startswith(src, "DVBS2,")) > 0 || (l = startswith(src, "DVBS-2,")) > 0)
       dvbs2 = 1;
-    else if ((l = startswith(src, "DVBS,")) > 0)
+    else if ((l = startswith(src, "DVBS,")) > 0 || (l = startswith(src, "DVB-S,")) > 0)
       dvbs2 = 0;
     else
       return;

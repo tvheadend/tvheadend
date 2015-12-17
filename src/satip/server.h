@@ -51,8 +51,8 @@ struct satip_server_conf {
   int satip_dvbt2;
   int satip_dvbc;
   int satip_dvbc2;
-  int satip_atsc;
-  int satip_dvbcb;
+  int satip_atsc_t;
+  int satip_atsc_c;
   char *satip_nat_ip;
 };
 

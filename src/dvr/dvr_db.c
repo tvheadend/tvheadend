@@ -393,6 +393,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   time_t stop = de->de_stop;
   uint32_t removal = dvr_entry_get_removal_days(de);
   uint32_t retention = dvr_entry_get_retention_days(de);
+  int save;
 
   stop = de->de_stop + removal * (time_t)86400;
   if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
@@ -400,17 +401,22 @@ dvr_entry_retention_timer(dvr_entry_t *de)
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
       return;
     }
+    save = 0;
     if (dvr_get_filename(de))
-      dvr_entry_delete(de, 1);    // delete actual file
+      save = dvr_entry_delete(de); // delete actual file
     if (retention == DVR_RET_ONREMOVE) {
       dvr_entry_destroy(de, 1);   // also remove database entry
       return;
     }
+    if (save)
+      dvr_entry_save(de);
   }
 
-  if (retention  < DVR_RET_ONREMOVE) {
+  if (retention < DVR_RET_ONREMOVE) {
     stop = de->de_stop + retention * (time_t)86400;
     dvr_entry_retention_arm(de, dvr_timer_expire, stop);
+  } else {
+    gtimer_disarm(&de->de_timer);
   }
 }
 
@@ -497,7 +503,7 @@ dvr_entry_status(dvr_entry_t *de)
       default:
         break;
     }
-    if(dvr_get_filesize(de) == -1)
+    if(dvr_get_filesize(de, 0) == -1)
       return N_("File missing");
     if(de->de_last_error)
       return streaming_code2txt(de->de_last_error);
@@ -533,7 +539,7 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(de->de_last_error || dvr_get_filesize(de) == -1)
+    if(de->de_last_error || dvr_get_filesize(de, 0) == -1)
       s = "completedError";
     rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
@@ -592,12 +598,14 @@ dvr_entry_set_timer(dvr_entry_t *de)
   if (now >= stop || de->de_dont_reschedule) {
 
     /* EPG thinks that the program is running */
-    if(de->de_running_start > de->de_running_stop) {
+    if(de->de_running_start > de->de_running_stop && !de->de_dont_reschedule) {
       stop = dispatch_clock + 10;
-      goto recording;
+      if (de->de_sched_state == DVR_RECORDING)
+        goto recording;
     }
 
-    if(htsmsg_is_empty(de->de_files))
+    /* Files are missing and job was completed */
+    if(htsmsg_is_empty(de->de_files) && !de->de_dont_reschedule)
       dvr_entry_missed_time(de, de->de_last_error);
     else
       dvr_entry_completed(de, de->de_last_error);
@@ -753,6 +761,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   if (!clone)
     dvr_entry_set_timer(de);
   htsp_dvr_entry_add(de);
+  dvr_vfs_refresh_entry(de);
 
   return de;
 }
@@ -934,7 +943,6 @@ dvr_entry_clone(dvr_entry_t *de)
 
   if (n) {
     if(de->de_sched_state == DVR_RECORDING) {
-      de->de_dont_reschedule = 1;
       dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 1);
       dvr_rec_migrate(de, n);
       n->de_start = dispatch_clock;
@@ -971,15 +979,15 @@ dvr_entry_rerecord(dvr_entry_t *de)
     if (de->de_sched_state == DVR_COMPLETED &&
         de->de_errors == 0 &&
         de->de_data_errors < de->de_parent->de_data_errors) {
-      fsize1 = dvr_get_filesize(de);
-      fsize2 = dvr_get_filesize(de2);
+      fsize1 = dvr_get_filesize(de, DVR_FILESIZE_TOTAL);
+      fsize2 = dvr_get_filesize(de2, DVR_FILESIZE_TOTAL);
       if (fsize1 / 5 < fsize2 / 6) {
         goto not_so_good;
       } else {
         dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
-      if(dvr_get_filesize(de) == -1) {
+      if(dvr_get_filesize(de, 0) == -1) {
 delete_me:
         dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
@@ -1041,8 +1049,13 @@ not_so_good:
                                   de->de_owner, de->de_creator, NULL,
                                   de->de_pri, de->de_retention, de->de_removal,
                                   buf);
-  if (de2)
+  if (de2) {
     dvr_entry_change_parent_child(de, de2, NULL, 1);
+  } else {
+    /* we have already queued similar recordings, mark as resolved */
+    de->de_dont_rerecord = 1;
+    dvr_entry_save(de);
+  }
 
   return 0;
 }
@@ -1284,14 +1297,30 @@ dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf)
 void
 dvr_entry_save(dvr_entry_t *de)
 {
-  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map(), *e, *l, *c, *info;
+  htsmsg_field_t *f;
   char ubuf[UUID_HEX_SIZE];
+  const char *filename;
 
   lock_assert(&global_lock);
 
   idnode_save(&de->de_id, m);
-  if (de->de_files)
-    htsmsg_add_msg(m, "files", htsmsg_copy(de->de_files));
+  if (de->de_files) {
+    l = htsmsg_create_list();
+    HTSMSG_FOREACH(f, de->de_files)
+      if ((e = htsmsg_field_get_map(f)) != NULL) {
+        filename = htsmsg_get_str(e, "filename");
+        info = htsmsg_get_list(e, "info");
+        if (filename) {
+          c = htsmsg_create_map();
+          htsmsg_add_str(c, "filename", filename);
+          if (info)
+            htsmsg_add_msg(c, "info", htsmsg_copy(info));
+          htsmsg_add_msg(l, NULL, c);
+        }
+      }
+    htsmsg_add_msg(m, "files", l);
+  }
   hts_settings_save(m, "dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
   htsmsg_destroy(m);
 }
@@ -1730,7 +1759,6 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       atomic_exchange_time_t(&de->de_running_stop, dispatch_clock);
       atomic_exchange_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
-        de->de_dont_reschedule = 1;
         dvr_stop_recording(de, SM_CODE_OK, 0, 0);
         tvhdebug("dvr", "dvr entry %s %s %s on %s - EPG stop",
                  idnode_uuid_as_str(&de->de_id, ubuf), srcname,
@@ -1760,6 +1788,8 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
 
   if (!clone)
     dvr_rec_unsubscribe(de);
+
+  de->de_dont_reschedule = 1;
 
   if (stopcode != SM_CODE_INVALID_TARGET &&
       (rec_state == DVR_RS_PENDING ||
@@ -1795,6 +1825,8 @@ static void
 dvr_timer_stop_recording(void *aux)
 {
   dvr_entry_t *de = aux;
+  if(de->de_sched_state != DVR_RECORDING)
+    return;
   /* EPG thinks that the program is running */
   if (de->de_running_start > de->de_running_stop) {
     gtimer_arm(&de->de_timer, dvr_timer_stop_recording, de, 10);
@@ -1878,8 +1910,14 @@ dvr_entry_find_by_id(int id)
 static void
 dvr_entry_purge(dvr_entry_t *de, int delconf)
 {
-  if(de->de_sched_state == DVR_RECORDING)
+  int dont_reschedule;
+
+  if(de->de_sched_state == DVR_RECORDING) {
+    dont_reschedule = de->de_dont_reschedule;
     dvr_stop_recording(de, SM_CODE_SOURCE_DELETED, delconf, 0);
+    if (!delconf)
+      de->de_dont_reschedule = dont_reschedule;
+  }
 }
 
 
@@ -2519,7 +2557,7 @@ dvr_entry_class_filesize_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_sched_state == DVR_COMPLETED ||
       de->de_sched_state == DVR_RECORDING) {
-    size = dvr_get_filesize(de);
+    size = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (size < 0)
       size = 0;
   } else
@@ -3056,20 +3094,31 @@ dvr_get_filename(dvr_entry_t *de)
  *
  */
 int64_t
-dvr_get_filesize(dvr_entry_t *de)
+dvr_get_filesize(dvr_entry_t *de, int flags)
 {
+  htsmsg_field_t *f;
+  htsmsg_t *m;
   const char *filename;
-  struct stat st;
+  int first = 1;
+  int64_t res = 0, size;
 
-  filename = dvr_get_filename(de);
-
-  if(filename == NULL)
+  if (de->de_files == NULL)
     return -1;
 
-  if(stat(filename, &st) != 0)
-    return -1;
+  HTSMSG_FOREACH(f, de->de_files)
+    if ((m = htsmsg_field_get_map(f)) != NULL) {
+      filename = htsmsg_get_str(m, "filename");
+      if (flags & DVR_FILESIZE_UPDATE)
+        size = dvr_vfs_update_filename(filename, m);
+      else
+        size = htsmsg_get_s64_or_default(m, "size", -1);
+      if (filename && size >= 0) {
+        res = (flags & DVR_FILESIZE_TOTAL) ? (res + size) : size;
+        first = 0;
+      }
+    }
 
-  return st.st_size;
+  return first ? -1 : res;
 }
 
 /**
@@ -3098,8 +3147,8 @@ dvr_val2pri(dvr_prio_t v)
 /**
  *
  */
-void
-dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
+int
+dvr_entry_delete(dvr_entry_t *de)
 {
   dvr_config_t *cfg = de->de_config;
   htsmsg_t *m;
@@ -3108,7 +3157,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
   struct tm tm;
   const char *filename;
   char tbuf[64], ubuf[UUID_HEX_SIZE], *rdir, *postcmd;
-  int r;
+  int r, ret = 0;
 
   t = dvr_entry_get_start_time(de, 1);
   localtime_r(&t, &tm);
@@ -3131,6 +3180,7 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
     if(cfg->dvr_title_dir || cfg->dvr_channel_dir || cfg->dvr_dir_per_day || de->de_directory)
       rdir = cfg->dvr_storage;
 
+    dvr_vfs_remove_entry(de);
     HTSMSG_FOREACH(f, de->de_files) {
       m = htsmsg_field_get_map(f);
       if (m == NULL) continue;
@@ -3145,12 +3195,11 @@ dvr_entry_delete(dvr_entry_t *de, int no_missed_time_resched)
       if (postcmd && postcmd[0])
         dvr_spawn_postcmd(de, postcmd, filename);
       htsmsg_delete_field(m, "filename");
+      ret = 1;
     }
   }
-  if (no_missed_time_resched)
-    dvr_entry_set_state(de, DVR_MISSED_TIME, DVR_RS_PENDING, de->de_last_error);
-  else
-    dvr_entry_missed_time(de, de->de_last_error);
+
+  return ret;
 }
 
 /**
@@ -3180,7 +3229,6 @@ dvr_entry_t *
 dvr_entry_stop(dvr_entry_t *de)
 {
   if(de->de_sched_state == DVR_RECORDING) {
-    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_OK, 1, 0);
     return de;
   }
@@ -3198,7 +3246,6 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
 
   switch(de->de_sched_state) {
   case DVR_RECORDING:
-    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
     break;
 
@@ -3235,10 +3282,9 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
 
   switch(de->de_sched_state) {
   case DVR_RECORDING:
-    de->de_dont_reschedule = 1;
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
   case DVR_COMPLETED:
-    dvr_entry_delete(de, 1);
+    dvr_entry_delete(de);
     dvr_entry_destroy(de, 1);
     break;
 

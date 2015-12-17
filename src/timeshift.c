@@ -268,7 +268,7 @@ static void timeshift_input
     if (sm->sm_type == SMT_PACKET) {
       tvhtrace("timeshift",
                "ts %d pkt in  - stream %d type %c pts %10"PRId64
-               " dts %10"PRId64" dur %10d len %zu",
+               " dts %10"PRId64" dur %10d len %6zu",
                ts->id,
                pkt->pkt_componentindex,
                pkt_frametype_to_char(pkt->pkt_frametype),
@@ -304,14 +304,15 @@ static void timeshift_input
       if (sm->sm_type == SMT_PACKET) {
         tvhtrace("timeshift",
                  "ts %d pkt buf - stream %d type %c pts %10"PRId64
-                 " dts %10"PRId64" dur %10d len %zu",
+                 " dts %10"PRId64" dur %10d len %6zu time %14"PRId64,
                  ts->id,
                  pkt->pkt_componentindex,
                  pkt_frametype_to_char(pkt->pkt_frametype),
                  ts_rescale(pkt->pkt_pts, 1000000),
                  ts_rescale(pkt->pkt_dts, 1000000),
                  pkt->pkt_duration,
-                 pktbuf_len(pkt->pkt_payload));
+                 pktbuf_len(pkt->pkt_payload),
+                 sm->sm_time);
       }
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else

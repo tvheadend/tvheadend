@@ -99,7 +99,6 @@ tvheadend.passwdeditor = function(panel, index)
             create: { }
         },
         del: true,
-        move: true,
         list: list,
         help: function() {
             new tvheadend.help(_('Password Control Entries'), 'config_passwords.html');

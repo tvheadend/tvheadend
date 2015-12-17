@@ -75,7 +75,7 @@ static void* timeshift_reaper_callback ( void *p )
           tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                  dpath, strerror(errno));
     } else {
-      tvhtrace("timeshift", "remove RAM segment (time %li)", (long)tsf->time);
+      tvhtrace("timeshift", "remove RAM segment (time %"PRItime_t", size %"PRId64")", tsf->time, (int64_t)tsf->size);
     }
 
     /* Free memory */
@@ -152,8 +152,7 @@ int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
 void timeshift_filemgr_close ( timeshift_file_t *tsf )
 {
   ssize_t r = timeshift_write_eof(tsf);
-  if (r > 0)
-  {
+  if (r > 0) {
     tsf->size += r;
     atomic_add_u64(&timeshift_total_size, r);
     if (tsf->ram)
@@ -175,9 +174,9 @@ void timeshift_filemgr_remove
   assert(tsf->rfd < 0);
   if (tvhtrace_enabled()) {
     if (tsf->path)
-      tvhdebug("timeshift", "ts %d remove %s", ts->id, tsf->path);
+      tvhdebug("timeshift", "ts %d remove %s (size %"PRId64")", ts->id, tsf->path, (int64_t)tsf->size);
     else
-      tvhdebug("timeshift", "ts %d RAM segment remove time %li", ts->id, (long)tsf->time);
+      tvhdebug("timeshift", "ts %d RAM segment remove time %"PRItime_t" (size %"PRId64", alloc size %"PRId64")", ts->id, tsf->time, (int64_t)tsf->size, (int64_t)tsf->ram_size);
   }
   TAILQ_REMOVE(&ts->files, tsf, link);
   atomic_dec_u64(&timeshift_total_size, tsf->size);
@@ -297,8 +296,8 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int create )
           free(tsf_tmp);
           tsf_tmp = NULL;
         } else {
-          tvhtrace("timeshift", "ts %d create RAM segment with %"PRId64" bytes (time %li)",
-                   ts->id, tsf_tmp->ram_size, (long)time);
+          tvhtrace("timeshift", "ts %d create RAM segment with %"PRId64" bytes (time %"PRItime_t")",
+                   ts->id, tsf_tmp->ram_size, time);
         }
       }
       
@@ -402,7 +401,7 @@ void timeshift_filemgr_init ( void )
 
   /* Size processing */
   timeshift_total_size = 0;
-  timeshift_conf.ram_size   = 0;
+  timeshift_conf.ram_size = 0;
 
   /* Start the reaper thread */
   timeshift_reaper_run = 1;

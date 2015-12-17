@@ -1073,7 +1073,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             text: conf.saveText || _('Save'),
             iconCls: conf.saveIconCls || 'save',
             handler: function() {
-                if (panel.getForm().isDirty()) {
+                if (panel.getForm().isDirty() || conf.alwaysDirty) {
                     var node = panel.getForm().getFieldValues();
                     node.uuid = conf.uuids ? conf.uuids : item.uuid;
                     tvheadend.Ajax({
@@ -1174,25 +1174,79 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
 /*
  *
  */
-tvheadend.idnode_editor_win = function(_uilevel, item, conf)
+tvheadend.idnode_editor_win = function(_uilevel, conf)
 {
-   var p = tvheadend.idnode_editor(_uilevel, item, conf);
-   var width = p.fixedWidth;
-   var w = new Ext.ux.Window({
-       title: conf.winTitle,
-       iconCls: conf.iconCls || 'edit',
-       layout: 'fit',
-       autoWidth: width ? false : true,
-       autoHeight: true,
-       autoScroll: true,
-       plain: true,
-       items: p
-   });
-   conf.win = w;
-   if (width)
-       w.setWidth(width);
-   w.show();
-   return w;
+    function display(item, conf, title) {
+        var p = tvheadend.idnode_editor(_uilevel, item, conf);
+        var width = p.fixedWidth;
+        var w = new Ext.ux.Window({
+            title: title,
+            iconCls: conf.iconCls || 'edit',
+            layout: 'fit',
+            autoWidth: width ? false : true,
+            autoHeight: true,
+            autoScroll: true,
+            plain: true,
+            items: p
+        });
+        conf.win = w;
+        if (width)
+            w.setWidth(width);
+        w.show();
+        return w;
+    }
+
+    if (!conf.cancel)
+        conf.cancel = function(conf) {
+            conf.win.close();
+            conf.win = null;
+       }
+
+    if (conf.fullData) {
+       display(conf.fullData, conf, conf.winTitle || _('Edit'));
+       return;
+    }
+
+    var params = conf.params || {};
+
+    var uuids = null;
+    if (conf.selections) {
+        var r = conf.selections;
+        if (!r || r.length <= 0)
+            return;
+
+        uuids = [];
+        for (var i = 0; i < r.length; i++)
+            uuids.push(r[i].id);
+            
+        params['uuid'] = r[0].id;
+    }
+        
+    params['meta'] = 1;
+
+    conf.win = null;
+
+    tvheadend.Ajax({
+        url: conf.loadURL ? conf.loadURL : 'api/idnode/load',
+        params: params,
+        success: function(d) {
+            d = json_decode(d);
+            d = d[0];
+            if (conf.modifyData)
+                conf.modifyData(conf, d);
+            var title = conf.winTitle;
+            if (!title) {
+                if (uuids && uuids.length > 1)
+                    title = String.format(_('Edit {0} ({1} entries)'),
+                                              conf.titleS, uuids.length);
+                else
+                    title = String.format(_('Edit {0}'), conf.titleS);
+            }
+            if (uuids && uuids.length > 1)
+                conf.uuids = uuids;
+            display(d, conf, title);
+        }
+    });
 }
 
 /*
@@ -1453,7 +1507,7 @@ tvheadend.idnode_grid = function(panel, conf)
     var idnode = null;
 
     var update = function(o) {
-        if ((o.create || 'delete' in o) && auto.getValue()) {
+        if ((o.create || o.moveup || o.movedown || 'delete' in o) && auto.getValue()) {
             store.reload();
             return;
         }
@@ -1496,8 +1550,10 @@ tvheadend.idnode_grid = function(panel, conf)
             grid.getView().refresh();
     };
 
-    function build(d)
-    {
+    function build(d) {
+        if (grid)
+            return;
+
         if (conf.builder)
             conf.builder(conf);
 
@@ -1768,39 +1824,10 @@ tvheadend.idnode_grid = function(panel, conf)
                             w.show();
                         }
                     } else {
-                        var r = select.getSelections();
-                        if (r && r.length > 0) {
-                            var uuids = [];
-                            for (var i = 0; i < r.length; i++)
-                                uuids.push(r[i].id);
-                            var params = {};
-                            if (conf.edit && conf.edit.params)
-                                params = conf.edit.params;
-                            params['uuid'] = r[0].id;
-                            params['meta'] = 1;
-                            tvheadend.Ajax({
-                                url: 'api/idnode/load',
-                                params: params,
-                                success: function(d) {
-                                    d = json_decode(d);
-                                    var c = {
-                                        win: null,
-                                        cancel: function(conf) {
-                                            conf.win.close();
-                                            conf.win = null;
-                                        }
-                                    };
-                                    if (uuids.length > 1) {
-                                        c.winTitle = String.format(_('Edit {0} ({1} entries)'),
-                                                                   conf.titleS, uuids.length);
-                                        c.uuids = uuids;
-                                    } else {
-                                        c.winTitle = String.format(_('Edit {0}'), conf.titleS);
-                                    }
-                                    tvheadend.idnode_editor_win(uilevel, d[0], c);
-                                }
-                            });
-                        }
+                        tvheadend.idnode_editor_win(uilevel, {
+                            selections: select.getSelections(),
+                            params: conf.edit && conf.edit.params ? conf.edit.params : null
+                        });
                     }
                 }
             });
@@ -2463,6 +2490,7 @@ tvheadend.idnode_tree = function(panel, conf)
     function builder() {
         if (tree)
             return;
+
         if (conf.builder)
             conf.builder(conf);
 

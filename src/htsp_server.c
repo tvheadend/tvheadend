@@ -924,7 +924,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     break;
   case DVR_RECORDING:
     s = "recording";
-    fsize = dvr_get_filesize(de);
+    fsize = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (de->de_rec_state == DVR_RS_ERROR ||
        (de->de_rec_state == DVR_RS_PENDING && de->de_last_error != SM_CODE_OK))
     {
@@ -934,7 +934,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     break;
   case DVR_COMPLETED:
     s = "completed";
-    fsize = dvr_get_filesize(de);
+    fsize = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
     if (fsize < 0)
       error = "File missing";
     else if(de->de_last_error)
@@ -1292,13 +1292,14 @@ static htsmsg_t *
 htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  int64_t bfree, btotal;
+  int64_t bfree, bused, btotal;
 
-  if (dvr_get_disk_space(&bfree, &btotal))
+  if (dvr_get_disk_space(&bfree, &bused, &btotal))
     return htsp_error("Unable to stat path");
   
   out = htsmsg_create_map();
   htsmsg_add_s64(out, "freediskspace", bfree);
+  htsmsg_add_s64(out, "useddiskspace", bused);
   htsmsg_add_s64(out, "totaldiskspace", btotal);
   return out;
 }
@@ -2330,7 +2331,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
                              "htsp", SUBSCRIPTION_PACKET | SUBSCRIPTION_HTSP);
   profile_chain_init(&hs->hs_prch, pro, ch);
   if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
-    tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", pro->pro_name);
+    tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", profile_get_name(pro));
     profile_chain_close(&hs->hs_prch);
     free(hs);
     return htsp_error("Stream setup error");
@@ -2365,7 +2366,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
 
   tvhdebug("htsp", "%s - subscribe to %s using profile %s",
-           htsp->htsp_logname, channel_get_name(ch), pro->pro_name ?: "");
+           htsp->htsp_logname, channel_get_name(ch), profile_get_name(pro));
   hs->hs_s = subscription_create_from_channel(&hs->hs_prch, NULL, weight,
 					      htsp->htsp_logname,
 					      SUBSCRIPTION_PACKET |
@@ -3222,6 +3223,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   free(htsp.htsp_peername);
   free(htsp.htsp_username);
   free(htsp.htsp_clientname);
+  free(htsp.htsp_language);
   access_destroy(htsp.htsp_granted_access);
   *opaque = NULL;
 }

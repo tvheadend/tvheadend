@@ -299,13 +299,17 @@ static void
 epggrab_mux_stop ( mpegts_mux_t *mm, void *p, int reason )
 {
   epggrab_ota_mux_t *ota;
-  char ubuf[UUID_HEX_SIZE];
+  char ubuf[UUID_HEX_SIZE], name[256];
   const char *uuid = idnode_uuid_as_str(&mm->mm_id, ubuf);
   int done = EPGGRAB_OTA_DONE_STOLEN;
 
   if (reason == SM_CODE_NO_INPUT)
     done = EPGGRAB_OTA_DONE_NO_DATA;
-  tvhtrace("epggrab", "mux %p (%s) stop", mm, uuid);
+
+  if (tvhtrace_enabled()) {
+    mpegts_mux_nice_name(mm, name, sizeof(name));
+    tvhtrace("epggrab", "mux %s (%p) stop", name, mm);
+  }
   TAILQ_FOREACH(ota, &epggrab_ota_active, om_q_link)
     if (!strcmp(ota->om_mux_uuid, uuid)) {
       epggrab_ota_done(ota, done);
@@ -459,6 +463,7 @@ epggrab_ota_kick_cb ( void *p )
   epggrab_ota_mux_t *om = TAILQ_FIRST(&epggrab_ota_pending);
   epggrab_ota_mux_t *first = NULL;
   mpegts_mux_t *mm;
+  char name[256];
   struct {
     mpegts_network_t *net;
     uint8_t failed;
@@ -518,6 +523,7 @@ next_one:
     net = &networks[networks_count++];
     net->net = mm->mm_network;
     net->failed = 0;
+    net->fatal = 0;
   }
 
   epg_flag = MM_EPG_DISABLE;
@@ -530,7 +536,6 @@ next_one:
 
   if (epg_flag < 0 || epg_flag == MM_EPG_DISABLE) {
     if (tvhtrace_enabled()) {
-      char name[256];
       mpegts_mux_nice_name(mm, name, sizeof(name));
       tvhtrace("epggrab", "epg mux %s is disabled, skipping", name);
     }
@@ -547,7 +552,6 @@ next_one:
     }
   }
   if ((i == 0 || (r == 0 && modname)) && epg_flag != MM_EPG_FORCE) {
-    char name[256];
     mpegts_mux_nice_name(mm, name, sizeof(name));
     tvhdebug("epggrab", "no OTA modules active for %s, check again next time", name);
     goto done;
@@ -565,6 +569,10 @@ next_one:
                                 SUBSCRIPTION_ONESHOT |
                                 SUBSCRIPTION_TABLES))) {
     if (r != SM_CODE_NO_ADAPTERS) {
+      if (tvhtrace_enabled()) {
+        mpegts_mux_nice_name(mm, name, sizeof(name));
+        tvhtrace("epggrab", "subscription failed for %s (result %d)", name, r);
+      }
       TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
       om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
       if (r == SM_CODE_NO_FREE_ADAPTER)
@@ -572,10 +580,17 @@ next_one:
       if (first == NULL)
         first = om;
     } else {
+      if (tvhtrace_enabled()) {
+        mpegts_mux_nice_name(mm, name, sizeof(name));
+        tvhtrace("epggrab", "no free adapter for %s (subscribe)", name);
+      }
       net->fatal = 1;
     }
   } else {
-    tvhtrace("epggrab", "mux %p started", mm);
+    if (tvhtrace_enabled()) {
+      mpegts_mux_nice_name(mm, name, sizeof(name));
+      tvhtrace("epggrab", "mux %s (%p), started", name, mm);
+    }
     kick = 0;
     /* note: it is possible that the mux_start listener is not called */
     /* for reshared mux subscriptions, so call it (maybe second time) here.. */

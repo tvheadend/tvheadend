@@ -184,7 +184,11 @@ const idclass_t satip_frontend_class =
       .id       = "teardown_delay",
       .name     = N_("Force teardown delay"),
       .desc     = N_("Force the delay between RTSP TEARDOWN and RTSP "
+<<<<<<< HEAD
                      "SETUP command (value from ‘Next tune delay in ms’ "
+=======
+                     "SETUP command (value from 'Next tune delay in ms' "
+>>>>>>> upstream/master
                      "is used). Some devices are not able to handle "
                      "quick continuous tuning."),
       .opts     = PO_ADVANCED,
@@ -396,11 +400,21 @@ const idclass_t satip_frontend_dvbc_class =
   }
 };
 
-const idclass_t satip_frontend_atsc_class =
+const idclass_t satip_frontend_atsc_t_class =
 {
   .ic_super      = &satip_frontend_class,
-  .ic_class      = "satip_frontend_atsc",
-  .ic_caption    = N_("SAT>IP ATSC frontend"),
+  .ic_class      = "satip_frontend_atsc_t",
+  .ic_caption    = N_("SAT>IP ATSC-T frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t satip_frontend_atsc_c_class =
+{
+  .ic_super      = &satip_frontend_class,
+  .ic_class      = "satip_frontend_atsc_c",
+  .ic_caption    = N_("SAT>IP ATSC-C frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -1677,9 +1691,6 @@ wrdata:
     pthread_mutex_unlock(&lfe->sf_dvr_lock);
   }
 
-  /* Do not send the SMT_SIGNAL_STATUS packets - we are out of service */
-  gtimer_disarm(&lfe->sf_monitor_timer);
-
   sbuf_free(sb);
   udp_multirecv_free(&um);
   lfe->sf_curmux = NULL;
@@ -1810,8 +1821,10 @@ satip_frontend_create
     idc = &satip_frontend_dvbt_class;
   else if (type == DVB_TYPE_C)
     idc = &satip_frontend_dvbc_class;
-  else if (type == DVB_TYPE_ATSC)
-    idc = &satip_frontend_atsc_class;
+  else if (type == DVB_TYPE_ATSC_T)
+    idc = &satip_frontend_atsc_t_class;
+  else if (type == DVB_TYPE_ATSC_C)
+    idc = &satip_frontend_atsc_c_class;
   else {
     tvherror("satip", "unknown FE type %d", type);
     return NULL;

@@ -686,7 +686,7 @@ service_find_instance
             pro->pro_svfilter == PROFILE_SVF_NONE ||
             (pro->pro_svfilter == PROFILE_SVF_SD && service_is_sdtv(s)) ||
             (pro->pro_svfilter == PROFILE_SVF_HD && service_is_hdtv(s))) {
-          s->s_enlist(s, ti, sil, flags);
+          s->s_enlist(s, ti, sil, flags, weight);
           enlisted++;
         }
       }
@@ -695,11 +695,11 @@ service_find_instance
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
         s = (service_t *)ilm->ilm_in1;
         if (s->s_is_enabled(s, flags))
-          s->s_enlist(s, ti, sil, flags);
+          s->s_enlist(s, ti, sil, flags, weight);
       }
     }
   } else {
-    s->s_enlist(s, ti, sil, flags);
+    s->s_enlist(s, ti, sil, flags, weight);
   }
 
   /* Clean */
@@ -782,6 +782,8 @@ void
 service_unref(service_t *t)
 {
   if((atomic_add(&t->s_refcount, -1)) == 1) {
+    if (t->s_unref)
+      t->s_unref(t);
     free(t->s_nicename);
     free(t);
   }
@@ -809,11 +811,11 @@ service_destroy(service_t *t, int delconf)
   th_subscription_t *s;
   idnode_list_mapping_t *ilm;
 
+  lock_assert(&global_lock);
+
   if(t->s_delete != NULL)
     t->s_delete(t, delconf);
 
-  lock_assert(&global_lock);
-  
   service_mapper_remove(t);
 
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL)

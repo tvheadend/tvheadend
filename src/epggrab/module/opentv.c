@@ -1031,5 +1031,9 @@ void opentv_done ( void )
 
 void opentv_load ( void )
 {
-  // TODO: do we want to keep a list of channels stored?
+  epggrab_module_t *m;
+
+  LIST_FOREACH(m, &epggrab_modules, link)
+    if (strncmp(m->id, "opentv-", 7) == 0)
+      epggrab_module_channels_load(m->id);
 }

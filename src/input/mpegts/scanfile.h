@@ -38,7 +38,8 @@ typedef LIST_HEAD(,scanfile_region) scanfile_region_list_t;
 extern scanfile_region_list_t scanfile_regions_DVBC;
 extern scanfile_region_list_t scanfile_regions_DVBT;
 extern scanfile_region_list_t scanfile_regions_DVBS;
-extern scanfile_region_list_t scanfile_regions_ATSC;
+extern scanfile_region_list_t scanfile_regions_ATSC_T;
+extern scanfile_region_list_t scanfile_regions_ATSC_C;
 
 void scanfile_init ( void );
 void scanfile_done ( void );

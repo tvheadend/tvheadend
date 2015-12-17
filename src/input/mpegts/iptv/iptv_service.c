@@ -49,7 +49,7 @@ iptv_service_delete ( service_t *s, int delconf )
   char ubuf2[UUID_HEX_SIZE];
 
   /* Remove config */
-  if (delconf)
+  if (delconf && s->s_type == STYPE_STD)
     hts_settings_remove("input/iptv/networks/%s/muxes/%s/services/%s",
                         idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf0),
                         idnode_uuid_as_str(&mm->mm_id, ubuf1),

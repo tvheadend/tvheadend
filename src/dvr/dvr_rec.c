@@ -115,12 +115,12 @@ dvr_rec_subscribe(dvr_entry_t *de)
   if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
     profile_chain_close(prch);
     tvherror("dvr", "unable to create new channel streaming chain '%s' for '%s', using default",
-             pro->pro_name, channel_get_name(de->de_channel));
+             profile_get_name(pro), channel_get_name(de->de_channel));
     pro = profile_find_by_name(NULL, NULL);
     profile_chain_init(prch, pro, de->de_channel);
     if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
       tvherror("dvr", "unable to create channel streaming default chain '%s' for '%s'",
-               pro->pro_name, channel_get_name(de->de_channel));
+               profile_get_name(pro), channel_get_name(de->de_channel));
       profile_chain_close(prch);
       free(prch);
       return -EINVAL;
@@ -132,7 +132,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 					      NULL, NULL, NULL, NULL);
   if (de->de_s == NULL) {
     tvherror("dvr", "unable to create new channel subcription for '%s' profile '%s'",
-             channel_get_name(de->de_channel), pro->pro_name);
+             channel_get_name(de->de_channel), profile_get_name(pro));
     profile_chain_close(prch);
     free(prch);
     return -EINVAL;
@@ -168,6 +168,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   de->de_chain = NULL;
   profile_chain_close(prch);
   free(prch);
+
+  dvr_vfs_refresh_entry(de);
 }
 
 /**
@@ -900,6 +902,8 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     dvr_rec_fatal_error(de, "Unable to open file");
     return -1;
   }
+
+  dvr_vfs_refresh_entry(de);
 
   ss_copy = streaming_start_copy(ss);
 

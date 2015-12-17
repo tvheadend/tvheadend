@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-26 20:06+0100\n"
-"PO-Revision-Date: 2015-11-24 15:16+0000\n"
+"POT-Creation-Date: 2015-12-03 14:21+0100\n"
+"PO-Revision-Date: 2015-12-03 13:22+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Czech (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/cs/)\n"
 "MIME-Version: 1.0\n"
@@ -120,7 +120,7 @@ msgstr "Zrušit"
 msgid "Abort the selected recording"
 msgstr "Ukonči vybrané nahrávání"
 
-#: src/webui/static/app/tvheadend.js:554
+#: src/webui/static/app/tvheadend.js:581
 msgid "About"
 msgstr "O programu"
 
@@ -140,19 +140,23 @@ msgstr "Přístupová položka"
 msgid "Active"
 msgstr "Aktivní"
 
-#: src/webui/static/app/idnode.js:1380 src/webui/static/app/idnode.js:1894
+#: src/webui/static/app/idnode.js:1522 src/webui/static/app/idnode.js:2056
 msgid "Add"
 msgstr "Přidat"
 
-#: src/webui/static/app/idnode.js:1378 src/webui/static/app/idnode.js:1892
+#: src/webui/static/app/idnode.js:1520 src/webui/static/app/idnode.js:2054
 msgid "Add a new entry"
 msgstr "Přidat novou položku"
 
-#: src/webui/static/app/idnode.js:1086 src/webui/static/app/idnode.js:1117
+#: src/webui/static/app/idnode.js:1213 src/webui/static/app/idnode.js:1244
 msgid "Add {0}"
 msgstr "Přidat {0}"
 
-#: src/webui/static/app/idnode.js:893
+#: src/webui/static/app/idnode.js:583 src/webui/static/app/idnode.js:599
+msgid "Advanced"
+msgstr "Rozšířené"
+
+#: src/webui/static/app/idnode.js:976
 msgid "Advanced Settings"
 msgstr "Pokročilé nastavení"
 
@@ -172,11 +176,11 @@ msgstr "Věk"
 msgid "Age Rating"
 msgstr "Věkové hodnocení"
 
-#: src/webui/static/app/idnode.js:1571 src/webui/static/app/idnode.js:1610
+#: src/webui/static/app/idnode.js:1713 src/webui/static/app/idnode.js:1752
 msgid "All"
 msgstr "Vše"
 
-#: src/webui/static/app/idnode.js:954 src/webui/static/app/idnode.js:1041
+#: src/webui/static/app/idnode.js:1060 src/webui/static/app/idnode.js:1165
 msgid "Apply"
 msgstr "Použij"
 
@@ -188,7 +192,7 @@ msgstr "Ulož provedené změny (dočasně - nebudou zachovány po restartu)."
 msgid "Apply configuration (run-time only)"
 msgstr "Ulož konfiguraci (dočasnou)"
 
-#: src/webui/static/app/idnode.js:1040
+#: src/webui/static/app/idnode.js:1164
 msgid "Apply settings"
 msgstr "Použij nastavení"
 
@@ -200,19 +204,19 @@ msgstr "Dub"
 msgid "April"
 msgstr "Duben"
 
-#: src/webui/static/app/chconf.js:144
+#: src/webui/static/app/chconf.js:146
 msgid "Assign Number"
 msgstr "Přiřaď číslo"
 
-#: src/webui/static/app/chconf.js:142
+#: src/webui/static/app/chconf.js:144
 msgid "Assign lowest free channel number"
 msgstr "Přiřaď nejmenší volné číslo"
 
-#: src/webui/static/app/esfilter.js:70
+#: src/webui/static/app/esfilter.js:71
 msgid "Audio Stream Filter"
 msgstr "Filter pro audio"
 
-#: src/webui/static/app/esfilter.js:71
+#: src/webui/static/app/esfilter.js:72
 msgid "Audio Stream Filters"
 msgstr "Filtry pro audio"
 
@@ -228,27 +232,32 @@ msgstr "Srpen"
 msgid "Auto Recorder"
 msgstr "Automatický záznam"
 
-#: src/webui/static/app/tvheadend.js:126
+#: src/webui/static/app/tvheadend.js:141
 msgid "Auto-refresh"
 msgstr "Automatické obnovení"
 
 #: src/webui/static/app/epg.js:225 src/webui/static/app/dvr.js:57
+#: src/webui/static/app/dvr.js:572
 msgid "Autorec"
 msgstr "Auto-rekordér"
 
-#: src/webui/static/app/idnode.js:432 src/webui/static/app/idnode.js:595
+#: src/webui/static/app/dvr.js:573
+msgid "Autorecs"
+msgstr "Auto-rekordér"
+
+#: src/webui/static/app/idnode.js:441 src/webui/static/app/idnode.js:654
 msgid "Available"
 msgstr "Dostupné"
 
-#: src/webui/static/app/status.js:366
+#: src/webui/static/app/status.js:374
 msgid "BER"
 msgstr "BER"
 
-#: src/webui/static/app/status.js:359
+#: src/webui/static/app/status.js:367
 msgid "Bandwidth (kb/s)"
 msgstr "Šířka pásma (kb/s)"
 
-#: src/webui/static/app/status.js:668 src/webui/static/app/status.js:761
+#: src/webui/static/app/status.js:676 src/webui/static/app/status.js:769
 msgid "Bandwidth monitor"
 msgstr "Monitor šířky pásma"
 
@@ -256,7 +265,11 @@ msgstr "Monitor šířky pásma"
 msgid "Base"
 msgstr "Báze"
 
-#: src/webui/static/app/idnode.js:891
+#: src/webui/static/app/idnode.js:581 src/webui/static/app/idnode.js:593
+msgid "Basic"
+msgstr "Základní"
+
+#: src/webui/static/app/idnode.js:974
 msgid "Basic Settings"
 msgstr "Základní nastavení"
 
@@ -292,11 +305,11 @@ msgstr "Nahrávám. Prosím, čekejte..."
 msgid "CA"
 msgstr "CA"
 
-#: src/webui/static/app/esfilter.js:127
+#: src/webui/static/app/esfilter.js:131
 msgid "CA Stream Filter"
 msgstr "CA filter"
 
-#: src/webui/static/app/esfilter.js:128
+#: src/webui/static/app/esfilter.js:132
 msgid "CA Stream Filters"
 msgstr "CA filtry"
 
@@ -309,34 +322,38 @@ msgid "CAs"
 msgstr "CA kódy"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:926 src/webui/static/app/idnode.js:1061
+#: src/webui/static/app/idnode.js:1026 src/webui/static/app/idnode.js:1188
 #: src/webui/static/app/servicemapper.js:119
 msgid "Cancel"
 msgstr "Zruš"
 
-#: src/webui/static/app/status.js:508
+#: src/webui/static/app/status.js:516
 msgid "Cancel Connection"
 msgstr "Zruš spojení"
 
-#: src/webui/static/app/idnode.js:1060
+#: src/webui/static/app/idnode.js:1187
 msgid "Cancel operation"
 msgstr "Zruš operaci"
 
-#: src/webui/static/app/status.js:509
+#: src/webui/static/app/status.js:517
 msgid "Cancel the selected connection?"
 msgstr "Zrušit vybrané spojení?"
 
-#: src/webui/static/app/status.js:505
+#: src/webui/static/app/status.js:513
 msgid "Cancel this connection"
 msgstr "Zruš toto spojení"
 
-#: src/webui/static/app/chconf.js:207 src/webui/static/app/epg.js:546
+#: src/webui/static/app/idnode.js:611
+msgid "Change the user interface level (basic, advanced, expert)"
+msgstr "Změní úrověň uživatelského rozhraní (základní, rozšířená, expert)"
+
+#: src/webui/static/app/chconf.js:199 src/webui/static/app/epg.js:546
 #: src/webui/static/app/epg.js:547 src/webui/static/app/epg.js:1028
-#: src/webui/static/app/status.js:104
+#: src/webui/static/app/status.js:106
 msgid "Channel"
 msgstr "Program"
 
-#: src/webui/static/app/tvheadend.js:492
+#: src/webui/static/app/tvheadend.js:517
 msgid "Channel / EPG"
 msgstr "Program / EPG"
 
@@ -348,7 +365,11 @@ msgstr "Štítek programu"
 msgid "Channel Tags"
 msgstr "Štítky programu"
 
-#: src/webui/static/app/chconf.js:208 src/webui/static/app/chconf.js:212
+#: src/webui/static/app/chconf.js:167
+msgid "Channel number operations"
+msgstr "Operace s čísly programů"
+
+#: src/webui/static/app/chconf.js:200 src/webui/static/app/chconf.js:204
 msgid "Channels"
 msgstr "Programy"
 
@@ -360,19 +381,19 @@ msgstr "Kontrolovat dostupnost"
 msgid "Choose a month (Control+Up/Down to move years)"
 msgstr "Vyberte měsíc (Control+nahoru/dolů pro změnu roku)"
 
-#: src/webui/static/app/config.js:36
+#: src/webui/static/app/config.js:50
 msgid "Clean image (icon) cache"
 msgstr "Vymazat vyrovnávací paměť pro obrázky"
 
-#: src/webui/static/app/config.js:34
+#: src/webui/static/app/config.js:48
 msgid "Clean image cache on storage"
 msgstr "Vymazat vyrovnávací paměť pro obrázky (na disk)"
 
-#: src/webui/static/app/status.js:258 src/webui/static/app/status.js:261
+#: src/webui/static/app/status.js:266 src/webui/static/app/status.js:269
 msgid "Clear statistics"
 msgstr "Vymazat statistiku"
 
-#: src/webui/static/app/status.js:262
+#: src/webui/static/app/status.js:270
 msgid "Clear statistics for selected input?"
 msgstr "Vymažat statistiku pro vybraný vstup?"
 
@@ -396,19 +417,19 @@ msgstr "Comet chyba"
 msgid "Comment"
 msgstr "Komentář"
 
-#: src/webui/static/app/status.js:717
+#: src/webui/static/app/status.js:725
 msgid "Compression ratio"
 msgstr "Poměr komprese"
 
-#: src/webui/static/app/caclient.js:44 src/webui/static/app/caclient.js:61
+#: src/webui/static/app/caclient.js:45 src/webui/static/app/caclient.js:62
 msgid "Conditional Access Client"
 msgstr "Klient systém podmíněného přístupu"
 
-#: src/webui/static/app/tvheadend.js:435
+#: src/webui/static/app/tvheadend.js:456
 msgid "Configuration"
 msgstr "Konfigurace"
 
-#: src/webui/static/app/status.js:609
+#: src/webui/static/app/status.js:617
 msgid "Connections"
 msgstr "Spojení"
 
@@ -417,11 +438,11 @@ msgstr "Spojení"
 msgid "Content Type"
 msgstr "Typ obsahu"
 
-#: src/webui/static/app/status.js:388
+#: src/webui/static/app/status.js:396
 msgid "Continuity Errors"
 msgstr "Chyby kontinuity"
 
-#: src/webui/static/app/idnode.js:1020
+#: src/webui/static/app/idnode.js:1140
 msgid "Create"
 msgstr "Vytvoř"
 
@@ -439,7 +460,7 @@ msgstr "Vytvořit auto-rekordér, který bude zaznamenávat všechna budoucí vy
 msgid "Create network tags"
 msgstr "Vytvořit štítek sítě"
 
-#: src/webui/static/app/idnode.js:1019
+#: src/webui/static/app/idnode.js:1139
 msgid "Create new entry"
 msgstr "Vytvořit novou položku"
 
@@ -456,7 +477,7 @@ msgstr "Vytvořeno z EPG dotazu"
 msgid "Currently this will match (and record) %d events."
 msgstr "Aktuálně bude vyhodnoceno (a zaznamenáno) %d událostí."
 
-#: src/webui/static/app/tvheadend.js:474
+#: src/webui/static/app/tvheadend.js:498
 msgid "DVB Inputs"
 msgstr "DVB Vstupy"
 
@@ -480,16 +501,8 @@ msgstr "Rekordér budoucí/současné záznamy"
 msgid "DVR Autorec"
 msgstr "DVR auto-rekordér"
 
-#: src/webui/static/app/dvr.js:573
-msgid "DVR Autorec Entries"
-msgstr "Položky DVR auto-rekordéru"
-
-#: src/webui/static/app/dvr.js:572
-msgid "DVR Autorec Entry"
-msgstr "Položka DVR auto-rekordéru"
-
 #: src/webui/static/app/dvr.js:677
-msgid "DVR Timerec"
+msgid "DVR Timers"
 msgstr "DVR časový rekordér"
 
 #: src/webui/static/app/tvhlog.js:28
@@ -508,7 +521,7 @@ msgstr "Pro"
 msgid "December"
 msgstr "Prosinec"
 
-#: src/webui/static/app/idnode.js:1394 src/webui/static/app/idnode.js:1906
+#: src/webui/static/app/idnode.js:1536 src/webui/static/app/idnode.js:2068
 msgid "Delete"
 msgstr "Vymazat"
 
@@ -520,11 +533,11 @@ msgstr "Vymazat záznam"
 msgid "Delete scheduled recording of this program"
 msgstr "Vymazat naplánovaný záznam tohoto programu"
 
-#: src/webui/static/app/idnode.js:1392 src/webui/static/app/idnode.js:1904
+#: src/webui/static/app/idnode.js:1534 src/webui/static/app/idnode.js:2066
 msgid "Delete selected entries"
 msgstr "Vymazat označené položky"
 
-#: src/webui/static/app/status.js:132
+#: src/webui/static/app/status.js:140
 msgid "Descramble"
 msgstr "Dešifruj"
 
@@ -554,7 +567,7 @@ msgstr "Profily digitálního video rekordéru"
 msgid "Disabled"
 msgstr "Zakázáno"
 
-#: src/webui/static/app/config.js:95
+#: src/webui/static/app/config.js:109
 msgid "Discover SAT>IP servers"
 msgstr "Vyhledat SAT>IP servery"
 
@@ -570,7 +583,7 @@ msgstr "Skutečně chcete zrušit/odebrat vybrané události?"
 msgid "Do you really want to delete the selected recordings?"
 msgstr "Opravdu chcete vymazat vybrané záznamy?"
 
-#: src/webui/static/app/tvheadend.js:98
+#: src/webui/static/app/tvheadend.js:113
 msgid "Do you really want to delete the selection?"
 msgstr "Skutečně chcete smazat výběr?"
 
@@ -638,19 +651,19 @@ msgstr "Název EPG graberu"
 msgid "EPG Update"
 msgstr "Aktualizace EPG"
 
-#: src/webui/static/app/idnode.js:1481
+#: src/webui/static/app/idnode.js:1623
 msgid "Edit"
 msgstr "Editace"
 
-#: src/webui/static/app/idnode.js:1479
+#: src/webui/static/app/idnode.js:1621
 msgid "Edit selected entry"
 msgstr "Edituj vybranou položku"
 
-#: src/webui/static/app/idnode.js:1495 src/webui/static/app/idnode.js:1534
+#: src/webui/static/app/idnode.js:1637 src/webui/static/app/idnode.js:1676
 msgid "Edit {0}"
 msgstr "Editace {0}"
 
-#: src/webui/static/app/idnode.js:1530
+#: src/webui/static/app/idnode.js:1672
 msgid "Edit {0} ({1} entries)"
 msgstr "Edituj {0} ({1} záznamů)"
 
@@ -658,13 +671,13 @@ msgstr "Edituj {0} ({1} záznamů)"
 msgid "Electronic Program Guide"
 msgstr "Elektronický průvodce programem"
 
-#: src/webui/static/app/esfilter.js:64 src/webui/static/app/esfilter.js:83
-#: src/webui/static/app/esfilter.js:121 src/webui/static/app/esfilter.js:139
-#: src/webui/static/app/esfilter.js:158
+#: src/webui/static/app/esfilter.js:65 src/webui/static/app/esfilter.js:85
+#: src/webui/static/app/esfilter.js:125 src/webui/static/app/esfilter.js:144
+#: src/webui/static/app/esfilter.js:164
 msgid "Elementary Stream Filter"
 msgstr "Filtr elementárního streamu"
 
-#: src/webui/static/app/tvheadend.js:764
+#: src/webui/static/app/tvheadend.js:791
 msgid "Enable debug output"
 msgstr "Povolit ladící výstup"
 
@@ -681,7 +694,7 @@ msgstr "Vložte text pro filtr..."
 msgid "Episode"
 msgstr "Episoda"
 
-#: src/webui/static/app/status.js:138
+#: src/webui/static/app/status.js:146
 msgid "Errors"
 msgstr "Chyby"
 
@@ -692,6 +705,14 @@ msgstr "Pořady"
 #: src/webui/static/app/dvr.js:148
 msgid "Every day"
 msgstr "Každý den"
+
+#: src/webui/static/app/idnode.js:584 src/webui/static/app/idnode.js:605
+msgid "Expert"
+msgstr "Expert"
+
+#: src/webui/static/app/idnode.js:978
+msgid "Expert Settings"
+msgstr "Expertní nastavení"
 
 #: src/webui/static/app/servicemapper.js:15
 msgid "Failed"
@@ -757,7 +778,7 @@ msgstr "Vynutit scan"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "Vynutit nový scan (všechny muxy) pro vybrané sítě"
 
-#: src/webui/static/app/tvheadend.js:703
+#: src/webui/static/app/tvheadend.js:730
 msgid "Free"
 msgstr "Volné"
 
@@ -769,7 +790,7 @@ msgstr "Pát"
 msgid "Friday"
 msgstr "Pátek"
 
-#: src/webui/static/app/tvheadend.js:351
+#: src/webui/static/app/tvheadend.js:366
 msgid "Fullscreen"
 msgstr "Celá obrazovka"
 
@@ -777,15 +798,11 @@ msgstr "Celá obrazovka"
 msgid "Fulltext"
 msgstr "Celý text"
 
-#: src/webui/static/app/tvheadend.js:693
-msgid "GB"
-msgstr "GB"
-
-#: src/webui/static/app/tvheadend.js:444
+#: src/webui/static/app/tvheadend.js:466
 msgid "General"
 msgstr "Základní"
 
-#: src/webui/static/app/config.js:15 src/webui/static/app/config.js:74
+#: src/webui/static/app/config.js:29 src/webui/static/app/config.js:88
 msgid "General Configuration"
 msgstr "Základní konfigurace"
 
@@ -793,7 +810,11 @@ msgstr "Základní konfigurace"
 msgid "Genre"
 msgstr "Styl"
 
-#: src/webui/static/app/idnode.js:1227
+#: src/webui/static/app/tvheadend.js:720
+msgid "GiB"
+msgstr "GiB"
+
+#: src/webui/static/app/idnode.js:1364
 msgid "Grid Update"
 msgstr "Aktualizace mřížky"
 
@@ -801,33 +822,33 @@ msgstr "Aktualizace mřížky"
 msgid "Group By This Field"
 msgstr "Seskup podle tohoto pole"
 
-#: src/webui/static/app/idnode.js:973 src/webui/static/app/idnode.js:1657
-#: src/webui/static/app/idnode.js:2013 src/webui/static/app/idnode.js:2371
+#: src/webui/static/app/idnode.js:1096 src/webui/static/app/idnode.js:1819
+#: src/webui/static/app/idnode.js:2190 src/webui/static/app/idnode.js:2622
 #: src/webui/static/app/epg.js:875
 msgid "Help"
 msgstr "Nápověda"
 
-#: src/webui/static/app/tvheadend.js:48
+#: src/webui/static/app/tvheadend.js:63
 msgid "Help for"
 msgstr "Nápověda pro"
 
-#: src/webui/static/app/idnode.js:1587
+#: src/webui/static/app/idnode.js:1729
 msgid "Hide"
 msgstr "Skrýt"
 
-#: src/webui/static/app/idnode.js:1981
+#: src/webui/static/app/idnode.js:2143
 msgid "Hide passwords"
 msgstr "Schovat hesla"
 
-#: src/webui/static/app/status.js:86
+#: src/webui/static/app/status.js:88
 msgid "Hostname"
 msgstr "Název hostitele"
 
-#: src/webui/static/app/status.js:76
+#: src/webui/static/app/status.js:78
 msgid "ID"
 msgstr "ID"
 
-#: src/webui/static/app/status.js:562
+#: src/webui/static/app/status.js:570
 msgid "IP Address"
 msgstr "IP Adresa"
 
@@ -847,11 +868,11 @@ msgstr "Záznamy s blokovanými IP adresami"
 msgid "Ignored"
 msgstr "Ignorováno"
 
-#: src/webui/static/app/config.js:66
+#: src/webui/static/app/config.js:80
 msgid "Image cache"
 msgstr "Mezipaměť pro obrázky"
 
-#: src/webui/static/app/status.js:715
+#: src/webui/static/app/status.js:723
 msgid "In"
 msgstr "Vstup"
 
@@ -859,11 +880,11 @@ msgstr "Vstup"
 msgid "Include encrypted services"
 msgstr "Včetně zašifrovaných služeb"
 
-#: src/webui/static/app/status.js:339 src/webui/static/app/status.js:805
+#: src/webui/static/app/status.js:347 src/webui/static/app/status.js:813
 msgid "Input"
 msgstr "Vstup"
 
-#: src/webui/static/app/status.js:144
+#: src/webui/static/app/status.js:152
 msgid "Input (kb/s)"
 msgstr "Vstup (kb/s)"
 
@@ -891,41 +912,37 @@ msgstr "Črc"
 msgid "June"
 msgstr "Červenec"
 
-#: src/webui/static/app/tvheadend.js:697
-msgid "KB"
-msgstr "KB"
+#: src/webui/static/app/tvheadend.js:724
+msgid "KiB"
+msgstr "KiB"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
 msgstr "Poslední stránka"
 
-#: src/webui/static/app/tvheadend.js:307
+#: src/webui/static/app/tvheadend.js:322
 msgid "Live TV Player"
 msgstr "Live TV Přehrávač"
 
-#: src/webui/static/app/tvheadend.js:108
+#: src/webui/static/app/tvheadend.js:123
 msgid "Loading, please wait..."
 msgstr "Nahrávám, prosím, čekejte..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
 #: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:627
 #: src/webui/static/app/epg.js:650 src/webui/static/app/epg.js:674
-#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:245
-#: src/webui/static/app/tvheadend.js:283
+#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:260
+#: src/webui/static/app/tvheadend.js:298
 msgid "Loading..."
 msgstr "Nahrávám..."
 
-#: src/webui/static/app/tvheadend.js:674
+#: src/webui/static/app/tvheadend.js:701
 msgid "Logged in as"
 msgstr "Přihlášen jako"
 
-#: src/webui/static/app/config.js:93
+#: src/webui/static/app/config.js:107
 msgid "Look for new SAT>IP servers"
 msgstr "Hledat nové SAT>IP servery"
-
-#: src/webui/static/app/tvheadend.js:695
-msgid "MB"
-msgstr "MB"
 
 #: src/webui/static/app/servicemapper.js:126
 msgid "Map"
@@ -979,9 +996,13 @@ msgstr "Kvě"
 msgid "Merge same name"
 msgstr "Spoj stejný název"
 
-#: src/webui/static/app/tvheadend.js:97
+#: src/webui/static/app/tvheadend.js:112
 msgid "Message"
 msgstr "Zpráva"
+
+#: src/webui/static/app/tvheadend.js:722
+msgid "MiB"
+msgstr "MiB"
 
 #: src/webui/static/app/i18n-post.js:94
 msgid "Mon"
@@ -991,35 +1012,35 @@ msgstr "Květen"
 msgid "Monday"
 msgstr "Pondělí"
 
-#: src/webui/static/app/idnode.js:1450 src/webui/static/app/idnode.js:1953
+#: src/webui/static/app/idnode.js:1592 src/webui/static/app/idnode.js:2115
 msgid "Move Down"
 msgstr "Posunout dolů"
 
-#: src/webui/static/app/idnode.js:1425 src/webui/static/app/idnode.js:1932
+#: src/webui/static/app/idnode.js:1567 src/webui/static/app/idnode.js:2094
 msgid "Move Up"
 msgstr "Posunout nahoru"
 
-#: src/webui/static/app/chconf.js:168
+#: src/webui/static/app/chconf.js:156
 msgid "Move channel one number down"
 msgstr "Snížení čísla programu"
 
-#: src/webui/static/app/chconf.js:155
+#: src/webui/static/app/chconf.js:150
 msgid "Move channel one number up"
 msgstr "Zvýšení čísla programu"
 
-#: src/webui/static/app/idnode.js:1448
+#: src/webui/static/app/idnode.js:1590
 msgid "Move selected entries down"
 msgstr "Posun vybraných programů dolů"
 
-#: src/webui/static/app/idnode.js:1423
+#: src/webui/static/app/idnode.js:1565
 msgid "Move selected entries up"
 msgstr "Posun vybraných programů nahoru"
 
-#: src/webui/static/app/idnode.js:1951
+#: src/webui/static/app/idnode.js:2113
 msgid "Move selected entry down"
 msgstr "Posun vybraného programu dolů"
 
-#: src/webui/static/app/idnode.js:1930
+#: src/webui/static/app/idnode.js:2092
 msgid "Move selected entry up"
 msgstr "Posun vybraného programu nahoru"
 
@@ -1068,21 +1089,21 @@ msgstr "Žádná data k zobrazení"
 msgid "No days"
 msgstr "Žádné dny"
 
-#: src/webui/static/app/tvheadend.js:677
+#: src/webui/static/app/tvheadend.js:704
 msgid "No verified access"
 msgstr "Neprověřený přístup"
 
 #. / {0} title (lowercase), {1} title
-#: src/webui/static/app/tvheadend.js:121
+#: src/webui/static/app/tvheadend.js:136
 msgid "No {0} to display"
 msgstr "Žádné {0} k zobrazení"
 
-#: src/webui/static/app/idnode.js:1572 src/webui/static/app/mpegts.js:208
+#: src/webui/static/app/idnode.js:1714 src/webui/static/app/mpegts.js:208
 #: src/webui/static/app/mpegts.js:218
 msgid "None"
 msgstr "Žádný"
 
-#: src/webui/static/app/idnode.js:341
+#: src/webui/static/app/idnode.js:350
 msgid "Not set"
 msgstr "Nenastaveno"
 
@@ -1098,13 +1119,17 @@ msgstr "Říjen"
 msgid "Number"
 msgstr "Číslo"
 
-#: src/webui/static/app/chconf.js:170
+#: src/webui/static/app/chconf.js:158
 msgid "Number Down"
 msgstr "Číslo dolů"
 
-#: src/webui/static/app/chconf.js:157
+#: src/webui/static/app/chconf.js:152
 msgid "Number Up"
 msgstr "Zvýšit číslo"
+
+#: src/webui/static/app/chconf.js:169
+msgid "Number operations"
+msgstr "Operace s čísly"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
@@ -1122,23 +1147,23 @@ msgstr "Listopad"
 msgid "On#DateFilter"
 msgstr "V"
 
-#: src/webui/static/app/esfilter.js:145
+#: src/webui/static/app/esfilter.js:150
 msgid "Other Stream Filter"
 msgstr "Filtr jiných streamů"
 
-#: src/webui/static/app/esfilter.js:146
+#: src/webui/static/app/esfilter.js:151
 msgid "Other Stream Filters"
 msgstr "Filtry jiných streamů"
 
-#: src/webui/static/app/status.js:716
+#: src/webui/static/app/status.js:724
 msgid "Out"
 msgstr "Výstup"
 
-#: src/webui/static/app/status.js:152
+#: src/webui/static/app/status.js:160
 msgid "Output (kb/s)"
 msgstr "Výstup (kb/s)"
 
-#: src/webui/static/app/status.js:372
+#: src/webui/static/app/status.js:380
 msgid "PER"
 msgstr "PER"
 
@@ -1146,11 +1171,11 @@ msgstr "PER"
 msgid "Page"
 msgstr "Stránka"
 
-#: src/webui/static/app/idnode.js:2040 src/webui/static/app/idnode.js:2226
+#: src/webui/static/app/idnode.js:2217 src/webui/static/app/idnode.js:2403
 msgid "Parameters"
 msgstr "Parametry"
 
-#: src/webui/static/app/idnode.js:1570
+#: src/webui/static/app/idnode.js:1712
 msgid "Parent disabled"
 msgstr "Rodič zakázán"
 
@@ -1166,22 +1191,22 @@ msgstr "Položky hesel"
 msgid "Passwords"
 msgstr "Hesla"
 
-#: src/webui/static/app/tvheadend.js:336
+#: src/webui/static/app/tvheadend.js:351
 msgid "Pause"
 msgstr "Pauza"
 
-#: src/webui/static/app/tvheadend.js:132
+#: src/webui/static/app/tvheadend.js:147
 msgid "Per page"
 msgstr "Na stránce"
 
 #: src/webui/static/app/mpegts.js:126 src/webui/static/app/mpegts.js:127
 #: src/webui/static/app/mpegts.js:131 src/webui/static/app/mpegts.js:307
 #: src/webui/static/app/mpegts.js:308 src/webui/static/app/mpegts.js:312
-#: src/webui/static/app/chconf.js:223 src/webui/static/app/chconf.js:224
-#: src/webui/static/app/chconf.js:231 src/webui/static/app/dvr.js:407
+#: src/webui/static/app/chconf.js:215 src/webui/static/app/chconf.js:216
+#: src/webui/static/app/chconf.js:223 src/webui/static/app/dvr.js:407
 #: src/webui/static/app/dvr.js:408 src/webui/static/app/dvr.js:414
 #: src/webui/static/app/dvr.js:518 src/webui/static/app/dvr.js:519
-#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:319
+#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:334
 msgid "Play"
 msgstr "Přehrát"
 
@@ -1209,6 +1234,10 @@ msgstr "Předchozí měsíc (Control+vlevo)"
 msgid "Previous Page"
 msgstr "Předchozí stránka"
 
+#: src/webui/static/app/status.js:118
+msgid "Profile"
+msgstr "Profil"
+
 #: src/webui/static/app/dvr.js:548
 msgid "Profile Name"
 msgstr "Název profilu"
@@ -1217,7 +1246,7 @@ msgstr "Název profilu"
 msgid "Progress"
 msgstr "Postup"
 
-#: src/webui/static/app/config.js:51 src/webui/static/app/config.js:53
+#: src/webui/static/app/config.js:65 src/webui/static/app/config.js:67
 msgid "Re-fetch images"
 msgstr "Opětovné načtení obrázků"
 
@@ -1225,7 +1254,7 @@ msgstr "Opětovné načtení obrázků"
 msgid "Re-record"
 msgstr "Znovu zaznamenat"
 
-#: src/webui/static/app/idnode.js:895
+#: src/webui/static/app/idnode.js:980
 msgid "Read-only Info"
 msgstr "Informace pouze pro čtení"
 
@@ -1245,7 +1274,7 @@ msgstr "Série rekordéru"
 msgid "Record this program now"
 msgstr "Zaznamenej vysílání tohoto programu"
 
-#: src/webui/static/app/tvheadend.js:521
+#: src/webui/static/app/tvheadend.js:548
 msgid "Recording"
 msgstr "Nahrávání"
 
@@ -1257,7 +1286,7 @@ msgstr "Detaily nahrávání"
 msgid "Refresh"
 msgstr "Obnovit"
 
-#: src/webui/static/app/chconf.js:194
+#: src/webui/static/app/chconf.js:186
 msgid "Reset (clear) the selected icon URLs"
 msgstr "Zresetovat (vymazat) vybrané URL pro ikony"
 
@@ -1265,7 +1294,7 @@ msgstr "Zresetovat (vymazat) vybrané URL pro ikony"
 msgid "Reset All"
 msgstr "Resetuj vše"
 
-#: src/webui/static/app/chconf.js:196
+#: src/webui/static/app/chconf.js:188
 msgid "Reset Icon"
 msgstr "Resetuj ikonu"
 
@@ -1273,20 +1302,20 @@ msgstr "Resetuj ikonu"
 msgid "Reset all filters (show all)"
 msgstr "Resetuj všechny filtry (zobraz vše)"
 
-#: src/webui/static/app/idnode.js:1364 src/webui/static/app/idnode.js:1879
-#: src/webui/static/app/idnode.js:2336
+#: src/webui/static/app/idnode.js:1506 src/webui/static/app/idnode.js:2041
+#: src/webui/static/app/idnode.js:2560
 msgid "Revert pending changes (marked with red border)"
 msgstr "Obnovit neuložené změny (označené červeným okrajem)"
 
-#: src/webui/static/app/config.js:108
+#: src/webui/static/app/config.js:122
 msgid "SAT>IP Server"
 msgstr "SAT>IP Server"
 
-#: src/webui/static/app/config.js:116
+#: src/webui/static/app/config.js:130
 msgid "SAT>IP Server Configuration"
 msgstr "Konfigurace SAT>IP serveru"
 
-#: src/webui/static/app/status.js:402
+#: src/webui/static/app/status.js:410
 msgid "SNR"
 msgstr "SNR"
 
@@ -1298,13 +1327,13 @@ msgstr "Sob"
 msgid "Saturday"
 msgstr "Sobota"
 
-#: src/webui/static/app/idnode.js:934 src/webui/static/app/idnode.js:1339
-#: src/webui/static/app/idnode.js:1859 src/webui/static/app/idnode.js:2319
+#: src/webui/static/app/idnode.js:1034 src/webui/static/app/idnode.js:1481
+#: src/webui/static/app/idnode.js:2021 src/webui/static/app/idnode.js:2541
 msgid "Save"
 msgstr "Ulož"
 
-#: src/webui/static/app/idnode.js:1337 src/webui/static/app/idnode.js:1857
-#: src/webui/static/app/idnode.js:2317
+#: src/webui/static/app/idnode.js:1479 src/webui/static/app/idnode.js:2019
+#: src/webui/static/app/idnode.js:2539
 msgid "Save pending changes (marked with red border)"
 msgstr "Uložit změny udělané do konfigurace (označené červeným okrajem)"
 
@@ -1328,19 +1357,19 @@ msgstr "Hledej v TheTVDB (název)"
 msgid "Search title..."
 msgstr "Hledat název...."
 
-#: src/webui/static/app/tvheadend.js:252
+#: src/webui/static/app/tvheadend.js:267
 msgid "Select channel..."
 msgstr "Vybrat program..."
 
-#: src/webui/static/app/tvheadend.js:289
+#: src/webui/static/app/tvheadend.js:304
 msgid "Select stream profile..."
 msgstr "Vybrat profil streamu..."
 
-#: src/webui/static/app/idnode.js:447 src/webui/static/app/idnode.js:618
+#: src/webui/static/app/idnode.js:456 src/webui/static/app/idnode.js:677
 msgid "Select {0} ..."
 msgstr "Vybrat {0} ..."
 
-#: src/webui/static/app/idnode.js:431 src/webui/static/app/idnode.js:594
+#: src/webui/static/app/idnode.js:440 src/webui/static/app/idnode.js:653
 msgid "Selected"
 msgstr "Vybrané"
 
@@ -1352,7 +1381,7 @@ msgstr "Zář"
 msgid "September"
 msgstr "Září"
 
-#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:110
+#: src/webui/static/app/mpegts.js:294 src/webui/static/app/status.js:112
 msgid "Service"
 msgstr "Služba"
 
@@ -1372,7 +1401,7 @@ msgstr "Detaily služby pro"
 msgid "Services"
 msgstr "Služby"
 
-#: src/webui/static/app/idnode.js:853
+#: src/webui/static/app/idnode.js:924
 msgid "Settings"
 msgstr "Nastavení"
 
@@ -1380,15 +1409,15 @@ msgstr "Nastavení"
 msgid "Show in Groups"
 msgstr "Zobrazit ve skupinách"
 
-#: src/webui/static/app/idnode.js:1975
+#: src/webui/static/app/idnode.js:2137
 msgid "Show or hide passwords"
 msgstr "Ukázat nebo skrýt hesla"
 
-#: src/webui/static/app/idnode.js:1977 src/webui/static/app/idnode.js:1981
+#: src/webui/static/app/idnode.js:2139 src/webui/static/app/idnode.js:2143
 msgid "Show passwords"
 msgstr "Ukázat hesla"
 
-#: src/webui/static/app/status.js:422
+#: src/webui/static/app/status.js:430
 msgid "Signal Strength"
 msgstr "Síla signálu"
 
@@ -1408,7 +1437,7 @@ msgstr "Hodnocení"
 msgid "Stars"
 msgstr "Hodnocení"
 
-#: src/webui/static/app/status.js:116
+#: src/webui/static/app/status.js:124
 msgid "Start"
 msgstr "Začátek"
 
@@ -1417,19 +1446,19 @@ msgstr "Začátek"
 msgid "Start Time"
 msgstr "Začátek"
 
-#: src/webui/static/app/status.js:572
+#: src/webui/static/app/status.js:580
 msgid "Started"
 msgstr "Běží"
 
-#: src/webui/static/app/status.js:126
+#: src/webui/static/app/status.js:134
 msgid "State"
 msgstr "Stav"
 
-#: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:619
+#: src/webui/static/app/dvr.js:51 src/webui/static/app/status.js:627
 msgid "Status"
 msgstr "Stav"
 
-#: src/webui/static/app/dvr.js:202 src/webui/static/app/tvheadend.js:343
+#: src/webui/static/app/dvr.js:202 src/webui/static/app/tvheadend.js:358
 msgid "Stop"
 msgstr "Zastavit"
 
@@ -1445,12 +1474,12 @@ msgstr "Ukončit záznam tohoto vysílání"
 msgid "Stop the selected recording"
 msgstr "Dokonči vybrané nahrávání"
 
-#: src/webui/static/app/tvheadend.js:700
+#: src/webui/static/app/tvheadend.js:727
 msgid "Storage space"
 msgstr "Místo na úložišti"
 
-#: src/webui/static/app/status.js:344 src/webui/static/app/status.js:474
-#: src/webui/static/app/tvheadend.js:509
+#: src/webui/static/app/status.js:352 src/webui/static/app/status.js:482
+#: src/webui/static/app/tvheadend.js:535
 msgid "Stream"
 msgstr "Stream"
 
@@ -1467,11 +1496,11 @@ msgstr "Název profilu streamu"
 msgid "Stream Profiles"
 msgstr "Profily streamů"
 
-#: src/webui/static/app/status.js:349
+#: src/webui/static/app/status.js:357
 msgid "Subs No."
 msgstr "Odběry Počet"
 
-#: src/webui/static/app/status.js:199
+#: src/webui/static/app/status.js:207
 msgid "Subscriptions"
 msgstr "Odběry"
 
@@ -1479,11 +1508,11 @@ msgstr "Odběry"
 msgid "Subtitle"
 msgstr "Podtitulek"
 
-#: src/webui/static/app/esfilter.js:108
+#: src/webui/static/app/esfilter.js:111
 msgid "Subtitle Stream Filter"
 msgstr "Filtr streamu podtitulků"
 
-#: src/webui/static/app/esfilter.js:109
+#: src/webui/static/app/esfilter.js:112
 msgid "Subtitle Stream Filters"
 msgstr "Filtry streamu podtitulků"
 
@@ -1495,15 +1524,15 @@ msgstr "Ned"
 msgid "Sunday"
 msgstr "Neděle"
 
-#: src/webui/static/app/chconf.js:183
+#: src/webui/static/app/chconf.js:164
 msgid "Swap Numbers"
 msgstr "Zaměň čísla"
 
-#: src/webui/static/app/chconf.js:181
+#: src/webui/static/app/chconf.js:162
 msgid "Swap the numbers for the two selected channels"
 msgstr "Zaměnit čísla pro dva vybrané programy"
 
-#: src/webui/static/app/tvheadend.js:760
+#: src/webui/static/app/tvheadend.js:787
 msgid "System log"
 msgstr "Systémový log"
 
@@ -1515,11 +1544,11 @@ msgstr "TV adaptéry"
 msgid "Tag"
 msgstr "Štítek"
 
-#: src/webui/static/app/esfilter.js:89
+#: src/webui/static/app/esfilter.js:91
 msgid "Teletext Stream Filter"
 msgstr "Filter streamu teletextu"
 
-#: src/webui/static/app/esfilter.js:90
+#: src/webui/static/app/esfilter.js:92
 msgid "Teletext Stream Filters"
 msgstr "Filtry streamu teletextu"
 
@@ -1595,17 +1624,17 @@ msgstr "Čtv"
 msgid "Thursday"
 msgstr "Čtvrtek"
 
-#: src/webui/static/app/dvr.js:639
-msgid "Time Schedule"
-msgstr "Plánovač času"
-
 #: src/webui/static/app/dvr.js:59
 msgid "Time Scheduler"
 msgstr "Plánovač času"
 
+#: src/webui/static/app/dvr.js:639
+msgid "Timer"
+msgstr "Časový rekordér"
+
 #: src/webui/static/app/dvr.js:640
-msgid "Time Schedules"
-msgstr "Plánovače času"
+msgid "Timers"
+msgstr "Časové rekordéry"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
@@ -1616,7 +1645,7 @@ msgid "Timeshift Configuration"
 msgstr "Timeshift konfigurace"
 
 #: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
-#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:98
+#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:100
 msgid "Title"
 msgstr "Název pořadu"
 
@@ -1624,7 +1653,7 @@ msgstr "Název pořadu"
 msgid "Today"
 msgstr "Dnes"
 
-#: src/webui/static/app/tvheadend.js:361
+#: src/webui/static/app/tvheadend.js:376
 msgid "Toggle mute"
 msgstr "Přepnout ztlumení"
 
@@ -1632,11 +1661,11 @@ msgstr "Přepnout ztlumení"
 msgid "Toggle re-record functionality"
 msgstr "Přepnout opětovný záznam"
 
-#: src/webui/static/app/tvheadend.js:703
+#: src/webui/static/app/tvheadend.js:730
 msgid "Total"
 msgstr "Celkově"
 
-#: src/webui/static/app/status.js:383
+#: src/webui/static/app/status.js:391
 msgid "Transport Errors"
 msgstr "Chyby transportu"
 
@@ -1656,25 +1685,25 @@ msgstr "Úterý"
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr "Naladit over-the-air EPG muxy pro grabování nových událostí"
 
-#: src/webui/static/app/tvheadend.js:739
+#: src/webui/static/app/tvheadend.js:766
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend webový panel"
 
-#: src/webui/static/app/caclient.js:46 src/webui/static/app/esfilter.js:32
-#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:557
+#: src/webui/static/app/caclient.js:47 src/webui/static/app/esfilter.js:32
+#: src/webui/static/app/mpegts.js:76 src/webui/static/app/status.js:565
 msgid "Type"
 msgstr "Typ"
 
-#: src/webui/static/app/status.js:378
+#: src/webui/static/app/status.js:386
 msgid "Uncorrected Blocks"
 msgstr "Neopravené bloky"
 
-#: src/webui/static/app/idnode.js:1366 src/webui/static/app/idnode.js:1881
-#: src/webui/static/app/idnode.js:2338
+#: src/webui/static/app/idnode.js:1508 src/webui/static/app/idnode.js:2043
+#: src/webui/static/app/idnode.js:2562
 msgid "Undo"
 msgstr "Zpět"
 
-#: src/webui/static/app/status.js:415 src/webui/static/app/status.js:435
+#: src/webui/static/app/status.js:423 src/webui/static/app/status.js:443
 msgid "Unknown"
 msgstr "Neznámý"
 
@@ -1686,11 +1715,11 @@ msgstr "Budoucí / současné záznamy"
 msgid "Upcoming Recording"
 msgstr "Budoucí záznamy"
 
-#: src/webui/static/app/status.js:92 src/webui/static/app/status.js:567
+#: src/webui/static/app/status.js:94 src/webui/static/app/status.js:575
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#: src/webui/static/app/tvheadend.js:459
+#: src/webui/static/app/tvheadend.js:482
 msgid "Users"
 msgstr "Uživatelé"
 
@@ -1702,7 +1731,15 @@ msgstr "Filtr video streamu"
 msgid "Video Stream Filters"
 msgstr "Filtry video streamů"
 
-#: src/webui/static/app/tvheadend.js:370
+#: src/webui/static/app/idnode.js:613
+msgid "View level"
+msgstr "Úroveň zobrazení"
+
+#: src/webui/static/app/idnode.js:616
+msgid "View level: "
+msgstr "Úroveň zobrazení: "
+
+#: src/webui/static/app/tvheadend.js:385
 msgid "Volume"
 msgstr "Hlasitost"
 
@@ -1722,7 +1759,7 @@ msgstr "Stř"
 msgid "Wednesday"
 msgstr "Středa"
 
-#: src/webui/static/app/status.js:354
+#: src/webui/static/app/status.js:362
 msgid "Weight"
 msgstr "Váha"
 
@@ -1734,7 +1771,7 @@ msgstr "Bude přeskočeno"
 msgid "Yes"
 msgstr "Ano"
 
-#: src/webui/static/app/idnode.js:459 src/webui/static/app/idnode.js:740
+#: src/webui/static/app/idnode.js:468 src/webui/static/app/idnode.js:799
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "Musíte použít číslo v osmičkové soustavě - chmod notaci, např. 0644"
 
@@ -1764,16 +1801,16 @@ msgid ""
 "A|gi|hi|gia|hia|g|H#TimeField"
 msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
-#: src/webui/static/app/idnode.js:349 src/webui/static/app/idnode.js:350
+#: src/webui/static/app/idnode.js:358 src/webui/static/app/idnode.js:359
 #: src/webui/static/app/epg.js:427 src/webui/static/app/epg.js:429
 msgid "hrs"
 msgstr "hod"
 
-#: src/webui/static/app/tvheadend.js:678
+#: src/webui/static/app/tvheadend.js:705
 msgid "login"
 msgstr "přihlásit"
 
-#: src/webui/static/app/tvheadend.js:675
+#: src/webui/static/app/tvheadend.js:702
 msgid "logout"
 msgstr "odhlásit"
 
@@ -1801,7 +1838,7 @@ msgstr "d.m.Y#DateField"
 msgid "m/d/y#DatePicker"
 msgstr "d.m.Y#DatePicker"
 
-#: src/webui/static/app/idnode.js:350 src/webui/static/app/idnode.js:352
+#: src/webui/static/app/idnode.js:359 src/webui/static/app/idnode.js:361
 #: src/webui/static/app/epg.js:429 src/webui/static/app/epg.js:432
 #: src/webui/static/app/dvr.js:46
 msgid "min"
@@ -1836,6 +1873,6 @@ msgid "{0} selected row{1}"
 msgstr "{0} vybraný řádek{1}"
 
 #. / {0} start, {1} end, {2} total, {3} title
-#: src/webui/static/app/tvheadend.js:119
+#: src/webui/static/app/tvheadend.js:134
 msgid "{3} {0} - {1} of {2}"
 msgstr "{3} {0} - {1} z {2}"

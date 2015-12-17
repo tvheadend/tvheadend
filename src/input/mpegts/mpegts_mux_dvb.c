@@ -92,9 +92,13 @@ dvb_mux_##c##_class_##l##_enum (void *o, const char *lang)\
 {\
   static const int     t[] = { __VA_ARGS__ };\
   int i;\
-  htsmsg_t *m = htsmsg_create_list();\
-  for (i = 0; i < ARRAY_SIZE(t); i++)\
-    htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, dvb_##l##2str(t[i])));\
+  htsmsg_t *m = htsmsg_create_list(), *e;\
+  for (i = 0; i < ARRAY_SIZE(t); i++) {\
+    e = htsmsg_create_map(); \
+    htsmsg_add_str(e, "key", dvb_##l##2str(t[i]));\
+    htsmsg_add_str(e, "val", tvh_gettext_lang(lang, dvb_##l##2str(t[i])));\
+    htsmsg_add_msg(m, NULL, e);\
+  }\
   return m;\
 }
 #define MUX_PROP_STR(_id, _name, t, l, d)\
@@ -207,7 +211,7 @@ const idclass_t dvb_mux_dvbt_class =
   .ic_caption    = N_("Linux DVB-T multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery system"), dvbt, delsys, N_("DVB-T")),
+      MUX_PROP_STR("delsys", N_("Delivery system"), dvbt, delsys, "DVBT"),
     },
     {
       .type     = PT_U32,
@@ -263,12 +267,12 @@ dvb_mux_class_X(dvbc, qam, fec_inner,             fec,
 
 #define dvb_mux_dvbc_class_delsys_get dvb_mux_class_delsys_get
 #define dvb_mux_dvbc_class_delsys_set dvb_mux_class_delsys_set
+
 static htsmsg_t *
 dvb_mux_dvbc_class_delsys_enum (void *o, const char *lang)
 {
   htsmsg_t *list = htsmsg_create_list();
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_A));
-  htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_B));
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_C));
   return list;
 }
@@ -280,7 +284,7 @@ const idclass_t dvb_mux_dvbc_class =
   .ic_caption    = N_("Linux DVB-C multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery system"), dvbc, delsys, N_("DVBC_ANNEX_AC")),
+      MUX_PROP_STR("delsys", N_("Delivery system"), dvbc, delsys, "DVB-C"),
     },
     {
       .type     = PT_U32,
@@ -634,11 +638,11 @@ const idclass_t dvb_mux_dvbs_class =
   }
 };
 
-#define dvb_mux_atsc_class_delsys_get dvb_mux_class_delsys_get
-#define dvb_mux_atsc_class_delsys_set dvb_mux_class_delsys_set
+#define dvb_mux_atsc_t_class_delsys_get dvb_mux_class_delsys_get
+#define dvb_mux_atsc_t_class_delsys_set dvb_mux_class_delsys_set
 
 static htsmsg_t *
-dvb_mux_atsc_class_delsys_enum (void *o, const char *lang)
+dvb_mux_atsc_t_class_delsys_enum (void *o, const char *lang)
 {
   htsmsg_t *list = htsmsg_create_list();
   htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_ATSC));
@@ -646,17 +650,17 @@ dvb_mux_atsc_class_delsys_enum (void *o, const char *lang)
   return list;
 }
 
-dvb_mux_class_R(atsc, modulation, qam,
+dvb_mux_class_R(atsc_t, modulation, qam,
                      DVB_MOD_QAM_AUTO, DVB_MOD_QAM_256, DVB_MOD_VSB_8);
 
-const idclass_t dvb_mux_atsc_class =
+const idclass_t dvb_mux_atsc_t_class =
 {
   .ic_super      = &dvb_mux_class,
-  .ic_class      = "dvb_mux_atsc",
-  .ic_caption    = N_("Linux ATSC multiplex"),
+  .ic_class      = "dvb_mux_atsc_t",
+  .ic_caption    = N_("Linux ATSC-T multiplex"),
   .ic_properties = (const property_t[]){
     {
-      MUX_PROP_STR("delsys", N_("Delivery system"), atsc, delsys, N_("ATSC")),
+      MUX_PROP_STR("delsys", N_("Delivery system"), atsc_t, delsys, "ATSC-T"),
     },
     {
       .type     = PT_U32,
@@ -667,7 +671,52 @@ const idclass_t dvb_mux_atsc_class =
       .set      = dvb_mux_dvbt_class_frequency_set,
     },
     {
-      MUX_PROP_STR("modulation", N_("Modulation"), atsc, qam, N_("AUTO"))
+      MUX_PROP_STR("modulation", N_("Modulation"), atsc_t, qam, N_("AUTO"))
+    },
+    {}
+  }
+};
+
+#define dvb_mux_atsc_c_class_delsys_get dvb_mux_class_delsys_get
+#define dvb_mux_atsc_c_class_delsys_set dvb_mux_class_delsys_set
+
+static htsmsg_t *
+dvb_mux_atsc_c_class_delsys_enum (void *o, const char *lang)
+{
+  htsmsg_t *list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, dvb_delsys2str(DVB_SYS_DVBC_ANNEX_B));
+  return list;
+}
+
+const idclass_t dvb_mux_atsc_c_class =
+{
+  .ic_super      = &dvb_mux_class,
+  .ic_class      = "dvb_mux_atsc_c",
+  .ic_caption    = N_("Linux ATSC-C multiplex"),
+  .ic_properties = (const property_t[]){
+    {
+      MUX_PROP_STR("delsys", N_("Delivery system"), atsc_c, delsys, "ATSC-C"),
+    },
+    {
+      .type     = PT_U32,
+      .id       = "frequency",
+      .name     = N_("Frequency (Hz)"),
+      .desc     = N_("The frequency of the mux (in Hertz)."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
+      .set      = dvb_mux_dvbt_class_frequency_set,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "symbolrate",
+      .name     = N_("Symbol rate (Sym/s)"),
+      .desc     = N_("The symbol rate."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_qam.symbol_rate),
+    },
+    {
+      MUX_PROP_STR("constellation", N_("Constellation"), dvbc, qam, N_("AUTO"))
+    },
+    {
+      MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO"))
     },
     {}
   }
@@ -775,9 +824,12 @@ dvb_mux_create0
   } else if (ln->ln_type == DVB_TYPE_T) {
     idc = &dvb_mux_dvbt_class;
     delsys = DVB_SYS_DVBT;
-  } else if (ln->ln_type == DVB_TYPE_ATSC) {
-    idc = &dvb_mux_atsc_class;
+  } else if (ln->ln_type == DVB_TYPE_ATSC_T) {
+    idc = &dvb_mux_atsc_t_class;
     delsys = DVB_SYS_ATSC;
+  } else if (ln->ln_type == DVB_TYPE_ATSC_C) {
+    idc = &dvb_mux_atsc_c_class;
+    delsys = DVB_SYS_DVBC_ANNEX_B;
   } else {
     tvherror("dvb", "unknown FE type %d", ln->ln_type);
     return NULL;

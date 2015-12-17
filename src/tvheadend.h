@@ -210,6 +210,7 @@ void tasklet_disarm(tasklet_t *gti);
  */
 LIST_HEAD(access_entry_list, access_entry);
 LIST_HEAD(th_subscription_list, th_subscription);
+LIST_HEAD(dvr_vfs_list, dvr_vfs);
 LIST_HEAD(dvr_config_list, dvr_config);
 LIST_HEAD(dvr_entry_list, dvr_entry);
 TAILQ_HEAD(ref_update_queue, ref_update);

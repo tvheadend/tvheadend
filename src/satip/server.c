@@ -119,14 +119,14 @@ satip_server_http_xml(http_connection_t *hc)
   http_arg_list_t args;
 
   struct xml_type_xtab xtab[] =  {
-    { "DVBS",  &satip_server_conf.satip_dvbs,  &dvbs },
-    { "DVBS2", &satip_server_conf.satip_dvbs2, &dvbs },
-    { "DVBT",  &satip_server_conf.satip_dvbt,  &dvbt },
-    { "DVBT2", &satip_server_conf.satip_dvbt2, &dvbt },
-    { "DVBC",  &satip_server_conf.satip_dvbc,  &dvbc },
-    { "DVBC2", &satip_server_conf.satip_dvbc2, &dvbc },
-    { "ATSC",  &satip_server_conf.satip_atsc,  &atsc },
-    { "DVBCB", &satip_server_conf.satip_dvbcb, &dvbc },
+    { "DVBS",  &satip_server_conf.satip_dvbs,   &dvbs },
+    { "DVBS2", &satip_server_conf.satip_dvbs2,  &dvbs },
+    { "DVBT",  &satip_server_conf.satip_dvbt,   &dvbt },
+    { "DVBT2", &satip_server_conf.satip_dvbt2,  &dvbt },
+    { "DVBC",  &satip_server_conf.satip_dvbc,   &dvbc },
+    { "DVBC2", &satip_server_conf.satip_dvbc2,  &dvbc },
+    { "ATSCT", &satip_server_conf.satip_atsc_t, &atsc },
+    { "ATSCC", &satip_server_conf.satip_atsc_c, &atsc },
     {}
   };
 
@@ -145,7 +145,7 @@ satip_server_http_xml(http_connection_t *hc)
         srcs = mn->mn_satip_source;
     } else if (idnode_is_instance(&mn->mn_id, &dvb_network_dvbc_class))
       dvbc++;
-    else if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_class))
+    else if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_t_class))
       atsc++;
     else if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
       LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
@@ -527,15 +527,15 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
               http_server_ip, http_server_port,
               http_server_ip, satip_server_rtsp_port,
               descramble, muxcnf);
-  tvhinfo("satips", "SAT>IP Server tuners: DVB-T/T2 %d/%d, DVB-S/S2 %d/%d, DVB-C/C2 %d/%d, ATSC %d, DVB-Cable/AnnexB %d",
+  tvhinfo("satips", "SAT>IP Server tuners: DVB-T/T2 %d/%d, DVB-S/S2 %d/%d, DVB-C/C2 %d/%d, ATSC-T/C %d/%d",
               satip_server_conf.satip_dvbt,
               satip_server_conf.satip_dvbt2,
               satip_server_conf.satip_dvbs,
               satip_server_conf.satip_dvbs2,
               satip_server_conf.satip_dvbc,
               satip_server_conf.satip_dvbc2,
-              satip_server_conf.satip_atsc,
-              satip_server_conf.satip_dvbcb);
+              satip_server_conf.satip_atsc_t,
+              satip_server_conf.satip_atsc_c);
 }
 
 /*
@@ -671,7 +671,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbs",
       .name   = N_("DVB-S"),
-      .desc   = N_("The number of DVB-S tuners to export."),
+      .desc   = N_("The number of DVB-S (Satellite) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbs),
       .group  = 2,
     },
@@ -679,7 +679,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbs2",
       .name   = N_("DVB-S2"),
-      .desc   = N_("The number of DVB-S2 tuners to export."),
+      .desc   = N_("The number of DVB-S2 (Satellite) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbs2),
       .group  = 2,
     },
@@ -687,7 +687,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbt",
       .name   = N_("DVB-T"),
-      .desc   = N_("The number of DVB-T tuners to export."),
+      .desc   = N_("The number of DVB-T (Terresterial) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbt),
       .group  = 2,
     },
@@ -695,7 +695,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbt2",
       .name   = N_("DVB-T2"),
-      .desc   = N_("The number of DVB-T2 tuners to export."),
+      .desc   = N_("The number of DVB-T2 (Terresterial) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbt2),
       .group  = 2,
     },
@@ -703,7 +703,7 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbc",
       .name   = N_("DVB-C"),
-      .desc   = N_("The number of DVB-C tuners to export."),
+      .desc   = N_("The number of DVB-C (Cable) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbc),
       .group  = 2,
     },
@@ -711,24 +711,24 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_dvbc2",
       .name   = N_("DVB-C2"),
-      .desc   = N_("The number of DVB-C2 tuners to export."),
+      .desc   = N_("The number of DVB-C2 (Cable) tuners to export."),
       .off    = offsetof(struct satip_server_conf, satip_dvbc2),
       .group  = 2,
     },
     {
       .type   = PT_INT,
-      .id     = "satip_atsc",
-      .name   = N_("ATSC"),
-      .desc   = N_("The number of ATSC tuners to export."),
-      .off    = offsetof(struct satip_server_conf, satip_atsc),
+      .id     = "satip_atsct",
+      .name   = N_("ATSC-T"),
+      .desc   = N_("The number of ATSC-T (Terresterial) tuners to export."),
+      .off    = offsetof(struct satip_server_conf, satip_atsc_t),
       .group  = 2,
     },
     {
       .type   = PT_INT,
-      .id     = "satip_dvbc2",
-      .name   = N_("DVB-Cable/AnnexB"),
-      .desc   = N_("The number of DVB-Cable/AnnexB tuners to export."),
-      .off    = offsetof(struct satip_server_conf, satip_dvbcb),
+      .id     = "satip_atscc",
+      .name   = N_("ATSC-C"),
+      .desc   = N_("The number of ATSC-C (Cable/AnnexB) tuners to export."),
+      .off    = offsetof(struct satip_server_conf, satip_atsc_c),
       .group  = 2,
     },
     {}

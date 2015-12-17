@@ -119,6 +119,12 @@ typedef struct timeshift {
 } timeshift_t;
 
 /*
+ *
+ */
+extern uint64_t timeshift_total_size;
+extern uint64_t timeshift_total_ram_size;
+
+/*
  * Write functions
  */
 ssize_t timeshift_write_start   ( timeshift_file_t *tsf, int64_t time, streaming_start_t *ss );

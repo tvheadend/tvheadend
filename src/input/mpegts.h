@@ -1040,6 +1040,8 @@ mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
 static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &mpegts_service_class, NULL); }
 
+void mpegts_service_unref ( service_t *s );
+
 void mpegts_service_delete ( service_t *s, int delconf );
 
 

@@ -946,6 +946,36 @@ mpegts_input_tuning_error ( mpegts_input_t *mi, mpegts_mux_t *mm )
  * Data processing
  * *************************************************************************/
 
+#if 0
+static int data_noise ( mpegts_packet_t *mp )
+{
+  static uint64_t off = 0, win = 4096, limit = 2*1024*1024;
+  uint8_t *data = mp->mp_data;
+  uint32_t i, p, s, len = mp->mp_len;
+  for (p = 0; p < len; p += 188) {
+    off += 188;
+    if (off >= limit && off < limit + win) {
+      if ((off & 3) == 1) {
+        memmove(data + p, data + p + 188, len - (p + 188));
+        p -= 188;
+        mp->mp_len -= 188;
+        return 1;
+      }
+      s = ((data[2] + data[3] + data[4]) & 3) + 1;
+      for (i = 0; i < 188; i += s)
+        ((char *)data)[p+i] ^= data[10] + data[12] + data[i];
+    } else if (off >= limit + win) {
+      off = 0;
+      limit = (uint64_t)data[15] * 4 * 1024;
+      win   = (uint64_t)data[16] * 16;
+    }
+  }
+  return 0;
+}
+#else
+static inline int data_noise( mpegts_packet_t *mp ) { return 0; }
+#endif
+
 static int inline
 get_pcr ( const uint8_t *tsb, int64_t *rpcr )
 {
@@ -1061,6 +1091,11 @@ mpegts_input_recv_packets
     len -= len2;
     off += len2;
 
+    if ((flags & MPEGTS_DATA_CC_RESTART) == 0 && data_noise(mp)) {
+      free(mp);
+      goto end;
+    }
+
     pthread_mutex_lock(&mi->mi_input_lock);
     if (mmi->mmi_mux->mm_active == mmi) {
       TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
@@ -1072,6 +1107,7 @@ mpegts_input_recv_packets
   }
 
   /* Adjust buffer */
+end:
   if (len && (flags & MPEGTS_DATA_CC_RESTART) == 0)
     sbuf_cut(sb, off); // cut off the bottom
   else

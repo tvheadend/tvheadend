@@ -672,8 +672,8 @@ const idclass_t esfilter_class_video = {
       .desc     = N_("The logical stream index to compare. Note that "
                      "this index is computed using all filters."
                      "Example: If filter is set to AC3 audio type and "
-                     "the language to ‘eng’ and there are two AC3 "
-                     "‘eng’ streams in the service, the first stream "
+                     "the language to 'eng' and there are two AC3 "
+                     "'eng' streams in the service, the first stream "
                      "could be identified using number 1 and the "
                      "second using number 2."),
       .off      = offsetof(esfilter_t, esf_sindex),
@@ -764,8 +764,8 @@ const idclass_t esfilter_class_audio = {
       .desc     = N_("The logical stream index to compare. Note that "
                      "this index is computed using all filters."
                      "Example: If filter is set to AC3 audio type and "
-                     "the language to ‘eng’ and there are two AC3 "
-                     "‘eng’ streams in the service, the first stream "
+                     "the language to 'eng' and there are two AC3 "
+                     "'eng' streams in the service, the first stream "
                      "could be identified using number 1 and the "
                      "second using number 2."),
       .off      = offsetof(esfilter_t, esf_sindex),
@@ -856,8 +856,8 @@ const idclass_t esfilter_class_teletext = {
       .desc     = N_("The logical stream index to compare. Note that "
                      "this index is computed using all filters."
                      "Example: If filter is set to AC3 audio type and "
-                     "the language to ‘eng’ and there are two AC3 "
-                     "‘eng’ streams in the service, the first stream "
+                     "the language to 'eng' and there are two AC3 "
+                     "'eng' streams in the service, the first stream "
                      "could be identified using number 1 and the "
                      "second using number 2."),
       .off      = offsetof(esfilter_t, esf_sindex),
@@ -948,8 +948,8 @@ const idclass_t esfilter_class_subtit = {
       .desc     = N_("The logical stream index to compare. Note that "
                      "this index is computed using all filters."
                      "Example: If filter is set to AC3 audio type and "
-                     "the language to ‘eng’ and there are two AC3 "
-                     "‘eng’ streams in the service, the first stream "
+                     "the language to 'eng' and there are two AC3 "
+                     "'eng' streams in the service, the first stream "
                      "could be identified using number 1 and the "
                      "second using number 2."),
       .off      = offsetof(esfilter_t, esf_sindex),
@@ -1051,8 +1051,8 @@ const idclass_t esfilter_class_ca = {
       .desc     = N_("The logical stream index to compare. Note that "
                      "this index is computed using all filters."
                      "Example: If filter is set to AC3 audio type and "
-                     "the language to ‘eng’ and there are two AC3 "
-                     "‘eng’ streams in the service, the first stream "
+                     "the language to 'eng' and there are two AC3 "
+                     "'eng' streams in the service, the first stream "
                      "could be identified using number 1 and the "
                      "second using number 2."),
       .off      = offsetof(esfilter_t, esf_sindex),

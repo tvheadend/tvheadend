@@ -820,3 +820,7 @@ void eit_init ( void )
 void eit_done ( void )
 {
 }
+
+void eit_load ( void )
+{
+}
