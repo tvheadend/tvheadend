@@ -575,10 +575,9 @@ serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int autor
         start_window = start + 30;
         if (start_window >= 24 * 60)
           start_window -= 24 * 60;
-
-        htsmsg_add_s32(conf, "start", start >= 0 ? start : -1); // -1 = any time
-        htsmsg_add_s32(conf, "start_window", start_window >= 0 ? start_window : -1); // -1 = any duration
       }
+      htsmsg_add_s32(conf, "start", start >= 0 ? start : -1); // -1 = any time
+      htsmsg_add_s32(conf, "start_window", start_window >= 0 ? start_window : -1); // -1 = any duration
     }
     else { // for update, we don't care about "approxTime"
       if(!htsmsg_get_s32(in, "start", &s32))
