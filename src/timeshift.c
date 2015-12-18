@@ -312,7 +312,7 @@ static void timeshift_input
                  ts_rescale(pkt->pkt_dts, 1000000),
                  pkt->pkt_duration,
                  pktbuf_len(pkt->pkt_payload),
-                 sm->sm_time);
+                 sm->sm_time - ts->pts_delta);
       }
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else
