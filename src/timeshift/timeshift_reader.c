@@ -594,7 +594,7 @@ void *timeshift_reader ( void *p )
               break;
 
             case SMT_SKIP_ABS_TIME:
-              if (ts->pts_delta == PTS_UNSET) {
+              if (ts->pts_delta == 0) {
                 tvhlog(LOG_ERR, "timeshift", "ts %d abs skip not possible no PTS delta", ts->id);
                 skip = NULL;
                 break;
@@ -760,7 +760,7 @@ void *timeshift_reader ( void *p )
         skip->time = pkt->pkt_pts;
         skip->type = SMT_SKIP_ABS_TIME;
         tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to pts %"PRId64" ok, time %"PRId64,
-               ts->id, skip->time, sm->sm_time - ts->pts_delta);
+               ts->id, ts_rescale(skip->time, 1000000), sm->sm_time - ts->pts_delta);
       } else {
         /* Report error */
         skip->type = SMT_SKIP_ERROR;
