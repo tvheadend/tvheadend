@@ -320,7 +320,7 @@ static void _process_msg
     case SMT_MPEGTS:
     case SMT_PACKET:
       pthread_mutex_lock(&ts->rdwr_mutex);
-      if ((tsf = timeshift_filemgr_get(ts, 1)) && (tsf->wfd >= 0 || tsf->ram)) {
+      if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) && (tsf->wfd >= 0 || tsf->ram)) {
         if ((err = _process_msg0(ts, tsf, &sm)) < 0) {
           timeshift_filemgr_close(tsf);
           tsf->bad = 1;

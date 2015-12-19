@@ -19,8 +19,9 @@
 #ifndef __TVH_TIMESHIFT_PRIVATE_H__
 #define __TVH_TIMESHIFT_PRIVATE_H__
 
-#define TIMESHIFT_PLAY_BUF     200000 // us to buffer in TX
-#define TIMESHIFT_FILE_PERIOD      60 // number of secs in each buffer file
+#define TIMESHIFT_PLAY_BUF         2000000 //< us to buffer in TX
+#define TIMESHIFT_FILE_PERIOD      60      //< number of secs in each buffer file
+#define TIMESHIFT_BACKLOG_MAX      16      //< maximum elementary streams
 
 /**
  * Indexes of import data in the stream
@@ -55,7 +56,7 @@ typedef struct timeshift_file
   int                           rfd;      ///< Read descriptor
   char                          *path;    ///< Full path to file
 
-  time_t                        time;     ///< Files coarse timestamp
+  int64_t                       time;     ///< Files coarse timestamp
   size_t                        size;     ///< Current file size;
   int64_t                       last;     ///< Latest timestamp
   off_t                         woff;     ///< Write offset
@@ -90,8 +91,11 @@ typedef struct timeshift {
   char                        *path;      ///< Directory containing buffer
   time_t                      max_time;   ///< Maximum period to shift
   int                         ondemand;   ///< Whether this is an on-demand timeshift
-  int64_t                     pts_delta;  ///< Delta between system clock and PTS
-  int64_t                     pts_val[6]; ///< Decision PTS values for multiple packets
+  int                         packet_mode;///< Packet mode (otherwise MPEG-TS data mode)
+  int64_t                     last_time;  ///< Last time in us (PTS conversion)
+  int64_t                     ref_time;   ///< Start time in us (monoclock)
+  struct streaming_message_queue backlog[TIMESHIFT_BACKLOG_MAX]; ///< Queued packets for time sorting
+  int                         backlog_max;///< Maximum component index in backlog
 
   enum {
     TS_INIT,
@@ -153,7 +157,7 @@ void timeshift_filemgr_term     ( void );
 int  timeshift_filemgr_makedirs ( int ts_index, char *buf, size_t len );
 
 timeshift_file_t *timeshift_filemgr_get
-  ( timeshift_t *ts, int create );
+  ( timeshift_t *ts, int64_t start_time );
 timeshift_file_t *timeshift_filemgr_oldest
   ( timeshift_t *ts );
 timeshift_file_t *timeshift_filemgr_newest

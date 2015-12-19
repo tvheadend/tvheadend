@@ -2459,7 +2459,7 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   memset(&skip, 0, sizeof(skip));
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
-    skip.time = hs->hs_90khz ? s64 : ts_rescale_i(s64, 1000000);
+    skip.time = hs->hs_90khz ? s64 : ts_rescale_inv(s64, 1000000);
     tvhtrace("htsp-sub", "skip: %s %"PRId64" (%s)", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
   } else if (!htsmsg_get_s64(in, "size", &s64)) {
@@ -4008,32 +4008,6 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
 /**
  *
  */
-static void
-htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  tvhdebug("htsp", "%s - subscription skip", hs->hs_htsp->htsp_logname);
-  htsmsg_add_str(m, "method", "subscriptionSkip");
-  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-
-  /* Flush pkt buffers */
-  if (skip->type != SMT_SKIP_ERROR)
-    htsp_flush_queue(hs->hs_htsp, &hs->hs_q, 0);
-
-  if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
-    htsmsg_add_u32(m, "absolute", 1);
-  if (skip->type == SMT_SKIP_ERROR)
-    htsmsg_add_u32(m, "error", 1);
-  else if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_REL_TIME)
-    htsmsg_add_s64(m, "time", hs->hs_90khz ? skip->time : ts_rescale(skip->time, 1000000));
-  else if (skip->type == SMT_SKIP_ABS_SIZE || skip->type == SMT_SKIP_REL_SIZE)
-    htsmsg_add_s64(m, "size", skip->size);
-  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
-}
-
-/**
- *
- */
 #if ENABLE_TIMESHIFT
 static void
 htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *status)
@@ -4050,6 +4024,34 @@ htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *
   htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 #endif
+
+/**
+ *
+ */
+static void
+htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  tvhdebug("htsp", "%s - subscription skip", hs->hs_htsp->htsp_logname);
+  htsmsg_add_str(m, "method", "subscriptionSkip");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
+
+  /* Flush pkt buffers */
+  if (skip->type != SMT_SKIP_ERROR) {
+    htsp_flush_queue(hs->hs_htsp, &hs->hs_q, 0);
+    htsp_subscription_timeshift_status(hs, &skip->timeshift);
+  }
+
+  if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
+    htsmsg_add_u32(m, "absolute", 1);
+  if (skip->type == SMT_SKIP_ERROR)
+    htsmsg_add_u32(m, "error", 1);
+  else if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_REL_TIME)
+    htsmsg_add_s64(m, "time", hs->hs_90khz ? skip->time : ts_rescale(skip->time, 1000000));
+  else if (skip->type == SMT_SKIP_ABS_SIZE || skip->type == SMT_SKIP_REL_SIZE)
+    htsmsg_add_s64(m, "size", skip->size);
+  htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
+}
 
 /**
  *

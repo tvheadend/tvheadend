@@ -40,14 +40,6 @@ typedef struct timeshift_conf {
 extern struct timeshift_conf timeshift_conf;
 extern const idclass_t timeshift_conf_class;
 
-typedef struct timeshift_status
-{
-  int     full;
-  int64_t shift;
-  int64_t pts_start;
-  int64_t pts_end;
-} timeshift_status_t;
-
 void timeshift_init ( void );
 void timeshift_term ( void );
 

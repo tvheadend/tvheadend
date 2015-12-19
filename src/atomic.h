@@ -48,6 +48,21 @@ atomic_add_u64(volatile uint64_t *ptr, uint64_t incr)
 #endif
 }
 
+static inline int64_t
+atomic_add_s64(volatile int64_t *ptr, int64_t incr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_fetch_and_add(ptr, incr);
+#else
+  uint64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr += incr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
 static inline time_t
 atomic_add_time_t(volatile time_t *ptr, time_t incr)
 {
@@ -119,6 +134,12 @@ atomic_exchange(volatile int *ptr, int new)
 
 static inline int
 atomic_exchange_u64(volatile uint64_t *ptr, uint64_t new)
+{
+  return  __sync_lock_test_and_set(ptr, new);
+}
+
+static inline int
+atomic_exchange_s64(volatile int64_t *ptr, int64_t new)
 {
   return  __sync_lock_test_and_set(ptr, new);
 }

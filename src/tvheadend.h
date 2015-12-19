@@ -310,6 +310,17 @@ typedef struct descramble_info {
 } descramble_info_t;
 
 /**
+ *
+ */
+typedef struct timeshift_status
+{
+  int     full;
+  int64_t shift;
+  int64_t pts_start;
+  int64_t pts_end;
+} timeshift_status_t;
+
+/**
  * Streaming skip
  */
 typedef struct streaming_skip
@@ -326,6 +337,9 @@ typedef struct streaming_skip
     off_t   size;
     int64_t time;
   };
+#if ENABLE_TIMESHIFT
+  timeshift_status_t timeshift;
+#endif
 } streaming_skip_t;
 
 
@@ -700,7 +714,7 @@ static inline int64_t ts_rescale(int64_t ts, int tb)
   return (ts * tb ) / 90000LL;
 }
 
-static inline int64_t ts_rescale_i(int64_t ts, int tb)
+static inline int64_t ts_rescale_inv(int64_t ts, int tb)
 {
   return (ts * 90000LL) / tb;
 }

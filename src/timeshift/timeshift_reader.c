@@ -236,7 +236,7 @@ static timeshift_index_iframe_t *_timeshift_last_frame
 {
   int end;
   timeshift_index_iframe_t *tsi = NULL;
-  timeshift_file_t *tsf = timeshift_filemgr_get(ts, 0);
+  timeshift_file_t *tsf = timeshift_filemgr_get(ts, -1);
   while (tsf && !tsi) {
     if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list))) {
       tsf = timeshift_filemgr_prev(tsf, &end, 0);
@@ -317,7 +317,7 @@ static int _timeshift_skip
         tsf = tsf_last;
       end = -1;
     } else {
-      tsf = tsf_last = timeshift_filemgr_get(ts, 0);
+      tsf = tsf_last = timeshift_filemgr_newest(ts);
       tsi = NULL;
       while (tsf && !tsi) {
         tsf_last = tsf;
@@ -348,7 +348,7 @@ static int _timeshift_read
 {
   timeshift_file_t *tsf = *cur_file;
   ssize_t r;
-  off_t off, ooff;
+  off_t off;
 
   if (tsf) {
 
@@ -365,7 +365,6 @@ static int _timeshift_read
                  ts->id, tsf->path, (int64_t)tsf->roff, (int64_t)off, strerror(errno));
 
     /* Read msg */
-    ooff = tsf->roff;
     r = _read_msg(tsf, -1, sm);
     if (r < 0) {
       streaming_message_t *e = streaming_msg_create_code(SMT_STOP, SM_CODE_UNDEFINED_ERROR);
@@ -376,20 +375,8 @@ static int _timeshift_read
     }
     tvhtrace("timeshift", "ts %d seek to %jd (fd %i) read msg %p (%"PRId64")", ts->id, (intmax_t)tsf->roff, tsf->rfd, *sm, (int64_t)r);
 
-    /* Incomplete */
-    if (r == 0) {
-      if (tsf->rfd >= 0) {
-        tvhtrace("timeshift", "ts %d seek to %jd (fd %i) (incomplete)", ts->id, (intmax_t)tsf->roff, tsf->rfd);
-        if ((off = lseek(tsf->rfd, ooff, SEEK_SET)) != ooff)
-          tvherror("timeshift", "seek to %s failed (off %"PRId64" != %"PRId64"): %s",
-                   tsf->path, (int64_t)ooff, (int64_t)off, strerror(errno));
-      }
-      tsf->roff = ooff;
-      return 0;
-    }
-
     /* Special case - EOF */
-    if (r == sizeof(size_t) || tsf->roff > tsf->size) {
+    if (r <= sizeof(size_t) || tsf->roff > tsf->size || *sm == NULL) {
       if (tsf->rfd >= 0)
         close(tsf->rfd);
       tsf->rfd  = -1;
@@ -398,6 +385,7 @@ static int _timeshift_read
       pthread_mutex_unlock(&ts->rdwr_mutex);
       tsf->roff = 0; // reset
       *wait     = 0;
+      tvhtrace("timeshift", "ts %d eof, cur_file %p", ts->id, *cur_file);
 
     /* Check SMT_START index */
     } else {
@@ -438,6 +426,62 @@ static int _timeshift_flush_to_live
   return 0;
 }
 
+/*
+ * Send the status message
+ */
+static void timeshift_fill_status
+  ( timeshift_t *ts, timeshift_status_t *status, int64_t current_time )
+{
+  timeshift_index_iframe_t *fst, *lst;
+  int64_t shift;
+
+  fst    = _timeshift_first_frame(ts);
+  lst    = _timeshift_last_frame(ts);
+  status->full  = ts->full;
+  tvhtrace("timeshift", "status last->time %"PRId64" current time %"PRId64" state %d",
+           lst ? lst->time : -1, current_time, ts->state);
+  shift  = lst ? ts_rescale_inv(lst->time - current_time, 1000000) : -1;
+  status->shift = (ts->state <= TS_LIVE || shift < 0 || !lst) ? 0 : shift;
+  if (lst && fst && lst != fst) {
+    status->pts_start = ts_rescale_inv(fst->time, 1000000);
+    status->pts_end   = ts_rescale_inv(lst->time, 1000000);
+  } else {
+    status->pts_start = PTS_UNSET;
+    status->pts_end   = PTS_UNSET;
+  }
+}
+
+static void timeshift_status
+  ( timeshift_t *ts, int64_t current_time )
+{
+  streaming_message_t *tsm;
+  timeshift_status_t *status;
+
+  status = calloc(1, sizeof(timeshift_status_t));
+  timeshift_fill_status(ts, status, current_time);
+  tsm = streaming_msg_create_data(SMT_TIMESHIFT_STATUS, status);
+  streaming_target_deliver2(ts->output, tsm);
+}
+
+/*
+ * Trace packet
+ */
+static void timeshift_trace_pkt
+  ( timeshift_t *ts, streaming_message_t *sm )
+{
+  th_pkt_t *pkt = sm->sm_data;
+  tvhtrace("timeshift",
+           "ts %d pkt out - stream %d type %c pts %10"PRId64
+           " dts %10"PRId64 " dur %10d len %6zu time %14"PRItime_t,
+           ts->id,
+           pkt->pkt_componentindex,
+           pkt_frametype_to_char(pkt->pkt_frametype),
+           ts_rescale(pkt->pkt_pts, 1000000),
+           ts_rescale(pkt->pkt_dts, 1000000),
+           pkt->pkt_duration,
+           pktbuf_len(pkt->pkt_payload), sm->sm_time);
+}
+
 /* **************************************************************************
  * Thread
  * *************************************************************************/
@@ -452,12 +496,11 @@ void *timeshift_reader ( void *p )
   int nfds, end, run = 1, wait = -1;
   timeshift_file_t *cur_file = NULL;
   int cur_speed = 100, keyframe_mode = 0;
-  int64_t pause_time = 0, play_time = 0, last_time = 0;
-  int64_t now, deliver, skip_time = 0;
+  int64_t mono_now, mono_play_time = 0, mono_last_status = 0;
+  int64_t deliver, deliver0, pause_time = 0, last_time = 0, skip_time = 0;
   streaming_message_t *sm = NULL, *ctrl = NULL;
   timeshift_index_iframe_t *tsi = NULL;
   streaming_skip_t *skip = NULL;
-  time_t last_status = 0;
   tvhpoll_t *pd;
   tvhpoll_event_t ev = { 0 };
 
@@ -482,7 +525,7 @@ void *timeshift_reader ( void *p )
     wait      = -1;
     end       = 0;
     skip      = NULL;
-    now       = getmonoclock();
+    mono_now  = getmonoclock();
 
     /* Control */
     pthread_mutex_lock(&ts->state_mutex);
@@ -527,12 +570,19 @@ void *timeshift_reader ( void *p )
                        ts->id);
                 timeshift_writer_flush(ts);
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                if ((cur_file    = timeshift_filemgr_get(ts, 1))) {
+                cur_file = timeshift_filemgr_newest(ts);
+                cur_file = timeshift_filemgr_get(ts, cur_file ? cur_file->last :
+                                                     atomic_add_s64(&ts->last_time, 0));
+                if (cur_file != NULL) {
                   cur_file->roff = cur_file->size;
                   pause_time     = cur_file->last;
                   last_time      = pause_time;
+                } else {
+                  last_time      = atomic_add_s64(&ts->last_time, 0);
                 }
                 pthread_mutex_unlock(&ts->rdwr_mutex);
+                mono_play_time = mono_now;
+                tvhtrace("timeshift", "update play time TS_LIVE - %"PRId64, mono_now);
               }
 
             /* Buffer playback */
@@ -555,10 +605,11 @@ void *timeshift_reader ( void *p )
             }
 
             /* Update */
-            play_time  = getmonoclock();
             cur_speed  = speed;
-            if (speed != 100 || ts->state != TS_LIVE)
+            if (speed != 100 || ts->state != TS_LIVE) {
               ts->state = speed == 0 ? TS_PAUSE : TS_PLAY;
+              tvhtrace("timeshift", "reader - set %s", speed == 0 ? "TS_PAUSE" : "TS_PLAY");
+            }
             tvhlog(LOG_DEBUG, "timeshift", "ts %d change speed %d",
                    ts->id, speed);
           }
@@ -594,11 +645,6 @@ void *timeshift_reader ( void *p )
               break;
 
             case SMT_SKIP_ABS_TIME:
-              if (ts->pts_delta == 0) {
-                tvhlog(LOG_ERR, "timeshift", "ts %d abs skip not possible no PTS delta", ts->id);
-                skip = NULL;
-                break;
-              }
               /* -fallthrough */
             case SMT_SKIP_REL_TIME:
 
@@ -609,7 +655,8 @@ void *timeshift_reader ( void *p )
               /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                if ((cur_file    = timeshift_filemgr_get(ts, !ts->ondemand))) {
+                cur_file = timeshift_filemgr_newest(ts);
+                if (cur_file && (cur_file = timeshift_filemgr_get(ts, cur_file->last)) != NULL) {
                   cur_file->roff = cur_file->size;
                   last_time      = cur_file->last;
                 } else {
@@ -621,17 +668,18 @@ void *timeshift_reader ( void *p )
 
               /* May have failed */
               if (skip) {
-                skip_time += (skip->type == SMT_SKIP_ABS_TIME) ? ts->pts_delta : last_time;
-                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip last_time %"PRId64" pts_delta %"PRId64,
-                       ts->id, skip_time - ts->pts_delta, ts->pts_delta);
+                if (skip->type == SMT_SKIP_REL_TIME)
+                  skip_time += last_time;
+                tvhlog(LOG_DEBUG, "timeshift", "ts %d skip time %"PRId64, ts->id, skip_time);
 
-               /* Live (stage2) */
+                /* Live (stage2) */
                 if (ts->state == TS_LIVE) {
-                  if (skip_time >= now) {
+                  if (skip_time >= atomic_add_s64(&ts->last_time, 0) - TIMESHIFT_PLAY_BUF) {
                     tvhlog(LOG_DEBUG, "timeshift", "ts %d skip ignored, already live", ts->id);
                     skip = NULL;
                   } else {
                     ts->state = TS_PLAY;
+                    tvhtrace("timeshift", "reader - set TS_PLAY");
                   }
                 }
               }
@@ -640,8 +688,10 @@ void *timeshift_reader ( void *p )
               if (skip) {
 
                 /* Adjust time */
-                play_time  = now;
-                pause_time = skip_time;
+                if (mono_play_time != mono_now)
+                  tvhtrace("timeshift", "update play time skip - %"PRId64, mono_now);
+                mono_play_time = mono_now;
+                pause_time = atomic_add_s64(&ts->last_time, 0);
                 tsi        = NULL;
 
                 /* Clear existing packet */
@@ -671,38 +721,23 @@ void *timeshift_reader ( void *p )
       }
     }
 
-    /* Status message */
-    if (now >= (last_status + 1000000)) {
-      streaming_message_t *tsm;
-      timeshift_status_t *status;
-      timeshift_index_iframe_t *fst, *lst;
-      status = calloc(1, sizeof(timeshift_status_t));
-      fst    = _timeshift_first_frame(ts);
-      lst    = _timeshift_last_frame(ts);
-      status->full  = ts->full;
-      status->shift = ts->state <= TS_LIVE ? 0 : ts_rescale_i(now - last_time, 1000000);
-      if (lst && fst && lst != fst && ts->pts_delta != PTS_UNSET) {
-        status->pts_start = ts_rescale_i(fst->time - ts->pts_delta, 1000000);
-        status->pts_end   = ts_rescale_i(lst->time - ts->pts_delta, 1000000);
-      } else {
-        status->pts_start = PTS_UNSET;
-        status->pts_end   = PTS_UNSET;
-      }
-      tsm = streaming_msg_create_data(SMT_TIMESHIFT_STATUS, status);
-      streaming_target_deliver2(ts->output, tsm);
-      last_status = now;
-    }
 
     /* Done */
     if (!run || !cur_file || ((ts->state != TS_PLAY && !skip))) {
+      if (mono_now >= (mono_last_status + 1000000)) {
+        timeshift_status(ts, last_time);
+        mono_last_status = mono_now;
+      }
       pthread_mutex_unlock(&ts->state_mutex);
       continue;
     }
 
     /* Calculate delivery time */
-    deliver = (now - play_time) + TIMESHIFT_PLAY_BUF;
-    deliver = (deliver * cur_speed) / 100;
+    deliver0 = (mono_now - mono_play_time) + TIMESHIFT_PLAY_BUF;
+    deliver = (deliver0 * cur_speed) / 100;
     deliver = (deliver + pause_time);
+    tvhtrace("timeshift", "speed %d now %"PRId64" play_time %"PRId64" deliver %"PRId64" deliver0 %"PRId64,
+             cur_speed, mono_now, mono_play_time, deliver, deliver0);
 
     /* Determine next packet */
     if (!sm) {
@@ -718,7 +753,7 @@ void *timeshift_reader ( void *p )
         else
           req_time = skip_time;
         tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to %"PRId64" from %"PRId64,
-               ts->id, req_time - ts->pts_delta, last_time - ts->pts_delta);
+               ts->id, req_time, last_time);
 
         /* Find */
         pthread_mutex_lock(&ts->rdwr_mutex);
@@ -727,7 +762,7 @@ void *timeshift_reader ( void *p )
         pthread_mutex_unlock(&ts->rdwr_mutex);
         if (tsi)
           tvhlog(LOG_DEBUG, "timeshift", "ts %d skip found pkt @ %"PRId64,
-                 ts->id, tsi->time - ts->pts_delta);
+                 ts->id, tsi->time);
 
         /* File changed (close) */
         if ((tsf != cur_file) && cur_file && cur_file->rfd >= 0) {
@@ -755,12 +790,14 @@ void *timeshift_reader ( void *p )
 
     /* Send skip response */
     if (skip) {
-      if (sm && sm->sm_type == SMT_PACKET) {
-        th_pkt_t *pkt = sm->sm_data;
-        skip->time = pkt->pkt_pts;
+      if (sm) {
+        /* Status message */
+        skip->time = ts_rescale_inv(sm->sm_time, 1000000);
         skip->type = SMT_SKIP_ABS_TIME;
-        tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to pts %"PRId64" ok, time %"PRId64,
-               ts->id, ts_rescale(skip->time, 1000000), sm->sm_time - ts->pts_delta);
+        tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to pts %"PRId64" ok", ts->id, sm->sm_time);
+        /* Update timeshift status */
+        timeshift_fill_status(ts, &skip->timeshift, sm->sm_time);
+        mono_last_status = mono_now;
       } else {
         /* Report error */
         skip->type = SMT_SKIP_ERROR;
@@ -774,33 +811,30 @@ void *timeshift_reader ( void *p )
     /* Deliver */
     if (sm && (skip ||
                (((cur_speed < 0) && (sm->sm_time >= deliver)) ||
-               ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
+                ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
-      if (sm->sm_type == SMT_PACKET && tvhtrace_enabled()) {
-        th_pkt_t *pkt = sm->sm_data;
-        tvhtrace("timeshift",
-                 "ts %d pkt out - stream %d type %c pts %10"PRId64
-                 " dts %10"PRId64 " dur %10d len %6zu time %14"PRItime_t,
-                 ts->id,
-                 pkt->pkt_componentindex,
-                 pkt_frametype_to_char(pkt->pkt_frametype),
-                 ts_rescale(pkt->pkt_pts, 1000000),
-                 ts_rescale(pkt->pkt_dts, 1000000),
-                 pkt->pkt_duration,
-                 pktbuf_len(pkt->pkt_payload), sm->sm_time - ts->pts_delta);
-      }
+      if (sm->sm_type == SMT_PACKET && tvhtrace_enabled())
+        timeshift_trace_pkt(ts, sm);
       last_time = sm->sm_time;
       streaming_target_deliver2(ts->output, sm);
       sm        = NULL;
       wait      = 0;
+
     } else if (sm) {
+
       if (cur_speed > 0)
         wait = (sm->sm_time - deliver) / 1000;
       else
         wait = (deliver - sm->sm_time) / 1000;
       if (wait == 0) wait = 1;
-      tvhtrace("timeshift", "ts %d wait %d",
-               ts->id, wait);
+      tvhtrace("timeshift", "ts %d wait %d", ts->id, wait);
+
+    }
+
+    /* Periodic timeshift status */
+    if (mono_now >= (mono_last_status + 1000000)) {
+      timeshift_status(ts, last_time);
+      mono_last_status = mono_now;
     }
 
     /* Terminate */
@@ -811,11 +845,12 @@ void *timeshift_reader ( void *p )
       /* Back to live (unless buffer is full) */
       if (end == 1 && !ts->full) {
         tvhlog(LOG_DEBUG, "timeshift", "ts %d eob revert to live mode", ts->id);
-        ts->state = TS_LIVE;
         cur_speed = 100;
         ctrl      = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);
         ctrl      = NULL;
+        tvhtrace("timeshift", "reader - set TS_LIVE");
+        ts->state = TS_LIVE;
 
         /* Flush timeshift buffer to live */
         if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1)
@@ -835,13 +870,17 @@ void *timeshift_reader ( void *p )
       } else {
         if (cur_speed <= 0) {
           cur_speed = 0;
+          tvhtrace("timeshift", "reader - set TS_PAUSE");
           ts->state = TS_PAUSE;
         } else {
           cur_speed = 100;
+          tvhtrace("timeshift", "reader - set TS_PLAY");
           ts->state = TS_PLAY;
-          play_time = now;
+          if (mono_play_time != mono_now)
+            tvhtrace("timeshift", "update play time (pause) - %"PRId64, mono_now);
+          mono_play_time = mono_now;
         }
-        tvhlog(LOG_DEBUG, "timeshift", "ts %d sob speed %d", ts->id, cur_speed);
+        tvhlog(LOG_DEBUG, "timeshift", "ts %d sob speed %d last time %"PRId64, ts->id, cur_speed, last_time);
         pause_time = last_time;
         ctrl       = streaming_msg_create_code(SMT_SPEED, cur_speed);
         streaming_target_deliver2(ts->output, ctrl);

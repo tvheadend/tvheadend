@@ -24,6 +24,7 @@
 #include "settings.h"
 #include "atomic.h"
 #include "access.h"
+#include "atomic.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -205,34 +206,80 @@ const idclass_t timeshift_conf_class = {
 };
 
 /*
- * Decode initial time diff
- *
- * Gather some packets and select the lowest pts to identify
- * the correct start. Note that for timeshift, the tsfix
- * stream plugin is applied, so the starting pts should be
- * near zero. If not - it's a bug.
+ * Process a packet with time sorting
  */
+
+#define MAX_TIME_DELTA (2*1000000) /* 2 seconds */
+#define BACKLOG_COUNT ARRAY_SIZE(timeshift_t->backlog)
+
 static void
-timeshift_set_pts_delta ( timeshift_t *ts, int64_t pts )
+timeshift_packet_deliver ( timeshift_t *ts, streaming_message_t *sm )
 {
+  th_pkt_t *pkt = sm->sm_data;
+  tvhtrace("timeshift",
+           "ts %d pkt buf - stream %d type %c pts %10"PRId64
+           " dts %10"PRId64" dur %10d len %6zu time %14"PRId64,
+           ts->id,
+           pkt->pkt_componentindex,
+           pkt_frametype_to_char(pkt->pkt_frametype),
+           ts_rescale(pkt->pkt_pts, 1000000),
+           ts_rescale(pkt->pkt_dts, 1000000),
+           pkt->pkt_duration,
+           pktbuf_len(pkt->pkt_payload),
+           sm->sm_time);
+  streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
+}
+
+static void
+timeshift_packet_flush ( timeshift_t *ts, int64_t time )
+{
+  streaming_message_t *lowest, *sm;
+  struct streaming_message_queue *sq;
   int i;
-  int64_t smallest = INT64_MAX;
 
-  if (pts == PTS_UNSET)
-    return;
-
-  for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++) {
-    int64_t i64 = ts->pts_val[i];
-    if (i64 == PTS_UNSET) {
-      ts->pts_val[i] = pts;
-      break;
+  while (1) {
+    lowest = NULL;
+    for (i = 0; i < ts->backlog_max; i++) {
+      sq = &ts->backlog[i];
+      sm = TAILQ_FIRST(sq);
+      if (sm && sm->sm_time + MAX_TIME_DELTA < time)
+        if (lowest == NULL || lowest->sm_time > sm->sm_time)
+          lowest = sm;
     }
-    if (i64 < smallest)
-      smallest = i64;
+    if (!lowest)
+      break;
+    TAILQ_REMOVE(sq, lowest, sm_link);
+    timeshift_packet_deliver(ts, lowest);
+  }
+}
+
+static void
+timeshift_packet( timeshift_t *ts, th_pkt_t *pkt )
+{
+  streaming_message_t *sm;
+  int64_t time;
+
+  if (pkt->pkt_componentindex >= TIMESHIFT_BACKLOG_MAX) {
+    pkt_ref_dec(pkt);
+    return;
   }
 
-  if (i >= ARRAY_SIZE(ts->pts_val))
-    ts->pts_delta = getmonoclock() - ts_rescale(smallest, 1000000);
+  sm = streaming_msg_create_pkt(pkt);
+
+  time = ts_rescale(pkt->pkt_pts, 1000000);
+  if (time > ts->last_time) {
+    atomic_exchange_s64(&ts->last_time, time);
+    timeshift_packet_flush(ts, time);
+  }
+
+  sm->sm_time = time;
+  if (time + MAX_TIME_DELTA < ts->last_time) {
+    timeshift_packet_deliver(ts, sm);
+  } else {
+    if (pkt->pkt_componentindex >= ts->backlog_max)
+      ts->backlog_max = pkt->pkt_componentindex + 1;
+    TAILQ_INSERT_TAIL(&ts->backlog[pkt->pkt_componentindex], sm, sm_link);
+  }
 }
 
 /*
@@ -281,25 +328,26 @@ static void timeshift_input
         (sm->sm_type == SMT_STOP && sm->sm_code == 0))
       exit = 1;
 
-    /* Record (one-off) PTS delta */
-    if (sm->sm_type == SMT_PACKET && ts->pts_delta == 0)
-      timeshift_set_pts_delta(ts, pkt->pkt_pts);
+    if (sm->sm_type == SMT_MPEGTS)
+      ts->packet_mode = 0;
 
     /* Buffer to disk */
     if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
-      sm->sm_time = getmonoclock();
-      if (sm->sm_type == SMT_PACKET) {
-        tvhtrace("timeshift",
-                 "ts %d pkt buf - stream %d type %c pts %10"PRId64
-                 " dts %10"PRId64" dur %10d len %6zu time %14"PRId64,
-                 ts->id,
-                 pkt->pkt_componentindex,
-                 pkt_frametype_to_char(pkt->pkt_frametype),
-                 ts_rescale(pkt->pkt_pts, 1000000),
-                 ts_rescale(pkt->pkt_dts, 1000000),
-                 pkt->pkt_duration,
-                 pktbuf_len(pkt->pkt_payload),
-                 sm->sm_time - ts->pts_delta);
+      if (ts->packet_mode) {
+        sm->sm_time = ts->last_time;
+        if (sm->sm_type == SMT_PACKET) {
+          timeshift_packet(ts, pkt);
+          sm->sm_data = NULL;
+          streaming_msg_free(sm);
+          goto pktcont;
+        }
+      } else {
+        if (ts->ref_time == 0) {
+          ts->ref_time = getmonoclock();
+          sm->sm_time = 0;
+        } else {
+          sm->sm_time = getmonoclock() - ts->ref_time;
+        }
       }
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else {
@@ -317,6 +365,7 @@ static void timeshift_input
       }
       streaming_msg_free(sm);
     }
+pktcont:
 
     /* Exit/Stop */
     if (exit) {
@@ -336,6 +385,7 @@ timeshift_destroy(streaming_target_t *pad)
 {
   timeshift_t *ts = (timeshift_t*)pad;
   streaming_message_t *sm;
+  int i;
 
   /* Must hold global lock */
   lock_assert(&global_lock);
@@ -355,6 +405,8 @@ timeshift_destroy(streaming_target_t *pad)
 
   /* Shut stuff down */
   streaming_queue_deinit(&ts->wr_queue);
+  for (i = 0; i < TIMESHIFT_BACKLOG_MAX; i++)
+    streaming_queue_clear(&ts->backlog[i]);
 
   close(ts->rd_pipe.rd);
   close(ts->rd_pipe.wr);
@@ -396,9 +448,11 @@ streaming_target_t *timeshift_create
   ts->vididx     = -1;
   ts->id         = timeshift_index;
   ts->ondemand   = timeshift_conf.ondemand;
-  ts->pts_delta  = 0;
-  for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++)
-    ts->pts_val[i] = PTS_UNSET;
+  ts->packet_mode= 1;
+  ts->last_time  = 0;
+  ts->ref_time   = 0;
+  for (i = 0; i < TIMESHIFT_BACKLOG_MAX; i++)
+    TAILQ_INIT(&ts->backlog[i]);
   pthread_mutex_init(&ts->rdwr_mutex, NULL);
   pthread_mutex_init(&ts->state_mutex, NULL);
 
