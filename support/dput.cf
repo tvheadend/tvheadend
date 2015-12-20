@@ -8,14 +8,15 @@ method = scp
 incoming = /srv/reprepro/unstable/incoming
 allow_unsigned_uploads = 0
 
-[tvh-beta]
-fqdn = apt.tvheadend.org
-method = scp
-incoming = /srv/reprepro/beta/incoming
-allow_unsigned_uploads = 0
-
 [tvh-stable]
 fqdn = apt.tvheadend.org
 method = scp
 incoming = /srv/reprepro/stable/incoming
 allow_unsigned_uploads = 0
+
+[tvh-release]
+fqdn = apt.tvheadend.org
+method = scp
+incoming = /srv/reprepro/release/incoming
+allow_unsigned_uploads = 0
+
