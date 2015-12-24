@@ -120,7 +120,7 @@ dvr_autorec_completed(dvr_entry_t *de, int error_code)
     }
     if (total == 0)
       total = count;
-    if (count < max_count)
+    if (count <= max_count)
       break;
     if (de_prev) {
       tvhinfo("dvr", "autorec %s removing recordings %s (allowed count %u total %u)",
