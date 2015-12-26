@@ -458,7 +458,7 @@ dvr_entry_completed(dvr_entry_t *de, int error_code)
 #endif
   dvr_entry_retention_timer(de);
   if (de->de_autorec)
-    dvr_autorec_completed(de, error_code);
+    dvr_autorec_completed(de->de_autorec, error_code);
 }
 
 /**

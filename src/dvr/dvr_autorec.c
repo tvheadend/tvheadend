@@ -98,11 +98,10 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del, int disabled)
  * Handle maxcount
  */
 void
-dvr_autorec_completed(dvr_entry_t *de, int error_code)
+dvr_autorec_completed(dvr_autorec_entry_t *dae, int error_code)
 {
   uint32_t count, total = 0;
-  dvr_entry_t *de_prev;
-  dvr_autorec_entry_t *dae = de->de_autorec;
+  dvr_entry_t *de, *de_prev;
   uint32_t max_count = dvr_autorec_get_max_count(dae);
   char ubuf[UUID_HEX_SIZE];
 
@@ -427,6 +426,7 @@ dvr_autorec_entry_class_save(idnode_t *self)
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
   dvr_autorec_save(dae);
   dvr_autorec_changed(dae, 1);
+  dvr_autorec_completed(dae, 0);
   htsp_autorec_entry_update(dae);
 }
 
