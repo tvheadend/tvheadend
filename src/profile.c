@@ -1414,6 +1414,7 @@ typedef struct profile_transcode {
   uint32_t pro_abitrate;
   char    *pro_language;
   char    *pro_vcodec;
+  char    *pro_vcodec_preset;
   char    *pro_acodec;
   char    *pro_scodec;
 } profile_transcode_t;
@@ -1539,6 +1540,31 @@ profile_class_vcodec_list(void *o, const char *lang)
   return profile_class_codec_list(profile_class_vcodec_sct_check, lang);
 }
 
+static htsmsg_t *
+profile_class_vcodec_preset_list(void *o, const char *lang)
+{
+  static const struct strtab_str tab[] = {
+    {N_("ultrafast: h264 / h265") 	     , "ultrafast" },
+    {N_("superfast: h264 / h265") 	     , "superfast" },
+    {N_("veryfast: h264 / h265 / qsv(h264)") 	     , "veryfast"  },
+    {N_("faster: h264 / h265 / qsv(h264)") 	     , "faster"    },
+    {N_("fast: h264 / h265 / qsv(h264 / h265)") 	     , "fast"      },
+    {N_("medium: h264 / h265 / qsv(h264 / h265)") 	     , "medium"    },
+    {N_("slow: h264 / h265 / qsv(h264 / h265)") 	     , "slow"      },
+    {N_("slower: h264 / h265 / qsv(h264)") 	     , "slower"    },
+    {N_("veryslow: h264 / h265 / qsv(h264)") 	     , "veryslow"  },
+    {N_("placebo: h264 / h265") 	     , "placebo"   },
+    {N_("hq: nvenc(h264 / h265)") 	     , "hq"        },
+    {N_("hp: nvenc(h264 / h265)") 	     , "hp"        },
+    {N_("bd: nvenc(h264 / h265)") 	     , "bd"        },
+    {N_("ll: nvenc(h264 / h265)") 	     , "ll"        },
+    {N_("llhq: nvenc(h264 / h265)")     , "llhq"      },
+    {N_("llhp: nvenc(h264 / h265)")     , "llhp"      },
+    {N_("default: nvenc(h264 / h265)")  , "default"   }
+  };
+  return strtab2htsmsg_str(tab, 1, lang);
+}
+
 static int
 profile_class_acodec_sct_check(int sct)
 {
@@ -1627,6 +1653,16 @@ const idclass_t profile_transcode_class =
       .group    = 2
     },
     {
+      .type     = PT_STR,
+      .id       = "vcodec_preset",
+      .name     = N_("Video codec preset"),
+      .off      = offsetof(profile_transcode_t, pro_vcodec_preset),
+      .def.s    = "faster",
+      .list     = profile_class_vcodec_preset_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
+    },
+    {
       .type     = PT_U32,
       .id       = "vbitrate",
       .name     = N_("Video bitrate (kb/s) (0=auto)"),
@@ -1703,6 +1739,8 @@ profile_transcode_can_share(profile_chain_t *prch,
    */
   if (strcmp(pro1->pro_vcodec ?: "", pro2->pro_vcodec ?: ""))
     return 0;
+  if (strcmp(pro1->pro_vcodec_preset ?: "", pro2->pro_vcodec_preset ?: ""))
+    return 0;
   if (strcmp(pro1->pro_acodec ?: "", pro2->pro_acodec ?: ""))
     return 0;
   if (strcmp(pro1->pro_scodec ?: "", pro2->pro_scodec ?: ""))
@@ -1735,6 +1773,7 @@ profile_transcode_work(profile_chain_t *prch,
 
   memset(&props, 0, sizeof(props));
   strncpy(props.tp_vcodec, pro->pro_vcodec ?: "", sizeof(props.tp_vcodec)-1);
+  strncpy(props.tp_vcodec_preset, pro->pro_vcodec_preset ?: "", sizeof(props.tp_vcodec_preset)-1);
   strncpy(props.tp_acodec, pro->pro_acodec ?: "", sizeof(props.tp_acodec)-1);
   strncpy(props.tp_scodec, pro->pro_scodec ?: "", sizeof(props.tp_scodec)-1);
   props.tp_resolution = profile_transcode_resolution(pro);
@@ -1836,6 +1875,7 @@ profile_transcode_free(profile_t *_pro)
 {
   profile_transcode_t *pro = (profile_transcode_t *)_pro;
   free(pro->pro_vcodec);
+  free(pro->pro_vcodec_preset);
   free(pro->pro_acodec);
   free(pro->pro_scodec);
 }
@@ -1960,6 +2000,7 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libvpx");
+    htsmsg_add_str (conf, "vcodec_preset", "faster");
     htsmsg_add_str (conf, "acodec", "libvorbis");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -1980,6 +2021,7 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libx264");
+    htsmsg_add_str (conf, "vcodec_preset", "faster");
     htsmsg_add_str (conf, "acodec", "aac");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
@@ -2000,6 +2042,7 @@ profile_init(void)
     htsmsg_add_u32 (conf, "resolution", 384);
     htsmsg_add_u32 (conf, "channels", 2);
     htsmsg_add_str (conf, "vcodec", "libx264");
+    htsmsg_add_str (conf, "vcodec_preset", "faster");
     htsmsg_add_str (conf, "acodec", "aac");
     htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
