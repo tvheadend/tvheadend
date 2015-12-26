@@ -1331,12 +1331,9 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
-      if (!strcmp(ocodec->name, "nvenc"))
-         av_dict_set(&opts, "preset",  "hq", 0);
-      else if (!strcmp(ocodec->name, "h264_qsv"))
-         av_dict_set(&opts, "preset",  "medium", 0);
-      else
-         av_dict_set(&opts, "preset",  "faster", 0);
+      // select preset according to system performance and codec type
+      av_dict_set(&opts, "preset",  t->t_props.tp_vcodec_preset, 0);
+      tvhinfo("transcode", "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
 
       // All modern devices should support "high" profile
       av_dict_set(&opts, "profile", "high", 0);
@@ -1365,7 +1362,10 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       octx->flags         |= CODEC_FLAG_GLOBAL_HEADER;
 
       // on all hardware ultrafast (or maybe superfast) should be safe
-      av_dict_set(&opts, "preset", "ultrafast",  0);
+      // select preset according to system performance
+      av_dict_set(&opts, "preset",  t->t_props.tp_vcodec_preset, 0);
+      tvhinfo("transcode", "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
+
       // disables encoder features which tend to be bottlenecks for the decoder/player
       av_dict_set(&opts, "tune",   "fastdecode", 0);
 
@@ -2065,6 +2065,7 @@ transcoder_set_properties(streaming_target_t *st,
   transcoder_props_t *tp = &t->t_props;
 
   strncpy(tp->tp_vcodec, props->tp_vcodec, sizeof(tp->tp_vcodec)-1);
+  strncpy(tp->tp_vcodec_preset, props->tp_vcodec_preset, sizeof(tp->tp_vcodec_preset)-1);
   strncpy(tp->tp_acodec, props->tp_acodec, sizeof(tp->tp_acodec)-1);
   strncpy(tp->tp_scodec, props->tp_scodec, sizeof(tp->tp_scodec)-1);
   tp->tp_channels   = props->tp_channels;
