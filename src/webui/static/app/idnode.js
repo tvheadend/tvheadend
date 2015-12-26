@@ -1583,7 +1583,7 @@ tvheadend.idnode_grid = function(panel, conf)
             fields.push(f.id);
             ifields.push(f);
             if (!f.noui) {
-                c['tooltip'] = f.text;
+                c['tooltip'] = f.description || f.text;
                 columns.push(c);
                 if (c.filter)
                     filters.push(c.filter);
