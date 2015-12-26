@@ -1835,6 +1835,23 @@ capmt_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
 }
 
 static void
+capmt_caid_add(capmt_service_t *ct, mpegts_service_t *t, int pid, caid_t *c)
+{
+  capmt_caid_ecm_t *cce;
+
+  tvhlog(LOG_DEBUG, "capmt",
+         "%s: New caid 0x%04X:0x%06X (pid 0x%04X) for service \"%s\"",
+          capmt_name(ct->ct_capmt), c->caid, c->providerid, pid, t->s_dvb_svcname);
+
+  cce = calloc(1, sizeof(capmt_caid_ecm_t));
+  cce->cce_caid = c->caid;
+  cce->cce_ecmpid = pid;
+  cce->cce_providerid = c->providerid;
+  cce->cce_service = t;
+  LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+}
+
+static void
 capmt_caid_change(th_descrambler_t *td)
 {
   capmt_service_t *ct = (capmt_service_t *)td;
@@ -1863,17 +1880,7 @@ capmt_caid_change(th_descrambler_t *td)
             break;
       if (cce)
         continue;
-      tvhlog(LOG_DEBUG, "capmt",
-             "%s: New caid 0x%04X:0x%06X for service \"%s\"",
-              capmt_name(capmt), c->caid, c->providerid, t->s_dvb_svcname);
-
-      /* ecmpid not already seen, add it to list */
-      cce             = calloc(1, sizeof(capmt_caid_ecm_t));
-      cce->cce_caid   = c->caid;
-      cce->cce_ecmpid = st->es_pid;
-      cce->cce_providerid = c->providerid;
-      cce->cce_service = t;
-      LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+      capmt_caid_add(ct, t, st->es_pid, c);
       change = 1;
     }
   }
@@ -2066,13 +2073,12 @@ capmt_service_start(caclient_t *cac, service_t *s)
 {
   capmt_t *capmt = (capmt_t *)cac;
   capmt_service_t *ct;
-  capmt_caid_ecm_t *cce;
   th_descrambler_t *td;
   mpegts_service_t *t = (mpegts_service_t*)s;
   elementary_stream_t *st;
   int tuner = -1, i, change = 0;
   char buf[512];
-  caid_t *c;
+  caid_t *c, sca;
   
   lock_assert(&global_lock);
 
@@ -2156,19 +2162,16 @@ capmt_service_start(caclient_t *cac, service_t *s)
         continue;
       if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid)
         continue;
-
-      tvhlog(LOG_DEBUG, "capmt",
-        "%s: New caid 0x%04X for service \"%s\"", capmt_name(capmt), c->caid, t->s_dvb_svcname);
-
-      /* add it to list */
-      cce             = calloc(1, sizeof(capmt_caid_ecm_t));
-      cce->cce_caid   = c->caid;
-      cce->cce_ecmpid = st->es_pid;
-      cce->cce_providerid = c->providerid;
-      cce->cce_service = t;
-      LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
+      capmt_caid_add(ct, t, st->es_pid, c);
       change = 1;
     }
+  }
+
+  if (!change && t->s_dvb_forcecaid) {
+    memset(&sca, 0, sizeof(sca));
+    sca.caid = t->s_dvb_forcecaid;
+    capmt_caid_add(ct, t, 8191, &sca);
+    change = 1;
   }
 
   td = (th_descrambler_t *)ct;
