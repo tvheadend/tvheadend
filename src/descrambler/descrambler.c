@@ -260,6 +260,14 @@ descrambler_service_start ( service_t *t )
     if (count == 0)
       return;
 
+  } else {
+
+    for (p = constcw_table; *p; p++)
+      if (*p == ((mpegts_service_t *)t)->s_dvb_forcecaid) {
+        constcw = 1;
+        break;
+      }
+
   }
 
   ((mpegts_service_t *)t)->s_dvb_mux->mm_descrambler_flush = 0;
