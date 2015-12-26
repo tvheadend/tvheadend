@@ -139,6 +139,18 @@ DECODERS += h264_vdpau
 endif
 
 #
+# NVENC
+#
+
+ifeq (yes,$(CONFIG_NVENC))
+
+EXTRAARG += --enable-nvenc --enable-nonfree
+
+ENCODERS += nvenc_h264 nvenc_hevc
+
+endif
+
+#
 # MFX Dispatcher (libmfx)
 #
 

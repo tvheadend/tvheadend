@@ -39,6 +39,7 @@ OPTIONS=(
   "libx265:no"
   "libx265_static:yes"
   "vdpau:auto"
+  "nvenc:auto"
   "libmfx:no"
   "libmfx_static:yes"
   "inotify:auto"
@@ -423,6 +424,15 @@ if enabled libffmpeg_static; then
       enable vdpau
     elif enabled vdpau; then
       die "vdpau (Video API library) not found"
+    fi
+  fi
+
+  # nvenc
+  if enabled_or_auto nvenc; then
+    if check_cc_header nvEncodeAPI; then
+      enable nvenc
+    elif enabled nvenc; then
+      die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
     fi
   fi
 
