@@ -1930,6 +1930,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
   const char *str;
   uint32_t u32;
+  int64_t s64;
   channel_t *ch = NULL;
   char ubuf[UUID_HEX_SIZE];
 
@@ -1937,14 +1938,20 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(!(str = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
 
-  /* Do we have a channel? No = any */
-  if (!htsmsg_get_u32(in, "channelId", &u32)) {
-    ch = channel_find_by_id(u32);
-
-    /* Check access channel */
-    if (ch && !htsp_user_access_channel(htsp, ch))
-      return htsp_error("User does not have access");
+  if (htsp->htsp_version > 24) {
+    if (!htsmsg_get_s64(in, "channelId", &s64)) { // not sending or -1 = any channel
+      if (s64 >= 0)
+        ch = channel_find_by_id((uint32_t)s64);
+    }
   }
+  else {
+    if (!htsmsg_get_u32(in, "channelId", &u32))   // not sending = any channel
+      ch = channel_find_by_id(u32);
+  }
+
+  /* Check access channel */
+  if (ch && !htsp_user_access_channel(htsp, ch))
+    return htsp_error("User does not have access");
 
   /* Create autorec config from htsp and add */
   dae = dvr_autorec_create_htsp(serierec_convert(htsp, in, ch, 1, 1));
@@ -2054,20 +2061,27 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   const char *str;
   channel_t *ch = NULL;
   uint32_t u32;
+  int64_t s64;
   char ubuf[UUID_HEX_SIZE];
 
   /* Options */
   if(!(str = htsmsg_get_str(in, "title")))
     return htsp_error("Invalid arguments");
 
-  /* Do we have a channel? No = any */
-  if (!htsmsg_get_u32(in, "channelId", &u32)) {
-    ch = channel_find_by_id(u32);
-
-    /* Check access channel */
-    if (ch && !htsp_user_access_channel(htsp, ch))
-      return htsp_error("User does not have access");
+  if (htsp->htsp_version > 24) {
+    if (!htsmsg_get_s64(in, "channelId", &s64)) { // not sending or -1 = any channel
+      if (s64 >= 0)
+        ch = channel_find_by_id((uint32_t)s64);
+    }
   }
+  else {
+    if (!htsmsg_get_u32(in, "channelId", &u32))   // not sending = any channel
+      ch = channel_find_by_id(u32);
+  }
+
+  /* Check access channel */
+  if (ch && !htsp_user_access_channel(htsp, ch))
+    return htsp_error("User does not have access");
 
   /* Create timerec config from htsp and add */
   dte = dvr_timerec_create_htsp(serierec_convert(htsp, in, ch, 0, 1));
