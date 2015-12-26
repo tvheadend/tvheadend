@@ -184,6 +184,7 @@ const idclass_t satip_frontend_class =
       .id       = "teardown_delay",
       .name     = N_("Force teardown delay"),
       .desc     = N_("Force the delay between RTSP TEARDOWN and RTSP "
+                     "SETUP command (value from ‘Next tune delay in ms’ "
                      "SETUP command (value from 'Next tune delay in ms' "
                      "is used). Some devices are not able to handle "
                      "quick continuous tuning."),
