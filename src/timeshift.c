@@ -265,19 +265,6 @@ static void timeshift_input
       ts->state  = TS_LIVE;
     }
 
-    if (sm->sm_type == SMT_PACKET) {
-      tvhtrace("timeshift",
-               "ts %d pkt in  - stream %d type %c pts %10"PRId64
-               " dts %10"PRId64" dur %10d len %6zu",
-               ts->id,
-               pkt->pkt_componentindex,
-               pkt_frametype_to_char(pkt->pkt_frametype),
-               ts_rescale(pkt->pkt_pts, 1000000),
-               ts_rescale(pkt->pkt_dts, 1000000),
-               pkt->pkt_duration,
-               pktbuf_len(pkt->pkt_payload));
-    }
-
     /* Pass-thru */
     if (ts->state <= TS_LIVE) {
       if (sm->sm_type == SMT_START) {
@@ -295,7 +282,7 @@ static void timeshift_input
       exit = 1;
 
     /* Record (one-off) PTS delta */
-    if (sm->sm_type == SMT_PACKET && ts->pts_delta == PTS_UNSET)
+    if (sm->sm_type == SMT_PACKET && ts->pts_delta == 0)
       timeshift_set_pts_delta(ts, pkt->pkt_pts);
 
     /* Buffer to disk */
@@ -312,11 +299,24 @@ static void timeshift_input
                  ts_rescale(pkt->pkt_dts, 1000000),
                  pkt->pkt_duration,
                  pktbuf_len(pkt->pkt_payload),
-                 sm->sm_time);
+                 sm->sm_time - ts->pts_delta);
       }
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
-    } else
+    } else {
+      if (sm->sm_type == SMT_PACKET) {
+        tvhtrace("timeshift",
+                 "ts %d pkt in  - stream %d type %c pts %10"PRId64
+                 " dts %10"PRId64" dur %10d len %6zu",
+                 ts->id,
+                 pkt->pkt_componentindex,
+                 pkt_frametype_to_char(pkt->pkt_frametype),
+                 ts_rescale(pkt->pkt_pts, 1000000),
+                 ts_rescale(pkt->pkt_dts, 1000000),
+                 pkt->pkt_duration,
+                 pktbuf_len(pkt->pkt_payload));
+      }
       streaming_msg_free(sm);
+    }
 
     /* Exit/Stop */
     if (exit) {
@@ -396,7 +396,7 @@ streaming_target_t *timeshift_create
   ts->vididx     = -1;
   ts->id         = timeshift_index;
   ts->ondemand   = timeshift_conf.ondemand;
-  ts->pts_delta  = PTS_UNSET;
+  ts->pts_delta  = 0;
   for (i = 0; i < ARRAY_SIZE(ts->pts_val); i++)
     ts->pts_val[i] = PTS_UNSET;
   pthread_mutex_init(&ts->rdwr_mutex, NULL);
