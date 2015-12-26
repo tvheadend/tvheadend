@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -637,6 +638,7 @@ int
 imagecache_open ( uint32_t id )
 {
   imagecache_image_t skel, *i;
+  char *fn;
   int fd = -1;
 
   lock_assert(&global_lock);
@@ -647,8 +649,11 @@ imagecache_open ( uint32_t id )
     return -1;
 
   /* Local file */
-  if (!strncasecmp(i->url, "file://", 7))
-    fd = open(i->url + 7, O_RDONLY);
+  if (!strncasecmp(i->url, "file://", 7)) {
+    fn = strdupa(i->url + 7);
+    http_deescape(fn);
+    fd = open(fn, O_RDONLY);
+  }
 
   /* Remote file */
 #if ENABLE_IMAGECACHE
