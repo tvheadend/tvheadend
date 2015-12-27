@@ -780,15 +780,14 @@ void *timeshift_reader ( void *p )
         th_pkt_t *pkt = sm->sm_data;
         tvhtrace("timeshift",
                  "ts %d pkt out - stream %d type %c pts %10"PRId64
-                 " dts %10"PRId64 " dur %10d len %6zu time %14"PRId64,
+                 " dts %10"PRId64 " dur %10d len %6zu time %14"PRItime_t,
                  ts->id,
                  pkt->pkt_componentindex,
                  pkt_frametype_to_char(pkt->pkt_frametype),
                  ts_rescale(pkt->pkt_pts, 1000000),
                  ts_rescale(pkt->pkt_dts, 1000000),
                  pkt->pkt_duration,
-                 pktbuf_len(pkt->pkt_payload),
-                 (int64_t)sm->sm_time - ts->pts_delta);
+                 pktbuf_len(pkt->pkt_payload), sm->sm_time - ts->pts_delta);
       }
       last_time = sm->sm_time;
       streaming_target_deliver2(ts->output, sm);
