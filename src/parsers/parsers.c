@@ -317,6 +317,12 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
       if (l < muxlen)
         break;
 
+      if (muxlen < 7) {
+        tvhtrace("parser", "AAC/ATDS skip byte %02x", d[0]);
+        p++;
+        continue;
+      }
+
       latm = 0;
       sbuf_reset(&st->es_buf_a, 4000);
       sbuf_append(&st->es_buf_a, d, muxlen);
