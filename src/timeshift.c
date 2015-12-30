@@ -317,18 +317,18 @@ timeshift_packets_clone( timeshift_t *ts, struct streaming_message_queue *dst )
 static void timeshift_input
   ( void *opaque, streaming_message_t *sm )
 {
-  int exit = 0;
+  int exit = 0, type = sm->sm_type;
   timeshift_t *ts = opaque;
-  th_pkt_t *pkt = sm->sm_data;
+  th_pkt_t *pkt = sm->sm_data, *pkt2;
 
   pthread_mutex_lock(&ts->state_mutex);
 
   /* Control */
-  if (sm->sm_type == SMT_SKIP) {
+  if (type == SMT_SKIP) {
     if (ts->state >= TS_LIVE)
       timeshift_write_skip(ts->rd_pipe.wr, sm->sm_data);
     streaming_msg_free(sm);
-  } else if (sm->sm_type == SMT_SPEED) {
+  } else if (type == SMT_SPEED) {
     if (ts->state >= TS_LIVE)
       timeshift_write_speed(ts->rd_pipe.wr, sm->sm_code);
     streaming_msg_free(sm);
@@ -337,36 +337,48 @@ static void timeshift_input
   else {
 
     /* Start */
-    if (sm->sm_type == SMT_START && ts->state == TS_INIT) {
-      ts->state  = TS_LIVE;
-    }
+    if (type == SMT_START && ts->state == TS_INIT)
+      ts->state = TS_LIVE;
 
     pthread_mutex_lock(&ts->buffering_mutex);
 
+    /* Change PTS/DTS offsets */
+    if (ts->packet_mode && ts->start_pts && type == SMT_PACKET) {
+      pkt2 = pkt_copy_shallow(pkt);
+      pkt_ref_dec(pkt);
+      sm->sm_data = pkt2;
+      pkt2->pkt_pts += ts->start_pts;
+      pkt2->pkt_dts += ts->start_pts;
+    }
+
     /* Pass-thru */
     if (ts->state <= TS_LIVE) {
-      if (sm->sm_type == SMT_START) {
+      if (type == SMT_START) {
         if (ts->smt_start)
           streaming_start_unref(ts->smt_start);
         ts->smt_start = sm->sm_data;
         atomic_add(&ts->smt_start->ss_refcount, 1);
+        if (ts->packet_mode) {
+          timeshift_packet_flush(ts, ts->last_time + MAX_TIME_DELTA + 1000);
+          ts->start_pts = ts->last_time + 1000;
+        }
       }
       streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
     }
 
     /* Check for exit */
-    if (sm->sm_type == SMT_EXIT ||
-        (sm->sm_type == SMT_STOP && sm->sm_code == 0))
+    if (type == SMT_EXIT ||
+        (type == SMT_STOP && sm->sm_code != SM_CODE_SOURCE_RECONFIGURED))
       exit = 1;
 
-    if (sm->sm_type == SMT_MPEGTS)
+    if (type == SMT_MPEGTS)
       ts->packet_mode = 0;
 
     /* Buffer to disk */
     if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
       if (ts->packet_mode) {
         sm->sm_time = ts->last_time;
-        if (sm->sm_type == SMT_PACKET) {
+        if (type == SMT_PACKET) {
           timeshift_packet(ts, pkt);
           sm->sm_data = NULL;
           streaming_msg_free(sm);
@@ -382,7 +394,7 @@ static void timeshift_input
       }
       streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
     } else {
-      if (sm->sm_type == SMT_PACKET) {
+      if (type == SMT_PACKET) {
         tvhtrace("timeshift",
                  "ts %d pkt in  - stream %d type %c pts %10"PRId64
                  " dts %10"PRId64" dur %10d len %6zu",
@@ -483,6 +495,7 @@ streaming_target_t *timeshift_create
   ts->ondemand   = timeshift_conf.ondemand;
   ts->packet_mode= 1;
   ts->last_time  = 0;
+  ts->start_pts  = 0;
   ts->ref_time   = 0;
   for (i = 0; i < TIMESHIFT_BACKLOG_MAX; i++)
     TAILQ_INIT(&ts->backlog[i]);
