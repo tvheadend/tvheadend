@@ -340,6 +340,52 @@ static int _timeshift_skip
 }
 
 /*
+ *
+ */
+static int _timeshift_do_skip
+  ( timeshift_t *ts, int64_t req_time, int64_t last_time,
+    timeshift_file_t **_cur_file, timeshift_index_iframe_t **_tsi )
+{
+  timeshift_file_t *tsf = NULL, *cur_file;
+  timeshift_index_iframe_t *tsi;
+  int end;
+
+  tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to %"PRId64" from %"PRId64,
+         ts->id, req_time, last_time);
+
+  /* Find */
+  cur_file = *_cur_file;
+  pthread_mutex_lock(&ts->rdwr_mutex);
+  end = _timeshift_skip(ts, req_time, last_time,
+                        cur_file, &tsf, _tsi);
+  tsi = *_tsi;
+  pthread_mutex_unlock(&ts->rdwr_mutex);
+  if (tsi)
+    tvhlog(LOG_DEBUG, "timeshift", "ts %d skip found pkt @ %"PRId64,
+           ts->id, tsi->time);
+
+  /* File changed (close) */
+  if ((tsf != cur_file) && cur_file && cur_file->rfd >= 0) {
+    close(cur_file->rfd);
+    cur_file->rfd = -1;
+  }
+
+  /* Position */
+  if (cur_file)
+    cur_file->refcount--;
+  if ((cur_file = *_cur_file = tsf) != NULL) {
+    if (tsi)
+      cur_file->roff = tsi->pos;
+    else
+      cur_file->roff = 0;
+    tvhtrace("timeshift", "do skip cur_file %p roff %"PRId64, cur_file, cur_file->roff);
+  }
+
+  return end;
+}
+
+
+/*
  * Output packet
  */
 static int _timeshift_read
@@ -373,7 +419,8 @@ static int _timeshift_read
       tvhlog(LOG_ERR, "timeshift", "ts %d could not read buffer", ts->id);
       return -1;
     }
-    tvhtrace("timeshift", "ts %d seek to %jd (fd %i) read msg %p (%"PRId64")", ts->id, (intmax_t)tsf->roff, tsf->rfd, *sm, (int64_t)r);
+    tvhtrace("timeshift", "ts %d seek to %jd (fd %i) read msg %p/%"PRId64" (%"PRId64")",
+             ts->id, (intmax_t)tsf->roff, tsf->rfd, *sm, *sm ? (*sm)->sm_time : -1, (int64_t)r);
 
     /* Special case - EOF */
     if (r <= sizeof(size_t) || tsf->roff > tsf->size || *sm == NULL) {
@@ -381,9 +428,10 @@ static int _timeshift_read
         close(tsf->rfd);
       tsf->rfd  = -1;
       pthread_mutex_lock(&ts->rdwr_mutex);
-      *cur_file = timeshift_filemgr_next(tsf, NULL, 0);
+      *cur_file = tsf = timeshift_filemgr_next(tsf, NULL, 0);
       pthread_mutex_unlock(&ts->rdwr_mutex);
-      tsf->roff = 0; // reset
+      if (tsf)
+        tsf->roff = 0; // reset
       *wait     = 0;
       tvhtrace("timeshift", "ts %d eof, cur_file %p", ts->id, *cur_file);
 
@@ -704,18 +752,24 @@ void *timeshift_reader ( void *p )
 
               /* OK */
               if (skip) {
+                /* seek */
+                tsi = NULL;
+                end = _timeshift_do_skip(ts, skip_time, last_time, &cur_file, &tsi);
+                if (tsi) {
+                  pause_time = tsi->time;
 
-                /* Adjust time */
-                if (mono_play_time != mono_now)
-                  tvhtrace("timeshift", "update play time skip - %"PRId64, mono_now);
-                mono_play_time = mono_now;
-                pause_time = atomic_add_s64(&ts->last_time, 0);
-                tsi        = NULL;
+                  /* Adjust time */
+                  if (mono_play_time != mono_now)
+                    tvhtrace("timeshift", "update play time skip - %"PRId64, mono_now);
+                  mono_play_time = mono_now;
 
-                /* Clear existing packet */
-                if (sm)
-                  streaming_msg_free(sm);
-                sm = NULL;
+                  /* Clear existing packet */
+                  if (sm)
+                    streaming_msg_free(sm);
+                  sm = NULL;
+                } else {
+                  skip = NULL;
+                }
               }
               break;
             default:
@@ -762,7 +816,6 @@ void *timeshift_reader ( void *p )
 
       /* Rewind or Fast forward (i-frame only) */
       if (skip || keyframe_mode) {
-        timeshift_file_t *tsf = NULL;
         int64_t req_time;
 
         /* Time */
@@ -770,33 +823,8 @@ void *timeshift_reader ( void *p )
           req_time = last_time + ((cur_speed < 0) ? -1 : 1);
         else
           req_time = skip_time;
-        tvhlog(LOG_DEBUG, "timeshift", "ts %d skip to %"PRId64" from %"PRId64,
-               ts->id, req_time, last_time);
 
-        /* Find */
-        pthread_mutex_lock(&ts->rdwr_mutex);
-        end = _timeshift_skip(ts, req_time, last_time,
-                              cur_file, &tsf, &tsi);
-        pthread_mutex_unlock(&ts->rdwr_mutex);
-        if (tsi)
-          tvhlog(LOG_DEBUG, "timeshift", "ts %d skip found pkt @ %"PRId64,
-                 ts->id, tsi->time);
-
-        /* File changed (close) */
-        if ((tsf != cur_file) && cur_file && cur_file->rfd >= 0) {
-          close(cur_file->rfd);
-          cur_file->rfd = -1;
-        }
-
-        /* Position */
-        if (cur_file)
-          cur_file->refcount--;
-        if ((cur_file = tsf) != NULL) {
-          if (tsi)
-            cur_file->roff = tsi->pos;
-          else
-            cur_file->roff = 0;
-        }
+        end = _timeshift_do_skip(ts, req_time, last_time, &cur_file, &tsi);
       }
 
       /* Find packet */
@@ -845,7 +873,8 @@ void *timeshift_reader ( void *p )
       else
         wait = (deliver - sm->sm_time) / 1000;
       if (wait == 0) wait = 1;
-      tvhtrace("timeshift", "ts %d wait %d", ts->id, wait);
+      tvhtrace("timeshift", "ts %d wait %d speed %d sm_time %"PRId64" deliver %"PRId64,
+               ts->id, wait, cur_speed, sm->sm_time, deliver);
 
     }
 
