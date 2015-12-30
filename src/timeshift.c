@@ -285,16 +285,23 @@ timeshift_packet( timeshift_t *ts, th_pkt_t *pkt )
 void
 timeshift_packets_clone( timeshift_t *ts, struct streaming_message_queue *dst )
 {
-  streaming_message_t *lowest, *sm;
-  struct streaming_message_queue *sq, *backlogs;
+  streaming_message_t *lowest, *sm, *sm2;
+  struct streaming_message_queue *sq, *sq2, *backlogs;
   int i;
 
   lock_assert(&ts->state_mutex);
 
-  /* init temporary queues */
+  /* init temporary queues and copy the backlog data */
   backlogs = alloca(ts->backlog_max * sizeof(*backlogs));
-  for (i = 0; i < ts->backlog_max; i++)
-    TAILQ_INIT(&backlogs[i]);
+  for (i = 0; i < ts->backlog_max; i++) {
+    sq = &backlogs[i];
+    sq2 = &ts->backlog[i];
+    TAILQ_INIT(sq);
+    TAILQ_FOREACH(sm, sq2, sm_link) {
+      sm2 = streaming_msg_clone(sm);
+      TAILQ_INSERT_TAIL(sq, sm2, sm_link);
+    }
+  }
   /* push to destination (pts sorted) */
   while (1) {
     lowest = NULL;
