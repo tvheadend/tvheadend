@@ -97,7 +97,6 @@ typedef struct timeshift {
   int64_t                     ref_time;   ///< Start time in us (monoclock)
   struct streaming_message_queue backlog[TIMESHIFT_BACKLOG_MAX]; ///< Queued packets for time sorting
   int                         backlog_max;///< Maximum component index in backlog
-  pthread_mutex_t             buffering_mutex;///< Protect backlog / write queues
 
   enum {
     TS_INIT,

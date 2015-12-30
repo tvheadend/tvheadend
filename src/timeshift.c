@@ -289,7 +289,7 @@ timeshift_packets_clone( timeshift_t *ts, struct streaming_message_queue *dst )
   struct streaming_message_queue *sq, *backlogs;
   int i;
 
-  lock_assert(&ts->buffering_mutex);
+  lock_assert(&ts->state_mutex);
 
   /* init temporary queues */
   backlogs = alloca(ts->backlog_max * sizeof(*backlogs));
@@ -339,8 +339,6 @@ static void timeshift_input
     /* Start */
     if (type == SMT_START && ts->state == TS_INIT)
       ts->state = TS_LIVE;
-
-    pthread_mutex_lock(&ts->buffering_mutex);
 
     /* Change PTS/DTS offsets */
     if (ts->packet_mode && ts->start_pts && type == SMT_PACKET) {
@@ -409,8 +407,6 @@ static void timeshift_input
       streaming_msg_free(sm);
     }
 pktcont:
-
-    pthread_mutex_unlock(&ts->buffering_mutex);
 
     /* Exit/Stop */
     if (exit) {
@@ -501,7 +497,6 @@ streaming_target_t *timeshift_create
     TAILQ_INIT(&ts->backlog[i]);
   pthread_mutex_init(&ts->rdwr_mutex, NULL);
   pthread_mutex_init(&ts->state_mutex, NULL);
-  pthread_mutex_init(&ts->buffering_mutex, NULL);
 
   /* Initialise output */
   tvh_pipe(O_NONBLOCK, &ts->rd_pipe);

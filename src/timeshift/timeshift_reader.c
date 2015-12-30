@@ -757,10 +757,12 @@ void *timeshift_reader ( void *p )
                 end = _timeshift_do_skip(ts, skip_time, last_time, &cur_file, &tsi);
                 if (tsi) {
                   pause_time = tsi->time;
+                  tvhtrace("timeshift", "ts %d skip set pause_time %"PRId64" last_time %"PRId64,
+                           ts->id, pause_time, last_time);
 
                   /* Adjust time */
                   if (mono_play_time != mono_now)
-                    tvhtrace("timeshift", "update play time skip - %"PRId64, mono_now);
+                    tvhtrace("timeshift", "ts %d update play time skip - %"PRId64, ts->id, mono_now);
                   mono_play_time = mono_now;
 
                   /* Clear existing packet */
@@ -898,20 +900,14 @@ void *timeshift_reader ( void *p )
         ctrl      = NULL;
         tvhtrace("timeshift", "reader - set TS_LIVE");
 
-        /* Critical section - protect write / backlog queues */
-        pthread_mutex_lock(&ts->buffering_mutex);
-
         /* Flush timeshift buffer to live */
-        if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1) {
-          pthread_mutex_unlock(&ts->buffering_mutex);
+        if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1)
           break;
-        }
 
         /* Flush write / backlog queues */
         _timeshift_write_queues(ts);
         
         ts->state = TS_LIVE;
-        pthread_mutex_unlock(&ts->buffering_mutex);
 
         /* Close file (if open) */
         if (cur_file && cur_file->rfd >= 0) {
