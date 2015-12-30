@@ -349,9 +349,9 @@ static void timeshift_input
     if (ts->packet_mode && ts->start_pts && type == SMT_PACKET) {
       pkt2 = pkt_copy_shallow(pkt);
       pkt_ref_dec(pkt);
-      sm->sm_data = pkt2;
-      pkt2->pkt_pts += ts->start_pts;
-      pkt2->pkt_dts += ts->start_pts;
+      sm->sm_data = pkt = pkt2;
+      pkt->pkt_pts += ts->start_pts;
+      pkt->pkt_dts += ts->start_pts;
     }
 
     /* Pass-thru */
@@ -363,7 +363,8 @@ static void timeshift_input
         atomic_add(&ts->smt_start->ss_refcount, 1);
         if (ts->packet_mode) {
           timeshift_packet_flush(ts, ts->last_time + MAX_TIME_DELTA + 1000);
-          ts->start_pts = ts->last_time + 1000;
+          if (ts->last_time)
+            ts->start_pts = ts->last_time + 1000;
         }
       }
       streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
