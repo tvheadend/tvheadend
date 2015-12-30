@@ -384,3 +384,15 @@ void timeshift_writer_flush ( timeshift_t *ts )
   pthread_mutex_unlock(&sq->sq_mutex);
 }
 
+void timeshift_writer_clone ( timeshift_t *ts, struct streaming_message_queue *dst )
+{
+  streaming_message_t *sm, *sm2;
+  streaming_queue_t *sq = &ts->wr_queue;
+
+  pthread_mutex_lock(&sq->sq_mutex);
+  TAILQ_FOREACH(sm, &sq->sq_queue, sm_link) {
+    sm2 = streaming_msg_clone(sm);
+    TAILQ_INSERT_TAIL(dst, sm2, sm_link);
+  }
+  pthread_mutex_unlock(&sq->sq_mutex);
+}

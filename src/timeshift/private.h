@@ -96,6 +96,7 @@ typedef struct timeshift {
   int64_t                     ref_time;   ///< Start time in us (monoclock)
   struct streaming_message_queue backlog[TIMESHIFT_BACKLOG_MAX]; ///< Queued packets for time sorting
   int                         backlog_max;///< Maximum component index in backlog
+  pthread_mutex_t             buffering_mutex;///< Protect backlog / write queues
 
   enum {
     TS_INIT,
@@ -129,6 +130,11 @@ extern uint64_t timeshift_total_size;
 extern uint64_t timeshift_total_ram_size;
 
 /*
+ *
+ */
+void timeshift_packets_clone ( timeshift_t *ts, struct streaming_message_queue *dst );
+
+/*
  * Write functions
  */
 ssize_t timeshift_write_start   ( timeshift_file_t *tsf, int64_t time, streaming_start_t *ss );
@@ -142,6 +148,7 @@ ssize_t timeshift_write_exit    ( int fd );
 ssize_t timeshift_write_eof     ( timeshift_file_t *tsf );
 
 void timeshift_writer_flush ( timeshift_t *ts );
+void timeshift_writer_clone ( timeshift_t *ts, struct streaming_message_queue *dst );
 
 /*
  * Threads

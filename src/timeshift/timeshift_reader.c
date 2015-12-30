@@ -427,6 +427,24 @@ static int _timeshift_flush_to_live
 }
 
 /*
+ * Write packets from temporary queues
+ */
+static void _timeshift_write_queues
+  ( timeshift_t *ts )
+{
+  struct streaming_message_queue sq;
+  streaming_message_t *sm;
+
+  TAILQ_INIT(&sq);
+  timeshift_writer_clone(ts, &sq);
+  timeshift_packets_clone(ts, &sq);
+  while ((sm = TAILQ_FIRST(&sq)) != NULL) {
+    TAILQ_REMOVE(&sq, sm, sm_link);
+    streaming_target_deliver2(ts->output, sm);
+  }
+}
+
+/*
  * Send the status message
  */
 static void timeshift_fill_status
@@ -850,11 +868,21 @@ void *timeshift_reader ( void *p )
         streaming_target_deliver2(ts->output, ctrl);
         ctrl      = NULL;
         tvhtrace("timeshift", "reader - set TS_LIVE");
-        ts->state = TS_LIVE;
+
+        /* Critical section - protect write / backlog queues */
+        pthread_mutex_lock(&ts->buffering_mutex);
 
         /* Flush timeshift buffer to live */
-        if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1)
+        if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1) {
+          pthread_mutex_unlock(&ts->buffering_mutex);
           break;
+        }
+
+        /* Flush write / backlog queues */
+        _timeshift_write_queues(ts);
+        
+        ts->state = TS_LIVE;
+        pthread_mutex_unlock(&ts->buffering_mutex);
 
         /* Close file (if open) */
         if (cur_file && cur_file->rfd >= 0) {
