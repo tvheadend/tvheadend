@@ -75,7 +75,8 @@ static void* timeshift_reaper_callback ( void *p )
           tvhlog(LOG_ERR, "timeshift", "failed to remove %s [e=%s]",
                  dpath, strerror(errno));
     } else {
-      tvhtrace("timeshift", "remove RAM segment (time %"PRItime_t", size %"PRId64")", tsf->time, (int64_t)tsf->size);
+      tvhtrace("timeshift", "remove RAM segment (time %"PRId64", size %"PRId64")",
+               tsf->time, (int64_t)tsf->size);
     }
 
     /* Free memory */
@@ -185,7 +186,8 @@ void timeshift_filemgr_remove
     if (tsf->path)
       tvhdebug("timeshift", "ts %d remove %s (size %"PRId64")", ts->id, tsf->path, (int64_t)tsf->size);
     else
-      tvhdebug("timeshift", "ts %d RAM segment remove time %"PRItime_t" (size %"PRId64", alloc size %"PRId64")", ts->id, tsf->time, (int64_t)tsf->size, (int64_t)tsf->ram_size);
+      tvhdebug("timeshift", "ts %d RAM segment remove time %"PRId64" (size %"PRId64", alloc size %"PRId64")",
+               ts->id, tsf->time, (int64_t)tsf->size, (int64_t)tsf->ram_size);
   }
   TAILQ_REMOVE(&ts->files, tsf, link);
   atomic_dec_u64(&timeshift_total_size, tsf->size);
