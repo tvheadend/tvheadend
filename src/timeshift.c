@@ -259,10 +259,8 @@ timeshift_packet( timeshift_t *ts, th_pkt_t *pkt )
   streaming_message_t *sm;
   int64_t time;
 
-  if (pkt->pkt_componentindex >= TIMESHIFT_BACKLOG_MAX) {
-    pkt_ref_dec(pkt);
+  if (pkt->pkt_componentindex >= TIMESHIFT_BACKLOG_MAX)
     return;
-  }
 
   sm = streaming_msg_create_pkt(pkt);
 
@@ -385,9 +383,7 @@ static void timeshift_input
         sm->sm_time = ts->last_time;
         if (type == SMT_PACKET) {
           timeshift_packet(ts, pkt);
-          sm->sm_data = NULL;
-          streaming_msg_free(sm);
-          goto pktcont;
+          goto msg_free;
         }
       } else {
         if (ts->ref_time == 0) {
@@ -411,9 +407,9 @@ static void timeshift_input
                  pkt->pkt_duration,
                  pktbuf_len(pkt->pkt_payload));
       }
+msg_free:
       streaming_msg_free(sm);
     }
-pktcont:
 
     /* Exit/Stop */
     if (exit) {
