@@ -646,7 +646,8 @@ void *timeshift_reader ( void *p )
                   pause_time     = cur_file->last;
                   last_time      = pause_time;
                 } else {
-                  last_time      = atomic_add_s64(&ts->last_time, 0);
+                  pause_time     = atomic_add_s64(&ts->last_time, 0);
+                  last_time      = pause_time;
                 }
                 pthread_mutex_unlock(&ts->rdwr_mutex);
                 mono_play_time = mono_now;
@@ -728,8 +729,7 @@ void *timeshift_reader ( void *p )
                   cur_file->roff = cur_file->size;
                   last_time      = cur_file->last;
                 } else {
-                  tvhlog(LOG_ERR, "timeshift", "ts %d failed to get current file", ts->id);
-                  skip = NULL;
+                  last_time      = atomic_add_s64(&ts->last_time, 0);
                 }
                 pthread_mutex_unlock(&ts->rdwr_mutex);
               }
