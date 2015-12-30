@@ -396,6 +396,8 @@ static int _timeshift_read
   ssize_t r;
   off_t off;
 
+  *sm = NULL;
+
   if (tsf) {
 
     /* Open file */
@@ -455,21 +457,21 @@ static int _timeshift_read
  * Flush all data to live
  */
 static int _timeshift_flush_to_live
-  ( timeshift_t *ts, timeshift_file_t **cur_file,
-    streaming_message_t **sm, int *wait )
+  ( timeshift_t *ts, timeshift_file_t **cur_file, int *wait )
 {
+  streaming_message_t *sm;
+
   time_t pts = 0;
   while (*cur_file) {
-    if (_timeshift_read(ts, cur_file, sm, wait) == -1)
+    if (_timeshift_read(ts, cur_file, &sm, wait) == -1)
       return -1;
-    if (!*sm) break;
-    if ((*sm)->sm_type == SMT_PACKET) {
-      pts = ((th_pkt_t*)(*sm)->sm_data)->pkt_pts;
+    if (!sm) break;
+    if (sm->sm_type == SMT_PACKET) {
+      pts = ((th_pkt_t*)sm->sm_data)->pkt_pts;
       tvhlog(LOG_DEBUG, "timeshift", "ts %d deliver %"PRId64" pts=%"PRItime_t,
-             ts->id, (*sm)->sm_time, pts);
+             ts->id, sm->sm_time, pts);
     }
-    streaming_target_deliver2(ts->output, *sm);
-    *sm = NULL;
+    streaming_target_deliver2(ts->output, sm);
   }
   return 0;
 }
@@ -766,9 +768,10 @@ void *timeshift_reader ( void *p )
                   mono_play_time = mono_now;
 
                   /* Clear existing packet */
-                  if (sm)
+                  if (sm) {
                     streaming_msg_free(sm);
-                  sm = NULL;
+                    sm = NULL;
+                  }
                 } else {
                   skip = NULL;
                 }
@@ -827,6 +830,12 @@ void *timeshift_reader ( void *p )
           req_time = skip_time;
 
         end = _timeshift_do_skip(ts, req_time, last_time, &cur_file, &tsi);
+      }
+
+      /* Clear old message */
+      if (sm) {
+        streaming_msg_free(sm);
+        sm = NULL;
       }
 
       /* Find packet */
@@ -901,7 +910,7 @@ void *timeshift_reader ( void *p )
         tvhtrace("timeshift", "reader - set TS_LIVE");
 
         /* Flush timeshift buffer to live */
-        if (_timeshift_flush_to_live(ts, &cur_file, &sm, &wait) == -1)
+        if (_timeshift_flush_to_live(ts, &cur_file, &wait) == -1)
           break;
 
         /* Flush write / backlog queues */
