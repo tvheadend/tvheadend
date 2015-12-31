@@ -154,7 +154,9 @@ const idclass_t timeshift_conf_class = {
     {
       .type   = PT_BOOL,
       .id     = "ondemand",
-      .name   = N_("On-demand (no rewind)"),
+      .name   = N_("On-demand (no first rewind)"),
+      .desc   = N_("Use timeshift only on-demand. It is started when the first request "
+                   "to move in the playback time occurs (fast-forward, rewind, goto)."),
       .off    = offsetof(timeshift_conf_t, ondemand),
     },
     {
@@ -379,7 +381,7 @@ static void timeshift_input
       ts->packet_mode = 0;
 
     /* Buffer to disk */
-    if ((ts->state > TS_LIVE) || (!ts->ondemand && (ts->state == TS_LIVE))) {
+    if ((ts->state > TS_LIVE) || (ts->dobuf && (ts->state == TS_LIVE))) {
       if (ts->packet_mode) {
         sm->sm_time = ts->last_time;
         if (type == SMT_PACKET) {
@@ -493,6 +495,7 @@ streaming_target_t *timeshift_create
   ts->vididx     = -1;
   ts->id         = timeshift_index;
   ts->ondemand   = timeshift_conf.ondemand;
+  ts->dobuf      = ts->ondemand ? 0 : 1;
   ts->packet_mode= 1;
   ts->last_time  = 0;
   ts->start_pts  = 0;

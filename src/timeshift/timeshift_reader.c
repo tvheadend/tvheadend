@@ -617,7 +617,7 @@ void *timeshift_reader ( void *p )
           if (speed < -3200) speed = -3200;
 
           /* Ignore negative */
-          if (ts->ondemand && (speed < 0))
+          if (!ts->dobuf && (speed < 0))
             speed = cur_file ? speed : 0;
 
           /* Process */
@@ -637,6 +637,7 @@ void *timeshift_reader ( void *p )
                 tvhlog(LOG_DEBUG, "timeshift", "ts %d enter timeshift mode",
                        ts->id);
                 timeshift_writer_flush(ts);
+                ts->dobuf = 1;
                 pthread_mutex_lock(&ts->rdwr_mutex);
                 cur_file = timeshift_filemgr_newest(ts);
                 cur_file = timeshift_filemgr_get(ts, cur_file ? cur_file->last :
@@ -747,6 +748,7 @@ void *timeshift_reader ( void *p )
                     skip = NULL;
                   } else {
                     ts->state = TS_PLAY;
+                    ts->dobuf = 1;
                     tvhtrace("timeshift", "reader - set TS_PLAY");
                   }
                 }
@@ -924,10 +926,6 @@ void *timeshift_reader ( void *p )
           cur_file->rfd = -1;
         }
 
-        /* Flush ALL files */
-        if (ts->ondemand)
-          timeshift_filemgr_flush(ts, NULL);
-
       /* Pause */
       } else {
         if (cur_speed <= 0) {
@@ -938,6 +936,7 @@ void *timeshift_reader ( void *p )
           cur_speed = 100;
           tvhtrace("timeshift", "reader - set TS_PLAY");
           ts->state = TS_PLAY;
+          ts->dobuf = 1;
           if (mono_play_time != mono_now)
             tvhtrace("timeshift", "update play time (pause) - %"PRId64, mono_now);
           mono_play_time = mono_now;
@@ -949,11 +948,6 @@ void *timeshift_reader ( void *p )
         ctrl       = NULL;
       }
 
-    /* Flush unwanted */
-    } else if (ts->ondemand && cur_file) {
-      pthread_mutex_lock(&ts->rdwr_mutex);
-      timeshift_filemgr_flush(ts, cur_file);
-      pthread_mutex_unlock(&ts->rdwr_mutex);
     }
 
     pthread_mutex_unlock(&ts->state_mutex);

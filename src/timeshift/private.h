@@ -92,6 +92,7 @@ typedef struct timeshift {
   time_t                      max_time;   ///< Maximum period to shift
   int                         ondemand;   ///< Whether this is an on-demand timeshift
   int                         packet_mode;///< Packet mode (otherwise MPEG-TS data mode)
+  int                         dobuf;      ///< Buffer packets (store)
   int64_t                     last_time;  ///< Last time in us (PTS conversion)
   int64_t                     start_pts;  ///< Start time for packets (PTS)
   int64_t                     ref_time;   ///< Start time in us (monoclock)
