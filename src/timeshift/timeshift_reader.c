@@ -651,16 +651,7 @@ void *timeshift_reader ( void *p )
                   last_time      = pause_time;
                 }
                 pthread_mutex_unlock(&ts->rdwr_mutex);
-                mono_play_time = mono_now;
-                tvhtrace("timeshift", "update play time TS_LIVE - %"PRId64, mono_now);
               }
-
-            /* Buffer playback */
-            } else if (ts->state == TS_PLAY) {
-              pause_time = last_time;
-
-            /* Paused */
-            } else {
             }
 
             /* Check keyframe mode */
@@ -680,8 +671,11 @@ void *timeshift_reader ( void *p )
               ts->state = speed == 0 ? TS_PAUSE : TS_PLAY;
               tvhtrace("timeshift", "reader - set %s", speed == 0 ? "TS_PAUSE" : "TS_PLAY");
             }
-            tvhlog(LOG_DEBUG, "timeshift", "ts %d change speed %d",
-                   ts->id, speed);
+            if (ts->state == TS_PLAY) {
+              mono_play_time = mono_now;
+              tvhtrace("timeshift", "update play time TS_LIVE - %"PRId64" play buffer from %"PRId64, mono_now, pause_time);
+            }
+            tvhlog(LOG_DEBUG, "timeshift", "ts %d change speed %d", ts->id, speed);
           }
 
           /* Send on the message */
@@ -761,7 +755,7 @@ void *timeshift_reader ( void *p )
                 end = _timeshift_do_skip(ts, skip_time, last_time, &cur_file, &tsi);
                 if (tsi) {
                   pause_time = tsi->time;
-                  tvhtrace("timeshift", "ts %d skip set pause_time %"PRId64" last_time %"PRId64,
+                  tvhtrace("timeshift", "ts %d skip - play buffer from %"PRId64" last_time %"PRId64,
                            ts->id, pause_time, last_time);
 
                   /* Adjust time */
