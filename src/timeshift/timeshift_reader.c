@@ -377,7 +377,7 @@ static int _timeshift_do_skip
     if (tsi)
       cur_file->roff = tsi->pos;
     else
-      cur_file->roff = 0;
+      cur_file->roff = req_time > last_time ? cur_file->size : 0;
     tvhtrace("timeshift", "do skip cur_file %p roff %"PRId64, cur_file, cur_file->roff);
   }
 

@@ -226,6 +226,40 @@ ssize_t timeshift_write_eof ( timeshift_file_t *tsf )
   return _write(tsf, &sz, sizeof(sz));
 }
 
+/*
+ * Stream start handling
+ */
+static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
+{
+  timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
+  streaming_start_t *ss;
+  int i;
+
+  ti->pos  = tsf->size;
+  ti->data = sm;
+  TAILQ_INSERT_TAIL(&tsf->sstart, ti, link);
+
+  /* Update video index */
+  ss = sm->sm_data;
+  for (i = 0; i < ss->ss_num_components; i++)
+    if (SCT_ISVIDEO(ss->ss_components[i].ssc_type)) {
+      ts->vididx = ss->ss_components[i].ssc_index;
+      break;
+    }
+}
+
+static void _copy_last_sstart ( timeshift_t *ts, timeshift_file_t *tsf )
+{
+  streaming_message_t *sm;
+  streaming_start_t *ss = ts->smt_start;
+
+  if (ss) {
+    atomic_add(&ss->ss_refcount, 1);
+    sm = streaming_msg_create_data(SMT_START, ss);
+    _handle_sstart(ts, tsf, sm);
+  }
+}
+
 /* **************************************************************************
  * Thread
  * *************************************************************************/
@@ -233,26 +267,18 @@ ssize_t timeshift_write_eof ( timeshift_file_t *tsf )
 static inline ssize_t _process_msg0
   ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t **smp )
 {
-  int i;
   ssize_t err;
-  streaming_start_t *ss;
   streaming_message_t *sm = *smp;
+
   if (sm->sm_type == SMT_START) {
     err = 0;
-    timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
-    ti->pos  = tsf->size;
-    ti->data = sm;
+    _handle_sstart(ts, tsf, sm);
     *smp = NULL;
-    TAILQ_INSERT_TAIL(&tsf->sstart, ti, link);
-
-    /* Update video index */
-    ss = sm->sm_data;
-    for (i = 0; i < ss->ss_num_components; i++)
-      if (SCT_ISVIDEO(ss->ss_components[i].ssc_type))
-        ts->vididx = ss->ss_components[i].ssc_index;
   } else if (sm->sm_type == SMT_SIGNAL_STATUS)
     err = timeshift_write_sigstat(tsf, sm->sm_time, sm->sm_data);
   else if (sm->sm_type == SMT_PACKET) {
+    if (TAILQ_EMPTY(&tsf->sstart))
+      _copy_last_sstart(ts, tsf);
     err = timeshift_write_packet(tsf, sm->sm_time, sm->sm_data);
     if (err > 0) {
       th_pkt_t *pkt = sm->sm_data;
@@ -266,8 +292,11 @@ static inline ssize_t _process_msg0
         TAILQ_INSERT_TAIL(&tsf->iframes, ti, link);
       }
     }
-  } else if (sm->sm_type == SMT_MPEGTS)
+  } else if (sm->sm_type == SMT_MPEGTS) {
+    if (TAILQ_EMPTY(&tsf->sstart))
+      _copy_last_sstart(ts, tsf);
     err = timeshift_write_mpegts(tsf, sm->sm_time, sm->sm_data);
+  }
   else
     err = 0;
 
