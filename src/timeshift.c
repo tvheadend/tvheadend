@@ -283,14 +283,17 @@ timeshift_packet( timeshift_t *ts, th_pkt_t *pkt, int deliver )
     if (pkt->pkt_componentindex >= ts->backlog_max)
       ts->backlog_max = pkt->pkt_componentindex + 1;
     TAILQ_INSERT_TAIL(&ts->backlog[pkt->pkt_componentindex], sm, sm_link);
+    pkt->pkt_delivered = ts->state <= TS_LIVE;
   }
 }
 
 void
-timeshift_packets_clone( timeshift_t *ts, struct streaming_message_queue *dst )
+timeshift_packets_clone
+  ( timeshift_t *ts, struct streaming_message_queue *dst, int delivered )
 {
   streaming_message_t *lowest, *sm, *sm2;
   struct streaming_message_queue *sq, *sq2, *backlogs;
+  th_pkt_t *pkt;
   int i;
 
   lock_assert(&ts->state_mutex);
@@ -302,6 +305,11 @@ timeshift_packets_clone( timeshift_t *ts, struct streaming_message_queue *dst )
     sq2 = &ts->backlog[i];
     TAILQ_INIT(sq);
     TAILQ_FOREACH(sm, sq2, sm_link) {
+      if (!delivered) {
+        pkt = sm->sm_data;
+        if (pkt->pkt_delivered)
+          continue;
+      }
       sm2 = streaming_msg_clone(sm);
       TAILQ_INSERT_TAIL(sq, sm2, sm_link);
     }

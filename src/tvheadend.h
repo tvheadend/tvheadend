@@ -529,7 +529,7 @@ typedef struct streaming_message {
   TAILQ_ENTRY(streaming_message) sm_link;
   streaming_message_type_t sm_type;
 #if ENABLE_TIMESHIFT
-  int64_t  sm_time;
+  int64_t sm_time;
 #endif
   union {
     void *sm_data;

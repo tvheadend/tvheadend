@@ -133,7 +133,7 @@ extern uint64_t timeshift_total_ram_size;
 /*
  *
  */
-void timeshift_packets_clone ( timeshift_t *ts, struct streaming_message_queue *dst );
+void timeshift_packets_clone ( timeshift_t *ts, struct streaming_message_queue *dst, int delivered );
 
 /*
  * Write functions
