@@ -678,6 +678,7 @@ void *timeshift_reader ( void *p )
               tvhtrace("timeshift", "update play time TS_LIVE - %"PRId64" play buffer from %"PRId64, mono_now, pause_time);
             } else if (ts->state == TS_PAUSE) {
               skip_delivered = 1;
+              pause_time = last_time;
             }
             tvhlog(LOG_DEBUG, "timeshift", "ts %d change speed %d", ts->id, speed);
           }
