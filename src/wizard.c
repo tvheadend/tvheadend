@@ -134,11 +134,9 @@ static void hello_save(idnode_t *in)
   size_t l = 0;
   int save = 0;
 
-  printf("hello save '%s'\n", w->ui_lang);
   if (w->ui_lang[0] && strcmp(config.language_ui ?: "", w->ui_lang)) {
     free(config.language_ui);
     config.language_ui = strdup(w->ui_lang);
-    printf("language_ui = '%s'\n", config.language_ui);
     save = 1;
   }
   buf[0] = '\0';
@@ -151,7 +149,6 @@ static void hello_save(idnode_t *in)
   if (buf[0] && strcmp(buf, config.language ?: "")) {
     free(config.language);
     config.language = strdup(buf);
-    printf("language = '%s'\n", config.language);
     save = 1;
   }
   if (save)
