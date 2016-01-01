@@ -649,6 +649,8 @@ void spawn_init(void)
 
 void spawn_done(void)
 {
+  spawn_t *s;
+
   spawn_pipe_running = 0;
   pthread_kill(spawn_pipe_tid, SIGTERM);
   pthread_join(spawn_pipe_tid, NULL);
@@ -656,4 +658,9 @@ void spawn_done(void)
   tvh_pipe_close(&spawn_pipe_info);
   free(spawn_error_buf);
   free(spawn_info_buf);
+  while ((s = LIST_FIRST(&spawns)) != NULL) {
+    LIST_REMOVE(s, link);
+    free((char *)s->name);
+    free(s);
+  }
 }
