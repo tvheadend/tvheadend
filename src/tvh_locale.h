@@ -26,6 +26,8 @@ static inline const char *tvh_gettext(const char *s)
 #define _(s) tvh_gettext(s)
 #define N_(s) (s)
 
+int tvh_gettext_langcode_valid(const char *code);
+
 void tvh_gettext_init(void);
 void tvh_gettext_done(void);
 

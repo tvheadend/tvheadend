@@ -58,9 +58,11 @@ api_language_locale_enum
   l = htsmsg_create_list();
   while (c->code2b) {
     e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", c->code2b);
-    htsmsg_add_str(e, "val", c->desc);
-    htsmsg_add_msg(l, NULL, e);
+    if (tvh_gettext_langcode_valid(c->code2b)) {
+      htsmsg_add_str(e, "key", c->code2b);
+      htsmsg_add_str(e, "val", c->desc);
+      htsmsg_add_msg(l, NULL, e);
+    }
     s = c->locale;
     while (s && *s) {
       if (*s == '|')
@@ -68,11 +70,13 @@ api_language_locale_enum
       if (s[0] == '\0' || s[1] == '\0')
         break;
       snprintf(buf1, sizeof(buf1), "%s_%c%c", c->code2b, s[0], s[1]);
-      snprintf(buf2, sizeof(buf2), "%s (%c%c)", c->desc, s[0], s[1]);
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", buf1);
-      htsmsg_add_str(e, "val", buf2);
-      htsmsg_add_msg(l, NULL, e);
+      if (tvh_gettext_langcode_valid(buf1)) {
+        snprintf(buf2, sizeof(buf2), "%s (%c%c)", c->desc, s[0], s[1]);
+        e = htsmsg_create_map();
+        htsmsg_add_str(e, "key", buf1);
+        htsmsg_add_str(e, "val", buf2);
+        htsmsg_add_msg(l, NULL, e);
+      }
       s += 2;
     }
     c++;

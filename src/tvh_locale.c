@@ -163,6 +163,21 @@ static struct lng *lng_get_locale(char *locale_lang)
 /*
  *
  */
+int tvh_gettext_langcode_valid(const char *code)
+{
+  struct lng ls;
+  int ret;
+
+  pthread_mutex_lock(&tvh_gettext_mutex);
+  ls.tvh_lang = code;
+  ret = RB_FIND(&lngs, &ls, link, lng_cmp) != NULL;
+  pthread_mutex_unlock(&tvh_gettext_mutex);
+  return ret;
+}
+
+/*
+ *
+ */
 
 const char *tvh_gettext_get_lang(const char *lang)
 {
