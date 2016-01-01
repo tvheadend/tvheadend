@@ -2089,7 +2089,7 @@ const idclass_t config_class = {
       .name   = N_("User language"),
       .desc   = N_("The default language to use if the user "
                    " language isn't set in the Access Entries tab."),
-      .list   = language_get_list,
+      .list   = language_get_ui_list,
       .off    = offsetof(config_t, language_ui),
       .group  = 3
     },

@@ -1365,6 +1365,15 @@ language_get_list ( void *obj, const char *lang )
 }
 
 htsmsg_t *
+language_get_ui_list ( void *obj, const char *lang )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "language/ui_locale");
+  return m;
+}
+
+htsmsg_t *
 user_get_userlist ( void *obj, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_map();
@@ -1464,7 +1473,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .id       = "langui",
       .name     = N_("Web interface language"),
-      .list     = language_get_list,
+      .list     = language_get_ui_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
       .opts     = PO_ADVANCED,
     },

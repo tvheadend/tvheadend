@@ -46,8 +46,8 @@ api_language_enum
 }
 
 static int
-api_language_locale_enum
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+_api_language_locale_enum
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp, int all )
 {
   const lang_code_t *c = lang_codes;
   htsmsg_t *l, *e;
@@ -58,7 +58,7 @@ api_language_locale_enum
   l = htsmsg_create_list();
   while (c->code2b) {
     e = htsmsg_create_map();
-    if (tvh_gettext_langcode_valid(c->code2b)) {
+    if (all || tvh_gettext_langcode_valid(c->code2b)) {
       htsmsg_add_str(e, "key", c->code2b);
       htsmsg_add_str(e, "val", c->desc);
       htsmsg_add_msg(l, NULL, e);
@@ -70,7 +70,7 @@ api_language_locale_enum
       if (s[0] == '\0' || s[1] == '\0')
         break;
       snprintf(buf1, sizeof(buf1), "%s_%c%c", c->code2b, s[0], s[1]);
-      if (tvh_gettext_langcode_valid(buf1)) {
+      if (all || tvh_gettext_langcode_valid(buf1)) {
         snprintf(buf2, sizeof(buf2), "%s (%c%c)", c->desc, s[0], s[1]);
         e = htsmsg_create_map();
         htsmsg_add_str(e, "key", buf1);
@@ -86,12 +86,27 @@ api_language_locale_enum
   return 0;
 }
 
+static int
+api_language_locale_enum
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return _api_language_locale_enum(perm, opaque, op, args, resp, 1);
+}
+
+static int
+api_language_ui_locale_enum
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return _api_language_locale_enum(perm, opaque, op, args, resp, 0);
+}
+
 void api_language_init ( void )
 {
   static api_hook_t ah[] = {
 
-    { "language/list",   ACCESS_ANONYMOUS, api_language_enum, NULL },
-    { "language/locale", ACCESS_ANONYMOUS, api_language_locale_enum, NULL },
+    { "language/list",      ACCESS_ANONYMOUS, api_language_enum, NULL },
+    { "language/locale",    ACCESS_ANONYMOUS, api_language_locale_enum, NULL },
+    { "language/ui_locale", ACCESS_ANONYMOUS, api_language_ui_locale_enum, NULL },
 
     { NULL },
   };
