@@ -672,8 +672,8 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
 
     if (es->es_nok >= CWC_MAX_NOKS) {
       tvhlog(LOG_DEBUG, "cwc",
-             "Too many NOKs for service \"%s\"%s from %s",
-             t->s_dvb_svcname, chaninfo, ct->td_nicename);
+             "Too many NOKs[%i] for service \"%s\"%s from %s",
+             es->es_section, t->s_dvb_svcname, chaninfo, ct->td_nicename);
       goto forbid;
     }
 
@@ -744,12 +744,12 @@ forbid:
 
     if(len < 35) {
       tvhlog(LOG_DEBUG, "cwc",
-             "Received ECM reply%s for service \"%s\" "
+             "Received ECM reply%s for service \"%s\" [%d] "
              "even: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
              " odd: %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x (seqno: %d "
              "Req delay: %"PRId64" ms)",
              chaninfo,
-             t->s_dvb_svcname,
+             t->s_dvb_svcname, es->es_section,
              msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
              msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
              msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
