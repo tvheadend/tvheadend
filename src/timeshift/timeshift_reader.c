@@ -562,10 +562,11 @@ void *timeshift_reader ( void *p )
 {
   timeshift_t *ts = p;
   int nfds, end, run = 1, wait = -1, skip_delivered = 0;
-  timeshift_file_t *cur_file = NULL;
+  timeshift_file_t *cur_file = NULL, *tmp_file;
   int cur_speed = 100, keyframe_mode = 0;
   int64_t mono_now, mono_play_time = 0, mono_last_status = 0;
   int64_t deliver, deliver0, pause_time = 0, last_time = 0, skip_time = 0;
+  int64_t i64;
   streaming_message_t *sm = NULL, *ctrl = NULL;
   timeshift_index_iframe_t *tsi = NULL;
   streaming_skip_t *skip = NULL;
@@ -641,9 +642,14 @@ void *timeshift_reader ( void *p )
                 ts->dobuf = 1;
                 skip_delivered = 1;
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                cur_file = timeshift_filemgr_newest(ts);
-                cur_file = timeshift_filemgr_get(ts, cur_file ? cur_file->last :
-                                                     atomic_add_s64(&ts->last_time, 0));
+                tmp_file = timeshift_filemgr_newest(ts);
+                if (tmp_file != NULL) {
+                  i64 = tmp_file->last;
+                  tmp_file->refcount--;
+                } else {
+                  i64 = atomic_add_s64(&ts->last_time, 0);
+                }
+                cur_file = timeshift_filemgr_get(ts, i64);
                 if (cur_file != NULL) {
                   cur_file->roff = cur_file->size;
                   pause_time     = cur_file->last;
@@ -724,8 +730,12 @@ void *timeshift_reader ( void *p )
               /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
                 pthread_mutex_lock(&ts->rdwr_mutex);
-                cur_file = timeshift_filemgr_newest(ts);
-                if (cur_file && (cur_file = timeshift_filemgr_get(ts, cur_file->last)) != NULL) {
+                tmp_file = timeshift_filemgr_newest(ts);
+                if (tmp_file) {
+                  i64 = tmp_file->last;
+                  tmp_file->refcount--;
+                }
+                if (tmp_file && (cur_file = timeshift_filemgr_get(ts, i64)) != NULL) {
                   cur_file->roff = cur_file->size;
                   last_time      = cur_file->last;
                 } else {
