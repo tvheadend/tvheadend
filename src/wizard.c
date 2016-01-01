@@ -1,6 +1,6 @@
 /*
  *  tvheadend, Wizard
- *  Copyright (C) 2015 Jaroslav Kysela
+ *  Copyright (C) 2015,2016 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  */
 
 #include "tvheadend.h"
+#include "config.h"
 #include "access.h"
 #include "settings.h"
 #include "input.h"
@@ -99,15 +100,29 @@ static wizard_page_t *page_init(const char *class_name, const char *caption)
 }
 
 /*
+ *
+ */
+
+static const void *hello_get_network(void *o)
+{
+  strcpy(prop_sbuf, "Test123");
+  return &prop_sbuf_ptr;
+}
+
+static int hello_set_network(void *o, const void *v)
+{
+  return 0;
+}
+
+/*
  * Hello
  */
 
 typedef struct wizard_hello {
-  char network[256];
-  char admin_username[32];
-  char admin_password[32];
-  char username[32];
-  char password[32];
+  char ui_lang[32];
+  char epg_lang1[32];
+  char epg_lang2[32];
+  char epg_lang3[32];
 } wizard_hello_t;
 
 
@@ -115,6 +130,151 @@ static void hello_save(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_hello_t *w = p->aux;
+  char buf[32];
+  size_t l = 0;
+  int save = 0;
+
+  printf("hello save '%s'\n", w->ui_lang);
+  if (w->ui_lang[0] && strcmp(config.language_ui ?: "", w->ui_lang)) {
+    free(config.language_ui);
+    config.language_ui = strdup(w->ui_lang);
+    printf("language_ui = '%s'\n", config.language_ui);
+    save = 1;
+  }
+  buf[0] = '\0';
+  if (w->epg_lang1[0])
+    tvh_strlcatf(buf, sizeof(buf), l, "%s", w->epg_lang1);
+  if (w->epg_lang2[0])
+    tvh_strlcatf(buf, sizeof(buf), l, "%s%s", l > 0 ? "," : "", w->epg_lang2);
+  if (w->epg_lang3[0])
+    tvh_strlcatf(buf, sizeof(buf), l, "%s%s", l > 0 ? "," : "", w->epg_lang3);
+  if (buf[0] && strcmp(buf, config.language ?: "")) {
+    free(config.language);
+    config.language = strdup(buf);
+    printf("language = '%s'\n", config.language);
+    save = 1;
+  }
+  if (save)
+    config_save();
+}
+
+BASIC_STR_OPS(wizard_hello_t, ui_lang)
+BASIC_STR_OPS(wizard_hello_t, epg_lang1)
+BASIC_STR_OPS(wizard_hello_t, epg_lang2)
+BASIC_STR_OPS(wizard_hello_t, epg_lang3)
+
+DESCRIPTION_FCN(hello, N_("\
+Enter the languages for the web user interface and \
+for EPG texts.\
+"))
+
+wizard_page_t *wizard_hello(void)
+{
+  static const property_group_t groups[] = {
+    {
+      .name     = N_("Web interface"),
+      .number   = 1,
+    },
+    {
+      .name     = N_("EPG Language (priority order)"),
+      .number   = 2,
+    },
+    {}
+  };
+  static const property_t props[] = {
+    {
+      .type     = PT_STR,
+      .id       = "ui_lang",
+      .name     = N_("Language"),
+      .get      = wizard_get_value_ui_lang,
+      .set      = wizard_set_value_ui_lang,
+      .list     = language_get_ui_list,
+      .group    = 1
+    },
+    {
+      .type     = PT_STR,
+      .id       = "epg_lang1",
+      .name     = N_("Language 1"),
+      .get      = wizard_get_value_epg_lang1,
+      .set      = wizard_set_value_epg_lang1,
+      .list     = language_get_list,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
+      .id       = "epg_lang2",
+      .name     = N_("Language 2"),
+      .get      = wizard_get_value_epg_lang2,
+      .set      = wizard_set_value_epg_lang2,
+      .list     = language_get_list,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
+      .id       = "epg_lang3",
+      .name     = N_("Language 3"),
+      .get      = wizard_get_value_epg_lang3,
+      .set      = wizard_set_value_epg_lang3,
+      .list     = language_get_list,
+      .group    = 2
+    },
+    ICON(),
+    DESCRIPTION(hello),
+    NEXT_BUTTON(login),
+    {}
+  };
+  wizard_page_t *page =
+    page_init("wizard_hello",
+    N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
+  idclass_t *ic = (idclass_t *)page->idnode.in_class;
+  wizard_hello_t *w;
+  htsmsg_t *m;
+  htsmsg_field_t *f;
+  const char *s;
+  int idx;
+
+  ic->ic_properties = props;
+  ic->ic_groups = groups;
+  ic->ic_save = hello_save;
+  page->aux = w = calloc(1, sizeof(wizard_hello_t));
+
+  if (config.language_ui)
+    strncpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang));
+
+  m = htsmsg_csv_2_list(config.language, ',');
+  f = m ? HTSMSG_FIRST(m) : NULL;
+  for (idx = 0; idx < 3 && f != NULL; idx++) {
+    s = htsmsg_field_get_string(f);
+    if (s == NULL) break;
+    switch (idx) {
+    case 0: strncpy(w->epg_lang1, s, sizeof(w->epg_lang1) - 1); break;
+    case 1: strncpy(w->epg_lang2, s, sizeof(w->epg_lang2) - 1); break;
+    case 2: strncpy(w->epg_lang3, s, sizeof(w->epg_lang3) - 1); break;
+    }
+    f = HTSMSG_NEXT(f);
+  }
+  htsmsg_destroy(m);
+
+  return page;
+}
+
+/*
+ * Login/Network access
+ */
+
+typedef struct wizard_login {
+  char network[256];
+  char admin_username[32];
+  char admin_password[32];
+  char username[32];
+  char password[32];
+} wizard_login_t;
+
+
+static void login_save(idnode_t *in)
+{
+  wizard_page_t *p = (wizard_page_t *)in;
+  wizard_login_t *w = p->aux;
   access_entry_t *ae, *ae_next;
   passwd_entry_t *pw, *pw_next;
   htsmsg_t *conf;
@@ -191,24 +351,13 @@ static void hello_save(idnode_t *in)
   }
 }
 
-BASIC_STR_OPS(wizard_hello_t, network)
-BASIC_STR_OPS(wizard_hello_t, admin_username)
-BASIC_STR_OPS(wizard_hello_t, admin_password)
-BASIC_STR_OPS(wizard_hello_t, username)
-BASIC_STR_OPS(wizard_hello_t, password)
+BASIC_STR_OPS(wizard_login_t, network)
+BASIC_STR_OPS(wizard_login_t, admin_username)
+BASIC_STR_OPS(wizard_login_t, admin_password)
+BASIC_STR_OPS(wizard_login_t, username)
+BASIC_STR_OPS(wizard_login_t, password)
 
-static const void *hello_get_network(void *o)
-{
-  strcpy(prop_sbuf, "Test123");
-  return &prop_sbuf_ptr;
-}
-
-static int hello_set_network(void *o, const void *v)
-{
-  return 0;
-}
-
-DESCRIPTION_FCN(hello, N_("\
+DESCRIPTION_FCN(login, N_("\
 Enter the access control details to secure your system. \
 The first part of this covers the IPv4 network details \
 for address-based access to the system; for example, \
@@ -223,7 +372,7 @@ This wizard should be run only on the initial setup. Please, cancel \
 it, if you are not willing to touch the current configuration.\
 "))
 
-wizard_page_t *wizard_hello(void)
+wizard_page_t *wizard_login(void)
 {
   static const property_group_t groups[] = {
     {
@@ -282,22 +431,23 @@ wizard_page_t *wizard_hello(void)
       .group    = 3
     },
     ICON(),
-    DESCRIPTION(hello),
+    DESCRIPTION(login),
+    PREV_BUTTON(hello),
     NEXT_BUTTON(network),
     {}
   };
   wizard_page_t *page =
-    page_init("wizard_hello",
+    page_init("wizard_login",
     N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
-  wizard_hello_t *w;
+  wizard_login_t *w;
   access_entry_t *ae;
   passwd_entry_t *pw;
 
   ic->ic_properties = props;
   ic->ic_groups = groups;
-  ic->ic_save = hello_save;
-  page->aux = w = calloc(1, sizeof(wizard_hello_t));
+  ic->ic_save = login_save;
+  page->aux = w = calloc(1, sizeof(wizard_login_t));
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
     if (!ae->ae_wizard)
@@ -394,7 +544,7 @@ wizard_page_t *wizard_network(void)
     NETWORK(4, N_("Network 4")),
     ICON(),
     DESCRIPTION(network),
-    PREV_BUTTON(hello),
+    PREV_BUTTON(login),
     NEXT_BUTTON(input),
     {}
   };

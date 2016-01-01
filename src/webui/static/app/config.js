@@ -24,6 +24,7 @@ tvheadend.baseconf = function(panel, index) {
     };
 
     tvheadend.idnode_simple(panel, {
+        id: 'base_config',
         url: 'api/config',
         title: _('Base'),
         iconCls: 'baseconf',
@@ -31,7 +32,7 @@ tvheadend.baseconf = function(panel, index) {
         comet: 'config',
         labelWidth: 250,
         tbar: [wizardButton],
-        postsave: function(data, abuttons) {
+        postsave: function(data) {
             var l = data['uilevel'];
             if (l >= 0) {
                 var tr = {0:'basic',1:'advanced',2:'expert'};

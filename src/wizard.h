@@ -31,6 +31,7 @@ typedef struct wizard_page {
 typedef wizard_page_t *(*wizard_build_fcn_t)(void);
 
 wizard_page_t *wizard_hello(void);
+wizard_page_t *wizard_login(void);
 wizard_page_t *wizard_network(void);
 wizard_page_t *wizard_input(void);
 wizard_page_t *wizard_status(void);

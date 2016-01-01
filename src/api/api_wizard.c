@@ -80,6 +80,8 @@ api_wizard_init ( void )
   static api_hook_t ah[] = {
     { "wizard/hello/load",   ACCESS_ADMIN, wizard_idnode_load_simple, wizard_hello },
     { "wizard/hello/save",   ACCESS_ADMIN, wizard_idnode_save_simple, wizard_hello },
+    { "wizard/login/load",   ACCESS_ADMIN, wizard_idnode_load_simple, wizard_login },
+    { "wizard/login/save",   ACCESS_ADMIN, wizard_idnode_save_simple, wizard_login },
     { "wizard/network/load", ACCESS_ADMIN, wizard_idnode_load_simple, wizard_network },
     { "wizard/network/save", ACCESS_ADMIN, wizard_idnode_save_simple, wizard_network },
     { "wizard/input/load",   ACCESS_ADMIN, wizard_idnode_load_simple, wizard_input },

@@ -1073,8 +1073,9 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             text: conf.saveText || _('Save'),
             iconCls: conf.saveIconCls || 'save',
             handler: function() {
+                var node = null;
                 if (panel.getForm().isDirty() || conf.alwaysDirty) {
-                    var node = panel.getForm().getFieldValues();
+                    node = panel.getForm().getFieldValues();
                     node.uuid = conf.uuids ? conf.uuids : item.uuid;
                     tvheadend.Ajax({
                         url: conf.saveURL || 'api/idnode/save',
@@ -1084,14 +1085,16 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                         success: function(d) {
                             if (conf.win)
                                 conf.win.close();
+                            if (conf.postsave)
+                                conf.postsave(conf, node);
                         }
                     });
                 } else {
                     if (conf.win)
                         conf.win.close();
+                    if (conf.postsave)
+                        conf.postsave(conf, node);
                 }
-                if (conf.postsave)
-                    conf.postsave(conf);
             }
         });
         buttons.push(saveBtn);

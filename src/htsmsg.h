@@ -88,6 +88,7 @@ typedef struct htsmsg_field {
 
 #define HTSMSG_FOREACH(f, msg) TAILQ_FOREACH(f, &(msg)->hm_fields, hmf_link)
 #define HTSMSG_FIRST(msg)      TAILQ_FIRST(&(msg)->hm_fields)
+#define HTSMSG_NEXT(f)         TAILQ_NEXT(f, hmf_link)
 
 /**
  * Create a new map

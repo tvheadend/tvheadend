@@ -8,7 +8,8 @@ tvheadend.wizard_start = function(page) {
 
     var w = null;
     var tabMapping = {
-        hello: 'access_entry',
+        hello: 'base_config',
+        login: 'access_entry',
         network: 'mpegts_network',
         input: 'tvadapters',
         status: 'status_streams',
@@ -103,7 +104,13 @@ tvheadend.wizard_start = function(page) {
             comet: m.events,
             noApply: true,
             noUIlevel: true,
-            postsave: function(conf) {
+            postsave: function(conf, data) {
+                if (data) {
+                    if (('ui_lang' in data) && data['ui_lang'] != tvh_locale_lang) {
+                        window.location.reload();
+                        return;
+                    }
+                }
                 if (!last)
                     newpage(conf, 'page_next_');
                 else
