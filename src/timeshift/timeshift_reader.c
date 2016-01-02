@@ -647,7 +647,7 @@ void *timeshift_reader ( void *p )
                   i64 = tmp_file->last;
                   tmp_file->refcount--;
                 } else {
-                  i64 = atomic_add_s64(&ts->last_time, 0);
+                  i64 = ts->last_time;
                 }
                 cur_file = timeshift_filemgr_get(ts, i64);
                 if (cur_file != NULL) {
@@ -655,7 +655,7 @@ void *timeshift_reader ( void *p )
                   pause_time     = cur_file->last;
                   last_time      = pause_time;
                 } else {
-                  pause_time     = atomic_add_s64(&ts->last_time, 0);
+                  pause_time     = i64;
                   last_time      = pause_time;
                 }
                 pthread_mutex_unlock(&ts->rdwr_mutex);
@@ -739,7 +739,7 @@ void *timeshift_reader ( void *p )
                   cur_file->roff = cur_file->size;
                   last_time      = cur_file->last;
                 } else {
-                  last_time      = atomic_add_s64(&ts->last_time, 0);
+                  last_time      = ts->last_time;
                 }
                 skip_delivered = 0;
                 pthread_mutex_unlock(&ts->rdwr_mutex);
@@ -753,7 +753,7 @@ void *timeshift_reader ( void *p )
 
                 /* Live (stage2) */
                 if (ts->state == TS_LIVE) {
-                  if (skip_time >= atomic_add_s64(&ts->last_time, 0) - TIMESHIFT_PLAY_BUF) {
+                  if (skip_time >= ts->last_time - TIMESHIFT_PLAY_BUF) {
                     tvhlog(LOG_DEBUG, "timeshift", "ts %d skip ignored, already live", ts->id);
                     skip = NULL;
                   } else {

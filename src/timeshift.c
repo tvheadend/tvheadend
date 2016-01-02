@@ -271,7 +271,7 @@ timeshift_packet( timeshift_t *ts, th_pkt_t *pkt, int deliver )
 
   time = ts_rescale(pkt->pkt_pts, 1000000);
   if (time > ts->last_time) {
-    atomic_exchange_s64(&ts->last_time, time);
+    ts->last_time = time;
     timeshift_packet_flush(ts, time, deliver);
   }
 
