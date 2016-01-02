@@ -2147,6 +2147,7 @@ psi_parse_pmt
   int version;
   int position;
   int tt_position;
+  int video_stream;
   const char *lang;
   uint8_t audio_type;
 
@@ -2213,6 +2214,7 @@ psi_parse_pmt
     tt_position = 1000;
     lang = NULL;
     audio_type = 0;
+    video_stream = 0;
 
     switch(estype) {
     case 0x01:
@@ -2270,6 +2272,10 @@ psi_parse_pmt
         update |= psi_desc_ca(t, ptr, dlen);
         break;
 
+      case DVB_DESC_VIDEO_STREAM:
+        video_stream = dlen > 0 && SCT_ISVIDEO(hts_stream_type);
+        break;
+
       case DVB_DESC_REGISTRATION:
         if(mux->mm_pmt_ac3 != MM_AC3_PMT_N05 && dlen == 4 &&
            ptr[0] == 'A' && ptr[1] == 'C' && ptr[2] == '-' &&  ptr[3] == '3')
@@ -2303,7 +2309,7 @@ psi_parse_pmt
         break;
 
       case DVB_DESC_SUBTITLE:
-        if(dlen < 8)
+        if(dlen < 8 || video_stream)
           break;
 
         lang = lang_code_get2((const char*)ptr, 3);
