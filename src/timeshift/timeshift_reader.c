@@ -215,36 +215,24 @@ static streaming_message_t *_timeshift_find_sstart
   return ti ? ti->data : NULL;
 }
 
-static timeshift_index_iframe_t *_timeshift_first_frame
-  ( timeshift_t *ts )
+static int64_t _timeshift_first_time
+  ( timeshift_t *ts, int *active )
 { 
+  int64_t ret = 0;
   int end;
   timeshift_index_iframe_t *tsi = NULL;
   timeshift_file_t *tsf = timeshift_filemgr_oldest(ts);
   while (tsf && !tsi) {
-    if (!(tsi = TAILQ_FIRST(&tsf->iframes))) {
+    if (!(tsi = TAILQ_FIRST(&tsf->iframes)))
       tsf = timeshift_filemgr_next(tsf, &end, 0);
-    }
+  }
+  if (tsi) {
+    *active = 1;
+    ret = tsi->time;
   }
   if (tsf)
     tsf->refcount--;
-  return tsi;
-}
-
-static timeshift_index_iframe_t *_timeshift_last_frame
-  ( timeshift_t *ts )
-{
-  int end;
-  timeshift_index_iframe_t *tsi = NULL;
-  timeshift_file_t *tsf = timeshift_filemgr_get(ts, -1);
-  while (tsf && !tsi) {
-    if (!(tsi = TAILQ_LAST(&tsf->iframes, timeshift_index_iframe_list))) {
-      tsf = timeshift_filemgr_prev(tsf, &end, 0);
-    }
-  }
-  if (tsf)
-    tsf->refcount--;
-  return tsi;
+  return ret;
 }
 
 static int _timeshift_skip
@@ -500,19 +488,23 @@ static void _timeshift_write_queues
 static void timeshift_fill_status
   ( timeshift_t *ts, timeshift_status_t *status, int64_t current_time )
 {
-  timeshift_index_iframe_t *fst, *lst;
-  int64_t shift;
+  int active = 0;
+  int64_t start, end;
 
-  fst    = _timeshift_first_frame(ts);
-  lst    = _timeshift_last_frame(ts);
-  status->full  = ts->full;
-  tvhtrace("timeshift", "status last->time %"PRId64" current time %"PRId64" state %d",
-           lst ? lst->time : -1, current_time, ts->state);
-  shift  = lst ? ts_rescale_inv(lst->time - current_time, 1000000) : -1;
-  status->shift = (ts->state <= TS_LIVE || shift < 0 || !lst) ? 0 : shift;
-  if (lst && fst && lst != fst) {
-    status->pts_start = ts_rescale_inv(fst->time, 1000000);
-    status->pts_end   = ts_rescale_inv(lst->time, 1000000);
+  start = _timeshift_first_time(ts, &active);
+  end   = ts->last_time;
+  if (current_time < 0)
+    current_time = 0;
+  if (current_time > end)
+    current_time = end;
+  status->full = ts->full;
+  tvhtrace("timeshift", "ts %d status start %"PRId64" end %"PRId64
+                        " current %"PRId64" state %d",
+           ts->id, start, end, current_time, ts->state);
+  status->shift = ts_rescale_inv(end - current_time, 1000000);
+  if (active) {
+    status->pts_start = ts_rescale_inv(start, 1000000);
+    status->pts_end   = ts_rescale_inv(end,   1000000);
   } else {
     status->pts_start = PTS_UNSET;
     status->pts_end   = PTS_UNSET;
