@@ -484,7 +484,9 @@ capmt_connect(capmt_t *capmt, int i)
   if (!capmt->capmt_running)
     return -1;
 
-  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP || capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO) {
+  if (capmt->capmt_oscam == CAPMT_OSCAM_TCP ||
+      capmt->capmt_oscam == CAPMT_OSCAM_NET_PROTO ||
+      capmt->capmt_oscam == CAPMT_OSCAM_UNIX_SOCKET_NP) {
 
     char errbuf[256];
 
