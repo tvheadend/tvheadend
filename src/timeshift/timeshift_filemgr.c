@@ -119,6 +119,21 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
  * File Handling
  * *************************************************************************/
 
+void
+timeshift_filemgr_dump0 ( timeshift_t *ts )
+{
+  timeshift_file_t *tsf;
+
+  if (TAILQ_EMPTY(&ts->files)) {
+    tvhtrace("timeshift", "ts %d file dump - EMPTY", ts->id);
+    return;
+  }
+  TAILQ_FOREACH(tsf, &ts->files, link) {
+    tvhtrace("timeshift", "ts %d file dump tsf %p time %"PRId64" last %"PRId64,
+             ts->id, tsf, tsf->time, tsf->last);
+  }
+}
+
 /*
  * Get root directory
  *
@@ -321,7 +336,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
         /* Create File */
         snprintf(path, sizeof(path), "%s/tvh-%"PRId64, ts->path, start_time);
         tvhtrace("timeshift", "ts %d create file %s", ts->id, path);
-        if ((fd = open(path, O_WRONLY | O_CREAT, 0600)) > 0) {
+        if ((fd = tvh_open(path, O_WRONLY | O_CREAT, 0600)) > 0) {
           tsf_tmp = timeshift_filemgr_file_init(ts, start_time);
           tsf_tmp->wfd = fd;
           tsf_tmp->path = strdup(path);
@@ -339,6 +354,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
         }
       }
     }
+    timeshift_filemgr_dump(ts);
     tsf_tl = tsf_tmp;
   }
 

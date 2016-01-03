@@ -43,6 +43,8 @@
 
 static ssize_t _read_buf ( timeshift_file_t *tsf, int fd, void *buf, size_t size )
 {
+  size_t r, ret;
+
   if (tsf && tsf->ram) {
     if (tsf->roff == tsf->woff) return 0;
     if (tsf->roff + size > tsf->woff) return -1;
@@ -52,10 +54,26 @@ static ssize_t _read_buf ( timeshift_file_t *tsf, int fd, void *buf, size_t size
     pthread_mutex_unlock(&tsf->ram_lock);
     return size;
   } else {
-    size = read(tsf ? tsf->rfd : fd, buf, size);
-    if (size > 0 && tsf)
-      tsf->roff += size;
-    return size;
+    ret = 0;
+    while (size > 0) {
+      r = read(tsf ? tsf->rfd : fd, buf, size);
+      if (r < 0) {
+        if (ERRNO_AGAIN(errno))
+          continue;
+        tvhtrace("timeshift", "read errno %d", errno);
+        return -1;
+      }
+      if (r > 0) {
+        size -= r;
+        ret += r;
+        buf += r;
+      }
+      if (r == 0)
+        return 0;
+    }
+    if (ret > 0 && tsf)
+      tsf->roff += r;
+    return ret;
   }
 }
 
@@ -367,7 +385,7 @@ static int _timeshift_read
 {
   timeshift_file_t *tsf = *cur_file;
   ssize_t r;
-  off_t off;
+  off_t off = 0;
 
   *sm = NULL;
 
@@ -375,7 +393,7 @@ static int _timeshift_read
 
     /* Open file */
     if (tsf->rfd < 0 && !tsf->ram) {
-      tsf->rfd = open(tsf->path, O_RDONLY);
+      tsf->rfd = tvh_open(tsf->path, O_RDONLY, 0);
       tvhtrace("timeshift", "ts %d open file %s (fd %i)", ts->id, tsf->path, tsf->rfd);
       if (tsf->rfd < 0)
         return -1;
@@ -395,19 +413,19 @@ static int _timeshift_read
       return -1;
     }
     tvhtrace("timeshift", "ts %d seek to %jd (fd %i) read msg %p/%"PRId64" (%"PRId64")",
-             ts->id, (intmax_t)tsf->roff, tsf->rfd, *sm, *sm ? (*sm)->sm_time : -1, (int64_t)r);
+             ts->id, (intmax_t)off, tsf->rfd, *sm, *sm ? (*sm)->sm_time : -1, (int64_t)r);
 
     /* Special case - EOF */
     if (r <= sizeof(size_t) || tsf->roff > tsf->size || *sm == NULL) {
       if (tsf->rfd >= 0)
         close(tsf->rfd);
       tsf->rfd  = -1;
-      *cur_file = tsf = timeshift_filemgr_next(tsf, NULL, 0);
-      if (tsf)
-        tsf->roff = 0; // reset
+      *cur_file = timeshift_filemgr_next(tsf, NULL, 0);
+      if (*cur_file)
+        (*cur_file)->roff = 0; // reset
       *wait     = 0;
-      tvhtrace("timeshift", "ts %d eof, cur_file %p", ts->id, *cur_file);
-
+      tvhtrace("timeshift", "ts %d eof, cur_file %p (prev %p)", ts->id, *cur_file, tsf);
+      timeshift_filemgr_dump(ts);
     }
   }
   return 0;
@@ -821,11 +839,9 @@ void *timeshift_reader ( void *p )
 
     /* Terminate */
     if (!cur_file || end != 0) {
-      if (!end)
-        end = (cur_speed > 0) ? 1 : -1;
 
       /* Back to live (unless buffer is full) */
-      if (end == 1 && !ts->full) {
+      if ((end == 1 && !ts->full) || !cur_file) {
         tvhlog(LOG_DEBUG, "timeshift", "ts %d eob revert to live mode", ts->id);
         cur_speed = 100;
         ctrl      = streaming_msg_create_code(SMT_SPEED, cur_speed);
@@ -834,8 +850,10 @@ void *timeshift_reader ( void *p )
         tvhtrace("timeshift", "reader - set TS_LIVE");
 
         /* Flush timeshift buffer to live */
-        if (_timeshift_flush_to_live(ts, &cur_file, &wait) == -1)
+        if (_timeshift_flush_to_live(ts, &cur_file, &wait) == -1) {
+          pthread_mutex_unlock(&ts->state_mutex);
           break;
+        }
 
         ts->state = TS_LIVE;
 

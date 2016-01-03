@@ -180,4 +180,12 @@ void timeshift_filemgr_remove
 void timeshift_filemgr_flush ( timeshift_t *ts, timeshift_file_t *end );
 void timeshift_filemgr_close ( timeshift_file_t *tsf );
 
+void timeshift_filemgr_dump0 ( timeshift_t *ts );
+
+static inline void timeshift_filemgr_dump ( timeshift_t *ts )
+{
+  if (tvhtrace_enabled())
+    timeshift_filemgr_dump0(ts);
+}
+
 #endif /* __TVH_TIMESHIFT_PRIVATE_H__ */

@@ -59,6 +59,7 @@ static ssize_t _write
 {
   uint8_t *ram;
   size_t alloc;
+  ssize_t ret;
   if (tsf->ram) {
     pthread_mutex_lock(&tsf->ram_lock);
     if (tsf->ram_size < tsf->woff + count) {
@@ -80,7 +81,10 @@ static ssize_t _write
     pthread_mutex_unlock(&tsf->ram_lock);
     return count;
   }
-  return _write_fd(tsf->wfd, buf, count);
+  ret = _write_fd(tsf->wfd, buf, count);
+  if (ret > 0)
+    tsf->woff += ret;
+  return ret;
 }
 
 /*
