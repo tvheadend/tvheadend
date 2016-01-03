@@ -29,7 +29,7 @@ import log
 # HTSP Client
 # ###########################################################################
 
-HTSP_PROTO_VERSION = 6
+HTSP_PROTO_VERSION = 25
 
 # Create passwd digest
 def htsp_digest ( user, passwd, chal ):
