@@ -19,7 +19,7 @@
 #ifndef __TVH_TIMESHIFT_PRIVATE_H__
 #define __TVH_TIMESHIFT_PRIVATE_H__
 
-#define TIMESHIFT_PLAY_BUF         500000  //< us to buffer in TX
+#define TIMESHIFT_PLAY_BUF         1000000  //< us to buffer in TX
 #define TIMESHIFT_FILE_PERIOD      60      //< number of secs in each buffer file
 #define TIMESHIFT_BACKLOG_MAX      16      //< maximum elementary streams
 
@@ -94,6 +94,7 @@ typedef struct timeshift {
   int                         packet_mode;///< Packet mode (otherwise MPEG-TS data mode)
   int                         dobuf;      ///< Buffer packets (store)
   int64_t                     last_time;  ///< Last time in us (PTS conversion)
+  int64_t                     last_wr_time;///< Last write time in us (PTS conversion)
   int64_t                     start_pts;  ///< Start time for packets (PTS)
   int64_t                     ref_time;   ///< Start time in us (monoclock)
   int64_t                     buf_time;   ///< Last buffered time in us (PTS conversion)
@@ -128,6 +129,16 @@ typedef struct timeshift {
 extern uint64_t timeshift_total_size;
 extern uint64_t timeshift_total_ram_size;
 
+void timeshift_packet_log0
+  ( const char *prefix, timeshift_t *ts, streaming_message_t *sm );
+
+static inline void timeshift_packet_log
+  ( const char *prefix, timeshift_t *ts, streaming_message_t *sm )
+{
+  if (sm->sm_type == SMT_PACKET && tvhtrace_enabled())
+    timeshift_packet_log0(prefix, ts, sm);
+}
+
 /*
  * Write functions
  */
@@ -140,9 +151,6 @@ ssize_t timeshift_write_speed   ( int fd, int speed );
 ssize_t timeshift_write_stop    ( int fd, int code );
 ssize_t timeshift_write_exit    ( int fd );
 ssize_t timeshift_write_eof     ( timeshift_file_t *tsf );
-
-void timeshift_writer_flush ( timeshift_t *ts );
-void timeshift_writer_clone ( timeshift_t *ts, struct streaming_message_queue *dst );
 
 /*
  * Threads

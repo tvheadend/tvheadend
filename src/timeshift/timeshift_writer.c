@@ -253,15 +253,13 @@ static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_m
  * *************************************************************************/
 
 static inline ssize_t _process_msg0
-  ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t **smp )
+  ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
 {
   ssize_t err;
-  streaming_message_t *sm = *smp;
 
   if (sm->sm_type == SMT_START) {
     err = 0;
-    _handle_sstart(ts, tsf, sm);
-    *smp = NULL;
+    _handle_sstart(ts, tsf, streaming_msg_clone(sm));
   } else if (sm->sm_type == SMT_SIGNAL_STATUS)
     err = timeshift_write_sigstat(tsf, sm->sm_time, sm->sm_data);
   else if (sm->sm_type == SMT_PACKET) {
@@ -307,7 +305,7 @@ static void _process_msg
     /* Terminate */
     case SMT_EXIT:
       if (run) *run = 0;
-      goto live;
+      break;
     case SMT_STOP:
       if (sm->sm_code != SM_CODE_SOURCE_RECONFIGURED && run)
         *run = 0;
@@ -334,14 +332,19 @@ static void _process_msg
     case SMT_PACKET:
       pthread_mutex_lock(&ts->state_mutex);
       ts->buf_time = sm->sm_time;
-      if (ts->state == TS_LIVE)
+      if (ts->state == TS_LIVE) {
         streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
+        if (sm->sm_type == SMT_PACKET)
+          timeshift_packet_log("liv", ts, sm);
+      }
       if (ts->dobuf) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) && (tsf->wfd >= 0 || tsf->ram)) {
-          if ((err = _process_msg0(ts, tsf, &sm)) < 0) {
+          if ((err = _process_msg0(ts, tsf, sm)) < 0) {
             timeshift_filemgr_close(tsf);
             tsf->bad = 1;
             ts->full = 1; ///< Stop any more writing
+          } else {
+            timeshift_packet_log("sav", ts, sm);
           }
           tsf->refcount--;
         }
@@ -352,6 +355,7 @@ static void _process_msg
 
   /* Next */
   streaming_msg_free(sm);
+  return;
 
 live:
   pthread_mutex_lock(&ts->state_mutex);
@@ -387,35 +391,4 @@ void *timeshift_writer ( void *aux )
 
   pthread_mutex_unlock(&sq->sq_mutex);
   return NULL;
-}
-
-/* **************************************************************************
- * Utilities
- * *************************************************************************/
-
-void timeshift_writer_flush ( timeshift_t *ts )
-
-{
-  streaming_message_t *sm;
-  streaming_queue_t *sq = &ts->wr_queue;
-
-  pthread_mutex_lock(&sq->sq_mutex);
-  while ((sm = TAILQ_FIRST(&sq->sq_queue))) {
-    streaming_queue_remove(sq, sm);
-    _process_msg(ts, sm, NULL);
-  }
-  pthread_mutex_unlock(&sq->sq_mutex);
-}
-
-void timeshift_writer_clone ( timeshift_t *ts, struct streaming_message_queue *dst )
-{
-  streaming_message_t *sm, *sm2;
-  streaming_queue_t *sq = &ts->wr_queue;
-
-  pthread_mutex_lock(&sq->sq_mutex);
-  TAILQ_FOREACH(sm, &sq->sq_queue, sm_link) {
-    sm2 = streaming_msg_clone(sm);
-    TAILQ_INSERT_TAIL(dst, sm2, sm_link);
-  }
-  pthread_mutex_unlock(&sq->sq_mutex);
 }
