@@ -945,11 +945,13 @@ skip_pkt:
         } else {
           cur_speed = 100;
           tvhtrace("timeshift", "reader - set TS_PLAY");
-          ts->state = TS_PLAY;
-          ts->dobuf = 1;
-          if (mono_play_time != mono_now)
-            tvhtrace("timeshift", "update play time (pause) - %"PRId64, mono_now);
-          mono_play_time = mono_now;
+          if (ts->state != TS_PLAY) {
+            ts->state = TS_PLAY;
+            ts->dobuf = 1;
+            if (mono_play_time != mono_now)
+              tvhtrace("timeshift", "update play time (pause) - %"PRId64, mono_now);
+            mono_play_time = mono_now;
+          }
         }
         tvhlog(LOG_DEBUG, "timeshift", "ts %d sob speed %d last time %"PRId64, ts->id, cur_speed, last_time);
         pause_time = last_time;
