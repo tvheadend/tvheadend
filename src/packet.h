@@ -56,9 +56,6 @@ typedef struct th_pkt {
   uint8_t pkt_componentindex;
   uint8_t pkt_frametype;
   uint8_t pkt_field;  // Set if packet is only a half frame (a field)
-#if ENABLE_TIMESHIFT
-  uint8_t pkt_delivered;
-#endif
 
   uint8_t pkt_channels;
   uint8_t pkt_sri;

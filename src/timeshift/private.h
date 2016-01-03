@@ -19,7 +19,7 @@
 #ifndef __TVH_TIMESHIFT_PRIVATE_H__
 #define __TVH_TIMESHIFT_PRIVATE_H__
 
-#define TIMESHIFT_PLAY_BUF         2000000 //< us to buffer in TX
+#define TIMESHIFT_PLAY_BUF         500000  //< us to buffer in TX
 #define TIMESHIFT_FILE_PERIOD      60      //< number of secs in each buffer file
 #define TIMESHIFT_BACKLOG_MAX      16      //< maximum elementary streams
 
@@ -96,21 +96,20 @@ typedef struct timeshift {
   int64_t                     last_time;  ///< Last time in us (PTS conversion)
   int64_t                     start_pts;  ///< Start time for packets (PTS)
   int64_t                     ref_time;   ///< Start time in us (monoclock)
+  int64_t                     buf_time;   ///< Last buffered time in us (PTS conversion)
   struct streaming_message_queue backlog[TIMESHIFT_BACKLOG_MAX]; ///< Queued packets for time sorting
   int                         backlog_max;///< Maximum component index in backlog
 
   enum {
-    TS_INIT,
     TS_EXIT,
     TS_LIVE,
     TS_PAUSE,
     TS_PLAY,
   }                           state;       ///< Play state
   pthread_mutex_t             state_mutex; ///< Protect state changes
+  uint8_t                     exit;        ///< Exit from the main input thread
   uint8_t                     full;        ///< Buffer is full
   
-  streaming_start_t          *smt_start;   ///< Current stream makeup
-
   streaming_queue_t           wr_queue;   ///< Writer queue
   pthread_t                   wr_thread;  ///< Writer thread
 
@@ -128,11 +127,6 @@ typedef struct timeshift {
  */
 extern uint64_t timeshift_total_size;
 extern uint64_t timeshift_total_ram_size;
-
-/*
- *
- */
-void timeshift_packets_clone ( timeshift_t *ts, struct streaming_message_queue *dst, int delivered );
 
 /*
  * Write functions
