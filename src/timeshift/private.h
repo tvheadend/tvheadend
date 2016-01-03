@@ -117,7 +117,6 @@ typedef struct timeshift {
   pthread_t                   rd_thread;  ///< Reader thread
   th_pipe_t                   rd_pipe;    ///< Message passing to reader
 
-  pthread_mutex_t             rdwr_mutex; ///< Buffer protection
   timeshift_file_list_t       files;      ///< List of files
 
   int                         vididx;     ///< Index of (current) video stream

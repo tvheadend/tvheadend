@@ -515,7 +515,6 @@ streaming_target_t *timeshift_create
   ts->ref_time   = 0;
   for (i = 0; i < TIMESHIFT_BACKLOG_MAX; i++)
     TAILQ_INIT(&ts->backlog[i]);
-  pthread_mutex_init(&ts->rdwr_mutex, NULL);
   pthread_mutex_init(&ts->state_mutex, NULL);
 
   /* Initialise output */

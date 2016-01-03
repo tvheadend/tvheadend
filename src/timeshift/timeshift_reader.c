@@ -343,11 +343,9 @@ static int _timeshift_do_skip
 
   /* Find */
   cur_file = *_cur_file;
-  pthread_mutex_lock(&ts->rdwr_mutex);
   end = _timeshift_skip(ts, req_time, last_time,
                         cur_file, &tsf, _tsi);
   tsi = *_tsi;
-  pthread_mutex_unlock(&ts->rdwr_mutex);
   if (tsi)
     tvhlog(LOG_DEBUG, "timeshift", "ts %d skip found pkt @ %"PRId64,
            ts->id, tsi->time);
@@ -417,9 +415,7 @@ static int _timeshift_read
       if (tsf->rfd >= 0)
         close(tsf->rfd);
       tsf->rfd  = -1;
-      pthread_mutex_lock(&ts->rdwr_mutex);
       *cur_file = tsf = timeshift_filemgr_next(tsf, NULL, 0);
-      pthread_mutex_unlock(&ts->rdwr_mutex);
       if (tsf)
         tsf->roff = 0; // reset
       *wait     = 0;
@@ -633,7 +629,6 @@ void *timeshift_reader ( void *p )
                 timeshift_writer_flush(ts);
                 ts->dobuf = 1;
                 skip_delivered = 1;
-                pthread_mutex_lock(&ts->rdwr_mutex);
                 tmp_file = timeshift_filemgr_newest(ts);
                 if (tmp_file != NULL) {
                   i64 = tmp_file->last;
@@ -650,7 +645,6 @@ void *timeshift_reader ( void *p )
                   pause_time     = i64;
                   last_time      = pause_time;
                 }
-                pthread_mutex_unlock(&ts->rdwr_mutex);
               }
             }
 
@@ -695,10 +689,8 @@ void *timeshift_reader ( void *p )
 
                 /* Reset */
                 if (ts->full) {
-                  pthread_mutex_lock(&ts->rdwr_mutex);
                   timeshift_filemgr_flush(ts, NULL);
                   ts->full = 0;
-                  pthread_mutex_unlock(&ts->rdwr_mutex);
                 }
 
                 /* Release */
@@ -721,7 +713,6 @@ void *timeshift_reader ( void *p )
 
               /* Live playback (stage1) */
               if (ts->state == TS_LIVE) {
-                pthread_mutex_lock(&ts->rdwr_mutex);
                 tmp_file = timeshift_filemgr_newest(ts);
                 if (tmp_file) {
                   i64 = tmp_file->last;
@@ -734,7 +725,6 @@ void *timeshift_reader ( void *p )
                   last_time      = ts->last_time;
                 }
                 skip_delivered = 0;
-                pthread_mutex_unlock(&ts->rdwr_mutex);
               }
 
               /* May have failed */
