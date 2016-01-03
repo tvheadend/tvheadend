@@ -239,6 +239,7 @@ _dvr_inotify_moved
 
   snprintf(path, sizeof(path), "%s/%s", die->path, from);
 
+  de = NULL;
   LIST_FOREACH(dif, &die->entries, link) {
     de = dif->de;
     if (de->de_files == NULL)
