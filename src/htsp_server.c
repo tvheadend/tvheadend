@@ -883,7 +883,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
 
   if(de->de_title && (s = lang_str_get(de->de_title, lang)))
     htsmsg_add_str(out, "title", s);
-  if(de->de_title && (s = lang_str_get(de->de_subtitle, lang)))
+  if(de->de_subtitle && (s = lang_str_get(de->de_subtitle, lang)))
     htsmsg_add_str(out, "subtitle", s);
   if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
     htsmsg_add_str(out, "description", s);
