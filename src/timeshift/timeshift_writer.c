@@ -367,6 +367,8 @@ live:
   pthread_mutex_lock(&ts->state_mutex);
   if (ts->state == TS_LIVE)
     streaming_target_deliver2(ts->output, sm);
+  else
+    streaming_msg_free(sm);
   pthread_mutex_unlock(&ts->state_mutex);
 }
 
