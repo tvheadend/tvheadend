@@ -4015,7 +4015,7 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
   tvhdebug("htsp", "%s - subscription speed", hs->hs_htsp->htsp_logname);
   htsmsg_add_str(m, "method", "subscriptionSpeed");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  htsmsg_add_u32(m, "speed", speed);
+  htsmsg_add_s32(m, "speed", speed);
   htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
 
