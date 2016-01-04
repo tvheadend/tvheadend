@@ -297,7 +297,9 @@ api_epg_grid
 
   memset(&eq, 0, sizeof(eq));
 
-  eq.lang = lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
+  lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
+  if (lang)
+    eq.lang = strdup(lang);
   str = htsmsg_get_str(args, "title");
   if (str)
     eq.stitle = strdup(str);
@@ -443,6 +445,7 @@ api_epg_grid
   pthread_mutex_unlock(&global_lock);
 
   epg_query_free(&eq);
+  free(lang);
 
   /* Build response */
   *resp = htsmsg_create_map();
