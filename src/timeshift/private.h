@@ -129,6 +129,9 @@ typedef struct timeshift {
 
   timeshift_file_list_t       files;      ///< List of files
 
+  int                         ram_segments;  ///< Count of segments in RAM
+  int                         file_segments; ///< Count of segments in files
+
   int                         vididx;     ///< Index of (current) video stream
 
 } timeshift_t;

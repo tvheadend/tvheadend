@@ -205,6 +205,13 @@ void timeshift_filemgr_remove
                ts->id, tsf->time, (int64_t)tsf->size, (int64_t)tsf->ram_size);
   }
   TAILQ_REMOVE(&ts->files, tsf, link);
+  if (tsf->path) {
+    assert(ts->file_segments > 0);
+    ts->file_segments--;
+  } else {
+    assert(ts->ram_segments > 0);
+    ts->ram_segments--;
+  }
   atomic_dec_u64(&timeshift_total_size, tsf->size);
   if (tsf->ram)
     atomic_dec_u64(&timeshift_total_ram_size, tsf->size);
@@ -310,18 +317,31 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
       tvhtrace("timeshift", "ts %d RAM total %"PRId64" requested %"PRId64" segment %"PRId64,
                    ts->id, atomic_pre_add_u64(&timeshift_total_ram_size, 0),
                    timeshift_conf.ram_size, timeshift_conf.ram_segment_size);
-      if (timeshift_conf.ram_size >= 8*1024*1024 &&
-          atomic_pre_add_u64(&timeshift_total_ram_size, 0) <
-            timeshift_conf.ram_size + (timeshift_conf.ram_segment_size / 2)) {
-        tsf_tmp = timeshift_filemgr_file_init(ts, start_time);
-        tsf_tmp->ram_size = MIN(16*1024*1024, timeshift_conf.ram_segment_size);
-        tsf_tmp->ram = malloc(tsf_tmp->ram_size);
-        if (!tsf_tmp->ram) {
-          free(tsf_tmp);
-          tsf_tmp = NULL;
+      while (1) {
+        if (timeshift_conf.ram_size >= 8*1024*1024 &&
+            atomic_pre_add_u64(&timeshift_total_ram_size, 0) <
+              timeshift_conf.ram_size + (timeshift_conf.ram_segment_size / 2)) {
+          tsf_tmp = timeshift_filemgr_file_init(ts, start_time);
+          tsf_tmp->ram_size = MIN(16*1024*1024, timeshift_conf.ram_segment_size);
+          tsf_tmp->ram = malloc(tsf_tmp->ram_size);
+          if (!tsf_tmp->ram) {
+            free(tsf_tmp);
+            tsf_tmp = NULL;
+          } else {
+            tvhtrace("timeshift", "ts %d create RAM segment with %"PRId64" bytes (time %"PRId64")",
+                     ts->id, tsf_tmp->ram_size, start_time);
+            ts->ram_segments++;
+          }
+          break;
         } else {
-          tvhtrace("timeshift", "ts %d create RAM segment with %"PRId64" bytes (time %"PRId64")",
-                   ts->id, tsf_tmp->ram_size, start_time);
+          tsf_hd = TAILQ_FIRST(&ts->files);
+          if (timeshift_conf.ram_fit && tsf_hd && !tsf_hd->refcount &&
+              tsf_hd->ram && ts->file_segments == 0) {
+            tvhtrace("timeshift", "ts %d remove RAM segment %"PRId64" (fit)", ts->id, tsf_hd->time);
+            timeshift_filemgr_remove(ts, tsf_hd, 0);
+          } else {
+            break;
+          }
         }
       }
       
@@ -340,6 +360,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
           tsf_tmp = timeshift_filemgr_file_init(ts, start_time);
           tsf_tmp->wfd = fd;
           tsf_tmp->path = strdup(path);
+          ts->file_segments++;
         }
       }
 

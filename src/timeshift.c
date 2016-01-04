@@ -224,6 +224,14 @@ const idclass_t timeshift_conf_class = {
       .name   = N_("RAM only"),
       .off    = offsetof(timeshift_conf_t, ram_only),
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "ram_fit",
+      .name   = N_("Fit to RAM (cut rewind)"),
+      .desc   = N_("If possible, maintain the timeshift data in the server memory only. "
+                   "This may reduce the amount of allowed rewind time."),
+      .off    = offsetof(timeshift_conf_t, ram_fit),
+    },
     {}
   }
 };
@@ -431,6 +439,8 @@ streaming_target_t *timeshift_create
   ts->ref_time   = 0;
   ts->seek.file  = NULL;
   ts->seek.frame = NULL;
+  ts->ram_segments = 0;
+  ts->file_segments = 0;
   for (i = 0; i < TIMESHIFT_BACKLOG_MAX; i++)
     TAILQ_INIT(&ts->backlog[i]);
   pthread_mutex_init(&ts->state_mutex, NULL);
