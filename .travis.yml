@@ -1,0 +1,6 @@
+#
+# Basic Build Setup
+#
+
+language: c
+script: ./configure && make
