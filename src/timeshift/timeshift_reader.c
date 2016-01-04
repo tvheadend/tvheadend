@@ -829,8 +829,10 @@ void *timeshift_reader ( void *p )
         tvhlog(LOG_DEBUG, "timeshift", "ts %d skip failed (%d)", ts->id, sm ? sm->sm_type : -1);
       }
       streaming_target_deliver2(ts->output, ctrl);
-      ctrl = NULL;
+    } else {
+      streaming_msg_free(ctrl);
     }
+    ctrl = NULL;
 
     /* Deliver */
     if (sm && (skip ||
@@ -838,6 +840,8 @@ void *timeshift_reader ( void *p )
                 ((cur_speed > 0) && (sm->sm_time <= deliver))))) {
 
       last_time = sm->sm_time;
+      if (!skip && keyframe_mode) /* always send status on keyframe mode */
+        timeshift_status(ts, last_time);
       timeshift_packet_log("out", ts, sm);
       streaming_target_deliver2(ts->output, sm);
       sm        = NULL;
