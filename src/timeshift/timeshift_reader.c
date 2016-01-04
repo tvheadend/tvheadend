@@ -634,18 +634,20 @@ void *timeshift_reader ( void *p )
             }
 
             /* Update */
-            cur_speed = speed;
             if (speed != 100 || state != TS_LIVE) {
               ts->state = speed == 0 ? TS_PAUSE : TS_PLAY;
               tvhtrace("timeshift", "reader - set %s", speed == 0 ? "TS_PAUSE" : "TS_PLAY");
             }
-            if (ts->state == TS_PLAY && state != TS_PLAY) {
+            if ((ts->state == TS_PLAY && state != TS_PLAY) || (speed != cur_speed)) {
               mono_play_time = mono_now;
               tvhtrace("timeshift", "update play time TS_LIVE - %"PRId64" play buffer from %"PRId64,
                        mono_now, pause_time);
+              if (speed != cur_speed)
+                pause_time = last_time;
             } else if (ts->state == TS_PAUSE && state != TS_PAUSE) {
               pause_time = last_time;
             }
+            cur_speed = speed;
             tvhlog(LOG_DEBUG, "timeshift", "ts %d change speed %d", ts->id, speed);
           }
 
