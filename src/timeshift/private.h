@@ -19,7 +19,7 @@
 #ifndef __TVH_TIMESHIFT_PRIVATE_H__
 #define __TVH_TIMESHIFT_PRIVATE_H__
 
-#define TIMESHIFT_PLAY_BUF         1000000  //< us to buffer in TX
+#define TIMESHIFT_PLAY_BUF         1000000 //< us to buffer in TX
 #define TIMESHIFT_FILE_PERIOD      60      //< number of secs in each buffer file
 #define TIMESHIFT_BACKLOG_MAX      16      //< maximum elementary streams
 
@@ -82,6 +82,14 @@ typedef TAILQ_HEAD(timeshift_file_list,timeshift_file) timeshift_file_list_t;
 /**
  *
  */
+typedef struct timeshift_seek {
+  timeshift_file_t           *file;
+  timeshift_index_iframe_t   *frame;
+} timeshift_seek_t;
+
+/**
+ *
+ */
 typedef struct timeshift {
   // Note: input MUST BE FIRST in struct
   streaming_target_t          input;      ///< Input source
@@ -110,6 +118,8 @@ typedef struct timeshift {
   pthread_mutex_t             state_mutex; ///< Protect state changes
   uint8_t                     exit;        ///< Exit from the main input thread
   uint8_t                     full;        ///< Buffer is full
+
+  timeshift_seek_t            seek;       ///< Seek into buffered data
   
   streaming_queue_t           wr_queue;   ///< Writer queue
   pthread_t                   wr_thread;  ///< Writer thread
@@ -164,6 +174,35 @@ void *timeshift_writer ( void *p );
 void timeshift_filemgr_init     ( void );
 void timeshift_filemgr_term     ( void );
 int  timeshift_filemgr_makedirs ( int ts_index, char *buf, size_t len );
+
+static inline void timeshift_file_get0 ( timeshift_file_t *tsf )
+{
+  if (tsf)
+    tsf->refcount++;
+}
+
+#define timeshift_file_get(tsf) ({ \
+  timeshift_file_get0(tsf); \
+  /* tvhtrace("timeshift", "file get %p refcount %d fcn %s:%d", \
+            tsf, tsf ? tsf->refcount : -1, __FUNCTION__, __LINE__); */ \
+  tsf; \
+})
+
+static inline void timeshift_file_put0 ( timeshift_file_t *tsf )
+{
+  if (tsf) {
+    if (!tsf->refcount)
+      abort();
+    tsf->refcount--;
+  }
+}
+
+#define timeshift_file_put(tsf) ({ \
+  /* tvhtrace("timeshift", "file put %p refcount %d fcn %s:%d", \
+           tsf, tsf ? (tsf->refcount - 1) : -1, __FUNCTION__, __LINE__); */ \
+  timeshift_file_put0(tsf); \
+  tsf; \
+})
 
 timeshift_file_t *timeshift_filemgr_get
   ( timeshift_t *ts, int64_t start_time );

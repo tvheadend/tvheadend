@@ -342,15 +342,17 @@ static void _process_msg
           timeshift_packet_log("liv", ts, sm);
       }
       if (ts->dobuf) {
-        if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) && (tsf->wfd >= 0 || tsf->ram)) {
-          if ((err = _process_msg0(ts, tsf, sm)) < 0) {
-            timeshift_filemgr_close(tsf);
-            tsf->bad = 1;
-            ts->full = 1; ///< Stop any more writing
-          } else {
-            timeshift_packet_log("sav", ts, sm);
+        if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
+          if (tsf->wfd >= 0 || tsf->ram) {
+            if ((err = _process_msg0(ts, tsf, sm)) < 0) {
+              timeshift_filemgr_close(tsf);
+              tsf->bad = 1;
+              ts->full = 1; ///< Stop any more writing
+            } else {
+              timeshift_packet_log("sav", ts, sm);
+            }
           }
-          tsf->refcount--;
+          timeshift_file_put(tsf);
         }
       }
       pthread_mutex_unlock(&ts->state_mutex);

@@ -129,8 +129,8 @@ timeshift_filemgr_dump0 ( timeshift_t *ts )
     return;
   }
   TAILQ_FOREACH(tsf, &ts->files, link) {
-    tvhtrace("timeshift", "ts %d file dump tsf %p time %"PRId64" last %"PRId64,
-             ts->id, tsf, tsf->time, tsf->last);
+    tvhtrace("timeshift", "ts %d (full=%d) file dump tsf %p time %4"PRId64" last %10"PRId64" bad %d refcnt %d",
+             ts->id, ts->full, tsf, tsf->time, tsf->last, tsf->bad, tsf->refcount);
   }
 }
 
@@ -358,9 +358,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
     tsf_tl = tsf_tmp;
   }
 
-  if (tsf_tl)
-    tsf_tl->refcount++;
-  return tsf_tl;
+  return timeshift_file_get(tsf_tl);
 }
 
 timeshift_file_t *timeshift_filemgr_next
@@ -369,22 +367,18 @@ timeshift_file_t *timeshift_filemgr_next
   timeshift_file_t *nxt = TAILQ_NEXT(tsf, link);
   if (!nxt && end)  *end = 1;
   if (!nxt && keep) return tsf;
-  tsf->refcount--;
-  if (nxt)
-    nxt->refcount++;
-  return nxt;
+  timeshift_file_put(tsf);
+  return timeshift_file_get(nxt);
 }
 
 timeshift_file_t *timeshift_filemgr_prev
   ( timeshift_file_t *tsf, int *end, int keep )
 {
-  timeshift_file_t *nxt = TAILQ_PREV(tsf, timeshift_file_list, link);
-  if (!nxt && end)  *end = 1;
-  if (!nxt && keep) return tsf;
-  tsf->refcount--;
-  if (nxt)
-    nxt->refcount++;
-  return nxt;
+  timeshift_file_t *prev = TAILQ_PREV(tsf, timeshift_file_list, link);
+  if (!prev && end)  *end = 1;
+  if (!prev && keep) return tsf;
+  timeshift_file_put(tsf);
+  return timeshift_file_get(prev);
 }
 
 /*
@@ -393,9 +387,7 @@ timeshift_file_t *timeshift_filemgr_prev
 timeshift_file_t *timeshift_filemgr_oldest ( timeshift_t *ts )
 {
   timeshift_file_t *tsf = TAILQ_FIRST(&ts->files);
-  if (tsf)
-    tsf->refcount++;
-  return tsf;
+  return timeshift_file_get(tsf);
 }
 
 /*
@@ -404,9 +396,7 @@ timeshift_file_t *timeshift_filemgr_oldest ( timeshift_t *ts )
 timeshift_file_t *timeshift_filemgr_newest ( timeshift_t *ts )
 {
   timeshift_file_t *tsf = TAILQ_LAST(&ts->files, timeshift_file_list);
-  if (tsf)
-    tsf->refcount++;
-  return tsf;
+  return timeshift_file_get(tsf);
 }
 
 /* **************************************************************************

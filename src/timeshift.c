@@ -429,6 +429,8 @@ streaming_target_t *timeshift_create
   ts->buf_time   = 0;
   ts->start_pts  = 0;
   ts->ref_time   = 0;
+  ts->seek.file  = NULL;
+  ts->seek.frame = NULL;
   for (i = 0; i < TIMESHIFT_BACKLOG_MAX; i++)
     TAILQ_INIT(&ts->backlog[i]);
   pthread_mutex_init(&ts->state_mutex, NULL);
