@@ -75,7 +75,8 @@ static timeshift_seek_t *_read_close ( timeshift_seek_t *seek )
 
 static ssize_t _read_buf ( timeshift_file_t *tsf, int fd, void *buf, size_t size )
 {
-  size_t r, ret;
+  ssize_t r;
+  size_t ret;
 
   if (tsf && tsf->ram) {
     if (tsf->roff == tsf->woff) return 0;
