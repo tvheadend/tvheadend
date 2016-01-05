@@ -90,7 +90,6 @@ static ssize_t _read_buf ( timeshift_file_t *tsf, int fd, void *buf, size_t size
     ret = 0;
     while (size > 0) {
       r = read(tsf ? tsf->rfd : fd, buf, size);
-      tvhtrace("timeshift", "read %ld size %ld", (long)r, (long)size);
       if (r < 0) {
         if (ERRNO_AGAIN(errno))
           continue;
