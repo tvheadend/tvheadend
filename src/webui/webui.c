@@ -140,6 +140,14 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_root2(http_connection_t *hc, const char *remain, void *opaque)
 {
+  if (!tvheadend_webroot) return 1;
+  http_redirect(hc, "/", &hc->hc_req_args, 0);
+  return 0;
+}
+
+static int
+page_no_webroot(http_connection_t *hc, const char *remain, void *opaque)
+{
   size_t l;
   char *s;
 
@@ -1818,9 +1826,10 @@ webui_init(int xspf)
 
   s = tvheadend_webroot;
   tvheadend_webroot = NULL;
-  http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
+  http_path_add("", NULL, page_no_webroot, ACCESS_WEB_INTERFACE);
   tvheadend_webroot = s;
 
+  http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
