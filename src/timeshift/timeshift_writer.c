@@ -231,25 +231,35 @@ ssize_t timeshift_write_eof ( timeshift_file_t *tsf )
 }
 
 /*
- * Stream start handling
+ * Update smt_start
  */
-static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
+static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
 {
-  timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
-  streaming_start_t *ss;
   int i;
 
-  ti->pos  = tsf->size;
-  ti->data = sm;
-  TAILQ_INSERT_TAIL(&tsf->sstart, ti, link);
+  if (ts->smt_start)
+    streaming_start_unref(ts->smt_start);
+  streaming_start_ref(ss);
+  ts->smt_start = ss;
 
   /* Update video index */
-  ss = sm->sm_data;
   for (i = 0; i < ss->ss_num_components; i++)
     if (SCT_ISVIDEO(ss->ss_components[i].ssc_type)) {
       ts->vididx = ss->ss_components[i].ssc_index;
       break;
     }
+}
+
+/*
+ * Stream start handling
+ */
+static void _handle_sstart ( timeshift_t *ts, timeshift_file_t *tsf, streaming_message_t *sm )
+{
+  timeshift_index_data_t *ti = calloc(1, sizeof(timeshift_index_data_t));
+
+  ti->pos  = tsf->size;
+  ti->data = sm;
+  TAILQ_INSERT_TAIL(&tsf->sstart, ti, link);
 }
 
 /* **************************************************************************
@@ -302,7 +312,6 @@ static void _process_msg
 {
   int err;
   timeshift_file_t *tsf;
-  streaming_start_t *ss;
 
   /* Process */
   switch (sm->sm_type) {
@@ -342,14 +351,8 @@ static void _process_msg
         if (sm->sm_type == SMT_PACKET)
           timeshift_packet_log("liv", ts, sm);
       }
-      if (sm->sm_type == SMT_START) {
-        /* remember start */
-        if (ts->smt_start)
-          streaming_start_unref(ts->smt_start);
-        ss = sm->sm_data;
-        streaming_start_ref(ss);
-        ts->smt_start = ss;
-      }
+      if (sm->sm_type == SMT_START)
+        _update_smt_start(ts, (streaming_start_t *)sm->sm_data);
       if (ts->dobuf) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
           if (tsf->wfd >= 0 || tsf->ram) {
