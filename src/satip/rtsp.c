@@ -1482,8 +1482,7 @@ rtsp_flush_requests(http_connection_t *hc)
     if (rs->shutdown_on_close == hc) {
       rtsp_close_session(rs);
       rtsp_free_session(rs);
-    }
-    if (rs->tcp_data == hc) {
+    } else if (rs->tcp_data == hc) {
       satip_rtp_close((void *)(intptr_t)rs->stream);
       rs->tcp_data = NULL;
     }
