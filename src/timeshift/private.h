@@ -196,8 +196,7 @@ static inline void timeshift_file_get0 ( timeshift_file_t *tsf )
 static inline void timeshift_file_put0 ( timeshift_file_t *tsf )
 {
   if (tsf) {
-    if (!tsf->refcount)
-      abort();
+    assert(tsf->refcount > 0);
     tsf->refcount--;
   }
 }
