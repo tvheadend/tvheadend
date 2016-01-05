@@ -248,35 +248,38 @@ static void
 timeshift_packet_flush ( timeshift_t *ts, int64_t time )
 {
   streaming_message_t *lowest, *sm;
-  struct streaming_message_queue *sq;
+  struct streaming_message_queue *sq, *sq_lowest;
   int i;
 
   while (1) {
     lowest = NULL;
+    sq_lowest = NULL;
     for (i = 0; i < ts->backlog_max; i++) {
       sq = &ts->backlog[i];
       sm = TAILQ_FIRST(sq);
       if (sm && sm->sm_time + MAX_TIME_DELTA < time)
-        if (lowest == NULL || lowest->sm_time > sm->sm_time)
+        if (lowest == NULL || lowest->sm_time > sm->sm_time) {
           lowest = sm;
+          sq_lowest = sq;
+        }
     }
     if (!lowest)
       break;
-    TAILQ_REMOVE(sq, lowest, sm_link);
+    TAILQ_REMOVE(sq_lowest, lowest, sm_link);
     ts->last_wr_time = lowest->sm_time;
     timeshift_packet_log("wr ", ts, lowest);
     streaming_target_deliver2(&ts->wr_queue.sq_st, lowest);
   }
 }
 
-static void
+static int
 timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
 {
   th_pkt_t *pkt = sm->sm_data;
   int64_t time;
 
   if (pkt->pkt_componentindex >= TIMESHIFT_BACKLOG_MAX)
-    return;
+    return -1;
 
   time = ts_rescale(pkt->pkt_pts, 1000000);
   if (time > ts->last_time) {
@@ -294,6 +297,7 @@ timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
       ts->backlog_max = pkt->pkt_componentindex + 1;
     TAILQ_INSERT_TAIL(&ts->backlog[pkt->pkt_componentindex], sm, sm_link);
   }
+  return 0;
 }
 
 /*
@@ -339,10 +343,8 @@ static void timeshift_input
     /* Send to the writer thread */
     if (ts->packet_mode) {
       sm->sm_time = ts->last_wr_time;
-      if (type == SMT_PACKET) {
-        timeshift_packet(ts, sm);
+      if ((type == SMT_PACKET) && !timeshift_packet(ts, sm))
         goto _exit;
-      }
     } else {
       if (ts->ref_time == 0) {
         ts->ref_time = getmonoclock();
