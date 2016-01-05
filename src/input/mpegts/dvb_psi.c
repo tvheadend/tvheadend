@@ -432,6 +432,7 @@ dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s,
   if (!bs) {
     bs = calloc(1, sizeof(*bs));
     bs->svc = s;
+    service_ref((service_t *)s);
     TAILQ_INSERT_TAIL(&bi->services, bs, link);
   }
   if (lcn != UINT_MAX && !bs->lcn_dtag) {
@@ -1017,6 +1018,8 @@ dvb_bat_destroy_lists( mpegts_table_t *mt )
   while ((bi = LIST_FIRST(&b->bats)) != NULL) {
     while ((bs = TAILQ_FIRST(&bi->services)) != NULL) {
       TAILQ_REMOVE(&bi->services, bs, link);
+      if (bs->svc)
+        service_unref((service_t *)bs->svc);
       free(bs);
     }
     while ((fs = TAILQ_FIRST(&bi->fservices)) != NULL) {
