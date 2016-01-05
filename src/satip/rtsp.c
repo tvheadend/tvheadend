@@ -53,6 +53,7 @@ typedef struct session {
   int weight;
   int used_weight;
   http_connection_t *shutdown_on_close;
+  http_connection_t *tcp_data;
   int perm_lock;
   uint32_t nsession;
   char session[9];
@@ -595,6 +596,7 @@ pids:
                     rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                     rs->frontend, rs->findex, &rs->dmc_tuned,
                     &rs->pids, rs->perm_lock);
+    rs->tcp_data = rs->udp_rtp ? NULL : hc;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
@@ -1480,9 +1482,10 @@ rtsp_flush_requests(http_connection_t *hc)
     if (rs->shutdown_on_close == hc) {
       rtsp_close_session(rs);
       rtsp_free_session(rs);
-    } else {
-      if (rs->rtp_peer_port == RTSP_TCP_DATA)
-        satip_rtp_close((void *)(intptr_t)rs->stream);
+    }
+    if (rs->tcp_data == hc) {
+      satip_rtp_close((void *)(intptr_t)rs->stream);
+      rs->tcp_data = NULL;
     }
   }
   pthread_mutex_unlock(&rtsp_lock);
@@ -1556,6 +1559,8 @@ rtsp_close_session(session_t *rs)
   rs->udp_rtp = NULL;
   udp_close(rs->udp_rtcp);
   rs->udp_rtcp = NULL;
+  rs->shutdown_on_close = NULL;
+  rs->tcp_data = NULL;
   pthread_mutex_lock(&global_lock);
   mpegts_pid_reset(&rs->pids);
   rtsp_clean(rs);
