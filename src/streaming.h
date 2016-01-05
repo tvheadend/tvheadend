@@ -109,6 +109,11 @@ streaming_target_deliver(streaming_target_t *st, streaming_message_t *sm)
 
 void streaming_target_deliver2(streaming_target_t *st, streaming_message_t *sm);
 
+static inline void streaming_start_ref(streaming_start_t *ss)
+{
+  atomic_add(&ss->ss_refcount, 1);
+}
+
 void streaming_start_unref(streaming_start_t *ss);
 
 streaming_start_t *streaming_start_copy(const streaming_start_t *src);

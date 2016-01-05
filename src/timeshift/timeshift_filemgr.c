@@ -258,6 +258,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
   int fd;
   timeshift_file_t *tsf_tl, *tsf_hd, *tsf_tmp;
   timeshift_index_data_t *ti;
+  streaming_message_t *sm;
   char path[PATH_MAX];
   int64_t time;
 
@@ -364,13 +365,20 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
         }
       }
 
-      if (tsf_tmp) {
+      if (tsf_tmp && tsf_tl) {
         /* Copy across last start message */
-        if (tsf_tl && (ti = TAILQ_LAST(&tsf_tl->sstart, timeshift_index_data_list))) {
-          tvhtrace("timeshift", "ts %d copy smt_start to new file",
-                   ts->id);
+        if ((ti = TAILQ_LAST(&tsf_tl->sstart, timeshift_index_data_list)) || ts->smt_start) {
+          tvhtrace("timeshift", "ts %d copy smt_start to new file%s",
+                   ts->id, ti ? " (from last file)" : "");
           timeshift_index_data_t *ti2 = calloc(1, sizeof(timeshift_index_data_t));
-          ti2->data = streaming_msg_clone(ti->data);
+          if (ti) {
+            sm = streaming_msg_clone(ti->data);
+          } else {
+            sm = streaming_msg_create(SMT_START);
+            streaming_start_ref(ts->smt_start);
+            sm->sm_data = ts->smt_start;
+          }
+          ti2->data = sm;
           TAILQ_INSERT_TAIL(&tsf_tmp->sstart, ti2, link);
         }
       }

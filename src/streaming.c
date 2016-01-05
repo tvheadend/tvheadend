@@ -247,7 +247,7 @@ streaming_msg_clone(streaming_message_t *src)
 
   case SMT_START:
     ss = dst->sm_data = src->sm_data;
-    atomic_add(&ss->ss_refcount, 1);
+    streaming_start_ref(ss);
     break;
 
   case SMT_SKIP:

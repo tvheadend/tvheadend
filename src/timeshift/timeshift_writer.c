@@ -302,6 +302,7 @@ static void _process_msg
 {
   int err;
   timeshift_file_t *tsf;
+  streaming_start_t *ss;
 
   /* Process */
   switch (sm->sm_type) {
@@ -340,6 +341,14 @@ static void _process_msg
         streaming_target_deliver2(ts->output, streaming_msg_clone(sm));
         if (sm->sm_type == SMT_PACKET)
           timeshift_packet_log("liv", ts, sm);
+      }
+      if (sm->sm_type == SMT_START) {
+        /* remember start */
+        if (ts->smt_start)
+          streaming_start_unref(ts->smt_start);
+        ss = sm->sm_data;
+        streaming_start_ref(ss);
+        ts->smt_start = ss;
       }
       if (ts->dobuf) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {

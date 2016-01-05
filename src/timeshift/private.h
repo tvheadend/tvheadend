@@ -134,6 +134,8 @@ typedef struct timeshift {
 
   int                         vididx;     ///< Index of (current) video stream
 
+  streaming_start_t          *smt_start;  ///< Streaming start info
+
 } timeshift_t;
 
 /*

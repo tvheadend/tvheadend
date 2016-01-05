@@ -397,6 +397,9 @@ timeshift_destroy(streaming_target_t *pad)
   /* Flush files */
   timeshift_filemgr_flush(ts, NULL);
 
+  if (ts->smt_start)
+    streaming_start_unref(ts->smt_start);
+
   if (ts->path)
     free(ts->path);
   free(ts);
