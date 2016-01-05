@@ -2291,8 +2291,10 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 static void _bytes_out_cb(void *aux)
 {
   htsp_subscription_t *hs = aux;
-  if (hs->hs_s)
+  if (hs->hs_s) {
     subscription_add_bytes_out(hs->hs_s, atomic_exchange(&hs->hs_s_bytes_out, 0));
+    gtimer_arm_ms(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, 200);
+  }
 }
 
 /**
