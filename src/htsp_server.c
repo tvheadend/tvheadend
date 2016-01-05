@@ -186,6 +186,8 @@ typedef struct htsp_subscription {
   int hs_sid;  /* Subscription ID (set by client) */
 
   th_subscription_t *hs_s; // Temporary
+  int                hs_s_bytes_out;
+  gtimer_t           hs_s_bytes_out_timer;
 
   streaming_target_t hs_input;
   profile_chain_t    hs_prch;
@@ -340,10 +342,15 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq, int dead)
 static void
 htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
+  th_subscription_t *ts = hs->hs_s;
+
+  hs->hs_s = NULL;
+  gtimer_disarm(&hs->hs_s_bytes_out_timer);
+
   LIST_REMOVE(hs, hs_link);
   LIST_INSERT_HEAD(&htsp->htsp_dead_subscriptions, hs, hs_link);
 
-  subscription_unsubscribe(hs->hs_s, UNSUBSCRIBE_FINAL);
+  subscription_unsubscribe(ts, UNSUBSCRIBE_FINAL);
 
   if(hs->hs_prch.prch_st != NULL)
     profile_chain_close(&hs->hs_prch);
@@ -2278,6 +2285,16 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
   return out;
 }
 
+/*
+ *
+ */
+static void _bytes_out_cb(void *aux)
+{
+  htsp_subscription_t *hs = aux;
+  if (hs->hs_s)
+    subscription_add_bytes_out(hs->hs_s, atomic_exchange(&hs->hs_s_bytes_out, 0));
+}
+
 /**
  * Request subscription for a channel
  */
@@ -2388,6 +2405,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      htsp->htsp_granted_access->aa_representative,
 					      htsp->htsp_clientname,
 					      NULL);
+  if (hs->hs_s)
+    gtimer_arm_ms(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, 200);
   return NULL;
 }
 
@@ -3699,7 +3718,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   payloadlen = pktbuf_len(pkt->pkt_payload);
   htsmsg_add_binptr(m, "payload", pktbuf_ptr(pkt->pkt_payload), payloadlen);
   htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
-  subscription_add_bytes_out(hs->hs_s, payloadlen);
+  atomic_add(&hs->hs_s_bytes_out, payloadlen);
 
   if(hs->hs_last_report != dispatch_clock) {
 
