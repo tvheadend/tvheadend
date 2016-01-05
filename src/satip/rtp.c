@@ -420,8 +420,9 @@ satip_rtp_thread(void *aux)
   }
   pthread_mutex_unlock(&sq->sq_mutex);
 
-  tvhdebug("satips", "RTP streaming to %s:%d closed (%s request)",
-           peername, rtp->port, alive ? "remote" : "streaming");
+  tvhdebug("satips", "RTP streaming to %s:%d closed (%s request)%s",
+           peername, rtp->port, alive ? "remote" : "streaming",
+           fatal ? " (fatal)" : "");
 
   return NULL;
 }
@@ -492,6 +493,8 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
     rtp->sig.snr = 28000;
   }
 
+  tvhtrace("satips", "rtp queue %p", rtp);
+
   pthread_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
   tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
@@ -557,6 +560,7 @@ void satip_rtp_close(void *id)
 
   pthread_mutex_lock(&satip_rtp_lock);
   rtp = satip_rtp_find(id);
+  tvhtrace("satips", "rtp close %p", rtp);
   if (rtp) {
     TAILQ_REMOVE(&satip_rtp_sessions, rtp, link);
     sq = rtp->sq;
