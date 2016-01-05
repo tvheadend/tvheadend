@@ -813,6 +813,7 @@ dvb_bskyb_local_channels
       if (s) {
         bs = calloc(1, sizeof(*bs));
         bs->svc = s;
+        service_ref((service_t *)s);
         TAILQ_INSERT_TAIL(&bi->services, bs, link);
       }
     }
