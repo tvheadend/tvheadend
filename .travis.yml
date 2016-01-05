@@ -1,0 +1,35 @@
+#
+# Basic Build Setup
+#
+
+language: c
+script: ./configure && make
+
+#
+# Global variables
+#
+
+env:
+  global:
+    # COVERITY API TOKEN
+    secure: "jayQBYM6ENIgf4UOJNdBMKa0+xL9ew6zTmOBt6dGVqO+TFtsxjKvAtbVt3wSbSa+1/jM0NCJlDs57dMcp7KkPjJ0HFEp+EJDZFw5BMvPT6IN1aQ1L3f+q/BZb6qbT0OiLT6efX1IIbrCE6Q3qB2xpkrMJgHEf5EB2ewDe4my/J1cK9D8d+8ollBuuIzJYWoItoEVh2cxNPHrzvql6xObHm9rOHE6r1oRHcBDYXgf3s9gUbSBAFV05UbudCTRuWiIguntuncHsXbhg7Ax/RrS9rO/mD1Re3hAMj4Rgwm6sMFuQSV953D7AH4b2KNAJCk1p7ugBfkeh9XWsKbWPeFfx+cYN46pi/HAjq2T9ZTg1wnkvScXWzzVW85NcK5Xy9HXT+b1SWauPdVa70yTg4wV7Iv477ak6rxhl7VtAEYmTn7iuAdHVMC1N/SmS1gzfXZ3hPpRYrd1N0YJ4Z3mRmkelJHYDap1Vw0jeXcuJKOa8/9YSWWjIiEt69Ap+ajF3NEwLwHcgZOlHdtHaRJ+SDEd+IvAL0NMyDVvhuDstTfjwM1I6j9Ya1DNuBGLLyDBCUlxIXoP/WuSxVpIOzAatwR3Pb1S/yVZqvj79PnHsQ0r/PaIk9VeCh7Z0obeS5xjOG24sGYGHRB0WK5p6hs+YusX8Ulz3o6oEAo4ouIKKzz7mgo="
+
+#
+# Coverity
+#
+
+addons:
+  coverity_scan:
+
+    # Github project
+    project:
+      name: adamsutton/tvheadend
+      version: 1.0
+      description: Tvheadend
+
+    notification_email: dev@adamsutton.me.uk
+
+    build_command_prepend: ./configure
+    build_command: make
+
+    branch_pattern: coverity/*
