@@ -1066,14 +1066,12 @@ not_so_good:
 static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
 {
   dvr_entry_t *de2;
-  struct tm de_start;
   int record;
 
   if (!de->de_autorec)
     return NULL;
 
   record = de->de_autorec->dae_record;
-  localtime_r(&de->de_start, &de_start);
 
   switch (record) {
     case DVR_AUTOREC_RECORD_ALL:
@@ -1091,8 +1089,6 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
         return NULL;
       break;
     case DVR_AUTOREC_RECORD_ONCE_PER_WEEK:
-      de_start.tm_mday -= (de_start.tm_wday + 6) % 7; // week = mon-sun
-      mktime(&de_start); // adjusts de_start
       break;
   }
 
@@ -1132,18 +1128,24 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
           return de2;
         break;
       case DVR_AUTOREC_RECORD_ONCE_PER_WEEK: {
-        struct tm de2_start;
+        struct tm de1_start, de2_start;
+        localtime_r(&de->de_start, &de1_start);
         localtime_r(&de2->de_start, &de2_start);
+        de1_start.tm_mday -= (de1_start.tm_wday + 6) % 7; // week = mon-sun
         de2_start.tm_mday -= (de2_start.tm_wday + 6) % 7; // week = mon-sun
+        mktime(&de1_start); // adjusts de_start
         mktime(&de2_start); // adjusts de2_start
-        if (de_start.tm_year == de2_start.tm_year && de_start.tm_yday == de2_start.tm_yday)
+        if (de1_start.tm_year == de2_start.tm_year &&
+            de1_start.tm_yday == de2_start.tm_yday)
           return de2;
         break;
       }
       case DVR_AUTOREC_RECORD_ONCE_PER_DAY: {
-        struct tm de2_start;
+        struct tm de1_start, de2_start;
+        localtime_r(&de->de_start, &de1_start);
         localtime_r(&de2->de_start, &de2_start);
-        if (de_start.tm_year == de2_start.tm_year && de_start.tm_yday == de2_start.tm_yday)
+        if (de1_start.tm_year == de2_start.tm_year &&
+            de1_start.tm_yday == de2_start.tm_yday)
           return de2;
         break;
       }
