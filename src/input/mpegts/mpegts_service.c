@@ -922,23 +922,61 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
   return 0;
 }
 
+void
+mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
+{
+  mpegts_service_t *s2;
+  mpegts_apids_t *pids;
+  elementary_stream_t *st;
+
+  lock_assert(&s->s_stream_mutex);
+
+  pids = mpegts_pid_alloc();
+
+  mpegts_pid_add(pids, s->s_pmt_pid, MPS_WEIGHT_PMT);
+  mpegts_pid_add(pids, s->s_pcr_pid, MPS_WEIGHT_PCR);
+
+  /* Ensure that filtered PIDs are not send in ts_recv_raw */
+  TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
+    if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
+        st->es_pid >= 0 && st->es_pid < 8192)
+      mpegts_pid_add(pids, st->es_pid, mpegts_mps_weight(st));
+
+  LIST_FOREACH(s2, &s->s_masters, s_masters_link) {
+    pthread_mutex_lock(&s2->s_stream_mutex);
+    if (!del)
+      mpegts_pid_add_group(s2->s_slaves_pids, pids);
+    else
+      mpegts_pid_del_group(s2->s_slaves_pids, pids);
+    pthread_mutex_unlock(&s2->s_stream_mutex);
+  }
+
+  mpegts_pid_destroy(&pids);
+}
+
 static int
 mpegts_service_link ( mpegts_service_t *master, mpegts_service_t *slave )
 {
+  pthread_mutex_lock(&slave->s_stream_mutex);
   pthread_mutex_lock(&master->s_stream_mutex);
   LIST_INSERT_HEAD(&slave->s_masters, master, s_masters_link);
   LIST_INSERT_HEAD(&master->s_slaves, slave, s_slaves_link);
   pthread_mutex_unlock(&master->s_stream_mutex);
+  mpegts_service_update_slave_pids(slave, 0);
+  pthread_mutex_unlock(&slave->s_stream_mutex);
   return 0;
 }
 
 static int
 mpegts_service_unlink ( mpegts_service_t *master, mpegts_service_t *slave )
 {
+  pthread_mutex_lock(&slave->s_stream_mutex);
+  mpegts_service_update_slave_pids(slave, 1);
   pthread_mutex_lock(&master->s_stream_mutex);
   LIST_SAFE_REMOVE(master, s_masters_link);
   LIST_SAFE_REMOVE(slave, s_slaves_link);
   pthread_mutex_unlock(&master->s_stream_mutex);
+  pthread_mutex_unlock(&slave->s_stream_mutex);
   return 0;
 }
 

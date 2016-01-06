@@ -147,6 +147,7 @@ struct mpegts_table_mux_cb
 typedef struct mpegts_pid_sub
 {
   RB_ENTRY(mpegts_pid_sub) mps_link;
+  LIST_ENTRY(mpegts_pid_sub) mps_raw_link;
   LIST_ENTRY(mpegts_pid_sub) mps_svcraw_link;
 #define MPS_NONE    0x00
 #define MPS_ALL     0x01
@@ -189,6 +190,7 @@ typedef struct mpegts_pid
   int                      mp_type; // mask for all subscribers
   int8_t                   mp_cc;
   RB_HEAD(,mpegts_pid_sub) mp_subs; // subscribers to pid
+  LIST_HEAD(,mpegts_pid_sub) mp_raw_subs;
   LIST_HEAD(,mpegts_pid_sub) mp_svc_subs;
   RB_ENTRY(mpegts_pid)     mp_link;
 } mpegts_pid_t;
@@ -788,6 +790,8 @@ int         mpegts_input_class_network_set  ( void *o, const void *p );
 htsmsg_t   *mpegts_input_class_network_enum ( void *o, const char *lang );
 char       *mpegts_input_class_network_rend ( void *o, const char *lang );
 
+int mpegts_mps_weight(elementary_stream_t *st);
+
 int mpegts_mps_cmp( mpegts_pid_sub_t *a, mpegts_pid_sub_t *b );
 
 void mpegts_network_register_builder
@@ -1037,13 +1041,14 @@ mpegts_service_find_e2
 mpegts_service_t *
 mpegts_service_find_by_pid ( mpegts_mux_t *mm, int pid );
 
+void mpegts_service_update_slave_pids ( mpegts_service_t *t, int del );
+
 static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
   { return idnode_find(uuid, &mpegts_service_class, NULL); }
 
 void mpegts_service_unref ( service_t *s );
 
 void mpegts_service_delete ( service_t *s, int delconf );
-
 
 /*
  * MPEG-TS event handler
