@@ -239,14 +239,31 @@ tvheadend.services = function(panel, index)
         var mapButton = {
             name: 'map',
             builder: function() {
+                var m = new Ext.menu.Menu()
+                m.add({
+                    name: 'mapsel',
+                    tooltip: _('Map selected services to channels'),
+                    iconCls: 'clone',
+                    text: _('Map selected services'),
+                });
+                m.add({
+                    name: 'mapall',
+                    tooltip: _('Map all services to channels'),
+                    iconCls: 'clone',
+                    text: _('Map all services'),
+                });
                 return new Ext.Toolbar.Button({
                     tooltip: _('Map services to channels'),
                     iconCls: 'clone',
-                    text: _('Map All'),
+                    text: _('Map services'),
+                    menu: m,
                     disabled: false
                 });
             },
-            callback: tvheadend.service_mapper
+            callback: {
+                mapall: tvheadend.service_mapper_all,
+                mapsel: tvheadend.service_mapper_sel,
+            }
         };
         
         var selected = function(s, abuttons)

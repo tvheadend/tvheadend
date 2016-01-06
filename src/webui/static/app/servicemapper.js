@@ -77,7 +77,7 @@ tvheadend.service_mapper_status = function(panel, index)
 /*
  * Start mapping
  */
-tvheadend.service_mapper = function(t, e, store, select)
+tvheadend.service_mapper_sel = function(t, e, store, select)
 {
     var panel = null;
     var win = null;
@@ -98,12 +98,13 @@ tvheadend.service_mapper = function(t, e, store, select)
     }
 
     tvheadend.idnode_editor_win(tvheadend.uilevel, {
+        winTitle: _('Map services to channels'),
         loadURL: 'api/service/mapper/load',
         saveURL: 'api/service/mapper/save',
         saveText: _('Map services'),
         alwaysDirty: true,
         noApply: true,
-        modifyData: modify_data,
+        modifyData: select ? modify_data : null,
         postsave: function() {
             tvheadend.select_tab('service_mapper');
         },
@@ -111,4 +112,39 @@ tvheadend.service_mapper = function(t, e, store, select)
             new tvheadend.help(_('Map services'), 'config_mapper.html');
         }
     });
+}
+
+tvheadend.service_mapper0 = function(all)
+{
+    tvheadend.idnode_editor_win(tvheadend.uilevel, {
+        winTitle: _('Map services to channels'),
+        loadURL: 'api/service/mapper/load',
+        saveURL: 'api/service/mapper/save',
+        saveText: _('Map services'),
+        alwaysDirty: true,
+        noApply: true,
+        beforeShow: all ? function(panel, conf) {
+            var form = panel.getForm();
+            var services = form.findField('services');
+            services.on('afterrender', function() {
+                services.selectAll();
+            });
+        } : null,
+        postsave: function() {
+            tvheadend.select_tab('service_mapper');
+        },
+        help: function() {
+            new tvheadend.help(_('Map services'), 'config_mapper.html');
+        }
+    });
+}
+
+tvheadend.service_mapper_all = function()
+{
+    tvheadend.service_mapper0(1);
+}
+
+tvheadend.service_mapper_none = function()
+{
+    tvheadend.service_mapper0(0);
 }

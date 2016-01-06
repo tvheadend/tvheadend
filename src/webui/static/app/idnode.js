@@ -1192,6 +1192,8 @@ tvheadend.idnode_editor_win = function(_uilevel, conf)
             plain: true,
             items: p
         });
+        if (conf.beforeShow)
+            conf.beforeShow(p, conf);
         conf.win = w;
         if (width)
             w.setWidth(width);
