@@ -1,7 +1,15 @@
 Tvheadend
 ========================================
-(c) 2006 - 2015 Tvheadend Foundation CIC
+(c) 2006 - 2016 Tvheadend Foundation CIC
 
+Status
+------
+
+[![Build Status](https://travis-ci.org/tvheadend/tvheadend.svg?branch=master)](https://travis-ci.org/tvheadend/tvheadend)
+
+[![Download](https://api.bintray.com/packages/tvheadend/deb/tvheadend/images/download.svg)](https://bintray.com/tvheadend/deb/tvheadend/)
+
+[![Coverity Scan](https://scan.coverity.com/projects/2114/badge.svg)](https://scan.coverity.com/projects/2114)
 
 What it is
 ----------
@@ -58,10 +66,18 @@ Only network sources (IPTV, SAT>IP) are supported on OS X.
 There is no support for DVB USB sticks and PCI cards.
 Transcoding is currently not supported.
 
+Packages
+--------
+
+The latest official packages can be downloaded from:
+
+  * Debian/Ubuntu : https://bintray.com/tvheadend/deb
+
 Further information
 -------------------
 
 For more information about building, including generating packages, please visit:
+> https://tvheadend.org/projects/tvheadend/wiki/AptRepository
 > https://tvheadend.org/projects/tvheadend/wiki/Building  
 > https://tvheadend.org/projects/tvheadend/wiki/Packaging  
 > https://tvheadend.org/projects/tvheadend/wiki/Git
