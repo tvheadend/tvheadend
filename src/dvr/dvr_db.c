@@ -1063,7 +1063,7 @@ not_so_good:
 /**
  *
  */
-static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
+static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 {
   dvr_entry_t *de2;
   int record;
@@ -1079,6 +1079,8 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
     case DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER:
       if (strempty(de->de_episode))
         return NULL;
+      break;
+    case DVR_AUTOREC_RECORD_DIFFERENT_TITLE:
       break;
     case DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE:
       if (lang_str_empty(de->de_subtitle))
@@ -1111,12 +1113,17 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t* de)
       continue;
 
     // if titles are not defined or do not match, don't dedup
-    if (lang_str_compare(de->de_title, de2->de_title))
+    if (record != DVR_AUTOREC_RECORD_DIFFERENT_TITLE &&
+        lang_str_compare(de->de_title, de2->de_title))
       continue;
 
     switch (record) {
       case DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER:
         if (!strempty(de2->de_episode) && !strcmp(de->de_episode, de2->de_episode))
+          return de2;
+        break;
+      case DVR_AUTOREC_RECORD_DIFFERENT_TITLE:
+        if (!lang_str_compare(de->de_title, de2->de_title))
           return de2;
         break;
       case DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE:

@@ -922,6 +922,8 @@ dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
         DVR_AUTOREC_RECORD_ALL },
     { N_("Record if different episode number"),
         DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER },
+    { N_("Record if different title"),
+        DVR_AUTOREC_RECORD_DIFFERENT_TITLE },
     { N_("Record if different subtitle"),
         DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE },
     { N_("Record if different description"),
