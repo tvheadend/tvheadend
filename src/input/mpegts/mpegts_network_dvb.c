@@ -137,11 +137,30 @@ dvb_network_atsc_t_class_scanfile_list ( void *o, const char *lang )
 {
   return dvb_network_class_scanfile_list(o, lang, "atsc-t");
 }
-
 static htsmsg_t *
 dvb_network_atsc_c_class_scanfile_list ( void *o, const char *lang )
 {
   return dvb_network_class_scanfile_list(o, lang, "atsc-c");
+}
+static htsmsg_t *
+dvb_network_isdb_t_class_scanfile_list ( void *o, const char *lang )
+{
+  return dvb_network_class_scanfile_list(o, lang, "isdb-t");
+}
+static htsmsg_t *
+dvb_network_isdb_c_class_scanfile_list ( void *o, const char *lang )
+{
+  return dvb_network_class_scanfile_list(o, lang, "isdb-c");
+}
+static htsmsg_t *
+dvb_network_isdb_s_class_scanfile_list ( void *o, const char *lang )
+{
+  return dvb_network_class_scanfile_list(o, lang, "isdb-s");
+}
+static htsmsg_t *
+dvb_network_dab_class_scanfile_list ( void *o, const char *lang )
+{
+  return dvb_network_class_scanfile_list(o, lang, "dab");
 }
 
 static const void *
@@ -321,6 +340,94 @@ const idclass_t dvb_network_atsc_c_class =
   }
 };
 
+const idclass_t dvb_network_isdb_t_class =
+{
+  .ic_super      = &dvb_network_class,
+  .ic_class      = "dvb_network_isdb_t",
+  .ic_caption    = N_("ISDB-T network"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of ISDB-T muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
+      .set      = dvb_network_class_scanfile_set,
+      .get      = dvb_network_class_scanfile_get,
+      .list     = dvb_network_isdb_t_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
+const idclass_t dvb_network_isdb_c_class =
+{
+  .ic_super      = &dvb_network_class,
+  .ic_class      = "dvb_network_isdb_c",
+  .ic_caption    = N_("ISDB-C network"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of ISDB-C muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
+      .set      = dvb_network_class_scanfile_set,
+      .get      = dvb_network_class_scanfile_get,
+      .list     = dvb_network_isdb_c_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
+const idclass_t dvb_network_isdb_s_class =
+{
+  .ic_super      = &dvb_network_class,
+  .ic_class      = "dvb_network_isdb_s",
+  .ic_caption    = N_("ISDB-S network"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of ISDB-S muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
+      .set      = dvb_network_class_scanfile_set,
+      .get      = dvb_network_class_scanfile_get,
+      .list     = dvb_network_isdb_s_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
+const idclass_t dvb_network_dab_class =
+{
+  .ic_super      = &dvb_network_class,
+  .ic_class      = "dvb_network_dab",
+  .ic_caption    = N_("DAB network"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_STR,
+      .id       = "scanfile",
+      .name     = N_("Pre-defined muxes"),
+      .desc     = N_("Use a pre-defined list of DAB muxes. "
+                     "Note: these lists can sometimes be outdated and "
+                     "may cause scanning to take longer than usual."),
+      .set      = dvb_network_class_scanfile_set,
+      .get      = dvb_network_class_scanfile_get,
+      .list     = dvb_network_dab_class_scanfile_list,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
 /* ****************************************************************************
  * Class methods
  * ***************************************************************************/
@@ -457,6 +564,14 @@ dvb_network_mux_class
     return &dvb_mux_atsc_t_class;
   if (idnode_is_instance(&mn->mn_id, &dvb_network_atsc_c_class))
     return &dvb_mux_atsc_c_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_isdb_t_class))
+    return &dvb_mux_isdb_t_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_isdb_c_class))
+    return &dvb_mux_isdb_c_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_isdb_s_class))
+    return &dvb_mux_isdb_s_class;
+  if (idnode_is_instance(&mn->mn_id, &dvb_network_dab_class))
+    return &dvb_mux_dab_class;
   return NULL;
 }
 
@@ -702,6 +817,10 @@ static  const idclass_t* dvb_network_classes[] = {
   &dvb_network_dvbs_class,
   &dvb_network_atsc_t_class,
   &dvb_network_atsc_c_class,
+  &dvb_network_isdb_t_class,
+  &dvb_network_isdb_c_class,
+  &dvb_network_isdb_s_class,
+  &dvb_network_dab_class
 };
 
 void dvb_network_init ( void )

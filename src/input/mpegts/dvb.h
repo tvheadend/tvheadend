@@ -380,7 +380,11 @@ typedef enum dvb_fe_type {
   DVB_TYPE_S,			/* satellite */
   DVB_TYPE_ATSC_T,		/* terrestrial - north america */
   DVB_TYPE_ATSC_C,		/* cable - north america */
-  DVB_TYPE_LAST = DVB_TYPE_ATSC_C
+  DVB_TYPE_ISDB_T,              /* terrestrial - japan, brazil */
+  DVB_TYPE_ISDB_C,              /* cable - japan, brazil */
+  DVB_TYPE_ISDB_S,              /* satellite - japan, brazil */
+  DVB_TYPE_DAB,                 /* digital radio (europe) */
+  DVB_TYPE_LAST = DVB_TYPE_DAB
 } dvb_fe_type_t;
 
 typedef enum dvb_fe_spectral_inversion {
@@ -558,6 +562,17 @@ typedef struct dvb_ofdm_config {
   dvb_fe_hierarchy_t      hierarchy_information;
 } dvb_ofdm_config_t;
 
+typedef struct dvb_isdbt_config {
+  dvb_fe_bandwidth_t      bandwidth;
+  dvb_fe_guard_interval_t guard_interval;
+  struct {
+    dvb_fe_code_rate_t    fec;
+    dvb_fe_modulation_t   modulation;
+    int                   segment_count;
+    int                   time_interleaving;
+  } layers[3];
+} dvb_isdbt_config_t;
+
 typedef struct dvb_mux_conf
 {
   dvb_fe_type_t               dmc_fe_type;
@@ -574,6 +589,7 @@ typedef struct dvb_mux_conf
     dvb_qpsk_config_t         dmc_fe_qpsk;
     dvb_qam_config_t          dmc_fe_qam;
     dvb_ofdm_config_t         dmc_fe_ofdm;
+    dvb_isdbt_config_t        dmc_fe_isdbt;
   } u;
 
   // For scan file configurations

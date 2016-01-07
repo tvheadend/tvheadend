@@ -2586,7 +2586,10 @@ psi_tables_install ( mpegts_input_t *mi, mpegts_mux_t *mm,
   case DVB_SYS_DVBT2:
   case DVB_SYS_DVBS:
   case DVB_SYS_DVBS2:
+  case DVB_SYS_ISDBT:
+  case DVB_SYS_ISDBC:
   case DVB_SYS_ISDBS:
+  case DVB_SYS_DAB:
     psi_tables_dvb(mm);
     break;
   case DVB_SYS_TURBO:
@@ -2599,12 +2602,9 @@ psi_tables_install ( mpegts_input_t *mi, mpegts_mux_t *mm,
     break;
   case DVB_SYS_NONE:
   case DVB_SYS_DVBH:
-  case DVB_SYS_ISDBT:
-  case DVB_SYS_ISDBC:
   case DVB_SYS_DTMB:
   case DVB_SYS_CMMB:
   case DVB_SYS_DSS:
-  case DVB_SYS_DAB:
     break;
   case DVB_SYS_ATSC_ALL:
     psi_tables_atsc_c(mm);
