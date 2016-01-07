@@ -101,12 +101,10 @@ typedef struct timeshift {
   int                         ondemand;   ///< Whether this is an on-demand timeshift
   int                         packet_mode;///< Packet mode (otherwise MPEG-TS data mode)
   int                         dobuf;      ///< Buffer packets (store)
-  int64_t                     last_time;  ///< Last time in us (PTS conversion)
   int64_t                     last_wr_time;///< Last write time in us (PTS conversion)
   int64_t                     start_pts;  ///< Start time for packets (PTS)
   int64_t                     ref_time;   ///< Start time in us (monoclock)
   int64_t                     buf_time;   ///< Last buffered time in us (PTS conversion)
-  struct streaming_message_queue backlog[TIMESHIFT_BACKLOG_MAX]; ///< Queued packets for time sorting
   int                         backlog_max;///< Maximum component index in backlog
 
   enum {
