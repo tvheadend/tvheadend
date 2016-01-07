@@ -820,7 +820,9 @@ static  const idclass_t* dvb_network_classes[] = {
   &dvb_network_isdb_t_class,
   &dvb_network_isdb_c_class,
   &dvb_network_isdb_s_class,
+#if 0 /* TODO: write DAB stream parser */
   &dvb_network_dab_class
+#endif
 };
 
 void dvb_network_init ( void )
