@@ -40,6 +40,7 @@ extern scanfile_region_list_t scanfile_regions_DVBT;
 extern scanfile_region_list_t scanfile_regions_DVBS;
 extern scanfile_region_list_t scanfile_regions_ATSC_T;
 extern scanfile_region_list_t scanfile_regions_ATSC_C;
+extern scanfile_region_list_t scanfile_regions_ISDB_T;
 
 void scanfile_init ( void );
 void scanfile_done ( void );

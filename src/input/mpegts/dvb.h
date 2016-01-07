@@ -568,8 +568,8 @@ typedef struct dvb_isdbt_config {
   struct {
     dvb_fe_code_rate_t    fec;
     dvb_fe_modulation_t   modulation;
-    int                   segment_count;
-    int                   time_interleaving;
+    uint32_t              segment_count;
+    uint32_t              time_interleaving;
   } layers[3];
 } dvb_isdbt_config_t;
 

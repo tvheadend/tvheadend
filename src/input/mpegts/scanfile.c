@@ -39,6 +39,7 @@ scanfile_region_list_t scanfile_regions_DVBT;
 scanfile_region_list_t scanfile_regions_DVBS;
 scanfile_region_list_t scanfile_regions_ATSC_T;
 scanfile_region_list_t scanfile_regions_ATSC_C;
+scanfile_region_list_t scanfile_regions_ISDB_T;
 
 /* **************************************************************************
  * Country codes
@@ -285,6 +286,7 @@ scanfile_region_create
   else if (!strcmp(type, "dvb-c"))  list = &scanfile_regions_DVBC;
   else if (!strcmp(type, "atsc-t")) list = &scanfile_regions_ATSC_T;
   else if (!strcmp(type, "atsc-c")) list = &scanfile_regions_ATSC_C;
+  else if (!strcmp(type, "isdb-t")) list = &scanfile_regions_ISDB_T;
   if (!list) return NULL;
 
   LIST_FOREACH(reg, list, sfr_link) {
@@ -433,7 +435,7 @@ scanfile_load_dvbv5
   ( scanfile_network_t **net, const char *type, const char *name,
     char *line, fb_file *fp )
 {
-  int res = 1, r = 1;
+  int res = 1, r = 1, i;
   char buf[256];
   char *s, *t;
   const char *x;
@@ -468,8 +470,9 @@ scanfile_load_dvbv5
     htsmsg_add_str(l, s, t);
   }
 
-  mux = malloc(sizeof(dvb_mux_conf_t));
+  mux = calloc(1, sizeof(dvb_mux_conf_t));
   mux->dmc_fe_delsys = -1;
+  mux->dmc_fe_inversion = DVB_INVERSION_AUTO;
 
   x = htsmsg_get_str(l, "DELIVERY_SYSTEM");
 
@@ -601,6 +604,60 @@ scanfile_load_dvbv5
     if ((x = htsmsg_get_str(l, "INVERSION")))
       if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
         mux_fail(r, "wrong inversion '%s'", x);
+
+  } else if (mux->dmc_fe_delsys == DVB_SYS_ISDBT) {
+
+    if ((x = htsmsg_get_str(l, "BANDWIDTH_HZ"))) {
+      if (isdigit(x[0])) {
+        /* convert to kHz */
+        int64_t ll = strtoll(x, NULL, 0);
+        ll /= 1000;
+        snprintf(buf, sizeof(buf), "%llu", (long long unsigned)ll);
+        x = buf;
+      }
+      if ((mux->u.dmc_fe_ofdm.bandwidth = dvb_str2bw(x)) == -1)
+        mux_fail(r, "wrong bandwidth '%s'", x);
+    }
+    
+    if ((x = htsmsg_get_str(l, "INVERSION")))
+      if ((mux->dmc_fe_inversion = dvb_str2inver(x)) == -1)
+        mux_fail(r, "wrong inversion '%s'", x);
+    if ((x = htsmsg_get_str(l, "GUARD_INTERVAL")))
+      if ((mux->u.dmc_fe_isdbt.guard_interval = dvb_str2guard(x)) == -1)
+        mux_fail(r, "wrong guard interval '%s'", x);
+
+    for (i = 0; i < 3; i++) {
+      mux->u.dmc_fe_isdbt.layers[i].fec = DVB_FEC_AUTO;
+      mux->u.dmc_fe_isdbt.layers[i].modulation = DVB_MOD_AUTO;
+    }
+
+    if ((x = htsmsg_get_str(l, "ISDBT_LAYERA_FEC")))
+      if ((mux->u.dmc_fe_isdbt.layers[0].fec = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong inner FEC-A '%s'", x);
+    if ((x = htsmsg_get_str(l, "ISDBT_LAYERB_FEC")))
+      if ((mux->u.dmc_fe_isdbt.layers[1].fec = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong inner FEC-B '%s'", x);
+    if ((x = htsmsg_get_str(l, "ISDBT_LAYERC_FEC")))
+      if ((mux->u.dmc_fe_isdbt.layers[2].fec = dvb_str2fec(x)) == -1)
+        mux_fail(r, "wrong inner FEC-C '%s'", x);
+
+    if ((x = htsmsg_get_str(l, "ISDBT_LAYERA_MODULATION")))
+      if ((mux->u.dmc_fe_isdbt.layers[0].modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+    if ((x = htsmsg_get_str(l, "ISDBT_LAYERB_MODULATION")))
+      if ((mux->u.dmc_fe_isdbt.layers[1].modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+    if ((x = htsmsg_get_str(l, "ISDBT_LAYERC_MODULATION")))
+      if ((mux->u.dmc_fe_isdbt.layers[2].modulation = dvb_str2qam(x)) == -1)
+        mux_fail(r, "wrong modulation '%s'", x);
+
+    mux->u.dmc_fe_isdbt.layers[0].segment_count = htsmsg_get_u32_or_default(l, "ISDBT_LAYERA_SEGMENT_COUNT", 0);
+    mux->u.dmc_fe_isdbt.layers[1].segment_count = htsmsg_get_u32_or_default(l, "ISDBT_LAYERB_SEGMENT_COUNT", 0);
+    mux->u.dmc_fe_isdbt.layers[2].segment_count = htsmsg_get_u32_or_default(l, "ISDBT_LAYERC_SEGMENT_COUNT", 0);
+
+    mux->u.dmc_fe_isdbt.layers[0].time_interleaving = htsmsg_get_u32_or_default(l, "ISDBT_LAYERA_TIME_INTERLEAVING", 0);
+    mux->u.dmc_fe_isdbt.layers[1].time_interleaving = htsmsg_get_u32_or_default(l, "ISDBT_LAYERB_TIME_INTERLEAVING", 0);
+    mux->u.dmc_fe_isdbt.layers[2].time_interleaving = htsmsg_get_u32_or_default(l, "ISDBT_LAYERC_TIME_INTERLEAVING", 0);
 
   } else {
 
@@ -754,6 +811,7 @@ scanfile_init ( void )
   r += scanfile_stats("DVB-C",  &scanfile_regions_DVBC);
   r += scanfile_stats("ATSC-T", &scanfile_regions_ATSC_T);
   r += scanfile_stats("ATSC-C", &scanfile_regions_ATSC_C);
+  r += scanfile_stats("ISDB-T", &scanfile_regions_ISDB_T);
   if (!r) {
     tvhwarn("scanfile", "no predefined muxes found, check path '%s%s'",
             path[0] == '/' ? path : TVHEADEND_DATADIR "/",
@@ -798,6 +856,7 @@ scanfile_done ( void )
   scanfile_done_region(&scanfile_regions_DVBC);
   scanfile_done_region(&scanfile_regions_ATSC_T);
   scanfile_done_region(&scanfile_regions_ATSC_C);
+  scanfile_done_region(&scanfile_regions_ISDB_T);
 }
 
 /*
@@ -825,6 +884,8 @@ scanfile_find ( const char *id )
     l = &scanfile_regions_ATSC_T;
   else if (!strcasecmp(tok, "atsc-c"))
     l = &scanfile_regions_ATSC_C;
+  else if (!strcasecmp(tok, "isdb-t"))
+    l = &scanfile_regions_ISDB_T;
   else
     goto fail;
 
