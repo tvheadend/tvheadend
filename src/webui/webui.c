@@ -1779,7 +1779,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
       if (lang) {
         snprintf(buf, sizeof(buf), "src/webui/static/intl/tvh.%s.js.gz", lang);
         if (!http_file_test(buf)) {
-          snprintf(buf, sizeof(buf), "/static/intl/tvh.%s.js.gz", lang);
+          snprintf(buf, sizeof(buf), "../static/intl/tvh.%s.js.gz", lang);
           http_redirect(hc, buf, NULL, 0);
           return 0;
         }
@@ -1799,7 +1799,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
       snprintf(buf, sizeof(buf), "docs/html/%s/%s%s%s", lang, components[1],
                                  nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
       if (http_file_test(buf)) lang = "en";
-      snprintf(buf, sizeof(buf), "/docs/%s/%s%s%s", lang, components[1],
+      snprintf(buf, sizeof(buf), "../docs/%s/%s%s%s", lang, components[1],
                                  nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
       http_redirect(hc, buf, NULL, 0);
       return 0;
