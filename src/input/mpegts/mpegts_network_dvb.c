@@ -893,6 +893,14 @@ const idclass_t *dvb_network_class_by_fe_type(dvb_fe_type_t type)
     return &dvb_network_atsc_t_class;
   else if (type == DVB_TYPE_ATSC_C)
     return &dvb_network_atsc_c_class;
+  else if (type == DVB_TYPE_ISDB_T)
+    return &dvb_network_isdb_t_class;
+  else if (type == DVB_TYPE_ISDB_C)
+    return &dvb_network_isdb_c_class;
+  else if (type == DVB_TYPE_ISDB_S)
+    return &dvb_network_isdb_s_class;
+  else if (type == DVB_TYPE_DAB)
+    return &dvb_network_dab_class;
 
   return NULL;
 }
@@ -909,6 +917,14 @@ dvb_fe_type_t dvb_fe_type_by_network_class(const idclass_t *idc)
     return DVB_TYPE_ATSC_T;
   else if (idc == &dvb_network_atsc_c_class)
     return DVB_TYPE_ATSC_C;
+  else if (idc == &dvb_network_isdb_t_class)
+    return DVB_TYPE_ISDB_T;
+  else if (idc == &dvb_network_isdb_c_class)
+    return DVB_TYPE_ISDB_C;
+  else if (idc == &dvb_network_isdb_s_class)
+    return DVB_TYPE_ISDB_S;
+  else if (idc == &dvb_network_dab_class)
+    return DVB_TYPE_DAB;
 
   return DVB_TYPE_NONE;
 }

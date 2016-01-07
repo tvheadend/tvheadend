@@ -972,6 +972,18 @@ dvb_mux_create0
   } else if (ln->ln_type == DVB_TYPE_ATSC_C) {
     idc = &dvb_mux_atsc_c_class;
     delsys = DVB_SYS_DVBC_ANNEX_B;
+  } else if (ln->ln_type == DVB_TYPE_ISDB_T) {
+    idc = &dvb_mux_isdb_t_class;
+    delsys = DVB_SYS_ISDBT;
+  } else if (ln->ln_type == DVB_TYPE_ISDB_C) {
+    idc = &dvb_mux_isdb_c_class;
+    delsys = DVB_SYS_ISDBC;
+  } else if (ln->ln_type == DVB_TYPE_ISDB_S) {
+    idc = &dvb_mux_isdb_s_class;
+    delsys = DVB_SYS_ISDBS;
+  } else if (ln->ln_type == DVB_TYPE_DAB) {
+    idc = &dvb_mux_dab_class;
+    delsys = DVB_SYS_DAB;
   } else {
     tvherror("dvb", "unknown FE type %d", ln->ln_type);
     return NULL;
