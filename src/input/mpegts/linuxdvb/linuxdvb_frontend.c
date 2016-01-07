@@ -299,6 +299,46 @@ const idclass_t linuxdvb_frontend_atsc_c_class =
   }
 };
 
+const idclass_t linuxdvb_frontend_isdb_t_class =
+{
+  .ic_super      = &linuxdvb_frontend_class,
+  .ic_class      = "linuxdvb_frontend_isdb_t",
+  .ic_caption    = N_("Linux ISDB-T frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t linuxdvb_frontend_isdb_c_class =
+{
+  .ic_super      = &linuxdvb_frontend_class,
+  .ic_class      = "linuxdvb_frontend_isdb_c",
+  .ic_caption    = N_("Linux ISDB-C frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t linuxdvb_frontend_isdb_s_class =
+{
+  .ic_super      = &linuxdvb_frontend_class,
+  .ic_class      = "linuxdvb_frontend_isdb_s",
+  .ic_caption    = N_("Linux ISDB-S frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+const idclass_t linuxdvb_frontend_dab_class =
+{
+  .ic_super      = &linuxdvb_frontend_class,
+  .ic_class      = "linuxdvb_frontend_dab",
+  .ic_caption    = N_("Linux DAB frontend"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
 /* **************************************************************************
  * Class methods
  * *************************************************************************/
@@ -1464,6 +1504,7 @@ linuxdvb_frontend_tune0
     break;
   case DVB_TYPE_C:
   case DVB_TYPE_ATSC_C:
+  case DVB_TYPE_ISDB_C:
     p.u.qam.symbol_rate      = dmc->u.dmc_fe_qam.symbol_rate;
     p.u.qam.fec_inner        = TRU(qam.fec_inner, fec_tbl, FEC_AUTO);
     p.u.qam.modulation       = TR(modulation, mod_tbl, QAM_AUTO);
@@ -1538,7 +1579,9 @@ linuxdvb_frontend_tune0
 #endif
 
   /* DVB-C */
-  } else if (lfe->lfe_type == DVB_TYPE_C) {
+  } else if (lfe->lfe_type == DVB_TYPE_C ||
+             lfe->lfe_type == DVB_TYPE_ATSC_C ||
+             lfe->lfe_type == DVB_TYPE_ISDB_C) {
     S2CMD(DTV_SYMBOL_RATE,       p.u.qam.symbol_rate);
     S2CMD(DTV_MODULATION,        p.u.qam.modulation);
     S2CMD(DTV_INNER_FEC,         p.u.qam.fec_inner);
@@ -1563,9 +1606,37 @@ linuxdvb_frontend_tune0
 #endif
     }
 
-  /* ATSC */
-  } else {
+  /* ATSC-T */
+  } else if (lfe->lfe_type == DVB_TYPE_ATSC_T) {
     S2CMD(DTV_MODULATION,        p.u.vsb.modulation);
+
+#if DVB_VER_ATLEAST(5,0)
+  /* ISDB-T */
+  } else if (lfe->lfe_type == DVB_TYPE_ISDB_T) {
+    int i, j;
+    S2CMD(DTV_BANDWIDTH_HZ,      dvb_bandwidth(dmc->u.dmc_fe_isdbt.bandwidth));
+    S2CMD(DTV_GUARD_INTERVAL,    TRU(isdbt.guard_interval, guard_tbl, GUARD_INTERVAL_AUTO));
+    for (i = j = 0; i < 3; i++, j += DTV_ISDBT_LAYERB_FEC - DTV_ISDBT_LAYERA_FEC) {
+      S2CMD(DTV_ISDBT_LAYERA_FEC               + j, TRU(isdbt.layers[i].fec, fec_tbl, FEC_AUTO));
+      S2CMD(DTV_ISDBT_LAYERA_MODULATION        + j, TRU(isdbt.layers[i].modulation, mod_tbl, QAM_AUTO));
+      S2CMD(DTV_ISDBT_LAYERA_SEGMENT_COUNT     + j, dmc->u.dmc_fe_isdbt.layers[i].segment_count);
+      S2CMD(DTV_ISDBT_LAYERA_TIME_INTERLEAVING + j, dmc->u.dmc_fe_isdbt.layers[i].time_interleaving);
+    }
+
+  /* ISDB-S */
+  } else if (lfe->lfe_type == DVB_TYPE_ISDB_S) {
+    r = dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER ? (dmc->dmc_fe_stream_id & 0xFF) |
+        ((dmc->dmc_fe_pls_code & 0x3FFFF)<<8) | ((dmc->dmc_fe_pls_mode & 0x3)<<26) :
+        DVB_NO_STREAM_ID_FILTER;
+#if DVB_VER_ATLEAST(5,9)
+    S2CMD(DTV_STREAM_ID,       r);
+#elif DVB_VER_ATLEAST(5,3)
+    S2CMD(DTV_DVBT2_PLP_ID,    r);
+#endif
+
+  /* DAB */
+  } else if (lfe->lfe_type == DVB_TYPE_DAB) {
+#endif /* 5.0+ */
   }
 
   /* Tune */
@@ -1693,6 +1764,14 @@ linuxdvb_frontend_create
     idc = &linuxdvb_frontend_atsc_t_class;
   else if (type == DVB_TYPE_ATSC_C)
     idc = &linuxdvb_frontend_atsc_c_class;
+  else if (type == DVB_TYPE_ISDB_T)
+    idc = &linuxdvb_frontend_isdb_t_class;
+  else if (type == DVB_TYPE_ISDB_C)
+    idc = &linuxdvb_frontend_isdb_c_class;
+  else if (type == DVB_TYPE_ISDB_S)
+    idc = &linuxdvb_frontend_isdb_s_class;
+  else if (type == DVB_TYPE_DAB)
+    idc = &linuxdvb_frontend_dab_class;
   else {
     tvherror("linuxdvb", "unknown FE type %d", type);
     return NULL;
