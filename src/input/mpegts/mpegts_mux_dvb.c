@@ -719,10 +719,10 @@ const idclass_t dvb_mux_isdb_t_class =
     },
     /* Layer C */
     {
-      MUX_PROP_STR("layerb_fec", N_("Layer C: FEC"), isdb_t, isdbt_fec_c, N_("AUTO")),
+      MUX_PROP_STR("layerc_fec", N_("Layer C: FEC"), isdb_t, isdbt_fec_c, N_("AUTO")),
     },
     {
-      MUX_PROP_STR("layerb_mod", N_("Layer C: Constellation"), isdb_t, isdbt_mod_c, N_("AUTO")),
+      MUX_PROP_STR("layerc_mod", N_("Layer C: Constellation"), isdb_t, isdbt_mod_c, N_("AUTO")),
     },
     {
       .type     = PT_U32,
@@ -732,7 +732,7 @@ const idclass_t dvb_mux_isdb_t_class =
     },
     {
       .type     = PT_U32,
-      .id       = "layerb_timint",
+      .id       = "layerc_timint",
       .name     = N_("Layer C: Time interleaving"),
       .off      = offsetof(dvb_mux_t, lm_tuning.u.dmc_fe_isdbt.layers[2].time_interleaving),
     },
