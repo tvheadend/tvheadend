@@ -1679,7 +1679,7 @@ dvr_entry_update
 void 
 dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 {
-  dvr_entry_t *de;
+  dvr_entry_t *de, *de_next;
   channel_t *ch = e->channel;
   epg_broadcast_t *e2;
   char ubuf[UUID_HEX_SIZE];
@@ -1691,7 +1691,8 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
   if (ch == NULL || e == new_e) return;
 
   /* Existing entry */
-  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+  for (de = LIST_FIRST(&ch->ch_dvrs); de; de = de_next) {
+    de_next = LIST_NEXT(de, de_channel_link);
 
     if (de->de_bcast != e)
       continue;

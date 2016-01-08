@@ -368,6 +368,9 @@ _psip_eit_callback_channel
     length = (ptr[6] & 0x0f) << 16 | ptr[7] << 8 | ptr[8];
     stop = start + length;
     titlelen = ptr[9];
+
+    if (12 + titlelen > len) break;
+
     dlen = ((ptr[10+titlelen] & 0x0f) << 8) | ptr[11+titlelen];
     size = titlelen + dlen + 12;
     tvhtrace("psip", "  %03d: titlelen %d, dlen %d", i, titlelen, dlen);
