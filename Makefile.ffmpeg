@@ -66,7 +66,7 @@ COMPONENTS      = avutil avformat avcodec swresample swscale avfilter avresample
 PROTOCOLS       = file
 DECODERS        = mpeg2video mp2 ac3 eac3 h264 h264_vdpau hevc aac aac_latm vorbis libvorbis
 ENCODERS        = mpeg2video mp2 libx264 libvpx_vp8 libvpx_vp9 aac libaacplus vorbis libvorbis
-MUXERS          = mpegts mpeg2dvd matroska webm
+MUXERS          = mpegts mpeg2dvd matroska webm mp4
 BSFS            = h264_mp4toannexb hevc_mp4toannexb
 FILTERS         = yadif scale
 

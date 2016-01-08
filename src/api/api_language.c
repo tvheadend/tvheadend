@@ -57,8 +57,8 @@ _api_language_locale_enum
 
   l = htsmsg_create_list();
   while (c->code2b) {
-    e = htsmsg_create_map();
     if (all || tvh_gettext_langcode_valid(c->code2b)) {
+      e = htsmsg_create_map();
       htsmsg_add_str(e, "key", c->code2b);
       htsmsg_add_str(e, "val", c->desc);
       htsmsg_add_msg(l, NULL, e);
