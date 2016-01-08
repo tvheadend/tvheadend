@@ -646,22 +646,27 @@ dvb_delsys2type ( dvb_fe_delivery_system_t delsys )
   switch (delsys) {
     case DVB_SYS_DVBC_ANNEX_A:
     case DVB_SYS_DVBC_ANNEX_C:
-    case DVB_SYS_ISDBC:
       return DVB_TYPE_C;
     case DVB_SYS_DVBT:
     case DVB_SYS_DVBT2:
     case DVB_SYS_TURBO:
-    case DVB_SYS_ISDBT:
       return DVB_TYPE_T;
     case DVB_SYS_DVBS:
     case DVB_SYS_DVBS2:
-    case DVB_SYS_ISDBS:
       return DVB_TYPE_S;
     case DVB_SYS_ATSC:
     case DVB_SYS_ATSCMH:
       return DVB_TYPE_ATSC_T;
     case DVB_SYS_DVBC_ANNEX_B:
       return DVB_TYPE_ATSC_C;
+    case DVB_SYS_ISDBT:
+      return DVB_TYPE_ISDB_T;
+    case DVB_SYS_ISDBC:
+      return DVB_TYPE_ISDB_C;
+    case DVB_SYS_ISDBS:
+      return DVB_TYPE_ISDB_S;
+    case DVB_SYS_DAB:
+      return DVB_TYPE_DAB;
     default:
       return DVB_TYPE_NONE;
   }
@@ -863,12 +868,19 @@ const static struct strtab typetab[] = {
   {"DVB-S",  DVB_TYPE_S},
   {"ATSC-T", DVB_TYPE_ATSC_T},
   {"ATSC-C", DVB_TYPE_ATSC_C},
+  {"ISDB-T", DVB_TYPE_ISDB_T},
+  {"ISDB-C", DVB_TYPE_ISDB_C},
+  {"ISDB-S", DVB_TYPE_ISDB_S},
+  {"DAB",    DVB_TYPE_DAB},
   {"DVBT",   DVB_TYPE_T},
   {"DVBC",   DVB_TYPE_C},
   {"DVBS",   DVB_TYPE_S},
   {"ATSC",   DVB_TYPE_ATSC_T},
   {"ATSCT",  DVB_TYPE_ATSC_T},
-  {"ATSCC",  DVB_TYPE_ATSC_C}
+  {"ATSCC",  DVB_TYPE_ATSC_C},
+  {"ISDBT",  DVB_TYPE_ISDB_T},
+  {"ISDBC",  DVB_TYPE_ISDB_C},
+  {"ISDBS",  DVB_TYPE_ISDB_S}
 };
 dvb_str2val(type);
 
