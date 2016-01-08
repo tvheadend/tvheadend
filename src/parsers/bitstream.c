@@ -108,7 +108,7 @@ read_golomb_ue(bitstream_t *bs)
   for(b = 0; !b && !bs_eof(bs) && lzb < 32; lzb++)
     b = read_bits1(bs);
 
-  if (lzb < 0)
+  if (lzb < 0 || lzb > 31)
     return 0;
   return (1 << lzb) - 1 + read_bits(bs, lzb);
 }

@@ -219,8 +219,7 @@ static const char *
 esfilter_class_get_title(idnode_t *self, const char *lang)
 {
   esfilter_t *esf = (esfilter_t *)self;
-  char ubuf[UUID_HEX_SIZE];
-  return idnode_uuid_as_str(&esf->esf_id, ubuf);
+  return idnode_uuid_as_str(&esf->esf_id, prop_sbuf);
 }
 
 static void

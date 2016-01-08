@@ -393,8 +393,10 @@ scanfile_load_one
   if (r) {
     free(mux);
   } else {
-    if (*net == NULL && scanfile_create_network(net, type, name, mux->dmc_fe_delsys))
+    if (*net == NULL && scanfile_create_network(net, type, name, mux->dmc_fe_delsys)) {
+      free(mux);
       return -1;
+    }
     LIST_INSERT_HEAD(&(*net)->sfn_muxes, mux, dmc_link);
   }
   return 1;

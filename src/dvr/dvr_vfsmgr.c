@@ -94,13 +94,14 @@ dvr_vfs_refresh_entry(dvr_entry_t *de)
     return;
   HTSMSG_FOREACH(f, de->de_files)
     if ((m = htsmsg_field_get_map(f)) != NULL) {
-      filename = htsmsg_get_str(m, "filename");
       vfs = dvr_vfs_find1(vfs, m);
       if (vfs) {
         size = htsmsg_get_s64_or_default(m, "size", 0);
         vfs->used_size = size <= vfs->used_size ? vfs->used_size - size : 0;
       }
-      if(statvfs(filename, &vst) < 0 || stat(filename, &st) < 0) {
+      filename = htsmsg_get_str(m, "filename");
+      if(filename == NULL ||
+         statvfs(filename, &vst) < 0 || stat(filename, &st) < 0) {
         tvhlog(LOG_ERR, "dvr", "unable to stat file '%s'", filename);
         goto rem;
       }

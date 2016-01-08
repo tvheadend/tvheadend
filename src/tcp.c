@@ -121,6 +121,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
   } else {
     snprintf(errbuf, errbufsize, "Invalid protocol family");
     freeaddrinfo(ai);
+    close(fd);
     return -1;
   }
 

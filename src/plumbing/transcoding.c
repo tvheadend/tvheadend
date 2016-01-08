@@ -1162,7 +1162,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   video_stream_t *vs = (video_stream_t*)ts;
   streaming_message_t *sm;
   th_pkt_t *pkt2;
-  static int max_bitrate = (INT_MAX / 3000) * 0.8;
+  static int max_bitrate = INT_MAX / ((3000*10)/8);
 
   av_init_packet(&packet);
   av_init_packet(&packet2);
@@ -1431,6 +1431,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   /* and pull out a filtered frame */
+  got_output = 0;
   while (1) {
 	ret = av_buffersink_get_frame(vs->flt_bufsinkctx, vs->vid_enc_frame);
 	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)

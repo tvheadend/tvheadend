@@ -271,7 +271,6 @@ multi:
       htsmsg_add_str(item, "m3u-url", get_url(buf, sizeof(buf), p, url));
     } else if (item) {
       htsmsg_destroy(item);
-      free(item);
       item = NULL;
     }
 

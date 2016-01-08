@@ -429,6 +429,9 @@ atsc_get_string
 
       src    += 3;
       srclen -= 3;
+      
+      if (bytecount > srclen)
+        return ls;
 
       if (mode == 0 && compressiontype == 0) {
         tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",

@@ -1090,16 +1090,16 @@ dvr_thread_mpegts_stats(dvr_entry_t *de, void *sm_data)
 {
   th_subscription_t *ts;
   pktbuf_t *pb = sm_data;
-  int ret;
+  int ret = 0;
 
-  if (pb == NULL)
-    return 0;
-  if ((ts = de->de_s) != NULL) {
-    if (pb->pb_err) {
-      de->de_data_errors += pb->pb_err;
-      ret = 1;
+  if (pb) {
+    if ((ts = de->de_s) != NULL) {
+      if (pb->pb_err) {
+        de->de_data_errors += pb->pb_err;
+        ret = 1;
+      }
+      subscription_add_bytes_out(ts, pktbuf_len(pb));
     }
-    subscription_add_bytes_out(ts, pktbuf_len(pb));
   }
   return ret;
 }
@@ -1368,6 +1368,8 @@ dvr_thread(void *aux)
     case SMT_START:
       start_time = dispatch_clock;
       packets = 0;
+      if (ss)
+	streaming_start_unref(ss);
       ss = streaming_start_copy((streaming_start_t *)sm->sm_data);
       break;
 

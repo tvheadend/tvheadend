@@ -236,7 +236,7 @@ wizard_page_t *wizard_hello(void)
   page->aux = w = calloc(1, sizeof(wizard_hello_t));
 
   if (config.language_ui)
-    strncpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang));
+    strncpy(w->ui_lang, config.language_ui, sizeof(w->ui_lang)-1);
 
   m = htsmsg_csv_2_list(config.language, ',');
   f = m ? HTSMSG_FIRST(m) : NULL;
@@ -322,7 +322,7 @@ static void login_save(idnode_t *in)
   }
 
   if (w->username[0]) {
-    s = w->username && w->username[0] ? w->username : "*";
+    s = w->username[0] ? w->username : "*";
     conf = htsmsg_create_map();
     htsmsg_add_str(conf, "prefix", w->network);
     htsmsg_add_str(conf, "username", s);

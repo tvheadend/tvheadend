@@ -102,10 +102,11 @@ dvr_autorec_completed(dvr_autorec_entry_t *dae, int error_code)
 {
   uint32_t count, total = 0;
   dvr_entry_t *de, *de_prev;
-  uint32_t max_count = dvr_autorec_get_max_count(dae);
+  uint32_t max_count;
   char ubuf[UUID_HEX_SIZE];
 
   if (dae == NULL) return;
+  max_count = dvr_autorec_get_max_count(dae);
   if (max_count <= 0) return;
   while (1) {
     count = 0;

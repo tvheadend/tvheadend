@@ -132,6 +132,8 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
   /*
    * extract the URL
    */
+  if (items == NULL)
+    return NULL;
   HTSMSG_FOREACH(f, items) {
     if ((item = htsmsg_field_get_map(f)) == NULL) continue;
     inf = htsmsg_get_map(item, "stream-inf");

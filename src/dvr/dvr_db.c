@@ -255,7 +255,7 @@ dvr_entry_get_extra_time_post( dvr_entry_t *de )
   return extra;
 }
 
-const char *
+char *
 dvr_entry_get_retention_string ( dvr_entry_t *de )
 {
   char buf[24];
@@ -271,7 +271,7 @@ dvr_entry_get_retention_string ( dvr_entry_t *de )
   return strdup(buf);
 }
 
-const char *
+char *
 dvr_entry_get_removal_string ( dvr_entry_t *de )
 {
   char buf[24];
@@ -1573,7 +1573,7 @@ static dvr_entry_t *_dvr_entry_update
   if (e && e->episode && e->episode->subtitle) {
     save |= lang_str_set2(&de->de_subtitle, e->episode->subtitle) ? DVR_UPDATED_SUBTITLE : 0;
   } else if (subtitle) {
-    save |= lang_str_set(&de->de_title, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
+    save |= lang_str_set(&de->de_subtitle, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
   }
 
   /* EID */
@@ -3237,6 +3237,7 @@ dvr_entry_delete(dvr_entry_t *de)
   time_t t;
   struct tm tm;
   const char *filename;
+  char *str1, *str2;
   char tbuf[64], ubuf[UUID_HEX_SIZE], *rdir, *postcmd;
   int r, ret = 0;
 
@@ -3245,13 +3246,15 @@ dvr_entry_delete(dvr_entry_t *de)
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
 
+  str1 = dvr_entry_get_retention_string(de);
+  str2 = dvr_entry_get_removal_string(de);
   tvhlog(LOG_INFO, "dvr", "delete entry %s \"%s\" on \"%s\" start time %s, "
 	 "scheduled for recording by \"%s\", retention \"%s\" removal \"%s\"",
          idnode_uuid_as_str(&de->de_id, ubuf),
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf,
-	 de->de_creator ?: "",
-	 dvr_entry_get_retention_string(de),
-	 dvr_entry_get_removal_string(de));
+	 de->de_creator ?: "", str1, str2);
+  free(str2);
+  free(str1);
 
   if(!htsmsg_is_empty(de->de_files)) {
 #if ENABLE_INOTIFY
