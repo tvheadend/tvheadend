@@ -91,6 +91,7 @@ lav_muxer_add_stream(lav_muxer_t *lm,
   switch(lm->m_config.m_type) {
   case MC_MATROSKA:
   case MC_AVMATROSKA:
+  case MC_AVMP4:
     st->time_base.num = 1000000;
     st->time_base.den = 1;
     break;
@@ -217,6 +218,18 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= (type == SCT_MPEG2AUDIO);
     ret |= (type == SCT_AC3);
 
+  case MC_AVMP4:
+    ret |= (type == SCT_MPEG2VIDEO);
+    ret |= (type == SCT_H264);
+    ret |= (type == SCT_HEVC);
+
+    ret |= (type == SCT_MPEG2AUDIO);
+    ret |= (type == SCT_AC3);
+    ret |= (type == SCT_AAC);
+    ret |= (type == SCT_MP4A);
+    ret |= (type == SCT_EAC3);
+    break;
+
   default:
     break;
   }
@@ -270,6 +283,7 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   int i;
   streaming_start_component_t *ssc;
   AVFormatContext *oc;
+  AVDictionary *opts = NULL;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   char app[128];
 
@@ -310,16 +324,24 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
     }
   }
 
+  if(lm->m_config.m_type == MC_AVMP4) {
+    av_dict_set(&opts, "frag_duration", "1", 0);
+    av_dict_set(&opts, "ism_lookahead", "0", 0);
+  }
+
   if(!lm->lm_oc->nb_streams) {
     tvhlog(LOG_ERR, "libav",  "No supported streams available");
     lm->m_errors++;
     return -1;
-  } else if(avformat_write_header(lm->lm_oc, NULL) < 0) {
+  } else if(avformat_write_header(lm->lm_oc, &opts) < 0) {
     tvhlog(LOG_ERR, "libav",  "Failed to write %s header", 
 	   muxer_container_type2txt(lm->m_config.m_type));
     lm->m_errors++;
     return -1;
   }
+
+  if (opts)
+    av_dict_free(&opts);
 
   lm->lm_init = 1;
 
@@ -399,6 +421,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   AVFormatContext *oc;
   AVStream *st;
   AVPacket packet;
+  enum AVCodecID codec_id;
   th_pkt_t *pkt = (th_pkt_t*)data, *opkt;
   lav_muxer_t *lm = (lav_muxer_t*)m;
   unsigned char *tofree;
@@ -430,9 +453,10 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
     tofree = NULL;
     av_init_packet(&packet);
+    codec_id = st->codec->codec_id;
 
-    if((lm->lm_h264_filter && st->codec->codec_id == AV_CODEC_ID_H264) ||
-       (lm->lm_hevc_filter && st->codec->codec_id == AV_CODEC_ID_HEVC)) {
+    if((lm->lm_h264_filter && codec_id == AV_CODEC_ID_H264) ||
+       (lm->lm_hevc_filter && codec_id == AV_CODEC_ID_HEVC)) {
       pkt = avc_convert_pkt(opkt = pkt);
       pkt_ref_dec(opkt);
       if(av_bitstream_filter_filter(st->codec->codec_id == AV_CODEC_ID_H264 ?
@@ -451,14 +475,20 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
       } else {
         tofree = packet.data;
       }
-    } else if (st->codec->codec_id == AV_CODEC_ID_AAC) {
+    } else if (codec_id == AV_CODEC_ID_AAC) {
       /* remove ADTS header */
       packet.data = pktbuf_ptr(pkt->pkt_payload) + 7;
       packet.size = pktbuf_len(pkt->pkt_payload) - 7;
     } else {
+      if (lm->m_config.m_type == MC_AVMP4 &&
+          (codec_id == AV_CODEC_ID_H264 || codec_id == AV_CODEC_ID_HEVC)) {
+        pkt = avc_convert_pkt(opkt = pkt);
+        pkt_ref_dec(opkt);
+      }
       packet.data = pktbuf_ptr(pkt->pkt_payload);
       packet.size = pktbuf_len(pkt->pkt_payload);
     }
+
 
     packet.stream_index = st->index;
  
@@ -580,6 +610,9 @@ lav_muxer_create(const muxer_config_t *m_cfg)
   case MC_WEBM:
   case MC_AVWEBM:
     mux_name = "webm";
+    break;
+  case MC_AVMP4:
+    mux_name = "mp4";
     break;
   default:
     mux_name = muxer_container_type2txt(m_cfg->m_type);

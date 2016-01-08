@@ -1400,6 +1400,75 @@ profile_libav_matroska_builder(void)
 }
 
 /*
+ *  LibAV/MP4 muxer
+ */
+typedef struct profile_libav_mp4 {
+  profile_t;
+} profile_libav_mp4_t;
+
+const idclass_t profile_libav_mp4_class =
+{
+  .ic_super      = &profile_class,
+  .ic_class      = "profile-libav-mp4",
+  .ic_caption    = N_("MP4/av-lib"),
+};
+
+static int
+profile_libav_mp4_reopen(profile_chain_t *prch,
+                         muxer_config_t *m_cfg, int flags)
+{
+  muxer_config_t c;
+
+  if (m_cfg)
+    c = *m_cfg; /* do not alter the original parameter */
+  else
+    memset(&c, 0, sizeof(c));
+  if (c.m_type != MC_AVMP4)
+    c.m_type = MC_AVMP4;
+
+  assert(!prch->prch_muxer);
+  prch->prch_muxer = muxer_create(&c);
+  return 0;
+}
+
+static int
+profile_libav_mp4_open(profile_chain_t *prch,
+                       muxer_config_t *m_cfg, int flags, size_t qsize)
+{
+  int r;
+
+  prch->prch_flags = SUBSCRIPTION_PACKET;
+  prch->prch_sq.sq_maxsize = qsize;
+
+  r = profile_htsp_work(prch, &prch->prch_sq.sq_st, 0, 0);
+  if (r) {
+    profile_chain_close(prch);
+    return r;
+  }
+
+  profile_libav_mp4_reopen(prch, m_cfg, flags);
+
+  return 0;
+}
+
+static muxer_container_type_t
+profile_libav_mp4_get_mc(profile_t *_pro)
+{
+  return MC_AVMP4;
+}
+
+static profile_t *
+profile_libav_mp4_builder(void)
+{
+  profile_libav_mp4_t *pro = calloc(1, sizeof(*pro));
+  pro->pro_sflags = SUBSCRIPTION_PACKET;
+  pro->pro_reopen = profile_libav_mp4_reopen;
+  pro->pro_open   = profile_libav_mp4_open;
+  pro->pro_get_mc = profile_libav_mp4_get_mc;
+  return (profile_t *)pro;
+}
+
+/*
  *  Transcoding + packet-like muxers
  */
 
@@ -1916,6 +1985,7 @@ profile_init(void)
 #if ENABLE_LIBAV
   profile_register(&profile_libav_mpegts_class, profile_libav_mpegts_builder);
   profile_register(&profile_libav_matroska_class, profile_libav_matroska_builder);
+  profile_register(&profile_libav_mp4_class, profile_libav_mp4_builder);
   profile_transcode_experimental_codecs =
     getenv("TVHEADEND_LIBAV_NO_EXPERIMENTAL_CODECS") ? 0 : 1;
   profile_register(&profile_transcode_class, profile_transcode_builder);

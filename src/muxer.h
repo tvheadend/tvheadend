@@ -33,6 +33,7 @@ typedef enum {
   MC_WEBM        = 6,
   MC_AVMATROSKA  = 7,
   MC_AVWEBM      = 8,
+  MC_AVMP4       = 9,
 } muxer_container_type_t;
 
 typedef enum {
