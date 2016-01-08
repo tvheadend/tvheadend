@@ -1105,7 +1105,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                 iconCls: 'apply',
                 handler: function() {
                     if (panel.getForm().isDirty()) {
-                        var node = panel.getForm().getFieldValues();
+                        var form = panel.getForm();
+                        var node = form.getFieldValues();
                         node.uuid = conf.uuids ? conf.uuids : item.uuid;
                         tvheadend.Ajax({
                             url: conf.saveURL || 'api/idnode/save',
@@ -1113,7 +1114,13 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                                 node: Ext.encode(node)
                             },
                             success: function(d) {
-                                panel.getForm().reset();
+                                Ext.MessageBox.alert(_('Apply'), _('Changes were applied!'));
+                                form.trackResetOnLoad = true;
+                                form.setValues(node);
+                            },
+                            failure: function(response) {
+                                Ext.MessageBox.alert(_('Apply'), _('Cannot apply') + ': ' + response.responseText + '!');
+                                form.reset();
                             }
                         });
                     }
@@ -1417,12 +1424,20 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                         params['uuid'] = puuid;
                     if (pclass)
                         params['class'] = pclass;
-                    params['conf'] = Ext.encode(panel.getForm().getFieldValues());
+                    var form = panel.getForm();
+                    var values = form.getFieldValues();
+                    params['conf'] = Ext.encode(values);
                     tvheadend.Ajax({
                         url: conf.create.url || conf.url + '/create',
                         params: params,
                         success: function(d) {
-                            panel.getForm().reset();
+                            Ext.MessageBox.confirm(_('Apply'), _('Changes were applied!'));
+                            form.trackResetOnLoad = true;
+                            form.setValues(node);
+                        },
+                        failure: function(response) {
+                            Ext.MessageBox.confirm(_('Apply'), _('Cannot apply') + ': ' + response.responseText + '!');
+                            form.reset();
                         }
                     });
                 }

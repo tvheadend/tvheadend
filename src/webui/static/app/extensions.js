@@ -1832,9 +1832,6 @@ Ext.ux.Window = Ext.extend(Ext.Window, {
 
 });
 
-// create namespace
-Ext.ns('Ext.ux');
-
 Ext.layout.Column2Layout = Ext.extend(Ext.layout.ColumnLayout, {
 
   getLayoutTargetSize : function() {
