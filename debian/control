@@ -1,7 +1,7 @@
 Source: tvheadend
 Section: video
 Priority: extra
-Maintainer: Andreas Öman <andreas@tvheadend.org>
+Maintainer: Adam Sutton <aps@tvheadend.org>
 Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, libcurl4-gnutls-dev, git-core, liburiparser-dev, python
 Standards-Version: 3.7.3
 
@@ -13,8 +13,9 @@ Enhances: showtime
 Replaces: hts-tvheadend
 Homepage: https://tvheadend.org
 Description: Tvheadend
- Tvheadend is a TV streaming server for Linux supporting DVB, ATSC, IPTV, and Analog video (V4L) as input sources.
- Can be used as a backend to Showtime, XBMC and various other clients.
+ Tvheadend is a TV streaming server and digital video recorder.
+   - supports a variety of inputs (DVB-S(2)/T(2)/C, IPTV, SAT<IP, HDHR)
+   - supports a variant clients (Showtime, Kodi, VLC)
 
 Package: tvheadend-dbg
 Architecture: any
