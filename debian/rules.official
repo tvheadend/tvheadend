@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- --enable-libffmpeg_static
+
+override_dh_auto_build:
+	make ${JARGS}
+
+override_dh_strip:
+	dh_strip --dbg-package=tvheadend-dbg
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tvheadend
+
+override_dh_auto_clean:
+  

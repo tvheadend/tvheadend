@@ -76,6 +76,9 @@ for b in $TVH_BUILD; do
 
   # Create changelog
   ./support/changelog "$CHANGELOG" "$d" "$VER" || exit 1
+
+  # Override rules file for official builds
+  cp ./debian/rules.official ./debian/rules
   
   # Build source package
   dpkg-buildpackage -d -I.git* -S -sgpg -pgpg || exit 1
