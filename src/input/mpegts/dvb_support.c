@@ -429,7 +429,7 @@ atsc_get_string
 
       src    += 3;
       srclen -= 3;
-      
+
       if (bytecount > srclen)
         return ls;
 

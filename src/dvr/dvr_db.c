@@ -42,6 +42,7 @@ static int dvr_in_init;
 static gtimer_t dvr_dbus_timer;
 #endif
 
+static void dvr_entry_deferred_destroy(dvr_entry_t *de);
 static void dvr_entry_set_timer(dvr_entry_t *de);
 static void dvr_timer_rerecord(void *aux);
 static void dvr_timer_expire(void *aux);
@@ -403,9 +404,9 @@ dvr_entry_retention_timer(dvr_entry_t *de)
     }
     save = 0;
     if (dvr_get_filename(de))
-      save = dvr_entry_delete(de); // delete actual file
+      save = dvr_entry_delete(de);    // delete actual file
     if (retention == DVR_RET_ONREMOVE) {
-      dvr_entry_destroy(de, 1);   // also remove database entry
+      dvr_entry_deferred_destroy(de); // also remove database entry
       return;
     }
     if (save)
@@ -1334,6 +1335,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
 #endif
 
   gtimer_disarm(&de->de_timer);
+  gtimer_disarm(&de->de_deferred_timer);
 #if ENABLE_DBUS_1
   gtimer_arm(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, 2);
 #endif
@@ -1349,6 +1351,20 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
     dvr_entry_change_parent_child(de, NULL, de, delconf);
 
   dvr_entry_dec_ref(de);
+}
+
+/**
+ *
+ */
+static void _deferred_destroy_cb(void *aux)
+{
+  dvr_entry_destroy(aux, 1);
+}
+
+static void
+dvr_entry_deferred_destroy(dvr_entry_t *de)
+{
+  gtimer_arm(&de->de_deferred_timer, _deferred_destroy_cb, de, 0);
 }
 
 /**
