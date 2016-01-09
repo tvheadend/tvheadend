@@ -223,6 +223,7 @@ lav_muxer_support_stream(muxer_container_type_t mc,
     ret |= (type == SCT_MPEG2VIDEO);
     ret |= (type == SCT_MPEG2AUDIO);
     ret |= (type == SCT_AC3);
+    break;
 
   case MC_AVMP4:
     ret |= (type == SCT_MPEG2VIDEO);
