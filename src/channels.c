@@ -484,14 +484,12 @@ const idclass_t channel_class = {
 channel_t *
 channel_find_by_name ( const char *name )
 {
-printf("1an");
   channel_t *ch;
   if (name == NULL)
     return NULL;
   CHANNEL_FOREACH(ch)
     if (ch->ch_enabled && !strcasecmp(channel_get_name(ch), name))
       break;
-printf("1an");
   return ch;
 }
 
