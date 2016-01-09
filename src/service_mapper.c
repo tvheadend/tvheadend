@@ -487,6 +487,7 @@ static const idclass_t service_mapper_conf_class = {
       .islist = 1,
       .id     = "services",
       .name   = N_("Services"),
+      .desc   = N_("Select services to map."),
       .get    = service_mapper_services_get,
       .set    = service_mapper_services_set,
       .list   = service_mapper_services_enum,
@@ -496,6 +497,8 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "check_availability",
       .name   = N_("Check availability"),
+      .desc   = N_("Check service availability (Add live services "
+                   "only)."),
       .off    = offsetof(service_mapper_t, d.check_availability),
       .opts   = PO_ADVANCED
     },
@@ -503,19 +506,22 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "encrypted",
       .name   = N_("Map encrypted services"),
+      .desc   = N_("Ignore encryption flag, include encrypted services "
+                   "anyway."),
       .off    = offsetof(service_mapper_t, d.encrypted),
     },
     {
       .type   = PT_BOOL,
       .id     = "merge_same_name",
       .name   = N_("Merge same name"),
+      .desc   = N_("Merge services with the same name to one channel."),
       .off    = offsetof(service_mapper_t, d.merge_same_name),
     },
     {
       .type   = PT_BOOL,
       .id     = "type_tags",
       .name   = N_("Create type based tags"),
-      .desc   = N_("Create SDTV/HDTV/Radio tags"),
+      .desc   = N_("Create SDTV/HDTV/Radio tags."),
       .off    = offsetof(service_mapper_t, d.type_tags),
       .opts   = PO_ADVANCED
     },
@@ -523,6 +529,7 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "provider_tags",
       .name   = N_("Create provider name tags"),
+      .desc   = N_("Create a provider name tag."),
       .off    = offsetof(service_mapper_t, d.provider_tags),
       .opts   = PO_ADVANCED
     },
@@ -530,6 +537,7 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "network_tags",
       .name   = N_("Create network name tags"),
+      .desc   = N_("Create network name tags (set by provider)."),
       .off    = offsetof(service_mapper_t, d.network_tags),
       .opts   = PO_ADVANCED
     },
