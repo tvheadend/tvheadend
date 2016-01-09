@@ -159,6 +159,12 @@ lav_muxer_add_stream(lav_muxer_t *lm,
     c->sample_aspect_ratio.num = ssc->ssc_aspect_num;
     c->sample_aspect_ratio.den = ssc->ssc_aspect_den;
 
+    if (lm->m_config.m_type == MC_AVMP4) {
+      /* this is a whole hell */
+      AVRational ratio = { c->height, c->width };
+      c->sample_aspect_ratio = av_mul_q(c->sample_aspect_ratio, ratio);
+    }
+
     st->sample_aspect_ratio.num = c->sample_aspect_ratio.num;
     st->sample_aspect_ratio.den = c->sample_aspect_ratio.den;
 
