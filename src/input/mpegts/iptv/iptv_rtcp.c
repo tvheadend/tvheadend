@@ -304,6 +304,8 @@ int
 rtcp_init(iptv_rtcp_info_t * info)
 
 {
+  uint32_t rnd;
+
   info->last_ts = 0;
   info->next_ts = 0;
   info->members = 2;
@@ -314,12 +316,9 @@ rtcp_init(iptv_rtcp_info_t * info)
   info->average_packet_size = 52;
   
   // Fill my SSRC
-  // TODO: have a better random
-  unsigned int seed = 21 * time(NULL);
-  seed += 37 * clock();
-  seed += 97 * getpid();
-  srandom(seed);
-  info->my_ssrc = random();
+  uuid_random((uint8_t *)&rnd, sizeof(random));
+  info->my_ssrc = rnd;
+  srand48(rnd * 0x4232a9b9);
   
   return 0;
 }
