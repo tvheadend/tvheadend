@@ -173,6 +173,9 @@ wizard_page_t *wizard_hello(const char *lang)
       .type     = PT_STR,
       .id       = "ui_lang",
       .name     = N_("Language"),
+      .desc     = N_("Select the default user interface language. "
+                     "This can be overridden later in access entries "
+                     "on a per user basis."),
       .get      = wizard_get_value_ui_lang,
       .set      = wizard_set_value_ui_lang,
       .list     = language_get_ui_list,
@@ -182,6 +185,7 @@ wizard_page_t *wizard_hello(const char *lang)
       .type     = PT_STR,
       .id       = "epg_lang1",
       .name     = N_("Language 1"),
+      .desc     = N_("Select high priority (default) EPG language."),
       .get      = wizard_get_value_epg_lang1,
       .set      = wizard_set_value_epg_lang1,
       .list     = language_get_list,
@@ -191,6 +195,7 @@ wizard_page_t *wizard_hello(const char *lang)
       .type     = PT_STR,
       .id       = "epg_lang2",
       .name     = N_("Language 2"),
+      .desc     = N_("Select medium priority EPG language."),
       .get      = wizard_get_value_epg_lang2,
       .set      = wizard_set_value_epg_lang2,
       .list     = language_get_list,
@@ -200,6 +205,7 @@ wizard_page_t *wizard_hello(const char *lang)
       .type     = PT_STR,
       .id       = "epg_lang3",
       .name     = N_("Language 3"),
+      .desc     = N_("Select low priority EPG language."),
       .get      = wizard_get_value_epg_lang3,
       .set      = wizard_set_value_epg_lang3,
       .list     = language_get_list,
@@ -383,6 +389,7 @@ wizard_page_t *wizard_login(const char *lang)
       .type     = PT_STR,
       .id       = "network",
       .name     = N_("Allowed network"),
+      .desc     = N_("Enter allowed network prefixes."),
       .get      = wizard_get_value_network,
       .set      = wizard_set_value_network,
       .group    = 1
@@ -391,6 +398,9 @@ wizard_page_t *wizard_login(const char *lang)
       .type     = PT_STR,
       .id       = "admin_username",
       .name     = N_("Admin username"),
+      .desc     = N_("Enter an administrator username. "
+                     "Note: do not use the same username as the "
+                     "superuser backdoor account."),
       .get      = wizard_get_value_admin_username,
       .set      = wizard_set_value_admin_username,
       .group    = 2
@@ -399,6 +409,7 @@ wizard_page_t *wizard_login(const char *lang)
       .type     = PT_STR,
       .id       = "admin_password",
       .name     = N_("Admin password"),
+      .desc     = N_("Enter an administrator password."),
       .get      = wizard_get_value_admin_password,
       .set      = wizard_set_value_admin_password,
       .group    = 2
@@ -407,6 +418,7 @@ wizard_page_t *wizard_login(const char *lang)
       .type     = PT_STR,
       .id       = "username",
       .name     = N_("Username"),
+      .desc     = N_("Enter a non-admin user username."),
       .get      = wizard_get_value_username,
       .set      = wizard_set_value_username,
       .group    = 3
@@ -415,6 +427,7 @@ wizard_page_t *wizard_login(const char *lang)
       .type     = PT_STR,
       .id       = "password",
       .name     = N_("Password"),
+      .desc     = N_("Enter a non-admin user password."),
       .get      = wizard_get_value_password,
       .set      = wizard_set_value_password,
       .group    = 3
