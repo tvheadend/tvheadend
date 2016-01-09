@@ -1361,6 +1361,7 @@ const idclass_t profile_libav_matroska_class =
       .type     = PT_BOOL,
       .id       = "webm",
       .name     = N_("WEBM"),
+      .desc     = N_("Use WEBM format."),
       .off      = offsetof(profile_libav_matroska_t, pro_webm),
       .opts     = PO_ADVANCED,
       .def.i    = 0,
