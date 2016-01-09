@@ -82,13 +82,13 @@ int epggrab_channel_match_name ( epggrab_channel_t *ec, channel_t *ch )
   if (name == NULL)
     return 0;
 
-  if (ec->name && !strcmp(ec->name, name))
+  if (ec->name && !strcasecmp(ec->name, name))
     return 1;
 
   if (ec->names)
     HTSMSG_FOREACH(f, ec->names)
       if ((s = htsmsg_field_get_str(f)) != NULL)
-        if (!strcmp(s, name))
+        if (!strcasecmp(s, name))
           return 1;
 
   return 0;
