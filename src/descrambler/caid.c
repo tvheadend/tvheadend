@@ -129,6 +129,8 @@ detect_card_type(const uint16_t caid)
     case 0x5581:
     case 0x4aee:
       return CARD_BULCRYPT;
+    case 0x5500 ... 0x551a:
+      return CARD_GRIFFIN;
   }
   
   switch(c_sys) {

@@ -33,6 +33,7 @@ typedef enum {
   CARD_CRYPTOWORKS,
   CARD_BULCRYPT,
   CARD_STREAMGUARD,
+  CARD_GRIFFIN,
   CARD_UNKNOWN
 } card_type_t;
 

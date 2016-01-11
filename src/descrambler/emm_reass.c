@@ -552,6 +552,29 @@ emm_bulcrypt
     send(aux, data, len, mux);
 }
 
+static void
+emm_griffin
+  (emm_reass_t *ra, const uint8_t *data, int len, void *mux,
+   emm_send_t send, void *aux)
+{
+  emm_provider_t *ep;
+  int i;
+
+  if (len < 1)
+    return;
+
+  switch (data[0]) {
+  case 0x82:
+  case 0x83:
+    PROVIDERS_FOREACH(ra, i, ep)
+      if (memcmp(&data[3], &ep->sa[0], 4) == 0) {
+        send(aux, data, len, mux);
+        break;
+      }
+    break;
+  }
+}
+
 void
 emm_filter(emm_reass_t *ra, const uint8_t *data, int len, void *mux,
            emm_send_t send, void *aux)
@@ -579,6 +602,7 @@ emm_reass_init(emm_reass_t *ra, uint16_t caid)
   case CARD_CRYPTOWORKS: ra->do_emm = emm_cryptoworks;  break;
   case CARD_BULCRYPT:    ra->do_emm = emm_bulcrypt;     break;
   case CARD_STREAMGUARD: ra->do_emm = emm_streamguard;  break;
+  case CARD_GRIFFIN:     ra->do_emm = emm_griffin;      break;
   default: break;
   }
 }
