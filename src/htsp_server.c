@@ -4010,6 +4010,7 @@ htsp_subscription_descramble_info(htsp_subscription_t *hs, descramble_info_t *di
 
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "descrambleInfo");
+  htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "pid", di->pid);
   htsmsg_add_u32(m, "caid", di->caid);
   htsmsg_add_u32(m, "provid", di->provid);
