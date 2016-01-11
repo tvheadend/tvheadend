@@ -162,6 +162,7 @@ iptv_pipe_init ( void )
   static iptv_handler_t ih[] = {
     {
       .scheme = "pipe",
+      .buffer_limit = 5000,
       .start  = iptv_pipe_start,
       .stop   = iptv_pipe_stop,
       .read   = iptv_pipe_read,

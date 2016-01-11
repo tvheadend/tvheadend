@@ -592,12 +592,14 @@ iptv_http_init ( void )
   static iptv_handler_t ih[] = {
     {
       .scheme = "http",
+      .buffer_limit = 5000,
       .start  = iptv_http_start,
       .stop   = iptv_http_stop,
       .pause  = iptv_http_pause
     },
     {
       .scheme  = "https",
+      .buffer_limit = 5000,
       .start  = iptv_http_start,
       .stop   = iptv_http_stop,
       .pause  = iptv_http_pause

@@ -410,18 +410,25 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 static inline int
 iptv_input_pause_check ( iptv_mux_t *im )
 {
-  int64_t s64;
+  int64_t s64, limit;
 
   if (im->im_pcr == PTS_UNSET)
     return 0;
+  limit = im->mm_iptv_buffer_limit;
+  if (!limit)
+    limit = im->im_handler->buffer_limit;
+  if (limit == UINT32_MAX)
+    return 0;
+  limit *= 1000;
   s64 = getmonoclock() - im->im_pcr_start;
   im->im_pcr_start += s64;
   im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
   im->im_pcr &= PTS_MASK;
-  tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64, im->im_pcr, im->im_pcr_start);
+  tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64", limit %"PRId64,
+           im->im_pcr, im->im_pcr_start, limit);
 
   /* queued more than 3 seconds? trigger the pause */
-  return im->im_pcr_end - im->im_pcr_start >= 3000000LL;
+  return im->im_pcr_end - im->im_pcr_start >= limit;
 }
 
 void

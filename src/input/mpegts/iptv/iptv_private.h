@@ -49,6 +49,9 @@ typedef struct iptv_handler iptv_handler_t;
 struct iptv_handler
 {
   const char *scheme;
+
+  uint32_t buffer_limit;
+
   int     (*start) ( iptv_mux_t *im, const char *raw, const url_t *url );
   void    (*stop)  ( iptv_mux_t *im );
   ssize_t (*read)  ( iptv_mux_t *im );
@@ -140,6 +143,8 @@ struct iptv_mux
   uint32_t              mm_iptv_rtp_seq;
 
   sbuf_t                mm_iptv_buffer;
+
+  uint32_t              mm_iptv_buffer_limit;
 
   iptv_handler_t       *im_handler;
   gtimer_t              im_pause_timer;

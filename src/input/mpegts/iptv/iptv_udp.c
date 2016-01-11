@@ -184,6 +184,7 @@ iptv_udp_init ( void )
   static iptv_handler_t ih[] = {
     {
       .scheme = "udp",
+      .buffer_limit = UINT32_MAX, /* unlimited */
       .start  = iptv_udp_start,
       .stop   = iptv_udp_stop,
       .read   = iptv_udp_read,
@@ -191,6 +192,7 @@ iptv_udp_init ( void )
     },
     {
       .scheme = "rtp",
+      .buffer_limit = UINT32_MAX, /* unlimited */
       .start  = iptv_udp_start,
       .stop   = iptv_udp_stop,
       .read   = iptv_udp_rtp_read,

@@ -137,6 +137,7 @@ iptv_file_init ( void )
   static iptv_handler_t ih[] = {
     {
       .scheme = "file",
+      .buffer_limit = 5000,
       .start  = iptv_file_start,
       .stop   = iptv_file_stop
     },
