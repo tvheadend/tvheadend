@@ -288,7 +288,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
   while((l = st->es_buf.sb_ptr - p) > 3) {
     const uint8_t *d = st->es_buf.sb_data + p;
     /* Startcode check */
-    if(d[0] == 0 || d[1] == 0 || d[2] == 1) {
+    if(d[0] == 0 && d[1] == 0 && d[2] == 1) {
       p += 4;
     /* LATM */
     } else if(latm != 0 && d[0] == 0x56 && (d[1] & 0xe0) == 0xe0) {
@@ -318,7 +318,6 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
         break;
 
       if (muxlen < 7) {
-        tvhtrace("parser", "AAC/ATDS skip byte %02x", d[0]);
         p++;
         continue;
       }
