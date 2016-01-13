@@ -97,7 +97,6 @@ extern int tvheadend_webui_debug;
 extern int tvheadend_htsp_port;
 
 typedef struct source_info {
-  char *si_device;
   char *si_adapter;
   char *si_network;
   char *si_satpos;
