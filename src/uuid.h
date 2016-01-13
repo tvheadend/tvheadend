@@ -60,6 +60,22 @@ int uuid_bin2hex  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 int uuid_hex2bin  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 
 /**
+ * Copy
+ */
+static inline void uuid_copy ( tvh_uuid_t *dst, const tvh_uuid_t *src )
+{
+  *dst = *src;
+}
+
+/**
+ * Compare
+ */
+static inline int uuid_cmp ( const tvh_uuid_t *a, const tvh_uuid_t *b )
+{
+  return memcmp(a->bin, b->bin, UUID_BIN_SIZE);
+}
+
+/**
  * Valid hex uuid
  */
 int uuid_hexvalid ( const char *uuid );

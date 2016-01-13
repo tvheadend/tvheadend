@@ -675,7 +675,7 @@ satip_device_find( const char *satip_uuid )
   satip_device_calc_bin_uuid(binuuid, satip_uuid);
   TVH_HARDWARE_FOREACH(th) {
     if (idnode_is_instance(&th->th_id, &satip_device_class) &&
-        memcmp(th->th_id.in_uuid, binuuid, UUID_BIN_SIZE) == 0)
+        memcmp(th->th_id.in_uuid.bin, binuuid, UUID_BIN_SIZE) == 0)
       return (satip_device_t *)th;
   }
   return NULL;

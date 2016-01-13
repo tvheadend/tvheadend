@@ -497,7 +497,7 @@ channel_t *
 channel_find_by_id ( uint32_t i )
 {
   channel_t skel;
-  memcpy(skel.ch_id.in_uuid, &i, sizeof(i));
+  memcpy(skel.ch_id.in_uuid.bin, &i, sizeof(i));
 
   return RB_FIND(&channels, &skel, ch_link, ch_id_cmp);
 }

@@ -57,7 +57,7 @@ SKEL_DECLARE(idclasses_skel, idclass_link_t);
 static int
 in_cmp(const idnode_t *a, const idnode_t *b)
 {
-  return memcmp(a->in_uuid, b->in_uuid, sizeof(a->in_uuid));
+  return uuid_cmp(&a->in_uuid, &b->in_uuid);
 }
 
 static int
@@ -131,7 +131,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
       in->in_class = NULL;
       return -1;
     }
-    memcpy(in->in_uuid, u.bin, sizeof(in->in_uuid));
+    uuid_copy(&in->in_uuid, &u);
 
     c = NULL;
     if (flags & IDNODE_SHORT_UUID) {
@@ -234,7 +234,7 @@ uint32_t
 idnode_get_short_uuid (const idnode_t *in)
 {
   uint32_t u32;
-  memcpy(&u32, in->in_uuid, sizeof(u32));
+  memcpy(&u32, in->in_uuid.bin, sizeof(u32));
   return u32 & 0x7FFFFFFF; // compat needs to be +ve signed
 }
 
@@ -244,7 +244,7 @@ idnode_get_short_uuid (const idnode_t *in)
 const char *
 idnode_uuid_as_str(const idnode_t *in, char *uuid)
 {
-  bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid, sizeof(in->in_uuid));
+  bin2hex(uuid, UUID_HEX_SIZE, in->in_uuid.bin, sizeof(in->in_uuid.bin));
   return uuid;
 }
 
@@ -608,7 +608,7 @@ idnode_find ( const char *uuid, const idclass_t *idc, const idnodes_rb_t *domain
   tvhtrace("idnode", "find node %s class %s", uuid, idc ? idc->ic_class : NULL);
   if(uuid == NULL || strlen(uuid) != UUID_HEX_SIZE - 1)
     return NULL;
-  if(hex2bin(skel.in_uuid, sizeof(skel.in_uuid), uuid))
+  if(hex2bin(skel.in_uuid.bin, sizeof(skel.in_uuid.bin), uuid))
     return NULL;
   if (domain == NULL)
     domain = idnode_domain(idc);

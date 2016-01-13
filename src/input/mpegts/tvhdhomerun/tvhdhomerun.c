@@ -249,7 +249,7 @@ tvhdhomerun_device_find( uint32_t device_id )
   tvhdhomerun_device_calc_bin_uuid(binuuid, device_id);
   TVH_HARDWARE_FOREACH(th) {
     if (idnode_is_instance(&th->th_id, &tvhdhomerun_device_class) &&
-        memcmp(th->th_id.in_uuid, binuuid, UUID_BIN_SIZE) == 0)
+        memcmp(th->th_id.in_uuid.bin, binuuid, UUID_BIN_SIZE) == 0)
       return (tvhdhomerun_device_t *)th;
   }
   return NULL;

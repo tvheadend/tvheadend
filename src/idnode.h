@@ -83,7 +83,7 @@ typedef RB_HEAD(, idnode) idnodes_rb_t;
  * Node definition
  */
 struct idnode {
-  uint8_t           in_uuid[UUID_BIN_SIZE]; ///< Unique ID
+  tvh_uuid_t        in_uuid;                ///< Unique ID
   RB_ENTRY(idnode)  in_link;                ///< Global hash
   RB_ENTRY(idnode)  in_domain_link;         ///< Root class link (domain)
   idnodes_rb_t     *in_domain;              ///< Domain nodes
