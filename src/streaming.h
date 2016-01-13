@@ -21,6 +21,7 @@
 
 #include "packet.h"
 #include "htsmsg.h"
+#include "service.h"
 
 
 typedef struct streaming_start_component {

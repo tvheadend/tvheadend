@@ -96,17 +96,6 @@ extern int tvheadend_webui_port;
 extern int tvheadend_webui_debug;
 extern int tvheadend_htsp_port;
 
-typedef struct source_info {
-  char *si_adapter;
-  char *si_network;
-  char *si_satpos;
-  char *si_mux;
-  char *si_provider;
-  char *si_service;
-  int   si_type;
-} source_info_t;
-
-
 static inline void
 lock_assert0(pthread_mutex_t *l, const char *file, int line)
 {
