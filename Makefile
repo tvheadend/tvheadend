@@ -61,8 +61,8 @@ endif
 
 ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
 
-CFLAGS  += -I${ROOTDIR}/libav_static/build/ffmpeg/include
-LDFLAGS_FFDIR = ${ROOTDIR}/libav_static/build/ffmpeg/lib
+CFLAGS  += -I${BUILDDIR}/ffmpeg/build/ffmpeg/include
+LDFLAGS_FFDIR = ${BUILDDIR}/ffmpeg/build/ffmpeg/lib
 LDFLAGS += ${LDFLAGS_FFDIR}/libavresample.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libswresample.a
 LDFLAGS += ${LDFLAGS_FFDIR}/libavfilter.a
@@ -112,9 +112,9 @@ endif
 endif # CONFIG_LIBFFMPEG_STATIC
 
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
-CFLAGS  += -I${ROOTDIR}/libhdhomerun_static
-LDFLAGS += -L${ROOTDIR}/libhdhomerun_static/libhdhomerun \
-           -Wl,-Bstatic -lhdhomerun -Wl,-Bdynamic
+CFLAGS  += -I$(BUILDDIR)/hdhomerun
+LDFLAGS += $(BUILDDIR)/hdhomerun/libhdhomerun/libhdhomerun.a \
+           -Wl,-Bstatic -Wl,-Bdynamic
 endif
 
 vpath %.c $(ROOTDIR)
@@ -587,8 +587,6 @@ clean:
 # Distclean
 .PHONY: distclean
 distclean: clean
-	rm -rf ${ROOTDIR}/libav_static
-	rm -rf ${ROOTDIR}/libhdhomerun_static
 	rm -rf ${ROOTDIR}/build.*
 	rm -rf ${ROOTDIR}/data/dvb-scan
 	rm -f ${ROOTDIR}/.config.mk
@@ -684,11 +682,11 @@ ifeq ($(CONFIG_LIBFFMPEG_STATIC),yes)
 src/libav.h ${SRCS-LIBAV} ${DEPS-LIBAV}: ${BUILDDIR}/libffmpeg_stamp
 endif
 
-${BUILDDIR}/libffmpeg_stamp: ${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a
+${BUILDDIR}/libffmpeg_stamp: ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a
 	@touch $@
 
-${ROOTDIR}/libav_static/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
-	$(MAKE) -f Makefile.ffmpeg build
+${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
+	$(MAKE) -f Makefile.ffmpeg
 
 # Static HDHOMERUN library
 
@@ -696,11 +694,11 @@ ifeq ($(CONFIG_LIBHDHOMERUN_STATIC),yes)
 src/input/mpegts/tvhdhomerun/tvhdhomerun_private.h ${SRCS-HDHOMERUN}: ${BUILDDIR}/libhdhomerun_stamp
 endif
 
-${BUILDDIR}/libhdhomerun_stamp: ${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a
+${BUILDDIR}/libhdhomerun_stamp: ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.a
 	@touch $@
 
-${ROOTDIR}/libhdhomerun_static/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
-	$(MAKE) -f Makefile.hdhomerun build
+${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
+	$(MAKE) -f Makefile.hdhomerun
 
 # linuxdvb git tree
 $(ROOTDIR)/data/dvb-scan/.stamp:
