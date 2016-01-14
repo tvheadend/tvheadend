@@ -434,6 +434,17 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 
   if(m->mm_network->mn_network_name != NULL)
     si->si_network = strdup(m->mm_network->mn_network_name);
+#if ENABLE_MPEGTS_DVB
+  dvb_fe_type_t ftype;
+  ftype = dvb_fe_type_by_network_class(m->mm_network->mn_id.in_class);
+  if (ftype == DVB_TYPE_NONE)
+    strcpy(buf, "IPTV");
+  else
+    snprintf(buf, sizeof(buf), "%s", dvb_type2str(ftype));
+#else
+  strcpy(buf, "IPTV");
+#endif
+  si->si_network_type = strdup(buf);
 
   m->mm_display_name(m, buf, sizeof(buf));
   si->si_mux = strdup(buf);

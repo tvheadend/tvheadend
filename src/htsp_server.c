@@ -3876,6 +3876,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
   if(si->si_mux     ) htsmsg_add_str(sourceinfo, "mux"    ,  si->si_mux     );
   if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
+  if(si->si_network_type) htsmsg_add_str(sourceinfo, "network_type",  si->si_network_type );
   if(si->si_provider) htsmsg_add_str(sourceinfo, "provider", si->si_provider);
   if(si->si_service ) htsmsg_add_str(sourceinfo, "service",  si->si_service );
   if(si->si_satpos  ) htsmsg_add_str(sourceinfo, "satpos",   si->si_satpos  );

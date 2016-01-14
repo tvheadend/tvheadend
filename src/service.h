@@ -44,6 +44,7 @@ typedef struct source_info {
   tvh_uuid_t si_mux_uuid;
   char *si_adapter;
   char *si_network;
+  char *si_network_type;
   char *si_satpos;
   char *si_mux;
   char *si_provider;
