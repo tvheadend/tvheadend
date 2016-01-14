@@ -24,7 +24,7 @@
 #include "htsbuf.h"
 #include "tvhdhomerun.h"
 
-#include <libhdhomerun/hdhomerun.h>
+#include "libhdhomerun/hdhomerun.h"
 
 typedef struct tvhdhomerun_device_info tvhdhomerun_device_info_t;
 typedef struct tvhdhomerun_device      tvhdhomerun_device_t;
