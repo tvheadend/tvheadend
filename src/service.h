@@ -39,6 +39,9 @@ struct mpegts_apids;
  * Source information
  */
 typedef struct source_info {
+  tvh_uuid_t si_adapter_uuid;
+  tvh_uuid_t si_network_uuid;
+  tvh_uuid_t si_mux_uuid;
   char *si_adapter;
   char *si_network;
   char *si_satpos;

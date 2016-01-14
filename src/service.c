@@ -1480,7 +1480,8 @@ service_source_info_free(struct source_info *si)
 void
 service_source_info_copy(source_info_t *dst, const source_info_t *src)
 {
-#define COPY(x) dst->si_##x = src->si_##x ? strdup(src->si_##x) : NULL
+  *dst = *src;
+#define COPY(x) if (src->si_##x) dst->si_##x = strdup(src->si_##x)
   COPY(adapter);
   COPY(network);
   COPY(mux);

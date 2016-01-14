@@ -3787,6 +3787,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
 {
   htsmsg_t *m,*streams, *c, *sourceinfo;
   const char *type;
+  tvh_uuid_t hex;
   int i;
   const source_info_t *si;
 
@@ -3860,6 +3861,18 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   htsmsg_add_msg(m, "streams", streams);
 
   si = &ss->ss_si;
+  if(!uuid_empty(&si->si_adapter_uuid)) {
+    uuid_bin2hex(&si->si_adapter_uuid, &hex);
+    htsmsg_add_str(sourceinfo, "adapter_uuid", hex.hex);
+  }
+  if(!uuid_empty(&si->si_mux_uuid)) {
+    uuid_bin2hex(&si->si_mux_uuid, &hex);
+    htsmsg_add_str(sourceinfo, "mux_uuid", hex.hex);
+  }
+  if(!uuid_empty(&si->si_network_uuid)) {
+    uuid_bin2hex(&si->si_network_uuid, &hex);
+    htsmsg_add_str(sourceinfo, "network_uuid", hex.hex);
+  }
   if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
   if(si->si_mux     ) htsmsg_add_str(sourceinfo, "mux"    ,  si->si_mux     );
   if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );

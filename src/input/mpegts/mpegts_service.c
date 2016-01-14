@@ -429,6 +429,9 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
   memset(si, 0, sizeof(struct source_info));
   si->si_type = S_MPEG_TS;
 
+  uuid_copy(&si->si_network_uuid, &m->mm_network->mn_id.in_uuid);
+  uuid_copy(&si->si_mux_uuid, &m->mm_id.in_uuid);
+
   if(m->mm_network->mn_network_name != NULL)
     si->si_network = strdup(m->mm_network->mn_network_name);
 
@@ -437,6 +440,7 @@ mpegts_service_setsourceinfo(service_t *t, source_info_t *si)
 
   if(s->s_dvb_active_input) {
     mpegts_input_t *mi = s->s_dvb_active_input;
+    uuid_copy(&si->si_adapter_uuid, &mi->ti_id.in_uuid);
     mi->mi_display_name(mi, buf, sizeof(buf));
     si->si_adapter = strdup(buf);
   }

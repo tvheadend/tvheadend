@@ -27,6 +27,8 @@
 
 #define RANDOM_PATH "/dev/urandom"
 
+uint8_t ___uuid_empty[UUID_BIN_SIZE] = { 0 };
+
 static int fd = -1;
 
 /* **************************************************************************
