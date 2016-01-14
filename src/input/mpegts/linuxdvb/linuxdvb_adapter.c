@@ -386,6 +386,9 @@ linuxdvb_adapter_add ( const char *path )
       if ((delsys = linuxdvb2tvh_delsys(delsys)) == DVB_SYS_NONE)
         continue;
 
+      if (force_dvbs)
+        delsys = DVB_SYS_DVBS;
+
       /* Invalid */
       if ((type5 = dvb_delsys2type(delsys)) == DVB_TYPE_NONE)
         continue;
