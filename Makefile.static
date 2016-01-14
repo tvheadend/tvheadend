@@ -1,0 +1,102 @@
+#
+# Copyright (C) 2008-2014 Tvheadend Foundation CIC
+#
+# This file is part of Tvheadend
+#
+# Tvheadend is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Tvheadend is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Tvheadend.  If not, see <http://www.gnu.org/licenses/>.
+#
+# For more details, including opportunities for alternative licensing,
+# please read the LICENSE file.
+#
+# ############################################################################
+
+# ############################################################################
+# Generic makefile for handling static 3rd party libraries
+# ############################################################################
+
+#
+# Required inputs
+#
+#   LIB_NAME			- The name of the library used in files uploaded/downloaded
+#   LIB_FILES			-	The files to be packaged
+#
+# Optional inputs
+#
+#   BINTRAY_USER	- The bintray user account for uploads
+#   BINTRAY_PASS  - The bintray password
+#   BINTRAY_REPO	- The repo to upload to
+#
+
+MAKEFILE ?= $(firstword $(MAKEFILE_LIST))
+
+default: liball
+
+# Setup environment for scripts
+export ARCH
+export CODENAME
+export ROOTDIR
+export BUILDDIR
+export LIBDIR
+export BINTRAY_USER
+export BINTRAY_PASS
+export BINTRAY_REPO
+
+# Download cache
+.PHONY: libcacheget
+libcacheget:
+	@($(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
+	$(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true
+
+# Upload
+.PHONY: libcacheput
+libcacheput: build
+	@$(ROOTDIR)/support/lib.sh upload $(LIB_NAME) $(LIB_FILES)
+
+# Do it all
+.PHONY: liball
+liball: libcacheget libcacheput
+
+# ############################################################################
+# Helper routines
+# ############################################################################
+
+define DOWNLOAD
+	@mkdir -p $(LIB_ROOT)/build
+	@if test -z "$${TVHEADEND_FILE_CACHE}"; then \
+	  printf "WGET            $(1)\n"; \
+	  wget --no-verbose -O $(2) $(1); \
+	else \
+	  file=$$(basename $(2)); \
+	  cp "$$TVHEADEND_FILE_CACHE/$$(file)" $(2); \
+	fi
+	@{ \
+	  sum=$$(sha1sum $(2) | cut -d ' ' -f 1); \
+	  printf "SHA1SUM test '$${sum}' == '$(3)': "; \
+	  test "y$${sum}" = "y$(3)"; \
+	}
+	@echo "OK"
+endef
+
+define UNTAR
+	@{ \
+	  printf "UNTAR           $(1)\n"; \
+	  tar x -C $(LIB_ROOT) -$(2)f $(LIB_ROOT)/$(1); \
+	}
+endef
+	
+# ############################################################################
+# Editor Configuration
+#
+# vim:sts=2:ts=2:sw=2:et!
+# ############################################################################
