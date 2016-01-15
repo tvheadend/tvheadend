@@ -139,12 +139,15 @@ MSGMERGE ?= msgmerge
 # Debug/Output
 #
 
+BRIEF  = CC MKBUNDLE
 ifndef V
 ECHO   = printf "%-16s%s\n" $(1) $(2)
-BRIEF  = CC MKBUNDLE CXX
 MSG    = $(subst $(BUILDDIR)/,,$@)
 $(foreach VAR,$(BRIEF), \
-	$(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
+	$(eval p$(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
+else
+$(foreach VAR,$(BRIEF), \
+	$(eval p$(VAR) = $($(VAR))))
 endif
 
 #
@@ -188,7 +191,7 @@ SRCS-1 = \
 	src/trap.c \
 	src/avg.c \
 	src/htsstr.c \
-        src/tvhpoll.c \
+	src/tvhpoll.c \
 	src/huffman.c \
 	src/filebundle.c \
 	src/config.c \
@@ -329,9 +332,9 @@ I18N-C += $(SRCS-MPEGTS)
 
 # MPEGTS DVB
 SRCS-MPEGTS-DVB = \
-        src/input/mpegts/mpegts_network_dvb.c \
-        src/input/mpegts/mpegts_mux_dvb.c \
-        src/input/mpegts/scanfile.c
+	src/input/mpegts/mpegts_network_dvb.c \
+	src/input/mpegts/mpegts_mux_dvb.c \
+	src/input/mpegts/scanfile.c
 SRCS-${CONFIG_MPEGTS_DVB} += $(SRCS-MPEGTS-DVB)
 I18N-C += $(SRCS-MPEGTS-DVB)
 
@@ -347,14 +350,14 @@ I18N-C += $(SRCS-MPEGTS-EPG)
 
 # LINUX DVB
 SRCS-LINUXDVB = \
-        src/input/mpegts/linuxdvb/linuxdvb.c \
-        src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
-        src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
-        src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
-        src/input/mpegts/linuxdvb/linuxdvb_lnb.c \
-        src/input/mpegts/linuxdvb/linuxdvb_switch.c \
-        src/input/mpegts/linuxdvb/linuxdvb_rotor.c \
-        src/input/mpegts/linuxdvb/linuxdvb_en50494.c
+	src/input/mpegts/linuxdvb/linuxdvb.c \
+	src/input/mpegts/linuxdvb/linuxdvb_adapter.c \
+	src/input/mpegts/linuxdvb/linuxdvb_frontend.c \
+	src/input/mpegts/linuxdvb/linuxdvb_satconf.c \
+	src/input/mpegts/linuxdvb/linuxdvb_lnb.c \
+	src/input/mpegts/linuxdvb/linuxdvb_switch.c \
+	src/input/mpegts/linuxdvb/linuxdvb_rotor.c \
+	src/input/mpegts/linuxdvb/linuxdvb_en50494.c
 SRCS-${CONFIG_LINUXDVB} += $(SRCS-LINUXDVB)
 I18N-C += $(SRCS-LINUXDVB)
 
@@ -369,31 +372,31 @@ I18N-C += $(SRCS-SATIP-CLIENT)
 
 # HDHOMERUN
 SRCS-HDHOMERUN = \
-        src/input/mpegts/tvhdhomerun/tvhdhomerun.c \
-        src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c
+	src/input/mpegts/tvhdhomerun/tvhdhomerun.c \
+	src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c
 SRCS-${CONFIG_HDHOMERUN_CLIENT} += $(SRCS-HDHOMERUN)
 I18N-C += $(SRCS-HDHOMERUN)
 
 # IPTV
 SRCS-IPTV = \
 	src/input/mpegts/iptv/iptv.c \
-        src/input/mpegts/iptv/iptv_mux.c \
-        src/input/mpegts/iptv/iptv_service.c \
-        src/input/mpegts/iptv/iptv_http.c \
-        src/input/mpegts/iptv/iptv_udp.c \
-        src/input/mpegts/iptv/iptv_rtsp.c \
-        src/input/mpegts/iptv/iptv_rtcp.c \
-        src/input/mpegts/iptv/iptv_pipe.c \
-        src/input/mpegts/iptv/iptv_file.c \
+	src/input/mpegts/iptv/iptv_mux.c \
+	src/input/mpegts/iptv/iptv_service.c \
+	src/input/mpegts/iptv/iptv_http.c \
+	src/input/mpegts/iptv/iptv_udp.c \
+	src/input/mpegts/iptv/iptv_rtsp.c \
+	src/input/mpegts/iptv/iptv_rtcp.c \
+	src/input/mpegts/iptv/iptv_pipe.c \
+	src/input/mpegts/iptv/iptv_file.c \
 	src/input/mpegts/iptv/iptv_auto.c
 SRCS-${CONFIG_IPTV} += $(SRCS-IPTV)
 I18N-C += $(SRCS-IPTV)
 
 # TSfile
 SRCS-TSFILE = \
-        src/input/mpegts/tsfile/tsfile.c \
-        src/input/mpegts/tsfile/tsfile_input.c \
-        src/input/mpegts/tsfile/tsfile_mux.c
+	src/input/mpegts/tsfile/tsfile.c \
+	src/input/mpegts/tsfile/tsfile_input.c \
+	src/input/mpegts/tsfile/tsfile_mux.c
 SRCS-$(CONFIG_TSFILE) += $(SRCS-TSFILE)
 I18N-C += $(SRCS-TSFILE)
 
@@ -482,7 +485,7 @@ endif
 
 ifeq ($(FFDECSA-yes),yes)
 SRCS-yes += src/descrambler/ffdecsa/ffdecsa_interface.c \
-	    src/descrambler/ffdecsa/ffdecsa_int.c
+	src/descrambler/ffdecsa/ffdecsa_int.c
 SRCS-${CONFIG_MMX}  += src/descrambler/ffdecsa/ffdecsa_mmx.c
 SRCS-${CONFIG_SSE2} += src/descrambler/ffdecsa/ffdecsa_sse2.c
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
@@ -513,9 +516,9 @@ POC_PY=PYTHONIOENCODING=utf-8 $(PYTHON) support/poc.py
 
 define merge-po
 	@if ! test -r "$(1)"; then \
-	  sed -e 's/Content-Type: text\/plain; charset=CHARSET/Content-Type: text\/plain; charset=utf-8/' < "$(2)" > "$(1).new"; \
+		sed -e 's/Content-Type: text\/plain; charset=CHARSET/Content-Type: text\/plain; charset=utf-8/' < "$(2)" > "$(1).new"; \
 	else \
-	  $(MSGMERGE) -o $(1).new $(1) $(2); \
+		$(MSGMERGE) -o $(1).new $(1) $(2); \
 	fi
 	@mv $(1).new $(1)
 endef
@@ -564,17 +567,17 @@ reconfigure:
 
 # Binary
 ${PROG}: .config.mk make_webui $(OBJS)
-	$(CC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
+	$(pCC) -o $@ $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 # Object
 ${BUILDDIR}/%.o: %.c
 	@mkdir -p $(dir $@)
-	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
+	$(pCC) -MD -MP $(CFLAGS) -c -o $@ $<
 
 # Add-on
 ${BUILDDIR}/%.so: ${SRCS_EXTRA}
 	@mkdir -p $(dir $@)
-	${CC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
+	${pCC} -O -fbuiltin -fomit-frame-pointer -fPIC -shared -o $@ $< -ldl
 
 # Clean
 .PHONY: clean
@@ -613,11 +616,11 @@ $(BUILDDIR)/timestamp.c: FORCE
 	@echo 'const char* build_timestamp = "'`date -Iseconds`'";' >> $@
 
 $(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
-	$(CC) -c -o $@ $<
+	$(pCC) -c -o $@ $<
 
 $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 	@mkdir -p $(dir $@)
-	$(CC) -c -o $@ $<
+	$(pCC) -c -o $@ $<
 
 # Internationalization
 .PHONY: intl
@@ -666,11 +669,11 @@ src/tvh_locale_inc.c: $(PO-FILES)
 # Bundle files
 $(BUILDDIR)/bundle.o: $(BUILDDIR)/bundle.c
 	@mkdir -p $(dir $@)
-	$(CC) -I${ROOTDIR}/src -c -o $@ $<
+	$(pCC) -I${ROOTDIR}/src -c -o $@ $<
 
 $(BUILDDIR)/bundle.c: check_dvb_scan make_webui
 	@mkdir -p $(dir $@)
-	$(MKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
+	$(pMKBUNDLE) -o $@ -d ${BUILDDIR}/bundle.d $(BUNDLE_FLAGS) $(BUNDLES:%=$(ROOTDIR)/%)
 
 .PHONY: make_webui
 make_webui:
