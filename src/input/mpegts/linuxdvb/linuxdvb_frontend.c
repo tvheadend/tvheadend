@@ -1516,6 +1516,11 @@ linuxdvb_frontend_tune0
   case DVB_TYPE_ATSC_T:
     p.u.vsb.modulation       = TR(modulation, mod_tbl, QAM_AUTO);
     break;
+#if DVB_API_VERSION >= 5
+  case DVB_TYPE_ISDB_T:
+  case DVB_TYPE_DAB:
+    break;
+#endif
   default:
     tvherror("linuxdvb", "%s - unknown FE type %d", buf1, dmc->dmc_fe_type);
     return SM_CODE_TUNING_FAILED;
