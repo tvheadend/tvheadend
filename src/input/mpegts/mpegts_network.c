@@ -251,6 +251,13 @@ const idclass_t mpegts_network_class =
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_scanq_length,
     },
+    {
+       .type     = PT_BOOL,
+       .id       = "wizard",
+       .name     = N_("Wizard"),
+       .off      = offsetof(mpegts_network_t, mn_wizard),
+       .opts     = PO_NOUI
+    },
     {}
   }
 };
@@ -447,6 +454,19 @@ mpegts_network_scan ( mpegts_network_t *mn )
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
     mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+}
+
+void
+mpegts_network_get_type_str( mpegts_network_t *mn, char *buf, size_t buflen )
+{
+  const char *s = "IPTV";
+#if ENABLE_MPEGTS_DVB
+  dvb_fe_type_t ftype;
+  ftype = dvb_fe_type_by_network_class(mn->mn_id.in_class);
+  if (ftype != DVB_TYPE_NONE)
+    s = dvb_type2str(ftype);
+#endif
+  snprintf(buf, buflen, "%s", s);
 }
 
 /******************************************************************************

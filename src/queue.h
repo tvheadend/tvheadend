@@ -11,6 +11,22 @@
  * Extra LIST-ops
  */
 
+#define LIST_LAST(headname, head, field) ({ \
+        headname *r; \
+        for (r = LIST_FIRST(head); \
+             LIST_NEXT(r, field); \
+             r = LIST_NEXT(r, field)); \
+        r; \
+})
+
+#define LIST_PREV(elm, headname, head, field) ({ \
+        headname *r; \
+        for (r = LIST_FIRST(head); \
+             r && LIST_NEXT(r, field) != (elm); \
+             r = LIST_NEXT(r, field)); \
+        r; \
+})
+
 #define LIST_ENTRY_INIT(elm, field) \
         (elm)->field.le_next = NULL, (elm)->field.le_prev = NULL
 

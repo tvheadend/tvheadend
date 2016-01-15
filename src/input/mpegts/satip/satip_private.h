@@ -177,6 +177,7 @@ struct satip_satconf
   /*
    * Config
    */
+  int                        sfc_wizard;
   int                        sfc_enabled;
   int                        sfc_position;
   int                        sfc_priority;

@@ -302,6 +302,8 @@ struct mpegts_network
    */
   char                    *mn_network_name;
   char                    *mn_provider_network_name;
+  int                      mn_wizard;
+  uint8_t                  mn_wizard_free;
 
   /*
    * Inputs
@@ -826,6 +828,7 @@ void mpegts_network_delete ( mpegts_network_t *mn, int delconf );
 int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
 int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
 void mpegts_network_scan ( mpegts_network_t *mn );
+void mpegts_network_get_type_str( mpegts_network_t *mn, char *buf, size_t buflen );
 
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,

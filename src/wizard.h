@@ -24,17 +24,18 @@
 
 typedef struct wizard_page {
   idnode_t idnode;
+  const char *name;
   void (*free)(struct wizard_page *);
   void *aux;
 } wizard_page_t;
 
-typedef wizard_page_t *(*wizard_build_fcn_t)(void);
+typedef wizard_page_t *(*wizard_build_fcn_t)(const char *lang);
 
-wizard_page_t *wizard_hello(void);
-wizard_page_t *wizard_login(void);
-wizard_page_t *wizard_network(void);
-wizard_page_t *wizard_input(void);
-wizard_page_t *wizard_status(void);
-wizard_page_t *wizard_mapping(void);
+wizard_page_t *wizard_hello(const char *lang);
+wizard_page_t *wizard_login(const char *lang);
+wizard_page_t *wizard_network(const char *lang);
+wizard_page_t *wizard_input(const char *lang);
+wizard_page_t *wizard_status(const char *lang);
+wizard_page_t *wizard_mapping(const char *lang);
 
 #endif /* __TVH_WIZARD_H__ */

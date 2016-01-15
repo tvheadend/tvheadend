@@ -185,6 +185,13 @@ const idclass_t satip_satconf_class =
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_BOOL,
+      .id       = "wizard",
+      .name     = N_("Wizard"),
+      .off      = offsetof(satip_satconf_t, sfc_wizard),
+      .opts     = PO_NOUI,
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable or disable this configuration."),

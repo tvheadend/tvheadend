@@ -25,13 +25,27 @@
 #include "wizard.h"
 
 static int
+wizard_page ( const char *page )
+{
+  pthread_mutex_lock(&global_lock);
+  if (strcmp(page, config.wizard ?: "")) {
+    free(config.wizard);
+    config.wizard = page[0] ? strdup(page) : NULL;
+    config_save();
+  }
+  pthread_mutex_unlock(&global_lock);
+  return 0;
+}
+
+static int
 wizard_idnode_load_simple
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   int r;
   wizard_build_fcn_t fcn = opaque;
-  wizard_page_t *page = fcn();
+  wizard_page_t *page = fcn(perm->aa_lang_ui);
   r = api_idnode_load_simple(perm, &page->idnode, op, args, resp);
+  wizard_page(page->name);
   page->free(page);
   return r;
 }
@@ -42,36 +56,24 @@ wizard_idnode_save_simple
 {
   int r;
   wizard_build_fcn_t fcn = opaque;
-  wizard_page_t *page = fcn();
+  wizard_page_t *page = fcn(perm->aa_lang_ui);
   r = api_idnode_save_simple(perm, &page->idnode, op, args, resp);
   page->free(page);
   return r;
 }
 
 static int
-wizard_page
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp, const char *page )
-{
-  pthread_mutex_lock(&global_lock);
-  free(config.wizard);
-  config.wizard = strdup(page);
-  config_save();
-  pthread_mutex_unlock(&global_lock);
-  return 0;
-}
-
-static int
 wizard_cancel
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return wizard_page(perm, opaque, op, args, resp, "");
+  return wizard_page("");
 }
 
 static int
 wizard_start
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return wizard_page(perm, opaque, op, args, resp, "hello");
+  return wizard_page("hello");
 }
 
 void

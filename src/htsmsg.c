@@ -935,7 +935,9 @@ htsmsg_copy_i(htsmsg_t *src, htsmsg_t *dst)
 htsmsg_t *
 htsmsg_copy(htsmsg_t *src)
 {
-  htsmsg_t *dst = src->hm_islist ? htsmsg_create_list() : htsmsg_create_map();
+  htsmsg_t *dst;
+  if (src == NULL) return NULL;
+  dst = src->hm_islist ? htsmsg_create_list() : htsmsg_create_map();
   htsmsg_copy_i(src, dst);
   return dst;
 }

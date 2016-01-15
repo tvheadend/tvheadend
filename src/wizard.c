@@ -87,10 +87,12 @@ static void page_free(wizard_page_t *page)
   free(page);
 }
 
-static wizard_page_t *page_init(const char *class_name, const char *caption)
+static wizard_page_t *page_init
+  (const char *name, const char *class_name, const char *caption)
 {
   wizard_page_t *page = calloc(1, sizeof(*page));
   idclass_t *ic = calloc(1, sizeof(*ic));
+  page->name = name;
   page->idnode.in_class = ic;
   ic->ic_caption = caption;
   ic->ic_class = ic->ic_event = class_name;
@@ -165,7 +167,7 @@ Enter the languages for the web user interface and \
 for EPG texts.\
 "))
 
-wizard_page_t *wizard_hello(void)
+wizard_page_t *wizard_hello(const char *lang)
 {
   static const property_group_t groups[] = {
     {
@@ -221,7 +223,7 @@ wizard_page_t *wizard_hello(void)
     {}
   };
   wizard_page_t *page =
-    page_init("wizard_hello",
+    page_init("hello", "wizard_hello",
     N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_hello_t *w;
@@ -369,7 +371,7 @@ This wizard should be run only on the initial setup. Please, cancel \
 it, if you are not willing to touch the current configuration.\
 "))
 
-wizard_page_t *wizard_login(void)
+wizard_page_t *wizard_login(const char *lang)
 {
   static const property_group_t groups[] = {
     {
@@ -434,7 +436,7 @@ wizard_page_t *wizard_login(void)
     {}
   };
   wizard_page_t *page =
-    page_init("wizard_login",
+    page_init("login", "wizard_login",
     N_("Welcome - Tvheadend - your TV streaming server and video recorder"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_login_t *w;
@@ -477,78 +479,206 @@ wizard_page_t *wizard_login(void)
 /*
  * Network settings
  */
+#define WIZARD_NETWORKS 6
 
 typedef struct wizard_network {
-  char network_type1[32];
-  char network_type2[32];
-  char network_type3[32];
-  char network_type4[32];
+  property_t props [WIZARD_NETWORKS * 3 + 10];
+  char tuner       [WIZARD_NETWORKS][64];
+  char tunerid     [WIZARD_NETWORKS][UUID_HEX_SIZE];
+  char network_type[WIZARD_NETWORKS][64];
+  htsmsg_t *network_types[WIZARD_NETWORKS];
 } wizard_network_t;
 
-#define NETWORK(num, nameval) { \
+static void network_free(wizard_page_t *page)
+{
+  wizard_network_t *w = page->aux;
+  int idx;
+
+  for (idx = 0; idx < WIZARD_NETWORKS; idx++)
+    htsmsg_destroy(w->network_types[idx]);
+  page_free(page);
+}
+
+static void network_save(idnode_t *in)
+{
+  wizard_page_t *p = (wizard_page_t *)in;
+  wizard_network_t *w = p->aux;
+  mpegts_network_t *mn, *mn_next;
+  tvh_input_t *ti;
+  htsmsg_t *m;
+  int idx;
+
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+    if (mn->mn_wizard)
+      mn->mn_wizard_free = 1;
+  for (idx = 0; idx < WIZARD_NETWORKS; idx++) {
+    if (w->network_type[idx][0] == '\0')
+      continue;
+    ti = tvh_input_find_by_uuid(w->tunerid[idx]);
+    if (ti == NULL || ti->ti_wizard_set == NULL)
+      continue;
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "mpegts_network_type", w->network_type[idx]);
+    ti->ti_wizard_set(ti, m);
+    htsmsg_destroy(m);
+  }
+  for (mn = LIST_FIRST(&mpegts_network_all); mn != NULL; mn = mn_next) {
+    mn_next = LIST_NEXT(mn, mn_global_link);
+    if (mn->mn_wizard_free)
+      mn->mn_delete(mn, 1);
+  }
+}
+
+#define NETWORK_GROUP(num) { \
+  .name     = N_("Network " STRINGIFY(num)), \
+  .number   = num, \
+}
+
+#define NETWORK(num) { \
+  .type = PT_STR, \
+  .id   = "tuner" STRINGIFY(num), \
+  .name = N_("Tuner"), \
+  .get  = network_get_tvalue##num, \
+  .opts = PO_RDONLY, \
+  .group = num, \
+}, { \
+  .type = PT_STR, \
+  .id   = "hidden_tunerid" STRINGIFY(num), \
+  .name = "Tuner", \
+  .get  = network_get_tidvalue##num, \
+  .opts = PO_RDONLY | PO_NOUI, \
+}, { \
   .type = PT_STR, \
   .id   = "network" STRINGIFY(num), \
-  .name = nameval, \
+  .name = N_("Network type"), \
   .get  = network_get_value##num, \
   .set  = network_set_value##num, \
-  .list = network_get_list, \
+  .list = network_get_list##num, \
+  .group = num, \
 }
 
 #define NETWORK_FCN(num) \
+static const void *network_get_tvalue##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_network_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->tuner[num-1]); \
+  return &prop_sbuf_ptr; \
+} \
+static const void *network_get_tidvalue##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_network_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->tunerid[num-1]); \
+  return &prop_sbuf_ptr; \
+} \
 static const void *network_get_value##num(void *o) \
 { \
   wizard_page_t *p = o; \
   wizard_network_t *w = p->aux; \
-  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->network_type##num); \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->network_type[num-1]); \
   return &prop_sbuf_ptr; \
 } \
 static int network_set_value##num(void *o, const void *v) \
 { \
   wizard_page_t *p = o; \
   wizard_network_t *w = p->aux; \
-  snprintf(w->network_type##num, sizeof(w->network_type##num), "%s", (const char *)v); \
+  snprintf(w->network_type[num-1], sizeof(w->network_type[num-1]), "%s", (const char *)v); \
   return 1; \
+} \
+static htsmsg_t *network_get_list##num(void *o, const char *lang) \
+{ \
+  if (o == NULL) return NULL; \
+  wizard_page_t *p = o; \
+  wizard_network_t *w = p->aux; \
+  return htsmsg_copy(w->network_types[num-1]); \
 }
 
 NETWORK_FCN(1)
 NETWORK_FCN(2)
 NETWORK_FCN(3)
 NETWORK_FCN(4)
+NETWORK_FCN(5)
+NETWORK_FCN(6)
 
 DESCRIPTION_FCN(network, N_("\
-Create networks. The T means terresterial, C is cable and S is satellite.\
+Select network type for detected tuners.\n\
+The T means terresterial, C is cable and S is satellite.\
 "))
 
-static htsmsg_t *network_get_list(void *o, const char *lang)
-{
-  mpegts_network_builder_t *mnb;
-  htsmsg_t *e, *l = htsmsg_create_list();
-  LIST_FOREACH(mnb, &mpegts_network_builders, link) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", mnb->idc->ic_class);
-    htsmsg_add_str(e, "val", idclass_get_caption(mnb->idc, lang));
-    htsmsg_add_msg(l, NULL, e);
-  }
-  return l;
-}
 
-wizard_page_t *wizard_network(void)
+wizard_page_t *wizard_network(const char *lang)
 {
+  static const property_group_t groups[] = {
+    NETWORK_GROUP(1),
+    NETWORK_GROUP(2),
+    NETWORK_GROUP(3),
+    NETWORK_GROUP(4),
+    NETWORK_GROUP(5),
+    NETWORK_GROUP(6),
+    {}
+  };
+  static const property_t nprops[] = {
+    NETWORK(1),
+    NETWORK(2),
+    NETWORK(3),
+    NETWORK(4),
+    NETWORK(5),
+    NETWORK(6),
+  };
   static const property_t props[] = {
-    NETWORK(1, N_("Network 1")),
-    NETWORK(2, N_("Network 2")),
-    NETWORK(3, N_("Network 3")),
-    NETWORK(4, N_("Network 4")),
     ICON(),
     DESCRIPTION(network),
     PREV_BUTTON(login),
     NEXT_BUTTON(input),
-    {}
   };
-  wizard_page_t *page = page_init("wizard_network", N_("Network settings"));
+  wizard_page_t *page = page_init("network", "wizard_network", N_("Network settings"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
-  ic->ic_properties = props;
-  page->aux = calloc(1, sizeof(wizard_network_t));
+  wizard_network_t *w;
+  mpegts_network_t *mn;
+  tvh_input_t *ti;
+  const char *name;
+  htsmsg_t *m;
+  int idx, nidx = 0;
+
+  page->aux = w = calloc(1, sizeof(wizard_network_t));
+  ic->ic_groups = groups;
+  ic->ic_properties = w->props;
+  ic->ic_save = network_save;
+  page->free = network_free;
+
+  for (idx = 0; idx < ARRAY_SIZE(props); idx++)
+    w->props[idx] = props[idx];
+
+  for (ti = LIST_LAST(tvh_input_t, &tvh_inputs, ti_link); ti;
+       ti = LIST_PREV(ti, tvh_input_t, &tvh_inputs, ti_link)) {
+    if (ti->ti_wizard_get == NULL)
+      continue;
+    m = ti->ti_wizard_get(ti, lang);
+    if (m == NULL)
+      continue;
+    name = htsmsg_get_str(m, "input_name");
+    if (name) {
+      snprintf(w->tuner[nidx], sizeof(w->tuner[nidx]), "%s", name);
+      idnode_uuid_as_str(&ti->ti_id, w->tunerid[nidx]);
+      mn = mpegts_network_find(htsmsg_get_str(m, "mpegts_network"));
+      if (mn) {
+        snprintf(w->network_type[nidx], sizeof(w->network_type[nidx]), "%s",
+                 mn->mn_id.in_class->ic_class);
+      }
+      w->network_types[nidx] = htsmsg_copy(htsmsg_get_list(m, "mpegts_network_types"));
+      w->props[idx++] = nprops[nidx * 3 + 0];
+      w->props[idx++] = nprops[nidx * 3 + 1];
+      w->props[idx++] = nprops[nidx * 3 + 2];
+      nidx++;
+    }
+    htsmsg_destroy(m);
+    if (nidx >= WIZARD_NETWORKS)
+      break;
+  }
+
+  assert(idx < ARRAY_SIZE(w->props));
+
   return page;
 }
 
@@ -561,7 +691,7 @@ Assign inputs to networks.\
 "))
 
 
-wizard_page_t *wizard_input(void)
+wizard_page_t *wizard_input(const char *lang)
 {
   static const property_t props[] = {
     {
@@ -591,7 +721,7 @@ wizard_page_t *wizard_input(void)
     NEXT_BUTTON(status),
     {}
   };
-  wizard_page_t *page = page_init("wizard_input", N_("Input / tuner settings"));
+  wizard_page_t *page = page_init("input", "wizard_input", N_("Input / tuner settings"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
   return page;
@@ -606,7 +736,7 @@ Show the scan status.\
 "))
 
 
-wizard_page_t *wizard_status(void)
+wizard_page_t *wizard_status(const char *lang)
 {
   static const property_t props[] = {
     {
@@ -631,7 +761,7 @@ wizard_page_t *wizard_status(void)
     NEXT_BUTTON(mapping),
     {}
   };
-  wizard_page_t *page = page_init("wizard_status", N_("Scan status"));
+  wizard_page_t *page = page_init("status", "wizard_status", N_("Scan status"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
   return page;
@@ -646,7 +776,7 @@ Do the service mapping to channels.\
 "))
 
 
-wizard_page_t *wizard_mapping(void)
+wizard_page_t *wizard_mapping(const char *lang)
 {
   static const property_t props[] = {
     {
@@ -663,7 +793,7 @@ wizard_page_t *wizard_mapping(void)
     LAST_BUTTON(),
     {}
   };
-  wizard_page_t *page = page_init("wizard_service_map", N_("Service mapping"));
+  wizard_page_t *page = page_init("mapping", "wizard_service_map", N_("Service mapping"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
   return page;
