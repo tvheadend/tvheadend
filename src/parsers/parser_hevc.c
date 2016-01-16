@@ -828,7 +828,7 @@ static void hvcc_init(HEVCDecoderConfigurationRecord *hvcc)
      * the ProfileTierLevel parsing code will unset them when needed.
      */
     hvcc->general_profile_compatibility_flags = 0xffffffff;
-    hvcc->general_constraint_indicator_flags  = 0xffffffffffff;
+    hvcc->general_constraint_indicator_flags  = 0xffffffffffffLL;
 
     /*
      * Initialize this field with an invalid value which can be used to detect
