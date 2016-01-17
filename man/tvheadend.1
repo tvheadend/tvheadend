@@ -1,36 +1,48 @@
 .TH "tvheadend" 1
 .SH NAME
-tvheadend \ - Advanced TV streaming server/relay
+Tvheadend \ - Advanced TV streaming server/relay and personal video recorder.
 .SH SYNOPSIS
 .B tvheadend
 [\fIOPTIONS\fR]
 .SH DESCRIPTION
 .B Tvheadend
-is a streaming server/relay supporting a variety of sources and multiple
-output formats. It is primarily intended to be used in together with the
-.B Showtime
-Media player.
+is a streaming server/relay supporting a variety of sources 
+and multiple output formats. It can be used as a standalone 
+PVR or in conjunction with media players such as 
+.B Movian 
+(Showtime),  
+.B Kodi
+(XBMC), 
+.B VLC 
+and others.
 .SH OPTIONS
 All arguments are optional.
+.PP
+Generic Options
 .TP
 \fB\-v\fR, \fB\-\-version\fR
 Show version information.
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 Show built-in help information (may be more up to date).
+.PP
+Service Configuration Options
 .TP
 \fB\-c\fR, \fB\-\-config\fR
-Specify an alternate config path; the default is \fI${HOME}/.hts\fR
+Specify an alternative config path; the default is \fI${HOME}/.hts\fR
+.TP
+\fB\-B\fR, \fB\-\-nobackup\fR
+Don't backup configuration tree at upgrade.
 .TP
 \fB\-f
-Fork and become a background process (daemon). Default no.
+Fork and become a background process (daemon). Default is no.
 .TP
 \fB\-u\fR \fIusername\fR, \fB\-\-user\fR \fIusername\fR
 Run as user \fIusername\fR. Only applicable if daemonizing. Default is to
-use the uid of 1 (daemon on most systems).
+use the uid of 1 ('daemon' on most systems).
 .TP
 \fB\-g\fR \fIgroupname\fR, \fB\-\-group \fR\fIgroupname\fR
-Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 (daemon) will be used.
+Run as group \fR\fIgroupname\fR. Only applicable if daemonizing. Default is to use the 'video' group. If the 'video' group does not exist, gid 1 ('daemon') will be used.
 .TP
 \fB\-p\fR \fIpidpath\fR, \fB\-\-pid \fR\fIpidpath\fR
 Specify alternative PID path file (default /var/run/tvheadend.pid).
@@ -41,8 +53,26 @@ password. Use with care as it will allow world-wide administrative
 access to your Tvheadend installation until you edit the
 access-control from within the Tvheadend UI.
 .TP
+\fB\-U\fR, \fB\-\-dbus\fR
+Enable DBus.
+.TP
+\fB\-e\fR, \fB\-\-dbus_session\fR
+DBus - use the session message bus instead of the system one.
+.TP
 \fB\-a\fR, \fB\-\-adapters\fR
-Only use specified DVB adapters (comma separated).
+Only use specified DVB adapters (comma separated, -1 == none).
+.TP
+\fB\-\-satip_rtsp\fR
+SAT>IP RTSP port number for server (default: -1 = disable, 0 = 
+webconfig, standard port is 554).
+.TP
+\fB\-\-nosatip\fR
+Disable SAT>IP client.
+.TP
+\fB\-\-satip_xml\fR
+URL with the SAT>IP server XML location.
+.PP
+Server Connectivity
 .TP
 \fB\-6\fR, \fB\-\-ipv6\fR
 Listen on IPv6.
@@ -63,32 +93,70 @@ Specify alternative HTSP port (default 9882).
 \fB\-\-htsp_port2
 Specify extra HTSP port.
 .TP
-\fB\-d\fR, \fB\-\-debug\fR
-Enable all debug.
+\fB\-\-useragent
+Specify User-Agent header for the http client.
+.TP
+\fB\-\-xspf
+Use XSPF playlist instead of M3U.
+.PP
+Debug options
+.TP
+\fB\-d\fR, \fB\-\-stderr\fR
+Enable debug on stderr.
+.TP
+\fB\-n\fR, \fB\-\-nostderr\fR
+Disable debug on stderr.
 .TP
 \fB\-s\fR, \fB\-\-syslog\fR
 Enable debug to syslog.
 .TP
-\fB\-\-uidebug
-Enable web UI debug.
+\fB\-S\fR, \fB\-\-nosyslog\fR
+Disable syslog (all messages).
 .TP
-\fB\-l\fR, \fB\-\-log\fR
-Log to file.
+\fB\-l\fR, \fB\-\-logfile\fR
+Enable debug to file.
+.TP
+\fB\-\-debug\fR
+Enable debug subsystems.
+.TP
+\fB\-\-trace\fR
+Enable trace subsystems.
+.TP
+\fB\-\-fileline\fR
+Add file and line numbers to debug.
+.TP
+\fB\-\-threadid\fR
+Add the thread ID to debug.
+.TP
+\fB\-\-libav\fR
+More verbose libav log.
+.TP
+\fB\-\-uidebug\fR
+Enable web UI debug (non-minified JavaScript).
 .TP
 \fB\-A\fR, \fB\-\-abort\fR
 Immediately abort on startup (for debug).
 .TP
-\fB\-\-noacl
+\fB\-D\fR, \fB\-\-dump\fR
+Enable coredumps for daemon.
+.TP
+\fB\-\-noacl\fR
 Do not perform any access control checking.
 .TP
-\fB\-R\fR, \fB\-\-dvbraw\fR
-Use rawts file to create virtual adapter.
-.TP
-\fB\-r\fR, \fB\-\-rawts\fR
-Use rawts file to generate virtual services.
+\fB\-\-nobat\fR
+Disable DVB bouquets.
 .TP
 \fB\-j\fR, \fB\-\-join\fR
 Subscribe to a service permanently.
+.PP
+Testing Options
+.TP
+\fB\-\-tsfile_tuners\fR
+Specify number of tsfile tuners.
+.TP
+\fB\-\-tsfile\fR
+Use ts file (mux file) as input.
+.TP
 .SH "LOGGING"
 All activity inside tvheadend is logged to syslog using log facility
 \fBLOG_DAEMON\fR.
@@ -98,16 +166,17 @@ In order for Tvheadend to control the video adapters on the system it
 must be granted access to those devices. Most systems have a 'video'
 group with write access to the video adapter devices. When Tvheadend
 is started as a daemon it will automatically change its primary group
-to 'video' in order to access these groups. If your system is configured
-in a different way you can either change the group membership of the
-video adapters (/dev/dvb, etc) or reconfigure the Tvheadend startup
-parameters. This is most likely the behavior if you have installed
-Tvheadend from a distribution package.
+to 'video' in order to access these groups. 
 .PP
-If Tvheadend is started without the '-f' argument it will not daemonize
-nor change its primary userid/groupid. Rather it will run with the permissions
-granted to the user executing the binary. If that's the case you must make
-sure the current user is granted with access to the video devices.
+If your system is configured in a different way you can either change 
+the group membership of the video adapters (/dev/dvb, etc) or reconfigure 
+the Tvheadend startup parameters. This is most likely the behavior if you 
+have installed Tvheadend from a distribution package.
+.PP
+If Tvheadend is started without the '-f' argument it will neither daemonize
+nor change its primary userid/groupid. Instead, it will run with the permissions
+granted to the user executing the binary. If that's the case then you must make
+sure that the current user is granted access to the video devices.
 .SS "Configuration"
 All configuration in Tvheadend is maintained via its embedded web server running on port 9981. Just point your browser to:
 .PP
@@ -117,23 +186,29 @@ All configuration in Tvheadend is maintained via its embedded web server running
 .PP
 By default \fIeveryone (also from remote hosts)\fR is allowed \fIfull\fR
 access to \fIall\fR features / settings in the web user interface. If
-this is the first time you setup Tvheadend you are most encouraged to
-enter the web user interface, selected the 'Configuration' + 'Access Control'
-tab and make reasonable changes. Further help / documentation can be obtained
+this is the first time you're setting up Tvheadend, you are strongly encouraged
+to enter the web user interface, selected the 'Configuration' + 'Access Control'
+tab and make reasonable changes. Further help and documentation can be obtained
 inside the web interface.
 .SS "Settings"
-Settings are stored in the current users home directory. Thus, if Tvheadend
+Settings are stored in the current user's home directory. Thus, if Tvheadend
 is run as a system daemon a dedicated user needs to be created and Tvheadend
-should be launched with the '-u' argument. Also notice that XMLTV will read
-store cache and configuration from the user home directory.
+should be launched with the '-u' argument. Also notice that XMLTV will read/
+store cache and configuration from the same user home directory.
 .PP
-If daemonizing, tvheadend will writes it pid in /var/run/tvheadend.pid
+If daemonizing, tvheadend will writes its pid in /var/run/tvheadend.pid
 .SH "AUTHOR"
 .B Tvheadend
-and this man page is maintained by Andreas Oeman
-.PP
-(andreas a tvheadend d org)
+and this man page is maintained by the Tvheadend team. Please see the 
+application for credits.
 .PP
 You may also visit #hts at irc.freenode.net
+.SH "COPYRIGHT"
+2006 - 2016 Andreas Öman, et al. 
+.PP
+Licensed under GPLv3 <https://www.gnu.org/licenses/gpl-3.0.txt>.
+This is free software: you are free to change and redistribute it subject
+to the provisions of the license above.
+There is NO WARRANTY, to the extent permitted by law.
 .SH "SEE ALSO"
 .BR https://tvheadend.org
