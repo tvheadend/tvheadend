@@ -12,7 +12,9 @@ if [ -d ".git" ]; then
   if [ $? -ne 0 ]; then
     # Git describe failed, maybe "--dirty" option is not available
     # Adding "-unknown" postfix to mark this situation
-    VER=$(cd "$(dirname "$0")/.."; git describe --match "v*" 2> /dev/null)-unknown
+    VER=$(cd "$(dirname "$0")/.."; git describe --match "v*" 2> /dev/null)
+    [ -z "$VER" ] && VER=0.0.0
+    VER=${VER}-unknown
   fi
   VER=$(echo $VER | sed "s/^v//" | sed "s/-\([0-9]*\)-\(g[0-9a-f]*\)/-\1~\2/")
 elif [ -f "$(dirname "$0")/../debian/changelog" ]; then

@@ -2,5 +2,11 @@
 # Basic Build Setup
 #
 
+sudo: required
+dist: trusty
 language: c
-script: ./configure && make
+before_install:
+  - sudo apt-get -qq update
+  - sudo ./Autobuild.sh -o deps
+script:
+  - ./Autobuild.sh
