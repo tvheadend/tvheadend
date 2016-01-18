@@ -402,7 +402,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
 {
   cwc_message_t *cm = malloc(sizeof(cwc_message_t));
   uint8_t *buf = cm->cm_data;
-  int seq;
+  int seq, ret;
 
   if (len < 3 || len + 12 > CWS_NETMSGSIZE) {
     free(cm);
@@ -427,10 +427,11 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
   // adding packet header size
   len += 12;
 
-  if((len = des_encrypt(buf, len, cwc)) <= 0) {
+  if((ret = des_encrypt(buf, len, cwc)) <= 0) {
     free(cm);
     return -1;
   }
+  len = (size_t)ret;
 
   tvhtrace("cwc", "sending message sid %d len %zu enq %d", sid, len, enq);
   tvhlog_hexdump("cwc", buf, len);

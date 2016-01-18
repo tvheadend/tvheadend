@@ -252,7 +252,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   char tpath[PATH_MAX] = "", path[PATH_MAX];
   tvhpoll_event_t ev;
   tvhpoll_t *efd = NULL;
-  http_client_t *hc;
+  http_client_t *hc = NULL;
 
   lock_assert(&global_lock);
 
@@ -316,6 +316,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
 error_lock:
   pthread_mutex_lock(&global_lock);
 error:
+  if (NULL != hc) http_client_close(hc);
   urlreset(&url);
   tvhpoll_destroy(efd);
   img->state = IDLE;

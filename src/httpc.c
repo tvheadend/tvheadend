@@ -1093,8 +1093,6 @@ rtsp_data:
       res = 0;
     }
     r += hc->hc_csize;
-    if (res < 0)
-      return http_client_flush(hc, res);
     hc->hc_in_rtp_data = 1;
     hc->hc_code = 0;
     res = http_client_finish(hc);

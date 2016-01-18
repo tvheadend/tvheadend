@@ -475,6 +475,12 @@ mpegts_input_open_pid
         tvhdebug("mpegts", "%s - open PID %s subscription [%04x/%p]",
                  buf, (type & MPS_TABLES) ? "tables" : "fullmux", type, owner);
         mm->mm_update_pids_flag = 1;
+      } else {
+        tvherror("mpegts",
+                 "%s - open PID %04x (%d) failed, dupe sub (owner %p)",
+                 buf, mp->mp_pid, mp->mp_pid, owner);
+        free(mps);
+        mp = NULL;
       }
     } else if (!RB_INSERT_SORTED(&mp->mp_subs, mps, mps_link, mpegts_mps_cmp)) {
       mp->mp_type |= type;
@@ -487,6 +493,8 @@ mpegts_input_open_pid
                buf, mp->mp_pid, mp->mp_pid, type, owner);
       mm->mm_update_pids_flag = 1;
     } else {
+      tvherror("mpegts", "%s - open PID %04x (%d) failed, dupe sub (owner %p)",
+               buf, mp->mp_pid, mp->mp_pid, owner);
       free(mps);
       mp = NULL;
     }
