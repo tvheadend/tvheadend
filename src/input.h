@@ -90,7 +90,7 @@ struct tvh_input {
   void (*ti_get_streams) (tvh_input_t *, tvh_input_stream_list_t*);
   void (*ti_clear_stats) (tvh_input_t *);
   struct htsmsg *(*ti_wizard_get) (tvh_input_t *, const char *);
-  void (*ti_wizard_set)  (tvh_input_t *, struct htsmsg *);
+  void (*ti_wizard_set)  (tvh_input_t *, struct htsmsg *, const char *);
 };
 
 /*

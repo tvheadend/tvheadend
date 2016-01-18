@@ -593,6 +593,42 @@ const idclass_t tvhdhomerun_frontend_atsc_c_class =
   }
 };
 
+static mpegts_network_t *
+tvhdhomerun_frontend_wizard_network ( tvhdhomerun_frontend_t *hfe )
+{
+  return (mpegts_network_t *)LIST_FIRST(&hfe->mi_networks);
+}
+
+static htsmsg_t *
+tvhdhomerun_frontend_wizard_get( tvh_input_t *ti, const char *lang )
+{
+  tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)ti;
+  mpegts_network_t *mn;
+  const idclass_t *idc = NULL;
+
+  mn = tvhdhomerun_frontend_wizard_network(hfe);
+  if (mn == NULL || (mn && mn->mn_wizard))
+    idc = dvb_network_class_by_fe_type(hfe->hf_type);
+  return mpegts_network_wizard_get((mpegts_input_t *)hfe, idc, mn, lang);
+}
+
+static void
+tvhdhomerun_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
+{
+  tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)ti;
+  const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
+  mpegts_network_t *mn;
+
+  mn = tvhdhomerun_frontend_wizard_network(hfe);
+  if (ntype && (mn == NULL || mn->mn_wizard)) {
+    htsmsg_t *nlist = htsmsg_create_list();
+    mpegts_network_wizard_create(ntype, &nlist, lang);
+    htsmsg_add_str(nlist, NULL, ntype);
+    mpegts_input_set_networks((mpegts_input_t *)hfe, nlist);
+    htsmsg_destroy(nlist);
+  }
+}
+
 void
 tvhdhomerun_frontend_delete ( tvhdhomerun_frontend_t *hfe )
 {
@@ -677,6 +713,8 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   }
 
   /* Input callbacks */
+  hfe->ti_wizard_get     = tvhdhomerun_frontend_wizard_get;
+  hfe->ti_wizard_set     = tvhdhomerun_frontend_wizard_set;
   hfe->mi_is_enabled     = tvhdhomerun_frontend_is_enabled;
   hfe->mi_start_mux      = tvhdhomerun_frontend_start_mux;
   hfe->mi_stop_mux       = tvhdhomerun_frontend_stop_mux;

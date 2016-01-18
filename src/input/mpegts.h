@@ -803,6 +803,8 @@ void mpegts_network_register_builder
 void mpegts_network_unregister_builder
   ( const idclass_t *idc );
 
+mpegts_network_builder_t *mpegts_network_builder_find ( const char *clazz );
+
 mpegts_network_t *mpegts_network_build
   ( const char *clazz, htsmsg_t *conf );
                  
@@ -829,6 +831,10 @@ int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
 int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
 void mpegts_network_scan ( mpegts_network_t *mn );
 void mpegts_network_get_type_str( mpegts_network_t *mn, char *buf, size_t buflen );
+
+htsmsg_t * mpegts_network_wizard_get ( mpegts_input_t *mi, const idclass_t *idc,
+                                       mpegts_network_t *mn, const char *lang );
+void mpegts_network_wizard_create ( const char *clazz, htsmsg_t **nlist, const char *lang );
 
 mpegts_mux_t *mpegts_mux_create0
   ( mpegts_mux_t *mm, const idclass_t *class, const char *uuid,

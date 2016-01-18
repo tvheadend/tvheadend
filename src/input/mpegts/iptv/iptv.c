@@ -1001,6 +1001,37 @@ iptv_network_init ( void )
   htsmsg_destroy(c);
 }
 
+static mpegts_network_t *
+iptv_input_wizard_network ( iptv_input_t *lfe )
+{
+  return (mpegts_network_t *)LIST_FIRST(&lfe->mi_networks);
+}
+
+static htsmsg_t *
+iptv_input_wizard_get( tvh_input_t *ti, const char *lang )
+{
+  iptv_input_t *mi = (iptv_input_t*)ti;
+  mpegts_network_t *mn;
+  const idclass_t *idc;
+
+  mn = iptv_input_wizard_network(mi);
+  if (mn == NULL || (mn && mn->mn_wizard))
+    idc = &iptv_auto_network_class;
+  return mpegts_network_wizard_get((mpegts_input_t *)mi, idc, mn, lang);
+}
+
+static void
+iptv_input_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
+{
+  iptv_input_t *mi = (iptv_input_t*)ti;
+  const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
+  mpegts_network_t *mn;
+
+  mn = iptv_input_wizard_network(mi);
+  if ((mn == NULL || mn->mn_wizard))
+    mpegts_network_wizard_create(ntype, NULL, lang);
+}
+
 void iptv_init ( void )
 {
   /* Register handlers */
@@ -1015,6 +1046,8 @@ void iptv_init ( void )
   /* Init Input */
   mpegts_input_create0((mpegts_input_t*)iptv_input,
                        &iptv_input_class, NULL, NULL);
+  iptv_input->ti_wizard_get     = iptv_input_wizard_get;
+  iptv_input->ti_wizard_set     = iptv_input_wizard_set;
   iptv_input->mi_warm_mux       = iptv_input_warm_mux;
   iptv_input->mi_start_mux      = iptv_input_start_mux;
   iptv_input->mi_stop_mux       = iptv_input_stop_mux;

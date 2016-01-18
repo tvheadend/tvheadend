@@ -1762,52 +1762,44 @@ satip_frontend_default_positions ( satip_frontend_t *lfe )
   return sd->sd_info.srcs;
 }
 
+static mpegts_network_t *
+satip_frontend_wizard_network ( satip_frontend_t *lfe )
+{
+  satip_satconf_t *sfc;
+
+  sfc = TAILQ_FIRST(&lfe->sf_satconf);
+  if (sfc && sfc->sfc_networks)
+    if (sfc->sfc_networks->is_count > 0)
+      return (mpegts_network_t *)sfc->sfc_networks->is_array[0];
+  return NULL;
+}
+
 static htsmsg_t *
 satip_frontend_wizard_get( tvh_input_t *ti, const char *lang )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)ti;
-  htsmsg_t *m = htsmsg_create_map(), *l, *e;
-  satip_satconf_t *sfc;
-  const idclass_t *idc;
-  char ubuf[UUID_HEX_SIZE], buf[256];
+  mpegts_network_t *mn;
+  const idclass_t *idc = NULL;
 
-  sfc = TAILQ_FIRST(&lfe->sf_satconf);
-  if (sfc == NULL || (sfc && sfc->sfc_wizard)) {
-    lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
-    htsmsg_add_str(m, "input_name", buf);
+  mn = satip_frontend_wizard_network(lfe);
+  if (lfe->sf_master == 0 && (mn == NULL || (mn && mn->mn_wizard)))
     idc = dvb_network_class_by_fe_type(lfe->sf_type);
-    if (idc) {
-      l = htsmsg_create_list();
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", idc->ic_class);
-      htsmsg_add_str(e, "val", idclass_get_caption(idc, lang));
-      htsmsg_add_msg(l, NULL, e);
-      htsmsg_add_msg(m, "mpegts_network_types", l);
-    }
-    if (sfc && sfc->sfc_wizard) {
-      lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
-      htsmsg_add_str(m, "input_name", buf);
-      htsmsg_add_str(m, "mpegts_network",
-                     idnode_uuid_as_str(sfc->sfc_networks->is_array[0], ubuf));
-    }
-  }
-  return m;
+  return mpegts_network_wizard_get((mpegts_input_t *)lfe, idc, mn, lang);
 }
 
 static void
-satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf )
+satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)ti;
-  const char *uuid = htsmsg_get_str(conf, "mpegts_network_type");
-  satip_satconf_t *sfc;
+  const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
+  mpegts_network_t *mn;
 
-  sfc = TAILQ_FIRST(&lfe->sf_satconf);
-  if (uuid && (sfc == NULL || sfc->sfc_wizard)) {
+  mn = satip_frontend_wizard_network(lfe);
+  if (ntype && lfe->sf_master == 0 && (mn == NULL || mn->mn_wizard)) {
     htsmsg_t *conf = htsmsg_create_map();
-    htsmsg_t *nlist = htsmsg_create_list();
-    htsmsg_add_str(nlist, NULL, uuid);
+    htsmsg_t *nlist;
+    mpegts_network_wizard_create(ntype, &nlist, lang);
     htsmsg_add_msg(conf, "networks", nlist);
-    htsmsg_add_bool(conf, "wizard", 1);
     satip_satconf_create(lfe, conf, satip_frontend_default_positions(lfe));
     htsmsg_destroy(conf);
   }

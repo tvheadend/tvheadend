@@ -482,6 +482,7 @@ wizard_page_t *wizard_login(const char *lang)
 #define WIZARD_NETWORKS 6
 
 typedef struct wizard_network {
+  char lang        [64];
   property_t props [WIZARD_NETWORKS * 3 + 10];
   char tuner       [WIZARD_NETWORKS][64];
   char tunerid     [WIZARD_NETWORKS][UUID_HEX_SIZE];
@@ -519,7 +520,7 @@ static void network_save(idnode_t *in)
       continue;
     m = htsmsg_create_map();
     htsmsg_add_str(m, "mpegts_network_type", w->network_type[idx]);
-    ti->ti_wizard_set(ti, m);
+    ti->ti_wizard_set(ti, m, w->lang[0] ? w->lang : NULL);
     htsmsg_destroy(m);
   }
   for (mn = LIST_FIRST(&mpegts_network_all); mn != NULL; mn = mn_next) {
@@ -646,6 +647,7 @@ wizard_page_t *wizard_network(const char *lang)
   ic->ic_properties = w->props;
   ic->ic_save = network_save;
   page->free = network_free;
+  snprintf(w->lang, sizeof(w->lang), "%s", lang ?: "");
 
   for (idx = 0; idx < ARRAY_SIZE(props); idx++)
     w->props[idx] = props[idx];

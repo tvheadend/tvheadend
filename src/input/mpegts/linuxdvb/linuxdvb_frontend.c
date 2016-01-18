@@ -1720,6 +1720,60 @@ linuxdvb_frontend_tune1
  * Creation/Config
  * *************************************************************************/
 
+static mpegts_network_t *
+linuxdvb_frontend_wizard_network ( linuxdvb_frontend_t *lfe )
+{
+  linuxdvb_satconf_ele_t *ele = NULL;
+
+  if (lfe->lfe_satconf) {
+    ele = TAILQ_FIRST(&lfe->lfe_satconf->ls_elements);
+    if (ele && ele->lse_networks && ele->lse_networks->is_count > 0)
+      return (mpegts_network_t *)ele->lse_networks->is_array[0];
+  }
+  return (mpegts_network_t *)LIST_FIRST(&lfe->mi_networks);
+}
+
+static htsmsg_t *
+linuxdvb_frontend_wizard_get( tvh_input_t *ti, const char *lang )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)ti;
+  mpegts_network_t *mn;
+  const idclass_t *idc = NULL;
+
+  mn = linuxdvb_frontend_wizard_network(lfe);
+  if ((lfe->lfe_master == 0 && mn == NULL) || (mn && mn->mn_wizard))
+    idc = dvb_network_class_by_fe_type(lfe->lfe_type);
+  return mpegts_network_wizard_get((mpegts_input_t *)lfe, idc, mn, lang);
+}
+
+static void
+linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
+{
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)ti;
+  const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
+  mpegts_network_t *mn;
+
+  mn = linuxdvb_frontend_wizard_network(lfe);
+  if (ntype && (mn == NULL || mn->mn_wizard)) {
+    htsmsg_t *nlist;
+    mpegts_network_wizard_create(ntype, &nlist, lang);
+    if (lfe->lfe_satconf) {
+      htsmsg_t *conf = htsmsg_create_map();
+      htsmsg_add_msg(conf, "networks", nlist);
+      linuxdvb_satconf_create(lfe, NULL, NULL, conf);
+      mn = linuxdvb_frontend_wizard_network(lfe);
+      htsmsg_destroy(conf);
+    } else {
+      mpegts_input_set_networks((mpegts_input_t *)lfe, nlist);
+      htsmsg_destroy(nlist);
+    }
+    if (mn) {
+      mn->mn_wizard = 1;
+      mn->mn_config_save(mn);
+    }
+  }
+}
+
 linuxdvb_frontend_t *
 linuxdvb_frontend_create
   ( htsmsg_t *conf, linuxdvb_adapter_t *la, int number,
@@ -1815,6 +1869,8 @@ linuxdvb_frontend_create
   lfe->lfe_dvr_path = strdup(dvr_path);
 
   /* Input callbacks */
+  lfe->ti_wizard_get      = linuxdvb_frontend_wizard_get;
+  lfe->ti_wizard_set      = linuxdvb_frontend_wizard_set;
   lfe->mi_is_enabled      = linuxdvb_frontend_is_enabled;
   lfe->mi_start_mux       = linuxdvb_frontend_start_mux;
   lfe->mi_stop_mux        = linuxdvb_frontend_stop_mux;
