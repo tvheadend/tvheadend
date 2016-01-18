@@ -39,7 +39,10 @@
 #   BINTRAY_REPO  - The repo to upload to
 #
 
-MAKEFILE ?= $(firstword $(MAKEFILE_LIST))
+MAKEFILE      ?= $(firstword $(MAKEFILE_LIST))
+
+# ./configure override
+BINTRAY_CACHE ?= $(CONFIG_BINTRAY_CACHE)
 
 default: liball
 
@@ -57,7 +60,7 @@ export BINTRAY_REPO
 # Download cache
 .PHONY: libcacheget
 libcacheget:
-ifneq ($(BINTRAY_CACHE),)
+ifeq ($(BINTRAY_CACHE),yes)
 	@( $(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
 	 $(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true
 endif

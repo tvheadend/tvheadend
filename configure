@@ -56,6 +56,7 @@ OPTIONS=(
   "tsdebug:no"
   "gtimer_check:no"
   "libsystemd_daemon:no"
+  "bintray_cache:yes"
 )
 
 #
@@ -652,7 +653,6 @@ if enabled_or_auto libsystemd_daemon; then
     die "libsystemd-daemon development support not found (use --disable-systemd_daemon)"
   fi
 fi
-
 
 # ###########################################################################
 # Write config
