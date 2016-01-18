@@ -33,9 +33,10 @@
 #
 # Optional inputs
 #
-#   BINTRAY_USER	- The bintray user account for uploads
+#   BINTRAY_CACHE - Use cached builds from bintray
+#   BINTRAY_USER  - The bintray user account for uploads
 #   BINTRAY_PASS  - The bintray password
-#   BINTRAY_REPO	- The repo to upload to
+#   BINTRAY_REPO  - The repo to upload to
 #
 
 MAKEFILE ?= $(firstword $(MAKEFILE_LIST))
@@ -48,6 +49,7 @@ export CODENAME
 export ROOTDIR
 export BUILDDIR
 export LIBDIR
+export BINTRAY_CACHE
 export BINTRAY_USER
 export BINTRAY_PASS
 export BINTRAY_REPO
@@ -55,13 +57,17 @@ export BINTRAY_REPO
 # Download cache
 .PHONY: libcacheget
 libcacheget:
-	@($(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
-	$(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true
+ifneq ($(BINTRAY_CACHE),)
+	@( $(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
+	 $(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true
+endif
 
 # Upload
 .PHONY: libcacheput
 libcacheput: build
+ifneq ($(BINTRAY_USER),)
 	@$(ROOTDIR)/support/lib.sh upload $(LIB_NAME) $(LIB_FILES)
+endif
 
 # Do it all
 .PHONY: liball
