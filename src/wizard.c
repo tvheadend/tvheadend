@@ -543,10 +543,10 @@ static void network_save(idnode_t *in)
   .group = num, \
 }, { \
   .type = PT_STR, \
-  .id   = "hidden_tunerid" STRINGIFY(num), \
+  .id   = "tunerid" STRINGIFY(num), \
   .name = "Tuner", \
   .get  = network_get_tidvalue##num, \
-  .opts = PO_RDONLY | PO_NOUI, \
+  .opts = PO_RDONLY | PO_PERSIST | PO_NOUI, \
 }, { \
   .type = PT_STR, \
   .id   = "network" STRINGIFY(num), \

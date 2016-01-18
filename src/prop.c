@@ -489,6 +489,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "lorder", 1);
   if (opts & PO_MULTILINE)
     htsmsg_add_bool(m, "multiline", 1);
+  if (opts & PO_PERSIST)
+    htsmsg_add_bool(m, "persistent", 1);
 
   /* Enum list */
   if (pl->list) {

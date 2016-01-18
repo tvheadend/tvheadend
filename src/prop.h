@@ -61,6 +61,7 @@ typedef enum {
 #define PO_LOCALE    (1<<14) // Call tvh_locale_lang on string
 #define PO_LORDER    (1<<15) // Manage order in lists
 #define PO_MULTILINE (1<<16) // Multiline string
+#define PO_PERSIST   (1<<17) // Persistent value (return back on save)
 
 /*
  * Property definition

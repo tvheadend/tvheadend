@@ -252,6 +252,7 @@ tvheadend.IdNodeField = function(conf)
     this.group = conf.group;
     this.lorder = conf.lorder;
     this.multiline = conf.multiline;
+    this.persistent = conf.persistent;
     this['enum'] = conf['enum'];
     this.store = null;
     if (this['enum'])
@@ -1056,6 +1057,18 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         tvheadend.idnode_editor_form(uilevel, item.props || item.params, item.meta, panel, c);
     }
 
+    function values(form) {
+        var node = form.getFieldValues();
+        var props = item.props || item.params;
+        node.uuid = conf.uuids ? conf.uuids : item.uuid;
+        for (var i = 0; i < props.length; i++) {
+            var p = props[i];
+            if (p.persistent)
+                node[p.name] = p.value;
+        }
+        return node;
+    }
+
     /* Buttons */
     if (!conf.noButtons) {
         if (conf.cancel) {
@@ -1073,10 +1086,10 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             text: conf.saveText || _('Save'),
             iconCls: conf.saveIconCls || 'save',
             handler: function() {
+                var form = panel.getForm();
                 var node = null;
-                if (panel.getForm().isDirty() || conf.alwaysDirty) {
-                    node = panel.getForm().getFieldValues();
-                    node.uuid = conf.uuids ? conf.uuids : item.uuid;
+                if (form.isDirty() || conf.alwaysDirty) {
+                    node = values(form);
                     tvheadend.Ajax({
                         url: conf.saveURL || 'api/idnode/save',
                         params: {
@@ -1104,10 +1117,9 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                 text: _('Apply'),
                 iconCls: 'apply',
                 handler: function() {
-                    if (panel.getForm().isDirty()) {
-                        var form = panel.getForm();
-                        var node = form.getFieldValues();
-                        node.uuid = conf.uuids ? conf.uuids : item.uuid;
+                    var form = panel.getForm();
+                    if (form.isDirty()) {
+                        var node = values(form);
                         tvheadend.Ajax({
                             url: conf.saveURL || 'api/idnode/save',
                             params: {
