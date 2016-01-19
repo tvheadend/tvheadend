@@ -332,6 +332,18 @@ mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
   return mi->mi_enabled;
 }
 
+void
+mpegts_input_set_enabled ( mpegts_input_t *mi, int enabled )
+{
+  enabled = !!enabled;
+  if (mi->mi_enabled != enabled) {
+    htsmsg_t *conf = htsmsg_create_map();
+    htsmsg_add_bool(conf, "enabled", enabled);
+    idnode_update(&mi->ti_id, conf);
+    htsmsg_destroy(conf);
+  }
+}
+
 static void
 mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {

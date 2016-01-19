@@ -987,7 +987,7 @@ linuxdvb_satconf_create
   if (conf) {
 
     /* Load elements */
-    // Note: we do things this way else hte orbital_pos field in advanced
+    // Note: we do things this way else the orbital_pos field in advanced
     // will result in extra elements
     if ((l = htsmsg_get_list(conf, "elements"))) {
       HTSMSG_FOREACH(f, l) {

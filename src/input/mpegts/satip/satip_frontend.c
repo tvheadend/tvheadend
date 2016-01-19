@@ -1797,11 +1797,18 @@ satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
   mn = satip_frontend_wizard_network(lfe);
   if (ntype && lfe->sf_master == 0 && (mn == NULL || mn->mn_wizard)) {
     htsmsg_t *conf = htsmsg_create_map();
+    htsmsg_t *list = htsmsg_create_list();
+    htsmsg_t *pos  = htsmsg_create_map();
     htsmsg_t *nlist;
     mpegts_network_wizard_create(ntype, &nlist, lang);
-    htsmsg_add_msg(conf, "networks", nlist);
+    htsmsg_add_bool(pos, "enabled", 1);
+    htsmsg_add_msg(pos, "networks", nlist);
+    htsmsg_add_msg(list, NULL, pos);
+    htsmsg_add_msg(conf, "satconf", list);
     satip_satconf_create(lfe, conf, satip_frontend_default_positions(lfe));
     htsmsg_destroy(conf);
+    if (satip_frontend_wizard_network(lfe))
+      mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
   }
 }
 

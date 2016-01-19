@@ -1753,24 +1753,33 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
   const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
   mpegts_network_t *mn;
 
+  if (LIST_FIRST(&lfe->mi_mux_active))
+    return;
   mn = linuxdvb_frontend_wizard_network(lfe);
   if (ntype && (mn == NULL || mn->mn_wizard)) {
     htsmsg_t *nlist;
     mpegts_network_wizard_create(ntype, &nlist, lang);
     if (lfe->lfe_satconf) {
       htsmsg_t *conf = htsmsg_create_map();
-      htsmsg_add_msg(conf, "networks", nlist);
-      linuxdvb_satconf_create(lfe, NULL, NULL, conf);
-      mn = linuxdvb_frontend_wizard_network(lfe);
+      htsmsg_t *elems = htsmsg_create_list();
+      htsmsg_t *elem = htsmsg_create_map();
+      htsmsg_add_str(conf, "type", "simple");
+      htsmsg_add_bool(elem, "enable", 1);
+      htsmsg_add_msg(elem, "networks", nlist);
+      htsmsg_add_msg(elems, NULL, elem);
+      htsmsg_add_msg(conf, "elements", elems);
+      if (lfe->lfe_satconf) {
+        linuxdvb_satconf_delete(lfe->lfe_satconf, 0);
+        lfe->lfe_satconf = NULL;
+      }
+      lfe->lfe_satconf = linuxdvb_satconf_create(lfe, NULL, NULL, conf);
       htsmsg_destroy(conf);
     } else {
       mpegts_input_set_networks((mpegts_input_t *)lfe, nlist);
       htsmsg_destroy(nlist);
     }
-    if (mn) {
-      mn->mn_wizard = 1;
-      mn->mn_config_save(mn);
-    }
+    if (linuxdvb_frontend_wizard_network(lfe))
+      mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
   }
 }
 

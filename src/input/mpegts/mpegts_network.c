@@ -507,15 +507,23 @@ mpegts_network_wizard_create
 
   if (nlist)
     *nlist = NULL;
+
   mnb = mpegts_network_builder_find(clazz);
   if (mnb == NULL)
     return;
+
+  /* only one network per type */
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+    if (mn->mn_id.in_class == mnb->idc)
+      goto found;
 
   conf = htsmsg_create_map();
   htsmsg_add_str(conf, "networkname", idclass_get_caption(mnb->idc, lang));
   htsmsg_add_bool(conf, "wizard", 1);
   mn = mnb->build(mnb->idc, conf);
   htsmsg_destroy(conf);
+
+found:
   if (mn && nlist) {
     *nlist = htsmsg_create_list();
     htsmsg_add_str(*nlist, NULL, idnode_uuid_as_str(&mn->mn_id, buf));

@@ -322,6 +322,7 @@ static void login_save(idnode_t *in)
       pw->pw_wizard = 1;
       passwd_entry_save(pw);
     }
+    htsmsg_destroy(conf);
   }
 
   if (w->username[0]) {
@@ -347,6 +348,7 @@ static void login_save(idnode_t *in)
         pw->pw_wizard = 1;
         passwd_entry_save(pw);
       }
+      htsmsg_destroy(conf);
     }
   }
 }
@@ -727,7 +729,7 @@ static void muxes_save(idnode_t *in)
     if (idnode_is_instance(&mn->mn_id, &dvb_network_class) && w->muxes[idx][0]) {
       dvb_network_scanfile_set((dvb_network_t *)mn, w->muxes[idx]);
     } else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class) &&
-               w->iptv_url[0]) {
+               w->iptv_url[idx]) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, "url", w->iptv_url[idx]);
       idnode_load(&mn->mn_id, m);
@@ -851,7 +853,7 @@ MUXES_FCN(5)
 MUXES_FCN(6)
 
 DESCRIPTION_FCN(muxes, N_("\
-Assign predefined mxues to networks.\
+Assign predefined muxes to networks.\
 "))
 
 wizard_page_t *wizard_muxes(const char *lang)
@@ -893,7 +895,7 @@ wizard_page_t *wizard_muxes(const char *lang)
   mpegts_network_t *mn;
   int idx, midx = 0;
 
-  page->aux = w = calloc(1, sizeof(wizard_network_t));
+  page->aux = w = calloc(1, sizeof(wizard_muxes_t));
   ic->ic_groups = groups;
   ic->ic_properties = w->props;
   ic->ic_save = muxes_save;
@@ -912,6 +914,7 @@ wizard_page_t *wizard_muxes(const char *lang)
         w->props[idx++] = nprops[midx * 3 + 2];
         midx++;
       } else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class)) {
+        snprintf(w->iptv_url[midx], sizeof(w->iptv_url[midx]), "%s", ((iptv_network_t *)mn)->in_url ?: "");
         w->props[idx++] = iptvprops[midx * 3 + 0];
         w->props[idx++] = iptvprops[midx * 3 + 1];
         w->props[idx++] = iptvprops[midx * 3 + 2];
@@ -954,7 +957,7 @@ wizard_page_t *wizard_status(const char *lang)
     },
     ICON(),
     DESCRIPTION(status),
-    PREV_BUTTON(input),
+    PREV_BUTTON(muxes),
     NEXT_BUTTON(mapping),
     {}
   };

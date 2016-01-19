@@ -783,6 +783,8 @@ int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
 
 int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags );
 
+void mpegts_input_set_enabled ( mpegts_input_t *mi, int enabled );
+
 void mpegts_input_empty_status ( mpegts_input_t *mi, tvh_input_stream_t *st );
 
 
