@@ -34,7 +34,7 @@ typedef wizard_page_t *(*wizard_build_fcn_t)(const char *lang);
 wizard_page_t *wizard_hello(const char *lang);
 wizard_page_t *wizard_login(const char *lang);
 wizard_page_t *wizard_network(const char *lang);
-wizard_page_t *wizard_input(const char *lang);
+wizard_page_t *wizard_muxes(const char *lang);
 wizard_page_t *wizard_status(const char *lang);
 wizard_page_t *wizard_mapping(const char *lang);
 

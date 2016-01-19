@@ -75,6 +75,10 @@ dvb_mux_t *dvb_network_find_mux
 const idclass_t *dvb_network_mux_class(mpegts_network_t *mn);
 int dvb_network_get_orbital_pos(mpegts_network_t *mn);
 
+void dvb_network_scanfile_set ( dvb_network_t *ln, const char *id );
+
+htsmsg_t * dvb_network_class_scanfile_list ( void *o, const char *lang );
+
 /*
  *
  */

@@ -10,8 +10,8 @@ tvheadend.wizard_start = function(page) {
     var tabMapping = {
         hello: 'base_config',
         login: 'access_entry',
-        network: 'mpegts_network',
-        input: 'tvadapters',
+        network: 'tvadapters',
+        muxes: 'mpegts_network',
         status: 'status_streams',
         mapping: 'channels',
     }

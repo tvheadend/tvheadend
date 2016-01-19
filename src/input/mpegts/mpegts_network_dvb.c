@@ -59,19 +59,19 @@ dvb_network_class_scanfile_get ( void *o )
   static const char *s = NULL;
   return &s;
 }
-static int
-dvb_network_class_scanfile_set ( void *o, const void *s )
+
+void
+dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
 {
-  dvb_network_t *ln = o;
   dvb_mux_conf_t *dmc;
   scanfile_network_t *sfn;
   dvb_mux_t *mm;
 
   /* Find */
-  if (!s)
-    return 0;
-  if (!(sfn = scanfile_find(s)))
-    return 0;
+  if (!id)
+    return;
+  if (!(sfn = scanfile_find(id)))
+    return;
 
   /* Set satellite position */
   if (sfn->sfn_satpos != INT_MAX && ln->mn_satpos == INT_MAX)
@@ -80,7 +80,7 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
     if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
-      mm = dvb_mux_create0(o, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
+      mm = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
                            dmc, NULL, NULL);
       if (mm)
         mm->mm_config_save((mpegts_mux_t *)mm);
@@ -99,68 +99,56 @@ dvb_network_class_scanfile_set ( void *o, const void *s )
       }
     }
   }
+  return;
+}
+
+static int
+dvb_network_class_scanfile_set ( void *o, const void *s )
+{
+  dvb_network_scanfile_set(o, s);
   return 0;
 }
-static htsmsg_t *
-dvb_network_class_scanfile_list ( void *o, const char *lang, const char *type )
+
+htsmsg_t *
+dvb_network_class_scanfile_list ( void *o, const char *lang )
 {
   dvb_network_t *ln = o;
+  const char *type;
+  const idclass_t *clazz;
+
+  if (ln == NULL)
+    return NULL;
   htsmsg_t *e, *m = htsmsg_create_map();
   htsmsg_add_str(m, "type", "api");
   htsmsg_add_str(m, "uri", "dvb/scanfile/list");
   htsmsg_add_str(m, "stype", "none");
   e = htsmsg_create_map();
+  clazz = ln->mn_id.in_class;
+  if (clazz == &dvb_network_dvbt_class)
+    type = "dvbt";
+  else if (clazz == &dvb_network_dvbc_class)
+    type = "dvbc";
+  else if (clazz == &dvb_network_dvbs_class)
+    type = "dvbs";
+  else if (clazz == &dvb_network_atsc_t_class)
+    type = "atsc-t";
+  else if (clazz == &dvb_network_atsc_c_class)
+    type = "atsc-c";
+  else if (clazz == &dvb_network_isdb_t_class)
+    type = "isdb-t";
+  else if (clazz == &dvb_network_isdb_c_class)
+    type = "isdb-c";
+  else if (clazz == &dvb_network_isdb_s_class)
+    type = "isdb-s";
+  else if (clazz == &dvb_network_dab_class)
+    type = "dab";
+  else
+    type = "unk";
   htsmsg_add_str(e, "type", type);
   if (ln && ln->mn_satpos != INT_MAX)
     htsmsg_add_s32(e, "satpos", ln->mn_satpos);
   htsmsg_add_msg(m, "params", e);
   return m;
-}
-
-static htsmsg_t *
-dvb_network_dvbt_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "dvbt");
-}
-static htsmsg_t *
-dvb_network_dvbc_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "dvbc");
-}
-static htsmsg_t *
-dvb_network_dvbs_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "dvbs");
-}
-static htsmsg_t *
-dvb_network_atsc_t_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "atsc-t");
-}
-static htsmsg_t *
-dvb_network_atsc_c_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "atsc-c");
-}
-static htsmsg_t *
-dvb_network_isdb_t_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "isdb-t");
-}
-static htsmsg_t *
-dvb_network_isdb_c_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "isdb-c");
-}
-static htsmsg_t *
-dvb_network_isdb_s_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "isdb-s");
-}
-static htsmsg_t *
-dvb_network_dab_class_scanfile_list ( void *o, const char *lang )
-{
-  return dvb_network_class_scanfile_list(o, lang, "dab");
 }
 
 static const void *
@@ -235,7 +223,7 @@ const idclass_t dvb_network_dvbt_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_dvbt_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -257,7 +245,7 @@ const idclass_t dvb_network_dvbc_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_dvbc_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -279,7 +267,7 @@ const idclass_t dvb_network_dvbs_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_dvbs_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {
@@ -311,7 +299,7 @@ const idclass_t dvb_network_atsc_t_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_atsc_t_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -333,7 +321,7 @@ const idclass_t dvb_network_atsc_c_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_atsc_c_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -355,7 +343,7 @@ const idclass_t dvb_network_isdb_t_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_isdb_t_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -377,7 +365,7 @@ const idclass_t dvb_network_isdb_c_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_isdb_c_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -399,7 +387,7 @@ const idclass_t dvb_network_isdb_s_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_isdb_s_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -421,7 +409,7 @@ const idclass_t dvb_network_dab_class =
                      "may cause scanning to take longer than usual."),
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
-      .list     = dvb_network_dab_class_scanfile_list,
+      .list     = dvb_network_class_scanfile_list,
       .opts     = PO_NOSAVE,
     },
     {}

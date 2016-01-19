@@ -21,6 +21,7 @@
 #include "access.h"
 #include "settings.h"
 #include "input.h"
+#include "input/mpegts/iptv/iptv_private.h"
 #include "wizard.h"
 
 /*
@@ -547,7 +548,8 @@ static void network_save(idnode_t *in)
   .id   = "tunerid" STRINGIFY(num), \
   .name = "Tuner", \
   .get  = network_get_tidvalue##num, \
-  .opts = PO_RDONLY | PO_PERSIST | PO_NOUI, \
+  .set  = network_set_tidvalue##num, \
+  .opts = PO_PERSIST | PO_NOUI, \
 }, { \
   .type = PT_STR, \
   .id   = "network" STRINGIFY(num), \
@@ -572,6 +574,13 @@ static const void *network_get_tidvalue##num(void *o) \
   wizard_network_t *w = p->aux; \
   snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->tunerid[num-1]); \
   return &prop_sbuf_ptr; \
+} \
+static int network_set_tidvalue##num(void *o, const void *v) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_network_t *w = p->aux; \
+  snprintf(w->tunerid[num-1], sizeof(w->tunerid[num-1]), "%s", (const char *)v); \
+  return 1; \
 } \
 static const void *network_get_value##num(void *o) \
 { \
@@ -631,7 +640,7 @@ wizard_page_t *wizard_network(const char *lang)
     ICON(),
     DESCRIPTION(network),
     PREV_BUTTON(login),
-    NEXT_BUTTON(input),
+    NEXT_BUTTON(muxes),
   };
   wizard_page_t *page = page_init("network", "wizard_network", N_("Network settings"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
@@ -685,47 +694,233 @@ wizard_page_t *wizard_network(const char *lang)
 }
 
 /*
- * Input settings
+ * Muxes settings
  */
 
-DESCRIPTION_FCN(input, N_("\
-Assign inputs to networks.\
+typedef struct wizard_muxes {
+  property_t props [WIZARD_NETWORKS * 3 + 10];
+  char network     [WIZARD_NETWORKS][64];
+  char networkid   [WIZARD_NETWORKS][UUID_HEX_SIZE];
+  char muxes       [WIZARD_NETWORKS][64];
+  char iptv_url    [WIZARD_NETWORKS][512];
+} wizard_muxes_t;
+
+static void muxes_free(wizard_page_t *page)
+{
+  page_free(page);
+}
+
+static void muxes_save(idnode_t *in)
+{
+  wizard_page_t *p = (wizard_page_t *)in;
+  wizard_muxes_t *w = p->aux;
+  mpegts_network_t *mn;
+  htsmsg_t *m;
+  int idx;
+
+  for (idx = 0; idx < WIZARD_NETWORKS; idx++) {
+    if (w->networkid[idx][0] == '\0')
+      continue;
+    mn = mpegts_network_find(w->networkid[idx]);
+    if (mn == NULL || !mn->mn_wizard)
+      continue;
+    if (idnode_is_instance(&mn->mn_id, &dvb_network_class) && w->muxes[idx][0]) {
+      dvb_network_scanfile_set((dvb_network_t *)mn, w->muxes[idx]);
+    } else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class) &&
+               w->iptv_url[0]) {
+      m = htsmsg_create_map();
+      htsmsg_add_str(m, "url", w->iptv_url[idx]);
+      idnode_load(&mn->mn_id, m);
+      htsmsg_destroy(m);
+    }
+  }
+}
+
+#define MUXES(num) { \
+  .type = PT_STR, \
+  .id   = "network" STRINGIFY(num), \
+  .name = N_("Network"), \
+  .get  = muxes_get_nvalue##num, \
+  .opts = PO_RDONLY, \
+  .group = num, \
+}, { \
+  .type = PT_STR, \
+  .id   = "networkid" STRINGIFY(num), \
+  .name = "Network", \
+  .get  = muxes_get_idvalue##num, \
+  .set  = muxes_set_idvalue##num, \
+  .opts = PO_PERSIST | PO_NOUI, \
+}, { \
+  .type = PT_STR, \
+  .id   = "muxes" STRINGIFY(num), \
+  .name = N_("Pre-defined muxes"), \
+  .get  = muxes_get_value##num, \
+  .set  = muxes_set_value##num, \
+  .list = muxes_get_list##num, \
+  .group = num, \
+}
+
+#define MUXES_IPTV(num) { \
+  .type = PT_STR, \
+  .id   = "network" STRINGIFY(num), \
+  .name = N_("Network"), \
+  .get  = muxes_get_nvalue##num, \
+  .opts = PO_RDONLY, \
+  .group = num, \
+}, { \
+  .type = PT_STR, \
+  .id   = "networkid" STRINGIFY(num), \
+  .name = "Network", \
+  .get  = muxes_get_idvalue##num, \
+  .set  = muxes_set_idvalue##num, \
+  .opts = PO_PERSIST | PO_NOUI, \
+}, { \
+  .type = PT_STR, \
+  .id   = "muxes" STRINGIFY(num), \
+  .name = N_("URL"), \
+  .desc = N_("URL of the M3U playlist."), \
+  .get  = muxes_get_iptv_value##num, \
+  .set  = muxes_set_iptv_value##num, \
+  .group = num, \
+}
+
+#define MUXES_FCN(num) \
+static const void *muxes_get_nvalue##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->network[num-1]); \
+  return &prop_sbuf_ptr; \
+} \
+static const void *muxes_get_idvalue##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->networkid[num-1]); \
+  return &prop_sbuf_ptr; \
+} \
+static int muxes_set_idvalue##num(void *o, const void *v) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(w->networkid[num-1], sizeof(w->networkid[num-1]), "%s", (const char *)v); \
+  return 1; \
+} \
+static const void *muxes_get_value##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->muxes[num-1]); \
+  return &prop_sbuf_ptr; \
+} \
+static int muxes_set_value##num(void *o, const void *v) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(w->muxes[num-1], sizeof(w->muxes[num-1]), "%s", (const char *)v); \
+  return 1; \
+} \
+static htsmsg_t *muxes_get_list##num(void *o, const char *lang) \
+{ \
+  if (o == NULL) return NULL; \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  mpegts_network_t *mn = mpegts_network_find(w->networkid[num-1]); \
+  return mn ? dvb_network_class_scanfile_list(mn, lang) : NULL; \
+} \
+static const void *muxes_get_iptv_value##num(void *o) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", w->iptv_url[num-1]); \
+  return &prop_sbuf_ptr; \
+} \
+static int muxes_set_iptv_value##num(void *o, const void *v) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_muxes_t *w = p->aux; \
+  snprintf(w->iptv_url[num-1], sizeof(w->iptv_url[num-1]), "%s", (const char *)v); \
+  return 1; \
+}
+
+MUXES_FCN(1)
+MUXES_FCN(2)
+MUXES_FCN(3)
+MUXES_FCN(4)
+MUXES_FCN(5)
+MUXES_FCN(6)
+
+DESCRIPTION_FCN(muxes, N_("\
+Assign predefined mxues to networks.\
 "))
 
-
-wizard_page_t *wizard_input(const char *lang)
+wizard_page_t *wizard_muxes(const char *lang)
 {
-  static const property_t props[] = {
-    {
-      .type     = PT_STR,
-      .id       = "input1",
-      .name     = N_("Input 1 network"),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
-    },
-    {
-      .type     = PT_STR,
-      .id       = "input2",
-      .name     = N_("Input 2 network"),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
-    },
-    {
-      .type     = PT_STR,
-      .id       = "input3",
-      .name     = N_("Input 3 network"),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
-    },
-    ICON(),
-    DESCRIPTION(input),
-    PREV_BUTTON(network),
-    NEXT_BUTTON(status),
+  static const property_group_t groups[] = {
+    NETWORK_GROUP(1),
+    NETWORK_GROUP(2),
+    NETWORK_GROUP(3),
+    NETWORK_GROUP(4),
+    NETWORK_GROUP(5),
+    NETWORK_GROUP(6),
     {}
   };
-  wizard_page_t *page = page_init("input", "wizard_input", N_("Input / tuner settings"));
+  static const property_t nprops[] = {
+    MUXES(1),
+    MUXES(2),
+    MUXES(3),
+    MUXES(4),
+    MUXES(5),
+    MUXES(6),
+  };
+  static const property_t iptvprops[] = {
+    MUXES_IPTV(1),
+    MUXES_IPTV(2),
+    MUXES_IPTV(3),
+    MUXES_IPTV(4),
+    MUXES_IPTV(5),
+    MUXES_IPTV(6),
+  };
+  static const property_t props[] = {
+    ICON(),
+    DESCRIPTION(muxes),
+    PREV_BUTTON(network),
+    NEXT_BUTTON(status),
+  };
+  wizard_page_t *page = page_init("muxes", "wizard_muxes", N_("Assign predefined muxes to networks"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
-  ic->ic_properties = props;
+  wizard_muxes_t *w;
+  mpegts_network_t *mn;
+  int idx, midx = 0;
+
+  page->aux = w = calloc(1, sizeof(wizard_network_t));
+  ic->ic_groups = groups;
+  ic->ic_properties = w->props;
+  ic->ic_save = muxes_save;
+  page->free = muxes_free;
+
+  for (idx = 0; idx < ARRAY_SIZE(props); idx++)
+    w->props[idx] = props[idx];
+
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+    if (mn->mn_wizard) {
+      mn->mn_display_name(mn, w->network[midx], sizeof(w->network[midx]));
+      idnode_uuid_as_str(&mn->mn_id, w->networkid[midx]);
+      if (idnode_is_instance(&mn->mn_id, &dvb_network_class)) {
+        w->props[idx++] = nprops[midx * 3 + 0];
+        w->props[idx++] = nprops[midx * 3 + 1];
+        w->props[idx++] = nprops[midx * 3 + 2];
+        midx++;
+      } else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class)) {
+        w->props[idx++] = iptvprops[midx * 3 + 0];
+        w->props[idx++] = iptvprops[midx * 3 + 1];
+        w->props[idx++] = iptvprops[midx * 3 + 2];
+        midx++;
+      }
+    }
+
+  assert(idx < ARRAY_SIZE(w->props));
+
   return page;
 }
 
