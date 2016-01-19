@@ -2063,10 +2063,6 @@ access_init(int createdefault, int noacl)
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);
 
-    TAILQ_INIT(&ae->ae_ipmasks);
-
-    access_set_prefix_default(&ae->ae_ipmasks);
-
     access_entry_save(ae);
 
     tvhlog(LOG_WARNING, "access",
