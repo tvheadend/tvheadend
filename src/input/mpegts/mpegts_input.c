@@ -476,6 +476,7 @@ mpegts_input_open_pid
                  buf, (type & MPS_TABLES) ? "tables" : "fullmux", type, owner);
         mm->mm_update_pids_flag = 1;
       } else {
+        mpegts_mux_nice_name(mm, buf, sizeof(buf));
         tvherror("mpegts",
                  "%s - open PID %04x (%d) failed, dupe sub (owner %p)",
                  buf, mp->mp_pid, mp->mp_pid, owner);
@@ -493,6 +494,7 @@ mpegts_input_open_pid
                buf, mp->mp_pid, mp->mp_pid, type, owner);
       mm->mm_update_pids_flag = 1;
     } else {
+      mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvherror("mpegts", "%s - open PID %04x (%d) failed, dupe sub (owner %p)",
                buf, mp->mp_pid, mp->mp_pid, owner);
       free(mps);
@@ -675,7 +677,8 @@ mpegts_input_open_service
       mpegts_input_open_pid(mi, mm, DVB_CAT_PID, MPS_SERVICE, MPS_WEIGHT_CAT, s);
     /* Open only filtered components here */
     TAILQ_FOREACH(st, &s->s_filt_components, es_filt_link)
-      if (s->s_scrambled_pass || st->es_type != SCT_CA) {
+      if ((s->s_scrambled_pass || st->es_type != SCT_CA) &&
+          st->es_pid != s->s_pmt_pid && st->es_pid != s->s_pcr_pid) {
         st->es_pid_opened = 1;
         mpegts_input_open_pid(mi, mm, st->es_pid, MPS_SERVICE, mpegts_mps_weight(st), s);
       }
