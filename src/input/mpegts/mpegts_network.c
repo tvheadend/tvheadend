@@ -99,7 +99,7 @@ mpegts_network_class_get_num_chn ( void *ptr )
 static const void *
 mpegts_network_class_get_scanq_length ( void *ptr )
 {
-  static __thread int n;
+  static int n;
   mpegts_mux_t *mm;
   mpegts_network_t *mn = ptr;
 

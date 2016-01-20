@@ -22,6 +22,7 @@
 #include "access.h"
 #include "api.h"
 #include "config.h"
+#include "input.h"
 #include "wizard.h"
 
 static int
@@ -76,6 +77,32 @@ wizard_start
   return wizard_page("hello");
 }
 
+static int
+wizard_status_progress
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int64_t active = 0, total = 0, services = 0;
+  mpegts_service_t *s;
+  mpegts_mux_t *mm;
+  mpegts_network_t *mn;
+
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    if (!mn->mn_wizard) continue;
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      total++;
+      if (mm->mm_scan_state != MM_SCAN_STATE_IDLE)
+        active++;
+      LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+        services++;
+    }
+  }
+  *resp = htsmsg_create_map();
+  htsmsg_add_dbl(*resp, "progress", total ? ((double)1.0 - ((double)active / (double)total)) : 1);
+  htsmsg_add_s64(*resp, "muxes", total);
+  htsmsg_add_s64(*resp, "services", services);
+  return 0;
+}
+
 void
 api_wizard_init ( void )
 {
@@ -90,6 +117,7 @@ api_wizard_init ( void )
     { "wizard/muxes/save",   ACCESS_ADMIN, wizard_idnode_save_simple, wizard_muxes },
     { "wizard/status/load",  ACCESS_ADMIN, wizard_idnode_load_simple, wizard_status },
     { "wizard/status/save",  ACCESS_ADMIN, wizard_idnode_save_simple, wizard_status },
+    { "wizard/status/progress", ACCESS_ADMIN, wizard_status_progress, NULL },
     { "wizard/mapping/load", ACCESS_ADMIN, wizard_idnode_load_simple, wizard_mapping },
     { "wizard/mapping/save", ACCESS_ADMIN, wizard_idnode_save_simple, wizard_mapping },
     { "wizard/start",        ACCESS_ADMIN, wizard_start, NULL },

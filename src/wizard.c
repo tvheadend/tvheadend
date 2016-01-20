@@ -53,6 +53,7 @@ static const void *icon_get(void *o)
 #define LAST_BUTTON()     SPECIAL_PROP("page_last", empty_get)
 #define ICON()            SPECIAL_PROP("icon", icon_get)
 #define DESCRIPTION(page) SPECIAL_PROP("description", wizard_description_##page)
+#define PROGRESS(fcn)     SPECIAL_PROP("progress", fcn)
 
 #define DESCRIPTION_FCN(page, desc) \
 static const void *wizard_description_##page(void *o) \
@@ -700,6 +701,7 @@ wizard_page_t *wizard_network(const char *lang)
  */
 
 typedef struct wizard_muxes {
+  char lang        [64];
   property_t props [WIZARD_NETWORKS * 3 + 10];
   char network     [WIZARD_NETWORKS][64];
   char networkid   [WIZARD_NETWORKS][UUID_HEX_SIZE];
@@ -736,6 +738,14 @@ static void muxes_save(idnode_t *in)
       htsmsg_destroy(m);
     }
   }
+}
+
+static const void *muxes_progress_get(void *o)
+{
+  wizard_page_t *p = o;
+  wizard_muxes_t *w = p->aux;
+  snprintf(prop_sbuf, PROP_SBUF_LEN, "%s", tvh_gettext_lang(w->lang, N_("Scan progress")));
+  return &prop_sbuf_ptr;
 }
 
 #define MUXES(num) { \
@@ -900,6 +910,7 @@ wizard_page_t *wizard_muxes(const char *lang)
   ic->ic_properties = w->props;
   ic->ic_save = muxes_save;
   page->free = muxes_free;
+  snprintf(w->lang, sizeof(w->lang), "%s", lang ?: "");
 
   for (idx = 0; idx < ARRAY_SIZE(props); idx++)
     w->props[idx] = props[idx];
@@ -932,29 +943,40 @@ wizard_page_t *wizard_muxes(const char *lang)
  */
 
 DESCRIPTION_FCN(status, N_("\
-Show the scan status.\
+Show the scan status.\n\
+Please, wait until the scan finishes.\
 "))
 
 
 wizard_page_t *wizard_status(const char *lang)
 {
+  static const property_group_t groups[] = {
+    {
+      .name     = "",
+      .number   = 1,
+    },
+    {}
+  };
   static const property_t props[] = {
     {
       .type     = PT_STR,
       .id       = "muxes",
       .name     = N_("Found muxes"),
       .desc     = N_("Number of muxes found."),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
+      .get      = empty_get,
+      .opts     = PO_RDONLY,
+      .group    = 1,
     },
     {
       .type     = PT_STR,
       .id       = "services",
       .name     = N_("Found services"),
       .desc     = N_("Total number of services found."),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
+      .get      = empty_get,
+      .opts     = PO_RDONLY,
+      .group    = 1,
     },
+    PROGRESS(muxes_progress_get),
     ICON(),
     DESCRIPTION(status),
     PREV_BUTTON(muxes),
@@ -964,6 +986,7 @@ wizard_page_t *wizard_status(const char *lang)
   wizard_page_t *page = page_init("status", "wizard_status", N_("Scan status"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
+  ic->ic_groups = groups;
   return page;
 }
 
