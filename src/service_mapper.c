@@ -59,7 +59,7 @@ service_mapper_status ( void )
 /*
  * Start a new mapping
  */
-static void
+void
 service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
 {
   int e, tr, qd = 0;

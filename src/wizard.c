@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "input.h"
 #include "input/mpegts/iptv/iptv_private.h"
+#include "service_mapper.h"
 #include "wizard.h"
 
 /*
@@ -101,21 +102,6 @@ static wizard_page_t *page_init
   ic->ic_perm_def = ACCESS_ADMIN;
   page->free = page_free;
   return page;
-}
-
-/*
- *
- */
-
-static const void *hello_get_network(void *o)
-{
-  strcpy(prop_sbuf, "Test123");
-  return &prop_sbuf_ptr;
-}
-
-static int hello_set_network(void *o, const void *v)
-{
-  return 0;
 }
 
 /*
@@ -994,8 +980,53 @@ wizard_page_t *wizard_status(const char *lang)
  * Service Mapping
  */
 
+typedef struct wizard_mapping {
+  int mapall;
+  int provtags;
+  int nettags;
+} wizard_mapping_t;
+
+static void mapping_save(idnode_t *in)
+{
+  wizard_page_t *p = (wizard_page_t *)in;
+  wizard_mapping_t *w = p->aux;
+  service_mapper_conf_t conf;
+
+  if (!w->mapall)
+    return;
+  memset(&conf, 0, sizeof(conf));
+  conf.type_tags = 1;
+  conf.encrypted = 1;
+  conf.provider_tags = w->provtags;
+  conf.network_tags = w->nettags;
+  service_mapper_start(&conf, NULL);
+}
+
+#define MAPPING_FCN(name) \
+static const void *mapping_get_##name(void *o) \
+{ \
+  static int n; \
+  wizard_page_t *p = o; \
+  wizard_mapping_t *w = p->aux; \
+  n = w->name; \
+  return &n; \
+} \
+static int mapping_set_##name(void *o, const void *v) \
+{ \
+  wizard_page_t *p = o; \
+  wizard_mapping_t *w = p->aux; \
+  w->name = *(int *)v; \
+  return 1; \
+}
+
+MAPPING_FCN(mapall)
+MAPPING_FCN(provtags)
+MAPPING_FCN(nettags)
+
 DESCRIPTION_FCN(mapping, N_("\
-Do the service mapping to channels.\
+Map all discovered services to channels.\n\
+Note: You may ommit this step (do not check the map all services) and\
+do the service to channel mapping manually.\n\
 "))
 
 
@@ -1003,20 +1034,64 @@ wizard_page_t *wizard_mapping(const char *lang)
 {
   static const property_t props[] = {
     {
-      .type     = PT_STR,
-      .id       = "pnetwork",
-      .name     = N_("Select network"),
-      .desc     = N_("Select a Network."),
-      .get      = hello_get_network,
-      .set      = hello_set_network,
+      .type     = PT_BOOL,
+      .id       = "mapall",
+      .name     = N_("Map all services"),
+      .get      = mapping_get_mapall,
+      .set      = mapping_set_mapall,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "provtags",
+      .name     = N_("Create provider tags"),
+      .get      = mapping_get_provtags,
+      .set      = mapping_set_provtags,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "nettags",
+      .name     = N_("Create network tags"),
+      .get      = mapping_get_nettags,
+      .set      = mapping_set_nettags,
     },
     ICON(),
     DESCRIPTION(mapping),
     PREV_BUTTON(status),
+    NEXT_BUTTON(channels),
     LAST_BUTTON(),
     {}
   };
-  wizard_page_t *page = page_init("mapping", "wizard_service_map", N_("Service mapping"));
+  wizard_page_t *page = page_init("mapping", "wizard_mapping", N_("Service mapping"));
+  idclass_t *ic = (idclass_t *)page->idnode.in_class;
+  wizard_mapping_t *w;
+  ic->ic_properties = props;
+  ic->ic_save = mapping_save;
+  page->aux = w = calloc(1, sizeof(wizard_mapping_t));
+  w->provtags = service_mapper_conf.d.provider_tags;
+  w->nettags = service_mapper_conf.d.network_tags;
+  return page;
+}
+
+/*
+ * Discovered channels
+ */
+
+DESCRIPTION_FCN(channels, N_("\
+You are finished now.\n\
+You may further customize your settings by editing channel numbers etc.\
+"))
+
+
+wizard_page_t *wizard_channels(const char *lang)
+{
+  static const property_t props[] = {
+    ICON(),
+    DESCRIPTION(channels),
+    PREV_BUTTON(mapping),
+    LAST_BUTTON(),
+    {}
+  };
+  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Service mapping"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   ic->ic_properties = props;
   return page;

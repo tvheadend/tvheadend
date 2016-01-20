@@ -308,6 +308,7 @@ tvheadend.services = function(panel, index)
         conf.selected = null;
     }
     tvheadend.idnode_grid(panel, {
+        id: 'services',
         url: 'api/mpegts/service',
         titleS: _('Service'),
         titleP: _('Services'),

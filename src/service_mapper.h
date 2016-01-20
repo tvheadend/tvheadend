@@ -51,6 +51,9 @@ extern service_mapper_t service_mapper_conf;
 void service_mapper_init   ( void );
 void service_mapper_done   ( void );
 
+// Start service mapper
+void service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids );
+
 // Stop pending services (remove from Q)
 void service_mapper_stop   ( void );
 

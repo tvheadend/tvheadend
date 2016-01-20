@@ -120,6 +120,8 @@ api_wizard_init ( void )
     { "wizard/status/progress", ACCESS_ADMIN, wizard_status_progress, NULL },
     { "wizard/mapping/load", ACCESS_ADMIN, wizard_idnode_load_simple, wizard_mapping },
     { "wizard/mapping/save", ACCESS_ADMIN, wizard_idnode_save_simple, wizard_mapping },
+    { "wizard/channels/load", ACCESS_ADMIN, wizard_idnode_load_simple, wizard_channels },
+    { "wizard/channels/save", ACCESS_ADMIN, wizard_idnode_save_simple, wizard_channels },
     { "wizard/start",        ACCESS_ADMIN, wizard_start, NULL },
     { "wizard/cancel",       ACCESS_ADMIN, wizard_cancel, NULL },
     { NULL },

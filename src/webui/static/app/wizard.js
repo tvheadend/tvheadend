@@ -12,7 +12,8 @@ tvheadend.wizard_start = function(page) {
         network: 'tvadapters',
         muxes: 'mpegts_network',
         status: 'status_streams',
-        mapping: 'channels',
+        mapping: 'services',
+        channels: 'channels'
     }
 
     function cancel(conf) {
@@ -165,9 +166,9 @@ tvheadend.wizard_start = function(page) {
 
     tvheadend.wizard = page;
 
-    if (tvheadend.wizard_delayed_activation == null) {
-        tvheadend.wizard_delayed_activation = new Ext.util.DelayedTask(activate_tab);
-    tvheadend.wizard_delayed_activation.delay(1000);
+    if (tvheadend.wizard_delayed_activation == null)
+        tvheadend.wizard_delayed_activation = new Ext.util.DelayedTask();
+    tvheadend.wizard_delayed_activation.delay(1000, activate_tab);
 
     tvheadend.Ajax({
         url: 'api/wizard/' + page + '/load',

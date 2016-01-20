@@ -37,5 +37,6 @@ wizard_page_t *wizard_network(const char *lang);
 wizard_page_t *wizard_muxes(const char *lang);
 wizard_page_t *wizard_status(const char *lang);
 wizard_page_t *wizard_mapping(const char *lang);
+wizard_page_t *wizard_channels(const char *lang);
 
 #endif /* __TVH_WIZARD_H__ */
