@@ -522,6 +522,8 @@ mpegts_network_wizard_create
   htsmsg_add_bool(conf, "wizard", 1);
   mn = mnb->build(mnb->idc, conf);
   htsmsg_destroy(conf);
+  if (mn)
+    mn->mn_config_save(mn);
 
 found:
   if (mn && nlist) {

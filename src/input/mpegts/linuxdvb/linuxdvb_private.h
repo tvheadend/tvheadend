@@ -451,8 +451,7 @@ void linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls );
 htsmsg_t *linuxdvb_satconf_type_list ( void *o, const char *lang );
 
 linuxdvb_satconf_t *linuxdvb_satconf_create
-  ( linuxdvb_frontend_t *lfe,
-    const char *type, const char *uuid, htsmsg_t *conf );
+  ( linuxdvb_frontend_t *lfe, htsmsg_t *conf );
 
 void linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf );
 

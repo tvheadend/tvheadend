@@ -957,15 +957,21 @@ linuxdvb_satconf_match_mux
 
 linuxdvb_satconf_t *
 linuxdvb_satconf_create
-  ( linuxdvb_frontend_t *lfe, const char *type, const char *uuid,
-    htsmsg_t *conf )
+  ( linuxdvb_frontend_t *lfe, htsmsg_t *conf )
 {
   int i;
   htsmsg_t *l, *e;
   htsmsg_field_t *f;
   linuxdvb_satconf_ele_t *lse;
-  const char *str;
-  struct linuxdvb_satconf_type *lst = linuxdvb_satconf_type_find(type);
+  const char *str, *type = NULL, *uuid = NULL;
+  struct linuxdvb_satconf_type *lst;
+
+  if (conf) {
+    type = htsmsg_get_str(conf, "type");
+    uuid = htsmsg_get_str(conf, "uuid");
+  }
+
+  lst = linuxdvb_satconf_type_find(type);
   assert(lst);
   
   linuxdvb_satconf_t *ls = calloc(1, sizeof(linuxdvb_satconf_t));

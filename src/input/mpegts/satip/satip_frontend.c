@@ -1809,6 +1809,7 @@ satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
     htsmsg_destroy(conf);
     if (satip_frontend_wizard_network(lfe))
       mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
+    satip_device_save(lfe->sf_device);
   }
 }
 

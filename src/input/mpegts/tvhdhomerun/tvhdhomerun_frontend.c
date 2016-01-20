@@ -628,6 +628,7 @@ tvhdhomerun_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *la
     htsmsg_destroy(nlist);
     if (tvhdhomerun_frontend_wizard_network(hfe))
       mpegts_input_set_enabled((mpegts_input_t *)hfe, 1);
+    tvhdhomerun_device_save(hfe->hf_device);
   }
 }
 

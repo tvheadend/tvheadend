@@ -168,12 +168,16 @@ static int
 linuxdvb_frontend_dvbs_class_satconf_set ( void *self, const void *str )
 {
   linuxdvb_frontend_t *lfe = self;
+  htsmsg_t *conf;
   if (lfe->lfe_satconf) {
     if (!strcmp(str ?: "", lfe->lfe_satconf->ls_type))
       return 0;
     linuxdvb_satconf_delete(lfe->lfe_satconf, 1);
   }
-  lfe->lfe_satconf = linuxdvb_satconf_create(lfe, str, NULL, NULL);
+  conf = htsmsg_create_map();
+  htsmsg_add_str(conf, "type", str);
+  lfe->lfe_satconf = linuxdvb_satconf_create(lfe, conf);
+  htsmsg_destroy(conf);
   return 1;
 }
 
@@ -1763,7 +1767,7 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
       htsmsg_t *conf = htsmsg_create_map();
       htsmsg_t *elems = htsmsg_create_list();
       htsmsg_t *elem = htsmsg_create_map();
-      htsmsg_add_str(conf, "type", "simple");
+      htsmsg_add_str(conf, "type", "4port");
       htsmsg_add_bool(elem, "enable", 1);
       htsmsg_add_msg(elem, "networks", nlist);
       htsmsg_add_msg(elems, NULL, elem);
@@ -1772,7 +1776,7 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
         linuxdvb_satconf_delete(lfe->lfe_satconf, 0);
         lfe->lfe_satconf = NULL;
       }
-      lfe->lfe_satconf = linuxdvb_satconf_create(lfe, NULL, NULL, conf);
+      lfe->lfe_satconf = linuxdvb_satconf_create(lfe, conf);
       htsmsg_destroy(conf);
     } else {
       mpegts_input_set_networks((mpegts_input_t *)lfe, nlist);
@@ -1780,6 +1784,7 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
     }
     if (linuxdvb_frontend_wizard_network(lfe))
       mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
+    linuxdvb_adapter_save(lfe->lfe_adapter);
   }
 }
 
@@ -1790,10 +1795,10 @@ linuxdvb_frontend_create
     dvb_fe_type_t type, const char *name )
 {
   const idclass_t *idc;
-  const char *str, *uuid = NULL, *muuid = NULL, *scuuid = NULL, *sctype = NULL;
+  const char *str, *uuid = NULL, *muuid = NULL;
   char id[16], lname[256];
   linuxdvb_frontend_t *lfe;
-  htsmsg_t *scconf = NULL;
+  htsmsg_t *scconf;
 
   /* Tuner slave */
   snprintf(id, sizeof(id), "master for #%d", number);
@@ -1897,17 +1902,11 @@ linuxdvb_frontend_create
   pthread_cond_init(&lfe->lfe_dvr_cond, NULL);
   mpegts_pid_init(&lfe->lfe_pids);
  
-  /* Satconf */
-  if (conf && !muuid) {
-    if ((scconf = htsmsg_get_map(conf, "satconf"))) {
-      sctype = htsmsg_get_str(scconf, "type");
-      scuuid = htsmsg_get_str(scconf, "uuid");
-    }
-  }
-
   /* Create satconf */
-  if (lfe->lfe_type == DVB_TYPE_S && !lfe->lfe_satconf && !muuid)
-    lfe->lfe_satconf = linuxdvb_satconf_create(lfe, sctype, scuuid, scconf);
+  if (lfe->lfe_type == DVB_TYPE_S && !lfe->lfe_satconf && !muuid) {
+    scconf = conf ? htsmsg_get_map(conf, "satconf") : NULL;
+    lfe->lfe_satconf = linuxdvb_satconf_create(lfe, scconf);
+  }
 
   /* Double check enabled */
   linuxdvb_frontend_enabled_updated((mpegts_input_t*)lfe);
