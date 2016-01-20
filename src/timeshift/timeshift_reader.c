@@ -483,10 +483,14 @@ static void timeshift_fill_status
 
   start = _timeshift_first_time(ts, &active);
   end   = ts->buf_time;
-  if (current_time < 0)
-    current_time = 0;
-  if (current_time > end)
+  if (ts->state <= TS_LIVE) {
     current_time = end;
+  } else {
+    if (current_time < 0)
+      current_time = 0;
+    if (current_time > end)
+      current_time = end;
+  }
   status->full = ts->full;
   tvhtrace("timeshift", "ts %d status start %"PRId64" end %"PRId64
                         " current %"PRId64" state %d",
