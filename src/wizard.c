@@ -152,7 +152,9 @@ BASIC_STR_OPS(wizard_hello_t, epg_lang3)
 
 DESCRIPTION_FCN(hello, N_("\
 Enter the languages for the web user interface and \
-for EPG texts.\
+for EPG texts.\n\
+This wizard should be run only on the initial setup. Please, cancel \
+it, if you are not willing to touch the current configuration.\
 "))
 
 wizard_page_t *wizard_hello(const char *lang)
@@ -363,8 +365,6 @@ username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
 You can leave the username and password blank if you don't want \
 this part, and would prefer anonymous access to anyone.\n\
-This wizard should be run only on the initial setup. Please, cancel \
-it, if you are not willing to touch the current configuration.\
 "))
 
 wizard_page_t *wizard_login(const char *lang)
