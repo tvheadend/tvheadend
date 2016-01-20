@@ -114,6 +114,9 @@ skip_cc:
         ts_remux(m, tsb, len, errors);
     }
     pthread_mutex_unlock(&m->s_stream_mutex);
+    /* mark service live even without real subscribers */
+    service_set_streaming_status_flags((service_t*)t, TSS_PACKETS);
+    t->s_streaming_live |= TSS_LIVE;
   }
 }
 
