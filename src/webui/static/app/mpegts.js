@@ -165,11 +165,11 @@ tvheadend.show_service_streams = function(data) {
     function header( ) {
         html += '<table style="font-size:8pt;font-family:monospace;padding:2px"';
         html += '<tr>';
-        html += '<th style="width:50px;font-weight:bold">Index</th>';
-        html += '<th style="width:120px;font-weight:bold">PID</th>';
-        html += '<th style="width:100px;font-weight:bold">Type</th>';
-        html += '<th style="width:75px;font-weight:bold">Language</th>';
-        html += '<th style="width:*;font-weight:bold">Details</th>';
+        html += '<th style="width:50px;font-weight:bold">' + _('Index') + '</th>';
+        html += '<th style="width:120px;font-weight:bold">' + _('PID') + '</th>';
+        html += '<th style="width:100px;font-weight:bold">' + _('Type') + '</th>';
+        html += '<th style="width:75px;font-weight:bold">' + _('Language') + '</th>';
+        html += '<th style="width:*;font-weight:bold">' + _('Details') + '</th>';
         html += '</tr>';
 
     }
