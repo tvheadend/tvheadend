@@ -965,6 +965,8 @@ mpegts_service_link ( mpegts_service_t *master, mpegts_service_t *slave )
 {
   pthread_mutex_lock(&slave->s_stream_mutex);
   pthread_mutex_lock(&master->s_stream_mutex);
+  assert(LIST_SAFE_ENTRY(master, s_masters_link));
+  assert(LIST_SAFE_ENTRY(slave, s_slaves_link));
   LIST_INSERT_HEAD(&slave->s_masters, master, s_masters_link);
   LIST_INSERT_HEAD(&master->s_slaves, slave, s_slaves_link);
   pthread_mutex_unlock(&master->s_stream_mutex);

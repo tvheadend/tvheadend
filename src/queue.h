@@ -36,6 +36,9 @@
                 LIST_ENTRY_INIT(elm, field); \
         }
 
+#define LIST_SAFE_ENTRY(elm, field) \
+        ((elm)->field.le_next == NULL && (elm)->field.le_prev == NULL)
+
 #define LIST_MOVE(newhead, oldhead, field) do {			        \
         if((oldhead)->lh_first) {					\
            (oldhead)->lh_first->field.le_prev = &(newhead)->lh_first;	\
