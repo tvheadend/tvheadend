@@ -892,12 +892,12 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
       mpegts_input_close_pids(mi, mm, t, 1);
       for (i = 0; i < x->count; i++) {
         pi = &x->pids[i];
-        mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+        mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t, 0);
       }
     } else {
       if (pids->all) {
         mpegts_input_close_pids(mi, mm, t, 1);
-        mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t);
+        mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t, 0);
       } else {
         mpegts_pid_compare(p, x, &add, &del);
         for (i = 0; i < del.count; i++) {
@@ -906,7 +906,7 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
         }
         for (i = 0; i < add.count; i++) {
           pi = &add.pids[i];
-          mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t);
+          mpegts_input_open_pid(mi, mm, pi->pid, MPS_RAW, pi->weight, t, 0);
         }
         mpegts_pid_done(&add);
         mpegts_pid_done(&del);
