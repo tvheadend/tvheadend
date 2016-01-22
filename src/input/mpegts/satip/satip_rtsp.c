@@ -300,7 +300,7 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
     }
   }
   if (weight)
-    htsbuf_qprintf(&q, "tvhweight=%d", weight);
+    htsbuf_qprintf(&q, "%stvhweight=%d", htsbuf_empty(&q) ? "" : "&", weight);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);
