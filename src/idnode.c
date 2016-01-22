@@ -962,6 +962,16 @@ idnode_filter_clear
 }
 
 void
+idnode_set_alloc
+  ( idnode_set_t *is, size_t alloc )
+{
+  if (is->is_alloc < alloc) {
+    is->is_alloc = alloc;
+    is->is_array = realloc(is->is_array, alloc * sizeof(idnode_t*));
+  }
+}
+
+void
 idnode_set_add
   ( idnode_set_t *is, idnode_t *in, idnode_filter_t *filt, const char *lang )
 {
@@ -969,10 +979,8 @@ idnode_set_add
     return;
   
   /* Allocate more space */
-  if (is->is_alloc == is->is_count) {
-    is->is_alloc = MAX(100, is->is_alloc * 2);
-    is->is_array = realloc(is->is_array, is->is_alloc * sizeof(idnode_t*));
-  }
+  if (is->is_alloc == is->is_count)
+    idnode_set_alloc(is, MAX(100, is->is_alloc * 2));
   if (is->is_sorted) {
     size_t i;
     idnode_t **a = is->is_array;
@@ -1017,8 +1025,9 @@ idnode_set_remove
 {
   ssize_t i = idnode_set_find_index(is, in);
   if (i >= 0) {
-    memmove(&is->is_array[i], &is->is_array[i+1],
-            (is->is_count - i - 1) * sizeof(idnode_t *));
+    if (is->is_count > 1)
+      memmove(&is->is_array[i], &is->is_array[i+1],
+              (is->is_count - i - 1) * sizeof(idnode_t *));
     is->is_count--;
     return 1;
   }
@@ -1049,6 +1058,13 @@ idnode_set_as_htsmsg
   for (i = 0; i < is->is_count; i++)
     htsmsg_add_str(l, NULL, idnode_uuid_as_str(is->is_array[i], ubuf));
   return l;
+}
+
+void
+idnode_set_clear ( idnode_set_t *is )
+{
+  free(is->is_array);
+  is->is_count = is->is_alloc = 0;
 }
 
 void

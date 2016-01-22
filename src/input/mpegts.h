@@ -535,8 +535,7 @@ struct mpegts_service
   int      s_dvb_subscription_weight;
 
   mpegts_apids_t             *s_pids;
-  LIST_HEAD(, mpegts_service) s_masters;
-  LIST_ENTRY(mpegts_service)  s_masters_link;
+  idnode_set_t                s_masters;
   LIST_HEAD(, mpegts_service) s_slaves;
   LIST_ENTRY(mpegts_service)  s_slaves_link;
   mpegts_apids_t             *s_slaves_pids;
