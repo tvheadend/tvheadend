@@ -321,8 +321,8 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_BOOL,
       .id     = "ota_initial",
-      .name   = N_("Force initial EPG scan at start-up"),
-      .desc   = N_("Force an initial EPG scan at start-up."),
+      .name   = N_("Force initial EPG grab at start-up"),
+      .desc   = N_("Force an initial EPG grab at start-up."),
       .off    = offsetof(epggrab_conf_t, ota_initial),
       .opts   = PO_ADVANCED,
       .group  = 3,

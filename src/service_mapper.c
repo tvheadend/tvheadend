@@ -497,7 +497,7 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "check_availability",
       .name   = N_("Check availability"),
-      .desc   = N_("Check service availability (Add live services "
+      .desc   = N_("Check service availability (add live services "
                    "only)."),
       .off    = offsetof(service_mapper_t, d.check_availability),
       .opts   = PO_ADVANCED
