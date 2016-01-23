@@ -688,7 +688,7 @@ const idclass_t epggrab_channel_class = {
       .type     = PT_STR,
       .id       = "module",
       .name     = N_("Module"),
-      .desc     = N_("Name of the module used to grab this EPG data.")
+      .desc     = N_("Name of the module used to grab this EPG data."),
       .get      = epggrab_channel_class_module_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
       .group    = 1
@@ -750,7 +750,7 @@ const idclass_t epggrab_channel_class = {
       .type     = PT_STR,
       .id       = "icon",
       .name     = N_("Icon"),
-      .desc     = N_("Channel icon as defined in EPG data.")
+      .desc     = N_("Channel icon as defined in EPG data."),
       .off      = offsetof(epggrab_channel_t, icon),
       .group    = 1
     },
