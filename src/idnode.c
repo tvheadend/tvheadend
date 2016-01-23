@@ -1064,6 +1064,7 @@ void
 idnode_set_clear ( idnode_set_t *is )
 {
   free(is->is_array);
+  is->is_array = NULL;
   is->is_count = is->is_alloc = 0;
 }
 
