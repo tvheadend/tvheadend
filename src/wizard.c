@@ -729,13 +729,16 @@ static void muxes_save(idnode_t *in)
       continue;
     if (idnode_is_instance(&mn->mn_id, &dvb_network_class) && w->muxes[idx][0]) {
       dvb_network_scanfile_set((dvb_network_t *)mn, w->muxes[idx]);
-    } else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class) &&
+    }
+#if ENABLE_IPTV
+      else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class) &&
                w->iptv_url[idx]) {
       m = htsmsg_create_map();
       htsmsg_add_str(m, "url", w->iptv_url[idx]);
       idnode_load(&mn->mn_id, m);
       htsmsg_destroy(m);
     }
+#endif
   }
 }
 
@@ -923,13 +926,16 @@ wizard_page_t *wizard_muxes(const char *lang)
         w->props[idx++] = nprops[midx * 3 + 1];
         w->props[idx++] = nprops[midx * 3 + 2];
         midx++;
-      } else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class)) {
+      }
+#if ENABLE_IPTV
+        else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class)) {
         snprintf(w->iptv_url[midx], sizeof(w->iptv_url[midx]), "%s", ((iptv_network_t *)mn)->in_url ?: "");
         w->props[idx++] = iptvprops[midx * 3 + 0];
         w->props[idx++] = iptvprops[midx * 3 + 1];
         w->props[idx++] = iptvprops[midx * 3 + 2];
         midx++;
       }
+#endif
     }
 
   assert(idx < ARRAY_SIZE(w->props));
