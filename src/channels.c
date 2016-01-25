@@ -675,7 +675,7 @@ svcnamepicons(const char *svcname)
     c = *s;
     if (c == '&') {
       d[0] = 'a'; d[1] = 'n'; d[2] = 'd'; d += 3;
-    } else if (c == '*') {
+    } else if (c == '+') {
       d[0] = 'p'; d[1] = 'l'; d[2] = 'u'; d[3] = 's'; d += 4;
     } else if (c == '*') {
       d[0] = 's'; d[1] = 't'; d[2] = 'a'; d[3] = 'r'; d += 4;
