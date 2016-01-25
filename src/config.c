@@ -1911,6 +1911,17 @@ config_class_uilevel ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+config_class_chiconscheme_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("No scheme"),           CHICON_NONE },
+    { N_("All lower-case"),      CHICON_LOWERCASE },
+    { N_("Service name picons"), CHICON_SVCNAME },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -2163,11 +2174,13 @@ const idclass_t config_class = {
       .group  = 6,
     },
     {
-      .type   = PT_BOOL,
-      .id     = "chiconlowercase",
-      .name   = N_("Channel icon name lower-case"),
-      .desc   = N_("Use icons with lower-case filenames only."),
-      .off    = offsetof(config_t, chicon_lowercase),
+      .type   = PT_INT,
+      .id     = "chiconscheme",
+      .name   = N_("Channel icon name scheme"),
+      .desc   = N_("Select scheme to generathe the channel icon names "
+                   "(all lower-case, service name picons etc.)."),
+      .list   = config_class_chiconscheme_list,
+      .off    = offsetof(config_t, chicon_scheme),
       .opts   = PO_ADVANCED,
       .group  = 6,
     },

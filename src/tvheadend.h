@@ -132,6 +132,13 @@ typedef enum {
 #define UILEVEL_EXPERT   2
 
 /*
+ *
+ */
+#define CHICON_NONE      0
+#define CHICON_LOWERCASE 1
+#define CHICON_SVCNAME   2
+
+/*
  * global timer
  */
 

@@ -657,6 +657,41 @@ channel_set_number ( channel_t *ch, uint32_t major, uint32_t minor )
   return save;
 }
 
+static char *
+svcnamepicons(const char *svcname)
+{
+  const char *s;
+  char *r, *d;
+  int count;
+  char c;
+
+  for (s = svcname, count = 0; *s; s++) {
+    c = *s;
+    if (c == '&' || c == '+' || c == '*')
+      count++;
+  }
+  r = d = malloc(count * 4 + (s - svcname) + 1);
+  for (s = svcname; *s; s++) {
+    c = *s;
+    if (c == '&') {
+      d[0] = 'a'; d[1] = 'n'; d[2] = 'd'; d += 3;
+    } else if (c == '*') {
+      d[0] = 'p'; d[1] = 'l'; d[2] = 'u'; d[3] = 's'; d += 4;
+    } else if (c == '*') {
+      d[0] = 's'; d[1] = 't'; d[2] = 'a'; d[3] = 'r'; d += 4;
+    } else {
+      if (c >= 'a' && c <= 'z')
+        *d++ = c;
+      else if (c >= 'A' && c <= 'Z')
+        *d++ = c - 'A' + 'a';
+      else if (c >= '0' && c <= '9')
+        *d++ = c;
+    }
+  }
+  *d = '\0';
+  return r;
+}
+
 static int
 check_file( const char *url )
 {
@@ -675,6 +710,7 @@ channel_get_icon ( channel_t *ch )
              *icon   = ch->ch_icon,
              *chname, *icn;
   uint32_t id, i, pick, prefer = config.prefer_picon ? 1 : 0;
+  char c;
 
   if (icon && *icon == '\0')
     icon = NULL;
@@ -713,38 +749,54 @@ channel_get_icon ( channel_t *ch )
 
       /* Check for and replace placeholders */
       if ((send = strstr(chi, "%C"))) {
+
         sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                      chname, strlen(chname) * 2);
         if (sname == NULL)
           sname = strdup(chname);
 
         /* Remove problematic characters */
-        s = sname;
-        while (s && *s) {
-          if (*s <= ' ' || *s > 122 ||
-              strchr("/:\\<>|*?'\"", *s) != NULL)
-            *(char *)s = '_';
-          else if (config.chicon_lowercase && *s >= 'A' && *s <= 'Z')
-            *(char *)s = *s - 'A' + 'a';
-          s++;
+        if (config.chicon_scheme == CHICON_SVCNAME) {
+          s = svcnamepicons(sname);
+          free((char *)sname);
+          sname = s;
+        } else {
+          s = sname;
+          while (s && *s) {
+            c = *s;
+            if (c <= ' ' || c > 122 ||
+                strchr("/:\\<>|*?'\"", c) != NULL)
+              *(char *)s = '_';
+            else if (config.chicon_scheme == CHICON_LOWERCASE && c >= 'A' && c <= 'Z')
+              *(char *)s = c - 'A' + 'a';
+            s++;
+          }
         }
-      }
-      else if((send = strstr(chi, "%c"))) {
+
+      } else if((send = strstr(chi, "%c"))) {
+
         char *aname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                      chname, strlen(chname) * 2);
 
         if (aname == NULL)
           aname = strdup(chname);
 
-        if (config.chicon_lowercase)
-          for (s = aname; *s; s++)
-            if (*s >= 'A' && *s <= 'Z')
-              *(char *)s = *s - 'A' + 'a';
+        if (config.chicon_scheme == CHICON_LOWERCASE) {
+          for (s = aname; *s; s++) {
+            c = *s;
+            if (c >= 'A' && c <= 'Z')
+              *(char *)s = c - 'A' + 'a';
+          }
+        } else if (config.chicon_scheme == CHICON_SVCNAME) {
+          s = svcnamepicons(aname);
+          free((char *)aname);
+          aname = (char *)s;
+        }
 
         sname = url_encode(aname);
         free((char *)aname);
-      }
-      else {
+
+      } else {
         buf[0] = '\0';
         sname = "";
       }
