@@ -34,7 +34,8 @@ typedef struct globalheaders {
 
 } globalheaders_t;
 
-#define MAX_SCAN_TIME 3500  // in ms
+/* note: there up to 2.5 sec diffs in some sources! */
+#define MAX_SCAN_TIME 5000  // in ms
 
 /**
  *
