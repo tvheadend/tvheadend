@@ -209,23 +209,23 @@ all:
 
 $(WEBDIR)/extjs-std.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
 	$(VV)printf 'extjs_lcss(hq, "static/tvh.css.gz");\n' > $@
-	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
 	$(VV)printf 'extjs_load(hq, "static/tvh.js.gz");\n' >> $@
 
 $(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
-	$(VV)printf '$(foreach f,$(CSS),extjs_lcss(hq, "$(f)");\r\n)' > $@
-	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
-	$(VV)printf '$(foreach f,$(JAVASCRIPT),extjs_load(hq, "$(f)");\r\n)' >> $@
+	$(VV)printf '$(foreach f,$(CSS),extjs_lcss(hq, "$(f)");\n)' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf '$(foreach f,$(JAVASCRIPT),extjs_load(hq, "$(f)");\n)' >> $@
 
 $(WEBDIR)/extjs-tv-std.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
-	$(VV)printf 'extjs_lcss(hq, "static/tvh-tv.css.gz");' > $@
-	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
-	$(VV)printf 'extjs_load(hq, "static/tvh-tv.js.gz");' >> $@
+	$(VV)printf 'extjs_lcss(hq, "static/tvh-tv.css.gz");\n' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf 'extjs_load(hq, "static/tvh-tv.js.gz");\n' >> $@
 
 $(WEBDIR)/extjs-tv-debug.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
-	$(VV)printf '$(foreach f,$(CSS_TV),extjs_lcss(hq, "$(f)");\r\n)' > $@
-	$(VV)printf 'extjs_load(hq, "redir/locale.js");\r\n' >> $@
-	$(VV)printf '$(foreach f,$(JAVASCRIPT_TV),extjs_load(hq, "$(f)");\r\n)' >> $@
+	$(VV)printf '$(foreach f,$(CSS_TV),extjs_lcss(hq, "$(f)");\n)' > $@
+	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
+	$(VV)printf '$(foreach f,$(JAVASCRIPT_TV),extjs_load(hq, "$(f)");\n)' >> $@
 
 $(WEBDIR)/$(ROOTPATH)/tvh.js.gz: $(JAVASCRIPT_SRC)
 	$(call GO_JS)
