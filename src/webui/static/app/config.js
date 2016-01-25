@@ -32,18 +32,25 @@ tvheadend.baseconf = function(panel, index) {
         comet: 'config',
         labelWidth: 250,
         tbar: [wizardButton],
-        postsave: function(data) {
+        postsave: function(data, abuttons, form) {
+            var reload = 0;
             var l = data['uilevel'];
             if (l >= 0) {
                 var tr = {0:'basic',1:'advanced',2:'expert'};
                 l = (l in tr) ? tr[l] : 'basic';
-                if (l !== tvheadend.uilevel) {
-                    window.location.reload();
-                    return;
-                }
+                if (l !== tvheadend.uilevel)
+                    reload = 1;
             }
             var n = data['uilevel_nochange'] ? true : false;
             if (n !== tvheadend.uilevel_nochange)
+                reload = 1;
+            var n = data['ui_quicktips'] ? true : false;
+            if (tvheadend.quicktips !== n)
+                reload = 1;
+            var f = form.findField('language_ui');
+            if (f.initialConfig.value !== data['language_ui'])
+                reload = 1;
+            if (reload)
                 window.location.reload();
         },
         help: function() {

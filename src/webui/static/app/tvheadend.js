@@ -442,7 +442,7 @@ function accessUpdate(o) {
     if (o.uilevel)
         tvheadend.uilevel = o.uilevel;
         
-    tvheadend.quicktips = o.quicktips;
+    tvheadend.quicktips = o.quicktips ? true : false;
 
     if (o.uilevel_nochange)
         tvheadend.uilevel_nochange = true;

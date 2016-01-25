@@ -2730,7 +2730,7 @@ tvheadend.idnode_simple = function(panel, conf)
                     },
                     success: function() {
                         if (conf.postsave)
-                            conf.postsave(node, abuttons);
+                            conf.postsave(node, abuttons, current.getForm());
                         form_load(true);
                     }
                 });
