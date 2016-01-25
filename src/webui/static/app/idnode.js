@@ -1858,7 +1858,8 @@ tvheadend.idnode_grid = function(panel, conf)
                     } else {
                         tvheadend.idnode_editor_win(uilevel, {
                             selections: select.getSelections(),
-                            params: conf.edit && conf.edit.params ? conf.edit.params : null
+                            params: conf.edit && conf.edit.params ? conf.edit.params : null,
+                            titleS: conf.titleS
                         });
                     }
                 }
