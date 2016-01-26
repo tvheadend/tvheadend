@@ -2813,7 +2813,11 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "start",
       .name     = N_("Start time"),
+<<<<<<< HEAD
       .desc     = N_("The start time of the recording."),
+=======
+      .desc     = N_("The start time as defined in EPG data (or timer entry)."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .set      = dvr_entry_class_start_set,
       .off      = offsetof(dvr_entry_t, de_start),
       .get_opts = dvr_entry_class_start_opts,
@@ -2826,9 +2830,15 @@ const idclass_t dvr_entry_class = {
                      "start time by x minutes, for example if a program "
                      "is to start at 13:00 and you set a padding of 5 "
                      "minutes it will start recording at 12:54:30 "
+<<<<<<< HEAD
                      "(including a warming-up time of 30 seconds). If this "
                      "isn't set the pre-recording padding if set in the "
                      "channel or DVR profile will be used."),
+=======
+                     "(including a warm-up time of 30 seconds). If this "
+                     "isn't set the pre-recording padding if set in "
+                     "channel or DVR profile configuration will be used."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .off      = offsetof(dvr_entry_t, de_start_extra),
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
@@ -2847,7 +2857,11 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "stop",
       .name     = N_("Stop time"),
+<<<<<<< HEAD
       .desc     = N_("The time the entry stops/stopped being recorded."),
+=======
+      .desc     = N_("The time the entry will stop being recorded."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .set      = dvr_entry_class_stop_set,
       .off      = offsetof(dvr_entry_t, de_stop),
     },
@@ -2983,7 +2997,11 @@ const idclass_t dvr_entry_class = {
       .type     = PT_U32,
       .id       = "removal",
       .name     = N_("DVR file retention period"),
+<<<<<<< HEAD
       .desc     = N_("Number of days to keep the file."),
+=======
+      .desc     = N_("Number of days to keep the recordings` file."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .off      = offsetof(dvr_entry_t, de_removal),
       .def.i    = DVR_RET_DVRCONFIG,
       .list     = dvr_entry_class_removal_list,
@@ -2993,7 +3011,11 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "config_name",
       .name     = N_("DVR configuration"),
+<<<<<<< HEAD
       .desc     = N_("The DVR profile to be used/used by the recording."),
+=======
+      .desc     = N_("The DVR profile to be used/used by the entry."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .set      = dvr_entry_class_config_name_set,
       .get      = dvr_entry_class_config_name_get,
       .list     = dvr_entry_class_config_name_list,

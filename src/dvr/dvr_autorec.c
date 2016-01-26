@@ -1147,7 +1147,11 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .id       = "retention",
       .name     = N_("DVR log retention"),
+<<<<<<< HEAD
       .desc     = N_("Number of days to retain infomation about recording."),
+=======
+      .desc     = N_("Number of days to retain logging information."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .def.i    = DVR_RET_DVRCONFIG,
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
       .list     = dvr_entry_class_retention_list,
@@ -1157,7 +1161,11 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .id       = "removal",
       .name     = N_("DVR file retention period"),
+<<<<<<< HEAD
       .desc     = N_("Number of days to keep the recorded file."),
+=======
+      .desc     = N_("Number of days to keep the recordings` file."),
+>>>>>>> 68debaf0c8cb9e8af17ed5582910e2eaadeda17b
       .def.i    = DVR_RET_DVRCONFIG,
       .off      = offsetof(dvr_autorec_entry_t, dae_removal),
       .list     = dvr_entry_class_removal_list,
