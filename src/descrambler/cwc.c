@@ -247,7 +247,6 @@ typedef struct cwc {
  */
 
 static void cwc_service_pid_free(cwc_service_t *ct);
-static void cwc_service_destroy(th_descrambler_t *td);
 
 
 /**
@@ -1029,6 +1028,18 @@ cwc_free_cards(cwc_t *cwc)
 /**
  *
  */
+static void
+cwc_flush_services(cwc_t *cwc)
+{
+  cwc_service_t *ct;
+
+  LIST_FOREACH(ct, &cwc->cwc_services, cs_link)
+    descrambler_flush_table_data(ct->td_service);
+}
+
+/**
+ *
+ */
 static void *
 cwc_writer_thread(void *aux)
 {
@@ -1127,6 +1138,8 @@ cwc_session(cwc_t *cwc)
    * Ok, connection good, reset retry delay to zero
    */
   cwc->cwc_retry_delay = 0;
+
+  cwc_flush_services(cwc);
 
   /**
    * We do all requests from now on in a separate thread
