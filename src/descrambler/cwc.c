@@ -182,6 +182,7 @@ typedef struct cs_card_data {
 
   struct cwc *cwc;
   mpegts_mux_t *cwc_mux;
+  int running;
 
 } cs_card_data_t;
 
@@ -489,17 +490,91 @@ cwc_send_ka(cwc_t *cwc)
 }
 
 /**
+ *
+ */
+static cs_card_data_t *
+cwc_new_card(cwc_t *cwc, uint16_t caid, uint8_t *ua,
+             int pcount, uint8_t **pid, uint8_t **psa)
+{
+  cs_card_data_t *pcard = NULL;
+  emm_provider_t *ep;
+  const char *n;
+  const uint8_t *id, *sa;
+  int i, allocated = 0;
+
+  LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
+    if (pcard->cs_ra.caid == caid)
+      break;
+
+  if (pcard == NULL) {
+    pcard = calloc(1, sizeof(cs_card_data_t));
+    emm_reass_init(&pcard->cs_ra, caid);
+    allocated = 1;
+  }
+
+  if (ua)
+    memcpy(pcard->cs_ra.ua, ua, 8);
+  else
+    memset(pcard->cs_ra.ua, 0, 8);
+
+  free(pcard->cs_ra.providers);
+  pcard->cs_ra.providers_count = pcount;
+  pcard->cs_ra.providers = calloc(pcount, sizeof(pcard->cs_ra.providers[0]));
+
+  for (i = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
+    id = pid[i];
+    if (id)
+      ep->id = (id[0] << 16) | (id[1] << 8) | id[2];
+    if (psa)
+      memcpy(ep->sa, psa[i], 8);
+  }
+
+  n = caid2name(caid & 0xff00) ?: "Unknown";
+
+  if (ua) {
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
+           "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
+           "with %d provider%s",
+           cwc->cwc_hostname, cwc->cwc_port,
+           cwc->cwc_username, n, caid,
+           ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
+           pcount, pcount > 1 ? "s" : "");
+  } else {
+    tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
+           "to a %s-card [0x%04x] with %d provider%s",
+           cwc->cwc_hostname, cwc->cwc_port,
+           cwc->cwc_username, n, caid,
+           pcount, pcount > 1 ? "s" : "");
+  }
+
+  for (i = 0, ep = pcard->cs_ra.providers; i < pcount; i++, ep++) {
+    if (psa) {
+      sa = ep->sa;
+      tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%04x:0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
+             cwc->cwc_hostname, cwc->cwc_port, i + 1, caid, ep->id,
+             sa[0], sa[1], sa[2], sa[3], sa[4], sa[5], sa[6], sa[7]);
+    } else {
+      tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%04x:0x%06x",
+             cwc->cwc_hostname, cwc->cwc_port, i + 1, caid, ep->id);
+    }
+  }
+
+  pcard->running = 1;
+  if (allocated)
+    LIST_INSERT_HEAD(&cwc->cwc_cards, pcard, cs_card);
+  return pcard;
+}
+
+/**
  * Handle reply to card data request
  */
 static int
 cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 {
-  int plen, i;
+  int plen, i, emm_allowed;
   unsigned int nprov;
-  const char *n;
-  uint8_t *ua, *sa;
-  emm_provider_t *ep;
-  struct cs_card_data *pcard;
+  uint8_t **pid, **psa, *ua, *msg2;
+  cs_card_data_t *pcard;
 
   msg += 12;
   len -= 12;
@@ -518,50 +593,31 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
 
   nprov = msg[14];
 
+  msg2  = msg + 15;
+  plen -= 12;
+
   if(plen < nprov * 11) {
     tvhlog(LOG_INFO, "cwc", "Invalid card data reply (provider list)");
     return -1;
   }
 
-  caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
-  pcard = calloc(1, sizeof(struct cs_card_data));
-  emm_reass_init(&pcard->cs_ra, (msg[4] << 8) | msg[5]);
+  pid = nprov ? alloca(nprov * sizeof(uint8_t *)) : NULL;
+  psa = nprov ? alloca(nprov * sizeof(uint8_t *)) : NULL;
 
-  n = caid2name(pcard->cs_ra.caid & 0xff00) ?: "Unknown";
-
-  memcpy(ua = pcard->cs_ra.ua, &msg[6], 8);
-
-  msg  += 15;
-  plen -= 12;
-
-  pcard->cs_ra.providers_count = nprov;
-  pcard->cs_ra.providers = calloc(nprov, sizeof(pcard->cs_ra.providers[0]));
-  
-  tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
-         "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
-         "with %d providers",
-         cwc->cwc_hostname, cwc->cwc_port,
-         cwc->cwc_username, n, pcard->cs_ra.caid,
-         ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
-         nprov);
-
-  for (i = 0, ep = pcard->cs_ra.providers; i < nprov; i++, ep++) {
-    ep->id = (msg[0] << 16) | (msg[1] << 8) | msg[2];
-    memcpy(sa = ep->sa, msg + 3, 8);
-    
-    tvhlog(LOG_INFO, "cwc", "%s:%i: Provider ID #%d: 0x%06x %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x",
-           cwc->cwc_hostname, cwc->cwc_port, i + 1, ep->id,
-           sa[0], sa[1], sa[2], sa[3], sa[4], sa[5], sa[6], sa[7]);
-
-    msg += 11;
+  for (i = 0; i < nprov; i++) {
+    pid[i] = msg2;
+    psa[i] = msg2 + 3;
+    msg2 += 11;
   }
 
-  LIST_INSERT_HEAD(&cwc->cwc_cards, pcard, cs_card);
+  caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
+  pcard = cwc_new_card(cwc, (msg[4] << 8) | msg[5], msg + 6, nprov, pid, psa);
 
   cwc->cwc_forward_emm = 0;
   if (cwc->cwc_emm) {
-    int emm_allowed = ua[0] || ua[1] || ua[2] || ua[3] ||
-                      ua[4] || ua[5] || ua[6] || ua[7];
+    ua = pcard->cs_ra.ua;
+    emm_allowed = ua[0] || ua[1] || ua[2] || ua[3] ||
+                  ua[4] || ua[5] || ua[6] || ua[7];
 
     if (!emm_allowed) {
       tvhlog(LOG_INFO, "cwc", 
@@ -817,9 +873,7 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
   uint16_t seq = (msg[2] << 8) | msg[3];
   int plen;
   short caid;
-  const char *n;
-  uint8_t *ua;
-  unsigned int nprov;
+  uint8_t **u8;
 
   switch(msgtype) {
     case 0x80:
@@ -862,34 +916,10 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
           return -1;
         }
 
-        nprov = msg[14];
-
-        if(plen < nprov * 11) {
-          tvhlog(LOG_INFO, "cwc", "Invalid card data reply (provider list)");
-          return -1;
-        }
         caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
-        struct cs_card_data *pcard;
-        pcard = calloc(1, sizeof(struct cs_card_data));
-        emm_reass_init(&pcard->cs_ra, caid);
-        pcard->cs_ra.providers_count = 1;
-        pcard->cs_ra.providers = calloc(1, sizeof(pcard->cs_ra.providers[0]));
-        
-        n = caid2name(caid & 0xff00) ?: "Unknown";
-
-        memcpy(ua = pcard->cs_ra.ua, &msg[6], 8);
-
-        pcard->cs_ra.providers[0].id = (msg[8] << 16) | (msg[9] << 8) | msg[10];
-        
-        tvhlog(LOG_INFO, "cwc", "%s:%i: Connected as user %s "
-               "to a %s-card [0x%04x : %02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x] "
-               "with one Provider ID 0x%06x",
-               cwc->cwc_hostname, cwc->cwc_port,
-               cwc->cwc_username, n, caid,
-               ua[0], ua[1], ua[2], ua[3], ua[4], ua[5], ua[6], ua[7],
-               pcard->cs_ra.providers[0].id);
-
-        LIST_INSERT_HEAD(&cwc->cwc_cards, pcard, cs_card);
+        u8 = alloca(sizeof(uint8_t *));
+        u8[0] = &msg[8];
+        cwc_new_card(cwc, caid, NULL, 1, u8, NULL);
       }
   }
   return 0;
@@ -966,6 +996,18 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
     return -1;
   }
   return msglen;
+}
+
+/**
+ *
+ */
+static void
+cwc_invalidate_cards(cwc_t *cwc)
+{
+  cs_card_data_t *cd;
+
+  LIST_FOREACH(cd, &cwc->cwc_cards, cs_card)
+    cd->running = 0;
 }
 
 /**
@@ -1135,7 +1177,7 @@ cwc_thread(void *aux)
 
   while(cwc->cwc_running) {
 
-    cwc_free_cards(cwc);
+    cwc_invalidate_cards(cwc);
     caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_READY);
     
     snprintf(hostname, sizeof(hostname), "%s", cwc->cwc_hostname);
@@ -1206,7 +1248,7 @@ cwc_thread(void *aux)
  *
  */
 static int
-verify_provider(struct cs_card_data *pcard, uint32_t providerid)
+verify_provider(cs_card_data_t *pcard, uint32_t providerid)
 {
   int i;
 
@@ -1225,7 +1267,7 @@ verify_provider(struct cs_card_data *pcard, uint32_t providerid)
 static void
 cwc_emm_send(void *aux, const uint8_t *radata, int ralen, void *mux)
 {
-  struct cs_card_data *pcard = aux;
+  cs_card_data_t *pcard = aux;
   cwc_t *cwc = pcard->cwc;
 
   tvhtrace("cwc", "sending EMM for %04x mux %p", pcard->cs_ra.caid, mux);
@@ -1239,7 +1281,7 @@ cwc_emm_send(void *aux, const uint8_t *radata, int ralen, void *mux)
 static void
 cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
 {
-  struct cs_card_data *pcard = opaque;
+  cs_card_data_t *pcard = opaque;
   cwc_t *cwc;
   void *mux;
 
@@ -1252,7 +1294,7 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   cwc = pcard->cwc;
   pthread_mutex_lock(&cwc->cwc_mutex);
   mux = pcard->cwc_mux;
-  if (cwc->cwc_forward_emm && cwc->cwc_writer_running) {
+  if (pcard->running && cwc->cwc_forward_emm && cwc->cwc_writer_running) {
     if (cwc->cwc_emmex) {
       if (cwc->cwc_mux != mux) {
         int64_t delta = getmonoclock() - cwc->cwc_update_time;
@@ -1284,7 +1326,7 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   ecm_pid_t *ep;
   ecm_section_t *es;
   char chaninfo[32];
-  struct cs_card_data *pcard = NULL;
+  cs_card_data_t *pcard = NULL;
   caid_t *c;
   uint16_t caid;
   uint32_t provid;
@@ -1327,7 +1369,9 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
         if (st && st->es_type == SCT_CA)
           LIST_FOREACH(c, &st->es_caids, link)
             LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
-              if(pcard->cs_ra.caid == c->caid && verify_provider(pcard, c->providerid))
+              if(pcard->running &&
+                 pcard->cs_ra.caid == c->caid &&
+                 verify_provider(pcard, c->providerid))
                 goto prefcapid_ok;
         tvhlog(LOG_DEBUG, "cwc", "Invalid prefered ECM (PID %d) found for service \"%s\"", t->s_dvb_prefcapid, t->s_dvb_svcname);
         t->s_dvb_prefcapid = 0;
@@ -1351,7 +1395,9 @@ prefcapid_ok:
   if (st) {
     LIST_FOREACH(c, &st->es_caids, link)
       LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card)
-        if(pcard->cs_ra.caid == c->caid && verify_provider(pcard, c->providerid))
+        if(pcard->running &&
+           pcard->cs_ra.caid == c->caid &&
+           verify_provider(pcard, c->providerid))
           goto found;
   }
 
@@ -1486,7 +1532,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   th_descrambler_t *td;
   elementary_stream_t *st;
   caid_t *c;
-  struct cs_card_data *pcard;
+  cs_card_data_t *pcard;
   char buf[512];
   int i;
 
@@ -1501,6 +1547,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
       break;
   }
   LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
+    if (!pcard->running) continue;
     if (pcard->cs_ra.caid == 0) continue;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
       if (((mpegts_service_t *)t)->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
@@ -1597,7 +1644,7 @@ static void
 cwc_caid_update(caclient_t *cac, mpegts_mux_t *mux, uint16_t caid, uint16_t pid, int valid)
 {
   cwc_t *cwc = (cwc_t *)cac;;
-  struct cs_card_data *pcard;
+  cs_card_data_t *pcard;
 
   tvhtrace("cwc",
            "caid update event - client %s mux %p caid %04x (%i) pid %04x (%i) valid %i",
