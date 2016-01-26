@@ -844,8 +844,6 @@ cwc_running_reply(cwc_t *cwc, uint8_t msgtype, uint8_t *msg, int len)
               }
             }
       tvhlog(LOG_WARNING, "cwc", "Got unexpected ECM reply (seqno: %d)", seq);
-      LIST_FOREACH(ct, &cwc->cwc_services, cs_link)
-        ct->ecm_state = ECM_RESET;
       break;
 
     case 0xD3:
