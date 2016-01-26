@@ -283,7 +283,7 @@ const idclass_t mpegts_input_class =
       .type     = PT_U32,
       .id       = "free_weight",
       .name     = N_("Free subscription weight"),
-      .desc     = N_("If the subscription weight for this input is bellow "
+      .desc     = N_("If the subscription weight for this input is below "
                      "the specified threshold, the tuner is handled as free "
                      "(according the priority settings). Otherwise, a next "
                      "tuner (without any subscriptions) is used. Set this value "
