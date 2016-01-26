@@ -499,6 +499,7 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   const char *n;
   uint8_t *ua, *sa;
   emm_provider_t *ep;
+  struct cs_card_data *pcard;
 
   msg += 12;
   len -= 12;
@@ -523,7 +524,6 @@ cwc_decode_card_data_reply(cwc_t *cwc, uint8_t *msg, int len)
   }
 
   caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_CONNECTED);
-  struct cs_card_data *pcard;
   pcard = calloc(1, sizeof(struct cs_card_data));
   emm_reass_init(&pcard->cs_ra, (msg[4] << 8) | msg[5]);
 
@@ -971,6 +971,22 @@ cwc_read_message(cwc_t *cwc, const char *state, int timeout)
 /**
  *
  */
+static void
+cwc_free_cards(cwc_t *cwc)
+{
+  cs_card_data_t *cd;
+
+  while((cd = LIST_FIRST(&cwc->cwc_cards)) != NULL) {
+    LIST_REMOVE(cd, cs_card);
+    descrambler_close_emm(cd->cwc_mux, cd, cd->cs_ra.caid);
+    emm_reass_done(&cd->cs_ra);
+    free(cd);
+  }
+}
+
+/**
+ *
+ */
 static void *
 cwc_writer_thread(void *aux)
 {
@@ -1119,6 +1135,7 @@ cwc_thread(void *aux)
 
   while(cwc->cwc_running) {
 
+    cwc_free_cards(cwc);
     caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_READY);
     
     snprintf(hostname, sizeof(hostname), "%s", cwc->cwc_hostname);
@@ -1179,6 +1196,7 @@ cwc_thread(void *aux)
 
   tvhlog(LOG_INFO, "cwc", "%s:%i inactive",
          cwc->cwc_hostname, cwc->cwc_port);
+  cwc_free_cards(cwc);
   pthread_mutex_unlock(&cwc->cwc_mutex);
   return NULL;
 }
@@ -1546,7 +1564,6 @@ end:
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
-
 /**
  *
  */
@@ -1555,7 +1572,6 @@ cwc_free(caclient_t *cac)
 {
   cwc_t *cwc = (cwc_t *)cac;
   cwc_service_t *ct;
-  cs_card_data_t *cd;
   mpegts_service_t *t;
 
   while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
@@ -1567,12 +1583,7 @@ cwc_free(caclient_t *cac)
     pthread_mutex_unlock(&t->s_stream_mutex);
   }
 
-  while((cd = LIST_FIRST(&cwc->cwc_cards)) != NULL) {
-    LIST_REMOVE(cd, cs_card);
-    descrambler_close_emm(cd->cwc_mux, cd, cd->cs_ra.caid);
-    emm_reass_done(&cd->cs_ra);
-    free(cd);
-  }
+  cwc_free_cards(cwc);
   free((void *)cwc->cwc_password);
   free((void *)cwc->cwc_password_salted);
   free((void *)cwc->cwc_username);
