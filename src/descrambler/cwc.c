@@ -1532,6 +1532,16 @@ cwc_service_destroy(th_descrambler_t *td)
   free(ct);
 }
 
+static void
+cwc_service_destroy1(th_descrambler_t *td)
+{
+  cwc_service_t *ct = (cwc_service_t *)td;
+  cwc_t *cwc = ct->cs_cwc;
+  pthread_mutex_lock(&cwc->cwc_mutex);
+  cwc_service_destroy(td);
+  pthread_mutex_unlock(&cwc->cwc_mutex);
+}
+
 /**
  * Check if our CAID's matches, and if so, link
  *
@@ -1593,7 +1603,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   snprintf(buf, sizeof(buf), "cwc-%s-%i-%04X", cwc->cwc_hostname, cwc->cwc_port, pcard->cs_ra.caid);
   td->td_nicename      = strdup(buf);
   td->td_service       = t;
-  td->td_stop          = cwc_service_destroy;
+  td->td_stop          = cwc_service_destroy1;
   td->td_ecm_reset     = cwc_ecm_reset;
   td->td_ecm_idle      = cwc_ecm_idle;
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
