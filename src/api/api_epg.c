@@ -117,6 +117,25 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
   if ((s = epg_broadcast_get_description(eb, lang)))
     htsmsg_add_str(m, "description", s);
 
+  if (eb->is_new)
+    htsmsg_add_u32(m, "new", eb->is_new);
+  if (eb->is_repeat)
+    htsmsg_add_u32(m, "repeat", eb->is_repeat);
+  if (eb->is_widescreen)
+    htsmsg_add_u32(m, "widescreen", eb->is_widescreen);
+  if (eb->is_deafsigned)
+    htsmsg_add_u32(m, "deafsigned", eb->is_deafsigned);
+  if (eb->is_subtitled)
+    htsmsg_add_u32(m, "subtitled", eb->is_subtitled);
+  if (eb->is_audio_desc)
+    htsmsg_add_u32(m, "audiodesc", eb->is_audio_desc);
+  if (eb->is_hd)
+    htsmsg_add_u32(m, "hd", eb->is_hd);
+  if (eb->lines)
+    htsmsg_add_u32(m, "lines", eb->lines);
+  if (eb->aspect)
+    htsmsg_add_u32(m, "aspect", eb->aspect);
+
   /* Episode info */
   if (ee) {
     
