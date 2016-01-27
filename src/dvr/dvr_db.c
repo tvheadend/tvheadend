@@ -3198,7 +3198,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "duplicate",
       .name     = N_("Rerun of"),
-      .desc     = N_("Name of program the entry is a rerun of."),
+      .desc     = N_("Name (or date) of program the entry is a rerun of."),
       .get      = dvr_entry_class_duplicate_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_ADVANCED,
     },
