@@ -131,6 +131,29 @@ tvheadend.epgDetails = function(event) {
       });
       content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Content Type') + ':</div> ' + genre.join(', ') + '</div>';
     }
+    var tags = [];
+    if (event.hd > 1)
+      tags.push(_('UHDTV'));
+    else if (event.hd > 0)
+      tags.push(_('HDTV'));
+    if ('new' in event)
+      tags.push(_('New#EPG').split('#')[0]);
+    if (event.repeat)
+      tags.push(_('Repeat#EPG').split('#')[0]);
+    if (event.widescreen)
+      tags.push(_('Widescreen'));
+    if (event.aspect)
+      tags.push(_('Aspect') + ' ' + (event.aspect / 100.0));
+    if (event.lines)
+      tags.push(_('Lines') + ' ' + event.lines);
+    if (event.deafsigned)
+      tags.push(_('Deaf signed#EPG').split('#')[0]);
+    if (event.subtitled)
+      tags.push(_('Subtitled#EPG').split('#')[0]);
+    if (event.audiodesc)
+      tags.push(_('Audio description#EPG').split('#')[0]);
+    if (tags.length > 0)
+      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Parameters') + ':</div> ' + tags.join(', ') + '</div>';
 
     content += '<div id="related"></div>';
     content += '<div id="altbcast"></div>';
