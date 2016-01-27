@@ -542,7 +542,7 @@ fin:
 #endif
 }
 
-static void
+void
 descrambler_flush_table_data( service_t *t )
 {
   mpegts_service_t *ms = (mpegts_service_t *)t;

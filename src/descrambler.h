@@ -164,6 +164,7 @@ void descrambler_notify        ( th_descrambler_t *t,
 int  descrambler_descramble    ( struct service *t,
                                  struct elementary_stream *st,
                                  const uint8_t *tsb, int len );
+void descrambler_flush_table_data( struct service *t );
 int  descrambler_open_pid      ( struct mpegts_mux *mux, void *opaque, int pid,
                                  descrambler_section_callback_t callback,
                                  struct service *service );
