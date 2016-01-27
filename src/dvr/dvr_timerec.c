@@ -558,9 +558,10 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_STR,
       .id       = "directory",
       .name     = N_("Directory"),
-      .desc     = N_("Override the subdirectory rules specified by the "
-                     "DVR configuration and put all recordings done by "
-                     "this entry into the specified subdirectory"),
+      .desc     = N_("Directory override. Override the subdirectory "
+                     "rules specified by the DVR configuration and put "
+                     "all recordings done by this entry into the "
+                     "specified subdirectory"),
       .off      = offsetof(dvr_timerec_entry_t, dte_directory),
       .opts     = PO_EXPERT
     },

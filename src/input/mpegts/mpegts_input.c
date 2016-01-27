@@ -229,6 +229,7 @@ const idclass_t mpegts_input_class =
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
+      .desc     = N_("Enable/disable tuner/adapter."),
       .off      = offsetof(mpegts_input_t, mi_enabled),
       .notify   = mpegts_input_enabled_notify,
       .def.i    = 1,
@@ -237,6 +238,8 @@ const idclass_t mpegts_input_class =
       .type     = PT_INT,
       .id       = "priority",
       .name     = N_("Priority"),
+      .desc     = N_("The tuner priority value (a higher value means to "
+                     "use this tuner out of preference)."),
       .off      = offsetof(mpegts_input_t, mi_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -245,6 +248,10 @@ const idclass_t mpegts_input_class =
       .type     = PT_INT,
       .id       = "spriority",
       .name     = N_("Streaming priority"),
+      .desc     = N_("The tuner priority value for streamed channels "
+                     "through HTTP or HTSP (a higher value means to use "
+                     "this tuner out of preference). If not set (zero), "
+                     "the standard priority value is used."),
       .off      = offsetof(mpegts_input_t, mi_streaming_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -253,6 +260,7 @@ const idclass_t mpegts_input_class =
       .type     = PT_STR,
       .id       = "displayname",
       .name     = N_("Name"),
+      .desc     = N_("Name of the tuner/adapter."),
       .off      = offsetof(mpegts_input_t, mi_name),
       .notify   = idnode_notify_title_changed,
     },
@@ -260,6 +268,8 @@ const idclass_t mpegts_input_class =
       .type     = PT_BOOL,
       .id       = "ota_epg",
       .name     = N_("Over-the-air EPG"),
+      .desc     = N_("Enable over-the-air program guide (EPG) scanning "
+                     "on this input device."),
       .off      = offsetof(mpegts_input_t, mi_ota_epg),
       .def.i    = 1,
     },
@@ -267,6 +277,9 @@ const idclass_t mpegts_input_class =
       .type     = PT_BOOL,
       .id       = "initscan",
       .name     = N_("Initial scan"),
+      .desc     = N_("Allow the initial scan tuning on this device "
+                     "(scan when Tvheadend starts). See Skip Initial "
+                     "Scan in the network settings for further details."),
       .off      = offsetof(mpegts_input_t, mi_initscan),
       .def.i    = 1,
       .opts     = PO_ADVANCED,
@@ -275,6 +288,7 @@ const idclass_t mpegts_input_class =
       .type     = PT_BOOL,
       .id       = "idlescan",
       .name     = N_("Idle scan"),
+      .desc     = N_("Allow idle scan tuning on this device."),
       .off      = offsetof(mpegts_input_t, mi_idlescan),
       .def.i    = 1,
       .opts     = PO_ADVANCED,
@@ -297,6 +311,7 @@ const idclass_t mpegts_input_class =
       .type     = PT_STR,
       .id       = "networks",
       .name     = N_("Networks"),
+      .desc     = N_("Associate this device with one or more networks."),
       .islist   = 1,
       .set      = mpegts_input_class_network_set,
       .get      = mpegts_input_class_network_get,
@@ -307,6 +322,11 @@ const idclass_t mpegts_input_class =
       .type     = PT_STR,
       .id       = "linked",
       .name     = N_("Linked input"),
+      .desc     = N_("Wake up the linked input whenever this adapter "
+                     "is used. The subscriptions are named as “keep”. "
+                     "Note that this isn't normally needed, and is here "
+                     "simply as a workaround to driver bugs in certain "
+                     "dual tuner cards that otherwise lock the second tuner."),
       .set      = mpegts_input_class_linked_set,
       .get      = mpegts_input_class_linked_get,
       .list     = mpegts_input_class_linked_enum,
