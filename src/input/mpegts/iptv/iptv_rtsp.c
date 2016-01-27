@@ -228,27 +228,27 @@ iptv_rtsp_stop
 static void
 iptv_rtp_header_callback ( iptv_mux_t *im, uint8_t *rtp, int len )
 {
-    rtsp_priv_t *rp = im->im_data;
-    iptv_rtcp_info_t *rtcp_info = rp->rtcp_info;
-    ssize_t hlen;
-    
-    /* Basic headers checks */
-    /* Version 2 */
-    if ((rtp[0] & 0xC0) != 0x80)
-      return;
+  rtsp_priv_t *rp = im->im_data;
+  iptv_rtcp_info_t *rtcp_info = rp->rtcp_info;
+  ssize_t hlen;
 
-    /* Header length (4bytes per CSRC) */
-    hlen = ((rtp[0] & 0xf) * 4) + 12;
-    if (rtp[0] & 0x10) {
-      if (len < hlen+4)
-        return;
-      hlen += ((rtp[hlen+2] << 8) | rtp[hlen+3]) * 4;
-      hlen += 4;
-    }
-    if (len < hlen || ((len - hlen) % 188) != 0)
+  /* Basic headers checks */
+  /* Version 2 */
+  if ((rtp[0] & 0xC0) != 0x80)
+    return;
+
+  /* Header length (4bytes per CSRC) */
+  hlen = ((rtp[0] & 0xf) * 4) + 12;
+  if (rtp[0] & 0x10) {
+    if (len < hlen+4)
       return;
-    
-    rtcp_receiver_update(rtcp_info, rtp);
+    hlen += ((rtp[hlen+2] << 8) | rtp[hlen+3]) * 4;
+    hlen += 4;
+  }
+  if (len < hlen || ((len - hlen) % 188) != 0)
+    return;
+
+  rtcp_receiver_update(rtcp_info, rtp);
 }
 
 /*
@@ -283,15 +283,19 @@ iptv_rtsp_init ( void )
   static iptv_handler_t ih[] = {
     {
       .scheme = "rtsp",
+      .buffer_limit = UINT32_MAX, /* unlimited */
       .start  = iptv_rtsp_start,
       .stop   = iptv_rtsp_stop,
       .read   = iptv_rtsp_read,
+      .pause  = iptv_input_pause_handler
     },
     {
       .scheme  = "rtsps",
+      .buffer_limit = UINT32_MAX, /* unlimited */
       .start  = iptv_rtsp_start,
       .stop   = iptv_rtsp_stop,
       .read   = iptv_rtsp_read,
+      .pause  = iptv_input_pause_handler
     }
   };
   iptv_handler_register(ih, 2);
