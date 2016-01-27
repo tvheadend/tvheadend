@@ -282,6 +282,14 @@ static int _eit_desc_component
     /* Described */
     if (t == 0x40 || t == 0x44)
       ev->ad = 1;
+
+  /* HEVC */
+  } else if ( c == 0x9 ) {
+
+    ev->ws = 1;
+    if (t > 3)
+      ev->hd = 2;
+
   }
 
   return 0;
