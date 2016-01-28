@@ -217,8 +217,8 @@ const idclass_t dvb_mux_dvbt_class =
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dvbt, delsys, "DVBT"),
       .desc     = N_("The delivery system the mux uses. "
-                     "If you have a DVB-T tuner you must select DVB-T "
-                     "here."),
+                     "Make sure that your tuner supports the delivery system"
+                     ""),
     },
     {
       .type     = PT_U32,
@@ -795,12 +795,12 @@ const idclass_t dvb_mux_isdb_c_class =
     },
     {
       MUX_PROP_STR("constellation", N_("Constellation"), dvbc, qam, N_("AUTO")),
-      .desc     = N_("Select the quadrature amplitude modulation (QAM) used by the mux. "
+      .desc     = N_("The quadrature amplitude modulation (QAM) used by the mux. "
                      "If you're not sure of the value leave as AUTO."),
     },
     {
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
-      .desc     = N_("Select the forward error correction used on the mux."),
+      .desc     = N_("The forward error correction used on the mux."),
     },
     {}
   }
@@ -874,7 +874,7 @@ const idclass_t dvb_mux_dab_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dab, delsys, "DAB"),
-      .desc     = N_("The delivery system used by your cable provider."),
+      .desc     = N_("The delivery system used by the mux."),
     },
     {
       .type     = PT_U32,
