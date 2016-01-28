@@ -332,6 +332,22 @@ dvr_sub_channel(const char *id, const void *aux, char *tmp, size_t tmplen)
 }
 
 static const char *
+dvr_sub_genre(const char *id, const void *aux, char *tmp, size_t tmplen)
+{
+  const dvr_entry_t *de = aux;
+  epg_genre_t *genre;
+  char buf[64];
+
+  if (de->de_bcast == NULL || de->de_bcast->episode == NULL)
+    return "";
+  genre = LIST_FIRST(&de->de_bcast->episode->genre);
+  if (!genre || !genre->code)
+    return "";
+  epg_genre_get_str(genre, 0, 1, buf, sizeof(buf), "en");
+  return dvr_do_prefix(id, buf, tmp, tmplen);
+}
+
+static const char *
 dvr_sub_owner(const char *id, const void *aux, char *tmp, size_t tmplen)
 {
   return dvr_do_prefix(id, ((dvr_entry_t *)aux)->de_owner, tmp, tmplen);
@@ -410,6 +426,13 @@ static htsstr_substitute_t dvr_subs_entry[] = {
   { .id = ".c", .getval = dvr_sub_channel },
   { .id = ",c", .getval = dvr_sub_channel },
   { .id = ";c", .getval = dvr_sub_channel },
+  { .id = "g",  .getval = dvr_sub_genre },
+  { .id = " g", .getval = dvr_sub_genre },
+  { .id = "-g", .getval = dvr_sub_genre },
+  { .id = "_g", .getval = dvr_sub_genre },
+  { .id = ".g", .getval = dvr_sub_genre },
+  { .id = ",g", .getval = dvr_sub_genre },
+  { .id = ";g", .getval = dvr_sub_genre },
   { .id = NULL, .getval = NULL }
 };
 
@@ -1481,7 +1504,7 @@ fin:
 void
 dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename)
 {
-  char buf1[2048], *buf2;
+  char buf1[MAX(PATH_MAX, 2048)], *buf2;
   char tmp[MAX(PATH_MAX, 512)];
   htsmsg_t *info, *e;
   htsmsg_field_t *f;
