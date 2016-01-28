@@ -95,7 +95,7 @@ static struct htsp_connection_list htsp_connections;
 
 static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
 const char * _htsp_get_subscription_status(int smcode);
-static void htsp_epg_window_cb(void *aux);
+static void htsp_epg_send_waiting(struct htsp_connection *, int64_t mintime);
 
 /**
  *
@@ -1372,7 +1372,6 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   int64_t lastUpdate = 0;
   int64_t epgMaxTime = 0;
   const char *lang;
-  epg_broadcast_t *ebc;
 
   /* Get optional flags, allow updating them if already in async mode */
   htsmsg_get_u32(in, "epg", &epg);
@@ -1383,7 +1382,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
       /* Only allow to increasing the window as pulling back events doesn't make sense */
       if (htsp->htsp_epg_window && epgMaxTime > (dispatch_clock + htsp->htsp_epg_window)) {
         htsp->htsp_epg_window = epgMaxTime-dispatch_clock;
-        gtimer_arm(&htsp->htsp_epg_timer, htsp_epg_window_cb, htsp, 1); // Force update
+        epg = 1; // Force update
       }
     }
     else
@@ -1440,22 +1439,8 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
       htsp_send_message(htsp, htsp_build_dvrentry(htsp, de, "dvrEntryAdd", htsp->htsp_language), NULL);
 
   /* Send EPG updates */
-  if (epg) {
-    epgMaxTime = dispatch_clock + htsp->htsp_epg_window;
-    htsp->htsp_epg_lastupdate = epgMaxTime;
-
-    CHANNEL_FOREACH(ch) {
-      if (!htsp_user_access_channel(htsp, ch)) continue;
-      RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
-        if (htsp->htsp_epg_window && ebc->start > epgMaxTime) break;
-        htsmsg_t *e = htsp_build_event(ebc, "eventAdd", lang, lastUpdate, htsp);
-        if (e) htsp_send_message(htsp, e, NULL);
-      }
-    }
-    /* Keep the epg window up to date */
-    if (htsp->htsp_epg_window)
-      gtimer_arm(&htsp->htsp_epg_timer, htsp_epg_window_cb, htsp, HTSP_ASYNC_EPG_INTERVAL);
-  }
+  if (epg)
+    htsp_epg_send_waiting(htsp, -1);
 
   /* Notify that initial sync has been completed */
   m = htsmsg_create_map();
@@ -3238,9 +3223,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   if(htsp.htsp_async_mode)
     LIST_REMOVE(&htsp, htsp_async_link);
 
-  if(htsp.htsp_async_mode & HTSP_ASYNC_EPG) {
-    gtimer_disarm(&htsp.htsp_epg_timer);
-  }
+  gtimer_disarm(&htsp.htsp_epg_timer);
 
   /* deregister this client */
   LIST_REMOVE(&htsp, htsp_link);
@@ -3637,12 +3620,20 @@ static void
 htsp_epg_window_cb(void *aux)
 {
   htsp_connection_t *htsp = aux;
+  htsp_epg_send_waiting(htsp, htsp->htsp_epg_lastupdate);
+}
+
+/**
+ * Send all waiting EPG events
+ */
+static void
+htsp_epg_send_waiting(htsp_connection_t *htsp, int64_t mintime)
+{
   epg_broadcast_t *ebc;
   channel_t *ch;
-  int64_t maxtime, mintime;
+  int64_t maxtime;
 
   maxtime = dispatch_clock + htsp->htsp_epg_window;
-  mintime = htsp->htsp_epg_lastupdate;
   htsp->htsp_epg_lastupdate = maxtime;
 
   /* Push new events */
@@ -3656,7 +3647,9 @@ htsp_epg_window_cb(void *aux)
     }
   }
 
-  gtimer_arm(&htsp->htsp_epg_timer, htsp_epg_window_cb, htsp, HTSP_ASYNC_EPG_INTERVAL);
+  /* Keep the epg window up to date */
+  if (htsp->htsp_epg_window)
+    gtimer_arm(&htsp->htsp_epg_timer, htsp_epg_window_cb, htsp, HTSP_ASYNC_EPG_INTERVAL);
 }
 
 /**
