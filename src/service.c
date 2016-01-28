@@ -166,7 +166,7 @@ const idclass_t service_class = {
       .type     = PT_INT,
       .id       = "auto",
       .name     = N_("Automatic checking"),
-      .desc     = N_("Check for the service presence. If the service is no "
+      .desc     = N_("Check for the services' presence. If the service is no "
                      "longer broadcast this field will change to "
                      "“Missing In PAT/SDT”."),
       .list     = service_class_auto_list,
