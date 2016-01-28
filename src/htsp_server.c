@@ -1369,7 +1369,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_timerec_entry_t *dte;
   htsmsg_t *m;
   uint32_t epg = 0;
-  int64_t lastUpdate = 0;
+  int64_t lastUpdate = -1;
   int64_t epgMaxTime = 0;
   const char *lang;
 
@@ -1377,16 +1377,20 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_get_u32(in, "epg", &epg);
   if (!htsmsg_get_s64(in, "lastUpdate", &lastUpdate))   // 0 = never
     htsp->htsp_epg_lastupdate = lastUpdate;
+  else if (htsp->htsp_async_mode & HTSP_ASYNC_EPG)
+    lastUpdate = htsp->htsp_epg_lastupdate;
   if (!htsmsg_get_s64(in, "epgMaxTime", &epgMaxTime)) { // 0 = unlimited window
     if (htsp->htsp_async_mode & HTSP_ASYNC_EPG) {
-      /* Only allow to increasing the window as pulling back events doesn't make sense */
-      if (htsp->htsp_epg_window && epgMaxTime > (dispatch_clock + htsp->htsp_epg_window)) {
+      /* Only allow to change the window in the correct range */
+      if (htsp->htsp_epg_window && epgMaxTime > htsp->htsp_epg_lastupdate)
         htsp->htsp_epg_window = epgMaxTime-dispatch_clock;
-        epg = 1; // Force update
-      }
+    } else if (epgMaxTime > dispatch_clock) {
+      htsp->htsp_epg_window = epgMaxTime-dispatch_clock;
+    } else {
+      htsp->htsp_epg_window = 0;
     }
-    else
-      htsp->htsp_epg_window = epgMaxTime ? epgMaxTime-dispatch_clock : 0;
+    if (htsp->htsp_epg_window)
+      htsp->htsp_epg_window = MAX(htsp->htsp_epg_window, 600);
   }
   if ((lang = htsmsg_get_str(in, "language")) != NULL) {
     if (lang[0]) {
@@ -1400,12 +1404,20 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   /* First, just OK the async request */
   htsp_reply(htsp, in, htsmsg_create_map()); 
 
-  if(htsp->htsp_async_mode)
-    return NULL; /* already in async mode */
-
-  htsp->htsp_async_mode = HTSP_ASYNC_ON;
+  /* Set epg */
   if(epg)
     htsp->htsp_async_mode |= HTSP_ASYNC_EPG;
+  else
+    htsp->htsp_async_mode &= ~HTSP_ASYNC_EPG;
+
+  if(htsp->htsp_async_mode & HTSP_ASYNC_ON) {
+    /* Sync epg on demand */
+    if (epg)
+      htsp_epg_send_waiting(htsp, lastUpdate);
+    return NULL;
+  }
+
+  htsp->htsp_async_mode = HTSP_ASYNC_ON;
 
   /* Send all enabled and external tags */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
