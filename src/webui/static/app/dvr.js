@@ -581,6 +581,7 @@ tvheadend.autorec_editor = function(panel, index) {
             fulltext:     { width: 70 },
             channel:      { width: 200 },
             tag:          { width: 200 },
+            btype:        { width: 50 },
             content_type: { width: 100 },
             minduration:  { width: 100 },
             maxduration:  { width: 100 },
@@ -607,14 +608,14 @@ tvheadend.autorec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/autorec',
             params: {
-               list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
+               list: 'enabled,name,directory,title,fulltext,channel,tag,btype,content_type,minduration,' +
                      'maxduration,weekdays,start,start_window,pri,dedup,retention,removal,' +
                      'maxcount,maxsched,config_name,comment'
             },
             create: { }
         },
         del: true,
-        list: 'enabled,name,directory,title,fulltext,channel,tag,content_type,minduration,' +
+        list: 'enabled,name,directory,title,fulltext,channel,tag,btype,content_type,minduration,' +
               'maxduration,weekdays,start,start_window,pri,dedup,config_name,owner,creator,comment',
         sort: {
           field: 'name',

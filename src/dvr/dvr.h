@@ -295,6 +295,11 @@ typedef enum {
   DVR_AUTOREC_LRECORD_ONCE_PER_DAY = 11,
 } dvr_autorec_dedup_t;
 
+typedef enum {
+  DVR_AUTOREC_BTYPE_ALL = 0,
+  DVR_AUTOREC_BTYPE_NEW = 1,
+  DVR_AUTOREC_BTYPE_REPEAT = 2
+} dvr_autorec_btype_t;
 
 /**
  * Autorec entry
@@ -344,6 +349,7 @@ typedef struct dvr_autorec_entry {
   int dae_maxduration;
   uint32_t dae_retention;
   uint32_t dae_removal;
+  uint32_t dae_btype;
   uint32_t dae_max_count;
   uint32_t dae_max_sched_count;
 

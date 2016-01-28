@@ -167,6 +167,12 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(dae->dae_brand)
       if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
   }
+  if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
+    if (dae->dae_btype == DVR_AUTOREC_BTYPE_NEW && e->is_repeat)
+      return 0;
+    if (dae->dae_btype == DVR_AUTOREC_BTYPE_REPEAT && e->is_repeat == 0)
+      return 0;
+  }
   if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if (!dae->dae_fulltext) {
@@ -947,6 +953,20 @@ dvr_autorec_entry_class_dedup_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+dvr_autorec_entry_class_btype_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Any"),
+        DVR_AUTOREC_BTYPE_ALL },
+    { N_("New / premiere / unknown"),
+        DVR_AUTOREC_BTYPE_NEW },
+    { N_("Repeated"),
+        DVR_AUTOREC_BTYPE_REPEAT },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 static uint32_t
 dvr_autorec_entry_class_owner_opts(void *o)
 {
@@ -1032,6 +1052,26 @@ const idclass_t dvr_autorec_entry_class = {
       .opts     = PO_ADVANCED
     },
     {
+      .type     = PT_U32,
+      .id       = "btype",
+      .name     = N_("Broadcast type"),
+      .desc     = N_("Select type of broadcast (all, new/premiere or repeat)."),
+      .def.i    = DVR_AUTOREC_BTYPE_ALL,
+      .off      = offsetof(dvr_autorec_entry_t, dae_btype),
+      .list     = dvr_autorec_entry_class_btype_list,
+      .opts     = PO_HIDDEN | PO_ADVANCED,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "content_type",
+      .name     = N_("Content type"),
+      .desc     = N_("The content type (Movie/Drama, Sports, etc.) to "
+                     "be used to filter matching events/programmes."),
+      .list     = dvr_autorec_entry_class_content_type_list,
+      .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
+      .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_STR,
       .id       = "start",
       .name     = N_("Start after"),
@@ -1107,16 +1147,6 @@ const idclass_t dvr_autorec_entry_class = {
                      "longer than this duration."),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
-      .opts     = PO_ADVANCED
-    },
-    {
-      .type     = PT_U32,
-      .id       = "content_type",
-      .name     = N_("Content type"),
-      .desc     = N_("The content type (Movie/Drama, Sports, etc.) to "
-                     "be used to filter matching events/programmes."),
-      .list     = dvr_autorec_entry_class_content_type_list,
-      .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
       .opts     = PO_ADVANCED
     },
     {
