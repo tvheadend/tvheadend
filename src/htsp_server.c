@@ -1374,7 +1374,8 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   const char *lang;
 
   /* Get optional flags, allow updating them if already in async mode */
-  htsmsg_get_u32(in, "epg", &epg);
+  if (htsmsg_get_u32(in, "epg", &epg))
+    epg = (htsp->htsp_async_mode & HTSP_ASYNC_EPG) ? 1 : 0;
   if (!htsmsg_get_s64(in, "lastUpdate", &lastUpdate))   // 0 = never
     htsp->htsp_epg_lastupdate = lastUpdate;
   else if (htsp->htsp_async_mode & HTSP_ASYNC_EPG)
