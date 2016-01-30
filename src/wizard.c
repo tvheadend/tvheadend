@@ -718,7 +718,6 @@ static void muxes_save(idnode_t *in)
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_muxes_t *w = p->aux;
   mpegts_network_t *mn;
-  htsmsg_t *m;
   int idx;
 
   for (idx = 0; idx < WIZARD_NETWORKS; idx++) {
@@ -733,7 +732,7 @@ static void muxes_save(idnode_t *in)
 #if ENABLE_IPTV
       else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class) &&
                w->iptv_url[idx]) {
-      m = htsmsg_create_map();
+      htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "url", w->iptv_url[idx]);
       idnode_load(&mn->mn_id, m);
       htsmsg_destroy(m);
@@ -887,6 +886,7 @@ wizard_page_t *wizard_muxes(const char *lang)
     MUXES(5),
     MUXES(6),
   };
+#if ENABLE_IPTV
   static const property_t iptvprops[] = {
     MUXES_IPTV(1),
     MUXES_IPTV(2),
@@ -895,6 +895,7 @@ wizard_page_t *wizard_muxes(const char *lang)
     MUXES_IPTV(5),
     MUXES_IPTV(6),
   };
+#endif
   static const property_t props[] = {
     ICON(),
     DESCRIPTION(muxes),
