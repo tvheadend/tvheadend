@@ -87,7 +87,7 @@ define DOWNLOAD
 	  wget --no-verbose -O $(2) $(1); \
 	else \
 	  file=$$(basename $(2)); \
-	  cp "$$TVHEADEND_FILE_CACHE/$$(file)" $(2); \
+	  cp "$$TVHEADEND_FILE_CACHE/$${file}" $(2); \
 	fi
 	@{ \
 	  sum=$$(sha1sum $(2) | cut -d ' ' -f 1); \
@@ -103,7 +103,7 @@ define UNTAR
 	  tar x -C $(LIB_ROOT) -$(2)f $(LIB_ROOT)/$(1); \
 	}
 endef
-	
+
 # ############################################################################
 # Editor Configuration
 #
