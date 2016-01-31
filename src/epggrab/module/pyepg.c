@@ -303,7 +303,7 @@ static int _pyepg_parse_broadcast
 
   /* Find broadcast */
   broadcast 
-    = epg_broadcast_find_by_time(channel, tm_start, tm_stop, 0, 1, &save);
+    = epg_broadcast_find_by_time(channel, mod, tm_start, tm_stop, 0, 1, &save);
   if ( broadcast == NULL ) return 0;
   stats->broadcasts.total++;
   if ( save ) stats->broadcasts.created++;

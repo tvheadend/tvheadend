@@ -384,7 +384,7 @@ _psip_eit_callback_channel
              i, ch ? channel_get_name(ch) : "(null)", eventid, start, length,
              lang_str_get(title, NULL), titlelen);
 
-    ebc = epg_broadcast_find_by_time(ch, start, stop, eventid, 1, &save2);
+    ebc = epg_broadcast_find_by_time(ch, mod, start, stop, eventid, 1, &save2);
     tvhtrace("psip", "  eid=%5d, start=%"PRItime_t", stop=%"PRItime_t", ebc=%p",
              eventid, start, stop, ebc);
     if (!ebc) goto next;

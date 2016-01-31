@@ -468,8 +468,8 @@ struct epg_broadcast
 
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
-  ( struct channel *ch, time_t start, time_t stop, 
-    uint16_t eid, int create, int *save );
+  ( struct channel *ch, struct epggrab_module *src,
+    time_t start, time_t stop, uint16_t eid, int create, int *save );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
 epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id );
 

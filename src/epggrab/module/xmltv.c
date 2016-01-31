@@ -477,7 +477,7 @@ static int _xmltv_parse_programme_tags
   /*
    * Broadcast
    */
-  if (!(ebc = epg_broadcast_find_by_time(ch, start, stop, 0, 1, &save))) 
+  if (!(ebc = epg_broadcast_find_by_time(ch, mod, start, stop, 0, 1, &save)))
     return 0;
   stats->broadcasts.total++;
   if (save) stats->broadcasts.created++;
