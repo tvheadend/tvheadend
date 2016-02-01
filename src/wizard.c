@@ -840,7 +840,19 @@ static htsmsg_t *muxes_get_list##num(void *o, const char *lang) \
   wizard_muxes_t *w = p->aux; \
   mpegts_network_t *mn = mpegts_network_find(w->networkid[num-1]); \
   return mn ? dvb_network_class_scanfile_list(mn, lang) : NULL; \
-} \
+}
+
+
+MUXES_FCN(1)
+MUXES_FCN(2)
+MUXES_FCN(3)
+MUXES_FCN(4)
+MUXES_FCN(5)
+MUXES_FCN(6)
+
+#if ENABLE_IPTV
+
+#define MUXES_IPTV_FCN(num) \
 static const void *muxes_get_iptv_value##num(void *o) \
 { \
   wizard_page_t *p = o; \
@@ -856,12 +868,14 @@ static int muxes_set_iptv_value##num(void *o, const void *v) \
   return 1; \
 }
 
-MUXES_FCN(1)
-MUXES_FCN(2)
-MUXES_FCN(3)
-MUXES_FCN(4)
-MUXES_FCN(5)
-MUXES_FCN(6)
+MUXES_IPTV_FCN(1)
+MUXES_IPTV_FCN(2)
+MUXES_IPTV_FCN(3)
+MUXES_IPTV_FCN(4)
+MUXES_IPTV_FCN(5)
+MUXES_IPTV_FCN(6)
+
+#endif
 
 DESCRIPTION_FCN(muxes, N_("\
 Assign predefined muxes to networks.\
