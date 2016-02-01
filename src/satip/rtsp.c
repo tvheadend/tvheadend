@@ -516,6 +516,7 @@ rtsp_start
           }
         }
       }
+#if ENABLE_IPTV
       if (idnode_is_instance(&mn->mn_id, &iptv_network_class)) {
         LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
           if (deltaU32(rs->dmc.dmc_fe_freq, ((iptv_mux_t *)mux)->mm_iptv_satip_dvbt_freq) < 2000)
@@ -526,6 +527,7 @@ rtsp_start
           break;
         }
       }
+#endif
     }
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
