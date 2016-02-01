@@ -46,6 +46,14 @@ lang_str_t *lang_str_create ( void )
   return calloc(1, sizeof(lang_str_t));
 }
 
+lang_str_t *lang_str_create2 ( const char *s, const char *lang )
+{
+  lang_str_t *ls = lang_str_create();
+  if (ls)
+    lang_str_add(ls, s, lang, 0);
+  return ls;
+}
+
 /* Destroy (free memory) */
 void lang_str_destroy ( lang_str_t *ls )
 { 
@@ -72,7 +80,7 @@ lang_str_t *lang_str_copy ( const lang_str_t *ls )
 
 /* Get language element */
 lang_str_ele_t *lang_str_get2
-  ( lang_str_t *ls, const char *lang )
+  ( const lang_str_t *ls, const char *lang )
 {
   int i;
   const char **langs;
@@ -101,7 +109,7 @@ lang_str_ele_t *lang_str_get2
 
 /* Get string */
 const char *lang_str_get
-  ( lang_str_t *ls, const char *lang )
+  ( const lang_str_t *ls, const char *lang )
 {
   lang_str_ele_t *e = lang_str_get2(ls, lang);
   return e ? e->str : NULL;
@@ -255,7 +263,7 @@ lang_str_t *lang_str_deserialize ( htsmsg_t *m, const char *n )
 }
 
 /* Compare */
-int lang_str_compare( lang_str_t *ls1, lang_str_t *ls2 )
+int lang_str_compare( const lang_str_t *ls1, const lang_str_t *ls2 )
 {
   lang_str_ele_t *e;
   const char *s1, *s2;

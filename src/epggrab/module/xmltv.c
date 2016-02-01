@@ -217,8 +217,9 @@ static void parse_xmltv_dd_progid
  *
  */
 static void get_episode_info
-  (epggrab_module_t *mod,
-   htsmsg_t *tags, char **uri, char **suri, epg_episode_num_t *epnum )
+  ( epggrab_module_t *mod,
+    htsmsg_t *tags, char **uri, char **suri,
+    epg_episode_num_t *epnum )
 {
   htsmsg_field_t *f;
   htsmsg_t *c, *a;
@@ -249,7 +250,7 @@ static void get_episode_info
  */
 static int
 xmltv_parse_vid_quality
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m, int8_t *bw )
+  ( epg_broadcast_t *ebc, htsmsg_t *m, int8_t *bw, uint32_t *changes )
 {
   int save = 0;
   int hd = 0, lines = 0, aspect = 0;
@@ -293,13 +294,13 @@ xmltv_parse_vid_quality
       aspect = (100 * w) / h;
     }
   }
-  save |= epg_broadcast_set_is_hd(ebc, hd, mod);
+  save |= epg_broadcast_set_is_hd(ebc, hd, changes);
   if (aspect) {
-    save |= epg_broadcast_set_is_widescreen(ebc, hd || aspect > 137, mod);
-    save |= epg_broadcast_set_aspect(ebc, aspect, mod);
+    save |= epg_broadcast_set_is_widescreen(ebc, hd || aspect > 137, changes);
+    save |= epg_broadcast_set_aspect(ebc, aspect, changes);
   }
   if (lines)
-    save |= epg_broadcast_set_lines(ebc, lines, mod);
+    save |= epg_broadcast_set_lines(ebc, lines, changes);
   
   return save;
 }
@@ -309,7 +310,7 @@ xmltv_parse_vid_quality
  */
 int
 xmltv_parse_accessibility 
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m )
+  ( epg_broadcast_t *ebc, htsmsg_t *m, uint32_t *changes )
 {
   int save = 0;
   htsmsg_t *tag;
@@ -321,12 +322,12 @@ xmltv_parse_accessibility
       if ((tag = htsmsg_get_map_by_field(f))) {
         str = htsmsg_xml_get_attr_str(tag, "type");
         if (str && !strcmp(str, "teletext"))
-          save |= epg_broadcast_set_is_subtitled(ebc, 1, mod);
+          save |= epg_broadcast_set_is_subtitled(ebc, 1, changes);
         else if (str && !strcmp(str, "deaf-signed"))
-          save |= epg_broadcast_set_is_deafsigned(ebc, 1, mod);
+          save |= epg_broadcast_set_is_deafsigned(ebc, 1, changes);
       }
     } else if (!strcmp(f->hmf_name, "audio-described")) {
-      save |= epg_broadcast_set_is_audio_desc(ebc, 1, mod);
+      save |= epg_broadcast_set_is_audio_desc(ebc, 1, changes);
     }
   }
   return save;
@@ -336,13 +337,13 @@ xmltv_parse_accessibility
  * Previously shown
  */
 static int _xmltv_parse_previously_shown
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *tag,
-    time_t *first_aired )
+  ( epg_broadcast_t *ebc, time_t *first_aired,
+    htsmsg_t *tag, uint32_t *changes )
 {
   int ret;
   const char *start;
-  if (!mod || !ebc || !tag) return 0;
-  ret = epg_broadcast_set_is_repeat(ebc, 1, mod);
+  if (!ebc || !tag) return 0;
+  ret = epg_broadcast_set_is_repeat(ebc, 1, changes);
   if ((start = htsmsg_xml_get_attr_str(tag, "start")))
     *first_aired = _xmltv_str2time(start);
   return ret;
@@ -355,14 +356,14 @@ static int _xmltv_parse_previously_shown
  *   </star-rating>
  */
 static int _xmltv_parse_star_rating
-  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *body )
+  ( epg_episode_t *ee, htsmsg_t *body, uint32_t *changes )
 {
   double a, b;
   htsmsg_t *stars, *tags;
   const char *s1, *s2;
   char *s1end, *s2end;
 
-  if (!mod || !ee || !body) return 0;
+  if (!ee || !body) return 0;
   if (!(stars = htsmsg_get_map(body, "star-rating"))) return 0;
   if (!(tags  = htsmsg_get_map(stars, "tags"))) return 0;
   if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
@@ -372,7 +373,7 @@ static int _xmltv_parse_star_rating
   b = strtod(s2 + 1, &s2end);
   if ( a == 0.0f || b == 0.0f) return 0;
 
-  return epg_episode_set_star_rating(ee, (100 * a) / b, mod);
+  return epg_episode_set_star_rating(ee, (100 * a) / b, changes);
 }
 
 /*
@@ -397,20 +398,20 @@ static int _xmltv_parse_star_rating
  * [rating system=advisory] values "strong sexual content","Language", etc
  */
 static int _xmltv_parse_age_rating
-  ( epggrab_module_t *mod, epg_episode_t *ee, htsmsg_t *body )
+  ( epg_episode_t *ee, htsmsg_t *body, uint32_t *changes )
 {
   uint8_t age;
   htsmsg_t *rating, *tags;
   const char *s1;
 
-  if (!mod || !ee || !body) return 0;
+  if (!ee || !body) return 0;
   if (!(rating = htsmsg_get_map(body, "rating"))) return 0;
   if (!(tags  = htsmsg_get_map(rating, "tags"))) return 0;
   if (!(s1 = htsmsg_xml_get_cdata_str(tags, "value"))) return 0;
 
   age = atoi(s1);
 
-  return epg_episode_set_age_rating(ee, age, mod);
+  return epg_episode_set_age_rating(ee, age, changes);
 }
 
 /*
@@ -473,11 +474,12 @@ static int _xmltv_parse_programme_tags
   lang_str_t *subtitle = NULL;
   time_t first_aired = 0;
   int8_t bw = -1;
+  uint32_t changes = 0, changes2 = 0, changes3 = 0;
 
   /*
    * Broadcast
    */
-  if (!(ebc = epg_broadcast_find_by_time(ch, mod, start, stop, 0, 1, &save)))
+  if (!(ebc = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save, &changes)))
     return 0;
   stats->broadcasts.total++;
   if (save) stats->broadcasts.created++;
@@ -485,21 +487,21 @@ static int _xmltv_parse_programme_tags
   /* Description (wait for episode first) */
   _xmltv_parse_lang_str(&desc, tags, "desc");
   if (desc)
-    save3 |= epg_broadcast_set_description2(ebc, desc, mod);
+    save3 |= epg_broadcast_set_description(ebc, desc, &changes);
 
   /* Quality metadata */
-  save |= xmltv_parse_vid_quality(mod, ebc, htsmsg_get_map(tags, "video"), &bw);
+  save |= xmltv_parse_vid_quality(ebc, htsmsg_get_map(tags, "video"), &bw, &changes);
 
   /* Accessibility */
-  save |= xmltv_parse_accessibility(mod, ebc, tags);
+  save |= xmltv_parse_accessibility(ebc, tags, &changes);
 
   /* Misc */
-  save |= _xmltv_parse_previously_shown(mod, ebc,
+  save |= _xmltv_parse_previously_shown(ebc, &first_aired,
                                         htsmsg_get_map(tags, "previously-shown"),
-                                        &first_aired);
+                                        &changes);
   if (htsmsg_get_map(tags, "premiere") ||
       htsmsg_get_map(tags, "new"))
-    save |= epg_broadcast_set_is_new(ebc, 1, mod);
+    save |= epg_broadcast_set_is_new(ebc, 1, &changes);
 
   /*
    * Episode/Series info
@@ -510,25 +512,24 @@ static int _xmltv_parse_programme_tags
    * Series Link
    */
   if (suri) {
-    es = epg_serieslink_find_by_uri(suri, 1, &save2);
+    if ((es = epg_serieslink_find_by_uri(suri, mod, 1, &save2, &changes2))) {
+      save |= epg_broadcast_set_serieslink(ebc, es, &changes);
+      save |= epg_serieslink_change_finish(es, changes2, 0);
+    }
     free(suri);
     if (es) stats->seasons.total++;
     if (save2) stats->seasons.created++;
-
-    if (es)
-      save |= epg_broadcast_set_serieslink(ebc, es, mod);
   }
 
   /*
    * Episode
    */
   if (uri) {
-    if ((ee = epg_episode_find_by_uri(uri, 1, &save3)))
-      save |= epg_broadcast_set_episode(ebc, ee, mod);
-    free(uri);
+    ee = epg_episode_find_by_uri(uri, mod, 1, &save3, &changes3);
   } else {
-    ee = epg_broadcast_get_episode(ebc, 1, &save3);
+    ee = epg_episode_find_by_broadcast(ebc, mod, 1, &save3, &changes3);
   }
+  save |= epg_broadcast_set_episode(ebc, ee, &changes);
   if (ee)    stats->episodes.total++;
   if (save3) stats->episodes.created++;
 
@@ -537,27 +538,33 @@ static int _xmltv_parse_programme_tags
     _xmltv_parse_lang_str(&subtitle, tags, "sub-title");
 
     if (title) 
-      save3 |= epg_episode_set_title2(ee, title, mod);
+      save3 |= epg_episode_set_title(ee, title, &changes3);
     if (subtitle)
-      save3 |= epg_episode_set_subtitle2(ee, subtitle, mod);
+      save3 |= epg_episode_set_subtitle(ee, subtitle, &changes3);
 
     if ((egl = _xmltv_parse_categories(tags))) {
-      save3 |= epg_episode_set_genre(ee, egl, mod);
+      save3 |= epg_episode_set_genre(ee, egl, &changes3);
       epg_genre_list_destroy(egl);
     }
 
     if (bw != -1)
-      save3 |= epg_episode_set_is_bw(ee, (uint8_t)bw, mod);
+      save3 |= epg_episode_set_is_bw(ee, (uint8_t)bw, &changes3);
 
-    save3 |= epg_episode_set_epnum(ee, &epnum, mod);
+    save3 |= epg_episode_set_epnum(ee, &epnum, &changes3);
 
-    save3 |= _xmltv_parse_star_rating(mod, ee, tags);
+    save3 |= _xmltv_parse_star_rating(ee, tags, &changes3);
 
-    save3 |= _xmltv_parse_age_rating(mod, ee, tags);
+    save3 |= _xmltv_parse_age_rating(ee, tags, &changes3);
 
     if (icon)
-      save3 |= epg_episode_set_image(ee, icon, mod);
+      save3 |= epg_episode_set_image(ee, icon, &changes3);
+
+    save3 |= epg_episode_set_first_aired(ee, first_aired, &changes3);
+
+    save3 |= epg_episode_change_finish(ee, changes3, 0);
   }
+
+  save |= epg_broadcast_change_finish(ebc, changes, 0);
 
   /* Stats */
   if (save)  stats->broadcasts.modified++;

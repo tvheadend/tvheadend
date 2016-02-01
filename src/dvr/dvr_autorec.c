@@ -813,7 +813,7 @@ dvr_autorec_entry_class_brand_set(void *o, const void *v)
 
   if (v && *(char *)v == '\0')
     v = NULL;
-  brand = v ? epg_brand_find_by_uri(v, 1, &save) : NULL;
+  brand = v ? epg_brand_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
   if (brand && dae->dae_brand != brand) {
     if (dae->dae_brand)
       dae->dae_brand->putref((epg_object_t*)dae->dae_brand);
@@ -849,7 +849,7 @@ dvr_autorec_entry_class_season_set(void *o, const void *v)
 
   if (v && *(char *)v == '\0')
     v = NULL;
-  season = v ? epg_season_find_by_uri(v, 1, &save) : NULL;
+  season = v ? epg_season_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
   if (season && dae->dae_season != season) {
     if (dae->dae_season)
       dae->dae_season->putref((epg_object_t*)dae->dae_season);
@@ -885,7 +885,7 @@ dvr_autorec_entry_class_series_link_set(void *o, const void *v)
 
   if (v && *(char *)v == '\0')
     v = NULL;
-  sl = v ? epg_serieslink_find_by_uri(v, 1, &save) : NULL;
+  sl = v ? epg_serieslink_find_by_uri(v, NULL, 1, &save, NULL) : NULL;
   if (sl && dae->dae_serieslink != sl) {
     if (dae->dae_serieslink)
       dae->dae_serieslink->putref((epg_object_t*)dae->dae_season);

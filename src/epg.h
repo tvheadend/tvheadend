@@ -119,6 +119,15 @@ typedef enum epg_object_type
 } epg_object_type_t;
 #define EPG_TYPEMAX EPG_SERIESLINK
 
+/* Change flags - shared */
+#define EPG_CHANGED_CREATE        (1<<0)
+#define EPG_CHANGED_TITLE         (1<<1)
+#define EPG_CHANGED_SUBTITLE      (1<<2)
+#define EPG_CHANGED_SUMMARY       (1<<3)
+#define EPG_CHANGED_DESCRIPTION   (1<<4)
+#define EPG_CHANGED_IMAGE         (1<<5)
+#define EPG_CHANGED_SLAST         2
+
 /* Object */
 struct epg_object
 {
@@ -155,6 +164,11 @@ epg_object_t *epg_object_deserialize ( htsmsg_t *msg, int create, int *save );
  * e.g. The Simpsons, 24, Eastenders, etc...
  * ***********************************************************************/
 
+/* Change flags */
+#define EPG_CHANGED_SEASON_COUNT (1<<(EPG_CHANGED_SLAST+1))
+#define EPG_CHANGED_SEASONS      (1<<(EPG_CHANGED_SLAST+2))
+#define EPG_CHANGED_EPISODES     (1<<(EPG_CHANGED_SLAST+3))
+
 /* Object */
 struct epg_brand
 {
@@ -171,8 +185,12 @@ struct epg_brand
 
 /* Lookup */
 epg_brand_t *epg_brand_find_by_uri
-  ( const char *uri, int create, int *save );
+  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
 epg_brand_t *epg_brand_find_by_id ( uint32_t id );
+
+/* Post-modify */
+int epg_brand_change_finish( epg_brand_t *b, uint32_t changed, int merge )
+  __attribute__((warn_unused_result));
 
 /* Accessors */
 const char *epg_brand_get_title
@@ -182,18 +200,16 @@ const char *epg_brand_get_summary
 
 /* Mutators */
 int epg_brand_set_title        
-  ( epg_brand_t *b, const char *title, const char *lang,
-    struct epggrab_module *src )
+  ( epg_brand_t *b, const lang_str_t *title, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_brand_set_summary
-  ( epg_brand_t *b, const char *summary, const char *lang,
-    struct epggrab_module *src )
+  ( epg_brand_t *b, const lang_str_t *summary, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_brand_set_season_count
-  ( epg_brand_t *b, uint16_t season_count, struct epggrab_module *src )
+  ( epg_brand_t *b, uint16_t season_count, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_brand_set_image
-  ( epg_brand_t *b, const char *i, struct epggrab_module *src )
+  ( epg_brand_t *b, const char *i, uint32_t *changed )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -206,6 +222,10 @@ htsmsg_t    *epg_brand_list ( void );
 /* ************************************************************************
  * Season
  * ***********************************************************************/
+
+/* Change flags */
+#define EPG_CHANGED_SEASON_NUMBER (1<<(EPG_CHANGED_SLAST+1))
+#define EPG_CHANGED_EPISODE_COUNT (1<<(EPG_CHANGED_SLAST+2))
 
 /* Object */
 struct epg_season
@@ -225,8 +245,12 @@ struct epg_season
 
 /* Lookup */
 epg_season_t *epg_season_find_by_uri
-  ( const char *uri, int create, int *save );
+  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
 epg_season_t *epg_season_find_by_id ( uint32_t id );
+
+/* Post-modify */
+int epg_season_change_finish( epg_season_t *s, uint32_t changed, int merge )
+  __attribute__((warn_unused_result));
 
 /* Accessors */
 const char *epg_season_get_summary
@@ -234,20 +258,19 @@ const char *epg_season_get_summary
 
 /* Mutators */
 int epg_season_set_summary
-  ( epg_season_t *s, const char *summary, const char *lang,
-    struct epggrab_module *src )
+  ( epg_season_t *s, const lang_str_t *summary, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_season_set_number
-  ( epg_season_t *s, uint16_t number, struct epggrab_module *src )
+  ( epg_season_t *s, uint16_t number, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_season_set_episode_count
-  ( epg_season_t *s, uint16_t episode_count, struct epggrab_module *src )
+  ( epg_season_t *s, uint16_t episode_count, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_season_set_brand
-  ( epg_season_t *s, epg_brand_t *b, struct epggrab_module *src )
+  ( epg_season_t *s, epg_brand_t *b, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_season_set_image
-  ( epg_season_t *s, const char *image, struct epggrab_module *src )
+  ( epg_season_t *s, const char *image, uint32_t *changed )
   __attribute__((warn_unused_result));
 
 /* Serialization */
@@ -257,6 +280,22 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 /* ************************************************************************
  * Episode
  * ***********************************************************************/
+
+/* Change flags */
+#define EPG_CHANGED_GENRE        (1<<(EPG_CHANGED_SLAST+1))
+#define EPG_CHANGED_EPNUM_NUM    (1<<(EPG_CHANGED_SLAST+2))
+#define EPG_CHANGED_EPNUM_CNT    (1<<(EPG_CHANGED_SLAST+3))
+#define EPG_CHANGED_EPPAR_NUM    (1<<(EPG_CHANGED_SLAST+4))
+#define EPG_CHANGED_EPPAR_CNT    (1<<(EPG_CHANGED_SLAST+5))
+#define EPG_CHANGED_EPSER_NUM    (1<<(EPG_CHANGED_SLAST+6))
+#define EPG_CHANGED_EPSER_CNT    (1<<(EPG_CHANGED_SLAST+7))
+#define EPG_CHANGED_EPTEXT       (1<<(EPG_CHANGED_SLAST+8))
+#define EPG_CHANGED_IS_BW        (1<<(EPG_CHANGED_SLAST+9))
+#define EPG_CHANGED_STAR_RATING  (1<<(EPG_CHANGED_SLAST+10))
+#define EPG_CHANGED_AGE_RATING   (1<<(EPG_CHANGED_SLAST+11))
+#define EPG_CHANGED_FIRST_AIRED  (1<<(EPG_CHANGED_SLAST+12))
+#define EPG_CHANGED_BRAND        (1<<(EPG_CHANGED_SLAST+13))
+#define EPG_CHANGED_SEASON       (1<<(EPG_CHANGED_SLAST+14))
 
 /* Episode numbering object - this is for some back-compat and also
  * to allow episode information to be "collated" into easy to use object
@@ -300,8 +339,14 @@ struct epg_episode
 
 /* Lookup */
 epg_episode_t *epg_episode_find_by_uri
-  ( const char *uri, int create, int *save );
+  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
 epg_episode_t *epg_episode_find_by_id ( uint32_t id );
+epg_episode_t *epg_episode_find_by_broadcast
+  ( epg_broadcast_t *b, struct epggrab_module *src, int create, int *save, uint32_t *changes );
+
+/* Post-modify */
+int epg_episode_change_finish( epg_episode_t *s, uint32_t changed, int merge )
+  __attribute__((warn_unused_result));
 
 /* Accessors */
 const char *epg_episode_get_title
@@ -315,60 +360,49 @@ const char *epg_episode_get_description
 
 /* Mutators */
 int epg_episode_set_title
-  ( epg_episode_t *e, const char *title, const char *lang,
-    struct epggrab_module *src )
+  ( epg_episode_t *e, const lang_str_t *title, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_subtitle
-  ( epg_episode_t *e, const char *subtitle, const char *lang,
-    struct epggrab_module *src )
+  ( epg_episode_t *e, const lang_str_t *subtitle, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_summary
-  ( epg_episode_t *e, const char *summary, const char *lang,
-    struct epggrab_module *src )
+  ( epg_episode_t *e, const lang_str_t *summary, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_description
-  ( epg_episode_t *e, const char *description, const char *lang,
-    struct epggrab_module *src )
+  ( epg_episode_t *e, const lang_str_t *description, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_number
-  ( epg_episode_t *e, uint16_t number, struct epggrab_module *src )
+  ( epg_episode_t *e, uint16_t number, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_part
-  ( epg_episode_t *e, uint16_t number, uint16_t count,
-    struct epggrab_module *src )
+  ( epg_episode_t *e, uint16_t number, uint16_t count, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_epnum
-  ( epg_episode_t *e, epg_episode_num_t *num, struct epggrab_module *src )
+  ( epg_episode_t *e, epg_episode_num_t *num, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_brand
-  ( epg_episode_t *e, epg_brand_t *b, struct epggrab_module *src )
+  ( epg_episode_t *e, epg_brand_t *b, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_season
-  ( epg_episode_t *e, epg_season_t *s, struct epggrab_module *src )
+  ( epg_episode_t *e, epg_season_t *s, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_genre
-  ( epg_episode_t *e, epg_genre_list_t *g, struct epggrab_module *src )
+  ( epg_episode_t *e, epg_genre_list_t *g, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_image
-  ( epg_episode_t *e, const char *i, struct epggrab_module *src )
+  ( epg_episode_t *e, const char *i, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_is_bw
-  ( epg_episode_t *e, uint8_t bw, struct epggrab_module *src )
-  __attribute__((warn_unused_result));
-int epg_episode_set_title2
-  ( epg_episode_t *e, const lang_str_t *str, struct epggrab_module *src )
-  __attribute__((warn_unused_result));
-int epg_episode_set_subtitle2
-  ( epg_episode_t *e, const lang_str_t *str, struct epggrab_module *src )
+  ( epg_episode_t *e, uint8_t bw, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_first_aired
-  ( epg_episode_t *e, time_t aired, struct epggrab_module *src )
+  ( epg_episode_t *e, time_t aired, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_star_rating
-  ( epg_episode_t *e, uint8_t stars, struct epggrab_module *src )
+  ( epg_episode_t *e, uint8_t stars, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_age_rating
-  ( epg_episode_t *e, uint8_t age, struct epggrab_module *src )
+  ( epg_episode_t *e, uint8_t age, uint32_t *changed )
   __attribute__((warn_unused_result));
 
 // Note: this does NOT strdup the text field
@@ -415,9 +449,13 @@ struct epg_serieslink
 
 /* Lookup */
 epg_serieslink_t *epg_serieslink_find_by_uri
-  ( const char *uri, int create, int *save );
+  ( const char *uri, struct epggrab_module *src, int create, int *save, uint32_t *changes );
 epg_serieslink_t *epg_serieslink_find_by_id
   ( uint32_t id );
+
+/* Post-modify */
+int epg_serieslink_change_finish( epg_serieslink_t *s, uint32_t changed, int merge )
+  __attribute__((warn_unused_result));
 
 /* Serialization */
 htsmsg_t         *epg_serieslink_serialize   ( epg_serieslink_t *s );
@@ -427,6 +465,19 @@ epg_serieslink_t *epg_serieslink_deserialize
 /* ************************************************************************
  * Broadcast - specific airing (channel & time) of an episode
  * ***********************************************************************/
+
+#define EPG_CHANGED_DVB_EID      (1<<(EPG_CHANGED_SLAST+1))
+#define EPG_CHANGED_IS_WIDESCREEN (1<<(EPG_CHANGED_SLAST+2))
+#define EPG_CHANGED_IS_HD        (1<<(EPG_CHANGED_SLAST+3))
+#define EPG_CHANGED_LINES        (1<<(EPG_CHANGED_SLAST+4))
+#define EPG_CHANGED_ASPECT       (1<<(EPG_CHANGED_SLAST+5))
+#define EPG_CHANGED_DEAFSIGNED   (1<<(EPG_CHANGED_SLAST+6))
+#define EPG_CHANGED_SUBTITLED    (1<<(EPG_CHANGED_SLAST+7))
+#define EPG_CHANGED_AUDIO_DESC   (1<<(EPG_CHANGED_SLAST+8))
+#define EPG_CHANGED_IS_NEW       (1<<(EPG_CHANGED_SLAST+9))
+#define EPG_CHANGED_IS_REPEAT    (1<<(EPG_CHANGED_SLAST+10))
+#define EPG_CHANGED_EPISODE      (1<<(EPG_CHANGED_SLAST+11))
+#define EPG_CHANGED_SERIESLINK   (1<<(EPG_CHANGED_SLAST+12))
 
 /* Object */
 struct epg_broadcast
@@ -469,9 +520,13 @@ struct epg_broadcast
 /* Lookup */
 epg_broadcast_t *epg_broadcast_find_by_time 
   ( struct channel *ch, struct epggrab_module *src,
-    time_t start, time_t stop, uint16_t eid, int create, int *save );
+    time_t start, time_t stop, int create, int *save, uint32_t *changes );
 epg_broadcast_t *epg_broadcast_find_by_eid ( struct channel *ch, uint16_t eid );
 epg_broadcast_t *epg_broadcast_find_by_id  ( uint32_t id );
+
+/* Post-modify */
+int epg_broadcast_change_finish( epg_broadcast_t *b, uint32_t changed, int merge )
+  __attribute__((warn_unused_result));
 
 /* Special */
 epg_broadcast_t *epg_broadcast_clone
@@ -480,58 +535,51 @@ void epg_broadcast_notify_running
   ( epg_broadcast_t *b, epg_source_t esrc, epg_running_t running );
 
 /* Mutators */
+int epg_broadcast_set_dvb_eid
+  ( epg_broadcast_t *b, uint16_t dvb_eid, uint32_t *changed )
+  __attribute__((warn_unused_result));
 int epg_broadcast_set_episode
-  ( epg_broadcast_t *b, epg_episode_t *e, struct epggrab_module *src )
+  ( epg_broadcast_t *b, epg_episode_t *e, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_widescreen
-  ( epg_broadcast_t *b, uint8_t ws, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t ws, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_hd
-  ( epg_broadcast_t *b, uint8_t hd, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t hd, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_lines 
-  ( epg_broadcast_t *b, uint16_t lines, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint16_t lines, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_aspect
-  ( epg_broadcast_t *b, uint16_t aspect, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint16_t aspect, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_deafsigned
-  ( epg_broadcast_t *b, uint8_t ds, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t ds, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_subtitled
-  ( epg_broadcast_t *b, uint8_t st, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t st, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_audio_desc
-  ( epg_broadcast_t *b, uint8_t ad, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t ad, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_new
-  ( epg_broadcast_t *b, uint8_t n, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t n, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_repeat
-  ( epg_broadcast_t *b, uint8_t r, struct epggrab_module *src )
+  ( epg_broadcast_t *b, uint8_t r, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_summary
-  ( epg_broadcast_t *b, const char *str, const char *lang, 
-    struct epggrab_module *src )
+  ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_description
-  ( epg_broadcast_t *b, const char *str, const char *lang, 
-    struct epggrab_module *src )
-  __attribute__((warn_unused_result));
-int epg_broadcast_set_summary2
-  ( epg_broadcast_t *b, const lang_str_t *str, struct epggrab_module *src )
-  __attribute__((warn_unused_result));
-int epg_broadcast_set_description2
-  ( epg_broadcast_t *b, const lang_str_t *str, struct epggrab_module *src )
+  ( epg_broadcast_t *b, const lang_str_t *str, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_serieslink
-  ( epg_broadcast_t *b, epg_serieslink_t *sl, struct epggrab_module *src )
+  ( epg_broadcast_t *b, epg_serieslink_t *sl, uint32_t *changed )
   __attribute__((warn_unused_result));
 
 /* Accessors */
 epg_broadcast_t *epg_broadcast_get_next    ( epg_broadcast_t *b );
-epg_episode_t   *epg_broadcast_get_episode 
-  ( epg_broadcast_t *b, int create, int *save );
 const char *epg_broadcast_get_title 
   ( epg_broadcast_t *b, const char *lang );
 const char *epg_broadcast_get_subtitle

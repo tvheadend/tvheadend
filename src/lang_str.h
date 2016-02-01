@@ -34,11 +34,12 @@ typedef RB_HEAD(lang_str, lang_str_ele) lang_str_t;
 /* Create/Destroy */
 void            lang_str_destroy ( lang_str_t *ls );
 lang_str_t     *lang_str_create  ( void );
+lang_str_t     *lang_str_create2 ( const char *str, const char *lang );
 lang_str_t     *lang_str_copy    ( const lang_str_t *ls );
 
 /* Get elements */
-const char     *lang_str_get     ( lang_str_t *ls, const char *lang );
-lang_str_ele_t *lang_str_get2    ( lang_str_t *ls, const char *lang );
+const char     *lang_str_get     ( const lang_str_t *ls, const char *lang );
+lang_str_ele_t *lang_str_get2    ( const lang_str_t *ls, const char *lang );
 
 /* Add/Update elements */
 int             lang_str_add      
@@ -61,7 +62,7 @@ lang_str_t     *lang_str_deserialize
   ( htsmsg_t *m, const char *f );
 
 /* Compare */
-int             lang_str_compare ( lang_str_t *ls1, lang_str_t *ls2 );
+int             lang_str_compare ( const lang_str_t *ls1, const lang_str_t *ls2 );
 
 /* Empty */
 int             strempty(const char* c);

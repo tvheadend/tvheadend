@@ -176,11 +176,11 @@ epggrab_ota_service_del
 
 /* Note: this is reused by pyepg since they share a common format */
 int  xmltv_parse_accessibility
-  ( epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *m );
+  ( epg_broadcast_t *ebc, htsmsg_t *m, uint32_t *changes );
 
 /* Freesat huffman decoder */
 size_t freesat_huffman_decode
-  (char *dst, size_t* dstlen, const uint8_t *src, size_t srclen);
+  ( char *dst, size_t* dstlen, const uint8_t *src, size_t srclen );
 
 /* **************************************************************************
  * Module setup(s)

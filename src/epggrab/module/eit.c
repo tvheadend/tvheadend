@@ -415,10 +415,11 @@ static int _eit_process_event_one
   uint16_t eid;
   uint8_t dtag, dlen, running;
   epg_broadcast_t *ebc;
-  epg_episode_t *ee;
+  epg_episode_t *ee = NULL;
   epg_serieslink_t *es;
   epg_running_t run;
   eit_event_t ev;
+  uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
 
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
@@ -434,7 +435,7 @@ static int _eit_process_event_one
   if ( len < dllen ) return -1;
 
   /* Find broadcast */
-  ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, eid, 1, &save2);
+  ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
   tvhtrace("eit", "svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
                   " stop=%"PRItime_t", ebc=%p",
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
@@ -495,26 +496,30 @@ static int _eit_process_event_one
    * Broadcast
    */
 
+  *save |= epg_broadcast_set_dvb_eid(ebc, eid, &changes2);
+
   /* Summary/Description */
-  if ( ev.summary )
-    *save |= epg_broadcast_set_summary2(ebc, ev.summary, mod);
-  if ( ev.desc )
-    *save |= epg_broadcast_set_description2(ebc, ev.desc, mod);
+  if (ev.summary)
+    *save |= epg_broadcast_set_summary(ebc, ev.summary, &changes2);
+  if (ev.desc)
+    *save |= epg_broadcast_set_description(ebc, ev.desc, &changes2);
 
   /* Broadcast Metadata */
-  *save |= epg_broadcast_set_is_hd(ebc, ev.hd, mod);
-  *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, mod);
-  *save |= epg_broadcast_set_is_audio_desc(ebc, ev.ad, mod);
-  *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, mod);
-  *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, mod);
+  *save |= epg_broadcast_set_is_hd(ebc, ev.hd, &changes2);
+  *save |= epg_broadcast_set_is_widescreen(ebc, ev.ws, &changes2);
+  *save |= epg_broadcast_set_is_audio_desc(ebc, ev.ad, &changes2);
+  *save |= epg_broadcast_set_is_subtitled(ebc, ev.st, &changes2);
+  *save |= epg_broadcast_set_is_deafsigned(ebc, ev.ds, &changes2);
 
   /*
    * Series link
    */
 
   if (*ev.suri) {
-    if ((es = epg_serieslink_find_by_uri(ev.suri, 1, save)))
-      *save |= epg_broadcast_set_serieslink(ebc, es, mod);
+    if ((es = epg_serieslink_find_by_uri(ev.suri, mod, 1, save, &changes3))) {
+      *save |= epg_broadcast_set_serieslink(ebc, es, &changes2);
+      *save |= epg_serieslink_change_finish(es, changes3, 0);
+    }
   }
 
   /*
@@ -523,29 +528,31 @@ static int _eit_process_event_one
 
   /* Find episode */
   if (*ev.uri) {
-    if ((ee = epg_episode_find_by_uri(ev.uri, 1, save)))
-      *save |= epg_broadcast_set_episode(ebc, ee, mod);
-
-  /* Existing/Artificial */
-  } else
-    ee = epg_broadcast_get_episode(ebc, 1, save);
+    ee = epg_episode_find_by_uri(ev.uri, mod, 1, save, &changes4);
+  } else {
+    ee = epg_episode_find_by_broadcast(ebc, mod, 1, save, &changes4);
+  }
 
   /* Update Episode */
   if (ee) {
-    *save |= epg_episode_set_is_bw(ee, ev.bw, mod);
-    if ( ev.title )
-      *save |= epg_episode_set_title2(ee, ev.title, mod);
-    if ( ev.genre )
-      *save |= epg_episode_set_genre(ee, ev.genre, mod);
-    if ( ev.parental )
-      *save |= epg_episode_set_age_rating(ee, ev.parental, mod);
-    if ( ev.summary )
-      *save |= epg_episode_set_subtitle2(ee, ev.summary, mod);
+    *save |= epg_broadcast_set_episode(ebc, ee, &changes2);
+    *save |= epg_episode_set_is_bw(ee, ev.bw, &changes4);
+    if (ev.title)
+      *save |= epg_episode_set_title(ee, ev.title, &changes4);
+    if (ev.genre)
+      *save |= epg_episode_set_genre(ee, ev.genre, &changes4);
+    if (ev.parental)
+      *save |= epg_episode_set_age_rating(ee, ev.parental, &changes4);
+    if (ev.summary)
+      *save |= epg_episode_set_subtitle(ee, ev.summary, &changes4);
 #if TODO_ADD_EXTRA
-    if ( ev.extra )
-      *save |= epg_episode_set_extra(ee, extra, mod);
+    if (ev.extra)
+      *save |= epg_episode_set_extra(ee, extra, &changes4);
 #endif
+    *save |= epg_episode_change_finish(ee, changes4, 0);
   }
+
+  *save |= epg_broadcast_change_finish(ebc, changes2, 0);
 
   /* Tidy up */
 #if TODO_ADD_EXTRA
