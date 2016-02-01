@@ -414,7 +414,7 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
           strcpy(a, f);
           strcat(a, r[1]);
           strcat(a, p + l);
-          *argv[i++] = a;
+          (*argv)[i++] = a;
           break;
         }
       }
