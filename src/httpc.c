@@ -1026,9 +1026,7 @@ header:
   if (p && ver != RTSP_VERSION_1_0) {
     if (strcasecmp(p, "close") == 0)
       hc->hc_keepalive = 0;
-    else if (hc->hc_keepalive && strcasecmp(p, "keep-alive"))
-      return http_client_flush(hc, -EINVAL);
-    else if (!hc->hc_keepalive && strcasecmp(p, "close"))
+    else if (strcasecmp(p, "keep-alive")) /* no change for keep-alive */
       return http_client_flush(hc, -EINVAL);
   }
   if (ver == RTSP_VERSION_1_0) {
