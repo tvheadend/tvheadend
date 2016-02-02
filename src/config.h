@@ -52,6 +52,7 @@ typedef struct config {
   int dscp;
   uint32_t descrambler_buffer;
   int parser_backlog;
+  int epg_compress;
 } config_t;
 
 extern const idclass_t config_class;

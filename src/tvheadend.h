@@ -678,6 +678,8 @@ int tvhthread_create
    void *(*start_routine) (void *), void *arg,
    const char *name);
 
+int tvhtread_renice(int value);
+
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);
@@ -784,6 +786,7 @@ char *regexp_escape ( const char *str );
 #if ENABLE_ZLIB
 uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig );
 uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size );
+int      tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size, int speed );
 #endif
 
 /* URL decoding */

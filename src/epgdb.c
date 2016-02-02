@@ -31,6 +31,7 @@
 #include "channels.h"
 #include "epg.h"
 #include "epggrab.h"
+#include "config.h"
 
 #define EPG_DB_VERSION 2
 #define EPG_DB_ALLOC_STEP (1024*1024)
@@ -163,7 +164,7 @@ void epg_init ( void )
   int fd = -1;
   struct stat st;
   size_t remain;
-  uint8_t *mem, *rp;
+  uint8_t *mem, *rp, *zlib_mem = NULL;
   epggrab_stats_t stats;
   int ver = EPG_DB_VERSION;
   struct sigaction act, oldact;
@@ -213,6 +214,16 @@ void epg_init ( void )
       munmap(mem, st.st_size);
     goto end;
   }
+
+#if ENABLE_ZLIB
+  if (remain > 12 && memcmp(rp, "\xff\xffGZIP00", 8) == 0) {
+    uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
+    tvhlog(LOG_INFO, "epgdb", "gzip format detected, inflating (ratio %.1f%%)",
+           (float)((remain * 100.0) / orig));
+    rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
+    remain = rp ? orig : 0;
+  }
+#endif
 
   /* Process */
   memset(&stats, 0, sizeof(stats));
@@ -273,6 +284,7 @@ void epg_init ( void )
 
   /* Close file */
   munmap(mem, st.st_size);
+  free(zlib_mem);
 end:
   sigaction(SIGBUS, &oldact, NULL);
   close(fd);
@@ -325,17 +337,38 @@ static int _epg_write_sect ( sbuf_t *sb, const char *sect )
 static void epg_save_tsk_callback ( void *p, int dearmed )
 {
   sbuf_t *sb = p;
+  size_t size = sb->sb_ptr;
   int fd, r;
 
   tvhinfo("epgdb", "save start");
   fd = hts_settings_open_file(1, "epgdb.v%d", EPG_DB_VERSION);
   if (fd >= 0) {
-    r = tvh_write(fd, sb->sb_data, sb->sb_ptr);
+#if ENABLE_ZLIB
+    if (config.epg_compress) {
+      r = tvh_write(fd, "\xff\xffGZIP00\x00\x00\x00\x00", 12);
+      if (!r)
+        r = tvh_gzip_deflate_fd(fd, sb->sb_data, sb->sb_ptr, &size, 3) < 0;
+      if (!r && size > UINT_MAX)
+        r = 1;
+      if (!r) {
+        r = lseek(fd, 8, SEEK_SET) != (off_t)8;
+        if (!r) {
+          uint8_t data2[4];
+          data2[0] = (sb->sb_ptr >> 24) & 0xff;
+          data2[1] = (sb->sb_ptr >> 16) & 0xff;
+          data2[2] = (sb->sb_ptr >> 8) & 0xff;
+          data2[3] = (sb->sb_ptr & 0xff);
+          r = tvh_write(fd, data2, 4);
+        }
+      }
+   } else
+#endif
+      r = tvh_write(fd, sb->sb_data, sb->sb_ptr);
     close(fd);
     if (r)
-      tvherror("epgdb", "write error (size %d)", sb->sb_ptr);
+      tvherror("epgdb", "write error (size %zd)", size);
     else
-      tvhinfo("epgdb", "stored (size %d)", sb->sb_ptr);
+      tvhinfo("epgdb", "stored (size %zd)", size);
   } else
     tvherror("epgdb", "unable to open epgdb file");
   sbuf_free(sb);

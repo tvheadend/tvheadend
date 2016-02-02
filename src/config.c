@@ -1631,6 +1631,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.cookie_expires = 7;
   config.dscp = -1;
   config.descrambler_buffer = 9000;
+  config.epg_compress = 1;
 
   /* Generate default */
   if (!path) {
@@ -2089,6 +2090,19 @@ const idclass_t config_class = {
       .opts   = PO_LORDER,
       .group  = 2
     },
+#if ENABLE_ZLIB
+    {
+      .type   = PT_BOOL,
+      .id     = "epg_compress",
+      .name   = N_("Compress EPG database"),
+      .desc   = N_("Compress the EPG database to reduce disk I/O "
+                   "and space."),
+      .off    = offsetof(config_t, epg_compress),
+      .opts   = PO_EXPERT,
+      .def.i  = 1,
+      .group  = 1
+    },
+#endif
     {
       .type   = PT_STR,
       .islist = 1,

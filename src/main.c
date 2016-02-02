@@ -409,6 +409,8 @@ tasklet_thread ( void *aux )
 {
   tasklet_t *tsk;
 
+  tvhtread_renice(20);
+
   pthread_mutex_lock(&tasklet_lock);
   while (tvheadend_running) {
     tsk = TAILQ_FIRST(&tasklets);

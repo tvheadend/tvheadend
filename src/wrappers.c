@@ -4,6 +4,7 @@
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
@@ -194,6 +195,21 @@ tvhthread_create
   ts->arg  = arg;
   r = pthread_create(thread, attr, thread_wrapper, ts);
   return r;
+}
+
+/* linux style: -19 .. 20 */
+int
+tvhtread_renice(int value)
+{
+  int ret = 0;
+#ifdef SYS_gettid
+  pid_t tid;
+  tid = syscall(SYS_gettid);
+  ret = setpriority(PRIO_PROCESS, tid, value);
+#else
+#warning "Implement renice for your platform!"
+#endif
+  return ret;
 }
 
 #if ! ENABLE_QSORT_R
