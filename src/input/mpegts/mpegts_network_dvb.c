@@ -297,7 +297,7 @@ const idclass_t dvb_network_dvbs_class =
       .type     = PT_STR,
       .id       = "orbital_pos",
       .name     = N_("Orbital position"),
-      .desc     = N_("Select the orbital position of the satellite "
+      .desc     = N_("The orbital position of the satellite "
                      "your dish is pointing at."),
       .set      = dvb_network_class_orbital_pos_set,
       .get      = dvb_network_class_orbital_pos_get,

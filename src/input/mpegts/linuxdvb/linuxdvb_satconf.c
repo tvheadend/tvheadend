@@ -220,6 +220,9 @@ const idclass_t linuxdvb_satconf_class =
       .type     = PT_BOOL,
       .id       = "early_tune",
       .name     = N_("Tune before DiseqC"),
+      .desc     = N_("One tune request (setup) is sent before the "
+                     "DiseqC sequence (voltage, tone settings). "
+                     "Some linux drivers require this procedure."),
       .off      = offsetof(linuxdvb_satconf_t, ls_early_tune),
       .opts     = PO_ADVANCED,
       .def.i    = 1
@@ -228,6 +231,12 @@ const idclass_t linuxdvb_satconf_class =
       .type     = PT_INT,
       .id       = "diseqc_repeats",
       .name     = N_("DiseqC repeats"),
+      .desc     = N_("Number of repeats for the DiseqC commands "
+                     "(default is zero - no DiseqC repeats). "
+                     "Note: this represents the number of repeats, not "
+                     "the number of requests - so 0 means 'send once: "
+                     "don't repeat', 1 means 'send twice: send once, "
+                     "then send one repeat', etc."),
       .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_repeats),
       .opts     = PO_ADVANCED,
       .def.i    = 0
@@ -236,6 +245,11 @@ const idclass_t linuxdvb_satconf_class =
       .type     = PT_BOOL,
       .id       = "diseqc_full",
       .name     = N_("Full DiseqC"),
+      .desc     = N_("Always send the whole DiseqC sequence including "
+                     "LNB setup (voltage, tone). If this is not "
+                     "checked, only changed settings are sent, which "
+                     "may cause issues with some drivers. If the tuning "
+                     "is not reliable, try activating this option."),
       .off      = offsetof(linuxdvb_satconf_t, ls_diseqc_full),
       .opts     = PO_ADVANCED,
       .def.i    = 1
@@ -244,6 +258,9 @@ const idclass_t linuxdvb_satconf_class =
       .type     = PT_BOOL,
       .id       = "lnb_poweroff",
       .name     = N_("Turn off LNB when idle"),
+      .desc     = N_("Switch off the power to the LNB when idle. Note: "
+                     "this may cause interference with other devices "
+                     "when the LNB is powered back up."),
       .off      = offsetof(linuxdvb_satconf_t, ls_lnb_poweroff),
       .opts     = PO_ADVANCED,
       .def.i    = 1
@@ -289,6 +306,7 @@ const idclass_t linuxdvb_satconf_2port_class =
       .type     = PT_STR,
       .id       = "network_a",
       .name     = N_("A"),
+      .desc     = N_("Network for port A."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
@@ -300,6 +318,7 @@ const idclass_t linuxdvb_satconf_2port_class =
       .type     = PT_STR,
       .id       = "network_b",
       .name     = N_("B"),
+      .desc     = N_("Network for port B."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
@@ -324,6 +343,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .type     = PT_STR,
       .id       = "network_aa",
       .name     = N_("AA"),
+      .desc     = N_("Network for port AA."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
@@ -335,6 +355,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .type     = PT_STR,
       .id       = "network_ab",
       .name     = N_("AB"),
+      .desc     = N_("Network for port AB."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,
@@ -346,6 +367,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .type     = PT_STR,
       .id       = "network_ba",
       .name     = N_("BA"),
+      .desc     = N_("Network for port BA."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get2,
       .set      = linuxdvb_satconf_class_network_set2,
@@ -357,6 +379,7 @@ const idclass_t linuxdvb_satconf_4port_class =
       .type     = PT_STR,
       .id       = "network_bb",
       .name     = N_("BB"),
+      .desc     = N_("Network for port BB."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get3,
       .set      = linuxdvb_satconf_class_network_set3,
@@ -438,6 +461,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .type     = PT_U16,
       .id       = "id",
       .name     = N_("SCR (ID)"),
+      .desc     = N_("SCR (Satellite Channel Router) ID."),
       .get      = linuxdvb_satconf_class_en50494_id_get,
       .set      = linuxdvb_satconf_class_en50494_id_set,
       .list     = linuxdvb_en50494_id_list,
@@ -447,6 +471,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .type     = PT_U16,
       .id       = "pin",
       .name     = N_("PIN"),
+      .desc     = N_("PIN."),
       .get      = linuxdvb_satconf_class_en50494_pin_get,
       .set      = linuxdvb_satconf_class_en50494_pin_set,
       .list     = linuxdvb_en50494_pin_list,
@@ -456,6 +481,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .type     = PT_U16,
       .id       = "frequency",
       .name     = N_("Frequency (MHz)"),
+      .desc     = N_("Frequency (in MHz)."),
       .get      = linuxdvb_satconf_class_en50494_freq_get,
       .set      = linuxdvb_satconf_class_en50494_freq_set,
       .opts     = PO_NOSAVE,
@@ -464,6 +490,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .type     = PT_STR,
       .id       = "network_a",
       .name     = N_("Network A"),
+      .desc     = N_("Network for port A."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
@@ -475,6 +502,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .type     = PT_STR,
       .id       = "network_b",
       .name     = N_("Network B"),
+      .desc     = N_("Network for port B."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get1,
       .set      = linuxdvb_satconf_class_network_set1,

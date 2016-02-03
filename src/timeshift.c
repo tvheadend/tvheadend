@@ -170,38 +170,56 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "enabled",
       .name   = N_("Enabled"),
+      .desc   = N_("Enable/disable timeshift."),
       .off    = offsetof(timeshift_conf_t, enabled),
     },
     {
       .type   = PT_BOOL,
       .id     = "ondemand",
       .name   = N_("On-demand (no first rewind)"),
-      .desc   = N_("Use timeshift only on-demand. It is started when the first request "
+      /*.desc   = N_("Use timeshift only on-demand. It is started when the first request "
                    "to move in the playback time occurs (fast-forward, rewind, goto)."),
+      */
+      .desc   = N_("Only activate timeshift when the client makes the first "
+                   "rewind, fast-forward or pause request. Note, "
+                   "because there is no buffer on the first request, "
+                   "rewinding is not possible."),
       .off    = offsetof(timeshift_conf_t, ondemand),
     },
     {
       .type   = PT_STR,
       .id     = "path",
       .name   = N_("Storage path"),
+      .desc   = N_("Path to where the timeshift data will be stored. "
+                   "If nothing is specified this will default to "
+                   "CONF_DIR/timeshift/buffer."),
       .off    = offsetof(timeshift_conf_t, path),
     },
     {
       .type   = PT_U32,
       .id     = "max_period",
       .name   = N_("Maximum period (mins)"),
+      .desc   = N_("The maximum time period that will be buffered for "
+                   "any given (client) subscription."),
       .off    = offsetof(timeshift_conf_t, max_period),
     },
     {
       .type   = PT_BOOL,
       .id     = "unlimited_period",
       .name   = N_("Unlimited time"),
+      .desc   = N_("Allow the timeshift buffer to grow unbounded until "
+                   "your storage media runs out of space. Warning, "
+                   "enabling this option may cause your system to slow "
+                   "down or crash completely!"),
       .off    = offsetof(timeshift_conf_t, unlimited_period),
     },
     {
       .type   = PT_S64,
       .id     = "max_size",
       .name   = N_("Maximum size (MB)"),
+      .desc   = N_("The maximum combined size of all timeshift buffers. "
+                   "If you specify an unlimited period it's highly "
+                   "recommended you specify a value here."),
       .set    = timeshift_conf_class_max_size_set,
       .get    = timeshift_conf_class_max_size_get,
     },
@@ -209,6 +227,9 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_S64,
       .id     = "ram_size",
       .name   = N_("Maximum RAM size (MB)"),
+      .desc   = N_("The maximum RAM (system memory) size for timeshift "
+                   "buffers. When free RAM buffers are available, they "
+                   "are used instead storage to save the timeshift data."),
       .set    = timeshift_conf_class_ram_size_set,
       .get    = timeshift_conf_class_ram_size_get,
     },
@@ -216,12 +237,16 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "unlimited_size",
       .name   = N_("Unlimited size"),
+      .desc   = N_("Allow the combined size of all timeshift buffers to "
+                   "potentially grow unbounded until your storage media "
+                   "runs out of space."),
       .off    = offsetof(timeshift_conf_t, unlimited_size),
     },
     {
       .type   = PT_BOOL,
       .id     = "ram_only",
       .name   = N_("RAM only"),
+      .desc   = N_("Only use system RAM for timeshift buffers."),
       .off    = offsetof(timeshift_conf_t, ram_only),
     },
     {

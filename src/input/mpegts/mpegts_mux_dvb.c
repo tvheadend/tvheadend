@@ -217,8 +217,8 @@ const idclass_t dvb_mux_dvbt_class =
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dvbt, delsys, "DVBT"),
       .desc     = N_("The delivery system the mux uses. "
-                     "If you have a DVB-T tuner you must select DVB-T "
-                     "here."),
+                     "Make sure that your tuner supports the delivery "
+                     "system selected here."),
     },
     {
       .type     = PT_U32,
@@ -254,7 +254,7 @@ const idclass_t dvb_mux_dvbt_class =
     },
     {
       MUX_PROP_STR("hierarchy", N_("Hierarchy"), dvbt, hier, N_("AUTO")),
-      .desc     = N_("The hierarchical modulation used by this mux. "
+      .desc     = N_("The hierarchical modulation used by the mux. "
                      "Most people will not need to change this setting."),
     },
     {
@@ -312,7 +312,7 @@ const idclass_t dvb_mux_dvbc_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dvbc, delsys, "DVB-C"),
-      .desc     = N_("Select the delivery system used by your cable provider."),
+      .desc     = N_("The delivery system used by your cable provider."),
     },
     {
       .type     = PT_U32,
@@ -443,6 +443,7 @@ const idclass_t dvb_mux_dvbs_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dvbs, delsys, "DVBS"),
+      .desc     = N_("The delivery system used by your provider."),
     },
     {
       .type     = PT_U32,
@@ -485,7 +486,7 @@ const idclass_t dvb_mux_dvbs_class =
       .type     = PT_INT,
       .id       = "stream_id",
       .name     = N_("ISI (Stream ID)"),
-      .desc     = N_("The stream ID used for this mux."),
+      .desc     = N_("The stream ID used for the mux."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
       .opts     = PO_ADVANCED
@@ -493,14 +494,14 @@ const idclass_t dvb_mux_dvbs_class =
     {
       MUX_PROP_STR("pls_mode", N_("PLS mode"), dvbs, pls_mode, "ROOT"),
       .desc     = N_("The Physical Layer Scrambling (PLS) mode "
-                     "used on this mux."),
+                     "used on the mux."),
     },
     {
       .type     = PT_U32,
       .id       = "pls_code",
       .name     = N_("PLS code"),
       .desc     = N_("The Physical Layer Scrambling (PLS) code "
-                     "used on this mux."),
+                     "used on the mux."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
       .def.u32	= 1,
       .opts     = PO_ADVANCED
@@ -509,7 +510,7 @@ const idclass_t dvb_mux_dvbs_class =
       .type     = PT_STR,
       .id       = "orbital",
       .name     = N_("Orbital position"),
-      .desc     = N_("The orbital position of the satellite this mux is on."),
+      .desc     = N_("The orbital position of the satellite the mux is on."),
       .set      = dvb_mux_dvbs_class_orbital_set,
       .get      = dvb_mux_dvbs_class_orbital_get,
       .opts     = PO_ADVANCED | PO_RDONLY
@@ -545,6 +546,7 @@ const idclass_t dvb_mux_atsc_t_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), atsc_t, delsys, "ATSC-T"),
+      .desc     = N_("The delivery system used by your provider."),
     },
     {
       .type     = PT_U32,
@@ -585,6 +587,7 @@ const idclass_t dvb_mux_atsc_c_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), atsc_c, delsys, "ATSC-C"),
+      .desc     = N_("The delivery system used by your provider."),
     },
     {
       .type     = PT_U32,
@@ -669,7 +672,7 @@ const idclass_t dvb_mux_isdb_t_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), isdb_t, delsys, "ISDB-T"),
-      .desc     = N_("Select the delivery system used by your provider."),
+      .desc     = N_("The delivery system used by your provider."),
     },
     {
       .type     = PT_U32,
@@ -795,12 +798,12 @@ const idclass_t dvb_mux_isdb_c_class =
     },
     {
       MUX_PROP_STR("constellation", N_("Constellation"), dvbc, qam, N_("AUTO")),
-      .desc     = N_("Select the quadrature amplitude modulation (QAM) used by the mux. "
+      .desc     = N_("The quadrature amplitude modulation (QAM) used by the mux. "
                      "If you're not sure of the value leave as AUTO."),
     },
     {
       MUX_PROP_STR("fec", N_("FEC"), dvbc, fec, N_("AUTO")),
-      .desc     = N_("Select the forward error correction used on the mux."),
+      .desc     = N_("The forward error correction used on the mux."),
     },
     {}
   }
@@ -829,6 +832,7 @@ const idclass_t dvb_mux_isdb_s_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), isdb_s, delsys, "ISDBS"),
+      .desc     = N_("The delivery system used by your provider."),
     },
     {
       .type     = PT_U32,
@@ -842,7 +846,7 @@ const idclass_t dvb_mux_isdb_s_class =
       .type     = PT_INT,
       .id       = "stream_id",
       .name     = N_("Stream ID"),
-      .desc     = N_("The stream ID used for this mux."),
+      .desc     = N_("The stream ID used for the mux."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
       .opts     = PO_ADVANCED
@@ -874,7 +878,7 @@ const idclass_t dvb_mux_dab_class =
   .ic_properties = (const property_t[]){
     {
       MUX_PROP_STR("delsys", N_("Delivery system"), dab, delsys, "DAB"),
-      .desc     = N_("The delivery system used by your cable provider."),
+      .desc     = N_("The delivery system used by the mux."),
     },
     {
       .type     = PT_U32,

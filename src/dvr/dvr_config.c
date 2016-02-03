@@ -868,7 +868,7 @@ const idclass_t dvr_config_class = {
       .type     = PT_INT,
       .id       = "cache",
       .name     = N_("Cache scheme"),
-      .desc     = N_("Select the cache scheme used to store recordings. "
+      .desc     = N_("The cache scheme to use/used to store recordings. "
                      "Leave as “system” unless you have a special use "
                      "case for one of the others. See Help for details."),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
@@ -903,7 +903,7 @@ const idclass_t dvr_config_class = {
       .id       = "clone",
       .name     = N_("Clone scheduled entry on error"),
       .desc     = N_("If an error occurs clone the scheduled entry and "
-                     "try to record again if possible."),
+                     "try to record again (if possible)."),
       .off      = offsetof(dvr_config_t, dvr_clone),
       .opts     = PO_ADVANCED,
       .def.u32  = 1,
@@ -914,7 +914,7 @@ const idclass_t dvr_config_class = {
       .id       = "rerecord-errors",
       .name     = N_("Schedule a re-recording if more errors than (0=off)"),
       .desc     = N_("If more than x errors occur during a recording "
-                     "schedule a re-record if possible."),
+                     "schedule a re-record (if possible)."),
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
       .opts     = PO_ADVANCED,
       .group    = 1,

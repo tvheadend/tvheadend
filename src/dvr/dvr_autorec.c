@@ -1015,8 +1015,8 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_STR,
       .id       = "title",
       .name     = N_("Title (regexp)"),
-      .desc     = N_("The title of the programme to look for. Note that "
-                     "this accepts case- insensitive regular expressions."),
+      .desc     = N_("The title of the program to look for. Note that "
+                     "this accepts case-insensitive regular expressions."),
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
     },
