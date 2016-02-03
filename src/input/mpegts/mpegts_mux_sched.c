@@ -124,6 +124,7 @@ const idclass_t mpegts_mux_sched_class =
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
+      .desc     = N_("Enable/disable the entry."),
       .off      = offsetof(mpegts_mux_sched_t, mms_enabled),
       .def.i    = 1,
     },
@@ -131,6 +132,7 @@ const idclass_t mpegts_mux_sched_class =
       .type     = PT_STR,
       .id       = "mux",
       .name     = N_("Mux"),
+      .desc     = N_("The mux to play when the entry is triggered."),
       .off      = offsetof(mpegts_mux_sched_t, mms_mux),
       .list     = mpegts_mux_sched_class_mux_list,
     },
@@ -138,6 +140,7 @@ const idclass_t mpegts_mux_sched_class =
       .type     = PT_STR,
       .id       = "cron",
       .name     = N_("Cron"),
+      .desc     = N_("Schedule frequency (in Cron format)."),
       .off      = offsetof(mpegts_mux_sched_t, mms_cronstr),
       .set      = mpegts_mux_sched_class_cron_set,
     },
@@ -145,6 +148,8 @@ const idclass_t mpegts_mux_sched_class =
       .type     = PT_INT,
       .id       = "timeout",
       .name     = N_("Timout (secs)"),
+      .desc     = N_("The length of time (in seconds) to play the mux "
+                     "for. 1 hour = 3600."),
       .off      = offsetof(mpegts_mux_sched_t, mms_timeout),
     },
     {
