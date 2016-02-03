@@ -186,7 +186,7 @@ const idclass_t linuxdvb_ca_class =
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
-      .desc     = N_("Enable/disable this device."),
+      .desc     = N_("Enable/disable the device."),
       .off      = offsetof(linuxdvb_ca_t, lca_enabled),
       .notify   = linuxdvb_ca_class_enabled_notify,
     },

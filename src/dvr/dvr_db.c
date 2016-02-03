@@ -2841,8 +2841,9 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "start_real",
       .name     = N_("Scheduled start time"),
-      .desc     = N_("The scheduled start time, including any pre-recording padding "
-                     "and a warm-up time of 30 seconds."),
+      .desc     = N_("The scheduled start time, including any "
+                     "pre-recording padding and a warm-up time of 30 "
+                     "seconds."),
       .get      = dvr_entry_class_start_real_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },

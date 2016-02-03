@@ -641,7 +641,7 @@ const idclass_t tvhlog_conf_class = {
       .name   = N_("Debug log path"),
       /* Should this really be called Debug log path? Don't you need to
        * enter a filename here not just a path? */
-      .desc   = N_("Enter a filename for debug output."),
+      .desc   = N_("Enter a filename you want to save the debug log to."),
       .get    = tvhlog_class_path_get,
       .set    = tvhlog_class_path_set,
       .group  = 1,
