@@ -51,6 +51,7 @@ typedef struct config {
   uint32_t cookie_expires;
   int dscp;
   uint32_t descrambler_buffer;
+  int parser_backlog;
 } config_t;
 
 extern const idclass_t config_class;

@@ -2057,12 +2057,20 @@ const idclass_t config_class = {
       .type   = PT_U32,
       .id     = "descrambler_buffer",
       .name   = N_("Descrambler buffer (TS packets)"),
-      .desc   = N_("The number of packets Tvheadend buffers in case "
+      .desc   = N_("The number of MPEG-TS packets Tvheadend buffers in case "
                    "there is a delay receiving CA keys. "),
-                   /* Note: I'm not sure I've explained this very well
-                    * ;)
-                    */
       .off    = offsetof(config_t, descrambler_buffer),
+      .opts   = PO_EXPERT,
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "parser_backlog",
+      .name   = N_("Use packet backlog"),
+      .desc   = N_("Send previous stream frames to upper layers "
+                   "(before frame start is signalled in the stream). "
+                   "It may cause issues with some clients / players."),
+      .off    = offsetof(config_t, parser_backlog),
       .opts   = PO_EXPERT,
       .group  = 1
     },

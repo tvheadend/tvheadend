@@ -36,6 +36,7 @@
 #include "bitstream.h"
 #include "packet.h"
 #include "streaming.h"
+#include "config.h"
 
 /* parser states */
 #define PARSER_APPEND 0
@@ -1341,7 +1342,8 @@ deliver:
       goto deliver;
     }
   }
-  parser_backlog(t, st, pkt);
+  if (config.parser_backlog)
+    parser_backlog(t, st, pkt);
 }
 
 static int
