@@ -47,10 +47,10 @@
 #define HEVC_NAL_VPS        32
 #define HEVC_NAL_SPS        33
 #define HEVC_NAL_PPS        34
-#define NAL_AUD             35
-#define NAL_EOS_NUT         36
-#define NAL_EOB_NUT         37
-#define NAL_FD_NUT          38
+#define HEVC_NAL_AUD        35
+#define HEVC_NAL_EOS_NUT    36
+#define HEVC_NAL_EOB_NUT    37
+#define HEVC_NAL_FD_NUT     38
 #define HEVC_NAL_SEI_PREFIX 39
 #define HEVC_NAL_SEI_SUFFIX 40
 

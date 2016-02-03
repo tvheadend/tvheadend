@@ -1634,7 +1634,8 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
     break;
   }
 
-  if(is_ssc(next_startcode) || ((next_startcode >> 1) & 0x3f) == 1) {
+  if(is_ssc(next_startcode) ||
+     ((next_startcode >> 1) & 0x3f) == HEVC_NAL_TRAIL_R) {
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return PARSER_HEADER;
