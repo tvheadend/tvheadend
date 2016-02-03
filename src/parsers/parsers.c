@@ -1025,7 +1025,7 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
   else
     st->es_vbv_delay = v;
 #endif
-  return 0;
+  return PARSER_APPEND;
 }
 
 /**
