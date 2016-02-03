@@ -32,8 +32,6 @@
            hdhomerun_discover_find_devices_custom_v2
 #endif
 
-static void tvhdhomerun_device_discovery( void );
-
 static void
 tvhdhomerun_device_class_save ( idnode_t *in )
 {
@@ -60,6 +58,10 @@ TAILQ_HEAD(tvhdhomerun_discovery_queue, tvhdhomerun_discovery);
 
 static int tvhdhomerun_discoveries_count;
 static struct tvhdhomerun_discovery_queue tvhdhomerun_discoveries;
+
+static pthread_t tvhdhomerun_discovery_tid;
+static pthread_mutex_t tvhdhomerun_discovery_lock;
+static pthread_cond_t tvhdhomerun_discovery_cond;
 
 static const char *
 tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
@@ -345,49 +347,85 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   htsmsg_destroy(conf);
 }
 
-static void
-tvhdhomerun_device_discovery( void )
+static void *
+tvhdhomerun_device_discovery_thread( void *aux )
 {
   struct hdhomerun_discover_device_t result_list[MAX_HDHOMERUN_DEVICES];
+  struct timespec ts;
+  struct timeval  tp;
+  int numDevices, brk;
 
-  if (!tvheadend_running)
-    return;
+  while (tvheadend_running) {
 
-  int numDevices = hdhomerun_discover_find_devices_custom(0,
-                                                          HDHOMERUN_DEVICE_TYPE_TUNER,
-                                                          HDHOMERUN_DEVICE_ID_WILDCARD,
-                                                          result_list,
-                                                          MAX_HDHOMERUN_DEVICES);
+    numDevices =
+      hdhomerun_discover_find_devices_custom(0,
+                                             HDHOMERUN_DEVICE_TYPE_TUNER,
+                                             HDHOMERUN_DEVICE_ID_WILDCARD,
+                                             result_list,
+                                             MAX_HDHOMERUN_DEVICES);
 
-  if (numDevices > 0)
-  {
-    while (numDevices > 0 ) {
-      numDevices--;
-      struct hdhomerun_discover_device_t* cDev = &result_list[numDevices];
-      if ( cDev->device_type == HDHOMERUN_DEVICE_TYPE_TUNER ) {
-        if ( !tvhdhomerun_device_find(cDev->device_id) ) {
-          tvhlog(LOG_INFO, "tvhdhomerun","Found HDHomerun device %08x with %d tuners", cDev->device_id, cDev->tuner_count);
-          tvhdhomerun_device_create(cDev);
+    if (numDevices > 0) {
+      while (numDevices > 0 ) {
+        numDevices--;
+        struct hdhomerun_discover_device_t* cDev = &result_list[numDevices];
+        if ( cDev->device_type == HDHOMERUN_DEVICE_TYPE_TUNER ) {
+          pthread_mutex_lock(&global_lock);
+          if ( !tvhdhomerun_device_find(cDev->device_id) &&
+               tvheadend_running ) {
+            tvhlog(LOG_INFO, "tvhdhomerun","Found HDHomerun device %08x with %d tuners",
+                   cDev->device_id, cDev->tuner_count);
+            tvhdhomerun_device_create(cDev);
+          }
+          pthread_mutex_unlock(&global_lock);
         }
       }
     }
+
+    pthread_mutex_lock(&tvhdhomerun_discovery_lock);
+    brk = 0;
+    if (tvheadend_running) {
+      gettimeofday(&tp, NULL);
+      ts.tv_sec  = tp.tv_sec + 15;
+      ts.tv_nsec = tp.tv_usec * 1000;
+      brk = pthread_cond_timedwait(&tvhdhomerun_discovery_cond,
+                                   &tvhdhomerun_discovery_lock,
+                                   &ts);
+      brk = !ERRNO_AGAIN(brk) && brk != ETIMEDOUT;
+    }
+    pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
+    if (brk)
+      break;
   }
+
+  return NULL;
 }
 
 void tvhdhomerun_init ( void )
 {
   hdhomerun_debug_obj = hdhomerun_debug_create();
+  const char *s = getenv("TVHEADEND_HDHOMERUN_DEBUG");
 
-  hdhomerun_debug_set_filename(hdhomerun_debug_obj, "/tmp/tvheadend_hdhomerun_errors.log");
-  hdhomerun_debug_enable(hdhomerun_debug_obj);
+  if (s != NULL && *s) {
+    hdhomerun_debug_set_filename(hdhomerun_debug_obj, s);
+    hdhomerun_debug_enable(hdhomerun_debug_obj);
+  }
   TAILQ_INIT(&tvhdhomerun_discoveries);
-  tvhdhomerun_device_discovery();
+  pthread_mutex_init(&tvhdhomerun_discovery_lock, NULL);
+  pthread_cond_init(&tvhdhomerun_discovery_cond, NULL);
+  tvhthread_create(&tvhdhomerun_discovery_tid, NULL,
+                   tvhdhomerun_device_discovery_thread,
+                   NULL, "hdhm-disc");
 }
 
 void tvhdhomerun_done ( void )
 {
   tvh_hardware_t *th, *n;
   tvhdhomerun_discovery_t *d, *nd;
+
+  pthread_mutex_lock(&tvhdhomerun_discovery_lock);
+  pthread_cond_signal(&tvhdhomerun_discovery_cond);
+  pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
+  pthread_join(tvhdhomerun_discovery_tid, NULL);
 
   pthread_mutex_lock(&global_lock);
   for (th = LIST_FIRST(&tvh_hardware); th != NULL; th = n) {
