@@ -30,6 +30,7 @@ FFMPEG          = ffmpeg-2.8.2
 FFMPEG_TB       = $(FFMPEG).tar.bz2
 FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
 FFMPEG_SHA1     = 1952aeb9ec3f569514d8db4f30c195b765392639
+FFMPEG_DIFFS    = libavcodec.libvpxenc.diff
 
 EXTLIBS         = libx264 libvorbis libvpx
 COMPONENTS      = avutil avformat avcodec swresample swscale avfilter avresample
@@ -374,29 +375,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@mkdir -p $(LIB_ROOT)/build
 	$(call DOWNLOAD,$(FFMPEG_URL),$(LIB_ROOT)/$(FFMPEG_TB),$(FFMPEG_SHA1))
 	$(call UNTAR,$(FFMPEG_TB),j)
-	@cd $(LIB_ROOT)/$(FFMPEG) && echo -en "\
---- libavcodec/libvpxenc.c.old	2015-11-21 21:52:16.502341511 +0100\n\
-+++ libavcodec/libvpxenc.c	2015-11-21 21:53:18.164552128 +0100\n\
-@@ -104,19 +104,11 @@\n\
- \n\
- /** String mappings for enum vp8e_enc_control_id */\n\
- static const char *const ctlidstr[] = {\n\
--    [VP8E_UPD_ENTROPY]           = \"VP8E_UPD_ENTROPY\",\n\
--    [VP8E_UPD_REFERENCE]         = \"VP8E_UPD_REFERENCE\",\n\
--    [VP8E_USE_REFERENCE]         = \"VP8E_USE_REFERENCE\",\n\
--    [VP8E_SET_ROI_MAP]           = \"VP8E_SET_ROI_MAP\",\n\
--    [VP8E_SET_ACTIVEMAP]         = \"VP8E_SET_ACTIVEMAP\",\n\
--    [VP8E_SET_SCALEMODE]         = \"VP8E_SET_SCALEMODE\",\n\
-     [VP8E_SET_CPUUSED]           = \"VP8E_SET_CPUUSED\",\n\
-     [VP8E_SET_ENABLEAUTOALTREF]  = \"VP8E_SET_ENABLEAUTOALTREF\",\n\
-     [VP8E_SET_NOISE_SENSITIVITY] = \"VP8E_SET_NOISE_SENSITIVITY\",\n\
--    [VP8E_SET_SHARPNESS]         = \"VP8E_SET_SHARPNESS\",\n\
-     [VP8E_SET_STATIC_THRESHOLD]  = \"VP8E_SET_STATIC_THRESHOLD\",\n\
-     [VP8E_SET_TOKEN_PARTITIONS]  = \"VP8E_SET_TOKEN_PARTITIONS\",\n\
--    [VP8E_GET_LAST_QUANTIZER]    = \"VP8E_GET_LAST_QUANTIZER\",\n\
-     [VP8E_SET_ARNR_MAXFRAMES]    = \"VP8E_SET_ARNR_MAXFRAMES\",\n\
-     [VP8E_SET_ARNR_STRENGTH]     = \"VP8E_SET_ARNR_STRENGTH\",\n\
-     [VP8E_SET_ARNR_TYPE]         = \"VP8E_SET_ARNR_TYPE\",\n" | patch -p0
+	$(call PATCH,$(FFMPEG),$(FFMPEG_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
