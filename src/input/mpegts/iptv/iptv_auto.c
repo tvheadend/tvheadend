@@ -36,6 +36,35 @@ typedef struct auto_private {
 /*
  *
  */
+static int _epgcfg_from_str(const char *str)
+{
+  static struct strtab cfgs[] = {
+    { "0",                 MM_EPG_DISABLE },
+    { "none",              MM_EPG_DISABLE },
+    { "disable",           MM_EPG_DISABLE },
+    { "off",               MM_EPG_DISABLE },
+    { "1",                 MM_EPG_ENABLE },
+    { "all",               MM_EPG_ENABLE },
+    { "enable",            MM_EPG_ENABLE },
+    { "on",                MM_EPG_ENABLE },
+    { "force",             MM_EPG_FORCE },
+    { "eit",               MM_EPG_ONLY_EIT },
+    { "uk_freesat",        MM_EPG_ONLY_UK_FREESAT },
+    { "uk_freeview",       MM_EPG_ONLY_UK_FREEVIEW },
+    { "viasat_baltic",     MM_EPG_ONLY_VIASAT_BALTIC },
+    { "opentv_sky_uk",     MM_EPG_ONLY_OPENTV_SKY_UK },
+    { "opentv_sky_italia", MM_EPG_ONLY_OPENTV_SKY_ITALIA },
+    { "opentv_sky_ausat",  MM_EPG_ONLY_OPENTV_SKY_AUSAT },
+    { "bulsatcom_39e",     MM_EPG_ONLY_BULSATCOM_39E },
+    { "psip",              MM_EPG_ONLY_PSIP },
+    { NULL }
+  };
+  return str ? str2val(str, cfgs) : -1;
+}
+
+/*
+ *
+ */
 static void
 iptv_auto_network_process_m3u_item(iptv_network_t *in,
                                    const char *last_url,
@@ -48,7 +77,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   mpegts_mux_t *mm;
   iptv_mux_t *im;
   url_t u;
-  int change;
+  int change, epgcfg;
   http_arg_list_t args;
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
@@ -90,6 +119,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
     logo = htsmsg_get_str(item, "logo");
 
   epgid = htsmsg_get_str(item, "tvg-id");
+  epgcfg = _epgcfg_from_str(htsmsg_get_str(item, "tvh-epg"));
   tags  = htsmsg_get_str(item, "tvh-tags");
   if (tags) {
     tags = n = strdupa(tags);
@@ -208,6 +238,10 @@ skip_url:
         im->mm_iptv_tags = strdup(tags);
         change = 1;
       }
+      if (epgcfg >= 0 && im->mm_epg != epgcfg) {
+        im->mm_epg = epgcfg;
+        change = 1;
+      }
       if (change)
         idnode_notify_changed(&im->mm_id);
       (*total)++;
@@ -237,6 +271,8 @@ skip_url:
     htsmsg_add_s32(conf, "scan_result", MM_SCAN_OK);
   if (custom[0])
     htsmsg_add_str(conf, "iptv_hdr", custom);
+  if (epgcfg >= 0)
+    htsmsg_add_s32(conf, "epg", epgcfg);
   im = iptv_mux_create0(in, NULL, conf);
   htsmsg_destroy(conf);
 

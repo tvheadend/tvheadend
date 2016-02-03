@@ -384,7 +384,7 @@ enum mpegts_mux_epg_flag
   MM_EPG_ONLY_BULSATCOM_39E,
   MM_EPG_ONLY_PSIP,
 };
-#define MM_EPG_LAST MM_EPG_ONLY_OPENTV_SKY_AUSAT
+#define MM_EPG_LAST MM_EPG_ONLY_PSIP
 
 enum mpegts_mux_ac3_flag
 {
