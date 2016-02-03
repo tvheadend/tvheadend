@@ -1886,7 +1886,8 @@ parser_do_backlog(service_t *t, elementary_stream_t *st,
   streaming_message_t *sm;
   int64_t prevdts = PTS_UNSET, absdts = PTS_UNSET;
   int64_t prevpts = PTS_UNSET, abspts = PTS_UNSET;
-  th_pkt_t *pkt;
+  th_pkt_t *pkt, *npkt;
+  size_t metalen;
 
   tvhtrace("parser",
            "pkt bcklog %2d %-12s - backlog flush start -",
@@ -1919,6 +1920,17 @@ parser_do_backlog(service_t *t, elementary_stream_t *st,
       if (pkt->pkt_meta == NULL) {
         pktbuf_ref_inc(meta);
         pkt->pkt_meta = meta;
+        /* insert the metadata into payload of the first packet, too */
+        npkt = pkt_copy_shallow(pkt);
+        pktbuf_ref_dec(npkt->pkt_payload);
+        metalen = pktbuf_len(meta);
+        npkt->pkt_payload = pktbuf_alloc(NULL, metalen + pktbuf_len(pkt->pkt_payload));
+        memcpy(pktbuf_ptr(npkt->pkt_payload), pktbuf_ptr(meta), metalen);
+        memcpy(pktbuf_ptr(npkt->pkt_payload) + metalen,
+               pktbuf_ptr(pkt->pkt_payload), pktbuf_len(pkt->pkt_payload));
+        npkt->pkt_payload->pb_err = pkt->pkt_payload->pb_err + meta->pb_err;
+        pkt_ref_dec(pkt);
+        pkt = npkt;
       }
       meta = NULL;
     }
