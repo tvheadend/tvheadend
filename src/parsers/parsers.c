@@ -49,6 +49,12 @@
 #define PTS_BACKLOG (PTS_MASK + 1)
 
 static inline int
+is_ssc(uint32_t sc)
+{
+  return (sc & ~0x0f) == 0x1e0;
+}
+
+static inline int
 pts_is_backlog(int64_t pts)
 {
   return pts != PTS_UNSET && (pts & PTS_BACKLOG) != 0;
@@ -1378,7 +1384,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     }
   }
 
-  if(sc >= 0x000001e0 && sc <= 0x000001ef) {
+  if(is_ssc(sc)) {
     /* System start codes for video */
     if(len >= 9) {
       uint16_t plen = buf[4] << 8 | buf[5];
@@ -1395,7 +1401,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
           pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2);
         }
 
-        if (next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef)
+        if (is_ssc(next_startcode))
           return PARSER_RESET;
 
         if (pkt->pkt_payload == NULL || pkt->pkt_dts == PTS_UNSET) {
@@ -1469,8 +1475,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
     }
   }
 
-  if((next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) ||
-     (next_startcode & 0x1f) == H264_NAL_AUD) {
+  if(is_ssc(next_startcode) || (next_startcode & 0x1f) == H264_NAL_AUD) {
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return PARSER_HEADER;
@@ -1519,7 +1524,7 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
   bitstream_t bs;
   int ret = PARSER_APPEND;
 
-  if(sc >= 0x000001e0 && sc <= 0x000001ef) {
+  if(is_ssc(sc)) {
     /* System start codes for video */
     if(len >= 9) {
       uint16_t plen = buf[4] << 8 | buf[5];
@@ -1536,7 +1541,7 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
           pkt->pkt_payload = pktbuf_append(pkt->pkt_payload, buf + 6 + l2, len - 6 - l2);
         }
 
-        if (next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef)
+        if (is_ssc(next_startcode))
           return PARSER_RESET;
 
         parser_deliver(t, st, pkt);
@@ -1629,8 +1634,7 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
     break;
   }
 
-  if((next_startcode >= 0x000001e0 && next_startcode <= 0x000001ef) ||
-     ((next_startcode >> 1) & 0x3f) == 1) {
+  if(is_ssc(next_startcode) || ((next_startcode >> 1) & 0x3f) == 1) {
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return PARSER_HEADER;
