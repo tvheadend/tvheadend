@@ -443,7 +443,7 @@ opentv_parse_event_section_one
           lang_str_destroy(ls);
         }
       }
-      save |= epg_broadcast_change_finish(ebc, changes, merge);
+      save |= epg_episode_change_finish(ee, changes3, merge);
     }
 
     save |= epg_broadcast_change_finish(ebc, changes, merge);
