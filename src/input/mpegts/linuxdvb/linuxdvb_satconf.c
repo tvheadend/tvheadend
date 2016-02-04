@@ -528,6 +528,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_INT,
       .id       = "orbital_pos",
       .name     = N_("Orbital positions"),
+      .desc     = N_("Orbital positions."),
       .get      = linuxdvb_satconf_class_orbitalpos_get,
       .set      = linuxdvb_satconf_class_orbitalpos_set,
     },
@@ -535,6 +536,8 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_BOOL,
       .id       = "switch_rotor",
       .name     = N_("Switch before rotor"),
+      .desc     = N_("If the DiseqC switch is located before the rotor "
+                     "(i.e. tuner - switch - rotor), enable this."),
       .off      = offsetof(linuxdvb_satconf_t, ls_switch_rotor),
       .opts     = PO_ADVANCED,
     },
@@ -542,6 +545,10 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_U32,
       .id       = "max_rotor_move",
       .name     = N_("Rotor initialization time (seconds)"),
+      .desc     = N_("Upon start, Tvheadend doesn't know the last rotor "
+                     "position. This value defines the initial rotor "
+                     "movement. TVHeadend waits the specified time when "
+                     "the first movement is requested."),
       .off      = offsetof(linuxdvb_satconf_t, ls_max_rotor_move),
       .opts     = PO_ADVANCED,
       .def.u32  = 120
@@ -550,6 +557,8 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_U32,
       .id       = "min_rotor_move",
       .name     = N_("Minimum rotor time (seconds)"),
+      .desc     = N_("The minimum delay after the rotor movement "
+                     "command is sent."),
       .off      = offsetof(linuxdvb_satconf_t, ls_min_rotor_move),
       .opts     = PO_ADVANCED,
     },
@@ -557,6 +566,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_DBL,
       .id       = "site_lat",
       .name     = N_("Site latitude"),
+      .desc     = N_("Site latitude."),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lat),
       .opts     = PO_ADVANCED,
     },
@@ -564,6 +574,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_DBL,
       .id       = "site_lon",
       .name     = N_("Site longitude"),
+      .desc     = N_("Site longitude."),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lon),
       .opts     = PO_ADVANCED,
     },
@@ -571,6 +582,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_BOOL,
       .id       = "site_lat_south",
       .name     = N_("Southern hemisphere (latitude direction)"),
+      .desc     = N_("Southern hemisphere (latitude direction)."),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lat_south),
       .opts     = PO_ADVANCED,
       .def.i    = 0
@@ -579,6 +591,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_BOOL,
       .id       = "site_lon_west",
       .name     = N_("Western hemisphere (latitude direction)"),
+      .desc     = N_("Western hemisphere (latitude direction)."),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_lon_west),
       .opts     = PO_ADVANCED,
       .def.i    = 0
@@ -587,6 +600,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_INT,
       .id       = "site_altitude",
       .name     = N_("Altitude (meters)"),
+      .desc     = N_("Altitude (in meters)."),
       .off      = offsetof(linuxdvb_satconf_t, ls_site_altitude),
       .opts     = PO_ADVANCED,
       .def.i    = 0
@@ -595,6 +609,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
       .type     = PT_U32,
       .id       = "motor_rate",
       .name     = N_("Motor rate (milliseconds/deg)"),
+      .desc     = N_("Motor rate (in milliseconds/deg)."),
       .off      = offsetof(linuxdvb_satconf_t, ls_motor_rate),
     },
     {}
