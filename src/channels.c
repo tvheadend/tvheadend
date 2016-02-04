@@ -1377,12 +1377,14 @@ const idclass_t channel_tag_class = {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
+      .desc     = N_("Enable/disable the tag."),
       .off      = offsetof(channel_tag_t, ct_enabled),
     },
     {
       .type     = PT_U32,
       .id       = "index",
       .name     = N_("Sort index"),
+      .desc     = N_("Sort index."),
       .off      = offsetof(channel_tag_t, ct_index),
       .opts     = PO_ADVANCED,
     },
@@ -1390,12 +1392,14 @@ const idclass_t channel_tag_class = {
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Name"),
+      .desc     = N_("Name of the tag."),
       .off      = offsetof(channel_tag_t, ct_name),
     },
     {
       .type     = PT_BOOL,
       .id       = "internal",
       .name     = N_("Internal"),
+      .desc     = N_("Use tag internally (don`t expose to clients)."),
       .off      = offsetof(channel_tag_t, ct_internal),
       .opts     = PO_ADVANCED
     },
@@ -1403,6 +1407,9 @@ const idclass_t channel_tag_class = {
       .type     = PT_BOOL,
       .id       = "private",
       .name     = N_("Private"),
+      .desc     = N_("Only allow users with this tag (or those with "
+                     "no tags at all) set in "
+                     "access configuration to use the tag."),
       .off      = offsetof(channel_tag_t, ct_private),
       .opts     = PO_ADVANCED
     },
@@ -1410,6 +1417,8 @@ const idclass_t channel_tag_class = {
       .type     = PT_STR,
       .id       = "icon",
       .name     = N_("Icon (full URL)"),
+      .desc     = N_("Full path to an icon used to depict the tag. "
+                     "This can be a TV network logotype, etc."),
       .off      = offsetof(channel_tag_t, ct_icon),
       .notify   = channel_tag_class_icon_notify,
       .opts     = PO_ADVANCED
@@ -1418,6 +1427,7 @@ const idclass_t channel_tag_class = {
       .type     = PT_STR,
       .id       = "icon_public_url",
       .name     = N_("Icon URL"),
+      .desc     = N_("Relative path to the imagecache copy of the icon."),
       .get      = channel_tag_class_get_icon,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_EXPERT,
     },
@@ -1425,6 +1435,8 @@ const idclass_t channel_tag_class = {
       .type     = PT_BOOL,
       .id       = "titled_icon",
       .name     = N_("Icon has title"),
+      .desc     = N_("If set, presentation of the tag icon will not "
+                     "superimpose the tag name on top of the icon."),
       .off      = offsetof(channel_tag_t, ct_titled_icon),
       .opts     = PO_ADVANCED
     },
@@ -1432,6 +1444,7 @@ const idclass_t channel_tag_class = {
       .type     = PT_STR,
       .id       = "comment",
       .name     = N_("Comment"),
+      .desc     = N_("Free-form text field, enter whatever you like here."),
       .off      = offsetof(channel_tag_t, ct_comment),
     },
     {}
