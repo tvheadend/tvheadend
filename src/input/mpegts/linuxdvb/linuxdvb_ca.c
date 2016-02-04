@@ -194,7 +194,7 @@ const idclass_t linuxdvb_ca_class =
       .type     = PT_BOOL,
       .id       = "high_bitrate_mode",
       .name     = N_("High bitrate mode (CI+ CAMs only)"),
-      .name     = N_("Allow high bitrate mode."),
+      .desc     = N_("Allow high bitrate mode (CI+ CAMs only)."),
       .off      = offsetof(linuxdvb_ca_t, lca_high_bitrate_mode),
       .notify   = linuxdvb_ca_class_high_bitrate_notify,
     },
