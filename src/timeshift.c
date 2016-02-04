@@ -182,7 +182,7 @@ const idclass_t timeshift_conf_class = {
       */
       .desc   = N_("Only activate timeshift when the client makes the first "
                    "rewind, fast-forward or pause request. Note, "
-                   "because there is no buffer on the first request, "
+                   "because there is no buffer on the first request "
                    "rewinding is not possible."),
       .off    = offsetof(timeshift_conf_t, ondemand),
     },
