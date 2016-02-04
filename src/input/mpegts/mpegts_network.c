@@ -141,6 +141,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_STR,
       .id       = "networkname",
       .name     = N_("Network name"),
+      .desc     = N_("Name of the network."),
       .off      = offsetof(mpegts_network_t, mn_network_name),
       .notify   = idnode_notify_title_changed,
     },
@@ -148,6 +149,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_STR,
       .id       = "pnetworkname",
       .name     = N_("Provider network name"),
+      .desc     = N_("Provider`s network name."),
       .off      = offsetof(mpegts_network_t, mn_provider_network_name),
       .opts     = PO_ADVANCED | PO_HIDDEN,
     },
@@ -155,6 +157,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_U16,
       .id       = "nid",
       .name     = N_("Network ID (limit scanning)"),
+      .desc     = N_("Limited/limit scanning to this network ID only."), 
       .opts     = PO_ADVANCED,
       .off      = offsetof(mpegts_network_t, mn_nid),
     },
@@ -162,6 +165,8 @@ const idclass_t mpegts_network_class =
       .type     = PT_BOOL,
       .id       = "autodiscovery",
       .name     = N_("Network discovery"),
+      .desc     = N_("Discover more muxes using the Network "
+                     "Information Table (if available)."),
       .off      = offsetof(mpegts_network_t, mn_autodiscovery),
       .opts     = PO_ADVANCED,
       .def.i    = 1
@@ -170,6 +175,10 @@ const idclass_t mpegts_network_class =
       .type     = PT_BOOL,
       .id       = "skipinitscan",
       .name     = N_("Skip initial scan"),
+      .desc     = N_("Skip scanning known muxes on Tvheadend start. "
+                     "If initial scan is allowed and new muxes are "
+                     "found they will be scanned too. See Help for "
+                     "more details."),
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
       .opts     = PO_EXPERT,
       .def.i    = 1
@@ -178,6 +187,15 @@ const idclass_t mpegts_network_class =
       .type     = PT_BOOL,
       .id       = "idlescan",
       .name     = N_("Idle scan muxes"),
+      .desc     = N_("When nothing else is happening Tvheadend will "
+                     "continuously rotate among all muxes and tune to "
+                     "them to verify that they are still working when "
+                     "the inputs are not used for streaming. If your "
+                     "adapters have problems with lots of (endless) "
+                     "tuning disable this. Note that this option "
+                     "should be OFF for the normal operation. This type "
+                     "of mux probing is not required and it may cause "
+                     "issues for SAT>IP (limited number of PID filters)."),
       .off      = offsetof(mpegts_network_t, mn_idlescan),
       .def.i    = 0,
       .notify   = mpegts_network_class_idlescan_notify,
@@ -187,6 +205,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_BOOL,
       .id       = "sid_chnum",
       .name     = N_("Use service IDs as channel numbers"),
+      .desc     = N_("Use the provider's service IDs as channel numbers."),
       .off      = offsetof(mpegts_network_t, mn_sid_chnum),
       .opts     = PO_EXPERT,
       .def.i    = 0,
@@ -195,6 +214,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_BOOL,
       .id       = "ignore_chnum",
       .name     = N_("Ignore provider's channel numbers"),
+      .desc     = N_("Don`t use the provider`s channel numbers."),
       .off      = offsetof(mpegts_network_t, mn_ignore_chnum),
       .opts     = PO_ADVANCED,
       .def.i    = 0,
@@ -204,6 +224,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_U16,
       .id       = "satip_source",
       .name     = N_("SAT>IP source number"),
+      .desc     = N_("The SAT>IP source number."),
       .off      = offsetof(mpegts_network_t, mn_satip_source),
       .opts     = PO_ADVANCED
     },
@@ -212,6 +233,8 @@ const idclass_t mpegts_network_class =
       .type     = PT_STR,
       .id       = "charset",
       .name     = N_("Character set"),
+      .desc     = N_("The character encoding for this network "
+                     "(e.g. UTF-8)."),
       .off      = offsetof(mpegts_network_t, mn_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED,
@@ -220,6 +243,8 @@ const idclass_t mpegts_network_class =
       .type     = PT_BOOL,
       .id       = "localtime",
       .name     = N_("EIT broadcast in local time"),
+      .desc     = N_("If EIT events use local time rather than UTC enable "
+                     "this option."),
       .off      = offsetof(mpegts_network_t, mn_localtime),
       .opts     = PO_EXPERT,
     },
@@ -227,6 +252,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "num_mux",
       .name     = N_("# Muxes"),
+      .desc     = N_("Total number of muxes found on this network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_mux,
     },
@@ -234,6 +260,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "num_svc",
       .name     = N_("# Services"),
+      .desc     = N_("Total number of services found on this network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_svc,
     },
@@ -241,6 +268,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "num_chn",
       .name     = N_("# Mapped channels"),
+      .desc     = N_("Total number of mapped channels on this network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_chn,
     },
@@ -248,6 +276,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "scanq_length",
       .name     = N_("Scan queue length"),
+      .desc     = N_("The number of muxes left to scan on this network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_scanq_length,
     },
