@@ -1166,6 +1166,9 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (lang_str_empty(de->de_desc))
         return NULL;
       break;
+    case DVR_AUTOREC_RECORD_ONCE_PER_DAY:
+    case DVR_AUTOREC_LRECORD_ONCE_PER_DAY:
+      break;
     case DVR_AUTOREC_RECORD_ONCE_PER_WEEK:
     case DVR_AUTOREC_LRECORD_ONCE_PER_WEEK:
       break;
