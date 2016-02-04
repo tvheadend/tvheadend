@@ -481,6 +481,8 @@ md5sum ( const char *str )
   return ret;
 }
 
+#define FILE_MODE_BITS(x) (x&(S_IRWXU|S_IRWXG|S_IRWXO))
+
 int
 makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
 {
@@ -503,7 +505,8 @@ makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
         err = mkdir(path, mode);
         if (!err && gid != -1 && uid != -1)
           err = chown(path, uid, gid);
-        if (!err)
+        if (!err && !stat(path, &st) &&
+            FILE_MODE_BITS(mode) != FILE_MODE_BITS(st.st_mode))
           err = chmod(path, mode); /* override umode */
         tvhtrace("settings", "Creating directory \"%s\" with octal permissions "
                              "\"%o\" gid %d uid %d", path, mode, gid, uid);
