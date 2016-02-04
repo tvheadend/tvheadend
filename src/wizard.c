@@ -356,7 +356,7 @@ BASIC_STR_OPS(wizard_login_t, password)
 
 DESCRIPTION_FCN(login, N_("\
 Enter the access control details to secure your system. \
-The first part of this covers the IPv4 network details \
+The first part of this covers the network details \
 for address-based access to the system; for example, \
 192.168.1.0/24 to allow local access only to 192.168.1.x clients, \
 or 0.0.0.0/0 or empty value for access from any system.\n\
@@ -364,7 +364,11 @@ This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
 You can leave the username and password blank if you don't want \
-this part, and would prefer anonymous access to anyone.\n\
+this part, and would prefer anonymous access to anyone.\n\n<b>Notes</b>\n\
+You may enter a comma seperated list of network prefixes.\n\
+If you were asked to enter a username and password during installation \
+avoid using the same username here as this may cause unexpected \
+behavior.\n\
 "))
 
 wizard_page_t *wizard_login(const char *lang)
@@ -389,7 +393,8 @@ wizard_page_t *wizard_login(const char *lang)
       .type     = PT_STR,
       .id       = "network",
       .name     = N_("Allowed network"),
-      .desc     = N_("Enter allowed network prefixes."),
+      .desc     = N_("Enter allowed network prefix(es). You can enter a "
+                     "comma seperated list of prefixes here."),
       .get      = wizard_get_value_network,
       .set      = wizard_set_value_network,
       .group    = 1
@@ -542,6 +547,7 @@ static void network_save(idnode_t *in)
   .type = PT_STR, \
   .id   = "tuner" STRINGIFY(num), \
   .name = N_("Tuner"), \
+  .desc = N_("Name of the tuner."), \
   .get  = network_get_tvalue##num, \
   .opts = PO_RDONLY, \
   .group = num, \
@@ -549,6 +555,7 @@ static void network_save(idnode_t *in)
   .type = PT_STR, \
   .id   = "tunerid" STRINGIFY(num), \
   .name = "Tuner", \
+  .desc = N_("Name of the tuner."), \
   .get  = network_get_tidvalue##num, \
   .set  = network_set_tidvalue##num, \
   .opts = PO_PERSIST | PO_NOUI, \
@@ -556,6 +563,7 @@ static void network_save(idnode_t *in)
   .type = PT_STR, \
   .id   = "network" STRINGIFY(num), \
   .name = N_("Network type"), \
+  .desc = N_("Select an available network type for this tuner."), \
   .get  = network_get_value##num, \
   .set  = network_set_value##num, \
   .list = network_get_list##num, \
