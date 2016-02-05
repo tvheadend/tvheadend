@@ -317,7 +317,7 @@ opentv_parse_event_section_one
   epg_episode_t *ee;
   epg_serieslink_t *es;
   opentv_event_t ev;
-  char buffer[2048];
+  char buffer[2048], *s;
   lang_str_t *ls;
   uint32_t changes, changes2, changes3;
 
@@ -394,14 +394,13 @@ opentv_parse_event_section_one
         /* try to cleanup the title */
         if (_opentv_apply_pattern_list(buffer, sizeof(buffer), ev.title, &mod->p_cleanup_title)) {
           tvhtrace("opentv", "  clean title '%s'", buffer);
-          ls = lang_str_create2(buffer, lang);
-          save |= epg_episode_set_title(ee, ls, &changes3);
-          lang_str_destroy(ls);
+          s = buffer;
         } else {
-          ls = lang_str_create2(buffer, lang);
-          save |= epg_episode_set_title(ee, ls, &changes3);
-          lang_str_destroy(ls);
+          s = ev.title;
         }
+        ls = lang_str_create2(s, lang);
+        save |= epg_episode_set_title(ee, ls, &changes3);
+        lang_str_destroy(ls);
       }
       if (ev.cat) {
         epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
