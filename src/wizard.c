@@ -150,13 +150,28 @@ BASIC_STR_OPS(wizard_hello_t, epg_lang1)
 BASIC_STR_OPS(wizard_hello_t, epg_lang2)
 BASIC_STR_OPS(wizard_hello_t, epg_lang3)
 
-DESCRIPTION_FCN(hello, N_("\
+/*DESCRIPTION_FCN(hello, N_("\
 Enter the languages for the web user interface and \
 for EPG texts.\n\
 This wizard should be run only on the initial setup. Please, cancel \
 it, if you are not willing to touch the current configuration.\
 "))
-
+*/
+DESCRIPTION_FCN(hello, N_("\
+\
+Welcome to Tvheadend, your TV streaming server and video recorder. This \
+wizard will help you get up and running fast. Let`s start by configuring \
+the basic language settings. Please select the default user interface \
+and EPG language(s).\n\n\
+\
+<b>Notes</b>\n\
+If you cannot see your prefered language in the language list and would \
+like to help translate Tvheadend see \
+<a href=\"https://tvheadend.org/projects/tvheadend/wiki/Internationalization\" target=\"new\">here</a>.\n\
+You don`t have to enter any prefered language(s), the \
+default English language will be used.\nNot selecting the correct EPG \
+language can result in garbled EPG text, don't panic you can change it later. \n\
+"))
 wizard_page_t *wizard_hello(const char *lang)
 {
   static const property_group_t groups[] = {
@@ -355,6 +370,7 @@ BASIC_STR_OPS(wizard_login_t, username)
 BASIC_STR_OPS(wizard_login_t, password)
 
 DESCRIPTION_FCN(login, N_("\
+\
 Enter the access control details to secure your system. \
 The first part of this covers the network details \
 for address-based access to the system; for example, \
@@ -363,12 +379,16 @@ or 0.0.0.0/0 or empty value for access from any system.\n\
 This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
-You can leave the username and password blank if you don't want \
-this part, and would prefer anonymous access to anyone.\n\n<b>Notes</b>\n\
-You may enter a comma seperated list of network prefixes.\n\
+\n\n<b>Notes</b>\n\
+You may enter a comma seperated list of network prefixes (IPv4/IPv6).\n\
 If you were asked to enter a username and password during installation \
-avoid using the same username here as this may cause unexpected \
+avoid using the same username as this may cause unexpected \
 behavior.\n\
+To allow anonymous access for the admin or regular account enter \
+an asterisk (*) in the username and password fields. <u>It is not</u> \
+recommended you allow anonymous access to the admin account.</u> \n\
+If you plan on accessing Tvheadend over the Internet make sure you use \
+strong credentials and <u>do not allow anonymous access at all</u>. \
 "))
 
 wizard_page_t *wizard_login(const char *lang)
