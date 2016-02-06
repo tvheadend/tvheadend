@@ -163,8 +163,10 @@ Welcome to Tvheadend, your TV streaming server and video recorder. This \
 wizard will help you get up and running fast. Let`s start by configuring \
 the basic language settings. Please select the default user interface \
 and EPG language(s).\n\n\
+<b>This wizard should be run only on the initial setup. Please, cancel \
+it, if you are not willing to touch the current configuration. </b>\
 \
-<b>Notes</b>\n\
+\n\n<b>Notes</b>\n\
 If you cannot see your preferred language in the language list and would \
 like to help translate Tvheadend see \
 <a href=\"https://tvheadend.org/projects/tvheadend/wiki/Internationalization\" target=\"new\">here</a>.\n\
@@ -383,13 +385,13 @@ an administrator and regular (day-to-day) user. \
 \n\n<b>Notes</b>\n\
 You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
 if you were asked to enter a username and password during installation, \
-we'd recommend not using the same details for a user as it may cause \
+we'd recommend not using the same details for a user here as it may cause \
 unexpected behavior, incorrect permissions etc.\n\
 To allow anonymous access for any account (administrative or regular user) enter \
 an asterisk (*) in the username and password fields. <u>It is not</u> \
 recommended that you allow anonymous access to the admin account.</u> \n\
 If you plan on accessing Tvheadend over the Internet, make sure you use \
-strong credentials and <u>do not allow anonymous access at all</u>. \
+strong credentials and <u>do not allow anonymous access at all</u>. \n\n\
 "))
 
 wizard_page_t *wizard_login(const char *lang)
