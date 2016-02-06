@@ -384,7 +384,7 @@ an administrator and regular (day-to-day) user. \
 You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
 if you were asked to enter a username and password during installation, \
 we'd recommend not using the same details for a user as it may cause \
-unexpected behavior.\n\
+unexpected behavior, incorrect permissions etc.\n\
 To allow anonymous access for any account (administrative or regular user) enter \
 an asterisk (*) in the username and password fields. <u>It is not</u> \
 recommended that you allow anonymous access to the admin account.</u> \n\
