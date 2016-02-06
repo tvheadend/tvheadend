@@ -165,12 +165,13 @@ the basic language settings. Please select the default user interface \
 and EPG language(s).\n\n\
 \
 <b>Notes</b>\n\
-If you cannot see your prefered language in the language list and would \
+If you cannot see your preferred language in the language list and would \
 like to help translate Tvheadend see \
 <a href=\"https://tvheadend.org/projects/tvheadend/wiki/Internationalization\" target=\"new\">here</a>.\n\
-You don`t have to enter any prefered language(s), the \
-default English language will be used.\nNot selecting the correct EPG \
-language can result in garbled EPG text, don't panic you can change it later. \n\
+If you don't enter a preferred language, US English will be used as a default.\n\
+Not selecting the correct EPG \
+language can result in garbled EPG text; if this happens, don't panic, \
+as you can easily change it later. \n\
 "))
 wizard_page_t *wizard_hello(const char *lang)
 {
@@ -380,14 +381,14 @@ This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
 \n\n<b>Notes</b>\n\
-You may enter a comma seperated list of network prefixes (IPv4/IPv6).\n\
-If you were asked to enter a username and password during installation \
-avoid using the same username as this may cause unexpected \
-behavior.\n\
-To allow anonymous access for the admin or regular account enter \
+You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
+if you were asked to enter a username and password during installation, \
+we'd recommend not using the same details for a user as it may cause \
+unexpected behavior.\n\
+To allow anonymous access for any account (administrative or regular user) enter \
 an asterisk (*) in the username and password fields. <u>It is not</u> \
-recommended you allow anonymous access to the admin account.</u> \n\
-If you plan on accessing Tvheadend over the Internet make sure you use \
+recommended that you allow anonymous access to the admin account.</u> \n\
+If you plan on accessing Tvheadend over the Internet, make sure you use \
 strong credentials and <u>do not allow anonymous access at all</u>. \
 "))
 
