@@ -1418,7 +1418,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
     return NULL;
   }
 
-  htsp->htsp_async_mode = HTSP_ASYNC_ON;
+  htsp->htsp_async_mode |= HTSP_ASYNC_ON;
 
   /* Send all enabled and external tags */
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
