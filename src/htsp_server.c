@@ -4156,10 +4156,12 @@ htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
 
   /* Flush pkt buffers */
-  if (skip->type != SMT_SKIP_ERROR) {
+#if ENABLE_TIMESHIFT
+  if (skip->type != SMT_SKIP_ERROR && timeshift_conf.enabled) {
     htsp_flush_queue(hs->hs_htsp, &hs->hs_q, 0);
     htsp_subscription_timeshift_status(hs, &skip->timeshift);
   }
+#endif
 
   if (skip->type == SMT_SKIP_ABS_TIME || skip->type == SMT_SKIP_ABS_SIZE)
     htsmsg_add_u32(m, "absolute", 1);
