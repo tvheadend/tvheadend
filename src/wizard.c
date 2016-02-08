@@ -16,6 +16,10 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/*
+ * Use http://spec.commonmark.org/ as reference for description formatting.
+ */
+
 #include "tvheadend.h"
 #include "config.h"
 #include "access.h"
@@ -163,17 +167,17 @@ Welcome to Tvheadend, your TV streaming server and video recorder. This \
 wizard will help you get up and running fast. Let`s start by configuring \
 the basic language settings. Please select the default user interface \
 and EPG language(s).\n\n\
-<b>This wizard should be run only on the initial setup. Please, cancel \
-it, if you are not willing to touch the current configuration. </b>\
+**This wizard should be run only on the initial setup. Please, cancel \
+it, if you are not willing to touch the current configuration.**\
 \
-\n\n<b>Notes</b>\n\
+\n\n**Notes**: \
 If you cannot see your preferred language in the language list and would \
 like to help translate Tvheadend see \
-<a href=\"https://tvheadend.org/projects/tvheadend/wiki/Internationalization\" target=\"new\">here</a>.\n\
+[here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n\
 If you don't enter a preferred language, US English will be used as a default.\n\
 Not selecting the correct EPG \
 language can result in garbled EPG text; if this happens, don't panic, \
-as you can easily change it later. \n\
+as you can easily change it later.\n\
 "))
 wizard_page_t *wizard_hello(const char *lang)
 {
@@ -386,16 +390,16 @@ or 0.0.0.0/0 or empty value for access from any system.\n\
 This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
-\n\n<b>Notes</b>\n\
+\n\n**Notes**: \
 You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
 if you were asked to enter a username and password during installation, \
 we'd recommend not using the same details for a user here as it may cause \
 unexpected behavior, incorrect permissions etc.\n\
 To allow anonymous access for any account (administrative or regular user) enter \
-an asterisk (*) in the username and password fields. <u>It is not</u> \
-recommended that you allow anonymous access to the admin account.</u> \n\
+an asterisk (*) in the username and password fields. ___It is not___ \
+recommended that you allow anonymous access to the admin account.\n\
 If you plan on accessing Tvheadend over the Internet, make sure you use \
-strong credentials and <u>do not allow anonymous access at all</u>. \n\n\
+strong credentials and ___do not allow anonymous access at all___.\n\n\
 "))
 
 wizard_page_t *wizard_login(const char *lang)

@@ -75,6 +75,7 @@ CSS += static/app/ext.css
 
 JAVASCRIPT += $(ROOTPATH)/app/i18n.js
 JAVASCRIPT += $(ROOTPATH)/app/extensions.js
+JAVASCRIPT += $(ROOTPATH)/app/micromarkdown.js
 JAVASCRIPT += $(ROOTPATH)/livegrid/livegrid-all.js
 JAVASCRIPT += $(ROOTPATH)/lovcombo/lovcombo-all.js
 JAVASCRIPT += $(ROOTPATH)/multiselect/multiselect.js
