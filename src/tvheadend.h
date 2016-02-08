@@ -747,7 +747,7 @@ static inline uint8_t *sbuf_peek(sbuf_t *sb, int off) { return sb->sb_data + off
 
 char *md5sum ( const char *str );
 
-int makedirs ( const char *path, int mode, gid_t gid, uid_t uid );
+int makedirs ( const char *subsys, const char *path, int mode, int mstrict, gid_t gid, uid_t uid );
 
 int rmtree ( const char *path );
 

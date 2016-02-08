@@ -1225,7 +1225,7 @@ dobackup(const char *oldver)
   }
 
   snprintf(outfile, sizeof(outfile), "%s/backup", root);
-  if (makedirs(outfile, 0700, -1, -1))
+  if (makedirs("config", outfile, 0700, 1, -1, -1))
     goto fatal;
   if (chdir(root)) {
     tvherror("config", "unable to find directory '%s'", root);
@@ -1414,7 +1414,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   /* Ensure directory exists */
   if (stat(path, &st)) {
     config_newcfg = 1;
-    if (makedirs(path, 0700, gid, uid)) {
+    if (makedirs("config", path, 0700, 1, gid, uid)) {
       tvhwarn("START", "failed to create settings directory %s,"
                        " settings will not be saved", path);
       return;

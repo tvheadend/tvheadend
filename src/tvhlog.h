@@ -117,6 +117,7 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define tvhwarn(...)   tvhlog(LOG_WARNING, ##__VA_ARGS__)
 #define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
 #define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
+#define tvhalert(...)  tvhlog(LOG_ALERT,   ##__VA_ARGS__)
 
 void dispatch_clock_update(struct timespec *ts);
 

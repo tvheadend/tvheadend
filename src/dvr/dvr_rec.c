@@ -261,7 +261,8 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     }
   }
 
-  if (makedirs(path, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
+  if (makedirs("dvr", path,
+               cfg->dvr_muxcnf.m_directory_permissions, 0, -1, -1) != 0)
     return -1;
   
   /* Construct final name */
