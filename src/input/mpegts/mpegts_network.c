@@ -543,7 +543,7 @@ mpegts_network_wizard_create
 
   /* only one network per type */
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
-    if (mn->mn_id.in_class == mnb->idc)
+    if (mn->mn_id.in_class == mnb->idc && mn->mn_wizard)
       goto found;
 
   conf = htsmsg_create_map();
@@ -597,6 +597,8 @@ mpegts_network_builder_find
   ( const char *clazz )
 {
   mpegts_network_builder_t *mnb;
+  if (clazz == NULL)
+    return NULL;
   LIST_FOREACH(mnb, &mpegts_network_builders, link) {
     if (!strcmp(mnb->idc->ic_class, clazz))
       return mnb;

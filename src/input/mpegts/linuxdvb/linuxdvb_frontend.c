@@ -1808,13 +1808,13 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)ti;
   const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
   mpegts_network_t *mn;
+  htsmsg_t *nlist;
 
   if (LIST_FIRST(&lfe->mi_mux_active))
     return;
+  mpegts_network_wizard_create(ntype, &nlist, lang);
   mn = linuxdvb_frontend_wizard_network(lfe);
   if (ntype && (mn == NULL || mn->mn_wizard)) {
-    htsmsg_t *nlist;
-    mpegts_network_wizard_create(ntype, &nlist, lang);
     if (lfe->lfe_satconf) {
       htsmsg_t *conf = htsmsg_create_map();
       htsmsg_t *elems = htsmsg_create_list();
@@ -1837,6 +1837,8 @@ linuxdvb_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang 
     if (linuxdvb_frontend_wizard_network(lfe))
       mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
     linuxdvb_adapter_save(lfe->lfe_adapter);
+  } else {
+    htsmsg_destroy(nlist);
   }
 }
 

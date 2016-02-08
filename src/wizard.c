@@ -615,7 +615,9 @@ NETWORK_FCN(6)
 
 DESCRIPTION_FCN(network, N_("\
 Select network type for detected tuners.\n\
-The T means terresterial, C is cable and S is satellite.\
+The T means terresterial, C is cable and S is satellite.\n\
+If you do not assign a network type to the tuner, the tuner\
+will not be used in TVH.\
 "))
 
 

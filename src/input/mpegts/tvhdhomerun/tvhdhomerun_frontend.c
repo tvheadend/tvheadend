@@ -618,17 +618,19 @@ tvhdhomerun_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *la
   tvhdhomerun_frontend_t *hfe = (tvhdhomerun_frontend_t*)ti;
   const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
   mpegts_network_t *mn;
+  htsmsg_t *nlist;
 
   mn = tvhdhomerun_frontend_wizard_network(hfe);
+  mpegts_network_wizard_create(ntype, &nlist, lang);
   if (ntype && (mn == NULL || mn->mn_wizard)) {
-    htsmsg_t *nlist = htsmsg_create_list();
-    mpegts_network_wizard_create(ntype, &nlist, lang);
     htsmsg_add_str(nlist, NULL, ntype);
     mpegts_input_set_networks((mpegts_input_t *)hfe, nlist);
     htsmsg_destroy(nlist);
     if (tvhdhomerun_frontend_wizard_network(hfe))
       mpegts_input_set_enabled((mpegts_input_t *)hfe, 1);
     tvhdhomerun_device_save(hfe->hf_device);
+  } else {
+    htsmsg_destroy(nlist);
   }
 }
 

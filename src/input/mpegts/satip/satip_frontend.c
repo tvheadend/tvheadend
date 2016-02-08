@@ -1793,14 +1793,14 @@ satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
   satip_frontend_t *lfe = (satip_frontend_t*)ti;
   const char *ntype = htsmsg_get_str(conf, "mpegts_network_type");
   mpegts_network_t *mn;
+  htsmsg_t *nlist;
 
+  mpegts_network_wizard_create(ntype, &nlist, lang);
   mn = satip_frontend_wizard_network(lfe);
-  if (ntype && lfe->sf_master == 0 && (mn == NULL || mn->mn_wizard)) {
+  if (nlist && lfe->sf_master == 0 && (mn == NULL || mn->mn_wizard)) {
     htsmsg_t *conf = htsmsg_create_map();
     htsmsg_t *list = htsmsg_create_list();
     htsmsg_t *pos  = htsmsg_create_map();
-    htsmsg_t *nlist;
-    mpegts_network_wizard_create(ntype, &nlist, lang);
     htsmsg_add_bool(pos, "enabled", 1);
     htsmsg_add_msg(pos, "networks", nlist);
     htsmsg_add_msg(list, NULL, pos);
@@ -1810,6 +1810,8 @@ satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
     if (satip_frontend_wizard_network(lfe))
       mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
     satip_device_save(lfe->sf_device);
+  } else {
+    htsmsg_destroy(nlist);
   }
 }
 
