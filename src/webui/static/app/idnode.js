@@ -1090,6 +1090,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                 var node = null;
                 if (form.isDirty() || conf.alwaysDirty) {
                     node = values(form);
+                    if (conf.presave)
+                        conf.presave(conf, node);
                     tvheadend.Ajax({
                         url: conf.saveURL || 'api/idnode/save',
                         params: {

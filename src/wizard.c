@@ -292,7 +292,6 @@ static void login_save(idnode_t *in)
   htsmsg_add_bool(conf, "enabled", 1);
   htsmsg_add_str(conf, "prefix", w->network);
   htsmsg_add_str(conf, "username", s);
-  htsmsg_add_str(conf, "password", w->admin_password);
   htsmsg_add_bool(conf, "streaming", 1);
   htsmsg_add_bool(conf, "adv_streaming", 1);
   htsmsg_add_bool(conf, "htsp_streaming", 1);
@@ -323,9 +322,14 @@ static void login_save(idnode_t *in)
   if (w->username[0]) {
     s = w->username[0] ? w->username : "*";
     conf = htsmsg_create_map();
+    htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str(conf, "prefix", w->network);
     htsmsg_add_str(conf, "username", s);
-    htsmsg_add_str(conf, "password", w->password);
+    htsmsg_add_bool(conf, "streaming", 1);
+    htsmsg_add_bool(conf, "htsp_streaming", 1);
+    htsmsg_add_bool(conf, "dvr", 1);
+    htsmsg_add_bool(conf, "htsp_dvr", 1);
+    htsmsg_add_bool(conf, "webui", 1);
     ae = access_entry_create(NULL, conf);
     if (ae) {
       ae->ae_wizard = 1;
@@ -1094,7 +1098,6 @@ wizard_page_t *wizard_mapping(const char *lang)
     DESCRIPTION(mapping),
     PREV_BUTTON(status),
     NEXT_BUTTON(channels),
-    LAST_BUTTON(),
     {}
   };
   wizard_page_t *page = page_init("mapping", "wizard_mapping", N_("Service mapping"));
@@ -1112,11 +1115,36 @@ wizard_page_t *wizard_mapping(const char *lang)
  * Discovered channels
  */
 
+static void channels_save(idnode_t *in)
+{
+  access_entry_t *ae, *ae_next;
+
+  /* check, if we have another admin account */
+  TAILQ_FOREACH(ae, &access_entries, ae_link)
+    if (ae->ae_admin && ae->ae_wizard) break;
+  if (ae == NULL)
+    return;
+  /* remove the default access entry */
+  for (ae = TAILQ_FIRST(&access_entries); ae; ae = ae_next) {
+    ae_next = TAILQ_NEXT(ae, ae_link);
+    if (strcmp(ae->ae_comment, ACCESS_DEFAULT_COMMENT) == 0) {
+      access_entry_destroy(ae, 1);
+      break;
+    }
+  }
+}
+
 DESCRIPTION_FCN(channels, N_("\
+You are finished now.\n\
+You may further customize your settings by editing channel numbers etc.\n\
+If you confirm this dialog, the default administrator account will be\
+removed! Please, use credentals you defined through this wizard!\
+"))
+
+DESCRIPTION_FCN(channels2, N_("\
 You are finished now.\n\
 You may further customize your settings by editing channel numbers etc.\
 "))
-
 
 wizard_page_t *wizard_channels(const char *lang)
 {
@@ -1127,8 +1155,24 @@ wizard_page_t *wizard_channels(const char *lang)
     LAST_BUTTON(),
     {}
   };
-  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Service mapping"));
+  static const property_t props2[] = {
+    ICON(),
+    DESCRIPTION(channels2),
+    PREV_BUTTON(mapping),
+    LAST_BUTTON(),
+    {}
+  };
+  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Channels"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
+  access_entry_t *ae;
+
   ic->ic_properties = props;
+  ic->ic_flags |= IDCLASS_ALWAYS_SAVE;
+  ic->ic_save = channels_save;
+  /* do we have an admin created by wizard? */
+  TAILQ_FOREACH(ae, &access_entries, ae_link)
+    if (ae->ae_admin && ae->ae_wizard) break;
+  if (ae == NULL)
+    ic->ic_properties = props2;
   return page;
 }

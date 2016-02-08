@@ -16,10 +16,12 @@ tvheadend.wizard_start = function(page) {
         channels: 'channels'
     }
 
-    function cancel(conf) {
-        tvheadend.Ajax({
-            url: 'api/wizard/cancel'
-        });
+    function cancel(conf, noajax) {
+        if (!noajax) {
+            tvheadend.Ajax({
+                url: 'api/wizard/cancel'
+            });
+        }
         tvheadend.wizard = null;
         if (conf.win)
             conf.win.close();
@@ -135,6 +137,14 @@ tvheadend.wizard_start = function(page) {
             comet: m.events,
             noApply: true,
             noUIlevel: true,
+            alwaysDirty: last,
+            presave: function(conf, data) {
+                if (last) {
+                    tvheadend.Ajax({
+                        url: 'api/wizard/cancel'
+                    });
+                }
+            },
             postsave: function(conf, data) {
                 if (data) {
                     if (('ui_lang' in data) && data['ui_lang'] != tvh_locale_lang) {
@@ -142,10 +152,12 @@ tvheadend.wizard_start = function(page) {
                         return;
                     }
                 }
-                if (!last)
+                if (!last) {
                     newpage(conf, 'page_next_');
-                else
-                    cancel(conf);
+                } else {
+                    cancel(conf, 1);
+                    window.location.reload();
+                }
             },
             buildbtn: buildbtn,
             labelWidth: 250,

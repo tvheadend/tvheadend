@@ -147,11 +147,13 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   extern int access_noacl;
 
   htsmsg_t *m = htsmsg_create_map();
-  const char *username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
+  const char *username;
   int64_t bfree, bused, btotal;
   int dvr = !http_access_verify(hc, ACCESS_RECORDER);
   int admin = !http_access_verify(hc, ACCESS_ADMIN);
   const char *s;
+
+  username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
 
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
 

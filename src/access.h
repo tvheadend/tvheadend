@@ -22,6 +22,8 @@
 #include "idnode.h"
 #include "htsmsg.h"
 
+#define ACCESS_DEFAULT_COMMENT "Default access entry"
+
 struct profile;
 struct dvr_config;
 struct channel_tag;

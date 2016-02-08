@@ -2048,7 +2048,7 @@ access_init(int createdefault, int noacl)
     ae = access_entry_create(NULL, NULL);
 
     free(ae->ae_comment);
-    ae->ae_comment = strdup("Default access entry");
+    ae->ae_comment = strdup(ACCESS_DEFAULT_COMMENT);
 
     ae->ae_enabled        = 1;
     ae->ae_streaming      = 1;

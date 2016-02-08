@@ -54,6 +54,8 @@ typedef struct property_group
 /*
  * Class definition
  */
+#define IDCLASS_ALWAYS_SAVE    (1<<0)      ///< Always call the save callback
+
 typedef struct idclass idclass_t;
 struct idclass {
   const struct idclass   *ic_super;        ///< Parent class
@@ -64,6 +66,7 @@ struct idclass {
   const property_t       *ic_properties;   ///< Property list
   const char             *ic_event;        ///< Events to fire on add/delete/title
   uint32_t                ic_perm_def;     ///< Default permissions
+  uint32_t                ic_flags;        ///< Extra flags
   idnode_t               *ic_snode;        ///< Simple node
 
   /* Callbacks */

@@ -1109,7 +1109,7 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
   int save = 0;
   const idclass_t *idc = self->in_class;
   save = idnode_class_write_values(self, idc, c, optmask);
-  if (save && dosave)
+  if ((idc->ic_flags & IDCLASS_ALWAYS_SAVE) != 0 || (save && dosave))
     idnode_savefn(self);
   if (dosave)
     idnode_notify_changed(self);
