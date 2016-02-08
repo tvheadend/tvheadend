@@ -139,6 +139,12 @@ typedef enum {
 #define CHICON_SVCNAME   2
 
 /*
+ *
+ */
+#define PICON_STANDARD   0
+#define PICON_ISVCTYPE   1
+
+/*
  * global timer
  */
 

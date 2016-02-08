@@ -1923,6 +1923,16 @@ config_class_chiconscheme_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+config_class_piconscheme_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Standard"),                PICON_STANDARD },
+    { N_("Force service type to 1"), PICON_ISVCTYPE },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -2214,6 +2224,17 @@ const idclass_t config_class = {
                    "collection. See Help for more detailed "
                    "information."),
       .off    = offsetof(config_t, picon_path),
+      .opts   = PO_ADVANCED,
+      .group  = 6,
+    },
+    {
+      .type   = PT_INT,
+      .id     = "piconscheme",
+      .name   = N_("Picon name scheme"),
+      .desc   = N_("Select scheme to generate the picon names "
+                   "(standard, force service type to 1)"),
+      .list   = config_class_piconscheme_list,
+      .off    = offsetof(config_t, picon_scheme),
       .opts   = PO_ADVANCED,
       .group  = 6,
     },

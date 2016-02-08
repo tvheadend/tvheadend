@@ -570,7 +570,7 @@ mpegts_service_channel_icon ( service_t *s )
 
     snprintf(prop_sbuf, PROP_SBUF_LEN,
              "picon://1_0_%X_%X_%X_%X_%X_0_0_0.png",
-             ms->s_dvb_servicetype,
+             config.picon_scheme == PICON_ISVCTYPE ? 1 : ms->s_dvb_servicetype,
              ms->s_dvb_service_id,
              ms->s_dvb_mux->mm_tsid,
              ms->s_dvb_mux->mm_onid,
