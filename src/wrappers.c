@@ -206,6 +206,10 @@ tvhtread_renice(int value)
   pid_t tid;
   tid = syscall(SYS_gettid);
   ret = setpriority(PRIO_PROCESS, tid, value);
+#elif ENABLE_ANDROID
+  pid_t tid;
+  tid = gettid();
+  ret = setpriority(PRIO_PROCESS, tid, value);
 #else
 #warning "Implement renice for your platform!"
 #endif
