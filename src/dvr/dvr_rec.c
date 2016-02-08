@@ -746,7 +746,8 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     dirsep = path + l;
   }
   htsstr_unescape_to(path, filename, sizeof(filename));
-  if (makedirs(filename, cfg->dvr_muxcnf.m_directory_permissions, -1, -1) != 0)
+  if (makedirs("dvr", filename,
+               cfg->dvr_muxcnf.m_directory_permissions, 0, -1, -1) != 0)
     return -1;
   max = pathconf(filename, _PC_NAME_MAX);
   if (max < 8)

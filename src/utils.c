@@ -484,7 +484,8 @@ md5sum ( const char *str )
 #define FILE_MODE_BITS(x) (x&(S_IRWXU|S_IRWXG|S_IRWXO))
 
 int
-makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
+makedirs ( const char *subsys, const char *inpath, int mode,
+           int mstrict, gid_t gid, uid_t uid )
 {
   int err, ok;
   size_t x;
@@ -506,17 +507,25 @@ makedirs ( const char *inpath, int mode, gid_t gid, uid_t uid )
         if (!err && gid != -1 && uid != -1)
           err = chown(path, uid, gid);
         if (!err && !stat(path, &st) &&
-            FILE_MODE_BITS(mode) != FILE_MODE_BITS(st.st_mode))
+            FILE_MODE_BITS(mode) != FILE_MODE_BITS(st.st_mode)) {
           err = chmod(path, mode); /* override umode */
-        tvhtrace("settings", "Creating directory \"%s\" with octal permissions "
-                             "\"%o\" gid %d uid %d", path, mode, gid, uid);
+          if (!mstrict) {
+            err = 0;
+            tvhwarn(subsys, "Unable to change directory permissions "
+                            "to \"%o\" for \"%s\" (keeping \"%o\")",
+                            mode, path, FILE_MODE_BITS(st.st_mode));
+            mode = FILE_MODE_BITS(st.st_mode);
+          }
+        }
+        tvhtrace(subsys, "Creating directory \"%s\" with octal permissions "
+                         "\"%o\" gid %d uid %d", path, mode, gid, uid);
       } else {
         err   = S_ISDIR(st.st_mode) ? 0 : 1;
         errno = ENOTDIR;
       }
       if (err) {
-        tvhlog(LOG_ALERT, "settings", "Unable to create dir \"%s\": %s",
-               path, strerror(errno));
+        tvhalert(subsys, "Unable to create dir \"%s\": %s",
+                 path, strerror(errno));
         return -1;
       }
       path[x] = '/';

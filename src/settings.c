@@ -82,7 +82,7 @@ hts_settings_makedirs ( const char *inpath )
     }
     x--;
   }
-  return makedirs(path, 0700, -1, -1);
+  return makedirs("settings", path, 0700, 1, -1, -1);
 }
 
 /**

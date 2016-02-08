@@ -159,7 +159,7 @@ int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
   if (timeshift_filemgr_get_root(buf, len))
     return 1;
   snprintf(buf+strlen(buf), len-strlen(buf), "/%d", index);
-  return makedirs(buf, 0700, -1, -1);
+  return makedirs("timeshift", buf, 0700, 0, -1, -1);
 }
 
 /*
