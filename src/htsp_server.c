@@ -452,10 +452,10 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
  * Simple function to respond with an error
  */
 static htsmsg_t *
-htsp_error(const char *err)
+htsp_error(htsp_connection_t *htsp, const char *errstr)
 {
   htsmsg_t *r = htsmsg_create_map();
-  htsmsg_add_str(r, "error", err);
+  htsmsg_add_str(r, "error", tvh_gettext_lang(htsp->htsp_language, errstr));
   return r;
 }
 
@@ -511,7 +511,7 @@ htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
 
 #define HTSP_CHECK_CHANNEL_ACCESS(htsp, ch)\
 if (!htsp_user_access_channel(htsp, ch))\
-  return htsp_error("User cannot access this channel");
+  return htsp_error(htsp, N_("User cannot access this channel"));
 
 static const char *
 htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
@@ -704,7 +704,7 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
     fd = tvh_open(path, O_RDONLY, 0);
     tvhlog(LOG_DEBUG, "htsp", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
     if(fd == -1)
-      return htsp_error("Unable to open file");
+      return htsp_error(htsp, N_("Unable to open file"));
   }
 
   htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
@@ -1224,10 +1224,10 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
   const char *name, *lang;
 
   if(htsmsg_get_u32(in, "htspversion", &v))
-    return htsp_error("Missing argument 'htspversion'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if((name = htsmsg_get_str(in, "clientname")) == NULL)
-    return htsp_error("Missing argument 'clientname'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   r = htsmsg_create_map();
 
@@ -1304,7 +1304,7 @@ htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
       default:
         htsmsg_destroy(args2);
         htsmsg_destroy(ret);
-        return htsp_error("Bad request");
+        return htsp_error(htsp, N_("Bad request"));
     }
   } else if (resp) {
     /* Output response */
@@ -1325,7 +1325,7 @@ htsp_method_getDiskSpace(htsp_connection_t *htsp, htsmsg_t *in)
   int64_t bfree, bused, btotal;
 
   if (dvr_get_disk_space(&bfree, &bused, &btotal))
-    return htsp_error("Unable to stat path");
+    return htsp_error(htsp, N_("Unable to stat path"));
   
   out = htsmsg_create_map();
   htsmsg_add_s64(out, "freediskspace", bfree);
@@ -1347,17 +1347,17 @@ htsp_method_getSysTime(htsp_connection_t *htsp, htsmsg_t *in)
   struct tm serverLocalTime;
 
   if(gettimeofday(&tv, &tz) == -1)
-    return htsp_error("Unable to get system time"); 
+    return htsp_error(htsp, N_("Unable to get system time"));
 
   if (!localtime_r(&tv.tv_sec, &serverLocalTime))
-    return htsp_error("Unable to get system local time");
+    return htsp_error(htsp, N_("Unable to get system local time"));
 #if defined(HAS_GMTOFF)
   tz_offset = - serverLocalTime.tm_gmtoff / (60);
 #else
   // NB: This will be a day out when GMT offsets >= 13hrs or <11 hrs apply
   struct tm serverGmTime;
   if (!gmtime_r(&tv.tv_sec, &serverGmTime))
-    return htsp_error("Unable to get system gmt");
+    return htsp_error(htsp, N_("Unable to get system UTC time"));
   tz_offset = (serverGmTime.tm_hour - serverLocalTime.tm_hour) * 60;
   tz_offset += serverGmTime.tm_min - serverLocalTime.tm_min;
   if (tz_offset > 11 * 60)
@@ -1493,9 +1493,9 @@ htsp_method_getChannel(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *ch = NULL;
 
   if (htsmsg_get_u32(in, "channelId", &channelId))
-    return htsp_error("Missing argument 'channelId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
   if (!(ch = channel_find_by_id(channelId)))
-    return htsp_error("Channel does not exist");
+    return htsp_error(htsp, N_("Channel does not exist"));
 
   return htsp_build_channel(ch, NULL, htsp);
 }
@@ -1511,11 +1511,11 @@ htsp_method_getEvent(htsp_connection_t *htsp, htsmsg_t *in)
   const char *lang;
   
   if(htsmsg_get_u32(in, "eventId", &eventId))
-    return htsp_error("Missing argument 'eventId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
   lang = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
   if((e = epg_broadcast_find_by_id(eventId)) == NULL)
-    return htsp_error("Event does not exist");
+    return htsp_error(htsp, N_("Event does not exist"));
 
   return htsp_build_event(e, NULL, lang, 0, htsp);
 }
@@ -1537,14 +1537,14 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   /* Optional fields */
   if (!htsmsg_get_u32(in, "channelId", &u32))
     if (!(ch = channel_find_by_id(u32)))
-      return htsp_error("Channel does not exist");
+      return htsp_error(htsp, N_("Channel does not exist"));
   if (!htsmsg_get_u32(in, "eventId", &u32))
     if (!(e = epg_broadcast_find_by_id(u32)))
-      return htsp_error("Event does not exist");
+      return htsp_error(htsp, N_("Event does not exist"));
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   numFollowing = htsmsg_get_u32_or_default(in, "numFollowing", 0);
   maxTime      = htsmsg_get_s64_or_default(in, "maxTime", 0);
@@ -1605,7 +1605,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Required */
   if( (query = htsmsg_get_str(in, "query")) == NULL )
-    return htsp_error("Missing argument 'query'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   memset(&eq, 0, sizeof(eq));
 
@@ -1616,13 +1616,13 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   /* Optional */
   if(!(htsmsg_get_u32(in, "channelId", &u32))) {
     if (!(ch = channel_find_by_id(u32)))
-      return htsp_error("Channel does not exist");
+      return htsp_error(htsp, N_("Channel does not exist"));
     else
       eq.channel = strdup(idnode_uuid_as_str(&ch->ch_id, ubuf));
   }
   if(!(htsmsg_get_u32(in, "tagId", &u32))) {
     if (!(ct = htsp_channel_tag_find_by_identifier(htsp, u32)))
-      return htsp_error("Channel tag does not exist");
+      return htsp_error(htsp, N_("Channel tag does not exist"));
     else
       eq.channel_tag = strdup(idnode_uuid_as_str(&ct->ct_id, ubuf));
   }
@@ -1645,7 +1645,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Query */
   epg_query(&eq, htsp->htsp_granted_access);
@@ -1682,7 +1682,7 @@ htsp_method_getEpgObject(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Required fields */
   if (htsmsg_get_u32(in, "id", &id))
-    return htsp_error("Missing argument: id");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   /* Optional fields */
   if (!htsmsg_get_u32(in, "type", &u32) && (u32 <= EPG_TYPEMAX))
@@ -1692,11 +1692,11 @@ htsp_method_getEpgObject(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Get object */
   if (!(eo = epg_object_find_by_id(id, type)))
-    return htsp_error("Invalid EPG object request");
+    return htsp_error(htsp, N_("Invalid EPG object request"));
 
   /* Serialize */
   if (!(out = epg_object_serialize(eo)))
-    return htsp_error("Unknown: failed to serialize object");
+    return htsp_error(htsp, N_("Internal error"));
 
   return out;
 }
@@ -1784,18 +1784,18 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Manual timer */
   if (!e) {
     if (!ch)
-      return htsp_error("Channel does not exist");
+      return htsp_error(htsp, N_("Channel does not exist"));
 
     /* Required attributes */
     if (htsmsg_get_s64(in, "start", &start) ||
         htsmsg_get_s64(in, "stop", &stop) ||
         !(title = htsmsg_get_str(in, "title")))
-      return htsp_error("Invalid arguments");
+      return htsp_error(htsp, N_("Invalid arguments"));
 
     /* Optional attributes */
     if (!(subtitle = htsmsg_get_str(in, "subtitle")))
@@ -1853,23 +1853,23 @@ htsp_findDvrEntry(htsp_connection_t *htsp, htsmsg_t *in, htsmsg_t **out, int chn
   dvr_entry_t *de;
 
   if(htsmsg_get_u32(in, "id", &dvrEntryId)) {
-    *out = htsp_error("Missing argument 'id'");
+    *out = htsp_error(htsp, N_("Invalid arguments"));
     return NULL;
   }
 
   if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL) {
-    *out = htsp_error("id not found");
+    *out = htsp_error(htsp, N_("DVR entry not found"));
     return NULL;
   }
 
   if(dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
-    *out = htsp_error("User does not have access");
+    *out = htsp_error(htsp, N_("User does not have access"));
     return NULL;
   }
 
   /* Check access */
   if (chn && de->de_channel && !htsp_user_access_channel(htsp, de->de_channel)) {
-    *out = htsp_error("User does not have access");
+    *out = htsp_error(htsp, N_("User does not have access"));
     return NULL;
   }
 
@@ -1902,7 +1902,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Check access new channel */
   if (channel && !htsp_user_access_channel(htsp, channel))
-    return htsp_error("User does not have access to channel");
+    return htsp_error(htsp, N_("User does not have access to channel"));
 
   enabled     = htsmsg_get_s64_or_default(in, "enabled",    -1);
   dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
@@ -1995,7 +1995,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Options */
   if(!(str = htsmsg_get_str(in, "title")))
-    return htsp_error("Invalid arguments");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if (htsp->htsp_version > 24) {
     if (!htsmsg_get_s64(in, "channelId", &s64)) { // not sending or -1 = any channel
@@ -2010,7 +2010,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Check access channel */
   if (ch && !htsp_user_access_channel(htsp, ch))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Create autorec config from htsp and add */
   dae = dvr_autorec_create_htsp(serierec_convert(htsp, in, ch, 1, 1));
@@ -2042,17 +2042,17 @@ htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *ch = NULL;
 
   if (!(daeId = htsmsg_get_str(in, "id")))
-    return htsp_error("Missing argument 'id'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if((dae = dvr_autorec_find_by_uuid(daeId)) == NULL)
-    return htsp_error("id not found");
+    return htsp_error(htsp, N_("Automatic schedule entry not found"));
 
   if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 0))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Check access old channel*/
   if (dae->dae_channel && !htsp_user_access_channel(htsp, dae->dae_channel))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Do we have a channel? No = keep old one */
   if (!htsmsg_get_s64(in, "channelId", &s64)) //s64 -> -1 = any channel
@@ -2062,7 +2062,7 @@ htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
     /* Check access new channel */
     if (ch && !htsp_user_access_channel(htsp, ch))
-      return htsp_error("User does not have access");
+      return htsp_error(htsp, N_("User does not have access"));
   }
 
   /* Update autorec config from htsp and save */
@@ -2082,17 +2082,17 @@ htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_autorec_entry_t *dae;
 
   if (!(daeId = htsmsg_get_str(in, "id")))
-    return htsp_error("Missing argument 'id'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if((dae = dvr_autorec_find_by_uuid(daeId)) == NULL)
-    return htsp_error("id not found");
+    return htsp_error(htsp, N_("Automatic schedule entry not found"));
 
   if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 0))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Check access */
   if (dae->dae_channel && !htsp_user_access_channel(htsp, dae->dae_channel))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   autorec_destroy_by_id(daeId, 1);
   
@@ -2115,7 +2115,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Options */
   if(!(str = htsmsg_get_str(in, "title")))
-    return htsp_error("Invalid arguments");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if (htsp->htsp_version > 24) {
     if (!htsmsg_get_s64(in, "channelId", &s64)) { // not sending or -1 = any channel
@@ -2130,7 +2130,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Check access channel */
   if (ch && !htsp_user_access_channel(htsp, ch))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Create timerec config from htsp and add */
   dte = dvr_timerec_create_htsp(serierec_convert(htsp, in, ch, 0, 1));
@@ -2161,17 +2161,17 @@ htsp_method_updateTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   channel_t *ch = NULL;
 
   if (!(dteId = htsmsg_get_str(in, "id")))
-    return htsp_error("Missing argument 'id'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if((dte = dvr_timerec_find_by_uuid(dteId)) == NULL)
-    return htsp_error("id not found");
+    return htsp_error(htsp, N_("Automatic time scheduler entry not found"));
 
   if(dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 0))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Check access old channel */
   if (dte->dte_channel && !htsp_user_access_channel(htsp, dte->dte_channel))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Do we have a channel? No = keep old one */
   if (!htsmsg_get_s64(in, "channelId", &s64)) //s64 -> -1 = any channel
@@ -2181,7 +2181,7 @@ htsp_method_updateTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
     /* Check access new channel */
     if (ch && !htsp_user_access_channel(htsp, ch))
-      return htsp_error("User does not have access");
+      return htsp_error(htsp, N_("User does not have access"));
   }
 
   /* Update timerec config from htsp and save */
@@ -2200,17 +2200,17 @@ htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   dvr_timerec_entry_t *dte;
 
   if (!(dteId = htsmsg_get_str(in, "id")))
-    return htsp_error("Missing argument 'id'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if((dte = dvr_timerec_find_by_uuid(dteId)) == NULL)
-    return htsp_error("id not found");
+    return htsp_error(htsp, N_("Automatic time scheduler entry not found"));
 
   if(dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 0))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Check access */
   if (dte->dte_channel && !htsp_user_access_channel(htsp, dte->dte_channel))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   timerec_destroy_by_id(dteId, 1);
 
@@ -2240,17 +2240,17 @@ htsp_method_getDvrCutpoints(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t dvrEntryId;
   dvr_entry_t *de;
   if (htsmsg_get_u32(in, "id", &dvrEntryId))
-    return htsp_error("Missing argument 'id'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL)
-    return htsp_error("id not found");
+    return htsp_error(htsp, N_("DVR schedule not found"));
 
   if(dvr_entry_verify(de, htsp->htsp_granted_access, 1))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   /* Check access */
   if (!htsp_user_access_channel(htsp, de->de_channel))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   htsmsg_t *msg = htsmsg_create_map();
 
@@ -2291,22 +2291,22 @@ htsp_method_getTicket(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(!htsmsg_get_u32(in, "channelId", &id)) {
     if (!(ch = channel_find_by_id(id)))
-      return htsp_error("Invalid channelId");
+      return htsp_error(htsp, N_("Channel not found"));
     if (!htsp_user_access_channel(htsp, ch))
-      return htsp_error("User does not have access");
+      return htsp_error(htsp, N_("User does not have access"));
 
     snprintf(path, sizeof(path), "/stream/channelid/%d", id);
     ticket = access_ticket_create(path, htsp->htsp_granted_access);
   } else if(!htsmsg_get_u32(in, "dvrId", &id)) {
     if (!(de = dvr_entry_find_by_id(id)))
-      return htsp_error("DVR entry does not exist");
+      return htsp_error(htsp, N_("DVR schedule does not exist"));
     if (!htsp_user_access_channel(htsp, de->de_channel))
-      return htsp_error("User does not have access");
+      return htsp_error(htsp, N_("User does not have access"));
 
     snprintf(path, sizeof(path), "/dvrfile/%d", id);
     ticket = access_ticket_create(path, htsp->htsp_granted_access);
   } else {
-    return htsp_error("Missing argument 'channelId' or 'dvrId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
   }
 
   out = htsmsg_create_map();
@@ -2342,19 +2342,19 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   profile_t *pro;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   if(!htsmsg_get_u32(in, "channelId", &chid)) {
     if((ch = channel_find_by_id(chid)) == NULL)
-      return htsp_error("Requested channel does not exist");
+      return htsp_error(htsp, N_("Channel does not exist"));
   } else if((str = htsmsg_get_str(in, "channelName")) != NULL) {
     if((ch = channel_find_by_name(str)) == NULL)
-      return htsp_error("Requested channel does not exist");
+      return htsp_error(htsp, N_("Channel does not exist"));
   } else {
-    return htsp_error("Missing argument 'channelId' or 'channelName'");
+    return htsp_error(htsp, N_("Invalid arguments"));
   }
   if (!htsp_user_access_channel(htsp, ch))
-    return htsp_error("User does not have access");
+    return htsp_error(htsp, N_("User does not have access"));
 
   weight = htsmsg_get_u32_or_default(in, "weight", 0);
   req90khz = htsmsg_get_u32_or_default(in, "90khz", 0);
@@ -2398,7 +2398,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
     tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", profile_get_name(pro));
     profile_chain_close(&hs->hs_prch);
     free(hs);
-    return htsp_error("Stream setup error");
+    return htsp_error(htsp, N_("Stream setup error"));
   }
 
   /*
@@ -2454,7 +2454,7 @@ htsp_method_unsubscribe(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t sid;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   LIST_FOREACH(s, &htsp->htsp_subscriptions, hs_link)
     if(s->hs_sid == sid)
@@ -2483,7 +2483,7 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t sid, weight;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   weight = htsmsg_get_u32_or_default(in, "weight", 0);
 
@@ -2492,7 +2492,7 @@ htsp_method_change_weight(htsp_connection_t *htsp, htsmsg_t *in)
       break;
   
   if(hs == NULL)
-    return htsp_error("Requested subscription does not exist");
+    return htsp_error(htsp, N_("Subscription does not exist"));
 
   htsp_reply(htsp, in, htsmsg_create_map());
 
@@ -2512,14 +2512,14 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   streaming_skip_t skip;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
       break;
 
   if(hs == NULL)
-    return htsp_error("Requested subscription does not exist");
+    return htsp_error(htsp, N_("Subscription does not exist"));
 
   abs = htsmsg_get_u32_or_default(in, "absolute", 0);
 
@@ -2534,7 +2534,7 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
     skip.size = s64;
     tvhtrace("htsp-sub", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
   } else {
-    return htsp_error("Missing argument 'time' or 'size'");
+    return htsp_error(htsp, N_("Invalid arguments"));
   }
 
   subscription_set_skip(hs->hs_s, &skip);
@@ -2554,16 +2554,16 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
   int32_t speed;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
   if(htsmsg_get_s32(in, "speed", &speed))
-    return htsp_error("Missing argument 'speed'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
       break;
 
   if(hs == NULL)
-    return htsp_error("Requested subscription does not exist");
+    return htsp_error(htsp, N_("Subscription does not exist"));
 
   tvhtrace("htsp-sub", "speed: %d", speed);
   subscription_set_speed(hs->hs_s, speed);
@@ -2583,14 +2583,14 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
   streaming_skip_t skip;
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
       break;
 
   if(hs == NULL)
-    return htsp_error("Requested subscription does not exist");
+    return htsp_error(htsp, N_("Subscription does not exist"));
 
   memset(&skip, 0, sizeof(skip));
   skip.type = SMT_SKIP_LIVE;
@@ -2611,14 +2611,14 @@ htsp_method_filter_stream(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t sid;
   htsmsg_t *l;
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
-    return htsp_error("Missing argument 'subscriptionId'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
     if(hs->hs_sid == sid)
       break;
 
   if(hs == NULL)
-    return htsp_error("Requested subscription does not exist");
+    return htsp_error(htsp, N_("Subscription does not exist"));
 
   if((l = htsmsg_get_list(in, "enable")) != NULL) {
     htsmsg_field_t *f;
@@ -2650,7 +2650,7 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 
 
   if((str = htsmsg_get_str(in, "file")) == NULL)
-    return htsp_error("Missing argument 'file'");
+    return htsp_error(htsp, N_("Invalid arguments"));
 
   // optional leading slash
   if (*str == '/')
@@ -2660,29 +2660,29 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
      (s2 = tvh_strbegins(str, "dvrfile/")) != NULL) {
     dvr_entry_t *de = dvr_entry_find_by_id(atoi(s2));
     if(de == NULL)
-      return htsp_error("DVR entry does not exist");
+      return htsp_error(htsp, N_("DVR schedule does not exist"));
 
     if (dvr_entry_verify(de, htsp->htsp_granted_access, 1))
-      return htsp_error("User does not have access");
+      return htsp_error(htsp, N_("User does not have access"));
 
     if (!htsp_user_access_channel(htsp, de->de_channel))
-      return htsp_error("User does not have access");
+      return htsp_error(htsp, N_("User does not have access"));
 
     filename = dvr_get_filename(de);
 
     if (filename == NULL)
-      return htsp_error("DVR entry does not have a file yet");
+      return htsp_error(htsp, N_("DVR schedule does not have a file yet"));
 
     return htsp_file_open(htsp, filename, 0);
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
     int fd = imagecache_open(atoi(s2));
     if (fd < 0)
-      return htsp_error("failed to open image");
+      return htsp_error(htsp, N_("Failed to open image"));
     return htsp_file_open(htsp, str, fd);
 
   } else {
-    return htsp_error("Unknown file");
+    return htsp_error(htsp, N_("Unknown file"));
   }
 }
 
@@ -2700,10 +2700,10 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   int fd;
 
   if(hf == NULL)
-    return htsp_error("Unknown file id");
+    return htsp_error(htsp, N_("Invalid file"));
 
   if(htsmsg_get_s64(in, "size", &size))
-    return htsp_error("Missing field 'size'");
+    return htsp_error(htsp, N_("Invalid parameters"));
 
   fd = hf->hf_fd;
 
@@ -2719,14 +2719,14 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
   /* Read */
   void *m = malloc(size);
   if(m == NULL) {
-    e = "Too big segment";
+    e = N_("Not enough memory");
     goto error;
   }
 
   int r = read(fd, m, size);
   if(r < 0) {
     free(m);
-    e = "Read error";
+    e = N_("Read error");
     goto error;
   }
 
@@ -2736,7 +2736,7 @@ htsp_method_file_read(htsp_connection_t *htsp, htsmsg_t *in)
 
 error:
   pthread_mutex_lock(&global_lock);
-  return e ? htsp_error(e) : rep;
+  return e ? htsp_error(htsp, e) : rep;
 }
 
 /**
@@ -2748,7 +2748,7 @@ htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
   htsp_file_t *hf = htsp_file_find(htsp, in);
 
   if(hf == NULL)
-    return htsp_error("Unknown file id");
+    return htsp_error(htsp, N_("Invalid file"));
 
   htsp_file_destroy(hf);
   return htsmsg_create_map();
@@ -2766,7 +2766,7 @@ htsp_method_file_stat(htsp_connection_t *htsp, htsmsg_t *in)
   int fd;
 
   if(hf == NULL)
-    return htsp_error("Unknown file id");
+    return htsp_error(htsp, N_("Invalid file"));
 
   fd = hf->hf_fd;
 
@@ -2794,10 +2794,10 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
   int fd, whence;
 
   if(hf == NULL)
-    return htsp_error("Unknown file id");
+    return htsp_error(htsp, N_("Invalid file"));
 
   if (htsmsg_get_s64(in, "offset", &off))
-    return htsp_error("Missing field 'offset'");
+    return htsp_error(htsp, N_("Invalid parameters"));
 
   if ((str = htsmsg_get_str(in, "whence"))) {
     if (!strcmp(str, "SEEK_SET"))
@@ -2807,7 +2807,7 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
     else if (!strcmp(str, "SEEK_END"))
       whence = SEEK_END;
     else
-      return htsp_error("Field 'whence' contained invalid value");
+      return htsp_error(htsp, N_("Invalid parameters"));
   } else {
     whence = SEEK_SET;
   }
@@ -2817,7 +2817,7 @@ htsp_method_file_seek(htsp_connection_t *htsp, htsmsg_t *in)
 
   if ((off = lseek(fd, off, whence)) < 0) {
     pthread_mutex_lock(&global_lock);
-    return htsp_error("Seek error");
+    return htsp_error(htsp, N_("Seek error"));
   }
 
   rep = htsmsg_create_map();
@@ -3104,11 +3104,11 @@ readmsg:
       }
 
       if(i == NUM_METHODS) {
-        reply = htsp_error("Method not found");
+        reply = htsp_error(htsp, N_("Method not found"));
       }
 
     } else {
-      reply = htsp_error("No 'method' argument");
+      reply = htsp_error(htsp, N_("Invalid arguments"));
     }
 
     pthread_mutex_unlock(&global_lock);
