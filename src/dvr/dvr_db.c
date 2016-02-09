@@ -2835,13 +2835,14 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "start_extra",
       .name     = N_("Pre-recording padding"),
-      .desc     = N_("Start recording earlier than the EPG/timer defined "
-                     "start time by x minutes, for example if a program "
-                     "is to start at 13:00 and you set a padding of 5 "
-                     "minutes it will start recording at 12:54:30 "
-                     "(including a warming-up time of 30 seconds). If this "
-                     "isn't set the pre-recording padding if set in the "
-                     "channel or DVR profile will be used."),
+      .desc     = N_("Start recording earlier than the "
+                     "EPG/timer-defined start time by x minutes: for "
+                     "example, if a program is to start at 13:00 and "
+                     "you set a padding of 5 minutes, it will start "
+                     "recording at 12:54:30 (including a warm-up time "
+                     "of 30 seconds). If this isn't specified, any "
+                     "pre-recording padding as set in the channel or "
+                     "DVR profile will be used."),
       .off      = offsetof(dvr_entry_t, de_start_extra),
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
@@ -2888,7 +2889,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "duration",
       .name     = N_("Duration"),
-      .desc     = N_("The total recording time including pre and post "
+      .desc     = N_("The total recording time including pre- and post-"
                      "recording padding."),
       .get      = dvr_entry_class_duration_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_DURATION,
@@ -3027,7 +3028,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "creator",
       .name     = N_("Creator"),
-      .desc     = N_("The user who created the recording or the "
+      .desc     = N_("The user who created the recording, or the "
                      "auto-recording source and IP address if scheduled "
                      "by a matching rule."),
       .off      = offsetof(dvr_entry_t, de_creator),
@@ -3086,7 +3087,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_BOOL,
       .id       = "noresched",
       .name     = N_("Don't reschedule"),
-      .desc     = N_("Don`t re-schedule if recording fails."),
+      .desc     = N_("Don't re-schedule if recording fails."),
       .off      = offsetof(dvr_entry_t, de_dont_reschedule),
       .opts     = PO_HIDDEN | PO_NOUI,
     },
@@ -3094,7 +3095,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_BOOL,
       .id       = "norerecord",
       .name     = N_("Don't re-record"),
-      .desc     = N_("Don`t re-record if recording fails."),
+      .desc     = N_("Don't re-record if recording fails."),
       .off      = offsetof(dvr_entry_t, de_dont_rerecord),
       .opts     = PO_HIDDEN | PO_ADVANCED,
     },
@@ -3119,7 +3120,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "timerec",
       .name     = N_("Auto time record"),
-      .desc     = N_("Timer based automatic recording."),
+      .desc     = N_("Timer-based automatic recording."),
       .set      = dvr_entry_class_timerec_set,
       .get      = dvr_entry_class_timerec_get,
       .opts     = PO_RDONLY | PO_EXPERT,
@@ -3128,7 +3129,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "timerec_caption",
       .name     = N_("Time record caption"),
-      .desc     = N_("Timer based automatic record caption."),
+      .desc     = N_("Timer-based automatic record caption."),
       .get      = dvr_entry_class_timerec_caption_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_NOUI,
     },

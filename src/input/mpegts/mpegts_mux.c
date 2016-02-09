@@ -530,7 +530,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Name"),
-      .desc     = N_("The name (or freq) the mux is on."),
+      .desc     = N_("The name (or frequency) the mux is on."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_name,
     },

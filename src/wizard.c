@@ -170,12 +170,12 @@ and EPG language(s).\n\n\
 **This wizard should be run only on the initial setup. Please, cancel \
 it, if you are not willing to touch the current configuration.**\
 \
-\n\n**Notes**: \
-If you cannot see your preferred language in the language list and would \
+\n\n**Notes**:\n \
+* If you cannot see your preferred language in the language list and would \
 like to help translate Tvheadend see \
 [here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n\
-If you don't enter a preferred language, US English will be used as a default.\n\
-Not selecting the correct EPG \
+* If you don't enter a preferred language, US English will be used as a default.\n\
+* Not selecting the correct EPG \
 language can result in garbled EPG text; if this happens, don't panic, \
 as you can easily change it later.\n\
 "))
@@ -198,8 +198,8 @@ wizard_page_t *wizard_hello(const char *lang)
       .id       = "ui_lang",
       .name     = N_("Language"),
       .desc     = N_("Select the default user interface language. "
-                     "This can be overridden later in access entries "
-                     "on a per user basis."),
+                     "This can be overridden later in \"Access Entries\" "
+                     "on a per-user basis."),
       .get      = wizard_get_value_ui_lang,
       .set      = wizard_set_value_ui_lang,
       .list     = language_get_ui_list,
@@ -390,16 +390,16 @@ or 0.0.0.0/0 or empty value for access from any system.\n\
 This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
-\n\n**Notes**: \
-You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
+\n\n**Notes**:\n \
+* You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
 if you were asked to enter a username and password during installation, \
 we'd recommend not using the same details for a user here as it may cause \
 unexpected behavior, incorrect permissions etc.\n\
-To allow anonymous access for any account (administrative or regular user) enter \
+* To allow anonymous access for any account (administrative or regular user) enter \
 an asterisk (*) in the username and password fields. ___It is not___ \
 recommended that you allow anonymous access to the admin account.\n\
-If you plan on accessing Tvheadend over the Internet, make sure you use \
-strong credentials and ___do not allow anonymous access at all___.\n\n\
+* If you plan on accessing Tvheadend over the Internet, make sure you use \
+strong credentials and ___do not allow anonymous access at all___.\n\
 "))
 
 wizard_page_t *wizard_login(const char *lang)
@@ -653,10 +653,27 @@ NETWORK_FCN(5)
 NETWORK_FCN(6)
 
 DESCRIPTION_FCN(network, N_("\
-Select network type for detected tuners.\n\
-The T means terresterial, C is cable and S is satellite.\n\
-If you do not assign a network type to the tuner, the tuner\
-will not be used in TVH.\
+Now let's get your tuners configured. Go ahead and select a network for \
+each of the tuners you would like to use. if you do not assign a \
+network to a tuner it will __not__ be used.\n\
+\
+**Selecting the Right Network**:\n\
+Many tuners are able to receive different signal types. If you normally \
+receive your channels through an antenna (also known as an aerial) then \
+you would select the network under the tuners with DVB-T/ATSC-T/ISDB-T \
+in the name.\n\
+\
+If you receive your channels through a satellite dish then you would \
+select the network under the tuners with DVB-S/S2 in the name.\n\
+\
+If you receive your channels via a cable then you would select the network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\
+\
+**Notes**:\n\
+* Tuners already in use will not appear below.\n\
+* If using IPTV, the playlist you enter must contain valid links to \
+streams using codecs supported by Tvheadend.\n\
+* If you've configured Tvheadend before running this wizard, changes \
+you make via this wizard may not be applied.\
 "))
 
 
@@ -1170,15 +1187,15 @@ static void channels_save(idnode_t *in)
 }
 
 DESCRIPTION_FCN(channels, N_("\
-You are finished now.\n\
-You may further customize your settings by editing channel numbers etc.\n\
+You are now finished.\n\
+You may further customize your settings by editing channel numbers, etc.\n\
 If you confirm this dialog, the default administrator account will be\
-removed! Please, use credentals you defined through this wizard!\
+removed. Please then use credentals you defined thru this wizard.\
 "))
 
 DESCRIPTION_FCN(channels2, N_("\
-You are finished now.\n\
-You may further customize your settings by editing channel numbers etc.\
+You are now finished.\n\
+You may further customize your settings by editing channel numbers, etc.\
 "))
 
 wizard_page_t *wizard_channels(const char *lang)

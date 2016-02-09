@@ -679,7 +679,7 @@ const idclass_t tvhlog_conf_class = {
       .type   = PT_BOOL,
       .id     = "trace",
       .name   = N_("Debug trace (low-level)"),
-      .desc   = N_("Enable/disable including of low level debug traces."),
+      .desc   = N_("Enable/disable inclusion of low-level debug traces."),
       .get    = tvhlog_class_trace_get,
       .set    = tvhlog_class_trace_set,
 #if !ENABLE_TRACE
