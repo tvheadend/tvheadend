@@ -323,7 +323,7 @@ const idclass_t mpegts_input_class =
       .id       = "linked",
       .name     = N_("Linked input"),
       .desc     = N_("Wake up the linked input whenever this adapter "
-                     "is used. The subscriptions are named as “keep”. "
+                     "is used. The subscriptions are named as \"keep\". "
                      "Note that this isn't normally needed, and is here "
                      "simply as a workaround to driver bugs in certain "
                      "dual tuner cards that otherwise lock the second tuner."),

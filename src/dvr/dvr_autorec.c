@@ -1033,7 +1033,7 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "channel",
       .name     = N_("Channel"),
       .desc     = N_("The channel on which this rule applies, i.e. the "
-                     "channel you’re aiming to record."),
+                     "channel you're aiming to record."),
       .set      = dvr_autorec_entry_class_channel_set,
       .get      = dvr_autorec_entry_class_channel_get,
       .rend     = dvr_autorec_entry_class_channel_rend,
@@ -1075,8 +1075,8 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_STR,
       .id       = "start",
       .name     = N_("Start after"),
-      .desc     = N_("An event which starts between this “start after” "
-                     "and “start before” will be matched (including "
+      .desc     = N_("An event which starts between this \"start after\" "
+                     "and \"start before\" will be matched (including "
                      "boundary values)."),
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
@@ -1087,8 +1087,8 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_STR,
       .id       = "start_window",
       .name     = N_("Start before"),
-      .desc     = N_("An event which starts between this “start after” "
-                     "and “start before” will be matched (including "
+      .desc     = N_("An event which starts between this \"start after\" "
+                     "and \"start before\" will be matched (including "
                      "boundary values)."),
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,

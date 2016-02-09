@@ -869,7 +869,7 @@ const idclass_t dvr_config_class = {
       .id       = "cache",
       .name     = N_("Cache scheme"),
       .desc     = N_("The cache scheme to use/used to store recordings. "
-                     "Leave as “system” unless you have a special use "
+                     "Leave as \"system\" unless you have a special use "
                      "case for one of the others. See Help for details."),
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
@@ -1134,8 +1134,8 @@ const idclass_t dvr_config_class = {
       .id       = "channel-dir",
       .name     = N_("Make subdirectories per channel"),
       .desc     = N_("Create a directory per channel when "
-                     "storing recordings. If both this and the ‘directory "
-                     "per day’ checkbox is enabled, the date-directory "
+                     "storing recordings. If both this and the 'directory "
+                     "per day' checkbox is enabled, the date-directory "
                      "will be parent to the per-channel directory."),
       .off      = offsetof(dvr_config_t, dvr_channel_dir),
       .opts     = PO_EXPERT,
