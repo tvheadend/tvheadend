@@ -145,7 +145,8 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
         sscanf(s, "%dx%d", &width, &height);
       if (htsmsg_get_str(item, "m3u-url"))
         if ((width == 0 && sel_bandwidth < bandwidth) ||
-            (bandwidth > 200000 && sel_width < width && sel_height < height)) {
+            (bandwidth > 200000 && sel_width < width && sel_height < height) ||
+            (sel == NULL && bandwidth > 1000)) {
           sel = item;
           sel_bandwidth = bandwidth;
           sel_width = width;

@@ -199,6 +199,7 @@ multi:
       t = htsmsg_create_map();
       delim = 0;
       while (*data && delim != '\n' && delim != '\r') {
+        while (*data && *data <= ' ') data++;
         p = data;
         while (*data && *data >= ' ' && *data != '=') data++;
         if (*data == '=') {
