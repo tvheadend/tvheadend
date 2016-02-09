@@ -1938,7 +1938,7 @@ htsp_method_stopDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (de == NULL)
     return out;
 
-  dvr_entry_cancel(de, 0);
+  dvr_entry_stop(de);
 
   return htsp_success();
 }
