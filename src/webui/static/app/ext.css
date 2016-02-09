@@ -600,6 +600,14 @@
     background-image: url(../icons/accept.png) !important;
 }
 
+.movetofinished {
+    background-image: url(../icons/accept.png) !important;
+}
+
+.movetofailed {
+    background-image: url(../icons/exclamation.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;

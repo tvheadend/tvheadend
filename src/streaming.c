@@ -424,6 +424,8 @@ streaming_code2txt(int code)
     return N_("User limit reached");
   case SM_CODE_WEAK_STREAM:
     return N_("Weak stream");
+  case SM_CODE_USER_REQUEST:
+    return N_("User request");
 
   case SM_CODE_NO_FREE_ADAPTER:
     return N_("No free adapter");

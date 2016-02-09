@@ -368,11 +368,41 @@ tvheadend.dvr_finished = function(panel, index) {
         }
     };
 
+    var moveButton = {
+        name: 'move',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Mark the selected recording as failed'),
+                iconCls: 'movetofailed',
+                text: _('Move to failed'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/dvr/entry/move/failed',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+
     function selected(s, abuttons) {
         var r = s.getSelections();
         var b = r.length > 0 && r[0].data.filesize > 0;
         abuttons.download.setDisabled(!b);
         abuttons.rerecord.setDisabled(!b);
+        abuttons.move.setDisabled(!b);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -414,7 +444,7 @@ tvheadend.dvr_finished = function(panel, index) {
                            '?title=' + encodeURIComponent(title) + '">' + _('Play') + '</a>';
                 }
             }],
-        tbar: [downloadButton, rerecordButton],
+        tbar: [downloadButton, rerecordButton, moveButton],
         selected: selected,
         help: function() {
             new tvheadend.help(_('DVR - Finished Recordings'), 'dvr_finished.html');
@@ -479,11 +509,41 @@ tvheadend.dvr_failed = function(panel, index) {
         }
     };
 
+    var moveButton = {
+        name: 'move',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Mark the selected recording as finished'),
+                iconCls: 'movetofinished',
+                text: _('Move to finished'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/dvr/entry/move/finished',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+
     function selected(s, abuttons) {
         var r = s.getSelections();
         var b = r.length > 0 && r[0].data.filesize > 0;
         abuttons.download.setDisabled(!b);
         abuttons.rerecord.setDisabled(r.length <= 0);
+        abuttons.move.setDisabled(r.length <= 0);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -525,7 +585,7 @@ tvheadend.dvr_failed = function(panel, index) {
                            '?title=' + encodeURIComponent(title) + '">' + _('Play') + '</a>';
                 }
             }],
-        tbar: [downloadButton, rerecordButton],
+        tbar: [downloadButton, rerecordButton, moveButton],
         selected: selected,
         help: function() {
             new tvheadend.help(_('DVR - Failed Recordings'), 'dvr_failed.html');

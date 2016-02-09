@@ -3399,6 +3399,16 @@ dvr_entry_set_rerecord(dvr_entry_t *de, int cmd)
 /**
  *
  */
+void
+dvr_entry_move(dvr_entry_t *de, int failed)
+{
+  if(de->de_sched_state == DVR_COMPLETED)
+    dvr_entry_completed(de, failed ? SM_CODE_USER_REQUEST : SM_CODE_OK);
+}
+
+/**
+ *
+ */
 dvr_entry_t *
 dvr_entry_stop(dvr_entry_t *de)
 {
