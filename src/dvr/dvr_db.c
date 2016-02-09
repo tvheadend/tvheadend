@@ -1481,10 +1481,11 @@ dvr_timer_remove_files(void *aux)
 #define DVR_UPDATED_EID          (1<<14)
 #define DVR_UPDATED_BROADCAST    (1<<15)
 #define DVR_UPDATED_EPISODE      (1<<16)
+#define DVR_UPDATED_CONFIG       (1<<17)
 
 static char *dvr_updated_str(char *buf, size_t buflen, int flags)
 {
-  static const char *x = "ecoOsStumdpgrviBE";
+  static const char *x = "ecoOsStumdpgrviBEC";
   const char *p = x;
   char *w = buf, *end = buf + buflen;
 
@@ -1502,7 +1503,8 @@ static char *dvr_updated_str(char *buf, size_t buflen, int flags)
  *
  */
 static dvr_entry_t *_dvr_entry_update
-  ( dvr_entry_t *de, int enabled, epg_broadcast_t *e, channel_t *ch,
+  ( dvr_entry_t *de, int enabled, const char *dvr_config_uuid,
+    epg_broadcast_t *e, channel_t *ch,
     const char *title, const char *subtitle, const char *desc,
     const char *lang, time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
@@ -1535,6 +1537,12 @@ static dvr_entry_t *_dvr_entry_update
       save |= DVR_UPDATED_STOP_EXTRA;
     }
     goto dosave;
+  }
+
+  /* Configuration */
+  if (dvr_config_uuid) {
+    de->de_config = dvr_config_find_by_name_default(dvr_config_uuid);
+    save |= DVR_UPDATED_CONFIG;
   }
 
   /* Channel */
@@ -1664,14 +1672,16 @@ dosave:
  */
 dvr_entry_t * 
 dvr_entry_update
-  ( dvr_entry_t *de, int enabled, channel_t *ch,
+  ( dvr_entry_t *de, int enabled,
+    const char *dvr_config_uuid, channel_t *ch,
     const char *title, const char *subtitle,
     const char *desc, const char *lang,
     time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
     dvr_prio_t pri, int retention, int removal )
 {
-  return _dvr_entry_update(de, enabled, NULL, ch, title, subtitle, desc, lang,
+  return _dvr_entry_update(de, enabled, dvr_config_uuid,
+                           NULL, ch, title, subtitle, desc, lang,
                            start, stop, start_extra, stop_extra,
                            pri, retention, removal);
 }
@@ -1730,7 +1740,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                    epg_broadcast_get_title(e2, NULL),
                    channel_get_name(ch),
                    e2->start, e2->stop);
-          _dvr_entry_update(de, -1, e2, NULL, NULL, NULL, NULL, NULL,
+          _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
                             0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
           return;
         }
@@ -1773,7 +1783,7 @@ void dvr_event_updated(epg_broadcast_t *e)
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
     if (de->de_bcast != e)
       continue;
-    _dvr_entry_update(de, -1, e, NULL, NULL, NULL, NULL,
+    _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
                       NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
     found++;
   }
@@ -1790,7 +1800,7 @@ void dvr_event_updated(epg_broadcast_t *e)
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel),
                  e->start, e->stop);
-        _dvr_entry_update(de, -1, e, NULL, NULL, NULL, NULL,
+        _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
                           NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
         break;
       }

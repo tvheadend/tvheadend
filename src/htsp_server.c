@@ -641,6 +641,12 @@ serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int autor
     htsmsg_add_str(conf, "config_name", str ?: "");
     htsmsg_add_str(conf, "owner",   htsp->htsp_granted_access->aa_username ?: "");
     htsmsg_add_str(conf, "creator", htsp->htsp_granted_access->aa_representative ?: "");
+  } else {
+    str = htsmsg_get_str(in, "configName");
+    if (str) {
+      str = htsp_dvr_config_name(htsp, str);
+      htsmsg_add_str(conf, "config_name", str ?: "");
+    }
   }
 
   /* Weekdays only if present */
@@ -1881,7 +1887,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   uint32_t u32;
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra, priority, retention, removal;
-  const char *title, *subtitle, *desc, *lang;
+  const char *dvr_config_name, *title, *subtitle, *desc, *lang;
   channel_t *channel = NULL;
   int enabled;
 
@@ -1899,6 +1905,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error("User does not have access to channel");
 
   enabled     = htsmsg_get_s64_or_default(in, "enabled",    -1);
+  dvr_config_name = htsp_dvr_config_name(htsp, htsmsg_get_str(in, "configName"));
   start       = htsmsg_get_s64_or_default(in, "start",      0);
   stop        = htsmsg_get_s64_or_default(in, "stop",       0);
   start_extra = htsmsg_get_s64_or_default(in, "startExtra", 0);
@@ -1911,8 +1918,9 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  de = dvr_entry_update(de, enabled, channel, title, subtitle, desc, lang, start, stop,
-                        start_extra, stop_extra, priority, retention, removal);
+  de = dvr_entry_update(de, enabled, dvr_config_name, channel, title, subtitle,
+                        desc, lang, start, stop, start_extra, stop_extra,
+                        priority, retention, removal);
 
   return htsp_success();
 }
