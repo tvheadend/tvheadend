@@ -668,7 +668,7 @@ const idclass_t tvhlog_conf_class = {
       .type   = PT_STR,
       .id     = "debugsubs",
       .name   = N_("Debug subsystems"),
-      .desc   = N_("Enter comma separated list of subsystems you want "
+      .desc   = N_("Enter comma-separated list of subsystems you want "
                    "debugging output for (e.g "
                    "+linuxdvb,+subscriptions,+mpegts)."),
       .get    = tvhlog_class_debugsubs_get,
@@ -691,7 +691,7 @@ const idclass_t tvhlog_conf_class = {
       .type   = PT_STR,
       .id     = "tracesubs",
       .name   = N_("Trace subsystems"),
-      .desc   = N_("Enter comma separated list of subsystems you want "
+      .desc   = N_("Enter comma-separated list of subsystems you want "
                    "to get traces for (e.g +linuxdvb,+subscriptions,+mpegts)."),
       .get    = tvhlog_class_tracesubs_get,
       .set    = tvhlog_class_tracesubs_set,

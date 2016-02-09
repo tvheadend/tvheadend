@@ -1442,7 +1442,7 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .id       = "prefix",
       .name     = N_("Allowed networks"),
-      .desc     = N_("List of allowed IPv4 or IPv6 hosts or networks (comma separated)."),
+      .desc     = N_("List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."),
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
       .opts     = PO_ADVANCED
@@ -2026,7 +2026,7 @@ const idclass_t ipblock_entry_class = {
       .id       = "prefix",
       .name     = N_("Network prefix"),
       .desc     = N_("The network prefix(es) to block, "
-                     "e.g.192.168.2.0/24 (comma separated list)."),
+                     "e.g.192.168.2.0/24 (comma-separated list)."),
       .set      = ipblock_entry_class_prefix_set,
       .get      = ipblock_entry_class_prefix_get,
     },
