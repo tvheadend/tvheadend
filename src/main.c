@@ -686,7 +686,7 @@ main(int argc, char **argv)
       OPT_BOOL, &opt_dbus_session },
 #endif
 #if ENABLE_LINUXDVB
-    { 'a', "adapters",  N_("Only use specified DVB adapters (comma separated, -1 = none)"),
+    { 'a', "adapters",  N_("Only use specified DVB adapters (comma-separated, -1 = none)"),
       OPT_STR, &opt_dvb_adapters },
 #endif
 #if ENABLE_SATIP_SERVER
