@@ -579,7 +579,7 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_STR,
       .id       = "start",
       .name     = N_("Start"),
-      .desc     = N_("Time to start the recording/Time the recording started."),
+      .desc     = N_("Time to start the recording/time the recording started."),
       .set      = dvr_timerec_entry_class_start_set,
       .get      = dvr_timerec_entry_class_start_get,
       .list     = dvr_timerec_entry_class_time_list,
@@ -590,7 +590,7 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_STR,
       .id       = "stop",
       .name     = N_("Stop"),
-      .desc     = N_("Time to stop recording/Time the recording stopped."),
+      .desc     = N_("Time to stop recording/time the recording stopped."),
       .set      = dvr_timerec_entry_class_stop_set,
       .get      = dvr_timerec_entry_class_stop_get,
       .list     = dvr_timerec_entry_class_time_list,
@@ -662,7 +662,7 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_STR,
       .id       = "creator",
       .name     = N_("Creator"),
-      .desc     = N_("The user who created the recording or the "
+      .desc     = N_("The user who created the recording, or the "
                      "auto-recording source and IP address if scheduled "
                      "by a matching rule."),
       .off      = offsetof(dvr_timerec_entry_t, dte_creator),

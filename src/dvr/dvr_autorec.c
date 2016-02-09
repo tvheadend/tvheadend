@@ -1006,9 +1006,9 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = N_("Directory"),
       .desc     = N_("When specified, this setting overrides the "
                      "subdirectory rules (except the base directory) "
-                     "specified by the DVR configuration and puts all "
-                     "recordings done by this entry into the specified "
-                     "subdirectory. See Help for more info."),
+                     "defined in the DVR configuration and puts all "
+                     "recordings done by this entry into the "
+                     "subdirectory named here. See Help for more info."),
       .off      = offsetof(dvr_autorec_entry_t, dae_directory),
     },
     {
@@ -1043,7 +1043,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_STR,
       .id       = "tag",
       .name     = N_("Channel tag"),
-      .desc     = N_("A channel tag (e.g. a group of channels) on which "
+      .desc     = N_("A channel tag (e.g. a group of channels) to which "
                      "this rule applies."),
       .set      = dvr_autorec_entry_class_tag_set,
       .get      = dvr_autorec_entry_class_tag_get,
@@ -1066,7 +1066,7 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "content_type",
       .name     = N_("Content type"),
       .desc     = N_("The content type (Movie/Drama, Sports, etc.) to "
-                     "be used to filter matching events/programmes."),
+                     "be used to filter matching events/programs."),
       .list     = dvr_autorec_entry_class_content_type_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
       .opts     = PO_ADVANCED
@@ -1120,7 +1120,7 @@ const idclass_t dvr_autorec_entry_class = {
       .islist   = 1,
       .id       = "weekdays",
       .name     = N_("Days of week"),
-      .desc     = N_("Days of the week which the rule should apply."),
+      .desc     = N_("Days of the week to which the rule should apply."),
       .set      = dvr_autorec_entry_class_weekdays_set,
       .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,
@@ -1132,7 +1132,7 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "minduration",
       .name     = N_("Minimum duration"),
       .desc     = N_("The minimal duration of a matching event - in "
-                     "other words, only match programmes that are no "
+                     "other words, only match programs that are no "
                      "shorter than this duration."),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
@@ -1261,7 +1261,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_STR,
       .id       = "creator",
       .name     = N_("Creator"),
-      .desc     = N_("The user who created the recording or the "
+      .desc     = N_("The user who created the recording, or the "
                      "auto-recording source and IP address if scheduled "
                      "by a matching rule."),
       .off      = offsetof(dvr_autorec_entry_t, dae_creator),

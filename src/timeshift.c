@@ -183,7 +183,7 @@ const idclass_t timeshift_conf_class = {
       .desc   = N_("Only activate timeshift when the client makes the first "
                    "rewind, fast-forward or pause request. Note, "
                    "because there is no buffer on the first request "
-                   "rewinding is not possible."),
+                   "rewinding is not possible at that point."),
       .off    = offsetof(timeshift_conf_t, ondemand),
     },
     {
@@ -229,7 +229,8 @@ const idclass_t timeshift_conf_class = {
       .name   = N_("Maximum RAM size (MB)"),
       .desc   = N_("The maximum RAM (system memory) size for timeshift "
                    "buffers. When free RAM buffers are available, they "
-                   "are used instead storage to save the timeshift data."),
+                   "are used for timeshift data in preference to using "
+                   "storage."),
       .set    = timeshift_conf_class_ram_size_set,
       .get    = timeshift_conf_class_ram_size_get,
     },

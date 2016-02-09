@@ -1511,8 +1511,8 @@ const idclass_t access_entry_class = {
       .islist   = 1,
       .id       = "profile",
       .name     = N_("Streaming profiles"),
-      .desc     = N_("The streaming profile to use/used, if not set the "
-                     "default will be used."),
+      .desc     = N_("The streaming profile to use/used. If not set, "
+                     "the default will be used."),
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
@@ -1547,7 +1547,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "all_rw_dvr",
       .name     = N_("All DVR (rw)"),
-      .desc     = N_("Allow/disallow read/write access to other users "
+      .desc     = N_("Allow/disallow read/write access to other users' "
                      "DVR entries."),
       .off      = offsetof(access_entry_t, ae_all_rw_dvr),
     },
@@ -1584,7 +1584,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "admin",
       .name     = N_("Admin"),
-      .desc     = N_("Allow/disallow access to the Configuration tab."),
+      .desc     = N_("Allow/disallow access to the 'Configuration' tab."),
       .off      = offsetof(access_entry_t, ae_admin),
     },
     {
@@ -1625,7 +1625,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "channel_tag_exclude",
       .name     = N_("Exclude channel tags"),
-      .desc     = N_("Enable excluding of user-config defined channel "
+      .desc     = N_("Enable exclusion of user-config defined channel "
                      "tags. This will prevent the user from accessing "
                      "channels associated with the tags selected (below)."),
       .off      = offsetof(access_entry_t, ae_chtags_exclude),
@@ -1872,8 +1872,8 @@ const idclass_t passwd_entry_class = {
       .type     = PT_STR,
       .id       = "username",
       .name     = N_("Username"),
-      .desc     = N_("Username of the entry. (this should match "
-                     "a username from within the Access Entries tab."),
+      .desc     = N_("Username of the entry (this should match a "
+                     "username from within the \"Access Entries\" tab."),
       .off      = offsetof(passwd_entry_t, pw_username),
     },
     {

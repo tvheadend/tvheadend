@@ -449,7 +449,7 @@ const idclass_t dvb_mux_dvbs_class =
       .type     = PT_U32,
       .id       = "frequency",
       .name     = N_("Frequency (kHz)"),
-      .desc     = N_("The frequency of the mux/transponder in Hertz,"),
+      .desc     = N_("The frequency of the mux/transponder in Hertz."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_freq),
       .set      = dvb_mux_dvbs_class_frequency_set,
     },

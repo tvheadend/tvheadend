@@ -1060,7 +1060,7 @@ const idclass_t profile_mpegts_pass_class =
       .id       = "rewrite_pmt",
       .name     = N_("Rewrite PMT"),
       .desc     = N_("Rewrite PMT (Program Map Table) packets to only "
-                     "include information about the currently streamed "
+                     "include information about the currently-streamed "
                      "service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
       .opts     = PO_ADVANCED,
@@ -1072,7 +1072,7 @@ const idclass_t profile_mpegts_pass_class =
       .id       = "rewrite_pat",
       .name     = N_("Rewrite PAT"),
       .desc     = N_("Rewrite PAT (Program Association Table) packets "
-                     "to only include information about the currently "
+                     "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
       .opts     = PO_ADVANCED,
@@ -1084,7 +1084,7 @@ const idclass_t profile_mpegts_pass_class =
       .id       = "rewrite_sdt",
       .name     = N_("Rewrite SDT"),
       .desc     = N_("Rewrite SDT (Service Description Table) packets "
-                     "to only include information about the currently "
+                     "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
       .opts     = PO_ADVANCED,
@@ -1096,7 +1096,7 @@ const idclass_t profile_mpegts_pass_class =
       .id       = "rewrite_eit",
       .name     = N_("Rewrite EIT"),
       .desc     = N_("Rewrite EIT (Event Information Table) packets "
-                     "to only include information about the currently "
+                     "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
       .opts     = PO_ADVANCED,
@@ -1778,7 +1778,7 @@ const idclass_t profile_transcode_class =
       .type     = PT_U32,
       .id       = "vbitrate",
       .name     = N_("Video bitrate (kb/s) (0=auto)"),
-      .desc     = N_("Bitrate to use for the transcode. See help for "
+      .desc     = N_("Bitrate to use for the transcode. See Help for "
                      "detailed information."),
       .off      = offsetof(profile_transcode_t, pro_vbitrate),
       .opts     = PO_ADVANCED,
@@ -1790,7 +1790,7 @@ const idclass_t profile_transcode_class =
       .id       = "acodec",
       .name     = N_("Audio codec"),
       .desc     = N_("Audio codec to use for the transcode. \"Do not "
-                     "use \" will disable audio output."),
+                     "use\" will disable audio output."),
       .off      = offsetof(profile_transcode_t, pro_acodec),
       .def.s    = "libvorbis",
       .list     = profile_class_acodec_list,

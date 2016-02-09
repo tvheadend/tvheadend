@@ -250,9 +250,10 @@ const idclass_t iptv_mux_class =
       .type     = PT_U32,
       .id       = "iptv_buffer_limit",
       .name     = N_("Buffering limit (ms)"),
-      .desc     = N_("Specifies the incoming buffering limit in milliseconds (PCR based). "
-                     "If PCR time difference from the system clock is higher, the incoming "
-                     "stream is paused."),
+      .desc     = N_("Specifies the incoming buffering limit in "
+                     "milliseconds (PCR based). If the PCR time "
+                     "difference from the system clock is higher than "
+                     "this, the incoming stream is paused."),
       .off      = offsetof(iptv_mux_t, mm_iptv_buffer_limit),
       .opts     = PO_ADVANCED,
     },

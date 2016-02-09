@@ -415,7 +415,8 @@ const idclass_t channel_class = {
                      "EPG data to the channel (using the channel name "
                      "for matching). If you turn this option off, only "
                      "the OTA EPG grabber will be used for this channel "
-                     "unless the EPG Source option is not set manually."),
+                     "unless you've specifically set a different EPG "
+                     "Source."),
       .off      = offsetof(channel_t, ch_epgauto),
       .opts     = PO_ADVANCED,
     },
@@ -461,10 +462,10 @@ const idclass_t channel_class = {
       .id       = "epg_running",
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EPG running state. Use EITp/f to decide "
-                     "event start/stop. This is also known as accurate "
-                     "recording. Note that this can have unexpected "
-                     "results if the broadcaster isn`t very good at "
-                     "time keeping."),
+                     "event start/stop. This is also known as "
+                     "\"Accurate Recording\". Note that this can have "
+                     "unexpected results if the broadcaster isn`t very "
+                     "good at time keeping."),
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,
       .opts     = PO_ADVANCED
@@ -1399,7 +1400,7 @@ const idclass_t channel_tag_class = {
       .type     = PT_BOOL,
       .id       = "internal",
       .name     = N_("Internal"),
-      .desc     = N_("Use tag internally (don`t expose to clients)."),
+      .desc     = N_("Use tag internally (don't expose to clients)."),
       .off      = offsetof(channel_tag_t, ct_internal),
       .opts     = PO_ADVANCED
     },

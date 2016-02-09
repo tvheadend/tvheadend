@@ -937,12 +937,13 @@ const idclass_t dvr_config_class = {
       .id       = "pre-extra-time",
       .name     = N_("Pre-recording padding"),
       .desc     = N_("Start recording earlier than the defined "
-                     "start time by x minutes, for example if a program "
-                     "is to start at 13:00 and you set a padding of 5 "
+                     "Start recording earlier than the defined start "
+                     "time by x minutes: for example, if a program is "
+                     "to start at 13:00 and you set a padding of 5 "
                      "minutes it will start recording at 12:54:30 "
-                     "(including a warming-up time of 30 seconds). If this "
-                     "isn't set the pre-recording padding if set in the "
-                     "channel or DVR entry will be used."),
+                     "(including a warm-up time of 30 seconds). If this "
+                     "isn't specified, any pre-recording padding as set "
+                     "in the channel or DVR entry will be used."),
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),
       .list     = dvr_config_class_extra_list,
       .opts     = PO_ADVANCED,
@@ -976,9 +977,9 @@ const idclass_t dvr_config_class = {
       .id       = "epg-running",
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EITp/f to decide event start/stop. This is "
-                     "also known as accurate recording. Note that this "
-                     "can have unexpected results if the broadcaster "
-                     "isn`t very good at time keeping."),
+                     "also known as \"Accurate Recording\". Note that "
+                     "this can have unexpected results if the "
+                     "broadcaster isn't very good at time keeping."),
       .off      = offsetof(dvr_config_t, dvr_running),
       .opts     = PO_ADVANCED,
       .def.u32  = 1,
@@ -1122,9 +1123,9 @@ const idclass_t dvr_config_class = {
       .id       = "day-dir",
       .name     = N_("Make subdirectories per day"),
       .desc     = N_("Create a new directory per day in the "
-                     "recording system path. Only days when anything is "
-                     "recorded will the folder be created. The format of the "
-                     "directory will be ISO standard YYYY-MM-DD."),
+                     "recording system path. Folders will only be "
+                     "created when something is recorded. The format "
+                     "of the directory will be ISO standard YYYY-MM-DD."),
       .off      = offsetof(dvr_config_t, dvr_dir_per_day),
       .opts     = PO_EXPERT,
       .group    = 4,
@@ -1136,7 +1137,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("Create a directory per channel when "
                      "storing recordings. If both this and the 'directory "
                      "per day' checkbox is enabled, the date-directory "
-                     "will be parent to the per-channel directory."),
+                     "will be the parent of the per-channel directory."),
       .off      = offsetof(dvr_config_t, dvr_channel_dir),
       .opts     = PO_EXPERT,
       .group    = 4,
@@ -1210,7 +1211,7 @@ const idclass_t dvr_config_class = {
       .type     = PT_BOOL,
       .id       = "omit-title",
       .name     = N_("Don't include title in filename"),
-      .desc     = N_("Don`t include the title in the filename."),
+      .desc     = N_("Don't include the title in the filename."),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
       .opts     = PO_EXPERT,
       .group    = 6,
