@@ -460,6 +460,17 @@ htsp_error(const char *err)
 }
 
 /**
+ * Simple function to respond with an success
+ */
+static htsmsg_t *
+htsp_success(void)
+{
+  htsmsg_t *r = htsmsg_create_map();
+  htsmsg_add_u32(r, "success", 1);
+  return r;
+}
+
+/**
  *
  */
 static void
@@ -1817,7 +1828,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   case DVR_COMPLETED:
     htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
     htsmsg_add_u32(out, "success", 1);
-    break;  
+    break;
   case DVR_NOSTATE:
     htsmsg_add_str(out, "error", "Could not add dvrEntry");
     htsmsg_add_u32(out, "success", 0);
@@ -1827,32 +1838,57 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 }
 
 /**
+ * Find DVR entry
+ */
+static dvr_entry_t *
+htsp_findDvrEntry(htsp_connection_t *htsp, htsmsg_t *in, htsmsg_t **out, int chn)
+{
+  uint32_t dvrEntryId;
+  dvr_entry_t *de;
+
+  if(htsmsg_get_u32(in, "id", &dvrEntryId)) {
+    *out = htsp_error("Missing argument 'id'");
+    return NULL;
+  }
+
+  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL) {
+    *out = htsp_error("id not found");
+    return NULL;
+  }
+
+  if(dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
+    *out = htsp_error("User does not have access");
+    return NULL;
+  }
+
+  /* Check access */
+  if (chn && de->de_channel && !htsp_user_access_channel(htsp, de->de_channel)) {
+    *out = htsp_error("User does not have access");
+    return NULL;
+  }
+
+  return de;
+}
+
+
+/**
  * update a Dvrentry
  */
 static htsmsg_t *
 htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
-  uint32_t dvrEntryId, u32;
+  htsmsg_t *out = NULL;
+  uint32_t u32;
   dvr_entry_t *de;
   time_t start, stop, start_extra, stop_extra, priority, retention, removal;
   const char *title, *subtitle, *desc, *lang;
   channel_t *channel = NULL;
   int enabled;
 
-  if(htsmsg_get_u32(in, "id", &dvrEntryId))
-    return htsp_error("Missing argument 'id'");
+  de = htsp_findDvrEntry(htsp, in, &out, 0);
+  if (de == NULL)
+    return out;
   
-  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL)
-    return htsp_error("id not found");
-
-  if(dvr_entry_verify(de, htsp->htsp_granted_access, 1))
-    return htsp_error("User does not have access");
-
-  /* Check access old channel */
-  if (de->de_channel && !htsp_user_access_channel(htsp, de->de_channel))
-    return htsp_error("User does not have access to channel");
-
   if(!htsmsg_get_u32(in, "channelId", &u32))
     channel = channel_find_by_id(u32);
   if (!channel)
@@ -1878,11 +1914,25 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   de = dvr_entry_update(de, enabled, channel, title, subtitle, desc, lang, start, stop,
                         start_extra, stop_extra, priority, retention, removal);
 
-  //create response
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-  
-  return out;
+  return htsp_success();
+}
+
+/**
+ * stop a Dvrentry
+ */
+static htsmsg_t *
+htsp_method_stopDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  htsmsg_t *out = NULL;
+  dvr_entry_t *de;
+
+  de = htsp_findDvrEntry(htsp, in, &out, 1);
+  if (de == NULL)
+    return out;
+
+  dvr_entry_cancel(de, 0);
+
+  return htsp_success();
 }
 
 /**
@@ -1891,30 +1941,16 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_cancelDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
-  uint32_t dvrEntryId;
+  htsmsg_t *out = NULL;
   dvr_entry_t *de;
 
-  if(htsmsg_get_u32(in, "id", &dvrEntryId))
-    return htsp_error("Missing argument 'id'");
-
-  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL)
-    return htsp_error("id not found");
-
-  if(dvr_entry_verify(de, htsp->htsp_granted_access, 0))
-    return htsp_error("User does not have access");
-
-  /* Check access */
-  if (!htsp_user_access_channel(htsp, de->de_channel))
-    return htsp_error("User does not have access");
+  de = htsp_findDvrEntry(htsp, in, &out, 1);
+  if (de == NULL)
+    return out;
 
   dvr_entry_cancel(de, 0);
 
-  //create response
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-
-  return out;
+  return htsp_success();
 }
 
 /**
@@ -1924,29 +1960,15 @@ static htsmsg_t *
 htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsmsg_t *out;
-  uint32_t dvrEntryId;
   dvr_entry_t *de;
 
-  if(htsmsg_get_u32(in, "id", &dvrEntryId))
-    return htsp_error("Missing argument 'id'");
-
-  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL)
-    return htsp_error("id not found");
-
-  if(dvr_entry_verify(de, htsp->htsp_granted_access, 0))
-    return htsp_error("User does not have access");
-
-  /* Check access */
-  if (!htsp_user_access_channel(htsp, de->de_channel))
-    return htsp_error("User does not have access");
+  de = htsp_findDvrEntry(htsp, in, &out, 1);
+  if (de == NULL)
+    return out;
 
   dvr_entry_cancel_delete(de, 0);
 
-  //create response
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-
-  return out;
+  return htsp_success();
 }
 
 /**
@@ -1989,7 +2011,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   out = htsmsg_create_map();
 
   if (dae) {
-   htsmsg_add_str(out, "id", idnode_uuid_as_str(&dae->dae_id, ubuf));
+    htsmsg_add_str(out, "id", idnode_uuid_as_str(&dae->dae_id, ubuf));
     htsmsg_add_u32(out, "success", 1);
   }
   else {
@@ -2006,7 +2028,6 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
   const char *daeId;
   dvr_autorec_entry_t *dae;
   int64_t s64;
@@ -2039,11 +2060,7 @@ htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   /* Update autorec config from htsp and save */
   dvr_autorec_update_htsp(dae, serierec_convert(htsp, in, ch, 1, 0));
 
-  /* create response */
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-
-  return out;
+  return htsp_success();
 }
 
 
@@ -2053,7 +2070,6 @@ htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
   const char *daeId;
   dvr_autorec_entry_t *dae;
 
@@ -2072,11 +2088,7 @@ htsp_method_deleteAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   autorec_destroy_by_id(daeId, 1);
   
-  /* create response */
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-
-  return out;
+  return htsp_success();
 }
 
 /**
@@ -2135,7 +2147,6 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_updateTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
   const char *dteId;
   dvr_timerec_entry_t *dte;
   int64_t s64;
@@ -2168,11 +2179,7 @@ htsp_method_updateTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   /* Update timerec config from htsp and save */
   dvr_timerec_update_htsp(dte, serierec_convert(htsp, in, ch, 0, 0));
 
-  /* create response */
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-
-  return out;
+  return htsp_success();
 }
 
 /**
@@ -2181,7 +2188,6 @@ htsp_method_updateTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 static htsmsg_t *
 htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *out;
   const char *dteId;
   dvr_timerec_entry_t *dte;
 
@@ -2200,11 +2206,7 @@ htsp_method_deleteTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   timerec_destroy_by_id(dteId, 1);
 
-  /* create response */
-  out = htsmsg_create_map();
-  htsmsg_add_u32(out, "success", 1);
-
-  return out;
+  return htsp_success();
 }
 
 /**
@@ -2857,6 +2859,7 @@ struct {
   { "getDvrConfigs",            htsp_method_getDvrConfigs,      ACCESS_HTSP_RECORDER},
   { "addDvrEntry",              htsp_method_addDvrEntry,        ACCESS_HTSP_RECORDER},
   { "updateDvrEntry",           htsp_method_updateDvrEntry,     ACCESS_HTSP_RECORDER},
+  { "stopDvrEntry",             htsp_method_stopDvrEntry,       ACCESS_HTSP_RECORDER},
   { "cancelDvrEntry",           htsp_method_cancelDvrEntry,     ACCESS_HTSP_RECORDER},
   { "deleteDvrEntry",           htsp_method_deleteDvrEntry,     ACCESS_HTSP_RECORDER},
   { "addAutorecEntry",          htsp_method_addAutorecEntry,    ACCESS_HTSP_RECORDER},
