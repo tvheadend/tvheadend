@@ -1004,14 +1004,14 @@ get_pcr ( const uint8_t *tsb, int64_t *rpcr )
     return 0;
 
   if ((tsb[3] & 0x20) == 0 ||
-      tsb[4] <= 5 ||
+       tsb[4] <= 5 ||
       (tsb[5] & 0x10) == 0)
     return 0;
 
-  pcr  = (uint64_t)tsb[6] << 25;
-  pcr |= (uint64_t)tsb[7] << 17;
-  pcr |= (uint64_t)tsb[8] << 9;
-  pcr |= (uint64_t)tsb[9] << 1;
+  pcr  =  (uint64_t)tsb[6] << 25;
+  pcr |=  (uint64_t)tsb[7] << 17;
+  pcr |=  (uint64_t)tsb[8] << 9;
+  pcr |=  (uint64_t)tsb[9] << 1;
   pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
   *rpcr = pcr;
   return 1;
