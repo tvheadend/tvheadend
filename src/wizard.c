@@ -164,7 +164,7 @@ it, if you are not willing to touch the current configuration.\
 DESCRIPTION_FCN(hello, N_("\
 \
 Welcome to Tvheadend, your TV streaming server and video recorder. This \
-wizard will help you get up and running fast. Let`s start by configuring \
+wizard will help you get up and running fast. Let's start by configuring \
 the basic language settings. Please select the default user interface \
 and EPG language(s).\n\n\
 **This wizard should be run only on the initial setup. Please, cancel \
@@ -386,7 +386,7 @@ Enter the access control details to secure your system. \
 The first part of this covers the network details \
 for address-based access to the system; for example, \
 192.168.1.0/24 to allow local access only to 192.168.1.x clients, \
-or 0.0.0.0/0 or empty value for access from any system.\n\
+or 0.0.0.0/0 or empty value for access from any system.\n\n\
 This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
@@ -655,25 +655,31 @@ NETWORK_FCN(6)
 DESCRIPTION_FCN(network, N_("\
 Now let's get your tuners configured. Go ahead and select a network for \
 each of the tuners you would like to use. if you do not assign a \
-network to a tuner it will __not__ be used.\n\
+network to a tuner it will __not__ be used.\n\n\
 \
-**Selecting the Right Network**:\n\
-Many tuners are able to receive different signal types. If you normally \
-receive your channels through an antenna (also known as an aerial) then \
+**Selecting the Right Network**:\n\n\
+Many tuners are able to receive different signal types..\n\n\
+**If you \
+receive your channels through an antenna (also known as an aerial)** then \
 you would select the network under the tuners with DVB-T/ATSC-T/ISDB-T \
-in the name.\n\
+in the name.\n\n\
 \
-If you receive your channels through a satellite dish then you would \
-select the network under the tuners with DVB-S/S2 in the name.\n\
+**If you receive your channels through a satellite dish** then you would \
+select the network under the tuners with DVB-S/S2 in the name.\n\n\
 \
-If you receive your channels via a cable then you would select the network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\
+**If you receive your channels via a cable** then you would select the \
+network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n\n\
 \
 **Notes**:\n\
 * Tuners already in use will not appear below.\n\
 * If using IPTV, the playlist you enter must contain valid links to \
 streams using codecs supported by Tvheadend.\n\
+* For devices with multiple tuners (e.g. either cable or terrestrial), \
+be aware that many only allow you to use one tuner at a time. \
+Selecting more than one tuner per device can thus result in unexpected \
+behavior.\n\
 * If you've configured Tvheadend before running this wizard, changes \
-you make via this wizard may not be applied.\
+you make via this wizard may not be applied.\n\
 "))
 
 
