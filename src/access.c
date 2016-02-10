@@ -1093,6 +1093,8 @@ access_entry_destroy(access_entry_t *ae, int delconf)
   access_ipmask_t *ai;
   char ubuf[UUID_HEX_SIZE];
 
+  idnode_save_check(&ae->ae_id, delconf);
+
   if (delconf)
     hts_settings_remove("accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id, ubuf));
 
@@ -1759,6 +1761,8 @@ passwd_entry_destroy(passwd_entry_t *pw, int delconf)
   if (pw == NULL)
     return;
 
+  idnode_save_check(&pw->pw_id, delconf);
+
   if (delconf)
     hts_settings_remove("passwd/%s", idnode_uuid_as_str(&pw->pw_id, ubuf));
   TAILQ_REMOVE(&passwd_entries, pw, pw_link);
@@ -1931,10 +1935,11 @@ ipblock_entry_create(const char *uuid, htsmsg_t *conf)
 }
 
 static void
-ipblock_entry_destroy(ipblock_entry_t *ib)
+ipblock_entry_destroy(ipblock_entry_t *ib, int delconf)
 {
   if (ib == NULL)
     return;
+  idnode_save_check(&ib->ib_id, delconf);
   TAILQ_REMOVE(&ipblock_entries, ib, ib_link);
   idnode_unlink(&ib->ib_id);
   free(ib->ib_comment);
@@ -1969,7 +1974,7 @@ ipblock_entry_class_delete(idnode_t *self)
   char ubuf[UUID_HEX_SIZE];
 
   hts_settings_remove("ipblock/%s", idnode_uuid_as_str(&ib->ib_id, ubuf));
-  ipblock_entry_destroy(ib);
+  ipblock_entry_destroy(ib, 1);
 }
 
 static int
@@ -2127,7 +2132,7 @@ access_done(void)
   while ((pw = TAILQ_FIRST(&passwd_entries)) != NULL)
     passwd_entry_destroy(pw, 0);
   while ((ib = TAILQ_FIRST(&ipblock_entries)) != NULL)
-    ipblock_entry_destroy(ib);
+    ipblock_entry_destroy(ib, 0);
   free((void *)superuser_username);
   superuser_username = NULL;
   free((void *)superuser_password);

@@ -132,6 +132,7 @@ bouquet_destroy(bouquet_t *bq)
     return;
 
   RB_REMOVE(&bouquets, bq, bq_link);
+  idnode_save_check(&bq->bq_id, 1);
   idnode_unlink(&bq->bq_id);
 
   if ((bqd = bq->bq_download) != NULL) {

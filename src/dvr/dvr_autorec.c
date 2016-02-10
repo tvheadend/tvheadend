@@ -364,6 +364,8 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
 
+  idnode_save_check(&dae->dae_id, delconf);
+
   dvr_autorec_purge_spawns(dae, delconf, 0);
 
   if (delconf)

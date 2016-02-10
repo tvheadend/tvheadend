@@ -393,6 +393,8 @@ void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf, int rb_remove 
 
   if (ec == NULL) return;
 
+  idnode_save_check(&ec->idnode, delconf);
+
   /* Already linked */
   epggrab_channel_links_delete(ec, 0);
   if (rb_remove)

@@ -498,6 +498,8 @@ linuxdvb_adapter_del ( const char *path )
           break;
       }
     if (!th) return;
+
+    idnode_save_check(&la->th_id, 1);
   
     /* Delete the frontends */
     for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = next) {

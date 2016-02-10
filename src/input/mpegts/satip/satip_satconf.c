@@ -307,6 +307,7 @@ satip_satconf_destroy0
 {
   satip_frontend_t *lfe = sfc->sfc_lfe;
   TAILQ_REMOVE(&lfe->sf_satconf, sfc, sfc_link);
+  idnode_save_check(&sfc->sfc_id, 1);
   idnode_unlink(&sfc->sfc_id);
   idnode_set_free(sfc->sfc_networks);
   free(sfc->sfc_name);

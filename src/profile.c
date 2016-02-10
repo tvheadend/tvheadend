@@ -132,6 +132,7 @@ static void
 profile_delete(profile_t *pro, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
+  idnode_save_check(&pro->pro_id, delconf);
   pro->pro_enabled = 0;
   if (pro->pro_conf_changed)
     pro->pro_conf_changed(pro);

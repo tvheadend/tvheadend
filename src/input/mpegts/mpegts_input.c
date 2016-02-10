@@ -1829,6 +1829,8 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   /* Early shutdown flag */
   mi->mi_running = 0;
 
+  idnode_save_check(&mi->ti_id, delconf);
+
   /* Remove networks */
   while ((mnl = LIST_FIRST(&mi->mi_networks)))
     mpegts_input_del_network(mnl);

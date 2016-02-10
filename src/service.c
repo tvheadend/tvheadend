@@ -822,6 +822,8 @@ service_destroy(service_t *t, int delconf)
 
   lock_assert(&global_lock);
 
+  idnode_save_check(&t->s_id, delconf);
+
   if(t->s_delete != NULL)
     t->s_delete(t, delconf);
 

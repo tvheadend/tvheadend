@@ -232,6 +232,8 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
 
+  idnode_save_check(&dte->dte_id, delconf);
+
   dvr_timerec_purge_spawn(dte, delconf);
 
   if (delconf)

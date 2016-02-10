@@ -437,6 +437,7 @@ void epggrab_done ( void )
 
   pthread_mutex_lock(&global_lock);
   while ((mod = LIST_FIRST(&epggrab_modules)) != NULL) {
+    idnode_save_check(&mod->idnode, 1);
     idnode_unlink(&mod->idnode);
     LIST_REMOVE(mod, link);
     pthread_mutex_unlock(&global_lock);

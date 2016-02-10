@@ -1012,6 +1012,8 @@ channel_delete ( channel_t *ch, int delconf )
 
   lock_assert(&global_lock);
 
+  idnode_save_check(&ch->ch_id, delconf);
+
   if (delconf)
     tvhinfo("channel", "%s - deleting", channel_get_name(ch));
 
@@ -1226,6 +1228,8 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
 {
   idnode_list_mapping_t *ilm;
   char ubuf[UUID_HEX_SIZE];
+
+  idnode_save_check(&ct->ct_id, delconf);
 
   while((ilm = LIST_FIRST(&ct->ct_ctms)) != NULL)
     channel_tag_mapping_destroy(ilm, delconf ? ilm->ilm_in1 : NULL);

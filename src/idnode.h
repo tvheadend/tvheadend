@@ -212,6 +212,7 @@ htsmsg_t *idclass_serialize0 (const idclass_t *idc, htsmsg_t *list, int optmask,
 htsmsg_t *idnode_serialize0  (idnode_t *self, htsmsg_t *list, int optmask, const char *lang);
 void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmask, const char *lang);
 int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
+void      idnode_save_check (idnode_t *self, int weak);
 
 #define idclass_serialize(idc, lang) idclass_serialize0(idc, NULL, 0, lang)
 #define idnode_serialize(in, lang)   idnode_serialize0(in, NULL, 0, lang)

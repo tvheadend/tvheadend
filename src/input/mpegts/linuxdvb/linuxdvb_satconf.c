@@ -1396,6 +1396,7 @@ void
 linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls )
 {
   TAILQ_REMOVE(&ls->lse_parent->ls_elements, ls, lse_link);
+  idnode_save_check(&ls->lse_id, 1);
   idnode_unlink(&ls->lse_id);
   if (ls->lse_lnb)     linuxdvb_lnb_destroy(ls->lse_lnb);
   if (ls->lse_switch)  linuxdvb_switch_destroy(ls->lse_switch);
@@ -1461,6 +1462,7 @@ linuxdvb_satconf_delete ( linuxdvb_satconf_t *ls, int delconf )
     nxt = TAILQ_NEXT(lse, lse_link);
     linuxdvb_satconf_ele_destroy(lse);
   }
+  idnode_save_check(&ls->ls_id, 1);
   idnode_unlink(&ls->ls_id);
   free(ls);
 }
@@ -1518,6 +1520,7 @@ linuxdvb_diseqc_create0
 void
 linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld )
 {
+  idnode_save_check(&ld->ld_id, 1);
   idnode_unlink(&ld->ld_id);
   free((void *)ld->ld_type);
 }

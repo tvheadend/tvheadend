@@ -194,6 +194,7 @@ esfilter_delete(esfilter_t *esf, int delconf)
   if (delconf)
     hts_settings_remove("esfilter/%s", idnode_uuid_as_str(&esf->esf_id, ubuf));
   TAILQ_REMOVE(&esfilters[esf->esf_class], esf, esf_link);
+  idnode_save_check(&esf->esf_id, delconf);
   idnode_unlink(&esf->esf_id);
   free(esf->esf_comment);
   free(esf);

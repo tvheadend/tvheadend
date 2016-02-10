@@ -236,6 +236,8 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
 
+  idnode_save_check(&cfg->dvr_id, delconf);
+
   if (delconf) {
     tvhinfo("dvr", "Deleting configuration '%s'", cfg->dvr_config_name);
     hts_settings_remove("dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));

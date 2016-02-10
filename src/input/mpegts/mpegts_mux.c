@@ -48,6 +48,7 @@ mpegts_mux_instance_delete
 {
   mpegts_mux_instance_t *mmi = (mpegts_mux_instance_t *)tii;
 
+  idnode_save_check(&tii->tii_id, 1);
   idnode_unlink(&tii->tii_id);
   LIST_REMOVE(mmi, mmi_mux_link);
   LIST_REMOVE(tii, tii_input_link);
@@ -659,6 +660,8 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   mpegts_service_t *s;
   th_subscription_t *ths;
   char buf[256];
+
+  idnode_save_check(&mm->mm_id, delconf);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);

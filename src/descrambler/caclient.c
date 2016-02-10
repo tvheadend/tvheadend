@@ -137,6 +137,7 @@ caclient_delete(caclient_t *cac, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
 
+  idnode_save_check(&cac->cac_id, delconf);
   cac->cac_enabled = 0;
   cac->cac_conf_changed(cac);
   if (delconf)

@@ -161,11 +161,7 @@ idnode_unlink(idnode_t *in)
   RB_REMOVE(in->in_domain, in, in_domain_link);
   tvhtrace("idnode", "unlink node %s", idnode_uuid_as_str(in, ubuf));
   idnode_notify(in, "delete");
-
-  if (in->in_save) {
-    TAILQ_REMOVE(&idnodes_save, in->in_save, ise_link);
-    in->in_save = NULL;
-  }
+  assert(in->in_save == NULL);
 }
 
 /**
@@ -1109,6 +1105,29 @@ idnode_save_queue ( idnode_t *self )
     pthread_cond_signal(&save_cond);
   TAILQ_INSERT_TAIL(&idnodes_save, ise, ise_link);
   self->in_save = ise;
+}
+
+void
+idnode_save_check ( idnode_t *self, int weak )
+{
+  char filename[PATH_MAX];
+  htsmsg_t *m;
+
+  if (self->in_save == NULL)
+    return;
+
+  TAILQ_REMOVE(&idnodes_save, self->in_save, ise_link);
+  free(self->in_save);
+  self->in_save = NULL;
+
+  if (weak)
+    return;
+
+  m = idnode_savefn(self, filename, sizeof(filename));
+  if (m) {
+    hts_settings_save(m, "%s", filename);
+    htsmsg_destroy(m);
+  }
 }
 
 int

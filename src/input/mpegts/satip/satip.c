@@ -721,6 +721,8 @@ satip_device_destroy( satip_device_t *sd )
 
   gtimer_disarm(&sd->sd_destroy_timer);
 
+  idnode_save_check(&sd->th_id, 1);
+
   while ((lfe = TAILQ_FIRST(&sd->sd_frontends)) != NULL)
     satip_frontend_delete(lfe);
 

@@ -1294,6 +1294,8 @@ dvr_entry_dec_ref(dvr_entry_t *de)
     return;
   }
 
+  idnode_save_check(&de->de_id, 1);
+
   idnode_unlink(&de->de_id);
 
   if(de->de_autorec != NULL)
@@ -1329,6 +1331,8 @@ void
 dvr_entry_destroy(dvr_entry_t *de, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
+
+  idnode_save_check(&de->de_id, delconf);
 
   if (delconf)
     hts_settings_remove("dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
