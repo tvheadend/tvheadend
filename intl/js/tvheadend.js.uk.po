@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-15 21:23+0100\n"
-"PO-Revision-Date: 2015-12-15 20:24+0000\n"
+"POT-Creation-Date: 2016-02-09 14:47+0100\n"
+"PO-Revision-Date: 2016-02-09 13:48+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Ukrainian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/uk/)\n"
 "MIME-Version: 1.0\n"
@@ -35,7 +35,7 @@ msgstr "(Очистити фільтр)"
 msgid "(None)"
 msgstr "(Нічого)"
 
-#: src/webui/static/app/epg.js:209
+#: src/webui/static/app/epg.js:232
 msgid "(default DVR Profile)"
 msgstr "(типовий профіль DVR)"
 
@@ -139,23 +139,23 @@ msgstr ""
 msgid "Active"
 msgstr "Активне"
 
-#: src/webui/static/app/idnode.js:1701 src/webui/static/app/idnode.js:2191
+#: src/webui/static/app/idnode.js:1735 src/webui/static/app/idnode.js:2226
 msgid "Add"
 msgstr "Додати"
 
-#: src/webui/static/app/idnode.js:1699 src/webui/static/app/idnode.js:2189
+#: src/webui/static/app/idnode.js:1733 src/webui/static/app/idnode.js:2224
 msgid "Add a new entry"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1285 src/webui/static/app/idnode.js:1466
+#: src/webui/static/app/idnode.js:1311 src/webui/static/app/idnode.js:1500
 msgid "Add {0}"
 msgstr "Додати {0}"
 
-#: src/webui/static/app/idnode.js:584 src/webui/static/app/idnode.js:600
+#: src/webui/static/app/idnode.js:585 src/webui/static/app/idnode.js:601
 msgid "Advanced"
 msgstr "Просунутий"
 
-#: src/webui/static/app/idnode.js:1013
+#: src/webui/static/app/idnode.js:1014
 msgid "Advanced Settings"
 msgstr "Розширені налаштування"
 
@@ -167,7 +167,7 @@ msgstr "Після"
 msgid "After filtering and reordering (without PCR and PMT)"
 msgstr "Після фільтрування і перестановки (без PCR і PMT)"
 
-#: src/webui/static/app/epg.js:568 src/webui/static/app/epg.js:569
+#: src/webui/static/app/epg.js:591 src/webui/static/app/epg.js:592
 msgid "Age"
 msgstr "Вік"
 
@@ -175,11 +175,13 @@ msgstr "Вік"
 msgid "Age Rating"
 msgstr "Рейтинг по віку"
 
-#: src/webui/static/app/idnode.js:1847 src/webui/static/app/idnode.js:1886
+#: src/webui/static/app/idnode.js:1882 src/webui/static/app/idnode.js:1921
 msgid "All"
 msgstr "Все"
 
-#: src/webui/static/app/idnode.js:1101 src/webui/static/app/idnode.js:1405
+#: src/webui/static/app/idnode.js:1119 src/webui/static/app/idnode.js:1131
+#: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1431
+#: src/webui/static/app/idnode.js:1448 src/webui/static/app/idnode.js:1453
 msgid "Apply"
 msgstr "Застосувати"
 
@@ -191,7 +193,7 @@ msgstr "Застосувати будь-які зміни, зроблені ни
 msgid "Apply configuration (run-time only)"
 msgstr "Застосувати конфігурацію (тільки поточне)"
 
-#: src/webui/static/app/idnode.js:1404
+#: src/webui/static/app/idnode.js:1430
 msgid "Apply settings"
 msgstr "Застосувати налаштування"
 
@@ -203,11 +205,15 @@ msgstr "Квіт"
 msgid "April"
 msgstr "Квітень"
 
-#: src/webui/static/app/chconf.js:146
+#: src/webui/static/app/epg.js:146
+msgid "Aspect"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:163
 msgid "Assign Number"
 msgstr "Присвоїти номер"
 
-#: src/webui/static/app/chconf.js:144
+#: src/webui/static/app/chconf.js:161
 msgid "Assign lowest free channel number"
 msgstr "Присвоїти найменший вільний номер каналу"
 
@@ -219,6 +225,10 @@ msgstr "Фільтр аудіо-потоку"
 msgid "Audio Stream Filters"
 msgstr "Фільтри аудіо-потоку"
 
+#: src/webui/static/app/epg.js:154
+msgid "Audio description#EPG"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
 msgstr "Серп"
@@ -227,7 +237,7 @@ msgstr "Серп"
 msgid "August"
 msgstr "Серпень"
 
-#: src/webui/static/app/epg.js:1024
+#: src/webui/static/app/epg.js:1047
 msgid "Auto Recorder"
 msgstr "Автозапис"
 
@@ -235,16 +245,16 @@ msgstr "Автозапис"
 msgid "Auto-refresh"
 msgstr "Автооновлення"
 
-#: src/webui/static/app/epg.js:225 src/webui/static/app/dvr.js:57
-#: src/webui/static/app/dvr.js:572
+#: src/webui/static/app/epg.js:248 src/webui/static/app/dvr.js:57
+#: src/webui/static/app/dvr.js:632
 msgid "Autorec"
 msgstr "Автозапис"
 
-#: src/webui/static/app/dvr.js:573
+#: src/webui/static/app/dvr.js:633
 msgid "Autorecs"
 msgstr "Автозаписи"
 
-#: src/webui/static/app/idnode.js:442 src/webui/static/app/idnode.js:681
+#: src/webui/static/app/idnode.js:443 src/webui/static/app/idnode.js:682
 msgid "Available"
 msgstr "Доступно"
 
@@ -260,15 +270,15 @@ msgstr "Ширина каналу (кб/с)"
 msgid "Bandwidth monitor"
 msgstr "Монітор трафіку"
 
-#: src/webui/static/app/config.js:28
+#: src/webui/static/app/config.js:29
 msgid "Base"
 msgstr "Основне"
 
-#: src/webui/static/app/idnode.js:582 src/webui/static/app/idnode.js:594
+#: src/webui/static/app/idnode.js:583 src/webui/static/app/idnode.js:595
 msgid "Basic"
 msgstr "Базовий"
 
-#: src/webui/static/app/idnode.js:1011
+#: src/webui/static/app/idnode.js:1012
 msgid "Basic Settings"
 msgstr "Основні налаштування"
 
@@ -284,15 +294,15 @@ msgstr "Букет каналів"
 msgid "Bouquets"
 msgstr "Букети каналів"
 
-#: src/webui/static/app/epg.js:238
+#: src/webui/static/app/epg.js:261
 msgid "Broadcast Details"
 msgstr "Деталі трансляції"
 
-#: src/webui/static/app/epg.js:343
+#: src/webui/static/app/epg.js:366
 msgid "Broadcast details"
 msgstr "Деталі трансляції"
 
-#: src/webui/static/app/epg.js:831
+#: src/webui/static/app/epg.js:854
 msgid "Buffering. Please wait..."
 msgstr "Буферування. Почекайте, будь ласка..."
 
@@ -317,7 +327,7 @@ msgid "CAs"
 msgstr "CAs"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:1063 src/webui/static/app/idnode.js:1430
+#: src/webui/static/app/idnode.js:1076 src/webui/static/app/idnode.js:1464
 msgid "Cancel"
 msgstr "Відмінити"
 
@@ -325,7 +335,7 @@ msgstr "Відмінити"
 msgid "Cancel Connection"
 msgstr "Відмінити з’єднання"
 
-#: src/webui/static/app/idnode.js:1429
+#: src/webui/static/app/idnode.js:1463
 msgid "Cancel operation"
 msgstr "Відмінити операцію"
 
@@ -337,12 +347,20 @@ msgstr "Відмінити вибрані з’єднання?"
 msgid "Cancel this connection"
 msgstr "Відмінити це з’єднання"
 
-#: src/webui/static/app/idnode.js:612
+#: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1453
+msgid "Cannot apply"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:613
 msgid "Change the user interface level (basic, advanced, expert)"
 msgstr "Зміна рівня інтерфейсу користувача (базовий, просунутий, експертний)"
 
-#: src/webui/static/app/chconf.js:200 src/webui/static/app/epg.js:546
-#: src/webui/static/app/epg.js:547 src/webui/static/app/epg.js:1028
+#: src/webui/static/app/idnode.js:1131 src/webui/static/app/idnode.js:1448
+msgid "Changes were applied!"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:569
+#: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1051
 #: src/webui/static/app/status.js:106
 msgid "Channel"
 msgstr "Канал"
@@ -359,11 +377,11 @@ msgstr "Мітка груп каналів"
 msgid "Channel Tags"
 msgstr "Мітки груп каналів"
 
-#: src/webui/static/app/chconf.js:167
+#: src/webui/static/app/chconf.js:184
 msgid "Channel number operations"
 msgstr "Операції над номерами каналів"
 
-#: src/webui/static/app/chconf.js:201 src/webui/static/app/chconf.js:205
+#: src/webui/static/app/chconf.js:218 src/webui/static/app/chconf.js:222
 msgid "Channels"
 msgstr "Канали"
 
@@ -371,11 +389,11 @@ msgstr "Канали"
 msgid "Choose a month (Control+Up/Down to move years)"
 msgstr "Вибрати місяць (кнопки Control+Up/Down для більше років)"
 
-#: src/webui/static/app/config.js:70
+#: src/webui/static/app/config.js:78
 msgid "Clean image (icon) cache"
 msgstr "Очистити кеш зображень (іконок)"
 
-#: src/webui/static/app/config.js:68
+#: src/webui/static/app/config.js:76
 msgid "Clean image cache on storage"
 msgstr "Очищення кешу зображень на пристрої збереження"
 
@@ -391,15 +409,15 @@ msgstr "Очистити статистику для вибраного ввод
 msgid "Client Name"
 msgstr "Назва клієнта"
 
-#: src/webui/static/app/idnode.js:1352 src/webui/static/app/idnode.js:2201
+#: src/webui/static/app/idnode.js:1378 src/webui/static/app/idnode.js:2236
 msgid "Clone"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:2199
+#: src/webui/static/app/idnode.js:2234
 msgid "Clone a new entry"
 msgstr ""
 
-#: src/webui/static/app/epg.js:232
+#: src/webui/static/app/epg.js:255
 msgid "Close"
 msgstr "Закрити"
 
@@ -431,8 +449,8 @@ msgstr "Конфігурація"
 msgid "Connections"
 msgstr "З’єднання"
 
-#: src/webui/static/app/epg.js:132 src/webui/static/app/epg.js:575
-#: src/webui/static/app/epg.js:576
+#: src/webui/static/app/epg.js:132 src/webui/static/app/epg.js:598
+#: src/webui/static/app/epg.js:599
 msgid "Content Type"
 msgstr "Тип змісту"
 
@@ -440,29 +458,29 @@ msgstr "Тип змісту"
 msgid "Continuity Errors"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1378
+#: src/webui/static/app/idnode.js:1404
 msgid "Create"
 msgstr "Створити"
 
-#: src/webui/static/app/epg.js:844
+#: src/webui/static/app/epg.js:867
 msgid "Create AutoRec"
 msgstr "Створити Автозапис"
 
-#: src/webui/static/app/epg.js:224 src/webui/static/app/epg.js:846
+#: src/webui/static/app/epg.js:247 src/webui/static/app/epg.js:869
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
 msgstr "Створити правило автоматичного запису для запису всіх майбутніх програм, що відповідають поточним критеріям. "
 
-#: src/webui/static/app/idnode.js:1377
+#: src/webui/static/app/idnode.js:1403
 msgid "Create new entry"
 msgstr "Створити новий ввід"
 
-#: src/webui/static/app/epg.js:1046
+#: src/webui/static/app/epg.js:1069
 msgid "Created from EPG query"
 msgstr "Створити з програми"
 
-#: src/webui/static/app/epg.js:1033
+#: src/webui/static/app/epg.js:1056
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr "Зараз з цим збіжні (і записані) %d подій."
@@ -471,15 +489,15 @@ msgstr "Зараз з цим збіжні (і записані) %d подій."
 msgid "DVB Inputs"
 msgstr "Ввід DVB"
 
-#: src/webui/static/app/epg.js:314 src/webui/static/app/dvr.js:557
+#: src/webui/static/app/epg.js:337 src/webui/static/app/dvr.js:617
 msgid "DVR"
 msgstr "DVR"
 
-#: src/webui/static/app/dvr.js:531
+#: src/webui/static/app/dvr.js:591
 msgid "DVR - Failed Recordings"
 msgstr "DVR - Невдалі записи"
 
-#: src/webui/static/app/dvr.js:420
+#: src/webui/static/app/dvr.js:450
 msgid "DVR - Finished Recordings"
 msgstr "DVR - Закінчені записи"
 
@@ -487,13 +505,17 @@ msgstr "DVR - Закінчені записи"
 msgid "DVR - Upcoming/Current Recordings"
 msgstr "DVR - Майбутні/Поточні записи"
 
-#: src/webui/static/app/dvr.js:624
+#: src/webui/static/app/dvr.js:685
 msgid "DVR Autorec"
 msgstr "DVR Автозапис"
 
-#: src/webui/static/app/dvr.js:677
+#: src/webui/static/app/dvr.js:738
 msgid "DVR Timers"
 msgstr "Таймери DVR"
+
+#: src/webui/static/app/epg.js:150
+msgid "Deaf signed#EPG"
+msgstr ""
 
 #: src/webui/static/app/tvhlog.js:28
 msgid "Debug Configuration"
@@ -511,19 +533,19 @@ msgstr "Груд"
 msgid "December"
 msgstr "Грудень"
 
-#: src/webui/static/app/idnode.js:1715 src/webui/static/app/idnode.js:2214
+#: src/webui/static/app/idnode.js:1749 src/webui/static/app/idnode.js:2249
 msgid "Delete"
 msgstr "Вилучити"
 
-#: src/webui/static/app/epg.js:198
+#: src/webui/static/app/epg.js:221
 msgid "Delete recording"
 msgstr "Вилучити запис"
 
-#: src/webui/static/app/epg.js:197
+#: src/webui/static/app/epg.js:220
 msgid "Delete scheduled recording of this program"
 msgstr "Вилучити запис цієї програми за розкладом"
 
-#: src/webui/static/app/idnode.js:1713 src/webui/static/app/idnode.js:2212
+#: src/webui/static/app/idnode.js:1747 src/webui/static/app/idnode.js:2247
 msgid "Delete selected entries"
 msgstr "Вилучити вибрані пункти"
 
@@ -531,25 +553,25 @@ msgstr "Вилучити вибрані пункти"
 msgid "Descramble"
 msgstr "Розкодування"
 
-#: src/webui/static/app/mpegts.js:265
+#: src/webui/static/app/mpegts.js:282
 msgid "Detailed stream info"
 msgstr "Детальна інформація про потік"
 
-#: src/webui/static/app/mpegts.js:261 src/webui/static/app/epg.js:329
-#: src/webui/static/app/epg.js:330 src/webui/static/app/dvr.js:123
-#: src/webui/static/app/dvr.js:124
+#: src/webui/static/app/mpegts.js:172 src/webui/static/app/mpegts.js:278
+#: src/webui/static/app/epg.js:352 src/webui/static/app/epg.js:353
+#: src/webui/static/app/dvr.js:123 src/webui/static/app/dvr.js:124
 msgid "Details"
 msgstr "Деталі"
 
-#: src/webui/static/app/dvr.js:692
+#: src/webui/static/app/dvr.js:753
 msgid "Digital Video Recorder"
 msgstr "Цифровий Відео Записувач DVR"
 
-#: src/webui/static/app/dvr.js:546
+#: src/webui/static/app/dvr.js:606
 msgid "Digital Video Recorder Profile"
 msgstr "Профіль DVR"
 
-#: src/webui/static/app/dvr.js:547
+#: src/webui/static/app/dvr.js:607
 msgid "Digital Video Recorder Profiles"
 msgstr "Профілі DVR"
 
@@ -557,7 +579,7 @@ msgstr "Профілі DVR"
 msgid "Disabled"
 msgstr "Вимкнено"
 
-#: src/webui/static/app/config.js:129
+#: src/webui/static/app/config.js:137
 msgid "Discover SAT>IP servers"
 msgstr "Виявлення серверів SAT>IP"
 
@@ -569,7 +591,7 @@ msgstr "Показ {0} - {1} з {2}"
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Ви дійсно бажаєте скасувати/перестати планувати вибране?"
 
-#: src/webui/static/app/dvr.js:388 src/webui/static/app/dvr.js:499
+#: src/webui/static/app/dvr.js:418 src/webui/static/app/dvr.js:559
 msgid "Do you really want to delete the selected recordings?"
 msgstr "Ви дійсно бажаєте вилучити вибрані записи?"
 
@@ -581,30 +603,30 @@ msgstr "Ви дійсно бажаєте вилучити вибране?"
 msgid "Do you really want to gracefully stop/unschedule the selection?"
 msgstr "Ви дійсно бажаєте елегантно зупинити/перестати планувати вибране?"
 
-#: src/webui/static/app/epg.js:286
+#: src/webui/static/app/epg.js:309
 msgid "Do you really want to gracefully stop/unschedule this recording?"
 msgstr "Ви дійсно бажаєте елегантно зупинити/перестати планувати цей запис?"
 
-#: src/webui/static/app/epg.js:299
+#: src/webui/static/app/epg.js:322
 msgid "Do you really want to remove this recording?"
 msgstr "Ви дійсно бажаєте вилучити цей запис?"
 
-#: src/webui/static/app/epg.js:1007 src/webui/static/app/epg.js:1013
-#: src/webui/static/app/epg.js:1016 src/webui/static/app/epg.js:1019
-#: src/webui/static/app/epg.js:1022
+#: src/webui/static/app/epg.js:1030 src/webui/static/app/epg.js:1036
+#: src/webui/static/app/epg.js:1039 src/webui/static/app/epg.js:1042
+#: src/webui/static/app/epg.js:1045
 msgid "Don't care"
 msgstr "Все одно"
 
-#: src/webui/static/app/dvr.js:329 src/webui/static/app/dvr.js:440
+#: src/webui/static/app/dvr.js:329 src/webui/static/app/dvr.js:470
 msgid "Download"
 msgstr "Звантаження"
 
-#: src/webui/static/app/dvr.js:327 src/webui/static/app/dvr.js:438
+#: src/webui/static/app/dvr.js:327 src/webui/static/app/dvr.js:468
 msgid "Download the selected recording"
 msgstr "Звантажити вибраний запис"
 
-#: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:530
-#: src/webui/static/app/epg.js:531 src/webui/static/app/epg.js:1031
+#: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:553
+#: src/webui/static/app/epg.js:554 src/webui/static/app/epg.js:1054
 #: src/webui/static/app/dvr.js:46
 msgid "Duration"
 msgstr "Тривалість"
@@ -637,27 +659,27 @@ msgstr "Модулі захоплювача ТВ-програми"
 msgid "EPG Grabber Name"
 msgstr "Назва захоплювача ТВ-програми"
 
-#: src/webui/static/app/epg.js:954
+#: src/webui/static/app/epg.js:977
 msgid "EPG Update"
 msgstr "Оновлення програми передач"
 
-#: src/webui/static/app/idnode.js:1206 src/webui/static/app/idnode.js:1802
+#: src/webui/static/app/idnode.js:1232 src/webui/static/app/idnode.js:1836
 msgid "Edit"
 msgstr "Редагувати"
 
-#: src/webui/static/app/idnode.js:1800
+#: src/webui/static/app/idnode.js:1834
 msgid "Edit selected entry"
 msgstr "Редагувати вибраний пункт"
 
-#: src/webui/static/app/idnode.js:1243 src/webui/static/app/idnode.js:1816
+#: src/webui/static/app/idnode.js:1269 src/webui/static/app/idnode.js:1850
 msgid "Edit {0}"
 msgstr "Редагувати {0}"
 
-#: src/webui/static/app/idnode.js:1240
+#: src/webui/static/app/idnode.js:1266
 msgid "Edit {0} ({1} entries)"
 msgstr ""
 
-#: src/webui/static/app/epg.js:878 src/webui/static/app/epg.js:889
+#: src/webui/static/app/epg.js:901 src/webui/static/app/epg.js:912
 msgid "Electronic Program Guide"
 msgstr "Програма телепередач"
 
@@ -671,8 +693,8 @@ msgstr "Фільтр елементарного потоку"
 msgid "Enable debug output"
 msgstr "Ввімкнути вивід відладки"
 
-#: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:522
-#: src/webui/static/app/epg.js:523
+#: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:545
+#: src/webui/static/app/epg.js:546
 msgid "End Time"
 msgstr "Час закінчення"
 
@@ -680,7 +702,7 @@ msgstr "Час закінчення"
 msgid "Enter Filter Text..."
 msgstr "Ввести текст фільтру..."
 
-#: src/webui/static/app/epg.js:505 src/webui/static/app/epg.js:506
+#: src/webui/static/app/epg.js:528 src/webui/static/app/epg.js:529
 msgid "Episode"
 msgstr "Епізод"
 
@@ -688,7 +710,7 @@ msgstr "Епізод"
 msgid "Errors"
 msgstr "Помилки"
 
-#: src/webui/static/app/epg.js:896
+#: src/webui/static/app/epg.js:919
 msgid "Events"
 msgstr "Події"
 
@@ -696,11 +718,11 @@ msgstr "Події"
 msgid "Every day"
 msgstr "Кожен день"
 
-#: src/webui/static/app/idnode.js:585 src/webui/static/app/idnode.js:606
+#: src/webui/static/app/idnode.js:586 src/webui/static/app/idnode.js:607
 msgid "Expert"
 msgstr "Експертний"
 
-#: src/webui/static/app/idnode.js:1015
+#: src/webui/static/app/idnode.js:1016
 msgid "Expert Settings"
 msgstr "Експертні налаштування"
 
@@ -708,11 +730,11 @@ msgstr "Експертні налаштування"
 msgid "Failed"
 msgstr "Невдалі"
 
-#: src/webui/static/app/dvr.js:493
+#: src/webui/static/app/dvr.js:553
 msgid "Failed Recording"
 msgstr "Невдалий запис"
 
-#: src/webui/static/app/dvr.js:494
+#: src/webui/static/app/dvr.js:554
 msgid "Failed Recordings"
 msgstr "Невдалі записи"
 
@@ -728,19 +750,19 @@ msgstr "Лютий"
 msgid "File size"
 msgstr "Розмір файлу"
 
-#: src/webui/static/app/epg.js:636
+#: src/webui/static/app/epg.js:659
 msgid "Filter channel..."
 msgstr "Фільтрування каналів..."
 
-#: src/webui/static/app/epg.js:683
+#: src/webui/static/app/epg.js:706
 msgid "Filter content type..."
 msgstr "Фільтрування по типу змісту..."
 
-#: src/webui/static/app/epg.js:704
+#: src/webui/static/app/epg.js:727
 msgid "Filter duration..."
 msgstr "Фільтрування по тривалості"
 
-#: src/webui/static/app/epg.js:659
+#: src/webui/static/app/epg.js:682
 msgid "Filter tag..."
 msgstr "Фільтрування по мітках..."
 
@@ -748,15 +770,15 @@ msgstr "Фільтрування по мітках..."
 msgid "Filters"
 msgstr "Фільтри"
 
-#: src/webui/static/app/wizard.js:114
+#: src/webui/static/app/wizard.js:160
 msgid "Finish"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:382
+#: src/webui/static/app/dvr.js:412
 msgid "Finished Recording"
 msgstr "Закінчений запис"
 
-#: src/webui/static/app/dvr.js:383
+#: src/webui/static/app/dvr.js:413
 msgid "Finished Recordings"
 msgstr "Закінчені записи"
 
@@ -788,7 +810,7 @@ msgstr "П’ятниця"
 msgid "Fullscreen"
 msgstr "Повний екран"
 
-#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1009
+#: src/webui/static/app/epg.js:874 src/webui/static/app/epg.js:1032
 msgid "Fulltext"
 msgstr "Повний текст"
 
@@ -796,11 +818,11 @@ msgstr "Повний текст"
 msgid "General"
 msgstr "Загальне"
 
-#: src/webui/static/app/config.js:49 src/webui/static/app/config.js:108
+#: src/webui/static/app/config.js:57 src/webui/static/app/config.js:116
 msgid "General Configuration"
 msgstr "Загальна конфігурація"
 
-#: src/webui/static/app/epg.js:1030
+#: src/webui/static/app/epg.js:1053
 msgid "Genre"
 msgstr "Жанр"
 
@@ -808,7 +830,7 @@ msgstr "Жанр"
 msgid "GiB"
 msgstr "ГіБ"
 
-#: src/webui/static/app/idnode.js:1541
+#: src/webui/static/app/idnode.js:1575
 msgid "Grid Update"
 msgstr ""
 
@@ -816,9 +838,13 @@ msgstr ""
 msgid "Group By This Field"
 msgstr "Групувати по цьому полі"
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1953
-#: src/webui/static/app/idnode.js:2336 src/webui/static/app/idnode.js:2770
-#: src/webui/static/app/epg.js:875
+#: src/webui/static/app/epg.js:138
+msgid "HDTV"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
+#: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
+#: src/webui/static/app/epg.js:898
 msgid "Help"
 msgstr "Допомога"
 
@@ -826,11 +852,11 @@ msgstr "Допомога"
 msgid "Help for"
 msgstr "Допомога про"
 
-#: src/webui/static/app/idnode.js:1863
+#: src/webui/static/app/idnode.js:1898
 msgid "Hide"
 msgstr "Сховати"
 
-#: src/webui/static/app/idnode.js:2289
+#: src/webui/static/app/idnode.js:2324
 msgid "Hide passwords"
 msgstr "Сховати паролі"
 
@@ -862,13 +888,17 @@ msgstr ""
 msgid "Ignored"
 msgstr "Зігноровано"
 
-#: src/webui/static/app/config.js:100
+#: src/webui/static/app/config.js:108
 msgid "Image cache"
 msgstr "Кеш зображень"
 
 #: src/webui/static/app/status.js:724
 msgid "In"
 msgstr "В"
+
+#: src/webui/static/app/mpegts.js:168
+msgid "Index"
+msgstr ""
 
 #: src/webui/static/app/status.js:347 src/webui/static/app/status.js:814
 msgid "Input"
@@ -906,9 +936,17 @@ msgstr "Червень"
 msgid "KiB"
 msgstr "КіБ"
 
+#: src/webui/static/app/mpegts.js:171
+msgid "Language"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
 msgstr "Остання сторінка"
+
+#: src/webui/static/app/epg.js:148
+msgid "Lines"
+msgstr ""
 
 #: src/webui/static/app/tvheadend.js:340
 msgid "Live TV Player"
@@ -919,9 +957,9 @@ msgid "Loading, please wait..."
 msgstr "Завантаження, зачекайте, будь ласка..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:627
-#: src/webui/static/app/epg.js:650 src/webui/static/app/epg.js:674
-#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:278
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:650
+#: src/webui/static/app/epg.js:673 src/webui/static/app/epg.js:697
+#: src/webui/static/app/epg.js:718 src/webui/static/app/tvheadend.js:278
 #: src/webui/static/app/tvheadend.js:316
 msgid "Loading..."
 msgstr "Завантаження..."
@@ -930,28 +968,45 @@ msgstr "Завантаження..."
 msgid "Logged in as"
 msgstr "Залогований як"
 
-#: src/webui/static/app/config.js:127
+#: src/webui/static/app/config.js:135
 msgid "Look for new SAT>IP servers"
 msgstr "Пошук нових серверів SAT>IP"
 
-#: src/webui/static/app/mpegts.js:245 src/webui/static/app/mpegts.js:257
+#: src/webui/static/app/mpegts.js:274
 msgid "Map All"
 msgstr "Відображення всіх"
 
-#: src/webui/static/app/mpegts.js:255
+#: src/webui/static/app/mpegts.js:272
 msgid "Map Selected"
 msgstr "Відображення вибраних"
 
-#: src/webui/static/app/chconf.js:131
-msgid "Map Services"
-msgstr "Відображення сервісів"
+#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:139
+msgid "Map all services"
+msgstr ""
 
-#: src/webui/static/app/servicemapper.js:103
-#: src/webui/static/app/servicemapper.js:111
+#: src/webui/static/app/mpegts.js:251 src/webui/static/app/chconf.js:137
+msgid "Map all services to channels"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:247 src/webui/static/app/chconf.js:133
+msgid "Map selected services"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:245 src/webui/static/app/chconf.js:131
+msgid "Map selected services to channels"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:258 src/webui/static/app/chconf.js:144
+#: src/webui/static/app/servicemapper.js:104
+#: src/webui/static/app/servicemapper.js:112
+#: src/webui/static/app/servicemapper.js:123
+#: src/webui/static/app/servicemapper.js:137
 msgid "Map services"
 msgstr "Відображення сервісів"
 
-#: src/webui/static/app/mpegts.js:243 src/webui/static/app/chconf.js:129
+#: src/webui/static/app/mpegts.js:256 src/webui/static/app/chconf.js:142
+#: src/webui/static/app/servicemapper.js:101
+#: src/webui/static/app/servicemapper.js:120
 msgid "Map services to channels"
 msgstr "Відображення сервісів до каналів"
 
@@ -966,6 +1021,14 @@ msgstr "Бер"
 #: src/webui/static/app/i18n-post.js:22
 msgid "March"
 msgstr "Березень"
+
+#: src/webui/static/app/dvr.js:375
+msgid "Mark the selected recording as failed"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:516
+msgid "Mark the selected recording as finished"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
@@ -991,47 +1054,55 @@ msgstr "Пон"
 msgid "Monday"
 msgstr "Понеділок"
 
-#: src/webui/static/app/idnode.js:1771 src/webui/static/app/idnode.js:2261
+#: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2296
 msgid "Move Down"
 msgstr "Пересунути вниз"
 
-#: src/webui/static/app/idnode.js:1746 src/webui/static/app/idnode.js:2240
+#: src/webui/static/app/idnode.js:1780 src/webui/static/app/idnode.js:2275
 msgid "Move Up"
 msgstr "Пересунути вверх"
 
-#: src/webui/static/app/chconf.js:156
+#: src/webui/static/app/chconf.js:173
 msgid "Move channel one number down"
 msgstr "Пересунути канал на одну позицію вниз"
 
-#: src/webui/static/app/chconf.js:150
+#: src/webui/static/app/chconf.js:167
 msgid "Move channel one number up"
 msgstr "Пересунути канал на одну позицію вверх"
 
-#: src/webui/static/app/idnode.js:1769
+#: src/webui/static/app/idnode.js:1803
 msgid "Move selected entries down"
 msgstr "Пересунути вибрані позиції вниз"
 
-#: src/webui/static/app/idnode.js:1744
+#: src/webui/static/app/idnode.js:1778
 msgid "Move selected entries up"
 msgstr "Пересунути вибрані позиції вверх"
 
-#: src/webui/static/app/idnode.js:2259
+#: src/webui/static/app/idnode.js:2294
 msgid "Move selected entry down"
 msgstr "Пересунути вибрану позицію вниз"
 
-#: src/webui/static/app/idnode.js:2238
+#: src/webui/static/app/idnode.js:2273
 msgid "Move selected entry up"
 msgstr "Пересунути вибрану позицію вверх"
+
+#: src/webui/static/app/dvr.js:377
+msgid "Move to failed"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:518
+msgid "Move to finished"
+msgstr ""
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:109
 msgid "Mux"
 msgstr "Мультиплекс"
 
-#: src/webui/static/app/mpegts.js:333 src/webui/static/app/mpegts.js:343
+#: src/webui/static/app/mpegts.js:351 src/webui/static/app/mpegts.js:361
 msgid "Mux Scheduler"
 msgstr "Планувальник мультиплексів"
 
-#: src/webui/static/app/mpegts.js:334 src/webui/static/app/mpegts.js:338
+#: src/webui/static/app/mpegts.js:352 src/webui/static/app/mpegts.js:356
 msgid "Mux Schedulers"
 msgstr "Планувальники мультиплексів"
 
@@ -1047,6 +1118,10 @@ msgstr "Мережа"
 #: src/webui/static/app/mpegts.js:67 src/webui/static/app/mpegts.js:71
 msgid "Networks"
 msgstr "Мережі"
+
+#: src/webui/static/app/epg.js:140
+msgid "New#EPG"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
@@ -1077,12 +1152,12 @@ msgstr "Немає перевіреного доступу"
 msgid "No {0} to display"
 msgstr "Немає {0} для показу"
 
-#: src/webui/static/app/idnode.js:1848 src/webui/static/app/mpegts.js:209
+#: src/webui/static/app/idnode.js:1883 src/webui/static/app/mpegts.js:209
 #: src/webui/static/app/mpegts.js:219
 msgid "None"
 msgstr "Нічого"
 
-#: src/webui/static/app/idnode.js:351
+#: src/webui/static/app/idnode.js:352
 msgid "Not set"
 msgstr "Не встановлено"
 
@@ -1094,19 +1169,19 @@ msgstr "Лист"
 msgid "November"
 msgstr "Листопад"
 
-#: src/webui/static/app/epg.js:537 src/webui/static/app/epg.js:538
+#: src/webui/static/app/epg.js:560 src/webui/static/app/epg.js:561
 msgid "Number"
 msgstr "Номер"
 
-#: src/webui/static/app/chconf.js:158
+#: src/webui/static/app/chconf.js:175
 msgid "Number Down"
 msgstr "Номер вниз"
 
-#: src/webui/static/app/chconf.js:152
+#: src/webui/static/app/chconf.js:169
 msgid "Number Up"
 msgstr "Номер вверх"
 
-#: src/webui/static/app/chconf.js:169
+#: src/webui/static/app/chconf.js:186
 msgid "Number operations"
 msgstr "Операції над номерами"
 
@@ -1146,15 +1221,20 @@ msgstr "Вивід (кб/с)"
 msgid "PER"
 msgstr "PER"
 
+#: src/webui/static/app/mpegts.js:169
+msgid "PID"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
 msgstr "Сторінка"
 
-#: src/webui/static/app/idnode.js:2367 src/webui/static/app/idnode.js:2550
+#: src/webui/static/app/idnode.js:2402 src/webui/static/app/idnode.js:2585
+#: src/webui/static/app/epg.js:156
 msgid "Parameters"
 msgstr "Параметри"
 
-#: src/webui/static/app/idnode.js:1846
+#: src/webui/static/app/idnode.js:1881
 msgid "Parent disabled"
 msgstr ""
 
@@ -1179,13 +1259,13 @@ msgid "Per page"
 msgstr "На сторінку"
 
 #: src/webui/static/app/mpegts.js:127 src/webui/static/app/mpegts.js:128
-#: src/webui/static/app/mpegts.js:132 src/webui/static/app/mpegts.js:308
-#: src/webui/static/app/mpegts.js:309 src/webui/static/app/mpegts.js:313
-#: src/webui/static/app/chconf.js:216 src/webui/static/app/chconf.js:217
-#: src/webui/static/app/chconf.js:224 src/webui/static/app/dvr.js:407
-#: src/webui/static/app/dvr.js:408 src/webui/static/app/dvr.js:414
-#: src/webui/static/app/dvr.js:518 src/webui/static/app/dvr.js:519
-#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:352
+#: src/webui/static/app/mpegts.js:132 src/webui/static/app/mpegts.js:326
+#: src/webui/static/app/mpegts.js:327 src/webui/static/app/mpegts.js:331
+#: src/webui/static/app/chconf.js:233 src/webui/static/app/chconf.js:234
+#: src/webui/static/app/chconf.js:241 src/webui/static/app/dvr.js:437
+#: src/webui/static/app/dvr.js:438 src/webui/static/app/dvr.js:444
+#: src/webui/static/app/dvr.js:578 src/webui/static/app/dvr.js:579
+#: src/webui/static/app/dvr.js:585 src/webui/static/app/tvheadend.js:352
 msgid "Play"
 msgstr "Програвання"
 
@@ -1193,11 +1273,11 @@ msgstr "Програвання"
 msgid "Play Selected Channel"
 msgstr ""
 
-#: src/webui/static/app/epg.js:162
+#: src/webui/static/app/epg.js:185
 msgid "Play program"
 msgstr "Програвання програми"
 
-#: src/webui/static/app/epg.js:161
+#: src/webui/static/app/epg.js:184
 msgid "Play this program"
 msgstr "Програвати цю програму"
 
@@ -1205,7 +1285,7 @@ msgstr "Програвати цю програму"
 msgid "Please Wait..."
 msgstr "Зачекайте, будь ласка..."
 
-#: src/webui/static/app/wizard.js:63
+#: src/webui/static/app/wizard.js:66
 msgid "Previous"
 msgstr ""
 
@@ -1221,23 +1301,23 @@ msgstr "Попередня сторінка"
 msgid "Profile"
 msgstr "Профіль"
 
-#: src/webui/static/app/dvr.js:548
+#: src/webui/static/app/dvr.js:608
 msgid "Profile Name"
 msgstr "Назва профілю"
 
-#: src/webui/static/app/epg.js:460 src/webui/static/app/epg.js:461
+#: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
 msgid "Progress"
 msgstr "Прогрес"
 
-#: src/webui/static/app/config.js:85 src/webui/static/app/config.js:87
+#: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
 msgid "Re-fetch images"
 msgstr "Ще раз отримати зображення"
 
-#: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:459
+#: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:489
 msgid "Re-record"
 msgstr "Перезаписати"
 
-#: src/webui/static/app/idnode.js:1017
+#: src/webui/static/app/idnode.js:1018
 msgid "Read-only Info"
 msgstr "Інформація тільки для читання"
 
@@ -1245,15 +1325,15 @@ msgstr "Інформація тільки для читання"
 msgid "Reconnected to Tvheadend"
 msgstr "З’єднатися знову з "
 
-#: src/webui/static/app/epg.js:219
+#: src/webui/static/app/epg.js:242
 msgid "Record program"
 msgstr "Записати програму"
 
-#: src/webui/static/app/epg.js:225
+#: src/webui/static/app/epg.js:248
 msgid "Record series"
 msgstr "Записати серії"
 
-#: src/webui/static/app/epg.js:218
+#: src/webui/static/app/epg.js:241
 msgid "Record this program now"
 msgstr "Записати цю програму вже"
 
@@ -1269,32 +1349,36 @@ msgstr "Деталі запису"
 msgid "Refresh"
 msgstr "Відновити"
 
-#: src/webui/static/app/chconf.js:186
+#: src/webui/static/app/epg.js:142
+msgid "Repeat#EPG"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:203
 msgid "Reset (clear) the selected icon URLs"
 msgstr "Скинути (очистити) вибрані URL іконок"
 
-#: src/webui/static/app/epg.js:857
+#: src/webui/static/app/epg.js:880
 msgid "Reset All"
 msgstr "Скинути все"
 
-#: src/webui/static/app/chconf.js:188
+#: src/webui/static/app/chconf.js:205
 msgid "Reset Icon"
 msgstr "Скинути іконку"
 
-#: src/webui/static/app/epg.js:859
+#: src/webui/static/app/epg.js:882
 msgid "Reset all filters (show all)"
 msgstr "Скинути всі фільтри (показати всі)"
 
-#: src/webui/static/app/idnode.js:1685 src/webui/static/app/idnode.js:2176
-#: src/webui/static/app/idnode.js:2708
+#: src/webui/static/app/idnode.js:1719 src/webui/static/app/idnode.js:2211
+#: src/webui/static/app/idnode.js:2743
 msgid "Revert pending changes (marked with red border)"
 msgstr "Відкинути поточні зміни (позначені червоними краями)"
 
-#: src/webui/static/app/config.js:142
+#: src/webui/static/app/config.js:150
 msgid "SAT>IP Server"
 msgstr "Сервер SAT>IP"
 
-#: src/webui/static/app/config.js:150
+#: src/webui/static/app/config.js:158
 msgid "SAT>IP Server Configuration"
 msgstr "Конфігурація серверу SAT>IP"
 
@@ -1310,17 +1394,17 @@ msgstr "Суб"
 msgid "Saturday"
 msgstr "Субота"
 
-#: src/webui/static/app/idnode.js:1073 src/webui/static/app/idnode.js:1660
-#: src/webui/static/app/idnode.js:2156 src/webui/static/app/idnode.js:2689
+#: src/webui/static/app/idnode.js:1086 src/webui/static/app/idnode.js:1694
+#: src/webui/static/app/idnode.js:2191 src/webui/static/app/idnode.js:2724
 msgid "Save"
 msgstr "Зберегти"
 
-#: src/webui/static/app/wizard.js:114
+#: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:1658 src/webui/static/app/idnode.js:2154
-#: src/webui/static/app/idnode.js:2687
+#: src/webui/static/app/idnode.js:1692 src/webui/static/app/idnode.js:2189
+#: src/webui/static/app/idnode.js:2722
 msgid "Save pending changes (marked with red border)"
 msgstr "Зберегти щойно зроблені зміни (помічені червоними краями)"
 
@@ -1332,15 +1416,15 @@ msgstr "Запланований час початку"
 msgid "Scheduled Stop Time"
 msgstr "Запланований час закінчення"
 
-#: src/webui/static/app/epg.js:147 src/webui/static/app/dvr.js:66
+#: src/webui/static/app/epg.js:170 src/webui/static/app/dvr.js:66
 msgid "Search IMDB (for title)"
 msgstr "Шукати в IMDB (за назвою)"
 
-#: src/webui/static/app/epg.js:154 src/webui/static/app/dvr.js:72
+#: src/webui/static/app/epg.js:177 src/webui/static/app/dvr.js:72
 msgid "Search TheTVDB (for title)"
 msgstr "Шукати в TheTVDB (за назвами)"
 
-#: src/webui/static/app/epg.js:616
+#: src/webui/static/app/epg.js:639
 msgid "Search title..."
 msgstr "Пошук назви..."
 
@@ -1352,11 +1436,11 @@ msgstr "Пошук каналу..."
 msgid "Select stream profile..."
 msgstr "Вибір профілю потоку..."
 
-#: src/webui/static/app/idnode.js:457 src/webui/static/app/idnode.js:704
+#: src/webui/static/app/idnode.js:458 src/webui/static/app/idnode.js:705
 msgid "Select {0} ..."
 msgstr "Вибір {0} ..."
 
-#: src/webui/static/app/idnode.js:441 src/webui/static/app/idnode.js:680
+#: src/webui/static/app/idnode.js:442 src/webui/static/app/idnode.js:681
 msgid "Selected"
 msgstr "Вибрано"
 
@@ -1368,7 +1452,7 @@ msgstr "Вер"
 msgid "September"
 msgstr "Вересень"
 
-#: src/webui/static/app/mpegts.js:295 src/webui/static/app/status.js:112
+#: src/webui/static/app/mpegts.js:313 src/webui/static/app/status.js:112
 msgid "Service"
 msgstr "Сервіс"
 
@@ -1380,11 +1464,11 @@ msgstr "Відображення сервісу"
 msgid "Service details for"
 msgstr "Деталі сервісу для"
 
-#: src/webui/static/app/mpegts.js:296 src/webui/static/app/mpegts.js:303
+#: src/webui/static/app/mpegts.js:314 src/webui/static/app/mpegts.js:321
 msgid "Services"
 msgstr "Сервіси"
 
-#: src/webui/static/app/idnode.js:961
+#: src/webui/static/app/idnode.js:962
 msgid "Settings"
 msgstr "Налаштування"
 
@@ -1392,11 +1476,11 @@ msgstr "Налаштування"
 msgid "Show in Groups"
 msgstr "Показати в групах"
 
-#: src/webui/static/app/idnode.js:2283
+#: src/webui/static/app/idnode.js:2318
 msgid "Show or hide passwords"
 msgstr "Показати всі сховані паролі"
 
-#: src/webui/static/app/idnode.js:2285 src/webui/static/app/idnode.js:2289
+#: src/webui/static/app/idnode.js:2320 src/webui/static/app/idnode.js:2324
 msgid "Show passwords"
 msgstr "Показати паролі"
 
@@ -1416,7 +1500,7 @@ msgstr "Сортувати в порядку спадання"
 msgid "Star Rating"
 msgstr "Зірковий рейтинг"
 
-#: src/webui/static/app/epg.js:560 src/webui/static/app/epg.js:561
+#: src/webui/static/app/epg.js:583 src/webui/static/app/epg.js:584
 msgid "Stars"
 msgstr "Зірки"
 
@@ -1424,8 +1508,8 @@ msgstr "Зірки"
 msgid "Start"
 msgstr "Почати"
 
-#: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:513
-#: src/webui/static/app/epg.js:514
+#: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:536
+#: src/webui/static/app/epg.js:537
 msgid "Start Time"
 msgstr "Час початку"
 
@@ -1453,11 +1537,11 @@ msgstr "Статус"
 msgid "Stop"
 msgstr "Зупинити"
 
-#: src/webui/static/app/epg.js:189
+#: src/webui/static/app/epg.js:212
 msgid "Stop recording"
 msgstr "Зупинити запис"
 
-#: src/webui/static/app/epg.js:188
+#: src/webui/static/app/epg.js:211
 msgid "Stop recording of this program"
 msgstr "Зупинити запис цієї програми"
 
@@ -1495,7 +1579,7 @@ msgstr "# підписки"
 msgid "Subscriptions"
 msgstr "Підписки"
 
-#: src/webui/static/app/epg.js:497 src/webui/static/app/epg.js:498
+#: src/webui/static/app/epg.js:520 src/webui/static/app/epg.js:521
 msgid "Subtitle"
 msgstr "Субтитри"
 
@@ -1507,6 +1591,10 @@ msgstr "Фільтр субтитрів потоку"
 msgid "Subtitle Stream Filters"
 msgstr "Фільтри субтитрів потоку"
 
+#: src/webui/static/app/epg.js:152
+msgid "Subtitled#EPG"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
 msgstr "Нед"
@@ -1515,11 +1603,11 @@ msgstr "Нед"
 msgid "Sunday"
 msgstr "Неділя"
 
-#: src/webui/static/app/chconf.js:164
+#: src/webui/static/app/chconf.js:181
 msgid "Swap Numbers"
 msgstr "Поміняти номери"
 
-#: src/webui/static/app/chconf.js:162
+#: src/webui/static/app/chconf.js:179
 msgid "Swap the numbers for the two selected channels"
 msgstr "Поміняти номери двох вибраних каналів"
 
@@ -1531,7 +1619,7 @@ msgstr "Системний журнал"
 msgid "TV adapters"
 msgstr "Адаптери ТБ"
 
-#: src/webui/static/app/epg.js:1029
+#: src/webui/static/app/epg.js:1052
 msgid "Tag"
 msgstr "Мітка"
 
@@ -1543,7 +1631,7 @@ msgstr "Фільтр потоку телетексту"
 msgid "Teletext Stream Filters"
 msgstr "Фільтри потоку телетексту"
 
-#: src/webui/static/app/dvr.js:389 src/webui/static/app/dvr.js:500
+#: src/webui/static/app/dvr.js:419 src/webui/static/app/dvr.js:560
 msgid "The associated file will be removed from storage."
 msgstr "Відповідний файл буде вилучено з пристрою зберігання."
 
@@ -1567,7 +1655,7 @@ msgstr "Максимальне значення цього поля є {0}"
 msgid "The minimum length for this field is {0}"
 msgstr "Мінімальна довжина цього поля є {0}"
 
-#: src/webui/static/app/idnode.js:1352
+#: src/webui/static/app/idnode.js:1378
 msgid "The selected entry is the original!"
 msgstr ""
 
@@ -1605,7 +1693,7 @@ msgstr "Ця дата перед мінімальною датою"
 msgid "This field is required"
 msgstr "Це поле вимагається"
 
-#: src/webui/static/app/epg.js:1024
+#: src/webui/static/app/epg.js:1047
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
@@ -1623,24 +1711,16 @@ msgstr "Четвер"
 msgid "Time Scheduler"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:639
+#: src/webui/static/app/dvr.js:700
 msgid "Timer"
 msgstr "Таймер"
 
-#: src/webui/static/app/dvr.js:640
+#: src/webui/static/app/dvr.js:701
 msgid "Timers"
 msgstr "Таймери"
 
-#: src/webui/static/app/timeshift.js:16
-msgid "Timeshift"
-msgstr "Зсув часу"
-
-#: src/webui/static/app/timeshift.js:24
-msgid "Timeshift Configuration"
-msgstr "Конфігурація зсуву часу"
-
-#: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
-#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:100
+#: src/webui/static/app/epg.js:506 src/webui/static/app/epg.js:507
+#: src/webui/static/app/epg.js:1050 src/webui/static/app/status.js:100
 msgid "Title"
 msgstr "Назва"
 
@@ -1652,7 +1732,7 @@ msgstr "Сьогодні"
 msgid "Toggle mute"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:457
+#: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:487
 msgid "Toggle re-record functionality"
 msgstr ""
 
@@ -1685,11 +1765,16 @@ msgid "Tvheadend Web-Panel"
 msgstr "Веб-панель Tvheadend"
 
 #: src/webui/static/app/caclient.js:47 src/webui/static/app/esfilter.js:32
-#: src/webui/static/app/mpegts.js:77 src/webui/static/app/status.js:566
+#: src/webui/static/app/mpegts.js:77 src/webui/static/app/mpegts.js:170
+#: src/webui/static/app/status.js:566
 msgid "Type"
 msgstr "Тип"
 
-#: src/webui/static/app/wizard.js:145
+#: src/webui/static/app/epg.js:136
+msgid "UHDTV"
+msgstr ""
+
+#: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
 msgstr ""
 
@@ -1697,8 +1782,8 @@ msgstr ""
 msgid "Uncorrected Blocks"
 msgstr "Невиправлені блоки"
 
-#: src/webui/static/app/idnode.js:1687 src/webui/static/app/idnode.js:2178
-#: src/webui/static/app/idnode.js:2710
+#: src/webui/static/app/idnode.js:1721 src/webui/static/app/idnode.js:2213
+#: src/webui/static/app/idnode.js:2745
 msgid "Undo"
 msgstr "Анулювати"
 
@@ -1734,11 +1819,11 @@ msgstr "Фільтр відео-потоку"
 msgid "Video Stream Filters"
 msgstr "Фільтри відео-потоку"
 
-#: src/webui/static/app/idnode.js:614
+#: src/webui/static/app/idnode.js:615
 msgid "View level"
 msgstr "Переглянути рівень"
 
-#: src/webui/static/app/idnode.js:617
+#: src/webui/static/app/idnode.js:618
 msgid "View level: "
 msgstr "Переглянути рівень:"
 
@@ -1746,11 +1831,11 @@ msgstr "Переглянути рівень:"
 msgid "Volume"
 msgstr "Гучність"
 
-#: src/webui/static/app/epg.js:864
+#: src/webui/static/app/epg.js:887
 msgid "Watch TV"
 msgstr "Дивитися ТВ"
 
-#: src/webui/static/app/epg.js:866
+#: src/webui/static/app/epg.js:889
 msgid "Watch live TV in a new browser window."
 msgstr "Дивитися прямий ефір в новому вікні переглядача."
 
@@ -1766,15 +1851,19 @@ msgstr "Середа"
 msgid "Weight"
 msgstr "Вага"
 
+#: src/webui/static/app/epg.js:144
+msgid "Widescreen"
+msgstr ""
+
 #: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"
 msgstr "Буде пропущено"
 
-#: src/webui/static/app/wizard.js:119
+#: src/webui/static/app/wizard.js:165
 msgid "Wizard - initial configuration and tutorial"
 msgstr ""
 
-#: src/webui/static/app/wizard.js:56
+#: src/webui/static/app/wizard.js:59
 msgid "Wizard - page \"{0}\" not found"
 msgstr ""
 
@@ -1782,7 +1871,7 @@ msgstr ""
 msgid "Yes"
 msgstr "Так"
 
-#: src/webui/static/app/idnode.js:469 src/webui/static/app/idnode.js:834
+#: src/webui/static/app/idnode.js:470 src/webui/static/app/idnode.js:835
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "Вам потрібно ввести значення - використайте вісімковий запис chmod, наприклад 0664"
 
@@ -1812,8 +1901,8 @@ msgid ""
 "A|gi|hi|gia|hia|g|H#TimeField"
 msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H# ПолеЧасу"
 
-#: src/webui/static/app/idnode.js:359 src/webui/static/app/idnode.js:360
-#: src/webui/static/app/epg.js:427 src/webui/static/app/epg.js:429
+#: src/webui/static/app/idnode.js:360 src/webui/static/app/idnode.js:361
+#: src/webui/static/app/epg.js:450 src/webui/static/app/epg.js:452
 msgid "hrs"
 msgstr "год"
 
@@ -1849,8 +1938,8 @@ msgstr "м/д/р#ПолеДати"
 msgid "m/d/y#DatePicker"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:360 src/webui/static/app/idnode.js:362
-#: src/webui/static/app/epg.js:429 src/webui/static/app/epg.js:432
+#: src/webui/static/app/idnode.js:361 src/webui/static/app/idnode.js:363
+#: src/webui/static/app/epg.js:452 src/webui/static/app/epg.js:455
 #: src/webui/static/app/dvr.js:46
 msgid "min"
 msgstr "хв"

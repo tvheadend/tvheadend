@@ -10,9 +10,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-15 21:23+0100\n"
-"PO-Revision-Date: 2016-01-04 06:33+0000\n"
-"Last-Translator: Levente Cseh <levente@csehs.com>\n"
+"POT-Creation-Date: 2016-02-09 14:47+0100\n"
+"PO-Revision-Date: 2016-02-09 13:48+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -37,7 +37,7 @@ msgstr "(Szűrő törlés)"
 msgid "(None)"
 msgstr "(Semelyik)"
 
-#: src/webui/static/app/epg.js:209
+#: src/webui/static/app/epg.js:232
 msgid "(default DVR Profile)"
 msgstr "(alapértelmezett DVR profil)"
 
@@ -141,23 +141,23 @@ msgstr "Hozzáférési adat"
 msgid "Active"
 msgstr "Aktív"
 
-#: src/webui/static/app/idnode.js:1701 src/webui/static/app/idnode.js:2191
+#: src/webui/static/app/idnode.js:1735 src/webui/static/app/idnode.js:2226
 msgid "Add"
 msgstr "Hozzáad"
 
-#: src/webui/static/app/idnode.js:1699 src/webui/static/app/idnode.js:2189
+#: src/webui/static/app/idnode.js:1733 src/webui/static/app/idnode.js:2224
 msgid "Add a new entry"
 msgstr "Új bejegyzés hozzáadása"
 
-#: src/webui/static/app/idnode.js:1285 src/webui/static/app/idnode.js:1466
+#: src/webui/static/app/idnode.js:1311 src/webui/static/app/idnode.js:1500
 msgid "Add {0}"
 msgstr "Hozzáad {0}"
 
-#: src/webui/static/app/idnode.js:584 src/webui/static/app/idnode.js:600
+#: src/webui/static/app/idnode.js:585 src/webui/static/app/idnode.js:601
 msgid "Advanced"
 msgstr "Haladó"
 
-#: src/webui/static/app/idnode.js:1013
+#: src/webui/static/app/idnode.js:1014
 msgid "Advanced Settings"
 msgstr "További Beállítások"
 
@@ -169,7 +169,7 @@ msgstr "Azután"
 msgid "After filtering and reordering (without PCR and PMT)"
 msgstr "Szűrés és átrendezés után (PCR és PMT nélkül)"
 
-#: src/webui/static/app/epg.js:568 src/webui/static/app/epg.js:569
+#: src/webui/static/app/epg.js:591 src/webui/static/app/epg.js:592
 msgid "Age"
 msgstr "Életkor"
 
@@ -177,11 +177,13 @@ msgstr "Életkor"
 msgid "Age Rating"
 msgstr "Életkor Besorolás"
 
-#: src/webui/static/app/idnode.js:1847 src/webui/static/app/idnode.js:1886
+#: src/webui/static/app/idnode.js:1882 src/webui/static/app/idnode.js:1921
 msgid "All"
 msgstr "Összes"
 
-#: src/webui/static/app/idnode.js:1101 src/webui/static/app/idnode.js:1405
+#: src/webui/static/app/idnode.js:1119 src/webui/static/app/idnode.js:1131
+#: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1431
+#: src/webui/static/app/idnode.js:1448 src/webui/static/app/idnode.js:1453
 msgid "Apply"
 msgstr "Alkalmaz"
 
@@ -193,7 +195,7 @@ msgstr "A futó konfigurációban végzett módosítások alkalmazása."
 msgid "Apply configuration (run-time only)"
 msgstr "Konfiguráció alkalmazása (csak a jelenleg futó)"
 
-#: src/webui/static/app/idnode.js:1404
+#: src/webui/static/app/idnode.js:1430
 msgid "Apply settings"
 msgstr "Beállítások alkalmazása"
 
@@ -205,11 +207,15 @@ msgstr "Ápr"
 msgid "April"
 msgstr "Április"
 
-#: src/webui/static/app/chconf.js:146
+#: src/webui/static/app/epg.js:146
+msgid "Aspect"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:163
 msgid "Assign Number"
 msgstr "Szám hozzárendelése"
 
-#: src/webui/static/app/chconf.js:144
+#: src/webui/static/app/chconf.js:161
 msgid "Assign lowest free channel number"
 msgstr "Legkisebb szabad csatornaszám hozzárendelése"
 
@@ -221,6 +227,10 @@ msgstr "Audió stream szűrő"
 msgid "Audio Stream Filters"
 msgstr "Audió stream szűrők"
 
+#: src/webui/static/app/epg.js:154
+msgid "Audio description#EPG"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
 msgstr "Aug"
@@ -229,7 +239,7 @@ msgstr "Aug"
 msgid "August"
 msgstr "Augusztus"
 
-#: src/webui/static/app/epg.js:1024
+#: src/webui/static/app/epg.js:1047
 msgid "Auto Recorder"
 msgstr "Automata Felvevő"
 
@@ -237,16 +247,16 @@ msgstr "Automata Felvevő"
 msgid "Auto-refresh"
 msgstr "Auto frissítés"
 
-#: src/webui/static/app/epg.js:225 src/webui/static/app/dvr.js:57
-#: src/webui/static/app/dvr.js:572
+#: src/webui/static/app/epg.js:248 src/webui/static/app/dvr.js:57
+#: src/webui/static/app/dvr.js:632
 msgid "Autorec"
 msgstr "Auto felvétel"
 
-#: src/webui/static/app/dvr.js:573
+#: src/webui/static/app/dvr.js:633
 msgid "Autorecs"
 msgstr "Auto felvétel"
 
-#: src/webui/static/app/idnode.js:442 src/webui/static/app/idnode.js:681
+#: src/webui/static/app/idnode.js:443 src/webui/static/app/idnode.js:682
 msgid "Available"
 msgstr "Elérhető"
 
@@ -262,15 +272,15 @@ msgstr "Sávszélesség (kb/s)"
 msgid "Bandwidth monitor"
 msgstr "Sávszélesség kijelző"
 
-#: src/webui/static/app/config.js:28
+#: src/webui/static/app/config.js:29
 msgid "Base"
 msgstr "Alap"
 
-#: src/webui/static/app/idnode.js:582 src/webui/static/app/idnode.js:594
+#: src/webui/static/app/idnode.js:583 src/webui/static/app/idnode.js:595
 msgid "Basic"
 msgstr "Alap"
 
-#: src/webui/static/app/idnode.js:1011
+#: src/webui/static/app/idnode.js:1012
 msgid "Basic Settings"
 msgstr "Alapbeállítások"
 
@@ -286,15 +296,15 @@ msgstr "Csomag"
 msgid "Bouquets"
 msgstr "Csomagok"
 
-#: src/webui/static/app/epg.js:238
+#: src/webui/static/app/epg.js:261
 msgid "Broadcast Details"
 msgstr "Adás Részletei"
 
-#: src/webui/static/app/epg.js:343
+#: src/webui/static/app/epg.js:366
 msgid "Broadcast details"
 msgstr "Adás részletei"
 
-#: src/webui/static/app/epg.js:831
+#: src/webui/static/app/epg.js:854
 msgid "Buffering. Please wait..."
 msgstr "Pufferelés. Kérem várjon..."
 
@@ -319,7 +329,7 @@ msgid "CAs"
 msgstr "CA-k"
 
 #: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
-#: src/webui/static/app/idnode.js:1063 src/webui/static/app/idnode.js:1430
+#: src/webui/static/app/idnode.js:1076 src/webui/static/app/idnode.js:1464
 msgid "Cancel"
 msgstr "Mégse"
 
@@ -327,7 +337,7 @@ msgstr "Mégse"
 msgid "Cancel Connection"
 msgstr "Kapcsolat megszakítása"
 
-#: src/webui/static/app/idnode.js:1429
+#: src/webui/static/app/idnode.js:1463
 msgid "Cancel operation"
 msgstr "Művelet megszakítása"
 
@@ -339,12 +349,20 @@ msgstr "Megszakítja a jelenlegi kapcsolatot?"
 msgid "Cancel this connection"
 msgstr "Kapcsolat megszakítása"
 
-#: src/webui/static/app/idnode.js:612
+#: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1453
+msgid "Cannot apply"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:613
 msgid "Change the user interface level (basic, advanced, expert)"
 msgstr "Felhasználói felület szint módósítása (alapfokú, haladó, szakértő)"
 
-#: src/webui/static/app/chconf.js:200 src/webui/static/app/epg.js:546
-#: src/webui/static/app/epg.js:547 src/webui/static/app/epg.js:1028
+#: src/webui/static/app/idnode.js:1131 src/webui/static/app/idnode.js:1448
+msgid "Changes were applied!"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:569
+#: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1051
 #: src/webui/static/app/status.js:106
 msgid "Channel"
 msgstr "Csatorna"
@@ -361,11 +379,11 @@ msgstr "Csatorna-címke"
 msgid "Channel Tags"
 msgstr "Csatorna-címkék"
 
-#: src/webui/static/app/chconf.js:167
+#: src/webui/static/app/chconf.js:184
 msgid "Channel number operations"
 msgstr "Csatorna számmal kapcsolatos műveletek"
 
-#: src/webui/static/app/chconf.js:201 src/webui/static/app/chconf.js:205
+#: src/webui/static/app/chconf.js:218 src/webui/static/app/chconf.js:222
 msgid "Channels"
 msgstr "Csatornák"
 
@@ -373,11 +391,11 @@ msgstr "Csatornák"
 msgid "Choose a month (Control+Up/Down to move years)"
 msgstr "Válasszon hónapot (Control-Fel/Le az évek változtatásához)"
 
-#: src/webui/static/app/config.js:70
+#: src/webui/static/app/config.js:78
 msgid "Clean image (icon) cache"
 msgstr "Kép (Ikon) cache törlése"
 
-#: src/webui/static/app/config.js:68
+#: src/webui/static/app/config.js:76
 msgid "Clean image cache on storage"
 msgstr "Kép cache törlése a tárhelyen"
 
@@ -393,15 +411,15 @@ msgstr "Statisztikák törlése a választott bemeneten?"
 msgid "Client Name"
 msgstr "Ügyfél neve"
 
-#: src/webui/static/app/idnode.js:1352 src/webui/static/app/idnode.js:2201
+#: src/webui/static/app/idnode.js:1378 src/webui/static/app/idnode.js:2236
 msgid "Clone"
 msgstr "Klónozás"
 
-#: src/webui/static/app/idnode.js:2199
+#: src/webui/static/app/idnode.js:2234
 msgid "Clone a new entry"
 msgstr "Új bejegyzés klónozása"
 
-#: src/webui/static/app/epg.js:232
+#: src/webui/static/app/epg.js:255
 msgid "Close"
 msgstr "Bezár"
 
@@ -433,8 +451,8 @@ msgstr "Beállítás"
 msgid "Connections"
 msgstr "Csatlakozások"
 
-#: src/webui/static/app/epg.js:132 src/webui/static/app/epg.js:575
-#: src/webui/static/app/epg.js:576
+#: src/webui/static/app/epg.js:132 src/webui/static/app/epg.js:598
+#: src/webui/static/app/epg.js:599
 msgid "Content Type"
 msgstr "Tartalom típusa"
 
@@ -442,29 +460,29 @@ msgstr "Tartalom típusa"
 msgid "Continuity Errors"
 msgstr "Folytonossági hibák"
 
-#: src/webui/static/app/idnode.js:1378
+#: src/webui/static/app/idnode.js:1404
 msgid "Create"
 msgstr "Létrehoz"
 
-#: src/webui/static/app/epg.js:844
+#: src/webui/static/app/epg.js:867
 msgid "Create AutoRec"
 msgstr "Auto felvételt létrehoz"
 
-#: src/webui/static/app/epg.js:224 src/webui/static/app/epg.js:846
+#: src/webui/static/app/epg.js:247 src/webui/static/app/epg.js:869
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
 msgstr "Egy automatikus felvételi szabály készítése mely az aktuális lekérdezésnek megfelelő összes jövőbeli adást felveszi."
 
-#: src/webui/static/app/idnode.js:1377
+#: src/webui/static/app/idnode.js:1403
 msgid "Create new entry"
 msgstr "Új bejegyzés létrehozása"
 
-#: src/webui/static/app/epg.js:1046
+#: src/webui/static/app/epg.js:1069
 msgid "Created from EPG query"
 msgstr "EPG lekérdezésből származik"
 
-#: src/webui/static/app/epg.js:1033
+#: src/webui/static/app/epg.js:1056
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr "Jelenleg ez megfelel (és rögzíti) a %d eseménynek"
@@ -473,15 +491,15 @@ msgstr "Jelenleg ez megfelel (és rögzíti) a %d eseménynek"
 msgid "DVB Inputs"
 msgstr "DVB-bemenetek"
 
-#: src/webui/static/app/epg.js:314 src/webui/static/app/dvr.js:557
+#: src/webui/static/app/epg.js:337 src/webui/static/app/dvr.js:617
 msgid "DVR"
 msgstr "DVR"
 
-#: src/webui/static/app/dvr.js:531
+#: src/webui/static/app/dvr.js:591
 msgid "DVR - Failed Recordings"
 msgstr "DVR - Sikertelen felvételek"
 
-#: src/webui/static/app/dvr.js:420
+#: src/webui/static/app/dvr.js:450
 msgid "DVR - Finished Recordings"
 msgstr "DVR - Kész felvételek"
 
@@ -489,13 +507,17 @@ msgstr "DVR - Kész felvételek"
 msgid "DVR - Upcoming/Current Recordings"
 msgstr "DVR - Jövőbeni/jelenlegi felvételek"
 
-#: src/webui/static/app/dvr.js:624
+#: src/webui/static/app/dvr.js:685
 msgid "DVR Autorec"
 msgstr "DVR auto felvételek"
 
-#: src/webui/static/app/dvr.js:677
+#: src/webui/static/app/dvr.js:738
 msgid "DVR Timers"
 msgstr "DVR Időzítők"
+
+#: src/webui/static/app/epg.js:150
+msgid "Deaf signed#EPG"
+msgstr ""
 
 #: src/webui/static/app/tvhlog.js:28
 msgid "Debug Configuration"
@@ -513,19 +535,19 @@ msgstr "Dec"
 msgid "December"
 msgstr "December"
 
-#: src/webui/static/app/idnode.js:1715 src/webui/static/app/idnode.js:2214
+#: src/webui/static/app/idnode.js:1749 src/webui/static/app/idnode.js:2249
 msgid "Delete"
 msgstr "Törlés"
 
-#: src/webui/static/app/epg.js:198
+#: src/webui/static/app/epg.js:221
 msgid "Delete recording"
 msgstr "Felvétel törlése"
 
-#: src/webui/static/app/epg.js:197
+#: src/webui/static/app/epg.js:220
 msgid "Delete scheduled recording of this program"
 msgstr "A műsor időzített felvételének törlése"
 
-#: src/webui/static/app/idnode.js:1713 src/webui/static/app/idnode.js:2212
+#: src/webui/static/app/idnode.js:1747 src/webui/static/app/idnode.js:2247
 msgid "Delete selected entries"
 msgstr "Kijelölt bejegyzések törlése"
 
@@ -533,25 +555,25 @@ msgstr "Kijelölt bejegyzések törlése"
 msgid "Descramble"
 msgstr "Titkosítás feloldás"
 
-#: src/webui/static/app/mpegts.js:265
+#: src/webui/static/app/mpegts.js:282
 msgid "Detailed stream info"
 msgstr "Részletes stream információ"
 
-#: src/webui/static/app/mpegts.js:261 src/webui/static/app/epg.js:329
-#: src/webui/static/app/epg.js:330 src/webui/static/app/dvr.js:123
-#: src/webui/static/app/dvr.js:124
+#: src/webui/static/app/mpegts.js:172 src/webui/static/app/mpegts.js:278
+#: src/webui/static/app/epg.js:352 src/webui/static/app/epg.js:353
+#: src/webui/static/app/dvr.js:123 src/webui/static/app/dvr.js:124
 msgid "Details"
 msgstr "Részletek"
 
-#: src/webui/static/app/dvr.js:692
+#: src/webui/static/app/dvr.js:753
 msgid "Digital Video Recorder"
 msgstr "Digitális Videó Felvevő"
 
-#: src/webui/static/app/dvr.js:546
+#: src/webui/static/app/dvr.js:606
 msgid "Digital Video Recorder Profile"
 msgstr "Digitális Videó Felvevő profil"
 
-#: src/webui/static/app/dvr.js:547
+#: src/webui/static/app/dvr.js:607
 msgid "Digital Video Recorder Profiles"
 msgstr "Digitális Videó Felvevő profilok"
 
@@ -559,7 +581,7 @@ msgstr "Digitális Videó Felvevő profilok"
 msgid "Disabled"
 msgstr "Kikapcsolt"
 
-#: src/webui/static/app/config.js:129
+#: src/webui/static/app/config.js:137
 msgid "Discover SAT>IP servers"
 msgstr "SAT>IP szerver keresése"
 
@@ -571,7 +593,7 @@ msgstr "{0} - {1} a {2} -ből"
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Valóban megszakítja a kijelölt időzítést?"
 
-#: src/webui/static/app/dvr.js:388 src/webui/static/app/dvr.js:499
+#: src/webui/static/app/dvr.js:418 src/webui/static/app/dvr.js:559
 msgid "Do you really want to delete the selected recordings?"
 msgstr "Valóban törli a kijelölt felvételeket?"
 
@@ -583,30 +605,30 @@ msgstr "Tényleg törölni akarja a kiválasztott elemet?"
 msgid "Do you really want to gracefully stop/unschedule the selection?"
 msgstr "Valóban meg szeretné állítani/át szeretné ütemezni a kijelölt elemet?"
 
-#: src/webui/static/app/epg.js:286
+#: src/webui/static/app/epg.js:309
 msgid "Do you really want to gracefully stop/unschedule this recording?"
 msgstr "Valóban meg szeretné állítani/át szeretné ütemezni ezt a felvételt?"
 
-#: src/webui/static/app/epg.js:299
+#: src/webui/static/app/epg.js:322
 msgid "Do you really want to remove this recording?"
 msgstr "Tényleg törölni akarod ezt a felvételt?"
 
-#: src/webui/static/app/epg.js:1007 src/webui/static/app/epg.js:1013
-#: src/webui/static/app/epg.js:1016 src/webui/static/app/epg.js:1019
-#: src/webui/static/app/epg.js:1022
+#: src/webui/static/app/epg.js:1030 src/webui/static/app/epg.js:1036
+#: src/webui/static/app/epg.js:1039 src/webui/static/app/epg.js:1042
+#: src/webui/static/app/epg.js:1045
 msgid "Don't care"
 msgstr "Nem érdekel"
 
-#: src/webui/static/app/dvr.js:329 src/webui/static/app/dvr.js:440
+#: src/webui/static/app/dvr.js:329 src/webui/static/app/dvr.js:470
 msgid "Download"
 msgstr "Letöltés"
 
-#: src/webui/static/app/dvr.js:327 src/webui/static/app/dvr.js:438
+#: src/webui/static/app/dvr.js:327 src/webui/static/app/dvr.js:468
 msgid "Download the selected recording"
 msgstr "Kiválasztott felvétel letöltése"
 
-#: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:530
-#: src/webui/static/app/epg.js:531 src/webui/static/app/epg.js:1031
+#: src/webui/static/app/epg.js:111 src/webui/static/app/epg.js:553
+#: src/webui/static/app/epg.js:554 src/webui/static/app/epg.js:1054
 #: src/webui/static/app/dvr.js:46
 msgid "Duration"
 msgstr "Időtartam"
@@ -639,27 +661,27 @@ msgstr "EPG letöltő modulok"
 msgid "EPG Grabber Name"
 msgstr "EPG letöltő név"
 
-#: src/webui/static/app/epg.js:954
+#: src/webui/static/app/epg.js:977
 msgid "EPG Update"
 msgstr "EPG frissítés"
 
-#: src/webui/static/app/idnode.js:1206 src/webui/static/app/idnode.js:1802
+#: src/webui/static/app/idnode.js:1232 src/webui/static/app/idnode.js:1836
 msgid "Edit"
 msgstr "Szerkesztés"
 
-#: src/webui/static/app/idnode.js:1800
+#: src/webui/static/app/idnode.js:1834
 msgid "Edit selected entry"
 msgstr "Kiválasztott elem szerkesztése"
 
-#: src/webui/static/app/idnode.js:1243 src/webui/static/app/idnode.js:1816
+#: src/webui/static/app/idnode.js:1269 src/webui/static/app/idnode.js:1850
 msgid "Edit {0}"
 msgstr "Szerkesztés {0}"
 
-#: src/webui/static/app/idnode.js:1240
+#: src/webui/static/app/idnode.js:1266
 msgid "Edit {0} ({1} entries)"
 msgstr "{0} ({1} bejegyzések) szerkesztése"
 
-#: src/webui/static/app/epg.js:878 src/webui/static/app/epg.js:889
+#: src/webui/static/app/epg.js:901 src/webui/static/app/epg.js:912
 msgid "Electronic Program Guide"
 msgstr "Elektronikus műsor újság"
 
@@ -673,8 +695,8 @@ msgstr "Alapvető stream szűrő"
 msgid "Enable debug output"
 msgstr "Nyomkövetési kimenet engedélyezése"
 
-#: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:522
-#: src/webui/static/app/epg.js:523
+#: src/webui/static/app/epg.js:109 src/webui/static/app/epg.js:545
+#: src/webui/static/app/epg.js:546
 msgid "End Time"
 msgstr "Lejárati idő"
 
@@ -682,7 +704,7 @@ msgstr "Lejárati idő"
 msgid "Enter Filter Text..."
 msgstr "Szűrési szöveg bevitele..."
 
-#: src/webui/static/app/epg.js:505 src/webui/static/app/epg.js:506
+#: src/webui/static/app/epg.js:528 src/webui/static/app/epg.js:529
 msgid "Episode"
 msgstr "Epizód"
 
@@ -690,7 +712,7 @@ msgstr "Epizód"
 msgid "Errors"
 msgstr "Hibák"
 
-#: src/webui/static/app/epg.js:896
+#: src/webui/static/app/epg.js:919
 msgid "Events"
 msgstr "Események"
 
@@ -698,11 +720,11 @@ msgstr "Események"
 msgid "Every day"
 msgstr "Minden nap"
 
-#: src/webui/static/app/idnode.js:585 src/webui/static/app/idnode.js:606
+#: src/webui/static/app/idnode.js:586 src/webui/static/app/idnode.js:607
 msgid "Expert"
 msgstr "Haladó"
 
-#: src/webui/static/app/idnode.js:1015
+#: src/webui/static/app/idnode.js:1016
 msgid "Expert Settings"
 msgstr "Haladó beállítások"
 
@@ -710,11 +732,11 @@ msgstr "Haladó beállítások"
 msgid "Failed"
 msgstr "Sikertelen"
 
-#: src/webui/static/app/dvr.js:493
+#: src/webui/static/app/dvr.js:553
 msgid "Failed Recording"
 msgstr "Sikertelen Felvétel"
 
-#: src/webui/static/app/dvr.js:494
+#: src/webui/static/app/dvr.js:554
 msgid "Failed Recordings"
 msgstr "Sikertelen Felvételek"
 
@@ -730,19 +752,19 @@ msgstr "Február"
 msgid "File size"
 msgstr "Fájlméret"
 
-#: src/webui/static/app/epg.js:636
+#: src/webui/static/app/epg.js:659
 msgid "Filter channel..."
 msgstr "Csatorna szűrő..."
 
-#: src/webui/static/app/epg.js:683
+#: src/webui/static/app/epg.js:706
 msgid "Filter content type..."
 msgstr "Szűrő-tartalom típusa..."
 
-#: src/webui/static/app/epg.js:704
+#: src/webui/static/app/epg.js:727
 msgid "Filter duration..."
 msgstr "Szűrő időtartama..."
 
-#: src/webui/static/app/epg.js:659
+#: src/webui/static/app/epg.js:682
 msgid "Filter tag..."
 msgstr "Szűrő-címke..."
 
@@ -750,15 +772,15 @@ msgstr "Szűrő-címke..."
 msgid "Filters"
 msgstr "Szűrők"
 
-#: src/webui/static/app/wizard.js:114
+#: src/webui/static/app/wizard.js:160
 msgid "Finish"
 msgstr "Befejezés"
 
-#: src/webui/static/app/dvr.js:382
+#: src/webui/static/app/dvr.js:412
 msgid "Finished Recording"
 msgstr "Befejezett felvétel"
 
-#: src/webui/static/app/dvr.js:383
+#: src/webui/static/app/dvr.js:413
 msgid "Finished Recordings"
 msgstr "Befejezett felvételek"
 
@@ -790,7 +812,7 @@ msgstr "Péntek"
 msgid "Fullscreen"
 msgstr "Teljes képernyő"
 
-#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1009
+#: src/webui/static/app/epg.js:874 src/webui/static/app/epg.js:1032
 msgid "Fulltext"
 msgstr "Fulltext"
 
@@ -798,11 +820,11 @@ msgstr "Fulltext"
 msgid "General"
 msgstr "Általános"
 
-#: src/webui/static/app/config.js:49 src/webui/static/app/config.js:108
+#: src/webui/static/app/config.js:57 src/webui/static/app/config.js:116
 msgid "General Configuration"
 msgstr "Általános beállítás"
 
-#: src/webui/static/app/epg.js:1030
+#: src/webui/static/app/epg.js:1053
 msgid "Genre"
 msgstr "Műfaj"
 
@@ -810,7 +832,7 @@ msgstr "Műfaj"
 msgid "GiB"
 msgstr "GiB"
 
-#: src/webui/static/app/idnode.js:1541
+#: src/webui/static/app/idnode.js:1575
 msgid "Grid Update"
 msgstr "Hálózati frissítés"
 
@@ -818,9 +840,13 @@ msgstr "Hálózati frissítés"
 msgid "Group By This Field"
 msgstr "Ezen mező szerinti csoportosítás"
 
-#: src/webui/static/app/idnode.js:1140 src/webui/static/app/idnode.js:1953
-#: src/webui/static/app/idnode.js:2336 src/webui/static/app/idnode.js:2770
-#: src/webui/static/app/epg.js:875
+#: src/webui/static/app/epg.js:138
+msgid "HDTV"
+msgstr ""
+
+#: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
+#: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
+#: src/webui/static/app/epg.js:898
 msgid "Help"
 msgstr "Segítség"
 
@@ -828,11 +854,11 @@ msgstr "Segítség"
 msgid "Help for"
 msgstr "Segítség"
 
-#: src/webui/static/app/idnode.js:1863
+#: src/webui/static/app/idnode.js:1898
 msgid "Hide"
 msgstr "Elrejt"
 
-#: src/webui/static/app/idnode.js:2289
+#: src/webui/static/app/idnode.js:2324
 msgid "Hide passwords"
 msgstr "Jelszavak rejtése"
 
@@ -864,13 +890,17 @@ msgstr "IP-szűrő rekordok"
 msgid "Ignored"
 msgstr "Elutasított"
 
-#: src/webui/static/app/config.js:100
+#: src/webui/static/app/config.js:108
 msgid "Image cache"
 msgstr "Képek tárolója"
 
 #: src/webui/static/app/status.js:724
 msgid "In"
 msgstr "In"
+
+#: src/webui/static/app/mpegts.js:168
+msgid "Index"
+msgstr ""
 
 #: src/webui/static/app/status.js:347 src/webui/static/app/status.js:814
 msgid "Input"
@@ -908,9 +938,17 @@ msgstr "Június"
 msgid "KiB"
 msgstr "KiB"
 
+#: src/webui/static/app/mpegts.js:171
+msgid "Language"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
 msgstr "Utolsó Oldal"
+
+#: src/webui/static/app/epg.js:148
+msgid "Lines"
+msgstr ""
 
 #: src/webui/static/app/tvheadend.js:340
 msgid "Live TV Player"
@@ -921,9 +959,9 @@ msgid "Loading, please wait..."
 msgstr "Betőltés, kérem várjon..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:627
-#: src/webui/static/app/epg.js:650 src/webui/static/app/epg.js:674
-#: src/webui/static/app/epg.js:695 src/webui/static/app/tvheadend.js:278
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:650
+#: src/webui/static/app/epg.js:673 src/webui/static/app/epg.js:697
+#: src/webui/static/app/epg.js:718 src/webui/static/app/tvheadend.js:278
 #: src/webui/static/app/tvheadend.js:316
 msgid "Loading..."
 msgstr "Betöltés..."
@@ -932,28 +970,45 @@ msgstr "Betöltés..."
 msgid "Logged in as"
 msgstr "Bejelentkezés mint"
 
-#: src/webui/static/app/config.js:127
+#: src/webui/static/app/config.js:135
 msgid "Look for new SAT>IP servers"
 msgstr "Új SAT>IP szerver keresése"
 
-#: src/webui/static/app/mpegts.js:245 src/webui/static/app/mpegts.js:257
+#: src/webui/static/app/mpegts.js:274
 msgid "Map All"
 msgstr "Mindet hozzárendel"
 
-#: src/webui/static/app/mpegts.js:255
+#: src/webui/static/app/mpegts.js:272
 msgid "Map Selected"
 msgstr "Kijelöltet hozzárendel"
 
-#: src/webui/static/app/chconf.js:131
-msgid "Map Services"
-msgstr "Szolgáltatásokat hozzárendel"
+#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:139
+msgid "Map all services"
+msgstr ""
 
-#: src/webui/static/app/servicemapper.js:103
-#: src/webui/static/app/servicemapper.js:111
+#: src/webui/static/app/mpegts.js:251 src/webui/static/app/chconf.js:137
+msgid "Map all services to channels"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:247 src/webui/static/app/chconf.js:133
+msgid "Map selected services"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:245 src/webui/static/app/chconf.js:131
+msgid "Map selected services to channels"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:258 src/webui/static/app/chconf.js:144
+#: src/webui/static/app/servicemapper.js:104
+#: src/webui/static/app/servicemapper.js:112
+#: src/webui/static/app/servicemapper.js:123
+#: src/webui/static/app/servicemapper.js:137
 msgid "Map services"
 msgstr "Szolgáltatások hozzárendelése"
 
-#: src/webui/static/app/mpegts.js:243 src/webui/static/app/chconf.js:129
+#: src/webui/static/app/mpegts.js:256 src/webui/static/app/chconf.js:142
+#: src/webui/static/app/servicemapper.js:101
+#: src/webui/static/app/servicemapper.js:120
 msgid "Map services to channels"
 msgstr "Szolgáltatások hozzárendelése csatornákhoz"
 
@@ -968,6 +1023,14 @@ msgstr "Mar"
 #: src/webui/static/app/i18n-post.js:22
 msgid "March"
 msgstr "Március"
+
+#: src/webui/static/app/dvr.js:375
+msgid "Mark the selected recording as failed"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:516
+msgid "Mark the selected recording as finished"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
@@ -993,47 +1056,55 @@ msgstr "Hé"
 msgid "Monday"
 msgstr "Hétfő"
 
-#: src/webui/static/app/idnode.js:1771 src/webui/static/app/idnode.js:2261
+#: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2296
 msgid "Move Down"
 msgstr "Mozgatás Lejjebb"
 
-#: src/webui/static/app/idnode.js:1746 src/webui/static/app/idnode.js:2240
+#: src/webui/static/app/idnode.js:1780 src/webui/static/app/idnode.js:2275
 msgid "Move Up"
 msgstr "Mozgatás Feljebb"
 
-#: src/webui/static/app/chconf.js:156
+#: src/webui/static/app/chconf.js:173
 msgid "Move channel one number down"
 msgstr "Csatorna mozgatása eggyel lejjebb"
 
-#: src/webui/static/app/chconf.js:150
+#: src/webui/static/app/chconf.js:167
 msgid "Move channel one number up"
 msgstr "Csatorna mozgatása eggyel feljebb"
 
-#: src/webui/static/app/idnode.js:1769
+#: src/webui/static/app/idnode.js:1803
 msgid "Move selected entries down"
 msgstr "A kiválasztott bejegyzések lefele mozgatása"
 
-#: src/webui/static/app/idnode.js:1744
+#: src/webui/static/app/idnode.js:1778
 msgid "Move selected entries up"
 msgstr "A kiválasztott bejegyzések felele mozgatása"
 
-#: src/webui/static/app/idnode.js:2259
+#: src/webui/static/app/idnode.js:2294
 msgid "Move selected entry down"
 msgstr "A kiválasztott bejegyzés lefele mozgatása"
 
-#: src/webui/static/app/idnode.js:2238
+#: src/webui/static/app/idnode.js:2273
 msgid "Move selected entry up"
 msgstr "A kiválasztott bejegyzés felfele mozgatása"
+
+#: src/webui/static/app/dvr.js:377
+msgid "Move to failed"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:518
+msgid "Move to finished"
+msgstr ""
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:109
 msgid "Mux"
 msgstr "Mux"
 
-#: src/webui/static/app/mpegts.js:333 src/webui/static/app/mpegts.js:343
+#: src/webui/static/app/mpegts.js:351 src/webui/static/app/mpegts.js:361
 msgid "Mux Scheduler"
 msgstr "Mux Ütemező"
 
-#: src/webui/static/app/mpegts.js:334 src/webui/static/app/mpegts.js:338
+#: src/webui/static/app/mpegts.js:352 src/webui/static/app/mpegts.js:356
 msgid "Mux Schedulers"
 msgstr "Mux Ütemezők"
 
@@ -1049,6 +1120,10 @@ msgstr "Hálózat"
 #: src/webui/static/app/mpegts.js:67 src/webui/static/app/mpegts.js:71
 msgid "Networks"
 msgstr "Hálózatok"
+
+#: src/webui/static/app/epg.js:140
+msgid "New#EPG"
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
@@ -1079,12 +1154,12 @@ msgstr "Nincs hozzáférés"
 msgid "No {0} to display"
 msgstr "Nincs kijelezhető {0}"
 
-#: src/webui/static/app/idnode.js:1848 src/webui/static/app/mpegts.js:209
+#: src/webui/static/app/idnode.js:1883 src/webui/static/app/mpegts.js:209
 #: src/webui/static/app/mpegts.js:219
 msgid "None"
 msgstr "Egyik sem"
 
-#: src/webui/static/app/idnode.js:351
+#: src/webui/static/app/idnode.js:352
 msgid "Not set"
 msgstr "Nincs beállítva"
 
@@ -1096,19 +1171,19 @@ msgstr "Nov"
 msgid "November"
 msgstr "November"
 
-#: src/webui/static/app/epg.js:537 src/webui/static/app/epg.js:538
+#: src/webui/static/app/epg.js:560 src/webui/static/app/epg.js:561
 msgid "Number"
 msgstr "Szám"
 
-#: src/webui/static/app/chconf.js:158
+#: src/webui/static/app/chconf.js:175
 msgid "Number Down"
 msgstr "Szám Csökkentése"
 
-#: src/webui/static/app/chconf.js:152
+#: src/webui/static/app/chconf.js:169
 msgid "Number Up"
 msgstr "Szám Növelése"
 
-#: src/webui/static/app/chconf.js:169
+#: src/webui/static/app/chconf.js:186
 msgid "Number operations"
 msgstr "Műveletek száma"
 
@@ -1148,15 +1223,20 @@ msgstr "Kimenet (kb/s)"
 msgid "PER"
 msgstr "PER"
 
+#: src/webui/static/app/mpegts.js:169
+msgid "PID"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
 msgstr "Oldal"
 
-#: src/webui/static/app/idnode.js:2367 src/webui/static/app/idnode.js:2550
+#: src/webui/static/app/idnode.js:2402 src/webui/static/app/idnode.js:2585
+#: src/webui/static/app/epg.js:156
 msgid "Parameters"
 msgstr "Paraméterek"
 
-#: src/webui/static/app/idnode.js:1846
+#: src/webui/static/app/idnode.js:1881
 msgid "Parent disabled"
 msgstr "Szülő letiltva"
 
@@ -1181,13 +1261,13 @@ msgid "Per page"
 msgstr "Oldalanként"
 
 #: src/webui/static/app/mpegts.js:127 src/webui/static/app/mpegts.js:128
-#: src/webui/static/app/mpegts.js:132 src/webui/static/app/mpegts.js:308
-#: src/webui/static/app/mpegts.js:309 src/webui/static/app/mpegts.js:313
-#: src/webui/static/app/chconf.js:216 src/webui/static/app/chconf.js:217
-#: src/webui/static/app/chconf.js:224 src/webui/static/app/dvr.js:407
-#: src/webui/static/app/dvr.js:408 src/webui/static/app/dvr.js:414
-#: src/webui/static/app/dvr.js:518 src/webui/static/app/dvr.js:519
-#: src/webui/static/app/dvr.js:525 src/webui/static/app/tvheadend.js:352
+#: src/webui/static/app/mpegts.js:132 src/webui/static/app/mpegts.js:326
+#: src/webui/static/app/mpegts.js:327 src/webui/static/app/mpegts.js:331
+#: src/webui/static/app/chconf.js:233 src/webui/static/app/chconf.js:234
+#: src/webui/static/app/chconf.js:241 src/webui/static/app/dvr.js:437
+#: src/webui/static/app/dvr.js:438 src/webui/static/app/dvr.js:444
+#: src/webui/static/app/dvr.js:578 src/webui/static/app/dvr.js:579
+#: src/webui/static/app/dvr.js:585 src/webui/static/app/tvheadend.js:352
 msgid "Play"
 msgstr "Lejátszás"
 
@@ -1195,11 +1275,11 @@ msgstr "Lejátszás"
 msgid "Play Selected Channel"
 msgstr "Kiválasztott csatornára váltás"
 
-#: src/webui/static/app/epg.js:162
+#: src/webui/static/app/epg.js:185
 msgid "Play program"
 msgstr "Műsor lejátszása"
 
-#: src/webui/static/app/epg.js:161
+#: src/webui/static/app/epg.js:184
 msgid "Play this program"
 msgstr "Műsor lejátszása"
 
@@ -1207,7 +1287,7 @@ msgstr "Műsor lejátszása"
 msgid "Please Wait..."
 msgstr "Kérem várjon..."
 
-#: src/webui/static/app/wizard.js:63
+#: src/webui/static/app/wizard.js:66
 msgid "Previous"
 msgstr "Előző"
 
@@ -1223,23 +1303,23 @@ msgstr "Előző Oldal"
 msgid "Profile"
 msgstr "Profil"
 
-#: src/webui/static/app/dvr.js:548
+#: src/webui/static/app/dvr.js:608
 msgid "Profile Name"
 msgstr "Profilnév"
 
-#: src/webui/static/app/epg.js:460 src/webui/static/app/epg.js:461
+#: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
 msgid "Progress"
 msgstr "Folyamat"
 
-#: src/webui/static/app/config.js:85 src/webui/static/app/config.js:87
+#: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
 msgid "Re-fetch images"
 msgstr "Képek újratöltése"
 
-#: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:459
+#: src/webui/static/app/dvr.js:348 src/webui/static/app/dvr.js:489
 msgid "Re-record"
 msgstr "Újrarögzítés"
 
-#: src/webui/static/app/idnode.js:1017
+#: src/webui/static/app/idnode.js:1018
 msgid "Read-only Info"
 msgstr "Írásvédett Adat"
 
@@ -1247,15 +1327,15 @@ msgstr "Írásvédett Adat"
 msgid "Reconnected to Tvheadend"
 msgstr "Újracsatlakozva a Tvheadend-hez"
 
-#: src/webui/static/app/epg.js:219
+#: src/webui/static/app/epg.js:242
 msgid "Record program"
 msgstr "Műsor felvétele"
 
-#: src/webui/static/app/epg.js:225
+#: src/webui/static/app/epg.js:248
 msgid "Record series"
 msgstr "Sorozat felvétele"
 
-#: src/webui/static/app/epg.js:218
+#: src/webui/static/app/epg.js:241
 msgid "Record this program now"
 msgstr "Műsor azonnali rögzítése"
 
@@ -1271,32 +1351,36 @@ msgstr "Felvétel részletei"
 msgid "Refresh"
 msgstr "Frissítés"
 
-#: src/webui/static/app/chconf.js:186
+#: src/webui/static/app/epg.js:142
+msgid "Repeat#EPG"
+msgstr ""
+
+#: src/webui/static/app/chconf.js:203
 msgid "Reset (clear) the selected icon URLs"
 msgstr "A kiválasztott ikon URL alaphelyzetbe állítása (törlése)"
 
-#: src/webui/static/app/epg.js:857
+#: src/webui/static/app/epg.js:880
 msgid "Reset All"
 msgstr "Minden alaphelyzetbe"
 
-#: src/webui/static/app/chconf.js:188
+#: src/webui/static/app/chconf.js:205
 msgid "Reset Icon"
 msgstr "Ikon alaphelyzetbe"
 
-#: src/webui/static/app/epg.js:859
+#: src/webui/static/app/epg.js:882
 msgid "Reset all filters (show all)"
 msgstr "Minden szűrő alaphelyzetbe (mindent mutat)"
 
-#: src/webui/static/app/idnode.js:1685 src/webui/static/app/idnode.js:2176
-#: src/webui/static/app/idnode.js:2708
+#: src/webui/static/app/idnode.js:1719 src/webui/static/app/idnode.js:2211
+#: src/webui/static/app/idnode.js:2743
 msgid "Revert pending changes (marked with red border)"
 msgstr "A függőben lévő változtatások elvetése (piros szegéllyel jelzett)"
 
-#: src/webui/static/app/config.js:142
+#: src/webui/static/app/config.js:150
 msgid "SAT>IP Server"
 msgstr "SAT>IP szerver"
 
-#: src/webui/static/app/config.js:150
+#: src/webui/static/app/config.js:158
 msgid "SAT>IP Server Configuration"
 msgstr "SAT>IP szerver beállítások"
 
@@ -1312,17 +1396,17 @@ msgstr "Szo"
 msgid "Saturday"
 msgstr "Szombat"
 
-#: src/webui/static/app/idnode.js:1073 src/webui/static/app/idnode.js:1660
-#: src/webui/static/app/idnode.js:2156 src/webui/static/app/idnode.js:2689
+#: src/webui/static/app/idnode.js:1086 src/webui/static/app/idnode.js:1694
+#: src/webui/static/app/idnode.js:2191 src/webui/static/app/idnode.js:2724
 msgid "Save"
 msgstr "Mentés"
 
-#: src/webui/static/app/wizard.js:114
+#: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
 msgstr "Mentés és következő"
 
-#: src/webui/static/app/idnode.js:1658 src/webui/static/app/idnode.js:2154
-#: src/webui/static/app/idnode.js:2687
+#: src/webui/static/app/idnode.js:1692 src/webui/static/app/idnode.js:2189
+#: src/webui/static/app/idnode.js:2722
 msgid "Save pending changes (marked with red border)"
 msgstr "A függőben lévő változtatások mentése (piros szegéllyel jelzett)"
 
@@ -1334,15 +1418,15 @@ msgstr "Időzített kezdési időpont"
 msgid "Scheduled Stop Time"
 msgstr "Időzített leállítási időpont"
 
-#: src/webui/static/app/epg.js:147 src/webui/static/app/dvr.js:66
+#: src/webui/static/app/epg.js:170 src/webui/static/app/dvr.js:66
 msgid "Search IMDB (for title)"
 msgstr "Keresés IMDB-n (cím szerint)"
 
-#: src/webui/static/app/epg.js:154 src/webui/static/app/dvr.js:72
+#: src/webui/static/app/epg.js:177 src/webui/static/app/dvr.js:72
 msgid "Search TheTVDB (for title)"
 msgstr "Keresés TheTVDB-n (cím szerint)"
 
-#: src/webui/static/app/epg.js:616
+#: src/webui/static/app/epg.js:639
 msgid "Search title..."
 msgstr "Cím keresése..."
 
@@ -1354,11 +1438,11 @@ msgstr "Csatorna kiválasztása..."
 msgid "Select stream profile..."
 msgstr "Válasszon stream-profilt..."
 
-#: src/webui/static/app/idnode.js:457 src/webui/static/app/idnode.js:704
+#: src/webui/static/app/idnode.js:458 src/webui/static/app/idnode.js:705
 msgid "Select {0} ..."
 msgstr "{0} kiválasztása..."
 
-#: src/webui/static/app/idnode.js:441 src/webui/static/app/idnode.js:680
+#: src/webui/static/app/idnode.js:442 src/webui/static/app/idnode.js:681
 msgid "Selected"
 msgstr "Kiválasztott"
 
@@ -1370,7 +1454,7 @@ msgstr "Szept"
 msgid "September"
 msgstr "Szeptember"
 
-#: src/webui/static/app/mpegts.js:295 src/webui/static/app/status.js:112
+#: src/webui/static/app/mpegts.js:313 src/webui/static/app/status.js:112
 msgid "Service"
 msgstr "Szolgáltatás"
 
@@ -1382,11 +1466,11 @@ msgstr "Szolgáltatás hozzárendelő"
 msgid "Service details for"
 msgstr "Szolgáltatás részletei a"
 
-#: src/webui/static/app/mpegts.js:296 src/webui/static/app/mpegts.js:303
+#: src/webui/static/app/mpegts.js:314 src/webui/static/app/mpegts.js:321
 msgid "Services"
 msgstr "Szolgáltatások"
 
-#: src/webui/static/app/idnode.js:961
+#: src/webui/static/app/idnode.js:962
 msgid "Settings"
 msgstr "Beállítások"
 
@@ -1394,11 +1478,11 @@ msgstr "Beállítások"
 msgid "Show in Groups"
 msgstr "Mutasd csoportokban"
 
-#: src/webui/static/app/idnode.js:2283
+#: src/webui/static/app/idnode.js:2318
 msgid "Show or hide passwords"
 msgstr "Jelszavak rejtése vagy mutatása"
 
-#: src/webui/static/app/idnode.js:2285 src/webui/static/app/idnode.js:2289
+#: src/webui/static/app/idnode.js:2320 src/webui/static/app/idnode.js:2324
 msgid "Show passwords"
 msgstr "Jelszavak mutatása"
 
@@ -1418,7 +1502,7 @@ msgstr "Csökkenő sorrend"
 msgid "Star Rating"
 msgstr "Csillag értékelés"
 
-#: src/webui/static/app/epg.js:560 src/webui/static/app/epg.js:561
+#: src/webui/static/app/epg.js:583 src/webui/static/app/epg.js:584
 msgid "Stars"
 msgstr "Csillagok"
 
@@ -1426,8 +1510,8 @@ msgstr "Csillagok"
 msgid "Start"
 msgstr "Kezdés"
 
-#: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:513
-#: src/webui/static/app/epg.js:514
+#: src/webui/static/app/epg.js:107 src/webui/static/app/epg.js:536
+#: src/webui/static/app/epg.js:537
 msgid "Start Time"
 msgstr "Kezdés Időpontja"
 
@@ -1455,11 +1539,11 @@ msgstr "Állapot"
 msgid "Stop"
 msgstr "Leállítás"
 
-#: src/webui/static/app/epg.js:189
+#: src/webui/static/app/epg.js:212
 msgid "Stop recording"
 msgstr "Felvétel leállítása"
 
-#: src/webui/static/app/epg.js:188
+#: src/webui/static/app/epg.js:211
 msgid "Stop recording of this program"
 msgstr "Műsor felvételének leállítása"
 
@@ -1497,7 +1581,7 @@ msgstr "Előfizetői szám"
 msgid "Subscriptions"
 msgstr "Előfizetések"
 
-#: src/webui/static/app/epg.js:497 src/webui/static/app/epg.js:498
+#: src/webui/static/app/epg.js:520 src/webui/static/app/epg.js:521
 msgid "Subtitle"
 msgstr "Felirat"
 
@@ -1509,6 +1593,10 @@ msgstr "Stream-felirat szűrő"
 msgid "Subtitle Stream Filters"
 msgstr "Stream-felirat szűrők"
 
+#: src/webui/static/app/epg.js:152
+msgid "Subtitled#EPG"
+msgstr ""
+
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
 msgstr "Vas"
@@ -1517,11 +1605,11 @@ msgstr "Vas"
 msgid "Sunday"
 msgstr "Vasárnap"
 
-#: src/webui/static/app/chconf.js:164
+#: src/webui/static/app/chconf.js:181
 msgid "Swap Numbers"
 msgstr "Számok cseréje"
 
-#: src/webui/static/app/chconf.js:162
+#: src/webui/static/app/chconf.js:179
 msgid "Swap the numbers for the two selected channels"
 msgstr "Számok cseréje a két kijelölt csatornánál"
 
@@ -1533,7 +1621,7 @@ msgstr "Rendszernapló"
 msgid "TV adapters"
 msgstr "TV adapterek"
 
-#: src/webui/static/app/epg.js:1029
+#: src/webui/static/app/epg.js:1052
 msgid "Tag"
 msgstr "Címke"
 
@@ -1545,7 +1633,7 @@ msgstr "Teletext stream-szűrő"
 msgid "Teletext Stream Filters"
 msgstr "Teletext stream-szűrők"
 
-#: src/webui/static/app/dvr.js:389 src/webui/static/app/dvr.js:500
+#: src/webui/static/app/dvr.js:419 src/webui/static/app/dvr.js:560
 msgid "The associated file will be removed from storage."
 msgstr "A megfelelő file törlésre kerül a tárhelyről."
 
@@ -1569,7 +1657,7 @@ msgstr "Ennek a mezőnek a maximális értéke {0}"
 msgid "The minimum length for this field is {0}"
 msgstr "Ennek a mezőnek a minimális hossza {0}"
 
-#: src/webui/static/app/idnode.js:1352
+#: src/webui/static/app/idnode.js:1378
 msgid "The selected entry is the original!"
 msgstr "A kiválasztott bejegyzés megegyezik az eredetivel!"
 
@@ -1607,7 +1695,7 @@ msgstr "Ez a megengedettnél korábbi dátum"
 msgid "This field is required"
 msgstr "Szükséges mező"
 
-#: src/webui/static/app/epg.js:1024
+#: src/webui/static/app/epg.js:1047
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
@@ -1625,24 +1713,16 @@ msgstr "Csütörtök"
 msgid "Time Scheduler"
 msgstr "Időzítő"
 
-#: src/webui/static/app/dvr.js:639
+#: src/webui/static/app/dvr.js:700
 msgid "Timer"
 msgstr "Időzítő"
 
-#: src/webui/static/app/dvr.js:640
+#: src/webui/static/app/dvr.js:701
 msgid "Timers"
 msgstr "Időzítők"
 
-#: src/webui/static/app/timeshift.js:16
-msgid "Timeshift"
-msgstr "Időeltolás"
-
-#: src/webui/static/app/timeshift.js:24
-msgid "Timeshift Configuration"
-msgstr "Időeltolás Beállítása"
-
-#: src/webui/static/app/epg.js:483 src/webui/static/app/epg.js:484
-#: src/webui/static/app/epg.js:1027 src/webui/static/app/status.js:100
+#: src/webui/static/app/epg.js:506 src/webui/static/app/epg.js:507
+#: src/webui/static/app/epg.js:1050 src/webui/static/app/status.js:100
 msgid "Title"
 msgstr "Cím"
 
@@ -1654,7 +1734,7 @@ msgstr "Ma"
 msgid "Toggle mute"
 msgstr "Némít"
 
-#: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:457
+#: src/webui/static/app/dvr.js:346 src/webui/static/app/dvr.js:487
 msgid "Toggle re-record functionality"
 msgstr "Újravételezés funkció ki/bekapcsolása"
 
@@ -1687,11 +1767,16 @@ msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend Webes felület"
 
 #: src/webui/static/app/caclient.js:47 src/webui/static/app/esfilter.js:32
-#: src/webui/static/app/mpegts.js:77 src/webui/static/app/status.js:566
+#: src/webui/static/app/mpegts.js:77 src/webui/static/app/mpegts.js:170
+#: src/webui/static/app/status.js:566
 msgid "Type"
 msgstr "Típus"
 
-#: src/webui/static/app/wizard.js:145
+#: src/webui/static/app/epg.js:136
+msgid "UHDTV"
+msgstr ""
+
+#: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
 msgstr "Nem tölthető be a varázsló oldal!"
 
@@ -1699,8 +1784,8 @@ msgstr "Nem tölthető be a varázsló oldal!"
 msgid "Uncorrected Blocks"
 msgstr "Kijavítatlan Képkockák"
 
-#: src/webui/static/app/idnode.js:1687 src/webui/static/app/idnode.js:2178
-#: src/webui/static/app/idnode.js:2710
+#: src/webui/static/app/idnode.js:1721 src/webui/static/app/idnode.js:2213
+#: src/webui/static/app/idnode.js:2745
 msgid "Undo"
 msgstr "Visszavonás"
 
@@ -1736,11 +1821,11 @@ msgstr "Videó Folyam Szűrő"
 msgid "Video Stream Filters"
 msgstr "Videó Folyam Szűrői"
 
-#: src/webui/static/app/idnode.js:614
+#: src/webui/static/app/idnode.js:615
 msgid "View level"
 msgstr "Nézet szint"
 
-#: src/webui/static/app/idnode.js:617
+#: src/webui/static/app/idnode.js:618
 msgid "View level: "
 msgstr "Nézet szint:"
 
@@ -1748,11 +1833,11 @@ msgstr "Nézet szint:"
 msgid "Volume"
 msgstr "Hangerő"
 
-#: src/webui/static/app/epg.js:864
+#: src/webui/static/app/epg.js:887
 msgid "Watch TV"
 msgstr "TV nézés"
 
-#: src/webui/static/app/epg.js:866
+#: src/webui/static/app/epg.js:889
 msgid "Watch live TV in a new browser window."
 msgstr "Élő TV adás megtekintése új ablakban."
 
@@ -1768,15 +1853,19 @@ msgstr "Szerda"
 msgid "Weight"
 msgstr "Súly"
 
+#: src/webui/static/app/epg.js:144
+msgid "Widescreen"
+msgstr ""
+
 #: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"
 msgstr "Kihagyásra kerül"
 
-#: src/webui/static/app/wizard.js:119
+#: src/webui/static/app/wizard.js:165
 msgid "Wizard - initial configuration and tutorial"
 msgstr "Varázsló - kezdeti beállítás és magyarázat"
 
-#: src/webui/static/app/wizard.js:56
+#: src/webui/static/app/wizard.js:59
 msgid "Wizard - page \"{0}\" not found"
 msgstr "A \"{0}\" varázsló oldal nem található"
 
@@ -1784,7 +1873,7 @@ msgstr "A \"{0}\" varázsló oldal nem található"
 msgid "Yes"
 msgstr "Igen"
 
-#: src/webui/static/app/idnode.js:469 src/webui/static/app/idnode.js:834
+#: src/webui/static/app/idnode.js:470 src/webui/static/app/idnode.js:835
 msgid "You must provide a value - use octal chmod notation, e.g. 0664"
 msgstr "Tulajdonság megadása kötelező - használj oktális chmod jelölést, pl. 0664"
 
@@ -1814,8 +1903,8 @@ msgid ""
 "A|gi|hi|gia|hia|g|H#TimeField"
 msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
-#: src/webui/static/app/idnode.js:359 src/webui/static/app/idnode.js:360
-#: src/webui/static/app/epg.js:427 src/webui/static/app/epg.js:429
+#: src/webui/static/app/idnode.js:360 src/webui/static/app/idnode.js:361
+#: src/webui/static/app/epg.js:450 src/webui/static/app/epg.js:452
 msgid "hrs"
 msgstr "órák"
 
@@ -1851,8 +1940,8 @@ msgstr "m/d/y#DateField"
 msgid "m/d/y#DatePicker"
 msgstr "m/d/y#DatePicker"
 
-#: src/webui/static/app/idnode.js:360 src/webui/static/app/idnode.js:362
-#: src/webui/static/app/epg.js:429 src/webui/static/app/epg.js:432
+#: src/webui/static/app/idnode.js:361 src/webui/static/app/idnode.js:363
+#: src/webui/static/app/epg.js:452 src/webui/static/app/epg.js:455
 #: src/webui/static/app/dvr.js:46
 msgid "min"
 msgstr "perc"
