@@ -41,9 +41,14 @@ typedef struct idclass_link
   RB_ENTRY(idclass_link) link;
 } idclass_link_t;
 
-static idnodes_rb_t           idnodes;
-static RB_HEAD(,idclass_link) idclasses;
-static RB_HEAD(,idclass_link) idrootclasses;
+static idnodes_rb_t             idnodes;
+static RB_HEAD(,idclass_link)   idclasses;
+static RB_HEAD(,idclass_link)   idrootclasses;
+static TAILQ_HEAD(,idnode_save) idnodes_save;
+
+pthread_cond_t save_cond;
+pthread_t save_tid;
+static int save_running;
 
 SKEL_DECLARE(idclasses_skel, idclass_link_t);
 
@@ -71,35 +76,6 @@ ic_cmp ( const idclass_link_t *a, const idclass_link_t *b )
 /* **************************************************************************
  * Registration
  * *************************************************************************/
-
-/**
- *
- */
-pthread_t idnode_tid;
-
-void
-idnode_init(void)
-{
-  RB_INIT(&idnodes);
-  RB_INIT(&idclasses);
-  RB_INIT(&idrootclasses);
-}
-
-void
-idnode_done(void)
-{
-  idclass_link_t *il;
-
-  while ((il = RB_FIRST(&idclasses)) != NULL) {
-    RB_REMOVE(&idclasses, il, link);
-    free(il);
-  }
-  while ((il = RB_FIRST(&idrootclasses)) != NULL) {
-    RB_REMOVE(&idrootclasses, il, link);
-    free(il);
-  }
-  SKEL_FREE(idclasses_skel);
-}
 
 static const idclass_t *
 idnode_root_class(const idclass_t *idc)
@@ -1103,6 +1079,21 @@ idnode_savefn ( idnode_t *self )
   }
 }
 
+static void
+idnode_save_queue ( idnode_t *self )
+{
+  idnode_save_t *ise;
+
+  if (self->in_save)
+    return;
+  ise = malloc(sizeof(*ise));
+  ise->ise_node = self;
+  if (TAILQ_EMPTY(&idnodes_save))
+    pthread_cond_signal(&save_cond);
+  TAILQ_INSERT_TAIL(&idnodes_save, ise, ise_link);
+  self->in_save = ise;
+}
+
 int
 idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
 {
@@ -1110,7 +1101,7 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
   const idclass_t *idc = self->in_class;
   save = idnode_class_write_values(self, idc, c, optmask);
   if ((idc->ic_flags & IDCLASS_ALWAYS_SAVE) != 0 || (save && dosave))
-    idnode_savefn(self);
+    idnode_save_queue(self);
   if (dosave)
     idnode_notify_changed(self);
   // Note: always output event if "dosave", reason is that UI updates on
@@ -1125,7 +1116,7 @@ void
 idnode_changed( idnode_t *self )
 {
   idnode_notify_changed(self);
-  idnode_savefn(self);
+  idnode_save_queue(self);
 }
 
 /* **************************************************************************
@@ -1368,12 +1359,12 @@ idnode_list_notify ( idnode_list_mapping_t *ilm, void *origin )
   if (origin == ilm->ilm_in1) {
     idnode_notify_changed(ilm->ilm_in2);
     if (ilm->ilm_in2_save)
-      idnode_savefn(ilm->ilm_in2);
+      idnode_save_queue(ilm->ilm_in2);
   }
   if (origin == ilm->ilm_in2) {
     idnode_notify_changed(ilm->ilm_in1);
     if (ilm->ilm_in1_save)
-      idnode_savefn(ilm->ilm_in1);
+      idnode_save_queue(ilm->ilm_in1);
   }
 }
 
@@ -1643,6 +1634,78 @@ idnode_notify_title_changed (void *in, const char *lang)
   htsmsg_add_str(m, "text", idnode_get_title(in, lang));
   notify_by_msg("title", m, 0);
   idnode_notify_changed(in);
+}
+
+/* **************************************************************************
+ * Save thread
+ * *************************************************************************/
+
+static void *
+save_thread ( void *aux )
+{
+  idnode_save_t *ise;
+
+  tvhtread_renice(15);
+
+  pthread_mutex_lock(&global_lock);
+
+  while (save_running) {
+    if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL) {
+      pthread_cond_wait(&save_cond, &global_lock);
+      continue;
+    }
+    idnode_savefn(ise->ise_node);
+    ise->ise_node->in_save = NULL;
+    TAILQ_REMOVE(&idnodes_save, ise, ise_link);
+    free(ise);
+  }
+
+  while ((ise = TAILQ_FIRST(&idnodes_save)) != NULL) {
+    idnode_savefn(ise->ise_node);
+    ise->ise_node->in_save = NULL;
+    TAILQ_REMOVE(&idnodes_save, ise, ise_link);
+    free(ise);
+  }
+
+  pthread_mutex_unlock(&global_lock);
+  return NULL;
+}
+
+/* **************************************************************************
+ * Initialization
+ * *************************************************************************/
+
+void
+idnode_init(void)
+{
+  RB_INIT(&idnodes);
+  RB_INIT(&idclasses);
+  RB_INIT(&idrootclasses);
+  TAILQ_INIT(&idnodes_save);
+
+  pthread_cond_init(&save_cond, NULL);
+  save_running = 1;
+  tvhthread_create(&save_tid, NULL, save_thread, NULL, "save");
+}
+
+void
+idnode_done(void)
+{
+  idclass_link_t *il;
+
+  save_running = 0;
+  pthread_cond_signal(&save_cond);
+  pthread_join(save_tid, NULL);
+
+  while ((il = RB_FIRST(&idclasses)) != NULL) {
+    RB_REMOVE(&idclasses, il, link);
+    free(il);
+  }
+  while ((il = RB_FIRST(&idrootclasses)) != NULL) {
+    RB_REMOVE(&idrootclasses, il, link);
+    free(il);
+  }
+  SKEL_FREE(idclasses_skel);
 }
 
 /******************************************************************************

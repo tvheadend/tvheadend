@@ -450,16 +450,18 @@ dvr_entry_missed_time(dvr_entry_t *de, int error_code)
 /*
  * Completed
  */
-static void
+static int
 dvr_entry_completed(dvr_entry_t *de, int error_code)
 {
-  dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_FINISHED, error_code);
+  int change;
+  change = dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_FINISHED, error_code);
 #if ENABLE_INOTIFY
   dvr_inotify_add(de);
 #endif
   dvr_entry_retention_timer(de);
   if (de->de_autorec)
     dvr_autorec_completed(de->de_autorec, error_code);
+  return change;
 }
 
 /**
@@ -3404,7 +3406,8 @@ void
 dvr_entry_move(dvr_entry_t *de, int failed)
 {
   if(de->de_sched_state == DVR_COMPLETED)
-    dvr_entry_completed(de, failed ? SM_CODE_USER_REQUEST : SM_CODE_OK);
+    if (dvr_entry_completed(de, failed ? SM_CODE_USER_REQUEST : SM_CODE_OK))
+      idnode_changed(&de->de_id);
 }
 
 /**

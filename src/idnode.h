@@ -28,6 +28,7 @@
 
 struct access;
 typedef struct idnode idnode_t;
+typedef struct idnode_save idnode_save_t;
 
 /*
  * Node set
@@ -92,8 +93,16 @@ struct idnode {
   idnodes_rb_t     *in_domain;              ///< Domain nodes
   const idclass_t  *in_class;               ///< Class definition
   struct access    *in_access;              ///< Actual permissions
-
+  idnode_save_t    *in_save;                ///< Pointer to the save link
 };
+
+/*
+ * Node save list
+ */
+typedef struct idnode_save {
+  TAILQ_ENTRY(idnode_save)  ise_link;       ///< List chain
+  idnode_t                 *ise_node;       ///< Node owning this
+} idnode_save_t;
 
 /*
  * Node list mapping definition
