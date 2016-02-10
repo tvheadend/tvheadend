@@ -33,9 +33,10 @@ tsfile_input_list_t      tsfile_inputs;
 extern const idclass_t mpegts_service_class;
 extern const idclass_t mpegts_network_class;
 
-static void
-tsfile_service_config_save ( service_t *s )
+static htsmsg_t *
+tsfile_service_config_save ( service_t *s, char *filename, size_t fsize )
 {
+  return NULL;
 }
 
 static void

@@ -288,11 +288,13 @@ mpegts_mux_instance_weight ( mpegts_mux_instance_t *mmi )
  * Class definition
  * ***************************************************************************/
 
-static void
-mpegts_mux_class_save ( idnode_t *self )
+static htsmsg_t *
+mpegts_mux_class_save ( idnode_t *self, char *filename, size_t fsize )
 {
   mpegts_mux_t *mm = (mpegts_mux_t*)self;
-  if (mm->mm_config_save) mm->mm_config_save(mm);
+  if (mm->mm_config_save)
+    return mm->mm_config_save(mm, filename, fsize);
+  return NULL;
 }
 
 static void
@@ -696,9 +698,10 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   free(mm);
 }
 
-static void
-mpegts_mux_config_save ( mpegts_mux_t *mm )
+static htsmsg_t *
+mpegts_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
 {
+  return NULL;
 }
 
 static int
@@ -1189,8 +1192,7 @@ mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
     return 0;
   mm->mm_onid = onid;
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  mm->mm_config_save(mm);
-  idnode_notify_changed(&mm->mm_id);
+  idnode_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1202,13 +1204,12 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
   if (!force && mm->mm_tsid)
     return 0;
   mm->mm_tsid = tsid;
-  mm->mm_config_save(mm);
   if (tvhtrace_enabled()) {
     char buf[256];
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace("mpegts", "%s - set tsid %04X (%d)", buf, tsid, tsid);
   }
-  idnode_notify_changed(&mm->mm_id);
+  idnode_changed(&mm->mm_id);
   return 1;
 }
 
@@ -1218,13 +1219,12 @@ mpegts_mux_set_crid_authority ( mpegts_mux_t *mm, const char *defauth )
   if (defauth && !strcmp(defauth, mm->mm_crid_authority ?: ""))
     return 0;
   tvh_str_update(&mm->mm_crid_authority, defauth);
-  mm->mm_config_save(mm);
   if (tvhtrace_enabled()) {
     char buf[256];
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace("mpegts", "%s - set crid authority %s", buf, defauth);
   }
-  idnode_notify_changed(&mm->mm_id);
+  idnode_changed(&mm->mm_id);
   return 1;
 }
 

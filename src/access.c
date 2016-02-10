@@ -1146,19 +1146,6 @@ access_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
 /**
  *
  */
-void
-access_entry_save(access_entry_t *ae)
-{
-  htsmsg_t *c = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-  idnode_save(&ae->ae_id, c);
-  hts_settings_save(c, "accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id, ubuf));
-  htsmsg_destroy(c);
-}
-
-/**
- *
- */
 static void
 access_entry_reindex(void)
 {
@@ -1168,7 +1155,7 @@ access_entry_reindex(void)
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
     if (ae->ae_index != i) {
       ae->ae_index = i;
-      access_entry_save(ae);
+      idnode_changed(&ae->ae_id);
     }
     i++;
   }
@@ -1178,11 +1165,16 @@ access_entry_reindex(void)
  * Class definition
  * **************************************************************************/
 
-static void
-access_entry_class_save(idnode_t *self)
+static htsmsg_t *
+access_entry_class_save(idnode_t *self, char *filename, size_t fsize)
 {
+  access_entry_t *ae = (access_entry_t *)self;
+  char ubuf[UUID_HEX_SIZE];
+  htsmsg_t *c = htsmsg_create_map();
   access_entry_update_rights((access_entry_t *)self);
-  access_entry_save((access_entry_t *)self);
+  idnode_save(&ae->ae_id, c);
+  snprintf(filename, fsize, "accesscontrol/%s", idnode_uuid_as_str(&ae->ae_id, ubuf));
+  return c;
 }
 
 static void
@@ -1778,20 +1770,15 @@ passwd_entry_destroy(passwd_entry_t *pw, int delconf)
   free(pw);
 }
 
-void
-passwd_entry_save(passwd_entry_t *pw)
+static htsmsg_t *
+passwd_entry_class_save(idnode_t *self, char *filename, size_t fsize)
 {
-  htsmsg_t *c = htsmsg_create_map();
+  passwd_entry_t *pw = (passwd_entry_t *)self;
   char ubuf[UUID_HEX_SIZE];
+  htsmsg_t *c = htsmsg_create_map();
   idnode_save(&pw->pw_id, c);
-  hts_settings_save(c, "passwd/%s", idnode_uuid_as_str(&pw->pw_id, ubuf));
-  htsmsg_destroy(c);
-}
-
-static void
-passwd_entry_class_save(idnode_t *self)
-{
-  passwd_entry_save((passwd_entry_t *)self);
+  snprintf(filename, fsize, "passwd/%s", idnode_uuid_as_str(&pw->pw_id, ubuf));
+  return c;
 }
 
 static void
@@ -1954,20 +1941,15 @@ ipblock_entry_destroy(ipblock_entry_t *ib)
   free(ib);
 }
 
-void
-ipblock_entry_save(ipblock_entry_t *ib)
+static htsmsg_t *
+ipblock_entry_class_save(idnode_t *self, char *filename, size_t fsize)
 {
+  ipblock_entry_t *ib = (ipblock_entry_t *)self;
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&ib->ib_id, c);
-  hts_settings_save(c, "ipblock/%s", idnode_uuid_as_str(&ib->ib_id, ubuf));
-  htsmsg_destroy(c);
-}
-
-static void
-ipblock_entry_class_save(idnode_t *self)
-{
-  ipblock_entry_save((ipblock_entry_t *)self);
+  snprintf(filename, fsize, "ipblock/%s", idnode_uuid_as_str(&ib->ib_id, ubuf));
+  return c;
 }
 
 static const char *
@@ -2109,7 +2091,7 @@ access_init(int createdefault, int noacl)
     ae->ae_admin          = 1;
     access_entry_update_rights(ae);
 
-    access_entry_save(ae);
+    idnode_changed(&ae->ae_id);
 
     tvhlog(LOG_WARNING, "access",
 	   "Created default wide open access controle entry");

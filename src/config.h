@@ -62,7 +62,6 @@ extern config_t config;
 void        config_boot    ( const char *path, gid_t gid, uid_t uid );
 void        config_init    ( int backup );
 void        config_done    ( void );
-void        config_save    ( void );
 
 const char *config_get_server_name ( void );
 const char *config_get_language    ( void );

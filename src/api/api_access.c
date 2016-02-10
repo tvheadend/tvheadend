@@ -47,7 +47,7 @@ api_passwd_entry_create
 
   pthread_mutex_lock(&global_lock);
   if ((pw = passwd_entry_create(NULL, conf)) != NULL)
-    passwd_entry_save(pw);
+    idnode_changed(&pw->pw_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;
@@ -79,7 +79,7 @@ api_ipblock_entry_create
 
   pthread_mutex_lock(&global_lock);
   if ((ib = ipblock_entry_create(NULL, conf)) != NULL)
-    ipblock_entry_save(ib);
+    idnode_changed(&ib->ib_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;
@@ -155,7 +155,7 @@ api_access_entry_create
 
   pthread_mutex_lock(&global_lock);
   if ((ae = access_entry_create(NULL, conf)) != NULL)
-    access_entry_save(ae);
+    idnode_changed(&ae->ae_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;

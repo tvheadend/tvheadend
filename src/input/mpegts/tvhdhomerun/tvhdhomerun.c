@@ -32,10 +32,27 @@
            hdhomerun_discover_find_devices_custom_v2
 #endif
 
-static void
-tvhdhomerun_device_class_save ( idnode_t *in )
+static htsmsg_t *
+tvhdhomerun_device_class_save ( idnode_t *in, char *filename, size_t fsize )
 {
-  tvhdhomerun_device_save((tvhdhomerun_device_t *)in);
+  tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
+  tvhdhomerun_frontend_t *lfe;
+  htsmsg_t *m, *l;
+  char ubuf[UUID_HEX_SIZE];
+
+  m = htsmsg_create_map();
+  idnode_save(&hd->th_id, m);
+
+  l = htsmsg_create_map();
+  TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
+    tvhdhomerun_frontend_save(lfe, l);
+  htsmsg_add_msg(m, "frontends", l);
+
+  htsmsg_add_str(m, "fe_override", hd->hd_override_type);
+
+  snprintf(filename, fsize, "input/tvhdhomerun/adapters/%s",
+           idnode_uuid_as_str(&hd->th_id, ubuf));
+  return m;
 }
 
 static idnode_set_t *
@@ -189,28 +206,6 @@ const idclass_t tvhdhomerun_device_class =
 };
 
 
-void
-tvhdhomerun_device_save( tvhdhomerun_device_t *hd )
-{
-  tvhdhomerun_frontend_t *lfe;
-  htsmsg_t *m, *l;
-  char ubuf[UUID_HEX_SIZE];
-
-  m = htsmsg_create_map();
-  idnode_save(&hd->th_id, m);
-
-  l = htsmsg_create_map();
-  TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
-    tvhdhomerun_frontend_save(lfe, l);
-  htsmsg_add_msg(m, "frontends", l);
-
-  htsmsg_add_str(m, "fe_override", hd->hd_override_type);
-
-  hts_settings_save(m, "input/tvhdhomerun/adapters/%s",
-                    idnode_uuid_as_str(&hd->th_id, ubuf));
-  htsmsg_destroy(m);
-}
-
 static void
 tvhdhomerun_discovery_destroy(tvhdhomerun_discovery_t *d, int unlink)
 {
@@ -342,7 +337,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
 
   if (save)
-    tvhdhomerun_device_save(hd);
+    tvhdhomerun_device_changed(hd);
 
   htsmsg_destroy(conf);
 }

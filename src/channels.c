@@ -69,9 +69,28 @@ ch_id_cmp ( channel_t *a, channel_t *b )
  * *************************************************************************/
 
 static void
-channel_class_save ( idnode_t *self )
+channel_class_changed ( idnode_t *self )
 {
-  channel_save((channel_t *)self);
+  channel_t *ch = (channel_t *)self;
+
+  /* update the EPG channel <-> channel mapping here */
+  if (ch->ch_enabled && ch->ch_epgauto)
+    epggrab_channel_add(ch);
+}
+
+static htsmsg_t *
+channel_class_save ( idnode_t *self, char *filename, size_t fsize )
+{
+  channel_t *ch = (channel_t *)self;
+  htsmsg_t *c = NULL;
+  char ubuf[UUID_HEX_SIZE];
+  /* save channel (on demand) */
+  if (ch->ch_dont_save == 0) {
+    c = htsmsg_create_map();
+    idnode_save(&ch->ch_id, c);
+    snprintf(filename, fsize, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id, ubuf));
+  }
+  return c;
 }
 
 static void
@@ -342,6 +361,7 @@ const idclass_t channel_class = {
   .ic_class      = "channel",
   .ic_caption    = N_("Channel"),
   .ic_event      = "channel",
+  .ic_changed    = channel_class_changed,
   .ic_save       = channel_class_save,
   .ic_get_title  = channel_class_get_title,
   .ic_delete     = channel_class_delete,
@@ -768,8 +788,7 @@ channel_get_icon ( channel_t *ch )
       if (strncmp(icn, "picon://", 8) == 0) continue;
       if (check_file(icn)) {
         icon = ch->ch_icon = strdup(icn);
-        channel_save(ch);
-        idnode_notify_changed(&ch->ch_id);
+        idnode_changed(&ch->ch_id);
         goto found;
       }
     }
@@ -857,8 +876,7 @@ channel_get_icon ( channel_t *ch )
 
       if (i > 1 || check_file(buf)) {
         icon = ch->ch_icon = strdup(buf);
-        channel_save(ch);
-        idnode_notify_changed(&ch->ch_id);
+        idnode_changed(&ch->ch_id);
       }
     }
 
@@ -871,8 +889,7 @@ channel_get_icon ( channel_t *ch )
         snprintf(buf2, sizeof(buf2), "%s/%s", picon, icn+8);
         if (i > 1 || check_file(buf2)) {
           icon = ch->ch_icon = strdup(icn);
-          channel_save(ch);
-          idnode_notify_changed(&ch->ch_id);
+          idnode_changed(&ch->ch_id);
           break;
         }
       }
@@ -1026,7 +1043,7 @@ channel_delete ( channel_t *ch, int delconf )
     if (delconf) {
       free(ch1->ch_epg_parent);
       ch1->ch_epg_parent = NULL;
-      channel_save(ch1);
+      idnode_changed(&ch1->ch_id);
     }
   }
 
@@ -1045,26 +1062,6 @@ channel_delete ( channel_t *ch, int delconf )
   free(ch->ch_icon);
   free(ch);
 }
-
-/*
- * Save
- */
-void
-channel_save ( channel_t *ch )
-{
-  htsmsg_t *c;
-  char ubuf[UUID_HEX_SIZE];
-  if (ch->ch_dont_save == 0) {
-    c = htsmsg_create_map();
-    idnode_save(&ch->ch_id, c);
-    hts_settings_save(c, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id, ubuf));
-    htsmsg_destroy(c);
-  }
-  /* update the EPG channel <-> channel mapping here */
-  if (ch->ch_enabled && ch->ch_epgauto)
-    epggrab_channel_add(ch);
-}
-
 
 
 
@@ -1255,21 +1252,6 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
 /**
  *
  */
-void
-channel_tag_save(channel_tag_t *ct)
-{
-  htsmsg_t *c = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-  idnode_save(&ct->ct_id, c);
-  hts_settings_save(c, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id, ubuf));
-  htsmsg_destroy(c);
-  htsp_tag_update(ct);
-}
-
-
-/**
- *
- */
 const char *
 channel_tag_get_icon(channel_tag_t *ct)
 {
@@ -1319,10 +1301,16 @@ chtags_ok:
  * Channel Tag Class definition
  * **************************************************************************/
 
-static void
-channel_tag_class_save(idnode_t *self)
+static htsmsg_t *
+channel_tag_class_save(idnode_t *self, char *filename, size_t fsize)
 {
-  channel_tag_save((channel_tag_t *)self);
+  channel_tag_t *ct = (channel_tag_t *)self;
+  htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&ct->ct_id, c);
+  snprintf(filename, fsize, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id, ubuf));
+  htsp_tag_update(ct);
+  return c;
 }
 
 static void
@@ -1474,7 +1462,7 @@ channel_tag_find_by_name(const char *name, int create)
   ct->ct_enabled = 1;
   tvh_str_update(&ct->ct_name, name);
 
-  channel_tag_save(ct);
+  idnode_changed(&ct->ct_id);
   return ct;
 }
 

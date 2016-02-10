@@ -550,9 +550,9 @@ struct satip_server_conf satip_server_conf = {
   .satip_allow_remote_weight = 1
 };
 
-static void satip_server_class_save(idnode_t *self)
+static void satip_server_class_changed(idnode_t *self)
 {
-  config_save();
+  idnode_changed(&config.idnode);
   satip_server_save();
 }
 
@@ -572,7 +572,7 @@ const idclass_t satip_server_class = {
   .ic_caption    = N_("SAT>IP server"),
   .ic_event      = "satip_server",
   .ic_perm_def   = ACCESS_ADMIN,
-  .ic_save       = satip_server_class_save,
+  .ic_changed    = satip_server_class_changed,
   .ic_groups     = (const property_group_t[]) {
       {
          .name   = N_("General"),
@@ -745,7 +745,6 @@ static void satip_server_save(void)
   int descramble, rewrite_pmt, muxcnf;
   char *nat_ip;
 
-  config_save();
   if (!satip_server_rtsp_port_locked) {
     satips_rtsp_port(0);
     if (satip_server_rtsp_port > 0) {
@@ -849,7 +848,7 @@ void satip_server_register(void)
   }
 
   if (save)
-    config_save();
+    idnode_changed(&config.idnode);
 
   satips_upnp_discovery = upnp_service_create(upnp_service);
   if (satips_upnp_discovery == NULL) {

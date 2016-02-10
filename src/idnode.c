@@ -161,6 +161,11 @@ idnode_unlink(idnode_t *in)
   RB_REMOVE(in->in_domain, in, in_domain_link);
   tvhtrace("idnode", "unlink node %s", idnode_uuid_as_str(in, ubuf));
   idnode_notify(in, "delete");
+
+  if (in->in_save) {
+    TAILQ_REMOVE(&idnodes_save, in->in_save, ise_link);
+    in->in_save = NULL;
+  }
 }
 
 /**
@@ -1067,16 +1072,28 @@ idnode_class_write_values
 }
 
 static void
-idnode_savefn ( idnode_t *self )
+idnode_changedfn ( idnode_t *self )
 {
   const idclass_t *idc = self->in_class;
   while (idc) {
-    if (idc->ic_save) {
-      idc->ic_save(self);
+    if (idc->ic_changed) {
+      idc->ic_changed(self);
       break;
     }
     idc = idc->ic_super;
   }
+}
+
+static htsmsg_t *
+idnode_savefn ( idnode_t *self, char *filename, size_t fsize )
+{
+  const idclass_t *idc = self->in_class;
+  while (idc) {
+    if (idc->ic_save)
+      return idc->ic_save(self, filename, fsize);
+    idc = idc->ic_super;
+  }
+  return NULL;
 }
 
 static void
@@ -1100,8 +1117,10 @@ idnode_write0 ( idnode_t *self, htsmsg_t *c, int optmask, int dosave )
   int save = 0;
   const idclass_t *idc = self->in_class;
   save = idnode_class_write_values(self, idc, c, optmask);
-  if ((idc->ic_flags & IDCLASS_ALWAYS_SAVE) != 0 || (save && dosave))
+  if ((idc->ic_flags & IDCLASS_ALWAYS_SAVE) != 0 || (save && dosave)) {
+    idnode_changedfn(self);
     idnode_save_queue(self);
+  }
   if (dosave)
     idnode_notify_changed(self);
   // Note: always output event if "dosave", reason is that UI updates on
@@ -1644,6 +1663,8 @@ static void *
 save_thread ( void *aux )
 {
   idnode_save_t *ise;
+  htsmsg_t *m;
+  char filename[PATH_MAX];
 
   tvhtread_renice(15);
 
@@ -1654,17 +1675,29 @@ save_thread ( void *aux )
       pthread_cond_wait(&save_cond, &global_lock);
       continue;
     }
-    idnode_savefn(ise->ise_node);
+    m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
     ise->ise_node->in_save = NULL;
     TAILQ_REMOVE(&idnodes_save, ise, ise_link);
+    pthread_mutex_unlock(&global_lock);
     free(ise);
+    if (m) {
+      hts_settings_save(m, "%s", filename);
+      htsmsg_destroy(m);
+    }
+    pthread_mutex_lock(&global_lock);
   }
 
   while ((ise = TAILQ_FIRST(&idnodes_save)) != NULL) {
-    idnode_savefn(ise->ise_node);
+    m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
     ise->ise_node->in_save = NULL;
     TAILQ_REMOVE(&idnodes_save, ise, ise_link);
+    pthread_mutex_unlock(&global_lock);
     free(ise);
+    if (m) {
+      hts_settings_save(m, "%s", filename);
+      htsmsg_destroy(m);
+    }
+    pthread_mutex_lock(&global_lock);
   }
 
   pthread_mutex_unlock(&global_lock);

@@ -310,7 +310,6 @@ void epggrab_ota_trigger          ( int secs );
  */
 void epggrab_init                 ( void );
 void epggrab_done                 ( void );
-void epggrab_save                 ( void );
 void epggrab_ota_init             ( void );
 void epggrab_ota_post             ( void );
 void epggrab_ota_shutdown         ( void );

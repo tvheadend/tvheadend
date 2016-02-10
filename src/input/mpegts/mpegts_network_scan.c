@@ -79,7 +79,7 @@ mpegts_network_scan_timer_cb ( void *p )
     TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
     if (mm->mm_scan_result != MM_SCAN_FAIL) {
       mm->mm_scan_result = MM_SCAN_FAIL;
-      mm->mm_config_save(mm);
+      idnode_changed(&mm->mm_id);
     }
     mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
     mm->mm_scan_weight = 0;
@@ -124,7 +124,7 @@ mpegts_network_scan_mux_done0
 
   if (result != MM_SCAN_NONE && mm->mm_scan_result != result) {
     mm->mm_scan_result = result;
-    mm->mm_config_save(mm);
+    idnode_changed(&mm->mm_id);
   }
 
   /* Re-enable? */
@@ -392,10 +392,9 @@ tsid_lookup:
                                             MPEGTS_ONID_NONE,
                                             MPEGTS_TSID_NONE,
                                             mux, NULL, NULL);
-        if (mm)
-        {
-          mm->mm_config_save(mm);
+        if (mm) {
           char buf[256];
+          idnode_changed(&mm->mm_id);
           mn->mn_display_name(mn, buf, sizeof(buf));
           tvhinfo("mpegts", "fastscan mux add to network '%s'", buf);
         }

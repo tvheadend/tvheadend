@@ -206,7 +206,7 @@ bouquet_find_by_source(const char *name, const char *src, int create)
       tvhwarn("bouquet", "bouquet name '%s' changed to '%s'", bq->bq_name ?: "", name);
       free(bq->bq_name);
       bq->bq_name = strdup(name);
-      bouquet_save(bq, 1);
+      idnode_changed(&bq->bq_id);
     }
     return bq;
   }
@@ -239,7 +239,7 @@ bouquet_tag(bouquet_t *bq, int create)
   ct = channel_tag_find_by_name(buf, create);
   if (ct) {
     bq->bq_chtag_ptr = ct;
-    bouquet_save(bq, 0);
+    idnode_changed(&bq->bq_id);
   }
   return ct;
 }
@@ -294,10 +294,8 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   else
     ch = (channel_t *)ilm->ilm_in2;
   if (ch && bq->bq_chtag)
-    if (channel_tag_map(bouquet_tag(bq, 1), ch, ch)) {
-      idnode_notify_changed(&ch->ch_id);
-      channel_save(ch);
-    }
+    if (channel_tag_map(bouquet_tag(bq, 1), ch, ch))
+      idnode_changed(&ch->ch_id);
 }
 
 /*
@@ -462,8 +460,10 @@ bouquet_completed(bouquet_t *bq, uint32_t seen)
   bq->bq_active_services = idnode_set_create(1);
 
 save:
-  if (bq->bq_saveflag)
-    bouquet_save(bq, 1);
+  if (bq->bq_saveflag) {
+    bq->bq_saveflag = 0;
+    idnode_changed(&bq->bq_id);
+  }
 }
 
 /*
@@ -568,26 +568,8 @@ bouquet_delete(bouquet_t *bq)
   } else {
     idnode_set_free(bq->bq_services);
     bq->bq_services = idnode_set_create(1);
-    bouquet_save(bq, 1);
+    idnode_changed(&bq->bq_id);
   }
-}
-
-/**
- *
- */
-void
-bouquet_save(bouquet_t *bq, int notify)
-{
-  htsmsg_t *c = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-  idnode_save(&bq->bq_id, c);
-  hts_settings_save(c, "bouquet/%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
-  if (bq->bq_shield)
-    htsmsg_add_bool(c, "shield", 1);
-  htsmsg_destroy(c);
-  bq->bq_saveflag = 0;
-  if (notify)
-    idnode_notify_changed(&bq->bq_id);
 }
 
 /**
@@ -607,10 +589,18 @@ bouquet_change_comment ( bouquet_t *bq, const char *comment, int replace )
  * Class definition
  * **************************************************************************/
 
-static void
-bouquet_class_save(idnode_t *self)
+static htsmsg_t *
+bouquet_class_save(idnode_t *self, char *filename, size_t fsize)
 {
-  bouquet_save((bouquet_t *)self, 0);
+  bouquet_t *bq = (bouquet_t *)self;
+  htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&bq->bq_id, c);
+  snprintf(filename, fsize, "bouquet/%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
+  if (bq->bq_shield)
+    htsmsg_add_bool(c, "shield", 1);
+  bq->bq_saveflag = 0;
+  return c;
 }
 
 static void

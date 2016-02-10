@@ -134,7 +134,7 @@ dvr_entry_dont_rerecord(dvr_entry_t *de, int dont_rerecord)
   dont_rerecord = dont_rerecord ? 1 : 0;
   if (de->de_dont_rerecord ? 1 : 0 != dont_rerecord) {
     de->de_dont_rerecord = dont_rerecord;
-    dvr_entry_save(de);
+    idnode_changed(&de->de_id);
     idnode_notify_changed(&de->de_id);
     htsp_dvr_entry_update(de);
   }
@@ -162,9 +162,9 @@ dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *ori
     if (parent->de_child) {
       p = parent->de_child->de_parent;
       parent->de_child->de_parent = NULL;
-      if (save && p && p != origin) dvr_entry_save(p);
+      if (save && p && p != origin) idnode_changed(&p->de_id);
       parent->de_child = NULL;
-      if (save && origin != parent) dvr_entry_save(parent);
+      if (save && origin != parent) idnode_changed(&parent->de_id);
       return 1;
     }
     return 0;
@@ -173,9 +173,9 @@ dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *ori
     if (child->de_parent) {
       p = child->de_parent->de_child;
       child->de_parent->de_child = NULL;
-      if (save && p && p != origin) dvr_entry_save(p);
+      if (save && p && p != origin) idnode_changed(&p->de_id);
       child->de_parent = NULL;
-      if (save && origin != child) dvr_entry_save(child);
+      if (save && origin != child) idnode_changed(&child->de_id);
       return 1;
     }
     return 0;
@@ -183,17 +183,17 @@ dvr_entry_change_parent_child(dvr_entry_t *parent, dvr_entry_t *child, void *ori
   if (parent->de_child) {
     p = parent->de_child->de_parent;
     parent->de_child->de_parent = NULL;
-    if (save && p) dvr_entry_save(p);
+    if (save && p) idnode_changed(&p->de_id);
   }
   if (child->de_parent) {
     p = child->de_parent->de_child;
     child->de_parent->de_child = NULL;
-    if (save && p) dvr_entry_save(p);
+    if (save && p) idnode_changed(&p->de_id);
   }
   parent->de_child = child;
   child->de_parent = parent;
-  if (save && origin != parent) dvr_entry_save(parent);
-  if (save && origin != child) dvr_entry_save(child);
+  if (save && origin != parent) idnode_changed(&parent->de_id);
+  if (save && origin != child) idnode_changed(&child->de_id);
   return 1;
 }
 
@@ -410,7 +410,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
       return;
     }
     if (save)
-      dvr_entry_save(de);
+      idnode_changed(&de->de_id);
   }
 
   if (retention < DVR_RET_ONREMOVE) {
@@ -873,7 +873,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
          idnode_uuid_as_str(&de->de_id, ubuf),
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator ?: "");
 
-  dvr_entry_save(de);
+  idnode_changed(&de->de_id);
   return de;
 }
 
@@ -953,7 +953,7 @@ dvr_entry_clone(dvr_entry_t *de)
     } else {
       dvr_entry_set_timer(n);
     }
-    dvr_entry_save(n);
+    idnode_changed(&n->de_id);
   }
 
   return n == NULL ? de : n;
@@ -1057,7 +1057,7 @@ not_so_good:
   } else {
     /* we have already queued similar recordings, mark as resolved */
     de->de_dont_rerecord = 1;
-    dvr_entry_save(de);
+    idnode_changed(&de->de_id);
   }
 
   return 0;
@@ -1389,44 +1389,9 @@ dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf)
     if (def)
       LIST_INSERT_HEAD(&def->dvr_entries, de, de_config_link);
     if (delconf)
-      dvr_entry_save(de);
+      idnode_changed(&de->de_id);
   }
 }
-
-/**
- *
- */
-void
-dvr_entry_save(dvr_entry_t *de)
-{
-  htsmsg_t *m = htsmsg_create_map(), *e, *l, *c, *info;
-  htsmsg_field_t *f;
-  char ubuf[UUID_HEX_SIZE];
-  const char *filename;
-
-  lock_assert(&global_lock);
-
-  idnode_save(&de->de_id, m);
-  if (de->de_files) {
-    l = htsmsg_create_list();
-    HTSMSG_FOREACH(f, de->de_files)
-      if ((e = htsmsg_field_get_map(f)) != NULL) {
-        filename = htsmsg_get_str(e, "filename");
-        info = htsmsg_get_list(e, "info");
-        if (filename) {
-          c = htsmsg_create_map();
-          htsmsg_add_str(c, "filename", filename);
-          if (info)
-            htsmsg_add_msg(c, "info", htsmsg_copy(info));
-          htsmsg_add_msg(l, NULL, c);
-        }
-      }
-    htsmsg_add_msg(m, "files", l);
-  }
-  hts_settings_save(m, "dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
-  htsmsg_destroy(m);
-}
-
 
 /**
  *
@@ -1767,7 +1732,7 @@ dvr_event_removed(epg_broadcast_t *e)
     if (de->de_bcast != e)
       continue;
     dvr_entry_assign_broadcast(de, NULL);
-    dvr_entry_save(de);
+    idnode_changed(&de->de_id);
   }
 }
 
@@ -1921,7 +1886,7 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
     return;
 
   if (saveconf)
-    dvr_entry_save(de);
+    idnode_changed(&de->de_id);
 
   dvr_entry_retention_timer(de);
 
@@ -2039,14 +2004,42 @@ dvr_entry_purge(dvr_entry_t *de, int delconf)
  * **************************************************************************/
 
 static void
-dvr_entry_class_save(idnode_t *self)
+dvr_entry_class_changed(idnode_t *self)
 {
   dvr_entry_t *de = (dvr_entry_t *)self;
-  dvr_entry_save(de);
   if (dvr_entry_is_valid(de))
     dvr_entry_set_timer(de);
-
   htsp_dvr_entry_update(de);
+}
+
+static htsmsg_t *
+dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
+{
+  dvr_entry_t *de = (dvr_entry_t *)self;
+  htsmsg_t *m = htsmsg_create_map(), *e, *l, *c, *info;
+  htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
+  const char *filename2;
+
+  idnode_save(&de->de_id, m);
+  if (de->de_files) {
+    l = htsmsg_create_list();
+    HTSMSG_FOREACH(f, de->de_files)
+      if ((e = htsmsg_field_get_map(f)) != NULL) {
+        filename2 = htsmsg_get_str(e, "filename");
+        info = htsmsg_get_list(e, "info");
+        if (filename2) {
+          c = htsmsg_create_map();
+          htsmsg_add_str(c, "filename", filename2);
+          if (info)
+            htsmsg_add_msg(c, "info", htsmsg_copy(info));
+          htsmsg_add_msg(l, NULL, c);
+        }
+      }
+    htsmsg_add_msg(m, "files", l);
+  }
+  snprintf(filename, fsize, "dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
+  return m;
 }
 
 static void
@@ -2811,6 +2804,7 @@ const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
   .ic_caption   = N_("DVR entry"),
   .ic_event     = "dvrentry",
+  .ic_changed   = dvr_entry_class_changed,
   .ic_save      = dvr_entry_class_save,
   .ic_get_title = dvr_entry_class_get_title,
   .ic_delete    = dvr_entry_class_delete,

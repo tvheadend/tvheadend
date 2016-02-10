@@ -28,13 +28,14 @@
  * Class definition
  * ***************************************************************************/
 
-static void
+static htsmsg_t *
 mpegts_network_class_save
-  ( idnode_t *in )
+  ( idnode_t *in, char *filename, size_t fsize )
 {
   mpegts_network_t *mn = (mpegts_network_t*)in;
   if (mn->mn_config_save)
-    mn->mn_config_save(mn);
+    return mn->mn_config_save(mn, filename, fsize);
+  return NULL;
 }
 
 static const char *
@@ -302,11 +303,12 @@ mpegts_network_display_name
   strncpy(buf, mn->mn_network_name ?: "unknown", len);
 }
 
-static void
+static htsmsg_t *
 mpegts_network_config_save
-  ( mpegts_network_t *mn )
+  ( mpegts_network_t *mn, char *filename, size_t size )
 {
   // Nothing - leave to child classes
+  return NULL;
 }
 
 static mpegts_mux_t *
@@ -552,7 +554,7 @@ mpegts_network_wizard_create
   mn = mnb->build(mnb->idc, conf);
   htsmsg_destroy(conf);
   if (mn)
-    mn->mn_config_save(mn);
+    idnode_changed(&mn->mn_id);
 
 found:
   if (mn && nlist) {

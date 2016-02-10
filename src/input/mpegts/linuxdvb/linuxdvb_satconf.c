@@ -138,12 +138,12 @@ linuxdvb_satconf_class_get_title ( idnode_t *p, const char *lang )
 }
 
 static void
-linuxdvb_satconf_class_save ( idnode_t *s )
+linuxdvb_satconf_class_changed ( idnode_t *s )
 {
   linuxdvb_satconf_t  *ls  = (linuxdvb_satconf_t*)s;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)ls->ls_frontend;
   linuxdvb_adapter_t  *la  = lfe->lfe_adapter;
-  linuxdvb_adapter_save(la);
+  linuxdvb_adapter_changed(la);
 }
 
 static const void *
@@ -214,7 +214,7 @@ const idclass_t linuxdvb_satconf_class =
   .ic_caption    = N_("DVB-S satellite configuration"),
   .ic_event      = "linuxdvb_satconf",
   .ic_get_title  = linuxdvb_satconf_class_get_title,
-  .ic_save       = linuxdvb_satconf_class_save,
+  .ic_changed    = linuxdvb_satconf_class_changed,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_BOOL,
@@ -1302,10 +1302,10 @@ linuxdvb_satconf_ele_class_get_childs ( idnode_t *o )
 }
 
 static void
-linuxdvb_satconf_ele_class_save ( idnode_t *in )
+linuxdvb_satconf_ele_class_changed ( idnode_t *in )
 {
   linuxdvb_satconf_ele_t *lse = (linuxdvb_satconf_ele_t*)in;
-  linuxdvb_satconf_class_save(&lse->lse_parent->ls_id);
+  linuxdvb_satconf_class_changed(&lse->lse_parent->ls_id);
 }
 
 const idclass_t linuxdvb_satconf_ele_class =
@@ -1315,7 +1315,7 @@ const idclass_t linuxdvb_satconf_ele_class =
   .ic_event      = "linuxdvb_satconf_ele",
   .ic_get_title  = linuxdvb_satconf_ele_class_get_title,
   .ic_get_childs = linuxdvb_satconf_ele_class_get_childs,
-  .ic_save       = linuxdvb_satconf_ele_class_save,
+  .ic_changed    = linuxdvb_satconf_ele_class_changed,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_BOOL,
@@ -1477,11 +1477,11 @@ linuxdvb_diseqc_class_get_title ( idnode_t *o, const char *lang )
 }
 
 static void
-linuxdvb_diseqc_class_save ( idnode_t *o )
+linuxdvb_diseqc_class_changed ( idnode_t *o )
 {
   linuxdvb_diseqc_t *ld = (linuxdvb_diseqc_t*)o;
   if (ld->ld_satconf)
-    linuxdvb_satconf_ele_class_save(&ld->ld_satconf->lse_id);
+    linuxdvb_satconf_ele_class_changed(&ld->ld_satconf->lse_id);
 }
 
 const idclass_t linuxdvb_diseqc_class =
@@ -1490,7 +1490,7 @@ const idclass_t linuxdvb_diseqc_class =
   .ic_caption     = N_("DiseqC"),
   .ic_event       = "linuxdvb_diseqc",
   .ic_get_title   = linuxdvb_diseqc_class_get_title,
-  .ic_save        = linuxdvb_diseqc_class_save,
+  .ic_changed     = linuxdvb_diseqc_class_changed,
 };
 
 linuxdvb_diseqc_t *

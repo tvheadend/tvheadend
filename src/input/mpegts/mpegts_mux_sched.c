@@ -60,15 +60,22 @@ mpegts_mux_sched_set_timer ( mpegts_mux_sched_t *mms )
 }
 
 static void
-mpegts_mux_sched_class_save ( idnode_t *in )
+mpegts_mux_sched_class_changed ( idnode_t *in )
 {
   mpegts_mux_sched_t *mms = (mpegts_mux_sched_t*)in;
 
   /* Update timer */
   mpegts_mux_sched_set_timer(mms);
+}
 
-  /* Save */
-  mpegts_mux_sched_save(mms);
+static htsmsg_t *
+mpegts_mux_sched_class_save ( idnode_t *in, char *filename, size_t fsize )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(in, c);
+  snprintf(filename, fsize, "muxsched/%s", idnode_uuid_as_str(in, ubuf));
+  return c;
 }
 
 static void
@@ -117,6 +124,7 @@ const idclass_t mpegts_mux_sched_class =
   .ic_class      = "mpegts_mux_sched",
   .ic_caption    = N_("Mux schedule entry"),
   .ic_event      = "mpegts_mux_sched",
+  .ic_changed    = mpegts_mux_sched_class_changed,
   .ic_save       = mpegts_mux_sched_class_save,
   .ic_delete     = mpegts_mux_sched_class_delete,
   .ic_properties = (const property_t[]){
@@ -297,16 +305,6 @@ mpegts_mux_sched_create ( const char *uuid, htsmsg_t *conf )
   mpegts_mux_sched_set_timer(mms);
 
   return mms;
-}
-
-void
-mpegts_mux_sched_save ( mpegts_mux_sched_t *mms )
-{
-  htsmsg_t *c = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-  idnode_save(&mms->mms_id, c);
-  hts_settings_save(c, "muxsched/%s", idnode_uuid_as_str(&mms->mms_id, ubuf));
-  htsmsg_destroy(c);
 }
 
 void

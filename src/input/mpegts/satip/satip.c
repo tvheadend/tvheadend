@@ -117,10 +117,28 @@ satip_device_nicename( satip_device_t *sd, char *buf, int len )
  * SAT-IP client
  */
 
-static void
-satip_device_class_save ( idnode_t *in )
+static htsmsg_t *
+satip_device_class_save ( idnode_t *in, char *filename, size_t fsize )
 {
-  satip_device_save((satip_device_t *)in);
+  satip_device_t *sd = (satip_device_t *)in;
+  satip_frontend_t *lfe;
+  htsmsg_t *m, *l;
+  char ubuf[UUID_HEX_SIZE];
+
+  if (sd->sd_nosave)
+    return NULL;
+
+  m = htsmsg_create_map();
+  idnode_save(&sd->th_id, m);
+
+  l = htsmsg_create_map();
+  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+    satip_frontend_save(lfe, l);
+  htsmsg_add_msg(m, "frontends", l);
+
+  snprintf(filename, fsize, "input/satip/adapters/%s",
+           idnode_uuid_as_str(&sd->th_id, ubuf));
+  return m;
 }
 
 static idnode_set_t *
@@ -655,7 +673,7 @@ satip_device_create( satip_device_info_t *info )
   }
 
   if (save)
-    satip_device_save(sd);
+    satip_device_changed(sd);
 
   sd->sd_inload = 0;
 
@@ -692,29 +710,6 @@ satip_device_find_by_descurl( const char *descurl )
       return (satip_device_t *)th;
   }
   return NULL;
-}
-
-void
-satip_device_save( satip_device_t *sd )
-{
-  satip_frontend_t *lfe;
-  htsmsg_t *m, *l;
-  char ubuf[UUID_HEX_SIZE];
-
-  if (sd->sd_nosave)
-    return;
-
-  m = htsmsg_create_map();
-  idnode_save(&sd->th_id, m);
-
-  l = htsmsg_create_map();
-  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
-    satip_frontend_save(lfe, l);
-  htsmsg_add_msg(m, "frontends", l);
-
-  hts_settings_save(m, "input/satip/adapters/%s",
-                    idnode_uuid_as_str(&sd->th_id, ubuf));
-  htsmsg_destroy(m);
 }
 
 void

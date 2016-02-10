@@ -269,8 +269,8 @@ mpegts_service_is_enabled(service_t *t, int flags)
 /*
  * Save
  */
-static void
-mpegts_service_config_save ( service_t *t )
+static htsmsg_t *
+mpegts_service_config_save ( service_t *t, char *filename, size_t fsize )
 {
   htsmsg_t *c = htsmsg_create_map();
   mpegts_service_t *s = (mpegts_service_t*)t;
@@ -278,11 +278,11 @@ mpegts_service_config_save ( service_t *t )
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
   service_save(t, c);
-  hts_settings_save(c, "input/dvb/networks/%s/muxes/%s/services/%s",
-                    idnode_uuid_as_str(&s->s_dvb_mux->mm_network->mn_id, ubuf0),
-                    idnode_uuid_as_str(&s->s_dvb_mux->mm_id, ubuf1),
-                    idnode_uuid_as_str(&s->s_id, ubuf2));
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s/services/%s",
+           idnode_uuid_as_str(&s->s_dvb_mux->mm_network->mn_id, ubuf0),
+           idnode_uuid_as_str(&s->s_dvb_mux->mm_id, ubuf1),
+           idnode_uuid_as_str(&s->s_id, ubuf2));
+  return c;
 }
 
 /*

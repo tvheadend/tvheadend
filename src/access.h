@@ -279,12 +279,6 @@ access_entry_destroy(access_entry_t *ae, int delconf);
  *
  */
 void
-access_entry_save(access_entry_t *ae);
-
-/**
- *
- */
-void
 access_destroy_by_profile(struct profile *pro, int delconf);
 void
 access_destroy_by_dvr_config(struct dvr_config *cfg, int delconf);
@@ -298,16 +292,12 @@ passwd_entry_t *
 passwd_entry_create(const char *uuid, htsmsg_t *conf);
 void
 passwd_entry_destroy(passwd_entry_t *ae, int delconf);
-void
-passwd_entry_save(passwd_entry_t *pw);
 
 /**
  *
  */
 ipblock_entry_t *
 ipblock_entry_create(const char *uuid, htsmsg_t *conf);
-void
-ipblock_entry_save(ipblock_entry_t *pw);
 
 /**
  *

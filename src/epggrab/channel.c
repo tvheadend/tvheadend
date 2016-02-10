@@ -171,10 +171,10 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch, void *origin )
   if (ec->icon && epggrab_conf.channel_reicon)
     save |= channel_set_icon(ch, ec->icon);
   if (save)
-    channel_save(ch);
+    idnode_changed(&ch->ch_id);
 
   if (origin == NULL)
-    epggrab_channel_save(ec);
+    idnode_changed(&ec->idnode);
   return 1;
 }
 
@@ -198,7 +198,7 @@ int epggrab_channel_set_name ( epggrab_channel_t *ec, const char *name )
       LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_name(ch, name))
-          channel_save(ch);
+          idnode_changed(&ch->ch_id);
       }
     }
     save = 1;
@@ -224,7 +224,7 @@ int epggrab_channel_set_icon ( epggrab_channel_t *ec, const char *icon )
       LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
         ch = (channel_t *)ilm->ilm_in2;
         if (channel_set_icon(ch, icon))
-          channel_save(ch);
+          idnode_changed(&ch->ch_id);
       }
     }
     save = 1;
@@ -250,7 +250,7 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int major, int minor )
         if (channel_set_number(ch,
                                lcn / CHANNEL_SPLIT,
                                lcn % CHANNEL_SPLIT))
-          channel_save(ch);
+          idnode_changed(&ch->ch_id);
       }
     }
     save = 1;
@@ -303,7 +303,7 @@ void epggrab_channel_updated ( epggrab_channel_t *ec )
     epggrab_channel_autolink(ec);
 
   /* Save */
-  epggrab_channel_save(ec);
+  idnode_changed(&ec->idnode);
 }
 
 /* ID comparison */
@@ -385,16 +385,6 @@ epggrab_channel_t *epggrab_channel_find
     }
   }
   return ec;
-}
-
-void epggrab_channel_save( epggrab_channel_t *ec )
-{
-  htsmsg_t *m = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-  idnode_save(&ec->idnode, m);
-  hts_settings_save(m, "epggrab/%s/channels/%s",
-                    ec->mod->saveid, idnode_uuid_as_str(&ec->idnode, ubuf));
-  htsmsg_destroy(m);
 }
 
 void epggrab_channel_destroy( epggrab_channel_t *ec, int delconf, int rb_remove )
@@ -538,10 +528,16 @@ epggrab_channel_class_get_title(idnode_t *self, const char *lang)
   return prop_sbuf;
 }
 
-static void
-epggrab_channel_class_save(idnode_t *self)
+static htsmsg_t *
+epggrab_channel_class_save(idnode_t *self, char *filename, size_t fsize)
 {
-  epggrab_channel_save((epggrab_channel_t *)self);
+  epggrab_channel_t *ec = (epggrab_channel_t *)self;
+  htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&ec->idnode, m);
+  snprintf(filename, fsize, "epggrab/%s/channels/%s",
+           ec->mod->saveid, idnode_uuid_as_str(&ec->idnode, ubuf));
+  return m;
 }
 
 static void

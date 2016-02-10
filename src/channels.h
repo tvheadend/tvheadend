@@ -150,8 +150,6 @@ channel_tag_t *channel_tag_find_by_identifier(uint32_t id);
 static inline channel_tag_t *channel_tag_find_by_uuid(const char *uuid)
   {  return (channel_tag_t*)idnode_find(uuid, &channel_tag_class, NULL); }
 
-void channel_tag_save(channel_tag_t *ct);
-
 htsmsg_t * channel_tag_class_get_list(void *o, const char *lang);
 
 const char * channel_tag_get_icon(channel_tag_t *ct);
@@ -164,8 +162,6 @@ int channel_tag_map(channel_tag_t *ct, channel_t *ch, void *origin);
 void channel_tag_unmap(channel_t *ch, void *origin);
 
 int channel_tag_access(channel_tag_t *ct, struct access *a, int disabled);
-
-void channel_save(channel_t *ch);
 
 const char *channel_get_name ( channel_t *ch );
 int channel_set_name ( channel_t *ch, const char *name );

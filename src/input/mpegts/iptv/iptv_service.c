@@ -22,8 +22,8 @@
 
 extern const idclass_t mpegts_service_class;
 
-static void
-iptv_service_config_save ( service_t *s )
+static htsmsg_t *
+iptv_service_config_save ( service_t *s, char *filename, size_t fsize )
 {
   mpegts_mux_t     *mm = ((mpegts_service_t *)s)->s_dvb_mux;
   htsmsg_t         *c  = htsmsg_create_map();
@@ -32,11 +32,11 @@ iptv_service_config_save ( service_t *s )
   char ubuf2[UUID_HEX_SIZE];
 
   service_save(s, c);
-  hts_settings_save(c, "input/iptv/networks/%s/muxes/%s/services/%s",
-                    idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf0),
-                    idnode_uuid_as_str(&mm->mm_id, ubuf1),
-                    idnode_uuid_as_str(&s->s_id, ubuf2));
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "input/iptv/networks/%s/muxes/%s/services/%s",
+           idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf0),
+           idnode_uuid_as_str(&mm->mm_id, ubuf1),
+           idnode_uuid_as_str(&s->s_id, ubuf2));
+  return c;
 }
 
 static void

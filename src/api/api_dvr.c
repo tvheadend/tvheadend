@@ -57,7 +57,7 @@ api_dvr_config_create
 
   pthread_mutex_lock(&global_lock);
   if ((cfg = dvr_config_create(NULL, NULL, conf)))
-    dvr_config_save(cfg);
+    idnode_changed(&cfg->dvr_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;
@@ -172,7 +172,7 @@ api_dvr_entry_create
       htsmsg_add_msg(conf, "subtitle", m);
     }
     if ((de = dvr_entry_create(NULL, conf, 0)))
-      dvr_entry_save(de);
+      idnode_changed(&de->de_id);
 
     res = 0;
     free(lang);
@@ -244,7 +244,7 @@ api_dvr_entry_create_by_event
                                        NULL, DVR_PRIO_NORMAL, DVR_RET_DVRCONFIG,
                                        DVR_RET_DVRCONFIG, comment);
         if (de)
-          dvr_entry_save(de);
+          idnode_changed(&de->de_id);
       }
     }
     pthread_mutex_unlock(&global_lock);
@@ -382,10 +382,8 @@ api_dvr_autorec_create
   if (cfg) {
     htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
     dae = dvr_autorec_create(NULL, conf);
-    if (dae) {
-      dvr_autorec_save(dae);
-      dvr_autorec_changed(dae, 1);
-    }
+    if (dae)
+      idnode_changed(&dae->dae_id);
   }
   pthread_mutex_unlock(&global_lock);
 
@@ -427,10 +425,8 @@ api_dvr_autorec_create_by_series
                                           perm->aa_username,
                                           perm->aa_representative,
                                           "Created from EPG query");
-        if (dae) {
-          dvr_autorec_save(dae);
-          dvr_autorec_changed(dae, 1);
-        }
+        if (dae)
+          idnode_changed(&dae->dae_id);
       }
     }
     pthread_mutex_unlock(&global_lock);
@@ -467,10 +463,8 @@ api_dvr_timerec_create
 
   pthread_mutex_lock(&global_lock);
   dte = dvr_timerec_create(NULL, conf);
-  if (dte) {
-    dvr_timerec_save(dte);
-    dvr_timerec_check(dte);
-  }
+  if (dte)
+    idnode_changed(&dte->dte_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;

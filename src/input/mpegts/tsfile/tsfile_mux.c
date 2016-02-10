@@ -46,9 +46,10 @@ tsfile_mux_instance_create
   return mmi;
 }
 
-static void
-iptv_mux_config_save ( mpegts_mux_t *m )
+static htsmsg_t *
+iptv_mux_config_save ( mpegts_mux_t *m, char *filename, size_t fsize )
 {
+  return NULL;
 }
 
 mpegts_mux_t *

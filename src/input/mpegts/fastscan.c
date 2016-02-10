@@ -123,8 +123,10 @@ dvb_fastscan_create(htsmsg_t *e)
   if (bq == NULL)
     goto fail;
   bq->bq_shield = 1;
-  if (bq->bq_saveflag)
-    bouquet_save(bq, 1);
+  if (bq->bq_saveflag) {
+    bq->bq_saveflag = 0;
+    idnode_changed(&bq->bq_id);
+  }
 
   fs = RB_INSERT_SORTED(&fastscan_rb, fastscan_rb_skel, link, _fs_cmp);
   if (!fs) {

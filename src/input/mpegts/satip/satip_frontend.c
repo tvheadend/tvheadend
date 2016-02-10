@@ -94,10 +94,10 @@ satip_frontend_signal_cb( void *aux )
  * *************************************************************************/
 
 static void
-satip_frontend_class_save ( idnode_t *in )
+satip_frontend_class_changed ( idnode_t *in )
 {
   satip_device_t *la = ((satip_frontend_t*)in)->sf_device;
-  satip_device_save(la);
+  satip_device_changed(la);
 }
 
 static int
@@ -138,7 +138,7 @@ const idclass_t satip_frontend_class =
   .ic_super      = &mpegts_input_class,
   .ic_class      = "satip_frontend",
   .ic_caption    = N_("SAT>IP DVB frontend"),
-  .ic_save       = satip_frontend_class_save,
+  .ic_changed    = satip_frontend_class_changed,
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_INT,
@@ -1809,7 +1809,7 @@ satip_frontend_wizard_set( tvh_input_t *ti, htsmsg_t *conf, const char *lang )
     htsmsg_destroy(conf);
     if (satip_frontend_wizard_network(lfe))
       mpegts_input_set_enabled((mpegts_input_t *)lfe, 1);
-    satip_device_save(lfe->sf_device);
+    satip_device_changed(lfe->sf_device);
   } else {
     htsmsg_destroy(nlist);
   }

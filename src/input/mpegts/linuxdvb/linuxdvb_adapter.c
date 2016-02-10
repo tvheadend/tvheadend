@@ -45,11 +45,38 @@
  * DVB Adapter
  * **************************************************************************/
 
-static void
-linuxdvb_adapter_class_save ( idnode_t *in )
+static htsmsg_t *
+linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
 {
   linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)in;
-  linuxdvb_adapter_save(la);
+  htsmsg_t *m, *l;
+  linuxdvb_frontend_t *lfe;
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_ca_t *lca;
+#endif
+  char ubuf[UUID_HEX_SIZE];
+
+  m = htsmsg_create_map();
+  idnode_save(&la->th_id, m);
+
+  /* Frontends */
+  l = htsmsg_create_map();
+  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
+    linuxdvb_frontend_save(lfe, l);
+  htsmsg_add_msg(m, "frontends", l);
+
+  /* CAs */
+#if ENABLE_LINUXDVB_CA
+  l = htsmsg_create_map();
+  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
+    linuxdvb_ca_save(lca, l);
+  htsmsg_add_msg(m, "ca_devices", l);
+#endif
+
+  /* Save */
+  snprintf(filename, fsize, "input/linuxdvb/adapters/%s",
+           idnode_uuid_as_str(&la->th_id, ubuf));
+  return m;
 }
 
 static idnode_set_t *
@@ -97,42 +124,6 @@ const idclass_t linuxdvb_adapter_class =
     {}
   }
 };
-
-/*
- * Save data
- */
-void
-linuxdvb_adapter_save ( linuxdvb_adapter_t *la )
-{
-  htsmsg_t *m, *l;
-  linuxdvb_frontend_t *lfe;
-#if ENABLE_LINUXDVB_CA
-  linuxdvb_ca_t *lca;
-#endif
-  char ubuf[UUID_HEX_SIZE];
-
-  m = htsmsg_create_map();
-  idnode_save(&la->th_id, m);
-
-  /* Frontends */
-  l = htsmsg_create_map();
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    linuxdvb_frontend_save(lfe, l);
-  htsmsg_add_msg(m, "frontends", l);
-
-  /* CAs */
-#if ENABLE_LINUXDVB_CA
-  l = htsmsg_create_map();
-  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-    linuxdvb_ca_save(lca, l);
-  htsmsg_add_msg(m, "ca_devices", l);
-#endif
-
-  /* Save */
-  hts_settings_save(m, "input/linuxdvb/adapters/%s",
-                    idnode_uuid_as_str(&la->th_id, ubuf));
-  htsmsg_destroy(m);
-}
 
 /*
  * Check if enabled
@@ -488,7 +479,7 @@ linuxdvb_adapter_add ( const char *path )
 
   /* Save configuration */
   if (save && la)
-    linuxdvb_adapter_save(la);
+    linuxdvb_adapter_changed(la);
 }
 
 static void

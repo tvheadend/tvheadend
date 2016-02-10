@@ -26,8 +26,6 @@
 
 struct esfilter_entry_queue esfilters[ESF_CLASS_LAST + 1];
 
-static void esfilter_class_save(idnode_t *self);
-
 /*
  * Class masks
  */
@@ -128,7 +126,7 @@ esfilter_reindex(esfilter_class_t cls)
   TAILQ_FOREACH(esf, &esfilters[cls], esf_link)
     if (esf->esf_save) {
       esf->esf_save = 0;
-      esfilter_class_save((idnode_t *)esf);
+      idnode_changed(&esf->esf_id);
     }
 }
 
@@ -185,7 +183,7 @@ esfilter_create
   if (!conf)
     esfilter_reindex(esf->esf_class);
   if (save)
-    esfilter_class_save((idnode_t *)esf);
+    idnode_changed(&esf->esf_id);
   return esf;
 }
 
@@ -205,14 +203,14 @@ esfilter_delete(esfilter_t *esf, int delconf)
  * Class functions
  */
 
-static void
-esfilter_class_save(idnode_t *self)
+static htsmsg_t *
+esfilter_class_save(idnode_t *self, char *filename, size_t fsize)
 {
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(self, c);
-  hts_settings_save(c, "esfilter/%s", idnode_uuid_as_str(self, ubuf));
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "esfilter/%s", idnode_uuid_as_str(self, ubuf));
+  return c;
 }
 
 static const char *

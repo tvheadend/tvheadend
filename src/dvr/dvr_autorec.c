@@ -87,7 +87,7 @@ dvr_autorec_purge_spawns(dvr_autorec_entry_t *dae, int del, int disabled)
       }
       dvr_entry_cancel(de, 0);
     } else
-      dvr_entry_save(de);
+      idnode_changed(&de->de_id);
   }
   if (bcast)
     bcast[i] = NULL;
@@ -310,10 +310,8 @@ dvr_autorec_create_htsp(htsmsg_t *conf)
   dae = dvr_autorec_create(NULL, conf);
   htsmsg_destroy(conf);
 
-  if (dae) {
-    dvr_autorec_save(dae);
-    dvr_autorec_changed(dae, 1);
-  }
+  if (dae)
+    idnode_changed(&dae->dae_id);
 
   return dae;
 }
@@ -322,8 +320,7 @@ void
 dvr_autorec_update_htsp(dvr_autorec_entry_t *dae, htsmsg_t *conf)
 {
   idnode_update(&dae->dae_id, conf);
-  dvr_autorec_save(dae);
-  dvr_autorec_changed(dae, 1);
+  idnode_changed(&dae->dae_id);
   tvhlog(LOG_INFO, "autorec", "\"%s\" on \"%s\": Updated", dae->dae_title ? dae->dae_title : "",
       (dae->dae_channel && dae->dae_channel->ch_name) ? dae->dae_channel->ch_name : "any channel");
 }
@@ -407,34 +404,29 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   free(dae);
 }
 
-/**
- *
- */
-void
-dvr_autorec_save(dvr_autorec_entry_t *dae)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE]; 
-
-  lock_assert(&global_lock);
-
-  idnode_save(&dae->dae_id, m);
-  hts_settings_save(m, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
-  htsmsg_destroy(m);
-}
-
 /* **************************************************************************
  * DVR Autorec Entry Class definition
  * **************************************************************************/
 
 static void
-dvr_autorec_entry_class_save(idnode_t *self)
+dvr_autorec_entry_class_changed(idnode_t *self)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
-  dvr_autorec_save(dae);
+
   dvr_autorec_changed(dae, 1);
   dvr_autorec_completed(dae, 0);
   htsp_autorec_entry_update(dae);
+}
+
+static htsmsg_t *
+dvr_autorec_entry_class_save(idnode_t *self, char *filename, size_t fsize)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
+  htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&dae->dae_id, m);
+  snprintf(filename, fsize, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
+  return m;
 }
 
 static void
@@ -981,6 +973,7 @@ const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
   .ic_caption    = N_("DVR Auto-record entry"),
   .ic_event      = "dvrautorec",
+  .ic_changed    = dvr_autorec_entry_class_changed,
   .ic_save       = dvr_autorec_entry_class_save,
   .ic_get_title  = dvr_autorec_entry_class_get_title,
   .ic_delete     = dvr_autorec_entry_class_delete,
@@ -1409,7 +1402,7 @@ autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf)
     dae->dae_channel_tag = NULL;
     idnode_notify_changed(&dae->dae_id);
     if (delconf)
-      dvr_autorec_save(dae);
+      idnode_changed(&dae->dae_id);
   }
 }
 
@@ -1443,7 +1436,7 @@ autorec_destroy_by_config(dvr_config_t *kcfg, int delconf)
       LIST_INSERT_HEAD(&cfg->dvr_autorec_entries, dae, dae_config_link);
     dae->dae_config = cfg;
     if (delconf)
-      dvr_autorec_save(dae);
+      idnode_changed(&dae->dae_id);
   }
 }
 

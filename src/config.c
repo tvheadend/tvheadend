@@ -1568,7 +1568,7 @@ config_migrate ( int backup )
 update:
   config.version = v;
   tvh_str_set(&config.full_version, tvheadend_version);
-  config_save();
+  idnode_changed(&config.idnode);
   return 1;
 }
 
@@ -1722,7 +1722,7 @@ config_init ( int backup )
     config.version = ARRAY_SIZE(config_migrate_table);
     tvh_str_set(&config.full_version, tvheadend_version);
     tvh_str_set(&config.server_name, "Tvheadend");
-    config_save();
+    idnode_changed(&config.idnode);
   
   /* Perform migrations */
   } else {
@@ -1748,24 +1748,20 @@ void config_done ( void )
   file_unlock(config_lock, config_lock_fd);
 }
 
-void config_save ( void )
+/* **************************************************************************
+ * Config Class
+ * *************************************************************************/
+
+static htsmsg_t *
+config_class_save(idnode_t *self, char *filename, size_t fsize)
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&config.idnode, c);
 #if ENABLE_SATIP_SERVER
   idnode_save(&satip_server_conf.idnode, c);
 #endif
-  hts_settings_save(c, "config");
-  htsmsg_destroy(c);
-}
-
-/* **************************************************************************
- * Config Class
- * *************************************************************************/
-
-static void config_class_save(idnode_t *self)
-{
-  config_save();
+  snprintf(filename, fsize, "config");
+  return c;
 }
 
 static int

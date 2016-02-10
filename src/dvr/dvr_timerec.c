@@ -77,7 +77,7 @@ dvr_timerec_purge_spawn(dvr_timerec_entry_t *dte, int delconf)
       if (de->de_sched_state == DVR_SCHEDULED)
         dvr_entry_cancel(de, 0);
       else
-        dvr_entry_save(de);
+        idnode_changed(&de->de_id);
     }
   }
 }
@@ -209,10 +209,8 @@ dvr_timerec_create_htsp(htsmsg_t *conf)
   dte = dvr_timerec_create(NULL, conf);
   htsmsg_destroy(conf);
 
-  if (dte) {
-    dvr_timerec_save(dte);
-    dvr_timerec_check(dte);
-  }
+  if (dte)
+    idnode_changed(&dte->dte_id);
 
   return dte;
 }
@@ -221,9 +219,7 @@ void
 dvr_timerec_update_htsp (dvr_timerec_entry_t *dte, htsmsg_t *conf)
 {
   idnode_update(&dte->dte_id, conf);
-  dvr_timerec_save(dte);
-  dvr_timerec_check(dte);
-  htsp_timerec_entry_update(dte);
+  idnode_changed(&dte->dte_id);
   tvhlog(LOG_INFO, "timerec", "\"%s\" on \"%s\": Updated", dte->dte_title ? dte->dte_title : "",
       (dte->dte_channel && dte->dte_channel->ch_name) ? dte->dte_channel->ch_name : "any channel");
 }
@@ -262,33 +258,27 @@ timerec_entry_destroy(dvr_timerec_entry_t *dte, int delconf)
   free(dte);
 }
 
-/**
- *
- */
-void
-dvr_timerec_save(dvr_timerec_entry_t *dte)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-
-  lock_assert(&global_lock);
-
-  idnode_save(&dte->dte_id, m);
-  hts_settings_save(m, "dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id, ubuf));
-  htsmsg_destroy(m);
-}
-
 /* **************************************************************************
  * DVR Autorec Entry Class definition
  * **************************************************************************/
 
 static void
-dvr_timerec_entry_class_save(idnode_t *self)
+dvr_timerec_entry_class_changed(idnode_t *self)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)self;
-  dvr_timerec_save(dte);
   dvr_timerec_check(dte);
   htsp_timerec_entry_update(dte);
+}
+
+static htsmsg_t *
+dvr_timerec_entry_class_save(idnode_t *self, char *filename, size_t fsize)
+{
+  dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)self;
+  htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&dte->dte_id, m);
+  snprintf(filename, fsize, "dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id, ubuf));
+  return m;
 }
 
 static void
@@ -527,6 +517,7 @@ const idclass_t dvr_timerec_entry_class = {
   .ic_class      = "dvrtimerec",
   .ic_caption    = N_("DVR time record entry"),
   .ic_event      = "dvrtimerec",
+  .ic_changed    = dvr_timerec_entry_class_changed,
   .ic_save       = dvr_timerec_entry_class_save,
   .ic_get_title  = dvr_timerec_entry_class_get_title,
   .ic_delete     = dvr_timerec_entry_class_delete,
@@ -775,7 +766,7 @@ timerec_destroy_by_config(dvr_config_t *kcfg, int delconf)
       LIST_INSERT_HEAD(&cfg->dvr_timerec_entries, dte, dte_config_link);
     dte->dte_config = cfg;
     if (delconf)
-      dvr_timerec_save(dte);
+      idnode_changed(&dte->dte_id);
   }
 }
 

@@ -115,10 +115,10 @@ ciplus13_app_ai_data_rate_info(linuxdvb_ca_t *lca, ciplus13_data_rate_t rate)
 }
 
 static void
-linuxdvb_ca_class_save ( idnode_t *in )
+linuxdvb_ca_class_changed ( idnode_t *in )
 {
   linuxdvb_adapter_t *la = ((linuxdvb_ca_t*)in)->lca_adapter;
-  linuxdvb_adapter_save(la);
+  linuxdvb_adapter_changed(la);
 }
 
 static void
@@ -179,7 +179,7 @@ const idclass_t linuxdvb_ca_class =
 {
   .ic_class      = "linuxdvb_ca",
   .ic_caption    = N_("Linux DVB CA"),
-  .ic_save       = linuxdvb_ca_class_save,
+  .ic_changed    = linuxdvb_ca_class_changed,
   .ic_get_title  = linuxdvb_ca_class_get_title,
   .ic_properties = (const property_t[]) {
     {

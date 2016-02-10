@@ -73,7 +73,8 @@ struct idclass {
   /* Callbacks */
   idnode_set_t   *(*ic_get_childs) (idnode_t *self);
   const char     *(*ic_get_title)  (idnode_t *self, const char *lang);
-  void            (*ic_save)       (idnode_t *self);
+  void            (*ic_changed)    (idnode_t *self);
+  htsmsg_t       *(*ic_save)       (idnode_t *self, char *filename, size_t fsize);
   void            (*ic_delete)     (idnode_t *self);
   void            (*ic_moveup)     (idnode_t *self);
   void            (*ic_movedown)   (idnode_t *self);

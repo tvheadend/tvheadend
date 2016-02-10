@@ -268,8 +268,7 @@ service_mapper_process
     }
 
     /* save */
-    idnode_notify_changed(&chn->ch_id);
-    channel_save(chn);
+    idnode_changed(&chn->ch_id);
   }
   if (!bq) {
     service_mapper_stat.ok++;
@@ -421,19 +420,21 @@ service_mapper_reset_stats (void)
 /*
  * Save settings
  */
-static void service_mapper_conf_class_save ( idnode_t *self )
+static htsmsg_t *
+service_mapper_conf_class_save ( idnode_t *self, char *filename, size_t fsize )
 {
   htsmsg_t *m;
 
   m = htsmsg_create_map();
   idnode_save(&service_mapper_conf.idnode, m);
-  hts_settings_save(m, "service_mapper/config");
-  htsmsg_destroy(m);
+  snprintf(filename, fsize, "service_mapper/config");
 
   if (!htsmsg_is_empty(service_mapper_conf.services))
     service_mapper_start(&service_mapper_conf.d, service_mapper_conf.services);
   htsmsg_destroy(service_mapper_conf.services);
   service_mapper_conf.services = NULL;
+
+  return m;
 }
 
 /*

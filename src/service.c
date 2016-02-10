@@ -51,7 +51,7 @@
 
 static void service_data_timeout(void *aux);
 static void service_class_delete(struct idnode *self);
-static void service_class_save(struct idnode *self);
+static htsmsg_t *service_class_save(struct idnode *self, char *filename, size_t fsize);
 
 struct service_queue service_all;
 struct service_queue service_raw_all;
@@ -1391,12 +1391,13 @@ service_class_delete(struct idnode *self)
 /**
  *
  */
-static void
-service_class_save(struct idnode *self)
+static htsmsg_t *
+service_class_save(struct idnode *self, char *filename, size_t fsize)
 {
   service_t *s = (service_t *)self;
   if (s->s_config_save)
-    s->s_config_save(s);
+    return s->s_config_save(s, filename, fsize);
+  return NULL;
 }
 
 /**
@@ -1426,7 +1427,7 @@ service_saver(void *aux)
     pthread_mutex_lock(&global_lock);
 
     if(t->s_status != SERVICE_ZOMBIE && t->s_config_save)
-      t->s_config_save(t);
+      idnode_changed(&t->s_id);
     if(t->s_status == SERVICE_RUNNING && restart)
       service_restart(t);
     service_unref(t);

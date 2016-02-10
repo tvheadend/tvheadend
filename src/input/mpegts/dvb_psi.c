@@ -461,7 +461,7 @@ dvb_desc_service_list
       if (bi)
         dvb_bat_find_service(bi, s, 0, UINT_MAX);
       if (save)
-        s->s_config_save((service_t*)s);
+        idnode_changed(&s->s_id);
     }
   }
   return 0;
@@ -493,7 +493,7 @@ dvb_desc_local_channel
                     s->s_dvb_channel_num != lcn) {
           s->s_dvb_channel_dtag = dtag;
           s->s_dvb_channel_num = lcn;
-          s->s_config_save((service_t*)s);
+          idnode_changed(&s->s_id);
           service_refresh_channel((service_t*)s);
         }
       }
@@ -1398,9 +1398,9 @@ dvb_nit_callback
     tvhdebug(mt->mt_name, "network %04X (%d) [%s]", nbid, nbid, name);
     save |= mpegts_network_set_network_name(mn, name);
     if (save)
-      mn->mn_config_save(mn);
+      idnode_changed(&mn->mn_id);
     if (mpegts_mux_set_network_name(mm, name))
-      mm->mm_config_save(mm);
+      idnode_changed(&mm->mm_id);
   }
 
   /* Transport length */
@@ -1734,7 +1734,7 @@ atsc_vct_callback
 
         /* Save */
         if (save)
-          s->s_config_save((service_t*)s);
+          idnode_changed(&s->s_id);
      }
 
     /* Move on */

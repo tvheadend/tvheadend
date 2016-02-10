@@ -128,7 +128,7 @@ api_mpegts_network_create
   if (mn) {
     err = 0;
     *resp = htsmsg_create_map();
-    mn->mn_config_save(mn);
+    idnode_changed(&mn->mn_id);
   } else {
     err = EINVAL;
   }
@@ -225,7 +225,7 @@ api_mpegts_network_muxcreate
   if (!(mm = mn->mn_mux_create2(mn, conf)))
     goto exit;
 
-  mm->mm_config_save(mm);
+  idnode_changed(&mm->mm_id);
   err = 0;
 
 exit:
@@ -319,7 +319,7 @@ api_mpegts_mux_sched_create
   if (mms) {
     err = 0;
     *resp = htsmsg_create_map();
-    mpegts_mux_sched_save(mms);
+    idnode_changed(&mms->mms_id);
   } else {
     err = EINVAL;
   }

@@ -74,7 +74,7 @@ dvr_config_find_by_name_default(const char *name)
   if (dvrdefaultconfig == NULL) {
     cfg = dvr_config_create("", NULL, NULL);
     assert(cfg);
-    dvr_config_save(cfg);
+    idnode_changed(&cfg->dvr_id);
     dvrdefaultconfig = cfg;
   }
 
@@ -508,38 +508,12 @@ dvr_config_delete(const char *name)
     tvhwarn("dvr", "Attempt to delete default config ignored");
 }
 
-/*
- *
- */
-void
-dvr_config_save(dvr_config_t *cfg)
-{
-  htsmsg_t *m = htsmsg_create_map();
-  char ubuf[UUID_HEX_SIZE];
-
-  lock_assert(&global_lock);
-
-  dvr_config_storage_check(cfg);
-  if (cfg->dvr_cleanup_threshold_free < 50)
-    cfg->dvr_cleanup_threshold_free = 50; // as checking is only periodically, lower is not save
-  if (cfg->dvr_removal_days != DVR_RET_FOREVER &&
-      cfg->dvr_removal_days > cfg->dvr_retention_days)
-    cfg->dvr_retention_days = DVR_RET_ONREMOVE;
-  if (cfg->dvr_removal_days > DVR_RET_FOREVER)
-    cfg->dvr_removal_days = DVR_RET_FOREVER;
-  if (cfg->dvr_retention_days > DVR_RET_FOREVER)
-    cfg->dvr_retention_days = DVR_RET_FOREVER;
-  idnode_save(&cfg->dvr_id, m);
-  hts_settings_save(m, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
-  htsmsg_destroy(m);
-}
-
 /* **************************************************************************
  * DVR Config Class definition
  * **************************************************************************/
 
 static void
-dvr_config_class_save(idnode_t *self)
+dvr_config_class_changed(idnode_t *self)
 {
   dvr_config_t *cfg = (dvr_config_t *)self;
   if (dvr_config_is_default(cfg))
@@ -551,7 +525,27 @@ dvr_config_class_save(idnode_t *self)
   } else {
     dvr_update_pathname_from_booleans(cfg);
   }
-  dvr_config_save(cfg);
+  dvr_config_storage_check(cfg);
+  if (cfg->dvr_cleanup_threshold_free < 50)
+    cfg->dvr_cleanup_threshold_free = 50; // as checking is only periodically, lower is not save
+  if (cfg->dvr_removal_days != DVR_RET_FOREVER &&
+      cfg->dvr_removal_days > cfg->dvr_retention_days)
+    cfg->dvr_retention_days = DVR_RET_ONREMOVE;
+  if (cfg->dvr_removal_days > DVR_RET_FOREVER)
+    cfg->dvr_removal_days = DVR_RET_FOREVER;
+  if (cfg->dvr_retention_days > DVR_RET_FOREVER)
+    cfg->dvr_retention_days = DVR_RET_FOREVER;
+}
+
+static htsmsg_t *
+dvr_config_class_save(idnode_t *self, char *filename, size_t fsize)
+{
+  dvr_config_t *cfg = (dvr_config_t *)self;
+  htsmsg_t *m = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&cfg->dvr_id, m);
+  snprintf(filename, fsize, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
+  return m;
 }
 
 static void
@@ -787,6 +781,7 @@ const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
   .ic_caption    = N_("DVR configuration profile"),
   .ic_event      = "dvrconfig",
+  .ic_changed    = dvr_config_class_changed,
   .ic_save       = dvr_config_class_save,
   .ic_get_title  = dvr_config_class_get_title,
   .ic_delete     = dvr_config_class_delete,

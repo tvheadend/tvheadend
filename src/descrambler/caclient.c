@@ -37,8 +37,6 @@ const idclass_t *caclient_classes[] = {
 struct caclient_entry_queue caclients;
 static pthread_mutex_t caclients_mutex;
 
-static void caclient_class_save ( idnode_t *in );
-
 static const idclass_t *
 caclient_class_find(const char *name)
 {
@@ -68,7 +66,7 @@ caclient_reindex(void)
   TAILQ_FOREACH(cac, &caclients, cac_link)
     if (cac->cac_save) {
       cac->cac_save = 0;
-      caclient_class_save((idnode_t *)cac);
+      idnode_changed((idnode_t *)cac);
     }
 }
 
@@ -129,7 +127,7 @@ caclient_create
   }
   pthread_mutex_unlock(&caclients_mutex);
   if (save)
-    caclient_class_save((idnode_t *)cac);
+    idnode_changed((idnode_t *)cac);
   cac->cac_conf_changed(cac);
   return cac;
 }
@@ -155,15 +153,20 @@ caclient_delete(caclient_t *cac, int delconf)
 }
 
 static void
-caclient_class_save ( idnode_t *in )
+caclient_class_changed ( idnode_t *in )
+{
+  caclient_t *cac = (caclient_t *)in;
+  cac->cac_conf_changed(cac);
+}
+
+static htsmsg_t *
+caclient_class_save ( idnode_t *in, char *filename, size_t fsize )
 {
   char ubuf[UUID_HEX_SIZE];
-  caclient_t *cac = (caclient_t *)in;
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(in, c);
-  hts_settings_save(c, "caclient/%s", idnode_uuid_as_str(in, ubuf));
-  htsmsg_destroy(c);
-  cac->cac_conf_changed(cac);
+  snprintf(filename, fsize, "caclient/%s", idnode_uuid_as_str(in, ubuf));
+  return c;
 }
 
 static const char *
@@ -237,6 +240,7 @@ const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
   .ic_caption    = N_("Conditional access client"),
+  .ic_changed    = caclient_class_changed,
   .ic_save       = caclient_class_save,
   .ic_event      = "caclient",
   .ic_get_title  = caclient_class_get_title,

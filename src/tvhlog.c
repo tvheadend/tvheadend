@@ -477,10 +477,6 @@ tvhlog_end ( void )
  * Configuration
  */
 
-static void tvhlog_class_save(idnode_t *self)
-{
-}
-
 static const void *
 tvhlog_class_path_get ( void *o )
 {
@@ -626,7 +622,6 @@ const idclass_t tvhlog_conf_class = {
   .ic_caption    = N_("Debugging"),
   .ic_event      = "tvhlog_conf",
   .ic_perm_def   = ACCESS_ADMIN,
-  .ic_save       = tvhlog_class_save,
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("Settings"),

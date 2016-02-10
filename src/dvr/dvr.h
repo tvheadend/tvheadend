@@ -440,8 +440,6 @@ static inline dvr_config_t *dvr_config_find_by_uuid(const char *uuid)
 
 void dvr_config_delete(const char *name);
 
-void dvr_config_save(dvr_config_t *cfg);
-
 void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
 static inline uint32_t dvr_retention_cleanup(uint32_t val)
@@ -486,8 +484,6 @@ time_t dvr_entry_get_extra_time_pre( dvr_entry_t *de );
 void dvr_entry_init(void);
 
 void dvr_entry_done(void);
-
-void dvr_entry_save(dvr_entry_t *de);
 
 void dvr_entry_destroy_by_config(dvr_config_t *cfg, int delconf);
 
@@ -635,8 +631,6 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
                             const char *owner, const char *creator,
                             const char *comment);
 
-void dvr_autorec_save(dvr_autorec_entry_t *dae);
-
 void dvr_autorec_changed(dvr_autorec_entry_t *dae, int purge);
 
 static inline dvr_autorec_entry_t *
@@ -708,8 +702,6 @@ static inline dvr_timerec_entry_t *
 dvr_timerec_find_by_uuid(const char *uuid)
   { return (dvr_timerec_entry_t*)idnode_find(uuid, &dvr_timerec_entry_class, NULL); }
 
-
-void dvr_timerec_save(dvr_timerec_entry_t *dae);
 
 void dvr_timerec_check(dvr_timerec_entry_t *dae);
 

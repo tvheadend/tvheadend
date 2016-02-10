@@ -84,11 +84,12 @@ static const char *epggrab_mod_class_title(idnode_t *self, const char *lang)
   return prop_sbuf;
 }
 
-static void epggrab_mod_class_save(idnode_t *self)
+static void
+epggrab_mod_class_changed(idnode_t *self)
 {
   epggrab_module_t *mod = (epggrab_module_t *)self;
   epggrab_activate_module(mod, mod->enabled);
-  epggrab_save();
+  idnode_changed(&epggrab_conf.idnode);
 }
 
 static const void *epggrab_mod_class_type_get(void *o)
@@ -109,7 +110,7 @@ const idclass_t epggrab_mod_class = {
   .ic_event      = "epggrab_mod",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = epggrab_mod_class_title,
-  .ic_save       = epggrab_mod_class_save,
+  .ic_changed    = epggrab_mod_class_changed,
   .ic_groups     = (const property_group_t[]) {
      {
         .name   = N_("Settings"),

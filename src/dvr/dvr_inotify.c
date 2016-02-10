@@ -261,7 +261,7 @@ _dvr_inotify_moved
     if (to) {
       snprintf(path, sizeof(path), "%s/%s", die->path, to);
       htsmsg_set_str(m, "filename", path);
-      dvr_entry_save(de);
+      idnode_changed(&de->de_id);
     } else {
       htsmsg_field_destroy(de->de_files, f);
       if (htsmsg_is_empty(de->de_files))

@@ -356,7 +356,8 @@ void linuxdvb_adapter_init ( void );
 
 void linuxdvb_adapter_done ( void );
 
-void linuxdvb_adapter_save ( linuxdvb_adapter_t *la );
+static inline void linuxdvb_adapter_changed ( linuxdvb_adapter_t *la )
+  { idnode_changed(&la->th_id); }
 
 int  linuxdvb_adapter_current_weight ( linuxdvb_adapter_t *la );
 

@@ -41,8 +41,6 @@ static LIST_HEAD(,profile_chain) profile_chains;
 
 static profile_t *profile_default;
 
-static void profile_class_save ( idnode_t *in );
-
 /*
  *
  */
@@ -114,7 +112,7 @@ profile_create
   pro->pro_refcount = 1;
   TAILQ_INSERT_TAIL(&profiles, pro, pro_link);
   if (save)
-    profile_class_save((idnode_t *)pro);
+    idnode_changed(&pro->pro_id);
   if (pro->pro_conf_changed)
     pro->pro_conf_changed(pro);
   return pro;
@@ -146,8 +144,8 @@ profile_delete(profile_t *pro, int delconf)
   profile_release(pro);
 }
 
-static void
-profile_class_save ( idnode_t *in )
+static htsmsg_t *
+profile_class_save ( idnode_t *in, char *filename, size_t fsize )
 {
   profile_t *pro = (profile_t *)in;
   htsmsg_t *c = htsmsg_create_map();
@@ -157,10 +155,10 @@ profile_class_save ( idnode_t *in )
   idnode_save(in, c);
   if (pro->pro_shield)
     htsmsg_add_bool(c, "shield", 1);
-  hts_settings_save(c, "profile/%s", idnode_uuid_as_str(in, ubuf));
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "profile/%s", idnode_uuid_as_str(in, ubuf));
   if (pro->pro_conf_changed)
     pro->pro_conf_changed(pro);
+  return c;
 }
 
 static const char *
@@ -224,7 +222,7 @@ profile_class_default_set(void *o, const void *v)
     old = profile_default;
     profile_default = pro;
     if (old)
-      profile_class_save(&old->pro_id);
+      idnode_changed(&old->pro_id);
     return 1;
   }
   return 0;

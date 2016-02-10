@@ -69,7 +69,7 @@ struct imagecache_config imagecache_conf = {
   .idnode.in_class = &imagecache_class,
 };
 
-static void imagecache_save(idnode_t *self);
+static htsmsg_t *imagecache_save(idnode_t *self, char *filename, size_t fsize);
 
 const idclass_t imagecache_class = {
   .ic_snode      = (idnode_t *)&imagecache_conf,
@@ -507,14 +507,14 @@ imagecache_done ( void )
 /*
  * Save
  */
-static void
-imagecache_save ( idnode_t *self )
+static htsmsg_t *
+imagecache_save ( idnode_t *self, char *filename, size_t fsize )
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&imagecache_conf.idnode, c);
-  hts_settings_save(c, "imagecache/config");
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "imagecache/config");
   pthread_cond_broadcast(&imagecache_cond);
+  return c;
 }
 
 /*

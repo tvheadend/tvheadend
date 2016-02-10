@@ -96,8 +96,6 @@ void bouquet_change_comment(bouquet_t *bq, const char *comment, int replace);
 
 uint64_t bouquet_get_channel_number(bouquet_t *bq, service_t *t);
 
-void bouquet_save(bouquet_t *bq, int notify);
-
 /**
  *
  */

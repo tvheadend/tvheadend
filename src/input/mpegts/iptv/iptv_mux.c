@@ -261,17 +261,17 @@ const idclass_t iptv_mux_class =
   }
 };
 
-static void
-iptv_mux_config_save ( mpegts_mux_t *mm )
+static htsmsg_t *
+iptv_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
 {
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
   mpegts_mux_save(mm, c);
-  hts_settings_save(c, "input/iptv/networks/%s/muxes/%s/config",
-                    idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
-                    idnode_uuid_as_str(&mm->mm_id, ubuf2));
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "input/iptv/networks/%s/muxes/%s/config",
+           idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
+           idnode_uuid_as_str(&mm->mm_id, ubuf2));
+  return c;
 }
 
 static void

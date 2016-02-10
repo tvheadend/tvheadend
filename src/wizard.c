@@ -120,7 +120,7 @@ typedef struct wizard_hello {
 } wizard_hello_t;
 
 
-static void hello_save(idnode_t *in)
+static void hello_changed(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_hello_t *w = p->aux;
@@ -146,7 +146,7 @@ static void hello_save(idnode_t *in)
     save = 1;
   }
   if (save)
-    config_save();
+    idnode_changed(&config.idnode);
 }
 
 BASIC_STR_OPS(wizard_hello_t, ui_lang)
@@ -252,7 +252,7 @@ wizard_page_t *wizard_hello(const char *lang)
 
   ic->ic_properties = props;
   ic->ic_groups = groups;
-  ic->ic_save = hello_save;
+  ic->ic_changed = hello_changed;
   page->aux = w = calloc(1, sizeof(wizard_hello_t));
 
   if (config.language_ui)
@@ -288,7 +288,7 @@ typedef struct wizard_login {
 } wizard_login_t;
 
 
-static void login_save(idnode_t *in)
+static void login_changed(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_login_t *w = p->aux;
@@ -324,7 +324,7 @@ static void login_save(idnode_t *in)
   ae = access_entry_create(NULL, conf);
   if (ae) {
     ae->ae_wizard = 1;
-    access_entry_save(ae);
+    idnode_changed(&ae->ae_id);
   }
   htsmsg_destroy(conf);
 
@@ -336,7 +336,7 @@ static void login_save(idnode_t *in)
     pw = passwd_entry_create(NULL, conf);
     if (pw) {
       pw->pw_wizard = 1;
-      passwd_entry_save(pw);
+      idnode_changed(&pw->pw_id);
     }
     htsmsg_destroy(conf);
   }
@@ -355,7 +355,7 @@ static void login_save(idnode_t *in)
     ae = access_entry_create(NULL, conf);
     if (ae) {
       ae->ae_wizard = 1;
-      access_entry_save(ae);
+      idnode_changed(&ae->ae_id);
     }
     htsmsg_destroy(conf);
 
@@ -367,7 +367,7 @@ static void login_save(idnode_t *in)
       pw = passwd_entry_create(NULL, conf);
       if (pw) {
         pw->pw_wizard = 1;
-        passwd_entry_save(pw);
+        idnode_changed(&pw->pw_id);
       }
       htsmsg_destroy(conf);
     }
@@ -484,7 +484,7 @@ wizard_page_t *wizard_login(const char *lang)
 
   ic->ic_properties = props;
   ic->ic_groups = groups;
-  ic->ic_save = login_save;
+  ic->ic_changed = login_changed;
   page->aux = w = calloc(1, sizeof(wizard_login_t));
 
   TAILQ_FOREACH(ae, &access_entries, ae_link) {
@@ -539,7 +539,7 @@ static void network_free(wizard_page_t *page)
   page_free(page);
 }
 
-static void network_save(idnode_t *in)
+static void network_changed(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_network_t *w = p->aux;
@@ -720,7 +720,7 @@ wizard_page_t *wizard_network(const char *lang)
   page->aux = w = calloc(1, sizeof(wizard_network_t));
   ic->ic_groups = groups;
   ic->ic_properties = w->props;
-  ic->ic_save = network_save;
+  ic->ic_changed = network_changed;
   page->free = network_free;
   snprintf(w->lang, sizeof(w->lang), "%s", lang ?: "");
 
@@ -777,7 +777,7 @@ static void muxes_free(wizard_page_t *page)
   page_free(page);
 }
 
-static void muxes_save(idnode_t *in)
+static void muxes_changed(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_muxes_t *w = p->aux;
@@ -989,7 +989,7 @@ wizard_page_t *wizard_muxes(const char *lang)
   page->aux = w = calloc(1, sizeof(wizard_muxes_t));
   ic->ic_groups = groups;
   ic->ic_properties = w->props;
-  ic->ic_save = muxes_save;
+  ic->ic_changed = muxes_changed;
   page->free = muxes_free;
   snprintf(w->lang, sizeof(w->lang), "%s", lang ?: "");
 
@@ -1084,7 +1084,7 @@ typedef struct wizard_mapping {
   int nettags;
 } wizard_mapping_t;
 
-static void mapping_save(idnode_t *in)
+static void mapping_changed(idnode_t *in)
 {
   wizard_page_t *p = (wizard_page_t *)in;
   wizard_mapping_t *w = p->aux;
@@ -1162,7 +1162,7 @@ wizard_page_t *wizard_mapping(const char *lang)
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   wizard_mapping_t *w;
   ic->ic_properties = props;
-  ic->ic_save = mapping_save;
+  ic->ic_changed = mapping_changed;
   page->aux = w = calloc(1, sizeof(wizard_mapping_t));
   w->provtags = service_mapper_conf.d.provider_tags;
   w->nettags = service_mapper_conf.d.network_tags;
@@ -1173,7 +1173,7 @@ wizard_page_t *wizard_mapping(const char *lang)
  * Discovered channels
  */
 
-static void channels_save(idnode_t *in)
+static void channels_changed(idnode_t *in)
 {
   access_entry_t *ae, *ae_next;
 
@@ -1226,7 +1226,7 @@ wizard_page_t *wizard_channels(const char *lang)
 
   ic->ic_properties = props;
   ic->ic_flags |= IDCLASS_ALWAYS_SAVE;
-  ic->ic_save = channels_save;
+  ic->ic_changed = channels_changed;
   /* do we have an admin created by wizard? */
   TAILQ_FOREACH(ae, &access_entries, ae_link)
     if (ae->ae_admin && ae->ae_wizard) break;

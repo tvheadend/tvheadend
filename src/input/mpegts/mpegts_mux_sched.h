@@ -67,7 +67,6 @@ typedef struct mpegts_mux_sched
 
 mpegts_mux_sched_t *mpegts_mux_sched_create ( const char *uuid, htsmsg_t *c );
 void mpegts_mux_sched_delete ( mpegts_mux_sched_t *mms, int delconf );
-void mpegts_mux_sched_save   ( mpegts_mux_sched_t *mms );
 
 void mpegts_mux_sched_init ( void );
 void mpegts_mux_sched_done ( void );

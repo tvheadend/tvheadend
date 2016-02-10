@@ -327,7 +327,7 @@ struct mpegts_network
    */
   void              (*mn_delete)       (mpegts_network_t*, int delconf);
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
-  void              (*mn_config_save)  (mpegts_network_t*);
+  htsmsg_t *        (*mn_config_save)  (mpegts_network_t*, char *filename, size_t fsize);
   mpegts_mux_t*     (*mn_create_mux)
     (mpegts_network_t*, void *origin, uint16_t onid, uint16_t tsid,
      void *conf, int force);
@@ -487,7 +487,7 @@ struct mpegts_mux
    */
 
   void (*mm_delete)           (mpegts_mux_t *mm, int delconf);
-  void (*mm_config_save)      (mpegts_mux_t *mm);
+  htsmsg_t *(*mm_config_save) (mpegts_mux_t *mm, char *filename, size_t fsize);
   void (*mm_display_name)     (mpegts_mux_t*, char *buf, size_t len);
   int  (*mm_is_enabled)       (mpegts_mux_t *mm);
   void (*mm_stop)             (mpegts_mux_t *mm, int force, int reason);

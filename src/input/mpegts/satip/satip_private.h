@@ -197,7 +197,8 @@ void satip_device_init ( void );
 
 void satip_device_done ( void );
 
-void satip_device_save ( satip_device_t *sd );
+static inline void satip_device_changed ( satip_device_t *sd )
+  { idnode_changed(&sd->th_id); }
 
 void satip_device_destroy ( satip_device_t *sd );
 

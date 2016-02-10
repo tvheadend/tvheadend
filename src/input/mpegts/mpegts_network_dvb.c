@@ -83,7 +83,7 @@ dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
       mm = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
                            dmc, NULL, NULL);
       if (mm)
-        mm->mm_config_save((mpegts_mux_t *)mm);
+        idnode_changed(&mm->mm_id);
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(dmc, buf, sizeof(buf));
@@ -549,16 +549,16 @@ dvb_network_find_mux
   return (dvb_mux_t *)mm;
 }
 
-static void
-dvb_network_config_save ( mpegts_network_t *mn )
+static htsmsg_t *
+dvb_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
 {
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&mn->mn_id, c);
   htsmsg_add_str(c, "class", mn->mn_id.in_class->ic_class);
-  hts_settings_save(c, "input/dvb/networks/%s/config",
-                    idnode_uuid_as_str(&mn->mn_id, ubuf));
-  htsmsg_destroy(c);
+  snprintf(filename, fsize, "input/dvb/networks/%s/config",
+           idnode_uuid_as_str(&mn->mn_id, ubuf));
+  return c;
 }
 
 const idclass_t *
@@ -741,7 +741,7 @@ save:
   if (mm && save) {
     mm->mm_dmc_origin        = origin;
     mm->mm_dmc_origin_expire = dispatch_clock + 3600 * 24; /* one day */
-    mm->mm_config_save((mpegts_mux_t *)mm);
+    idnode_changed(&mm->mm_id);
   }
 noop:
   return (mpegts_mux_t *)mm;

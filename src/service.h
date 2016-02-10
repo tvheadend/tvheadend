@@ -319,7 +319,7 @@ typedef struct service {
 
   void (*s_stop_feed)(struct service *t);
 
-  void (*s_config_save)(struct service *t);
+  htsmsg_t *(*s_config_save)(struct service *t, char *filename, size_t fsize);
 
   void (*s_setsourceinfo)(struct service *t, struct source_info *si);
 

@@ -32,7 +32,7 @@ wizard_page ( const char *page )
   if (strcmp(page, config.wizard ?: "")) {
     free(config.wizard);
     config.wizard = page[0] ? strdup(page) : NULL;
-    config_save();
+    idnode_changed(&config.idnode);
   }
   pthread_mutex_unlock(&global_lock);
   return 0;

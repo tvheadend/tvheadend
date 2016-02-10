@@ -277,7 +277,7 @@ skip_url:
   htsmsg_destroy(conf);
 
   if (im) {
-    im->mm_config_save((mpegts_mux_t *)im);
+    idnode_changed(&im->mm_id);
     (*total)++;
     (*count)++;
   }
