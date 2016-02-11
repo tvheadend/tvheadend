@@ -161,7 +161,7 @@ idnode_unlink(idnode_t *in)
   RB_REMOVE(in->in_domain, in, in_domain_link);
   tvhtrace("idnode", "unlink node %s", idnode_uuid_as_str(in, ubuf));
   idnode_notify(in, "delete");
-  assert(in->in_save == NULL);
+  assert(in->in_save == NULL || in->in_save == SAVEPTR_OUTOFSERVICE);
 }
 
 /**
@@ -1113,12 +1113,12 @@ idnode_save_check ( idnode_t *self, int weak )
   char filename[PATH_MAX];
   htsmsg_t *m;
 
-  if (self->in_save == NULL)
+  if (self->in_save == NULL || self->in_save == SAVEPTR_OUTOFSERVICE)
     return;
 
   TAILQ_REMOVE(&idnodes_save, self->in_save, ise_link);
   free(self->in_save);
-  self->in_save = NULL;
+  self->in_save = SAVEPTR_OUTOFSERVICE;
 
   if (weak)
     return;

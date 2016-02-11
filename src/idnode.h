@@ -30,6 +30,8 @@ struct access;
 typedef struct idnode idnode_t;
 typedef struct idnode_save idnode_save_t;
 
+#define SAVEPTR_OUTOFSERVICE ((void *)((intptr_t)-1LL))
+
 /*
  * Node set
  */
