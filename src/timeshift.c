@@ -102,18 +102,24 @@ void timeshift_term ( void )
 }
 
 /*
+ * Changed settings
+ */
+static void
+timeshift_conf_class_changed ( idnode_t *self )
+{
+  timeshift_fixup();
+}
+
+/*
  * Save settings
  */
-static void timeshift_conf_class_save ( idnode_t *self )
+static htsmsg_t *
+timeshift_conf_class_save ( idnode_t *self, char *filename, size_t fsize )
 {
-  htsmsg_t *m;
-
-  timeshift_fixup();
-
-  m = htsmsg_create_map();
+  htsmsg_t *m = htsmsg_create_map();
   idnode_save(&timeshift_conf.idnode, m);
-  hts_settings_save(m, "timeshift/config");
-  htsmsg_destroy(m);
+  snprintf(filename, fsize, "timeshift/config");
+  return m;
 }
 
 /*
@@ -164,6 +170,7 @@ const idclass_t timeshift_conf_class = {
   .ic_caption    = N_("Timeshift"),
   .ic_event      = "timeshift",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_changed    = timeshift_conf_class_changed,
   .ic_save       = timeshift_conf_class_save,
   .ic_properties = (const property_t[]){
     {
