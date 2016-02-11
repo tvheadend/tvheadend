@@ -133,7 +133,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   va_list ap;
   htsbuf_queue_t hq;
   htsbuf_data_t *hd;
-  int ok;
+  int ok, r;
 
   if(settingspath == NULL)
     return;
@@ -172,7 +172,14 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
 
   /* Move */
   if(ok) {
-    rename(tmppath, path);
+    r = rename(tmppath, path);
+    if (r && errno == EISDIR) {
+      rmtree(path);
+      r = rename(tmppath, path);
+    }
+    if (r)
+      tvhlog(LOG_ALERT, "settings", "Unable to rename file \"%s\" to \"%s\" - %s",
+	     tmppath, path, strerror(errno));
   
   /* Delete tmp */
   } else

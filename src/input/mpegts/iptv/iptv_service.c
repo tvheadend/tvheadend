@@ -25,36 +25,16 @@ extern const idclass_t mpegts_service_class;
 static htsmsg_t *
 iptv_service_config_save ( service_t *s, char *filename, size_t fsize )
 {
-  mpegts_mux_t     *mm = ((mpegts_service_t *)s)->s_dvb_mux;
-  htsmsg_t         *c  = htsmsg_create_map();
-  char ubuf0[UUID_HEX_SIZE];
-  char ubuf1[UUID_HEX_SIZE];
-  char ubuf2[UUID_HEX_SIZE];
-
-  service_save(s, c);
-  snprintf(filename, fsize, "input/iptv/networks/%s/muxes/%s/services/%s",
-           idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf0),
-           idnode_uuid_as_str(&mm->mm_id, ubuf1),
-           idnode_uuid_as_str(&s->s_id, ubuf2));
-  return c;
+  mpegts_mux_t *mm = ((mpegts_service_t *)s)->s_dvb_mux;
+  idnode_changed(&mm->mm_id);
+  return NULL;
 }
 
 static void
 iptv_service_delete ( service_t *s, int delconf )
 {
-  iptv_service_t   *is = (iptv_service_t *)s;
-  mpegts_mux_t     *mm = is->s_dvb_mux;
-  char ubuf0[UUID_HEX_SIZE];
-  char ubuf1[UUID_HEX_SIZE];
-  char ubuf2[UUID_HEX_SIZE];
-
-  /* Remove config */
-  if (delconf && s->s_type == STYPE_STD)
-    hts_settings_remove("input/iptv/networks/%s/muxes/%s/services/%s",
-                        idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf0),
-                        idnode_uuid_as_str(&mm->mm_id, ubuf1),
-                        idnode_uuid_as_str(&s->s_id, ubuf2));
-
+  mpegts_mux_t *mm = ((mpegts_service_t *)s)->s_dvb_mux;
+  idnode_changed(&mm->mm_id);
   /* Note - do no pass the delconf flag - another file location */
   mpegts_service_delete(s, 0);
 }

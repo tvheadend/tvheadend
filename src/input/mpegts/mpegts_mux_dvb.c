@@ -903,7 +903,7 @@ dvb_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
   char ubuf2[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
   mpegts_mux_save(mm, c);
-  snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s/config",
+  snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s",
            idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
            idnode_uuid_as_str(&mm->mm_id, ubuf2));
   return c;
@@ -978,7 +978,7 @@ dvb_mux_create0
   const idclass_t *idc;
   mpegts_mux_t *mm;
   dvb_mux_t *lm;
-  htsmsg_t *c, *e;
+  htsmsg_t *c, *c2, *e;
   htsmsg_field_t *f;
   dvb_fe_delivery_system_t delsys;
   char ubuf1[UUID_HEX_SIZE];
@@ -1046,15 +1046,19 @@ dvb_mux_create0
   if (!conf) return lm;
 
   /* Services */
-  c = hts_settings_load_r(1, "input/dvb/networks/%s/muxes/%s/services",
-                         idnode_uuid_as_str(&ln->mn_id, ubuf1),
-                         idnode_uuid_as_str(&mm->mm_id, ubuf2));
+  c2 = NULL;
+  c = htsmsg_get_map(conf, "services");
+  if (c == NULL)
+    c = c2 = hts_settings_load_r(1, "input/dvb/networks/%s/muxes/%s/services",
+                                 idnode_uuid_as_str(&ln->mn_id, ubuf1),
+                                 idnode_uuid_as_str(&mm->mm_id, ubuf2));
+
   if (c) {
     HTSMSG_FOREACH(f, c) {
       if (!(e = htsmsg_get_map_by_field(f))) continue;
       mpegts_service_create1(f->hmf_name, (mpegts_mux_t *)lm, 0, 0, e);
     }
-    htsmsg_destroy(c);
+    htsmsg_destroy(c2);
   }
 
   if (ln->ln_type == DVB_TYPE_S) {

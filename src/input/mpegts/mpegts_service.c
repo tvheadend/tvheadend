@@ -272,17 +272,9 @@ mpegts_service_is_enabled(service_t *t, int flags)
 static htsmsg_t *
 mpegts_service_config_save ( service_t *t, char *filename, size_t fsize )
 {
-  htsmsg_t *c = htsmsg_create_map();
   mpegts_service_t *s = (mpegts_service_t*)t;
-  char ubuf0[UUID_HEX_SIZE];
-  char ubuf1[UUID_HEX_SIZE];
-  char ubuf2[UUID_HEX_SIZE];
-  service_save(t, c);
-  snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s/services/%s",
-           idnode_uuid_as_str(&s->s_dvb_mux->mm_network->mn_id, ubuf0),
-           idnode_uuid_as_str(&s->s_dvb_mux->mm_id, ubuf1),
-           idnode_uuid_as_str(&s->s_id, ubuf2));
-  return c;
+  idnode_changed(&s->s_dvb_mux->mm_id);
+  return NULL;
 }
 
 /*
@@ -672,16 +664,8 @@ mpegts_service_delete ( service_t *t, int delconf )
 {
   mpegts_service_t *ms = (mpegts_service_t*)t, *mms;
   mpegts_mux_t     *mm = ms->s_dvb_mux;
-  char ubuf0[UUID_HEX_SIZE];
-  char ubuf1[UUID_HEX_SIZE];
-  char ubuf2[UUID_HEX_SIZE];
 
-  /* Remove config */
-  if (delconf && t->s_type == STYPE_STD)
-    hts_settings_remove("input/dvb/networks/%s/muxes/%s/services/%s",
-                      idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf0),
-                      idnode_uuid_as_str(&mm->mm_id, ubuf1),
-                      idnode_uuid_as_str(&t->s_id, ubuf2));
+  idnode_changed(&mm->mm_id);
 
   /* Free memory */
   if (t->s_type == STYPE_STD)

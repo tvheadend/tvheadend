@@ -694,6 +694,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   gtimer_disarm(&mm->mm_update_pids_timer);
 
   /* Free memory */
+  idnode_save_check(&mm->mm_id, 1);
   idnode_unlink(&mm->mm_id);
   free(mm->mm_provider_network_name);
   free(mm->mm_crid_authority);
@@ -1174,7 +1175,20 @@ mpegts_mux_create0
 void
 mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c )
 {
-  idnode_save(&mm->mm_id, c);
+  mpegts_service_t *ms;
+  htsmsg_t *root = htsmsg_create_map();
+  htsmsg_t *services = htsmsg_create_map();
+  htsmsg_t *e;
+  char ubuf[UUID_HEX_SIZE];
+
+  idnode_save(&mm->mm_id, root);
+  LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+    e = htsmsg_create_map();
+    service_save((service_t *)ms, e);
+    htsmsg_add_msg(services, idnode_uuid_as_str(&ms->s_id, ubuf), e);
+  }
+  htsmsg_add_msg(root, "services", services);
+  htsmsg_add_msg(c, "config", root);
 }
 
 int
