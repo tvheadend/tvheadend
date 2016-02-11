@@ -167,8 +167,10 @@ Welcome to Tvheadend, your TV streaming server and video recorder. This \
 wizard will help you get up and running fast. Let's start by configuring \
 the basic language settings. Please select the default user interface \
 and EPG language(s).\n\n\
-**This wizard should be run only on the initial setup. Please, cancel \
-it, if you are not willing to touch the current configuration.**\
+**This wizard should only be run on initial setup. Please cancel it if \
+you're not willing to touch the current configuration, continuing in \
+such cases can lead to misconfiguration and not all changes made thru \
+this wizard will take affect.**\n\
 \
 \n\n**Notes**:\n \
 * If you cannot see your preferred language in the language list and would \
@@ -678,8 +680,6 @@ streams using codecs supported by Tvheadend.\n\
 be aware that many only allow you to use one tuner at a time. \
 Selecting more than one tuner per device can thus result in unexpected \
 behavior.\n\
-* If you've configured Tvheadend before running this wizard, changes \
-you make via this wizard may not be applied.\n\
 "))
 
 
@@ -841,6 +841,7 @@ static const void *muxes_progress_get(void *o)
   .type = PT_STR, \
   .id   = "network" STRINGIFY(num), \
   .name = N_("Network"), \
+  .desc = N_("Name of the network."), \
   .get  = muxes_get_nvalue##num, \
   .opts = PO_RDONLY, \
   .group = num, \
@@ -848,6 +849,7 @@ static const void *muxes_progress_get(void *o)
   .type = PT_STR, \
   .id   = "networkid" STRINGIFY(num), \
   .name = "Network", \
+  .desc = N_("ID of the network."), \
   .get  = muxes_get_idvalue##num, \
   .set  = muxes_set_idvalue##num, \
   .opts = PO_PERSIST | PO_NOUI, \
@@ -942,7 +944,22 @@ MUXES_IPTV_FCN(6)
 #endif
 
 DESCRIPTION_FCN(muxes, N_("\
-Assign predefined muxes to networks.\
+Assign predefined muxes to networks. To save you from manually entering \
+muxes Tvheadend includes predefined mux lists. Please select a list \
+for each network below.\n\
+\n\
+**Notes**:\n\
+* Select the closest transmitter if using an antenna (T), if using \
+cable (C) select your provider, if using satellite (S) the orbital \
+position your dish is pointing towards or if using IPTV enter \
+the URL to your playlist.\n\
+* If you're unsure as to which list(s) to select you may want to look \
+online for details about the various television reception choices \
+available in your area.\n\
+* Networks already configured will not be shown below.\n\
+* Selecting the wrong list may cause the scan (on the next page) to fail.\n\
+* If you're really confused please come talk to us on \
+[IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\
 "))
 
 wizard_page_t *wizard_muxes(const char *lang)
@@ -1135,6 +1152,8 @@ wizard_page_t *wizard_mapping(const char *lang)
       .type     = PT_BOOL,
       .id       = "mapall",
       .name     = N_("Map all services"),
+      .desc     = N_("Automatically map all available services to "
+                     "channels."),
       .get      = mapping_get_mapall,
       .set      = mapping_set_mapall,
     },
@@ -1142,6 +1161,8 @@ wizard_page_t *wizard_mapping(const char *lang)
       .type     = PT_BOOL,
       .id       = "provtags",
       .name     = N_("Create provider tags"),
+      .desc     = N_("Create and associate a provider tag to created "
+                     "channels."),
       .get      = mapping_get_provtags,
       .set      = mapping_set_provtags,
     },
@@ -1149,6 +1170,8 @@ wizard_page_t *wizard_mapping(const char *lang)
       .type     = PT_BOOL,
       .id       = "nettags",
       .name     = N_("Create network tags"),
+      .desc     = N_("Create and associate a network tag to created "
+                     "channels."),
       .get      = mapping_get_nettags,
       .set      = mapping_set_nettags,
     },
