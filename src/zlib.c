@@ -162,12 +162,14 @@ int tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig, int s
   r = tvh_write(fd, "\xff\xffGZIP00\x00\x00\x00\x00", 12);
   if (r)
     return 1;
-  r = tvh_gzip_deflate_fd(fd, data, orig, &size, 3) < 0;
-  if (r || size > UINT_MAX)
-    return 1;
-  r = lseek(fd, 8, SEEK_SET) != (off_t)8;
-  if (r)
-    return 1;
+  if (orig > 0) {
+    r = tvh_gzip_deflate_fd(fd, data, orig, &size, 3) < 0;
+    if (r || size > UINT_MAX)
+      return 1;
+    r = lseek(fd, 8, SEEK_SET) != (off_t)8;
+    if (r)
+      return 1;
+  }
   data2[0] = (orig >> 24) & 0xff;
   data2[1] = (orig >> 16) & 0xff;
   data2[2] = (orig >> 8) & 0xff;
