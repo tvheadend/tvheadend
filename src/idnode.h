@@ -104,11 +104,11 @@ struct idnode {
 /*
  * Node save list
  */
-typedef struct idnode_save {
+struct idnode_save {
   TAILQ_ENTRY(idnode_save)  ise_link;       ///< List chain
   idnode_t                 *ise_node;       ///< Node owning this
   time_t                    ise_reqtime;    ///< First request
-} idnode_save_t;
+};
 
 /*
  * Node list mapping definition
