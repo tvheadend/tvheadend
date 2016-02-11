@@ -30,6 +30,8 @@ struct access;
 typedef struct idnode idnode_t;
 typedef struct idnode_save idnode_save_t;
 
+#define IDNODE_SAVE_DELAY 3
+
 #define SAVEPTR_OUTOFSERVICE ((void *)((intptr_t)-1LL))
 
 /*
@@ -105,6 +107,7 @@ struct idnode {
 typedef struct idnode_save {
   TAILQ_ENTRY(idnode_save)  ise_link;       ///< List chain
   idnode_t                 *ise_node;       ///< Node owning this
+  time_t                    ise_reqtime;    ///< First request
 } idnode_save_t;
 
 /*
