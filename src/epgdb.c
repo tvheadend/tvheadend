@@ -345,22 +345,7 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
   if (fd >= 0) {
 #if ENABLE_ZLIB
     if (config.epg_compress) {
-      r = tvh_write(fd, "\xff\xffGZIP00\x00\x00\x00\x00", 12);
-      if (!r)
-        r = tvh_gzip_deflate_fd(fd, sb->sb_data, sb->sb_ptr, &size, 3) < 0;
-      if (!r && size > UINT_MAX)
-        r = 1;
-      if (!r) {
-        r = lseek(fd, 8, SEEK_SET) != (off_t)8;
-        if (!r) {
-          uint8_t data2[4];
-          data2[0] = (sb->sb_ptr >> 24) & 0xff;
-          data2[1] = (sb->sb_ptr >> 16) & 0xff;
-          data2[2] = (sb->sb_ptr >> 8) & 0xff;
-          data2[3] = (sb->sb_ptr & 0xff);
-          r = tvh_write(fd, data2, 4);
-        }
-      }
+      r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, sb->sb_ptr, 3) < 0;
    } else
 #endif
       r = tvh_write(fd, sb->sb_data, sb->sb_ptr);

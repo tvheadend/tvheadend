@@ -104,6 +104,10 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       }
       break;
 
+    case HMF_BOOL:
+      f->hmf_bool = datalen == 1 ? buf[0] : 0;
+      break;
+
     default:
       free(n);
       free(f);
@@ -173,6 +177,11 @@ htsmsg_binary_count(htsmsg_t *msg)
 	u64 = u64 >> 8;
       }
       break;
+
+    case HMF_BOOL:
+      if (f->hmf_bool) len++;
+      break;
+
     }
   }
   return len;
@@ -216,6 +225,11 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
 	u64 = u64 >> 8;
       }
       break;
+
+    case HMF_BOOL:
+      l = f->hmf_bool ? 1 : 0;
+      break;
+
     default:
       abort();
     }
@@ -251,6 +265,11 @@ htsmsg_binary_write(htsmsg_t *msg, uint8_t *ptr)
 	ptr[i] = u64;
 	u64 = u64 >> 8;
       }
+      break;
+
+    case HMF_BOOL:
+      if (f->hmf_bool)
+        ptr[0] = 1;
       break;
     }
     ptr += l;
