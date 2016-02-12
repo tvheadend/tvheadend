@@ -241,12 +241,12 @@ const idclass_t mpegts_network_class =
       .opts     = PO_ADVANCED,
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "localtime",
-      .name     = N_("EIT broadcast in local time"),
-      .desc     = N_("If EIT events use local time rather than UTC enable "
-                     "this option."),
+      .name     = N_("EIT time offset"),
+      .desc     = N_("Select the time offset for EIT events."),
       .off      = offsetof(mpegts_network_t, mn_localtime),
+      .list     = dvb_timezone_enum,
       .opts     = PO_EXPERT,
     },
     {

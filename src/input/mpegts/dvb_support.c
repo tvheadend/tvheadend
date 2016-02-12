@@ -455,11 +455,59 @@ atsc_get_string
 }
 
 /*
+ *
+ */
+
+static struct strtab dvb_timezone_strtab[] = {
+  { N_("UTC"),        0 },
+  { N_("Local (server) time"), 1 },
+  { N_("UTC- 1"),    -1*60 },
+  { N_("UTC- 2"),    -2*60 },
+  { N_("UTC- 2:30"), -2*60-30 },
+  { N_("UTC- 3"),    -3*60 },
+  { N_("UTC- 3:30"), -3*60-30 },
+  { N_("UTC- 4"),    -4*60 },
+  { N_("UTC- 4:30"), -4*60-30 },
+  { N_("UTC- 5"),    -5*60 },
+  { N_("UTC- 6"),    -6*60 },
+  { N_("UTC- 7"),    -7*60 },
+  { N_("UTC- 8"),    -8*60 },
+  { N_("UTC- 9"),    -9*60 },
+  { N_("UTC- 9:30"), -9*60-30 },
+  { N_("UTC-10"),    -10*60 },
+  { N_("UTC-11"),    -11*60 },
+  { N_("UTC+ 1"),     1*60 },
+  { N_("UTC+ 2"),     2*60 },
+  { N_("UTC+ 3"),     3*60 },
+  { N_("UTC+ 4"),     4*60 },
+  { N_("UTC+ 4:30"),  4*60+30 },
+  { N_("UTC+ 5"),     5*60 },
+  { N_("UTC+ 5:30"),  5*60+30 },
+  { N_("UTC+ 5:45"),  5*60+45 },
+  { N_("UTC+ 6"),     6*60 },
+  { N_("UTC+ 6:30"),  6*60+30 },
+  { N_("UTC+ 7"),     7*60 },
+  { N_("UTC+ 8"),     8*60 },
+  { N_("UTC+ 8:45"),  8*60+45 },
+  { N_("UTC+ 9"),     9*60 },
+  { N_("UTC+ 9:30"),  9*60+30 },
+  { N_("UTC+10"),     10*60 },
+  { N_("UTC+10:30"),  10*60+30 },
+  { N_("UTC+11"),     11*60 },
+};
+
+htsmsg_t *
+dvb_timezone_enum ( void *p, const char *lang )
+{
+  return strtab2htsmsg(dvb_timezone_strtab, 1, lang);
+}
+
+/*
  * DVB time and date functions
  */
 
 time_t
-dvb_convert_date(const uint8_t *dvb_buf, int local)
+dvb_convert_date(const uint8_t *dvb_buf, int tmzone)
 {
   int i;
   int year, month, day, hour, min, sec;
@@ -495,7 +543,14 @@ dvb_convert_date(const uint8_t *dvb_buf, int local)
   dvb_time.tm_isdst = -1;
   dvb_time.tm_wday = 0;
   dvb_time.tm_yday = 0;
-  return local ? mktime(&dvb_time) : timegm(&dvb_time);
+
+  if (tmzone == 0) /* UTC */
+    return timegm(&dvb_time);
+  if (tmzone == 1) /* Local time */
+    return mktime(&dvb_time);
+
+  /* apply offset */
+  return timegm(&dvb_time) + tmzone;
 }
 
 static time_t _gps_leap_seconds[17] = {
