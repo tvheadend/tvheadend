@@ -117,7 +117,7 @@ const idclass_t linuxdvb_adapter_class =
       .type     = PT_STR,
       .id       = "rootpath",
       .name     = N_("Device path"),
-      .desc     = N_("Path used by device."),
+      .desc     = N_("Path used by the device."),
       .opts     = PO_RDONLY,
       .off      = offsetof(linuxdvb_adapter_t, la_rootpath),
     },
