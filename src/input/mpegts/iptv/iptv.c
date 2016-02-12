@@ -658,6 +658,8 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
   char *icon_url_sane = in->in_icon_url_sane;
   char ubuf[UUID_HEX_SIZE];
 
+  idnode_save_check(&mn->mn_id, delconf);
+
   gtimer_disarm(&in->in_bouquet_timer);
 
   if (in->mn_id.in_class == &iptv_auto_network_class)
