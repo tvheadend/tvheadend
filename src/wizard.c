@@ -168,9 +168,9 @@ wizard will help you get up and running fast. Let's start by configuring \
 the basic language settings. Please select the default user interface \
 and EPG language(s).\n\n\
 **This wizard should only be run on initial setup. Please cancel it if \
-you're not willing to touch the current configuration, continuing in \
+you're not willing to touch the current configuration, as continuing in \
 such cases can lead to misconfiguration and not all changes made thru \
-this wizard will take affect.**\n\
+this wizard will take effect.**\n\
 \
 \n\n**Notes**:\n \
 * If you cannot see your preferred language in the language list and would \
@@ -945,13 +945,13 @@ MUXES_IPTV_FCN(6)
 
 DESCRIPTION_FCN(muxes, N_("\
 Assign predefined muxes to networks. To save you from manually entering \
-muxes Tvheadend includes predefined mux lists. Please select a list \
+muxes, Tvheadend includes predefined mux lists. Please select a list \
 for each network below.\n\
 \n\
 **Notes**:\n\
-* Select the closest transmitter if using an antenna (T), if using \
-cable (C) select your provider, if using satellite (S) the orbital \
-position your dish is pointing towards or if using IPTV enter \
+* Select the closest transmitter if using an antenna (T); if using \
+cable (C), select your provider; if using satellite (S), the orbital \
+position of the satellite your dish is pointing towards; or if using IPTV, enter \
 the URL to your playlist.\n\
 * If you're unsure as to which list(s) to select you may want to look \
 online for details about the various television reception choices \
