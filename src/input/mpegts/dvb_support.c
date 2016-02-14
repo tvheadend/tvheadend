@@ -550,7 +550,7 @@ dvb_convert_date(const uint8_t *dvb_buf, int tmzone)
     return mktime(&dvb_time);
 
   /* apply offset */
-  return timegm(&dvb_time) + tmzone;
+  return timegm(&dvb_time) + tmzone * 60;
 }
 
 static time_t _gps_leap_seconds[17] = {
