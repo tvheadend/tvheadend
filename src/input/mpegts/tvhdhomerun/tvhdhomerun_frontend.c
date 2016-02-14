@@ -501,6 +501,7 @@ static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *
   if (wpids.all)
     tvhdhomerun_device_open_pid(hfe, MPEGTS_FULLMUX_PID);
   mpegts_pid_done(&wpids);
+  mpegts_pid_done(&pids);
 }
 
 static idnode_set_t *
