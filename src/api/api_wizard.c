@@ -59,6 +59,7 @@ wizard_idnode_save_simple
   wizard_build_fcn_t fcn = opaque;
   wizard_page_t *page = fcn(perm->aa_lang_ui);
   r = api_idnode_save_simple(perm, &page->idnode, op, args, resp);
+  idnode_save_check(&page->idnode, 1);
   page->free(page);
   return r;
 }
