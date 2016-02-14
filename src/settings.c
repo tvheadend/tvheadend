@@ -182,12 +182,14 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
     htsbuf_queue_flush(&hq);
   } else {
 #if ENABLE_ZLIB
+    msgdata = NULL;
     r = htsmsg_binary_serialize(record, &msgdata, &msglen, 0x10000);
     if (!r && msglen >= 4) {
       r = tvh_gzip_deflate_fd_header(fd, msgdata + 4, msglen - 4, 3);
       if (r)
         ok = 0;
     }
+    free(msgdata);
 #endif
   }
   close(fd);
