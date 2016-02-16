@@ -985,7 +985,7 @@ done:
 
 static void
 satip_frontend_shutdown
-  ( satip_frontend_t *lfe, http_client_t *rtsp, tvhpoll_t *efd )
+  ( satip_frontend_t *lfe, const char *name, http_client_t *rtsp, tvhpoll_t *efd )
 {
   char b[32];
   tvhpoll_event_t ev;
@@ -995,6 +995,7 @@ satip_frontend_shutdown
     return;
 
   snprintf(b, sizeof(b), "/stream=%li", rtsp->hc_rtsp_stream_id);
+  tvhtrace("satip", "%s - shutdown for %s/%s", name, b, rtsp->hc_rtsp_session ?: "");
   r = rtsp_teardown(rtsp, (char *)b, NULL);
   if (r < 0) {
     tvhtrace("satip", "%s - bad teardown", b);
@@ -1038,7 +1039,7 @@ satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
 
 static void
 satip_frontend_close_rtsp
-  ( satip_frontend_t *lfe, tvhpoll_t *efd, http_client_t **rtsp )
+  ( satip_frontend_t *lfe, const char *name, tvhpoll_t *efd, http_client_t **rtsp )
 {
   tvhpoll_event_t ev;
 
@@ -1048,7 +1049,7 @@ satip_frontend_close_rtsp
   ev.data.ptr = NULL;
   tvhpoll_rem(efd, &ev, 1);
 
-  satip_frontend_shutdown(lfe, *rtsp, efd);
+  satip_frontend_shutdown(lfe, name, *rtsp, efd);
 
   memset(&ev, 0, sizeof(ev));
   ev.events   = TVHPOLL_IN;
@@ -1203,7 +1204,7 @@ new_tune:
   lfe_master = NULL;
 
   if (rtsp && !lfe->sf_device->sd_fast_switch)
-    satip_frontend_close_rtsp(lfe, efd, &rtsp);
+    satip_frontend_close_rtsp(lfe, buf, efd, &rtsp);
 
   if (rtsp)
     rtsp->hc_rtp_data_received = NULL;
@@ -1217,12 +1218,15 @@ new_tune:
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   lfe->sf_display_name = buf;
 
+  u64_2 = getmonoclock();
+
   while (!start) {
 
     nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 50 : -1);
 
     if (!tvheadend_running) { exit_flag = 1; goto done; }
-    if (rtsp && nfds == 0) satip_frontend_close_rtsp(lfe, efd, &rtsp);
+    if (rtsp && getmonoclock() - u64_2 > 50000) /* 50ms */
+      satip_frontend_close_rtsp(lfe, buf, efd, &rtsp);
     if (nfds <= 0) continue;
 
     if (ev[0].data.ptr == NULL) {
@@ -1710,7 +1714,7 @@ wrdata:
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {
-    satip_frontend_shutdown(lfe, rtsp, efd);
+    satip_frontend_shutdown(lfe, buf, rtsp, efd);
     http_client_close(rtsp);
     rtsp = NULL;
   }
