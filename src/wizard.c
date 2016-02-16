@@ -1048,13 +1048,13 @@ Tvheadend is now scanning for available services, please wait until \
 the scan completes.\n\n\
 \
 **Notes**:\n\
-* During scanning the number of muxes and services shown below should \
+* During scanning the number of muxes/services shown below should \
 increase; if not check the connection(s) to your device(s).\n\
 * The status tab (behind this wizard) will display signal information, \
 if you notice a lot of errors or the signal strength appears low this \
 usually indicates an issue with your antenna, satellite dish or cable.\n\
 * If you don't see any signal information at all but the number of \
-muxes and services is increasing the driver used by your device isn't \
+muxes/services is increasing the driver used by your device isn't \
 supplying signal information to Tvheadend, in most cases this isn't \
 an issue.\n\
 "))
