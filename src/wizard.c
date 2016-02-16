@@ -669,7 +669,7 @@ in the name.\n\n\
 **If you receive your channels through a satellite dish** then you would \
 select the network under the tuners with DVB-S/S2 in the name.\n\n\
 \
-**If you receive your channels via a cable** then you would select the \
+**If you receive your channels via cable** then you would select the \
 network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n\n\
 \
 **Notes**:\n\
@@ -951,8 +951,8 @@ for each network below.\n\
 **Notes**:\n\
 * Select the closest transmitter if using an antenna (T); if using \
 cable (C), select your provider; if using satellite (S), the orbital \
-position of the satellite your dish is pointing towards; or if using IPTV, enter \
-the URL to your playlist.\n\
+position of the satellite your dish is pointing towards; or if using \
+IPTV, enter the URL to your playlist.\n\
 * If you're unsure as to which list(s) to select you may want to look \
 online for details about the various television reception choices \
 available in your area.\n\
