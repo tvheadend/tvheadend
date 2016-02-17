@@ -1014,7 +1014,7 @@ parse_mpeg2video_pic_start(service_t *t, elementary_stream_t *st, int *frametype
 
   pct = read_bits(bs, 3);
   if(pct < PKT_I_FRAME || pct > PKT_B_FRAME)
-    return 1; /* Illegal picture_coding_type */
+    return PARSER_RESET; /* Illegal picture_coding_type */
 
   *frametype = pct;
 
@@ -1091,7 +1091,7 @@ parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
   int width, height, aspect, duration;
 
   if(bs->len < 61)
-    return 1;
+    return PARSER_RESET;
   
   width = read_bits(bs, 12);
   height = read_bits(bs, 12);
@@ -1111,7 +1111,7 @@ parse_mpeg2video_seq_start(service_t *t, elementary_stream_t *st,
 #endif
 
   parser_set_stream_vparam(st, width, height, duration);
-  return 0;
+  return PARSER_APPEND;
 }
 
 
@@ -1161,6 +1161,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
   const uint8_t *buf = st->es_buf.sb_data + sc_offset;
   bitstream_t bs;
   int frametype;
+  th_pkt_t *pkt;
 
   if(next_startcode == 0x1e0)
     return PARSER_HEADER;
@@ -1174,7 +1175,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       return PARSER_RESET;
 
     parse_pes_header(t, st, buf + 6, len - 6);
-    return 1;
+    return PARSER_RESET;
 
   case 0x00:
     /* Picture start code */
@@ -1187,10 +1188,12 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     if(st->es_curpkt != NULL)
       pkt_ref_dec(st->es_curpkt);
 
-    st->es_curpkt = pkt_alloc(NULL, 0, st->es_curpts, st->es_curdts);
-    st->es_curpkt->pkt_frametype = frametype;
-    st->es_curpkt->pkt_duration = st->es_frame_duration;
-    st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
+    pkt = pkt_alloc(NULL, 0, st->es_curpts, st->es_curdts);
+    pkt->pkt_frametype = frametype;
+    pkt->pkt_duration = st->es_frame_duration;
+    pkt->pkt_commercial = t->s_tt_commercial_advice;
+
+    st->es_curpkt = pkt;
 
     /* If we know the frame duration, increase DTS accordingly */
     if(st->es_curdts != PTS_UNSET)
@@ -1204,7 +1207,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
   case 0xb3:
     /* Sequence start code */
     if(!st->es_buf.sb_err) {
-      if(parse_mpeg2video_seq_start(t, st, &bs))
+      if(parse_mpeg2video_seq_start(t, st, &bs) != PARSER_APPEND)
         return PARSER_RESET;
       parser_global_data_move(st, buf, len);
     }
@@ -1212,7 +1215,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 
   case 0xb5:
     if(len < 5)
-      return 1;
+      return PARSER_RESET;
     switch(buf[4] >> 4) {
     case 0x1:
       // Sequence Extension
@@ -1236,7 +1239,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       size_t metalen = 0;
       if(pkt == NULL) {
         /* no packet, may've been discarded by sanity checks here */
-        return 1;
+        return PARSER_RESET;
       }
 
       if(st->es_global_data) {
