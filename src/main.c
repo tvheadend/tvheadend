@@ -1163,7 +1163,6 @@ main(int argc, char **argv)
   tasklet_flush();
   tvhtrace("main", "tasklet leave");
 
-  tvhftrace("main", hts_settings_done);
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);
   tvhftrace("main", esfilter_done);
@@ -1178,6 +1177,7 @@ main(int argc, char **argv)
   tvhlog_end();
 
   tvhftrace("main", config_done);
+  tvhftrace("main", hts_settings_done);
 
   if(opt_fork)
     unlink(opt_pidpath);
