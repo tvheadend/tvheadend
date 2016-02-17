@@ -1,8 +1,8 @@
 Source: tvheadend
 Section: video
 Priority: extra
-Maintainer: Andreas Öman <andreas@tvheadend.org>
-Build-Depends: debhelper (>= 7.0.50), pkg-config, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, libcurl4-gnutls-dev, git-core, liburiparser-dev, python
+Maintainer: Adam Sutton <aps@tvheadend.org>
+Build-Depends: debhelper (>= 7.0.50), pkg-config, gettext, libavahi-client-dev, libssl-dev, zlib1g-dev, wget, bzip2, libcurl4-gnutls-dev, git-core, liburiparser-dev, python, curl, ca-certificates
 Standards-Version: 3.7.3
 
 Package: tvheadend
