@@ -957,9 +957,8 @@ IPTV, enter the URL to your playlist.\n\
 online for details about the various television reception choices \
 available in your area.\n\
 * Networks already configured will not be shown below.\n\
-* Selecting the wrong list may cause the scan (on the next page) to fail.\n\
-* If you're really confused please come talk to us on \
-[IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\
+* Selecting the wrong list may cause the scan (on the next page) to \
+fail.\n\
 "))
 
 wizard_page_t *wizard_muxes(const char *lang)
@@ -1044,19 +1043,21 @@ wizard_page_t *wizard_muxes(const char *lang)
  */
 
 DESCRIPTION_FCN(status, N_("\
-Tvheadend is now scanning for available services, please wait until \
-the scan completes.\n\n\
+Tvheadend is now scanning for available services. Please wait until the \
+scan completes..\n\n\
 \
 **Notes**:\n\
-* During scanning the number of muxes/services shown below should \
-increase; if not check the connection(s) to your device(s).\n\
-* The status tab (behind this wizard) will display signal information, \
-if you notice a lot of errors or the signal strength appears low this \
-usually indicates an issue with your antenna, satellite dish or cable.\n\
-* If you don't see any signal information at all but the number of \
-muxes/services is increasing the driver used by your device isn't \
-supplying signal information to Tvheadend, in most cases this isn't \
-an issue.\n\
+* During scanning, the number of muxes and services shown below should \
+increase. If this doesn't happen, check the connection(s) to your \
+device(s)..\n\
+* The status tab (behind this wizard) will display signal information. \
+If you notice a lot of errors or the signal strength appears low then \
+this usually indicates a physical issue with your antenna, satellite \
+dish or cable..\n\
+* If you don't see any signal information at all, but the number of \
+muxes or services is increasing anyway, the driver used by your device \
+isn't supplying signal information to Tvheadend. In most cases this \
+isn't an issue..\n\
 "))
 
 
@@ -1150,9 +1151,20 @@ MAPPING_FCN(provtags)
 MAPPING_FCN(nettags)
 
 DESCRIPTION_FCN(mapping, N_("\
-Map all discovered services to channels.\n\
-Note: You may ommit this step (do not check the map all services) and\
-do the service to channel mapping manually.\n\
+Map all discovered services to channels.\n\n\
+In order for your frontend client(s) Kodi, Movian, etc to see/play any \
+channels you must first map discovered services to channels.\n\n\
+\
+If you would like Tvheadend to do this for you check the \
+'Map all services' option below but be aware that this will also map \
+encrypted services you may not have access to.\n\n\
+\
+**You may ommit this step (do not check 'Map all services') and \
+map services to channels manually.**\n\n\
+\
+**Notes**:\n\
+* Many providers include undesirable services Teleshopping, Adult \
+Entertainment, etc; using the 'Map all services' will include these. \n\
 "))
 
 
@@ -1230,12 +1242,26 @@ DESCRIPTION_FCN(channels, N_("\
 You are now finished.\n\
 You may further customize your settings by editing channel numbers, etc.\n\
 If you confirm this dialog, the default administrator account will be\
-removed. Please then use credentals you defined thru this wizard.\
+removed. Please then use credentals you defined thru this wizard.\n\n\
+\
+If you require further help check out \
+[Tvheadend.org](http://tvheadend.org) or chat to us on \
+[IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\n\
+\
+Thank you for using Tvheadend (and don't forget to \
+[donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)\
 "))
 
 DESCRIPTION_FCN(channels2, N_("\
 You are now finished.\n\
-You may further customize your settings by editing channel numbers, etc.\
+You may further customize your settings by editing channel numbers, etc.\n\n\
+\
+If you require further help check out \
+[Tvheadend.org](http://tvheadend.org) or chat to us on \
+[IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\n\
+\
+Thank you for using Tvheadend (and don't forget to \
+[donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)\
 "))
 
 wizard_page_t *wizard_channels(const char *lang)
@@ -1254,7 +1280,7 @@ wizard_page_t *wizard_channels(const char *lang)
     LAST_BUTTON(),
     {}
   };
-  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Channels"));
+  wizard_page_t *page = page_init("channels", "wizard_channels", N_("Finished"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
   access_entry_t *ae;
 
