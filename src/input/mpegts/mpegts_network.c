@@ -422,6 +422,8 @@ mpegts_network_create0
 
   /* Defaults */
   mn->mn_satpos = INT_MAX;
+  mn->mn_skipinitscan = 1;
+  mn->mn_autodiscovery = 1;
 
   /* Load config */
   if (conf)
