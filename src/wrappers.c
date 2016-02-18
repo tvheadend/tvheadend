@@ -11,6 +11,7 @@
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
+#include <sys/syscall.h>
 #endif
 
 #ifdef PLATFORM_FREEBSD
