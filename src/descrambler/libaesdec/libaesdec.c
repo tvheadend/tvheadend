@@ -59,7 +59,6 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
   unsigned char *pkt;
   unsigned char ev_od = 0;
   int xc0, offset, n;
-  int len;
   pkt = packet;
   AES_KEY k;
 
@@ -78,15 +77,13 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
     pkt[3] &= 0x3f;  // consider it decrypted now
     if (pkt[3] & 0x20) { // incomplete packet
       offset = 4 + pkt[4] + 1;
-      len = 188 - offset;
-      n = len >> 3;
+      n = (188 - offset) >> 4;
       if (n == 0) { // decrypted==encrypted!
         return;  // this doesn't need more processing
       }
     } else {
-        len = 184;
-	offset = 4;
-      }
+      offset = 4;
+    }
   } else {
     return;
   }
@@ -97,9 +94,7 @@ void aes_decrypt_packet(void *keys, unsigned char *packet) {
     k = ((struct aes_keys_t *) keys)->odd;
   }
 
-  // TODO room for improvement?
-  int i;
-  for (i = offset; i <= (len - 16); i += 16) {
-    AES_ecb_encrypt(pkt + i, pkt + i, &k, AES_DECRYPT);
+  for (; offset <= (188 - 16); offset += 16) {
+    AES_ecb_encrypt(pkt + offset, pkt + offset, &k, AES_DECRYPT);
   }
 }
