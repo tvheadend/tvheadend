@@ -26,11 +26,11 @@ unexport LDFLAGS
 # Upstream Packages
 # ###########################################################################
 
-FFMPEG          = ffmpeg-2.8.2
+FFMPEG          = ffmpeg-2.8.5
 FFMPEG_TB       = $(FFMPEG).tar.bz2
 FFMPEG_URL      = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1     = 1952aeb9ec3f569514d8db4f30c195b765392639
-FFMPEG_DIFFS    = libavcodec.libvpxenc.diff
+FFMPEG_SHA1     = 74f82c0bdaada050ada9010ecb574fb02d434c00
+FFMPEG_DIFFS    =
 
 EXTLIBS         = libx264 libvorbis libvpx
 COMPONENTS      = avutil avformat avcodec swresample swscale avfilter avresample
@@ -51,15 +51,15 @@ LIBVORBIS_TB    = $(LIBVORBIS).tar.gz
 LIBVORBIS_URL   = http://downloads.xiph.org/releases/vorbis/$(LIBVORBIS_TB)
 LIBVORBIS_SHA1  = 10c7fee173178d72855aa7593dfe49d9b3d6c804
 
-LIBX264         = x264-snapshot-20151120-2245
+LIBX264         = x264-snapshot-20160217-2245
 LIBX264_TB      = $(LIBX264).tar.bz2
 LIBX264_URL     = http://ftp.via.ecp.fr/pub/videolan/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1    = 6ca54b8e257ef52f55c752e94e77dbc93fe32fe4
+LIBX264_SHA1    = e3b9d6f3372c9052fac3bffe7175518bb269a359
 
-LIBX265         = x265_1.8
+LIBX265         = x265_1.9
 LIBX265_TB      = $(LIBX265).tar.gz
 LIBX265_URL     = http://ftp.videolan.org/pub/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1    = 10092d220cd361868672641b8ce7b575cb42bb82
+LIBX265_SHA1    = 8c9aa3b87b0f0a418bbb9782e9354d112d75e003
 
 LIBVPX          = libvpx-1.5.0
 LIBVPX_TB       = $(LIBVPX).tar.bz2
