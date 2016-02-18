@@ -395,6 +395,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		--extra-cflags="$(ECFLAGS)" \
 		--extra-libs="$(ELIBS)" \
                 --pkg-config="$(ROOTDIR)/support/pkg-config.ffmpeg" \
+		$(EXTRAARG) \
 		$(foreach extlib,$(EXTLIBS),--enable-$(extlib)) \
 		$(foreach component,$(COMPONENTS),--enable-$(component)) \
 		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
