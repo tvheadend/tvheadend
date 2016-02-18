@@ -402,7 +402,9 @@ rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
           av = 1;
   }
   pthread_mutex_unlock(&s->s_stream_mutex);
-  return enc && av;
+  if (enc == 0 || av == 0)
+    return 0;
+  return pids == NULL || mpegts_pid_wexists(pids, s->s_pmt_pid, MPS_WEIGHT_RAW);
 }
 
 /*
