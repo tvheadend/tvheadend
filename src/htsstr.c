@@ -24,8 +24,6 @@
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-static void htsstr_argsplit_add(char ***argv, int *argc, char *s);
-
 char *
 hts_strndup(const char *src, size_t len)
 {
@@ -122,8 +120,12 @@ htsstr_escape_find(const char *src, size_t upto_index)
 }
 
 static void
-htsstr_argsplit_add(char ***argv, int *argc, char *s)
+htsstr_argsplit_add
+  (char ***argv, int *argc, const char *start, const char *stop)
 {
+  char *s = NULL;
+  if (start)
+    s = htsstr_unescape(hts_strndup(start, stop - start));
   *argv = realloc(*argv, sizeof((*argv)[0]) * (*argc + 1));
   (*argv)[(*argc)++] = s;
 }
@@ -133,18 +135,11 @@ htsstr_argsplit(const char *str) {
   int quote = 0;
   int inarg = 0;
   const char *start = NULL;
-  const char *stop = NULL;
   const char *s;
   char **argv = NULL;
   int argc = 0;
 
   for(s = str; *s; s++) {
-    if(start && stop) {
-      htsstr_argsplit_add(&argv, &argc,
-                          htsstr_unescape(hts_strndup(start, stop - start)));
-      start = stop = NULL;
-    }
-    
     if(inarg) {
       switch(*s) {
         case '\\':
@@ -154,14 +149,21 @@ htsstr_argsplit(const char *str) {
           if(quote) {
             inarg = 0;
             quote = 0;
-            stop = s;
+            if (start) {
+              htsstr_argsplit_add(&argv, &argc, start, s);
+              start = NULL;
+            }
+            s++;
           }
           break;
         case ' ':
           if(quote)
             break;
           inarg = 0;
-          stop = s;
+          if (start) {
+            htsstr_argsplit_add(&argv, &argc, start, s);
+            start = NULL;
+          }
           break;
         default:
           break;
@@ -171,26 +173,22 @@ htsstr_argsplit(const char *str) {
         case ' ':
           break;
         case '"':
+          inarg = 1;
           quote = 1;
-          s++;
-          /* fallthru */
+          start = s + 1;
+          break;
         default:
           inarg = 1;
           start = s;
-          stop = NULL;
           break;
       }
     }
   }
 
-  if(start) {
-    if(!stop)
-      stop = str + strlen(str);
-    htsstr_argsplit_add(&argv, &argc,
-                        htsstr_unescape(hts_strndup(start, stop - start)));
-  }
+  if(start)
+    htsstr_argsplit_add(&argv, &argc, start, str + strlen(str));
 
-  htsstr_argsplit_add(&argv, &argc, NULL);
+  htsstr_argsplit_add(&argv, &argc, NULL, NULL);
 
   return argv;
 }
