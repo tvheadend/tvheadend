@@ -752,6 +752,8 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
   max = pathconf(filename, _PC_NAME_MAX);
   if (max < 8)
     max = NAME_MAX;
+  if (max > 255 && cfg->dvr_windows_compatible_filenames)
+    max = 255;
   max -= 2;
   j = strlen(filename);
   snprintf(filename + j, sizeof(filename) - j, "/%s", dirsep);
