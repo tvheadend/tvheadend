@@ -281,6 +281,16 @@ dvr_clean_directory_separator(char *s, char *tmp, size_t tmplen)
 static const char *
 dvr_do_prefix(const char *id, const char *s, char *tmp, size_t tmplen)
 {
+  if (id[0] == '?') {
+    if (*s >= '0' && *s <= '9') {
+      char *endptr;
+      long l = strtol(s, &endptr, 10);
+      if (l && tmplen > l)
+        tmplen = l;
+      s = endptr;
+    }
+    id++;
+  }
   if (s == NULL) {
     tmp[0] = '\0';
   } else if (s[0] && !isalpha(id[0])) {
@@ -398,42 +408,42 @@ dvr_sub_stop(const char *id, const void *aux, char *tmp, size_t tmplen)
 }
 
 static htsstr_substitute_t dvr_subs_entry[] = {
-  { .id = "t",  .getval = dvr_sub_title },
-  { .id = " t", .getval = dvr_sub_title },
-  { .id = "-t", .getval = dvr_sub_title },
-  { .id = "_t", .getval = dvr_sub_title },
-  { .id = ".t", .getval = dvr_sub_title },
-  { .id = ",t", .getval = dvr_sub_title },
-  { .id = ";t", .getval = dvr_sub_title },
-  { .id = "s",  .getval = dvr_sub_subtitle },
-  { .id = " s", .getval = dvr_sub_subtitle },
-  { .id = "-s", .getval = dvr_sub_subtitle },
-  { .id = "_s", .getval = dvr_sub_subtitle },
-  { .id = ".s", .getval = dvr_sub_subtitle },
-  { .id = ",s", .getval = dvr_sub_subtitle },
-  { .id = ";s", .getval = dvr_sub_subtitle },
-  { .id = "e",  .getval = dvr_sub_episode },
-  { .id = " e", .getval = dvr_sub_episode },
-  { .id = "-e", .getval = dvr_sub_episode },
-  { .id = "_e", .getval = dvr_sub_episode },
-  { .id = ".e", .getval = dvr_sub_episode },
-  { .id = ",e", .getval = dvr_sub_episode },
-  { .id = ";e", .getval = dvr_sub_episode },
-  { .id = "c",  .getval = dvr_sub_channel },
-  { .id = " c", .getval = dvr_sub_channel },
-  { .id = "-c", .getval = dvr_sub_channel },
-  { .id = "_c", .getval = dvr_sub_channel },
-  { .id = ".c", .getval = dvr_sub_channel },
-  { .id = ",c", .getval = dvr_sub_channel },
-  { .id = ";c", .getval = dvr_sub_channel },
-  { .id = "g",  .getval = dvr_sub_genre },
-  { .id = " g", .getval = dvr_sub_genre },
-  { .id = "-g", .getval = dvr_sub_genre },
-  { .id = "_g", .getval = dvr_sub_genre },
-  { .id = ".g", .getval = dvr_sub_genre },
-  { .id = ",g", .getval = dvr_sub_genre },
-  { .id = ";g", .getval = dvr_sub_genre },
-  { .id = NULL, .getval = NULL }
+  { .id = "?t",  .getval = dvr_sub_title },
+  { .id = "? t", .getval = dvr_sub_title },
+  { .id = "?-t", .getval = dvr_sub_title },
+  { .id = "?_t", .getval = dvr_sub_title },
+  { .id = "?.t", .getval = dvr_sub_title },
+  { .id = "?,t", .getval = dvr_sub_title },
+  { .id = "?;t", .getval = dvr_sub_title },
+  { .id = "?s",  .getval = dvr_sub_subtitle },
+  { .id = "? s", .getval = dvr_sub_subtitle },
+  { .id = "?-s", .getval = dvr_sub_subtitle },
+  { .id = "?_s", .getval = dvr_sub_subtitle },
+  { .id = "?.s", .getval = dvr_sub_subtitle },
+  { .id = "?,s", .getval = dvr_sub_subtitle },
+  { .id = "?;s", .getval = dvr_sub_subtitle },
+  { .id = "e",   .getval = dvr_sub_episode },
+  { .id = " e",  .getval = dvr_sub_episode },
+  { .id = "-e",  .getval = dvr_sub_episode },
+  { .id = "_e",  .getval = dvr_sub_episode },
+  { .id = ".e",  .getval = dvr_sub_episode },
+  { .id = ",e",  .getval = dvr_sub_episode },
+  { .id = ";e",  .getval = dvr_sub_episode },
+  { .id = "c",   .getval = dvr_sub_channel },
+  { .id = " c",  .getval = dvr_sub_channel },
+  { .id = "-c",  .getval = dvr_sub_channel },
+  { .id = "_c",  .getval = dvr_sub_channel },
+  { .id = ".c",  .getval = dvr_sub_channel },
+  { .id = ",c",  .getval = dvr_sub_channel },
+  { .id = ";c",  .getval = dvr_sub_channel },
+  { .id = "g",   .getval = dvr_sub_genre },
+  { .id = " g",  .getval = dvr_sub_genre },
+  { .id = "-g",  .getval = dvr_sub_genre },
+  { .id = "_g",  .getval = dvr_sub_genre },
+  { .id = ".g",  .getval = dvr_sub_genre },
+  { .id = ",g",  .getval = dvr_sub_genre },
+  { .id = ";g",  .getval = dvr_sub_genre },
+  { .id = NULL,  .getval = NULL }
 };
 
 static const char *

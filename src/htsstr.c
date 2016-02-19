@@ -250,9 +250,16 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
       src++;
     }
     for (s = sub; s->id; s++) {
-      for (p = s->id, x = src; *p; p++, x++)
+      for (p = s->id, x = src; *p; p++, x++) {
+        if (*p == '?') {
+          while (*x >= '0' && *x <= '9')
+            x++;
+          x--;
+          continue;
+        }
         if (*p != *x)
           break;
+      }
       if (*p == '\0') {
         src = x;
         if ((l = dstlen) > 0) {
