@@ -1560,7 +1560,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "htsp_anonymize",
       .name     = N_("Anonymize HTSP access"),
-      .desc     = N_("Do not send any stream specific information to"
+      .desc     = N_("Do not send any stream specific information to "
                      "the HTSP client like signal strenght, input source"
                      "etc."),
       .off      = offsetof(access_entry_t, ae_htsp_anonymize),
