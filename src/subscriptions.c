@@ -124,6 +124,7 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 
   /* Ignore - not actually linked */
   if (!s->ths_current_instance) goto stop;
+  s->ths_current_instance = NULL;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
