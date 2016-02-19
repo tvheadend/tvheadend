@@ -1243,7 +1243,7 @@ DESCRIPTION_FCN(channels, N_("\
 You are now finished.\n\
 You may further customize your settings by editing channel numbers, etc.\n\
 If you confirm this dialog, the default administrator account will be\
-removed. Please then the use credentals you defined thru this wizard.\n\n\
+removed. Please then the use credentials you defined thru this wizard.\n\n\
 \
 If you require further help, check out \
 [Tvheadend.org](http://tvheadend.org) or chat to us on \
