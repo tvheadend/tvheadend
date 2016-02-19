@@ -267,13 +267,20 @@ dvr_clean_directory_separator(char *s, char *tmp, size_t tmplen)
     end = tmp + tmplen - 1;
     /* replace directory separator */
     for (p = tmp; *s && p != end; s++, p++)
-      *p = *s == '/' ? '-' : *s;
+      if (*s == '/')
+        *p = '-';
+      else if (*s == '"')
+        *s = '\'';
+      else
+        *p = *s;
     *p = '\0';
     return tmp;
   } else  {
     for (; *s; s++)
       if (*s == '/')
         *s = '-';
+      else if (*s == '"')
+        *s = '\'';
     return tmp;
   }
 }
