@@ -1152,18 +1152,19 @@ MAPPING_FCN(nettags)
 
 DESCRIPTION_FCN(mapping, N_("\
 Map all discovered services to channels.\n\n\
-In order for your frontend client(s) Kodi, Movian, etc to see/play any \
-channels you must first map discovered services to channels.\n\n\
+In order for your frontend client(s) (such as Kodi, Movian, and similar) \
+to see/play and channels, you must first map discovered services to \
+channels.\n\n\
 \
-If you would like Tvheadend to do this for you check the \
-'Map all services' option below but be aware that this will also map \
+If you would like Tvheadend to do this for you, check the \
+'Map all services' option below, but be aware that this will also map \
 encrypted services you may not have access to.\n\n\
 \
-**You may ommit this step (do not check 'Map all services') and \
+**You may omit this step (do not check 'Map all services') and \
 map services to channels manually.**\n\n\
 \
 **Notes**:\n\
-* Many providers include undesirable services Teleshopping, Adult \
+* Many providers include undesirable services - Teleshopping, Adult \
 Entertainment, etc; using the 'Map all services' will include these. \n\
 "))
 
@@ -1242,9 +1243,9 @@ DESCRIPTION_FCN(channels, N_("\
 You are now finished.\n\
 You may further customize your settings by editing channel numbers, etc.\n\
 If you confirm this dialog, the default administrator account will be\
-removed. Please then use credentals you defined thru this wizard.\n\n\
+removed. Please then the use credentals you defined thru this wizard.\n\n\
 \
-If you require further help check out \
+If you require further help, check out \
 [Tvheadend.org](http://tvheadend.org) or chat to us on \
 [IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\n\
 \
@@ -1256,7 +1257,7 @@ DESCRIPTION_FCN(channels2, N_("\
 You are now finished.\n\
 You may further customize your settings by editing channel numbers, etc.\n\n\
 \
-If you require further help check out \
+If you require further help, check out \
 [Tvheadend.org](http://tvheadend.org) or chat to us on \
 [IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\n\
 \
