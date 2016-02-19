@@ -298,6 +298,9 @@ static void timeshift_input
   timeshift_t *ts = opaque;
   th_pkt_t *pkt, *pkt2;
 
+  if (ts->exit)
+    return;
+
   /* Control */
   if (type == SMT_SKIP) {
     timeshift_write_skip(ts->rd_pipe.wr, sm->sm_data);
@@ -365,7 +368,8 @@ timeshift_destroy(streaming_target_t *pad)
   pthread_mutex_lock(&ts->state_mutex);
   sm = streaming_msg_create(SMT_EXIT);
   streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
-  timeshift_write_exit(ts->rd_pipe.wr);
+  if (!ts->exit)
+    timeshift_write_exit(ts->rd_pipe.wr);
   pthread_mutex_unlock(&ts->state_mutex);
 
   /* Wait for all threads */
