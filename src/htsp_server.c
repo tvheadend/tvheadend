@@ -276,6 +276,12 @@ htsp_is_stream_enabled(htsp_subscription_t *hs, unsigned int id)
   return 1;
 }
 
+static inline int
+htsp_anonymize(htsp_connection_t *htsp)
+{
+  return (htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_ANONYMIZE) != 0;
+}
+
 /**
  *
  */
@@ -3953,13 +3959,15 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     uuid_bin2hex(&si->si_network_uuid, &hex);
     htsmsg_add_str(sourceinfo, "network_uuid", hex.hex);
   }
-  if(si->si_adapter ) htsmsg_add_str(sourceinfo, "adapter",  si->si_adapter );
-  if(si->si_mux     ) htsmsg_add_str(sourceinfo, "mux"    ,  si->si_mux     );
-  if(si->si_network ) htsmsg_add_str(sourceinfo, "network",  si->si_network );
-  if(si->si_network_type) htsmsg_add_str(sourceinfo, "network_type",  si->si_network_type );
-  if(si->si_provider) htsmsg_add_str(sourceinfo, "provider", si->si_provider);
-  if(si->si_service ) htsmsg_add_str(sourceinfo, "service",  si->si_service );
-  if(si->si_satpos  ) htsmsg_add_str(sourceinfo, "satpos",   si->si_satpos  );
+  if (!htsp_anonymize(hs->hs_htsp)) {
+    htsmsg_add_str2(sourceinfo, "adapter",      si->si_adapter     );
+    htsmsg_add_str2(sourceinfo, "mux",          si->si_mux         );
+    htsmsg_add_str2(sourceinfo, "network",      si->si_network     );
+    htsmsg_add_str2(sourceinfo, "network_type", si->si_network_type);
+    htsmsg_add_str2(sourceinfo, "provider",     si->si_provider    );
+    htsmsg_add_str2(sourceinfo, "service",      si->si_service     );
+    htsmsg_add_str2(sourceinfo, "satpos",       si->si_satpos      );
+  }
   
   htsmsg_add_msg(m, "sourceinfo", sourceinfo);
  
@@ -4080,15 +4088,19 @@ htsp_subscription_signal_status(htsp_subscription_t *hs, signal_status_t *sig)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "signalStatus");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  htsmsg_add_str(m, "feStatus",   sig->status_text);
-  if((sig->snr != -2) && (sig->snr_scale == SIGNAL_STATUS_SCALE_RELATIVE))
-    htsmsg_add_u32(m, "feSNR",    sig->snr);
-  if((sig->signal != -2) && (sig->signal_scale == SIGNAL_STATUS_SCALE_RELATIVE))
-    htsmsg_add_u32(m, "feSignal", sig->signal);
-  if(sig->ber != -2)
-    htsmsg_add_u32(m, "feBER",    sig->ber);
-  if(sig->unc != -2)
-    htsmsg_add_u32(m, "feUNC",    sig->unc);
+  if (!htsp_anonymize(hs->hs_htsp)) {
+    htsmsg_add_str(m, "feStatus",   sig->status_text);
+    if((sig->snr != -2) && (sig->snr_scale == SIGNAL_STATUS_SCALE_RELATIVE))
+      htsmsg_add_u32(m, "feSNR",    sig->snr);
+    if((sig->signal != -2) && (sig->signal_scale == SIGNAL_STATUS_SCALE_RELATIVE))
+      htsmsg_add_u32(m, "feSignal", sig->signal);
+    if(sig->ber != -2)
+      htsmsg_add_u32(m, "feBER",    sig->ber);
+    if(sig->unc != -2)
+      htsmsg_add_u32(m, "feUNC",    sig->unc);
+  } else {
+    htsmsg_add_str(m, "feStatus", "");
+  }
   htsp_send_message(hs->hs_htsp, m, &hs->hs_htsp->htsp_hmq_qstatus);
 }
 
@@ -4100,6 +4112,8 @@ htsp_subscription_descramble_info(htsp_subscription_t *hs, descramble_info_t *di
 {
   /* don't bother old clients */
   if (hs->hs_htsp->htsp_version < 24)
+    return;
+  if (htsp_anonymize(hs->hs_htsp))
     return;
 
   htsmsg_t *m = htsmsg_create_map();

@@ -17,8 +17,9 @@ tvheadend.acleditor = function(panel, index)
                 'streaming,adv_streaming,htsp_streaming,' +
                 'profile,conn_limit_type,conn_limit,' +
                 'dvr,htsp_dvr,all_dvr,all_rw_dvr,' +
-                'failed_dvr,dvr_config,channel_min,channel_max,' +
-                'channel_tag_exclude,channel_tag,comment';
+                'failed_dvr,htsp_anonymize,dvr_config,' +
+                'channel_min,channel_max,channel_tag_exclude,' +
+                'channel_tag,comment';
 
     tvheadend.idnode_grid(panel, {
         id: 'access_entry',

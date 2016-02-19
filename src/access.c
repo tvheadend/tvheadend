@@ -407,7 +407,7 @@ access_dump_a(access_t *a)
   int first;
 
   tvh_strlcatf(buf, sizeof(buf), l,
-    "%s:%s [%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u:l%u%s",
+    "%s:%s [%c%c%c%c%c%c%c%c%c%c%c], conn=%u:s%u:r%u:l%u%s",
     a->aa_representative ?: "<no-id>",
     a->aa_username ?: "<no-user>",
     a->aa_rights & ACCESS_STREAMING          ? 'S' : ' ',
@@ -419,6 +419,7 @@ access_dump_a(access_t *a)
     a->aa_rights & ACCESS_ALL_RECORDER       ? 'L' : ' ',
     a->aa_rights & ACCESS_ALL_RW_RECORDER    ? 'D' : ' ',
     a->aa_rights & ACCESS_FAILED_RECORDER    ? 'F' : ' ',
+    a->aa_rights & ACCESS_HTSP_ANONYMIZE     ? 'H' : ' ',
     a->aa_rights & ACCESS_ADMIN              ? '*' : ' ',
     a->aa_conn_limit,
     a->aa_conn_limit_streaming,
@@ -1022,6 +1023,8 @@ access_entry_update_rights(access_entry_t *ae)
     r |= ACCESS_ALL_RW_RECORDER;
   if (ae->ae_failed_dvr)
     r |= ACCESS_FAILED_RECORDER;
+  if (ae->ae_htsp_anonymize)
+    r |= ACCESS_HTSP_ANONYMIZE;
   if (ae->ae_admin)
     r |= ACCESS_ADMIN;
   ae->ae_rights = r;
@@ -1551,6 +1554,16 @@ const idclass_t access_entry_class = {
       .name     = N_("Failed DVR"),
       .desc     = N_("Allow/disallow access to all failed DVR entries."),
       .off      = offsetof(access_entry_t, ae_failed_dvr),
+      .opts     = PO_ADVANCED | PO_HIDDEN,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "htsp_anonymize",
+      .name     = N_("Anonymize HTSP access"),
+      .desc     = N_("Do not send any stream specific information to"
+                     "the HTSP client like signal strenght, input source"
+                     "etc."),
+      .off      = offsetof(access_entry_t, ae_htsp_anonymize),
       .opts     = PO_ADVANCED | PO_HIDDEN,
     },
     {

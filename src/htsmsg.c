@@ -280,6 +280,16 @@ htsmsg_add_str(htsmsg_t *msg, const char *name, const char *str)
  *
  */
 void
+htsmsg_add_str2(htsmsg_t *msg, const char *name, const char *str)
+{
+  if (msg && name && str)
+    htsmsg_add_str(msg, name, str);
+}
+
+/*
+ *
+ */
+void
 htsmsg_add_str_exclusive(htsmsg_t *msg, const char *str)
 {
   htsmsg_field_t *f;

@@ -120,6 +120,8 @@ typedef struct access_entry {
   int ae_all_rw_dvr;
   int ae_failed_dvr;
 
+  int ae_htsp_anonymize;
+
   idnode_list_head_t ae_dvr_configs;
 
   int ae_webui;
@@ -184,7 +186,8 @@ typedef struct access_ticket {
 #define ACCESS_ALL_RECORDER       (1<<7)
 #define ACCESS_ALL_RW_RECORDER    (1<<8)
 #define ACCESS_FAILED_RECORDER    (1<<9)
-#define ACCESS_ADMIN              (1<<10)
+#define ACCESS_HTSP_ANONYMIZE     (1<<10)
+#define ACCESS_ADMIN              (1<<11)
 #define ACCESS_OR                 (1<<30)
 
 #define ACCESS_FULL \
