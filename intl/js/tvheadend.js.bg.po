@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-09 14:47+0100\n"
-"PO-Revision-Date: 2016-02-09 13:48+0000\n"
+"POT-Creation-Date: 2016-02-12 13:29+0100\n"
+"PO-Revision-Date: 2016-02-12 12:30+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
@@ -1720,6 +1720,14 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:701
 msgid "Timers"
+msgstr ""
+
+#: src/webui/static/app/timeshift.js:16
+msgid "Timeshift"
+msgstr ""
+
+#: src/webui/static/app/timeshift.js:24
+msgid "Timeshift Configuration"
 msgstr ""
 
 #: src/webui/static/app/epg.js:506 src/webui/static/app/epg.js:507
