@@ -336,10 +336,11 @@ subscription_reschedule(void)
       t->s_streaming_status = 0;
       t->s_status = SERVICE_IDLE;
 
-      subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
-
       si = s->ths_current_instance;
       assert(si != NULL);
+
+      subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
+
       si->si_error = s->ths_testing_error;
       time(&si->si_error_time);
 
