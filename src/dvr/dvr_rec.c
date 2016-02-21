@@ -270,7 +270,7 @@ dvr_clean_directory_separator(char *s, char *tmp, size_t tmplen)
       if (*s == '/')
         *p = '-';
       else if (*s == '"')
-        *s = '\'';
+        *p = '\'';
       else
         *p = *s;
     *p = '\0';
