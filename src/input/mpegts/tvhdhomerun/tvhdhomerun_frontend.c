@@ -235,7 +235,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   res = hdhomerun_device_get_tuner_status(hfe->hf_hdhomerun_tuner, &tuner_status_str, &tuner_status);
   pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
   if(res < 1)
-    tvhwarn("tvhdhomerun", "tuner_status (%d): %s", res, tuner_status_str);
+    tvhwarn("tvhdhomerun", "tuner_status (%d)", res);
 
   if(tuner_status.signal_present)
     hfe->hf_status = SIGNAL_GOOD;
