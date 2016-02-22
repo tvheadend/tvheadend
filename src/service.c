@@ -146,6 +146,18 @@ service_class_auto_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+service_type_auto_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Override disabled"),  -1 },
+    { N_("Radio (0x02)"), 0x02 },
+    { N_("MPEG2 HD TV (0x11)"),  0x11 },
+    { N_("H.264 HD TV (0x19)"), 0x19 }
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t service_class = {
   .ic_class      = "service",
   .ic_caption    = N_("Service"),
@@ -217,6 +229,7 @@ const idclass_t service_class = {
       .name     = N_("Type override"),
       .desc     = N_("Service type override. This value will override the "
                      "service type provided by the stream."),
+      .list     = service_type_auto_list,
       .off      = offsetof(service_t, s_type_user),
       .opts     = PO_ADVANCED
     },
