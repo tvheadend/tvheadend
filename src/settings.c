@@ -183,11 +183,13 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   } else {
 #if ENABLE_ZLIB
     msgdata = NULL;
-    r = htsmsg_binary_serialize(record, &msgdata, &msglen, 0x10000);
+    r = htsmsg_binary_serialize(record, &msgdata, &msglen, 2*1024*1024);
     if (!r && msglen >= 4) {
       r = tvh_gzip_deflate_fd_header(fd, msgdata + 4, msglen - 4, 3);
       if (r)
         ok = 0;
+    } else {
+      tvhlog(LOG_ALERT, "settings", "Unable to pack the configuration data \"%s\"", path);
     }
     free(msgdata);
 #endif
