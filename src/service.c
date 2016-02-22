@@ -211,6 +211,15 @@ const idclass_t service_class = {
       .get      = service_class_caid_get,
       .opts     = PO_NOSAVE | PO_RDONLY | PO_HIDDEN | PO_EXPERT,
     },
+    {
+      .type     = PT_INT,
+      .id       = "s_type_user",
+      .name     = N_("Type override"),
+      .desc     = N_("Service type override. This value will override the "
+                     "service type provided by the stream."),
+      .off      = offsetof(service_t, s_type_user),
+      .opts     = PO_ADVANCED
+    },
     {}
   }
 };
@@ -938,6 +947,7 @@ service_create0
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
   t->s_type = service_type;
+  t->s_type_user = -1;
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
@@ -1134,9 +1144,14 @@ service_has_audio_or_video(service_t *t)
 int
 service_is_sdtv(service_t *t)
 {
-  if (t->s_servicetype == ST_SDTV)
+  char s_type;
+  if(t->s_type_user > -1)
+    s_type = t->s_type_user;
+  else
+    s_type = t->s_servicetype;
+  if (s_type == ST_SDTV)
     return 1;
-  else if (t->s_servicetype == ST_NONE) {
+  else if (s_type == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components, es_link)
       if (SCT_ISVIDEO(st->es_type) && st->es_height < 720)
@@ -1148,9 +1163,14 @@ service_is_sdtv(service_t *t)
 int
 service_is_hdtv(service_t *t)
 {
-  if (t->s_servicetype == ST_HDTV)
+  char s_type;
+  if(t->s_type_user > -1)
+    s_type = t->s_type_user;
+  else
+    s_type = t->s_servicetype;
+  if (s_type == ST_HDTV)
     return 1;
-  else if (t->s_servicetype == ST_NONE) {
+  else if (s_type == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components, es_link)
       if (SCT_ISVIDEO(st->es_type) && st->es_height >= 720)
@@ -1166,9 +1186,14 @@ int
 service_is_radio(service_t *t)
 {
   int ret = 0;
-  if (t->s_servicetype == ST_RADIO)
+  char s_type;
+  if(t->s_type_user > -1)
+    s_type = t->s_type_user;
+  else
+    s_type = t->s_servicetype;
+  if (s_type == ST_RADIO)
     return 1;
-  else if (t->s_servicetype == ST_NONE) {
+  else if (s_type == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components, es_link) {
       if (SCT_ISVIDEO(st->es_type))

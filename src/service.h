@@ -303,6 +303,7 @@ typedef struct service {
   int s_enabled;
   int s_auto;
   int s_prio;
+  int s_type_user;
 
   LIST_ENTRY(service) s_active_link;
 
