@@ -289,7 +289,7 @@ static const char *
 dvr_do_prefix(const char *id, const char *s, char *tmp, size_t tmplen)
 {
   if (id[0] == '?') {
-    if (*s >= '0' && *s <= '9') {
+    if (s != NULL && *s >= '0' && *s <= '9') {
       char *endptr;
       long l = strtol(s, &endptr, 10);
       if (l && tmplen > l)
