@@ -274,7 +274,8 @@ typedef struct service {
    * Service type
    */
   enum {
-    ST_NONE,
+    ST_UNSET = -1,
+    ST_NONE = 0,
     ST_OTHER,
     ST_SDTV,
     ST_HDTV,
