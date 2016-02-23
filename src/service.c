@@ -150,13 +150,11 @@ static htsmsg_t *
 service_type_auto_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Override disabled"),  ST_UNSET },
-    { N_("None (0)"),           ST_NONE },
-    { N_("MPEG2 SD TV (0x01)"), 0x01 },
-    { N_("Radio       (0x02)"), 0x02 },
-    { N_("MPEG2 HD TV (0x11)"), 0x11 },
-    { N_("H.264 SD TV (0x16)"), 0x16 },
-    { N_("H.264 HD TV (0x19)"), 0x19 }
+    { N_("Override disabled"), ST_UNSET },
+    { N_("None"),              ST_NONE  },
+    { N_("Radio"),             ST_RADIO },
+    { N_("SD TV"),             ST_SDTV  },
+    { N_("HD TV)"),            ST_HDTV  }
   };
   return strtab2htsmsg(tab, 1, lang);
 }
