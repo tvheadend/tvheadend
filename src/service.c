@@ -150,9 +150,12 @@ static htsmsg_t *
 service_type_auto_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Override disabled"),  -1 },
-    { N_("Radio (0x02)"), 0x02 },
-    { N_("MPEG2 HD TV (0x11)"),  0x11 },
+    { N_("Override disabled"),  ST_UNSET },
+    { N_("None (0)"),           ST_NONE },
+    { N_("MPEG2 SD TV (0x01)"), 0x01 },
+    { N_("Radio       (0x02)"), 0x02 },
+    { N_("MPEG2 HD TV (0x11)"), 0x11 },
+    { N_("H.264 SD TV (0x16)"), 0x16 },
     { N_("H.264 HD TV (0x19)"), 0x19 }
   };
   return strtab2htsmsg(tab, 1, lang);
@@ -960,7 +963,7 @@ service_create0
   pthread_mutex_init(&t->s_stream_mutex, NULL);
   pthread_cond_init(&t->s_tss_cond, NULL);
   t->s_type = service_type;
-  t->s_type_user = -1;
+  t->s_type_user = ST_UNSET;
   t->s_source_type = source_type;
   t->s_refcount = 1;
   t->s_enabled = 1;
@@ -1158,10 +1161,10 @@ int
 service_is_sdtv(service_t *t)
 {
   char s_type;
-  if(t->s_type_user > -1)
-    s_type = t->s_type_user;
-  else
+  if(t->s_type_user == ST_UNSET)
     s_type = t->s_servicetype;
+  else
+    s_type = t->s_type_user;
   if (s_type == ST_SDTV)
     return 1;
   else if (s_type == ST_NONE) {
@@ -1177,10 +1180,10 @@ int
 service_is_hdtv(service_t *t)
 {
   char s_type;
-  if(t->s_type_user > -1)
-    s_type = t->s_type_user;
-  else
+  if(t->s_type_user == ST_UNSET)
     s_type = t->s_servicetype;
+  else
+    s_type = t->s_type_user;
   if (s_type == ST_HDTV)
     return 1;
   else if (s_type == ST_NONE) {
@@ -1200,10 +1203,10 @@ service_is_radio(service_t *t)
 {
   int ret = 0;
   char s_type;
-  if(t->s_type_user > -1)
-    s_type = t->s_type_user;
-  else
+  if(t->s_type_user == ST_UNSET)
     s_type = t->s_servicetype;
+  else
+    s_type = t->s_type_user;
   if (s_type == ST_RADIO)
     return 1;
   else if (s_type == ST_NONE) {
