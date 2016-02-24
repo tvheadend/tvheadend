@@ -707,9 +707,10 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
   mpegts_service_t *t = (mpegts_service_t *)ct->td_service;
   cwc_t *cwc = ct->cs_cwc;
   ecm_pid_t *ep;
-  ecm_section_t *es2;
+  ecm_section_t *es2, es3;
   char chaninfo[128];
   int i;
+  uint32_t off;
   int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
 
   es->es_pending = 0;
@@ -817,10 +818,7 @@ forbid:
                t->s_dvb_svcname, delay, ct->td_nicename);
       es->es_keystate = ES_RESOLVED;
       es->es_resolved = 1;
-
-      pthread_mutex_unlock(&cwc->cwc_mutex);
-      descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, msg + 3, msg + 3 + 8);
-      pthread_mutex_lock(&cwc->cwc_mutex);
+      off = 8;
     } else {
       tvhlog(LOG_DEBUG, "cwc",
            "Received ECM reply%s for service \"%s\" "
@@ -832,10 +830,10 @@ forbid:
            msg[3 + 0], msg[3 + 1], msg[3 + 2], msg[3 + 3], msg[3 + 4],
            msg[3 + 5], msg[3 + 6], msg[3 + 7], msg[3 + 8], msg[3 + 9],
            msg[3 + 10],msg[3 + 11],msg[3 + 12],msg[3 + 13],msg[3 + 14],
-           msg[3 + 15], msg[3 + 16], msg[3 + 17], msg[3 + 18], msg[3 + 19],
-           msg[3 + 20], msg[3 + 21], msg[3 + 22], msg[3 + 23], msg[3 + 24],
+           msg[3 + 15],msg[3 + 16],msg[3 + 17],msg[3 + 18],msg[3 + 19],
+           msg[3 + 20],msg[3 + 21],msg[3 + 22],msg[3 + 23],msg[3 + 24],
            msg[3 + 25],msg[3 + 26],msg[3 + 27],msg[3 + 28],msg[3 + 29],
-           msg[3 + 30], msg[3 + 31], seq, delay);
+           msg[3 + 30],msg[3 + 31], seq, delay);
 
       if(es->es_keystate != ES_RESOLVED)
         tvhlog(LOG_DEBUG, "cwc",
@@ -843,18 +841,19 @@ forbid:
                t->s_dvb_svcname, delay, ct->td_nicename);
       es->es_keystate = ES_RESOLVED;
       es->es_resolved = 1;
-
-      pthread_mutex_unlock(&cwc->cwc_mutex);
-      descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_AES, msg + 3, msg + 3 + 16);
-      pthread_mutex_lock(&cwc->cwc_mutex);
+      off = 16;
     }
 
+    es3 = *es;
+    pthread_mutex_unlock(&cwc->cwc_mutex);
+    descrambler_keys((th_descrambler_t *)ct, DESCRAMBLER_DES, msg + 3, msg + 3 + off);
     snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cwc->cwc_hostname, cwc->cwc_port);
     descrambler_notify((th_descrambler_t *)ct,
-                       es->es_caid, es->es_provid,
-                       caid2name(es->es_caid),
-                       es->es_channel, delay,
+                       es3.es_caid, es3.es_provid,
+                       caid2name(es3.es_caid),
+                       es3.es_channel, delay,
                        1, "", chaninfo, "newcamd");
+    pthread_mutex_lock(&cwc->cwc_mutex);
   }
 }
 
