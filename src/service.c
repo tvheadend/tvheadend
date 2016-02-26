@@ -697,7 +697,7 @@ service_find_instance
   idnode_list_mapping_t *ilm;
   service_instance_t *si, *next;
   profile_t *pro = prch ? prch->prch_pro : NULL;
-  int enlisted, weight2;
+  int enlisted;
 
   lock_assert(&global_lock);
 
@@ -775,15 +775,20 @@ service_find_instance
         break;
   }
 
-  /* Bump the one with lowest weight */
+  /* Bump the one with lowest weight or bigger priority */
   if (!si) {
     next = NULL;
-    weight2 = weight;
-    TAILQ_FOREACH(si, sil, si_link)
-      if (weight2 > si->si_weight && si->si_error == 0) {
-        weight2 = si->si_weight;
-        next = si;
+    TAILQ_FOREACH(si, sil, si_link) {
+      if (si->si_error) continue;
+      if (next == NULL) {
+        if (si->si_weight < weight)
+          next = si;
+      } else {
+        if ((si->si_weight < next->si_weight) ||
+            (si->si_weight == next->si_weight && si->si_prio > next->si_prio))
+          next = si;
       }
+    }
     si = next;
   }
 
