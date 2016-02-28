@@ -203,7 +203,7 @@ const idclass_t service_class = {
       .id       = "priority",
       .name     = N_("Priority (-10..10)"),
       .desc     = N_("Service priority. Enter a value between -10 and "
-                     "10. A higher value indicates a higher preference. " 
+                     "10. A higher value indicates a higher preference. "
                      "See Help for more info."),
       .off      = offsetof(service_t, s_prio),
       .opts     = PO_ADVANCED
@@ -212,7 +212,7 @@ const idclass_t service_class = {
       .type     = PT_BOOL,
       .id       = "encrypted",
       .name     = N_("Encrypted"),
-      .desc     = N_("The service`s encryption status."),
+      .desc     = N_("The service's encryption status."),
       .get      = service_class_encrypted_get,
       .opts     = PO_NOSAVE | PO_RDONLY
     },
@@ -285,7 +285,7 @@ stream_clean(elementary_stream_t *st)
   streaming_queue_clear(&st->es_backlog);
 
   st->es_startcode = 0;
-  
+
   sbuf_free(&st->es_buf);
   sbuf_free(&st->es_buf_a);
 
@@ -353,7 +353,7 @@ service_stop(service_t *t)
   descrambler_service_stop(t);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
- 
+
   assert(LIST_FIRST(&t->s_streaming_pad.sp_targets) == NULL);
   assert(LIST_FIRST(&t->s_subscriptions) == NULL);
 
@@ -740,7 +740,7 @@ service_find_instance
     if(si->si_mark)
       service_instance_destroy(sil, si);
   }
-  
+
   if (TAILQ_EMPTY(sil)) {
     if (*error < SM_CODE_NO_ADAPTERS)
       *error = SM_CODE_NO_ADAPTERS;
@@ -957,7 +957,7 @@ service_create0
   }
 
   lock_assert(&global_lock);
-  
+
   if (service_type == STYPE_RAW)
     TAILQ_INSERT_TAIL(&service_raw_all, t, s_all_link);
   else
@@ -978,7 +978,7 @@ service_create0
   t->s_last_pid = -1;
 
   streaming_pad_init(&t->s_streaming_pad);
-  
+
   /* Load config */
   if (conf)
     service_load(t, conf);
@@ -990,16 +990,16 @@ service_create0
 /**
  *
  */
-static void 
+static void
 service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 {
   char buf[200];
   if(st->es_pid != -1)
-    snprintf(buf, sizeof(buf), "%s: %s @ #%d", 
+    snprintf(buf, sizeof(buf), "%s: %s @ #%d",
 	     service_nicename(t),
 	     streaming_component_type2txt(st->es_type), st->es_pid);
   else
-    snprintf(buf, sizeof(buf), "%s: %s", 
+    snprintf(buf, sizeof(buf), "%s: %s",
 	     service_nicename(t),
 	     streaming_component_type2txt(st->es_type));
 
@@ -1011,7 +1011,7 @@ service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 /**
  *
  */
-void 
+void
 service_make_nicename(service_t *t)
 {
   char buf[256], buf2[16];
@@ -1030,7 +1030,7 @@ service_make_nicename(service_t *t)
     service_name = buf2;
   }
 
-  snprintf(buf, sizeof(buf), 
+  snprintf(buf, sizeof(buf),
 	   "%s%s%s%s%s%s%s",
 	   si.si_adapter ?: "", si.si_adapter && si.si_network ? "/" : "",
 	   si.si_network ?: "", si.si_network && si.si_mux     ? "/" : "",
@@ -1109,7 +1109,7 @@ elementary_stream_t *
 service_stream_find_(service_t *t, int pid)
 {
   elementary_stream_t *st;
- 
+
   lock_assert(&t->s_stream_mutex);
 
   TAILQ_FOREACH(st, &t->s_components, es_link) {
@@ -1298,7 +1298,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 
 /**
  * Restart output on a service.
- * Happens if the stream composition changes. 
+ * Happens if the stream composition changes.
  * (i.e. an AC3 stream disappears, etc)
  */
 void
@@ -1321,7 +1321,7 @@ service_restart(service_t *t)
       streaming_pad_deliver(&t->s_streaming_pad,
                             streaming_msg_create_code(SMT_STOP,
                                                       SM_CODE_SOURCE_RECONFIGURED));
-      
+
     streaming_pad_deliver(&t->s_streaming_pad,
                           streaming_msg_create_data(SMT_START,
                                                     service_build_stream_start(t)));
@@ -1355,15 +1355,15 @@ service_build_stream_start(service_t *t)
   streaming_start_t *ss;
 
   lock_assert(&t->s_stream_mutex);
-  
+
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
     n++;
 
-  ss = calloc(1, sizeof(streaming_start_t) + 
+  ss = calloc(1, sizeof(streaming_start_t) +
 	      sizeof(streaming_start_component_t) * n);
 
   ss->ss_num_components = n;
-  
+
   n = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     streaming_start_component_t *ssc = &ss->ss_components[n++];
@@ -1870,7 +1870,7 @@ void service_save ( service_t *t, htsmsg_t *m )
       if(st->es_frame_duration)
         htsmsg_add_u32(sub, "duration", st->es_frame_duration);
     }
-    
+
     htsmsg_add_msg(list, NULL, sub);
   }
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -1954,7 +1954,7 @@ load_legacy_caid(htsmsg_t *c, elementary_stream_t *st)
 /**
  *
  */
-static void 
+static void
 load_caid(htsmsg_t *m, elementary_stream_t *st)
 {
   htsmsg_field_t *f;
@@ -1967,7 +1967,7 @@ load_caid(htsmsg_t *m, elementary_stream_t *st)
   HTSMSG_FOREACH(f, v) {
     if((c = htsmsg_get_map_by_field(f)) == NULL)
       continue;
-    
+
     if(htsmsg_get_u32(c, "caid", &a))
       continue;
 
@@ -2012,7 +2012,7 @@ void service_load ( service_t *t, htsmsg_t *c )
         continue;
 
       st = service_stream_create(t, pid, type);
-    
+
       if((v = htsmsg_get_str(c, "language")) != NULL)
         strncpy(st->es_lang, lang_code_get(v), 3);
 
@@ -2023,7 +2023,7 @@ void service_load ( service_t *t, htsmsg_t *c )
 
       if(!htsmsg_get_u32(c, "position", &u32))
         st->es_position = u32;
-   
+
       load_legacy_caid(c, st);
       load_caid(c, st);
 

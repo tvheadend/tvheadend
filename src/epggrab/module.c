@@ -151,7 +151,7 @@ const idclass_t epggrab_mod_class = {
       .id     = "priority",
       .name   = N_("Priority"),
       .desc   = N_("Grabber priority. This option lets you pick which "
-                   "EPG grabber`s data gets used first if more than one "
+                   "EPG grabber's data gets used first if more than one "
                    "grabber is enabled. Priority is given to the grabber "
                    "with the highest value set here."),
       .off    = offsetof(epggrab_module_t, priority),
@@ -331,7 +331,7 @@ epggrab_module_int_t *epggrab_module_int_create
 {
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_int_t));
-  
+
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         cls ?: &epggrab_class_mod_int,
@@ -350,7 +350,7 @@ epggrab_module_int_t *epggrab_module_int_create
 }
 
 char *epggrab_module_grab_spawn ( void *m )
-{ 
+{
   int        rd = -1, outlen;
   char       *outbuf;
   epggrab_module_int_t *mod = m;
@@ -456,7 +456,7 @@ static void *_epggrab_socket_thread ( void *p )
   int s;
   epggrab_module_ext_t *mod = (epggrab_module_ext_t*)p;
   tvhlog(LOG_INFO, mod->id, "external socket enabled");
-  
+
   while ( mod->enabled && mod->sock ) {
     tvhlog(LOG_DEBUG, mod->id, "waiting for connection");
     s = accept(mod->sock, NULL, NULL);
@@ -561,7 +561,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
 
   /* Allocate data */
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ext_t));
-  
+
   /* Pass through */
   hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
@@ -588,7 +588,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
     epggrab_ota_module_ops_t *ops )
 {
   if (!skel) skel = calloc(1, sizeof(epggrab_module_ota_t));
-  
+
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
                         &epggrab_class_mod_ota,
