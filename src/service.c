@@ -188,6 +188,14 @@ const idclass_t service_class = {
       .opts     = PO_ADVANCED,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "remote_timeshift",
+      .name     = N_("Remote timeshift"),
+      .desc     = N_("Pass timeshift commands to a remote RTSP server"),
+      .off      = offsetof(service_t, s_remote_timeshift),
+      .opts     = PO_ADVANCED,
+    },
+    {
       .type     = PT_STR,
       .islist   = 1,
       .id       = "channel",

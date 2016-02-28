@@ -299,6 +299,7 @@ typedef struct service {
    * subscription scheduling.
    */
   int s_enabled;
+  int s_remote_timeshift;
   int s_auto;
   int s_prio;
   int s_type_user;
