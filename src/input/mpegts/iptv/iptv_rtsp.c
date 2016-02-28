@@ -53,7 +53,7 @@ iptv_rtsp_alive_cb ( void *aux )
   iptv_mux_t *im = aux;
   rtsp_priv_t *rp = im->im_data;
 
-  rtsp_send(rp->hc, RTSP_CMD_OPTIONS, rp->path, rp->query, NULL);
+  rtsp_get_parameter(rp->hc, "");
   mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
                  sec2mono(MAX(1, (rp->hc->hc_rtp_timeout / 2) - 1)));
 }
