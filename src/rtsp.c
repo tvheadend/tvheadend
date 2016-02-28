@@ -38,7 +38,7 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
                 (hc->hc_port != 554 ? 7 : 0) +
                 (path ? strlen(path) : 1) + 1;
   char *buf = alloca(blen);
-  char buf2[7];
+  char buf2[64];
   char buf_body[size + 3];
 
   if (hc->hc_rtsp_session) {
@@ -60,6 +60,24 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
     http_arg_set(hdr, "Content-Length", buf2);
   }
 
+  // Add RTSP range_start for Range header (timestamp)
+  if(hc->hc_rtsp_range_start > 0) {
+    if (hdr == NULL) {
+      hdr = &h;
+        http_arg_init(&h);
+     }
+     snprintf(buf2, sizeof(buf2), "npt=%d-", hc->hc_rtsp_range_start);
+     http_arg_set(hdr, "Range", buf2);
+  }
+  // Add RTSP scale header
+  if(hc->hc_rtsp_scale != 0) {
+    if (hdr == NULL) {
+      hdr = &h;
+        http_arg_init(&h);
+     }
+     snprintf(buf2, sizeof(buf2), "%d.00", hc->hc_rtsp_scale);
+     http_arg_set(hdr, "Scale", buf2);
+  }
   http_client_basic_auth(hc, hdr, hc->hc_rtsp_user, hc->hc_rtsp_pass);
   if (hc->hc_port != 554)
     snprintf(buf2, sizeof(buf2), ":%d", hc->hc_port);

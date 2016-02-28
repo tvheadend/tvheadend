@@ -346,6 +346,8 @@ struct http_client {
   char        *hc_rtsp_user;
   char        *hc_rtsp_pass;
   char         hc_rtsp_keep_alive_cmd;
+  int          hc_rtsp_range_start;
+  int          hc_rtsp_scale;
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
