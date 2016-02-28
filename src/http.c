@@ -50,16 +50,17 @@ static pthread_mutex_t http_paths_mutex = PTHREAD_MUTEX_INITIALIZER;
 static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
-  { "NONE",       HTTP_CMD_NONE },
-  { "GET",        HTTP_CMD_GET },
-  { "HEAD",       HTTP_CMD_HEAD },
-  { "POST",       HTTP_CMD_POST },
-  { "DESCRIBE",   RTSP_CMD_DESCRIBE },
-  { "OPTIONS",    RTSP_CMD_OPTIONS },
-  { "SETUP",      RTSP_CMD_SETUP },
-  { "PLAY",       RTSP_CMD_PLAY },
-  { "TEARDOWN",   RTSP_CMD_TEARDOWN },
-  { "PAUSE",      RTSP_CMD_PAUSE },
+  { "NONE",          HTTP_CMD_NONE },
+  { "GET",           HTTP_CMD_GET },
+  { "HEAD",          HTTP_CMD_HEAD },
+  { "POST",          HTTP_CMD_POST },
+  { "DESCRIBE",      RTSP_CMD_DESCRIBE },
+  { "OPTIONS",       RTSP_CMD_OPTIONS },
+  { "SETUP",         RTSP_CMD_SETUP },
+  { "PLAY",          RTSP_CMD_PLAY },
+  { "TEARDOWN",      RTSP_CMD_TEARDOWN },
+  { "PAUSE",         RTSP_CMD_PAUSE },
+  { "GET_PARAMETER", RTSP_CMD_GET_PARAMETER },
 };
 
 

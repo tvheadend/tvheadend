@@ -110,6 +110,7 @@ typedef enum http_cmd {
   RTSP_CMD_TEARDOWN,
   RTSP_CMD_PLAY,
   RTSP_CMD_PAUSE,
+  RTSP_CMD_GET_PARAMETER,
 } http_cmd_t;
 
 #define HTTP_CMD_OPTIONS RTSP_CMD_OPTIONS
@@ -409,8 +410,17 @@ rtsp_play( http_client_t *hc, const char *path, const char *query ) {
 }
 
 static inline int
+rtsp_pause( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_PAUSE, path, query, NULL);
+}
+
+static inline int
 rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
   return rtsp_send(hc, RTSP_CMD_TEARDOWN, path, query, NULL);
+}
+
+static inline int rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
+  return rtsp_send(hc, RTSP_CMD_GET_PARAMETER, NULL, parameter, NULL);
 }
 
 int rtsp_describe_decode( http_client_t *hc );
