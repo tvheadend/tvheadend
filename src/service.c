@@ -154,7 +154,7 @@ service_type_auto_list ( void *o, const char *lang )
     { N_("None"),              ST_NONE  },
     { N_("Radio"),             ST_RADIO },
     { N_("SD TV"),             ST_SDTV  },
-    { N_("HD TV)"),            ST_HDTV  }
+    { N_("HD TV"),             ST_HDTV  }
   };
   return strtab2htsmsg(tab, 1, lang);
 }
