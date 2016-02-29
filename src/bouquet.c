@@ -773,10 +773,9 @@ bouquet_class_chtag_ref_get ( void *obj )
 {
   static const char *buf;
   bouquet_t *bq = obj;
-  char ubuf[UUID_HEX_SIZE];
 
   if (bq->bq_chtag_ptr)
-    buf = idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id, ubuf);
+    buf = idnode_uuid_as_str(&bq->bq_chtag_ptr->ct_id, prop_sbuf);
   else
     buf = "";
   return &buf;
