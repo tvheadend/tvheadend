@@ -389,7 +389,7 @@ const idclass_t channel_class = {
       .id       = "name",
       .name     = N_("Name"),
       .desc     = N_("Name. The name given to/of the channel (This is "
-                     "how it`ll appear in your EPG.)"),
+                     "how it'll appear in your EPG.)"),
       .off      = offsetof(channel_t, ch_name),
       .set      = channel_class_set_name,
       .get      = channel_class_get_name,
@@ -484,7 +484,7 @@ const idclass_t channel_class = {
       .desc     = N_("Use EPG running state. Use EITp/f to decide "
                      "event start/stop. This is also known as "
                      "\"Accurate Recording\". Note that this can have "
-                     "unexpected results if the broadcaster isn`t very "
+                     "unexpected results if the broadcaster isn't very "
                      "good at time keeping."),
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,
@@ -1077,7 +1077,7 @@ channel_init ( void )
   htsmsg_field_t *f;
   channel_t *ch, *parent;
   char *s;
-  
+
   RB_INIT(&channels);
 
   /* Tags */
@@ -1113,7 +1113,7 @@ void
 channel_done ( void )
 {
   channel_t *ch;
-  
+
   pthread_mutex_lock(&global_lock);
   while ((ch = RB_FIRST(&channels)) != NULL)
     channel_delete(ch, 0);
@@ -1510,7 +1510,7 @@ static void
 channel_tag_done ( void )
 {
   channel_tag_t *ct;
-  
+
   pthread_mutex_lock(&global_lock);
   while ((ct = TAILQ_FIRST(&channel_tags)) != NULL)
     channel_tag_destroy(ct, 0);
