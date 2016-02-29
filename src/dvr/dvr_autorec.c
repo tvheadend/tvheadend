@@ -296,6 +296,9 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
   idnode_load(&dae->dae_id, conf);
 
+  dvr_autorec_changed(dae, 1);
+  dvr_autorec_completed(dae, 0);
+
   htsp_autorec_entry_add(dae);
 
   return dae;
