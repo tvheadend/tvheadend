@@ -169,7 +169,8 @@ rtsp_setup_decode( http_client_t *hc, int satip )
         }
       }
     }
-  } else if (!strncasecmp(argv[0], "RTP/AVP", 7)) {
+  } else if (!strcasecmp(argv[0], "RTP/AVP") ||
+             !strcasecmp(argv[0], "RTP/AVP/UDP")) {
     if (n < 3)
       return -EIO;
     hc->hc_rtp_multicast = strcasecmp(argv[1], "multicast") == 0;
