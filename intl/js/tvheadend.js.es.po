@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-12 13:29+0100\n"
+"POT-Creation-Date: 2016-02-19 20:34+0100\n"
 "PO-Revision-Date: 2016-02-12 12:30+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
@@ -126,15 +126,15 @@ msgstr "Abortar la grabación seleccionada"
 msgid "About"
 msgstr "Información"
 
-#: src/webui/static/app/acleditor.js:65
+#: src/webui/static/app/acleditor.js:66
 msgid "Access Control Entries"
 msgstr "Entradas de Control de Acceso"
 
-#: src/webui/static/app/acleditor.js:27
+#: src/webui/static/app/acleditor.js:28
 msgid "Access Entries"
 msgstr "Entradas de Acceso"
 
-#: src/webui/static/app/acleditor.js:26
+#: src/webui/static/app/acleditor.js:27
 msgid "Access Entry"
 msgstr "Entrada de Acceso"
 
@@ -875,15 +875,15 @@ msgstr "ID"
 msgid "IP Address"
 msgstr "Dirección IP"
 
-#: src/webui/static/app/acleditor.js:143
+#: src/webui/static/app/acleditor.js:144
 msgid "IP Blocking Entries"
 msgstr "Direcciones IP Bloqueadas"
 
-#: src/webui/static/app/acleditor.js:119
+#: src/webui/static/app/acleditor.js:120
 msgid "IP Blocking Record"
 msgstr "Registro de Bloqueo de Direcciones IP"
 
-#: src/webui/static/app/acleditor.js:120
+#: src/webui/static/app/acleditor.js:121
 msgid "IP Blocking Records"
 msgstr "Registros de Bloqueos de Direcciones IP"
 
@@ -1241,15 +1241,15 @@ msgstr "Parámetros"
 msgid "Parent disabled"
 msgstr "Contiguo deshabilitado"
 
-#: src/webui/static/app/acleditor.js:80
+#: src/webui/static/app/acleditor.js:81
 msgid "Password"
 msgstr "Contraseña"
 
-#: src/webui/static/app/acleditor.js:104
+#: src/webui/static/app/acleditor.js:105
 msgid "Password Control Entries"
 msgstr "Contraseña de Entradas de Control"
 
-#: src/webui/static/app/acleditor.js:81
+#: src/webui/static/app/acleditor.js:82
 msgid "Passwords"
 msgstr "Contraseñas"
 

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-12 13:29+0100\n"
+"POT-Creation-Date: 2016-02-19 20:34+0100\n"
 "PO-Revision-Date: 2016-02-15 07:56+0000\n"
 "Last-Translator: Trex <trex2004@gmail.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
@@ -125,15 +125,15 @@ msgstr "A kiválasztott felvétel elvetése"
 msgid "About"
 msgstr "Névjegy"
 
-#: src/webui/static/app/acleditor.js:65
+#: src/webui/static/app/acleditor.js:66
 msgid "Access Control Entries"
 msgstr "Hozzáférés szabályozási adatok"
 
-#: src/webui/static/app/acleditor.js:27
+#: src/webui/static/app/acleditor.js:28
 msgid "Access Entries"
 msgstr "Hozzáférési adatok"
 
-#: src/webui/static/app/acleditor.js:26
+#: src/webui/static/app/acleditor.js:27
 msgid "Access Entry"
 msgstr "Hozzáférési adat"
 
@@ -874,15 +874,15 @@ msgstr "ID"
 msgid "IP Address"
 msgstr "IP-cím"
 
-#: src/webui/static/app/acleditor.js:143
+#: src/webui/static/app/acleditor.js:144
 msgid "IP Blocking Entries"
 msgstr "IP-szűrő bejegyzések"
 
-#: src/webui/static/app/acleditor.js:119
+#: src/webui/static/app/acleditor.js:120
 msgid "IP Blocking Record"
 msgstr "IP-szűrő rekord"
 
-#: src/webui/static/app/acleditor.js:120
+#: src/webui/static/app/acleditor.js:121
 msgid "IP Blocking Records"
 msgstr "IP-szűrő rekordok"
 
@@ -1240,15 +1240,15 @@ msgstr "Paraméterek"
 msgid "Parent disabled"
 msgstr "Szülő letiltva"
 
-#: src/webui/static/app/acleditor.js:80
+#: src/webui/static/app/acleditor.js:81
 msgid "Password"
 msgstr "Jelszó"
 
-#: src/webui/static/app/acleditor.js:104
+#: src/webui/static/app/acleditor.js:105
 msgid "Password Control Entries"
 msgstr "Jelszó ellenőrzési bejegyzések"
 
-#: src/webui/static/app/acleditor.js:81
+#: src/webui/static/app/acleditor.js:82
 msgid "Passwords"
 msgstr "Jelszavak"
 

@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-12 13:29+0100\n"
-"PO-Revision-Date: 2016-02-12 12:44+0000\n"
+"POT-Creation-Date: 2016-02-19 20:34+0100\n"
+"PO-Revision-Date: 2016-02-20 17:52+0000\n"
 "Last-Translator: Prof Yaffle\n"
 "Language-Team: English (United States) (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/en_US/)\n"
 "MIME-Version: 1.0\n"
@@ -354,7 +354,7 @@ msgstr "Accept remote subscription weight"
 msgid "Accept the remote subscription weight (from the SAT>IP client)."
 msgstr "Accept the remote subscription weight (from the SAT>IP client)."
 
-#: src/access.c:1405
+#: src/access.c:1408
 msgid "Access"
 msgstr "Access"
 
@@ -390,19 +390,19 @@ msgid ""
 " garbage data at the beginning. "
 msgstr "Additional time (in seconds) in which to get the tuner ready for recording. This is useful for those with tuners that take some time to tune and/or send garbage data at the beginning. "
 
-#: src/access.c:1580
+#: src/access.c:1593
 msgid "Admin"
 msgstr "Admin"
 
-#: src/wizard.c:447
+#: src/wizard.c:449
 msgid "Admin password"
 msgstr "Admin password"
 
-#: src/wizard.c:436
+#: src/wizard.c:438
 msgid "Admin username"
 msgstr "Admin username"
 
-#: src/wizard.c:413
+#: src/wizard.c:415
 msgid "Administrator login"
 msgstr "Administrator login"
 
@@ -411,7 +411,7 @@ msgstr "Administrator login"
 msgid "Adult movie"
 msgstr "Adult movie"
 
-#: src/access.c:1386 src/config.c:1905
+#: src/access.c:1389 src/config.c:1905
 msgid "Advanced"
 msgstr "Advanced"
 
@@ -419,7 +419,7 @@ msgstr "Advanced"
 msgid "Advanced (non-universal LNBs, rotors, etc.)"
 msgstr "Advanced (non-universal LNBs, rotors, etc.)"
 
-#: src/access.c:1490
+#: src/access.c:1493
 msgid "Advanced streaming"
 msgstr "Advanced streaming"
 
@@ -431,11 +431,11 @@ msgstr "Adventure"
 msgid "Advertisement / Shopping"
 msgstr "Advertisement / Shopping"
 
-#: src/access.c:1345
+#: src/access.c:1348
 msgid "All (Streaming plus DVR)"
 msgstr "All (Streaming plus DVR)"
 
-#: src/access.c:1543
+#: src/access.c:1546
 msgid "All DVR (rw)"
 msgstr "All DVR (rw)"
 
@@ -506,59 +506,59 @@ msgstr "Allow the timeshift buffer to grow unbounded until your storage media ru
 msgid "Allow to show the quick tips for the form fields."
 msgstr "Show quick tips for the form fields."
 
-#: src/access.c:1499
+#: src/access.c:1502
 msgid ""
 "Allow/disallow HTSP protocol streaming, e.g Kodi (via pvr.hts) or Movian."
 msgstr "Allow/disallow HTSP protocol streaming, e.g Kodi (via pvr.hts) or Movian."
 
-#: src/access.c:1484
+#: src/access.c:1487
 msgid "Allow/disallow HTTP streaming."
 msgstr "Allow/disallow HTTP streaming."
 
-#: src/access.c:1528
+#: src/access.c:1531
 msgid "Allow/disallow access to DVR via the HTSP protocol."
 msgstr "Allow/disallow access to DVR via the HTSP protocol."
 
-#: src/access.c:1552
+#: src/access.c:1555
 msgid "Allow/disallow access to all failed DVR entries."
 msgstr "Allow/disallow access to all failed DVR entries."
 
-#: src/access.c:1536
+#: src/access.c:1539
 msgid "Allow/disallow access to other users DVR entries (read only)."
 msgstr "Allow/disallow access to other users DVR entries (read only)."
 
-#: src/access.c:1581
+#: src/access.c:1594
 msgid "Allow/disallow access to the 'Configuration' tab."
 msgstr "Allow/disallow access to the 'Configuration' tab."
 
-#: src/access.c:1520
+#: src/access.c:1523
 msgid ""
 "Allow/disallow access to video recorder functionality (including Autorecs)."
 msgstr "Allow/disallow access to video recorder functionality (including Autorecs)."
 
-#: src/access.c:1491
+#: src/access.c:1494
 msgid ""
 "Allow/disallow advanced http streaming, e.g, direct service or mux links."
 msgstr "Allow/disallow advanced http streaming, e.g, direct service or mux links."
 
-#: src/access.c:1544
+#: src/access.c:1547
 msgid "Allow/disallow read/write access to other users' DVR entries."
 msgstr "Allow/disallow read/write access to other users' DVR entries."
 
-#: src/access.c:1573
+#: src/access.c:1586
 msgid ""
 "Allow/disallow web interface access (this  includes access to the EPG)."
 msgstr "Allow/disallow web interface access (this  includes access to the EPG)."
 
-#: src/access.c:1561
+#: src/access.c:1574
 msgid "Allowed DVR profiles. This limits the profiles the user has access to."
 msgstr "Allowed DVR profiles. This limits the profiles the user has access to."
 
-#: src/wizard.c:426
+#: src/wizard.c:428
 msgid "Allowed network"
 msgstr "Allowed network"
 
-#: src/access.c:1438
+#: src/access.c:1441
 msgid "Allowed networks"
 msgstr "Allowed networks"
 
@@ -603,6 +603,10 @@ msgstr "An event which starts between this \"start after\" and \"start before\" 
 msgid "Animals"
 msgstr "Animals"
 
+#: src/access.c:1562
+msgid "Anonymize HTSP access"
+msgstr "Anonymize HTSP access"
+
 #: src/dvr/dvr_autorec.c:613 src/dvr/dvr_autorec.c:649
 #: src/dvr/dvr_autorec.c:663 src/dvr/dvr_autorec.c:670
 #: src/dvr/dvr_autorec.c:954 src/dvr/dvr_timerec.c:405
@@ -613,13 +617,20 @@ msgstr "Any"
 msgid "Arts"
 msgstr "Arts"
 
-#: src/wizard.c:983
+#: src/wizard.c:999
 msgid "Assign predefined muxes to networks"
 msgstr "Assign predefined muxes to networks"
 
-#: src/wizard.c:944
-msgid "Assign predefined muxes to networks."
-msgstr "Assign predefined muxes to networks."
+#: src/wizard.c:946
+msgid ""
+"Assign predefined muxes to networks. To save you from manually entering muxes, Tvheadend includes predefined mux lists. Please select a list for each network below.\n"
+"\n"
+"**Notes**:\n"
+"* Select the closest transmitter if using an antenna (T); if using cable (C), select your provider; if using satellite (S), the orbital position of the satellite your dish is pointing towards; or if using IPTV, enter the URL to your playlist.\n"
+"* If you're unsure as to which list(s) to select you may want to look online for details about the various television reception choices available in your area.\n"
+"* Networks already configured will not be shown below.\n"
+"* Selecting the wrong list may cause the scan (on the next page) to fail.\n"
+msgstr "Assign predefined muxes to networks. To save you from manually entering muxes, Tvheadend includes predefined mux lists. Please select a list for each network below.\n\n**Notes**:\n* Select the closest transmitter if using an antenna (T); if using cable (C), select your provider; if using satellite (S), the orbital position of the satellite your dish is pointing towards; or if using IPTV, enter the URL to your playlist.\n* If you're unsure as to which list(s) to select you may want to look online for details about the various television reception choices available in your area.\n* Networks already configured will not be shown below.\n* Selecting the wrong list may cause the scan (on the next page) to fail.\n"
 
 #: src/input/mpegts/mpegts_input.c:314
 msgid "Associate this device with one or more networks."
@@ -700,11 +711,11 @@ msgstr "Automatic checking"
 msgid "Automatic recording caption."
 msgstr "Automatic recording caption."
 
-#: src/htsp_server.c:2048 src/htsp_server.c:2088
+#: src/htsp_server.c:2054 src/htsp_server.c:2094
 msgid "Automatic schedule entry not found"
 msgstr "Automatic schedule entry not found"
 
-#: src/htsp_server.c:2167 src/htsp_server.c:2206
+#: src/htsp_server.c:2173 src/htsp_server.c:2212
 msgid "Automatic time scheduler entry not found"
 msgstr "Automatic time scheduler entry not found"
 
@@ -719,6 +730,10 @@ msgid ""
 " OTA EPG grabber will be used for this channel unless you've specifically "
 "set a different EPG Source."
 msgstr "Automatically map EPG source. Automatically link EPG data to the channel (using the channel name for matching). If you turn this option off, only the OTA EPG grabber will be used for this channel unless you've specifically set a different EPG Source."
+
+#: src/wizard.c:1179
+msgid "Automatically map all available services to channels."
+msgstr "Automatically map all available services to channels."
 
 #: src/channels.c:379
 msgid "Automatically name from network"
@@ -777,11 +792,11 @@ msgstr "BA"
 msgid "BB"
 msgstr "BB"
 
-#: src/subscriptions.c:904
+#: src/subscriptions.c:905
 msgid "Bad"
 msgstr "Bad"
 
-#: src/htsp_server.c:1307
+#: src/htsp_server.c:1313
 msgid "Bad request"
 msgstr "Bad request"
 
@@ -797,7 +812,7 @@ msgstr "Bandwidth"
 msgid "Based on software from"
 msgstr "Based on software from"
 
-#: src/access.c:1385 src/config.c:1904
+#: src/access.c:1388 src/config.c:1904
 msgid "Basic"
 msgstr "Basic"
 
@@ -966,8 +981,8 @@ msgstr "Cartoons"
 msgid "Channel"
 msgstr "Channel"
 
-#: src/htsp_server.c:1498 src/htsp_server.c:1540 src/htsp_server.c:1619
-#: src/htsp_server.c:1792 src/htsp_server.c:2349 src/htsp_server.c:2352
+#: src/htsp_server.c:1504 src/htsp_server.c:1546 src/htsp_server.c:1625
+#: src/htsp_server.c:1798 src/htsp_server.c:2355 src/htsp_server.c:2358
 msgid "Channel does not exist"
 msgstr "Channel does not exist"
 
@@ -991,7 +1006,7 @@ msgstr "Channel icon path (see Help)"
 msgid "Channel name"
 msgstr "Channel name"
 
-#: src/htsp_server.c:2294
+#: src/htsp_server.c:2300
 msgid "Channel not found"
 msgstr "Channel not found"
 
@@ -1015,7 +1030,7 @@ msgstr "Channel numbers from"
 msgid "Channel tag"
 msgstr "Channel tag"
 
-#: src/htsp_server.c:1625
+#: src/htsp_server.c:1631
 msgid "Channel tag does not exist"
 msgstr "Channel tag does not exist"
 
@@ -1023,11 +1038,11 @@ msgstr "Channel tag does not exist"
 msgid "Channel tag reference"
 msgstr "Channel tag reference"
 
-#: src/access.c:1632 src/input/mpegts/iptv/iptv_mux.c:238
+#: src/access.c:1645 src/input/mpegts/iptv/iptv_mux.c:238
 msgid "Channel tags"
 msgstr "Channel tags"
 
-#: src/access.c:1633
+#: src/access.c:1646
 msgid "Channel tags the user is allowed access to/excluded from."
 msgstr "Channel tags the user is allowed access to/excluded from."
 
@@ -1035,7 +1050,7 @@ msgstr "Channel tags the user is allowed access to/excluded from."
 msgid "Channel to use/used for the recording."
 msgstr "Channel to use/used for the recording."
 
-#: src/profile.c:1735 src/wizard.c:1223 src/epggrab/channel.c:759
+#: src/profile.c:1735 src/epggrab/channel.c:759
 msgid "Channels"
 msgstr "Channels"
 
@@ -1116,7 +1131,7 @@ msgstr "Command delay time (ms) (10-200)"
 msgid "Command time (ms) (10-100)"
 msgstr "Command time (ms) (10-100)"
 
-#: src/access.c:1643 src/access.c:1890 src/access.c:2024 src/channels.c:1439
+#: src/access.c:1656 src/access.c:1903 src/access.c:2037 src/channels.c:1439
 #: src/esfilter.c:713 src/esfilter.c:805 src/esfilter.c:897 src/esfilter.c:989
 #: src/esfilter.c:1092 src/esfilter.c:1171 src/profile.c:330
 #: src/bouquet.c:1008 src/epggrab/channel.c:780 src/dvr/dvr_db.c:3223
@@ -1172,7 +1187,7 @@ msgstr "Configuration name"
 msgid "Configuration version"
 msgstr "Configuration version"
 
-#: src/access.c:1587
+#: src/access.c:1600
 msgid "Connection limit type"
 msgstr "Connection limit type"
 
@@ -1266,6 +1281,14 @@ msgstr "Create a new directory per day in the recording system path. Folders wil
 msgid "Create a provider name tag."
 msgstr "Create a provider name tag."
 
+#: src/wizard.c:1197
+msgid "Create and associate a network tag to created channels."
+msgstr "Create and associate a network tag to created channels."
+
+#: src/wizard.c:1188
+msgid "Create and associate a provider tag to created channels."
+msgstr "Create and associate a provider tag to created channels."
+
 #: src/input/mpegts/iptv/iptv.c:835
 msgid "Create bouquet"
 msgstr "Create bouquet"
@@ -1286,7 +1309,7 @@ msgstr "Create network name tags"
 msgid "Create network name tags (set by provider)."
 msgstr "Create network name tags (set by provider)."
 
-#: src/wizard.c:1151
+#: src/wizard.c:1196
 msgid "Create network tags"
 msgstr "Create network tags"
 
@@ -1294,7 +1317,7 @@ msgstr "Create network tags"
 msgid "Create provider name tags"
 msgstr "Create provider name tags"
 
-#: src/wizard.c:1144
+#: src/wizard.c:1187
 msgid "Create provider tags"
 msgstr "Create provider tags"
 
@@ -1460,7 +1483,7 @@ msgstr "DVB-T network"
 msgid "DVB-T2"
 msgstr "DVB-T2"
 
-#: src/access.c:1347
+#: src/access.c:1350
 msgid "DVR"
 msgstr "DVR"
 
@@ -1481,7 +1504,7 @@ msgstr "DVR configuration"
 msgid "DVR configuration profile"
 msgstr "DVR configuration profile"
 
-#: src/access.c:1560
+#: src/access.c:1573
 msgid "DVR configuration profiles"
 msgstr "DVR configuration profiles"
 
@@ -1489,7 +1512,7 @@ msgstr "DVR configuration profiles"
 msgid "DVR entry"
 msgstr "DVR entry"
 
-#: src/htsp_server.c:1861
+#: src/htsp_server.c:1867
 msgid "DVR entry not found"
 msgstr "DVR entry not found"
 
@@ -1530,15 +1553,15 @@ msgstr "DVR override: unimportant"
 msgid "DVR profile to use/used for the recording."
 msgstr "DVR profile to use/used for the recording."
 
-#: src/htsp_server.c:2302 src/htsp_server.c:2663
+#: src/htsp_server.c:2308 src/htsp_server.c:2669
 msgid "DVR schedule does not exist"
 msgstr "DVR schedule does not exist"
 
-#: src/htsp_server.c:2674
+#: src/htsp_server.c:2680
 msgid "DVR schedule does not have a file yet"
 msgstr "DVR schedule does not have a file yet"
 
-#: src/htsp_server.c:2246
+#: src/htsp_server.c:2252
 msgid "DVR schedule not found"
 msgstr "DVR schedule not found"
 
@@ -1607,7 +1630,7 @@ msgstr "Debug trace (low-level)"
 msgid "Debugging"
 msgstr "Debugging"
 
-#: src/access.c:1384 src/access.c:1396 src/config.c:1874 src/profile.c:310
+#: src/access.c:1387 src/access.c:1399 src/config.c:1874 src/profile.c:310
 msgid "Default"
 msgstr "Default"
 
@@ -1615,7 +1638,7 @@ msgstr "Default"
 msgid "Default language(s)"
 msgstr "Default language(s)"
 
-#: src/access.c:1466
+#: src/access.c:1469
 msgid "Default language."
 msgstr "Default language."
 
@@ -1623,11 +1646,11 @@ msgstr "Default language."
 msgid "Default priority"
 msgstr "Default priority"
 
-#: src/access.c:1448
+#: src/access.c:1451
 msgid "Default user interface level."
 msgstr "Default user interface level."
 
-#: src/access.c:1475
+#: src/access.c:1478
 msgid "Default web interface language."
 msgstr "Default web interface language."
 
@@ -1754,6 +1777,12 @@ msgstr "DiseqC rotor"
 msgid "DiseqC switch"
 msgstr "DiseqC switch"
 
+#: src/access.c:1563
+msgid ""
+"Do not send any stream specific information to the HTSP client like signal "
+"strength, input source etc."
+msgstr "Do not send any stream-specific information to the HTSP client, like signal strength, input source, etc."
+
 #: src/profile.c:1602
 msgid "Do not use"
 msgstr "Do not use"
@@ -1833,7 +1862,7 @@ msgstr "EIT - skip TSID check"
 msgid "EIT time offset"
 msgstr "EIT time offset"
 
-#: src/wizard.c:190
+#: src/wizard.c:192
 msgid "EPG Language (priority order)"
 msgstr "EPG Language (priority order)"
 
@@ -1927,7 +1956,7 @@ msgstr "Enable debug to file"
 msgid "Enable debug to syslog"
 msgstr "Enable debug to syslog"
 
-#: src/access.c:1622
+#: src/access.c:1635
 msgid ""
 "Enable exclusion of user-config defined channel tags. This will prevent the "
 "user from accessing channels associated with the tags selected (below)."
@@ -2055,7 +2084,7 @@ msgstr "Enable/disable the channel."
 msgid "Enable/disable the device."
 msgstr "Enable/disable the device."
 
-#: src/access.c:1425 src/access.c:1859 src/access.c:2008 src/dvr/dvr_db.c:2821
+#: src/access.c:1428 src/access.c:1872 src/access.c:2021 src/dvr/dvr_db.c:2821
 #: src/dvr/dvr_timerec.c:532 src/input/mpegts/mpegts_mux_sched.c:135
 msgid "Enable/disable the entry."
 msgstr "Enable/disable the entry."
@@ -2080,7 +2109,7 @@ msgstr "Enable/disable timeshift."
 msgid "Enable/disable tuner/adapter."
 msgstr "Enable/disable tuner/adapter."
 
-#: src/access.c:1424 src/access.c:1858 src/access.c:2007 src/channels.c:355
+#: src/access.c:1427 src/access.c:1871 src/access.c:2020 src/channels.c:355
 #: src/channels.c:372 src/channels.c:1372 src/service.c:161
 #: src/imagecache.c:85 src/esfilter.c:622 src/profile.c:301 src/bouquet.c:883
 #: src/epggrab/module.c:144 src/epggrab/channel.c:670 src/dvr/dvr_db.c:2820
@@ -2098,7 +2127,7 @@ msgstr "Enabled"
 msgid "Encrypted"
 msgstr "Encrypted"
 
-#: src/htsp_server.c:834
+#: src/htsp_server.c:840
 msgid "Encrypted service"
 msgstr "Encrypted service"
 
@@ -2106,25 +2135,25 @@ msgstr "Encrypted service"
 msgid "Enter a filename you want to save the debug log to."
 msgstr "Enter a filename you want to save the debug log to."
 
-#: src/wizard.c:466
+#: src/wizard.c:468
 msgid "Enter a non-admin user password."
 msgstr "Enter a non-admin user password."
 
-#: src/wizard.c:457
+#: src/wizard.c:459
 msgid "Enter a non-admin user username."
 msgstr "Enter a non-admin user username."
 
-#: src/wizard.c:427
+#: src/wizard.c:429
 msgid ""
 "Enter allowed network prefix(es). You can enter a comma-seperated list of "
 "prefixes here."
 msgstr "Enter allowed network prefix(es). You can enter a comma-separated list of prefixes here."
 
-#: src/wizard.c:448
+#: src/wizard.c:450
 msgid "Enter an administrator password."
 msgstr "Enter an administrator password."
 
-#: src/wizard.c:437
+#: src/wizard.c:439
 msgid ""
 "Enter an administrator username. Note: do not use the same username as the "
 "superuser backdoor account."
@@ -2146,7 +2175,7 @@ msgstr "Enter comma-separated list of subsystems you want to get traces for (e.g
 msgid "Enter external IP if behind Network address translation (NAT)."
 msgstr "Enter external IP if behind a Network Address Translation (NAT) device."
 
-#: src/wizard.c:383
+#: src/wizard.c:385
 msgid ""
 "Enter the access control details to secure your system. The first part of this covers the network details for address-based access to the system; for example, 192.168.1.0/24 to allow local access only to 192.168.1.x clients, or 0.0.0.0/0 or empty value for access from any system.\n"
 "\n"
@@ -2200,7 +2229,7 @@ msgstr "Errors"
 msgid "Even key"
 msgstr "Even key"
 
-#: src/htsp_server.c:1518 src/htsp_server.c:1543
+#: src/htsp_server.c:1524 src/htsp_server.c:1549
 msgid "Event does not exist"
 msgstr "Event does not exist"
 
@@ -2208,7 +2237,7 @@ msgstr "Event does not exist"
 msgid "Every day"
 msgstr "Every day"
 
-#: src/access.c:1621
+#: src/access.c:1634
 msgid "Exclude channel tags"
 msgstr "Exclude channel tags"
 
@@ -2220,7 +2249,7 @@ msgstr "Expeditions"
 msgid "Experimental film"
 msgstr "Experimental film"
 
-#: src/access.c:1387 src/config.c:1906
+#: src/access.c:1390 src/config.c:1906
 msgid "Expert"
 msgstr "Expert"
 
@@ -2281,16 +2310,16 @@ msgstr "FEC low"
 msgid "Factual topics"
 msgstr "Factual topics"
 
-#: src/subscriptions.c:930
+#: src/subscriptions.c:931
 #, c-format
 msgid "Failed"
 msgstr "Failed"
 
-#: src/access.c:1551
+#: src/access.c:1554
 msgid "Failed DVR"
 msgstr "Failed DVR"
 
-#: src/htsp_server.c:2681
+#: src/htsp_server.c:2687
 msgid "Failed to open image"
 msgstr "Failed to open image"
 
@@ -2338,7 +2367,7 @@ msgstr "Film"
 msgid "Fine arts"
 msgstr "Fine arts"
 
-#: src/dvr/dvr_db.c:493
+#: src/wizard.c:1284 src/dvr/dvr_db.c:493
 msgid "Finished"
 msgstr "Finished"
 
@@ -2444,11 +2473,11 @@ msgstr "Fork and run as daemon"
 msgid "Format string"
 msgstr "Format string"
 
-#: src/wizard.c:1048
+#: src/wizard.c:1077
 msgid "Found muxes"
 msgstr "Found muxes"
 
-#: src/wizard.c:1057
+#: src/wizard.c:1086
 msgid "Found services"
 msgstr "Found services"
 
@@ -2460,7 +2489,7 @@ msgstr "Free subscription weight"
 msgid "Free-form field, enter whatever you like here."
 msgstr "Free-form field, enter whatever you like here."
 
-#: src/access.c:1644 src/access.c:1891 src/access.c:2023 src/channels.c:1440
+#: src/access.c:1657 src/access.c:1904 src/access.c:2036 src/channels.c:1440
 #: src/dvr/dvr_db.c:3224 src/dvr/dvr_autorec.c:1269 src/dvr/dvr_timerec.c:668
 msgid "Free-form text field, enter whatever you like here."
 msgstr "Free-form text field, enter whatever you like here."
@@ -2512,7 +2541,7 @@ msgstr "Friendly name"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:88
 #: src/input/mpegts/satip/satip_frontend.c:146
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:548
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:549
 msgid "Frontend number"
 msgstr "Frontend number"
 
@@ -2599,27 +2628,27 @@ msgstr "Guard interval"
 msgid "HD: high definition"
 msgstr "HD: high definition"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:590
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:591
 msgid "HDHomeRun ATSC-C frontend"
 msgstr "HDHomeRun ATSC-C frontend"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:580
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:581
 msgid "HDHomeRun ATSC-T frontend"
 msgstr "HDHomeRun ATSC-T frontend"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:542
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:543
 msgid "HDHomeRun DVB frontend"
 msgstr "HDHomeRun DVB frontend"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:570
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:571
 msgid "HDHomeRun DVB-C frontend"
 msgstr "HDHomeRun DVB-C frontend"
 
-#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:560
+#: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:561
 msgid "HDHomeRun DVB-T frontend"
 msgstr "HDHomeRun DVB-T frontend"
 
-#: src/access.c:1527
+#: src/access.c:1530
 msgid "HTSP DVR"
 msgstr "HTSP DVR"
 
@@ -2631,7 +2660,7 @@ msgstr "HTSP Default Stream Settings"
 msgid "HTSP stream profile"
 msgstr "HTSP stream profile"
 
-#: src/access.c:1498
+#: src/access.c:1501
 msgid "HTSP streaming"
 msgstr "HTSP streaming"
 
@@ -2666,7 +2695,7 @@ msgstr "High"
 msgid "High bitrate mode (CI+ CAMs only)"
 msgstr "High bitrate mode (CI+ CAMs only)"
 
-#: src/access.c:1615
+#: src/access.c:1628
 msgid "Highest channel number the user can access."
 msgstr "Highest channel number the user can access."
 
@@ -2696,6 +2725,10 @@ msgstr "How frequently the upstream provider is checked for changes."
 msgid "ID"
 msgstr "ID"
 
+#: src/wizard.c:852
+msgid "ID of the network."
+msgstr "ID of the network."
+
 #: src/input/mpegts/mpegts_mux.c:383
 msgid "IDLE"
 msgstr "IDLE"
@@ -2705,7 +2738,7 @@ msgstr "IDLE"
 msgid "IP address"
 msgstr "IP address"
 
-#: src/access.c:1967 src/access.c:1997
+#: src/access.c:1980 src/access.c:2010
 msgid "IP blocking"
 msgstr "IP blocking"
 
@@ -2785,7 +2818,7 @@ msgstr "Icon has title"
 msgid "Icons from"
 msgstr "Icons from"
 
-#: src/subscriptions.c:892
+#: src/subscriptions.c:893
 msgid "Idle"
 msgstr "Idle"
 
@@ -2950,7 +2983,7 @@ msgstr "Include the time for the recording in the event title. This applies to b
 msgid "Include time in filename"
 msgstr "Include time in filename"
 
-#: src/access.c:1417 src/esfilter.c:615 src/descrambler/caclient.c:263
+#: src/access.c:1420 src/esfilter.c:615 src/descrambler/caclient.c:263
 msgid "Index"
 msgstr "Index"
 
@@ -2994,7 +3027,7 @@ msgstr "Internal"
 msgid "Internal EPG grabber"
 msgstr "Internal EPG grabber"
 
-#: src/htsp_server.c:1699
+#: src/htsp_server.c:1705
 msgid "Internal error"
 msgstr "Internal error"
 
@@ -3011,7 +3044,7 @@ msgstr "Interview"
 msgid "Invalid"
 msgstr "Invalid"
 
-#: src/htsp_server.c:1695
+#: src/htsp_server.c:1701
 msgid "Invalid EPG object request"
 msgstr "Invalid EPG object request"
 
@@ -3020,25 +3053,25 @@ msgstr "Invalid EPG object request"
 msgid "Invalid adapter number '%s'\n"
 msgstr "Invalid adapter number '%s'\n"
 
-#: src/htsp_server.c:1227 src/htsp_server.c:1230 src/htsp_server.c:1496
-#: src/htsp_server.c:1514 src/htsp_server.c:1608 src/htsp_server.c:1685
-#: src/htsp_server.c:1798 src/htsp_server.c:1856 src/htsp_server.c:1998
-#: src/htsp_server.c:2045 src/htsp_server.c:2085 src/htsp_server.c:2118
-#: src/htsp_server.c:2164 src/htsp_server.c:2203 src/htsp_server.c:2243
-#: src/htsp_server.c:2309 src/htsp_server.c:2345 src/htsp_server.c:2354
-#: src/htsp_server.c:2457 src/htsp_server.c:2486 src/htsp_server.c:2515
-#: src/htsp_server.c:2537 src/htsp_server.c:2557 src/htsp_server.c:2559
-#: src/htsp_server.c:2586 src/htsp_server.c:2614 src/htsp_server.c:2653
-#: src/htsp_server.c:3111
+#: src/htsp_server.c:1233 src/htsp_server.c:1236 src/htsp_server.c:1502
+#: src/htsp_server.c:1520 src/htsp_server.c:1614 src/htsp_server.c:1691
+#: src/htsp_server.c:1804 src/htsp_server.c:1862 src/htsp_server.c:2004
+#: src/htsp_server.c:2051 src/htsp_server.c:2091 src/htsp_server.c:2124
+#: src/htsp_server.c:2170 src/htsp_server.c:2209 src/htsp_server.c:2249
+#: src/htsp_server.c:2315 src/htsp_server.c:2351 src/htsp_server.c:2360
+#: src/htsp_server.c:2463 src/htsp_server.c:2492 src/htsp_server.c:2521
+#: src/htsp_server.c:2543 src/htsp_server.c:2563 src/htsp_server.c:2565
+#: src/htsp_server.c:2592 src/htsp_server.c:2620 src/htsp_server.c:2659
+#: src/htsp_server.c:3117
 msgid "Invalid arguments"
 msgstr "Invalid arguments"
 
-#: src/htsp_server.c:2703 src/htsp_server.c:2751 src/htsp_server.c:2769
-#: src/htsp_server.c:2797
+#: src/htsp_server.c:2709 src/htsp_server.c:2757 src/htsp_server.c:2775
+#: src/htsp_server.c:2803
 msgid "Invalid file"
 msgstr "Invalid file"
 
-#: src/htsp_server.c:2706 src/htsp_server.c:2800 src/htsp_server.c:2810
+#: src/htsp_server.c:2712 src/htsp_server.c:2806 src/htsp_server.c:2816
 msgid "Invalid parameters"
 msgstr "Invalid parameters"
 
@@ -3078,20 +3111,20 @@ msgstr "LNB"
 msgid "LNB type"
 msgstr "LNB type"
 
-#: src/access.c:1465 src/esfilter.c:650 src/esfilter.c:742 src/esfilter.c:834
-#: src/esfilter.c:926 src/esfilter.c:1121 src/profile.c:1746 src/wizard.c:199
+#: src/access.c:1468 src/esfilter.c:650 src/esfilter.c:742 src/esfilter.c:834
+#: src/esfilter.c:926 src/esfilter.c:1121 src/profile.c:1746 src/wizard.c:201
 msgid "Language"
 msgstr "Language"
 
-#: src/wizard.c:211
+#: src/wizard.c:213
 msgid "Language 1"
 msgstr "Language 1"
 
-#: src/wizard.c:221
+#: src/wizard.c:223
 msgid "Language 2"
 msgstr "Language 2"
 
-#: src/wizard.c:231
+#: src/wizard.c:233
 msgid "Language 3"
 msgstr "Language 3"
 
@@ -3164,7 +3197,7 @@ msgstr "Layer C: Time interleaving"
 msgid "Leisure hobbies"
 msgstr "Leisure hobbies"
 
-#: src/access.c:1596
+#: src/access.c:1609
 msgid "Limit connections"
 msgstr "Limit connections"
 
@@ -3232,7 +3265,7 @@ msgstr "LinuxDVB adapter"
 msgid "LinuxDVB network"
 msgstr "LinuxDVB network"
 
-#: src/access.c:1439
+#: src/access.c:1442
 msgid "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
 msgstr "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
 
@@ -3317,7 +3350,7 @@ msgstr "Login/Logout"
 msgid "Low"
 msgstr "Low"
 
-#: src/access.c:1607
+#: src/access.c:1620
 msgid "Lowest channel number the user can access."
 msgstr "Lowest channel number the user can access."
 
@@ -3417,13 +3450,21 @@ msgstr "Manufacturer's product information page for the device."
 msgid "Manufacturer's product name."
 msgstr "Manufacturer's product name."
 
-#: src/wizard.c:1124
+#: src/wizard.c:1153
 msgid ""
 "Map all discovered services to channels.\n"
-"Note: You may ommit this step (do not check the map all services) anddo the service to channel mapping manually.\n"
-msgstr "Map all discovered services to channels.\nNote: You may omit this step (do not check the map all services) and do the service-to-channel mapping manually.\n"
+"\n"
+"In order for your frontend client(s) (such as Kodi, Movian, and similar) to see/play and channels, you must first map discovered services to channels.\n"
+"\n"
+"If you would like Tvheadend to do this for you, check the 'Map all services' option below, but be aware that this will also map encrypted services you may not have access to.\n"
+"\n"
+"**You may omit this step (do not check 'Map all services') and map services to channels manually.**\n"
+"\n"
+"**Notes**:\n"
+"* Many providers include undesirable services - Teleshopping, Adult Entertainment, etc; using the 'Map all services' will include these. \n"
+msgstr "Map all discovered services to channels.\n\nIn order for your frontend client(s) (such as Kodi, Movian, and similar) to see/play and channels, you must first map discovered services to channels.\n\nIf you would like Tvheadend to do this for you, check the 'Map all services' option below, but be aware that this will also map encrypted services you may not have access to.\n\n**You may omit this step (do not check 'Map all services') and map services to channels manually.**\n\n**Notes**:\n* Many providers include undesirable services - Teleshopping, Adult Entertainment, etc; using the 'Map all services' will include these. \n"
 
-#: src/wizard.c:1137
+#: src/wizard.c:1178
 msgid "Map all services"
 msgstr "Map all services"
 
@@ -3470,7 +3511,7 @@ msgstr "Matroska specific"
 msgid "Matroska/av-lib"
 msgstr "Matroska/av-lib"
 
-#: src/access.c:1614
+#: src/access.c:1627
 msgid "Maximal channel number"
 msgstr "Maximal channel number"
 
@@ -3546,11 +3587,11 @@ msgstr "Merge same name"
 msgid "Merge services with the same name to one channel."
 msgstr "Merge services with the same name to one channel."
 
-#: src/htsp_server.c:3107
+#: src/htsp_server.c:3113
 msgid "Method not found"
 msgstr "Method not found"
 
-#: src/access.c:1606
+#: src/access.c:1619
 msgid "Minimal channel number"
 msgstr "Minimal channel number"
 
@@ -3710,7 +3751,7 @@ msgstr "Name of the entry."
 msgid "Name of the module used to grab EPG data."
 msgstr "Name of the module used to grab EPG data."
 
-#: src/input/mpegts/mpegts_network.c:145
+#: src/wizard.c:844 src/input/mpegts/mpegts_network.c:145
 msgid "Name of the network."
 msgstr "Name of the network."
 
@@ -3722,7 +3763,7 @@ msgstr "Name of the profile."
 msgid "Name of the tag."
 msgstr "Name of the tag."
 
-#: src/wizard.c:581 src/wizard.c:589
+#: src/wizard.c:583 src/wizard.c:591
 msgid "Name of the tuner."
 msgstr "Name of the tuner."
 
@@ -3754,7 +3795,7 @@ msgstr "Nature"
 msgid "Network"
 msgstr "Network"
 
-#: src/wizard.c:573
+#: src/wizard.c:575
 msgid "Network "
 msgstr "Network "
 
@@ -3774,7 +3815,7 @@ msgstr "Network ID (limit scanning)"
 msgid "Network UUID"
 msgstr "Network UUID"
 
-#: src/wizard.c:409
+#: src/wizard.c:411
 msgid "Network access"
 msgstr "Network access"
 
@@ -3812,7 +3853,7 @@ msgstr "Network for port BB."
 msgid "Network name"
 msgstr "Network name"
 
-#: src/access.c:2014
+#: src/access.c:2027
 msgid "Network prefix"
 msgstr "Network prefix"
 
@@ -3820,7 +3861,7 @@ msgstr "Network prefix"
 msgid "Network settings"
 msgstr "Network settings"
 
-#: src/wizard.c:596 src/input/mpegts/satip/satip_frontend.c:227
+#: src/wizard.c:598 src/input/mpegts/satip/satip_frontend.c:227
 #: src/input/mpegts/satip/satip_frontend.c:390
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:197
 msgid "Network type"
@@ -3849,7 +3890,7 @@ msgstr "News magazine"
 msgid "Next tune delay in ms (0-2000)"
 msgstr "Next tune delay in ms (0-2000)"
 
-#: src/access.c:1397
+#: src/access.c:1400
 msgid "No"
 msgstr "No"
 
@@ -3917,7 +3958,7 @@ msgid ""
 "the signal level displayed within Tvheadend looks too low."
 msgstr "Not all SAT>IP servers use the same signal scaling. Change this setting if the signal level displayed within Tvheadend looks too low."
 
-#: src/htsp_server.c:2722
+#: src/htsp_server.c:2728
 msgid "Not enough memory"
 msgstr "Not enough memory"
 
@@ -3937,7 +3978,7 @@ msgstr "Not set (none or channel configuration)"
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Not set (use channel or DVR configuration)"
 
-#: src/wizard.c:655
+#: src/wizard.c:657
 msgid ""
 "Now let's get your tuners configured. Go ahead and select a network for each of the tuners you would like to use. if you do not assign a network to a tuner it will __not__ be used.\n"
 "\n"
@@ -3949,14 +3990,13 @@ msgid ""
 "\n"
 "**If you receive your channels through a satellite dish** then you would select the network under the tuners with DVB-S/S2 in the name.\n"
 "\n"
-"**If you receive your channels via a cable** then you would select the network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n"
+"**If you receive your channels via cable** then you would select the network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n"
 "\n"
 "**Notes**:\n"
 "* Tuners already in use will not appear below.\n"
 "* If using IPTV, the playlist you enter must contain valid links to streams using codecs supported by Tvheadend.\n"
 "* For devices with multiple tuners (e.g. either cable or terrestrial), be aware that many only allow you to use one tuner at a time. Selecting more than one tuner per device can thus result in unexpected behavior.\n"
-"* If you've configured Tvheadend before running this wizard, changes you make via this wizard may not be applied.\n"
-msgstr "Now let's get your tuners configured. Go ahead and select a network for each of the tuners you would like to use. if you do not assign a network to a tuner it will __not__ be used.\n\n**Selecting the Right Network**:\n\nMany tuners are able to receive different signal types..\n\n**If you receive your channels through an antenna (also known as an aerial)** then you would select the network under the tuners with DVB-T/ATSC-T/ISDB-T in the name.\n\n**If you receive your channels through a satellite dish** then you would select the network under the tuners with DVB-S/S2 in the name.\n\n**If you receive your channels via a cable** then you would select the network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n\n**Notes**:\n* Tuners already in use will not appear below.\n* If using IPTV, the playlist you enter must contain valid links to streams using codecs supported by Tvheadend.\n* For devices with multiple tuners (e.g. either cable or terrestrial), be aware that many only allow you to use one tuner at a time. Selecting more than one tuner per device can thus result in unexpected behavior.\n* If you've configured Tvheadend before running this wizard, changes you make via this wizard may not be applied.\n"
+msgstr "Now let's get your tuners configured. Go ahead and select a network for each of the tuners you would like to use. If you do not assign a network to a tuner it will __not__ be used.\n\n**Selecting the Right Network**:\n\nMany tuners are able to receive different signal types..\n\n**If you receive your channels through an antenna (also known as an aerial)** then you would select the network under the tuners with DVB-T/ATSC-T/ISDB-T in the name.\n\n**If you receive your channels through a satellite dish** then you would select the network under the tuners with DVB-S/S2 in the name.\n\n**If you receive your channels via cable** then you would select the network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n\n**Notes**:\n* Tuners already in use will not appear below.\n* If using IPTV, the playlist you enter must contain valid links to streams using codecs supported by Tvheadend.\n* For devices with multiple tuners (e.g. either cable or terrestrial), be aware that many only allow you to use one tuner at a time. Selecting more than one tuner per device can thus result in unexpected behavior.\n"
 
 #: src/channels.c:402 src/epggrab/channel.c:742
 msgid "Number"
@@ -3994,7 +4034,7 @@ msgstr "Number of errors that occurred during recording (Transport errors)."
 msgid "Number of errors that occurred during recording."
 msgstr "Number of errors that occurred during recording."
 
-#: src/wizard.c:1049
+#: src/wizard.c:1078
 msgid "Number of muxes found."
 msgstr "Number of muxes found."
 
@@ -4305,19 +4345,19 @@ msgid ""
 "extension)."
 msgstr "Pass subscription weight to the SAT>IP server (Tvheadend-specific extension)."
 
-#: src/access.c:1873 src/wizard.c:465 src/descrambler/cwc.c:1822
+#: src/access.c:1886 src/wizard.c:467 src/descrambler/cwc.c:1822
 msgid "Password"
 msgstr "Password"
 
-#: src/access.c:1874
+#: src/access.c:1887
 msgid "Password for the entry."
 msgstr "Password for the entry."
 
-#: src/access.c:1882
+#: src/access.c:1895
 msgid "Password2"
 msgstr "Password2"
 
-#: src/access.c:1848
+#: src/access.c:1861
 msgid "Passwords"
 msgstr "Passwords"
 
@@ -4357,9 +4397,6 @@ msgid ""
 msgstr "Path to where the timeshift data will be stored. If nothing is specified this will default to CONF_DIR/timeshift/buffer."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:120
-msgid "Path used by device."
-msgstr "Path used by device."
-
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:257
 msgid "Path used by the device."
 msgstr "Path used by the device."
@@ -4378,7 +4415,7 @@ msgstr "Performing arts"
 msgid "Periodically save EPG to disk (hours)"
 msgstr "Periodically save EPG to disk (hours)"
 
-#: src/access.c:1456 src/config.c:2006
+#: src/access.c:1459 src/config.c:2006
 msgid "Persistent user interface level"
 msgstr "Persistent user interface level"
 
@@ -4511,7 +4548,7 @@ msgstr "Presentation details."
 msgid "Press"
 msgstr "Press"
 
-#: src/access.c:1457
+#: src/access.c:1460
 msgid "Prevent changing of interface view level."
 msgstr "Prevent changing of interface view level."
 
@@ -4627,7 +4664,7 @@ msgstr "Re-record%s%s"
 msgid "Re-try period (hours)"
 msgstr "Re-try period (hours)"
 
-#: src/htsp_server.c:2729
+#: src/htsp_server.c:2735
 msgid "Read error"
 msgstr "Read error"
 
@@ -4741,7 +4778,7 @@ msgid ""
 "aborted if an error occurs."
 msgstr "Restart streaming on error. This is useful for DVR so a recording isn't aborted if an error occurs."
 
-#: src/access.c:1588
+#: src/access.c:1601
 msgid "Restrict connections to this type."
 msgstr "Restrict connections to this type."
 
@@ -4831,7 +4868,7 @@ msgstr "Run as group"
 msgid "Run as user"
 msgstr "Run as user"
 
-#: src/subscriptions.c:900 src/dvr/dvr_db.c:485
+#: src/subscriptions.c:901 src/dvr/dvr_db.c:485
 msgid "Running"
 msgstr "Running"
 
@@ -4968,7 +5005,7 @@ msgstr "Scan queue length"
 msgid "Scan result"
 msgstr "Scan result"
 
-#: src/wizard.c:1070 src/input/mpegts/mpegts_mux.c:576
+#: src/wizard.c:1099 src/input/mpegts/mpegts_mux.c:576
 msgid "Scan status"
 msgstr "Scan status"
 
@@ -5039,15 +5076,15 @@ msgstr "Season %d"
 msgid "Season information (if available)."
 msgstr "Season information (if available)."
 
-#: src/htsp_server.c:2820
+#: src/htsp_server.c:2826
 msgid "Seek error"
 msgstr "Seek error"
 
-#: src/wizard.c:597
+#: src/wizard.c:599
 msgid "Select an available network type for this tuner."
 msgstr "Select an available network type for this tuner."
 
-#: src/wizard.c:212
+#: src/wizard.c:214
 msgid "Select high priority (default) EPG language."
 msgstr "Select high priority (default) EPG language."
 
@@ -5058,11 +5095,11 @@ msgid ""
 "exists or not. Reject = Always reject."
 msgstr "Select how Tvheadend should handle muxes. Auto = accept the mux if it doesn't already exist; Keep = always keep the mux regardless of whether it exists or not; Reject = always reject."
 
-#: src/wizard.c:232
+#: src/wizard.c:234
 msgid "Select low priority EPG language."
 msgstr "Select low priority EPG language."
 
-#: src/wizard.c:222
+#: src/wizard.c:224
 msgid "Select medium priority EPG language."
 msgstr "Select medium priority EPG language."
 
@@ -5080,7 +5117,7 @@ msgstr "Select services to map."
 msgid "Select subtitle codec to use for transcoding."
 msgstr "Select subtitle codec to use for transcoding."
 
-#: src/wizard.c:200
+#: src/wizard.c:202
 msgid ""
 "Select the default user interface language. This can be overridden later in "
 "\"Access Entries\" on a per-user basis."
@@ -5214,7 +5251,7 @@ msgstr "Service count %zi"
 msgid "Service mapper"
 msgstr "Service mapper"
 
-#: src/wizard.c:1161
+#: src/wizard.c:1208
 msgid "Service mapping"
 msgstr "Service mapping"
 
@@ -5285,12 +5322,6 @@ msgstr "Settings"
 #: src/epg.c:2207
 msgid "Show"
 msgstr "Show"
-
-#: src/wizard.c:1029
-msgid ""
-"Show the scan status.\n"
-"Please, wait until the scan finishes."
-msgstr "Show the scan status.\nPlease, wait until the scan finishes."
 
 #: src/main.c:666
 msgid "Show this page"
@@ -5556,7 +5587,7 @@ msgstr "Stream index"
 msgid "Stream profile"
 msgstr "Stream profile"
 
-#: src/htsp_server.c:2401
+#: src/htsp_server.c:2407
 msgid "Stream setup error"
 msgstr "Stream setup error"
 
@@ -5565,7 +5596,7 @@ msgstr "Stream setup error"
 msgid "Stream type"
 msgstr "Stream type"
 
-#: src/access.c:1346 src/access.c:1483
+#: src/access.c:1349 src/access.c:1486
 msgid "Streaming"
 msgstr "Streaming"
 
@@ -5574,7 +5605,7 @@ msgstr "Streaming"
 msgid "Streaming priority"
 msgstr "Streaming priority"
 
-#: src/access.c:1507
+#: src/access.c:1510
 msgid "Streaming profiles"
 msgstr "Streaming profiles"
 
@@ -5586,8 +5617,8 @@ msgstr "Subdirectory options"
 msgid "Subscribe to a service permanently"
 msgstr "Subscribe to a service permanently"
 
-#: src/htsp_server.c:2495 src/htsp_server.c:2522 src/htsp_server.c:2566
-#: src/htsp_server.c:2593 src/htsp_server.c:2621
+#: src/htsp_server.c:2501 src/htsp_server.c:2528 src/htsp_server.c:2572
+#: src/htsp_server.c:2599 src/htsp_server.c:2627
 msgid "Subscription does not exist"
 msgstr "Subscription does not exist"
 
@@ -5701,7 +5732,7 @@ msgstr "Teletext stream type is only available for this filter."
 msgid "Tennis"
 msgstr "Tennis"
 
-#: src/subscriptions.c:896
+#: src/subscriptions.c:897
 msgid "Testing"
 msgstr "Testing"
 
@@ -6142,7 +6173,7 @@ msgstr "The name given to the rule."
 msgid "The name of the profile."
 msgstr "The name of the profile."
 
-#: src/access.c:2015
+#: src/access.c:2028
 msgid ""
 "The network prefix(es) to block, e.g.192.168.2.0/24 (comma-separated list)."
 msgstr "The network prefix(es) to block, e.g.192.168.2.0/24 (comma-separated list)."
@@ -6201,7 +6232,7 @@ msgid ""
 "receiving CA keys. "
 msgstr "The number of MPEG-TS packets Tvheadend buffers in case there is a delay receiving CA keys. "
 
-#: src/access.c:1597
+#: src/access.c:1610
 msgid "The number of allowed connections this user can make to the server."
 msgstr "The number of allowed connections this user can make to the server."
 
@@ -6381,7 +6412,7 @@ msgstr "The stream ID used for the mux."
 msgid "The stream profile the DVR profile will use for recordings."
 msgstr "The stream profile the DVR profile will use for recordings."
 
-#: src/access.c:1508
+#: src/access.c:1511
 msgid ""
 "The streaming profile to use/used. If not set, the default will be used."
 msgstr "The streaming profile to use/used. If not set, the default will be used."
@@ -6569,7 +6600,7 @@ msgstr "Total number of muxes found on this network."
 msgid "Total number of services found on this network."
 msgstr "Total number of services found on this network."
 
-#: src/wizard.c:1058
+#: src/wizard.c:1087
 msgid "Total number of services found."
 msgstr "Total number of services found."
 
@@ -6617,7 +6648,7 @@ msgstr "Tue"
 msgid "Tune before DiseqC"
 msgstr "Tune before DiseqC"
 
-#: src/wizard.c:580
+#: src/wizard.c:582
 msgid "Tuner"
 msgstr "Tuner"
 
@@ -6641,6 +6672,16 @@ msgstr "Tuning failed"
 msgid "Turn off LNB when idle"
 msgstr "Turn off LNB when idle"
 
+#: src/wizard.c:1045
+msgid ""
+"Tvheadend is now scanning for available services. Please wait until the scan completes..\n"
+"\n"
+"**Notes**:\n"
+"* During scanning, the number of muxes and services shown below should increase. If this doesn't happen, check the connection(s) to your device(s)..\n"
+"* The status tab (behind this wizard) will display signal information. If you notice a lot of errors or the signal strength appears low then this usually indicates a physical issue with your antenna, satellite dish or cable..\n"
+"* If you don't see any signal information at all, but the number of muxes or services is increasing anyway, the driver used by your device isn't supplying signal information to Tvheadend. In most cases this isn't an issue..\n"
+msgstr "Tvheadend is now scanning for available services. Please wait until the scan completes..\n\n**Notes**:\n* During scanning, the number of muxes and services shown below should increase. If this doesn't happen, check the connection(s) to your device(s)..\n* The status tab (behind this wizard) will display signal information. If you notice a lot of errors or the signal strength appears low then this usually indicates a physical issue with your antenna, satellite dish or cable..\n* If you don't see any signal information at all, but the number of muxes or services is increasing anyway, the driver used by your device isn't supplying signal information to Tvheadend. In most cases this isn't an issue..\n"
+
 #: src/config.c:1987
 msgid "Tvheadend server name"
 msgstr "Tvheadend server name"
@@ -6653,12 +6694,12 @@ msgstr "Type"
 msgid "UDP RTP port number (2 ports)"
 msgstr "UDP RTP port number (2 ports)"
 
-#: src/wizard.c:857 src/dvr/dvr_db.c:3183 src/input/mpegts/iptv/iptv.c:826
+#: src/wizard.c:859 src/dvr/dvr_db.c:3183 src/input/mpegts/iptv/iptv.c:826
 #: src/input/mpegts/iptv/iptv_mux.c:139
 msgid "URL"
 msgstr "URL"
 
-#: src/wizard.c:858
+#: src/wizard.c:860
 msgid "URL of the M3U playlist."
 msgstr "URL of the M3U playlist."
 
@@ -6819,23 +6860,23 @@ msgstr "UTC-11"
 msgid "UUID"
 msgstr "UUID"
 
-#: src/htsp_server.c:1360
+#: src/htsp_server.c:1366
 msgid "Unable to get system UTC time"
 msgstr "Unable to get system UTC time"
 
-#: src/htsp_server.c:1353
+#: src/htsp_server.c:1359
 msgid "Unable to get system local time"
 msgstr "Unable to get system local time"
 
-#: src/htsp_server.c:1350
+#: src/htsp_server.c:1356
 msgid "Unable to get system time"
 msgstr "Unable to get system time"
 
-#: src/htsp_server.c:707
+#: src/htsp_server.c:713
 msgid "Unable to open file"
 msgstr "Unable to open file"
 
-#: src/htsp_server.c:1328
+#: src/htsp_server.c:1334
 msgid "Unable to stat path"
 msgstr "Unable to stat path"
 
@@ -6875,7 +6916,7 @@ msgstr "Universally unique identifier. Read only."
 msgid "Unknown"
 msgstr "Unknown"
 
-#: src/htsp_server.c:2685
+#: src/htsp_server.c:2691
 msgid "Unknown file"
 msgstr "Unknown file"
 
@@ -7060,22 +7101,22 @@ msgstr "Use x amount of storage space."
 msgid "User access error"
 msgstr "User access error"
 
-#: src/htsp_server.c:514
+#: src/htsp_server.c:520
 msgid "User cannot access this channel"
 msgstr "User cannot access this channel"
 
-#: src/htsp_server.c:1547 src/htsp_server.c:1648 src/htsp_server.c:1787
-#: src/htsp_server.c:1866 src/htsp_server.c:1872 src/htsp_server.c:2013
-#: src/htsp_server.c:2051 src/htsp_server.c:2055 src/htsp_server.c:2065
-#: src/htsp_server.c:2091 src/htsp_server.c:2095 src/htsp_server.c:2133
-#: src/htsp_server.c:2170 src/htsp_server.c:2174 src/htsp_server.c:2184
-#: src/htsp_server.c:2209 src/htsp_server.c:2213 src/htsp_server.c:2249
-#: src/htsp_server.c:2253 src/htsp_server.c:2296 src/htsp_server.c:2304
-#: src/htsp_server.c:2357 src/htsp_server.c:2666 src/htsp_server.c:2669
+#: src/htsp_server.c:1553 src/htsp_server.c:1654 src/htsp_server.c:1793
+#: src/htsp_server.c:1872 src/htsp_server.c:1878 src/htsp_server.c:2019
+#: src/htsp_server.c:2057 src/htsp_server.c:2061 src/htsp_server.c:2071
+#: src/htsp_server.c:2097 src/htsp_server.c:2101 src/htsp_server.c:2139
+#: src/htsp_server.c:2176 src/htsp_server.c:2180 src/htsp_server.c:2190
+#: src/htsp_server.c:2215 src/htsp_server.c:2219 src/htsp_server.c:2255
+#: src/htsp_server.c:2259 src/htsp_server.c:2302 src/htsp_server.c:2310
+#: src/htsp_server.c:2363 src/htsp_server.c:2672 src/htsp_server.c:2675
 msgid "User does not have access"
 msgstr "User does not have access"
 
-#: src/htsp_server.c:1905
+#: src/htsp_server.c:1911
 msgid "User does not have access to channel"
 msgstr "User does not have access to channel"
 
@@ -7087,7 +7128,7 @@ msgstr "User icon"
 msgid "User icon. The URL (or path) to the icon to use/used for the channel."
 msgstr "User icon. The URL (or path) to the icon to use/used for the channel."
 
-#: src/access.c:1447 src/config.c:1996
+#: src/access.c:1450 src/config.c:1996
 msgid "User interface level"
 msgstr "User interface level"
 
@@ -7103,7 +7144,7 @@ msgstr "User language"
 msgid "User limit reached"
 msgstr "User limit reached"
 
-#: src/wizard.c:417
+#: src/wizard.c:419
 msgid "User login"
 msgstr "User login"
 
@@ -7111,16 +7152,16 @@ msgstr "User login"
 msgid "User request"
 msgstr "User request"
 
-#: src/access.c:1431 src/access.c:1865 src/wizard.c:456
+#: src/access.c:1434 src/access.c:1878 src/wizard.c:458
 #: src/descrambler/cwc.c:1816
 msgid "Username"
 msgstr "Username"
 
-#: src/access.c:1432
+#: src/access.c:1435
 msgid "Username for the entry (login username)."
 msgstr "Username for the entry (login username)."
 
-#: src/access.c:1866
+#: src/access.c:1879
 msgid ""
 "Username of the entry (this should match a username from within the \"Access"
 " Entries\" tab."
@@ -7163,7 +7204,7 @@ msgid ""
 "output."
 msgstr "Video codec to use for the transcode. \"Do not use\" will disable video output."
 
-#: src/access.c:1519
+#: src/access.c:1522
 msgid "Video recorder"
 msgstr "Video recorder"
 
@@ -7171,7 +7212,7 @@ msgstr "Video recorder"
 msgid "Video stream filter"
 msgstr "Video stream filter"
 
-#: src/access.c:1535
+#: src/access.c:1538
 msgid "View all DVR entries"
 msgstr "View all DVR entries"
 
@@ -7239,11 +7280,11 @@ msgstr "Weak stream"
 msgid "Weather report"
 msgstr "Weather report"
 
-#: src/access.c:1572 src/wizard.c:186
+#: src/access.c:1585 src/wizard.c:188
 msgid "Web interface"
 msgstr "Web interface"
 
-#: src/access.c:1474
+#: src/access.c:1477
 msgid "Web interface language"
 msgstr "Web interface language"
 
@@ -7255,7 +7296,7 @@ msgstr "Web user interface"
 msgid "Wed"
 msgstr "Wed"
 
-#: src/wizard.c:245 src/wizard.c:479
+#: src/wizard.c:247 src/wizard.c:481
 msgid "Welcome - Tvheadend - your TV streaming server and video recorder"
 msgstr "Welcome - Tvheadend - your TV streaming server and video recorder"
 
@@ -7263,13 +7304,14 @@ msgstr "Welcome - Tvheadend - your TV streaming server and video recorder"
 msgid ""
 "Welcome to Tvheadend, your TV streaming server and video recorder. This wizard will help you get up and running fast. Let's start by configuring the basic language settings. Please select the default user interface and EPG language(s).\n"
 "\n"
-"**This wizard should be run only on the initial setup. Please, cancel it, if you are not willing to touch the current configuration.**\n"
+"**This wizard should only be run on initial setup. Please cancel it if you're not willing to touch the current configuration, as continuing in such cases can lead to misconfiguration and not all changes made thru this wizard will take effect.**\n"
+"\n"
 "\n"
 "**Notes**:\n"
 " * If you cannot see your preferred language in the language list and would like to help translate Tvheadend see [here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n"
 "* If you don't enter a preferred language, US English will be used as a default.\n"
 "* Not selecting the correct EPG language can result in garbled EPG text; if this happens, don't panic, as you can easily change it later.\n"
-msgstr "Welcome to Tvheadend, your TV streaming server and video recorder. This wizard will help you get up and running fast. Let's start by configuring the basic language settings. Please select the default user interface and EPG language(s).\n\n**This wizard should be run only on the initial setup. Please, cancel it, if you are not willing to touch the current configuration.**\n\n**Notes**:\n * If you cannot see your preferred language in the language list and would like to help translate Tvheadend see [here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n* If you don't enter a preferred language, US English will be used as a default.\n* Not selecting the correct EPG language can result in garbled EPG text; if this happens, don't panic, as you can easily change it later.\n"
+msgstr "Welcome to Tvheadend, your TV streaming server and video recorder. This wizard will help you get up and running fast. Let's start by configuring the basic language settings. Please select the default user interface and EPG language(s).\n\n**This wizard should only be run on initial setup. Please cancel it if you're not willing to touch the current configuration, as continuing in such cases can lead to misconfiguration and not all changes made thru this wizard will take effect.**\n\n\n**Notes**:\n * If you cannot see your preferred language in the language list and would like to help translate Tvheadend see [here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n* If you don't enter a preferred language, US English will be used as a default.\n* Not selecting the correct EPG language can result in garbled EPG text; if this happens, don't panic, as you can easily change it later.\n"
 
 #: src/epg.c:2177
 msgid "Western"
@@ -7314,7 +7356,7 @@ msgstr "When the service was first identified and recorded."
 msgid "When the service was last seen during a mux scan."
 msgstr "When the service was last seen during a mux scan."
 
-#: src/access.c:1650 src/access.c:1897 src/input/mpegts/mpegts_network.c:287
+#: src/access.c:1663 src/access.c:1910 src/input/mpegts/mpegts_network.c:287
 msgid "Wizard"
 msgstr "Wizard"
 
@@ -7336,22 +7378,32 @@ msgid ""
 "database (re-read on next startup). Set to 0 to disable."
 msgstr "Writes the current in-memory EPG database to disk every x hours, so it can be re-read on the next startup (e.g. in case an unexpected shutdown occurs). Set to 0 to disable."
 
-#: src/access.c:1398
+#: src/access.c:1401
 msgid "Yes"
 msgstr "Yes"
 
-#: src/wizard.c:1202
-msgid ""
-"You are now finished.\n"
-"You may further customize your settings by editing channel numbers, etc."
-msgstr "You are now finished.\nYou may further customize your settings by editing channel numbers, etc."
-
-#: src/wizard.c:1195
+#: src/wizard.c:1256
 msgid ""
 "You are now finished.\n"
 "You may further customize your settings by editing channel numbers, etc.\n"
-"If you confirm this dialog, the default administrator account will beremoved. Please then use credentals you defined thru this wizard."
-msgstr "You are now finished.\nYou may further customize your settings by editing channel numbers, etc.\nIf you confirm this dialog, the default administrator account will be removed. Please then use credentials you defined thru this wizard."
+"\n"
+"If you require further help, check out [Tvheadend.org](http://tvheadend.org) or chat to us on [IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n"
+"\n"
+"\n"
+"Thank you for using Tvheadend (and don't forget to [donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)"
+msgstr "You are now finished.\nYou may further customize your settings by editing channel numbers, etc.\n\nIf you require further help, check out [Tvheadend.org](http://tvheadend.org) or chat to us on [IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\nThank you for using Tvheadend (and don't forget to [donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)"
+
+#: src/wizard.c:1242
+msgid ""
+"You are now finished.\n"
+"You may further customize your settings by editing channel numbers, etc. \n"
+"If you confirm this dialog, the default administrator account will be removed. Please then the use credentials you defined thru this wizard.\n"
+"\n"
+"If you require further help, check out [Tvheadend.org](http://tvheadend.org) or chat to us on [IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n"
+"\n"
+"\n"
+"Thank you for using Tvheadend (and don't forget to [donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)"
+msgstr "You are now finished.\nYou may further customize your settings by editing channel numbers, etc. \nIf you confirm this dialog, the default administrator account will be removed. Please then the use credentials you defined thru this wizard.\n\nIf you require further help, check out [Tvheadend.org](http://tvheadend.org) or chat to us on [IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\nThank you for using Tvheadend (and don't forget to [donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)"
 
 #: src/input/mpegts/satip/satip.c:284
 msgid "addpids/delpids supported"

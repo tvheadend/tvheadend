@@ -3,7 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Alexander Knöbel <alex@belogy.de>, 2015
+# Alexander Knöbel <alex@belogy.de>, 2015-2016
 # Alfred Zastrow <alfred.zastrow@t-online.de>, 2015
 # Michael Pesch <mr.mytril@posteo.de>, 2015
 # Nilsen <nils.eickelkamp@gmail.com>, 2015-2016
@@ -13,8 +13,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-12 13:29+0100\n"
-"PO-Revision-Date: 2016-02-15 23:41+0000\n"
+"POT-Creation-Date: 2016-02-19 20:34+0100\n"
+"PO-Revision-Date: 2016-02-26 17:01+0000\n"
 "Last-Translator: Nilsen <nils.eickelkamp@gmail.com>\n"
 "Language-Team: German (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
@@ -128,15 +128,15 @@ msgstr "Ausgewählte Aufnahme abbrechen"
 msgid "About"
 msgstr "Über"
 
-#: src/webui/static/app/acleditor.js:65
+#: src/webui/static/app/acleditor.js:66
 msgid "Access Control Entries"
 msgstr "Zugriffskontrolle"
 
-#: src/webui/static/app/acleditor.js:27
+#: src/webui/static/app/acleditor.js:28
 msgid "Access Entries"
 msgstr "Zugriffseinträge"
 
-#: src/webui/static/app/acleditor.js:26
+#: src/webui/static/app/acleditor.js:27
 msgid "Access Entry"
 msgstr "Zugriffseintrag"
 
@@ -845,7 +845,7 @@ msgstr "Nach diesem Feld gruppieren"
 
 #: src/webui/static/app/epg.js:138
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
 #: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
@@ -877,15 +877,15 @@ msgstr "ID"
 msgid "IP Address"
 msgstr "IP-Adresse"
 
-#: src/webui/static/app/acleditor.js:143
+#: src/webui/static/app/acleditor.js:144
 msgid "IP Blocking Entries"
 msgstr "IP-Sperreneinträge"
 
-#: src/webui/static/app/acleditor.js:119
+#: src/webui/static/app/acleditor.js:120
 msgid "IP Blocking Record"
 msgstr "IP-Sperreneintrag"
 
-#: src/webui/static/app/acleditor.js:120
+#: src/webui/static/app/acleditor.js:121
 msgid "IP Blocking Records"
 msgstr "IP-Sperreneinträge"
 
@@ -903,7 +903,7 @@ msgstr "Eingang"
 
 #: src/webui/static/app/mpegts.js:168
 msgid "Index"
-msgstr ""
+msgstr "Index"
 
 #: src/webui/static/app/status.js:347 src/webui/static/app/status.js:814
 msgid "Input"
@@ -1033,7 +1033,7 @@ msgstr "Gewählte Aufnahme als fehlgeschlagen markieren"
 
 #: src/webui/static/app/dvr.js:516
 msgid "Mark the selected recording as finished"
-msgstr "Gewählte Aufnahme als fertig markieren"
+msgstr "Gewählte Aufnahme als abgeschlossen markieren"
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
@@ -1097,7 +1097,7 @@ msgstr "In Fehlgeschlagene verschieben"
 
 #: src/webui/static/app/dvr.js:518
 msgid "Move to finished"
-msgstr "In Fertige verschieben"
+msgstr "In Abgeschlossene verschieben"
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:109
 msgid "Mux"
@@ -1228,7 +1228,7 @@ msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:169
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
@@ -1243,15 +1243,15 @@ msgstr "Parameter"
 msgid "Parent disabled"
 msgstr "Übergeordnet deaktiviert"
 
-#: src/webui/static/app/acleditor.js:80
+#: src/webui/static/app/acleditor.js:81
 msgid "Password"
 msgstr "Passwort"
 
-#: src/webui/static/app/acleditor.js:104
+#: src/webui/static/app/acleditor.js:105
 msgid "Password Control Entries"
 msgstr "Passwortkontrolleinträge"
 
-#: src/webui/static/app/acleditor.js:81
+#: src/webui/static/app/acleditor.js:82
 msgid "Passwords"
 msgstr "Passwörter"
 
@@ -1726,7 +1726,7 @@ msgstr "Timer"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
-msgstr ""
+msgstr "Timeshift"
 
 #: src/webui/static/app/timeshift.js:24
 msgid "Timeshift Configuration"
@@ -1785,7 +1785,7 @@ msgstr "Typ"
 
 #: src/webui/static/app/epg.js:136
 msgid "UHDTV"
-msgstr ""
+msgstr "UHDTV"
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
