@@ -391,8 +391,14 @@ void http_client_unpause( http_client_t *hc );
  * RTSP helpers
  */
 
-int rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
-               const char *query, http_arg_list_t *hdr );
+int rtsp_send_ext( http_client_t *hc, http_cmd_t cmd, const char *path,
+               const char *query, http_arg_list_t *hdr, const char *body, size_t size );
+
+static inline int
+rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
+               const char *query, http_arg_list_t *hdr ) {
+  return rtsp_send_ext( hc, cmd, path, query, hdr, NULL, 0 );
+}
                       
 void rtsp_clear_session( http_client_t *hc );
 
@@ -421,7 +427,10 @@ rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
 }
 
 static inline int rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
-  return rtsp_send(hc, RTSP_CMD_GET_PARAMETER, NULL, parameter, NULL);
+  http_arg_list_t hdr;
+  http_arg_init(&hdr);
+  http_arg_set(&hdr, "Content-Type", "text/parameters");
+  return rtsp_send_ext(hc, RTSP_CMD_GET_PARAMETER, NULL, NULL, &hdr, parameter, strlen(parameter));
 }
 
 int rtsp_describe_decode( http_client_t *hc );

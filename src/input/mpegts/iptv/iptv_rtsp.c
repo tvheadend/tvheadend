@@ -53,7 +53,7 @@ iptv_rtsp_alive_cb ( void *aux )
   iptv_mux_t *im = aux;
   rtsp_priv_t *rp = im->im_data;
   if(rp->hc->hc_rtsp_keep_alive_cmd == RTSP_CMD_GET_PARAMETER)
-    rtsp_get_parameter(rp->hc, "");
+    rtsp_get_parameter(rp->hc, "position");
   else if(rp->hc->hc_rtsp_keep_alive_cmd == RTSP_CMD_OPTIONS)
     rtsp_send(rp->hc, RTSP_CMD_OPTIONS, rp->path, rp->query, NULL);
   else
