@@ -1195,6 +1195,7 @@ dobackup(const char *oldver)
   const char *argv[] = {
     "/usr/bin/tar", "cjf", outfile,
     "--exclude", "backup", "--exclude", "epggrab/*.sock",
+    "--exclude", "timeshift/buffer",
     ".", NULL
   };
   const char *root = hts_settings_get_root();
