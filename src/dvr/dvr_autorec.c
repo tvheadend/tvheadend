@@ -296,9 +296,6 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
   idnode_load(&dae->dae_id, conf);
 
-  dvr_autorec_changed(dae, 1);
-  dvr_autorec_completed(dae, 0);
-
   htsp_autorec_entry_add(dae);
 
   return dae;
@@ -1313,6 +1310,7 @@ dvr_autorec_update(void)
   dvr_autorec_entry_t *dae;
   TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
     dvr_autorec_changed(dae, 0);
+    dvr_autorec_completed(dae, 0);
   }
 }
 

@@ -382,8 +382,11 @@ api_dvr_autorec_create
   if (cfg) {
     htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
     dae = dvr_autorec_create(NULL, conf);
-    if (dae)
+    if (dae) {
       idnode_changed(&dae->dae_id);
+      dvr_autorec_changed(dae, 0);
+      dvr_autorec_completed(dae, 0);
+    }
   }
   pthread_mutex_unlock(&global_lock);
 
