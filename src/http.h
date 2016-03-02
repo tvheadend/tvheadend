@@ -345,6 +345,7 @@ struct http_client {
   int          hc_rtp_timeout;
   char        *hc_rtsp_user;
   char        *hc_rtsp_pass;
+  char         hc_rtsp_keep_alive_cmd;
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
