@@ -528,7 +528,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "epg_parent",
       .name     = N_("Reuse EPG from"),
-      .name     = N_("Reuse EPG from. Reuse the EPG from another "
+      .desc     = N_("Reuse EPG from. Reuse the EPG from another "
                      "channel."),
       .set      = channel_class_epg_parent_set,
       .list     = channel_class_get_list,
