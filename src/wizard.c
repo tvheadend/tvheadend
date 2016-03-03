@@ -1153,7 +1153,7 @@ MAPPING_FCN(nettags)
 DESCRIPTION_FCN(mapping, N_("\
 Map all discovered services to channels.\n\n\
 In order for your frontend client(s) (such as Kodi, Movian, and similar) \
-to see/play and channels, you must first map discovered services to \
+to see/play channels, you must first map discovered services to \
 channels.\n\n\
 \
 If you would like Tvheadend to do this for you, check the \
