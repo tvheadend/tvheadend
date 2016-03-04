@@ -281,7 +281,7 @@ static int _timeshift_skip
 {
   timeshift_index_iframe_t *tsi  = seek->frame;
   timeshift_file_t         *tsf  = seek->file, *tsf_last;
-  int64_t                   sec  = req_time / (1000000 * TIMESHIFT_FILE_PERIOD);
+  int64_t                   sec  = req_time / (MONOCLOCK_RESOLUTION * TIMESHIFT_FILE_PERIOD);
   int                       back = (req_time < cur_time) ? 1 : 0;
   int                       end  = 0;
 
@@ -773,7 +773,7 @@ void *timeshift_reader ( void *p )
 
     /* Done */
     if (!run || !seek->file || ((ts->state != TS_PLAY && !skip))) {
-      if (mono_now >= (mono_last_status + 1000000)) {
+      if (mono_now >= (mono_last_status + MONOCLOCK_RESOLUTION)) {
         timeshift_status(ts, last_time);
         mono_last_status = mono_now;
       }
@@ -865,7 +865,7 @@ void *timeshift_reader ( void *p )
     }
 
     /* Periodic timeshift status */
-    if (mono_now >= (mono_last_status + 1000000)) {
+    if (mono_now >= (mono_last_status + MONOCLOCK_RESOLUTION)) {
       timeshift_status(ts, last_time);
       mono_last_status = mono_now;
     }

@@ -411,12 +411,6 @@ typedef struct service {
    */
   pthread_mutex_t s_stream_mutex;
 
-
-  /**
-   * Condition variable to singal when streaming_status changes
-   * interlocked with s_stream_mutex
-   */
-  pthread_cond_t s_tss_cond;
   /**
    *
    */			   

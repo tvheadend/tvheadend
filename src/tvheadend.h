@@ -112,6 +112,14 @@ lock_assert0(pthread_mutex_t *l, const char *file, int line)
 
 #define lock_assert(l) lock_assert0(l, __FILE__, __LINE__)
 
+/*
+ *
+ */
+
+typedef struct {
+  pthread_cond_t cond;
+} tvh_cond_t;
+
 
 /*
  * Commercial status
@@ -563,7 +571,7 @@ typedef struct streaming_queue {
   streaming_target_t sq_st;
 
   pthread_mutex_t sq_mutex;    /* Protects sp_queue */
-  pthread_cond_t  sq_cond;     /* Condvar for signalling new packets */
+  tvh_cond_t  sq_cond;         /* Condvar for signalling new packets */
 
   size_t          sq_maxsize;  /* Max queue size (bytes) */
   size_t          sq_size;     /* Actual queue size (bytes) - only data */
@@ -624,6 +632,8 @@ static inline int clock_gettime(int clk_id, struct timespec* t) {
 }
 #endif
 
+#define MONOCLOCK_RESOLUTION 1000000LL /* microseconds */
+
 static inline int64_t 
 getmonoclock(void)
 {
@@ -631,7 +641,8 @@ getmonoclock(void)
 
   clock_gettime(CLOCK_MONOTONIC_COARSE, &tp);
 
-  return tp.tv_sec * 1000000ULL + (tp.tv_nsec / 1000);
+  return tp.tv_sec * MONOCLOCK_RESOLUTION +
+         (tp.tv_nsec / (1000000000LL/MONOCLOCK_RESOLUTION));
 }
 
 int sri_to_rate(int sri);
@@ -688,6 +699,16 @@ int tvhthread_create
 int tvhtread_renice(int value);
 
 int tvh_mutex_timedlock(pthread_mutex_t *mutex, int64_t usec);
+
+int tvh_cond_init(tvh_cond_t *cond);
+
+int tvh_cond_destroy(tvh_cond_t *cond);
+
+int tvh_cond_signal(tvh_cond_t *cond, int broadcast);
+
+int tvh_cond_wait(tvh_cond_t *cond, pthread_mutex_t *mutex);
+
+int tvh_cond_timedwait(tvh_cond_t *cond, pthread_mutex_t *mutex, int64_t monoclock);
 
 int tvh_open(const char *pathname, int flags, mode_t mode);
 

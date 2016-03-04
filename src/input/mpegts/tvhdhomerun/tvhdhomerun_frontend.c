@@ -71,7 +71,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
   pthread_mutex_lock(&hfe->hf_input_thread_mutex);
   hfe->mi_display_name((mpegts_input_t*)hfe, buf, sizeof(buf));
   mmi = LIST_FIRST(&hfe->mi_mux_active);
-  pthread_cond_signal(&hfe->hf_input_thread_cond);
+  tvh_cond_signal(&hfe->hf_input_thread_cond, 0);
   pthread_mutex_unlock(&hfe->hf_input_thread_mutex);
   if (mmi == NULL) return NULL;
 
@@ -255,7 +255,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
       tvh_pipe(O_NONBLOCK, &hfe->hf_input_thread_pipe);
       pthread_mutex_lock(&hfe->hf_input_thread_mutex);
       tvhthread_create(&hfe->hf_input_thread, NULL, tvhdhomerun_frontend_input_thread, hfe, "hdhm-front");
-      pthread_cond_wait(&hfe->hf_input_thread_cond, &hfe->hf_input_thread_mutex);
+      tvh_cond_wait(&hfe->hf_input_thread_cond, &hfe->hf_input_thread_mutex);
       pthread_mutex_unlock(&hfe->hf_input_thread_mutex);
 
       /* install table handlers */
@@ -735,7 +735,7 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
   /* mutex init */
   pthread_mutex_init(&hfe->hf_hdhomerun_device_mutex, NULL);
   pthread_mutex_init(&hfe->hf_input_thread_mutex, NULL);
-  pthread_cond_init(&hfe->hf_input_thread_cond, NULL);
+  tvh_cond_init(&hfe->hf_input_thread_cond);
 
   return hfe;
 }

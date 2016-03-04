@@ -964,7 +964,6 @@ service_create0
     TAILQ_INSERT_TAIL(&service_all, t, s_all_link);
 
   pthread_mutex_init(&t->s_stream_mutex, NULL);
-  pthread_cond_init(&t->s_tss_cond, NULL);
   t->s_type = service_type;
   t->s_type_user = ST_UNSET;
   t->s_source_type = source_type;
@@ -1264,8 +1263,6 @@ service_send_streaming_status(service_t *t)
   streaming_pad_deliver(&t->s_streaming_pad,
                         streaming_msg_create_code(SMT_SERVICE_STATUS,
                                                   t->s_streaming_status));
-
-  pthread_cond_broadcast(&t->s_tss_cond);
 }
 
 /**
@@ -1398,7 +1395,7 @@ service_build_stream_start(service_t *t)
  */
 
 static pthread_mutex_t pending_save_mutex;
-static pthread_cond_t pending_save_cond;
+static tvh_cond_t pending_save_cond;
 static struct service_queue pending_save_queue;
 
 /**
@@ -1416,7 +1413,7 @@ service_request_save(service_t *t, int restart)
     t->s_ps_onqueue = 1 + !!restart;
     TAILQ_INSERT_TAIL(&pending_save_queue, t, s_ps_link);
     service_ref(t);
-    pthread_cond_signal(&pending_save_cond);
+    tvh_cond_signal(&pending_save_cond, 0);
   } else if (restart) {
     t->s_ps_onqueue = 2; // upgrade to restart too
   }
@@ -1460,7 +1457,7 @@ service_saver(void *aux)
   while(tvheadend_running) {
 
     if((t = TAILQ_FIRST(&pending_save_queue)) == NULL) {
-      pthread_cond_wait(&pending_save_cond, &pending_save_mutex);
+      tvh_cond_wait(&pending_save_cond, &pending_save_mutex);
       continue;
     }
     assert(t->s_ps_onqueue != 0);
@@ -1500,7 +1497,7 @@ service_init(void)
   TAILQ_INIT(&service_raw_all);
   TAILQ_INIT(&service_raw_remove);
   pthread_mutex_init(&pending_save_mutex, NULL);
-  pthread_cond_init(&pending_save_cond, NULL);
+  tvh_cond_init(&pending_save_cond);
   tvhthread_create(&service_saver_tid, NULL, service_saver, NULL, "service");
 }
 
@@ -1509,7 +1506,9 @@ service_done(void)
 {
   service_t *t;
 
-  pthread_cond_signal(&pending_save_cond);
+  pthread_mutex_lock(&pending_save_mutex);
+  tvh_cond_signal(&pending_save_cond, 0);
+  pthread_mutex_unlock(&pending_save_mutex);
   pthread_join(service_saver_tid, NULL);
 
   pthread_mutex_lock(&global_lock);

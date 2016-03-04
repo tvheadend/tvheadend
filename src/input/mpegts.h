@@ -683,7 +683,7 @@ struct mpegts_input
   // Note: this section is protected by mi_input_lock
   pthread_t                       mi_input_tid;
   pthread_mutex_t                 mi_input_lock;
-  pthread_cond_t                  mi_input_cond;
+  tvh_cond_t                      mi_input_cond;
   TAILQ_HEAD(,mpegts_packet)      mi_input_queue;
 
   /* Data processing/output */
@@ -696,7 +696,7 @@ struct mpegts_input
 
   /* Table processing */
   pthread_t                       mi_table_tid;
-  pthread_cond_t                  mi_table_cond;
+  tvh_cond_t                      mi_table_cond;
   mpegts_table_feed_queue_t       mi_table_queue;
 
   /* DBus */

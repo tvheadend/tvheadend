@@ -78,7 +78,7 @@ static struct tvhdhomerun_discovery_queue tvhdhomerun_discoveries;
 
 static pthread_t tvhdhomerun_discovery_tid;
 static pthread_mutex_t tvhdhomerun_discovery_lock;
-static pthread_cond_t tvhdhomerun_discovery_cond;
+static tvh_cond_t tvhdhomerun_discovery_cond;
 
 static const char *
 tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
@@ -346,8 +346,6 @@ static void *
 tvhdhomerun_device_discovery_thread( void *aux )
 {
   struct hdhomerun_discover_device_t result_list[MAX_HDHOMERUN_DEVICES];
-  struct timespec ts;
-  struct timeval  tp;
   int numDevices, brk;
 
   while (tvheadend_running) {
@@ -379,12 +377,9 @@ tvhdhomerun_device_discovery_thread( void *aux )
     pthread_mutex_lock(&tvhdhomerun_discovery_lock);
     brk = 0;
     if (tvheadend_running) {
-      gettimeofday(&tp, NULL);
-      ts.tv_sec  = tp.tv_sec + 15;
-      ts.tv_nsec = tp.tv_usec * 1000;
-      brk = pthread_cond_timedwait(&tvhdhomerun_discovery_cond,
-                                   &tvhdhomerun_discovery_lock,
-                                   &ts);
+      brk = tvh_cond_timedwait(&tvhdhomerun_discovery_cond,
+                               &tvhdhomerun_discovery_lock,
+                               getmonoclock() + 15 * MONOCLOCK_RESOLUTION);
       brk = !ERRNO_AGAIN(brk) && brk != ETIMEDOUT;
     }
     pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
@@ -406,7 +401,7 @@ void tvhdhomerun_init ( void )
   }
   TAILQ_INIT(&tvhdhomerun_discoveries);
   pthread_mutex_init(&tvhdhomerun_discovery_lock, NULL);
-  pthread_cond_init(&tvhdhomerun_discovery_cond, NULL);
+  tvh_cond_init(&tvhdhomerun_discovery_cond);
   tvhthread_create(&tvhdhomerun_discovery_tid, NULL,
                    tvhdhomerun_device_discovery_thread,
                    NULL, "hdhm-disc");
@@ -418,7 +413,7 @@ void tvhdhomerun_done ( void )
   tvhdhomerun_discovery_t *d, *nd;
 
   pthread_mutex_lock(&tvhdhomerun_discovery_lock);
-  pthread_cond_signal(&tvhdhomerun_discovery_cond);
+  tvh_cond_signal(&tvhdhomerun_discovery_cond, 0);
   pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
   pthread_join(tvhdhomerun_discovery_tid, NULL);
 

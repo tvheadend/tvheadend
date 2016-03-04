@@ -164,7 +164,7 @@ typedef struct htsp_connection {
   struct htsp_msg_q_queue htsp_active_output_queues;
 
   pthread_mutex_t htsp_out_mutex;
-  pthread_cond_t htsp_out_cond;
+  tvh_cond_t htsp_out_cond;
 
   htsp_msg_q_t htsp_hmq_ctrl;
   htsp_msg_q_t htsp_hmq_epg;
@@ -415,7 +415,7 @@ htsp_send(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
 
   hmq->hmq_length++;
   hmq->hmq_payload += payloadsize;
-  pthread_cond_signal(&htsp->htsp_out_cond);
+  tvh_cond_signal(&htsp->htsp_out_cond, 0);
   pthread_mutex_unlock(&htsp->htsp_out_mutex);
 }
 
@@ -3150,7 +3150,7 @@ htsp_write_scheduler(void *aux)
 
     if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
       /* Nothing to be done, go to sleep */
-      pthread_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
+      tvh_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
       continue;
     }
 
@@ -3268,7 +3268,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 
   pthread_mutex_lock(&htsp.htsp_out_mutex);
   htsp.htsp_writer_run = 0;
-  pthread_cond_signal(&htsp.htsp_out_cond);
+  tvh_cond_signal(&htsp.htsp_out_cond, 0);
   pthread_mutex_unlock(&htsp.htsp_out_mutex);
 
   pthread_join(htsp.htsp_writer_thread, NULL);

@@ -18,22 +18,9 @@
 #include <pthread_np.h>
 #endif
 
-int
-tvh_mutex_timedlock
-  ( pthread_mutex_t *mutex, int64_t usec )
-{
-  int64_t finish = getmonoclock() + usec;
-  int retcode;
-
-  while ((retcode = pthread_mutex_trylock (mutex)) == EBUSY) {
-    if (getmonoclock() >= finish)
-      return ETIMEDOUT;
-
-    usleep(10000);
-  }
-
-  return retcode;
-}
+/*
+ * filedescriptor routines
+ */
 
 int
 tvh_open(const char *pathname, int flags, mode_t mode)
@@ -128,6 +115,10 @@ tvh_fopen(const char *filename, const char *mode)
   return f;
 }
 
+/*
+ * thread routines
+ */
+
 static void doquit(int sig)
 {
 }
@@ -206,6 +197,82 @@ tvhtread_renice(int value)
 #endif
   return ret;
 }
+
+int
+tvh_mutex_timedlock
+  ( pthread_mutex_t *mutex, int64_t usec )
+{
+  int64_t finish = getmonoclock() + usec;
+  int retcode;
+
+  while ((retcode = pthread_mutex_trylock (mutex)) == EBUSY) {
+    if (getmonoclock() >= finish)
+      return ETIMEDOUT;
+
+    usleep(10000);
+  }
+
+  return retcode;
+}
+
+/*
+ * thread condition variables - monotonic clocks
+ */
+
+int
+tvh_cond_init
+  ( tvh_cond_t *cond )
+{
+  int r;
+
+  pthread_condattr_t attr;
+  pthread_condattr_init(&attr);
+  r = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+  if (r) {
+    fprintf(stderr, "Unable to set monotonic clocks for conditions! (%d)", r);
+    abort();
+  }
+  return pthread_cond_init(&cond->cond, &attr);
+}
+
+int
+tvh_cond_destroy
+  ( tvh_cond_t *cond )
+{
+  return pthread_cond_destroy(&cond->cond);
+}
+
+int
+tvh_cond_signal
+  ( tvh_cond_t *cond, int broadcast )
+{
+  if (broadcast)
+    return pthread_cond_broadcast(&cond->cond);
+  else
+    return pthread_cond_signal(&cond->cond);
+}
+
+int
+tvh_cond_wait
+  ( tvh_cond_t *cond, pthread_mutex_t *mutex)
+{
+  return pthread_cond_wait(&cond->cond, mutex);
+}
+
+int
+tvh_cond_timedwait
+  ( tvh_cond_t *cond, pthread_mutex_t *mutex, int64_t monoclock )
+{
+  struct timespec ts;
+  ts.tv_sec = monoclock / MONOCLOCK_RESOLUTION;
+  ts.tv_nsec = (monoclock % MONOCLOCK_RESOLUTION) *
+               (1000000000ULL/MONOCLOCK_RESOLUTION);
+  return pthread_cond_timedwait(&cond->cond, mutex, &ts);
+}
+
+/*
+ * qsort
+ */
 
 #if ! ENABLE_QSORT_R
 /*

@@ -82,7 +82,7 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
     sq->sq_size += streaming_message_data_size(sm);
   }
 
-  pthread_cond_signal(&sq->sq_cond);
+  tvh_cond_signal(&sq->sq_cond, 0);
   pthread_mutex_unlock(&sq->sq_mutex);
 }
 
@@ -105,7 +105,7 @@ streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
   streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
-  pthread_cond_init(&sq->sq_cond, NULL);
+  tvh_cond_init(&sq->sq_cond);
   TAILQ_INIT(&sq->sq_queue);
 
   sq->sq_maxsize = maxsize;
@@ -121,7 +121,7 @@ streaming_queue_deinit(streaming_queue_t *sq)
   sq->sq_size = 0;
   streaming_queue_clear(&sq->sq_queue);
   pthread_mutex_destroy(&sq->sq_mutex);
-  pthread_cond_destroy(&sq->sq_cond);
+  tvh_cond_destroy(&sq->sq_cond);
 }
 
 /**

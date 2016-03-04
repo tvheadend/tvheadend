@@ -398,7 +398,7 @@ void *timeshift_writer ( void *aux )
     /* Get message */
     sm = TAILQ_FIRST(&sq->sq_queue);
     if (sm == NULL) {
-      pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
+      tvh_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
     streaming_queue_remove(sq, sm);

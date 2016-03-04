@@ -85,7 +85,7 @@ static int                      http_running;
 static tvhpoll_t               *http_poll;
 static TAILQ_HEAD(,http_client) http_clients;
 static pthread_mutex_t          http_lock;
-static pthread_cond_t           http_cond;
+static tvh_cond_t               http_cond;
 static th_pipe_t                http_pipe;
 static char                    *http_user_agent;
 
@@ -1352,7 +1352,7 @@ http_client_thread ( void *p )
         continue;
       }
       if (hc->hc_shutdown_wait) {
-        pthread_cond_broadcast(&http_cond);
+        tvh_cond_signal(&http_cond, 1);
         /* Disable the poll looping for this moment */
         http_client_poll_dir(hc, 0, 0);
         pthread_mutex_unlock(&http_lock);
@@ -1364,7 +1364,7 @@ http_client_thread ( void *p )
       pthread_mutex_lock(&http_lock);
       hc->hc_running = 0;
       if (hc->hc_shutdown_wait)
-        pthread_cond_broadcast(&http_cond);
+        tvh_cond_signal(&http_cond, 1);
       pthread_mutex_unlock(&http_lock);
     }
   }
@@ -1529,7 +1529,7 @@ http_client_close ( http_client_t *hc )
     pthread_mutex_lock(&http_lock);
     hc->hc_shutdown_wait = 1;
     while (hc->hc_running)
-      pthread_cond_wait(&http_cond, &http_lock);
+      tvh_cond_wait(&http_cond, &http_lock);
     if (hc->hc_efd) {
       memset(&ev, 0, sizeof(ev));
       ev.fd = hc->hc_fd;
@@ -1572,7 +1572,7 @@ http_client_init ( const char *user_agent )
 
   /* Setup list */
   pthread_mutex_init(&http_lock, NULL);
-  pthread_cond_init(&http_cond, NULL);
+  tvh_cond_init(&http_cond);
   TAILQ_INIT(&http_clients);
 
   /* Setup pipe */

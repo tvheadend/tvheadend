@@ -41,7 +41,7 @@ typedef struct service_mapper_item {
 } service_mapper_item_t;
 
 static service_mapper_status_t service_mapper_stat; 
-static pthread_cond_t          service_mapper_cond;
+static tvh_cond_t              service_mapper_cond;
 static TAILQ_HEAD(, service_mapper_item) service_mapper_queue;
 service_mapper_t               service_mapper_conf;
 
@@ -132,7 +132,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
   api_service_mapper_notify();
 
   /* Signal */
-  if (qd) pthread_cond_signal(&service_mapper_cond);
+  if (qd) tvh_cond_signal(&service_mapper_cond, 0);
 }
 
 /*
@@ -312,7 +312,7 @@ service_mapper_thread ( void *aux )
         working = 0;
         tvhinfo("service_mapper", "idle");
       }
-      pthread_cond_wait(&service_mapper_cond, &global_lock);
+      tvh_cond_wait(&service_mapper_cond, &global_lock);
       if (!tvheadend_running)
         break;
     }
@@ -354,7 +354,7 @@ service_mapper_thread ( void *aux )
 
       /* Wait for message */
       while((sm = TAILQ_FIRST(&sq->sq_queue)) == NULL) {
-        pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
+        tvh_cond_wait(&sq->sq_cond, &sq->sq_mutex);
         if (!tvheadend_running)
           break;
       }
@@ -557,7 +557,7 @@ void service_mapper_init ( void )
   htsmsg_t *m;
 
   TAILQ_INIT(&service_mapper_queue);
-  pthread_cond_init(&service_mapper_cond, NULL);
+  tvh_cond_init(&service_mapper_cond);
   tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL, "svcmap");
 
   /* Defaults */
@@ -576,7 +576,7 @@ void service_mapper_init ( void )
 
 void service_mapper_done ( void )
 {
-  pthread_cond_signal(&service_mapper_cond);
+  tvh_cond_signal(&service_mapper_cond, 0);
   pthread_join(service_mapper_tid, NULL);
   htsmsg_destroy(service_mapper_conf.services);
   service_mapper_conf.services = NULL;

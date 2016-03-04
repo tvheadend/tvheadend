@@ -317,8 +317,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
   muxer_t *mux = prch->prch_muxer;
   time_t lastpkt;
   int ptimeout, grace = 20;
-  struct timespec ts;
-  struct timeval  tp;
+  struct timeval tp;
   streaming_start_t *ss_copy;
   int64_t mono;
 
@@ -345,12 +344,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {
-      gettimeofday(&tp, NULL);
-      ts.tv_sec  = tp.tv_sec + 1;
-      ts.tv_nsec = tp.tv_usec * 1000;
-
-      if(pthread_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, &ts) == ETIMEDOUT) {
-
+      if(tvh_cond_timedwait(&sq->sq_cond, &sq->sq_mutex,
+                            getmonoclock() + 1 * MONOCLOCK_RESOLUTION) == ETIMEDOUT) {
         /* Check socket status */
         if (tcp_socket_dead(hc->hc_fd)) {
           tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);

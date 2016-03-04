@@ -26,7 +26,7 @@
 #include "notify.h"
 #include "webui/webui.h"
 
-static pthread_cond_t         notify_cond;
+static tvh_cond_t             notify_cond;
 static pthread_mutex_t        notify_mutex;
 static htsmsg_t              *notify_queue;
 static pthread_t              notify_tid;
@@ -75,7 +75,7 @@ notify_delayed(const char *id, const char *event, const char *action)
     if (strcmp(htsmsg_field_get_str(f) ?: "", id) == 0)
       goto skip;
   htsmsg_add_str(e, NULL, id);
-  pthread_cond_signal(&notify_cond);
+  tvh_cond_signal(&notify_cond, 0);
 skip:
   pthread_mutex_unlock(&notify_mutex);
 }
@@ -92,7 +92,7 @@ notify_thread ( void *p )
 
     /* Get queue */
     if (!notify_queue) {
-      pthread_cond_wait(&notify_cond, &notify_mutex);
+      tvh_cond_wait(&notify_cond, &notify_mutex);
       continue;
     }
     q            = notify_queue;
@@ -126,13 +126,13 @@ void notify_init( void )
 {
   notify_queue = NULL;
   pthread_mutex_init(&notify_mutex, NULL);
-  pthread_cond_init(&notify_cond, NULL);
+  tvh_cond_init(&notify_cond);
   tvhthread_create(&notify_tid, NULL, notify_thread, NULL, "notify");
 }
 
 void notify_done( void )
 {
-  pthread_cond_signal(&notify_cond);
+  tvh_cond_signal(&notify_cond, 0);
   pthread_join(notify_tid, NULL);
   pthread_mutex_lock(&notify_mutex);
   htsmsg_destroy(notify_queue);

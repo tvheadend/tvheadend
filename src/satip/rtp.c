@@ -376,7 +376,7 @@ satip_rtp_thread(void *aux)
           continue;
         }
       }
-      pthread_cond_wait(&sq->sq_cond, &sq->sq_mutex);
+      tvh_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
     }
     streaming_queue_remove(sq, sm);
@@ -566,7 +566,7 @@ void satip_rtp_close(void *id)
     sq = rtp->sq;
     pthread_mutex_lock(&sq->sq_mutex);
     rtp->sq = NULL;
-    pthread_cond_signal(&sq->sq_cond);
+    tvh_cond_signal(&sq->sq_cond, 0);
     pthread_mutex_unlock(&sq->sq_mutex);
     pthread_mutex_unlock(&satip_rtp_lock);
     if (rtp->port == RTSP_TCP_DATA)

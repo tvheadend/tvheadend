@@ -126,7 +126,7 @@ struct linuxdvb_frontend
   pthread_t                 lfe_dvr_thread;
   th_pipe_t                 lfe_dvr_pipe;
   pthread_mutex_t           lfe_dvr_lock;
-  pthread_cond_t            lfe_dvr_cond;
+  tvh_cond_t                lfe_dvr_cond;
   mpegts_apids_t            lfe_pids;
   int                       lfe_pids_max;
  

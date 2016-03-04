@@ -40,7 +40,7 @@ htsmsg_t                *tvhlog_debug;
 htsmsg_t                *tvhlog_trace;
 pthread_t                tvhlog_tid;
 pthread_mutex_t          tvhlog_mutex;
-pthread_cond_t           tvhlog_cond;
+tvh_cond_t               tvhlog_cond;
 TAILQ_HEAD(,tvhlog_msg)  tvhlog_queue;
 int                      tvhlog_queue_size;
 int                      tvhlog_queue_full;
@@ -237,7 +237,7 @@ tvhlog_thread ( void *p )
                     // but overall performance will be higher
         fp = NULL;
       }
-      pthread_cond_wait(&tvhlog_cond, &tvhlog_mutex);
+      tvh_cond_wait(&tvhlog_cond, &tvhlog_mutex);
       continue;
     }
     TAILQ_REMOVE(&tvhlog_queue, msg, link);
@@ -336,7 +336,7 @@ void tvhlogv ( const char *file, int line,
   if (tvhlog_run) {
     TAILQ_INSERT_TAIL(&tvhlog_queue, msg, link);
     tvhlog_queue_size++;
-    pthread_cond_signal(&tvhlog_cond);
+    tvh_cond_signal(&tvhlog_cond, 0);
   } else {
 #endif
     FILE *fp = NULL;
@@ -438,7 +438,7 @@ tvhlog_init ( int level, int options, const char *path )
   tvhlog_run     = 1;
   openlog("tvheadend", LOG_PID, LOG_DAEMON);
   pthread_mutex_init(&tvhlog_mutex, NULL);
-  pthread_cond_init(&tvhlog_cond, NULL);
+  tvh_cond_init(&tvhlog_cond);
   TAILQ_INIT(&tvhlog_queue);
 }
 
@@ -455,7 +455,7 @@ tvhlog_end ( void )
   tvhlog_msg_t *msg;
   pthread_mutex_lock(&tvhlog_mutex);
   tvhlog_run = 0;
-  pthread_cond_signal(&tvhlog_cond);
+  tvh_cond_signal(&tvhlog_cond, 0);
   pthread_mutex_unlock(&tvhlog_mutex);
   pthread_join(tvhlog_tid, NULL);
   pthread_mutex_lock(&tvhlog_mutex);

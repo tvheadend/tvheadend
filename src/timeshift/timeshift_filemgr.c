@@ -36,7 +36,7 @@ static int                   timeshift_reaper_run;
 static timeshift_file_list_t timeshift_reaper_list;
 static pthread_t             timeshift_reaper_thread;
 static pthread_mutex_t       timeshift_reaper_lock;
-static pthread_cond_t        timeshift_reaper_cond;
+static tvh_cond_t            timeshift_reaper_cond;
 
 uint64_t                     timeshift_total_size;
 uint64_t                     timeshift_total_ram_size;
@@ -58,7 +58,7 @@ static void* timeshift_reaper_callback ( void *p )
     /* Get next */
     tsf = TAILQ_FIRST(&timeshift_reaper_list);
     if (!tsf) {
-      pthread_cond_wait(&timeshift_reaper_cond, &timeshift_reaper_lock);
+      tvh_cond_wait(&timeshift_reaper_cond, &timeshift_reaper_lock);
       continue;
     }
     TAILQ_REMOVE(&timeshift_reaper_list, tsf, link);
@@ -111,7 +111,7 @@ static void timeshift_reaper_remove ( timeshift_file_t *tsf )
   }
   pthread_mutex_lock(&timeshift_reaper_lock);
   TAILQ_INSERT_TAIL(&timeshift_reaper_list, tsf, link);
-  pthread_cond_signal(&timeshift_reaper_cond);
+  tvh_cond_signal(&timeshift_reaper_cond, 0);
   pthread_mutex_unlock(&timeshift_reaper_lock);
 }
 
@@ -239,7 +239,7 @@ static timeshift_file_t * timeshift_filemgr_file_init
   timeshift_file_t *tsf;
 
   tsf = calloc(1, sizeof(timeshift_file_t));
-  tsf->time     = start_time / (1000000LL * TIMESHIFT_FILE_PERIOD);
+  tsf->time     = start_time / (MONOCLOCK_RESOLUTION * TIMESHIFT_FILE_PERIOD);
   tsf->last     = start_time;
   tsf->wfd      = -1;
   tsf->rfd      = -1;
@@ -272,7 +272,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
 
   /* Store to file */
   tsf_tl = TAILQ_LAST(&ts->files, timeshift_file_list);
-  time = start_time / (1000000LL * TIMESHIFT_FILE_PERIOD);
+  time = start_time / (MONOCLOCK_RESOLUTION * TIMESHIFT_FILE_PERIOD);
   if (!tsf_tl || tsf_tl->time < time ||
       (tsf_tl->ram && tsf_tl->woff >= timeshift_conf.ram_segment_size)) {
     tsf_hd = TAILQ_FIRST(&ts->files);
@@ -450,7 +450,7 @@ void timeshift_filemgr_init ( void )
   /* Start the reaper thread */
   timeshift_reaper_run = 1;
   pthread_mutex_init(&timeshift_reaper_lock, NULL);
-  pthread_cond_init(&timeshift_reaper_cond, NULL);
+  tvh_cond_init(&timeshift_reaper_cond);
   TAILQ_INIT(&timeshift_reaper_list);
   tvhthread_create(&timeshift_reaper_thread, NULL,
                    timeshift_reaper_callback, NULL, "tshift-reap");
@@ -466,7 +466,7 @@ void timeshift_filemgr_term ( void )
   /* Wait for thread */
   pthread_mutex_lock(&timeshift_reaper_lock);
   timeshift_reaper_run = 0;
-  pthread_cond_signal(&timeshift_reaper_cond);
+  tvh_cond_signal(&timeshift_reaper_cond, 0);
   pthread_mutex_unlock(&timeshift_reaper_lock);
   pthread_join(timeshift_reaper_thread, NULL);
 

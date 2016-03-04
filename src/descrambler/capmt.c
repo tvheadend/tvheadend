@@ -256,7 +256,7 @@ typedef struct capmt_adapter {
 typedef struct capmt {
   caclient_t;
 
-  pthread_cond_t capmt_cond;
+  tvh_cond_t capmt_cond;
 
   struct capmt_service_list capmt_services;
 
@@ -1641,7 +1641,6 @@ capmt_thread(void *aux)
   capmt_t *capmt = aux;
   capmt_adapter_t *ca;
   capmt_opaque_t *t;
-  struct timespec ts;
   int d, i, j, fatal;
 
   tvhlog(LOG_INFO, "capmt", "%s active", capmt_name(capmt));
@@ -1677,7 +1676,7 @@ capmt_thread(void *aux)
     pthread_mutex_lock(&capmt->capmt_mutex);
 
     while(capmt->capmt_running && capmt->cac_enabled == 0)
-      pthread_cond_wait(&capmt->capmt_cond, &capmt->capmt_mutex);
+      tvh_cond_wait(&capmt->capmt_cond, &capmt->capmt_mutex);
 
     pthread_mutex_unlock(&capmt->capmt_mutex);
 
@@ -1770,12 +1769,10 @@ capmt_thread(void *aux)
       d = 60;
     }
 
-    clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += d;
-
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id, NULL), d);
 
-    pthread_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, &ts);
+    tvh_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex,
+                       getmonoclock() + d * MONOCLOCK_RESOLUTION);
 
     pthread_mutex_unlock(&capmt->capmt_mutex);
   }
@@ -2195,7 +2192,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
 
   /* wake-up idle thread */
-  pthread_cond_signal(&capmt->capmt_cond);
+  tvh_cond_signal(&capmt->capmt_cond, 0);
 
 fin:
   pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -2245,7 +2242,7 @@ capmt_conf_changed(caclient_t *cac)
     }
     pthread_mutex_lock(&capmt->capmt_mutex);
     capmt->capmt_reconfigure = 1;
-    pthread_cond_signal(&capmt->capmt_cond);
+    tvh_cond_signal(&capmt->capmt_cond, 0);
     pthread_mutex_unlock(&capmt->capmt_mutex);
     tvh_write(capmt->capmt_pipe.wr, "", 1);
   } else {
@@ -2254,7 +2251,7 @@ capmt_conf_changed(caclient_t *cac)
     pthread_mutex_lock(&capmt->capmt_mutex);
     capmt->capmt_running = 0;
     capmt->capmt_reconfigure = 0;
-    pthread_cond_signal(&capmt->capmt_cond);
+    tvh_cond_signal(&capmt->capmt_cond, 0);
     tid = capmt->capmt_tid;
     pthread_mutex_unlock(&capmt->capmt_mutex);
     tvh_write(capmt->capmt_pipe.wr, "", 1);
@@ -2319,7 +2316,7 @@ caclient_t *capmt_create(void)
   capmt_t *capmt = calloc(1, sizeof(*capmt));
 
   pthread_mutex_init(&capmt->capmt_mutex, NULL);
-  pthread_cond_init(&capmt->capmt_cond, NULL);
+  tvh_cond_init(&capmt->capmt_cond);
   TAILQ_INIT(&capmt->capmt_writeq);
   tvh_pipe(O_NONBLOCK, &capmt->capmt_pipe);
 

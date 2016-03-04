@@ -198,11 +198,11 @@ typedef struct cwc {
 
   pthread_t cwc_tid;
 
-  pthread_cond_t cwc_cond;
+  tvh_cond_t cwc_cond;
 
   pthread_mutex_t cwc_mutex;
   pthread_mutex_t cwc_writer_mutex; 
-  pthread_cond_t cwc_writer_cond; 
+  tvh_cond_t cwc_writer_cond;
   int cwc_writer_running;
   struct cwc_message_queue cwc_writeq;
 
@@ -443,7 +443,7 @@ cwc_send_msg(cwc_t *cwc, const uint8_t *msg, size_t len, int sid, int enq, uint1
     cm->cm_len = len;
     pthread_mutex_lock(&cwc->cwc_writer_mutex);
     TAILQ_INSERT_TAIL(&cwc->cwc_writeq, cm, cm_link);
-    pthread_cond_signal(&cwc->cwc_writer_cond);
+    tvh_cond_signal(&cwc->cwc_writer_cond, 0);
     pthread_mutex_unlock(&cwc->cwc_writer_mutex);
   } else {
     if (tvh_write(cwc->cwc_fd, buf, len))
@@ -1046,7 +1046,6 @@ cwc_writer_thread(void *aux)
 {
   cwc_t *cwc = aux;
   cwc_message_t *cm;
-  struct timespec ts;
   int r;
 
   pthread_mutex_lock(&cwc->cwc_writer_mutex);
@@ -1068,10 +1067,9 @@ cwc_writer_thread(void *aux)
 
     /* If nothing is to be sent in CWC_KEEPALIVE_INTERVAL seconds we
        need to send a keepalive */
-    ts.tv_sec  = time(NULL) + CWC_KEEPALIVE_INTERVAL;
-    ts.tv_nsec = 0;
-    r = pthread_cond_timedwait(&cwc->cwc_writer_cond, 
-                               &cwc->cwc_writer_mutex, &ts);
+    r = tvh_cond_timedwait(&cwc->cwc_writer_cond,
+                           &cwc->cwc_writer_mutex,
+                           getmonoclock() + CWC_KEEPALIVE_INTERVAL * MONOCLOCK_RESOLUTION);
     if(r == ETIMEDOUT)
       cwc_send_ka(cwc);
   }
@@ -1146,7 +1144,7 @@ cwc_session(cwc_t *cwc)
    * We do all requests from now on in a separate thread
    */
   cwc->cwc_writer_running = 1;
-  pthread_cond_init(&cwc->cwc_writer_cond, NULL);
+  tvh_cond_init(&cwc->cwc_writer_cond);
   pthread_mutex_init(&cwc->cwc_writer_mutex, NULL);
   TAILQ_INIT(&cwc->cwc_writeq);
   tvhthread_create(&writer_thread_id, NULL, cwc_writer_thread, cwc, "cwc-writer");
@@ -1168,7 +1166,7 @@ cwc_session(cwc_t *cwc)
    */
   shutdown(cwc->cwc_fd, SHUT_RDWR);
   cwc->cwc_writer_running = 0;
-  pthread_cond_signal(&cwc->cwc_writer_cond);
+  tvh_cond_signal(&cwc->cwc_writer_cond, 0);
   pthread_join(writer_thread_id, NULL);
   tvhlog(LOG_DEBUG, "cwc", "Write thread joined");
 }
@@ -1184,7 +1182,6 @@ cwc_thread(void *aux)
   char errbuf[100];
   char hostname[256];
   int port;
-  struct timespec ts;
   int attempts = 0;
 
   pthread_mutex_lock(&cwc->cwc_mutex);
@@ -1240,14 +1237,13 @@ cwc_thread(void *aux)
     caclient_set_status((caclient_t *)cwc, CACLIENT_STATUS_DISCONNECTED);
 
     d = 3;
-    ts.tv_sec = time(NULL) + d;
-    ts.tv_nsec = 0;
 
     tvhlog(LOG_INFO, "cwc", 
            "%s:%i: Automatic connection attempt in %d seconds",
            cwc->cwc_hostname, cwc->cwc_port, d-1);
 
-    pthread_cond_timedwait(&cwc->cwc_cond, &cwc->cwc_mutex, &ts);
+    tvh_cond_timedwait(&cwc->cwc_cond, &cwc->cwc_mutex,
+                       getmonoclock() + d * MONOCLOCK_RESOLUTION);
   }
 
   tvhlog(LOG_INFO, "cwc", "%s:%i inactive",
@@ -1737,14 +1733,14 @@ cwc_conf_changed(caclient_t *cac)
     cwc->cwc_reconfigure = 1;
     if(cwc->cwc_fd >= 0)
       shutdown(cwc->cwc_fd, SHUT_RDWR);
-    pthread_cond_signal(&cwc->cwc_cond);
+    tvh_cond_signal(&cwc->cwc_cond, 0);
     pthread_mutex_unlock(&cwc->cwc_mutex);
   } else {
     if (!cwc->cwc_running)
       return;
     pthread_mutex_lock(&cwc->cwc_mutex);
     cwc->cwc_running = 0;
-    pthread_cond_signal(&cwc->cwc_cond);
+    tvh_cond_signal(&cwc->cwc_cond, 0);
     tid = cwc->cwc_tid;
     if (cwc->cwc_fd >= 0)
       shutdown(cwc->cwc_fd, SHUT_RDWR);
@@ -1872,7 +1868,7 @@ caclient_t *cwc_create(void)
   cwc_t *cwc = calloc(1, sizeof(*cwc));
 
   pthread_mutex_init(&cwc->cwc_mutex, NULL);
-  pthread_cond_init(&cwc->cwc_cond, NULL);
+  tvh_cond_init(&cwc->cwc_cond);
   cwc->cac_free         = cwc_free;
   cwc->cac_start        = cwc_service_start;
   cwc->cac_conf_changed = cwc_conf_changed;

@@ -46,7 +46,7 @@ static RB_HEAD(,idclass_link)   idclasses;
 static RB_HEAD(,idclass_link)   idrootclasses;
 static TAILQ_HEAD(,idnode_save) idnodes_save;
 
-pthread_cond_t save_cond;
+tvh_cond_t save_cond;
 pthread_t save_tid;
 static int save_running;
 static gtimer_t save_timer;
@@ -1096,7 +1096,7 @@ idnode_savefn ( idnode_t *self, char *filename, size_t fsize )
 static void
 idnode_save_trigger_thread_cb( void *aux )
 {
-  pthread_cond_signal(&save_cond);
+  tvh_cond_signal(&save_cond, 0);
 }
 
 static void
@@ -1703,7 +1703,7 @@ save_thread ( void *aux )
       if (ise)
         gtimer_arm(&save_timer, idnode_save_trigger_thread_cb, NULL,
                    (ise->ise_reqtime + IDNODE_SAVE_DELAY) - dispatch_clock);
-      pthread_cond_wait(&save_cond, &global_lock);
+      tvh_cond_wait(&save_cond, &global_lock);
       continue;
     }
     m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
@@ -1749,7 +1749,7 @@ idnode_init(void)
   RB_INIT(&idrootclasses);
   TAILQ_INIT(&idnodes_save);
 
-  pthread_cond_init(&save_cond, NULL);
+  tvh_cond_init(&save_cond);
   save_running = 1;
   tvhthread_create(&save_tid, NULL, save_thread, NULL, "save");
 }
@@ -1760,7 +1760,7 @@ idnode_done(void)
   idclass_link_t *il;
 
   save_running = 0;
-  pthread_cond_signal(&save_cond);
+  tvh_cond_signal(&save_cond, 0);
   pthread_join(save_tid, NULL);
   gtimer_disarm(&save_timer);
 

@@ -176,7 +176,7 @@ pthread_mutex_t atomic_lock;
 static LIST_HEAD(, gtimer) gtimers;
 static pthread_cond_t gtimer_cond;
 static TAILQ_HEAD(, tasklet) tasklets;
-static pthread_cond_t tasklet_cond;
+static tvh_cond_t tasklet_cond;
 static pthread_t tasklet_tid;
 
 static void
@@ -359,7 +359,7 @@ tasklet_arm(tasklet_t *tsk, tsk_callback_t *callback, void *opaque)
   TAILQ_INSERT_TAIL(&tasklets, tsk, tsk_link);
 
   if (TAILQ_FIRST(&tasklets) == tsk)
-    pthread_cond_signal(&tasklet_cond);
+    tvh_cond_signal(&tasklet_cond, 0);
 
   pthread_mutex_unlock(&tasklet_lock);
 }
@@ -415,7 +415,7 @@ tasklet_thread ( void *aux )
   while (tvheadend_running) {
     tsk = TAILQ_FIRST(&tasklets);
     if (tsk == NULL) {
-      pthread_cond_wait(&tasklet_cond, &tasklet_lock);
+      tvh_cond_wait(&tasklet_cond, &tasklet_lock);
       continue;
     }
     if (tsk->tsk_callback) {
@@ -609,7 +609,7 @@ main(int argc, char **argv)
   pthread_mutex_init(&tasklet_lock, NULL);
   pthread_mutex_init(&atomic_lock, NULL);
   pthread_cond_init(&gtimer_cond, NULL);
-  pthread_cond_init(&tasklet_cond, NULL);
+  tvh_cond_init(&tasklet_cond);
   TAILQ_INIT(&tasklets);
 
   /* Defaults */
@@ -1157,7 +1157,7 @@ main(int argc, char **argv)
   tvhftrace("main", api_done);
 
   tvhtrace("main", "tasklet enter");
-  pthread_cond_signal(&tasklet_cond);
+  tvh_cond_signal(&tasklet_cond, 0);
   pthread_join(tasklet_tid, NULL);
   tvhtrace("main", "tasklet thread end");
   tasklet_flush();

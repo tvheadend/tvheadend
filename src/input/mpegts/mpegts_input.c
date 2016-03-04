@@ -1118,7 +1118,7 @@ mpegts_input_recv_packets
     pthread_mutex_lock(&mi->mi_input_lock);
     if (mmi->mmi_mux->mm_active == mmi) {
       TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
-      pthread_cond_signal(&mi->mi_input_cond);
+      tvh_cond_signal(&mi->mi_input_cond, 0);
     } else {
       free(mp);
     }
@@ -1434,7 +1434,7 @@ done:
 
   /* Wake table */
   if (table_wakeup)
-    pthread_cond_signal(&mi->mi_table_cond);
+    tvh_cond_signal(&mi->mi_table_cond, 0);
 
   /* Bandwidth monitoring */
   llen = tsb - mpkt->mp_data;
@@ -1460,7 +1460,7 @@ mpegts_input_thread ( void * p )
         tvhtrace("mpegts", "input %s got %zu bytes", buf, bytes);
         bytes = 0;
       }
-      pthread_cond_wait(&mi->mi_input_cond, &mi->mi_input_lock);
+      tvh_cond_wait(&mi->mi_input_cond, &mi->mi_input_lock);
       continue;
     }
     TAILQ_REMOVE(&mi->mi_input_queue, mp, mp_link);
@@ -1522,7 +1522,7 @@ mpegts_input_table_thread ( void *aux )
 
     /* Wait for data */
     if (!(mtf = TAILQ_FIRST(&mi->mi_table_queue))) {
-      pthread_cond_wait(&mi->mi_table_cond, &mi->mi_output_lock);
+      tvh_cond_wait(&mi->mi_table_cond, &mi->mi_output_lock);
       continue;
     }
     TAILQ_REMOVE(&mi->mi_table_queue, mtf, mtf_link);
@@ -1699,12 +1699,12 @@ mpegts_input_thread_stop ( mpegts_input_t *mi )
 
   /* Stop input thread */
   pthread_mutex_lock(&mi->mi_input_lock);
-  pthread_cond_signal(&mi->mi_input_cond);
+  tvh_cond_signal(&mi->mi_input_cond, 0);
   pthread_mutex_unlock(&mi->mi_input_lock);
 
   /* Stop table thread */
   pthread_mutex_lock(&mi->mi_output_lock);
-  pthread_cond_signal(&mi->mi_table_cond);
+  tvh_cond_signal(&mi->mi_table_cond, 0);
   pthread_mutex_unlock(&mi->mi_output_lock);
 
   /* Join threads (relinquish lock due to potential deadlock) */
@@ -1787,11 +1787,11 @@ mpegts_input_create0
 
   /* Init input/output structures */
   pthread_mutex_init(&mi->mi_input_lock, NULL);
-  pthread_cond_init(&mi->mi_input_cond, NULL);
+  tvh_cond_init(&mi->mi_input_cond);
   TAILQ_INIT(&mi->mi_input_queue);
 
   pthread_mutex_init(&mi->mi_output_lock, NULL);
-  pthread_cond_init(&mi->mi_table_cond, NULL);
+  tvh_cond_init(&mi->mi_table_cond);
   TAILQ_INIT(&mi->mi_table_queue);
 
   /* Defaults */
@@ -1853,7 +1853,7 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   mpegts_input_thread_stop(mi);
 
   pthread_mutex_destroy(&mi->mi_output_lock);
-  pthread_cond_destroy(&mi->mi_table_cond);
+  tvh_cond_destroy(&mi->mi_table_cond);
   free(mi->mi_name);
   free(mi->mi_linked);
   free(mi);

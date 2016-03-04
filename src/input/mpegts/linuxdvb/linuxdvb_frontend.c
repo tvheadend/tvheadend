@@ -772,7 +772,7 @@ linuxdvb_frontend_monitor ( void *aux )
       pthread_mutex_lock(&lfe->lfe_dvr_lock);
       tvhthread_create(&lfe->lfe_dvr_thread, NULL,
                        linuxdvb_frontend_input_thread, lfe, "lnxdvb-front");
-      pthread_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
+      tvh_cond_wait(&lfe->lfe_dvr_cond, &lfe->lfe_dvr_lock);
       pthread_mutex_unlock(&lfe->lfe_dvr_lock);
 
       /* Table handlers */
@@ -1167,7 +1167,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
   lfe->mi_display_name((mpegts_input_t*)lfe, name, sizeof(name));
   mmi = LIST_FIRST(&lfe->mi_mux_active);
-  pthread_cond_signal(&lfe->lfe_dvr_cond);
+  tvh_cond_signal(&lfe->lfe_dvr_cond, 0);
   pthread_mutex_unlock(&lfe->lfe_dvr_lock);
   if (mmi == NULL) return NULL;
 
@@ -1953,7 +1953,7 @@ linuxdvb_frontend_create
 
   /* DVR lock/cond */
   pthread_mutex_init(&lfe->lfe_dvr_lock, NULL);
-  pthread_cond_init(&lfe->lfe_dvr_cond, NULL);
+  tvh_cond_init(&lfe->lfe_dvr_cond);
   mpegts_pid_init(&lfe->lfe_pids);
  
   /* Create satconf */

@@ -117,7 +117,7 @@ const idclass_t imagecache_class = {
   }
 };
 
-static pthread_cond_t                 imagecache_cond;
+static tvh_cond_t                     imagecache_cond;
 static TAILQ_HEAD(, imagecache_image) imagecache_queue;
 static gtimer_t                       imagecache_timer;
 #endif
@@ -179,7 +179,7 @@ imagecache_image_add ( imagecache_image_t *img )
   if (strncasecmp("file://", img->url, 7)) {
     img->state = QUEUED;
     TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
-    pthread_cond_broadcast(&imagecache_cond);
+    tvh_cond_signal(&imagecache_cond, 1);
   } else {
     time(&img->updated);
   }
@@ -330,7 +330,7 @@ error:
   } else {
     tvhdebug("imagecache", "downloaded %s", img->url);
   }
-  pthread_cond_broadcast(&imagecache_cond);
+  tvh_cond_signal(&imagecache_cond, 1);
 
   return res;
 };
@@ -345,13 +345,13 @@ imagecache_thread ( void *p )
 
     /* Check we're enabled */
     if (!imagecache_conf.enabled) {
-      pthread_cond_wait(&imagecache_cond, &global_lock);
+      tvh_cond_wait(&imagecache_cond, &global_lock);
       continue;
     }
 
     /* Get entry */
     if (!(img = TAILQ_FIRST(&imagecache_queue))) {
-      pthread_cond_wait(&imagecache_cond, &global_lock);
+      tvh_cond_wait(&imagecache_cond, &global_lock);
       continue;
     }
 
@@ -412,7 +412,7 @@ imagecache_init ( void )
 
   /* Create threads */
 #if ENABLE_IMAGECACHE
-  pthread_cond_init(&imagecache_cond, NULL);
+  tvh_cond_init(&imagecache_cond);
   TAILQ_INIT(&imagecache_queue);
 #endif
 
@@ -493,7 +493,7 @@ imagecache_done ( void )
   imagecache_image_t *img;
 
 #if ENABLE_IMAGECACHE
-  pthread_cond_broadcast(&imagecache_cond);
+  tvh_cond_signal(&imagecache_cond, 1);
   pthread_join(imagecache_tid, NULL);
 #endif
   while ((img = RB_FIRST(&imagecache_by_id)) != NULL)
@@ -513,7 +513,7 @@ imagecache_save ( idnode_t *self, char *filename, size_t fsize )
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&imagecache_conf.idnode, c);
   snprintf(filename, fsize, "imagecache/config");
-  pthread_cond_broadcast(&imagecache_cond);
+  tvh_cond_signal(&imagecache_cond, 1);
   return c;
 }
 
@@ -660,17 +660,14 @@ imagecache_open ( uint32_t id )
 #if ENABLE_IMAGECACHE
   else if (imagecache_conf.enabled) {
     int e;
-    struct timespec ts;
 
     /* Use existing */
     if (i->updated) {
 
     /* Wait */
     } else if (i->state == FETCHING) {
-      time(&ts.tv_sec);
-      ts.tv_nsec = 0;
-      ts.tv_sec += 5;
-      e = pthread_cond_timedwait(&imagecache_cond, &global_lock, &ts);
+      e = tvh_cond_timedwait(&imagecache_cond, &global_lock,
+                             getmonoclock() + 5 * MONOCLOCK_RESOLUTION);
       if (e == ETIMEDOUT)
         return -1;
 
