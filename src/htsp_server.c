@@ -905,8 +905,8 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
 
   htsmsg_add_s64(out, "start",       de->de_start);
   htsmsg_add_s64(out, "stop",        de->de_stop);
-  htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de));
-  htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de));
+  htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de)/60);
+  htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de)/60);
 
   if (htsp->htsp_version > 24)
     htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de));

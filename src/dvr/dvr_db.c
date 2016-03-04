@@ -214,14 +214,17 @@ dvr_entry_warm_time( dvr_entry_t *de )
 time_t
 dvr_entry_get_start_time( dvr_entry_t *de, int warm )
 {
-  return de->de_start - (60 * dvr_entry_get_extra_time_pre(de)) -
-         (warm ? dvr_entry_warm_time(de) : 0);
+  int64_t b = (dvr_entry_get_extra_time_pre(de)) -
+              (warm ? dvr_entry_warm_time(de) : 0);
+  if (de->de_start < b)
+    return 0;
+  return de->de_start - b;
 }
 
 time_t
 dvr_entry_get_stop_time( dvr_entry_t *de )
 {
-  return de->de_stop + (60 * dvr_entry_get_extra_time_post(de));
+  return time_t_out_of_range((int64_t)de->de_stop + dvr_entry_get_extra_time_post(de));
 }
 
 time_t
@@ -237,7 +240,7 @@ dvr_entry_get_extra_time_pre( dvr_entry_t *de )
     if (!extra_valid(extra))
       extra = de->de_config->dvr_extra_time_pre;
   }
-  return extra;
+  return MINMAX(extra, 0, 24*60) * 60;
 }
 
 time_t
@@ -253,7 +256,7 @@ dvr_entry_get_extra_time_post( dvr_entry_t *de )
     if (!extra_valid(extra))
       extra = de->de_config->dvr_extra_time_post;
   }
-  return extra;
+  return MINMAX(extra, 0, 24*60) * 60;
 }
 
 char *
@@ -396,7 +399,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   uint32_t retention = dvr_entry_get_retention_days(de);
   int save;
 
-  stop = de->de_stop + removal * (time_t)86400;
+  stop = time_t_out_of_range((int64_t)de->de_stop + removal * (int64_t)86400);
   if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
     if (stop > dispatch_clock) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
@@ -414,7 +417,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   }
 
   if (retention < DVR_RET_ONREMOVE) {
-    stop = de->de_stop + retention * (time_t)86400;
+    stop = time_t_out_of_range((int64_t)de->de_stop + retention * (int64_t)86400);
     dvr_entry_retention_arm(de, dvr_timer_expire, stop);
   } else {
     gtimer_disarm(&de->de_timer);

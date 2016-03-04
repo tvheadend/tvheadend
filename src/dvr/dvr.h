@@ -444,7 +444,7 @@ void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
 static inline uint32_t dvr_retention_cleanup(uint32_t val)
 {
-  return (val > 0xffffffff - 86400) ? (0xffffffff - 86400) : val;
+  return val > DVR_RET_FOREVER ? DVR_RET_FOREVER : val;
 }
 
 /*

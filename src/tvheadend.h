@@ -842,4 +842,16 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #define PRItime_t       "ld"
 #endif
 
+void time_t_out_of_range_notify(int64_t val);
+
+static inline time_t time_t_out_of_range(uint64_t val)
+{
+  time_t r = val;
+  if ((int64_t)r != val) {
+    time_t_out_of_range_notify(val);
+    r = INT32_MAX;
+  }
+  return r;
+}
+
 #endif /* TVHEADEND_H */

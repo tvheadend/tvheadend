@@ -1260,3 +1260,12 @@ htsmsg_t *tvheadend_capabilities_list(int check)
   }
   return r;
 }
+
+/**
+ *
+ */
+void time_t_out_of_range_notify(int64_t val)
+{
+  tvherror("main", "time value of of range (%"PRId64") of time_t", val);
+  abort();
+}
