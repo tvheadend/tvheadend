@@ -48,7 +48,7 @@ RB_HEAD(,epggrab_ota_mux)    epggrab_ota_all;
 epggrab_ota_head_t           epggrab_ota_pending;
 epggrab_ota_head_t           epggrab_ota_active;
 
-gtimer_t                     epggrab_ota_kick_timer;
+mtimer_t                     epggrab_ota_kick_timer;
 gtimer_t                     epggrab_ota_start_timer;
 
 int                          epggrab_ota_running;
@@ -161,7 +161,7 @@ epggrab_ota_kick ( int delay )
   if (TAILQ_EMPTY(&epggrab_ota_pending))
     return;
 
-  gtimer_arm(&epggrab_ota_kick_timer, epggrab_ota_kick_cb, NULL, delay);
+  mtimer_arm_rel(&epggrab_ota_kick_timer, epggrab_ota_kick_cb, NULL, mono4sec(delay));
 }
 
 static void
@@ -184,8 +184,8 @@ epggrab_ota_done ( epggrab_ota_mux_t *om, int reason )
   mpegts_mux_nice_name(mm, name, sizeof(name));
   tvhdebug("epggrab", "grab done for %s (%s)", name, reasons[reason]);
 
-  gtimer_disarm(&om->om_timer);
-  gtimer_disarm(&om->om_data_timer);
+  mtimer_disarm(&om->om_timer);
+  mtimer_disarm(&om->om_data_timer);
 
   assert(om->om_q_type == EPGGRAB_OTA_MUX_ACTIVE);
   TAILQ_REMOVE(&epggrab_ota_active, om, om_q_link);
@@ -243,10 +243,10 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
   TAILQ_INSERT_TAIL(&epggrab_ota_active, om, om_q_link);
   om->om_q_type = EPGGRAB_OTA_MUX_ACTIVE;
   grace = mpegts_input_grace(mmi->mmi_input, mm);
-  gtimer_arm(&om->om_timer, epggrab_ota_timeout_cb, om,
-             epggrab_ota_timeout_get() + grace);
-  gtimer_arm(&om->om_data_timer, epggrab_ota_data_timeout_cb, om,
-             30 + grace); /* 30 seconds to receive any EPG info */
+  mtimer_arm_rel(&om->om_timer, epggrab_ota_timeout_cb, om,
+                 mono4sec(epggrab_ota_timeout_get() + grace));
+  mtimer_arm_rel(&om->om_data_timer, epggrab_ota_data_timeout_cb, om,
+                 mono4sec(30 + grace)); /* 30 seconds to receive any EPG info */
   if (modname) {
     LIST_FOREACH(m, &epggrab_modules, link)
       if (!strcmp(m->id, modname)) {
@@ -625,7 +625,7 @@ static void
 epggrab_ota_next_arm( time_t next )
 {
   tvhtrace("epggrab", "next ota start event in %li seconds", next - time(NULL));
-  gtimer_arm_abs(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
+  gtimer_arm_absn(&epggrab_ota_start_timer, epggrab_ota_start_cb, NULL, next);
   dbus_emit_signal_s64("/epggrab/ota", "next", next);
 }
 
@@ -641,7 +641,7 @@ epggrab_ota_start_cb ( void *p )
   epggrab_ota_kick(1);
 
   pthread_mutex_lock(&epggrab_ota_mutex);
-  if (!cron_multi_next(epggrab_ota_cron_multi, dispatch_clock, &next))
+  if (!cron_multi_next(epggrab_ota_cron_multi, gdispatch_clock, &next))
     epggrab_ota_next_arm(next);
   else
     tvhwarn("epggrab", "ota cron config invalid or unset");
@@ -887,8 +887,8 @@ epggrab_ota_free ( epggrab_ota_head_t *head, epggrab_ota_mux_t *ota  )
   epggrab_ota_map_t *map;
   epggrab_ota_svc_link_t *svcl;
 
-  gtimer_disarm(&ota->om_timer);
-  gtimer_disarm(&ota->om_data_timer);
+  mtimer_disarm(&ota->om_timer);
+  mtimer_disarm(&ota->om_data_timer);
   if (head != NULL)
     TAILQ_REMOVE(head, ota, om_q_link);
   RB_REMOVE(&epggrab_ota_all, ota, om_global_link);

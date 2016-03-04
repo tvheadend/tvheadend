@@ -320,7 +320,7 @@ struct mpegts_network
    */
   mpegts_mux_queue_t mn_scan_pend;    // Pending muxes
   mpegts_mux_queue_t mn_scan_active;  // Active muxes
-  gtimer_t           mn_scan_timer;   // Timer for activity
+  mtimer_t           mn_scan_timer;   // Timer for activity
 
   /*
    * Functions
@@ -415,7 +415,7 @@ struct mpegts_mux
   uint16_t                mm_tsid;
 
   int                     mm_update_pids_flag;
-  gtimer_t                mm_update_pids_timer;
+  mtimer_t                mm_update_pids_timer;
 
   /*
    * Services
@@ -431,7 +431,7 @@ struct mpegts_mux
   int                      mm_scan_weight;  ///< Scan priority
   int                      mm_scan_flags;   ///< Subscription flags
   int                      mm_scan_init;    ///< Flag to timeout handler
-  gtimer_t                 mm_scan_timeout; ///< Timer to handle timeout
+  mtimer_t                 mm_scan_timeout; ///< Timer to handle timeout
   TAILQ_ENTRY(mpegts_mux)  mm_scan_link;    ///< Link to Queue
   mpegts_mux_scan_state_t  mm_scan_state;   ///< Scanning state
 
@@ -443,7 +443,7 @@ struct mpegts_mux
   }                        mm_dmc_origin2;
 #endif
   void                    *mm_dmc_origin;
-  time_t                   mm_dmc_origin_expire;
+  int64_t                  mm_dmc_origin_expire;
 
   char                    *mm_fastscan_muxes;
 
@@ -592,11 +592,6 @@ struct mpegts_service
   time_t s_tsbuf_last;
 
   /**
-   * Average continuity errors
-   */
-  avgstat_t s_cc_errors;
-
-  /**
    * PCR drift compensation. This should really be per-packet.
    */
   int64_t  s_pcr_drift;
@@ -670,7 +665,7 @@ struct mpegts_input
   /*
    * Status
    */
-  gtimer_t mi_status_timer;
+  mtimer_t mi_status_timer;
 
   /*
    * Input processing

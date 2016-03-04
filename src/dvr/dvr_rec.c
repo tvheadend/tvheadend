@@ -878,9 +878,9 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 static void
 dvr_notify(dvr_entry_t *de)
 {
-  if (de->de_last_notify + 5 < dispatch_clock) {
+  if (de->de_last_notify + mono4sec(5) < mdispatch_clock) {
     idnode_notify_changed(&de->de_id);
-    de->de_last_notify = dispatch_clock;
+    de->de_last_notify = mdispatch_clock;
     htsp_dvr_entry_update(de);
   }
 }
@@ -1272,7 +1272,7 @@ dvr_thread(void *aux)
     streaming_queue_remove(sq, sm);
 
     if (running_disabled) {
-      epg_running = real_start <= dispatch_clock;
+      epg_running = real_start <= gdispatch_clock;
     } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
       running_start = atomic_add_time_t(&de->de_running_start, 0);
       running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
@@ -1281,13 +1281,13 @@ dvr_thread(void *aux)
         if (epg_running && atomic_add_time_t(&de->de_running_pause, 0) >= running_start)
           epg_running = 2;
       } else if (running_stop == 0) {
-        if (start_time + 2 >= dispatch_clock) {
+        if (start_time + 2 >= gdispatch_clock) {
           TAILQ_INSERT_TAIL(&backlog, sm, sm_link);
           continue;
         } else {
           if (TAILQ_FIRST(&backlog))
             streaming_queue_clear(&backlog);
-          epg_running = real_start <= dispatch_clock;
+          epg_running = real_start <= gdispatch_clock;
         }
       } else {
         epg_running = 0;
@@ -1409,7 +1409,7 @@ dvr_thread(void *aux)
       break;
 
     case SMT_START:
-      start_time = dispatch_clock;
+      start_time = gdispatch_clock;
       packets = 0;
       if (ss)
 	streaming_start_unref(ss);

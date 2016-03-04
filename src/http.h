@@ -293,7 +293,7 @@ struct http_client {
   char        *hc_data;         /* data body */
   size_t       hc_data_size;    /* data body size - result for caller */
 
-  time_t       hc_ping_time;    /* last issued command */
+  int64_t      hc_ping_time;    /* last issued command */
 
   char        *hc_rbuf;         /* read buffer */
   size_t       hc_rsize;        /* read buffer size */
@@ -344,7 +344,7 @@ struct http_client {
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
-  gtimer_t     hc_close_timer;
+  mtimer_t     hc_close_timer;
 
   /* callbacks */
   void    (*hc_hdr_create)   (http_client_t *hc, http_arg_list_t *h,

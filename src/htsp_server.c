@@ -146,7 +146,7 @@ typedef struct htsp_connection {
 
   int64_t  htsp_epg_window;      // only send async epg updates within this window (seconds)
   int64_t  htsp_epg_lastupdate;  // last update time for async epg events
-  gtimer_t htsp_epg_timer;       // timer for async epg updates
+  mtimer_t htsp_epg_timer;       // timer for async epg updates
 
   /**
    * Async mode
@@ -194,14 +194,14 @@ typedef struct htsp_subscription {
 
   th_subscription_t *hs_s; // Temporary
   int                hs_s_bytes_out;
-  gtimer_t           hs_s_bytes_out_timer;
+  mtimer_t           hs_s_bytes_out_timer;
 
   streaming_target_t hs_input;
   profile_chain_t    hs_prch;
 
   htsp_msg_q_t hs_q;
 
-  time_t hs_last_report; /* Last queue status report sent */
+  int64_t hs_last_report; /* Last queue status report sent */
 
   int hs_dropstats[PKT_NTYPES];
 
@@ -358,7 +358,7 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
   th_subscription_t *ts = hs->hs_s;
 
   hs->hs_s = NULL;
-  gtimer_disarm(&hs->hs_s_bytes_out_timer);
+  mtimer_disarm(&hs->hs_s_bytes_out_timer);
 
   LIST_REMOVE(hs, hs_link);
   LIST_INSERT_HEAD(&htsp->htsp_dead_subscriptions, hs, hs_link);
@@ -1407,9 +1407,9 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
     if (htsp->htsp_async_mode & HTSP_ASYNC_EPG) {
       /* Only allow to change the window in the correct range */
       if (htsp->htsp_epg_window && epgMaxTime > htsp->htsp_epg_lastupdate)
-        htsp->htsp_epg_window = epgMaxTime-dispatch_clock;
-    } else if (epgMaxTime > dispatch_clock) {
-      htsp->htsp_epg_window = epgMaxTime-dispatch_clock;
+        htsp->htsp_epg_window = epgMaxTime-gdispatch_clock;
+    } else if (epgMaxTime > gdispatch_clock) {
+      htsp->htsp_epg_window = epgMaxTime-gdispatch_clock;
     } else {
       htsp->htsp_epg_window = 0;
     }
@@ -2331,7 +2331,7 @@ static void _bytes_out_cb(void *aux)
   htsp_subscription_t *hs = aux;
   if (hs->hs_s) {
     subscription_add_bytes_out(hs->hs_s, atomic_exchange(&hs->hs_s_bytes_out, 0));
-    gtimer_arm_ms(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, 200);
+    mtimer_arm_rel(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, mono4ms(200));
   }
 }
 
@@ -2446,7 +2446,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      htsp->htsp_clientname,
 					      NULL);
   if (hs->hs_s)
-    gtimer_arm_ms(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, 200);
+    mtimer_arm_rel(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, mono4ms(200));
   return NULL;
 }
 
@@ -3253,7 +3253,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   if(htsp.htsp_async_mode)
     LIST_REMOVE(&htsp, htsp_async_link);
 
-  gtimer_disarm(&htsp.htsp_epg_timer);
+  mtimer_disarm(&htsp.htsp_epg_timer);
 
   /* deregister this client */
   LIST_REMOVE(&htsp, htsp_link);
@@ -3663,7 +3663,7 @@ htsp_epg_send_waiting(htsp_connection_t *htsp, int64_t mintime)
   channel_t *ch;
   int64_t maxtime;
 
-  maxtime = dispatch_clock + htsp->htsp_epg_window;
+  maxtime = gdispatch_clock + htsp->htsp_epg_window;
   htsp->htsp_epg_lastupdate = maxtime;
 
   /* Push new events */
@@ -3679,7 +3679,8 @@ htsp_epg_send_waiting(htsp_connection_t *htsp, int64_t mintime)
 
   /* Keep the epg window up to date */
   if (htsp->htsp_epg_window)
-    gtimer_arm(&htsp->htsp_epg_timer, htsp_epg_window_cb, htsp, HTSP_ASYNC_EPG_INTERVAL);
+    mtimer_arm_rel(&htsp->htsp_epg_timer, htsp_epg_window_cb,
+                   htsp, mono4sec(HTSP_ASYNC_EPG_INTERVAL));
 }
 
 /**
@@ -3808,11 +3809,11 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
   atomic_add(&hs->hs_s_bytes_out, payloadlen);
 
-  if(hs->hs_last_report != dispatch_clock) {
+  if(sec4mono(hs->hs_last_report) != sec4mono(mdispatch_clock)) {
 
     /* Send a queue and signal status report every second */
 
-    hs->hs_last_report = dispatch_clock;
+    hs->hs_last_report = mdispatch_clock;
 
     m = htsmsg_create_map();
     htsmsg_add_str(m, "method", "queueStatus");

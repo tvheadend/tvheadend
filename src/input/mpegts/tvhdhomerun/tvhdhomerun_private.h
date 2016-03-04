@@ -45,7 +45,7 @@ struct tvhdhomerun_device
 {
   tvh_hardware_t;
 
-  gtimer_t                   hd_destroy_timer;
+  mtimer_t                   hd_destroy_timer;
 
   /*
    * Adapter info
@@ -107,14 +107,14 @@ struct tvhdhomerun_frontend
   uint8_t                        hf_input_thread_terminating;  // Used for terminating the input_thread.
 
   // Global lock for the libhdhomerun library since it seems to have some threading-issues.
-  pthread_mutex_t               hf_hdhomerun_device_mutex;
+  pthread_mutex_t                hf_hdhomerun_device_mutex;
 
   /*
    * Reception
    */
   char                           hf_pid_filter_buf[1024];
 
-  gtimer_t                       hf_monitor_timer;
+  mtimer_t                       hf_monitor_timer;
 
   mpegts_mux_instance_t         *hf_mmi;
 

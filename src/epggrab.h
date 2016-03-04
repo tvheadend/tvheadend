@@ -210,8 +210,8 @@ struct epggrab_ota_mux
   uint8_t                            om_complete;     ///< Has completed a scan
   uint8_t                            om_requeue;      ///< Requeue when stolen
   uint8_t                            om_save;         ///< something changed
-  gtimer_t                           om_timer;        ///< Per mux active timer
-  gtimer_t                           om_data_timer;   ///< Any EPG data seen?
+  mtimer_t                           om_timer;        ///< Per mux active timer
+  mtimer_t                           om_data_timer;   ///< Any EPG data seen?
 
   char                              *om_force_modname;///< Force this module
 

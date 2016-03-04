@@ -47,7 +47,7 @@ typedef struct http_priv {
   htsmsg_t      *hls_m3u;
   htsmsg_t      *hls_key;
   uint8_t       *hls_si;
-  time_t         hls_last_si;
+  int64_t        hls_last_si;
   struct {
     char          tmp[AES_BLOCK_SIZE];
     int           tmp_len;
@@ -323,14 +323,14 @@ iptv_http_data
     memcpy(hp->hls_si, buf, 2*188);
   }
 
-  if (dispatch_clock != hp->hls_last_si && hp->hls_si) {
+  if (hp->hls_last_si + mono4sec(1) <= mdispatch_clock && hp->hls_si) {
     /* do rounding to start of the last MPEG-TS packet */
     rem = 188 - (hp->off % 188);
     if (im->mm_iptv_buffer.sb_ptr >= rem) {
       im->mm_iptv_buffer.sb_ptr -= rem;
       memcpy(tsbuf, im->mm_iptv_buffer.sb_data + im->mm_iptv_buffer.sb_ptr, rem);
       sbuf_append(&im->mm_iptv_buffer, hp->hls_si, 2*188);
-      hp->hls_last_si = dispatch_clock;
+      hp->hls_last_si = mdispatch_clock;
       sbuf_append(&im->mm_iptv_buffer, tsbuf, rem);
       hp->off += rem;
     }
@@ -344,7 +344,7 @@ iptv_http_data
 
   if (pause && iptv_http_safe_global_lock(hp)) {
     if (im->mm_active && !hp->shutdown)
-      gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+      mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, mono4sec(1));
     pthread_mutex_unlock(&global_lock);
   }
   return 0;

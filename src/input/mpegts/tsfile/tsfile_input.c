@@ -165,7 +165,7 @@ tsfile_input_thread ( void *aux )
         }
         pcr_last          = pcr.pcr_first;
 #if PLATFORM_LINUX
-        pcr_last_realtime = getmonoclock();
+        pcr_last_realtime = getfastmonoclock();
 #endif
       }
     }

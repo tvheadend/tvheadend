@@ -36,7 +36,7 @@
 
 struct dvr_timerec_entry_queue timerec_entries;
 
-static gtimer_t dvr_timerec_timer;
+static mtimer_t dvr_timerec_timer;
 
 /**
  *
@@ -119,15 +119,15 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   if(dte->dte_channel == NULL)
     goto fail;
 
-  limit = dispatch_clock - 600;
-  start = dvr_timerec_timecorrection(dispatch_clock, dte->dte_start, &tm_start);
-  stop  = dvr_timerec_timecorrection(dispatch_clock, dte->dte_stop,  &tm_stop);
+  limit = gdispatch_clock - 600;
+  start = dvr_timerec_timecorrection(gdispatch_clock, dte->dte_start, &tm_start);
+  stop  = dvr_timerec_timecorrection(gdispatch_clock, dte->dte_stop,  &tm_stop);
   if (start < limit && stop < limit) {
     /* next day */
-    start = dvr_timerec_timecorrection(dispatch_clock + 24*60*60,
+    start = dvr_timerec_timecorrection(gdispatch_clock + 24*60*60,
                                        dte->dte_start,
                                        &tm_start);
-    stop  = dvr_timerec_timecorrection(dispatch_clock + 24*60*60,
+    stop  = dvr_timerec_timecorrection(gdispatch_clock + 24*60*60,
                                        dte->dte_stop,
                                        &tm_stop);
   }
@@ -716,7 +716,7 @@ dvr_timerec_timer_cb(void *aux)
   }
 
   /* load the timer */
-  gtimer_arm(&dvr_timerec_timer, dvr_timerec_timer_cb, NULL, 3550);
+  mtimer_arm_rel(&dvr_timerec_timer, dvr_timerec_timer_cb, NULL, mono4sec(3550));
 }
 
 void

@@ -765,7 +765,7 @@ linuxdvb_ca_monitor ( void *aux )
 
   }
 
-  gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
+  mtimer_arm_rel(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, mono4ms(250));
 }
 
 linuxdvb_ca_t *
@@ -806,7 +806,7 @@ linuxdvb_ca_create
 
   TAILQ_INIT(&lca->lca_capmt_queue);
 
-  gtimer_arm_ms(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, 250);
+  mtimer_arm_rel(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, mono4ms(250));
 
   return lca;
 }
@@ -868,8 +868,8 @@ done:
   free(lcc);
 
   if (!TAILQ_EMPTY(&lca->lca_capmt_queue)) {
-    gtimer_arm_ms(&lca->lca_capmt_queue_timer,
-                  linuxdvb_ca_process_capmt_queue, lca, i);
+    mtimer_arm_rel(&lca->lca_capmt_queue_timer,
+                   linuxdvb_ca_process_capmt_queue, lca, mono4ms(i));
   }
 }
 
@@ -905,8 +905,8 @@ linuxdvb_ca_enqueue_capmt(linuxdvb_ca_t *lca, uint8_t slot, const uint8_t *ptr,
              ca_pmt_list_mgmt2str(lcc->list_mgmt));
   }
 
-  gtimer_arm_ms(&lca->lca_capmt_queue_timer,
-                linuxdvb_ca_process_capmt_queue, lca, 50);
+  mtimer_arm_rel(&lca->lca_capmt_queue_timer,
+                 linuxdvb_ca_process_capmt_queue, lca, mono4ms(50));
 }
 
 void linuxdvb_ca_save( linuxdvb_ca_t *lca, htsmsg_t *msg )

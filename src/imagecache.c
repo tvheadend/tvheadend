@@ -119,7 +119,7 @@ const idclass_t imagecache_class = {
 
 static tvh_cond_t                     imagecache_cond;
 static TAILQ_HEAD(, imagecache_image) imagecache_queue;
-static gtimer_t                       imagecache_timer;
+static mtimer_t                       imagecache_timer;
 #endif
 
 static int
@@ -463,7 +463,7 @@ imagecache_init ( void )
   // TODO: this could be more efficient by being targetted, however
   //       the reality its not necessary and I'd prefer to avoid dumping
   //       100's of timers into the global pool
-  gtimer_arm(&imagecache_timer, imagecache_timer_cb, NULL, 600);
+  mtimer_arm_rel(&imagecache_timer, imagecache_timer_cb, NULL, mono4sec(600));
 #endif
 }
 
@@ -493,6 +493,7 @@ imagecache_done ( void )
   imagecache_image_t *img;
 
 #if ENABLE_IMAGECACHE
+  mtimer_disarm(&imagecache_timer);
   tvh_cond_signal(&imagecache_cond, 1);
   pthread_join(imagecache_tid, NULL);
 #endif
@@ -641,6 +642,7 @@ imagecache_open ( uint32_t id )
   imagecache_image_t skel, *i;
   char *fn;
   int fd = -1;
+  int64_t mono;
 
   lock_assert(&global_lock);
 
@@ -666,10 +668,12 @@ imagecache_open ( uint32_t id )
 
     /* Wait */
     } else if (i->state == FETCHING) {
-      e = tvh_cond_timedwait(&imagecache_cond, &global_lock,
-                             getmonoclock() + 5 * MONOCLOCK_RESOLUTION);
-      if (e == ETIMEDOUT)
-        return -1;
+      mono = mdispatch_clock + mono4sec(5);
+      do {
+        e = tvh_cond_timedwait(&imagecache_cond, &global_lock, mono);
+        if (e == ETIMEDOUT)
+          return -1;
+      } while (ERRNO_AGAIN(e));
 
     /* Attempt to fetch */
     } else if (i->state == QUEUED) {

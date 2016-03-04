@@ -47,14 +47,14 @@ mpegts_mux_sched_set_timer ( mpegts_mux_sched_t *mms )
     if (mms->mms_timeout <= 0)
       gtimer_disarm(&mms->mms_timer);
     else {
-      gtimer_arm(&mms->mms_timer, mpegts_mux_sched_timer, mms,
-                 mms->mms_timeout);
+      gtimer_arm_rel(&mms->mms_timer, mpegts_mux_sched_timer, mms,
+                     mms->mms_timeout);
     }
   } else {
     time_t now, nxt;
     time(&now);
     if (!cron_next(&mms->mms_cronjob, now, &nxt)) {
-      gtimer_arm_abs(&mms->mms_timer, mpegts_mux_sched_timer, mms, nxt);
+      gtimer_arm_absn(&mms->mms_timer, mpegts_mux_sched_timer, mms, nxt);
     }
   }
 }
@@ -176,7 +176,7 @@ mpegts_mux_sched_input ( void *p, streaming_message_t *sm )
 
   switch (sm->sm_type) {
     case SMT_STOP:
-      gtimer_arm(&mms->mms_timer, mpegts_mux_sched_timer, mms, 0);
+      gtimer_arm_rel(&mms->mms_timer, mpegts_mux_sched_timer, mms, 0);
       break;
     default:
       // ignore
@@ -231,14 +231,14 @@ mpegts_mux_sched_timer ( void *p )
 
     /* Failed (try-again soon) */
     if (!mms->mms_sub) {
-      gtimer_arm(&mms->mms_timer, mpegts_mux_sched_timer, mms, 60);
+      gtimer_arm_rel(&mms->mms_timer, mpegts_mux_sched_timer, mms, 60);
 
     /* OK */
     } else {
       mms->mms_active = 1;
       if (mms->mms_timeout > 0) {
-        gtimer_arm(&mms->mms_timer, mpegts_mux_sched_timer, mms,
-                   mms->mms_timeout);
+        gtimer_arm_rel(&mms->mms_timer, mpegts_mux_sched_timer, mms,
+                       mms->mms_timeout);
       } 
     }
 
@@ -257,7 +257,7 @@ mpegts_mux_sched_timer ( void *p )
     }
 
     /* Timer */
-    gtimer_arm_abs(&mms->mms_timer, mpegts_mux_sched_timer, mms, nxt);
+    gtimer_arm_absn(&mms->mms_timer, mpegts_mux_sched_timer, mms, nxt);
   }
 }
 

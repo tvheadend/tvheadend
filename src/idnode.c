@@ -49,7 +49,7 @@ static TAILQ_HEAD(,idnode_save) idnodes_save;
 tvh_cond_t save_cond;
 pthread_t save_tid;
 static int save_running;
-static gtimer_t save_timer;
+static mtimer_t save_timer;
 
 SKEL_DECLARE(idclasses_skel, idclass_link_t);
 
@@ -1108,9 +1108,9 @@ idnode_save_queue ( idnode_t *self )
     return;
   ise = malloc(sizeof(*ise));
   ise->ise_node = self;
-  ise->ise_reqtime = dispatch_clock;
+  ise->ise_reqtime = mdispatch_clock;
   if (TAILQ_EMPTY(&idnodes_save) && save_running)
-    gtimer_arm(&save_timer, idnode_save_trigger_thread_cb, NULL, IDNODE_SAVE_DELAY);
+    mtimer_arm_rel(&save_timer, idnode_save_trigger_thread_cb, NULL, IDNODE_SAVE_DELAY);
   TAILQ_INSERT_TAIL(&idnodes_save, ise, ise_link);
   self->in_save = ise;
 }
@@ -1699,10 +1699,10 @@ save_thread ( void *aux )
 
   while (save_running) {
     if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
-        (ise->ise_reqtime + IDNODE_SAVE_DELAY > dispatch_clock)) {
+        (ise->ise_reqtime + IDNODE_SAVE_DELAY > mdispatch_clock)) {
       if (ise)
-        gtimer_arm(&save_timer, idnode_save_trigger_thread_cb, NULL,
-                   (ise->ise_reqtime + IDNODE_SAVE_DELAY) - dispatch_clock);
+        mtimer_arm_abs(&save_timer, idnode_save_trigger_thread_cb, NULL,
+                       ise->ise_reqtime + IDNODE_SAVE_DELAY);
       tvh_cond_wait(&save_cond, &global_lock);
       continue;
     }
@@ -1718,7 +1718,7 @@ save_thread ( void *aux )
     pthread_mutex_lock(&global_lock);
   }
 
-  gtimer_disarm(&save_timer);
+  mtimer_disarm(&save_timer);
 
   while ((ise = TAILQ_FIRST(&idnodes_save)) != NULL) {
     m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
@@ -1762,7 +1762,7 @@ idnode_done(void)
   save_running = 0;
   tvh_cond_signal(&save_cond, 0);
   pthread_join(save_tid, NULL);
-  gtimer_disarm(&save_timer);
+  mtimer_disarm(&save_timer);
 
   while ((il = RB_FIRST(&idclasses)) != NULL) {
     RB_REMOVE(&idclasses, il, link);

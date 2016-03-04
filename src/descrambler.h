@@ -72,12 +72,12 @@ typedef struct th_descrambler_runtime {
   uint8_t  dr_key_index;
   uint8_t  dr_key_valid;
   uint8_t  dr_key_changed;
-  uint32_t dr_key_interval;
-  time_t   dr_key_start;
-  time_t   dr_key_timestamp[2];
-  time_t   dr_ecm_start[2];
-  time_t   dr_ecm_last_key_time;
-  time_t   dr_last_err;
+  uint64_t dr_key_interval;
+  int64_t   dr_key_start;
+  int64_t   dr_key_timestamp[2];
+  int64_t   dr_ecm_start[2];
+  int64_t   dr_ecm_last_key_time;
+  int64_t   dr_last_err;
   TAILQ_HEAD(, th_descrambler_data) dr_queue;
   uint32_t dr_queue_total;
   tvhlog_limit_t dr_loglimit_key;

@@ -335,10 +335,10 @@ static void timeshift_input
         goto _exit;
     } else {
       if (ts->ref_time == 0) {
-        ts->ref_time = getmonoclock();
+        ts->ref_time = getfastmonoclock();
         sm->sm_time = 0;
       } else {
-        sm->sm_time = getmonoclock() - ts->ref_time;
+        sm->sm_time = getfastmonoclock() - ts->ref_time;
       }
     }
     streaming_target_deliver2(&ts->wr_queue.sq_st, sm);

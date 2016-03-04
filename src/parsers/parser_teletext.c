@@ -619,7 +619,7 @@ tt_construct_unix_time(uint8_t *buf)
   int i;
   struct tm tm;
 
-  t = dispatch_clock;
+  t = gdispatch_clock;
   localtime_r(&t, &tm);
 
   tm.tm_hour = atoi((char *)buf);

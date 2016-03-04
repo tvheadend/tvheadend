@@ -170,7 +170,7 @@ typedef struct access_ticket {
 
   TAILQ_ENTRY(access_ticket) at_link;
 
-  gtimer_t at_timer;
+  mtimer_t at_timer;
   char *at_resource;
   access_t *at_access;
 } access_ticket_t;

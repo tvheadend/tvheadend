@@ -861,8 +861,7 @@ mpegts_input_started_mux
 
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
-    gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer,
-               mi, 1);
+    mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, mono4sec(1));
 
   /* Update */
   mmi->mmi_mux->mm_active = mmi;
@@ -900,7 +899,7 @@ mpegts_input_stopped_mux
 
   /* Disarm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
-    gtimer_disarm(&mi->mi_status_timer);
+    mtimer_disarm(&mi->mi_status_timer);
 
   mi->mi_display_name(mi, buf, sizeof(buf));
   tvhtrace("mpegts", "%s - flush subscribers", buf);
@@ -1054,10 +1053,10 @@ mpegts_input_recv_packets
 
   if (len < (MIN_TS_PKT * 188) && (flags & MPEGTS_DATA_CC_RESTART) == 0) {
     /* For slow streams, check also against the clock */
-    if (dispatch_clock == mi->mi_last_dispatch)
+    if (sec4mono(mdispatch_clock) == sec4mono(mi->mi_last_dispatch))
       return;
   }
-  mi->mi_last_dispatch = dispatch_clock;
+  mi->mi_last_dispatch = mdispatch_clock;
 
   /* Check for sync */
   while ( (len >= MIN_TS_SYN) &&
@@ -1738,7 +1737,7 @@ mpegts_input_status_timer ( void *p )
     tvh_input_stream_destroy(&st);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
-  gtimer_arm(&mi->mi_status_timer, mpegts_input_status_timer, mi, 1);
+  mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, mono4sec(1));
   mpegts_input_dbus_notify(mi, subs);
 }
 

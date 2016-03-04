@@ -93,7 +93,7 @@ struct iptv_network
   char    *in_url;
   char    *in_url_sane;
   int      in_bouquet;
-  gtimer_t in_bouquet_timer;
+  mtimer_t in_bouquet_timer;
   char    *in_ctx_charset;
   int64_t  in_channel_number;
   uint32_t in_refetch_period;
@@ -147,7 +147,7 @@ struct iptv_mux
   uint32_t              mm_iptv_buffer_limit;
 
   iptv_handler_t       *im_handler;
-  gtimer_t              im_pause_timer;
+  mtimer_t              im_pause_timer;
 
   int64_t               im_pcr;
   int64_t               im_pcr_start;

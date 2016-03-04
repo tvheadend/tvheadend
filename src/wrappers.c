@@ -78,17 +78,16 @@ tvh_pipe_close(th_pipe_t *p)
 int
 tvh_write(int fd, const void *buf, size_t len)
 {
-  time_t next = dispatch_clock + 25;
+  int64_t limit = mdispatch_clock + mono4sec(25);
   ssize_t c;
 
   while (len) {
     c = write(fd, buf, len);
     if (c < 0) {
       if (ERRNO_AGAIN(errno)) {
-        if (dispatch_clock > next)
+        if (mdispatch_clock > limit)
           break;
         usleep(100);
-        dispatch_clock_update(NULL);
         continue;
       }
       break;
@@ -202,11 +201,11 @@ int
 tvh_mutex_timedlock
   ( pthread_mutex_t *mutex, int64_t usec )
 {
-  int64_t finish = getmonoclock() + usec;
+  int64_t finish = getfastmonoclock() + usec;
   int retcode;
 
   while ((retcode = pthread_mutex_trylock (mutex)) == EBUSY) {
-    if (getmonoclock() >= finish)
+    if (getfastmonoclock() >= finish)
       return ETIMEDOUT;
 
     usleep(10000);

@@ -719,7 +719,7 @@ satip_device_destroy( satip_device_t *sd )
 
   lock_assert(&global_lock);
 
-  gtimer_disarm(&sd->sd_destroy_timer);
+  mtimer_disarm(&sd->sd_destroy_timer);
 
   idnode_save_check(&sd->th_id, 1);
 
@@ -764,7 +764,7 @@ satip_device_destroy_cb( void *aux )
 void
 satip_device_destroy_later( satip_device_t *sd, int after )
 {
-  gtimer_arm_ms(&sd->sd_destroy_timer, satip_device_destroy_cb, sd, after);
+  mtimer_arm_rel(&sd->sd_destroy_timer, satip_device_destroy_cb, sd, mono4ms(after));
 }
 
 /*
@@ -782,7 +782,7 @@ typedef struct satip_discovery {
   char *deviceid;
   url_t url;
   http_client_t *http_client;
-  time_t http_start;
+  int64_t http_start;
 } satip_discovery_t;
 
 TAILQ_HEAD(satip_discovery_queue, satip_discovery);
@@ -791,10 +791,10 @@ static int satip_enabled;
 static int satip_discoveries_count;
 static struct satip_discovery_queue satip_discoveries;
 static upnp_service_t *satip_discovery_service;
-static gtimer_t satip_discovery_timer;
-static gtimer_t satip_discovery_static_timer;
-static gtimer_t satip_discovery_timerq;
-static gtimer_t satip_discovery_msearch_timer;
+static mtimer_t satip_discovery_timer;
+static mtimer_t satip_discovery_static_timer;
+static mtimer_t satip_discovery_timerq;
+static mtimer_t satip_discovery_msearch_timer;
 static str_list_t *satip_static_clients;
 
 static void
@@ -1006,7 +1006,7 @@ satip_discovery_timerq_cb(void *aux)
     d = next;
     next = TAILQ_NEXT(d, disc_link);
     if (d->http_client) {
-      if (dispatch_clock - d->http_start > 4)
+      if (mdispatch_clock - d->http_start > mono4sec(4))
         satip_discovery_destroy(d, 1);
       continue;
     }
@@ -1016,7 +1016,7 @@ satip_discovery_timerq_cb(void *aux)
     if (d->http_client == NULL)
       satip_discovery_destroy(d, 1);
     else {
-      d->http_start = dispatch_clock;
+      d->http_start = mdispatch_clock;
       d->http_client->hc_conn_closed = satip_discovery_http_closed;
       http_client_register(d->http_client);
       r = http_client_simple(d->http_client, &d->url);
@@ -1025,7 +1025,7 @@ satip_discovery_timerq_cb(void *aux)
     }
   }
   if (TAILQ_FIRST(&satip_discoveries))
-    gtimer_arm(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, 5);
+    mtimer_arm_rel(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, mono4sec(5));
 }
 
 static void
@@ -1134,7 +1134,7 @@ satip_discovery_service_received
   if (!satip_discovery_find(d) && !satip_device_find(d->uuid)) {
     TAILQ_INSERT_TAIL(&satip_discoveries, d, disc_link);
     satip_discoveries_count++;
-    gtimer_arm_ms(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, 250);
+    mtimer_arm_rel(&satip_discovery_timerq, satip_discovery_timerq_cb, NULL, mono4ms(250));
     i = 0;
   }
   pthread_mutex_unlock(&global_lock);
@@ -1148,7 +1148,7 @@ add_uuid:
   /* if new uuid was discovered, retrigger MSEARCH */
   pthread_mutex_lock(&global_lock);
   if (!satip_device_find(uuid))
-    gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 5);
+    mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb, NULL, mono4sec(5));
   pthread_mutex_unlock(&global_lock);
 }
 
@@ -1210,8 +1210,8 @@ ST: urn:ses-com:device:SatIPServer:1\r\n"
   upnp_send(&q, NULL, 0, 0);
   htsbuf_queue_flush(&q);
 
-  gtimer_arm_ms(&satip_discovery_msearch_timer, satip_discovery_send_msearch,
-                (void *)(intptr_t)(attempt + 1), attempt * 11);
+  mtimer_arm_rel(&satip_discovery_msearch_timer, satip_discovery_send_msearch,
+                 (void *)(intptr_t)(attempt + 1), mono4ms(attempt * 11));
 #undef MSG
 }
 
@@ -1224,7 +1224,7 @@ satip_discovery_static_timer_cb(void *aux)
     return;
   for (i = 0; i < satip_static_clients->num; i++)
     satip_discovery_static(satip_static_clients->str[i]);
-  gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 3600);
+  mtimer_arm_rel(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, mono4sec(3600));
 }
 
 static void
@@ -1233,7 +1233,8 @@ satip_discovery_timer_cb(void *aux)
   if (!tvheadend_running)
     return;
   if (!upnp_running) {
-    gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
+    mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb,
+                   NULL, mono4sec(1));
     return;
   }
   if (satip_discovery_service == NULL) {
@@ -1245,7 +1246,8 @@ satip_discovery_timer_cb(void *aux)
   }
   if (satip_discovery_service)
     satip_discovery_send_msearch((void *)1);
-  gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 3600);
+  mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb,
+                 NULL, mono4sec(3600));
 }
 
 void
@@ -1253,8 +1255,10 @@ satip_device_discovery_start( void )
 {
   if (!satip_enabled)
     return;
-  gtimer_arm(&satip_discovery_timer, satip_discovery_timer_cb, NULL, 1);
-  gtimer_arm(&satip_discovery_static_timer, satip_discovery_static_timer_cb, NULL, 1);
+  mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb,
+                 NULL, mono4sec(1));
+  mtimer_arm_rel(&satip_discovery_static_timer, satip_discovery_static_timer_cb,
+                 NULL, mono4sec(1));
 }
 
 /*

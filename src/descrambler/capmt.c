@@ -1642,6 +1642,7 @@ capmt_thread(void *aux)
   capmt_adapter_t *ca;
   capmt_opaque_t *t;
   int d, i, j, fatal;
+  int64_t mono;
 
   tvhlog(LOG_INFO, "capmt", "%s active", capmt_name(capmt));
 
@@ -1771,8 +1772,12 @@ capmt_thread(void *aux)
 
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id, NULL), d);
 
-    tvh_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex,
-                       getmonoclock() + d * MONOCLOCK_RESOLUTION);
+    mono = mdispatch_clock + mono4sec(d);
+    do {
+      i = tvh_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, mono);
+      if (i == ETIMEDOUT)
+        break;
+    } while (ERRNO_AGAIN(i));
 
     pthread_mutex_unlock(&capmt->capmt_mutex);
   }

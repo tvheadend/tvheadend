@@ -41,7 +41,7 @@ static int _psip_ett_callback(mpegts_table_t *mt, const uint8_t *ptr, int len, i
 typedef struct psip_table {
   TAILQ_ENTRY(psip_table) pt_link;
   mpegts_table_t         *pt_table;
-  time_t                  pt_start;
+  int64_t                 pt_start;
   uint16_t                pt_pid;
   uint16_t                pt_type;
   uint8_t                 pt_complete;
@@ -62,7 +62,7 @@ typedef struct psip_status {
   mpegts_mux_t            *ps_mm;
   TAILQ_HEAD(, psip_table) ps_tables;
   RB_HEAD(, psip_desc)     ps_descs;
-  gtimer_t                 ps_reschedule_timer;
+  mtimer_t                 ps_reschedule_timer;
   uint8_t                  ps_complete;
   uint8_t                  ps_armed;
 } psip_status_t;
@@ -87,7 +87,7 @@ psip_status_destroy ( mpegts_table_t *mt )
       free(pd->pd_data);
       free(pd);
     }
-    gtimer_disarm(&st->ps_reschedule_timer);
+    mtimer_disarm(&st->ps_reschedule_timer);
     free(st);
   } else {
     TAILQ_FOREACH(pt, &st->ps_tables, pt_link)
@@ -163,7 +163,7 @@ psip_activate_table(psip_status_t *ps, psip_table_t *pt)
   }
   ps->ps_refcount++;
   mt->mt_destroy = psip_status_destroy;
-  pt->pt_start = dispatch_clock;
+  pt->pt_start = mdispatch_clock;
   pt->pt_table = mt;
   tvhtrace("psip", "table activated - pid 0x%04X type 0x%04X", mt->mt_pid, pt->pt_type);
   return mt;
@@ -203,7 +203,7 @@ psip_reschedule_tables(psip_status_t *ps)
   total = 0;
   TAILQ_FOREACH(pt, &ps->ps_tables, pt_link) {
     total++;
-    if (pt->pt_table && pt->pt_start + 10 < dispatch_clock) {
+    if (pt->pt_table && pt->pt_start + mono4sec(10) < mdispatch_clock) {
       tvhtrace("psip", "table late: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
       mpegts_table_destroy(pt->pt_table);
       pt->pt_table = NULL;
@@ -222,7 +222,7 @@ psip_reschedule_tables(psip_status_t *ps)
 #if 0
   for (i = 0; i < total; i++) {
     pt = tables[i];
-    tvhtrace("psip", "sorted: pid = 0x%04X, type = 0x%04X, time = %"PRItime_t", complete %d\n",
+    tvhtrace("psip", "sorted: pid = 0x%04X, type = 0x%04X, time = %"PRId64", complete %d\n",
              pt->pt_pid, pt->pt_type, pt->pt_start, pt->pt_complete);
   }
 #endif
@@ -260,7 +260,7 @@ psip_complete_table(psip_status_t *ps, mpegts_table_t *mt)
   mpegts_table_destroy(mt);
 
   if (pt)
-    gtimer_arm(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, 0);
+    mtimer_arm_rel(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, 0);
 
   if (ps->ps_ota == NULL)
     return;
@@ -268,7 +268,7 @@ psip_complete_table(psip_status_t *ps, mpegts_table_t *mt)
   if (ps->ps_complete) {
     if (!ps->ps_armed) {
       ps->ps_armed = 1;
-      gtimer_arm(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, 10);
+      mtimer_arm_rel(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, mono4sec(10));
     }
     return;
   }

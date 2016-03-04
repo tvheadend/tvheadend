@@ -30,7 +30,8 @@
 #include "libav.h"
 #include "webui/webui.h"
 
-time_t                   dispatch_clock;
+int64_t                  mdispatch_clock;
+time_t                   gdispatch_clock;
 
 int                      tvhlog_run;
 int                      tvhlog_level;

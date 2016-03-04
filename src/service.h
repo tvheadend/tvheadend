@@ -82,9 +82,6 @@ typedef struct elementary_stream {
 
   int8_t es_cc;             /* Last CC */
 
-  avgstat_t es_cc_errors;
-  avgstat_t es_rate;
-
   int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
   /* For service stream packet reassembly */
@@ -383,13 +380,13 @@ typedef struct service {
    * it will check if any packets has been parsed. If not the status
    * will be set to TRANSPORT_STATUS_NO_INPUT
    */
-  gtimer_t s_receive_timer;
+  mtimer_t s_receive_timer;
   /**
    * Stream start time
    */
-  int    s_timeout;
-  int    s_grace_delay;
-  time_t s_start_time;
+  int     s_timeout;
+  int     s_grace_delay;
+  int64_t s_start_time;
 
 
   /*********************************************************
@@ -451,11 +448,6 @@ typedef struct service {
   elementary_stream_t *s_audio;
 #endif
  
-  /**
-   * Average bitrate
-   */
-  avgstat_t s_rate;
-
   /**
    * Descrambling support
    */

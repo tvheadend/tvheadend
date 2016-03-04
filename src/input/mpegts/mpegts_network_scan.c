@@ -89,7 +89,7 @@ mpegts_network_scan_timer_cb ( void *p )
   /* Re-arm timer. Really this is just a safety measure as we'd normally
    * expect the timer to be forcefully triggered on finish of a mux scan
    */
-  gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 120);
+  mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, mono4sec(120));
 }
 
 /******************************************************************************
@@ -111,7 +111,7 @@ mpegts_network_scan_mux_done0
       TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
       TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
                             mm, mm_scan_link, mm_cmp);
-      gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 10);
+      mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, mono4sec(10));
       weight = 0;
     } else {
       mpegts_network_scan_queue_del(mm);
@@ -200,8 +200,8 @@ mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
   tvhdebug("mpegts", "%s - removing mux %s from scan queue", buf2, buf);
   mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
   mm->mm_scan_weight = 0;
-  gtimer_disarm(&mm->mm_scan_timeout);
-  gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
+  mtimer_disarm(&mm->mm_scan_timeout);
+  mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
   mpegts_network_scan_notify(mm);
 }
 
@@ -245,7 +245,7 @@ mpegts_network_scan_queue_add
     mm->mm_scan_flags = SUBSCRIPTION_IDLESCAN;
   TAILQ_INSERT_SORTED_R(&mn->mn_scan_pend, mpegts_mux_queue,
                         mm, mm_scan_link, mm_cmp);
-  gtimer_arm(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, delay);
+  mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, mono4sec(delay));
   mpegts_network_scan_notify(mm);
 }
 

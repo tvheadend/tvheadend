@@ -382,8 +382,8 @@ void epg_save ( void )
   sbuf_init_fixed(sb, EPG_DB_ALLOC_STEP);
 
   if (epggrab_conf.epgdb_periodicsave)
-    gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
-               epggrab_conf.epgdb_periodicsave * 3600);
+    gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
+                   epggrab_conf.epgdb_periodicsave * 3600);
 
   memset(&stats, 0, sizeof(stats));
   if ( _epg_write_sect(sb, "config") ) goto error;

@@ -189,7 +189,6 @@ SRCS-1 = \
 	src/settings.c \
 	src/htsbuf.c \
 	src/trap.c \
-	src/avg.c \
 	src/htsstr.c \
 	src/tvhpoll.c \
 	src/huffman.c \

@@ -60,7 +60,7 @@ typedef struct session {
   dvb_mux_conf_t dmc;
   dvb_mux_conf_t dmc_tuned;
   mpegts_apids_t pids;
-  gtimer_t timer;
+  mtimer_t timer;
   mpegts_mux_t *mux;
   int mux_created;
   profile_chain_t prch;
@@ -220,7 +220,7 @@ rtsp_rearm_session_timer(session_t *rs)
 {
   if (!rs->shutdown_on_close) {
     pthread_mutex_lock(&global_lock);
-    gtimer_arm(&rs->timer, rtsp_session_timer_cb, rs, RTSP_TIMEOUT);
+    mtimer_arm_rel(&rs->timer, rtsp_session_timer_cb, rs, mono4sec(RTSP_TIMEOUT));
     pthread_mutex_unlock(&global_lock);
   }
 }
@@ -1188,7 +1188,7 @@ error:
 static void
 rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
 {
-  unsigned long mono = getmonoclock();
+  unsigned long mono = mdispatch_clock;
   int dvbt, dvbc;
 
   htsbuf_append_str(q, "v=0\r\n");
@@ -1567,7 +1567,7 @@ rtsp_close_session(session_t *rs)
   pthread_mutex_lock(&global_lock);
   mpegts_pid_reset(&rs->pids);
   rtsp_clean(rs);
-  gtimer_disarm(&rs->timer);
+  mtimer_disarm(&rs->timer);
   pthread_mutex_unlock(&global_lock);
 }
 
@@ -1579,7 +1579,7 @@ rtsp_free_session(session_t *rs)
 {
   TAILQ_REMOVE(&rtsp_sessions, rs, link);
   pthread_mutex_lock(&global_lock);
-  gtimer_disarm(&rs->timer);
+  mtimer_disarm(&rs->timer);
   pthread_mutex_unlock(&global_lock);
   mpegts_pid_done(&rs->pids);
   free(rs);

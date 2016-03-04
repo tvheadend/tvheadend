@@ -45,7 +45,7 @@
 
 struct th_subscription_list subscriptions;
 struct th_subscription_list subscriptions_remove;
-static gtimer_t             subscription_reschedule_timer;
+static mtimer_t             subscription_reschedule_timer;
 static int                  subscription_postpone;
 
 /**
@@ -147,7 +147,7 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
   LIST_REMOVE(s, ths_service_link);
 
   if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
-    gtimer_arm(&s->ths_remove_timer, subscription_unsubscribe_cb, s, 0);
+    mtimer_arm_rel(&s->ths_remove_timer, subscription_unsubscribe_cb, s, 0);
 
 stop:
   if(LIST_FIRST(&t->s_subscriptions) == NULL)
@@ -285,8 +285,8 @@ subscription_start_instance
                              s->ths_source, s->ths_prch,
                              &s->ths_instances, error, s->ths_weight,
                              s->ths_flags, s->ths_timeout,
-                             dispatch_clock > s->ths_postpone_end ?
-                               0 : s->ths_postpone_end - dispatch_clock);
+                             mdispatch_clock > s->ths_postpone_end ?
+                               0 : sec4mono(s->ths_postpone_end - mdispatch_clock));
   return s->ths_current_instance = si;
 }
 
@@ -301,7 +301,7 @@ subscription_reschedule(void)
   service_t *t;
   service_instance_t *si;
   streaming_message_t *sm;
-  int error, postpone = INT_MAX;
+  int error, postpone = INT_MAX, postpone2;
   assert(reenter == 0);
   reenter = 1;
 
@@ -313,10 +313,11 @@ subscription_reschedule(void)
 
     /* Postpone the tuner decision */
     /* Leave some time to wakeup tuners through DBus or so */
-    if (s->ths_postpone_end > dispatch_clock) {
-      if (postpone > s->ths_postpone_end - dispatch_clock)
-        postpone = s->ths_postpone_end - dispatch_clock;
-      sm = streaming_msg_create_code(SMT_GRACE, (s->ths_postpone_end - dispatch_clock) + 5);
+    if (s->ths_postpone_end > mdispatch_clock) {
+      postpone2 = sec4mono(s->ths_postpone_end - mdispatch_clock);
+      if (postpone > postpone2)
+        postpone = postpone2;
+      sm = streaming_msg_create_code(SMT_GRACE, postpone + 5);
       streaming_target_deliver(s->ths_output, sm);
       continue;
     }
@@ -353,10 +354,10 @@ subscription_reschedule(void)
     s->ths_current_instance = si;
 
     if(si == NULL) {
-      if (s->ths_last_error != error || s->ths_last_find + 2 >= dispatch_clock) {
+      if (s->ths_last_error != error || s->ths_last_find + mono4sec(2) >= mdispatch_clock) {
         tvhtrace("subscription", "%04X: instance not available, retrying", shortid(s));
         if (s->ths_last_error != error)
-          s->ths_last_find = dispatch_clock;
+          s->ths_last_find = mdispatch_clock;
         s->ths_last_error = error;
         continue;
       }
@@ -390,8 +391,8 @@ subscription_reschedule(void)
 
   if (postpone <= 0 || postpone == INT_MAX)
     postpone = 2;
-  gtimer_arm(&subscription_reschedule_timer,
-	           subscription_reschedule_cb, NULL, postpone);
+  mtimer_arm_rel(&subscription_reschedule_timer,
+	         subscription_reschedule_cb, NULL, mono4sec(postpone));
 
   reenter = 0;
 }
@@ -413,26 +414,25 @@ static int64_t
 subscription_set_postpone(void *aux, const char *path, int64_t postpone)
 {
   th_subscription_t *s;
-  time_t now = time(NULL);
+  time_t now = mdispatch_clock_update();
+  int64_t postpone2;
 
   if (strcmp(path, "/set"))
     return -1;
   /* some limits that make sense */
-  if (postpone < 0)
-    postpone = 0;
-  if (postpone > 120)
-    postpone = 120;
+  postpone = MINMAX(postpone, 0, 120);
+  postpone2 = mono4sec(postpone);
   pthread_mutex_lock(&global_lock);
   if (subscription_postpone != postpone) {
     subscription_postpone = postpone;
-    tvhinfo("subscriptions", "postpone set to %d seconds", (int)postpone);
+    tvhinfo("subscriptions", "postpone set to %"PRId64" seconds", postpone);
     LIST_FOREACH(s, &subscriptions, ths_global_link) {
       s->ths_postpone = postpone;
-      if (s->ths_postpone_end > now && s->ths_postpone_end - now > postpone)
-        s->ths_postpone_end = now + postpone;
+      if (s->ths_postpone_end > now && s->ths_postpone_end - now > postpone2)
+        s->ths_postpone_end = now + postpone2;
     }
-    gtimer_arm(&subscription_reschedule_timer,
-  	       subscription_reschedule_cb, NULL, 0);
+    mtimer_arm_rel(&subscription_reschedule_timer,
+  	           subscription_reschedule_cb, NULL, 0);
   }
   pthread_mutex_unlock(&global_lock);
   return postpone;
@@ -453,8 +453,8 @@ subscription_input_null(void *opaque, streaming_message_t *sm)
   th_subscription_t *s = opaque;
   if (sm->sm_type == SMT_STOP && s->ths_state != SUBSCRIPTION_ZOMBIE) {
     LIST_INSERT_HEAD(&subscriptions_remove, s, ths_remove_link);
-    gtimer_arm(&subscription_reschedule_timer, 
-  	       subscription_reschedule_cb, NULL, 0);
+    mtimer_arm_rel(&subscription_reschedule_timer,
+  	           subscription_reschedule_cb, NULL, 0);
   }
 
   streaming_msg_free(sm);
@@ -642,14 +642,14 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
 
   service_instance_list_clear(&s->ths_instances);
 
-  gtimer_disarm(&s->ths_remove_timer);
+  mtimer_disarm(&s->ths_remove_timer);
 
   if ((flags & UNSUBSCRIBE_FINAL) != 0 ||
       (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
     subscription_destroy(s);
 
-  gtimer_arm(&subscription_reschedule_timer, 
-            subscription_reschedule_cb, NULL, 0);
+  mtimer_arm_rel(&subscription_reschedule_timer,
+                 subscription_reschedule_cb, NULL, 0);
   notify_reload("subscriptions");
 }
 
@@ -706,7 +706,7 @@ subscription_create
   s->ths_flags             = flags;
   s->ths_timeout           = pro ? pro->pro_timeout : 0;
   s->ths_postpone          = subscription_postpone;
-  s->ths_postpone_end      = dispatch_clock + s->ths_postpone;
+  s->ths_postpone_end      = mdispatch_clock + mono4sec(s->ths_postpone);
 
   if (s->ths_prch)
     s->ths_weight = profile_chain_weight(s->ths_prch, weight);
@@ -726,8 +726,8 @@ subscription_create
 
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
-  gtimer_arm(&subscription_reschedule_timer, 
-	           subscription_reschedule_cb, NULL, 0);
+  mtimer_arm_rel(&subscription_reschedule_timer,
+	         subscription_reschedule_cb, NULL, 0);
   notify_reload("subscriptions");
 
   return s;
@@ -796,8 +796,8 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
     subscription_link_service(s, si->si_s);
     subscription_show_info(s);
   } else {
-    gtimer_arm(&subscription_reschedule_timer,
-               subscription_reschedule_cb, NULL, 0);
+    mtimer_arm_rel(&subscription_reschedule_timer,
+                   subscription_reschedule_cb, NULL, 0);
   }
   return s;
 }
@@ -871,7 +871,7 @@ subscription_create_from_mux(profile_chain_t *prch,
  * Status monitoring
  * *************************************************************************/
 
-static gtimer_t subscription_status_timer;
+static mtimer_t subscription_status_timer;
 
 /*
  * Serialize info about subscription
@@ -965,8 +965,8 @@ subscription_status_callback ( void *p )
   int64_t count = 0;
   static int64_t old_count = -1;
 
-  gtimer_arm(&subscription_status_timer,
-             subscription_status_callback, NULL, 1);
+  mtimer_arm_rel(&subscription_status_timer,
+                 subscription_status_callback, NULL, mono4sec(1));
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     /* Store the difference between total bytes from the last round */
@@ -1008,6 +1008,7 @@ void
 subscription_done(void)
 {
   pthread_mutex_lock(&global_lock);
+  mtimer_disarm(&subscription_status_timer);
   /* clear remaining subscriptions */
   subscription_reschedule();
   pthread_mutex_unlock(&global_lock);
@@ -1052,8 +1053,8 @@ subscription_change_weight(th_subscription_t *s, int weight)
 
   LIST_INSERT_SORTED(&subscriptions, s, ths_global_link, subscription_sort);
 
-  gtimer_arm(&subscription_reschedule_timer, 
-	           subscription_reschedule_cb, NULL, 0);
+  mtimer_arm_rel(&subscription_reschedule_timer,
+	         subscription_reschedule_cb, NULL, 0);
 }
 
 /**
@@ -1126,7 +1127,7 @@ dummy_callback(void *opauqe, streaming_message_t *sm)
   streaming_msg_free(sm);
 }
 
-static gtimer_t dummy_sub_timer;
+static mtimer_t dummy_sub_timer;
 /**
  *
  */
@@ -1149,7 +1150,7 @@ subscription_dummy_join(const char *id, int first)
   th_subscription_t *s;
 
   if(first) {
-    gtimer_arm(&dummy_sub_timer, dummy_retry, strdup(id), 2);
+    mtimer_arm_rel(&dummy_sub_timer, dummy_retry, strdup(id), mono4sec(2));
     return;
   }
 
@@ -1157,7 +1158,7 @@ subscription_dummy_join(const char *id, int first)
     tvhlog(LOG_ERR, "subscription", 
 	   "Unable to dummy join %s, service not found, retrying...", id);
 
-    gtimer_arm(&dummy_sub_timer, dummy_retry, strdup(id), 1);
+    mtimer_arm_rel(&dummy_sub_timer, dummy_retry, strdup(id), mono4sec(1));
     return;
   }
 

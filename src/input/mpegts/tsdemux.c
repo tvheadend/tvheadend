@@ -73,12 +73,10 @@ ts_recv_packet0
       cc = tsb2[3] & 0xf;
       if(st->es_cc != -1 && cc != st->es_cc) {
         /* Let the hardware to stabilize and don't flood the log */
-        if (t->s_start_time + 1 < dispatch_clock &&
+        if (t->s_start_time + mono4sec(1) < mdispatch_clock &&
             tvhlog_limit(&st->es_cc_log, 10))
           tvhwarn("TS", "%s Continuity counter error (total %zi)",
                         service_component_nicename(st), st->es_cc_log.count);
-        avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
-        avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
         if (!error)
           errors++;
         error |= 2;
@@ -143,12 +141,10 @@ ts_recv_skipped0
       cc = tsb2[3] & 0xf;
       if(st->es_cc != -1 && cc != st->es_cc) {
         /* Let the hardware to stabilize and don't flood the log */
-        if (t->s_start_time + 1 < dispatch_clock &&
+        if (t->s_start_time + mono4sec(1) < mdispatch_clock &&
             tvhlog_limit(&st->es_cc_log, 10))
           tvhwarn("TS", "%s Continuity counter error (total %zi)",
                         service_component_nicename(st), st->es_cc_log.count);
-        avgstat_add(&t->s_cc_errors, 1, dispatch_clock);
-        avgstat_add(&st->es_cc_errors, 1, dispatch_clock);
       }
       st->es_cc = (cc + 1) & 0xf;
     }
@@ -221,8 +217,6 @@ ts_recv_packet1
 
   if(!error)
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
-
-  avgstat_add(&t->s_rate, len, dispatch_clock);
 
   if(!t->s_scrambled_pass &&
      ((tsb[3] & 0xc0) ||
@@ -331,7 +325,7 @@ ts_flush(mpegts_service_t *t, sbuf_t *sb)
   streaming_message_t sm;
   pktbuf_t *pb;
 
-  t->s_tsbuf_last = dispatch_clock;
+  t->s_tsbuf_last = mdispatch_clock;
 
   pb = pktbuf_alloc(sb->sb_data, sb->sb_ptr);
   pb->pb_err = sb->sb_err;
@@ -362,7 +356,8 @@ ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
   sbuf_append(sb, src, len);
   sb->sb_err += errors;
 
-  if(dispatch_clock == t->s_tsbuf_last && sb->sb_ptr < TS_REMUX_BUFSIZE)
+  if(sec4mono(mdispatch_clock) == sec4mono(t->s_tsbuf_last) &&
+     sb->sb_ptr < TS_REMUX_BUFSIZE)
     return;
 
   ts_flush(t, sb);
@@ -384,7 +379,8 @@ ts_skip(mpegts_service_t *t, const uint8_t *src, int len)
 
   sb->sb_err += len / 188;
 
-  if(dispatch_clock == t->s_tsbuf_last && sb->sb_err < (TS_REMUX_BUFSIZE / 188))
+  if(sec4mono(mdispatch_clock) == sec4mono(t->s_tsbuf_last) &&
+     sb->sb_err < (TS_REMUX_BUFSIZE / 188))
     return;
 
   ts_flush(t, sb);

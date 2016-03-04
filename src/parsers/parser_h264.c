@@ -126,7 +126,7 @@ typedef struct h264_private {
   h264_sps_t sps[MAX_SPS_COUNT];
   h264_pps_t pps[MAX_PPS_COUNT];
 
-  time_t start;
+  int64_t start;
 
 } h264_private_t;
 
@@ -232,7 +232,7 @@ h264_decode_seq_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
   if ((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
-    p->start = dispatch_clock;
+    p->start = mdispatch_clock;
   }
 
   profile_idc = read_bits(bs, 8);
@@ -348,7 +348,7 @@ h264_decode_pic_parameter_set(elementary_stream_t *st, bitstream_t *bs)
 
   if((p = st->es_priv) == NULL) {
     p = st->es_priv = calloc(1, sizeof(h264_private_t));
-    p->start = dispatch_clock;
+    p->start = mdispatch_clock;
   }
   
   pps_id = read_golomb_ue(bs);
@@ -427,7 +427,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   d = 0;
   if (sps->time_scale)
     d = 180000 * (uint64_t)sps->units_in_tick / (uint64_t)sps->time_scale;
-  if (d == 0 && st->es_frame_duration < 2 && p->start + 4 < dispatch_clock) {
+  if (d == 0 && st->es_frame_duration < 2 && p->start + mono4sec(4) < mdispatch_clock) {
     tvhwarn("parser", "H264 stream has not timing information, using 30fps");
     d = 3000; /* 90000/30 = 3000 : 30fps */
   }

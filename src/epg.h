@@ -139,10 +139,10 @@ struct epg_object
   epg_object_type_t       type;       ///< Specific object type
   uint32_t                id;         ///< Internal ID
   char                   *uri;        ///< Unique ID (from grabber)
-  time_t                  created;    ///< Time the object was created
   time_t                  updated;    ///< Last time object was changed
 
-  int                     _updated;   ///< Flag to indicate updated
+  uint8_t                 _updated;   ///< Flag to indicate updated
+  uint8_t                 _created;   ///< Flag to indicate creation
   int                     refcount;   ///< Reference counting
   // Note: could use LIST_ENTRY field to determine this!
 

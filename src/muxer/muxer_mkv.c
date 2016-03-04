@@ -110,7 +110,7 @@ typedef struct mk_muxer {
   int64_t cluster_tc;
   off_t cluster_pos;
   int cluster_maxsize;
-  time_t cluster_last_close;
+  int64_t cluster_last_close;
 
   off_t segment_header_pos;
 
@@ -942,7 +942,7 @@ mk_close_cluster(mk_muxer_t *mk)
   if(mk->cluster != NULL)
     mk_write_master(mk, 0x1f43b675, mk->cluster);
   mk->cluster = NULL;
-  mk->cluster_last_close = dispatch_clock;
+  mk->cluster_last_close = mdispatch_clock;
 }
 
 
@@ -992,12 +992,12 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 
   if(vkeyframe && mk->cluster &&
      (mk->cluster->hq_size > mk->cluster_maxsize ||
-      mk->cluster_last_close + 1 < dispatch_clock))
+      mk->cluster_last_close + mono4sec(1) < mdispatch_clock))
     mk_close_cluster(mk);
 
   else if(!mk->has_video && mk->cluster &&
           (mk->cluster->hq_size > clusersizemax/40 ||
-           mk->cluster_last_close + 1 < dispatch_clock))
+           mk->cluster_last_close + mono4sec(1) < mdispatch_clock))
     mk_close_cluster(mk);
 
   else if(mk->cluster && mk->cluster->hq_size > clusersizemax)

@@ -709,6 +709,7 @@ mpegts_service_create0
 {
   int r;
   char buf[256];
+  time_t dispatch_clock = gdispatch_clock;
 
   /* defaults for older version */
   s->s_dvb_created = dispatch_clock;
@@ -723,8 +724,8 @@ mpegts_service_create0
     if (sid)     s->s_dvb_service_id = sid;
     if (pmt_pid) s->s_pmt_pid        = pmt_pid;
   } else {
-    if (s->s_dvb_last_seen > dispatch_clock) /* sanity check */
-      s->s_dvb_last_seen = dispatch_clock;
+    if (s->s_dvb_last_seen > gdispatch_clock) /* sanity check */
+      s->s_dvb_last_seen = gdispatch_clock;
   }
   s->s_dvb_mux        = mm;
   if ((r = dvb_servicetype_lookup(s->s_dvb_servicetype)) != -1)
@@ -787,8 +788,8 @@ mpegts_service_find
         if (save) *save = 1;
       }
       if (create) {
-        if ((save && *save) || s->s_dvb_last_seen + 3600 < dispatch_clock) {
-          s->s_dvb_last_seen = dispatch_clock;
+        if ((save && *save) || s->s_dvb_last_seen + 3600 < gdispatch_clock) {
+          s->s_dvb_last_seen = gdispatch_clock;
           if (save) *save = 1;
         }
       }
@@ -799,7 +800,7 @@ mpegts_service_find
   /* Create */
   if (create) {
     s = mm->mm_network->mn_create_service(mm, sid, pmt_pid);
-    s->s_dvb_created = s->s_dvb_last_seen = dispatch_clock;
+    s->s_dvb_created = s->s_dvb_last_seen = gdispatch_clock;
     if (save) *save = 1;
   }
 

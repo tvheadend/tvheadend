@@ -30,7 +30,7 @@
 typedef struct auto_private {
   iptv_network_t *in_network;
   download_t      in_download;
-  gtimer_t        in_auto_timer;
+  mtimer_t        in_auto_timer;
 } auto_private_t;
 
 /*
@@ -384,7 +384,7 @@ static void
 iptv_auto_network_stop( void *aux )
 {
   auto_private_t *ap = aux;
-  gtimer_disarm(&ap->in_auto_timer);
+  mtimer_disarm(&ap->in_auto_timer);
 }
 
 /*
@@ -397,8 +397,8 @@ iptv_auto_network_trigger0(void *aux)
   iptv_network_t *in = ap->in_network;
 
   download_start(&ap->in_download, in->in_url, ap);
-  gtimer_arm(&ap->in_auto_timer, iptv_auto_network_trigger0, ap,
-             MAX(1, in->in_refetch_period) * 60);
+  mtimer_arm_rel(&ap->in_auto_timer, iptv_auto_network_trigger0, ap,
+                 mono4sec(MAX(1, in->in_refetch_period) * 60));
 }
 
 /*
@@ -437,7 +437,7 @@ iptv_auto_network_done( iptv_network_t *in )
 {
   auto_private_t *ap = in->in_auto;
   in->in_auto = NULL;
-  gtimer_disarm(&ap->in_auto_timer);
+  mtimer_disarm(&ap->in_auto_timer);
   download_done(&ap->in_download);
   free(ap);
 }

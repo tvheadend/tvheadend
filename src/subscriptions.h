@@ -78,7 +78,7 @@ typedef struct th_subscription {
 
   int ths_testing_error;
 
-  gtimer_t ths_remove_timer;
+  mtimer_t ths_remove_timer;
 
   LIST_ENTRY(th_subscription) ths_channel_link;
   struct channel *ths_channel;          /* May be NULL if channel has been
@@ -108,7 +108,7 @@ typedef struct th_subscription {
   int ths_flags;
   int ths_timeout;
 
-  time_t ths_last_find;
+  int64_t ths_last_find;
   int ths_last_error;
 
   streaming_message_t *ths_start_message;
@@ -127,8 +127,8 @@ typedef struct th_subscription {
   /**
    * Postpone
    */
-  int    ths_postpone;
-  time_t ths_postpone_end;
+  int     ths_postpone;
+  int64_t ths_postpone_end;
 
   /*
    * MPEG-TS mux chain

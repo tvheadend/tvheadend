@@ -1835,8 +1835,6 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
   pkt->pkt_aspect_num = st->es_aspect_num;
   pkt->pkt_aspect_den = st->es_aspect_den;
 
-  //  avgstat_add(&st->es_rate, pkt->pkt_payloadlen, dispatch_clock);
-
   /**
    * Input is ok
    */

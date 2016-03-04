@@ -32,8 +32,8 @@ typedef struct download {
   void (*stop)(void *aux);
   /* internal members */
   http_client_t *http_client;
-  gtimer_t       fetch_timer;
-  gtimer_t       pipe_read_timer;
+  mtimer_t       fetch_timer;
+  mtimer_t       pipe_read_timer;
   sbuf_t         pipe_sbuf;
   int            pipe_fd;
   pid_t          pipe_pid;

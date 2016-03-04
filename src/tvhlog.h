@@ -30,15 +30,13 @@
 #include <time.h>
 
 #include "atomic.h"
+#include "clock.h"
 #include "htsmsg.h"
 
 typedef struct {
-  time_t last;
+  int64_t last;
   size_t count;
 } tvhlog_limit_t;
-
-/* Globals */
-extern time_t           dispatch_clock;
 
 /* Config */
 extern int              tvhlog_level;
@@ -70,8 +68,9 @@ void _tvhlog_hexdump   ( const char *file, int line,
 static inline void tvhlog_limit_reset ( tvhlog_limit_t *limit )
   { limit->last = 0; limit->count = 0; }
 static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
-  { time_t t = dispatch_clock; limit->count++;
-    if (limit->last + delay < t) { limit->last = t; return 1; }
+  { int64_t t = mdispatch_clock; limit->count++;
+    if (limit->last + (int64_t)delay * MONOCLOCK_RESOLUTION < t)
+      { limit->last = t; return 1; }
     return 0; }
 
 
@@ -129,8 +128,6 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 #define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
 #define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
 #define tvhalert(...)  tvhlog(LOG_ALERT,   ##__VA_ARGS__)
-
-time_t dispatch_clock_update(struct timespec *ts);
 
 void tvhlog_backtrace_printf(const char *fmt, ...);
 

@@ -38,12 +38,12 @@ struct dvr_vfs_list dvrvfs_list;
 
 static int dvr_disk_space_config_idx;
 static int dvr_disk_space_config_size;
-static time_t dvr_disk_space_config_lastdelete;
+static int64_t dvr_disk_space_config_lastdelete;
 static int64_t dvr_bfree;
 static int64_t dvr_btotal;
 static int64_t dvr_bused;
 static pthread_mutex_t dvr_disk_space_mutex;
-static gtimer_t dvr_disk_space_timer;
+static mtimer_t dvr_disk_space_timer;
 static tasklet_t dvr_disk_space_tasklet;
 
 /*
@@ -204,7 +204,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   /* When deleting a file from the disk, the system needs some time to actually do this */
   /* If calling this function to fast after the previous call, statvfs might be wrong/not updated yet */
   /* So we are risking to delete more files than needed, so allow 10s for the system to handle previous deletes */
-  if (dvr_disk_space_config_lastdelete + 10 > dispatch_clock) {
+  if (dvr_disk_space_config_lastdelete + mono4sec(10) > mdispatch_clock) {
     tvhlog(LOG_WARNING, "dvr","disk space cleanup for config \"%s\" is not allowed now", configName);
     return -1;
   }
@@ -221,7 +221,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
 
   while (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
     oldest = NULL;
-    stoptime = dispatch_clock;
+    stoptime = gdispatch_clock;
 
     LIST_FOREACH(de, &dvrentries, de_global_link) {
       if (de->de_sched_state != DVR_COMPLETED &&
@@ -261,7 +261,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       tvhlog(LOG_INFO, "dvr","Delete \"until space needed\" recording \"%s\" with stop time \"%s\" and file size \"%"PRId64" MB\"",
              lang_str_get(oldest->de_title, NULL), tbuf, TOMIB(fileSize));
 
-      dvr_disk_space_config_lastdelete = dispatch_clock;
+      dvr_disk_space_config_lastdelete = mdispatch_clock;
       if (dvr_entry_get_retention_days(oldest) == DVR_RET_ONREMOVE) {
         dvr_entry_delete(oldest);     // delete actual file
         dvr_entry_destroy(oldest, 1); // also delete database entry
@@ -429,7 +429,7 @@ dvr_get_disk_space_cb(void *aux)
     path = strdup(cfg->dvr_storage);
     tasklet_arm(&dvr_disk_space_tasklet, dvr_get_disk_space_tcb, path);
   }
-  gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 15);
+  mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, mono4sec(15));
 }
 
 /**
@@ -450,7 +450,7 @@ dvr_disk_space_init(void)
   dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
   pthread_mutex_init(&dvr_disk_space_mutex, NULL);
   dvr_get_disk_space_update(cfg->dvr_storage, 1);
-  gtimer_arm(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, 5);
+  mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, mono4sec(5));
 }
 
 /**
@@ -462,7 +462,7 @@ dvr_disk_space_done(void)
   dvr_vfs_t *vfs;
 
   tasklet_disarm(&dvr_disk_space_tasklet);
-  gtimer_disarm(&dvr_disk_space_timer);
+  mtimer_disarm(&dvr_disk_space_timer);
   while ((vfs = LIST_FIRST(&dvrvfs_list)) != NULL) {
     LIST_REMOVE(vfs, link);
     free(vfs);

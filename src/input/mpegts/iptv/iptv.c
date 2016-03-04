@@ -117,7 +117,7 @@ iptv_bouquet_update(void *aux)
 void
 iptv_bouquet_trigger(iptv_network_t *in, int timeout)
 {
-  gtimer_arm(&in->in_bouquet_timer, iptv_bouquet_update, in, timeout);
+  mtimer_arm_rel(&in->in_bouquet_timer, iptv_bouquet_update, in, mono4sec(timeout));
 }
 
 void
@@ -369,7 +369,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   pthread_mutex_lock(&iptv_lock);
 
-  gtimer_disarm(&im->im_pause_timer);
+  mtimer_disarm(&im->im_pause_timer);
 
   /* Stop */
   if (im->im_handler->stop)
@@ -420,7 +420,7 @@ iptv_input_pause_check ( iptv_mux_t *im )
   if (limit == UINT32_MAX)
     return 0;
   limit *= 1000;
-  s64 = getmonoclock() - im->im_pcr_start;
+  s64 = getfastmonoclock() - im->im_pcr_start;
   im->im_pcr_start += s64;
   im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
   im->im_pcr &= PTS_MASK;
@@ -446,7 +446,7 @@ iptv_input_unpause ( void *aux )
   }
   pthread_mutex_unlock(&iptv_lock);
   if (pause)
-    gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+    mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, mono4sec(1));
 }
 
 static void *
@@ -492,7 +492,7 @@ iptv_input_thread ( void *aux )
     if (r == 1) {
       pthread_mutex_lock(&global_lock);
       if (im->mm_active)
-        gtimer_arm(&im->im_pause_timer, iptv_input_unpause, im, 1);
+        mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, mono4sec(1));
       pthread_mutex_unlock(&global_lock);
     }
   }
@@ -567,7 +567,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
         s64 = pts_diff(pcr.pcr_first, pcr.pcr_last);
         if (s64 != PTS_UNSET) {
           im->im_pcr = pcr.pcr_first;
-          im->im_pcr_start = getmonoclock();
+          im->im_pcr_start = getfastmonoclock();
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
           tvhtrace("iptv-pcr", "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
                    pcr.pcr_first, pcr.pcr_last, im->im_pcr_start, im->im_pcr_end);
@@ -660,7 +660,7 @@ iptv_network_delete ( mpegts_network_t *mn, int delconf )
 
   idnode_save_check(&mn->mn_id, delconf);
 
-  gtimer_disarm(&in->in_bouquet_timer);
+  mtimer_disarm(&in->in_bouquet_timer);
 
   if (in->mn_id.in_class == &iptv_auto_network_class)
     iptv_auto_network_done(in);

@@ -28,7 +28,7 @@
 typedef struct bouquet_download {
   bouquet_t  *bq;
   download_t  download;
-  gtimer_t    timer;
+  mtimer_t    timer;
 } bouquet_download_t;
 
 bouquet_tree_t bouquets;
@@ -1029,8 +1029,8 @@ bouquet_download_trigger0(void *aux)
   bouquet_t *bq = bqd->bq;
 
   download_start(&bqd->download, bq->bq_ext_url, bqd);
-  gtimer_arm(&bqd->timer, bouquet_download_trigger0, bqd,
-             MAX(1, bq->bq_ext_url_period) * 60);
+  mtimer_arm_rel(&bqd->timer, bouquet_download_trigger0, bqd,
+                 mono4sec(MAX(1, bq->bq_ext_url_period) * 60));
 }
 
 static void
@@ -1047,7 +1047,7 @@ static void
 bouquet_download_stop(void *aux)
 {
   bouquet_download_t *bqd = aux;
-  gtimer_disarm(&bqd->timer);
+  mtimer_disarm(&bqd->timer);
 }
 
 static int

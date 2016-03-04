@@ -62,7 +62,7 @@ struct satip_device
 {
   tvh_hardware_t;
 
-  gtimer_t                   sd_destroy_timer;
+  mtimer_t                   sd_destroy_timer;
   int                        sd_inload;
   int                        sd_nosave;
 
@@ -146,7 +146,7 @@ struct satip_frontend
   int                        sf_atsc_c;
   int                        sf_position;
   signal_state_t             sf_status;
-  gtimer_t                   sf_monitor_timer;
+  mtimer_t                   sf_monitor_timer;
   uint64_t                   sf_last_tune;
   satip_tune_req_t          *sf_req;
   satip_tune_req_t          *sf_req_thread;

@@ -86,7 +86,8 @@ satip_frontend_signal_cb( void *aux )
     streaming_pad_deliver(&svc->s_streaming_pad, streaming_msg_clone(&sm));
     pthread_mutex_unlock(&svc->s_stream_mutex);
   }
-  gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 250);
+  mtimer_arm_rel(&lfe->sf_monitor_timer, satip_frontend_signal_cb,
+                 lfe, mono4ms(250));
 }
 
 /* **************************************************************************
@@ -525,7 +526,7 @@ satip_frontend_stop_mux
   mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
   tvhdebug("satip", "%s - stopping %s", buf1, buf2);
 
-  gtimer_disarm(&lfe->sf_monitor_timer);
+  mtimer_disarm(&lfe->sf_monitor_timer);
 
   /* Stop tune */
   tvh_write(lfe->sf_dvr_pipe.wr, "", 1);
@@ -591,7 +592,8 @@ satip_frontend_start_mux
   /* notify thread that we are ready */
   tvh_write(lfe->sf_dvr_pipe.wr, "s", 1);
 
-  gtimer_arm_ms(&lfe->sf_monitor_timer, satip_frontend_signal_cb, lfe, 50);
+  mtimer_arm_rel(&lfe->sf_monitor_timer, satip_frontend_signal_cb,
+                 lfe, mono4ms(50));
 
   return 0;
 }
@@ -1121,7 +1123,7 @@ wrdata:
     }
 
     if (lfe->sf_sbuf.sb_ptr > 64 * 1024 ||
-        lfe->sf_last_data_tstamp != dispatch_clock) {
+        lfe->sf_last_data_tstamp + mono4sec(1) <= mdispatch_clock) {
       pthread_mutex_lock(&lfe->sf_dvr_lock);
       if (lfe->sf_req == lfe->sf_req_thread) {
         mmi = lfe->sf_req->sf_mmi;
@@ -1130,7 +1132,7 @@ wrdata:
                                   &lfe->sf_sbuf, 0, NULL);
       }
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
-      lfe->sf_last_data_tstamp = dispatch_clock;
+      lfe->sf_last_data_tstamp = mdispatch_clock;
     }
 
   } else if (b[1] == 1) {
@@ -1218,14 +1220,14 @@ new_tune:
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
   lfe->sf_display_name = buf;
 
-  u64_2 = getmonoclock();
+  u64_2 = getfastmonoclock();
 
   while (!start) {
 
     nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 50 : -1);
 
     if (!tvheadend_running) { exit_flag = 1; goto done; }
-    if (rtsp && getmonoclock() - u64_2 > 50000) /* 50ms */
+    if (rtsp && getfastmonoclock() - u64_2 > 50000) /* 50ms */
       satip_frontend_close_rtsp(lfe, buf, efd, &rtsp);
     if (nfds <= 0) continue;
 
@@ -1335,7 +1337,7 @@ new_tune:
   tc = 1;
   while (i) {
 
-    u64_2 = (getmonoclock() - u64) / 1000;
+    u64_2 = (getfastmonoclock() - u64) / 1000;
     if (u64_2 >= (uint64_t)i)
       break;
     r = (uint64_t)i - u64_2;
@@ -1384,7 +1386,7 @@ new_tune:
   }
 
   pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
-  lfe_master->sf_last_tune = getmonoclock();
+  lfe_master->sf_last_tune = getfastmonoclock();
   pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
 
   i = 0;
@@ -1605,7 +1607,7 @@ new_tune:
     }
 
     /* We need to keep the session alive */
-    if (rtsp->hc_ping_time + rtsp->hc_rtp_timeout / 2 < dispatch_clock &&
+    if (rtsp->hc_ping_time + mono4sec(rtsp->hc_rtp_timeout / 2) < mdispatch_clock &&
         rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
       reply = 1;
@@ -1735,7 +1737,7 @@ done:
 
   if (lfe->sf_teardown_delay && lfe_master) {
     pthread_mutex_lock(&lfe->sf_device->sd_tune_mutex);
-    lfe->sf_last_tune = lfe_master->sf_last_tune = getmonoclock();
+    lfe->sf_last_tune = lfe_master->sf_last_tune = getfastmonoclock();
     pthread_mutex_unlock(&lfe->sf_device->sd_tune_mutex);
   }
 
@@ -2019,7 +2021,7 @@ satip_frontend_delete ( satip_frontend_t *lfe )
   }
 
   /* Stop timer */
-  gtimer_disarm(&lfe->sf_monitor_timer);
+  mtimer_disarm(&lfe->sf_monitor_timer);
 
   /* Remove from adapter */
   TAILQ_REMOVE(&lfe->sf_device->sd_frontends, lfe, sf_link);

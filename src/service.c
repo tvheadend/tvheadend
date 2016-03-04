@@ -57,7 +57,7 @@ struct service_queue service_all;
 struct service_queue service_raw_all;
 struct service_queue service_raw_remove;
 
-static gtimer_t service_raw_remove_timer;
+static mtimer_t service_raw_remove_timer;
 
 static void
 service_class_notify_enabled ( void *obj, const char *lang )
@@ -316,9 +316,6 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
   if(t->s_status == SERVICE_RUNNING)
     stream_clean(es);
 
-  avgstat_flush(&es->es_rate);
-  avgstat_flush(&es->es_cc_errors);
-
   if (t->s_last_es == es) {
     t->s_last_pid = -1;
     t->s_last_es = NULL;
@@ -344,7 +341,7 @@ service_stop(service_t *t)
 {
   elementary_stream_t *st;
 
-  gtimer_disarm(&t->s_receive_timer);
+  mtimer_disarm(&t->s_receive_timer);
 
   t->s_stop_feed(t);
 
@@ -648,7 +645,7 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_streaming_live   = 0;
   t->s_scrambled_seen   = 0;
   t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
-  t->s_start_time       = dispatch_clock;
+  t->s_start_time       = mdispatch_clock;
 
   pthread_mutex_lock(&t->s_stream_mutex);
   service_build_filter(t);
@@ -680,7 +677,8 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_timeout = timeout;
   t->s_grace_delay = stimeout;
   if (stimeout > 0)
-    gtimer_arm(&t->s_receive_timer, service_data_timeout, t, stimeout);
+    mtimer_arm_rel(&t->s_receive_timer, service_data_timeout, t,
+                   mono4sec(stimeout));
   return 0;
 }
 
@@ -875,8 +873,6 @@ service_destroy(service_t *t, int delconf)
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)
     service_stream_destroy(t, st);
 
-  avgstat_flush(&t->s_rate);
-
   switch (t->s_type) {
   case STYPE_RAW:
     TAILQ_REMOVE(&service_raw_all, t, s_all_link);
@@ -907,7 +903,7 @@ service_remove_raw(service_t *t)
   t->s_type = STYPE_RAW_REMOVED;
   TAILQ_REMOVE(&service_raw_all, t, s_all_link);
   TAILQ_INSERT_TAIL(&service_raw_remove, t, s_all_link);
-  gtimer_arm(&service_raw_remove_timer, service_remove_raw_timer_cb, NULL, 0);
+  mtimer_arm_rel(&service_raw_remove_timer, service_remove_raw_timer_cb, NULL, 0);
 }
 
 void
@@ -1082,9 +1078,6 @@ service_stream_create(service_t *t, int pid,
 
   st->es_pid = pid;
 
-  avgstat_init(&st->es_rate, 10);
-  avgstat_init(&st->es_cc_errors, 10);
-
   service_stream_make_nicename(t, st);
 
   if(t->s_status == SERVICE_RUNNING) {
@@ -1143,7 +1136,8 @@ service_data_timeout(void *aux)
   pthread_mutex_unlock(&t->s_stream_mutex);
 
   if (t->s_timeout > 0)
-    gtimer_arm(&t->s_receive_timer, service_data_timeout, t, t->s_timeout);
+    mtimer_arm_rel(&t->s_receive_timer, service_data_timeout, t,
+                   mono4sec(t->s_timeout));
 }
 
 /**

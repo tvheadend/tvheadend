@@ -173,8 +173,8 @@ static void _epggrab_load ( void )
   }
 
   if (epggrab_conf.epgdb_periodicsave)
-    gtimer_arm(&epggrab_save_timer, epg_save_callback, NULL,
-               epggrab_conf.epgdb_periodicsave * 3600);
+    gtimer_arm_rel(&epggrab_save_timer, epg_save_callback, NULL,
+                   epggrab_conf.epgdb_periodicsave * 3600);
 
   idnode_notify_changed(&epggrab_conf.idnode);
  

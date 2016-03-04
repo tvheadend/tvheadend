@@ -711,7 +711,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
   char chaninfo[128];
   int i;
   uint32_t off;
-  int64_t delay = (getmonoclock() - es->es_time) / 1000LL; // in ms
+  int64_t delay = (getfastmonoclock() - es->es_time) / 1000LL; // in ms
 
   es->es_pending = 0;
 
@@ -1046,6 +1046,7 @@ cwc_writer_thread(void *aux)
 {
   cwc_t *cwc = aux;
   cwc_message_t *cm;
+  int64_t mono;
   int r;
 
   pthread_mutex_lock(&cwc->cwc_writer_mutex);
@@ -1055,10 +1056,10 @@ cwc_writer_thread(void *aux)
     if((cm = TAILQ_FIRST(&cwc->cwc_writeq)) != NULL) {
       TAILQ_REMOVE(&cwc->cwc_writeq, cm, cm_link);
       pthread_mutex_unlock(&cwc->cwc_writer_mutex);
-      //      int64_t ts = getmonoclock();
+      //      int64_t ts = getfastmonoclock();
       if (tvh_write(cwc->cwc_fd, cm->cm_data, cm->cm_len))
         tvhlog(LOG_INFO, "cwc", "write error %s", strerror(errno));
-      //      printf("Write took %lld usec\n", getmonoclock() - ts);
+      //      printf("Write took %lld usec\n", getfastmonoclock() - ts);
       free(cm);
       pthread_mutex_lock(&cwc->cwc_writer_mutex);
       continue;
@@ -1067,11 +1068,14 @@ cwc_writer_thread(void *aux)
 
     /* If nothing is to be sent in CWC_KEEPALIVE_INTERVAL seconds we
        need to send a keepalive */
-    r = tvh_cond_timedwait(&cwc->cwc_writer_cond,
-                           &cwc->cwc_writer_mutex,
-                           getmonoclock() + CWC_KEEPALIVE_INTERVAL * MONOCLOCK_RESOLUTION);
-    if(r == ETIMEDOUT)
-      cwc_send_ka(cwc);
+    mono = mdispatch_clock + mono4sec(CWC_KEEPALIVE_INTERVAL);
+    do {
+      r = tvh_cond_timedwait(&cwc->cwc_writer_cond, &cwc->cwc_writer_mutex, mono);
+      if(r == ETIMEDOUT) {
+        cwc_send_ka(cwc);
+        break;
+      }
+    } while (ERRNO_AGAIN(r));
   }
 
   pthread_mutex_unlock(&cwc->cwc_writer_mutex);
@@ -1178,11 +1182,12 @@ static void *
 cwc_thread(void *aux)
 {
   cwc_t *cwc = aux;
-  int fd, d;
+  int fd, d, r;
   char errbuf[100];
   char hostname[256];
   int port;
   int attempts = 0;
+  int64_t mono;
 
   pthread_mutex_lock(&cwc->cwc_mutex);
 
@@ -1242,8 +1247,12 @@ cwc_thread(void *aux)
            "%s:%i: Automatic connection attempt in %d seconds",
            cwc->cwc_hostname, cwc->cwc_port, d-1);
 
-    tvh_cond_timedwait(&cwc->cwc_cond, &cwc->cwc_mutex,
-                       getmonoclock() + d * MONOCLOCK_RESOLUTION);
+    mono = mdispatch_clock + mono4sec(d);
+    do {
+      r = tvh_cond_timedwait(&cwc->cwc_cond, &cwc->cwc_mutex, mono);
+      if (r == ETIMEDOUT)
+        break;
+    } while (ERRNO_AGAIN(r));
   }
 
   tvhlog(LOG_INFO, "cwc", "%s:%i inactive",
@@ -1307,11 +1316,10 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if (pcard->running && cwc->cwc_forward_emm && cwc->cwc_writer_running) {
     if (cwc->cwc_emmex) {
       if (cwc->cwc_mux != mux) {
-        int64_t delta = getmonoclock() - cwc->cwc_update_time;
-        if (delta < 25000000UL)  /* 25 seconds */
+        if (cwc->cwc_update_time + mono4sec(25) < mdispatch_clock)
           goto end_of_job;
       }
-      cwc->cwc_update_time = getmonoclock();
+      cwc->cwc_update_time = mdispatch_clock;
     }
     cwc->cwc_mux = mux;
     emm_filter(&pcard->cs_ra, data, len, mux, cwc_emm_send, pcard);
@@ -1469,7 +1477,7 @@ found:
       tvhlog(LOG_DEBUG, "cwc",
              "Sending ECM%s section=%d/%d, for service \"%s\" (seqno: %d)",
              chaninfo, section, ep->ep_last_section, t->s_dvb_svcname, es->es_seq);
-      es->es_time = getmonoclock();
+      es->es_time = getfastmonoclock();
       break;
 
     default:

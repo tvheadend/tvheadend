@@ -130,7 +130,7 @@ access_ticket_create(const char *resource, access_t *a)
   at->at_access = access_copy(a);
 
   TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
-  gtimer_arm(&at->at_timer, access_ticket_timout, at, 60*5);
+  mtimer_arm_rel(&at->at_timer, access_ticket_timout, at, 60*5);
 
   return at->at_id;
 }
@@ -146,7 +146,7 @@ access_ticket_delete(const char *id)
   if((at = access_ticket_find(id)) == NULL)
     return -1;
 
-  gtimer_disarm(&at->at_timer);
+  mtimer_disarm(&at->at_timer);
   access_ticket_destroy(at);
 
   return 0;

@@ -143,7 +143,7 @@ struct linuxdvb_frontend
   int                       lfe_nodata;
   int                       lfe_freq;
   time_t                    lfe_monitor;
-  gtimer_t                  lfe_monitor_timer;
+  mtimer_t                  lfe_monitor_timer;
   tvhlog_limit_t            lfe_status_log;
 
   /*
@@ -181,8 +181,8 @@ struct linuxdvb_ca
   int                       lca_enabled;
   int                       lca_high_bitrate_mode;
   int                       lca_capmt_query;
-  gtimer_t                  lca_monitor_timer;
-  gtimer_t                  lca_capmt_queue_timer;
+  mtimer_t                  lca_monitor_timer;
+  mtimer_t                  lca_capmt_queue_timer;
   int                       lca_capmt_interval;
   int                       lca_capmt_query_interval;
   pthread_t                 lca_en50221_thread;
@@ -242,7 +242,7 @@ struct linuxdvb_satconf
   /*
    * Diseqc handling
    */
-  gtimer_t               ls_diseqc_timer;
+  mtimer_t               ls_diseqc_timer;
   int                    ls_diseqc_idx;
   int                    ls_diseqc_repeats;
   int                    ls_diseqc_full;

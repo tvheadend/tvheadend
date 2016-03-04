@@ -30,7 +30,7 @@ typedef struct {
   udp_multirecv_t um;
   char *path;
   char *query;
-  gtimer_t alive_timer;
+  mtimer_t alive_timer;
   int play;
   iptv_rtcp_info_t * rtcp_info;
 } rtsp_priv_t;
@@ -54,8 +54,8 @@ iptv_rtsp_alive_cb ( void *aux )
   rtsp_priv_t *rp = im->im_data;
 
   rtsp_send(rp->hc, RTSP_CMD_OPTIONS, rp->path, rp->query, NULL);
-  gtimer_arm(&rp->alive_timer, iptv_rtsp_alive_cb, im,
-             MAX(1, (rp->hc->hc_rtp_timeout / 2) - 1));
+  mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
+                 mono4sec(MAX(1, (rp->hc->hc_rtp_timeout / 2) - 1)));
 }
 
 /*
@@ -72,7 +72,7 @@ iptv_rtsp_header ( http_client_t *hc )
     /* teardown (or teardown timeout) */
     if (hc->hc_cmd == RTSP_CMD_TEARDOWN) {
       pthread_mutex_lock(&global_lock);
-      gtimer_arm(&hc->hc_close_timer, iptv_rtsp_close_cb, hc, 0);
+      mtimer_arm_rel(&hc->hc_close_timer, iptv_rtsp_close_cb, hc, 0);
       pthread_mutex_unlock(&global_lock);
     }
     return 0;
@@ -102,8 +102,8 @@ iptv_rtsp_header ( http_client_t *hc )
     hc->hc_cmd = HTTP_CMD_NONE;
     pthread_mutex_lock(&global_lock);
     iptv_input_mux_started(hc->hc_aux);
-    gtimer_arm(&rp->alive_timer, iptv_rtsp_alive_cb, im,
-               MAX(1, (hc->hc_rtp_timeout / 2) - 1));
+    mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
+                   mono4sec(MAX(1, (hc->hc_rtp_timeout / 2) - 1)));
     pthread_mutex_unlock(&global_lock);
     break;
   default:
@@ -213,7 +213,7 @@ iptv_rtsp_stop
   if (play)
     rtsp_teardown(rp->hc, rp->path, "");
   pthread_mutex_unlock(&iptv_lock);
-  gtimer_disarm(&rp->alive_timer);
+  mtimer_disarm(&rp->alive_timer);
   udp_multirecv_free(&rp->um);
   if (!play)
     http_client_close(rp->hc);

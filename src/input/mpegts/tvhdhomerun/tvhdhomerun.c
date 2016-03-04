@@ -379,7 +379,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
     if (tvheadend_running) {
       brk = tvh_cond_timedwait(&tvhdhomerun_discovery_cond,
                                &tvhdhomerun_discovery_lock,
-                               getmonoclock() + 15 * MONOCLOCK_RESOLUTION);
+                               mdispatch_clock + mono4sec(15));
       brk = !ERRNO_AGAIN(brk) && brk != ETIMEDOUT;
     }
     pthread_mutex_unlock(&tvhdhomerun_discovery_lock);
@@ -439,7 +439,7 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
 
   lock_assert(&global_lock);
 
-  gtimer_disarm(&hd->hd_destroy_timer);
+  mtimer_disarm(&hd->hd_destroy_timer);
 
   idnode_save_check(&hd->th_id, 1);
 

@@ -42,12 +42,12 @@ iptv_file_thread ( void *aux )
 {
   iptv_mux_t *im = aux;
   file_priv_t *fp = im->im_data;
-  struct timespec ts;
   ssize_t r;
   int fd = fp->fd, pause = 0;
   char buf[32*1024];
   off_t off = 0;
-  int n;
+  int64_t mono;
+  int e;
 
 #if defined(PLATFORM_DARWIN)
   fcntl(fd, F_NOCACHE, 1);
@@ -55,12 +55,12 @@ iptv_file_thread ( void *aux )
   pthread_mutex_lock(&iptv_lock);
   while (!fp->shutdown && fd > 0) {
     while (!fp->shutdown && pause) {
-      clock_gettime(CLOCK_REALTIME, &ts);
-      ts.tv_sec += 1;
-      n = tvh_cond_timedwait(&fp->cond, &iptv_lock,
-                             getmonoclock() + 1 * MONOCLOCK_RESOLUTION);
-      if (n == ETIMEDOUT)
-        break;
+      mono = mdispatch_clock + mono4sec(1);
+      do {
+        e = tvh_cond_timedwait(&fp->cond, &iptv_lock, mono);
+        if (e == ETIMEDOUT)
+          break;
+      } while (ERRNO_AGAIN(e));
     }
     if (fp->shutdown)
       break;

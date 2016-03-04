@@ -126,7 +126,7 @@ download_fetch_complete(http_client_t *hc)
              hc->hc_code, hc->hc_result, hc->hc_data_size);
 
   /* note: http_client_close must be called outside http_client callbacks */
-  gtimer_arm(&dn->fetch_timer, download_fetch_done, hc, 0);
+  mtimer_arm_rel(&dn->fetch_timer, download_fetch_done, hc, 0);
 
 out:
   pthread_mutex_unlock(&global_lock);
@@ -193,7 +193,7 @@ failed:
     }
   }
 
-  gtimer_arm_ms(&dn->pipe_read_timer, download_pipe_read, dn, 250);
+  mtimer_arm_rel(&dn->pipe_read_timer, download_pipe_read, dn, mono4ms(250));
 }
 
 /*
@@ -206,7 +206,7 @@ download_pipe(download_t *dn, const char *args)
   int r;
 
   download_pipe_close(dn);
-  gtimer_disarm(&dn->pipe_read_timer);
+  mtimer_disarm(&dn->pipe_read_timer);
 
   /* Arguments */
   if (spawn_parse_args(&argv, 64, args, NULL)) {
@@ -228,7 +228,7 @@ download_pipe(download_t *dn, const char *args)
 
   fcntl(dn->pipe_fd, F_SETFL, fcntl(dn->pipe_fd, F_GETFL) | O_NONBLOCK);
 
-  gtimer_arm_ms(&dn->pipe_read_timer, download_pipe_read, dn, 250);
+  mtimer_arm_rel(&dn->pipe_read_timer, download_pipe_read, dn, mono4ms(250));
   return 0;
 }
 
@@ -319,7 +319,7 @@ download_start( download_t *dn, const char *url, void *aux )
     dn->url = strdup(url);
   }
   dn->aux = aux;
-  gtimer_arm(&dn->fetch_timer, download_fetch, dn, 0);
+  mtimer_arm_rel(&dn->fetch_timer, download_fetch, dn, 0);
 }
 
 /*
@@ -333,8 +333,8 @@ download_done( download_t *dn )
     dn->http_client = NULL;
   }
   download_pipe_close(dn);
-  gtimer_disarm(&dn->fetch_timer);
-  gtimer_disarm(&dn->pipe_read_timer);
+  mtimer_disarm(&dn->fetch_timer);
+  mtimer_disarm(&dn->pipe_read_timer);
   free(dn->log); dn->log = NULL;
   free(dn->url); dn->url = NULL;
 }

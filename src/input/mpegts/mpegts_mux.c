@@ -95,7 +95,7 @@ mpegts_mux_scan_active
     t = mpegts_input_grace(mi, mm);
   
     /* Setup timeout */
-    gtimer_arm(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, t);
+    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, mono4sec(t));
   }
 }
 
@@ -691,7 +691,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   }
 
   /* Stop PID timer */
-  gtimer_disarm(&mm->mm_update_pids_timer);
+  mtimer_disarm(&mm->mm_update_pids_timer);
 
   /* Free memory */
   idnode_save_check(&mm->mm_id, 1);
@@ -859,7 +859,7 @@ void
 mpegts_mux_update_pids ( mpegts_mux_t *mm )
 {
   if (mm && mm->mm_active)
-    gtimer_arm(&mm->mm_update_pids_timer, mpegts_mux_update_pids_cb, mm, 0);
+    mtimer_arm_rel(&mm->mm_update_pids_timer, mpegts_mux_update_pids_cb, mm, 0);
 }
 
 void
@@ -1090,7 +1090,7 @@ again:
   /* Pending tables (another 20s or 30s - bit arbitrary) */
   } else if (q) {
     tvhtrace("mpegts", "%s - scan needs more time", buf);
-    gtimer_arm(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, w ? 30 : 20);
+    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, mono4sec(w ? 30 : 20));
     return;
 
   /* Complete */

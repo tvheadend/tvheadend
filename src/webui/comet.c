@@ -57,7 +57,7 @@ typedef struct comet_mailbox {
   char *cmb_boxid; /* SHA-1 hash */
   char *cmb_lang;  /* UI language */
   htsmsg_t *cmb_messages; /* A vector */
-  time_t cmb_last_used;
+  int64_t cmb_last_used;
   LIST_ENTRY(comet_mailbox) cmb_link;
   int cmb_debug;
 } comet_mailbox_t;
@@ -95,7 +95,7 @@ comet_flush(void)
   for(cmb = LIST_FIRST(&mailboxes); cmb != NULL; cmb = next) {
     next = LIST_NEXT(cmb, cmb_link);
 
-    if(cmb->cmb_last_used && cmb->cmb_last_used + 60 < dispatch_clock)
+    if(cmb->cmb_last_used && cmb->cmb_last_used + mono4sec(60) < mdispatch_clock)
       cmb_destroy(cmb);
   }
   pthread_mutex_unlock(&comet_mutex);
@@ -131,7 +131,7 @@ comet_mailbox_create(const char *lang)
 
   cmb->cmb_boxid = strdup(id);
   cmb->cmb_lang = lang ? strdup(lang) : NULL;
-  time(&cmb->cmb_last_used);
+  cmb->cmb_last_used = mdispatch_clock;
   mailbox_tally++;
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
@@ -238,7 +238,8 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   comet_mailbox_t *cmb = NULL; 
   const char *cometid = http_arg_get(&hc->hc_req_args, "boxid");
   const char *immediate = http_arg_get(&hc->hc_req_args, "immediate");
-  int im = immediate ? atoi(immediate) : 0;
+  int im = immediate ? atoi(immediate) : 0, e;
+  int64_t mono;
   htsmsg_t *m;
 
   if(!im)
@@ -263,8 +264,12 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   cmb->cmb_last_used = 0; /* Make sure we're not flushed out */
 
   if(!im && cmb->cmb_messages == NULL) {
-    tvh_cond_timedwait(&comet_cond, &comet_mutex,
-                       getmonoclock() + 10 * MONOCLOCK_RESOLUTION);
+    mono = mdispatch_clock + mono4sec(10);
+    do {
+      e = tvh_cond_timedwait(&comet_cond, &comet_mutex, mono);
+      if (e == ETIMEDOUT)
+        break;
+    } while (ERRNO_AGAIN(e));
     if (!comet_running) {
       pthread_mutex_unlock(&comet_mutex);
       return 400;
@@ -276,7 +281,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_list());
   cmb->cmb_messages = NULL;
   
-  cmb->cmb_last_used = dispatch_clock;
+  cmb->cmb_last_used = mdispatch_clock;
 
   pthread_mutex_unlock(&comet_mutex);
 
