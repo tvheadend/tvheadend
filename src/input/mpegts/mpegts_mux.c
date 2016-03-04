@@ -1341,12 +1341,8 @@ mpegts_mux_tuning_error ( const char *mux_uuid, mpegts_mux_instance_t *mmi_match
 {
   mpegts_mux_t *mm;
   mpegts_mux_instance_t *mmi;
-  struct timespec timeout;
 
-  timeout.tv_sec = 2;
-  timeout.tv_nsec = 0;
-
-  if (!pthread_mutex_timedlock(&global_lock, &timeout)) {
+  if (!tvh_mutex_timedlock(&global_lock, 2000000)) {
     mm = mpegts_mux_find(mux_uuid);
     if (mm) {
       if ((mmi = mm->mm_active) != NULL && mmi == mmi_match)

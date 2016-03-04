@@ -687,6 +687,8 @@ int tvhthread_create
 
 int tvhtread_renice(int value);
 
+int tvh_mutex_timedlock(pthread_mutex_t *mutex, int64_t usec);
+
 int tvh_open(const char *pathname, int flags, mode_t mode);
 
 int tvh_socket(int domain, int type, int protocol);

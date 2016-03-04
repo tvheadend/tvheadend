@@ -18,32 +18,22 @@
 #include <pthread_np.h>
 #endif
 
-#if ENABLE_ANDROID
 int
-pthread_mutex_timedlock
-  ( pthread_mutex_t *mutex, struct timespec *timeout )
+tvh_mutex_timedlock
+  ( pthread_mutex_t *mutex, int64_t usec )
 {
-  struct timeval timenow;
-  struct timespec sleepytime;
+  int64_t finish = getmonoclock() + usec;
   int retcode;
 
-  /* This is just to avoid a completely busy wait */
-  sleepytime.tv_sec = 0;
-  sleepytime.tv_nsec = 10000000; /* 10ms */
-
   while ((retcode = pthread_mutex_trylock (mutex)) == EBUSY) {
-    gettimeofday (&timenow, NULL);
-
-    if (timenow.tv_sec >= timeout->tv_sec &&
-       (timenow.tv_usec * 1000) >= timeout->tv_nsec)
+    if (getmonoclock() >= finish)
       return ETIMEDOUT;
 
-    nanosleep (&sleepytime, NULL);
+    usleep(10000);
   }
 
   return retcode;
 }
-#endif
 
 int
 tvh_open(const char *pathname, int flags, mode_t mode)
