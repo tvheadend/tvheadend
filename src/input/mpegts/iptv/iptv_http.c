@@ -84,7 +84,7 @@ iptv_http_safe_global_lock( http_priv_t *hp )
     if (r == 0)
       break;
     if (r == EBUSY)
-      usleep(10000);
+      tvh_safe_usleep(10000);
   }
   return 1;
 }

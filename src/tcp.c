@@ -548,7 +548,7 @@ try_again:
         return NULL;
       }
       pthread_mutex_unlock(&global_lock);
-      usleep(250000);
+      tvh_safe_usleep(250000);
       pthread_mutex_lock(&global_lock);
       if (tvheadend_running)
         goto try_again;
@@ -1116,7 +1116,7 @@ tcp_server_done(void)
   while (LIST_FIRST(&tcp_server_active) != NULL) {
     if (t + sec2mono(5) < getfastmonoclock())
       tvhtrace("tcp", "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
-    usleep(20000);
+    tvh_safe_usleep(20000);
   }
 
   pthread_mutex_lock(&global_lock);

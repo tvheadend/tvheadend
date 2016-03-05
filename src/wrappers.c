@@ -87,7 +87,7 @@ tvh_write(int fd, const void *buf, size_t len)
       if (ERRNO_AGAIN(errno)) {
         if (mdispatch_clock > limit)
           break;
-        usleep(100);
+        tvh_safe_usleep(100);
         continue;
       }
       break;
@@ -208,7 +208,7 @@ tvh_mutex_timedlock
     if (getfastmonoclock() >= finish)
       return ETIMEDOUT;
 
-    usleep(10000);
+    tvh_safe_usleep(10000);
   }
 
   return retcode;
@@ -267,6 +267,61 @@ tvh_cond_timedwait
   ts.tv_nsec = (monoclock % MONOCLOCK_RESOLUTION) *
                (1000000000ULL/MONOCLOCK_RESOLUTION);
   return pthread_cond_timedwait(&cond->cond, mutex, &ts);
+}
+
+/*
+ * clocks
+ */
+
+void
+tvh_safe_usleep(int64_t us)
+{
+  int64_t r;
+  if (us <= 0)
+    return;
+  do {
+    r = tvh_usleep(us);
+    if (r < 0) {
+      if (ERRNO_AGAIN(r))
+        continue;
+      break;
+    }
+    us = r;
+  } while (r > 0);
+}
+
+int64_t
+tvh_usleep(int64_t us)
+{
+  struct timespec ts;
+  int64_t val;
+  int r;
+  if (us <= 0)
+    return 0;
+  ts.tv_sec = us / 1000000LL;
+  ts.tv_nsec = (us % 1000000LL) * 1000LL;
+  r = clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, &ts);
+  val = (ts.tv_sec * 1000000LL) + ((ts.tv_nsec + 500LL) / 1000LL);
+  if (ERRNO_AGAIN(r))
+    return val;
+  return r ? -r : 0;
+}
+
+int64_t
+tvh_usleep_abs(int64_t us)
+{
+  struct timespec ts;
+  int64_t val;
+  int r;
+  if (us <= 0)
+    return 0;
+  ts.tv_sec = us / 1000000LL;
+  ts.tv_nsec = (us % 1000000LL) * 1000LL;
+  r = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, &ts);
+  val = (ts.tv_sec * 1000000LL) + ((ts.tv_nsec + 500LL) / 1000LL);
+  if (ERRNO_AGAIN(r))
+    return val;
+  return r ? -r : 0;
 }
 
 /*

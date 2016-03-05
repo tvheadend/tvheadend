@@ -46,9 +46,7 @@ tsfile_input_thread ( void *aux )
   sbuf_t buf;
   mpegts_pcr_t pcr;
   int64_t pcr_last = PTS_UNSET;
-#if PLATFORM_LINUX
-  int64_t pcr_last_realtime = 0;
-#endif
+  int64_t pcr_last_mono = 0;
   tsfile_input_t *mi = aux;
   mpegts_mux_instance_t *mmi;
   tsfile_mux_instance_t *tmi;
@@ -90,6 +88,8 @@ tsfile_input_thread ( void *aux )
   len = 0;
   tvhtrace("tsfile", "adapter %d file size %jd rem %zu",
            mi->mi_instance, (intmax_t)st.st_size, rem);
+
+  pcr_last_mono = getfastmonoclock();
   
   /* Process input */
   while (1) {
@@ -141,8 +141,7 @@ tsfile_input_thread ( void *aux )
       /* Delay */
       if (pcr.pcr_first != PTS_UNSET) {
         if (pcr_last != PTS_UNSET) {
-          struct timespec slp;
-          int64_t delta;
+          int64_t delta, r;
 
           delta = pcr.pcr_first - pcr_last;
 
@@ -152,21 +151,12 @@ tsfile_input_thread ( void *aux )
             delta = 90000;
           delta *= 11;
 
-#if PLATFORM_LINUX
-          delta += pcr_last_realtime;
-          slp.tv_sec  = (delta / 1000000);
-          slp.tv_nsec = (delta % 1000000) * 1000;
-          clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &slp, NULL);
-#else
-          slp.tv_sec  = (delta / 1000000);
-          slp.tv_nsec = (delta % 1000000) * 1000;
-          nanosleep(&slp, NULL);
-#endif
+          do {
+            r = tvh_usleep_abs(pcr_last_mono + delta);
+          } while (ERRNO_AGAIN(r) || r > 0);
         }
-        pcr_last          = pcr.pcr_first;
-#if PLATFORM_LINUX
-        pcr_last_realtime = getfastmonoclock();
-#endif
+        pcr_last      = pcr.pcr_first;
+        pcr_last_mono = getfastmonoclock();
       }
     }
     sched_yield();

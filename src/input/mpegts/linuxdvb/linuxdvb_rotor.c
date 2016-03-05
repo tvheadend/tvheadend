@@ -376,7 +376,7 @@ linuxdvb_rotor_gotox_tune
       tvherror("diseqc", "failed to set GOTOX pos %d", lr->lr_position);
       return -1;
     }
-    usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
+    tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
   }
 
   tvhdebug("diseqc", "rotor GOTOX pos %d sent", lr->lr_position);
@@ -412,7 +412,7 @@ linuxdvb_rotor_usals_tune
       tvherror("diseqc", "failed to send USALS command");
       return -1;
     }
-    usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
+    tvh_safe_usleep(MINMAX(lr->lr_cmd_time, 10, 100) * 1000);
   }
 
   return linuxdvb_rotor_grace((linuxdvb_diseqc_t*)lr,lm);

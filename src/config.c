@@ -1458,7 +1458,7 @@ dobackup(const char *oldver)
     code = -ENOENT;
   } else {
     while ((code = spawn_reap(pid, errtxt, sizeof(errtxt))) == -EAGAIN)
-      usleep(20000);
+      tvh_safe_usleep(20000);
     if (code == -ECHILD)
       code = 0;
     tvhinfo("config", "backup: completed");

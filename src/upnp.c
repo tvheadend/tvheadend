@@ -216,7 +216,7 @@ upnp_thread( void *aux )
     pthread_mutex_unlock(&upnp_lock);
     if (data == NULL)
       break;
-    usleep((long)data->delay_ms * 1000);
+    tvh_safe_usleep((long)data->delay_ms * 1000);
     upnp_dump_data(data);
     udp_write_queue(unicast, &data->queue, &data->storage);
     htsbuf_queue_flush(&data->queue);

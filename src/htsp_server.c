@@ -3093,7 +3093,7 @@ readmsg:
 
       	    pthread_mutex_unlock(&global_lock);
             /* Classic authentication failed delay */
-            usleep(250000);
+            tvh_safe_usleep(250000);
 
             reply = htsmsg_create_map();
             htsmsg_add_u32(reply, "noaccess", 1);

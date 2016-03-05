@@ -105,4 +105,9 @@ static inline time_t time_t_out_of_range(uint64_t val)
   return r;
 }
 
+void tvh_safe_usleep(int64_t us);
+
+int64_t tvh_usleep(int64_t us);
+int64_t tvh_usleep_abs(int64_t us);
+
 #endif /* TVHEADEND_CLOCK_H */

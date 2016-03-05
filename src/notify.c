@@ -110,7 +110,7 @@ notify_thread ( void *p )
     htsmsg_destroy(q);
 
     /* Wait */
-    usleep(500000);
+    tvh_safe_usleep(500000);
     pthread_mutex_lock(&notify_mutex);
   }
   pthread_mutex_unlock(&notify_mutex);

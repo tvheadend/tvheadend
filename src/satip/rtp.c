@@ -861,20 +861,21 @@ static void *
 satip_rtcp_thread(void *aux)
 {
   satip_rtp_session_t *rtp;
-  struct timespec ts;
+  int64_t us;
   uint8_t msg[RTCP_PAYLOAD+1];
   char addrbuf[50];
   int r, len, err;
 
   tvhtrace("satips", "starting rtcp thread");
   while (satip_rtcp_run) {
-    ts.tv_sec  = 0;
-    ts.tv_nsec = 150000000;
+    us = 150000;
     do {
-      r = nanosleep(&ts, &ts);
+      us = tvh_usleep(us);
+      if (us < 0)
+        goto end;
       if (!satip_rtcp_run)
         goto end;
-    } while (r && ts.tv_nsec);
+    } while (us > 0);
     pthread_mutex_lock(&satip_rtp_lock);
     TAILQ_FOREACH(rtp, &satip_rtp_sessions, link) {
       if (rtp->sq == NULL) continue;

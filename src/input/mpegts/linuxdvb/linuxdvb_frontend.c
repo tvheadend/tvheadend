@@ -1756,7 +1756,7 @@ linuxdvb_frontend_tune1
   rep = lfe->lfe_tune_repeats > 0 ? lfe->lfe_tune_repeats : 0;
   for (i = 0; i <= rep; i++) {
     if (i > 0)
-      usleep(15000);
+      tvh_safe_usleep(15000);
     r = linuxdvb_frontend_tune0(lfe, mmi, freq);
     if (r)
       break;

@@ -315,7 +315,7 @@ linuxdvb_adapter_add ( const char *path )
     if (!i) {
       for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
         if (!access(fe_path, R_OK | W_OK)) break;
-        usleep(100000);
+        tvh_safe_usleep(100000);
       }
     }
     if (access(fe_path, R_OK | W_OK)) continue;
@@ -323,7 +323,7 @@ linuxdvb_adapter_add ( const char *path )
     /* Get frontend info */
     for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
       if ((fd = tvh_open(fe_path, O_RDWR, 0)) >= 0) break;
-      usleep(100000);
+      tvh_safe_usleep(100000);
     }
     if (fd < 0) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", fe_path);
@@ -413,7 +413,7 @@ linuxdvb_adapter_add ( const char *path )
     /* Get ca info */
     for (j = 0; j < MAX_DEV_OPEN_ATTEMPTS; j++) {
       if ((fd = tvh_open(ca_path, O_RDWR, 0)) >= 0) break;
-      usleep(100000);
+      tvh_safe_usleep(100000);
     }
     if (fd < 0) {
       tvhlog(LOG_ERR, "linuxdvb", "unable to open %s", ca_path);

@@ -196,14 +196,14 @@ linuxdvb_switch_tune
           if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x39, 1,
                                    0xF0 | ls->ls_uncommitted))
             return -1;
-          usleep(slp);
+          tvh_safe_usleep(slp);
         }
 
       /* Committed */
       if (ls->ls_committed >= 0) {
         if (linuxdvb_diseqc_send(fd, 0xE0 | r1, 0x10, 0x38, 1, com))
           return -1;
-        usleep(slp);
+        tvh_safe_usleep(slp);
       }
 
       if (!ls->ls_uncommitted_first) {
@@ -212,7 +212,7 @@ linuxdvb_switch_tune
           if (linuxdvb_diseqc_send(fd, 0xE0 | r2, 0x10, 0x39, 1,
                                    0xF0 | ls->ls_uncommitted))
             return -1;
-          usleep(slp);
+          tvh_safe_usleep(slp);
         }
       }
 

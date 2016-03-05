@@ -223,7 +223,7 @@ linuxdvb_en50494_tune
       tvherror("en50494","failed to lock for tuning");
       return -1;
     }
-    usleep(20000);
+    tvh_safe_usleep(20000);
   }
 
   /* setup en50494 switch */
@@ -234,7 +234,7 @@ linuxdvb_en50494_tune
       uint8_t rnd;
       uuid_random(&rnd, 1);
       int ms = ((int)rnd)%50 + 68;
-      usleep(ms*1000);
+      tvh_safe_usleep(ms*1000);
     }
 
     /* use 18V */
@@ -243,7 +243,7 @@ linuxdvb_en50494_tune
       tvherror("en50494", "error setting lnb voltage to 18V");
       break;
     }
-    usleep(15000); /* standard: 4ms < x < 22ms */
+    tvh_safe_usleep(15000); /* standard: 4ms < x < 22ms */
 
     /* send tune command (with/without pin) */
     tvhdebug("en50494",
@@ -269,7 +269,7 @@ linuxdvb_en50494_tune
       tvherror("en50494", "error send tune command");
       break;
     }
-    usleep(50000); /* standard: 2ms < x < 60ms */
+    tvh_safe_usleep(50000); /* standard: 2ms < x < 60ms */
 
     /* return to 13V */
     ret = linuxdvb_diseqc_set_volt(lsp, 0);

@@ -472,7 +472,7 @@ udp_write( udp_connection_t *uc, const void *buf, size_t len,
                  sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
     if (r < 0) {
       if (ERRNO_AGAIN(errno)) {
-        usleep(100);
+        tvh_safe_usleep(100);
         continue;
       }
       break;

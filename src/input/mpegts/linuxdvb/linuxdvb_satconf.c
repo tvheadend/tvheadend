@@ -758,7 +758,7 @@ linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol )
   /* the linuxdvb_diseqc_set_volt() fcn already sleeps for 15ms */
   if (delay > 15) {
     tvhtrace("diseqc", "initial sleep %dms", delay);
-    usleep((delay-15)*1000);
+    tvh_safe_usleep((delay-15)*1000);
   }
   return 0;
 }
@@ -852,7 +852,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
         return -1;
       }
       ls->ls_last_tone_off = band + 1;
-      usleep(20000); // Allow LNB to settle before tuning
+      tvh_safe_usleep(20000); // Allow LNB to settle before tuning
     }
   }
 
@@ -1576,7 +1576,7 @@ linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
     return -1;
   }
   if (vol >= 0)
-    usleep(15000);
+    tvh_safe_usleep(15000);
   ls->ls_last_vol = vol ? (vol < 0 ? 0 : 2) : 1;
   return 0;
 }

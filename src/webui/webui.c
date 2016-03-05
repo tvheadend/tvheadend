@@ -400,7 +400,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           while (getfastmonoclock() < mono) {
             if (tcp_socket_dead(hc->hc_fd))
               break;
-            usleep(50000);
+            tvh_safe_usleep(50000);
           }
           return;
         }

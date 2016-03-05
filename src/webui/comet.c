@@ -243,7 +243,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_t *m;
 
   if(!im)
-    usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
+    tvh_safe_usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
 
   pthread_mutex_lock(&comet_mutex);
   if (!comet_running) {
