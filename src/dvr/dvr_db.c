@@ -354,7 +354,7 @@ dvr_dbus_timer_cb( void *aux )
     if (de->de_sched_state != DVR_SCHEDULED)
       continue;
     start = dvr_entry_get_start_time(de, 1);
-    if (gdispatch_clock < start && start > max)
+    if (gclk() < start && start > max)
       max = start;
   }
   /* lower the maximum value */
@@ -363,7 +363,7 @@ dvr_dbus_timer_cb( void *aux )
     if (de->de_sched_state != DVR_SCHEDULED)
       continue;
     start = dvr_entry_get_start_time(de, 1);
-    if (gdispatch_clock < start && start < result)
+    if (gclk() < start && start < result)
       result = start;
   }
   /* different? send it.... */
@@ -381,8 +381,8 @@ static void
 dvr_entry_retention_arm(dvr_entry_t *de, gti_callback_t *cb, time_t when)
 {
   uint32_t rerecord = dvr_entry_get_rerecord_errors(de);
-  if (rerecord && (when - gdispatch_clock) > 3600) {
-    when = gdispatch_clock + 3600;
+  if (rerecord && (when - gclk()) > 3600) {
+    when = gclk() + 3600;
     cb = dvr_timer_rerecord;
   }
   gtimer_arm_absn(&de->de_timer, cb, de, when);
@@ -401,7 +401,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
 
   stop = time_t_out_of_range((int64_t)de->de_stop + removal * (int64_t)86400);
   if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
-    if (stop > gdispatch_clock) {
+    if (stop > gclk()) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
       return;
     }
@@ -605,7 +605,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
     /* EPG thinks that the program is running */
     if(de->de_running_start > de->de_running_stop && !de->de_dont_reschedule) {
-      stop = gdispatch_clock + 10;
+      stop = gclk() + 10;
       if (de->de_sched_state == DVR_RECORDING)
         goto recording;
     }
@@ -951,7 +951,7 @@ dvr_entry_clone(dvr_entry_t *de)
     if(de->de_sched_state == DVR_RECORDING) {
       dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 1);
       dvr_rec_migrate(de, n);
-      n->de_start = gdispatch_clock;
+      n->de_start = gclk();
       dvr_entry_start_recording(n, 1);
     } else {
       dvr_entry_set_timer(n);
@@ -1031,7 +1031,7 @@ not_so_good:
         dvr_entry_warm_time(de);
   RB_FOREACH(ev, &de->de_channel->ch_epg_schedule, sched_link) {
     if (de->de_bcast == ev) continue;
-    if (ev->start - pre < gdispatch_clock) continue;
+    if (ev->start - pre < gclk()) continue;
     if (dvr_entry_fuzzy_match(de, ev, 0, INT64_MAX))
       if (!e || e->start > ev->start)
         e = ev;
@@ -1497,8 +1497,8 @@ static dvr_entry_t *_dvr_entry_update
 
   if (!dvr_entry_is_editable(de)) {
     if (stop > 0) {
-      if (stop < gdispatch_clock)
-        stop = gdispatch_clock;
+      if (stop < gclk())
+        stop = gclk();
       if (stop < de->de_start)
         stop = de->de_start;
       if (stop != de->de_stop) {
@@ -1813,10 +1813,10 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
-        atomic_exchange_time_t(&de->de_running_start, gdispatch_clock);
+        atomic_exchange_time_t(&de->de_running_start, gclk());
       }
-      if (dvr_entry_get_start_time(de, 1) > gdispatch_clock) {
-        atomic_exchange_time_t(&de->de_start, gdispatch_clock);
+      if (dvr_entry_get_start_time(de, 1) > gclk()) {
+        atomic_exchange_time_t(&de->de_start, gclk());
         dvr_entry_set_timer(de);
         tvhdebug("dvr", "dvr entry %s event %s on %s - EPG start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
@@ -1830,7 +1830,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
        * sometimes, the running bits are parsed randomly for a few moments
        * so don't expect that the broacasting has only 5 seconds
        */
-      if (de->de_running_start + 5 > gdispatch_clock)
+      if (de->de_running_start + 5 > gclk())
         continue;
 
       srcname = de->de_dvb_eid == e->dvb_eid ? "event" : "other running event";
@@ -1841,7 +1841,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(de->de_channel));
       }
-      atomic_exchange_time_t(&de->de_running_stop, gdispatch_clock);
+      atomic_exchange_time_t(&de->de_running_stop, gclk());
       atomic_exchange_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
         dvr_stop_recording(de, SM_CODE_OK, 0, 0);
@@ -1856,7 +1856,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
-        atomic_exchange_time_t(&de->de_running_pause, gdispatch_clock);
+        atomic_exchange_time_t(&de->de_running_pause, gclk());
       }
     }
   }
@@ -2168,8 +2168,8 @@ dvr_entry_class_stop_set(void *o, const void *_v)
   time_t v = *(time_t *)_v;
 
   if (!dvr_entry_is_editable(de)) {
-    if (v < gdispatch_clock)
-      v = gdispatch_clock;
+    if (v < gclk())
+      v = gclk();
   }
   if (v < de->de_start)
     v = de->de_start;

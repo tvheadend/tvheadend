@@ -789,14 +789,14 @@ linuxdvb_frontend_monitor ( void *aux )
                      lfe, ms2mono(50));
 
       /* Monitor 1 per sec */
-      if (mdispatch_clock < lfe->lfe_monitor)
+      if (mclk() < lfe->lfe_monitor)
         return;
-      lfe->lfe_monitor = mdispatch_clock + sec2mono(1);
+      lfe->lfe_monitor = mclk() + sec2mono(1);
     }
   } else {
-    if (mdispatch_clock < lfe->lfe_monitor)
+    if (mclk() < lfe->lfe_monitor)
       return;
-    lfe->lfe_monitor = mdispatch_clock + ms2mono(period);
+    lfe->lfe_monitor = mclk() + ms2mono(period);
   }
 
   /* Statistics - New API */

@@ -323,14 +323,14 @@ iptv_http_data
     memcpy(hp->hls_si, buf, 2*188);
   }
 
-  if (hp->hls_last_si + sec2mono(1) <= mdispatch_clock && hp->hls_si) {
+  if (hp->hls_last_si + sec2mono(1) <= mclk() && hp->hls_si) {
     /* do rounding to start of the last MPEG-TS packet */
     rem = 188 - (hp->off % 188);
     if (im->mm_iptv_buffer.sb_ptr >= rem) {
       im->mm_iptv_buffer.sb_ptr -= rem;
       memcpy(tsbuf, im->mm_iptv_buffer.sb_data + im->mm_iptv_buffer.sb_ptr, rem);
       sbuf_append(&im->mm_iptv_buffer, hp->hls_si, 2*188);
-      hp->hls_last_si = mdispatch_clock;
+      hp->hls_last_si = mclk();
       sbuf_append(&im->mm_iptv_buffer, tsbuf, rem);
       hp->off += rem;
     }

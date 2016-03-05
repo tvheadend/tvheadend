@@ -39,8 +39,18 @@ static inline int clock_gettime(int clk_id, struct timespec* t) {
 }
 #endif
 
-extern int64_t mdispatch_clock;
-extern time_t  gdispatch_clock;
+extern int64_t __mdispatch_clock;
+extern time_t  __gdispatch_clock;
+
+static inline int64_t mclk(void)
+{
+  return atomic_add_s64(&__mdispatch_clock, 0);
+}
+
+static inline time_t gclk(void)
+{
+  return atomic_add_time_t(&__gdispatch_clock, 0);
+}
 
 #define MONOCLOCK_RESOLUTION 1000000LL /* microseconds */
 
@@ -89,9 +99,6 @@ getfastmonoclock(void)
   return tp.tv_sec * MONOCLOCK_RESOLUTION +
          (tp.tv_nsec / (1000000000LL/MONOCLOCK_RESOLUTION));
 }
-
-time_t  gdispatch_clock_update(void);
-int64_t mdispatch_clock_update(void);
 
 void time_t_out_of_range_notify(int64_t val);
 

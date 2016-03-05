@@ -204,7 +204,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   /* When deleting a file from the disk, the system needs some time to actually do this */
   /* If calling this function to fast after the previous call, statvfs might be wrong/not updated yet */
   /* So we are risking to delete more files than needed, so allow 10s for the system to handle previous deletes */
-  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mdispatch_clock) {
+  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mclk()) {
     tvhlog(LOG_WARNING, "dvr","disk space cleanup for config \"%s\" is not allowed now", configName);
     return -1;
   }
@@ -221,7 +221,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
 
   while (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
     oldest = NULL;
-    stoptime = gdispatch_clock;
+    stoptime = gclk();
 
     LIST_FOREACH(de, &dvrentries, de_global_link) {
       if (de->de_sched_state != DVR_COMPLETED &&
@@ -261,7 +261,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       tvhlog(LOG_INFO, "dvr","Delete \"until space needed\" recording \"%s\" with stop time \"%s\" and file size \"%"PRId64" MB\"",
              lang_str_get(oldest->de_title, NULL), tbuf, TOMIB(fileSize));
 
-      dvr_disk_space_config_lastdelete = mdispatch_clock;
+      dvr_disk_space_config_lastdelete = mclk();
       if (dvr_entry_get_retention_days(oldest) == DVR_RET_ONREMOVE) {
         dvr_entry_delete(oldest);     // delete actual file
         dvr_entry_destroy(oldest, 1); // also delete database entry

@@ -118,7 +118,7 @@ dvb_service_autoenable( mpegts_service_t *s, const char *where )
             s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id, where);
     service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
   }
-  s->s_dvb_check_seen = gdispatch_clock;
+  s->s_dvb_check_seen = gclk();
 }
 
 #if ENABLE_MPEGTS_DVB
@@ -2452,11 +2452,11 @@ static void dvb_time_update(const uint8_t *ptr, const char *srcname)
 {
   static time_t dvb_last_update = 0;
   time_t t;
-  if (dvb_last_update + 1800 < gdispatch_clock) {
+  if (dvb_last_update + 1800 < gclk()) {
     t = dvb_convert_date(ptr, 0);
     if (t > 0) {
       tvhtime_update(t, srcname);
-      dvb_last_update = gdispatch_clock;
+      dvb_last_update = gclk();
     }
   }
 }

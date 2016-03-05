@@ -645,7 +645,7 @@ error:
   empty = TAILQ_EMPTY(&hc->hc_wqueue);
   TAILQ_INSERT_TAIL(&hc->hc_wqueue, wcmd, link);
 
-  hc->hc_ping_time = mdispatch_clock;
+  hc->hc_ping_time = mclk();
 
   if (empty)
     return http_client_send_partial(hc);

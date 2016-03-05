@@ -1108,7 +1108,7 @@ idnode_save_queue ( idnode_t *self )
     return;
   ise = malloc(sizeof(*ise));
   ise->ise_node = self;
-  ise->ise_reqtime = mdispatch_clock;
+  ise->ise_reqtime = mclk();
   if (TAILQ_EMPTY(&idnodes_save) && save_running)
     mtimer_arm_rel(&save_timer, idnode_save_trigger_thread_cb, NULL, IDNODE_SAVE_DELAY);
   TAILQ_INSERT_TAIL(&idnodes_save, ise, ise_link);
@@ -1699,7 +1699,7 @@ save_thread ( void *aux )
 
   while (save_running) {
     if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
-        (ise->ise_reqtime + IDNODE_SAVE_DELAY > mdispatch_clock)) {
+        (ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk())) {
       if (ise)
         mtimer_arm_abs(&save_timer, idnode_save_trigger_thread_cb, NULL,
                        ise->ise_reqtime + IDNODE_SAVE_DELAY);

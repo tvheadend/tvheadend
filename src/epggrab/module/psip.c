@@ -163,7 +163,7 @@ psip_activate_table(psip_status_t *ps, psip_table_t *pt)
   }
   ps->ps_refcount++;
   mt->mt_destroy = psip_status_destroy;
-  pt->pt_start = mdispatch_clock;
+  pt->pt_start = mclk();
   pt->pt_table = mt;
   tvhtrace("psip", "table activated - pid 0x%04X type 0x%04X", mt->mt_pid, pt->pt_type);
   return mt;
@@ -203,7 +203,7 @@ psip_reschedule_tables(psip_status_t *ps)
   total = 0;
   TAILQ_FOREACH(pt, &ps->ps_tables, pt_link) {
     total++;
-    if (pt->pt_table && pt->pt_start + sec2mono(10) < mdispatch_clock) {
+    if (pt->pt_table && pt->pt_start + sec2mono(10) < mclk()) {
       tvhtrace("psip", "table late: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
       mpegts_table_destroy(pt->pt_table);
       pt->pt_table = NULL;

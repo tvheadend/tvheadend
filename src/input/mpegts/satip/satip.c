@@ -1006,7 +1006,7 @@ satip_discovery_timerq_cb(void *aux)
     d = next;
     next = TAILQ_NEXT(d, disc_link);
     if (d->http_client) {
-      if (mdispatch_clock - d->http_start > sec2mono(4))
+      if (mclk() - d->http_start > sec2mono(4))
         satip_discovery_destroy(d, 1);
       continue;
     }
@@ -1016,7 +1016,7 @@ satip_discovery_timerq_cb(void *aux)
     if (d->http_client == NULL)
       satip_discovery_destroy(d, 1);
     else {
-      d->http_start = mdispatch_clock;
+      d->http_start = mclk();
       d->http_client->hc_conn_closed = satip_discovery_http_closed;
       http_client_register(d->http_client);
       r = http_client_simple(d->http_client, &d->url);

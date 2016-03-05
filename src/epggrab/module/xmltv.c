@@ -613,9 +613,9 @@ static int _xmltv_parse_programme
      (attribs = htsmsg_get_map(subtag,  "attrib")) != NULL)
     icon = htsmsg_get_str(attribs, "src");
 
-  if(stop <= start || stop <= gdispatch_clock) return 0;
+  if(stop <= start || stop <= gclk()) return 0;
 
-  ec->laststamp = gdispatch_clock;
+  ec->laststamp = gclk();
   LIST_FOREACH(ilm, &ec->channels, ilm_in1_link) {
     ch = (channel_t *)ilm->ilm_in2;
     if (!ch->ch_enabled || ch->ch_epg_parent) continue;
@@ -642,7 +642,7 @@ static int _xmltv_parse_channel
   if((id      = htsmsg_get_str(attribs, "id"))   == NULL) return 0;
   if((tags    = htsmsg_get_map(body, "tags"))    == NULL) return 0;
   if((ch      = epggrab_channel_find(mod, id, 1, &save)) == NULL) return 0;
-  ch->laststamp = gdispatch_clock;
+  ch->laststamp = gclk();
   stats->channels.total++;
   if (save) stats->channels.created++;
   

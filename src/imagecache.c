@@ -668,7 +668,7 @@ imagecache_open ( uint32_t id )
 
     /* Wait */
     } else if (i->state == FETCHING) {
-      mono = mdispatch_clock + sec2mono(5);
+      mono = mclk() + sec2mono(5);
       do {
         e = tvh_cond_timedwait(&imagecache_cond, &global_lock, mono);
         if (e == ETIMEDOUT)

@@ -83,6 +83,9 @@
 
 pthread_t main_tid;
 
+int64_t   __mdispatch_clock;
+time_t    __gdispatch_clock;
+
 /* Command line option struct */
 typedef struct {
   const char  sopt;
@@ -274,9 +277,9 @@ GTIMER_FCN(mtimer_arm_rel)
   (GTIMER_TRACEID_ mtimer_t *gti, mti_callback_t *callback, void *opaque, int64_t delta)
 {
 #if ENABLE_GTIMER_CHECK
-  GTIMER_FCN(mtimer_arm_abs)(id, fcn, gti, callback, opaque, mdispatch_clock + delta);
+  GTIMER_FCN(mtimer_arm_abs)(id, fcn, gti, callback, opaque, mclk() + delta);
 #else
-  mtimer_arm_abs(gti, callback, opaque, mdispatch_clock + delta);
+  mtimer_arm_abs(gti, callback, opaque, mclk() + delta);
 #endif
 }
 
@@ -335,9 +338,9 @@ GTIMER_FCN(gtimer_arm_rel)
   (GTIMER_TRACEID_ gtimer_t *gti, gti_callback_t *callback, void *opaque, time_t delta)
 {
 #if ENABLE_GTIMER_CHECK
-  GTIMER_FCN(gtimer_arm_absn)(id, fcn, gti, callback, opaque, gdispatch_clock + delta);
+  GTIMER_FCN(gtimer_arm_absn)(id, fcn, gti, callback, opaque, gclk() + delta);
 #else
-  gtimer_arm_absn(gti, callback, opaque, gdispatch_clock + delta);
+  gtimer_arm_absn(gti, callback, opaque, gclk() + delta);
 #endif
 }
 
@@ -515,17 +518,18 @@ show_usage
 /**
  *
  */
-int64_t
+static int64_t
 mdispatch_clock_update(void)
 {
   int64_t mono = getmonoclock();
 
-  if (mono > mtimer_periodic) {
-    mtimer_periodic = mono + MONOCLOCK_RESOLUTION;
+  if (mono > atomic_add_s64(&mtimer_periodic, 0)) {
+    atomic_exchange_s64(&mtimer_periodic, mono + MONOCLOCK_RESOLUTION);
     comet_flush(); /* Flush idle comet mailboxes */
   }
 
-  return mdispatch_clock = mono;
+  atomic_exchange_s64(&__mdispatch_clock, mono);
+  return mono;
 }
 
 /**
@@ -536,7 +540,7 @@ mtimer_tick_thread(void *aux)
 {
   while (tvheadend_running) {
     /* update clocks each 10x in one second */
-    mdispatch_clock = getmonoclock();
+    atomic_exchange_s64(&__mdispatch_clock, getmonoclock());
     tvh_safe_usleep(100000);
   }
   return NULL;
@@ -604,10 +608,12 @@ mtimer_thread(void *aux)
 /**
  *
  */
-time_t
+static inline time_t
 gdispatch_clock_update(void)
 {
-  return gdispatch_clock = time(NULL);
+  time_t now = time(NULL);
+  atomic_exchange_time_t(&__gdispatch_clock, now);
+  return now;
 }
 
 /**
@@ -717,8 +723,8 @@ main(int argc, char **argv)
   tvheadend_webroot         = NULL;
   tvheadend_htsp_port       = 9982;
   tvheadend_htsp_port_extra = 0;
-  mdispatch_clock = getmonoclock();
-  time(&gdispatch_clock);
+  __mdispatch_clock = getmonoclock();
+  __gdispatch_clock = time(NULL);
 
   /* Command line options */
   int         opt_help         = 0,
@@ -1083,8 +1089,8 @@ main(int argc, char **argv)
   
   /* Initialise clock */
   pthread_mutex_lock(&global_lock);
-  mdispatch_clock = getmonoclock();
-  time(&gdispatch_clock);
+  __mdispatch_clock = getmonoclock();
+  __gdispatch_clock = time(NULL);
 
   /* Signal handling */
   sigfillset(&set);

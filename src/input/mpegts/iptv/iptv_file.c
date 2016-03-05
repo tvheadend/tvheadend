@@ -55,7 +55,7 @@ iptv_file_thread ( void *aux )
   pthread_mutex_lock(&iptv_lock);
   while (!fp->shutdown && fd > 0) {
     while (!fp->shutdown && pause) {
-      mono = mdispatch_clock + sec2mono(1);
+      mono = mclk() + sec2mono(1);
       do {
         e = tvh_cond_timedwait(&fp->cond, &iptv_lock, mono);
         if (e == ETIMEDOUT)

@@ -419,7 +419,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   streaming_msg_free(sm);
   int64_t diff, diff2, threshold;
   
-  if(tfs == NULL || mdispatch_clock < tf->tf_start_time) {
+  if(tfs == NULL || mclk() < tf->tf_start_time) {
     pkt_ref_dec(pkt);
     return;
   }
@@ -573,7 +573,7 @@ tsfix_create(streaming_target_t *output)
   TAILQ_INIT(&tf->tf_ptsq);
 
   tf->tf_output = output;
-  tf->tf_start_time = mdispatch_clock;
+  tf->tf_start_time = mclk();
 
   streaming_target_init(&tf->tf_input, tsfix_input, tf, 0);
   return &tf->tf_input;

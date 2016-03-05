@@ -95,7 +95,7 @@ comet_flush(void)
   for(cmb = LIST_FIRST(&mailboxes); cmb != NULL; cmb = next) {
     next = LIST_NEXT(cmb, cmb_link);
 
-    if(cmb->cmb_last_used && cmb->cmb_last_used + sec2mono(60) < mdispatch_clock)
+    if(cmb->cmb_last_used && cmb->cmb_last_used + sec2mono(60) < mclk())
       cmb_destroy(cmb);
   }
   pthread_mutex_unlock(&comet_mutex);
@@ -131,7 +131,7 @@ comet_mailbox_create(const char *lang)
 
   cmb->cmb_boxid = strdup(id);
   cmb->cmb_lang = lang ? strdup(lang) : NULL;
-  cmb->cmb_last_used = mdispatch_clock;
+  cmb->cmb_last_used = mclk();
   mailbox_tally++;
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
@@ -264,7 +264,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   cmb->cmb_last_used = 0; /* Make sure we're not flushed out */
 
   if(!im && cmb->cmb_messages == NULL) {
-    mono = mdispatch_clock + sec2mono(10);
+    mono = mclk() + sec2mono(10);
     do {
       e = tvh_cond_timedwait(&comet_cond, &comet_mutex, mono);
       if (e == ETIMEDOUT)
@@ -281,7 +281,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_list());
   cmb->cmb_messages = NULL;
   
-  cmb->cmb_last_used = mdispatch_clock;
+  cmb->cmb_last_used = mclk();
 
   pthread_mutex_unlock(&comet_mutex);
 

@@ -181,7 +181,7 @@ static void _epg_object_set_updated ( void *o )
     tvhtrace("epg", "eo [%p, %u, %d, %s] updated",
              eo, eo->id, eo->type, eo->uri);
     eo->_updated = 1;
-    eo->updated  = gdispatch_clock;
+    eo->updated  = gclk();
     LIST_INSERT_HEAD(&epg_object_updated, eo, up_link);
   }
 }
@@ -1559,7 +1559,7 @@ static void _epg_channel_timer_callback ( void *p )
   while ((ebc = RB_FIRST(&ch->ch_epg_schedule))) {
 
     /* Expire */
-    if ( ebc->stop <= gdispatch_clock ) {
+    if ( ebc->stop <= gclk() ) {
       tvhlog(LOG_DEBUG, "epg", "expire event %u (%s) from %s",
              ebc->id, epg_broadcast_get_title(ebc, NULL),
              channel_get_name(ch));
@@ -1567,7 +1567,7 @@ static void _epg_channel_timer_callback ( void *p )
       continue; // skip to next
 
     /* No now */
-    } else if (ebc->start > gdispatch_clock) {
+    } else if (ebc->start > gclk()) {
       ch->ch_epg_next = ebc;
       next            = ebc->start;
 
@@ -1761,7 +1761,7 @@ epg_broadcast_t *epg_broadcast_find_by_time
   epg_broadcast_t **ebc;
   if (!channel || !start || !stop) return NULL;
   if (stop <= start) return NULL;
-  if (stop <= gdispatch_clock) return NULL;
+  if (stop <= gclk()) return NULL;
 
   ebc = _epg_broadcast_skel();
   (*ebc)->start   = start;
@@ -1864,7 +1864,7 @@ void epg_broadcast_notify_running
   now = ch ? ch->ch_epg_now : NULL;
   if (running == EPG_RUNNING_STOP) {
     if (now == broadcast && orunning == broadcast->running)
-      broadcast->stop = gdispatch_clock - 1;
+      broadcast->stop = gclk() - 1;
   } else {
     if (broadcast != now && now) {
       now->running = EPG_RUNNING_STOP;
@@ -2090,7 +2090,7 @@ epg_broadcast_t *epg_broadcast_deserialize
   if (htsmsg_get_s64(m, "stop", &stop)) return NULL;
   if (!start || !stop) return NULL;
   if (stop <= start) return NULL;
-  if (stop <= gdispatch_clock) return NULL;
+  if (stop <= gclk()) return NULL;
   if (!(str = htsmsg_get_str(m, "episode"))) return NULL;
 
   _epg_object_deserialize(m, (epg_object_t*)*skel);
@@ -2538,7 +2538,7 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
 
   /* Filtering */
   if (e == NULL) return;
-  if (e->stop < gdispatch_clock) return;
+  if (e->stop < gclk()) return;
   if (_eq_comp_num(&eq->start, e->start)) return;
   if (_eq_comp_num(&eq->stop, e->stop)) return;
   if (eq->duration.comp != EC_NO) {

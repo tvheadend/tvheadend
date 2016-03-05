@@ -285,8 +285,8 @@ subscription_start_instance
                              s->ths_source, s->ths_prch,
                              &s->ths_instances, error, s->ths_weight,
                              s->ths_flags, s->ths_timeout,
-                             mdispatch_clock > s->ths_postpone_end ?
-                               0 : mono2sec(s->ths_postpone_end - mdispatch_clock));
+                             mclk() > s->ths_postpone_end ?
+                               0 : mono2sec(s->ths_postpone_end - mclk()));
   return s->ths_current_instance = si;
 }
 
@@ -313,8 +313,8 @@ subscription_reschedule(void)
 
     /* Postpone the tuner decision */
     /* Leave some time to wakeup tuners through DBus or so */
-    if (s->ths_postpone_end > mdispatch_clock) {
-      postpone2 = mono2sec(s->ths_postpone_end - mdispatch_clock);
+    if (s->ths_postpone_end > mclk()) {
+      postpone2 = mono2sec(s->ths_postpone_end - mclk());
       if (postpone > postpone2)
         postpone = postpone2;
       sm = streaming_msg_create_code(SMT_GRACE, postpone + 5);
@@ -354,10 +354,10 @@ subscription_reschedule(void)
     s->ths_current_instance = si;
 
     if(si == NULL) {
-      if (s->ths_last_error != error || s->ths_last_find + sec2mono(2) >= mdispatch_clock) {
+      if (s->ths_last_error != error || s->ths_last_find + sec2mono(2) >= mclk()) {
         tvhtrace("subscription", "%04X: instance not available, retrying", shortid(s));
         if (s->ths_last_error != error)
-          s->ths_last_find = mdispatch_clock;
+          s->ths_last_find = mclk();
         s->ths_last_error = error;
         continue;
       }
@@ -414,7 +414,7 @@ static int64_t
 subscription_set_postpone(void *aux, const char *path, int64_t postpone)
 {
   th_subscription_t *s;
-  time_t now = mdispatch_clock_update();
+  int64_t now = mclk();
   int64_t postpone2;
 
   if (strcmp(path, "/set"))
@@ -434,7 +434,7 @@ subscription_set_postpone(void *aux, const char *path, int64_t postpone)
     mtimer_arm_rel(&subscription_reschedule_timer,
   	           subscription_reschedule_cb, NULL, 0);
   }
-  pthread_mutex_unlock(&global_lock);
+ pthread_mutex_unlock(&global_lock);
   return postpone;
 }
 
@@ -706,7 +706,7 @@ subscription_create
   s->ths_flags             = flags;
   s->ths_timeout           = pro ? pro->pro_timeout : 0;
   s->ths_postpone          = subscription_postpone;
-  s->ths_postpone_end      = mdispatch_clock + sec2mono(s->ths_postpone);
+  s->ths_postpone_end      = mclk() + sec2mono(s->ths_postpone);
 
   if (s->ths_prch)
     s->ths_weight = profile_chain_weight(s->ths_prch, weight);

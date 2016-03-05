@@ -661,7 +661,7 @@ dvb_network_create_mux
     dvb_mux_t *lm = (dvb_mux_t*)mm;
     /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
-    if (mm->mm_dmc_origin_expire > mdispatch_clock && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
+    if (mm->mm_dmc_origin_expire > mclk() && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
       goto noop;
     #define COMPARE(x, cbit) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
@@ -740,7 +740,7 @@ dvb_network_create_mux
 save:
   if (mm && save) {
     mm->mm_dmc_origin        = origin;
-    mm->mm_dmc_origin_expire = mdispatch_clock + sec2mono(3600 * 24); /* one day */
+    mm->mm_dmc_origin_expire = mclk() + sec2mono(3600 * 24); /* one day */
     idnode_changed(&mm->mm_id);
   }
 noop:

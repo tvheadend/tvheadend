@@ -78,14 +78,14 @@ tvh_pipe_close(th_pipe_t *p)
 int
 tvh_write(int fd, const void *buf, size_t len)
 {
-  int64_t limit = mdispatch_clock + sec2mono(25);
+  int64_t limit = mclk() + sec2mono(25);
   ssize_t c;
 
   while (len) {
     c = write(fd, buf, len);
     if (c < 0) {
       if (ERRNO_AGAIN(errno)) {
-        if (mdispatch_clock > limit)
+        if (mclk() > limit)
           break;
         tvh_safe_usleep(100);
         continue;

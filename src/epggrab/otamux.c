@@ -641,7 +641,7 @@ epggrab_ota_start_cb ( void *p )
   epggrab_ota_kick(1);
 
   pthread_mutex_lock(&epggrab_ota_mutex);
-  if (!cron_multi_next(epggrab_ota_cron_multi, gdispatch_clock, &next))
+  if (!cron_multi_next(epggrab_ota_cron_multi, gclk(), &next))
     epggrab_ota_next_arm(next);
   else
     tvhwarn("epggrab", "ota cron config invalid or unset");

@@ -1068,7 +1068,7 @@ cwc_writer_thread(void *aux)
 
     /* If nothing is to be sent in CWC_KEEPALIVE_INTERVAL seconds we
        need to send a keepalive */
-    mono = mdispatch_clock + sec2mono(CWC_KEEPALIVE_INTERVAL);
+    mono = mclk() + sec2mono(CWC_KEEPALIVE_INTERVAL);
     do {
       r = tvh_cond_timedwait(&cwc->cwc_writer_cond, &cwc->cwc_writer_mutex, mono);
       if(r == ETIMEDOUT) {
@@ -1247,7 +1247,7 @@ cwc_thread(void *aux)
            "%s:%i: Automatic connection attempt in %d seconds",
            cwc->cwc_hostname, cwc->cwc_port, d-1);
 
-    mono = mdispatch_clock + sec2mono(d);
+    mono = mclk() + sec2mono(d);
     do {
       r = tvh_cond_timedwait(&cwc->cwc_cond, &cwc->cwc_mutex, mono);
       if (r == ETIMEDOUT)
@@ -1316,10 +1316,10 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if (pcard->running && cwc->cwc_forward_emm && cwc->cwc_writer_running) {
     if (cwc->cwc_emmex) {
       if (cwc->cwc_mux != mux) {
-        if (cwc->cwc_update_time + sec2mono(25) < mdispatch_clock)
+        if (cwc->cwc_update_time + sec2mono(25) < mclk())
           goto end_of_job;
       }
-      cwc->cwc_update_time = mdispatch_clock;
+      cwc->cwc_update_time = mclk();
     }
     cwc->cwc_mux = mux;
     emm_filter(&pcard->cs_ra, data, len, mux, cwc_emm_send, pcard);

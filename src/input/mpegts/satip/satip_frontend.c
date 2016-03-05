@@ -1123,7 +1123,7 @@ wrdata:
     }
 
     if (lfe->sf_sbuf.sb_ptr > 64 * 1024 ||
-        lfe->sf_last_data_tstamp + sec2mono(1) <= mdispatch_clock) {
+        lfe->sf_last_data_tstamp + sec2mono(1) <= mclk()) {
       pthread_mutex_lock(&lfe->sf_dvr_lock);
       if (lfe->sf_req == lfe->sf_req_thread) {
         mmi = lfe->sf_req->sf_mmi;
@@ -1132,7 +1132,7 @@ wrdata:
                                   &lfe->sf_sbuf, 0, NULL);
       }
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
-      lfe->sf_last_data_tstamp = mdispatch_clock;
+      lfe->sf_last_data_tstamp = mclk();
     }
 
   } else if (b[1] == 1) {
@@ -1607,7 +1607,7 @@ new_tune:
     }
 
     /* We need to keep the session alive */
-    if (rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mdispatch_clock &&
+    if (rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mclk() &&
         rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
       reply = 1;

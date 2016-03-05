@@ -1407,9 +1407,9 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
     if (htsp->htsp_async_mode & HTSP_ASYNC_EPG) {
       /* Only allow to change the window in the correct range */
       if (htsp->htsp_epg_window && epgMaxTime > htsp->htsp_epg_lastupdate)
-        htsp->htsp_epg_window = epgMaxTime-gdispatch_clock;
-    } else if (epgMaxTime > gdispatch_clock) {
-      htsp->htsp_epg_window = epgMaxTime-gdispatch_clock;
+        htsp->htsp_epg_window = epgMaxTime-gclk();
+    } else if (epgMaxTime > gclk()) {
+      htsp->htsp_epg_window = epgMaxTime-gclk();
     } else {
       htsp->htsp_epg_window = 0;
     }
@@ -3663,7 +3663,7 @@ htsp_epg_send_waiting(htsp_connection_t *htsp, int64_t mintime)
   channel_t *ch;
   int64_t maxtime;
 
-  maxtime = gdispatch_clock + htsp->htsp_epg_window;
+  maxtime = gclk() + htsp->htsp_epg_window;
   htsp->htsp_epg_lastupdate = maxtime;
 
   /* Push new events */
@@ -3809,11 +3809,11 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
   atomic_add(&hs->hs_s_bytes_out, payloadlen);
 
-  if(mono2sec(hs->hs_last_report) != mono2sec(mdispatch_clock)) {
+  if(mono2sec(hs->hs_last_report) != mono2sec(mclk())) {
 
     /* Send a queue and signal status report every second */
 
-    hs->hs_last_report = mdispatch_clock;
+    hs->hs_last_report = mclk();
 
     m = htsmsg_create_map();
     htsmsg_add_str(m, "method", "queueStatus");

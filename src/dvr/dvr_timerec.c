@@ -119,15 +119,15 @@ dvr_timerec_check(dvr_timerec_entry_t *dte)
   if(dte->dte_channel == NULL)
     goto fail;
 
-  limit = gdispatch_clock - 600;
-  start = dvr_timerec_timecorrection(gdispatch_clock, dte->dte_start, &tm_start);
-  stop  = dvr_timerec_timecorrection(gdispatch_clock, dte->dte_stop,  &tm_stop);
+  limit = gclk() - 600;
+  start = dvr_timerec_timecorrection(gclk(), dte->dte_start, &tm_start);
+  stop  = dvr_timerec_timecorrection(gclk(), dte->dte_stop,  &tm_stop);
   if (start < limit && stop < limit) {
     /* next day */
-    start = dvr_timerec_timecorrection(gdispatch_clock + 24*60*60,
+    start = dvr_timerec_timecorrection(gclk() + 24*60*60,
                                        dte->dte_start,
                                        &tm_start);
-    stop  = dvr_timerec_timecorrection(gdispatch_clock + 24*60*60,
+    stop  = dvr_timerec_timecorrection(gclk() + 24*60*60,
                                        dte->dte_stop,
                                        &tm_stop);
   }

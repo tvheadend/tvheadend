@@ -1188,7 +1188,7 @@ error:
 static void
 rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
 {
-  unsigned long mono = mdispatch_clock;
+  unsigned long mono = mclk();
   int dvbt, dvbc;
 
   htsbuf_append_str(q, "v=0\r\n");

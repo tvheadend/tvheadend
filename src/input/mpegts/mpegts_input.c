@@ -1053,10 +1053,10 @@ mpegts_input_recv_packets
 
   if (len < (MIN_TS_PKT * 188) && (flags & MPEGTS_DATA_CC_RESTART) == 0) {
     /* For slow streams, check also against the clock */
-    if (mono2sec(mdispatch_clock) == mono2sec(mi->mi_last_dispatch))
+    if (mono2sec(mclk()) == mono2sec(mi->mi_last_dispatch))
       return;
   }
-  mi->mi_last_dispatch = mdispatch_clock;
+  mi->mi_last_dispatch = mclk();
 
   /* Check for sync */
   while ( (len >= MIN_TS_SYN) &&
