@@ -140,7 +140,7 @@ static void
 satip_rtp_header(satip_rtp_session_t *rtp, struct iovec *v, uint32_t off)
 {
   uint8_t *data = v->iov_base;
-  uint32_t tstamp = sec4mono(mdispatch_clock) + rtp->seq;
+  uint32_t tstamp = mono2sec(mdispatch_clock) + rtp->seq;
 
   rtp->seq++;
 

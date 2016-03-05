@@ -78,7 +78,7 @@ tvh_pipe_close(th_pipe_t *p)
 int
 tvh_write(int fd, const void *buf, size_t len)
 {
-  int64_t limit = mdispatch_clock + mono4sec(25);
+  int64_t limit = mdispatch_clock + sec2mono(25);
   ssize_t c;
 
   while (len) {

@@ -2331,7 +2331,7 @@ static void _bytes_out_cb(void *aux)
   htsp_subscription_t *hs = aux;
   if (hs->hs_s) {
     subscription_add_bytes_out(hs->hs_s, atomic_exchange(&hs->hs_s_bytes_out, 0));
-    mtimer_arm_rel(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, mono4ms(200));
+    mtimer_arm_rel(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, ms2mono(200));
   }
 }
 
@@ -2446,7 +2446,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 					      htsp->htsp_clientname,
 					      NULL);
   if (hs->hs_s)
-    mtimer_arm_rel(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, mono4ms(200));
+    mtimer_arm_rel(&hs->hs_s_bytes_out_timer, _bytes_out_cb, hs, ms2mono(200));
   return NULL;
 }
 
@@ -3680,7 +3680,7 @@ htsp_epg_send_waiting(htsp_connection_t *htsp, int64_t mintime)
   /* Keep the epg window up to date */
   if (htsp->htsp_epg_window)
     mtimer_arm_rel(&htsp->htsp_epg_timer, htsp_epg_window_cb,
-                   htsp, mono4sec(HTSP_ASYNC_EPG_INTERVAL));
+                   htsp, sec2mono(HTSP_ASYNC_EPG_INTERVAL));
 }
 
 /**
@@ -3809,7 +3809,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_send_subscription(htsp, m, pkt->pkt_payload, hs, payloadlen);
   atomic_add(&hs->hs_s_bytes_out, payloadlen);
 
-  if(sec4mono(hs->hs_last_report) != sec4mono(mdispatch_clock)) {
+  if(mono2sec(hs->hs_last_report) != mono2sec(mdispatch_clock)) {
 
     /* Send a queue and signal status report every second */
 

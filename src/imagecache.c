@@ -463,7 +463,7 @@ imagecache_init ( void )
   // TODO: this could be more efficient by being targetted, however
   //       the reality its not necessary and I'd prefer to avoid dumping
   //       100's of timers into the global pool
-  mtimer_arm_rel(&imagecache_timer, imagecache_timer_cb, NULL, mono4sec(600));
+  mtimer_arm_rel(&imagecache_timer, imagecache_timer_cb, NULL, sec2mono(600));
 #endif
 }
 
@@ -668,7 +668,7 @@ imagecache_open ( uint32_t id )
 
     /* Wait */
     } else if (i->state == FETCHING) {
-      mono = mdispatch_clock + mono4sec(5);
+      mono = mdispatch_clock + sec2mono(5);
       do {
         e = tvh_cond_timedwait(&imagecache_cond, &global_lock, mono);
         if (e == ETIMEDOUT)

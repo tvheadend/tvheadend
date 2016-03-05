@@ -229,7 +229,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
 
   /* re-arm */
   mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb,
-                 hfe, mono4sec(1));
+                 hfe, sec2mono(1));
 
   /* Get current status */
   pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
@@ -268,7 +268,7 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
                          ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_delsys);
 
     } else { // quick re-arm the timer to wait for signal lock
-      mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, mono4ms(50));
+      mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, ms2mono(50));
     }
   }
 
@@ -420,7 +420,7 @@ static int tvhdhomerun_frontend_tune(tvhdhomerun_frontend_t *hfe, mpegts_mux_ins
   hfe->hf_status = SIGNAL_NONE;
 
   /* start the monitoring */
-  mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, mono4ms(50));
+  mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, ms2mono(50));
   hfe->hf_ready = 1;
 
   return 0;
@@ -477,7 +477,7 @@ tvhdhomerun_frontend_stop_mux
   hfe->hf_status = 0;
   hfe->hf_ready = 0;
 
-  mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, mono4sec(2));
+  mtimer_arm_rel(&hfe->hf_monitor_timer, tvhdhomerun_frontend_monitor_cb, hfe, sec2mono(2));
 }
 
 static void tvhdhomerun_frontend_update_pids( mpegts_input_t *mi, mpegts_mux_t *mm )

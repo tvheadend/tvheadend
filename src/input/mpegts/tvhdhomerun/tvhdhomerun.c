@@ -379,7 +379,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
     if (tvheadend_running) {
       brk = tvh_cond_timedwait(&tvhdhomerun_discovery_cond,
                                &tvhdhomerun_discovery_lock,
-                               mdispatch_clock + mono4sec(15));
+                               mdispatch_clock + sec2mono(15));
       brk = !ERRNO_AGAIN(brk) && brk != ETIMEDOUT;
     }
     pthread_mutex_unlock(&tvhdhomerun_discovery_lock);

@@ -678,7 +678,7 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_grace_delay = stimeout;
   if (stimeout > 0)
     mtimer_arm_rel(&t->s_receive_timer, service_data_timeout, t,
-                   mono4sec(stimeout));
+                   sec2mono(stimeout));
   return 0;
 }
 
@@ -1137,7 +1137,7 @@ service_data_timeout(void *aux)
 
   if (t->s_timeout > 0)
     mtimer_arm_rel(&t->s_receive_timer, service_data_timeout, t,
-                   mono4sec(t->s_timeout));
+                   sec2mono(t->s_timeout));
 }
 
 /**

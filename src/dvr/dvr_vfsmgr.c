@@ -204,7 +204,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   /* When deleting a file from the disk, the system needs some time to actually do this */
   /* If calling this function to fast after the previous call, statvfs might be wrong/not updated yet */
   /* So we are risking to delete more files than needed, so allow 10s for the system to handle previous deletes */
-  if (dvr_disk_space_config_lastdelete + mono4sec(10) > mdispatch_clock) {
+  if (dvr_disk_space_config_lastdelete + sec2mono(10) > mdispatch_clock) {
     tvhlog(LOG_WARNING, "dvr","disk space cleanup for config \"%s\" is not allowed now", configName);
     return -1;
   }
@@ -429,7 +429,7 @@ dvr_get_disk_space_cb(void *aux)
     path = strdup(cfg->dvr_storage);
     tasklet_arm(&dvr_disk_space_tasklet, dvr_get_disk_space_tcb, path);
   }
-  mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, mono4sec(15));
+  mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, sec2mono(15));
 }
 
 /**
@@ -450,7 +450,7 @@ dvr_disk_space_init(void)
   dvr_config_t *cfg = dvr_config_find_by_name_default(NULL);
   pthread_mutex_init(&dvr_disk_space_mutex, NULL);
   dvr_get_disk_space_update(cfg->dvr_storage, 1);
-  mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, mono4sec(5));
+  mtimer_arm_rel(&dvr_disk_space_timer, dvr_get_disk_space_cb, NULL, sec2mono(5));
 }
 
 /**

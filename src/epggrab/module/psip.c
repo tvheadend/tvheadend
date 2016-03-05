@@ -203,7 +203,7 @@ psip_reschedule_tables(psip_status_t *ps)
   total = 0;
   TAILQ_FOREACH(pt, &ps->ps_tables, pt_link) {
     total++;
-    if (pt->pt_table && pt->pt_start + mono4sec(10) < mdispatch_clock) {
+    if (pt->pt_table && pt->pt_start + sec2mono(10) < mdispatch_clock) {
       tvhtrace("psip", "table late: pid = 0x%04X, type = 0x%04X\n", pt->pt_pid, pt->pt_type);
       mpegts_table_destroy(pt->pt_table);
       pt->pt_table = NULL;
@@ -268,7 +268,7 @@ psip_complete_table(psip_status_t *ps, mpegts_table_t *mt)
   if (ps->ps_complete) {
     if (!ps->ps_armed) {
       ps->ps_armed = 1;
-      mtimer_arm_rel(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, mono4sec(10));
+      mtimer_arm_rel(&ps->ps_reschedule_timer, psip_reschedule_tables_cb, ps, sec2mono(10));
     }
     return;
   }

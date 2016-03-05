@@ -84,7 +84,7 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
   if (len == 0)
     return;
   dd = TAILQ_LAST(&dr->dr_queue, th_descrambler_queue);
-  if (dd && sec4mono(dd->dd_timestamp) == sec4mono(mdispatch_clock) &&
+  if (dd && mono2sec(dd->dd_timestamp) == mono2sec(mdispatch_clock) &&
       (dd->dd_sbuf.sb_data[3] & 0x40) == (tsb[3] & 0x40)) { /* key match */
     sbuf_append(&dd->dd_sbuf, tsb, len);
     dr->dr_queue_total += len;
@@ -276,7 +276,7 @@ descrambler_service_start ( service_t *t )
     dr->dr_service = t;
     TAILQ_INIT(&dr->dr_queue);
     dr->dr_key_index = 0xff;
-    dr->dr_key_interval = mono4sec(10);
+    dr->dr_key_interval = sec2mono(10);
     dr->dr_key_const = constcw;
     if (constcw)
       tvhtrace("descrambler", "using constcw for \"%s\"", t->s_nicename);
@@ -574,12 +574,12 @@ key_update( th_descrambler_runtime_t *dr, uint8_t key, int64_t timestamp )
   /* set the even (0) or odd (0x40) key index */
   dr->dr_key_index = key & 0x40;
   if (dr->dr_key_start) {
-    dr->dr_key_interval = dr->dr_key_start + mono4sec(50) < timestamp ?
-                          mono4sec(10) : timestamp - dr->dr_key_start;
+    dr->dr_key_interval = dr->dr_key_start + sec2mono(50) < timestamp ?
+                          sec2mono(10) : timestamp - dr->dr_key_start;
     dr->dr_key_start = timestamp;
   } else {
     /* We don't know the exact start key switch time */
-    dr->dr_key_start = timestamp - mono4sec(60);
+    dr->dr_key_start = timestamp - sec2mono(60);
   }
 }
 
@@ -587,7 +587,7 @@ static inline int
 key_changed ( th_descrambler_runtime_t *dr, uint8_t ki, int64_t timestamp )
 {
   return dr->dr_key_index != (ki & 0x40) &&
-         dr->dr_key_start + mono4sec(2) < timestamp;
+         dr->dr_key_start + sec2mono(2) < timestamp;
 }
 
 static inline int
@@ -612,7 +612,7 @@ key_late( th_descrambler_runtime_t *dr, uint8_t ki, int64_t timestamp )
       goto late;
   }
   /* ECM was sent, but no new key was received */
-  if (dr->dr_ecm_last_key_time + mono4sec(2) < dr->dr_key_start &&
+  if (dr->dr_ecm_last_key_time + sec2mono(2) < dr->dr_key_start &&
       (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + 4 < dr->dr_key_start)) {
 late:
     dr->dr_key_valid &= ~((ki & 0x40) + 0x40);
@@ -625,7 +625,7 @@ static inline int
 key_started( th_descrambler_runtime_t *dr, uint8_t ki )
 {
   uint8_t kidx = (ki & 0x40) >> 6;
-  return mdispatch_clock - dr->dr_ecm_start[kidx] < mono4sec(5);
+  return mdispatch_clock - dr->dr_ecm_start[kidx] < sec2mono(5);
 }
 
 static int
@@ -699,7 +699,7 @@ descrambler_descramble ( service_t *t,
 
     /* process the queued TS packets */
     if (dr->dr_queue_total > 0) {
-      descrambler_data_time_flush(dr, mdispatch_clock - (dr->dr_key_interval - mono4sec(2)));
+      descrambler_data_time_flush(dr, mdispatch_clock - (dr->dr_key_interval - sec2mono(2)));
       for (dd = TAILQ_FIRST(&dr->dr_queue); dd; dd = dd_next) {
         dd_next = TAILQ_NEXT(dd, dd_link);
         sb = &dd->dd_sbuf;
@@ -751,7 +751,7 @@ descrambler_descramble ( service_t *t,
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         if (key_late(dr, ki, mdispatch_clock)) {
           tvherror("descrambler", "ECM - key late (%ld ms) for service \"%s\"",
-                                  ms4mono(mdispatch_clock - dr->dr_ecm_last_key_time),
+                                  mono2ms(mdispatch_clock - dr->dr_ecm_last_key_time),
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           descrambler_notify_nokey(dr);
           if (ecm_reset(t, dr)) {
@@ -785,7 +785,7 @@ next:
           }
         }
       } else if (dr->dr_key_index != (ki & 0x40) &&
-                 dr->dr_key_start + mono4sec(2) < mdispatch_clock) {
+                 dr->dr_key_start + sec2mono(2) < mdispatch_clock) {
         tvhtrace("descrambler", "stream key changed to %s for service \"%s\"",
                                 (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
@@ -800,7 +800,7 @@ next:
       dbuflen = MAX(300, config.descrambler_buffer);
       if (dr->dr_queue_total >= dbuflen * 188) {
         descrambler_data_cut(dr, MAX((dbuflen / 10) * 188, len));
-        if (dr->dr_last_err + mono4sec(10) < mdispatch_clock) {
+        if (dr->dr_last_err + sec2mono(10) < mdispatch_clock) {
           dr->dr_last_err = mdispatch_clock;
           tvherror("descrambler", "cannot decode packets for service \"%s\"",
                    ((mpegts_service_t *)t)->s_dvb_svcname);

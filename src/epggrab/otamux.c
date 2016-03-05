@@ -161,7 +161,7 @@ epggrab_ota_kick ( int delay )
   if (TAILQ_EMPTY(&epggrab_ota_pending))
     return;
 
-  mtimer_arm_rel(&epggrab_ota_kick_timer, epggrab_ota_kick_cb, NULL, mono4sec(delay));
+  mtimer_arm_rel(&epggrab_ota_kick_timer, epggrab_ota_kick_cb, NULL, sec2mono(delay));
 }
 
 static void
@@ -244,9 +244,9 @@ epggrab_ota_start ( epggrab_ota_mux_t *om, mpegts_mux_t *mm )
   om->om_q_type = EPGGRAB_OTA_MUX_ACTIVE;
   grace = mpegts_input_grace(mmi->mmi_input, mm);
   mtimer_arm_rel(&om->om_timer, epggrab_ota_timeout_cb, om,
-                 mono4sec(epggrab_ota_timeout_get() + grace));
+                 sec2mono(epggrab_ota_timeout_get() + grace));
   mtimer_arm_rel(&om->om_data_timer, epggrab_ota_data_timeout_cb, om,
-                 mono4sec(30 + grace)); /* 30 seconds to receive any EPG info */
+                 sec2mono(30 + grace)); /* 30 seconds to receive any EPG info */
   if (modname) {
     LIST_FOREACH(m, &epggrab_modules, link)
       if (!strcmp(m->id, modname)) {

@@ -220,7 +220,7 @@ rtsp_rearm_session_timer(session_t *rs)
 {
   if (!rs->shutdown_on_close) {
     pthread_mutex_lock(&global_lock);
-    mtimer_arm_rel(&rs->timer, rtsp_session_timer_cb, rs, mono4sec(RTSP_TIMEOUT));
+    mtimer_arm_rel(&rs->timer, rtsp_session_timer_cb, rs, sec2mono(RTSP_TIMEOUT));
     pthread_mutex_unlock(&global_lock);
   }
 }

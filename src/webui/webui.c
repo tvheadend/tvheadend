@@ -342,7 +342,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     pthread_mutex_lock(&sq->sq_mutex);
     sm = TAILQ_FIRST(&sq->sq_queue);
     if(sm == NULL) {
-      mono = mdispatch_clock + mono4sec(1);
+      mono = mdispatch_clock + sec2mono(1);
       do {
         r = tvh_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, mono);
         if (r == ETIMEDOUT) {
@@ -350,8 +350,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
           if (tcp_socket_dead(hc->hc_fd)) {
             tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up", hc->hc_url_orig);
             run = 0;
-          } else if((!started && mdispatch_clock - lastpkt > mono4sec(grace)) ||
-                     (started && ptimeout > 0 && mdispatch_clock - lastpkt > mono4sec(ptimeout))) {
+          } else if((!started && mdispatch_clock - lastpkt > sec2mono(grace)) ||
+                     (started && ptimeout > 0 && mdispatch_clock - lastpkt > sec2mono(ptimeout))) {
             tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
             run = 0;
           }
@@ -396,7 +396,7 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
 
         if (hc->hc_no_output) {
           streaming_msg_free(sm);
-          mono = getfastmonoclock() + mono4sec(2);
+          mono = getfastmonoclock() + sec2mono(2);
           while (getfastmonoclock() < mono) {
             if (tcp_socket_dead(hc->hc_fd))
               break;
@@ -429,8 +429,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
         tvhlog(LOG_DEBUG, "webui",  "Stop streaming %s, client hung up",
                hc->hc_url_orig);
         run = 0;
-      } else if((!started && mdispatch_clock - lastpkt > mono4sec(grace)) ||
-                 (started && ptimeout > 0 && mdispatch_clock - lastpkt > mono4sec(ptimeout))) {
+      } else if((!started && mdispatch_clock - lastpkt > sec2mono(grace)) ||
+                 (started && ptimeout > 0 && mdispatch_clock - lastpkt > sec2mono(ptimeout))) {
         tvhlog(LOG_WARNING, "webui",  "Stop streaming %s, timeout waiting for packets", hc->hc_url_orig);
         run = 0;
       }

@@ -323,7 +323,7 @@ iptv_http_data
     memcpy(hp->hls_si, buf, 2*188);
   }
 
-  if (hp->hls_last_si + mono4sec(1) <= mdispatch_clock && hp->hls_si) {
+  if (hp->hls_last_si + sec2mono(1) <= mdispatch_clock && hp->hls_si) {
     /* do rounding to start of the last MPEG-TS packet */
     rem = 188 - (hp->off % 188);
     if (im->mm_iptv_buffer.sb_ptr >= rem) {
@@ -344,7 +344,7 @@ iptv_http_data
 
   if (pause && iptv_http_safe_global_lock(hp)) {
     if (im->mm_active && !hp->shutdown)
-      mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, mono4sec(1));
+      mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
     pthread_mutex_unlock(&global_lock);
   }
   return 0;

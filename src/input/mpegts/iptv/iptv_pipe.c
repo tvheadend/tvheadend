@@ -123,7 +123,7 @@ iptv_pipe_read ( iptv_mux_t *im )
       spawn_kill(pid, iptv_pipe_kill_sig(im), im->mm_iptv_kill_timeout);
       im->mm_iptv_fd = -1;
       im->im_data = NULL;
-      if (mdispatch_clock < im->mm_iptv_respawn_last + mono4sec(2)) {
+      if (mdispatch_clock < im->mm_iptv_respawn_last + sec2mono(2)) {
         tvherror("iptv", "stdin pipe unexpectedly closed: %s",
                  r < 0 ? strerror(errno) : "No data");
       } else {

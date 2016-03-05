@@ -529,7 +529,7 @@ linuxdvb_frontend_stop_mux
   lfe->lfe_status2 = 0;
 
   /* Ensure it won't happen immediately */
-  mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, mono4sec(2));
+  mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, sec2mono(2));
 
   if (lfe->lfe_satconf && lfe->lfe_refcount == 1)
     linuxdvb_satconf_post_stop_mux(lfe->lfe_satconf);
@@ -546,7 +546,7 @@ linuxdvb_frontend_stop_mux
         lfe2->lfe_status  = 0;
         lfe2->lfe_status2 = 0;
         /* Ensure it won't happen immediately */
-        mtimer_arm_rel(&lfe2->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, mono4sec(2));
+        mtimer_arm_rel(&lfe2->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, sec2mono(2));
         if (lfe2->lfe_satconf)
           linuxdvb_satconf_post_stop_mux(lfe2->lfe_satconf);
         lfe2->lfe_in_setup = 0;
@@ -711,7 +711,7 @@ linuxdvb_frontend_monitor ( void *aux )
   if (!mmi || !lfe->lfe_ready) return;
 
   /* re-arm */
-  mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, mono4ms(period));
+  mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, ms2mono(period));
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
@@ -751,7 +751,7 @@ linuxdvb_frontend_monitor ( void *aux )
     if (lfe->lfe_locked && lfe->lfe_freq > 0) {
       tvhlog(LOG_WARNING, "linuxdvb", "%s - %s", buf, retune ? "retune" : "retune nodata");
       linuxdvb_frontend_tune0(lfe, mmi, lfe->lfe_freq);
-      mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, mono4ms(50));
+      mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, ms2mono(50));
       lfe->lfe_locked = 1;
     }
   }
@@ -786,17 +786,17 @@ linuxdvb_frontend_monitor ( void *aux )
     /* Re-arm (quick) */
     } else {
       mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor,
-                     lfe, mono4ms(50));
+                     lfe, ms2mono(50));
 
       /* Monitor 1 per sec */
       if (mdispatch_clock < lfe->lfe_monitor)
         return;
-      lfe->lfe_monitor = mdispatch_clock + mono4sec(1);
+      lfe->lfe_monitor = mdispatch_clock + sec2mono(1);
     }
   } else {
     if (mdispatch_clock < lfe->lfe_monitor)
       return;
-    lfe->lfe_monitor = mdispatch_clock + mono4sec((period + 999) / 1000);
+    lfe->lfe_monitor = mdispatch_clock + ms2mono(period);
   }
 
   /* Statistics - New API */
@@ -1766,7 +1766,7 @@ linuxdvb_frontend_tune1
   if (!r) {
     time(&lfe->lfe_monitor);
     lfe->lfe_monitor += 4;
-    mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, mono4ms(50));
+    mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, ms2mono(50));
     lfe->lfe_ready = 1;
   }
 

@@ -1030,7 +1030,7 @@ bouquet_download_trigger0(void *aux)
 
   download_start(&bqd->download, bq->bq_ext_url, bqd);
   mtimer_arm_rel(&bqd->timer, bouquet_download_trigger0, bqd,
-                 mono4sec(MAX(1, bq->bq_ext_url_period) * 60));
+                 sec2mono(MAX(1, bq->bq_ext_url_period) * 60));
 }
 
 static void

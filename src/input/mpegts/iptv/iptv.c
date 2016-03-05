@@ -117,7 +117,7 @@ iptv_bouquet_update(void *aux)
 void
 iptv_bouquet_trigger(iptv_network_t *in, int timeout)
 {
-  mtimer_arm_rel(&in->in_bouquet_timer, iptv_bouquet_update, in, mono4sec(timeout));
+  mtimer_arm_rel(&in->in_bouquet_timer, iptv_bouquet_update, in, sec2mono(timeout));
 }
 
 void
@@ -446,7 +446,7 @@ iptv_input_unpause ( void *aux )
   }
   pthread_mutex_unlock(&iptv_lock);
   if (pause)
-    mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, mono4sec(1));
+    mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
 }
 
 static void *
@@ -492,7 +492,7 @@ iptv_input_thread ( void *aux )
     if (r == 1) {
       pthread_mutex_lock(&global_lock);
       if (im->mm_active)
-        mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, mono4sec(1));
+        mtimer_arm_rel(&im->im_pause_timer, iptv_input_unpause, im, sec2mono(1));
       pthread_mutex_unlock(&global_lock);
     }
   }

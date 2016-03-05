@@ -548,7 +548,7 @@ mtimer_thread(void *aux)
     /* Global monoclock timers */
     pthread_mutex_lock(&global_lock);
 
-    next = now + mono4sec(3600);
+    next = now + sec2mono(3600);
 
     while((mti = LIST_FIRST(&mtimers)) != NULL) {
       

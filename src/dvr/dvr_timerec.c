@@ -716,7 +716,7 @@ dvr_timerec_timer_cb(void *aux)
   }
 
   /* load the timer */
-  mtimer_arm_rel(&dvr_timerec_timer, dvr_timerec_timer_cb, NULL, mono4sec(3550));
+  mtimer_arm_rel(&dvr_timerec_timer, dvr_timerec_timer_cb, NULL, sec2mono(3550));
 }
 
 void

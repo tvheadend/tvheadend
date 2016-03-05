@@ -1772,7 +1772,7 @@ capmt_thread(void *aux)
 
     tvhlog(LOG_INFO, "capmt", "%s: Automatic reconnection attempt in in %d seconds", idnode_get_title(&capmt->cac_id, NULL), d);
 
-    mono = mdispatch_clock + mono4sec(d);
+    mono = mdispatch_clock + sec2mono(d);
     do {
       i = tvh_cond_timedwait(&capmt->capmt_cond, &capmt->capmt_mutex, mono);
       if (i == ETIMEDOUT)

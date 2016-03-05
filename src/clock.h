@@ -45,25 +45,25 @@ extern time_t  gdispatch_clock;
 #define MONOCLOCK_RESOLUTION 1000000LL /* microseconds */
 
 static inline int64_t
-mono4sec(int64_t sec)
+sec2mono(int64_t sec)
 {
   return sec * MONOCLOCK_RESOLUTION;
 }
 
 static inline int64_t
-sec4mono(int64_t monosec)
+mono2sec(int64_t monosec)
 {
   return monosec / MONOCLOCK_RESOLUTION;
 }
 
 static inline int64_t
-mono4ms(int64_t ms)
+ms2mono(int64_t ms)
 {
   return ms * (MONOCLOCK_RESOLUTION / 1000LL);
 }
 
 static inline int64_t
-ms4mono(int64_t monosec)
+mono2ms(int64_t monosec)
 {
   return monosec / (MONOCLOCK_RESOLUTION / 1000LL);
 }

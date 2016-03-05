@@ -861,7 +861,7 @@ mpegts_input_started_mux
 
   /* Arm timer */
   if (LIST_FIRST(&mi->mi_mux_active) == NULL)
-    mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, mono4sec(1));
+    mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, sec2mono(1));
 
   /* Update */
   mmi->mmi_mux->mm_active = mmi;
@@ -1053,7 +1053,7 @@ mpegts_input_recv_packets
 
   if (len < (MIN_TS_PKT * 188) && (flags & MPEGTS_DATA_CC_RESTART) == 0) {
     /* For slow streams, check also against the clock */
-    if (sec4mono(mdispatch_clock) == sec4mono(mi->mi_last_dispatch))
+    if (mono2sec(mdispatch_clock) == mono2sec(mi->mi_last_dispatch))
       return;
   }
   mi->mi_last_dispatch = mdispatch_clock;
@@ -1737,7 +1737,7 @@ mpegts_input_status_timer ( void *p )
     tvh_input_stream_destroy(&st);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
-  mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, mono4sec(1));
+  mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, sec2mono(1));
   mpegts_input_dbus_notify(mi, subs);
 }
 

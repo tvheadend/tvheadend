@@ -95,7 +95,7 @@ comet_flush(void)
   for(cmb = LIST_FIRST(&mailboxes); cmb != NULL; cmb = next) {
     next = LIST_NEXT(cmb, cmb_link);
 
-    if(cmb->cmb_last_used && cmb->cmb_last_used + mono4sec(60) < mdispatch_clock)
+    if(cmb->cmb_last_used && cmb->cmb_last_used + sec2mono(60) < mdispatch_clock)
       cmb_destroy(cmb);
   }
   pthread_mutex_unlock(&comet_mutex);
@@ -264,7 +264,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   cmb->cmb_last_used = 0; /* Make sure we're not flushed out */
 
   if(!im && cmb->cmb_messages == NULL) {
-    mono = mdispatch_clock + mono4sec(10);
+    mono = mdispatch_clock + sec2mono(10);
     do {
       e = tvh_cond_timedwait(&comet_cond, &comet_mutex, mono);
       if (e == ETIMEDOUT)

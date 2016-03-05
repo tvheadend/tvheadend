@@ -539,7 +539,7 @@ try_again:
     c2 = aa->aa_conn_limit_streaming ? used >= aa->aa_conn_limit_streaming : -1;
 
     if (c1 && c2) {
-      if (started + mono4sec(3) < mdispatch_clock) {
+      if (started + sec2mono(3) < mdispatch_clock) {
         tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' "
                         "(limit %u, streaming limit %u, active streaming %u, DVR %u)",
                  aa->aa_username ?: "", aa->aa_representative ?: "",
@@ -1114,7 +1114,7 @@ tcp_server_done(void)
   
   t = getfastmonoclock();
   while (LIST_FIRST(&tcp_server_active) != NULL) {
-    if (t + mono4sec(5) < getfastmonoclock())
+    if (t + sec2mono(5) < getfastmonoclock())
       tvhtrace("tcp", "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
     usleep(20000);
   }

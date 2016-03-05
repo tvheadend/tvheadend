@@ -239,7 +239,7 @@ static timeshift_file_t * timeshift_filemgr_file_init
   timeshift_file_t *tsf;
 
   tsf = calloc(1, sizeof(timeshift_file_t));
-  tsf->time     = sec4mono(start_time) / TIMESHIFT_FILE_PERIOD;
+  tsf->time     = mono2sec(start_time) / TIMESHIFT_FILE_PERIOD;
   tsf->last     = start_time;
   tsf->wfd      = -1;
   tsf->rfd      = -1;
@@ -272,7 +272,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
 
   /* Store to file */
   tsf_tl = TAILQ_LAST(&ts->files, timeshift_file_list);
-  time = sec4mono(start_time) / TIMESHIFT_FILE_PERIOD;
+  time = mono2sec(start_time) / TIMESHIFT_FILE_PERIOD;
   if (!tsf_tl || tsf_tl->time < time ||
       (tsf_tl->ram && tsf_tl->woff >= timeshift_conf.ram_segment_size)) {
     tsf_hd = TAILQ_FIRST(&ts->files);

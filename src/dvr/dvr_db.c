@@ -631,7 +631,7 @@ recording:
     tvhtrace("dvr", "entry timer scheduled for %"PRItime_t, start);
     gtimer_arm_absn(&de->de_timer, dvr_timer_start_recording, de, start);
 #if ENABLE_DBUS_1
-    mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, mono4sec(5));
+    mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(5));
 #endif
 
   } else {
@@ -1349,7 +1349,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
   gtimer_disarm(&de->de_timer);
   mtimer_disarm(&de->de_deferred_timer);
 #if ENABLE_DBUS_1
-  mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, mono4sec(2));
+  mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(2));
 #endif
 
   if (de->de_channel)

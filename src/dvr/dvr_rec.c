@@ -878,7 +878,7 @@ dvr_rec_fatal_error(dvr_entry_t *de, const char *fmt, ...)
 static void
 dvr_notify(dvr_entry_t *de)
 {
-  if (de->de_last_notify + mono4sec(5) < mdispatch_clock) {
+  if (de->de_last_notify + sec2mono(5) < mdispatch_clock) {
     idnode_notify_changed(&de->de_id);
     de->de_last_notify = mdispatch_clock;
     htsp_dvr_entry_update(de);

@@ -740,7 +740,7 @@ dvb_network_create_mux
 save:
   if (mm && save) {
     mm->mm_dmc_origin        = origin;
-    mm->mm_dmc_origin_expire = mdispatch_clock + mono4sec(3600 * 24); /* one day */
+    mm->mm_dmc_origin_expire = mdispatch_clock + sec2mono(3600 * 24); /* one day */
     idnode_changed(&mm->mm_id);
   }
 noop:

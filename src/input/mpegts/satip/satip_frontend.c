@@ -87,7 +87,7 @@ satip_frontend_signal_cb( void *aux )
     pthread_mutex_unlock(&svc->s_stream_mutex);
   }
   mtimer_arm_rel(&lfe->sf_monitor_timer, satip_frontend_signal_cb,
-                 lfe, mono4ms(250));
+                 lfe, ms2mono(250));
 }
 
 /* **************************************************************************
@@ -593,7 +593,7 @@ satip_frontend_start_mux
   tvh_write(lfe->sf_dvr_pipe.wr, "s", 1);
 
   mtimer_arm_rel(&lfe->sf_monitor_timer, satip_frontend_signal_cb,
-                 lfe, mono4ms(50));
+                 lfe, ms2mono(50));
 
   return 0;
 }
@@ -1123,7 +1123,7 @@ wrdata:
     }
 
     if (lfe->sf_sbuf.sb_ptr > 64 * 1024 ||
-        lfe->sf_last_data_tstamp + mono4sec(1) <= mdispatch_clock) {
+        lfe->sf_last_data_tstamp + sec2mono(1) <= mdispatch_clock) {
       pthread_mutex_lock(&lfe->sf_dvr_lock);
       if (lfe->sf_req == lfe->sf_req_thread) {
         mmi = lfe->sf_req->sf_mmi;
@@ -1607,7 +1607,7 @@ new_tune:
     }
 
     /* We need to keep the session alive */
-    if (rtsp->hc_ping_time + mono4sec(rtsp->hc_rtp_timeout / 2) < mdispatch_clock &&
+    if (rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mdispatch_clock &&
         rtsp->hc_cmd == HTTP_CMD_NONE) {
       rtsp_options(rtsp);
       reply = 1;

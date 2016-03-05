@@ -193,7 +193,7 @@ failed:
     }
   }
 
-  mtimer_arm_rel(&dn->pipe_read_timer, download_pipe_read, dn, mono4ms(250));
+  mtimer_arm_rel(&dn->pipe_read_timer, download_pipe_read, dn, ms2mono(250));
 }
 
 /*
@@ -228,7 +228,7 @@ download_pipe(download_t *dn, const char *args)
 
   fcntl(dn->pipe_fd, F_SETFL, fcntl(dn->pipe_fd, F_GETFL) | O_NONBLOCK);
 
-  mtimer_arm_rel(&dn->pipe_read_timer, download_pipe_read, dn, mono4ms(250));
+  mtimer_arm_rel(&dn->pipe_read_timer, download_pipe_read, dn, ms2mono(250));
   return 0;
 }
 

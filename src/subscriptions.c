@@ -286,7 +286,7 @@ subscription_start_instance
                              &s->ths_instances, error, s->ths_weight,
                              s->ths_flags, s->ths_timeout,
                              mdispatch_clock > s->ths_postpone_end ?
-                               0 : sec4mono(s->ths_postpone_end - mdispatch_clock));
+                               0 : mono2sec(s->ths_postpone_end - mdispatch_clock));
   return s->ths_current_instance = si;
 }
 
@@ -314,7 +314,7 @@ subscription_reschedule(void)
     /* Postpone the tuner decision */
     /* Leave some time to wakeup tuners through DBus or so */
     if (s->ths_postpone_end > mdispatch_clock) {
-      postpone2 = sec4mono(s->ths_postpone_end - mdispatch_clock);
+      postpone2 = mono2sec(s->ths_postpone_end - mdispatch_clock);
       if (postpone > postpone2)
         postpone = postpone2;
       sm = streaming_msg_create_code(SMT_GRACE, postpone + 5);
@@ -354,7 +354,7 @@ subscription_reschedule(void)
     s->ths_current_instance = si;
 
     if(si == NULL) {
-      if (s->ths_last_error != error || s->ths_last_find + mono4sec(2) >= mdispatch_clock) {
+      if (s->ths_last_error != error || s->ths_last_find + sec2mono(2) >= mdispatch_clock) {
         tvhtrace("subscription", "%04X: instance not available, retrying", shortid(s));
         if (s->ths_last_error != error)
           s->ths_last_find = mdispatch_clock;
@@ -392,7 +392,7 @@ subscription_reschedule(void)
   if (postpone <= 0 || postpone == INT_MAX)
     postpone = 2;
   mtimer_arm_rel(&subscription_reschedule_timer,
-	         subscription_reschedule_cb, NULL, mono4sec(postpone));
+	         subscription_reschedule_cb, NULL, sec2mono(postpone));
 
   reenter = 0;
 }
@@ -421,7 +421,7 @@ subscription_set_postpone(void *aux, const char *path, int64_t postpone)
     return -1;
   /* some limits that make sense */
   postpone = MINMAX(postpone, 0, 120);
-  postpone2 = mono4sec(postpone);
+  postpone2 = sec2mono(postpone);
   pthread_mutex_lock(&global_lock);
   if (subscription_postpone != postpone) {
     subscription_postpone = postpone;
@@ -706,7 +706,7 @@ subscription_create
   s->ths_flags             = flags;
   s->ths_timeout           = pro ? pro->pro_timeout : 0;
   s->ths_postpone          = subscription_postpone;
-  s->ths_postpone_end      = mdispatch_clock + mono4sec(s->ths_postpone);
+  s->ths_postpone_end      = mdispatch_clock + sec2mono(s->ths_postpone);
 
   if (s->ths_prch)
     s->ths_weight = profile_chain_weight(s->ths_prch, weight);
@@ -966,7 +966,7 @@ subscription_status_callback ( void *p )
   static int64_t old_count = -1;
 
   mtimer_arm_rel(&subscription_status_timer,
-                 subscription_status_callback, NULL, mono4sec(1));
+                 subscription_status_callback, NULL, sec2mono(1));
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     /* Store the difference between total bytes from the last round */
@@ -1150,7 +1150,7 @@ subscription_dummy_join(const char *id, int first)
   th_subscription_t *s;
 
   if(first) {
-    mtimer_arm_rel(&dummy_sub_timer, dummy_retry, strdup(id), mono4sec(2));
+    mtimer_arm_rel(&dummy_sub_timer, dummy_retry, strdup(id), sec2mono(2));
     return;
   }
 
@@ -1158,7 +1158,7 @@ subscription_dummy_join(const char *id, int first)
     tvhlog(LOG_ERR, "subscription", 
 	   "Unable to dummy join %s, service not found, retrying...", id);
 
-    mtimer_arm_rel(&dummy_sub_timer, dummy_retry, strdup(id), mono4sec(1));
+    mtimer_arm_rel(&dummy_sub_timer, dummy_retry, strdup(id), sec2mono(1));
     return;
   }
 

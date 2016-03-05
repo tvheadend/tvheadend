@@ -73,7 +73,7 @@ ts_recv_packet0
       cc = tsb2[3] & 0xf;
       if(st->es_cc != -1 && cc != st->es_cc) {
         /* Let the hardware to stabilize and don't flood the log */
-        if (t->s_start_time + mono4sec(1) < mdispatch_clock &&
+        if (t->s_start_time + sec2mono(1) < mdispatch_clock &&
             tvhlog_limit(&st->es_cc_log, 10))
           tvhwarn("TS", "%s Continuity counter error (total %zi)",
                         service_component_nicename(st), st->es_cc_log.count);
@@ -141,7 +141,7 @@ ts_recv_skipped0
       cc = tsb2[3] & 0xf;
       if(st->es_cc != -1 && cc != st->es_cc) {
         /* Let the hardware to stabilize and don't flood the log */
-        if (t->s_start_time + mono4sec(1) < mdispatch_clock &&
+        if (t->s_start_time + sec2mono(1) < mdispatch_clock &&
             tvhlog_limit(&st->es_cc_log, 10))
           tvhwarn("TS", "%s Continuity counter error (total %zi)",
                         service_component_nicename(st), st->es_cc_log.count);
@@ -356,7 +356,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
   sbuf_append(sb, src, len);
   sb->sb_err += errors;
 
-  if(sec4mono(mdispatch_clock) == sec4mono(t->s_tsbuf_last) &&
+  if(mono2sec(mdispatch_clock) == mono2sec(t->s_tsbuf_last) &&
      sb->sb_ptr < TS_REMUX_BUFSIZE)
     return;
 
@@ -379,7 +379,7 @@ ts_skip(mpegts_service_t *t, const uint8_t *src, int len)
 
   sb->sb_err += len / 188;
 
-  if(sec4mono(mdispatch_clock) == sec4mono(t->s_tsbuf_last) &&
+  if(mono2sec(mdispatch_clock) == mono2sec(t->s_tsbuf_last) &&
      sb->sb_err < (TS_REMUX_BUFSIZE / 188))
     return;
 

@@ -95,7 +95,7 @@ mpegts_mux_scan_active
     t = mpegts_input_grace(mi, mm);
   
     /* Setup timeout */
-    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, mono4sec(t));
+    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, sec2mono(t));
   }
 }
 
@@ -1090,7 +1090,7 @@ again:
   /* Pending tables (another 20s or 30s - bit arbitrary) */
   } else if (q) {
     tvhtrace("mpegts", "%s - scan needs more time", buf);
-    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, mono4sec(w ? 30 : 20));
+    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, sec2mono(w ? 30 : 20));
     return;
 
   /* Complete */
