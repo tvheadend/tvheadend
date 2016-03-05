@@ -669,8 +669,10 @@ tcp_server_loop(void *aux)
 
   while(tcp_server_running) {
     r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
-    if(r == -1) {
-      perror("tcp_server: tvhpoll_wait");
+    if(r < 0) {
+      if (ERRNO_AGAIN(r))
+        continue;
+      tvherror("tcp", "tcp_server_loop: tvhpoll_wait: %s", strerror(errno));
       continue;
     }
 
