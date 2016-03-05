@@ -396,8 +396,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
 
         if (hc->hc_no_output) {
           streaming_msg_free(sm);
-          mono = getfastmonoclock() + sec2mono(2);
-          while (getfastmonoclock() < mono) {
+          mono = mdispatch_clock + sec2mono(2);
+          while (mdispatch_clock < mono) {
             if (tcp_socket_dead(hc->hc_fd))
               break;
             tvh_safe_usleep(50000);

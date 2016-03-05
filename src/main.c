@@ -177,6 +177,7 @@ static LIST_HEAD(, mtimer) mtimers;
 static tvh_cond_t mtimer_cond;
 static int64_t mtimer_periodic;
 static pthread_t mtimer_tid;
+static pthread_t mtimer_tick_tid;
 static LIST_HEAD(, gtimer) gtimers;
 static pthread_cond_t gtimer_cond;
 static TAILQ_HEAD(, tasklet) tasklets;
@@ -525,6 +526,20 @@ mdispatch_clock_update(void)
   }
 
   return mdispatch_clock = mono;
+}
+
+/**
+ *
+ */
+static void *
+mtimer_tick_thread(void *aux)
+{
+  while (tvheadend_running) {
+    /* update clocks each 10x in one second */
+    mdispatch_clock = getmonoclock();
+    tvh_safe_usleep(100000);
+  }
+  return NULL;
 }
 
 /**
@@ -1098,6 +1113,7 @@ main(int argc, char **argv)
 
   epg_in_load = 1;
 
+  tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
   dbus_server_init(opt_dbus, opt_dbus_session);
@@ -1254,6 +1270,9 @@ main(int argc, char **argv)
   tvhtrace("main", "tasklet thread end");
   tasklet_flush();
   tvhtrace("main", "tasklet leave");
+  tvhtrace("main", "mtimer tick thread join enter");
+  pthread_join(tasklet_tid, NULL);
+  tvhtrace("main", "mtimer tick thread join leave");
 
   tvhftrace("main", dvb_done);
   tvhftrace("main", lang_str_done);

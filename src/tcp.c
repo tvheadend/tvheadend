@@ -1112,9 +1112,9 @@ tcp_server_done(void)
   tvh_pipe_close(&tcp_server_pipe);
   tvhpoll_destroy(tcp_server_poll);
   
-  t = getfastmonoclock();
+  t = mdispatch_clock;
   while (LIST_FIRST(&tcp_server_active) != NULL) {
-    if (t + sec2mono(5) < getfastmonoclock())
+    if (t + sec2mono(5) < mdispatch_clock)
       tvhtrace("tcp", "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
     tvh_safe_usleep(20000);
   }
