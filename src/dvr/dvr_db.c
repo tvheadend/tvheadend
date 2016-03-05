@@ -396,8 +396,16 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   uint32_t retention = dvr_entry_get_retention_days(de);
   int save;
 
-  stop = de->de_stop + removal * (time_t)86400;
+  int64_t maxtime = sizeof(time_t) < 8 ? INT_MAX : LONG_MAX; // time_t length depends on OS (32 vs 64-bit)
+
+  /* Protect against time_t overflows */
+  if (removal < DVR_RET_SPACE && (maxtime - de->de_stop < removal * (int64_t)86400))
+    removal = DVR_RET_FOREVER;
+  if (retention < DVR_RET_ONREMOVE && (maxtime - de->de_stop < retention * (int64_t)86400))
+    retention = DVR_RET_ONREMOVE;
+
   if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
+    stop = de->de_stop + removal * (time_t)86400;
     if (stop > dispatch_clock) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
       return;
