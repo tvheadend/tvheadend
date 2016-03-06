@@ -589,7 +589,9 @@ mtimer_thread(void *aux)
       cb(mti->mti_opaque);
 
 #if ENABLE_GTIMER_CHECK
-      tvhtrace("mtimer", "%s:%s duration %"PRId64"ns", id, fcn, getmonoclock() - mtm);
+      mtm = getmonoclock() - mtm;
+      if (mtm > 10000)
+        tvhtrace("mtimer", "%s:%s duration %"PRId64"us", id, fcn, mtm);
 #endif
     }
 
@@ -670,7 +672,9 @@ mainloop(void)
       cb(gti->gti_opaque);
 
 #if ENABLE_GTIMER_CHECK
-      tvhtrace("gtimer", "%s:%s duration %"PRId64"ns", id, fcn, getmonoclock() - mtm);
+      mtm = getmonoclock() - mtm;
+      if (mtm > 10000)
+        tvhtrace("gtimer", "%s:%s duration %"PRId64"us", id, fcn, mtm);
 #endif
     }
 
