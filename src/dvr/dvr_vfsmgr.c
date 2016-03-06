@@ -216,8 +216,8 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       return -1;
   }
 
-  tvhlog(LOG_INFO, "dvr","disk space cleanup for config \"%s\", required/current free space \"%"PRId64"/%"PRId64" MiB\", required/current used space \"%"PRId64"/%"PRId64" MiB\"",
-         configName, TOMIB(requiredBytes), TOMIB(availBytes), TOMIB(maximalBytes), TOMIB(usedBytes));
+  tvhtrace("dvr", "disk space cleanup for config \"%s\", required/current free space \"%"PRId64"/%"PRId64" MiB\", required/current used space \"%"PRId64"/%"PRId64" MiB\"",
+           configName, TOMIB(requiredBytes), TOMIB(availBytes), TOMIB(maximalBytes), TOMIB(usedBytes));
 
   while (availBytes < requiredBytes || ((maximalBytes < usedBytes) && cfg->dvr_cleanup_threshold_used)) {
     oldest = NULL;
@@ -283,8 +283,8 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
   }
 
 finish:
-  tvhlog(LOG_INFO, "dvr","disk space cleanup for config \"%s\", cleared \"%"PRId64" MB\" of disk space, new free disk space \"%"PRId64" MiB\", new used disk space \"%"PRId64" MiB\"",
-         configName, TOMIB(clearedBytes), TOMIB(availBytes), TOMIB(usedBytes));
+  tvhtrace("dvr", "disk space cleanup for config \"%s\", cleared \"%"PRId64" MB\" of disk space, new free disk space \"%"PRId64" MiB\", new used disk space \"%"PRId64" MiB\"",
+           configName, TOMIB(clearedBytes), TOMIB(availBytes), TOMIB(usedBytes));
 
   return clearedBytes;
 }
