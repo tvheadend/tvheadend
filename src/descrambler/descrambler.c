@@ -750,7 +750,7 @@ descrambler_descramble ( service_t *t,
                                 (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         if (key_late(dr, ki, mclk())) {
-          tvherror("descrambler", "ECM - key late (%ld ms) for service \"%s\"",
+          tvherror("descrambler", "ECM - key late (%"PRId64" ms) for service \"%s\"",
                                   mono2ms(mclk() - dr->dr_ecm_last_key_time),
                                   ((mpegts_service_t *)t)->s_dvb_svcname);
           descrambler_notify_nokey(dr);
