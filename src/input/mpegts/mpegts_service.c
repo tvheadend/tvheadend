@@ -663,9 +663,10 @@ void
 mpegts_service_delete ( service_t *t, int delconf )
 {
   mpegts_service_t *ms = (mpegts_service_t*)t, *mms;
-  mpegts_mux_t     *mm = ms->s_dvb_mux;
+  mpegts_mux_t     *mm = t->s_type == STYPE_STD ? ms->s_dvb_mux : NULL;
 
-  idnode_changed(&mm->mm_id);
+  if (mm)
+    idnode_changed(&mm->mm_id);
 
   /* Free memory */
   if (t->s_type == STYPE_STD)
