@@ -26,6 +26,7 @@
 #endif
 
 #ifdef PLATFORM_DARWIN
+#error "Platforms without monotonic clocks are not supported!"
 #define CLOCK_MONOTONIC 0
 #define CLOCK_REALTIME 0
 
