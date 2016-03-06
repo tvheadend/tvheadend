@@ -310,8 +310,11 @@ dvr_autorec_create_htsp(htsmsg_t *conf)
   dae = dvr_autorec_create(NULL, conf);
   htsmsg_destroy(conf);
 
-  if (dae)
+  if (dae) {
+    dvr_autorec_changed(dae, 0);
+    dvr_autorec_completed(dae, 0);
     idnode_changed(&dae->dae_id);
+  }
 
   return dae;
 }
@@ -353,6 +356,10 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   htsmsg_add_str(conf, "comment", comment ?: "");
   dae = dvr_autorec_create(NULL, conf);
   htsmsg_destroy(conf);
+  if (dae) {
+    dvr_autorec_changed(dae, 0);
+    dvr_autorec_completed(dae, 0);
+  }
   return dae;
 }
 
