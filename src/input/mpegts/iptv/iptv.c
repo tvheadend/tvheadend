@@ -264,7 +264,7 @@ iptv_sub_url_encode(iptv_mux_t *im, const char *s, char *tmp, size_t tmplen)
 }
 
 static const char *
-iptv_sub_mux_name(const char *id, const void *aux, char *tmp, size_t tmplen)
+iptv_sub_mux_name(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   const mpegts_mux_instance_t *mmi = aux;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
@@ -272,7 +272,7 @@ iptv_sub_mux_name(const char *id, const void *aux, char *tmp, size_t tmplen)
 }
 
 static const char *
-iptv_sub_service_name(const char *id, const void *aux, char *tmp, size_t tmplen)
+iptv_sub_service_name(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   const mpegts_mux_instance_t *mmi = aux;
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
@@ -280,7 +280,7 @@ iptv_sub_service_name(const char *id, const void *aux, char *tmp, size_t tmplen)
 }
 
 static const char *
-iptv_sub_weight(const char *id, const void *aux, char *tmp, size_t tmplen)
+iptv_sub_weight(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   const mpegts_mux_instance_t *mmi = aux;
   snprintf(tmp, tmplen, "%d", mmi->mmi_start_weight);

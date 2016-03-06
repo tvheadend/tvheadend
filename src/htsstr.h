@@ -35,7 +35,7 @@ void htsstr_argsplit_free(char **argv);
 
 typedef struct {
   const char *id;
-  const char *(*getval)(const char *id, const void *aux, char *tmp, size_t tmplen);
+  const char *(*getval)(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen);
 } htsstr_substitute_t;
 
 const char *

@@ -259,14 +259,14 @@ htsstr_substitute(const char *src, char *dst, size_t dstlen,
           break;
       }
       if (*p == '\0') {
-        src = x;
         if ((l = dstlen) > 0) {
-          v = s->getval(s->id, aux, tmp, tmplen);
+          v = s->getval(s->id, src, aux, tmp, tmplen);
           strncpy(dst, v, l);
           l = MIN(strlen(v), l);
           dst += l;
           dstlen -= l;
         }
+        src = x;
         break;
       }
     }
