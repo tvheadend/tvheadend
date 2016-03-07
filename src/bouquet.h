@@ -40,7 +40,12 @@ typedef struct bouquet {
   int           bq_mapnolcn;
   int           bq_mapnoname;
   int           bq_mapradio;
+  int           bq_mapencrypted;
+  int           bq_mapmergename;
   int           bq_chtag;
+  int           bq_chtag_type_tags;
+  int           bq_chtag_provider_tags;
+  int           bq_chtag_network_tags;
   channel_tag_t*bq_chtag_ptr;
   const char   *bq_chtag_waiting;
   char         *bq_name;

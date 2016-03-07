@@ -66,6 +66,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   bq->bq_services = idnode_set_create(1);
   bq->bq_active_services = idnode_set_create(1);
   bq->bq_ext_url_period = 60;
+  bq->bq_mapencrypted = 1;
 
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
@@ -273,6 +274,7 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     .check_availability = 0,
     .encrypted          = 1,
     .merge_same_name    = 0,
+    .type_tags          = 0,
     .provider_tags      = 0,
     .network_tags       = 0
   };
@@ -287,12 +289,19 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
     return;
   if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
     return;
+  if (!bq->bq_mapencrypted && service_is_encrypted(t))
+    return;
   LIST_FOREACH(ilm, &t->s_channels, ilm_in1_link)
     if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq)
       break;
-  if (!ilm)
+  if (!ilm) {
+    sm_conf.encrypted = bq->bq_mapencrypted;
+    sm_conf.merge_same_name = bq->bq_mapmergename;
+    sm_conf.type_tags = bq->bq_chtag_type_tags;
+    sm_conf.provider_tags = bq->bq_chtag_provider_tags;
+    sm_conf.network_tags = bq->bq_chtag_network_tags;
     ch = service_mapper_process(&sm_conf, t, bq);
-  else
+  } else
     ch = (channel_t *)ilm->ilm_in2;
   if (ch && bq->bq_chtag)
     if (channel_tag_map(bouquet_tag(bq, 1), ch, ch))
@@ -672,28 +681,68 @@ bouquet_class_maptoch_notify ( void *obj, const char *lang )
 }
 
 static void
-bouquet_class_mapnolcn_notify ( void *obj, const char *lang )
+bouquet_class_lcn_offset_notify ( void *obj, const char *lang )
 {
-  bouquet_t *bq = obj;
-  service_t *t;
-  size_t z;
-
-  if (bq->bq_in_load)
+  if (((bouquet_t *)obj)->bq_in_load)
     return;
-  if (!bq->bq_mapnolcn && bq->bq_enabled && bq->bq_maptoch) {
-    for (z = 0; z < bq->bq_services->is_count; z++) {
-      t = (service_t *)bq->bq_services->is_array[z];
-      if ((bq->bq_only_bq_lcn || service_get_channel_number(t) <= 0) &&
-          bouquet_get_channel_number0(bq, t) <= 0)
-        bouquet_unmap_channel(bq, t);
-    }
-  } else {
-    bouquet_map_to_channels(bq);
-  }
+  bouquet_notify_channels((bouquet_t *)obj);
+}
+
+static idnode_slist_t bouquest_class_mapopt_slist[] = {
+  {
+    .id   = "mapnolcn",
+    .name = N_("Map zero-numbered channels"),
+    .off  = offsetof(bouquet_t, bq_mapnolcn),
+  },
+  {
+    .id   = "mapnoname",
+    .name = N_("Map unnamed channels"),
+    .off  = offsetof(bouquet_t, bq_mapnoname),
+  },
+  {
+    .id   = "mapradio",
+    .name = N_("Map radio channels"),
+    .off  = offsetof(bouquet_t, bq_mapradio),
+  },
+  {
+    .id   = "encrypted",
+    .name = N_("Map encrypted services"),
+    .off  = offsetof(bouquet_t, bq_mapencrypted),
+  },
+  {
+    .id   = "merge_name",
+    .name = N_("Merge same name"),
+    .off  = offsetof(bouquet_t, bq_mapmergename),
+  },
+  {}
+};
+
+static htsmsg_t *
+bouquet_class_mapopt_enum ( void *obj, const char *lang )
+{
+  return idnode_slist_enum(obj, bouquest_class_mapopt_slist, lang);
+}
+
+static const void *
+bouquet_class_mapopt_get ( void *obj )
+{
+  return idnode_slist_get(obj, bouquest_class_mapopt_slist);
+}
+
+static char *
+bouquet_class_mapopt_rend ( void *obj, const char *lang )
+{
+  return idnode_slist_rend(obj, bouquest_class_mapopt_slist, lang);
+}
+
+static int
+bouquet_class_mapopt_set ( void *obj, const void *p )
+{
+  return idnode_slist_set(obj, bouquest_class_mapopt_slist, p);
 }
 
 static void
-bouquet_class_mapnoname_notify ( void *obj, const char *lang )
+bouquet_class_mapopt_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
   service_t *t;
@@ -701,35 +750,68 @@ bouquet_class_mapnoname_notify ( void *obj, const char *lang )
 
   if (bq->bq_in_load)
     return;
-  if (!bq->bq_mapnoname && bq->bq_enabled && bq->bq_maptoch) {
+  if (bq->bq_enabled && bq->bq_maptoch) {
     for (z = 0; z < bq->bq_services->is_count; z++) {
       t = (service_t *)bq->bq_services->is_array[z];
-      if (noname(service_get_channel_name(t)))
+      if (!bq->bq_mapradio && service_is_radio(t))
+        bouquet_unmap_channel(bq, t);
+      else if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
+        bouquet_unmap_channel(bq, t);
+      else if (!bq->bq_mapradio && service_is_radio(t))
+        bouquet_unmap_channel(bq, t);
+      else if (!bq->bq_mapencrypted && service_is_encrypted(t))
         bouquet_unmap_channel(bq, t);
     }
-  } else {
-    bouquet_map_to_channels(bq);
   }
+  bouquet_map_to_channels(bq);
 }
 
-static void
-bouquet_class_mapradio_notify ( void *obj, const char *lang )
-{
-  bouquet_t *bq = obj;
-  service_t *t;
-  size_t z;
+static idnode_slist_t bouquest_class_chtag_slist[] = {
+  {
+    .id   = "bouquet_tag",
+    .name = N_("Create bouquet tag"),
+    .off  = offsetof(bouquet_t, bq_chtag),
+  },
+  {
+    .id   = "type_tags",
+    .name = N_("Create type based tags"),
+    .off  = offsetof(bouquet_t, bq_chtag_type_tags),
+  },
+  {
+    .id   = "providers_tags",
+    .name = N_("Create provider name tags"),
+    .off  = offsetof(bouquet_t, bq_chtag_provider_tags),
+  },
+  {
+    .id   = "network_tags",
+    .name = N_("Create network name tags"),
+    .off  = offsetof(bouquet_t, bq_chtag_network_tags),
+  },
+  {}
+};
 
-  if (bq->bq_in_load)
-    return;
-  if (!bq->bq_mapradio && bq->bq_enabled && bq->bq_maptoch) {
-    for (z = 0; z < bq->bq_services->is_count; z++) {
-      t = (service_t *)bq->bq_services->is_array[z];
-      if (service_is_radio(t))
-        bouquet_unmap_channel(bq, t);
-    }
-  } else {
-    bouquet_map_to_channels(bq);
-  }
+static htsmsg_t *
+bouquet_class_chtag_enum ( void *obj, const char *lang )
+{
+  return idnode_slist_enum(obj, bouquest_class_chtag_slist, lang);
+}
+
+static const void *
+bouquet_class_chtag_get ( void *obj )
+{
+  return idnode_slist_get(obj, bouquest_class_chtag_slist);
+}
+
+static char *
+bouquet_class_chtag_rend ( void *obj, const char *lang )
+{
+  return idnode_slist_rend(obj, bouquest_class_chtag_slist, lang);
+}
+
+static int
+bouquet_class_chtag_set ( void *obj, const void *p )
+{
+  return idnode_slist_set(obj, bouquest_class_chtag_slist, p);
 }
 
 static void
@@ -755,17 +837,8 @@ bouquet_class_chtag_notify ( void *obj, const char *lang )
       if (ilm)
         channel_tag_unmap((channel_t *)ilm->ilm_in2, ct);
     }
-  } else {
-    bouquet_map_to_channels(bq);
   }
-}
-
-static void
-bouquet_class_lcn_offset_notify ( void *obj, const char *lang )
-{
-  if (((bouquet_t *)obj)->bq_in_load)
-    return;
-  bouquet_notify_channels((bouquet_t *)obj);
+  bouquet_map_to_channels(bq);
 }
 
 static const void *
@@ -899,36 +972,28 @@ const idclass_t bouquet_class = {
       .notify   = bouquet_class_maptoch_notify,
     },
     {
-      .type     = PT_BOOL,
-      .id       = "mapnolcn",
-      .name     = N_("Map zero-numbered channels"),
-      .off      = offsetof(bouquet_t, bq_mapnolcn),
-      .notify   = bouquet_class_mapnolcn_notify,
+      .type     = PT_INT,
+      .id       = "mapopt",
+      .name     = N_("Channel mapping options"),
+      .notify   = bouquet_class_mapopt_notify,
+      .list     = bouquet_class_mapopt_enum,
+      .get      = bouquet_class_mapopt_get,
+      .set      = bouquet_class_mapopt_set,
+      .rend     = bouquet_class_mapopt_rend,
       .opts     = PO_ADVANCED,
+      .islist   = 1
     },
     {
-      .type     = PT_BOOL,
-      .id       = "mapnoname",
-      .name     = N_("Map unnamed channels"),
-      .off      = offsetof(bouquet_t, bq_mapnoname),
-      .notify   = bouquet_class_mapnoname_notify,
-      .opts     = PO_ADVANCED,
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "mapradio",
-      .name     = N_("Map radio channels"),
-      .off      = offsetof(bouquet_t, bq_mapradio),
-      .notify   = bouquet_class_mapradio_notify,
-      .opts     = PO_ADVANCED,
-    },
-    {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "chtag",
-      .name     = N_("Create tag"),
-      .off      = offsetof(bouquet_t, bq_chtag),
+      .name     = N_("Create tags"),
       .notify   = bouquet_class_chtag_notify,
+      .list     = bouquet_class_chtag_enum,
+      .get      = bouquet_class_chtag_get,
+      .set      = bouquet_class_chtag_set,
+      .rend     = bouquet_class_chtag_rend,
       .opts     = PO_ADVANCED,
+      .islist   = 1
     },
     {
       .type     = PT_STR,

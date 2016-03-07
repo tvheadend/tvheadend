@@ -33,8 +33,7 @@ tvheadend.cteditor = function(panel, index)
  */
 tvheadend.bouquet = function(panel, index)
 {
-    var list0 = 'name,maptoch,mapnolcn,lcn_off,mapnoname,mapradio,' +
-                'chtag,source,services_count,services_seen,comment';
+    var list0 = 'name,maptoch,lcn_off,mapopt,chtag,source,services_count,services_seen,comment';
     var list  = 'enabled,rescan,' + list0;
     var elist = 'enabled,rescan,ext_url,' + list0;
     var alist = 'enabled,ext_url,' + list0;
@@ -49,12 +48,9 @@ tvheadend.bouquet = function(panel, index)
             enabled:        { width: 50 },
             rescan:         { width: 50 },
             name:           { width: 200 },
-            maptoch:        { width: 100 },
-            mapnolcn:       { width: 100 },
-            mapradio:       { width: 100 },
             lcn_off:        { width: 100 },
-            mapnoname:      { width: 100 },
-            chtag:          { width: 100 },
+            mapopt:         { width: 150 },
+            chtag:          { width: 150 },
             source:         { width: 200 },
             services_count: { width: 100 },
             services_seen:  { width: 100 },

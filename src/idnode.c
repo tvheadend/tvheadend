@@ -1394,6 +1394,87 @@ idnode_serialize0(idnode_t *self, htsmsg_t *list, int optmask, const char *lang)
 }
 
 /* **************************************************************************
+ * Simple list helpers
+ * *************************************************************************/
+
+htsmsg_t *
+idnode_slist_enum ( idnode_t *in, idnode_slist_t *options, const char *lang )
+{
+  htsmsg_t *l = htsmsg_create_list(), *m;
+
+  for (; options->id; options++) {
+    m = htsmsg_create_map();
+    htsmsg_add_str(m, "key", options->id);
+    htsmsg_add_str(m, "val", tvh_gettext_lang(lang, options->name));
+    htsmsg_add_msg(l, NULL, m);
+  }
+  return l;
+}
+
+htsmsg_t *
+idnode_slist_get ( idnode_t *in, idnode_slist_t *options )
+{
+  htsmsg_t *l = htsmsg_create_list();
+  int *ip;
+
+  for (; options->id; options++) {
+    ip = (void *)in + options->off;
+    if (*ip)
+      htsmsg_add_str(l, NULL, options->id);
+  }
+  return l;
+}
+
+int
+idnode_slist_set ( idnode_t *in, idnode_slist_t *options, const htsmsg_t *vals )
+{
+  idnode_slist_t *o;
+  htsmsg_field_t *f;
+  int *ip, changed = 0;
+  const char *s;
+
+  for (o = options; o->id; o++) {
+    ip = (void *)in + o->off;
+    HTSMSG_FOREACH(f, vals) {
+      if ((s = htsmsg_field_get_str(f)) != NULL)
+        continue;
+      if (strcmp(s, o->id))
+        continue;
+      if (*ip == 0) changed = 1;
+      break;
+    }
+    if (f == NULL && *ip) changed = 1;
+  }
+  HTSMSG_FOREACH(f, vals) {
+    if ((s = htsmsg_field_get_str(f)) != NULL)
+      continue;
+    for (o = options; o->id; o++) {
+      if (strcmp(o->id, s)) continue;
+      ip = (void *)in + o->off;
+      *ip = 1;
+      break;
+    }
+  }
+  return changed;
+}
+
+char *
+idnode_slist_rend ( idnode_t *in, idnode_slist_t *options, const char *lang )
+{
+  int *ip;
+  size_t l = 0;
+
+  prop_sbuf[0] = '\0';
+  for (; options->id; options++) {
+    ip = (void *)in + options->off;
+    if (*ip)
+     tvh_strlcatf(prop_sbuf, PROP_SBUF_LEN, l, "%s%s", prop_sbuf[0] ? "," : "",
+                   tvh_gettext_lang(lang, options->name));
+  }
+  return prop_sbuf_ptr;
+}
+
+/* **************************************************************************
  * List helpers
  * *************************************************************************/
 
