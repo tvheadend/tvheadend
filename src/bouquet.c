@@ -953,6 +953,7 @@ const idclass_t bouquet_class = {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
+      .desc     = N_("Enable/disable the bouquet."),
       .off      = offsetof(bouquet_t, bq_enabled),
       .notify   = bouquet_class_enabled_notify,
     },
@@ -960,6 +961,7 @@ const idclass_t bouquet_class = {
       .type     = PT_BOOL,
       .id       = "rescan",
       .name     = N_("Rescan"),
+      .desc     = N_("Rescan the mux for changes to the bouquet."),
       .off      = offsetof(bouquet_t, bq_rescan),
       .notify   = bouquet_class_rescan_notify,
       .opts     = PO_NOSAVE,
@@ -968,6 +970,8 @@ const idclass_t bouquet_class = {
       .type     = PT_BOOL,
       .id       = "maptoch",
       .name     = N_("Auto-Map to channels"),
+      .desc     = N_("Automatically map channels defined within the "
+                     "bouquet."),
       .off      = offsetof(bouquet_t, bq_maptoch),
       .notify   = bouquet_class_maptoch_notify,
     },
@@ -975,6 +979,15 @@ const idclass_t bouquet_class = {
       .type     = PT_INT,
       .id       = "mapopt",
       .name     = N_("Channel mapping options"),
+      .desc     = N_("Options to use/used when mapping "
+                     "channels; Map zero-numbered "
+                     "channels: include channels with no channel number. "
+                     " | Map unnamed channels: include channels with no "
+                     "name. | Map radio channels: include radio "
+                     "channels. | Map encrypted services: include "
+                     "channels even if the linked service is flagged as "
+                     "encrypted. | Merge same name: combine channels "
+                     "with the same name into a single channel."),
       .notify   = bouquet_class_mapopt_notify,
       .list     = bouquet_class_mapopt_enum,
       .get      = bouquet_class_mapopt_get,
@@ -987,6 +1000,17 @@ const idclass_t bouquet_class = {
       .type     = PT_INT,
       .id       = "chtag",
       .name     = N_("Create tags"),
+      .desc     = N_("Create and link these tags to channels when "
+                     "mapping; Create bouquet tag: create a "
+                     "tag with the bouquets name and link it to all mapped "
+                     "channels created by the bouquet. | Create "
+                     "type-based tags: create a tag based on "
+                     "the channel type and link it to the channel. | "
+                     "Create provider name tags: create a tag with the "
+                     "channel providers name and link it to the "
+                     "channel. | Create network name tags: create a tag "
+                     "with the network name and link it to all mapped "
+                     "channels created by the bouquet."),
       .notify   = bouquet_class_chtag_notify,
       .list     = bouquet_class_chtag_enum,
       .get      = bouquet_class_chtag_get,
@@ -1008,12 +1032,14 @@ const idclass_t bouquet_class = {
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Name"),
+      .desc     = N_("Name of the bouquet."),
       .off      = offsetof(bouquet_t, bq_name),
     },
     {
       .type     = PT_STR,
       .id       = "ext_url",
       .name     = N_("External URL"),
+      .desc     = N_("External URL of the bouquet."),
       .off      = offsetof(bouquet_t, bq_ext_url),
       .opts     = PO_HIDDEN | PO_MULTILINE,
       .notify   = bouquet_class_ext_url_notify,
@@ -1022,6 +1048,7 @@ const idclass_t bouquet_class = {
       .type     = PT_BOOL,
       .id       = "ssl_peer_verify",
       .name     = N_("SSL verify peer"),
+      .desc     = N_("Verify the SSL certificate."),
       .off      = offsetof(bouquet_t, bq_ssl_peer_verify),
       .opts     = PO_ADVANCED | PO_HIDDEN | PO_EXPERT,
       .notify   = bouquet_class_ext_url_notify,
@@ -1030,6 +1057,7 @@ const idclass_t bouquet_class = {
       .type     = PT_U32,
       .id       = "ext_url_period",
       .name     = N_("Re-fetch period (mins)"),
+      .desc     = N_("Re-fetch the bouquet every x mins."),
       .off      = offsetof(bouquet_t, bq_ext_url_period),
       .opts     = PO_ADVANCED | PO_HIDDEN,
       .notify   = bouquet_class_ext_url_notify,
@@ -1039,6 +1067,7 @@ const idclass_t bouquet_class = {
       .type     = PT_STR,
       .id       = "source",
       .name     = N_("Source"),
+      .desc     = N_("Bouquet source."),
       .off      = offsetof(bouquet_t, bq_src),
       .opts     = PO_RDONLY | PO_ADVANCED,
     },
@@ -1047,6 +1076,7 @@ const idclass_t bouquet_class = {
       .islist   = 1,
       .id       = "services",
       .name     = N_("Services"),
+      .desc     = N_("Number of services."),
       .get      = bouquet_class_services_get,
       .set      = bouquet_class_services_set,
       .rend     = bouquet_class_services_rend,
@@ -1056,6 +1086,7 @@ const idclass_t bouquet_class = {
       .type     = PT_U32,
       .id       = "services_seen",
       .name     = N_("# Services seen"),
+      .desc     = N_("Total number of services seen."),
       .off      = offsetof(bouquet_t, bq_services_seen),
       .opts     = PO_RDONLY,
     },
@@ -1063,6 +1094,7 @@ const idclass_t bouquet_class = {
       .type     = PT_U32,
       .id       = "services_count",
       .name     = N_("# Services"),
+      .desc     = N_("Total number of services."),
       .get      = bouquet_class_services_count_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
@@ -1070,12 +1102,15 @@ const idclass_t bouquet_class = {
       .type     = PT_STR,
       .id       = "comment",
       .name     = N_("Comment"),
+      .desc     = N_("Free-form text field, enter whatever you like."),
       .off      = offsetof(bouquet_t, bq_comment),
     },
     {
       .type     = PT_U32,
       .id       = "lcn_off",
       .name     = N_("Channel number offset"),
+      .desc     = N_("Offset the mapped channel numbers by x "
+                     "(value here + channel number)."),
       .off      = offsetof(bouquet_t, bq_lcn_offset),
       .notify   = bouquet_class_lcn_offset_notify,
       .opts     = PO_ADVANCED
