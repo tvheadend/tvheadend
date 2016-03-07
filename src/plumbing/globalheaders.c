@@ -282,7 +282,10 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     pkt = sm->sm_data;
     ssc = streaming_start_component_find_by_index(gh->gh_ss, 
 						  pkt->pkt_componentindex);
-    assert(ssc != NULL);
+    if (ssc == NULL) {
+      tvherror("globalheaders", "Unable to find component %d", pkt->pkt_componentindex);
+      return;
+    }
 
     pkt_ref_inc(pkt);
 
