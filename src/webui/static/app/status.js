@@ -262,7 +262,7 @@ tvheadend.status_streams = function(panel, index)
             width: 10,
             actions: [
                 {
-                    iconCls: 'undo',
+                    iconCls: 'clean',
                     qtip: _('Clear statistics'),
                     cb: function(grid, rec, act, row) {
                         var uuid = grid.getStore().getAt(row).data.uuid;
