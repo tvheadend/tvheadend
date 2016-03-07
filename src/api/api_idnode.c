@@ -365,6 +365,7 @@ api_idnode_load_simple
   if (!idnode_perm(in, perm, NULL)) {
     l = htsmsg_create_list();
     m = idnode_serialize0(in, flist, 0, perm->aa_lang_ui);
+    idnode_perm_unset(in);
     if (meta > 0)
       htsmsg_add_msg(m, "meta", idclass_serialize0(in->in_class, flist, 0, perm->aa_lang_ui));
     htsmsg_add_msg(l, NULL, m);
@@ -644,6 +645,7 @@ api_idnode_handler
         continue;
       }
       handler(perm, in);
+      idnode_perm_unset(in);
       cnt++;
     }
     htsmsg_destroy(msg);
