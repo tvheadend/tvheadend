@@ -399,8 +399,8 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   uint32_t retention = dvr_entry_get_retention_days(de);
   int save;
 
-  stop = time_t_out_of_range((int64_t)de->de_stop + removal * (int64_t)86400);
   if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
+    stop = time_t_out_of_range((int64_t)de->de_stop + removal * (int64_t)86400);
     if (stop > gclk()) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
       return;
