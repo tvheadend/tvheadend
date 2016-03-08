@@ -88,7 +88,7 @@ for opt do
     gzip)
       eval "$(toupper ${opt}CMD)=\"$val\""
       ;;
-    cc|cflags|ldflags|arch|cpu|platform|python|bzip2)
+    cc|cflags|ldflags|arch|cpu|platform|python|bzip2|nowerror)
       eval "$(toupper $opt)=\"$val\""
       ;;
     enable-*)

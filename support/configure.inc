@@ -173,6 +173,7 @@ show_help ()
   printf "  $fmt Build and optimize for specific CPU\n" "--cpu=CPU"
   printf "  $fmt Build for architecture [$ARCH]\n" "--arch=ARCH"
   printf "  $fmt Build for platform [$PLATFORM]\n" "--platform=PLATFORM"
+  printf "  $fmt Build without -Werror CFLAGS" "--nowerror"
   printf "  $fmt Use python binary [$PYTHON]\n" "--python=PYTHON"
   echo ""
   echo "Options"
@@ -494,6 +495,11 @@ mandir    = ${mandir}
 datadir   = ${datadir}
 libdir    = ${libdir}
 EOF
+
+  # no -Werror
+  if test -n "${NOWERROR}"; then
+    echo "CFLAGS_NO_WERROR = yes" >> "${CONFIG_MK}"
+  fi
 
   # Create C include
   CONFIG_H="${BUILDDIR}/build.h"

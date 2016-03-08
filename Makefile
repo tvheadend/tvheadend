@@ -32,7 +32,10 @@ CFLAGS  += -g -O2
 ifeq ($(CONFIG_W_UNUSED_RESULT),yes)
 CFLAGS  += -Wunused-result
 endif
-CFLAGS  += -Wall -Werror -Wwrite-strings -Wno-deprecated-declarations
+ifneq ($(CFLAGS_NO_WERROR),yes)
+CFLAGS  += -Werror
+endif
+CFLAGS  += -Wall -Wwrite-strings -Wno-deprecated-declarations
 CFLAGS  += -Wmissing-prototypes
 CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
 CFLAGS  += -D_FILE_OFFSET_BITS=64
