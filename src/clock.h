@@ -45,12 +45,12 @@ extern time_t  __gdispatch_clock;
 
 static inline int64_t mclk(void)
 {
-  return atomic_add_s64(&__mdispatch_clock, 0);
+  return atomic_get_s64(&__mdispatch_clock);
 }
 
 static inline time_t gclk(void)
 {
-  return atomic_add_time_t(&__gdispatch_clock, 0);
+  return atomic_get_time_t(&__gdispatch_clock);
 }
 
 #define MONOCLOCK_RESOLUTION 1000000LL /* microseconds */

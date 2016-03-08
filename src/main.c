@@ -531,12 +531,12 @@ mdispatch_clock_update(void)
 {
   int64_t mono = getmonoclock();
 
-  if (mono > atomic_add_s64(&mtimer_periodic, 0)) {
-    atomic_exchange_s64(&mtimer_periodic, mono + MONOCLOCK_RESOLUTION);
+  if (mono > atomic_get_s64(&mtimer_periodic)) {
+    atomic_set_s64(&mtimer_periodic, mono + MONOCLOCK_RESOLUTION);
     comet_flush(); /* Flush idle comet mailboxes */
   }
 
-  atomic_exchange_s64(&__mdispatch_clock, mono);
+  atomic_set_s64(&__mdispatch_clock, mono);
   return mono;
 }
 
@@ -548,7 +548,7 @@ mtimer_tick_thread(void *aux)
 {
   while (tvheadend_running) {
     /* update clocks each 10x in one second */
-    atomic_exchange_s64(&__mdispatch_clock, getmonoclock());
+    atomic_set_s64(&__mdispatch_clock, getmonoclock());
     tvh_safe_usleep(100000);
   }
   return NULL;
@@ -622,7 +622,7 @@ static inline time_t
 gdispatch_clock_update(void)
 {
   time_t now = time(NULL);
-  atomic_exchange_time_t(&__gdispatch_clock, now);
+  atomic_set_time_t(&__gdispatch_clock, now);
   return now;
 }
 

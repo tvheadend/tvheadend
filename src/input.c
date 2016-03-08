@@ -86,12 +86,12 @@ tvh_input_instance_clear_stats ( tvh_input_instance_t *tii )
 {
   tvh_input_stream_stats_t *s = &tii->tii_stats;
 
-  atomic_exchange(&s->ber, 0);
-  atomic_exchange(&s->unc, 0);
-  atomic_exchange(&s->cc, 0);
-  atomic_exchange(&s->te, 0);
-  atomic_exchange(&s->ec_block, 0);
-  atomic_exchange(&s->tc_block, 0);
+  atomic_set(&s->ber, 0);
+  atomic_set(&s->unc, 0);
+  atomic_set(&s->cc, 0);
+  atomic_set(&s->te, 0);
+  atomic_set(&s->ec_block, 0);
+  atomic_set(&s->tc_block, 0);
 }
 
 /*

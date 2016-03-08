@@ -140,7 +140,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   de->de_chain = prch;
 
-  atomic_exchange(&de->de_thread_shutdown, 0);
+  atomic_set(&de->de_thread_shutdown, 0);
   tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
   return 0;
 }
@@ -1272,11 +1272,11 @@ dvr_thread(void *aux)
     if (running_disabled) {
       epg_running = real_start <= gclk();
     } else if (sm->sm_type == SMT_PACKET || sm->sm_type == SMT_MPEGTS) {
-      running_start = atomic_add_time_t(&de->de_running_start, 0);
-      running_stop  = atomic_add_time_t(&de->de_running_stop,  0);
+      running_start = atomic_get_time_t(&de->de_running_start);
+      running_stop  = atomic_get_time_t(&de->de_running_stop);
       if (running_start > 0) {
         epg_running = running_start >= running_stop ? 1 : 0;
-        if (epg_running && atomic_add_time_t(&de->de_running_pause, 0) >= running_start)
+        if (epg_running && atomic_get_time_t(&de->de_running_pause) >= running_start)
           epg_running = 2;
       } else if (running_stop == 0) {
         if (start_time + 2 >= gclk()) {

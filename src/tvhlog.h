@@ -97,7 +97,7 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define tvhlog_spawn(severity, subsys, fmt, ...)\
   _tvhlog(__FILE__, __LINE__, 0, severity, subsys, fmt, ##__VA_ARGS__)
 #if ENABLE_TRACE
-#define tvhtrace_enabled() (LOG_TRACE <= atomic_add(&tvhlog_level, 0))
+#define tvhtrace_enabled() (LOG_TRACE <= atomic_get(&tvhlog_level))
 #define tvhtrace(subsys, fmt, ...) \
   do { \
     if (tvhtrace_enabled()) \
