@@ -521,6 +521,8 @@ ssize_t fb_read ( fb_file *fp, void *buf, size_t count )
     fp->pos += count;
   } else if (fp->type == FB_DIRECT) {
     count = fread(buf, 1, count, fp->d.cur);
+    if (count <= 0)
+      return -1;
     fp->pos += count;
   } else {
     count = MIN(count, fp->b.root->f.size - fp->pos);
