@@ -2098,8 +2098,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
     tuner = lfe->lfe_adapter->la_dvb_number;
 #endif
 
-  pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&capmt->capmt_mutex);
+  pthread_mutex_lock(&t->s_stream_mutex);
 
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link)
     /* skip, if we already have this service */
@@ -2199,8 +2199,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
   tvh_cond_signal(&capmt->capmt_cond, 0);
 
 fin:
-  pthread_mutex_unlock(&capmt->capmt_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
+  pthread_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
     capmt_notify_server(capmt, NULL, 0);
