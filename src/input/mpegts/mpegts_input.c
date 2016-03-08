@@ -1447,6 +1447,7 @@ mpegts_input_thread ( void * p )
   mpegts_packet_t *mp;
   mpegts_input_t  *mi = p;
   size_t bytes = 0;
+  int update_pids;
   char buf[256];
 
   mi->mi_display_name(mi, buf, sizeof(buf));
@@ -1476,8 +1477,9 @@ mpegts_input_thread ( void * p )
       pthread_mutex_lock(&mi->mi_output_lock);
     }
     bytes += mpegts_input_process(mi, mp);
+    update_pids = mp->mp_mux && mp->mp_mux->mm_update_pids_flag;
     pthread_mutex_unlock(&mi->mi_output_lock);
-    if (mp->mp_mux && mp->mp_mux->mm_update_pids_flag) {
+    if (update_pids) {
       pthread_mutex_lock(&global_lock);
       mpegts_mux_update_pids(mp->mp_mux);
       pthread_mutex_unlock(&global_lock);
