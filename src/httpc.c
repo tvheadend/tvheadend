@@ -1117,7 +1117,7 @@ rtsp_data:
   return res;
 }
 
-static int
+int
 http_client_run( http_client_t *hc )
 {
   int r;
