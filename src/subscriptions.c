@@ -947,10 +947,10 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   } else if(s->ths_dvrfile != NULL)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
 
-  htsmsg_add_u32(m, "in", s->ths_bytes_in_avg);
-  htsmsg_add_u32(m, "out", s->ths_bytes_out_avg);
-  htsmsg_add_s64(m, "total_in", s->ths_total_bytes_in);
-  htsmsg_add_s64(m, "total_out", s->ths_total_bytes_out);
+  htsmsg_add_u32(m, "in", atomic_get(&s->ths_bytes_in_avg));
+  htsmsg_add_u32(m, "out", atomic_get(&s->ths_bytes_out_avg));
+  htsmsg_add_s64(m, "total_in", atomic_get_u64(&s->ths_total_bytes_in));
+  htsmsg_add_s64(m, "total_out", atomic_get_u64(&s->ths_total_bytes_out));
 
   return m;
 }
@@ -970,15 +970,15 @@ subscription_status_callback ( void *p )
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     /* Store the difference between total bytes from the last round */
-    uint64_t in_prev = s->ths_total_bytes_in_prev;
+    uint64_t in_prev = atomic_get_u64(&s->ths_total_bytes_in_prev);
     uint64_t in_curr = atomic_get_u64(&s->ths_total_bytes_in);
-    uint64_t out_prev = s->ths_total_bytes_out_prev;
+    uint64_t out_prev = atomic_get_u64(&s->ths_total_bytes_out_prev);
     uint64_t out_curr = atomic_get_u64(&s->ths_total_bytes_out);
 
-    s->ths_bytes_in_avg = (int)(in_curr - in_prev);
-    s->ths_total_bytes_in_prev = s->ths_total_bytes_in;
-    s->ths_bytes_out_avg = (int)(out_curr - out_prev);
-    s->ths_total_bytes_out_prev = s->ths_total_bytes_out;
+    atomic_set(&s->ths_bytes_in_avg, (int)(in_curr - in_prev));
+    atomic_set_u64(&s->ths_total_bytes_in_prev, s->ths_total_bytes_in);
+    atomic_set(&s->ths_bytes_out_avg, (int)(out_curr - out_prev));
+    atomic_set_u64(&s->ths_total_bytes_out_prev, s->ths_total_bytes_out);
 
     htsmsg_t *m = subscription_create_msg(s, NULL);
     htsmsg_add_u32(m, "updateEntry", 1);
