@@ -396,8 +396,6 @@ dvr_get_disk_space_update(const char *path, int locked)
 static void
 dvr_get_disk_space_tcb(void *opaque, int dearmed)
 {
-  pthread_mutex_unlock(&tasklet_lock);
-
   if (!dearmed) {
     htsmsg_t *m = htsmsg_create_map();
 
@@ -412,7 +410,6 @@ dvr_get_disk_space_tcb(void *opaque, int dearmed)
     dvr_disk_space_check();
   }
 
-  pthread_mutex_lock(&tasklet_lock);
   free(opaque);
 }
 

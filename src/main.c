@@ -448,7 +448,7 @@ tasklet_thread ( void *aux )
       tvh_cond_wait(&tasklet_cond, &tasklet_lock);
       continue;
     }
-    /* the callback might re-initiaze tasklet, save everythin */
+    /* the callback might re-initialize tasklet, save everythin */
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk_cb = tsk->tsk_callback;
     opaque = tsk->tsk_opaque;
@@ -456,8 +456,11 @@ tasklet_thread ( void *aux )
     if (tsk->tsk_allocated)
       free(tsk);
     /* now, the callback can be safely called */
-    if (tsk_cb)
+    if (tsk_cb) {
+      pthread_mutex_unlock(&tasklet_lock);
       tsk_cb(opaque, 0);
+      pthread_mutex_lock(&tasklet_lock);
+    }
   }
   pthread_mutex_unlock(&tasklet_lock);
 
