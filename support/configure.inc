@@ -173,7 +173,7 @@ show_help ()
   printf "  $fmt Build and optimize for specific CPU\n" "--cpu=CPU"
   printf "  $fmt Build for architecture [$ARCH]\n" "--arch=ARCH"
   printf "  $fmt Build for platform [$PLATFORM]\n" "--platform=PLATFORM"
-  printf "  $fmt Build without -Werror CFLAGS" "--nowerror"
+  printf "  $fmt Build without -Werror CFLAGS\n" "--nowerror"
   printf "  $fmt Use python binary [$PYTHON]\n" "--python=PYTHON"
   echo ""
   echo "Options"
