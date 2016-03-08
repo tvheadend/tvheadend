@@ -176,13 +176,13 @@ atomic_get(volatile int *ptr)
 }
 
 static inline uint64_t
-atomic_get_u64(volatile int *ptr)
+atomic_get_u64(volatile uint64_t *ptr)
 {
   return atomic_add_u64(ptr, 0);
 }
 
 static inline int64_t
-atomic_get_s64(volatile int *ptr)
+atomic_get_s64(volatile int64_t *ptr)
 {
   return atomic_add_s64(ptr, 0);
 }
