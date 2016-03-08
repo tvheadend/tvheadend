@@ -1695,8 +1695,6 @@ mpegts_input_thread_start ( void *aux )
 static void
 mpegts_input_thread_stop ( mpegts_input_t *mi )
 {
-  int running = mi->mi_running;
-
   mi->mi_running = 0;
   mtimer_disarm(&mi->mi_input_thread_start);
 
@@ -1711,12 +1709,10 @@ mpegts_input_thread_stop ( mpegts_input_t *mi )
   pthread_mutex_unlock(&mi->mi_output_lock);
 
   /* Join threads (relinquish lock due to potential deadlock) */
-  if (running) {
-    pthread_mutex_unlock(&global_lock);
-    pthread_join(mi->mi_input_tid, NULL);
-    pthread_join(mi->mi_table_tid, NULL);
-    pthread_mutex_lock(&global_lock);
-  }
+  pthread_mutex_unlock(&global_lock);
+  pthread_join(mi->mi_input_tid, NULL);
+  pthread_join(mi->mi_table_tid, NULL);
+  pthread_mutex_lock(&global_lock);
 }
 
 /* **************************************************************************
@@ -1812,7 +1808,7 @@ mpegts_input_create0
     idnode_load(&mi->ti_id, c);
 
   /* Start threads */
-  mtimer_arm_rel(&mi->mi_input_thread_start, mpegts_input_thread_start, mi, NULL);
+  mtimer_arm_rel(&mi->mi_input_thread_start, mpegts_input_thread_start, mi, 0);
 
   return mi;
 }
