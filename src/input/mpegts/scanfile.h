@@ -34,17 +34,16 @@ typedef struct scanfile_region {
   LIST_HEAD(,scanfile_network) sfr_networks;
 } scanfile_region_t;
 
-typedef LIST_HEAD(,scanfile_region) scanfile_region_list_t;
-extern scanfile_region_list_t scanfile_regions_DVBC;
-extern scanfile_region_list_t scanfile_regions_DVBT;
-extern scanfile_region_list_t scanfile_regions_DVBS;
-extern scanfile_region_list_t scanfile_regions_ATSC_T;
-extern scanfile_region_list_t scanfile_regions_ATSC_C;
-extern scanfile_region_list_t scanfile_regions_ISDB_T;
+typedef struct scanfile_region_list {
+  LIST_HEAD(,scanfile_region)  srl_regions;
+  const char                  *srl_type;
+  const char                  *srl_alt_type;
+} scanfile_region_list_t;
 
-void scanfile_init ( void );
+void scanfile_init ( const char *muxconf_path, int lock );
 void scanfile_done ( void );
 
+scanfile_region_list_t *scanfile_find_region_list ( const char *type );
 scanfile_network_t *scanfile_find ( const char *id );
   
 #endif /* __DVB_SCANFILES_H__ */

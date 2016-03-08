@@ -24,6 +24,7 @@
 #include "mpegts_dvb.h"
 #include "linuxdvb/linuxdvb_private.h"
 #include "dvb_charset.h"
+#include "config.h"
 #include "scanfile.h"
 
 #include <sys/types.h>
@@ -842,9 +843,6 @@ void dvb_network_init ( void )
   htsmsg_field_t *f;
   const char *s;
   int i;
-
-  /* Load scan files */
-  scanfile_init();
 
   /* Load list of mux charset global overrides */
   dvb_charset_init();

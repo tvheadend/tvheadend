@@ -34,12 +34,23 @@
 #include <strings.h>
 #include <ctype.h>
 
-scanfile_region_list_t scanfile_regions_DVBC;
-scanfile_region_list_t scanfile_regions_DVBT;
-scanfile_region_list_t scanfile_regions_DVBS;
-scanfile_region_list_t scanfile_regions_ATSC_T;
-scanfile_region_list_t scanfile_regions_ATSC_C;
-scanfile_region_list_t scanfile_regions_ISDB_T;
+#define SCANFILE_LIMIT (4*1024*1024)
+
+static const char *scanfile_region_types[][2] = {
+  { "dvb-s", "dvbs" },
+  { "dvb-t", "dvbt" },
+  { "dvb-c", "dvbc" },
+  { "atsc-t", NULL  },
+  { "atsc-c", NULL  },
+  { "isdb-t", NULL  }
+};
+
+#define REGIONS ARRAY_SIZE(scanfile_region_types)
+
+static scanfile_region_list_t *scanfile_regions;
+static scanfile_region_list_t *scanfile_regions_load;
+static int64_t scanfile_total_load;
+
 
 /* **************************************************************************
  * Country codes
@@ -281,15 +292,15 @@ scanfile_region_create
 {
   scanfile_region_t *reg;
   scanfile_region_list_t *list = NULL;
-  if      (!strcmp(type, "dvb-s"))  list = &scanfile_regions_DVBS;
-  else if (!strcmp(type, "dvb-t"))  list = &scanfile_regions_DVBT;
-  else if (!strcmp(type, "dvb-c"))  list = &scanfile_regions_DVBC;
-  else if (!strcmp(type, "atsc-t")) list = &scanfile_regions_ATSC_T;
-  else if (!strcmp(type, "atsc-c")) list = &scanfile_regions_ATSC_C;
-  else if (!strcmp(type, "isdb-t")) list = &scanfile_regions_ISDB_T;
+  int i;
+  for (i = 0; i < REGIONS; i++)
+    if (strcmp(scanfile_regions_load[i].srl_type, type) == 0) {
+      list = &scanfile_regions_load[i];
+      break;
+    }
   if (!list) return NULL;
 
-  LIST_FOREACH(reg, list, sfr_link) {
+  LIST_FOREACH(reg, &list->srl_regions, sfr_link) {
     if (!strcmp(reg->sfr_id, id)) break;
   }
 
@@ -298,7 +309,7 @@ scanfile_region_create
     reg = calloc(1, sizeof(scanfile_region_t));
     reg->sfr_id   = strdup(id);
     reg->sfr_name = strdup(desc);
-    LIST_INSERT_SORTED(list, reg, sfr_link, scanfile_region_cmp);
+    LIST_INSERT_SORTED(&list->srl_regions, reg, sfr_link, scanfile_region_cmp);
   }
   
   return reg;
@@ -700,8 +711,11 @@ scanfile_load_file
 
   tvhtrace("scanfile", "load file %s", name);
 
+  if (scanfile_total_load > SCANFILE_LIMIT) return;
   fp = fb_open2(dir, name, 1, 0);
   if (!fp) return;
+  scanfile_total_load += fb_size(fp);
+  if (scanfile_total_load > SCANFILE_LIMIT) goto end;
 
   /* Process file */
   load = 1;
@@ -734,6 +748,7 @@ scanfile_load_file
         break;
     }
   }
+end:
   fb_close(fp);
 }
 
@@ -778,7 +793,7 @@ scanfile_stats(const char *what, scanfile_region_list_t *list)
   scanfile_network_t *sfn;
   int regions = 0, networks =0;
 
-  LIST_FOREACH(reg, list, sfr_link) {
+  LIST_FOREACH(reg, &list->srl_regions, sfr_link) {
     regions++;
     LIST_FOREACH(sfn, &reg->sfr_networks, sfn_link)
       networks++;
@@ -791,39 +806,7 @@ scanfile_stats(const char *what, scanfile_region_list_t *list)
 }
 
 /*
- * Initialise the mux list
- */
-void
-scanfile_init ( void )
-{
-  const char *path = config.muxconf_path;
-  int r = 0;
-  if (!path || !*path)
-#if ENABLE_DVBSCAN
-    path = "data/dvb-scan";
-#elif defined(PLATFORM_FREEBSD)
-    path = "/usr/local/share/dtv-scan-tables";
-#else
-    path = "/usr/share/dvb";
-#endif
-  scanfile_load_dir(path, NULL, 0);
-
-  r += scanfile_stats("DVB-T",  &scanfile_regions_DVBT);
-  r += scanfile_stats("DVB-S",  &scanfile_regions_DVBS);
-  r += scanfile_stats("DVB-C",  &scanfile_regions_DVBC);
-  r += scanfile_stats("ATSC-T", &scanfile_regions_ATSC_T);
-  r += scanfile_stats("ATSC-C", &scanfile_regions_ATSC_C);
-  r += scanfile_stats("ISDB-T", &scanfile_regions_ISDB_T);
-  if (!r) {
-    tvhwarn("scanfile", "no predefined muxes found, check path '%s%s'",
-            path[0] == '/' ? path : TVHEADEND_DATADIR "/",
-            path[0] == '/' ? "" : path);
-    tvhwarn("scanfile", "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
-  }
-}
-
-/*
- * Destroy the mux list
+ * Destroy the region
  */
 static void
 scanfile_done_region( scanfile_region_list_t *list )
@@ -832,7 +815,7 @@ scanfile_done_region( scanfile_region_list_t *list )
   scanfile_network_t *net;
   dvb_mux_conf_t *mux;
 
-  while ((reg = LIST_FIRST(list)) != NULL) {
+  while ((reg = LIST_FIRST(&list->srl_regions)) != NULL) {
     LIST_REMOVE(reg, sfr_link);
     while ((net = LIST_FIRST(&reg->sfr_networks)) != NULL) {
       LIST_REMOVE(net, sfn_link);
@@ -850,15 +833,94 @@ scanfile_done_region( scanfile_region_list_t *list )
   }
 }
 
+/*
+ * Initialise the mux list
+ */
+void
+scanfile_init ( const char *muxconf_path, int lock )
+{
+  const char *path = muxconf_path;
+  char buf[32], *p;
+  int r = 0, i;
+  if (!path || !*path)
+#if ENABLE_DVBSCAN
+    path = "data/dvb-scan";
+#elif defined(PLATFORM_FREEBSD)
+    path = "/usr/local/share/dtv-scan-tables";
+#else
+    path = "/usr/share/dvb";
+#endif
+
+  scanfile_total_load = 0;
+  scanfile_regions_load = calloc(REGIONS, sizeof(scanfile_region_list_t));
+  for (i = 0; i < REGIONS; i++) {
+    scanfile_regions_load[i].srl_type = scanfile_region_types[i][0];
+    scanfile_regions_load[i].srl_alt_type = scanfile_region_types[i][1];
+  }
+
+  scanfile_load_dir(path, NULL, 0);
+
+  for (i = 0; i < REGIONS; i++) {
+    snprintf(buf, sizeof(buf)-1, "%s", scanfile_regions_load[i].srl_type);
+    buf[sizeof(buf)-1] = '\0';
+    for (p = buf; *p; p++) *p = toupper(*p);
+    r += scanfile_stats(buf, &scanfile_regions_load[i]);
+  }
+  if (!r) {
+    tvhwarn("scanfile", "no predefined muxes found, check path '%s%s'",
+            path[0] == '/' ? path : TVHEADEND_DATADIR "/",
+            path[0] == '/' ? "" : path);
+    tvhwarn("scanfile", "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
+    for (i = 0; i < REGIONS; i++)
+      scanfile_done_region(&scanfile_regions_load[i]);
+    free(scanfile_regions_load);
+    scanfile_regions_load = NULL;
+  } else {
+    if (lock)
+      pthread_mutex_lock(&global_lock);
+    scanfile_done();
+    scanfile_regions = scanfile_regions_load;
+    scanfile_regions_load = NULL;
+    if (lock)
+      pthread_mutex_unlock(&global_lock);
+  }
+}
+
+/*
+ * Destroy the mux list
+ */
 void
 scanfile_done ( void )
 {
-  scanfile_done_region(&scanfile_regions_DVBS);
-  scanfile_done_region(&scanfile_regions_DVBT);
-  scanfile_done_region(&scanfile_regions_DVBC);
-  scanfile_done_region(&scanfile_regions_ATSC_T);
-  scanfile_done_region(&scanfile_regions_ATSC_C);
-  scanfile_done_region(&scanfile_regions_ISDB_T);
+  scanfile_region_list_t *l;
+  int i;
+
+  l = scanfile_regions;
+  scanfile_regions = NULL;
+  if (l) {
+    for (i = 0; i < REGIONS; i++)
+      scanfile_done_region(&l[i]);
+    free(l);
+  }
+}
+
+/*
+ * Find region list by type
+ */
+scanfile_region_list_t *
+scanfile_find_region_list ( const char *type )
+{
+  scanfile_region_list_t *list = NULL;
+  int i;
+  if (scanfile_regions == NULL)
+    return NULL;
+  for (i = 0; i < REGIONS; i++)
+    if (strcasecmp(scanfile_regions[i].srl_type, type) == 0 ||
+        strcasecmp(scanfile_regions[i].srl_alt_type, type) == 0) {
+      list = &scanfile_regions[i];
+      break;
+    }
+  return list;
 }
 
 /*
@@ -876,25 +938,14 @@ scanfile_find ( const char *id )
   /* Type */
   if (!(tok = strtok_r(tmp, "/", &s)))
     goto fail;
-  if (!strcasecmp(tok, "dvbt"))
-    l = &scanfile_regions_DVBT;
-  else if (!strcasecmp(tok, "dvbc"))
-    l = &scanfile_regions_DVBC;
-  else if (!strcasecmp(tok, "dvbs"))
-    l = &scanfile_regions_DVBS;
-  else if (!strcasecmp(tok, "atsc-t"))
-    l = &scanfile_regions_ATSC_T;
-  else if (!strcasecmp(tok, "atsc-c"))
-    l = &scanfile_regions_ATSC_C;
-  else if (!strcasecmp(tok, "isdb-t"))
-    l = &scanfile_regions_ISDB_T;
-  else
+  l = scanfile_find_region_list(tok);
+  if (!l)
     goto fail;
 
   /* Region */
   if (!(tok = strtok_r(NULL, "/", &s)))
     goto fail;
-  LIST_FOREACH(r, l, sfr_link)
+  LIST_FOREACH(r, &l->srl_regions, sfr_link)
     if (!strcmp(r->sfr_id, tok))
       break;
   if (!r) goto fail;

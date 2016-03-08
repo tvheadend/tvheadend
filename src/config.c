@@ -33,6 +33,7 @@
 #include "url.h"
 #include "satip/server.h"
 #include "channels.h"
+#include "input/mpegts/scanfile.h"
 
 #include <netinet/ip.h>
 
@@ -1930,6 +1931,29 @@ config_class_piconscheme_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+#if ENABLE_MPEGTS_DVB
+static void
+config_muxconfpath_notify_cb(void *opaque, int disarmed)
+{
+  char *muxconf_path = opaque;
+  if (disarmed || muxconf_path == NULL || muxconf_path[0] == '\0') {
+    free(muxconf_path);
+    return;
+  }
+  tvhinfo("config", "scanfile re-initialization with path %s", muxconf_path);
+  scanfile_init(muxconf_path, 1);
+  free(muxconf_path);
+}
+#endif
+
+static void
+config_muxconfpath_notify ( void *o, const char *lang )
+{
+#if ENABLE_MPEGTS_DVB
+  tasklet_arm_alloc(config_muxconfpath_notify_cb, strdup(config.muxconf_path));
+#endif
+}
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
@@ -2142,6 +2166,7 @@ const idclass_t config_class = {
                    "/usr/share/dvb/. Leave blank to use Tvheadend's "
                    "internal file set."),
       .off    = offsetof(config_t, muxconf_path),
+      .notify = config_muxconfpath_notify,
       .opts   = PO_ADVANCED,
       .group  = 4
     },

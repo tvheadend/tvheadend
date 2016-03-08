@@ -381,29 +381,18 @@ api_dvb_scanfile_list
   if (!type)
     return -EINVAL;
 
-  if (!strcasecmp(type, "dvbt"))
-    list = &scanfile_regions_DVBT;
-  else if (!strcasecmp(type, "dvbc"))
-    list = &scanfile_regions_DVBC;
-  else if (!strcasecmp(type, "dvbs"))
-    list = &scanfile_regions_DVBS;
-  else if (!strcasecmp(type, "atsc-t"))
-    list = &scanfile_regions_ATSC_T;
-  else if (!strcasecmp(type, "atsc-c"))
-    list = &scanfile_regions_ATSC_C;
-  else if (!strcasecmp(type, "isdb-t"))
-    list = &scanfile_regions_ISDB_T;
-  else
+  list = scanfile_find_region_list(type);
+  if (!list)
     return -EINVAL;
   
   l = htsmsg_create_list();
-  LIST_FOREACH(r, list, sfr_link) {
+  LIST_FOREACH(r, &list->srl_regions, sfr_link) {
     LIST_FOREACH(n, &r->sfr_networks, sfn_link) {
       if (satpos != INT_MAX && n->sfn_satpos != satpos) continue;
       e = htsmsg_create_map();
       sprintf(buf, "%s/%s/%s", type, r->sfr_id, n->sfn_id);
       htsmsg_add_str(e, "key", buf);
-      if (list != &scanfile_regions_DVBS) {
+      if (strcmp(list->srl_type, "dvb-s")) {
         sprintf(buf, "%s: %s", r->sfr_name, n->sfn_name);
         htsmsg_add_str(e, "val", buf);
       } else {
