@@ -637,7 +637,7 @@ _eit_callback
   /* Validate */
   if(tableid < 0x4e || tableid > 0x6f || len < 11) {
     if (ths)
-      ths->ths_total_err++;
+      atomic_add(&ths->ths_total_err, 1);
     return -1;
   }
 
