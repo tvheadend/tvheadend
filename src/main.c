@@ -436,6 +436,8 @@ static void *
 tasklet_thread ( void *aux )
 {
   tasklet_t *tsk;
+  tsk_callback_t *tsk_cb;
+  void *opaque;
 
   tvhtread_renice(20);
 
@@ -446,13 +448,16 @@ tasklet_thread ( void *aux )
       tvh_cond_wait(&tasklet_cond, &tasklet_lock);
       continue;
     }
-    if (tsk->tsk_callback) {
-      tsk->tsk_callback(tsk->tsk_opaque, 0);
-      tsk->tsk_callback = NULL;
-    }
+    /* the callback might re-initiaze tasklet, save everythin */
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
+    tsk_cb = tsk->tsk_callback;
+    opaque = tsk->tsk_opaque;
+    tsk->tsk_callback = NULL;
     if (tsk->tsk_allocated)
       free(tsk);
+    /* now, the callback can be safely called */
+    if (tsk_cb)
+      tsk_cb(opaque, 0);
   }
   pthread_mutex_unlock(&tasklet_lock);
 
