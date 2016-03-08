@@ -152,8 +152,11 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
     }
   }
   if (hc->hc_fd >= 0) {
-    if (hc->hc_conn_closed)
+    if (hc->hc_conn_closed) {
+      pthread_mutex_unlock(&hc->hc_mutex);
       hc->hc_conn_closed(hc, -hc->hc_result);
+      pthread_mutex_lock(&hc->hc_mutex);
+    }
     if (hc->hc_fd >= 0)
       close(hc->hc_fd);
     hc->hc_fd = -1;
@@ -663,11 +666,15 @@ http_client_finish( http_client_t *hc )
     tvhlog_hexdump("httpc", hc->hc_data, hc->hc_csize);
   }
   if (hc->hc_in_rtp_data && hc->hc_rtp_data_complete) {
+    pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_rtp_data_complete(hc);
+    pthread_mutex_lock(&hc->hc_mutex);
     if (res < 0)
       return http_client_flush(hc, res);
   } else if (hc->hc_data_complete) {
+    pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_data_complete(hc);
+    pthread_mutex_lock(&hc->hc_mutex);
     if (res < 0)
       return http_client_flush(hc, res);
   }
@@ -731,7 +738,9 @@ http_client_data_copy( http_client_t *hc, char *buf, size_t len )
   int res;
 
   if (hc->hc_data_received) {
+    pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_data_received(hc, buf, len);
+    pthread_mutex_lock(&hc->hc_mutex);
     if (res < 0)
       return res;
   } else {
@@ -882,16 +891,13 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
   return end ? 1 : 0;
 }
 
-int
-http_client_run( http_client_t *hc )
+static int
+http_client_run0( http_client_t *hc )
 {
   char *buf, *saveptr, *argv[3], *d, *p;
   int ver, res, delimsize = 4;
   ssize_t r;
   size_t len;
-
-  if (hc == NULL)
-    return 0;
 
   if (hc->hc_shutdown) {
     if (hc->hc_ssl && hc->hc_ssl->shutdown) {
@@ -1038,7 +1044,9 @@ header:
   if (p)
     hc->hc_chunked = strcasecmp(p, "chunked") == 0;
   if (hc->hc_hdr_received) {
+    pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_hdr_received(hc);
+    pthread_mutex_lock(&hc->hc_mutex);
     if (res < 0)
       return http_client_flush(hc, res);
   }
@@ -1084,7 +1092,9 @@ rtsp_data:
       return HTTP_CON_RECEIVING;
     }
     if (hc->hc_rtp_data_received) {
+      pthread_mutex_unlock(&hc->hc_mutex);
       res = hc->hc_rtp_data_received(hc, hc->hc_rbuf + r, hc->hc_csize);
+      pthread_mutex_lock(&hc->hc_mutex);
       if (res < 0)
         return res;
     } else {
@@ -1105,6 +1115,19 @@ rtsp_data:
     }
   }
   return res;
+}
+
+static int
+http_client_run( http_client_t *hc )
+{
+  int r;
+
+  if (hc == NULL)
+    return 0;
+  pthread_mutex_lock(&hc->hc_mutex);
+  r = http_client_run0(hc);
+  pthread_mutex_unlock(&hc->hc_mutex);
+  return r;
 }
 
 /*
@@ -1290,13 +1313,17 @@ int
 http_client_simple( http_client_t *hc, const url_t *url )
 {
   http_arg_list_t h;
+  int r;
 
+  pthread_mutex_lock(&hc->hc_mutex);
   http_arg_init(&h);
   hc->hc_hdr_create(hc, &h, url, 0);
   free(hc->hc_url);
   hc->hc_url = url->raw ? strdup(url->raw) : NULL;
-  return http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
-                          &h, NULL, 0);
+  r = http_client_send(hc, HTTP_CMD_GET, url->path, url->query,
+                       &h, NULL, 0);
+  pthread_mutex_unlock(&hc->hc_mutex);
+  return r;
 }
 
 void
@@ -1330,10 +1357,10 @@ http_client_thread ( void *p )
   http_client_t *hc;
   char c;
 
-  while (http_running) {
+  while (atomic_get(&http_running)) {
     n = tvhpoll_wait(http_poll, &ev, 1, -1);
     if (n < 0) {
-      if (http_running && !ERRNO_AGAIN(errno))
+      if (atomic_get(&http_running) && !ERRNO_AGAIN(errno))
         tvherror("httpc", "tvhpoll_wait() error");
     } else if (n > 0) {
       if (&http_pipe == ev.data.ptr) {
@@ -1398,11 +1425,12 @@ http_client_reconnect
   struct http_client_ssl *ssl;
   char errbuf[256];
 
+  pthread_mutex_lock(&hc->hc_mutex);
   free(hc->hc_scheme);
   free(hc->hc_host);
 
   if (scheme == NULL || host == NULL)
-    return -EINVAL;
+    goto errnval;
 
   port           = http_port(hc, scheme, port);
   hc->hc_pevents = 0;
@@ -1414,7 +1442,7 @@ http_client_reconnect
   hc->hc_fd      = tcp_connect(host, port, hc->hc_bindaddr, errbuf, sizeof(errbuf), -1);
   if (hc->hc_fd < 0) {
     tvhlog(LOG_ERR, "httpc", "%04X: Unable to connect to %s:%i - %s", shortid(hc), host, port, errbuf);
-    return -EINVAL;
+    goto errnval;
   }
   hc->hc_einprogress = 1;
   tvhtrace("httpc", "%04X: Connected to %s:%i", shortid(hc), host, port);
@@ -1448,18 +1476,25 @@ http_client_reconnect
     }
   }
 
+  pthread_mutex_unlock(&hc->hc_mutex);
   return 0;
 
 err4:
   SSL_free(ssl->ssl);
+  ssl->ssl = NULL;
 err3:
   BIO_free(ssl->rbio);
   BIO_free(ssl->wbio);
+  ssl->rbio = ssl->wbio = NULL;
 err2:
   SSL_CTX_free(ssl->ctx);
+  ssl->ctx = NULL;
 err1:
   close(hc->hc_fd);
+  hc->hc_fd = -1;
   free(ssl);
+errnval:
+  pthread_mutex_unlock(&hc->hc_mutex);
   return -EINVAL;
 }
 
@@ -1472,6 +1507,7 @@ http_client_connect
   static int tally;
 
   hc             = calloc(1, sizeof(http_client_t));
+  pthread_mutex_init(&hc->hc_mutex, NULL);
   hc->hc_id      = ++tally;
   hc->hc_aux     = aux;
   hc->hc_io_size = 1024;
@@ -1539,6 +1575,7 @@ http_client_close ( http_client_t *hc )
     }
     pthread_mutex_unlock(&http_lock);
   }
+  pthread_mutex_lock(&hc->hc_mutex);
   http_client_shutdown(hc, 1, 0);
   http_client_flush(hc, 0);
   tvhtrace("httpc", "%04X: Closed", shortid(hc));
@@ -1546,6 +1583,8 @@ http_client_close ( http_client_t *hc )
     http_client_cmd_destroy(hc, wcmd);
   http_client_ssl_free(hc);
   rtsp_clear_session(hc);
+  pthread_mutex_unlock(&hc->hc_mutex);
+  pthread_mutex_destroy(&hc->hc_mutex);
   free(hc->hc_url);
   free(hc->hc_location);
   free(hc->hc_rbuf);
@@ -1587,7 +1626,7 @@ http_client_init ( const char *user_agent )
   tvhpoll_add(http_poll, &ev, 1);
 
   /* Setup thread */
-  http_running = 1;
+  atomic_set(&http_running, 1);
   tvhthread_create(&http_client_tid, NULL, http_client_thread, NULL, "httpc");
 #if HTTPCLIENT_TESTSUITE
   http_client_testsuite_run();
@@ -1599,7 +1638,7 @@ http_client_done ( void )
 {
   http_client_t *hc;
 
-  http_running = 0;
+  atomic_set(&http_running, 0);
   tvh_write(http_pipe.wr, "", 1);
   pthread_join(http_client_tid, NULL);
   tvh_pipe_close(&http_pipe);

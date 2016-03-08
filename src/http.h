@@ -268,6 +268,8 @@ struct http_client {
 
   TAILQ_ENTRY(http_client) hc_link;
 
+  pthread_mutex_t hc_mutex;
+
   int          hc_id;
   int          hc_fd;
   char        *hc_scheme;
@@ -306,6 +308,8 @@ struct http_client {
   size_t       hc_chunk_alloc;
   size_t       hc_chunk_pos;
   char        *hc_location;
+  uint8_t      hc_running;	/* outside hc_mutex */
+  uint8_t      hc_shutdown_wait;/* outside hc_mutex */
   int          hc_redirects;
   int          hc_result;
   int          hc_shutdown:1;
@@ -317,8 +321,6 @@ struct http_client {
   int          hc_in_rtp_data:1;
   int          hc_chunked:1;
   int          hc_chunk_trails:1;
-  int          hc_running:1;
-  int          hc_shutdown_wait:1;
   int          hc_handle_location:1; /* handle the redirection (location) requests */
   int          hc_pause:1;
 
