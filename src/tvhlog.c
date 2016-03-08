@@ -283,7 +283,7 @@ void tvhlogv ( const char *file, int line,
   options = tvhlog_options;
   if (severity >= LOG_DEBUG) {
     ok = 0;
-    if (severity <= tvhlog_level) {
+    if (severity <= atomic_add(&tvhlog_level, 0)) {
       if (tvhlog_trace) {
         ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
         ok = htsmsg_get_u32_or_default(tvhlog_trace, subsys, ok);
@@ -573,19 +573,14 @@ static const void *
 tvhlog_class_trace_get ( void *o )
 {
   static int si;
-  si = tvhlog_level >= LOG_TRACE;
+  si = atomic_add(&tvhlog_level, 0) >= LOG_TRACE;
   return &si;
 }
 
 static int
 tvhlog_class_trace_set ( void *o, const void *v )
 {
-  pthread_mutex_lock(&tvhlog_mutex);
-  if (*(int *)v)
-    tvhlog_level = LOG_TRACE;
-  else
-    tvhlog_level = LOG_DEBUG;
-  pthread_mutex_unlock(&tvhlog_mutex);
+  atomic_exchange(&tvhlog_level, *(int *)v ? LOG_TRACE : LOG_DEBUG);
   return 1;
 }
 
