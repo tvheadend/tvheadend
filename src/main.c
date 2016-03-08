@@ -1289,7 +1289,7 @@ main(int argc, char **argv)
   tasklet_flush();
   tvhtrace("main", "tasklet leave");
   tvhtrace("main", "mtimer tick thread join enter");
-  pthread_join(tasklet_tid, NULL);
+  pthread_join(mtimer_tick_tid, NULL);
   tvhtrace("main", "mtimer tick thread join leave");
 
   tvhftrace("main", dvb_done);
