@@ -649,7 +649,8 @@ tcp_server_start(void *aux)
   LIST_REMOVE(tsl, alink);
   LIST_INSERT_HEAD(&tcp_server_join, tsl, jlink);
   pthread_mutex_unlock(&global_lock);
-  tvh_write(tcp_server_pipe.wr, &c, 1);
+  if (atomic_get(&tcp_server_running))
+    tvh_write(tcp_server_pipe.wr, &c, 1);
   return NULL;
 }
 
