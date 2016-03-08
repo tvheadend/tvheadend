@@ -246,7 +246,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
     tvh_safe_usleep(100000); /* Always sleep 0.1 sec to avoid comet storms */
 
   pthread_mutex_lock(&comet_mutex);
-  if (!comet_running) {
+  if (!atomic_get(&comet_running)) {
     pthread_mutex_unlock(&comet_mutex);
     return HTTP_STATUS_BAD_REQUEST;
   }
@@ -270,7 +270,7 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
       if (e == ETIMEDOUT)
         break;
     } while (ERRNO_AGAIN(e));
-    if (!comet_running) {
+    if (!atomic_get(&comet_running)) {
       pthread_mutex_unlock(&comet_mutex);
       return 400;
     }
@@ -338,7 +338,7 @@ comet_init(void)
 {
   pthread_mutex_lock(&comet_mutex);
   tvh_cond_init(&comet_cond);
-  comet_running = 1;
+  atomic_set(&comet_running, 1);
   pthread_mutex_unlock(&comet_mutex);
   http_path_add("/comet/poll",  NULL, comet_mailbox_poll, ACCESS_WEB_INTERFACE);
   http_path_add("/comet/debug", NULL, comet_mailbox_dbg,  ACCESS_WEB_INTERFACE);
@@ -350,7 +350,7 @@ comet_done(void)
   comet_mailbox_t *cmb;
 
   pthread_mutex_lock(&comet_mutex);
-  comet_running = 0;
+  atomic_set(&comet_running, 0);
   while ((cmb = LIST_FIRST(&mailboxes)) != NULL)
     cmb_destroy(cmb);
   pthread_mutex_unlock(&comet_mutex);
@@ -391,7 +391,7 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
 
   pthread_mutex_lock(&comet_mutex);
 
-  if (comet_running) {
+  if (atomic_get(&comet_running)) {
     LIST_FOREACH(cmb, &mailboxes, cmb_link) {
 
       if(isdebug && !cmb->cmb_debug)

@@ -667,7 +667,7 @@ tcp_server_loop(void *aux)
   socklen_t slen;
   char c;
 
-  while(tcp_server_running) {
+  while(atomic_get(&tcp_server_running)) {
     r = tvhpoll_wait(tcp_server_poll, &ev, 1, -1);
     if(r < 0) {
       if (ERRNO_AGAIN(r))
@@ -1085,7 +1085,7 @@ tcp_server_init(void)
   ev.data.ptr = &tcp_server_pipe;
   tvhpoll_add(tcp_server_poll, &ev, 1);
 
-  tcp_server_running = 1;
+  atomic_set(&tcp_server_running, 1);
   tvhthread_create(&tcp_server_tid, NULL, tcp_server_loop, NULL, "tcp-loop");
 }
 
@@ -1097,7 +1097,7 @@ tcp_server_done(void)
   char c = 'E';
   int64_t t;
 
-  tcp_server_running = 0;
+  atomic_set(&tcp_server_running, 0);
   tvh_write(tcp_server_pipe.wr, &c, 1);
 
   pthread_mutex_lock(&global_lock);

@@ -328,7 +328,7 @@ epggrab_ota_register
   int save = 0;
   epggrab_ota_map_t *map;
 
-  if (!epggrab_ota_running)
+  if (!atomic_get(&epggrab_ota_running))
     return NULL;
 
   if (ota == NULL) {
@@ -698,7 +698,7 @@ epggrab_ota_service_add ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
 {
   epggrab_ota_svc_link_t *svcl;
 
-  if (uuid == NULL || !epggrab_ota_running)
+  if (uuid == NULL || !atomic_get(&epggrab_ota_running))
     return;
   SKEL_ALLOC(epggrab_svc_link_skel);
   epggrab_svc_link_skel->uuid = (char *)uuid;
@@ -718,7 +718,7 @@ void
 epggrab_ota_service_del ( epggrab_ota_map_t *map, epggrab_ota_mux_t *ota,
                           epggrab_ota_svc_link_t *svcl, int save )
 {
-  if (svcl == NULL || (!epggrab_ota_running && save))
+  if (svcl == NULL || (!atomic_get(&epggrab_ota_running) && save))
     return;
   epggrab_ota_service_trace(ota, svcl, "delete");
   RB_REMOVE(&map->om_svcs, svcl, link);
@@ -842,7 +842,7 @@ epggrab_ota_init ( void )
     if (!S_ISDIR(st.st_mode))
       hts_settings_remove("epggrab/otamux");
 
-  epggrab_ota_running = 1;
+  atomic_set(&epggrab_ota_running, 1);
   
   /* Load config */
   if ((c = hts_settings_load_r(1, "epggrab/otamux"))) {
@@ -908,7 +908,7 @@ epggrab_ota_shutdown ( void )
 {
   epggrab_ota_mux_t *ota;
 
-  epggrab_ota_running = 0;
+  atomic_set(&epggrab_ota_running, 0);
   while ((ota = TAILQ_FIRST(&epggrab_ota_active)) != NULL)
     epggrab_ota_free(&epggrab_ota_active, ota);
   while ((ota = TAILQ_FIRST(&epggrab_ota_pending)) != NULL)

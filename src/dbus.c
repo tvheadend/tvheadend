@@ -65,7 +65,7 @@ dbus_emit_signal(const char *obj_name, const char *sig_name, htsmsg_t *msg)
   int unused __attribute__((unused));
   size_t l;
 
-  if (!dbus_running) {
+  if (!atomic_get(&dbus_running)) {
     htsmsg_destroy(msg);
     return;
   }
@@ -354,13 +354,13 @@ dbus_server_thread(void *aux)
 
   conn = dbus_create_session("org.tvheadend.server");
   if (conn == NULL) {
-    dbus_running = 0;
+    atomic_set(&dbus_running, 0);
     return NULL;
   }
 
   notify = dbus_create_session("org.tvheadend.notify");
   if (notify == NULL) {
-    dbus_running = 0;
+    atomic_set(&dbus_running, 0);
     dbus_connection_safe_close(conn);
     return NULL;
   }
@@ -373,7 +373,7 @@ dbus_server_thread(void *aux)
   tvhpoll_add(poll, &ev, 1);
   memset(&ev, 0, sizeof(ev));
   if (!dbus_connection_get_unix_fd(conn, &ev.fd)) {
-    dbus_running = 0;
+    atomic_set(&dbus_running, 0);
     tvhpoll_destroy(poll);
     dbus_connection_safe_close(notify);
     dbus_connection_safe_close(conn);
@@ -383,11 +383,11 @@ dbus_server_thread(void *aux)
   ev.data.ptr = conn;
   tvhpoll_add(poll, &ev, 1);
 
-  while (dbus_running) {
+  while (atomic_get(&dbus_running)) {
 
     n = tvhpoll_wait(poll, &ev, 1, -1);
     if (n < 0) {
-      if (dbus_running && !ERRNO_AGAIN(errno))
+      if (atomic_get(&dbus_running) && !ERRNO_AGAIN(errno))
         tvherror("dbus", "tvhpoll_wait() error");
     } else if (n == 0) {
       continue;
@@ -449,7 +449,7 @@ dbus_server_init(int enabled, int session)
   if (enabled) {
     tvh_pipe(O_NONBLOCK, &dbus_pipe);
     dbus_threads_init_default();
-    dbus_running = 1;
+    atomic_set(&dbus_running, 1);
     dbus_emit_signal_str("/main", "start", tvheadend_version);
   }
 }
@@ -467,7 +467,7 @@ dbus_server_done(void)
   dbus_rpc_t *rpc;
 
   dbus_emit_signal_str("/main", "stop", "bye");
-  dbus_running = 0;
+  atomic_set(&dbus_running, 0);
   if (dbus_pipe.wr > 0) {
     tvh_write(dbus_pipe.wr, "", 1);
     pthread_kill(dbus_tid, SIGTERM);

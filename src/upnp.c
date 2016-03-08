@@ -88,7 +88,7 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
 {
   upnp_data_t *data;
 
-  if (!upnp_running)
+  if (!atomic_get(&upnp_running))
     return;
   data = calloc(1, sizeof(upnp_data_t));
   htsbuf_queue_init(&data->queue, 0);
@@ -158,7 +158,7 @@ upnp_thread( void *aux )
 
   delay_ms = 0;
 
-  while (upnp_running && multicast->fd >= 0) {
+  while (atomic_get(&upnp_running) && multicast->fd >= 0) {
     r = tvhpoll_wait(poll, ev, 2, delay_ms ?: 1000);
     if (r == 0) /* timeout */
       delay_ms = 0;
@@ -224,7 +224,7 @@ upnp_thread( void *aux )
   }
 
 error:
-  upnp_running = 0;
+  atomic_set(&upnp_running, 0);
   tvhpoll_destroy(poll);
   udp_close(unicast);
   udp_close(multicast);
@@ -248,7 +248,7 @@ upnp_server_init(const char *bindaddr)
   pthread_mutex_init(&upnp_lock, NULL);
   TAILQ_INIT(&upnp_data_write);
   TAILQ_INIT(&upnp_services);
-  upnp_running = 1;
+  atomic_set(&upnp_running, 1);
   tvhthread_create(&upnp_tid, NULL, upnp_thread, (char *)bindaddr, "upnp");
 }
 
@@ -258,7 +258,7 @@ upnp_server_done(void)
   upnp_data_t *data;
   upnp_service_t *us;
 
-  upnp_running = 0;
+  atomic_set(&upnp_running, 0);
   pthread_kill(upnp_tid, SIGTERM);
   pthread_join(upnp_tid, NULL);
   while ((us = TAILQ_FIRST(&upnp_services)) != NULL)

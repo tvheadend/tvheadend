@@ -1232,7 +1232,7 @@ satip_discovery_timer_cb(void *aux)
 {
   if (!tvheadend_is_running())
     return;
-  if (!upnp_running) {
+  if (!atomic_get(&upnp_running)) {
     mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb,
                    NULL, sec2mono(1));
     return;

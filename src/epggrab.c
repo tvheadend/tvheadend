@@ -95,10 +95,10 @@ static void* _epggrab_internal_thread ( void* p )
   ts.tv_sec  = time(NULL) + 120;
 
   /* Time for other jobs */
-  while (epggrab_running) {
+  while (atomic_get(&epggrab_running)) {
     pthread_mutex_lock(&epggrab_mutex);
     err = ETIMEDOUT;
-    while (epggrab_running) {
+    while (atomic_get(&epggrab_running)) {
       err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
       if (err == ETIMEDOUT) break;
     }
@@ -108,11 +108,11 @@ static void* _epggrab_internal_thread ( void* p )
 
   time(&ts.tv_sec);
 
-  while (epggrab_running) {
+  while (atomic_get(&epggrab_running)) {
 
     /* Check for config change */
     pthread_mutex_lock(&epggrab_mutex);
-    while (epggrab_running && confver == epggrab_confver) {
+    while (atomic_get(&epggrab_running) && confver == epggrab_confver) {
       err = pthread_cond_timedwait(&epggrab_cond, &epggrab_mutex, &ts);
       if (err == ETIMEDOUT) break;
     }
@@ -126,7 +126,7 @@ static void* _epggrab_internal_thread ( void* p )
     /* Run grabber(s) */
     /* Note: this loop is not protected, assuming static boot allocation */
     LIST_FOREACH(mod, &epggrab_modules, link) {
-      if (!epggrab_running)
+      if (!atomic_get(&epggrab_running))
         break;
       if (mod->type == EPGGRAB_INT)
          _epggrab_module_grab((epggrab_module_int_t *)mod);
@@ -420,7 +420,7 @@ void epggrab_init ( void )
   epggrab_ota_post();
 
   /* Start internal grab thread */
-  epggrab_running = 1;
+  atomic_set(&epggrab_running, 1);
   tvhthread_create(&epggrab_tid, NULL, _epggrab_internal_thread, NULL, "epggrabi");
 }
 
@@ -431,7 +431,7 @@ void epggrab_done ( void )
 {
   epggrab_module_t *mod;
 
-  epggrab_running = 0;
+  atomic_set(&epggrab_running, 0);
   pthread_cond_signal(&epggrab_cond);
   pthread_join(epggrab_tid, NULL);
 

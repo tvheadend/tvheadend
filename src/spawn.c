@@ -127,7 +127,7 @@ spawn_pipe_thread(void *aux)
   ev[1].data.ptr = &spawn_pipe_error;
   tvhpoll_add(efd, ev, 2);
 
-  while (spawn_pipe_running) {
+  while (atomic_get(&spawn_pipe_running)) {
 
     nfds = tvhpoll_wait(efd, ev, 2, 500);
 
@@ -643,7 +643,7 @@ void spawn_init(void)
 {
   tvh_pipe(O_NONBLOCK, &spawn_pipe_info);
   tvh_pipe(O_NONBLOCK, &spawn_pipe_error);
-  spawn_pipe_running = 1;
+  atomic_set(&spawn_pipe_running, 1);
   pthread_create(&spawn_pipe_tid, NULL, spawn_pipe_thread, NULL);
 }
 
@@ -651,7 +651,7 @@ void spawn_done(void)
 {
   spawn_t *s;
 
-  spawn_pipe_running = 0;
+  atomic_set(&spawn_pipe_running, 0);
   pthread_kill(spawn_pipe_tid, SIGTERM);
   pthread_join(spawn_pipe_tid, NULL);
   tvh_pipe_close(&spawn_pipe_error);
