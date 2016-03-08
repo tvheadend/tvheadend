@@ -381,8 +381,7 @@ const idclass_t channel_class = {
                      "Always use the name defined by the network."),
       .off      = offsetof(channel_t, ch_autoname),
       .set      = channel_class_autoname_set,
-      .opts     = PO_ADVANCED,
-      .opts     = PO_NOSAVE,
+      .opts     = PO_ADVANCED | PO_NOSAVE,
     },
     {
       .type     = PT_STR,

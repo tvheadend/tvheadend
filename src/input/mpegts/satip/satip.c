@@ -393,7 +393,7 @@ const idclass_t satip_device_class =
       .type     = PT_STR,
       .id       = "manufacturer",
       .name     = N_("Manufacturer"),
-      .name     = N_("The manufacturer of the SAT>IP server."),
+      .desc     = N_("The manufacturer of the SAT>IP server."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(satip_device_t, sd_info.manufacturer),
     },
