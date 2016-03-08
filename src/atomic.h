@@ -204,13 +204,13 @@ atomic_set(volatile int *ptr, int val)
 }
 
 static inline uint64_t
-atomic_set_u64(volatile int *ptr, uint64_t val)
+atomic_set_u64(volatile uint64_t *ptr, uint64_t val)
 {
   return atomic_exchange_u64(ptr, val);
 }
 
 static inline int64_t
-atomic_set_s64(volatile int *ptr, int64_t val)
+atomic_set_s64(volatile int64_t *ptr, int64_t val)
 {
   return atomic_exchange_s64(ptr, val);
 }
