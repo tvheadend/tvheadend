@@ -671,7 +671,7 @@ struct mpegts_input
    * Input processing
    */
 
-  uint8_t mi_running;            /* threads running */
+  int mi_running;            /* threads running */
   time_t mi_last_dispatch;
 
   /* Data input */

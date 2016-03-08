@@ -1451,7 +1451,7 @@ mpegts_input_thread ( void * p )
 
   mi->mi_display_name(mi, buf, sizeof(buf));
   pthread_mutex_lock(&mi->mi_input_lock);
-  while (mi->mi_running) {
+  while (atomic_get(&mi->mi_running)) {
 
     /* Wait for a packet */
     if (!(mp = TAILQ_FIRST(&mi->mi_input_queue))) {
@@ -1517,7 +1517,7 @@ mpegts_input_table_thread ( void *aux )
   char                   muxname[256];
 
   pthread_mutex_lock(&mi->mi_output_lock);
-  while (mi->mi_running) {
+  while (atomic_get(&mi->mi_running)) {
 
     /* Wait for data */
     if (!(mtf = TAILQ_FIRST(&mi->mi_table_queue))) {
@@ -1529,7 +1529,7 @@ mpegts_input_table_thread ( void *aux )
     
     /* Process */
     pthread_mutex_lock(&global_lock);
-    if (mi->mi_running) {
+    if (atomic_get(&mi->mi_running)) {
       if (mm != mtf->mtf_mux) {
         mm = mtf->mtf_mux;
         if (mm)
@@ -1684,7 +1684,7 @@ static void
 mpegts_input_thread_start ( void *aux )
 {
   mpegts_input_t *mi = aux;
-  mi->mi_running = 1;
+  atomic_set(&mi->mi_running, 1);
   
   tvhthread_create(&mi->mi_table_tid, NULL,
                    mpegts_input_table_thread, mi, "mi-table");
@@ -1695,7 +1695,7 @@ mpegts_input_thread_start ( void *aux )
 static void
 mpegts_input_thread_stop ( mpegts_input_t *mi )
 {
-  mi->mi_running = 0;
+  atomic_set(&mi->mi_running, 0);
   mtimer_disarm(&mi->mi_input_thread_start);
 
   /* Stop input thread */
@@ -1828,7 +1828,7 @@ mpegts_input_delete ( mpegts_input_t *mi, int delconf )
   tvh_input_instance_t *tii, *tii_next;
 
   /* Early shutdown flag */
-  mi->mi_running = 0;
+  atomic_set(&mi->mi_running, 0);
 
   idnode_save_check(&mi->ti_id, delconf);
 
