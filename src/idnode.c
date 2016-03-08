@@ -1109,7 +1109,7 @@ idnode_save_queue ( idnode_t *self )
   ise = malloc(sizeof(*ise));
   ise->ise_node = self;
   ise->ise_reqtime = mclk();
-  if (TAILQ_EMPTY(&idnodes_save) && save_running)
+  if (TAILQ_EMPTY(&idnodes_save) && atomic_get(&save_running))
     mtimer_arm_rel(&save_timer, idnode_save_trigger_thread_cb, NULL, IDNODE_SAVE_DELAY);
   TAILQ_INSERT_TAIL(&idnodes_save, ise, ise_link);
   self->in_save = ise;
@@ -1778,7 +1778,7 @@ save_thread ( void *aux )
 
   pthread_mutex_lock(&global_lock);
 
-  while (save_running) {
+  while (atomic_get(&save_running)) {
     if ((ise = TAILQ_FIRST(&idnodes_save)) == NULL ||
         (ise->ise_reqtime + IDNODE_SAVE_DELAY > mclk())) {
       if (ise)
@@ -1831,7 +1831,7 @@ idnode_init(void)
   TAILQ_INIT(&idnodes_save);
 
   tvh_cond_init(&save_cond);
-  save_running = 1;
+  atomic_set(&save_running, 1);
   tvhthread_create(&save_tid, NULL, save_thread, NULL, "save");
 }
 
@@ -1840,7 +1840,7 @@ idnode_done(void)
 {
   idclass_link_t *il;
 
-  save_running = 0;
+  atomic_set(&save_running, 0);
   tvh_cond_signal(&save_cond, 0);
   pthread_join(save_tid, NULL);
   mtimer_disarm(&save_timer);
