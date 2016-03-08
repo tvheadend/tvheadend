@@ -214,7 +214,7 @@ dvr_entry_warm_time( dvr_entry_t *de )
 time_t
 dvr_entry_get_start_time( dvr_entry_t *de, int warm )
 {
-  int64_t b = (dvr_entry_get_extra_time_pre(de)) -
+  int64_t b = (dvr_entry_get_extra_time_pre(de)) +
               (warm ? dvr_entry_warm_time(de) : 0);
   if (de->de_start < b)
     return 0;
