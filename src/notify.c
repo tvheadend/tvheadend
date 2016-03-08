@@ -55,7 +55,7 @@ notify_delayed(const char *id, const char *event, const char *action)
   htsmsg_t *m = NULL, *e = NULL;
   htsmsg_field_t *f;
 
-  if (!tvheadend_running)
+  if (!tvheadend_is_running())
     return;
 
   pthread_mutex_lock(&notify_mutex);
@@ -88,7 +88,7 @@ notify_thread ( void *p )
 
   pthread_mutex_lock(&notify_mutex);
 
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
 
     /* Get queue */
     if (!notify_queue) {

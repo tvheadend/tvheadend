@@ -209,7 +209,7 @@ doexit(int x)
   if (pthread_self() != main_tid)
     pthread_kill(main_tid, SIGTERM);
   pthread_cond_signal(&gtimer_cond);
-  tvheadend_running = 0;
+  atomic_set(&tvheadend_running, 0);
   signal(x, doexit);
 }
 
@@ -442,7 +442,7 @@ tasklet_thread ( void *aux )
   tvhtread_renice(20);
 
   pthread_mutex_lock(&tasklet_lock);
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     tsk = TAILQ_FIRST(&tasklets);
     if (tsk == NULL) {
       tvh_cond_wait(&tasklet_cond, &tasklet_lock);
@@ -546,7 +546,7 @@ mdispatch_clock_update(void)
 static void *
 mtimer_tick_thread(void *aux)
 {
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     /* update clocks each 10x in one second */
     atomic_set_s64(&__mdispatch_clock, getmonoclock());
     tvh_safe_usleep(100000);
@@ -569,7 +569,7 @@ mtimer_thread(void *aux)
   const char *fcn;
 #endif
 
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     now = mdispatch_clock_update();
 
     /* Global monoclock timers */
@@ -642,7 +642,7 @@ mainloop(void)
   const char *fcn;
 #endif
 
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     now = gdispatch_clock_update();
 
     /* Global timers */
@@ -1088,7 +1088,7 @@ main(int argc, char **argv)
     umask(0);
   }
 
-  tvheadend_running = 1;
+  atomic_set(&tvheadend_running, 1);
 
   /* Start log thread (must be done post fork) */
   tvhlog_start();

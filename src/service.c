@@ -1448,7 +1448,7 @@ service_saver(void *aux)
 
   pthread_mutex_lock(&pending_save_mutex);
 
-  while(tvheadend_running) {
+  while(tvheadend_is_running()) {
 
     if((t = TAILQ_FIRST(&pending_save_queue)) == NULL) {
       tvh_cond_wait(&pending_save_cond, &pending_save_mutex);

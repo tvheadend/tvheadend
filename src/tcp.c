@@ -148,7 +148,7 @@ tcp_connect(const char *hostname, int port, const char *bindaddr,
         timeout = 0;
 
       while (1) {
-        if (!tvheadend_running) {
+        if (!tvheadend_is_running()) {
           errbuf[0] = '\0';
           tvhpoll_destroy(efd);
           close(fd);
@@ -352,7 +352,7 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
     if(x == 0)
       return ETIMEDOUT;
     if(x == -1) {
-      if (!tvheadend_running)
+      if (!tvheadend_is_running())
         return ECONNRESET;
       if (ERRNO_AGAIN(errno))
         continue;
@@ -550,7 +550,7 @@ try_again:
       pthread_mutex_unlock(&global_lock);
       tvh_safe_usleep(250000);
       pthread_mutex_lock(&global_lock);
-      if (tvheadend_running)
+      if (tvheadend_is_running())
         goto try_again;
       return NULL;
     }

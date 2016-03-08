@@ -3061,7 +3061,7 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   /* Session main loop */
 
-  while(tvheadend_running) {
+  while(tvheadend_is_running()) {
 readmsg:
     reply = NULL;
 
@@ -3128,7 +3128,7 @@ readmsg:
   pthread_mutex_lock(&global_lock);
   tcp_connection_land(tcp_id);
   pthread_mutex_unlock(&global_lock);
-  return tvheadend_running ? r : 0;
+  return tvheadend_is_running() ? r : 0;
 }
 
 /**

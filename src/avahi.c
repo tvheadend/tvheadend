@@ -290,7 +290,7 @@ avahi_thread(void *aux)
     name = NULL;
     free(name2);
 
-  } while (tvheadend_running && avahi_do_restart);
+  } while (tvheadend_is_running() && avahi_do_restart);
 
   return NULL;
 }

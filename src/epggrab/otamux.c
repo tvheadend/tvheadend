@@ -688,7 +688,7 @@ epggrab_ota_service_trace ( epggrab_ota_mux_t *ota,
   if (mm && svc) {
     mpegts_mux_nice_name(mm, buf, sizeof(buf));
     tvhtrace("epggrab", "ota %s %s service %s", buf, op, svc->s_nicename);
-  } else if (tvheadend_running)
+  } else if (tvheadend_is_running())
     tvhtrace("epggrab", "ota %s, problem? (%p %p)", op, mm, svc);
 }
 

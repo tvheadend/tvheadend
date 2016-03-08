@@ -172,7 +172,7 @@ tvhdhomerun_frontend_input_thread ( void *aux )
 
   /* TODO: flush buffer? */
 
-  while(tvheadend_running) {
+  while(tvheadend_is_running()) {
     nfds = tvhpoll_wait(efd, ev, 1, -1);
 
     if (nfds < 1) continue;

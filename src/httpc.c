@@ -1839,7 +1839,7 @@ http_client_testsuite_run( void )
   urlinit(&u2);
   http_arg_init(&args);
   efd = tvhpoll_create(1);
-  while (fgets(line, sizeof(line), fp) != NULL && tvheadend_running) {
+  while (fgets(line, sizeof(line), fp) != NULL && tvheadend_is_running()) {
     if (line[0] == '\0')
       continue;
     s = line + strlen(line) - 1;
@@ -1954,7 +1954,7 @@ http_client_testsuite_run( void )
         fprintf(stderr, "HTTPCTS Send Failed %s\n", strerror(-r));
         goto fatal;
       }
-      while (tvheadend_running) {
+      while (tvheadend_is_running()) {
         fprintf(stderr, "HTTPCTS: Enter Poll\n");
         r = tvhpoll_wait(efd, &ev, 1, -1);
         fprintf(stderr, "HTTPCTS: Leave Poll: %i (%s)\n", r, r < 0 ? val2str(-r, ERRNO_tab) : "OK");

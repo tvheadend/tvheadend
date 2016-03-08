@@ -295,7 +295,7 @@ imagecache_image_fetch ( imagecache_image_t *img )
   if (r < 0)
     goto error_lock;
 
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     r = tvhpoll_wait(efd, &ev, 1, -1);
     if (r < 0)
       break;
@@ -341,7 +341,7 @@ imagecache_thread ( void *p )
   imagecache_image_t *img;
 
   pthread_mutex_lock(&global_lock);
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
 
     /* Check we're enabled */
     if (!imagecache_conf.enabled) {

@@ -1220,7 +1220,7 @@ satip_discovery_static_timer_cb(void *aux)
 {
   int i;
 
-  if (!tvheadend_running)
+  if (!tvheadend_is_running())
     return;
   for (i = 0; i < satip_static_clients->num; i++)
     satip_discovery_static(satip_static_clients->str[i]);
@@ -1230,7 +1230,7 @@ satip_discovery_static_timer_cb(void *aux)
 static void
 satip_discovery_timer_cb(void *aux)
 {
-  if (!tvheadend_running)
+  if (!tvheadend_is_running())
     return;
   if (!upnp_running) {
     mtimer_arm_rel(&satip_discovery_timer, satip_discovery_timer_cb,

@@ -1198,7 +1198,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   linuxdvb_update_pids(lfe, name, &tuned, pids, ARRAY_SIZE(pids));
 
   /* Read */
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     nfds = tvhpoll_wait(efd, ev, 1, 150);
     if (nfds == 0) { /* timeout */
       if (nodata == 0) {

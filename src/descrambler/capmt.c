@@ -491,7 +491,7 @@ capmt_connect(capmt_t *capmt, int i)
 
     fd = tcp_connect(capmt->capmt_sockfile, capmt->capmt_port, NULL,
                      errbuf, sizeof(errbuf), 2);
-    if (fd < 0 && tvheadend_running) {
+    if (fd < 0 && tvheadend_is_running()) {
       tvhlog(LOG_ERR, "capmt",
              "%s: Cannot connect to %s:%i (%s); Do you have OSCam running?",
              capmt_name(capmt), capmt->capmt_sockfile, capmt->capmt_port, errbuf);
@@ -512,7 +512,7 @@ capmt_connect(capmt_t *capmt, int i)
     if (fd < 0 ||
         connect(fd, (const struct sockaddr*)&serv_addr_un,
                 sizeof(serv_addr_un)) != 0) {
-      if (tvheadend_running)
+      if (tvheadend_is_running())
         tvhlog(LOG_ERR, "capmt",
                "%s: Cannot connect to %s (%s); Do you have OSCam running?",
                capmt_name(capmt), capmt->capmt_sockfile, strerror(errno));

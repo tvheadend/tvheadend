@@ -1732,7 +1732,7 @@ idnode_notify ( idnode_t *in, const char *action )
   char ubuf[UUID_HEX_SIZE];
   const char *uuid = idnode_uuid_as_str(in, ubuf);
 
-  if (!tvheadend_running)
+  if (!tvheadend_is_running())
     return;
 
   while (ic) {

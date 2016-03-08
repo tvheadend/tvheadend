@@ -67,11 +67,17 @@ typedef struct {
   const char     *name;
   const uint32_t *enabled;
 } tvh_caps_t;
+
 extern int              tvheadend_running;
 extern const char      *tvheadend_version;
 extern const char      *tvheadend_cwd;
 extern const char      *tvheadend_webroot;
 extern const tvh_caps_t tvheadend_capabilities[];
+
+static inline int tvheadend_is_running(void)
+{
+  return atomic_get(&tvheadend_running);
+}
 
 htsmsg_t *tvheadend_capabilities_list(int check);
 
@@ -84,8 +90,6 @@ typedef struct str_list
 
 #define PTS_UNSET INT64_C(0x8000000000000000)
 #define PTS_MASK  INT64_C(0x00000001ffffffff)
-
-extern int tvheadend_running;
 
 extern pthread_mutex_t global_lock;
 extern pthread_mutex_t tasklet_lock;

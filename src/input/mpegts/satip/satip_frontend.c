@@ -1226,7 +1226,7 @@ new_tune:
 
     nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 50 : -1);
 
-    if (!tvheadend_running) { exit_flag = 1; goto done; }
+    if (!tvheadend_is_running()) { exit_flag = 1; goto done; }
     if (rtsp && getfastmonoclock() - u64_2 > 50000) /* 50ms */
       satip_frontend_close_rtsp(lfe, buf, efd, &rtsp);
     if (nfds <= 0) continue;
@@ -1349,7 +1349,7 @@ new_tune:
     tc = 1;
     nfds = tvhpoll_wait(efd, ev, 1, r);
 
-    if (!tvheadend_running) { exit_flag = 1; goto done; }
+    if (!tvheadend_is_running()) { exit_flag = 1; goto done; }
     if (nfds < 0) continue;
     if (nfds == 0) break;
 
@@ -1463,7 +1463,7 @@ new_tune:
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
 
-    if (!tvheadend_running || exit_flag) {
+    if (!tvheadend_is_running() || exit_flag) {
       exit_flag = 1;
       running = 0;
       if (reply++ > 5)

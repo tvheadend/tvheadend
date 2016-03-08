@@ -304,7 +304,7 @@ service_mapper_thread ( void *aux )
 
   pthread_mutex_lock(&global_lock);
 
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
     
     /* Wait for work */
     while (!(smi = TAILQ_FIRST(&service_mapper_queue))) {
@@ -313,10 +313,10 @@ service_mapper_thread ( void *aux )
         tvhinfo("service_mapper", "idle");
       }
       tvh_cond_wait(&service_mapper_cond, &global_lock);
-      if (!tvheadend_running)
+      if (!tvheadend_is_running())
         break;
     }
-    if (!tvheadend_running)
+    if (!tvheadend_is_running())
       break;
     s = smi->s;
     service_mapper_remove(s);
@@ -350,15 +350,15 @@ service_mapper_thread ( void *aux )
     /* Wait */
     run = 1;
     pthread_mutex_lock(&sq->sq_mutex);
-    while(tvheadend_running && run) {
+    while(tvheadend_is_running() && run) {
 
       /* Wait for message */
       while((sm = TAILQ_FIRST(&sq->sq_queue)) == NULL) {
         tvh_cond_wait(&sq->sq_cond, &sq->sq_mutex);
-        if (!tvheadend_running)
+        if (!tvheadend_is_running())
           break;
       }
-      if (!tvheadend_running)
+      if (!tvheadend_is_running())
         break;
 
       streaming_queue_remove(sq, sm);
@@ -382,7 +382,7 @@ service_mapper_thread ( void *aux )
       streaming_msg_free(sm);
       pthread_mutex_lock(&sq->sq_mutex);
     }
-    if (!tvheadend_running)
+    if (!tvheadend_is_running())
       break;
 
     streaming_queue_clear(&sq->sq_queue);

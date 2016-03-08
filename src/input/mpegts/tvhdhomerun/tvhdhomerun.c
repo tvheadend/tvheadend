@@ -348,7 +348,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
   struct hdhomerun_discover_device_t result_list[MAX_HDHOMERUN_DEVICES];
   int numDevices, brk;
 
-  while (tvheadend_running) {
+  while (tvheadend_is_running()) {
 
     numDevices =
       hdhomerun_discover_find_devices_custom(0,
@@ -364,7 +364,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
         if ( cDev->device_type == HDHOMERUN_DEVICE_TYPE_TUNER ) {
           pthread_mutex_lock(&global_lock);
           if ( !tvhdhomerun_device_find(cDev->device_id) &&
-               tvheadend_running ) {
+               tvheadend_is_running() ) {
             tvhlog(LOG_INFO, "tvhdhomerun","Found HDHomerun device %08x with %d tuners",
                    cDev->device_id, cDev->tuner_count);
             tvhdhomerun_device_create(cDev);
@@ -376,7 +376,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
 
     pthread_mutex_lock(&tvhdhomerun_discovery_lock);
     brk = 0;
-    if (tvheadend_running) {
+    if (tvheadend_is_running()) {
       brk = tvh_cond_timedwait(&tvhdhomerun_discovery_cond,
                                &tvhdhomerun_discovery_lock,
                                mclk() + sec2mono(15));
