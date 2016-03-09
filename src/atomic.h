@@ -150,19 +150,43 @@ atomic_exchange(volatile int *ptr, int val)
 static inline uint64_t
 atomic_exchange_u64(volatile uint64_t *ptr, uint64_t val)
 {
+#if ENABLE_ATOMIC64
   return  __sync_lock_test_and_set(ptr, val);
+#else
+  uint64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  pthread_mutex_unlock(&atomic_lock);
+#endif
 }
 
 static inline int64_t
 atomic_exchange_s64(volatile int64_t *ptr, int64_t val)
 {
+#if ENABLE_ATOMIC64
   return  __sync_lock_test_and_set(ptr, val);
+#else
+  int64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  pthread_mutex_unlock(&atomic_lock);
+#endif
 }
 
 static inline time_t
 atomic_exchange_time_t(volatile time_t *ptr, time_t val)
 {
+#if ENABLE_ATOMIC_TIME_T
   return  __sync_lock_test_and_set(ptr, val);
+#else
+  time_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  pthread_mutex_unlock(&atomic_lock);
+#endif
 }
 
 /*
