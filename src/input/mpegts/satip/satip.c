@@ -516,6 +516,9 @@ satip_device_hack( satip_device_t *sd )
 {
   if(sd->sd_disable_workarounds)
       return;
+#if 0
+  /* V1.24.0.156 cannot be distinguished from V1.13.0.105 :-( */
+  /* hopefully, all users have V1.16.0.120+ now */
   if (sd->sd_info.deviceid[0] &&
       strcmp(sd->sd_info.server, "Linux/1.0 UPnP/1.1 IDL4K/1.0") == 0) {
     /* AXE Linux distribution - Inverto firmware */
@@ -526,7 +529,9 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids_deladd = 0;
     tvhwarn("satip", "Detected old Inverto firmware V1.13.0.105 and less");
     tvhwarn("satip", "Upgrade to V1.16.0.120 - http://http://www.inverto.tv/support/ - IDL400s");
-  } else if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
+  } else
+#endif
+  if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
     /* OctopusNet requires pids in the SETUP RTSP command */
     sd->sd_pids0       = 1;
   } else if (strstr(sd->sd_info.manufacturer, "Triax") &&
