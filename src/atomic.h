@@ -158,6 +158,7 @@ atomic_exchange_u64(volatile uint64_t *ptr, uint64_t val)
   ret = *ptr;
   *ptr = val;
   pthread_mutex_unlock(&atomic_lock);
+  return ret;
 #endif
 }
 
@@ -172,6 +173,7 @@ atomic_exchange_s64(volatile int64_t *ptr, int64_t val)
   ret = *ptr;
   *ptr = val;
   pthread_mutex_unlock(&atomic_lock);
+  return ret;
 #endif
 }
 
@@ -186,6 +188,7 @@ atomic_exchange_time_t(volatile time_t *ptr, time_t val)
   ret = *ptr;
   *ptr = val;
   pthread_mutex_unlock(&atomic_lock);
+  return ret;
 #endif
 }
 
