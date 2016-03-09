@@ -351,7 +351,7 @@ dvr_disk_space_check()
           goto checking;
       } else {
 checking:
-        tvhlog(LOG_DEBUG, "dvr","checking free and used disk space for config \"%s\" : OK",
+        tvhtrace("dvr", "checking free and used disk space for config \"%s\" : OK",
                cfg != dvr_config_find_by_name(NULL) ? cfg->dvr_config_name : "Default profile");
       }
     }
