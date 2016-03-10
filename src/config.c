@@ -48,6 +48,7 @@
 #define IPTOS_CLASS_CS7                 0xe0
 #endif
 
+static void config_muxconfpath_notify ( void *o, const char *lang );
 
 void tvh_str_set(char **strp, const char *src);
 int tvh_str_update(char **strp, const char *src);
@@ -59,6 +60,7 @@ int tvh_str_update(char **strp, const char *src);
 struct config config;
 static char config_lock[PATH_MAX];
 static int config_lock_fd;
+static int config_scanfile_ok;
 
 /* *************************************************************************
  * Config migration
@@ -1634,6 +1636,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.dscp = -1;
   config.descrambler_buffer = 9000;
   config.epg_compress = 1;
+  config_scanfile_ok = 0;
 
   /* Generate default */
   if (!path) {
@@ -1704,6 +1707,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   htsmsg_destroy(config2);
   if (config.server_name == NULL || config.server_name[0] == '\0')
     config.server_name = strdup("Tvheadend");
+  if (!config_scanfile_ok)
+    config_muxconfpath_notify(&config.idnode, NULL);
 }
 
 void
@@ -1936,7 +1941,7 @@ static void
 config_muxconfpath_notify_cb(void *opaque, int disarmed)
 {
   char *muxconf_path = opaque;
-  if (disarmed || muxconf_path == NULL || muxconf_path[0] == '\0') {
+  if (disarmed) {
     free(muxconf_path);
     return;
   }
@@ -1950,7 +1955,9 @@ static void
 config_muxconfpath_notify ( void *o, const char *lang )
 {
 #if ENABLE_MPEGTS_DVB
-  tasklet_arm_alloc(config_muxconfpath_notify_cb, strdup(config.muxconf_path));
+  config_scanfile_ok = 1;
+  tasklet_arm_alloc(config_muxconfpath_notify_cb,
+                    config.muxconf_path ? strdup(config.muxconf_path) : NULL);
 #endif
 }
 
