@@ -345,9 +345,9 @@ service_stop(service_t *t)
 
   t->s_stop_feed(t);
 
-  pthread_mutex_lock(&t->s_stream_mutex);
-
   descrambler_service_stop(t);
+
+  pthread_mutex_lock(&t->s_stream_mutex);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
 
