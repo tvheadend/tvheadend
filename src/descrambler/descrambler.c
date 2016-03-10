@@ -335,10 +335,14 @@ static void
 descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di, int locked )
 {
   streaming_message_t *sm;
+  int r;
 
+  pthread_mutex_lock(&t->s_stream_mutex);
   if (!t->s_descramble_info)
     t->s_descramble_info = calloc(1, sizeof(*di));
-  if (memcmp(t->s_descramble_info, di, sizeof(*di)) == 0) {
+  r = memcmp(t->s_descramble_info, di, sizeof(*di));
+  pthread_mutex_unlock(&t->s_stream_mutex);
+  if (r == 0) { /* identical */
     free(di);
     return;
   }

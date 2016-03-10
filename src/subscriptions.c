@@ -893,6 +893,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
   descramble_info_t *di;
+  service_t *t;
   profile_t *pro;
   char buf[256];
 
@@ -936,9 +937,10 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   if(s->ths_channel != NULL)
     htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel));
   
-  if(s->ths_service != NULL) {
-    htsmsg_add_str(m, "service", s->ths_service->s_nicename ?: "");
+  if((t = s->ths_service) != NULL) {
+    htsmsg_add_str(m, "service", t->s_nicename ?: "");
 
+    pthread_mutex_lock(&t->s_stream_mutex);
     if ((di = s->ths_service->s_descramble_info) != NULL) {
       if (di->caid == 0 && di->ecmtime == 0) {
         snprintf(buf, sizeof(buf), N_("Failed"));
@@ -949,6 +951,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
       }
       htsmsg_add_str(m, "descramble", buf);
     }
+    pthread_mutex_unlock(&t->s_stream_mutex);
 
     if (s->ths_prch != NULL) {
       pro = s->ths_prch->prch_pro;
