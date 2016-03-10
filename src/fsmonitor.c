@@ -53,7 +53,7 @@ fsmonitor_thread ( void* p )
   fsmonitor_link_t *fml;
   fsmonitor_t *fsm;
 
-  while (fsmonitor_fd >= 0) {
+  while (atomic_get(&tvheadend_running)) {
 
     /* Wait for event */
     c = read(fsmonitor_fd, buf, sizeof(buf));

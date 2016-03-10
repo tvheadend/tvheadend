@@ -327,7 +327,7 @@ void* _dvr_inotify_thread ( void *p )
   int fromfd;
   int cookie;
 
-  while (_inot_fd >= 0) {
+  while (atomic_get(&tvheadend_running)) {
 
     /* Read events */
     fromfd = 0;
