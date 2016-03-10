@@ -1425,7 +1425,6 @@ http_client_reconnect
   struct http_client_ssl *ssl;
   char errbuf[256];
 
-  pthread_mutex_lock(&hc->hc_mutex);
   free(hc->hc_scheme);
   free(hc->hc_host);
 
@@ -1476,7 +1475,6 @@ http_client_reconnect
     }
   }
 
-  pthread_mutex_unlock(&hc->hc_mutex);
   return 0;
 
 err4:
@@ -1494,7 +1492,6 @@ err1:
   hc->hc_fd = -1;
   free(ssl);
 errnval:
-  pthread_mutex_unlock(&hc->hc_mutex);
   return -EINVAL;
 }
 
@@ -1505,6 +1502,7 @@ http_client_connect
 {
   http_client_t *hc;
   static int tally;
+  int r;
 
   hc             = calloc(1, sizeof(http_client_t));
   pthread_mutex_init(&hc->hc_mutex, NULL);
@@ -1520,7 +1518,10 @@ http_client_connect
 
   hc->hc_hdr_create = http_client_basic_args;
 
-  if (http_client_reconnect(hc, ver, scheme, host, port) < 0) {
+  pthread_mutex_lock(&hc->hc_mutex);
+  r = http_client_reconnect(hc, ver, scheme, host, port);
+  pthread_mutex_unlock(&hc->hc_mutex);
+  if (r < 0) {
     free(hc);
     return NULL;
   }
