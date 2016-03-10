@@ -813,7 +813,7 @@ capmt_send_stop_descrambling(capmt_t *capmt)
 static void 
 capmt_service_destroy(th_descrambler_t *td)
 {
-  capmt_service_t *ct = (capmt_service_t *)td;
+  capmt_service_t *ct = (capmt_service_t *)td, *ct2;
   mpegts_service_t *s = (mpegts_service_t *)ct->td_service;
   int oscam_new = capmt_oscam_new(ct->ct_capmt);
   capmt_caid_ecm_t *cce;
@@ -843,11 +843,16 @@ capmt_service_destroy(th_descrambler_t *td)
   if (oscam_new)
     capmt_enumerate_services(capmt, 1);
 
-  if (LIST_EMPTY(&capmt->capmt_services)) {
+  LIST_FOREACH(ct2, &capmt->capmt_services, ct_link)
+    if (ct2->ct_adapter == ct->ct_adapter)
+      break;
+  if (ct2 == NULL) {
     capmt_pid_flush_adapter(capmt, ct->ct_adapter);
     capmt->capmt_adapters[ct->ct_adapter].ca_tuner = NULL;
-    memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
   }
+
+  if (LIST_EMPTY(&capmt->capmt_services))
+    memset(&capmt->capmt_demuxes, 0, sizeof(capmt->capmt_demuxes));
 
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
