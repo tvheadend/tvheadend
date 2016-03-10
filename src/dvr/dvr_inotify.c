@@ -85,11 +85,11 @@ void dvr_inotify_init ( void )
  */
 void dvr_inotify_done ( void )
 {
-  int fd = _inot_fd;
-  _inot_fd = -1;
-  close(fd);
+  shutdown(_inot_fd, SHUT_RDWR);
   pthread_kill(dvr_inotify_tid, SIGTERM);
   pthread_join(dvr_inotify_tid, NULL);
+  close(_inot_fd);
+  _inot_fd = -1;
   SKEL_FREE(dvr_inotify_entry_skel);
 }
 
