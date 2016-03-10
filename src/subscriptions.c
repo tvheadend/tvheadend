@@ -985,15 +985,13 @@ subscription_status_callback ( void *p )
 
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     /* Store the difference between total bytes from the last round */
-    uint64_t in_prev = atomic_get_u64(&s->ths_total_bytes_in_prev);
     uint64_t in_curr = atomic_get_u64(&s->ths_total_bytes_in);
-    uint64_t out_prev = atomic_get_u64(&s->ths_total_bytes_out_prev);
+    uint64_t in_prev = atomic_exchange_u64(&s->ths_total_bytes_in_prev, in_curr);
     uint64_t out_curr = atomic_get_u64(&s->ths_total_bytes_out);
+    uint64_t out_prev = atomic_exchange_u64(&s->ths_total_bytes_out_prev, out_curr);
 
     atomic_set(&s->ths_bytes_in_avg, (int)(in_curr - in_prev));
-    atomic_set_u64(&s->ths_total_bytes_in_prev, s->ths_total_bytes_in);
     atomic_set(&s->ths_bytes_out_avg, (int)(out_curr - out_prev));
-    atomic_set_u64(&s->ths_total_bytes_out_prev, s->ths_total_bytes_out);
 
     htsmsg_t *m = subscription_create_msg(s, NULL);
     htsmsg_add_u32(m, "updateEntry", 1);
