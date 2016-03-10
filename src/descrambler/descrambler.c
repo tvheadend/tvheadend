@@ -248,7 +248,8 @@ descrambler_service_start ( service_t *t )
     count = 0;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
       LIST_FOREACH(ca, &st->es_caids, link) {
-        for (p = constcw_table; *p; p++)
+        if (ca->use == 0) continue;
+        for (p = constcw_table; p && *p; p++)
           if (ca->caid == *p) {
             constcw = 1;
             break;
@@ -262,11 +263,13 @@ descrambler_service_start ( service_t *t )
 
   } else {
 
-    for (p = constcw_table; *p; p++)
-      if (*p == ((mpegts_service_t *)t)->s_dvb_forcecaid) {
-        constcw = 1;
-        break;
-      }
+    if (constcw_table) {
+      for (p = constcw_table; *p; p++)
+        if (*p == ((mpegts_service_t *)t)->s_dvb_forcecaid) {
+          constcw = 1;
+          break;
+        }
+    }
 
   }
 
