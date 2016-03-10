@@ -429,10 +429,10 @@ descrambler_keys ( th_descrambler_t *td, int type,
     return;
   }
 
-  if (tvhcsa_set_type(&dr->dr_csa, type) < 0)
-    return;
-
   pthread_mutex_lock(&t->s_stream_mutex);
+
+  if (tvhcsa_set_type(&dr->dr_csa, type) < 0)
+    goto fin;
 
   LIST_FOREACH(td2, &t->s_descramblers, td_service_link)
     if (td2 != td && td2->td_keystate == DS_RESOLVED) {
