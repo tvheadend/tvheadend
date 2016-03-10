@@ -988,12 +988,12 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       demux_index >= MAX_INDEX ||
       filter_index >= MAX_FILTER)
     return;
+  pthread_mutex_lock(&capmt->capmt_mutex);
   cf = &capmt->capmt_demuxes.filters[demux_index];
   filter = &cf->dmx[filter_index];
   if (filter->pid != pid)
-    return;
+    goto end;
   flags = filter->flags;
-  pthread_mutex_lock(&capmt->capmt_mutex);
   memset(filter, 0, sizeof(*filter));
   capmt_pid_remove(capmt, adapter, pid, flags);
   /* short the max values */
@@ -1005,6 +1005,7 @@ capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   while (demux_index != 255 && capmt->capmt_demuxes.filters[demux_index].max == 0)
     demux_index--;
   capmt->capmt_demuxes.max = demux_index == 255 ? 0 : demux_index + 1;
+end:
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
 
