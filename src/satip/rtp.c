@@ -867,13 +867,13 @@ satip_rtcp_thread(void *aux)
   int r, len, err;
 
   tvhtrace("satips", "starting rtcp thread");
-  while (satip_rtcp_run) {
+  while (atomic_get(&satip_rtcp_run)) {
     us = 150000;
     do {
       us = tvh_usleep(us);
       if (us < 0)
         goto end;
-      if (!satip_rtcp_run)
+      if (!atomic_get(&satip_rtcp_run))
         goto end;
     } while (us > 0);
     pthread_mutex_lock(&satip_rtp_lock);
@@ -917,10 +917,10 @@ void satip_rtp_init(int boot)
   pthread_mutex_init(&satip_rtp_lock, NULL);
 
   if (boot)
-    satip_rtcp_run = 0;
+    atomic_set(&satip_rtcp_run, 0);
 
-  if (!boot && !satip_rtcp_run) {
-    satip_rtcp_run = 1;
+  if (!boot && !atomic_get(&satip_rtcp_run)) {
+    atomic_set(&satip_rtcp_run, 1);
     tvhthread_create(&satip_rtcp_tid, NULL, satip_rtcp_thread, NULL, "satip-rtcp");
   }
 }
@@ -931,8 +931,8 @@ void satip_rtp_init(int boot)
 void satip_rtp_done(void)
 {
   assert(TAILQ_EMPTY(&satip_rtp_sessions));
-  if (satip_rtcp_run) {
-    satip_rtcp_run = 0;
+  if (atomic_get(&satip_rtcp_run)) {
+    atomic_set(&satip_rtcp_run, 0);
     pthread_kill(satip_rtcp_tid, SIGTERM);
     pthread_join(satip_rtcp_tid, NULL);
   }
