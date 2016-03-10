@@ -57,6 +57,15 @@ extern struct th_subscription_list subscriptions;
 #define UNSUBSCRIBE_QUIET     0x01
 #define UNSUBSCRIBE_FINAL     0x02
 
+/* States */
+typedef enum {
+  SUBSCRIPTION_IDLE,
+  SUBSCRIPTION_TESTING_SERVICE,
+  SUBSCRIPTION_GOT_SERVICE,
+  SUBSCRIPTION_BAD_SERVICE,
+  SUBSCRIPTION_ZOMBIE
+} ths_state_t;
+
 typedef struct th_subscription {
 
   int ths_id;
@@ -68,13 +77,7 @@ typedef struct th_subscription {
 
   int ths_weight;
 
-  enum {
-    SUBSCRIPTION_IDLE,
-    SUBSCRIPTION_TESTING_SERVICE,
-    SUBSCRIPTION_GOT_SERVICE,
-    SUBSCRIPTION_BAD_SERVICE,
-    SUBSCRIPTION_ZOMBIE
-  } ths_state;
+  int ths_state;
 
   int ths_testing_error;
 
