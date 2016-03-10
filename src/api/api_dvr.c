@@ -266,7 +266,7 @@ static int
 api_dvr_entry_rerecord_toggle
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_toggle, "rerecord");
+  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_toggle, "rerecord", 0);
 }
 
 static void
@@ -279,7 +279,7 @@ static int
 api_dvr_entry_rerecord_deny
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_deny, "rerecord");
+  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_deny, "rerecord", 0);
 }
 
 static void
@@ -292,7 +292,7 @@ static int
 api_dvr_entry_rerecord_allow
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_allow, "rerecord");
+  return api_idnode_handler(perm, args, resp, api_dvr_rerecord_allow, "rerecord", 0);
 }
 
 static void
@@ -305,7 +305,7 @@ static int
 api_dvr_entry_stop
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_stop, "stop");
+  return api_idnode_handler(perm, args, resp, api_dvr_stop, "stop", 0);
 }
 
 static void
@@ -318,7 +318,7 @@ static int
 api_dvr_entry_cancel
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_cancel, "cancel");
+  return api_idnode_handler(perm, args, resp, api_dvr_cancel, "cancel", 0);
 }
 
 static void
@@ -331,7 +331,7 @@ static int
 api_dvr_entry_move_finished
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_move_finished, "move finished");
+  return api_idnode_handler(perm, args, resp, api_dvr_move_finished, "move finished", 0);
 }
 
 static void
@@ -344,7 +344,7 @@ static int
 api_dvr_entry_move_failed
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_dvr_move_failed, "move failed");
+  return api_idnode_handler(perm, args, resp, api_dvr_move_failed, "move failed", 0);
 }
 
 static void

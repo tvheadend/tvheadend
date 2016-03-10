@@ -613,7 +613,7 @@ int
 api_idnode_handler
   ( access_t *perm, htsmsg_t *args, htsmsg_t **resp,
     void (*handler)(access_t *perm, idnode_t *in),
-    const char *op )
+    const char *op, int destroyed )
 {
   int err = 0;
   idnode_t *in;
@@ -645,7 +645,8 @@ api_idnode_handler
         continue;
       }
       handler(perm, in);
-      idnode_perm_unset(in);
+      if (!destroyed)
+        idnode_perm_unset(in);
       cnt++;
     }
     htsmsg_destroy(msg);
@@ -686,7 +687,7 @@ static int
 api_idnode_delete
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_delete_, "delete");
+  return api_idnode_handler(perm, args, resp, api_idnode_delete_, "delete", 1);
 }
 
 static void
@@ -699,7 +700,7 @@ static int
 api_idnode_moveup
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_moveup_, "moveup");
+  return api_idnode_handler(perm, args, resp, api_idnode_moveup_, "moveup", 0);
 }
 
 static void
@@ -712,7 +713,7 @@ static int
 api_idnode_movedown
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_movedown_, "movedown");
+  return api_idnode_handler(perm, args, resp, api_idnode_movedown_, "movedown", 0);
 }
 
 void api_idnode_init ( void )
