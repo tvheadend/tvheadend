@@ -128,6 +128,7 @@ typedef struct http_connection {
   struct sockaddr_storage *hc_self;
   char *hc_representative;
 
+  pthread_mutex_t  *hc_paths_mutex;
   http_path_list_t *hc_paths;
   int (*hc_process)(struct http_connection *hc, htsbuf_queue_t *spill);
 

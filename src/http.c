@@ -46,6 +46,7 @@
 void *http_server;
 static int http_server_running;
 
+static pthread_mutex_t http_paths_mutex = PTHREAD_MUTEX_INITIALIZER;
 static http_path_list_t http_paths;
 
 static struct strtab HTTP_cmdtab[] = {
@@ -119,6 +120,7 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
 
   while (1) {
 
+    pthread_mutex_lock(hc->hc_paths_mutex);
     LIST_FOREACH(hp, hc->hc_paths, hp_link) {
       if(!strncmp(path, hp->hp_path, hp->hp_len)) {
         if(path[hp->hp_len] == 0 ||
@@ -127,6 +129,7 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
           break;
       }
     }
+    pthread_mutex_unlock(hc->hc_paths_mutex);
 
     if(hp == NULL)
       return NULL;
@@ -994,7 +997,9 @@ http_path_add_modify(const char *path, void *opaque, http_callback_t *callback,
   hp->hp_callback = callback;
   hp->hp_accessmask = accessmask;
   hp->hp_path_modify = path_modify;
+  pthread_mutex_lock(&http_paths_mutex);
   LIST_INSERT_HEAD(&http_paths, hp, hp_link);
+  pthread_mutex_unlock(&http_paths_mutex);
   return hp;
 }
 
@@ -1190,6 +1195,7 @@ http_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   hc.hc_peer    = peer;
   hc.hc_self    = self;
   hc.hc_paths   = &http_paths;
+  hc.hc_paths_mutex = &http_paths_mutex;
   hc.hc_process = http_process_request;
 
   http_serve_requests(&hc);
@@ -1243,10 +1249,12 @@ http_server_done(void)
   if (http_server)
     tcp_server_delete(http_server);
   http_server = NULL;
+  pthread_mutex_lock(&http_paths_mutex);
   while ((hp = LIST_FIRST(&http_paths)) != NULL) {
     LIST_REMOVE(hp, hp_link);
     free((void *)hp->hp_path);
     free(hp);
   }
+  pthread_mutex_unlock(&http_paths_mutex);
   pthread_mutex_unlock(&global_lock);
 }
