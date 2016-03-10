@@ -69,16 +69,18 @@ satip_frontend_signal_cb( void *aux )
     lfe->sf_tables = 1;
   }
   sigstat.status_text  = signal2str(lfe->sf_status);
+  pthread_mutex_lock(&mmi->tii_stats_mutex);
   sigstat.snr          = mmi->tii_stats.snr;
   sigstat.signal       = mmi->tii_stats.signal;
   sigstat.ber          = mmi->tii_stats.ber;
-  sigstat.unc          = mmi->tii_stats.unc;
+  sigstat.unc          = atomic_get(&mmi->tii_stats.unc);
   sigstat.signal_scale = mmi->tii_stats.signal_scale;
   sigstat.snr_scale    = mmi->tii_stats.snr_scale;
   sigstat.ec_bit       = mmi->tii_stats.ec_bit;
   sigstat.tc_bit       = mmi->tii_stats.tc_bit;
   sigstat.ec_block     = mmi->tii_stats.ec_block;
   sigstat.tc_block     = mmi->tii_stats.tc_block;
+  pthread_mutex_unlock(&mmi->tii_stats_mutex);
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
   LIST_FOREACH(svc, &mmi->mmi_mux->mm_transports, s_active_link) {
@@ -726,6 +728,7 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
    * -a BER lower than 2x10-4 after Viterbi for DVB-S
    * -a PER lower than 10-7 for DVB-S2
    */
+  pthread_mutex_lock(&mmi->tii_stats_mutex);
   while (len >= 12) {
     if ((rtcp[0] & 0xc0) != 0x80)	        /* protocol version: v2 */
       return;
@@ -746,9 +749,9 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
             strncmp(s, "ver=1.2;tuner=", 14) == 0) {
           n = http_tokenize(s + 14, argv, 4, ',');
           if (n < 4)
-            return;
+            goto fail;
           if (atoi(argv[0]) != lfe->sf_number)
-            return;
+            goto fail;
           mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->tii_stats.signal_scale =
@@ -767,13 +770,13 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
           goto ok;          
         } else if (strncmp(s, "ver=1.0;", 8) == 0) {
           if ((s = strstr(s + 8, ";tuner=")) == NULL)
-            return;
+            goto fail;
           s += 7;
           n = http_tokenize(s, argv, 4, ',');
           if (n < 4)
-            return;
+            goto fail;
           if (atoi(argv[0]) != lfe->sf_number)
-            return;
+            goto fail;
           mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->tii_stats.signal_scale =
@@ -787,9 +790,9 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
         } else if (strncmp(s, "ver=1.1;tuner=", 14) == 0) {
           n = http_tokenize(s + 14, argv, 4, ',');
           if (n < 4)
-            return;
+            goto fail;
           if (atoi(argv[0]) != lfe->sf_number)
-            return;
+            goto fail;
           mmi->tii_stats.signal =
             atoi(argv[1]) * 0xffff / lfe->sf_device->sd_sig_scale;
           mmi->tii_stats.signal_scale =
@@ -806,7 +809,7 @@ satip_frontend_decode_rtcp( satip_frontend_t *lfe, const char *name,
     rtcp += l;
     len -= l;
   }
-  return;
+  goto fail;
 
 ok:
   if (mmi->tii_stats.snr < 2 && status == SIGNAL_GOOD)
@@ -814,6 +817,8 @@ ok:
   else if (mmi->tii_stats.snr < 4 && status == SIGNAL_GOOD)
     status              = SIGNAL_FAINT;
   lfe->sf_status        = status;
+fail:
+  pthread_mutex_unlock(&mmi->tii_stats_mutex);
 }
 
 static int
@@ -1127,7 +1132,7 @@ wrdata:
       pthread_mutex_lock(&lfe->sf_dvr_lock);
       if (lfe->sf_req == lfe->sf_req_thread) {
         mmi = lfe->sf_req->sf_mmi;
-        mmi->tii_stats.unc += unc;
+        atomic_add(&mmi->tii_stats.unc, unc);
         mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi,
                                   &lfe->sf_sbuf, 0, NULL);
       }
@@ -1687,7 +1692,7 @@ wrdata:
     }
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     if (lfe->sf_req == lfe->sf_req_thread) {
-      mmi->tii_stats.unc += unc;
+      atomic_add(&mmi->tii_stats.unc, unc);
       mpegts_input_recv_packets((mpegts_input_t*)lfe, mmi, sb, 0, NULL);
     } else
       fatal = 1;

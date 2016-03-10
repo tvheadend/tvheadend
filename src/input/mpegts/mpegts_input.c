@@ -1061,7 +1061,7 @@ mpegts_input_recv_packets
   /* Check for sync */
   while ( (len >= MIN_TS_SYN) &&
           ((len2 = ts_sync_count(tsb, len)) < MIN_TS_SYN) ) {
-    mmi->tii_stats.unc++;
+    atomic_add(&mmi->tii_stats.unc, 1);
     --len;
     ++tsb;
     ++off;
@@ -1295,7 +1295,7 @@ mpegts_input_process
     /* Transport error */
     if (pid & 0x8000) {
       if ((pid & 0x1FFF) != 0x1FFF)
-        ++mmi->tii_stats.te;
+        atomic_add(&mmi->tii_stats.te, 1);
     }
 
     pid &= 0x1FFF;
@@ -1318,7 +1318,7 @@ mpegts_input_process
           cc = tsb2[3] & 0x0f;
           if (cc2 != 0xff && cc2 != cc) {
             tvhtrace("mpegts", "%s: pid %04X cc err %2d != %2d", muxname, pid, cc, cc2);
-            ++mmi->tii_stats.cc;
+            atomic_add(&mmi->tii_stats.cc, 1);
           }
           cc2 = (cc + 1) & 0xF;
         }
@@ -1615,7 +1615,20 @@ mpegts_input_stream_status
   st->stream_name = strdup(buf);
   st->subs_count  = s;
   st->max_weight  = w;
-  st->stats       = mmi->tii_stats;
+  pthread_mutex_lock(&mmi->tii_stats_mutex);
+  st->stats.signal = mmi->tii_stats.signal;
+  st->stats.snr    = mmi->tii_stats.snr;
+  st->stats.ber    = mmi->tii_stats.ber;
+  st->stats.signal_scale = mmi->tii_stats.signal_scale;
+  st->stats.snr_scale    = mmi->tii_stats.snr_scale;
+  st->stats.ec_bit   = mmi->tii_stats.ec_bit;
+  st->stats.tc_bit   = mmi->tii_stats.tc_bit;
+  st->stats.ec_block = mmi->tii_stats.ec_block;
+  st->stats.tc_block = mmi->tii_stats.tc_block;
+  pthread_mutex_unlock(&mmi->tii_stats_mutex);
+  st->stats.unc   = atomic_get(&mmi->tii_stats.unc);
+  st->stats.cc    = atomic_get(&mmi->tii_stats.cc);
+  st->stats.te    = atomic_get(&mmi->tii_stats.te);
   st->stats.bps   = atomic_exchange(&mmi->tii_stats.bps, 0) * 8;
 }
 
@@ -1632,11 +1645,13 @@ mpegts_input_empty_status
   st->input_name  = strdup(buf);
   LIST_FOREACH(mmi_, &mi->mi_mux_instances, tii_input_link) {
     mmi = (mpegts_mux_instance_t *)mmi_;
-    st->stats.unc += mmi->tii_stats.unc;
-    st->stats.cc += mmi->tii_stats.cc;
+    st->stats.unc += atomic_get(&mmi->tii_stats.unc);
+    st->stats.cc += atomic_get(&mmi->tii_stats.cc);
+    pthread_mutex_lock(&mmi->tii_stats_mutex);
     st->stats.te += mmi->tii_stats.te;
     st->stats.ec_block += mmi->tii_stats.ec_block;
     st->stats.tc_block += mmi->tii_stats.tc_block;
+    pthread_mutex_unlock(&mmi->tii_stats_mutex);
   }
 }
 
@@ -1672,11 +1687,13 @@ mpegts_input_clear_stats ( tvh_input_t *i )
   pthread_mutex_lock(&mi->mi_output_lock);
   LIST_FOREACH(mmi_, &mi->mi_mux_instances, tii_input_link) {
     mmi = (mpegts_mux_instance_t *)mmi_;
-    mmi->tii_stats.unc = 0;
-    mmi->tii_stats.cc = 0;
+    atomic_set(&mmi->tii_stats.unc, 0);
+    atomic_set(&mmi->tii_stats.cc, 0);
+    pthread_mutex_lock(&mmi->tii_stats_mutex);
     mmi->tii_stats.te = 0;
     mmi->tii_stats.ec_block = 0;
     mmi->tii_stats.tc_block = 0;
+    pthread_mutex_unlock(&mmi->tii_stats_mutex);
   }
   pthread_mutex_unlock(&mi->mi_output_lock);
   notify_reload("input_status");

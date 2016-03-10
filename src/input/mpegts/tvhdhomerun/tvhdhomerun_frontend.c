@@ -272,6 +272,8 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
     }
   }
 
+  pthread_mutex_lock(&mmi->tii_stats_mutex);
+
   if(tuner_status.signal_present) {
     /* TODO: totaly stupid conversion from 0-100 scale to 0-655.35 */
     mmi->tii_stats.snr = tuner_status.signal_to_noise_quality * 655.35;
@@ -286,9 +288,11 @@ tvhdhomerun_frontend_monitor_cb( void *aux )
   sigstat.signal       = mmi->tii_stats.signal;
   sigstat.signal_scale = mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
   sigstat.ber          = mmi->tii_stats.ber;
-  sigstat.unc          = mmi->tii_stats.unc;
+  sigstat.unc          = atomic_get(&mmi->tii_stats.unc);
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
+
+  pthread_mutex_unlock(&mmi->tii_stats_mutex);
 
   LIST_FOREACH(svc, &mmi->mmi_mux->mm_transports, s_active_link) {
     pthread_mutex_lock(&svc->s_stream_mutex);

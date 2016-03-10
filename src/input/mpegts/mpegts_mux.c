@@ -52,6 +52,7 @@ mpegts_mux_instance_delete
   idnode_unlink(&tii->tii_id);
   LIST_REMOVE(mmi, mmi_mux_link);
   LIST_REMOVE(tii, tii_input_link);
+  pthread_mutex_destroy(&mmi->tii_stats_mutex);
   free(mmi);
 }
 
@@ -65,6 +66,8 @@ mpegts_mux_instance_create0
     free(mmi);
     return NULL;
   }
+
+  pthread_mutex_init(&mmi->tii_stats_mutex, NULL);
 
   /* Setup links */
   mmi->mmi_mux   = mm;

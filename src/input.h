@@ -101,6 +101,7 @@ struct tvh_input_instance {
 
   LIST_ENTRY(tvh_input_instance) tii_input_link;
 
+  pthread_mutex_t          tii_stats_mutex;
   tvh_input_stream_stats_t tii_stats;
 
   void (*tii_delete) (tvh_input_instance_t *tii);

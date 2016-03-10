@@ -799,6 +799,9 @@ linuxdvb_frontend_monitor ( void *aux )
     lfe->lfe_monitor = mclk() + ms2mono(period);
   }
 
+
+  pthread_mutex_lock(&mmi->tii_stats_mutex);
+
   /* Statistics - New API */
 #if DVB_VER_ATLEAST(5,10)
   memset(&fe_properties, 0, sizeof(fe_properties));
@@ -937,7 +940,8 @@ linuxdvb_frontend_monitor ( void *aux )
     gotprop = 0;
     if(ioctl_check(lfe, 8) && fe_properties[4].u.st.len > 0) {
       if(fe_properties[4].u.st.stat[0].scale == FE_SCALE_COUNTER) {
-        mmi->tii_stats.unc = mmi->tii_stats.ec_block = fe_properties[4].u.st.stat[0].uvalue;
+        atomic_set(&mmi->tii_stats.unc, fe_properties[4].u.st.stat[0].uvalue);
+        mmi->tii_stats.ec_block = fe_properties[4].u.st.stat[0].uvalue;
         gotprop = 1;
       }
       else {
@@ -957,7 +961,9 @@ linuxdvb_frontend_monitor ( void *aux )
       }
       else {
         ioctl_bad(lfe, 9);
-        mmi->tii_stats.ec_block = mmi->tii_stats.unc = 0; /* both values or none */
+        /* both values to none */
+        mmi->tii_stats.ec_block = 0;
+        atomic_set(&mmi->tii_stats.unc, 0);
         if (logit)
           tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BLOCK_COUNT scale: %d",
                  fe_properties[5].u.st.stat[0].scale);
@@ -966,7 +972,7 @@ linuxdvb_frontend_monitor ( void *aux )
     if(!gotprop && ioctl_check(lfe, 10)) {
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32)) {
-        mmi->tii_stats.unc = u32;
+        atomic_set(&mmi->tii_stats.unc, u32);
         gotprop = 1;
       }
       else {
@@ -1008,7 +1014,7 @@ linuxdvb_frontend_monitor ( void *aux )
         tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
     }
     if (ioctl_check(lfe, 4) && !ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
-      mmi->tii_stats.unc = u32;
+      atomic_set(&mmi->tii_stats.unc, u32);
     else {
       ioctl_bad(lfe, 4);
       if (logit)
@@ -1021,7 +1027,7 @@ linuxdvb_frontend_monitor ( void *aux )
   sigstat.snr          = mmi->tii_stats.snr;
   sigstat.signal       = mmi->tii_stats.signal;
   sigstat.ber          = mmi->tii_stats.ber;
-  sigstat.unc          = mmi->tii_stats.unc;
+  sigstat.unc          = atomic_get(&mmi->tii_stats.unc);
   sigstat.signal_scale = mmi->tii_stats.signal_scale;
   sigstat.snr_scale    = mmi->tii_stats.snr_scale;
   sigstat.ec_bit       = mmi->tii_stats.ec_bit;
@@ -1030,6 +1036,9 @@ linuxdvb_frontend_monitor ( void *aux )
   sigstat.tc_block     = mmi->tii_stats.tc_block;
   sm.sm_type = SMT_SIGNAL_STATUS;
   sm.sm_data = &sigstat;
+
+  pthread_mutex_unlock(&mmi->tii_stats_mutex);
+
   LIST_FOREACH(s, &mmi->mmi_mux->mm_transports, s_active_link) {
     pthread_mutex_lock(&s->s_stream_mutex);
     streaming_pad_deliver(&s->s_streaming_pad, streaming_msg_clone(&sm));

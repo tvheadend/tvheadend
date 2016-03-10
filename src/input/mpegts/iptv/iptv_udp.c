@@ -161,7 +161,7 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
 
   im->mm_iptv_rtp_seq = seq;
   if (im->mm_active)
-    im->mm_active->tii_stats.unc += unc;
+    atomic_add(&im->mm_active->tii_stats.unc, unc);
 
   return res;
 }
