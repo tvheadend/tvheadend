@@ -1859,17 +1859,14 @@ capmt_caid_change(th_descrambler_t *td)
 {
   capmt_service_t *ct = (capmt_service_t *)td;
   capmt_t *capmt = ct->ct_capmt;
-  mpegts_service_t *t;
+  mpegts_service_t *t = (mpegts_service_t*)td->td_service;
   elementary_stream_t *st;
   capmt_caid_ecm_t *cce;
   caid_t *c;
   int change = 0;
 
   pthread_mutex_lock(&capmt->capmt_mutex);
-
-  t = (mpegts_service_t*)td->td_service;
-
-  lock_assert(&t->s_stream_mutex);
+  pthread_mutex_lock(&t->s_stream_mutex);
 
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
@@ -1888,6 +1885,7 @@ capmt_caid_change(th_descrambler_t *td)
     }
   }
 
+  pthread_mutex_unlock(&t->s_stream_mutex);
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)

@@ -88,7 +88,8 @@ typedef struct dvb_bat {
 int dvb_bouquets_parse = 1;
 
 static int
-psi_parse_pmt(mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len);
+psi_parse_pmt(mpegts_mux_t *mux, mpegts_service_t *t,
+              const uint8_t *ptr, int len, int *_update);
 
 static inline int
 mpegts_mux_alive(mpegts_mux_t *mm)
@@ -965,11 +966,27 @@ dvb_cat_callback
  * PMT processing
  */
 
+/* PMT update reason flags */
+#define PMT_UPDATE_PCR                0x1
+#define PMT_UPDATE_NEW_STREAM         0x2
+#define PMT_UPDATE_LANGUAGE           0x4
+#define PMT_UPDATE_AUDIO_TYPE         0x8
+#define PMT_UPDATE_FRAME_DURATION     0x10
+#define PMT_UPDATE_COMPOSITION_ID     0x20
+#define PMT_UPDATE_ANCILLARY_ID       0x40
+#define PMT_UPDATE_STREAM_DELETED     0x80
+#define PMT_UPDATE_NEW_CA_STREAM      0x100
+#define PMT_UPDATE_NEW_CAID           0x200
+#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x400
+#define PMT_UPDATE_PARENT_PID         0x800
+#define PMT_UPDATE_CAID_DELETED       0x1000
+#define PMT_REORDERED                 0x2000
+
 int
 dvb_pmt_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r, sect, last, ver;
+  int r, sect, last, ver, update;
   uint16_t sid;
   mpegts_mux_t *mm = mt->mt_mux;
   mpegts_service_t *s;
@@ -988,9 +1005,12 @@ dvb_pmt_callback
 
   /* Process */
   tvhdebug("pmt", "sid %04X (%d)", sid, sid);
+  update = 0;
   pthread_mutex_lock(&s->s_stream_mutex);
-  r = psi_parse_pmt(mt->mt_mux, s, ptr, len);
+  r = psi_parse_pmt(mt->mt_mux, s, ptr, len, &update);
   pthread_mutex_unlock(&s->s_stream_mutex);
+  if (update & PMT_UPDATE_NEW_CAID)
+    descrambler_caid_changed((service_t *)s);
   if (r)
     service_restart((service_t*)s);
 
@@ -1960,24 +1980,6 @@ dvb_fs_sdt_callback
 #endif
 
 /**
- * PMT update reason flags
- */
-#define PMT_UPDATE_PCR                0x1
-#define PMT_UPDATE_NEW_STREAM         0x2
-#define PMT_UPDATE_LANGUAGE           0x4
-#define PMT_UPDATE_AUDIO_TYPE         0x8
-#define PMT_UPDATE_FRAME_DURATION     0x10
-#define PMT_UPDATE_COMPOSITION_ID     0x20
-#define PMT_UPDATE_ANCILLARY_ID       0x40
-#define PMT_UPDATE_STREAM_DELETED     0x80
-#define PMT_UPDATE_NEW_CA_STREAM      0x100
-#define PMT_UPDATE_NEW_CAID           0x200
-#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x400
-#define PMT_UPDATE_PARENT_PID         0x800
-#define PMT_UPDATE_CAID_DELETED       0x1000
-#define PMT_REORDERED                 0x2000
-
-/**
  * Add a CA descriptor
  */
 static int
@@ -2136,7 +2138,7 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
  */
 static int
 psi_parse_pmt
-  (mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len)
+  (mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len, int *_update)
 {
   int ret = 0;
   uint16_t pcr_pid, pid;
@@ -2432,15 +2434,12 @@ psi_parse_pmt
       if(t->s_status == SERVICE_RUNNING)
         ret = 1;
     }
-    
-    // notify descrambler that we found another CAIDs
-    if (update & PMT_UPDATE_NEW_CAID)
-      descrambler_caid_changed((service_t *)t);
   }
 
   if (service_has_audio_or_video((service_t *)t))
     dvb_service_autoenable(t, "PAT and PMT");
 
+  *_update = update;
   return ret;
 }
 
