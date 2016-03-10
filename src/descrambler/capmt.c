@@ -809,7 +809,6 @@ capmt_send_stop_descrambling(capmt_t *capmt)
 
 /**
  * global_lock is held
- * s_stream_mutex is held
  */
 static void 
 capmt_service_destroy(th_descrambler_t *td)

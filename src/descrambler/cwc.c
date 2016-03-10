@@ -1329,7 +1329,7 @@ end_of_job:
 }
 
 /**
- * t->s_streaming_mutex is held
+ *
  */
 static void
 cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
@@ -1358,8 +1358,8 @@ cwc_table_input(void *opaque, int pid, const uint8_t *data, int len, int emm)
   if((data[0] & 0xf0) != 0x80)
     return;
 
-  pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&cwc->cwc_mutex);
+  pthread_mutex_lock(&t->s_stream_mutex);
 
   if (ct->td_keystate == DS_IDLE)
     goto end;
@@ -1488,13 +1488,12 @@ found:
   }
 
 end:
-  pthread_mutex_unlock(&cwc->cwc_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
+  pthread_mutex_unlock(&cwc->cwc_mutex);
 }
 
 /**
  * cwc_mutex is held
- * s_stream_mutex is held
  */
 static void 
 cwc_service_pid_free(cwc_service_t *ct)
@@ -1514,14 +1513,15 @@ cwc_service_pid_free(cwc_service_t *ct)
 
 /**
  * cwc_mutex is held
- * s_stream_mutex is held
  */
 static void
 cwc_service_destroy(th_descrambler_t *td)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
+  cwc_t *cwc = ct->cs_cwc;
   int i;
 
+  pthread_mutex_lock(&cwc->cwc_mutex);
   for (i = 0; i < CWC_ES_PIDS; i++)
     if (ct->cs_epids[i])
       descrambler_close_pid(ct->cs_mux, ct,
@@ -1535,15 +1535,6 @@ cwc_service_destroy(th_descrambler_t *td)
 
   free(ct->td_nicename);
   free(ct);
-}
-
-static void
-cwc_service_destroy1(th_descrambler_t *td)
-{
-  cwc_service_t *ct = (cwc_service_t *)td;
-  cwc_t *cwc = ct->cs_cwc;
-  pthread_mutex_lock(&cwc->cwc_mutex);
-  cwc_service_destroy(td);
   pthread_mutex_unlock(&cwc->cwc_mutex);
 }
 
@@ -1568,8 +1559,8 @@ cwc_service_start(caclient_t *cac, service_t *t)
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
     return;
 
-  pthread_mutex_lock(&t->s_stream_mutex);
   pthread_mutex_lock(&cwc->cwc_mutex);
+  pthread_mutex_lock(&t->s_stream_mutex);
   LIST_FOREACH(ct, &cwc->cwc_services, cs_link) {
     if (ct->td_service == t && ct->cs_cwc == cwc)
       break;
@@ -1608,7 +1599,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   snprintf(buf, sizeof(buf), "cwc-%s-%i-%04X", cwc->cwc_hostname, cwc->cwc_port, pcard->cs_ra.caid);
   td->td_nicename      = strdup(buf);
   td->td_service       = t;
-  td->td_stop          = cwc_service_destroy1;
+  td->td_stop          = cwc_service_destroy;
   td->td_ecm_reset     = cwc_ecm_reset;
   td->td_ecm_idle      = cwc_ecm_idle;
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
@@ -1635,8 +1626,8 @@ cwc_service_start(caclient_t *cac, service_t *t)
          service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
 
 end:
-  pthread_mutex_unlock(&cwc->cwc_mutex);
   pthread_mutex_unlock(&t->s_stream_mutex);
+  pthread_mutex_unlock(&cwc->cwc_mutex);
 }
 
 /**
@@ -1647,16 +1638,9 @@ cwc_free(caclient_t *cac)
 {
   cwc_t *cwc = (cwc_t *)cac;
   cwc_service_t *ct;
-  mpegts_service_t *t;
 
-  while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL) {
-    t = (mpegts_service_t *)ct->td_service;
-    pthread_mutex_lock(&t->s_stream_mutex);
-    pthread_mutex_lock(&cwc->cwc_mutex);
-    cwc_service_destroy((th_descrambler_t *)&ct);
-    pthread_mutex_lock(&cwc->cwc_mutex);
-    pthread_mutex_unlock(&t->s_stream_mutex);
-  }
+  while((ct = LIST_FIRST(&cwc->cwc_services)) != NULL)
+    cwc_service_destroy((th_descrambler_t *)ct);
 
   cwc_free_cards(cwc);
   free((void *)cwc->cwc_password);
