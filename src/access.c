@@ -68,7 +68,6 @@ access_ticket_destroy(access_ticket_t *at)
   free(at->at_resource);
   TAILQ_REMOVE(&access_tickets, at, at_link);
   access_destroy(at->at_access);
-  free(at);
 }
 
 /**
