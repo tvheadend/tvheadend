@@ -68,8 +68,8 @@ satip_frontend_signal_cb( void *aux )
                        ((dvb_mux_t *)mmi->mmi_mux)->lm_tuning.dmc_fe_delsys);
     lfe->sf_tables = 1;
   }
-  sigstat.status_text  = signal2str(lfe->sf_status);
   pthread_mutex_lock(&mmi->tii_stats_mutex);
+  sigstat.status_text  = signal2str(lfe->sf_status);
   sigstat.snr          = mmi->tii_stats.snr;
   sigstat.signal       = mmi->tii_stats.signal;
   sigstat.ber          = mmi->tii_stats.ber;
@@ -588,8 +588,10 @@ satip_frontend_start_mux
   lfe->sf_running   = 1;
   lfe->sf_tables    = 0;
   lfe->sf_atsc_c    = lm->lm_tuning.dmc_fe_modulation != DVB_MOD_VSB_8;
-  lfe->sf_status    = SIGNAL_NONE;
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
+  pthread_mutex_lock(&mmi->tii_stats_mutex);
+  lfe->sf_status    = SIGNAL_NONE;
+  pthread_mutex_unlock(&mmi->tii_stats_mutex);
 
   /* notify thread that we are ready */
   tvh_write(lfe->sf_dvr_pipe.wr, "s", 1);
