@@ -1945,7 +1945,7 @@ config_muxconfpath_notify_cb(void *opaque, int disarmed)
     free(muxconf_path);
     return;
   }
-  tvhinfo("config", "scanfile re-initialization with path %s", muxconf_path);
+  tvhinfo("config", "scanfile (re)initialization with path %s", muxconf_path ?: "<none>");
   scanfile_init(muxconf_path, 1);
   free(muxconf_path);
 }
