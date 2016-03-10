@@ -1115,14 +1115,15 @@ tcp_server_done(void)
   tvh_pipe_close(&tcp_server_pipe);
   tvhpoll_destroy(tcp_server_poll);
   
+  pthread_mutex_lock(&global_lock);
   t = mclk();
   while (LIST_FIRST(&tcp_server_active) != NULL) {
     if (t + sec2mono(5) < mclk())
       tvhtrace("tcp", "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
+    pthread_mutex_unlock(&global_lock);
     tvh_safe_usleep(20000);
+    pthread_mutex_lock(&global_lock);
   }
-
-  pthread_mutex_lock(&global_lock);
   while ((tsl = LIST_FIRST(&tcp_server_join)) != NULL) {
     LIST_REMOVE(tsl, jlink);
     pthread_mutex_unlock(&global_lock);
