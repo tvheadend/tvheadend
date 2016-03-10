@@ -1595,7 +1595,13 @@ http_client_close ( http_client_t *hc )
   free(hc->hc_bindaddr);
   free(hc->hc_rtsp_user);
   free(hc->hc_rtsp_pass);
+#ifdef CLANG_SANITIZER
+  pthread_mutex_lock(&http_lock);
+#endif
   free(hc);
+#ifdef CLANG_SANITIZER
+  pthread_mutex_unlock(&http_lock);
+#endif
 }
 
 /*

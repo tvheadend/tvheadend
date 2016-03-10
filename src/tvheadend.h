@@ -115,6 +115,12 @@ lock_assert0(pthread_mutex_t *l, const char *file, int line)
 
 #define lock_assert(l) lock_assert0(l, __FILE__, __LINE__)
 
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer) || __has_feature(thread_sanitizer)
+#define CLANG_SANITIZER 1
+#endif
+#endif
+
 /*
  *
  */
