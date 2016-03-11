@@ -1844,7 +1844,7 @@ const idclass_t caclient_cwc_class =
     {
       .type     = PT_BOOL,
       .id       = "emmex",
-      .name     = N_("One mux (EMM)"),
+      .name     = N_("Updates from one mux (EMM)"),
       .off      = offsetof(cwc_t, cwc_emmex),
       .def.i    = 1
     },
