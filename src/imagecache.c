@@ -642,7 +642,6 @@ imagecache_open ( uint32_t id )
   imagecache_image_t skel, *i;
   char *fn;
   int fd = -1;
-  int64_t mono;
 
   lock_assert(&global_lock);
 
@@ -662,6 +661,7 @@ imagecache_open ( uint32_t id )
 #if ENABLE_IMAGECACHE
   else if (imagecache_conf.enabled) {
     int e;
+    int64_t mono;
 
     /* Use existing */
     if (i->updated) {
