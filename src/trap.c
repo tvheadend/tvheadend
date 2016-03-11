@@ -294,6 +294,11 @@ trap_init(const char *ver)
 
   dl_iterate_phdr(callback, NULL);
   
+#if ENABLE_EXECINFO
+  void *frames[MAXFRAMES];
+  /* warmup backtrace allocators */
+  backtrace(frames, MAXFRAMES);
+#endif
 
   memset(&sa, 0, sizeof(sa));
 
