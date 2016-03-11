@@ -860,9 +860,9 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
     return 0;
   }  
 
-  csize = hc->hc_csize == (size_t) -1 ? 0 : hc->hc_csize;
+  csize = hc->hc_csize == (size_t)-1 ? 0 : hc->hc_csize;
   l = len;
-  if (hc->hc_csize && hc->hc_csize != (size_t) -1 && hc->hc_rpos > csize) {
+  if (hc->hc_csize && hc->hc_csize != (size_t)-1 && hc->hc_rpos > csize) {
     l2 = hc->hc_rpos - csize;
     if (l2 < l)
       l = l2;
@@ -879,10 +879,16 @@ http_client_data_received( http_client_t *hc, char *buf, ssize_t len, int hdr )
     }
   }
   hc->hc_rpos += l;
-  end |= hc->hc_csize && hc->hc_rpos >= hc->hc_csize;
+  if (hc->hc_csize && hc->hc_rpos >= hc->hc_csize) {
+    end = 1;
+    hc->hc_rpos = 0;
+    hc->hc_in_data = 0;
+  } else if (end) {
+    hc->hc_in_data = 0;
+  }
   if (l < len) {
     l2 = len - l;
-    if (l2 > hc->hc_rsize)
+    if (l2 + 1 > hc->hc_rsize)
       hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize = l2 + 1);
     memcpy(hc->hc_rbuf, buf + l, l2);
     hc->hc_rbuf[l2] = '\0';
@@ -1872,6 +1878,7 @@ http_client_testsuite_run( void )
   int r, expected = HTTP_CON_DONE, expected_code = 200;
   int handle_location = 0;
   int peer_verify = 1;
+  int repeat = 0, repeat2;
 
   path = getenv("TVHEADEND_HTTPC_TEST");
   if (path == NULL)
@@ -1913,6 +1920,7 @@ http_client_testsuite_run( void )
       expected_code = 200;
       handle_location = 0;
       peer_verify = 1;
+      repeat = 0;
     } else if (strcmp(s, "DataTransfer=all") == 0) {
       data_transfer = 0;
     } else if (strcmp(s, "DataTransfer=cont") == 0) {
@@ -1949,14 +1957,14 @@ http_client_testsuite_run( void )
         goto fatal;
     } else if (strncmp(s, "Version=", 8) == 0) {
       ver = http_str2ver(s + 8);
-      if (ver < 0)
-        goto fatal;
     } else if (strncmp(s, "URL=", 4) == 0) {
       urlreset(&u1);
       if (urlparse(s + 4, &u1) < 0) {
         fprintf(stderr, "HTTPCTS: Parse URL error for '%s'\n", s + 4);
         goto fatal;
       }
+    } else if (strncmp(s, "Repeat=", 7) == 0) {
+      repeat = atoi(s + 7);
     } else if (strncmp(s, "Command=", 8) == 0) {
       if (strcmp(s + 8, "EXIT") == 0)
         break;
@@ -1965,11 +1973,11 @@ http_client_testsuite_run( void )
         goto fatal;
       }
       cmd = http_str2cmd(s + 8);
-      if (cmd < 0)
-        goto fatal;
+      repeat2 = 0;
+rep:
       http_client_basic_args(hc, &args, &u1, 1);
       if (u2.host == NULL || u1.host == NULL || strcmp(u1.host, u2.host) ||
-          u2.port != u1.port || !hc->hc_keepalive) {
+          u2.port != u1.port || (hc && !hc->hc_keepalive)) {
         http_client_close(hc);
         if (port)
           u1.port = port;
@@ -1981,6 +1989,8 @@ http_client_testsuite_run( void )
           fprintf(stderr, "HTTPCTS: Connected to %s:%i\n", hc->hc_host, hc->hc_port);
         }
         http_client_ssl_peer_verify(hc, peer_verify);
+        urlreset(&u2);
+        urlcopy(&u2, &u1);
       }
       fprintf(stderr, "HTTPCTS Send: Cmd=%s Ver=%s Host=%s Path=%s\n",
               http_cmd2str(cmd), http_ver2str(ver), http_arg_get(&args, "Host"), u1.path);
@@ -2036,8 +2046,8 @@ http_client_testsuite_run( void )
         if (r == HTTP_CON_DONE)
           goto fatal;
       }
-      urlreset(&u2);
-      urlcopy(&u2, &u1);
+      if (repeat2++ < repeat)
+        goto rep;
       urlreset(&u1);
       http_client_clear_state(hc);
     } else {
