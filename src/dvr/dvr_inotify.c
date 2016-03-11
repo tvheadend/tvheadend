@@ -70,8 +70,8 @@ pthread_t dvr_inotify_tid;
 
 void dvr_inotify_init ( void )
 {
-  _inot_fd = inotify_init1(IN_CLOEXEC);
-  if (_inot_fd < 0) {
+  atomic_set(&_inot_fd, inotify_init1(IN_CLOEXEC));
+  if (atomic_get(&_inot_fd) < 0) {
     tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
            strerror(errno));
     return;
@@ -85,11 +85,10 @@ void dvr_inotify_init ( void )
  */
 void dvr_inotify_done ( void )
 {
-  shutdown(_inot_fd, SHUT_RDWR);
+  int fd = atomic_exchange(&_inot_fd, -1);
+  if (fd >= 0) close(fd);
   pthread_kill(dvr_inotify_tid, SIGTERM);
   pthread_join(dvr_inotify_tid, NULL);
-  close(_inot_fd);
-  _inot_fd = -1;
   SKEL_FREE(dvr_inotify_entry_skel);
 }
 
@@ -115,9 +114,10 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
   dvr_inotify_entry_t *e;
   const char *filename;
   char *path;
+  int fd = atomic_get(&_inot_fd);
 
   filename = htsmsg_get_str(m, "filename");
-  if (filename == NULL)
+  if (filename == NULL || fd < 0)
     return;
 
   path = strdupa(filename);
@@ -130,7 +130,7 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
     e       = dvr_inotify_entry_skel;
     SKEL_USED(dvr_inotify_entry_skel);
     e->path = strdup(e->path);
-    e->fd   = inotify_add_watch(_inot_fd, e->path, EVENT_MASK);
+    e->fd   = inotify_add_watch(fd, e->path, EVENT_MASK);
   }
 
   if (!dvr_inotify_exists(e, de)) {
@@ -154,7 +154,7 @@ void dvr_inotify_add ( dvr_entry_t *de )
   htsmsg_field_t *f;
   htsmsg_t *m;
 
-  if (_inot_fd < 0 || de->de_files == NULL)
+  if (atomic_get(&_inot_fd) < 0 || de->de_files == NULL)
     return;
 
   HTSMSG_FOREACH(f, de->de_files)
@@ -169,6 +169,8 @@ void dvr_inotify_del ( dvr_entry_t *de )
 {
   dvr_inotify_filename_t *f = NULL, *f_next;
   dvr_inotify_entry_t *e, *e_next;
+  int fd;
+
   lock_assert(&global_lock);
 
   for (e = RB_FIRST(&_inot_tree); e; e = e_next) {
@@ -180,8 +182,9 @@ void dvr_inotify_del ( dvr_entry_t *de )
         free(f);
         if (LIST_FIRST(&e->entries) == NULL) {
           RB_REMOVE(&_inot_tree, e, link);
-          if (e->fd >= 0)
-            inotify_rm_watch(_inot_fd, e->fd);
+          fd = atomic_get(&_inot_fd);
+          if (e->fd >= 0 && fd >= 0)
+            inotify_rm_watch(fd, e->fd);
           free(e->path);
           free(e);
         }
@@ -321,7 +324,7 @@ _dvr_inotify_delete_all
  */
 void* _dvr_inotify_thread ( void *p )
 {
-  int i, len;
+  int fd, i, len;
   char buf[EVENT_BUF_LEN];
   const char *from;
   int fromfd;
@@ -334,8 +337,11 @@ void* _dvr_inotify_thread ( void *p )
     cookie = 0;
     from   = NULL;
     i      = 0;
-    len    = read(_inot_fd, buf, EVENT_BUF_LEN);
-    if (_inot_fd < 0)
+    fd     = atomic_get(&_inot_fd);
+    if (fd < 0)
+      break;
+    len    = read(fd, buf, EVENT_BUF_LEN);
+    if (len < 0)
       break;
 
     /* Process */

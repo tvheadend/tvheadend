@@ -45,7 +45,7 @@ fmp_cmp ( fsmonitor_path_t *a, fsmonitor_path_t *b )
 static void *
 fsmonitor_thread ( void* p )
 {
-  int c, i;
+  int fd, c, i;
   uint8_t buf[sizeof(struct inotify_event) * 10];
   char path[1024];
   struct inotify_event *ev;
@@ -55,9 +55,13 @@ fsmonitor_thread ( void* p )
 
   while (atomic_get(&tvheadend_running)) {
 
+    fd = atomic_get(&fsmonitor_fd);
+    if (fd < 0)
+      break;
+
     /* Wait for event */
-    c = read(fsmonitor_fd, buf, sizeof(buf));
-    if (fsmonitor_fd < 0)
+    c = read(fd, buf, sizeof(buf));
+    if (c < 0)
       break;
 
     /* Process */
@@ -105,7 +109,7 @@ void
 fsmonitor_init ( void )
 {
   /* Intialise inotify */
-  fsmonitor_fd = inotify_init1(IN_CLOEXEC);
+  atomic_set(&fsmonitor_fd, inotify_init1(IN_CLOEXEC));
   tvhthread_create(&fsmonitor_tid, NULL, fsmonitor_thread, NULL, "fsmonitor");
 }
 
@@ -115,11 +119,10 @@ fsmonitor_init ( void )
 void
 fsmonitor_done ( void )
 {
-  shutdown(fsmonitor_fd, SHUT_RDWR);
+  int fd = atomic_exchange(&fsmonitor_fd, -1);
+  if (fd >= 0) close(fd);
   pthread_kill(fsmonitor_tid, SIGTERM);
   pthread_join(fsmonitor_tid, NULL);
-  close(fsmonitor_fd);
-  fsmonitor_fd = -1;
 }
 
 /*
@@ -128,7 +131,7 @@ fsmonitor_done ( void )
 int
 fsmonitor_add ( const char *path, fsmonitor_t *fsm )
 {
-  int mask;
+  int fd, mask;
   fsmonitor_path_t *skel;
   fsmonitor_path_t *fmp;
   fsmonitor_link_t *fml;
@@ -145,7 +148,11 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
   fmp = RB_INSERT_SORTED(&fsmonitor_paths, skel, fmp_link, fmp_cmp);
   if (!fmp) {
     fmp = skel;
-    fmp->fmp_fd = inotify_add_watch(fsmonitor_fd, path, mask);
+    fd  = atomic_get(&fsmonitor_fd);
+    if (fd >= 0)
+      fmp->fmp_fd = inotify_add_watch(fd, path, mask);
+    else
+      fmp->fmp_fd = -1;
 
     /* Failed */
     if (fmp->fmp_fd <= 0) {
@@ -187,6 +194,7 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
   static fsmonitor_path_t skel;
   fsmonitor_path_t *fmp;
   fsmonitor_link_t *fml;
+  int fd;
 
   lock_assert(&global_lock);
 
@@ -212,7 +220,9 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
     if (LIST_EMPTY(&fmp->fmp_monitors)) {
       tvhdebug("fsmonitor", "unwatch %s", fmp->fmp_path);
       RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
-      inotify_rm_watch(fsmonitor_fd, fmp->fmp_fd);
+      fd = atomic_get(&fsmonitor_fd);
+      if (fd >= 0)
+        inotify_rm_watch(fd, fmp->fmp_fd);
       free(fmp->fmp_path);
       free(fmp);
     }
