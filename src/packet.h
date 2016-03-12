@@ -19,6 +19,8 @@
 #ifndef PACKET_H_
 #define PACKET_H_
 
+struct memoryinfo;
+
 /**
  * Packet buffer
  */
@@ -83,6 +85,13 @@ typedef struct th_pktref {
 /**
  *
  */
+extern struct memoryinfo pkt_memoryinfo;
+extern struct memoryinfo pktbuf_memoryinfo;
+extern struct memoryinfo pktref_memoryinfo;
+
+/**
+ *
+ */
 void pkt_ref_dec(th_pkt_t *pkt);
 
 void pkt_ref_inc(th_pkt_t *pkt);
@@ -101,6 +110,8 @@ th_pkt_t *pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts);
 
 th_pkt_t *pkt_copy_shallow(th_pkt_t *pkt);
 
+th_pkt_t *pkt_copy_nodata(th_pkt_t *pkt);
+
 th_pktref_t *pktref_create(th_pkt_t *pkt);
 
 /*
@@ -108,6 +119,8 @@ th_pktref_t *pktref_create(th_pkt_t *pkt);
  */
 
 void pktbuf_ref_dec(pktbuf_t *pb);
+
+void pktbuf_destroy(pktbuf_t *pb);
 
 pktbuf_t *pktbuf_ref_inc(pktbuf_t *pb);
 

@@ -82,6 +82,21 @@ atomic_add_time_t(volatile time_t *ptr, time_t incr)
  * Atomic ADD and FETCH operation
  */
 
+static inline int64_t
+atomic_pre_add_s64(volatile int64_t *ptr, int64_t incr)
+{
+#if ENABLE_ATOMIC64
+  return __sync_add_and_fetch(ptr, incr);
+#else
+  int64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  *ptr += incr;
+  ret = *ptr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
 static inline uint64_t
 atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
 {
@@ -92,6 +107,31 @@ atomic_pre_add_u64(volatile uint64_t *ptr, uint64_t incr)
   pthread_mutex_lock(&atomic_lock);
   *ptr += incr;
   ret = *ptr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
+}
+
+/*
+ * Atomic ADD and FETCH operation with PEAK (MAX)
+ */
+
+static inline int64_t
+atomic_pre_add_s64_peak(volatile int64_t *ptr, int64_t incr,
+                        volatile int64_t *peak)
+{
+#if ENABLE_ATOMIC64
+  int64_t ret = __sync_add_and_fetch(ptr, incr);
+  if (__sync_fetch_and_add(peak, 0) < ret)
+    __sync_lock_test_and_set(peak, ret);
+  return ret;
+#else
+  int64_t ret;
+  pthread_mutex_lock(&atomic_lock);
+  *ptr += incr;
+  ret = *ptr;
+  if (*peak < ret)
+    *peak = ret;
   pthread_mutex_unlock(&atomic_lock);
   return ret;
 #endif
@@ -246,4 +286,26 @@ static inline time_t
 atomic_set_time_t(volatile time_t *ptr, time_t val)
 {
   return atomic_exchange_time_t(ptr, val);
+}
+
+/*
+ * Atomic set operation + peak (MAX)
+ */
+
+static inline int64_t
+atomic_set_s64_peak(volatile int64_t *ptr, int64_t val, volatile int64_t *peak)
+{
+#if ENABLE_ATOMIC64
+  int64_t ret = atomic_exchange_s64(ptr, val);
+  if (val > atomic_get_s64(peak))
+    atomic_set_s64(peak, val);
+  return ret;
+#else
+  pthread_mutex_lock(&atomic_lock);
+  *ptr = val;
+  if (val > *peak)
+    *peak = val;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
 }

@@ -311,6 +311,20 @@ int lang_str_empty(lang_str_t* str) {
   return strempty(lang_str_get(str, NULL));
 }
 
+size_t lang_str_size(const lang_str_t *ls)
+{
+  lang_str_ele_t *e;
+  size_t size;
+  if (!ls) return 0;
+  size = sizeof(*ls);
+  RB_FOREACH(e, ls, link) {
+    size += sizeof(*e);
+    size += tvh_strlen(e->str);
+    size += tvh_strlen(e->lang);
+  }
+  return size;
+}
+
 void lang_str_done( void )
 {
   SKEL_FREE(lang_str_ele_skel);

@@ -269,6 +269,7 @@ int idnode_list_set2 ( idnode_t *in2, idnode_list_head_t *in2_list,
 const char *idnode_get_str (idnode_t *self, const char *key );
 int         idnode_get_u32 (idnode_t *self, const char *key, uint32_t *u32);
 int         idnode_get_s64 (idnode_t *self, const char *key,  int64_t *s64);
+int         idnode_get_s64_atomic (idnode_t *self, const char *key, int64_t *s64);
 int         idnode_get_dbl (idnode_t *self, const char *key,   double *dbl);
 int         idnode_get_bool(idnode_t *self, const char *key, int *b);
 int         idnode_get_time(idnode_t *self, const char *key, time_t *tm);

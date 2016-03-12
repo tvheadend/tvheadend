@@ -143,7 +143,7 @@ static int _write_pktbuf ( timeshift_file_t *tsf, pktbuf_t *pktbuf )
   if (pktbuf) {
     ret = err = _write(tsf, &pktbuf->pb_size, sizeof(pktbuf->pb_size));
     if (err < 0) return err;
-    err = _write(tsf, pktbuf->pb_data, pktbuf->pb_size);
+    err = _write(tsf, pktbuf_ptr(pktbuf), pktbuf_len(pktbuf));
     if (err < 0) return err;
     ret += err;
   } else {

@@ -435,6 +435,33 @@ idnode_get_s64
 }
 
 /*
+ * Get field as signed 64-bit int
+ */
+int
+idnode_get_s64_atomic
+  ( idnode_t *self, const char *key, int64_t *s64 )
+{
+  const property_t *p = idnode_find_prop(self, key);
+  if (p) {
+    const void *ptr;
+    if (p->islist)
+      return 1;
+    else if (p->get)
+      ptr = p->get(self);
+    else
+      ptr = ((void*)self) + p->off;
+    switch (p->type) {
+      case PT_S64_ATOMIC:
+        *s64 = atomic_get_s64((int64_t*)ptr);
+        return 0;
+      default:
+        break;
+    }
+  }
+  return 1;
+}
+
+/*
  * Get field as double
  */
 int
@@ -727,6 +754,17 @@ idnode_cmp_sort
         int64_t s64a = 0, s64b = 0;
         idnode_get_s64(ina, sort->key, &s64a);
         idnode_get_s64(inb, sort->key, &s64b);
+        if (sort->dir == IS_ASC)
+          return safecmp(s64a, s64b);
+        else
+          return safecmp(s64b, s64a);
+      }
+      break;
+    case PT_S64_ATOMIC:
+      {
+        int64_t s64a = 0, s64b = 0;
+        idnode_get_s64_atomic(ina, sort->key, &s64a);
+        idnode_get_s64_atomic(inb, sort->key, &s64b);
         if (sort->dir == IS_ASC)
           return safecmp(s64a, s64b);
         else

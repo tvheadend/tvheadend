@@ -71,6 +71,8 @@
 #include "profile.h"
 #include "bouquet.h"
 #include "tvhtime.h"
+#include "packet.h"
+#include "memoryinfo.h"
 
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
@@ -186,6 +188,7 @@ static pthread_cond_t gtimer_cond;
 static TAILQ_HEAD(, tasklet) tasklets;
 static tvh_cond_t tasklet_cond;
 static pthread_t tasklet_tid;
+static memoryinfo_t tasklet_memoryinfo = { .my_name = "Tasklet" };
 
 static void
 handle_sigpipe(int x)
@@ -364,6 +367,7 @@ tasklet_arm_alloc(tsk_callback_t *callback, void *opaque)
 {
   tasklet_t *tsk = calloc(1, sizeof(*tsk));
   if (tsk) {
+    memoryinfo_alloc(&tasklet_memoryinfo, sizeof(*tsk));
     tsk->tsk_allocated = 1;
     tasklet_arm(tsk, callback, opaque);
   }
@@ -422,8 +426,10 @@ tasklet_flush()
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk->tsk_callback(tsk->tsk_opaque, 1);
     tsk->tsk_callback = NULL;
-    if (tsk->tsk_allocated)
+    if (tsk->tsk_allocated) {
+      memoryinfo_free(&tasklet_memoryinfo, sizeof(*tsk));
       free(tsk);
+    }
   }
 
   pthread_mutex_unlock(&tasklet_lock);
@@ -453,8 +459,10 @@ tasklet_thread ( void *aux )
     tsk_cb = tsk->tsk_callback;
     opaque = tsk->tsk_opaque;
     tsk->tsk_callback = NULL;
-    if (tsk->tsk_allocated)
+    if (tsk->tsk_allocated) {
+      memoryinfo_free(&tasklet_memoryinfo, sizeof(*tsk));
       free(tsk);
+    }
     /* now, the callback can be safely called */
     if (tsk_cb) {
       pthread_mutex_unlock(&tasklet_lock);
@@ -1124,6 +1132,12 @@ main(int argc, char **argv)
   idnode_init();
   spawn_init();
   config_init(opt_nobackup == 0);
+
+  /* Memoryinfo */
+  memoryinfo_register(&tasklet_memoryinfo);
+  memoryinfo_register(&pkt_memoryinfo);
+  memoryinfo_register(&pktbuf_memoryinfo);
+  memoryinfo_register(&pktref_memoryinfo);
 
   /**
    * Initialize subsystems

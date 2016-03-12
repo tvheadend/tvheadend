@@ -42,6 +42,7 @@ const static struct strtab typetab[] = {
   { "u16",     PT_U16 },
   { "u32",     PT_U32 },
   { "s64",     PT_S64 },
+  { "s64",     PT_S64_ATOMIC },
   { "dbl",     PT_DBL },
   { "time",    PT_TIME },
   { "langstr", PT_LANGSTR },
@@ -165,6 +166,8 @@ prop_write_values
         PROP_UPDATE(s64, int64_t);
         break;
       }
+      case PT_S64_ATOMIC:
+        break;
       case PT_DBL: {
         if (htsmsg_field_get_dbl(f, &dbl))
           continue;
@@ -310,6 +313,9 @@ prop_read_value
       } else
         htsmsg_add_s64(m, name, *(int64_t *)val);
       break;
+    case PT_S64_ATOMIC:
+      htsmsg_add_s64(m, name, atomic_get_s64((int64_t *)val));
+      break;
     case PT_STR:
       if (optmask & PO_LOCALE) {
         if ((s = *(const char **)val))
@@ -438,6 +444,7 @@ prop_serialize_value
         htsmsg_add_u32(m, "default", pl->def.u32);
         break;
       case PT_S64:
+      case PT_S64_ATOMIC:
         htsmsg_add_s64(m, "default", pl->def.s64);
         break;
       case PT_DBL:

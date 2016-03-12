@@ -129,10 +129,10 @@ static ssize_t _read_pktbuf ( timeshift_file_t *tsf, int fd, pktbuf_t **pktbuf )
 
   /* Data */
   *pktbuf = pktbuf_alloc(NULL, sz);
-  r = _read_buf(tsf, fd, (*pktbuf)->pb_data, sz);
+  r = _read_buf(tsf, fd, pktbuf_ptr(*pktbuf), sz);
   if (r != sz) {
-    free((*pktbuf)->pb_data);
-    free(*pktbuf);
+    pktbuf_destroy(*pktbuf);
+    *pktbuf = NULL;
     return r < 0 ? -1 : 0;
   }
   cnt += r;

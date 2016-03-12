@@ -44,6 +44,7 @@
 #include "htsbuf.h"
 #include "bouquet.h"
 #include "intlconv.h"
+#include "memoryinfo.h"
 
 #define CHANNEL_BLANK_NAME  "{name-not-set}"
 
@@ -1064,7 +1065,30 @@ channel_delete ( channel_t *ch, int delconf )
   free(ch);
 }
 
+/**
+ *
+ */
 
+static void channels_memoryinfo_update(memoryinfo_t *my)
+{
+  channel_t *ch;
+  int64_t size = 0, count = 0;
+
+  lock_assert(&global_lock);
+  CHANNEL_FOREACH(ch) {
+    size += sizeof(*ch);
+    size += tvh_strlen(ch->ch_epg_parent);
+    size += tvh_strlen(ch->ch_name);
+    size += tvh_strlen(ch->ch_icon);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t channels_memoryinfo = {
+  .my_name = "Channels",
+  .my_update = channels_memoryinfo_update
+};
 
 /**
  *
@@ -1078,6 +1102,7 @@ channel_init ( void )
   char *s;
 
   RB_INIT(&channels);
+  memoryinfo_register(&channels_memoryinfo);
 
   /* Tags */
   channel_tag_init();
@@ -1116,6 +1141,7 @@ channel_done ( void )
   pthread_mutex_lock(&global_lock);
   while ((ch = RB_FIRST(&channels)) != NULL)
     channel_delete(ch, 0);
+  memoryinfo_unregister(&channels_memoryinfo);
   pthread_mutex_unlock(&global_lock);
   channel_tag_done();
 }
@@ -1486,6 +1512,31 @@ channel_tag_find_by_identifier(uint32_t id) {
 }
 
 /**
+ *
+ */
+
+static void channel_tags_memoryinfo_update(memoryinfo_t *my)
+{
+  channel_tag_t *ct;
+  int64_t size = 0, count = 0;
+
+  lock_assert(&global_lock);
+  TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+    size += sizeof(*ct);
+    size += tvh_strlen(ct->ct_name);
+    size += tvh_strlen(ct->ct_comment);
+    size += tvh_strlen(ct->ct_icon);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t channel_tags_memoryinfo = {
+  .my_name = "Channel tags",
+  .my_update = channel_tags_memoryinfo_update
+};
+
+/**
  *  Init / Done
  */
 
@@ -1495,6 +1546,7 @@ channel_tag_init ( void )
   htsmsg_t *c, *m;
   htsmsg_field_t *f;
 
+  memoryinfo_register(&channel_tags_memoryinfo);
   TAILQ_INIT(&channel_tags);
   if ((c = hts_settings_load("channel/tag")) != NULL) {
     HTSMSG_FOREACH(f, c) {

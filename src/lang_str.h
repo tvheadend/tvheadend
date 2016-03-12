@@ -68,6 +68,9 @@ int             lang_str_compare ( const lang_str_t *ls1, const lang_str_t *ls2 
 int             strempty(const char* c);
 int             lang_str_empty(lang_str_t* str);
 
+/* Size in bytes */
+size_t          lang_str_size ( const lang_str_t *ls );
+
 /* Init/Done */
 void            lang_str_done( void );
 

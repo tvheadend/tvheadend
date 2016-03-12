@@ -696,6 +696,18 @@ mpegts_service_satip_source ( service_t *t )
   return mn ? mn->mn_satip_source : -1;
 }
 
+static void
+mpegts_service_memoryinfo ( service_t *t, int64_t *size )
+{
+  mpegts_service_t *ms = (mpegts_service_t*)t;
+  *size += sizeof(*ms);
+  *size += tvh_strlen(ms->s_nicename);
+  *size += tvh_strlen(ms->s_dvb_svcname);
+  *size += tvh_strlen(ms->s_dvb_provider);
+  *size += tvh_strlen(ms->s_dvb_cridauth);
+  *size += tvh_strlen(ms->s_dvb_charset);
+}
+
 /* **************************************************************************
  * Creation/Location
  * *************************************************************************/
@@ -749,6 +761,7 @@ mpegts_service_create0
   s->s_channel_icon   = mpegts_service_channel_icon;
   s->s_mapped         = mpegts_service_mapped;
   s->s_satip_source   = mpegts_service_satip_source;
+  s->s_memoryinfo     = mpegts_service_memoryinfo;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   service_make_nicename((service_t*)s);
@@ -1019,6 +1032,7 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_link           = mpegts_service_link;
   s->s_unlink         = mpegts_service_unlink;
   s->s_satip_source   = mpegts_service_satip_source;
+  s->s_memoryinfo     = mpegts_service_memoryinfo;
 
   pthread_mutex_lock(&s->s_stream_mutex);
   free(s->s_nicename);

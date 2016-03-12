@@ -189,11 +189,7 @@ th_pkt_t *
 avc_convert_pkt(th_pkt_t *src)
 {
   sbuf_t payload;
-  th_pkt_t *pkt = malloc(sizeof(*pkt));
-
-  *pkt = *src;
-  pkt->pkt_refcount = 1;
-  pkt->pkt_meta = NULL;
+  th_pkt_t *pkt = pkt_copy_nodata(src);
 
   sbuf_init(&payload);
 

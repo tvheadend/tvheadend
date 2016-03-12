@@ -20,6 +20,7 @@
 #include "tvheadend.h"
 #include "channels.h"
 #include "access.h"
+#include "memoryinfo.h"
 #include "api.h"
 #include "config.h"
 
@@ -31,6 +32,19 @@ api_config_capabilities(access_t *perm, void *opaque, const char *op,
     return 0;
 }
 
+static void
+api_memoryinfo_grid
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
+{
+  memoryinfo_t *my;
+
+  LIST_FOREACH(my, &memoryinfo_entries, my_link) {
+    if (my->my_update)
+      my->my_update(my);
+    idnode_set_add(ins, (idnode_t*)my, &conf->filter, perm->aa_lang_ui);
+  }
+}
+
 void
 api_config_init ( void )
 {
@@ -40,6 +54,8 @@ api_config_init ( void )
     { "config/save",         ACCESS_ADMIN, api_idnode_save_simple, &config },
     { "tvhlog/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &tvhlog_conf },
     { "tvhlog/config/save",  ACCESS_ADMIN, api_idnode_save_simple, &tvhlog_conf },
+    { "memoryinfo/class",    ACCESS_ADMIN, api_idnode_class, (void *)&memoryinfo_class },
+    { "memoryinfo/grid",     ACCESS_ADMIN, api_idnode_grid, api_memoryinfo_grid },
     { NULL },
   };
 

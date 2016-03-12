@@ -213,7 +213,8 @@ SRCS-1 = \
 	src/profile.c \
 	src/bouquet.c \
 	src/lock.c \
-	src/wizard.c
+	src/wizard.c \
+	src/memoryinfo.c
 SRCS = $(SRCS-1)
 I18N-C = $(SRCS-1)
 

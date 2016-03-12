@@ -32,6 +32,7 @@
 #include "epg.h"
 #include "epggrab.h"
 #include "config.h"
+#include "memoryinfo.h"
 
 #define EPG_DB_VERSION 2
 #define EPG_DB_ALLOC_STEP (1024*1024)
@@ -147,6 +148,125 @@ _epgdb_v2_process( char **sect, htsmsg_t *m, epggrab_stats_t *stats )
 }
 
 /*
+ * Memoryinfo
+ */
+
+static void epg_memoryinfo_brands_update(memoryinfo_t *my)
+{
+  epg_object_t *eo;
+  epg_brand_t *eb;
+  int64_t size = 0, count = 0;
+
+  RB_FOREACH(eo, &epg_brands, uri_link) {
+    eb = (epg_brand_t *)eo;
+    size += sizeof(*eb);
+    size += tvh_strlen(eb->uri);
+    size += lang_str_size(eb->title);
+    size += lang_str_size(eb->summary);
+    size += tvh_strlen(eb->image);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t epg_memoryinfo_brands = {
+  .my_name = "EPG Brands",
+  .my_update = epg_memoryinfo_brands_update
+};
+
+static void epg_memoryinfo_seasons_update(memoryinfo_t *my)
+{
+  epg_object_t *eo;
+  epg_season_t *es;
+  int64_t size = 0, count = 0;
+
+  RB_FOREACH(eo, &epg_seasons, uri_link) {
+    es = (epg_season_t *)eo;
+    size += sizeof(*es);
+    size += tvh_strlen(es->uri);
+    size += lang_str_size(es->summary);
+    size += tvh_strlen(es->image);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t epg_memoryinfo_seasons = {
+  .my_name = "EPG Seasons",
+  .my_update = epg_memoryinfo_seasons_update
+};
+
+static void epg_memoryinfo_episodes_update(memoryinfo_t *my)
+{
+  epg_object_t *eo;
+  epg_episode_t *ee;
+  int64_t size = 0, count = 0;
+
+  RB_FOREACH(eo, &epg_episodes, uri_link) {
+    ee = (epg_episode_t *)eo;
+    size += sizeof(*ee);
+    size += tvh_strlen(ee->uri);
+    size += lang_str_size(ee->title);
+    size += lang_str_size(ee->subtitle);
+    size += lang_str_size(ee->summary);
+    size += lang_str_size(ee->description);
+    size += tvh_strlen(ee->image);
+    size += tvh_strlen(ee->epnum.text);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t epg_memoryinfo_episodes = {
+  .my_name = "EPG Episodes",
+  .my_update = epg_memoryinfo_episodes_update
+};
+
+static void epg_memoryinfo_serieslinks_update(memoryinfo_t *my)
+{
+  epg_object_t *eo;
+  epg_serieslink_t *es;
+  int64_t size = 0, count = 0;
+
+  RB_FOREACH(eo, &epg_serieslinks, uri_link) {
+    es = (epg_serieslink_t *)eo;
+    size += sizeof(*es);
+    size += tvh_strlen(es->uri);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t epg_memoryinfo_serieslinks = {
+  .my_name = "EPG Series Links",
+  .my_update = epg_memoryinfo_serieslinks_update
+};
+
+static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
+{
+  channel_t *ch;
+  epg_broadcast_t *ebc;
+  int64_t size = 0, count = 0;
+
+  CHANNEL_FOREACH(ch) {
+    if (ch->ch_epg_parent) continue;
+    RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
+      size += sizeof(*ebc);
+      size += tvh_strlen(ebc->uri);
+      size += lang_str_size(ebc->summary);
+      size += lang_str_size(ebc->description);
+      count++;
+    }
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t epg_memoryinfo_broadcasts = {
+  .my_name = "EPG Broadcasts",
+  .my_update = epg_memoryinfo_broadcasts_update
+};
+
+/*
  * Recovery
  */
 static sigjmp_buf epg_mmap_env;
@@ -169,6 +289,12 @@ void epg_init ( void )
   int ver = EPG_DB_VERSION;
   struct sigaction act, oldact;
   char *sect = NULL;
+
+  memoryinfo_register(&epg_memoryinfo_brands);
+  memoryinfo_register(&epg_memoryinfo_seasons);
+  memoryinfo_register(&epg_memoryinfo_episodes);
+  memoryinfo_register(&epg_memoryinfo_serieslinks);
+  memoryinfo_register(&epg_memoryinfo_broadcasts);
 
   /* Find the right file (and version) */
   while (fd < 0 && ver > 0) {
@@ -298,6 +424,11 @@ void epg_done ( void )
   CHANNEL_FOREACH(ch)
     epg_channel_unlink(ch);
   epg_skel_done();
+  memoryinfo_unregister(&epg_memoryinfo_brands);
+  memoryinfo_unregister(&epg_memoryinfo_seasons);
+  memoryinfo_unregister(&epg_memoryinfo_episodes);
+  memoryinfo_unregister(&epg_memoryinfo_serieslinks);
+  memoryinfo_unregister(&epg_memoryinfo_broadcasts);
   pthread_mutex_unlock(&global_lock);
 }
 

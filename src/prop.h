@@ -35,6 +35,7 @@ typedef enum {
   PT_U16,
   PT_U32,
   PT_S64,
+  PT_S64_ATOMIC,
   PT_DBL,
   PT_TIME,
   PT_LANGSTR,

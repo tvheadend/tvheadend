@@ -48,6 +48,7 @@
 #include "access.h"
 #include "esfilter.h"
 #include "bouquet.h"
+#include "memoryinfo.h"
 
 static void service_data_timeout(void *aux);
 static void service_class_delete(struct idnode *self);
@@ -936,6 +937,13 @@ service_provider_name ( service_t *s )
   return NULL;
 }
 
+void
+service_memoryinfo ( service_t *s, int64_t *size )
+{
+  *size += sizeof(*s);
+  *size += tvh_strlen(s->s_nicename);
+}
+
 /**
  * Create and initialize a new service struct
  */
@@ -968,6 +976,7 @@ service_create0
   t->s_channel_number = service_channel_number;
   t->s_channel_name   = service_channel_name;
   t->s_provider_name  = service_provider_name;
+  t->s_memoryinfo     = service_memoryinfo;
   TAILQ_INIT(&t->s_components);
   TAILQ_INIT(&t->s_filt_components);
   t->s_last_pid = -1;
@@ -1483,9 +1492,36 @@ service_saver(void *aux)
  */
 pthread_t service_saver_tid;
 
+static void services_memoryinfo_update(memoryinfo_t *my)
+{
+  service_t *t;
+  int64_t size = 0, count = 0;
+
+  lock_assert(&global_lock);
+  TAILQ_FOREACH(t, &service_all, s_all_link) {
+    t->s_memoryinfo(t, &size);
+    count++;
+  }
+  TAILQ_FOREACH(t, &service_raw_all, s_all_link) {
+    t->s_memoryinfo(t, &size);
+    count++;
+  }
+  TAILQ_FOREACH(t, &service_raw_remove, s_all_link) {
+    t->s_memoryinfo(t, &size);
+    count++;
+  }
+  memoryinfo_update(my, size, count);
+}
+
+static memoryinfo_t services_memoryinfo = {
+  .my_name = "Services",
+  .my_update = services_memoryinfo_update
+};
+
 void
 service_init(void)
 {
+  memoryinfo_register(&services_memoryinfo);
   TAILQ_INIT(&pending_save_queue);
   TAILQ_INIT(&service_all);
   TAILQ_INIT(&service_raw_all);
@@ -1508,6 +1544,7 @@ service_done(void)
   pthread_mutex_lock(&global_lock);
   while ((t = TAILQ_FIRST(&service_raw_remove)) != NULL)
     service_destroy(t, 0);
+  memoryinfo_unregister(&services_memoryinfo);
   pthread_mutex_unlock(&global_lock);
 }
 

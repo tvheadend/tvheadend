@@ -14,7 +14,7 @@ tvheadend.tvhlog = function(panel, index) {
 
     tvheadend.idnode_simple(panel, {
         url: 'api/tvhlog/config',
-        title: _('Debugging'),
+        title: _('Configuration'),
         iconCls: 'debug',
         tabIndex: index,
         comet: 'tvhlog_conf',
@@ -29,4 +29,19 @@ tvheadend.tvhlog = function(panel, index) {
         }
     });
 
+};
+
+tvheadend.memoryinfo = function(panel, index)
+{
+    tvheadend.idnode_grid(panel, {
+        url: 'api/memoryinfo',
+        titleS: _('Memory info entry'),
+        titleP: _('Memory info entries'),
+        iconCls: 'exclamation',
+        tabIndex: index,
+        readonly: true,
+        help: function() {
+            new tvheadend.help(_('Memory information entries'), 'config_memoryinfo.html');
+        }
+    });
 };

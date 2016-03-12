@@ -255,6 +255,7 @@ void tasklet_disarm(tasklet_t *gti);
 /*
  * List / Queue header declarations
  */
+LIST_HEAD(memoryinfo_list, memoryinfo);
 LIST_HEAD(access_entry_list, access_entry);
 LIST_HEAD(th_subscription_list, th_subscription);
 LIST_HEAD(dvr_vfs_list, dvr_vfs);
@@ -670,6 +671,8 @@ extern void scopedunlock(pthread_mutex_t **mtxp);
   ({ int tvh_l = strlen(n); \
      char *tvh_b = alloca(tvh_l + 1); \
      memcpy(tvh_b, n, tvh_l + 1); })
+
+#define tvh_strlen(s) ((s) ? strlen(s) : 0)
 
 #define tvh_strlcatf(buf, size, ptr, fmt...) \
   do { int __r = snprintf((buf) + ptr, (size) - ptr, fmt); \

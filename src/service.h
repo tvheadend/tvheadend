@@ -330,6 +330,8 @@ typedef struct service {
 
   int (*s_satip_source)(struct service *t);
 
+  void (*s_memoryinfo)(struct service *t, int64_t *size);
+
   /**
    * Channel info
    */
@@ -622,6 +624,8 @@ const char *service_get_full_channel_name (service_t *s);
 int64_t     service_get_channel_number (service_t *s);
 const char *service_get_channel_icon (service_t *s);
 const char *service_get_channel_epgid (service_t *s);
+
+void service_memoryinfo (service_t *s, int64_t *size);
 
 void service_mapped (service_t *s);
 

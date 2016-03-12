@@ -436,14 +436,14 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int l, pid;
-  uint8_t *tsb, *pkt = pb->pb_data;
-  size_t  len = pb->pb_size, len2;
+  uint8_t *tsb, *pkt = pktbuf_ptr(pb);
+  size_t  len = pktbuf_len(pb), len2;
   
   /* Rewrite PAT/PMT in operation */
   if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt ||
       pm->pm_rewrite_sdt || pm->pm_rewrite_eit) {
 
-    for (tsb = pb->pb_data, len2 = pb->pb_size, len = 0;
+    for (tsb = pktbuf_ptr(pb), len2 = pktbuf_len(pb), len = 0;
          len2 > 0; tsb += l, len2 -= l) {
 
       pid = (tsb[1] & 0x1f) << 8 | tsb[2];
