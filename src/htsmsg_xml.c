@@ -300,7 +300,7 @@ htsmsg_xml_parse_attrib(xmlparser_t *xp, htsmsg_t *msg, char *src,
   attribname[attriblen] = 0;
   payload[payloadlen] = 0;
 
-  f = htsmsg_field_add(msg, attribname, HMF_STR, 0);
+  f = htsmsg_field_add(msg, attribname, HMF_STR, 0, 0);
   f->hmf_str = payload;
   return src;
 }
@@ -702,7 +702,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     assert(cc != NULL);
     assert(TAILQ_NEXT(cc, cc_link) == NULL);
     
-    f = htsmsg_field_add(parent, "cdata", HMF_STR, 0);
+    f = htsmsg_field_add(parent, "cdata", HMF_STR, 0, 0);
     f->hmf_str = cc->cc_start;
     *cc->cc_end = 0;
     free(cc);
@@ -731,7 +731,7 @@ htsmsg_xml_parse_cd(xmlparser_t *xp, htsmsg_t *parent, char *src)
     }
     body[c] = 0;
 
-    f = htsmsg_field_add(parent, "cdata", HMF_STR, HMF_ALLOCED);
+    f = htsmsg_field_add(parent, "cdata", HMF_STR, HMF_ALLOCED, 0);
     f->hmf_str = body;
 
   } else {

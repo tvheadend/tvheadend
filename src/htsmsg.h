@@ -58,8 +58,9 @@ typedef struct htsmsg_field {
   uint8_t hmf_type;
   uint8_t hmf_flags;
 
-#define HMF_ALLOCED 0x1
-#define HMF_NAME_ALLOCED 0x2
+#define HMF_ALLOCED        0x1
+#define HMF_NAME_INALLOCED 0x2
+#define HMF_NAME_ALLOCED   0x4
 
   union {
     int64_t  s64;
@@ -72,6 +73,7 @@ typedef struct htsmsg_field {
     double dbl;
     int bool;
   } u;
+  char hmf_edata[0];
 } htsmsg_field_t;
 
 #define hmf_s64     u.s64
@@ -378,7 +380,7 @@ void htsmsg_print(htsmsg_t *msg);
  * Create a new field. Primarily intended for htsmsg internal functions.
  */
 htsmsg_field_t *htsmsg_field_add(htsmsg_t *msg, const char *name,
-				 int type, int flags);
+				 int type, int flags, size_t esize);
 
 /**
  * Get a field, return NULL if it does not exist
