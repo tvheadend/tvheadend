@@ -1135,6 +1135,10 @@ main(int argc, char **argv)
 
   /* Memoryinfo */
   memoryinfo_register(&tasklet_memoryinfo);
+#if ENABLE_SLOW_MEMORYINFO
+  memoryinfo_register(&htsmsg_memoryinfo);
+  memoryinfo_register(&htsmsg_field_memoryinfo);
+#endif
   memoryinfo_register(&pkt_memoryinfo);
   memoryinfo_register(&pktbuf_memoryinfo);
   memoryinfo_register(&pktref_memoryinfo);

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include "queue.h"
+#include "build.h"
 
 #define HTSMSG_ERR_FIELD_NOT_FOUND       -1
 #define HTSMSG_ERR_CONVERSION_IMPOSSIBLE -2
@@ -41,6 +42,7 @@ typedef struct htsmsg {
    * Data to be free'd when the message is destroyed
    */
   const void *hm_data;
+  size_t hm_data_size;
 } htsmsg_t;
 
 
@@ -59,8 +61,9 @@ typedef struct htsmsg_field {
   uint8_t hmf_flags;
 
 #define HMF_ALLOCED        0x1
-#define HMF_NAME_INALLOCED 0x2
-#define HMF_NAME_ALLOCED   0x4
+#define HMF_INALLOCED      0x2
+#define HMF_NAME_INALLOCED 0x4
+#define HMF_NAME_ALLOCED   0x8
 
   union {
     int64_t  s64;
@@ -73,6 +76,10 @@ typedef struct htsmsg_field {
     double dbl;
     int bool;
   } u;
+
+#if ENABLE_SLOW_MEMORYINFO
+  size_t hmf_edata_size;
+#endif
   char hmf_edata[0];
 } htsmsg_field_t;
 
@@ -418,3 +425,10 @@ const char *htsmsg_get_cdata(htsmsg_t *m, const char *field);
 char *htsmsg_list_2_csv(htsmsg_t *m, char delim, int human);
 
 htsmsg_t *htsmsg_csv_2_list(const char *str, char delim);
+
+/**
+ *
+ */
+struct memoryinfo;
+extern struct memoryinfo htsmsg_memoryinfo;
+extern struct memoryinfo htsmsg_field_memoryinfo;

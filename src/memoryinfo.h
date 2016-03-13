@@ -75,5 +75,9 @@ static inline void memoryinfo_free(memoryinfo_t *my, int64_t size)
   atomic_dec_s64(&my->my_count, 1);
 }
 
+static inline void memoryinfo_remove(memoryinfo_t *my, int64_t size)
+{
+  atomic_dec_s64(&my->my_size, size);
+}
 
 #endif /* TVHEADEND_MEMORYINFO_H */

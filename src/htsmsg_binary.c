@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "htsmsg_binary.h"
+#include "memoryinfo.h"
 
 /*
  *
@@ -31,12 +32,12 @@
 static int
 htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 {
-  unsigned type, namelen, datalen;
+  uint_fast32_t type, namelen, datalen;
+  size_t tlen;
   htsmsg_field_t *f;
   htsmsg_t *sub;
-  char *n;
   uint64_t u64;
-  int i;
+  int i, bin = 0;
 
   while(len > 5) {
 
@@ -53,36 +54,43 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     if(len < namelen + datalen)
       return -1;
 
-    f = malloc(sizeof(htsmsg_field_t));
+    tlen = sizeof(htsmsg_field_t) +
+           (namelen ? namelen + 1 : 0) +
+           (type == HMF_STR ? datalen + 1 : 0);
+    f = malloc(tlen);
+    if (f == NULL)
+      return -1;
+#if ENABLE_SLOW_MEMORYINFO
+    f->hmf_edata_size = tlen - sizeof(htsmsg_field_t);
+    memoryinfo_alloc(&htsmsg_field_memoryinfo, tlen);
+#endif
     f->hmf_type  = type;
 
     if(namelen > 0) {
-      n = malloc(namelen + 1);
-      memcpy(n, buf, namelen);
-      n[namelen] = 0;
+      f->hmf_name = f->hmf_edata;
+      memcpy(f->hmf_edata, buf, namelen);
+      f->hmf_edata[namelen] = 0;
 
       buf += namelen;
       len -= namelen;
-      f->hmf_flags = HMF_NAME_ALLOCED;
+      f->hmf_flags = HMF_NAME_INALLOCED;
 
     } else {
-      n = NULL;
+      f->hmf_name  = NULL;
       f->hmf_flags = 0;
     }
 
-    f->hmf_name  = n;
-
     switch(type) {
     case HMF_STR:
-      f->hmf_str = n = malloc(datalen + 1);
-      memcpy(n, buf, datalen);
-      n[datalen] = 0;
-      f->hmf_flags |= HMF_ALLOCED;
+      f->hmf_str = f->hmf_edata + (namelen ? namelen + 1 : 0);
+      memcpy((char *)f->hmf_str, buf, datalen);
+      ((char *)f->hmf_str)[datalen] = 0;
       break;
 
     case HMF_BIN:
       f->hmf_bin = (const void *)buf;
       f->hmf_binsize = datalen;
+      bin = 1;
       break;
 
     case HMF_S64:
@@ -97,11 +105,16 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       sub = &f->hmf_msg;
       TAILQ_INIT(&sub->hm_fields);
       sub->hm_data = NULL;
-      if(htsmsg_binary_des0(sub, buf, datalen) < 0) {
-        free(n);
+      i = htsmsg_binary_des0(sub, buf, datalen);
+      if (i < 0) {
+#if ENABLE_SLOW_MEMORYINFO
+        memoryinfo_free(&htsmsg_field_memoryinfo, tlen);
+#endif
         free(f);
         return -1;
       }
+      if (i > 0)
+        bin = 1;
       break;
 
     case HMF_BOOL:
@@ -109,7 +122,9 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       break;
 
     default:
-      free(n);
+#if ENABLE_SLOW_MEMORYINFO
+      memoryinfo_free(&htsmsg_field_memoryinfo, tlen);
+#endif
       free(f);
       return -1;
     }
@@ -118,7 +133,7 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     buf += datalen;
     len -= datalen;
   }
-  return 0;
+  return bin;
 }
 
 
@@ -127,14 +142,20 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
  *
  */
 htsmsg_t *
-htsmsg_binary_deserialize(const void *data, size_t len, const void *buf)
+htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
 {
   htsmsg_t *msg = htsmsg_create_map();
-  msg->hm_data = buf;
-
-  if(htsmsg_binary_des0(msg, data, len) < 0) {
+  int r = htsmsg_binary_des0(msg, data, len);
+  if (r < 0) {
     htsmsg_destroy(msg);
     return NULL;
+  }
+  if (r > 0) {
+    msg->hm_data = buf;
+    msg->hm_data_size = len;
+#if ENABLE_SLOW_MEMORYINFO
+    memoryinfo_append(&htsmsg_memoryinfo, len);
+#endif
   }
   return msg;
 }

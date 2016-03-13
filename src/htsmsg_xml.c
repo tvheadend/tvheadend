@@ -849,6 +849,7 @@ htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize)
 
   if(xp.xp_srcdataused) {
     m->hm_data = src0;
+    m->hm_data_size = strlen(src0) + 1;
   } else {
     free(src0);
   }
