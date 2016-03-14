@@ -301,7 +301,9 @@ atomic_set_s64_peak(volatile int64_t *ptr, int64_t val, volatile int64_t *peak)
     atomic_set_s64(peak, val);
   return ret;
 #else
+  int64_t ret;
   pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
   *ptr = val;
   if (val > *peak)
     *peak = val;
