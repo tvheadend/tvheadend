@@ -60,20 +60,20 @@ static cron_multi_t  *epggrab_cron_multi;
  */
 static void _epggrab_module_grab ( epggrab_module_int_t *mod )
 {
-  time_t tm1, tm2;
+  int64_t tm1, tm2;
   htsmsg_t *data;
 
   if (!mod->enabled)
     return;
 
   /* Grab */
-  time(&tm1);
+  tm1 = getfastmonoclock();
   data = mod->trans(mod, mod->grab(mod));
-  time(&tm2);
+  tm2 = getfastmonoclock() + (MONOCLOCK_RESOLUTION / 2);
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_INFO, mod->id, "grab took %"PRItime_t" seconds", tm2 - tm1);
+    tvhlog(LOG_INFO, mod->id, "grab took %"PRId64" seconds", mono2sec(tm2 - tm1));
     epggrab_module_parse(mod, data);
   } else {
     tvhlog(LOG_WARNING, mod->id, "grab returned no data");
