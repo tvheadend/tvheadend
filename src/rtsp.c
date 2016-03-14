@@ -266,3 +266,11 @@ rtsp_describe_decode( http_client_t *hc )
   printf("data:\n%s\n",    hc->hc_data);
   return HTTP_CON_OK;
 }
+
+int
+rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
+  http_arg_list_t hdr;
+  http_arg_init(&hdr);
+  http_arg_set(&hdr, "Content-Type", "text/parameters");
+  return rtsp_send_ext(hc, RTSP_CMD_GET_PARAMETER, NULL, NULL, &hdr, parameter, strlen(parameter));
+}
