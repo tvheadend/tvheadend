@@ -104,9 +104,10 @@ descrambler_data_cut(th_descrambler_runtime_t *dr, int len)
   th_descrambler_data_t *dd;
 
   while (len > 0 && (dd = TAILQ_FIRST(&dr->dr_queue)) != NULL) {
+    if (dr->dr_skip)
+      ts_skip_packet2((mpegts_service_t *)dr->dr_service,
+                      dd->dd_sbuf.sb_data, MIN(len, dd->dd_sbuf.sb_ptr));
     if (len < dd->dd_sbuf.sb_ptr) {
-      if (dr->dr_skip)
-        ts_skip_packet2((mpegts_service_t *)dr->dr_service, dd->dd_sbuf.sb_data, len);
       sbuf_cut(&dd->dd_sbuf, len);
       dr->dr_queue_total -= len;
       break;
@@ -284,6 +285,7 @@ descrambler_service_start ( service_t *t )
     if (constcw)
       tvhtrace("descrambler", "using constcw for \"%s\"", t->s_nicename);
     dr->dr_skip = 0;
+    dr->dr_force_skip = 0;
     tvhcsa_init(&dr->dr_csa);
   }
   caclient_start(t);
@@ -775,6 +777,12 @@ descrambler_descramble ( service_t *t,
     return 1;
   }
 next:
+  if (!dr->dr_skip) {
+    if (!dr->dr_force_skip)
+      dr->dr_force_skip = mclk() + sec2mono(30);
+    else if (dr->dr_force_skip < mclk())
+      dr->dr_skip = 1;
+  }
   if (dr->dr_ecm_start[0] || dr->dr_ecm_start[1]) { /* ECM sent */
     ki = tsb[3];
     if ((ki & 0x80) != 0x00) {
@@ -820,6 +828,8 @@ next:
       service_set_streaming_status_flags(t, TSS_NO_ACCESS);
     }
   } else {
+    if (dr->dr_skip || count == 0)
+      ts_skip_packet2((mpegts_service_t *)dr->dr_service, tsb, len);
     service_set_streaming_status_flags(t, TSS_NO_ACCESS);
   }
   if (flush_data)
