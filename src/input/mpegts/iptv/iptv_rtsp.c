@@ -83,7 +83,7 @@ iptv_rtsp_header ( http_client_t *hc )
   }
 
   if (hc->hc_cmd == RTSP_CMD_GET_PARAMETER && hc->hc_code != HTTP_STATUS_OK) {
-    tvherror("iptv", "GET_PARAMETER command returned invalid error code %d for '%s', "
+    tvhtrace("iptv", "GET_PARAMETER command returned invalid error code %d for '%s', "
         "fall back to OPTIONS in keep alive loop.", hc->hc_code, im->mm_iptv_url_raw);
     hc->hc_rtsp_keep_alive_cmd = RTSP_CMD_OPTIONS;
     return 0;
