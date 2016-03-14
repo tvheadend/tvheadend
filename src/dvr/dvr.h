@@ -28,6 +28,8 @@
 #include "lang_str.h"
 #include "tvhvfs.h"
 
+#define DVR_MAX_DATA_ERRORS     (10000)
+
 #define DVR_FILESIZE_UPDATE     (1<<0)
 #define DVR_FILESIZE_TOTAL      (1<<1)
 

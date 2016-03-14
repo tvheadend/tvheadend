@@ -66,7 +66,9 @@ api_dvr_config_create
 static int is_dvr_entry_finished(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_COMPLETED && !entry->de_last_error && dvr_get_filesize(entry, 0) != -1;
+  return state == DVR_COMPLETED && !entry->de_last_error &&
+         dvr_get_filesize(entry, 0) != -1 &&
+         entry->de_data_errors < DVR_MAX_DATA_ERRORS;
 }
 
 static int is_dvr_entry_upcoming(dvr_entry_t *entry)

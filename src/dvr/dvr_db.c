@@ -509,6 +509,8 @@ dvr_entry_status(dvr_entry_t *de)
       default:
         break;
     }
+    if(de->de_data_errors >= DVR_MAX_DATA_ERRORS) /* user configurable threshold? */
+      return N_("Too many data errors");
     if(dvr_get_filesize(de, 0) == -1)
       return N_("File missing");
     if(de->de_last_error)
