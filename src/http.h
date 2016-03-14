@@ -426,12 +426,7 @@ rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
   return rtsp_send(hc, RTSP_CMD_TEARDOWN, path, query, NULL);
 }
 
-static inline int rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
-  http_arg_list_t hdr;
-  http_arg_init(&hdr);
-  http_arg_set(&hdr, "Content-Type", "text/parameters");
-  return rtsp_send_ext(hc, RTSP_CMD_GET_PARAMETER, NULL, NULL, &hdr, parameter, strlen(parameter));
-}
+int rtsp_get_parameter( http_client_t *hc, const char *parameter );
 
 int rtsp_describe_decode( http_client_t *hc );
 static inline int
