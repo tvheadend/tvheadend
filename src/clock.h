@@ -54,6 +54,7 @@ static inline time_t gclk(void)
 }
 
 #define MONOCLOCK_RESOLUTION 1000000LL /* microseconds */
+#define MONOCLOCK_FASTSEC    0xfffffLL /* 1048575 */
 
 static inline int64_t
 sec2mono(int64_t sec)
@@ -99,6 +100,12 @@ getfastmonoclock(void)
 
   return tp.tv_sec * MONOCLOCK_RESOLUTION +
          (tp.tv_nsec / (1000000000LL/MONOCLOCK_RESOLUTION));
+}
+
+static inline int
+monocmpfastsec(int64_t m1, int64_t m2)
+{
+  return (m1 & ~MONOCLOCK_FASTSEC) == (m2 & ~MONOCLOCK_FASTSEC);
 }
 
 void time_t_out_of_range_notify(int64_t val);

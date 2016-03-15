@@ -84,7 +84,7 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
   if (len == 0)
     return;
   dd = TAILQ_LAST(&dr->dr_queue, th_descrambler_queue);
-  if (dd && mono2sec(dd->dd_timestamp) == mono2sec(mclk()) &&
+  if (dd && monocmpfastsec(dd->dd_timestamp, mclk()) &&
       (dd->dd_sbuf.sb_data[3] & 0x40) == (tsb[3] & 0x40)) { /* key match */
     sbuf_append(&dd->dd_sbuf, tsb, len);
     dr->dr_queue_total += len;

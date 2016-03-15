@@ -356,8 +356,7 @@ ts_remux(mpegts_service_t *t, const uint8_t *src, int len, int errors)
   sbuf_append(sb, src, len);
   sb->sb_err += errors;
 
-  if(mono2sec(mclk()) == mono2sec(t->s_tsbuf_last) &&
-     sb->sb_ptr < TS_REMUX_BUFSIZE)
+  if(monocmpfastsec(mclk(), t->s_tsbuf_last) && sb->sb_ptr < TS_REMUX_BUFSIZE)
     return;
 
   ts_flush(t, sb);
@@ -379,7 +378,7 @@ ts_skip(mpegts_service_t *t, const uint8_t *src, int len)
 
   sb->sb_err += len / 188;
 
-  if(mono2sec(mclk()) == mono2sec(t->s_tsbuf_last) &&
+  if(monocmpfastsec(mclk(), t->s_tsbuf_last) &&
      sb->sb_err < (TS_REMUX_BUFSIZE / 188))
     return;
 
