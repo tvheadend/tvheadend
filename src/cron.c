@@ -360,6 +360,8 @@ cron_multi_next ( cron_multi_t *cm, const time_t now, time_t *ret )
 
 /*
  * Testing
+ *
+ *   gcc -g -DCRON_TEST -I./build.linux src/cron.c
  */
 #ifdef CRON_TEST
 static
