@@ -421,6 +421,20 @@ htsmsg_field_set_str(htsmsg_field_t *f, const char *str)
  *
  */
 int
+htsmsg_field_set_str_force(htsmsg_field_t *f, const char *str)
+{
+  if (f->hmf_type != HMF_STR) {
+    htsmsg_field_data_destroy(f);
+    f->hmf_type = HMF_STR;
+    f->hmf_str = "";
+  }
+  return htsmsg_field_set_str(f, str);
+}
+
+/*
+ *
+ */
+int
 htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str)
 {
   htsmsg_field_t *f = htsmsg_field_find(msg, name);
@@ -781,15 +795,15 @@ htsmsg_field_get_string(htsmsg_field_t *f)
   case HMF_STR:
     break;
   case HMF_BOOL:
-    htsmsg_field_set_str(f, f->hmf_bool ? "true" : "false");
+    htsmsg_field_set_str_force(f, f->hmf_bool ? "true" : "false");
     break;
   case HMF_S64:
     snprintf(buf, sizeof(buf), "%"PRId64, f->hmf_s64);
-    htsmsg_field_set_str(f, buf);
+    htsmsg_field_set_str_force(f, buf);
     break;
   case HMF_DBL:
     snprintf(buf, sizeof(buf), "%lf", f->hmf_dbl);
-    htsmsg_field_set_str(f, buf);
+    htsmsg_field_set_str_force(f, buf);
     break;
   }
   return f->hmf_str;

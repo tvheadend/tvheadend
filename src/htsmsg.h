@@ -183,6 +183,7 @@ int  htsmsg_set_str(htsmsg_t *msg, const char *name, const char *str);
  * Update a string field
  */
 int  htsmsg_field_set_str(htsmsg_field_t *f, const char *str);
+int  htsmsg_field_set_str_force(htsmsg_field_t *f, const char *str);
 
 /**
  * Add an field where source is a list or map message.
