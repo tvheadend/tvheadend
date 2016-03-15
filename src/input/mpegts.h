@@ -672,7 +672,7 @@ struct mpegts_input
    */
 
   int mi_running;            /* threads running */
-  time_t mi_last_dispatch;
+  int64_t mi_last_dispatch;
 
   /* Data input */
   // Note: this section is protected by mi_input_lock
