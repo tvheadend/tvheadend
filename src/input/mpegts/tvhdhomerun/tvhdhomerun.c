@@ -441,7 +441,7 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
 
   mtimer_disarm(&hd->hd_destroy_timer);
 
-  idnode_save_check(&hd->th_id, 1);
+  idnode_save_check(&hd->th_id, 0);
 
   tvhlog(LOG_INFO, "tvhdhomerun", "Releasing locks for devices");
   while ((lfe = TAILQ_FIRST(&hd->hd_frontends)) != NULL) {
