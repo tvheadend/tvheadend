@@ -579,7 +579,7 @@ linuxdvb_frontend_start_mux
   if (lfe->lfe_master) {
     assert(lfe->lfe_type == DVB_TYPE_S);
     lfe2 = (linuxdvb_frontend_t *)idnode_find(lfe->lfe_master, &linuxdvb_frontend_class, NULL);
-    if (lfe2->lfe_type != lfe->lfe_type)
+    if (lfe2 && lfe2->lfe_type != lfe->lfe_type)
       lfe2 = NULL;
     res = SM_CODE_TUNING_FAILED;
     if (lfe2) {
