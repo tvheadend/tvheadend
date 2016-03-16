@@ -2449,13 +2449,13 @@ psi_parse_pmt
 
 static void dvb_time_update(const uint8_t *ptr, const char *srcname)
 {
-  static time_t dvb_last_update = 0;
+  static int64_t dvb_last_update = 0;
   time_t t;
-  if (dvb_last_update + 1800 < gclk()) {
+  if (dvb_last_update + sec2mono(1800) < mclk()) {
     t = dvb_convert_date(ptr, 0);
     if (t > 0) {
       tvhtime_update(t, srcname);
-      dvb_last_update = gclk();
+      dvb_last_update = mclk();
     }
   }
 }
