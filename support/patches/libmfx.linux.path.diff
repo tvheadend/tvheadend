@@ -1,0 +1,12 @@
+diff -urN ../mfx_dispatch.orig/src/mfx_library_iterator_linux.cpp ./src/mfx_library_iterator_linux.cpp
+--- ../mfx_dispatch.orig/src/mfx_library_iterator_linux.cpp	2016-02-06 12:48:45.070749257 +0100
++++ ./src/mfx_library_iterator_linux.cpp	2016-02-06 12:50:40.830752490 +0100
+@@ -333,7 +333,7 @@
+     m_implType = implType;
+ 
+     snprintf(m_path, sizeof(m_path)/sizeof(m_path[0]),
+-             "%s/%s/%04x/%04x", mfx_storage_opt, mfx_folder, m_vendorID, m_deviceID);
++             "%s/%s", mfx_storage_opt, mfx_folder);
+ 
+     m_libs_num = mfx_list_libraries(m_path, (MFX_LIB_HARDWARE == implType), &m_libs);
+ 

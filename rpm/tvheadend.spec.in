@@ -39,9 +39,9 @@ SAT>IP and various other clients using these protocols.
 %build
 echo %{version}-%{release} > %{_builddir}/%{buildsubdir}/rpm/version
 %ifarch %arm
-      %configure --disable-lockowner --enable-bundle --disable-libffmpeg_static
+      %configure --disable-lockowner --enable-bundle --disable-ffmpeg_static
 %else
-      %configure --disable-lockowner --enable-bundle --enable-libffmpeg_static --enable-libx265
+      %configure --disable-lockowner --enable-bundle --enable-ffmpeg_static --enable-libx265
 %endif
 %{__make} %{?_smp_mflags}
 
@@ -107,4 +107,4 @@ exit 0
 * Mon Oct 13 2014 Jaroslav Kysela <perex@perex.cz> 3.9-1803-g392dec0
 - Add basic RPM build support
 
-~   
+~

@@ -34,13 +34,21 @@ OPTIONS=(
   "avahi:auto"
   "zlib:auto"
   "libav:auto"
-  "libffmpeg_static:yes"
+  "ffmpeg_static:yes"
+  "libx264:yes"
   "libx264_static:yes"
-  "libx265:no"
+  "libx265:yes"
   "libx265_static:yes"
-  "vdpau:auto"
+  "libvpx:yes"
+  "libvpx_static:yes"
+  "libtheora:yes"
+  "libtheora_static:yes"
+  "libvorbis:yes"
+  "libvorbis_static:yes"
+  "libfdkaac:yes"
+  "libfdkaac_static:yes"
   "nvenc:auto"
-  "libmfx:no"
+  "qsv:no"
   "libmfx_static:yes"
   "inotify:auto"
   "epoll:auto"
@@ -141,7 +149,7 @@ else
   COMPILER=gcc
 fi
 
-check_cc_snippet getloadavg '#include <stdlib.h> 
+check_cc_snippet getloadavg '#include <stdlib.h>
 void test() { getloadavg(NULL,0); }'
 
 check_cc_snippet atomic64 '#include <stdint.h>
@@ -395,38 +403,76 @@ if enabled_or_auto avahi; then
 fi
 
 #
-# libav
+# ffmpeg
 #
-if enabled libffmpeg_static; then
+if enabled ffmpeg_static; then
 
   enable libav
   has_libav=true
 
   # libx264
-  if disabled libx264_static; then
-    check_cc_lib x264 || die "libx264 not found"
+  if enabled libx264; then
+    if disabled libx264_static; then
+      check_pkg x264 ">=0.142" || die "x264 package not found"
+    fi
+  else
+    disable libx264_static
   fi
 
   # libx265
   if enabled libx265; then
-    if enabled libx265_static; then
-      check_bin cmake || die "cmake not found (needed for building libx265)"
-      check_cc_lib stdc++ stdcpp ||\
-        die "libstdc++ not found (needed for building libx265)"
+    if disabled libx265_static; then
+      check_pkg x265 ">=1.5" || die "x265 package not found"
     else
-      check_cc_lib x265 || die "libx265 not found"
+      check_bin cmake || die "cmake not found"
+      check_cc_lib stdc++ stdcpp || die "libstdc++ not found"
     fi
   else
     disable libx265_static
   fi
 
-  # vdpau
-  if enabled_or_auto vdpau; then
-    if check_pkg vdpau; then
-      enable vdpau
-    elif enabled vdpau; then
-      die "vdpau (Video API library) not found"
+  # libvpx
+  if enabled libvpx; then
+    if disabled libvpx_static; then
+      check_pkg vpx ">=1.3.0" || die "vpx package not found"
     fi
+  else
+    disable libvpx_static
+  fi
+
+  # libtheora
+  if enabled libtheora; then
+    if disabled libtheora_static; then
+      check_pkg theoraenc ">=1.1.1" || die "theoraenc package not found"
+      check_pkg theoradec ">=1.1.1" || die "theoradec package not found"
+      check_pkg theora    ">=1.1.1" || die "theora package not found"
+    else
+      enable libogg_static
+    fi
+  else
+    disable libtheora_static
+  fi
+
+  # libvorbis
+  if enabled libvorbis; then
+    if disabled libvorbis_static; then
+      check_pkg vorbisfile ">=1.3.4" || die "vorbisfile package not found"
+      check_pkg vorbisenc  ">=1.3.4" || die "vorbisenc package not found"
+      check_pkg vorbis     ">=1.3.4" || die "vorbis package not found"
+    else
+      enable libogg_static
+    fi
+  else
+    disable libvorbis_static
+  fi
+
+  # libfdk-aac
+  if enabled libfdkaac; then
+    if disabled libfdkaac_static; then
+      check_pkg fdk-aac ">=0.1.3" || die "fdk-aac package not found"
+    fi
+  else
+    disable libfdkaac_static
   fi
 
   # nvenc
@@ -438,28 +484,27 @@ if enabled libffmpeg_static; then
     fi
   fi
 
-  # libmfx
-  if enabled libmfx; then
-    check_cc_lib va || die "libva not found"
-    check_cc_lib va-drm va_drm || disable va_drm
-    check_cc_lib va-x11 va_x11 || disable va_x11
-    if disabled va_drm && disabled va_x11; then
-      die "neither libva-drm nor libva-x11 was found"
-    fi
-    if enabled libmfx_static; then
-      check_bin autoreconf ||\
-        die "autoreconf not found (needed for building libmfx)"
-      check_bin libtool ||\
-        die "libtool not found (needed for building libmfx)"
-      check_bin libtoolize ||\
-        die "libtoolize not found (needed for building libmfx)"
-      check_cc_lib stdc++ stdcpp ||\
-        die "libstdc++ not found (needed for building libmfx)"
+  # qsv
+  if enabled qsv; then
+    if disabled libmfx_static; then
+      check_pkg libmfx ">=1.16" || die "libmfx package not found"
     else
-      check_cc_lib mfx || die "libmfx not found"
+      check_bin autoreconf       || die "autoreconf not found"
+      check_bin libtool          || die "libtool not found"
+      check_bin libtoolize       || die "libtoolize not found"
+      check_cc_lib stdc++ stdcpp || die "libstdc++ not found"
     fi
+    enable vaapi
   else
     disable libmfx_static
+  fi
+
+  # vaapi
+  if enabled vaapi; then
+    check_pkg libva ">=0.38.0"     || \
+      die "vaapi (Video Acceleration (VA) API for Linux) not found"
+    check_pkg libva-x11 ">=0.38.0" || die "libva-x11 not found"
+    check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
   fi
 
 else
@@ -467,81 +512,24 @@ else
   if enabled_or_auto libav; then
     has_libav=true
 
-    ffmpeg=$(${PKG_CONFIG} --modversion libavcodec | cut -d '.' -f 3)
-    test -z "$ffmpeg" && ffmpeg=0
-    printf "$TAB" "checking for ffmpeg libraries ..."
-    if test $ffmpeg -lt 100; then
-      ffmpeg=
-      echo "fail"
-    else
-      ffmpeg=yes
-      echo "ok"
-    fi
-
-    if test "$ffmpeg" == "yes"; then
-
-      #
-      # check for version n1.2+
-      #
-      if $has_libav && ! check_pkg libavcodec ">=55.18.102"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavutil ">=52.38.100"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavformat ">=55.12.100"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavfilter ">=4.0.0"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavresample ">=1.1.0"; then
-        has_libav=false
-      fi
-
-    else
-
-      #
-      # check for version v10+
-      #
-
-      if $has_libav && ! check_pkg libavcodec ">=55.34.1"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavutil ">=53.3.0"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavformat ">=55.12.0"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavfilter ">=4.0.0"; then
-        has_libav=false
-      fi
-
-      if $has_libav && ! check_pkg libavresample ">=1.1.0"; then
-        has_libav=false
-      fi
-
-    fi
+    check_pkg libavfilter   ">=6.31.100"  || has_libav=false
+    check_pkg libswresample ">=2.0.101"   || has_libav=false
+    check_pkg libavresample ">=3.0.0"     || has_libav=false
+    check_pkg libswscale    ">=4.0.100"   || has_libav=false
+    check_pkg libavformat   ">=57.25.100" || has_libav=false
+    check_pkg libavcodec    ">=57.24.102" || has_libav=false
+    check_pkg libavutil     ">=55.17.103" || has_libav=false
 
     if $has_libav; then
       enable libav
     else
-      echo "WARNING: none or old libav or libffmpeg libraries were detected"
-      echo "         * use --disable-libav or --enable-libffmpeg_static"
-      echo "         ** supported ffmpeg libs n1.2+"
-      echo "         ** supported libav  libs v10+"
+      echo "WARNING: none or old ffmpeg libraries were detected"
+      echo "         * use --disable-libav or --enable-ffmpeg_static"
       if enabled libav; then
-        die "libav development support not found"
+        die "ffmpeg development support not found"
       fi
     fi
+
   fi
 
 fi
