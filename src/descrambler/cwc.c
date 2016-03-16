@@ -731,6 +731,7 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
       tvhlog(LOG_DEBUG, "cwc",
              "Too many NOKs[%i] for service \"%s\"%s from %s",
              es->es_section, t->s_dvb_svcname, chaninfo, ct->td_nicename);
+      es->es_keystate = ES_FORBIDDEN;
       goto forbid;
     }
 
