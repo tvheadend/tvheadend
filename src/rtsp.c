@@ -28,9 +28,10 @@
  * Utils
  */
 int
-rtsp_send( http_client_t *hc, http_cmd_t cmd,
+rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
            const char *path, const char *query,
-           http_arg_list_t *hdr )
+           http_arg_list_t *hdr,
+           const char *body, size_t size )
 {
   http_arg_list_t h;
   size_t blen = 7 + strlen(hc->hc_host) +
@@ -38,6 +39,7 @@ rtsp_send( http_client_t *hc, http_cmd_t cmd,
                 (path ? strlen(path) : 1) + 1;
   char *buf = alloca(blen);
   char buf2[7];
+  char buf_body[size + 3];
 
   if (hc->hc_rtsp_session) {
     if (hdr == NULL) {
@@ -46,13 +48,28 @@ rtsp_send( http_client_t *hc, http_cmd_t cmd,
     }
     http_arg_set(hdr, "Session", hc->hc_rtsp_session);
   }
+
+  if (size > 0) {
+    if (hdr == NULL) {
+      hdr = &h;
+      http_arg_init(&h);
+    }
+    strncpy(buf_body, body, sizeof(buf_body));
+    strncat(buf_body, "\r\n", 2);
+    snprintf(buf2, sizeof(buf2), "%lu", size + 2);
+    http_arg_set(hdr, "Content-Length", buf2);
+  }
+
   http_client_basic_auth(hc, hdr, hc->hc_rtsp_user, hc->hc_rtsp_pass);
   if (hc->hc_port != 554)
     snprintf(buf2, sizeof(buf2), ":%d", hc->hc_port);
   else
     buf2[0] = '\0';
   snprintf(buf, blen, "rtsp://%s%s%s", hc->hc_host, buf2, path ? path : "/");
-  return http_client_send(hc, cmd, buf, query, hdr, NULL, 0);
+  if(size > 0)
+    return http_client_send(hc, cmd, buf, query, hdr, buf_body, size + 2);
+  else
+    return http_client_send(hc, cmd, buf, query, hdr, NULL, 0);
 }
 
 void
@@ -248,4 +265,12 @@ rtsp_describe_decode( http_client_t *hc )
     printf("  %s: %s\n", ra->key, ra->val);
   printf("data:\n%s\n",    hc->hc_data);
   return HTTP_CON_OK;
+}
+
+int
+rtsp_get_parameter( http_client_t *hc, const char *parameter ) {
+  http_arg_list_t hdr;
+  http_arg_init(&hdr);
+  http_arg_set(&hdr, "Content-Type", "text/parameters");
+  return rtsp_send_ext(hc, RTSP_CMD_GET_PARAMETER, NULL, NULL, &hdr, parameter, strlen(parameter));
 }

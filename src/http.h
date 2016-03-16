@@ -110,6 +110,7 @@ typedef enum http_cmd {
   RTSP_CMD_TEARDOWN,
   RTSP_CMD_PLAY,
   RTSP_CMD_PAUSE,
+  RTSP_CMD_GET_PARAMETER,
 } http_cmd_t;
 
 #define HTTP_CMD_OPTIONS RTSP_CMD_OPTIONS
@@ -344,6 +345,7 @@ struct http_client {
   int          hc_rtp_timeout;
   char        *hc_rtsp_user;
   char        *hc_rtsp_pass;
+  char         hc_rtsp_keep_alive_cmd;
 
   struct http_client_ssl *hc_ssl; /* ssl internals */
 
@@ -389,8 +391,14 @@ void http_client_unpause( http_client_t *hc );
  * RTSP helpers
  */
 
-int rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
-               const char *query, http_arg_list_t *hdr );
+int rtsp_send_ext( http_client_t *hc, http_cmd_t cmd, const char *path,
+               const char *query, http_arg_list_t *hdr, const char *body, size_t size );
+
+static inline int
+rtsp_send( http_client_t *hc, http_cmd_t cmd, const char *path,
+               const char *query, http_arg_list_t *hdr ) {
+  return rtsp_send_ext( hc, cmd, path, query, hdr, NULL, 0 );
+}
                       
 void rtsp_clear_session( http_client_t *hc );
 
@@ -409,9 +417,16 @@ rtsp_play( http_client_t *hc, const char *path, const char *query ) {
 }
 
 static inline int
+rtsp_pause( http_client_t *hc, const char *path, const char *query ) {
+  return rtsp_send(hc, RTSP_CMD_PAUSE, path, query, NULL);
+}
+
+static inline int
 rtsp_teardown( http_client_t *hc, const char *path, const char *query ) {
   return rtsp_send(hc, RTSP_CMD_TEARDOWN, path, query, NULL);
 }
+
+int rtsp_get_parameter( http_client_t *hc, const char *parameter );
 
 int rtsp_describe_decode( http_client_t *hc );
 static inline int

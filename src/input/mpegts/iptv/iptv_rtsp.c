@@ -52,8 +52,12 @@ iptv_rtsp_alive_cb ( void *aux )
 {
   iptv_mux_t *im = aux;
   rtsp_priv_t *rp = im->im_data;
-
-  rtsp_send(rp->hc, RTSP_CMD_OPTIONS, rp->path, rp->query, NULL);
+  if(rp->hc->hc_rtsp_keep_alive_cmd == RTSP_CMD_GET_PARAMETER)
+    rtsp_get_parameter(rp->hc, "position");
+  else if(rp->hc->hc_rtsp_keep_alive_cmd == RTSP_CMD_OPTIONS)
+    rtsp_send(rp->hc, RTSP_CMD_OPTIONS, rp->path, rp->query, NULL);
+  else
+    return;
   mtimer_arm_rel(&rp->alive_timer, iptv_rtsp_alive_cb, im,
                  sec2mono(MAX(1, (rp->hc->hc_rtp_timeout / 2) - 1)));
 }
@@ -75,6 +79,13 @@ iptv_rtsp_header ( http_client_t *hc )
       mtimer_arm_rel(&hc->hc_close_timer, iptv_rtsp_close_cb, hc, 0);
       pthread_mutex_unlock(&global_lock);
     }
+    return 0;
+  }
+
+  if (hc->hc_cmd == RTSP_CMD_GET_PARAMETER && hc->hc_code != HTTP_STATUS_OK) {
+    tvhtrace("iptv", "GET_PARAMETER command returned invalid error code %d for '%s', "
+        "fall back to OPTIONS in keep alive loop.", hc->hc_code, im->mm_iptv_url_raw);
+    hc->hc_rtsp_keep_alive_cmd = RTSP_CMD_OPTIONS;
     return 0;
   }
 
@@ -160,10 +171,11 @@ iptv_rtsp_start
     return SM_CODE_TUNING_FAILED;
   }
 
-  hc->hc_hdr_received    = iptv_rtsp_header;
-  hc->hc_data_received   = iptv_rtsp_data;
-  hc->hc_handle_location = 1;        /* allow redirects */
-  http_client_register(hc);          /* register to the HTTP thread */
+  hc->hc_hdr_received        = iptv_rtsp_header;
+  hc->hc_data_received       = iptv_rtsp_data;
+  hc->hc_handle_location     = 1;                      /* allow redirects */
+  hc->hc_rtsp_keep_alive_cmd = RTSP_CMD_GET_PARAMETER; /* start keep alive loop with GET_PARAMETER */
+  http_client_register(hc);                            /* register to the HTTP thread */
   r = rtsp_setup(hc, u->path, u->query, NULL,
                  ntohs(IP_PORT(rtp->ip)),
                  ntohs(IP_PORT(rtcp->ip)));
