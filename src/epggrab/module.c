@@ -262,7 +262,7 @@ void epggrab_module_parse( void *m, htsmsg_t *data )
   htsmsg_destroy(data);
 
   /* Debug stats */
-  tvhlog(LOG_INFO, mod->id, "parse took %"PRItime_t" seconds", mono2sec(tm2 - tm1));
+  tvhlog(LOG_INFO, mod->id, "parse took %"PRId64" seconds", mono2sec(tm2 - tm1));
   tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
          stats.channels.total, stats.channels.created,
          stats.channels.modified);
