@@ -643,6 +643,7 @@
     margin: 5px;
     font: normal 16px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
+    text-decoration: underline;
 }
 
 .x-epg-subtitle {
@@ -652,8 +653,16 @@
 }
 
 .x-epg-time {
-    font-style: italic;
+    font-style: normal;
     margin: 5px;
+}
+
+.x-epg-time-start {
+    color: green;
+}
+
+.x-epg-time-stop {
+    color: red;
 }
 
 .x-epg-prefix {
@@ -679,7 +688,7 @@
 }
 
 .x-epg-meta {
-    font-style: italic;
+    font-style: normal;
     margin: 5px;
 }
 
