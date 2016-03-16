@@ -182,6 +182,7 @@ struct satip_satconf
   int                        sfc_priority;
   int                        sfc_grace;
   char                      *sfc_name;
+  int                        sfc_network_limit;
 
   /*
    * Assigned networks to this SAT configuration
@@ -234,7 +235,7 @@ int satip_satconf_get_grace
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
 int satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm );
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int check );
 
 /*
  * RTSP part

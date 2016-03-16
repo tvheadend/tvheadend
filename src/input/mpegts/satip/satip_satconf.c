@@ -65,13 +65,36 @@ satip_satconf_get_grace
   return sfc ? sfc->sfc_grace : 0;
 }
 
+static int
+satip_satconf_check_network_limit
+  ( satip_frontend_t *lfe, satip_satconf_t *sfc, idnode_t *mn )
+{
+  satip_frontend_t *lfe2;
+  satip_satconf_t *sfc2;
+  int count;
+
+  count = 0;
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
+    TAILQ_FOREACH(sfc2, &lfe2->sf_satconf, sfc_link)
+      if (idnode_set_exists(sfc->sfc_networks, mn))
+        count++;
+
+  return count <= sfc->sfc_network_limit;
+}
+
 int
 satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm )
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int check )
 {
   satip_satconf_t *sfc;
   sfc = satip_satconf_find_ele(lfe, mm);
-  return sfc && sfc->sfc_enabled ? sfc->sfc_position : 0;
+  if (sfc && sfc->sfc_enabled) {
+    if (!check || sfc->sfc_network_limit <= 0)
+      return sfc->sfc_position;
+    if (satip_satconf_check_network_limit(lfe, sfc, &mm->mm_network->mn_id))
+      return sfc->sfc_position;
+  }
+  return 0;
 }
 
 /* **************************************************************************
@@ -223,6 +246,17 @@ const idclass_t satip_satconf_class =
       .off      = offsetof(satip_satconf_t, sfc_position),
       .def.i    = 1,
       .opts     = PO_RDONLY | PO_ADVANCED,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "network_limit",
+      .name     = N_("Network limit per position"),
+      .desc     = N_("A comma separated list with tuner limits per network "
+                     "position (src=) for satellite SAT>IP tuners. "
+                     "The first limit number is for src=1 (AA), second "
+                     "for src=2 (AB) etc."),
+      .opts     = PO_EXPERT,
+      .off      = offsetof(satip_satconf_t, sfc_network_limit),
     },
     {
       .type     = PT_STR,

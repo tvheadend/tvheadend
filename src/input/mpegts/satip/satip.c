@@ -328,7 +328,7 @@ const idclass_t satip_device_class =
       .id       = "skip_ts",
       .name     = N_("Skip TS packets (0-200)"),
       .desc     = N_("Skip x number of transport packets."),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .off      = offsetof(satip_device_t, sd_skip_ts),
     },
     {
