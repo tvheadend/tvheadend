@@ -31,7 +31,6 @@ typedef struct bouquet {
   int           bq_saveflag;
   int           bq_in_load;
   int           bq_only_bq_lcn;
-  time_t        bq_updated;
 
   int           bq_shield;
   int           bq_enabled;
