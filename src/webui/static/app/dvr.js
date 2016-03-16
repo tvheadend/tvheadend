@@ -39,9 +39,9 @@ tvheadend.dvrDetails = function(uuid) {
         if (episode)
           content += '<div class="x-epg-title">' + episode + '</div>';
         if (start_real)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled Start Time') + ':</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
+          content += '<div class="x-epg-time"><div class="x-epg-time-start"><div class="x-epg-prefix">' + _('Scheduled Start Time') + ':</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
         if (stop_real)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
+          content += '<div class="x-epg-time"><div class="x-epg-time-stop"><div class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
         if (duration)
           content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Duration') + ':</div> ' + parseInt(duration / 60) + ' ' + _('min') + '</div>';
         content += '<hr/>';
