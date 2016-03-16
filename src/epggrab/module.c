@@ -249,20 +249,20 @@ epggrab_module_t *epggrab_module_create
  */
 void epggrab_module_parse( void *m, htsmsg_t *data )
 {
-  time_t tm1, tm2;
+  int64_t tm1, tm2;
   int save = 0;
   epggrab_stats_t stats;
   epggrab_module_int_t *mod = m;
 
   /* Parse */
   memset(&stats, 0, sizeof(stats));
-  time(&tm1);
+  tm1 = getfastmonoclock();
   save |= mod->parse(mod, data, &stats);
-  time(&tm2);
+  tm2 = getfastmonoclock();
   htsmsg_destroy(data);
 
   /* Debug stats */
-  tvhlog(LOG_INFO, mod->id, "parse took %"PRItime_t" seconds", tm2 - tm1);
+  tvhlog(LOG_INFO, mod->id, "parse took %"PRItime_t" seconds", mono2sec(tm2 - tm1));
   tvhlog(LOG_INFO, mod->id, "  channels   tot=%5d new=%5d mod=%5d",
          stats.channels.total, stats.channels.created,
          stats.channels.modified);
