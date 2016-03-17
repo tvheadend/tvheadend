@@ -102,9 +102,15 @@ mpegts_network_scan_mux_done0
   ( mpegts_mux_t *mm, mpegts_mux_scan_result_t result, int weight )
 {
   mpegts_network_t *mn = mm->mm_network;
+  mpegts_mux_scan_state_t state = mm->mm_scan_state;
 
+  /* prevent double del: */
+  /*   mpegts_mux_stop -> mpegts_network_scan_mux_cancel */
+  mm->mm_scan_state = MM_SCAN_STATE_IDLE;
   mpegts_mux_unsubscribe_by_name(mm, "scan");
-  if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
+  mm->mm_scan_state = state;
+
+  if (state == MM_SCAN_STATE_PEND) {
     if (weight || mn->mn_idlescan) {
       if (!weight)
         mm->mm_scan_weight = SUBSCRIPTION_PRIO_SCAN_IDLE;
