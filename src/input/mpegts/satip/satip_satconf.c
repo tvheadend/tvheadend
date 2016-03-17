@@ -76,7 +76,7 @@ satip_satconf_check_network_limit
   count = 0;
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
     TAILQ_FOREACH(sfc2, &lfe2->sf_satconf, sfc_link)
-      if (idnode_set_exists(sfc->sfc_networks, mn))
+      if (idnode_set_exists(sfc->sfc_networks, mn) && lfe2->sf_running)
         count++;
 
   return count <= sfc->sfc_network_limit;
@@ -84,15 +84,20 @@ satip_satconf_check_network_limit
 
 int
 satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int check )
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check )
 {
   satip_satconf_t *sfc;
   sfc = satip_satconf_find_ele(lfe, mm);
   if (sfc && sfc->sfc_enabled) {
+    if (netlimit)
+      *netlimit = sfc->sfc_network_limit;
     if (!check || sfc->sfc_network_limit <= 0)
       return sfc->sfc_position;
     if (satip_satconf_check_network_limit(lfe, sfc, &mm->mm_network->mn_id))
       return sfc->sfc_position;
+  } else {
+    if (netlimit)
+      *netlimit = 0;
   }
   return 0;
 }

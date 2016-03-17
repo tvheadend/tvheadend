@@ -454,7 +454,7 @@ static int
 satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
 {
   satip_frontend_t *lfe_master;
-  mpegts_mux_t *mm1;
+  mpegts_mux_t *mm1 = NULL;
   dvb_mux_conf_t *mc1, *mc2;
   int position, high1, high2;
 
@@ -466,7 +466,7 @@ satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
     lfe_master = satip_frontend_find_by_number(lfe2->sf_device, lfe2->sf_master) ?: lfe2;
 
   mm1 = lfe2->sf_req->sf_mmi->mmi_mux;
-  position = satip_satconf_get_position(lfe2, mm2, 0);
+  position = satip_satconf_get_position(lfe2, mm2, NULL, 0);
   if (position <= 0 || lfe_master->sf_position != position)
     return 0;
   mc1 = &((dvb_mux_t *)mm1)->lm_tuning;
@@ -487,18 +487,31 @@ satip_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_frontend_t *lfe2;
-  int position;
+  int position, netlimit;
 
   lock_assert(&global_lock);
 
   if (!mpegts_input_is_enabled(mi, mm, flags)) return 0;
   if (lfe->sf_device->sd_dbus_allow <= 0) return 0;
   if (lfe->sf_type != DVB_TYPE_S) return 1;
+  /* try to reuse any input for limited networks if allowed */
+  if (lfe->sf_device->sd_all_tuners) {
+    position = satip_satconf_get_position(lfe, mm, &netlimit, 0);
+    if (position <= 0) return 0;
+    if (netlimit <= 0) goto cont;
+    /* try to reuse any tuner input as slave */
+    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
+      if (lfe2 == lfe) continue;
+      if (satip_frontend_match_satcfg(lfe2, mm))
+        return 1;
+    }
+  }
   /* check if the position is enabled */
-  position = satip_satconf_get_position(lfe, mm, 1);
+  position = satip_satconf_get_position(lfe, mm, NULL, 1);
   if (position <= 0)
     return 0;
   /* check if any "blocking" tuner is running */
+cont:
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
     if (lfe2 == lfe) continue;
     if (lfe2->sf_type != DVB_TYPE_S) continue;
@@ -555,7 +568,7 @@ satip_frontend_start_mux
   char buf1[256], buf2[256];
 
   if (lfe->sf_positions > 0) {
-    lfe->sf_position = satip_satconf_get_position(lfe, mmi->mmi_mux, 1);
+    lfe->sf_position = satip_satconf_get_position(lfe, mmi->mmi_mux, NULL, 0);
     if (lfe->sf_position <= 0)
       return SM_CODE_TUNING_FAILED;
   }

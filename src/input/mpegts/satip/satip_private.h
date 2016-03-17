@@ -95,6 +95,7 @@ struct satip_device
   int                        sd_can_weight;
   int                        sd_dbus_allow;
   int                        sd_skip_ts;
+  int                        sd_all_tuners;
   int                        sd_disable_workarounds;
   pthread_mutex_t            sd_tune_mutex;
 };
@@ -235,7 +236,7 @@ int satip_satconf_get_grace
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
 int satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int check );
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check );
 
 /*
  * RTSP part
