@@ -911,15 +911,17 @@ scanfile_region_list_t *
 scanfile_find_region_list ( const char *type )
 {
   scanfile_region_list_t *list = NULL;
+  scanfile_region_list_t *ptr = scanfile_regions;
   int i;
-  if (scanfile_regions == NULL)
+  if (ptr == NULL)
     return NULL;
-  for (i = 0; i < REGIONS; i++)
-    if (strcasecmp(scanfile_regions[i].srl_type, type) == 0 ||
-        strcasecmp(scanfile_regions[i].srl_alt_type, type) == 0) {
-      list = &scanfile_regions[i];
+  for (i = 0; i < REGIONS; i++, ptr++) {
+    if (strcasecmp(ptr->srl_type, type) == 0 ||
+        (ptr->srl_alt_type && strcasecmp(ptr->srl_alt_type, type) == 0)) {
+      list = ptr;
       break;
     }
+  }
   return list;
 }
 
