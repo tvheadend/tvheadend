@@ -872,13 +872,17 @@ mpegts_input_recv_packets
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, sbuf_t *sb,
     int64_t *pcr, uint16_t *pcr_pid )
 {
-  int len2 = 0, off = 0;
+  int len, len2, off;
   mpegts_packet_t *mp;
-  uint8_t *tsb = sb->sb_data;
-  int     len  = sb->sb_ptr;
+  uint8_t *tsb;
 #define MIN_TS_PKT 100
 #define MIN_TS_SYN (5*188)
 
+retry:
+  len2 = 0;
+  off  = 0;
+  tsb  = sb->sb_data;
+  len  = sb->sb_ptr;
   if (len < (MIN_TS_PKT * 188)) {
     /* For slow streams, check also against the clock */
     if (dispatch_clock == mi->mi_last_dispatch)
@@ -933,9 +937,11 @@ mpegts_input_recv_packets
   }
 
   /* Adjust buffer */
-  if (len)
+  if (len) {
     sbuf_cut(sb, off); // cut off the bottom
-  else
+    if (sb->sb_ptr >= MIN_TS_PKT * 188)
+      goto retry;
+  } else
     sb->sb_ptr = 0;    // clear
 }
 
