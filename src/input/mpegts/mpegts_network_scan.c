@@ -36,6 +36,10 @@ mm_cmp ( mpegts_mux_t *a, mpegts_mux_t *b )
 {
   int r = b->mm_scan_weight - a->mm_scan_weight;
   if (r == 0) {
+    r = uuid_cmp(&a->mm_network->mn_id.in_uuid,
+                 &b->mm_network->mn_id.in_uuid);
+    if (r)
+      return r;
     if (idnode_is_instance(&a->mm_id, &dvb_mux_dvbs_class) &&
         idnode_is_instance(&b->mm_id, &dvb_mux_dvbs_class)) {
       dvb_mux_conf_t *mc1 = &((dvb_mux_t *)a)->lm_tuning;
