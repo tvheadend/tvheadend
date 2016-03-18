@@ -79,14 +79,28 @@ iptv_udp_read ( iptv_mux_t *im )
   struct iovec *iovec;
   udp_multirecv_t *um = im->im_data;
   ssize_t res = 0;
+  char name[256];
 
   n = udp_multirecv_read(um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
   if (n < 0)
     return -1;
 
+  im->mm_iptv_rtp_seq &= ~0xfff;
   for (i = 0; i < n; i++, iovec++) {
+    if (iovec->iov_len <= 0)
+      continue;
+    if (*(uint8_t *)iovec->iov_base != 0x47) {
+      im->mm_iptv_rtp_seq++;
+      continue;
+    }
     sbuf_append(&im->mm_iptv_buffer, iovec->iov_base, iovec->iov_len);
     res += iovec->iov_len;
+  }
+
+  if (im->mm_iptv_rtp_seq < 0xffff && im->mm_iptv_rtp_seq > 0x3ff) {
+    mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
+    tvherror("iptv", "receving non-raw UDP data for %s!", name);
+    im->mm_iptv_rtp_seq = 0x10000; /* no further logs! */
   }
 
   return res;
