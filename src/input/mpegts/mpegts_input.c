@@ -341,7 +341,8 @@ const idclass_t mpegts_input_class =
  * *************************************************************************/
 
 int
-mpegts_input_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+mpegts_input_is_enabled
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   if ((flags & SUBSCRIPTION_EPG) != 0 && !mi->mi_ota_epg)
     return 0;

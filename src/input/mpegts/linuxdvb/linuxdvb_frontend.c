@@ -462,7 +462,8 @@ linuxdvb_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+linuxdvb_frontend_is_enabled
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
   linuxdvb_adapter_t *la;
@@ -470,7 +471,7 @@ linuxdvb_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
   char ubuf[UUID_HEX_SIZE];
 
   if (lfe->lfe_fe_path == NULL) return 0;
-  if (!mpegts_input_is_enabled(mi, mm, flags)) return 0;
+  if (!mpegts_input_is_enabled(mi, mm, flags, weight)) return 0;
   if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
   if (lfe->lfe_in_setup) return 0;
   if (lfe->lfe_type != DVB_TYPE_S) return 1;

@@ -133,7 +133,7 @@ linuxdvb_adapter_is_enabled ( linuxdvb_adapter_t *la )
 {
   linuxdvb_frontend_t *lfe;
   LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
-    if (lfe->mi_is_enabled((mpegts_input_t*)lfe, NULL, 0))
+    if (lfe->mi_is_enabled((mpegts_input_t*)lfe, NULL, 0, -1))
       return 1;
   }
   return 0;

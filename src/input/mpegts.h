@@ -703,7 +703,7 @@ struct mpegts_input
   /*
    * Functions
    */
-  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, int flags);
+  int  (*mi_is_enabled)     (mpegts_input_t*, mpegts_mux_t *mm, int flags, int weight);
   void (*mi_enabled_updated)(mpegts_input_t*);
   void (*mi_display_name)   (mpegts_input_t*, char *buf, size_t len);
   int  (*mi_get_weight)     (mpegts_input_t*, mpegts_mux_t *mm, int flags);
@@ -776,7 +776,7 @@ void mpegts_input_status_timer ( void *p );
 
 int mpegts_input_grace ( mpegts_input_t * mi, mpegts_mux_t * mm );
 
-int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags );
+int mpegts_input_is_enabled ( mpegts_input_t * mi, mpegts_mux_t *mm, int flags, int weight );
 
 void mpegts_input_set_enabled ( mpegts_input_t *mi, int enabled );
 

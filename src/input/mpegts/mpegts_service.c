@@ -306,7 +306,7 @@ mpegts_service_enlist
     if (ti && (tvh_input_t *)mi != ti)
       continue;
 
-    if (!mi->mi_is_enabled(mi, mmi->mmi_mux, flags)) continue;
+    if (!mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight)) continue;
 
     /* Set weight to -1 (forced) for already active mux */
     if (mmi->mmi_mux->mm_active == mmi) {

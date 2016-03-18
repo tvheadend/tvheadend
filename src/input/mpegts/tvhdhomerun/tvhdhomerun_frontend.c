@@ -42,9 +42,10 @@ tvhdhomerun_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-tvhdhomerun_frontend_is_enabled ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+tvhdhomerun_frontend_is_enabled
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  return mpegts_input_is_enabled(mi, mm, flags);
+  return mpegts_input_is_enabled(mi, mm, flags, weight);
 }
 
 static void *
