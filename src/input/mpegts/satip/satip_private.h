@@ -184,6 +184,7 @@ struct satip_satconf
   int                        sfc_grace;
   char                      *sfc_name;
   int                        sfc_network_limit;
+  int                        sfc_network_group;
 
   /*
    * Assigned networks to this SAT configuration

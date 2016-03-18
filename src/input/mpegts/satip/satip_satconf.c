@@ -75,9 +75,15 @@ satip_satconf_check_network_limit
 
   count = 0;
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
-    TAILQ_FOREACH(sfc2, &lfe2->sf_satconf, sfc_link)
-      if (idnode_set_exists(sfc->sfc_networks, mn) && lfe2->sf_running)
+    TAILQ_FOREACH(sfc2, &lfe2->sf_satconf, sfc_link) {
+      if (!lfe2->sf_running) continue;
+      if (sfc->sfc_network_group > 0 &&
+          sfc2->sfc_network_group > 0 &&
+          sfc2->sfc_network_group == sfc->sfc_network_group)
         count++;
+      else if (idnode_set_exists(sfc2->sfc_networks, mn))
+        count++;
+    }
 
   return count <= sfc->sfc_network_limit;
 }
@@ -256,12 +262,20 @@ const idclass_t satip_satconf_class =
       .type     = PT_INT,
       .id       = "network_limit",
       .name     = N_("Network limit per position"),
-      .desc     = N_("A comma separated list with tuner limits per network "
-                     "position (src=) for satellite SAT>IP tuners. "
+      .desc     = N_("Concurrent limit per network position (src=) "
+                     "for satellite SAT>IP tuners. "
                      "The first limit number is for src=1 (AA), second "
                      "for src=2 (AB) etc."),
       .opts     = PO_EXPERT,
       .off      = offsetof(satip_satconf_t, sfc_network_limit),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "network_group",
+      .name     = N_("Network group"),
+      .desc     = N_("Define network group to limit network usage."),
+      .opts     = PO_EXPERT,
+      .off      = offsetof(satip_satconf_t, sfc_network_group),
     },
     {
       .type     = PT_STR,
