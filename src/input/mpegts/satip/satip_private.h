@@ -209,6 +209,9 @@ void satip_device_destroy_later( satip_device_t *sd, int after_ms );
 
 char *satip_device_nicename ( satip_device_t *sd, char *buf, int len );
 
+int satip_frontend_match_satcfg
+  ( satip_frontend_t *lfe2, mpegts_mux_t *mm2, int flags, int weight );
+
 satip_frontend_t *
 satip_frontend_create
   ( htsmsg_t *conf, satip_device_t *sd, dvb_fe_type_t type, int v2, int num );
@@ -237,7 +240,7 @@ int satip_satconf_get_grace
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
 int satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check );
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check, int flags, int weight );
 
 /*
  * RTSP part

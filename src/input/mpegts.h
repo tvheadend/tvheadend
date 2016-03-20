@@ -924,6 +924,7 @@ void mpegts_input_recv_packets
 int mpegts_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );
 int mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags );
 int mpegts_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm );
+int mpegts_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi );
 
 void mpegts_input_save ( mpegts_input_t *mi, htsmsg_t *c );
 

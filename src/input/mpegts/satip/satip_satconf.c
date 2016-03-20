@@ -66,41 +66,121 @@ satip_satconf_get_grace
 }
 
 static int
-satip_satconf_check_network_limit
-  ( satip_frontend_t *lfe, satip_satconf_t *sfc, idnode_t *mn )
+satip_satconf_master_or_slave
+  ( satip_frontend_t *lfe1, satip_frontend_t *lfe2 )
 {
-  satip_frontend_t *lfe2;
+  return lfe1->sf_number == lfe2->sf_master ||
+         lfe2->sf_number == lfe1->sf_master;
+}
+
+static int
+satip_satconf_in_network_group
+  ( satip_frontend_t *lfe, int network_group, idnode_t *mn )
+{
   satip_satconf_t *sfc2;
-  int count;
 
-  count = 0;
+  TAILQ_FOREACH(sfc2, &lfe->sf_satconf, sfc_link) {
+    if (network_group > 0 &&
+        sfc2->sfc_network_group > 0 &&
+        sfc2->sfc_network_group == network_group)
+      break;
+    else if (idnode_set_exists(sfc2->sfc_networks, mn))
+      break;
+  }
+  return sfc2 != NULL;
+}
+
+static int
+satip_satconf_check_limits
+  ( satip_frontend_t *lfe, satip_satconf_t *sfc, mpegts_mux_t *mm,
+    int flags, int weight, int manage )
+{
+  satip_frontend_t *lfe2, *lowest_lfe;
+  mpegts_mux_t *mm2;
+  mpegts_input_t *mi2;
+  idnode_t *mn = &mm->mm_network->mn_id;
+  int count, size, lowest, w2, r, i, limit, *hashes;
+
+  size = 0;
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link)
-    TAILQ_FOREACH(sfc2, &lfe2->sf_satconf, sfc_link) {
-      if (!lfe2->sf_running) continue;
-      if (sfc->sfc_network_group > 0 &&
-          sfc2->sfc_network_group > 0 &&
-          sfc2->sfc_network_group == sfc->sfc_network_group)
-        count++;
-      else if (idnode_set_exists(sfc2->sfc_networks, mn))
-        count++;
-    }
+    size++;
+  hashes = alloca(size * sizeof(int));
 
-  return count <= sfc->sfc_network_limit;
+  limit = sfc->sfc_network_limit > 0 ? sfc->sfc_network_limit : 1;
+
+retry:
+  memset(hashes, 0, size * sizeof(int));
+  count = 1;
+  lowest = INT_MAX;
+  lowest_lfe = NULL;
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
+    if (lfe == lfe2 || !lfe2->sf_running || lfe2->sf_type != DVB_TYPE_S)
+      continue;
+    if (sfc->sfc_network_limit) {
+      if (!satip_satconf_in_network_group(lfe2, sfc->sfc_network_group, mn))
+        continue;
+    } else {
+      if (!satip_satconf_master_or_slave(lfe, lfe2))
+        continue;
+    }
+    mi2 = (mpegts_input_t *)lfe2;
+    mm2 = lfe2->sf_req->sf_mmi->mmi_mux;
+    if (weight > 0) {
+      w2 = lfe2->mi_get_weight(mi2, mm2, flags);
+      if (w2 < weight)
+        continue;
+    } else {
+      w2 = -1;
+    }
+    r = satip_frontend_match_satcfg(lfe2, mm, 0, -1);
+    if (r && manage) {
+      w2 = lfe2->mi_get_weight(mi2, mm2, flags);;
+      if (w2 < lowest) {
+        lowest = w2;
+        lowest_lfe = lfe2;
+      }
+    }
+    for (i = 0; i < size; i++) {
+      if (hashes[i] == r)
+        break;
+      if (!hashes[i]) {
+        hashes[i] = r;
+        count++;
+        break;
+      }
+    }
+  }
+  if (count <= limit)
+    return 1;
+  if (manage) {
+    /* free tuner with lowest weight */
+    mm2 = lowest_lfe->sf_req->sf_mmi->mmi_mux;
+    mm2->mm_stop(mm2, 1, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
+    goto retry;
+  }
+  return 0;
 }
 
 int
 satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check )
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check, int flags, int weight )
 {
   satip_satconf_t *sfc;
   sfc = satip_satconf_find_ele(lfe, mm);
   if (sfc && sfc->sfc_enabled) {
     if (netlimit)
       *netlimit = sfc->sfc_network_limit;
-    if (!check || sfc->sfc_network_limit <= 0)
+    if (!check)
       return sfc->sfc_position;
-    if (satip_satconf_check_network_limit(lfe, sfc, &mm->mm_network->mn_id))
+    if (check > 1) {
+      satip_satconf_check_limits(lfe, sfc, mm, flags, weight, 1);
       return sfc->sfc_position;
+    } else {
+      if (sfc->sfc_network_limit <= 0)
+        return sfc->sfc_position;
+      if (satip_satconf_check_limits(lfe, sfc, mm, flags, weight, 0))
+        return sfc->sfc_position;
+    }
   } else {
     if (netlimit)
       *netlimit = 0;

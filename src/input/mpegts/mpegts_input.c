@@ -405,7 +405,7 @@ mpegts_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
   return mi->mi_priority;
 }
 
-static int
+int
 mpegts_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   mpegts_mux_instance_t *cur;

@@ -451,22 +451,48 @@ satip_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 }
 
 static int
-satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
+satip_frontend_get_max_weight ( satip_frontend_t *lfe, mpegts_mux_t *mm, int flags )
+{
+  satip_frontend_t *lfe2;
+  int w = 0, w2;
+
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
+    if (!lfe2->sf_running) continue;
+    if (lfe2->sf_type != DVB_TYPE_S) continue;
+    if (lfe2 != lfe) continue;
+    if (lfe->sf_master != lfe2->sf_number &&
+        lfe2->sf_master != lfe->sf_number) continue;
+    w2 = lfe2->mi_get_weight((mpegts_input_t *)lfe2, mm, flags);
+    if (w2 > w)
+      w = w2;
+  }
+  return w;
+}
+
+int
+satip_frontend_match_satcfg
+  ( satip_frontend_t *lfe2, mpegts_mux_t *mm2, int flags, int weight )
 {
   satip_frontend_t *lfe_master;
   mpegts_mux_t *mm1 = NULL;
   dvb_mux_conf_t *mc1, *mc2;
-  int position, high1, high2;
+  int position, weight2, high1, high2;
 
-  if (lfe2->sf_req == NULL || lfe2->sf_req->sf_mmi == NULL)
+  if (!lfe2->sf_running)
     return 0;
 
   lfe_master = lfe2;
   if (lfe2->sf_master)
     lfe_master = satip_frontend_find_by_number(lfe2->sf_device, lfe2->sf_master) ?: lfe2;
 
+  if (weight > 0) {
+    weight2 = satip_frontend_get_max_weight(lfe2, mm2, flags);
+    if (weight2 > 0 && weight2 < weight)
+      return 1;
+  }
+
   mm1 = lfe2->sf_req->sf_mmi->mmi_mux;
-  position = satip_satconf_get_position(lfe2, mm2, NULL, 0);
+  position = satip_satconf_get_position(lfe2, mm2, NULL, 0, 0, -1);
   if (position <= 0 || lfe_master->sf_position != position)
     return 0;
   mc1 = &((dvb_mux_t *)mm1)->lm_tuning;
@@ -479,7 +505,9 @@ satip_frontend_match_satcfg ( satip_frontend_t *lfe2, mpegts_mux_t *mm2 )
   high2 = mc2->dmc_fe_freq > 11700000;
   if (high1 != high2)
     return 0;
-  return 1;
+
+  /* return unique hash for the active satcfg greater than zero */
+  return 1 | (high1 ? 2 : 0) | ((int)mc1->u.dmc_fe_qpsk.polarisation << 8) | (position << 16);
 }
 
 static int
@@ -497,18 +525,18 @@ satip_frontend_is_enabled
   if (lfe->sf_type != DVB_TYPE_S) return 1;
   /* try to reuse any input for limited networks if allowed */
   if (lfe->sf_device->sd_all_tuners) {
-    position = satip_satconf_get_position(lfe, mm, &netlimit, 0);
+    position = satip_satconf_get_position(lfe, mm, &netlimit, 0, 0, -1);
     if (position <= 0) return 0;
     if (netlimit <= 0) goto cont;
     /* try to reuse any tuner input as slave */
     TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
       if (lfe2 == lfe) continue;
-      if (satip_frontend_match_satcfg(lfe2, mm))
+      if (satip_frontend_match_satcfg(lfe2, mm, flags, weight))
         return 1;
     }
   }
   /* check if the position is enabled */
-  position = satip_satconf_get_position(lfe, mm, NULL, 1);
+  position = satip_satconf_get_position(lfe, mm, NULL, 1, flags, weight);
   if (position <= 0)
     return 0;
   /* check if any "blocking" tuner is running */
@@ -519,13 +547,10 @@ cont:
     if (lfe->sf_master == lfe2->sf_number) {
       if (!lfe2->sf_running)
         return 0; /* master must be running */
-      return satip_frontend_match_satcfg(lfe2, mm);
+      return satip_frontend_match_satcfg(lfe2, mm, flags, weight);
     }
-    if (lfe2->sf_master == lfe->sf_number && lfe2->sf_running) {
-      if (lfe2->sf_req == NULL || lfe2->sf_req->sf_mmi == NULL)
-        return 0;
-      return satip_frontend_match_satcfg(lfe2, mm);
-    }
+    if (lfe2->sf_master == lfe->sf_number && lfe2->sf_running)
+      return satip_frontend_match_satcfg(lfe2, mm, flags, weight);
   }
   return 1;
 }
@@ -560,6 +585,26 @@ satip_frontend_stop_mux
 }
 
 static int
+satip_frontend_warm_mux
+  ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  satip_frontend_t *lfe = (satip_frontend_t*)mi;
+  int r;
+
+  r = mpegts_input_warm_mux(mi, mmi);
+  if (r)
+    return r;
+
+  if (lfe->sf_positions > 0) {
+    lfe->sf_position = satip_satconf_get_position(lfe, mmi->mmi_mux, NULL, 2, 0, -1);
+    if (lfe->sf_position <= 0)
+      return SM_CODE_TUNING_FAILED;
+  }
+
+  return 0;
+}
+
+static int
 satip_frontend_start_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
 {
@@ -567,12 +612,6 @@ satip_frontend_start_mux
   dvb_mux_t *lm = (dvb_mux_t *)mmi->mmi_mux;
   satip_tune_req_t *tr;
   char buf1[256], buf2[256];
-
-  if (lfe->sf_positions > 0) {
-    lfe->sf_position = satip_satconf_get_position(lfe, mmi->mmi_mux, NULL, 0);
-    if (lfe->sf_position <= 0)
-      return SM_CODE_TUNING_FAILED;
-  }
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
   mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
@@ -1956,6 +1995,7 @@ satip_frontend_create
   lfe->ti_wizard_get     = satip_frontend_wizard_get;
   lfe->ti_wizard_set     = satip_frontend_wizard_set;
   lfe->mi_is_enabled     = satip_frontend_is_enabled;
+  lfe->mi_warm_mux       = satip_frontend_warm_mux;
   lfe->mi_start_mux      = satip_frontend_start_mux;
   lfe->mi_stop_mux       = satip_frontend_stop_mux;
   lfe->mi_network_list   = satip_frontend_network_list;
