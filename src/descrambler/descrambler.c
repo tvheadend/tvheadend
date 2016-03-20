@@ -334,16 +334,15 @@ descrambler_caid_changed ( service_t *t )
 }
 
 static void
-descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di, int locked )
+descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di )
 {
   streaming_message_t *sm;
   int r;
 
-  pthread_mutex_lock(&t->s_stream_mutex);
+  lock_assert(&t->s_stream_mutex);
   if (!t->s_descramble_info)
     t->s_descramble_info = calloc(1, sizeof(*di));
   r = memcmp(t->s_descramble_info, di, sizeof(*di));
-  pthread_mutex_unlock(&t->s_stream_mutex);
   if (r == 0) { /* identical */
     free(di);
     return;
@@ -353,11 +352,7 @@ descrambler_notify_deliver( mpegts_service_t *t, descramble_info_t *di, int lock
   sm = streaming_msg_create(SMT_DESCRAMBLE_INFO);
   sm->sm_data = di;
 
-  if (!locked)
-    pthread_mutex_lock(&t->s_stream_mutex);
   streaming_pad_deliver(&t->s_streaming_pad, sm);
-  if (!locked)
-    pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 static void
@@ -371,7 +366,7 @@ descrambler_notify_nokey( th_descrambler_runtime_t *dr )
   di = calloc(1, sizeof(*di));
   di->pid = t->s_pmt_pid;
 
-  descrambler_notify_deliver(t, di, 1);
+  descrambler_notify_deliver(t, di);
 }
 
 void
@@ -406,7 +401,9 @@ descrambler_notify( th_descrambler_t *td,
   strncpy(di->from, from, sizeof(di->protocol)-1);
   strncpy(di->protocol, protocol, sizeof(di->protocol)-1);
 
-  descrambler_notify_deliver(t, di, 0);
+  pthread_mutex_lock(&t->s_stream_mutex);
+  descrambler_notify_deliver(t, di);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 int
