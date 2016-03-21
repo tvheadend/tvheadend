@@ -91,6 +91,16 @@ satip_satconf_in_network_group
 }
 
 static int
+satip_satconf_hash ( mpegts_mux_t *mm, int position )
+{
+  dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
+  assert(position <= 0x7fff);
+  return 1 | (mc->dmc_fe_freq > 11700000 ? 2 : 0) |
+         ((int)mc->u.dmc_fe_qpsk.polarisation << 8) |
+         (position << 16);
+}
+
+static int
 satip_satconf_check_limits
   ( satip_frontend_t *lfe, satip_satconf_t *sfc, mpegts_mux_t *mm,
     int flags, int weight, int manage )
@@ -110,9 +120,13 @@ satip_satconf_check_limits
 
 retry:
   memset(hashes, 0, size * sizeof(int));
-  count = 1;
   lowest = INT_MAX;
   lowest_lfe = NULL;
+
+  /* add wanted mux to hashes */
+  hashes[0] = satip_satconf_hash(mm, sfc->sfc_position);
+  count = 1;
+
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
     if (lfe == lfe2 || !lfe2->sf_running || lfe2->sf_type != DVB_TYPE_S)
       continue;
@@ -132,14 +146,14 @@ retry:
     } else {
       w2 = -1;
     }
-    r = satip_frontend_match_satcfg(lfe2, mm, 0, -1);
-    if (r && manage) {
+    if (manage) {
       w2 = lfe2->mi_get_weight(mi2, mm2, flags);;
       if (w2 < lowest) {
         lowest = w2;
         lowest_lfe = lfe2;
       }
     }
+    r = satip_satconf_hash(mm2, lfe2->sf_position);
     for (i = 0; i < size; i++) {
       if (hashes[i] == r)
         break;
@@ -154,6 +168,9 @@ retry:
     return 1;
   if (manage) {
     /* free tuner with lowest weight */
+    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    lfe->sf_wait_for |= 1 << lowest_lfe->sf_number;
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
     mm2 = lowest_lfe->sf_req->sf_mmi->mmi_mux;
     mm2->mm_stop(mm2, 1, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
     goto retry;

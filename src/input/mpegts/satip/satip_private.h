@@ -157,6 +157,7 @@ struct satip_frontend
   uint32_t                   sf_seq;
   dvb_mux_t                 *sf_curmux;
   time_t                     sf_last_data_tstamp;
+  uint32_t                   sf_wait_for;
  
   /*
    * Configuration

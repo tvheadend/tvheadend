@@ -505,9 +505,7 @@ satip_frontend_match_satcfg
   high2 = mc2->dmc_fe_freq > 11700000;
   if (high1 != high2)
     return 0;
-
-  /* return unique hash for the active satcfg greater than zero */
-  return 1 | (high1 ? 2 : 0) | ((int)mc1->u.dmc_fe_qpsk.polarisation << 8) | (position << 16);
+  return 1;
 }
 
 static int
@@ -986,6 +984,39 @@ skip:
   return 0;
 }
 
+static int
+satip_frontend_other_is_waiting( satip_frontend_t *lfe )
+{
+  satip_frontend_t *lfe2;
+  int r;
+
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
+    if (lfe == lfe2) continue;
+    pthread_mutex_lock(&lfe2->sf_dvr_lock);
+    r = lfe2->sf_wait_for & (1 << lfe->sf_number);
+    pthread_mutex_unlock(&lfe2->sf_dvr_lock);
+    if (r)
+      return 1;
+  }
+  return 0;
+}
+
+static void
+satip_frontend_wake_other_waiting( satip_frontend_t *lfe )
+{
+  satip_frontend_t *lfe2;
+
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
+    if (lfe == lfe2) continue;
+    pthread_mutex_lock(&lfe2->sf_dvr_lock);
+    if (lfe2->sf_running && lfe2->sf_wait_for & (1 << lfe->sf_number)) {
+      lfe2->sf_wait_for &= ~(1 << lfe->sf_number);
+      tvh_write(lfe2->sf_dvr_pipe.wr, "o", 1);
+    }
+    pthread_mutex_unlock(&lfe2->sf_dvr_lock);
+  }
+}
+
 static void
 satip_frontend_extra_shutdown
   ( satip_frontend_t *lfe, uint8_t *session, long stream_id )
@@ -1120,6 +1151,7 @@ satip_frontend_close_rtsp
   tvhpoll_add(efd, &ev, 1);
 
   http_client_close(*rtsp);
+  satip_frontend_wake_other_waiting(lfe);
   *rtsp = NULL;
 }
 
@@ -1282,12 +1314,21 @@ new_tune:
 
   u64_2 = getfastmonoclock();
 
-  while (!start) {
+  pthread_mutex_lock(&lfe->sf_dvr_lock);
+  if (lfe->sf_wait_for == 0) start |= 2; else start &= ~2;
+  pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
-    nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 50 : -1);
+  while (start != 3) {
+
+    nfds = tvhpoll_wait(efd, ev, 1, rtsp ? 55 : -1);
+
+    pthread_mutex_lock(&lfe->sf_dvr_lock);
+    if (lfe->sf_wait_for == 0) start |= 2; else start &= ~2;
+    pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
     if (!tvheadend_is_running()) { exit_flag = 1; goto done; }
-    if (rtsp && getfastmonoclock() - u64_2 > 50000) /* 50ms */
+    if (rtsp && (getfastmonoclock() - u64_2 > 50000 || /* 50ms */
+                 satip_frontend_other_is_waiting(lfe)))
       satip_frontend_close_rtsp(lfe, buf, efd, &rtsp);
     if (nfds <= 0) continue;
 
@@ -1428,6 +1469,8 @@ new_tune:
         } else if (b[0] == 's') {
           start = 1;
           goto done;
+        } else if (b[0] == 'o') {
+          continue;
         }
       }
       tvhtrace("satip", "%s - input thread received mux close", buf);
@@ -1544,6 +1587,8 @@ new_tune:
         } else if (b[0] == 's') {
           start = 1; running = 0;
           continue;
+        } else if (b[0] == 'o') {
+          continue;
         }
       }
       tvhtrace("satip", "%s - input thread received mux close", buf);
@@ -1607,6 +1652,7 @@ new_tune:
             satip_frontend_tuning_error(lfe, tr);
             fatal = 1;
           } else {
+            satip_frontend_wake_other_waiting(lfe);
             strncpy((char *)session, rtsp->hc_rtsp_session ?: "", sizeof(session));
             session[sizeof(session)-1] = '\0';
             stream_id = rtsp->hc_rtsp_stream_id;
@@ -1810,6 +1856,9 @@ done:
   tvhpoll_destroy(efd);
   lfe->sf_display_name = NULL;
   lfe->sf_curmux = NULL;
+
+  satip_frontend_wake_other_waiting(lfe);
+
   return NULL;
 #undef PKTS
 }
