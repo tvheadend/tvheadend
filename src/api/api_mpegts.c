@@ -388,7 +388,9 @@ api_dvb_scanfile_list
   l = htsmsg_create_list();
   LIST_FOREACH(r, &list->srl_regions, sfr_link) {
     LIST_FOREACH(n, &r->sfr_networks, sfn_link) {
-      if (satpos != INT_MAX && n->sfn_satpos != satpos) continue;
+      if (satpos != INT_MAX &&
+          abs(n->sfn_satpos - satpos) > 2 &&
+          abs(satpos - n->sfn_satpos) > 2) continue;
       e = htsmsg_create_map();
       sprintf(buf, "%s/%s/%s", type, r->sfr_id, n->sfn_id);
       htsmsg_add_str(e, "key", buf);
