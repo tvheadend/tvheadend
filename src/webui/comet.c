@@ -40,6 +40,7 @@
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
 static tvh_cond_t comet_cond;
+static int comet_waiting;
 
 #define MAILBOX_UNUSED_TIMEOUT      20
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
@@ -265,11 +266,13 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
 
   if(!im && cmb->cmb_messages == NULL) {
     mono = mclk() + sec2mono(10);
+    comet_waiting++;
     do {
       e = tvh_cond_timedwait(&comet_cond, &comet_mutex, mono);
       if (e == ETIMEDOUT)
         break;
     } while (ERRNO_AGAIN(e));
+    comet_waiting--;
     if (!atomic_get(&comet_running)) {
       pthread_mutex_unlock(&comet_mutex);
       return 400;
@@ -339,6 +342,7 @@ comet_init(void)
   pthread_mutex_lock(&comet_mutex);
   tvh_cond_init(&comet_cond);
   atomic_set(&comet_running, 1);
+  comet_waiting = 0;
   pthread_mutex_unlock(&comet_mutex);
   http_path_add("/comet/poll",  NULL, comet_mailbox_poll, ACCESS_WEB_INTERFACE);
   http_path_add("/comet/debug", NULL, comet_mailbox_dbg,  ACCESS_WEB_INTERFACE);
@@ -348,12 +352,24 @@ void
 comet_done(void)
 {
   comet_mailbox_t *cmb;
+  int waiting;
 
   pthread_mutex_lock(&comet_mutex);
   atomic_set(&comet_running, 0);
   while ((cmb = LIST_FIRST(&mailboxes)) != NULL)
     cmb_destroy(cmb);
+  tvh_cond_signal(&comet_cond, 1);
   pthread_mutex_unlock(&comet_mutex);
+
+  waiting = 1;
+  while (waiting) {
+    pthread_mutex_lock(&comet_mutex);
+    waiting = comet_waiting;
+    pthread_mutex_unlock(&comet_mutex);
+  }
+
+  tvh_cond_destroy(&comet_cond);
+
 }
 
 /**
@@ -389,6 +405,9 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
   comet_mailbox_t *cmb;
   htsmsg_t *e;
 
+  if (!atomic_get(&comet_running))
+    return;
+
   pthread_mutex_lock(&comet_mutex);
 
   if (atomic_get(&comet_running)) {
@@ -404,8 +423,8 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int rewrite)
         comet_mailbox_rewrite_msg(rewrite, e, cmb->cmb_lang);
       htsmsg_add_msg(cmb->cmb_messages, NULL, e);
     }
+    tvh_cond_signal(&comet_cond, 1);
   }
 
-  tvh_cond_signal(&comet_cond, 1);
   pthread_mutex_unlock(&comet_mutex);
 }
