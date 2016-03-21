@@ -82,6 +82,16 @@ om_id_cmp   ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 }
 
 static int
+om_mux_cmp  ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
+{
+  mpegts_mux_t *a1 = mpegts_mux_find(a->om_mux_uuid);
+  mpegts_mux_t *b1 = mpegts_mux_find(b->om_mux_uuid);
+  assert(a1);
+  assert(b1);
+  return mpegts_mux_compare(a1, b1);
+}
+
+static int
 om_svcl_cmp ( epggrab_ota_svc_link_t *a, epggrab_ota_svc_link_t *b )
 {
   return strcmp(a->uuid, b->uuid);
@@ -107,7 +117,7 @@ epggrab_ota_queue_one( epggrab_ota_mux_t *om )
   om->om_requeue = 1;
   if (om->om_q_type != EPGGRAB_OTA_MUX_IDLE)
     return 0;
-  TAILQ_INSERT_TAIL(&epggrab_ota_pending, om, om_q_link);
+  TAILQ_INSERT_SORTED(&epggrab_ota_pending, om, om_q_link, om_mux_cmp);
   om->om_q_type = EPGGRAB_OTA_MUX_PENDING;
   return 1;
 }
@@ -346,7 +356,7 @@ epggrab_ota_register
       ota  = epggrab_ota_mux_skel;
       SKEL_USED(epggrab_ota_mux_skel);
       ota->om_mux_uuid = strdup(uuid);
-      TAILQ_INSERT_TAIL(&epggrab_ota_pending, ota, om_q_link);
+      TAILQ_INSERT_SORTED(&epggrab_ota_pending, ota, om_q_link, om_mux_cmp);
       ota->om_q_type = EPGGRAB_OTA_MUX_PENDING;
       if (TAILQ_FIRST(&epggrab_ota_pending) == ota)
         epggrab_ota_kick(1);

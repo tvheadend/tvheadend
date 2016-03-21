@@ -35,23 +35,8 @@ static int
 mm_cmp ( mpegts_mux_t *a, mpegts_mux_t *b )
 {
   int r = b->mm_scan_weight - a->mm_scan_weight;
-  if (r == 0) {
-    r = uuid_cmp(&a->mm_network->mn_id.in_uuid,
-                 &b->mm_network->mn_id.in_uuid);
-    if (r)
-      return r;
-    if (idnode_is_instance(&a->mm_id, &dvb_mux_dvbs_class) &&
-        idnode_is_instance(&b->mm_id, &dvb_mux_dvbs_class)) {
-      dvb_mux_conf_t *mc1 = &((dvb_mux_t *)a)->lm_tuning;
-      dvb_mux_conf_t *mc2 = &((dvb_mux_t *)b)->lm_tuning;
-      assert(mc1->dmc_fe_type == DVB_TYPE_S);
-      assert(mc2->dmc_fe_type == DVB_TYPE_S);
-      r = (int)mc1->u.dmc_fe_qpsk.polarisation -
-          (int)mc2->u.dmc_fe_qpsk.polarisation;
-      if (r == 0)
-        r = mc1->dmc_fe_freq - mc2->dmc_fe_freq;
-    }
-  }
+  if (r == 0)
+    return mpegts_mux_compare(a, b);
   return r;
 }
 
