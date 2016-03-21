@@ -209,6 +209,22 @@ satip_satconf_get_position
  * Class definition
  * *************************************************************************/
 
+static void
+satip_satconf_sanity_check( satip_frontend_t *lfe )
+{
+  satip_satconf_t *sfc;
+
+  TAILQ_FOREACH(sfc, &lfe->sf_satconf, sfc_link) {
+    if (sfc->sfc_network_limit) {
+      if (lfe->sf_master) {
+        tvherror("satip", "%s: unable to combine master/slave with network limiter, "
+                          "disabling master", lfe->mi_name);
+        lfe->sf_master = 0;
+      }
+    }
+  }
+}
+
 static const void *
 satip_satconf_class_network_get( void *o )
 {
@@ -304,6 +320,7 @@ satip_satconf_class_changed ( idnode_t *in )
 {
   satip_satconf_t *sfc = (satip_satconf_t*)in;
   satip_device_changed(sfc->sfc_lfe->sf_device);
+  satip_satconf_sanity_check(sfc->sfc_lfe);
 }
 
 const idclass_t satip_satconf_class =
@@ -449,6 +466,7 @@ satip_satconf_create
   if (lfe->sf_positions == 0)
     for ( ; lfe->sf_positions < def_positions; lfe->sf_positions++)
       satip_satconf_create0(lfe, NULL, lfe->sf_positions);
+  satip_satconf_sanity_check(lfe);
 }
 
 static void
@@ -482,6 +500,7 @@ satip_satconf_updated_positions
     sfc = TAILQ_NEXT(sfc, sfc_link);
     satip_satconf_destroy0(sfc_old);
   }
+  satip_satconf_sanity_check(lfe);
 }
 
 void
