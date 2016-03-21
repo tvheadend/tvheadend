@@ -95,7 +95,6 @@ struct satip_device
   int                        sd_can_weight;
   int                        sd_dbus_allow;
   int                        sd_skip_ts;
-  int                        sd_all_tuners;
   int                        sd_disable_workarounds;
   pthread_mutex_t            sd_tune_mutex;
 };

@@ -514,31 +514,18 @@ satip_frontend_is_enabled
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_frontend_t *lfe2;
-  int position, netlimit;
+  int position;
 
   lock_assert(&global_lock);
 
   if (!mpegts_input_is_enabled(mi, mm, flags, weight)) return 0;
   if (lfe->sf_device->sd_dbus_allow <= 0) return 0;
   if (lfe->sf_type != DVB_TYPE_S) return 1;
-  /* try to reuse any input for limited networks if allowed */
-  if (lfe->sf_device->sd_all_tuners) {
-    position = satip_satconf_get_position(lfe, mm, &netlimit, 0, 0, -1);
-    if (position <= 0) return 0;
-    if (netlimit <= 0) goto cont;
-    /* try to reuse any tuner input as slave */
-    TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
-      if (lfe2 == lfe) continue;
-      if (satip_frontend_match_satcfg(lfe2, mm, flags, weight))
-        return 1;
-    }
-  }
   /* check if the position is enabled */
   position = satip_satconf_get_position(lfe, mm, NULL, 1, flags, weight);
   if (position <= 0)
     return 0;
   /* check if any "blocking" tuner is running */
-cont:
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
     if (lfe2 == lfe) continue;
     if (lfe2->sf_type != DVB_TYPE_S) continue;
