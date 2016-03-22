@@ -44,6 +44,9 @@
       (char *) memcpy(__new, __old, __len);                                   \
     })
 #endif
+#ifndef index
+#define index(...) strchr(__VA_ARGS__)
+#endif
 #endif
 #endif
 #include "queue.h"
