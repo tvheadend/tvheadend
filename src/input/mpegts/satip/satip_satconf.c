@@ -77,24 +77,26 @@ static int
 satip_satconf_in_network_group
   ( satip_frontend_t *lfe, int network_group, idnode_t *mn )
 {
-  satip_satconf_t *sfc2;
+  satip_satconf_t *sfc;
 
-  TAILQ_FOREACH(sfc2, &lfe->sf_satconf, sfc_link) {
+  TAILQ_FOREACH(sfc, &lfe->sf_satconf, sfc_link) {
+    if (sfc->sfc_position != lfe->sf_position)
+      continue;
     if (network_group > 0 &&
-        sfc2->sfc_network_group > 0 &&
-        sfc2->sfc_network_group == network_group)
+        sfc->sfc_network_group > 0 &&
+        sfc->sfc_network_group == network_group)
       break;
-    else if (idnode_set_exists(sfc2->sfc_networks, mn))
+    else if (idnode_set_exists(sfc->sfc_networks, mn))
       break;
   }
-  return sfc2 != NULL;
+  return sfc != NULL;
 }
 
 static int
 satip_satconf_hash ( mpegts_mux_t *mm, int position )
 {
   dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
-  assert(position <= 0x7fff);
+ assert(position <= 0x7fff);
   return 1 | (mc->dmc_fe_freq > 11700000 ? 2 : 0) |
          ((int)mc->u.dmc_fe_qpsk.polarisation << 8) |
          (position << 16);
@@ -137,21 +139,18 @@ retry:
       if (!satip_satconf_master_or_slave(lfe, lfe2))
         continue;
     }
+    if (!manage && weight <= 0)
+      continue;
     mi2 = (mpegts_input_t *)lfe2;
     mm2 = lfe2->sf_req->sf_mmi->mmi_mux;
-    if (weight > 0) {
+    w2  = -1;
+    if (weight > 0 || manage)
       w2 = lfe2->mi_get_weight(mi2, mm2, flags);
-      if (w2 < weight)
-        continue;
-    } else {
-      w2 = -1;
-    }
-    if (manage) {
-      w2 = lfe2->mi_get_weight(mi2, mm2, flags);;
-      if (w2 < lowest) {
-        lowest = w2;
-        lowest_lfe = lfe2;
-      }
+    if (!manage && w2 < weight)
+      continue;
+    if (manage && w2 < lowest) {
+      lowest = w2;
+      lowest_lfe = lfe2;
     }
     r = satip_satconf_hash(mm2, lfe2->sf_position);
     for (i = 0; i < size; i++) {
@@ -166,7 +165,7 @@ retry:
   }
   if (count <= limit)
     return 1;
-  if (manage) {
+  if (manage && lowest_lfe) {
     /* free tuner with lowest weight */
     pthread_mutex_lock(&lfe->sf_dvr_lock);
     lfe->sf_wait_for |= 1 << lowest_lfe->sf_number;
