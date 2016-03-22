@@ -30,7 +30,7 @@ tvheadend.dvrDetails = function(uuid) {
             content += '<img class="x-epg-chicon" src="' + chicon + '">';
 
         if (duplicate)
-            content += '<div class="x-epg-meta"><font color="red"><div class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</div>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
+            content += '<div class="x-epg-meta"><font color="red"><span class="x-epg-prefix">' + _('Will be skipped') + '<br>' + _('because it is a rerun of:') + '</span>' + tvheadend.niceDate(duplicate * 1000) + '</font></div>';
 
         if (title)
           content += '<div class="x-epg-title">' + title + '</div>';
@@ -39,26 +39,26 @@ tvheadend.dvrDetails = function(uuid) {
         if (episode)
           content += '<div class="x-epg-title">' + episode + '</div>';
         if (start_real)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled Start Time') + ':</div> ' + tvheadend.niceDate(start_real * 1000) + '</div>';
+          content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(start_real * 1000) + '</span></div>';
         if (stop_real)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</div> ' + tvheadend.niceDate(stop_real * 1000) + '</div>';
+          content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Scheduled Stop Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(stop_real * 1000) + '</span></div>';
         if (duration)
-          content += '<div class="x-epg-time"><div class="x-epg-prefix">' + _('Duration') + ':</div> ' + parseInt(duration / 60) + ' ' + _('min') + '</div>';
-        content += '<hr/>';
+          content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(duration / 60) + ' ' + _('min') + '</span></div>';
+        content += '<hr class="x-epg-hr"/>';
         if (desc) {
           content += '<div class="x-epg-desc">' + desc + '</div>';
-          content += '<hr/>';
+          content += '<hr class="x-epg-hr"/>';
         }
         if (status)
-          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Status') + ':</div> ' + status + '</div>';
+          content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Status') + ':</span><span class="x-epg-body">' + status + '</span></div>';
         if (filesize)
-          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('File size') + ':</div> ' + parseInt(filesize / 1000000) + ' MB</div>';
+          content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('File size') + ':</span><span class="x-epg-body">' + parseInt(filesize / 1000000) + ' MB</span></div>';
         if (comment)
-          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Comment') + ':</div> ' + comment + '</div>';
+          content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Comment') + ':</span><span class="x-epg-body">' + comment + '</span></div>';
         if (autorec_caption)
-          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Autorec') + ':</div> ' + autorec_caption + '</div>';
+          content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Autorec') + ':</span><span class="x-epg-body">' + autorec_caption + '</span></div>';
         if (timerec_caption)
-          content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Time Scheduler') + ':</div> ' + timerec_caption + '</div>';
+          content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Time Scheduler') + ':</span><span class="x-epg-body">' + timerec_caption + '</span></div>';
 
         var buttons = [];
 

@@ -104,22 +104,22 @@ tvheadend.epgDetails = function(event) {
     if (event.episodeOnscreen)
         content += '<div class="x-epg-title">' + event.episodeOnscreen + '</div>';
     if (event.start)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Start Time') + ':</div> ' + tvheadend.niceDate(event.start) + '</div>';
+      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Start Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.start) + '</span></div>';
     if (event.stop)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('End Time') + ':</div> ' + tvheadend.niceDate(event.stop) + '</div>';
+      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('End Time') + ':</span><span class="x-epg-body">' + tvheadend.niceDate(event.stop) + '</span></div>';
     if (duration)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Duration') + ':</div> ' + parseInt(duration / 60) + ' min</div>';
-    content += '<hr/>';
+      content += '<div class="x-epg-time"><span class="x-epg-prefix">' + _('Duration') + ':</span><span class="x-epg-body">' + parseInt(duration / 60) + ' ' + _('min') + '</span></div>';
+    content += '<hr class="x-epg-hr"/>';
     if (event.summary)
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
     if (event.description)
       content += '<div class="x-epg-desc">' + event.description + '</div>';
     if (event.summary || event.description)
-      content += '<hr/>';
+      content += '<hr class="x-epg-hr"/>';
     if (event.starRating)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Star Rating') + ':</div> ' + event.starRating + '</div>';
+      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Star Rating') + ':</span><span class="x-epg-body">' + event.starRating + '</span></div>';
     if (event.ageRating)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Age Rating') + ':</div> ' + event.ageRating + '</div>';
+      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Age Rating') + ':</span><span class="x-epg-body">' + event.ageRating + '</span></div>';
     if (event.genre) {
       var genre = [];
       Ext.each(event.genre, function(g) {
@@ -130,7 +130,7 @@ tvheadend.epgDetails = function(event) {
         if (g1 || g2)
           genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
       });
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Content Type') + ':</div> ' + genre.join(', ') + '</div>';
+      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-body">' + genre.join(', ') + '</span></div>';
     }
     var tags = [];
     if (event.hd > 1)
@@ -154,7 +154,7 @@ tvheadend.epgDetails = function(event) {
     if (event.audiodesc)
       tags.push(_('Audio description#EPG').split('#')[0]);
     if (tags.length > 0)
-      content += '<div class="x-epg-meta"><div class="x-epg-prefix">' + _('Parameters') + ':</div> ' + tags.join(', ') + '</div>';
+      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Parameters') + ':</span><span class="x-epg-body">' + tags.join(', ') + '</span></div>';
 
     content += '<div id="related"></div>';
     content += '<div id="altbcast"></div>';

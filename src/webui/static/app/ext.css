@@ -639,10 +639,17 @@
     white-space: nowrap;
 }
 
+.x-epg-hr {
+    margin: 0;
+}
+
 .x-epg-title {
     margin: 5px;
+    padding: 5px;
     font: normal 16px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
+    text-align: center;
+    border-bottom: 1px solid #000000;
 }
 
 .x-epg-subtitle {
@@ -651,19 +658,19 @@
     font-weight: bold;
 }
 
-.x-epg-time {
-    font-style: italic;
-    margin: 5px;
-}
-
 .x-epg-prefix {
     display: inline-block;
     width: 12em;
     font-weight: bold;
 }
 
+.x-epg-body {
+    margin-left: 5px;
+    display: inline-block;
+}
+
 .x-epg-summary {
-    margin: 5px 5px 5px 5px;
+    margin: 5px;
     font-weight: bold;
 }
 
@@ -678,9 +685,12 @@
     max-height: 99px;
 }
 
+.x-epg-time {
+    margin: 5px 5px 5px 10px;
+}
+
 .x-epg-meta {
-    font-style: italic;
-    margin: 5px;
+    margin: 5px 5px 5px 10px;
 }
 
 .tv-video-player {
