@@ -19,22 +19,24 @@
 #define COMPAT_H
 
 #if ENABLE_ANDROID
+#ifndef strdupa
+#define strdupa(s)                                                            \
+    ({                                                                        \
+      const char *__old = (s);                                                \
+      size_t __len = strlen(__old) + 1;                                       \
+      char *__new = (char *) alloca(__len);                                   \
+      (char *) memcpy(__new, __old, __len);                                   \
+    })
+#endif
+#ifndef index
+#define index(...) strchr(__VA_ARGS__)
+#endif
 #define S_IEXEC S_IXUSR
 #define epoll_create1(EPOLL_CLOEXEC) epoll_create(n)
 #define inotify_init1(IN_CLOEXEC) inotify_init()
 #include <time64.h>
 // 32-bit Android has only timegm64() and not timegm().
 // We replicate the behaviour of timegm() when the result overflows time_t.
-static inline time_t timegm(struct tm* const t);
-time_t timegm(struct tm* const t) {
-  // time_t is signed on Android.
-  static const time_t kTimeMax = ~(1L << (sizeof(time_t) * CHAR_BIT - 1));
-  static const time_t kTimeMin = (1L << (sizeof(time_t) * CHAR_BIT - 1));
-  time64_t result = timegm64(t);
-  if (result < kTimeMin || result > kTimeMax)
-    return -1;
-  return result;
-}
 
 #define	IPTOS_DSCP_MASK		0xfc
 #define	IPTOS_DSCP(x)		((x) & IPTOS_DSCP_MASK)
