@@ -492,7 +492,7 @@ rtsp_start
   mpegts_service_t *svc;
   dvb_mux_conf_t dmc;
   char buf[384];
-  int res = HTTP_STATUS_SERVICE, qsize = 3000000, created = 0, weight;
+  int res = HTTP_STATUS_NOT_ALLOWED, qsize = 3000000, created = 0, weight;
 
   pthread_mutex_lock(&global_lock);
   weight = satip_server_conf.satip_weight;
