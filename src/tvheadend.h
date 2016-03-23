@@ -35,7 +35,6 @@
 #if ENABLE_LOCKOWNER || ENABLE_ANDROID
 #include <sys/syscall.h>
 #endif
-#endif
 #include "queue.h"
 #include "hts_strtab.h"
 #include "htsmsg.h"
