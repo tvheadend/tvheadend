@@ -30,6 +30,7 @@
 #endif
 #ifndef index
 #define index(...) strchr(__VA_ARGS__)
+#endif
 #define S_IEXEC S_IXUSR
 #define epoll_create1(EPOLL_CLOEXEC) epoll_create(n)
 #define inotify_init1(IN_CLOEXEC) inotify_init()
