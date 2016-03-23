@@ -19,6 +19,17 @@
 #define COMPAT_H
 
 #if ENABLE_ANDROID
+#ifndef strdupa
+#define strdupa(s)                                                            \
+    ({                                                                        \
+      const char *__old = (s);                                                \
+      size_t __len = strlen(__old) + 1;                                       \
+      char *__new = (char *) alloca(__len);                                   \
+      (char *) memcpy(__new, __old, __len);                                   \
+    })
+#endif
+#ifndef index
+#define index(...) strchr(__VA_ARGS__)
 #define S_IEXEC S_IXUSR
 #define epoll_create1(EPOLL_CLOEXEC) epoll_create(n)
 #define inotify_init1(IN_CLOEXEC) inotify_init()
