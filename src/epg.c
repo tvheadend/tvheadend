@@ -336,11 +336,13 @@ static int _epg_object_set_lang_str
   if (!str) {
     lang_str_destroy(*old);
     *old = NULL;
+    _epg_object_set_updated(o);
     return 1;
   }
   if (lang_str_compare(*old, str)) {
     lang_str_destroy(*old);
     *old = lang_str_copy(str);
+    _epg_object_set_updated(o);
     return 1;
   }
   return 0;
