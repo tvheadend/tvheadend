@@ -76,16 +76,18 @@ typedef struct opentv_module_t
   int                   sid;
   int                   bouquetid;
   int                   bouquet_auto;
-  int                   *channel;
-  int                   *title;
-  int                   *summary;
-  opentv_dict_t         *dict;
-  opentv_genre_t        *genre;
-  opentv_pattern_list_t  p_snum;
-  opentv_pattern_list_t  p_enum;
-  opentv_pattern_list_t  p_pnum;
-  opentv_pattern_list_t  p_subt;
-  opentv_pattern_list_t  p_cleanup_title;
+  int                  *channel;
+  int                  *title;
+  int                  *summary;
+  opentv_dict_t        *dict;
+  opentv_genre_t       *genre;
+  int                   titles_time;
+  int                   summaries_time;
+  opentv_pattern_list_t p_snum;
+  opentv_pattern_list_t p_enum;
+  opentv_pattern_list_t p_pnum;
+  opentv_pattern_list_t p_subt;
+  opentv_pattern_list_t p_cleanup_title;
 } opentv_module_t;
 
 /*
@@ -146,6 +148,8 @@ typedef struct opentv_status
   epggrab_ota_map_t *os_map;
   int                os_refcount;
   epggrab_ota_mux_t *os_ota;
+  int64_t            os_titles_start;
+  int64_t            os_summaries_start;
 } opentv_status_t;
 
 static void
@@ -618,29 +622,34 @@ done:
     if (sta->os_refcount == 1) {
   
       if (mt->mt_table == OPENTV_TITLE_BASE) {
-        int *t;
-        tvhinfo(mt->mt_name, "titles complete");
+        if (sta->os_titles_start + sec2mono(mod->titles_time) < mclk()) {
+          int *t;
+          tvhinfo(mt->mt_name, "titles complete");
 
-        /* Summaries */
-        t = mod->summary;
-        while (*t) {
-          mpegts_table_t *mt2;
-          mt2 = mpegts_table_add(mt->mt_mux,
-                                 OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
-                                 opentv_table_callback, sta,
-                                 mod->id, MT_CRC, *t++,
-                                 MPS_WEIGHT_EIT);
-          if (mt2) {
-            sta->os_refcount++;
-            mt2->mt_destroy    = opentv_status_destroy;
+          /* Summaries */
+          t = mod->summary;
+          while (*t) {
+            mpegts_table_t *mt2;
+            mt2 = mpegts_table_add(mt->mt_mux,
+                                   OPENTV_SUMMARY_BASE, OPENTV_TABLE_MASK,
+                                   opentv_table_callback, sta,
+                                   mod->id, MT_CRC, *t++,
+                                   MPS_WEIGHT_EIT);
+            if (mt2) {
+              sta->os_refcount++;
+              mt2->mt_destroy    = opentv_status_destroy;
+            }
           }
+          mpegts_table_destroy(mt);
+          sta->os_summaries_start = mclk();
         }
-        mpegts_table_destroy(mt);
       } else {
-        tvhinfo(mt->mt_name, "summaries complete");
-        mpegts_table_destroy(mt);
-        if (ota)
-          epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
+        if (sta->os_summaries_start + sec2mono(mod->summaries_time) < mclk()) {
+          tvhinfo(mt->mt_name, "summaries complete");
+          mpegts_table_destroy(mt);
+          if (ota)
+            epggrab_ota_complete((epggrab_module_ota_t*)mod, ota);
+        }
       }
     } else {
       mpegts_table_destroy(mt);
@@ -701,6 +710,7 @@ opentv_bat_callback
         }
       }
     }
+    sta->os_titles_start = mclk();
 
     /* Remove BAT handler */
     mpegts_table_destroy(mt);
@@ -933,6 +943,7 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   char ibuf[100], nbuf[1000];
   htsmsg_t *cl, *tl, *sl;
   uint32_t tsid, sid, onid, bouquetid;
+  uint32_t titles_time, summaries_time;
   const char *str, *name;
   opentv_dict_t *dict;
   opentv_genre_t *genre;
@@ -955,6 +966,8 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   if (htsmsg_get_u32(m, "tsid", &tsid)) return -1;
   if (htsmsg_get_u32(m, "sid", &sid)) return -1;
   if (htsmsg_get_u32(m, "bouquetid", &bouquetid)) return -1;
+  titles_time = htsmsg_get_u32_or_default(m, "titles_time", 30);
+  summaries_time = htsmsg_get_u32_or_default(m, "summaries_time", 240);
 
   /* Genre map (optional) */
   str = htsmsg_get_str(m, "genre");
@@ -981,6 +994,8 @@ static int _opentv_prov_load_one ( const char *id, htsmsg_t *m )
   mod->sid      = sid;
   mod->bouquetid = bouquetid;
   mod->bouquet_auto = bouquetid == 0;
+  mod->titles_time = MINMAX(titles_time, 0, 120);
+  mod->summaries_time = MINMAX(summaries_time, 0, 600);
   mod->channel  = _pid_list_to_array(cl);
   mod->title    = _pid_list_to_array(tl);
   mod->summary  = _pid_list_to_array(sl);
