@@ -433,7 +433,7 @@ tvheadend.status_streams = function(panel, index)
             colored: true,
             ceiling: 65535,
             tvh_renderer: function(v, p, record) {
-                var scale = record.get('snr_scale');
+                var scale = record.get('signal_scale');
                 if (scale == 1)
                   return v;
                 if (scale == 2) {
