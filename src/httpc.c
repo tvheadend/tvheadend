@@ -863,7 +863,7 @@ int
 http_client_run( http_client_t *hc )
 {
   char *buf, *saveptr, *argv[3], *d, *p;
-  int ver, res, delimsize = 4;
+  int ver, res, delimsize;
   ssize_t r;
   size_t len;
 
@@ -895,8 +895,11 @@ http_client_run( http_client_t *hc )
   buf = alloca(hc->hc_io_size);
 
   if (!hc->hc_in_data && hc->hc_rpos > 3) {
-    if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL)
+    hc->hc_rbuf[hc->hc_rpos] = '\0';
+    if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) != NULL) {
+      delimsize = 4;
       goto header;
+    }
     if ((d = strstr(hc->hc_rbuf, "\n\n")) != NULL) {
       delimsize = 2;
       goto header;
@@ -947,11 +950,12 @@ retry:
   }
   memcpy(hc->hc_rbuf + hc->hc_rpos, buf, r);
   hc->hc_rpos += r;
-  hc->hc_rbuf[hc->hc_rpos] = '\0';
 
 next_header:
   if (hc->hc_rpos < 3)
     return HTTP_CON_RECEIVING;
+  hc->hc_rbuf[hc->hc_rpos] = '\0';
+  delimsize = 4;
   if ((d = strstr(hc->hc_rbuf, "\r\n\r\n")) == NULL) {
     delimsize = 2;
     if ((d = strstr(hc->hc_rbuf, "\n\n")) == NULL)
