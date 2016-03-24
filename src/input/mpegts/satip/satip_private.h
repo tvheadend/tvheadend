@@ -97,6 +97,7 @@ struct satip_device
   int                        sd_skip_ts;
   int                        sd_disable_workarounds;
   pthread_mutex_t            sd_tune_mutex;
+  TAILQ_HEAD(,satip_frontend)sd_serialize_queue;
 };
 
 struct satip_tune_req {
@@ -156,7 +157,9 @@ struct satip_frontend
   uint32_t                   sf_seq;
   dvb_mux_t                 *sf_curmux;
   time_t                     sf_last_data_tstamp;
-  uint32_t                   sf_wait_for;
+  int                        sf_netlimit;
+  int                        sf_serialize;
+  TAILQ_ENTRY(satip_frontend)sf_serialize_link;
  
   /*
    * Configuration

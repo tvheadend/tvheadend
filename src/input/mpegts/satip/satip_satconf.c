@@ -167,9 +167,6 @@ retry:
     return 1;
   if (manage && lowest_lfe) {
     /* free tuner with lowest weight */
-    pthread_mutex_lock(&lfe->sf_dvr_lock);
-    lfe->sf_wait_for |= 1 << lowest_lfe->sf_number;
-    pthread_mutex_unlock(&lfe->sf_dvr_lock);
     mm2 = lowest_lfe->sf_req->sf_mmi->mmi_mux;
     mm2->mm_stop(mm2, 1, SM_CODE_SUBSCRIPTION_OVERRIDDEN);
     goto retry;
