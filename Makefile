@@ -76,8 +76,14 @@ FFMPEG_LIBS := \
     libavcodec \
     libavutil
 
-# FFMEG_STATIC
+# FFMPEG_STATIC
 ifeq ($(CONFIG_FFMPEG_STATIC),yes)
+
+ifeq (,$(wildcard ${BUILDDIR}/libffmpeg_stamp))
+# build static FFMPEG as first for pkgconfig
+ffmpeg_all: ${BUILDDIR}/libffmpeg_stamp
+	$(MAKE) all
+endif
 
 FFMPEG_PREFIX := $(BUILDDIR)/ffmpeg/build/ffmpeg
 FFMPEG_LIBDIR := $(FFMPEG_PREFIX)/lib
@@ -120,11 +126,11 @@ endif
 LDFLAGS += $(foreach lib,$(FFMPEG_LIBS),$(FFMPEG_LIBDIR)/$(lib).a)
 LDFLAGS += $(foreach lib,$(FFMPEG_DEPS),$(FFMPEG_LIBDIR)/$(lib).a)
 
-else
+else # !FFMPEG_STATIC
 
 FFMPEG_CONFIG := $(PKG_CONFIG)
 
-endif # FFMEG_STATIC
+endif # FFMPEG_STATIC
 
 CFLAGS  += `$(FFMPEG_CONFIG) --cflags $(FFMPEG_LIBS)`
 LDFLAGS += `$(FFMPEG_CONFIG) --libs $(FFMPEG_LIBS)`
