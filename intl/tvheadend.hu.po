@@ -11,9 +11,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-19 20:34+0100\n"
-"PO-Revision-Date: 2016-02-19 19:34+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-03-01 20:28+0100\n"
+"PO-Revision-Date: 2016-03-17 09:24+0000\n"
+"Last-Translator: Trex <trex2004@gmail.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -40,12 +40,12 @@ msgstr " #Hozzárendelt csatornák"
 msgid "# Muxes"
 msgstr "# Mux-ok"
 
-#: src/bouquet.c:1001 src/input/mpegts/mpegts_network.c:263
+#: src/bouquet.c:1000 src/input/mpegts/mpegts_network.c:263
 #: src/input/mpegts/mpegts_mux.c:608
 msgid "# Services"
 msgstr "# Szolgáltatások"
 
-#: src/bouquet.c:994
+#: src/bouquet.c:993
 msgid "# Services seen"
 msgstr "#Talált szolgáltatások"
 
@@ -215,7 +215,7 @@ msgstr "9"
 msgid "A"
 msgstr "A"
 
-#: src/dvr/dvr_autorec.c:1041
+#: src/dvr/dvr_autorec.c:1044
 msgid "A channel tag (e.g. a group of channels) to which this rule applies."
 msgstr ""
 
@@ -311,7 +311,7 @@ msgstr "ATSC-C"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:586
 msgid "ATSC-C multiplex"
-msgstr ""
+msgstr "ATSC-C multiplex"
 
 #: src/input/mpegts/mpegts_network_dvb.c:336
 msgid "ATSC-C network"
@@ -323,7 +323,7 @@ msgstr "ATSC-T"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:545
 msgid "ATSC-T multiplex"
-msgstr ""
+msgstr "ATSC-T multiplex"
 
 #: src/input/mpegts/mpegts_network_dvb.c:314
 msgid "ATSC-T network"
@@ -448,7 +448,7 @@ msgstr ""
 
 #: src/config.c:1916
 msgid "All lower-case"
-msgstr ""
+msgstr "Minden kisbetűs"
 
 #: src/webui/extjs.c:234
 msgid ""
@@ -456,23 +456,23 @@ msgid ""
 "equipment."
 msgstr "Minden adományt a szerver infrastruktúra támogatására és tesztberendezések vásárlására fordítunk."
 
-#: src/dvr/dvr_autorec.c:928
+#: src/dvr/dvr_autorec.c:931
 msgid "All: Record if different description"
-msgstr ""
+msgstr "Minden: Felvétel ha eltérő a leírás"
 
-#: src/dvr/dvr_autorec.c:924
+#: src/dvr/dvr_autorec.c:927
 msgid "All: Record if different episode number"
-msgstr ""
+msgstr "Minden: Felvétel ha különbözik az epizód száma"
 
-#: src/dvr/dvr_autorec.c:926
+#: src/dvr/dvr_autorec.c:929
 msgid "All: Record if different subtitle"
-msgstr ""
+msgstr "Minden: Felvétel, ha különbözik a feliratnyelv"
 
-#: src/dvr/dvr_autorec.c:932
+#: src/dvr/dvr_autorec.c:935
 msgid "All: Record once per day"
-msgstr ""
+msgstr "Minden: Felvétel naponta egyszer"
 
-#: src/dvr/dvr_autorec.c:930
+#: src/dvr/dvr_autorec.c:933
 msgid "All: Record once per week"
 msgstr ""
 
@@ -594,7 +594,7 @@ msgid ""
 "values using the new v5 linuxdvb API."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1073 src/dvr/dvr_autorec.c:1085
+#: src/dvr/dvr_autorec.c:1076 src/dvr/dvr_autorec.c:1088
 msgid ""
 "An event which starts between this \"start after\" and \"start before\" will"
 " be matched (including boundary values)."
@@ -608,9 +608,9 @@ msgstr "Állat"
 msgid "Anonymize HTSP access"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:613 src/dvr/dvr_autorec.c:649
-#: src/dvr/dvr_autorec.c:663 src/dvr/dvr_autorec.c:670
-#: src/dvr/dvr_autorec.c:954 src/dvr/dvr_timerec.c:405
+#: src/dvr/dvr_autorec.c:616 src/dvr/dvr_autorec.c:652
+#: src/dvr/dvr_autorec.c:666 src/dvr/dvr_autorec.c:673
+#: src/dvr/dvr_autorec.c:957 src/dvr/dvr_timerec.c:405
 msgid "Any"
 msgstr "Bármi"
 
@@ -700,11 +700,11 @@ msgstr "Automatikus felvétel%s%s"
 msgid "Auto time record"
 msgstr "Automatikus időzített felvétel"
 
-#: src/bouquet.c:898
+#: src/bouquet.c:897
 msgid "Auto-Map to channels"
 msgstr "Automatikus csatorna-hozzárendelés"
 
-#: src/service.c:168
+#: src/service.c:181
 msgid "Automatic checking"
 msgstr "Automatikus ellenőrzés"
 
@@ -793,7 +793,7 @@ msgstr "BA"
 msgid "BB"
 msgstr "BB"
 
-#: src/subscriptions.c:905
+#: src/subscriptions.c:906
 msgid "Bad"
 msgstr "Rossz"
 
@@ -829,7 +829,7 @@ msgstr ""
 msgid "Boot ID"
 msgstr "Boot ID"
 
-#: src/bouquet.c:873
+#: src/bouquet.c:872
 msgid "Bouquet"
 msgstr "Csokor"
 
@@ -841,11 +841,11 @@ msgstr "Csokor (auto)"
 msgid "Bouquet (auto). The bouquet the channel is associated with."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1223
+#: src/dvr/dvr_autorec.c:1226
 msgid "Brand"
 msgstr "Márka"
 
-#: src/dvr/dvr_autorec.c:1224
+#: src/dvr/dvr_autorec.c:1227
 msgid "Branding information (if available)."
 msgstr ""
 
@@ -853,7 +853,7 @@ msgstr ""
 msgid "Broadcast"
 msgstr "Sugárzás"
 
-#: src/dvr/dvr_autorec.c:1052
+#: src/dvr/dvr_autorec.c:1055
 msgid "Broadcast type"
 msgstr ""
 
@@ -904,7 +904,7 @@ msgstr "CA-szolgáltató"
 msgid "CA stream filter"
 msgstr "CA stream szűrő"
 
-#: src/service.c:209
+#: src/service.c:222
 msgid "CAID"
 msgstr "CAID"
 
@@ -977,8 +977,8 @@ msgstr "Camd.socket file-név / IP-cím (TCP mód)"
 msgid "Cartoons"
 msgstr "Rajzfilmek"
 
-#: src/channels.c:362 src/service.c:180 src/dvr/dvr_db.c:2900
-#: src/dvr/dvr_autorec.c:1029 src/dvr/dvr_timerec.c:564
+#: src/channels.c:362 src/service.c:193 src/dvr/dvr_db.c:2900
+#: src/dvr/dvr_autorec.c:1032 src/dvr/dvr_timerec.c:564
 msgid "Channel"
 msgstr "Csatorna"
 
@@ -1019,7 +1019,7 @@ msgstr "Csatorna szám"
 msgid "Channel number as defined in EPG data."
 msgstr ""
 
-#: src/bouquet.c:1014
+#: src/bouquet.c:1013
 msgid "Channel number offset"
 msgstr "Csatorna szám offszet"
 
@@ -1027,7 +1027,7 @@ msgstr "Csatorna szám offszet"
 msgid "Channel numbers from"
 msgstr "Csatorna számozás kezdőérték"
 
-#: src/channels.c:1363 src/dvr/dvr_autorec.c:1040
+#: src/channels.c:1363 src/dvr/dvr_autorec.c:1043
 msgid "Channel tag"
 msgstr "Csatorna-cimke"
 
@@ -1035,7 +1035,7 @@ msgstr "Csatorna-cimke"
 msgid "Channel tag does not exist"
 msgstr ""
 
-#: src/bouquet.c:937
+#: src/bouquet.c:936
 msgid "Channel tag reference"
 msgstr "Csatorna-cimke referencia "
 
@@ -1074,7 +1074,7 @@ msgstr ""
 msgid "Check availability"
 msgstr "Elérhetőség ellenőrzése"
 
-#: src/service.c:169
+#: src/service.c:182
 msgid ""
 "Check for the services' presence. If the service is no longer broadcast this"
 " field will change to \"Missing In PAT/SDT\"."
@@ -1116,7 +1116,7 @@ msgstr "Kliens név"
 msgid "Clone scheduled entry on error"
 msgstr "Hiba esetén klónozza a bejegyzést"
 
-#: src/descrambler/cwc.c:1811
+#: src/descrambler/cwc.c:1812
 msgid "Code word client (newcamd)"
 msgstr "Kódszó kliens (newcamd)"
 
@@ -1135,8 +1135,8 @@ msgstr "Parancs idő (ms) (10-100)"
 #: src/access.c:1656 src/access.c:1903 src/access.c:2037 src/channels.c:1439
 #: src/esfilter.c:713 src/esfilter.c:805 src/esfilter.c:897 src/esfilter.c:989
 #: src/esfilter.c:1092 src/esfilter.c:1171 src/profile.c:330
-#: src/bouquet.c:1008 src/epggrab/channel.c:780 src/dvr/dvr_db.c:3223
-#: src/dvr/dvr_autorec.c:1268 src/dvr/dvr_timerec.c:667
+#: src/bouquet.c:1007 src/epggrab/channel.c:780 src/dvr/dvr_db.c:3223
+#: src/dvr/dvr_autorec.c:1271 src/dvr/dvr_timerec.c:667
 #: src/dvr/dvr_config.c:847 src/descrambler/caclient.c:283
 msgid "Comment"
 msgstr "Megjegyzés"
@@ -1213,7 +1213,7 @@ msgstr "Tartalom betűtípusa"
 msgid "Content reference identifier authority."
 msgstr "Tartalom referencia azonosító hatóság."
 
-#: src/dvr/dvr_db.c:3157 src/dvr/dvr_autorec.c:1062
+#: src/dvr/dvr_db.c:3157 src/dvr/dvr_autorec.c:1065
 msgid "Content type"
 msgstr "Tartalom típusa"
 
@@ -1229,7 +1229,7 @@ msgstr "Verseny"
 msgid "Continue even if descrambling fails"
 msgstr "Folytassa még akkor is, ha a dekódólás sikertelen"
 
-#: src/dvr/dvr_autorec.c:1107
+#: src/dvr/dvr_autorec.c:1110
 msgid "Continue recording for x minutes after scheduled stop time"
 msgstr ""
 
@@ -1322,7 +1322,7 @@ msgstr "Szolgáltatói név tag-ek létrehozása"
 msgid "Create provider tags"
 msgstr ""
 
-#: src/bouquet.c:929
+#: src/bouquet.c:928
 msgid "Create tag"
 msgstr "Címke létrehozása"
 
@@ -1340,7 +1340,7 @@ msgstr "Típus alapú tag-ek létrehozása"
 msgid "Created"
 msgstr "Létrehozott"
 
-#: src/dvr/dvr_db.c:3030 src/dvr/dvr_autorec.c:1258 src/dvr/dvr_timerec.c:657
+#: src/dvr/dvr_db.c:3030 src/dvr/dvr_autorec.c:1261 src/dvr/dvr_timerec.c:657
 msgid "Creator"
 msgstr "Szerző"
 
@@ -1388,7 +1388,7 @@ msgstr "DBus - a jelenlegi üzenet használata a rendszer helyett"
 msgid "DES constant code word client"
 msgstr "DES - adat titkosítási szabvány konstans kódszó kliens"
 
-#: src/descrambler/cwc.c:1842
+#: src/descrambler/cwc.c:1843
 msgid "DES key"
 msgstr "DES kulcs"
 
@@ -1488,7 +1488,7 @@ msgstr "DVB-T2"
 msgid "DVR"
 msgstr "DVR"
 
-#: src/dvr/dvr_autorec.c:976
+#: src/dvr/dvr_autorec.c:979
 msgid "DVR Auto-record entry"
 msgstr "Automatikus DVR felvétel bejegyzés"
 
@@ -1497,7 +1497,7 @@ msgid "DVR behavior"
 msgstr "DVR működés"
 
 #: src/dvr/dvr_db.c:2357 src/dvr/dvr_db.c:2381 src/dvr/dvr_db.c:3010
-#: src/dvr/dvr_autorec.c:1212 src/dvr/dvr_timerec.c:638
+#: src/dvr/dvr_autorec.c:1215 src/dvr/dvr_timerec.c:638
 msgid "DVR configuration"
 msgstr "DVR beállítások"
 
@@ -1517,12 +1517,12 @@ msgstr "DVR bejegyzés"
 msgid "DVR entry not found"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3000 src/dvr/dvr_autorec.c:1184 src/dvr/dvr_timerec.c:628
+#: src/dvr/dvr_db.c:3000 src/dvr/dvr_autorec.c:1187 src/dvr/dvr_timerec.c:628
 #: src/dvr/dvr_config.c:891
 msgid "DVR file retention period"
 msgstr "DVR file tárolás"
 
-#: src/dvr/dvr_db.c:2990 src/dvr/dvr_autorec.c:1174 src/dvr/dvr_timerec.c:618
+#: src/dvr/dvr_db.c:2990 src/dvr/dvr_autorec.c:1177 src/dvr/dvr_timerec.c:618
 msgid "DVR log retention"
 msgstr "DVR log tárolása"
 
@@ -1590,11 +1590,11 @@ msgstr ""
 msgid "Days of Week"
 msgstr "Hét napjai"
 
-#: src/dvr/dvr_autorec.c:1118
+#: src/dvr/dvr_autorec.c:1121
 msgid "Days of the week to which the rule should apply."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1117
+#: src/dvr/dvr_autorec.c:1120
 msgid "Days of week"
 msgstr "Hét napjai"
 
@@ -1705,7 +1705,7 @@ msgid ""
 "https://en.wikipedia.org/wiki/Differentiated_services for more information. "
 msgstr "Differentiated Services Code Point / Type of Service: a service class beállítása, amit a Tvheadend küld minden csomaggal. A választástól függően ez közli a routerrel, hogy milyen prioritással küldje tovább a Tvhheadend által továbbított csomagokat, ez a beállítás általában nem igényel változtatást. Lásd: https://en.wikipedia.org/wiki/Differentiated_services további információkért. "
 
-#: src/dvr/dvr_db.c:3048 src/dvr/dvr_autorec.c:1001 src/dvr/dvr_timerec.c:553
+#: src/dvr/dvr_db.c:3048 src/dvr/dvr_autorec.c:1004 src/dvr/dvr_timerec.c:553
 msgid "Directory"
 msgstr "Könyvtár"
 
@@ -1831,7 +1831,7 @@ msgid "Don't reschedule"
 msgstr "Ne ütemezze újra"
 
 #: src/input/mpegts/mpegts_network.c:218
-msgid "Don`t use the provider`s channel numbers."
+msgid "Don't use the provider's channel numbers."
 msgstr ""
 
 #: src/epg.c:2175 src/epg.c:2182 src/epg.c:2183 src/epg.c:2184 src/epg.c:2185
@@ -1839,11 +1839,11 @@ msgstr ""
 msgid "Drama"
 msgstr "Dráma"
 
-#: src/dvr/dvr_autorec.c:1164
+#: src/dvr/dvr_autorec.c:1167
 msgid "Duplicate handling"
 msgstr "dupla bejegyzések kezelése"
 
-#: src/dvr/dvr_autorec.c:1165
+#: src/dvr/dvr_autorec.c:1168
 msgid "Duplicate recording handling."
 msgstr ""
 
@@ -2045,7 +2045,7 @@ msgstr ""
 msgid "Enable/disable LNA."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:988
+#: src/dvr/dvr_autorec.c:991
 msgid "Enable/disable auto-rec rule."
 msgstr ""
 
@@ -2111,10 +2111,10 @@ msgid "Enable/disable tuner/adapter."
 msgstr ""
 
 #: src/access.c:1427 src/access.c:1871 src/access.c:2020 src/channels.c:355
-#: src/channels.c:372 src/channels.c:1372 src/service.c:161
-#: src/imagecache.c:85 src/esfilter.c:622 src/profile.c:301 src/bouquet.c:883
+#: src/channels.c:372 src/channels.c:1372 src/service.c:174
+#: src/imagecache.c:85 src/esfilter.c:622 src/profile.c:301 src/bouquet.c:882
 #: src/epggrab/module.c:144 src/epggrab/channel.c:670 src/dvr/dvr_db.c:2820
-#: src/dvr/dvr_autorec.c:987 src/dvr/dvr_timerec.c:531
+#: src/dvr/dvr_autorec.c:990 src/dvr/dvr_timerec.c:531
 #: src/dvr/dvr_config.c:825 src/descrambler/caclient.c:270
 #: src/input/mpegts/mpegts_input.c:231 src/input/mpegts/mpegts_mux.c:500
 #: src/input/mpegts/mpegts_mux_sched.c:134
@@ -2124,7 +2124,7 @@ msgstr ""
 msgid "Enabled"
 msgstr "Engedélyezett"
 
-#: src/service.c:201
+#: src/service.c:214
 msgid "Encrypted"
 msgstr "Kódolt"
 
@@ -2234,7 +2234,7 @@ msgstr "Páros kulcs"
 msgid "Event does not exist"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:779
+#: src/dvr/dvr_autorec.c:782
 msgid "Every day"
 msgstr "Minden nap"
 
@@ -2270,7 +2270,7 @@ msgstr "Külső EPG letöltő"
 msgid "External IP (NAT)"
 msgstr "Külső IP cím (NAT)"
 
-#: src/bouquet.c:952
+#: src/bouquet.c:951
 msgid "External URL"
 msgstr "Külső URL"
 
@@ -2278,11 +2278,11 @@ msgstr "Külső URL"
 msgid "Extra arguments"
 msgstr "Plussz paraméterek"
 
-#: src/dvr/dvr_autorec.c:1096
+#: src/dvr/dvr_autorec.c:1099
 msgid "Extra start time"
 msgstr "Plussz kezdési idő"
 
-#: src/dvr/dvr_autorec.c:1106
+#: src/dvr/dvr_autorec.c:1109
 msgid "Extra stop time"
 msgstr "Plussz leállítási időpont"
 
@@ -2311,7 +2311,7 @@ msgstr "FEC alacsony"
 msgid "Factual topics"
 msgstr "Tényszerű témák"
 
-#: src/subscriptions.c:931
+#: src/subscriptions.c:932
 #, c-format
 msgid "Failed"
 msgstr "Sikertelen"
@@ -2491,7 +2491,7 @@ msgid "Free-form field, enter whatever you like here."
 msgstr ""
 
 #: src/access.c:1657 src/access.c:1904 src/access.c:2036 src/channels.c:1440
-#: src/dvr/dvr_db.c:3224 src/dvr/dvr_autorec.c:1269 src/dvr/dvr_timerec.c:668
+#: src/dvr/dvr_db.c:3224 src/dvr/dvr_autorec.c:1272 src/dvr/dvr_timerec.c:668
 msgid "Free-form text field, enter whatever you like here."
 msgstr ""
 
@@ -2531,7 +2531,7 @@ msgstr ""
 msgid "Frequency (kHz)"
 msgstr "Frekvencia (kHz)"
 
-#: src/dvr/dvr_autorec.c:761
+#: src/dvr/dvr_autorec.c:764
 msgid "Fri"
 msgstr "Pé"
 
@@ -2568,7 +2568,7 @@ msgstr ""
 msgid "Full pathname specification"
 msgstr "Teljes elérési útvonal meghatározása"
 
-#: src/dvr/dvr_autorec.c:1021
+#: src/dvr/dvr_autorec.c:1024
 msgid "Full-text"
 msgstr "Teljes szöveg"
 
@@ -2616,7 +2616,7 @@ msgstr "Általános opciók"
 
 #: src/epggrab/module.c:153
 msgid ""
-"Grabber priority. This option lets you pick which EPG grabber`s data gets "
+"Grabber priority. This option lets you pick which EPG grabber's data gets "
 "used first if more than one grabber is enabled. Priority is given to the "
 "grabber with the highest value set here."
 msgstr ""
@@ -2624,6 +2624,10 @@ msgstr ""
 #: src/input/mpegts/mpegts_mux_dvb.c:251 src/input/mpegts/mpegts_mux_dvb.c:693
 msgid "Guard interval"
 msgstr "Figelési intervallum"
+
+#: src/service.c:157
+msgid "HD TV"
+msgstr ""
 
 #: src/profile.c:267
 msgid "HD: high definition"
@@ -2708,7 +2712,7 @@ msgstr "Történelmi film"
 msgid "Horror"
 msgstr "Horror"
 
-#: src/descrambler/cwc.c:1829
+#: src/descrambler/cwc.c:1830
 msgid "Hostname/IP"
 msgstr "Hostname/IP"
 
@@ -2819,7 +2823,7 @@ msgstr "Ikon címmel rendelkezik"
 msgid "Icons from"
 msgstr "Ikonok forrása"
 
-#: src/subscriptions.c:893
+#: src/subscriptions.c:894
 msgid "Idle"
 msgstr "üresjárat"
 
@@ -3302,27 +3306,27 @@ msgstr "Helyi csatornaszám"
 msgid "Local discovery IP address"
 msgstr "IP-cím lokális felderítése "
 
-#: src/dvr/dvr_autorec.c:940
+#: src/dvr/dvr_autorec.c:943
 msgid "Local: Record if different description"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:934
+#: src/dvr/dvr_autorec.c:937
 msgid "Local: Record if different episode number"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:938
+#: src/dvr/dvr_autorec.c:941
 msgid "Local: Record if different subtitle"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:936
+#: src/dvr/dvr_autorec.c:939
 msgid "Local: Record if different title"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:944
+#: src/dvr/dvr_autorec.c:947
 msgid "Local: Record once per day"
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:942
+#: src/dvr/dvr_autorec.c:945
 msgid "Local: Record once per week"
 msgstr ""
 
@@ -3473,15 +3477,15 @@ msgstr "Minden szolgáltatás hozzárendelése"
 msgid "Map encrypted services"
 msgstr "Titkosított szolgáltatások összerendelése."
 
-#: src/bouquet.c:921
+#: src/bouquet.c:920
 msgid "Map radio channels"
 msgstr "Rádio-csatorna szolgáltatások hozzárendelése"
 
-#: src/bouquet.c:913
+#: src/bouquet.c:912
 msgid "Map unnamed channels"
 msgstr "Névvel nem rendelkező csatornák hozzárendelése"
 
-#: src/bouquet.c:905
+#: src/bouquet.c:904
 msgid "Map zero-numbered channels"
 msgstr "0-s sorszámmal rendelkező csatornák hozzárendelése"
 
@@ -3539,11 +3543,11 @@ msgstr ""
 msgid "Maximum bandwidth (Kbps)"
 msgstr "Maximális sávszélesség (Kbps)"
 
-#: src/dvr/dvr_autorec.c:1194
+#: src/dvr/dvr_autorec.c:1197
 msgid "Maximum count (0=default)"
 msgstr "Maximális szám (0=alapértelmezett)"
 
-#: src/dvr/dvr_autorec.c:1139
+#: src/dvr/dvr_autorec.c:1142
 msgid "Maximum duration"
 msgstr "Maximális időtartam"
 
@@ -3560,7 +3564,7 @@ msgstr "PID-ek maximális hoszza"
 msgid "Maximum period (mins)"
 msgstr "Maximális periódus (percben)"
 
-#: src/dvr/dvr_autorec.c:1203
+#: src/dvr/dvr_autorec.c:1206
 msgid "Maximum schedules limit (0=default)"
 msgstr "Maximális betervezésének száma (0=alapértelmezett)"
 
@@ -3596,7 +3600,7 @@ msgstr ""
 msgid "Minimal channel number"
 msgstr "Minimális csatorna szám"
 
-#: src/dvr/dvr_autorec.c:1128
+#: src/dvr/dvr_autorec.c:1131
 msgid "Minimum duration"
 msgstr "Minimális időtartam"
 
@@ -3640,7 +3644,7 @@ msgstr "Modul ID"
 msgid "Module ID used to grab EPG data."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:757
+#: src/dvr/dvr_autorec.c:760
 msgid "Mon"
 msgstr "Hét"
 
@@ -3727,9 +3731,9 @@ msgstr "Mux ütem. bejegyzés"
 msgid "NONE"
 msgstr "EGYIK SEM"
 
-#: src/channels.c:390 src/channels.c:1387 src/bouquet.c:946
+#: src/channels.c:390 src/channels.c:1387 src/bouquet.c:945
 #: src/epggrab/module.c:125 src/epggrab/channel.c:724
-#: src/dvr/dvr_autorec.c:994 src/dvr/dvr_timerec.c:538
+#: src/dvr/dvr_autorec.c:997 src/dvr/dvr_timerec.c:538
 #: src/input/mpegts/mpegts_input.c:262 src/input/mpegts/mpegts_mux.c:535
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1329
 #: src/input/mpegts/satip/satip_satconf.c:196
@@ -3774,7 +3778,7 @@ msgstr ""
 
 #: src/channels.c:391
 msgid ""
-"Name. The name given to/of the channel (This is how it`ll appear in your "
+"Name. The name given to/of the channel (This is how it'll appear in your "
 "EPG.)"
 msgstr ""
 
@@ -3875,7 +3879,7 @@ msgstr "Hálózat típusa"
 msgid "Networks"
 msgstr "Hálózatok"
 
-#: src/dvr/dvr_autorec.c:956
+#: src/dvr/dvr_autorec.c:959
 msgid "New / premiere / unknown"
 msgstr ""
 
@@ -3911,7 +3915,7 @@ msgstr "Nincs meghatározott eszköz\n"
 msgid "No assigned adapters"
 msgstr "Nincs hozzárendelt adapter"
 
-#: src/dvr/dvr_autorec.c:781
+#: src/dvr/dvr_autorec.c:784
 msgid "No days"
 msgstr "Nincsenek napok"
 
@@ -3943,7 +3947,8 @@ msgstr "Nincs engedélyezett szolgáltatás"
 msgid "No source available"
 msgstr "Nincs forrás"
 
-#: src/profile.c:265 src/input/mpegts/linuxdvb/linuxdvb_switch.c:259
+#: src/service.c:154 src/profile.c:265
+#: src/input/mpegts/linuxdvb/linuxdvb_switch.c:259
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:478
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:303
 msgid "None"
@@ -3975,7 +3980,7 @@ msgstr "Nincs beállítva"
 msgid "Not set (none or channel configuration)"
 msgstr "Nem beállított (egy sem vagy csatorna beállítás hiányzik)"
 
-#: src/dvr/dvr_db.c:2794 src/dvr/dvr_autorec.c:656
+#: src/dvr/dvr_db.c:2794 src/dvr/dvr_autorec.c:659
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Nem beállított (csatorna használata vagy DVR beállítás)"
 
@@ -4007,7 +4012,7 @@ msgstr "Szám"
 msgid "Number of days to keep the file."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1185 src/dvr/dvr_timerec.c:629
+#: src/dvr/dvr_autorec.c:1188 src/dvr/dvr_timerec.c:629
 msgid "Number of days to keep the recorded file."
 msgstr ""
 
@@ -4019,7 +4024,7 @@ msgstr ""
 msgid "Number of days to retain entry information."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1175
+#: src/dvr/dvr_autorec.c:1178
 msgid "Number of days to retain infomation about recording."
 msgstr ""
 
@@ -4126,7 +4131,7 @@ msgstr ""
 msgid "Once per auto channel"
 msgstr ""
 
-#: src/descrambler/cwc.c:1858
+#: src/descrambler/cwc.c:1859
 msgid "One mux (EMM)"
 msgstr "Egy MUX (EMM)"
 
@@ -4264,12 +4269,16 @@ msgstr "Over-the-air EPG letöltő"
 msgid "Over-the-air grabbers"
 msgstr "Over-the-air letöltők"
 
+#: src/service.c:153
+msgid "Override disabled"
+msgstr ""
+
 #: src/input/mpegts/satip/satip_frontend.c:228
 #: src/input/mpegts/satip/satip_frontend.c:391
 msgid "Override the frontend type."
 msgstr "Frontend típusának felülbírálata."
 
-#: src/dvr/dvr_db.c:3021 src/dvr/dvr_autorec.c:1250 src/dvr/dvr_timerec.c:649
+#: src/dvr/dvr_db.c:3021 src/dvr/dvr_autorec.c:1253 src/dvr/dvr_timerec.c:649
 msgid "Owner"
 msgstr "Tulajdonos"
 
@@ -4277,7 +4286,7 @@ msgstr "Tulajdonos"
 msgid "Owner of the entry."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1251
+#: src/dvr/dvr_autorec.c:1254
 msgid "Owner of the rule."
 msgstr ""
 
@@ -4346,7 +4355,7 @@ msgid ""
 "extension)."
 msgstr "Előfizetői súly továbbadása a SAT>IP szervereknek (Tvheadend specifikus kiterjesztés)."
 
-#: src/access.c:1886 src/wizard.c:467 src/descrambler/cwc.c:1822
+#: src/access.c:1886 src/wizard.c:467 src/descrambler/cwc.c:1823
 msgid "Password"
 msgstr "Jelszó"
 
@@ -4456,7 +4465,7 @@ msgstr "Pop"
 msgid "Popular culture"
 msgstr "Népszerű kultúra"
 
-#: src/descrambler/cwc.c:1836
+#: src/descrambler/cwc.c:1837
 msgid "Port"
 msgstr "Port"
 
@@ -4559,7 +4568,7 @@ msgid ""
 "removes the view level drop-dowm from the interface."
 msgstr "Megakadályozza a felhasználókat hogy felülírják a fenti felhasználói felület szintjének beállítását, és eltávolítja a nézetszint lenyílólistát a  felhasználói felületről"
 
-#: src/epggrab/module.c:152 src/dvr/dvr_db.c:2979 src/dvr/dvr_autorec.c:1150
+#: src/epggrab/module.c:152 src/dvr/dvr_db.c:2979 src/dvr/dvr_autorec.c:1153
 #: src/dvr/dvr_timerec.c:608 src/input/mpegts/mpegts_input.c:240
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1336
 #: src/input/mpegts/satip/satip_satconf.c:204 src/input/mpegts/iptv/iptv.c:729
@@ -4567,7 +4576,7 @@ msgstr "Megakadályozza a felhasználókat hogy felülírják a fenti felhaszná
 msgid "Priority"
 msgstr "Prioritás"
 
-#: src/service.c:191
+#: src/service.c:204
 msgid "Priority (-10..10)"
 msgstr "Prioritás (-10..10)"
 
@@ -4612,7 +4621,7 @@ msgid "Provider network name"
 msgstr "Hálózat neve"
 
 #: src/input/mpegts/mpegts_network.c:153
-msgid "Provider`s network name."
+msgid "Provider's network name."
 msgstr ""
 
 #: src/epg.c:2295
@@ -4648,11 +4657,15 @@ msgstr "RTSP Port (554 vagy 9983), 0 = letiltás"
 msgid "RTSP/TCP (embedded data)"
 msgstr "RTSP/TCP (beágyazott adat)"
 
+#: src/service.c:155
+msgid "Radio"
+msgstr ""
+
 #: src/imagecache.c:103
 msgid "Re-fetch period (hours)"
 msgstr "Újrapróbálkozási idő (órákban)"
 
-#: src/bouquet.c:968 src/input/mpegts/iptv/iptv.c:858
+#: src/bouquet.c:967 src/input/mpegts/iptv/iptv.c:858
 msgid "Re-fetch period (mins)"
 msgstr "Újrapróbálkozási idő (percben)"
 
@@ -4675,7 +4688,7 @@ msgid ""
 " 9983, 0 = disable)."
 msgstr "A szerver által használt Real Time Streaming Protokol (RTSP) port. (554 vagy 9983, 0=kikapcsolt). "
 
-#: src/dvr/dvr_autorec.c:922
+#: src/dvr/dvr_autorec.c:925
 msgid "Record all"
 msgstr "Összes rögzítése"
 
@@ -4725,7 +4738,7 @@ msgstr "HTTP argumentumok törlése"
 msgid "Remove all unsafe characters from filename"
 msgstr "Nem biztonságos karakterek eltávolítása a fájlnévből"
 
-#: src/dvr/dvr_autorec.c:958
+#: src/dvr/dvr_autorec.c:961
 msgid "Repeated"
 msgstr ""
 
@@ -4753,7 +4766,7 @@ msgstr "Jelentések"
 msgid "Rerun of"
 msgstr "Újrafuttatása"
 
-#: src/bouquet.c:890
+#: src/bouquet.c:889
 msgid "Rescan"
 msgstr "Újrakeresés"
 
@@ -4869,7 +4882,7 @@ msgstr "Futtatás az alábbi felhasználócsportként"
 msgid "Run as user"
 msgstr "Futtatás felhasználóként"
 
-#: src/subscriptions.c:901 src/dvr/dvr_db.c:485
+#: src/subscriptions.c:902 src/dvr/dvr_db.c:485
 msgid "Running"
 msgstr "Futó"
 
@@ -4936,6 +4949,10 @@ msgstr "SCR (ID)"
 msgid "SCR (Satellite Channel Router) ID."
 msgstr ""
 
+#: src/service.c:156
+msgid "SD TV"
+msgstr ""
+
 #: src/profile.c:266
 msgid "SD: standard definition"
 msgstr "SD: Normál felbontású"
@@ -4964,11 +4981,11 @@ msgstr "SIGUSR1"
 msgid "SIGUSR2"
 msgstr "SIGUSR2"
 
-#: src/bouquet.c:960 src/input/mpegts/iptv/iptv.c:866
+#: src/bouquet.c:959 src/input/mpegts/iptv/iptv.c:866
 msgid "SSL verify peer"
 msgstr "SSL pár ellenőrzés"
 
-#: src/dvr/dvr_autorec.c:762
+#: src/dvr/dvr_autorec.c:765
 msgid "Sat"
 msgstr "Sat"
 
@@ -5064,7 +5081,7 @@ msgstr ""
 msgid "Script/program to be run when a recording gets removed."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1232
+#: src/dvr/dvr_autorec.c:1235
 msgid "Season"
 msgstr "Évad"
 
@@ -5073,7 +5090,7 @@ msgstr "Évad"
 msgid "Season %d"
 msgstr "%d. Évad"
 
-#: src/dvr/dvr_autorec.c:1233
+#: src/dvr/dvr_autorec.c:1236
 msgid "Season information (if available)."
 msgstr ""
 
@@ -5158,7 +5175,7 @@ msgstr "Válassza ki az elérési útvonalat a DVB-scan konfigurációs fájlokh
 msgid "Select the time offset for EIT events."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1053
+#: src/dvr/dvr_autorec.c:1056
 msgid "Select type of broadcast (all, new/premiere or repeat)."
 msgstr ""
 
@@ -5197,11 +5214,11 @@ msgstr "Küldje el a teljes RTSP PLAY parancsot minden teljes RTSP setup parancs
 msgid "Serial number"
 msgstr "Gyári szám"
 
-#: src/dvr/dvr_autorec.c:1241
+#: src/dvr/dvr_autorec.c:1244
 msgid "Series link"
 msgstr "Sorozat hozzáférés"
 
-#: src/dvr/dvr_autorec.c:1242
+#: src/dvr/dvr_autorec.c:1245
 msgid "Series link ID."
 msgstr ""
 
@@ -5229,7 +5246,7 @@ msgstr "Szerverkapcsolat"
 msgid "Server details."
 msgstr "Szerver részletei."
 
-#: src/service.c:151 src/esfilter.c:659 src/esfilter.c:751 src/esfilter.c:843
+#: src/service.c:164 src/esfilter.c:659 src/esfilter.c:751 src/esfilter.c:843
 #: src/esfilter.c:935 src/esfilter.c:1038 src/esfilter.c:1130
 msgid "Service"
 msgstr "Szolgáltatás"
@@ -5243,7 +5260,7 @@ msgstr "Szolgáltatás ID"
 msgid "Service configuration"
 msgstr "Szolgáltatás konfiguráció"
 
-#: src/bouquet.c:836
+#: src/bouquet.c:835
 #, c-format
 msgid "Service count %zi"
 msgstr "Szolgátatások száma %zi"
@@ -5268,13 +5285,13 @@ msgstr ""
 msgid "Service name picons"
 msgstr ""
 
-#: src/service.c:192
+#: src/service.c:205
 msgid ""
 "Service priority. Enter a value between -10 and 10. A higher value indicates"
 " a higher preference. See Help for more info."
 msgstr ""
 
-#: src/service.c:220
+#: src/service.c:243
 msgid "Service raw"
 msgstr "Szolgáltatás raw"
 
@@ -5282,7 +5299,13 @@ msgstr "Szolgáltatás raw"
 msgid "Service type"
 msgstr "Szolgáltatás típus"
 
-#: src/channels.c:497 src/service_mapper.c:490 src/bouquet.c:985
+#: src/service.c:231
+msgid ""
+"Service type override. This value will override the service type provided by"
+" the stream."
+msgstr ""
+
+#: src/channels.c:497 src/service_mapper.c:490 src/bouquet.c:984
 msgid "Services"
 msgstr "Szolgáltatások"
 
@@ -5430,7 +5453,7 @@ msgstr "Indexek rendszerezése"
 msgid "Sort index."
 msgstr ""
 
-#: src/bouquet.c:977
+#: src/bouquet.c:976
 msgid "Source"
 msgstr "Forrás"
 
@@ -5513,11 +5536,11 @@ msgstr "Standard"
 msgid "Start"
 msgstr "Kezdés"
 
-#: src/dvr/dvr_autorec.c:1072
+#: src/dvr/dvr_autorec.c:1075
 msgid "Start after"
 msgstr "Kezdés időpont után"
 
-#: src/dvr/dvr_autorec.c:1084
+#: src/dvr/dvr_autorec.c:1087
 msgid "Start before"
 msgstr "Kezdés időpont előtt"
 
@@ -5539,7 +5562,7 @@ msgid ""
 "recording padding as set in the channel or DVR entry will be used."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1097
+#: src/dvr/dvr_autorec.c:1100
 msgid "Start recording earlier than the defined start time by x minutes."
 msgstr ""
 
@@ -5651,7 +5674,7 @@ msgstr ""
 msgid "Subtitle stream filter"
 msgstr "Stream-felirat szűrő"
 
-#: src/dvr/dvr_autorec.c:763
+#: src/dvr/dvr_autorec.c:766
 msgid "Sun"
 msgstr "Vas"
 
@@ -5733,7 +5756,7 @@ msgstr "A Teletext stream típus csak ennél a szűrőnél alkalmazható. "
 msgid "Tennis"
 msgstr "Tenisz"
 
-#: src/subscriptions.c:897
+#: src/subscriptions.c:898
 msgid "Testing"
 msgstr "Tesztelés"
 
@@ -5767,7 +5790,7 @@ msgid ""
 "as AUTO."
 msgstr ""
 
-#: src/service.c:210
+#: src/service.c:223
 msgid "The Conditional Access ID used for the service."
 msgstr ""
 
@@ -5779,7 +5802,7 @@ msgstr "A Content reference identifier (CRID) hatóság."
 msgid "The DVR profile to be used/used by the recording."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1213
+#: src/dvr/dvr_autorec.c:1216
 msgid "The DVR profile to be used/used by this rule."
 msgstr ""
 
@@ -5859,13 +5882,13 @@ msgid ""
 " you have a special use case for one of the others. See Help for details."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1030
+#: src/dvr/dvr_autorec.c:1033
 msgid ""
 "The channel on which this rule applies, i.e. the channel you're aiming to "
 "record."
 msgstr ""
 
-#: src/service.c:181
+#: src/service.c:194
 msgid "The channel this service is mapped to."
 msgstr ""
 
@@ -5887,7 +5910,7 @@ msgid ""
 "unless channel names, etc  appear garbled."
 msgstr "A  multiplex átltal használt karakter szett. Ezt csak akkor kell megváltoztatni, ha a csatorna nevek, stb. helytelenül jelennek meg."
 
-#: src/dvr/dvr_autorec.c:1063
+#: src/dvr/dvr_autorec.c:1066
 msgid ""
 "The content type (Movie/Drama, Sports, etc.) to be used to filter matching "
 "events/programs."
@@ -6078,7 +6101,7 @@ msgstr "Az összehasonlítandó logikai adatfolyam indexe. Ne feledje, hogy ez a
 msgid "The manufacturer of the SAT>IP server."
 msgstr "A SAT>IP szerver gyártója."
 
-#: src/dvr/dvr_autorec.c:1140
+#: src/dvr/dvr_autorec.c:1143
 msgid ""
 "The maximal duration of a matching event - in other words, only match "
 "programmes that are no longer than this duration."
@@ -6101,7 +6124,7 @@ msgstr ""
 msgid "The maximum number of entries that can be matched."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1204
+#: src/dvr/dvr_autorec.c:1207
 msgid "The maximum number of recording entries this rule can create."
 msgstr ""
 
@@ -6113,7 +6136,7 @@ msgstr ""
 msgid "The maximum number of services to decrypt per mux."
 msgstr "A mux-onkénti szolgáltatások visszafejtésének száma."
 
-#: src/dvr/dvr_autorec.c:1195
+#: src/dvr/dvr_autorec.c:1198
 msgid "The maximum number of times this rule can be triggered."
 msgstr ""
 
@@ -6123,7 +6146,7 @@ msgid ""
 "subscription."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1129
+#: src/dvr/dvr_autorec.c:1132
 msgid ""
 "The minimal duration of a matching event - in other words, only match "
 "programs that are no shorter than this duration."
@@ -6166,7 +6189,7 @@ msgstr "A mux általánosan egyedi azonosítója."
 msgid "The name (or frequency) the mux is on."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:995
+#: src/dvr/dvr_autorec.c:998
 msgid "The name given to the rule."
 msgstr ""
 
@@ -6281,7 +6304,7 @@ msgstr ""
 msgid "The polarization used on the mux."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1151
+#: src/dvr/dvr_autorec.c:1154
 msgid ""
 "The priority of any recordings set because of this rule: in descending "
 "priority, values are important, high, normal, low and unimportant. Higher-"
@@ -6377,8 +6400,8 @@ msgstr "A szolgáltatás csatornájának minor-ja, a szolgáltató beállítása
 msgid "The service's channel number as set by the provider."
 msgstr "A szolgáltatás csatornájának sorszáma, a szolgáltató beállítása alapján."
 
-#: src/service.c:202
-msgid "The service`s encryption status."
+#: src/service.c:215
+msgid "The service's encryption status."
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:278
@@ -6444,7 +6467,7 @@ msgstr "Jelsebesség."
 msgid "The time the entry stops/stopped being recorded."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1013
+#: src/dvr/dvr_autorec.c:1016
 msgid ""
 "The title of the program to look for. Note that this accepts case-"
 "insensitive regular expressions."
@@ -6482,7 +6505,7 @@ msgid ""
 "the standard priority value is used."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3031 src/dvr/dvr_autorec.c:1259 src/dvr/dvr_timerec.c:658
+#: src/dvr/dvr_db.c:3031 src/dvr/dvr_autorec.c:1262 src/dvr/dvr_timerec.c:658
 msgid ""
 "The user who created the recording, or the auto-recording source and IP "
 "address if scheduled by a matching rule."
@@ -6508,7 +6531,7 @@ msgstr "Ez egy NTP meghajtót hoz létre (az shmem interfész használatával) a
 msgid "Thriller"
 msgstr "Thriller"
 
-#: src/dvr/dvr_autorec.c:760
+#: src/dvr/dvr_autorec.c:763
 msgid "Thu"
 msgstr "Csüt"
 
@@ -6569,7 +6592,7 @@ msgstr "Időtúllépés (másodperc)"
 msgid "Title"
 msgstr "Cím"
 
-#: src/dvr/dvr_autorec.c:1012
+#: src/dvr/dvr_autorec.c:1015
 msgid "Title (regexp)"
 msgstr "Cím (regexp)"
 
@@ -6641,7 +6664,7 @@ msgstr "Transzponder ID"
 msgid "Transport stream ID"
 msgstr "Transzport stream ID"
 
-#: src/dvr/dvr_autorec.c:758
+#: src/dvr/dvr_autorec.c:761
 msgid "Tue"
 msgstr "Ke"
 
@@ -6690,6 +6713,10 @@ msgstr "Tvheadend szerver neve"
 #: src/epggrab/module.c:134
 msgid "Type"
 msgstr "Típus"
+
+#: src/service.c:230
+msgid "Type override"
+msgstr ""
 
 #: src/input/mpegts/satip/satip_frontend.c:154
 msgid "UDP RTP port number (2 ports)"
@@ -6938,7 +6965,7 @@ msgstr "Korlátlan idő"
 msgid "Unset (default)"
 msgstr "Nem beállított(alapértelmezett)"
 
-#: src/descrambler/cwc.c:1851
+#: src/descrambler/cwc.c:1852
 msgid "Update card (EMM)"
 msgstr "Kártya (EMM) frissítése"
 
@@ -7001,7 +7028,7 @@ msgstr "Következtessen az EPG állapotából"
 msgid ""
 "Use EPG running state. Use EITp/f to decide event start/stop. This is also "
 "known as \"Accurate Recording\". Note that this can have unexpected results "
-"if the broadcaster isn`t very good at time keeping."
+"if the broadcaster isn't very good at time keeping."
 msgstr ""
 
 #: src/profile.c:1193 src/profile.c:1363
@@ -7154,7 +7181,7 @@ msgid "User request"
 msgstr ""
 
 #: src/access.c:1434 src/access.c:1878 src/wizard.c:458
-#: src/descrambler/cwc.c:1816
+#: src/descrambler/cwc.c:1817
 msgid "Username"
 msgstr "Felhasználónév"
 
@@ -7293,7 +7320,7 @@ msgstr "Webes felület nyelve"
 msgid "Web user interface"
 msgstr "WEB-es felület"
 
-#: src/dvr/dvr_autorec.c:759
+#: src/dvr/dvr_autorec.c:762
 msgid "Wed"
 msgstr "Sze"
 
@@ -7336,14 +7363,14 @@ msgid ""
 "issues for SAT>IP (limited number of PID filters)."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1002
+#: src/dvr/dvr_autorec.c:1005
 msgid ""
 "When specified, this setting overrides the subdirectory rules (except the "
 "base directory) defined in the DVR configuration and puts all recordings "
 "done by this entry into the subdirectory named here. See Help for more info."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1022
+#: src/dvr/dvr_autorec.c:1025
 msgid ""
 "When the fulltext is checked, the title pattern is matched against title, "
 "subtitle, summary and description."

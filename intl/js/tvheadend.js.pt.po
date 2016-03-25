@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# esfomeado esfomeado <vps1992@live.com.pt>, 2016
 # Orlando Rocha <ornrocha@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-19 20:34+0100\n"
-"PO-Revision-Date: 2016-02-12 12:30+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-03-01 20:28+0100\n"
+"PO-Revision-Date: 2016-03-03 15:04+0000\n"
+"Last-Translator: esfomeado esfomeado <vps1992@live.com.pt>\n"
 "Language-Team: Portuguese (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -153,7 +154,7 @@ msgstr "Adicionar {0}"
 
 #: src/webui/static/app/idnode.js:585 src/webui/static/app/idnode.js:601
 msgid "Advanced"
-msgstr ""
+msgstr "Avançado"
 
 #: src/webui/static/app/idnode.js:1014
 msgid "Advanced Settings"
@@ -183,7 +184,7 @@ msgstr "Todos"
 #: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1431
 #: src/webui/static/app/idnode.js:1448 src/webui/static/app/idnode.js:1453
 msgid "Apply"
-msgstr ""
+msgstr "Aplicar"
 
 #: src/webui/static/app/tvhlog.js:25
 msgid "Apply any changes made below to the run-time configuration."
@@ -195,7 +196,7 @@ msgstr "Aplicar configuração (apenas em execução) "
 
 #: src/webui/static/app/idnode.js:1430
 msgid "Apply settings"
-msgstr ""
+msgstr "Aplicar defenições"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
@@ -207,7 +208,7 @@ msgstr "Abril"
 
 #: src/webui/static/app/epg.js:146
 msgid "Aspect"
-msgstr ""
+msgstr "Aspecto"
 
 #: src/webui/static/app/chconf.js:163
 msgid "Assign Number"
@@ -276,7 +277,7 @@ msgstr "Base"
 
 #: src/webui/static/app/idnode.js:583 src/webui/static/app/idnode.js:595
 msgid "Basic"
-msgstr ""
+msgstr "Básico"
 
 #: src/webui/static/app/idnode.js:1012
 msgid "Basic Settings"
@@ -349,7 +350,7 @@ msgstr "Cancelar esta conexão"
 
 #: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1453
 msgid "Cannot apply"
-msgstr ""
+msgstr "Não é possível aplicar"
 
 #: src/webui/static/app/idnode.js:613
 msgid "Change the user interface level (basic, advanced, expert)"
@@ -411,7 +412,7 @@ msgstr "Nome do Cliente"
 
 #: src/webui/static/app/idnode.js:1378 src/webui/static/app/idnode.js:2236
 msgid "Clone"
-msgstr ""
+msgstr "Copiar"
 
 #: src/webui/static/app/idnode.js:2234
 msgid "Clone a new entry"
@@ -828,7 +829,7 @@ msgstr "Género"
 
 #: src/webui/static/app/tvheadend.js:743
 msgid "GiB"
-msgstr ""
+msgstr "GiB"
 
 #: src/webui/static/app/idnode.js:1575
 msgid "Grid Update"
@@ -840,7 +841,7 @@ msgstr "Agrupar por este campo"
 
 #: src/webui/static/app/epg.js:138
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
 #: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
@@ -938,7 +939,7 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:171
 msgid "Language"
-msgstr ""
+msgstr "Idioma"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -1183,7 +1184,7 @@ msgstr "Número para Cima"
 
 #: src/webui/static/app/chconf.js:186
 msgid "Number operations"
-msgstr ""
+msgstr "Número de operações"
 
 #: src/webui/static/app/i18n-post.js:110
 msgid "OK"
@@ -1223,7 +1224,7 @@ msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:169
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
@@ -1287,7 +1288,7 @@ msgstr "Esperar, por favor..."
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
-msgstr ""
+msgstr "Anterior"
 
 #: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
@@ -1299,7 +1300,7 @@ msgstr "Página anterior"
 
 #: src/webui/static/app/status.js:118
 msgid "Profile"
-msgstr ""
+msgstr "Perfil"
 
 #: src/webui/static/app/dvr.js:608
 msgid "Profile Name"
@@ -1780,7 +1781,7 @@ msgstr "Tipo"
 
 #: src/webui/static/app/epg.js:136
 msgid "UHDTV"
-msgstr ""
+msgstr "UHDTV"
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"

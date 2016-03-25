@@ -4,16 +4,16 @@
 # 
 # Translators:
 # Pablo Rodríguez <trujulu@gmail.com>, 2015
-# Pablo Rodríguez <trujulu@gmail.com>, 2015
+# Pablo Rodríguez <trujulu@gmail.com>, 2015-2016
 # Pepe Gomez <jagcos@gmail.com>, 2015
 # Salvador Gonzalez <salva.gonzalez@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-19 20:34+0100\n"
-"PO-Revision-Date: 2016-02-12 12:30+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-03-01 20:28+0100\n"
+"PO-Revision-Date: 2016-03-18 21:19+0000\n"
+"Last-Translator: Pablo Rodríguez <trujulu@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -210,7 +210,7 @@ msgstr "Abril"
 
 #: src/webui/static/app/epg.js:146
 msgid "Aspect"
-msgstr ""
+msgstr "Aspecto"
 
 #: src/webui/static/app/chconf.js:163
 msgid "Assign Number"
@@ -230,7 +230,7 @@ msgstr "Filtros de Retransmisión de Audio"
 
 #: src/webui/static/app/epg.js:154
 msgid "Audio description#EPG"
-msgstr ""
+msgstr "Descripción de audio#EPG "
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
@@ -352,7 +352,7 @@ msgstr "Cancelar esta conexión"
 
 #: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1453
 msgid "Cannot apply"
-msgstr ""
+msgstr "No se pudo aplicar"
 
 #: src/webui/static/app/idnode.js:613
 msgid "Change the user interface level (basic, advanced, expert)"
@@ -360,7 +360,7 @@ msgstr "Cambiar el nivel de interfaz de usuario (básico, avanzado, experto)"
 
 #: src/webui/static/app/idnode.js:1131 src/webui/static/app/idnode.js:1448
 msgid "Changes were applied!"
-msgstr ""
+msgstr "¡Cambios aplicados!"
 
 #: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:569
 #: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1051
@@ -518,7 +518,7 @@ msgstr "Temporizadores DVR"
 
 #: src/webui/static/app/epg.js:150
 msgid "Deaf signed#EPG"
-msgstr ""
+msgstr "Firmado para sordos#EPG"
 
 #: src/webui/static/app/tvhlog.js:28
 msgid "Debug Configuration"
@@ -843,7 +843,7 @@ msgstr "Grupo Por Este Campo "
 
 #: src/webui/static/app/epg.js:138
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
 #: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
@@ -901,7 +901,7 @@ msgstr "In"
 
 #: src/webui/static/app/mpegts.js:168
 msgid "Index"
-msgstr ""
+msgstr "Índice"
 
 #: src/webui/static/app/status.js:347 src/webui/static/app/status.js:814
 msgid "Input"
@@ -941,7 +941,7 @@ msgstr "KiB"
 
 #: src/webui/static/app/mpegts.js:171
 msgid "Language"
-msgstr ""
+msgstr "Idioma"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -949,7 +949,7 @@ msgstr "Última Página"
 
 #: src/webui/static/app/epg.js:148
 msgid "Lines"
-msgstr ""
+msgstr "Lineas"
 
 #: src/webui/static/app/tvheadend.js:340
 msgid "Live TV Player"
@@ -985,19 +985,19 @@ msgstr "Mapear Seleccionado"
 
 #: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:139
 msgid "Map all services"
-msgstr ""
+msgstr "Mapear todos los servicios"
 
 #: src/webui/static/app/mpegts.js:251 src/webui/static/app/chconf.js:137
 msgid "Map all services to channels"
-msgstr ""
+msgstr "Mapear todos los servicios para canales"
 
 #: src/webui/static/app/mpegts.js:247 src/webui/static/app/chconf.js:133
 msgid "Map selected services"
-msgstr ""
+msgstr "Mapear serviciones seleccionados"
 
 #: src/webui/static/app/mpegts.js:245 src/webui/static/app/chconf.js:131
 msgid "Map selected services to channels"
-msgstr ""
+msgstr "Mapear los servicios seleccionados para canales"
 
 #: src/webui/static/app/mpegts.js:258 src/webui/static/app/chconf.js:144
 #: src/webui/static/app/servicemapper.js:104
@@ -1027,11 +1027,11 @@ msgstr "Marzo"
 
 #: src/webui/static/app/dvr.js:375
 msgid "Mark the selected recording as failed"
-msgstr ""
+msgstr "Marcar la grabación seleccionada como fallida"
 
 #: src/webui/static/app/dvr.js:516
 msgid "Mark the selected recording as finished"
-msgstr ""
+msgstr "Marcar la grabación seleccionada como finalizada"
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
@@ -1091,11 +1091,11 @@ msgstr "Mover entrada seleccionada arriba"
 
 #: src/webui/static/app/dvr.js:377
 msgid "Move to failed"
-msgstr ""
+msgstr "Mover a fallido"
 
 #: src/webui/static/app/dvr.js:518
 msgid "Move to finished"
-msgstr ""
+msgstr "Mover a finalizado"
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:109
 msgid "Mux"
@@ -1124,7 +1124,7 @@ msgstr "Redes"
 
 #: src/webui/static/app/epg.js:140
 msgid "New#EPG"
-msgstr ""
+msgstr "Nuevo#EPG"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
@@ -1226,7 +1226,7 @@ msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:169
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
@@ -1354,7 +1354,7 @@ msgstr "Refrescar"
 
 #: src/webui/static/app/epg.js:142
 msgid "Repeat#EPG"
-msgstr ""
+msgstr "Repetir#EPG"
 
 #: src/webui/static/app/chconf.js:203
 msgid "Reset (clear) the selected icon URLs"
@@ -1596,7 +1596,7 @@ msgstr "Filtros de Subtítulos en Retransmisión"
 
 #: src/webui/static/app/epg.js:152
 msgid "Subtitled#EPG"
-msgstr ""
+msgstr "Subitulado#EPG"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
@@ -1724,11 +1724,11 @@ msgstr "Temporizadores"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
-msgstr ""
+msgstr "Cambio de hora"
 
 #: src/webui/static/app/timeshift.js:24
 msgid "Timeshift Configuration"
-msgstr ""
+msgstr "Configuración de Cambio de hora"
 
 #: src/webui/static/app/epg.js:506 src/webui/static/app/epg.js:507
 #: src/webui/static/app/epg.js:1050 src/webui/static/app/status.js:100
@@ -1783,7 +1783,7 @@ msgstr "Tipo"
 
 #: src/webui/static/app/epg.js:136
 msgid "UHDTV"
-msgstr ""
+msgstr "UHDTV"
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
@@ -1864,7 +1864,7 @@ msgstr "Peso"
 
 #: src/webui/static/app/epg.js:144
 msgid "Widescreen"
-msgstr ""
+msgstr "Pantalla panorámica"
 
 #: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"

@@ -6,13 +6,14 @@
 # Alfio Saitta <as.android65@gmail.com>, 2015
 # armand <ar.huqi@gmail.com>, 2015
 # Mario Di Raimondo <mario.diraimondo@gmail.com>, 2015
+# Nicola Apicella <na+transifex@nicapicella.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-19 20:34+0100\n"
-"PO-Revision-Date: 2016-02-12 12:30+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-03-01 20:28+0100\n"
+"PO-Revision-Date: 2016-03-07 15:40+0000\n"
+"Last-Translator: Nicola Apicella <na+transifex@nicapicella.com>\n"
 "Language-Team: Italian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -31,7 +32,7 @@ msgstr "(?:°|°|°|°)"
 #: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
 #: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
 msgid "(Clear filter)"
-msgstr "(Cancella filtro)"
+msgstr "(Rimuovi filtro)"
 
 #: src/webui/static/app/i18n-post.js:210
 msgid "(None)"
@@ -209,7 +210,7 @@ msgstr "Aprile"
 
 #: src/webui/static/app/epg.js:146
 msgid "Aspect"
-msgstr ""
+msgstr "Aspetto"
 
 #: src/webui/static/app/chconf.js:163
 msgid "Assign Number"
@@ -229,7 +230,7 @@ msgstr "Filtri degli stream audio"
 
 #: src/webui/static/app/epg.js:154
 msgid "Audio description#EPG"
-msgstr ""
+msgstr "Descrizione audio"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
@@ -842,7 +843,7 @@ msgstr "Raggruppa per questo campo"
 
 #: src/webui/static/app/epg.js:138
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
 #: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
@@ -940,7 +941,7 @@ msgstr "KiB"
 
 #: src/webui/static/app/mpegts.js:171
 msgid "Language"
-msgstr ""
+msgstr "Lingua"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -1123,7 +1124,7 @@ msgstr "Reti"
 
 #: src/webui/static/app/epg.js:140
 msgid "New#EPG"
-msgstr ""
+msgstr "Nuovo"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
@@ -1225,7 +1226,7 @@ msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:169
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
@@ -1289,7 +1290,7 @@ msgstr "Prego attendere..."
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
-msgstr ""
+msgstr "Precedente"
 
 #: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
@@ -1595,7 +1596,7 @@ msgstr "Filtri dello stream sottotitolo"
 
 #: src/webui/static/app/epg.js:152
 msgid "Subtitled#EPG"
-msgstr ""
+msgstr "Sottotitolato"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
@@ -1723,11 +1724,11 @@ msgstr "Temporizzatori"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
-msgstr ""
+msgstr "Timeshift"
 
 #: src/webui/static/app/timeshift.js:24
 msgid "Timeshift Configuration"
-msgstr ""
+msgstr "Configurazione del timeshift"
 
 #: src/webui/static/app/epg.js:506 src/webui/static/app/epg.js:507
 #: src/webui/static/app/epg.js:1050 src/webui/static/app/status.js:100
@@ -1782,7 +1783,7 @@ msgstr "Tipo"
 
 #: src/webui/static/app/epg.js:136
 msgid "UHDTV"
-msgstr ""
+msgstr "UHDTV"
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
@@ -1811,7 +1812,7 @@ msgstr "Registrazioni future"
 
 #: src/webui/static/app/tvheadend.js:753
 msgid "Used by tvheadend"
-msgstr ""
+msgstr "Utilizzato da tvheadend"
 
 #: src/webui/static/app/status.js:94 src/webui/static/app/status.js:576
 msgid "Username"
@@ -1863,7 +1864,7 @@ msgstr "Peso"
 
 #: src/webui/static/app/epg.js:144
 msgid "Widescreen"
-msgstr ""
+msgstr "Widescreen"
 
 #: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"

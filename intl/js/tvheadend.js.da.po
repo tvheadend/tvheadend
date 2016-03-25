@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-19 20:34+0100\n"
-"PO-Revision-Date: 2016-02-12 12:30+0000\n"
+"POT-Creation-Date: 2016-03-01 20:28+0100\n"
+"PO-Revision-Date: 2016-03-10 00:03+0000\n"
 "Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Danish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/da/)\n"
 "MIME-Version: 1.0\n"
@@ -984,7 +984,7 @@ msgstr "Map valgte"
 
 #: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:139
 msgid "Map all services"
-msgstr ""
+msgstr "Tilføj alle tjenester"
 
 #: src/webui/static/app/mpegts.js:251 src/webui/static/app/chconf.js:137
 msgid "Map all services to channels"

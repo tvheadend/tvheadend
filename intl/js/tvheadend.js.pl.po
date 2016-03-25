@@ -3,14 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# pepeEL pepeEL <piotr.kuchciak@gmail.com>, 2016
 # PiterEL <inactive+PiterEL@transifex.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-19 20:34+0100\n"
-"PO-Revision-Date: 2016-02-12 12:30+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-03-01 20:28+0100\n"
+"PO-Revision-Date: 2016-03-07 21:56+0000\n"
+"Last-Translator: pepeEL pepeEL <piotr.kuchciak@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -207,7 +208,7 @@ msgstr "Kwiecień"
 
 #: src/webui/static/app/epg.js:146
 msgid "Aspect"
-msgstr ""
+msgstr "Wygląd"
 
 #: src/webui/static/app/chconf.js:163
 msgid "Assign Number"
@@ -227,7 +228,7 @@ msgstr "Filtry strumieni audio"
 
 #: src/webui/static/app/epg.js:154
 msgid "Audio description#EPG"
-msgstr ""
+msgstr "Audio opis#EPG"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
@@ -349,7 +350,7 @@ msgstr "Anuluj to połaczenie"
 
 #: src/webui/static/app/idnode.js:1136 src/webui/static/app/idnode.js:1453
 msgid "Cannot apply"
-msgstr ""
+msgstr "Nie można zastosować"
 
 #: src/webui/static/app/idnode.js:613
 msgid "Change the user interface level (basic, advanced, expert)"
@@ -357,7 +358,7 @@ msgstr "Zmień poziom interfejsu użytkownika (podstawowy, zaawansowany, ekspert
 
 #: src/webui/static/app/idnode.js:1131 src/webui/static/app/idnode.js:1448
 msgid "Changes were applied!"
-msgstr ""
+msgstr "Zmiany zostały zastosowane!"
 
 #: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:569
 #: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1051
@@ -411,11 +412,11 @@ msgstr "Nazwa Klienta"
 
 #: src/webui/static/app/idnode.js:1378 src/webui/static/app/idnode.js:2236
 msgid "Clone"
-msgstr ""
+msgstr "Klonuj"
 
 #: src/webui/static/app/idnode.js:2234
 msgid "Clone a new entry"
-msgstr ""
+msgstr "Klonuj nowy wpis"
 
 #: src/webui/static/app/epg.js:255
 msgid "Close"
@@ -495,7 +496,7 @@ msgstr "DVR"
 
 #: src/webui/static/app/dvr.js:591
 msgid "DVR - Failed Recordings"
-msgstr "DVR-nie udane nagrania"
+msgstr "DVR-błędne nagrania"
 
 #: src/webui/static/app/dvr.js:450
 msgid "DVR - Finished Recordings"
@@ -515,7 +516,7 @@ msgstr "DVR Timery"
 
 #: src/webui/static/app/epg.js:150
 msgid "Deaf signed#EPG"
-msgstr ""
+msgstr "Pusty podpis#EPG"
 
 #: src/webui/static/app/tvhlog.js:28
 msgid "Debug Configuration"
@@ -728,15 +729,15 @@ msgstr "Ustawienia eksperta"
 
 #: src/webui/static/app/servicemapper.js:13
 msgid "Failed"
-msgstr "Nie udane"
+msgstr "Błędne"
 
 #: src/webui/static/app/dvr.js:553
 msgid "Failed Recording"
-msgstr "Nie udane nagranie"
+msgstr "Błędne nagranie"
 
 #: src/webui/static/app/dvr.js:554
 msgid "Failed Recordings"
-msgstr "Nie udane nagrania"
+msgstr "Błędne nagrania"
 
 #: src/webui/static/app/i18n-post.js:36
 msgid "Feb"
@@ -772,7 +773,7 @@ msgstr "Filtry"
 
 #: src/webui/static/app/wizard.js:160
 msgid "Finish"
-msgstr ""
+msgstr "Koniec"
 
 #: src/webui/static/app/dvr.js:412
 msgid "Finished Recording"
@@ -840,7 +841,7 @@ msgstr "Grupuj po tym polu"
 
 #: src/webui/static/app/epg.js:138
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1164 src/webui/static/app/idnode.js:1988
 #: src/webui/static/app/idnode.js:2371 src/webui/static/app/idnode.js:2805
@@ -898,7 +899,7 @@ msgstr "Wej"
 
 #: src/webui/static/app/mpegts.js:168
 msgid "Index"
-msgstr ""
+msgstr "Indeks"
 
 #: src/webui/static/app/status.js:347 src/webui/static/app/status.js:814
 msgid "Input"
@@ -938,7 +939,7 @@ msgstr "KiB"
 
 #: src/webui/static/app/mpegts.js:171
 msgid "Language"
-msgstr ""
+msgstr "Język"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -946,7 +947,7 @@ msgstr "Ostatnia Strona"
 
 #: src/webui/static/app/epg.js:148
 msgid "Lines"
-msgstr ""
+msgstr "Linie"
 
 #: src/webui/static/app/tvheadend.js:340
 msgid "Live TV Player"
@@ -982,19 +983,19 @@ msgstr "Mapuj wybrane"
 
 #: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:139
 msgid "Map all services"
-msgstr ""
+msgstr "Mapuj wszystkie serwisy"
 
 #: src/webui/static/app/mpegts.js:251 src/webui/static/app/chconf.js:137
 msgid "Map all services to channels"
-msgstr ""
+msgstr "Mapuj wszystkie serwisy do kanałów"
 
 #: src/webui/static/app/mpegts.js:247 src/webui/static/app/chconf.js:133
 msgid "Map selected services"
-msgstr ""
+msgstr "Mapuj zaznaczone serwisy"
 
 #: src/webui/static/app/mpegts.js:245 src/webui/static/app/chconf.js:131
 msgid "Map selected services to channels"
-msgstr ""
+msgstr "Mapuj zaznaczone serwisy do kanałów"
 
 #: src/webui/static/app/mpegts.js:258 src/webui/static/app/chconf.js:144
 #: src/webui/static/app/servicemapper.js:104
@@ -1024,11 +1025,11 @@ msgstr "Marzec"
 
 #: src/webui/static/app/dvr.js:375
 msgid "Mark the selected recording as failed"
-msgstr ""
+msgstr "Zaznacz wybrane nagranie jako błędne"
 
 #: src/webui/static/app/dvr.js:516
 msgid "Mark the selected recording as finished"
-msgstr ""
+msgstr "Zaznacz wybrane nagranie jako zakończone"
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
@@ -1088,11 +1089,11 @@ msgstr "Przenieś wybrany wpis w górę"
 
 #: src/webui/static/app/dvr.js:377
 msgid "Move to failed"
-msgstr ""
+msgstr "Przenieś do błędnych"
 
 #: src/webui/static/app/dvr.js:518
 msgid "Move to finished"
-msgstr ""
+msgstr "Przenieś do zakończonych"
 
 #: src/webui/static/app/mpegts.js:100 src/webui/static/app/mpegts.js:109
 msgid "Mux"
@@ -1121,7 +1122,7 @@ msgstr "Sieci"
 
 #: src/webui/static/app/epg.js:140
 msgid "New#EPG"
-msgstr ""
+msgstr "Nowy#EPG"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
@@ -1223,7 +1224,7 @@ msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:169
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
@@ -1287,7 +1288,7 @@ msgstr "Proszę czekać..."
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
-msgstr ""
+msgstr "Poprzednia"
 
 #: src/webui/static/app/i18n-post.js:133
 msgid "Previous Month (Control+Left)"
@@ -1351,7 +1352,7 @@ msgstr "Odśwież"
 
 #: src/webui/static/app/epg.js:142
 msgid "Repeat#EPG"
-msgstr ""
+msgstr "Powtórz#EPG"
 
 #: src/webui/static/app/chconf.js:203
 msgid "Reset (clear) the selected icon URLs"
@@ -1401,7 +1402,7 @@ msgstr "Zapisz"
 
 #: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
-msgstr ""
+msgstr "Zapisz i następna"
 
 #: src/webui/static/app/idnode.js:1692 src/webui/static/app/idnode.js:2189
 #: src/webui/static/app/idnode.js:2722
@@ -1515,11 +1516,11 @@ msgstr "Czas rozpoczęcia"
 
 #: src/webui/static/app/config.js:11
 msgid "Start initial configuration wizard"
-msgstr ""
+msgstr "Uruchom kreatora konfiguracji początkowej"
 
 #: src/webui/static/app/config.js:13
 msgid "Start wizard"
-msgstr ""
+msgstr "Uruchom kreator"
 
 #: src/webui/static/app/status.js:581
 msgid "Started"
@@ -1593,7 +1594,7 @@ msgstr "Filtry strumieni napisów"
 
 #: src/webui/static/app/epg.js:152
 msgid "Subtitled#EPG"
-msgstr ""
+msgstr "Podtytuł#EPG"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
@@ -1657,7 +1658,7 @@ msgstr "Minimalna długość dla tego pola to {0}"
 
 #: src/webui/static/app/idnode.js:1378
 msgid "The selected entry is the original!"
-msgstr ""
+msgstr "Wybrana pozycja jest oryginalna!"
 
 #: src/webui/static/app/i18n-post.js:234
 msgid "The time in this field must be equal to or after {0}"
@@ -1721,11 +1722,11 @@ msgstr "Timery"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
-msgstr ""
+msgstr "Timeshift"
 
 #: src/webui/static/app/timeshift.js:24
 msgid "Timeshift Configuration"
-msgstr ""
+msgstr "Konfiguracja Timeshift"
 
 #: src/webui/static/app/epg.js:506 src/webui/static/app/epg.js:507
 #: src/webui/static/app/epg.js:1050 src/webui/static/app/status.js:100
@@ -1780,11 +1781,11 @@ msgstr "Typ"
 
 #: src/webui/static/app/epg.js:136
 msgid "UHDTV"
-msgstr ""
+msgstr "UHDTV"
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
-msgstr ""
+msgstr "Nie można uzyskać strony kreatora!"
 
 #: src/webui/static/app/status.js:386
 msgid "Uncorrected Blocks"
@@ -1809,7 +1810,7 @@ msgstr "nadchodzące nagranie"
 
 #: src/webui/static/app/tvheadend.js:753
 msgid "Used by tvheadend"
-msgstr ""
+msgstr "Używany przez tvheadend"
 
 #: src/webui/static/app/status.js:94 src/webui/static/app/status.js:576
 msgid "Username"
@@ -1861,7 +1862,7 @@ msgstr "Waga"
 
 #: src/webui/static/app/epg.js:144
 msgid "Widescreen"
-msgstr ""
+msgstr "Panoramiczny"
 
 #: src/webui/static/app/dvr.js:33
 msgid "Will be skipped"
@@ -1869,11 +1870,11 @@ msgstr "Zostaną pominięte"
 
 #: src/webui/static/app/wizard.js:165
 msgid "Wizard - initial configuration and tutorial"
-msgstr ""
+msgstr "Kreator - początkowa konfiguracja i poradnik"
 
 #: src/webui/static/app/wizard.js:59
 msgid "Wizard - page \"{0}\" not found"
-msgstr ""
+msgstr "Kreator - strona \"{0}\" nie znaleziona"
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
