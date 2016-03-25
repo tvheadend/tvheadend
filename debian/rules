@@ -13,6 +13,9 @@ override_dh_auto_build:
 override_dh_strip:
 	dh_strip --dbg-package=tvheadend-dbg
 
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
 override_dh_auto_install:
 	dh_auto_install --destdir=debian/tvheadend
 

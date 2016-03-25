@@ -1,0 +1,100 @@
+diff -urN ../x264-snapshot-20160217-2245.orig/configure ./configure
+--- ../x264-snapshot-20160217-2245.orig/configure	2016-02-17 22:45:04.000000000 +0100
++++ ./configure	2016-03-16 10:25:41.000913817 +0100
+@@ -364,6 +364,7 @@
+ CHECK_CFLAGS=""
+ HAVE_GETOPT_LONG=1
+ cross_prefix=""
++PKG_CONFIG="$PKG_CONFIG"
+ 
+ EXE=""
+ AS_EXT=".S"
+@@ -508,6 +509,10 @@
+ STRIP="${STRIP-${cross_prefix}strip}"
+ INSTALL="${INSTALL-install}"
+ 
++if [ "x$PKG_CONFIG" = x ]; then
++    PKG_CONFIG=${cross_prefix}pkg-config
++fi
++
+ if [ "x$host" = x ]; then
+     host=`${SRCPATH}/config.guess`
+ fi
+@@ -902,9 +907,9 @@
+ 
+ if [ "$cli_libx264" = "system" -a "$shared" != "yes" ] ; then
+     [ "$static" = "yes" ] && die "Option --system-libx264 can not be used together with --enable-static"
+-    if ${cross_prefix}pkg-config --exists x264 2>/dev/null; then
+-        X264_LIBS="$(${cross_prefix}pkg-config --libs x264)"
+-        X264_INCLUDE_DIR="${X264_INCLUDE_DIR-$(${cross_prefix}pkg-config --variable=includedir x264)}"
++    if ${PKG_CONFIG} --exists x264 2>/dev/null; then
++        X264_LIBS="$(${PKG_CONFIG} --libs x264)"
++        X264_INCLUDE_DIR="${X264_INCLUDE_DIR-$(${PKG_CONFIG} --variable=includedir x264)}"
+         configure_system_override "$X264_INCLUDE_DIR" || die "Detection of system libx264 configuration failed"
+     else
+         die "Can not find system libx264"
+@@ -978,9 +983,9 @@
+ 
+ if [ "$swscale" = "auto" ] ; then
+     swscale="no"
+-    if ${cross_prefix}pkg-config --exists libswscale 2>/dev/null; then
+-        SWSCALE_LIBS="$SWSCALE_LIBS $(${cross_prefix}pkg-config --libs libswscale libavutil)"
+-        SWSCALE_CFLAGS="$SWSCALE_CFLAGS $(${cross_prefix}pkg-config --cflags libswscale libavutil)"
++    if ${PKG_CONFIG} --exists libswscale 2>/dev/null; then
++        SWSCALE_LIBS="$SWSCALE_LIBS $(${PKG_CONFIG} --libs libswscale libavutil)"
++        SWSCALE_CFLAGS="$SWSCALE_CFLAGS $(${PKG_CONFIG} --cflags libswscale libavutil)"
+     fi
+     [ -z "$SWSCALE_LIBS" ] && SWSCALE_LIBS="-lswscale -lavutil"
+ 
+@@ -995,9 +1000,9 @@
+ 
+ if [ "$lavf" = "auto" ] ; then
+     lavf="no"
+-    if ${cross_prefix}pkg-config --exists libavformat libavcodec libswscale 2>/dev/null; then
+-        LAVF_LIBS="$LAVF_LIBS $(${cross_prefix}pkg-config --libs libavformat libavcodec libavutil libswscale)"
+-        LAVF_CFLAGS="$LAVF_CFLAGS $(${cross_prefix}pkg-config --cflags libavformat libavcodec libavutil libswscale)"
++    if ${PKG_CONFIG} --exists libavformat libavcodec libswscale 2>/dev/null; then
++        LAVF_LIBS="$LAVF_LIBS $(${PKG_CONFIG} --libs libavformat libavcodec libavutil libswscale)"
++        LAVF_CFLAGS="$LAVF_CFLAGS $(${PKG_CONFIG} --cflags libavformat libavcodec libavutil libswscale)"
+     fi
+     if [ -z "$LAVF_LIBS" -a -z "$LAVF_CFLAGS" ]; then
+         LAVF_LIBS="-lavformat"
+@@ -1019,9 +1024,9 @@
+     ffms_major="2"; ffms_minor="16"; ffms_micro="2"; ffms_bump="0"
+     ffms="no"
+ 
+-    if ${cross_prefix}pkg-config --exists ffms2 2>/dev/null; then
+-        FFMS2_LIBS="$FFMS2_LIBS $(${cross_prefix}pkg-config --libs ffms2)"
+-        FFMS2_CFLAGS="$FFMS2_CFLAGS $(${cross_prefix}pkg-config --cflags ffms2)"
++    if ${PKG_CONFIG} --exists ffms2 2>/dev/null; then
++        FFMS2_LIBS="$FFMS2_LIBS $(${PKG_CONFIG} --libs ffms2)"
++        FFMS2_CFLAGS="$FFMS2_CFLAGS $(${PKG_CONFIG} --cflags ffms2)"
+     fi
+     [ -z "$FFMS2_LIBS" ] && FFMS2_LIBS="-lffms2"
+ 
+@@ -1061,9 +1066,9 @@
+ 
+ if [ "$lsmash" = "auto" ] ; then
+     lsmash="no"
+-    if ${cross_prefix}pkg-config --exists liblsmash 2>/dev/null; then
+-        LSMASH_LIBS="$LSMASH_LIBS $(${cross_prefix}pkg-config --libs liblsmash)"
+-        LSMASH_CFLAGS="$LSMASH_CFLAGS $(${cross_prefix}pkg-config --cflags liblsmash)"
++    if ${PKG_CONFIG} --exists liblsmash 2>/dev/null; then
++        LSMASH_LIBS="$LSMASH_LIBS $(${PKG_CONFIG} --libs liblsmash)"
++        LSMASH_CFLAGS="$LSMASH_CFLAGS $(${PKG_CONFIG} --cflags liblsmash)"
+     fi
+     [ -z "$LSMASH_LIBS" ] && LSMASH_LIBS="-llsmash"
+ 
+@@ -1324,6 +1329,7 @@
+ RANLIB=$RANLIB
+ STRIP=$STRIP
+ INSTALL=$INSTALL
++PKG_CONFIG=$PKG_CONFIG
+ AS=$AS
+ ASFLAGS=$ASFLAGS
+ RC=$RC
+@@ -1445,4 +1451,3 @@
+ 
+ echo
+ echo "You can run 'make' or 'make fprofiled' now."
+-
