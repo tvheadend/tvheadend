@@ -1035,10 +1035,12 @@ satip_frontend_wake_other_waiting( satip_frontend_t *lfe )
     lfe = TAILQ_FIRST(&sd->sd_serialize_queue);
     if (lfe != NULL) {
       tvhtrace("satip", "wake other waiting: %s", lfe->mi_name);
+      pthread_mutex_unlock(&sd->sd_tune_mutex);
       pthread_mutex_lock(&lfe->sf_dvr_lock);
       if (lfe->sf_running)
         tvh_write(lfe->sf_dvr_pipe.wr, "o", 1);
       pthread_mutex_unlock(&lfe->sf_dvr_lock);
+      return;
     }
   }
   pthread_mutex_unlock(&sd->sd_tune_mutex);
