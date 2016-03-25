@@ -16,7 +16,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "python"
+        "python",
+        "dvb-apps"
       ],
 
       "buildcmd": [
@@ -40,12 +41,12 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "libx264-dev",
-        "python"
+        "python",
+        "dvb-apps"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --disable-libx264_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -65,7 +66,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "python"
+        "python",
+        "dvb-apps"
       ],
 
       "buildcmd": [
@@ -89,12 +91,12 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "libx264-dev",
-        "python"
+        "python",
+        "dvb-apps"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --disable-libx264_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -114,7 +116,8 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "python"
+        "python",
+        "dvb-apps"
       ],
 
       "buildcmd": [
@@ -138,12 +141,12 @@
         "bzip2",
         "git-core",
         "liburiparser-dev",
-        "libx264-dev",
-        "python"
+        "python",
+        "dvb-apps"
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --disable-libx264_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     }
