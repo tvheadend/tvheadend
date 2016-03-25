@@ -197,7 +197,7 @@ dvb_desc_sat_del
    uint16_t onid, uint16_t tsid,
    const uint8_t *ptr, int len, int force )
 {
-  int frequency, symrate;
+  int frequency, symrate, polarisation, orbitalpos;
   dvb_mux_conf_t dmc;
   char buf[128];
 
@@ -220,17 +220,25 @@ dvb_desc_sat_del
     return NULL;
   }
 
+  if (symrate < 1000) /* broken symrate? */
+    symrate *= 1000;
+
+  orbitalpos = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
+  if ((ptr[6] & 0x80) == 0) orbitalpos *= -1;
+  if (orbitalpos == 0)
+    orbitalpos = ((dvb_mux_t *)mm)->lm_tuning.u.dmc_fe_qpsk.orbital_pos;
+
+  polarisation = (ptr[6] >> 5) & 0x03;
+
   dvb_mux_conf_init(&dmc, (ptr[6] & 0x4) ? DVB_SYS_DVBS2 : DVB_SYS_DVBS);
 
   dmc.dmc_fe_freq                = frequency;
-  dmc.u.dmc_fe_qpsk.orbital_pos  = bcdtoint(ptr[4]) * 100 + bcdtoint(ptr[5]);
-  if ((ptr[6] & 0x80) == 0)
-    dmc.u.dmc_fe_qpsk.orbital_pos *= -1;
-  dmc.u.dmc_fe_qpsk.polarisation = (ptr[6] >> 5) & 0x03;
+  dmc.u.dmc_fe_qpsk.orbital_pos  = orbitalpos;
+  dmc.u.dmc_fe_qpsk.polarisation = polarisation;
 
   dmc.u.dmc_fe_qpsk.symbol_rate  = symrate * 100;
   dmc.u.dmc_fe_qpsk.fec_inner    = fec_tab[ptr[10] & 0x0f];
-  
+
   static int mtab[4] = {
     DVB_MOD_NONE, DVB_MOD_QPSK, DVB_MOD_PSK_8, DVB_MOD_QAM_16
   };
