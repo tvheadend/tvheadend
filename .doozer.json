@@ -4,6 +4,7 @@
     "precise-amd64": {
       "buildenv": "precise-amd64",
       "builddeps": [
+        "cmake",
         "git",
         "build-essential",
         "pkg-config",
@@ -27,6 +28,7 @@
     "precise-i386": {
       "buildenv": "precise-i386",
       "builddeps": [
+        "cmake",
         "git",
         "build-essential",
         "pkg-config",
@@ -51,6 +53,7 @@
     "trusty-amd64": {
       "buildenv": "trusty-amd64",
       "builddeps": [
+        "cmake",
         "git",
         "build-essential",
         "pkg-config",
@@ -74,6 +77,7 @@
     "trusty-i386": {
       "buildenv": "trusty-i386",
       "builddeps": [
+        "cmake",
         "git",
         "build-essential",
         "pkg-config",
@@ -98,6 +102,7 @@
     "vivid-amd64": {
       "buildenv": "vivid-amd64",
       "builddeps": [
+        "cmake",
         "git",
         "build-essential",
         "pkg-config",
@@ -121,6 +126,7 @@
     "vivid-i386": {
       "buildenv": "vivid-i386",
       "builddeps": [
+        "cmake",
         "git",
         "build-essential",
         "pkg-config",
