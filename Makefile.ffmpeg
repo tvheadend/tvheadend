@@ -154,6 +154,12 @@ ifneq (,$(DEB_BUILD_GNU_TYPE))
 LIBX264_HOST := --host=$(DEB_BUILD_GNU_TYPE)
 endif
 
+ifeq (,$(LIBX264_HOST))
+ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
+LIBX264_HOST := --host=$(ARCH)-linux-gnu
+endif
+endif
+
 $(LIB_ROOT)/$(LIBX264)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX264_URL),$(LIB_ROOT)/$(LIBX264_TB),$(LIBX264_SHA1))
 	$(call UNTAR,$(LIBX264_TB),j)
