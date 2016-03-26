@@ -162,7 +162,6 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_download:
 
 $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
-		$(LIB_ROOT)/$(FFMPEG)/.tvh_tmp \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
 		--disable-avs \
@@ -501,20 +500,6 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@mkdir -p $(EBUILDIR)
 	$(call DOWNLOAD,$(FFMPEG_URL),$(LIB_ROOT)/$(FFMPEG_TB),$(FFMPEG_SHA1))
 	$(call UNTAR,$(FFMPEG_TB),j)
-	@touch $@
-
-$(LIB_ROOT)/$(FFMPEG)/.tvh_tmp: \
-		$(LIB_ROOT)/$(YASM)/.tvh_build \
-		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
-	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
-		--disable-all \
-		--enable-gpl \
-		--extra-cflags="$(ECFLAGS)" \
-		--extra-libs="$(ELIBS)" \
-		--pkg-config="$(ROOTDIR)/support/pkg-config.ffmpeg" \
-		$(foreach component,$(COMPONENTS),--enable-$(component))
-	DESTDIR=$(EBUILDIR) \
-		$(MAKE) -C $(LIB_ROOT)/$(FFMPEG) install clean distclean
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
