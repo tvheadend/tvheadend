@@ -324,6 +324,12 @@ endif
 
 ifeq (yes,$(CONFIG_LIBTHEORA_STATIC))
 
+ifeq (,$(LIBTHEORA_HOST))
+ifneq (,$(FFMPEG_HOST))
+LIBTHEORA_HOST := --host=$(FFMPEG_HOST)
+endif
+endif
+
 $(LIB_ROOT)/$(LIBTHEORA)/.tvh_download:
 	$(call DOWNLOAD,$(LIBTHEORA_URL),$(LIB_ROOT)/$(LIBTHEORA_TB),$(LIBTHEORA_SHA1))
 	$(call UNTAR,$(LIBTHEORA_TB),z)
@@ -335,7 +341,8 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBTHEORA) && $(CONFIGURE) \
 		--with-ogg=$(EPREFIX) \
-		--disable-examples
+		--disable-examples \
+		$(LIBTHEORA_HOST)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBTHEORA) install
 	@touch $@
