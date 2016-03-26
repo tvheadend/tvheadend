@@ -21,7 +21,7 @@ include $(DIR)/.config.mk
 
 ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
 FFMPEG_HOST   := $(ARCH)-linux-gnu
-FFMPEG_TARGET := x86-linux-gnu
+FFMPEG_TARGET := x86-linux-gcc
 endif
 
 unexport CFLAGS
