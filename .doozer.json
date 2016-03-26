@@ -21,6 +21,7 @@
       ],
 
       "buildcmd": [
+        "rm -rf ./build.linux",
         "./configure --disable-dvbscan --enable-ffmpeg_static --disable-libx265_static --disable-libx265 --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
