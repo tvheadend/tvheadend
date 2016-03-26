@@ -401,7 +401,8 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
-		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
+		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download \
+		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build
 	cd $(LIB_ROOT)/$(LIBFDKAAC) && $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
