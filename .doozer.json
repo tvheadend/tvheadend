@@ -21,7 +21,7 @@
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -46,7 +46,7 @@
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -71,7 +71,7 @@
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -96,7 +96,7 @@
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -121,7 +121,7 @@
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     },
@@ -146,7 +146,7 @@
       ],
 
       "buildcmd": [
-        "./configure --disable-dvbscan --enable-libffmpeg_static --enable-hdhomerun_static",
+        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
         "make -j ${PARALLEL}"
       ]
     }
