@@ -20,7 +20,8 @@ DIR :=  $(dir $(lastword $(MAKEFILE_LIST)))
 include $(DIR)/.config.mk
 
 ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
-FFMPEG_TARGET := $(ARCH)-linux-gnu
+FFMPEG_HOST   := $(ARCH)-linux-gnu
+FFMPEG_TARGET := x86-linux-gnu
 endif
 
 unexport CFLAGS
@@ -159,8 +160,8 @@ LIBX264_HOST := --host=$(DEB_BUILD_GNU_TYPE)
 endif
 
 ifeq (,$(LIBX264_HOST))
-ifneq (,$(FFMPEG_TARGET))
-LIBX264_HOST := --host=$(FFMPEG_TARGET)
+ifneq (,$(FFMPEG_HOST))
+LIBX264_HOST := --host=$(FFMPEG_HOST)
 endif
 endif
 
