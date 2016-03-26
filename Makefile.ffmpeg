@@ -19,6 +19,10 @@
 DIR :=  $(dir $(lastword $(MAKEFILE_LIST)))
 include $(DIR)/.config.mk
 
+ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
+FFMPEG_TARGET := $(ARCH)-linux-gnu
+endif
+
 unexport CFLAGS
 unexport LDFLAGS
 
@@ -155,8 +159,8 @@ LIBX264_HOST := --host=$(DEB_BUILD_GNU_TYPE)
 endif
 
 ifeq (,$(LIBX264_HOST))
-ifneq (,$(filter i386 i486 i586 i686 pentium,$(ARCH)))
-LIBX264_HOST := --host=$(ARCH)-linux-gnu
+ifneq (,$(FFMPEG_TARGET))
+LIBX264_HOST := --host=$(FFMPEG_TARGET)
 endif
 endif
 
@@ -249,6 +253,10 @@ endif
 
 ifeq (yes,$(CONFIG_LIBVPX_STATIC))
 
+ifneq (,$(FFMPEG_TARGET))
+LIBVPX_TARGET := --target=$(FFMPEG_TARGET)
+endif
+
 $(LIB_ROOT)/$(LIBVPX)/.tvh_download:
 	$(call DOWNLOAD,$(LIBVPX_URL),$(LIB_ROOT)/$(LIBVPX_TB),$(LIBVPX_SHA1))
 	$(call UNTAR,$(LIBVPX_TB),j)
@@ -260,7 +268,8 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
 	cd $(LIB_ROOT)/$(LIBVPX) && $(CONFIGURE) \
 		--disable-examples \
 		--disable-docs \
-		--disable-unit-tests
+		--disable-unit-tests \
+                $(LIBVPX_TARGET)
 	DIST_DIR=$(EPREFIX) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBVPX) install
 	@touch $@
