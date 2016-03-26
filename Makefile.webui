@@ -50,7 +50,7 @@ JAVASCRIPT_TV =
 CSS_INIT =
 CSS_DONE =
 CSS_BLUE =
-CSS_GREY =
+CSS_GRAY =
 CSS_ACCESS =
 CSS_TV =
 
@@ -73,7 +73,7 @@ CSS_DONE   += static/xcheckbox/xcheckbox.css
 CSS_DONE   += static/app/ext.css
 
 CSS_BLUE   += $(EXTJSPATH)/resources/css/xtheme-blue.css
-CSS_GREY   += $(EXTJSPATH)/resources/css/xtheme-grey.css
+CSS_GRAY   += $(EXTJSPATH)/resources/css/xtheme-gray.css
 CSS_ACCESS += $(EXTJSPATH)/resources/css/xtheme-access.css
 
 #
