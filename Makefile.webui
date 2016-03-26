@@ -47,7 +47,11 @@ endif
 JAVASCRIPT =
 JAVASCRIPT2 =
 JAVASCRIPT_TV =
-CSS =
+CSS_INIT =
+CSS_DONE =
+CSS_BLUE =
+CSS_GREY =
+CSS_ACCESS =
 CSS_TV =
 
 #
@@ -61,13 +65,16 @@ JAVASCRIPT += $(EXTJSPATH)/ext-all$(DEBUG).js
 # CSS
 #
 
-CSS += $(EXTJSPATH)/resources/css/ext-all-notheme.css
-CSS += $(EXTJSPATH)/resources/css/xtheme-blue.css
-CSS += $(ROOTPATH)/livegrid/resources/css/ext-ux-livegrid.css
-CSS += $(EXTJSPATH)/examples/ux/gridfilters/css/GridFilters.css
-CSS += $(EXTJSPATH)/examples/ux/gridfilters/css/RangeMenu.css
-CSS += static/xcheckbox/xcheckbox.css
-CSS += static/app/ext.css
+CSS_INIT   += $(EXTJSPATH)/resources/css/ext-all-notheme.css
+CSS_DONE   += $(ROOTPATH)/livegrid/resources/css/ext-ux-livegrid.css
+CSS_DONE   += $(EXTJSPATH)/examples/ux/gridfilters/css/GridFilters.css
+CSS_DONE   += $(EXTJSPATH)/examples/ux/gridfilters/css/RangeMenu.css
+CSS_DONE   += static/xcheckbox/xcheckbox.css
+CSS_DONE   += static/app/ext.css
+
+CSS_BLUE   += $(EXTJSPATH)/resources/css/xtheme-blue.css
+CSS_GREY   += $(EXTJSPATH)/resources/css/xtheme-grey.css
+CSS_ACCESS += $(EXTJSPATH)/resources/css/xtheme-access.css
 
 #
 # extjs extensions
@@ -147,9 +154,13 @@ JAVASCRIPT_TV += $(ROOTPATH)/tv.js
 #
 
 JAVASCRIPT_SRC = $(foreach f,$(JAVASCRIPT),$(WEBDIR)/$(f))
-CSS_SRC = $(foreach f,$(CSS),$(WEBDIR)/$(f))
+CSS_BLUE_SRC   = $(foreach f,$(CSS_INIT) $(CSS_BLUE) $(CSS_DONE),$(WEBDIR)/$(f))
+CSS_GRAY_SRC   = $(foreach f,$(CSS_INIT) $(CSS_GRAY) $(CSS_DONE),$(WEBDIR)/$(f))
+CSS_ACCESS_SRC = $(foreach f,$(CSS_INIT) $(CSS_ACCESS) $(CSS_DONE),$(WEBDIR)/$(f))
+CSS_SRC        = $(CSS_BLUE_SRC) $(CSS_GRAY_SRC) $(CSS_ACCESS_SRC)
+
 JAVASCRIPT_TV_SRC = $(foreach f,$(JAVASCRIPT_TV),$(WEBDIR)/$(f))
-CSS_TV_SRC = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
+CSS_TV_SRC     = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
 
 #
 # Internationalization
@@ -209,12 +220,14 @@ all:
 	$(MAKE) -f $(IAM) WEBUI=debug compile-debug
 
 $(WEBDIR)/extjs-std.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
-	$(VV)printf 'extjs_lcss(hq, "static/tvh.css.gz");\n' > $@
+	$(VV)printf 'extjs_lcss(hq, "redir/theme.css");\n' > $@
 	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
 	$(VV)printf 'extjs_load(hq, "static/tvh.js.gz");\n' >> $@
 
 $(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
-	$(VV)printf '$(foreach f,$(CSS),extjs_lcss(hq, "$(f)");\n)' > $@
+	$(VV)printf '$(foreach f,$(CSS_INIT),extjs_lcss(hq, "$(f)");\n)' > $@
+	$(VV)printf 'extjs_lcss(hq, "redir/theme.debug.css");\n' >> $@
+	$(VV)printf '$(foreach f,$(CSS_DONE),extjs_lcss(hq, "$(f)");\n)' >> $@
 	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
 	$(VV)printf '$(foreach f,$(JAVASCRIPT),extjs_load(hq, "$(f)");\n)' >> $@
 
@@ -231,7 +244,13 @@ $(WEBDIR)/extjs-tv-debug.c: $(JAVASCRIPT_TV_SRC) $(CSS_TV_SRC)
 $(WEBDIR)/$(ROOTPATH)/tvh.js.gz: $(JAVASCRIPT_SRC)
 	$(call GO_JS)
 
-$(WEBDIR)/$(ROOTPATH)/tvh.css.gz: $(CSS_SRC)
+$(WEBDIR)/$(ROOTPATH)/tvh.blue.css.gz: $(CSS_BLUE_SRC)
+	$(call GO_CSS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh.gray.css.gz: $(CSS_GRAY_SRC)
+	$(call GO_CSS)
+
+$(WEBDIR)/$(ROOTPATH)/tvh.access.css.gz: $(CSS_ACCESS_SRC)
 	$(call GO_CSS)
 
 $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz: $(JAVASCRIPT_TV_SRC)
@@ -241,7 +260,8 @@ $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz: $(CSS_TV_SRC)
 	$(call GO_CSS)
 
 .PHONY: compile-std
-compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.css.gz \
+compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.blue.css.gz \
+             $(WEBDIR)/$(ROOTPATH)/tvh.gray.css.gz $(WEBDIR)/$(ROOTPATH)/tvh.access.css.gz \
              $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz \
              $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES)
 	@echo "WEBUI std finished"

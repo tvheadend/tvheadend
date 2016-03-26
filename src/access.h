@@ -98,6 +98,7 @@ typedef struct access_entry {
   char *ae_comment;
   char *ae_lang;
   char *ae_lang_ui;
+  char *ae_theme;
 
   int ae_index;
   int ae_wizard;
@@ -159,6 +160,7 @@ typedef struct access {
   uint32_t  aa_conn_dvr;
   int       aa_uilevel;
   int       aa_uilevel_nochange;
+  char     *aa_theme;
 } access_t;
 
 TAILQ_HEAD(access_ticket_queue, access_ticket);
@@ -224,6 +226,12 @@ access_t *access_copy(access_t *src);
  */
 char *
 access_get_lang(access_t *a, const char *lang);
+
+/**
+ *
+ */
+const char *
+access_get_theme(access_t *a);
 
 /**
  * Verifies that the given user in combination with the source ip
@@ -313,6 +321,7 @@ void access_done(void);
  */
 htsmsg_t *language_get_list ( void *obj, const char *lang );
 htsmsg_t *language_get_ui_list ( void *obj, const char *lang );
+htsmsg_t *theme_get_ui_list ( void *obj, const char *lang );
 htsmsg_t *user_get_userlist ( void *obj, const char *lang );
 
 #endif /* ACCESS_H_ */

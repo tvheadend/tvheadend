@@ -39,6 +39,7 @@ typedef struct config {
   char *language;
   char *info_area;
   char *language_ui;
+  char *theme_ui;
   char *muxconf_path;
   int prefer_picon;
   char *chicon_path;

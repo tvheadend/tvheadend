@@ -41,6 +41,9 @@ tvheadend.baseconf = function(panel, index) {
                 if (l !== tvheadend.uilevel)
                     reload = 1;
             }
+            var n = data['theme'];
+            if (n !== tvheadend.theme)
+              reload = 1;
             var n = data['uilevel_nochange'] ? true : false;
             if (n !== tvheadend.uilevel_nochange)
                 reload = 1;

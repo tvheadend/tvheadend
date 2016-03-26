@@ -209,6 +209,8 @@ access_copy(access_t *src)
     dst->aa_lang = strdup(src->aa_lang);
   if (src->aa_lang_ui)
     dst->aa_lang_ui = strdup(src->aa_lang_ui);
+  if (src->aa_theme)
+    dst->aa_theme = strdup(src->aa_theme);
   if (src->aa_profiles)
     dst->aa_profiles = htsmsg_copy(src->aa_profiles);
   if (src->aa_dvrcfgs)
@@ -244,6 +246,20 @@ access_get_lang(access_t *a, const char *lang)
 /**
  *
  */
+const char *
+access_get_theme(access_t *a)
+{
+  if (a->aa_theme == NULL || a->aa_theme[0] == '\0') {
+    if (config.theme_ui == NULL || config.theme_ui[0] == '\0')
+      return "blue";
+     return config.theme_ui;
+  }
+  return a->aa_theme;
+}
+
+/**
+ *
+ */
 void
 access_destroy(access_t *a)
 {
@@ -253,6 +269,7 @@ access_destroy(access_t *a)
   free(a->aa_representative);
   free(a->aa_lang);
   free(a->aa_lang_ui);
+  free(a->aa_theme);
   htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
@@ -599,6 +616,9 @@ access_update(access_t *a, access_entry_t *ae)
     else if ((s = config_get_language_ui()) != NULL)
       a->aa_lang_ui = lang_code_user(s);
   }
+
+  if ((!a->aa_theme || a->aa_theme[0] == '\0') && ae->ae_theme && ae->ae_theme[0])
+    a->aa_theme = strdup(a->aa_theme);
 
   a->aa_rights |= ae->ae_rights;
 }
@@ -1402,6 +1422,17 @@ uilevel_nochange_get_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+htsmsg_t *
+theme_get_ui_list ( void *p, const char *lang )
+{
+  static struct strtab_str tab[] = {
+    { N_("Blue"),     "blue"  },
+    { N_("Gray"),     "gray"  },
+    { N_("Access"),   "access" },
+  };
+  return strtab2htsmsg_str(tab, 1, lang);
+}
+
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = N_("Access"),
@@ -1474,10 +1505,18 @@ const idclass_t access_entry_class = {
       .type     = PT_STR,
       .id       = "langui",
       .name     = N_("Web interface language"),
-      .desc     = N_("Default web interface language."),
+      .desc     = N_("Web interface language."),
       .list     = language_get_ui_list,
       .off      = offsetof(access_entry_t, ae_lang_ui),
       .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "themeui",
+      .name     = N_("Web theme"),
+      .desc     = N_("Web interface theme."),
+      .list     = theme_get_ui_list,
+      .off      = offsetof(access_entry_t, ae_theme),
     },
     {
       .type     = PT_BOOL,

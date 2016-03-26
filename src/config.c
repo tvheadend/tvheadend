@@ -1637,6 +1637,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.descrambler_buffer = 9000;
   config.epg_compress = 1;
   config_scanfile_ok = 0;
+  config.theme_ui = strdup("blue");
 
   /* Generate default */
   if (!path) {
@@ -1747,6 +1748,7 @@ void config_done ( void )
   free(config.server_name);
   free(config.language);
   free(config.language_ui);
+  free(config.theme_ui);
   free(config.info_area);
   free(config.muxconf_path);
   free(config.chicon_path);
@@ -2162,6 +2164,16 @@ const idclass_t config_class = {
                    " language isn't set in the Access Entries tab."),
       .list   = language_get_ui_list,
       .off    = offsetof(config_t, language_ui),
+      .group  = 3
+    },
+    {
+      .type   = PT_STR,
+      .id     = "theme_ui",
+      .name   = N_("Theme"),
+      .desc   = N_("The default theme for web interface to use if the user "
+                   " theme isn't set in the Access Entries tab."),
+      .list   = theme_get_ui_list,
+      .off    = offsetof(config_t, theme_ui),
       .group  = 3
     },
     {

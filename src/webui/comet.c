@@ -169,6 +169,7 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
     if (config.uilevel_nochange)
       htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
   }
+  htsmsg_add_str(m, "theme", access_get_theme(hc->hc_access));
   htsmsg_add_u32(m, "quicktips", config.ui_quicktips);
   if (!access_noacl)
     htsmsg_add_str(m, "username", username);
