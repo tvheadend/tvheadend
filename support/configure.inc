@@ -14,6 +14,7 @@ CONFIGURE_ARGS="$*"
 # System setup
 [ -z "$PLATFORM" ] && PLATFORM=$(uname -s | tr "[:upper:]" "[:lower:]")
 [ -z "$CPU"      ] && CPU=generic
+[ -z "$ARCH"     ] && ARCH=$(CC -dumpmachine | cut -d '-' -f 1)
 [ -z "$ARCH"     ] && ARCH=$(uname -m)
 [ -z "$OSENV"    ] && OSENV=posix
 [ -z "$PYTHON"   ] && PYTHON=python
