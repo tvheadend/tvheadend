@@ -96,29 +96,6 @@ FFMPEG_SHA1    = daa827a8d1b7d5be418087165a55bdad5197f9d5
 
 LIB_NAME  := ffmpeg
 LIB_ROOT  := $(BUILDDIR)/$(LIB_NAME)
-LIB_FILES := \
-	$(LIB_ROOT)/$(YASM)/.tvh_download \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBX264)/.tvh_download \
-	$(LIB_ROOT)/$(LIBX264)/.tvh_build \
-	$(LIB_ROOT)/$(LIBX265)/.tvh_download \
-	$(LIB_ROOT)/$(LIBX265)/.tvh_build \
-	$(LIB_ROOT)/$(LIBVPX)/.tvh_download \
-	$(LIB_ROOT)/$(LIBVPX)/.tvh_build \
-	$(LIB_ROOT)/$(LIBOGG)/.tvh_download \
-	$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
-	$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download \
-	$(LIB_ROOT)/$(LIBTHEORA)/.tvh_build \
-	$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download \
-	$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
-	$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download \
-	$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
-	$(LIB_ROOT)/$(LIBMFX)/.tvh_download \
-	$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
-	$(LIB_ROOT)/$(FFMPEG)/.tvh_download \
-	$(LIB_ROOT)/$(FFMPEG)/.tvh_build \
-	$(LIB_ROOT)/build/ffmpeg/lib/*.a \
-	$(LIB_ROOT)/build/ffmpeg/include/*
 
 include $(DIR)/Makefile.static
 
@@ -152,7 +129,7 @@ $(LIB_ROOT)/$(YASM)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(YASM)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_download
 	cd $(LIB_ROOT)/$(YASM) && $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(YASM) install
@@ -184,9 +161,9 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(FFMPEG)/.tvh_tmp \
-	$(LIB_ROOT)/$(LIBX264)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(FFMPEG)/.tvh_tmp \
+		$(LIB_ROOT)/$(LIBX264)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
 		--disable-avs \
 		--disable-ffms \
@@ -230,8 +207,8 @@ $(LIB_ROOT)/$(LIBX265)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBX265)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBX265)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX265)/build/linux && cmake -G "Unix Makefiles" \
 		-DCMAKE_INSTALL_PREFIX="/ffmpeg" \
 		-DENABLE_SHARED:BOOL=OFF \
@@ -273,8 +250,8 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBVPX)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBVPX)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVPX) && $(CONFIGURE) \
 		--disable-examples \
 		--disable-docs \
@@ -308,8 +285,8 @@ $(LIB_ROOT)/$(LIBOGG)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBOGG)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBOGG)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOGG)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBOGG) && $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBOGG) install
@@ -338,9 +315,9 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
-	$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
+		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBTHEORA) && $(CONFIGURE) \
 		--with-ogg=$(EPREFIX) \
 		--disable-examples
@@ -382,9 +359,9 @@ $(LIB_ROOT)/$(LIBVORBIS)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBVORBIS)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
-	$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
+		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVORBIS) && $(CONFIGURE) \
 		--with-ogg=$(EPREFIX)
 	DESTDIR=$(EBUILDIR) \
@@ -424,7 +401,7 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
-	$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
+		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBFDKAAC) && $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
@@ -477,7 +454,7 @@ $(LIB_ROOT)/$(LIBMFX)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(LIBMFX)/.tvh_build: \
-	$(LIB_ROOT)/$(LIBMFX)/.tvh_download
+		$(LIB_ROOT)/$(LIBMFX)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBMFX) && autoreconf -i && $(CONFIGURE) \
 		--with-libva_x11 \
 		--with-libva_drm
@@ -527,8 +504,8 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_tmp: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(FFMPEG)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
 	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
 		--disable-all \
 		--enable-gpl \
@@ -541,15 +518,15 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_tmp: \
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
-	$(LIB_ROOT)/$(YASM)/.tvh_build \
-	$(LIB_ROOT)/$(LIBX264)/.tvh_build \
-	$(LIB_ROOT)/$(LIBX265)/.tvh_build \
-	$(LIB_ROOT)/$(LIBVPX)/.tvh_build \
-	$(LIB_ROOT)/$(LIBTHEORA)/.tvh_build \
-	$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
-	$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
-	$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
-	$(LIB_ROOT)/$(FFMPEG)/.tvh_download
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBX264)/.tvh_build \
+		$(LIB_ROOT)/$(LIBX265)/.tvh_build \
+		$(LIB_ROOT)/$(LIBVPX)/.tvh_build \
+		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_build \
+		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
+		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
+		$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
+		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
 	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
 		--disable-all \
 		--enable-gpl \
