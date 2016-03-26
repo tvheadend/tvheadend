@@ -1798,7 +1798,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
           return 0;
         }
       }
-      return 0;
+      return HTTP_STATUS_BAD_REQUEST;
     }
     if (!strcmp(components[0], "theme.debug.css")) {
       theme = access_get_theme(hc->hc_access);
@@ -1810,7 +1810,7 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
           return 0;
         }
       }
-      return 0;
+      return HTTP_STATUS_BAD_REQUEST;
     }
   }
 
