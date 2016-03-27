@@ -60,14 +60,14 @@ const idclass_t memoryinfo_class = {
     {
       .type     = PT_S64_ATOMIC,
       .id       = "count",
-      .name     = N_("Counf of objects"),
+      .name     = N_("Count of objects"),
       .off      = offsetof(memoryinfo_t, my_count),
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {
       .type     = PT_S64_ATOMIC,
       .id       = "peak_count",
-      .name     = N_("Peak counf of objects"),
+      .name     = N_("Peak count of objects"),
       .off      = offsetof(memoryinfo_t, my_peak_count),
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
