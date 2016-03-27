@@ -86,8 +86,11 @@ om_mux_cmp  ( epggrab_ota_mux_t *a, epggrab_ota_mux_t *b )
 {
   mpegts_mux_t *a1 = mpegts_mux_find(a->om_mux_uuid);
   mpegts_mux_t *b1 = mpegts_mux_find(b->om_mux_uuid);
-  assert(a1);
-  assert(b1);
+  if (a1 == NULL || b1 == NULL) {
+    if (a1 == NULL && b1 == NULL)
+      return 0;
+    return a1 == NULL ? 1 : -1;
+  }
   return mpegts_mux_compare(a1, b1);
 }
 
