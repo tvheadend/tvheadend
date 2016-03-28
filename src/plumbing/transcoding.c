@@ -2110,8 +2110,10 @@ transcoder_get_capabilities(int experimental)
     if (!WORKING_ENCODER(p->id))
       continue;
 
-    if ((p->capabilities & CODEC_CAP_EXPERIMENTAL) && !experimental)
+    if (((p->capabilities & CODEC_CAP_EXPERIMENTAL) && !experimental) ||
+        (p->capabilities & AV_CODEC_CAP_VARIABLE_FRAME_SIZE)) {
       continue;
+    }
 
     sct = codec_id2streaming_component_type(p->id);
     if (sct == SCT_NONE || sct == SCT_UNKNOWN)
