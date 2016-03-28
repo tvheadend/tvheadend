@@ -618,7 +618,7 @@ access_update(access_t *a, access_entry_t *ae)
   }
 
   if ((!a->aa_theme || a->aa_theme[0] == '\0') && ae->ae_theme && ae->ae_theme[0])
-    a->aa_theme = strdup(a->aa_theme);
+    a->aa_theme = strdup(ae->ae_theme);
 
   a->aa_rights |= ae->ae_rights;
 }
