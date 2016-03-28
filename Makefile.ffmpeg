@@ -175,6 +175,8 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
+		--disable-swscale \
+		--disable-lavf \
 		--disable-avs \
 		--disable-ffms \
 		--disable-gpac \
