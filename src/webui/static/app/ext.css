@@ -678,10 +678,21 @@
     margin: 10px;
 }
 
+.x-epg-left {
+    float: left;
+    width: 78%;
+}
+
+.x-epg-bottom {
+    width: 100%;
+    margin: 5px 0 0 0;
+    clear: both;
+}
+
 .x-epg-chicon {
     float: right;
     margin: 5px;
-    max-width: 132px;
+    width: 20%;
     max-height: 99px;
 }
 
