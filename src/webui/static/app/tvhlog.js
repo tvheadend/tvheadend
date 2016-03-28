@@ -35,8 +35,8 @@ tvheadend.memoryinfo = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/memoryinfo',
-        titleS: _('Memory info entry'),
-        titleP: _('Memory info entries'),
+        titleS: _('Memory Info Entry'),
+        titleP: _('Memory Info Entries'),
         iconCls: 'exclamation',
         tabIndex: index,
         readonly: true,
