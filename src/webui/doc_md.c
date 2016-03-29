@@ -127,8 +127,8 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   const idclass_t *ic;
   const char *lang = hc->hc_access->aa_lang_ui;
   htsbuf_queue_t *hq = &hc->hc_reply;
-  htsmsg_t *m, *l, *n;
-  htsmsg_field_t *f;
+  htsmsg_t *m, *l, *n, *e, *x;
+  htsmsg_field_t *f, *f2;
   const char *s;
   int nl = 0;
 
@@ -150,17 +150,33 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     n = htsmsg_field_get_map(f);
     if (!n) continue;
     s = htsmsg_get_str(n, "caption");
-    if (s) {
-      nl = md_nl(hq, nl);
-      md_style(hq, "**", s);
-      md_nl(hq, 1);
-    }
+    if (!s) continue;
+    nl = md_nl(hq, nl);
+    md_style(hq, "**", s);
+    md_nl(hq, 1);
     s = htsmsg_get_str(n, "description");
     if (s) {
-      nl = md_nl(hq, nl);
       md_text(hq, ": ", "  ", s);
       md_nl(hq, 1);
     }
+    e = htsmsg_get_list(n, "enum");
+    if (e) {
+      HTSMSG_FOREACH(f2, e) {
+        x = htsmsg_field_get_map(f2);
+        if (x) {
+          s = htsmsg_get_str(x, "val");
+        } else {
+          s = htsmsg_field_get_string(f2);
+        }
+        if (s) {
+          md_nl(hq, 1);
+          htsbuf_append(hq, "  * ", 4);
+          md_style(hq, "**", s);
+        }
+      }
+      md_nl(hq, 1);
+    }
+    htsmsg_print(n);
   }
   htsmsg_destroy(m);
   return 0;
