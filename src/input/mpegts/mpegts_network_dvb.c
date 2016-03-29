@@ -838,16 +838,16 @@ static const idclass_t * dvb_network_classes[] = {
 };
 
 static const idclass_t * dvb_mux_classes[] = {
-  &dvb_network_dvbt_class,
-  &dvb_network_dvbc_class,
-  &dvb_network_dvbs_class,
-  &dvb_network_atsc_t_class,
-  &dvb_network_atsc_c_class,
-  &dvb_network_isdb_t_class,
-  &dvb_network_isdb_c_class,
-  &dvb_network_isdb_s_class,
+  &dvb_mux_dvbt_class,
+  &dvb_mux_dvbc_class,
+  &dvb_mux_dvbs_class,
+  &dvb_mux_atsc_t_class,
+  &dvb_mux_atsc_c_class,
+  &dvb_mux_isdb_t_class,
+  &dvb_mux_isdb_c_class,
+  &dvb_mux_isdb_s_class,
 #if 0 /* TODO: write DAB stream parser */
-  &dvb_network_dab_class,
+  &dvb_mux_dab_class,
 #endif
 };
 
