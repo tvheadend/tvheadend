@@ -10,7 +10,7 @@ src/webui/extjs-tv-debug.c
 src/webui/static/tvh.js.gz
 src/webui/static/tvh-tv.css.gz
 src/webui/static/tvh-tv.js.gz
-src/webui/static/tvh.css.gz
+src/webui/static/tvh.*.css.gz
 
 data/dvb-scan
 
