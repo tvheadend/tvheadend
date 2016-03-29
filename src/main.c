@@ -1134,6 +1134,7 @@ main(int argc, char **argv)
   config_init(opt_nobackup == 0);
 
   /* Memoryinfo */
+  idclass_register(&memoryinfo_class);
   memoryinfo_register(&tasklet_memoryinfo);
 #if ENABLE_SLOW_MEMORYINFO
   memoryinfo_register(&htsmsg_memoryinfo);
@@ -1151,6 +1152,8 @@ main(int argc, char **argv)
 
   tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
+
+  tvh_hardware_init();
 
   dbus_server_init(opt_dbus, opt_dbus_session);
 

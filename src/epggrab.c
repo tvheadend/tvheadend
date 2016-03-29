@@ -399,6 +399,12 @@ void epggrab_init ( void )
   pthread_mutex_init(&epggrab_mutex, NULL);
   pthread_cond_init(&epggrab_cond, NULL);
 
+  idclass_register(&epggrab_class);
+  idclass_register(&epggrab_mod_class);
+  idclass_register(&epggrab_mod_int_class);
+  idclass_register(&epggrab_mod_ext_class);
+  idclass_register(&epggrab_mod_ota_class);
+
   epggrab_channel_init();
 
   /* Initialise modules */

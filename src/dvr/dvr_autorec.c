@@ -1290,6 +1290,7 @@ dvr_autorec_init(void)
   htsmsg_field_t *f;
 
   TAILQ_INIT(&autorec_entries);
+  idclass_register(&dvr_autorec_entry_class);
   if((l = hts_settings_load("dvr/autorec")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)

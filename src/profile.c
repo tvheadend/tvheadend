@@ -49,6 +49,7 @@ void
 profile_register(const idclass_t *clazz, profile_builder_t builder)
 {
   profile_build_t *pb = calloc(1, sizeof(*pb)), *pb2;
+  idclass_register(clazz);
   pb->clazz = clazz;
   pb->build = builder;
   pb2 = LIST_FIRST(&profile_builders);

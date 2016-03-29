@@ -2099,6 +2099,10 @@ access_init(int createdefault, int noacl)
   TAILQ_INIT(&passwd_entries);
   TAILQ_INIT(&ipblock_entries);
 
+  idclass_register(&access_entry_class);
+  idclass_register(&passwd_entry_class);
+  idclass_register(&ipblock_entry_class);
+
   /* Load ipblock entries */
   if ((c = hts_settings_load("ipblock")) != NULL) {
     HTSMSG_FOREACH(f, c) {

@@ -221,6 +221,8 @@ void idnode_notify_title_changed (void *in, const char *lang);
 
 void idclass_register ( const idclass_t *idc );
 const idclass_t *idclass_find ( const char *name );
+idclass_t const **idclass_find_all(void);
+idclass_t const **idclass_find_children(const char *name);
 const char *idclass_get_caption ( const idclass_t *idc, const char *lang );
 htsmsg_t *idclass_serialize0 (const idclass_t *idc, htsmsg_t *list, int optmask, const char *lang);
 htsmsg_t *idnode_serialize0  (idnode_t *self, htsmsg_t *list, int optmask, const char *lang);

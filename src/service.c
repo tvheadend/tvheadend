@@ -1526,6 +1526,8 @@ service_init(void)
   TAILQ_INIT(&service_all);
   TAILQ_INIT(&service_raw_all);
   TAILQ_INIT(&service_raw_remove);
+  idclass_register(&service_class);
+  idclass_register(&service_raw_class);
   pthread_mutex_init(&pending_save_mutex, NULL);
   tvh_cond_init(&pending_save_cond);
   tvhthread_create(&service_saver_tid, NULL, service_saver, NULL, "service");

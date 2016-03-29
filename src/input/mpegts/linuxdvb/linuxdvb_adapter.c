@@ -597,6 +597,39 @@ linuxdvb_adapter_init ( void )
 {
   force_dvbs = getenv("TVHEADEND_DEBUG_FORCE_DVBS") != NULL;
 
+  idclass_register(&linuxdvb_adapter_class);
+
+  idclass_register(&linuxdvb_frontend_dvbt_class);
+  idclass_register(&linuxdvb_frontend_dvbs_class);
+  idclass_register(&linuxdvb_frontend_dvbs_slave_class);
+  idclass_register(&linuxdvb_frontend_dvbc_class);
+  idclass_register(&linuxdvb_frontend_atsc_t_class);
+  idclass_register(&linuxdvb_frontend_atsc_c_class);
+  idclass_register(&linuxdvb_frontend_isdb_t_class);
+  idclass_register(&linuxdvb_frontend_isdb_c_class);
+  idclass_register(&linuxdvb_frontend_isdb_s_class);
+  idclass_register(&linuxdvb_frontend_dab_class);
+
+  idclass_register(&linuxdvb_lnb_class);
+  idclass_register(&linuxdvb_rotor_class);
+  idclass_register(&linuxdvb_rotor_gotox_class);
+  idclass_register(&linuxdvb_rotor_usals_class);
+  idclass_register(&linuxdvb_en50494_class);
+  idclass_register(&linuxdvb_switch_class);
+  idclass_register(&linuxdvb_diseqc_class);
+
+  idclass_register(&linuxdvb_satconf_class);
+  idclass_register(&linuxdvb_satconf_lnbonly_class);
+  idclass_register(&linuxdvb_satconf_2port_class);
+  idclass_register(&linuxdvb_satconf_4port_class);
+  idclass_register(&linuxdvb_satconf_en50494_class);
+  idclass_register(&linuxdvb_satconf_advanced_class);
+  idclass_register(&linuxdvb_satconf_ele_class);
+
+#if ENABLE_LINUXDVB_CA
+  idclass_register(&linuxdvb_ca_class);
+#endif
+
   /* Install monitor on /dev */
   (void)fsmonitor_add("/dev", &devmon);
 

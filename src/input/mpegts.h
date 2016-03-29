@@ -64,7 +64,9 @@ typedef TAILQ_HEAD(mpegts_table_feed_queue, mpegts_table_feed)
 /* Classes */
 extern const idclass_t mpegts_network_class;
 extern const idclass_t mpegts_mux_class;
+extern const idclass_t mpegts_mux_instance_class;
 extern const idclass_t mpegts_service_class;
+extern const idclass_t mpegts_service_raw_class;
 extern const idclass_t mpegts_input_class;
 
 /* **************************************************************************

@@ -399,6 +399,11 @@ void tvhdhomerun_init ( void )
     hdhomerun_debug_set_filename(hdhomerun_debug_obj, s);
     hdhomerun_debug_enable(hdhomerun_debug_obj);
   }
+  idclass_register(&tvhdhomerun_device_class);
+  idclass_register(&tvhdhomerun_frontend_dvbt_class);
+  idclass_register(&tvhdhomerun_frontend_dvbc_class);
+  idclass_register(&tvhdhomerun_frontend_atsc_t_class);
+  idclass_register(&tvhdhomerun_frontend_atsc_c_class);
   TAILQ_INIT(&tvhdhomerun_discoveries);
   pthread_mutex_init(&tvhdhomerun_discovery_lock, NULL);
   tvh_cond_init(&tvhdhomerun_discovery_cond);

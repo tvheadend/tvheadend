@@ -823,7 +823,7 @@ dvb_network_builder
   return (mpegts_network_t*)dvb_network_create0(NULL, idc, conf);
 }
 
-static  const idclass_t* dvb_network_classes[] = {
+static const idclass_t * dvb_network_classes[] = {
   &dvb_network_dvbt_class,
   &dvb_network_dvbc_class,
   &dvb_network_dvbs_class,
@@ -833,7 +833,21 @@ static  const idclass_t* dvb_network_classes[] = {
   &dvb_network_isdb_c_class,
   &dvb_network_isdb_s_class,
 #if 0 /* TODO: write DAB stream parser */
-  &dvb_network_dab_class
+  &dvb_network_dab_class,
+#endif
+};
+
+static const idclass_t * dvb_mux_classes[] = {
+  &dvb_network_dvbt_class,
+  &dvb_network_dvbc_class,
+  &dvb_network_dvbs_class,
+  &dvb_network_atsc_t_class,
+  &dvb_network_atsc_c_class,
+  &dvb_network_isdb_t_class,
+  &dvb_network_isdb_c_class,
+  &dvb_network_isdb_s_class,
+#if 0 /* TODO: write DAB stream parser */
+  &dvb_network_dab_class,
 #endif
 };
 
@@ -846,6 +860,10 @@ void dvb_network_init ( void )
 
   /* Load list of mux charset global overrides */
   dvb_charset_init();
+
+  /* Register mux classes */
+  for (i = 0; i < ARRAY_SIZE(dvb_mux_classes); i++)
+    idclass_register(dvb_mux_classes[i]);
 
   /* Register class builders */
   for (i = 0; i < ARRAY_SIZE(dvb_network_classes); i++)

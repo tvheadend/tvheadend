@@ -443,6 +443,7 @@ tvhlog_init ( int level, int options, const char *path )
 void
 tvhlog_start ( void )
 {
+  idclass_register(&tvhlog_conf_class);
   tvhthread_create(&tvhlog_tid, NULL, tvhlog_thread, NULL, "log");
 }
 

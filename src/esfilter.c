@@ -1187,8 +1187,11 @@ esfilter_init(void)
   htsmsg_field_t *f;
   int i;
 
-  for (i = 0; i <= ESF_CLASS_LAST; i++)
+  for (i = 0; i <= ESF_CLASS_LAST; i++) {
     TAILQ_INIT(&esfilters[i]);
+    if (esfilter_classes[i])
+      idclass_register(esfilter_classes[i]);
+  }
 
   if (!(c = hts_settings_load("esfilter")))
     return;

@@ -352,12 +352,17 @@ caclient_init(void)
 {
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
+  const idclass_t **r;
 
   pthread_mutex_init(&caclients_mutex, NULL);
   TAILQ_INIT(&caclients);
+  idclass_register(&caclient_class);
 #if ENABLE_TSDEBUG
   tsdebugcw_init();
 #endif
+
+  for (r = caclient_classes; *r; r++)
+    idclass_register(*r);
 
   if (!(c = hts_settings_load("caclient")))
     return;

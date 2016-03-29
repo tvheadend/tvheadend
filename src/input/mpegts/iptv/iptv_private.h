@@ -174,6 +174,7 @@ iptv_service_t *iptv_service_create0
 
 extern const idclass_t iptv_network_class;
 extern const idclass_t iptv_auto_network_class;
+extern const idclass_t iptv_mux_class;
 
 extern iptv_input_t   *iptv_input;
 extern iptv_network_t *iptv_network;

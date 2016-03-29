@@ -1639,6 +1639,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config_scanfile_ok = 0;
   config.theme_ui = strdup("blue");
 
+  idclass_register(&config_class);
+
   /* Generate default */
   if (!path) {
     const char *homedir = getenv("HOME");

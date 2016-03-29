@@ -26,7 +26,9 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
   /* Register classes (avoid API 400 errors due to not yet defined) */
   idclass_register(&mpegts_network_class);
   idclass_register(&mpegts_mux_class);
+  idclass_register(&mpegts_mux_instance_class);
   idclass_register(&mpegts_service_class);
+  idclass_register(&mpegts_service_raw_class);
 
   /* FastScan init */
   dvb_fastscan_init();

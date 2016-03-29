@@ -162,7 +162,7 @@ const idclass_t epggrab_mod_class = {
   }
 };
 
-const idclass_t epggrab_class_mod_int = {
+const idclass_t epggrab_mod_int_class = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_int",
   .ic_caption    = N_("Internal EPG grabber"),
@@ -189,7 +189,7 @@ const idclass_t epggrab_class_mod_int = {
   }
 };
 
-const idclass_t epggrab_class_mod_ext = {
+const idclass_t epggrab_mod_ext_class = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ext",
   .ic_caption    = N_("External EPG grabber"),
@@ -207,7 +207,7 @@ const idclass_t epggrab_class_mod_ext = {
   }
 };
 
-const idclass_t epggrab_class_mod_ota = {
+const idclass_t epggrab_mod_ota_class = {
   .ic_super      = &epggrab_mod_class,
   .ic_class      = "epggrab_mod_ota",
   .ic_caption    = N_("Over-the-air EPG grabber"),
@@ -334,7 +334,7 @@ epggrab_module_int_t *epggrab_module_int_create
 
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
-                        cls ?: &epggrab_class_mod_int,
+                        cls ?: &epggrab_mod_int_class,
                         id, saveid, name, priority);
 
   /* Int data */
@@ -565,7 +565,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   /* Pass through */
   hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
-                            &epggrab_class_mod_ext,
+                            &epggrab_mod_ext_class,
                             id, saveid, name, priority, path,
                             NULL, parse, trans);
 
@@ -591,7 +591,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
 
   /* Pass through */
   epggrab_module_create((epggrab_module_t*)skel,
-                        &epggrab_class_mod_ota,
+                        &epggrab_mod_ota_class,
                         id, saveid, name, priority);
 
   /* Setup */

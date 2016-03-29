@@ -410,6 +410,8 @@ imagecache_init ( void )
   imagecache_conf.ignore_sslcert = 0;
 #endif
 
+  idclass_register(&imagecache_class);
+
   /* Create threads */
 #if ENABLE_IMAGECACHE
   tvh_cond_init(&imagecache_cond);

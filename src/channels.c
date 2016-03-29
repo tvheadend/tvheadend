@@ -1103,6 +1103,8 @@ channel_init ( void )
 
   RB_INIT(&channels);
   memoryinfo_register(&channels_memoryinfo);
+  idclass_register(&channel_class);
+  idclass_register(&channel_tag_class);
 
   /* Tags */
   channel_tag_init();

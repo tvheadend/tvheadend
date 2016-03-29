@@ -557,6 +557,7 @@ void service_mapper_init ( void )
   htsmsg_t *m;
 
   TAILQ_INIT(&service_mapper_queue);
+  idclass_register(&service_mapper_conf_class);
   tvh_cond_init(&service_mapper_cond);
   tvhthread_create(&service_mapper_tid, NULL, service_mapper_thread, NULL, "svcmap");
 

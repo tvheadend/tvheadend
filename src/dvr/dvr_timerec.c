@@ -681,6 +681,7 @@ dvr_timerec_init(void)
   htsmsg_field_t *f;
 
   TAILQ_INIT(&timerec_entries);
+  idclass_register(&dvr_timerec_entry_class);
   if((l = hts_settings_load("dvr/timerec")) != NULL) {
     HTSMSG_FOREACH(f, l) {
       if((c = htsmsg_get_map_by_field(f)) == NULL)

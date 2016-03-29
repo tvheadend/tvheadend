@@ -38,6 +38,16 @@ const idclass_t tvh_input_instance_class =
 };
 
 /*
+ *
+ */
+void
+tvh_hardware_init ( void )
+{
+  idclass_register(&tvh_input_class);
+  idclass_register(&tvh_input_instance_class);
+}
+
+/*
  * Create entry
  */
 void *

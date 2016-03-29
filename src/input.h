@@ -116,6 +116,8 @@ struct tvh_hardware {
   LIST_ENTRY(tvh_hardware)     th_link;
 };
 
+void tvh_hardware_init(void);
+
 void *tvh_hardware_create0
   ( void *o, const idclass_t *idc, const char *uuid, htsmsg_t *conf );
 void tvh_hardware_delete ( tvh_hardware_t *th );
@@ -135,8 +137,6 @@ tvh_hardware_list_t tvh_hardware;
 /*
  * Methods
  */
-
-void input_init ( void );
 
 htsmsg_t * tvh_input_stream_create_msg ( tvh_input_stream_t *st );
 

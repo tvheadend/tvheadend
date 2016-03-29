@@ -32,7 +32,7 @@
 #include "access.h"
 
 static const idnodes_rb_t * idnode_domain ( const idclass_t *idc );
-static void idclass_root_register ( idnode_t *in );
+static idnodes_rb_t * idclass_find_domain ( const idclass_t *idc );
 
 typedef struct idclass_link
 {
@@ -137,9 +137,11 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   tvhtrace("idnode", "insert node %s", idnode_uuid_as_str(in, ubuf));
 
   /* Register the class */
-  idclass_register(class); // Note: we never actually unregister
-  idclass_root_register(in);
-  assert(in->in_domain);
+  in->in_domain = idclass_find_domain(class);
+  if (in->in_domain == NULL) {
+    tvherror("idnode", "classs '%s' is not registered", class->ic_class);
+    abort();
+  }
   c = RB_INSERT_SORTED(in->in_domain, in, in_domain_link, in_cmp);
   assert(c == NULL);
 
@@ -1327,39 +1329,52 @@ idclass_get_property_groups (const idclass_t *idc, const char *lang)
   return NULL;
 }
 
-void
-idclass_register(const idclass_t *idc)
+static idnodes_rb_t *
+idclass_find_domain(const idclass_t *idc)
 {
-  while (idc) {
-    SKEL_ALLOC(idclasses_skel);
-    idclasses_skel->idc = idc;
-    if (RB_INSERT_SORTED(&idclasses, idclasses_skel, link, ic_cmp))
-      break;
-    RB_INIT(&idclasses_skel->nodes); /* not used, but for sure */
-    SKEL_USED(idclasses_skel);
-    tvhtrace("idnode", "register class %s", idc->ic_class);
-    idc = idc->ic_super;
-  }
-}
-
-static void
-idclass_root_register(idnode_t *in)
-{
-  const idclass_t *idc = in->in_class;
   idclass_link_t *r;
   idc = idnode_root_class(idc);
   SKEL_ALLOC(idclasses_skel);
   idclasses_skel->idc = idc;
+  r = RB_FIND(&idrootclasses, idclasses_skel, link, ic_cmp);
+  if (r)
+    return &r->nodes;
+  return NULL;
+}
+
+static void
+idclass_root_register(const idclass_t *idc)
+{
+  idclass_link_t *r;
+  SKEL_ALLOC(idclasses_skel);
+  idclasses_skel->idc = idc;
   r = RB_INSERT_SORTED(&idrootclasses, idclasses_skel, link, ic_cmp);
-  if (r) {
-    in->in_domain = &r->nodes;
-    return;
-  }
+  if (r) return;
   RB_INIT(&idclasses_skel->nodes);
   r = idclasses_skel;
   SKEL_USED(idclasses_skel);
   tvhtrace("idnode", "register root class %s", idc->ic_class);
-  in->in_domain = &r->nodes;
+}
+
+void
+idclass_register(const idclass_t *idc)
+{
+  const idclass_t *prev = NULL;
+  while (idc) {
+    SKEL_ALLOC(idclasses_skel);
+    idclasses_skel->idc = idc;
+    if (RB_INSERT_SORTED(&idclasses, idclasses_skel, link, ic_cmp)) {
+      prev = NULL;
+      break;
+    }
+    RB_INIT(&idclasses_skel->nodes); /* not used, but for sure */
+    SKEL_USED(idclasses_skel);
+    tvhtrace("idnode", "register class %s", idc->ic_class);
+    prev = idc;
+    idc = idc->ic_super;
+  }
+  if (prev)
+    idclass_root_register(prev);
 }
 
 const idclass_t *
@@ -1372,6 +1387,53 @@ idclass_find ( const char *class )
   tvhtrace("idnode", "find class %s", class);
   t = RB_FIND(&idclasses, &skel, link, ic_cmp);
   return t ? t->idc : NULL;
+}
+
+idclass_t const **
+idclass_find_all(void)
+{
+  idclass_link_t *l;
+  idclass_t const **ret;
+  int i = 0, count = 0;
+  RB_FOREACH(l, &idclasses, link)
+    count++;
+  if (count == 0)
+    return NULL;
+  ret = calloc(count + 1, sizeof(idclass_t *));
+  RB_FOREACH(l, &idclasses, link)
+    ret[i++] = l->idc;
+  ret[i] = NULL;
+  return ret;
+}
+
+idclass_t const **
+idclass_find_children(const char *clazz)
+{
+  const idclass_t *ic = idclass_find(clazz), *root;
+  idclass_link_t *l;
+  idclass_t const **ret;
+  int i, count;
+
+  if (ic == NULL)
+    return NULL;
+  root = idnode_root_class(ic);
+  if (root == NULL)
+    return NULL;
+  ret = NULL;
+  count = i = 0;
+  RB_FOREACH(l, &idclasses, link) {
+    if (root == idnode_root_class(l->idc)) {
+      if (i <= count) {
+        count += 50;
+        ret = realloc(ret, count * sizeof(const idclass_t *));
+      }
+      ret[i++] = ic;
+    }
+  }
+  if (i <= count)
+    ret = realloc(ret, (count + 1) * sizeof(const idclass_t *));
+  ret[i] = NULL;
+  return ret;
 }
 
 /*

@@ -68,8 +68,6 @@ typedef TAILQ_HEAD(linuxdvb_satconf_ele_list,linuxdvb_satconf_ele) linuxdvb_satc
 typedef TAILQ_HEAD(linuxdvb_ca_capmt_queue,linuxdvb_ca_capmt) linuxdvb_ca_capmt_queue_t;
 #endif
 
-extern const idclass_t linuxdvb_adapter_class;
-
 struct linuxdvb_adapter
 {
   tvh_hardware_t;
@@ -344,6 +342,38 @@ struct linuxdvb_en50494
   /* runtime */
   uint32_t  le_tune_freq; /* the real frequency to tune to */
 };
+
+/*
+ * Classes
+ */
+
+extern const idclass_t linuxdvb_adapter_class;
+extern const idclass_t linuxdvb_frontend_dvbt_class;
+extern const idclass_t linuxdvb_frontend_dvbs_class;
+extern const idclass_t linuxdvb_frontend_dvbs_slave_class;
+extern const idclass_t linuxdvb_frontend_dvbc_class;
+extern const idclass_t linuxdvb_frontend_atsc_t_class;
+extern const idclass_t linuxdvb_frontend_atsc_c_class;
+extern const idclass_t linuxdvb_frontend_isdb_t_class;
+extern const idclass_t linuxdvb_frontend_isdb_c_class;
+extern const idclass_t linuxdvb_frontend_isdb_s_class;
+extern const idclass_t linuxdvb_frontend_dab_class;
+
+extern const idclass_t linuxdvb_lnb_class;
+extern const idclass_t linuxdvb_rotor_class;
+extern const idclass_t linuxdvb_rotor_gotox_class;
+extern const idclass_t linuxdvb_rotor_usals_class;
+extern const idclass_t linuxdvb_en50494_class;
+extern const idclass_t linuxdvb_switch_class;
+extern const idclass_t linuxdvb_diseqc_class;
+
+extern const idclass_t linuxdvb_satconf_class;
+extern const idclass_t linuxdvb_satconf_lnbonly_class;
+extern const idclass_t linuxdvb_satconf_2port_class;
+extern const idclass_t linuxdvb_satconf_4port_class;
+extern const idclass_t linuxdvb_satconf_en50494_class;
+extern const idclass_t linuxdvb_satconf_advanced_class;
+extern const idclass_t linuxdvb_satconf_ele_class;
 
 /*
  * Methods

@@ -196,6 +196,19 @@ struct satip_satconf
 };
 
 /*
+ * Classes
+ */
+extern const idclass_t satip_frontend_class;
+
+extern const idclass_t satip_frontend_dvbt_class;
+extern const idclass_t satip_frontend_dvbs_class;
+extern const idclass_t satip_frontend_dvbs_slave_class;
+extern const idclass_t satip_frontend_atsc_t_class;
+extern const idclass_t satip_frontend_atsc_c_class;
+
+extern const idclass_t satip_satconf_class;
+
+/*
  * Methods
  */
   

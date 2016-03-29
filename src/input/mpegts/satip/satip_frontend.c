@@ -357,7 +357,7 @@ const idclass_t satip_frontend_dvbs_class =
 const idclass_t satip_frontend_dvbs_slave_class =
 {
   .ic_super      = &satip_frontend_class,
-  .ic_class      = "satip_frontend_dvbs",
+  .ic_class      = "satip_frontend_dvbs_slave",
   .ic_caption    = N_("SAT>IP DVB-S slave frontend"),
   .ic_properties = (const property_t[]){
     {

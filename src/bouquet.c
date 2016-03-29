@@ -1229,6 +1229,7 @@ bouquet_init(void)
   bouquet_t *bq;
 
   RB_INIT(&bouquets);
+  idclass_register(&bouquet_class);
 
   /* Load */
   if ((c = hts_settings_load("bouquet")) != NULL) {

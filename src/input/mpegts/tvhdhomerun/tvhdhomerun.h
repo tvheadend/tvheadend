@@ -20,6 +20,12 @@
 #ifndef __TVH_tvhdhomerun_H__
 #define __TVH_tvhdhomerun_H__
 
+extern const idclass_t tvhdhomerun_device_class;
+extern const idclass_t tvhdhomerun_frontend_dvbt_class;
+extern const idclass_t tvhdhomerun_frontend_dvbc_class;
+extern const idclass_t tvhdhomerun_frontend_atsc_t_class;
+extern const idclass_t tvhdhomerun_frontend_atsc_c_class;
+
 void tvhdhomerun_init( void );
 void tvhdhomerun_done( void );
 

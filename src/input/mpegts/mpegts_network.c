@@ -582,6 +582,7 @@ mpegts_network_register_builder
   mnb->idc   = idc;
   mnb->build = build;
   LIST_INSERT_HEAD(&mpegts_network_builders, mnb, link);
+  idclass_register(idc);
 }
 
 void

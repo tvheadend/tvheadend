@@ -293,13 +293,13 @@ SRCS-2 += \
 	src/parsers/parser_hevc.c \
 	src/parsers/parser_latm.c \
 	src/parsers/parser_avc.c \
-	src/parsers/parser_teletext.c \
+	src/parsers/parser_teletext.c
 
 SRCS-2 += \
-	src/epggrab/module.c\
-	src/epggrab/channel.c\
-	src/epggrab/module/pyepg.c\
-	src/epggrab/module/xmltv.c\
+	src/epggrab/module.c \
+	src/epggrab/channel.c \
+	src/epggrab/module/pyepg.c \
+	src/epggrab/module/xmltv.c
 
 SRCS-2 += \
 	src/plumbing/tsfix.c \
@@ -320,9 +320,10 @@ SRCS-2 += \
 	src/webui/extjs.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
-	src/webui/html.c\
-	src/webui/webui_api.c\
-	src/webui/xmltv.c
+	src/webui/html.c \
+	src/webui/webui_api.c \
+	src/webui/xmltv.c \
+	src/webui/doc_md.c
 
 SRCS-2 += \
 	src/muxer.c \

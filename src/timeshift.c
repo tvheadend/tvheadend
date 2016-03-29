@@ -83,6 +83,8 @@ void timeshift_init ( void )
   timeshift_conf.max_period       = 60;                      // Hr (60mins)
   timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
 
+  idclass_register(&timeshift_conf_class);
+
   /* Load settings */
   if ((m = hts_settings_load("timeshift/config"))) {
     idnode_load(&timeshift_conf.idnode, m);

@@ -793,6 +793,7 @@ void
 epggrab_channel_init( void )
 {
   TAILQ_INIT(&epggrab_channel_entries);
+  idclass_register(&epggrab_channel_class);
 }
 
 void

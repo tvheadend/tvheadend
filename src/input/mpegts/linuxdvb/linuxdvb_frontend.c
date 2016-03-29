@@ -298,7 +298,7 @@ const idclass_t linuxdvb_frontend_dvbs_class =
 const idclass_t linuxdvb_frontend_dvbs_slave_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
-  .ic_class      = "linuxdvb_frontend_dvbs",
+  .ic_class      = "linuxdvb_frontend_dvbs_slave",
   .ic_caption    = N_("Linux DVB-S slave frontend"),
   .ic_properties = (const property_t[]){
     {

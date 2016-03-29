@@ -332,6 +332,8 @@ mpegts_mux_sched_init ( void )
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
 
+  idclass_register(&mpegts_mux_sched_class);
+
   /* Load settings */
   if ((c = hts_settings_load_r(1, "muxsched"))) {
     HTSMSG_FOREACH(f, c) {

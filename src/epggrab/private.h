@@ -183,6 +183,15 @@ size_t freesat_huffman_decode
   ( char *dst, size_t* dstlen, const uint8_t *src, size_t srclen );
 
 /* **************************************************************************
+ * Classes
+ * *************************************************************************/
+
+extern const idclass_t epggrab_mod_class;
+extern const idclass_t epggrab_mod_int_class;
+extern const idclass_t epggrab_mod_ext_class;
+extern const idclass_t epggrab_mod_ota_class;
+
+/* **************************************************************************
  * Module setup(s)
  * *************************************************************************/
 

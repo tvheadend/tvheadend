@@ -1277,6 +1277,7 @@ dvr_config_init(void)
   /* Default settings */
 
   LIST_INIT(&dvrconfigs);
+  idclass_register(&dvr_config_class);
 
   if ((l = hts_settings_load("dvr/config")) != NULL) {
     HTSMSG_FOREACH(f, l) {

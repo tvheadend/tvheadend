@@ -982,6 +982,9 @@ iptv_network_init ( void )
   htsmsg_t *c, *e;
   htsmsg_field_t *f;
 
+  /* Register muxes */
+  idclass_register(&iptv_mux_class);
+
   /* Register builders */
   mpegts_network_register_builder(&iptv_network_class,
                                   iptv_network_builder);

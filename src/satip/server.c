@@ -779,6 +779,8 @@ void satip_server_init(int rtsp_port)
   int descramble, rewrite_pmt, muxcnf;
   char *nat_ip;
 
+  idclass_register(&satip_server_class);
+
   http_server_ip = NULL;
   satip_server_bootid = time(NULL);
   satip_server_conf.satip_deviceid = 1;
