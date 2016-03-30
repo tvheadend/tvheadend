@@ -871,9 +871,12 @@ channel_get_icon ( channel_t *ch )
         free((char *)sname);
         sname = aname;
       }
+      if (send)
+        send = url_encode(send);
 
       snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
       free((char *)sname);
+      free((char *)send);
       free((char *)chi);
 
       if (i > 1 || check_file(buf)) {
