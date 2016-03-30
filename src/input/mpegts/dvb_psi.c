@@ -1043,7 +1043,12 @@ dvb_bat_destroy_lists( mpegts_table_t *mt )
   dvb_bat_svc_t *bs;
   dvb_freesat_region_t *fr;
   dvb_freesat_svc_t *fs;
+  bouquet_t *bq;
 
+  if (mt->mt_table == DVB_FASTSCAN_NIT_BASE) {
+    bq = mt->mt_opaque;
+    bq->bq_fastscan_bi = NULL;
+  }
   while ((bi = LIST_FIRST(&b->bats)) != NULL) {
     while ((bs = TAILQ_FIRST(&bi->services)) != NULL) {
       TAILQ_REMOVE(&bi->services, bs, link);
@@ -1315,14 +1320,22 @@ dvb_nit_callback
   nbid = (ptr[0] << 8) | ptr[1];
 
   /* Begin */
-  if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A &&
-      tableid != DVB_FASTSCAN_NIT_BASE)
+  if (tableid == DVB_FASTSCAN_NIT_BASE) {
+    bq = mt->mt_opaque;
+  } else if (tableid != 0x40 && tableid != 0x41 && tableid != 0x4A) {
     return -1;
+  }
 
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, nbid, 7, &st, &sect, &last, &ver);
   if (r == 0) {
     if (tableid == 0x4A || tableid == DVB_FASTSCAN_NIT_BASE) {
+      if (tableid == DVB_FASTSCAN_NIT_BASE && bq) {
+        bq->bq_fastscan_nit = 0;
+        if (bq->bq_fastscan_sdt)
+          return 1;
+        bq = NULL;
+      }
       if ((b = mt->mt_bat) != NULL) {
         if (!b->complete) {
           dvb_bat_completed(b, mt->mt_name, tableid, mm->mm_tsid, nbid,
@@ -1375,6 +1388,9 @@ dvb_nit_callback
       mt->mt_working++;
       mt->mt_flags |= MT_FASTSWITCH;
     }
+    if (tableid == DVB_FASTSCAN_NIT_BASE && bq)
+      if (!bq->bq_fastscan_nit && !bq->bq_fastscan_sdt)
+        bi = NULL;
   }
 
   /* Network Descriptors */
@@ -1410,8 +1426,10 @@ dvb_nit_callback
   /* Fastscan */
   if (tableid == DVB_FASTSCAN_NIT_BASE) {
     tvhdebug(mt->mt_name, "fastscan %04X (%d) [%s]", nbid, nbid, name);
-    bq = mt->mt_opaque;
-    dvb_bouquet_comment(bq, mm);
+    if (bq && bi) {
+      dvb_bouquet_comment(bq, mm);
+      bq->bq_fastscan_bi = bi;
+    }
 
   /* BAT */
   } else if (tableid == 0x4A) {
@@ -1822,7 +1840,7 @@ dvb_bat_callback
 static int
 dvb_fs_sdt_mux
   ( mpegts_table_t *mt, mpegts_mux_t *mm, mpegts_psi_table_state_t *st,
-    const uint8_t *ptr, int len, int discovery )
+    const uint8_t *ptr, int len, int discovery, dvb_bat_id_t *bi )
 {
   uint16_t onid, tsid, service_id;
   uint8_t dtag;
@@ -1898,6 +1916,9 @@ dvb_fs_sdt_mux
     tvhtrace(mt->mt_name, "    type %d name [%s] provider [%s]",
              stype, sname, sprov);
 
+    if (bi)
+      dvb_bat_find_service(bi, s, 0, UINT_MAX);
+
     /* Update service type */
     if (stype && !s->s_dvb_servicetype) {
       int r;
@@ -1960,7 +1981,8 @@ dvb_fs_sdt_callback
   int r, sect, last, ver;
   uint16_t nbid;
   mpegts_mux_t *mm = mt->mt_mux;
-  mpegts_psi_table_state_t *st  = NULL;
+  bouquet_t *bq = mt->mt_opaque;
+  mpegts_psi_table_state_t *st = NULL;
 
   /* Fastscan ID */
   nbid = (ptr[0] << 8) | ptr[1];
@@ -1968,19 +1990,29 @@ dvb_fs_sdt_callback
   /* Begin */
   if (tableid != 0xBD)
     return -1;
+  if (bq) {
+    if (bq->bq_fastscan_nit)
+      return 1;
+    if (!bq->bq_fastscan_sdt)
+      return 0;
+  }
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, nbid, 7, &st, &sect, &last, &ver);
   if (r == 0) {
     mt->mt_working -= st->working;
     st->working = 0;
+    if (bq)
+      bq->bq_fastscan_sdt = 0;
+    mpegts_table_destroy(mt);
   }
   if (r != 1) return r;
   if (len < 5) return -1;
   ptr += 5;
   len -= 5;
 
-  dvb_fs_sdt_mux(mt, mm, st, ptr, len, 1);
-  dvb_fs_sdt_mux(mt, mm, st, ptr, len, 0);
+  dvb_fs_sdt_mux(mt, mm, st, ptr, len, 1, NULL);
+  dvb_fs_sdt_mux(mt, mm, st, ptr, len, 0,
+                 bq && bq->bq_fastscan_nit ? bq->bq_fastscan_bi : NULL);
 
   /* End */
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
@@ -2517,11 +2549,13 @@ static void
 psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
 {
   tvhtrace("fastscan", "adding table %04X (%i) for '%s'", pid, pid, name);
+  bq->bq_fastscan_nit = 1;
+  bq->bq_fastscan_sdt = 1;
   mpegts_table_add(aux, DVB_FASTSCAN_NIT_BASE, DVB_FASTSCAN_MASK,
                    dvb_nit_callback, bq, "fs_nit", MT_CRC, pid,
                    MPS_WEIGHT_NIT2);
   mpegts_table_add(aux, DVB_FASTSCAN_SDT_BASE, DVB_FASTSCAN_MASK,
-                   dvb_fs_sdt_callback, NULL, "fs_sdt", MT_CRC, pid,
+                   dvb_fs_sdt_callback, bq, "fs_sdt", MT_CRC, pid,
                    MPS_WEIGHT_SDT2);
 }
 #endif

@@ -60,6 +60,11 @@ typedef struct bouquet {
   uint32_t      bq_lcn_offset;
   uint64_t      bq_last_lcn;
 
+  /* fastscan bouquet helpers */
+  int           bq_fastscan_nit;
+  int           bq_fastscan_sdt;
+  void         *bq_fastscan_bi;
+
   void         *bq_download;
 
 } bouquet_t;
