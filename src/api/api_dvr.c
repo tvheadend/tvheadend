@@ -56,8 +56,10 @@ api_dvr_config_create
     return EINVAL;
 
   pthread_mutex_lock(&global_lock);
-  if ((cfg = dvr_config_create(NULL, NULL, conf)))
+  if ((cfg = dvr_config_create(NULL, NULL, conf))) {
     idnode_changed(&cfg->dvr_id);
+    dvr_config_changed(cfg);
+  }
   pthread_mutex_unlock(&global_lock);
 
   return 0;
@@ -468,8 +470,10 @@ api_dvr_timerec_create
 
   pthread_mutex_lock(&global_lock);
   dte = dvr_timerec_create(NULL, conf);
-  if (dte)
+  if (dte) {
     idnode_changed(&dte->dte_id);
+    dvr_timerec_check(dte);
+  }
   pthread_mutex_unlock(&global_lock);
 
   return 0;

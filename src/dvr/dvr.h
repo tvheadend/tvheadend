@@ -442,6 +442,8 @@ static inline dvr_config_t *dvr_config_find_by_uuid(const char *uuid)
 
 void dvr_config_delete(const char *name);
 
+void dvr_config_changed(dvr_config_t *cfg);
+
 void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
 static inline uint32_t dvr_retention_cleanup(uint32_t val)

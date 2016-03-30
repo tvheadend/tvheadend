@@ -510,14 +510,12 @@ dvr_config_delete(const char *name)
     tvhwarn("dvr", "Attempt to delete default config ignored");
 }
 
-/* **************************************************************************
- * DVR Config Class definition
- * **************************************************************************/
-
-static void
-dvr_config_class_changed(idnode_t *self)
+/**
+ *
+ */
+void
+dvr_config_changed(dvr_config_t *cfg)
 {
-  dvr_config_t *cfg = (dvr_config_t *)self;
   if (dvr_config_is_default(cfg))
     cfg->dvr_enabled = 1;
   cfg->dvr_valid = 1;
@@ -537,6 +535,17 @@ dvr_config_class_changed(idnode_t *self)
     cfg->dvr_removal_days = DVR_RET_FOREVER;
   if (cfg->dvr_retention_days > DVR_RET_FOREVER)
     cfg->dvr_retention_days = DVR_RET_FOREVER;
+}
+
+
+/* **************************************************************************
+ * DVR Config Class definition
+ * **************************************************************************/
+
+static void
+dvr_config_class_changed(idnode_t *self)
+{
+  dvr_config_changed((dvr_config_t *)self);
 }
 
 static htsmsg_t *
