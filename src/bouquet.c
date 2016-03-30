@@ -977,6 +977,7 @@ const idclass_t bouquet_class = {
     },
     {
       .type     = PT_INT,
+      .islist   = 1,
       .id       = "mapopt",
       .name     = N_("Channel mapping options"),
       .desc     = N_("Options to use/used when mapping "
@@ -993,11 +994,11 @@ const idclass_t bouquet_class = {
       .get      = bouquet_class_mapopt_get,
       .set      = bouquet_class_mapopt_set,
       .rend     = bouquet_class_mapopt_rend,
-      .opts     = PO_ADVANCED,
-      .islist   = 1
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_INT,
+      .islist   = 1,
       .id       = "chtag",
       .name     = N_("Create tags"),
       .desc     = N_("Create and link these tags to channels when "
@@ -1016,8 +1017,7 @@ const idclass_t bouquet_class = {
       .get      = bouquet_class_chtag_get,
       .set      = bouquet_class_chtag_set,
       .rend     = bouquet_class_chtag_rend,
-      .opts     = PO_ADVANCED,
-      .islist   = 1
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,

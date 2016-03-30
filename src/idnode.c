@@ -1535,18 +1535,21 @@ idnode_slist_set ( idnode_t *in, idnode_slist_t *options, const htsmsg_t *vals )
 
   for (o = options; o->id; o++) {
     ip = (void *)in + o->off;
-    HTSMSG_FOREACH(f, vals) {
-      if ((s = htsmsg_field_get_str(f)) != NULL)
-        continue;
-      if (strcmp(s, o->id))
-        continue;
-      if (*ip == 0) changed = 1;
-      break;
+    if (!changed) {
+      HTSMSG_FOREACH(f, vals) {
+        if ((s = htsmsg_field_get_str(f)) != NULL)
+          continue;
+        if (strcmp(s, o->id))
+          continue;
+        if (*ip == 0) changed = 1;
+        break;
+      }
+      if (f == NULL && *ip) changed = 1;
     }
-    if (f == NULL && *ip) changed = 1;
+    *ip = 0;
   }
   HTSMSG_FOREACH(f, vals) {
-    if ((s = htsmsg_field_get_str(f)) != NULL)
+    if ((s = htsmsg_field_get_str(f)) == NULL)
       continue;
     for (o = options; o->id; o++) {
       if (strcmp(o->id, s)) continue;
