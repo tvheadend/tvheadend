@@ -408,9 +408,9 @@ imagecache_init ( void )
   imagecache_conf.ok_period      = 24 * 7; // weekly
   imagecache_conf.fail_period    = 24;     // daily
   imagecache_conf.ignore_sslcert = 0;
-#endif
 
   idclass_register(&imagecache_class);
+#endif
 
   /* Create threads */
 #if ENABLE_IMAGECACHE
