@@ -248,7 +248,9 @@ download_fetch(void *aux)
     goto done;
 
   if (strncmp(dn->url, "file://", 7) == 0) {
-    download_file(dn, dn->url + 7);
+    char *f = strdupa(dn->url + 7);
+    http_deescape(f);
+    download_file(dn, f);
     goto done;
   }
 
