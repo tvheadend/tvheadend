@@ -220,9 +220,9 @@ typedef struct cwc {
   /* Emm forwarding */
   int cwc_forward_emm;
 
-  /* one update id */
-  int64_t cwc_update_time;
-  void *cwc_mux;
+  /* Emm exclusive update */
+  int64_t cwc_emm_update_time;
+  void *cwc_emm_mux;
   
   /* From configuration */
 
@@ -1316,13 +1316,13 @@ cwc_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   mux = pcard->cwc_mux;
   if (pcard->running && cwc->cwc_forward_emm && cwc->cwc_writer_running) {
     if (cwc->cwc_emmex) {
-      if (cwc->cwc_mux != mux) {
-        if (cwc->cwc_update_time + sec2mono(25) < mclk())
+      if (cwc->cwc_emm_mux && cwc->cwc_emm_mux != mux) {
+        if (cwc->cwc_emm_update_time + sec2mono(25) > mclk())
           goto end_of_job;
       }
-      cwc->cwc_update_time = mclk();
+      cwc->cwc_emm_update_time = mclk();
     }
-    cwc->cwc_mux = mux;
+    cwc->cwc_emm_mux = mux;
     emm_filter(&pcard->cs_ra, data, len, mux, cwc_emm_send, pcard);
   }
 end_of_job:
