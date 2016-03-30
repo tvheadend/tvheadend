@@ -129,8 +129,8 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   htsbuf_queue_t *hq = &hc->hc_reply;
   htsmsg_t *m, *l, *n, *e, *x;
   htsmsg_field_t *f, *f2;
-  const char *s;
-  int nl = 0;
+  const char *s, **doc;
+  int nl = 0, first = 1;
 
   pthread_mutex_lock(&global_lock);
   ic = idclass_find(clazz);
@@ -138,12 +138,18 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_NOT_FOUND;
   }
+  doc = ic->ic_doc;
   m = idclass_serialize(ic, lang);
   pthread_mutex_unlock(&global_lock);
   s = htsmsg_get_str(m, "caption");
   if (s) {
-    md_header(hq, "####", s);
+    md_header(hq, "##", s);
     nl = 1;
+  }
+  for (; *doc; doc++) {
+    md_nl(hq, 1);
+    md_text(hq, NULL, NULL, tvh_gettext_lang(lang, *doc));
+    md_nl(hq, 1);
   }
   l = htsmsg_get_list(m, "props");
   HTSMSG_FOREACH(f, l) {
@@ -151,6 +157,17 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     if (!n) continue;
     s = htsmsg_get_str(n, "caption");
     if (!s) continue;
+    if (first) {
+      md_nl(hq, 1);
+      md_nl(hq, 1);
+      htsbuf_append_str(hq, "####");
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("Items")));
+      md_nl(hq, 1);
+      md_nl(hq, 1);
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("The items have the following functions:")));
+      md_nl(hq, 1);
+      first = 0;
+    }
     nl = md_nl(hq, nl);
     md_style(hq, "**", s);
     md_nl(hq, 1);
@@ -176,7 +193,6 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
       }
       md_nl(hq, 1);
     }
-    htsmsg_print(n);
   }
   htsmsg_destroy(m);
   return 0;
