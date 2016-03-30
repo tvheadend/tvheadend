@@ -836,32 +836,29 @@ channel_get_icon ( channel_t *ch )
           }
         }
 
-      } else if((send = strstr(chi, "%c"))) {
+      } else if ((send = strstr(chi, "%c"))) {
 
-        char *aname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+        sname = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
                                      chname, strlen(chname) * 2);
 
-        if (aname == NULL)
-          aname = strdup(chname);
+        if (sname == NULL)
+          sname = strdup(chname);
 
         if (config.chicon_scheme == CHICON_LOWERCASE) {
-          for (s = aname; *s; s++) {
+          for (s = sname; *s; s++) {
             c = *s;
             if (c >= 'A' && c <= 'Z')
               *(char *)s = c - 'A' + 'a';
           }
         } else if (config.chicon_scheme == CHICON_SVCNAME) {
-          s = svcnamepicons(aname);
-          free((char *)aname);
-          aname = (char *)s;
+          s = svcnamepicons(sname);
+          free((char *)sname);
+          sname = (char *)s;
         }
-
-        sname = url_encode(aname);
-        free((char *)aname);
 
       } else {
         buf[0] = '\0';
-        sname = "";
+        sname = NULL;
       }
 
       if (send) {
@@ -869,9 +866,14 @@ channel_get_icon ( channel_t *ch )
         send += 2;
       }
 
-      snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
-      if (send)
+      if (sname) {
+        char *aname = url_encode(sname);
         free((char *)sname);
+        sname = aname;
+      }
+
+      snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
+      free((char *)sname);
       free((char *)chi);
 
       if (i > 1 || check_file(buf)) {
