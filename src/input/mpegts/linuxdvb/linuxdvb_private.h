@@ -348,6 +348,8 @@ struct linuxdvb_en50494
  */
 
 extern const idclass_t linuxdvb_adapter_class;
+extern const idclass_t linuxdvb_ca_class;
+
 extern const idclass_t linuxdvb_frontend_dvbt_class;
 extern const idclass_t linuxdvb_frontend_dvbs_class;
 extern const idclass_t linuxdvb_frontend_dvbs_slave_class;
