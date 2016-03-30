@@ -206,7 +206,7 @@ page_markdown(http_connection_t *hc, const char *remain, void *opaque)
     r = HTTP_STATUS_BAD_REQUEST;
 
   if (r == 0)
-    http_output_content(hc, "text/xml");
+    http_output_content(hc, "text/markdown");
 
   return r;
 }
