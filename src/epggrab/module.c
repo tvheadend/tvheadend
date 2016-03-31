@@ -463,6 +463,7 @@ static void *_epggrab_socket_thread ( void *p )
     if (s <= 0) continue;
     tvhlog(LOG_DEBUG, mod->id, "got connection %d", s);
     _epggrab_socket_handler(mod, s);
+    close(s);
   }
   tvhlog(LOG_DEBUG, mod->id, "terminated");
   return NULL;
