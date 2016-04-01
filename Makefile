@@ -538,6 +538,14 @@ BUNDLES                    = $(BUNDLES-yes)
 ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 
 #
+# Documentation
+#
+
+MD-CLASS = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
+SRCS-yes += src/docs.c
+I18N-C   += src/docs_inc.c
+
+#
 # Internationalization
 #
 PO-FILES = $(foreach f,$(LANGUAGES),intl/tvheadend.$(f).po)
@@ -653,6 +661,20 @@ $(BUILDDIR)/build.o: $(BUILDDIR)/build.c
 	@mkdir -p $(dir $@)
 	$(pCC) -c -o $@ $<
 
+# Documentation
+$(BUILDDIR)/docs-timestamp: $(MD-FILES) support/doc/md_to_c.py
+	@-rm -f src/docs_inc.c
+	@for i in $(MD-CLASS); do \
+	   echo "Markdown class: $${i}"; \
+	   support/doc/md_to_c.py --in="docs/class/$${i}.md" \
+	                          --name="tvh_doc_$${i}_class" >> src/docs_inc.c; \
+	 done
+	@touch $@
+
+src/docs_inc.c: $(BUILDDIR)/docs-timestamp
+
+$(BUILDDIR)/src/docs.o: src/docs_inc.c
+
 # Internationalization
 .PHONY: intl
 intl:
@@ -660,7 +682,11 @@ intl:
 	@$(XGETTEXT2) -o intl/tvheadend.pot.new $(I18N-C)
 	@sed -e 's/^"Language: /"Language: en/' < intl/tvheadend.pot.new > intl/tvheadend.pot
 	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" WEBUI=std intl
+	@printf "Building docs/tvheadend.pot\n"
+	@$(XGETTEXT2) -o intl/docs/tvheadend.pot.new $(I18N-DOCS)
+	@sed -e 's/^"Language: /"Language: en/' < intl/docs/tvheadend.pot.new > intl/docs/tvheadend.pot
 	$(MAKE)
+
 
 intl/tvheadend.pot:
 

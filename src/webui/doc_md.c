@@ -144,12 +144,14 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   s = htsmsg_get_str(m, "caption");
   if (s) {
     md_header(hq, "##", s);
-    nl = 1;
+    nl = md_nl(hq, 1);
   }
   for (; *doc; doc++) {
-    md_nl(hq, 1);
-    md_text(hq, NULL, NULL, tvh_gettext_lang(lang, *doc));
-    md_nl(hq, 1);
+    if (*doc[0] == '\xff') {
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
+    } else {
+      htsbuf_append_str(hq, *doc);
+    }
   }
   l = htsmsg_get_list(m, "props");
   HTSMSG_FOREACH(f, l) {
@@ -158,8 +160,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     s = htsmsg_get_str(n, "caption");
     if (!s) continue;
     if (first) {
-      md_nl(hq, 1);
-      md_nl(hq, 1);
+      nl = md_nl(hq, nl);
       htsbuf_append_str(hq, "####");
       htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("Items")));
       md_nl(hq, 1);

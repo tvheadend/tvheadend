@@ -1433,26 +1433,14 @@ theme_get_ui_list ( void *p, const char *lang )
   return strtab2htsmsg_str(tab, 1, lang);
 }
 
-static const char *access_entry_doc[] = {
-  N_("Setting up access control is an important initial step as "
-     "**the system is initially wide open**."),
-  N_("Tvheadend verifies access by scanning through all enabled access control "
-     "entries in sequence, from the top of the list to the bottom. "
-     "The permission flags, streaming profiles, DVR config profiles, "
-     "channel tags and so on are combined for all matching access entries. "
-     "An access entry is said to match if the username matches and the IP "
-     "source address of the requesting peer is within the prefix. There is "
-     "also anonymous access, if the user is set to asterisk. Only network "
-     "prefix is matched then."),
-  NULL
-};
+extern const char *tvh_doc_access_entry_class[];
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
   .ic_caption    = N_("Access"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
-  .ic_doc        = access_entry_doc,
+  .ic_doc        = tvh_doc_access_entry_class,
   .ic_save       = access_entry_class_save,
   .ic_get_title  = access_entry_class_get_title,
   .ic_delete     = access_entry_class_delete,
