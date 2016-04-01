@@ -1052,6 +1052,7 @@ main(int argc, char **argv)
   }
 
   uuid_init();
+  idnode_init();
   config_boot(opt_config, gid, uid);
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);    // bind to ports only
@@ -1129,7 +1130,6 @@ main(int argc, char **argv)
 
   /* Initialise configuration */
   notify_init();
-  idnode_init();
   spawn_init();
   config_init(opt_nobackup == 0);
 
