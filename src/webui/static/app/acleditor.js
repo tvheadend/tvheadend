@@ -63,7 +63,7 @@ tvheadend.acleditor = function(panel, index)
         move: true,
         list: list,
         help: function() {
-            new tvheadend.help(_('Access Control Entries'), 'config_access.html');
+            new tvheadend.mdhelp('class/access');
         }
     });
 };
