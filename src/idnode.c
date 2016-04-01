@@ -1351,7 +1351,6 @@ idclass_root_register(const idclass_t *idc)
   r = RB_INSERT_SORTED(&idrootclasses, idclasses_skel, link, ic_cmp);
   if (r) return;
   RB_INIT(&idclasses_skel->nodes);
-  r = idclasses_skel;
   SKEL_USED(idclasses_skel);
   tvhtrace("idnode", "register root class %s", idc->ic_class);
 }

@@ -92,6 +92,41 @@ tvheadend.help = function(title, pagename) {
     });
 };
 
+tvheadend.mdhelp = function(pagename) {
+    Ext.Ajax.request({
+        url: 'markdown/' + pagename,
+        success: function(result, request) {
+
+            var text = result.responseText;
+            var title = text.split('\n')[0].split('#');
+            
+            if (title)
+                title = title[title.length-1];
+            
+            text = '<div class="hts-doc-text">' + micromarkdown.parse(text) + '</div>';
+
+            var content = new Ext.Panel({
+                autoScroll: true,
+                border: false,
+                layout: 'fit',
+                html: text
+            });
+
+            var win = new Ext.Window({
+                title: _('Help for') + ' ' + title,
+                iconCls: 'help',
+                layout: 'fit',
+                width: 900,
+                height: 400,
+                constrainHeader: true,
+                items: [content]
+            });
+            win.show();
+
+        }
+    });
+};
+
 tvheadend.paneladd = function(dst, add, idx) {
     if (idx != null)
         dst.insert(idx, add);

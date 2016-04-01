@@ -322,9 +322,9 @@ var micromarkdown = {
       }
     }
 
-    str = str.replace(/ {2,}[\n]{1,}/gmi, '<br/>');
+    str = str.replace(/ {2,}[\n]{1,}/gmi, '<p>');
 
-    str = str.replace(/[\n]{2,}/gmi, '<br/><br/>');
+    str = str.replace(/[\n]{2,}/gmi, '<p>');
 
     for(var index in micromarkdown.codeblocks) { 
       if(micromarkdown.codeblocks.hasOwnProperty(index)) {

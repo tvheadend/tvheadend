@@ -392,9 +392,9 @@ or 0.0.0.0/0 or empty value for access from any system.\n\n\
 This works alongside the second part, which is a familiar \
 username/password combination, so provide these for both \
 an administrator and regular (day-to-day) user. \
-\n\n**Notes**:\n \
-* You may enter a comma-separated list of network prefixes (IPv4/IPv6).\n\
-if you were asked to enter a username and password during installation, \
+\n\n**Notes**:\n\
+* You may enter a comma-separated list of network prefixes (IPv4/IPv6).\
+If you were asked to enter a username and password during installation, \
 we'd recommend not using the same details for a user here as it may cause \
 unexpected behavior, incorrect permissions etc.\n\
 * To allow anonymous access for any account (administrative or regular user) enter \

@@ -67,6 +67,7 @@ struct idclass {
   const char             *ic_class;        ///< Class name
   const char             *ic_caption;      ///< Class description
   const char             *ic_order;        ///< Property order (comma-separated)
+  const char            **ic_doc;          ///< NULL terminated array of strings
   const property_group_t *ic_groups;       ///< Groups for visual representation
   const property_t       *ic_properties;   ///< Property list
   const char             *ic_event;        ///< Events to fire on add/delete/title

@@ -723,6 +723,16 @@
     font: normal 12px arial, tahoma, helvetica, sans-serif;
 }
 
+.x-wizard-description ul {
+    list-style: disc outside;
+    padding-left: 15px;
+}
+
+.x-wizard-description p, .x-wizard-description li {
+    margin: 5px 0 0 0;
+    list-style: disc outside;
+}
+
 /* Table styles for webUI help */
 
 .hts-doc-text table, .hts-doc-text th, .hts-doc-text td {
