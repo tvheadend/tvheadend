@@ -1437,7 +1437,7 @@ extern const char *tvh_doc_access_entry_class[];
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
-  .ic_caption    = N_("Access"),
+  .ic_caption    = N_("Access Entries"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_access_entry_class,
