@@ -1702,6 +1702,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "wizard",
       .name     = N_("Wizard"),
+      .desc     = N_("This option isn't configurable."),
       .off      = offsetof(access_entry_t, ae_wizard),
       .opts     = PO_NOUI
     },

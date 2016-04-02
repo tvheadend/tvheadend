@@ -41,7 +41,7 @@ tvheadend.memoryinfo = function(panel, index)
         tabIndex: index,
         readonly: true,
         help: function() {
-            new tvheadend.help(_('Memory information entries'), 'config_memoryinfo.html');
+            new new tvheadend.mdhelp('class/memoryinfo');
         }
     });
 };
