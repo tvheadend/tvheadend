@@ -1451,6 +1451,7 @@ const idclass_t access_entry_class = {
       .type     = PT_INT,
       .id       = "index",
       .name     = N_("Index"),
+      .desc     = N_("Not configurable."),
       .off      = offsetof(access_entry_t, ae_index),
       .opts     = PO_RDONLY | PO_HIDDEN,
     },
