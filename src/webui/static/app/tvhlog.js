@@ -35,13 +35,13 @@ tvheadend.memoryinfo = function(panel, index)
 {
     tvheadend.idnode_grid(panel, {
         url: 'api/memoryinfo',
-        titleS: _('Memory Info Entry'),
-        titleP: _('Memory Info Entries'),
+        titleS: _('Memory Information Entry'),
+        titleP: _('Memory Information Entries'),
         iconCls: 'exclamation',
         tabIndex: index,
         readonly: true,
         help: function() {
-            new tvheadend.help(_('Memory information entries'), 'config_memoryinfo.html');
+            new tvheadend.mdhelp('class/memoryinfo');
         }
     });
 };
