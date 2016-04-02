@@ -1437,7 +1437,7 @@ extern const char *tvh_doc_access_entry_class[];
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
-  .ic_caption    = N_("Access"),
+  .ic_caption    = N_("Access Entries"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_access_entry_class,
@@ -1451,6 +1451,7 @@ const idclass_t access_entry_class = {
       .type     = PT_INT,
       .id       = "index",
       .name     = N_("Index"),
+      .desc     = N_("Not configurable."),
       .off      = offsetof(access_entry_t, ae_index),
       .opts     = PO_RDONLY | PO_HIDDEN,
     },
@@ -1702,6 +1703,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "wizard",
       .name     = N_("Wizard"),
+      .desc     = N_("This option isn't configurable."),
       .off      = offsetof(access_entry_t, ae_wizard),
       .opts     = PO_NOUI
     },
