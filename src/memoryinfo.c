@@ -33,7 +33,7 @@ extern const char *tvh_doc_memoryinfo_class[];
 
 const idclass_t memoryinfo_class = {
   .ic_class      = "memoryinfo",
-  .ic_caption    = N_("Memory information"),
+  .ic_caption    = N_("Memory Information"),
   .ic_event      = "memoryinfo",
   .ic_doc        = tvh_doc_memoryinfo_class,
   .ic_perm_def   = ACCESS_ADMIN,
