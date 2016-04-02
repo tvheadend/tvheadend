@@ -146,11 +146,13 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     md_header(hq, "##", s);
     nl = md_nl(hq, 1);
   }
-  for (; *doc; doc++) {
-    if (*doc[0] == '\xff') {
-      htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
-    } else {
-      htsbuf_append_str(hq, *doc);
+  if (doc) {
+    for (; *doc; doc++) {
+      if (*doc[0] == '\xff') {
+        htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
+      } else {
+        htsbuf_append_str(hq, *doc);
+      }
     }
   }
   l = htsmsg_get_list(m, "props");
