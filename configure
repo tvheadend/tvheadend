@@ -581,6 +581,7 @@ if enabled dvbscan; then
   "${ROOTDIR}/support/getmuxlist"
   if [ $? -ne 0 ]; then
     echo "fail"
+    check_bin git || echo "FATAL: git binary not found (install the git package)"
     die "Failed to fetch dvb-scan data (use --disable-dvbscan)"
   fi
   echo "ok"
