@@ -2287,7 +2287,7 @@ const idclass_t caclient_capmt_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_capmt",
-  .ic_caption    = N_("CAPMT (Linux DVBAPI)"),
+  .ic_caption    = N_("CAPMT (Linux Network DVBAPI)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
