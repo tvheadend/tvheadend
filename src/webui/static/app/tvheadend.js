@@ -135,7 +135,9 @@ tvheadend.mdhelp = function(pagename) {
             listeners: {
                 render: function(win) {
                     win.body.on('click', function(e, dom) {
-                        tvheadend.mdhelp(dom.getAttribute('page'));
+                        var page = dom.getAttribute('page');
+                        if (page)
+                            tvheadend.mdhelp(page);
                     });
                 }
             },
