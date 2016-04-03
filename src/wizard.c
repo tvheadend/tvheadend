@@ -41,7 +41,7 @@ static const void *empty_get(void *o)
 
 static const void *icon_get(void *o)
 {
-  strcpy(prop_sbuf, "docresources/tvheadendlogo.png");
+  strcpy(prop_sbuf, "static/img/logobig.png");
   return &prop_sbuf_ptr;
 }
 
@@ -172,7 +172,7 @@ you're not willing to touch the current configuration, as continuing in \
 such cases can lead to misconfiguration and not all changes made thru \
 this wizard will take effect.**\n\
 \
-\n\n**Notes**:\n \
+\n\n**Notes**:\n\
 * If you cannot see your preferred language in the language list and would \
 like to help translate Tvheadend see \
 [here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n\
