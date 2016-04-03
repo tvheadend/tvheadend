@@ -736,29 +736,29 @@
 /* Table styles for webUI help */
 
 .hts-doc-text table, .hts-doc-text th, .hts-doc-text td {
-  font-size: inherit;
-  border: 1px solid #98c0f4;
-  margin: 20px
+    font-size: inherit;
+    border: 1px solid #98c0f4;
+    margin: 20px
 }
 
 .hts-doc-text td,.hts-doc-text th {
-  padding: 5px
+    padding: 5px
 }
 
 .hts-doc-text table {
-  border-collapse: collapse
+    border-collapse: collapse
 }
 
 .hts-doc-text th {
-  text-align: center;
-  height: 2em;
-  background-color: #d9e8fb;
-  color: black;
-  font-weight: bold
+    text-align: center;
+    height: 2em;
+    background-color: #d9e8fb;
+    color: black;
+    font-weight: bold
 }
 
 .hts-doc-text tr:nth-child(even) {
-  background-color: #F2F7FE
+    background-color: #F2F7FE
 }
 
 /* Additional general text styles for webUI help */
@@ -768,33 +768,32 @@
     padding: 5px;
 }
 
-
 .hts-doc-text p {
-  margin-top: 1em;
-  margin-bottom: 1em;
-  margin-left: 1em
+    margin-top: 1em;
+    margin-bottom: 1em;
+    margin-left: 1em
 }
 
 .hts-doc-text h2, h3, h4 {
-  font-size: larger
+    font-size: larger
 }
 
 .hts-doc-text h4 {
-  color: #2163A6;
-  margin-top: 15px
+    color: #2163A6;
+    margin-top: 15px
 }
 
 .hts-doc-text strong {
-  font-weight: bold
+    font-weight: bold
 }
 
 .hts-doc-text em {
-  font-style: italic
+    font-style: italic
 }
 
 .hts-doc-text td img {
-  display: inline;
-  margin: -5px auto
+    display: inline;
+    margin: -5px auto
 }
 
 /* List styles for webUI help */
@@ -815,13 +814,54 @@
 }
 
 .hts-doc-text ul {
-  list-style-type:disc;
-  padding-left:3em
+    list-style-type:disc;
+    padding-left:3em
 }
 
 .hts-doc-text ul li {
-  padding-top: 0px;
-  padding-bottom: 0px
+    padding-top: 0px;
+    padding-bottom: 0px
+}
+
+/* Styles for help TOC */
+
+.hts-doc-toc {
+    width: 200px;
+    padding: 5px 5px 5px 5px;
+    float: right;
+}
+
+.hts-doc-toc a {
+    cursor: pointer;
+}
+
+.hts-doc-toc p {
+    margin: 3px 0 1px 5px;
+}
+
+.hts-doc-toc li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.hts-doc-toc ul {
+    list-style-type: disc;
+    padding-left: 2em;
+}
+
+.hts-doc-toc ul ul {
+    list-style-type: circle;
+    padding-left: 1em;
+}
+
+.hts-doc-toc ul ul ul {
+    list-style-type: square;
+    padding-left: 1em;
+}
+
+.hts-doc-toc ul li {
+    padding-top: 0px;
+    padding-bottom: 0px
 }
 
 /* Additional image and caption styles for webUI help */

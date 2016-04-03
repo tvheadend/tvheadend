@@ -51,7 +51,7 @@ var micromarkdown = {
     url2: /[ \t\n]([a-zA-Z]{2,16}:\/\/[a-zA-Z0-9@:%_\+.~#?&=]{2,256}.[a-z]{2,4}\b(\/[\-a-zA-Z0-9@:%_\+.~#?&\/\/=]*)?)[ \t\n]/g
   },
   codeblocks: {},
-  parse: function (str, strict) {
+  parse: function (str, strict, linkfcn) {
     'use strict';
     var line, nstatus = 0,
       status, cel, calign, indent, helper, helper1, helper2, count, repstr, stra, trashgc = [],
@@ -207,9 +207,17 @@ var micromarkdown = {
     /* links */
     while ((stra = micromarkdown.regexobject.links.exec(str)) !== null) {
       if (stra[0].substr(0, 1) === '!') {
-        str = str.replace(stra[0], '<img src="' + stra[2] + '" alt="' + stra[1] + '" title="' + stra[1] + '" />\n');
+        var src = stra[2];
+        if (linkfcn && src.indexOf('://') === -1)
+          src = linkfcn('src', src);
+        str = str.replace(stra[0], '<img src="' + src + '" alt="' + stra[1] + '" title="' + stra[1] + '" />\n');
       } else {
-        str = str.replace(stra[0], '<a ' + micromarkdown.mmdCSSclass(stra[2], strict) + 'href="' + stra[2] + '">' + stra[1] + '</a>\n');
+        var href = stra[2];
+        if (linkfcn && href.indexOf('://') === -1)
+          href = linkfcn('href', href);
+        else if (href)
+          href = 'href="' + href + '"'
+        str = str.replace(stra[0], '<a ' + micromarkdown.mmdCSSclass(stra[2], strict) + href + '>' + stra[1] + '</a>\n');
       }
     }
     while ((stra = micromarkdown.regexobject.mail.exec(str)) !== null) {
@@ -402,11 +410,13 @@ var micromarkdown = {
     if ((str.indexOf('/') !== -1) && (strict !== true)) {
       urlTemp = str.split('/');
       if (urlTemp[1].length === 0) {
-        urlTemp = urlTemp[2].split('.');
+        if (urlTemp[2].indexOf('.') !== -1)
+          urlTemp = urlTemp[2].split('.');
       } else {
-        urlTemp = urlTemp[0].split('.');
+        if (urlTemp[0].indexOf('.') !== -1)
+          urlTemp = urlTemp[0].split('.');
       }
-      return 'class="mmd_' + urlTemp[urlTemp.length - 2].replace(/[^\w\d]/g, '') + urlTemp[urlTemp.length - 1] + '" ';
+      return 'class="tvh_mmd_' + urlTemp[urlTemp.length - 2].replace(/[^\w\d]/g, '') + urlTemp[urlTemp.length - 1] + '" ';
     }
     return '';
   }

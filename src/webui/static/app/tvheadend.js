@@ -7,6 +7,7 @@ tvheadend.uilevel = 'expert';
 tvheadend.uilevel_nochange = false;
 tvheadend.quicktips = true;
 tvheadend.wizard = null;
+tvheadend.docs_toc = null;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -87,42 +88,75 @@ tvheadend.help = function(title, pagename) {
                 items: [content]
             });
             win.show();
-
         }
     });
 };
 
 tvheadend.mdhelp = function(pagename) {
+
+    var linkfcn = function(type, href) {
+        if (type == 'src') {
+            if (href.substring(0, 7) == 'images/')
+               return 'static/img' + href.substring(6);
+            return href;
+        } else {
+            return 'page="' + href + '"';
+        }
+    }
+
+    var fcn = function(result) {
+        var mdtext = result.responseText;
+        var title = mdtext.split('\n')[0].split('#');
+        
+        if (title)
+            title = title[title.length-1];
+        
+        var text = '<div>';
+        if (tvheadend.docs_toc)
+            text += '<div class="hts-doc-toc">' + tvheadend.docs_toc + '</div>';
+        text += '<div class="hts-doc-text">' + micromarkdown.parse(mdtext, 0, linkfcn) + '</div>';
+        text += '</div>';
+
+        var content = new Ext.Panel({
+            autoScroll: true,
+            border: false,
+            layout: 'fit',
+            html: text
+        });
+
+        var win = new Ext.Window({
+            title: _('Help for') + ' ' + title,
+            iconCls: 'help',
+            layout: 'fit',
+            width: 900,
+            height: 400,
+            constrainHeader: true,
+            items: [content],
+            listeners: {
+                render: function(win) {
+                    win.body.on('click', function(e, dom) {
+                        tvheadend.mdhelp(dom.getAttribute('page'));
+                    });
+                }
+            },
+        });
+        win.show();
+    }
+
     Ext.Ajax.request({
         url: 'markdown/' + pagename,
-        success: function(result, request) {
-
-            var text = result.responseText;
-            var title = text.split('\n')[0].split('#');
-            
-            if (title)
-                title = title[title.length-1];
-            
-            text = '<div class="hts-doc-text">' + micromarkdown.parse(text) + '</div>';
-
-            var content = new Ext.Panel({
-                autoScroll: true,
-                border: false,
-                layout: 'fit',
-                html: text
-            });
-
-            var win = new Ext.Window({
-                title: _('Help for') + ' ' + title,
-                iconCls: 'help',
-                layout: 'fit',
-                width: 900,
-                height: 400,
-                constrainHeader: true,
-                items: [content]
-            });
-            win.show();
-
+        success: function(result) {
+            if (!tvheadend.docs_toc) {
+                Ext.Ajax.request({
+                    url: 'markdown/toc',
+                    success: function(result_toc) {
+                        tvheadend.docs_toc = micromarkdown.parse(result_toc.responseText, 0, linkfcn);
+                        fcn(result);
+                    }
+                });
+            } else {
+                fcn(result);
+            }
         }
     });
 };

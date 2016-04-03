@@ -20,6 +20,7 @@
 #include "config.h"
 #include "webui.h"
 #include "http.h"
+#include "docs.h"
 
 /* */
 static int
@@ -202,11 +203,34 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
 }
 
 /**
+ *
+ */
+static int
+http_markdown_page(http_connection_t *hc, const struct tvh_doc_page *page)
+{
+  const char **doc = page->strings;
+  const char *lang = hc->hc_access->aa_lang_ui;
+  htsbuf_queue_t *hq = &hc->hc_reply;
+
+  if (doc == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+  for (; *doc; doc++) {
+    if (*doc[0] == '\xff') {
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
+    } else {
+      htsbuf_append_str(hq, *doc);
+    }
+  }
+  return 0;
+}
+
+/**
  * Handle requests for markdown export.
  */
 int
 page_markdown(http_connection_t *hc, const char *remain, void *opaque)
 {
+  const struct tvh_doc_page *page;
   char *components[2];
   int nc, r;
 
@@ -221,9 +245,18 @@ page_markdown(http_connection_t *hc, const char *remain, void *opaque)
     r = http_markdown_classes(hc);
   else if (nc == 2 && !strcmp(components[0], "class"))
     r = http_markdown_class(hc, components[1]);
-  else
+  else if (nc == 1) {
+    for (page = tvh_doc_markdown_pages; page->name; page++)
+      if (!strcmp(page->name, components[0])) {
+        r = http_markdown_page(hc, page);
+        goto done;
+      }
     r = HTTP_STATUS_BAD_REQUEST;
+  } else {
+    r = HTTP_STATUS_BAD_REQUEST;
+  }
 
+done:
   if (r == 0)
     http_output_content(hc, "text/markdown");
 
