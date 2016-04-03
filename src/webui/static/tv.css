@@ -101,7 +101,7 @@ body {
 }
 
 .tv-video-idle {
-    background-image     : url(../docresources/tvheadendlogo.png);
+    background-image     : url(../static/img/logobig.png);
 }
 
 .tv-video-loading {
