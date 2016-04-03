@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -635,6 +636,8 @@ static int _xmltv_parse_channel
   htsmsg_t *attribs, *tags, *subtag;
   const char *id, *name, *icon;
   epggrab_channel_t *ch;
+  htsmsg_field_t *f;
+  htsmsg_t *dnames;
 
   if(body == NULL) return 0;
 
@@ -646,15 +649,41 @@ static int _xmltv_parse_channel
   stats->channels.total++;
   if (save) stats->channels.created++;
   
-  if((name = htsmsg_xml_get_cdata_str(tags, "display-name")) != NULL) {
-    save |= epggrab_channel_set_name(ch, name);
+  dnames = htsmsg_create_list();
+
+  HTSMSG_FOREACH(f, tags) {
+    if (!(subtag = htsmsg_field_get_map(f))) continue;
+    if (strcmp(f->hmf_name, "display-name") == 0) {
+      int n = 0;
+
+      name = htsmsg_get_str(subtag, "cdata");
+      while (isdigit(*(name + n))) n++;
+      if (n > 0) {
+        if (*(name + n) == 0 || *(name + n) == ' ') {
+          save |= epggrab_channel_set_number(ch, atoi(name), 0);
+          name += n;
+          while (*name == ' ') name++;
+        }
+      }
+      if (*name)
+        htsmsg_add_str_exclusive(dnames, name);
+    }
+    else if (strcmp(f->hmf_name, "icon") == 0) {
+      if ((attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
+          (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
+        save |= epggrab_channel_set_icon(ch, icon);
+      }
+    }
   }
 
-  if((subtag  = htsmsg_get_map(tags,    "icon"))   != NULL &&
-     (attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
-     (icon    = htsmsg_get_str(attribs, "src"))    != NULL) {
-    save |= epggrab_channel_set_icon(ch, icon);
+  HTSMSG_FOREACH(f, dnames) {
+    const char *s;
+
+    if ((s = htsmsg_field_get_str(f)) != NULL)
+      save |= epggrab_channel_set_name(ch, s);
   }
+  htsmsg_destroy(dnames);
+
   if (save)
     stats->channels.modified++;
   return save;
