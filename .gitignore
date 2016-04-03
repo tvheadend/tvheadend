@@ -3,6 +3,7 @@ build.*
 
 src/version.c
 src/tvh_locale_inc.c
+src/docs_inc.[ch]
 src/webui/extjs-std.c
 src/webui/extjs-debug.c
 src/webui/extjs-tv-std.c

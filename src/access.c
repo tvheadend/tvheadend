@@ -1437,7 +1437,7 @@ extern const char *tvh_doc_access_entry_class[];
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
-  .ic_caption    = N_("Access"),
+  .ic_caption    = N_("Access Entries"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_access_entry_class,
@@ -1452,7 +1452,7 @@ const idclass_t access_entry_class = {
       .id       = "index",
       .name     = N_("Index"),
       .off      = offsetof(access_entry_t, ae_index),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
     },
     {
       .type     = PT_BOOL,
@@ -1935,7 +1935,7 @@ const idclass_t passwd_entry_class = {
       .id       = "password2",
       .name     = N_("Password2"),
       .off      = offsetof(passwd_entry_t, pw_password2),
-      .opts     = PO_PASSWORD | PO_HIDDEN | PO_EXPERT | PO_WRONCE,
+      .opts     = PO_PASSWORD | PO_HIDDEN | PO_EXPERT | PO_WRONCE | PO_NOUI,
       .set      = passwd_entry_class_password2_set,
     },
     {

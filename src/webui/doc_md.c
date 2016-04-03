@@ -20,6 +20,7 @@
 #include "config.h"
 #include "webui.h"
 #include "http.h"
+#include "docs.h"
 
 /* */
 static int
@@ -130,7 +131,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   htsmsg_t *m, *l, *n, *e, *x;
   htsmsg_field_t *f, *f2;
   const char *s, **doc;
-  int nl = 0, first = 1;
+  int nl = 0, first = 1, b;
 
   pthread_mutex_lock(&global_lock);
   ic = idclass_find(clazz);
@@ -146,17 +147,20 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     md_header(hq, "##", s);
     nl = md_nl(hq, 1);
   }
-  for (; *doc; doc++) {
-    if (*doc[0] == '\xff') {
-      htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
-    } else {
-      htsbuf_append_str(hq, *doc);
+  if (doc) {
+    for (; *doc; doc++) {
+      if (*doc[0] == '\xff') {
+        htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
+      } else {
+        htsbuf_append_str(hq, *doc);
+      }
     }
   }
   l = htsmsg_get_list(m, "props");
   HTSMSG_FOREACH(f, l) {
     n = htsmsg_field_get_map(f);
     if (!n) continue;
+    if (!htsmsg_get_bool(n, "noui", &b) && b) continue;
     s = htsmsg_get_str(n, "caption");
     if (!s) continue;
     if (first) {
@@ -171,6 +175,11 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     }
     nl = md_nl(hq, nl);
     md_style(hq, "**", s);
+    if (!htsmsg_get_bool(n, "rdonly", &b) && b) {
+      htsbuf_append(hq, " _", 2);
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("(Read-only)")));
+      htsbuf_append(hq, "_", 1);
+    }
     md_nl(hq, 1);
     s = htsmsg_get_str(n, "description");
     if (s) {
@@ -200,11 +209,34 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
 }
 
 /**
+ *
+ */
+static int
+http_markdown_page(http_connection_t *hc, const struct tvh_doc_page *page)
+{
+  const char **doc = page->strings;
+  const char *lang = hc->hc_access->aa_lang_ui;
+  htsbuf_queue_t *hq = &hc->hc_reply;
+
+  if (doc == NULL)
+    return HTTP_STATUS_NOT_FOUND;
+  for (; *doc; doc++) {
+    if (*doc[0] == '\xff') {
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, *doc + 1));
+    } else {
+      htsbuf_append_str(hq, *doc);
+    }
+  }
+  return 0;
+}
+
+/**
  * Handle requests for markdown export.
  */
 int
 page_markdown(http_connection_t *hc, const char *remain, void *opaque)
 {
+  const struct tvh_doc_page *page;
   char *components[2];
   int nc, r;
 
@@ -219,9 +251,18 @@ page_markdown(http_connection_t *hc, const char *remain, void *opaque)
     r = http_markdown_classes(hc);
   else if (nc == 2 && !strcmp(components[0], "class"))
     r = http_markdown_class(hc, components[1]);
-  else
+  else if (nc == 1) {
+    for (page = tvh_doc_markdown_pages; page->name; page++)
+      if (!strcmp(page->name, components[0])) {
+        r = http_markdown_page(hc, page);
+        goto done;
+      }
     r = HTTP_STATUS_BAD_REQUEST;
+  } else {
+    r = HTTP_STATUS_BAD_REQUEST;
+  }
 
+done:
   if (r == 0)
     http_output_content(hc, "text/markdown");
 

@@ -1,5 +1,5 @@
 #include <unistd.h>
-//#include "tvh_locale.h"
+#include "docs.h"
 
 #define LANGPREF "\xff"
 #define N_(s) s

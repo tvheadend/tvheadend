@@ -29,10 +29,13 @@ service_class_get_title ( idnode_t *self, const char *lang )
   return ((memoryinfo_t *)self)->my_name;
 }
 
+extern const char *tvh_doc_memoryinfo_class[];
+
 const idclass_t memoryinfo_class = {
   .ic_class      = "memoryinfo",
-  .ic_caption    = N_("Memory information"),
+  .ic_caption    = N_("Memory Information"),
   .ic_event      = "memoryinfo",
+  .ic_doc        = tvh_doc_memoryinfo_class,
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = service_class_get_title,
   .ic_properties = (const property_t[]){

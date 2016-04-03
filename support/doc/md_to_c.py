@@ -18,10 +18,16 @@ import sys
 from textwrap import wrap
 from mistune import Markdown, Renderer
 
+HUMAN=False
+DEBUG=False
+
 NOLANG=[
   '.',
   ','
 ]
+
+def debug(str):
+   sys.stderr.write('DEBUG: ' + str + '\n')
 
 class Object:
 
@@ -30,12 +36,18 @@ class Object:
 class TVH_C_Renderer(Renderer):
 
   def get_nolang(self, text):
-    return '"' + text + '",\n'
+    if HUMAN:
+      return text
+    else:
+      return '_' + str(len(text)) + ':' + text
     
   def get_lang(self, text):
     if text in NOLANG:
       return self.get_nolang(text)
-    return 'LANGPREF N_("' + text + '"),\n'
+    if HUMAN:
+      return text
+    else:
+      return 'x' + str(len(text)) + ':' + text
 
   def get_block(self, text):
     type = text[0]
@@ -47,53 +59,60 @@ class TVH_C_Renderer(Renderer):
     return (text[p+1+l:], type, t)
 
   def newline(self):
-    return self.get_nolang('\n')
+    if DEBUG: debug('newline')
+    return '\n'
 
   def text(self, text):
     if not text:
       return ''
-    pre = ''
-    post = ''
-    if ord(text[0]) <= ord(' '):
-      pre = self.get_nolang(' ')
-    if ord(text[-1]) <= ord(' '):
-      post = self.get_nolang(' ')
+    if DEBUG: debug('text: ' + repr(text))
     text = text.replace('\n', ' ')
-    text = ' \\\n'.join(wrap(text, 74))
-    return pre + self.get_lang(text) + post
+    return self.get_lang(text)
 
   def linebreak(self):
-    return self.get_nolang('\\n')
+    if DEBUG: debug('linebreak')
+    return '\n'
 
   def hrule(self):
-    return self.get_nolang('---\\n')
+    if DEBUG: debug('hrule')
+    return self.get_nolang('---') + '\n'
 
   def header(self, text, level, raw=None):
-    return self.get_nolang('#'*(level+1)) + \
-           text + \
-           self.get_nolang('\\n\\n')
+    if DEBUG: debug('header[%d]: ' % level + repr(text))
+    return '\n' + self.get_nolang('#'*(level+1)) + text + '\n'
 
   def paragraph(self, text):
-    return text + self.get_nolang('\\n\\n')
+    if DEBUG: debug('paragraph: ' + repr(text))
+    return '\n' + text + '\n'
 
   def list(self, text, ordered=True):
-    r = ''
+    r = '\n'
     while text:
       text, type, t = self.get_block(text)
+      if DEBUG: debug('list[' + type + ']: ' + repr(t))
       if type == 'l':
-        r += self.get_nolang((ordered and ('# ' + t) or ('* ' + t)) + '\n')
+        r += self.get_nolang(ordered and '# ' or '* ') + t
     return r
 
   def list_item(self, text):
-    return self.get_nolang('l' + str(len(text)) + ':') + text
+    while text[0] == '\n':
+      text = text[1:]
+    if DEBUG: debug('list item: ' + repr(text))
+    a = text.split('\n')
+    text = a[0] + '\n'
+    for t in a[1:]:
+      if t:
+        text += self.get_nolang('  ') + t + '\n'
+    return 'l' + str(len(text)) + ':' + text
 
   def block_code(self, code, lang=None):
-    return self.get_nolang('```no-highlight\n') + code + self.get_nolang('\n```\n')
+    return self.get_nolang('```no-highlight') + '\n' + \
+           code + '\n' + self.get_nolang('```') + '\n'
 
   def block_quote(self, text):
     r = ''
     for line in text.splitlines():
-      r += self.get_nolang((line and '> ' or '')) + line + self.get_nolang('\n')
+      r += self.get_nolang((line and '> ' or '')) + line + '\n'
     return r
 
   def block_html(self, text):
@@ -103,6 +122,7 @@ class TVH_C_Renderer(Renderer):
     fatal('Inline HTML not allowed: ' + repr(text))
 
   def _emphasis(self, text, pref):
+    if DEBUG: debug('emphasis[' + pref + ']: ' + repr(text))
     return self.get_nolang(pref) + text + self.get_nolang(pref + ' ')
 
   def emphasis(self, text):
@@ -115,7 +135,7 @@ class TVH_C_Renderer(Renderer):
     return self._emphasis(text, '~~')
 
   def codespan(self, text):
-    return self.get_nolang('`') + text + self.get_nolang('`')
+    return self.get_nolang('`' + text + '`')
 
   def autolink(self, link, is_email=False):
     return self.get_nolang('<') + link + self.get_nolang('>')
@@ -225,30 +245,64 @@ class TVH_C_Renderer(Renderer):
     return self.get_nolang('[^' + str(index) + ']')
 
   def footnote_item(self, key, text):
-    r = self.get_nolang('[^' + str(index) + ']:\n')
+    r = self.get_nolang('[^' + str(index) + ']:' + '\n')
     for l in text.split('\n'):
-      r += self.get_nolang('  ') + l.lstrip().rstrip() + self.get_nolang('\n')
+      r += self.get_nolang('  ') + self.get_lang(l.lstrip().rstrip()) + '\n'
     return r
 
   def footnotes(self, text):
-    return text
+    text = text.replace('\n', ' ')
+    return self.get_lang(text.lstrip().rstrip()) + '\n'
 
 #
 #
 #
 
 def optimize(text):
-  lines = text.splitlines()
+
   r = ''
-  prev = ''
-  for line in lines:
-    if prev.startswith('"') and line.startswith('"'):
-      prev = prev[:-2] + line[1:]
-      continue
-    elif prev:
-      r += prev + '\n'
-    prev = line
-  return r + (prev and (prev + '\n')  or '') 
+  x = ''
+  n = ''
+
+  def repl(t):
+    return t.replace('"', '\\"')
+
+  def nolang(t):
+    return '"' + repl(t) + '",\n'
+
+  def lang(t):
+    return 'LANGPREF N_("' + repl(x) + '"),\n'
+
+  text = text.lstrip().rstrip()
+  while text.find('\n\n\n') >= 0:
+    text = text.replace('\n\n\n', '\n\n')
+  if HUMAN:
+    return text
+
+  for text in text.splitlines():
+    while text:
+      type = text[0]
+      p = text.find(':')
+      if p <= 0:
+        fatal('wrong text entry: ' + repr(text))
+        break
+      l = int(text[1:p])
+      t = text[p+1:p+1+l]
+      if type == 'x':
+        if n: r += nolang(n)
+        n = ''
+        x += t
+      elif type == '_':
+        if x: r += lang(x)
+        x = ''
+        n += t
+      text = text[p+l+1:]
+    if x: r += lang(x)
+    x = ''
+    n += '\\n'
+  if n: r += nolang(n)
+  if x: r += lang(x)
+  return r
 
 #
 #
@@ -273,6 +327,8 @@ def argv_get(what):
 #
 #
 
+HUMAN=argv_get('human')
+DEBUG=argv_get('debug')
 input = argv_get('in')
 if not input:
   fatal('Specify input file.')
@@ -289,4 +345,7 @@ md = Markdown(renderer)
 text = md(text)
 text = optimize(text)
 
-print('const char *' + name + '[] = {\n' + text + '\nNULL\n};\n');
+if not HUMAN:
+  print('const char *' + name + '[] = {\n' + text + '\nNULL\n};\n');
+else:
+  print(text)
