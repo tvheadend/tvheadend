@@ -131,7 +131,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   htsmsg_t *m, *l, *n, *e, *x;
   htsmsg_field_t *f, *f2;
   const char *s, **doc;
-  int nl = 0, first = 1;
+  int nl = 0, first = 1, b;
 
   pthread_mutex_lock(&global_lock);
   ic = idclass_find(clazz);
@@ -160,6 +160,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   HTSMSG_FOREACH(f, l) {
     n = htsmsg_field_get_map(f);
     if (!n) continue;
+    if (!htsmsg_get_bool(n, "noui", &b) && b) continue;
     s = htsmsg_get_str(n, "caption");
     if (!s) continue;
     if (first) {
@@ -174,6 +175,11 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     }
     nl = md_nl(hq, nl);
     md_style(hq, "**", s);
+    if (!htsmsg_get_bool(n, "rdonly", &b) && b) {
+      htsbuf_append(hq, " _", 2);
+      htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("(Read-only)")));
+      htsbuf_append(hq, "_", 1);
+    }
     md_nl(hq, 1);
     s = htsmsg_get_str(n, "description");
     if (s) {
