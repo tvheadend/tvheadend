@@ -25,6 +25,7 @@
 typedef struct wizard_page {
   idnode_t idnode;
   const char *name;
+  char *desc;
   void (*free)(struct wizard_page *);
   void *aux;
 } wizard_page_t;

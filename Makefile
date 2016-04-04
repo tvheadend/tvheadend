@@ -541,11 +541,14 @@ ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 # Documentation
 #
 
-SRCS-yes += src/docs.c
-I18N-C   += src/docs_inc.c
-I18N-DOCS = $(wildcard docs/markdown/*.md) $(wildcard docs/class/*.md)
-MD-ROOT   = $(patsubst docs/markdown/%.md,%,$(wildcard docs/markdown/*.md))
-MD-CLASS  = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
+SRCS-yes  += src/docs.c
+I18N-C    += src/docs_inc.c
+I18N-DOCS  = $(wildcard docs/markdown/*.md)
+I18N-DOCS += $(wildcard docs/class/*.md)
+I18N-DOCS += $(wildcard docs/wizard/*.md)
+MD-ROOT    = $(patsubst docs/markdown/%.md,%,$(wildcard docs/markdown/*.md))
+MD-CLASS   = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
+MD-WIZARD  = $(patsubst docs/wizard/%.md,%,$(wildcard docs/wizard/*.md))
 
 #
 # Internationalization
@@ -676,6 +679,11 @@ $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
 	   support/doc/md_to_c.py --in="docs/class/$${i}.md" \
 	                          --name="tvh_doc_$${i}_class" >> src/docs_inc.c || exit 1; \
 	 done
+	@for i in $(MD-WIZARD); do \
+	   echo "Markdown: docs/wizard/$${i}.md"; \
+	   support/doc/md_to_c.py --in="docs/wizard/$${i}.md" \
+	                          --name="tvh_doc_wizard_$${i}" >> src/docs_inc.c || exit 1; \
+	 done
 	@printf "\n\nconst struct tvh_doc_page tvh_doc_markdown_pages[] = {\n" >> src/docs_inc.c
 	@for i in $(MD-ROOT); do \
 	   echo "  { \"$${i}\", tvh_doc_root_$${i} }," >> src/docs_inc.c || exit 1; \
@@ -685,9 +693,10 @@ $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
 	@touch $@
 
 src/docs_inc.c: $(BUILDDIR)/docs-timestamp
+
 src/docs_inc.h: $(BUILDDIR)/docs-timestamp
 
-$(BUILDDIR)/src/docs.o: src/docs_inc.c $(I18N-DOCS) support/doc/md_to_c.py
+$(BUILDDIR)/src/docs.o: $(BUILDDIR)/docs-timestamp $(I18N-DOCS) support/doc/md_to_c.py
 
 # Internationalization
 .PHONY: intl

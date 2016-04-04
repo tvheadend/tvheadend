@@ -21,6 +21,7 @@
  */
 
 #include "tvheadend.h"
+#include "htsbuf.h"
 #include "config.h"
 #include "access.h"
 #include "settings.h"
@@ -45,6 +46,25 @@ static const void *icon_get(void *o)
   return &prop_sbuf_ptr;
 }
 
+static const void *description_get(wizard_page_t *page, const char **doc)
+{
+  htsbuf_queue_t q;
+
+  if (!page->desc) {
+    htsbuf_queue_init(&q, 0);
+    for (; *doc; doc++) {
+      if (*doc[0] == '\xff') {
+        htsbuf_append_str(&q, tvh_gettext_lang(config.language_ui, *doc + 1));
+      } else {
+        htsbuf_append_str(&q, *doc);
+      }
+    }
+    page->desc = htsbuf_to_string(&q);
+    htsbuf_queue_flush(&q);
+  }
+  return &page->desc;
+}
+
 #define SPECIAL_PROP(idval, getfcn) { \
   .type = PT_STR, \
   .id   = idval, \
@@ -60,11 +80,11 @@ static const void *icon_get(void *o)
 #define DESCRIPTION(page) SPECIAL_PROP("description", wizard_description_##page)
 #define PROGRESS(fcn)     SPECIAL_PROP("progress", fcn)
 
-#define DESCRIPTION_FCN(page, desc) \
+#define DESCRIPTION_FCN(page) \
+extern const char *tvh_doc_wizard_##page[]; \
 static const void *wizard_description_##page(void *o) \
 { \
-  static const char *t = desc; \
-  return &t; \
+  return description_get(o, tvh_doc_wizard_##page); \
 }
 
 #define BASIC_STR_OPS(stru, field) \
@@ -89,6 +109,7 @@ static int wizard_set_value_##field(void *o, const void *v) \
 
 static void page_free(wizard_page_t *page)
 {
+  free(page->desc);
   free(page->aux);
   free((char *)page->idnode.in_class);
   free(page);
@@ -154,33 +175,8 @@ BASIC_STR_OPS(wizard_hello_t, epg_lang1)
 BASIC_STR_OPS(wizard_hello_t, epg_lang2)
 BASIC_STR_OPS(wizard_hello_t, epg_lang3)
 
-/*DESCRIPTION_FCN(hello, N_("\
-Enter the languages for the web user interface and \
-for EPG texts.\n\
-This wizard should be run only on the initial setup. Please, cancel \
-it, if you are not willing to touch the current configuration.\
-"))
-*/
-DESCRIPTION_FCN(hello, N_("\
-\
-Welcome to Tvheadend, your TV streaming server and video recorder. This \
-wizard will help you get up and running fast. Let's start by configuring \
-the basic language settings. Please select the default user interface \
-and EPG language(s).\n\n\
-**This wizard should only be run on initial setup. Please cancel it if \
-you're not willing to touch the current configuration, as continuing in \
-such cases can lead to misconfiguration and not all changes made thru \
-this wizard will take effect.**\n\
-\
-\n\n**Notes**:\n\
-* If you cannot see your preferred language in the language list and would \
-like to help translate Tvheadend see \
-[here](https://tvheadend.org/projects/tvheadend/wiki/Internationalization).\n\
-* If you don't enter a preferred language, US English will be used as a default.\n\
-* Not selecting the correct EPG \
-language can result in garbled EPG text; if this happens, don't panic, \
-as you can easily change it later.\n\
-"))
+DESCRIPTION_FCN(hello)
+
 wizard_page_t *wizard_hello(const char *lang)
 {
   static const property_group_t groups[] = {
@@ -382,27 +378,7 @@ BASIC_STR_OPS(wizard_login_t, admin_password)
 BASIC_STR_OPS(wizard_login_t, username)
 BASIC_STR_OPS(wizard_login_t, password)
 
-DESCRIPTION_FCN(login, N_("\
-\
-Enter the access control details to secure your system. \
-The first part of this covers the network details \
-for address-based access to the system; for example, \
-192.168.1.0/24 to allow local access only to 192.168.1.x clients, \
-or 0.0.0.0/0 or empty value for access from any system.\n\n\
-This works alongside the second part, which is a familiar \
-username/password combination, so provide these for both \
-an administrator and regular (day-to-day) user. \
-\n\n**Notes**:\n\
-* You may enter a comma-separated list of network prefixes (IPv4/IPv6).\
-If you were asked to enter a username and password during installation, \
-we'd recommend not using the same details for a user here as it may cause \
-unexpected behavior, incorrect permissions etc.\n\
-* To allow anonymous access for any account (administrative or regular user) enter \
-an asterisk (*) in the username and password fields. ___It is not___ \
-recommended that you allow anonymous access to the admin account.\n\
-* If you plan on accessing Tvheadend over the Internet, make sure you use \
-strong credentials and ___do not allow anonymous access at all___.\n\
-"))
+DESCRIPTION_FCN(login)
 
 wizard_page_t *wizard_login(const char *lang)
 {
@@ -654,34 +630,7 @@ NETWORK_FCN(4)
 NETWORK_FCN(5)
 NETWORK_FCN(6)
 
-DESCRIPTION_FCN(network, N_("\
-Now let's get your tuners configured. Go ahead and select a network for \
-each of the tuners you would like to use. if you do not assign a \
-network to a tuner it will __not__ be used.\n\n\
-\
-**Selecting the Right Network**:\n\n\
-Many tuners are able to receive different signal types..\n\n\
-**If you \
-receive your channels through an antenna (also known as an aerial)** then \
-you would select the network under the tuners with DVB-T/ATSC-T/ISDB-T \
-in the name.\n\n\
-\
-**If you receive your channels through a satellite dish** then you would \
-select the network under the tuners with DVB-S/S2 in the name.\n\n\
-\
-**If you receive your channels via cable** then you would select the \
-network under the tuners with DVB-C/ATSC-C/ISDB-C in the name.\n\n\
-\
-**Notes**:\n\
-* Tuners already in use will not appear below.\n\
-* If using IPTV, the playlist you enter must contain valid links to \
-streams using codecs supported by Tvheadend.\n\
-* For devices with multiple tuners (e.g. either cable or terrestrial), \
-be aware that many only allow you to use one tuner at a time. \
-Selecting more than one tuner per device can thus result in unexpected \
-behavior.\n\
-"))
-
+DESCRIPTION_FCN(network)
 
 wizard_page_t *wizard_network(const char *lang)
 {
@@ -943,23 +892,7 @@ MUXES_IPTV_FCN(6)
 
 #endif
 
-DESCRIPTION_FCN(muxes, N_("\
-Assign predefined muxes to networks. To save you from manually entering \
-muxes, Tvheadend includes predefined mux lists. Please select a list \
-for each network below.\n\
-\n\
-**Notes**:\n\
-* Select the closest transmitter if using an antenna (T); if using \
-cable (C), select your provider; if using satellite (S), the orbital \
-position of the satellite your dish is pointing towards; or if using \
-IPTV, enter the URL to your playlist.\n\
-* If you're unsure as to which list(s) to select you may want to look \
-online for details about the various television reception choices \
-available in your area.\n\
-* Networks already configured will not be shown below.\n\
-* Selecting the wrong list may cause the scan (on the next page) to \
-fail.\n\
-"))
+DESCRIPTION_FCN(muxes)
 
 wizard_page_t *wizard_muxes(const char *lang)
 {
@@ -1042,24 +975,7 @@ wizard_page_t *wizard_muxes(const char *lang)
  * Status
  */
 
-DESCRIPTION_FCN(status, N_("\
-Tvheadend is now scanning for available services. Please wait until the \
-scan completes..\n\n\
-\
-**Notes**:\n\
-* During scanning, the number of muxes and services shown below should \
-increase. If this doesn't happen, check the connection(s) to your \
-device(s)..\n\
-* The status tab (behind this wizard) will display signal information. \
-If you notice a lot of errors or the signal strength appears low then \
-this usually indicates a physical issue with your antenna, satellite \
-dish or cable..\n\
-* If you don't see any signal information at all, but the number of \
-muxes or services is increasing anyway, the driver used by your device \
-isn't supplying signal information to Tvheadend. In most cases this \
-isn't an issue..\n\
-"))
-
+DESCRIPTION_FCN(status)
 
 wizard_page_t *wizard_status(const char *lang)
 {
@@ -1150,24 +1066,7 @@ MAPPING_FCN(mapall)
 MAPPING_FCN(provtags)
 MAPPING_FCN(nettags)
 
-DESCRIPTION_FCN(mapping, N_("\
-Map all discovered services to channels.\n\n\
-In order for your frontend client(s) (such as Kodi, Movian, and similar) \
-to see/play channels, you must first map discovered services to \
-channels.\n\n\
-\
-If you would like Tvheadend to do this for you, check the \
-'Map all services' option below, but be aware that this will also map \
-encrypted services you may not have access to.\n\n\
-\
-**You may omit this step (do not check 'Map all services') and \
-map services to channels manually.**\n\n\
-\
-**Notes**:\n\
-* Many providers include undesirable services - Teleshopping, Adult \
-Entertainment, etc; using the 'Map all services' will include these. \n\
-"))
-
+DESCRIPTION_FCN(mapping)
 
 wizard_page_t *wizard_mapping(const char *lang)
 {
@@ -1239,31 +1138,8 @@ static void channels_changed(idnode_t *in)
   }
 }
 
-DESCRIPTION_FCN(channels, N_("\
-You are now finished.\n\
-You may further customize your settings by editing channel numbers, etc. \n\
-If you confirm this dialog, the default administrator account will be \
-removed. Please then the use credentials you defined thru this wizard.\n\n\
-\
-If you require further help, check out \
-[Tvheadend.org](http://tvheadend.org) or chat to us on \
-[IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\n\
-\
-Thank you for using Tvheadend (and don't forget to \
-[donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)\
-"))
-
-DESCRIPTION_FCN(channels2, N_("\
-You are now finished.\n\
-You may further customize your settings by editing channel numbers, etc.\n\n\
-\
-If you require further help, check out \
-[Tvheadend.org](http://tvheadend.org) or chat to us on \
-[IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).\n\n\n\
-\
-Thank you for using Tvheadend (and don't forget to \
-[donate](http://tvheadend.org/projects/tvheadend/wiki/Donate))! :)\
-"))
+DESCRIPTION_FCN(channels)
+DESCRIPTION_FCN(channels2)
 
 wizard_page_t *wizard_channels(const char *lang)
 {
