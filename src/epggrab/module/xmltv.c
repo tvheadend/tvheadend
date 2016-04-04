@@ -637,7 +637,9 @@ static int _xmltv_parse_channel
   const char *id, *name, *icon;
   epggrab_channel_t *ch;
   htsmsg_field_t *f;
-  htsmsg_t *dnames;
+  htsmsg_t *dnames1, *dnames2;
+  const char *cnum = NULL;
+  int cnumlen;
 
   if(body == NULL) return 0;
 
@@ -649,7 +651,8 @@ static int _xmltv_parse_channel
   stats->channels.total++;
   if (save) stats->channels.created++;
   
-  dnames = htsmsg_create_list();
+  dnames1 = htsmsg_create_list();
+  dnames2 = htsmsg_create_list();
 
   HTSMSG_FOREACH(f, tags) {
     if (!(subtag = htsmsg_field_get_map(f))) continue;
@@ -657,16 +660,14 @@ static int _xmltv_parse_channel
       int n = 0;
 
       name = htsmsg_get_str(subtag, "cdata");
-      while (isdigit(*(name + n))) n++;
-      if (n > 0) {
-        if (*(name + n) == 0 || *(name + n) == ' ') {
-          save |= epggrab_channel_set_number(ch, atoi(name), 0);
-          name += n;
-          while (*name == ' ') name++;
-        }
+      while (isdigit(name[n])) n++;
+      if (n > 0 && n < 4 && name[n] == 0) {
+        cnum = name;
+        cnumlen = n;
+        save |= epggrab_channel_set_number(ch, atoi(cnum), 0);
       }
-      if (*name)
-        htsmsg_add_str_exclusive(dnames, name);
+      else
+        htsmsg_add_str(dnames1, NULL, name);
     }
     else if (strcmp(f->hmf_name, "icon") == 0) {
       if ((attribs = htsmsg_get_map(subtag,  "attrib")) != NULL &&
@@ -676,13 +677,24 @@ static int _xmltv_parse_channel
     }
   }
 
-  HTSMSG_FOREACH(f, dnames) {
+  HTSMSG_FOREACH(f, dnames1) {
     const char *s;
+    if ((s = htsmsg_field_get_str(f)) != NULL) {
+      if (cnum && strncmp(s, cnum, cnumlen) == 0 && s[cnumlen] == ' ' && s[cnumlen + 1] != 0)
+        htsmsg_add_str_exclusive(dnames2, s + cnumlen + 1);
+      else
+        htsmsg_add_str_exclusive(dnames2, s);
+    }
+  }
 
+  HTSMSG_FOREACH(f, dnames2) {
+    const char *s;
     if ((s = htsmsg_field_get_str(f)) != NULL)
       save |= epggrab_channel_set_name(ch, s);
   }
-  htsmsg_destroy(dnames);
+
+  htsmsg_destroy(dnames2);
+  htsmsg_destroy(dnames1);
 
   if (save)
     stats->channels.modified++;
