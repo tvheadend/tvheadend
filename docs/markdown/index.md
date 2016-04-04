@@ -14,6 +14,5 @@ Tvheadend includes copies of many of these pages in the application, which
 is easier to find when you're wondering what to do next.
 
 If you get really stuck, there's the [forum](https://tvheadend.org/projects/tvheadend/boards)
-and IRC (*#hts* on *freenode*) - [Kiwi IRC](https://kiwiirc.com/) is a good web
-client if you don't already have an IRC client installed, please [Freenode](https://webchat.freenode.net/)
-has one of their own.
+and IRC (*#hts* on *freenode*) - [Kiwi IRC](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts) or Freenode's [webchat](http://webchat.freenode.net) are good web
+clients if you don't already have an IRC client installed.
