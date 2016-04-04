@@ -102,7 +102,7 @@ tvheadend.wizard_start = function(page) {
         if (icon)
             c += '<img class="x-wizard-icon" src="' + icon + '"/>';
         if (text)
-            text = micromarkdown.parse(text);
+            text = marked(text);
         c += '<div class="x-wizard-description">' + text + '</div>';
         var p = new Ext.Panel({
             width: 570,

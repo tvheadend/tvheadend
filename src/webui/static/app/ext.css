@@ -733,6 +733,10 @@
     list-style: disc outside;
 }
 
+.x-wizard-description strong {
+    font-weight: bold;
+}
+
 /* Table styles for webUI help */
 
 .hts-doc-text table, .hts-doc-text th, .hts-doc-text td {
@@ -827,12 +831,21 @@
 
 .hts-doc-toc {
     width: 200px;
-    padding: 5px 5px 5px 5px;
+    padding: 0;
+    margin: 0 5px 0 5px;
     float: right;
+    border-left: dotted 1px;
+    border-bottom: dotted 1px;
 }
 
 .hts-doc-toc a {
     cursor: pointer;
+}
+
+.hts-doc-toc a:hover {
+    cursor: pointer;
+    background-color: black;
+    color: white;
 }
 
 .hts-doc-toc p {
@@ -844,18 +857,32 @@
     padding-bottom: 5px;
 }
 
+.hts-doc-toc ol {
+    list-style-type: arabic;
+    list-style-position: outside;
+    padding-left: 2em;
+}
+
+.hts-doc-toc ol li {
+    padding-top: 0px;
+    padding-bottom: 0px
+}
+
 .hts-doc-toc ul {
     list-style-type: disc;
+    list-style-position: outside;
     padding-left: 2em;
 }
 
 .hts-doc-toc ul ul {
     list-style-type: circle;
+    list-style-position: outside;
     padding-left: 1em;
 }
 
 .hts-doc-toc ul ul ul {
     list-style-type: square;
+    list-style-position: outside;
     padding-left: 1em;
 }
 
@@ -868,7 +895,7 @@
 
 .hts-doc-text img {
   margin: 0px auto;
-  display: block;
+  /* display: block; */
   border: none;
   padding: 10px;
   max-width: 97%

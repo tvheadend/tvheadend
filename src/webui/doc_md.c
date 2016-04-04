@@ -144,7 +144,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
   pthread_mutex_unlock(&global_lock);
   s = htsmsg_get_str(m, "caption");
   if (s) {
-    md_header(hq, "##", s);
+    md_header(hq, "## ", s);
     nl = md_nl(hq, 1);
   }
   if (doc) {
@@ -165,7 +165,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     if (!s) continue;
     if (first) {
       nl = md_nl(hq, nl);
-      htsbuf_append_str(hq, "####");
+      htsbuf_append_str(hq, "#### ");
       htsbuf_append_str(hq, tvh_gettext_lang(lang, N_("Items")));
       md_nl(hq, 1);
       md_nl(hq, 1);

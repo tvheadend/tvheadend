@@ -83,6 +83,7 @@ class TVH_C_Renderer(Renderer):
         xlink.append(o)
         if t.find(']') >= 0 and (t.endswith(')') or t.endswith(') ')):
           d += xfound and self.get_lang(r) or self.get_nolang(r)
+          r = ''
           xfound = 0
           d += ''.join(xlink)
           xlink = []
@@ -126,11 +127,11 @@ class TVH_C_Renderer(Renderer):
 
   def hrule(self):
     if DEBUG: debug('hrule')
-    return self.get_nolang('---') + '\n'
+    return '\n' + self.get_nolang('---') + '\n'
 
   def header(self, text, level, raw=None):
     if DEBUG: debug('header[%d]: ' % level + repr(text))
-    return '\n' + self.get_nolang('#'*(level+1)) + text + '\n'
+    return '\n' + self.get_nolang('#'*(level+1) + ' ') + text + '\n'
 
   def paragraph(self, text):
     if DEBUG: debug('paragraph: ' + repr(text))
@@ -202,6 +203,7 @@ class TVH_C_Renderer(Renderer):
     self.link(src, title, text, image=True)
 
   def table(self, header, body):
+    if DEBUG: debug('table: ' + repr(header) + ' ' + repr(body))
     hrows = []
     while header:
       header, type, t = self.get_block(header)
@@ -247,41 +249,46 @@ class TVH_C_Renderer(Renderer):
         if 'align' in col.flags:
           align[i] = col.flags['align'][0]
         i += 1
-    r = ''
+    r = '\n'
     for row in hrows:
       i = 0
       for col in row:
         if i > 0:
           r += self.get_nolang(' | ')
-        r += col.text.ljust(colmax[i])
+        r += col.text
         i += 1
-      r += self.get_nolang('\n')
+      r += '\n'
     for i in range(colscount):
       if i > 0:
         r += self.get_nolang(' | ')
       if align[i] == 'c':
-        r += self.get_nolang(':' + '-'.ljust(colmax[i]-2, '-') + ':')
+        r += self.get_nolang(':---:')
       elif align[i] == 'l':
-        r += self.get_nolang(':' + '-'.ljust(colmax[i]-1, '-'))
+        r += self.get_nolang(':----')
       elif align[i] == 'r':
-        r += self.get_nolang('-'.ljust(colmax[i]-1, '-') + ':')
+        r += self.get_nolang('----:')
       else:
-        r += self.get_nolang('-'.ljust(colmax[i], '-'))
-    r += self.get_nolang('\n')
+        r += self.get_nolang('-----')
+    r += '\n'
     for row in brows:
       i = 0
       for col in row:
         if i > 0:
           r += self.get_nolang(' | ')
-        r += col.text.ljust(colmax[i])
+        r += col.text
         i += 1
-      r += self.get_nolang('\n')
+      r += '\n'
     return r
 
   def table_row(self, content):
-    return self.get_nolang('r' + str(len(content)) + ':') + content
+    if DEBUG: debug('table_row: ' + repr(content))
+    return 'r' + str(len(content)) + ':' + content
 
   def table_cell(self, content, **flags):
+    if DEBUG: debug('table_cell: ' + repr(content) + ' ' + repr(flags))
+    # dirty fix for inline images
+    if content.startswith('x1:!_1:['):
+      content = '_2:![' + content[8:]
     content = content.replace('\n', ' ')
     r = ''
     for fl in flags:

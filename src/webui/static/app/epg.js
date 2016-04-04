@@ -910,7 +910,7 @@ tvheadend.epg = function() {
             text: _('Help'),
             iconCls: 'help',
             handler: function() {
-                new tvheadend.help(_('Electronic Program Guide'), 'epg.html');
+                new tvheadend.mdhelp('epg');
             }
         }
     ];

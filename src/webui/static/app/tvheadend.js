@@ -8,6 +8,8 @@ tvheadend.uilevel_nochange = false;
 tvheadend.quicktips = true;
 tvheadend.wizard = null;
 tvheadend.docs_toc = null;
+tvheadend.doc_history = [];
+tvheadend.doc_win = null;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -94,27 +96,59 @@ tvheadend.help = function(title, pagename) {
 
 tvheadend.mdhelp = function(pagename) {
 
-    var linkfcn = function(type, href) {
-        if (type == 'src') {
-            if (href.substring(0, 7) == 'images/')
-               return 'static/img' + href.substring(6);
-            return href;
-        } else {
-            return 'page="' + href + '"';
-        }
+    var parse = function(text) {
+        var renderer = new marked.Renderer;
+        renderer.link = function(href, title, text) {
+            if (href.indexOf(':/') === -1) {
+                var r = '<a page="' + href + '"';
+                if (title) r += ' title="' + title + '"';
+                return r + '>' + text + '</a>';
+            }
+            return marked.Renderer.prototype.link.call(this, href, title, text);
+        };
+        renderer.image = function(href, title, text) {
+            if (href) {
+                if (href.substring(0, 7) == 'images/')
+                    href = 'static/img' + href.substring(6);
+                else if (href.substring(0, 6) == 'icons/')
+                    href = 'static/' + href;
+            }
+            return marked.Renderer.prototype.image.call(this, href, title, text);
+        };
+        opts = { renderer: renderer };
+        return marked(text, opts);
     }
 
     var fcn = function(result) {
         var mdtext = result.responseText;
         var title = mdtext.split('\n')[0].split('#');
+        var history = '';
+
+        if (tvheadend.doc_win) {
+            tvheadend.doc_win.close();
+            tvheadend.doc_win = null;
+        }
         
         if (title)
             title = title[title.length-1];
+
+        if (tvheadend.doc_history) {
+            for (var i = 1; i <= tvheadend.doc_history.length; i++) {
+                var p = tvheadend.doc_history[i-1];
+                if (!history)
+                    history = '## ' + _('Last Help Pages') + '\n\n';
+                history += '' + i + '. [' + p[1] + '](' + p[0] + ')\n';
+            }
+            history = parse(history);
+            if (history)
+                history += '<hr/>';
+        }
         
-        var text = '<div>';
-        if (tvheadend.docs_toc)
-            text += '<div class="hts-doc-toc">' + tvheadend.docs_toc + '</div>';
-        text += '<div class="hts-doc-text">' + micromarkdown.parse(mdtext, 0, linkfcn) + '</div>';
+        var bodyid = Ext.id();
+        var text = '<div id="' + bodyid + '">';
+        if (tvheadend.docs_toc || history)
+            text += '<div class="hts-doc-toc">' + history + tvheadend.docs_toc + '</div>';
+        text += '<div class="hts-doc-text">' + parse(mdtext) + '</div>';
         text += '</div>';
 
         var content = new Ext.Panel({
@@ -123,6 +157,38 @@ tvheadend.mdhelp = function(pagename) {
             layout: 'fit',
             html: text
         });
+
+        var doresize = function(win) {
+            var aw = Ext.lib.Dom.getViewWidth();
+            var ah = Ext.lib.Dom.getViewHeight();
+            var size = win.getSize();
+            var osize = [size.width, size.height];
+            var pos = win.getPosition();
+            var opos = pos;
+
+            if (pos[0] > -9000) {
+                if (pos[0] + size.width > aw)
+                    pos[0] = Math.max(0, aw - size.width);
+                if (pos[0] + size.width > aw)
+                    size.width = aw;
+                if (pos[1] + size.height > ah)
+                    pos[1] = Math.max(0, ah - size.height);
+                if (pos[1] + size.height > ah)
+                    size.height = ah;
+                if (pos != opos || osize[0] != size.width || osize[1] != size.height) {
+                  win.setPosition(pos);
+                  win.setSize(size);
+                }
+            }
+
+            var dom = win.getEl().dom;
+            var el = dom.querySelectorAll("img");
+            var maxwidth = '97%';
+            if (size.width >= 350)
+                maxwidth = '' + (size.width - 290) + 'px';
+            for (var i = 0; i < el.length; i++)
+                el[i].style['max-width'] = maxwidth;
+        }
 
         var win = new Ext.Window({
             title: _('Help for') + ' ' + title,
@@ -139,10 +205,35 @@ tvheadend.mdhelp = function(pagename) {
                         if (page)
                             tvheadend.mdhelp(page);
                     });
+                },
+                afterrender: function(win) {
+                    doresize(win);
+                },
+                resize: function(win, width, height) {
+                    doresize(win);
+                },
+                destroy: function(win) {
+                    if (win == tvheadend.doc_win)
+                        tvheadend.doc_win = null;
+                    Ext.EventManager.removeResizeListener(doresize, this);
                 }
             },
         });
+        var aw = Ext.lib.Dom.getViewWidth();
+        var ah = Ext.lib.Dom.getViewHeight();
+        if (aw > 400) aw -= 50;
+        if (aw > 500) aw -= 50;
+        if (aw > 800) aw -= 100;
+        if (ah > 400) ah -= 50;
+        if (ah > 500) ah -= 50;
+        if (ah > 800) ah -= 100;
+        win.setSize(aw, ah);
+        Ext.EventManager.onWindowResize(function() { doresize(this); }, win, [true]);
         win.show();
+        tvheadend.doc_history = [[pagename, title]].concat(tvheadend.doc_history);
+        if (tvheadend.doc_history.length > 5)
+           tvheadend.doc_history.pop();
+        tvheadend.doc_win = win;
     }
 
     Ext.Ajax.request({
@@ -152,7 +243,7 @@ tvheadend.mdhelp = function(pagename) {
                 Ext.Ajax.request({
                     url: 'markdown/toc',
                     success: function(result_toc) {
-                        tvheadend.docs_toc = micromarkdown.parse(result_toc.responseText, 0, linkfcn);
+                        tvheadend.docs_toc = parse(result_toc.responseText);
                         fcn(result);
                     }
                 });
