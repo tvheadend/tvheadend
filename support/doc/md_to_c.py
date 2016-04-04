@@ -21,10 +21,7 @@ from mistune import Markdown, Renderer
 HUMAN=False
 DEBUG=False
 
-NOLANG=[
-  '.',
-  ','
-]
+NOLANG_CHARS=" "
 
 def debug(str):
    sys.stderr.write('DEBUG: ' + str + '\n')
@@ -36,18 +33,67 @@ class Object:
 class TVH_C_Renderer(Renderer):
 
   def get_nolang(self, text):
+    if not text:
+      return ''
     if HUMAN:
       return text
     else:
       return '_' + str(len(text)) + ':' + text
     
   def get_lang(self, text):
-    if text in NOLANG:
-      return self.get_nolang(text)
+    if not text:
+      return ''
+
+    n = ''
+    while text and text[0] in NOLANG_CHARS:
+      n += text[0]
+      text = text[1:]
+    e = ''
+    while text and text[-1] in NOLANG_CHARS:
+      e = text[-1] + e
+      text = text[:-1]
+
+    while text.find('  ') >= 0:
+      text = text.replace('  ', ' ')
+
+    if not HUMAN:
+      text = 'x' + str(len(text)) + ':' + text
+    return self.get_nolang(n) + text + self.get_nolang(e)
+
+  def get_human(self, text):
     if HUMAN:
       return text
-    else:
-      return 'x' + str(len(text)) + ':' + text
+    xfound = 0
+    xlink = []
+    d = ''
+    r = ''
+    while text:
+      type = text[0]
+      p = text.find(':')
+      if p <= 0:
+        fatal('wrong text entry: ' + repr(text))
+        break
+      l = int(text[1:p])
+      o = text[:p+1+l]
+      t = text[p+1:p+1+l]
+      text = text[p+l+1:]
+      if not t:
+        continue
+      if xlink:
+        xlink.append(o)
+        if t.find(']') >= 0 and (t.endswith(')') or t.endswith(') ')):
+          d += xfound and self.get_lang(r) or self.get_nolang(r)
+          xfound = 0
+          d += ''.join(xlink)
+          xlink = []
+        continue
+      if type == '_' and t == ('[' or t == '!['):
+        xlink.append(o)
+        continue
+      r += t
+      if type == 'x':
+        xfound = 1
+    return d + (xfound and self.get_lang(r) or self.get_nolang(r))
 
   def get_block(self, text):
     type = text[0]
@@ -67,7 +113,12 @@ class TVH_C_Renderer(Renderer):
       return ''
     if DEBUG: debug('text: ' + repr(text))
     text = text.replace('\n', ' ')
+    text = text.replace('\t', '        ')
     return self.get_lang(text)
+
+  def doescape(self, text):
+    if DEBUG: debug('escape: ' + repr(text))
+    return self.get_nolang(text)
 
   def linebreak(self):
     if DEBUG: debug('linebreak')
@@ -83,7 +134,7 @@ class TVH_C_Renderer(Renderer):
 
   def paragraph(self, text):
     if DEBUG: debug('paragraph: ' + repr(text))
-    return '\n' + text + '\n'
+    return '\n' + self.get_human(text) + '\n'
 
   def list(self, text, ordered=True):
     r = '\n'
@@ -99,7 +150,7 @@ class TVH_C_Renderer(Renderer):
       text = text[1:]
     if DEBUG: debug('list item: ' + repr(text))
     a = text.split('\n')
-    text = a[0] + '\n'
+    text = self.get_human(a[0]) + '\n'
     for t in a[1:]:
       if t:
         text += self.get_nolang('  ') + t + '\n'
@@ -238,8 +289,8 @@ class TVH_C_Renderer(Renderer):
       if type(v) == type(True):
         v = v and 1 or 0
       v = str(v) and str(v) or ''
-      r += self.get_nolang('f' + str(len(fl) + 1 + len(v)) + ':' + fl + '=') + v
-    return r + self.get_nolang('c' + str(len(content)) + ':') + content
+      r += 'f' + str(len(fl) + 1 + len(v)) + ':' + fl + '=' + v
+    return r + 'c' + str(len(content)) + ':' + content
 
   def footnote_ref(self, key, index):
     return self.get_nolang('[^' + str(index) + ']')
