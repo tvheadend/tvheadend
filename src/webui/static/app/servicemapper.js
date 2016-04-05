@@ -126,6 +126,9 @@ tvheadend.service_mapper0 = function(all)
         beforeShow: all ? function(panel, conf) {
             var form = panel.getForm();
             var services = form.findField('services');
+            services.on('afterrender', function() {
+                services.selectAll();
+            });
             services.store.on('load', function() {
                 services.selectAll();
             });
