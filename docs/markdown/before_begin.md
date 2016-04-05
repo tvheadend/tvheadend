@@ -10,7 +10,7 @@ television signal and extract from it the programme stream. The tuner hardware
 is also responsible for communicating with your satellite dish via the LNB 
 in the case of DVB-S.
 
-* **Network tuners** are small (usually ([arm](https://en.wikipedia.org/wiki/ARM_architecture) based) 
+* **Network tuners** are small (usually [arm](https://en.wikipedia.org/wiki/ARM_architecture) based) 
 computers that you connect to your network via Ethernet or Wifi, they often have a large number of tuners 
 and are controlled via a web interface or software. Many work out-of-the-box with Tvheadend using SAT>IP or the HDHomeRun protocols.
 
