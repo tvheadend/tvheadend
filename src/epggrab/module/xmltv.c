@@ -632,7 +632,7 @@ static int _xmltv_parse_programme
 static int _xmltv_parse_channel
   (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
 {
-  int save =0;
+  int save = 0, chnum = ((epggrab_module_ext_t *)mod)->xmltv_chnum;
   htsmsg_t *attribs, *tags, *subtag;
   const char *id, *name, *icon;
   epggrab_channel_t *ch;
@@ -657,10 +657,10 @@ static int _xmltv_parse_channel
       int n = 0;
 
       name = htsmsg_get_str(subtag, "cdata");
-      if (((epggrab_module_ext_t *)mod)->xmltv_chnum) {
+      if (chnum) {
         while (isdigit(*(name + n))) n++;
         if (n > 0) {
-          if (*(name + n) == 0 || *(name + n) == ' ') {
+          if (*(name + n) == 0 || (*(name + n) == ' ' && chnum == 1)) {
             save |= epggrab_channel_set_number(ch, atoi(name), 0);
             name += n;
             while (*name == ' ') name++;
@@ -753,17 +753,29 @@ static int _xmltv_parse
   N_("Try to obtain channel numbers from the display-name xml tag. " \
      "If the first word is number, it is used as the channel number.")
 
+static htsmsg_t *
+xmltv_dn_chnum_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Disabled"),          0 },
+    { N_("First word"),        1 },
+    { N_("Only digits"),       2 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t epggrab_mod_int_xmltv_class = {
   .ic_super      = &epggrab_mod_int_class,
   .ic_class      = "epggrab_mod_int_xmltv",
   .ic_caption    = N_("Internal XMLTV EPG grabber"),
   .ic_properties = (const property_t[]){
     {
-      .type   = PT_BOOL,
+      .type   = PT_INT,
       .id     = "dn_chnum",
       .name   = DN_CHNUM_NAME,
       .desc   = DN_CHNUM_DESC,
       .off    = offsetof(epggrab_module_int_t, xmltv_chnum),
+      .list   = xmltv_dn_chnum_list,
       .group  = 1
     },
     {}
