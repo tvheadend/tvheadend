@@ -136,17 +136,34 @@ channels so your client can actually request them (i.e. so you can watch
 or record). You can do this in two places:
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
-
-Press the "Map All" button. Note the resultant dialog box that allows you
-to exclude some services from the mapping: this is covered in more detail
-later in this guide. 
-
 **Tvheadend web interface: _Configuration -> Channel/EPG -> Channels_**
 
-Press the "Map Services" button. Again, you can exclude services as you
-can for 'Map All', above.
+#### 6.1. Mapping All
 
-> Any explanation on how a channel can map to multiple services <......>
+  Press the "Map services" button and then "Map all services" from the drop-down. 
+  Note the resultant dialog box that allows you to exclude some services 
+  from the mapping: this is covered in more detail later in this guide. 
+  
+#### 6.2. Mapping Selected
+
+  While holding ctrl (single selection) or shift (to select a range), 
+  Click on the services you would like to map as channels.. 
+    
+  Once you're done selecting, press the "Map services" button and then 
+  "Map selected services" - **be careful not to click on the grid or 
+  you'll lose your selection!**
+    
+  A dialog will then appear with the list of available services and 
+  various other mapping options. 
+    
+  The ticked check boxes [✓] indicate which services will be mapped, 
+  when you're happy with the selection press the "Map services" 
+  button. You will then be taken to the Service Mapper tab which 
+  will begin mapping services to channels. 
+
+  **Tip**: By default Tvheadend will only show a small selection of 
+  available services - you can increase this by using the paging 
+  selector at the bottom right of the page.
 
 > Anything about using bouquets
 ##NOTE: TODO: TEXT REQUIRED
