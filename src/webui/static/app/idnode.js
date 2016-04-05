@@ -936,7 +936,12 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
                        collapsible: conf.nocollapse ? false : true,
                        collapsed: conf.collapsed ? true : false,
                        animCollapse: true,
-                       items: conf.items
+                       items: conf.items,
+                       listeners: {
+                           collapse: function() {
+                               panel.fireEvent('collapse');
+                           }
+                       }
                    });
     }
 
@@ -1042,6 +1047,11 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
     var panel = null;
     var buttons = [];
     var uilevel = _uilevel;
+
+    function shadow() {
+         if (panel.ownerCt.baseCls == "x-window")
+             panel.ownerCt.syncShadow();
+    }
 
     function destroy() {
         panel.removeAll(true);
@@ -1154,6 +1164,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                 destroy();
                 build();
                 panel.getForm().setValues(values);
+                shadow();
             });
             buttons.push('->');
             buttons.push(uilevelBtn);
@@ -1186,7 +1197,12 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         defaultType: 'textfield',
         buttonAlign: 'left',
         autoScroll: true,
-        buttons: buttons
+        buttons: buttons,
+        listeners: {
+            collapse: function() {
+                shadow();
+            }
+        }
     });
 
     build();
