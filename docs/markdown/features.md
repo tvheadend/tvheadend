@@ -26,11 +26,7 @@ on multiple sources).
 
 ####Transcoding Support
 * Subject to your system's capabilities, support for on-the-fly transcoding
-for both live and recorded streams
-* text
-* text
-
-##NOTE: TODO: TEXT REQUIRED
+for both live and recorded streams in various formats.
 
 ####Digital Video Recorder
 * Built in video recorder stores recorded programs as Transport Stream (.ts) or Matroska (.mkv) files.
@@ -66,7 +62,7 @@ be configured based on username/password and/or IP address.
 * Requires a card server (newcamd and capmt protocol is supported).
 
 ####Fully-Integrated with Mainstream Media Players
-* Movian and Kodi are the main targets/
+* Movian and Kodi are the main targets.
 * All channel data, channel groups/tages, EPG and TV streaming is carried over a single TCP connection.
 
 ####Mobile/Remote Client Support
