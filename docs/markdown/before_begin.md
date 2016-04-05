@@ -1,4 +1,4 @@
-##Before you begin
+##Before You Begin
 
 There are some basic concepts that will make life much easier if you 
 understand them from the outset.
