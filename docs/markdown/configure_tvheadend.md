@@ -38,10 +38,11 @@ but they do go out of date as broadcasters move services around and national
 authorities change entire pieces of spectrum. As such, you should try the
 pre-defined values, but you may need to add muxes manually.
 
-* When creating a DVB-S network be sure to set the orbital 
-position of the satellite your dish is pointing at as some satellites 
+* When creating a DVB-S network, be sure to set the orbital 
+position of the satellite your dish is pointing, as some satellites 
 provide additional information related to other nearby satellites that 
 you may not be able to receive.
+
 * Network discovery (enabled by default) increases the likelihood of 
 receiving all available muxes and services.
 
@@ -120,11 +121,11 @@ and language(s), and so on.
   Highlight the network(s) you would like to force scan and then press 
   the "Force Scan" button. 
   
-  Force scanning can take some time, you may continue to
-  use Tvheadend while a scan is in-progress but doing so will increase 
-  the time needed for it to complete - the time needed can vary depending 
-  on a number of factors, the number of available tuners and how many muxes 
-  you have etc.
+  Force scanning can take some time. You may continue to use Tvheadend 
+  while a scan is in progress, but doing so will increase the time 
+  needed for it to complete. Note that the time required can vary 
+  depending on a number of factors, such as how many tuners you 
+  have available and the number of muxes on each.
   
   **Tip**: You may select more than one network by holding ctrl and 
   clicking on additional networks. 
