@@ -39,7 +39,7 @@ authorities change entire pieces of spectrum. As such, you should try the
 pre-defined values, but you may need to add muxes manually.
 
 * When creating a DVB-S network, be sure to set the orbital 
-position of the satellite your dish is pointing, as some satellites 
+position of the satellite to which your dish is pointing, as some satellites 
 provide additional information related to other nearby satellites that 
 you may not be able to receive.
 
