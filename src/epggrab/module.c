@@ -552,7 +552,7 @@ epggrab_module_activate_socket ( void *m, int a )
  * Create a module
  */
 epggrab_module_ext_t *epggrab_module_ext_create
-  ( epggrab_module_ext_t *skel,
+  ( epggrab_module_ext_t *skel, const idclass_t *cls,
     const char *id, const char *saveid,
     const char *name, int priority, const char *sockid,
     int (*parse) (void *m, htsmsg_t *data, epggrab_stats_t *sta),
@@ -566,7 +566,7 @@ epggrab_module_ext_t *epggrab_module_ext_create
   /* Pass through */
   hts_settings_buildpath(path, sizeof(path), "epggrab/%s.sock", sockid);
   epggrab_module_int_create((epggrab_module_int_t*)skel,
-                            &epggrab_mod_ext_class,
+                            cls ?: &epggrab_mod_ext_class,
                             id, saveid, name, priority, path,
                             NULL, parse, trans);
 

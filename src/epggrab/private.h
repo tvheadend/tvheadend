@@ -87,7 +87,7 @@ epggrab_module_int_t *epggrab_module_int_create
  * *************************************************************************/
 
 epggrab_module_ext_t *epggrab_module_ext_create
-  ( epggrab_module_ext_t *skel,
+  ( epggrab_module_ext_t *skel, const idclass_t *cls,
     const char *id, const char *saveid,
     const char *name, int priority,
     const char *sockid,
@@ -188,7 +188,11 @@ size_t freesat_huffman_decode
 
 extern const idclass_t epggrab_mod_class;
 extern const idclass_t epggrab_mod_int_class;
+extern const idclass_t epggrab_mod_int_pyepg_class;
+extern const idclass_t epggrab_mod_int_xmltv_class;
 extern const idclass_t epggrab_mod_ext_class;
+extern const idclass_t epggrab_mod_ext_pyepg_class;
+extern const idclass_t epggrab_mod_ext_xmltv_class;
 extern const idclass_t epggrab_mod_ota_class;
 
 /* **************************************************************************

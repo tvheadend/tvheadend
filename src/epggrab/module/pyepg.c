@@ -458,18 +458,33 @@ static int _pyepg_parse
  * Module Setup
  * ***********************************************************************/
 
+const idclass_t epggrab_mod_int_pyepg_class = {
+  .ic_super      = &epggrab_mod_int_class,
+  .ic_class      = "epggrab_mod_int_pyepg",
+  .ic_caption    = N_("Internal PyEPG grabber"),
+};
+
+
+const idclass_t epggrab_mod_ext_pyepg_class = {
+  .ic_super      = &epggrab_mod_ext_class,
+  .ic_class      = "epggrab_mod_ext_pyepg",
+  .ic_caption    = N_("External PyEPG grabber"),
+};
+
+
 void pyepg_init ( void )
 {
   char buf[256];
 
   /* Internal module */
   if (find_exec("pyepg", buf, sizeof(buf)-1))
-    epggrab_module_int_create(NULL, NULL,
+    epggrab_module_int_create(NULL, &epggrab_mod_int_pyepg_class,
                               "pyepg-internal", "pyepg", "PyEPG", 4, buf,
                               NULL, _pyepg_parse, NULL);
 
   /* External module */
-  epggrab_module_ext_create(NULL, "pyepg", "pyepg", "PyEPG", 4, "pyepg",
+  epggrab_module_ext_create(NULL, &epggrab_mod_ext_pyepg_class,
+                            "pyepg", "pyepg", "PyEPG", 4, "pyepg",
                             _pyepg_parse, NULL);
 }
 

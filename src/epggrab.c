@@ -402,7 +402,11 @@ void epggrab_init ( void )
   idclass_register(&epggrab_class);
   idclass_register(&epggrab_mod_class);
   idclass_register(&epggrab_mod_int_class);
+  idclass_register(&epggrab_mod_int_pyepg_class);
+  idclass_register(&epggrab_mod_int_xmltv_class);
   idclass_register(&epggrab_mod_ext_class);
+  idclass_register(&epggrab_mod_ext_pyepg_class);
+  idclass_register(&epggrab_mod_ext_xmltv_class);
   idclass_register(&epggrab_mod_ota_class);
 
   epggrab_channel_init();

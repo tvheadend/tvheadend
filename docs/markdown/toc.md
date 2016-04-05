@@ -59,8 +59,10 @@ Web Interface Configuration Guide
   - [EPG Grabber](class/epggrab)
   - EPG Grabber Modules
     - [OTA Module](class/epggrab_mod_ota)
-    - [Internal Module](class/epggrab_mod_int)
-    - [External Module](class/epggrab_mod_ext)
+    - [Internal PyEPG](class/epggrab_mod_int_pyepg)
+    - [Internal XMLTV](class/epggrab_mod_int_xmltv)
+    - [External PyEPG](class/epggrab_mod_ext_pyepg)
+    - [External XMLTV](class/epggrab_mod_ext_xmltv)
 
 * Stream
 

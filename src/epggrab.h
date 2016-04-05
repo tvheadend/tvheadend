@@ -172,6 +172,8 @@ struct epggrab_module_int
   const char                   *path;     ///< Path for the command
   const char                   *args;     ///< Extra arguments
 
+  int                           xmltv_chnum;
+
   /* Handle data */
   char*     (*grab)   ( void *mod );
   htsmsg_t* (*trans)  ( void *mod, char *data );
