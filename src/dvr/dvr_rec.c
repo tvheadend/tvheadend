@@ -142,6 +142,9 @@ dvr_rec_subscribe(dvr_entry_t *de)
 
   atomic_set(&de->de_thread_shutdown, 0);
   tvhthread_create(&de->de_thread, NULL, dvr_thread, de, "dvr");
+
+  if (de->de_config->dvr_preproc)
+    dvr_spawn_cmd(de, de->de_config->dvr_preproc, NULL, 1);
   return 0;
 }
 
@@ -1520,34 +1523,39 @@ fin:
  *
  */
 void
-dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename)
+dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
 {
   char buf1[MAX(PATH_MAX, 2048)], *buf2;
   char tmp[MAX(PATH_MAX, 512)];
-  htsmsg_t *info, *e;
+  htsmsg_t *info = NULL, *e;
   htsmsg_field_t *f;
   char **args;
 
-  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
-      (e = htsmsg_field_get_map(f)) != NULL) {
-    if (filename == NULL) {
-      filename = htsmsg_get_str(e, "filename");
-      if (filename == NULL)
-        return;
+  if (!pre) {
+    if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+        (e = htsmsg_field_get_map(f)) != NULL) {
+      if (filename == NULL) {
+        filename = htsmsg_get_str(e, "filename");
+        if (filename == NULL)
+          return;
+      }
+      info = htsmsg_get_list(e, "info");
+    } else {
+      return;
     }
-    info = htsmsg_get_list(e, "info");
-  } else {
-    return;
   }
 
   /* Substitute DVR entry formatters */
-  htsstr_substitute(postcmd, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de, tmp, sizeof(tmp));
+  htsstr_substitute(cmd, buf1, sizeof(buf1), '%', dvr_subs_postproc_entry, de, tmp, sizeof(tmp));
   buf2 = tvh_strdupa(buf1);
   /* Substitute filename formatters */
-  htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename, tmp, sizeof(tmp));
-  buf2 = tvh_strdupa(buf1);
+  if (!pre) {
+    htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_filename, filename, tmp, sizeof(tmp));
+    buf2 = tvh_strdupa(buf1);
+  }
   /* Substitute info formatters */
-  htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_info, info, tmp, sizeof(tmp));
+  if (info)
+    htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_info, info, tmp, sizeof(tmp));
 
   args = htsstr_argsplit(buf1);
   if(args[0])
@@ -1572,5 +1580,5 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
   prch->prch_muxer = NULL;
 
   if(dvr_postproc && dvr_postproc[0])
-    dvr_spawn_postcmd(de, dvr_postproc, NULL);
+    dvr_spawn_cmd(de, dvr_postproc, NULL, 0);
 }

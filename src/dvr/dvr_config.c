@@ -260,6 +260,9 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
   free(cfg->dvr_charset);
   free(cfg->dvr_storage);
   free(cfg->dvr_config_name);
+  free(cfg->dvr_preproc);
+  free(cfg->dvr_postproc);
+  free(cfg->dvr_postremove);
   free(cfg);
 }
 
@@ -1007,6 +1010,16 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The maximum number of recordings that can be scheduled."),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_sched_count),
       .opts     = PO_ADVANCED,
+      .group    = 1,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "preproc",
+      .name     = N_("Pre-processor command"),
+      .desc     = N_("Script/program to be run when a recording starts "
+                     "(service is subscribed but no filename available)."),
+      .off      = offsetof(dvr_config_t, dvr_preproc),
+      .opts     = PO_EXPERT,
       .group    = 1,
     },
     {

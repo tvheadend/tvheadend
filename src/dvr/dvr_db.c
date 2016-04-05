@@ -3337,7 +3337,7 @@ dvr_entry_delete(dvr_entry_t *de)
   struct tm tm;
   const char *filename;
   char *str1, *str2;
-  char tbuf[64], ubuf[UUID_HEX_SIZE], *rdir, *postcmd;
+  char tbuf[64], ubuf[UUID_HEX_SIZE], *rdir, *cmd;
   int r, ret = 0;
 
   t = dvr_entry_get_start_time(de, 1);
@@ -3374,9 +3374,9 @@ dvr_entry_delete(dvr_entry_t *de)
         tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
   	       filename, strerror(-errno));
 
-      postcmd = de->de_config->dvr_postremove;
-      if (postcmd && postcmd[0])
-        dvr_spawn_postcmd(de, postcmd, filename);
+      cmd = de->de_config->dvr_postremove;
+      if (cmd && cmd[0])
+        dvr_spawn_cmd(de, cmd, filename, 0);
       htsmsg_delete_field(m, "filename");
       ret = 1;
     }

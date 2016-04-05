@@ -59,6 +59,7 @@ typedef struct dvr_config {
   uint32_t dvr_autorec_max_sched_count;
   char *dvr_charset;
   char *dvr_charset_id;
+  char *dvr_preproc;
   char *dvr_postproc;
   char *dvr_postremove;
   uint32_t dvr_warm_time;
@@ -596,7 +597,7 @@ htsmsg_t *dvr_entry_class_removal_list ( void *o, const char *lang );
 
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
-void dvr_spawn_postcmd(dvr_entry_t *de, const char *postcmd, const char *filename);
+void dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre);
 
 void dvr_vfs_refresh_entry(dvr_entry_t *de);
 void dvr_vfs_remove_entry(dvr_entry_t *de);
