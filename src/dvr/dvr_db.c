@@ -2809,10 +2809,13 @@ dvr_entry_class_content_type_list(void *o, const char *lang)
   return m;
 }
 
+extern const char *tvh_doc_dvrentry_class[];
+
 const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
-  .ic_caption   = N_("DVR entry"),
+  .ic_caption   = N_("DVR Entry"),
   .ic_event     = "dvrentry",
+  .ic_doc       = tvh_doc_dvrentry_class,
   .ic_changed   = dvr_entry_class_changed,
   .ic_save      = dvr_entry_class_save,
   .ic_get_title = dvr_entry_class_get_title,
@@ -2903,7 +2906,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "channel",
       .name     = N_("Channel"),
-      .desc     = N_("The channel to be used/used for the recording."),
+      .desc     = N_("The channel name the entry will record from."),
       .set      = dvr_entry_class_channel_set,
       .get      = dvr_entry_class_channel_get,
       .rend     = dvr_entry_class_channel_rend,
@@ -2922,7 +2925,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "channelname",
       .name     = N_("Channel name"),
-      .desc     = N_("Name of channel used for the recording."),
+      .desc     = N_("Name of channel the entry recorded from."),
       .get      = dvr_entry_class_channel_name_get,
       .set      = dvr_entry_class_channel_name_set,
       .off      = offsetof(dvr_entry_t, de_channel_name),
