@@ -1830,6 +1830,11 @@ Ext.ux.Window = Ext.extend(Ext.Window, {
     this.keepItVisible(false);
   },
 
+  syncShadow : function() {
+    Ext.Window.superclass.syncShadow.apply(this, arguments);
+    this.keepItVisible(false);
+  },
+
 });
 
 Ext.layout.Column2Layout = Ext.extend(Ext.layout.ColumnLayout, {

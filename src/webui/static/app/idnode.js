@@ -940,6 +940,9 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
                        listeners: {
                            collapse: function() {
                                panel.fireEvent('collapse');
+                           },
+                           expand: function() {
+                               panel.fireEvent('expand');
                            }
                        }
                    });
@@ -1200,6 +1203,9 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         buttons: buttons,
         listeners: {
             collapse: function() {
+                shadow();
+            },
+            expand: function() {
                 shadow();
             }
         }
