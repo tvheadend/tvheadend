@@ -167,8 +167,10 @@ Ext.ux.form.LovCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @private
 	 */
 	,onBeforeQuery:function(qe) {
-	        var d = tvheadend.regexEscape(this.getCheckedDisplay());
-		qe.query = qe.query.replace(new RegExp(d + '[ ' + this.separator + ']*'), '');
+		if (qe.query) {
+		        var d = tvheadend.regexEscape(this.getCheckedDisplay());
+			qe.query = qe.query.replace(new RegExp(d + '[ ' + this.separator + ']*'), '');
+		}
 	} // eo function onBeforeQuery
 	// }}}
 	// {{{
