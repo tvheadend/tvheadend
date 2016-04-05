@@ -773,18 +773,27 @@
 }
 
 .hts-doc-text p {
+    margin-left: 1em;
     margin-top: 1em;
     margin-bottom: 1em;
-    margin-left: 1em
 }
 
 .hts-doc-text h2, h3, h4 {
+    margin-top: 1em;
+    margin-bottom: 1em;
     font-size: larger
 }
 
 .hts-doc-text h4 {
+    margin-top: 1em;
+    margin-bottom: 1em;
     color: #2163A6;
-    margin-top: 15px
+}
+
+.hts-doc-text h5 {
+    margin-top: .7em;
+    margin-bottom: .7em;
+    color: #2163A6;
 }
 
 .hts-doc-text strong {
@@ -812,6 +821,11 @@
     padding-bottom: 10px;
 }
 
+.hts-doc-text ol {
+    list-style-type: arabic;
+    padding-left:3em
+}
+
 .hts-doc-text li {
     padding-top: 5px;
     padding-bottom: 5px;
@@ -825,6 +839,46 @@
 .hts-doc-text ul li {
     padding-top: 0px;
     padding-bottom: 0px
+}
+
+/* Additional image and caption styles for webUI help */
+
+.hts-doc-text img {
+    margin: 0px auto;
+    /* display: block; */
+    border: none;
+    padding: 10px;
+    max-width: 97%
+}
+
+.hts-doc-text p.caption {
+    font-weight: bold;
+    color: #2163A6;
+    font-style: italic;
+    text-align: center;
+    text-decoration: underline
+}
+
+/* Inline/block code styles for webUI help */
+
+.hts-doc-text code {
+    background-color: white;
+    border-color: #E1E4E5;
+    border-style: solid;
+    border-width: 1px;
+    color: darkred;
+    font-family:  'Courier New', Courier, monospace;
+    margin-left: 2em;
+    padding-bottom: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 0px;
+    display: inline-block;
+}
+
+.hts-doc-text p code {
+    margin-left: 0;
+    display: initial;
 }
 
 /* Styles for help TOC */
@@ -889,95 +943,6 @@
 .hts-doc-toc ul li {
     padding-top: 0px;
     padding-bottom: 0px
-}
-
-/* Additional image and caption styles for webUI help */
-
-.hts-doc-text img {
-  margin: 0px auto;
-  /* display: block; */
-  border: none;
-  padding: 10px;
-  max-width: 97%
-}
-
-.hts-doc-text p.caption {
-  font-weight: bold;
-  color: #2163A6;
-  font-style: italic;
-  text-align: center;
-  text-decoration: underline
-}
-
-/* Inline/block code styles for webUI help */
-
-.hts-doc-text code {
-  background-color: white;
-  border-color: #E1E4E5;
-  border-style: solid;
-  border-width: 1px;
-  color: darkred;
-  font-family:  'Courier New', Courier, monospace;
-  padding-bottom: 0px;
-  padding-left: 5px;
-  padding-right: 5px;
-  padding-top: 0px;
-}
-
-/* Admonition styles for webUI help */
-
-.hts-doc-text .admonition {
-  margin: 20px;
-  border: 0px solid;
-  border-left-width: 5px;
-  padding-top: 0px;padding-bottom: 5px
-}
-
-.hts-doc-text .admonition-title {
-  font-size: larger;
-  font-weight: bolder;
-  padding-top: 5px;padding-bottom: 5px;
-  margin: 0px
-}
-
-.hts-doc-text .admonition.note {
-  background-color: #D6EBFF;
-  border-left-color: #4575A6
-}
-
-.hts-doc-text .admonition.note .admonition-title {
-  background-color: #4575A6;
-  color: white
-}
-
-.hts-doc-text .admonition.tip {
-  background-color: #CDF1E9;
-  border-left-color: #1ABC9C
-}
-
-.hts-doc-text .admonition.tip .admonition-title {
-  background-color: #1ABC9C;
-  color: white
-}
-
-.hts-doc-text .admonition.warning {
-  background-color: #FFD0B0; 
-  border-left-color: #FF9147
-}
-
-.hts-doc-text .admonition.warning .admonition-title {
-  background-color: #FF9147;
-  color: white
-}
-
-.hts-doc-text .admonition.danger {
-  background-color: #E8AFAF;
-  border-left-color: #FF3333
-}
-
-.hts-doc-text .admonition.danger .admonition-title {
-  background-color: #FF3333;
-  color: white
 }
 
 .tv-video-idle {

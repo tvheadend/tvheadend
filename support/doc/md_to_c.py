@@ -139,11 +139,13 @@ class TVH_C_Renderer(Renderer):
 
   def list(self, text, ordered=True):
     r = '\n'
+    idx = 1
     while text:
       text, type, t = self.get_block(text)
       if DEBUG: debug('list[' + type + ']: ' + repr(t))
       if type == 'l':
-        r += self.get_nolang(ordered and '# ' or '* ') + t
+        r += self.get_nolang(ordered and str(idx) + '. ' or '* ') + t
+        if ordered: idx += 1
     return r
 
   def list_item(self, text):
@@ -158,8 +160,11 @@ class TVH_C_Renderer(Renderer):
     return 'l' + str(len(text)) + ':' + text
 
   def block_code(self, code, lang=None):
-    return self.get_nolang('```no-highlight') + '\n' + \
-           code + '\n' + self.get_nolang('```') + '\n'
+    if DEBUG: debug('block code: ' + repr(code))
+    r = self.get_nolang('```no-highlight') + '\n'
+    for line in code.splitlines():
+      r += self.get_nolang(line) + '\n'
+    return r + self.get_nolang('```') + '\n'
 
   def block_quote(self, text):
     r = ''

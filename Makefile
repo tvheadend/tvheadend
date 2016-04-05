@@ -696,6 +696,8 @@ src/docs_inc.c: $(BUILDDIR)/docs-timestamp
 
 src/docs_inc.h: $(BUILDDIR)/docs-timestamp
 
+src/docs.c: src/docs_inc.c src/docs_inc.h
+
 $(BUILDDIR)/src/docs.o: $(BUILDDIR)/docs-timestamp $(I18N-DOCS) support/doc/md_to_c.py
 
 # Internationalization
