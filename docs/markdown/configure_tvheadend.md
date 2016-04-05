@@ -120,46 +120,46 @@ and language(s), and so on.
   Highlight the network(s) you would like to force scan and then press 
   the "Force Scan" button. 
   
-  Tip: You may select more than one network by holding ctrl and 
-  clicking on additional networks. 
-  
-  * Force scanning can take some time, you may continue to
+  Force scanning can take some time, you may continue to
   use Tvheadend while a scan is in-progress but doing so will increase 
   the time needed for it to complete - the time needed can vary depending 
   on a number of factors, the number of available tuners and how many muxes 
   you have etc.
+  
+  **Tip**: You may select more than one network by holding ctrl and 
+  clicking on additional networks. 
 
 ### 6. Map Services to Channels
 
 Once scanning for services is complete, you need to map the services to 
 channels so your client can actually request them (i.e. so you can watch
-or record). You can do this in two places:
+or record).
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
-**Tvheadend web interface: _Configuration -> Channel/EPG -> Channels_**
 
 #### 6.1. Mapping All
 
-  Press the "Map services" button and then "Map all services" from the drop-down. 
-  Note the resultant dialog box that allows you to exclude some services 
-  from the mapping: this is covered in more detail later in this guide. 
+  Press the "Map services" button and then "Map all services". 
+  
+  A dialog will then appear with the list of available services and various 
+  other mapping options. The ticked check boxes [✓] indicate which 
+  services will be mapped, when you're happy with the selection press 
+  the "Map services" button. You will then be taken to the Service 
+  Mapper tab which will begin mapping services to channels. 
   
 #### 6.2. Mapping Selected
 
   While holding ctrl (single selection) or shift (to select a range), 
-  Click on the services you would like to map as channels.. 
-    
-  Once you're done selecting, press the "Map services" button and then 
+  click on the services you would like to map as channels. Once you're 
+  done selecting, press the "Map services" button and then 
   "Map selected services" - **be careful not to click on the grid or 
   you'll lose your selection!**
     
   A dialog will then appear with the list of available services and 
-  various other mapping options. 
-    
-  The ticked check boxes [✓] indicate which services will be mapped, 
-  when you're happy with the selection press the "Map services" 
-  button. You will then be taken to the Service Mapper tab which 
-  will begin mapping services to channels. 
+  various other mapping options. The ticked check boxes [✓] indicate 
+  which services will be mapped, when you're happy with the selection 
+  press the "Map services" button. You will then be taken to the 
+  Service Mapper tab which will begin mapping services to channels. 
 
   **Tip**: By default Tvheadend will only show a small selection of 
   available services - you can increase this by using the paging 
