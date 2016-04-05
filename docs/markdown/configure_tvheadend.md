@@ -63,7 +63,7 @@ At this point, your tuners now know what networks to use: one network can
 appear on multiple tuners (many-to-one), and one tuner can have multiple
 networks.
 
-### 4. If Necessary, Manually Add Muxes
+###4. If Necessary, Manually Add Muxes
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Muxes_**
 
@@ -97,7 +97,7 @@ central and northern Europe
 You can also use [dvbscan](http://www.linuxtv.org/wiki/index.php/Dvbscan) to
 force a scan and effectively ask your tuner what it can see.
 
-### 5. Scan for Services
+###5. Scan for Services
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
 
@@ -111,7 +111,7 @@ and language(s), and so on.
 
 (For the technically-minded, these unique identifiers - the elementary streams - are referred to as 'packet identifiers' or 'PIDs').
 
-#### 5.1. Forcing a Scan
+####5.1. Forcing a Scan
 
   You may force a scan by going to:
 
@@ -129,7 +129,7 @@ and language(s), and so on.
   **Tip**: You may select more than one network by holding ctrl and 
   clicking on additional networks. 
 
-### 6. Map Services to Channels
+###6. Map Services to Channels
 
 Once scanning for services is complete, you need to map the services to 
 channels so your client can actually request them (i.e. so you can watch
@@ -137,7 +137,7 @@ or record).
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
 
-#### 6.1. Mapping All
+####6.1. Mapping All
 
   Press the "Map services" button and then "Map all services". 
   
@@ -147,7 +147,7 @@ or record).
   the "Map services" button. You will then be taken to the Service 
   Mapper tab which will begin mapping services to channels. 
   
-#### 6.2. Mapping Selected
+####6.2. Mapping Selected
 
   While holding ctrl (single selection) or shift (to select a range), 
   click on the services you would like to map as channels. Once you're 
@@ -165,8 +165,15 @@ or record).
   available services - you can increase this by using the paging 
   selector at the bottom right of the page.
 
-> Anything about using bouquets
-##NOTE: TODO: TEXT REQUIRED
+####6.3. Bouquets
+
+  **Tvheadend web interface: _Configuration -> Channel / EPG -> Bouquets_**
+
+  Many service providers use bouquets for channel management and just 
+  like a standard set-top box Tvheadend can use these to automatically 
+  manage and keep your channels up-to-date.
+  
+  If you would like to use bouquets see [Bouquets](class/bouquet).
 
 ### 7. Watch TV
 
