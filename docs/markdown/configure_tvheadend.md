@@ -38,7 +38,12 @@ but they do go out of date as broadcasters move services around and national
 authorities change entire pieces of spectrum. As such, you should try the
 pre-defined values, but you may need to add muxes manually.
 
-**TODO: Critical configuration items at this stage: ........**
+* When creating a DVB-S network be sure to set the orbital 
+position of the satellite your dish is pointing at as some satellites 
+provide additional information related to other nearby satellites that 
+you may not be able to receive.
+* Network discovery (enabled by default) increases the likelihood of 
+receiving all available muxes and services.
 
 ###3. Associate the Network with the Respective Tuner(s)
 
@@ -54,8 +59,6 @@ and then associate an HD DVB-T2 (e.g. H.264) network with HD tuners, while
 having a separate SD network associated with an independent SD (e.g. MPEG-2)
 tuner. 
 
-**TODO: Critical configuration items at this stage: ........**
-
 At this point, your tuners now know what networks to use: one network can
 appear on multiple tuners (many-to-one), and one tuner can have multiple
 networks.
@@ -69,13 +72,16 @@ when you set up your initial network. However, should there be any issues,
 this is where you can manually add missing muxes. You only really need to
 worry about this if the pre-defined list didn't work (e.g. because of
 out-of-date data as broadcasters re-arrange their services or because automatic
-detection hasn't successfully found all the muxes over time. 
+detection (network discovery) hasn't successfully found all the muxes over time. 
 
 If you do need to add something manually, you'll need to search the Internet
 for details of the appropriate transmitter and settings: satellites tend not
 to change much and are universal over a large area, but terrestrial muxes
 are typically very localised and you'll need to know which specific transmitter
 you're listening to. 
+
+**Note**: some tuners (or drivers) require more tuning parameters than others so 
+**be sure to enter as many tuning parameters as possible**.
 
 Good sources of transmitter/mux information include:
 
@@ -86,13 +92,10 @@ Good sources of transmitter/mux information include:
 * [Interactive EU DVB-T map](http://www.dvbtmap.eu/mapmux.html) for primarily
 central and northern Europe
 
-> other major sources....?
-##NOTE: TODO: TEXT REQUIRED
+* [Lyngsat](http://www.lyngsat.com/) for worldwide satellite information.
 
 You can also use [dvbscan](http://www.linuxtv.org/wiki/index.php/Dvbscan) to
 force a scan and effectively ask your tuner what it can see.
- 
-**TODO: Critical configuration items at this stage: ........**
 
 ### 5. Scan for Services
 
@@ -106,11 +109,25 @@ on that mux, each of which is identified by a series of unique identifiers
 that describe the audio stream(s), the video stream(s), the subtitle stream(s)
 and language(s), and so on.
 
-(For the technically-minded, these unique identifiers - the elementary streams
-- are referred to as 'packet identifiers' or 'PIDs').
+(For the technically-minded, these unique identifiers - the elementary streams - are referred to as 'packet identifiers' or 'PIDs').
 
-> To force a scan ...
-##NOTE: TODO: TEXT REQUIRED
+#### 5.1. Forcing a Scan
+
+  You may force a scan by going to:
+
+  **Tvheadend web interface: _Configuration -> DVB Inputs -> Networks_**
+
+  Highlight the network(s) you would like to force scan and then press 
+  the "Force Scan" button. 
+  
+  Tip: You may select more than one network by holding ctrl and 
+  clicking on additional networks. 
+  
+  * Force scanning can take some time, you may continue to
+  use Tvheadend while a scan is in-progress but doing so will increase 
+  the time needed for it to complete - the time needed can vary depending 
+  on a number of factors, the number of available tuners and how many muxes 
+  you have etc.
 
 ### 6. Map Services to Channels
 
