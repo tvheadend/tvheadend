@@ -397,7 +397,7 @@ const idclass_t channel_class = {
     },
     {
       .type     = PT_S64,
-      .intsplit = CHANNEL_SPLIT,
+      .intextra = CHANNEL_SPLIT,
       .id       = "number",
       .name     = N_("Number"),
       .desc     = N_("Number. The position the channel will appear on "

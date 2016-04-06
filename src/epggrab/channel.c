@@ -737,7 +737,7 @@ const idclass_t epggrab_channel_class = {
     },
     {
       .type     = PT_S64,
-      .intsplit = CHANNEL_SPLIT,
+      .intextra = CHANNEL_SPLIT,
       .id       = "number",
       .name     = N_("Number"),
       .desc     = N_("Channel number as defined in EPG data."),

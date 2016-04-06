@@ -140,13 +140,13 @@ prop_write_values
         break;
       }
       case PT_U32: {
-        if (p->intsplit) {
+        if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
           char *s;
           if (!(new = htsmsg_field_get_str(f)))
             continue;
-          u32 = atol(new) * p->intsplit;
+          u32 = atol(new) * p->intextra;
           if ((s = strchr(new, '.')) != NULL)
-            u32 += (atol(s + 1) % p->intsplit);
+            u32 += (atol(s + 1) % p->intextra);
         } else {
           if (htsmsg_field_get_u32(f, &u32))
             continue;
@@ -155,10 +155,10 @@ prop_write_values
         break;
       }
       case PT_S64: {
-        if (p->intsplit) {
+        if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
           if (!(new = htsmsg_field_get_str(f)))
             continue;
-          s64 = prop_intsplit_from_str(new, p->intsplit);
+          s64 = prop_intsplit_from_str(new, p->intextra);
         } else {
           if (htsmsg_field_get_s64(f, &s64))
             continue;
@@ -290,9 +290,9 @@ prop_read_value
       htsmsg_add_u32(m, name, *(uint16_t *)val);
       break;
     case PT_U32:
-      if (p->intsplit) {
-        uint32_t maj = *(int64_t *)val / p->intsplit;
-        uint32_t min = *(int64_t *)val % p->intsplit;
+      if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
+        uint32_t maj = *(int64_t *)val / p->intextra;
+        uint32_t min = *(int64_t *)val % p->intextra;
         if (min) {
           snprintf(buf, sizeof(buf), "%u.%u", (unsigned int)maj, (unsigned int)min);
           htsmsg_add_str(m, name, buf);
@@ -302,9 +302,9 @@ prop_read_value
         htsmsg_add_u32(m, name, *(uint32_t *)val);
       break;
     case PT_S64:
-      if (p->intsplit) {
-        int64_t maj = *(int64_t *)val / p->intsplit;
-        int64_t min = *(int64_t *)val % p->intsplit;
+      if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
+        int64_t maj = *(int64_t *)val / p->intextra;
+        int64_t min = *(int64_t *)val % p->intextra;
         if (min) {
           snprintf(buf, sizeof(buf), "%lu.%lu", (unsigned long)maj, (unsigned long)min);
           htsmsg_add_str(m, name, buf);
@@ -511,8 +511,15 @@ prop_serialize_value
     htsmsg_add_u32(m, "group", pl->group);
 
   /* Split integer value */
-  if (pl->intsplit)
-    htsmsg_add_u32(m, "intsplit", pl->intsplit);
+  if (pl->intextra) {
+    if (INTEXTRA_IS_SPLIT(pl->intextra))
+      htsmsg_add_u32(m, "intsplit", pl->intextra);
+    else {
+      htsmsg_add_s32(m, "intmax", INTEXTRA_GET_MAX(pl->intextra));
+      htsmsg_add_s32(m, "intmin", INTEXTRA_GET_MIN(pl->intextra));
+      htsmsg_add_s32(m, "intstep", INTEXTRA_GET_STEP(pl->intextra));
+    }
+  }
 
   /* Data */
   if (obj)

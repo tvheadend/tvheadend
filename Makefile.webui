@@ -69,6 +69,7 @@ CSS_INIT   += $(EXTJSPATH)/resources/css/ext-all-notheme.css
 CSS_DONE   += $(ROOTPATH)/livegrid/resources/css/ext-ux-livegrid.css
 CSS_DONE   += $(EXTJSPATH)/examples/ux/gridfilters/css/GridFilters.css
 CSS_DONE   += $(EXTJSPATH)/examples/ux/gridfilters/css/RangeMenu.css
+CSS_DONE   += $(EXTJSPATH)/examples/ux/css/Spinner.css
 CSS_DONE   += static/xcheckbox/xcheckbox.css
 CSS_DONE   += static/app/ext.css
 
@@ -98,6 +99,8 @@ JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/NumericFilter.js
 JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/filter/StringFilter.js
 JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/ListMenu.js
 JAVASCRIPT += $(EXTJSPATH)/examples/ux/gridfilters/menu/RangeMenu.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/Spinner.js
+JAVASCRIPT += $(EXTJSPATH)/examples/ux/SpinnerField.js
 JAVASCRIPT += $(ROOTPATH)/app/i18n-post.js
 
 #

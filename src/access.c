@@ -1655,7 +1655,7 @@ const idclass_t access_entry_class = {
     },
     {
       .type     = PT_S64,
-      .intsplit = CHANNEL_SPLIT,
+      .intextra = CHANNEL_SPLIT,
       .id       = "channel_min",
       .name     = N_("Minimal channel number"),
       .desc     = N_("Lowest channel number the user can access."),
@@ -1663,7 +1663,7 @@ const idclass_t access_entry_class = {
     },
     {
       .type     = PT_S64,
-      .intsplit = CHANNEL_SPLIT,
+      .intextra = CHANNEL_SPLIT,
       .id       = "channel_max",
       .name     = N_("Maximal channel number"),
       .desc     = N_("Highest channel number the user can access."),

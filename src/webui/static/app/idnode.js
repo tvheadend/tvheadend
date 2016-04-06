@@ -248,6 +248,9 @@ tvheadend.IdNodeField = function(conf)
     this.duration = conf.duration;
     this.date = conf.date;
     this.intsplit = conf.intsplit;
+    this.intmin = conf.intmin;
+    this.intmax = conf.intmax;
+    this.intstep = conf.intstep;
     this.hexa = conf.hexa;
     this.group = conf.group;
     this.lorder = conf.lorder;
@@ -488,8 +491,14 @@ tvheadend.IdNodeField = function(conf)
                     } else if (this.intsplit) {
                         c['maskRe'] = /[0-9\.]/;
                         cons = Ext.form.TextField;
-                    } else
+                    } else if (this.intmin || this.intmax) {
+                        cons = Ext.ux.form.SpinnerField;
+                        c['minValue'] = this.intmin;
+                        c['maxValue'] = this.intmax;
+                        c['incrementValue'] = this.intstep || 1;
+                    } else {
                         cons = Ext.form.NumberField;
+                    }
                     break;
 
                 /* 'str' and 'perm' */
@@ -812,6 +821,18 @@ tvheadend.idnode_editor_field = function(f, conf)
                     maskRe: /[0-9\.]/
                 });
                 break;
+            } else if (f.intmin || f.intmin) {
+               r = new Ext.ux.form.SpinnerField({
+                    fieldLabel: f.caption,
+                    name: f.id,
+                    disabled: d,
+                    width: 300,
+                    value: value,
+                    minValue: f.intmin,
+                    maxValue: f.intmax,
+                    incrementalValue: f.intstep || 1
+               });
+               break;
             }
             r = new Ext.form.NumberField({
                 fieldLabel: f.caption,

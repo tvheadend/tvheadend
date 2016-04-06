@@ -817,8 +817,8 @@ idnode_filter_init
         if (p->type == PT_U32 || p->type == PT_S64 ||
             p->type == PT_TIME) {
           int64_t v = f->u.n.n;
-          if (p->intsplit != f->u.n.intsplit) {
-            v = (v / MIN(1, f->u.n.intsplit)) * p->intsplit;
+          if (INTEXTRA_IS_SPLIT(p->intextra) && p->intextra != f->u.n.intsplit) {
+            v = (v / MIN(1, f->u.n.intsplit)) * p->intextra;
             f->u.n.n = v;
           }
         }

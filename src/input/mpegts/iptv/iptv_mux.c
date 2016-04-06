@@ -170,7 +170,7 @@ const idclass_t iptv_mux_class =
     },
     {
       .type     = PT_S64,
-      .intsplit = CHANNEL_SPLIT,
+      .intextra = CHANNEL_SPLIT,
       .id       = "channel_number",
       .name     = N_("Channel number"),
       .off      = offsetof(iptv_mux_t, mm_iptv_chnum),

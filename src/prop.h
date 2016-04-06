@@ -65,6 +65,18 @@ typedef enum {
 #define PO_PERSIST   (1<<17) // Persistent value (return back on save)
 
 /*
+ * min/max/step helpers
+ */
+#define INTEXTRA_RANGE(min, max, step) \
+  ((1<<31)|(((step)&0x7f)<<24)|(((max)&0xfff)<<12)|((min)&0xfff))
+
+#define INTEXTRA_IS_RANGE(e) (((e) & (1<<31)) != 0)
+#define INTEXTRA_IS_SPLIT(e) !INTEXTRA_IS_RANGE(e)
+#define INTEXTRA_GET_STEP(e) (((e)>>24)&0x7f)
+#define INTEXTRA_GET_MAX(e)  ((e)&(1<<23)?-(((e)>>12)&0x7ff):(((e)>>12)&0x7ff))
+#define INTEXTRA_GET_MIN(e)  ((e)&(1<<11)?-((e)&0x7ff):((e)&0x7ff))
+
+/*
  * Property definition
  */
 typedef struct property {
@@ -76,7 +88,7 @@ typedef struct property {
   uint8_t     group;      ///< Visual group ID (like ExtJS FieldSet)
   size_t      off;        ///< Offset into object
   uint32_t    opts;       ///< Options
-  uint32_t    intsplit;   ///< integer/remainder boundary
+  uint32_t    intextra;   ///< intsplit: integer/remainder boundary or range: min/max/step
 
   /* String based processing */
   const void *(*get)  (void *ptr);

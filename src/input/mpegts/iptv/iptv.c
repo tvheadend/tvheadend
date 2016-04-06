@@ -847,7 +847,7 @@ const idclass_t iptv_auto_network_class = {
     },
     {
       .type     = PT_S64,
-      .intsplit = CHANNEL_SPLIT,
+      .intextra = CHANNEL_SPLIT,
       .id       = "channel_number",
       .name     = N_("Channel numbers from"),
       .off      = offsetof(iptv_network_t, in_channel_number),

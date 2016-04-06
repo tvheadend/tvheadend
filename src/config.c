@@ -2058,6 +2058,7 @@ const idclass_t config_class = {
     },
     {
       .type   = PT_U32,
+      .intextra = INTEXTRA_RANGE(1, 0x7ff, 1),
       .id     = "cookie_expires",
       .name   = N_("Cookie expiration (days)"),
       .desc   = N_("The number of days cookies set by Tvheadend should "
