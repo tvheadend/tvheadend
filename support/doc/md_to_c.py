@@ -23,6 +23,12 @@ DEBUG=False
 
 NOLANG_CHARS=" "
 
+def utf8open(fn, mode):
+  if sys.version_info[0] < 3:
+    return open(fn, mode)
+  else:
+    return open(fn, mode, encoding='utf-8')
+
 def debug(str):
    sys.stderr.write('DEBUG: ' + str + '\n')
 
@@ -399,7 +405,7 @@ name = argv_get('name')
 if not name:
   fatal('Specify class name.')
 
-fp = open(input)
+fp = utf8open(input, 'r')
 text = fp.read(1024*1024*2)
 fp.close()
 
