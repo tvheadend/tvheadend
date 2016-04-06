@@ -541,6 +541,8 @@ ALL-$(CONFIG_DVBSCAN)     += check_dvb_scan
 # Documentation
 #
 
+MD-TO-C    = PYTHONIOENCODING=utf-8 $(PYTHON) support/doc/md_to_c.py
+
 SRCS-yes  += src/docs.c
 I18N-C    += src/docs_inc.c
 I18N-DOCS  = $(wildcard docs/markdown/*.md)
@@ -671,18 +673,18 @@ $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
 	@-rm -f src/docs_inc.c
 	@for i in $(MD-ROOT); do \
 	   echo "Markdown: docs/markdown/$${i}.md"; \
-	   support/doc/md_to_c.py --in="docs/markdown/$${i}.md" \
-	                          --name="tvh_doc_root_$${i}" >> src/docs_inc.c || exit 1; \
+	   $(MD-TO-C) --in="docs/markdown/$${i}.md" \
+	              --name="tvh_doc_root_$${i}" >> src/docs_inc.c || exit 1; \
 	 done
 	@for i in $(MD-CLASS); do \
 	   echo "Markdown: docs/class/$${i}.md"; \
-	   support/doc/md_to_c.py --in="docs/class/$${i}.md" \
-	                          --name="tvh_doc_$${i}_class" >> src/docs_inc.c || exit 1; \
+	   $(MD-TO-C) --in="docs/class/$${i}.md" \
+	              --name="tvh_doc_$${i}_class" >> src/docs_inc.c || exit 1; \
 	 done
 	@for i in $(MD-WIZARD); do \
 	   echo "Markdown: docs/wizard/$${i}.md"; \
-	   support/doc/md_to_c.py --in="docs/wizard/$${i}.md" \
-	                          --name="tvh_doc_wizard_$${i}" >> src/docs_inc.c || exit 1; \
+	   $(MD-TO-C) --in="docs/wizard/$${i}.md" \
+	              --name="tvh_doc_wizard_$${i}" >> src/docs_inc.c || exit 1; \
 	 done
 	@printf "\n\nconst struct tvh_doc_page tvh_doc_markdown_pages[] = {\n" >> src/docs_inc.c
 	@for i in $(MD-ROOT); do \
@@ -802,7 +804,7 @@ $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp: $(ROOTDIR)/data/satellites.xml \
 	@if ! test -s $(ROOTDIR)/data/satellites.xml ; then echo "Put your satellites.xml file to $(ROOTDIR)/data/satellites.xml"; exit 1; fi
 	@if ! test -d $(ROOTDIR)/data/dvb-scan/dvb-s ; then mkdir $(ROOTDIR)/data/dvb-scan/dvb-s ; fi
 	@rm -rf $(ROOTDIR)/data/dvb-scan/dvb-s/*
-	@$(ROOTDIR)/support/sat_xml_scan.py \
+	@PYTHONIOENCODING=utf-8 $(PYTHON) $(ROOTDIR)/support/sat_xml_scan.py \
 		$(ROOTDIR)/data/satellites.xml $(ROOTDIR)/data/dvb-scan/dvb-s
 	@touch $(ROOTDIR)/data/dvb-scan/dvb-s/.stamp
 
