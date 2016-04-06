@@ -662,6 +662,7 @@ const idclass_t tvhlog_conf_class = {
                    "+linuxdvb,+subscriptions,+mpegts)."),
       .get    = tvhlog_class_debugsubs_get,
       .set    = tvhlog_class_debugsubs_set,
+      .opts   = PO_MULTILINE,
       .group  = 1,
     },
     {
@@ -685,7 +686,9 @@ const idclass_t tvhlog_conf_class = {
       .get    = tvhlog_class_tracesubs_get,
       .set    = tvhlog_class_tracesubs_set,
 #if !ENABLE_TRACE
-      .opts   = PO_RDONLY | PO_HIDDEN,
+      .opts   = PO_RDONLY | PO_HIDDEN |  PO_MULTILINE,
+#else
+      .opts   = PO_MULTILINE,
 #endif
       .group  = 1,
     },
