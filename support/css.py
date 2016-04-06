@@ -53,6 +53,8 @@ def url(fn):
       e += p
       p += 4
       url = l[p:e].strip().lstrip()
+      if url and url[0] == "'" and url[-1] == "'":
+        url = url[1:-1]
       if url.startswith('../docresources'):
         url = umangle(url, '../docresources', TVHDIR + '/docs/docresources')
       elif url.startswith('../../docresources'):
