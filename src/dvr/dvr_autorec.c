@@ -978,10 +978,13 @@ dvr_autorec_entry_class_owner_opts(void *o)
   return PO_RDONLY | PO_ADVANCED;
 }
 
+extern const char *tvh_doc_dvrautorec_class[];
+
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
   .ic_caption    = N_("DVR Auto-record entry"),
   .ic_event      = "dvrautorec",
+  .ic_doc        = tvh_doc_dvrautorec_class,
   .ic_changed    = dvr_autorec_entry_class_changed,
   .ic_save       = dvr_autorec_entry_class_save,
   .ic_get_title  = dvr_autorec_entry_class_get_title,

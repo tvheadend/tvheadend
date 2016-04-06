@@ -791,10 +791,13 @@ dvr_config_class_pathname_set(void *o, const void *v)
   return 0;
 }
 
+extern const char *tvh_doc_dvrconfig_class[];
+
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
   .ic_caption    = N_("DVR configuration profile"),
   .ic_event      = "dvrconfig",
+  .ic_doc        = tvh_doc_dvrconfig_class,
   .ic_changed    = dvr_config_class_changed,
   .ic_save       = dvr_config_class_save,
   .ic_get_title  = dvr_config_class_get_title,
