@@ -565,12 +565,15 @@ static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+extern const char *tvh_doc_satip_server_class[];
+
 const idclass_t satip_server_class = {
   .ic_snode      = (idnode_t *)&satip_server_conf,
   .ic_class      = "satip_server",
   .ic_caption    = N_("SAT>IP server"),
   .ic_event      = "satip_server",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_doc        = tvh_doc_satip_server_class,
   .ic_changed    = satip_server_class_changed,
   .ic_groups     = (const property_group_t[]) {
       {

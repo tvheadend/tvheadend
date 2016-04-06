@@ -2051,7 +2051,6 @@ ipblock_entry_class_prefix_get(void *o)
 
 extern const char *tvh_doc_ipblocking_class[];
 
-
 const idclass_t ipblock_entry_class = {
   .ic_class      = "ipblocking",
   .ic_caption    = N_("IP blocking"),

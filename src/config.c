@@ -1965,12 +1965,15 @@ config_muxconfpath_notify ( void *o, const char *lang )
 #endif
 }
 
+extern const char *tvh_doc_config_class[];
+
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
   .ic_class      = "config",
   .ic_caption    = N_("Configuration"),
   .ic_event      = "config",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_doc        = tvh_doc_config_class,
   .ic_save       = config_class_save,
   .ic_groups     = (const property_group_t[]) {
       {

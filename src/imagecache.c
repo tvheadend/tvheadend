@@ -71,12 +71,15 @@ struct imagecache_config imagecache_conf = {
 
 static htsmsg_t *imagecache_save(idnode_t *self, char *filename, size_t fsize);
 
+extern const char *tvh_doc_imagecache_class[];
+
 const idclass_t imagecache_class = {
   .ic_snode      = (idnode_t *)&imagecache_conf,
   .ic_class      = "imagecache",
   .ic_caption    = N_("Image cache"),
   .ic_event      = "imagecache",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_doc        = tvh_doc_imagecache_class,
   .ic_save       = imagecache_save,
   .ic_properties = (const property_t[]){
     {
