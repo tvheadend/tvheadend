@@ -140,7 +140,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     return HTTP_STATUS_NOT_FOUND;
   }
   doc = ic->ic_doc;
-  m = idclass_serialize(ic, lang);
+  m = idclass_serializedoc(ic, lang);
   pthread_mutex_unlock(&global_lock);
   s = htsmsg_get_str(m, "caption");
   if (s) {
@@ -186,22 +186,29 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
       md_text(hq, ": ", "  ", s);
       md_nl(hq, 1);
     }
-    e = htsmsg_get_list(n, "enum");
-    if (e) {
-      HTSMSG_FOREACH(f2, e) {
-        x = htsmsg_field_get_map(f2);
-        if (x) {
-          s = htsmsg_get_str(x, "val");
-        } else {
-          s = htsmsg_field_get_string(f2);
-        }
-        if (s) {
-          md_nl(hq, 1);
-          htsbuf_append(hq, "  * ", 4);
-          md_style(hq, "**", s);
-        }
-      }
+    s = htsmsg_get_str(n, "doc");
+    if (s) {
+      htsbuf_append_str(hq, s);
       md_nl(hq, 1);
+    }
+    if (!htsmsg_get_bool_or_default(n, "doc_nlist", 0)) {
+      e = htsmsg_get_list(n, "enum");
+      if (e) {
+        HTSMSG_FOREACH(f2, e) {
+          x = htsmsg_field_get_map(f2);
+          if (x) {
+            s = htsmsg_get_str(x, "val");
+          } else {
+            s = htsmsg_field_get_string(f2);
+          }
+          if (s) {
+            md_nl(hq, 1);
+            htsbuf_append(hq, "  * ", 4);
+            md_style(hq, "**", s);
+          }
+        }
+        md_nl(hq, 1);
+      }
     }
   }
   htsmsg_destroy(m);

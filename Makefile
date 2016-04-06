@@ -547,9 +547,11 @@ SRCS-yes  += src/docs.c
 I18N-C    += src/docs_inc.c
 I18N-DOCS  = $(wildcard docs/markdown/*.md)
 I18N-DOCS += $(wildcard docs/class/*.md)
+I18N-DOCS += $(wildcard docs/property/*.md)
 I18N-DOCS += $(wildcard docs/wizard/*.md)
 MD-ROOT    = $(patsubst docs/markdown/%.md,%,$(wildcard docs/markdown/*.md))
 MD-CLASS   = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
+MD-PROP    = $(patsubst docs/property/%.md,%,$(wildcard docs/property/*.md))
 MD-WIZARD  = $(patsubst docs/wizard/%.md,%,$(wildcard docs/wizard/*.md))
 
 #
@@ -680,6 +682,11 @@ $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
 	   echo "Markdown: docs/class/$${i}.md"; \
 	   $(MD-TO-C) --in="docs/class/$${i}.md" \
 	              --name="tvh_doc_$${i}_class" >> src/docs_inc.c || exit 1; \
+	 done
+	@for i in $(MD-PROP); do \
+	   echo "Markdown: docs/property/$${i}.md"; \
+	   $(MD-TO-C) --in="docs/property/$${i}.md" \
+	              --name="tvh_doc_$${i}_property" >> src/docs_inc.c || exit 1; \
 	 done
 	@for i in $(MD-WIZARD); do \
 	   echo "Markdown: docs/wizard/$${i}.md"; \

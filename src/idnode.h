@@ -231,8 +231,9 @@ void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmas
 int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 void      idnode_save_check (idnode_t *self, int weak);
 
-#define idclass_serialize(idc, lang) idclass_serialize0(idc, NULL, 0, lang)
-#define idnode_serialize(in, lang)   idnode_serialize0(in, NULL, 0, lang)
+#define idclass_serialize(idc, lang)    idclass_serialize0(idc, NULL, 0, lang)
+#define idclass_serializedoc(idc, lang) idclass_serialize0(idc, NULL, PO_DOC, lang)
+#define idnode_serialize(in, lang)      idnode_serialize0(in, NULL, 0, lang)
 #define idnode_load(in, m)     idnode_write0(in, m, PO_NOSAVE, 0)
 #define idnode_save(in, m)     idnode_read0(in, m, NULL, PO_NOSAVE | PO_USERAW, NULL)
 #define idnode_update(in, m)   idnode_write0(in, m, PO_RDONLY | PO_WRONCE, 1)

@@ -422,6 +422,13 @@ prop_serialize_value
 
   /* Metadata */
   htsmsg_add_str(m, "caption",  tvh_gettext_lang(lang, pl->name));
+  if ((optmask & PO_DOC) && pl->doc) {
+    char *s = pl->doc(pl, lang);
+    if (s) {
+      htsmsg_add_str(m, "doc", s);
+      free(s);
+    }
+  }
   if (pl->desc)
     htsmsg_add_str(m, "description", tvh_gettext_lang(lang, pl->desc));
   if (pl->islist) {
@@ -498,6 +505,8 @@ prop_serialize_value
     htsmsg_add_bool(m, "multiline", 1);
   if (opts & PO_PERSIST)
     htsmsg_add_bool(m, "persistent", 1);
+  if ((optmask & PO_DOC) && (opts & PO_DOC_NLIST))
+    htsmsg_add_bool(m, "doc_nlist", 1);
 
   /* Enum list */
   if (pl->list) {
@@ -566,6 +575,35 @@ prop_serialize
     }
   }
 }
+
+/**
+ *
+ */
+char *
+prop_md_doc(const char **doc, const char *lang)
+{
+  const char *s;
+  char *r = NULL;
+  size_t l = 0;
+
+  for (; *doc; doc++) {
+    if (*doc[0] == '\xff') {
+      s = tvh_gettext_lang(lang, *doc + 1);
+    } else {
+      s = *doc;
+    }
+    if (r == NULL) {
+      r = strdup(s);
+      l = strlen(s);
+    } else {
+      l += strlen(s) + 1;
+      r = realloc(r, l);
+      strcat(r, s);
+    }
+  }
+  return r;
+}
+
 
 /******************************************************************************
  * Editor Configuration

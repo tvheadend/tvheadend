@@ -320,7 +320,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         selected: selected,
         beforeedit: beforeedit,
         help: function() {
-            new tvheadend.help(_('DVR - Upcoming/Current Recordings'), 'dvr_upcoming.html');
+            new tvheadend.mdhelp('class/dvrentry');
         }
     });
 
@@ -461,7 +461,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tbar: [downloadButton, rerecordButton, moveButton],
         selected: selected,
         help: function() {
-            new tvheadend.help(_('DVR - Finished Recordings'), 'dvr_finished.html');
+            new tvheadend.mdhelp('class/dvrentry');
         }
     });
 
@@ -602,7 +602,7 @@ tvheadend.dvr_failed = function(panel, index) {
         tbar: [downloadButton, rerecordButton, moveButton],
         selected: selected,
         help: function() {
-            new tvheadend.help(_('DVR - Failed Recordings'), 'dvr_failed.html');
+            new tvheadend.mdhelp('class/dvrentry');
         }
     });
 
@@ -628,7 +628,7 @@ tvheadend.dvr_settings = function(panel, index) {
         },
         del: true,
         help: function() {
-            new tvheadend.help(_('DVR'), 'config_dvr.html');
+            new tvheadend.mdhelp('class/dvrconfig');
         }
     });
 
@@ -696,7 +696,7 @@ tvheadend.autorec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Autorec'), 'dvr_autorec.html');
+            new tvheadend.mdhelp('class/dvrautorec');
         }
     });
 
@@ -749,7 +749,7 @@ tvheadend.timerec_editor = function(panel, index) {
           direction: 'ASC'
         },
         help: function() {
-            new tvheadend.help(_('DVR Timers'), 'dvr_timerec.html');
+            new tvheadend.mdhelp('class/dvrtimerec');
         }
     });
 

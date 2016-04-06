@@ -63,6 +63,8 @@ typedef enum {
 #define PO_LORDER    (1<<15) // Manage order in lists
 #define PO_MULTILINE (1<<16) // Multiline string
 #define PO_PERSIST   (1<<17) // Persistent value (return back on save)
+#define PO_DOC       (1<<18) // Use doc callback instead description if exists
+#define PO_DOC_NLIST (1<<19) // Do not show list in doc
 
 /*
  * min/max/step helpers
@@ -114,6 +116,9 @@ typedef struct property {
   /* Extended options */
   uint32_t    (*get_opts) (void *ptr);
 
+  /* Documentation callback */
+  char       *(*doc) ( const struct property *prop, const char *lang );
+
   /* Notification callback */
   void        (*notify)   (void *ptr, const char *lang);
 
@@ -143,6 +148,9 @@ static inline int64_t prop_intsplit_from_str(const char *s, int64_t intsplit)
     s64 += (atol(s + 1) % intsplit);
   return s64;
 }
+
+char *
+prop_md_doc(const char **md, const char *lang);
 
 #endif /* __TVH_PROP_H__ */
 
