@@ -20,13 +20,14 @@ Web Interface Guide
 
   - [EPG Grid](epg)
 
-* DVR
+* Digital Video Recorder
 
-  - [Upcoming/Current Recordings](class/dvrentry)
+  - [Upcoming/Current Recordings](dvr_upcoming)
   - [Finished Recordings](class/dvrentry)
   - [Failed Recordings](class/dvrentry)
   - [DVR AutoRec Entries](class/dvrautorec)
   - [Time Schedules (TimeRec)](class/dvrtimerec)
+  - [DVR Entry](class/dvrentry)
 
 Web Interface Configuration Guide
 

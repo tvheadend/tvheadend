@@ -63,7 +63,7 @@ be configured based on username/password and/or IP address.
 
 ####Fully-Integrated with Mainstream Media Players
 * Movian and Kodi are the main targets.
-* All channel data, channel groups/tages, EPG and TV streaming is carried over a single TCP connection.
+* All channel data, channel groups/tags, EPG and TV streaming is carried over a single TCP connection.
 
 ####Mobile/Remote Client Support
 * As well as the web interface, which is accessible through VPN if required, 
