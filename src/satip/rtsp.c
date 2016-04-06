@@ -91,9 +91,10 @@ static void rtsp_free_session(session_t *rs);
 /*
  *
  */
-static int
-rtsp_delsys(int fe, int *findex)
+int
+satip_rtsp_delsys(int fe, int *findex, const char **ftype)
 {
+  const char *t = NULL;
   int res, i;
 
   if (fe < 1)
@@ -102,48 +103,56 @@ rtsp_delsys(int fe, int *findex)
   i = satip_server_conf.satip_dvbs;
   if (fe <= i) {
     res = DVB_SYS_DVBS;
+    t = "DVB-S";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_dvbs2;
   if (fe <= i) {
     res = DVB_SYS_DVBS;
+    t = "DVB-S2";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_dvbt;
   if (fe <= i) {
     res = DVB_SYS_DVBT;
+    t = "DVB-T";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_dvbt2;
   if (fe <= i) {
     res = DVB_SYS_DVBT;
+    t = "DVB-T2";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_dvbc;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
+    t = "DVB-C";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_dvbc2;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_A;
+    t = "DVB-C2";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_atsc_t;
   if (fe <= i) {
     res = DVB_SYS_ATSC;
+    t = "ATSC-T";
     goto result;
   }
   fe -= i;
   i = satip_server_conf.satip_atsc_c;
   if (fe <= i) {
     res = DVB_SYS_DVBC_ANNEX_B;
+    t = "ATSC-C";
     goto result;
   }
   pthread_mutex_unlock(&global_lock);
@@ -151,6 +160,8 @@ rtsp_delsys(int fe, int *findex)
 result:
   pthread_mutex_unlock(&global_lock);
   *findex = i;
+  if (ftype)
+    *ftype = t;
   return res;
 }
 
@@ -896,9 +907,11 @@ rtsp_parse_cmd
   rs = rtsp_find_session(hc, stream);
 
   if (fe > 0) {
-    delsys = rtsp_delsys(fe, &findex);
-    if (delsys == DVB_SYS_NONE)
+    delsys = satip_rtsp_delsys(fe, &findex, NULL);
+    if (delsys == DVB_SYS_NONE) {
+      tvherror("satips", "fe=%d does not exist", fe);
       goto end;
+    }
   } else {
     delsys = msys;
   }

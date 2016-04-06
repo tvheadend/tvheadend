@@ -82,6 +82,8 @@ void satip_rtp_close(void *id);
 void satip_rtp_init(int boot);
 void satip_rtp_done(void);
 
+int satip_rtsp_delsys(int fe, int *findex, const char **ftype);
+
 void satip_server_rtsp_init(const char *bindaddr, int port,
                             int descramble, int rewrite_pmt, int muxcnf,
                             const char *nat_ip);

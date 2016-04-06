@@ -522,6 +522,9 @@ static void satips_rtsp_port(int def)
 
 static void satip_server_info(const char *prefix, int descramble, int muxcnf)
 {
+  int fe, findex;
+  const char *ftype;
+
   tvhinfo("satips", "SAT>IP Server %sinitialized "
                     "(HTTP %s:%d, RTSP %s:%d, "
                     "descramble %d, muxcnf %d)",
@@ -529,15 +532,11 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
               http_server_ip, http_server_port,
               http_server_ip, satip_server_rtsp_port,
               descramble, muxcnf);
-  tvhinfo("satips", "SAT>IP Server tuners: DVB-T/T2 %d/%d, DVB-S/S2 %d/%d, DVB-C/C2 %d/%d, ATSC-T/C %d/%d",
-              satip_server_conf.satip_dvbt,
-              satip_server_conf.satip_dvbt2,
-              satip_server_conf.satip_dvbs,
-              satip_server_conf.satip_dvbs2,
-              satip_server_conf.satip_dvbc,
-              satip_server_conf.satip_dvbc2,
-              satip_server_conf.satip_atsc_t,
-              satip_server_conf.satip_atsc_c);
+  for (fe = 1; fe <= 128; fe++) {
+    if (satip_rtsp_delsys(fe, &findex, &ftype) == DVB_TYPE_NONE)
+      break;
+    tvhinfo("satips", "  tuner[fe=%d]: %s #%d", fe, ftype, findex);
+  }
 }
 
 /*
