@@ -1897,11 +1897,14 @@ passwd_entry_class_password2_set(void *o, const void *v)
   return 0;
 }
 
+extern const char *tvh_doc_passwd_class[];
+
 const idclass_t passwd_entry_class = {
   .ic_class      = "passwd",
   .ic_caption    = N_("Passwords"),
   .ic_event      = "passwd",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_doc        = tvh_doc_passwd_class,
   .ic_save       = passwd_entry_class_save,
   .ic_get_title  = passwd_entry_class_get_title,
   .ic_delete     = passwd_entry_class_delete,
@@ -2046,11 +2049,15 @@ ipblock_entry_class_prefix_get(void *o)
   return &ret;
 }
 
+extern const char *tvh_doc_ipblocking_class[];
+
+
 const idclass_t ipblock_entry_class = {
   .ic_class      = "ipblocking",
   .ic_caption    = N_("IP blocking"),
   .ic_event      = "ipblocking",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_doc        = tvh_doc_ipblocking_class,
   .ic_save       = ipblock_entry_class_save,
   .ic_get_title  = ipblock_entry_class_get_title,
   .ic_delete     = ipblock_entry_class_delete,
