@@ -142,9 +142,7 @@ endif
 
 ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 CFLAGS  += -I$(BUILDDIR)/hdhomerun
-LDFLAGS += \
-    $(BUILDDIR)/hdhomerun/libhdhomerun/libhdhomerun.a \
-    -L$(BUILDDIR)/hdhomerun/libhdhomerun
+LDFLAGS += $(BUILDDIR)/hdhomerun/libhdhomerun/libhdhomerun.a
 endif
 
 vpath %.c $(ROOTDIR)
