@@ -19,13 +19,11 @@ playing. Note, the *Play* links do not link to an actual file but to a m3u playl
 
 ###2. Downloading a Recording
 
-Highlight the desired entry then press the *[Download]* button on the 
-menu bar.
+Highlight the desired entry then press the *[Download]* button on the menu bar.
 
 ###3. Re-recording an Entry/Re-schedule a Failed Recording
 
-You can re-schedule an entry by pressing the *[Re-record]* button on  
-the menu bar.
+You can re-schedule an entry by pressing the *[Re-record]* button on the menu bar.
 
 **Note**: Your EPG data must have another matching event to be able to re-schedule 
 the entry.
@@ -38,8 +36,7 @@ button from the menu bar.
 
 ###5. Deleting an Entry
 
-Highlight the desired entry(s) then press the *[Delete]* button on the 
-menu bar. 
+Highlight the desired entry(s) then press the *[Delete]* button on the menu bar. 
 
 **Deleting an entry cannot be undone. You 
 will be prompted to confirm deletion.**
