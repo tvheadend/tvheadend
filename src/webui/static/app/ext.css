@@ -945,6 +945,12 @@
     padding-bottom: 0px
 }
 
+.hts-doc-text a {
+    cursor: pointer;
+    text-decoration: underline;
+    color:blue;
+}
+
 .tv-video-idle {
     background-image     : url(../../static/img/logobig.png);
     background-repeat    : no-repeat;
