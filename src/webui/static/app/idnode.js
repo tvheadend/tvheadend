@@ -337,7 +337,7 @@ tvheadend.IdNodeField = function(conf)
             props.xtype = 'checkcolumn';
             props.renderer = Ext.ux.grid.CheckColumn.prototype.renderer;
         }
-        
+
         return props;
     };
 
@@ -347,7 +347,7 @@ tvheadend.IdNodeField = function(conf)
             return function(v) {
                 return '<span class="tvh-grid-unset">********</span>';
             }
-            
+
         if (this.type === 'time') {
             if (this.duration)
                 return function(v) {
@@ -426,7 +426,7 @@ tvheadend.IdNodeField = function(conf)
             disabled: d,
             width: 300
         };
-        
+
         /* ComboBox */
         if (this['enum']) {
 
@@ -459,7 +459,7 @@ tvheadend.IdNodeField = function(conf)
                 c['forceSelection'] = false;
                 c['triggerAction'] = 'all';
                 c['emptyText'] = _('Select {0} ...').replace('{0}', this.text);
-                
+
                 combo = true;
             }
 
@@ -730,14 +730,14 @@ tvheadend.idnode_editor_field = function(f, conf)
         }
 
         /* TODO: listeners for regexp?
-         listeners       : { 
+         listeners       : {
          keyup: function() {
          this.store.filter('val', this.getRawValue(), true, false);
          },
          beforequery: function(queryEvent) {
          queryEvent.combo.onLoad();
          // prevent doQuery from firing and clearing out my filter.
-         return false; 
+         return false;
          }
          }
          */
@@ -821,7 +821,7 @@ tvheadend.idnode_editor_field = function(f, conf)
                     maskRe: /[0-9\.]/
                 });
                 break;
-            } else if (f.intmin || f.intmin) {
+            } else if (f.intmin || f.intmax) {
                r = new Ext.ux.form.SpinnerField({
                     fieldLabel: f.caption,
                     name: f.id,
@@ -1010,7 +1010,7 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
                     p = newFieldSet({ title: m.name });
                     mfs[number] = p;
                 }
-                cfs[number] = p;                    
+                cfs[number] = p;
             }
         }
         for (var number in groups) {
@@ -1080,7 +1080,7 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
     function destroy() {
         panel.removeAll(true);
     }
-    
+
     function build() {
         var c = {
             showpwd: conf.showpwd,
@@ -1287,10 +1287,10 @@ tvheadend.idnode_editor_win = function(_uilevel, conf)
         uuids = [];
         for (var i = 0; i < r.length; i++)
             uuids.push(r[i].id);
-            
+
         params['uuid'] = r[0].id;
     }
-        
+
     params['meta'] = 1;
 
     conf.win = null;
@@ -1468,7 +1468,7 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
             }
         });
         buttons.push(abuttons.save);
-        
+
         abuttons.apply = new Ext.Button({
             tooltip: _('Apply settings'),
             text: _('Apply'),
@@ -2500,7 +2500,7 @@ tvheadend.idnode_form_grid = function(panel, conf)
             },
             items: [grid]
         });
-        
+
         dpanel.add(mpanel);
         dpanel.doLayout(false, true);
 
@@ -2880,7 +2880,7 @@ tvheadend.idnode_simple = function(panel, conf)
                align: 'stretch'
             }
         });
-        
+
         dpanel.add(mpanel);
         dpanel.doLayout(false, true);
 
