@@ -15,17 +15,18 @@ playing. Note, the *Play* links do not link to an actual file but to a m3u playl
 
 ###2. Downloading a Recording
 
-Highlight the desired entry then press the *[Download]* button from the 
+Highlight the desired entry then press the *[Download]* button on the 
 menu bar.
 
 ###3. Editing an Entry
 
-You can edit an entry by clicking the *[Edit]* button from the menu bar, 
+You can edit an entry by clicking the *[Edit]* button on the menu bar, 
 note that not all [DVR Entry](class/dvrentry) fields can be edited.
 
 ###4. Deleting an Entry.
 
-Highlight the desired entry(s) then press the *[Delete]* button. 
+Highlight the desired entry(s) then press the *[Delete]* button on the 
+menu bar. 
 
 **Deleting an entry cannot be undone. You 
 will be prompted to confirm deletion.**
