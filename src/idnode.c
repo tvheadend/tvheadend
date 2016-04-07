@@ -1925,14 +1925,18 @@ save_thread ( void *aux )
  * *************************************************************************/
 
 void
-idnode_init(void)
+idnode_boot(void)
 {
   RB_INIT(&idnodes);
   RB_INIT(&idclasses);
   RB_INIT(&idrootclasses);
   TAILQ_INIT(&idnodes_save);
-
   tvh_cond_init(&save_cond);
+}
+
+void
+idnode_init(void)
+{
   atomic_set(&save_running, 1);
   tvhthread_create(&save_tid, NULL, save_thread, NULL, "save");
 }

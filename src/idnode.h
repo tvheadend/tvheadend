@@ -192,6 +192,7 @@ typedef LIST_HEAD(,idnode_filter_ele) idnode_filter_t;
 extern idnode_t tvhlog_conf;
 extern const idclass_t tvhlog_conf_class;
 
+void idnode_boot(void);
 void idnode_init(void);
 void idnode_done(void);
 
