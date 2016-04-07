@@ -22,7 +22,7 @@ playing. Note, the *Play* links do not link to an actual file but to a m3u playl
 Highlight the desired entry then press the *[Download]* button from the 
 menu bar.
 
-###3. Re-recording an Entry/Re-schedule a Failed Recording.
+###3. Re-recording an Entry/Re-schedule a Failed Recording
 
 You can re-schedule an entry by pressing the *[Re-record]* button from 
 the menu bar.
