@@ -2153,7 +2153,7 @@ dvr_entry_class_start_extra_opts(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && !dvr_entry_is_editable(de))
     return PO_RDONLY | PO_DURATION | PO_ADVANCED;
-  return PO_DURATION | PO_ADVANCED;
+  return PO_DURATION | PO_ADVANCED | PO_DOC_NLIST;
 }
 
 static int
@@ -2809,11 +2809,18 @@ dvr_entry_class_content_type_list(void *o, const char *lang)
   return m;
 }
 
+static char *
+dvr_entry_prop_status_doc(const struct property *p, const char *lang)
+{    
+    extern const char *tvh_doc_dvr_status_property[];
+    return prop_md_doc(tvh_doc_dvr_status_property, lang);
+}
+
 extern const char *tvh_doc_dvrentry_class[];
 
 const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
-  .ic_caption   = N_("DVR Entry"),
+  .ic_caption   = N_("DVR Entries"),
   .ic_event     = "dvrentry",
   .ic_doc       = tvh_doc_dvrentry_class,
   .ic_changed   = dvr_entry_class_changed,
@@ -2882,7 +2889,7 @@ const idclass_t dvr_entry_class = {
                      "stop time."),
       .off      = offsetof(dvr_entry_t, de_stop_extra),
       .list     = dvr_entry_class_extra_list,
-      .opts     = PO_SORTKEY | PO_ADVANCED,
+      .opts     = PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_TIME,
@@ -2917,7 +2924,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "channel_icon",
       .name     = N_("Channel icon"),
-      /*.desc     = N_("Channel icon URL."),*/
+      .desc     = N_("Channel icon URL."),
       .get      = dvr_entry_class_channel_icon_url_get,
       .opts     = PO_HIDDEN | PO_RDONLY | PO_NOSAVE | PO_NOUI,
     },
@@ -2990,7 +2997,7 @@ const idclass_t dvr_entry_class = {
       .def.i    = DVR_PRIO_NORMAL,
       .set      = dvr_entry_class_pri_set,
       .list     = dvr_entry_class_pri_list,
-      .opts     = PO_SORTKEY,
+      .opts     = PO_SORTKEY | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
@@ -3000,7 +3007,7 @@ const idclass_t dvr_entry_class = {
       .off      = offsetof(dvr_entry_t, de_retention),
       .def.i    = DVR_RET_DVRCONFIG,
       .list     = dvr_entry_class_retention_list,
-      .opts     = PO_HIDDEN | PO_EXPERT
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
@@ -3010,7 +3017,7 @@ const idclass_t dvr_entry_class = {
       .off      = offsetof(dvr_entry_t, de_removal),
       .def.i    = DVR_RET_DVRCONFIG,
       .list     = dvr_entry_class_removal_list,
-      .opts     = PO_HIDDEN | PO_ADVANCED
+      .opts     = PO_HIDDEN | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -3046,7 +3053,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "filename",
       .name     = N_("Filename"),
-      /*.desc   = N_("Filename used by this entry."), */
+      .desc     = N_("Filename used by the entry."),
       .get      = dvr_entry_class_filename_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
     },
@@ -3054,7 +3061,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "directory",
       .name     = N_("Directory"),
-      /*.desc   = N_("Directory used by this entry."), */
+      .desc     = N_("Directory used by the entry."),
       .off      = offsetof(dvr_entry_t, de_directory),
       .opts     = PO_RDONLY | PO_NOUI,
     },
@@ -3062,7 +3069,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_U32,
       .id       = "errorcode",
       .name     = N_("Error code"),
-      /*.desc   = N_("Error code of entry."), */
+      .desc     = N_("Error code of entry."),
       .off      = offsetof(dvr_entry_t, de_last_error),
       .opts     = PO_RDONLY | PO_NOUI,
     },
@@ -3205,6 +3212,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_STR,
       .id       = "status",
       .name     = N_("Status"),
+      .doc      = dvr_entry_prop_status_doc,
       .desc     = N_("The recording/entry status."),
       .get      = dvr_entry_class_status_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_LOCALE,
