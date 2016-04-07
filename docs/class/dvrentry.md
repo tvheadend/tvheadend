@@ -2,13 +2,13 @@ DVR entries are used by Tvheadend to keep track of upcoming, finished and failed
 
 !['Digital Video Recorder' Tabs](docresources/configdvrtabs4.png)
 
----
-
   * Upcoming and currently recording entries remain in the [Upcoming/Current Recordings](dvr_upcoming) tab.
  
   * When a recording completes successfully the entry is moved to the [Finished Recordings](dvr_finished) tab.
 
   * When a recording fails or gets aborted the entry is moved to the [Failed Recordings](dvr_failed) tab.
+  
+---
   
 The *Details* column gives a quick overview as to the status of each 
 entry:
