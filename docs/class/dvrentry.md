@@ -16,8 +16,11 @@ entry:
 Icon                                       | Description
 -------------------------------------------|-------------
 ![Clock icon](icons/scheduled.png)         | the program is scheduled (upcoming)
-![Recording icon](icons/rec.png)           | the program is active and underway (current)
-![Information icon](icons/information.png) | click to display detailed information about the selected recording (upcoming or current)
+![Recording icon](icons/rec.png)           | recording of the program is active and underway (current)
+![Information icon](icons/information.png) | click to display detailed information about the selected recording
+![Exclamation icon](icons/exclamation.png) | the program failed to record
+![Accept icon](icons/accept.png)           | the program recorded successfully
+
   
 **Note**: Some entry details are not available/incomplete until the recording 
 completes or fails, e.g. filesize, total data errors, etc.
