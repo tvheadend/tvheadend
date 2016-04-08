@@ -194,17 +194,20 @@ static const char *
 http_rc2str(int code)
 {
   switch(code) {
-  case HTTP_STATUS_OK:              return "OK";
-  case HTTP_STATUS_PARTIAL_CONTENT: return "Partial Content";
-  case HTTP_STATUS_FOUND:           return "Found";
-  case HTTP_STATUS_BAD_REQUEST:     return "Bad Request";
-  case HTTP_STATUS_UNAUTHORIZED:    return "Unauthorized";
-  case HTTP_STATUS_NOT_FOUND:       return "Not Found";
-  case HTTP_STATUS_UNSUPPORTED:     return "Unsupported Media Type";
-  case HTTP_STATUS_BANDWIDTH:       return "Not Enough Bandwidth";
-  case HTTP_STATUS_BAD_SESSION:     return "Session Not Found";
-  case HTTP_STATUS_HTTP_VERSION:    return "HTTP/RTSP Version Not Supported";
-  default:
+  case HTTP_STATUS_OK:              /* 200 */ return "OK";
+  case HTTP_STATUS_PARTIAL_CONTENT: /* 206 */ return "Partial Content";
+  case HTTP_STATUS_FOUND:           /* 302 */ return "Found";
+  case HTTP_STATUS_BAD_REQUEST:     /* 400 */ return "Bad Request";
+  case HTTP_STATUS_UNAUTHORIZED:    /* 401 */ return "Unauthorized";
+  case HTTP_STATUS_FORBIDDEN:       /* 403 */ return "Forbidden";
+  case HTTP_STATUS_NOT_FOUND:       /* 404 */ return "Not Found";
+  case HTTP_STATUS_NOT_ALLOWED:     /* 405 */ return "Method Not Allowed";
+  case HTTP_STATUS_UNSUPPORTED:     /* 415 */ return "Unsupported Media Type";
+  case HTTP_STATUS_BANDWIDTH:       /* 453 */ return "Not Enough Bandwidth";
+  case HTTP_STATUS_BAD_SESSION:     /* 454 */ return "Session Not Found";
+  case HTTP_STATUS_INTERNAL:        /* 500 */ return "Internal Server Error";
+  case HTTP_STATUS_HTTP_VERSION:    /* 505 */ return "HTTP/RTSP Version Not Supported";
+default:
     return "Unknown Code";
     break;
   }
