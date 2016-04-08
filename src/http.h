@@ -149,6 +149,8 @@ typedef struct http_connection {
 
   char *hc_username;
   char *hc_password;
+  char *hc_authhdr;
+  char *hc_nonce;
   access_t *hc_access;
 
   struct config_head *hc_user_config;

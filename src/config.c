@@ -1631,6 +1631,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   memset(&config, 0, sizeof(config));
   config.idnode.in_class = &config_class;
   config.ui_quicktips = 1;
+  config.digest = 1;
+  config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
   config.dscp = -1;
@@ -1751,6 +1753,7 @@ void config_done ( void )
   free(config.language);
   free(config.language_ui);
   free(config.theme_ui);
+  free(config.realm);
   free(config.info_area);
   free(config.muxconf_path);
   free(config.chicon_path);
@@ -2056,6 +2059,17 @@ const idclass_t config_class = {
       .name   = N_("User interface quick tips"),
       .desc   = N_("Allow to show the quick tips for the form fields."),
       .off    = offsetof(config_t, ui_quicktips),
+      .opts   = PO_ADVANCED,
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "digest",
+      .name   = N_("Use HTTP digest authentication"),
+      .desc   = N_("Digest access authentication is intended as a security trade-off. "
+                   "It is intended to replace unencrypted HTTP basic access authentication. "
+                   "This option should be enabled for the standard usage."),
+      .off    = offsetof(config_t, digest),
       .opts   = PO_ADVANCED,
       .group  = 1
     },

@@ -2907,11 +2907,31 @@ struct {
  * *************************************************************************/
 
 /**
+ *
+ */
+struct htsp_verify_struct {
+  const uint8_t *digest;
+  const uint8_t *challenge;
+};
+
+static int
+htsp_verify_callback(void *aux, const char *passwd)
+{
+  struct htsp_verify_struct *v = aux;
+  uint8_t d[20];
+
+  if (v->digest == NULL || v->challenge == NULL) return 0;
+  sha1_calc(d, (uint8_t *)passwd, strlen(passwd), v->challenge, 32);
+  return memcmp(d, v->digest, 20) == 0;
+}
+
+/**
  * Raise privs by field in message
  */
 static int
 htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 {
+  struct htsp_verify_struct vs;
   const char *username;
   const void *digest;
   size_t digestlen;
@@ -2923,8 +2943,10 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
   if(!htsmsg_get_bin(m, "digest", &digest, &digestlen)) {
 
-    rights = access_get_hashed(username, digest, htsp->htsp_challenge,
-                               (struct sockaddr *)htsp->htsp_peer);
+    vs.digest = digest;
+    vs.challenge = htsp->htsp_challenge;
+    rights = access_get((struct sockaddr *)htsp->htsp_peer, username,
+                        htsp_verify_callback, &vs);
 
     if (rights->aa_rights == 0) {
       tvhlog(LOG_INFO, "htsp", "%s: Unauthorized access", htsp->htsp_logname);

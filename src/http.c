@@ -30,6 +30,7 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
+#include <openssl/md5.h>
 
 #include "tvheadend.h"
 #include "tcp.h"
@@ -219,6 +220,77 @@ static const char *cachemonths[12] = {
 };
 
 /**
+ * Digest authentication helpers
+ */
+typedef struct http_nonce {
+  RB_ENTRY(http_nonce) link;
+  mtimer_t expire;
+  char nonce[MD5_DIGEST_LENGTH*2+1];
+} http_nonce_t;
+
+static RB_HEAD(, http_nonce) http_nonces;
+
+static int
+http_nonce_cmp(const void *a, const void *b)
+{
+  return strcmp(((http_nonce_t *)a)->nonce, ((http_nonce_t *)b)->nonce);
+}
+
+static void
+http_nonce_timeout(void *aux)
+{
+  struct http_nonce *n = aux;
+  RB_REMOVE(&http_nonces, n, link);
+  free(n);
+}
+
+static char *
+http_get_nonce(void)
+{
+  struct http_nonce *n = calloc(1, sizeof(*n));
+  char stamp[16], *m;
+  int64_t mono = getmonoclock();
+  mono ^= 0xa1687211885fcd30;
+  snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
+  m = md5sum(stamp, 1);
+  strcpy(n->nonce, m);
+  pthread_mutex_lock(&global_lock);
+  RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp);
+  mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(10));
+  pthread_mutex_unlock(&global_lock);
+  return m;
+}
+
+static char *
+http_find_nonce(const char *nonce)
+{
+  struct http_nonce *n, tmp;
+
+  if (nonce == NULL)
+    return NULL;
+  strcpy(tmp.nonce, nonce);
+  pthread_mutex_lock(&global_lock);
+  n = RB_FIND(&http_nonces, &tmp, link, http_nonce_cmp);
+  pthread_mutex_unlock(&global_lock);
+  if (n) {
+    pthread_mutex_lock(&global_lock);
+    mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(2*60));
+    pthread_mutex_unlock(&global_lock);
+    return n->nonce;
+  }
+  return NULL;
+}
+
+static char *
+http_get_opaque(const char *realm, const char *nonce)
+{
+  char *a = alloca(strlen(realm) + strlen(nonce) + 1);
+  strcpy(a, realm);
+  strcat(a, nonce);
+  return md5sum(a, 1);
+}
+
+/**
  * Transmit a HTTP reply
  */
 void
@@ -276,8 +348,28 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     htsbuf_qprintf(&hdrs, "Cache-Control: max-age=%d\r\n", maxage);
   }
 
-  if(rc == HTTP_STATUS_UNAUTHORIZED)
-    htsbuf_append_str(&hdrs, "WWW-Authenticate: Basic realm=\"tvheadend\"\r\n");
+  if(rc == HTTP_STATUS_UNAUTHORIZED) {
+    const char *realm = config.realm;
+    if (realm == NULL || realm[0] == '\0')
+      realm = "tvheadend";
+    if (config.digest) {
+      if (hc->hc_nonce == NULL)
+        hc->hc_nonce = http_get_nonce();
+      char *opaque = http_get_opaque(realm, hc->hc_nonce);
+      htsbuf_append_str(&hdrs, "WWW-Authenticate: Digest realm=\"");
+      htsbuf_append_str(&hdrs, realm);
+      htsbuf_append_str(&hdrs, "\", qop=\"auth, auth-int\", nonce=\"");
+      htsbuf_append_str(&hdrs, hc->hc_nonce);
+      htsbuf_append_str(&hdrs, "\", opaque=\"");
+      htsbuf_append_str(&hdrs, opaque);
+      htsbuf_append_str(&hdrs, "\"\r\n");
+      free(opaque);
+    } else {
+      htsbuf_append_str(&hdrs, "WWW-Authenticate: Basic realm=\"");
+      htsbuf_append_str(&hdrs, realm);
+      htsbuf_append_str(&hdrs, "\"\r\n");
+    }
+  }
   if (hc->hc_logout_cookie == 1) {
     htsbuf_append_str(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
   } else if (hc->hc_logout_cookie == 2) {
@@ -364,6 +456,41 @@ http_encoding_valid(http_connection_t *hc, const char *encoding)
     tok = strtok_r(NULL, ",", &saveptr);
   }
   return 0;
+}
+
+/**
+ *
+ */
+static char *
+http_get_header_value(const char *hdr, const char *name)
+{
+  char *tokbuf, *tok, *saveptr = NULL, *q, *s;
+
+  tokbuf = tvh_strdupa(hdr);
+  tok = strtok_r(tokbuf, ",", &saveptr);
+  while (tok) {
+    while (*tok == ' ')
+      tok++;
+    if ((q = strchr(tok, '=')) == NULL)
+      goto next;
+    *q = '\0';
+    if (strcasecmp(tok, name))
+      goto next;
+    s = q + 1;
+    if (*s == '"') {
+      q = strchr(++s, '"');
+      if (q)
+        *q = '\0';
+    } else {
+      q = strchr(s, ' ');
+      if (q)
+        *q = '\0';
+    }
+    return strdup(s);
+next:
+    tok = strtok_r(NULL, ",", &saveptr);
+  }
+  return NULL;
 }
 
 /**
@@ -549,11 +676,127 @@ http_access_verify_ticket(http_connection_t *hc)
 }
 
 /**
+ *
+ */
+struct http_verify_structure {
+  char *password;
+  char *d_ha1;
+  char *d_all;
+  char *d_response;
+};
+
+static int
+http_verify_callback(void *aux, const char *passwd)
+{
+   struct http_verify_structure *v = aux;
+   char ha1[512];
+   char all[1024];
+   char *m;
+   int res;
+
+   if (v->d_ha1) {
+     snprintf(ha1, sizeof(ha1), "%s:%s", v->d_ha1, passwd);
+     m = md5sum(ha1, 1);
+     snprintf(all, sizeof(all), "%s:%s", m, v->d_all);
+     free(m);
+     m = md5sum(all, 1);
+     res = strcmp(m, v->d_response) == 0;
+     free(m);
+     return res;
+   }
+   if (v->password == NULL) return 0;
+   return strcmp(v->password, passwd) == 0;
+}
+
+/**
+ *
+ */
+static int
+http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
+{
+  memset(v, 0, sizeof(*v));
+  if (hc->hc_authhdr) {
+
+    if (hc->hc_nonce == NULL)
+      return -1;
+
+    const char *method = http_cmd2str(hc->hc_cmd);
+    char *response = http_get_header_value(hc->hc_authhdr, "response");
+    char *qop = http_get_header_value(hc->hc_authhdr, "qop");
+    char *uri = http_get_header_value(hc->hc_authhdr, "uri");
+    char *realm = NULL, *nonce_count = NULL, *cnonce = NULL, *m = NULL;
+    char all[1024];
+    int res = -1;
+
+    if (qop == NULL || uri == NULL)
+      goto end;
+     
+    if (strcasecmp(qop, "auth-int") == 0) {
+      m = md5sum(hc->hc_post_data ?: "", 1);
+      snprintf(all, sizeof(all), "%s:%s:%s", method, uri, m);
+      free(m);
+      m = NULL;
+    } else if (strcasecmp(qop, "auth") == 0) {
+      snprintf(all, sizeof(all), "%s:%s", method, uri);
+    } else {
+      goto end;
+    }
+
+    m = md5sum(all, 1);
+    if (qop == NULL || *qop == '\0') {
+      snprintf(all, sizeof(all), "%s:%s", hc->hc_nonce, m);
+      goto set;
+    } else {
+      realm = http_get_header_value(hc->hc_authhdr, "realm");
+      nonce_count = http_get_header_value(hc->hc_authhdr, "nc");
+      cnonce = http_get_header_value(hc->hc_authhdr, "cnonce");
+      if (realm == NULL || nonce_count == NULL || cnonce == NULL) {
+        goto end;
+      } else {
+        snprintf(all, sizeof(all), "%s:%s:%s:%s:%s",
+                 hc->hc_nonce, nonce_count, cnonce, qop, m);
+set:
+        v->d_all = strdup(all);
+        snprintf(all, sizeof(all), "%s:%s", hc->hc_username, realm);
+        v->d_ha1 = strdup(all);
+        v->d_response = response;
+        response = NULL;
+      }
+    }
+    res = 0;
+end:
+    free(response);
+    free(qop);
+    free(uri);
+    free(realm);
+    free(nonce_count);
+    free(cnonce);
+    free(m);
+    return res;
+  } else {
+    v->password = hc->hc_password;
+  }
+  return 0;
+}
+
+/*
+ *
+ */
+static void
+http_verify_free(struct http_verify_structure *v)
+{
+  free(v->d_ha1);
+  free(v->d_all);
+  free(v->d_response);
+}
+
+/**
  * Return non-zero if no access
  */
 int
 http_access_verify(http_connection_t *hc, int mask)
 {
+  struct http_verify_structure v;
   int res = -1;
 
   http_access_verify_ticket(hc);
@@ -562,8 +805,11 @@ http_access_verify(http_connection_t *hc, int mask)
 
   if (res) {
     access_destroy(hc->hc_access);
-    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                               (struct sockaddr *)hc->hc_peer);
+    if (http_verify_prepare(hc, &v))
+      return -1;
+    hc->hc_access = access_get((struct sockaddr *)hc->hc_peer, hc->hc_username,
+                               http_verify_callback, &v);
+    http_verify_free(&v);
     if (hc->hc_access)
       res = access_verify2(hc->hc_access, mask);
   }
@@ -578,6 +824,7 @@ int
 http_access_verify_channel(http_connection_t *hc, int mask,
                            struct channel *ch)
 {
+  struct http_verify_structure v;
   int res = -1;
 
   assert(ch);
@@ -592,8 +839,11 @@ http_access_verify_channel(http_connection_t *hc, int mask,
 
   if (res) {
     access_destroy(hc->hc_access);
-    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                               (struct sockaddr *)hc->hc_peer);
+    if (http_verify_prepare(hc, &v))
+      return -1;
+    hc->hc_access = access_get((struct sockaddr *)hc->hc_peer, hc->hc_username,
+                               http_verify_callback, &v);
+    http_verify_free(&v);
     if (hc->hc_access) {
       res = access_verify2(hc->hc_access, mask);
 
@@ -799,6 +1049,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   hc->hc_representative = hc->hc_peer_ipstr;
   hc->hc_username = NULL;
   hc->hc_password = NULL;
+  hc->hc_authhdr  = NULL;
   hc->hc_session  = NULL;
 
   /* Set keep-alive status */
@@ -837,14 +1088,37 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   /* Extract authorization */
   if((v = http_arg_get(&hc->hc_args, "Authorization")) != NULL) {
     if((n = http_tokenize(v, argv, 2, -1)) == 2) {
-      n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
-      if (n < 0)
-        n = 0;
-      authbuf[n] = 0;
-      if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
-        hc->hc_username = tvh_strdupa(argv[0]);
-        hc->hc_password = tvh_strdupa(argv[1]);
-        // No way to actually track this
+      if (strcasecmp(argv[0], "basic") == 0) {
+        n = base64_decode((uint8_t *)authbuf, argv[1], sizeof(authbuf) - 1);
+        if (n < 0)
+          n = 0;
+        authbuf[n] = 0;
+        if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
+          hc->hc_username = tvh_strdupa(argv[0]);
+          hc->hc_password = tvh_strdupa(argv[1]);
+          // No way to actually track this
+        }
+      } else if (strcasecmp(argv[0], "digest") == 0) {
+        v = http_get_header_value(argv[1], "nonce");
+        if (v == NULL || http_find_nonce(v) == NULL) {
+          http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+          free(v);
+          return -1;
+        }
+        if (hc->hc_nonce && strcmp(hc->hc_nonce, v) != 0) {
+          http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+          free(v);
+          return -1;
+        }
+        free(hc->hc_nonce);
+        hc->hc_nonce = v;
+        v = http_get_header_value(argv[1], "username");
+        hc->hc_authhdr  = tvh_strdupa(argv[1]);
+        hc->hc_username = tvh_strdupa(v);
+        free(v);
+      } else {
+        http_error(hc, HTTP_STATUS_BAD_REQUEST);
+        return -1;
       }
     }
   }
@@ -1159,7 +1433,7 @@ http_serve_requests(http_connection_t *hc)
 
     free(hc->hc_post_data);
     hc->hc_post_data = NULL;
-
+    
     http_arg_flush(&hc->hc_args);
     http_arg_flush(&hc->hc_req_args);
 
@@ -1175,6 +1449,10 @@ http_serve_requests(http_connection_t *hc)
 error:
   free(hdrline);
   free(cmdline);
+
+  free(hc->hc_nonce);
+  hc->hc_nonce = NULL;
+
 }
 
 
@@ -1230,6 +1508,7 @@ http_server_init(const char *bindaddr)
     .stop   = NULL,
     .cancel = http_cancel
   };
+  RB_INIT(&http_nonces);
   http_server = tcp_server_create("http", "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
   atomic_set(&http_server_running, 1);
 }
@@ -1244,6 +1523,7 @@ void
 http_server_done(void)
 {
   http_path_t *hp;
+  http_nonce_t *n;
 
   pthread_mutex_lock(&global_lock);
   atomic_set(&http_server_running, 0);
@@ -1257,5 +1537,10 @@ http_server_done(void)
     free(hp);
   }
   pthread_mutex_unlock(&http_paths_mutex);
+  while ((n = RB_FIRST(&http_nonces)) != NULL) {
+    mtimer_disarm(&n->expire);
+    RB_REMOVE(&http_nonces, n, link);
+    free(n);
+  }
   pthread_mutex_unlock(&global_lock);
 }

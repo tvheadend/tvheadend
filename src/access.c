@@ -49,14 +49,9 @@ const char *superuser_password;
 
 int access_noacl;
 
-static int passwd_verify(const char *username, const char *passwd);
-static int passwd_verify2(const char *username, const char *passwd,
+static int passwd_verify(const char *username, verify_callback_t verify, void *aux);
+static int passwd_verify2(const char *username, verify_callback_t verify, void *aux,
                           const char *username2, const char *passwd2);
-static int passwd_verify_digest(const char *username, const uint8_t *digest,
-                                const uint8_t *challenge);
-static int passwd_verify_digest2(const char *username, const uint8_t *digest,
-                                 const uint8_t *challenge,
-                                 const char *username2, const char *passwd2);
 
 /**
  *
@@ -358,59 +353,6 @@ access_ip_blocked(struct sockaddr *src)
   return 0;
 }
 
-/**
- *
- */
-int
-access_verify(const char *username, const char *password,
-	      struct sockaddr *src, uint32_t mask)
-{
-  uint32_t bits = 0;
-  access_entry_t *ae;
-  int match = 0, nouser = username == NULL || username[0] == '\0';
-
-  if (access_noacl)
-    return 0;
-
-  if (access_ip_blocked(src))
-    return -1;
-
-  if (!passwd_verify2(username, password,
-                      superuser_username, superuser_password))
-    return 0;
-
-  if (passwd_verify(username, password))
-    username = NULL;
-
-  TAILQ_FOREACH(ae, &access_entries, ae_link) {
-
-    if(!ae->ae_enabled)
-      continue;
-
-    if(ae->ae_username[0] != '*') {
-      /* acl entry requires username to match */
-      if(username == NULL || strcmp(username, ae->ae_username))
-	continue; /* Didn't get one */
-    }
-
-    if(!netmask_verify(&ae->ae_ipmasks, src))
-      continue; /* IP based access mismatches */
-
-    if (ae->ae_username[0] != '*')
-      match = 1;
-
-    bits |= ae->ae_rights;
-  }
-
-  /* Username was not matched - no access */
-  if (!match && !nouser)
-    bits = 0;
-
-  return (mask & ACCESS_OR) ?
-         ((mask & bits) ? 0 : -1) :
-         ((mask & bits) == mask ? 0 : -1);
-}
-
 /*
  *
  */
@@ -624,7 +566,6 @@ access_update(access_t *a, access_entry_t *ae)
 }
 
 /**
- *
  */
 static void
 access_set_lang_ui(access_t *a)
@@ -646,7 +587,7 @@ access_set_lang_ui(access_t *a)
  *
  */
 access_t *
-access_get(const char *username, const char *password, struct sockaddr *src)
+access_get(struct sockaddr *src, const char *username, verify_callback_t verify, void *aux)
 {
   access_t *a = access_alloc();
   access_entry_t *ae;
@@ -655,16 +596,16 @@ access_get(const char *username, const char *password, struct sockaddr *src)
   if (!access_noacl && access_ip_blocked(src))
     return a;
 
-  if (!passwd_verify(username, password)) {
+  if (!passwd_verify(username, verify, aux)) {
     a->aa_username = strdup(username);
     a->aa_representative = strdup(username);
-    if(!passwd_verify2(username, password,
+    if(!passwd_verify2(username, verify, aux,
                        superuser_username, superuser_password))
       return access_full(a);
   } else {
     a->aa_representative = malloc(50);
     tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
-    if(!passwd_verify2(username, password,
+    if(!passwd_verify2(username, verify, aux,
                        superuser_username, superuser_password))
       return access_full(a);
     username = NULL;
@@ -689,72 +630,6 @@ access_get(const char *username, const char *password, struct sockaddr *src)
 
     if(ae->ae_username[0] != '*')
       a->aa_match = 1;
-
-    access_update(a, ae);
-  }
-
-  /* Username was not matched - no access */
-  if (!a->aa_match) {
-    free(a->aa_username);
-    a->aa_username = NULL;
-    if (!nouser)
-      a->aa_rights = 0;
-  }
-
-  access_set_lang_ui(a);
-
-  if (tvhtrace_enabled())
-    access_dump_a(a);
-  return a;
-}
-
-/**
- *
- */
-access_t *
-access_get_hashed(const char *username, const uint8_t digest[20],
-		  const uint8_t *challenge, struct sockaddr *src)
-{
-  access_t *a = access_alloc();
-  access_entry_t *ae;
-  int nouser = username == NULL || username[0] == '\0';
-
-  if (!access_noacl && access_ip_blocked(src))
-    return a;
-
-  if (!passwd_verify_digest(username, digest, challenge)) {
-    a->aa_username = strdup(username);
-    a->aa_representative = strdup(username);
-    if(!passwd_verify_digest2(username, digest, challenge,
-                              superuser_username, superuser_password))
-      return access_full(a);
-  } else {
-    a->aa_representative = malloc(50);
-    tcp_get_str_from_ip((struct sockaddr*)src, a->aa_representative, 50);
-    if(!passwd_verify_digest2(username, digest, challenge,
-                              superuser_username, superuser_password))
-      return access_full(a);
-    username = NULL;
-  }
-
-  if(access_noacl)
-    return access_full(a);
-
-  TAILQ_FOREACH(ae, &access_entries, ae_link) {
-
-    if(!ae->ae_enabled)
-      continue;
-
-    if(!netmask_verify(&ae->ae_ipmasks, src))
-      continue; /* IP based access mismatches */
-
-    if(ae->ae_username[0] != '*') {
-
-      if (username == NULL || strcmp(username, ae->ae_username))
-        continue;
-
-      a->aa_match = 1;
-    }
 
     access_update(a, ae);
   }
@@ -1716,62 +1591,30 @@ const idclass_t access_entry_class = {
 static int passwd_entry_class_password_set(void *o, const void *v);
 
 static int
-passwd_verify_digest2(const char *username, const uint8_t *digest,
-                      const uint8_t *challenge,
-                      const char *username2, const char *passwd2)
+passwd_verify2
+  (const char *username, verify_callback_t verify, void *aux,
+   const char *username2, const char *passwd2)
 {
-  uint8_t d[20];
-
   if (username == NULL || username[0] == '\0' ||
       username2 == NULL || username2[0] == '\0' ||
-      passwd2 == NULL || passwd2[0] == '\0')
+      passwd2 == NULL)
     return -1;
 
   if (strcmp(username, username2))
     return -1;
 
-  sha1_calc(d, (uint8_t *)passwd2, strlen(passwd2), challenge, 32);
-
-  return memcmp(d, digest, 20) ? -1 : 0;
+  return verify(aux, passwd2) ? 0 : -1;
 }
 
 static int
-passwd_verify_digest(const char *username, const uint8_t *digest,
-                     const uint8_t *challenge)
+passwd_verify
+  (const char *username, verify_callback_t verify, void *aux)
 {
   passwd_entry_t *pw;
 
   TAILQ_FOREACH(pw, &passwd_entries, pw_link)
     if (pw->pw_enabled &&
-        !passwd_verify_digest2(username, digest, challenge,
-                               pw->pw_username, pw->pw_password))
-      return 0;
-  return -1;
-}
-
-static int
-passwd_verify2(const char *username, const char *passwd,
-               const char *username2, const char *passwd2)
-{
-  if (username == NULL || username[0] == '\0' ||
-      username2 == NULL || username2[0] == '\0' ||
-      passwd == NULL || passwd2 == NULL)
-    return -1;
-
-  if (strcmp(username, username2))
-    return -1;
-
-  return strcmp(passwd, passwd2) ? -1 : 0;
-}
-
-static int
-passwd_verify(const char *username, const char *passwd)
-{
-  passwd_entry_t *pw;
-
-  TAILQ_FOREACH(pw, &passwd_entries, pw_link)
-    if (pw->pw_enabled &&
-        !passwd_verify2(username, passwd,
+        !passwd_verify2(username, verify, aux,
                         pw->pw_username, pw->pw_password))
       return 0;
   return -1;

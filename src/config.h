@@ -33,6 +33,8 @@ typedef struct config {
   int uilevel;
   int uilevel_nochange;
   int ui_quicktips;
+  int digest;
+  char *realm;
   char *wizard;
   char *full_version;
   char *server_name;

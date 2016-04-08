@@ -239,9 +239,6 @@ access_get_theme(access_t *a);
  *
  * Return 0 if access is granted, -1 otherwise
  */
-int access_verify(const char *username, const char *password,
-		  struct sockaddr *src, uint32_t mask);
-
 static inline int access_verify2(access_t *a, uint32_t mask)
   { return (mask & ACCESS_OR) ?
       ((a->aa_rights & mask) ? 0 : -1) :
@@ -252,15 +249,10 @@ int access_verify_list(htsmsg_t *list, const char *item);
 /**
  * Get the access structure
  */
-access_t *access_get(const char *username, const char *password,
-                     struct sockaddr *src);
+typedef int (*verify_callback_t)(void *aux, const char *passwd);
 
-/**
- *
- */
-access_t *
-access_get_hashed(const char *username, const uint8_t digest[20],
-		  const uint8_t *challenge, struct sockaddr *src);
+access_t *access_get(struct sockaddr *src, const char *username,
+                     verify_callback_t verify, void *aux);
 
 /**
  *

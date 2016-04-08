@@ -803,7 +803,7 @@ uint32_t sbuf_peek_u32be(sbuf_t *sb, int off);
 static inline  int32_t sbuf_peek_s32be(sbuf_t *sb, int off) { return sbuf_peek_u32be(sb, off); }
 static inline uint8_t *sbuf_peek(sbuf_t *sb, int off) { return sb->sb_data + off; }
 
-char *md5sum ( const char *str );
+char *md5sum ( const char *str, int lowercase );
 
 int makedirs ( const char *subsys, const char *path, int mode, int mstrict, gid_t gid, uid_t uid );
 
