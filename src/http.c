@@ -278,7 +278,7 @@ http_nonce_exists(const char *nonce)
   struct http_nonce *n, tmp;
 
   if (nonce == NULL)
-    return NULL;
+    return 0;
   strcpy(tmp.nonce, nonce);
   pthread_mutex_lock(&global_lock);
   n = RB_FIND(&http_nonces, &tmp, link, http_nonce_cmp);
