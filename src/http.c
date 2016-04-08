@@ -248,21 +248,29 @@ static char *
 http_get_nonce(void)
 {
   struct http_nonce *n = calloc(1, sizeof(*n));
-  char stamp[16], *m;
-  int64_t mono = getmonoclock();
-  mono ^= 0xa1687211885fcd30;
-  snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
-  m = md5sum(stamp, 1);
-  strcpy(n->nonce, m);
-  pthread_mutex_lock(&global_lock);
-  RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp);
-  mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(10));
-  pthread_mutex_unlock(&global_lock);
+  char stamp[32], *m;
+  int64_t mono;
+
+  while (1) {
+    mono = getmonoclock();
+    mono ^= 0xa1687211885fcd30;
+    snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
+    m = md5sum(stamp, 1);
+    strcpy(n->nonce, m);
+    pthread_mutex_lock(&global_lock);
+    if (RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp)) {
+      pthread_mutex_unlock(&global_lock);
+      continue; /* get unique md5 */
+    }
+    mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(10));
+    pthread_mutex_unlock(&global_lock);
+    break;
+  }
   return m;
 }
 
-static char *
-http_find_nonce(const char *nonce)
+static int
+http_nonce_exists(const char *nonce)
 {
   struct http_nonce *n, tmp;
 
@@ -271,14 +279,13 @@ http_find_nonce(const char *nonce)
   strcpy(tmp.nonce, nonce);
   pthread_mutex_lock(&global_lock);
   n = RB_FIND(&http_nonces, &tmp, link, http_nonce_cmp);
-  pthread_mutex_unlock(&global_lock);
   if (n) {
-    pthread_mutex_lock(&global_lock);
     mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(2*60));
     pthread_mutex_unlock(&global_lock);
-    return n->nonce;
+    return 1;
   }
-  return NULL;
+  pthread_mutex_unlock(&global_lock);
+  return 0;
 }
 
 static char *
@@ -535,11 +542,17 @@ void
 http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
+  int level;
 
   if (!atomic_get(&http_server_running)) return;
 
   if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED)
-    tvhlog(error < 400 ? LOG_INFO : LOG_ERR, "http", "%s: %s %s %s -- %d",
+    level = LOG_INFO;
+    if (error == HTTP_STATUS_UNAUTHORIZED)
+      level = LOG_DEBUG;
+    else if (error == HTTP_STATUS_BAD_REQUEST || error > HTTP_STATUS_UNAUTHORIZED)
+      level = LOG_ERR;
+    tvhlog(level, "http", "%s: %s %s %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, error);
 
@@ -683,6 +696,7 @@ struct http_verify_structure {
   char *d_ha1;
   char *d_all;
   char *d_response;
+  http_connection_t *hc;
 };
 
 static int
@@ -760,6 +774,7 @@ set:
         snprintf(all, sizeof(all), "%s:%s", hc->hc_username, realm);
         v->d_ha1 = strdup(all);
         v->d_response = response;
+        v->hc = hc;
         response = NULL;
       }
     }
@@ -1100,7 +1115,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
         }
       } else if (strcasecmp(argv[0], "digest") == 0) {
         v = http_get_header_value(argv[1], "nonce");
-        if (v == NULL || http_find_nonce(v) == NULL) {
+        if (v == NULL || !http_nonce_exists(v)) {
           http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           free(v);
           return -1;

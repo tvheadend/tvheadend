@@ -470,9 +470,10 @@ sbuf_read(sbuf_t *sb, int fd)
 char *
 md5sum ( const char *str, int lowercase )
 {
-  int i;
-  static unsigned char md5[MD5_DIGEST_LENGTH];
+  uint8_t md5[MD5_DIGEST_LENGTH];
   char *ret = malloc((MD5_DIGEST_LENGTH * 2) + 1);
+  int i;
+
   MD5((const unsigned char*)str, strlen(str), md5);
   for (i = 0; i < MD5_DIGEST_LENGTH; i++)
     sprintf(&ret[i*2], lowercase ? "%02x" : "%02X", md5[i]);
