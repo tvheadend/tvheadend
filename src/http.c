@@ -365,7 +365,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
       char *opaque = http_get_opaque(realm, hc->hc_nonce);
       htsbuf_append_str(&hdrs, "WWW-Authenticate: Digest realm=\"");
       htsbuf_append_str(&hdrs, realm);
-      htsbuf_append_str(&hdrs, "\", qop=\"auth, auth-int\", nonce=\"");
+      htsbuf_append_str(&hdrs, "\", qop=\"auth\", nonce=\"");
       htsbuf_append_str(&hdrs, hc->hc_nonce);
       htsbuf_append_str(&hdrs, "\", opaque=\"");
       htsbuf_append_str(&hdrs, opaque);
