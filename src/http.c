@@ -1433,7 +1433,7 @@ http_serve_requests(http_connection_t *hc)
 
     free(hc->hc_post_data);
     hc->hc_post_data = NULL;
-    
+
     http_arg_flush(&hc->hc_args);
     http_arg_flush(&hc->hc_req_args);
 

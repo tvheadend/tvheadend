@@ -1012,6 +1012,7 @@ access_entry_destroy(access_entry_t *ae, int delconf)
   free(ae->ae_comment);
   free(ae->ae_lang);
   free(ae->ae_lang_ui);
+  free(ae->ae_theme);
   free(ae);
 }
 
