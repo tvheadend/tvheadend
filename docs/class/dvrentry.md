@@ -8,10 +8,13 @@ DVR entries are used by Tvheadend to keep track of upcoming, finished and failed
 
   * When a recording fails or gets aborted the entry is moved to the [Failed Recordings](dvr_failed) tab.
   
+  
+**Note**: Some entry details are not available/incomplete until the recording 
+completes or fails, e.g. filesize, total data errors, etc.
+
 ---
   
-The *Details* column gives a quick overview as to the status of each 
-entry:
+**Details** : Gives a quick overview as to the status of each entry.
 
 Icon                                       | Description
 -------------------------------------------|-------------
@@ -20,8 +23,4 @@ Icon                                       | Description
 ![Information icon](icons/information.png) | click to display detailed information about the selected recording
 ![Exclamation icon](icons/exclamation.png) | the program failed to record
 ![Accept icon](icons/accept.png)           | the program recorded successfully
-
-  
-**Note**: Some entry details are not available/incomplete until the recording 
-completes or fails, e.g. filesize, total data errors, etc.
 

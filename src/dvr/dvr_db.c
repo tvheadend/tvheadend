@@ -2816,12 +2816,27 @@ dvr_entry_prop_status_doc(const struct property *p, const char *lang)
     return prop_md_doc(tvh_doc_dvr_status_property, lang);
 }
 
+static char *
+dvr_entry_prop_start_extra_doc(const struct property *p, const char *lang)
+{
+    extern const char *tvh_doc_dvr_start_extra_property[];
+    return prop_md_doc(tvh_doc_dvr_start_extra_property, lang);
+}
+
+static char *
+dvr_entry_prop_dvr_stop_extra_doc(const struct property *p, const char *lang)
+{
+    extern const char *tvh_doc_dvr_stop_extra_property[];
+    return prop_md_doc(tvh_doc_dvr_stop_extra_property, lang);
+}
+
 extern const char *tvh_doc_dvrentry_class[];
 
 const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
   .ic_caption   = N_("DVR Entries"),
   .ic_event     = "dvrentry",
+  /*.ic_doc       = tvh_doc_dvrentry_class,*/
   .ic_doc       = tvh_doc_dvrentry_class,
   .ic_changed   = dvr_entry_class_changed,
   .ic_save      = dvr_entry_class_save,
@@ -2851,13 +2866,8 @@ const idclass_t dvr_entry_class = {
       .id       = "start_extra",
       .name     = N_("Pre-recording padding"),
       .desc     = N_("Start recording earlier than the "
-                     "EPG/timer-defined start time by x minutes: for "
-                     "example, if a program is to start at 13:00 and "
-                     "you set a padding of 5 minutes, it will start "
-                     "recording at 12:54:30 (including a warm-up time "
-                     "of 30 seconds). If this isn't specified, any "
-                     "pre-recording padding as set in the channel or "
-                     "DVR profile will be used."),
+                     "EPG/timer-defined start time by x minutes."),
+      .doc      = dvr_entry_prop_start_extra_doc,
       .off      = offsetof(dvr_entry_t, de_start_extra),
       .set      = dvr_entry_class_start_extra_set,
       .list     = dvr_entry_class_extra_list,
@@ -2867,9 +2877,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "start_real",
       .name     = N_("Scheduled start time"),
-      .desc     = N_("The scheduled start time, including any "
-                     "pre-recording padding and a warm-up time of 30 "
-                     "seconds."),
+      .desc     = N_("The scheduled start time, including any padding."),
       .get      = dvr_entry_class_start_real_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
@@ -2877,7 +2885,8 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "stop",
       .name     = N_("Stop time"),
-      .desc     = N_("The time the entry stops/stopped being recorded."),
+      .desc     = N_("The time the entry stops/stopped being recorded, "
+                     "including any padding."),
       .set      = dvr_entry_class_stop_set,
       .off      = offsetof(dvr_entry_t, de_stop),
     },
@@ -2887,6 +2896,7 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Post-recording padding"),
       .desc     = N_("Continue recording for x minutes after scheduled "
                      "stop time."),
+      .doc      = dvr_entry_prop_dvr_stop_extra_doc,
       .off      = offsetof(dvr_entry_t, de_stop_extra),
       .list     = dvr_entry_class_extra_list,
       .opts     = PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
@@ -2895,17 +2905,15 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "stop_real",
       .name     = N_("Scheduled stop time"),
-      .desc     = N_("The scheduled stop time including any post-recording "
-                     "padding."),
+      .desc     = N_("The scheduled stop time."),
       .get      = dvr_entry_class_stop_real_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
     {
       .type     = PT_TIME,
       .id       = "duration",
-      .name     = N_("Duration"),
-      .desc     = N_("The total recording time including pre- and post-"
-                     "recording padding."),
+      .name     = N_("Scheduled Duration"),
+      .desc     = N_("The total scheduled duration."),
       .get      = dvr_entry_class_duration_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_DURATION,
     },
