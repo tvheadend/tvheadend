@@ -111,7 +111,11 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   }
 
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
-  assert(bq2 == NULL);
+  if (bq2) {
+    tvherror("bouquet", "found duplicate source id: '%s', remove duplicate config", bq->bq_src);
+    free(bq);
+    return NULL;
+  }
 
   bq->bq_saveflag = 1;
 
@@ -1236,7 +1240,8 @@ bouquet_init(void)
     HTSMSG_FOREACH(f, c) {
       if (!(m = htsmsg_field_get_map(f))) continue;
       bq = bouquet_create(f->hmf_name, m, NULL, NULL);
-      bq->bq_saveflag = 0;
+      if (bq)
+        bq->bq_saveflag = 0;
     }
     htsmsg_destroy(c);
   }
