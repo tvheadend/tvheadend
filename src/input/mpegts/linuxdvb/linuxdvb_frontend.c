@@ -1107,7 +1107,7 @@ linuxdvb_frontend_close_pid0
           pids_size--, pids++);
   if (pids_size == 0)
     return;
-  tvhtrace("linuxdvb", "%s - close PID %04X (%d) fd %d\n", name, pid, pid, pids->fd);
+  tvhtrace("linuxdvb", "%s - close PID %04X (%d) fd %d", name, pid, pid, pids->fd);
   close(pids->fd);
   pids->fd = -1;
   pids->pid = -1;
