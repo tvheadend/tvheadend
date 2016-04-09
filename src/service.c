@@ -155,7 +155,8 @@ service_type_auto_list ( void *o, const char *lang )
     { N_("None"),              ST_NONE  },
     { N_("Radio"),             ST_RADIO },
     { N_("SD TV"),             ST_SDTV  },
-    { N_("HD TV"),             ST_HDTV  }
+    { N_("HD TV"),             ST_HDTV  },
+    { N_("UHD TV"),            ST_UHDTV }
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -1194,7 +1195,27 @@ service_is_hdtv(service_t *t)
   else if (s_type == ST_NONE) {
     elementary_stream_t *st;
     TAILQ_FOREACH(st, &t->s_components, es_link)
-      if (SCT_ISVIDEO(st->es_type) && st->es_height >= 720)
+      if (SCT_ISVIDEO(st->es_type) &&
+          st->es_height >= 720 && st->es_height <= 1080)
+        return 1;
+  }
+  return 0;
+}
+
+int
+service_is_uhdtv(service_t *t)
+{
+  char s_type;
+  if(t->s_type_user == ST_UNSET)
+    s_type = t->s_servicetype;
+  else
+    s_type = t->s_type_user;
+  if (s_type == ST_UHDTV)
+    return 1;
+  else if (s_type == ST_NONE) {
+    elementary_stream_t *st;
+    TAILQ_FOREACH(st, &t->s_components, es_link)
+      if (SCT_ISVIDEO(st->es_type) && st->es_height > 1080)
         return 1;
   }
   return 0;
@@ -1246,12 +1267,13 @@ const char *
 service_servicetype_txt ( service_t *s )
 {
   static const char *types[] = {
-    "HDTV", "SDTV", "Radio", "Other"
+    "HDTV", "SDTV", "Radio", "UHDTV", "Other"
   };
   if (service_is_hdtv(s))  return types[0];
   if (service_is_sdtv(s))  return types[1];
   if (service_is_radio(s)) return types[2];
-  return types[3];
+  if (service_is_uhdtv(s)) return types[3];
+  return types[4];
 }
 
 

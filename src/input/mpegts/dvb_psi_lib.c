@@ -41,6 +41,7 @@ static const int dvb_servicetype_map[][2] = {
   { 0xA6, ST_HDTV  }, /* Bell TV tiered HDTV */
   { 0xA8, ST_SDTV  }, /* DN advanced SDTV */
   { 0xD3, ST_SDTV  }, /* SKY TV SDTV */
+  { 0x1F, ST_UHDTV }, /* HEVC (assume all HEVC content is UHD?) */
 };
 
 int
