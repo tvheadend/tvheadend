@@ -6,9 +6,9 @@ This tab shows your all upcoming/current recordings.
 
 ---
 
-###1. Adding and Editing an Entry 
+###Adding and Editing an Entry 
 
-####1.1. Adding an Entry Using the EPG
+####Adding an Entry Using the EPG
 
 Using the Electronic Program Guide search functionality, find the 
 program/event you would like to record. For full instructions on how to 
@@ -23,7 +23,7 @@ using the resultant dialog you can:
 
 **Tip**: You can quickly find all matching programs by clicking on the title.
 
-####1.2. Adding an Entry Using Autorec Rules
+####Adding an Entry Using Autorec Rules
 
 Autorec rules allow you to match events using various options. 
 
@@ -32,7 +32,7 @@ Autorec rules allow you to match events using various options.
 
 Please see [Autorec](dvr_autorec) for more information.
 
-####1.3. Manual Event Entry/Editing an Entry
+####Manual Event Entry/Editing an Entry
 
 Use the *[Add]* button to manually to add an entry. To edit an entry, 
 highlight the desired entry within the grid and then press the *[Edit]* button.
@@ -45,7 +45,7 @@ of which can also be seen in the grid view:
 See the [DVR Entries](class/dvrentry) page for a more detailed look at 
 the various entry options.
 
-###2. Deleting an Entry
+###Deleting an Entry
 
 You can delete or abort an upcoming entry (or an already in-progress recording) by pressing 
 the *[Delete]* or *[Abort]* buttons.
