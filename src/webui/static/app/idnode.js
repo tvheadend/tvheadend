@@ -1162,7 +1162,12 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
                                 node: Ext.encode(node)
                             },
                             success: function(d) {
-                                Ext.MessageBox.alert(_('Apply'), _('Changes were applied!'));
+                                Ext.MessageBox.show({
+                                    title: _('Apply'),
+                                    msg: _('Changes were applied!'),
+                                    buttons: Ext.MessageBox.OK,
+                                    icon: Ext.MessageBox.INFO,
+                                });
                                 form.trackResetOnLoad = true;
                                 form.setValues(node);
                             },
@@ -1488,7 +1493,13 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                         url: conf.create.url || conf.url + '/create',
                         params: params,
                         success: function(d) {
-                            Ext.MessageBox.confirm(_('Apply'), _('Changes were applied!'));
+                            Ext.MessageBox.show({
+                                title: _('Apply'),
+                                msg: _('Changes were applied!'),
+                                buttons: Ext.MessageBox.OK,
+                                icon: Ext.MessageBox.INFO,
+                            });
+                            //Ext.MessageBox.confirm(_('Apply'), _('Changes were applied!'));
                             form.trackResetOnLoad = true;
                             form.setValues(node);
                         },
