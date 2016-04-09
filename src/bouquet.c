@@ -51,6 +51,34 @@ _bq_cmp(const void *a, const void *b)
 /**
  *
  */
+static void
+bouquet_free(bouquet_t *bq)
+{
+  bouquet_download_t *bqd;
+
+  idnode_save_check(&bq->bq_id, 1);
+  idnode_unlink(&bq->bq_id);
+
+  if ((bqd = bq->bq_download) != NULL) {
+    bouquet_download_stop(bqd);
+    download_done(&bqd->download);
+    free(bqd);
+  }
+
+  idnode_set_free(bq->bq_active_services);
+  idnode_set_free(bq->bq_services);
+  htsmsg_destroy(bq->bq_services_waiting);
+  free((char *)bq->bq_chtag_waiting);
+  free(bq->bq_name);
+  free(bq->bq_ext_url);
+  free(bq->bq_src);
+  free(bq->bq_comment);
+  free(bq);
+}
+
+/**
+ *
+ */
 bouquet_t *
 bouquet_create(const char *uuid, htsmsg_t *conf,
                const char *name, const char *src)
@@ -71,7 +99,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
       tvherror("bouquet", "invalid uuid '%s'", uuid);
-    free(bq);
+    bouquet_free(bq);
     return NULL;
   }
 
@@ -113,7 +141,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
   if (bq2) {
     tvherror("bouquet", "found duplicate source id: '%s', remove duplicate config", bq->bq_src);
-    free(bq);
+    bouquet_free(bq);
     return NULL;
   }
 
@@ -131,30 +159,12 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 static void
 bouquet_destroy(bouquet_t *bq)
 {
-  bouquet_download_t *bqd;
-
   if (!bq)
     return;
 
   RB_REMOVE(&bouquets, bq, bq_link);
-  idnode_save_check(&bq->bq_id, 1);
-  idnode_unlink(&bq->bq_id);
 
-  if ((bqd = bq->bq_download) != NULL) {
-    bouquet_download_stop(bqd);
-    download_done(&bqd->download);
-    free(bqd);
-  }
-
-  idnode_set_free(bq->bq_active_services);
-  idnode_set_free(bq->bq_services);
-  assert(bq->bq_services_waiting == NULL);
-  free((char *)bq->bq_chtag_waiting);
-  free(bq->bq_name);
-  free(bq->bq_ext_url);
-  free(bq->bq_src);
-  free(bq->bq_comment);
-  free(bq);
+  bouquet_free(bq);
 }
 
 /**
