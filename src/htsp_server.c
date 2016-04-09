@@ -507,7 +507,7 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 }
 
 /**
- * Cehck if user can access the channel
+ * Check if user can access the channel
  */
 static inline int
 htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
@@ -557,7 +557,7 @@ htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
  * @return the htsmsg_t config to be added or updated with idnode
  */
 static htsmsg_t *
-serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int autorec, int add)
+htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int autorec, int add)
 {
   htsmsg_t *conf,*days;
   uint32_t u32;
@@ -2016,7 +2016,7 @@ htsp_method_addAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error(htsp, N_("User does not have access"));
 
   /* Create autorec config from htsp and add */
-  dae = dvr_autorec_create_htsp(serierec_convert(htsp, in, ch, 1, 1));
+  dae = dvr_autorec_create_htsp(htsp_serierec_convert(htsp, in, ch, 1, 1));
 
   /* create response */
   out = htsmsg_create_map();
@@ -2065,7 +2065,7 @@ htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   /* Update autorec config from htsp and save */
-  dvr_autorec_update_htsp(dae, serierec_convert(htsp, in, ch, 1, 0));
+  dvr_autorec_update_htsp(dae, htsp_serierec_convert(htsp, in, ch, 1, 0));
 
   return htsp_success();
 }
@@ -2128,7 +2128,7 @@ htsp_method_addTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_error(htsp, N_("User does not have access"));
 
   /* Create timerec config from htsp and add */
-  dte = dvr_timerec_create_htsp(serierec_convert(htsp, in, ch, 0, 1));
+  dte = dvr_timerec_create_htsp(htsp_serierec_convert(htsp, in, ch, 0, 1));
 
   /* create response */
   out = htsmsg_create_map();
@@ -2176,7 +2176,7 @@ htsp_method_updateTimerecEntry(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   /* Update timerec config from htsp and save */
-  dvr_timerec_update_htsp(dte, serierec_convert(htsp, in, ch, 0, 0));
+  dvr_timerec_update_htsp(dte, htsp_serierec_convert(htsp, in, ch, 0, 0));
 
   return htsp_success();
 }
