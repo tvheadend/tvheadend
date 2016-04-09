@@ -939,6 +939,8 @@ tcp_server_delete(void *server)
   ev.events   = TVHPOLL_IN;
   ev.data.ptr = ts;
   tvhpoll_rem(tcp_server_poll, &ev, 1);
+  close(ts->serverfd);
+  ts->serverfd = -1;
   LIST_INSERT_HEAD(&tcp_server_delete_list, ts, link);
   tvh_write(tcp_server_pipe.wr, &c, 1);
 }
