@@ -183,7 +183,7 @@ profile_class_delete(idnode_t *self)
 }
 
 static uint32_t
-profile_class_enabled_opts(void *o)
+profile_class_enabled_opts(void *o, const property_t *p)
 {
   profile_t *pro = o;
   uint32_t r = 0;
@@ -231,7 +231,7 @@ profile_class_default_set(void *o, const void *v)
 }
 
 static uint32_t
-profile_class_name_opts(void *o)
+profile_class_name_opts(void *o, const property_t *p)
 {
   profile_t *pro = o;
   uint32_t r = 0;

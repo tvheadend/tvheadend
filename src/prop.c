@@ -99,7 +99,7 @@ prop_write_values
     if (!f) continue;
 
     /* Ignore */
-    u32 = p->get_opts ? p->get_opts(obj) : p->opts;
+    u32 = p->get_opts ? p->get_opts(obj, p) : p->opts;
     if(u32 & optmask) continue;
 
     /* Sanity check */
@@ -223,7 +223,7 @@ prop_write_values
         break;
       }
     }
-  
+
     /* Setter */
     if (p->set && new)
       save = p->set(obj, new);
@@ -259,7 +259,7 @@ prop_read_value
   char buf[24];
 
   /* Ignore */
-  u32 = p->get_opts ? p->get_opts(obj) : p->opts;
+  u32 = p->get_opts ? p->get_opts(obj, p) : p->opts;
   if (u32 & optmask) return;
   if (p->type == PT_NONE) return;
 
@@ -276,7 +276,7 @@ prop_read_value
     assert(p->get); /* requirement */
     if (val)
       htsmsg_add_msg(m, name, (htsmsg_t*)val);
-  
+
   /* Single */
   } else {
     switch(p->type) {
@@ -362,7 +362,7 @@ prop_read_values
     const property_t *p;
     htsmsg_field_t *f;
     int b, total = 0, count = 0;
-    
+
     HTSMSG_FOREACH(f, list) {
       total++;
       if (!htsmsg_field_get_bool(f, &b)) {
@@ -476,7 +476,7 @@ prop_serialize_value
   }
 
   /* Options */
-  opts = pl->get_opts ? pl->get_opts(obj) : pl->opts;
+  opts = pl->get_opts ? pl->get_opts(obj, pl) : pl->opts;
   if (opts & PO_RDONLY)
     htsmsg_add_bool(m, "rdonly", 1);
   if (opts & PO_NOSAVE)
