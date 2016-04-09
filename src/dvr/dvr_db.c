@@ -2885,8 +2885,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "stop",
       .name     = N_("Stop time"),
-      .desc     = N_("The time the entry stops/stopped being recorded, "
-                     "including any padding."),
+      .desc     = N_("The time the entry stops/stopped being recorded."),
       .set      = dvr_entry_class_stop_set,
       .off      = offsetof(dvr_entry_t, de_stop),
     },
@@ -2905,7 +2904,7 @@ const idclass_t dvr_entry_class = {
       .type     = PT_TIME,
       .id       = "stop_real",
       .name     = N_("Scheduled stop time"),
-      .desc     = N_("The scheduled stop time."),
+      .desc     = N_("The scheduled stop time, including any padding."),
       .get      = dvr_entry_class_stop_real_get,
       .opts     = PO_RDONLY | PO_NOSAVE,
     },
