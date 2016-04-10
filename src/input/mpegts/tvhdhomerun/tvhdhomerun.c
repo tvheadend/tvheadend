@@ -21,6 +21,7 @@
 #include "input.h"
 #include "htsbuf.h"
 #include "settings.h"
+#include "tcp.h"
 #include "tvhdhomerun.h"
 #include "tvhdhomerun_private.h"
 
@@ -85,8 +86,10 @@ tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
 {
   static char buf[256];
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
+  char ip[64];
+  tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, ip, sizeof(ip));
   snprintf(buf, sizeof(buf),
-           "%s - %s", hd->hd_info.friendlyname, hd->hd_info.ip_address);
+           "%s - %s", hd->hd_info.friendlyname, ip);
   return buf;
 }
 
@@ -263,7 +266,6 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   int j, save = 0;
   struct hdhomerun_device_t *hdhomerun_tuner;
   dvb_fe_type_t type = DVB_TYPE_C;
-  struct in_addr ip_addr;
 
   tvhdhomerun_device_calc_uuid(&uuid, dInfo->device_id);
 
@@ -318,8 +320,9 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   char fName[128];
   snprintf(fName, 128, "HDHomeRun(%08X)",dInfo->device_id);
 
-  ip_addr.s_addr = htonl(dInfo->ip_addr);
-  hd->hd_info.ip_address = strdup(inet_ntoa(ip_addr));
+  memset(&hd->hd_info.ip_address, 0, sizeof(hd->hd_info.ip_address));
+  hd->hd_info.ip_address.ss_family = AF_INET;
+  ((struct sockaddr_in *)&hd->hd_info.ip_address)->sin_addr.s_addr = htonl(dInfo->ip_addr);
   hd->hd_info.uuid = strdup(uuid.hex);
   hd->hd_info.friendlyname = strdup(fName);
 
@@ -363,11 +366,32 @@ tvhdhomerun_device_discovery_thread( void *aux )
         struct hdhomerun_discover_device_t* cDev = &result_list[numDevices];
         if ( cDev->device_type == HDHOMERUN_DEVICE_TYPE_TUNER ) {
           pthread_mutex_lock(&global_lock);
-          if ( !tvhdhomerun_device_find(cDev->device_id) &&
-               tvheadend_is_running() ) {
-            tvhlog(LOG_INFO, "tvhdhomerun","Found HDHomerun device %08x with %d tuners",
-                   cDev->device_id, cDev->tuner_count);
-            tvhdhomerun_device_create(cDev);
+          tvhdhomerun_device_t *existing = tvhdhomerun_device_find(cDev->device_id);
+          if ( tvheadend_is_running() ) {
+            if ( !existing ) {
+              tvhlog(LOG_INFO, "tvhdhomerun","Found HDHomerun device %08x with %d tuners",
+                     cDev->device_id, cDev->tuner_count);
+              tvhdhomerun_device_create(cDev);
+            } else if ( ((struct sockaddr_in *)&existing->hd_info.ip_address)->sin_addr.s_addr !=
+                     htonl(cDev->ip_addr) ) {
+              struct sockaddr_storage detected_dev_addr;
+              memset(&detected_dev_addr, 0, sizeof(detected_dev_addr));
+              detected_dev_addr.ss_family = AF_INET;
+              ((struct sockaddr_in *)&detected_dev_addr)->sin_addr.s_addr = htonl(cDev->ip_addr);
+
+              char existing_ip[64];
+              tcp_get_str_from_ip((struct sockaddr *)&existing->hd_info.ip_address,
+                     existing_ip, sizeof(existing_ip));
+
+              char detected_ip[64];
+              tcp_get_str_from_ip((struct sockaddr *)&detected_dev_addr, detected_ip,
+                     sizeof(detected_ip));
+
+              tvhlog(LOG_INFO, "tvhdhomerun","HDHomerun device %08x switched IPs from %s to %s, updating",
+                     cDev->device_id, existing_ip, detected_ip);
+              tvhdhomerun_device_destroy(existing);
+              tvhdhomerun_device_create(cDev);
+            }
           }
           pthread_mutex_unlock(&global_lock);
         }
@@ -454,7 +478,6 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
   }
 
 #define FREEM(x) free(hd->hd_info.x)
-  FREEM(ip_address);
   FREEM(friendlyname);
   FREEM(uuid);
   FREEM(deviceModel);
