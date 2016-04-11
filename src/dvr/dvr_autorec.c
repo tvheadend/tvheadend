@@ -483,7 +483,8 @@ dvr_autorec_entry_class_channel_set(void *o, const void *v)
       return 1;
     }
   } else if (dae->dae_channel != ch) {
-    if (!channel_access(ch, dae->dae_id.in_access, 1))
+    if (dae->dae_id.in_access &&
+        !channel_access(ch, dae->dae_id.in_access, 1))
       return 0;
     if (dae->dae_channel)
       LIST_REMOVE(dae, dae_channel_link);

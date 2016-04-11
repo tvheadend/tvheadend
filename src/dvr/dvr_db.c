@@ -2271,7 +2271,8 @@ dvr_entry_class_channel_set(void *o, const void *v)
       return 1;
     }
   } else if (de->de_channel != ch) {
-    if (!channel_access(ch, de->de_id.in_access, 1))
+    if (de->de_id.in_access &&
+        !channel_access(ch, de->de_id.in_access, 1))
       return 0;
     if (de->de_channel)
       LIST_REMOVE(de, de_channel_link);
