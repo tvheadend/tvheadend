@@ -596,8 +596,15 @@ channel_access(channel_t *ch, access_t *a, int disabled)
 {
   char ubuf[UUID_HEX_SIZE];
 
-  if (!ch || !a)
+  if (!a)
     return 0;
+
+  if (!ch) {
+    /* If user has full rights, allow access to removed chanels */
+    if (a->aa_chrange == NULL && a->aa_chtags == NULL)
+      return 1;
+    return 0;
+  }
 
   if (!disabled && !ch->ch_enabled)
     return 0;
