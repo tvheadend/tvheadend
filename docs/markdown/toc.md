@@ -26,8 +26,8 @@ Web Interface Guide
   - [Upcoming/Current Recordings](dvr_upcoming)
   - [Finished Recordings](dvr_finished)
   - [Failed Recordings](dvr_failed)
-  - [DVR AutoRec Entries](class/dvrautorec)
-  - [Time Schedules (TimeRec)](class/dvrtimerec)
+  - [Auto-recording (Autorecs)](class/dvrautorec)
+  - [Time-based Recording (Timers)](class/dvrtimerec)
 
 Web Interface Configuration Guide
 

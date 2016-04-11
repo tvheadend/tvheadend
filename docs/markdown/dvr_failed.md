@@ -1,6 +1,6 @@
-##Digital Video Recorder - Failed Recordings
+##DVR - Failed Recordings
 
-This tab shows all failed recordings.
+This tab shows all failed recording entries.
 
 !['Failed Recordings' Tab](docresources/failedrecordings1.png)
 
@@ -12,10 +12,12 @@ information.
 
 ###Playing a Failed Recording
 
-You can play a partial recording by clicking the *Play* link.
+You can play a partial recording by clicking the *Play* link, 
+note that these links do not link to an actual file but to a playlist.
 
-If your browser supports video playback it should automatically start 
-playing. Note, the *Play* links do not link to an actual file but to a m3u playlist.
+This will automatically launch an appropriate player, otherwise you will
+need to manually open the playlist to start watching (normally a
+double-click on the downloaded file).
 
 ###Downloading a Recording
 
@@ -30,7 +32,7 @@ the entry.
 
 ###Moving an Entry
 
-Failed recording can be moved to the [Finished Recordings](dvr_finished) 
+Failed recordings can be moved to the [Finished Recordings](dvr_finished) 
 tab by highlighting the desired entry and then pressing the *[Move to finished]*
 button from the menu bar.
 
@@ -38,9 +40,8 @@ button from the menu bar.
 
 Highlight the desired entry(s) then press the *[Delete]* button on the menu bar. 
 
-**Deleting an entry cannot be undone. You 
-will be prompted to confirm deletion.**
+**Deleting can't be undone. You will be prompted to confirm deletion.**
 
 **Tip**: You can highlight multiple entries by holding ctrl or shift 
-(to select a range).
+(to select a range) while clicking.
 

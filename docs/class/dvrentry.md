@@ -1,4 +1,5 @@
-DVR entries are used by Tvheadend to keep track of upcoming, finished and failed recordings.
+DVR entries are used by Tvheadend to keep track of upcoming, finished 
+and failed recordings.
 
 !['Digital Video Recorder' Tabs](docresources/configdvrtabs4.png)
 
@@ -9,7 +10,7 @@ DVR entries are used by Tvheadend to keep track of upcoming, finished and failed
   * When a recording fails or gets aborted the entry is moved to the [Failed Recordings](dvr_failed) tab.
   
   
-**Note**: Some entry details are not available/incomplete until the recording 
+Some entry details are not available/incomplete until the recording 
 completes or fails, e.g. filesize, total data errors, etc.
 
 ---

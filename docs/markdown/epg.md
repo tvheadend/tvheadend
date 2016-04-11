@@ -34,23 +34,23 @@ Filter                     | Function
 **Filter content type...** | Only display events that match the given content type tag.
                            | Most DVB networks classify their events into content groups. This field allows you to filter based on content type (e.g. “Sports” or “Game Show”). Supported tags are determined by your broadcaster. Again, simply start typing to filter the entries if you have a long list to choose from.
 **Filter duration...**     | Only display events that fall between the given minimum and maximum durations.
-                           | This allows you to filter for or against, say, a daily broadcast and a weekly omnibus edition of a programme, or only look for short news bulletins and not the 24-hour rolling broadcasts.
+                           | This allows you to filter for or against, say, a daily broadcast and a weekly omnibus edition of a program, or only look for short news bulletins and not the 24-hour rolling broadcasts.
 
 *Title*, *Channel*, *Tag* and *Content Type* are dependent on your configuration and on what your 
 broadcaster sends. Options for the *Duration* are as follows:
 
 Filter Range           | Example Purpose
 -----------------------|----------------
-00:00:01 to 00:15:00   | Very short news bulletins, children's programmes, etc.
-00:15:01 to 00:30:00   | Short programmes, e.g. daily soap operas
-00:30:01 to 01:30:00   | Medium-length programmes, e.g. documentaries
-01:30:01 to 03:00:00   | Longer programmes, e.g. films
-03:00:00 to no maximum | Very long programmes, e.g. major sporting events
+00:00:01 to 00:15:00   | Very short news bulletins, children's programs, etc.
+00:15:01 to 00:30:00   | Short programs, e.g. daily soap operas
+00:30:01 to 01:30:00   | Medium-length programs, e.g. documentaries
+01:30:01 to 03:00:00   | Longer programs, e.g. films
+03:00:00 to no maximum | Very long programs, e.g. major sporting events
 
 So, if you only want to see Movies from your available HD channels, you
 would select ‘HDTV’ in the *[Filter tag…]* field, and select ‘Movie /
 Drama’ in the *[Filter content type…]* field. If you wish, you could
-then further limit the search to programmes of between 90 minutes and 3
+then further limit the search to programs of between 90 minutes and 3
 hours by selecting ‘01:30:01 to 03:00:00’ in the *[Filter duration…]*
 field.
 
@@ -80,40 +80,41 @@ Button              | Function
 The main grid items have the following functions:
 
 **Details**
-: Displays the current status of a recording event for this programme if 
+: Displays the current status of a recording event for this program if 
   one applies: 
 
 Icon                                                   | Description
 -------------------------------------------------------|-------------
-![Clock icon](icons/clock.png)                         | the programme is scheduled for recording
-![Recording icon](icons/rec.png)                       | the programme is currently recording
+![Clock icon](icons/scheduled.png)                     | the program is scheduled for recording
+![Recording icon](icons/rec.png)                       | the program is currently recording
 ![Broadcast details icon](icons/broadcast_details.png) | click to call up more detailed information about an event
+![Exclamation icon](icons/exclamation.png)             | the program failed to record
 
 **Progress**
-: A bar graph display of how far through a programme we currently are.
+: A bar graph display of how far through a program we currently are.
 
 **Title**
-: The title of the programme. *You can automatically set a filter to the
+: The title of the program. *You can automatically set a filter to the
   value of this field by clicking on it (e.g. click on 'Daily News' will
-  automatically filter the whole grid to only show programmes with the same
+  automatically filter the whole grid to only show programs with the same
   name).*
 
-**SubTitle**
-: The subtitle of the programme, if gien by your EPG provider. Note that some
-  (notably, UK) providers use this for a programme synopsis instead of a true
+**Subtitle**
+: The subtitle of the program, if gien by your EPG provider. Note that some
+  (notably, UK) providers use this for a program synopsis instead of a true
   subtitle.
 
 **Episode**
 : Episode number, if given by your EPG provider.
 
 **Start Time**
-: The scheduled start time of the programme.
+: The scheduled start time of the program.
 
 **End Time**
-: The scheduled end time of the programme.
+: The scheduled end time of the program.
 
 **Duration**
-: The scheduled duration (i.e. start time to end time) of the programme. 
+: The scheduled duration (i.e. start time to end time) of the program. 
 
 **Number**
 : The channel number of the broadcasting channel, if defined.
@@ -121,19 +122,19 @@ Icon                                                   | Description
 **Channel**
 : The name of the broadcasting channel. *You can automatically set a filter to the
   value of this field by clicking on it (e.g. click on 'Channel 4 HD' will
-  automatically filter the whole grid to only show programmes from that channel).*
+  automatically filter the whole grid to only show programs from that channel).*
 
 **Stars**
-: Rating (in stars) of the programme.
+: Rating (in stars) of the program.
 
 **Age**
-: Age rating of the programme.
+: Age rating of the program.
 
 **Content Type**
 : Any content/genre information as provided by the EPG provider. *You can
   automatically set a filter to the value of this field by clicking on it
   (e.g. click on 'Movie/Drama' will automatically filter the whole grid
-  to only show programmes of the same type).*
+  to only show programs of the same type).*
 
 ---
 
@@ -158,13 +159,13 @@ If you schedule any kind of recording from this point, you can choose a
 specific DVR profile that will apply to the recording or autorec rule.
 This will normally show as *(default)*, but you can define different
 profiles in the **Configuration -\> Recording -\> Digital Video
-Recorder** tab. This allows you to set, for example, more post-
+Recorder Profiles** tab. This allows you to set, for example, more post-
 broadcast padding for a channel that always runs late, or perhaps define
 a different post-processing command to strip adverts out on a commercial
 channel.
 
-You will also see a *[Search IMDB]* button to look for the programme by name
-on imdb.com, and a *[Play program]* button to watch a programme that’s already
+You will also see *[Search IMDB]* and *[TheTVDB] buttons to look for the program by name
+on imdb.com/thetvdb.com, and a *[Play program]* button to watch a program that’s already
 in progress. This second button downloads a playlist file (XSPF or M3U
 depending on your startup options); if your system is configured for it,
 this will automatically launch an appropriate player, otherwise you will

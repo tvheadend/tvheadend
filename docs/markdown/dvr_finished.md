@@ -1,6 +1,6 @@
-##Digital Video Recorder - Finished Recordings
+##DVR - Finished Recordings
 
-This tab shows all your finished recordings.
+This tab shows all your finished recording entries.
 
 !['Finished Recordings' Tab](docresources/finishedrecordings1.png)
 
@@ -8,10 +8,12 @@ This tab shows all your finished recordings.
 
 ###Playing a Recording
 
-You can play a recording by clicking the *Play* link.
+You can play a recording by clicking the *Play* link, 
+note that these links do not link to an actual file but to a playlist.
 
-If your browser supports video playback it should automatically start 
-playing. Note, the *Play* links do not link to an actual file but to a m3u playlist.
+This will automatically launch an appropriate player, otherwise you will
+need to manually open the playlist to start watching (normally a
+double-click on the downloaded file).
 
 ###Downloading a Recording
 
@@ -21,17 +23,17 @@ menu bar.
 ###Editing an Entry
 
 You can edit an entry by clicking the *[Edit]* button on the menu bar, 
-note that not all [DVR Entry](class/dvrentry) fields can be edited.
+note that not all [Entry](class/dvrentry) fields can be edited.
 
-###Deleting an Entry.
+###Deleting an Entry
 
 Highlight the desired entry(s) then press the *[Delete]* button on the 
 menu bar. 
 
-**Deleting an entry cannot be undone. You 
+**Deleting can't be undone. You 
 will be prompted to confirm deletion.**
 
 **Tip**: You can highlight multiple entries by holding ctrl or shift 
-(to select a range).
+(to select a range) while clicking.
 
 
