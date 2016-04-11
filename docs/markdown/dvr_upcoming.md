@@ -36,8 +36,9 @@ You can set time-based entries using the [Timer](class/dvrtimerec) tab.
 
 ####Manual Event Entry/Editing an Entry
 
-To add or edit an entry highlight the desired entry within the grid and 
-then press the *[Add]* or *[Edit]* button.
+To add an entry press the *[Add]* button from the menu bar. To edit an 
+entry highlight the desired entry within the grid and 
+then press the *[Edit]* button.
 
 A common set of fields is used for the _Add_ or _Edit_ dialogs, most
 of which can also be seen in the grid view:
@@ -46,6 +47,10 @@ of which can also be seen in the grid view:
 
 See the [DVR Entries](class/dvrentry) page for a more detailed look at 
 the various entry options.
+
+**Tip**: You can quickly make changes to an entry by double-clicking on 
+the desired field within the grid - see [Web interface Guide - General](webui_general) 
+for details.
 
 ###Deleting an Entry/Stopping an In-progress Recording
 
@@ -58,4 +63,4 @@ the *[Delete]*, *[Stop]* or *[Abort]* button from the menu bar.
 
 Note that only in-progress recording can be stopped or aborted.
 
-**Deleting or aborting an entry cannot be undone, you will be prompted for confirmation.**
+**Deleting an entry can't be undone, you will be prompted for confirmation.**
