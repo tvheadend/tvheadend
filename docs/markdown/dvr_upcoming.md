@@ -49,8 +49,8 @@ See the [DVR Entries](class/dvrentry) page for a more detailed look at
 the various entry options.
 
 **Tip**: You can quickly make changes to an entry by double-clicking on 
-the desired field within the grid - see [Web interface Guide - General](webui_general) 
-for details.
+the desired field within the grid - see *Editing Fields* on the [Web interface Guide - General](webui_general) 
+page for details.
 
 ###Deleting an Entry/Stopping an In-progress Recording
 
