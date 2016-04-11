@@ -515,10 +515,6 @@ htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
   return channel_access(ch, htsp->htsp_granted_access, 0);
 }
 
-#define HTSP_CHECK_CHANNEL_ACCESS(htsp, ch)\
-if (!htsp_user_access_channel(htsp, ch))\
-  return htsp_error(htsp, N_("User cannot access this channel"));
-
 static const char *
 htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
 {
@@ -1795,13 +1791,13 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     lang = htsp->htsp_language;
 
   /* Check access */
-  if (ch && !htsp_user_access_channel(htsp, ch))
+  if (!htsp_user_access_channel(htsp, ch))
     return htsp_error(htsp, N_("User does not have access"));
+  if (!ch)
+    return htsp_error(htsp, N_("Channel does not exist"));
 
   /* Manual timer */
   if (!e) {
-    if (!ch)
-      return htsp_error(htsp, N_("Channel does not exist"));
 
     /* Required attributes */
     if (htsmsg_get_s64(in, "start", &start) ||
@@ -1817,7 +1813,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     if (!(desc = htsmsg_get_str(in, "description")))
       desc = "";
 
-    // create the dvr entry
+    /* Create the dvr entry */
     de = dvr_entry_create_htsp(enabled, dvr_config_name, ch, start, stop,
                                start_extra, stop_extra,
                                title, subtitle, desc, lang, 0,
@@ -1827,16 +1823,18 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Event timer */
   } else {
+
     de = dvr_entry_create_by_event(enabled, dvr_config_name, e,
                                    start_extra, stop_extra,
                                    htsp->htsp_granted_access->aa_username,
                                    htsp->htsp_granted_access->aa_representative,
                                    NULL, priority, retention, removal, comment);
+
   }
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
   
-  //create response
+  /* Create response */
   out = htsmsg_create_map();
   
   switch(dvr_status) {
