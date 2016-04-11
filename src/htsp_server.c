@@ -1549,8 +1549,6 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error(htsp, N_("Event does not exist"));
 
   /* Check access */
-  if (ch && !htsp_user_access_channel(htsp, ch))
-    return htsp_error(htsp, N_("User does not have access"));
 
   numFollowing = htsmsg_get_u32_or_default(in, "numFollowing", 0);
   maxTime      = htsmsg_get_s64_or_default(in, "maxTime", 0);
@@ -1558,6 +1556,10 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Use event as starting point */
   if (e || ch) {
+
+    if (!htsp_user_access_channel(htsp, ch))
+      return htsp_error(htsp, N_("User does not have access"));
+
     if (!e) e = ch->ch_epg_now ?: ch->ch_epg_next;
 
     /* Output */
@@ -1572,9 +1574,12 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* All channels */
   } else {
+
     events = htsmsg_create_list();
     CHANNEL_FOREACH(ch) {
       int num = numFollowing;
+      if (!htsp_user_access_channel(htsp, ch))
+        return htsp_error(htsp, N_("User does not have access"));
       RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
         if (maxTime && e->start > maxTime) break;
         htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0, htsp));
@@ -1582,6 +1587,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
         if (num) num--;
       }
     }
+
   }
   
   /* Send */
