@@ -1574,7 +1574,7 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
     CHANNEL_FOREACH(ch) {
       int num = numFollowing;
       if (!htsp_user_access_channel(htsp, ch))
-        return htsp_error(htsp, N_("User does not have access"));
+        continue;
       RB_FOREACH(e, &ch->ch_epg_schedule, sched_link) {
         if (maxTime && e->start > maxTime) break;
         htsmsg_add_msg(events, NULL, htsp_build_event(e, NULL, lang, 0, htsp));
