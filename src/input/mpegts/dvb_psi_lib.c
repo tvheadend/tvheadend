@@ -32,7 +32,15 @@ static const int dvb_servicetype_map[][2] = {
   { 0x02, ST_RADIO },
   { 0x11, ST_HDTV  }, /* HDTV (MPEG2) */
   { 0x16, ST_SDTV  }, /* Advanced codec SDTV */
+  { 0x17, ST_SDTV  }, /* Advanced codec SDTV - NVOD time-shifted */
+  { 0x18, ST_SDTV  }, /* Advanced codec SDTV - NVOD reference */
   { 0x19, ST_HDTV  }, /* Advanced codec HDTV */
+  { 0x1A, ST_HDTV  }, /* Advanced codec HDTV - NVOD time-shifted */
+  { 0x1B, ST_HDTV  }, /* Advanced codec HDTV - NVOD reference */
+  { 0x1C, ST_HDTV  }, /* Advanced codec HDTV - plano-stereoscopic */
+  { 0x1D, ST_HDTV  }, /* Advanced codec HDTV - plano-stereoscopic - NVOD time-shifted */
+  { 0x1E, ST_HDTV  }, /* Advanced codec HDTV - plano-stereoscopic - NVOID reference */
+  { 0x1F, ST_UHDTV }, /* HEVC (assume all HEVC content is UHD?) */
   { 0x80, ST_SDTV  }, /* NET POA - Cabo SDTV */
   { 0x91, ST_HDTV  }, /* Bell TV HDTV */
   { 0x96, ST_SDTV  }, /* Bell TV SDTV */
@@ -41,7 +49,6 @@ static const int dvb_servicetype_map[][2] = {
   { 0xA6, ST_HDTV  }, /* Bell TV tiered HDTV */
   { 0xA8, ST_SDTV  }, /* DN advanced SDTV */
   { 0xD3, ST_SDTV  }, /* SKY TV SDTV */
-  { 0x1F, ST_UHDTV }, /* HEVC (assume all HEVC content is UHD?) */
 };
 
 int
