@@ -596,7 +596,7 @@ channel_access(channel_t *ch, access_t *a, int disabled)
 {
   char ubuf[UUID_HEX_SIZE];
 
-  if (!ch)
+  if (!ch || !a)
     return 0;
 
   if (!disabled && !ch->ch_enabled)

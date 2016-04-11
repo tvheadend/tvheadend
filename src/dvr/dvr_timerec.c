@@ -327,6 +327,8 @@ dvr_timerec_entry_class_channel_set(void *o, const void *v)
       return 1;
     }
   } else if (dte->dte_channel != ch) {
+    if (!channel_access(ch, dte->dte_id.in_access, 1))
+      return 0;
     if (dte->dte_channel)
       LIST_REMOVE(dte, dte_channel_link);
     dte->dte_channel = ch;
