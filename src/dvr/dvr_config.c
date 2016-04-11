@@ -802,7 +802,7 @@ extern const char *tvh_doc_dvrconfig_class[];
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
-  .ic_caption    = N_("DVR configuration profile"),
+  .ic_caption    = N_("DVR - Configuration Profile"),
   .ic_event      = "dvrconfig",
   .ic_doc        = tvh_doc_dvrconfig_class,
   .ic_changed    = dvr_config_class_changed,

@@ -3007,7 +3007,7 @@ const idclass_t dvr_entry_class = {
       .def.i    = DVR_PRIO_NORMAL,
       .set      = dvr_entry_class_pri_set,
       .list     = dvr_entry_class_pri_list,
-      .opts     = PO_SORTKEY | PO_DOC_NLIST,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_U32,

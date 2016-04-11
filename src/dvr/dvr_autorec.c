@@ -985,7 +985,7 @@ extern const char *tvh_doc_dvrautorec_class[];
 
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
-  .ic_caption    = N_("DVR Auto-record entry"),
+  .ic_caption    = N_("DVR - Auto-recording (Autorecs)"),
   .ic_event      = "dvrautorec",
   .ic_doc        = tvh_doc_dvrautorec_class,
   .ic_changed    = dvr_autorec_entry_class_changed,
@@ -1005,7 +1005,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Name"),
-      .desc     = N_("The name given to the rule."),
+      .desc     = N_("The name of the the rule."),
       .off      = offsetof(dvr_autorec_entry_t, dae_name),
     },
 	{
@@ -1063,7 +1063,7 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .id       = "btype",
       .name     = N_("Broadcast type"),
-      .desc     = N_("Select type of broadcast (all, new/premiere or repeat)."),
+      .desc     = N_("Select type of broadcast."),
       .def.i    = DVR_AUTOREC_BTYPE_ALL,
       .off      = offsetof(dvr_autorec_entry_t, dae_btype),
       .list     = dvr_autorec_entry_class_btype_list,
@@ -1077,7 +1077,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "be used to filter matching events/programs."),
       .list     = dvr_autorec_entry_class_content_type_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_STR,
@@ -1089,7 +1089,7 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
-      .opts     = PO_SORTKEY
+      .opts     = PO_SORTKEY | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1101,7 +1101,7 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,
       .list     = dvr_autorec_entry_class_time_list_,
-      .opts     = PO_SORTKEY,
+      .opts     = PO_SORTKEY | PO_DOC_NLIST,
     },
     {
       .type     = PT_TIME,
@@ -1111,7 +1111,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "time by x minutes."),
       .off      = offsetof(dvr_autorec_entry_t, dae_start_extra),
       .list     = dvr_autorec_entry_class_extra_list,
-      .opts     = PO_DURATION | PO_SORTKEY | PO_ADVANCED
+      .opts     = PO_DURATION | PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_TIME,
@@ -1121,7 +1121,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "stop time"),
       .off      = offsetof(dvr_autorec_entry_t, dae_stop_extra),
       .list     = dvr_autorec_entry_class_extra_list,
-      .opts     = PO_DURATION | PO_SORTKEY | PO_ADVANCED
+      .opts     = PO_DURATION | PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
@@ -1133,7 +1133,8 @@ const idclass_t dvr_autorec_entry_class = {
       .get      = dvr_autorec_entry_class_weekdays_get_,
       .list     = dvr_autorec_entry_class_weekdays_list,
       .rend     = dvr_autorec_entry_class_weekdays_rend_,
-      .def.list = dvr_autorec_entry_class_weekdays_default
+      .def.list = dvr_autorec_entry_class_weekdays_default,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -1144,7 +1145,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "shorter than this duration."),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -1155,21 +1156,19 @@ const idclass_t dvr_autorec_entry_class = {
                      "longer than this duration."),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
       .id       = "pri",
       .name     = N_("Priority"),
       .desc     = N_("The priority of any recordings set because of this "
-                     "rule: in descending priority, values are "
-                     "important, high, normal, low and unimportant. "
-                     "Higher-priority events will take precedence and "
+                     "rule will take precedence and "
                      "cancel lower-priority events."),
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_U32,
@@ -1179,7 +1178,7 @@ const idclass_t dvr_autorec_entry_class = {
       .def.i    = DVR_AUTOREC_RECORD_ALL,
       .off      = offsetof(dvr_autorec_entry_t, dae_record),
       .list     = dvr_autorec_entry_class_dedup_list,
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_U32,
@@ -1189,7 +1188,7 @@ const idclass_t dvr_autorec_entry_class = {
       .def.i    = DVR_RET_DVRCONFIG,
       .off      = offsetof(dvr_autorec_entry_t, dae_retention),
       .list     = dvr_entry_class_retention_list,
-      .opts     = PO_HIDDEN | PO_EXPERT,
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
@@ -1199,7 +1198,7 @@ const idclass_t dvr_autorec_entry_class = {
       .def.i    = DVR_RET_DVRCONFIG,
       .off      = offsetof(dvr_autorec_entry_t, dae_removal),
       .list     = dvr_entry_class_removal_list,
-      .opts     = PO_HIDDEN | PO_ADVANCED,
+      .opts     = PO_HIDDEN | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
