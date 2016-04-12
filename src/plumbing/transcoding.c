@@ -1911,8 +1911,8 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
     }
   }
 
-  tvhtrace("transcode", "%04X: transcoder_calc_stream_count=%d",
-           shortid(t), (video + audio + subtitle));
+  tvhtrace("transcode", "%04X: transcoder_calc_stream_count=%d (video=%d, audio=%d, subtitle=%d)",
+           shortid(t), (video + audio + subtitle), video, audio, subtitle);
 
 
   return (video + audio + subtitle);
@@ -1927,7 +1927,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 {
   int i, j, n, rc;
   streaming_start_t *ss;
-
+  transcoder_props_t *tp = &t->t_props;
+  char* requested_lang;
 
   n = transcoder_calc_stream_count(t, src);
   ss = calloc(1, (sizeof(streaming_start_t) +
@@ -1939,6 +1940,22 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
   ss->ss_pmt_pid        = src->ss_pmt_pid;
   service_source_info_copy(&ss->ss_si, &src->ss_si);
 
+  requested_lang = tp->tp_language;
+
+  if (requested_lang[0] != '\0')
+  {
+      for (i = 0; i < src->ss_num_components; i++) {
+        streaming_start_component_t *ssc_src = &src->ss_components[i];
+        if (SCT_ISAUDIO(ssc_src->ssc_type) && !strcmp(tp->tp_language, ssc_src->ssc_lang))
+          break;
+      }
+
+      if (i == src->ss_num_components)
+      {
+        tvhinfo("transcode", "Could not find requestd lang [%s] in stream, using first one", tp->tp_language);
+        requested_lang[0] = '\0';
+      }
+  }
 
   for (i = j = 0; i < src->ss_num_components && j < n; i++) {
     streaming_start_component_t *ssc_src = &src->ss_components[i];
@@ -1951,10 +1968,8 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 
     if (SCT_ISVIDEO(ssc->ssc_type))
       rc = transcoder_init_video(t, ssc);
-
-    else if (SCT_ISAUDIO(ssc->ssc_type))
+    else if (SCT_ISAUDIO(ssc->ssc_type) && (requested_lang[0] == '\0' || !strcmp(requested_lang, ssc->ssc_lang)))
       rc = transcoder_init_audio(t, ssc);
-
     else if (SCT_ISSUBTITLE(ssc->ssc_type))
       rc = transcoder_init_subtitle(t, ssc);
     else
