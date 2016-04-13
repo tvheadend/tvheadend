@@ -7,6 +7,12 @@ source_file = intl/tvheadend.pot
 source_lang = en
 type = PO
 
+[tvheadend.docs]
+file_filter = intl/docs/tvheadend.doc.<lang>.po
+source_file = intl/docs/tvheadend.doc.pot
+source_lang = en
+type = PO
+
 [tvheadend.js]
 file_filter = intl/js/tvheadend.js.<lang>.po
 source_file = intl/js/tvheadend.js.pot

@@ -1,0 +1,3775 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-04-13 10:39+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/docs_inc.c:7 src/docs_inc.c:49 src/docs_inc.c:243 src/docs_inc.c:283
+#: src/docs_inc.c:423 src/docs_inc.c:467 src/docs_inc.c:523 src/docs_inc.c:701
+#: src/docs_inc.c:855 src/docs_inc.c:861 src/docs_inc.c:877 src/docs_inc.c:983
+#: src/docs_inc.c:1057 src/docs_inc.c:1387 src/docs_inc.c:1571
+#: src/docs_inc.c:1654 src/docs_inc.c:1716 src/docs_inc.c:1751
+#: src/docs_inc.c:1767 src/docs_inc.c:1813
+msgid "!"
+msgstr ""
+
+#: src/docs_inc.c:1769
+msgid "'Autorec' Tab"
+msgstr ""
+
+#: src/docs_inc.c:1753
+msgid "'Digital Video Recorder Profiles' Tab 1"
+msgstr ""
+
+#: src/docs_inc.c:1656
+msgid "'Digital Video Recorder' Tabs"
+msgstr ""
+
+#: src/docs_inc.c:703
+msgid "'Electronic Program Guide' Tab"
+msgstr ""
+
+#: src/docs_inc.c:1573
+msgid "'Failed Recordings' Tab"
+msgstr ""
+
+#: src/docs_inc.c:9
+msgid "'Finished Recordings' Tab"
+msgstr ""
+
+#: src/docs_inc.c:1815
+msgid "'General' Tab Screenshot 1"
+msgstr ""
+
+#: src/docs_inc.c:525
+msgid "'Status - Stream' Tab"
+msgstr ""
+
+#: src/docs_inc.c:51 src/docs_inc.c:985 src/docs_inc.c:1389
+msgid "'Status - Subscriptions' Tab"
+msgstr ""
+
+#: src/docs_inc.c:425
+msgid "'Upcoming/Current Recordings' Tab"
+msgstr ""
+
+#: src/docs_inc.c:169
+msgid ""
+"(For the technically-minded, these unique identifiers - the elementary "
+"streams - are referred to as 'packet identifiers' or 'PIDs')."
+msgstr ""
+
+#: src/docs_inc.c:1535
+msgid "(other clients may also be available)."
+msgstr ""
+
+#: src/docs_inc.c:1161
+msgid ")"
+msgstr ""
+
+#: src/docs_inc.c:1996 src/docs_inc.c:2072
+msgid ")! :)"
+msgstr ""
+
+#: src/docs_inc.c:113
+msgid ""
+"- but they do go out of date as broadcasters move services around and "
+"national authorities change entire pieces of spectrum. As such, you should "
+"try the pre-defined values, but you may need to add muxes manually."
+msgstr ""
+
+#: src/docs_inc.c:1107
+msgid ""
+"- this will not only tell you what's supported under Linux, but also how to "
+"get it all working."
+msgstr ""
+
+#: src/docs_inc.c:213 src/docs_inc.c:253 src/docs_inc.c:1075
+#: src/docs_inc.c:1147 src/docs_inc.c:1990 src/docs_inc.c:2066
+msgid "."
+msgstr ""
+
+#: src/docs_inc.c:305
+msgid ""
+". Please use github's features if you want to provide patches. Contributions "
+"and improvements are always welcome."
+msgstr ""
+
+#: src/docs_inc.c:1177
+msgid "... and then open the PR on github"
+msgstr ""
+
+#: src/docs_inc.c:341
+msgid "... produces:"
+msgstr ""
+
+#: src/docs_inc.c:677
+msgid "/etc/default/tvheadend options"
+msgstr ""
+
+#: src/docs_inc.c:1843
+msgid "/home/user/Videos/News.mkv"
+msgstr ""
+
+#: src/docs_inc.c:1891
+msgid "0"
+msgstr ""
+
+#: src/docs_inc.c:753
+msgid "00:00:01 to 00:15:00"
+msgstr ""
+
+#: src/docs_inc.c:757
+msgid "00:15:01 to 00:30:00"
+msgstr ""
+
+#: src/docs_inc.c:761
+msgid "00:30:01 to 01:30:00"
+msgstr ""
+
+#: src/docs_inc.c:765
+msgid "01:30:01 to 03:00:00"
+msgstr ""
+
+#: src/docs_inc.c:769
+msgid "03:00:00 to no maximum"
+msgstr ""
+
+#: src/docs_inc.c:91
+msgid "1. Ensure Tuners are Available for Use"
+msgstr ""
+
+#: src/docs_inc.c:1077
+msgid "1. Install the Tuner Hardware"
+msgstr ""
+
+#: src/docs_inc.c:1883
+msgid "1224421200"
+msgstr ""
+
+#: src/docs_inc.c:1887
+msgid "1224426600"
+msgstr ""
+
+#: src/docs_inc.c:1101
+msgid "2. Install Firmware and/or Drivers"
+msgstr ""
+
+#: src/docs_inc.c:103
+msgid "2. Set up Relevant Network(s)"
+msgstr ""
+
+#: src/docs_inc.c:119
+msgid "3. Associate the Network with the Respective Tuner(s)"
+msgstr ""
+
+#: src/docs_inc.c:129
+msgid "4. If Necessary, Manually Add Muxes"
+msgstr ""
+
+#: src/docs_inc.c:163
+msgid "5. Scan for Services"
+msgstr ""
+
+#: src/docs_inc.c:171
+msgid "5.1. Forcing a Scan"
+msgstr ""
+
+#: src/docs_inc.c:1895
+msgid "6"
+msgstr ""
+
+#: src/docs_inc.c:183
+msgid "6. Map Services to Channels"
+msgstr ""
+
+#: src/docs_inc.c:189
+msgid "6.1. Mapping All"
+msgstr ""
+
+#: src/docs_inc.c:195
+msgid "6.2. Mapping Selected"
+msgstr ""
+
+#: src/docs_inc.c:203
+msgid "6.3. Bouquets"
+msgstr ""
+
+#: src/docs_inc.c:215
+msgid "7. Watch TV"
+msgstr ""
+
+#: src/docs_inc.c:1906 src/docs_inc.c:1917 src/docs_inc.c:1926
+msgid ":"
+msgstr ""
+
+#: src/docs_inc.c:1831
+#, c-format
+msgid ""
+": Command to run after finishing a recording. The command will be run in "
+"background and is executed even if a recording is aborted or an error "
+"occurred. Use the %e error formatting string to check for errors, the error "
+"string is “OK” if recording finished successfully."
+msgstr ""
+
+#: src/docs_inc.c:1093
+msgid "A Note on USB Tuners"
+msgstr ""
+
+#: src/docs_inc.c:1033
+msgid ""
+"A __driver__ is the piece of software that your operating system uses to "
+"talk to the tuner. This can be built into the OS (e.g. 'supported since "
+"kernel X') or might be a separate piece of software that you need install, "
+"and maybe even compile, separately."
+msgstr ""
+
+#: src/docs_inc.c:1025
+msgid ""
+"A __tuner__ is the hardware (chipset) needed to interpret a digital "
+"television signal and extract from it the programme stream. The tuner "
+"hardware is also responsible for communicating with your satellite dish via "
+"the LNB in the case of DVB-S."
+msgstr ""
+
+#: src/docs_inc.c:465
+msgid ""
+"A common set of fields is used for the _Add_ or _Edit_ dialogs, most of "
+"which can also be seen in the grid view:"
+msgstr ""
+
+#: src/docs_inc.c:193 src/docs_inc.c:199
+msgid ""
+"A dialog will then appear with the list of available services and various "
+"other mapping options. The ticked check boxes [✓] indicate which services "
+"will be mapped, when you're happy with the selection press the \"Map services"
+"\" button. You will then be taken to the Service Mapper tab which will begin "
+"mapping services to channels."
+msgstr ""
+
+#: src/docs_inc.c:1445
+msgid ""
+"A general-purpose MPEG-TS `pipe://` for analogue and non-broadcast sources"
+msgstr ""
+
+#: src/docs_inc.c:875
+msgid ""
+"A popup with details about the to-be-created autorecording rule needs to be "
+"confirmed before the rule takes effect."
+msgstr ""
+
+#: src/docs_inc.c:949
+msgid "AAC"
+msgstr ""
+
+#: src/docs_inc.c:1429
+msgid "AC-3, AAC and MP2 audio supported."
+msgstr ""
+
+#: src/docs_inc.c:1347
+msgid "AES constant code word client"
+msgstr ""
+
+#: src/docs_inc.c:1879 src/docs_inc.c:1932
+msgid "Aborted by user"
+msgstr ""
+
+#: src/docs_inc.c:1373
+msgid "About"
+msgstr ""
+
+#: src/docs_inc.c:1700
+msgid "Accept icon"
+msgstr ""
+
+#: src/docs_inc.c:1259
+msgid "Access Configuration (Users)"
+msgstr ""
+
+#: src/docs_inc.c:1261
+msgid "Access Entries"
+msgstr ""
+
+#: src/docs_inc.c:1513
+msgid ""
+"Access to system features (streaming, administration, configurations) can be "
+"configured based on username/password and/or IP address."
+msgstr ""
+
+#: src/docs_inc.c:349
+msgid "Actual numbers don't matter, just that it's a number"
+msgstr ""
+
+#: src/docs_inc.c:469
+msgid "Add/Edit Upcoming Recording"
+msgstr ""
+
+#: src/docs_inc.c:447
+msgid "Adding an Entry Using Autorec Rules"
+msgstr ""
+
+#: src/docs_inc.c:429
+msgid "Adding an Entry Using the EPG"
+msgstr ""
+
+#: src/docs_inc.c:427
+msgid "Adding and Editing an Entry"
+msgstr ""
+
+#: src/docs_inc.c:1867
+msgid "Afternoon"
+msgstr ""
+
+#: src/docs_inc.c:1950
+msgid ""
+"All available tuners failed to tune (this can indicate a signal, driver or "
+"hardware problem)."
+msgstr ""
+
+#: src/docs_inc.c:1523
+msgid ""
+"All channel data, channel groups/tags, EPG and TV streaming is carried over "
+"a single TCP connection."
+msgstr ""
+
+#: src/docs_inc.c:1541
+msgid ""
+"All major character encodings in DVB are supported (e.g. for localised EPG "
+"character sets)."
+msgstr ""
+
+#: src/docs_inc.c:1471
+msgid "All original streams (multiple audio tracks, etc) are recorded."
+msgstr ""
+
+#: src/docs_inc.c:1499
+msgid "All settings are stored in human-readable text files."
+msgstr ""
+
+#: src/docs_inc.c:1497
+msgid ""
+"All setup and configuration is done from the built in web user interface."
+msgstr ""
+
+#: src/docs_inc.c:1493
+msgid ""
+"All sorting/filtering is then done in C by the main application for speed."
+msgstr ""
+
+#: src/docs_inc.c:1539
+msgid "All text is encoded in UTF-8 to provide full international support."
+msgstr ""
+
+#: src/docs_inc.c:607
+msgid ""
+"Alternatively, you can run Tvheadend on a server, perhaps on an always-on "
+"system that houses your media, perhaps on a dedicated low-power system - "
+"it's your choice."
+msgstr ""
+
+#: src/docs_inc.c:621
+msgid ""
+"An __Internet connection__ is recommended but not essential. You need to "
+"have an accurate clock for EPG timers to work, for example, but this can be "
+"synchronised from the broadcast signal if you're not in a position to use "
+"`ntp` or similar."
+msgstr ""
+
+#: src/docs_inc.c:681
+msgid "And I'm left with these final open questions:"
+msgstr ""
+
+#: src/docs_inc.c:353
+msgid "And another item."
+msgstr ""
+
+#: src/docs_inc.c:1047
+msgid ""
+"And finally, services are mapped to __channels__ . These are what you and "
+"your client software think in terms of: _\"I'd like to watch BBC One now, "
+"please\"_ ."
+msgstr ""
+
+#: src/docs_inc.c:387
+msgid ""
+"And if you don't want a header, you can leave it out - but the cells remain "
+"in this theme, so I'd suggest you don't do this as it's ugly:"
+msgstr ""
+
+#: src/docs_inc.c:579
+msgid ""
+"And the same drop-down menu also gives you access to a __filter__ function "
+"if defined. The filter does simple pattern-matching on any string you "
+"provide."
+msgstr ""
+
+#: src/docs_inc.c:619
+msgid ""
+"And, of course, you'll need one or more __TV tuners__ if you want to receive "
+"regular broadcast television - otherwise, you're limited to IP sources."
+msgstr ""
+
+#: src/docs_inc.c:1529
+msgid "Android"
+msgstr ""
+
+#: src/docs_inc.c:345
+msgid "Another item"
+msgstr ""
+
+#: src/docs_inc.c:1361
+msgid "Appendices"
+msgstr ""
+
+#: src/docs_inc.c:1363
+msgid "Appendix 1 - FAQ"
+msgstr ""
+
+#: src/docs_inc.c:1365
+msgid "Appendix 2 - Command-line Options"
+msgstr ""
+
+#: src/docs_inc.c:1367
+msgid "Appendix 3 - Debugging Options"
+msgstr ""
+
+#: src/docs_inc.c:1369
+msgid "Appendix 4 - Updating this documentation"
+msgstr ""
+
+#: src/docs_inc.c:1371
+msgid "Appendix 5 - Markdown Cribsheet"
+msgstr ""
+
+#: src/docs_inc.c:1037
+msgid "Application/Tvheadend Fundamentals"
+msgstr ""
+
+#: src/docs_inc.c:229
+msgid "Arranging your channels into groups (channel tags)"
+msgstr ""
+
+#: src/docs_inc.c:1109
+msgid ""
+"As a broad guide, though, you need two main components: a driver, and "
+"firmware."
+msgstr ""
+
+#: src/docs_inc.c:219
+msgid "As required, you may now wish to look into:"
+msgstr ""
+
+#: src/docs_inc.c:297
+msgid ""
+"As well as being able to record the input, Tvheadend also offers it up to "
+"client applications via HTTP (VLC, MPlayer), HTSP (Kodi, Movian) and SAT>IP "
+"streaming."
+msgstr ""
+
+#: src/docs_inc.c:1527
+msgid ""
+"As well as the web interface, which is accessible through VPN if required, "
+"third-party clients are available for both"
+msgstr ""
+
+#: src/docs_inc.c:255
+msgid ""
+"As you set things up, consult the on-line (web interface) help as well. "
+"Tvheadend includes copies of many of these pages in the application, which "
+"is easier to find when you're wondering what to do next."
+msgstr ""
+
+#: src/docs_inc.c:1961
+msgid ""
+"Assign predefined muxes to networks. To save you from manually entering "
+"muxes, Tvheadend includes predefined mux lists. Please select a list for "
+"each network below."
+msgstr ""
+
+#: src/docs_inc.c:123
+msgid ""
+"Associate each of your tuners with the correct network through _Parameters -"
+"> Basic Settings_ ."
+msgstr ""
+
+#: src/docs_inc.c:127
+msgid ""
+"At this point, your tuners now know what networks to use: one network can "
+"appear on multiple tuners (many-to-one), and one tuner can have multiple "
+"networks."
+msgstr ""
+
+#: src/docs_inc.c:1323
+msgid "Audio Stream Filters"
+msgstr ""
+
+#: src/docs_inc.c:441
+msgid ""
+"Automatically record all upcoming events matching the program's title by "
+"pressing the _[Autorec]_ button."
+msgstr ""
+
+#: src/docs_inc.c:457
+msgid "Autorec"
+msgstr ""
+
+#: src/docs_inc.c:879
+msgid "Autorec Dialogue Box"
+msgstr ""
+
+#: src/docs_inc.c:449
+msgid "Autorec rules allow you to match events using various options."
+msgstr ""
+
+#: src/docs_inc.c:871
+msgid "Autorecordings"
+msgstr ""
+
+#: src/docs_inc.c:1851
+msgid "BBC world"
+msgstr ""
+
+#: src/docs_inc.c:1253
+msgid "Base Config"
+msgstr ""
+
+#: src/docs_inc.c:1491
+msgid "Based on extJS, all pages are dynamic and self-refreshing."
+msgstr ""
+
+#: src/docs_inc.c:1845
+msgid "Basename of recording"
+msgstr ""
+
+#: src/docs_inc.c:601 src/docs_inc.c:1213
+msgid "Basic Requirements"
+msgstr ""
+
+#: src/docs_inc.c:1910
+msgid ""
+"Be sure to check you have enough free tuners available to record all "
+"scheduled recordings if they overlap."
+msgstr ""
+
+#: src/docs_inc.c:1171
+msgid ""
+"Because we upload the theme as well, what it looks like locally should be "
+"100% representative of what it looks like once it's pushed to the Internet."
+msgstr ""
+
+#: src/docs_inc.c:1019
+msgid "Before You Begin"
+msgstr ""
+
+#: src/docs_inc.c:1219
+msgid "Before you begin (concepts)"
+msgstr ""
+
+#: src/docs_inc.c:211 src/docs_inc.c:1285
+msgid "Bouquets"
+msgstr ""
+
+#: src/docs_inc.c:821
+msgid "Broadcast details icon"
+msgstr ""
+
+#: src/docs_inc.c:1151
+msgid "Broadly:"
+msgstr ""
+
+#: src/docs_inc.c:889 src/docs_inc.c:919 src/docs_inc.c:943
+msgid "Browser"
+msgstr ""
+
+#: src/docs_inc.c:1467
+msgid ""
+"Built in video recorder stores recorded programs as Transport Stream (.ts) "
+"or Matroska (.mkv) files."
+msgstr ""
+
+#: src/docs_inc.c:57 src/docs_inc.c:531 src/docs_inc.c:783 src/docs_inc.c:991
+#: src/docs_inc.c:1395
+msgid "Button"
+msgstr ""
+
+#: src/docs_inc.c:779
+msgid "Buttons"
+msgstr ""
+
+#: src/docs_inc.c:1627
+msgid ""
+"By default Tvheadend's _Play_ links are playlists, although not all players "
+"accept them (e.g. Media Player Classic Home Cinema). You can bypass this by "
+"removing the `/play/` path from the url."
+msgstr ""
+
+#: src/docs_inc.c:1329
+msgid "CA Stream Filters"
+msgstr ""
+
+#: src/docs_inc.c:1341
+msgid "CAPMT (Linux Network DVBAPI)"
+msgstr ""
+
+#: src/docs_inc.c:289
+msgid "Cable TV, delivered via a cable to your house (DVB-C)"
+msgstr ""
+
+#: src/docs_inc.c:1441
+msgid "Cable signals via DVB-C"
+msgstr ""
+
+#: src/docs_inc.c:1143
+msgid ""
+"Change markdown files in docs/markdown, docs/classes, docs/wizard and type "
+"make. Follow"
+msgstr ""
+
+#: src/docs_inc.c:1279
+msgid "Channel / EPG"
+msgstr ""
+
+#: src/docs_inc.c:1283
+msgid "Channel Tags"
+msgstr ""
+
+#: src/docs_inc.c:1849
+msgid "Channel name"
+msgstr ""
+
+#: src/docs_inc.c:1281
+msgid "Channels"
+msgstr ""
+
+#: src/docs_inc.c:727
+msgid ""
+"Channels in the drop down are ordered by name and can be filtered (by name) "
+"by typing in the box."
+msgstr ""
+
+#: src/docs_inc.c:653
+msgid ""
+"Check all link from tvh (e.g. there are no help buttons on the 'Stream' tabs)"
+msgstr ""
+
+#: src/docs_inc.c:647
+msgid ""
+"Check non-univeral (i.e. item-specific) configuration items (e.g. the IPTV "
+"mux parameters) and make sure they're documented"
+msgstr ""
+
+#: src/docs_inc.c:789
+msgid "Clears all search filters."
+msgstr ""
+
+#: src/docs_inc.c:99
+msgid ""
+"Click on each tuner that you want Tvheadend to use, and ensure \"Enabled\" "
+"is checked in the 'Parameters' list"
+msgstr ""
+
+#: src/docs_inc.c:813 src/docs_inc.c:1684
+msgid "Clock icon"
+msgstr ""
+
+#: src/docs_inc.c:1163
+msgid "Clone the"
+msgstr ""
+
+#: src/docs_inc.c:1343
+msgid "Code word client (newcamd)"
+msgstr ""
+
+#: src/docs_inc.c:1173
+msgid "Command sequence (this presumes Linux, but Windows is very similar):"
+msgstr ""
+
+#: src/docs_inc.c:497
+msgid "Command-line Options"
+msgstr ""
+
+#: src/docs_inc.c:645
+msgid ""
+"Complete the content for 4.0 (4.2 can wait) - strip out what isn't stricly "
+"necessary now (we can come back)"
+msgstr ""
+
+#: src/docs_inc.c:1339
+msgid "Conditional Access (CA)"
+msgstr ""
+
+#: src/docs_inc.c:1809
+msgid "Configuration - General"
+msgstr ""
+
+#: src/docs_inc.c:1777
+msgid "Configuration - IP Blocking Records"
+msgstr ""
+
+#: src/docs_inc.c:1787
+msgid "Configuration - Image Cache"
+msgstr ""
+
+#: src/docs_inc.c:1735
+msgid "Configuration - Passwords"
+msgstr ""
+
+#: src/docs_inc.c:1747
+msgid "Configuration - Recording - Digital Video Recorder Profiles"
+msgstr ""
+
+#: src/docs_inc.c:1797
+msgid "Configuration - SAT>IP Server"
+msgstr ""
+
+#: src/docs_inc.c:85 src/docs_inc.c:1225
+msgid "Configure Tvheadend"
+msgstr ""
+
+#: src/docs_inc.c:1357
+msgid "Connections"
+msgstr ""
+
+#: src/docs_inc.c:379
+msgid "Content from cell 1"
+msgstr ""
+
+#: src/docs_inc.c:381
+msgid "Content from cell 2"
+msgstr ""
+
+#: src/docs_inc.c:383
+msgid "Content in the first column"
+msgstr ""
+
+#: src/docs_inc.c:385
+msgid "Content in the second column"
+msgstr ""
+
+#: src/docs_inc.c:1189
+msgid "Convert all files: `mkdocs build --clean`"
+msgstr ""
+
+#: src/docs_inc.c:1185
+msgid "Convert the webui files: `./convert.sh docs/webui <target_directory>`"
+msgstr ""
+
+#: src/docs_inc.c:1191
+msgid "Copy the contents of the resultant `site` directory to gihub pages"
+msgstr ""
+
+#: src/docs_inc.c:795
+msgid "Create Autorec"
+msgstr ""
+
+#: src/docs_inc.c:107
+msgid ""
+"Create a network of the appropriate type here. You can have multiple "
+"networks of the same type as necessary, e.g. to have two DVB-T networks "
+"defined, one with HD muxes, one without."
+msgstr ""
+
+#: src/docs_inc.c:1475
+msgid "Create rule sets manually or based on EPG queries."
+msgstr ""
+
+#: src/docs_inc.c:797
+msgid ""
+"Creates an auto-recording rule based on the current filter criteria (see "
+"below)."
+msgstr ""
+
+#: src/docs_inc.c:1345
+msgid "DES constant code word client"
+msgstr ""
+
+#: src/docs_inc.c:1267
+msgid "DVB Inputs"
+msgstr ""
+
+#: src/docs_inc.c:1431
+msgid "DVB subtitles supported."
+msgstr ""
+
+#: src/docs_inc.c:1245
+msgid "DVR AutoRec Entries"
+msgstr ""
+
+#: src/docs_inc.c:473 src/docs_inc.c:1237 src/docs_inc.c:1577
+msgid "DVR Entries"
+msgstr ""
+
+#: src/docs_inc.c:25
+msgid "DVR Entry"
+msgstr ""
+
+#: src/docs_inc.c:1652
+msgid ""
+"DVR entries are used by Tvheadend to keep track of upcoming, finished and "
+"failed recordings."
+msgstr ""
+
+#: src/docs_inc.c:405
+msgid "Debian/Ubuntu installation instructions"
+msgstr ""
+
+#: src/docs_inc.c:507
+msgid "Debug Options"
+msgstr ""
+
+#: src/docs_inc.c:1349 src/docs_inc.c:1551
+msgid "Debugging"
+msgstr ""
+
+#: src/docs_inc.c:477 src/docs_inc.c:1605
+msgid "Deleting an Entry"
+msgstr ""
+
+#: src/docs_inc.c:29
+msgid "Deleting an Entry."
+msgstr ""
+
+#: src/docs_inc.c:811 src/docs_inc.c:1682 src/docs_inc.c:1837
+#: src/docs_inc.c:1930
+msgid "Description"
+msgstr ""
+
+#: src/docs_inc.c:1235 src/docs_inc.c:1465
+msgid "Digital Video Recorder"
+msgstr ""
+
+#: src/docs_inc.c:1761
+msgid "Digital Video Recorder - Autorec"
+msgstr ""
+
+#: src/docs_inc.c:1567
+msgid "Digital Video Recorder - Failed Recordings"
+msgstr ""
+
+#: src/docs_inc.c:3
+msgid "Digital Video Recorder - Finished Recordings"
+msgstr ""
+
+#: src/docs_inc.c:1710
+msgid "Digital Video Recorder - Time Schedules"
+msgstr ""
+
+#: src/docs_inc.c:419
+msgid "Digital Video Recorder - Upcoming/Current Recordings"
+msgstr ""
+
+#: src/docs_inc.c:1335
+msgid "Digital Video Recorder Profiles"
+msgstr ""
+
+#: src/docs_inc.c:63 src/docs_inc.c:537 src/docs_inc.c:801 src/docs_inc.c:997
+#: src/docs_inc.c:1401
+msgid "Display this help page."
+msgstr ""
+
+#: src/docs_inc.c:573
+msgid "Displaying and Manipulating Columns"
+msgstr ""
+
+#: src/docs_inc.c:409
+msgid ""
+"Do not assume that your distro's package manager will give you the latest "
+"version of Tvheadend - indeed, give you any version at all. Always check."
+msgstr ""
+
+#: src/docs_inc.c:947
+msgid "Dolby Digital (AC3)"
+msgstr ""
+
+#: src/docs_inc.c:17 src/docs_inc.c:1587
+msgid "Downloading a Recording"
+msgstr ""
+
+#: src/docs_inc.c:1113
+msgid ""
+"Driver software typically comes either built-in to the operating system (a "
+"clue here is documentation that says _\"supported since kernel 3.16\"_ , for "
+"example) or as an external program that needs to be compiled in (e.g. how "
+"you'd build TBS' or Digital Devices drivers, or perhaps where the driver is "
+"supported in a later version of LinuxTV V4L-DVB than has made it to your "
+"kernel - the giveaway here is _\"compile and install the latest media_build"
+"\"_ )."
+msgstr ""
+
+#: src/docs_inc.c:2041
+msgid ""
+"During scanning, the number of muxes and services shown below should "
+"increase. If this doesn't happen, check the connection(s) to your device(s).."
+msgstr ""
+
+#: src/docs_inc.c:433
+msgid "EPG"
+msgstr ""
+
+#: src/docs_inc.c:857
+msgid "EPG Detail 1"
+msgstr ""
+
+#: src/docs_inc.c:863
+msgid "EPG Detail 2"
+msgstr ""
+
+#: src/docs_inc.c:1289
+msgid "EPG Grabber"
+msgstr ""
+
+#: src/docs_inc.c:1287
+msgid "EPG Grabber Channels"
+msgstr ""
+
+#: src/docs_inc.c:1291
+msgid "EPG Grabber Modules"
+msgstr ""
+
+#: src/docs_inc.c:1233
+msgid "EPG Grid"
+msgstr ""
+
+#: src/docs_inc.c:365
+msgid "Each numbered (ordered) list will restart from 1."
+msgstr ""
+
+#: src/docs_inc.c:569
+msgid ""
+"Each tab is then typically laid out with a menu bar across the top that "
+"provides access to Add/Save/Edit-type functions, and a grid like a "
+"spreadsheet below that. The grid items are frequently editable."
+msgstr ""
+
+#: src/docs_inc.c:1495
+msgid "Easy to Configure and Administer"
+msgstr ""
+
+#: src/docs_inc.c:585
+msgid "Editing Fields"
+msgstr ""
+
+#: src/docs_inc.c:21
+msgid "Editing an Entry"
+msgstr ""
+
+#: src/docs_inc.c:695 src/docs_inc.c:1231 src/docs_inc.c:1479
+msgid "Electronic Program Guide"
+msgstr ""
+
+#: src/docs_inc.c:2020 src/docs_inc.c:2079
+msgid ""
+"Enter the access control details to secure your system. The first part of "
+"this covers the network details for address-based access to the system; for "
+"example, 192.168.1.0/24 to allow local access only to 192.168.1.x clients, "
+"or 0.0.0.0/0 or empty value for access from any system."
+msgstr ""
+
+#: src/docs_inc.c:1877
+msgid "Error message"
+msgstr ""
+
+#: src/docs_inc.c:849
+msgid "Event details and recording"
+msgstr ""
+
+#: src/docs_inc.c:751
+msgid "Example Purpose"
+msgstr ""
+
+#: src/docs_inc.c:1839
+msgid "Example value"
+msgstr ""
+
+#: src/docs_inc.c:1696
+msgid "Exclamation icon"
+msgstr ""
+
+#: src/docs_inc.c:679
+msgid ""
+"Expand a bit on command-line options and give some examples of common usage"
+msgstr ""
+
+#: src/docs_inc.c:1089
+msgid ""
+"External HDHomeRun tuners that send MPEG-TS streams over a LAN connection"
+msgstr ""
+
+#: src/docs_inc.c:1299
+msgid "External PyEPG"
+msgstr ""
+
+#: src/docs_inc.c:1087
+msgid "External SAT>IP tuners that send MPEG-TS streams over a LAN connection"
+msgstr ""
+
+#: src/docs_inc.c:1083
+msgid "External USB tuners that plug in"
+msgstr ""
+
+#: src/docs_inc.c:1301
+msgid "External XMLTV"
+msgstr ""
+
+#: src/docs_inc.c:1619
+msgid "FAQ: Frequently-asked Questions"
+msgstr ""
+
+#: src/docs_inc.c:485 src/docs_inc.c:1243 src/docs_inc.c:1672
+msgid "Failed Recordings"
+msgstr ""
+
+#: src/docs_inc.c:1599
+msgid "Failed recording can be moved to the"
+msgstr ""
+
+#: src/docs_inc.c:1215
+msgid "Features"
+msgstr ""
+
+#: src/docs_inc.c:1423
+msgid "Features of Tvheadend"
+msgstr ""
+
+#: src/docs_inc.c:1936
+msgid "File missing"
+msgstr ""
+
+#: src/docs_inc.c:713
+msgid "Filter"
+msgstr ""
+
+#: src/docs_inc.c:749
+msgid "Filter Range"
+msgstr ""
+
+#: src/docs_inc.c:723
+msgid "Filter channel..."
+msgstr ""
+
+#: src/docs_inc.c:735
+msgid "Filter content type..."
+msgstr ""
+
+#: src/docs_inc.c:741
+msgid "Filter duration..."
+msgstr ""
+
+#: src/docs_inc.c:729
+msgid "Filter tag..."
+msgstr ""
+
+#: src/docs_inc.c:709
+msgid "Filtering (or searching)"
+msgstr ""
+
+#: src/docs_inc.c:1241 src/docs_inc.c:1601 src/docs_inc.c:1666
+msgid "Finished Recordings"
+msgstr ""
+
+#: src/docs_inc.c:375
+msgid "First Header"
+msgstr ""
+
+#: src/docs_inc.c:343
+msgid "First ordered list item"
+msgstr ""
+
+#: src/docs_inc.c:1091
+msgid ""
+"Follow the appropriate installation instructions and, if relevant, the setup "
+"instruction (e.g. for SAT>IP, which are effectively small, standalone "
+"computers)."
+msgstr ""
+
+#: src/docs_inc.c:403
+msgid ""
+"Follow the instructions that are specific to your Linux distribution (Ubuntu/"
+"Debian/Mint, Arch, Fedora...). This will typically be PPA-and-dpkg for "
+"Debian, but most other distros will need you to build your own version from "
+"source."
+msgstr ""
+
+#: src/docs_inc.c:853
+msgid ""
+"For EPG providers that supply series link information there will also be a "
+"_[Record series]_ button that will record all entries in the series."
+msgstr ""
+
+#: src/docs_inc.c:2114
+msgid ""
+"For devices with multiple tuners (e.g. either cable or terrestrial), be "
+"aware that many only allow you to use one tuner at a time. Selecting more "
+"than one tuner per device can thus result in unexpected behavior."
+msgstr ""
+
+#: src/docs_inc.c:859
+msgid ""
+"For events without any series link information, an _[Autorec]_ button will "
+"be provided to create a pseudo-series link using the autorec feature."
+msgstr ""
+
+#: src/docs_inc.c:1908
+msgid ""
+"For example, if a program is to start at 13:00 and you set a padding of 5 "
+"minutes, it will start recording at 12:54:30 (including a warm-up time of 30 "
+"seconds (user configurable)). If this isn't specified, any pre-recording "
+"padding as set in the channel or DVR profile will be used."
+msgstr ""
+
+#: src/docs_inc.c:179
+msgid ""
+"Force scanning can take some time. You may continue to use Tvheadend while a "
+"scan is in progress, but doing so will increase the time needed for it to "
+"complete. Note that the time required can vary depending on a number of "
+"factors, such as how many tuners you have available and the number of muxes "
+"on each."
+msgstr ""
+
+#: src/docs_inc.c:1835
+msgid "Format"
+msgstr ""
+
+#: src/docs_inc.c:1841
+msgid "Full path to recording"
+msgstr ""
+
+#: src/docs_inc.c:1519
+msgid "Fully-Integrated with Mainstream Media Players"
+msgstr ""
+
+#: src/docs_inc.c:59 src/docs_inc.c:533 src/docs_inc.c:715 src/docs_inc.c:785
+#: src/docs_inc.c:993 src/docs_inc.c:1397
+msgid "Function"
+msgstr ""
+
+#: src/docs_inc.c:1229 src/docs_inc.c:1251
+msgid "General"
+msgstr ""
+
+#: src/docs_inc.c:559
+msgid "General Overview of Web Interface"
+msgstr ""
+
+#: src/docs_inc.c:651
+msgid "Generate new webUI help pages and push them to the tvheadend repo"
+msgstr ""
+
+#: src/docs_inc.c:501
+msgid "Generic Options"
+msgstr ""
+
+#: src/docs_inc.c:1217
+msgid "Getting Started"
+msgstr ""
+
+#: src/docs_inc.c:323
+msgid "GitHub mastering markdown"
+msgstr ""
+
+#: src/docs_inc.c:139
+msgid "Good sources of transmitter/mux information include:"
+msgstr ""
+
+#: src/docs_inc.c:899 src/docs_inc.c:927 src/docs_inc.c:953
+msgid "Google Chrome"
+msgstr ""
+
+#: src/docs_inc.c:67 src/docs_inc.c:541 src/docs_inc.c:803 src/docs_inc.c:1001
+#: src/docs_inc.c:1405
+msgid "Grid Items"
+msgstr ""
+
+#: src/docs_inc.c:923
+msgid "H.264"
+msgstr ""
+
+#: src/docs_inc.c:1427
+msgid "H.265 (HEVC), H.264 (MPEG-4 AVC) and MPEG2 video supported."
+msgstr ""
+
+#: src/docs_inc.c:675
+msgid "HD Homerun setup"
+msgstr ""
+
+#: src/docs_inc.c:1455
+msgid "HTSP (Home TV Streaming Protocol)."
+msgstr ""
+
+#: src/docs_inc.c:1307
+msgid "HTSP Profile"
+msgstr ""
+
+#: src/docs_inc.c:1457
+msgid "HTTP streaming."
+msgstr ""
+
+#: src/docs_inc.c:1023
+msgid "Hardware/Software Fundamentals"
+msgstr ""
+
+#: src/docs_inc.c:61 src/docs_inc.c:535 src/docs_inc.c:799 src/docs_inc.c:995
+#: src/docs_inc.c:1399
+msgid "Help"
+msgstr ""
+
+#: src/docs_inc.c:19 src/docs_inc.c:1589
+msgid ""
+"Highlight the desired entry then press the _[Download]_ button on the menu "
+"bar."
+msgstr ""
+
+#: src/docs_inc.c:31 src/docs_inc.c:1607
+msgid ""
+"Highlight the desired entry(s) then press the _[Delete]_ button on the menu "
+"bar."
+msgstr ""
+
+#: src/docs_inc.c:177
+msgid ""
+"Highlight the network(s) you would like to force scan and then press the "
+"\"Force Scan\" button."
+msgstr ""
+
+#: src/docs_inc.c:623
+msgid "How Lightweight?"
+msgstr ""
+
+#: src/docs_inc.c:625
+msgid "How about light enough to run on a travel router? Take a look at this"
+msgstr ""
+
+#: src/docs_inc.c:685
+msgid ""
+"How deep do we want to (need to) get into setting up tuners - that's a "
+"constant source of woe for people?"
+msgstr ""
+
+#: src/docs_inc.c:667
+msgid "How to compile/install on _insert your distro here_"
+msgstr ""
+
+#: src/docs_inc.c:659
+msgid "How to configure a recording"
+msgstr ""
+
+#: src/docs_inc.c:665
+msgid "How to set up a multi-profile installation (access)"
+msgstr ""
+
+#: src/docs_inc.c:663
+msgid ""
+"How to set up conditional access (\"Conditional Access System Configuration"
+"\")"
+msgstr ""
+
+#: src/docs_inc.c:661
+msgid "How to watch Live TV"
+msgstr ""
+
+#: src/docs_inc.c:1265
+msgid "IP Address Block List"
+msgstr ""
+
+#: src/docs_inc.c:1988 src/docs_inc.c:2064
+msgid "IRC"
+msgstr ""
+
+#: src/docs_inc.c:809 src/docs_inc.c:1680
+msgid "Icon"
+msgstr ""
+
+#: src/docs_inc.c:133
+msgid ""
+"Ideally, this is where you'll see a list of the pre-populated muxes as "
+"created when you set up your initial network. However, should there be any "
+"issues, this is where you can manually add missing muxes. You only really "
+"need to worry about this if the pre-defined list didn't work (e.g. because "
+"of out-of-date data as broadcasters re-arrange their services or because "
+"automatic detection (network discovery) hasn't successfully found all the "
+"muxes over time."
+msgstr ""
+
+#: src/docs_inc.c:1507
+msgid "Idle scanning for automatic detection of muxes and services."
+msgstr ""
+
+#: src/docs_inc.c:101
+msgid ""
+"If anything is obviously wrong at this point, you probably have a driver/"
+"firmware error which you'll need to resolve before going any further."
+msgstr ""
+
+#: src/docs_inc.c:2112
+msgid ""
+"If using IPTV, the playlist you enter must contain valid links to streams "
+"using codecs supported by Tvheadend."
+msgstr ""
+
+#: src/docs_inc.c:687
+msgid ""
+"If we do all the above, do we need the FAQ pages? Check existing manual/guide"
+msgstr ""
+
+#: src/docs_inc.c:851
+msgid ""
+"If you click on a single event, a popup will display detailed information "
+"about the event. It also allows you to schedule the event for recording by "
+"clicking on the _[Record program]_ button."
+msgstr ""
+
+#: src/docs_inc.c:2056
+msgid ""
+"If you confirm this dialog, the default administrator account will be "
+"removed. Please then the use credentials you defined thru this wizard."
+msgstr ""
+
+#: src/docs_inc.c:135
+msgid ""
+"If you do need to add something manually, you'll need to search the Internet "
+"for details of the appropriate transmitter and settings: satellites tend not "
+"to change much and are universal over a large area, but terrestrial muxes "
+"are typically very localised and you'll need to know which specific "
+"transmitter you're listening to."
+msgstr ""
+
+#: src/docs_inc.c:2045
+msgid ""
+"If you don't see any signal information at all, but the number of muxes or "
+"services is increasing anyway, the driver used by your device isn't "
+"supplying signal information to Tvheadend. In most cases this isn't an "
+"issue.."
+msgstr ""
+
+#: src/docs_inc.c:257
+msgid "If you get really stuck, there's the"
+msgstr ""
+
+#: src/docs_inc.c:2030 src/docs_inc.c:2089
+msgid ""
+"If you plan on accessing Tvheadend over the Internet, make sure you use "
+"strong credentials and ___do not allow anonymous access at all_ __ ."
+msgstr ""
+
+#: src/docs_inc.c:1982 src/docs_inc.c:2058
+msgid "If you require further help, check out"
+msgstr ""
+
+#: src/docs_inc.c:865
+msgid ""
+"If you schedule any kind of recording from this point, you can choose a "
+"specific DVR profile that will apply to the recording or autorec rule. This "
+"will normally show as _(default)_ , but you can define different profiles in "
+"the __Configuration -> Recording -> Digital Video Recorder__ tab. This "
+"allows you to set, for example, more post- broadcast padding for a channel "
+"that always runs late, or perhaps define a different post-processing command "
+"to strip adverts out on a commercial channel."
+msgstr ""
+
+#: src/docs_inc.c:885
+msgid ""
+"If you want to watch live TV in the web UI, the _[Watch TV]_ button will pop "
+"up a HTML5 video player, where you can select the channel to watch and a "
+"stream profile to use. A transcoding stream profile is required to transcode "
+"the stream to a format that is supported by your browser, as browsers only "
+"support certain formats and codecs."
+msgstr ""
+
+#: src/docs_inc.c:2007
+msgid ""
+"If you would like Tvheadend to do this for you, check the 'Map all services' "
+"option below, but be aware that this will also map encrypted services you "
+"may not have access to."
+msgstr ""
+
+#: src/docs_inc.c:209
+msgid "If you would like to use bouquets see"
+msgstr ""
+
+#: src/docs_inc.c:1633
+msgid ""
+"If you're not seeing any service names at all this may indicate an issue "
+"with your hardware and/or configuration."
+msgstr ""
+
+#: src/docs_inc.c:1967
+msgid ""
+"If you're unsure as to which list(s) to select you may want to look online "
+"for details about the various television reception choices available in your "
+"area."
+msgstr ""
+
+#: src/docs_inc.c:15 src/docs_inc.c:1585
+msgid ""
+"If your browser supports video playback it should automatically start "
+"playing. Note, the _Play_ links do not link to an actual file but to a m3u "
+"playlist."
+msgstr ""
+
+#: src/docs_inc.c:1255
+msgid "Image Cache Config"
+msgstr ""
+
+#: src/docs_inc.c:1097
+msgid ""
+"In addition, even USB3 doesn't have the greatest practical bandwidth per "
+"bus. That means you're probably asking for problems if you have four DVB-S2 "
+"dongles on the same USB connection to the motherboard."
+msgstr ""
+
+#: src/docs_inc.c:317
+msgid ""
+"In general, __keep it simple__ , especially if you're contributing to the "
+"pages that get carried over into the web help. The simpler the formatting, "
+"the cleaner the conversion, the less tidying up there is afterwards."
+msgstr ""
+
+#: src/docs_inc.c:2005
+msgid ""
+"In order for your frontend client(s) (such as Kodi, Movian, and similar) to "
+"see/play channels, you must first map discovered services to channels."
+msgstr ""
+
+#: src/docs_inc.c:711
+msgid ""
+"In the EPG top tool bar you can access five input fields. These are used to "
+"filter/search for events. The form uses implicit AND between the input "
+"fields. This means that all filters must match for an event to be displayed."
+msgstr ""
+
+#: src/docs_inc.c:97
+msgid ""
+"Individual tuners are then the next level down (e.g. `DiBcom 7000PC : DVB-T "
+"#0`)"
+msgstr ""
+
+#: src/docs_inc.c:1692
+msgid "Information icon"
+msgstr ""
+
+#: src/docs_inc.c:1501
+msgid "Initial setup can be done by choosing one of the pre-defined"
+msgstr ""
+
+#: src/docs_inc.c:1435
+msgid "Input Sources"
+msgstr ""
+
+#: src/docs_inc.c:399
+msgid "Install Tvheadend"
+msgstr ""
+
+#: src/docs_inc.c:1067
+msgid "Install Your Tuners"
+msgstr ""
+
+#: src/docs_inc.c:1153
+msgid "Install dependencies ("
+msgstr ""
+
+#: src/docs_inc.c:1221
+msgid "Install hardware"
+msgstr ""
+
+#: src/docs_inc.c:1223
+msgid "Install tvheadend"
+msgstr ""
+
+#: src/docs_inc.c:1149
+msgid "Instructions for User Guide (FIXME!)"
+msgstr ""
+
+#: src/docs_inc.c:1141
+msgid "Instructions for on-line help"
+msgstr ""
+
+#: src/docs_inc.c:407
+msgid "Instructions on how to build from source"
+msgstr ""
+
+#: src/docs_inc.c:149
+msgid "Interactive EU DVB-T map"
+msgstr ""
+
+#: src/docs_inc.c:1085
+msgid "Internal (e.g. PCI) tuners that go inside the computer chassis"
+msgstr ""
+
+#: src/docs_inc.c:1295
+msgid "Internal PyEPG"
+msgstr ""
+
+#: src/docs_inc.c:1297
+msgid "Internal XMLTV"
+msgstr ""
+
+#: src/docs_inc.c:1537
+msgid "Internationalisation"
+msgstr ""
+
+#: src/docs_inc.c:295
+msgid ""
+"Internet and LAN feeds, such as IPTV, SAT>IP, HDHomeRun and a general-"
+"purpose MPEG-TS `pipe://`"
+msgstr ""
+
+#: src/docs_inc.c:1207
+msgid "Introduction"
+msgstr ""
+
+#: src/docs_inc.c:287
+msgid "It supports input from:"
+msgstr ""
+
+#: src/docs_inc.c:605
+msgid ""
+"It's perfectly possible to install and run Tvheadend as a single-seat "
+"installation, with the software running on the same system as any client "
+"software (e.g. Kodi), with all files stored locally."
+msgstr ""
+
+#: src/docs_inc.c:141
+msgid "KingofSat"
+msgstr ""
+
+#: src/docs_inc.c:263
+msgid "Kiwi IRC"
+msgstr ""
+
+#: src/docs_inc.c:1443
+msgid "LAN/IPTV signals such as IPTV, SAT>IP, HDHomeRun"
+msgstr ""
+
+#: src/docs_inc.c:793
+msgid "Launches Live TV via HTML5 video (see below)."
+msgstr ""
+
+#: src/docs_inc.c:1105
+msgid "LinuxTV wiki device library"
+msgstr ""
+
+#: src/docs_inc.c:337
+msgid "Lists"
+msgstr ""
+
+#: src/docs_inc.c:1453
+msgid "Local or remote disk, via the built-in digital video recorder."
+msgstr ""
+
+#: src/docs_inc.c:767
+msgid "Longer programmes, e.g. films"
+msgstr ""
+
+#: src/docs_inc.c:153
+msgid "Lyngsat"
+msgstr ""
+
+#: src/docs_inc.c:1317
+msgid "MP4/libav Profile"
+msgstr ""
+
+#: src/docs_inc.c:893
+msgid "MPEG-PS"
+msgstr ""
+
+#: src/docs_inc.c:891
+msgid "MPEG-TS"
+msgstr ""
+
+#: src/docs_inc.c:1313
+msgid "MPEG-TS/libav Profile"
+msgstr ""
+
+#: src/docs_inc.c:945
+msgid "MPEG2 Audio"
+msgstr ""
+
+#: src/docs_inc.c:921
+msgid "MPEG2 Video"
+msgstr ""
+
+#: src/docs_inc.c:1167
+msgid ""
+"Make changes locally. Pay close attention to formatting and syntax - use the "
+"live reload function (`mkdocs serve`) to preview them."
+msgstr ""
+
+#: src/docs_inc.c:461
+msgid "Manual Event Entry/Editing an Entry"
+msgstr ""
+
+#: src/docs_inc.c:1117
+msgid ""
+"Many Linux distros include a package for the most common devices (e.g. "
+"_linux-firmwares_ under Ubuntu or _firmware-linux-nonfree_ under Debian). If "
+"this isn't sufficient, a good source of firmware files is the"
+msgstr ""
+
+#: src/docs_inc.c:2013
+msgid ""
+"Many providers include undesirable services - Teleshopping, Adult "
+"Entertainment, etc; using the 'Map all services' will include these."
+msgstr ""
+
+#: src/docs_inc.c:207
+msgid ""
+"Many service providers use bouquets for channel management and just like a "
+"standard set-top box Tvheadend can use these to automatically manage and "
+"keep your channels up-to-date."
+msgstr ""
+
+#: src/docs_inc.c:2100
+msgid "Many tuners are able to receive different signal types.."
+msgstr ""
+
+#: src/docs_inc.c:1115
+msgid ""
+"Many tuners then also require __firmware__ - normally, a binary file that's "
+"been extracted from the proprietary drivers used by Windows."
+msgstr ""
+
+#: src/docs_inc.c:2003
+msgid "Map all discovered services to channels."
+msgstr ""
+
+#: src/docs_inc.c:321
+msgid "Markdown basics:"
+msgstr ""
+
+#: src/docs_inc.c:313
+msgid "Markdown/Formatting Crib Sheet"
+msgstr ""
+
+#: src/docs_inc.c:895
+msgid "Matroska"
+msgstr ""
+
+#: src/docs_inc.c:1311
+msgid "Matroska Profile"
+msgstr ""
+
+#: src/docs_inc.c:1315
+msgid "Matroska/libav Profile"
+msgstr ""
+
+#: src/docs_inc.c:763
+msgid "Medium-length programmes, e.g. documentaries"
+msgstr ""
+
+#: src/docs_inc.c:53 src/docs_inc.c:527 src/docs_inc.c:705 src/docs_inc.c:987
+#: src/docs_inc.c:1391
+msgid "Menu Bar/Buttons"
+msgstr ""
+
+#: src/docs_inc.c:1181
+msgid "Merge the changes"
+msgstr ""
+
+#: src/docs_inc.c:339
+msgid "Mixed lists don't work without further python extensions. Be careful."
+msgstr ""
+
+#: src/docs_inc.c:1525
+msgid "Mobile/Remote Client Support"
+msgstr ""
+
+#: src/docs_inc.c:1557
+msgid "More than one option can be used, e.g. _--trace cwc,dvr,linuxdvb_"
+msgstr ""
+
+#: src/docs_inc.c:739
+msgid ""
+"Most DVB networks classify their events into content groups. This field "
+"allows you to filter based on content type (e.g. “Sports” or “Game Show”). "
+"Supported tags are determined by your broadcaster. Again, simply start "
+"typing to filter the entries if you have a long list to choose from."
+msgstr ""
+
+#: src/docs_inc.c:571
+msgid ""
+"Most configuration items - certainly the ones that are common to all types "
+"of item covered by that tab - are in this grid. However, some item-specific "
+"configuration items are then only available through the _Add_ and _Edit_ "
+"dialog boxes. For example, the main network configuration tab grid covers "
+"parameters common to DVB-S, -T, -C and IPTV networks, but specific things "
+"such as FEC rolloff or mux URL are then only in the dialogs for networks "
+"that need these values."
+msgstr ""
+
+#: src/docs_inc.c:593
+msgid ""
+"Most rows are multi-selectable, so you can carry out certain actions on more "
+"than one entry at the same time. So, for example, you can select multiple "
+"items by using ctrl+click on each entry or click, shift+click to select a "
+"range."
+msgstr ""
+
+#: src/docs_inc.c:1521
+msgid "Movian and Kodi are the main targets."
+msgstr ""
+
+#: src/docs_inc.c:1597
+msgid "Moving an Entry"
+msgstr ""
+
+#: src/docs_inc.c:909 src/docs_inc.c:935 src/docs_inc.c:963
+msgid "Mozilla Firefox"
+msgstr ""
+
+#: src/docs_inc.c:1511
+msgid "Multi-User Support"
+msgstr ""
+
+#: src/docs_inc.c:1477
+msgid ""
+"Multiple DVR profiles that support different target directories, post-"
+"processing options, filtering options, etc."
+msgstr ""
+
+#: src/docs_inc.c:1469
+msgid "Multiple simultaneous recordings are supported."
+msgstr ""
+
+#: src/docs_inc.c:1277
+msgid "Mux Schedulers"
+msgstr ""
+
+#: src/docs_inc.c:1273
+msgid "Muxes"
+msgstr ""
+
+#: src/docs_inc.c:1045
+msgid ""
+"Muxes then carry __services__ . These are the individual streams of data. "
+"They can be TV or radio programmes, they can provide data services such as "
+"digital teletext, or they can be used as part of the control code for catch-"
+"up IPTV services."
+msgstr ""
+
+#: src/docs_inc.c:117
+msgid ""
+"Network discovery (enabled by default) increases the likelihood of receiving "
+"all available muxes and services."
+msgstr ""
+
+#: src/docs_inc.c:1271
+msgid "Networks"
+msgstr ""
+
+#: src/docs_inc.c:1969
+msgid "Networks already configured will not be shown below."
+msgstr ""
+
+#: src/docs_inc.c:1043
+msgid ""
+"Networks then have __muxes__ . These are the carrier frequencies that exist "
+"on the old analogue channels that are used to transmit multiple digital "
+"signals rather than a single analogue one. These signals are multiplexed "
+"together, hence the name _mux_ ."
+msgstr ""
+
+#: src/docs_inc.c:1863
+msgid "News"
+msgstr ""
+
+#: src/docs_inc.c:1875
+msgid "News and stories…"
+msgstr ""
+
+#: src/docs_inc.c:1847
+msgid "News.mkv"
+msgstr ""
+
+#: src/docs_inc.c:1946
+msgid "No free tuners - usually in-use by other subscription(s)."
+msgstr ""
+
+#: src/docs_inc.c:1948
+msgid "No tuners are enabled and/or have no network assigned."
+msgstr ""
+
+#: src/docs_inc.c:575
+msgid ""
+"Not all columns are necessarily visible. If you hover your mouse over a "
+"column heading, you'll see a down arrow - click here, and a drop-down menu "
+"will appear to give you access to __which columns are shown and which are "
+"not__ ."
+msgstr ""
+
+#: src/docs_inc.c:775
+msgid ""
+"Note that you don’t have to press a ‘Search’ button: the grid immediately "
+"updates itself as you change the filters."
+msgstr ""
+
+#: src/docs_inc.c:65 src/docs_inc.c:539 src/docs_inc.c:999 src/docs_inc.c:1403
+msgid "Note: FIXME: Need to add a help button!"
+msgstr ""
+
+#: src/docs_inc.c:1639
+msgid ""
+"Note: The above path only applies to Debian/Ubuntu systems others may differ."
+msgstr ""
+
+#: src/docs_inc.c:2096
+msgid ""
+"Now let's get your tuners configured. Go ahead and select a network for each "
+"of the tuners you would like to use. if you do not assign a network to a "
+"tuner it will __not__ be used."
+msgstr ""
+
+#: src/docs_inc.c:1893
+msgid "Number of data errors during recording"
+msgstr ""
+
+#: src/docs_inc.c:1889
+msgid "Number of errors during recording"
+msgstr ""
+
+#: src/docs_inc.c:1293
+msgid "OTA Module"
+msgstr ""
+
+#: src/docs_inc.c:649
+msgid ""
+"Obviously, fill in the minor gaps as highlighted in the document: buttons, "
+"descriptions, etc."
+msgstr ""
+
+#: src/docs_inc.c:363
+msgid "Oh, and"
+msgstr ""
+
+#: src/docs_inc.c:95
+msgid ""
+"On this tab, you'll see a tree structure, with the Linux device list at the "
+"top level (e.g. `/dev/dvb/adapter0`)"
+msgstr ""
+
+#: src/docs_inc.c:185
+msgid ""
+"Once scanning for services is complete, you need to map the services to "
+"channels so your client can actually request them (i.e. so you can watch or "
+"record)."
+msgstr ""
+
+#: src/docs_inc.c:437
+msgid ""
+"Once you've found the program you'd like to record, click on it, then using "
+"the resultant dialog you can:"
+msgstr ""
+
+#: src/docs_inc.c:1739
+msgid "One user name might have multiple passwords."
+msgstr ""
+
+#: src/docs_inc.c:731
+msgid ""
+"Only display events from channels which are included in the selected tag."
+msgstr ""
+
+#: src/docs_inc.c:725
+msgid "Only display events from the selected channel."
+msgstr ""
+
+#: src/docs_inc.c:743
+msgid ""
+"Only display events that fall between the given minimum and maximum "
+"durations."
+msgstr ""
+
+#: src/docs_inc.c:737
+msgid "Only display events that match the given content type tag."
+msgstr ""
+
+#: src/docs_inc.c:719
+msgid "Only display events that match the given title."
+msgstr ""
+
+#: src/docs_inc.c:1801
+msgid ""
+"Only networks with the “SAT>IP Source” field set are exported through the "
+"SAT>IP protocol. This field is matched through the “src” parameter asked "
+"from the SAT>IP client. Usually (and by default) this value is 1. For "
+"satellite tuners, this value determines the satellite source (dish). By "
+"specification position 1 = DiseqC AA, 2 = DiseqC AB, 3 = DiseqC BA, 4 = "
+"DiseqC BB, but any numbers may be used - depends on the SAT>IP client. Note "
+"that if you use a similar number for multiple networks, the first matched "
+"network containing the mux with requested parameters will win (also for "
+"unknown mux)."
+msgstr ""
+
+#: src/docs_inc.c:1119
+msgid "OpenElec firmware library"
+msgstr ""
+
+#: src/docs_inc.c:359
+msgid "Or minuses"
+msgstr ""
+
+#: src/docs_inc.c:361
+msgid "Or pluses"
+msgstr ""
+
+#: src/docs_inc.c:351
+msgid "Ordered sub-list"
+msgstr ""
+
+#: src/docs_inc.c:1331
+msgid "Other Stream Filters"
+msgstr ""
+
+#: src/docs_inc.c:1451
+msgid "Output Targets"
+msgstr ""
+
+#: src/docs_inc.c:1211
+msgid "Overview"
+msgstr ""
+
+#: src/docs_inc.c:277
+msgid "Overview of Tvheadend"
+msgstr ""
+
+#: src/docs_inc.c:1853
+msgid "Owner of this recording"
+msgstr ""
+
+#: src/docs_inc.c:565
+msgid "Page Structure"
+msgstr ""
+
+#: src/docs_inc.c:325
+msgid "Paragraphs Versus Definition Lists"
+msgstr ""
+
+#: src/docs_inc.c:1263
+msgid "Passwords"
+msgstr ""
+
+#: src/docs_inc.c:603
+msgid "Physical Architecture"
+msgstr ""
+
+#: src/docs_inc.c:673
+msgid "Platform differences - Ubuntu, Fedora, Red Hat, Arch, Android..."
+msgstr ""
+
+#: src/docs_inc.c:671
+msgid ""
+"Platform differences - what you need to transcode, or what you can expect "
+"from Android vs GNU/Linux"
+msgstr ""
+
+#: src/docs_inc.c:1581
+msgid "Playing a Failed Recording"
+msgstr ""
+
+#: src/docs_inc.c:11
+msgid "Playing a Recording"
+msgstr ""
+
+#: src/docs_inc.c:455
+msgid "Please see"
+msgstr ""
+
+#: src/docs_inc.c:1449
+msgid ""
+"Powerful many-to-many channel:service:tuner mapping that allows you to "
+"select channels irrespective of the underlying carrier (for channels that "
+"broadcast on multiple sources)."
+msgstr ""
+
+#: src/docs_inc.c:191
+msgid "Press the \"Map services\" button and then \"Map all services\"."
+msgstr ""
+
+#: src/docs_inc.c:1873
+msgid "Program description"
+msgstr ""
+
+#: src/docs_inc.c:1869
+msgid "Program episode"
+msgstr ""
+
+#: src/docs_inc.c:1865
+msgid "Program subtitle"
+msgstr ""
+
+#: src/docs_inc.c:1861
+msgid "Program title"
+msgstr ""
+
+#: src/docs_inc.c:1183
+msgid "Pull the latest revisions from the repository"
+msgstr ""
+
+#: src/docs_inc.c:247
+msgid "Purpose"
+msgstr ""
+
+#: src/docs_inc.c:1621
+msgid "Q: How do I get a playlist for all my channels?"
+msgstr ""
+
+#: src/docs_inc.c:1635
+msgid "Q: I get a blank page when trying to view the web interface!"
+msgstr ""
+
+#: src/docs_inc.c:1629
+msgid ""
+"Q: Tvheadend has scanned for services but some rows in the Service Name "
+"column are blank, is that normal?"
+msgstr ""
+
+#: src/docs_inc.c:1625
+msgid "Q: Why am I getting a playlist when trying to view/stream a channel?"
+msgstr ""
+
+#: src/docs_inc.c:1641
+msgid "Q: Why can't I see my tuners in Tvheadend's interface?"
+msgstr ""
+
+#: src/docs_inc.c:1591
+msgid "Re-recording an Entry/Re-schedule a Failed Recording"
+msgstr ""
+
+#: src/docs_inc.c:443
+msgid ""
+"Record all upcoming series episodes by pressing the _[Record series]_ "
+"button. __This replaces the _[Autorec]_ button when series link information "
+"is available.__"
+msgstr ""
+
+#: src/docs_inc.c:453
+msgid "Record events that broadcast between certain times or days of the week."
+msgstr ""
+
+#: src/docs_inc.c:451
+msgid ""
+"Record events using regular expressions, they can be as simple or as "
+"powerful as you like."
+msgstr ""
+
+#: src/docs_inc.c:439
+msgid "Record it once by pressing the _[Record program]_ button."
+msgstr ""
+
+#: src/docs_inc.c:1333
+msgid "Recording"
+msgstr ""
+
+#: src/docs_inc.c:817 src/docs_inc.c:1688
+msgid "Recording icon"
+msgstr ""
+
+#: src/docs_inc.c:319
+msgid "References"
+msgstr ""
+
+#: src/docs_inc.c:1059
+msgid "Relationship Between Tuners, Neworks, Muxes, Services and Channels"
+msgstr ""
+
+#: src/docs_inc.c:1517
+msgid "Requires a card server (newcamd and capmt protocol is supported)."
+msgstr ""
+
+#: src/docs_inc.c:787
+msgid "Reset All"
+msgstr ""
+
+#: src/docs_inc.c:1485
+msgid "Results can be scheduled for recording with a single click."
+msgstr ""
+
+#: src/docs_inc.c:1487
+msgid "Rich Browser-Driven Interface"
+msgstr ""
+
+#: src/docs_inc.c:1481
+msgid "Rich EPG support, with data from DVB/OTA, XMLTV (scheduled and socket)."
+msgstr ""
+
+#: src/docs_inc.c:1871
+msgid "S02.E07"
+msgstr ""
+
+#: src/docs_inc.c:1257
+msgid "SAT>IP Server Config"
+msgstr ""
+
+#: src/docs_inc.c:1799
+msgid ""
+"SAT>IP Server is something like DVB network tuner. Tvheadend can forward "
+"mpegts input streams including on-the-fly descramling to SAT>IP clients."
+msgstr ""
+
+#: src/docs_inc.c:1459
+msgid "SAT>IP server (including on-the-fly descrambling)."
+msgstr ""
+
+#: src/docs_inc.c:1425
+msgid "SDTV and HDTV support"
+msgstr ""
+
+#: src/docs_inc.c:1437
+msgid "Satellite signals via DVB-S and DVB-S2"
+msgstr ""
+
+#: src/docs_inc.c:291
+msgid "Satellite, so any signal coming in via a dish (DVB-S and DVB-S2)"
+msgstr ""
+
+#: src/docs_inc.c:717
+msgid "Search title..."
+msgstr ""
+
+#: src/docs_inc.c:1483
+msgid "Searchable and filterable from the web user interface."
+msgstr ""
+
+#: src/docs_inc.c:377
+msgid "Second Header"
+msgstr ""
+
+#: src/docs_inc.c:1942
+msgid "See below."
+msgstr ""
+
+#: src/docs_inc.c:471
+msgid "See the"
+msgstr ""
+
+#: src/docs_inc.c:1965
+msgid ""
+"Select the closest transmitter if using an antenna (T); if using cable (C), "
+"select your provider; if using satellite (S), the orbital position of the "
+"satellite your dish is pointing towards; or if using IPTV, enter the URL to "
+"your playlist."
+msgstr ""
+
+#: src/docs_inc.c:1971
+msgid "Selecting the wrong list may cause the scan (on the next page) to fail."
+msgstr ""
+
+#: src/docs_inc.c:505
+msgid "Server Connectivity"
+msgstr ""
+
+#: src/docs_inc.c:1359
+msgid "Server Mapper"
+msgstr ""
+
+#: src/docs_inc.c:503
+msgid "Service Configuration"
+msgstr ""
+
+#: src/docs_inc.c:1275
+msgid "Services"
+msgstr ""
+
+#: src/docs_inc.c:669
+msgid "Setting up SAT>IP - as a client, as a server"
+msgstr ""
+
+#: src/docs_inc.c:1725
+msgid ""
+"Setting up access control is an important initial step as __the system is "
+"initially wide open__ ."
+msgstr ""
+
+#: src/docs_inc.c:233
+msgid ""
+"Setting up access control rules for different client types/permission levels"
+msgstr ""
+
+#: src/docs_inc.c:223
+msgid "Setting up channel icons"
+msgstr ""
+
+#: src/docs_inc.c:221
+msgid ""
+"Setting up different EPGs (inc. localised character sets and timing offsets)"
+msgstr ""
+
+#: src/docs_inc.c:225
+msgid "Setting up recording profiles"
+msgstr ""
+
+#: src/docs_inc.c:231
+msgid "Setting up softcams for descrambling"
+msgstr ""
+
+#: src/docs_inc.c:227
+msgid "Setting up streaming profiles (including transcoding)"
+msgstr ""
+
+#: src/docs_inc.c:759
+msgid "Short programmes, e.g. daily soap operas"
+msgstr ""
+
+#: src/docs_inc.c:873
+msgid ""
+"Should you wish to record all events matching a specific query (to record "
+"your favourite show every week, for example) you can press the _[Create "
+"AutoRec]_ button in the top toolbar."
+msgstr ""
+
+#: src/docs_inc.c:1103
+msgid ""
+"Similar to the above, Tvheadend can do nothing if your tuners aren't working "
+"properly. A good place to check how to set up your tuners is the"
+msgstr ""
+
+#: src/docs_inc.c:1051
+msgid ""
+"Simply, because 'BBC One' might exist in many different places... it might "
+"have regional variations on multiple frequencies (so different services on "
+"different muxes); it might exist on more than one source (perhaps on two "
+"different satellites); and it might thus be accessible through more than one "
+"piece of hardware (two satellite tuners, or one satellite and one "
+"terrestrial tuner)."
+msgstr ""
+
+#: src/docs_inc.c:773
+msgid ""
+"So, if you only want to see Movies from your available HD channels, you "
+"would select ‘HDTV’ in the _[Filter tag…]_ field, and select ‘Movie / Drama’ "
+"in the _[Filter content type…]_ field. If you wish, you could then further "
+"limit the search to programmes of between 90 minutes and 3 hours by "
+"selecting ‘01:30:01 to 03:00:00’ in the _[Filter duration…]_ field."
+msgstr ""
+
+#: src/docs_inc.c:1515
+msgid "Software-Based CSA Descrambling"
+msgstr ""
+
+#: src/docs_inc.c:315
+msgid ""
+"Some notable items about how formatting is used on this particular site."
+msgstr ""
+
+#: src/docs_inc.c:1881
+msgid "Start time stamp of recording, UNIX epoch"
+msgstr ""
+
+#: src/docs_inc.c:1928
+msgid "Status"
+msgstr ""
+
+#: src/docs_inc.c:1381
+msgid "Status - Connections"
+msgstr ""
+
+#: src/docs_inc.c:43
+msgid "Status - Service Mapper"
+msgstr ""
+
+#: src/docs_inc.c:517
+msgid "Status - Stream"
+msgstr ""
+
+#: src/docs_inc.c:977
+msgid "Status - Subscriptions"
+msgstr ""
+
+#: src/docs_inc.c:335
+msgid ""
+"Stick to paragraph formatting unless and until you have a need for "
+"definition lists."
+msgstr ""
+
+#: src/docs_inc.c:1885
+msgid "Stop time stamp of recording, UNIX epoch"
+msgstr ""
+
+#: src/docs_inc.c:1303 src/docs_inc.c:1353
+msgid "Stream"
+msgstr ""
+
+#: src/docs_inc.c:1305
+msgid "Stream Profiles"
+msgstr ""
+
+#: src/docs_inc.c:1473
+msgid ""
+"Streams can be selected and filtered positively or negatively as required."
+msgstr ""
+
+#: src/docs_inc.c:1463
+msgid ""
+"Subject to your system's capabilities, support for on-the-fly transcoding "
+"for both live and recorded streams in various formats."
+msgstr ""
+
+#: src/docs_inc.c:1355
+msgid "Subscriptions"
+msgstr ""
+
+#: src/docs_inc.c:1327
+msgid "Subtitle Stream Filters"
+msgstr ""
+
+#: src/docs_inc.c:1509
+msgid ""
+"Support for broadcaster (primarily DVB-S) bouquets for easy channel mapping."
+msgstr ""
+
+#: src/docs_inc.c:1447
+msgid ""
+"Support for multiple adapters of any mix, with each adapter able to receive "
+"simultaneously all programmes on the current mux."
+msgstr ""
+
+#: src/docs_inc.c:941
+msgid "Supported audio codecs"
+msgstr ""
+
+#: src/docs_inc.c:1833
+msgid "Supported format strings:"
+msgstr ""
+
+#: src/docs_inc.c:887
+msgid "Supported formats (containers)"
+msgstr ""
+
+#: src/docs_inc.c:917
+msgid "Supported video codecs"
+msgstr ""
+
+#: src/docs_inc.c:611
+msgid "System Requirements"
+msgstr ""
+
+#: src/docs_inc.c:1269
+msgid "TV Adapters"
+msgstr ""
+
+#: src/docs_inc.c:1205
+msgid "Table of Contents"
+msgstr ""
+
+#: src/docs_inc.c:367
+msgid "Tables"
+msgstr ""
+
+#: src/docs_inc.c:369
+msgid "Tables can be constructed as follows."
+msgstr ""
+
+#: src/docs_inc.c:733
+msgid ""
+"Tags are used for grouping channels together - such as ‘Radio’ or ‘HDTV’ - "
+"and are configured by the administrator. You can start typing a tag name to "
+"filter the list."
+msgstr ""
+
+#: src/docs_inc.c:1325
+msgid "Teletext Stream Filters"
+msgstr ""
+
+#: src/docs_inc.c:1433
+msgid "Teletext subtitles supported."
+msgstr ""
+
+#: src/docs_inc.c:293
+msgid ""
+"Terrestrial, so over-the-air broadcasts received through a traditional "
+"television aerial (DVB-T and DVB-T2 in much of the world, ATSC in north and "
+"central America)"
+msgstr ""
+
+#: src/docs_inc.c:1439
+msgid "Terrestrial/Over-the-Air signals via DVB-T, DVB-T2 and ATSC"
+msgstr ""
+
+#: src/docs_inc.c:509
+msgid "Testing Options"
+msgstr ""
+
+#: src/docs_inc.c:1992 src/docs_inc.c:2068
+msgid "Thank you for using Tvheadend (and don't forget to"
+msgstr ""
+
+#: src/docs_inc.c:217
+msgid ""
+"That's it - you're done. You should now have a working basic Tvheadend "
+"installation with channels mapped and ready for use!"
+msgstr ""
+
+#: src/docs_inc.c:699
+msgid ""
+"The EPG tab displays a filterable grid containing all events, sorted based "
+"on start time."
+msgstr ""
+
+#: src/docs_inc.c:1039
+msgid ""
+"The Tvheadend software then sets up a series of configuration elements, and "
+"the way in which these interact determines how a TV signal ends up in front "
+"of you. They all use what's known as a _many-to-many_ relationship, in that "
+"one configuration element can be related to multiple elements of the next "
+"type, and vice versa: one tuner has multiple networks, one network can exist "
+"on multiple tuners."
+msgstr ""
+
+#: src/docs_inc.c:1135
+msgid "The User Guide in"
+msgstr ""
+
+#: src/docs_inc.c:1575
+msgid ""
+"The _Status_ column indicates why a recording failed. See the status item on "
+"the"
+msgstr ""
+
+#: src/docs_inc.c:483
+msgid ""
+"The _[Abort]_ button stops an already in-progress recording, moves the entry "
+"to the"
+msgstr ""
+
+#: src/docs_inc.c:481
+msgid ""
+"The _[Delete]_ button completely removes the event and any associated files."
+msgstr ""
+
+#: src/docs_inc.c:1111
+msgid ""
+"The __driver__ is the piece of software that, as far as the operating system "
+"is concerned, controls the tuner hardware."
+msgstr ""
+
+#: src/docs_inc.c:1041
+msgid ""
+"The __network__ is the software definition of your carrier network. Broadly, "
+"it lays out what sort of network it is (such as DVB-T or DVB-S2), how it "
+"gets scanned, where the DVB-S satellite is in orbit, and similar. Networks "
+"are used by tuners so the hardware knows where to look for a signal."
+msgstr ""
+
+#: src/docs_inc.c:1938
+msgid "The associated file(s) cannot be found on disk."
+msgstr ""
+
+#: src/docs_inc.c:301
+msgid "The code is hosted at"
+msgstr ""
+
+#: src/docs_inc.c:109
+msgid ""
+"The creation process allows you to select from a series of pre-defined mux "
+"lists for common DVB sources. These are maintained outside of Tvheadend, and "
+"are downloaded from"
+msgstr ""
+
+#: src/docs_inc.c:1133
+msgid ""
+"The documentation is written in markdown, and then converted for direct "
+"inclusion to tvheadend binary. The markdown processor in tvheadend binary "
+"adds also other information from the internal class system."
+msgstr ""
+
+#: src/docs_inc.c:1489
+msgid "The entire application is loaded into the browser."
+msgstr ""
+
+#: src/docs_inc.c:721
+msgid ""
+"The filter uses case-insensitive regular expressions. If you don’t know what "
+"a regular expression is, this simply means that you can type just parts of "
+"the title and filter on that - there’s no need for full, exact matching. If "
+"the fulltext checkbox is checked, the title text is matched against title, "
+"subtitle, summary and description."
+msgstr ""
+
+#: src/docs_inc.c:781
+msgid "The following buttons are also available:"
+msgstr ""
+
+#: src/docs_inc.c:1055
+msgid ""
+"The following diagram explains the relationship between these components:"
+msgstr ""
+
+#: src/docs_inc.c:55 src/docs_inc.c:529 src/docs_inc.c:707 src/docs_inc.c:989
+#: src/docs_inc.c:1393
+msgid "The following functions are available:"
+msgstr ""
+
+#: src/docs_inc.c:655
+msgid ""
+"The following major content items/chapters are then missing - based on most "
+"FAQs on the forum:"
+msgstr ""
+
+#: src/docs_inc.c:1555
+msgid ""
+"The following options can be passed to tvheadend to provide detailed "
+"debugging information while the application is running. Trace debugging has "
+"to be enabled at build time (`--enable-debugging`) and can then either be "
+"specified on the command- line (e.g. `tvheadend -u hts -g video --trace "
+"<module>`) or in the web interface (_Configuration -> Debugging_ )."
+msgstr ""
+
+#: src/docs_inc.c:567
+msgid ""
+"The interface is made up of nested tabs, so similar functions are grouped "
+"together (e.g. all configuration items at the top level, then all "
+"configuration items for a particular topic are below that)."
+msgstr ""
+
+#: src/docs_inc.c:69 src/docs_inc.c:543 src/docs_inc.c:805 src/docs_inc.c:1003
+#: src/docs_inc.c:1407
+msgid "The main grid items have the following functions:"
+msgstr ""
+
+#: src/docs_inc.c:371
+msgid "The markup code:"
+msgstr ""
+
+#: src/docs_inc.c:1645
+msgid ""
+"The other major cause of this issue is when you're running Tvheadend as a "
+"user who doesn't have sufficient access to the tuners, such as not being a "
+"member of the _video_ group."
+msgstr ""
+
+#: src/docs_inc.c:1934
+msgid "The recording was interrupted by the user."
+msgstr ""
+
+#: src/docs_inc.c:577
+msgid ""
+"The same drop-down menu gives you access to a __sort__ function if defined "
+"(it doesn't always make sense to have a sortable column for some "
+"parameters). You can also sort a column by simply clicking on the column "
+"header; reverse the sort order by clicking again."
+msgstr ""
+
+#: src/docs_inc.c:2043
+msgid ""
+"The status tab (behind this wizard) will display signal information. If you "
+"notice a lot of errors or the signal strength appears low then this usually "
+"indicates a physical issue with your antenna, satellite dish or cable.."
+msgstr ""
+
+#: src/docs_inc.c:1952
+msgid "The underlying service for the channel is no longer available."
+msgstr ""
+
+#: src/docs_inc.c:1021
+msgid ""
+"There are some basic concepts that will make life much easier if you "
+"understand them from the outset."
+msgstr ""
+
+#: src/docs_inc.c:563
+msgid ""
+"There are some basic navigation concepts that will help you get around and "
+"make the best of it."
+msgstr ""
+
+#: src/docs_inc.c:1071
+msgid "There is a discussion about supported hardware on"
+msgstr ""
+
+#: src/docs_inc.c:641
+msgid "These are not part of the final product, obviously!"
+msgstr ""
+
+#: src/docs_inc.c:333
+msgid ""
+"They may render the same here, but note the extra leading spaces in the "
+"second example: this means that they will convert differently for use in the "
+"web interface help. That in turn means your formatting will be all over the "
+"place unless you handle the dl/dt/dd formatting in Tvheadend's CSS."
+msgstr ""
+
+#: src/docs_inc.c:643
+msgid ""
+"They're just some of the areas I'm aware of that we need to close off before "
+"release"
+msgstr ""
+
+#: src/docs_inc.c:637
+msgid "Things To Do on This Guide..."
+msgstr ""
+
+#: src/docs_inc.c:745
+msgid ""
+"This allows you to filter for or against, say, a daily broadcast and a "
+"weekly omnibus edition of a programme, or only look for short news bulletins "
+"and not the 24-hour rolling broadcasts."
+msgstr ""
+
+#: src/docs_inc.c:125
+msgid ""
+"This can be as simple or as complex as necessary. You may simply have, for "
+"example, a single DVB-S2 network defined and then associate this with all "
+"DVB-S2 tuners. Or, you might have multiple networks defined - different "
+"satellites, different encoding. So, as further examples, you might define "
+"and then associate an HD DVB-T2 (e.g. H.264) network with HD tuners, while "
+"having a separate SD network associated with an independent SD (e.g. MPEG-2) "
+"tuner."
+msgstr ""
+
+#: src/docs_inc.c:249
+msgid ""
+"This document is intended to give you a high-level overview of how to set up "
+"Tvheadend for the first time. It does not aim to provide a complete "
+"description of every step or answer every question: more details are "
+"available on the tvheadend"
+msgstr ""
+
+#: src/docs_inc.c:47 src/docs_inc.c:521 src/docs_inc.c:981 src/docs_inc.c:1385
+msgid "This is a read-only tab; nothing is configurable."
+msgstr ""
+
+#: src/docs_inc.c:1919
+msgid ""
+"This is extremely useful for those programs you think/know will overrun. Any "
+"value selected here will keep a tuner busy for longer, so be sure to check "
+"you have enough free tuners to record all scheduled recordings if they "
+"overlap."
+msgstr ""
+
+#: src/docs_inc.c:1643
+msgid ""
+"This is normally because they're not installed properly. Check syslog/dmesg "
+"(e.g. `dmesg | grep dvb`) and see that you have startup messages that "
+"indicate whether or not the tuners have initialized properly. Similarly, "
+"check `/dev/dvb` to see if the block device files (i.e. the files used to "
+"communicate with the tuner) have been created correctly."
+msgstr ""
+
+#: src/docs_inc.c:1079
+msgid ""
+"This is obviously a core requirement that's outside of the scope of this "
+"guide."
+msgstr ""
+
+#: src/docs_inc.c:1099
+msgid ""
+"This is particularly true of systems such as the Raspberry Pi which share "
+"USB bandwidth with the Ethernet port. Don't be surprised if this kind of "
+"platform struggles and/or reports errors in a multi-tuner configuration, "
+"especially on high-bandwidth (e.g. HD) streams."
+msgstr ""
+
+#: src/docs_inc.c:167
+msgid ""
+"This is where the services will appear as your tuners tune to the muxes "
+"based on the network you told them to look on. Again, remember what's "
+"happening: Tvheadend is telling your tuner hardware (via the drivers) to "
+"sequentially tune to each mux it knows about, and then see what 'programmes' "
+"it can see on that mux, each of which is identified by a series of unique "
+"identifiers that describe the audio stream(s), the video stream(s), the "
+"subtitle stream(s) and language(s), and so on."
+msgstr ""
+
+#: src/docs_inc.c:87
+msgid ""
+"This section gives a high-level overview of the steps needed to get "
+"Tvheadend up and running. For more detailed information, please consult the "
+"rest of this guide - much of it is arranged in the same order as the tabs on "
+"the Tvheadend interface so you know where to look."
+msgstr ""
+
+#: src/docs_inc.c:401
+msgid ""
+"This section tells you how to get hold of the software in the first place, "
+"and how to get it onto your system."
+msgstr ""
+
+#: src/docs_inc.c:1069
+msgid ""
+"This section will give you some basic ideas on how to get your tuner working "
+"with your operating system. However, it's clearly way beyond the scope of "
+"this guide to tell you everything: consult specialist forums, search around, "
+"and at least do some research to work out what's likely to work or not "
+"before you hand over any money."
+msgstr ""
+
+#: src/docs_inc.c:1779
+msgid ""
+"This tab allows to configure blocked IP ranges. Users within these ranges "
+"are not allowed to login (use any Tvheadend service)."
+msgstr ""
+
+#: src/docs_inc.c:1765
+msgid "This tab controls EPG-driven recording rules."
+msgstr ""
+
+#: src/docs_inc.c:1714
+msgid "This tab controls timer-driven recording rules."
+msgstr ""
+
+#: src/docs_inc.c:1822
+msgid ""
+"This tab displays various memory usage information useful for debugging."
+msgstr ""
+
+#: src/docs_inc.c:1737
+msgid ""
+"This tab is the second part of Tvheadend's access control mechanism. It is "
+"where you set and maintain all user passwords (e.g. for streaming or DVR "
+"access)."
+msgstr ""
+
+#: src/docs_inc.c:1749
+msgid ""
+"This tab is used to configure operation of the Digital Video Recorder. It is "
+"not used for scheduling or administration of individual recordings."
+msgstr ""
+
+#: src/docs_inc.c:1712 src/docs_inc.c:1763
+msgid ""
+"This tab is used to create and maintain Digital Video Recorder rules. These "
+"can be EPG-driven (such as those created from the initial EPG tab) through "
+"the DVR AutoRec Entries tab , or can be timer-based through the Time "
+"Schedules tab."
+msgstr ""
+
+#: src/docs_inc.c:1569
+msgid "This tab shows all failed recordings."
+msgstr ""
+
+#: src/docs_inc.c:5
+msgid "This tab shows all your finished recordings."
+msgstr ""
+
+#: src/docs_inc.c:1383
+msgid "This tab shows information about all active connections."
+msgstr ""
+
+#: src/docs_inc.c:979
+msgid "This tab shows information about all active subscriptions to Tvheadend."
+msgstr ""
+
+#: src/docs_inc.c:519
+msgid "This tab shows information about all currently-open streams."
+msgstr ""
+
+#: src/docs_inc.c:45
+msgid "This tab shows information about current service mapping activity."
+msgstr ""
+
+#: src/docs_inc.c:421
+msgid "This tab shows your all upcoming/current recordings."
+msgstr ""
+
+#: src/docs_inc.c:1811
+msgid ""
+"This tabs allow configuration of several general parameters that affect the "
+"core Tvheadend functionality."
+msgstr ""
+
+#: src/docs_inc.c:1637
+msgid ""
+"This usually happens when Tvheadend is installed incorrectly. As a start, "
+"make sure that the web interface path `/usr/share/tvheadend/src/webui/static/"
+"` exists and isn't empty."
+msgstr ""
+
+#: src/docs_inc.c:1789
+msgid ""
+"This will cache any channel icons or other images (such as EPG metadata) to "
+"be served from the local webserver. This can be useful for multi-client "
+"systems and, generally, to reduce hits on upstream providers."
+msgstr ""
+
+#: src/docs_inc.c:2022 src/docs_inc.c:2081
+msgid ""
+"This works alongside the second part, which is a familiar username/password "
+"combination, so provide these for both an administrator and regular (day-to-"
+"day) user."
+msgstr ""
+
+#: src/docs_inc.c:1247
+msgid "Time Schedules (TimeRec)"
+msgstr ""
+
+#: src/docs_inc.c:1718
+msgid "Time Schedules Tab"
+msgstr ""
+
+#: src/docs_inc.c:1940
+msgid "Time missed"
+msgstr ""
+
+#: src/docs_inc.c:1944
+msgid "Time missed can be caused by one (or more) of the following:"
+msgstr ""
+
+#: src/docs_inc.c:1337
+msgid "Timeshift"
+msgstr ""
+
+#: src/docs_inc.c:591
+msgid ""
+"To add a new entry, press the _Add_ button. The new (empty) entry will be "
+"created on the server but will not be saved and will not necessarily be "
+"enabled. You can now change all the cells to the desired values, check the "
+"‘enable’ box if applicable and then press _Save_ to activate the new entry."
+msgstr ""
+
+#: src/docs_inc.c:2028 src/docs_inc.c:2087
+msgid ""
+"To allow anonymous access for any account (administrative or regular user) "
+"enter an asterisk (*) in the username and password fields. ___It is not_ __ "
+"recommended that you allow anonymous access to the admin account."
+msgstr ""
+
+#: src/docs_inc.c:589
+msgid "To change a check box or radio button, click once."
+msgstr ""
+
+#: src/docs_inc.c:869
+msgid ""
+"To close the popup, just click on the [X] window button. The popup isn’t "
+"modal, so you don’t have to close it before doing something else, and you "
+"can open as many detailed information popups as you want."
+msgstr ""
+
+#: src/docs_inc.c:587
+msgid ""
+"To edit a cell, double click on it. After a cell is changed, a small red "
+"flag or triangle will appear in the top-left corner to indicate that it has "
+"been changed. These changes can now be kept (_Save_ button), or abandoned "
+"(_Undo_ button)."
+msgstr ""
+
+#: src/docs_inc.c:1187
+msgid ""
+"To merge the webui files into tvheadend, copy them into `<your tvheadend "
+"clone>/docs/html`, push them to your remote repository and open a PR to "
+"merge them into master."
+msgstr ""
+
+#: src/docs_inc.c:1193
+msgid ""
+"To publish the entire User Guide to gihub, use `resync.sh` or use the "
+"following command sequence:"
+msgstr ""
+
+#: src/docs_inc.c:1179
+msgid "To update and resync, someone (me, probably!) needs to:"
+msgstr ""
+
+#: src/docs_inc.c:1899
+msgid ""
+"To use special characters (e.g. spaces), either put the string in quotes or "
+"escape the individual characters."
+msgstr ""
+
+#: src/docs_inc.c:1209
+msgid "To-do"
+msgstr ""
+
+#: src/docs_inc.c:1553
+msgid "Trace Options"
+msgstr ""
+
+#: src/docs_inc.c:1319
+msgid "Transcode Profile"
+msgstr ""
+
+#: src/docs_inc.c:657
+msgid ""
+"Transcoding (updated for 4.2, so needs to be tagged properly and reversed as "
+"applicable to 4.0)"
+msgstr ""
+
+#: src/docs_inc.c:1461
+msgid "Transcoding Support"
+msgstr ""
+
+#: src/docs_inc.c:2110
+msgid "Tuners already in use will not appear below."
+msgstr ""
+
+#: src/docs_inc.c:241
+msgid "Tvheadend 4.2 User Guide"
+msgstr ""
+
+#: src/docs_inc.c:245
+msgid "Tvheadend Logo"
+msgstr ""
+
+#: src/docs_inc.c:1623
+msgid ""
+"Tvheadend can generate a playlist of all your mapped services (channels). "
+"You can download it from the webui at `http://IP:Port/playlist`, e.g. "
+"`http://192.168.0.2:9981/playlist`."
+msgstr ""
+
+#: src/docs_inc.c:697
+msgid ""
+"Tvheadend has a built-in Electronic Program Guide. The EPG is an in-memory "
+"database populated with all the information about events received from the "
+"DVB networks over-the-air or from external grabbers such as XMLTV."
+msgstr ""
+
+#: src/docs_inc.c:285
+msgid "Tvheadend interface"
+msgstr ""
+
+#: src/docs_inc.c:281
+msgid ""
+"Tvheadend is a lightweight, easily-configured, general-purpose TV/video "
+"streaming server and recorder (PVR/DVR) for GNU/Linux, FreeBSD and Android."
+msgstr ""
+
+#: src/docs_inc.c:617
+msgid ""
+"Tvheadend is intended to be lightweight, so it will run on a NAS or similar "
+"__low-powered CPU__ . Note that the exception here is transcoding: if you "
+"want to convert high-definition video in real time then you will need a "
+"powerful, multi-core system. It will happily run in less than __1GB of "
+"RAM__ , and many people run it successfully on original Raspberry Pis with "
+"perhaps only 256MB of usable free memory. This does depend on what else "
+"you're using the computer for, though, as a GUI will drain your system as "
+"will any serious file serving."
+msgstr ""
+
+#: src/docs_inc.c:2037
+msgid ""
+"Tvheadend is now scanning for available services. Please wait until the scan "
+"completes.."
+msgstr ""
+
+#: src/docs_inc.c:561
+msgid "Tvheadend is operated primarily through a tabbed web interface."
+msgstr ""
+
+#: src/docs_inc.c:1727
+msgid ""
+"Tvheadend verifies access by scanning through all enabled access control "
+"entries in sequence, from the top of the list to the bottom. The permission "
+"flags, streaming profiles, DVR config profiles, channel tags and so on are "
+"combined for all matching access entries. An access entry is said to match "
+"if the username matches and the IP source address of the requesting peer is "
+"within the prefix. There is also anonymous access, if the user is set to "
+"asterisk. Only network prefix is matched then."
+msgstr ""
+
+#: src/docs_inc.c:1954
+msgid ""
+"Tvheadend wasn't running or crashed when a scheduled event/entry was to "
+"start."
+msgstr ""
+
+#: src/docs_inc.c:1984 src/docs_inc.c:2060
+msgid "Tvheadend.org"
+msgstr ""
+
+#: src/docs_inc.c:1123
+msgid ""
+"Typically, download the binary file and install it into `/lib/firmware`, "
+"owned by `root:root`, permissions `rw-r--r--` (0644)"
+msgstr ""
+
+#: src/docs_inc.c:1095
+msgid ""
+"USB tuners are cheap, work well and are frequently well-matched to "
+"physically-smaller builds (e.g. HTPCs) which simply don't have the internal "
+"slots. However, please remember that many need external power, or need a "
+"powered hub to work properly."
+msgstr ""
+
+#: src/docs_inc.c:357
+msgid "Unordered list can use asterisks"
+msgstr ""
+
+#: src/docs_inc.c:347
+msgid "Unordered sub-list."
+msgstr ""
+
+#: src/docs_inc.c:1658
+msgid "Upcoming and currently recording entries remain in the"
+msgstr ""
+
+#: src/docs_inc.c:1239 src/docs_inc.c:1660
+msgid "Upcoming/Current Recordings"
+msgstr ""
+
+#: src/docs_inc.c:1131
+msgid "Updating the Documentation 5 April 2016"
+msgstr ""
+
+#: src/docs_inc.c:499
+msgid "Usage: `tvheadend [OPTIONS]`"
+msgstr ""
+
+#: src/docs_inc.c:463
+msgid ""
+"Use the _[Add]_ button to manually to add an entry. To edit an entry, "
+"highlight the desired entry within the grid and then press the _[Edit]_ "
+"button."
+msgstr ""
+
+#: src/docs_inc.c:431
+msgid ""
+"Using the Electronic Program Guide search functionality, find the program/"
+"event you would like to record. For full instructions on how to search the "
+"EPG, take a look at the"
+msgstr ""
+
+#: src/docs_inc.c:925
+msgid "VP8"
+msgstr ""
+
+#: src/docs_inc.c:771
+msgid "Very long programmes, e.g. major sporting events"
+msgstr ""
+
+#: src/docs_inc.c:755
+msgid "Very short news bulletins, children's programmes, etc."
+msgstr ""
+
+#: src/docs_inc.c:1321
+msgid "Video Stream Filters"
+msgstr ""
+
+#: src/docs_inc.c:951
+msgid "Vorbis"
+msgstr ""
+
+#: src/docs_inc.c:791 src/docs_inc.c:883
+msgid "Watch TV"
+msgstr ""
+
+#: src/docs_inc.c:327
+msgid "Watch this one - indentation is key."
+msgstr ""
+
+#: src/docs_inc.c:683
+msgid ""
+"We need the webUI pages documented (as they are). How much should they be "
+"the how-tos, and how much should these be separate?"
+msgstr ""
+
+#: src/docs_inc.c:391
+msgid ""
+"We're using default heading/cell justification, so it's consistent "
+"throughout."
+msgstr ""
+
+#: src/docs_inc.c:1249
+msgid "Web Interface Configuration Guide"
+msgstr ""
+
+#: src/docs_inc.c:1227
+msgid "Web Interface Guide"
+msgstr ""
+
+#: src/docs_inc.c:1351
+msgid "Web Status Tab"
+msgstr ""
+
+#: src/docs_inc.c:1543
+msgid "Web interface internationalization"
+msgstr ""
+
+#: src/docs_inc.c:897
+msgid "WebM"
+msgstr ""
+
+#: src/docs_inc.c:279
+msgid "Welcome to Tvheadend!"
+msgstr ""
+
+#: src/docs_inc.c:1664
+msgid "When a recording completes successfully the entry is moved to the"
+msgstr ""
+
+#: src/docs_inc.c:1670
+msgid "When a recording fails or gets aborted the entry is moved to the"
+msgstr ""
+
+#: src/docs_inc.c:115
+msgid ""
+"When creating a DVB-S network, be sure to set the orbital position of the "
+"satellite to which your dish is pointing, as some satellites provide "
+"additional information related to other nearby satellites that you may not "
+"be able to receive."
+msgstr ""
+
+#: src/docs_inc.c:1053
+msgid ""
+"When you select the channel you want to watch or record, Tvheadend can then "
+"map a path through all those variables to ask a particular tuner to go and "
+"get the signal for you."
+msgstr ""
+
+#: src/docs_inc.c:1169
+msgid ""
+"When you're happy, push the changes to your remote repository and open a "
+"pull request"
+msgstr ""
+
+#: src/docs_inc.c:411
+msgid ""
+"Where a pre-built package exists, this will usually get you the last "
+"official stable version. However, more advanced users may be interested in "
+"running a development version - either a nightly build or a self-compiled "
+"version."
+msgstr ""
+
+#: src/docs_inc.c:609
+msgid ""
+"Where you have aerial/coax connections might influence your choice - unless "
+"you use SAT>IP or have some other way to transport your TV signal over a "
+"LAN, your Tvheadend installation has to live where you can actually connect "
+"your tuners."
+msgstr ""
+
+#: src/docs_inc.c:613
+msgid ""
+"Wherever you install it, Tvheadend primarily runs on __Linux__ - pre-built "
+"binaries are available for most Debian-based distributions (Debian itself, "
+"Ubuntu, Mint...) and RPMs for Fedora, or you can build it yourself. It runs "
+"on both 32- and 64-bit x86 and ARM processors, and so also can be built for "
+"Android (which uses the Linux kernel)."
+msgstr ""
+
+#: src/docs_inc.c:197
+msgid ""
+"While holding ctrl (single selection) or shift (to select a range), click on "
+"the services you would like to map as channels. Once you're done selecting, "
+"press the \"Map services\" button and then \"Map selected services\" - __be "
+"careful not to click on the grid or you'll lose your selection!__"
+msgstr ""
+
+#: src/docs_inc.c:299
+msgid ""
+"While supported in previous versions, analogue video (V4L) is no longer "
+"supported directly. If you still need this, or need to input signals from "
+"video cameras or other non-broadcast sources, use `pipe://`."
+msgstr ""
+
+#: src/docs_inc.c:1857
+msgid "Who created this recording"
+msgstr ""
+
+#: src/docs_inc.c:1049
+msgid "Why The Complexity?"
+msgstr ""
+
+#: src/docs_inc.c:373
+msgid "Will generate:"
+msgstr ""
+
+#: src/docs_inc.c:639
+msgid "Work-in-progress notes"
+msgstr ""
+
+#: src/docs_inc.c:1631
+msgid ""
+"Yes, not all services are given a name by providers. These services are "
+"usually hidden for a reason and are often used for things such as encrypted "
+"guide data for set-top boxes, interactive services, and so on."
+msgstr ""
+
+#: src/docs_inc.c:1978 src/docs_inc.c:2052
+msgid "You are now finished."
+msgstr ""
+
+#: src/docs_inc.c:1081
+msgid "You basically have the choice of:"
+msgstr ""
+
+#: src/docs_inc.c:89
+msgid ""
+"You can also consult the in-application help text, which mirrors this guide "
+"to a very great extent."
+msgstr ""
+
+#: src/docs_inc.c:157
+msgid "You can also use"
+msgstr ""
+
+#: src/docs_inc.c:881
+msgid ""
+"You can change or delete the autorec rules in the __Digital Video Recorder__ "
+"tab. Use that editor if you temporarily want to disable an autorecording or "
+"make adjustments to the channel, tag, or similar."
+msgstr ""
+
+#: src/docs_inc.c:777
+msgid ""
+"You can clear an individual filter by simply deleting its contents, or by "
+"selecting _‘(Clear filter)’_ as appropriate on all except the title filter. "
+"If you want to clear all filters, just press the _[Reset All]_ button."
+msgstr ""
+
+#: src/docs_inc.c:479
+msgid ""
+"You can delete or abort an upcoming entry (or an already in-progress "
+"recording) by pressing the _[Delete]_ or _[Abort]_ buttons."
+msgstr ""
+
+#: src/docs_inc.c:23
+msgid ""
+"You can edit an entry by clicking the _[Edit]_ button on the menu bar, note "
+"that not all"
+msgstr ""
+
+#: src/docs_inc.c:1583
+msgid "You can play a partial recording by clicking the _Play_ link."
+msgstr ""
+
+#: src/docs_inc.c:13
+msgid "You can play a recording by clicking the _Play_ link."
+msgstr ""
+
+#: src/docs_inc.c:1593
+msgid ""
+"You can re-schedule an entry by pressing the _[Re-record]_ button on the "
+"menu bar."
+msgstr ""
+
+#: src/docs_inc.c:355
+msgid "You can't have have properly indented paragraphs within list items."
+msgstr ""
+
+#: src/docs_inc.c:2026 src/docs_inc.c:2085
+msgid ""
+"You may enter a comma-separated list of network prefixes (IPv4/IPv6). If you "
+"were asked to enter a username and password during installation, we'd "
+"recommend not using the same details for a user here as it may cause "
+"unexpected behavior, incorrect permissions etc."
+msgstr ""
+
+#: src/docs_inc.c:173
+msgid "You may force a scan by going to:"
+msgstr ""
+
+#: src/docs_inc.c:1980 src/docs_inc.c:2054
+msgid ""
+"You may further customize your settings by editing channel numbers, etc."
+msgstr ""
+
+#: src/docs_inc.c:867
+msgid ""
+"You will also see a _[Search IMDB]_ button to look for the programme by name "
+"on imdb.com, and a _[Play program]_ button to watch a programme that’s "
+"already in progress. This second button downloads a playlist file (XSPF or "
+"M3U depending on your startup options); if your system is configured for it, "
+"this will automatically launch an appropriate player, otherwise you will "
+"need to manually open the playlist to start watching (normally a double-"
+"click on the downloaded file)."
+msgstr ""
+
+#: src/docs_inc.c:615
+msgid ""
+"You will only need __c. 30MB disk space__ for the application and associated "
+"files, and maybe anything up to __1GB__ for your configuration - depending "
+"on how many tuners of what type you have, how many channels you receive, "
+"your choice of programme guide, and so on. You'll clearly need much more for "
+"your recordings, though: as a guide, an hour of SD MPEG-2 video will take "
+"about 1GB, while high bitrate HD H.264 will easily consume 5GB+ per hour."
+msgstr ""
+
+#: src/docs_inc.c:1309
+msgid "[MPEG-TS Pass-thru Profile][class/profile-mpegts)"
+msgstr ""
+
+#: src/docs_inc.c:1897
+msgid "_Example usage_"
+msgstr ""
+
+#: src/docs_inc.c:747
+msgid ""
+"_Title_ , _Channel_ , _Tag_ and _Content Type_ are dependent on your "
+"configuration and on what your broadcaster sends. Options for the _Duration_ "
+"are as follows:"
+msgstr ""
+
+#: src/docs_inc.c:845
+msgid "__Age__ : Age rating of the programme."
+msgstr ""
+
+#: src/docs_inc.c:841
+msgid ""
+"__Channel__ : The name of the broadcasting channel. _You can automatically "
+"set a filter to the value of this field by clicking on it (e.g. click on "
+"'Channel 4 HD' will automatically filter the whole grid to only show "
+"programmes from that channel)._"
+msgstr ""
+
+#: src/docs_inc.c:847
+msgid ""
+"__Content Type__ : Any content/genre information as provided by the EPG "
+"provider. _You can automatically set a filter to the value of this field by "
+"clicking on it (e.g. click on 'Movie/Drama' will automatically filter the "
+"whole grid to only show programmes of the same type)._"
+msgstr ""
+
+#: src/docs_inc.c:33 src/docs_inc.c:1609
+msgid ""
+"__Deleting an entry cannot be undone. You will be prompted to confirm "
+"deletion.__"
+msgstr ""
+
+#: src/docs_inc.c:489
+msgid ""
+"__Deleting or aborting an entry cannot be undone, you will be prompted for "
+"confirmation.__"
+msgstr ""
+
+#: src/docs_inc.c:807
+msgid ""
+"__Details__ : Displays the current status of a recording event for this "
+"programme if one applies:"
+msgstr ""
+
+#: src/docs_inc.c:1678
+msgid "__Details__ : Gives a quick overview as to the status of each entry."
+msgstr ""
+
+#: src/docs_inc.c:837
+msgid ""
+"__Duration__ : The scheduled duration (i.e. start time to end time) of the "
+"programme."
+msgstr ""
+
+#: src/docs_inc.c:835
+msgid "__End Time__ : The scheduled end time of the programme."
+msgstr ""
+
+#: src/docs_inc.c:831
+msgid "__Episode__ : Episode number, if given by your EPG provider."
+msgstr ""
+
+#: src/docs_inc.c:1035
+msgid ""
+"__Firmware__ is a small piece of binary microcode that your system driver "
+"sends to the tuner upon initialisation. This is the cause of more problems "
+"than you'd imagine... if you find yourself in trouble, this is the first "
+"thing to check along with kernel support for your hardware."
+msgstr ""
+
+#: src/docs_inc.c:2104
+msgid ""
+"__If you receive your channels through a satellite dish__ then you would "
+"select the network under the tuners with DVB-S/S2 in the name."
+msgstr ""
+
+#: src/docs_inc.c:2102
+msgid ""
+"__If you receive your channels through an antenna (also known as an "
+"aerial)__ then you would select the network under the tuners with DVB-T/ATSC-"
+"T/ISDB-T in the name."
+msgstr ""
+
+#: src/docs_inc.c:2106
+msgid ""
+"__If you receive your channels via cable__ then you would select the network "
+"under the tuners with DVB-C/ATSC-C/ISDB-C in the name."
+msgstr ""
+
+#: src/docs_inc.c:1824
+msgid "__It does not have any user configurable options.__"
+msgstr ""
+
+#: src/docs_inc.c:71 src/docs_inc.c:73 src/docs_inc.c:75 src/docs_inc.c:77
+#: src/docs_inc.c:545 src/docs_inc.c:547 src/docs_inc.c:549 src/docs_inc.c:551
+#: src/docs_inc.c:1005 src/docs_inc.c:1007 src/docs_inc.c:1009
+#: src/docs_inc.c:1011 src/docs_inc.c:1409 src/docs_inc.c:1411
+#: src/docs_inc.c:1413 src/docs_inc.c:1415
+msgid "__Item__ : Description"
+msgstr ""
+
+#: src/docs_inc.c:1027
+msgid "__Network tuners__ are small (usually"
+msgstr ""
+
+#: src/docs_inc.c:1676
+msgid ""
+"__Note__ : Some entry details are not available/incomplete until the "
+"recording completes or fails, e.g. filesize, total data errors, etc."
+msgstr ""
+
+#: src/docs_inc.c:1595
+msgid ""
+"__Note__ : Your EPG data must have another matching event to be able to re-"
+"schedule the entry."
+msgstr ""
+
+#: src/docs_inc.c:137
+msgid ""
+"__Note__ : some tuners (or drivers) require more tuning parameters than "
+"others so __be sure to enter as many tuning parameters as possible__ ."
+msgstr ""
+
+#: src/docs_inc.c:1963 src/docs_inc.c:2011 src/docs_inc.c:2024
+#: src/docs_inc.c:2039 src/docs_inc.c:2083 src/docs_inc.c:2108
+msgid "__Notes__ :"
+msgstr ""
+
+#: src/docs_inc.c:839
+msgid ""
+"__Number__ : The channel number of the broadcasting channel, if defined."
+msgstr ""
+
+#: src/docs_inc.c:825
+msgid ""
+"__Progress__ : A bar graph display of how far through a programme we "
+"currently are."
+msgstr ""
+
+#: src/docs_inc.c:581
+msgid "__Re-arrange__ the columns by simply dragging he header to a new spot."
+msgstr ""
+
+#: src/docs_inc.c:583
+msgid ""
+"__Re-size__ the columns by dragging the very edges of the column header as "
+"required."
+msgstr ""
+
+#: src/docs_inc.c:2098
+msgid "__Selecting the Right Network__ :"
+msgstr ""
+
+#: src/docs_inc.c:843
+msgid "__Stars__ : Rating (in stars) of the programme."
+msgstr ""
+
+#: src/docs_inc.c:833
+msgid "__Start Time__ : The scheduled start time of the programme."
+msgstr ""
+
+#: src/docs_inc.c:829
+msgid ""
+"__SubTitle__ : The subtitle of the programme, if gien by your EPG provider. "
+"Note that some (notably, UK) providers use this for a programme synopsis "
+"instead of a true subtitle."
+msgstr ""
+
+#: src/docs_inc.c:331
+msgid "__This is definition list formatting__ : with a subsequent explanation"
+msgstr ""
+
+#: src/docs_inc.c:329
+msgid "__This is paragraph formatting__ : with a subsequent explanation"
+msgstr ""
+
+#: src/docs_inc.c:201
+msgid ""
+"__Tip__ : By default Tvheadend will only show a small selection of available "
+"services - you can increase this by using the paging selector at the bottom "
+"right of the page."
+msgstr ""
+
+#: src/docs_inc.c:35 src/docs_inc.c:1611
+msgid ""
+"__Tip__ : You can highlight multiple entries by holding ctrl or shift (to "
+"select a range)."
+msgstr ""
+
+#: src/docs_inc.c:445
+msgid ""
+"__Tip__ : You can quickly find all matching programs by clicking on the "
+"title."
+msgstr ""
+
+#: src/docs_inc.c:181
+msgid ""
+"__Tip__ : You may select more than one network by holding ctrl and clicking "
+"on additional networks."
+msgstr ""
+
+#: src/docs_inc.c:827
+msgid ""
+"__Title__ : The title of the programme. _You can automatically set a filter "
+"to the value of this field by clicking on it (e.g. click on 'Daily News' "
+"will automatically filter the whole grid to only show programmes with the "
+"same name)._"
+msgstr ""
+
+#: src/docs_inc.c:205
+msgid ""
+"__Tvheadend web interface: _Configuration -> Channel / EPG -> Bouquets_ __"
+msgstr ""
+
+#: src/docs_inc.c:131
+msgid "__Tvheadend web interface: _Configuration -> DVB Inputs -> Muxes_ __"
+msgstr ""
+
+#: src/docs_inc.c:105 src/docs_inc.c:175
+msgid "__Tvheadend web interface: _Configuration -> DVB Inputs -> Networks_ __"
+msgstr ""
+
+#: src/docs_inc.c:165 src/docs_inc.c:187
+msgid "__Tvheadend web interface: _Configuration -> DVB Inputs -> Services_ __"
+msgstr ""
+
+#: src/docs_inc.c:93 src/docs_inc.c:121
+msgid ""
+"__Tvheadend web interface: _Configuration -> DVB Inputs -> TV Adapters_ __"
+msgstr ""
+
+#: src/docs_inc.c:2009
+msgid ""
+"__You may omit this step (do not check 'Map all services') and map services "
+"to channels manually.__"
+msgstr ""
+
+#: src/docs_inc.c:1195
+msgid "`git add -A` (presumes to add everything)"
+msgstr ""
+
+#: src/docs_inc.c:1175
+msgid ""
+"`git add -A` (presumes to add everything, you can of course be selective)"
+msgstr ""
+
+#: src/docs_inc.c:1197
+msgid "`git commit -m \"Resync\"` (or whatever your commit message is)"
+msgstr ""
+
+#: src/docs_inc.c:1157 src/docs_inc.c:1531
+msgid "and"
+msgstr ""
+
+#: src/docs_inc.c:261
+msgid "and IRC (_#hts_ on _freenode_ ) -"
+msgstr ""
+
+#: src/docs_inc.c:487
+msgid ""
+"and marks it as _Aborted by user_ . Note that this does not remove the "
+"(partial) recording file from disk."
+msgstr ""
+
+#: src/docs_inc.c:269
+msgid "are good web clients if you don't already have an IRC client installed."
+msgstr ""
+
+#: src/docs_inc.c:1029
+msgid "arm"
+msgstr ""
+
+#: src/docs_inc.c:1031
+msgid ""
+"based) computers that you connect to your network via Ethernet or Wifi, they "
+"often have a large number of tuners and are controlled via a web interface "
+"or software. Many work out-of-the-box with Tvheadend using SAT>IP or the "
+"HDHomeRun protocols."
+msgstr ""
+
+#: src/docs_inc.c:823
+msgid "click to call up more detailed information about an event"
+msgstr ""
+
+#: src/docs_inc.c:1694
+msgid "click to display detailed information about the selected recording"
+msgstr ""
+
+#: src/docs_inc.c:1145
+msgid "development page"
+msgstr ""
+
+#: src/docs_inc.c:1137
+msgid "documentatation repository"
+msgstr ""
+
+#: src/docs_inc.c:1165
+msgid "documentation repository"
+msgstr ""
+
+#: src/docs_inc.c:1994 src/docs_inc.c:2070
+msgid "donate"
+msgstr ""
+
+#: src/docs_inc.c:159
+msgid "dvbscan"
+msgstr ""
+
+#: src/docs_inc.c:627
+msgid "example"
+msgstr ""
+
+#: src/docs_inc.c:1139
+msgid ""
+"fetches the markdown files using the build-in web server and use them as "
+"source for mkdocs."
+msgstr ""
+
+#: src/docs_inc.c:27
+msgid "fields can be edited."
+msgstr ""
+
+#: src/docs_inc.c:147
+msgid "for UK DVB-T transmitters"
+msgstr ""
+
+#: src/docs_inc.c:143
+msgid "for all European satellite information"
+msgstr ""
+
+#: src/docs_inc.c:459
+msgid "for more information."
+msgstr ""
+
+#: src/docs_inc.c:151
+msgid "for primarily central and northern Europe"
+msgstr ""
+
+#: src/docs_inc.c:155
+msgid "for worldwide satellite information."
+msgstr ""
+
+#: src/docs_inc.c:259
+msgid "forum"
+msgstr ""
+
+#: src/docs_inc.c:629
+msgid "from one of our users..."
+msgstr ""
+
+#: src/docs_inc.c:1159
+msgid "git"
+msgstr ""
+
+#: src/docs_inc.c:303
+msgid "github"
+msgstr ""
+
+#: src/docs_inc.c:1533
+msgid "iOS"
+msgstr ""
+
+#: src/docs_inc.c:111 src/docs_inc.c:1503
+msgid "linuxtv"
+msgstr ""
+
+#: src/docs_inc.c:1155
+msgid "mkdocs"
+msgstr ""
+
+#: src/docs_inc.c:1505
+msgid "networks or manually configured."
+msgstr ""
+
+#: src/docs_inc.c:901 src/docs_inc.c:903 src/docs_inc.c:911 src/docs_inc.c:913
+#: src/docs_inc.c:929 src/docs_inc.c:937 src/docs_inc.c:955 src/docs_inc.c:957
+#: src/docs_inc.c:965 src/docs_inc.c:967
+msgid "no"
+msgstr ""
+
+#: src/docs_inc.c:1559
+msgid "no-highlight"
+msgstr ""
+
+#: src/docs_inc.c:1121
+msgid "on their git repository."
+msgstr ""
+
+#: src/docs_inc.c:265
+msgid "or Freenode's"
+msgstr ""
+
+#: src/docs_inc.c:1986 src/docs_inc.c:2062
+msgid "or chat to us on"
+msgstr ""
+
+#: src/docs_inc.c:475
+msgid "page for a more detailed look at the various entry options."
+msgstr ""
+
+#: src/docs_inc.c:1579
+msgid "page for more information."
+msgstr ""
+
+#: src/docs_inc.c:435
+msgid "page."
+msgstr ""
+
+#: src/docs_inc.c:1690
+msgid "recording of the program is active and underway (current)"
+msgstr ""
+
+#: src/docs_inc.c:1603
+msgid ""
+"tab by highlighting the desired entry and then pressing the _[Move to "
+"finished]_ button from the menu bar."
+msgstr ""
+
+#: src/docs_inc.c:1662 src/docs_inc.c:1668 src/docs_inc.c:1674
+msgid "tab."
+msgstr ""
+
+#: src/docs_inc.c:1073
+msgid "the Tvheadend forums"
+msgstr ""
+
+#: src/docs_inc.c:1698
+msgid "the program failed to record"
+msgstr ""
+
+#: src/docs_inc.c:1686
+msgid "the program is scheduled (upcoming)"
+msgstr ""
+
+#: src/docs_inc.c:1702
+msgid "the program recorded successfully"
+msgstr ""
+
+#: src/docs_inc.c:819
+msgid "the programme is currently recording"
+msgstr ""
+
+#: src/docs_inc.c:815
+msgid "the programme is scheduled for recording"
+msgstr ""
+
+#: src/docs_inc.c:161
+msgid "to force a scan and effectively ask your tuner what it can see."
+msgstr ""
+
+#: src/docs_inc.c:145
+msgid "ukfree.tv"
+msgstr ""
+
+#: src/docs_inc.c:1855 src/docs_inc.c:1859
+msgid "user"
+msgstr ""
+
+#: src/docs_inc.c:267
+msgid "webchat"
+msgstr ""
+
+#: src/docs_inc.c:251
+msgid "wiki"
+msgstr ""
+
+#: src/docs_inc.c:905 src/docs_inc.c:907 src/docs_inc.c:915 src/docs_inc.c:931
+#: src/docs_inc.c:933 src/docs_inc.c:939 src/docs_inc.c:959 src/docs_inc.c:961
+#: src/docs_inc.c:969
+msgid "yes"
+msgstr ""
+
+#: src/docs_inc.c:389
+msgid ""
+"| --------------------------- | ------------- Headless table cell 1 | "
+"Content from cell 2 Content in the first column | Content in the second "
+"column"
+msgstr ""

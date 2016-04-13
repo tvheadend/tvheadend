@@ -81,9 +81,11 @@ CSS_ACCESS += $(EXTJSPATH)/resources/css/xtheme-access.css
 # extjs extensions
 #
 
+MARKED      = $(ROOTPATH)/app/marked.js
+
 JAVASCRIPT += $(ROOTPATH)/app/i18n.js
 JAVASCRIPT += $(ROOTPATH)/app/extensions.js
-JAVASCRIPT += $(ROOTPATH)/app/marked.js
+JAVASCRIPT += $(MARKED)
 JAVASCRIPT += $(ROOTPATH)/livegrid/livegrid-all.js
 JAVASCRIPT += $(ROOTPATH)/lovcombo/lovcombo-all.js
 JAVASCRIPT += $(ROOTPATH)/multiselect/multiselect.js
@@ -277,7 +279,7 @@ compile-debug: $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c
 .PHONY: intl
 intl:
 	@printf "Building intl/js/tvheadend.js.pot\n"
-	@$(XGETTEXT2) -o intl/js/tvheadend.js.pot.new $(JAVASCRIPT_SRC)
+	@$(XGETTEXT2) -o intl/js/tvheadend.js.pot.new $(filter-out $(WEBDIR)/$(MARKED),$(JAVASCRIPT_SRC))
 	@sed -e 's/^"Language: /"Language: en/' < intl/js/tvheadend.js.pot.new > intl/js/tvheadend.js.pot
 
 intl/js/tvheadend.js.pot:
