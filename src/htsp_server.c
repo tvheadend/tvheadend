@@ -830,10 +830,12 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
     t = (service_t *)ilm->ilm_in1;
     htsmsg_t *svcmsg = htsmsg_create_map();
     htsmsg_add_str(svcmsg, "name", service_nicename(t));
+
+    /* Service type string, i.e. UHD, HD, Radio,... */
     htsmsg_add_str(svcmsg, "type", service_servicetype_txt(t));
 
-    /* The client may wants to separate radio and tv, none = 0x00, radio = 0x01, tv = 0x02 */
-    htsmsg_add_u32(svcmsg, "serviceType", service_is_tv(t) ? 0x02 : (service_is_radio(t) ? 0x01 : 0x00));
+    /* Service content, other = 0x00, tv = 0x01, radio = 0x02 */
+    htsmsg_add_u32(svcmsg, "content", service_is_tv(t) ? 0x01 : (service_is_radio(t) ? 0x02 : 0x00));
 
     if (service_is_encrypted(t)) {
       htsmsg_add_u32(svcmsg, "caid", 65535);
