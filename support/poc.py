@@ -92,6 +92,9 @@ class PO:
 
 def load(po_files, fn):
 
+  if not fn:
+    return
+
   lang = fn.split('.')[-2]
 
   f = utf8open(fn, 'r')

@@ -555,20 +555,11 @@ MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(wildcard docs/wizard/*.md))
 #
 # Internationalization
 #
-PO-FILES = $(foreach f,$(LANGUAGES),intl/tvheadend.$(f).po)
-PO-FILES += $(foreach f,$(LANGUAGES),intl/docs/tvheadend.doc.$(f).po)
+PO-FILES  = $(wildcard $(foreach f,$(LANGUAGES),intl/tvheadend.$(f).po))
+PO-FILES += $(wildcard $(foreach f,$(LANGUAGES-DOC),intl/docs/tvheadend.doc.$(f).po))
 SRCS += src/tvh_locale.c
 
 POC_PY=PYTHONIOENCODING=utf-8 $(PYTHON) support/poc.py
-
-define merge-po
-	@if ! test -r "$(1)"; then \
-		sed -e 's/Content-Type: text\/plain; charset=CHARSET/Content-Type: text\/plain; charset=utf-8/' < "$(2)" > "$(1).new"; \
-	else \
-		$(MSGMERGE) -o $(1).new $(1) $(2); \
-	fi
-	@mv $(1).new $(1)
-endef
 
 #
 # Add-on modules
@@ -722,33 +713,6 @@ intl:
 
 
 intl/tvheadend.pot:
-
-#intl/tvheadend.en_GB.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.de.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.fr.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.cs.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.pl.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.bg.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.he.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.hr.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
-
-#intl/tvheadend.it.po: intl/tvheadend.pot
-#	$(call merge-po,$@,$<)
 
 $(BUILDDIR)/src/tvh_locale.o: src/tvh_locale_inc.c
 src/tvh_locale_inc.c: $(PO-FILES)

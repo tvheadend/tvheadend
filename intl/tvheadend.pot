@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-04-13 10:39+0200\n"
+"POT-Creation-Date: 2016-04-13 12:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -655,10 +655,6 @@ msgid ""
 "output."
 msgstr ""
 
-#: src/profile.c:1748
-msgid "Audio language (Not currently used)."
-msgstr ""
-
 #: src/esfilter.c:725
 msgid "Audio stream filter"
 msgstr ""
@@ -704,11 +700,11 @@ msgstr ""
 msgid "Automatic recording caption."
 msgstr ""
 
-#: src/htsp_server.c:2051 src/htsp_server.c:2087
+#: src/htsp_server.c:2060 src/htsp_server.c:2096
 msgid "Automatic schedule entry not found"
 msgstr ""
 
-#: src/htsp_server.c:2162 src/htsp_server.c:2197
+#: src/htsp_server.c:2171 src/htsp_server.c:2206
 msgid "Automatic time scheduler entry not found"
 msgstr ""
 
@@ -793,7 +789,7 @@ msgstr ""
 msgid "Bad"
 msgstr ""
 
-#: src/htsp_server.c:1309
+#: src/htsp_server.c:1318
 msgid "Bad request"
 msgstr ""
 
@@ -986,8 +982,8 @@ msgstr ""
 msgid "Channel"
 msgstr ""
 
-#: src/htsp_server.c:1499 src/htsp_server.c:1541 src/htsp_server.c:1626
-#: src/htsp_server.c:1796 src/htsp_server.c:2332 src/htsp_server.c:2335
+#: src/htsp_server.c:1508 src/htsp_server.c:1550 src/htsp_server.c:1635
+#: src/htsp_server.c:1805 src/htsp_server.c:2341 src/htsp_server.c:2344
 msgid "Channel does not exist"
 msgstr ""
 
@@ -1019,7 +1015,7 @@ msgstr ""
 msgid "Channel name"
 msgstr ""
 
-#: src/htsp_server.c:2277
+#: src/htsp_server.c:2286
 msgid "Channel not found"
 msgstr ""
 
@@ -1047,7 +1043,7 @@ msgstr ""
 msgid "Channel tag"
 msgstr ""
 
-#: src/htsp_server.c:1632
+#: src/htsp_server.c:1641
 msgid "Channel tag does not exist"
 msgstr ""
 
@@ -1562,7 +1558,7 @@ msgstr ""
 msgid "DVR configuration profiles"
 msgstr ""
 
-#: src/htsp_server.c:1870
+#: src/htsp_server.c:1879
 msgid "DVR entry not found"
 msgstr ""
 
@@ -1603,15 +1599,15 @@ msgstr ""
 msgid "DVR profile to use/used for the recording."
 msgstr ""
 
-#: src/htsp_server.c:2285 src/htsp_server.c:2646
+#: src/htsp_server.c:2294 src/htsp_server.c:2655
 msgid "DVR schedule does not exist"
 msgstr ""
 
-#: src/htsp_server.c:2654
+#: src/htsp_server.c:2663
 msgid "DVR schedule does not have a file yet"
 msgstr ""
 
-#: src/htsp_server.c:2233
+#: src/htsp_server.c:2242
 msgid "DVR schedule not found"
 msgstr ""
 
@@ -2184,7 +2180,7 @@ msgstr ""
 msgid "Encrypted"
 msgstr ""
 
-#: src/htsp_server.c:836
+#: src/htsp_server.c:840
 msgid "Encrypted service"
 msgstr ""
 
@@ -2277,7 +2273,7 @@ msgstr ""
 msgid "Even key"
 msgstr ""
 
-#: src/htsp_server.c:1519 src/htsp_server.c:1544
+#: src/htsp_server.c:1528 src/htsp_server.c:1553
 msgid "Event does not exist"
 msgstr ""
 
@@ -2379,7 +2375,7 @@ msgstr ""
 msgid "Failed DVR"
 msgstr ""
 
-#: src/htsp_server.c:2661
+#: src/htsp_server.c:2670
 msgid "Failed to open image"
 msgstr ""
 
@@ -3115,7 +3111,7 @@ msgstr ""
 msgid "Internal XMLTV EPG grabber"
 msgstr ""
 
-#: src/htsp_server.c:1706
+#: src/htsp_server.c:1715
 msgid "Internal error"
 msgstr ""
 
@@ -3132,7 +3128,7 @@ msgstr ""
 msgid "Invalid"
 msgstr ""
 
-#: src/htsp_server.c:1702
+#: src/htsp_server.c:1711
 msgid "Invalid EPG object request"
 msgstr ""
 
@@ -3141,25 +3137,25 @@ msgstr ""
 msgid "Invalid adapter number '%s'\n"
 msgstr ""
 
-#: src/htsp_server.c:1229 src/htsp_server.c:1232 src/htsp_server.c:1497
-#: src/htsp_server.c:1515 src/htsp_server.c:1615 src/htsp_server.c:1692
-#: src/htsp_server.c:1805 src/htsp_server.c:1865 src/htsp_server.c:2001
-#: src/htsp_server.c:2048 src/htsp_server.c:2084 src/htsp_server.c:2113
-#: src/htsp_server.c:2159 src/htsp_server.c:2194 src/htsp_server.c:2230
-#: src/htsp_server.c:2292 src/htsp_server.c:2328 src/htsp_server.c:2337
-#: src/htsp_server.c:2440 src/htsp_server.c:2469 src/htsp_server.c:2498
-#: src/htsp_server.c:2520 src/htsp_server.c:2540 src/htsp_server.c:2542
-#: src/htsp_server.c:2569 src/htsp_server.c:2597 src/htsp_server.c:2636
-#: src/htsp_server.c:3113
+#: src/htsp_server.c:1238 src/htsp_server.c:1241 src/htsp_server.c:1506
+#: src/htsp_server.c:1524 src/htsp_server.c:1624 src/htsp_server.c:1701
+#: src/htsp_server.c:1814 src/htsp_server.c:1874 src/htsp_server.c:2010
+#: src/htsp_server.c:2057 src/htsp_server.c:2093 src/htsp_server.c:2122
+#: src/htsp_server.c:2168 src/htsp_server.c:2203 src/htsp_server.c:2239
+#: src/htsp_server.c:2301 src/htsp_server.c:2337 src/htsp_server.c:2346
+#: src/htsp_server.c:2449 src/htsp_server.c:2478 src/htsp_server.c:2507
+#: src/htsp_server.c:2529 src/htsp_server.c:2549 src/htsp_server.c:2551
+#: src/htsp_server.c:2578 src/htsp_server.c:2606 src/htsp_server.c:2645
+#: src/htsp_server.c:3122
 msgid "Invalid arguments"
 msgstr ""
 
-#: src/htsp_server.c:2683 src/htsp_server.c:2731 src/htsp_server.c:2749
-#: src/htsp_server.c:2777
+#: src/htsp_server.c:2692 src/htsp_server.c:2740 src/htsp_server.c:2758
+#: src/htsp_server.c:2786
 msgid "Invalid file"
 msgstr ""
 
-#: src/htsp_server.c:2686 src/htsp_server.c:2780 src/htsp_server.c:2790
+#: src/htsp_server.c:2695 src/htsp_server.c:2789 src/htsp_server.c:2799
 msgid "Invalid parameters"
 msgstr ""
 
@@ -3673,7 +3669,7 @@ msgstr ""
 msgid "Merge services with the same name to one channel."
 msgstr ""
 
-#: src/htsp_server.c:3109
+#: src/htsp_server.c:3118
 msgid "Method not found"
 msgstr ""
 
@@ -4061,7 +4057,7 @@ msgid ""
 "the signal level displayed within Tvheadend looks too low."
 msgstr ""
 
-#: src/htsp_server.c:2702
+#: src/htsp_server.c:2711
 msgid "Not enough memory"
 msgstr ""
 
@@ -4648,6 +4644,10 @@ msgstr ""
 msgid "Preferred CA PID"
 msgstr ""
 
+#: src/profile.c:1748
+msgid "Preferred audio language."
+msgstr ""
+
 #: src/profile.c:396
 msgid "Preferred service video type"
 msgstr ""
@@ -4788,7 +4788,7 @@ msgstr ""
 msgid "Re-try period (hours)"
 msgstr ""
 
-#: src/htsp_server.c:2709
+#: src/htsp_server.c:2718
 msgid "Read error"
 msgstr ""
 
@@ -5218,7 +5218,7 @@ msgstr ""
 msgid "Season information (if available)."
 msgstr ""
 
-#: src/htsp_server.c:2800
+#: src/htsp_server.c:2809
 msgid "Seek error"
 msgstr ""
 
@@ -5734,7 +5734,7 @@ msgstr ""
 msgid "Stream profile"
 msgstr ""
 
-#: src/htsp_server.c:2384
+#: src/htsp_server.c:2393
 msgid "Stream setup error"
 msgstr ""
 
@@ -5764,8 +5764,8 @@ msgstr ""
 msgid "Subscribe to a service permanently"
 msgstr ""
 
-#: src/htsp_server.c:2478 src/htsp_server.c:2505 src/htsp_server.c:2549
-#: src/htsp_server.c:2576 src/htsp_server.c:2604
+#: src/htsp_server.c:2487 src/htsp_server.c:2514 src/htsp_server.c:2558
+#: src/htsp_server.c:2585 src/htsp_server.c:2613
 msgid "Subscription does not exist"
 msgstr ""
 
@@ -7034,15 +7034,15 @@ msgstr ""
 msgid "UUID"
 msgstr ""
 
-#: src/htsp_server.c:1362
+#: src/htsp_server.c:1371
 msgid "Unable to get system UTC time"
 msgstr ""
 
-#: src/htsp_server.c:1355
+#: src/htsp_server.c:1364
 msgid "Unable to get system local time"
 msgstr ""
 
-#: src/htsp_server.c:1352
+#: src/htsp_server.c:1361
 msgid "Unable to get system time"
 msgstr ""
 
@@ -7050,7 +7050,7 @@ msgstr ""
 msgid "Unable to open file"
 msgstr ""
 
-#: src/htsp_server.c:1330
+#: src/htsp_server.c:1339
 msgid "Unable to stat path"
 msgstr ""
 
@@ -7090,7 +7090,7 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: src/htsp_server.c:2665
+#: src/htsp_server.c:2674
 msgid "Unknown file"
 msgstr ""
 
@@ -7283,16 +7283,16 @@ msgstr ""
 msgid "User access error"
 msgstr ""
 
-#: src/htsp_server.c:1556 src/htsp_server.c:1655 src/htsp_server.c:1794
-#: src/htsp_server.c:1875 src/htsp_server.c:2016 src/htsp_server.c:2054
-#: src/htsp_server.c:2064 src/htsp_server.c:2090 src/htsp_server.c:2128
-#: src/htsp_server.c:2165 src/htsp_server.c:2175 src/htsp_server.c:2200
-#: src/htsp_server.c:2236 src/htsp_server.c:2279 src/htsp_server.c:2287
-#: src/htsp_server.c:2340 src/htsp_server.c:2649
+#: src/htsp_server.c:1565 src/htsp_server.c:1664 src/htsp_server.c:1803
+#: src/htsp_server.c:1884 src/htsp_server.c:2025 src/htsp_server.c:2063
+#: src/htsp_server.c:2073 src/htsp_server.c:2099 src/htsp_server.c:2137
+#: src/htsp_server.c:2174 src/htsp_server.c:2184 src/htsp_server.c:2209
+#: src/htsp_server.c:2245 src/htsp_server.c:2288 src/htsp_server.c:2296
+#: src/htsp_server.c:2349 src/htsp_server.c:2658
 msgid "User does not have access"
 msgstr ""
 
-#: src/htsp_server.c:1908
+#: src/htsp_server.c:1917
 msgid "User does not have access to channel"
 msgstr ""
 
