@@ -2,8 +2,6 @@ This tab controls timer-driven recording rules.
 
 ![Timer Tab](docresources/timeschedules.png)
 
-Timer events will appear as a [DVR Entry](class/dvrentry).
-
 ---
 
 ###Adding an Entry
@@ -11,6 +9,8 @@ Timer events will appear as a [DVR Entry](class/dvrentry).
 You can add an entry by pressing the *[Add]* button from the menu bar.
 
 ![Timer add example](docresources/dvrtimeradd.png)
+
+Note that when you create a rule/entry it will also generate a [DVR Entry](class/dvrentry).
 
 ###Editing an Entry
 

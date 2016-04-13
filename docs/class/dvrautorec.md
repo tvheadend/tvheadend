@@ -2,9 +2,6 @@ This tab controls EPG-driven recording rules.
 
 !['Autorec' Tab](docresources/dvrautorecentries.png)
 
-Any EPG events matched by an auto-recording rule will appear as a 
-[DVR Entry](class/dvrentry).
-
 ---
 
 ###Adding an Entry/Rule
@@ -26,6 +23,9 @@ Regex                             | Description
 ----------------------------------|------------
  `^BBC News$`                     | Matches "BBC News" exactly.
  `^(New\\: )?Regular Show$`       | Matches "Regular Show" and (if it exists) "New: Regular Show".
+ 
+EPG events matched by an autorec rule will appear as a [DVR Entry](class/dvrentry), this 
+includes events that are already in-progress.
 
 ###Editing an Entry
 
