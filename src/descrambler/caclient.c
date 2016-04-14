@@ -237,6 +237,8 @@ caclient_class_status_get(void *o)
   return &ret;
 }
 
+extern const char *tvh_doc_caclient_class[];
+
 const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
@@ -244,6 +246,7 @@ const idclass_t caclient_class =
   .ic_changed    = caclient_class_changed,
   .ic_save       = caclient_class_save,
   .ic_event      = "caclient",
+  .ic_doc        = tvh_doc_caclient_class,
   .ic_get_title  = caclient_class_get_title,
   .ic_delete     = caclient_class_delete,
   .ic_moveup     = caclient_class_moveup,

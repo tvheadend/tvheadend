@@ -59,7 +59,7 @@ tvheadend.caclient = function(panel, index) {
         lcol: [actions],
         plugins: [actions],
         help: function() {
-            new tvheadend.help(_('Conditional Access Client'), 'config_caclient.html');
+            new tvheadend.mdhelp('class/caclient');
         }
     });
 
