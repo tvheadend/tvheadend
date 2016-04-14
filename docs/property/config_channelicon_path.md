@@ -1,4 +1,6 @@
-: The following placeholders are available:
+: 
+
+The following placeholders are available:
 
 Placeholder | Function
 :----------:| --------
