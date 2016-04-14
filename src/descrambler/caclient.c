@@ -237,7 +237,7 @@ caclient_class_status_get(void *o)
   return &ret;
 }
 
-extern const char *tvh_doc_caclient_class[];
+CLASS_DOC(caclient)
 
 const idclass_t caclient_class =
 {

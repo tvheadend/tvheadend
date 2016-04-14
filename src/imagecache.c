@@ -71,7 +71,7 @@ struct imagecache_config imagecache_conf = {
 
 static htsmsg_t *imagecache_save(idnode_t *self, char *filename, size_t fsize);
 
-extern const char *tvh_doc_imagecache_class[];
+CLASS_DOC(imagecache)
 
 const idclass_t imagecache_class = {
   .ic_snode      = (idnode_t *)&imagecache_conf,

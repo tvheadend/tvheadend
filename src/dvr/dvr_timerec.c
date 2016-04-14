@@ -517,15 +517,8 @@ dvr_timerec_entry_class_owner_opts(void *o)
   return PO_RDONLY | PO_ADVANCED;
 }
 
-static char *
-dvr_timerec_prop_titleformat_doc(const struct property *p, const char *lang)
-{
-  extern const char *tvh_doc_dvr_timerec_title_format_property[];
-  return prop_md_doc(tvh_doc_dvr_timerec_title_format_property, lang);
-}
-
-
-extern const char *tvh_doc_dvrtimerec_class[];
+CLASS_DOC(dvrtimerec)
+PROP_DOC(dvr_timerec_title_format)
 
 const idclass_t dvr_timerec_entry_class = {
   .ic_class      = "dvrtimerec",
@@ -557,7 +550,7 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "title",
       .name     = N_("Title"),
       .desc     = N_("Title of the recording."),
-      .doc      = dvr_timerec_prop_titleformat_doc,
+      .doc      = prop_doc_dvr_timerec_title_format,
       .off      = offsetof(dvr_timerec_entry_t, dte_title),
       .def.s    = "Time-%F_%R",
     },

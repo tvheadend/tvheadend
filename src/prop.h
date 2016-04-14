@@ -152,6 +152,13 @@ static inline int64_t prop_intsplit_from_str(const char *s, int64_t intsplit)
 char *
 prop_md_doc(const char **md, const char *lang);
 
+#define PROP_DOC(name) \
+extern const char *tvh_doc_##name##_property[]; \
+static char * \
+prop_doc_##name(const struct property *p, const char *lang) \
+{ return prop_md_doc(tvh_doc_##name##_property, lang); }
+
+
 #endif /* __TVH_PROP_H__ */
 
 /******************************************************************************

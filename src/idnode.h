@@ -61,6 +61,8 @@ typedef struct property_group
  */
 #define IDCLASS_ALWAYS_SAVE    (1<<0)      ///< Always call the save callback
 
+#define CLASS_DOC(name) extern const char *tvh_doc_##name##_class[];
+
 typedef struct idclass idclass_t;
 struct idclass {
   const struct idclass   *ic_super;        ///< Parent class

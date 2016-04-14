@@ -29,7 +29,7 @@ service_class_get_title ( idnode_t *self, const char *lang )
   return ((memoryinfo_t *)self)->my_name;
 }
 
-extern const char *tvh_doc_memoryinfo_class[];
+CLASS_DOC(memoryinfo)
 
 const idclass_t memoryinfo_class = {
   .ic_class      = "memoryinfo",

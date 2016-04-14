@@ -566,7 +566,7 @@ static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
-extern const char *tvh_doc_satip_server_class[];
+CLASS_DOC(satip_server)
 
 const idclass_t satip_server_class = {
   .ic_snode      = (idnode_t *)&satip_server_conf,

@@ -1309,7 +1309,7 @@ theme_get_ui_list ( void *p, const char *lang )
   return strtab2htsmsg_str(tab, 1, lang);
 }
 
-extern const char *tvh_doc_access_entry_class[];
+CLASS_DOC(access_entry)
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
@@ -1741,7 +1741,7 @@ passwd_entry_class_password2_set(void *o, const void *v)
   return 0;
 }
 
-extern const char *tvh_doc_passwd_class[];
+CLASS_DOC(passwd)
 
 const idclass_t passwd_entry_class = {
   .ic_class      = "passwd",
@@ -1893,7 +1893,7 @@ ipblock_entry_class_prefix_get(void *o)
   return &ret;
 }
 
-extern const char *tvh_doc_ipblocking_class[];
+CLASS_DOC(ipblocking)
 
 const idclass_t ipblock_entry_class = {
   .ic_class      = "ipblocking",

@@ -981,7 +981,7 @@ dvr_autorec_entry_class_owner_opts(void *o)
   return PO_RDONLY | PO_ADVANCED;
 }
 
-extern const char *tvh_doc_dvrautorec_class[];
+CLASS_DOC(dvrautorec)
 
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",

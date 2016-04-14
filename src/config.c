@@ -1968,35 +1968,12 @@ config_muxconfpath_notify ( void *o, const char *lang )
 #endif
 }
 
-static char *
-config_channelicon_path_doc(const struct property *p, const char *lang) 
-{
-     extern const char *tvh_doc_config_channelicon_path_property[];
-     return prop_md_doc(tvh_doc_config_channelicon_path_property, lang);
-}
 
-static char *
-config_channelname_scheme_doc(const struct property *p, const char *lang) 
-{
-     extern const char *tvh_doc_config_channelname_scheme_property[];
-     return prop_md_doc(tvh_doc_config_channelname_scheme_property, lang);
-}
-
-static char *
-config_picon_path_doc(const struct property *p, const char *lang) 
-{
-     extern const char *tvh_doc_config_picon_path_property[];
-     return prop_md_doc(tvh_doc_config_picon_path_property, lang);
-}
-
-static char *
-config_picon_servicetype_doc(const struct property *p, const char *lang) 
-{
-     extern const char *tvh_doc_config_picon_servicetype_property[];
-     return prop_md_doc(tvh_doc_config_picon_servicetype_property, lang);
-}
-
-extern const char *tvh_doc_config_class[];
+CLASS_DOC(config)
+PROP_DOC(config_channelicon_path)
+PROP_DOC(config_channelname_scheme)
+PROP_DOC(config_picon_path)
+PROP_DOC(config_picon_servicetype)
 
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
@@ -2293,7 +2270,7 @@ const idclass_t config_class = {
                    "(file://) or remote (http://) image. "
                    "See Help for more infomation."),
       .off    = offsetof(config_t, chicon_path),
-      .doc    = config_channelicon_path_doc,
+      .doc    = prop_doc_config_channelicon_path,
       .opts   = PO_ADVANCED,
       .group  = 6,
     },
@@ -2304,7 +2281,7 @@ const idclass_t config_class = {
       .desc   = N_("Scheme to generate the the channel icon names "
                    "(all lower-case, service name picons etc.)."),
       .list   = config_class_chiconscheme_list,
-      .doc    = config_channelname_scheme_doc,
+      .doc    = prop_doc_config_channelname_scheme,
       .off    = offsetof(config_t, chicon_scheme),
       .opts   = PO_ADVANCED,
       .group  = 6,
@@ -2316,7 +2293,7 @@ const idclass_t config_class = {
       .desc   = N_("Path to a directory (folder) containing your picon "
                    "collection. See Help for more detailed "
                    "information."),
-      .doc    = config_picon_path_doc,
+      .doc    = prop_doc_config_picon_path,
       .off    = offsetof(config_t, picon_path),
       .opts   = PO_ADVANCED,
       .group  = 6,
@@ -2328,7 +2305,7 @@ const idclass_t config_class = {
       .desc   = N_("Select scheme to generate the picon names "
                    "(standard, force service type to 1)"),
       .list   = config_class_piconscheme_list,
-      .doc    = config_picon_servicetype_doc,
+      .doc    = prop_doc_config_picon_servicetype,
       .off    = offsetof(config_t, picon_scheme),
       .opts   = PO_ADVANCED,
       .group  = 6,
