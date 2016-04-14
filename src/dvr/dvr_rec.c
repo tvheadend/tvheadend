@@ -1060,6 +1060,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   if ((f = htsmsg_field_last(de->de_files)) != NULL &&
       (e = htsmsg_field_get_map(f)) != NULL) {
     htsmsg_set_msg(e, "info", info);
+    htsmsg_set_s64(e, "start", gclk());
   } else {
     htsmsg_destroy(info);
   }
@@ -1571,6 +1572,8 @@ static void
 dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
 {
   profile_chain_t *prch = de->de_chain;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
 
   if (prch == NULL)
     return;
@@ -1579,6 +1582,12 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
   muxer_destroy(prch->prch_muxer);
   prch->prch_muxer = NULL;
 
+  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+      (e = htsmsg_field_get_map(f)) != NULL)
+    htsmsg_set_s64(e, "stop", gclk());
+
   if(dvr_postproc && dvr_postproc[0])
     dvr_spawn_cmd(de, dvr_postproc, NULL, 0);
+
+  idnode_changed(&de->de_id);
 }

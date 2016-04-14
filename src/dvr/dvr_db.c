@@ -2029,6 +2029,7 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_field_t *f;
   char ubuf[UUID_HEX_SIZE];
   const char *filename2;
+  int64_t s64;
 
   idnode_save(&de->de_id, m);
   if (de->de_files) {
@@ -2042,6 +2043,10 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
           htsmsg_add_str(c, "filename", filename2);
           if (info)
             htsmsg_add_msg(c, "info", htsmsg_copy(info));
+          if (!htsmsg_get_s64(e, "start", &s64))
+            htsmsg_add_s64(c, "start", s64);
+          if (!htsmsg_get_s64(e, "stop", &s64))
+            htsmsg_add_s64(c, "stop", s64);
           htsmsg_add_msg(l, NULL, c);
         }
       }
