@@ -1298,6 +1298,17 @@ idclass_get_order (const idclass_t *idc)
   return NULL;
 }
 
+const char **
+idclass_get_doc (const idclass_t *idc)
+{
+  while (idc) {
+    if (idc->ic_doc)
+      return idc->ic_doc;
+    idc = idc->ic_super;
+  }
+  return NULL;
+}
+
 static htsmsg_t *
 idclass_get_property_groups (const idclass_t *idc, const char *lang)
 {

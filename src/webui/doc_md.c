@@ -139,7 +139,7 @@ http_markdown_class(http_connection_t *hc, const char *clazz)
     pthread_mutex_unlock(&global_lock);
     return HTTP_STATUS_NOT_FOUND;
   }
-  doc = ic->ic_doc;
+  doc = idclass_get_doc(ic);
   m = idclass_serializedoc(ic, lang);
   pthread_mutex_unlock(&global_lock);
   s = htsmsg_get_str(m, "caption");
