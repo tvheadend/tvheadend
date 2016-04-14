@@ -69,7 +69,7 @@ Web Interface Configuration Guide
 
   - Stream Profiles
     - [HTSP Profile](class/profile-htsp)
-    - [MPEG-TS Pass-thru Profile][class/profile-mpegts)
+    - [MPEG-TS Pass-thru Profile](class/profile-mpegts)
     - [Matroska Profile](class/profile-matroska)
     - [MPEG-TS/libav Profile](class/profile-libav-mpegts)
     - [Matroska/libav Profile](class/profile-libav-matroska)

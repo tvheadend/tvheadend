@@ -40,7 +40,7 @@ tvheadend.esfilter_tab = function(panel)
         },
         del: true,
         help: function() {
-            new tvheadend.help(_('Stream Profile'), 'config_streamprofile.html');
+            new tvheadend.mdhelp('class/profile')
         }
     });
 
@@ -62,7 +62,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
+            new tvheadend.mdhelp('class/esfilter_video')
         }
     });
 
@@ -82,7 +82,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
+            new tvheadend.mdhelp('class/esfilter_audio')
         }
     });
 
@@ -102,7 +102,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help('Elementary Stream Filter', 'config_esfilter.html');
+            new tvheadend.mdhelp('class/esfilter_teletext')
         }
     });
 
@@ -122,7 +122,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
+            new tvheadend.mdhelp('class/esfilter_subtit')
         }
     });
 
@@ -141,7 +141,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
+            new tvheadend.mdhelp('class/esfilter_ca')
         }
     });
 
@@ -161,7 +161,7 @@ tvheadend.esfilter_tab = function(panel)
         del: true,
         move: true,
         help: function() {
-            new tvheadend.help(_('Elementary Stream Filter'), 'config_esfilter.html');
+            new tvheadend.mdhelp('class/esfilter_other')
         }
     });
 };
