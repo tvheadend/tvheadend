@@ -948,7 +948,13 @@
 .hts-doc-text a {
     cursor: pointer;
     text-decoration: underline;
-    color:blue;
+    color: blue;
+}
+
+.hts-doc-text .hts-doc-anchor {
+    color: inherit;
+    text-decoration: inherit;
+    cursor: inherit;
 }
 
 .tv-video-idle {

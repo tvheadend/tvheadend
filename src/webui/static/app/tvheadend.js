@@ -99,7 +99,7 @@ tvheadend.mdhelp = function(pagename) {
     var parse = function(text) {
         var renderer = new marked.Renderer;
         renderer.link = function(href, title, text) {
-            if (href.indexOf(':/') === -1) {
+            if (href.indexOf(':/') === -1 && href.indexOf('#') > 1) {
                 var r = '<a page="' + href + '"';
                 if (title) r += ' title="' + title + '"';
                 return r + '>' + text + '</a>';
@@ -115,7 +115,13 @@ tvheadend.mdhelp = function(pagename) {
             }
             return marked.Renderer.prototype.image.call(this, href, title, text);
         };
-        opts = { renderer: renderer };
+        renderer.heading = function(text, level, raw) {
+            var id = raw.toLowerCase().replace(/[^\w]+/g, '-');
+            return '<h' + level + ' id="' + this.options.headerPrefix + id +
+                   '"><a class="hts-doc-anchor" href="#' + id + '">' + text +
+                   '</a></h' + level + '>\n';
+        };
+        opts = { renderer: renderer, headerPrefix: 'tvh-doc-hdr-' };
         return marked(text, opts);
     }
 
@@ -202,8 +208,17 @@ tvheadend.mdhelp = function(pagename) {
                 render: function(win) {
                     win.body.on('click', function(e, dom) {
                         var page = dom.getAttribute('page');
-                        if (page)
+                        if (page) {
                             tvheadend.mdhelp(page);
+                            return;
+                        }
+                        var href = dom.getAttribute('href');
+                        if (href.indexOf('#') !== -1) {
+                            var id = 'tvh-doc-hdr-' + href.substring(1);
+                            var el = document.getElementById(id);
+                            el.scrollIntoView();
+                            return;
+                        }
                     });
                 },
                 afterrender: function(win) {
