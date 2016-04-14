@@ -169,9 +169,9 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
       TAILQ_FOREACH(ra1, &args, link) {
         if (!htsbuf_empty(&q))
           htsbuf_append(&q, "&", 1);
-        htsbuf_append_and_escape_url(&q, ra1->key);
+        htsbuf_append_str(&q, ra1->key);
         htsbuf_append(&q, "=", 1);
-        htsbuf_append_and_escape_url(&q, ra1->val);
+        htsbuf_append_str(&q, ra1->val);
       }
       free(u.query);
       u.query = htsbuf_to_string(&q);
