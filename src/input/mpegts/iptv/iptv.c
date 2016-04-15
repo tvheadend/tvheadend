@@ -150,9 +150,9 @@ const idclass_t iptv_input_class = {
 };
 
 static int
-iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm )
+iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm, int active )
 {
-  int c = 0;
+  int c = active;
   mpegts_mux_instance_t *mmi;
   iptv_network_t *in = (iptv_network_t *)mm->mm_network;
   
@@ -180,8 +180,8 @@ iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
   mpegts_mux_instance_t *mmi;
 
   /* Find the "min" weight */
-  if (!iptv_input_is_free(mi, mm)) {
-    w = 1000000;
+  if (!iptv_input_is_free(mi, mm, 0)) {
+    w = INT_MAX;
 
     /* Service subs */
     pthread_mutex_lock(&mi->mi_output_lock);
@@ -228,10 +228,10 @@ iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
     return 0;
 
   /* Do we need to stop something? */
-  if (!iptv_input_is_free(mi, mmi->mmi_mux)) {
+  if (!iptv_input_is_free(mi, mmi->mmi_mux, 1)) {
     pthread_mutex_lock(&mi->mi_output_lock);
     mpegts_mux_instance_t *m, *s = NULL;
-    int w = 1000000;
+    int w = INT_MAX;
     LIST_FOREACH(m, &mi->mi_mux_active, mmi_active_link) {
       int t = mpegts_mux_instance_weight(m);
       if (t < w) {
