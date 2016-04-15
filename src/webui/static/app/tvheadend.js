@@ -99,7 +99,8 @@ tvheadend.mdhelp = function(pagename) {
     var parse = function(text) {
         var renderer = new marked.Renderer;
         renderer.link = function(href, title, text) {
-            if (href.indexOf(':/') === -1 && href.indexOf('#') > 1) {
+            var x = href.indexOf('#');
+            if (href.indexOf(':/') === -1 && (x === -1 || x > 1)) {
                 var r = '<a page="' + href + '"';
                 if (title) r += ' title="' + title + '"';
                 return r + '>' + text + '</a>';
