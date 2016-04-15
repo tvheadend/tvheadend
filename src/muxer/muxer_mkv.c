@@ -109,8 +109,8 @@ typedef struct mk_muxer {
   htsbuf_queue_t *cluster;
   int64_t cluster_tc;
   off_t cluster_pos;
-  int cluster_maxsize;
   int64_t cluster_last_close;
+  int64_t cluster_maxsize;
 
   off_t segment_header_pos;
 
@@ -235,6 +235,7 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
 
   mk->tracks = calloc(1, sizeof(mk_track_t) * ss->ss_num_components);
   mk->ntracks = ss->ss_num_components;
+  mk->cluster_maxsize = 4000000;
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
     tr = &mk->tracks[i];
@@ -267,22 +268,26 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       tracktype = 1;
       codec_id = "V_MPEG4/ISO/AVC";
       tr->avc = 1;
+      mk->cluster_maxsize = 10000000;
       break;
 
     case SCT_HEVC:
       tracktype = 1;
       codec_id = "V_MPEGH/ISO/HEVC";
+      mk->cluster_maxsize = 20000000;
       tr->hevc = 1;
       break;
 
     case SCT_VP8:
       tracktype = 1;
       codec_id = "V_VP8";
+      mk->cluster_maxsize = 10000000;
       break;
 
     case SCT_VP9:
       tracktype = 1;
       codec_id = "V_VP9";
+      mk->cluster_maxsize = 10000000;
       break;
 
     case SCT_MPEG2AUDIO:
@@ -961,7 +966,6 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 
   uint8_t *data = pktbuf_ptr(pkt->pkt_payload);
   size_t len = pktbuf_len(pkt->pkt_payload);
-  const int clusersizemax = 2000000;
 
   if(!data || len <= 0)
     return;
@@ -980,28 +984,29 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
       mk->totduration = nxt;
 
     delta = pts - mk->cluster_tc;
-    if(delta > 32767ll || delta < -32768ll)
-      mk_close_cluster(mk);
-
-    else if(vkeyframe && (delta > 30000ll || delta < -30000ll))
+    if((vkeyframe || !mk->has_video) && (delta > 30000ll || delta < -30000ll))
       mk_close_cluster(mk);
 
   } else {
     return;
   }
 
-  if(vkeyframe && mk->cluster &&
-     (mk->cluster->hq_size > mk->cluster_maxsize ||
-      mk->cluster_last_close + sec2mono(1) < mclk()))
-    mk_close_cluster(mk);
+  if(mk->cluster) {
 
-  else if(!mk->has_video && mk->cluster &&
-          (mk->cluster->hq_size > clusersizemax/40 ||
-           mk->cluster_last_close + sec2mono(1) < mclk()))
-    mk_close_cluster(mk);
+    if(vkeyframe &&
+       (mk->cluster->hq_size > mk->cluster_maxsize ||
+        mk->cluster_last_close + sec2mono(1) < mclk()))
+      mk_close_cluster(mk);
 
-  else if(mk->cluster && mk->cluster->hq_size > clusersizemax)
-    mk_close_cluster(mk);
+    else if(!mk->has_video &&
+            (mk->cluster->hq_size > mk->cluster_maxsize/40 ||
+             mk->cluster_last_close + sec2mono(1) < mclk()))
+      mk_close_cluster(mk);
+
+    else if(mk->cluster->hq_size > mk->cluster_maxsize)
+      mk_close_cluster(mk);
+
+  }
 
   if(mk->cluster == NULL) {
     mk->cluster_tc = pts;
@@ -1349,7 +1354,7 @@ mkv_muxer_open_file(muxer_t *m, const char *filename)
 
   mk->filename = strdup(filename);
   mk->fd = fd;
-  mk->cluster_maxsize = 2000000/4;
+  mk->cluster_maxsize = 2000000;
   mk->seekable = 1;
 
   return 0;
