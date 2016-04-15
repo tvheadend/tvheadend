@@ -145,7 +145,15 @@ note that not all fields can be edited.
 
 ---
 
-###Deleting an Entry
+###Moving an Entry/Recording
+
+Finished recordings can be moved to the *Failed Recordings* tab by 
+highlighting (selecting) the desired entry and then pressing the *[Move to failed]*
+button from the menu bar.
+
+---
+
+###Deleting an Entry/Recording
 
 Highlight (select) the desired entry(s) then press the *[Delete]* button on the 
 menu bar. 
@@ -206,15 +214,15 @@ the entry.
 
 ---
 
-###Moving an Entry
+###Moving an Entry/Recording
 
-Failed recordings can be moved to the Finished Recordings tab by 
+Failed recordings can be moved to the *Finished Recordings* tab by 
 highlighting (selecting) the desired entry and then pressing the *[Move to finished]*
 button from the menu bar.
 
 ---
 
-###Deleting an Entry
+###Deleting an Entry/Recording
 
 Highlight (select) the desired entry(s) then press the *[Delete]* button on the menu bar. 
 
