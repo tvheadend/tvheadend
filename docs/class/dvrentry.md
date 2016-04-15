@@ -64,7 +64,7 @@ See [Autorec](class/dvrautorec) for more information.
 
 ####Adding a Timer Event
 
-You can set time-based entries using the [Timer](class/dvrtimerec) tab.
+You can set time-based entries using the [Timers](class/dvrtimerec) tab.
 
 ####Manual Event Entry/Editing an Entry
 
