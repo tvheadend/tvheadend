@@ -84,13 +84,12 @@ static tvh_cond_t tvhdhomerun_discovery_cond;
 static const char *
 tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
 {
-  static char buf[256];
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
   char ip[64];
   tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, ip, sizeof(ip));
-  snprintf(buf, sizeof(buf),
+  snprintf(prop_sbuf, PROP_SBUF_LEN,
            "%s - %s", hd->hd_info.friendlyname, ip);
-  return buf;
+  return prop_sbuf;
 }
 
 static htsmsg_t *
@@ -151,6 +150,14 @@ tvhdhomerun_device_class_override_notify( void * obj, const char *lang )
   }
 }
 
+static const void *
+tvhdhomerun_device_class_get_ip_address ( void *obj )
+{
+  tvhdhomerun_device_t *hd = obj;
+  tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, prop_sbuf, PROP_SBUF_LEN);
+  return &prop_sbuf;
+}
+
 const idclass_t tvhdhomerun_device_class =
 {
   .ic_class      = "tvhdhomerun_client",
@@ -171,7 +178,7 @@ const idclass_t tvhdhomerun_device_class =
       .id       = "ip_address",
       .name     = N_("IP address"),
       .opts     = PO_RDONLY | PO_NOSAVE,
-      .off      = offsetof(tvhdhomerun_device_t, hd_info.ip_address),
+      .get      = tvhdhomerun_device_class_get_ip_address,
     },
     {
       .type     = PT_STR,
