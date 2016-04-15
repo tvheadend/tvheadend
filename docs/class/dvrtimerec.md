@@ -4,6 +4,18 @@ This tab controls timer-driven recording rules.
 
 ---
 
+###Buttons
+
+The tab has the following buttons:
+
+Button                 | Function
+-----------------------|-------------------
+**Save**               | Save any changes made to the grid/entries.
+**Undo**               | Revert any changes made since the last save.
+**Add**                | Display the *Add Timer* dialog.
+**Delete**             | Delete the selected entry/entries.
+**Edit**               | Edit the selected entry.
+
 ###Adding an Entry
 
 You can add an entry by pressing the *[Add]* button from the menu bar.

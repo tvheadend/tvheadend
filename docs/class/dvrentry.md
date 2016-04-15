@@ -3,9 +3,9 @@ and failed recordings.
 
 !['Digital Video Recorder' Tabs](docresources/configdvrtabs4.png)
 
-  * Upcoming and currently recording entries remain in the *Upcoming/Current Recordings* tab.
-  * When a recording completes successfully the entry is moved to the *Finished Recordings* tab.
-  * When a recording fails or gets aborted the entry is moved to the *Failed Recordings* tab.
+  * Upcoming and currently recording entries remain in the *[Upcoming/Current Recordings](#upcoming-current-recordings)* tab.
+  * When a recording completes successfully the entry is moved to the *[Finished Recordings](#finished-recordings)* tab.
+  * When a recording fails or gets aborted the entry is moved to the *[Failed Recordings](#failed-recordings)* tab.
   
 **Some entry details are not available/incomplete until the recording 
 completes or fails, e.g. filesize, total data errors, etc.**
@@ -17,6 +17,21 @@ completes or fails, e.g. filesize, total data errors, etc.**
 This tab shows your all upcoming/current recording entries.
 
 !['Upcoming/Current Recordings' Tab](docresources/upcomingrecordings1.png)
+
+###Buttons
+
+The tab has the following buttons:
+
+Button                 | Function
+-----------------------|-------------------
+**Save**               | Save any changes made to the grid/entries.
+**Undo**               | Revert any changes made since the last save.
+**Add**                | Display the *Add Entry* dialog.
+**Delete**             | Delete the selected entry/entries.
+**Edit**               | Edit the selected entry.
+**Stop**               | Gracefully stop the selected (in-progress) recording/entry.
+**Abort**              | Stop the selected (in-progress) recording/entry.
+**Help**               | Display this help page.
 
 ###Adding and Editing an Entry 
 
@@ -79,11 +94,24 @@ Note that only in-progress recording can be stopped or aborted.
 
 ---
 
-##DVR - Finished Recordings
+##Finished Recordings
 
 This tab shows all your finished recording entries.
 
 !['Finished Recordings' Tab](docresources/finishedrecordings1.png)
+
+###Buttons
+
+The tab has the following buttons:
+
+Button                 | Function
+-----------------------|-------------------
+**Delete**             | Delete the selected entry/recording.
+**Edit**               | Edit the selected entry/recording.
+**Download**           | Download the selected entry/recording.
+**Re-record**          | Re-schedule the selected entry/recording if possible.
+**Move to failed**     | Move the selected entry/entries to the *Failed Recordings* tab.
+**Help**               | Display this help page.
 
 ###Playing a Recording
 
@@ -118,13 +146,24 @@ will be prompted to confirm deletion.**
 
 ---
 
-##DVR - Failed Recordings
+##Failed Recordings
 
 This tab shows all failed recording entries.
 
 !['Failed Recordings' Tab](docresources/failedrecordings1.png)
 
-The *Status* column gives the reason why a recording failed. 
+###Buttons
+
+The tab has the following buttons:
+
+Button                 | Function
+-----------------------|-------------------
+**Delete**             | Delete the selected entry/recording.
+**Edit**               | Edit the selected entry/recording.
+**Download**           | Download the selected entry/recording.
+**Re-record**          | Re-schedule the selected entry/recording if possible.
+**Move to finished**   | Move the selected entry/entries to the *Finished Recordings* tab.
+**Help**               | Display this help page.
 
 ###Playing a Failed Recording
 
