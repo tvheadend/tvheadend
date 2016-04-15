@@ -16,6 +16,8 @@ Button                 | Function
 **Delete**             | Delete the selected entry/entries.
 **Edit**               | Edit the selected entry.
 
+---
+
 ###Adding an Entry/Rule
 
 You can add an entry by pressing the *[Add]* button from the menu bar.
@@ -39,6 +41,8 @@ Regex                             | Description
 EPG events matched by an autorec rule will appear as a [DVR Entry](class/dvrentry), this 
 includes events that are already in-progress.
 
+---
+
 ###Editing an Entry
 
 Highlight (select) the desired entry within the grid then click the *[Edit]* 
@@ -48,7 +52,11 @@ button from the menu bar.
 the desired field within the grid. See *Editing Fields* on the [Web interface Guide - General](webui_general) 
 page for details.
 
+---
+
 ###Deleting an Entry
 
 Highlight (select) the desired entry within the grid then click the *[Delete]* 
 button from the menu bar.
+
+---
