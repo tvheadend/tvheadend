@@ -571,7 +571,7 @@ CLASS_DOC(satip_server)
 const idclass_t satip_server_class = {
   .ic_snode      = (idnode_t *)&satip_server_conf,
   .ic_class      = "satip_server",
-  .ic_caption    = N_("SAT>IP server"),
+  .ic_caption    = N_("Configuration - SAT>IP server"),
   .ic_event      = "satip_server",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_satip_server_class,
