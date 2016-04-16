@@ -148,7 +148,7 @@ note that not all fields can be edited.
 ###Moving an Entry/Recording
 
 Finished recordings can be moved to the *Failed Recordings* tab by 
-highlighting (selecting) the desired entry and then pressing the *[Move to failed]*
+highlighting (selecting) the desired entry, and then pressing the *[Move to failed]*
 button from the menu bar.
 
 ---
@@ -217,7 +217,7 @@ the entry.
 ###Moving an Entry/Recording
 
 Failed recordings can be moved to the *Finished Recordings* tab by 
-highlighting (selecting) the desired entry and then pressing the *[Move to finished]*
+highlighting (selecting) the desired entry, and then pressing the *[Move to finished]*
 button from the menu bar.
 
 ---
