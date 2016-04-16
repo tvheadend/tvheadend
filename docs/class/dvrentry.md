@@ -69,7 +69,7 @@ You can set time-based entries using the [Timers](class/dvrtimerec) tab.
 ####Manual Event Entry/Editing an Entry
 
 To add an entry press the *[Add]* button from the menu bar. To edit an 
-entry highlight the desired entry within the grid and 
+entry highlight the desired entry within the grid, and 
 then press the *[Edit]* button.
 
 A common set of fields is used for the _Add_ or _Edit_ dialogs, most
@@ -133,7 +133,7 @@ double-click on the downloaded file).
 
 ###Downloading a Recording
 
-Highlight (select) the desired entry then press the *[Download]* button on the 
+Highlight (select) the desired entry, then press the *[Download]* button on the 
 menu bar.
 
 ---
@@ -155,7 +155,7 @@ button from the menu bar.
 
 ###Deleting an Entry/Recording
 
-Highlight (select) the desired entry(s) then press the *[Delete]* button on the 
+Highlight (select) the desired entry(s), then press the *[Delete]* button on the 
 menu bar. 
 
 **Deleting can't be undone. You 
@@ -201,7 +201,7 @@ double-click on the downloaded file).
 
 ###Downloading a Recording
 
-Highlight (select) the desired entry then press the *[Download]* button on the menu bar.
+Highlight (select) the desired entry, then press the *[Download]* button on the menu bar.
 
 ---
 
@@ -224,7 +224,7 @@ button from the menu bar.
 
 ###Deleting an Entry/Recording
 
-Highlight (select) the desired entry(s) then press the *[Delete]* button on the menu bar. 
+Highlight (select) the desired entry(s), then press the *[Delete]* button on the menu bar. 
 
 **Deleting can't be undone. You will be prompted to confirm deletion.**
 

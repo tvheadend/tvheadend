@@ -56,7 +56,7 @@ apply to subsequent accounts.**
 
 ### Editing an Entry/Account
 
-To edit an entry highlight (select) the entry from the grid then press 
+To edit an entry highlight (select) the entry from the grid, then press 
 the *[Edit]* button from the menu bar.
 
 **Tip**: You can quickly make changes to an entry by double-clicking on 
@@ -67,6 +67,6 @@ page for details.
 
 ### Deleting a User.
 
-To delete a user highlight (select) the entry from the grid then press
+To delete a user highlight (select) the entry from the grid, then press
 the *[Delete]* button from the menu bar.
 
