@@ -15,6 +15,7 @@ Button                 | Function
 **Add**                | Display the *Add Timer* dialog.
 **Delete**             | Delete the selected entry/entries.
 **Edit**               | Edit the selected entry.
+**Help**               | Display this help page.
 
 ---
 

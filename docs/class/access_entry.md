@@ -26,6 +26,7 @@ Button                 | Function
 **Move Up**            | Move the selected entry up the grid.
 **Move Down**          | Move the selected entry down the grid.
 **Edit**               | Edit the selected entry.
+**Help**               | Display this help page.
 
 ---
 

@@ -17,5 +17,6 @@ Button                      | Function
 **Undo**                    | Revert any changes made since the last save.
 **Clean image (icon) cache**| Clean-up the stored image files (empty cache and re-fetch icons).
 **Re-fetch images**         | Re-refresh image cache (reload images from upstream providers).
+**Help**                    | Display this help page.
 
 ---
