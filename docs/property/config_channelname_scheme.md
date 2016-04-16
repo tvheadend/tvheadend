@@ -8,6 +8,6 @@ tab.
 
 Scheme                 | Description
 -----------------------|-------------------
-No scheme              | Use service name "as is" to generate the filename - spaces are replaced with underscores `_` and non-alphanumeric characters are URL encoded.
-All lower-case         | Generate lower-case filenames - spaces are replaced with underscores `_` and non-alphanumeric characters are URL encoded.
+No scheme              | Use service name "as is" to generate the filename.
+All lower-case         | Generate lower-case filenames.
 Service name picons    | Generate lower-case filenames using picon formatting.
