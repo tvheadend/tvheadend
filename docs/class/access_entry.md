@@ -9,6 +9,24 @@ if the username matches and the IP source address of the requesting peer
 is within the prefix. There is also anonymous access, if the user is set
 to asterisk. Only network prefix is matched then.
 
+!['Access Entries Grid'](docresources/accessentriesgrid.png)
+
+---
+
+###Buttons
+
+The tab has the following buttons:
+
+Button                 | Function
+-----------------------|-------------------
+**Save**               | Save any changes made to the grid/entries.
+**Undo**               | Revert any changes made since the last save.
+**Add**                | Display the *Add Access* dialog.
+**Delete**             | Delete the selected entry/entries.
+**Move Up**            | Move the selected entry up the grid.
+**Move Down**          | Move the selected entry down the grid.
+**Edit**               | Edit the selected entry.
+
 ---
 
 ### Adding an Entry/Creating an Account
