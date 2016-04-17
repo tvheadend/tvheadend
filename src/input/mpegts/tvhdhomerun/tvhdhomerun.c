@@ -155,7 +155,7 @@ tvhdhomerun_device_class_get_ip_address ( void *obj )
 {
   tvhdhomerun_device_t *hd = obj;
   tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, prop_sbuf, PROP_SBUF_LEN);
-  return &prop_sbuf;
+  return &prop_sbuf_ptr;
 }
 
 const idclass_t tvhdhomerun_device_class =
