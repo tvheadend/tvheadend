@@ -178,6 +178,7 @@ static inline profile_t *profile_find_by_uuid(const char *uuid)
 profile_t *profile_find_by_name(const char *name, const char *alt);
 profile_t *profile_find_by_list(htsmsg_t *uuids, const char *name,
                                 const char *alt, int sflags);
+int profile_verify(profile_t *pro, int sflags);
 
 htsmsg_t * profile_class_get_list(void *o, const char *lang);
 

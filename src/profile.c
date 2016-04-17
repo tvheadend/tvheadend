@@ -464,7 +464,7 @@ profile_find_by_name(const char *name, const char *alt)
 /*
  *
  */
-static int
+int
 profile_verify(profile_t *pro, int sflags)
 {
   if (!pro)
@@ -545,9 +545,12 @@ htsmsg_t *
 profile_class_get_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *p = htsmsg_create_map();
   htsmsg_add_str(m, "type",  "api");
   htsmsg_add_str(m, "uri",   "profile/list");
   htsmsg_add_str(m, "event", "profile");
+  htsmsg_add_u32(p, "all",  1);
+  htsmsg_add_msg(m, "params", p);
   return m;
 }
 
