@@ -234,6 +234,7 @@ linuxdvb_frontend_dvbs_class_master_enum( void * self, const char *lang )
   tvh_hardware_t *th;
   char ubuf[UUID_HEX_SIZE];
   htsmsg_t *m = htsmsg_create_list();
+  if (self == NULL) return m;
   htsmsg_t *e = htsmsg_create_map();
   htsmsg_add_str(e, "key", "");
   htsmsg_add_str(e, "val", N_("This tuner"));
