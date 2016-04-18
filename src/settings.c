@@ -135,8 +135,6 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   htsbuf_queue_t hq;
   htsbuf_data_t *hd;
   int ok, r, pack;
-  void *msgdata;
-  size_t msglen;
 
   if(settingspath == NULL)
     return;
@@ -182,7 +180,8 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
     htsbuf_queue_flush(&hq);
   } else {
 #if ENABLE_ZLIB
-    msgdata = NULL;
+    void *msgdata = NULL;
+    size_t msglen;
     r = htsmsg_binary_serialize(record, &msgdata, &msglen, 2*1024*1024);
     if (!r && msglen >= 4) {
       r = tvh_gzip_deflate_fd_header(fd, msgdata + 4, msglen - 4, 3);
@@ -220,10 +219,8 @@ hts_settings_load_one(const char *filename)
 {
   ssize_t n, size;
   char *mem;
-  uint8_t *unpacked;
   fb_file *fp;
   htsmsg_t *r = NULL;
-  uint32_t orig;
 
   /* Open */
   if (!(fp = fb_open(filename, 1, 0))) return NULL;
@@ -238,9 +235,9 @@ hts_settings_load_one(const char *filename)
   if(n == size) {
     if (size > 12 && memcmp(mem, "\xff\xffGZIP00", 8) == 0) {
 #if ENABLE_ZLIB
-      orig = (mem[8] << 24) | (mem[9] << 16) | (mem[10] << 8) | mem[11];
+      uint32_t orig = (mem[8] << 24) | (mem[9] << 16) | (mem[10] << 8) | mem[11];
       if (orig > 0) {
-        unpacked = tvh_gzip_inflate((uint8_t *)mem + 12, size - 12, orig);
+        uint8_t *unpacked = tvh_gzip_inflate((uint8_t *)mem + 12, size - 12, orig);
         if (unpacked) {
           r = htsmsg_binary_deserialize(unpacked, orig, NULL);
           free(unpacked);
