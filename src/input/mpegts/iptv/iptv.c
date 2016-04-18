@@ -172,6 +172,13 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm, int active )
 }
 
 static int
+iptv_input_is_enabled
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
+{
+  return iptv_input_is_free(mi, mm, 0);
+}
+
+static int
 iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
   int w = 0;
@@ -190,6 +197,9 @@ iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
         LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
           w = MIN(w, ths->ths_weight);
     pthread_mutex_unlock(&mi->mi_output_lock);
+
+    if (w == INT_MAX)
+      w = 0;
   }
 
   return w;
@@ -1056,6 +1066,7 @@ void iptv_init ( void )
   iptv_input->mi_warm_mux       = iptv_input_warm_mux;
   iptv_input->mi_start_mux      = iptv_input_start_mux;
   iptv_input->mi_stop_mux       = iptv_input_stop_mux;
+  iptv_input->mi_is_enabled     = iptv_input_is_enabled;
   iptv_input->mi_get_weight     = iptv_input_get_weight;
   iptv_input->mi_get_grace      = iptv_input_get_grace;
   iptv_input->mi_get_priority   = iptv_input_get_priority;
