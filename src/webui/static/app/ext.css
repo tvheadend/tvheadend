@@ -902,6 +902,12 @@
     color: white;
 }
 
+.hts-doc-toc .hts-doc-anchor {
+    color: inherit;
+    text-decoration: inherit;
+    cursor: inherit;
+}
+
 .hts-doc-toc p {
     margin: 3px 0 1px 5px;
 }
