@@ -584,7 +584,10 @@ prop_md_doc(const char **doc, const char *lang)
 
   for (; *doc; doc++) {
     if (*doc[0] == '\xff') {
-      s = tvh_gettext_lang(lang, *doc + 1);
+      if (*doc[1] == 1)
+        s = tvh_gettext_lang(lang, *doc + 2);
+      else
+        s = "";
     } else {
       s = *doc;
     }

@@ -100,7 +100,21 @@ class TVH_C_Renderer(Renderer):
       r += t
       if type == 'x':
         xfound = 1
+      elif type != '_':
+        fatal('wrong type: ' + type + ' {' + t + '}')
     return d + (xfound and self.get_lang(r) or self.get_nolang(r))
+
+  def extra_cmd(self, text, tag, type):
+    pos1 = text.find('<' + tag + '>')
+    if pos1 < 0:
+      return 0
+    pos2 = text.find('</' + tag + '>')
+    if pos2 < 0:
+      return 0
+    link = text[pos1 + len(tag) + 2:pos2]
+    if len(link) <= 0:
+      return 0
+    return type + str(len(link)) + ':' + link
 
   def get_block(self, text):
     type = text[0]
@@ -179,6 +193,11 @@ class TVH_C_Renderer(Renderer):
     return r
 
   def block_html(self, text):
+    if DEBUG: debug('block html: ' + repr(text))
+    a = self.extra_cmd(text, 'tvh_class_doc', 'd')
+    if a: return a
+    a = self.extra_cmd(text, 'tvh_class_items', 'i')
+    if a: return a
     fatal('Block HTML not allowed: ' + repr(text))
 
   def inline_html(self, text):
@@ -365,6 +384,15 @@ def optimize(text):
         if x: r += lang(x)
         x = ''
         n += t
+      elif type == 'd' or type == 'i':
+        if n: r += nolang(n)
+        if x: r += lang(x)
+        n = ''
+        x = ''
+        if type == 'd':
+          r += 'DOCINCPREF "' + t + '",\n'
+        else:
+          r += 'ITEMSINCPREF "' + t + '",\n'
       text = text[p+l+1:]
     if x: r += lang(x)
     x = ''
