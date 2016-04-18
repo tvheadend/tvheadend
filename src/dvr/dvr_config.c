@@ -792,7 +792,10 @@ dvr_config_class_pathname_set(void *o, const void *v)
 }
 
 CLASS_DOC(dvrconfig)
+PROP_DOC(preprocessor)
 PROP_DOC(postprocessor)
+PROP_DOC(postremove)
+PROP_DOC(pathname)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -1023,6 +1026,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("Pre-processor command"),
       .desc     = N_("Script/program to be run when a recording starts "
                      "(service is subscribed but no filename available)."),
+      .doc      = prop_doc_preprocessor,
       .off      = offsetof(dvr_config_t, dvr_preproc),
       .opts     = PO_EXPERT,
       .group    = 1,
@@ -1032,6 +1036,7 @@ const idclass_t dvr_config_class = {
       .id       = "postproc",
       .name     = N_("Post-processor command"),
       .desc     = N_("Script/program to be run when a recording completes."),
+      .doc      = prop_doc_postprocessor,
       .off      = offsetof(dvr_config_t, dvr_postproc),
       .opts     = PO_ADVANCED,
       .group    = 1,
@@ -1041,6 +1046,7 @@ const idclass_t dvr_config_class = {
       .id       = "postremove",
       .name     = N_("Post-remove command"),
       .desc     = N_("Script/program to be run when a recording gets removed."),
+      .doc      = prop_doc_postremove,
       .off      = offsetof(dvr_config_t, dvr_postremove),
       .opts     = PO_EXPERT,
       .group    = 1,
@@ -1127,7 +1133,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The string allows you to manually specify the "
                      "full path generation using predefined "
                      "modifiers. See Help for full details."),
-      .doc      = prop_doc_postprocessor,
+      .doc      = prop_doc_pathname,
       .set      = dvr_config_class_pathname_set,
       .off      = offsetof(dvr_config_t, dvr_pathname),
       .opts     = PO_EXPERT,

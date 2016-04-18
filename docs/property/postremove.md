@@ -29,5 +29,4 @@ Format | Description                               | Example value
 To use special characters (e.g. spaces), either put the string in quotes or
 escape the individual characters.
 
-```/path/to/ffmpeg -i "%f" -vcodec libx264 -acodec copy "/path/with white space/%b"```
-
+```/usr/bin/tvh_file_removed "%f"```
