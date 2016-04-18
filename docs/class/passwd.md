@@ -22,9 +22,12 @@ Button                      | Function
 
 ###Adding and Editing an Entry/Password
 
-To add an entry press the *[Add]* button from the menu bar. To edit an 
-entry highlight (select) the entry from the grid, then press the 
-*[Edit]* button from the menu bar. Be aware that the username you enter 
+To add an entry press the *[Add]* button from the menu bar. 
+
+To edit an entry highlight (select) the entry from the grid, then press the 
+*[Edit]* button from the menu bar. 
+
+Be aware that the username you enter 
 must match a username/entry in the [Access Entries](class/access_entry) 
 tab for it to apply. You may have multiple password entries for the 
 same username if you wish. 
