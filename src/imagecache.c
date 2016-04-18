@@ -76,7 +76,7 @@ CLASS_DOC(imagecache)
 const idclass_t imagecache_class = {
   .ic_snode      = (idnode_t *)&imagecache_conf,
   .ic_class      = "imagecache",
-  .ic_caption    = N_("Configuration - Image cache"),
+  .ic_caption    = N_("Configuration - Image Cache"),
   .ic_event      = "imagecache",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_imagecache_class,
