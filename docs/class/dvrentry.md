@@ -68,9 +68,10 @@ You can set time-based entries using the [Timers](class/dvrtimerec) tab.
 
 ####Manual Event Entry/Editing an Entry
 
-To add an entry press the *[Add]* button from the menu bar. To edit an 
-entry highlight the desired entry within the grid, and 
-then press the *[Edit]* button.
+To add an entry press the *[Add]* button from the menu bar. 
+
+To edit an entry highlight the desired entry within the grid, and 
+then press the *[Edit]* button from the menu bar.
 
 A common set of fields is used for the _Add_ or _Edit_ dialogs, most
 of which can also be seen in the grid view:
