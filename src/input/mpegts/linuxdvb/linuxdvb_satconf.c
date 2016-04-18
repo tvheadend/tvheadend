@@ -1183,6 +1183,7 @@ static htsmsg_t *
 linuxdvb_satconf_ele_class_network_enum( void *o, const char *lang )
 {
   linuxdvb_satconf_ele_t *ls  = o;
+  if (ls == NULL) return NULL;
   return mpegts_input_class_network_enum(ls->lse_parent->ls_frontend, lang);
 }
 
