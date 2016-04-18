@@ -42,7 +42,7 @@ page for details.
 
 ###Deleting an Entry
 
-Highlight (select) the desired entry within the grid then click the *[Delete]* 
+Highlight (select) the desired entry within the grid, then click the *[Delete]* 
 button from the menu bar.
 
 ---
