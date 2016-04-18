@@ -45,7 +45,7 @@ Web Interface Configuration Guide
 
 * DVB Inputs
 
-  - [TV Adapters](class/tvh_input)
+  - [TV Adapters](tv_adapters)
   - [Networks](class/mpegts_network)
   - [Muxes](class/mpegts_mux)
   - [Services](class/service)
