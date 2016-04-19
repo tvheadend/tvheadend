@@ -376,7 +376,7 @@ mpegts_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 }
 
 int
-mpegts_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+mpegts_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   const mpegts_mux_instance_t *mmi;
   const service_t *s;

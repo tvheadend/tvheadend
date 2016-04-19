@@ -149,58 +149,61 @@ const idclass_t iptv_input_class = {
   }
 };
 
-static int
-iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm, int active )
+static mpegts_mux_instance_t *
+iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
+                     int active, int weight, int *lweight )
 {
-  int c = active;
-  mpegts_mux_instance_t *mmi;
+  int h = 0, l = 0, w, rw = INT_MAX;
+  mpegts_mux_instance_t *mmi, *rmmi = NULL;
   iptv_network_t *in = (iptv_network_t *)mm->mm_network;
   
+  pthread_mutex_lock(&mi->mi_output_lock);
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-    if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in)
-      c++;
-  
+    if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in) {
+      w = mpegts_mux_instance_weight(mmi);
+      if (w < rw) {
+        rmmi = mmi;
+        rw = w;
+      }
+      if (w >= weight) h++; else l++;
+    }
+  pthread_mutex_unlock(&mi->mi_output_lock);
+
+  if (lweight)
+    *lweight = rw == INT_MAX ? 0 : rw;
+
   /* Limit reached */
-  if (in->in_max_streams && c >= in->in_max_streams)
-    return 0;
+  if (in->in_max_streams && h >= in->in_max_streams) {
+    if (active) {
+      if (l == 0)
+        return rmmi;
+    } else {
+      return rmmi;
+    }
+  }
   
   /* Bandwidth reached */
-  if (in->in_bw_limited)
-      return 0;
+  if (in->in_bw_limited && l == 0)
+    return rmmi;
 
-  return 1;
+  return NULL;
 }
 
 static int
 iptv_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  return iptv_input_is_free(mi, mm, 0);
+  if (!mpegts_input_is_enabled(mi, mm, flags, weight)) return 0;
+  return iptv_input_is_free(mi, mm, 0, weight, NULL) == NULL;
 }
 
 static int
-iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  int w = 0;
-  const th_subscription_t *ths;
-  const service_t *s;
-  mpegts_mux_instance_t *mmi;
+  int w;
 
   /* Find the "min" weight */
-  if (!iptv_input_is_free(mi, mm, 0)) {
-    w = INT_MAX;
-
-    /* Service subs */
-    pthread_mutex_lock(&mi->mi_output_lock);
-    LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
-      LIST_FOREACH(s, &mmi->mmi_mux->mm_transports, s_active_link)
-        LIST_FOREACH(ths, &s->s_subscriptions, ths_service_link)
-          w = MIN(w, ths->ths_weight);
-    pthread_mutex_unlock(&mi->mi_output_lock);
-
-    if (w == INT_MAX)
-      w = 0;
-  }
+  iptv_input_is_free(mi, mm, 1, weight, &w);
 
   return w;
 
@@ -232,28 +235,17 @@ static int
 iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
+  mpegts_mux_instance_t *lmmi;
 
   /* Already active */
   if (im->mm_active)
     return 0;
 
   /* Do we need to stop something? */
-  if (!iptv_input_is_free(mi, mmi->mmi_mux, 1)) {
-    pthread_mutex_lock(&mi->mi_output_lock);
-    mpegts_mux_instance_t *m, *s = NULL;
-    int w = INT_MAX;
-    LIST_FOREACH(m, &mi->mi_mux_active, mmi_active_link) {
-      int t = mpegts_mux_instance_weight(m);
-      if (t < w) {
-        s = m;
-        w = t;
-      }
-    }
-    pthread_mutex_unlock(&mi->mi_output_lock);
-  
+  lmmi = iptv_input_is_free(mi, mmi->mmi_mux, 1, mmi->mmi_start_weight, NULL);
+  if (lmmi) {
     /* Stop */
-    if (s)
-      s->mmi_mux->mm_stop(s->mmi_mux, 1, SM_CODE_ABORTED);
+    lmmi->mmi_mux->mm_stop(lmmi->mmi_mux, 1, SM_CODE_ABORTED);
   }
   return 0;
 }
@@ -375,7 +367,6 @@ static void
 iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   iptv_mux_t *im = (iptv_mux_t*)mmi->mmi_mux;
-  mpegts_network_link_t *mnl;
 
   pthread_mutex_lock(&iptv_lock);
 
@@ -403,10 +394,7 @@ iptv_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   sbuf_free(&im->mm_iptv_buffer);
 
   /* Clear bw limit */
-  LIST_FOREACH(mnl, &mi->mi_networks, mnl_mi_link) {
-    iptv_network_t *in = (iptv_network_t*)mnl->mnl_network;
-    in->in_bw_limited = 0;
-  }
+  ((iptv_network_t *)im->mm_network)->in_bw_limited = 0;
 
   pthread_mutex_unlock(&iptv_lock);
 }

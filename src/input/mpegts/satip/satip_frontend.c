@@ -430,9 +430,9 @@ const idclass_t satip_frontend_atsc_c_class =
  * *************************************************************************/
 
 static int
-satip_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+satip_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  return mpegts_input_get_weight(mi, mm, flags);
+  return mpegts_input_get_weight(mi, mm, flags, weight);
 }
 
 static int
@@ -467,7 +467,7 @@ satip_frontend_get_max_weight ( satip_frontend_t *lfe, mpegts_mux_t *mm, int fla
     if (lfe2 != lfe) continue;
     if (lfe->sf_master != lfe2->sf_number &&
         lfe2->sf_master != lfe->sf_number) continue;
-    w2 = lfe2->mi_get_weight((mpegts_input_t *)lfe2, mm, flags);
+    w2 = lfe2->mi_get_weight((mpegts_input_t *)lfe2, mm, flags, 0);
     if (w2 > w)
       w = w2;
   }

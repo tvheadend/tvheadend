@@ -145,7 +145,7 @@ retry:
     mm2 = lfe2->sf_req->sf_mmi->mmi_mux;
     w2  = -1;
     if (weight > 0 || manage)
-      w2 = lfe2->mi_get_weight(mi2, mm2, flags);
+      w2 = lfe2->mi_get_weight(mi2, mm2, flags, 0);
     if (!manage && w2 < weight)
       continue;
     if (manage && w2 < lowest) {

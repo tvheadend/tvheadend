@@ -25,9 +25,9 @@
 #include "tvhdhomerun_private.h"
 
 static int
-tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+tvhdhomerun_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  return mpegts_input_get_weight(mi, mm, flags);
+  return mpegts_input_get_weight(mi, mm, flags, weight);
 }
 
 static int
