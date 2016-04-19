@@ -67,9 +67,6 @@ tvheadend.networks = function(panel, index)
         titleP: _('Networks'),
         iconCls: 'networks',
         tabIndex: index,
-        help: function() {
-            new tvheadend.help(_('Networks'), 'config_networks.html');
-        },
         tbar: [scanButton],
         add: {
             titleS: _('Network'),
@@ -102,9 +99,6 @@ tvheadend.muxes = function(panel, index)
         iconCls: 'muxes',
         tabIndex: index,
         hidemode: true,
-        help: function() {
-            new tvheadend.help(_('Muxes'), 'config_muxes.html');
-        },            
         add: {
             titleS: _('Mux'),
             select: {
@@ -317,9 +311,6 @@ tvheadend.services = function(panel, index)
         hidemode: true,
         add: false,
         del: true,
-        help: function() {
-            new tvheadend.help(_('Services'), 'config_services.html');
-        },         
         lcol: [
             {
                 width: 50,
@@ -352,9 +343,6 @@ tvheadend.mux_sched = function(panel, index)
         titleP: _('Mux Schedulers'),
         iconCls: 'muxSchedulers',
         tabIndex: index,
-        help: function() {
-            new tvheadend.help(_('Mux Schedulers'), 'config_muxsched.html');
-        },          
         hidemode: true,
         add: {
             url: 'api/mpegts/mux_sched',

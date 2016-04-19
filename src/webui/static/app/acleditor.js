@@ -61,10 +61,7 @@ tvheadend.acleditor = function(panel, index)
         },
         del: true,
         move: true,
-        list: list,
-        help: function() {
-            new tvheadend.mdhelp('class/access');
-        }
+        list: list
     });
 };
 
@@ -100,10 +97,7 @@ tvheadend.passwdeditor = function(panel, index)
             create: { }
         },
         del: true,
-        list: list,
-        help: function() {
-            new tvheadend.mdhelp('class/passwd');
-        }
+        list: list
     });
 };
 
@@ -139,9 +133,6 @@ tvheadend.ipblockeditor = function(panel, index)
             create: { }
         },
         del: true,
-        list: list,
-        help: function() {
-            new tvheadend.mdhelp('class/ipblocking');
-        }
+        list: list
     });
 };

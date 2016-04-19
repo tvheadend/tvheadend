@@ -1814,19 +1814,6 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
     }
   }
 
-  if (nc >= 2) {
-    if (!strcmp(components[0], "docs")) {
-      lang = tvh_gettext_get_lang(hc->hc_access->aa_lang_ui);
-      snprintf(buf, sizeof(buf), "docs/html/%s/%s%s%s", lang, components[1],
-                                 nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
-      if (http_file_test(buf)) lang = "en";
-      snprintf(buf, sizeof(buf), "/docs/%s/%s%s%s", lang, components[1],
-                                 nc > 2 ? "/" : "", nc > 2 ? components[1] : "");
-      http_redirect(hc, buf, NULL, 0);
-      return 0;
-    }
-  }
-
   return HTTP_STATUS_BAD_REQUEST;
 }
 

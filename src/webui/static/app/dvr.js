@@ -318,10 +318,7 @@ tvheadend.dvr_upcoming = function(panel, index) {
         lcol: [actions],
         tbar: [stopButton, abortButton],
         selected: selected,
-        beforeedit: beforeedit,
-        help: function() {
-            new tvheadend.mdhelp('class/dvrentry');
-        }
+        beforeedit: beforeedit
     });
 
     return panel;
@@ -459,10 +456,7 @@ tvheadend.dvr_finished = function(panel, index) {
                 }
             }],
         tbar: [downloadButton, rerecordButton, moveButton],
-        selected: selected,
-        help: function() {
-            new tvheadend.mdhelp('class/dvrentry');
-        }
+        selected: selected
     });
 
     return panel;
@@ -600,10 +594,7 @@ tvheadend.dvr_failed = function(panel, index) {
                 }
             }],
         tbar: [downloadButton, rerecordButton, moveButton],
-        selected: selected,
-        help: function() {
-            new tvheadend.mdhelp('class/dvrentry');
-        }
+        selected: selected
     });
 
     return panel;
@@ -626,10 +617,7 @@ tvheadend.dvr_settings = function(panel, index) {
             url: 'api/dvr/config',
             create: { }
         },
-        del: true,
-        help: function() {
-            new tvheadend.mdhelp('class/dvrconfig');
-        }
+        del: true
     });
 
     return panel;
@@ -694,9 +682,6 @@ tvheadend.autorec_editor = function(panel, index) {
         sort: {
           field: 'name',
           direction: 'ASC'
-        },
-        help: function() {
-            new tvheadend.mdhelp('class/dvrautorec');
         }
     });
 
@@ -747,9 +732,6 @@ tvheadend.timerec_editor = function(panel, index) {
         sort: {
           field: 'name',
           direction: 'ASC'
-        },
-        help: function() {
-            new tvheadend.mdhelp('class/dvrtimerec');
         }
     });
 

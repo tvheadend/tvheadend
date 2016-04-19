@@ -19,9 +19,6 @@ tvheadend.cteditor = function(panel, index)
         sort: {
           field: 'name',
           direction: 'ASC'
-        },
-        help: function() {
-            new tvheadend.help(_('Channel Tags'), 'config_tags.html');
         }
     });
 
@@ -67,9 +64,6 @@ tvheadend.bouquet = function(panel, index)
         sort: {
           field: 'name',
           direction: 'ASC'
-        },
-        help: function() {
-            new tvheadend.help(_('Bouquets'), 'config_bouquet.html');
         }
     });
 

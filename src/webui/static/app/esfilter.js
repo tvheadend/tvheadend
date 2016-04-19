@@ -38,10 +38,7 @@ tvheadend.esfilter_tab = function(panel)
             },
             create: { }
         },
-        del: true,
-        help: function() {
-            new tvheadend.mdhelp('class/profile')
-        }
+        del: true
     });
 
     var eslist = '-class,index';
@@ -60,10 +57,7 @@ tvheadend.esfilter_tab = function(panel)
             create: { }
         },
         del: true,
-        move: true,
-        help: function() {
-            new tvheadend.mdhelp('class/esfilter_video')
-        }
+        move: true
     });
 
     tvheadend.idnode_grid(panel, {
@@ -80,10 +74,7 @@ tvheadend.esfilter_tab = function(panel)
             create: {}
         },
         del: true,
-        move: true,
-        help: function() {
-            new tvheadend.mdhelp('class/esfilter_audio')
-        }
+        move: true
     });
 
     tvheadend.idnode_grid(panel, {
@@ -100,10 +91,7 @@ tvheadend.esfilter_tab = function(panel)
             create: {}
         },
         del: true,
-        move: true,
-        help: function() {
-            new tvheadend.mdhelp('class/esfilter_teletext')
-        }
+        move: true
     });
 
     tvheadend.idnode_grid(panel, {
@@ -120,10 +108,7 @@ tvheadend.esfilter_tab = function(panel)
             create: {}
         },
         del: true,
-        move: true,
-        help: function() {
-            new tvheadend.mdhelp('class/esfilter_subtit')
-        }
+        move: true
     });
 
     tvheadend.idnode_grid(panel, {
@@ -139,10 +124,7 @@ tvheadend.esfilter_tab = function(panel)
             create: {}
         },
         del: true,
-        move: true,
-        help: function() {
-            new tvheadend.mdhelp('class/esfilter_ca')
-        }
+        move: true
     });
 
     tvheadend.idnode_grid(panel, {
@@ -159,9 +141,6 @@ tvheadend.esfilter_tab = function(panel)
             create: {}
         },
         del: true,
-        move: true,
-        help: function() {
-            new tvheadend.mdhelp('class/esfilter_other')
-        }
+        move: true
     });
 };

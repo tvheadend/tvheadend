@@ -23,10 +23,7 @@ tvheadend.tvhlog = function(panel, index) {
         onchange: onchange,
         saveText: _("Apply configuration (run-time only)"),
         saveTooltip: _('Apply any changes made below to the run-time configuration.') + '<br/>' +
-                     _('They will be lost when the application next restarts.'),
-        help: function() {
-            new tvheadend.help(_('Debug Configuration'), 'config_debugging.html');
-        }
+                     _('They will be lost when the application next restarts.')
     });
 
 };
@@ -39,9 +36,6 @@ tvheadend.memoryinfo = function(panel, index)
         titleP: _('Memory Information Entries'),
         iconCls: 'exclamation',
         tabIndex: index,
-        readonly: true,
-        help: function() {
-            new tvheadend.mdhelp('class/memoryinfo');
-        }
+        readonly: true
     });
 };

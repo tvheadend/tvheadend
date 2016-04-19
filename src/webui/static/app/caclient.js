@@ -57,10 +57,7 @@ tvheadend.caclient = function(panel, index) {
         move: true,
         hidepwd: true,
         lcol: [actions],
-        plugins: [actions],
-        help: function() {
-            new tvheadend.mdhelp('class/caclient');
-        }
+        plugins: [actions]
     });
 
     return panel;

@@ -107,9 +107,6 @@ tvheadend.service_mapper_sel = function(t, e, store, select)
         modifyData: select ? modify_data : null,
         postsave: function() {
             tvheadend.select_tab('service_mapper');
-        },
-        help: function() {
-            new tvheadend.help(_('Map services'), 'config_mapper.html');
         }
     });
 }
@@ -135,9 +132,6 @@ tvheadend.service_mapper0 = function(all)
         } : null,
         postsave: function() {
             tvheadend.select_tab('service_mapper');
-        },
-        help: function() {
-            new tvheadend.help(_('Map services'), 'config_mapper.html');
         }
     });
 }

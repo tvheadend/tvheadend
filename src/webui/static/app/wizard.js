@@ -162,7 +162,7 @@ tvheadend.wizard_start = function(page) {
             cancel: cancel,
             uilevel: 'expert',
             help: function() {
-                new tvheadend.help(_('Wizard - initial configuration and tutorial'), 'config_wizard.html');
+                new tvheadend.mdhelp('wizard');
             }
         });
     }

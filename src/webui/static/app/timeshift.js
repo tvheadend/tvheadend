@@ -19,10 +19,7 @@ tvheadend.timeshift = function(panel, index) {
         comet: 'timeshift',
         labelWidth: 220,
         width: 570,
-        onchange: onchange,
-        help: function() {
-            new tvheadend.help(_('Timeshift Configuration'), 'config_timeshift.html');
-        }
+        onchange: onchange
     });
 
 };

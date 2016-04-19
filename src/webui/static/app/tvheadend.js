@@ -68,32 +68,6 @@ tvheadend.select_tab = function(id)
 /**
  * Displays a help popup window
  */
-tvheadend.help = function(title, pagename) {
-    Ext.Ajax.request({
-        url: 'redir/docs/' + pagename,
-        success: function(result, request) {
-
-            var content = new Ext.Panel({
-                autoScroll: true,
-                border: false,
-                layout: 'fit',
-                html: result.responseText
-            });
-
-            var win = new Ext.Window({
-                title: _('Help for') + ' ' + title,
-                iconCls: 'help',
-                layout: 'fit',
-                width: 900,
-                height: 400,
-                constrainHeader: true,
-                items: [content]
-            });
-            win.show();
-        }
-    });
-};
-
 tvheadend.mdhelp = function(pagename) {
 
     var parse = function(text) {

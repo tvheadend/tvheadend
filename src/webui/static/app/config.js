@@ -55,9 +55,6 @@ tvheadend.baseconf = function(panel, index) {
                 reload = 1;
             if (reload)
                 window.location.reload();
-        },
-        help: function() {
-            new tvheadend.mdhelp('class/config');
         }
     });
 
@@ -114,10 +111,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         comet: 'imagecache',
         width: 550,
         labelWidth: 200,
-        tbar: [cleanButton, triggerButton],
-        help: function() {
-            new tvheadend.mdhelp('class/imagecache');
-        }
+        tbar: [cleanButton, triggerButton]
     });
 
 };
@@ -156,9 +150,6 @@ tvheadend.satipsrvconf = function(panel, index) {
         comet: 'satip_server',
         width: 600,
         labelWidth: 250,
-        tbar: [discoverButton],
-        help: function() {
-            new tvheadend.mdhelp('class/satip_server');
-        }
+        tbar: [discoverButton]
     });
 };

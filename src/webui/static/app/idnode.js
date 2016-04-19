@@ -1199,15 +1199,19 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
             buttons.push(uilevelBtn);
         }
 
-        if (conf.help) {
-            var helpBtn = new Ext.Button({
-                text: _('Help'),
-                iconCls: 'help',
-                handler: conf.help
-            });
-            buttons.push(uilevelBtn ? '-' : '->');
-            buttons.push(helpBtn);
+        var help = conf.help;
+        if (!help) {
+            help = function() {
+                new tvheadend.mdhelp('class/' + item['class']);
+            }
         }
+        var helpBtn = new Ext.Button({
+            text: _('Help'),
+            iconCls: 'help',
+            handler: help
+        });
+        buttons.push(uilevelBtn ? '-' : '->');
+        buttons.push(helpBtn);
 
         if (conf.buildbtn)
             conf.buildbtn(conf, buttons);
@@ -2036,14 +2040,19 @@ tvheadend.idnode_grid = function(panel, conf)
         }
 
         /* Help */
-        if (conf.help) {
-            buttons.push(abuttons.uilevel ? '-' : '->');
-            buttons.push({
-                text: _('Help'),
-                iconCls: 'help',
-                handler: conf.help
-            });
+        var help = conf.help;
+        if (!help) {
+            help = function() {
+                new tvheadend.mdhelp('class/' + idnode.clazz);
+            }
         }
+
+        buttons.push(abuttons.uilevel ? '-' : '->');
+        buttons.push({
+            text: _('Help'),
+            iconCls: 'help',
+            handler: help
+        });
 
         plugins.push(filter);
         var gconf = {
@@ -2419,14 +2428,18 @@ tvheadend.idnode_form_grid = function(panel, conf)
         }
 
         /* Help */
-        if (conf.help) {
-            buttons.push(abuttons.uilevel ? '-' : '->');
-            buttons.push({
-                text: _('Help'),
-                iconCls: 'help',
-                handler: conf.help
-            });
+        var help = conf.help;
+        if (!help) {
+            help = function() {
+                new tvheadend.mdhelp('class/' + conf.clazz);
+            }
         }
+        buttons.push(abuttons.uilevel ? '-' : '->');
+        buttons.push({
+            text: _('Help'),
+            iconCls: 'help',
+            handler: help
+        });
 
         function roweditor_destroy() {
             if (current && current.editor) {
@@ -2853,14 +2866,18 @@ tvheadend.idnode_simple = function(panel, conf)
         }
 
         /* Help */
-        if (conf.help) {
-            buttons.push(abuttons.uilevel ? '-' : '->');
-            buttons.push({
-                text: _('Help'),
-                iconCls: 'help',
-                handler: conf.help
-            });
+        var help = conf.help;
+        if (!help) {
+            help = function() {
+              new tvheadend.mdhelp('class/' + lastdata['class']);
+            }
         }
+        buttons.push(abuttons.uilevel ? '-' : '->');
+        buttons.push({
+            text: _('Help'),
+            iconCls: 'help',
+            handler: help
+        });
 
         function form_load(force) {
             if (!force && current)

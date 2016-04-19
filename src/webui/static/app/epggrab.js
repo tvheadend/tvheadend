@@ -25,10 +25,7 @@ tvheadend.epggrab_base = function(panel, index) {
         tabIndex: index,
         width: 550,
         labelWidth: 200,
-        tbar: [triggerButton],
-        help: function() {
-            new tvheadend.help(_('EPG Grab Configuration'), 'config_epggrab.html');
-        }
+        tbar: [triggerButton]
     });
 
 }
@@ -46,9 +43,6 @@ tvheadend.epggrab_map = function(panel, index) {
         sort: {
           field: 'name',
           direction: 'ASC'
-        },
-        help: function() {
-            new tvheadend.help(_('EPG Grabber Channels'), 'config_epggrab.html');
         }
     });
 
@@ -79,10 +73,7 @@ tvheadend.epggrab_mod = function(panel, index) {
         fields: ['uuid', 'title', 'status'],
         list: { url: 'api/epggrab/module/list', params: { } },
         lcol: [actions],
-        plugins: [actions],
-        help: function() {
-            new tvheadend.help(_('EPG Grab Configuration'), 'config_epggrab.html');
-        }
+        plugins: [actions]
     });
 
 };
