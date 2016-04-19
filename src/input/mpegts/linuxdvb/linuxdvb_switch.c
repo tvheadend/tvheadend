@@ -109,11 +109,14 @@ linuxdvb_switch_class_get_title ( idnode_t *o, const char *lang )
 
 extern const idclass_t linuxdvb_diseqc_class;
 
+CLASS_DOC(linuxdvb_satconf)
+
 const idclass_t linuxdvb_switch_class =
 {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_switch",
   .ic_caption     = N_("DiseqC switch"),
+  .ic_doc         = tvh_doc_linuxdvb_satconf_class,
   .ic_get_title   = linuxdvb_switch_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
