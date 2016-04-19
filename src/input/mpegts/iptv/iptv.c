@@ -203,7 +203,8 @@ iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int wei
   int w;
 
   /* Find the "min" weight */
-  iptv_input_is_free(mi, mm, 1, weight, &w);
+  if (iptv_input_is_free(mi, mm, 1, weight, &w) == NULL)
+    w = 0;
 
   return w;
 
