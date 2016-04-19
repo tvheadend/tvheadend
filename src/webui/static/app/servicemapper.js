@@ -44,6 +44,21 @@ tvheadend.service_mapper_status = function(panel, index)
         items: [ok, ignore, fail, active, prog]
     });
 
+    /* Top panel */
+    var tpanel = new Ext.Panel({
+        title: _('Service Mapper'),
+        iconCls: 'serviceMapper',
+        layout: 'fit',
+        tbar: ['->', {
+             text: _('Help'),
+             iconCls: 'help',
+             handler: function() {
+                 new tvheadend.mdhelp('status_service_mapper')
+             }
+        }],
+        items: [mpanel]
+    });
+
     /* Comet */
     tvheadend.comet.on('servicemapper', function(m) {
         var n = m.ok + m.ignore + m.fail;
@@ -71,7 +86,7 @@ tvheadend.service_mapper_status = function(panel, index)
     });
 
     tvheadend.service_mapper_status_panel = mpanel;
-    tvheadend.paneladd(panel, mpanel, index);
+    tvheadend.paneladd(panel, tpanel, index);
 }
 
 /*

@@ -16,8 +16,6 @@ Button     | Function
 -----------|---------
 **Help**   | Display this help page.
 
-##Note: FIXME: Need to add a help button!
-
 ---
 
 ####Grid Items

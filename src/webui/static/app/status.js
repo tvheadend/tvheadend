@@ -173,6 +173,13 @@ tvheadend.status_subs = function(panel, index)
         }
 
         subs = new Ext.grid.GridPanel({
+            tbar: ['->', {
+                text: _('Help'),
+                iconCls: 'help',
+                handler: function() {
+                    new tvheadend.mdhelp('status_subscriptions')
+                }
+            }],
             border: false,
             loadMask: true,
             stripeRows: true,
@@ -447,6 +454,13 @@ tvheadend.status_streams = function(panel, index)
         }));
 
         grid = new Ext.grid.GridPanel({
+            tbar: ['->', {
+                text: _('Help'),
+                iconCls: 'help',
+                handler: function() {
+                    new tvheadend.mdhelp('status_streams')
+                }
+            }],
             border: false,
             loadMask: true,
             stripeRows: true,
@@ -584,6 +598,13 @@ tvheadend.status_conns = function(panel, index) {
             }]);
 
         grid = new Ext.grid.GridPanel({
+            tbar: ['->', {
+                text: _('Help'),
+                iconCls: 'help',
+                handler: function() {
+                    new tvheadend.mdhelp('status_connections')
+                }
+            }],
             border: false,
             loadMask: true,
             stripeRows: true,
