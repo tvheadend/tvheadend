@@ -51,11 +51,17 @@ linuxdvb_frontend_class_changed ( idnode_t *in )
   linuxdvb_adapter_changed(la);
 }
 
+CLASS_DOC(linuxdvb_frontend)
+CLASS_DOC(linuxdvb_frontend_dvbs)
+CLASS_DOC(linuxdvb_frontend_dvbt) 
+CLASS_DOC(linuxdvb_frontend_dvbc)
+
 const idclass_t linuxdvb_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "linuxdvb_frontend",
   .ic_caption    = N_("Linux DVB frontend"),
+  .ic_doc        = tvh_doc_linuxdvb_frontend_class,
   .ic_changed    = linuxdvb_frontend_class_changed,
   .ic_properties = (const property_t[]) {
     {
@@ -175,6 +181,7 @@ const idclass_t linuxdvb_frontend_dvbt_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbt",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbt_class,
   .ic_caption    = N_("Linux DVB-T frontend"),
   .ic_properties = (const property_t[]){
     {
@@ -258,6 +265,7 @@ const idclass_t linuxdvb_frontend_dvbs_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbs",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbs_class,
   .ic_caption    = N_("Linux DVB-S frontend"),
   .ic_get_childs = linuxdvb_frontend_dvbs_class_get_childs,
   .ic_properties = (const property_t[]){
@@ -300,6 +308,7 @@ const idclass_t linuxdvb_frontend_dvbs_slave_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbs_slave",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbs_class,
   .ic_caption    = N_("Linux DVB-S slave frontend"),
   .ic_properties = (const property_t[]){
     {
@@ -330,6 +339,7 @@ const idclass_t linuxdvb_frontend_dvbc_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbc",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbc_class,
   .ic_caption    = N_("Linux DVB-C frontend"),
   .ic_properties = (const property_t[]){
     {}
@@ -340,6 +350,7 @@ const idclass_t linuxdvb_frontend_atsc_t_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_atsc_t",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbt_class,
   .ic_caption    = N_("Linux ATSC-T frontend"),
   .ic_properties = (const property_t[]){
     {}
@@ -350,6 +361,7 @@ const idclass_t linuxdvb_frontend_atsc_c_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_atsc_c",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbc_class,
   .ic_caption    = N_("Linux ATSC-C frontend"),
   .ic_properties = (const property_t[]){
     {}
@@ -360,6 +372,7 @@ const idclass_t linuxdvb_frontend_isdb_t_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_isdb_t",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbt_class,
   .ic_caption    = N_("Linux ISDB-T frontend"),
   .ic_properties = (const property_t[]){
     {}
@@ -370,6 +383,7 @@ const idclass_t linuxdvb_frontend_isdb_c_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_isdb_c",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbc_class,
   .ic_caption    = N_("Linux ISDB-C frontend"),
   .ic_properties = (const property_t[]){
     {}
@@ -380,6 +394,7 @@ const idclass_t linuxdvb_frontend_isdb_s_class =
 {
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_isdb_s",
+  .ic_doc        = tvh_doc_linuxdvb_frontend_dvbs_class,
   .ic_caption    = N_("Linux ISDB-S frontend"),
   .ic_properties = (const property_t[]){
     {}
