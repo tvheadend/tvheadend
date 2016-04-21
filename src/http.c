@@ -635,7 +635,7 @@ http_redirect(http_connection_t *hc, const char *location,
     loc = htsbuf_to_string(&hq);
     htsbuf_queue_flush(&hq);
   } else if (!external && tvheadend_webroot && location[0] == '/') {
-    loc = malloc(strlen(location) + strlen(tvheadend_webroot) + 1);
+    loc = alloca(strlen(location) + strlen(tvheadend_webroot) + 1);
     strcpy((char *)loc, tvheadend_webroot);
     strcat((char *)loc, location);
   }
@@ -650,8 +650,28 @@ http_redirect(http_connection_t *hc, const char *location,
 		 loc, loc);
 
   http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, loc, 0);
-  if (loc != location)
-    free((void *)loc);
+}
+
+
+/**
+ * Send an CSS @import
+ */
+void
+http_css_import(http_connection_t *hc, const char *location)
+{
+  const char *loc = location;
+
+  htsbuf_queue_flush(&hc->hc_reply);
+
+  if (tvheadend_webroot && location[0] == '/') {
+    loc = alloca(strlen(location) + strlen(tvheadend_webroot) + 1);
+    strcpy((char *)loc, tvheadend_webroot);
+    strcat((char *)loc, location);
+  }
+
+  htsbuf_qprintf(&hc->hc_reply, "@import url('%s');\r\n", loc);
+
+  http_send_reply(hc, HTTP_STATUS_OK, "text/css", NULL, loc, 0);
 }
 
 /**
