@@ -650,7 +650,8 @@ _eit_callback
   // TODO: extra ID should probably include onid
 
   /* Register interest */
-  if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60))
+  if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60) ||
+      mt->mt_pid == 3003 /* uk_freesat */)
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
