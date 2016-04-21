@@ -435,7 +435,7 @@ linuxdvb_frontend_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, 
   linuxdvb_frontend_t *lfe;
   if (la->la_exclusive) {
     LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-      w = MAX(weight, mpegts_input_get_weight((mpegts_input_t*)lfe, mm, flags, weight));
+      w = MAX(w, mpegts_input_get_weight((mpegts_input_t*)lfe, mm, flags, weight));
   } else {
     w = mpegts_input_get_weight(mi, mm, flags, weight);
   }

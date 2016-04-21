@@ -222,6 +222,11 @@ void access_destroy(access_t *a);
 access_t *access_copy(access_t *src);
 
 /**
+ * Compare the access structures
+ */
+int access_compare(access_t *a, access_t *b);
+
+/**
  *
  */
 char *

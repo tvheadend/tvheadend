@@ -39,6 +39,8 @@
 #include "tcp.h"
 #include "lang_codes.h"
 
+#define TICKET_LIFETIME (5*60) /* in seconds */
+
 struct access_entry_queue access_entries;
 struct access_ticket_queue access_tickets;
 struct passwd_entry_queue passwd_entries;
@@ -52,6 +54,25 @@ int access_noacl;
 static int passwd_verify(const char *username, verify_callback_t verify, void *aux);
 static int passwd_verify2(const char *username, verify_callback_t verify, void *aux,
                           const char *username2, const char *passwd2);
+static void access_ticket_destroy(access_ticket_t *at);
+static void access_ticket_timeout(void *aux);
+
+/**
+ *
+ */
+static void
+access_ticket_rearm(void)
+{
+  access_ticket_t *at;
+
+  while ((at = TAILQ_FIRST(&access_tickets)) != NULL) {
+    if (at->at_timer.mti_expire > mclk()) {
+      mtimer_arm_abs(&at->at_timer, access_ticket_timeout, at, at->at_timer.mti_expire);
+      break;
+    }
+    access_ticket_destroy(at);
+  }
+}
 
 /**
  *
@@ -59,10 +80,12 @@ static int passwd_verify2(const char *username, verify_callback_t verify, void *
 static void
 access_ticket_destroy(access_ticket_t *at)
 {
+  mtimer_disarm(&at->at_timer);
   free(at->at_id);
   free(at->at_resource);
   TAILQ_REMOVE(&access_tickets, at, at_link);
   access_destroy(at->at_access);
+  free(at);
 }
 
 /**
@@ -74,7 +97,8 @@ access_ticket_find(const char *id)
   access_ticket_t *at = NULL;
   
   if(id != NULL) {
-    TAILQ_FOREACH(at, &access_tickets, at_link)
+    /* assume that newer tickets are hit more probably */
+    TAILQ_FOREACH_REVERSE(at, &access_tickets, access_ticket_queue, at_link)
       if(!strcmp(at->at_id, id))
 	return at;
   }
@@ -86,11 +110,12 @@ access_ticket_find(const char *id)
  *
  */
 static void
-access_ticket_timout(void *aux)
+access_ticket_timeout(void *aux)
 {
   access_ticket_t *at = aux;
 
   access_ticket_destroy(at);
+  access_ticket_rearm();
 }
 
 /**
@@ -99,20 +124,32 @@ access_ticket_timout(void *aux)
 const char *
 access_ticket_create(const char *resource, access_t *a)
 {
+  const int64_t lifetime = sec2mono(TICKET_LIFETIME);
   uint8_t buf[20];
   char id[41];
-  unsigned int i;
+  uint_fast32_t i;
   access_ticket_t *at;
   static const char hex_string[16] = "0123456789ABCDEF";
 
   assert(a);
+
+  /* try to find an existing ticket */
+  TAILQ_FOREACH_REVERSE(at, &access_tickets, access_ticket_queue, at_link) {
+    if (at->at_timer.mti_expire - lifetime + sec2mono(60) < mclk())
+      break;
+    if (strcmp(resource, at->at_resource))
+      continue;
+    if (!access_compare(at->at_access, a))
+      return at->at_id;
+  }
+
 
   at = calloc(1, sizeof(access_ticket_t));
 
   uuid_random(buf, 20);
 
   //convert to hexstring
-  for(i=0; i<sizeof(buf); i++){
+  for (i=0; i < sizeof(buf); i++){
     id[i*2] = hex_string[((buf[i] >> 4) & 0xF)];
     id[(i*2)+1] = hex_string[(buf[i]) & 0x0F];
   }
@@ -122,9 +159,14 @@ access_ticket_create(const char *resource, access_t *a)
   at->at_resource = strdup(resource);
 
   at->at_access = access_copy(a);
+  at->at_timer.mti_expire = mclk() + lifetime;
+
+  i = TAILQ_FIRST(&access_tickets) != NULL;
 
   TAILQ_INSERT_TAIL(&access_tickets, at, at_link);
-  mtimer_arm_rel(&at->at_timer, access_ticket_timout, at, sec2mono(60*5));
+
+  if (i)
+    access_ticket_rearm();
 
   return at->at_id;
 }
@@ -140,8 +182,8 @@ access_ticket_delete(const char *id)
   if((at = access_ticket_find(id)) == NULL)
     return -1;
 
-  mtimer_disarm(&at->at_timer);
   access_ticket_destroy(at);
+  access_ticket_rearm();
 
   return 0;
 }
@@ -186,6 +228,18 @@ access_verify_list(htsmsg_t *list, const char *item)
     return -1;
   }
   return 0;
+}
+
+/**
+ *
+ */
+int
+access_compare(access_t *a, access_t *b)
+{
+  int r = strcmp(a->aa_username ?: "", b->aa_username ?: "");
+  if (!r)
+    r = strcmp(a->aa_representative ?: "", b->aa_representative ?: "");
+  return r;
 }
 
 /**
