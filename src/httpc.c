@@ -980,7 +980,7 @@ retry:
   }
 
   if (hc->hc_rsize < r + hc->hc_rpos) {
-    if (hc->hc_rsize + r > hc->hc_io_size + 16*1024)
+    if (hc->hc_rsize + r > hc->hc_io_size + 20*1024)
       return http_client_flush(hc, -EMSGSIZE);
     hc->hc_rsize += r;
     hc->hc_rbuf = realloc(hc->hc_rbuf, hc->hc_rsize + 1);
