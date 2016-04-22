@@ -236,7 +236,7 @@ const idclass_t dvb_network_dvbt_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbt",
-  .ic_caption    = N_("DVB-T network"),
+  .ic_caption    = N_("DVB Inputs - Networks - DVB-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -258,7 +258,7 @@ const idclass_t dvb_network_dvbc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbc",
-  .ic_caption    = N_("DVB-C network"),
+  .ic_caption    = N_("DVB Inputs - Networks - DVB-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -280,7 +280,7 @@ const idclass_t dvb_network_dvbs_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbs",
-  .ic_caption    = N_("DVB-S network"),
+  .ic_caption    = N_("DVB Inputs - Networks - DVB-S Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -312,7 +312,7 @@ const idclass_t dvb_network_atsc_t_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc_t",
-  .ic_caption    = N_("ATSC-T network"),
+  .ic_caption    = N_("DVB Inputs - Networks - ATSC-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -334,7 +334,7 @@ const idclass_t dvb_network_atsc_c_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc_c",
-  .ic_caption    = N_("ATSC-C network"),
+  .ic_caption    = N_("DVB Inputs - Networks - ATSC-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -356,7 +356,7 @@ const idclass_t dvb_network_isdb_t_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_isdb_t",
-  .ic_caption    = N_("ISDB-T network"),
+  .ic_caption    = N_("DVB Inputs - Networks - ISDB-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -378,7 +378,7 @@ const idclass_t dvb_network_isdb_c_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_isdb_c",
-  .ic_caption    = N_("ISDB-C network"),
+  .ic_caption    = N_("DVB Inputs - Networks - ISDB-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -400,7 +400,7 @@ const idclass_t dvb_network_isdb_s_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_isdb_s",
-  .ic_caption    = N_("ISDB-S network"),
+  .ic_caption    = N_("DVB Inputs - Networks - ISDB-S Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -422,7 +422,7 @@ const idclass_t dvb_network_dab_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dab",
-  .ic_caption    = N_("DAB network"),
+  .ic_caption    = N_("DVB Inputs - Networks - DAB Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
