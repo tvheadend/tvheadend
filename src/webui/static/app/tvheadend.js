@@ -973,7 +973,7 @@ tvheadend.app = function() {
                         maxSize: 400,
                         collapsible: true,
                         collapsed: true,
-                        title: _('System log'),
+                        title: _('Tvheadend log'),
                         margins: '0 0 0 0',
                         tools: [{
                                 id: 'gear',
