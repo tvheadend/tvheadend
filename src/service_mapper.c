@@ -392,7 +392,7 @@ service_mapper_thread ( void *aux )
     subscription_unsubscribe(sub, UNSUBSCRIBE_FINAL);
 
     if(err) {
-      tvhinfo("service_mapper", "%s: failed [err %s]", s->s_nicename, err);
+      tvhinfo("service_mapper", "%s: failed [reason: %s]", s->s_nicename, err);
       service_mapper_stat.fail++;
     } else
       service_mapper_process(&smi->conf, s, NULL);

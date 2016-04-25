@@ -530,6 +530,7 @@ typedef enum {
 #define SM_CODE_NO_SERVICE                207
 #define SM_CODE_NO_VALID_ADAPTER          208
 #define SM_CODE_NO_ADAPTERS               209
+#define SM_CODE_INVALID_SERVICE           210
 
 #define SM_CODE_ABORTED                   300
 

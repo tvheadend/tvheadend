@@ -697,7 +697,7 @@ service_find_instance
   idnode_list_mapping_t *ilm;
   service_instance_t *si, *next;
   profile_t *pro = prch ? prch->prch_pro : NULL;
-  int enlisted;
+  int enlisted, r, r1;
 
   lock_assert(&global_lock);
 
@@ -705,6 +705,7 @@ service_find_instance
   TAILQ_FOREACH(si, sil, si_link)
     si->si_mark = 1;
 
+  r = 0;
   if (ch) {
     if (!ch->ch_enabled) {
       *error = SM_CODE_SVC_NOT_ENABLED;
@@ -718,20 +719,34 @@ service_find_instance
             pro->pro_svfilter == PROFILE_SVF_NONE ||
             (pro->pro_svfilter == PROFILE_SVF_SD && service_is_sdtv(s)) ||
             (pro->pro_svfilter == PROFILE_SVF_HD && service_is_hdtv(s))) {
-          s->s_enlist(s, ti, sil, flags, weight);
-          enlisted++;
+          r1 = s->s_enlist(s, ti, sil, flags, weight);
+          if (r1 == 0)
+            enlisted++;
+          else if (enlisted == 0)
+            r = r1;
         }
       }
     }
     if (enlisted == 0) {
       LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
         s = (service_t *)ilm->ilm_in1;
-        if (s->s_is_enabled(s, flags))
-          s->s_enlist(s, ti, sil, flags, weight);
+        if (s->s_is_enabled(s, flags)) {
+          r1 = s->s_enlist(s, ti, sil, flags, weight);
+          if (r1 == 0)
+            enlisted++;
+          else if (enlisted == 0)
+            r = r1;
+        }
       }
     }
   } else {
-    s->s_enlist(s, ti, sil, flags, weight);
+    r = s->s_enlist(s, ti, sil, flags, weight);
+  }
+
+  if (r) {
+    if (*error < r)
+      *error = r;
+    return NULL;
   }
 
   /* Clean */

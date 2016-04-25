@@ -445,6 +445,8 @@ streaming_code2txt(int code)
     return N_("No service assigned to channel");
   case SM_CODE_NO_ADAPTERS:
     return N_("No assigned adapters");
+  case SM_CODE_INVALID_SERVICE:
+    return N_("Invalid service");
 
   case SM_CODE_ABORTED:
     return N_("Aborted by user");
