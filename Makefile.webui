@@ -124,6 +124,7 @@ endif
 
 JAVASCRIPT += $(ROOTPATH)/app/tvadapters.js
 JAVASCRIPT += $(ROOTPATH)/app/idnode.js
+JAVASCRIPT += $(ROOTPATH)/app/profile.js
 JAVASCRIPT += $(ROOTPATH)/app/esfilter.js
 ifeq ($(CONFIG_MPEGTS), yes)
 JAVASCRIPT += $(ROOTPATH)/app/mpegts.js
@@ -270,7 +271,7 @@ compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.blue.css.
              $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz \
              $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES)
 	@echo "WEBUI std finished"
-	
+
 .PHONY: compile-debug
 compile-debug: $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c
 	@echo "WEBUI debug finished"
