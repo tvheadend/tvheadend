@@ -293,10 +293,6 @@ mpegts_service_enlist_raw
 
   assert(s->s_source_type == S_MPEG_TS);
 
-  /* invalid PMT */
-  if (s->s_pmt_pid <= 0 || s->s_pmt_pid >= 8191)
-    return SM_CODE_INVALID_SERVICE;
-
   /* Create instances */
   m->mm_create_instances(m);
 
