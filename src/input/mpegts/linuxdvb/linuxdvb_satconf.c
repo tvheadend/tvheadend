@@ -208,12 +208,16 @@ linuxdvb_satconf_class_get_childs ( idnode_t *o )
 /*
  * Generic satconf
  */
+ 
+CLASS_DOC(linuxdvb_satconf) /* Referenced by multiple classes. */
+ 
 const idclass_t linuxdvb_satconf_class =
 {
   .ic_class      = "linuxdvb_satconf",
   .ic_caption    = N_("DVB-S satellite configuration"),
   .ic_event      = "linuxdvb_satconf",
   .ic_get_title  = linuxdvb_satconf_class_get_title,
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_changed    = linuxdvb_satconf_class_changed,
   .ic_properties = (const property_t[]) {
     {
@@ -276,12 +280,14 @@ const idclass_t linuxdvb_satconf_lnbonly_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_lnbonly",
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_caption    = N_("DVB-S simple"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
       .id       = "networks",
       .name     = N_("Networks"),
+      .desc     = N_("The networks assigned to the device."),
       .islist   = 1,
       .get      = linuxdvb_satconf_class_network_get0,
       .set      = linuxdvb_satconf_class_network_set0,
@@ -300,6 +306,7 @@ const idclass_t linuxdvb_satconf_2port_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_2port",
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_caption    = N_("DVB-S tone burst"),
   .ic_properties = (const property_t[]) {
     {
@@ -337,6 +344,7 @@ const idclass_t linuxdvb_satconf_4port_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_4port",
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_caption    = N_("DVB-S 4-port"),
   .ic_properties = (const property_t[]) {
     {
@@ -455,6 +463,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_en50494",
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_caption    = N_("DVB-S EN50494 (UniCable, experimental)"),
   .ic_properties = (const property_t[]) {
     {
@@ -521,6 +530,7 @@ const idclass_t linuxdvb_satconf_advanced_class =
 {
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_advanced",
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_caption    = N_("DVB-S advanced"),
   .ic_get_childs = linuxdvb_satconf_class_get_childs,
   .ic_properties = (const property_t[]) {
@@ -1313,6 +1323,7 @@ const idclass_t linuxdvb_satconf_ele_class =
 {
   .ic_class      = "linuxdvb_satconf_ele",
   .ic_caption    = N_("Satconf"),
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
   .ic_event      = "linuxdvb_satconf_ele",
   .ic_get_title  = linuxdvb_satconf_ele_class_get_title,
   .ic_get_childs = linuxdvb_satconf_ele_class_get_childs,

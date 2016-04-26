@@ -1367,7 +1367,7 @@ CLASS_DOC(access_entry)
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
-  .ic_caption    = N_("Access Entries"),
+  .ic_caption    = N_("Access Configuration - Access Entries"),
   .ic_event      = "access",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_access_entry_class,
@@ -1799,7 +1799,7 @@ CLASS_DOC(passwd)
 
 const idclass_t passwd_entry_class = {
   .ic_class      = "passwd",
-  .ic_caption    = N_("Configuration - Passwords"),
+  .ic_caption    = N_("Access Configuration - Passwords"),
   .ic_event      = "passwd",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_passwd_class,
@@ -1951,7 +1951,7 @@ CLASS_DOC(ipblocking)
 
 const idclass_t ipblock_entry_class = {
   .ic_class      = "ipblocking",
-  .ic_caption    = N_("IP blocking"),
+  .ic_caption    = N_("Access Configuration - IP Blocking"),
   .ic_event      = "ipblocking",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_doc        = tvh_doc_ipblocking_class,

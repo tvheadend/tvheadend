@@ -129,12 +129,15 @@ mpegts_network_class_idlescan_notify ( void *p, const char *lang )
   }
 }
 
+CLASS_DOC(mpegts_network)
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
-  .ic_caption    = N_("MPEG-TS network"),
+  .ic_caption    = N_("DVB-Inputs - Networks (MPEG-TS network)"),
   .ic_event      = "mpegts_network",
   .ic_perm_def   = ACCESS_ADMIN,
+  .ic_doc        = tvh_doc_mpegts_network_class,
   .ic_save       = mpegts_network_class_save,
   .ic_get_title  = mpegts_network_class_get_title,
   .ic_properties = (const property_t[]){
@@ -234,7 +237,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_STR,
       .id       = "charset",
       .name     = N_("Character set"),
-      .desc     = N_("The character encoding for this network "
+      .desc     = N_("The character encoding for the network "
                      "(e.g. UTF-8)."),
       .off      = offsetof(mpegts_network_t, mn_charset),
       .list     = dvb_charset_enum,
@@ -253,7 +256,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "num_mux",
       .name     = N_("# Muxes"),
-      .desc     = N_("Total number of muxes found on this network."),
+      .desc     = N_("Total number of muxes found on the network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_mux,
     },
@@ -261,7 +264,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "num_svc",
       .name     = N_("# Services"),
-      .desc     = N_("Total number of services found on this network."),
+      .desc     = N_("Total number of services found on the network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_svc,
     },
@@ -269,7 +272,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "num_chn",
       .name     = N_("# Mapped channels"),
-      .desc     = N_("Total number of mapped channels on this network."),
+      .desc     = N_("Total number of mapped channels on the network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_num_chn,
     },
@@ -277,7 +280,7 @@ const idclass_t mpegts_network_class =
       .type     = PT_INT,
       .id       = "scanq_length",
       .name     = N_("Scan queue length"),
-      .desc     = N_("The number of muxes left to scan on this network."),
+      .desc     = N_("The number of muxes left to scan on the network."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_network_class_get_scanq_length,
     },

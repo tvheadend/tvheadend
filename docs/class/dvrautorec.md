@@ -48,7 +48,7 @@ automatically start being recorded.**
 
 ###Editing an Entry
 
-Highlight (select) the desired entry within the grid then click the *[Edit]* 
+Highlight (select) the desired entry within the grid, then click the *[Edit]* 
 button from the menu bar.
 
 **Tip**: You can quickly make changes to an entry by double-clicking on 
@@ -59,7 +59,7 @@ page for details.
 
 ###Deleting an Entry
 
-Highlight (select) the desired entry within the grid then click the *[Delete]* 
+Highlight (select) the desired entry within the grid, then click the *[Delete]* 
 button from the menu bar.
 
 ---

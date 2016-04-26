@@ -105,7 +105,7 @@ tvheadend.imgcacheconf = function(panel, index) {
 
     tvheadend.idnode_simple(panel, {
         url: 'api/imagecache/config',
-        title: _('Image cache'),
+        title: _('Image Cache'),
         iconCls: 'imgcacheconf',
         tabIndex: index,
         comet: 'imagecache',
