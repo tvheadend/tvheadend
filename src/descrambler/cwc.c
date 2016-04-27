@@ -1798,18 +1798,20 @@ const idclass_t caclient_cwc_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_cwc",
-  .ic_caption    = N_("Code word client (newcamd)"),
+  .ic_caption    = N_("CA Client - Code Word Client (newcamd)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
       .id       = "username",
       .name     = N_("Username"),
+      .desc     = N_("Login username."),
       .off      = offsetof(cwc_t, cwc_username),
     },
     {
       .type     = PT_STR,
       .id       = "password",
       .name     = N_("Password"),
+      .desc     = N_("Login password."),
       .off      = offsetof(cwc_t, cwc_password),
       .opts     = PO_PASSWORD
     },
@@ -1817,6 +1819,7 @@ const idclass_t caclient_cwc_class =
       .type     = PT_STR,
       .id       = "hostname",
       .name     = N_("Hostname/IP"),
+      .desc     = N_("Hostname (or IP) of the server."),
       .off      = offsetof(cwc_t, cwc_hostname),
       .def.s    = "localhost",
     },
@@ -1824,12 +1827,14 @@ const idclass_t caclient_cwc_class =
       .type     = PT_INT,
       .id       = "port",
       .name     = N_("Port"),
+      .desc     = N_("Port to connect to."),
       .off      = offsetof(cwc_t, cwc_port),
     },
     {
       .type     = PT_STR,
       .id       = "deskey",
       .name     = N_("DES key"),
+      .desc     = N_("DES Key."),
       .set      = caclient_cwc_class_deskey_set,
       .get      = caclient_cwc_class_deskey_get,
       .opts     = PO_PASSWORD,
@@ -1839,6 +1844,7 @@ const idclass_t caclient_cwc_class =
       .type     = PT_BOOL,
       .id       = "emm",
       .name     = N_("Update card (EMM)"),
+      .desc     = N_("Enable/disable offering of Entitlement Management Message updates."),
       .off      = offsetof(cwc_t, cwc_emm),
       .def.i    = 1
     },
@@ -1846,6 +1852,7 @@ const idclass_t caclient_cwc_class =
       .type     = PT_BOOL,
       .id       = "emmex",
       .name     = N_("Updates from one mux (EMM)"),
+      .desc     = N_("Update Entitlement Management Messages from one mux only."),
       .off      = offsetof(cwc_t, cwc_emmex),
       .def.i    = 1
     },

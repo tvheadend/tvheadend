@@ -2287,12 +2287,13 @@ const idclass_t caclient_capmt_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_capmt",
-  .ic_caption    = N_("CAPMT (Linux Network DVBAPI)"),
+  .ic_caption    = N_("CA Client - CAPMT (Linux Network DVBAPI)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
       .id       = "mode",
       .name     = N_("Mode"),
+      .desc     = N_("Oscam mode."),
       .off      = offsetof(capmt_t, capmt_oscam),
       .list     = caclient_capmt_class_oscam_mode_list,
       .def.i    = CAPMT_OSCAM_MULTILIST,
@@ -2301,6 +2302,7 @@ const idclass_t caclient_capmt_class =
       .type     = PT_STR,
       .id       = "camdfilename",
       .name     = N_("Camd.socket filename / IP Address (TCP mode)"),
+      .desc     = N_("Socket or IP Address (when in TCP mode)."),
       .off      = offsetof(capmt_t, capmt_sockfile),
       .def.s    = "/tmp/camd.socket",
     },
@@ -2308,6 +2310,7 @@ const idclass_t caclient_capmt_class =
       .type     = PT_INT,
       .id       = "port",
       .name     = N_("Listen / Connect port"),
+      .desc     = N_("Port to listen on."),
       .off      = offsetof(capmt_t, capmt_port),
       .def.i    = 9000
     },
