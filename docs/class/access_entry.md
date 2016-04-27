@@ -26,6 +26,7 @@ Button                 | Function
 **Move Up**            | Move the selected entry up the grid.
 **Move Down**          | Move the selected entry down the grid.
 **Edit**               | Edit the selected entry.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**               | Display this help page.
 
 ---

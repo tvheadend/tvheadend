@@ -266,7 +266,7 @@ const idclass_t linuxdvb_frontend_dvbs_class =
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_dvbs",
   .ic_doc        = tvh_doc_linuxdvb_frontend_dvbs_class,
-  .ic_caption    = N_("TV Adapters - Linux DVB-S Frontend"),
+  .ic_caption    = N_("TV Adapters - Linux DVB-S Frontend (Master)"),
   .ic_get_childs = linuxdvb_frontend_dvbs_class_get_childs,
   .ic_properties = (const property_t[]){
     {
@@ -395,7 +395,7 @@ const idclass_t linuxdvb_frontend_isdb_s_class =
   .ic_super      = &linuxdvb_frontend_class,
   .ic_class      = "linuxdvb_frontend_isdb_s",
   .ic_doc        = tvh_doc_linuxdvb_frontend_dvbs_class,
-  .ic_caption    = N_("TV Adapters - Linux ISDB-S Frontend"),
+  .ic_caption    = N_("TV Adapters - Linux ISDB-S Frontend (Master)"),
   .ic_properties = (const property_t[]){
     {}
   }

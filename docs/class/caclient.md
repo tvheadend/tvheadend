@@ -1,6 +1,4 @@
-##Configuration - CAs
-
-Tvheadend support connecting to card clients via the cwc (newcamd) and
+Tvheadend supports connecting to card clients via the cwc (newcamd) and
 capmt (linux network dvbapi) protocols for so-called 'softcam' descrambling.
 
 ---
@@ -18,6 +16,7 @@ Button              | Function
 **Move Up**         | Move the selected CA client configuration up in the list.
 **Move Down**       | Move the selected CA client configuration down in the list.
 **Show Passwords**  | Reveals any stored CA client passwords.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**            | Display this help page.
 
 ---

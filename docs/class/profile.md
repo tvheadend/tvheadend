@@ -27,6 +27,7 @@ Button     | Function
 **Undo**   | Undo any changes made to the stream profile configuration since the last save.
 **Add**    | Add a new stream profile.
 **Delete** | Delete an existing stream profile.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**   | Display this help page.
 
 ---

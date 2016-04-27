@@ -46,6 +46,7 @@ Button         | Function
 **Delete**     | Delete an existing network. This will also remove any association with an adapter.
 **Edit**       | Edit an existing network. This allows you to change any of the parameters you’d otherwise set when adding a new network, e.g. network discovery, idle scan, etc. - similar to using the check boxes to enable/disable functions.
 **Force Scan** | Force a new scan (i.e. scan all muxes for services) for the selected networks.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**       | Displays this help page. 
 
 ---
