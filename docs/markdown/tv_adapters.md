@@ -46,8 +46,8 @@ list.
 
 * Frontend
   - [Master](class/linuxdvb_frontend_dvbs)
-  - [Slave](class/linuxdvb_frontend_dvbs_slave)
   - [Master (ISDB-S)](class/linuxdvb_frontend_isdb_s)
+  - [Slave](class/linuxdvb_frontend_dvbs_slave)
 * Satellite Configuration
   - [Universal LNB](class/linuxdvb_satconf_lnbonly)
   - [2 Port](class/linuxdvb_satconf_2port)

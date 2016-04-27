@@ -92,13 +92,14 @@ const idclass_t linuxdvb_rotor_class = {
   .ic_super       = &linuxdvb_diseqc_class,
   .ic_class       = "linuxdvb_rotor",
   .ic_doc         = tvh_doc_linuxdvb_satconf_class,
-  .ic_caption     = N_("DiseqC rotor"),
+  .ic_caption     = N_("TV Adapters - SatConfig - DiseqC Rotor"),
   .ic_get_title   = linuxdvb_rotor_class_get_title,
   .ic_properties  = (const property_t[]) {
     {
       .type    = PT_U32,
       .id      = "powerup_time",
       .name    = N_("Power-up time (ms) (15-200)"),
+      .desc    = N_("Time (in milliseconds) for the rotor to power up."),
       .off     = offsetof(linuxdvb_rotor_t, lr_powerup_time),
       .def.u32 = 100,
     },
@@ -106,6 +107,7 @@ const idclass_t linuxdvb_rotor_class = {
       .type    = PT_U32,
       .id      = "cmd_time",
       .name    = N_("Command time (ms) (10-100)"),
+      .desc    = N_("Time (in milliseconds) for a command to complete."),
       .off     = offsetof(linuxdvb_rotor_t, lr_cmd_time),
       .def.u32 = 25
     },
@@ -117,18 +119,20 @@ const idclass_t linuxdvb_rotor_gotox_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_gotox",
-  .ic_caption     = N_("GOTOX rotor"),
+  .ic_caption     = N_("TV Adapters - SatConfig - GOTOX Rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_U16,
       .id     = "position",
       .name   = N_("GOTOX position"),
+      .desc   = N_("Satellite position."),
       .off    = offsetof(linuxdvb_rotor_t, lr_position),
     },
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = N_("Satellite longitude"),
+      .desc   = N_("Satellite longitude."),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
     {}
@@ -139,12 +143,13 @@ const idclass_t linuxdvb_rotor_usals_class =
 {
   .ic_super       = &linuxdvb_rotor_class,
   .ic_class       = "linuxdvb_rotor_usals",
-  .ic_caption     = N_("USALS rotor"),
+  .ic_caption     = N_("TV Adapters - SatConfig - USALS Rotor"),
   .ic_properties  = (const property_t[]) {
     {
       .type   = PT_DBL,
       .id     = "sat_lon",
       .name   = N_("Satellite longitude"),
+      .desc   = N_("Satellite longitude."),
       .off    = offsetof(linuxdvb_rotor_t, lr_sat_lon),
     },
  
