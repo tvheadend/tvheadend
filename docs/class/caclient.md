@@ -1,9 +1,11 @@
 Tvheadend supports connecting to card clients via the cwc (newcamd) and
 capmt (linux network dvbapi) protocols for so-called 'softcam' descrambling.
 
+!['CA Client Configuration Example'](docresources/caclientconfig.png)
+
 ---
 
-####Menu Bar/Buttons
+###Menu Bar/Buttons
 
 The following functions are available:
 
@@ -13,19 +15,18 @@ Button              | Function
 **Undo**            | Undo any changes made to the CA client configuration since the last save.
 **Add**             | Add a new CA client configuration.
 **Delete**          | Delete an existing CA client configuration.
+**Clone**           | Clone the currently selected configuration.
 **Move Up**         | Move the selected CA client configuration up in the list.
 **Move Down**       | Move the selected CA client configuration down in the list.
-**Show Passwords**  | Reveals any stored CA client passwords.
-**View Level**| Change the interface view level to show/hide more advanced options.
+**Show/Hide Passwords**  | Reveal/Hide any stored CA client passwords.
 **Help**            | Display this help page.
 
 ---
 
-####Available CA types
+###Available CA types
 
-New CA configurations are created with the _Add_ button, with subsequent 
-editing done within the grid. The following configuration parameters are 
-used, depending on the type of CA access:
+The following configuration parameters are used, depending on the type 
+of CA access:
 
 * List of types
 
@@ -33,5 +34,39 @@ used, depending on the type of CA access:
   - [Code word client (newcamd)](class/caclient_cwc)
   - [DES constant code word client](class/caclient_ccw_des)
   - [AES constant code word client](class/caclient_ccw_aes)
+
+---
+
+###Connection Status
+
+The icon next to each entry within the grid indicates the client's 
+connection status.
+
+Icon                                         | Description
+---------------------------------------------|------------
+!['Accept/OK Icon'](icons/accept.png)        | The client is connected.
+!['Error Icon'](icons/exclamation.png)       | There was an error connecting to the client.
+!['Stop/Disabled Icon'](icons/stop.png)      | The client is disabled.
+
+---
+
+###Adding/Editing a CA Configuration
+
+New CA configurations are created with the *[Add]* button. To edit an 
+existing configuration, click on it from within the grid, the 
+*Parameters* panel should then appear on the right hand side.
+
+**Tips**: 
+* Remember to *[Save]* your changes before selecting another config 
+from within the grid.
+* You can clone an existing config by clicking the *[Clone]* 
+button.
+
+---
+
+###Deleting a CA Configuration
+
+Highlight (select) the desired entry from the grid, then press the 
+*[Delete]* button from the menu bar. 
 
 ---
