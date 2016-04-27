@@ -15,6 +15,7 @@ The following functions are available:
 Button     | Function
 -----------|---------
 **Help**   | Display this help page.
+**View Level**| Change the interface view level to show/hide more advanced options.
 
 ---
 

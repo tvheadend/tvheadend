@@ -33,6 +33,7 @@ Button                 | Function
 **Edit**               | Edit the selected entry.
 **Stop**               | Gracefully stop the selected (in-progress) recording/entry.
 **Abort**              | Stop the selected (in-progress) recording/entry.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**               | Display this help page.
 
 ---
@@ -118,6 +119,8 @@ Button                 | Function
 **Download**           | Download the selected entry/recording.
 **Re-record**          | Re-schedule the selected entry/recording if possible.
 **Move to failed**     | Move the selected entry/entries to the *Failed Recordings* tab.
+**View Level**| Change the interface view level to show/hide more advanced options.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**               | Display this help page.
 
 ---
@@ -186,6 +189,7 @@ Button                 | Function
 **Download**           | Download the selected entry/recording.
 **Re-record**          | Re-schedule the selected entry/recording if possible.
 **Move to finished**   | Move the selected entry/entries to the *Finished Recordings* tab.
+**View Level**| Change the interface view level to show/hide more advanced options.
 **Help**               | Display this help page.
 
 ---

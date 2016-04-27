@@ -12,9 +12,9 @@ This is a read-only tab; nothing is configurable.
 
 The following functions are available:
 
-Button     | Function
------------|---------
-**Help**   | Display this help page.
+Button        | Function
+--------------|---------
+**Help**      | Display this help page.
 
 ---
 
