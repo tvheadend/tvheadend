@@ -242,7 +242,7 @@ CLASS_DOC(caclient)
 const idclass_t caclient_class =
 {
   .ic_class      = "caclient",
-  .ic_caption    = N_("Conditional access client"),
+  .ic_caption    = N_("Conditional Access Client"),
   .ic_changed    = caclient_class_changed,
   .ic_save       = caclient_class_save,
   .ic_event      = "caclient",
@@ -256,7 +256,7 @@ const idclass_t caclient_class =
       .type     = PT_STR,
       .id       = "class",
       .name     = N_("Class"),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
       .get      = caclient_class_class_get,
       .set      = caclient_class_class_set,
     },
@@ -264,19 +264,21 @@ const idclass_t caclient_class =
       .type     = PT_INT,
       .id       = "index",
       .name     = N_("Index"),
-      .opts     = PO_RDONLY | PO_HIDDEN,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOUI,
       .off      = offsetof(caclient_t, cac_index),
     },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
+      .desc     = N_("Enable/Disable CA client."),
       .off      = offsetof(caclient_t, cac_enabled),
     },
     {
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Client name"),
+      .desc     = N_("Name of the client."),
       .off      = offsetof(caclient_t, cac_name),
       .notify   = idnode_notify_title_changed,
     },
@@ -284,6 +286,7 @@ const idclass_t caclient_class =
       .type     = PT_STR,
       .id       = "comment",
       .name     = N_("Comment"),
+      .desc     = N_("Free-form text field, enter whatever you like."),
       .off      = offsetof(caclient_t, cac_comment),
     },
     {
@@ -291,7 +294,7 @@ const idclass_t caclient_class =
       .id       = "status",
       .name     = N_("Status"),
       .get      = caclient_class_status_get,
-      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE,
+      .opts     = PO_RDONLY | PO_HIDDEN | PO_NOSAVE | PO_NOUI,
     },
     { }
   }
