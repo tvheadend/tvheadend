@@ -32,6 +32,10 @@ then press the *[Edit]* button from the menu bar.
 
 Note that both the *[Add]* and *[Edit]* buttons display similar dialogs.
 
+**Tip**: You can enter a comma-separated list of network prefixes, if you're 
+unsure as to what to enter in the *Network prefix* field take a look at 
+[this guide](https://www.ripe.net/about-us/press-centre/understanding-ip-addressing).
+
 ---
 
 ### Deleting an Entry.

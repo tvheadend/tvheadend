@@ -221,6 +221,8 @@ dvb_network_class_orbital_pos_list ( void *o, const char *lang )
   return m;
 }
 
+PROP_DOC(predefinedmuxlist)
+
 const idclass_t dvb_network_class =
 {
   .ic_super      = &mpegts_network_class,
@@ -236,7 +238,7 @@ const idclass_t dvb_network_dvbt_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbt",
-  .ic_caption    = N_("DVB-T network"),
+  .ic_caption    = N_("DVB-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -245,6 +247,7 @@ const idclass_t dvb_network_dvbt_class =
       .desc     = N_("Use a pre-defined list of DVB-T muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_dvbt,
@@ -258,7 +261,7 @@ const idclass_t dvb_network_dvbc_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbc",
-  .ic_caption    = N_("DVB-C network"),
+  .ic_caption    = N_("DVB-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -267,6 +270,7 @@ const idclass_t dvb_network_dvbc_class =
       .desc     = N_("Use a pre-defined list of DVB-C muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_dvbc,
@@ -280,7 +284,7 @@ const idclass_t dvb_network_dvbs_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dvbs",
-  .ic_caption    = N_("DVB-S network"),
+  .ic_caption    = N_("DVB-S Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -289,6 +293,7 @@ const idclass_t dvb_network_dvbs_class =
       .desc     = N_("Use a pre-defined list of DVB-S/S2 muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_dvbs,
@@ -312,7 +317,7 @@ const idclass_t dvb_network_atsc_t_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc_t",
-  .ic_caption    = N_("ATSC-T network"),
+  .ic_caption    = N_("ATSC-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -321,6 +326,7 @@ const idclass_t dvb_network_atsc_t_class =
       .desc     = N_("Use a pre-defined list of ATSC-T muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_atsc_t,
@@ -334,7 +340,7 @@ const idclass_t dvb_network_atsc_c_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_atsc_c",
-  .ic_caption    = N_("ATSC-C network"),
+  .ic_caption    = N_("ATSC-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -343,6 +349,7 @@ const idclass_t dvb_network_atsc_c_class =
       .desc     = N_("Use a pre-defined list of ATSC-C muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_atsc_c,
@@ -356,7 +363,7 @@ const idclass_t dvb_network_isdb_t_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_isdb_t",
-  .ic_caption    = N_("ISDB-T network"),
+  .ic_caption    = N_("ISDB-T Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -365,6 +372,7 @@ const idclass_t dvb_network_isdb_t_class =
       .desc     = N_("Use a pre-defined list of ISDB-T muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_isdb_t,
@@ -378,7 +386,7 @@ const idclass_t dvb_network_isdb_c_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_isdb_c",
-  .ic_caption    = N_("ISDB-C network"),
+  .ic_caption    = N_("ISDB-C Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -387,6 +395,7 @@ const idclass_t dvb_network_isdb_c_class =
       .desc     = N_("Use a pre-defined list of ISDB-C muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_isdb_c,
@@ -400,7 +409,7 @@ const idclass_t dvb_network_isdb_s_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_isdb_s",
-  .ic_caption    = N_("ISDB-S network"),
+  .ic_caption    = N_("ISDB-S Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -409,6 +418,7 @@ const idclass_t dvb_network_isdb_s_class =
       .desc     = N_("Use a pre-defined list of ISDB-S muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_isdb_s,
@@ -422,7 +432,7 @@ const idclass_t dvb_network_dab_class =
 {
   .ic_super      = &dvb_network_class,
   .ic_class      = "dvb_network_dab",
-  .ic_caption    = N_("DAB network"),
+  .ic_caption    = N_("DAB Network"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_STR,
@@ -431,6 +441,7 @@ const idclass_t dvb_network_dab_class =
       .desc     = N_("Use a pre-defined list of DAB muxes. "
                      "Note: these lists can sometimes be outdated and "
                      "may cause scanning to take longer than usual."),
+      .doc      = prop_doc_predefinedmuxlist,
       .set      = dvb_network_class_scanfile_set,
       .get      = dvb_network_class_scanfile_get,
       .list     = dvb_network_class_scanfile_list_dab,
