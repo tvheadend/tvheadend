@@ -5,7 +5,7 @@ the core Tvheadend functionality.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

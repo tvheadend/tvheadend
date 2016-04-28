@@ -5,7 +5,7 @@ where you set and maintain all user passwords (e.g. for streaming or DVR access)
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

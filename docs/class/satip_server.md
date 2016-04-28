@@ -16,7 +16,7 @@ win (also for unknown mux).
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

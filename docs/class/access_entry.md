@@ -13,7 +13,7 @@ to asterisk. Only network prefix is matched then.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

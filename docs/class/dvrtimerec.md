@@ -4,7 +4,7 @@ This tab controls timer-driven recording rules.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 
