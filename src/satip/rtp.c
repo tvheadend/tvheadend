@@ -884,7 +884,7 @@ satip_rtcp_thread(void *aux)
       if (tvhtrace_enabled()) {
         msg[len] = '\0';
         tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
-        tvhtrace("satips", "RTCP send to %s:%d : %s", addrbuf, IP_PORT(rtp->peer2), msg + 16);
+        tvhtrace("satips", "RTCP send to %s:%d : %s", addrbuf, ntohs(IP_PORT(rtp->peer2)), msg + 16);
       }
       if (rtp->port == RTSP_TCP_DATA) {
         satip_rtp_tcp_data(rtp, 1, msg, len);
