@@ -967,7 +967,8 @@ rtsp_parse_cmd
     }
     *oldstate = rs->state;
     dmc = &rs->dmc;
-    if (rs->mux == NULL) goto end;
+    if (rs->mux == NULL)
+      *oldstate = rs->state = STATE_SETUP;
     if (!fe) {
       fe = rs->frontend;
       findex = rs->findex;
@@ -1346,7 +1347,7 @@ static int
 rtsp_process_play(http_connection_t *hc, int setup)
 {
   session_t *rs;
-  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, oldstate = 0, i, stream;;
+  int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, oldstate = 0, i, stream;
   char buf[256], *u = tvh_strdupa(hc->hc_url);
   http_arg_list_t args;
 
