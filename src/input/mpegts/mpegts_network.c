@@ -129,10 +129,13 @@ mpegts_network_class_idlescan_notify ( void *p, const char *lang )
   }
 }
 
+CLASS_DOC(mpegts_network)
+
 const idclass_t mpegts_network_class =
 {
   .ic_class      = "mpegts_network",
-  .ic_caption    = N_("MPEG-TS network"),
+  .ic_caption    = N_("DVB Inputs - Networks"),
+  .ic_doc        = tvh_doc_mpegts_network_class,
   .ic_event      = "mpegts_network",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_network_class_save,
