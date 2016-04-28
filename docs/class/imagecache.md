@@ -7,7 +7,7 @@ providers.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

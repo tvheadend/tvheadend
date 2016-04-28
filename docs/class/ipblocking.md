@@ -5,7 +5,7 @@ are not allowed to login (use any Tvheadend service).
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

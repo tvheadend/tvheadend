@@ -20,7 +20,7 @@ This tab shows your all upcoming/current recording entries.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 
@@ -108,7 +108,7 @@ This tab shows all your finished recording entries.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 
@@ -178,7 +178,7 @@ This tab shows all failed recording entries.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 

@@ -4,7 +4,7 @@ This tab controls EPG-driven recording rules.
 
 ---
 
-###Buttons
+###Menu Bar/Buttons
 
 The tab has the following buttons:
 
