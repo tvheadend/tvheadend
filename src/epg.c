@@ -2342,15 +2342,14 @@ static const char *_genre_get_name(int a, int b, const char *lang)
 // Note: | 0x20 is a cheats (fast) way of lowering case
 static int _genre_str_match ( const char *a, const char *b )
 {
-  int i = 0, j = 0;
   if (!a || !b) return 0;
-  while (a[i] != '\0' || b[j] != '\0') {
-    while (a[i] == ' ') i++;
-    while (b[j] == ' ') j++;
-    if ((a[i] | 0x20) != (b[j] | 0x20)) return 0;
-    i++; j++;
+  while (*a != '\0' || *b != '\0') {
+    while (*a == ' ') a++;
+    while (*b == ' ') b++;
+    if ((*a | 0x20) != (*b | 0x20)) return 0;
+    a++; b++;
   }
-  return (a[i] == '\0' && b[j] == '\0'); // end of string(both)
+  return (*a == '\0' && *b == '\0'); // end of string(both)
 }
 
 static uint8_t _epg_genre_find_by_name ( const char *name, const char *lang )
