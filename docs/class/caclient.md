@@ -52,8 +52,14 @@ Icon                                         | Description
 
 ###Adding/Editing a CA Configuration
 
-New CA configurations are created with the *[Add]* button. To edit an 
-existing configuration, click on it from within the grid, the 
+To create a new CA configuration press the *[Add]* button from the 
+menu bar, you will then be asked to select a client type. Once you've 
+selected a type you can then enter/select the desired options from the 
+resultant *Add* dialog.
+
+!['Add CA Config'](docresources/configcaadd.png)
+
+To edit an existing configuration, click on it from within the grid, the 
 *Parameters* panel should then appear on the right hand side.
 
 **Tips**: 
