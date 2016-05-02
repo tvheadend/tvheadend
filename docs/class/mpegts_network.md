@@ -18,7 +18,7 @@ supports several different types of network, notably:
    - [IPTV Automatic Network](class/iptv_auto_network) - IPTV using a playlist as the source
   
 Click the desired network type (above) to see all available 
-[options](#items).
+[parameters](#items).
 
 !['Networks' Tab Screenshot](docresources/dvbinputsnetwork.png)
 
@@ -44,7 +44,7 @@ Button         | Function
 ###Add/Edit a Network
 
 To create a network click the *[Add]* button from the menu bar and 
-select the required network type, and then using the resultant dialog 
+then select the required network type, then using the resultant dialog 
 enter/select the desired network options. To edit a network highlight 
 (select) the network within the grid, and then press the *[Edit]* 
 button from the menu bar.
@@ -61,12 +61,24 @@ an **enabled** adapter.
 * There is a 5-10 minute delay before a scan starts, this is so you can 
 make changes if needed (this does not apply to IPTV networks).
 
+For more detailed information on networks and how to set them up, see 
+[Configure Tvheadend.](configure_tvheadend) 
+
 ---
 
 ###Force Scanning
 
-You can force a scan by highlighting (selecting) the network(s) within the grid, 
-and then pressing the *[Force Scan]* button from the menu bar. 
+Highlight the network(s) you would like to force scan and then press 
+the "Force Scan" button from the menu bar.
+
+Force scanning can take some time. You may continue to use Tvheadend 
+while a scan is in progress, but doing so will increase the time needed 
+for it to complete. Note that the time required can vary depending on a 
+number of factors, such as how many tuners you have available and the 
+number of muxes on each.
+
+  **Tip**: You may select more than one network by holding ctrl and 
+  clicking on additional networks. 
 
 ---
 
