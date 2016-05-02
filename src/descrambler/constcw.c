@@ -282,7 +282,7 @@ const idclass_t caclient_ccw_des_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_des",
-  .ic_caption    = N_("CA Client - DES Constant Code Word"),
+  .ic_caption    = N_("DES Constant Code Word"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
@@ -348,7 +348,7 @@ const idclass_t caclient_ccw_aes_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_aes",
-  .ic_caption    = N_("CA Client - AES Constant Code Word"),
+  .ic_caption    = N_("AES Constant Code Word"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,
