@@ -1798,7 +1798,7 @@ const idclass_t caclient_cwc_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_cwc",
-  .ic_caption    = N_("CA Client - Code Word Client (newcamd)"),
+  .ic_caption    = N_("Code Word Client (newcamd)"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
