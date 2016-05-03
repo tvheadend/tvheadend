@@ -487,11 +487,14 @@ mpegts_mux_ac3_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+CLASS_DOC(mpegts_mux)
+
 const idclass_t mpegts_mux_class =
 {
   .ic_class      = "mpegts_mux",
   .ic_caption    = N_("MPEG-TS multiplex"),
   .ic_event      = "mpegts_mux",
+  .ic_doc        = tvh_doc_mpegts_mux_class,
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = mpegts_mux_class_save,
   .ic_delete     = mpegts_mux_class_delete,
