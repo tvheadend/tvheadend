@@ -193,7 +193,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_queue_t *hq = &hc->hc_reply;
   const char *lang = hc->hc_access->aa_lang_ui;
 
-  htsbuf_qprintf(hq, "<center>\n\
+  htsbuf_qprintf(hq, "<center class=\"about-tab\">\n\
 <div class=\"about-title\">HTS Tvheadend %s</div>\n\
 <p>&copy; 2006 - 2016 Andreas \303\226man, Jaroslav Kysela, Adam Sutton, et al.</p>\n\
 <p><img src=\"static/img/logobig.png\"></p>\n\

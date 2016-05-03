@@ -74,8 +74,13 @@ CSS_DONE   += static/xcheckbox/xcheckbox.css
 CSS_DONE   += static/app/ext.css
 
 CSS_BLUE   += $(EXTJSPATH)/resources/css/xtheme-blue.css
+CSS_BLUE2  += static/app/ext-blue.css
+
 CSS_GRAY   += $(EXTJSPATH)/resources/css/xtheme-gray.css
+CSS_GRAY2  += static/app/ext-gray.css
+
 CSS_ACCESS += $(EXTJSPATH)/resources/css/xtheme-access.css
+CSS_ACCESS2+= static/app/ext-access.css
 
 #
 # extjs extensions
@@ -159,9 +164,9 @@ JAVASCRIPT_TV += $(ROOTPATH)/tv.js
 #
 
 JAVASCRIPT_SRC = $(foreach f,$(JAVASCRIPT),$(WEBDIR)/$(f))
-CSS_BLUE_SRC   = $(foreach f,$(CSS_INIT) $(CSS_BLUE) $(CSS_DONE),$(WEBDIR)/$(f))
-CSS_GRAY_SRC   = $(foreach f,$(CSS_INIT) $(CSS_GRAY) $(CSS_DONE),$(WEBDIR)/$(f))
-CSS_ACCESS_SRC = $(foreach f,$(CSS_INIT) $(CSS_ACCESS) $(CSS_DONE),$(WEBDIR)/$(f))
+CSS_BLUE_SRC   = $(foreach f,$(CSS_INIT) $(CSS_BLUE) $(CSS_DONE) $(CSS_BLUE2),$(WEBDIR)/$(f))
+CSS_GRAY_SRC   = $(foreach f,$(CSS_INIT) $(CSS_GRAY) $(CSS_DONE) $(CSS_GRAY2),$(WEBDIR)/$(f))
+CSS_ACCESS_SRC = $(foreach f,$(CSS_INIT) $(CSS_ACCESS) $(CSS_ACCESS2) $(CSS_DONE),$(WEBDIR)/$(f))
 CSS_SRC        = $(CSS_BLUE_SRC) $(CSS_GRAY_SRC) $(CSS_ACCESS_SRC)
 
 JAVASCRIPT_TV_SRC = $(foreach f,$(JAVASCRIPT_TV),$(WEBDIR)/$(f))
@@ -233,6 +238,7 @@ $(WEBDIR)/extjs-debug.c: $(JAVASCRIPT_SRC) $(CSS_SRC)
 	$(VV)printf '$(foreach f,$(CSS_INIT),extjs_lcss(hq, "$(f)");\n)' > $@
 	$(VV)printf 'extjs_lcss(hq, "redir/theme.debug.css");\n' >> $@
 	$(VV)printf '$(foreach f,$(CSS_DONE),extjs_lcss(hq, "$(f)");\n)' >> $@
+	$(VV)printf 'extjs_lcss(hq, "redir/theme.app.debug.css");\n' >> $@
 	$(VV)printf 'extjs_load(hq, "redir/locale.js");\n' >> $@
 	$(VV)printf '$(foreach f,$(JAVASCRIPT),extjs_load(hq, "$(f)");\n)' >> $@
 

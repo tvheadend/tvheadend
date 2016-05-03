@@ -974,6 +974,11 @@
     font-size: 150%;
 }
 
+.about-tab {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .about-title {
     font-size: 24px;
     font-weight: bold;

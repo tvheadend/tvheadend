@@ -1812,6 +1812,18 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
       }
       return HTTP_STATUS_BAD_REQUEST;
     }
+    if (!strcmp(components[0], "theme.app.debug.css")) {
+      theme = access_get_theme(hc->hc_access);
+      if (theme) {
+        snprintf(buf, sizeof(buf), "src/webui/static/app/ext-%s.css", theme);
+        if (!http_file_test(buf)) {
+          snprintf(buf, sizeof(buf), "/static/app/ext-%s.css", theme);
+          http_css_import(hc, buf);
+          return 0;
+        }
+      }
+      return HTTP_STATUS_BAD_REQUEST;
+    }
   }
 
   return HTTP_STATUS_BAD_REQUEST;
