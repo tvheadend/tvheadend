@@ -1,25 +1,43 @@
+a {
+    color: #ff9c33
+}
+
 .ux-mselect {
-    overflow: auto;
     background: #33373d;
-    position: relative; /* for calculating scroll offsets */
-    zoom: 1;
-    overflow: auto;
 }
 
 .ux-mselect-item {
     font: normal 15px tahoma, arial, helvetica, sans-serif;
-    padding: 2px;
     border: 1px solid #33373d;
-    white-space: nowrap;
-    cursor: pointer;
 }
 
 .ux-mselect-selected {
     border: 3px solid #ff9c33 !important;
     background: #66676d;
-    cursor: pointer;
 }
 
-a {
-    color: #ff9c33
+.hts-doc-toc a:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid #ff9c33
+}
+
+.hts-doc-text {
+    font: normal 15px verdana;
+}
+
+.hts-doc-text .hts-doc-anchor {
+    color: #ffc033;
+}
+
+.hts-doc-text th {
+    background-color: white;
+}
+
+.hts-doc-text td {
+    border: 1px solid white;
+}
+
+.hts-doc-text tr:nth-child(even) {
+    background-color: #404046;
 }
