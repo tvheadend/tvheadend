@@ -63,7 +63,7 @@ export PATH := $(LIB_ROOT)/build/bin:$(PATH)
 OBJS := $(foreach file,$(LIBSRCS),$(LIB_ROOT)/$(LIBHDHR)/$(basename $(file)).o)
 
 $(LIB_ROOT)/$(LIBHDHR)/%.o: $(LIB_ROOT)/$(LIBHDHR)/%.c
-	$(CC) -MD -MP $(CFLAGS) -c -o $@ $<
+	$(CC) -MD -MP $(CFLAGS) -fPIE -c -o $@ $<
 
 $(LIB_ROOT)/$(LIBHDHR)/libhdhomerun.a: $(OBJS)
 	$(AR) rcs $@ $^

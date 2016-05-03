@@ -28,7 +28,7 @@ LANGUAGES ?= bg cs da de en_US en_GB es et fa fi fr he hr hu it lv nl pl pt ru s
 # Common compiler flags
 #
 
-CFLAGS  += -g -O2
+CFLAGS  += -g -O2 -fPIE
 ifeq ($(CONFIG_W_UNUSED_RESULT),yes)
 CFLAGS  += -Wunused-result
 endif
@@ -41,10 +41,11 @@ CFLAGS  += -fms-extensions -funsigned-char -fno-strict-aliasing
 CFLAGS  += -D_FILE_OFFSET_BITS=64
 CFLAGS  += -I${BUILDDIR} -I${ROOTDIR}/src -I${ROOTDIR}
 ifeq ($(CONFIG_ANDROID),yes)
-LDFLAGS += -ldl -lm -fPIE -pie
+LDFLAGS += -ldl -lm
 else
 LDFLAGS += -ldl -lpthread -lm
 endif
+LDFLAGS += -pie -Wl,-z,now
 ifeq ($(CONFIG_LIBICONV),yes)
 LDFLAGS += -liconv
 endif

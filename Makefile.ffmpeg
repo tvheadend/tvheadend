@@ -56,6 +56,7 @@ LIBX265        = x265_1.9
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/pub/videolan/x265/$(LIBX265_TB)
 LIBX265_SHA1   = 8c9aa3b87b0f0a418bbb9782e9354d112d75e003
+LIBX265_DIFFS  = libx265.pie.diff
 
 LIBVPX         = libvpx-1.5.0
 LIBVPX_TB      = $(LIBVPX).tar.bz2
@@ -116,7 +117,7 @@ export PATH := $(LIB_ROOT)/build/ffmpeg/bin:$(PATH)
 
 EBUILDIR  := $(LIB_ROOT)/build
 EPREFIX   := $(EBUILDIR)/ffmpeg
-ECFLAGS   := -I$(EPREFIX)/include
+ECFLAGS   := -I$(EPREFIX)/include -fPIE
 ELIBS     := -L$(EPREFIX)/lib -ldl
 
 CONFIGURE := FFMPEG_PREFIX=$(EPREFIX) \
@@ -175,6 +176,8 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
+		--extra-asflags="-DPIC" \
+                --extra-cflags="-fPIE" \
 		--disable-swscale \
 		--disable-lavf \
 		--disable-avs \
@@ -216,6 +219,7 @@ ifeq (yes,$(CONFIG_LIBX265_STATIC))
 $(LIB_ROOT)/$(LIBX265)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX265_URL),$(LIB_ROOT)/$(LIBX265_TB),$(LIBX265_SHA1))
 	$(call UNTAR,$(LIBX265_TB),z)
+	$(call PATCH,$(LIBX265),$(LIBX265_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX265)/.tvh_build: \
@@ -268,7 +272,9 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_download:
 $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVPX)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBVPX) && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(LIBVPX) && \
+		ASFLAGS="-DENABLE_PIC=1 -DPIC=1" $(CONFIGURE) \
+		--extra-cflags="-fPIE" \
 		--disable-examples \
 		--disable-docs \
 		--disable-unit-tests \
@@ -304,7 +310,7 @@ $(LIB_ROOT)/$(LIBOGG)/.tvh_download:
 $(LIB_ROOT)/$(LIBOGG)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBOGG) && $(CONFIGURE)
+	cd $(LIB_ROOT)/$(LIBOGG) && CFLAGS="-fPIE" $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBOGG) install
 	@touch $@
@@ -341,7 +347,8 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBTHEORA) && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(LIBTHEORA) && \
+		CFLAGS="-fPIE" $(CONFIGURE) \
 		--with-ogg=$(EPREFIX) \
 		--disable-examples \
 		$(LIBTHEORA_HOST)
@@ -386,7 +393,8 @@ $(LIB_ROOT)/$(LIBVORBIS)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBVORBIS) && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(LIBVORBIS) && \
+		CFLAGS="-fPIE" $(CONFIGURE) \
 		--with-ogg=$(EPREFIX)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBVORBIS) install
@@ -426,7 +434,8 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBFDKAAC) && $(CONFIGURE)
+	cd $(LIB_ROOT)/$(LIBFDKAAC) && \
+		CXXFLAGS="-fPIE" CFLAGS="-fPIE" $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
 	@touch $@
@@ -479,7 +488,8 @@ $(LIB_ROOT)/$(LIBMFX)/.tvh_download:
 
 $(LIB_ROOT)/$(LIBMFX)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBMFX)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBMFX) && autoreconf -i && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(LIBMFX) && autoreconf -i && \
+		CXXFLAGS="-fPIE" CFLAGS="-fPIE" $(CONFIGURE) \
 		--with-libva_x11 \
 		--with-libva_drm
 	DESTDIR=$(EBUILDIR) \
