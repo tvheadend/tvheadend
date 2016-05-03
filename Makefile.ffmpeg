@@ -178,6 +178,7 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
 		--extra-asflags="-DPIC" \
                 --extra-cflags="-fPIE" \
+		--disable-cli \
 		--disable-swscale \
 		--disable-lavf \
 		--disable-avs \
