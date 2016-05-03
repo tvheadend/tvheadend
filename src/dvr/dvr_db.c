@@ -3034,6 +3034,7 @@ const idclass_t dvr_entry_class = {
       .off      = offsetof(dvr_entry_t, de_owner),
       .list     = user_get_userlist,
       .get_opts = dvr_entry_class_owner_opts,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_STR,
@@ -3044,6 +3045,7 @@ const idclass_t dvr_entry_class = {
                      "by a matching rule."),
       .off      = offsetof(dvr_entry_t, de_creator),
       .get_opts = dvr_entry_class_owner_opts,
+      .opts     = PO_SORTKEY,
     },
     {
       .type     = PT_STR,
