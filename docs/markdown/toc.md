@@ -48,7 +48,7 @@ Web Interface Configuration Guide
   - [TV Adapters](tv_adapters)
   - [Networks](class/mpegts_network)
   - [Muxes](class/mpegts_mux)
-  - [Services](class/service)
+  - [Services](class/mpegts_service)
   - [Mux Schedulers](class/mpegts_mux_sched)
 
 * Channel / EPG
