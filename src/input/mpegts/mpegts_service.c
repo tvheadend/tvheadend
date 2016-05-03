@@ -80,11 +80,14 @@ mpegts_service_pref_capid_lock_list ( void *o, const char *lang )
    return strtab2htsmsg(tab, 1, lang);
 }
 
+CLASS_DOC(mpegts_service)
+
 const idclass_t mpegts_service_class =
 {
   .ic_super      = &service_class,
   .ic_class      = "mpegts_service",
   .ic_caption    = N_("MPEG-TS service"),
+  .ic_doc        = tvh_doc_mpegts_service_class,
   .ic_order      = "enabled,channel,svcname",
   .ic_properties = (const property_t[]){
     {
