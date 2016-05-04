@@ -119,11 +119,15 @@ mpegts_mux_sched_class_cron_set ( void *p, const void *v )
   return 0;
 }
 
+CLASS_DOC(mpegts_mux_sched)
+PROP_DOC(cron)
+
 const idclass_t mpegts_mux_sched_class =
 {
   .ic_class      = "mpegts_mux_sched",
-  .ic_caption    = N_("Mux schedule entry"),
+  .ic_caption    = N_("Mux Scheduler"),
   .ic_event      = "mpegts_mux_sched",
+  .ic_doc        = tvh_doc_mpegts_mux_sched_class,
   .ic_changed    = mpegts_mux_sched_class_changed,
   .ic_save       = mpegts_mux_sched_class_save,
   .ic_delete     = mpegts_mux_sched_class_delete,
@@ -149,6 +153,7 @@ const idclass_t mpegts_mux_sched_class =
       .id       = "cron",
       .name     = N_("Cron"),
       .desc     = N_("Schedule frequency (in Cron format)."),
+      .doc      = prop_doc_cron,
       .off      = offsetof(mpegts_mux_sched_t, mms_cronstr),
       .set      = mpegts_mux_sched_class_cron_set,
     },
