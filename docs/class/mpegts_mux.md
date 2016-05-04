@@ -71,7 +71,7 @@ press the *[Edit]* button from the menu bar.
 
 ###Deleting a Mux
 
-To edit a mux highlight the desired mux from within the grid, and 
+To delete a mux highlight the desired mux from within the grid, and 
 press the *[Delete]* button from the menu bar. 
 
 Deleting a mux will also remove any associated services, including 
