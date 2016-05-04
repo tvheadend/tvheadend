@@ -98,7 +98,7 @@ If you select more than one service from within the grid the
 
 !['Edit multiple services'](docresources/serviceedit2.png)
 
-Ticking the additional check box (next to each setting) will apply that 
+Ticking the additional check box (before each setting) will apply that 
 setting to all selected services.
 
 ---
