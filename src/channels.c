@@ -358,9 +358,12 @@ channel_class_epg_running_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+CLASS_DOC(channel)
+
 const idclass_t channel_class = {
   .ic_class      = "channel",
-  .ic_caption    = N_("Channel"),
+  .ic_caption    = N_("Channels"),
+  .ic_doc        = tvh_doc_channel_class,
   .ic_event      = "channel",
   .ic_changed    = channel_class_changed,
   .ic_save       = channel_class_save,

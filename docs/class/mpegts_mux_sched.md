@@ -32,6 +32,8 @@ which can also be seen in the grid view:
 
 !['Mux Add/Edit Example'](docresources/configdvbmuxsched1.png)
 
+**Tip**: You can also edit entries directly within the grid.
+
 ---
 
 ###Deleting an Entry
