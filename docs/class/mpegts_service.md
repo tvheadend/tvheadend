@@ -14,7 +14,7 @@ Button           | Function
 **Undo**         | Undo any changes made since the last save.
 **Edit**         | Edit an existing service.
 **Delete**       | Delete a service.
-**Map Selected** | Drop down menu: Map selected services, map the highlighted services within the grid. Map all services, map all available services as channels. Both options use the *Map services to channels* dialog. 
+**Map Services** | Drop down menu: Map selected services, map the highlighted services within the grid. Map all services, map all available services as channels. Both options use the *Map services to channels* dialog. 
 **View Level**   | Change the interface view level to show/hide more advanced options.
 **Help**         | Displays this help page. 
 
@@ -86,7 +86,7 @@ you'd like to associate/disassociate the service with.
 
 ---
 
-###Editing Services.
+###Editing Services
 
 You can edit services by highlighting (selecting) the services from 
 within the grid and then clicking the *[Edit]* button from the menu bar.
@@ -100,5 +100,16 @@ If you select more than one service from within the grid the
 
 Ticking the additional check box (before each setting) will apply that 
 setting to all selected services.
+
+---
+
+###Deleting Services
+
+You can delete services by selecting them from within the grid, and then 
+pressing the *[Delete]* button from the menu bar.
+
+**Tip**: You can select all services within the grid by pressing ctrl+A. 
+You can also ctrl+click to make additional selections, or shift+click to 
+select a range. 
 
 ---
