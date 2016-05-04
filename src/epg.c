@@ -186,16 +186,26 @@ static void _epg_object_set_updated ( void *o )
   }
 }
 
-static int _epg_object_set_grabber ( void *o, epggrab_module_t *grab )
+static int _epg_object_can_remove ( void *_old, void *_new )
 {
-  epg_object_t *eo = o;
-  if (!grab) return 1; // grab=NULL is override
-  if (!eo->grabber ||
-      ((eo->grabber != grab) && (grab->priority > eo->grabber->priority))) {
-    eo->grabber = grab;
-    return 1;
-  }
-  return grab == eo->grabber;
+  epggrab_module_t *ograb, *ngrab;
+  ngrab = ((epg_object_t *)_new)->grabber;
+  if (ngrab == NULL) return 0;
+  ograb = ((epg_object_t *)_old)->grabber;
+  if (ograb == NULL || ograb == ngrab) return 1;
+  if (ngrab->priority > ograb->priority) return 1;
+  return 0;
+}
+
+static int _epg_object_set_grabber ( void *o, epggrab_module_t *ngrab )
+{
+  epggrab_module_t *ograb;
+  if (!ngrab) return 1; // grab=NULL is override
+  ograb = ((epg_object_t *)o)->grabber;
+  if (ograb == ngrab) return 1;
+  if (ograb && ograb->priority >= ngrab->priority) return 0;
+  ((epg_object_t *)o)->grabber = ngrab;
+  return 1;
 }
 
 static void _epg_object_create ( void *o )
@@ -1662,6 +1672,11 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   /* Remove overlapping (before) */
   while ((ebc = RB_PREV(ret, sched_link)) != NULL) {
     if (ebc->stop <= ret->start) break;
+    if (!_epg_object_can_remove(ebc, ret)) {
+      tvhtrace("epg", "grabber for event %u has lower priority than overlap (b), removing", ebc->id);
+      _epg_channel_rem_broadcast(ch, ret, NULL);
+      return NULL;
+    }
     tvhtrace("epg", "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
              ebc->id, epg_broadcast_get_title(ebc, NULL),
              channel_get_name(ch), ebc->start, ebc->stop);
@@ -1671,6 +1686,11 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   /* Remove overlapping (after) */
   while ((ebc = RB_NEXT(ret, sched_link)) != NULL) {
     if (ebc->start >= ret->stop) break;
+    if (!_epg_object_can_remove(ebc, ret)) {
+      tvhtrace("epg", "grabber for event %u has lower priority than overlap (a), removing", ebc->id);
+      _epg_channel_rem_broadcast(ch, ret, NULL);
+      return NULL;
+    }
     tvhtrace("epg", "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
              ebc->id, epg_broadcast_get_title(ebc, NULL),
              channel_get_name(ch), ebc->start, ebc->stop);
