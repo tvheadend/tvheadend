@@ -41,3 +41,8 @@ a {
 .hts-doc-text tr:nth-child(even) {
     background-color: #404046;
 }
+
+.x-progress-text-back {
+    color: #fff;
+}
+
