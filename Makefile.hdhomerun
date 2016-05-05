@@ -22,6 +22,12 @@ include $(DIR)/.config.mk
 unexport CFLAGS
 unexport LDFLAGS
 
+ifeq ($(CONFIG_PIE),yes)
+CFLAGS += -fPIE
+else
+CFLAGS += -fPIC
+endif
+
 # ###########################################################################
 # Upstream Packages
 # ###########################################################################

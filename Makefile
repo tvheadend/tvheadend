@@ -29,6 +29,11 @@ LANGUAGES ?= bg cs da de en_US en_GB es et fa fi fr he hr hu it lv nl pl pt ru s
 #
 
 CFLAGS  += -g -O2 -fPIE
+ifeq ($(CONFIG_PIE),yes)
+CFLAGS  += -fPIE
+else
+CFLAGS  += -fPIC
+endif
 ifeq ($(CONFIG_W_UNUSED_RESULT),yes)
 CFLAGS  += -Wunused-result
 endif
