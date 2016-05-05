@@ -22,6 +22,11 @@
 #include "idnode.h"
 #include "htsmsg.h"
 #include "api.h"
+#if ENABLE_ANDROID
+#ifndef pthread_yield
+#define pthread_yield() sched_yield()
+#endif
+#endif
 
 htsmsg_t *
 api_idnode_flist_conf( htsmsg_t *args, const char *name )
