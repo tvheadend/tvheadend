@@ -46,10 +46,10 @@ YASM_TB        = $(YASM).tar.gz
 YASM_URL       = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
 YASM_SHA1      = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
-LIBX264        = x264-snapshot-20160217-2245
+LIBX264        = x264-snapshot-20160502-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.via.ecp.fr/pub/videolan/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = e3b9d6f3372c9052fac3bffe7175518bb269a359
+LIBX264_SHA1   = 90c48dab878520a819905880bc4912834fe694fb
 LIBX264_DIFFS  = libx264.configure.diff
 
 LIBX265        = x265_1.9
@@ -94,10 +94,10 @@ LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
 LIBMFX_SHA1    = 84dbdf4a6b409067e863eb9564bb2efdec6d39ce
 LIBMFX_DIFFS   = libmfx.linux.path.diff
 
-FFMPEG         = ffmpeg-3.0
+FFMPEG         = ffmpeg-3.0.2
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = daa827a8d1b7d5be418087165a55bdad5197f9d5
+FFMPEG_SHA1    = c40731a221fbfaa50671d69fe894bedd664f91e2
 
 
 # ##############################################################################
