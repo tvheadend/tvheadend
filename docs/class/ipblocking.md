@@ -5,32 +5,13 @@ are not allowed to login (use any Tvheadend service).
 
 ---
 
-###Menu Bar/Buttons
-
-The tab has the following buttons:
-
-Button                 | Function
------------------------|-------------------
-**Save**               | Save any changes made to the grid/entries.
-**Undo**               | Revert any changes made since the last save.
-**Add**                | Display the *Add IP Blocking Record* dialog.
-**Delete**             | Delete the selected entry/entries.
-**Edit**               | Edit the selected entry.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**               | Display this help page.
+<tvh_include>inc/buttons1</tvh_include>
 
 ---
 
-###Adding and Editing an Entry/Record
+<tvh_include>inc/add1</tvh_include>
 
-To add an entry press the *[Add]* button from the menu bar. 
-
-To edit an entry highlight the desired entry within the grid, and 
-then press the *[Edit]* button from the menu bar.
-
-!['Add Record Dialog'](docresources/accessipblockingedit.png)
-
-Note that both the *[Add]* and *[Edit]* buttons display similar dialogs.
+!['Add Entries Dialog'](docresources/accessipblockingedit.png)
 
 **Tip**: You can enter a comma-separated list of network prefixes, if you're 
 unsure as to what to enter in the *Network prefix* field take a look at 
@@ -38,12 +19,6 @@ unsure as to what to enter in the *Network prefix* field take a look at
 
 ---
 
-### Deleting an Entry.
-
-To delete an entry highlight (select) the entry from the grid, then press
-the *[Delete]* button from the menu bar.
-
-**Tip**: Rather than deleting an entry, you can disable it instead by 
-pressing the *[Edit]* button, and unticking the "Enabled" check box.
+<tvh_include>inc/del1</tvh_include>
 
 ---

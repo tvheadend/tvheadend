@@ -198,6 +198,8 @@ class TVH_C_Renderer(Renderer):
     if a: return a
     a = self.extra_cmd(text, 'tvh_class_items', 'i')
     if a: return a
+    a = self.extra_cmd(text, 'tvh_include', 'I')
+    if a: return a
     fatal('Block HTML not allowed: ' + repr(text))
 
   def inline_html(self, text):
@@ -384,15 +386,17 @@ def optimize(text):
         if x: r += lang(x)
         x = ''
         n += t
-      elif type == 'd' or type == 'i':
+      elif type in ['d', 'i', 'I']:
         if n: r += nolang(n)
         if x: r += lang(x)
         n = ''
         x = ''
         if type == 'd':
           r += 'DOCINCPREF "' + t + '",\n'
-        else:
+        elif type == 'i':
           r += 'ITEMSINCPREF "' + t + '",\n'
+        else:
+          r += 'MDINCLUDE "' + t + '",\n'
       text = text[p+l+1:]
     if x: r += lang(x)
     x = ''
@@ -400,6 +404,18 @@ def optimize(text):
   if n: r += nolang(n)
   if x: r += lang(x)
   return r
+
+#
+#
+#
+
+def dopages(pages):
+  print("\n\nconst struct tvh_doc_page tvh_doc_markdown_pages[] = {")
+  for page in pages.split(' '):
+    if not page: continue
+    print("  { \"%s\", tvh_doc_root_%s }," % (page, page.replace('/', '_')))
+  print("  { NULL, NULL },")
+  print("};")
 
 #
 #
@@ -426,12 +442,17 @@ def argv_get(what):
 
 HUMAN=argv_get('human')
 DEBUG=argv_get('debug')
+pages = argv_get('pages')
+if pages:
+  dopages(pages)
+  sys.exit(0)
 input = argv_get('in')
 if not input:
   fatal('Specify input file.')
 name = argv_get('name')
 if not name:
   fatal('Specify class name.')
+name = name.replace('/', '_')
 
 fp = utf8open(input, 'r')
 text = fp.read(1024*1024*2)

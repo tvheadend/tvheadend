@@ -22,6 +22,7 @@
 #include "http.h"
 #include "docs.h"
 
+static int md_doc(htsbuf_queue_t *hq, const char **doc, const char *lang, int nl);
 static int md_class(htsbuf_queue_t *hq, const char *clazz, const char *lang,
                     int hdr, int docs, int props);
 
@@ -164,6 +165,7 @@ md_props(htsbuf_queue_t *hq, htsmsg_t *m, const char *lang, int nl)
 static void
 md_render(htsbuf_queue_t *hq, const char *doc, const char *lang)
 {
+  const struct tvh_doc_page *page;
   if (doc[0] == '\xff') {
     switch (doc[1]) {
     case 1:
@@ -174,6 +176,14 @@ md_render(htsbuf_queue_t *hq, const char *doc, const char *lang)
       break;
     case 3:
       md_class(hq, doc + 2, lang, 0, 0, 1);
+      break;
+    case 4:
+      for (page = tvh_doc_markdown_pages; page->name; page++)
+        if (!strcmp(page->name, doc + 2)) {
+          if (page->strings)
+            md_doc(hq, page->strings, lang, 0);
+          break;
+        }
       break;
     }
   } else {

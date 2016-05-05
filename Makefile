@@ -545,10 +545,12 @@ MD-TO-C    = PYTHONIOENCODING=utf-8 $(PYTHON) support/doc/md_to_c.py
 SRCS-yes   += src/docs.c
 I18N-C-DOCS = src/docs_inc.c
 I18N-DOCS   = $(wildcard docs/markdown/*.md)
+I18N-DOCS  += $(wildcard docs/markdown/inc/*.md)
 I18N-DOCS  += $(wildcard docs/class/*.md)
 I18N-DOCS  += $(wildcard docs/property/*.md)
 I18N-DOCS  += $(wildcard docs/wizard/*.md)
 MD-ROOT     = $(patsubst docs/markdown/%.md,%,$(wildcard docs/markdown/*.md))
+MD-ROOT    += $(patsubst docs/markdown/inc/%.md,inc/%,$(wildcard docs/markdown/inc/*.md))
 MD-CLASS    = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
 MD-PROP     = $(patsubst docs/property/%.md,%,$(wildcard docs/property/*.md))
 MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(wildcard docs/wizard/*.md))
@@ -684,12 +686,7 @@ $(BUILDDIR)/docs-timestamp: $(I18N-DOCS) support/doc/md_to_c.py
 	   $(MD-TO-C) --in="docs/wizard/$${i}.md" \
 	              --name="tvh_doc_wizard_$${i}" >> src/docs_inc.c || exit 1; \
 	 done
-	@printf "\n\nconst struct tvh_doc_page tvh_doc_markdown_pages[] = {\n" >> src/docs_inc.c
-	@for i in $(MD-ROOT); do \
-	   echo "  { \"$${i}\", tvh_doc_root_$${i} }," >> src/docs_inc.c || exit 1; \
-	 done
-	@echo "  { NULL, NULL }," >> src/docs_inc.c || exit 1
-	@echo "};" >> src/docs_inc.c
+	@$(MD-TO-C) --pages="$(MD-ROOT)" >> src/docs_inc.c
 	@touch $@
 
 src/docs_inc.c: $(BUILDDIR)/docs-timestamp
