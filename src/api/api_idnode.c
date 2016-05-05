@@ -628,8 +628,6 @@ api_idnode_handler
     if (!(uuid = htsmsg_field_get_str(f)))
       return EINVAL;
 
-  pthread_mutex_lock(&global_lock);
-
   /* Multiple */
   if (uuids) {
     const idnodes_rb_t *domain = NULL;
@@ -642,6 +640,7 @@ api_idnode_handler
       if ((in = idnode_find(uuid, NULL, domain)) != NULL) {
         domain = in->in_domain;
         if (idnode_perm(in, perm, msg)) {
+          pthread_mutex_unlock(&global_lock);
           pcnt++;
           continue;
         }
