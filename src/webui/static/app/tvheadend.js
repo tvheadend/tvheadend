@@ -417,6 +417,16 @@ tvheadend.niceDate = function(dt) {
            '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
 }
 
+/*
+ *
+ */
+tvheadend.playLink = function(link, title) {
+    if (title) title = '?title=' + encodeURIComponent(title);
+    return '<a href="' + link + title + '">' +
+           '<img src="static/icons/control_play.png" class="playlink" title="' +
+           _('Play this stream') + '" alt="' + _('Play') + '"/></a>';
+}
+
 /**
  * Displays a mediaplayer using the html5 video element
  */

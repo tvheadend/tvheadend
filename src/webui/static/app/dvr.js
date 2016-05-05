@@ -451,8 +451,7 @@ tvheadend.dvr_finished = function(panel, index) {
                     var title = r.data['disp_title'];
                     if (r.data['episode'])
                         title += ' / ' + r.data['episode'];
-                    return '<a href="play/dvrfile/' + r.id +
-                           '?title=' + encodeURIComponent(title) + '">' + _('Play') + '</a>';
+                    return tvheadend.playLink('play/dvrfile/' + r.id, title);
                 }
             }],
         tbar: [downloadButton, rerecordButton, moveButton],
@@ -589,8 +588,7 @@ tvheadend.dvr_failed = function(panel, index) {
                     var title = r.data['disp_title'];
                     if (r.data['episode'])
                         title += ' / ' + r.data['episode'];
-                    return '<a href="play/dvrfile/' + r.id +
-                           '?title=' + encodeURIComponent(title) + '">' + _('Play') + '</a>';
+                    return tvheadend.playLink('play/dvrfile/' + r.id, title);
                 }
             }],
         tbar: [downloadButton, rerecordButton, moveButton],

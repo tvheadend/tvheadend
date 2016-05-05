@@ -984,6 +984,13 @@
     font-weight: bold;
 }
 
+.playlink {
+    margin: -1px;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
 /** vim: ts=4:sw=4:nu:fdc=4:nospell 
  *
  * Ext.ux.grid.RowActions.css 
