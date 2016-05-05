@@ -9,7 +9,7 @@ are not allowed to login (use any Tvheadend service).
 
 ---
 
-<tvh_include>inc/add1</tvh_include>
+<tvh_include>inc/add_grid_entry</tvh_include>
 
 !['Add Entries Dialog'](docresources/accessipblockingedit.png)
 
@@ -19,6 +19,10 @@ unsure as to what to enter in the *Network prefix* field take a look at
 
 ---
 
-<tvh_include>inc/del1</tvh_include>
+<tvh_include>inc/edit_grid_entries</tvh_include>
+
+---
+
+<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
