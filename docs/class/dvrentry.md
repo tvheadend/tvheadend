@@ -1,44 +1,80 @@
-DVR entries are used by Tvheadend to keep track of upcoming/current, finished 
-and failed recordings.
+DVR entries are how Tvheadend manages upcoming/current, finished and 
+failed recordings.
 
 !['Digital Video Recorder' Tabs](docresources/configdvrtabs4.png)
 
-  * Upcoming and currently recording entries remain in the *[Upcoming/Current Recordings](#dvr-upcoming-current-recordings)* tab.
-  * When a recording completes successfully the entry is moved to the *[Finished Recordings](#dvr-finished-recordings)* tab.
-  * When a recording fails or gets aborted the entry is moved to the *[Failed Recordings](#dvr-failed-recordings)* tab.
-  
-**Some entry details are not available/incomplete until the recording 
-completes or fails, e.g. filesize, total data errors, etc.**
+Each entry is moved between the tabs depending on its state:
 
----
+* Upcoming and currently recording entries remain in 
+the *Upcoming/Current Recordings* tab.
+* When a recording completes successfully the entry is moved to 
+the *Finished Recordings* tab.
+* When a recording fails (or is aborted) the entry is moved to 
+the *Failed Recordings* tab.
 
-##DVR - Upcoming/Current Recordings
+Please note that the grid in each tab may have different columns and 
+not all entry information is available until it completes or fails, 
+e.g filesize, total data errors, etc.
 
-This tab shows your all upcoming/current recording entries.
+The *Details* column gives a quick overview as to the status of each 
+entry:
 
-!['Upcoming/Current Recordings' Tab](docresources/upcomingrecordings1.png)
+Icon                                       | Description
+-------------------------------------------|-------------
+![Clock icon](icons/scheduled.png)         | the program is scheduled (upcoming)
+![Recording icon](icons/rec.png)           | recording of the program is active and underway (current)
+![Information icon](icons/information.png) | click to display detailed information about the selected recording
+![Exclamation icon](icons/exclamation.png) | the program failed to record
+![Accept icon](icons/accept.png)           | the program recorded successfully
 
 ---
 
 ###Menu Bar/Buttons
 
-The tab has the following buttons:
+The following functions are available:
 
-Button                 | Function
------------------------|-------------------
-**Save**               | Save any changes made to the grid/entries.
-**Undo**               | Revert any changes made since the last save.
-**Add**                | Display the *Add Entry* dialog.
-**Delete**             | Delete the selected entry/entries.
-**Edit**               | Edit the selected entry.
-**Stop**               | Gracefully stop the selected (in-progress) recording/entry.
-**Abort**              | Stop the selected (in-progress) recording/entry.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**               | Display this help page.
+Button                       | Function
+-----------------------------|---------
+**Delete**                   | Delete the selected grid entries.
+**Edit**                     | Edit the selected grid entries.
+**View Level**               | Change the interface view level to show/hide more advanced options.
+
+The following functions are only available in the 
+**Upcoming/Current Recordings** tab.
+
+Button                       | Function
+-----------------------------|---------
+**Add**                      | Add a new (one-time-only) recording entry.
+**Save**                     | Save changes made to the grid entries.
+**Undo**                     | Revert all changes made to the grid entries since the last save.
+**Stop**                     | Gracefully stop the selected in-progress recording entries.
+**Abort**                    | Abruptly stop the selected in-progress recording entries. 
+
+The following functions are only available in the **Finished Recordings** 
+and **Failed Recordings** tabs:
+
+Button                       | Function
+-----------------------------|---------
+**Download**                 | Download the recording.
+**Re-record**                | Re-schedule the selected entry/recording if possible.
+
+The following functions are only available in the **Finished Recordings** 
+tab.
+
+Button                       | Function
+-----------------------------|---------
+**Move to failed**           | Move the selected recording entries to the **Failed Recordings** tab.
+
+The following functions are only available in the **Failed Recordings** 
+tab.
+
+Button                       | Function
+-----------------------------|---------
+**Move to finished**         | Move the selected recording entries to the *Finished Recordings* tab.
 
 ---
 
-###Adding and Editing an Entry 
+<tvh_include>inc/add_grid_entry</tvh_include>
 
 ####Adding an Entry Using the EPG
 
@@ -62,190 +98,39 @@ Autorec rules allow you to match events using various options.
 
 See [Autorec](class/dvrautorec) for more information.
 
+---
 
-####Adding a Timer Event
-
-You can set time-based entries using the [Timers](class/dvrtimerec) tab.
-
-####Manual Event Entry/Editing an Entry
-
-To add an entry press the *[Add]* button from the menu bar. 
-
-To edit an entry highlight the desired entry within the grid, and 
-then press the *[Edit]* button from the menu bar.
-
-A common set of fields is used for the _Add_ or _Edit_ dialogs, most
-of which can also be seen in the grid view:
-
-![Add/Edit Upcoming Recording](docresources/upcomingrecordings3.png)
-
-**Tip**: You can quickly make changes to an entry by double-clicking on 
-the desired field within the grid. See *Editing Fields* on the [Web interface Guide - General](webui_general) 
-page for details.
+<tvh_include>inc/edit_grid_entries</tvh_include>
 
 ---
 
-###Deleting an Entry/Stopping an In-progress Recording
-
-You can delete, stop or abort an upcoming (or an already in-progress) recording by pressing 
-the *[Delete]*, *[Stop]* or *[Abort]* button from the menu bar.
-
-* The *[Delete]* button completely removes the event and any associated file(s).
-* The *[Stop]* button gracefully stops an in-progress recording and moves it to the Finished Recordings tab.
-* The *[Abort]* button stops an already in-progress recording, moves the entry to the Failed Recordings and marks it as *Aborted by user*.  Note that this does not remove the (partial) recording file from disk.
-
-Note that only in-progress recording can be stopped or aborted.
-
-**Deleting an entry can't be undone, you will be prompted for confirmation.**
-
----
-
-##DVR - Finished Recordings
-
-This tab shows all your finished recording entries.
-
-!['Finished Recordings' Tab](docresources/finishedrecordings1.png)
-
----
-
-###Menu Bar/Buttons
-
-The tab has the following buttons:
-
-Button                 | Function
------------------------|-------------------
-**Delete**             | Delete the selected entry/recording.
-**Edit**               | Edit the selected entry/recording.
-**Download**           | Download the selected entry/recording.
-**Re-record**          | Re-schedule the selected entry/recording if possible.
-**Move to failed**     | Move the selected entry/entries to the *Failed Recordings* tab.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**               | Display this help page.
+<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
 
 ###Playing a Recording
 
-You can play a recording by clicking the *Play* link, 
-note that these links do not link to an actual file but to a playlist.
+You can play a recording by clicking the *Play* icon.
 This will automatically launch an appropriate player, otherwise you will
 need to manually open the playlist to start watching (normally a
 double-click on the downloaded file).
+
+Note that these are not links to an actual file but to a playlist.
 
 ---
 
 ###Downloading a Recording
 
-Highlight (select) the desired entry, then press the *[Download]* button on the 
-menu bar.
+Highlight (select) the desired entry, then press the *[Download]* 
+button on the menu bar.
 
 ---
 
-###Editing an Entry
-
-You can edit an entry by clicking the *[Edit]* button on the menu bar, 
-note that not all fields can be edited.
-
----
-
-###Moving an Entry/Recording
-
-Finished recordings can be moved to the *Failed Recordings* tab by 
-highlighting (selecting) the desired entry, and then pressing the *[Move to failed]*
-button from the menu bar.
-
----
-
-###Deleting an Entry/Recording
-
-Highlight (select) the desired entry(s), then press the *[Delete]* button on the 
-menu bar. 
-
-**Deleting can't be undone. You 
-will be prompted to confirm deletion.**
-
-**Tip**: You can highlight multiple entries by holding ctrl or shift 
-(to select a range) while clicking.
-
----
-
-##DVR - Failed Recordings
-
-This tab shows all failed recording entries.
-
-!['Failed Recordings' Tab](docresources/failedrecordings1.png)
-
----
-
-###Menu Bar/Buttons
-
-The tab has the following buttons:
-
-Button                 | Function
------------------------|-------------------
-**Delete**             | Delete the selected entry/recording.
-**Edit**               | Edit the selected entry/recording.
-**Download**           | Download the selected entry/recording.
-**Re-record**          | Re-schedule the selected entry/recording if possible.
-**Move to finished**   | Move the selected entry/entries to the *Finished Recordings* tab.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**               | Display this help page.
-
----
-
-###Playing a Failed Recording
-
-You can play a partial recording by clicking the *Play* link, 
-note that these links do not link to an actual file but to a playlist.
-This will automatically launch an appropriate player, otherwise you will
-need to manually open the playlist to start watching (normally a
-double-click on the downloaded file).
-
----
-
-###Downloading a Recording
-
-Highlight (select) the desired entry, then press the *[Download]* button on the menu bar.
-
----
-
-###Re-recording an Entry/Re-schedule a Failed Recording
+###Re-recording an Entry/Re-schedule a Recording
 
 You can re-schedule an entry by pressing the *[Re-record]* button on the menu bar.
 
 **Note**: Your EPG data must have another matching event to be able to re-schedule 
 the entry.
-
----
-
-###Moving an Entry/Recording
-
-Failed recordings can be moved to the *Finished Recordings* tab by 
-highlighting (selecting) the desired entry, and then pressing the *[Move to finished]*
-button from the menu bar.
-
----
-
-###Deleting an Entry/Recording
-
-Highlight (select) the desired entry(s), then press the *[Delete]* button on the menu bar. 
-
-**Deleting can't be undone. You will be prompted to confirm deletion.**
-
-**Tip**: You can highlight multiple entries by holding ctrl or shift 
-(to select a range) while clicking.
-
----
-  
-**Details** : Gives a quick overview as to the status of each entry.
-
-Icon                                       | Description
--------------------------------------------|-------------
-![Clock icon](icons/scheduled.png)         | the program is scheduled (upcoming)
-![Recording icon](icons/rec.png)           | recording of the program is active and underway (current)
-![Information icon](icons/information.png) | click to display detailed information about the selected recording
-![Exclamation icon](icons/exclamation.png) | the program failed to record
-![Accept icon](icons/accept.png)           | the program recorded successfully
 
 ---
