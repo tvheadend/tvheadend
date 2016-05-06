@@ -249,6 +249,8 @@ page_static_file(http_connection_t *hc, const char *_remain, void *opaque)
       nogzip = 1;
     else if(!strcmp(postfix, "jpg"))
       nogzip = 1;
+    else if(!strcmp(postfix, "png"))
+      nogzip = 1;
   }
 
   fb_file *fp = fb_open(path, 0, (nogzip || gzip) ? 0 : 1);
@@ -1736,8 +1738,7 @@ webui_static_content(const char *http_path, const char *source)
 static int
 favicon(http_connection_t *hc, const char *remain, void *opaque)
 {
-  http_redirect(hc, "static/htslogo.png", NULL, 0);
-  return 0;
+  return page_static_file(hc, "logo.png", (void *)"src/webui/static/img");
 }
 
 /**

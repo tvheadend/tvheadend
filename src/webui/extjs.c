@@ -98,6 +98,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_append_str(hq, "<html>\n");
   htsbuf_append_str(hq, "<head>\n");
 
+  htsbuf_append_str(hq, "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
   htsbuf_append_str(hq, "<meta name=\"apple-itunes-app\" content=\"app-id=638900112\">\n");
 
   if (tvheadend_webui_debug) {
@@ -111,7 +112,7 @@ extjs_root(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   extjs_exec(hq, "\
-Ext.BLANK_IMAGE_URL = \'" EXTJSPATH "/resources/images/default/s.gif';\r\n\
+Ext.BLANK_IMAGE_URL = \'" EXTJSPATH "/resources/images/default/s.gif';\n\
 Ext.onReady(tvheadend.app.init, tvheadend.app);\
 ");
 
@@ -158,6 +159,7 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_append_str(hq, "<!DOCTYPE html>\n");
   htsbuf_append_str(hq, "<html>\n");
   htsbuf_append_str(hq, "<head>\n");
+  htsbuf_append_str(hq, "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
   htsbuf_append_str(hq, "<title>");
   htsbuf_append_str(hq, config.server_name);
   htsbuf_append_str(hq, "</title>\n");
@@ -196,7 +198,7 @@ page_about(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_qprintf(hq, "<center class=\"about-tab\">\n\
 <div class=\"about-title\">HTS Tvheadend %s</div>\n\
 <p>&copy; 2006 - 2016 Andreas \303\226man, Jaroslav Kysela, Adam Sutton, et al.</p>\n\
-<p><img src=\"static/img/logobig.png\"></p>\n\
+<p><img width=\"25%%\" height=\"34%%\" src=\"static/img/logobig.png\"></p>\n\
 <p><a href=\"https://tvheadend.org\">https://tvheadend.org</a></p>\n",
     tvheadend_version);
 
