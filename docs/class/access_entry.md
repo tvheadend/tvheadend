@@ -13,66 +13,54 @@ to asterisk. Only network prefix is matched then.
 
 ---
 
-###Menu Bar/Buttons
+<tvh_include>inc/common_button_table_start</tvh_include>
 
-The tab has the following buttons:
+<tvh_include>inc/common_button_table_end</tvh_include>
+
+Entries are checked in order, the following 
+functions allows you to change the ordering:
 
 Button                 | Function
------------------------|-------------------
-**Save**               | Save any changes made to the grid/entries.
-**Undo**               | Revert any changes made since the last save.
-**Add**                | Display the *Add Access* dialog.
-**Delete**             | Delete the selected entry/entries.
+-----------------------|---------
 **Move Up**            | Move the selected entry up the grid.
-**Move Down**          | Move the selected entry down the grid.
-**Edit**               | Edit the selected entry.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**               | Display this help page.
+**Move Down**          | Move the selected entry down the grid. 
 
 ---
 
-### Adding an Entry/Creating an Account
+<tvh_include>inc/add_grid_entry</tvh_include>
 
-To create a new user, navigate to the *Configuration -> Users -> Access Entries*
-tab and click on the *[Add]* button from the menu bar, then using the 
-*Add Access Entry* dialog enter the *required* username and select the 
-desired rights options. 
+####An Example
+
+!['Access Entry Example'](docresources/accessentriesnewuser.png)
 
 If you would like to allow anonymous access to your Tvheadend 
 server you may set-up an anonymous account by entering an asterisk `*` 
-in the username field. **WARNING: All access rights given to an anonymous account also
-apply to subsequent accounts.**
-
-!['Access Entry Example'](docresources/accessentriesnewuser.png)
+in the username field. **WARNING: All access rights given to an 
+anonymous account also apply to subsequent accounts.**
 
 **Don't forget** to also create a password entry for the user in the 
 *[Passwords](class/passwd)* tab!
 
 **Tips**:
-* Be as limiting as possible especially when making Tvheadend available over the internet.
-* For extra security, always enter (a comma-separated list of) network prefix(es) (*Allowed networks* in the *Add Access Entry* dialog).
-* If you lock yourself out, you can use the backdoor account to regain access, or restart Tvheadend with the `--noacl` argument.
-* You can have multiple entries using the same username with varying rights, allowing you to enable / disable each as needed. Keep in mind that matching account entry permissions are combined.
-* If you do create an anonymous account, it also requires a [password](class/passwd) entry (enter an asterisk `*` for both the username and password fields when adding the entry).
----
-
-### Editing an Entry/Account
-
-To edit an entry highlight (select) the entry from the grid, then press 
-the *[Edit]* button from the menu bar.
-
-**Tip**: You can quickly make changes to an entry by double-clicking on 
-the desired field within the grid. See *Editing Fields* on the [Web interface Guide - General](webui_general) 
-page for details.
+* Be as limiting as possible especially when making Tvheadend available 
+over the Internet.
+* For extra security, always enter (a comma-separated list of) 
+network prefix(es) (*Allowed networks*).
+* If you lock yourself out, you can use the backdoor account to regain 
+access, or restart Tvheadend with the `--noacl` argument.
+* You can have multiple entries using the same username with varying 
+rights, allowing you to enable / disable each as needed. Keep in mind 
+that matching account entry permissions are combined.
+* If you create an anonymous account, it also requires 
+a [password](class/passwd) entry (enter an asterisk `*` for both the 
+username and password fields when adding the entry).
 
 ---
 
-### Deleting an Entry/Account.
+<tvh_include>inc/edit_grid_entries</tvh_include>
 
-To delete a user highlight (select) the entry from the grid, then press
-the *[Delete]* button from the menu bar.
+---
 
-**Tip**: Rather than deleting an entry, you can disable it instead by 
-pressing the *[Edit]* button, and unticking the "Enabled" check box.
+<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
