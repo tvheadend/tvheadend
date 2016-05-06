@@ -869,14 +869,16 @@
     color: darkred;
     font-family:  'Courier New', Courier, monospace;
     margin-left: 2em;
-    padding-bottom: 0px;
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-top: 0px;
+    padding: 3px 5px 0 5px;
     display: inline-block;
 }
 
 .hts-doc-text p code {
+    margin-left: 0;
+    display: initial;
+}
+
+.hts-doc-text li code {
     margin-left: 0;
     display: initial;
 }

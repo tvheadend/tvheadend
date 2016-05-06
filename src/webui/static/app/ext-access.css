@@ -30,6 +30,10 @@ a {
     color: #ffc033;
 }
 
+.hts-doc-text a {
+    color: #ff9c33;
+}
+
 .hts-doc-text th {
     background-color: white;
 }
@@ -40,6 +44,11 @@ a {
 
 .hts-doc-text tr:nth-child(even) {
     background-color: #404046;
+}
+
+.hts-doc-text code {
+    background-color: initial;
+    color: #ff9c33;
 }
 
 .x-progress-text-back {
