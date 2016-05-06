@@ -5,7 +5,9 @@ are not allowed to login (use any Tvheadend service).
 
 ---
 
-<tvh_include>inc/buttons1</tvh_include>
+<tvh_include>inc/common_button_table_start</tvh_include>
+
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 ---
 

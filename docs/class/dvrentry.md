@@ -37,7 +37,7 @@ Button                       | Function
 -----------------------------|---------
 **Delete**                   | Delete the selected grid entries.
 **Edit**                     | Edit the selected grid entries.
-**View Level**               | Change the interface view level to show/hide more advanced options.
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 The following functions are only available in the 
 **Upcoming/Current Recordings** tab.

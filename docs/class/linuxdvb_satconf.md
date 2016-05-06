@@ -12,7 +12,7 @@ The following buttons are available:
 Button         | Function
 ---------------|---------
 **Save**       | Save the current configuration.
-**Help**       | Display this help page. 
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 ---
 

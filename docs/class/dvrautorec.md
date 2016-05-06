@@ -4,34 +4,24 @@ This tab controls EPG-driven recording rules.
 
 ---
 
-###Menu Bar/Buttons
+<tvh_include>inc/common_button_table_start</tvh_include>
 
-The tab has the following buttons:
-
-Button                 | Function
------------------------|-------------------
-**Save**               | Save any changes made to the grid/entries.
-**Undo**               | Revert any changes made since the last save.
-**Add**                | Display the *Add Autorec* dialog.
-**Delete**             | Delete the selected entry/entries.
-**Edit**               | Edit the selected entry.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**               | Display this help page.
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 ---
 
-###Adding an Entry/Rule
+<tvh_include>inc/add_grid_entry</tvh_include>
 
-You can add an entry by pressing the *[Add]* button from the menu bar.
+####An Example
 
-For example, if you wanted to record any programs matching "BBC News" on 
+If you wanted to record any programs matching "BBC News" on 
 BBC One you would enter something like this into the add entry dialog: 
 
 !['Autorec' example entry](docresources/dvrautorecadd.png)
 
 This uses a regular expression (regex) to match the program title 
 "BBC News" exactly, otherwise event titles containing the phrase would 
-also match (e.g "BBC News at One", "BBC News at Six" etc).
+also match, e.g "BBC News at One" and "BBC News at Six" etc.
 
 Regular expressions examples:
 
@@ -47,20 +37,11 @@ automatically start being recorded.**
 
 ---
 
-###Editing an Entry
-
-Highlight (select) the desired entry within the grid, then click the *[Edit]* 
-button from the menu bar.
-
-**Tip**: You can quickly make changes to an entry by double-clicking on 
-the desired field within the grid. See *Editing Fields* on the [Web interface Guide - General](webui_general) 
-page for details.
+<tvh_include>inc/edit_grid_entries</tvh_include>
 
 ---
 
-###Deleting an Entry
-
-Highlight (select) the desired entry within the grid, then click the *[Delete]* 
-button from the menu bar.
+<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
+
