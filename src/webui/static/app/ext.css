@@ -993,6 +993,11 @@
     cursor: pointer;
 }
 
+.logobig {
+    width: 25%;
+    height: auto;
+}
+
 /** vim: ts=4:sw=4:nu:fdc=4:nospell 
  *
  * Ext.ux.grid.RowActions.css 
