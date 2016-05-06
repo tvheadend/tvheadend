@@ -361,6 +361,7 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
 		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
 		--with-ogg=$(EPREFIX) \
 		--disable-examples \
+		--disable-spec \
 		$(LIBTHEORA_HOST)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBTHEORA) install
