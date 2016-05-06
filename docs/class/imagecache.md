@@ -9,7 +9,7 @@ providers.
 
 ###Menu Bar/Buttons
 
-The following buttons are available:
+The following functions are available:
 
 Button                      | Function
 ----------------------------|-------------------

@@ -76,6 +76,15 @@ Button                       | Function
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
+Note that the *[Add]* functionality is only available in 
+the *Upcoming/Current Recordings* tab. 
+
+####Manual Recording Entry Example
+
+This is an example of a one-time recording entry:
+
+!['Add new recording dialog'](docresources/addnewrecentry.png)
+
 ####Adding an Entry Using the EPG
 
 Using the Electronic Program Guide search functionality, find the 

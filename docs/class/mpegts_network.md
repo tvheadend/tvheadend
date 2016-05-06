@@ -24,35 +24,36 @@ Click the desired network type (above) to see all available
 
 ---
 
-###Menu Bar/Buttons
+<tvh_include>inc/common_button_table_start</tvh_include>
 
-The following functions are available:
+<tvh_include>inc/common_button_table_end</tvh_include>
+
+The following tab specific buttons are available: 
 
 Button         | Function
 ---------------|---------
-**Save**       | Save any changes made to the network configuration.
-**Undo**       | Undo any changes made to the network configuration since the last save.
-**Add**        | Add a new network. You can choose from any of the types described above.
-**Delete**     | Delete an existing network. This will also remove any association with an adapter.
-**Edit**       | Edit an existing network. This allows you to change any of the parameters you’d otherwise set when adding a new network, e.g. network discovery, idle scan, etc. - similar to using the check boxes to enable/disable functions.
 **Force Scan** | Force a new scan (i.e. scan all muxes for services) for the selected networks.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**       | Displays this help page. 
 
 ---
 
-###Add/Edit a Network
+###Adding an Entry/Network
 
 To create a network click the *[Add]* button from the menu bar and 
-then select the required network type, then using the resultant dialog 
-enter/select the desired network options. To edit a network highlight 
-(select) the network within the grid, and then press the *[Edit]* 
-button from the menu bar.
+then select the required network type:
 
-A common set of fields is used for the _Add_ or _Edit_ functions, most
-of which can also be seen in the grid view:
+!['Network selection'](docresources/networktypeselect.png)
 
-!['Add/Edit Network' Dialog - DVB-S/2](docresources/dvbnetworkedit.png)
+Then using the resultant dialog enter/select the desired network 
+options. A common set of fields is used for the *[Add]* dialog, 
+most of which can be seen in the grid view. 
+
+!['Add new network'](docresources/addnewnetwork.png)
+
+Pressing the *[Save]* button (at the bottom of the dialog) 
+will commit your changes and close the dialog, pressing the *[Apply]* 
+button will commit your changes but won't close the dialog, pressing 
+the *[Cancel]* button closes the dialog - any unsaved changes will be 
+lost.
 
 **Notes**:
 
@@ -66,10 +67,20 @@ For more detailed information on networks and how to set them up, see
 
 ---
 
+<tvh_include>inc/edit_grid_entries</tvh_include>
+
+!['Add/Edit Network' Dialog - DVB-S/2](docresources/dvbnetworkedit.png)
+
+---
+
+<tvh_include>inc/del_grid_entries</tvh_include>
+
+---
+
 ###Force Scanning
 
-Highlight the network(s) you would like to force scan and then press 
-the "Force Scan" button from the menu bar.
+Highlight (select) the network(s) you would like to force scan, and 
+then press the "Force Scan" button from the menu bar.
 
 Force scanning can take some time. You may continue to use Tvheadend 
 while a scan is in progress, but doing so will increase the time needed 
@@ -77,14 +88,8 @@ for it to complete. Note that the time required can vary depending on a
 number of factors, such as how many tuners you have available and the 
 number of muxes on each.
 
-  **Tip**: You may select more than one network by holding ctrl and 
-  clicking on additional networks. 
+<tvh_include>inc/selecting_entries_tip</tvh_include>
 
----
-
-###Deleting a Network
-
-To delete a network highlight (select) the network within the grid, and then 
-press the *[Delete]* button.
+<tvh_include>inc/paging_tip</tvh_include>
 
 ---

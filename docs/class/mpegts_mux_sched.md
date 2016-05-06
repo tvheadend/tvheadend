@@ -28,7 +28,7 @@ To edit an entry highlight (select) the entry from within the grid, and press th
 *[Edit]* button from the menu bar.
 
 A common set of fields is used for the Add or Edit functions, most of 
-which can also be seen in the grid view:
+which can be seen in the grid view:
 
 !['Mux Add/Edit Example'](docresources/configdvbmuxsched1.png)
 

@@ -35,7 +35,7 @@ Button     | Function
 ####Add/Edit Dialog Example
 
 A common set of fields is used for the _Add_ or _Edit_ functions, most
-of which can also be seen in the grid view:
+of which can be seen in the grid view:
 
 !['Add/Edit Stream Profiles' Dialog - mkv](docresources/configstreamprofiles1.png)
 

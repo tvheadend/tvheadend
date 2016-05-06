@@ -17,7 +17,7 @@ to asterisk. Only network prefix is matched then.
 
 <tvh_include>inc/common_button_table_end</tvh_include>
 
-Entries are checked in order, the following 
+Entries are checked in order (when logging in, etc), the following 
 functions allows you to change the ordering:
 
 Button                 | Function
@@ -28,8 +28,6 @@ Button                 | Function
 ---
 
 <tvh_include>inc/add_grid_entry</tvh_include>
-
-####An Example
 
 !['Access Entry Example'](docresources/accessentriesnewuser.png)
 

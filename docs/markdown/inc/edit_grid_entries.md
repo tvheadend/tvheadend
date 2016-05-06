@@ -2,9 +2,9 @@
 
 There are two methods to editing an entry.
 
-**Tip**: You can select all entries within the grid by pressing ctrl+A. 
-You can also ctrl+click to make additional selections, or shift+click to 
-select a range. 
+<tvh_include>inc/selecting_entries_tip</tvh_include>
+
+<tvh_include>inc/paging_tip</tvh_include>
 
 ####Editing in the Grid
 
@@ -22,7 +22,7 @@ can now be kept (*[Save]* button), or abandoned (*[Undo]* button).
 Highlight (select) the entries in the grid that you'd like to edit, then 
 click the *[Edit]* button from the menu bar, the edit dialog should now 
 be displayed. A common set of fields is used for the edit dialog, most 
-of which can also be seen in the grid view. Note that when editing 
+of which can be seen in the grid view. Note that when editing 
 multiple entries there is an additional check box before each setting, 
 ticking it will apply that setting to all selected entries.
 
