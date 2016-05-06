@@ -105,10 +105,11 @@ Web Status Tab
 
 Appendices
 
-  - [Appendix 1 - FAQ](faqs)
-  - [Appendix 2 - Command-line Options](cmdline_options)
-  - [Appendix 3 - Debugging Options](debugging)
-  - [Appendix 4 - Updating this documentation](doc_update)
-  - [Appendix 5 - Markdown Cribsheet](markdown_cribsheet)
+  - [Appendix 1 - URL syntax (Exports)](url)
+  - [Appendix 2 - FAQ](faqs)
+  - [Appendix 3 - Command-line Options](cmdline_options)
+  - [Appendix 4 - Debugging Options](debugging)
+  - [Appendix 5 - Updating this documentation](doc_update)
+  - [Appendix 6 - Markdown Cribsheet](markdown_cribsheet)
 
 [About](about)
