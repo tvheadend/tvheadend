@@ -377,7 +377,7 @@ tvheadend.IdNodeField = function(conf)
             return function(v) {
                 if (v > 0) {
                     var dt = new Date(v * 1000);
-                    var wd = dt.toLocaleString(window.navigator.language, {weekday: 'short'});
+                    var wd = dt.toLocaleString(tvheadend.language, {weekday: 'short'});
                     return wd + ' ' + dt.toLocaleString();
                 }
                 return '';

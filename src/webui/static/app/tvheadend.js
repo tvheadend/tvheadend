@@ -10,6 +10,7 @@ tvheadend.wizard = null;
 tvheadend.docs_toc = null;
 tvheadend.doc_history = [];
 tvheadend.doc_win = null;
+tvheadend.language = window.navigator.userLanguage || window.navigator.language;
 
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
@@ -412,7 +413,7 @@ Ext.Ajax.request({
  */
 tvheadend.niceDate = function(dt) {
     var d = new Date(dt);
-    return '<div class="x-nice-dayofweek">' + d.toLocaleString(window.navigator.language, {weekday: 'long'}) + '</div>' +
+    return '<div class="x-nice-dayofweek">' + d.toLocaleString(tvheadend.language, {weekday: 'long'}) + '</div>' +
            '<div class="x-nice-date">' + d.toLocaleDateString() + '</div>' +
            '<div class="x-nice-time">' + d.toLocaleTimeString() + '</div>';
 }
