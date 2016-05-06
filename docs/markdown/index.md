@@ -1,6 +1,6 @@
 #Tvheadend 4.2 User Guide
 
-![Tvheadend Logo](images/logobig.png)
+![Tvheadend Logo](images/logomid.png)
 
 #Purpose
 
