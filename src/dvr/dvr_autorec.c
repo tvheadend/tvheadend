@@ -1041,7 +1041,9 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "channel",
       .name     = N_("Channel"),
       .desc     = N_("The channel on which this rule applies, i.e. the "
-                     "channel you're aiming to record."),
+                     "channel you're aiming to record. You can leave "
+                     "this field blank to apply the rule to all "
+                     "channels."),
       .set      = dvr_autorec_entry_class_channel_set,
       .get      = dvr_autorec_entry_class_channel_get,
       .rend     = dvr_autorec_entry_class_channel_rend,
