@@ -16,17 +16,6 @@ Please note that the grid in each tab may have different columns and
 not all entry information is available until it completes or fails, 
 e.g filesize, total data errors, etc.
 
-The *Details* column gives a quick overview as to the status of each 
-entry:
-
-Icon                                       | Description
--------------------------------------------|-------------
-![Clock icon](icons/scheduled.png)         | the program is scheduled (upcoming)
-![Recording icon](icons/rec.png)           | recording of the program is active and underway (current)
-![Information icon](icons/information.png) | click to display detailed information about the selected recording
-![Exclamation icon](icons/exclamation.png) | the program failed to record
-![Accept icon](icons/accept.png)           | the program recorded successfully
-
 ---
 
 ###Menu Bar/Buttons
@@ -71,6 +60,21 @@ tab.
 Button                       | Function
 -----------------------------|---------
 **Move to finished**         | Move the selected recording entries to the *Finished Recordings* tab.
+
+---
+
+###Entry Overview
+
+The *Details* column gives a quick overview as to the status of each 
+entry:
+
+Icon                                       | Description
+-------------------------------------------|-------------
+![Clock icon](icons/scheduled.png)         | the program is scheduled (upcoming)
+![Recording icon](icons/rec.png)           | recording of the program is active and underway (current)
+![Information icon](icons/information.png) | click to display detailed information about the selected recording
+![Exclamation icon](icons/exclamation.png) | the program failed to record
+![Accept icon](icons/accept.png)           | the program recorded successfully
 
 ---
 
