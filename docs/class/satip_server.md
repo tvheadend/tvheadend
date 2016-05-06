@@ -18,14 +18,13 @@ win (also for unknown mux).
 
 ###Menu Bar/Buttons
 
-The tab has the following buttons:
+The following buttons are available:
 
 Button                      | Function
 ----------------------------|-------------------
 **Save**                    | Save all changes.
 **Undo**                    | Revert all changes since last save.
 **Discover SAT\>IP servers**| Attempt to discover more SAT>IP servers on the network.
-**View Level**| Change the interface view level to show/hide more advanced options.
-**Help**                    | Display this help page.
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 ---
