@@ -8,7 +8,7 @@ The adapters and tuners are listed and edited in a tree.
 
 ###Buttons
 
-The following buttons are available:
+The following functions are available:
 
 Button         | Function
 ---------------|---------
