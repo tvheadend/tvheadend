@@ -300,9 +300,11 @@ static htsmsg_t *
 satip_frontend_dvbs_class_master_enum( void * self, const char *lang )
 {
   satip_frontend_t *lfe = self, *lfe2;
-  satip_device_t *sd = lfe->sf_device;
   htsmsg_t *m = htsmsg_create_list();
   htsmsg_add_str(m, NULL, N_("This tuner"));
+  if (lfe == NULL)
+    return m;
+  satip_device_t *sd = lfe->sf_device;
   TAILQ_FOREACH(lfe2, &sd->sd_frontends, sf_link)
     if (lfe2 != lfe && lfe2->sf_type == lfe->sf_type)
       htsmsg_add_str(m, NULL, lfe2->mi_name);
