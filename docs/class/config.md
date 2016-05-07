@@ -7,7 +7,7 @@ the core Tvheadend functionality.
 
 ###Menu Bar/Buttons
 
-The the following functions are available:
+The following functions are available:
 
 Button                 | Function
 -----------------------|-------------------

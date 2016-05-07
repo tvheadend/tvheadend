@@ -4,20 +4,18 @@ Services are automatically pulled from muxes and can be mapped to Channels.
 
 ---
 
-###Menu Bar/Buttons
-
-The following functions are available:
-
-
 <tvh_include>inc/common_button_table_start</tvh_include>
 
 <tvh_include>inc/common_button_table_end</tvh_include>
 
 The following tab specific buttons are available: 
 
-Button         | Function
----------------|---------
-**Map Services** | Drop down menu: Map selected services, map the highlighted services within the grid. Map all services, map all available services as channels. Both options use the *Map services to channels* dialog. 
+Button                     | Function
+---------------------------|---------
+**Map Services**           | Drop down menu: 
+↓                          | ↓ 
+**Map selected services**  | Map the highlighted services within the grid. 
+**Map all services**       | Map all available services as channels. 
 
 ---
 
