@@ -716,6 +716,10 @@
 
 .x-wizard-icon {
     float: right;
+    margin: 0px auto;
+    border: none;
+    padding: 5px;
+    max-width: 25%
 }
 
 .x-wizard-description {

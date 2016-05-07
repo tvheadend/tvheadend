@@ -42,7 +42,7 @@ static const void *empty_get(void *o)
 
 static const void *icon_get(void *o)
 {
-  strcpy(prop_sbuf, "static/img/logowizard.png");
+  strcpy(prop_sbuf, "static/img/logobig.png");
   return &prop_sbuf_ptr;
 }
 
