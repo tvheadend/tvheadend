@@ -227,6 +227,16 @@ tvheadend.mdhelp = function(pagename) {
         tvheadend.doc_win = win;
     }
 
+    var helpfailuremsg = function() { 
+        Ext.MessageBox.show({
+            title:_('Error'),
+            msg: _('There was a problem displaying the help page!') + '<br>' + 
+                 _('This usually means there is no help available or the document couldn\'t be loaded.'),
+            buttons: Ext.Msg.OK,
+            icon: Ext.MessageBox.ERROR,
+        });
+    }
+
     Ext.Ajax.request({
         url: 'markdown/' + pagename,
         success: function(result) {
@@ -236,12 +246,14 @@ tvheadend.mdhelp = function(pagename) {
                     success: function(result_toc) {
                         tvheadend.docs_toc = parse(result_toc.responseText);
                         fcn(result);
-                    }
+                    },
+                    failure: helpfailuremsg,
                 });
             } else {
                 fcn(result);
             }
-        }
+        },
+        failure: helpfailuremsg,
     });
 };
 
