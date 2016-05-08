@@ -5,14 +5,6 @@ parameters.
 
 ---
 
-* Other Frontends
-  - [Master](class/linuxdvb_frontend_dvbs)
-  - [Master (ISDB-S)](class/linuxdvb_frontend_isdb_s)
-  - [Slave](class/linuxdvb_frontend_dvbs_slave)
-* Back to [TV Adapters](tv_adapters) 
-
----
-
 ###Buttons
 
 The following buttons are available:
