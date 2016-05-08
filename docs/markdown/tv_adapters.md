@@ -21,7 +21,7 @@ Button         | Function
 
 The device tree lists the available frontends, LNB configuration and 
 so on related to your device(s) in sections. Clicking on these sections 
-will display all available parameters and various device information.
+will display available parameters and device information.
 
 !['TV Adapter params'](static/img/doc/tvadapterparams.png)
 
@@ -29,20 +29,11 @@ will display all available parameters and various device information.
 
 ---
 
-##Device Configuration Options
+###Device Configuration
 
-You will generally see the following parameters for your device(s), however 
-there are device-specific parameters too, see 
-[Device-specific Parameters](#device-specific-parameters) for a full 
-list.
+Click on an item to display more information.
 
-<tvh_class_items>linuxdvb_frontend</tvh_class_items>
-
----
-
-##Device-specific Parameters
-
-###Satellite (DVB-S/ISDB-S)
+####Satellite (DVB-S/ISDB-S)
 
 * Frontend
   - [Master](class/linuxdvb_frontend_dvbs)
@@ -60,20 +51,31 @@ list.
   - [Rotor (GOTOX)](class/linuxdvb_rotor_gotox)
   - [Rotor (USALS)](class/linuxdvb_rotor_usals)
   
----
-
-###Terrestrial (DVB-T/ATSC-T/ISDB-T)
+####Terrestrial (DVB-T/ATSC-T/ISDB-T)
 
 * Frontend
   - [DVB-T/DVB-T2](class/linuxdvb_frontend_dvbt)
   - [ATSC-T](class/linuxdvb_frontend_atsc_t)
   - [ISDB-T](class/linuxdvb_frontend_isdb_t)
-  
----
 
-###Cable (DVB-C/ATSC-C/ISDB-C)
+####Cable (DVB-C/ATSC-C/ISDB-C)
 
 * Frontend
   - [DVB-C](class/linuxdvb_frontend_dvbc)
   - [ATSC-C](class/linuxdvb_frontend_atsc_c)
   - [ISDB-C](class/linuxdvb_frontend_isdb_c)
+
+####SAT>IP (DVB-T/ATSC-T/ATSC-C/DVB-S)
+
+* [Client](class/satip_client)
+   
+* Frontend
+   - [ATSC-T](class/satip_frontend_atsc_t)
+   - [ATSC-C](class/satip_frontend_atsc_c)
+   - [DVB-T](class/satip_frontend_dvbt)
+   - [DVB-S (Master)](class/satip_frontend_dvbs)
+   - [DVB-S (Slave)](class/satip_frontend_dvbs_slave)
+   
+* [Satellite Configuration](class/satip_satconf)
+
+---
