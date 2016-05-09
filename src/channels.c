@@ -1400,9 +1400,12 @@ channel_tag_class_get_list(void *o, const char *lang)
   return m;
 }
 
+CLASS_DOC(channeltag)
+
 const idclass_t channel_tag_class = {
   .ic_class      = "channeltag",
-  .ic_caption    = N_("Channel tag"),
+  .ic_caption    = N_("Channel Tags"),
+  .ic_doc        = tvh_doc_channeltag_class,
   .ic_event      = "channeltag",
   .ic_save       = channel_tag_class_save,
   .ic_get_title  = channel_tag_class_get_title,
