@@ -1,5 +1,5 @@
 This tab is where you manage your channel tags.
 
-!['Channel tag'](docresources/channeltags.png)
+!['Channel tag'](static/img/doc/channeltags.png)
 
 ---
