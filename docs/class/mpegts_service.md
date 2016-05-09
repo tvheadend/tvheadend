@@ -12,10 +12,12 @@ The following tab specific buttons are available:
 
 Button                     | Function
 ---------------------------|---------
-**Map Services**           | Drop down menu: 
-↓                          | ↓ 
-**Map selected services**  | Map the highlighted services within the grid. 
-**Map all services**       | Map all available services as channels. 
+**Map Services**           | Drop down menu (see mapping button table below). 
+
+Mapping Button              | Function
+----------------------------|--------------------
+**Map selected services**   | Map the highlighted services within the grid. 
+**Map all services**        | Map all available services as channels. 
 
 ---
 

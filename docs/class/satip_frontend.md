@@ -1,5 +1,5 @@
-This panel lists all the available satellite (DVB-S/ISDB-S) configuration 
-parameters.
+This panel displays all available SAT>IP 
+DVB-T/DVB-S/DVB-C/ATSC-T/ATSC-C frontend parameters.
 
 ---
 

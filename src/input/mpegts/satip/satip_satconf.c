@@ -319,11 +319,14 @@ satip_satconf_class_changed ( idnode_t *in )
   satip_satconf_sanity_check(sfc->sfc_lfe);
 }
 
+CLASS_DOC(satip_satconf)
+
 const idclass_t satip_satconf_class =
 {
   .ic_class      = "satip_satconf",
-  .ic_caption    = N_("Satconf"),
+  .ic_caption    = N_("SAT>IP Satellite Configuration"),
   .ic_event      = "satip_satconf",
+  .ic_doc        = tvh_doc_satip_satconf_class,
   .ic_get_title  = satip_satconf_class_get_title,
   .ic_changed    = satip_satconf_class_changed,
   .ic_properties = (const property_t[]) {
