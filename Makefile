@@ -535,7 +535,7 @@ SRCS-${CONFIG_DBUS_1}  += src/dbus.c
 
 # File bundles
 SRCS-${CONFIG_BUNDLE}     += bundle.c
-BUNDLES-yes               += docs/html docs/docresources src/webui/static
+BUNDLES-yes               += src/webui/static
 BUNDLES-yes               += data/conf
 BUNDLES-${CONFIG_DVBSCAN} += data/dvb-scan
 BUNDLES                    = $(BUNDLES-yes)

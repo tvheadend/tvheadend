@@ -1,6 +1,6 @@
 This tab lists all defined channels.
 
-!['Channel lists'](docresources/configchannellist.png)
+!['Channel lists'](static/img/doc/configchannellist.png)
 
 ---
 
@@ -31,12 +31,12 @@ press the *[Edit]* button, or edit the an entry directly in the grid.
 
 The _Add_ and _Edit_ buttons use a dialog similar to the following.
 
-!['Channel Edit (single)'](docresources/channeleditsingle.png)
+!['Channel Edit (single)'](static/img/doc/channeleditsingle.png)
 
 If you've selected multiple entries the *Edit Channel* dialog 
 will look slightly different.
 
-!['Channel Edit (multiple)'](docresources/channeleditmultiple.png)
+!['Channel Edit (multiple)'](static/img/doc/channeleditmultiple.png)
 
 Ticking the additional check box (before each setting) will apply that 
 setting to all selected channels.

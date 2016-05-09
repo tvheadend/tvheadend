@@ -1,7 +1,7 @@
 This panel tab lists all the available satellite (DVB-S/ISDB-S) configuration 
 parameters.
 
-!['Example Configuration'](docresources/dvbsatconf.png)
+!['Example Configuration'](static/img/doc/dvbsatconf.png)
 
 ---
 

@@ -1,7 +1,7 @@
 This tab allows to configure blocked IP ranges. Users within these ranges
 are not allowed to login (use any Tvheadend service).
 
-!['Access Control - Entries tab'](docresources/accessconfigipblockentries.png)
+!['Access Control - Entries tab'](static/img/doc/accessconfigipblockentries.png)
 
 ---
 
@@ -13,7 +13,7 @@ are not allowed to login (use any Tvheadend service).
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
-!['Add Entries Dialog'](docresources/accessipblockingedit.png)
+!['Add Entries Dialog'](static/img/doc/accessipblockingedit.png)
 
 **Tip**: You can enter a comma-separated list of network prefixes, if you're 
 unsure as to what to enter in the *Network prefix* field take a look at 

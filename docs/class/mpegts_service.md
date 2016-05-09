@@ -1,6 +1,6 @@
 Services are automatically pulled from muxes and can be mapped to Channels.
 
-!['Services'](docresources/configdvbservices.png)
+!['Services'](static/img/doc/configdvbservices.png)
 
 ---
 
@@ -28,13 +28,13 @@ There are a number of methods to mapping available services.
 *Map all services* and *Map selected services* functions use the 
 following *Map services to channels* dialog:
 
-!['Service mapper dialog'](docresources/mapservicesdialog.png)
+!['Service mapper dialog'](static/img/doc/mapservicesdialog.png)
 
 ####Mapping All
 
 Press the *[Map services]* button and then *[Map all services]*: 
 
-!['Map All Services'](docresources/mapservicesall.png)
+!['Map All Services'](static/img/doc/mapservicesall.png)
   
 The *Map services to channels* dialog will now appear, listing all available services and various 
 other [mapping options.](class/service_mapper) The ticked check boxes 
@@ -51,7 +51,7 @@ you'll lose your selection!
 
 <tvh_include>inc/selecting_entries_tip</tvh_include>
 
-!['Map selected'](docresources/mapselectedservices.png)
+!['Map selected'](static/img/doc/mapselectedservices.png)
     
 The *Map services to channels* dialog will now appear, listing all available services and various 
 other [mapping options.](class/service_mapper) The ticked 
@@ -77,7 +77,7 @@ the arrow will then display a list of options, move your mouse down to
 "Filters", a text box should then appear, click on it and enter the 
 desired service's name.
 
-!['Service filtering'](docresources/servicefilter.png)
+!['Service filtering'](static/img/doc/servicefilter.png)
 
 **Tip**: Remember to remove the filter when you're finished (uncheck the 
 check box next to the "Filters" option). 
@@ -86,7 +86,7 @@ check box next to the "Filters" option).
 channels will appear, check/untick the check box next to the channel 
 you'd like to associate/disassociate the service with. 
 
-!['Add service to channel example'](docresources/addservicetochannel.png)
+!['Add service to channel example'](static/img/doc/addservicetochannel.png)
 
 **3)** Press the *[Save]* button from the menu bar and you're done!
 

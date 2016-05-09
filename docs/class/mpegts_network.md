@@ -20,7 +20,7 @@ supports several different types of network, notably:
 Click the desired network type (above) to see all available 
 [parameters](#items).
 
-!['Networks' Tab Screenshot](docresources/dvbinputsnetwork.png)
+!['Networks' Tab Screenshot](static/img/doc/dvbinputsnetwork.png)
 
 ---
 
@@ -41,13 +41,13 @@ Button         | Function
 To create a network click the *[Add]* button from the menu bar and 
 then select the required network type:
 
-!['Network selection'](docresources/networktypeselect.png)
+!['Network selection'](static/img/doc/networktypeselect.png)
 
 Then using the resultant dialog enter/select the desired network 
 options. A common set of fields is used for the *[Add]* dialog, 
 most of which can be seen in the grid view. 
 
-!['Add new network'](docresources/addnewnetwork.png)
+!['Add new network'](static/img/doc/addnewnetwork.png)
 
 Pressing the *[Save]* button (at the bottom of the dialog) 
 will commit your changes and close the dialog, pressing the *[Apply]* 
@@ -69,7 +69,7 @@ For more detailed information on networks and how to set them up, see
 
 <tvh_include>inc/edit_grid_entries</tvh_include>
 
-!['Add/Edit Network' Dialog - DVB-S/2](docresources/dvbnetworkedit.png)
+!['Add/Edit Network' Dialog - DVB-S/2](static/img/doc/dvbnetworkedit.png)
 
 ---
 

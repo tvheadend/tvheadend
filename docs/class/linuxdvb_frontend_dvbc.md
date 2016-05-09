@@ -1,7 +1,7 @@
 This panel lists all the available Cable (DVB-C/C2/ISDB-C/ATSC-C) frontend 
 parameters.
 
-!['DVB-C frontend parameters'](docresources/dvbcfrontendparams.png)
+!['DVB-C frontend parameters'](static/img/doc/dvbcfrontendparams.png)
 
 ---
 

@@ -12,7 +12,7 @@ client. Note that if you use a similar number for multiple networks, the
 first matched network containing the mux with requested parameters will
 win (also for unknown mux).
 
-!['SAT\>IP Config tab'](docresources/satipconfig.png)
+!['SAT\>IP Config tab'](static/img/doc/satipconfig.png)
 
 ---
 

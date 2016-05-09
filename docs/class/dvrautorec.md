@@ -1,6 +1,6 @@
 This tab controls EPG-driven recording rules.
 
-!['Autorec' Tab](docresources/dvrautorecentries.png)
+!['Autorec' Tab](static/img/doc/dvrautorecentries.png)
 
 ---
 
@@ -15,7 +15,7 @@ This tab controls EPG-driven recording rules.
 If you wanted to record any programs matching "BBC News" on 
 BBC One you would enter something like this into the add entry dialog: 
 
-!['Autorec' example entry](docresources/dvrautorecadd.png)
+!['Autorec' example entry](static/img/doc/dvrautorecadd.png)
 
 This uses a regular expression (regex) to match the program title 
 "BBC News" exactly, otherwise event titles containing the phrase would 
@@ -37,7 +37,7 @@ automatically start being recorded.**
 
 <tvh_include>inc/edit_grid_entries</tvh_include>
 
-!['Edit Autorec'](docresources/editautorec.png)
+!['Edit Autorec'](static/img/doc/editautorec.png)
 
 ---
 

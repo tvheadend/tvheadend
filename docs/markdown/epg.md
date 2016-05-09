@@ -8,7 +8,7 @@ such as XMLTV.
 The EPG tab displays a filterable grid containing all events, sorted
 based on start time.
 
-!['Electronic Program Guide' Tab](docresources/epg.png)
+!['Electronic Program Guide' Tab](static/img/doc/epg.png)
 
 ---
 
@@ -147,13 +147,13 @@ for recording by clicking on the *[Record program]* button.
 For EPG providers that supply series link information there will also be
 a *[Record series]* button that will record all entries in the series.
 
-![EPG Detail 1](docresources/epg2.png)
+![EPG Detail 1](static/img/doc/epg2.png)
 
 For events without any series link information, an *[Autorec]* button
 will be provided to create a pseudo-series link using the autorec
 feature.
 
-![EPG Detail 2](docresources/epg3.png)
+![EPG Detail 2](static/img/doc/epg3.png)
 
 If you schedule any kind of recording from this point, you can choose a
 specific DVR profile that will apply to the recording or autorec rule.
@@ -187,7 +187,7 @@ record your favourite show every week, for example) you can press the
 A popup with details about the to-be-created autorecording rule needs to
 be confirmed before the rule takes effect.
 
-![Autorec Dialogue Box](docresources/autorecpopup.png)
+![Autorec Dialogue Box](static/img/doc/autorecpopup.png)
 
 You can change or delete the autorec rules in the **Digital Video
 Recorder** tab. Use that editor if you temporarily want to disable an

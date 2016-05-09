@@ -1875,8 +1875,6 @@ webui_init(int xspf)
   http_path_add("/redir",  NULL, http_redir, ACCESS_ANONYMOUS);
 
   webui_static_content("/static",        "src/webui/static");
-  webui_static_content("/docs",          "docs/html");
-  webui_static_content("/docresources",  "docs/docresources");
 
   simpleui_start();
   extjs_start();

@@ -4,7 +4,7 @@ This tab shows information about current service mapping activity.
 
 This is a read-only tab; nothing is configurable.
 
-!['Status - Subscriptions' Tab](docresources/statusservicemapper.png)
+!['Status - Subscriptions' Tab](static/img/doc/statusservicemapper.png)
 
 ---
 

@@ -1,7 +1,7 @@
 DVR entries are how Tvheadend manages upcoming/current, finished and 
 failed recordings.
 
-!['Digital Video Recorder' Tabs](docresources/configdvrtabs4.png)
+!['Digital Video Recorder' Tabs](static/img/doc/configdvrtabs4.png)
 
 Each entry is moved between the tabs depending on its state:
 
@@ -87,7 +87,7 @@ the *Upcoming/Current Recordings* tab.
 
 This is an example of a one-time recording entry:
 
-!['Add new recording dialog'](docresources/addnewrecentry.png)
+!['Add new recording dialog'](static/img/doc/addnewrecentry.png)
 
 ####Adding an Entry Using the EPG
 

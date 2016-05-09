@@ -1,7 +1,7 @@
 Tvheadend supports connecting to card clients via the cwc (newcamd) and
 capmt (linux network dvbapi) protocols for so-called 'softcam' descrambling.
 
-!['CA Client Configuration Example'](docresources/caclientconfig.png)
+!['CA Client Configuration Example'](static/img/doc/caclientconfig.png)
 
 ---
 
@@ -57,7 +57,7 @@ menu bar, you will then be asked to select a client type. Once you've
 selected a type you can then enter/select the desired options from the 
 resultant *Add* dialog.
 
-!['Add CA Config'](docresources/configcaadd.png)
+!['Add CA Config'](static/img/doc/configcaadd.png)
 
 To edit an existing configuration, click on it from within the grid, the 
 *Parameters* panel should then appear on the right hand side.

@@ -4,7 +4,7 @@ individual channels are multiplexed, hence the name. However, Tvheadend
 also uses the term ‘mux’ to describe a source for multiple IP 
 streams - so an IP address, in effect.
 
-!['Mux List'](docresources/configdvbmux.png)
+!['Mux List'](static/img/doc/configdvbmux.png)
 
 ---
 
@@ -19,11 +19,11 @@ streams - so an IP address, in effect.
 To add a mux press the *[Add]* button from the menu bar and select the 
 network you want to add the mux to:
 
-!['Network selection'](docresources/addmuxnetworkselection.png)
+!['Network selection'](static/img/doc/addmuxnetworkselection.png)
 
 Then enter the mux information:
 
-!['Add Mux Dialog'](docresources/configaddmuxexample.png)
+!['Add Mux Dialog'](static/img/doc/configaddmuxexample.png)
 
 Pressing the *[Save]* button (at the bottom of the dialog) 
 will commit your changes and close the dialog, pressing the *[Apply]* 

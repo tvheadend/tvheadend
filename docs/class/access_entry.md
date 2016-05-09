@@ -9,7 +9,7 @@ if the username matches and the IP source address of the requesting peer
 is within the prefix. There is also anonymous access, if the user is set
 to asterisk. Only network prefix is matched then.
 
-!['Access Entries Grid'](docresources/accessentriesgrid.png)
+!['Access Entries Grid'](static/img/doc/accessentriesgrid.png)
 
 ---
 
@@ -29,7 +29,7 @@ Button                 | Function
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
-!['Access Entry Example'](docresources/accessentriesnewuser.png)
+!['Access Entry Example'](static/img/doc/accessentriesnewuser.png)
 
 If you would like to allow anonymous access to your Tvheadend 
 server you may set-up an anonymous account by entering an asterisk `*` 

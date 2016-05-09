@@ -1,7 +1,7 @@
 Mux Schedulers enable Tvheadend to automatically play channels. This is 
 useful to get EPG, services or access rights updates.
 
-!['Mux Schedule Entries'](docresources/configdvbmuxsched.png)
+!['Mux Schedule Entries'](static/img/doc/configdvbmuxsched.png)
 
 ---
 
@@ -30,7 +30,7 @@ To edit an entry highlight (select) the entry from within the grid, and press th
 A common set of fields is used for the Add or Edit functions, most of 
 which can be seen in the grid view:
 
-!['Mux Add/Edit Example'](docresources/configdvbmuxsched1.png)
+!['Mux Add/Edit Example'](static/img/doc/configdvbmuxsched1.png)
 
 **Tip**: You can also edit entries directly within the grid.
 
