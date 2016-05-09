@@ -5,44 +5,28 @@ useful to get EPG, services or access rights updates.
 
 ---
 
-###Menu Bar/Buttons
+<tvh_include>inc/common_button_table_start</tvh_include>
 
-The following functions are available:
-
-Button         | Function
----------------|---------
-**Save**       | Save any changes made.
-**Undo**       | Undo any changes made since the last save.
-**Add**        | Add a new entry.
-**Delete**     | Delete an existing entry.
-**Edit**       | Edit an existing schedule entry.
-**View Level** | Change the interface view level to show/hide more advanced options.
-**Help**       | Displays this help page. 
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 ---
 
-###Adding/Editing an Entry
+<tvh_include>inc/add_grid_entry</tvh_include>
 
-You can add an entry by pressing the *[Add]* button from the menu bar. 
-To edit an entry highlight (select) the entry from within the grid, and press the 
-*[Edit]* button from the menu bar.
-
-A common set of fields is used for the Add or Edit functions, most of 
-which can be seen in the grid view:
-
+<<<<<<< 10ce88504b561738e9b6c8845758490ce74a7f41
 !['Mux Add/Edit Example'](static/img/doc/configdvbmuxsched1.png)
 
 **Tip**: You can also edit entries directly within the grid.
+=======
+!['Add Mux Schedule'](docresources/addmuxsched.png)
+>>>>>>> mdhelp: update channel, schedulers, satip help + screenshots
 
 ---
 
-###Deleting an Entry
+<tvh_include>inc/edit_grid_entries</tvh_include>
 
-To delete an entry highlight (select) the entry from within the grid, 
-and press the *[Delete]* button from the menu bar.
+---
 
-**Tip**: You can select all entries within the grid by pressing ctrl+A. 
-You can also ctrl+click to make additional selections, or shift+click to 
-select a range. 
+<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---

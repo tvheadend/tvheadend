@@ -1,5 +1,6 @@
-This panel lists all the available satellite (DVB-S/ISDB-S) configuration 
-parameters.
+This panel displays all available SAT>IP client parameters.
+
+!['SAT>IP Panel'](docresources/satipclient.png)
 
 ---
 

@@ -206,11 +206,14 @@ satip_device_class_tunercfg_notify ( void *o, const char *lang )
     satip_device_destroy_later(sd, 100);
 }
 
+CLASS_DOC(satip_client)
+
 const idclass_t satip_device_class =
 {
   .ic_class      = "satip_client",
   .ic_event      = "satip_client",
-  .ic_caption    = N_("SAT>IP client"),
+  .ic_caption    = N_("SAT>IP Client"),
+  .ic_doc        = tvh_doc_satip_client_class,
   .ic_save       = satip_device_class_save,
   .ic_get_childs = satip_device_class_get_childs,
   .ic_get_title  = satip_device_class_get_title,

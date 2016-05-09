@@ -141,11 +141,14 @@ satip_frontend_class_override_enum( void * p, const char *lang )
   return m;
 }
 
+CLASS_DOC(satip_frontend)
+
 const idclass_t satip_frontend_class =
 {
   .ic_super      = &mpegts_input_class,
   .ic_class      = "satip_frontend",
-  .ic_caption    = N_("SAT>IP DVB frontend"),
+  .ic_doc        = tvh_doc_satip_frontend_class,
+  .ic_caption    = N_("SAT>IP DVB Frontend"),
   .ic_changed    = satip_frontend_class_changed,
   .ic_properties = (const property_t[]) {
     {
@@ -227,7 +230,7 @@ const idclass_t satip_frontend_dvbt_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbt",
-  .ic_caption    = N_("SAT>IP DVB-T frontend"),
+  .ic_caption    = N_("SAT>IP DVB-T Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -315,7 +318,7 @@ const idclass_t satip_frontend_dvbs_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbs",
-  .ic_caption    = N_("SAT>IP DVB-S frontend"),
+  .ic_caption    = N_("SAT>IP DVB-S Frontend"),
   .ic_get_childs = satip_frontend_dvbs_class_get_childs,
   .ic_properties = (const property_t[]){
     {
@@ -360,7 +363,7 @@ const idclass_t satip_frontend_dvbs_slave_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbs_slave",
-  .ic_caption    = N_("SAT>IP DVB-S slave frontend"),
+  .ic_caption    = N_("SAT>IP DVB-S Slave Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -392,7 +395,7 @@ const idclass_t satip_frontend_dvbc_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_dvbc",
-  .ic_caption    = N_("SAT>IP DVB-C frontend"),
+  .ic_caption    = N_("SAT>IP DVB-C Frontend"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_STR,
@@ -411,7 +414,7 @@ const idclass_t satip_frontend_atsc_t_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_atsc_t",
-  .ic_caption    = N_("SAT>IP ATSC-T frontend"),
+  .ic_caption    = N_("SAT>IP ATSC-T Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
@@ -421,7 +424,7 @@ const idclass_t satip_frontend_atsc_c_class =
 {
   .ic_super      = &satip_frontend_class,
   .ic_class      = "satip_frontend_atsc_c",
-  .ic_caption    = N_("SAT>IP ATSC-C frontend"),
+  .ic_caption    = N_("SAT>IP ATSC-C Frontend"),
   .ic_properties = (const property_t[]){
     {}
   }
