@@ -549,7 +549,7 @@ http_error(http_connection_t *hc, int error)
 
   if (!atomic_get(&http_server_running)) return;
 
-  if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED)
+  if (error != HTTP_STATUS_FOUND && error != HTTP_STATUS_MOVED) {
     level = LOG_INFO;
     if (error == HTTP_STATUS_UNAUTHORIZED)
       level = LOG_DEBUG;
@@ -558,6 +558,7 @@ http_error(http_connection_t *hc, int error)
     tvhlog(level, "http", "%s: %s %s %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, error);
+  }
 
   if (hc->hc_version != RTSP_VERSION_1_0) {
     htsbuf_queue_flush(&hc->hc_reply);
