@@ -1649,7 +1649,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
     /* Existing */
     } else {
       if (!_epg_object_set_grabber(ret, src))
-        return ret;
+        return NULL;
 
       /* No time change */
       if (ret->stop == (*bcast)->stop) {
