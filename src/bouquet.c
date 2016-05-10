@@ -954,9 +954,13 @@ bouquet_class_ext_url_notify ( void *obj, const char *lang )
   bouquet_download_trigger((bouquet_t *)obj);
 }
 
+CLASS_DOC(bouquet)
+PROP_DOC(bouquet_mapping_options)
+
 const idclass_t bouquet_class = {
   .ic_class      = "bouquet",
   .ic_caption    = N_("Bouquet"),
+  .ic_doc        = tvh_doc_bouquet_class,
   .ic_event      = "bouquet",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = bouquet_class_save,
@@ -994,15 +998,8 @@ const idclass_t bouquet_class = {
       .islist   = 1,
       .id       = "mapopt",
       .name     = N_("Channel mapping options"),
-      .desc     = N_("Options to use/used when mapping "
-                     "channels; Map zero-numbered "
-                     "channels: include channels with no channel number. "
-                     " | Map unnamed channels: include channels with no "
-                     "name. | Map radio channels: include radio "
-                     "channels. | Map encrypted services: include "
-                     "channels even if the linked service is flagged as "
-                     "encrypted. | Merge same name: combine channels "
-                     "with the same name into a single channel."),
+      .desc     = N_("Options to use/used when mapping - see Help for details."),
+      .doc      = prop_doc_bouquet_mapping_options,
       .notify   = bouquet_class_mapopt_notify,
       .list     = bouquet_class_mapopt_enum,
       .get      = bouquet_class_mapopt_get,
