@@ -975,20 +975,21 @@ dvb_cat_callback
  */
 
 /* PMT update reason flags */
-#define PMT_UPDATE_PCR                0x1
-#define PMT_UPDATE_NEW_STREAM         0x2
-#define PMT_UPDATE_LANGUAGE           0x4
-#define PMT_UPDATE_AUDIO_TYPE         0x8
-#define PMT_UPDATE_FRAME_DURATION     0x10
-#define PMT_UPDATE_COMPOSITION_ID     0x20
-#define PMT_UPDATE_ANCILLARY_ID       0x40
-#define PMT_UPDATE_STREAM_DELETED     0x80
-#define PMT_UPDATE_NEW_CA_STREAM      0x100
-#define PMT_UPDATE_NEW_CAID           0x200
-#define PMT_UPDATE_CA_PROVIDER_CHANGE 0x400
-#define PMT_UPDATE_PARENT_PID         0x800
-#define PMT_UPDATE_CAID_DELETED       0x1000
-#define PMT_REORDERED                 0x2000
+#define PMT_UPDATE_PCR                (1<<0)
+#define PMT_UPDATE_NEW_STREAM         (1<<1)
+#define PMT_UPDATE_LANGUAGE           (1<<2)
+#define PMT_UPDATE_AUDIO_TYPE         (1<<3)
+#define PMT_UPDATE_FRAME_DURATION     (1<<4)
+#define PMT_UPDATE_COMPOSITION_ID     (1<<5)
+#define PMT_UPDATE_ANCILLARY_ID       (1<<6)
+#define PMT_UPDATE_STREAM_DELETED     (1<<7)
+#define PMT_UPDATE_NEW_CA_STREAM      (1<<8)
+#define PMT_UPDATE_NEW_CAID           (1<<9)
+#define PMT_UPDATE_CA_PROVIDER_CHANGE (1<<10)
+#define PMT_UPDATE_PARENT_PID         (1<<11)
+#define PMT_UPDATE_CAID_DELETED       (1<<12)
+#define PMT_UPDATE_CAID_PID           (1<<13)
+#define PMT_REORDERED                 (1<<14)
 
 int
 dvb_pmt_callback
@@ -2044,6 +2045,8 @@ psi_desc_add_ca
 
   LIST_FOREACH(c, &st->es_caids, link) {
     if(c->caid == caid) {
+      if (c->pid > 0 && c->pid != pid)
+        r |= PMT_UPDATE_CAID_PID;
       c->pid = pid;
 
       if(c->providerid != provid) {
@@ -2091,8 +2094,8 @@ psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
     break;
   case 0x0500:// Viaccess
     for (i = 4; i < size;) {
-      unsigned char nano = buffer[i++];
-      unsigned char nanolen = buffer[i++];
+      uint8_t nano    = buffer[i++];
+      uint8_t nanolen = buffer[i++];
 
       if (nano == 0x14) {
         provid = (buffer[i] << 16) | (buffer[i + 1] << 8) | (buffer[i + 2] & 0xf0);
@@ -2448,7 +2451,7 @@ psi_parse_pmt
 
   if(update) {
     tvhdebug("pmt", "Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      service_nicename((service_t*)t), version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
      update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
@@ -2462,6 +2465,7 @@ psi_parse_pmt
      update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
      update&PMT_UPDATE_PARENT_PID        ? ", Parent PID changed":"",
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
+     update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
     
     service_request_save((service_t*)t, 1);
@@ -2470,7 +2474,8 @@ psi_parse_pmt
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
                   PMT_UPDATE_NEW_CAID |
                   PMT_UPDATE_CA_PROVIDER_CHANGE |
-                  PMT_UPDATE_CAID_DELETED)) {
+                  PMT_UPDATE_CAID_DELETED |
+                  PMT_UPDATE_CAID_PID)) {
       if(t->s_status == SERVICE_RUNNING)
         ret = 1;
     }
