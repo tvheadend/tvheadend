@@ -461,14 +461,14 @@ static int _pyepg_parse
 const idclass_t epggrab_mod_int_pyepg_class = {
   .ic_super      = &epggrab_mod_int_class,
   .ic_class      = "epggrab_mod_int_pyepg",
-  .ic_caption    = N_("Internal PyEPG grabber"),
+  .ic_caption    = N_("Internal PyEPG Grabber"),
 };
 
 
 const idclass_t epggrab_mod_ext_pyepg_class = {
   .ic_super      = &epggrab_mod_ext_class,
   .ic_class      = "epggrab_mod_ext_pyepg",
-  .ic_caption    = N_("External PyEPG grabber"),
+  .ic_caption    = N_("External PyEPG Grabber"),
 };
 
 

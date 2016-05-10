@@ -104,9 +104,12 @@ static int epggrab_mod_class_type_set(void *o, const void *v)
   return 0;
 }
 
+CLASS_DOC(epggrabber_modules)
+
 const idclass_t epggrab_mod_class = {
   .ic_class      = "epggrab_mod",
-  .ic_caption    = N_("EPG grabber"),
+  .ic_caption    = N_("EPG Grabber"),
+  .ic_doc        = tvh_doc_epggrabber_modules_class,
   .ic_event      = "epggrab_mod",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = epggrab_mod_class_title,

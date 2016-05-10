@@ -767,7 +767,7 @@ xmltv_dn_chnum_list ( void *o, const char *lang )
 const idclass_t epggrab_mod_int_xmltv_class = {
   .ic_super      = &epggrab_mod_int_class,
   .ic_class      = "epggrab_mod_int_xmltv",
-  .ic_caption    = N_("Internal XMLTV EPG grabber"),
+  .ic_caption    = N_("Internal XMLTV EPG Grabber"),
   .ic_properties = (const property_t[]){
     {
       .type   = PT_INT,
@@ -785,7 +785,7 @@ const idclass_t epggrab_mod_int_xmltv_class = {
 const idclass_t epggrab_mod_ext_xmltv_class = {
   .ic_super      = &epggrab_mod_ext_class,
   .ic_class      = "epggrab_mod_ext_xmltv",
-  .ic_caption    = N_("External XMLTV EPG grabber"),
+  .ic_caption    = N_("External XMLTV EPG Grabber"),
   .ic_properties = (const property_t[]){
     {
       .type   = PT_BOOL,
