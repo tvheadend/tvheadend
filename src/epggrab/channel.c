@@ -719,9 +719,12 @@ epggrab_channel_class_only_one_notify ( void *obj, const char *lang )
   }
 }
 
+CLASS_DOC(epggrabber_channel)
+
 const idclass_t epggrab_channel_class = {
   .ic_class      = "epggrab_channel",
-  .ic_caption    = N_("EPG grabber channel"),
+  .ic_caption    = N_("EPG Grabber Channel"),
+  .ic_doc        = tvh_doc_epggrabber_channel_class,
   .ic_event      = "epggrab_channel",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = epggrab_channel_class_save,
