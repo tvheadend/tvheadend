@@ -243,10 +243,14 @@ epggrab_class_ota_cron_notify(void *self, const char *lang)
   epggrab_ota_set_cron();
 }
 
+CLASS_DOC(epg_grabber_config)
+PROP_DOC(cron)
+
 const idclass_t epggrab_class = {
   .ic_snode      = &epggrab_conf.idnode,
   .ic_class      = "epggrab",
-  .ic_caption    = N_("EPG grabber configuration"),
+  .ic_caption    = N_("EPG Grabber Configuration"),
+  .ic_doc        = tvh_doc_epg_grabber_config_class,
   .ic_event      = "epggrab",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_changed    = epggrab_class_changed,
@@ -320,6 +324,7 @@ const idclass_t epggrab_class = {
                    "The default cron triggers the internal grabbers "
                    "daily at 12:04 and 00:04. See Help on how to define "
                    "your own."),
+      .doc    = prop_doc_cron,
       .off    = offsetof(epggrab_conf_t, cron),
       .notify = epggrab_class_cron_notify,
       .opts   = PO_MULTILINE | PO_ADVANCED,
@@ -342,6 +347,7 @@ const idclass_t epggrab_class = {
                    "The default cron triggers the Over-the-air "
                    "grabber daily at 02:04 and 14:04. See Help on how "
                    "to define your own."),
+      .doc    = prop_doc_cron,
       .off    = offsetof(epggrab_conf_t, ota_cron),
       .notify = epggrab_class_ota_cron_notify,
       .opts   = PO_MULTILINE | PO_ADVANCED,
