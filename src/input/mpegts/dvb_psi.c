@@ -2468,9 +2468,9 @@ psi_parse_pmt
 
     // Only restart if something that our clients worry about did change
     if(update & ~(PMT_UPDATE_NEW_CA_STREAM |
-      PMT_UPDATE_NEW_CAID |
-      PMT_UPDATE_CA_PROVIDER_CHANGE | 
-      PMT_UPDATE_CAID_DELETED)) {
+                  PMT_UPDATE_NEW_CAID |
+                  PMT_UPDATE_CA_PROVIDER_CHANGE |
+                  PMT_UPDATE_CAID_DELETED)) {
       if(t->s_status == SERVICE_RUNNING)
         ret = 1;
     }
