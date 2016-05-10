@@ -45,7 +45,7 @@ connection status.
 Icon                                         | Description
 ---------------------------------------------|------------
 !['Accept/OK Icon'](icons/accept.png)        | The client is connected.
-!['Error Icon'](icons/exclamation.png)       | There was an error connecting.
+!['Error Icon'](icons/exclamation.png)       | There was an error.
 !['Stop/Disabled Icon'](icons/stop.png)      | The client is disabled.
 
 ---

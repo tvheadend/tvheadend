@@ -1,4 +1,4 @@
-This tab displays external EPG data used by channels.
+This tab displays EPG data used by channels.
 
 !['EPG Grabber Channels Tab'](static/img/doc/epggrabberchannels.png)
 
