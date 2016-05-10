@@ -243,14 +243,14 @@ epggrab_class_ota_cron_notify(void *self, const char *lang)
   epggrab_ota_set_cron();
 }
 
-CLASS_DOC(epg_grabber_config)
+CLASS_DOC(epgconf)
 PROP_DOC(cron)
 
 const idclass_t epggrab_class = {
   .ic_snode      = &epggrab_conf.idnode,
   .ic_class      = "epggrab",
   .ic_caption    = N_("EPG Grabber Configuration"),
-  .ic_doc        = tvh_doc_epg_grabber_config_class,
+  .ic_doc        = tvh_doc_epgconf_class,
   .ic_event      = "epggrab",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_changed    = epggrab_class_changed,
