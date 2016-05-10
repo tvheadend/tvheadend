@@ -275,7 +275,7 @@ CLASS_DOC(profile)
 const idclass_t profile_class =
 {
   .ic_class      = "profile",
-  .ic_caption    = N_("Stream profile"),
+  .ic_caption    = N_("Stream Profile"),
   .ic_event      = "profile",
   .ic_doc        = tvh_doc_profile_class,
   .ic_perm_def   = ACCESS_ADMIN,
@@ -975,7 +975,7 @@ const idclass_t profile_htsp_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-htsp",
-  .ic_caption    = N_("HTSP stream profile"),
+  .ic_caption    = N_("HTSP Stream Profile"),
   .ic_properties = (const property_t[]){
     /* Ready for future extensions */
     { }
