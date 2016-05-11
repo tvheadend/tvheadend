@@ -592,6 +592,7 @@ esfilter_class_action_enum(void *o, const char *lang)
 }
 
 CLASS_DOC(filters)
+PROP_DOC(action)
 
 const idclass_t esfilter_class = {
   .ic_class      = "esfilter",
@@ -701,6 +702,8 @@ const idclass_t esfilter_class_video = {
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
+      .opts     = PO_DOC_NLIST,
+      .doc      = prop_doc_action,
     },
     {
       .type     = PT_BOOL,
@@ -794,6 +797,8 @@ const idclass_t esfilter_class_audio = {
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
+      .opts     = PO_DOC_NLIST,
+      .doc      = prop_doc_action,
     },
     {
       .type     = PT_BOOL,
@@ -887,6 +892,8 @@ const idclass_t esfilter_class_teletext = {
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
+      .opts     = PO_DOC_NLIST,
+      .doc      = prop_doc_action,
     },
     {
       .type     = PT_BOOL,
@@ -980,6 +987,8 @@ const idclass_t esfilter_class_subtit = {
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
+      .opts     = PO_DOC_NLIST,
+      .doc      = prop_doc_action,
     },
     {
       .type     = PT_BOOL,
@@ -1083,6 +1092,8 @@ const idclass_t esfilter_class_ca = {
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
+      .opts     = PO_DOC_NLIST,
+      .doc      = prop_doc_action,
     },
     {
       .type     = PT_BOOL,
@@ -1163,6 +1174,8 @@ const idclass_t esfilter_class_other = {
       .get      = esfilter_class_action_get,
       .set      = esfilter_class_action_set,
       .list     = esfilter_class_action_enum,
+      .opts     = PO_DOC_NLIST,
+      .doc      = prop_doc_action,
     },
     {
       .type     = PT_BOOL,
