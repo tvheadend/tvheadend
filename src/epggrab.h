@@ -99,6 +99,10 @@ typedef struct epggrab_channel
 
   int                       only_one; ///< Map to only one channel (auto)
   idnode_list_head_t        channels; ///< Mapped channels (1 = epggrab channel, 2 = channel)
+
+  int                       update_chicon; ///< Update channel icon
+  int                       update_chnum;  ///< Update channel number
+  int                       update_chname; ///< Update channel name
 } epggrab_channel_t;
 
 /*
