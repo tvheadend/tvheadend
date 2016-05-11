@@ -166,10 +166,13 @@ timeshift_conf_class_ram_size_set ( void *o, const void *v )
   return 0;
 }
 
+CLASS_DOC(timeshift)
+
 const idclass_t timeshift_conf_class = {
   .ic_snode      = &timeshift_conf.idnode,
   .ic_class      = "timeshift",
   .ic_caption    = N_("Timeshift"),
+  .ic_doc        = tvh_doc_timeshift_class,
   .ic_event      = "timeshift",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_changed    = timeshift_conf_class_changed,

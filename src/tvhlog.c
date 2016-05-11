@@ -610,10 +610,13 @@ idnode_t tvhlog_conf = {
   .in_class      = &tvhlog_conf_class
 };
 
+CLASS_DOC(debugging)
+
 const idclass_t tvhlog_conf_class = {
   .ic_snode      = &tvhlog_conf,
   .ic_class      = "tvhlog_conf",
   .ic_caption    = N_("Debugging"),
+  .ic_doc        = tvh_doc_debugging_class,
   .ic_event      = "tvhlog_conf",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_groups     = (const property_group_t[]) {
