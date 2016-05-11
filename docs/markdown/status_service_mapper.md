@@ -1,14 +1,18 @@
-##Status - Service Mapper
+##Service Mapper 
 
-This tab shows information about current service mapping activity.
+This tab shows information about current service mapping activity. 
 
-This is a read-only tab; nothing is configurable.
+This is a read-only tab; nothing is configurable. 
 
-!['Status - Subscriptions' Tab](static/img/doc/statusservicemapper.png)
+!['Status - Subscriptions' Tab](static/img/doc/statusservicemapper.png) 
+
+
+The [Map services to channels](class/service_mapper) dialog 
+determines how services are mapped.
 
 ---
 
-####Menu Bar/Buttons
+###Menu Bar/Buttons
 
 The following functions are available:
 
@@ -18,18 +22,16 @@ Button     | Function
 
 ---
 
-####Grid Items
+###Items
 
-The main grid items have the following functions:
+**Mapped** 
+: Number of services mapped. 
 
-**Item**
-: Description
+**Ignored** 
+: Number of services ignored. 
 
-**Item**
-: Description
+**Failed** 
+: Number of services that failed to be mapped.
 
-**Item**
-: Description
-
-**Item**
-: Description
+**Active** 
+: Progress bar indicating mapping status.

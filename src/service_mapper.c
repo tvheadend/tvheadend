@@ -475,10 +475,13 @@ service_mapper_services_enum ( void *obj, const char *lang )
   return m;
 }
 
+CLASS_DOC(service_mapper)
+
 static const idclass_t service_mapper_conf_class = {
   .ic_snode      = &service_mapper_conf.idnode,
   .ic_class      = "service_mapper",
-  .ic_caption    = N_("Service mapper"),
+  .ic_caption    = N_("Service Mapping (Map services to channels)"),
+  .ic_doc        = tvh_doc_service_mapper_class,
   .ic_event      = "service_mapper",
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_save       = service_mapper_conf_class_save,
@@ -488,7 +491,7 @@ static const idclass_t service_mapper_conf_class = {
       .islist = 1,
       .id     = "services",
       .name   = N_("Services"),
-      .desc   = N_("Select services to map."),
+      .desc   = N_("Select/Selected services to map."),
       .get    = service_mapper_services_get,
       .set    = service_mapper_services_set,
       .list   = service_mapper_services_enum,

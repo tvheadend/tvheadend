@@ -1,6 +1,6 @@
 Stream Profiles are the settings for output formats. These are used for Live TV
 streaming and recordings. The profiles are assigned through 
-the [Access Entries](class/access_entry),
+the [Access Entries](class/access),
 DVR Profiles or as parameter for HTTP Streaming.
 
 !['Stream Profiles'](static/img/doc/configstreamprofiles.png)

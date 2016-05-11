@@ -68,17 +68,6 @@ automatically be re-added.
 
 ---
 
-###Playing a Mux
-
-You can stream a complete multiplex by copying/pasting the *Play* icon link 
-into the desired player/software.
-
-**Notes**:
-* The links don't link to the actual stream but to a playlist for 
-use with media players such as VLC, If you'd prefer to receive the raw 
-transport stream instead, you can do so by removing the `/play/` path from 
-the URL.
-* Not all devices support receiving a complete mux, notably low 
-powered set-top-boxes and older USB tuners. 
+<tvh_include>inc/play</tvh_include>
 
 ---

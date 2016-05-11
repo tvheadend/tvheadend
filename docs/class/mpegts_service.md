@@ -99,3 +99,14 @@ you'd like to associate/disassociate the service with.
 <tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
+
+###Service Information
+
+Clicking the !['Information Icon'](static/icons/information.png) 
+information icon will display service details.
+
+---
+
+<tvh_include>inc/play</tvh_include>
+
+---
