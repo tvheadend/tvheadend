@@ -8,7 +8,7 @@
 Getting Started
 * [Before you begin (concepts)](before_begin)
 * [Install hardware](install_hardware)
-* [Install tvheadend](install_tvheadend)
+* [Install Tvheadend](install_tvheadend)
 * [Configure Tvheadend](configure_tvheadend)
 
 Web Interface Guide
@@ -57,7 +57,7 @@ Web Interface Configuration Guide
   - [Bouquets](class/bouquet)
   - [EPG Grabber Channels](class/epggrab_channel)
   - [EPG Grabber](class/epggrab)
-  - EPG Grabber Modules
+  - [EPG Grabber Modules](class/epggrab_mod)
     - [OTA Module](class/epggrab_mod_ota)
     - [Internal PyEPG](class/epggrab_mod_int_pyepg)
     - [Internal XMLTV](class/epggrab_mod_int_xmltv)

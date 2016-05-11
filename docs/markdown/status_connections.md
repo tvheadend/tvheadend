@@ -22,7 +22,7 @@ Button     | Function
 
 The main grid items have the following functions:
 
-**!['Cancel'](static/icons/cancel.png)**
+**Cancel Icon !['Cancel'](static/icons/cancel.png)**
 : Forcefully kill the connection. Note that many applications such as Kodi will automatically reconnect when a connection is dropped.
 
 **Type**

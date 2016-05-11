@@ -458,7 +458,7 @@ tvheadend.status_streams = function(panel, index)
                 text: _('Help'),
                 iconCls: 'help',
                 handler: function() {
-                    new tvheadend.mdhelp('status_streams')
+                    new tvheadend.mdhelp('status_stream')
                 }
             }],
             border: false,
