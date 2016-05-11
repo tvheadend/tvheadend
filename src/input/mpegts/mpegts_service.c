@@ -204,7 +204,7 @@ const idclass_t mpegts_service_class =
       .desc     = N_("The character encoding for this service (e.g. UTF-8)."),
       .off      = offsetof(mpegts_service_t, s_dvb_charset),
       .list     = dvb_charset_enum,
-      .opts     = PO_EXPERT,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_U16,

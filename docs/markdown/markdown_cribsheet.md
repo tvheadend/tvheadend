@@ -10,6 +10,29 @@ the cleaner the conversion, the less tidying up there is afterwards.
 
 * Markdown basics: [GitHub mastering markdown](https://guides.github.com/features/mastering-markdown)
 
+###Including Documentation/Items
+
+You can include documentation/items in other markdown 
+files by using the tvh_class_doc, tvh_include and tvh_class_items tags.
+
+For example to include the passwd items you'd enter something like this:
+
+```
+<tvh_class_items>passwd</tvh_class_items>
+``` 
+
+To include class documentation you'd use:
+
+```
+<tvh_class_doc>passwd</tvh_class_doc>
+```
+
+To include multi-use docs (placed in the `docs/markdown/inc/` folder:
+
+```
+<tvh_include>inc/common_button_table_end</tvh_include>
+```
+
 ###Paragraphs Versus Definition Lists
 
 Watch this one - indentation is key.
