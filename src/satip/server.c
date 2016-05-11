@@ -30,6 +30,7 @@ static char *http_server_ip;
 static int http_server_port;
 static int satip_server_deviceid;
 static time_t satip_server_bootid;
+static char *satip_server_bindaddr;
 static int satip_server_rtsp_port;
 static int satip_server_rtsp_port_locked;
 static upnp_service_t *satips_upnp_discovery;
@@ -526,12 +527,11 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
   int fe, findex;
   const char *ftype;
 
-  tvhinfo("satips", "SAT>IP Server %sinitialized "
-                    "(HTTP %s:%d, RTSP %s:%d, "
-                    "descramble %d, muxcnf %d)",
-              prefix,
+  tvhinfo("satips", "SAT>IP Server %sinitialized", prefix);
+  tvhinfo("satips", "  HTTP %s:%d, RTSP %s:%d",
               http_server_ip, http_server_port,
-              http_server_ip, satip_server_rtsp_port,
+              http_server_ip, satip_server_rtsp_port);
+  tvhinfo("satips", "  descramble %d, muxcnf %d",
               descramble, muxcnf);
   for (fe = 1; fe <= 128; fe++) {
     if (satip_rtsp_delsys(fe, &findex, &ftype) == DVB_TYPE_NONE)
@@ -751,12 +751,16 @@ static void satip_server_init_common(const char *prefix, int announce)
   char *nat_ip;
 
   if (http_server_ip == NULL) {
+    if (tcp_server_onall(http_server) && satip_server_bindaddr == NULL) {
+      tvherror("satips", "use --satip_bindaddr parameter to select the local IP for SAT>IP");
+      tvherror("satips", "using Google lookup (might block the task until timeout)");
+    }
     if (tcp_server_bound(http_server, &http, PF_INET) < 0) {
       tvherror("satips", "Unable to determine the HTTP/RTSP address");
       return;
     }
     tcp_get_str_from_ip((const struct sockaddr *)&http, http_ip, sizeof(http_ip));
-    http_server_ip = strdup(http_ip);
+    http_server_ip = strdup(satip_server_bindaddr ?: http_ip);
     http_server_port = ntohs(IP_PORT(http));
   }
 
@@ -810,7 +814,7 @@ static void satip_server_save(void)
  * Initialization
  */
 
-void satip_server_init(int rtsp_port)
+void satip_server_init(const char *bindaddr, int rtsp_port)
 {
   pthread_mutex_init(&satip_server_reinit, NULL);
 
@@ -820,6 +824,7 @@ void satip_server_init(int rtsp_port)
   satip_server_bootid = time(NULL);
   satip_server_conf.satip_deviceid = 1;
 
+  satip_server_bindaddr = bindaddr ? strdup(bindaddr) : NULL;
   satip_server_rtsp_port_locked = rtsp_port > 0;
   satip_server_rtsp_port = rtsp_port;
   satips_rtsp_port(rtsp_port);
@@ -891,4 +896,5 @@ void satip_server_done(void)
   http_server_ip = NULL;
   free(satip_server_conf.satip_uuid);
   satip_server_conf.satip_uuid = NULL;
+  free(satip_server_bindaddr);
 }

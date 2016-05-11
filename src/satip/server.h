@@ -95,7 +95,7 @@ int satip_server_http_page(http_connection_t *hc,
 
 int satip_server_match_uuid(const char *uuid);
 
-void satip_server_init(int rtsp_port);
+void satip_server_init(const char *bindaddr, int rtsp_port);
 void satip_server_register(void);
 void satip_server_done(void);
 

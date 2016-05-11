@@ -1030,6 +1030,26 @@ tcp_server_bound ( void *server, struct sockaddr_storage *bound, int family )
   return 0;
 }
 
+/**
+ *
+ */
+int
+tcp_server_onall ( void *server )
+{
+  tcp_server_t *ts = server;
+  int i, len;
+  uint8_t *ptr;
+
+  if (server == NULL) return 0;
+
+  len = IP_IN_ADDRLEN(ts->bound);
+  ptr = (uint8_t *)IP_IN_ADDR(ts->bound);
+  for (i = 0; i < len; i++)
+    if (ptr[0])
+      break;
+  return i >= len;
+}
+
 /*
  * Connections status
  */

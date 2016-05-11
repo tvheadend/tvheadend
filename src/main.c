@@ -787,7 +787,8 @@ main(int argc, char **argv)
 #endif
              *opt_bindaddr     = NULL,
              *opt_subscribe    = NULL,
-             *opt_user_agent   = NULL;
+             *opt_user_agent   = NULL,
+             *opt_satip_bindaddr = NULL;
   str_list_t  opt_satip_xml    = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   str_list_t  opt_tsfile       = { .max = 10, .num = 0, .str = calloc(10, sizeof(char*)) };
   cmdline_opt_t cmdline_opts[] = {
@@ -819,6 +820,8 @@ main(int argc, char **argv)
       OPT_STR, &opt_dvb_adapters },
 #endif
 #if ENABLE_SATIP_SERVER
+    {   0, "satip_bindaddr", N_("Specify bind address for SAT>IP server"),
+      OPT_STR, &opt_satip_bindaddr },
     {   0, "satip_rtsp", N_("SAT>IP RTSP port number for server\n"
                             "(default: -1 = disable, 0 = webconfig, standard port is 554)"),
       OPT_INT, &opt_satip_rtsp },
@@ -1059,7 +1062,7 @@ main(int argc, char **argv)
   tcp_server_preinit(opt_ipv6);
   http_server_init(opt_bindaddr);    // bind to ports only
   htsp_init(opt_bindaddr);	     // bind to ports only
-  satip_server_init(opt_satip_rtsp); // bind to ports only
+  satip_server_init(opt_satip_bindaddr, opt_satip_rtsp); // bind to ports only
 
   if (opt_fork)
     pidfile = tvh_fopen(opt_pidpath, "w+");
