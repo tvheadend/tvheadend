@@ -241,7 +241,7 @@ const idclass_t mpegts_network_class =
                      "(e.g. UTF-8)."),
       .off      = offsetof(mpegts_network_t, mn_charset),
       .list     = dvb_charset_enum,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -250,7 +250,7 @@ const idclass_t mpegts_network_class =
       .desc     = N_("Select the time offset for EIT events."),
       .off      = offsetof(mpegts_network_t, mn_localtime),
       .list     = dvb_timezone_enum,
-      .opts     = PO_EXPERT,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
