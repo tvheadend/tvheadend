@@ -1,7 +1,6 @@
 ####Table of Contents
 
 [Introduction](index)
-* [To-do](todo)
 * [Overview](overview)
 * [Basic Requirements](requirements)
 * [Features](features)
@@ -108,8 +107,7 @@ Appendices
   - [Appendix 1 - URL syntax (Exports)](url)
   - [Appendix 2 - FAQ](faqs)
   - [Appendix 3 - Command-line Options](cmdline_options)
-  - [Appendix 4 - Debugging Options](debugging)
-  - [Appendix 5 - Updating this documentation](doc_update)
-  - [Appendix 6 - Markdown Cribsheet](markdown_cribsheet)
+  - [Appendix 4 - Updating this documentation](doc_update)
+  - [Appendix 5 - Markdown Cribsheet](markdown_cribsheet)
 
 [About](about)
