@@ -1,6 +1,6 @@
 /*
  *  Teletext parsing functions
- *  Copyright (C) 2007 Andreas Ã–man
+ *  Copyright (C) 2007 Andreas Öman
  *  Copyright (C) 2014 Jaroslav Kysela
  *
  *  This program is free software: you can redistribute it and/or modify

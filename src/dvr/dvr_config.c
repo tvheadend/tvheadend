@@ -796,10 +796,11 @@ PROP_DOC(preprocessor)
 PROP_DOC(postprocessor)
 PROP_DOC(postremove)
 PROP_DOC(pathname)
+PROP_DOC(cache_scheme)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
-  .ic_caption    = N_("DVR - Configuration Profile"),
+  .ic_caption    = N_("DVR - Profiles"),
   .ic_event      = "dvrconfig",
   .ic_doc        = tvh_doc_dvrconfig_class,
   .ic_changed    = dvr_config_class_changed,
@@ -887,10 +888,11 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The cache scheme to use/used to store recordings. "
                      "Leave as \"system\" unless you have a special use "
                      "case for one of the others. See Help for details."),
+      .doc      = prop_doc_cache_scheme,
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
       .list     = dvr_config_class_cache_list,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
       .group    = 1,
     },
     {

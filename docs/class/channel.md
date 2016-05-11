@@ -45,3 +45,7 @@ Numbering Button            | Function
 <tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
+
+<tvh_include>inc/play</tvh_include>
+
+---
