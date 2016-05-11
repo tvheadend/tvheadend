@@ -158,13 +158,13 @@ feature.
 If you schedule any kind of recording from this point, you can choose a
 specific DVR profile that will apply to the recording or autorec rule.
 This will normally show as *(default)*, but you can define different
-profiles in the **Configuration -\> Recording -\> Digital Video
-Recorder Profiles** tab. This allows you to set, for example, more post-
+profiles in the **Configuration -\> Recording -\> [Digital Video
+Recorder Profiles](class/dvrconfig)** tab. This allows you to set, for example, more post-
 broadcast padding for a channel that always runs late, or perhaps define
 a different post-processing command to strip adverts out on a commercial
 channel.
 
-You will also see *[Search IMDB]* and *[TheTVDB] buttons to look for the program by name
+You will also see *[Search IMDB]* and *[TheTVDB]* buttons to look for the program by name
 on imdb.com/thetvdb.com, and a *[Play program]* button to watch a program that’s already
 in progress. This second button downloads a playlist file (XSPF or M3U
 depending on your startup options); if your system is configured for it,
@@ -184,14 +184,10 @@ Should you wish to record all events matching a specific query (to
 record your favourite show every week, for example) you can press the
 *[Create AutoRec]* button in the top toolbar.
 
-A popup with details about the to-be-created autorecording rule needs to
-be confirmed before the rule takes effect.
-
-![Autorec Dialogue Box](static/img/doc/autorecpopup.png)
-
-You can change or delete the autorec rules in the **Digital Video
-Recorder** tab. Use that editor if you temporarily want to disable an
-autorecording or make adjustments to the channel, tag, or similar.
+You can change or delete the autorec rules in 
+the **[Autorec](class/dvrautorec)** tab. Use that editor if you 
+temporarily want to disable an autorecording or make adjustments to the 
+channel, tag, or similar.
 
 ---
 
