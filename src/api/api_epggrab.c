@@ -68,6 +68,21 @@ api_epggrab_ota_trigger
   return 0;
 }
 
+static int
+api_epggrab_rerun_internal
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int32_t s32;
+  if (htsmsg_get_s32(args, "rerun", &s32))
+    return EINVAL;
+  if (s32 > 0) {
+    pthread_mutex_lock(&global_lock);
+    epggrab_rerun_internal();
+    pthread_mutex_unlock(&global_lock);
+  }
+  return 0;
+}
+
 void api_epggrab_init ( void )
 {
   static api_hook_t ah[] = {
@@ -79,6 +94,7 @@ void api_epggrab_init ( void )
     { "epggrab/config/load",  ACCESS_ADMIN, api_idnode_load_simple, &epggrab_conf.idnode },
     { "epggrab/config/save",  ACCESS_ADMIN, api_idnode_save_simple, &epggrab_conf.idnode },
     { "epggrab/ota/trigger",  ACCESS_ADMIN, api_epggrab_ota_trigger, NULL },
+    { "epggrab/internal/rerun",  ACCESS_ADMIN, api_epggrab_rerun_internal, NULL },
     { NULL },
   };
 

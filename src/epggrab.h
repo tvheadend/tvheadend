@@ -306,6 +306,7 @@ extern int                   epggrab_ota_running;
 int epggrab_activate_module       ( epggrab_module_t *mod, int activate );
 void epggrab_ota_set_cron         ( void );
 void epggrab_ota_trigger          ( int secs );
+void epggrab_rerun_internal       ( void );
 
 /*
  * Load/Save

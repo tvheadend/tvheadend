@@ -136,6 +136,13 @@ static void* _epggrab_internal_thread ( void* p )
   return NULL;
 }
 
+void
+epggrab_rerun_internal(void)
+{
+  epggrab_confver++;
+  pthread_cond_signal(&epggrab_cond);
+}
+
 /* **************************************************************************
  * Configuration
  * *************************************************************************/
@@ -193,8 +200,7 @@ static void
 epggrab_class_changed(idnode_t *self)
 {
   /* Register */
-  epggrab_confver++;
-  pthread_cond_signal(&epggrab_cond);
+  epggrab_rerun_internal();
 }
 
 static htsmsg_t *

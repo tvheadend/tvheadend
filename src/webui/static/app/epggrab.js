@@ -1,3 +1,22 @@
+tvheadend.epggrab_rerun_button = function() {
+    return {
+        name: 'trigger',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                text: _("Re-run Internal EPG Grabbers"),
+                tooltip: _('Re-run all internal EPG grabbers to import EPG data now'),
+                iconCls: 'find',
+            });
+        },
+        callback: function(conf) {
+            tvheadend.Ajax({
+               url: 'api/epggrab/internal/rerun',
+               params: { rerun: 1 },
+            });
+        }
+    };
+}
+
 tvheadend.epggrab_base = function(panel, index) {
 
     var triggerButton = {
@@ -25,7 +44,7 @@ tvheadend.epggrab_base = function(panel, index) {
         tabIndex: index,
         width: 550,
         labelWidth: 200,
-        tbar: [triggerButton]
+        tbar: [triggerButton, tvheadend.epggrab_rerun_button()]
     });
 
 }
@@ -73,7 +92,8 @@ tvheadend.epggrab_mod = function(panel, index) {
         fields: ['uuid', 'title', 'status'],
         list: { url: 'api/epggrab/module/list', params: { } },
         lcol: [actions],
-        plugins: [actions]
+        plugins: [actions],
+        tbar: [tvheadend.epggrab_rerun_button()]
     });
 
 };
