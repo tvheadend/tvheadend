@@ -1624,7 +1624,7 @@ linuxdvb_frontend_tune0
 
   /* S2 tuning */
 #if DVB_API_VERSION >= 5
-  struct dtv_property cmds[20];
+  struct dtv_property cmds[32];
   struct dtv_properties cmdseq;
   
 
@@ -1709,12 +1709,19 @@ linuxdvb_frontend_tune0
     int i, j;
     S2CMD(DTV_BANDWIDTH_HZ,      dvb_bandwidth(dmc->u.dmc_fe_isdbt.bandwidth));
     S2CMD(DTV_GUARD_INTERVAL,    TRU(isdbt.guard_interval, guard_tbl, GUARD_INTERVAL_AUTO));
+#if DVB_VER_ATLEAST(5,1)
+    S2CMD(DTV_ISDBT_LAYER_ENABLED,     7);
+    S2CMD(DTV_ISDBT_PARTIAL_RECEPTION, 1);
+    S2CMD(DTV_ISDBT_SB_SUBCHANNEL_ID,  0);
+    S2CMD(DTV_ISDBT_SB_SEGMENT_IDX,    0);
+    S2CMD(DTV_ISDBT_SB_SEGMENT_COUNT,  0);
     for (i = j = 0; i < 3; i++, j += DTV_ISDBT_LAYERB_FEC - DTV_ISDBT_LAYERA_FEC) {
       S2CMD(DTV_ISDBT_LAYERA_FEC               + j, TRU(isdbt.layers[i].fec, fec_tbl, FEC_AUTO));
       S2CMD(DTV_ISDBT_LAYERA_MODULATION        + j, TRU(isdbt.layers[i].modulation, mod_tbl, QAM_AUTO));
       S2CMD(DTV_ISDBT_LAYERA_SEGMENT_COUNT     + j, dmc->u.dmc_fe_isdbt.layers[i].segment_count);
       S2CMD(DTV_ISDBT_LAYERA_TIME_INTERLEAVING + j, dmc->u.dmc_fe_isdbt.layers[i].time_interleaving);
     }
+#endif
 
   /* ISDB-S */
   } else if (lfe->lfe_type == DVB_TYPE_ISDB_S) {
