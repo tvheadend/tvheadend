@@ -1554,7 +1554,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   caid_t *c;
   cs_card_data_t *pcard;
   char buf[512];
-  int i;
+  int i, prefpid, prefpid_lock, forcecaid;
 
   extern const idclass_t mpegts_service_class;
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
@@ -1566,17 +1566,18 @@ cwc_service_start(caclient_t *cac, service_t *t)
     if (ct->td_service == t && ct->cs_cwc == cwc)
       break;
   }
+  prefpid      = ((mpegts_service_t *)t)->s_dvb_prefcapid;
+  prefpid_lock = ((mpegts_service_t *)t)->s_dvb_prefcapid_lock;
+  forcecaid    = ((mpegts_service_t *)t)->s_dvb_forcecaid;
   LIST_FOREACH(pcard, &cwc->cwc_cards, cs_card) {
     if (!pcard->running) continue;
     if (pcard->cs_ra.caid == 0) continue;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-      if (((mpegts_service_t *)t)->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
-          ((mpegts_service_t *)t)->s_dvb_prefcapid != st->es_pid)
+      if (prefpid_lock == PREFCAPID_FORCE && prefpid != st->es_pid)
         continue;
       LIST_FOREACH(c, &st->es_caids, link) {
         if (c->use && c->caid == pcard->cs_ra.caid)
-          if (!((mpegts_service_t *)t)->s_dvb_forcecaid ||
-               ((mpegts_service_t *)t)->s_dvb_forcecaid == c->caid)
+          if (!forcecaid || forcecaid == c->caid)
             break;
       }
       if (c) break;
