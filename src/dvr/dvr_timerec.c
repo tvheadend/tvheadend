@@ -508,7 +508,7 @@ dvr_timerec_entry_class_weekdays_rend(void *o, const char *lang)
 }
 
 static uint32_t
-dvr_timerec_entry_class_owner_opts(void *o)
+dvr_timerec_entry_class_owner_opts(void *o, uint32_t opts)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte && dte->dte_id.in_access &&

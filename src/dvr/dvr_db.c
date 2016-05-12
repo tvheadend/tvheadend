@@ -476,7 +476,7 @@ dvr_entry_status(dvr_entry_t *de)
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
     return N_("Scheduled for recording");
-    
+
   case DVR_RECORDING:
 
     switch(de->de_rec_state) {
@@ -688,7 +688,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
   /* Outside of window */
   if ((int64_t)llabs(e->start - de->de_start) > time_window)
     return 0;
-  
+
   /* Title match (or contains?) */
   if (strcmp(title1, title2))
     return 0;
@@ -1208,7 +1208,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       // if titles are not defined or do not match, don't dedup
       if (lang_str_compare(de->de_title, de2->de_title))
         continue;
-      
+
       if (match(de, de2, &aux)) {
         free(aux);
         return de2;
@@ -1233,7 +1233,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (record != DVR_AUTOREC_LRECORD_DIFFERENT_TITLE &&
           lang_str_compare(de->de_title, de2->de_title))
         continue;
-      
+
       if (match(de, de2, &aux)) {
         free(aux);
         return de2;
@@ -1343,7 +1343,7 @@ dvr_entry_destroy(dvr_entry_t *de, int delconf)
     hts_settings_remove("dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
 
   htsp_dvr_entry_delete(de);
-  
+
 #if ENABLE_INOTIFY
   dvr_inotify_del(de);
 #endif
@@ -1569,7 +1569,7 @@ static dvr_entry_t *_dvr_entry_update
     dvr_entry_set_timer(de);
   }
 
-  /* Title */ 
+  /* Title */
   if (e && e->episode && e->episode->title) {
     save |= lang_str_set2(&de->de_title, e->episode->title) ? DVR_UPDATED_TITLE : 0;
   } else if (title) {
@@ -1650,7 +1650,7 @@ dosave:
 /**
  *
  */
-dvr_entry_t * 
+dvr_entry_t *
 dvr_entry_update
   ( dvr_entry_t *de, int enabled,
     const char *dvr_config_uuid, channel_t *ch,
@@ -1669,7 +1669,7 @@ dvr_entry_update
 /**
  * Used to notify the DVR that an event has been replaced in the EPG
  */
-void 
+void
 dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
 {
   dvr_entry_t *de, *de_next;
@@ -1991,7 +1991,7 @@ dvr_entry_find_by_id(int id)
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if(idnode_get_short_uuid(&de->de_id) == id)
       break;
-  return de;  
+  return de;
 }
 
 
@@ -2129,7 +2129,7 @@ dvr_entry_class_start_set(void *o, const void *v)
 }
 
 static uint32_t
-dvr_entry_class_start_opts(void *o)
+dvr_entry_class_start_opts(void *o, uint32_t opts)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && !dvr_entry_is_editable(de))
@@ -2138,7 +2138,7 @@ dvr_entry_class_start_opts(void *o)
 }
 
 static uint32_t
-dvr_entry_class_config_name_opts(void *o)
+dvr_entry_class_config_name_opts(void *o, uint32_t opts)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && !dvr_entry_is_editable(de))
@@ -2147,7 +2147,7 @@ dvr_entry_class_config_name_opts(void *o)
 }
 
 static uint32_t
-dvr_entry_class_owner_opts(void *o)
+dvr_entry_class_owner_opts(void *o, uint32_t opts)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && de->de_id.in_access &&
@@ -2157,7 +2157,7 @@ dvr_entry_class_owner_opts(void *o)
 }
 
 static uint32_t
-dvr_entry_class_start_extra_opts(void *o)
+dvr_entry_class_start_extra_opts(void *o, uint32_t opts)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de && !dvr_entry_is_editable(de))
@@ -2811,7 +2811,7 @@ dvr_entry_class_extra_list(void *o, const char *lang)
   const char *msg = N_("Not set (use channel or DVR configuration)");
   return dvr_entry_class_duration_list(o, tvh_gettext_lang(lang, msg), 4*60, 1, lang);
 }
-                                        
+
 static htsmsg_t *
 dvr_entry_class_content_type_list(void *o, const char *lang)
 {
