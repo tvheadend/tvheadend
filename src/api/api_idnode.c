@@ -651,7 +651,7 @@ api_idnode_handler
       }
       pthread_mutex_unlock(&global_lock);
       if (destroyed)
-        pthread_yield(); /* delete penalty */
+        sched_yield(); /* delete penalty */
     }
     htsmsg_destroy(msg);
 
