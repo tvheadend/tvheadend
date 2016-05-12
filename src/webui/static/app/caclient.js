@@ -37,7 +37,8 @@ tvheadend.caclient = function(panel, index) {
         val: 'title',
         fields: ['uuid', 'title', 'status'],
         tabIndex: index,
-        uilevel: 'expert',
+        uilevel: tvheadend.capabilities.indexOf('caclient_advanced') === -1
+                 ? 'expert' : 'advanced',
         list: { url: 'api/caclient/list', params: { } },
         edit: { params: { list: list } },
         add: {

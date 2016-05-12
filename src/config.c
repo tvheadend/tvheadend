@@ -2122,6 +2122,16 @@ const idclass_t config_class = {
       .group  = 1
     },
     {
+      .type   = PT_BOOL,
+      .id     = "caclient_ui",
+      .name   = N_("Conditional Access"),
+      .desc   = N_("Enable the CAs (conditional accesses) tab in web user interface "
+                   "for the advanced level. By default, this tab is visible only "
+                   "in the expert level."),
+      .off    = offsetof(config_t, caclient_ui),
+      .group  = 1
+    },
+    {
       .type   = PT_U32,
       .id     = "descrambler_buffer",
       .name   = N_("Descrambler buffer (TS packets)"),

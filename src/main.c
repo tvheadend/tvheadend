@@ -1414,6 +1414,8 @@ htsmsg_t *tvheadend_capabilities_list(int check)
       htsmsg_add_str(r, NULL, tc->name);
     tc++;
   }
+  if (config.caclient_ui)
+    htsmsg_add_str(r, NULL, "caclient_advanced");
   return r;
 }
 
