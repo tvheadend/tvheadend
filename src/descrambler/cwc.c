@@ -1554,7 +1554,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
   caid_t *c;
   cs_card_data_t *pcard;
   char buf[512];
-  int i, prefpid, prefpid_lock, forcecaid;
+  int i, reuse = 0, prefpid, prefpid_lock, forcecaid;
 
   extern const idclass_t mpegts_service_class;
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
@@ -1588,8 +1588,25 @@ cwc_service_start(caclient_t *cac, service_t *t)
     if (ct) cwc_service_destroy((th_descrambler_t*)ct);
     goto end;
   }
-  if (ct)
-    goto end;
+  if (ct) {
+    reuse = 1;
+    for (i = 0; i < CWC_ES_PIDS; i++) {
+      if (!ct->cs_epids[i]) continue;
+      TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+        if (st->es_pid != ct->cs_epids[i]) continue;
+        LIST_FOREACH(c, &st->es_caids, link)
+          if (c->use && c->caid == pcard->cs_ra.caid)
+            break;
+        if (c) break;
+      }
+      if (st == NULL) {
+        descrambler_close_pid(ct->cs_mux, ct,
+                              DESCRAMBLER_ECM_PID(ct->cs_epids[i]));
+        reuse |= 2;
+      }
+    }
+    goto add;
+  }
 
   ct                   = calloc(1, sizeof(cwc_service_t));
   ct->cs_cwc           = cwc;
@@ -1608,10 +1625,12 @@ cwc_service_start(caclient_t *cac, service_t *t)
 
   LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
 
+add:
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     LIST_FOREACH(c, &st->es_caids, link)
       if (c->use && c->caid == pcard->cs_ra.caid) {
+        if (reuse && ct->cs_epids[i] != st->es_pid) reuse |= 2;
         ct->cs_epids[i++] = st->es_pid;
         break;
       }
@@ -1624,8 +1643,14 @@ cwc_service_start(caclient_t *cac, service_t *t)
                            DESCRAMBLER_ECM_PID(ct->cs_epids[i]),
                            cwc_table_input, t);
 
-  tvhlog(LOG_DEBUG, "cwc", "%s using CWC %s:%d",
-         service_nicename(t), cwc->cwc_hostname, cwc->cwc_port);
+  if (reuse & 2) {
+    ct->cs_channel = -1;
+    ct->ecm_state = ECM_INIT;
+  }
+
+  if (reuse != 1)
+    tvhlog(LOG_DEBUG, "cwc", "%s %susing CWC %s:%d",
+           service_nicename(t), reuse ? "re" : "", cwc->cwc_hostname, cwc->cwc_port);
 
 end:
   pthread_mutex_unlock(&t->s_stream_mutex);
