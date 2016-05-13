@@ -96,6 +96,7 @@ function download
 
   # Failed
   if [ ${R} -ne 0 ]; then
+    echo "FAILED TO DOWNLOAD ${URL} (BUT THIS IS NOT A FATAL ERROR! DO NOT REPORT THAT!)"
     rm -f ${P}.tmp
     return ${R}
   fi
