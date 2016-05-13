@@ -2110,10 +2110,14 @@ capmt_service_start(caclient_t *cac, service_t *s)
       /* update PIDs only */
       i = 0;
       TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
-        if (i < MAX_PIDS && SCT_ISAV(st->es_type))
+        if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
+          if (ct->ct_pids[i] != st->es_pid) change = 1;
           ct->ct_pids[i++] = st->es_pid;
-      for ( ; i < MAX_PIDS; i++)
+        }
+      for ( ; i < MAX_PIDS; i++) {
+        if (ct->ct_pids[i]) change = 1;
         ct->ct_pids[i] = 0;
+      }
       goto fin;
     }
 
