@@ -84,6 +84,14 @@ linuxdvb_lnb_standard_freq
 }
 
 static int
+linuxdvb_lnb_bandstack_match
+  ( linuxdvb_lnb_t *l, dvb_mux_t *lm1, dvb_mux_t *lm2 )
+{
+  /* everything is in one cable */
+  return 1;
+}
+
+static int
 linuxdvb_lnb_standard_match
   ( linuxdvb_lnb_t *l, dvb_mux_t *lm1, dvb_mux_t *lm2 )
 {
@@ -236,6 +244,20 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   },
   {
     { {
+      .ld_type    = "C-Band (bandstack)",
+      .ld_tune    = linuxdvb_lnb_standard_tune,
+      },
+      .lnb_freq   = linuxdvb_lnb_bandstack_freq,
+      .lnb_match  = linuxdvb_lnb_bandstack_match,
+      .lnb_band   = linuxdvb_lnb_bandstack_band,
+      .lnb_pol    = linuxdvb_lnb_bandstack_pol,
+    },
+    .lnb_low    =  5150000,
+    .lnb_high   =  5750000,
+    .lnb_switch =  0,
+  },
+  {
+    { {
       .ld_type    = "Ku 10750",
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
@@ -324,7 +346,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
       .ld_tune    = linuxdvb_lnb_standard_tune,
       },
       .lnb_freq   = linuxdvb_lnb_bandstack_freq,
-      .lnb_match  = linuxdvb_lnb_standard_match,
+      .lnb_match  = linuxdvb_lnb_bandstack_match,
       .lnb_band   = linuxdvb_lnb_bandstack_band,
       .lnb_pol    = linuxdvb_lnb_bandstack_pol,
     },
