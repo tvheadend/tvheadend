@@ -1512,6 +1512,10 @@ static dvr_entry_t *_dvr_entry_update
       de->de_stop_extra = stop_extra;
       save |= DVR_UPDATED_STOP_EXTRA;
     }
+    if (save & (DVR_UPDATED_STOP|DVR_UPDATED_STOP_EXTRA)) {
+      updated = 1;
+      dvr_entry_set_timer(de);
+    }
     goto dosave;
   }
 
