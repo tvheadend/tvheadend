@@ -21,6 +21,7 @@
 #include "memoryinfo.h"
 
 extern memoryinfo_t mpegts_input_queue_memoryinfo;
+extern memoryinfo_t mpegts_input_table_memoryinfo;
 
 void
 mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
@@ -35,6 +36,7 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
 
   /* Memory info */
   memoryinfo_register(&mpegts_input_queue_memoryinfo);
+  memoryinfo_register(&mpegts_input_table_memoryinfo);
 
   /* FastScan init */
   dvb_fastscan_init();

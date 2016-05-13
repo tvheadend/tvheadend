@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 
 memoryinfo_t mpegts_input_queue_memoryinfo = { .my_name = "MPEG-TS input queue" };
+memoryinfo_t mpegts_input_table_memoryinfo = { .my_name = "MPEG-TS table queue" };
 
 static void
 mpegts_input_del_network ( mpegts_network_link_t *mnl );
@@ -1389,6 +1390,7 @@ mpegts_input_process
               memcpy(mtf->mtf_tsb, tsb, llen);
               mtf->mtf_mux = mm;
               mi->mi_table_queue_size += llen;
+              memoryinfo_alloc(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + llen);
               TAILQ_INSERT_TAIL(&mi->mi_table_queue, mtf, mtf_link);
               table_wakeup = 1;
             }
@@ -1527,6 +1529,7 @@ mpegts_input_thread ( void * p )
 
   /* Flush */
   while ((mp = TAILQ_FIRST(&mi->mi_input_queue))) {
+    memoryinfo_free(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + mp->mp_len);
     TAILQ_REMOVE(&mi->mi_input_queue, mp, mp_link);
     free(mp);
   }
@@ -1553,6 +1556,7 @@ mpegts_input_table_thread ( void *aux )
       continue;
     }
     mi->mi_table_queue_size -= mtf->mtf_len;
+    memoryinfo_free(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + mtf->mtf_len);
     TAILQ_REMOVE(&mi->mi_table_queue, mtf, mtf_link);
     pthread_mutex_unlock(&mi->mi_output_lock);
     
@@ -1576,6 +1580,7 @@ mpegts_input_table_thread ( void *aux )
 
   /* Flush */
   while ((mtf = TAILQ_FIRST(&mi->mi_table_queue)) != NULL) {
+    memoryinfo_free(&mpegts_input_table_memoryinfo, sizeof(mpegts_table_feed_t) + mtf->mtf_len);
     TAILQ_REMOVE(&mi->mi_table_queue, mtf, mtf_link);
     free(mtf);
   }
