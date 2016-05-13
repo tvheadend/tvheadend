@@ -26,12 +26,14 @@
 #include "notify.h"
 #include "idnode.h"
 #include "dbus.h"
+#include "memoryinfo.h"
 
 #include <pthread.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 
+memoryinfo_t mpegts_input_queue_memoryinfo = { .my_name = "MPEG-TS input queue" };
 
 static void
 mpegts_input_del_network ( mpegts_network_link_t *mnl );
@@ -1121,6 +1123,7 @@ retry:
 
     pthread_mutex_lock(&mi->mi_input_lock);
     if (mmi->mmi_mux->mm_active == mmi) {
+      memoryinfo_alloc(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + len2);
       TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
       tvh_cond_signal(&mi->mi_input_cond, 0);
     } else {
@@ -1470,6 +1473,7 @@ mpegts_input_thread ( void * p )
       tvh_cond_wait(&mi->mi_input_cond, &mi->mi_input_lock);
       continue;
     }
+    memoryinfo_free(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + mp->mp_len);
     TAILQ_REMOVE(&mi->mi_input_queue, mp, mp_link);
     pthread_mutex_unlock(&mi->mi_input_lock);
       

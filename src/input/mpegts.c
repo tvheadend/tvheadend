@@ -18,6 +18,9 @@
 
 #include "input.h"
 #include "mpegts/fastscan.h"
+#include "memoryinfo.h"
+
+extern memoryinfo_t mpegts_input_queue_memoryinfo;
 
 void
 mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
@@ -29,6 +32,9 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
   idclass_register(&mpegts_mux_instance_class);
   idclass_register(&mpegts_service_class);
   idclass_register(&mpegts_service_raw_class);
+
+  /* Memory info */
+  memoryinfo_register(&mpegts_input_queue_memoryinfo);
 
   /* FastScan init */
   dvb_fastscan_init();
