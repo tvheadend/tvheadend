@@ -105,7 +105,7 @@ static inline int satip_server_match_uuid(const char *uuid) { return 0; }
 
 static inline void satip_server_config_changed(void) { };
 
-static inline void satip_server_init(int rtsp_port) { };
+static inline void satip_server_init(const char *bindaddr, int rtsp_port) { };
 static inline void satip_server_register(void) { };
 static inline void satip_server_done(void) { };
 
