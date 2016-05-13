@@ -683,6 +683,8 @@ struct mpegts_input
   pthread_mutex_t                 mi_input_lock;
   tvh_cond_t                      mi_input_cond;
   TAILQ_HEAD(,mpegts_packet)      mi_input_queue;
+  uint64_t                        mi_input_queue_size;
+  tvhlog_limit_t                  mi_input_queue_loglimit;
 
   /* Data processing/output */
   // Note: this lock (mi_output_lock) protects all the remaining
@@ -696,6 +698,8 @@ struct mpegts_input
   pthread_t                       mi_table_tid;
   tvh_cond_t                      mi_table_cond;
   mpegts_table_feed_queue_t       mi_table_queue;
+  uint64_t                        mi_table_queue_size;
+  tvhlog_limit_t                  mi_table_queue_loglimit;
 
   /* DBus */
 #if ENABLE_DBUS_1
