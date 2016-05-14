@@ -1894,7 +1894,7 @@ capmt_caid_change(th_descrambler_t *td)
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
-    capmt_notify_server(capmt, ct, 0);
+    capmt_notify_server(capmt, ct, 1);
 }
 
 static void
@@ -2111,11 +2111,11 @@ capmt_service_start(caclient_t *cac, service_t *s)
       i = 0;
       TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
         if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
-          if (ct->ct_pids[i] != st->es_pid) change = 1;
+          if (ct->ct_pids[i] != st->es_pid) change = 3;
           ct->ct_pids[i++] = st->es_pid;
         }
       for ( ; i < MAX_PIDS; i++) {
-        if (ct->ct_pids[i]) change = 1;
+        if (ct->ct_pids[i]) change = 3;
         ct->ct_pids[i] = 0;
       }
       goto fin;
@@ -2210,7 +2210,7 @@ fin:
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
-    capmt_notify_server(capmt, NULL, 0);
+    capmt_notify_server(capmt, NULL, (change >> 1) & 1);
 }
 
 
