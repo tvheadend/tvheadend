@@ -1708,8 +1708,9 @@ linuxdvb_frontend_tune0
   } else if (lfe->lfe_type == DVB_TYPE_ISDB_T) {
     int i, j;
     S2CMD(DTV_BANDWIDTH_HZ,      dvb_bandwidth(dmc->u.dmc_fe_isdbt.bandwidth));
-    S2CMD(DTV_GUARD_INTERVAL,    TRU(isdbt.guard_interval, guard_tbl, GUARD_INTERVAL_AUTO));
 #if DVB_VER_ATLEAST(5,1)
+    S2CMD(DTV_GUARD_INTERVAL, TRU(isdbt.guard_interval, guard_tbl, GUARD_INTERVAL_AUTO));
+    S2CMD(DTV_TRANSMISSION_MODE, TRANSMISSION_MODE_AUTO);
     S2CMD(DTV_ISDBT_LAYER_ENABLED,     7);
     S2CMD(DTV_ISDBT_PARTIAL_RECEPTION, 1);
     S2CMD(DTV_ISDBT_SOUND_BROADCASTING,0);
