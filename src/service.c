@@ -313,6 +313,7 @@ stream_clean(elementary_stream_t *st)
 void
 service_stream_destroy(service_t *t, elementary_stream_t *es)
 {
+  elementary_stream_t *es1;
   caid_t *c;
 
   if(t->s_status == SERVICE_RUNNING)
@@ -324,6 +325,11 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
   }
 
   TAILQ_REMOVE(&t->s_components, es, es_link);
+  TAILQ_FOREACH(es1, &t->s_filt_components, es_filt_link)
+    if (es1 == es) {
+      TAILQ_REMOVE(&t->s_filt_components, es, es_filt_link);
+      break;
+    }
 
   while ((c = LIST_FIRST(&es->es_caids)) != NULL) {
     LIST_REMOVE(c, link);
@@ -414,6 +420,34 @@ service_build_filter_add(service_t *t, elementary_stream_t *st,
 /**
  *
  */
+static void
+service_print_filter(service_t *t)
+{
+#if 0
+  elementary_stream_t *st;
+  caid_t *ca;
+
+  TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    if (LIST_EMPTY(&st->es_caids)) {
+      tvhinfo("service", "esfilter: \"%s\" %03d %05d %s %s",
+              t->s_nicename, st->es_index, st->es_pid,
+              streaming_component_type2txt(st->es_type),
+              lang_code_get(st->es_lang));
+    } else {
+      LIST_FOREACH(ca, &st->es_caids, link)
+        if (ca->use)
+          tvhinfo("service", "esfilter: \"%s\" %03d %05d %s %04x %06x",
+                  t->s_nicename, st->es_index, st->es_pid,
+                  streaming_component_type2txt(st->es_type),
+                  ca->caid, ca->providerid);
+    }
+  }
+#endif
+}
+
+/**
+ *
+ */
 void
 service_build_filter(service_t *t)
 {
@@ -436,6 +470,7 @@ service_build_filter(service_t *t)
     LIST_FOREACH(ca, &st->es_caids, link)
       ca->use = 1;
   }
+  service_print_filter(t);
   return;
 
 filter:
@@ -502,9 +537,9 @@ filter:
           if (esf->esf_sindex && esf->esf_sindex != sindex)
             continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %03d %05d %04x %06x \"%s\" %s",
-              esfilter_class2txt(i), st->es_index, esf->esf_index, st->es_pid,
-              esf->esf_caid, esf->esf_caprovider, t->s_nicename,
+            tvhlog(LOG_INFO, "service", "esfilter: \"%s\" %s %03d %03d %05d %04x %06x %s",
+              t->s_nicename, esfilter_class2txt(i), st->es_index,
+              esf->esf_index, st->es_pid, esf->esf_caid, esf->esf_caprovider,
               esfilter_action2txt(esf->esf_action));
           switch (esf->esf_action) {
           case ESFA_NONE:
@@ -555,11 +590,10 @@ ca_ignore:
           if (esf->esf_sindex && esf->esf_sindex != sindex)
             continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: %s %03d %03d %05d %s %s \"%s\" %s",
-              esfilter_class2txt(i), st->es_index, esf->esf_index,
+            tvhlog(LOG_INFO, "service", "esfilter: \"%s\" %s %03d %03d %05d %s %s %s",
+              t->s_nicename, esfilter_class2txt(i), st->es_index, esf->esf_index,
               st->es_pid, streaming_component_type2txt(st->es_type),
-              lang_code_get(st->es_lang), t->s_nicename,
-              esfilter_action2txt(esf->esf_action));
+              lang_code_get(st->es_lang), esfilter_action2txt(esf->esf_action));
           switch (esf->esf_action) {
           case ESFA_NONE:
             break;
@@ -626,6 +660,8 @@ ignore:
       }
     }
   }
+
+  service_print_filter(t);
 }
 
 /**
