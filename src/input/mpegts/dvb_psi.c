@@ -1018,10 +1018,11 @@ dvb_pmt_callback
   pthread_mutex_lock(&s->s_stream_mutex);
   r = psi_parse_pmt(mt->mt_mux, s, ptr, len, &update);
   pthread_mutex_unlock(&s->s_stream_mutex);
-  if (update & PMT_UPDATE_NEW_CAID)
-    descrambler_caid_changed((service_t *)s);
   if (r)
     service_restart((service_t*)s);
+  else if (update & (PMT_UPDATE_NEW_CA_STREAM|PMT_UPDATE_NEW_CAID|
+                     PMT_UPDATE_CAID_DELETED|PMT_UPDATE_CAID_PID))
+    descrambler_caid_changed((service_t *)s);
 
 #if ENABLE_LINUXDVB_CA
   /* DVBCAM requires full pmt data including header and crc */

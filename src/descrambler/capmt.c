@@ -181,6 +181,8 @@ typedef struct capmt_caid_ecm {
   mpegts_service_t *cce_service;
 
   LIST_ENTRY(capmt_caid_ecm) cce_link;
+
+  int cce_delete_me;
 } capmt_caid_ecm_t;
 
 /**
@@ -670,10 +672,13 @@ capmt_queue_msg
   capmt_message_t *msg, *msg2;
 
   if (flags & CAPMT_MSG_CLEAR) {
-    while ((msg = TAILQ_FIRST(&capmt->capmt_writeq)) != NULL) {
-      TAILQ_REMOVE(&capmt->capmt_writeq, msg, cm_link);
-      sbuf_free(&msg->cm_sb);
-      free(msg);
+    for (msg = TAILQ_FIRST(&capmt->capmt_writeq); msg; msg = msg2) {
+      msg2 = TAILQ_NEXT(msg, cm_link);
+      if (msg->cm_sid == sid) {
+        TAILQ_REMOVE(&capmt->capmt_writeq, msg, cm_link);
+        sbuf_free(&msg->cm_sb);
+        free(msg);
+      }
     }
   }
   if (flags & CAPMT_MSG_NODUP) {
@@ -792,9 +797,9 @@ capmt_send_stop(capmt_service_t *t)
  *
  */
 static void
-capmt_send_stop_descrambling(capmt_t *capmt)
+capmt_send_stop_descrambling(capmt_t *capmt, uint8_t demuxer)
 {
-  static uint8_t buf[8] = {
+  uint8_t buf[8] = {
     0x9F,
     0x80,
     0x3F,
@@ -802,7 +807,7 @@ capmt_send_stop_descrambling(capmt_t *capmt)
     0x83,
     0x02,
     0x00,
-    0xFF, /* wildcard demux id */
+    demuxer, /* 0xFF is wildcard demux id */
   };
   capmt_write_msg(capmt, 0, 0, buf, 8);
 }
@@ -1866,28 +1871,81 @@ capmt_caid_change(th_descrambler_t *td)
   capmt_t *capmt = ct->ct_capmt;
   mpegts_service_t *t = (mpegts_service_t*)td->td_service;
   elementary_stream_t *st;
-  capmt_caid_ecm_t *cce;
+  capmt_caid_ecm_t *cce, *cce_next;
   caid_t *c;
-  int change = 0;
+  int i, change = 0;
 
   pthread_mutex_lock(&capmt->capmt_mutex);
   pthread_mutex_lock(&t->s_stream_mutex);
 
+  /* add missing A/V PIDs and ECM PIDs */
+  i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+    if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
+      if (i == 0) change = 1;
+      ct->ct_pids[i++] = st->es_pid;
+    }
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
       continue;
     LIST_FOREACH(c, &st->es_caids, link) {
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
-        if (c->use && cce->cce_caid == c->caid && cce->cce_providerid == c->providerid)
-          if (!t->s_dvb_forcecaid || t->s_dvb_forcecaid == cce->cce_caid)
-            break;
-      if (cce)
-        continue;
-      capmt_caid_add(ct, t, st->es_pid, c);
-      change = 1;
+        if (c->use && cce->cce_caid == c->caid &&
+            cce->cce_providerid == c->providerid &&
+            st->es_pid == cce->cce_ecmpid &&
+            (!t->s_dvb_forcecaid || t->s_dvb_forcecaid == cce->cce_caid))
+          break;
+      if (!cce) {
+        capmt_caid_add(ct, t, st->es_pid, c);
+        change = 1;
+      }
     }
+  }
+
+  /* clear rest */
+  for (; i < MAX_PIDS; i++)
+    ct->ct_pids[i] = 0;
+
+  /* find removed ECM PIDs */
+  LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link) {
+    if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
+        cce->cce_ecmpid != t->s_dvb_prefcapid) {
+      st = NULL;
+    } else {
+      TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
+        LIST_FOREACH(c, &st->es_caids, link)
+          if (c->use && cce->cce_caid == c->caid &&
+              cce->cce_providerid == c->providerid &&
+              st->es_pid == cce->cce_ecmpid)
+            break;
+        if (c) break;
+      }
+    }
+    if (!st) {
+      change = 3;
+      cce->cce_delete_me = 1;
+    } else {
+      cce->cce_delete_me = 0;
+    }
+  }
+
+  if (change & 2) {
+    /* remove marked ECM PIDs */
+    for (cce = LIST_FIRST(&ct->ct_caid_ecm); cce; cce = cce_next) {
+      cce_next = LIST_NEXT(cce, cce_link);
+      if (cce->cce_delete_me) {
+        LIST_REMOVE(cce, cce_link);
+        free(cce);
+      }
+    }
+  }
+
+  if (change) {
+    if (capmt_oscam_netproto(capmt))
+      capmt_send_stop_descrambling(capmt, ct->ct_adapter);
+    else
+      capmt_send_stop(ct);
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);
@@ -2052,7 +2110,7 @@ capmt_enumerate_services(capmt_t *capmt, int force)
     if (capmt->capmt_sock[0] >= 0)
       caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_READY);
     if (capmt_oscam_netproto(capmt)) {
-      capmt_send_stop_descrambling(capmt);
+      capmt_send_stop_descrambling(capmt, 0xff);
       capmt_pid_flush(capmt);
     }
     else
@@ -2106,20 +2164,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link)
     /* skip, if we already have this service */
-    if (ct->td_service == (service_t *)t) {
-      /* update PIDs only */
-      i = 0;
-      TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
-        if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
-          if (ct->ct_pids[i] != st->es_pid) change = 3;
-          ct->ct_pids[i++] = st->es_pid;
-        }
-      for ( ; i < MAX_PIDS; i++) {
-        if (ct->ct_pids[i]) change = 3;
-        ct->ct_pids[i] = 0;
-      }
+    if (ct->td_service == (service_t *)t)
       goto fin;
-    }
 
   if (tuner < 0 && capmt->capmt_oscam != CAPMT_OSCAM_TCP &&
                    capmt->capmt_oscam != CAPMT_OSCAM_NET_PROTO &&

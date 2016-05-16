@@ -687,8 +687,9 @@ service_start(service_t *t, int instance, int weight, int flags,
 
   pthread_mutex_lock(&t->s_stream_mutex);
   service_build_filter(t);
-  descrambler_caid_changed(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
+
+  descrambler_caid_changed(t);
 
   if((r = t->s_start_feed(t, instance, weight, flags)))
     return r;
@@ -1407,6 +1408,8 @@ service_restart(service_t *t)
   }
 
   pthread_mutex_unlock(&t->s_stream_mutex);
+
+  descrambler_caid_changed(t);
 
 refresh:
   if(t->s_refresh_feed != NULL)
