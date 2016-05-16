@@ -1563,12 +1563,10 @@ htsp_method_getEvents(htsp_connection_t *htsp, htsmsg_t *in)
   /* Use event as starting point */
   if (e || ch) {
 
-    if (e && !ch) ch = e->channel;
-
-    if (!htsp_user_access_channel(htsp, ch))
-      return htsp_error(htsp, N_("User does not have access"));
-
     if (!e) e = ch->ch_epg_now ?: ch->ch_epg_next;
+
+    if (e && !htsp_user_access_channel(htsp, e->channel))
+      return htsp_error(htsp, N_("User does not have access"));
 
     /* Output */
     events = htsmsg_create_list();
