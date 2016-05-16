@@ -73,6 +73,7 @@ typedef struct dmx_filter {
 #define CA_SET_DESCR_X     0x866f1040
 #define CA_SET_DESCR_AES   0x40106f87
 #define CA_SET_DESCR_AES_X 0x876f1040
+#define CA_SET_DESCR_MODE  0x400c6f88
 #define CA_SET_PID         0x40086f87
 #define CA_SET_PID_X       0x876f0840
 #define DMX_STOP           0x00006f2a
@@ -141,6 +142,15 @@ LIST_HEAD(capmt_caid_ecm_list, capmt_caid_ecm);
  */
 typedef struct ca_info {
   uint16_t pids[MAX_PIDS];	// elementary stream pids (was: sequence / service id number)
+  enum {
+    CA_ALGO_DVBCSA,
+    CA_ALGO_DES,
+    CA_ALGO_AES128,
+  } algo;
+  enum {
+    CA_MODE_ECB,
+    CA_MODE_CBC,
+  } cipher_mode;
 } ca_info_t;
 
 /** 
@@ -1177,6 +1187,8 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
     return 4 + 16 + adapter_byte;
   else if (cmd == CA_SET_DESCR_AES)
     return 4 + 32;
+  else if (cmd == CA_SET_DESCR_MODE && capmt_oscam_netproto(capmt))
+    return 4 + 12;
   else if (oscam_new && cmd == DMX_SET_FILTER)
     //when using network protocol the dmx_sct_filter_params fields are added seperately to avoid padding problems, so we substract 2 bytes:
     return 4 + 2 + 60 + adapter_byte + (capmt_oscam_netproto(capmt) ? -2 : 0);
@@ -1267,7 +1279,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     tvhlog(LOG_DEBUG, "capmt", "%s, CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
                       capmt_name(capmt), adapter, parity, index,
                       cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
-    if (index == -1)   // skipping removal request
+    if (index < 0)   // skipping removal request
       return;
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
@@ -1289,7 +1301,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
                       capmt_name(capmt), adapter, parity, index,
                       cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7],
                       cw[8], cw[9], cw[10], cw[11], cw[12], cw[13], cw[14], cw[15]);
-    if (index == -1)   // skipping removal request
+    if (index < 0)   // skipping removal request
       return;
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
@@ -1299,6 +1311,28 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES, empty, cw, 1);
     } else
       tvhlog(LOG_ERR, "capmt", "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
+
+  } else if (cmd == CA_SET_DESCR_MODE) {
+
+    int32_t index       = sbuf_peek_s32(sb, offset + 4);
+    int32_t algo        = sbuf_peek_s32(sb, offset + 8);
+    int32_t cipher_mode = sbuf_peek_s32(sb, offset + 12);
+    ca_info_t *cai;
+
+    if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX)
+      return;
+    if (algo < 0 || algo > 2)
+      return;
+    if (cipher_mode < 0 || cipher_mode > 1)
+      return;
+
+    cai = &capmt->capmt_adapters[adapter].ca_info[index];
+    if (algo != cai->algo && cai->cipher_mode != cipher_mode) {
+      tvhlog(LOG_DEBUG, "capmt", "%s, CA_SET_DESCR_MODE adapter %d algo %d cipher mode %d",
+                      capmt_name(capmt), adapter, algo, cipher_mode);
+      cai->algo        = algo;
+      cai->cipher_mode = cipher_mode;
+    }
 
   } else if (cmd == DMX_SET_FILTER) {
 
