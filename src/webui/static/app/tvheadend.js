@@ -12,6 +12,12 @@ tvheadend.doc_history = [];
 tvheadend.doc_win = null;
 tvheadend.language = window.navigator.userLanguage || window.navigator.language;
 
+// Use en-US if browser language detection fails.
+if (!tvheadend.language || !/\S/.test(tvheadend.language)) {
+    console.log('No browser language detected, using hard-coded en-US.');
+    tvheadend.language = "en-US";
+}
+
 tvheadend.cookieProvider = new Ext.state.CookieProvider({
   // 7 days from now
   expires: new Date(new Date().getTime() + (1000 * 60 * 60 * 24 * 7))
