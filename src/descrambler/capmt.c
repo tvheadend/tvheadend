@@ -1916,7 +1916,8 @@ capmt_caid_change(th_descrambler_t *td)
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
-      if (i == 0) change = 1;
+      /* we use this first A/V PID in the PMT message */
+      if (i == 0 && ct->ct_pids[i] != st->es_pid) change = 1;
       ct->ct_pids[i++] = st->es_pid;
     }
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
@@ -2290,7 +2291,7 @@ fin:
   pthread_mutex_unlock(&capmt->capmt_mutex);
 
   if (change)
-    capmt_notify_server(capmt, NULL, (change >> 1) & 1);
+    capmt_notify_server(capmt, NULL, 0);
 }
 
 
