@@ -1046,7 +1046,14 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
         if (rf.length)
             panel.add(newFieldSet({ title: _("Read-only Info"), items: rf, collapsed: 'true'}));
     }
+
+    // form customization (if any) before layout()
+    if (('forms' in conf) && (meta['class'] in conf.forms)) {
+        conf.forms[meta['class']](panel.getForm());
+    }
+
     panel.doLayout();
+
     if (width)
         panel.fixedWidth = width + 50;
     if (conf.uuids) {
