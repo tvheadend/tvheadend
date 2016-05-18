@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Alex Platero <unhomen@gmail.com>, 2016
 # Pablo Rodríguez <trujulu@gmail.com>, 2015
 # Pablo Rodríguez <trujulu@gmail.com>, 2015-2016
 # Pepe Gomez <jagcos@gmail.com>, 2015
@@ -12,8 +13,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-05-07 23:18+0000\n"
+"Last-Translator: Pablo Rodríguez <trujulu@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -186,11 +187,11 @@ msgstr "Aplicar"
 
 #: src/webui/static/app/tvhlog.js:25
 msgid "Apply any changes made below to the run-time configuration."
-msgstr "Aplicar cualquier cambio hecho debajo de el tiempo de ejecucción configurado."
+msgstr "Aplicar cualquier cambio hecho debajo del tiempo de ejecución configurado."
 
 #: src/webui/static/app/tvhlog.js:24
 msgid "Apply configuration (run-time only)"
-msgstr "Applicar configuración (solo tiempo de ejecucción)"
+msgstr "Aplicar configuración (solo tiempo de ejecución)"
 
 #: src/webui/static/app/idnode.js:1478
 msgid "Apply settings"
@@ -434,7 +435,7 @@ msgstr "Comentario"
 
 #: src/webui/static/app/status.js:726
 msgid "Compression ratio"
-msgstr "Ratio de Compresión"
+msgstr "Ratio de compresión"
 
 #: src/webui/static/app/caclient.js:45 src/webui/static/app/caclient.js:62
 msgid "Conditional Access Client"
@@ -735,11 +736,11 @@ msgstr "Filtrar canal..."
 
 #: src/webui/static/app/epg.js:718
 msgid "Filter content type..."
-msgstr "Filtrat tipo de contenido..."
+msgstr "Filtrar tipo de contenido..."
 
 #: src/webui/static/app/epg.js:739
 msgid "Filter duration..."
-msgstr "Filtrat duración..."
+msgstr "Filtrar duración..."
 
 #: src/webui/static/app/epg.js:694
 msgid "Filter tag..."
@@ -913,7 +914,7 @@ msgstr "Idioma"
 
 #: src/webui/static/app/tvheadend.js:139
 msgid "Last Help Pages"
-msgstr ""
+msgstr "Últimas páginas de ayuda"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -1015,11 +1016,11 @@ msgstr "Mayo"
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Memory Information Entries"
-msgstr ""
+msgstr "Entradas de información de memoria"
 
 #: src/webui/static/app/tvhlog.js:38
 msgid "Memory Information Entry"
-msgstr ""
+msgstr "Entrada información de memoria"
 
 #: src/webui/static/app/tvheadend.js:292
 msgid "Message"
@@ -1318,7 +1319,7 @@ msgstr "Grabar este programa ahora"
 
 #: src/webui/static/app/tvheadend.js:733
 msgid "Recording"
-msgstr "Grabando"
+msgstr "Grabaciones"
 
 #: src/webui/static/app/dvr.js:146
 msgid "Recording details"

@@ -4,17 +4,18 @@
 # 
 # Translators:
 # Soul Mode Productions <soulmode32@gmail.com>, 2015
+# Barna Peto <trex2004@gmail.com>, 2016
 # Frankovics András <frankovics.andras@outlook.com>, 2015
 # Levente Cseh <levente@csehs.com>, 2015-2016
 # Stolmar Tamas <transifex@knight.qualitis.hu>, 2016
-# Trex <trex2004@gmail.com>, 2015-2016
+# Barna Peto <trex2004@gmail.com>, 2015-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-04-21 05:37+0000\n"
+"Last-Translator: Barna Peto <trex2004@gmail.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -60,7 +61,7 @@ msgstr "(Alapértelmezett profil)"
 
 #: src/webui/doc_md.c:180
 msgid "(Read-only)"
-msgstr ""
+msgstr "(csak olvasható)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "0"
@@ -222,7 +223,7 @@ msgstr "A"
 
 #: src/dvr/dvr_autorec.c:1054
 msgid "A channel tag (e.g. a group of channels) to which this rule applies."
-msgstr ""
+msgstr "A csatorna cimke (p.l. egy csatorna csoport) amire ez a szabály érvényes"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:345
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:57
@@ -7491,7 +7492,7 @@ msgstr ""
 
 #: src/access.c:1395
 msgid "Web theme"
-msgstr ""
+msgstr "Web téma"
 
 #: src/config.c:1991
 msgid "Web user interface"
@@ -7580,11 +7581,11 @@ msgstr "addpids/delpids támogatva"
 
 #: src/profile.c:1661
 msgid "bd: nvenc(h264 / h265)"
-msgstr ""
+msgstr "bd: nvenc(h264 / h265)"
 
 #: src/profile.c:1665
 msgid "default: nvenc(h264 / h265)"
-msgstr ""
+msgstr "alapértelmezett: nvenc(h264 / h265)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
@@ -7592,19 +7593,19 @@ msgstr "en50494"
 
 #: src/profile.c:1653
 msgid "fast: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "gyors: h264 / h265 / qsv(h264 / h265)"
 
 #: src/profile.c:1652
 msgid "faster: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "gyorsabb: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1660
 msgid "hp: nvenc(h264 / h265)"
-msgstr ""
+msgstr "hp: nvenc(h264 / h265)"
 
 #: src/profile.c:1659
 msgid "hq: nvenc(h264 / h265)"
-msgstr ""
+msgstr "hq: nvenc(h264 / h265)"
 
 #: src/dvr/dvr_db.c:2771
 msgid "hrs"
@@ -7617,19 +7618,19 @@ msgstr "Érvénytelen beállítás lett megadva [%s]"
 
 #: src/profile.c:1662
 msgid "ll: nvenc(h264 / h265)"
-msgstr ""
+msgstr "ll: nvenc(h264 / h265)"
 
 #: src/profile.c:1664
 msgid "llhp: nvenc(h264 / h265)"
-msgstr ""
+msgstr "llhp: nvenc(h264 / h265)"
 
 #: src/profile.c:1663
 msgid "llhq: nvenc(h264 / h265)"
-msgstr ""
+msgstr "llhq: nvenc(h264 / h265)"
 
 #: src/profile.c:1654
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "közepes: h264 / h265 / qsv(h264 / h265)"
 
 #: src/dvr/dvr_db.c:2772
 msgid "min"
@@ -7650,15 +7651,15 @@ msgstr "placebo: h264 / h265"
 
 #: src/profile.c:1655
 msgid "slow: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "lassú: h264 / h265 / qsv(h264 / h265)"
 
 #: src/profile.c:1656
 msgid "slower: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "lassabb: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1650
 msgid "superfast: h264 / h265"
-msgstr ""
+msgstr "szuper gyors: h264 / h265"
 
 #: src/main.c:877
 msgid "tsfile input (mux file)"
@@ -7670,12 +7671,12 @@ msgstr "tvhdhomerun ügyfél"
 
 #: src/profile.c:1649
 msgid "ultrafast: h264 / h265"
-msgstr ""
+msgstr "ultra gyors: h264 / h265"
 
 #: src/profile.c:1651
 msgid "veryfast: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "nagyon gyors: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1657
 msgid "veryslow: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "nagyon lassú: h264 / h265 / qsv(h264)"

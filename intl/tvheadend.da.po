@@ -3,7 +3,8 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Henry Jensen <henry@madsen-jensen.dk>, 2015-2016
+# Henry Madsen Jensen <henry@madsen-jensen.dk>, 2015-2016
+# Henry Madsen Jensen <henry@madsen-jensen.dk>, 2016
 # Poul Kalff <poulkalff@gmail.com>, 2015
 # Thomas Saabye <t.saabye@gmail.com>, 2015
 msgid ""
@@ -11,8 +12,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-05-08 12:35+0000\n"
+"Last-Translator: Henry Madsen Jensen <henry@madsen-jensen.dk>\n"
 "Language-Team: Danish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/da/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -364,7 +365,7 @@ msgstr "Adgang"
 
 #: src/access.c:1316
 msgid "Access Entries"
-msgstr ""
+msgstr "Adgangsposteringer"
 
 #: src/esfilter.c:693 src/esfilter.c:785 src/esfilter.c:877 src/esfilter.c:969
 #: src/esfilter.c:1072 src/esfilter.c:1151
@@ -993,7 +994,7 @@ msgstr "Kanal"
 #: src/htsp_server.c:1499 src/htsp_server.c:1541 src/htsp_server.c:1626
 #: src/htsp_server.c:1796 src/htsp_server.c:2332 src/htsp_server.c:2335
 msgid "Channel does not exist"
-msgstr ""
+msgstr "Kanalen eksistere ikke"
 
 #: src/dvr/dvr_db.c:2936
 msgid "Channel icon"
@@ -1001,15 +1002,15 @@ msgstr "Kanal-ikon"
 
 #: src/dvr/dvr_db.c:2937
 msgid "Channel icon URL."
-msgstr ""
+msgstr "Kanal ikon URL"
 
 #: src/epggrab/channel.c:751
 msgid "Channel icon as defined in EPG data."
-msgstr ""
+msgstr "Kanal ikon er defineret i EPG data."
 
 #: src/config.c:2272
 msgid "Channel icon name scheme"
-msgstr ""
+msgstr "Kanal ikon navne skema"
 
 #: src/config.c:2260
 msgid "Channel icon path (see Help)"
@@ -1017,7 +1018,7 @@ msgstr "Kanal-ikonsti (Se hjælp)"
 
 #: src/bouquet.c:996
 msgid "Channel mapping options"
-msgstr ""
+msgstr "Kanal kortlægnings indstillinger"
 
 #: src/dvr/dvr_db.c:2944
 msgid "Channel name"
@@ -1033,7 +1034,7 @@ msgstr "Kanalnummer"
 
 #: src/epggrab/channel.c:743
 msgid "Channel number as defined in EPG data."
-msgstr ""
+msgstr "Kanal nummer er defineret i EPG data."
 
 #: src/bouquet.c:1125
 msgid "Channel number offset"
@@ -1041,7 +1042,7 @@ msgstr "Kanalnummer-forskydning"
 
 #: src/epggrab/module/xmltv.c:751
 msgid "Channel numbers (heuristic)"
-msgstr ""
+msgstr "Kanalnumre (heuristiske)"
 
 #: src/input/mpegts/iptv/iptv.c:852
 msgid "Channel numbers from"
@@ -1061,15 +1062,15 @@ msgstr "Kanal gruppe reference"
 
 #: src/access.c:1562 src/input/mpegts/iptv/iptv_mux.c:238
 msgid "Channel tags"
-msgstr "Kanal gruppe"
+msgstr "Kanal etiketter"
 
 #: src/access.c:1563
 msgid "Channel tags the user is allowed access to/excluded from."
-msgstr "Kanal grupper, som brugeren har/ikke har adgang til."
+msgstr "Kanal etiketter, som brugeren har/ikke har adgang til."
 
 #: src/dvr/dvr_timerec.c:570
 msgid "Channel to use/used for the recording."
-msgstr ""
+msgstr "Kanal der bruges/brugt til optagelse."
 
 #: src/profile.c:1736 src/epggrab/channel.c:759
 msgid "Channels"
@@ -1077,7 +1078,7 @@ msgstr "Kanaler"
 
 #: src/epggrab/channel.c:760
 msgid "Channels EPG data is used by."
-msgstr ""
+msgstr "Kanal EPG data bliver brugt af."
 
 #: src/input/mpegts/mpegts_network.c:236 src/input/mpegts/mpegts_mux.c:600
 #: src/input/mpegts/mpegts_service.c:200
@@ -1169,7 +1170,7 @@ msgstr "Reklamepause"
 msgid ""
 "Commercials will be dropped from the recordings. At the moment, commercial "
 "detection only works for the Swedish channel TV4."
-msgstr ""
+msgstr "Reklamer vil blive droppet fra optagelsen. I øjeblikket virker denne funktion kun med den svenske kanal TV4."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:122
 msgid "Committed"
@@ -1285,14 +1286,14 @@ msgstr ""
 
 #: src/service_mapper.c:525
 msgid "Create SDTV/HDTV/Radio tags."
-msgstr "Opret SDTV/HDTV/Radio grupper."
+msgstr "Opret SDTV/HDTV/Radio etiketter."
 
 #: src/dvr/dvr_config.c:1168
 msgid ""
 "Create a directory per channel when storing recordings. If both this and the"
 " 'directory per day' checkbox is enabled, the date-directory will be the "
 "parent of the per-channel directory."
-msgstr ""
+msgstr "Opret en mappe pr. kanal, når optagelsen gemmes. Hvis både denne og \"mappe pr. dag\" tjekboks er valgt, vil \"mappe pr. dag\" være hoved mappen."
 
 #: src/dvr/dvr_config.c:1180
 msgid ""
@@ -1349,27 +1350,27 @@ msgstr ""
 
 #: src/service_mapper.c:540 src/bouquet.c:801
 msgid "Create network name tags"
-msgstr "Lav en gruppe til netværk"
+msgstr "Lav en etikette til netværk"
 
 #: src/service_mapper.c:541
 msgid "Create network name tags (set by provider)."
-msgstr "Opret grupper til netværk (bestemt af udbyder)."
+msgstr "Opret etiketter til netværk (bestemt af udbyder)."
 
 #: src/wizard.c:1095
 msgid "Create network tags"
-msgstr "Opret netværks gruppe"
+msgstr "Opret netværks etiketter"
 
 #: src/service_mapper.c:532 src/bouquet.c:796
 msgid "Create provider name tags"
-msgstr "Lav en gruppe til udbydere"
+msgstr "Lav en etikette til udbydere"
 
 #: src/wizard.c:1086
 msgid "Create provider tags"
-msgstr "Opret udbyder grupper"
+msgstr "Opret udbyder etiketter"
 
 #: src/bouquet.c:1017
 msgid "Create tags"
-msgstr "Opret grupper"
+msgstr "Opret etiketter"
 
 #: src/dvr/dvr_config.c:1110
 msgid ""
@@ -1379,7 +1380,7 @@ msgstr ""
 
 #: src/service_mapper.c:524 src/bouquet.c:791
 msgid "Create type based tags"
-msgstr "Lav type baseret gruppe"
+msgstr "Lav type baseret etikette"
 
 #: src/input/mpegts/mpegts_service.c:237
 msgid "Created"
@@ -1896,7 +1897,7 @@ msgstr "planlæg ikke igen"
 
 #: src/input/mpegts/mpegts_network.c:218
 msgid "Don't use the provider's channel numbers."
-msgstr ""
+msgstr "Brug ikke udbyderens kanal numre."
 
 #: src/epg.c:2177 src/epg.c:2184 src/epg.c:2185 src/epg.c:2186 src/epg.c:2187
 #: src/epg.c:2188 src/epg.c:2189 src/epg.c:2190
@@ -2295,7 +2296,7 @@ msgstr "Hver dag"
 
 #: src/access.c:1551
 msgid "Exclude channel tags"
-msgstr "Udeluk Kanal grupper"
+msgstr "Udeluk Kanal etiketter"
 
 #: src/epg.c:2298
 msgid "Expeditions"
@@ -2781,7 +2782,7 @@ msgstr "Høj bitrate mode (kun CI+ CAM)"
 
 #: src/access.c:1545
 msgid "Highest channel number the user can access."
-msgstr ""
+msgstr "Højeste kanal nummer brugeren kan få adgang til."
 
 #: src/memoryinfo.c:78
 msgid "Highest count of objects."
@@ -3456,7 +3457,7 @@ msgstr "Lav"
 
 #: src/access.c:1537
 msgid "Lowest channel number the user can access."
-msgstr ""
+msgstr "Laveste kanal nummer brugeren kan få adgang til."
 
 #: src/profile.c:1446
 msgid "MP4/av-lib"
@@ -5857,11 +5858,11 @@ msgstr "Tilføj metadata til filer"
 
 #: src/channels.c:509
 msgid "Tags"
-msgstr "Grupper"
+msgstr "etiketter"
 
 #: src/channels.c:510
 msgid "Tags. Tags linked/to link to the channel."
-msgstr "Grupper. Grupper tilføjet/skal tilføjes til kanal."
+msgstr "etiketter. etikette tilføjet/skal tilføjes til kanal."
 
 #: src/epg.c:2212 src/epg.c:2213 src/epg.c:2214 src/epg.c:2215 src/epg.c:2216
 #: src/epg.c:2217 src/epg.c:2218 src/epg.c:2219 src/epg.c:2220 src/epg.c:2221
@@ -5962,7 +5963,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:142
 msgid "The OpenTV channel number as set by the provider."
-msgstr ""
+msgstr "OpenTV kanal nummer, fastsat af udbyderen."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:213
 msgid "The PIN to use."
@@ -6423,7 +6424,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:620
 msgid "The number of services on the mux that are mapped to channels."
-msgstr ""
+msgstr "Antallet af tjenester på MUX, som kortlagt i kanaler."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:513
 msgid "The orbital position of the satellite the mux is on."
@@ -6539,7 +6540,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:126
 msgid "The service's channel number as set by the provider."
-msgstr ""
+msgstr "Tjenestens kanal nummer, fastsat af udbyderen."
 
 #: src/service.c:217
 msgid "The service's encryption status."
@@ -6763,7 +6764,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_network.c:272
 msgid "Total number of mapped channels on this network."
-msgstr ""
+msgstr "Samlede antal kortlagte kanaler i dette netværk."
 
 #: src/input/mpegts/mpegts_network.c:256
 msgid "Total number of muxes found on this network."
@@ -7280,7 +7281,7 @@ msgstr "Brug gruppen internt (vis ikke til klienter)."
 
 #: src/input/mpegts/mpegts_network.c:209
 msgid "Use the provider's service IDs as channel numbers."
-msgstr ""
+msgstr "Brug udbyderens tjeneste ID, som kanal nummer."
 
 #: src/dvr/dvr_config.c:1098
 msgid "Use this character set when setting filenames."
@@ -7301,11 +7302,11 @@ msgstr "Brugeradgangs-fejl"
 #: src/htsp_server.c:2236 src/htsp_server.c:2279 src/htsp_server.c:2287
 #: src/htsp_server.c:2340 src/htsp_server.c:2649
 msgid "User does not have access"
-msgstr ""
+msgstr "Brugeren har ikke adgang"
 
 #: src/htsp_server.c:1908
 msgid "User does not have access to channel"
-msgstr ""
+msgstr "Brugeren har ikke adgang til kanalen"
 
 #: src/channels.c:414
 msgid "User icon"
@@ -7367,7 +7368,7 @@ msgid ""
 "Vertical resolution (height) of the output video stream. Horizontal "
 "resolution is adjusted automatically to preserve aspect ratio. When set to "
 "0, the input resolution is used."
-msgstr ""
+msgstr "Lodret opløsning (højde) af udgangssignalets videostream. Vandret opløsning justeres automatisk for at bevare billedformatet. Når den er indstillet til 0, bruges indgangens opløsning."
 
 #: src/epg.c:2274
 msgid "Video"

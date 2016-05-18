@@ -8,6 +8,7 @@
 # Bastian Borschert <bastispatzi@gmail.com>, 2016
 # Michael Mutschlechner <info@michaelmutschlechner.com>, 2016
 # Michael Pesch <mr.mytril@posteo.de>, 2015
+# M. Uffin <marvin@giecom.de>, 2016
 # Nicola Apicella <na+transifex@nicapicella.com>, 2016
 # Philipp Hunger <info@hungerphilipp.de>, 2015
 # Robert S <robertschultz90@googlemail.com>, 2015-2016
@@ -18,8 +19,8 @@ msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-05-08 12:29+0000\n"
+"Last-Translator: M. Uffin <marvin@giecom.de>\n"
 "Language-Team: German (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -65,7 +66,7 @@ msgstr "(Standard Profil)"
 
 #: src/webui/doc_md.c:180
 msgid "(Read-only)"
-msgstr ""
+msgstr "(Nur lesen)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "0"
@@ -371,7 +372,7 @@ msgstr "Zugang"
 
 #: src/access.c:1316
 msgid "Access Entries"
-msgstr ""
+msgstr "Zugangseinträge"
 
 #: src/esfilter.c:693 src/esfilter.c:785 src/esfilter.c:877 src/esfilter.c:969
 #: src/esfilter.c:1072 src/esfilter.c:1151
@@ -834,7 +835,7 @@ msgstr "Zu nutzende Bitrate für die Transkodierung. Siehe Hilfe für Details."
 
 #: src/access.c:1305
 msgid "Blue"
-msgstr ""
+msgstr "Blau"
 
 #: src/input/mpegts/satip/satip.c:435
 msgid "Boot ID"
@@ -925,7 +926,7 @@ msgstr "CAID"
 
 #: src/descrambler/capmt.c:2290
 msgid "CAPMT (Linux Network DVBAPI)"
-msgstr ""
+msgstr "CAPMT (Linux Network DVBAPI)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:231
 msgid "CAPMT interval (in ms)."
@@ -1008,7 +1009,7 @@ msgstr "Kanallogo"
 
 #: src/dvr/dvr_db.c:2937
 msgid "Channel icon URL."
-msgstr ""
+msgstr "Kanalbild URL"
 
 #: src/epggrab/channel.c:751
 msgid "Channel icon as defined in EPG data."
@@ -1024,7 +1025,7 @@ msgstr "Kanallogo Pfad (siehe Hilfe)"
 
 #: src/bouquet.c:996
 msgid "Channel mapping options"
-msgstr ""
+msgstr "Kanalmappingoptionen"
 
 #: src/dvr/dvr_db.c:2944
 msgid "Channel name"
@@ -1048,7 +1049,7 @@ msgstr "Kanalnummer Versatz"
 
 #: src/epggrab/module/xmltv.c:751
 msgid "Channel numbers (heuristic)"
-msgstr ""
+msgstr "Kanalnummern (heuristisch)"
 
 #: src/input/mpegts/iptv/iptv.c:852
 msgid "Channel numbers from"
@@ -1288,7 +1289,7 @@ msgstr "Layout kopieren"
 
 #: src/memoryinfo.c:69
 msgid "Count of objects"
-msgstr ""
+msgstr "Anzahl der Objekte"
 
 #: src/service_mapper.c:525
 msgid "Create SDTV/HDTV/Radio tags."
@@ -1376,7 +1377,7 @@ msgstr "Anbieter-Tags anlegen"
 
 #: src/bouquet.c:1017
 msgid "Create tags"
-msgstr ""
+msgstr "Tags erstellen"
 
 #: src/dvr/dvr_config.c:1110
 msgid ""
@@ -1418,11 +1419,11 @@ msgstr "Zeitgeschehen"
 
 #: src/memoryinfo.c:70
 msgid "Current number of objects."
-msgstr ""
+msgstr "Aktuelle Zahl der Objekte"
 
 #: src/memoryinfo.c:54
 msgid "Current object size."
-msgstr ""
+msgstr "Aktuelle Objektgröße"
 
 #: src/input/mpegts/satip/satip.c:388
 msgid "Current tuner configuration."
@@ -1554,7 +1555,7 @@ msgstr "DVR Auto-Aufnahmeeintrag"
 
 #: src/dvr/dvr_db.c:2840
 msgid "DVR Entries"
-msgstr ""
+msgstr "DVR-Einträge"
 
 #: src/dvr/dvr_config.c:815
 msgid "DVR behavior"
@@ -1713,7 +1714,7 @@ msgstr "Standard Benutzeroberflächenebene."
 
 #: src/input/mpegts/satip/satip_satconf.c:386
 msgid "Define network group to limit network usage."
-msgstr ""
+msgstr "Definiere Netzwerkgruppen, um die Netzwerknutzung zu begrenzen"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:218 src/input/mpegts/mpegts_mux_dvb.c:314
 #: src/input/mpegts/mpegts_mux_dvb.c:445 src/input/mpegts/mpegts_mux_dvb.c:548
@@ -2205,7 +2206,7 @@ msgstr "Verschlüsselter Service"
 
 #: src/tvhlog.c:633
 msgid "Enter a filename you want to save the debug log to."
-msgstr ""
+msgstr "Dateiname eingeben, wohin die Debug-Datei gespeichert werden soll"
 
 #: src/wizard.c:444
 msgid "Enter a non-admin user password."
@@ -2282,7 +2283,7 @@ msgstr "Fehlercode"
 
 #: src/dvr/dvr_db.c:3082
 msgid "Error code of entry."
-msgstr ""
+msgstr "Errorcode des Eintrags"
 
 #: src/dvr/dvr_db.c:3089
 msgid "Errors"
@@ -2334,7 +2335,7 @@ msgstr "Externe IP (NAT)"
 
 #: src/epggrab/module/pyepg.c:471
 msgid "External PyEPG grabber"
-msgstr ""
+msgstr "Externer PyEPG-Grabber"
 
 #: src/bouquet.c:1055
 msgid "External URL"
@@ -2346,7 +2347,7 @@ msgstr "Externe URL des Bouquets."
 
 #: src/epggrab/module/xmltv.c:788
 msgid "External XMLTV EPG grabber"
-msgstr ""
+msgstr "Externer XMLTV EPG-Grabber"
 
 #: src/epggrab/module.c:182
 msgid "Extra arguments"
@@ -2396,7 +2397,7 @@ msgstr "Fehlgeschlagene Aufnahmen"
 
 #: src/htsp_server.c:2661
 msgid "Failed to open image"
-msgstr ""
+msgstr "Öffnen des Bildes fehlgeschlagen"
 
 #: src/epg.c:2180
 msgid "Fantasy"
@@ -2436,7 +2437,7 @@ msgstr "Dateiname Optionen"
 
 #: src/dvr/dvr_db.c:3066
 msgid "Filename used by the entry."
-msgstr ""
+msgstr "Dateiname des Eintrags"
 
 #: src/epg.c:2273
 msgid "Film"
@@ -2452,7 +2453,7 @@ msgstr "Abgeschlossen"
 
 #: src/epggrab/module/xmltv.c:761
 msgid "First word"
-msgstr ""
+msgstr "Erstes Wort"
 
 #: src/timeshift.c:265
 msgid "Fit to RAM (cut rewind)"
@@ -2570,25 +2571,25 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:870
 msgid "Free-form field, enter whatever you like here."
-msgstr ""
+msgstr "Frei-Form-Feld. Es kann alles eingegeben werden."
 
 #: src/access.c:1574 src/access.c:1792 src/access.c:1927 src/channels.c:1479
 #: src/dvr/dvr_db.c:3250 src/dvr/dvr_autorec.c:1282 src/dvr/dvr_timerec.c:673
 msgid "Free-form text field, enter whatever you like here."
-msgstr ""
+msgstr "Frei-Form-Textfeld. Es kann alles eingegeben werden."
 
 #: src/bouquet.c:1119 src/epggrab/channel.c:781
 msgid "Free-form text field, enter whatever you like."
-msgstr ""
+msgstr "Frei-Form-Textfeld. Es kann alles eingegeben werden."
 
 #: src/profile.c:332
 msgid "Free-form text field. You can enter whatever you like here."
-msgstr ""
+msgstr "Frei-Form-Textfeld. Es kann alles eingegeben werden."
 
 #: src/esfilter.c:714 src/esfilter.c:806 src/esfilter.c:898 src/esfilter.c:990
 #: src/esfilter.c:1093 src/esfilter.c:1172
 msgid "Free-format text field. Enter whatever you like here."
-msgstr ""
+msgstr "Frei-Format-Textfeld. Es kann alles eingegeben werden."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:133
 msgid "Frequency"
@@ -2705,7 +2706,7 @@ msgstr ""
 
 #: src/access.c:1306
 msgid "Gray"
-msgstr ""
+msgstr "Grau"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:251 src/input/mpegts/mpegts_mux_dvb.c:693
 msgid "Guard interval"
@@ -2792,7 +2793,7 @@ msgstr "Höchst mögliche Kanalnummer auf welche ein Benutzer zugreifen kann"
 
 #: src/memoryinfo.c:78
 msgid "Highest count of objects."
-msgstr ""
+msgstr "Höchste Anzahl von Objekten"
 
 #: src/epg.c:2184
 msgid "Historical movie"
@@ -6362,7 +6363,7 @@ msgstr ""
 
 #: src/input/mpegts/satip/satip_satconf.c:394
 msgid "The networks using this configuration."
-msgstr ""
+msgstr "Die Netzwerke, die diese Konfiguration nutzen."
 
 #: src/input/mpegts/mpegts_mux.c:531
 msgid "The networks' universally unique identifier (UUID)."
@@ -6613,7 +6614,7 @@ msgstr "Die Symbolrate"
 
 #: src/dvr/dvr_db.c:2891
 msgid "The time the entry stops/stopped being recorded."
-msgstr ""
+msgstr "Zeit, wann der Eintrag stoppt/die Aufnahme gestoppt wurde."
 
 #: src/dvr/dvr_autorec.c:1026
 msgid ""
@@ -6706,11 +6707,11 @@ msgstr "Zeit Aufnahme%s%s"
 
 #: src/dvr/dvr_timerec.c:580
 msgid "Time to start the recording/time the recording started."
-msgstr ""
+msgstr "Zeit, um die Aufnahme zu beginnen/Zeit, wo die Aufnahme startete"
 
 #: src/dvr/dvr_timerec.c:591
 msgid "Time to stop recording/time the recording stopped."
-msgstr ""
+msgstr "Zeit, um die Aufnahme zu stoppen/Zeit, wo die Aufnahme stoppte"
 
 #: src/config.c:1999
 msgid "Time update"
@@ -6726,7 +6727,7 @@ msgstr "Timeout (Sekunden)"
 
 #: src/dvr/dvr_db.c:3157
 msgid "Timer-based automatic record caption."
-msgstr ""
+msgstr "Titel der automatischen timerbasierten Aufnahme"
 
 #: src/dvr/dvr_db.c:3148
 msgid "Timer-based automatic recording."
@@ -6750,7 +6751,7 @@ msgstr "Titel (Regexp)"
 
 #: src/dvr/dvr_db.c:2955 src/dvr/dvr_db.c:2963
 msgid "Title of the program."
-msgstr ""
+msgstr "Titel des Programms"
 
 #: src/dvr/dvr_timerec.c:551
 msgid "Title of the recording."
@@ -6766,11 +6767,11 @@ msgstr "Tonburst"
 
 #: src/dvr/dvr_db.c:513
 msgid "Too many data errors"
-msgstr ""
+msgstr "Zu viele Dateifehler"
 
 #: src/input/mpegts/mpegts_network.c:272
 msgid "Total number of mapped channels on this network."
-msgstr ""
+msgstr "Gesamtzahl der gemappten Kanäle dieses Netzwerks"
 
 #: src/input/mpegts/mpegts_network.c:256
 msgid "Total number of muxes found on this network."
@@ -6786,11 +6787,11 @@ msgstr "Anzahl der gefundenen Services"
 
 #: src/bouquet.c:1103
 msgid "Total number of services seen."
-msgstr ""
+msgstr "Gesamtzahl der gesehenen Services."
 
 #: src/bouquet.c:1111
 msgid "Total number of services."
-msgstr ""
+msgstr "Gesamtzahl der Services"
 
 #: src/epg.c:2311
 msgid "Tourism / Travel"
@@ -6884,7 +6885,7 @@ msgstr "UDP RTP Port Nummer (2 ports)"
 
 #: src/service.c:159
 msgid "UHD TV"
-msgstr ""
+msgstr "UHD TV"
 
 #: src/wizard.c:808 src/dvr/dvr_db.c:3208 src/input/mpegts/iptv/iptv.c:826
 #: src/input/mpegts/iptv/iptv_mux.c:139
@@ -7201,11 +7202,11 @@ msgstr ""
 
 #: src/config.c:2068
 msgid "Use HTTP digest authentication"
-msgstr ""
+msgstr "HTTP digest Authentifizierung benutzen"
 
 #: src/profile.c:1194 src/profile.c:1364
 msgid "Use WEBM format."
-msgstr ""
+msgstr "WEBM-Format nutzen"
 
 #: src/dvr/dvr_config.c:1273
 msgid "Use Windows-compatible filenames"
@@ -7308,11 +7309,11 @@ msgstr "Benutzerzugriffsfehler"
 #: src/htsp_server.c:2236 src/htsp_server.c:2279 src/htsp_server.c:2287
 #: src/htsp_server.c:2340 src/htsp_server.c:2649
 msgid "User does not have access"
-msgstr ""
+msgstr "Benutzer hat keinen Zugang"
 
 #: src/htsp_server.c:1908
 msgid "User does not have access to channel"
-msgstr ""
+msgstr "Benutzer hat keinen Zugang zu diesem Kanal"
 
 #: src/channels.c:414
 msgid "User icon"
@@ -7320,7 +7321,7 @@ msgstr "Benutzerlogo"
 
 #: src/channels.c:415
 msgid "User icon. The URL (or path) to the icon to use/used for the channel."
-msgstr ""
+msgstr "Benutzericon. Die URL (oder Pfad) zum Icon für den Kanal"
 
 #: src/access.c:1359 src/config.c:2038
 msgid "User interface level"
@@ -7353,13 +7354,13 @@ msgstr "Benutzername"
 
 #: src/access.c:1344
 msgid "Username for the entry (login username)."
-msgstr ""
+msgstr "Benutzername des Eintrags (Loginname)"
 
 #: src/access.c:1767
 msgid ""
 "Username of the entry (this should match a username from within the \"Access"
 " Entries\" tab."
-msgstr ""
+msgstr "Benutzername des Eintrags (sollte den selben Namen haben wie im \"Zugangs\"-Tab"
 
 #: src/epg.c:2211
 msgid "Variety show"
@@ -7367,7 +7368,7 @@ msgstr "Varieteshow"
 
 #: src/bouquet.c:1065
 msgid "Verify the SSL certificate."
-msgstr ""
+msgstr "Verifiziere das SSL-Zertifikat"
 
 #: src/profile.c:1725
 msgid ""

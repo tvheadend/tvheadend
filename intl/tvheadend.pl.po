@@ -5,14 +5,15 @@
 # Translators:
 # Jaroslav Kysela, 2015
 # pepeEL <piotr.kuchciak@gmail.com>, 2016
+# pepeEL <piotr.kuchciak@gmail.com>, 2016
 # PiterEL <inactive+PiterEL@transifex.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-04-29 10:39+0000\n"
+"Last-Translator: pepeEL <piotr.kuchciak@gmail.com>\n"
 "Language-Team: Polish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/pl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -58,7 +59,7 @@ msgstr "(Domyślny profil)"
 
 #: src/webui/doc_md.c:180
 msgid "(Read-only)"
-msgstr ""
+msgstr "(Tylko do odczytu)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "0"
@@ -7103,7 +7104,7 @@ msgstr "Nieznany"
 
 #: src/htsp_server.c:2665
 msgid "Unknown file"
-msgstr ""
+msgstr "Nieznany plik"
 
 #: src/streaming.c:460
 #, c-format
@@ -7333,7 +7334,7 @@ msgstr "Osiągnięto limit użytkowników"
 
 #: src/wizard.c:395
 msgid "User login"
-msgstr ""
+msgstr "Login uzytkownika"
 
 #: src/streaming.c:428
 msgid "User request"
@@ -7481,15 +7482,15 @@ msgstr "Język interfejsu Web"
 
 #: src/access.c:1387
 msgid "Web interface language."
-msgstr ""
+msgstr "Język interfejsu Web."
 
 #: src/access.c:1396
 msgid "Web interface theme."
-msgstr ""
+msgstr "Temat interfejsu Web."
 
 #: src/access.c:1395
 msgid "Web theme"
-msgstr ""
+msgstr "Temat Web"
 
 #: src/config.c:1991
 msgid "Web user interface"
@@ -7548,7 +7549,7 @@ msgstr ""
 
 #: src/access.c:1580 src/access.c:1798 src/input/mpegts/mpegts_network.c:287
 msgid "Wizard"
-msgstr ""
+msgstr "Kreator"
 
 #: src/descrambler/capmt.c:2281
 msgid "Wrapper (capmt_ca.so)"
@@ -7578,11 +7579,11 @@ msgstr "addpids/delpids supported"
 
 #: src/profile.c:1661
 msgid "bd: nvenc(h264 / h265)"
-msgstr ""
+msgstr "bd: nvenc(h264 / h265)"
 
 #: src/profile.c:1665
 msgid "default: nvenc(h264 / h265)"
-msgstr ""
+msgstr "domyślny: nvenc(h264 / h265)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
@@ -7590,19 +7591,19 @@ msgstr "en50494"
 
 #: src/profile.c:1653
 msgid "fast: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "szybki: h264 / h265 / qsv(h264 / h265)"
 
 #: src/profile.c:1652
 msgid "faster: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "szybszy: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1660
 msgid "hp: nvenc(h264 / h265)"
-msgstr ""
+msgstr "hp: nvenc(h264 / h265)"
 
 #: src/profile.c:1659
 msgid "hq: nvenc(h264 / h265)"
-msgstr ""
+msgstr "hq: nvenc(h264 / h265)"
 
 #: src/dvr/dvr_db.c:2771
 msgid "hrs"
@@ -7615,19 +7616,19 @@ msgstr "Podano nieprawidłową opcję [%s]"
 
 #: src/profile.c:1662
 msgid "ll: nvenc(h264 / h265)"
-msgstr ""
+msgstr "ll: nvenc(h264 / h265)"
 
 #: src/profile.c:1664
 msgid "llhp: nvenc(h264 / h265)"
-msgstr ""
+msgstr "llhp: nvenc(h264 / h265)"
 
 #: src/profile.c:1663
 msgid "llhq: nvenc(h264 / h265)"
-msgstr ""
+msgstr "llhq: nvenc(h264 / h265)"
 
 #: src/profile.c:1654
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "średni: h264 / h265 / qsv(h264 / h265)"
 
 #: src/dvr/dvr_db.c:2772
 msgid "min"
@@ -7644,19 +7645,19 @@ msgstr "opcja %s wymaga wartości"
 
 #: src/profile.c:1658
 msgid "placebo: h264 / h265"
-msgstr ""
+msgstr "placebo: h264 / h265"
 
 #: src/profile.c:1655
 msgid "slow: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "wolny: h264 / h265 / qsv(h264 / h265)"
 
 #: src/profile.c:1656
 msgid "slower: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "wolniejszy: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1650
 msgid "superfast: h264 / h265"
-msgstr ""
+msgstr "super szybki: h264 / h265"
 
 #: src/main.c:877
 msgid "tsfile input (mux file)"
@@ -7668,12 +7669,12 @@ msgstr "klient tvhdhomerun"
 
 #: src/profile.c:1649
 msgid "ultrafast: h264 / h265"
-msgstr ""
+msgstr "ultra szybki: h264 / h265"
 
 #: src/profile.c:1651
 msgid "veryfast: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "bardzo szybki: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1657
 msgid "veryslow: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "bardzo wolny: h264 / h265 / qsv(h264)"

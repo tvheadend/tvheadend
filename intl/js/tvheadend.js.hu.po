@@ -3,16 +3,17 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# Barna Peto <trex2004@gmail.com>, 2016
 # Frankovics András <frankovics.andras@outlook.com>, 2015
 # Levente Cseh <levente@csehs.com>, 2015-2016
-# Trex <trex2004@gmail.com>, 2015-2016
+# Barna Peto <trex2004@gmail.com>, 2015-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-04-21 05:32+0000\n"
+"Last-Translator: Barna Peto <trex2004@gmail.com>\n"
 "Language-Team: Hungarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hu/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -912,7 +913,7 @@ msgstr "Nyelv"
 
 #: src/webui/static/app/tvheadend.js:139
 msgid "Last Help Pages"
-msgstr ""
+msgstr "Legutolsó súgó oldalak"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -1014,11 +1015,11 @@ msgstr "May#ShortNameForMay"
 
 #: src/webui/static/app/tvhlog.js:39
 msgid "Memory Information Entries"
-msgstr ""
+msgstr "Memoria Információs bejegyzések"
 
 #: src/webui/static/app/tvhlog.js:38
 msgid "Memory Information Entry"
-msgstr ""
+msgstr "Memoria Információs bejegyzés"
 
 #: src/webui/static/app/tvheadend.js:292
 msgid "Message"

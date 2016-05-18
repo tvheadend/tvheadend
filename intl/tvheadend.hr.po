@@ -4,14 +4,14 @@
 # 
 # Translators:
 # gogo <trebelnik2@gmail.com>, 2015
-# gogo <trebelnik2@gmail.com>, 2015
+# gogo <trebelnik2@gmail.com>, 2015-2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-04-13 10:39+0200\n"
-"PO-Revision-Date: 2016-04-13 08:54+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"PO-Revision-Date: 2016-05-11 20:28+0000\n"
+"Last-Translator: gogo <trebelnik2@gmail.com>\n"
 "Language-Team: Croatian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -75,17 +75,17 @@ msgstr ""
 #: src/dvr/dvr_db.c:2372 src/dvr/dvr_db.c:2396 src/dvr/dvr_config.c:728
 #: src/dvr/dvr_config.c:751
 msgid "1 month"
-msgstr ""
+msgstr "1 mjesec"
 
 #: src/dvr/dvr_db.c:2369 src/dvr/dvr_db.c:2393 src/dvr/dvr_config.c:725
 #: src/dvr/dvr_config.c:748
 msgid "1 week"
-msgstr ""
+msgstr "1 tjedan"
 
 #: src/dvr/dvr_db.c:2376 src/dvr/dvr_db.c:2400 src/dvr/dvr_config.c:732
 #: src/dvr/dvr_config.c:755
 msgid "1 year"
-msgstr ""
+msgstr "1 godinu"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:80
 msgid "10"
@@ -118,17 +118,17 @@ msgstr "2"
 #: src/dvr/dvr_db.c:2373 src/dvr/dvr_db.c:2397 src/dvr/dvr_config.c:729
 #: src/dvr/dvr_config.c:752
 msgid "2 months"
-msgstr ""
+msgstr "2 mjeseca"
 
 #: src/dvr/dvr_db.c:2370 src/dvr/dvr_db.c:2394 src/dvr/dvr_config.c:726
 #: src/dvr/dvr_config.c:749
 msgid "2 weeks"
-msgstr ""
+msgstr "2 tjedna"
 
 #: src/dvr/dvr_db.c:2377 src/dvr/dvr_db.c:2401 src/dvr/dvr_config.c:733
 #: src/dvr/dvr_config.c:756
 msgid "2 years"
-msgstr ""
+msgstr "2 godine"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:634
 msgid "2-Port switch (universal LNB)"
@@ -141,22 +141,22 @@ msgstr "3"
 #: src/dvr/dvr_db.c:2367 src/dvr/dvr_db.c:2391 src/dvr/dvr_config.c:723
 #: src/dvr/dvr_config.c:746
 msgid "3 days"
-msgstr ""
+msgstr "3 dana"
 
 #: src/dvr/dvr_db.c:2374 src/dvr/dvr_db.c:2398 src/dvr/dvr_config.c:730
 #: src/dvr/dvr_config.c:753
 msgid "3 months"
-msgstr ""
+msgstr "3 mjeseca"
 
 #: src/dvr/dvr_db.c:2371 src/dvr/dvr_db.c:2395 src/dvr/dvr_config.c:727
 #: src/dvr/dvr_config.c:750
 msgid "3 weeks"
-msgstr ""
+msgstr "3 tjedna"
 
 #: src/dvr/dvr_db.c:2378 src/dvr/dvr_db.c:2402 src/dvr/dvr_config.c:734
 #: src/dvr/dvr_config.c:757
 msgid "3 years"
-msgstr ""
+msgstr "3 godine"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:74
 msgid "4"
@@ -173,7 +173,7 @@ msgstr "5"
 #: src/dvr/dvr_db.c:2368 src/dvr/dvr_db.c:2392 src/dvr/dvr_config.c:724
 #: src/dvr/dvr_config.c:747
 msgid "5 days"
-msgstr ""
+msgstr "5 dana"
 
 #: src/profile.c:1548
 msgid "5.0"
@@ -190,7 +190,7 @@ msgstr "6"
 #: src/dvr/dvr_db.c:2375 src/dvr/dvr_db.c:2399 src/dvr/dvr_config.c:731
 #: src/dvr/dvr_config.c:754
 msgid "6 months"
-msgstr ""
+msgstr "6 mjeseca"
 
 #: src/profile.c:1550
 msgid "6.1"
@@ -359,7 +359,7 @@ msgstr ""
 
 #: src/access.c:1307
 msgid "Access"
-msgstr "Pristup"
+msgstr "Pristupačna"
 
 #: src/access.c:1316
 msgid "Access Entries"
@@ -689,7 +689,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:1279
 #, c-format
 msgid "Auto recording%s%s"
-msgstr ""
+msgstr "Automatsko snimanje%s%s"
 
 #: src/dvr/dvr_db.c:3147
 msgid "Auto time record"
@@ -746,7 +746,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3131
 msgid "Automatically record."
-msgstr ""
+msgstr "Automatski snimi."
 
 #: src/epggrab.c:290
 msgid ""
@@ -810,7 +810,7 @@ msgstr "Frekvencijska širina"
 
 #: src/webui/extjs.c:208
 msgid "Based on software from"
-msgstr "Temeljeneo na softveru s"
+msgstr "Temeljeno na softveru"
 
 #: src/access.c:1283 src/config.c:1918
 msgid "Basic"
@@ -826,7 +826,7 @@ msgstr ""
 
 #: src/access.c:1305
 msgid "Blue"
-msgstr ""
+msgstr "Plava"
 
 #: src/input/mpegts/satip/satip.c:435
 msgid "Boot ID"
@@ -973,7 +973,7 @@ msgstr "CS7"
 
 #: src/dvr/dvr_config.c:889
 msgid "Cache scheme"
-msgstr ""
+msgstr "Shema predmemorije"
 
 #: src/descrambler/capmt.c:2303
 msgid "Camd.socket filename / IP Address (TCP mode)"
@@ -1008,7 +1008,7 @@ msgstr ""
 
 #: src/config.c:2272
 msgid "Channel icon name scheme"
-msgstr ""
+msgstr "Naziv sheme ikone programa"
 
 #: src/config.c:2260
 msgid "Channel icon path (see Help)"
@@ -1020,7 +1020,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2944
 msgid "Channel name"
-msgstr ""
+msgstr "Naziv programa"
 
 #: src/htsp_server.c:2277
 msgid "Channel not found"
@@ -1040,7 +1040,7 @@ msgstr ""
 
 #: src/epggrab/module/xmltv.c:751
 msgid "Channel numbers (heuristic)"
-msgstr ""
+msgstr "Broj programa (heuristički)"
 
 #: src/input/mpegts/iptv/iptv.c:852
 msgid "Channel numbers from"
@@ -1133,7 +1133,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:924
 msgid "Clone scheduled entry on error"
-msgstr ""
+msgstr "Kloniraj zakazano snimanje pri grešci"
 
 #: src/descrambler/cwc.c:1801
 msgid "Code word client (newcamd)"
@@ -1180,11 +1180,11 @@ msgstr "Završeno U REDU"
 
 #: src/config.c:2157
 msgid "Compress EPG database"
-msgstr ""
+msgstr "Sažmi EPG bazu podataka"
 
 #: src/config.c:2158
 msgid "Compress the EPG database to reduce disk I/O and space."
-msgstr ""
+msgstr "Sažmi EPG bazu podataka za smanjivanje I/O diska i prostora."
 
 #: src/input/mpegts/satip/satip_satconf.c:375
 msgid ""
@@ -1207,7 +1207,7 @@ msgstr "ID podešavanja"
 
 #: src/dvr/dvr_config.c:858
 msgid "Configuration name"
-msgstr ""
+msgstr "Naziv podešavanja"
 
 #: src/config.c:2012
 msgid "Configuration version"
@@ -1284,7 +1284,7 @@ msgstr ""
 
 #: src/service_mapper.c:525
 msgid "Create SDTV/HDTV/Radio tags."
-msgstr ""
+msgstr "Stvori SDTV/HDTV/Radio oznake."
 
 #: src/dvr/dvr_config.c:1168
 msgid ""
@@ -1542,65 +1542,65 @@ msgstr "DVR"
 
 #: src/dvr/dvr_autorec.c:988
 msgid "DVR Auto-record entry"
-msgstr ""
+msgstr "DVR stavka automatskog snimanja"
 
 #: src/dvr/dvr_db.c:2840
 msgid "DVR Entries"
-msgstr ""
+msgstr "DVR stavka"
 
 #: src/dvr/dvr_config.c:815
 msgid "DVR behavior"
-msgstr ""
+msgstr "DVR ponašanje"
 
 #: src/dvr/dvr_db.c:2365 src/dvr/dvr_db.c:2389 src/dvr/dvr_db.c:3035
 #: src/dvr/dvr_autorec.c:1225 src/dvr/dvr_timerec.c:643
 msgid "DVR configuration"
-msgstr ""
+msgstr "DVR podešavanje"
 
 #: src/dvr/dvr_config.c:805
 msgid "DVR configuration profile"
-msgstr ""
+msgstr "DVR profil podešavanja"
 
 #: src/access.c:1490
 msgid "DVR configuration profiles"
-msgstr ""
+msgstr "DVR profili podešavanja"
 
 #: src/htsp_server.c:1870
 msgid "DVR entry not found"
-msgstr ""
+msgstr "DVR stavka nije pronađena"
 
 #: src/dvr/dvr_db.c:3025 src/dvr/dvr_autorec.c:1197 src/dvr/dvr_timerec.c:633
 #: src/dvr/dvr_config.c:913
 msgid "DVR file retention period"
-msgstr ""
+msgstr "Razdoblje zadržavanja DVR datoteke"
 
 #: src/dvr/dvr_db.c:3015 src/dvr/dvr_autorec.c:1187 src/dvr/dvr_timerec.c:623
 msgid "DVR log retention"
-msgstr ""
+msgstr "Zadržavanje DVR zapisa"
 
 #: src/dvr/dvr_config.c:902
 msgid "DVR log retention period"
-msgstr ""
+msgstr "Razdoblje zadržavanja DVR zapisa"
 
 #: src/profile.c:254
 msgid "DVR override: high"
-msgstr ""
+msgstr "DVR zaobilaženje: visok"
 
 #: src/profile.c:253
 msgid "DVR override: important"
-msgstr ""
+msgstr "DVR zaobilaženje: značajan"
 
 #: src/profile.c:256
 msgid "DVR override: low"
-msgstr ""
+msgstr "DVR zaobilaženje: nizak"
 
 #: src/profile.c:255
 msgid "DVR override: normal"
-msgstr ""
+msgstr "DVR zaobilaženje: normalan"
 
 #: src/profile.c:257
 msgid "DVR override: unimportant"
-msgstr ""
+msgstr "DVR zaobilaženje: nebitan"
 
 #: src/dvr/dvr_timerec.c:644
 msgid "DVR profile to use/used for the recording."
@@ -1628,7 +1628,7 @@ msgstr "Ples"
 
 #: src/dvr/dvr_db.c:3097
 msgid "Data errors"
-msgstr ""
+msgstr "Greške podataka"
 
 #: src/epggrab/channel.c:698
 msgid "Data path (if applicable)."
@@ -1693,11 +1693,11 @@ msgstr "Zadani jezici"
 
 #: src/access.c:1378
 msgid "Default language."
-msgstr ""
+msgstr "Zadani jezik."
 
 #: src/profile.c:340
 msgid "Default priority"
-msgstr ""
+msgstr "Zadani prioritet"
 
 #: src/access.c:1360
 msgid "Default user interface level."
@@ -1813,7 +1813,7 @@ msgstr "Onemogući zapis sustava (sve poruke)"
 
 #: src/channels.c:355 src/epggrab/module/xmltv.c:760
 msgid "Disabled"
-msgstr ""
+msgstr "Onemogućeno"
 
 #: src/input/mpegts/mpegts_network.c:169
 msgid ""
@@ -1879,11 +1879,11 @@ msgstr "Ne čuvaj"
 
 #: src/dvr/dvr_db.c:3122
 msgid "Don't re-record"
-msgstr ""
+msgstr "Ne snimaj ponovno"
 
 #: src/dvr/dvr_db.c:3123
 msgid "Don't re-record if recording fails."
-msgstr ""
+msgstr "Ne snimaj ponovno ako je snimanje neuspjelo"
 
 #: src/dvr/dvr_db.c:3115
 msgid "Don't re-schedule if recording fails."
@@ -1924,7 +1924,7 @@ msgstr ""
 
 #: src/wizard.c:188
 msgid "EPG Language (priority order)"
-msgstr ""
+msgstr "EPG jezik (poredak prioriteta)"
 
 #: src/epggrab/channel.c:717
 msgid "EPG data ID."
@@ -2322,7 +2322,7 @@ msgstr ""
 
 #: src/satip/server.c:668
 msgid "External IP (NAT)"
-msgstr ""
+msgstr "Vanjski IP (NAT)"
 
 #: src/epggrab/module/pyepg.c:471
 msgid "External PyEPG grabber"
@@ -2342,15 +2342,15 @@ msgstr ""
 
 #: src/epggrab/module.c:182
 msgid "Extra arguments"
-msgstr ""
+msgstr "Dodatni argumenti"
 
 #: src/dvr/dvr_autorec.c:1109
 msgid "Extra start time"
-msgstr ""
+msgstr "Dodatno vrijeme početka"
 
 #: src/dvr/dvr_autorec.c:1119
 msgid "Extra stop time"
-msgstr ""
+msgstr "Dodatno vrijeme završetka"
 
 #: src/dvr/dvr_config.c:945
 msgid "Extra warming up time (seconds)"
@@ -2412,7 +2412,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3216
 msgid "File size"
-msgstr ""
+msgstr "Veličina datoteke"
 
 #: src/dvr/dvr_db.c:3065
 msgid "Filename"
@@ -2444,7 +2444,7 @@ msgstr ""
 
 #: src/epggrab/module/xmltv.c:761
 msgid "First word"
-msgstr ""
+msgstr "Prva riječ"
 
 #: src/timeshift.c:265
 msgid "Fit to RAM (cut rewind)"
@@ -2484,11 +2484,11 @@ msgstr ""
 
 #: src/epggrab.c:326
 msgid "Force an initial EPG grab at start-up."
-msgstr ""
+msgstr "Prisili pokretanje EPG pretraživanja pri pokretanju"
 
 #: src/epggrab.c:325
 msgid "Force initial EPG grab at start-up"
-msgstr ""
+msgstr "Prisili pokretanje EPG pretraživanja pri pokretanju"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:162
 msgid "Force old status"
@@ -2500,11 +2500,11 @@ msgstr "Prisili pilota za DVB-S2"
 
 #: src/profile.c:354
 msgid "Force priority"
-msgstr ""
+msgstr "Prisili prioritet"
 
 #: src/config.c:1941
 msgid "Force service type to 1"
-msgstr ""
+msgstr "Prisili vrstu usluge na 1"
 
 #: src/input/mpegts/satip/satip_frontend.c:193
 msgid "Force teardown delay"
@@ -2538,7 +2538,7 @@ msgstr "Strane zemlje"
 #: src/dvr/dvr_db.c:2380 src/dvr/dvr_db.c:2404 src/dvr/dvr_config.c:736
 #: src/dvr/dvr_config.c:759
 msgid "Forever"
-msgstr ""
+msgstr "Zauvijek"
 
 #: src/main.c:801
 msgid "Fork and run as daemon"
@@ -2697,7 +2697,7 @@ msgstr ""
 
 #: src/access.c:1306
 msgid "Gray"
-msgstr ""
+msgstr "Siva"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:251 src/input/mpegts/mpegts_mux_dvb.c:693
 msgid "Guard interval"
@@ -2705,11 +2705,11 @@ msgstr ""
 
 #: src/service.c:158
 msgid "HD TV"
-msgstr ""
+msgstr "HD TV"
 
 #: src/profile.c:268
 msgid "HD: high definition"
-msgstr ""
+msgstr "HD: Visoka razlučivost"
 
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun_frontend.c:602
 msgid "HDHomeRun ATSC-C frontend"
@@ -2903,7 +2903,7 @@ msgstr "Ikona ima naziv"
 
 #: src/webui/extjs.c:209
 msgid "Icons from"
-msgstr "Ikone s"
+msgstr "Ikone su s"
 
 #: src/subscriptions.c:907
 msgid "Idle"
@@ -2921,7 +2921,7 @@ msgstr ""
 msgid ""
 "If an error occurs clone the scheduled entry and try to record again (if "
 "possible)."
-msgstr ""
+msgstr "Ako se pojavi greška kloniraj ovo zakazano snimanje i probaj snimiti ponovno (ako je moguće)."
 
 #: src/config.c:2251
 msgid ""
@@ -3014,7 +3014,7 @@ msgstr ""
 
 #: src/imagecache.c:79
 msgid "Image cache"
-msgstr ""
+msgstr "Predmemorija sllika"
 
 #: src/main.c:864
 msgid "Immediately abort"
@@ -3022,7 +3022,7 @@ msgstr "Odmah zaustavi"
 
 #: src/profile.c:248 src/dvr/dvr_db.c:2352
 msgid "Important"
-msgstr "Značajno"
+msgstr "Značajan"
 
 #: src/dvr/dvr_config.c:1191
 msgid "Include channel name in filename"
@@ -3112,23 +3112,23 @@ msgstr "Unutrašnji"
 
 #: src/epggrab/module.c:168
 msgid "Internal EPG grabber"
-msgstr ""
+msgstr "Unutrašnji EPG sakupljač"
 
 #: src/epggrab/module/pyepg.c:464
 msgid "Internal PyEPG grabber"
-msgstr ""
+msgstr "Unutrašnji PyEPG sakupljač"
 
 #: src/epggrab/module/xmltv.c:770
 msgid "Internal XMLTV EPG grabber"
-msgstr ""
+msgstr "Unutrašnji XMLTV EPG sakupljač"
 
 #: src/htsp_server.c:1706
 msgid "Internal error"
-msgstr ""
+msgstr "Unutrašnja greška"
 
 #: src/epggrab.c:254
 msgid "Internal grabber"
-msgstr ""
+msgstr "Unutrašnji sakupljač"
 
 #: src/epg.c:2197 src/epg.c:2198 src/epg.c:2199 src/epg.c:2200 src/epg.c:2201
 #: src/epg.c:2202 src/epg.c:2203 src/epg.c:2204 src/epg.c:2205 src/epg.c:2206
@@ -3217,19 +3217,19 @@ msgstr "Jezik"
 
 #: src/wizard.c:209
 msgid "Language 1"
-msgstr ""
+msgstr "Jezik 1"
 
 #: src/wizard.c:219
 msgid "Language 2"
-msgstr ""
+msgstr "Jezik 2"
 
 #: src/wizard.c:229
 msgid "Language 3"
-msgstr ""
+msgstr "Jezik 3"
 
 #: src/config.c:1987
 msgid "Language settings"
-msgstr ""
+msgstr "Postavke jezika"
 
 #: src/epg.c:2301 src/epg.c:2302 src/epg.c:2303 src/epg.c:2304 src/epg.c:2305
 #: src/epg.c:2306 src/epg.c:2307
@@ -3246,7 +3246,7 @@ msgstr ""
 
 #: src/config.c:2021
 msgid "Last updated from"
-msgstr "Posljednje ažuriranje iz"
+msgstr "Posljednje nadopuna iz"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:703
 msgid "Layer A: Constellation"
@@ -3451,7 +3451,7 @@ msgstr "Prijava/Odjava"
 
 #: src/profile.c:251 src/dvr/dvr_db.c:2355
 msgid "Low"
-msgstr ""
+msgstr "Nizak"
 
 #: src/access.c:1537
 msgid "Lowest channel number the user can access."
@@ -3515,7 +3515,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2403 src/dvr/dvr_config.c:735
 msgid "Maintained space"
-msgstr ""
+msgstr "Određeno prostorom"
 
 #: src/dvr/dvr_config.c:1167
 msgid "Make subdirectories per channel"
@@ -3567,7 +3567,7 @@ msgstr ""
 
 #: src/bouquet.c:713
 msgid "Map unnamed channels"
-msgstr ""
+msgstr "Mapiraj programe bez naziva"
 
 #: src/bouquet.c:708
 msgid "Map zero-numbered channels"
@@ -3633,7 +3633,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1152
 msgid "Maximum duration"
-msgstr ""
+msgstr "Najveće trajanje"
 
 #: src/input/mpegts/satip/satip.c:276
 msgid ""
@@ -3678,7 +3678,7 @@ msgstr ""
 
 #: src/service_mapper.c:518
 msgid "Merge services with the same name to one channel."
-msgstr ""
+msgstr "Spoji usluge s istim nazivom u jedan program."
 
 #: src/htsp_server.c:3109
 msgid "Method not found"
@@ -3690,7 +3690,7 @@ msgstr ""
 
 #: src/dvr/dvr_autorec.c:1141
 msgid "Minimum duration"
-msgstr ""
+msgstr "Najmanje trajanje"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:559
 msgid "Minimum rotor time (seconds)"
@@ -4037,7 +4037,7 @@ msgstr "Nema otkrivenih ulaza"
 
 #: src/config.c:1929
 msgid "No scheme"
-msgstr ""
+msgstr "Nema sheme"
 
 #: src/streaming.c:445
 msgid "No service assigned to channel"
@@ -4056,7 +4056,7 @@ msgstr "Nema dostupnog izvora"
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:478
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:303
 msgid "None"
-msgstr "Nijedan"
+msgstr "Nijedno"
 
 #: src/profile.c:250 src/dvr/dvr_db.c:2354
 msgid "Normal"
@@ -4213,7 +4213,7 @@ msgstr "Uključeno"
 
 #: src/dvr/dvr_db.c:2379 src/dvr/dvr_config.c:758
 msgid "On file removal"
-msgstr ""
+msgstr "Pri uklanjanju datoteke"
 
 #: src/timeshift.c:188
 msgid "On-demand (no first rewind)"
@@ -4280,7 +4280,7 @@ msgstr ""
 
 #: src/epggrab/module/xmltv.c:762
 msgid "Only digits"
-msgstr ""
+msgstr "Samo znamenke"
 
 #: src/input/mpegts/mpegts_service.c:78
 msgid "Only preferred CA PID"
@@ -4365,11 +4365,11 @@ msgstr "EPG iz signala"
 
 #: src/epggrab/module.c:213
 msgid "Over-the-air EPG grabber"
-msgstr ""
+msgstr "EPG sakupljač iz signala"
 
 #: src/epggrab.c:258
 msgid "Over-the-air grabbers"
-msgstr ""
+msgstr "Sakupljači iz signala"
 
 #: src/service.c:154
 msgid "Override disabled"
@@ -4533,7 +4533,7 @@ msgstr "Primjenjenja umjetnost"
 
 #: src/epggrab.c:300
 msgid "Periodically save EPG to disk (hours)"
-msgstr ""
+msgstr "Povremeno spremi EPG na disk (sati)"
 
 #: src/access.c:1368 src/config.c:2048
 msgid "Persistent user interface level"
@@ -4594,13 +4594,13 @@ msgstr ""
 
 #: src/channels.c:474 src/dvr/dvr_db.c:2898 src/dvr/dvr_config.c:975
 msgid "Post-recording padding"
-msgstr ""
+msgstr "Dodatno vrijeme nakon završetka zakazanog snimanja"
 
 #: src/channels.c:475
 msgid ""
 "Post-recording padding. Continue recording for x minutes after scheduled "
 "stop time."
-msgstr ""
+msgstr "Dodatno vrijeme nakon završetka zakazanog snimanja. Nastavi snimanje x minuta nakon završetka zakaznog snimanja."
 
 #: src/dvr/dvr_config.c:1048
 msgid "Post-remove command"
@@ -4633,7 +4633,7 @@ msgstr ""
 
 #: src/channels.c:459 src/dvr/dvr_db.c:2870 src/dvr/dvr_config.c:958
 msgid "Pre-recording padding"
-msgstr ""
+msgstr "Dodatno vrijeme prije početka zakazanog snimanja"
 
 #: src/channels.c:460
 msgid ""
@@ -4642,7 +4642,7 @@ msgid ""
 "you set a padding of 5 minutes it will start recording at 12:54:30 "
 "(including a warming-up time of 30 seconds). If this isn't set the pre-"
 "recording padding if set in the DVR entry or DVR profile will be used."
-msgstr ""
+msgstr "Dodatno vrijeme prije početka zakazanog snimanja. Pokreni snimanje ranije x minuta nego što je određeno EPG vodičem/Ručnim snimanjem, na primjer ako program počinje u 13:00 i postavite dodatno vrijeme na 5 minuta snimanje će početi u 12:54:30 (uključujući vrijeme pripreme 30 skundi). Ako ovdje nije postavljeno dodatno vrijeme prije početka snimanja, koristit će se ono postavljeno u DVR stavci ili DVR profilu."
 
 #: src/epg.c:2237
 msgid "Pre-school children's programs"
@@ -4658,7 +4658,7 @@ msgstr "Preferirani CA PID"
 
 #: src/profile.c:396
 msgid "Preferred service video type"
-msgstr ""
+msgstr "Željena vrsta video usluge"
 
 #: src/input/mpegts/satip/satip.c:459
 msgid "Presentation"
@@ -4777,7 +4777,7 @@ msgstr ""
 
 #: src/imagecache.c:106
 msgid "Re-fetch period (hours)"
-msgstr ""
+msgstr "Razdoblje ponovnog preuzimanja (sati)"
 
 #: src/bouquet.c:1073 src/input/mpegts/iptv/iptv.c:858
 msgid "Re-fetch period (mins)"
@@ -4794,7 +4794,7 @@ msgstr ""
 
 #: src/imagecache.c:114
 msgid "Re-try period (hours)"
-msgstr ""
+msgstr "Razdoblje ponovnog pokušaja (sati)"
 
 #: src/htsp_server.c:2709
 msgid "Read error"
@@ -4820,7 +4820,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:3217
 msgid "Recording file size."
-msgstr ""
+msgstr "Veličina datoteke snimanja."
 
 #: src/dvr/dvr_config.c:1057
 msgid "Recording system path"
@@ -5073,11 +5073,11 @@ msgstr ""
 
 #: src/service.c:157
 msgid "SD TV"
-msgstr ""
+msgstr "SD TV"
 
 #: src/profile.c:267
 msgid "SD: standard definition"
-msgstr ""
+msgstr "SD: Standardna razlučivost"
 
 #: src/input/mpegts/iptv/iptv_mux.c:107
 msgid "SIGHUP"
@@ -5151,7 +5151,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:935
 msgid "Schedule a re-recording if more errors than (0=off)"
-msgstr ""
+msgstr "Zakaži ponovno snimanje ako nastane više greška od (0=isključeno)"
 
 #: src/input/mpegts/mpegts_mux_sched.c:151
 msgid "Schedule frequency (in Cron format)."
@@ -5167,7 +5167,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2917
 msgid "Scheduled Duration"
-msgstr ""
+msgstr "Trajanje zakazanog snimanja"
 
 #: src/dvr/dvr_db.c:478
 msgid "Scheduled for recording"
@@ -5175,11 +5175,11 @@ msgstr "Zakazano za snimanje"
 
 #: src/dvr/dvr_db.c:2882
 msgid "Scheduled start time"
-msgstr ""
+msgstr "Zakazano vrijeme početka snimanja"
 
 #: src/dvr/dvr_db.c:2909
 msgid "Scheduled stop time"
-msgstr ""
+msgstr "Zakazano vrijeme završetka snimanja"
 
 #: src/config.c:2273
 msgid ""
@@ -5646,7 +5646,7 @@ msgstr ""
 
 #: src/main.c:841
 msgid "Specify extra htsp port"
-msgstr ""
+msgstr "Odredi dodatni htsp ulaz"
 
 #: src/epg.c:2299
 msgid "Spiritual sciences"
@@ -5692,7 +5692,7 @@ msgid ""
 "13:00 and you set a padding of 5 minutes it will start recording at 12:54:30"
 " (including a warm-up time of 30 seconds). If this isn't specified, any pre-"
 "recording padding as set in the channel or DVR entry will be used."
-msgstr ""
+msgstr "Pokreni snimanje ranije x minuta nego što je određeno vremenom početka, na primjer ako program počinje u 13:00 i postavite dodatno vrijeme na 5 minuta snimanje će početi u 12:54:30 (uključujući vrijeme pripreme 30 skundi). Ako nije određeno bilo kakvim dodatnim vremenom prije početka snimanja, koristit će se ono postavljeno u DVR stavci ili DVR profilu."
 
 #: src/dvr/dvr_autorec.c:1110
 msgid "Start recording earlier than the defined start time by x minutes."
@@ -5700,7 +5700,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2861
 msgid "Start time"
-msgstr ""
+msgstr "Vrijeme početka"
 
 #: src/dvr/dvr_db.c:3224 src/descrambler/caclient.c:289
 msgid "Status"
@@ -5720,7 +5720,7 @@ msgstr "Zaustavi"
 
 #: src/dvr/dvr_db.c:2890
 msgid "Stop time"
-msgstr ""
+msgstr "Vrijeme završetka"
 
 #: src/timeshift.c:201
 msgid "Storage path"
@@ -5737,7 +5737,7 @@ msgstr ""
 #: src/esfilter.c:670 src/esfilter.c:762 src/esfilter.c:854 src/esfilter.c:946
 #: src/esfilter.c:1049
 msgid "Stream index"
-msgstr ""
+msgstr "Sadržaj strujanja"
 
 #: src/profile.c:276 src/dvr/dvr_config.c:877
 msgid "Stream profile"
@@ -5750,7 +5750,7 @@ msgstr ""
 #: src/esfilter.c:639 src/esfilter.c:731 src/esfilter.c:823 src/esfilter.c:915
 #: src/esfilter.c:1007 src/esfilter.c:1110
 msgid "Stream type"
-msgstr ""
+msgstr "Vrsta strujanja"
 
 #: src/access.c:1244 src/access.c:1403
 msgid "Streaming"
@@ -5882,7 +5882,7 @@ msgstr ""
 
 #: src/esfilter.c:824
 msgid "Teletext stream type is only available for this filter."
-msgstr ""
+msgstr "Vrsta teletekst strujanja je dostupna samo za ovaj filter."
 
 #: src/epg.c:2229
 msgid "Tennis"
@@ -5906,7 +5906,7 @@ msgstr ""
 
 #: src/esfilter.c:1008
 msgid "The CA stream type is only available for this filter."
-msgstr ""
+msgstr "Vrsta CA strujanja je dostupna samo za ovaj filter."
 
 #: src/esfilter.c:1019
 msgid "The CAID to compare. Leave blank to apply to all IDs."
@@ -5957,7 +5957,7 @@ msgstr ""
 
 #: src/esfilter.c:1111
 msgid "The MPEGTS stream type is only available for this filter."
-msgstr ""
+msgstr "Vrsta MPEGTS strujanja je dostupna samo za ovaj filter."
 
 #: src/input/mpegts/mpegts_service.c:142
 msgid "The OpenTV channel number as set by the provider."
@@ -6619,7 +6619,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:2918
 msgid "The total scheduled duration."
-msgstr ""
+msgstr "Ukupno trajanje zakazanog snimanja."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:245
 msgid ""
@@ -6657,7 +6657,7 @@ msgstr ""
 
 #: src/config.c:2192
 msgid "Theme"
-msgstr ""
+msgstr "Tema"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:239
 #: src/input/mpegts/satip/satip_frontend.c:305
@@ -6710,11 +6710,11 @@ msgstr ""
 
 #: src/profile.c:363
 msgid "Timeout (sec) (0=infinite)"
-msgstr ""
+msgstr "Trajanje (sek) (0=brskonačno)"
 
 #: src/input/mpegts/satip/satip_satconf.c:356
 msgid "Timeout (seconds)"
-msgstr ""
+msgstr "Trajanje (sekunde)"
 
 #: src/dvr/dvr_db.c:3157
 msgid "Timer-based automatic record caption."
@@ -6750,7 +6750,7 @@ msgstr ""
 
 #: src/webui/extjs.c:221
 msgid "Toggle details"
-msgstr "Uključi pojedinosti"
+msgstr "Prikaži pojedinosti"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:136
 msgid "Tone burst"
@@ -6758,7 +6758,7 @@ msgstr ""
 
 #: src/dvr/dvr_db.c:513
 msgid "Too many data errors"
-msgstr ""
+msgstr "Previše grešaka podataka"
 
 #: src/input/mpegts/mpegts_network.c:272
 msgid "Total number of mapped channels on this network."
@@ -6876,7 +6876,7 @@ msgstr ""
 
 #: src/service.c:159
 msgid "UHD TV"
-msgstr ""
+msgstr "UHD TV"
 
 #: src/wizard.c:808 src/dvr/dvr_db.c:3208 src/input/mpegts/iptv/iptv.c:826
 #: src/input/mpegts/iptv/iptv_mux.c:139
@@ -7086,7 +7086,7 @@ msgstr ""
 
 #: src/profile.c:252 src/dvr/dvr_db.c:2356
 msgid "Unimportant"
-msgstr ""
+msgstr "Nebitan"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:628
 msgid "Universal LNB only"
@@ -7119,7 +7119,7 @@ msgstr ""
 
 #: src/profile.c:247
 msgid "Unset (default)"
-msgstr ""
+msgstr "Neodabran (zadano)"
 
 #: src/descrambler/cwc.c:1841
 msgid "Update card (EMM)"
@@ -7127,15 +7127,15 @@ msgstr ""
 
 #: src/epggrab.c:289
 msgid "Update channel icon"
-msgstr ""
+msgstr "Nadopuni ikonu programa"
 
 #: src/epggrab.c:267
 msgid "Update channel name"
-msgstr ""
+msgstr "Nadopuni naziv programa"
 
 #: src/epggrab.c:278
 msgid "Update channel number"
-msgstr ""
+msgstr "Nadopuni broj programa"
 
 #: src/dvr/dvr_config.c:776
 msgid "Update disabled"
@@ -7324,7 +7324,7 @@ msgstr ""
 
 #: src/config.c:2182
 msgid "User language"
-msgstr ""
+msgstr "Jezik korisnika"
 
 #: src/streaming.c:424 src/dvr/dvr_db.c:508
 msgid "User limit reached"
@@ -7404,7 +7404,7 @@ msgstr ""
 
 #: src/access.c:1455
 msgid "View all DVR entries"
-msgstr ""
+msgstr "Prikaži sve DVR stavke"
 
 #: src/streaming.c:554
 msgid "Visually impaired commentary/audio description"
@@ -7476,19 +7476,19 @@ msgstr ""
 
 #: src/access.c:1386
 msgid "Web interface language"
-msgstr ""
+msgstr "Jezik web sučelja"
 
 #: src/access.c:1387
 msgid "Web interface language."
-msgstr ""
+msgstr "Jezik web sučelja."
 
 #: src/access.c:1396
 msgid "Web interface theme."
-msgstr ""
+msgstr "Tema web sučelja."
 
 #: src/access.c:1395
 msgid "Web theme"
-msgstr ""
+msgstr "Web tema"
 
 #: src/config.c:1991
 msgid "Web user interface"
@@ -7547,7 +7547,7 @@ msgstr ""
 
 #: src/access.c:1580 src/access.c:1798 src/input/mpegts/mpegts_network.c:287
 msgid "Wizard"
-msgstr ""
+msgstr "Čarobnjak"
 
 #: src/descrambler/capmt.c:2281
 msgid "Wrapper (capmt_ca.so)"
@@ -7565,7 +7565,7 @@ msgid ""
 "Writes the current in-memory EPG database to disk every x hours, so should a"
 " crash/unexpected shutdown occur EPG data is saved periodically to the "
 "database (re-read on next startup). Set to 0 to disable."
-msgstr ""
+msgstr "Zapisuje trenutnu EPG bazu podataka iz memorije na disk svakih x sati, stoga može nastati rušenje/neočekivano isključivanje kada se s EPG podaci povremeno spremaju u bazu podataka (ponovno pročitaj pri sljedećem pokretanju). Postavite na 0 za onemogućavanje."
 
 #: src/access.c:1296
 msgid "Yes"
