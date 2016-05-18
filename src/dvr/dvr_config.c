@@ -1121,8 +1121,9 @@ const idclass_t dvr_config_class = {
       .id       = "skip-commercials",
       .name     = N_("Skip commercials"),
       .desc     = N_("Commercials will be dropped from the "
-                     "recordings. At the moment, commercial detection "
-                     "only works for the Swedish channel TV4."),
+                     "recordings. Commercial detection works using EITp/f "
+                     "(EPG running state) and for the Swedish channel TV4 "
+                     "(using teletext info)."),
       .off      = offsetof(dvr_config_t, dvr_skip_commercials),
       .opts     = PO_ADVANCED,
       .def.i    = 1,
