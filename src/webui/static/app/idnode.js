@@ -1046,7 +1046,14 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
         if (rf.length)
             panel.add(newFieldSet({ title: _("Read-only Info"), items: rf, collapsed: 'true'}));
     }
+
+    // form customization (if any) before layout()
+    if (conf.forms && (meta['class'] in conf.forms)) {
+        conf.forms[meta['class']](panel.getForm());
+    }
+
     panel.doLayout();
+
     if (width)
         panel.fixedWidth = width + 50;
     if (conf.uuids) {
@@ -1085,7 +1092,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         var c = {
             showpwd: conf.showpwd,
             uuids: conf.uuids,
-            labelWidth: conf.labelWidth || 200
+            labelWidth: conf.labelWidth || 200,
+            forms: conf.forms
         };
 
         tvheadend.idnode_editor_form(uilevel, item.props || item.params, item.meta, panel, c);
@@ -2474,7 +2482,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                         noButtons: true,
                         width: 730,
                         noautoWidth: true,
-                        showpwd: conf.showpwd
+                        showpwd: conf.showpwd,
+                        forms: conf.forms
                     });
                     abuttons.save.setDisabled(false);
                     abuttons.undo.setDisabled(false);
