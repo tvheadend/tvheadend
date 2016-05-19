@@ -468,8 +468,8 @@ DEPS-LIBAV = \
 	src/tvhlog.c
 SRCS-LIBAV = \
 	src/libav.c \
-	src/muxer/muxer_libav.c \
-	src/plumbing/transcoding.c
+	src/muxer/muxer_libav.c
+SRCS-LIBAV += $(wildcard src/transcoding/*.c)
 SRCS-$(CONFIG_LIBAV) += $(SRCS-LIBAV)
 I18N-C += $(SRCS-LIBAV)
 

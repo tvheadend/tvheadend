@@ -197,7 +197,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!ls) return 0;
   }
 
-  // Note: ignore channel test if we allow quality unlocking 
+  // Note: ignore channel test if we allow quality unlocking
   if ((cfg = dae->dae_config) == NULL)
     return 0;
   if(dae->dae_channel != NULL) {
@@ -972,7 +972,7 @@ dvr_autorec_entry_class_btype_list ( void *o, const char *lang )
 }
 
 static uint32_t
-dvr_autorec_entry_class_owner_opts(void *o)
+dvr_autorec_entry_class_owner_opts(void *o, uint32_t opts)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae && dae->dae_id.in_access &&

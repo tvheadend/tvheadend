@@ -609,7 +609,7 @@ dvr_config_class_enabled_set(void *o, const void *v)
 }
 
 static uint32_t
-dvr_config_class_enabled_opts(void *o)
+dvr_config_class_enabled_opts(void *o, uint32_t opts)
 {
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (cfg && dvr_config_is_default(cfg) && dvr_config_is_valid(cfg))
@@ -764,7 +764,7 @@ dvr_config_class_retention_list ( void *o, const char *lang )
 static htsmsg_t *
 dvr_config_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, 
+  return dvr_entry_class_duration_list(o,
            tvh_gettext_lang(lang, N_("Not set (none or channel configuration)")),
            4*60, 1, lang);
 }
