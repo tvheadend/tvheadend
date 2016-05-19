@@ -1259,7 +1259,8 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (de->de_bcast == e || (de->de_bcast && de->de_bcast->episode == e->episode))
-      return;
+      if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0)
+        return;
   }
 
   /* Handle max schedules limit for autorrecord */
