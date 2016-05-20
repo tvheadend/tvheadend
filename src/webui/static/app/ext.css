@@ -970,9 +970,10 @@
 }
 
 .tv-video-idle {
-    background-image     : url(../../static/img/logobig.png);
-    background-repeat    : no-repeat;
-    background-position  : center;
+    background-image: url(../../static/img/logomid.png);
+    background-size: 300px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .tv-video-message {
