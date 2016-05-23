@@ -282,7 +282,7 @@ tvh_safe_usleep(int64_t us)
   do {
     r = tvh_usleep(us);
     if (r < 0) {
-      if (ERRNO_AGAIN(r))
+      if (ERRNO_AGAIN(-r))
         continue;
       break;
     }
