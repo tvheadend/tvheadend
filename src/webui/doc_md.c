@@ -104,6 +104,8 @@ md_props(htsbuf_queue_t *hq, htsmsg_t *m, const char *lang, int nl)
   int first = 1, b;
 
   l = htsmsg_get_list(m, "props");
+  if (l == NULL)
+    return nl;
   HTSMSG_FOREACH(f, l) {
     n = htsmsg_field_get_map(f);
     if (!n) continue;
