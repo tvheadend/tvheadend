@@ -236,7 +236,10 @@ hts_settings_load_one(const char *filename)
     if (size > 12 && memcmp(mem, "\xff\xffGZIP00", 8) == 0) {
 #if ENABLE_ZLIB
       uint32_t orig = (mem[8] << 24) | (mem[9] << 16) | (mem[10] << 8) | mem[11];
-      if (orig > 0) {
+      if (orig > 10*1024*1024U) {
+        tvhlog(LOG_ALERT, "settings", "too big gzip for %s", filename);
+        r = NULL;
+      } else if (orig > 0) {
         uint8_t *unpacked = tvh_gzip_inflate((uint8_t *)mem + 12, size - 12, orig);
         if (unpacked) {
           r = htsmsg_binary_deserialize(unpacked, orig, NULL);
