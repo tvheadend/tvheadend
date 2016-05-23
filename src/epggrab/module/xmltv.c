@@ -776,6 +776,7 @@ const idclass_t epggrab_mod_int_xmltv_class = {
       .desc   = DN_CHNUM_DESC,
       .off    = offsetof(epggrab_module_int_t, xmltv_chnum),
       .list   = xmltv_dn_chnum_list,
+      .opts   = PO_DOC_NLIST,
       .group  = 1
     },
     {}
@@ -793,6 +794,7 @@ const idclass_t epggrab_mod_ext_xmltv_class = {
       .name   = DN_CHNUM_NAME,
       .desc   = DN_CHNUM_DESC,
       .off    = offsetof(epggrab_module_ext_t, xmltv_chnum),
+      .opts   = PO_DOC_NLIST,
       .group  = 1
     },
     {}

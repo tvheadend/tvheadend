@@ -520,6 +520,7 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_epg),
       .def.i    = MM_EPG_ENABLE,
       .list     = mpegts_mux_epg_list,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -588,7 +589,7 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_scan_state),
       .set      = mpegts_mux_class_scan_state_set,
       .list     = mpegts_mux_class_scan_state_enum,
-      .opts     = PO_NOSAVE | PO_SORTKEY,
+      .opts     = PO_NOSAVE | PO_SORTKEY | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -596,7 +597,7 @@ const idclass_t mpegts_mux_class =
       .name     = N_("Scan result"),
       .desc     = N_("The outcome of the last scan performed on this mux."),
       .off      = offsetof(mpegts_mux_t, mm_scan_result),
-      .opts     = PO_RDONLY | PO_SORTKEY,
+      .opts     = PO_RDONLY | PO_SORTKEY | PO_DOC_NLIST,
       .list     = mpegts_mux_class_scan_result_enum,
     },
     {
@@ -608,7 +609,7 @@ const idclass_t mpegts_mux_class =
                      " appear garbled."),
       .off      = offsetof(mpegts_mux_t, mm_charset),
       .list     = dvb_charset_enum,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -635,7 +636,7 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
-      .opts     = PO_HIDDEN | PO_EXPERT
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_BOOL,
