@@ -328,7 +328,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
   },
   {
      { {
-       .ld_type    = "C 5150/Ku 11700 (22khz switch)",
+       .ld_type    = "C 5150/Ku 11750 (22khz switch)",
        .ld_tune    = linuxdvb_lnb_standard_tune,
        },
        .lnb_freq   = linuxdvb_lnb_standard_freq,
