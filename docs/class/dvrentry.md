@@ -121,14 +121,7 @@ See [Autorec](class/dvrautorec) for more information.
 
 ---
 
-###Playing a Recording
-
-You can play a recording by clicking the *Play* icon.
-This will automatically launch an appropriate player, otherwise you will
-need to manually open the playlist to start watching (normally a
-double-click on the downloaded file).
-
-Note that these are not links to an actual file but to a playlist.
+<tvh_include>inc/play</tvh_include>
 
 ---
 

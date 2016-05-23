@@ -956,6 +956,7 @@ bouquet_class_ext_url_notify ( void *obj, const char *lang )
 
 CLASS_DOC(bouquet)
 PROP_DOC(bouquet_mapping_options)
+PROP_DOC(bouquet_tagging)
 
 const idclass_t bouquet_class = {
   .ic_class      = "bouquet",
@@ -1005,7 +1006,7 @@ const idclass_t bouquet_class = {
       .get      = bouquet_class_mapopt_get,
       .set      = bouquet_class_mapopt_set,
       .rend     = bouquet_class_mapopt_rend,
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -1013,22 +1014,14 @@ const idclass_t bouquet_class = {
       .id       = "chtag",
       .name     = N_("Create tags"),
       .desc     = N_("Create and link these tags to channels when "
-                     "mapping; Create bouquet tag: create a "
-                     "tag with the bouquets name and link it to all mapped "
-                     "channels created by the bouquet. | Create "
-                     "type-based tags: create a tag based on "
-                     "the channel type and link it to the channel. | "
-                     "Create provider name tags: create a tag with the "
-                     "channel providers name and link it to the "
-                     "channel. | Create network name tags: create a tag "
-                     "with the network name and link it to all mapped "
-                     "channels created by the bouquet."),
+                     "mapping."),
+      .doc      = prop_doc_bouquet_tagging,
       .notify   = bouquet_class_chtag_notify,
       .list     = bouquet_class_chtag_enum,
       .get      = bouquet_class_chtag_get,
       .set      = bouquet_class_chtag_set,
       .rend     = bouquet_class_chtag_rend,
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,

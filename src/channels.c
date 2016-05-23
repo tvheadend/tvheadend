@@ -491,7 +491,7 @@ const idclass_t channel_class = {
                      "good at time keeping."),
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,
-      .opts     = PO_ADVANCED
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,

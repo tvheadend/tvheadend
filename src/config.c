@@ -2047,6 +2047,7 @@ const idclass_t config_class = {
                    "Help button)."),
       .off    = offsetof(config_t, uilevel),
       .list   = config_class_uilevel,
+      .opts   = PO_DOC_NLIST,
       .group  = 1
     },
     {
@@ -2118,7 +2119,7 @@ const idclass_t config_class = {
                    "Differentiated_services for more information. "),
       .off    = offsetof(config_t, dscp),
       .list   = config_class_dscp_list,
-      .opts   = PO_EXPERT,
+      .opts   = PO_EXPERT | PO_DOC_NLIST,
       .group  = 1
     },
     {
@@ -2190,7 +2191,7 @@ const idclass_t config_class = {
       .set    = config_class_info_area_set,
       .get    = config_class_info_area_get,
       .list   = config_class_info_area_list,
-      .opts   = PO_LORDER | PO_ADVANCED,
+      .opts   = PO_LORDER | PO_ADVANCED | PO_DOC_NLIST,
       .group  = 3
     },
     {
@@ -2211,6 +2212,7 @@ const idclass_t config_class = {
                    " theme isn't set in the Access Entries tab."),
       .list   = theme_get_ui_list,
       .off    = offsetof(config_t, theme_ui),
+      .opts   = PO_DOC_NLIST,
       .group  = 3
     },
     {
@@ -2293,7 +2295,7 @@ const idclass_t config_class = {
       .list   = config_class_chiconscheme_list,
       .doc    = prop_doc_config_channelname_scheme,
       .off    = offsetof(config_t, chicon_scheme),
-      .opts   = PO_ADVANCED,
+      .opts   = PO_ADVANCED | PO_DOC_NLIST,
       .group  = 6,
     },
     {
@@ -2317,7 +2319,7 @@ const idclass_t config_class = {
       .list   = config_class_piconscheme_list,
       .doc    = prop_doc_config_picon_servicetype,
       .off    = offsetof(config_t, picon_scheme),
-      .opts   = PO_ADVANCED,
+      .opts   = PO_ADVANCED | PO_DOC_NLIST,
       .group  = 6,
     },
     {

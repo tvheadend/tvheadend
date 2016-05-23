@@ -223,7 +223,7 @@ const idclass_t mpegts_service_class =
                      "Conditional Access Packet Identifier. See Help "
                      "for more information."),
       .off      = offsetof(mpegts_service_t, s_dvb_prefcapid_lock),
-      .opts     = PO_EXPERT,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
       .list     = mpegts_service_pref_capid_lock_list,
     },
     {

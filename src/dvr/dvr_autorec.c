@@ -982,6 +982,7 @@ dvr_autorec_entry_class_owner_opts(void *o)
 }
 
 CLASS_DOC(dvrautorec)
+PROP_DOC(duplicate_handling)
 
 const idclass_t dvr_autorec_entry_class = {
   .ic_class      = "dvrautorec",
@@ -1069,7 +1070,7 @@ const idclass_t dvr_autorec_entry_class = {
       .def.i    = DVR_AUTOREC_BTYPE_ALL,
       .off      = offsetof(dvr_autorec_entry_t, dae_btype),
       .list     = dvr_autorec_entry_class_btype_list,
-      .opts     = PO_HIDDEN | PO_ADVANCED,
+      .opts     = PO_HIDDEN | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
@@ -1170,7 +1171,7 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
@@ -1178,9 +1179,10 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = N_("Duplicate handling"),
       .desc     = N_("Duplicate recording handling."),
       .def.i    = DVR_AUTOREC_RECORD_ALL,
+      .doc      = prop_doc_duplicate_handling,
       .off      = offsetof(dvr_autorec_entry_t, dae_record),
       .list     = dvr_autorec_entry_class_dedup_list,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,

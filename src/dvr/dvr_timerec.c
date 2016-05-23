@@ -618,7 +618,7 @@ const idclass_t dvr_timerec_entry_class = {
       .list     = dvr_entry_class_pri_list,
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_timerec_entry_t, dte_pri),
-      .opts     = PO_SORTKEY | PO_ADVANCED,
+      .opts     = PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
