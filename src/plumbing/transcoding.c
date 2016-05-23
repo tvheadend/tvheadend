@@ -401,7 +401,7 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   AVCodecContext *ictx;
   AVPacket packet;
   AVSubtitle sub;
-  int length,  got_subtitle;
+  int length, got_subtitle;
 
   subtitle_stream_t *ss = (subtitle_stream_t*)ts;
 
@@ -411,12 +411,13 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   icodec = ss->sub_icodec;
   //ocodec = ss->sub_ocodec;
 
+
   if (!avcodec_is_open(ictx)) {
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
       tvherror("transcode", "%04X: Unable to open %s decoder",
                shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
-      goto cleanup;
+      return;
     }
   }
 
@@ -426,6 +427,8 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   packet.pts      = pkt->pkt_pts;
   packet.dts      = pkt->pkt_dts;
   packet.duration = pkt->pkt_duration;
+
+  memset(&sub, 0, sizeof(sub));
 
   length = avcodec_decode_subtitle2(ictx,  &sub, &got_subtitle, &packet);
   if (length <= 0) {
