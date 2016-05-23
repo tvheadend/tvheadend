@@ -313,10 +313,8 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   hd->hd_pids_deladd = 1;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)hd, &tvhdhomerun_device_class,
-                            uuid.hex, conf)) {
-    free(hd);
+                            uuid.hex, conf))
     return;
-  }
 
   TAILQ_INIT(&hd->hd_frontends);
 
