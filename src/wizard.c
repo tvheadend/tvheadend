@@ -744,7 +744,7 @@ static void muxes_changed(idnode_t *in)
     }
 #if ENABLE_IPTV
       else if (idnode_is_instance(&mn->mn_id, &iptv_auto_network_class) &&
-               w->iptv_url[idx]) {
+               w->iptv_url[idx][0]) {
       htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "url", w->iptv_url[idx]);
       idnode_load(&mn->mn_id, m);
