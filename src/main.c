@@ -654,6 +654,8 @@ mainloop(void)
 
   while (tvheadend_is_running()) {
     now = gdispatch_clock_update();
+    ts.tv_sec  = now + 3600;
+    ts.tv_nsec = 0;
 
     /* Global timers */
     pthread_mutex_lock(&global_lock);
@@ -666,9 +668,6 @@ mainloop(void)
     LIST_FOREACH(gti, &gtimers, gti_link)
       tvhdebug("gtimer", "  gti %p expire %"PRItimet, gti, gti->gti_expire.tv_sec);
 #endif
-
-    ts.tv_sec += 3600;
-    ts.tv_nsec = 0;
 
     while((gti = LIST_FIRST(&gtimers)) != NULL) {
       
