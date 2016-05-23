@@ -263,6 +263,7 @@ http_get_nonce(void)
     pthread_mutex_lock(&global_lock);
     if (RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp)) {
       pthread_mutex_unlock(&global_lock);
+      free(m);
       continue; /* get unique md5 */
     }
     mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(10));
