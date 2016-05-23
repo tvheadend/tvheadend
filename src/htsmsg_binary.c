@@ -43,10 +43,10 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
 
     type    =  buf[0];
     namelen =  buf[1];
-    datalen = (buf[2] << 24) |
-              (buf[3] << 16) |
-              (buf[4] << 8 ) |
-              (buf[5]      );
+    datalen = (((uint_fast32_t)buf[2]) << 24) |
+              (((uint_fast32_t)buf[3]) << 16) |
+              (((uint_fast32_t)buf[4]) << 8 ) |
+              (((uint_fast32_t)buf[5])      );
     
     buf += 6;
     len -= 6;
