@@ -1272,7 +1272,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
 
       if (st->es_priv) {
         if (!TAILQ_EMPTY(&st->es_backlog))
-          parser_do_backlog(t, st, NULL, pkt ? pkt->pkt_meta : NULL);
+          parser_do_backlog(t, st, NULL, pkt->pkt_meta);
         parser_deliver(t, st, pkt);
       } else if (config.parser_backlog)
         parser_backlog(t, st, pkt);
