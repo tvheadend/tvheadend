@@ -280,7 +280,8 @@ http_nonce_exists(const char *nonce)
 
   if (nonce == NULL)
     return 0;
-  strcpy(tmp.nonce, nonce);
+  strncpy(tmp.nonce, nonce, sizeof(tmp.nonce)-1);
+  tmp.nonce[sizeof(tmp.nonce)-1] = '\0';
   pthread_mutex_lock(&global_lock);
   n = RB_FIND(&http_nonces, &tmp, link, http_nonce_cmp);
   if (n) {
