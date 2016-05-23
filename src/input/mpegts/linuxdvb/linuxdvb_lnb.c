@@ -327,6 +327,19 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_switch = 11300000,
   },
   {
+     { {
+       .ld_type    = "C 5150/Ku 11700 (22khz switch)",
+       .ld_tune    = linuxdvb_lnb_standard_tune,
+       },
+       .lnb_freq   = linuxdvb_lnb_standard_freq,
+       .lnb_band   = linuxdvb_lnb_standard_band,
+       .lnb_pol    = linuxdvb_lnb_standard_pol,
+     },
+     .lnb_low    =  5150000,
+     .lnb_high   = 10750000,
+     .lnb_switch = 11700000,
+  },
+  {
     { {
       .ld_type    = "DBS",
       .ld_tune    = linuxdvb_lnb_standard_tune,
@@ -354,7 +367,7 @@ struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
     .lnb_high   = 14350000,
     .lnb_switch = 0,
   },
-    {
+  {
     { {
       .ld_type    = "Ku 10700 (Australia)",
       .ld_tune    = linuxdvb_lnb_standard_tune,
