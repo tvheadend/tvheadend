@@ -788,7 +788,7 @@ static idnode_slist_t bouquest_class_chtag_slist[] = {
   },
   {
     .id   = "type_tags",
-    .name = N_("Create type based tags"),
+    .name = N_("Create type-based tags"),
     .off  = offsetof(bouquet_t, bq_chtag_type_tags),
   },
   {
@@ -1068,7 +1068,7 @@ const idclass_t bouquet_class = {
       .type     = PT_U32,
       .id       = "ext_url_period",
       .name     = N_("Re-fetch period (mins)"),
-      .desc     = N_("Re-fetch the bouquet every x mins."),
+      .desc     = N_("Re-fetch the bouquet every x minutes."),
       .off      = offsetof(bouquet_t, bq_ext_url_period),
       .opts     = PO_ADVANCED | PO_HIDDEN,
       .notify   = bouquet_class_ext_url_notify,

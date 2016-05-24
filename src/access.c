@@ -1819,7 +1819,7 @@ const idclass_t passwd_entry_class = {
       .id       = "username",
       .name     = N_("Username"),
       .desc     = N_("Username of the entry (this should match a "
-                     "username from within the \"Access Entries\" tab."),
+                     "username from within the \"Access Entries\" tab)."),
       .off      = offsetof(passwd_entry_t, pw_username),
     },
     {

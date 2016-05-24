@@ -524,7 +524,7 @@ static const idclass_t service_mapper_conf_class = {
     {
       .type   = PT_BOOL,
       .id     = "type_tags",
-      .name   = N_("Create type based tags"),
+      .name   = N_("Create type-based tags"),
       .desc   = N_("Create SDTV/HDTV/Radio tags."),
       .off    = offsetof(service_mapper_t, d.type_tags),
       .opts   = PO_ADVANCED

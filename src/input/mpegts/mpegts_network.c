@@ -196,7 +196,7 @@ const idclass_t mpegts_network_class =
                      "them to verify that they are still working when "
                      "the inputs are not used for streaming. If your "
                      "adapters have problems with lots of (endless) "
-                     "tuning disable this. Note that this option "
+                     "tuning, disable this. Note that this option "
                      "should be OFF for the normal operation. This type "
                      "of mux probing is not required and it may cause "
                      "issues for SAT>IP (limited number of PID filters)."),
