@@ -567,6 +567,7 @@ static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
 }
 
 CLASS_DOC(satip_server)
+PROP_DOC(satip_muxhandling)
 
 const idclass_t satip_server_class = {
   .ic_snode      = (idnode_t *)&satip_server_conf,
@@ -652,14 +653,12 @@ const idclass_t satip_server_class = {
       .type   = PT_INT,
       .id     = "satip_muxcnf",
       .name   = N_("Mux handling"),
-      .desc   = N_("Select how Tvheadend should handle muxes. "
-                   "Auto = accept the mux if it "
-                   "doesn't already exist. Keep = Always keep the mux"
-                   "regardless of whether it exists or not. Reject = "
-                   "Always reject."),
+      .desc   = N_("Select how Tvheadend should handle muxes. See Help "
+                   "for details."),
+      .doc    = prop_doc_satip_muxhandling,
       .off    = offsetof(struct satip_server_conf, satip_muxcnf),
       .list   = satip_server_class_muxcfg_list,
-      .opts   = PO_EXPERT,
+      .opts   = PO_EXPERT | PO_DOC_NLIST,
       .group  = 1,
     },
     {
