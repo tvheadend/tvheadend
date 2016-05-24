@@ -381,8 +381,7 @@ const idclass_t channel_class = {
       .type     = PT_BOOL,
       .id       = "autoname",
       .name     = N_("Automatically name from network"),
-      .desc     = N_("Automatically name from network. "
-                     "Always use the name defined by the network."),
+      .desc     = N_("Always use the name defined by the network."),
       .off      = offsetof(channel_t, ch_autoname),
       .set      = channel_class_autoname_set,
       .opts     = PO_ADVANCED | PO_NOSAVE,
@@ -391,7 +390,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "name",
       .name     = N_("Name"),
-      .desc     = N_("Name. The name given to/of the channel (This is "
+      .desc     = N_("The name given to/of the channel (This is "
                      "how it'll appear in your EPG.)"),
       .off      = offsetof(channel_t, ch_name),
       .set      = channel_class_set_name,
@@ -403,7 +402,7 @@ const idclass_t channel_class = {
       .intextra = CHANNEL_SPLIT,
       .id       = "number",
       .name     = N_("Number"),
-      .desc     = N_("Number. The position the channel will appear on "
+      .desc     = N_("The position the channel will appear on "
                      "your EPG. This is not used by Tvheadend "
                      "internally, but rather intended to be used by "
                      "HTSP clients for mapping to remote control "
@@ -415,7 +414,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "icon",
       .name     = N_("User icon"),
-      .desc     = N_("User icon. The URL (or path) to the icon to use/used "
+      .desc     = N_("The URL (or path) to the icon to use/used "
                      "for the channel."),
       .off      = offsetof(channel_t, ch_icon),
       .notify   = channel_class_icon_notify,
@@ -425,7 +424,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "icon_public_url",
       .name     = N_("Icon URL"),
-      .desc     = N_("Icon URL. The imagecache path to the icon to use/used "
+      .desc     = N_("The imagecache path to the icon to use/used "
                      "for the channel."),
       .get      = channel_class_get_icon,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN | PO_EXPERT,
@@ -434,12 +433,11 @@ const idclass_t channel_class = {
       .type     = PT_BOOL,
       .id       = "epgauto",
       .name     = N_("Automatically map EPG source"),
-      .desc     = N_("Automatically map EPG source. Automatically link "
-                     "EPG data to the channel (using the channel name "
-                     "for matching). If you turn this option off, only "
-                     "the OTA EPG grabber will be used for this channel "
-                     "unless you've specifically set a different EPG "
-                     "Source."),
+      .desc     = N_("Automatically link EPG data to the channel "
+                     "(using the channel name for matching). If you "
+                     "turn this option off, only the OTA EPG grabber "
+                     "will be used for this channel unless you've "
+                     "specifically set a different EPG Source."),
       .off      = offsetof(channel_t, ch_epgauto),
       .opts     = PO_ADVANCED,
     },
@@ -448,7 +446,7 @@ const idclass_t channel_class = {
       .islist   = 1,
       .id       = "epggrab",
       .name     = N_("EPG source"),
-      .desc     = N_("EPG source. Name of the module, grabber or channel "
+      .desc     = N_("Name of the module, grabber or channel "
                      "that should be used to update this channels "
                      "EPG info."),
       .set      = channel_class_epggrab_set,
@@ -460,7 +458,7 @@ const idclass_t channel_class = {
       .type     = PT_INT,
       .id       = "dvr_pre_time",
       .name     = N_("Pre-recording padding"), // TODO: better text?
-      .desc     = N_("Pre-recording padding. Start recording earlier "
+      .desc     = N_("Start recording earlier "
                      "than the EPG/timer defined "
                      "start time by x minutes, for example if a program "
                      "is to start at 13:00 and you set a padding of 5 "
@@ -475,7 +473,7 @@ const idclass_t channel_class = {
       .type     = PT_INT,
       .id       = "dvr_pst_time",
       .name     = N_("Post-recording padding"), // TODO: better text?
-      .desc     = N_("Post-recording padding. Continue recording for x "
+      .desc     = N_("Continue recording for x "
                      "minutes after scheduled stop time."),
       .off      = offsetof(channel_t, ch_dvr_extra_time_post),
       .opts     = PO_ADVANCED
@@ -484,7 +482,7 @@ const idclass_t channel_class = {
       .type     = PT_INT,
       .id       = "epg_running",
       .name     = N_("Use EPG running state"),
-      .desc     = N_("Use EPG running state. Use EITp/f to decide "
+      .desc     = N_("Use EITp/f to decide "
                      "event start/stop. This is also known as "
                      "\"Accurate Recording\". Note that this can have "
                      "unexpected results if the broadcaster isn't very "
@@ -498,7 +496,7 @@ const idclass_t channel_class = {
       .islist   = 1,
       .id       = "services",
       .name     = N_("Services"),
-      .desc     = N_("Services. Services associated with the channel."),
+      .desc     = N_("Services associated with the channel."),
       .get      = channel_class_services_get,
       .set      = channel_class_services_set,
       .list     = channel_class_services_enum,
@@ -510,7 +508,7 @@ const idclass_t channel_class = {
       .islist   = 1,
       .id       = "tags",
       .name     = N_("Tags"),
-      .desc     = N_("Tags. Tags linked/to link to the channel."),
+      .desc     = N_("Tags linked/to link to the channel."),
       .get      = channel_class_tags_get,
       .set      = channel_class_tags_set,
       .list     = channel_tag_class_get_list,
@@ -520,7 +518,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "bouquet",
       .name     = N_("Bouquet (auto)"),
-      .desc     = N_("Bouquet (auto). The bouquet the channel is "
+      .desc     = N_("The bouquet the channel is "
                      "associated with."),
       .get      = channel_class_bouquet_get,
       .set      = channel_class_bouquet_set,
@@ -531,7 +529,7 @@ const idclass_t channel_class = {
       .type     = PT_STR,
       .id       = "epg_parent",
       .name     = N_("Reuse EPG from"),
-      .desc     = N_("Reuse EPG from. Reuse the EPG from another "
+      .desc     = N_("Reuse the EPG from another "
                      "channel."),
       .set      = channel_class_epg_parent_set,
       .list     = channel_class_get_list,
