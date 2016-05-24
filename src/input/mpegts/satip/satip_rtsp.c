@@ -164,7 +164,8 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qpsk.symbol_rate);
     ADD(dmc_fe_delsys,              msys,  "dvbs");
     if (dmc->dmc_fe_modulation != DVB_MOD_NONE &&
-        dmc->dmc_fe_modulation != DVB_MOD_AUTO)
+        dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
+        dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
       ADD(dmc_fe_modulation,        mtype, "qpsk");
     ADD(u.dmc_fe_qpsk.polarisation, pol,   "h"   );
     if (dmc->u.dmc_fe_qpsk.fec_inner != DVB_FEC_NONE &&
@@ -186,7 +187,10 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
     satip_rtsp_add_val("sr", buf, dmc->u.dmc_fe_qam.symbol_rate);
     ADD(dmc_fe_delsys,              msys,  "dvbc");
-    ADD(dmc_fe_modulation,          mtype, "64qam");
+    if (dmc->dmc_fe_modulation != DVB_MOD_AUTO &&
+        dmc->dmc_fe_modulation != DVB_MOD_NONE &&
+        dmc->dmc_fe_modulation != DVB_MOD_QAM_AUTO)
+      ADD(dmc_fe_modulation,          mtype, "64qam");
     /* missing plp */
     if (dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_NONE &&
         dmc->u.dmc_fe_qam.fec_inner != DVB_FEC_AUTO)
