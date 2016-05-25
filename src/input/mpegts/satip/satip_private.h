@@ -108,6 +108,8 @@ struct satip_tune_req {
 
   int                        sf_weight;
   int                        sf_weight_tuned;
+
+  int                        sf_netposhash;
 };
 
 struct satip_frontend
@@ -158,8 +160,7 @@ struct satip_frontend
   dvb_mux_t                 *sf_curmux;
   time_t                     sf_last_data_tstamp;
   int                        sf_netlimit;
-  int                        sf_serialize;
-  TAILQ_ENTRY(satip_frontend)sf_serialize_link;
+  int                        sf_netposhash;
  
   /*
    * Configuration
@@ -256,7 +257,8 @@ int satip_satconf_get_grace
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
 int satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check, int flags, int weight );
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *hash,
+    int check, int flags, int weight );
 
 /*
  * RTSP part

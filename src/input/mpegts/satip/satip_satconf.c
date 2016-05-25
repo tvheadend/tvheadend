@@ -96,7 +96,7 @@ static int
 satip_satconf_hash ( mpegts_mux_t *mm, int position )
 {
   dvb_mux_conf_t *mc = &((dvb_mux_t *)mm)->lm_tuning;
- assert(position <= 0x7fff);
+  assert(position <= 0x7fff);
   return 1 | (mc->dmc_fe_freq > 11700000 ? 2 : 0) |
          ((int)mc->u.dmc_fe_qpsk.polarisation << 8) |
          (position << 16);
@@ -176,13 +176,14 @@ retry:
 
 int
 satip_satconf_get_position
-  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *netlimit, int check, int flags, int weight )
+  ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *hash,
+    int check, int flags, int weight )
 {
   satip_satconf_t *sfc;
   sfc = satip_satconf_find_ele(lfe, mm);
   if (sfc && sfc->sfc_enabled) {
-    if (netlimit)
-      *netlimit = sfc->sfc_network_limit;
+    if (hash)
+      *hash = sfc->sfc_network_group > 0 ? satip_satconf_hash(mm, sfc->sfc_position) : 0;
     if (!check)
       return sfc->sfc_position;
     if (check > 1) {
@@ -195,8 +196,8 @@ satip_satconf_get_position
         return sfc->sfc_position;
     }
   } else {
-    if (netlimit)
-      *netlimit = 0;
+    if (hash)
+      *hash = 0;
   }
   return 0;
 }
