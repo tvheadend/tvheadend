@@ -101,8 +101,10 @@
 }
 
 .ux-filtered-column {
-  font-style: italic !important;
-  font-weight: bold !important;
+    font-style: italic !important;
+    font-weight: bold !important;
+    background-image: url(../icons/linked.gif) !important;
+    background-repeat: no-repeat;
 }
 
 .x-view-drag-insert-above {
