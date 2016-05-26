@@ -36,7 +36,8 @@ that need these values.
 
 * And the same drop-down menu also gives you access to a **filter** function
   if defined. The filter does simple pattern-matching on any string you
-  provide.
+  provide. A small blue flag or triangle will appear in the top-left 
+  corner to indicate that a filter is active.
   
 * **Re-arrange** the columns by simply dragging he header to a new spot.
 
