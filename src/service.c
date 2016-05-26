@@ -184,7 +184,7 @@ const idclass_t service_class = {
       .name     = N_("Automatic checking"),
       .desc     = N_("Check for the services' presence. If the service is no "
                      "longer broadcast this field will change to "
-                     "\"Missing In PAT/SDT\"."),
+                     "Missing In PAT/SDT."),
       .list     = service_class_auto_list,
       .off      = offsetof(service_t, s_auto),
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
