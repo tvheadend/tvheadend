@@ -12,6 +12,8 @@ This tab controls EPG-driven recording rules.
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
+####Example
+
 If you wanted to record any programs matching "BBC News" on 
 BBC One you would enter something like this into the add entry dialog: 
 

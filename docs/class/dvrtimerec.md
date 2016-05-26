@@ -12,6 +12,10 @@ This tab controls timer-driven recording rules.
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
+####Example
+
+This is an example of a one-time timer-based recording entry:
+
 ![Timer add example](static/img/doc/dvrtimeradd.png)
 
 Note that when you create a rule/entry it will also generate a [DVR Entry](class/dvrentry).
