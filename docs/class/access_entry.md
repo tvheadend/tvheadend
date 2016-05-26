@@ -29,6 +29,10 @@ Button                 | Function
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
+####Example
+
+This is an example of a very limited user account entry.
+
 !['Access Entry Example'](static/img/doc/accessentriesnewuser.png)
 
 If you would like to allow anonymous access to your Tvheadend 

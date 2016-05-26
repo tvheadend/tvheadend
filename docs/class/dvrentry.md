@@ -85,7 +85,7 @@ the *Upcoming/Current Recordings* tab.
 
 ####Manual Recording Entry Example
 
-This is an example of a one-time recording entry:
+This is an example of a one-time recording entry.
 
 !['Add new recording dialog'](static/img/doc/addnewrecentry.png)
 

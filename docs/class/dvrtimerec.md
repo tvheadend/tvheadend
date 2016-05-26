@@ -14,7 +14,7 @@ This tab controls timer-driven recording rules.
 
 ####Example
 
-This is an example of a one-time timer-based recording entry:
+This is an example of a one-time timer-based recording entry.
 
 ![Timer add example](static/img/doc/dvrtimeradd.png)
 
