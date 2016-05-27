@@ -109,6 +109,8 @@ struct satip_tune_req {
   int                        sf_weight;
   int                        sf_weight_tuned;
 
+  int                        sf_netlimit;
+  int                        sf_netgroup;
   int                        sf_netposhash;
 };
 
@@ -160,6 +162,7 @@ struct satip_frontend
   dvb_mux_t                 *sf_curmux;
   time_t                     sf_last_data_tstamp;
   int                        sf_netlimit;
+  int                        sf_netgroup;
   int                        sf_netposhash;
  
   /*
@@ -256,7 +259,7 @@ int satip_satconf_get_priority
 int satip_satconf_get_grace
   ( satip_frontend_t *lfe, mpegts_mux_t *mm );
 
-int satip_satconf_get_position
+satip_satconf_t *satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *hash,
     int check, int flags, int weight );
 

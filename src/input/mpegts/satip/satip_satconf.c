@@ -99,7 +99,7 @@ satip_satconf_hash ( mpegts_mux_t *mm, int position )
   assert(position <= 0x7fff);
   return 1 | (mc->dmc_fe_freq > 11700000 ? 2 : 0) |
          ((int)mc->u.dmc_fe_qpsk.polarisation << 8) |
-         (position << 16);
+         ((position & 0xffff) << 16);
 }
 
 static int
@@ -174,7 +174,7 @@ retry:
   return 0;
 }
 
-int
+satip_satconf_t *
 satip_satconf_get_position
   ( satip_frontend_t *lfe, mpegts_mux_t *mm, int *hash,
     int check, int flags, int weight )
@@ -185,15 +185,15 @@ satip_satconf_get_position
     if (hash)
       *hash = sfc->sfc_network_group > 0 ? satip_satconf_hash(mm, sfc->sfc_position) : 0;
     if (!check)
-      return sfc->sfc_position;
+      return sfc;
     if (check > 1) {
       satip_satconf_check_limits(lfe, sfc, mm, flags, weight, 1);
-      return sfc->sfc_position;
+      return sfc;
     } else {
       if (sfc->sfc_network_limit <= 0)
-        return sfc->sfc_position;
+        return sfc;
       if (satip_satconf_check_limits(lfe, sfc, mm, flags, weight, 0))
-        return sfc->sfc_position;
+        return sfc;
     }
   } else {
     if (hash)

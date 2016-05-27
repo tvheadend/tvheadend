@@ -479,9 +479,10 @@ satip_frontend_match_satcfg
   ( satip_frontend_t *lfe2, mpegts_mux_t *mm2, int flags, int weight )
 {
   satip_frontend_t *lfe_master;
+  satip_satconf_t *sfc;
   mpegts_mux_t *mm1 = NULL;
   dvb_mux_conf_t *mc1, *mc2;
-  int position, weight2, high1, high2;
+  int weight2, high1, high2;
 
   if (!lfe2->sf_running)
     return 0;
@@ -497,8 +498,8 @@ satip_frontend_match_satcfg
   }
 
   mm1 = lfe2->sf_req->sf_mmi->mmi_mux;
-  position = satip_satconf_get_position(lfe2, mm2, NULL, 0, 0, -1);
-  if (position <= 0 || lfe_master->sf_position != position)
+  sfc = satip_satconf_get_position(lfe2, mm2, NULL, 0, 0, -1);
+  if (!sfc || lfe_master->sf_position != sfc->sfc_position)
     return 0;
   mc1 = &((dvb_mux_t *)mm1)->lm_tuning;
   mc2 = &((dvb_mux_t *)mm2)->lm_tuning;
@@ -519,7 +520,7 @@ satip_frontend_is_enabled
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
   satip_frontend_t *lfe2;
-  int position;
+  satip_satconf_t *sfc;
 
   lock_assert(&global_lock);
 
@@ -527,8 +528,8 @@ satip_frontend_is_enabled
   if (lfe->sf_device->sd_dbus_allow <= 0) return 0;
   if (lfe->sf_type != DVB_TYPE_S) return 1;
   /* check if the position is enabled */
-  position = satip_satconf_get_position(lfe, mm, NULL, 1, flags, weight);
-  if (position <= 0)
+  sfc = satip_satconf_get_position(lfe, mm, NULL, 1, flags, weight);
+  if (!sfc)
     return 0;
   /* check if any "blocking" tuner is running */
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
@@ -581,6 +582,7 @@ satip_frontend_warm_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
+  satip_satconf_t *sfc;
   int r;
 
   r = mpegts_input_warm_mux(mi, mmi);
@@ -588,11 +590,16 @@ satip_frontend_warm_mux
     return r;
 
   if (lfe->sf_positions > 0) {
-    lfe->sf_position = satip_satconf_get_position(lfe, mmi->mmi_mux,
-                                                  &lfe->sf_netposhash,
-                                                  2, 0, -1);
-    if (lfe->sf_position <= 0)
+    sfc = satip_satconf_get_position(lfe, mmi->mmi_mux,
+                                     &lfe->sf_netposhash,
+                                     2, 0, -1);
+    if (sfc) {
+      lfe->sf_position = sfc->sfc_position;
+      lfe->sf_netgroup = sfc->sfc_network_group;
+      lfe->sf_netlimit = MAX(1, sfc->sfc_network_limit);
+    } else {
       return SM_CODE_TUNING_FAILED;
+    }
   }
 
   return 0;
@@ -631,6 +638,8 @@ satip_frontend_start_mux
     tr->sf_weight = weight;
 
   tr->sf_netposhash = lfe->sf_netposhash;
+  tr->sf_netlimit   = lfe->sf_netlimit;
+  tr->sf_netgroup   = lfe->sf_netgroup;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
   lfe->sf_req       = tr;
@@ -987,37 +996,55 @@ satip_frontend_other_is_waiting( satip_frontend_t *lfe )
 {
   satip_device_t *sd = lfe->sf_device;
   satip_frontend_t *lfe2;
-  int r = 0, hash1, hash2;
+  int r, i, cont, hash1, hash2, limit0, limit, group, *hashes, count;
 
   if (lfe->sf_type != DVB_TYPE_S)
     return 0;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  hash1 = lfe->sf_req ? lfe->sf_req->sf_netposhash : 0;
+  if (lfe->sf_req) {
+    hash1 = lfe->sf_req->sf_netposhash;
+    limit = (limit0 = lfe->sf_req->sf_netlimit) - 1;
+    group = lfe->sf_req->sf_netgroup;
+  } else {
+    hash1 = limit0 = limit = group = 0;
+  }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
   if (hash1 == 0)
     return 0;
 
+  r = count = 0;
   pthread_mutex_lock(&sd->sd_tune_mutex);
+  TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) count++;
+  hashes = alloca(sizeof(int) * count);
+  memset(hashes, 0, sizeof(int) * count);
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
-    if (lfe2 == lfe)
-      continue;
-    if ((lfe->sf_master && lfe2->sf_number != lfe->sf_master) ||
-        (lfe2->sf_master && lfe->sf_number != lfe2->sf_master))
-      continue;
+    if (lfe2 == lfe) continue;
     pthread_mutex_lock(&lfe2->sf_dvr_lock);
+    cont = 0;
+    if (limit0 > 0) {
+      cont = group > 0 && lfe2->sf_req_thread && group != lfe2->sf_req_thread->sf_netgroup;
+    } else {
+      cont = (lfe->sf_master && lfe2->sf_number != lfe->sf_master) ||
+             (lfe2->sf_master && lfe->sf_number != lfe2->sf_master);
+    }
     hash2 = lfe2->sf_req_thread ? lfe2->sf_req_thread->sf_netposhash : 0;
     pthread_mutex_unlock(&lfe2->sf_dvr_lock);
-    if (hash2 == 0)
-      continue;
+    if (cont || hash2 == 0) continue;
     if (hash2 != hash1) {
-      r = 1;
-      break;
+      for (i = 0; i < count; i++) {
+        if (hashes[i] == hash2) break;
+        if (hashes[i] == 0) {
+          hashes[i] = hash2;
+          r++;
+          break;
+        }
+      }
     }
   }
   pthread_mutex_unlock(&sd->sd_tune_mutex);
-  return r;
+  return r > limit;
 }
 
 static void
@@ -1040,7 +1067,7 @@ satip_frontend_wake_other_waiting
       continue;
     pthread_mutex_lock(&lfe2->sf_dvr_lock);
     hash2 = lfe2->sf_req ? lfe2->sf_req->sf_netposhash : 0;
-    if (hash2 != 0 && hash1 == hash2 && lfe2->sf_running)
+    if (hash2 != 0 && hash1 != hash2 && lfe2->sf_running)
       tvh_write(lfe2->sf_dvr_pipe.wr, "o", 1);
     pthread_mutex_unlock(&lfe2->sf_dvr_lock);
   }
@@ -2065,6 +2092,8 @@ satip_frontend_create
 
   /* Defaults */
   lfe->sf_position     = -1;
+  lfe->sf_netlimit     = 1;
+  lfe->sf_netgroup     = 0;
 
   /* Callbacks */
   lfe->mi_get_weight   = satip_frontend_get_weight;
