@@ -415,6 +415,7 @@ struct mpegts_mux
   char                   *mm_provider_network_name;
   uint16_t                mm_onid;
   uint16_t                mm_tsid;
+  int                     mm_tsid_checks;
 
   int                     mm_update_pids_flag;
   mtimer_t                mm_update_pids_timer;

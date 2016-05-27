@@ -243,6 +243,8 @@ mpegts_mux_instance_start
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
     s->s_dvb_check_seen = s->s_dvb_last_seen;
 
+  mm->mm_tsid_checks = 0;
+
   /* Start */
   mi->mi_display_name(mi, buf2, sizeof(buf2));
   tvhinfo("mpegts", "%s - tuning on %s", buf, buf2);
@@ -1210,11 +1212,14 @@ mpegts_mux_set_network_name ( mpegts_mux_t *mm, const char *name )
 int
 mpegts_mux_set_onid ( mpegts_mux_t *mm, uint16_t onid )
 {
-  char buf[256];
   if (onid == mm->mm_onid)
     return 0;
   mm->mm_onid = onid;
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
+  if (tvhtrace_enabled()) {
+    char buf[256];
+    mpegts_mux_nice_name(mm, buf, sizeof(buf));
+    tvhtrace("mpegts", "%s - set onid %04X (%d)", buf, onid, onid);
+  }
   idnode_changed(&mm->mm_id);
   return 1;
 }

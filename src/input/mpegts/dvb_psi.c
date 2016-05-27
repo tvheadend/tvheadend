@@ -874,6 +874,24 @@ dvb_pat_callback
 
   /* Multiplex */
   tvhdebug("pat", "tsid %04X (%d)", tsid, tsid);
+  if (mm->mm_tsid && mm->mm_tsid != tsid) {
+    char buf[256];
+    if (++mm->mm_tsid_checks > 10) {
+      mpegts_mux_nice_name(mm, buf, sizeof(buf));
+      tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",
+              buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+      mm->mm_tsid_checks = 0;
+    } else {
+      if (tvhtrace_enabled()) {
+        mpegts_mux_nice_name(mm, buf, sizeof(buf));
+        tvhtrace("pat", "%s: ignore TSID - old %04x (%d), new %04x (%d)",
+                 buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+      }
+      return 0; /* keep rolling */
+    }
+  } else {
+    mm->mm_tsid_checks = 0;
+  }
   mpegts_mux_set_tsid(mm, tsid, 1);
   
   /* Process each programme */
@@ -1655,8 +1673,8 @@ dvb_sdt_callback
 
   /* Find Transport Stream */
   if (tableid == 0x42) {
+    if (mm->mm_tsid != tsid) return 0; /* keep rolling - perhaps PAT was not parsed yet */
     mpegts_mux_set_onid(mm, onid);
-    mpegts_mux_set_tsid(mm, tsid, 1);
     r = dvb_sdt_mux(mt, mm, mm, ptr, len, tableid);
     if (r)
       return r;
