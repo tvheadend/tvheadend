@@ -1974,6 +1974,8 @@ PROP_DOC(config_channelicon_path)
 PROP_DOC(config_channelname_scheme)
 PROP_DOC(config_picon_path)
 PROP_DOC(config_picon_servicetype)
+PROP_DOC(viewlevel_config)
+PROP_DOC(themes)
 
 const idclass_t config_class = {
   .ic_snode      = &config.idnode,
@@ -2045,6 +2047,7 @@ const idclass_t config_class = {
       .name   = N_("User interface level"),
       .desc   = N_("Sets the default interface view level (next to the "
                    "Help button)."),
+      .doc    = prop_doc_viewlevel_config,
       .off    = offsetof(config_t, uilevel),
       .list   = config_class_uilevel,
       .opts   = PO_DOC_NLIST,
@@ -2210,6 +2213,7 @@ const idclass_t config_class = {
       .name   = N_("Theme"),
       .desc   = N_("The default web interface to use if the user's "
                    " theme isn't set in the Access Entries tab."),
+      .doc    = prop_doc_themes,
       .list   = theme_get_ui_list,
       .off    = offsetof(config_t, theme_ui),
       .opts   = PO_DOC_NLIST,
