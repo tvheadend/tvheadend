@@ -880,7 +880,6 @@ dvb_pat_callback
       mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",
               buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
-      mm->mm_tsid_checks = 0;
     } else {
       if (tvhtrace_enabled()) {
         mpegts_mux_nice_name(mm, buf, sizeof(buf));
@@ -889,9 +888,8 @@ dvb_pat_callback
       }
       return 0; /* keep rolling */
     }
-  } else {
-    mm->mm_tsid_checks = 0;
   }
+  mm->mm_tsid_checks = -100;
   mpegts_mux_set_tsid(mm, tsid, 1);
   
   /* Process each programme */
