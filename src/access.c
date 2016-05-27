@@ -1364,6 +1364,10 @@ theme_get_ui_list ( void *p, const char *lang )
 }
 
 CLASS_DOC(access_entry)
+PROP_DOC(viewlevel_access_entries)
+PROP_DOC(themes)
+PROP_DOC(connection_limit)
+PROP_DOC(persistent_viewlevel)
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
@@ -1388,7 +1392,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
-      .desc     = N_("Enable/disable the entry."),
+      .desc     = N_("Enable/Disable the entry."),
       .off      = offsetof(access_entry_t, ae_enabled),
     },
     {
@@ -1412,18 +1416,22 @@ const idclass_t access_entry_class = {
       .id       = "uilevel",
       .name     = N_("User interface level"),
       .desc     = N_("Default user interface level."),
+      .doc      = prop_doc_viewlevel_access_entries,
       .off      = offsetof(access_entry_t, ae_uilevel),
       .list     = uilevel_get_list,
-      .opts     = PO_EXPERT
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
       .id       = "uilevel_nochange",
       .name     = N_("Persistent user interface level"),
-      .desc     = N_("Prevent changing of interface view level."),
+      .desc     = N_("Prevent the user from overriding the default user "
+                   "interface level setting and removes the view level "
+                   "drop-dowm from the interface."),
+      .doc      = prop_doc_persistent_viewlevel,
       .off      = offsetof(access_entry_t, ae_uilevel_nochange),
       .list     = uilevel_nochange_get_list,
-      .opts     = PO_EXPERT
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1448,21 +1456,23 @@ const idclass_t access_entry_class = {
       .id       = "themeui",
       .name     = N_("Web theme"),
       .desc     = N_("Web interface theme."),
+      .doc      = prop_doc_themes,
       .list     = theme_get_ui_list,
       .off      = offsetof(access_entry_t, ae_theme),
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_BOOL,
       .id       = "streaming",
       .name     = N_("Streaming"),
-      .desc     = N_("Allow/disallow HTTP streaming."),
+      .desc     = N_("Allow/Disallow HTTP streaming."),
       .off      = offsetof(access_entry_t, ae_streaming),
     },
     {
       .type     = PT_BOOL,
       .id       = "adv_streaming",
       .name     = N_("Advanced streaming"),
-      .desc     = N_("Allow/disallow advanced http streaming, "
+      .desc     = N_("Allow/Disallow advanced http streaming, "
                      "e.g, direct service or mux links."),
       .off      = offsetof(access_entry_t, ae_adv_streaming),
     },
@@ -1470,7 +1480,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "htsp_streaming",
       .name     = N_("HTSP streaming"),
-      .desc     = N_("Allow/disallow HTSP protocol streaming, "
+      .desc     = N_("Allow/Disallow HTSP protocol streaming, "
                      "e.g Kodi (via pvr.hts) or Movian."),
       .off      = offsetof(access_entry_t, ae_htsp_streaming),
     },
@@ -1491,7 +1501,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "dvr",
       .name     = N_("Video recorder"),
-      .desc     = N_("Allow/disallow access to video recorder "
+      .desc     = N_("Allow/Disallow access to video recorder "
                      "functionality (including Autorecs)."),
       .off      = offsetof(access_entry_t, ae_dvr),
     },
@@ -1499,7 +1509,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "htsp_dvr",
       .name     = N_("HTSP DVR"),
-      .desc     = N_("Allow/disallow access to DVR via the HTSP "
+      .desc     = N_("Allow/Disallow access to DVR via the HTSP "
                      "protocol."),
       .off      = offsetof(access_entry_t, ae_htsp_dvr),
     },
@@ -1507,7 +1517,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "all_dvr",
       .name     = N_("View all DVR entries"),
-      .desc     = N_("Allow/disallow access to other users DVR entries "
+      .desc     = N_("Allow/Disallow access to other users DVR entries "
                      "(read only)."),
       .off      = offsetof(access_entry_t, ae_all_dvr),
     },
@@ -1515,7 +1525,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "all_rw_dvr",
       .name     = N_("All DVR (rw)"),
-      .desc     = N_("Allow/disallow read/write access to other users' "
+      .desc     = N_("Allow/Disallow read/write access to other users' "
                      "DVR entries."),
       .off      = offsetof(access_entry_t, ae_all_rw_dvr),
     },
@@ -1554,7 +1564,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "webui",
       .name     = N_("Web interface"),
-      .desc     = N_("Allow/disallow web interface access (this "
+      .desc     = N_("Allow/Disallow web interface access (this "
                      " includes access to the EPG)."),
       .off      = offsetof(access_entry_t, ae_webui),
     },
@@ -1562,7 +1572,7 @@ const idclass_t access_entry_class = {
       .type     = PT_BOOL,
       .id       = "admin",
       .name     = N_("Admin"),
-      .desc     = N_("Allow/disallow access to the 'Configuration' tab."),
+      .desc     = N_("Allow/Disallow access to the 'Configuration' tab."),
       .off      = offsetof(access_entry_t, ae_admin),
     },
     {
@@ -1570,9 +1580,10 @@ const idclass_t access_entry_class = {
       .id       = "conn_limit_type",
       .name     = N_("Connection limit type"),
       .desc     = N_("Restrict connections to this type."),
+      .doc      = prop_doc_connection_limit,
       .off      = offsetof(access_entry_t, ae_conn_limit_type),
       .list     = access_entry_conn_limit_type_enum,
-      .opts     = PO_EXPERT
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
