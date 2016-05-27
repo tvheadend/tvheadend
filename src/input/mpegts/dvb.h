@@ -647,6 +647,13 @@ const char *dvb_sat_position_to_str( int position, char *buf, size_t buflen );
 
 const int dvb_sat_position_from_str( const char *buf );
 
+static inline int dvb_modulation_is_none_or_auto ( int modulation )
+{
+  return modulation == DVB_MOD_NONE ||
+         modulation == DVB_MOD_AUTO ||
+         modulation == DVB_MOD_QAM_AUTO;
+}
+
 #endif /* ENABLE_MPEGTS_DVB */
 
 void dvb_init       ( void );

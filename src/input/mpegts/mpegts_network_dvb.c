@@ -533,6 +533,14 @@ dvb_network_find_mux
     /* DVB-S extra checks */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
 
+      /* Same modulation */
+      if (!dvb_modulation_is_none_or_auto(lm->lm_tuning.dmc_fe_modulation) &&
+          !dvb_modulation_is_none_or_auto(dmc->dmc_fe_modulation) &&
+          lm->lm_tuning.dmc_fe_modulation != dmc->dmc_fe_modulation) continue;
+
+      /* Same FEC */
+      if (lm->lm_tuning.u.dmc_fe_qpsk.fec_inner != dmc->u.dmc_fe_qpsk.fec_inner) continue;
+
       /* Same polarisation */
       if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
 
