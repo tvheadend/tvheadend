@@ -1230,7 +1230,7 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint16_t tsid, int force )
 {
   if (tsid == mm->mm_tsid)
     return 0;
-  if (!force && mm->mm_tsid)
+  if (!force && mm->mm_tsid != MPEGTS_TSID_NONE)
     return 0;
   mm->mm_tsid = tsid;
   if (tvhtrace_enabled()) {
