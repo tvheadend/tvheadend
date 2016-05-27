@@ -1368,6 +1368,7 @@ PROP_DOC(viewlevel_access_entries)
 PROP_DOC(themes)
 PROP_DOC(connection_limit)
 PROP_DOC(persistent_viewlevel)
+PROP_DOC(streaming_profile)
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
@@ -1491,6 +1492,7 @@ const idclass_t access_entry_class = {
       .name     = N_("Streaming profiles"),
       .desc     = N_("The streaming profile to use/used. If not set, "
                      "the default will be used."),
+      .doc      = prop_doc_streaming_profile,
       .set      = access_entry_profile_set,
       .get      = access_entry_profile_get,
       .list     = profile_class_get_list,
