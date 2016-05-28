@@ -871,20 +871,21 @@ dvb_pat_callback
   r    = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                          tableid, tsid, 5, &st, &sect, &last, &ver);
   if (r != 1) return r;
+  if (tsid == 0) goto end;
 
   /* Multiplex */
-  tvhdebug("pat", "tsid %04X (%d)", tsid, tsid);
+  tvhdebug("pat", "%p: tsid %04X (%d)", mm, tsid, tsid);
   if (mm->mm_tsid && mm->mm_tsid != tsid) {
     char buf[256];
-    if (++mm->mm_tsid_checks > 10) {
+    if (++mm->mm_tsid_checks > 12) {
       mpegts_mux_nice_name(mm, buf, sizeof(buf));
       tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",
               buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
     } else {
       if (tvhtrace_enabled()) {
         mpegts_mux_nice_name(mm, buf, sizeof(buf));
-        tvhtrace("pat", "%s: ignore TSID - old %04x (%d), new %04x (%d)",
-                 buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+        tvhtrace("pat", "%s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
+                 buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
       }
       return 0; /* keep rolling */
     }
@@ -933,6 +934,7 @@ dvb_pat_callback
                      MPS_WEIGHT_NIT);
 
   /* End */
+end:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
