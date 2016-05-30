@@ -876,22 +876,24 @@ dvb_pat_callback
 
   /* Multiplex */
   tvhdebug("pat", "%p: tsid %04X (%d)", mm, tsid, tsid);
-  if (mm->mm_tsid && mm->mm_tsid != tsid) {
-    char buf[256];
-    if (++mm->mm_tsid_checks > 12) {
-      mpegts_mux_nice_name(mm, buf, sizeof(buf));
-      tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",
-              buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
-    } else {
-      if (tvhtrace_enabled()) {
+  if (mm->mm_tsid != MPEGTS_TSID_NONE) {
+    if (mm->mm_tsid && mm->mm_tsid != tsid) {
+      char buf[256];
+      if (++mm->mm_tsid_checks > 12) {
         mpegts_mux_nice_name(mm, buf, sizeof(buf));
-        tvhtrace("pat", "%s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
-                 buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
+        tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",
+                buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+      } else {
+        if (tvhtrace_enabled()) {
+          mpegts_mux_nice_name(mm, buf, sizeof(buf));
+          tvhtrace("pat", "%s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
+                   buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
+        }
+        return 0; /* keep rolling */
       }
-      return 0; /* keep rolling */
     }
+    mm->mm_tsid_checks = -100;
   }
-  mm->mm_tsid_checks = -100;
   mpegts_mux_set_tsid(mm, tsid, 1);
   
   /* Process each programme */
