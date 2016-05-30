@@ -673,7 +673,7 @@ _eit_callback
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
-    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid);
+    mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
 
   } else {
     if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&

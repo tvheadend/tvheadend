@@ -521,7 +521,7 @@ rtsp_start
           if (!mn2) mn2 = mn;
           mux = (mpegts_mux_t *)
                 dvb_network_find_mux((dvb_network_t *)mn, &rs->dmc,
-                                     MPEGTS_ONID_NONE, MPEGTS_TSID_NONE);
+                                     MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 1);
           if (mux) {
             dmc = ((dvb_mux_t *)mux)->lm_tuning;
             rs->perm_lock = 0;

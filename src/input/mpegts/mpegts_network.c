@@ -633,13 +633,15 @@ mpegts_network_build
 
 mpegts_mux_t *
 mpegts_network_find_mux
-  ( mpegts_network_t *mn, uint16_t onid, uint16_t tsid )
+  ( mpegts_network_t *mn, uint16_t onid, uint16_t tsid, int check )
 {
   mpegts_mux_t *mm;
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
     if (mm->mm_onid && onid && mm->mm_onid != onid) continue;
-    if (mm->mm_tsid == tsid && mm->mm_enabled)
-      break;
+    if (mm->mm_tsid == tsid) {
+      if (!check || mm->mm_enabled == MM_ENABLE)
+        break;
+    }
   }
   return mm;
 }

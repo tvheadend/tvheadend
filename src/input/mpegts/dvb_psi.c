@@ -97,6 +97,7 @@ mpegts_mux_alive(mpegts_mux_t *mm)
   /*
    * Return, if mux seems to be alive for updating.
    */
+  if (mm->mm_enabled != MM_ENABLE) return 0;
   return !LIST_EMPTY(&mm->mm_services) && mm->mm_scan_result != MM_SCAN_FAIL;
 }
 
@@ -1181,7 +1182,7 @@ dvb_nit_mux
   const char *charset;
   char buf[128], dauth[256];
 
-  if (mux && !mux->mm_enabled)
+  if (mux && mux->mm_enabled != MM_ENABLE)
     bi = NULL;
 
   charset = dvb_charset_find(mux ? mux->mm_network : mm->mm_network, mux, NULL);

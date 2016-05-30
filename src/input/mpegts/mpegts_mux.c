@@ -30,6 +30,9 @@
 #include <assert.h>
 
 static void mpegts_mux_scan_timeout ( void *p );
+static void mpegts_mux_do_stop ( mpegts_mux_t *mm, int delconf );
+
+
 /* ****************************************************************************
  * Mux instance (input linkage)
  * ***************************************************************************/
@@ -396,6 +399,7 @@ scan_result_tab[] = {
  { N_("OK"),           MM_SCAN_OK   },
  { N_("FAIL"),         MM_SCAN_FAIL },
  { N_("OK (partial)"), MM_SCAN_PARTIAL },
+ { N_("IGNORE"),       MM_SCAN_IGNORE },
 };
 
 int
@@ -455,7 +459,22 @@ mpegts_mux_class_enabled_notify ( void *p, const char *lang )
   if (!mm->mm_is_enabled(mm)) {
     mm->mm_stop(mm, 1, SM_CODE_MUX_NOT_ENABLED);
     mpegts_network_scan_mux_cancel(mm, 0);
+    if (mm->mm_enabled == MM_IGNORE) {
+      mpegts_mux_do_stop(mm, 1);
+      mm->mm_scan_result = MM_SCAN_IGNORE;
+    }
   }
+}
+
+static htsmsg_t *
+mpegts_mux_enable_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Ignore"),                   MM_IGNORE },
+    { N_("Disable"),                  MM_DISABLE },
+    { N_("Enable"),                   MM_ENABLE },
+  };
+  return strtab2htsmsg(tab, 1, lang);
 }
 
 static htsmsg_t *
@@ -503,13 +522,17 @@ const idclass_t mpegts_mux_class =
   .ic_get_title  = mpegts_mux_class_get_title,
   .ic_properties = (const property_t[]){
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "enabled",
       .name     = N_("Enabled"),
-      .desc     = N_("Enable or disable the mux."),
+      .desc     = N_("Enable, disable or ignore the mux. "
+                     "When the mux is marked as ignore, "
+                     "all discovered services are removed."),
       .off      = offsetof(mpegts_mux_t, mm_enabled),
-      .def.i    = 1,
+      .def.i    = MM_ENABLE,
+      .list     = mpegts_mux_enable_list,
       .notify   = mpegts_mux_class_enabled_notify,
+      .opts     = PO_DOC_NLIST
     },
     {
       .type     = PT_INT,
@@ -662,24 +685,12 @@ mpegts_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
            mm->mm_onid, mm->mm_tsid);
 }
 
-void
-mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
+static void
+mpegts_mux_do_stop ( mpegts_mux_t *mm, int delconf )
 {
   mpegts_mux_instance_t *mmi;
-  mpegts_service_t *s;
   th_subscription_t *ths;
-  char buf[256];
-
-  idnode_save_check(&mm->mm_id, delconf);
-
-  mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);
-  
-  /* Stop */
-  mm->mm_stop(mm, 1, SM_CODE_ABORTED);
-
-  /* Remove from network */
-  LIST_REMOVE(mm, mm_network_link);
+  mpegts_service_t *s;
 
   /* Cancel scan */
   mpegts_network_scan_queue_del(mm);
@@ -701,6 +712,26 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   /* Stop PID timer */
   mtimer_disarm(&mm->mm_update_pids_timer);
+}
+
+void
+mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
+{
+  char buf[256];
+
+  idnode_save_check(&mm->mm_id, delconf);
+
+  mpegts_mux_nice_name(mm, buf, sizeof(buf));
+  tvhinfo("mpegts", "%s (%p) - deleting", buf, mm);
+
+  /* Stop */
+  mm->mm_stop(mm, 1, SM_CODE_ABORTED);
+
+  /* Remove from network */
+  LIST_REMOVE(mm, mm_network_link);
+
+  /* Real stop */
+  mpegts_mux_do_stop(mm, delconf);
 
   /* Free memory */
   idnode_save_check(&mm->mm_id, 1);
@@ -720,7 +751,7 @@ mpegts_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
 static int
 mpegts_mux_is_enabled ( mpegts_mux_t *mm )
 {
-  return mm->mm_enabled;
+  return mm->mm_enabled == MM_ENABLE;
 }
 
 static int
@@ -1127,8 +1158,8 @@ mpegts_mux_create0
   }
 
   /* Enabled by default */
-  mm->mm_enabled             = 1;
-  mm->mm_epg                 = 1;
+  mm->mm_enabled             = MM_ENABLE;
+  mm->mm_epg                 = MM_EPG_ENABLE;
 
   /* Identification */
   mm->mm_onid                = onid;
@@ -1166,6 +1197,9 @@ mpegts_mux_create0
   /* Configuration */
   if (conf)
     idnode_load(&mm->mm_id, conf);
+
+  if (mm->mm_enabled == MM_IGNORE)
+    mm->mm_scan_result = MM_SCAN_IGNORE;
 
   /* Initial scan */
   if (mm->mm_scan_result == MM_SCAN_NONE || !mn->mn_skipinitscan)

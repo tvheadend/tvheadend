@@ -80,7 +80,7 @@ dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
 
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
-    if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE))) {
+    if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 0))) {
       mm = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
                            dmc, NULL, NULL);
       if (mm)
@@ -498,12 +498,15 @@ dvb_network_check_orbital_pos ( int satpos1, int satpos2 )
 
 dvb_mux_t *
 dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid )
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check )
 {
   int deltaf, deltar;
   mpegts_mux_t *mm, *mm_alt = NULL;
 
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+
+    if (check && mm->mm_enabled != MM_ENABLE) continue;
+
     deltaf = 2000; // 2K/MHz
     deltar = 1000;
     dvb_mux_t *lm = (dvb_mux_t*)mm;
@@ -654,7 +657,7 @@ dvb_network_create_mux
   }
 
   ln = (dvb_network_t*)mn;
-  mm = dvb_network_find_mux(ln, dmc, onid, tsid);
+  mm = dvb_network_find_mux(ln, dmc, onid, tsid, 0);
   if (!mm && (ln->mn_autodiscovery || force)) {
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
     save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;
