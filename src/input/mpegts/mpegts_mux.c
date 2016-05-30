@@ -1065,6 +1065,10 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   }
   pthread_mutex_unlock(&mm->mm_tables_lock);
 
+  /* override if all tables were found */
+  if (res < 0 && incomplete <= 0 && total > 2)
+    res = 1;
+
   if (res < 0) {
     /* is threshold 3 missing tables enough? */
     if (incomplete > 0 && total > incomplete && incomplete <= 3) {
