@@ -1071,7 +1071,7 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
       tvhinfo("mpegts", "%s - scan complete (partial - %d/%d tables)", buf, total, incomplete);
       mpegts_network_scan_mux_partial(mm);
     } else {
-      tvhinfo("mpegts", "%s - scan timed out (%d/%d tables)", buf, total, incomplete);
+      tvhwarn("mpegts", "%s - scan timed out (%d/%d tables)", buf, total, incomplete);
       mpegts_network_scan_mux_fail(mm);
     }
   } else if (res) {
