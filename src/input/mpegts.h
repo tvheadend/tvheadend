@@ -283,6 +283,12 @@ struct mpegts_table_feed {
  * Logical network
  * *************************************************************************/
 
+typedef enum {
+  MN_DISCOVERY_DISABLE = 0,
+  MN_DISCOVERY_NEW     = 1,
+  MN_DISCOVERY_CHANGE  = 2
+} mpegts_discovery_t;
+
 /* Network/Input linkage */
 struct mpegts_network_link
 {

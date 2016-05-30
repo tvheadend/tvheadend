@@ -129,6 +129,17 @@ mpegts_network_class_idlescan_notify ( void *p, const char *lang )
   }
 }
 
+static htsmsg_t *
+mpegts_network_discovery_enum ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Disable"),                  MN_DISCOVERY_DISABLE },
+    { N_("New muxes only"),           MN_DISCOVERY_NEW },
+    { N_("New muxes + change muxes"), MN_DISCOVERY_CHANGE },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(mpegts_network)
 
 const idclass_t mpegts_network_class =
@@ -166,14 +177,15 @@ const idclass_t mpegts_network_class =
       .off      = offsetof(mpegts_network_t, mn_nid),
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
       .id       = "autodiscovery",
       .name     = N_("Network discovery"),
       .desc     = N_("Discover more muxes using the Network "
                      "Information Table (if available)."),
       .off      = offsetof(mpegts_network_t, mn_autodiscovery),
+      .list     = mpegts_network_discovery_enum,
       .opts     = PO_ADVANCED,
-      .def.i    = 1
+      .def.i    = MN_DISCOVERY_NEW
     },
     {
       .type     = PT_BOOL,
@@ -426,7 +438,7 @@ mpegts_network_create0
   /* Defaults */
   mn->mn_satpos = INT_MAX;
   mn->mn_skipinitscan = 1;
-  mn->mn_autodiscovery = 1;
+  mn->mn_autodiscovery = MN_DISCOVERY_NEW;
 
   /* Load config */
   if (conf)
