@@ -307,7 +307,7 @@ static void login_changed(idnode_t *in)
       passwd_entry_destroy(pw, 1);
   }
 
-  s = w->admin_username[0] ? (w->admin_username ?: "") : "*";
+  s = w->admin_username[0] ? w->admin_username : "*";
   conf = htsmsg_create_map();
   htsmsg_add_bool(conf, "enabled", 1);
   htsmsg_add_str(conf, "prefix", w->network);
