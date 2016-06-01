@@ -684,7 +684,7 @@ dvb_network_create_mux
     char buf[128];
     dvb_mux_conf_t tuning_new, tuning_old;
     dvb_mux_t *lm = (dvb_mux_t*)mm;
-    int change = ln->mn_autodiscovery == MN_DISCOVERY_CHANGE;
+    int change = (ln->mn_autodiscovery == MN_DISCOVERY_CHANGE) || force;
     /* the nit tables may be inconsistent (like rolloff ping-pong) */
     /* accept information only from one origin mux */
     if (mm->mm_dmc_origin_expire > mclk() && mm->mm_dmc_origin && mm->mm_dmc_origin != origin)
