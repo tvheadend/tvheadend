@@ -102,6 +102,7 @@ void bouquet_notify_channels(bouquet_t *bq);
 void bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag);
 void bouquet_completed(bouquet_t *bq, uint32_t seen);
 void bouquet_change_comment(bouquet_t *bq, const char *comment, int replace);
+void bouquet_scan(bouquet_t *bq);
 
 uint64_t bouquet_get_channel_number(bouquet_t *bq, service_t *t);
 

@@ -609,6 +609,24 @@ bouquet_change_comment ( bouquet_t *bq, const char *comment, int replace )
   bq->bq_saveflag = 1;
 }
 
+/*
+ *
+ */
+void
+bouquet_scan ( bouquet_t *bq )
+{
+  void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
+  void iptv_bouquet_trigger_by_uuid( const char *uuid );
+#if ENABLE_IPTV
+  if (bq->bq_src && strncmp(bq->bq_src, "iptv-network://", 15) == 0)
+    return iptv_bouquet_trigger_by_uuid(bq->bq_src + 15);
+#endif
+  if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) == 0)
+    return bouquet_download_trigger(bq);
+  mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
+  bq->bq_rescan = 0;
+}
+
 /* **************************************************************************
  * Class definition
  * **************************************************************************/
@@ -655,36 +673,12 @@ bouquet_class_get_list(void *o, const char *lang)
 }
 
 static void
-bouquet_class_rescan_notify0 ( bouquet_t *bq, const char *lang )
-{
-  void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
-  void iptv_bouquet_trigger_by_uuid( const char *uuid );
-#if ENABLE_IPTV
-  if (bq->bq_src && strncmp(bq->bq_src, "iptv-network://", 15) == 0)
-    return iptv_bouquet_trigger_by_uuid(bq->bq_src + 15);
-#endif
-  if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) == 0)
-    return bouquet_download_trigger(bq);
-  mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
-  bq->bq_rescan = 0;
-}
-
-static void
-bouquet_class_rescan_notify ( void *obj, const char *lang )
-{
-  bouquet_t *bq = obj;
-
-  if (bq->bq_rescan)
-    bouquet_class_rescan_notify0(bq, lang);
-}
-
-static void
 bouquet_class_enabled_notify ( void *obj, const char *lang )
 {
   bouquet_t *bq = obj;
 
   if (bq->bq_enabled)
-    bouquet_class_rescan_notify0(bq, lang);
+    bouquet_scan(bq);
   bouquet_map_to_channels(bq);
 }
 
@@ -975,15 +969,6 @@ const idclass_t bouquet_class = {
       .desc     = N_("Enable/disable the bouquet."),
       .off      = offsetof(bouquet_t, bq_enabled),
       .notify   = bouquet_class_enabled_notify,
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "rescan",
-      .name     = N_("Rescan"),
-      .desc     = N_("Rescan the mux for changes to the bouquet."),
-      .off      = offsetof(bouquet_t, bq_rescan),
-      .notify   = bouquet_class_rescan_notify,
-      .opts     = PO_NOSAVE,
     },
     {
       .type     = PT_BOOL,

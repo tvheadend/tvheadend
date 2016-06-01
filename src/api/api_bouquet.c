@@ -81,6 +81,41 @@ api_bouquet_create
   return 0;
 }
 
+static int
+api_bouquet_scan
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  htsmsg_field_t *f;
+  htsmsg_t *uuids;
+  bouquet_t *bq;
+  const char *uuid;
+
+  if (!(f = htsmsg_field_find(args, "uuid")))
+    return -EINVAL;
+  if ((uuids = htsmsg_field_get_list(f))) {
+    HTSMSG_FOREACH(f, uuids) {
+      if (!(uuid = htsmsg_field_get_str(f))) continue;
+      pthread_mutex_lock(&global_lock);
+      bq = bouquet_find_by_uuid(uuid);
+      if (bq)
+        bouquet_scan(bq);
+      pthread_mutex_unlock(&global_lock);
+    }
+  } else if ((uuid = htsmsg_field_get_str(f))) {
+    pthread_mutex_lock(&global_lock);
+    bq = bouquet_find_by_uuid(uuid);
+    if (bq)
+      bouquet_scan(bq);
+    pthread_mutex_unlock(&global_lock);
+    if (!bq)
+      return -ENOENT;
+  } else {
+    return -EINVAL;
+  }
+
+  return 0;
+}
+
 void api_bouquet_init ( void )
 {
   static api_hook_t ah[] = {
@@ -88,6 +123,7 @@ void api_bouquet_init ( void )
     { "bouquet/class",   ACCESS_ADMIN, api_idnode_class, (void*)&bouquet_class },
     { "bouquet/grid",    ACCESS_ADMIN, api_idnode_grid,  api_bouquet_grid },
     { "bouquet/create",  ACCESS_ADMIN, api_bouquet_create, NULL },
+    { "bouquet/scan",    ACCESS_ADMIN, api_bouquet_scan, NULL },
 
     { NULL },
   };

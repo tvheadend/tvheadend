@@ -151,21 +151,19 @@ api_mpegts_network_scan
   if ((uuids = htsmsg_field_get_list(f))) {
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
-      mn = mpegts_network_find(uuid);
-      if (mn) {
-        pthread_mutex_lock(&global_lock);
-        mpegts_network_scan(mn);
-        pthread_mutex_unlock(&global_lock);
-      }
-    }
-  } else if ((uuid = htsmsg_field_get_str(f))) {
-    mn = mpegts_network_find(uuid);
-    if (mn) {
       pthread_mutex_lock(&global_lock);
-      mpegts_network_scan(mn);
+      mn = mpegts_network_find(uuid);
+      if (mn)
+        mpegts_network_scan(mn);
       pthread_mutex_unlock(&global_lock);
     }
-    else
+  } else if ((uuid = htsmsg_field_get_str(f))) {
+    pthread_mutex_lock(&global_lock);
+    mn = mpegts_network_find(uuid);
+    if (mn)
+      mpegts_network_scan(mn);
+    pthread_mutex_unlock(&global_lock);
+    if (!mn)
       return -ENOENT;
   } else {
     return -EINVAL;
