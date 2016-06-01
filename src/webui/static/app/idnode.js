@@ -830,7 +830,7 @@ tvheadend.idnode_editor_field = function(f, conf)
                     value: value,
                     minValue: f.intmin,
                     maxValue: f.intmax,
-                    incrementalValue: f.intstep || 1
+                    incrementValue: f.intstep || 1
                });
                break;
             }
