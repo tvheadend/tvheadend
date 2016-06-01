@@ -1075,12 +1075,14 @@ satip_frontend_wake_other_waiting
 
 static void
 satip_frontend_request_cleanup
-  ( satip_frontend_t *lfe, satip_tune_req_t *tr )
+  ( satip_frontend_t *lfe, satip_tune_req_t **_tr )
 {
+  satip_tune_req_t *tr = *_tr;
   if (tr && tr != lfe->sf_req) {
     mpegts_pid_done(&tr->sf_pids);
     mpegts_pid_done(&tr->sf_pids_tuned);
     free(tr);
+    *_tr = NULL;
   }
   if (tr == lfe->sf_req_thread)
     lfe->sf_req_thread = NULL;
@@ -1149,7 +1151,7 @@ done:
 static void
 satip_frontend_shutdown
   ( satip_frontend_t *lfe, const char *name, http_client_t *rtsp,
-    satip_tune_req_t *tr, tvhpoll_t *efd )
+    satip_tune_req_t **tr, tvhpoll_t *efd )
 {
   char b[32];
   tvhpoll_event_t ev;
@@ -1183,6 +1185,7 @@ satip_frontend_shutdown
   sbuf_free(&lfe->sf_sbuf);
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
+  satip_frontend_wake_other_waiting(lfe, *tr);
   satip_frontend_request_cleanup(lfe, tr);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 }
@@ -1218,7 +1221,7 @@ satip_frontend_close_rtsp
   ev.data.ptr = NULL;
   tvhpoll_rem(efd, &ev, 1);
 
-  satip_frontend_shutdown(lfe, name, *rtsp, *tr, efd);
+  satip_frontend_shutdown(lfe, name, *rtsp, tr, efd);
 
   memset(&ev, 0, sizeof(ev));
   ev.events   = TVHPOLL_IN;
@@ -1227,9 +1230,7 @@ satip_frontend_close_rtsp
   tvhpoll_add(efd, &ev, 1);
 
   http_client_close(*rtsp);
-  satip_frontend_wake_other_waiting(lfe, *tr);
   *rtsp = NULL;
-  *tr = NULL;
 }
 
 static int
@@ -1445,7 +1446,7 @@ new_tune:
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  satip_frontend_request_cleanup(lfe, tr);
+  satip_frontend_request_cleanup(lfe, &tr);
   lfe->sf_req_thread = tr = lfe->sf_req;
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
@@ -1896,10 +1897,9 @@ wrdata:
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {
-    satip_frontend_shutdown(lfe, buf, rtsp, tr, efd);
+    satip_frontend_shutdown(lfe, buf, rtsp, &tr, efd);
     http_client_close(rtsp);
     rtsp = NULL;
-    tr = NULL;
   }
 
 done:
@@ -1917,7 +1917,7 @@ done:
     goto new_tune;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  satip_frontend_request_cleanup(lfe, tr);
+  satip_frontend_request_cleanup(lfe, &tr);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
   if (rtsp)
