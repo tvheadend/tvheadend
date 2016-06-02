@@ -25,7 +25,7 @@
 #include "plumbing/globalheaders.h"
 #if ENABLE_LIBAV
 #include "lang_codes.h"
-#include "plumbing/transcoding.h"
+#include "transcoding/transcoding.h"
 #endif
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
