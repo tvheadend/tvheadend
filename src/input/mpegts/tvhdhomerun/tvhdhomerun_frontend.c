@@ -308,11 +308,16 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
   char buf[1024];
   int res;
 
-  //tvhdebug("tvhdhomerun", "adding PID 0x%x to pfilter", pid);
-
-  /* Skip internal PIDs */
-  if (pid > MPEGTS_FULLMUX_PID)
+  /* a full mux subscription should specificly set the filter */
+  if (pid == MPEGTS_FULLMUX_PID) {
+    tvhdebug("tvhdhomerun", "setting PID filter full mux");
+    pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
+    res = hdhomerun_device_set_tuner_filter(hfe->hf_hdhomerun_tuner, "0x0000-0x1FFF");
+    pthread_mutex_unlock(&hfe->hf_hdhomerun_device_mutex);
+    if(res < 1)
+      tvhlog(LOG_ERR, "tvhdhomerun", "failed to set_tuner_filter to 0x0000 - 0x1FFF");
     return;
+  }
 
   /* get the current filter */
   pthread_mutex_lock(&hfe->hf_hdhomerun_device_mutex);
@@ -324,6 +329,9 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
   }
 
   tvhdebug("tvhdhomerun", "current pfilter: %s", pfilter);
+
+  /* make sure the pid maps to a max of 0x1FFF, API will reject the call otherwise */
+  pid = (pid & 0x1FFF);
 
   memset(buf, 0x00, sizeof(buf));
   snprintf(buf, sizeof(buf), "0x%04x", pid);
