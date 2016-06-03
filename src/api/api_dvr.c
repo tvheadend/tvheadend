@@ -479,6 +479,21 @@ api_dvr_timerec_create
   return 0;
 }
 
+static int
+api_dvr_entry_file_moved
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  const char *src, *dst;
+  if (!(src = htsmsg_get_str(args, "src")))
+    return -EINVAL;
+  if (!(dst = htsmsg_get_str(args, "dst")))
+    return -EINVAL;
+  if (dvr_entry_file_moved(src, dst))
+    return -ENOENT;
+  return 0;
+}
+
+
 void api_dvr_init ( void )
 {
   static api_hook_t ah[] = {
@@ -500,6 +515,7 @@ void api_dvr_init ( void )
     { "dvr/entry/rerecord/allow",  ACCESS_RECORDER, api_dvr_entry_rerecord_allow, NULL },
     { "dvr/entry/stop",            ACCESS_RECORDER, api_dvr_entry_stop, NULL },
     { "dvr/entry/cancel",          ACCESS_RECORDER, api_dvr_entry_cancel, NULL },
+    { "dvr/entry/filemoved",       ACCESS_ADMIN,    api_dvr_entry_file_moved, NULL },
     { "dvr/entry/move/finished",   ACCESS_RECORDER, api_dvr_entry_move_finished, NULL },
     { "dvr/entry/move/failed",     ACCESS_RECORDER, api_dvr_entry_move_failed, NULL },
 

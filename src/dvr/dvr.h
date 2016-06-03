@@ -586,6 +586,8 @@ int dvr_entry_delete(dvr_entry_t *de);
 
 void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 
+int dvr_entry_file_moved(const char *src, const char *dst);
+
 void dvr_entry_destroy(dvr_entry_t *de, int delconf);
 
 htsmsg_t *dvr_entry_class_mc_list (void *o, const char *lang);

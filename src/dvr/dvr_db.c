@@ -3519,6 +3519,35 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
 /**
  *
  */
+int
+dvr_entry_file_moved(const char *src, const char *dst)
+{
+  dvr_entry_t *de;
+  htsmsg_t *m;
+  htsmsg_field_t *f;
+  const char *filename;
+  int r = -1;
+
+  if (!src || !dst || src[0] == '\0' || dst[0] == '\0' || access(dst, R_OK))
+    return r;
+  pthread_mutex_lock(&global_lock);
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    HTSMSG_FOREACH(f, de->de_files)
+      if ((m = htsmsg_field_get_map(f)) != NULL) {
+        filename = htsmsg_get_str(m, "filename");
+        if (strcmp(filename, src) == 0) {
+          htsmsg_set_str(m, "filename", dst);
+          dvr_vfs_refresh_entry(de);
+          r = 0;
+        }
+      }
+  pthread_mutex_unlock(&global_lock);
+  return r;
+}
+
+/**
+ *
+ */
 void
 dvr_entry_init(void)
 {
