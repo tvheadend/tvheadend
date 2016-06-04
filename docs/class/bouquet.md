@@ -21,6 +21,12 @@ listen to the specific MPEG-TS PIDs.
 
 <tvh_include>inc/common_button_table_end</tvh_include>
 
+The following tab specific buttons are available: 
+
+Button         | Function
+---------------|---------
+**Force Scan** | Rescan the selected mux for changes to the bouquet.
+
 ---
 
 <tvh_include>inc/add_grid_entry</tvh_include>

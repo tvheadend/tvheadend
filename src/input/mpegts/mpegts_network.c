@@ -135,12 +135,13 @@ mpegts_network_discovery_enum ( void *o, const char *lang )
   static const struct strtab tab[] = {
     { N_("Disable"),                  MN_DISCOVERY_DISABLE },
     { N_("New muxes only"),           MN_DISCOVERY_NEW },
-    { N_("New muxes + change muxes"), MN_DISCOVERY_CHANGE },
+    { N_("New muxes + changed muxes"), MN_DISCOVERY_CHANGE },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
 
 CLASS_DOC(mpegts_network)
+PROP_DOC(network_discovery)
 
 const idclass_t mpegts_network_class =
 {
@@ -182,9 +183,10 @@ const idclass_t mpegts_network_class =
       .name     = N_("Network discovery"),
       .desc     = N_("Discover more muxes using the Network "
                      "Information Table (if available)."),
+      .doc      = prop_doc_network_discovery,
       .off      = offsetof(mpegts_network_t, mn_autodiscovery),
       .list     = mpegts_network_discovery_enum,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_ADVANCED | PO_DOC_NLIST,
       .def.i    = MN_DISCOVERY_NEW
     },
     {
