@@ -331,7 +331,10 @@ static void tvhdhomerun_device_open_pid(tvhdhomerun_frontend_t *hfe, int pid) {
   tvhdebug("tvhdhomerun", "current pfilter: %s", pfilter);
 
   /* make sure the pid maps to a max of 0x1FFF, API will reject the call otherwise */
-  pid = (pid & 0x1FFF);
+  if(pid > 0x1FFF) {
+    tvhlog(LOG_ERR, "tvhdhomerun", "pid %d is too large, masking to API maximum of 0x1FFF", pid);
+    pid = (pid & 0x1FFF);
+  }
 
   memset(buf, 0x00, sizeof(buf));
   snprintf(buf, sizeof(buf), "0x%04x", pid);
