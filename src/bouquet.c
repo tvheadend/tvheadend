@@ -954,7 +954,7 @@ PROP_DOC(bouquet_tagging)
 
 const idclass_t bouquet_class = {
   .ic_class      = "bouquet",
-  .ic_caption    = N_("Bouquet"),
+  .ic_caption    = N_("Bouquets"),
   .ic_doc        = tvh_doc_bouquet_class,
   .ic_event      = "bouquet",
   .ic_perm_def   = ACCESS_ADMIN,
