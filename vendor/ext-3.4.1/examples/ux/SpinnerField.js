@@ -34,7 +34,7 @@ Ext.ux.form.SpinnerField = Ext.extend(Ext.form.NumberField, {
     adjustSize: Ext.BoxComponent.prototype.adjustSize,
 
 	constructor: function(config) {
-		var spinnerConfig = Ext.copyTo({}, config, 'incrementValue,alternateIncrementValue,accelerate,defaultValue,triggerClass,splitterClass');
+		var spinnerConfig = Ext.copyTo({}, config, 'incrementValue,alternateIncrementValue,accelerate,defaultValue,triggerClass,splitterClass,readOnly,editable');
 
 		var spl = this.spinner = new Ext.ux.Spinner(spinnerConfig);
 

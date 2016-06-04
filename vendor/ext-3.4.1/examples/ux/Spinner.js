@@ -31,6 +31,8 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
     alternateKey: Ext.EventObject.shiftKey,
     defaultValue: 0,
     accelerate: false,
+    readOnly: false,
+    editable: false,
 
     constructor: function(config){
         Ext.ux.Spinner.superclass.constructor.call(this, config);
@@ -99,6 +101,7 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
             this.el.position();
             this.el.setY(y);
         }
+        this.updateEditState();
     },
 
     doEnable: function(){
@@ -262,7 +265,7 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
 
     //private
     onTriggerClick: function(){
-        if (this.disabled || this.el.dom.readOnly) {
+        if (this.disabled || this.readOnly) {
             return;
         }
         var middle = this.getMiddle();
@@ -281,11 +284,31 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
     //private
     //checks if control is allowed to spin
     isSpinnable: function(){
-        if (this.disabled || this.el.dom.readOnly) {
+        if (this.disabled || this.readOnly) {
             Ext.EventObject.preventDefault(); //prevent scrolling when disabled/readonly
             return false;
         }
         return true;
+    },
+
+    updateEditState: function(){
+        if (this.field.rendered) {
+            this.field.setReadOnly(this.readOnly || (!this.editable));
+        }
+    },
+
+    setEditable: function(editable){
+        if(editable != this.editable){
+            this.editable = editable;
+            this.updateEditState();
+        }
+    },
+
+    setReadOnly: function(readOnly){
+        if(readOnly != this.readOnly){
+            this.readOnly = readOnly;
+            this.updateEditState();
+        }
     },
 
     handleMouseWheel: function(e){
