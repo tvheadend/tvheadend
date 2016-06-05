@@ -114,7 +114,7 @@ typedef struct property {
   } def;
 
   /* Extended options */
-  uint32_t    (*get_opts) (void *ptr);
+  uint32_t    (*get_opts) (void *ptr, uint32_t opts);
 
   /* Documentation callback */
   char       *(*doc) ( const struct property *prop, const char *lang );

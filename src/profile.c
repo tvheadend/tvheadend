@@ -25,7 +25,7 @@
 #include "plumbing/globalheaders.h"
 #if ENABLE_LIBAV
 #include "lang_codes.h"
-#include "plumbing/transcoding.h"
+#include "transcoding/transcoding.h"
 #endif
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
@@ -183,7 +183,7 @@ profile_class_delete(idnode_t *self)
 }
 
 static uint32_t
-profile_class_enabled_opts(void *o)
+profile_class_enabled_opts(void *o, uint32_t opts)
 {
   profile_t *pro = o;
   uint32_t r = 0;
@@ -231,7 +231,7 @@ profile_class_default_set(void *o, const void *v)
 }
 
 static uint32_t
-profile_class_name_opts(void *o)
+profile_class_name_opts(void *o, uint32_t opts)
 {
   profile_t *pro = o;
   uint32_t r = 0;

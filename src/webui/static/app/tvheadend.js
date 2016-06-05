@@ -116,7 +116,7 @@ tvheadend.mdhelp = function(pagename) {
             tvheadend.doc_win.close();
             tvheadend.doc_win = null;
         }
-        
+
         if (title)
             title = title[title.length-1];
 
@@ -131,7 +131,7 @@ tvheadend.mdhelp = function(pagename) {
             if (history)
                 history += '<hr/>';
         }
-        
+
         var bodyid = Ext.id();
         var text = '<div id="' + bodyid + '">';
         if (tvheadend.docs_toc || history)
@@ -233,10 +233,10 @@ tvheadend.mdhelp = function(pagename) {
         tvheadend.doc_win = win;
     }
 
-    var helpfailuremsg = function() { 
+    var helpfailuremsg = function() {
         Ext.MessageBox.show({
             title:_('Error'),
-            msg: _('There was a problem displaying the help page!') + '<br>' + 
+            msg: _('There was a problem displaying the help page!') + '<br>' +
                  _('This usually means there is no help available or the document couldn\'t be loaded.'),
             buttons: Ext.Msg.OK,
             icon: Ext.MessageBox.ERROR,
@@ -608,7 +608,7 @@ function diskspaceUpdate(o) {
 }
 
 /**
- * This function creates top level tabs based on access so users without 
+ * This function creates top level tabs based on access so users without
  * access to subsystems won't see them.
  *
  * Obviosuly, access is verified in the server too.
@@ -622,10 +622,10 @@ function accessUpdate(o) {
 
     if (o.uilevel)
         tvheadend.uilevel = o.uilevel;
-        
+
     if (o.theme)
         tvheadend.theme = o.theme;
-        
+
     tvheadend.quicktips = o.quicktips ? true : false;
 
     if (o.uilevel_nochange)
@@ -675,7 +675,7 @@ function accessUpdate(o) {
         tvheadend.baseconf(general);
         tvheadend.imgcacheconf(general);
         tvheadend.satipsrvconf(general);
-        
+
         cp.add(general);
 
         /* Users */
@@ -691,7 +691,7 @@ function accessUpdate(o) {
         tvheadend.acleditor(users);
         tvheadend.passwdeditor(users);
         tvheadend.ipblockeditor(users);
-        
+
         cp.add(users);
 
         /* DVB inputs, networks, muxes, services */
@@ -740,6 +740,7 @@ function accessUpdate(o) {
             iconCls: 'film_edit',
             items: []
         });
+        tvheadend.profile_tab(stream);
         tvheadend.esfilter_tab(stream);
 
         cp.add(stream);
@@ -755,7 +756,7 @@ function accessUpdate(o) {
         });
         tvheadend.dvr_settings(tsdvr);
         if (tvheadend.capabilities.indexOf('timeshift') !== -1)
-          tvheadend.timeshift(tsdvr);
+            tvheadend.timeshift(tsdvr);
 
         cp.add(tsdvr);
 
@@ -833,7 +834,7 @@ tvheadend.log = function(msg, style) {
  *
  */
 tvheadend.RootTabExtraComponent = Ext.extend(Ext.Component, {
-   
+
     onRender1: function(tab, before) {
         if (!this.componentTpl) {
             var tt = new Ext.Template(
@@ -852,7 +853,7 @@ tvheadend.RootTabExtraComponent = Ext.extend(Ext.Component, {
 });
 
 tvheadend.RootTabExtraClickComponent = Ext.extend(Ext.Component, {
-   
+
     onRender1: function(tab, before, click_cb) {
         if (!this.componentTpl) {
             var tt = new Ext.Template(
@@ -907,7 +908,7 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
                 }
             }
         }
-        
+
         if (this.extra.time)
             window.setInterval(this.setTime, 1000);
     },
