@@ -32,7 +32,7 @@ Ext.ux.Spinner = Ext.extend(Ext.util.Observable, {
     defaultValue: 0,
     accelerate: false,
     readOnly: false,
-    editable: false,
+    editable: true,
 
     constructor: function(config){
         Ext.ux.Spinner.superclass.constructor.call(this, config);
