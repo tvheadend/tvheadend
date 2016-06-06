@@ -232,8 +232,9 @@ const idclass_t satip_device_class =
     {
       .type     = PT_BOOL,
       .id       = "tcp_mode",
-      .name     = N_("RTSP/TCP (embedded data)"),
-      .desc     = N_("Enable or disable RTSP/TCP (embedded data) support."),
+      .name     = N_("RTP/AVP/TCP (embedded data)"),
+      .desc     = N_("Enable or disable RTP/AVP/TCP transfer mode "
+                     "(embedded data in the RTSP session) support."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(satip_device_t, sd_tcp_mode),
     },
