@@ -703,6 +703,13 @@ dvb_network_create_mux
                  " (%li)", (long)dmc->x, (long)tuning_new.x); \
         tuning_new.x = dmc->x; \
       } xr ? cbit : 0; })
+    #define COMPAREN0(x, cbit) ({ \
+      int xr = dmc->x != 1 && dmc->x != tuning_new.x; \
+      if (xr) { \
+        tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
+                 " (%li)", (long)dmc->x, (long)tuning_new.x); \
+        tuning_new.x = dmc->x; \
+      } xr ? cbit : 0; })
     tuning_new = tuning_old = lm->lm_tuning;
     /* Always save the orbital position */
     if (dmc->dmc_fe_type == DVB_TYPE_S) {
@@ -727,11 +734,11 @@ dvb_network_create_mux
     case DVB_TYPE_T:
       save |= COMPARE(dmc_fe_stream_id, CBIT_STREAM_ID);
       save |= COMPAREN(u.dmc_fe_ofdm.bandwidth, CBIT_BANDWIDTH);
+      save |= COMPAREN(u.dmc_fe_ofdm.hierarchy_information, CBIT_HIERARCHY);
       save |= COMPAREN(u.dmc_fe_ofdm.code_rate_HP, CBIT_RATE_HP);
-      save |= COMPAREN(u.dmc_fe_ofdm.code_rate_LP, CBIT_RATE_LP);
+      save |= COMPAREN0(u.dmc_fe_ofdm.code_rate_LP, CBIT_RATE_LP);
       save |= COMPAREN(u.dmc_fe_ofdm.transmission_mode, CBIT_TRANS_MODE);
       save |= COMPAREN(u.dmc_fe_ofdm.guard_interval, CBIT_GUARD);
-      save |= COMPAREN(u.dmc_fe_ofdm.hierarchy_information, CBIT_HIERARCHY);
       break;
     case DVB_TYPE_S:
       save |= COMPARE(u.dmc_fe_qpsk.polarisation, CBIT_POLARISATION);
@@ -757,11 +764,11 @@ dvb_network_create_mux
       mpegts_mux_nice_name((mpegts_mux_t *)mm, muxname, sizeof(muxname));
       dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
       tvhlog(change ? LOG_WARNING : LOG_NOTICE, "mpegts",
-             "mux %s%s from %s (%08x)", muxname,
+             "mux %s%s %s (%08x)", muxname,
              change ? " changed from" : " old params", buf, save);
       dvb_mux_conf_str(&tuning_new, buf, sizeof(buf));
       tvhlog(change ? LOG_WARNING : LOG_NOTICE, "mpegts",
-             "mux %s%s to   %s (%08x)", muxname,
+             "mux %s%s %s (%08x)", muxname,
              change ? " changed to  " : " new params", buf, save);
       if (!change) save = 0;
     }

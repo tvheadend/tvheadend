@@ -365,8 +365,8 @@ dvb_desc_terr_del
 
   /* Extract data */
   frequency     = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]);
-  if (!frequency) {
-    tvhwarn(mt->mt_name, "dvb-t frequency error");
+  if (frequency < 1000000 || frequency > 200000000) {
+    tvhdebug(mt->mt_name, "dvb-t frequency error (%d)", frequency);
     return NULL;
   }
 
