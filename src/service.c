@@ -53,6 +53,7 @@
 static void service_data_timeout(void *aux);
 static void service_class_delete(struct idnode *self);
 static htsmsg_t *service_class_save(struct idnode *self, char *filename, size_t fsize);
+static int service_make_nicename0(service_t *t, char *buf, size_t len, int adapter);
 
 struct service_queue service_all;
 struct service_queue service_raw_all;
@@ -1072,12 +1073,11 @@ service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 /**
  *
  */
-void
-service_make_nicename(service_t *t)
+static int
+service_make_nicename0(service_t *t, char *buf, size_t len, int adapter)
 {
-  char buf[256], buf2[16];
+  char buf2[16];
   source_info_t si;
-  elementary_stream_t *st;
   char *service_name;
   int prefidx;
 
@@ -1091,19 +1091,35 @@ service_make_nicename(service_t *t)
     service_name = buf2;
   }
 
-  snprintf(buf, sizeof(buf),
+  snprintf(buf, len,
 	   "%s%s%s%s%s%s%s",
-	   si.si_adapter ?: "", si.si_adapter && si.si_network ? "/" : "",
+	   adapter && si.si_adapter ? si.si_adapter : "",
+	   adapter && si.si_adapter && si.si_network ? "/" : "",
 	   si.si_network ?: "", si.si_network && si.si_mux     ? "/" : "",
 	   si.si_mux     ?: "", si.si_mux     && service_name  ? "/" : "",
 	   service_name ?: "");
-  prefidx = (si.si_adapter ? strlen(si.si_adapter) : 0) +
-            (si.si_adapter && si.si_network ? 1 : 0) +
+  prefidx = (adapter && si.si_adapter ? strlen(si.si_adapter) : 0) +
+            (adapter && si.si_adapter && si.si_network ? 1 : 0) +
             (si.si_network ? strlen(si.si_network) : 0) +
             (si.si_network && si.si_mux ? 1 : 0) +
             (si.si_mux ? strlen(si.si_mux) : 0);
 
   service_source_info_free(&si);
+
+  return prefidx;
+}
+
+/**
+ *
+ */
+void
+service_make_nicename(service_t *t)
+{
+  int prefidx;
+  char buf[256];
+  elementary_stream_t *st;
+
+  prefidx = service_make_nicename0(t, buf, sizeof(buf), 0);
 
   free(t->s_nicename);
   t->s_nicename = strdup(buf);
@@ -1678,9 +1694,12 @@ service_component_nicename(elementary_stream_t *st)
 }
 
 const char *
-service_adapter_nicename(service_t *t)
+service_adapter_nicename(service_t *t, char *buf, size_t len)
 {
-  return "Adapter";
+  pthread_mutex_lock(&t->s_stream_mutex);
+  service_make_nicename0(t, buf, len, 1);
+  pthread_mutex_unlock(&t->s_stream_mutex);
+  return buf;
 }
 
 const char *

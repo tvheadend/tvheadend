@@ -896,12 +896,12 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   service_t *t;
   profile_t *pro;
   char buf[256];
+  const char *state;
 
   htsmsg_add_u32(m, "id", s->ths_id);
   htsmsg_add_u32(m, "start", s->ths_start);
   htsmsg_add_u32(m, "errors", atomic_get(&s->ths_total_err));
 
-  const char *state;
   switch(subgetstate(s)) {
   default:
     state = N_("Idle");
@@ -920,7 +920,6 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     break;
   }
 
-
   htsmsg_add_str(m, "state", lang ? tvh_gettext_lang(lang, state) : state);
 
   if(s->ths_hostname != NULL)
@@ -938,7 +937,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel));
   
   if((t = s->ths_service) != NULL) {
-    htsmsg_add_str(m, "service", t->s_nicename ?: "");
+    htsmsg_add_str(m, "service", service_adapter_nicename(t, buf, sizeof(buf)));
 
     pthread_mutex_lock(&t->s_stream_mutex);
     if ((di = s->ths_service->s_descramble_info) != NULL) {

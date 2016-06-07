@@ -107,7 +107,7 @@ tvheadend.status_subs = function(panel, index)
                 dataIndex: 'channel'
             },
             {
-                width: 200,
+                width: 250,
                 id: 'service',
                 header: _("Service"),
                 dataIndex: 'service'
