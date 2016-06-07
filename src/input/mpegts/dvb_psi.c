@@ -377,7 +377,8 @@ dvb_desc_terr_del
   dmc.dmc_fe_modulation                   = ctab[(ptr[5] >> 6) & 0x3];
   dmc.u.dmc_fe_ofdm.hierarchy_information = htab[(ptr[5] >> 3) & 0x3];
   dmc.u.dmc_fe_ofdm.code_rate_HP          = fec_tab[(ptr[5] + 1) & 0x7];
-  dmc.u.dmc_fe_ofdm.code_rate_LP          = fec_tab[((ptr[6] + 1) >> 5) & 0x7];
+  if (dmc.u.dmc_fe_ofdm.hierarchy_information != DVB_HIERARCHY_NONE)
+    dmc.u.dmc_fe_ofdm.code_rate_LP        = fec_tab[((ptr[6] + 1) >> 5) & 0x7];
   dmc.u.dmc_fe_ofdm.guard_interval        = gtab[(ptr[6] >> 3) & 0x3];
   dmc.u.dmc_fe_ofdm.transmission_mode     = ttab[(ptr[6] >> 1) & 0x3];
 

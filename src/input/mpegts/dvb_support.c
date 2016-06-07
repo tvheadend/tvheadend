@@ -978,6 +978,8 @@ dvb_mux_conf_init ( dvb_mux_conf_t *dmc, dvb_fe_delivery_system_t delsys )
 static int
 dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
 {
+  char hp[16];
+  snprintf(hp, sizeof(hp), "%s", dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP));
   return
   snprintf(buf, bufsize,
            "%s freq %d bw %s cons %s hier %s code_rate %s:%s guard %s trans %s plp_id %d",
@@ -986,8 +988,7 @@ dvb_mux_conf_str_dvbt ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
            dvb_bw2str(dmc->u.dmc_fe_ofdm.bandwidth),
            dvb_qam2str(dmc->dmc_fe_modulation),
            dvb_hier2str(dmc->u.dmc_fe_ofdm.hierarchy_information),
-           dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_HP),
-           dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_LP),
+           hp, dvb_fec2str(dmc->u.dmc_fe_ofdm.code_rate_LP),
            dvb_guard2str(dmc->u.dmc_fe_ofdm.guard_interval),
            dvb_mode2str(dmc->u.dmc_fe_ofdm.transmission_mode),
            dmc->dmc_fe_stream_id);
