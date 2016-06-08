@@ -79,7 +79,7 @@ LIBVORBIS_SHA1  = 10c7fee173178d72855aa7593dfe49d9b3d6c804
 
 LIBX264         = x264-snapshot-20141218-2245
 LIBX264_TB      = $(LIBX264).tar.bz2
-LIBX264_URL     = http://ftp.via.ecp.fr/pub/videolan/x264/snapshots/$(LIBX264_TB)
+LIBX264_URL     = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
 LIBX264_SHA1    = 24a3b20e2c49a112e40df9f64885cbd81250298a
 
 LIBVPX          = libvpx-1.4.0
