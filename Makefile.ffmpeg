@@ -48,13 +48,13 @@ YASM_SHA1      = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
 LIBX264        = x264-snapshot-20160502-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
-LIBX264_URL    = http://ftp.via.ecp.fr/pub/videolan/x264/snapshots/$(LIBX264_TB)
+LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
 LIBX264_SHA1   = 90c48dab878520a819905880bc4912834fe694fb
 LIBX264_DIFFS  = libx264.configure.diff
 
 LIBX265        = x265_1.9
 LIBX265_TB     = $(LIBX265).tar.gz
-LIBX265_URL    = http://ftp.videolan.org/pub/videolan/x265/$(LIBX265_TB)
+LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
 LIBX265_SHA1   = 8c9aa3b87b0f0a418bbb9782e9354d112d75e003
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
