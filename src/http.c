@@ -1487,6 +1487,7 @@ http_serve_requests(http_connection_t *hc)
 error:
   free(hdrline);
   free(cmdline);
+  htsbuf_queue_flush(&spill);
 
   free(hc->hc_nonce);
   hc->hc_nonce = NULL;
