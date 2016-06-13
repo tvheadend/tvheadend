@@ -1148,11 +1148,6 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
           free(v);
           return -1;
         }
-        if (hc->hc_nonce && strcmp(hc->hc_nonce, v) != 0) {
-          http_error(hc, HTTP_STATUS_UNAUTHORIZED);
-          free(v);
-          return -1;
-        }
         free(hc->hc_nonce);
         hc->hc_nonce = v;
         v = http_get_header_value(argv[1], "username");
