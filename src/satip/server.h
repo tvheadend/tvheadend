@@ -29,9 +29,10 @@
 #include "udp.h"
 #include "http.h"
 
-#define MUXCNF_AUTO   0
-#define MUXCNF_KEEP   1
-#define MUXCNF_REJECT 2
+#define MUXCNF_AUTO               0
+#define MUXCNF_KEEP               1
+#define MUXCNF_REJECT             2
+#define MUXCNF_REJECT_EXACT_MATCH 3
 
 #define RTSP_TCP_DATA 1000000
 

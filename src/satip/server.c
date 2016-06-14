@@ -559,9 +559,10 @@ static void satip_server_class_changed(idnode_t *self)
 static htsmsg_t *satip_server_class_muxcfg_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Auto"),        MUXCNF_AUTO },
-    { N_("Keep"),        MUXCNF_KEEP },
-    { N_("Reject"),      MUXCNF_REJECT }
+    { N_("Auto"),               MUXCNF_AUTO },
+    { N_("Keep"),               MUXCNF_KEEP },
+    { N_("Reject"),             MUXCNF_REJECT },
+    { N_("Reject exact match"), MUXCNF_REJECT_EXACT_MATCH }
   };
   return strtab2htsmsg(tab, 1, lang);
 }

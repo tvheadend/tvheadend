@@ -521,7 +521,7 @@ rtsp_start
           if (!mn2) mn2 = mn;
           mux = (mpegts_mux_t *)
                 dvb_network_find_mux((dvb_network_t *)mn, &rs->dmc,
-                                     MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 1);
+                                     MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 1, rtsp_muxcnf == MUXCNF_REJECT_EXACT_MATCH );
           if (mux) {
             dmc = ((dvb_mux_t *)mux)->lm_tuning;
             rs->perm_lock = 0;
@@ -560,7 +560,7 @@ rtsp_start
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
       tvhwarn("satips", "%i/%s/%i: unable to create mux %s%s",
               rs->frontend, rs->session, rs->stream, buf,
-              rtsp_muxcnf == MUXCNF_REJECT ? " (configuration)" : "");
+              (rtsp_muxcnf == MUXCNF_REJECT || rtsp_muxcnf == MUXCNF_REJECT_EXACT_MATCH ) ? " (configuration)" : "");
       goto endclean;
     }
     if (rs->mux == mux && rs->subs)
