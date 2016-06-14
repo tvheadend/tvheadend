@@ -70,7 +70,7 @@ dvb_network_t *dvb_network_create0
   ( const char *uuid, const idclass_t *idc, htsmsg_t *conf );
 
 dvb_mux_t *dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check );
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check, int approx_match );
 
 const idclass_t *dvb_network_mux_class(mpegts_network_t *mn);
 int dvb_network_get_orbital_pos(mpegts_network_t *mn);

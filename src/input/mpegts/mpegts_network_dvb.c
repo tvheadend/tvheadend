@@ -80,7 +80,7 @@ dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
 
   /* Create */
   LIST_FOREACH(dmc, &sfn->sfn_muxes, dmc_link) {
-    if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 0))) {
+    if (!(mm = dvb_network_find_mux(ln, dmc, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, 0, 0))) {
       mm = dvb_mux_create0(ln, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE,
                            dmc, NULL, NULL);
       if (mm)
@@ -498,7 +498,7 @@ dvb_network_check_orbital_pos ( int satpos1, int satpos2 )
 
 dvb_mux_t *
 dvb_network_find_mux
-  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check )
+  ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint16_t onid, uint16_t tsid, int check, int approx_match )
 {
   int deltaf, deltar;
   mpegts_mux_t *mm, *mm_alt = NULL;
@@ -515,7 +515,7 @@ dvb_network_find_mux
     if (lm->lm_tuning.dmc_fe_type != dmc->dmc_fe_type) continue;
 
     /* Also, the system type should match (DVB-S/DVB-S2) */
-    if (lm->lm_tuning.dmc_fe_delsys != dmc->dmc_fe_delsys) continue;
+    if (!approx_match && (lm->lm_tuning.dmc_fe_delsys != dmc->dmc_fe_delsys)) continue;
 
     /* if ONID/TSID are a perfect match (and this is DVB-S, allow greater deltaf) */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
@@ -540,7 +540,7 @@ dvb_network_find_mux
     if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
 
     /* DVB-S extra checks */
-    if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
+    if (!approx_match && (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S)) {
 
       /* Same modulation */
       if (!dvb_modulation_is_none_or_auto(lm->lm_tuning.dmc_fe_modulation) &&
@@ -663,7 +663,7 @@ dvb_network_create_mux
   }
 
   ln = (dvb_network_t*)mn;
-  mm = dvb_network_find_mux(ln, dmc, onid, tsid, 0);
+  mm = dvb_network_find_mux(ln, dmc, onid, tsid, 0, 0);
   if (!mm && (ln->mn_autodiscovery != MN_DISCOVERY_DISABLE || force)) {
     cls = dvb_network_mux_class((mpegts_network_t *)ln);
     save |= cls == &dvb_mux_dvbt_class && dmc->dmc_fe_type == DVB_TYPE_T;
