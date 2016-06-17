@@ -418,14 +418,13 @@ dvb_desc_service
 
   /* Cleanup name */
   str = sname;
-  while (*str && *str <= 32)
+  while (*str && *str <= ' ')
     str++;
-  memmove(sname, str, sname_len); // Note: could avoid this copy by passing an output ptr
-  l   = strlen(str);
-  while (l > 1 && str[l-1] <= 32) {
-    str[l-1] = 0;
-    l--;
-  }
+  if (str != sname)
+    memmove(sname, str, sname_len - (str - sname));
+  l = strlen(str);
+  while (l > 1 && str[l-1] <= ' ')
+    str[--l] = '\0';
 
   return 0;
 }
