@@ -284,6 +284,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 						  pkt->pkt_componentindex);
     if (ssc == NULL) {
       tvherror("globalheaders", "Unable to find component %d", pkt->pkt_componentindex);
+      streaming_msg_free(sm);
       return;
     }
 
