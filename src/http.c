@@ -655,7 +655,7 @@ http_redirect(http_connection_t *hc, const char *location,
   http_send_reply(hc, HTTP_STATUS_FOUND, "text/html", NULL, loc, 0);
 
   if (loc != location)
-    free(loc);
+    free((char *)loc);
 }
 
 
