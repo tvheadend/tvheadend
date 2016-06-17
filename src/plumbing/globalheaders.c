@@ -274,7 +274,6 @@ static void
 gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 {
   th_pkt_t *pkt;
-  th_pktref_t *pr;
   streaming_start_component_t *ssc;
 
   switch(sm->sm_type) {
@@ -308,15 +307,12 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     streaming_target_deliver2(gh->gh_output, sm);
    
     // Send all pending packets
-    while((pr = TAILQ_FIRST(&gh->gh_holdq)) != NULL) {
-      TAILQ_REMOVE(&gh->gh_holdq, pr, pr_link);
-      pkt = pr->pr_pkt;
+    while((pkt = pktref_get_first(&gh->gh_holdq)) != NULL) {
       if (pkt->pkt_payload) {
         sm = streaming_msg_create_pkt(pkt);
         streaming_target_deliver2(gh->gh_output, sm);
       }
       pkt_ref_dec(pkt);
-      free(pr);
     }
     gh->gh_passthru = 1;
     break;

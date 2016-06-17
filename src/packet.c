@@ -193,6 +193,37 @@ pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr)
   }
 }
 
+/**
+ *
+ */
+th_pkt_t *
+pktref_get_first(struct th_pktref_queue *q)
+{
+  th_pktref_t *pr;
+  th_pkt_t *pkt;
+
+  pr = TAILQ_FIRST(q);
+  if (pr) {
+    pkt = pr->pr_pkt;
+    TAILQ_REMOVE(q, pr, pr_link);
+    free(pr);
+    memoryinfo_free(&pktref_memoryinfo, sizeof(*pr));
+    return pkt;
+  }
+  return NULL;
+}
+
+/**
+ *
+ */
+void
+pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt)
+{
+  th_pktref_t *pr;
+
+  pr = pktref_create(pkt);
+  TAILQ_INSERT_HEAD(q, pr, pr_link);
+}
 
 /**
  *

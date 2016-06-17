@@ -105,6 +105,11 @@ void pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt);
 
 void pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr);
 
+th_pkt_t *pktref_get_first(struct th_pktref_queue *q);
+
+void pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt);
+
+#define PKTREF_FOREACH(item, queue) TAILQ_FOREACH((item), (queue), pr_link)
 
 th_pkt_t *pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts);
 

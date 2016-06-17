@@ -287,13 +287,9 @@ static void
 tsfix_backlog(tsfix_t *tf)
 {
   th_pkt_t *pkt;
-  th_pktref_t *pr;
   tfstream_t *tfs;
 
-  while((pr = TAILQ_FIRST(&tf->tf_backlog)) != NULL) {
-    pkt = pr->pr_pkt;
-    TAILQ_REMOVE(&tf->tf_backlog, pr, pr_link);
-    free(pr);
+  while((pkt = pktref_get_first(&tf->tf_backlog)) != NULL) {
     tfs = tfs_find(tf, pkt);
     normalize_ts(tf, tfs, pkt, 0);
   }
@@ -311,7 +307,7 @@ tsfix_backlog_diff(tsfix_t *tf)
   tfstream_t *tfs;
   int64_t res = 0;
 
-  TAILQ_FOREACH(pr, &tf->tf_backlog, pr_link) {
+  PKTREF_FOREACH(pr, &tf->tf_backlog) {
     pkt = pr->pr_pkt;
     if (pkt->pkt_dts == PTS_UNSET) continue;
     if (pkt->pkt_dts >= tf->tf_tsref) continue;
@@ -331,15 +327,12 @@ tsfix_backlog_diff(tsfix_t *tf)
 static void
 recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
-  th_pktref_t *pr, *srch;
+  th_pktref_t *srch;
 
   pktref_enqueue(&tf->tf_ptsq, pkt);
 
-  while((pr = TAILQ_FIRST(&tf->tf_ptsq)) != NULL) {
+  while((pkt = pktref_get_first(&tf->tf_ptsq)) != NULL) {
     
-    pkt = pr->pr_pkt;
-    TAILQ_REMOVE(&tf->tf_ptsq, pr, pr_link);
-
     tfs = tfs_find(tf, pkt);
 
     switch(tfs->tfs_type) {
@@ -359,7 +352,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_P_FRAME:
 	/* Presentation occures at DTS of next I or P frame,
 	   try to find it */
-	TAILQ_FOREACH(srch, &tf->tf_ptsq, pr_link)
+	PKTREF_FOREACH(srch, &tf->tf_ptsq)
 	  if (tfs_find(tf, srch->pr_pkt) == tfs &&
 	      srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
@@ -370,7 +363,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	  }
 	if (srch == NULL) {
 	  /* return packet back to tf_ptsq */
-	  TAILQ_INSERT_HEAD(&tf->tf_ptsq, pr, pr_link);
+	  pktref_insert_head(&tf->tf_ptsq, pkt);
 	  return; /* not arrived yet, wait */
         }
       }
@@ -380,7 +373,6 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       break;
     }
 
-    free(pr);
     normalize_ts(tf, tfs, pkt, 1);
   }
 }
