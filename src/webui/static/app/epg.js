@@ -95,6 +95,12 @@ tvheadend.epgDetails = function(event) {
     if (event.start && event.stop && event.stop - event.start > 0)
         duration = (event.stop - event.start) / 1000;
 
+    if (event.image != null && event.image.length > 0) {
+        content += '<div>';
+        content += '<img class="x-epg-image" src="' + event.image + '">';
+        content += '</div>';
+    }
+
     if (event.channelIcon != null && event.channelIcon.length > 0) {
         content += '<img class="x-epg-chicon" src="' + event.channelIcon + '">';
         chicon = 1;
@@ -405,6 +411,7 @@ tvheadend.epg = function() {
             { name: 'summary' },
             { name: 'description' },
             { name: 'episodeOnscreen' },
+            { name: 'image' },
             {
                 name: 'start',
                 type: 'date',

@@ -698,6 +698,13 @@
     max-height: 99px;
 }
 
+.x-epg-image{
+    display: block;
+    margin: 5px;
+    max-height: 300px;
+    width: auto;
+}
+
 .x-epg-time {
     margin: 5px 5px 5px 10px;
 }
