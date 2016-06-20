@@ -18,6 +18,7 @@ test -z "$PKG_CONFIG" && PKG_CONFIG=pkg-config
 
 OPTIONS=(
   "pie:yes"
+  "ccdebug:no"
   "cwc:yes"
   "capmt:yes"
   "constcw:yes"

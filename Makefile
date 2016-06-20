@@ -28,7 +28,12 @@ LANGUAGES ?= bg cs da de en_US en_GB es et fa fi fr he hr hu it lv nl pl pt ru s
 # Common compiler flags
 #
 
-CFLAGS  += -g -O2
+CFLAGS  += -g
+ifeq ($(CONFIG_CCDEBUG),yes)
+CFLAGS  += -O0
+else
+CFLAGS  += -O2
+endif
 ifeq ($(CONFIG_PIE),yes)
 CFLAGS  += -fPIE
 else
