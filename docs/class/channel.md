@@ -32,6 +32,8 @@ Numbering Button            | Function
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
+####Example
+
 !['Add Channel Dialog'](static/img/doc/addchanneldialog.png)
 
 ---

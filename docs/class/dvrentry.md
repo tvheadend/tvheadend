@@ -7,10 +7,10 @@ Each entry is moved between the tabs depending on its state:
 
 * Upcoming and currently recording entries remain in 
 the *Upcoming/Current Recordings* tab.
-* When a recording completes successfully the entry is moved to 
-the *Finished Recordings* tab.
-* When a recording fails (or is aborted) the entry is moved to 
-the *Failed Recordings* tab.
+* When a recording completes successfully the entry is moved 
+(from *Upcoming/Current Recordings*) to the *Finished Recordings* tab.
+* When a recording fails (or is aborted) the entry is moved 
+(from *Upcoming/Current Recordings*) to the *Failed Recordings* tab.
 
 Please note that the grid in each tab may have different columns and 
 not all entry information is available until it completes or fails, 
@@ -20,7 +20,7 @@ e.g filesize, total data errors, etc.
 
 ###Menu Bar/Buttons
 
-The following functions are available:
+The following functions are available in all tabs:
 
 Button                       | Function
 -----------------------------|---------
