@@ -1075,18 +1075,15 @@ satip_frontend_wake_other_waiting
 
 static void
 satip_frontend_request_cleanup
-  ( satip_frontend_t *lfe, satip_tune_req_t **_tr )
+  ( satip_frontend_t *lfe, satip_tune_req_t *tr )
 {
-  satip_tune_req_t *tr = *_tr;
   if (tr && tr != lfe->sf_req) {
     mpegts_pid_done(&tr->sf_pids);
     mpegts_pid_done(&tr->sf_pids_tuned);
     free(tr);
-    *_tr = NULL;
   }
   if (tr == lfe->sf_req_thread)
     lfe->sf_req_thread = NULL;
-
 }
 
 static void
@@ -1151,14 +1148,14 @@ done:
 static void
 satip_frontend_shutdown
   ( satip_frontend_t *lfe, const char *name, http_client_t *rtsp,
-    satip_tune_req_t **tr, tvhpoll_t *efd )
+    satip_tune_req_t *tr, tvhpoll_t *efd )
 {
   char b[32];
   tvhpoll_event_t ev;
   int r, nfds;
 
   if (rtsp->hc_rtsp_stream_id < 0)
-    return;
+    goto wake;
 
   snprintf(b, sizeof(b), "/stream=%li", rtsp->hc_rtsp_stream_id);
   tvhtrace("satip", "%s - shutdown for %s/%s", name, b, rtsp->hc_rtsp_session ?: "");
@@ -1167,7 +1164,7 @@ satip_frontend_shutdown
     tvhtrace("satip", "%s - bad teardown", b);
   } else {
     while (1) {
-      r = http_client_run(rtsp);
+     r = http_client_run(rtsp);
       if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
         break;
       nfds = tvhpoll_wait(efd, &ev, 1, 400);
@@ -1184,8 +1181,9 @@ satip_frontend_shutdown
   }
   sbuf_free(&lfe->sf_sbuf);
 
+wake:
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  satip_frontend_wake_other_waiting(lfe, *tr);
+  satip_frontend_wake_other_waiting(lfe, tr);
   satip_frontend_request_cleanup(lfe, tr);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 }
@@ -1211,7 +1209,7 @@ satip_frontend_tuning_error ( satip_frontend_t *lfe, satip_tune_req_t *tr )
 static void
 satip_frontend_close_rtsp
   ( satip_frontend_t *lfe, const char *name, tvhpoll_t *efd,
-    http_client_t **rtsp, satip_tune_req_t **tr )
+    http_client_t *rtsp, satip_tune_req_t *tr )
 {
   tvhpoll_event_t ev;
 
@@ -1221,7 +1219,7 @@ satip_frontend_close_rtsp
   ev.data.ptr = NULL;
   tvhpoll_rem(efd, &ev, 1);
 
-  satip_frontend_shutdown(lfe, name, *rtsp, tr, efd);
+  satip_frontend_shutdown(lfe, name, rtsp, tr, efd);
 
   memset(&ev, 0, sizeof(ev));
   ev.events   = TVHPOLL_IN;
@@ -1229,8 +1227,7 @@ satip_frontend_close_rtsp
   ev.data.ptr = NULL;
   tvhpoll_add(efd, &ev, 1);
 
-  http_client_close(*rtsp);
-  *rtsp = NULL;
+  http_client_close(rtsp);
 }
 
 static int
@@ -1375,8 +1372,11 @@ new_tune:
   rtcp = rtp = NULL;
   lfe_master = NULL;
 
-  if (rtsp && !lfe->sf_device->sd_fast_switch)
-    satip_frontend_close_rtsp(lfe, buf, efd, &rtsp, &tr);
+  if (rtsp && !lfe->sf_device->sd_fast_switch) {
+    satip_frontend_close_rtsp(lfe, buf, efd, rtsp, tr);
+    rtsp = NULL;
+    tr = NULL;
+  }
 
   if (rtsp)
     rtsp->hc_rtp_data_received = NULL;
@@ -1402,8 +1402,11 @@ new_tune:
 
     if (!tvheadend_is_running()) { exit_flag = 1; goto done; }
     if (rtsp && (getfastmonoclock() - u64_2 > 50000 || /* 50ms */
-                 (start & 2) == 0))
-      satip_frontend_close_rtsp(lfe, buf, efd, &rtsp, &tr);
+                 (start & 2) == 0)) {
+      satip_frontend_close_rtsp(lfe, buf, efd, rtsp, tr);
+      rtsp = NULL;
+      tr = NULL;
+    }
     if (nfds <= 0) continue;
 
     if (ev[0].data.ptr == NULL) {
@@ -1446,7 +1449,7 @@ new_tune:
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  satip_frontend_request_cleanup(lfe, &tr);
+  satip_frontend_request_cleanup(lfe, tr);
   lfe->sf_req_thread = tr = lfe->sf_req;
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
@@ -1897,7 +1900,8 @@ wrdata:
   tvhpoll_rem(efd, ev, nfds);
 
   if (exit_flag) {
-    satip_frontend_shutdown(lfe, buf, rtsp, &tr, efd);
+    satip_frontend_shutdown(lfe, buf, rtsp, tr, efd);
+    tr = NULL;
     http_client_close(rtsp);
     rtsp = NULL;
   }
@@ -1917,7 +1921,7 @@ done:
     goto new_tune;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
-  satip_frontend_request_cleanup(lfe, &tr);
+  satip_frontend_request_cleanup(lfe, tr);
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
   if (rtsp)
@@ -1926,8 +1930,6 @@ done:
   tvhpoll_destroy(efd);
   lfe->sf_display_name = NULL;
   lfe->sf_curmux = NULL;
-
-  satip_frontend_wake_other_waiting(lfe, tr);
 
   return NULL;
 #undef PKTS
