@@ -2983,7 +2983,7 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   void *buf;
 
   v = timeout ? tcp_read_timeout(htsp->htsp_fd, data, 4, timeout) : 
-    tcp_read(htsp->htsp_fd, data, 4);
+                tcp_read(htsp->htsp_fd, data, 4);
 
   if(v != 0)
     return v;
@@ -2995,17 +2995,15 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
     return ENOMEM;
 
   v = timeout ? tcp_read_timeout(htsp->htsp_fd, buf, len, timeout) : 
-    tcp_read(htsp->htsp_fd, buf, len);
+                tcp_read(htsp->htsp_fd, buf, len);
   
   if(v != 0) {
     free(buf);
     return v;
   }
 
-  /* buf will be tied to the message.
-   * NB: If the message can not be deserialized buf will be free'd by the
-   * function.
-   */
+  /* buf will be tied to the message (on success) */
+  /* bellow fcn calls free(buf) (on failure) */
   *mp = htsmsg_binary_deserialize(buf, len, buf);
   if(*mp == NULL)
     return EBADMSG;

@@ -147,6 +147,7 @@ htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
   htsmsg_t *msg = htsmsg_create_map();
   int r = htsmsg_binary_des0(msg, data, len);
   if (r < 0) {
+    free(buf);
     htsmsg_destroy(msg);
     return NULL;
   }
@@ -156,6 +157,8 @@ htsmsg_binary_deserialize(void *data, size_t len, const void *buf)
 #if ENABLE_SLOW_MEMORYINFO
     memoryinfo_append(&htsmsg_memoryinfo, len);
 #endif
+  } else {
+    free(buf);
   }
   return msg;
 }
