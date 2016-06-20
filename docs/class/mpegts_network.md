@@ -49,11 +49,11 @@ most of which can be seen in the grid view.
 
 !['Add new network'](static/img/doc/addnewnetwork.png)
 
-Pressing the *[Save]* button (at the bottom of the dialog) 
-will commit your changes and close the dialog, pressing the *[Apply]* 
-button will commit your changes but won't close the dialog, pressing 
-the *[Cancel]* button closes the dialog - any unsaved changes will be 
-lost.
+Once you're happy with what you've entered into the dialog you can save 
+the network using the *[Save]* button (closing the dialog), save your 
+pending changes and continue making further adjustments by pressing the 
+*[Apply]* button, or cancel any unsaved changes (and close the dialog) 
+by pressing the *[Cancel]* button.
 
 **Notes**:
 
