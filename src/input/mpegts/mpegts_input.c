@@ -219,6 +219,9 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
   return m;
 }
 
+PROP_DOC(priority)
+PROP_DOC(streaming_priority)
+
 const idclass_t mpegts_input_class =
 {
   .ic_super      = &tvh_input_class,
@@ -242,7 +245,8 @@ const idclass_t mpegts_input_class =
       .id       = "priority",
       .name     = N_("Priority"),
       .desc     = N_("The tuner priority value (a higher value means to "
-                     "use this tuner out of preference)."),
+                     "use this tuner out of preference). See Help for details."),
+      .doc      = prop_doc_priority,
       .off      = offsetof(mpegts_input_t, mi_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
@@ -254,7 +258,8 @@ const idclass_t mpegts_input_class =
       .desc     = N_("The tuner priority value for streamed channels "
                      "through HTTP or HTSP (a higher value means to use "
                      "this tuner out of preference). If not set (zero), "
-                     "the standard priority value is used."),
+                     "the standard priority value is used. See Help for details."),
+      .doc      = prop_doc_streaming_priority,
       .off      = offsetof(mpegts_input_t, mi_streaming_priority),
       .def.i    = 1,
       .opts     = PO_ADVANCED
