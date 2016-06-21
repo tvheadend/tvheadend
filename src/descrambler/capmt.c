@@ -556,9 +556,9 @@ capmt_socket_close(capmt_t *capmt, int sock_idx)
 {
   int fd = capmt->capmt_sock[sock_idx];
   lock_assert(&capmt->capmt_mutex);
-  tvhtrace("capmt", "%s: socket close %d", capmt_name(capmt), fd);
   if (fd < 0)
     return;
+  tvhtrace("capmt", "%s: socket close %d", capmt_name(capmt), fd);
   capmt_poll_rem(capmt, fd);
   close(fd);
   capmt->capmt_sock[sock_idx] = -1;
