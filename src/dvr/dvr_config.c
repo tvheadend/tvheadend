@@ -797,6 +797,7 @@ PROP_DOC(postprocessor)
 PROP_DOC(postremove)
 PROP_DOC(pathname)
 PROP_DOC(cache_scheme)
+PROP_DOC(runningstate)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -996,9 +997,9 @@ const idclass_t dvr_config_class = {
       .id       = "epg-running",
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EITp/f to decide event start/stop. This is "
-                     "also known as \"Accurate Recording\". Note that "
-                     "this can have unexpected results if the "
-                     "broadcaster isn't very good at time keeping."),
+                     "also known as \"Accurate Recording\". See Help "
+                     "for details."),
+      .doc      = prop_doc_runningstate,
       .off      = offsetof(dvr_config_t, dvr_running),
       .opts     = PO_ADVANCED,
       .def.u32  = 1,

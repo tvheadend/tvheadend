@@ -359,6 +359,7 @@ channel_class_epg_running_list ( void *o, const char *lang )
 }
 
 CLASS_DOC(channel)
+PROP_DOC(runningstate)
 
 const idclass_t channel_class = {
   .ic_class      = "channel",
@@ -484,9 +485,8 @@ const idclass_t channel_class = {
       .name     = N_("Use EPG running state"),
       .desc     = N_("Use EITp/f to decide "
                      "event start/stop. This is also known as "
-                     "\"Accurate Recording\". Note that this can have "
-                     "unexpected results if the broadcaster isn't very "
-                     "good at time keeping."),
+                     "\"Accurate Recording\". See Help for details."),
+      .doc      = prop_doc_runningstate,
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
