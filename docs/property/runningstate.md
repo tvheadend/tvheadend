@@ -1,8 +1,8 @@
 :
 
 EITp/f (Event Information Table present/following) allows broadcasters 
-to tell DVRs/STBs when a program actually starts, finishes or pauses, 
-unfortunately not all broadcasters get it right which can lead to 
+to tell DVRs/STBs when a program actually starts, pauses or finishes, 
+unfortunately not all broadcasters get this right which can lead to 
 unexpected behavior, missing/failed recordings, etc..
 
 It is recommended that you only enable this option if you're absolutely 
