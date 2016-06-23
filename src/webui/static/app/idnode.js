@@ -173,19 +173,19 @@ tvheadend.idnode_filter_fields = function(d, list)
         var o = list.substring(1).split(',');
         r = d.slice();
         for (var i = 0; i < o.length; i++)
-           for (var j = 0; j < r.length; j++)
-              if (r[j].id === o[i]) {
-                  r.splice(i, 1);
-                  break;
-              }
+            for (var j = 0; j < r.length; j++)
+                if (r[j].id === o[i]) {
+                    r.splice(j, 1);
+                    break;
+                }
     } else {
         var o = list.split(',');
         for (var i = 0; i < o.length; i++)
-           for (var j = 0; j < d.length; j++)
-              if (d[j].id === o[i]) {
-                  r.push(d[j]);
-                  break;
-              }
+            for (var j = 0; j < d.length; j++)
+                if (d[j].id === o[i]) {
+                    r.push(d[j]);
+                    break;
+                }
     }
     return r;
 }
