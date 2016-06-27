@@ -652,6 +652,13 @@ const idclass_t mpegts_mux_class =
       .get      = mpegts_mux_class_get_num_chn,
     },
     {
+       .type     = PT_BOOL,
+       .id       = "tsid_zero",
+       .name     = N_("Accept zero value for TSID"),
+       .off      = offsetof(mpegts_mux_t, mm_tsid_accept_zero_value),
+       .opts     = PO_ADVANCED
+    },
+    {
       .type     = PT_INT,
       .id       = "pmt_06_ac3",
       .name     = N_("AC-3 detection"),

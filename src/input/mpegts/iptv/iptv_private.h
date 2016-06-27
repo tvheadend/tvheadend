@@ -101,6 +101,7 @@ struct iptv_network
   char    *in_icon_url_sane;
   int      in_ssl_peer_verify;
   char    *in_remove_args;
+  int      in_tsid_accept_zero_value;
 
   void    *in_auto; /* private structure for auto-network */
 };

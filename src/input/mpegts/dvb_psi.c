@@ -865,6 +865,7 @@ dvb_pat_callback
   mpegts_mux_t             *mm  = mt->mt_mux;
   mpegts_psi_table_state_t *st  = NULL;
   mpegts_service_t *s;
+  char buf[256];
 
   /* Begin */
   if (tableid != 0) return -1;
@@ -872,13 +873,18 @@ dvb_pat_callback
   r    = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                          tableid, tsid, 5, &st, &sect, &last, &ver);
   if (r != 1) return r;
-  if (tsid == 0) goto end;
+  if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
+    if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
+      mpegts_mux_nice_name(mm, buf, sizeof(buf));
+      tvhwarn("pat", "%s: TSID zero value detected, ignoring", buf);
+    }
+    goto end;
+  }
 
   /* Multiplex */
   tvhdebug("pat", "%p: tsid %04X (%d)", mm, tsid, tsid);
   if (mm->mm_tsid != MPEGTS_TSID_NONE) {
     if (mm->mm_tsid && mm->mm_tsid != tsid) {
-      char buf[256];
       if (++mm->mm_tsid_checks > 12) {
         mpegts_mux_nice_name(mm, buf, sizeof(buf));
         tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",

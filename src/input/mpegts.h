@@ -430,6 +430,8 @@ struct mpegts_mux
   uint16_t                mm_onid;
   uint16_t                mm_tsid;
   int                     mm_tsid_checks;
+  int                     mm_tsid_accept_zero_value;
+  tvhlog_limit_t          mm_tsid_loglimit;
 
   int                     mm_update_pids_flag;
   mtimer_t                mm_update_pids_timer;

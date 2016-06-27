@@ -142,6 +142,7 @@ void tsfile_add_file ( const char *path )
   
   /* Create logical instance */
   mm = tsfile_mux_create(uuid, tsfile_network);
+  mm->mm_tsid_accept_zero_value = 1;
   
   /* Create physical instance (for each tuner) */
   LIST_FOREACH(mi, &tsfile_inputs, tsi_link)

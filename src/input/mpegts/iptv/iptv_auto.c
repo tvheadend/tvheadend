@@ -273,6 +273,8 @@ skip_url:
     htsmsg_add_str(conf, "iptv_hdr", custom);
   if (epgcfg >= 0)
     htsmsg_add_s32(conf, "epg", epgcfg);
+  if (in->in_tsid_accept_zero_value)
+    htsmsg_add_s32(conf, "tsid_zero", 1);
   im = iptv_mux_create0(in, NULL, conf);
   htsmsg_destroy(conf);
 

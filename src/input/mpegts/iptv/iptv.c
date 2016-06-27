@@ -867,6 +867,12 @@ const idclass_t iptv_auto_network_class = {
       .opts     = PO_EXPERT
     },
     {
+      .type     = PT_BOOL,
+      .id       = "tsid_zero",
+      .name     = N_("Accept zero value for TSID"),
+      .off      = offsetof(iptv_network_t, in_tsid_accept_zero_value),
+    },
+    {
       .type     = PT_STR,
       .id       = "remove_args",
       .name     = N_("Remove HTTP arguments"),
