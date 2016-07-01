@@ -100,8 +100,9 @@ int http_str2ver(const char *str)
 /**
  *
  */
-static http_path_t *
-http_resolve(http_connection_t *hc, char **remainp, char **argsp)
+static int
+http_resolve(http_connection_t *hc, http_path_t *_hp,
+             char **remainp, char **argsp)
 {
   http_path_t *hp;
   int n = 0, cut = 0;
@@ -131,10 +132,14 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
           break;
       }
     }
+    if (hp) {
+      *_hp = *hp;
+      hp = _hp;
+    }
     pthread_mutex_unlock(hc->hc_paths_mutex);
 
     if(hp == NULL)
-      return NULL;
+      return 0;
 
     cut += hp->hp_len;
 
@@ -178,10 +183,10 @@ http_resolve(http_connection_t *hc, char **remainp, char **argsp)
     break;
 
   default:
-    return NULL;
+    return 0;
   }
 
-  return hp;
+  return 1;
 }
 
 
@@ -973,15 +978,14 @@ http_cmd_options(http_connection_t *hc)
 static int
 http_cmd_get(http_connection_t *hc)
 {
-  http_path_t *hp;
+  http_path_t hp;
   char *remain;
   char *args;
 
   if (tvhtrace_enabled())
     dump_request(hc);
 
-  hp = http_resolve(hc, &remain, &args);
-  if(hp == NULL) {
+  if (!http_resolve(hc, &hp, &remain, &args)) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
     return 0;
   }
@@ -989,7 +993,7 @@ http_cmd_get(http_connection_t *hc)
   if(args != NULL)
     http_parse_args(&hc->hc_req_args, args);
 
-  return http_exec(hc, hp, remain);
+  return http_exec(hc, &hp, remain);
 }
 
 
@@ -1004,7 +1008,7 @@ http_cmd_get(http_connection_t *hc)
 static int
 http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
 {
-  http_path_t *hp;
+  http_path_t hp;
   char *remain, *args, *v;
 
   /* Set keep-alive status */
@@ -1047,12 +1051,11 @@ http_cmd_post(http_connection_t *hc, htsbuf_queue_t *spill)
   if (tvhtrace_enabled())
     dump_request(hc);
 
-  hp = http_resolve(hc, &remain, &args);
-  if(hp == NULL) {
+  if (!http_resolve(hc, &hp, &remain, &args)) {
     http_error(hc, HTTP_STATUS_NOT_FOUND);
     return 0;
   }
-  return http_exec(hc, hp, remain);
+  return http_exec(hc, &hp, remain);
 }
 
 
