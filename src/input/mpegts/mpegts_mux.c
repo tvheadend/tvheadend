@@ -722,6 +722,15 @@ mpegts_mux_do_stop ( mpegts_mux_t *mm, int delconf )
 }
 
 void
+mpegts_mux_free ( mpegts_mux_t *mm )
+{
+  free(mm->mm_provider_network_name);
+  free(mm->mm_crid_authority);
+  free(mm->mm_charset);
+  free(mm);
+}
+
+void
 mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   char buf[256];
@@ -743,10 +752,7 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
   /* Free memory */
   idnode_save_check(&mm->mm_id, 1);
   idnode_unlink(&mm->mm_id);
-  free(mm->mm_provider_network_name);
-  free(mm->mm_crid_authority);
-  free(mm->mm_charset);
-  free(mm);
+  mpegts_mux_release(mm);
 }
 
 static htsmsg_t *
@@ -1168,6 +1174,8 @@ mpegts_mux_create0
     return NULL;
   }
 
+  mm->mm_refcount            = 1;
+
   /* Enabled by default */
   mm->mm_enabled             = MM_ENABLE;
   mm->mm_epg                 = MM_EPG_ENABLE;
@@ -1182,6 +1190,7 @@ mpegts_mux_create0
 
   /* Debug/Config */
   mm->mm_delete              = mpegts_mux_delete;
+  mm->mm_free                = mpegts_mux_free;
   mm->mm_display_name        = mpegts_mux_display_name;
   mm->mm_config_save         = mpegts_mux_config_save;
   mm->mm_is_enabled          = mpegts_mux_is_enabled;

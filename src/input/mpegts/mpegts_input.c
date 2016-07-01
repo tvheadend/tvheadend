@@ -1127,6 +1127,7 @@ retry:
       if (mi->mi_input_queue_size < 50*1024*1024) {
         mi->mi_input_queue_size += len2;
         memoryinfo_alloc(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + len2);
+        mpegts_mux_grab(mp->mp_mux);
         TAILQ_INSERT_TAIL(&mi->mi_input_queue, mp, mp_link);
         tvh_cond_signal(&mi->mi_input_cond, 0);
       } else {
@@ -1513,6 +1514,8 @@ mpegts_input_thread ( void * p )
     }
 
     /* Cleanup */
+    if (mp->mp_mux)
+      mpegts_mux_release(mp->mp_mux);
     free(mp);
 
 #if ENABLE_TSDEBUG
@@ -1531,6 +1534,8 @@ mpegts_input_thread ( void * p )
   while ((mp = TAILQ_FIRST(&mi->mi_input_queue))) {
     memoryinfo_free(&mpegts_input_queue_memoryinfo, sizeof(mpegts_packet_t) + mp->mp_len);
     TAILQ_REMOVE(&mi->mi_input_queue, mp, mp_link);
+    if (mp->mp_mux)
+      mpegts_mux_release(mp->mp_mux);
     free(mp);
   }
   mi->mi_input_queue_size = 0;
@@ -1606,8 +1611,10 @@ mpegts_input_flush_mux
   /* Flush input Q */
   pthread_mutex_lock(&mi->mi_input_lock);
   TAILQ_FOREACH(mp, &mi->mi_input_queue, mp_link) {
-    if (mp->mp_mux == mm)
+    if (mp->mp_mux == mm) {
+      mpegts_mux_release(mm);
       mp->mp_mux = NULL;
+    }
   }
   pthread_mutex_unlock(&mi->mi_input_lock);
 

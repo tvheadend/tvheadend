@@ -275,6 +275,24 @@ iptv_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
 }
 
 static void
+iptv_mux_free ( mpegts_mux_t *mm )
+{
+  iptv_mux_t *im = (iptv_mux_t *)mm;
+  free(im->mm_iptv_url);
+  free(im->mm_iptv_url_sane);
+  free(im->mm_iptv_url_raw);
+  free(im->mm_iptv_muxname);
+  free(im->mm_iptv_interface);
+  free(im->mm_iptv_svcname);
+  free(im->mm_iptv_env);
+  free(im->mm_iptv_hdr);
+  free(im->mm_iptv_tags);
+  free(im->mm_iptv_icon);
+  free(im->mm_iptv_epgid);
+  mpegts_mux_free(mm);
+}
+
+static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
   iptv_mux_t *im = (iptv_mux_t*)mm, copy;
@@ -286,19 +304,7 @@ iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
                         idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
                         idnode_uuid_as_str(&mm->mm_id, ubuf2));
 
-  copy = *im; /* keep pointers */
   mpegts_mux_delete(mm, delconf);
-  free(copy.mm_iptv_url);
-  free(copy.mm_iptv_url_sane);
-  free(copy.mm_iptv_url_raw);
-  free(copy.mm_iptv_muxname);
-  free(copy.mm_iptv_interface);
-  free(copy.mm_iptv_svcname);
-  free(copy.mm_iptv_env);
-  free(copy.mm_iptv_hdr);
-  free(copy.mm_iptv_tags);
-  free(copy.mm_iptv_icon);
-  free(copy.mm_iptv_epgid);
 }
 
 static void
@@ -336,6 +342,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
   im->mm_display_name     = iptv_mux_display_name;
   im->mm_config_save      = iptv_mux_config_save;
   im->mm_delete           = iptv_mux_delete;
+  im->mm_free             = iptv_mux_free;
 
   if (!im->mm_iptv_kill_timeout)
     im->mm_iptv_kill_timeout = 5;
