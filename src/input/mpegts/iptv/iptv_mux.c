@@ -295,7 +295,6 @@ iptv_mux_free ( mpegts_mux_t *mm )
 static void
 iptv_mux_delete ( mpegts_mux_t *mm, int delconf )
 {
-  iptv_mux_t *im = (iptv_mux_t*)mm, copy;
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
 
