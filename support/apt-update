@@ -23,10 +23,9 @@ TVH_ROOT=$(cd "$(dirname "$0")"/..; pwd)
 
 # Builds
 [ -z "$TVH_BUILD" ] && TVH_BUILD="
-precise:i386:amd64
 trusty:i386:amd64
-vivid:i386:amd64
 wily:i386:amd64
+xenial:i386:amd64
 wheezy:i386:amd64:armhf
 jessie:i386:amd64:armhf
 "
