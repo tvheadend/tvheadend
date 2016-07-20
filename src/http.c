@@ -261,7 +261,7 @@ http_get_nonce(void)
 
   while (1) {
     mono = getmonoclock();
-    mono ^= 0xa1687211885fcd30;
+    mono ^= 0xa1687211885fcd30LL;
     snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
     m = md5sum(stamp, 1);
     strcpy(n->nonce, m);
