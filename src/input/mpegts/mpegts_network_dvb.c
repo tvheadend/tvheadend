@@ -525,11 +525,11 @@ dvb_network_find_mux
                         // and remember the ONID and TSID must agree
       } else {
         /* the freq. changes for lower symbol rates might be smaller */
+        deltaf = 4000;
         if (dmc->u.dmc_fe_qpsk.symbol_rate < 5000000)
           deltaf = 1900;
         if (dmc->u.dmc_fe_qpsk.symbol_rate < 10000000)
           deltaf = 2900;
-        deltaf = 4000;
       }
     }
 
