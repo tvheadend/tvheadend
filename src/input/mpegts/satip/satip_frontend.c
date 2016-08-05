@@ -754,9 +754,11 @@ satip_frontend_pid_changed( http_client_t *rtsp,
     return 0;
   }
 
-  if (tr->sf_pids.all) {
+  mpegts_pid_weighted(&wpid, &tr->sf_pids, lfe->sf_device->sd_pids_max);
 
-all:
+  if (tr->sf_pids.all || (lfe->sf_device->sd_fullmux_ok && wpid.count > max_pids_count)) {
+    mpegts_pid_done(&wpid);
+
     i = tr->sf_pids_tuned.all;
     mpegts_pid_done(&tr->sf_pids_tuned);
     tr->sf_pids_tuned.all = 1;
@@ -771,7 +773,6 @@ all:
              tr->sf_pids_tuned.all ||
              tr->sf_pids.count == 0) {
 
-    mpegts_pid_weighted(&wpid, &tr->sf_pids, lfe->sf_device->sd_pids_max);
     j = MIN(wpid.count, lfe->sf_device->sd_pids_max);
     add = alloca(1 + j * 5);
     add[0] = '\0';
@@ -789,15 +790,6 @@ all:
     r = r == 0 ? 1 : r;
 
   } else {
-
-    mpegts_pid_weighted(&wpid, &tr->sf_pids, lfe->sf_device->sd_pids_max);
-
-    if (wpid.count > max_pids_count) {
-      if (lfe->sf_device->sd_fullmux_ok) {
-        mpegts_pid_done(&wpid);
-        goto all;
-      }
-    }
 
     mpegts_pid_compare(&wpid, &tr->sf_pids_tuned, &padd, &pdel);
 
