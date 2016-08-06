@@ -43,7 +43,7 @@ api_input_satip_discover
 {
   int err = 0;
 
-  if (strcmp(op, "all"))
+  if (op == NULL || strcmp(op, "all"))
     return -EINVAL;
 
   tvhinfo("satip", "Triggered new server discovery");
