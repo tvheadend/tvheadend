@@ -919,8 +919,8 @@ all:
              tr->sf_pids_tuned.all ||
              tr->sf_pids.count == 0) {
 
-    mpegts_pid_weighted(&wpid, &tr->sf_pids, lfe->sf_device->sd_pids_max);
-    j = MIN(wpid.count, lfe->sf_device->sd_pids_max);
+    mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
+    j = MIN(wpid.count, max_pids_count);
     add = alloca(1 + j * 5);
     add[0] = '\0';
     for (i = 0; i < j; i++)
@@ -939,7 +939,7 @@ all:
 
   } else {
 
-    mpegts_pid_weighted(&wpid, &tr->sf_pids, lfe->sf_device->sd_pids_max);
+    mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
 
     if (wpid.count > max_pids_count) {
       if (lfe->sf_device->sd_fullmux_ok) {
@@ -959,7 +959,7 @@ all:
       mpegts_pid_del(&tr->sf_pids_tuned, pdel.pids[i].pid, pdel.pids[i].weight);
     }
 
-    j = MIN(padd.count, lfe->sf_device->sd_pids_max);
+    j = MIN(padd.count, max_pids_count);
     for (i = 0; i < j; i++)
       sprintf(add + strlen(add), ",%i", padd.pids[i].pid);
 
