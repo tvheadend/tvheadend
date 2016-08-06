@@ -672,7 +672,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
   /* Wrong length (+/-20%) */
   t1 = de->de_stop - de->de_start;
   t2 = e->stop - e->start;
-  if (abs(t2 - t1) > (t1 / 5))
+  if (labs((long)(t2 - t1)) > (t1 / 5))
     return 0;
 
   /* Matching ID */
