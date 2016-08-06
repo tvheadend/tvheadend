@@ -886,10 +886,11 @@ satip_frontend_pid_changed( http_client_t *rtsp,
                             satip_frontend_t *lfe, const char *name )
 {
   satip_tune_req_t *tr;
+  satip_device_t *sd = lfe->sf_device;
   char *add, *del;
   int i, j, r;
-  int max_pids_len = lfe->sf_device->sd_pids_len;
-  int max_pids_count = lfe->sf_device->sd_pids_max;
+  int max_pids_len = sd->sd_pids_len;
+  int max_pids_count = sd->sd_pids_max;
   mpegts_apids_t wpid, padd, pdel;
 
   pthread_mutex_lock(&lfe->sf_dvr_lock);
@@ -915,11 +916,17 @@ all:
     r = satip_rtsp_play(rtsp, "all", NULL, NULL, max_pids_len, tr->sf_weight);
     r = r == 0 ? 1 : r;
 
-  } else if (!lfe->sf_device->sd_pids_deladd ||
+  } else if (!sd->sd_pids_deladd ||
              tr->sf_pids_tuned.all ||
              tr->sf_pids.count == 0) {
 
     mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
+
+    if (wpid.count > max_pids_count && sd->sd_fullmux_ok) {
+      mpegts_pid_done(&wpid);
+      goto all;
+    }
+
     j = MIN(wpid.count, max_pids_count);
     add = alloca(1 + j * 5);
     add[0] = '\0';
@@ -941,11 +948,9 @@ all:
 
     mpegts_pid_weighted(&wpid, &tr->sf_pids, max_pids_count);
 
-    if (wpid.count > max_pids_count) {
-      if (lfe->sf_device->sd_fullmux_ok) {
-        mpegts_pid_done(&wpid);
-        goto all;
-      }
+    if (wpid.count > max_pids_count && sd->sd_fullmux_ok) {
+      mpegts_pid_done(&wpid);
+      goto all;
     }
 
     mpegts_pid_compare(&wpid, &tr->sf_pids_tuned, &padd, &pdel);
