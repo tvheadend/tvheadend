@@ -284,9 +284,11 @@ timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
   th_pkt_t *pkt = sm->sm_data;
   int64_t time;
 
-  time = ts_rescale(pkt->pkt_pts, 1000000);
-  if (ts->last_wr_time < time)
-    ts->last_wr_time = time;
+  if (pkt->pkt_pts != PTS_UNSET) {
+    time = ts_rescale(pkt->pkt_pts, 1000000);
+    if (ts->last_wr_time < time)
+      ts->last_wr_time = time;
+  }
   sm->sm_time = ts->last_wr_time;
   timeshift_packet_log("wr ", ts, sm);
   streaming_target_deliver2(&ts->wr_queue.sq_st, sm);
@@ -321,8 +323,8 @@ static void timeshift_input
       pkt2 = pkt_copy_shallow(pkt);
       pkt_ref_dec(pkt);
       sm->sm_data = pkt2;
-      pkt2->pkt_pts += ts->start_pts;
-      pkt2->pkt_dts += ts->start_pts;
+      if (pkt2->pkt_pts != PTS_UNSET) pkt2->pkt_pts += ts->start_pts;
+      if (pkt2->pkt_dts != PTS_UNSET) pkt2->pkt_dts += ts->start_pts;
     }
 
     /* Check for exit */
