@@ -203,8 +203,14 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     return;
   }
 
+  if (pkt->pkt_dts == PTS_UNSET) {
+    if (pkt->pkt_pts != PTS_UNSET)
+      pkt->pkt_dts = pkt->pkt_pts;
+    else
+      goto deliver;
+  }
+
   pkt->pkt_dts &= PTS_MASK;
-  pkt->pkt_pts &= PTS_MASK;
 
   /* Subtract the transport wide start offset */
   ref = tfs->tfs_local_ref != PTS_UNSET ? tfs->tfs_local_ref : tf->tf_tsref;
@@ -258,12 +264,13 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 
   if(pkt->pkt_pts != PTS_UNSET) {
     /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
-    d = (pkt->pkt_pts - pkt->pkt_dts) & PTS_MASK;
+    d = ((pkt->pkt_pts & PTS_MASK) - pkt->pkt_dts) & PTS_MASK;
     pkt->pkt_pts = dts + d;
   }
 
   pkt->pkt_dts = dts;
 
+deliver:
   tvhtrace("tsfix", "%-12s %d %10"PRId64" %10"PRId64" %10d %zd",
 	      streaming_component_type2txt(tfs->tfs_type),
 	      pkt->pkt_frametype,
@@ -489,11 +496,12 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       return;
     }
 
-    pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
-
-    tvhtrace("tsfix", "%-12s DTS set to last %"PRId64" +%d == %"PRId64,
+    if(pkt->pkt_payload != NULL || pkt->pkt_pts != PTS_UNSET) {
+      pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
+      tvhtrace("tsfix", "%-12s DTS set to last %"PRId64" +%d == %"PRId64", PTS = %"PRId64,
 		streaming_component_type2txt(tfs->tfs_type),
-		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
+		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts, pkt->pkt_pts);
+    }
   }
 
   if (tfs->tfs_parent)
