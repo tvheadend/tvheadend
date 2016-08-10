@@ -20,8 +20,6 @@
 #include "streaming.h"
 #include "tsfix.h"
 
-#define tsfixprintf(fmt...) // printf(fmt)
-
 LIST_HEAD(tfstream_list, tfstream);
 
 /**
@@ -266,7 +264,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 
   pkt->pkt_dts = dts;
 
-  tsfixprintf("TSFIX: %-12s %d %10"PRId64" %10"PRId64" %10d %zd\n",
+  tvhtrace("tsfix", "%-12s %d %10"PRId64" %10"PRId64" %10d %zd",
 	      streaming_component_type2txt(tfs->tfs_type),
 	      pkt->pkt_frametype,
 	      pkt->pkt_dts,
@@ -343,7 +341,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_B_FRAME:
 	/* B-frames have same PTS as DTS, pass them on */
 	pkt->pkt_pts = pkt->pkt_dts;
-	tsfixprintf("TSFIX: %-12s PTS b-frame set to %"PRId64"\n",
+	tvhtrace("tsfix", "%-12s PTS b-frame set to %"PRId64,
 		    streaming_component_type2txt(tfs->tfs_type),
 		    pkt->pkt_dts);
 	break;
@@ -356,7 +354,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	  if (tfs_find(tf, srch->pr_pkt) == tfs &&
 	      srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
-	    tsfixprintf("TSFIX: %-12s PTS *-frame set to %"PRId64"\n",
+	    tvhtrace("tsfix", "%-12s PTS *-frame set to %"PRId64,
 			streaming_component_type2txt(tfs->tfs_type),
 			pkt->pkt_pts);
 	    break;
@@ -387,7 +385,7 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   // If PTS is missing, set it to DTS if not video
   if(pkt->pkt_pts == PTS_UNSET && !tfs->tfs_video) {
     pkt->pkt_pts = pkt->pkt_dts;
-    tsfixprintf("TSFIX: %-12s PTS set to %"PRId64"\n",
+    tvhtrace("tsfix", "%-12s PTS set to %"PRId64,
 		streaming_component_type2txt(tfs->tfs_type),
 		pkt->pkt_pts);
   }
@@ -431,7 +429,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       if (diff > 160000)
         diff = 160000;
       tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
-      tvhtrace("parser", "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
+      tvhtrace("tsfix", "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
       tsfix_backlog(tf);
     }
   } else if (tfs->tfs_local_ref == PTS_UNSET && tf->tf_tsref != PTS_UNSET &&
@@ -439,7 +437,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     if (tfs->tfs_audio) {
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
-        tvhwarn("parser", "The timediff for %s is big (%"PRId64"), using current dts",
+        tvhwarn("tsfix", "The timediff for %s is big (%"PRId64"), using current dts",
                 streaming_component_type2txt(tfs->tfs_type), diff);
         tfs->tfs_local_ref = pkt->pkt_dts;
       } else {
@@ -451,7 +449,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         if(tfs2->tfs_audio && tfs2->tfs_last_dts_in != PTS_UNSET) {
           diff = tsfix_ts_diff(tfs2->tfs_last_dts_in, pkt->pkt_dts);
           if (diff > 3 * 90000) {
-            tvhwarn("parser", "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
+            tvhwarn("tsfix", "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
             tfs->tfs_parent = tfs2;
             tfs->tfs_local_ref = tfs2->tfs_local_ref;
           } else {
@@ -467,7 +465,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
         tfstream_t *tfs2;
-        tvhwarn("parser", "The timediff for TELETEXT is big (%"PRId64"), using current dts", diff);
+        tvhwarn("tsfix", "The timediff for TELETEXT is big (%"PRId64"), using current dts", diff);
         tfs->tfs_local_ref = pkt->pkt_dts;
         /* Text subtitles extracted from teletext have same timebase */
         LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
@@ -493,7 +491,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 
     pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
 
-    tsfixprintf("TSFIX: %-12s DTS set to last %"PRId64" +%d == %"PRId64"\n",
+    tvhtrace("tsfix", "%-12s DTS set to last %"PRId64" +%d == %"PRId64,
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts);
   }
