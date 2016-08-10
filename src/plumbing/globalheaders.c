@@ -165,23 +165,31 @@ gh_queue_delay(globalheaders_t *gh, int index)
    * Find only packets which require the meta data. Ignore others.
    */
   while (f != l) {
-    ssc = streaming_start_component_find_by_index
-            (gh->gh_ss, f->pr_pkt->pkt_componentindex);
-    if (ssc && ssc->ssc_index == index)
-      break;
+    if (f->pr_pkt->pkt_dts != PTS_UNSET) {
+      ssc = streaming_start_component_find_by_index
+              (gh->gh_ss, f->pr_pkt->pkt_componentindex);
+      if (ssc && ssc->ssc_index == index)
+        break;
+    }
     f = TAILQ_NEXT(f, pr_link);
   }
   while (l != f) {
-    ssc = streaming_start_component_find_by_index
-            (gh->gh_ss, l->pr_pkt->pkt_componentindex);
-    if (ssc && ssc->ssc_index == index)
-      break;
+    if (l->pr_pkt->pkt_dts != PTS_UNSET) {
+      ssc = streaming_start_component_find_by_index
+              (gh->gh_ss, l->pr_pkt->pkt_componentindex);
+      if (ssc && ssc->ssc_index == index)
+        break;
+    }
     l = TAILQ_PREV(l, th_pktref_queue, pr_link);
   }
 
-  diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
-  if (diff < 0)
-    diff += PTS_MASK;
+  if (l->pr_pkt->pkt_dts != PTS_UNSET && f->pr_pkt->pkt_dts != PTS_UNSET) {
+    diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
+    if (diff < 0)
+      diff += PTS_MASK;
+  } else {
+    diff = 0;
+  }
 
   /* special noop packet from transcoder, increase decision limit */
   if (l == f && l->pr_pkt->pkt_payload == NULL)
