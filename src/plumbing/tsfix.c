@@ -271,9 +271,9 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   pkt->pkt_dts = dts;
 
 deliver:
-  tvhtrace("tsfix", "%-12s %d %10"PRId64" %10"PRId64" %10d %zd",
+  tvhtrace("tsfix", "%-12s %c %10"PRId64" %10"PRId64" %10d %zd",
 	      streaming_component_type2txt(tfs->tfs_type),
-	      pkt->pkt_frametype,
+	      pkt_frametype_to_char(pkt->pkt_frametype),
 	      pkt->pkt_dts,
 	      pkt->pkt_pts,
 	      pkt->pkt_duration,
