@@ -140,6 +140,8 @@ static inline uint8_t *pktbuf_ptr(pktbuf_t *pb) { return pb->pb_data; }
 
 static inline int64_t pts_diff(int64_t a, int64_t b)
 {
+  if (a == PTS_UNSET || b == PTS_UNSET)
+    return PTS_UNSET;
   a &= PTS_MASK;
   b &= PTS_MASK;
   if (b < (PTS_MASK / 4) && a > (PTS_MASK / 2))
@@ -148,6 +150,17 @@ static inline int64_t pts_diff(int64_t a, int64_t b)
     return b - a;
   else
     return PTS_UNSET;
+}
+
+static inline int pts_is_greater_or_equal(int64_t base, int64_t value)
+{
+  if (base == PTS_UNSET || value == PTS_UNSET)
+    return -1;
+  if (value >= base)
+    return 1;
+  if (value < (PTS_MASK / 4) && base > (PTS_MASK / 2))
+    return value + PTS_MASK + 1 >= base;
+  return 0;
 }
 
 #endif /* PACKET_H_ */

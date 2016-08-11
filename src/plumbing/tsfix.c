@@ -333,6 +333,7 @@ static void
 recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
   th_pktref_t *srch;
+  int total;
 
   pktref_enqueue(&tf->tf_ptsq, pkt);
 
@@ -357,19 +358,33 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_P_FRAME:
 	/* Presentation occures at DTS of next I or P frame,
 	   try to find it */
-	PKTREF_FOREACH(srch, &tf->tf_ptsq)
-	  if (tfs_find(tf, srch->pr_pkt) == tfs &&
-	      srch->pr_pkt->pkt_frametype <= PKT_P_FRAME) {
+        total = 0;
+	PKTREF_FOREACH(srch, &tf->tf_ptsq) {
+	  if (pkt->pkt_componentindex != tfs->tfs_index)
+	    continue;
+          total++;
+	  if (srch->pr_pkt->pkt_frametype <= PKT_P_FRAME &&
+	      pts_is_greater_or_equal(pkt->pkt_dts, srch->pr_pkt->pkt_dts) > 0 &&
+	      pts_diff(pkt->pkt_dts, srch->pr_pkt->pkt_dts) < 10 * 90000) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
-	    tvhtrace("tsfix", "%-12s PTS *-frame set to %"PRId64,
+	    tvhtrace("tsfix", "%-12s PTS *-frame set to %"PRId64", DTS %"PRId64,
 			streaming_component_type2txt(tfs->tfs_type),
-			pkt->pkt_pts);
+			pkt->pkt_pts, pkt->pkt_dts);
 	    break;
 	  }
+	  
+        }
 	if (srch == NULL) {
-	  /* return packet back to tf_ptsq */
-	  pktref_insert_head(&tf->tf_ptsq, pkt);
-	  return; /* not arrived yet, wait */
+	  if (total < 50) {
+            /* return packet back to tf_ptsq */
+	    pktref_insert_head(&tf->tf_ptsq, pkt);
+	    return; /* not arrived yet, wait */
+          } else {
+	    tvhtrace("tsfix", "%-12s packet drop PTS %"PRId64", DTS %"PRId64,
+			streaming_component_type2txt(tfs->tfs_type),
+			pkt->pkt_pts, pkt->pkt_dts);
+            pkt_ref_dec(pkt);
+          }
         }
       }
       break;
