@@ -454,6 +454,10 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   if(pkt->pkt_dts != PTS_UNSET && tf->tf_tsref == PTS_UNSET &&
      ((!tf->tf_hasvideo && tfs->tfs_audio) ||
       (tfs->tfs_video && pkt->pkt_frametype == PKT_I_FRAME))) {
+    if (pkt->pkt_err) {
+      tsfix_packet_drop(tfs, pkt, "ref1");
+      return;
+    }
     threshold = 22500;
     LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
       if (tfs != tfs2 && (tfs2->tfs_audio || tfs2->tfs_video) && !tfs2->tfs_seen) {
@@ -471,6 +475,10 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     }
   } else if (tfs->tfs_local_ref == PTS_UNSET && tf->tf_tsref != PTS_UNSET &&
              pkt->pkt_dts != PTS_UNSET) {
+    if (pkt->pkt_err) {
+      tsfix_packet_drop(tfs, pkt, "ref2");
+      return;
+    }
     if (tfs->tfs_audio) {
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
