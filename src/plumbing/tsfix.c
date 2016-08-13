@@ -189,6 +189,23 @@ tsfix_stop(tsfix_t *tf)
  *
  */
 static void
+tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
+{
+  tvhtrace("tsfix", "DROP: %-12s %c %10"PRId64" %10"PRId64" %10d %zd (%s)",
+	      streaming_component_type2txt(tfs->tfs_type),
+	      pkt_frametype_to_char(pkt->pkt_frametype),
+	      pkt->pkt_dts,
+	      pkt->pkt_pts,
+	      pkt->pkt_duration,
+	      pktbuf_len(pkt->pkt_payload),
+	      reason);
+  pkt_ref_dec(pkt);
+}
+
+/**
+ *
+ */
+static void
 normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 {
   int64_t ref, dts, d;
@@ -216,15 +233,15 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   ref = tfs->tfs_local_ref != PTS_UNSET ? tfs->tfs_local_ref : tf->tf_tsref;
   dts = pkt->pkt_dts - ref;
 
-  if(tfs->tfs_last_dts_norm == PTS_UNSET) {
-    if(dts < 0) {
+  if (tfs->tfs_last_dts_norm == PTS_UNSET) {
+    if (dts < 0 || pkt->pkt_err) {
       /* Early packet with negative time stamp, drop those */
-      pkt_ref_dec(pkt);
+      tsfix_packet_drop(tfs, pkt, "negative/error");
       return;
     }
   } else {
-    int64_t low   =  90000; /* one second */
-    int64_t upper = 180000; /* two seconds */
+    int64_t low   =   90000; /* one second */
+    int64_t upper = 2*90000; /* two seconds */
     d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
     if (tfs->tfs_subtitle) {
@@ -237,12 +254,13 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     }
 
     if (d < 0 || d > low) {
-
-      if(d < -PTS_MASK || d > -PTS_MASK + upper) {
-
+      if (d < -PTS_MASK || d > -PTS_MASK + upper) {
+        if (pkt->pkt_err) {
+          tsfix_packet_drop(tfs, pkt, "possible wrong discontinuity");
+          return;
+        }
 	tfs->tfs_bad_dts++;
-
-	if(tfs->tfs_bad_dts < 5) {
+        if (tfs->tfs_bad_dts < 5) {
 	  tvhlog(LOG_ERR, "parser",
 		 "transport stream %s, DTS discontinuity. "
 		 "DTS = %" PRId64 ", last = %" PRId64,
@@ -379,10 +397,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
             /* return packet back to tf_ptsq */
 	    pktref_insert_head(&tf->tf_ptsq, pkt);
           } else {
-	    tvhtrace("tsfix", "%-12s packet drop PTS %"PRId64", DTS %"PRId64,
-			streaming_component_type2txt(tfs->tfs_type),
-			pkt->pkt_pts, pkt->pkt_dts);
-            pkt_ref_dec(pkt);
+            tsfix_packet_drop(tfs, pkt, "mpeg2video overflow");
           }
           return; /* not arrived yet or invalid, wait */
         }
