@@ -560,6 +560,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "s",  .getval = dvr_sub_subtitle },
   { .id = "p",  .getval = dvr_sub_episode },
   { .id = "d",  .getval = dvr_sub_description },
+  { .id = "g",  .getval = dvr_sub_genre },
   { .id = "c",  .getval = dvr_sub_channel },
   { .id = "e",  .getval = dvr_sub_last_error },
   { .id = "C",  .getval = dvr_sub_creator },

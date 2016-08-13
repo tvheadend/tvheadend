@@ -17,6 +17,7 @@ Format | Description                               | Example value
 `%s`   | Program subtitle                          |  Afternoon
 `%p`   | Program episode                           |  S02.E07
 `%d`   | Program description                       |  News and stories…
+`%g`   | Program content type                      |  Current affairs
 `%e`   | Error message                             |  Aborted by user
 `%S`   | Start time stamp of recording, UNIX epoch |  1224421200
 `%E`   | Stop time stamp of recording, UNIX epoch  |  1224426600
