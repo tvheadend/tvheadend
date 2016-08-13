@@ -297,7 +297,8 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
     pkt_ref_inc(pkt);
 
-    apply_header(ssc, pkt);
+    if (pkt->pkt_err == 0)
+      apply_header(ssc, pkt);
 
     pktref_enqueue(&gh->gh_holdq, pkt);
 
