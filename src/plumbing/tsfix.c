@@ -378,13 +378,13 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	  if (total < 50) {
             /* return packet back to tf_ptsq */
 	    pktref_insert_head(&tf->tf_ptsq, pkt);
-	    return; /* not arrived yet, wait */
           } else {
 	    tvhtrace("tsfix", "%-12s packet drop PTS %"PRId64", DTS %"PRId64,
 			streaming_component_type2txt(tfs->tfs_type),
 			pkt->pkt_pts, pkt->pkt_dts);
             pkt_ref_dec(pkt);
           }
+          return; /* not arrived yet or invalid, wait */
         }
       }
       break;
