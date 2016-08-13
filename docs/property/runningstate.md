@@ -1,12 +1,13 @@
 :
 
-EITp/f (Event Information Table present/following) allows broadcasters 
-to tell DVRs/STBs when a program actually starts, pauses or finishes, 
-unfortunately not all broadcasters get this right which can lead to 
-unexpected behavior, missing/failed recordings, etc..
+EITp/f (Event Information Table present/following) is broadcast 
+alongside EPG data, it allows broadcasters to tell DVRs/STBs when a 
+program starts, pauses or finishes. 
 
 It is recommended that you only enable this option if you're absolutely 
-sure your broadcaster sends the flags correctly and on time. 
+sure the flags are sent correctly and on time. Incorrect EITp/f flags 
+can result in failed/broken recordings.
+
 You can set this option per channel or per DVR profile, 
 enabling/disabling per channel overrides the DVR profile setting.
 
