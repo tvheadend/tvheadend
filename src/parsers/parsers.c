@@ -1822,20 +1822,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
       pkt->pkt_pts < t->s_current_pts - 180000))
     t->s_current_pts = pkt->pkt_pts;
 
-  tvhtrace("parser",
-           "pkt stream %2d %-12s type %c"
-           " dts %10"PRId64" (%10"PRId64") pts %10"PRId64" (%10"PRId64")"
-           " dur %10d len %10zu err %i",
-           st->es_index,
-           streaming_component_type2txt(st->es_type),
-           pkt_frametype_to_char(pkt->pkt_frametype),
-           ts_rescale(pkt->pkt_dts, 1000000),
-           pkt->pkt_dts,
-           ts_rescale(pkt->pkt_pts, 1000000),
-           pkt->pkt_pts,
-           pkt->pkt_duration,
-           pktbuf_len(pkt->pkt_payload),
-           pkt->pkt_err);
+  pkt_trace("parser", pkt, st->es_index, st->es_type, "deliver");
 
   pkt->pkt_aspect_num = st->es_aspect_num;
   pkt->pkt_aspect_den = st->es_aspect_den;
@@ -1885,24 +1872,15 @@ parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
   pkt_ref_dec(pkt); /* streaming_msg_create_pkt increses ref counter */
 
 #if ENABLE_TRACE
-  int64_t dts = pts_no_backlog(pkt->pkt_dts);
-  int64_t pts = pts_no_backlog(pkt->pkt_pts);
-  tvhtrace("parser",
-           "pkt bcklog %2d %-12s type %c"
-           " dts%s%10"PRId64" (%10"PRId64") pts%s%10"PRId64" (%10"PRId64")"
-           " dur %10d len %10zu err %i",
-           st->es_index,
-           streaming_component_type2txt(st->es_type),
-           pkt_frametype_to_char(pkt->pkt_frametype),
-           pts_is_backlog(pkt->pkt_dts) ? "+" : " ",
-           ts_rescale(dts, 1000000),
-           dts,
-           pts_is_backlog(pkt->pkt_pts) ? "+" : " ",
-           ts_rescale(pts, 1000000),
-           pts,
-           pkt->pkt_duration,
-           pktbuf_len(pkt->pkt_payload),
-           pkt->pkt_err);
+  if (tvhtrace_enabled()) {
+    int64_t dts = pkt->pkt_dts;
+    int64_t pts = pkt->pkt_pts;
+    pkt->pkt_dts = pts_no_backlog(dts);
+    pkt->pkt_pts = pts_no_backlog(pts);
+    pkt_trace("parser", pkt, st->es_index, st->es_type, "backlog");
+    pkt->pkt_dts = dts;
+    pkt->pkt_pts = pts;
+  }
 #endif
 }
 

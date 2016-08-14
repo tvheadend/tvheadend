@@ -119,6 +119,16 @@ th_pkt_t *pkt_copy_nodata(th_pkt_t *pkt);
 
 th_pktref_t *pktref_create(th_pkt_t *pkt);
 
+void pkt_trace_
+  (const char *file, int line, const char *subsys, th_pkt_t *pkt,
+   int index, streaming_component_type_t type, const char *fmt, ...);
+
+#define pkt_trace(subsys, pkt, index, type, fmt, ...) \
+  do { \
+    if (tvhtrace_enabled()) \
+      pkt_trace_(__FILE__, __LINE__, subsys, pkt, index, type, fmt, ##__VA_ARGS__); \
+  } while (0)
+
 /*
  *
  */
@@ -137,6 +147,10 @@ pktbuf_t *pktbuf_append(pktbuf_t *pb, const void *data, size_t size);
 
 static inline size_t   pktbuf_len(pktbuf_t *pb) { return pb ? pb->pb_size : 0; }
 static inline uint8_t *pktbuf_ptr(pktbuf_t *pb) { return pb->pb_data; }
+
+/*
+ *
+ */
 
 static inline int64_t pts_diff(int64_t a, int64_t b)
 {
@@ -162,5 +176,7 @@ static inline int pts_is_greater_or_equal(int64_t base, int64_t value)
     return value + PTS_MASK + 1 >= base;
   return 0;
 }
+
+const char *pts_to_string(int64_t pts, char *buf);
 
 #endif /* PACKET_H_ */

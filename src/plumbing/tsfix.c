@@ -191,14 +191,7 @@ tsfix_stop(tsfix_t *tf)
 static void
 tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 {
-  tvhtrace("tsfix", "DROP: %-12s %c %10"PRId64" %10"PRId64" %10d %zd (%s)",
-	      streaming_component_type2txt(tfs->tfs_type),
-	      pkt_frametype_to_char(pkt->pkt_frametype),
-	      pkt->pkt_dts,
-	      pkt->pkt_pts,
-	      pkt->pkt_duration,
-	      pktbuf_len(pkt->pkt_payload),
-	      reason);
+  pkt_trace("tsfix", pkt, tfs->tfs_index, tfs->tfs_type, "drop");
   pkt_ref_dec(pkt);
 }
 
@@ -208,7 +201,7 @@ tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 static void
 normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 {
-  int64_t ref, dts, d;
+  int64_t ref, dts, odts, opts, d;
 
   if(tf->tf_tsref == PTS_UNSET) {
     if (backlog) {
@@ -220,6 +213,10 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     return;
   }
 
+  ref = tfs->tfs_local_ref != PTS_UNSET ? tfs->tfs_local_ref : tf->tf_tsref;
+  odts = pkt->pkt_dts;
+  opts = pkt->pkt_pts;
+
   if (pkt->pkt_dts == PTS_UNSET) {
     if (pkt->pkt_pts != PTS_UNSET)
       pkt->pkt_dts = pkt->pkt_pts;
@@ -230,7 +227,6 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   pkt->pkt_dts &= PTS_MASK;
 
   /* Subtract the transport wide start offset */
-  ref = tfs->tfs_local_ref != PTS_UNSET ? tfs->tfs_local_ref : tf->tf_tsref;
   dts = pkt->pkt_dts - ref;
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
@@ -289,13 +285,13 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
   pkt->pkt_dts = dts;
 
 deliver:
-  tvhtrace("tsfix", "%-12s %c %10"PRId64" %10"PRId64" %10d %zd",
-	      streaming_component_type2txt(tfs->tfs_type),
-	      pkt_frametype_to_char(pkt->pkt_frametype),
-	      pkt->pkt_dts,
-	      pkt->pkt_pts,
-	      pkt->pkt_duration,
-	      pktbuf_len(pkt->pkt_payload));
+  if (tvhtrace_enabled()) {
+    char _odts[22], _opts[22];
+    pkt_trace("tsfix", pkt, tfs->tfs_index, tfs->tfs_type,
+              "deliver odts %s opts %s ref %"PRId64" epoch %"PRId64,
+              pts_to_string(odts, _odts), pts_to_string(opts, _opts),
+              ref, tfs->tfs_dts_epoch);
+  }
 
   streaming_message_t *sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(tf->tf_output, sm);
