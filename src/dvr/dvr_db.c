@@ -55,6 +55,78 @@ static int dvr_entry_rerecord(dvr_entry_t *de);
 /*
  *
  */
+
+static struct strtab schedstatetab[] = {
+  { "SCHEDULED",  DVR_SCHEDULED },
+  { "RECORDING",  DVR_RECORDING },
+  { "COMPLETED",  DVR_COMPLETED },
+  { "NOSTATE",    DVR_NOSTATE   },
+  { "MISSEDTM",   DVR_MISSED_TIME }
+};
+
+const char *
+dvr_entry_sched_state2str(dvr_entry_sched_state_t s)
+{
+  return val2str(s, schedstatetab) ?: "INVALID";
+}
+
+static struct strtab rsstatetab[] = {
+  { "PENDING",    DVR_RS_PENDING },
+  { "WAIT",       DVR_RS_WAIT_PROGRAM_START },
+  { "RUNNING",    DVR_RS_RUNNING },
+  { "COMMERCIAL", DVR_RS_COMMERCIAL },
+  { "ERROR",      DVR_RS_ERROR },
+  { "EPGWAIT",    DVR_RS_EPG_WAIT },
+  { "FINISHED",   DVR_RS_FINISHED }
+};
+
+const char *
+dvr_entry_rs_state2str(dvr_rs_state_t s)
+{
+  return val2str(s, rsstatetab) ?: "INVALID";
+}
+
+void
+dvr_entry_trace_(const char *file, int line, dvr_entry_t *de, const char *fmt, ...)
+{
+  char buf[512], ubuf[UUID_HEX_SIZE];
+  va_list args;
+  va_start(args, fmt);
+  snprintf(buf, sizeof(buf), "entry %s - %s",
+                             idnode_uuid_as_str(&de->de_id, ubuf),
+                             fmt);
+  tvhlogv(file, line, 0, LOG_TRACE, "dvr", buf, &args);
+  va_end(args);
+}
+
+void
+dvr_entry_trace_time2_(const char *file, int line,
+                       dvr_entry_t *de,
+                       const char *t1name, time_t t1,
+                       const char *t2name, time_t t2,
+                       const char *fmt, ...)
+{
+  char buf[512], ubuf[UUID_HEX_SIZE], t1buf[32], t2buf[32];
+  va_list args;
+  va_start(args, fmt);
+  snprintf(buf, sizeof(buf), "entry %s%s%s%s%s%s%s%s%s - %s",
+                             idnode_uuid_as_str(&de->de_id, ubuf),
+                             t1name ? " " : "",
+                             t1name ? t1name : "",
+                             t1name ? " " : "",
+                             t1name ? gmtime2local(t1, t1buf, sizeof(t1buf)) : "",
+                             t2name ? " " : "",
+                             t2name ? t2name : "",
+                             t2name ? " " : "",
+                             t2name ? gmtime2local(t2, t2buf, sizeof(t2buf)) : "",
+                             fmt);
+  tvhlogv(file, line, 0, LOG_TRACE, "dvr", buf, &args);
+  va_end(args);
+}
+
+/*
+ *
+ */
 int
 dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
 {
@@ -85,6 +157,10 @@ dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
   if (de->de_sched_state != state ||
       de->de_rec_state != rec_state ||
       de->de_last_error != error_code) {
+    dvr_entry_trace(de, "set state - state %s rec_state %s error '%s'",
+                    dvr_entry_sched_state2str(state),
+                    dvr_entry_rs_state2str(rec_state),
+                    streaming_code2txt(error_code));
     if (de->de_bcast) {
       snprintf(id, sizeof(id), "%u", de->de_bcast->id);
       notify_delayed(id, "epg", "dvr_update");
@@ -109,6 +185,7 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
   if (bcast != de->de_bcast) {
     if (de->de_bcast) {
       snprintf(id, sizeof(id), "%u", de->de_bcast->id);
+      dvr_entry_trace(de, "unassign broadcast %s", id);
       de->de_bcast->putref((epg_object_t*)de->de_bcast);
       notify_delayed(id, "epg", "dvr_delete");
       de->de_bcast = NULL;
@@ -118,6 +195,7 @@ dvr_entry_assign_broadcast(dvr_entry_t *de, epg_broadcast_t *bcast)
       bcast->getref((epg_object_t*)bcast);
       de->de_bcast = bcast;
       snprintf(id, sizeof(id), "%u", bcast->id);
+      dvr_entry_trace(de, "assign broadcast %s", id);
       notify_delayed(id, "epg", "dvr_update");
     }
     return 1;
@@ -133,6 +211,7 @@ dvr_entry_dont_rerecord(dvr_entry_t *de, int dont_rerecord)
 {
   dont_rerecord = dont_rerecord ? 1 : 0;
   if (de->de_dont_rerecord ? 1 : 0 != dont_rerecord) {
+    dvr_entry_trace(de, "don't rerecord change %d", dont_rerecord);
     de->de_dont_rerecord = dont_rerecord;
     idnode_changed(&de->de_id);
     idnode_notify_changed(&de->de_id);
@@ -384,6 +463,9 @@ dvr_entry_retention_arm(dvr_entry_t *de, gti_callback_t *cb, time_t when)
   if (rerecord && (when - gclk()) > 3600) {
     when = gclk() + 3600;
     cb = dvr_timer_rerecord;
+    dvr_entry_trace_time1(de, "when", when, "retention arm - rerecord");
+  } else {
+    dvr_entry_trace_time1(de, "when", when, "retention arm", "when");
   }
   gtimer_arm_absn(&de->de_timer, cb, de, when);
 }
@@ -420,6 +502,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
     stop = time_t_out_of_range((int64_t)de->de_stop + retention * (int64_t)86400);
     dvr_entry_retention_arm(de, dvr_timer_expire, stop);
   } else {
+    dvr_entry_trace(de, "retention timer - disarm");
     gtimer_disarm(&de->de_timer);
   }
 }
@@ -601,13 +684,17 @@ dvr_entry_set_timer(dvr_entry_t *de)
   start = dvr_entry_get_start_time(de, 1);
   stop  = dvr_entry_get_stop_time(de);
 
+  dvr_entry_trace_time2(de, "start", start, "stop", stop, "set timer");
+
   if (now >= stop || de->de_dont_reschedule) {
 
     /* EPG thinks that the program is running */
     if(de->de_running_start > de->de_running_stop && !de->de_dont_reschedule) {
       stop = now + 10;
-      if (de->de_sched_state == DVR_RECORDING)
+      if (de->de_sched_state == DVR_RECORDING) {
+        dvr_entry_trace_time1(de, "stop", stop, "set timer - running+");
         goto recording;
+      }
     }
 
     /* Files are missing and job was completed */
@@ -622,13 +709,14 @@ dvr_entry_set_timer(dvr_entry_t *de)
   } else if (de->de_sched_state == DVR_RECORDING)  {
 
 recording:
+    dvr_entry_trace_time1(de, "stop", stop, "set timer - arm");
     gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de, stop);
 
   } else if (de->de_channel && de->de_channel->ch_enabled) {
 
     dvr_entry_set_state(de, DVR_SCHEDULED, DVR_RS_PENDING, de->de_last_error);
 
-    tvhtrace("dvr", "entry timer scheduled for %"PRItime_t, start);
+    dvr_entry_trace_time1(de, "start", start, "set timer - schedule");
     gtimer_arm_absn(&de->de_timer, dvr_timer_start_recording, de, start);
 #if ENABLE_DBUS_1
     mtimer_arm_rel(&dvr_dbus_timer, dvr_dbus_timer_cb, NULL, sec2mono(5));
@@ -636,6 +724,7 @@ recording:
 
   } else {
 
+    dvr_entry_trace(de, "set timer - nostate");
     dvr_entry_nostate(de, de->de_last_error);
 
   }
@@ -1040,11 +1129,10 @@ not_so_good:
   if (e == NULL)
     return 0;
 
-  tvhtrace("dvr", "  rerecord event %s on %s @ %"PRItime_t
-                   " to %"PRItime_t,
-                   epg_broadcast_get_title(e, NULL),
-                   channel_get_name(e->channel),
-                   e->start, e->stop);
+  dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
+                        "rerecord event %s on %s",
+                        epg_broadcast_get_title(e, NULL),
+                        channel_get_name(e->channel));
 
   idnode_uuid_as_str(&de->de_config->dvr_id, cfg_uuid);
   snprintf(buf, sizeof(buf), _("Re-record%s%s"),
@@ -1674,7 +1762,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
   dvr_entry_t *de, *de_next;
   channel_t *ch = e->channel;
   epg_broadcast_t *e2;
-  char ubuf[UUID_HEX_SIZE];
+  char t1buf[32], t2buf[32];
 
   assert(e != NULL);
   assert(new_e != NULL);
@@ -1689,13 +1777,10 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     if (de->de_bcast != e)
       continue;
 
-    tvhtrace("dvr",
-             "dvr entry %s event replaced %s on %s @ %"PRItime_t
-             " to %"PRItime_t,
-             idnode_uuid_as_str(&de->de_id, ubuf),
-             epg_broadcast_get_title(e, NULL),
-             channel_get_name(ch),
-             e->start, e->stop);
+    dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
+                          "event replaced %s on %s",
+                          epg_broadcast_get_title(e, NULL),
+                          channel_get_name(ch));
 
     /* Ignore - already in progress */
     if (de->de_sched_state != DVR_SCHEDULED)
@@ -1713,12 +1798,11 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
       RB_FOREACH(e2, &ch->ch_epg_schedule, sched_link) {
         if (dvr_entry_fuzzy_match(de, e2, e2->dvb_eid,
                                   de->de_config->dvr_update_window)) {
-          tvhtrace("dvr",
-                   "  replacement event %s on %s @ %"PRItime_t
-                   " to %"PRItime_t,
-                   epg_broadcast_get_title(e2, NULL),
-                   channel_get_name(ch),
-                   e2->start, e2->stop);
+          tvhtrace("dvr", "  replacement event %s on %s @ start %s stop %s",
+                          epg_broadcast_get_title(e2, NULL),
+                          channel_get_name(ch),
+                          gmtime2local(e2->start, t1buf, sizeof(t1buf)),
+                          gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
                             0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
           return;
@@ -1755,7 +1839,6 @@ void dvr_event_updated(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
   int found = 0;
-  char ubuf[UUID_HEX_SIZE];
 
   if (e->channel == NULL)
     return;
@@ -1772,13 +1855,10 @@ void dvr_event_updated(epg_broadcast_t *e)
       if (de->de_bcast) continue;
       if (dvr_entry_fuzzy_match(de, e, e->dvb_eid,
                                 de->de_config->dvr_update_window)) {
-        tvhtrace("dvr",
-                 "dvr entry %s link to event %s on %s @ %"PRItime_t
-                 " to %"PRItime_t,
-                 idnode_uuid_as_str(&de->de_id, ubuf),
-                 epg_broadcast_get_title(e, NULL),
-                 channel_get_name(e->channel),
-                 e->start, e->stop);
+        dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
+                              "link to event %s on %s",
+                              epg_broadcast_get_title(e, NULL),
+                              channel_get_name(e->channel));
         _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
                           NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
         break;
@@ -1917,6 +1997,10 @@ dvr_timer_stop_recording(void *aux)
   dvr_entry_t *de = aux;
   if(de->de_sched_state != DVR_RECORDING)
     return;
+  dvr_entry_trace_time2(de,
+                        "rstart", de->de_running_start,
+                        "rstop", de->de_running_stop,
+                        "stop recording timer called");
   /* EPG thinks that the program is running */
   if (de->de_running_start > de->de_running_stop) {
     gtimer_arm_rel(&de->de_timer, dvr_timer_stop_recording, de, 10);

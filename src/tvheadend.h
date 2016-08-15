@@ -840,6 +840,8 @@ static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - 
 
 htsmsg_t *network_interfaces_enum(void *obj, const char *lang);
 
+const char *gmtime2local(time_t gmt, char *buf, size_t buflen);
+
 /* glibc wrapper */
 #if ! ENABLE_QSORT_R
 void

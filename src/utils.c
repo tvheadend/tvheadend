@@ -810,3 +810,12 @@ htsmsg_t *network_interfaces_enum(void *obj, const char *lang)
   return NULL;
 #endif
 }
+
+const char *
+gmtime2local(time_t gmt, char *buf, size_t buflen)
+{
+  struct tm tm;
+  localtime_r(&gmt, &tm);
+  strftime(buf, buflen, "%F;%T(%z)", &tm);
+  return buf;
+}

@@ -781,6 +781,38 @@ void dvr_cutpoint_list_destroy (dvr_cutpoint_list_t *list);
  *
  */
 
+const char *dvr_entry_sched_state2str(dvr_entry_sched_state_t s);
+const char *dvr_entry_rs_state2str(dvr_rs_state_t s);
+
+void dvr_entry_trace_(const char *file, int line,
+                      dvr_entry_t *de, const char *fmt, ...);
+
+void dvr_entry_trace_time2_(const char *file, int line,
+                            dvr_entry_t *de,
+                            const char *t1name, time_t t1,
+                            const char *t2name, time_t t2,
+                            const char *fmt, ...);
+
+#define dvr_entry_trace(de, fmt, ...) \
+  do { \
+    if (tvhtrace_enabled()) \
+      dvr_entry_trace_(__FILE__, __LINE__, de, fmt, ##__VA_ARGS__); \
+  } while (0)
+
+#define dvr_entry_trace_time1(de, t1name, t1, fmt, ...) \
+  dvr_entry_trace_time2(de, t1name, t1, NULL, 0, fmt, ##__VA_ARGS__)
+
+#define dvr_entry_trace_time2(de, t1name, t1, t2name, t2, fmt, ...) \
+  do { \
+    if (tvhtrace_enabled()) \
+      dvr_entry_trace_time2_(__FILE__, __LINE__, de, t1name, t1, \
+                             t2name, t2, fmt, ##__VA_ARGS__); \
+  } while (0)
+
+/**
+ *
+ */
+
 void dvr_init(void);
 void dvr_config_init(void);
 
