@@ -593,12 +593,10 @@ dvr_usage_count(access_t *aa)
 void
 dvr_entry_set_timer(dvr_entry_t *de)
 {
-  time_t now, start, stop;
+  time_t now = gclk(), start, stop;
 
   if (dvr_in_init)
     return;
-
-  time(&now);
 
   start = dvr_entry_get_start_time(de, 1);
   stop  = dvr_entry_get_stop_time(de);
@@ -607,7 +605,7 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
     /* EPG thinks that the program is running */
     if(de->de_running_start > de->de_running_stop && !de->de_dont_reschedule) {
-      stop = gclk() + 10;
+      stop = now + 10;
       if (de->de_sched_state == DVR_RECORDING)
         goto recording;
     }
