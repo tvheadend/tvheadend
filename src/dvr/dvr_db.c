@@ -1878,6 +1878,10 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
 
   if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0 || e->channel == NULL)
     return;
+  tvhtrace("dvr", "dvr event running check for %s on %s running %d",
+           epg_broadcast_get_title(e, NULL),
+           channel_get_name(e->channel),
+           running);
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
     if (!dvr_entry_get_epg_running(de)) {
       atomic_set_time_t(&de->de_running_start, 0);
