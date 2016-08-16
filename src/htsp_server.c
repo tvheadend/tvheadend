@@ -1295,6 +1295,8 @@ htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
   const char *remain;
   int r;
 
+  pthread_mutex_unlock(&global_lock);
+
   args   = htsmsg_get_map(in, "args");
   remain = htsmsg_get_str(in, "path");
 
@@ -1325,6 +1327,8 @@ htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
   }
 
   htsmsg_destroy(args2);
+
+  pthread_mutex_lock(&global_lock);
   return ret;
 }
 
