@@ -175,7 +175,7 @@ tvhlog_process
   }
 
   /* Comet (debug must still be enabled??) */
-  if(msg->notify && msg->severity < LOG_TRACE) {
+  if (msg->notify && msg->severity < LOG_TRACE) {
     htsmsg_t *m = htsmsg_create_map();
     snprintf(buf, sizeof(buf), "%s %s", t, msg->msg);
     htsmsg_add_str(m, "notificationClass", "logmessage");
@@ -263,13 +263,15 @@ tvhlog_thread ( void *p )
   return NULL;
 }
 
-void tvhlogv ( const char *file, int line,
-               int notify, int severity,
+void tvhlogv ( const char *file, int line, int severity,
                const char *subsys, const char *fmt, va_list *args )
 {
-  int ok, options;
+  int ok, options, notify;
   size_t l;
   char buf[1024];
+
+  notify = (severity & LOG_TVH_NOTIFY) ? 1 : 0;
+  severity &= ~LOG_TVH_NOTIFY;
 
   pthread_mutex_lock(&tvhlog_mutex);
 
@@ -350,13 +352,12 @@ void tvhlogv ( const char *file, int line,
 /*
  * Map args
  */
-void _tvhlog ( const char *file, int line,
-               int notify, int severity,
+void _tvhlog ( const char *file, int line, int severity,
                const char *subsys, const char *fmt, ... )
 {
   va_list args;
   va_start(args, fmt);
-  tvhlogv(file, line, notify, severity, subsys, fmt, &args);
+  tvhlogv(file, line, severity, subsys, fmt, &args);
   va_end(args);
 }
 
@@ -365,10 +366,8 @@ void _tvhlog ( const char *file, int line,
  */
 #define HEXDUMP_WIDTH 16
 void
-_tvhlog_hexdump(const char *file, int line,
-                int notify, int severity,
-                const char *subsys,
-                const uint8_t *data, ssize_t len )
+_tvhlog_hexdump(const char *file, int line, int severity,
+                const char *subsys, const uint8_t *data, ssize_t len )
 {
   int i, c;
   char str[1024];
@@ -395,7 +394,7 @@ _tvhlog_hexdump(const char *file, int line,
       c++;
     }
     str[c] = '\0';
-    tvhlogv(file, line, notify, severity, subsys, str, NULL);
+    tvhlogv(file, line, severity, subsys, str, NULL);
     len  -= HEXDUMP_WIDTH;
     data += HEXDUMP_WIDTH;
   }

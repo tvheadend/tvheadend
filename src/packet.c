@@ -175,7 +175,7 @@ pkt_trace_(const char *file, int line, const char *subsys, th_pkt_t *pkt,
            pktbuf_len(pkt->pkt_payload),
            pkt->pkt_err,
            fmt ? ")" : "");
-  tvhlogv(file, line, 0, LOG_TRACE, subsys, buf, &args);
+  tvhlogv(file, line, LOG_TRACE, subsys, buf, &args);
   va_end(args);
 }
 

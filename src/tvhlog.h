@@ -54,17 +54,13 @@ void tvhlog_set_debug  ( const char *subsys );
 void tvhlog_get_debug  ( char *subsys, size_t len );
 void tvhlog_set_trace  ( const char *subsys );
 void tvhlog_get_trace  ( char *subsys, size_t len );
-void tvhlogv           ( const char *file, int line,
-                         int notify, int severity,
+void tvhlogv           ( const char *file, int line, int severity,
                          const char *subsys, const char *fmt, va_list *args );
-void _tvhlog           ( const char *file, int line,
-                         int notify, int severity,
+void _tvhlog           ( const char *file, int line, int severity,
                          const char *subsys, const char *fmt, ... )
-  __attribute__((format(printf,6,7)));
-void _tvhlog_hexdump   ( const char *file, int line,
-                         int notify, int severity,
-                         const char *subsys,
-                         const uint8_t *data, ssize_t len );
+  __attribute__((format(printf,5,6)));
+void _tvhlog_hexdump   ( const char *file, int line, int severity,
+                         const char *subsys, const uint8_t *data, ssize_t len );
 static inline void tvhlog_limit_reset ( tvhlog_limit_t *limit )
   { limit->last = 0; limit->count = 0; }
 static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
@@ -91,22 +87,24 @@ static inline int tvhlog_limit ( tvhlog_limit_t *limit, uint32_t delay )
 #define LOG_TRACE (LOG_DEBUG+1)
 #endif
 
+#define LOG_TVH_NOTIFY 0x40000000
+
 /* Macros */
 #define tvhlog(severity, subsys, fmt, ...)\
-  _tvhlog(__FILE__, __LINE__, 1, severity, subsys, fmt, ##__VA_ARGS__)
+  _tvhlog(__FILE__, __LINE__, severity | LOG_TVH_NOTIFY, subsys, fmt, ##__VA_ARGS__)
 #define tvhlog_spawn(severity, subsys, fmt, ...)\
-  _tvhlog(__FILE__, __LINE__, 0, severity, subsys, fmt, ##__VA_ARGS__)
+  _tvhlog(__FILE__, __LINE__, severity, subsys, fmt, ##__VA_ARGS__)
 #if ENABLE_TRACE
 #define tvhtrace_enabled() (LOG_TRACE <= atomic_get(&tvhlog_level))
 #define tvhtrace(subsys, fmt, ...) \
   do { \
     if (tvhtrace_enabled()) \
-      _tvhlog(__FILE__, __LINE__, 0, LOG_TRACE, subsys, fmt, ##__VA_ARGS__); \
+      _tvhlog(__FILE__, __LINE__, LOG_TRACE, subsys, fmt, ##__VA_ARGS__); \
   } while (0)
 #define tvhlog_hexdump(subsys, data, len) \
   do { \
     if (tvhtrace_enabled()) \
-      _tvhlog_hexdump(__FILE__, __LINE__, 0, LOG_TRACE, subsys, (uint8_t*)data, len); \
+      _tvhlog_hexdump(__FILE__, __LINE__, LOG_TRACE, subsys, (uint8_t*)data, len); \
   } while (0)
 #else
 static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }

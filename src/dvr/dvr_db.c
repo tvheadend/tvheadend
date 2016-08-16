@@ -95,7 +95,7 @@ dvr_entry_trace_(const char *file, int line, dvr_entry_t *de, const char *fmt, .
   snprintf(buf, sizeof(buf), "entry %s - %s",
                              idnode_uuid_as_str(&de->de_id, ubuf),
                              fmt);
-  tvhlogv(file, line, 0, LOG_TRACE, "dvr", buf, &args);
+  tvhlogv(file, line, LOG_TRACE, "dvr", buf, &args);
   va_end(args);
 }
 
@@ -120,7 +120,7 @@ dvr_entry_trace_time2_(const char *file, int line,
                              t2name ? " " : "",
                              t2name ? gmtime2local(t2, t2buf, sizeof(t2buf)) : "",
                              fmt);
-  tvhlogv(file, line, 0, LOG_TRACE, "dvr", buf, &args);
+  tvhlogv(file, line, LOG_TRACE, "dvr", buf, &args);
   va_end(args);
 }
 
