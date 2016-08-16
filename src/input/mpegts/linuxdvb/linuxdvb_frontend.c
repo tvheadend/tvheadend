@@ -1573,7 +1573,7 @@ linuxdvb_frontend_tune0
   if (tvhtrace_enabled()) {
     char buf2[256];
     dvb_mux_conf_str(&lm->lm_tuning, buf2, sizeof(buf2));
-    tvhtrace(LS_LINUXDVB, "tuner %s tunning to %s (freq %i)", buf1, buf2, freq);
+    tvhtrace(LS_LINUXDVB, "tuner %s tuning to %s (freq %i)", buf1, buf2, freq);
   }
   memset(&p, 0, sizeof(p));
   p.frequency                = dmc->dmc_fe_freq;

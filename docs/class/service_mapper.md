@@ -1,4 +1,4 @@
-The map services to channels dialog allows you to control how 
+The map services to channels dialog allows you to control how and which 
 services are mapped. The options selected here get passed to the 
 [Service Mapper](status_service_mapper) tab when you press 
 the *[Map services]* button.

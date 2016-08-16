@@ -9,6 +9,5 @@ Option                                       | Description
 **Record once per week**                     | Record the first matching event once a week.
 **Record once per day**                      | Record the first matching event once a day.
 
-*Local* or *All*? Local only checks the DVR log entries that were created by the 
-same autorec rule for duplicates, All checks all DVR log entries for 
-duplicates.
+*Local* only checks for duplicates created by the same 
+autorec rule, *All* checks all the DVR logs for duplicates.

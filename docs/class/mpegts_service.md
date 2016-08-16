@@ -23,42 +23,38 @@ Mapping Button              | Function
 
 ###Mapping Services to Channels
 
-There are a number of methods to mapping available services.
+  There are a number of methods to mapping available services, 
+  mapping uses the following dialog.
 
-*Map all services* and *Map selected services* functions use the 
-following *Map services to channels* dialog:
-
-!['Service mapper dialog'](static/img/doc/mapservicesdialog.png)
+  !['Service mapper dialog'](static/img/doc/mapservicesdialog.png)
 
 ####Mapping All
 
-Press the *[Map services]* button and then *[Map all services]*: 
+Press the *[Map services]* button and then *[Map all services]*.
 
 !['Map All Services'](static/img/doc/mapservicesall.png)
-  
-The *Map services to channels* dialog will now appear, listing all available services and various 
-other [mapping options.](class/service_mapper) The ticked check boxes 
-[✓] indicate which services will be mapped, when you're happy with the selection press 
-the "Map services" button. You will then be taken to the Service 
-Mapper tab which will begin mapping services to channels. 
+
+The [Map services to channels](class/service_mapper) will now be displayed with **all** services 
+checked - feel free to make changes. Once you're happy with the selection press the "Map services" button, you will 
+then be taken to the [Service Mapper](status_service_mapper) tab which 
+will begin mapping the selected services to channels. 
   
 ####Mapping Selected
 
-Click on the services you would like to map as channels. Once you're 
-done selecting, press the "Map services" button and then 
-"Map selected services" - be careful not to click on the grid or 
-you'll lose your selection!
-
-<tvh_include>inc/selecting_entries_tip</tvh_include>
+Click on the services you would like to map as channels, 
+once you're done selecting press the "Map services" button and 
+then "Map selected services". 
 
 !['Map selected'](static/img/doc/mapselectedservices.png)
     
-The *Map services to channels* dialog will now appear, listing all available services and various 
-other [mapping options.](class/service_mapper) The ticked 
-check boxes [✓] indicate which services will be mapped, when you're 
-happy with the selection press the "Map services" button. You will 
-then be taken to the Service Mapper tab which will begin mapping 
-services to channels. 
+The [Map services to channels](class/service_mapper) dialog will 
+now be displayed with the **selected** services checked - feel free to make 
+changes. Once you're happy with the selection press the 
+"Map services" button, you will then be taken to the 
+[Service Mapper](status_service_mapper) tab which will begin mapping 
+the selected services to channels. 
+
+<tvh_include>inc/selecting_entries_tip</tvh_include>
 
 **Tip**: By default Tvheadend will only show a small selection of 
 available services - you can increase this by using the paging 
@@ -71,10 +67,10 @@ You can map/remove a service to/from an existing channel by doing the following:
 **1)** Find the desired service from within the services grid. 
 
 If you have a lot of services you may want to use filtering to limit the 
-number of grid entries, you can do this by hovering your mouse over the 
-*Service name* column, a down arrow ▾ should now be visible. Clicking 
+number of grid entries. You can do this by hovering your mouse over the 
+*Service name* column, a down arrow ▾ should now be visible, clicking 
 the arrow will then display a list of options, move your mouse down to 
-"Filters", a text box should then appear, click on it and enter the 
+"Filters" and a text box should then appear, click on it and enter the 
 desired service's name.
 
 !['Service filtering'](static/img/doc/servicefilter.png)
@@ -83,12 +79,12 @@ desired service's name.
 check box next to the "Filters" option). 
 
 **2)** Double click on the channel field, a drop down listing of all defined 
-channels will appear, check/untick the check box next to the channel 
+channels will appear, check/uncheck the check box next to the channel 
 you'd like to associate/disassociate the service with. 
 
 !['Add service to channel example'](static/img/doc/addservicetochannel.png)
 
-**3)** Press the *[Save]* button from the menu bar and you're done!
+**3)** Press the *[Save]* button from the menu bar, and you're done!
 
 ---
 

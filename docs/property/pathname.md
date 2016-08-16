@@ -1,4 +1,4 @@
-: The string allow to manually specify the full path generation using
+: The string allows you to manually specify the full path generation using
   the predefined modifiers for strftime (see `man strftime`, except
   `%n` and `%t`) and Tvheadend specific. Note that you may modify some of
   this format string setting using the GUI fields below.
