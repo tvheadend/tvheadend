@@ -32,8 +32,7 @@ of the same type as necessary, e.g. to have two DVB-T networks defined,
 one with HD muxes, one without.
 
 The creation process allows you to select from a series of pre-defined mux
-lists for common DVB sources. These are maintained outside of Tvheadend, and
-are downloaded from [linuxtv](http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/) -
+lists for common DVB sources. These are available [here](https://github.com/tvheadend/dtv-scan-tables) -
 but they do go out of date as broadcasters move services around and national
 authorities change entire pieces of spectrum. As such, you should try the
 pre-defined values, but you may need to add muxes manually.
@@ -114,8 +113,6 @@ and language(s), and so on.
 
 ####5.1. Forcing a Scan
 
-  You may force a scan by going to:
-
   **Tvheadend web interface: _Configuration -> DVB Inputs -> Networks_**
 
   Highlight the network(s) you would like to force scan and then press 
@@ -132,35 +129,44 @@ and language(s), and so on.
 
 ###6. Map Services to Channels
 
-Once scanning for services is complete, you need to map the services to 
-channels so your client can actually request them (i.e. so you can watch
-or record).
+  **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
 
-**Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
+  Once scanning for services is complete, you need to map the services to 
+  channels so your client can actually request them (i.e. so you can watch
+  or record). There are a number of methods to mapping available services, 
+  mapping uses the following dialog.
 
-####6.1. Mapping All
+  !['Service mapper dialog'](static/img/doc/mapservicesdialog.png)
 
-  Press the "Map services" button and then "Map all services". 
+####6.1 Mapping All
+
+  Press the *[Map services]* button and then *[Map all services]*.
+
+  !['Map All Services'](static/img/doc/mapservicesall.png)
+
+  The [Map services to channels](class/service_mapper) dialog will 
+  now be displayed with **all** services checked - feel free to make 
+  changes. Once you're happy with the selection press the 
+  "Map services" button, you will then be taken to the 
+  [Service Mapper](status_service_mapper) tab which will begin mapping 
+  the selected services to channels. 
   
-  A dialog will then appear with the list of available services and various 
-  other mapping options. The ticked check boxes [✓] indicate which 
-  services will be mapped, when you're happy with the selection press 
-  the "Map services" button. You will then be taken to the Service 
-  Mapper tab which will begin mapping services to channels. 
-  
-####6.2. Mapping Selected
+####6.2 Mapping Selected
 
-  While holding ctrl (single selection) or shift (to select a range), 
-  click on the services you would like to map as channels. Once you're 
-  done selecting, press the "Map services" button and then 
-  "Map selected services" - **be careful not to click on the grid or 
-  you'll lose your selection!**
+  Click on the services you would like to map as channels, 
+  once you're done selecting press the "Map services" button and 
+  then "Map selected services". 
+
+  !['Map selected'](static/img/doc/mapselectedservices.png)
     
-  A dialog will then appear with the list of available services and 
-  various other mapping options. The ticked check boxes [✓] indicate 
-  which services will be mapped, when you're happy with the selection 
-  press the "Map services" button. You will then be taken to the 
-  Service Mapper tab which will begin mapping services to channels. 
+  The [Map services to channels](class/service_mapper) dialog will 
+  now be displayed with the **selected** services checked - feel free to make 
+  changes. Once you're happy with the selection press the 
+  "Map services" button, you will then be taken to the 
+  [Service Mapper](status_service_mapper) tab which will begin mapping 
+  the selected services to channels. 
+  
+<tvh_include>inc/selecting_entries_tip</tvh_include>
 
   **Tip**: By default Tvheadend will only show a small selection of 
   available services - you can increase this by using the paging 
