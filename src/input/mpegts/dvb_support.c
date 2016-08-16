@@ -404,7 +404,7 @@ atsc_get_string
   char buf[256];
 
   stringcount = src[0];
-  tvhtrace("atsc-str", "%d strings", stringcount);
+  tvhtrace(LS_MPEGTS, "atsc-str: %d strings", stringcount);
 
   src++;
   srclen--;
@@ -417,7 +417,7 @@ atsc_get_string
     langcode[2]  = src[2];
     segmentcount = src[3];
 
-    tvhtrace("atsc-str", "  %d: lang '%s', segments %d", i, langcode, segmentcount);
+    tvhtrace(LS_MPEGTS, "atsc-str:  %d: lang '%s', segments %d", i, langcode, segmentcount);
 
     src    += 4;
     srclen -= 4;
@@ -434,7 +434,7 @@ atsc_get_string
         return ls;
 
       if (mode == 0 && compressiontype == 0) {
-        tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
+        tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes: '%.*s'",
                  j, compressiontype, mode, bytecount, bytecount, src);
         memcpy(buf, src, bytecount);
         buf[bytecount] = '\0';
@@ -442,7 +442,7 @@ atsc_get_string
           ls = lang_str_create();
         lang_str_append(ls, buf, langcode);
       } else {
-        tvhtrace("atsc-str", "    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
+        tvhtrace(LS_MPEGTS, "atsc-str:    %d: comptype 0x%02x, mode 0x%02x, %d bytes",
                  j, compressiontype, mode, bytecount);
       }
 

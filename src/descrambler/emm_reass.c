@@ -329,13 +329,13 @@ emm_viaccess
 
       crc = tvh_crc32(ass2, len, 0xffffffff);
       if (!emm_cache_lookup(ra, crc)) {
-        tvhlog(LOG_DEBUG, "cwc",
-              "Send EMM "
-              "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
-              "...%02x.%02x.%02x.%02x",
-              ass2[0], ass2[1], ass2[2], ass2[3],
-              ass2[4], ass2[5], ass2[6], ass2[7],
-              ass2[len-4], ass2[len-3], ass2[len-2], ass2[len-1]);
+        tvhdebug(LS_CWC,
+                "Send EMM "
+                "%02x.%02x.%02x.%02x.%02x.%02x.%02x.%02x"
+                "...%02x.%02x.%02x.%02x",
+                ass2[0], ass2[1], ass2[2], ass2[3],
+                ass2[4], ass2[5], ass2[6], ass2[7],
+                ass2[len-4], ass2[len-3], ass2[len-2], ass2[len-1]);
         send(aux, ass2, len, mux);
         emm_cache_insert(ra, crc);
       }
@@ -441,7 +441,7 @@ emm_streamguard
   if (len < 1)
     return;
 
-  tvhlog(LOG_INFO, "cwc", "emm_streamguard streamguard card data emm get,here lots of works todo...");
+  tvhinfo(LS_CWC, "emm_streamguard streamguard card data emm get,here lots of works todo...");
 
   if (data[0] == 0x87) {
     match = memcmp(&data[3], &ra->ua[4], 4) == 0;
@@ -579,8 +579,8 @@ void
 emm_filter(emm_reass_t *ra, const uint8_t *data, int len, void *mux,
            emm_send_t send, void *aux)
 {
-  tvhtrace("emm-filter", "%s - len %d mux %p", caid2name(ra->caid), len, mux);
-  tvhlog_hexdump("emm-filter", data, len);
+  tvhtrace(LS_CWC, "emm filter : %s - len %d mux %p", caid2name(ra->caid), len, mux);
+  tvhlog_hexdump(LS_CWC, data, len);
   if (ra->do_emm)
     ra->do_emm(ra, data, len, mux, send, aux);
 }

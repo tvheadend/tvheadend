@@ -176,7 +176,7 @@ iptv_http_get_url( http_priv_t *hp, htsmsg_t *m )
   if (sel && hp->hls_url == NULL) {
     inf = htsmsg_get_map(sel, "stream-inf");
     bandwidth = htsmsg_get_s64_or_default(inf, "BANDWIDTH", 0);
-    tvhdebug("iptv", "HLS - selected stream %s, %"PRId64"kb/s, %s",
+    tvhdebug(LS_IPTV, "HLS - selected stream %s, %"PRId64"kb/s, %s",
              htsmsg_get_str(inf, "RESOLUTION"),
              bandwidth / 1024,
              htsmsg_get_str(inf, "CODECS"));
@@ -364,9 +364,9 @@ iptv_http_reconnect ( http_client_t *hc, const char *url )
     hc->hc_keepalive = 0;
     r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
     if (r < 0)
-      tvherror("iptv", "cannot reopen http client: %d'", r);
+      tvherror(LS_IPTV, "cannot reopen http client: %d'", r);
   } else {
-    tvherror("iptv", "m3u url invalid '%s'", url);
+    tvherror(LS_IPTV, "m3u url invalid '%s'", url);
   }
   urlreset(&u);
 }
@@ -402,7 +402,7 @@ url:
     if (hp->hls_key) {
       s = htsmsg_get_str(hp->hls_key, "METHOD");
       if (s == NULL || strcmp(s, "AES-128")) {
-        tvherror("iptv", "unknown crypto method '%s'", s);
+        tvherror(LS_IPTV, "unknown crypto method '%s'", s);
         goto end;
       }
       memset(&hp->hls_aes128.iv, 0, sizeof(hp->hls_aes128.iv));
@@ -410,14 +410,14 @@ url:
       if (s != NULL) {
         if (s[0] != '0' || (s[1] != 'x' && s[1] != 'X') ||
             strlen(s) != (AES_BLOCK_SIZE * 2) + 2) {
-          tvherror("iptv", "unknown IV type or length (%s)", s);
+          tvherror(LS_IPTV, "unknown IV type or length (%s)", s);
           goto end;
         }
         hex2bin(hp->hls_aes128.iv, sizeof(hp->hls_aes128.iv), s + 2);
       }
       s = htsmsg_get_str(hp->hls_key, "URI");
       if (s == NULL) {
-        tvherror("iptv", "no URI in KEY attribute");
+        tvherror(LS_IPTV, "no URI in KEY attribute");
         goto end;
       }
       hp->hls_encrypted = 1;
@@ -431,9 +431,9 @@ url:
         sbuf_reset(&hp->key_sbuf, 32);
       }
     }
-    tvhtrace("iptv", "m3u url: '%s'", url);
+    tvhtrace(LS_IPTV, "m3u url: '%s'", url);
     if (url == NULL) {
-      tvherror("iptv", "m3u contents parsing failed");
+      tvherror(LS_IPTV, "m3u contents parsing failed");
       goto fin;
     }
 new_m3u:
@@ -471,9 +471,9 @@ iptv_http_complete_key
 
   if (hp == NULL)
     return 0;
-  tvhtrace("iptv", "received key len %d", hp->key_sbuf.sb_ptr);
+  tvhtrace(LS_IPTV, "received key len %d", hp->key_sbuf.sb_ptr);
   if (hp->key_sbuf.sb_ptr != AES_BLOCK_SIZE) {
-    tvherror("iptv", "AES-128 key wrong length (%d)\n", hp->key_sbuf.sb_ptr);
+    tvherror(LS_IPTV, "AES-128 key wrong length (%d)\n", hp->key_sbuf.sb_ptr);
     return 0;
   }
   AES_set_decrypt_key(hp->key_sbuf.sb_data, 128, &hp->hls_aes128.key);

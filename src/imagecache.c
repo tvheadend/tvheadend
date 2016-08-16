@@ -240,7 +240,7 @@ imagecache_new_contents ( imagecache_image_t *img,
   }
   if (!r) {
     if (rename(tpath, path))
-      tvherror("imagecache", "unable to rename file '%s' to '%s'", tpath, path);
+      tvherror(LS_IMAGECACHE, "unable to rename file '%s' to '%s'", tpath, path);
   }
   imagecache_image_save(img);
   pthread_mutex_unlock(&global_lock);
@@ -276,10 +276,10 @@ imagecache_image_fetch ( imagecache_image_t *img )
   pthread_mutex_unlock(&global_lock);
 
   /* Build command */
-  tvhdebug("imagecache", "fetch %s", img->url);
+  tvhdebug(LS_IMAGECACHE, "fetch %s", img->url);
   memset(&url, 0, sizeof(url));
   if (urlparse(img->url, &url)) {
-    tvherror("imagecache", "Unable to parse url '%s'", img->url);
+    tvherror(LS_IMAGECACHE, "Unable to parse url '%s'", img->url);
     goto error_lock;
   }
 
@@ -329,9 +329,9 @@ error:
       img->failed = 1;
       imagecache_image_save(img);
     }
-    tvhwarn("imagecache", "failed to download %s", img->url);
+    tvhwarn(LS_IMAGECACHE, "failed to download %s", img->url);
   } else {
-    tvhdebug("imagecache", "downloaded %s", img->url);
+    tvhdebug(LS_IMAGECACHE, "downloaded %s", img->url);
   }
   tvh_cond_signal(&imagecache_cond, 1);
 
@@ -546,10 +546,10 @@ imagecache_clean( void )
   }
 #endif
 
-  tvhinfo("imagecache", "clean request");
+  tvhinfo(LS_IMAGECACHE, "clean request");
   /* remove unassociated data */
   if (hts_settings_buildpath(path, sizeof(path), "imagecache/data")) {
-    tvherror("imagecache", "clean - buildpath");
+    tvherror(LS_IMAGECACHE, "clean - buildpath");
     return;
   }
   if((n = fb_scandir(path, &namelist)) < 0)
@@ -562,7 +562,7 @@ imagecache_clean( void )
     img = RB_FIND(&imagecache_by_id, &skel, id_link, id_cmp);
     if (img)
       continue;
-    tvhinfo("imagecache", "clean: removing unassociated file '%s/%s'", path, name);
+    tvhinfo(LS_IMAGECACHE, "clean: removing unassociated file '%s/%s'", path, name);
     hts_settings_remove("imagecache/meta/%s", name);
     hts_settings_remove("imagecache/data/%s", name);
   }
@@ -581,7 +581,7 @@ imagecache_trigger( void )
 
   lock_assert(&global_lock);
 
-  tvhinfo("imagecache", "load triggered");
+  tvhinfo(LS_IMAGECACHE, "load triggered");
   RB_FOREACH(img, &imagecache_by_url, url_link) {
     if (img->state != IDLE) continue;
     imagecache_image_add(img);

@@ -434,14 +434,14 @@ service_print_filter(service_t *t)
 
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (LIST_EMPTY(&st->es_caids)) {
-      tvhinfo("service", "esfilter: \"%s\" %03d %05d %s %s",
+      tvhinfo(LS_SERVICE, "esfilter: \"%s\" %03d %05d %s %s",
               t->s_nicename, st->es_index, st->es_pid,
               streaming_component_type2txt(st->es_type),
               lang_code_get(st->es_lang));
     } else {
       LIST_FOREACH(ca, &st->es_caids, link)
         if (ca->use)
-          tvhinfo("service", "esfilter: \"%s\" %03d %05d %s %04x %06x",
+          tvhinfo(LS_SERVICE, "esfilter: \"%s\" %03d %05d %s %04x %06x",
                   t->s_nicename, st->es_index, st->es_pid,
                   streaming_component_type2txt(st->es_type),
                   ca->caid, ca->providerid);
@@ -542,7 +542,7 @@ filter:
           if (esf->esf_sindex && esf->esf_sindex != sindex)
             continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: \"%s\" %s %03d %03d %05d %04x %06x %s",
+            tvhinfo(LS_SERVICE, "esfilter: \"%s\" %s %03d %03d %05d %04x %06x %s",
               t->s_nicename, esfilter_class2txt(i), st->es_index,
               esf->esf_index, st->es_pid, esf->esf_caid, esf->esf_caprovider,
               esfilter_action2txt(esf->esf_action));
@@ -587,7 +587,7 @@ ca_ignore:
               service_build_filter_add(t, st, sta, &p);
             break;
           default:
-            tvhlog(LOG_DEBUG, "service", "Unknown esfilter action %d", esf->esf_action);
+            tvhdebug(LS_SERVICE, "Unknown esfilter action %d", esf->esf_action);
             break;
           }
         } else {
@@ -595,7 +595,7 @@ ca_ignore:
           if (esf->esf_sindex && esf->esf_sindex != sindex)
             continue;
           if (esf->esf_log)
-            tvhlog(LOG_INFO, "service", "esfilter: \"%s\" %s %03d %03d %05d %s %s %s",
+            tvhinfo(LS_SERVICE, "esfilter: \"%s\" %s %03d %03d %05d %s %s %s",
               t->s_nicename, esfilter_class2txt(i), st->es_index, esf->esf_index,
               st->es_pid, streaming_component_type2txt(st->es_type),
               lang_code_get(st->es_lang), esfilter_action2txt(esf->esf_action));
@@ -630,7 +630,7 @@ ignore:
               service_build_filter_add(t, st, sta, &p);
             break;
           default:
-            tvhlog(LOG_DEBUG, "service", "Unknown esfilter action %d", esf->esf_action);
+            tvhdebug(LS_SERVICE, "Unknown esfilter action %d", esf->esf_action);
             break;
           }
         }
@@ -681,7 +681,7 @@ service_start(service_t *t, int instance, int weight, int flags,
 
   lock_assert(&global_lock);
 
-  tvhtrace("service", "starting %s", t->s_nicename);
+  tvhtrace(LS_SERVICE, "starting %s", t->s_nicename);
 
   assert(t->s_status != SERVICE_RUNNING);
   t->s_streaming_status = 0;
@@ -808,7 +808,7 @@ service_find_instance
   TAILQ_FOREACH(si, sil, si_link) {
     const char *name = ch ? channel_get_name(ch) : NULL;
     if (!name && s) name = s->s_nicename;
-    tvhdebug("service", "%d: %s si %p %s weight %d prio %d error %d",
+    tvhdebug(LS_SERVICE, "%d: %s si %p %s weight %d prio %d error %d",
              si->si_instance, name, si, si->si_source, si->si_weight, si->si_prio,
              si->si_error);
   }
@@ -816,7 +816,7 @@ service_find_instance
   /* Already running? */
   TAILQ_FOREACH(si, sil, si_link)
     if(si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0) {
-      tvhtrace("service", "return already running %p", si);
+      tvhtrace(LS_SERVICE, "return already running %p", si);
       return si;
     }
 
@@ -857,9 +857,9 @@ service_find_instance
   }
 
   /* Start */
-  tvhtrace("service", "will start new instance %d", si->si_instance);
+  tvhtrace(LS_SERVICE, "will start new instance %d", si->si_instance);
   if (service_start(si->si_s, si->si_instance, weight, flags, timeout, postpone)) {
-    tvhtrace("service", "tuning failed");
+    tvhtrace(LS_SERVICE, "tuning failed");
     si->si_error = SM_CODE_TUNING_FAILED;
     if (*error < SM_CODE_TUNING_FAILED)
       *error = SM_CODE_TUNING_FAILED;
@@ -1013,7 +1013,7 @@ service_create0
 {
   if (idnode_insert(&t->s_id, uuid, class, 0)) {
     if (uuid)
-      tvherror("service", "invalid uuid '%s'", uuid);
+      tvherror(LS_SERVICE, "invalid uuid '%s'", uuid);
     free(t);
     return NULL;
   }
@@ -1375,7 +1375,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 
   t->s_streaming_status = set;
 
-  tvhlog(LOG_DEBUG, "service", "%s: Status changed to %s%s%s%s%s%s%s%s%s",
+  tvhdebug(LS_SERVICE, "%s: Status changed to %s%s%s%s%s%s%s%s%s",
 	 service_nicename(t),
 	 set & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
 	 set & TSS_INPUT_SERVICE  ? "[Input on service] " : "",

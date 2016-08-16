@@ -140,21 +140,21 @@ dbus_create_session(const char *name)
 
   conn = dbus_bus_get_private(dbus_session ? DBUS_BUS_SESSION : DBUS_BUS_SYSTEM, &err);
   if (dbus_error_is_set(&err)) {
-    tvherror("dbus", "Connection error: %s", err.message);
+    tvherror(LS_DBUS, "Connection error: %s", err.message);
     dbus_error_free(&err);
     return NULL;
   }
 
   ret = dbus_bus_request_name(conn, name, DBUS_NAME_FLAG_REPLACE_EXISTING, &err);
   if (dbus_error_is_set(&err)) {
-    tvherror("dbus", "Name error: %s", err.message);
+    tvherror(LS_DBUS, "Name error: %s", err.message);
     dbus_error_free(&err);
     dbus_connection_close(conn);
     dbus_connection_unref(conn);
     return NULL;
   }
   if (DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER != ret) {
-    tvherror("dbus", "Not primary owner");
+    tvherror(LS_DBUS, "Not primary owner");
     dbus_connection_close(conn);
     dbus_connection_unref(conn);
     return NULL;
@@ -175,7 +175,7 @@ dbus_send_signal(DBusConnection *conn, const char *obj_name,
 
   msg = dbus_message_new_signal(obj_name, if_name, sig_name);
   if (msg == NULL) {
-    tvherror("dbus", "Unable to create signal %s %s %s",
+    tvherror(LS_DBUS, "Unable to create signal %s %s %s",
                      obj_name, if_name, sig_name);
     dbus_connection_unref(conn);
     return -1;
@@ -183,7 +183,7 @@ dbus_send_signal(DBusConnection *conn, const char *obj_name,
   dbus_message_iter_init_append(msg, &args);
   dbus_from_htsmsg(value, &args);
   if (!dbus_connection_send(conn, msg, NULL)) {
-    tvherror("dbus", "Unable to send signal %s %s %s",
+    tvherror(LS_DBUS, "Unable to send signal %s %s %s",
                      obj_name, if_name, sig_name);
     dbus_message_unref(msg);
     dbus_connection_unref(conn);
@@ -388,7 +388,7 @@ dbus_server_thread(void *aux)
     n = tvhpoll_wait(poll, &ev, 1, -1);
     if (n < 0) {
       if (atomic_get(&dbus_running) && !ERRNO_AGAIN(errno))
-        tvherror("dbus", "tvhpoll_wait() error");
+        tvherror(LS_DBUS, "tvhpoll_wait() error");
     } else if (n == 0) {
       continue;
     }

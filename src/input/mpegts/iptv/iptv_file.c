@@ -99,7 +99,7 @@ iptv_file_start ( iptv_mux_t *im, const char *raw, const url_t *url )
   int fd = tvh_open(raw + 7, O_RDONLY | O_NONBLOCK, 0);
 
   if (fd < 0) {
-    tvherror("iptv", "unable to open file '%s'", raw + 7);
+    tvherror(LS_IPTV, "unable to open file '%s'", raw + 7);
     return -1;
   }
 

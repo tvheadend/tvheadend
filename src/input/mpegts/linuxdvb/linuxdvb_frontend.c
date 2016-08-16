@@ -426,7 +426,7 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
 
   /* Ensure disabled */
   if (!mi->mi_enabled) {
-    tvhtrace("linuxdvb", "%s - disabling tuner", buf);
+    tvhtrace(LS_LINUXDVB, "%s - disabling tuner", buf);
     if (lfe->lfe_fe_fd > 0) {
       close(lfe->lfe_fe_fd);
       lfe->lfe_fe_fd = -1;
@@ -438,7 +438,7 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
   /* Ensure FE opened (if not powersave) */
   } else if (!lfe->lfe_powersave && lfe->lfe_fe_fd <= 0 && lfe->lfe_fe_path) {
     lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace("linuxdvb", "%s - opening FE %s (%d)",
+    tvhtrace(LS_LINUXDVB, "%s - opening FE %s (%d)",
              buf, lfe->lfe_fe_path, lfe->lfe_fe_fd);
   }
 }
@@ -531,15 +531,15 @@ linuxdvb_frontend_stop_mux
 
   mi->mi_display_name(mi, buf1, sizeof(buf1));
   mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug("linuxdvb", "%s - stopping %s", buf1, buf2);
+  tvhdebug(LS_LINUXDVB, "%s - stopping %s", buf1, buf2);
 
   /* Stop thread */
   if (lfe->lfe_dvr_pipe.wr > 0) {
     tvh_write(lfe->lfe_dvr_pipe.wr, "", 1);
-    tvhtrace("linuxdvb", "%s - waiting for dvr thread", buf1);
+    tvhtrace(LS_LINUXDVB, "%s - waiting for dvr thread", buf1);
     pthread_join(lfe->lfe_dvr_thread, NULL);
     tvh_pipe_close(&lfe->lfe_dvr_pipe);
-    tvhdebug("linuxdvb", "%s - stopped dvr thread", buf1);
+    tvhdebug(LS_LINUXDVB, "%s - stopped dvr thread", buf1);
   }
 
   /* Not locked */
@@ -658,7 +658,7 @@ linuxdvb_frontend_network_list ( mpegts_input_t *mi )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
 
-  tvhtrace("linuxdvb", "%s: network list for %s",
+  tvhtrace(LS_LINUXDVB, "%s: network list for %s",
            mi->mi_name ?: "", dvb_type2str(lfe->lfe_type));
 
   return dvb_network_list_by_fe_type(lfe->lfe_type);
@@ -703,7 +703,7 @@ linuxdvb_frontend_monitor ( void *aux )
 #endif
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf, sizeof(buf));
-  tvhtrace("linuxdvb", "%s - checking FE status%s", buf, lfe->lfe_ready ? " (ready)" : "");
+  tvhtrace(LS_LINUXDVB, "%s - checking FE status%s", buf, lfe->lfe_ready ? " (ready)" : "");
   
   /* Disabled */
   if (!lfe->mi_enabled && mmi)
@@ -711,7 +711,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Close FE */
   if (lfe->lfe_fe_fd > 0 && !lfe->lfe_refcount && lfe->lfe_powersave) {
-    tvhtrace("linuxdvb", "%s - closing frontend", buf);
+    tvhtrace(LS_LINUXDVB, "%s - closing frontend", buf);
     close(lfe->lfe_fe_fd);
     lfe->lfe_fe_fd = -1;
     if (lfe->lfe_satconf)
@@ -721,7 +721,7 @@ linuxdvb_frontend_monitor ( void *aux )
   /* Check accessibility */
   if (lfe->lfe_fe_fd <= 0) {
     if (lfe->lfe_fe_path && access(lfe->lfe_fe_path, R_OK | W_OK)) {
-      tvherror("linuxdvb", "%s - device is not accessible", buf);
+      tvherror(LS_LINUXDVB, "%s - device is not accessible", buf);
       // TODO: disable device
       return;
     }
@@ -735,7 +735,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Get current status */
   if (ioctl(lfe->lfe_fe_fd, FE_READ_STATUS, &fe_status) == -1) {
-    tvhwarn("linuxdvb", "%s - FE_READ_STATUS error %s", buf, strerror(errno));
+    tvhwarn(LS_LINUXDVB, "%s - FE_READ_STATUS error %s", buf, strerror(errno));
     /* TODO: check error value */
     return;
 
@@ -750,7 +750,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
   /* Set default period */
   if (fe_status != lfe->lfe_status) {
-    tvhdebug("linuxdvb", "%s - status %7s (%s%s%s%s%s%s)", buf,
+    tvhdebug(LS_LINUXDVB, "%s - status %7s (%s%s%s%s%s%s)", buf,
              signal2str(status),
              (fe_status & FE_HAS_SIGNAL) ?  "SIGNAL"  : "",
              (fe_status & FE_HAS_CARRIER) ? " | CARRIER" : "",
@@ -759,7 +759,7 @@ linuxdvb_frontend_monitor ( void *aux )
              (fe_status & FE_HAS_LOCK) ?    " | LOCK"  : "",
              (fe_status & FE_TIMEDOUT) ?    "TIMEOUT" : "");
   } else {
-    tvhtrace("linuxdvb", "%s - status %d (%04X)", buf, status, fe_status);
+    tvhtrace(LS_LINUXDVB, "%s - status %d (%04X)", buf, status, fe_status);
   }
   retune = NOSIGNAL(fe_status) && NOSIGNAL(lfe->lfe_status) && !NOSIGNAL(lfe->lfe_status2);
   lfe->lfe_status2 = lfe->lfe_status;
@@ -769,7 +769,7 @@ linuxdvb_frontend_monitor ( void *aux )
   if (retune || lfe->lfe_nodata) {
     lfe->lfe_nodata = 0;
     if (lfe->lfe_locked && lfe->lfe_freq > 0) {
-      tvhlog(LOG_WARNING, "linuxdvb", "%s - %s", buf, retune ? "retune" : "retune nodata");
+      tvhwarn(LS_LINUXDVB, "%s - %s", buf, retune ? "retune" : "retune nodata");
       linuxdvb_frontend_tune0(lfe, mmi, lfe->lfe_freq);
       mtimer_arm_rel(&lfe->lfe_monitor_timer, linuxdvb_frontend_monitor, lfe, ms2mono(50));
       lfe->lfe_locked = 1;
@@ -784,7 +784,7 @@ linuxdvb_frontend_monitor ( void *aux )
 
     /* Locked */
     if (status == SIGNAL_GOOD) {
-      tvhdebug("linuxdvb", "%s - locked", buf);
+      tvhdebug(LS_LINUXDVB, "%s - locked", buf);
       lfe->lfe_locked = 1;
   
       /* Start input */
@@ -863,8 +863,8 @@ linuxdvb_frontend_monitor ( void *aux )
         ioctl_bad(lfe, 1);
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unhandled signal scale: %d",
-                 fe_properties[0].u.st.stat[0].scale);
+          tvhwarn(LS_LINUXDVB, "Unhandled signal scale: %d",
+                  fe_properties[0].u.st.stat[0].scale);
       }
     }
     if(!gotprop && ioctl_check(lfe, 2)) {
@@ -877,7 +877,7 @@ linuxdvb_frontend_monitor ( void *aux )
         ioctl_bad(lfe, 2);
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
+          tvhwarn(LS_LINUXDVB, "Unable to provide signal strength value.");
       }
     }
 
@@ -891,8 +891,8 @@ linuxdvb_frontend_monitor ( void *aux )
       else {
         ioctl_bad(lfe, 3);
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unhandled ERROR_BIT_COUNT scale: %d",
-                 fe_properties[1].u.st.stat[0].scale);
+          tvhwarn(LS_LINUXDVB, "Unhandled ERROR_BIT_COUNT scale: %d",
+                  fe_properties[1].u.st.stat[0].scale);
       }
     }
     /* TOTAL_BIT_COUNT */
@@ -906,8 +906,8 @@ linuxdvb_frontend_monitor ( void *aux )
         ioctl_bad(lfe, 4);
         mmi->tii_stats.ec_bit = 0; /* both values or none */
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BIT_COUNT scale: %d",
-                 fe_properties[2].u.st.stat[0].scale);
+          tvhwarn(LS_LINUXDVB, "Unhandled TOTAL_BIT_COUNT scale: %d",
+                  fe_properties[2].u.st.stat[0].scale);
       }
     }
     if(!gotprop && ioctl_check(lfe, 5)) {
@@ -917,7 +917,7 @@ linuxdvb_frontend_monitor ( void *aux )
       else {
         ioctl_bad(lfe, 5);
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
+          tvhwarn(LS_LINUXDVB, "Unable to provide BER value.");
       }
     }
     
@@ -938,8 +938,8 @@ linuxdvb_frontend_monitor ( void *aux )
         ioctl_bad(lfe, 6);
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unhandled SNR scale: %d",
-                 fe_properties[3].u.st.stat[0].scale);
+          tvhwarn(LS_LINUXDVB, "Unhandled SNR scale: %d",
+                  fe_properties[3].u.st.stat[0].scale);
       }
     }
     if(!gotprop && ioctl_check(lfe, 7)) {
@@ -952,7 +952,7 @@ linuxdvb_frontend_monitor ( void *aux )
         ioctl_bad(lfe, 7);
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
+          tvhwarn(LS_LINUXDVB, "Unable to provide SNR value.");
       }
     }
 
@@ -967,8 +967,8 @@ linuxdvb_frontend_monitor ( void *aux )
       else {
         ioctl_bad(lfe, 8);
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unhandled ERROR_BLOCK_COUNT scale: %d",
-                 fe_properties[4].u.st.stat[0].scale);
+          tvhwarn(LS_LINUXDVB, "Unhandled ERROR_BLOCK_COUNT scale: %d",
+                  fe_properties[4].u.st.stat[0].scale);
       }
     }
 
@@ -985,7 +985,7 @@ linuxdvb_frontend_monitor ( void *aux )
         mmi->tii_stats.ec_block = 0;
         atomic_set(&mmi->tii_stats.unc, 0);
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unhandled TOTAL_BLOCK_COUNT scale: %d",
+          tvhwarn(LS_LINUXDVB, "Unhandled TOTAL_BLOCK_COUNT scale: %d",
                  fe_properties[5].u.st.stat[0].scale);
       }
     }
@@ -998,7 +998,7 @@ linuxdvb_frontend_monitor ( void *aux )
       else {
         ioctl_bad(lfe, 10);
         if (logit)
-          tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide UNC value.");
+          tvhwarn(LS_LINUXDVB, "Unable to provide UNC value.");
       }
     }
   /* Older API */
@@ -1014,14 +1014,14 @@ linuxdvb_frontend_monitor ( void *aux )
       ioctl_bad(lfe, 1);
       mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
       if (logit)
-        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide signal strength value.");
+        tvhwarn(LS_LINUXDVB, "Unable to provide signal strength value.");
     }
     if (ioctl_check(lfe, 2) && !ioctl(lfe->lfe_fe_fd, FE_READ_BER, &u32))
       mmi->tii_stats.ber = u32;
     else {
       ioctl_bad(lfe, 2);
       if (logit)
-        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide BER value.");
+        tvhwarn(LS_LINUXDVB, "Unable to provide BER value.");
     }
     if (ioctl_check(lfe, 3) && !ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
       mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
@@ -1031,14 +1031,14 @@ linuxdvb_frontend_monitor ( void *aux )
       ioctl_bad(lfe, 3);
       mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
       if (logit)
-        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide SNR value.");
+        tvhwarn(LS_LINUXDVB, "Unable to provide SNR value.");
     }
     if (ioctl_check(lfe, 4) && !ioctl(lfe->lfe_fe_fd, FE_READ_UNCORRECTED_BLOCKS, &u32))
       atomic_set(&mmi->tii_stats.unc, u32);
     else {
       ioctl_bad(lfe, 4);
       if (logit)
-        tvhlog(LOG_WARNING, "linuxdvb", "Unable to provide UNC value.");
+        tvhwarn(LS_LINUXDVB, "Unable to provide UNC value.");
     }
   }
 
@@ -1081,7 +1081,7 @@ linuxdvb_frontend_open_pid0
 
   for ( ; pids_size > 0 && pids->fd >= 0; pids_size--, pids++);
   if (pids_size == 0) {
-    tvherror("linuxdvb", "%s - maximum PID count reached, pid %d ignored",
+    tvherror(LS_LINUXDVB, "%s - maximum PID count reached, pid %d ignored",
              name, pid);
     return;
   }
@@ -1089,13 +1089,13 @@ linuxdvb_frontend_open_pid0
   /* Open DMX */
   fd = tvh_open(lfe->lfe_dmx_path, O_RDWR, 0);
   if(fd == -1) {
-    tvherror("linuxdvb", "%s - failed to open dmx for pid %d [e=%s]",
+    tvherror(LS_LINUXDVB, "%s - failed to open dmx for pid %d [e=%s]",
              name, pid, strerror(errno));
     return;
   }
 
   /* Install filter */
-  tvhtrace("linuxdvb", "%s - open PID %04X (%d) fd %d", name, pid, pid, fd);
+  tvhtrace(LS_LINUXDVB, "%s - open PID %04X (%d) fd %d", name, pid, pid, fd);
   memset(&dmx_param, 0, sizeof(dmx_param));
   dmx_param.pid      = pid;
   dmx_param.input    = DMX_IN_FRONTEND;
@@ -1104,7 +1104,7 @@ linuxdvb_frontend_open_pid0
   dmx_param.flags    = DMX_IMMEDIATE_START;
 
   if(ioctl(fd, DMX_SET_PES_FILTER, &dmx_param)) {
-    tvherror("linuxdvb", "%s - failed to config dmx for pid %d [e=%s]",
+    tvherror(LS_LINUXDVB, "%s - failed to config dmx for pid %d [e=%s]",
              name, pid, strerror(errno));
     close(fd);
     return;
@@ -1124,7 +1124,7 @@ linuxdvb_frontend_close_pid0
           pids_size--, pids++);
   if (pids_size == 0)
     return;
-  tvhtrace("linuxdvb", "%s - close PID %04X (%d) fd %d", name, pid, pid, pids->fd);
+  tvhtrace(LS_LINUXDVB, "%s - close PID %04X (%d) fd %d", name, pid, pid, pids->fd);
   close(pids->fd);
   pids->fd = -1;
   pids->pid = -1;
@@ -1207,7 +1207,7 @@ linuxdvb_frontend_input_thread ( void *aux )
   /* Open DVR */
   dvr = tvh_open(lfe->lfe_dvr_path, O_RDONLY | O_NONBLOCK, 0);
   if (dvr < 0) {
-    tvherror("linuxdvb", "%s - failed to open %s", name, lfe->lfe_dvr_path);
+    tvherror(LS_LINUXDVB, "%s - failed to open %s", name, lfe->lfe_dvr_path);
     return NULL;
   }
 
@@ -1231,7 +1231,7 @@ linuxdvb_frontend_input_thread ( void *aux )
     nfds = tvhpoll_wait(efd, ev, 1, 150);
     if (nfds == 0) { /* timeout */
       if (nodata == 0) {
-        tvhlog(LOG_WARNING, "linuxdvb", "%s - poll TIMEOUT", name);
+        tvhwarn(LS_LINUXDVB, "%s - poll TIMEOUT", name);
         nodata = 50;
         lfe->lfe_nodata = 1;
       } else {
@@ -1258,11 +1258,11 @@ linuxdvb_frontend_input_thread ( void *aux )
       if (ERRNO_AGAIN(errno))
         continue;
       if (errno == EOVERFLOW) {
-        tvhlog(LOG_WARNING, "linuxdvb", "%s - read() EOVERFLOW", name);
+        tvhwarn(LS_LINUXDVB, "%s - read() EOVERFLOW", name);
         continue;
       }
-      tvhlog(LOG_ERR, "linuxdvb", "%s - read() error %d (%s)",
-             name, errno, strerror(errno));
+      tvherror(LS_LINUXDVB, "%s - read() error %d (%s)",
+               name, errno, strerror(errno));
       break;
     }
 
@@ -1310,7 +1310,7 @@ linuxdvb2tvh ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
       return tbl->t;
     tbl++;
   }
-  tvhtrace("linuxdvb", "%s - linuxdvb2tvh failed %d", prefix, key);
+  tvhtrace(LS_LINUXDVB, "%s - linuxdvb2tvh failed %d", prefix, key);
   return defval;
 }
 #endif
@@ -1323,7 +1323,7 @@ tvh2linuxdvb ( const char *prefix, linuxdvb_tbl_t *tbl, int key, int defval )
       return tbl->l;
     tbl++;
   }
-  tvhtrace("linuxdvb", "%s - tvh2linuxdvb failed %d", prefix, key);
+  tvhtrace(LS_LINUXDVB, "%s - tvh2linuxdvb failed %d", prefix, key);
   return defval;
 }
 
@@ -1380,11 +1380,11 @@ linuxdvb_frontend_clear
 
   /* Open FE */
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
-  tvhtrace("linuxdvb", "%s - frontend clear", buf1);
+  tvhtrace(LS_LINUXDVB, "%s - frontend clear", buf1);
 
   if (lfe->lfe_fe_fd <= 0) {
     lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace("linuxdvb", "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
+    tvhtrace(LS_LINUXDVB, "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
     if (lfe->lfe_fe_fd <= 0) {
       return SM_CODE_TUNING_FAILED;
     }
@@ -1402,7 +1402,7 @@ linuxdvb_frontend_clear
     .props = clear_p
   };
   if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &clear_cmdseq)) != 0) {
-    tvherror("linuxdvb", "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
+    tvherror(LS_LINUXDVB, "%s - DTV_CLEAR failed [e=%s]", buf1, strerror(errno));
     return -1;
   }
 
@@ -1418,7 +1418,7 @@ linuxdvb_frontend_clear
     delsys_p.cmd = DTV_DELIVERY_SYSTEM;
     delsys_p.u.data = TR(delsys, delsys_tbl, SYS_UNDEFINED);
     if ((ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &delsys_cmdseq)) != 0) {
-      tvherror("linuxdvb", "%s - DTV_DELIVERY_SYSTEM failed [e=%s]", buf1, strerror(errno));
+      tvherror(LS_LINUXDVB, "%s - DTV_DELIVERY_SYSTEM failed [e=%s]", buf1, strerror(errno));
       return -1;
     }
   }
@@ -1573,7 +1573,7 @@ linuxdvb_frontend_tune0
   if (tvhtrace_enabled()) {
     char buf2[256];
     dvb_mux_conf_str(&lm->lm_tuning, buf2, sizeof(buf2));
-    tvhtrace("linuxdvb", "tuner %s tunning to %s (freq %i)", buf1, buf2, freq);
+    tvhtrace(LS_LINUXDVB, "tuner %s tunning to %s (freq %i)", buf1, buf2, freq);
   }
   memset(&p, 0, sizeof(p));
   p.frequency                = dmc->dmc_fe_freq;
@@ -1611,7 +1611,7 @@ linuxdvb_frontend_tune0
     break;
 #endif
   default:
-    tvherror("linuxdvb", "%s - unknown FE type %d", buf1, dmc->dmc_fe_type);
+    tvherror(LS_LINUXDVB, "%s - unknown FE type %d", buf1, dmc->dmc_fe_type);
     return SM_CODE_TUNING_FAILED;
   }
 
@@ -1619,7 +1619,7 @@ linuxdvb_frontend_tune0
     p.frequency = lfe->lfe_freq = freq;
 
   if (dmc->dmc_fe_type != lfe->lfe_type) {
-    tvherror("linuxdvb", "%s - failed to tune [type does not match %i != %i]", buf1, dmc->dmc_fe_type, lfe->lfe_type);
+    tvherror(LS_LINUXDVB, "%s - failed to tune [type does not match %i != %i]", buf1, dmc->dmc_fe_type, lfe->lfe_type);
     return SM_CODE_TUNING_FAILED;
   }
 
@@ -1758,7 +1758,7 @@ linuxdvb_frontend_tune0
   if (tvhtrace_enabled()) {
     int i;
     for (i = 0; i < cmdseq.num; i++)
-      tvhtrace("linuxdvb", "S2CMD %02u => %u", cmds[i].cmd, cmds[i].u.data);
+      tvhtrace(LS_LINUXDVB, "S2CMD %02u => %u", cmds[i].cmd, cmds[i].u.data);
   }
   r = ioctl(lfe->lfe_fe_fd, FE_SET_PROPERTY, &cmdseq);
 
@@ -1769,7 +1769,7 @@ linuxdvb_frontend_tune0
 
   /* Failed */
   if (r != 0) {
-    tvherror("linuxdvb", "%s - failed to tune [e=%s]", buf1, strerror(errno));
+    tvherror(LS_LINUXDVB, "%s - failed to tune [e=%s]", buf1, strerror(errno));
     if (errno == EINVAL)
       mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
@@ -1787,10 +1787,10 @@ linuxdvb_frontend_tune1
 
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
   mpegts_mux_nice_name(mmi->mmi_mux, buf2, sizeof(buf2));
-  tvhdebug("linuxdvb", "%s - starting %s", buf1, buf2);
+  tvhdebug(LS_LINUXDVB, "%s - starting %s", buf1, buf2);
 
   /* Tune */
-  tvhtrace("linuxdvb", "%s - tuning", buf1);
+  tvhtrace(LS_LINUXDVB, "%s - tuning", buf1);
   rep = lfe->lfe_tune_repeats > 0 ? lfe->lfe_tune_repeats : 0;
   for (i = 0; i <= rep; i++) {
     if (i > 0)
@@ -1942,7 +1942,7 @@ linuxdvb_frontend_create
   else if (type == DVB_TYPE_DAB)
     idc = &linuxdvb_frontend_dab_class;
   else {
-    tvherror("linuxdvb", "unknown FE type %d", type);
+    tvherror(LS_LINUXDVB, "unknown FE type %d", type);
     return NULL;
   }
 

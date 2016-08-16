@@ -40,7 +40,7 @@ iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
 
   mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
 
-  conn = udp_bind("iptv", name, url->host, url->port,
+  conn = udp_bind(LS_IPTV, name, url->host, url->port,
                   im->mm_iptv_interface, IPTV_BUF_SIZE, 4*1024);
   if (conn == UDP_FATAL_ERROR)
     return SM_CODE_TUNING_FAILED;
@@ -99,7 +99,7 @@ iptv_udp_read ( iptv_mux_t *im )
 
   if (im->mm_iptv_rtp_seq < 0xffff && im->mm_iptv_rtp_seq > 0x3ff) {
     mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
-    tvherror("iptv", "receving non-raw UDP data for %s!", name);
+    tvherror(LS_IPTV, "receving non-raw UDP data for %s!", name);
     im->mm_iptv_rtp_seq = 0x10000; /* no further logs! */
   }
 
@@ -163,7 +163,7 @@ iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
       seq = nseq;
     else if (((seq + 1) & 0xffff) != nseq) {
       unc += (len / 188) * (uint32_t)((uint16_t)nseq-(uint16_t)(seq+1));
-      tvhtrace("iptv", "RTP discontinuity (%i != %i)", seq + 1, nseq);
+      tvhtrace(LS_IPTV, "RTP discontinuity (%i != %i)", seq + 1, nseq);
     }
     seq = nseq;
 

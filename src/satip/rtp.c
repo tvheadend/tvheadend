@@ -113,7 +113,7 @@ satip_rtp_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       return;
 
     if (sizeof(out) < ol + l + 5 + 4 /* crc */) {
-      tvherror("pass", "PMT entry too long (%i)", l);
+      tvherror(LS_PASS, "PMT entry too long (%i)", l);
       return;
     }
 
@@ -360,7 +360,7 @@ satip_rtp_thread(void *aux)
   int tcp = rtp->port == RTSP_TCP_DATA;
 
   tcp_get_str_from_ip((struct sockaddr *)&rtp->peer, peername, sizeof(peername));
-  tvhdebug("satips", "RTP streaming to %s:%d open", peername,
+  tvhdebug(LS_SATIPS, "RTP streaming to %s:%d open", peername,
            tcp ? IP_PORT(rtp->peer) : rtp->port);
 
   pthread_mutex_lock(&sq->sq_mutex);
@@ -420,7 +420,7 @@ satip_rtp_thread(void *aux)
   }
   pthread_mutex_unlock(&sq->sq_mutex);
 
-  tvhdebug("satips", "RTP streaming to %s:%d closed (%s request)%s",
+  tvhdebug(LS_SATIPS, "RTP streaming to %s:%d closed (%s request)%s",
            peername, rtp->port, alive ? "remote" : "streaming",
            fatal ? " (fatal)" : "");
 
@@ -493,7 +493,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
     rtp->sig.snr = 28000;
   }
 
-  tvhtrace("satips", "rtp queue %p", rtp);
+  tvhtrace(LS_SATIPS, "rtp queue %p", rtp);
 
   pthread_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
@@ -535,7 +535,7 @@ void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids)
           break;
       if (!tbl) {
         tbl = calloc(1, sizeof(*tbl));
-        dvb_table_parse_init(&tbl->tbl, "satip-pmt", pid, rtp);
+        dvb_table_parse_init(&tbl->tbl, "satip-pmt", LS_TBL_SATIP, pid, rtp);
         tbl->pid = pid;
         TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
       }
@@ -560,7 +560,7 @@ void satip_rtp_close(void *id)
 
   pthread_mutex_lock(&satip_rtp_lock);
   rtp = satip_rtp_find(id);
-  tvhtrace("satips", "rtp close %p", rtp);
+  tvhtrace(LS_SATIPS, "rtp close %p", rtp);
   if (rtp) {
     TAILQ_REMOVE(&satip_rtp_sessions, rtp, link);
     sq = rtp->sq;
@@ -866,7 +866,7 @@ satip_rtcp_thread(void *aux)
   char addrbuf[50];
   int r, len, err;
 
-  tvhtrace("satips", "starting rtcp thread");
+  tvhtrace(LS_SATIPS, "starting rtcp thread");
   while (atomic_get(&satip_rtcp_run)) {
     us = 150000;
     do {
@@ -884,7 +884,7 @@ satip_rtcp_thread(void *aux)
       if (tvhtrace_enabled()) {
         msg[len] = '\0';
         tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
-        tvhtrace("satips", "RTCP send to %s:%d : %s", addrbuf, ntohs(IP_PORT(rtp->peer2)), msg + 16);
+        tvhtrace(LS_SATIPS, "RTCP send to %s:%d : %s", addrbuf, ntohs(IP_PORT(rtp->peer2)), msg + 16);
       }
       if (rtp->port == RTSP_TCP_DATA) {
         satip_rtp_tcp_data(rtp, 1, msg, len);
@@ -898,7 +898,7 @@ satip_rtcp_thread(void *aux)
       if (r < 0) {
         err = errno;
         tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
-        tvhwarn("satips", "RTCP send to error %s:%d : %s",
+        tvhwarn(LS_SATIPS, "RTCP send to error %s:%d : %s",
                 addrbuf, IP_PORT(rtp->peer2), strerror(err));
       }
     }

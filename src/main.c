@@ -202,7 +202,7 @@ handle_sigill(int x)
   /* Note that on some platforms, the SSL library tries */
   /* to determine the CPU capabilities with possible */
   /* unknown instructions */
-  tvhwarn("CPU", "Illegal instruction handler (might be OK)");
+  tvhwarn(LS_CPU, "Illegal instruction handler (might be OK)");
   signal(SIGILL, handle_sigill);
 }
 
@@ -620,7 +620,7 @@ mtimer_thread(void *aux)
 #if ENABLE_GTIMER_CHECK
       mtm = getmonoclock() - mtm;
       if (mtm > 10000)
-        tvhtrace("mtimer", "%s:%s duration %"PRId64"us", id, fcn, mtm);
+        tvhtrace(LS_MTIMER, "%s:%s duration %"PRId64"us", id, fcn, mtm);
 #endif
     }
 
@@ -664,9 +664,9 @@ mainloop(void)
     //       the top of the list with a 0 offset we could loop indefinitely
     
 #if 0
-    tvhdebug("gtimer", "now %"PRItime_t, ts.tv_sec);
+    tvhdebug(LS_GTIMER, "now %"PRItime_t, ts.tv_sec);
     LIST_FOREACH(gti, &gtimers, gti_link)
-      tvhdebug("gtimer", "  gti %p expire %"PRItimet, gti, gti->gti_expire.tv_sec);
+      tvhdebug(LS_GTIMER, "  gti %p expire %"PRItimet, gti, gti->gti_expire.tv_sec);
 #endif
 
     while((gti = LIST_FIRST(&gtimers)) != NULL) {
@@ -691,7 +691,7 @@ mainloop(void)
 #if ENABLE_GTIMER_CHECK
       mtm = getmonoclock() - mtm;
       if (mtm > 10000)
-        tvhtrace("gtimer", "%s:%s duration %"PRId64"us", id, fcn, mtm);
+        tvhtrace(LS_GTIMER, "%s:%s duration %"PRId64"us", id, fcn, mtm);
 #endif
     }
 
@@ -1014,7 +1014,7 @@ main(int argc, char **argv)
   tvhlog_init(log_level, log_options, opt_logpath);
   tvhlog_set_debug(log_debug);
   tvhlog_set_trace(log_trace);
-  tvhinfo("main", "Log started");
+  tvhinfo(LS_MAIN, "Log started");
  
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
   signal(SIGILL, handle_sigill);   // see handler..
@@ -1042,7 +1042,7 @@ main(int argc, char **argv)
           for (i = 0; i < gnum; i++)
             snprintf(buf + strlen(buf), sizeof(buf) - 1 - strlen(buf),
                      ",%d", glist[i]);
-          tvhlog(LOG_ALERT, "START",
+          tvhlog(LOG_ALERT, LS_START,
                  "setgroups(%s) failed, do you have permission?", buf+1);
           return 1;
         }
@@ -1067,12 +1067,12 @@ main(int argc, char **argv)
     pidfile = tvh_fopen(opt_pidpath, "w+");
 
   if (gid != -1 && (getgid() != gid) && setgid(gid)) {
-    tvhlog(LOG_ALERT, "START",
+    tvhlog(LOG_ALERT, LS_START,
            "setgid(%d) failed, do you have permission?", gid);
     return 1;
   }
   if (uid != -1 && (getuid() != uid) && setuid(uid)) {
-    tvhlog(LOG_ALERT, "START",
+    tvhlog(LOG_ALERT, LS_START,
            "setuid(%d) failed, do you have permission?", uid);
     return 1;
   }
@@ -1091,10 +1091,10 @@ main(int argc, char **argv)
     if (opt_dump) {
 #ifdef PLATFORM_LINUX
       if (chdir("/tmp"))
-        tvhwarn("START", "failed to change cwd to /tmp");
+        tvhwarn(LS_START, "failed to change cwd to /tmp");
       prctl(PR_SET_DUMPABLE, 1);
 #else
-      tvhwarn("START", "Coredumps not implemented on your platform");
+      tvhwarn(LS_START, "Coredumps not implemented on your platform");
 #endif
     }
 
@@ -1249,7 +1249,7 @@ main(int argc, char **argv)
 
   pthread_sigmask(SIG_UNBLOCK, &set, NULL);
 
-  tvhlog(LOG_NOTICE, "START", "HTS Tvheadend version %s started, "
+  tvhlog(LOG_NOTICE, LS_START, "HTS Tvheadend version %s started, "
          "running as PID:%d UID:%d GID:%d, CWD:%s CNF:%s",
          tvheadend_version,
          getpid(), getuid(), getgid(), getcwd(buf, sizeof(buf)),
@@ -1266,73 +1266,73 @@ main(int argc, char **argv)
   pthread_join(mtimer_tid, NULL);
 
 #if ENABLE_DBUS_1
-  tvhftrace("main", dbus_server_done);
+  tvhftrace(LS_MAIN, dbus_server_done);
 #endif
 #if ENABLE_UPNP
-  tvhftrace("main", upnp_server_done);
+  tvhftrace(LS_MAIN, upnp_server_done);
 #endif
-  tvhftrace("main", satip_server_done);
-  tvhftrace("main", htsp_done);
-  tvhftrace("main", http_server_done);
-  tvhftrace("main", webui_done);
-  tvhftrace("main", fsmonitor_done);
-  tvhftrace("main", http_client_done);
-  tvhftrace("main", tcp_server_done);
+  tvhftrace(LS_MAIN, satip_server_done);
+  tvhftrace(LS_MAIN, htsp_done);
+  tvhftrace(LS_MAIN, http_server_done);
+  tvhftrace(LS_MAIN, webui_done);
+  tvhftrace(LS_MAIN, fsmonitor_done);
+  tvhftrace(LS_MAIN, http_client_done);
+  tvhftrace(LS_MAIN, tcp_server_done);
 
   // Note: the locking is obviously a bit redundant, but without
   //       we need to disable the gtimer_arm call in epg_save()
   pthread_mutex_lock(&global_lock);
-  tvhftrace("main", epg_save);
+  tvhftrace(LS_MAIN, epg_save);
 
 #if ENABLE_TIMESHIFT
-  tvhftrace("main", timeshift_term);
+  tvhftrace(LS_MAIN, timeshift_term);
 #endif
   pthread_mutex_unlock(&global_lock);
 
-  tvhftrace("main", epggrab_done);
+  tvhftrace(LS_MAIN, epggrab_done);
 #if ENABLE_MPEGTS
-  tvhftrace("main", mpegts_done);
+  tvhftrace(LS_MAIN, mpegts_done);
 #endif
-  tvhftrace("main", descrambler_done);
-  tvhftrace("main", service_mapper_done);
-  tvhftrace("main", service_done);
-  tvhftrace("main", channel_done);
-  tvhftrace("main", bouquet_done);
-  tvhftrace("main", dvr_done);
-  tvhftrace("main", subscription_done);
-  tvhftrace("main", access_done);
-  tvhftrace("main", epg_done);
-  tvhftrace("main", avahi_done);
-  tvhftrace("main", bonjour_done);
-  tvhftrace("main", imagecache_done);
-  tvhftrace("main", lang_code_done);
-  tvhftrace("main", api_done);
+  tvhftrace(LS_MAIN, descrambler_done);
+  tvhftrace(LS_MAIN, service_mapper_done);
+  tvhftrace(LS_MAIN, service_done);
+  tvhftrace(LS_MAIN, channel_done);
+  tvhftrace(LS_MAIN, bouquet_done);
+  tvhftrace(LS_MAIN, dvr_done);
+  tvhftrace(LS_MAIN, subscription_done);
+  tvhftrace(LS_MAIN, access_done);
+  tvhftrace(LS_MAIN, epg_done);
+  tvhftrace(LS_MAIN, avahi_done);
+  tvhftrace(LS_MAIN, bonjour_done);
+  tvhftrace(LS_MAIN, imagecache_done);
+  tvhftrace(LS_MAIN, lang_code_done);
+  tvhftrace(LS_MAIN, api_done);
 
-  tvhtrace("main", "tasklet enter");
+  tvhtrace(LS_MAIN, "tasklet enter");
   tvh_cond_signal(&tasklet_cond, 0);
   pthread_join(tasklet_tid, NULL);
-  tvhtrace("main", "tasklet thread end");
+  tvhtrace(LS_MAIN, "tasklet thread end");
   tasklet_flush();
-  tvhtrace("main", "tasklet leave");
-  tvhtrace("main", "mtimer tick thread join enter");
+  tvhtrace(LS_MAIN, "tasklet leave");
+  tvhtrace(LS_MAIN, "mtimer tick thread join enter");
   pthread_join(mtimer_tick_tid, NULL);
-  tvhtrace("main", "mtimer tick thread join leave");
+  tvhtrace(LS_MAIN, "mtimer tick thread join leave");
 
-  tvhftrace("main", dvb_done);
-  tvhftrace("main", lang_str_done);
-  tvhftrace("main", esfilter_done);
-  tvhftrace("main", profile_done);
-  tvhftrace("main", intlconv_done);
-  tvhftrace("main", urlparse_done);
-  tvhftrace("main", idnode_done);
-  tvhftrace("main", notify_done);
-  tvhftrace("main", spawn_done);
+  tvhftrace(LS_MAIN, dvb_done);
+  tvhftrace(LS_MAIN, lang_str_done);
+  tvhftrace(LS_MAIN, esfilter_done);
+  tvhftrace(LS_MAIN, profile_done);
+  tvhftrace(LS_MAIN, intlconv_done);
+  tvhftrace(LS_MAIN, urlparse_done);
+  tvhftrace(LS_MAIN, idnode_done);
+  tvhftrace(LS_MAIN, notify_done);
+  tvhftrace(LS_MAIN, spawn_done);
 
-  tvhlog(LOG_NOTICE, "STOP", "Exiting HTS Tvheadend");
+  tvhlog(LOG_NOTICE, LS_STOP, "Exiting HTS Tvheadend");
   tvhlog_end();
 
-  tvhftrace("main", config_done);
-  tvhftrace("main", hts_settings_done);
+  tvhftrace(LS_MAIN, config_done);
+  tvhftrace(LS_MAIN, hts_settings_done);
 
   if(opt_fork)
     unlink(opt_pidpath);
@@ -1423,5 +1423,5 @@ htsmsg_t *tvheadend_capabilities_list(int check)
  */
 void time_t_out_of_range_notify(int64_t val)
 {
-  tvherror("main", "time value out of range (%"PRId64") of time_t", val);
+  tvherror(LS_MAIN, "time value out of range (%"PRId64") of time_t", val);
 }

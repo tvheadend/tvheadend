@@ -415,7 +415,7 @@ mpegts_network_create0
   /* Setup idnode */
   if (idnode_insert(&mn->mn_id, uuid, idc, 0)) {
     if (uuid)
-      tvherror("mpegts", "invalid network uuid '%s'", uuid);
+      tvherror(LS_MPEGTS, "invalid network uuid '%s'", uuid);
     free(mn);
     return NULL;
   }
@@ -449,7 +449,7 @@ mpegts_network_create0
   /* Name */
   if (netname) mn->mn_network_name = strdup(netname);
   mn->mn_display_name(mn, buf, sizeof(buf));
-  tvhtrace("mpegts", "created network %s", buf);
+  tvhtrace(LS_MPEGTS, "created network %s", buf);
 
   return mn;
 }
@@ -475,7 +475,7 @@ mpegts_network_set_nid
     return 0;
   mn->mn_nid = nid;
   mn->mn_display_name(mn, buf, sizeof(buf));
-  tvhdebug("mpegts", "%s - set nid %04X (%d)", buf, nid, nid);
+  tvhdebug(LS_MPEGTS, "%s - set nid %04X (%d)", buf, nid, nid);
   return 1;
 }
 
@@ -489,7 +489,7 @@ mpegts_network_set_network_name
     if (name && name[0] && strcmp(name, mn->mn_network_name ?: "")) {
       tvh_str_update(&mn->mn_network_name, name);
       mn->mn_display_name(mn, buf, sizeof(buf));
-      tvhdebug("mpegts", "%s - set name %s", buf, name);
+      tvhdebug(LS_MPEGTS, "%s - set name %s", buf, name);
       save = 1;
     }
   }

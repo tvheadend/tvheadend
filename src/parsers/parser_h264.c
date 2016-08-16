@@ -428,7 +428,7 @@ h264_decode_slice_header(elementary_stream_t *st, bitstream_t *bs, int *pkttype,
   if (sps->time_scale)
     d = 180000 * (uint64_t)sps->units_in_tick / (uint64_t)sps->time_scale;
   if (d == 0 && st->es_frame_duration < 2 && p->start + sec2mono(4) < mclk()) {
-    tvhwarn("parser", "H264 stream has not timing information, using 30fps");
+    tvhwarn(LS_PARSER, "H264 stream has not timing information, using 30fps");
     d = 3000; /* 90000/30 = 3000 : 30fps */
   }
 

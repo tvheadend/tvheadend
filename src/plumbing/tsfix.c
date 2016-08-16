@@ -191,7 +191,7 @@ tsfix_stop(tsfix_t *tf)
 static void
 tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 {
-  pkt_trace("tsfix", pkt, tfs->tfs_index, tfs->tfs_type, "drop");
+  pkt_trace(LS_TSFIX, pkt, tfs->tfs_index, tfs->tfs_type, "drop");
   pkt_ref_dec(pkt);
 }
 
@@ -257,11 +257,11 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
         }
 	tfs->tfs_bad_dts++;
         if (tfs->tfs_bad_dts < 5) {
-	  tvhlog(LOG_ERR, "parser",
-		 "transport stream %s, DTS discontinuity. "
-		 "DTS = %" PRId64 ", last = %" PRId64,
-		 streaming_component_type2txt(tfs->tfs_type),
-		 dts, tfs->tfs_last_dts_norm);
+	  tvherror(LS_TSFIX,
+		   "transport stream %s, DTS discontinuity. "
+		   "DTS = %" PRId64 ", last = %" PRId64,
+		   streaming_component_type2txt(tfs->tfs_type),
+		   dts, tfs->tfs_last_dts_norm);
 	}
       } else {
 	/* DTS wrapped, increase upper bits */
@@ -287,7 +287,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 deliver:
   if (tvhtrace_enabled()) {
     char _odts[22], _opts[22];
-    pkt_trace("tsfix", pkt, tfs->tfs_index, tfs->tfs_type,
+    pkt_trace(LS_TSFIX, pkt, tfs->tfs_index, tfs->tfs_type,
               "deliver odts %s opts %s ref %"PRId64" epoch %"PRId64,
               pts_to_string(odts, _odts), pts_to_string(opts, _opts),
               ref, tfs->tfs_dts_epoch);
@@ -363,7 +363,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       case PKT_B_FRAME:
 	/* B-frames have same PTS as DTS, pass them on */
 	pkt->pkt_pts = pkt->pkt_dts;
-	tvhtrace("tsfix", "%-12s PTS b-frame set to %"PRId64,
+	tvhtrace(LS_TSFIX, "%-12s PTS b-frame set to %"PRId64,
 		    streaming_component_type2txt(tfs->tfs_type),
 		    pkt->pkt_dts);
 	break;
@@ -381,7 +381,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	      pts_is_greater_or_equal(pkt->pkt_dts, srch->pr_pkt->pkt_dts) > 0 &&
 	      pts_diff(pkt->pkt_dts, srch->pr_pkt->pkt_dts) < 10 * 90000) {
 	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
-	    tvhtrace("tsfix", "%-12s PTS *-frame set to %"PRId64", DTS %"PRId64,
+	    tvhtrace(LS_TSFIX, "%-12s PTS *-frame set to %"PRId64", DTS %"PRId64,
 			streaming_component_type2txt(tfs->tfs_type),
 			pkt->pkt_pts, pkt->pkt_dts);
 	    break;
@@ -418,7 +418,7 @@ compute_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   // If PTS is missing, set it to DTS if not video
   if(pkt->pkt_pts == PTS_UNSET && !tfs->tfs_video) {
     pkt->pkt_pts = pkt->pkt_dts;
-    tvhtrace("tsfix", "%-12s PTS set to %"PRId64,
+    tvhtrace(LS_TSFIX, "%-12s PTS set to %"PRId64,
 		streaming_component_type2txt(tfs->tfs_type),
 		pkt->pkt_pts);
   }
@@ -466,7 +466,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       if (diff > 160000)
         diff = 160000;
       tf->tf_tsref = (tf->tf_tsref - diff) % PTS_MASK;
-      tvhtrace("tsfix", "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
+      tvhtrace(LS_TSFIX, "reference clock set to %"PRId64" (backlog %"PRId64")", tf->tf_tsref, diff2);
       tsfix_backlog(tf);
     }
   } else if (tfs->tfs_local_ref == PTS_UNSET && tf->tf_tsref != PTS_UNSET &&
@@ -478,7 +478,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     if (tfs->tfs_audio) {
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
-        tvhwarn("tsfix", "The timediff for %s is big (%"PRId64"), using current dts",
+        tvhwarn(LS_TSFIX, "The timediff for %s is big (%"PRId64"), using current dts",
                 streaming_component_type2txt(tfs->tfs_type), diff);
         tfs->tfs_local_ref = pkt->pkt_dts;
       } else {
@@ -490,7 +490,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
         if(tfs2->tfs_audio && tfs2->tfs_last_dts_in != PTS_UNSET) {
           diff = tsfix_ts_diff(tfs2->tfs_last_dts_in, pkt->pkt_dts);
           if (diff > 3 * 90000) {
-            tvhwarn("tsfix", "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
+            tvhwarn(LS_TSFIX, "The timediff for DVBSUB is big (%"PRId64"), using audio dts", diff);
             tfs->tfs_parent = tfs2;
             tfs->tfs_local_ref = tfs2->tfs_local_ref;
           } else {
@@ -506,7 +506,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
       if (diff > 2 * 90000) {
         tfstream_t *tfs2;
-        tvhwarn("tsfix", "The timediff for TELETEXT is big (%"PRId64"), using current dts", diff);
+        tvhwarn(LS_TSFIX, "The timediff for TELETEXT is big (%"PRId64"), using current dts", diff);
         tfs->tfs_local_ref = pkt->pkt_dts;
         /* Text subtitles extracted from teletext have same timebase */
         LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
@@ -532,7 +532,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 
     if(pkt->pkt_payload != NULL || pkt->pkt_pts != PTS_UNSET) {
       pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
-      tvhtrace("tsfix", "%-12s DTS set to last %"PRId64" +%d == %"PRId64", PTS = %"PRId64,
+      tvhtrace(LS_TSFIX, "%-12s DTS set to last %"PRId64" +%d == %"PRId64", PTS = %"PRId64,
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts, pkt->pkt_pts);
     }

@@ -39,12 +39,12 @@ download_file(download_t *dn, const char *filename)
 
   fd = tvh_open(filename, O_RDONLY, 0);
   if (fd < 0) {
-    tvherror(dn->log, "unable to open file '%s': %s",
+    tvherror(dn->subsys, "unable to open file '%s': %s",
              filename, strerror(errno));
     return -1;
   }
   if (fstat(fd, &st) || st.st_size == 0) {
-    tvherror(dn->log, "unable to stat file '%s': %s",
+    tvherror(dn->subsys, "unable to stat file '%s': %s",
              filename, strerror(errno));
     close(fd);
     return -1;
@@ -122,7 +122,7 @@ download_fetch_complete(http_client_t *hc)
   if (hc->hc_code == HTTP_STATUS_OK && hc->hc_result == 0 && hc->hc_data_size > 0)
     dn->process(dn->aux, last_url, hc->hc_url, hc->hc_data, hc->hc_data_size);
   else
-    tvherror(dn->log, "unable to fetch data from url [%d-%d/%zd]",
+    tvherror(dn->subsys, "unable to fetch data from url [%d-%d/%zd]",
              hc->hc_code, hc->hc_result, hc->hc_data_size);
 
   /* note: http_client_close must be called outside http_client callbacks */
@@ -187,7 +187,7 @@ download_pipe_read(void *aux)
       if (ERRNO_AGAIN(errno))
         break;
 failed:
-      tvherror(dn->log, "pipe: read failed: %d", errno);
+      tvherror(dn->subsys, "pipe: read failed: %d", errno);
       download_pipe_close(dn);
       return;
     }
@@ -210,7 +210,7 @@ download_pipe(download_t *dn, const char *args)
 
   /* Arguments */
   if (spawn_parse_args(&argv, 64, args, NULL)) {
-    tvherror(dn->log, "pipe: unable to parse arguments (%s)", args);
+    tvherror(dn->subsys, "pipe: unable to parse arguments (%s)", args);
     return -1;
   }
 
@@ -222,7 +222,7 @@ download_pipe(download_t *dn, const char *args)
   if (r < 0) {
     dn->pipe_fd = -1;
     dn->pipe_pid = 0;
-    tvherror(dn->log, "pipe: cannot start (%s)", args);
+    tvherror(dn->subsys, "pipe: cannot start (%s)", args);
     return -1;
   }
 
@@ -265,12 +265,12 @@ download_fetch(void *aux)
   }
 
   if (urlparse(dn->url, &u) < 0) {
-    tvherror(dn->log, "wrong url");
+    tvherror(dn->subsys, "wrong url");
     goto stop;
   }
   hc = http_client_connect(dn, HTTP_VERSION_1_1, u.scheme, u.host, u.port, NULL);
   if (hc == NULL) {
-    tvherror(dn->log, "unable to open http client");
+    tvherror(dn->subsys, "unable to open http client");
     goto stop;
   }
   hc->hc_handle_location = 1;
@@ -280,7 +280,7 @@ download_fetch(void *aux)
   http_client_ssl_peer_verify(hc, dn->ssl_peer_verify);
   if (http_client_simple(hc, &u) < 0) {
     http_client_close(hc);
-    tvherror(dn->log, "unable to send http command");
+    tvherror(dn->subsys, "unable to send http command");
     goto stop;
   }
 
@@ -298,10 +298,10 @@ done:
  *
  */
 void
-download_init( download_t *dn, const char *log )
+download_init( download_t *dn, int subsys )
 {
   memset(dn, 0, sizeof(*dn));
-  dn->log = strdup(log);
+  dn->subsys = subsys;
   dn->pipe_fd = -1;
   sbuf_init(&dn->pipe_sbuf);
 }
@@ -337,6 +337,5 @@ download_done( download_t *dn )
   download_pipe_close(dn);
   mtimer_disarm(&dn->fetch_timer);
   mtimer_disarm(&dn->pipe_read_timer);
-  free(dn->log); dn->log = NULL;
   free(dn->url); dn->url = NULL;
 }

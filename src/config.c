@@ -1427,11 +1427,11 @@ dobackup(const char *oldver)
 
   assert(root);
 
-  tvhinfo("config", "backup: migrating config from %s (running %s)",
+  tvhinfo(LS_CONFIG, "backup: migrating config from %s (running %s)",
                     oldver, tvheadend_version);
 
   if (getcwd(cwd, sizeof(cwd)) == NULL) {
-    tvherror("config", "unable to get the current working directory");
+    tvherror(LS_CONFIG, "unable to get the current working directory");
     goto fatal;
   }
 
@@ -1442,21 +1442,21 @@ dobackup(const char *oldver)
   else if (!access("/usr/local/bin/tar", X_OK))
     argv[0] = "/usr/local/bin/tar";
   else {
-    tvherror("config", "unable to find tar program");
+    tvherror(LS_CONFIG, "unable to find tar program");
     goto fatal;
   }
 
   snprintf(outfile, sizeof(outfile), "%s/backup", root);
-  if (makedirs("config", outfile, 0700, 1, -1, -1))
+  if (makedirs(LS_CONFIG, outfile, 0700, 1, -1, -1))
     goto fatal;
   if (chdir(root)) {
-    tvherror("config", "unable to find directory '%s'", root);
+    tvherror(LS_CONFIG, "unable to find directory '%s'", root);
     goto fatal;
   }
 
   snprintf(outfile, sizeof(outfile), "%s/backup/%s.tar.bz2",
                                      root, oldver);
-  tvhinfo("config", "backup: running, output file %s", outfile);
+  tvhinfo(LS_CONFIG, "backup: running, output file %s", outfile);
 
   if (spawnv(argv[0], (void *)argv, &pid, 1, 1)) {
     code = -ENOENT;
@@ -1465,7 +1465,7 @@ dobackup(const char *oldver)
       tvh_safe_usleep(20000);
     if (code == -ECHILD)
       code = 0;
-    tvhinfo("config", "backup: completed");
+    tvhinfo(LS_CONFIG, "backup: completed");
   }
 
   if (code) {
@@ -1478,25 +1478,25 @@ dobackup(const char *oldver)
         htsbuf_append(&q, " ", 1);
     }
     s = htsbuf_to_string(&q);
-    tvherror("config", "command '%s' returned error code %d", s, code);
-    tvherror("config", "executed in directory '%s'", root);
-    tvherror("config", "please, do not report this as an error, you may use --nobackup option");
-    tvherror("config", "... or run the above command in the printed directory");
-    tvherror("config", "... using the same user/group as for the tvheadend executable");
-    tvherror("config", "... to check the reason for the unfinished backup");
+    tvherror(LS_CONFIG, "command '%s' returned error code %d", s, code);
+    tvherror(LS_CONFIG, "executed in directory '%s'", root);
+    tvherror(LS_CONFIG, "please, do not report this as an error, you may use --nobackup option");
+    tvherror(LS_CONFIG, "... or run the above command in the printed directory");
+    tvherror(LS_CONFIG, "... using the same user/group as for the tvheadend executable");
+    tvherror(LS_CONFIG, "... to check the reason for the unfinished backup");
     free(s);
     htsbuf_queue_flush(&q);
     goto fatal;
   }
 
   if (chdir(cwd)) {
-    tvherror("config", "unable to change directory to '%s'", cwd);
+    tvherror(LS_CONFIG, "unable to change directory to '%s'", cwd);
     goto fatal;
   }
   return;
 
 fatal:
-  tvherror("config", "backup: fatal error");
+  tvherror(LS_CONFIG, "backup: fatal error");
   exit(EXIT_FAILURE);
 }
 
@@ -1564,7 +1564,7 @@ config_migrate ( int backup )
 
   /* Run migrations */
   for ( ; v < ARRAY_SIZE(config_migrate_table); v++) {
-    tvhinfo("config", "migrating config from v%d to v%d", v, v+1);
+    tvhinfo(LS_CONFIG, "migrating config from v%d to v%d", v, v+1);
     config_migrate_table[v]();
   }
 
@@ -1591,7 +1591,7 @@ config_check_one ( const char *dir )
   HTSMSG_FOREACH(f, c) {
     if (!(e = htsmsg_field_get_map(f))) continue;
     if (strlen(f->hmf_name) != UUID_HEX_SIZE - 1) {
-      tvherror("START", "filename %s/%s/%s is invalid", hts_settings_get_root(), dir, f->hmf_name);
+      tvherror(LS_START, "filename %s/%s/%s is invalid", hts_settings_get_root(), dir, f->hmf_name);
       exit(1);
     }
   }
@@ -1647,7 +1647,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   if (!path) {
     const char *homedir = getenv("HOME");
     if (homedir == NULL) {
-      tvherror("START", "environment variable HOME is not set");
+      tvherror(LS_START, "environment variable HOME is not set");
       exit(EXIT_FAILURE);
     }
     snprintf(buf, sizeof(buf), "%s/.hts/tvheadend", homedir);
@@ -1657,8 +1657,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   /* Ensure directory exists */
   if (stat(path, &st)) {
     config_newcfg = 1;
-    if (makedirs("config", path, 0700, 1, gid, uid)) {
-      tvhwarn("START", "failed to create settings directory %s,"
+    if (makedirs(LS_CONFIG, path, 0700, 1, gid, uid)) {
+      tvhwarn(LS_START, "failed to create settings directory %s,"
                        " settings will not be saved", path);
       return;
     }
@@ -1666,7 +1666,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
 
   /* And is usable */
   else if (access(path, R_OK | W_OK)) {
-    tvhwarn("START", "configuration path %s is not r/w"
+    tvhwarn(LS_START, "configuration path %s is not r/w"
                      " for UID:%d GID:%d [e=%s],"
                      " settings will not be saved",
             path, getuid(), getgid(), strerror(errno));
@@ -1682,12 +1682,12 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
     exit(78); /* config error */
 
   if (chown(config_lock, uid, gid))
-    tvhwarn("config", "unable to chown lock file %s UID:%d GID:%d", config_lock, uid, gid);
+    tvhwarn(LS_CONFIG, "unable to chown lock file %s UID:%d GID:%d", config_lock, uid, gid);
 
   /* Load global settings */
   config2 = hts_settings_load("config");
   if (!config2) {
-    tvhlog(LOG_DEBUG, "config", "no configuration, loading defaults");
+    tvhlog(LOG_DEBUG, LS_CONFIG, "no configuration, loading defaults");
     config.wizard = strdup("hello");
     config_newcfg = 1;
   } else {
@@ -1722,7 +1722,7 @@ config_init ( int backup )
   const char *path = hts_settings_get_root();
 
   if (path == NULL || access(path, R_OK | W_OK)) {
-    tvhwarn("START", "configuration path %s is not r/w"
+    tvhwarn(LS_START, "configuration path %s is not r/w"
                      " for UID:%d GID:%d [e=%s],"
                      " settings will not be saved",
             path, getuid(), getgid(), strerror(errno));
@@ -1741,7 +1741,7 @@ config_init ( int backup )
     if (config_migrate(backup))
       config_check();
   }
-  tvhinfo("config", "loaded");
+  tvhinfo(LS_CONFIG, "loaded");
 }
 
 void config_done ( void )
@@ -1952,7 +1952,7 @@ config_muxconfpath_notify_cb(void *opaque, int disarmed)
     free(muxconf_path);
     return;
   }
-  tvhinfo("config", "scanfile (re)initialization with path %s", muxconf_path ?: "<none>");
+  tvhinfo(LS_CONFIG, "scanfile (re)initialization with path %s", muxconf_path ?: "<none>");
   scanfile_init(muxconf_path, 1);
   free(muxconf_path);
 }

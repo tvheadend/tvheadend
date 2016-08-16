@@ -89,7 +89,7 @@ tvhtime_update ( time_t utc, const char *srcname )
 
   localtime_r(&utc, &tm);
 
-  tvhtrace("time", "%s - current time is %04d/%02d/%02d %02d:%02d:%02d",
+  tvhtrace(LS_TIME, "%s - current time is %04d/%02d/%02d %02d:%02d:%02d",
            srcname,
            tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday,
            tm.tm_hour, tm.tm_min, tm.tm_sec);
@@ -105,14 +105,14 @@ tvhtime_update ( time_t utc, const char *srcname )
     if ((diff = llabs(t2 - t1)) > config.tvhtime_tolerance) {
 #if ENABLE_STIME
       if (stime(&utc) < 0)
-        tvherror("time", "%s - unable to update system time: %s", srcname, strerror(errno));
+        tvherror(LS_TIME, "%s - unable to update system time: %s", srcname, strerror(errno));
       else
-        tvhdebug("time", "%s - updated system clock", srcname);
+        tvhdebug(LS_TIME, "%s - updated system clock", srcname);
 #else
-      tvhnotice("time", "%s - stime(2) not implemented", srcname);
+      tvhnotice(LS_TIME, "%s - stime(2) not implemented", srcname);
 #endif
     } else {
-      tvhwarn("time", "%s - time not updated (diff %"PRId64")", srcname, diff);
+      tvhwarn(LS_TIME, "%s - time not updated (diff %"PRId64")", srcname, diff);
     }
   }
 
@@ -121,7 +121,7 @@ tvhtime_update ( time_t utc, const char *srcname )
     if (!(ntp_shm = ntp_shm_init()))
       return;
 
-    tvhtrace("time", "ntp delta = %"PRId64" us\n", t2 - t1);
+    tvhtrace(LS_TIME, "ntp delta = %"PRId64" us\n", t2 - t1);
     ntp_shm->valid = 0;
     ntp_shm->count++;
     ntp_shm->clockTimeStampSec    = utc;

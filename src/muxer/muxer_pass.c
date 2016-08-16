@@ -142,7 +142,7 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       return;
 
     if (sizeof(out) < ol + l + 5 + 4 /* crc */) {
-      tvherror("pass", "PMT entry too long (%i)", l);
+      tvherror(LS_PASS, "PMT entry too long (%i)", l);
       return;
     }
 
@@ -201,7 +201,7 @@ pass_muxer_sdt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       continue;
     }
     if (sizeof(out) < ol + l + 5 + 4 /* crc */) {
-      tvherror("pass", "SDT entry too long (%i)", l);
+      tvherror(LS_PASS, "SDT entry too long (%i)", l);
       return;
     }
     memcpy(out + ol, buf, l + 5);
@@ -315,11 +315,11 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     if (!SCT_ISVIDEO(ssc->ssc_type) && !SCT_ISAUDIO(ssc->ssc_type))
       continue;
     if (ssc->ssc_pid == DVB_SDT_PID && pm->pm_rewrite_sdt) {
-      tvhwarn("pass", "SDT PID shared with A/V, rewrite disabled");
+      tvhwarn(LS_PASS, "SDT PID shared with A/V, rewrite disabled");
       pm->pm_rewrite_sdt = 0;
     }
     if (ssc->ssc_pid == DVB_EIT_PID && pm->pm_rewrite_eit) {
-      tvhwarn("pass", "EIT PID shared with A/V, rewrite disabled");
+      tvhwarn(LS_PASS, "EIT PID shared with A/V, rewrite disabled");
       pm->pm_rewrite_eit = 0;
     }
   }
@@ -332,7 +332,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     pm->pm_ss = streaming_start_copy(ss);
 
     dvb_table_parse_done(&pm->pm_pmt);
-    dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", pm->pm_pmt_pid, pm);
+    dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, pm->pm_pmt_pid, pm);
   }
 
   return 0;
@@ -375,22 +375,22 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   int fd;
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  tvhtrace("pass", "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
+  tvhtrace(LS_PASS, "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
  
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, pm->m_config.m_file_permissions);
 
   if(fd < 0) {
     pm->pm_error = errno;
-    tvhlog(LOG_ERR, "pass", "%s: Unable to create file, open failed -- %s",
-	   filename, strerror(errno));
+    tvherror(LS_PASS, "%s: Unable to create file, open failed -- %s",
+	     filename, strerror(errno));
     pm->m_errors++;
     return -1;
   }
 
   /* bypass umask settings */
   if (fchmod(fd, pm->m_config.m_file_permissions))
-    tvhlog(LOG_ERR, "pass", "%s: Unable to change permissions -- %s",
-           filename, strerror(errno));
+    tvherror(LS_PASS, "%s: Unable to change permissions -- %s",
+             filename, strerror(errno));
 
   pm->pm_off      = 0;
   pm->pm_seekable = 1;
@@ -413,8 +413,8 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size)
   } else if(tvh_write(pm->pm_fd, data, size)) {
     pm->pm_error = errno;
     if (!MC_IS_EOS_ERROR(errno))
-      tvhlog(LOG_ERR, "pass", "%s: Write failed -- %s", pm->pm_filename,
-	     strerror(errno));
+      tvherror(LS_PASS, "%s: Write failed -- %s", pm->pm_filename,
+	       strerror(errno));
     else
       /* this is an end-of-streaming notification */
       m->m_eos = 1;
@@ -543,8 +543,8 @@ pass_muxer_close(muxer_t *m)
 
   if(pm->pm_seekable && close(pm->pm_fd)) {
     pm->pm_error = errno;
-    tvhlog(LOG_ERR, "pass", "%s: Unable to close file, close failed -- %s",
-	   pm->pm_filename, strerror(errno));
+    tvherror(LS_PASS, "%s: Unable to close file, close failed -- %s",
+	     pm->pm_filename, strerror(errno));
     pm->m_errors++;
     return -1;
   }
@@ -599,10 +599,10 @@ pass_muxer_create(const muxer_config_t *m_cfg)
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
 
-  dvb_table_parse_init(&pm->pm_pat, "pass-pat", DVB_PAT_PID, pm);
-  dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", 100,         pm);
-  dvb_table_parse_init(&pm->pm_sdt, "pass-sdt", DVB_SDT_PID, pm);
-  dvb_table_parse_init(&pm->pm_eit, "pass-eit", DVB_EIT_PID, pm);
+  dvb_table_parse_init(&pm->pm_pat, "pass-pat", LS_TBL_PASS, DVB_PAT_PID, pm);
+  dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, 100,         pm);
+  dvb_table_parse_init(&pm->pm_sdt, "pass-sdt", LS_TBL_PASS, DVB_SDT_PID, pm);
+  dvb_table_parse_init(&pm->pm_eit, "pass-eit", LS_TBL_PASS, DVB_EIT_PID, pm);
 
   return (muxer_t *)pm;
 }

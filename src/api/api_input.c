@@ -46,7 +46,7 @@ api_input_satip_discover
   if (op == NULL || strcmp(op, "all"))
     return -EINVAL;
 
-  tvhinfo("satip", "Triggered new server discovery");
+  tvhinfo(LS_SATIP, "Triggered new server discovery");
 
   pthread_mutex_lock(&global_lock);
   satip_device_discovery_start();

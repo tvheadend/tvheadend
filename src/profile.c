@@ -87,12 +87,12 @@ profile_create
   if ((s = htsmsg_get_str(conf, "class")) != NULL)
     pb = profile_class_find(s);
   if (pb == NULL) {
-    tvherror("profile", "wrong class %s!", s);
+    tvherror(LS_PROFILE, "wrong class %s!", s);
     return NULL;
   }
   pro = pb->build();
   if (pro == NULL) {
-    tvherror("profile", "Profile class %s is not available!", s);
+    tvherror(LS_PROFILE, "Profile class %s is not available!", s);
     return NULL;
   }
   LIST_INIT(&pro->pro_dvr_configs);
@@ -100,7 +100,7 @@ profile_create
   pro->pro_contaccess = 1;
   if (idnode_insert(&pro->pro_id, uuid, pb->clazz, 0)) {
     if (uuid)
-      tvherror("profile", "invalid uuid '%s'", uuid);
+      tvherror(LS_PROFILE, "invalid uuid '%s'", uuid);
     free(pro);
     return NULL;
   }

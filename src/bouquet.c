@@ -98,7 +98,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
-      tvherror("bouquet", "invalid uuid '%s'", uuid);
+      tvherror(LS_BOUQUET, "invalid uuid '%s'", uuid);
     bouquet_free(bq);
     return NULL;
   }
@@ -131,7 +131,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
       bq->bq_src = strdup(buf);
       bq->bq_download = bqd = calloc(1, sizeof(*bqd));
       bqd->bq = bq;
-      download_init(&bqd->download, "bouquet");
+      download_init(&bqd->download, LS_BOUQUET);
       bqd->download.process = bouquet_download_process;
       bqd->download.stop = bouquet_download_stop;
       bouquet_change_comment(bq, bq->bq_ext_url, 0);
@@ -140,7 +140,7 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
 
   bq2 = RB_INSERT_SORTED(&bouquets, bq, bq_link, _bq_cmp);
   if (bq2) {
-    tvherror("bouquet", "found duplicate source id: '%s', remove duplicate config", bq->bq_src);
+    tvherror(LS_BOUQUET, "found duplicate source id: '%s', remove duplicate config", bq->bq_src);
     bouquet_free(bq);
     return NULL;
   }
@@ -219,7 +219,7 @@ bouquet_find_by_source(const char *name, const char *src, int create)
   bq = RB_FIND(&bouquets, &bqs, bq_link, _bq_cmp);
   if (bq) {
     if (name && *name && bq->bq_name && strcmp(name, bq->bq_name)) {
-      tvhwarn("bouquet", "bouquet name '%s' changed to '%s'", bq->bq_name ?: "", name);
+      tvhwarn(LS_BOUQUET, "bouquet name '%s' changed to '%s'", bq->bq_name ?: "", name);
       free(bq->bq_name);
       bq->bq_name = strdup(name);
       idnode_changed(&bq->bq_id);
@@ -228,7 +228,7 @@ bouquet_find_by_source(const char *name, const char *src, int create)
   }
   if (create && name) {
     bq = bouquet_create(NULL, NULL, name, src);
-    tvhinfo("bouquet", "new bouquet '%s'", name);
+    tvhinfo(LS_BOUQUET, "new bouquet '%s'", name);
     return bq;
   }
   return NULL;
@@ -337,7 +337,7 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
     return;
 
   if (!idnode_set_exists(bq->bq_services, &s->s_id)) {
-    tvhtrace("bouquet", "add service %s to %s", s->s_nicename, bq->bq_name ?: "<unknown>");
+    tvhtrace(LS_BOUQUET, "add service %s to %s", s->s_nicename, bq->bq_name ?: "<unknown>");
     idnode_set_add(bq->bq_services, &s->s_id, NULL, NULL);
     bq->bq_saveflag = 1;
   }
@@ -388,7 +388,7 @@ bouquet_unmap_channel(bouquet_t *bq, service_t *t)
   while (ilm) {
     ilm_next = LIST_NEXT(ilm, ilm_in1_link);
     if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq) {
-      tvhinfo("bouquet", "%s / %s: unmapped from %s",
+      tvhinfo(LS_BOUQUET, "%s / %s: unmapped from %s",
               channel_get_name((channel_t *)ilm->ilm_in2), t->s_nicename,
               bq->bq_name ?: "<unknown>");
       channel_delete((channel_t *)ilm->ilm_in2, 1);
@@ -422,7 +422,7 @@ bouquet_notify_service_enabled(service_t *t)
 static void
 bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf)
 {
-  tvhtrace("bouquet", "remove service %s from %s",
+  tvhtrace(LS_BOUQUET, "remove service %s from %s",
            s->s_nicename, bq->bq_name ?: "<unknown>");
   idnode_set_remove(bq->bq_services, &s->s_id);
   if (delconf)
@@ -448,7 +448,7 @@ bouquet_completed(bouquet_t *bq, uint32_t seen)
     bq->bq_saveflag = 1;
   }
 
-  tvhtrace("bouquet", "%s: completed: enabled=%d active=%zi old=%zi seen=%u",
+  tvhtrace(LS_BOUQUET, "%s: completed: enabled=%d active=%zi old=%zi seen=%u",
             bq->bq_name ?: "", bq->bq_enabled, bq->bq_active_services->is_count,
             bq->bq_services->is_count, seen);
 
@@ -1190,7 +1190,7 @@ next:
     while (*data && (*data == '\r' || *data == '\n')) data++;
   }
   bouquet_completed(bq, seen);
-  tvhinfo("bouquet", "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
+  tvhinfo(LS_BOUQUET, "parsed Enigma%d bouquet %s (%d services)", ver, bq->bq_name, seen);
   return 0;
 }
 

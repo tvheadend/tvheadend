@@ -239,7 +239,7 @@ typedef struct htsp_file {
  * *************************************************************************/
 
 static void
-htsp_trace(htsp_connection_t *htsp, const char *subsystem,
+htsp_trace(htsp_connection_t *htsp, int subsystem,
            const char *prefix, htsmsg_t *m)
 {
   htsbuf_queue_t q;
@@ -432,7 +432,7 @@ htsp_send_subscription(htsp_connection_t *htsp, htsmsg_t *m, pktbuf_t *pb,
     tvh_strlcatf(buf, sizeof(buf), l, "subscription %i", hs->hs_sid);
     if (payloadsize)
       tvh_strlcatf(buf, sizeof(buf), l, " (payload %d)", payloadsize);
-    htsp_trace(htsp, "htsp-sub", buf, m);
+    htsp_trace(htsp, LS_HTSP_SUB, buf, m);
   }
 
   htsp_send(htsp, m, pb, &hs->hs_q, payloadsize);
@@ -448,7 +448,7 @@ htsp_send_message(htsp_connection_t *htsp, htsmsg_t *m, htsp_msg_q_t *hmq)
     const char *qname = "answer";
     if (hmq == &htsp->htsp_hmq_qstatus)
       qname = "status";
-    htsp_trace(htsp, "htsp-ans", qname, m);
+    htsp_trace(htsp, LS_HTSP_ANS, qname, m);
   }
 
   htsp_send(htsp, m, NULL, hmq ?: &htsp->htsp_hmq_ctrl, 0);
@@ -543,7 +543,7 @@ htsp_dvr_config_name( htsp_connection_t *htsp, const char *config_name )
   }
 
   if (!cfg && perm->aa_username)
-    tvhlog(LOG_INFO, "htsp", "User '%s' has no valid dvr config in ACL, using default...", perm->aa_username);
+    tvhinfo(LS_HTSP, "User '%s' has no valid dvr config in ACL, using default...", perm->aa_username);
 
   return cfg ? idnode_uuid_as_str(&cfg->dvr_id, ubuf) : NULL;
 }
@@ -704,7 +704,7 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
 
   if (fd <= 0) {
     fd = tvh_open(path, O_RDONLY, 0);
-    tvhlog(LOG_DEBUG, "htsp", "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
+    tvhdebug(LS_HTSP, "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
     if(fd == -1)
       return htsp_error(htsp, N_("Unable to open file"));
   }
@@ -749,7 +749,7 @@ htsp_file_find(const htsp_connection_t *htsp, htsmsg_t *in)
 static void
 htsp_file_destroy(htsp_file_t *hf)
 {
-  tvhlog(LOG_DEBUG, "htsp", "Closed opened file %s", hf->hf_path);
+  tvhdebug(LS_HTSP, "Closed opened file %s", hf->hf_path);
   free(hf->hf_path);
   close(hf->hf_fd);
   LIST_REMOVE(hf, hf_link);
@@ -1246,8 +1246,8 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 
   tvh_str_update(&htsp->htsp_clientname, htsmsg_get_str(in, "clientname"));
 
-  tvhlog(LOG_INFO, "htsp", "%s: Welcomed client software: %s (HTSPv%d)",
-	 htsp->htsp_logname, name, v);
+  tvhinfo(LS_HTSP, "%s: Welcomed client software: %s (HTSPv%d)",
+	  htsp->htsp_logname, name, v);
 
   htsmsg_add_u32(r, "htspversion", HTSP_PROTO_VERSION);
   htsmsg_add_str(r, "servername", config_get_server_name());
@@ -1663,7 +1663,7 @@ htsp_method_epgQuery(htsp_connection_t *htsp, htsmsg_t *in)
   eq.duration.comp = EC_RG;
   eq.duration.val1 = min_duration;
   eq.duration.val2 = max_duration;
-  tvhtrace("htsp", "min_duration %d and max_duration %d", min_duration, max_duration);
+  tvhtrace(LS_HTSP, "min_duration %d and max_duration %d", min_duration, max_duration);
 
   /* Check access */
   if (ch && !htsp_user_access_channel(htsp, ch))
@@ -2383,9 +2383,9 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 #if ENABLE_TIMESHIFT
   if (timeshiftPeriod != 0) {
     if (timeshiftPeriod == ~0)
-      tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (unlimited)");
+      tvhdebug(LS_HTSP, "using timeshift buffer (unlimited)");
     else
-      tvhlog(LOG_DEBUG, "htsp", "using timeshift buffer (%u mins)", timeshiftPeriod / 60);
+      tvhdebug(LS_HTSP, "using timeshift buffer (%u mins)", timeshiftPeriod / 60);
   }
 #endif
 
@@ -2393,7 +2393,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
                              "htsp", SUBSCRIPTION_PACKET | SUBSCRIPTION_HTSP);
   profile_chain_init(&hs->hs_prch, pro, ch);
   if (profile_chain_work(&hs->hs_prch, &hs->hs_input, timeshiftPeriod, 0)) {
-    tvhlog(LOG_ERR, "htsp", "unable to create profile chain '%s'", profile_get_name(pro));
+    tvherror(LS_HTSP, "unable to create profile chain '%s'", profile_get_name(pro));
     profile_chain_close(&hs->hs_prch);
     free(hs);
     return htsp_error(htsp, N_("Stream setup error"));
@@ -2427,7 +2427,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
    */
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
 
-  tvhdebug("htsp", "%s - subscribe to %s using profile %s",
+  tvhdebug(LS_HTSP, "%s - subscribe to %s using profile %s",
            htsp->htsp_logname, channel_get_name(ch), profile_get_name(pro));
   hs->hs_s = subscription_create_from_channel(&hs->hs_prch, NULL, weight,
 					      htsp->htsp_logname,
@@ -2525,12 +2525,12 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
     skip.time = hs->hs_90khz ? s64 : ts_rescale_inv(s64, 1000000);
-    tvhtrace("htsp-sub", "skip: %s %"PRId64" (%s)", abs ? "abs" : "rel",
+    tvhtrace(LS_HTSP_SUB, "skip: %s %"PRId64" (%s)", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
   } else if (!htsmsg_get_s64(in, "size", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_SIZE : SMT_SKIP_REL_SIZE;
     skip.size = s64;
-    tvhtrace("htsp-sub", "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
+    tvhtrace(LS_HTSP_SUB, "skip: %s by size %"PRId64, abs ? "abs" : "rel", s64);
   } else {
     return htsp_error(htsp, N_("Invalid arguments"));
   }
@@ -2563,7 +2563,7 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error(htsp, N_("Subscription does not exist"));
 
-  tvhtrace("htsp-sub", "speed: %d", speed);
+  tvhtrace(LS_HTSP_SUB, "speed: %d", speed);
   subscription_set_speed(hs->hs_s, speed);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -2592,7 +2592,7 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
 
   memset(&skip, 0, sizeof(skip));
   skip.type = SMT_SKIP_LIVE;
-  tvhtrace("htsp-sub", "live");
+  tvhtrace(LS_HTSP_SUB, "live");
   subscription_set_skip(hs->hs_s, &skip);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -2938,7 +2938,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
                         htsp_verify_callback, &vs);
 
     if (rights->aa_rights == 0) {
-      tvhlog(LOG_INFO, "htsp", "%s: Unauthorized access", htsp->htsp_logname);
+      tvhinfo(LS_HTSP, "%s: Unauthorized access", htsp->htsp_logname);
       access_destroy(rights);
       return 0;
     }
@@ -2948,12 +2948,12 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
                 htsp->htsp_granted_access->aa_rights) !=
                   htsp->htsp_granted_access->aa_rights;
       
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user '%s'",
-	   htsp->htsp_logname, username);
+    tvhinfo(LS_HTSP, "%s: Identified as user '%s'",
+	    htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
     if(privgain)
-      tvhlog(LOG_INFO, "htsp", "%s: Privileges updated", htsp->htsp_logname);
+      tvhinfo(LS_HTSP, "%s: Privileges updated", htsp->htsp_logname);
 
     access_destroy(htsp->htsp_granted_access);
     htsp->htsp_granted_access = rights;
@@ -2963,8 +2963,8 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
   } else {
 
-    tvhlog(LOG_INFO, "htsp", "%s: Identified as user '%s' (unverified)",
-	   htsp->htsp_logname, username);
+    tvhinfo(LS_HTSP, "%s: Identified as user '%s' (unverified)",
+	    htsp->htsp_logname, username);
     tvh_str_update(&htsp->htsp_username, username);
     htsp_update_logname(htsp);
 
@@ -3047,8 +3047,8 @@ htsp_read_loop(htsp_connection_t *htsp)
   void *tcp_id = NULL;;
 
   if(htsp_generate_challenge(htsp)) {
-    tvhlog(LOG_ERR, "htsp", "%s: Unable to generate challenge",
-	   htsp->htsp_logname);
+    tvherror(LS_HTSP, "%s: Unable to generate challenge",
+	     htsp->htsp_logname);
     return 1;
   }
 
@@ -3066,7 +3066,7 @@ htsp_read_loop(htsp_connection_t *htsp)
   if (tcp_id == NULL)
     return 0;
 
-  tvhlog(LOG_INFO, "htsp", "Got connection from %s", htsp->htsp_logname);
+  tvhinfo(LS_HTSP, "Got connection from %s", htsp->htsp_logname);
 
   /* Session main loop */
 
@@ -3090,9 +3090,9 @@ readmsg:
     }
 
     if((method = htsmsg_get_str(m, "method")) != NULL) {
-      tvhtrace("htsp", "%s - method %s", htsp->htsp_logname, method);
+      tvhtrace(LS_HTSP, "%s - method %s", htsp->htsp_logname, method);
       if (tvhtrace_enabled())
-        htsp_trace(htsp, "htsp-req", "request", m);
+        htsp_trace(htsp, LS_HTSP_REQ, "request", m);
       for(i = 0; i < NUM_METHODS; i++) {
         if(!strcmp(method, htsp_methods[i].name)) {
 
@@ -3181,8 +3181,7 @@ htsp_write_scheduler(void *aux)
     pthread_mutex_unlock(&htsp->htsp_out_mutex);
 
     if (htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX) != 0) {
-      tvhlog(LOG_WARNING, "htsp", "%s: failed to serialize data",
-             htsp->htsp_logname);
+      tvhwarn(LS_HTSP, "%s: failed to serialize data", htsp->htsp_logname);
       htsp_msg_destroy(hm);
       pthread_mutex_lock(&htsp->htsp_out_mutex);
       continue;
@@ -3195,8 +3194,8 @@ htsp_write_scheduler(void *aux)
     pthread_mutex_lock(&htsp->htsp_out_mutex);
     
     if (r) {
-      tvhlog(LOG_INFO, "htsp", "%s: Write error -- %s",
-             htsp->htsp_logname, strerror(errno));
+      tvhinfo(LS_HTSP, "%s: Write error -- %s",
+              htsp->htsp_logname, strerror(errno));
       break;
     }
   }
@@ -3250,7 +3249,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
 
   htsp_read_loop(&htsp);
 
-  tvhlog(LOG_INFO, "htsp", "%s: Disconnected", htsp.htsp_logname);
+  tvhinfo(LS_HTSP, "%s: Disconnected", htsp.htsp_logname);
 
   /**
    * Ok, we're back, other end disconnected. Clean up stuff.
@@ -3336,9 +3335,9 @@ htsp_init(const char *bindaddr)
     .stop   = NULL,
     .cancel = htsp_server_cancel
   };
-  htsp_server = tcp_server_create("htsp", "HTSP", bindaddr, tvheadend_htsp_port, &ops, NULL);
+  htsp_server = tcp_server_create(LS_HTSP, "HTSP", bindaddr, tvheadend_htsp_port, &ops, NULL);
   if(tvheadend_htsp_port_extra)
-    htsp_server_2 = tcp_server_create("htsp", "HTSP2", bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
+    htsp_server_2 = tcp_server_create(LS_HTSP, "HTSP2", bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
 }
 
 /*
@@ -3884,7 +3883,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   int i;
   const source_info_t *si;
 
-  tvhdebug("htsp", "%s - subscription start", hs->hs_htsp->htsp_logname);
+  tvhdebug(LS_HTSP, "%s - subscription start", hs->hs_htsp->htsp_logname);
 
   for(i = 0; i < ss->ss_num_components; i++) {
     const streaming_start_component_t *ssc = &ss->ss_components[i];
@@ -3992,7 +3991,7 @@ htsp_subscription_stop(htsp_subscription_t *hs, const char *err, const char *sub
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "subscriptionStop");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  tvhdebug("htsp", "%s - subscription stop", hs->hs_htsp->htsp_logname);
+  tvhdebug(LS_HTSP, "%s - subscription stop", hs->hs_htsp->htsp_logname);
 
   if(err != NULL)
     htsmsg_add_str(m, "status", err);
@@ -4013,7 +4012,7 @@ htsp_subscription_grace(htsp_subscription_t *hs, int grace)
   htsmsg_add_str(m, "method", "subscriptionGrace");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_u32(m, "graceTimeout", grace);
-  tvhdebug("htsp", "%s - subscription grace %i seconds", hs->hs_htsp->htsp_logname, grace);
+  tvhdebug(LS_HTSP, "%s - subscription grace %i seconds", hs->hs_htsp->htsp_logname, grace);
 
   htsp_send_subscription(hs->hs_htsp, m, NULL, hs, 0);
 }
@@ -4149,7 +4148,7 @@ static void
 htsp_subscription_speed(htsp_subscription_t *hs, int speed)
 {
   htsmsg_t *m = htsmsg_create_map();
-  tvhdebug("htsp", "%s - subscription speed", hs->hs_htsp->htsp_logname);
+  tvhdebug(LS_HTSP, "%s - subscription speed", hs->hs_htsp->htsp_logname);
   htsmsg_add_str(m, "method", "subscriptionSpeed");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
   htsmsg_add_s32(m, "speed", speed);
@@ -4183,7 +4182,7 @@ static void
 htsp_subscription_skip(htsp_subscription_t *hs, streaming_skip_t *skip)
 {
   htsmsg_t *m = htsmsg_create_map();
-  tvhdebug("htsp", "%s - subscription skip", hs->hs_htsp->htsp_logname);
+  tvhdebug(LS_HTSP, "%s - subscription skip", hs->hs_htsp->htsp_logname);
   htsmsg_add_str(m, "method", "subscriptionSkip");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
 
@@ -4219,7 +4218,7 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     if (hs->hs_wait_for_video)
       break;
     if (!hs->hs_first)
-      tvhdebug("htsp", "%s - first packet", hs->hs_htsp->htsp_logname);
+      tvhdebug(LS_HTSP, "%s - first packet", hs->hs_htsp->htsp_logname);
     hs->hs_first = 1;
     htsp_stream_deliver(hs, sm->sm_data);
     // reference is transfered

@@ -484,7 +484,7 @@ md5sum ( const char *str, int lowercase )
 #define FILE_MODE_BITS(x) (x&(S_IRWXU|S_IRWXG|S_IRWXO))
 
 int
-makedirs ( const char *subsys, const char *inpath, int mode,
+makedirs ( int subsys, const char *inpath, int mode,
            int mstrict, gid_t gid, uid_t uid )
 {
   int err, ok;
@@ -669,7 +669,7 @@ static void
 deferred_unlink_cb(void *s, int dearmed)
 {
   if (unlink((const char *)s))
-    tvherror("main", "unable to remove file '%s'", (const char *)s);
+    tvherror(LS_MAIN, "unable to remove file '%s'", (const char *)s);
   free(s);
 }
 
@@ -686,7 +686,7 @@ deferred_unlink_dir_cb(void *s, int dearmed)
   int l;
 
   if (unlink((const char *)du->filename))
-    tvherror("main", "unable to remove file '%s'", (const char *)du->filename);
+    tvherror(LS_MAIN, "unable to remove file '%s'", (const char *)du->filename);
 
   /* Remove all directories up to rootdir */
 

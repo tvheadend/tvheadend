@@ -74,8 +74,7 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
   switch (state) {
   case AVAHI_ENTRY_GROUP_ESTABLISHED :
     /* The entry group has been established successfully */
-    tvhlog(LOG_INFO, "AVAHI",
-	   "Service '%s' successfully established.", name);
+    tvhoinfo(LS_AVAHI, "Service '%s' successfully established.", name);
     break;
 
   case AVAHI_ENTRY_GROUP_COLLISION : {
@@ -87,8 +86,7 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
     avahi_free(name);
     name = n;
     
-    tvhlog(LOG_ERR, "AVAHI",
-	   "Service name collision, renaming service to '%s'", name);
+    tvherror(LS_AVAHI, "Service name collision, renaming service to '%s'", name);
 
     /* And recreate the services */
     create_services(avahi_entry_group_get_client(g));
@@ -96,9 +94,9 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
   }
 
   case AVAHI_ENTRY_GROUP_FAILURE :
-     tvhlog(LOG_ERR, "AVAHI",
-	    "Entry group failure: %s", 
-	    avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(g))));
+     tvherror(LS_AVAHI,
+	      "Entry group failure: %s", 
+	      avahi_strerror(avahi_client_errno(avahi_entry_group_get_client(g))));
     break;
 
   case AVAHI_ENTRY_GROUP_UNCOMMITED:
@@ -124,9 +122,9 @@ create_services(AvahiClient *c)
 
   if (!group)
     if (!(group = avahi_entry_group_new(c, entry_group_callback, NULL))) {
-      tvhlog(LOG_ERR, "AVAHI",
-	     "avahi_enty_group_new() failed: %s", 
-	     avahi_strerror(avahi_client_errno(c)));
+      tvherror(LS_AVAHI,
+	       "avahi_enty_group_new() failed: %s", 
+	        avahi_strerror(avahi_client_errno(c)));
       goto fail;
     }
 
@@ -134,7 +132,7 @@ create_services(AvahiClient *c)
    * because it was reset previously, add our entries.  */
 
   if (avahi_entry_group_is_empty(group)) {
-     tvhlog(LOG_DEBUG, "AVAHI", "Adding service '%s'", name);
+     tvhdebug(LS_AVAHI, "Adding service '%s'", name);
 
     /* Add the service for HTSP */
     if ((ret = avahi_entry_group_add_service(group, AVAHI_IF_UNSPEC, 
@@ -145,9 +143,9 @@ create_services(AvahiClient *c)
       if (ret == AVAHI_ERR_COLLISION)
 	goto collision;
 
-      tvhlog(LOG_ERR, "AVAHI",
-	     "Failed to add _htsp._tcp service: %s", 
-	     avahi_strerror(ret));
+      tvherror(LS_AVAHI,
+	       "Failed to add _htsp._tcp service: %s", 
+               avahi_strerror(ret));
       goto fail;
     }
 
@@ -168,17 +166,17 @@ create_services(AvahiClient *c)
       if (ret == AVAHI_ERR_COLLISION)
 	goto collision;
 
-      tvhlog(LOG_ERR, "AVAHI",
-	     "Failed to add _http._tcp service: %s", 
-	     avahi_strerror(ret));
+      tvherror(LS_AVAHI,
+	       "Failed to add _http._tcp service: %s", 
+	       avahi_strerror(ret));
       goto fail;
     }
 
     /* Tell the server to register the service */
     if ((ret = avahi_entry_group_commit(group)) < 0) {
-      tvhlog(LOG_ERR, "AVAHI",
-	     "Failed to commit entry group: %s", 
-	     avahi_strerror(ret));
+      tvherror(LS_AVAHI,
+	       "Failed to commit entry group: %s", 
+               avahi_strerror(ret));
       goto fail;
     }
   }
@@ -194,8 +192,7 @@ create_services(AvahiClient *c)
   avahi_free(name);
   name = n;
 
-  tvhlog(LOG_ERR, "AVAHI",
-	 "Service name collision, renaming service to '%s'", name);
+  tvherror(LS_AVAHI, "Service name collision, renaming service to '%s'", name);
 
   avahi_entry_group_reset(group);
 
@@ -226,8 +223,7 @@ client_callback(AvahiClient *c, AvahiClientState state, void *userdata)
     break;
 
   case AVAHI_CLIENT_FAILURE:
-    tvhlog(LOG_ERR, "AVAHI", "Client failure: %s", 
-	   avahi_strerror(avahi_client_errno(c)));
+    tvherror(LS_AVAHI, "Client failure: %s", avahi_strerror(avahi_client_errno(c)));
     break;
 
   case AVAHI_CLIENT_S_COLLISION:
@@ -271,7 +267,7 @@ avahi_thread(void *aux)
     avahi_poll = avahi_simple_poll_get(avahi_asp);
 
     if(avahi_do_restart) {
-      tvhlog(LOG_INFO, "AVAHI", "Service restarted.");
+      tvhinfo(LS_AVAHI, "Service restarted.");
       avahi_do_restart = 0;
       group = NULL;
     }

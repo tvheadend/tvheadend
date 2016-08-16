@@ -88,15 +88,15 @@ dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(dmc, buf, sizeof(buf));
-        tvhtrace("scanfile", "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
+        tvhtrace(LS_SCANFILE, "mux %p %s added to network %s", mm, buf, ln->mn_network_name);
       }
     } else {
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(dmc, buf, sizeof(buf));
-        tvhtrace("scanfile", "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
+        tvhtrace(LS_SCANFILE, "mux %p skipped %s in network %s", mm, buf, ln->mn_network_name);
         dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-        tvhtrace("scanfile", "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
+        tvhtrace(LS_SCANFILE, "mux %p exists %s in network %s", mm, buf, ln->mn_network_name);
       }
     }
   }
@@ -682,7 +682,7 @@ dvb_network_create_mux
       if (tvhtrace_enabled()) {
         char buf[128];
         dvb_mux_conf_str(&((dvb_mux_t *)mm)->lm_tuning, buf, sizeof(buf));
-        tvhtrace("mpegts", "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
+        tvhtrace(LS_MPEGTS, "mux %p %s onid %i tsid %i added to network %s (autodiscovery)",
                  mm, buf, onid, tsid, mm->mm_network->mn_network_name);
       }
     }
@@ -698,21 +698,21 @@ dvb_network_create_mux
     #define COMPARE(x, cbit) ({ \
       int xr = dmc->x != lm->lm_tuning.x; \
       if (xr) { \
-        tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
+        tvhtrace(LS_MPEGTS, "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)tuning_new.x); \
         tuning_new.x = dmc->x; \
       } xr ? cbit : 0; })
     #define COMPAREN(x, cbit) ({ \
       int xr = dmc->x != 0 && dmc->x != 1 && dmc->x != tuning_new.x; \
       if (xr) { \
-        tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
+        tvhtrace(LS_MPEGTS, "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)tuning_new.x); \
         tuning_new.x = dmc->x; \
       } xr ? cbit : 0; })
     #define COMPAREN0(x, cbit) ({ \
       int xr = dmc->x != 1 && dmc->x != tuning_new.x; \
       if (xr) { \
-        tvhtrace("mpegts", "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
+        tvhtrace(LS_MPEGTS, "create mux dmc->" #x " (%li) != lm->lm_tuning." #x \
                  " (%li)", (long)dmc->x, (long)tuning_new.x); \
         tuning_new.x = dmc->x; \
       } xr ? cbit : 0; })
@@ -769,11 +769,11 @@ dvb_network_create_mux
       char muxname[128];
       mpegts_mux_nice_name((mpegts_mux_t *)mm, muxname, sizeof(muxname));
       dvb_mux_conf_str(&tuning_old, buf, sizeof(buf));
-      tvhlog(change ? LOG_WARNING : LOG_NOTICE, "mpegts",
+      tvhlog(change ? LOG_WARNING : LOG_NOTICE, LS_MPEGTS,
              "mux %s%s %s (%08x)", muxname,
              change ? " changed from" : " old params", buf, save);
       dvb_mux_conf_str(&tuning_new, buf, sizeof(buf));
-      tvhlog(change ? LOG_WARNING : LOG_NOTICE, "mpegts",
+      tvhlog(change ? LOG_WARNING : LOG_NOTICE, LS_MPEGTS,
              "mux %s%s %s (%08x)", muxname,
              change ? " changed to  " : " new params", buf, save);
       if (!change) save = 0;
@@ -1020,7 +1020,7 @@ int dvb_network_get_orbital_pos(mpegts_network_t *mn)
     return INT_MAX;
   if (tvhtrace_enabled()) {
     if (!idnode_is_instance(&mn->mn_id, &dvb_network_dvbs_class)) {
-      tvhinfo("mpegts", "wrong dvb_network_get_orbital_pos() call");
+      tvhinfo(LS_MPEGTS, "wrong dvb_network_get_orbital_pos() call");
       return INT_MAX;
     }
   }

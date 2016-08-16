@@ -120,7 +120,7 @@ th_pkt_t *pkt_copy_nodata(th_pkt_t *pkt);
 th_pktref_t *pktref_create(th_pkt_t *pkt);
 
 void pkt_trace_
-  (const char *file, int line, const char *subsys, th_pkt_t *pkt,
+  (const char *file, int line, int subsys, th_pkt_t *pkt,
    int index, streaming_component_type_t type, const char *fmt, ...);
 
 #define pkt_trace(subsys, pkt, index, type, fmt, ...) \

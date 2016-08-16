@@ -98,7 +98,7 @@ uuid_init ( void )
 {
   fd = tvh_open(RANDOM_PATH, O_RDONLY, 0);
   if (fd == -1) {
-    tvherror("uuid", "failed to open %s", RANDOM_PATH);
+    tvherror(LS_UUID, "failed to open %s", RANDOM_PATH);
     exit(1);
   }
 }
@@ -107,7 +107,7 @@ void
 uuid_random ( uint8_t *buf, size_t bufsize )
 {
   if (read(fd, buf, bufsize) != bufsize) {
-    tvherror("uuid", "random failed: %s", strerror(errno));
+    tvherror(LS_UUID, "random failed: %s", strerror(errno));
     exit(1);
   }
 }
@@ -119,12 +119,12 @@ uuid_init_bin ( tvh_uuid_t *u, const char *str )
   memset(u, 0, sizeof(tvh_uuid_t));
   if (str) {
     if (strlen(str) != UUID_HEX_SIZE - 1) {
-      tvherror("uuid", "wrong uuid size");
+      tvherror(LS_UUID, "wrong uuid size");
       return -EINVAL;
     }
     return hex2bin(u->bin, sizeof(u->bin), str);
   } else if (read(fd, u->bin, sizeof(u->bin)) != sizeof(u->bin)) {
-    tvherror("uuid", "failed to read from %s", RANDOM_PATH);
+    tvherror(LS_UUID, "failed to read from %s", RANDOM_PATH);
     return -EINVAL;
   }
   return 0;

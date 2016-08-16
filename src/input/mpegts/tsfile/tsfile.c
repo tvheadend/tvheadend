@@ -138,7 +138,7 @@ void tsfile_add_file ( const char *path )
     uuid = tmp;
   }
 
-  tvhtrace("tsfile", "add file %s (uuid:%s)", path, uuid);
+  tvhtrace(LS_TSFILE, "add file %s (uuid:%s)", path, uuid);
   
   /* Create logical instance */
   mm = tsfile_mux_create(uuid, tsfile_network);

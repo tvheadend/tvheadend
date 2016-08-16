@@ -239,10 +239,10 @@ linuxdvb_switch_tune
       return -1;
 
     lsp->ls_last_toneburst = 0;
-    tvhtrace("diseqc", "toneburst %s", ls->ls_toneburst ? "B" : "A");
+    tvhtrace(LS_DISEQC, "toneburst %s", ls->ls_toneburst ? "B" : "A");
     if (ioctl(fd, FE_DISEQC_SEND_BURST,
               ls->ls_toneburst ? SEC_MINI_B : SEC_MINI_A)) {
-      tvherror("diseqc", "failed to set toneburst (e=%s)", strerror(errno));
+      tvherror(LS_DISEQC, "failed to set toneburst (e=%s)", strerror(errno));
       return -1;
     }
     lsp->ls_last_toneburst = ls->ls_toneburst + 1;

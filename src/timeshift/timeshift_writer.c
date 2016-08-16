@@ -69,7 +69,7 @@ static ssize_t _write
         alloc = MAX(count, 4*1024*1024);
       ram = realloc(tsf->ram, tsf->ram_size + alloc);
       if (ram == NULL) {
-        tvhwarn("timeshift", "RAM timeshift memalloc failed");
+        tvhwarn(LS_TIMESHIFT, "RAM timeshift memalloc failed");
         pthread_mutex_unlock(&tsf->ram_lock);
         return -1;
       }

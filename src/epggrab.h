@@ -152,6 +152,7 @@ struct epggrab_module
     EPGGRAB_EXT,
   }                            type;      ///< Grabber type
   const char                   *id;       ///< Module identifier
+  int                          subsys;    ///< Module log subsystem
   const char                   *saveid;   ///< Module save identifier
   const char                   *name;     ///< Module name (for display)
   int                          enabled;   ///< Whether the module is enabled

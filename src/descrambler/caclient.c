@@ -89,7 +89,7 @@ caclient_create
   if ((s = htsmsg_get_str(conf, "class")) != NULL)
     c = caclient_class_find(s);
   if (c == NULL) {
-    tvherror("caclient", "wrong class %s!", s);
+    tvherror(LS_CACLIENT, "wrong class %s!", s);
     abort();
   }
 #if ENABLE_CWC
@@ -107,12 +107,12 @@ caclient_create
     cac = constcw_create();
 #endif
   if (cac == NULL) {
-    tvherror("caclient", "CA Client class %s is not available!", s);
+    tvherror(LS_CACLIENT, "CA Client class %s is not available!", s);
     return NULL;
   }
   if (idnode_insert(&cac->cac_id, uuid, c, 0)) {
     if (uuid)
-      tvherror("caclient", "invalid uuid '%s'", uuid);
+      tvherror(LS_CACLIENT, "invalid uuid '%s'", uuid);
     free(cac);
     return NULL;
   }

@@ -178,7 +178,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
 
   if (idnode_insert(&dte->dte_id, uuid, &dvr_timerec_entry_class, 0)) {
     if (uuid)
-      tvhwarn("dvr", "invalid timerec entry uuid '%s'", uuid);
+      tvhwarn(LS_DVR, "invalid timerec entry uuid '%s'", uuid);
     free(dte);
     return NULL;
   }
@@ -219,7 +219,7 @@ dvr_timerec_update_htsp (dvr_timerec_entry_t *dte, htsmsg_t *conf)
 {
   idnode_update(&dte->dte_id, conf);
   idnode_changed(&dte->dte_id);
-  tvhlog(LOG_INFO, "timerec", "\"%s\" on \"%s\": Updated", dte->dte_title ? dte->dte_title : "",
+  tvhinfo(LS_DVR, "timerec \"%s\" on \"%s\": Updated", dte->dte_title ? dte->dte_title : "",
       (dte->dte_channel && dte->dte_channel->ch_name) ? dte->dte_channel->ch_name : "any channel");
 }
 
@@ -717,7 +717,7 @@ dvr_timerec_timer_cb(void *aux)
 {
   dvr_timerec_entry_t *dte;
 
-  tvhtrace("dvr", "timerec update");
+  tvhtrace(LS_DVR, "timerec update");
 
   /* check all entries */
   TAILQ_FOREACH(dte, &timerec_entries, dte_link) {

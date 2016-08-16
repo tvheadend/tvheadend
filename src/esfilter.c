@@ -158,12 +158,12 @@ esfilter_create
     }
   }
   if (!c) {
-    tvherror("esfilter", "wrong class %d!", cls);
+    tvherror(LS_ESFILTER, "wrong class %d!", cls);
     abort();
   }
   if (idnode_insert(&esf->esf_id, uuid, c, 0)) {
     if (uuid)
-      tvherror("esfilter", "invalid uuid '%s'", uuid);
+      tvherror(LS_ESFILTER, "invalid uuid '%s'", uuid);
     free(esf);
     return NULL;
   }
@@ -172,7 +172,7 @@ esfilter_create
   if (ESF_CLASS_IS_VALID(cls))
     esf->esf_class = cls;
   else if (!ESF_CLASS_IS_VALID(esf->esf_class)) {
-    tvherror("esfilter", "wrong class %d!", esf->esf_class);
+    tvherror(LS_ESFILTER, "wrong class %d!", esf->esf_class);
     abort();
   }
   if (esf->esf_index) {

@@ -51,7 +51,7 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
       if(!strlen(l))
         break;
 
-      tvhlog(level, "libav", "%s", l);
+      tvhlog(level, LS_LIBAV, "%s", l);
 
       if(!nl)
         break;
@@ -124,7 +124,7 @@ streaming_component_type2codec_id(streaming_component_type_t type)
 streaming_component_type_t
 codec_id2streaming_component_type(enum AVCodecID id)
 {
-  streaming_component_type_t type = AV_CODEC_ID_NONE;
+  streaming_component_type_t type = SCT_NONE;
 
   switch(id) {
   case AV_CODEC_ID_H264:

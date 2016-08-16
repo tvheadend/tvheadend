@@ -67,6 +67,105 @@ static const char *logtxtmeta[9][2] = {
   {"TRACE",     "\033[32m"},
 };
 
+struct logsubsystxt {
+  const char *name;
+  const char *desc;
+};
+
+static struct logsubsystxt logsubsys[] = {
+  [LS_NONE]          = { "<none>",        N_("None") },
+  [LS_START]         = { "START",         N_("START") },
+  [LS_STOP]          = { "STOP",          N_("STOP") },
+  [LS_CRASH]         = { "CRASH",         N_("CRASH") },
+  [LS_CPU]           = { "CPU",           N_("CPU") },
+  [LS_MAIN]          = { "main",          N_("Main") },
+  [LS_GTIMER]        = { "gtimer",        N_("Global timer") },
+  [LS_MTIMER]        = { "mtimer",        N_("Monitonic timer") },
+  [LS_THREAD]        = { "thread",        N_("Thread") },
+  [LS_TVHPOLL]       = { "tvhpoll",       N_("Poll multiplexer") },
+  [LS_TIME]          = { "time",          N_("Time") },
+  [LS_SPAWN]         = { "spawn",         N_("Spawn") },
+  [LS_FSMONITOR]     = { "fsmonitor",     N_("Filesystem monitor") },
+  [LS_LOCK]          = { "lock",          N_("Locking") },
+  [LS_UUID]          = { "uuid",          N_("UUID") },
+  [LS_IDNODE]        = { "idnode",        N_("Node subsystem") },
+  [LS_URL]           = { "url",           N_("URL") },
+  [LS_TCP]           = { "tcp",           N_("TCP Protocol") },
+  [LS_RTSP]          = { "rtsp",          N_("RTSP Protocol") },
+  [LS_UPNP]          = { "upnp",          N_("UPnP Protocol") },
+  [LS_SETTINGS]      = { "settings",      N_("Settings") },
+  [LS_CONFIG]        = { "config",        N_("Configuration") },
+  [LS_ACCESS]        = { "access",        N_("Access (ACL)") },
+  [LS_CRON]          = { "cron",          N_("Cron") },
+  [LS_DBUS]          = { "dbus",          N_("DBUS") },
+  [LS_AVAHI]         = { "avahi",         N_("Avahi") },
+  [LS_BONJOUR]       = { "bonjour",       N_("Bonjour") },
+  [LS_API]           = { "api",           N_("API") },
+  [LS_HTTP]          = { "http",          N_("HTTP Server") },
+  [LS_HTTPC]         = { "httpc",         N_("HTTP Client") },
+  [LS_HTSP]          = { "htsp",          N_("HTSP Server") },
+  [LS_HTSP_SUB]      = { "htsp-sub",      N_("HTSP Subscription") },
+  [LS_HTSP_REQ]      = { "htsp-req",      N_("HTSP Request") },
+  [LS_HTSP_ANS]      = { "htsp-ans",      N_("HTSP Answer") },
+  [LS_IMAGECACHE]    = { "imagecache",    N_("Image Cache") },
+  [LS_TBL]           = { "tbl",           N_("DVB SI Tables") },
+  [LS_TBL_BASE]      = { "tbl-base",      N_("Base DVB SI Tables (PAT,CAT,PMT,SDT etc.)") },
+  [LS_TBL_CSA]       = { "tbl-csa",       N_("DVB CSA (descrambling) Tables") },
+  [LS_TBL_EIT]       = { "tbl-eit",       N_("DVB EPG Tables") },
+  [LS_TBL_TIME]      = { "tbl-time",      N_("DVB Time Tables") },
+  [LS_TBL_ATSC]      = { "tbl-atsc",      N_("ATSC SI Tables") },
+  [LS_TBL_PASS]      = { "tbl-pass",      N_("Passthrough Muxer SI Tables") },
+  [LS_TBL_SATIP]     = { "tbl-satip",     N_("SAT>IP Server SI Tables") },
+  [LS_FASTSCAN]      = { "fastscan",      N_("Fastscan DVB") },
+  [LS_PARSER]        = { "parser",        N_("MPEG-TS Parser") },
+  [LS_TS]            = { "TS",            N_("Transport Stream") },
+  [LS_GLOBALHEADERS] = { "globalheaders", N_("Global Headers") }, 
+  [LS_TSFIX]         = { "tsfix",         N_("Time Stamp Fix") },
+  [LS_HEVC]          = { "hevc",          N_("HEVC - H.265") },
+  [LS_MUXER]         = { "muxer",         N_("Muxer") },
+  [LS_PASS]          = { "pass",          N_("Pass-thru muxer") },
+  [LS_MKV]           = { "mkv",           N_("Matroska muxer") },
+  [LS_SERVICE]       = { "service",       N_("Service") },
+  [LS_CHANNEL]       = { "channel",       N_("Channel") },
+  [LS_SUBSCRIPTION]  = { "subscription",  N_("Subscription") },
+  [LS_SERVICE_MAPPER]= { "service-mapper",N_("Service Mapper") },
+  [LS_BOUQUET]       = { "bouquet",       N_("Bouquet") },
+  [LS_ESFILTER]      = { "esfilter",      N_("Elementary Stream Filter") },
+  [LS_PROFILE]       = { "profile",       N_("Streaming Profile") },
+  [LS_DESCRAMBLER]   = { "descrambler",   N_("Descrambler") },
+  [LS_CACLIENT]      = { "caclient",      N_("CA (descrambling) Client") },
+  [LS_CSA]           = { "csa",           N_("CSA (descrambling)") },
+  [LS_CAPMT]         = { "capmt",         N_("CAPMT CA Client") },
+  [LS_CWC]           = { "cwc",           N_("CWC CA Client") },
+  [LS_DVR]           = { "dvr",           N_("Digital Video Recorder") },
+  [LS_EPG]           = { "epg",           N_("Electronic Program Guide") },
+  [LS_EPGDB]         = { "epgdb",         N_("EPG Database") },
+  [LS_EPGGRAB]       = { "epggrab",       N_("EPG Grabber") },
+  [LS_CHARSET]       = { "charset",       N_("Charset") },
+  [LS_DVB]           = { "dvb",           N_("DVB") },
+  [LS_MPEGTS]        = { "mpegts",        N_("MPEG-TS") },
+  [LS_MUXSCHED]      = { "muxsched",      N_("Mux Scheduler") },
+  [LS_LIBAV]         = { "libav",         N_("libav / ffmpeg") },
+  [LS_TRANSCODE]     = { "transcode",     N_("Transcode") },
+  [LS_IPTV]          = { "iptv",          N_("IPTV") },
+  [LS_IPTV_PCR]      = { "iptv-pcr",      N_("IPTV PCR") },
+  [LS_LINUXDVB]      = { "linuxdvb",      N_("LinuxDVB Input") },
+  [LS_DISEQC]        = { "diseqc",        N_("DiseqC") },
+  [LS_EN50221]       = { "en50221",       N_("CI Module") },
+  [LS_EN50494]       = { "en50494",       N_("Unicable (EN50494)") },
+  [LS_SATIP]         = { "satip",         N_("SAT>IP Client") },
+  [LS_SATIPS]        = { "satips",        N_("SAT>IP Server") },
+  [LS_TVHDHOMERUN]   = { "tvhdhomerun",   N_("TVHDHomeRun Client") }, 
+  [LS_PSIP]          = { "psip",          N_("ATSC PSIP EPG") },
+  [LS_OPENTV]        = { "opentv",        N_("OpenTV EPG") },
+  [LS_PYEPG]         = { "pyepg",         N_("PyEPG Import") },
+  [LS_XMLTV]         = { "xmltv",         N_("XMLTV EPG Import") },
+  [LS_WEBUI]         = { "webui",         N_("Web User Interface") },
+  [LS_TIMESHIFT]     = { "timeshift",     N_("Timeshift") },
+  [LS_SCANFILE]      = { "scanfile",      N_("Scanfile") },
+  [LS_TSFILE]        = { "tsfile",        N_("MPEG-TS File") },
+};
+
 static void
 tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
 {
@@ -264,7 +363,7 @@ tvhlog_thread ( void *p )
 }
 
 void tvhlogv ( const char *file, int line, int severity,
-               const char *subsys, const char *fmt, va_list *args )
+               int subsys, const char *fmt, va_list *args )
 {
   int ok, options, notify;
   size_t l;
@@ -288,11 +387,11 @@ void tvhlogv ( const char *file, int line, int severity,
     if (severity <= atomic_get(&tvhlog_level)) {
       if (tvhlog_trace) {
         ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_trace, subsys, ok);
+        ok = htsmsg_get_u32_or_default(tvhlog_trace, logsubsys[subsys].name, ok);
       }
       if (!ok && severity == LOG_DEBUG && tvhlog_debug) {
         ok = htsmsg_get_u32_or_default(tvhlog_debug, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_debug, subsys, ok);
+        ok = htsmsg_get_u32_or_default(tvhlog_debug, logsubsys[subsys].name, ok);
       }
     }
   } else {
@@ -318,7 +417,7 @@ void tvhlogv ( const char *file, int line, int severity,
   if (options & TVHLOG_OPT_THREAD) {
     tvh_strlcatf(buf, sizeof(buf), l, "tid %ld: ", (long)pthread_self());
   }
-  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", subsys);
+  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", logsubsys[subsys].name);
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
     tvh_strlcatf(buf, sizeof(buf), l, "(%s:%d) ", file, line);
   if (args)
@@ -353,7 +452,7 @@ void tvhlogv ( const char *file, int line, int severity,
  * Map args
  */
 void _tvhlog ( const char *file, int line, int severity,
-               const char *subsys, const char *fmt, ... )
+               int subsys, const char *fmt, ... )
 {
   va_list args;
   va_start(args, fmt);
@@ -367,7 +466,7 @@ void _tvhlog ( const char *file, int line, int severity,
 #define HEXDUMP_WIDTH 16
 void
 _tvhlog_hexdump(const char *file, int line, int severity,
-                const char *subsys, const uint8_t *data, ssize_t len )
+                int subsys, const uint8_t *data, ssize_t len )
 {
   int i, c;
   char str[1024];

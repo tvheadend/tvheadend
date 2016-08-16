@@ -71,14 +71,12 @@ tvhpoll_create ( size_t n )
   int fd;
 #if ENABLE_EPOLL
   if ((fd = epoll_create1(EPOLL_CLOEXEC)) < 0) {
-    tvhlog(LOG_ERR, "tvhpoll", "failed to create epoll [%s]",
-           strerror(errno));
+    tvherror(LS_TVHPOLL, "failed to create epoll [%s]", strerror(errno));
     return NULL;
   }
 #elif ENABLE_KQUEUE
   if ((fd = kqueue()) == -1) {
-    tvhlog(LOG_ERR, "tvhpoll", "failed to create kqueue [%s]",
-           strerror(errno));
+    tvherror(LS_TVHPOLL, "failed to create kqueue [%s]", strerror(errno));
     return NULL;
   }
 #else
@@ -129,7 +127,7 @@ int tvhpoll_add
       EV_SET(tp->ev+i, evs[i].fd, EVFILT_WRITE, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
       rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
       if (rc == -1) {
-        tvhlog(LOG_ERR, "tvhpoll", "failed to add kqueue WRITE filter [%d|%d]",
+        tvherror(LS_TVHPOLL, "failed to add kqueue WRITE filter [%d|%d]",
            evs[i].fd, rc);
         return -1;
       }
@@ -138,8 +136,7 @@ int tvhpoll_add
       EV_SET(tp->ev+i, evs[i].fd, EVFILT_READ, EV_ADD, 0, 0, (intptr_t*)evs[i].data.u64);
       rc = kevent(tp->fd, tp->ev+i, 1, NULL, 0, NULL);
       if (rc == -1) {
-        tvhlog(LOG_ERR, "tvhpoll", "failed to add kqueue READ filter [%d|%d]",
-           evs[i].fd, rc);
+        tvherror(LS_TVHPOLL, "failed to add kqueue READ filter [%d|%d]", evs[i].fd, rc);
         return -1;
       }
     }

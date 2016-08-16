@@ -562,7 +562,7 @@ http_error(http_connection_t *hc, int error)
       level = LOG_DEBUG;
     else if (error == HTTP_STATUS_BAD_REQUEST || error > HTTP_STATUS_UNAUTHORIZED)
       level = LOG_ERR;
-    tvhlog(level, "http", "%s: %s %s %s -- %d",
+    tvhlog(level, LS_HTTP, "%s: %s %s %s -- %d",
 	   hc->hc_peer_ipstr, http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, error);
   }
@@ -718,8 +718,8 @@ http_access_verify_ticket(http_connection_t *hc)
   hc->hc_access = access_ticket_verify2(ticket_id, hc->hc_url);
   if (hc->hc_access == NULL)
     return;
-  tvhlog(LOG_INFO, "http", "%s: using ticket %s for %s",
-	 hc->hc_peer_ipstr, ticket_id, hc->hc_url);
+  tvhinfo(LS_HTTP, "%s: using ticket %s for %s",
+	  hc->hc_peer_ipstr, ticket_id, hc->hc_url);
 }
 
 /**
@@ -957,7 +957,7 @@ dump_request(http_connection_t *hc)
   if (!first)
     tvh_strlcatf(buf, sizeof(buf), ptr, "}}");
 
-  tvhtrace("http", "%s %s %s%s", http_ver2str(hc->hc_version),
+  tvhtrace(LS_HTTP, "%s %s %s%s", http_ver2str(hc->hc_version),
            http_cmd2str(hc->hc_cmd), hc->hc_url, buf);
 }
 
@@ -1554,7 +1554,7 @@ http_server_init(const char *bindaddr)
     .cancel = http_cancel
   };
   RB_INIT(&http_nonces);
-  http_server = tcp_server_create("http", "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
+  http_server = tcp_server_create(LS_HTTP, "HTTP", bindaddr, tvheadend_webui_port, &ops, NULL);
   atomic_set(&http_server_running, 1);
 }
 

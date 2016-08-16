@@ -164,7 +164,7 @@ urlparse ( const char *str, url_t *url )
   if (!urlparse_exp) {
     urlparse_exp = calloc(1, sizeof(regex_t));
     if (regcomp(urlparse_exp, URL_RE, REG_ICASE | REG_EXTENDED)) {
-      tvherror("url", "failed to compile regexp");
+      tvherror(LS_URL, "failed to compile regexp");
       exit(1);
     }
   }

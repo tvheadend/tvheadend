@@ -492,7 +492,7 @@ access_dump_a(access_t *a)
     tvh_strlcatf(buf, sizeof(buf), l, ", tag=ANY");
   }
 
-  tvhtrace("access", "%s", buf);
+  tvhtrace(LS_ACCESS, "%s", buf);
 }
 
 /*
@@ -995,7 +995,7 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   if (idnode_insert(&ae->ae_id, uuid, &access_entry_class, 0)) {
     if (uuid)
-      tvherror("access", "invalid uuid '%s'", uuid);
+      tvherror(LS_ACCESS, "invalid uuid '%s'", uuid);
     free(ae);
     return NULL;
   }
@@ -1700,7 +1700,7 @@ passwd_entry_create(const char *uuid, htsmsg_t *conf)
 
   if (idnode_insert(&pw->pw_id, uuid, &passwd_entry_class, 0)) {
     if (uuid)
-      tvherror("access", "invalid uuid '%s'", uuid);
+      tvherror(LS_ACCESS, "invalid uuid '%s'", uuid);
     free(pw);
     return NULL;
   }
@@ -1887,7 +1887,7 @@ ipblock_entry_create(const char *uuid, htsmsg_t *conf)
 
   if (idnode_insert(&ib->ib_id, uuid, &ipblock_entry_class, 0)) {
     if (uuid)
-      tvherror("access", "invalid uuid '%s'", uuid);
+      tvherror(LS_ACCESS, "invalid uuid '%s'", uuid);
     free(ib);
     return NULL;
   }
@@ -2012,7 +2012,7 @@ access_init(int createdefault, int noacl)
 
   access_noacl = noacl;
   if (noacl)
-    tvhlog(LOG_WARNING, "access", "Access control checking disabled");
+    tvhwarn(LS_ACCESS, "Access control checking disabled");
 
   TAILQ_INIT(&access_entries);
   TAILQ_INIT(&access_tickets);
@@ -2073,12 +2073,11 @@ access_init(int createdefault, int noacl)
 
     idnode_changed(&ae->ae_id);
 
-    tvhlog(LOG_WARNING, "access",
-	   "Created default wide open access controle entry");
+    tvhwarn(LS_ACCESS, "Created default wide open access controle entry");
   }
 
   if(!TAILQ_FIRST(&access_entries) && !noacl)
-    tvherror("access", "No access entries loaded");
+    tvherror(LS_ACCESS, "No access entries loaded");
 
   /* Load superuser account */
 

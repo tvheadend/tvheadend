@@ -788,7 +788,7 @@ mpegts_service_create0
   pthread_mutex_unlock(&s->s_stream_mutex);
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  tvhlog(LOG_DEBUG, "mpegts", "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
+  tvhdebug(LS_MPEGTS, "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
   /* Notification */
   idnode_notify_changed(&mm->mm_id);
@@ -1059,7 +1059,7 @@ mpegts_service_create_raw ( mpegts_mux_t *mm )
   s->s_nicename = strdup(buf);
   pthread_mutex_unlock(&s->s_stream_mutex);
 
-  tvhlog(LOG_DEBUG, "mpegts", "%s - add raw service", buf);
+  tvhdebug(LS_MPEGTS, "%s - add raw service", buf);
 
   return s;
 }

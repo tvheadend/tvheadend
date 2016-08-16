@@ -137,12 +137,12 @@ upnp_thread( void *aux )
   size_t size;
   int r, delay_ms;
 
-  multicast = udp_bind("upnp", "upnp_thread_multicast",
+  multicast = udp_bind(LS_UPNP, "upnp_thread_multicast",
                        "239.255.255.250", 1900,
                        NULL, 32*1024, 32*1024);
   if (multicast == NULL || multicast == UDP_FATAL_ERROR)
     goto error;
-  unicast = udp_bind("upnp", "upnp_thread_unicast", bindaddr, 0,
+  unicast = udp_bind(LS_UPNP, "upnp_thread_unicast", bindaddr, 0,
                      NULL, 32*1024, 32*1024);
   if (unicast == NULL || unicast == UDP_FATAL_ERROR)
     goto error;
@@ -172,10 +172,10 @@ upnp_thread( void *aux )
         if (size > 0 && tvhtrace_enabled()) {
           char tbuf[256];
           inet_ntop(ip.ss_family, IP_IN_ADDR(ip), tbuf, sizeof(tbuf));
-          tvhtrace("upnp", "%s - received data from %s:%hu [size=%zi]",
+          tvhtrace(LS_UPNP, "%s - received data from %s:%hu [size=%zi]",
                    conn == multicast ? "multicast" : "unicast",
                    tbuf, (unsigned short) IP_PORT(ip), size);
-          tvhlog_hexdump("upnp", buf, size);
+          tvhlog_hexdump(LS_UPNP, buf, size);
         }
         /* TODO: a filter */
         TAILQ_FOREACH(us, &upnp_services, us_link)

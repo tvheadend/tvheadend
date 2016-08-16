@@ -508,7 +508,7 @@ page_status(http_connection_t *hc,
 #ifdef ENABLE_GETLOADAVG
   loads = getloadavg (avg, 3); 
   if (loads == -1) {
-        tvhlog(LOG_DEBUG, "webui",  "Error getting load average from getloadavg()");
+        tvhdebug(LS_WEBUI,  "Error getting load average from getloadavg()");
         loads = 0;
         /* should we return an error or a 0 on error */
         htsbuf_qprintf(hq, "<systemload>0</systemload>\n");

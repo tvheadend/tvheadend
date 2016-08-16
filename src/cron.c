@@ -328,7 +328,7 @@ cron_next ( cron_t *c, const time_t now, time_t *ret )
     *ret = mktime(&tmp);
   if (*ret <= now) {
 #ifndef CRON_TEST
-    tvherror("cron", "invalid time, now %"PRItime_t", result %"PRItime_t, now, *ret);
+    tvherror(LS_CRON, "invalid time, now %"PRItime_t", result %"PRItime_t, now, *ret);
 #else
     printf("ERROR: invalid time, now %"PRItime_t", result %"PRItime_t"\n", now, *ret);
 #endif

@@ -73,10 +73,10 @@ static void _epggrab_module_grab ( epggrab_module_int_t *mod )
 
   /* Process */
   if ( data ) {
-    tvhlog(LOG_INFO, mod->id, "grab took %"PRId64" seconds", mono2sec(tm2 - tm1));
+    tvhinfo(mod->subsys, "%s: grab took %"PRId64" seconds", mod->id, mono2sec(tm2 - tm1));
     epggrab_module_parse(mod, data);
   } else {
-    tvhlog(LOG_WARNING, mod->id, "grab returned no data");
+    tvhwarn(mod->subsys, "%s: grab returned no data", mod->id);
   }
 }
 

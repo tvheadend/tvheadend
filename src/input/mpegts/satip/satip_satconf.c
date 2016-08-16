@@ -214,8 +214,8 @@ satip_satconf_sanity_check( satip_frontend_t *lfe )
   TAILQ_FOREACH(sfc, &lfe->sf_satconf, sfc_link) {
     if (sfc->sfc_network_limit) {
       if (lfe->sf_master) {
-        tvherror("satip", "%s: unable to combine master/slave with network limiter, "
-                          "disabling master", lfe->mi_name);
+        tvherror(LS_SATIP, "%s: unable to combine master/slave with network limiter, "
+                           "disabling master", lfe->mi_name);
         lfe->sf_master = 0;
       }
     }

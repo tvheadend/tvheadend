@@ -255,7 +255,7 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
     tr->nextpts = PTS_UNSET;
 
     if (mk->webm && ssc->ssc_type != SCT_VP8 && ssc->ssc_type != SCT_VORBIS)
-      tvhwarn("mkv", "WEBM format supports only VP8+VORBIS streams (detected %s)",
+      tvhwarn(LS_MKV, "WEBM format supports only VP8+VORBIS streams (detected %s)",
               streaming_component_type2txt(ssc->ssc_type));
 
     switch(ssc->ssc_type) {
@@ -499,8 +499,7 @@ static void
 mk_write_queue(mk_muxer_t *mk, htsbuf_queue_t *q)
 {
   if(!mk->error && mk_write_to_fd(mk, q) && !MC_IS_EOS_ERROR(mk->error))
-    tvhlog(LOG_ERR, "mkv", "%s: Write failed -- %s", mk->filename,
-	   strerror(errno));
+    tvherror(LS_MKV, "%s: Write failed -- %s", mk->filename, strerror(errno));
 
   htsbuf_queue_flush(q);
 }
@@ -1181,8 +1180,8 @@ mk_mux_close(mk_muxer_t *mk)
       mk_write_master(mk, 0x1549a966, mk_build_segment_info(mk));
     else {
       mk->error = errno;
-      tvhlog(LOG_ERR, "mkv", "%s: Unable to write duration, seek failed -- %s",
-	     mk->filename, strerror(errno));
+      tvherror(LS_MKV, "%s: Unable to write duration, seek failed -- %s",
+	       mk->filename, strerror(errno));
     }
 
     // Rewrite segment header to update total size
@@ -1190,14 +1189,14 @@ mk_mux_close(mk_muxer_t *mk)
       mk_write_segment_header(mk, totsize - mk->segment_header_pos - 12);
     } else {
       mk->error = errno;
-      tvhlog(LOG_ERR, "mkv", "%s: Unable to write total size, seek failed -- %s",
-	     mk->filename, strerror(errno));
+      tvherror(LS_MKV, "%s: Unable to write total size, seek failed -- %s",
+	       mk->filename, strerror(errno));
     }
 
     if(close(mk->fd)) {
       mk->error = errno;
-      tvhlog(LOG_ERR, "mkv", "%s: Unable to close the file descriptor, close failed -- %s",
-	     mk->filename, strerror(errno));
+      tvherror(LS_MKV, "%s: Unable to close the file descriptor, close failed -- %s",
+	       mk->filename, strerror(errno));
     }
   }
 
@@ -1334,23 +1333,23 @@ mkv_muxer_open_file(muxer_t *m, const char *filename)
   mk_muxer_t *mk = (mk_muxer_t*)m;
   int fd, permissions = mk->m_config.m_file_permissions;
 
-  tvhtrace("mkv", "Creating file \"%s\" with file permissions \"%o\"",
+  tvhtrace(LS_MKV, "Creating file \"%s\" with file permissions \"%o\"",
            filename, permissions);
 
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, permissions);
 
   if(fd < 0) {
     mk->error = errno;
-    tvhlog(LOG_ERR, "mkv", "%s: Unable to create file, open failed -- %s",
-	   mk->filename, strerror(errno));
+    tvherror(LS_MKV, "%s: Unable to create file, open failed -- %s",
+	     mk->filename, strerror(errno));
     mk->m_errors++;
     return -1;
   }
 
   /* bypass umask settings */
   if (fchmod(fd, permissions))
-    tvhlog(LOG_ERR, "mkv", "%s: Unable to change permissions -- %s",
-           filename, strerror(errno));
+    tvherror(LS_MKV, "%s: Unable to change permissions -- %s",
+             filename, strerror(errno));
 
   mk->filename = strdup(filename);
   mk->fd = fd;

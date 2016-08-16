@@ -540,7 +540,7 @@ try_again:
 
     if (c1 && c2) {
       if (started + sec2mono(3) < mclk()) {
-        tvherror("tcp", "multiple connections are not allowed for user '%s' from '%s' "
+        tvherror(LS_TCP, "multiple connections are not allowed for user '%s' from '%s' "
                         "(limit %u, streaming limit %u, active streaming %u, DVR %u)",
                  aa->aa_username ?: "", aa->aa_representative ?: "",
                  aa->aa_conn_limit, aa->aa_conn_limit_streaming,
@@ -673,7 +673,7 @@ tcp_server_loop(void *aux)
     if(r < 0) {
       if (ERRNO_AGAIN(-r))
         continue;
-      tvherror("tcp", "tcp_server_loop: tvhpoll_wait: %s", strerror(errno));
+      tvherror(LS_TCP, "tcp_server_loop: tvhpoll_wait: %s", strerror(errno));
       continue;
     }
 
@@ -738,7 +738,7 @@ next:
       tvhthread_create(&tsl->tid, NULL, tcp_server_start, tsl, "tcp-start");
     }
   }
-  tvhtrace("tcp", "server thread finished");
+  tvhtrace(LS_TCP, "server thread finished");
   return NULL;
 }
 
@@ -752,7 +752,7 @@ static void *tcp_server_create_new
 #else
 void *tcp_server_create
 #endif
-  (const char *subsystem, const char *name, const char *bindaddr,
+  (int subsystem, const char *name, const char *bindaddr,
    int port, tcp_server_ops_t *ops, void *opaque)
 {
   int fd, x;
@@ -775,8 +775,8 @@ void *tcp_server_create
   x = getaddrinfo(bindaddr, port_buf, &hints, &res);
 
   if(x != 0) {
-    tvhlog(LOG_ERR, "tcp", "getaddrinfo: %s: %s", bindaddr != NULL ? bindaddr : "*",
-      x == EAI_SYSTEM ? strerror(errno) : gai_strerror(x));
+    tvherror(LS_TCP, "getaddrinfo: %s: %s", bindaddr != NULL ? bindaddr : "*",
+             x == EAI_SYSTEM ? strerror(errno) : gai_strerror(x));
     return NULL;
   }
 
@@ -811,7 +811,7 @@ void *tcp_server_create
 
   if(x != 0)
   {
-    tvhlog(LOG_ERR, "tcp", "bind: %s:%i: %s", bindaddr != NULL ? bindaddr : "*", port, strerror(errno));
+    tvherror(LS_TCP, "bind: %s:%i: %s", bindaddr != NULL ? bindaddr : "*", port, strerror(errno));
     close(fd);
     return NULL;
   }
@@ -825,7 +825,7 @@ void *tcp_server_create
   ts->opaque = opaque;
 
   tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
-  tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d", name, buf, htons(IP_PORT(bound)));
+  tvhinfo(subsystem, "Starting %s server %s:%d", name, buf, htons(IP_PORT(bound)));
 
   return ts;
 }
@@ -862,7 +862,7 @@ tcp_server_create
     memset(&bound, 0, sizeof(bound));
     s_len = sizeof(bound);
     if (getsockname(fd, (struct sockaddr *) &bound, &s_len) != 0) {
-      tvhlog(LOG_ERR, "tcp", "getsockname failed: %s", strerror(errno));
+      tvherror(LS_TCP, "getsockname failed: %s", strerror(errno));
       continue;
     }
     switch (bound.ss_family) {
@@ -891,10 +891,10 @@ tcp_server_create
     ts->ops    = *ops;
     ts->opaque = opaque;
     tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
-    tvhlog(LOG_INFO, subsystem, "Starting %s server %s:%d (systemd)", name, buf, htons(IP_PORT(bound)));
+    tvhinfo(subsystem, "Starting %s server %s:%d (systemd)", name, buf, htons(IP_PORT(bound)));
   } else {
     /* no systemd-managed socket found, create a new one */
-    tvhlog(LOG_INFO, "tcp", "No systemd socket: creating a new one");
+    tvhinfo(LS_TCP, "No systemd socket: creating a new one");
     ts =  tcp_server_create_new(subsystem, name, bindaddr, port, ops, opaque);
   }
 
@@ -1141,7 +1141,7 @@ tcp_server_done(void)
   t = mclk();
   while (LIST_FIRST(&tcp_server_active) != NULL) {
     if (t + sec2mono(5) < mclk())
-      tvhtrace("tcp", "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
+      tvhtrace(LS_TCP, "tcp server %p active too long", LIST_FIRST(&tcp_server_active));
     pthread_mutex_unlock(&global_lock);
     tvh_safe_usleep(20000);
     pthread_mutex_lock(&global_lock);

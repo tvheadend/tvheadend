@@ -67,12 +67,12 @@ _eit_dtag_dump
 #if APS_DEBUG
   int i = 0, j = 0;
   char tmp[100];
-  tvhlog(LOG_DEBUG, mod->id, "  dtag 0x%02X len %d", dtag, dlen);
+  tvhdebug(mod->subsys, "%s:  dtag 0x%02X len %d", mt->mt_name, dtag, dlen);
   while (i < dlen) {
     j += sprintf(tmp+j, "%02X ", buf[i]);
     i++;
     if ((i % 8) == 0 || (i == dlen)) {
-      tvhlog(LOG_DEBUG, mod->id, "    %s", tmp);
+      tvhdebug(mod->subsys, "%s:    %s", mt->mt_name, tmp);
       j = 0;
     }
   }
@@ -436,8 +436,8 @@ static int _eit_process_event_one
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
-  tvhtrace("eit", "svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
-                  " stop=%"PRItime_t", ebc=%p",
+  tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
+                       " stop=%"PRItime_t", ebc=%p",
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
            eid, start, stop, ebc);
   if (!ebc) return 0;
@@ -459,8 +459,8 @@ static int _eit_process_event_one
     ptr   += 2;
     if (dllen < dlen) break;
 
-    tvhtrace(mod->id, "  dtag %02X dlen %d", dtag, dlen);
-    tvhlog_hexdump(mod->id, ptr, dlen);
+    tvhtrace(mod->subsys, "%s:  dtag %02X dlen %d", mod->id, dtag, dlen);
+    tvhlog_hexdump(mod->subsys, ptr, dlen);
 
     switch (dtag) {
       case DVB_DESC_SHORT_EVENT:
@@ -680,7 +680,7 @@ _eit_callback
         !mm->mm_eit_tsid_nocheck) {
       if (mm->mm_onid != MPEGTS_ONID_NONE &&
           mm->mm_tsid != MPEGTS_TSID_NONE)
-        tvhtrace("eit",
+        tvhtrace(LS_TBL_EIT,
                 "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
                 tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
       mm = NULL;
@@ -692,7 +692,7 @@ _eit_callback
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
   if (!svc) {
-    tvhtrace("eit", "sid %i not found", sid);
+    tvhtrace(LS_TBL_EIT, "sid %i not found", sid);
     goto done;
   }
 
@@ -762,7 +762,7 @@ static int _eit_start
 
   /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
-    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", MT_CRC, 3002, MPS_WEIGHT_EIT);
+    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
     pid = 3003;
 
   /* Viasat Baltic (0x39) */
@@ -778,9 +778,9 @@ static int _eit_start
     pid  = DVB_EIT_PID;
     opts = MT_RECORD;
   }
-  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, MT_CRC | opts, pid, MPS_WEIGHT_EIT);
+  mpegts_table_add(dm, 0, 0, _eit_callback, map, m->id, LS_TBL_EIT, MT_CRC | opts, pid, MPS_WEIGHT_EIT);
   // TODO: might want to limit recording to EITpf only
-  tvhlog(LOG_DEBUG, m->id, "installed table handlers");
+  tvhdebug(m->subsys, "%s: installed table handlers", m->id);
   return 0;
 }
 
@@ -826,11 +826,11 @@ void eit_init ( void )
     .tune  = _eit_tune,
   };
 
-  epggrab_module_ota_create(NULL, "eit", NULL, "EIT: DVB Grabber", 1, &ops);
-  epggrab_module_ota_create(NULL, "uk_freesat", NULL, "UK: Freesat", 5, &ops);
-  epggrab_module_ota_create(NULL, "uk_freeview", NULL, "UK: Freeview", 5, &ops);
-  epggrab_module_ota_create(NULL, "viasat_baltic", NULL, "VIASAT: Baltic", 5, &ops);
-  epggrab_module_ota_create(NULL, "Bulsatcom_39E", NULL, "Bulsatcom: Bula 39E", 5, &ops);
+  epggrab_module_ota_create(NULL, "eit", LS_TBL_EIT, NULL, "EIT: DVB Grabber", 1, &ops);
+  epggrab_module_ota_create(NULL, "uk_freesat", LS_TBL_EIT, NULL, "UK: Freesat", 5, &ops);
+  epggrab_module_ota_create(NULL, "uk_freeview", LS_TBL_EIT, NULL, "UK: Freeview", 5, &ops);
+  epggrab_module_ota_create(NULL, "viasat_baltic", LS_TBL_EIT, NULL, "VIASAT: Baltic", 5, &ops);
+  epggrab_module_ota_create(NULL, "Bulsatcom_39E", LS_TBL_EIT, NULL, "Bulsatcom: Bula 39E", 5, &ops);
 }
 
 void eit_done ( void )

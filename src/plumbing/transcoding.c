@@ -182,7 +182,7 @@ transcode_opt_set_int(transcoder_t *t, transcoder_stream_t *ts,
 {
   int opt_error;
   if ((opt_error = av_opt_set_int(ctx, opt, val, 0)) != 0) {
-    tvherror("transcode", "%04X: Could not set option %s (error '%s')",
+    tvherror(LS_TRANSCODE, "%04X: Could not set option %s (error '%s')",
              shortid(t), opt, get_error_text(opt_error));
     if (abort)
       transcoder_stream_invalidate(ts);
@@ -336,19 +336,19 @@ transcoder_get_decoder(transcoder_t *t, streaming_component_type_t ty)
 
   codec_id = streaming_component_type2codec_id(ty);
   if (codec_id == AV_CODEC_ID_NONE) {
-    tvherror("transcode", "%04X: Unsupported input codec %s",
+    tvherror(LS_TRANSCODE, "%04X: Unsupported input codec %s",
 	     shortid(t), streaming_component_type2txt(ty));
     return NULL;
   }
 
   codec = avcodec_find_decoder(codec_id);
   if (!codec) {
-    tvherror("transcode", "%04X: Unable to find %s decoder",
+    tvherror(LS_TRANSCODE, "%04X: Unable to find %s decoder",
 	     shortid(t), streaming_component_type2txt(ty));
     return NULL;
   }
 
-  tvhtrace("transcode", "%04X: Using decoder %s", shortid(t), codec->name);
+  tvhtrace(LS_TRANSCODE, "%04X: Using decoder %s", shortid(t), codec->name);
 
   return codec;
 }
@@ -364,11 +364,11 @@ transcoder_get_encoder(transcoder_t *t, const char *codec_name)
 
   codec = avcodec_find_encoder_by_name(codec_name);
   if (!codec) {
-    tvherror("transcode", "%04X: Unable to find %s encoder",
+    tvherror(LS_TRANSCODE, "%04X: Unable to find %s encoder",
              shortid(t), codec_name);
     return NULL;
   }
-  tvhtrace("transcode", "%04X: Using encoder %s", shortid(t), codec->name);
+  tvhtrace(LS_TRANSCODE, "%04X: Using encoder %s", shortid(t), codec->name);
 
   return codec;
 }
@@ -382,7 +382,7 @@ transcoder_stream_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt
 {
   streaming_message_t *sm;
 
-  tvhtrace("transcode", "%04X: deliver copy (pts = %" PRIu64 ")",
+  tvhtrace(LS_TRANSCODE, "%04X: deliver copy (pts = %" PRIu64 ")",
            shortid(t), pkt->pkt_pts);
   sm = streaming_msg_create_pkt(pkt);
   streaming_target_deliver2(ts->ts_target, sm);
@@ -414,7 +414,7 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
 
   if (!avcodec_is_open(ictx)) {
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
-      tvherror("transcode", "%04X: Unable to open %s decoder",
+      tvherror(LS_TRANSCODE, "%04X: Unable to open %s decoder",
                shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
       return;
@@ -433,7 +433,7 @@ transcoder_stream_subtitle(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *p
   length = avcodec_decode_subtitle2(ictx,  &sub, &got_subtitle, &packet);
   if (length <= 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
-    tvherror("transcode", "%04X: Unable to decode subtitle (%d, %s)",
+    tvherror(LS_TRANSCODE, "%04X: Unable to decode subtitle (%d, %s)",
              shortid(t), length, get_error_text(length));
     goto cleanup;
   }
@@ -507,13 +507,13 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         memcpy(ictx->extradata,
                pktbuf_ptr(ts->ts_input_gh), pktbuf_len(ts->ts_input_gh));
       } else {
-        tvherror("transcode", "%04X: missing meta data for %s",
+        tvherror(LS_TRANSCODE, "%04X: missing meta data for %s",
                  shortid(t), icodec->id == AV_CODEC_ID_AAC ? "AAC" : "VORBIS");
       }
     }
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
-      tvherror("transcode", "%04X: Unable to open %s decoder",
+      tvherror(LS_TRANSCODE, "%04X: Unable to open %s decoder",
                shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
       goto cleanup;
@@ -523,7 +523,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   }
 
   if (pkt->pkt_pts > as->aud_dec_pts) {
-    tvhwarn("transcode", "%04X: Detected framedrop in audio", shortid(t));
+    tvhwarn(LS_TRANSCODE, "%04X: Detected framedrop in audio", shortid(t));
     as->aud_enc_pts += (pkt->pkt_pts - as->aud_dec_pts);
     as->aud_dec_pts += (pkt->pkt_pts - as->aud_dec_pts);
   }
@@ -537,24 +537,24 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   length = avcodec_decode_audio4(ictx, frame, &got_frame, &packet);
   av_free_packet(&packet);
 
-  tvhtrace("transcode", "%04X: audio decode: consumed=%d size=%zu, got=%d, pts=%" PRIi64,
+  tvhtrace(LS_TRANSCODE, "%04X: audio decode: consumed=%d size=%zu, got=%d, pts=%" PRIi64,
            shortid(t), length, pktbuf_len(pkt->pkt_payload), got_frame, pkt->pkt_pts);
 
   if (length < 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
-    tvherror("transcode", "%04X: Unable to decode audio (%d, %s)",
+    tvherror(LS_TRANSCODE, "%04X: Unable to decode audio (%d, %s)",
              shortid(t), length, get_error_text(length));
     transcoder_stream_invalidate(ts);
     goto cleanup;
   }
 
   if (!got_frame) {
-    tvhtrace("transcode", "%04X: Did not have a full frame in the packet", shortid(t));
+    tvhtrace(LS_TRANSCODE, "%04X: Did not have a full frame in the packet", shortid(t));
     goto cleanup;
   }
 
   if (length != pktbuf_len(pkt->pkt_payload))
-    tvhwarn("transcode",
+    tvhwarn(LS_TRANSCODE,
             "%04X: undecoded data (in=%zu, consumed=%d)",
             shortid(t), pktbuf_len(pkt->pkt_payload), length);
 
@@ -569,30 +569,30 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     octx->flags          |= CODEC_FLAG_GLOBAL_HEADER;
 
     if (!octx->sample_rate) {
-      tvherror("transcode", "%04X: audio encoder has no suitable sample rate!", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: audio encoder has no suitable sample rate!", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     } else {
-      tvhdebug("transcode", "%04X: using audio sample rate %d",
+      tvhdebug(LS_TRANSCODE, "%04X: using audio sample rate %d",
                           shortid(t), octx->sample_rate);
     }
 
     if (octx->sample_fmt == AV_SAMPLE_FMT_NONE) {
-      tvherror("transcode", "%04X: audio encoder has no suitable sample format!", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: audio encoder has no suitable sample format!", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     } else {
-      tvhdebug("transcode", "%04X: using audio sample format %s",
+      tvhdebug(LS_TRANSCODE, "%04X: using audio sample format %s",
                           shortid(t), av_get_sample_fmt_name(octx->sample_fmt));
     }
 
     if (!octx->channel_layout) {
-      tvherror("transcode", "%04X: audio encoder has no suitable channel layout!", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: audio encoder has no suitable channel layout!", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     } else {
       av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
-      tvhdebug("transcode", "%04X: using audio channel layout %s",
+      tvhdebug(LS_TRANSCODE, "%04X: using audio channel layout %s",
                           shortid(t), layout_buf);
     }
 
@@ -636,7 +636,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     if (avcodec_open2(octx, ocodec, NULL) < 0) {
-      tvherror("transcode", "%04X: Unable to open %s encoder",
+      tvherror(LS_TRANSCODE, "%04X: Unable to open %s encoder",
                shortid(t), ocodec->name);
       transcoder_stream_invalidate(ts);
       goto cleanup;
@@ -644,7 +644,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
     as->fifo = av_audio_fifo_alloc(octx->sample_fmt, octx->channels, 1);
     if (!as->fifo) {
-      tvherror("transcode", "%04X: Could not allocate fifo", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: Could not allocate fifo", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
@@ -660,14 +660,14 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   if (as->last_sample_rate    != ictx->sample_rate    ||
       as->last_sample_fmt     != ictx->sample_fmt     ||
       as->last_channel_layout != ictx->channel_layout) {
-    tvhdebug("transcode", "%04X: audio input format changed", shortid(t));
+    tvhdebug(LS_TRANSCODE, "%04X: audio input format changed", shortid(t));
 
     as->last_sample_rate    = ictx->sample_rate;
     as->last_sample_fmt     = ictx->sample_fmt;
     as->last_channel_layout = ictx->channel_layout;
 
     if (as->resample_context) {
-      tvhdebug("transcode", "%04X: stopping audio resampling", shortid(t));
+      tvhdebug(LS_TRANSCODE, "%04X: stopping audio resampling", shortid(t));
       avresample_free(&as->resample_context);
       as->resample_context = NULL;
       as->resample_is_open = 0;
@@ -681,21 +681,21 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   if (as->resample) {
     if (!as->resample_context) {
       if (!(as->resample_context = avresample_alloc_context())) {
-        tvherror("transcode", "%04X: Could not allocate resample context", shortid(t));
+        tvherror(LS_TRANSCODE, "%04X: Could not allocate resample context", shortid(t));
         transcoder_stream_invalidate(ts);
         goto cleanup;
       }
 
       // resample audio
-      tvhdebug("transcode", "%04X: starting audio resampling", shortid(t));
+      tvhdebug(LS_TRANSCODE, "%04X: starting audio resampling", shortid(t));
 
       av_get_channel_layout_string(layout_buf, sizeof (layout_buf), ictx->channels, ictx->channel_layout);
-      tvhdebug("transcode", "%04X: IN : channel_layout=%s, rate=%d, fmt=%s, bitrate=%"PRId64,
+      tvhdebug(LS_TRANSCODE, "%04X: IN : channel_layout=%s, rate=%d, fmt=%s, bitrate=%"PRId64,
                shortid(t), layout_buf, ictx->sample_rate,
                av_get_sample_fmt_name(ictx->sample_fmt), (int64_t)ictx->bit_rate);
 
       av_get_channel_layout_string(layout_buf, sizeof (layout_buf), octx->channels, octx->channel_layout);
-      tvhdebug("transcode", "%04X: OUT: channel_layout=%s, rate=%d, fmt=%s, bitrate=%"PRId64,
+      tvhdebug(LS_TRANSCODE, "%04X: OUT: channel_layout=%s, rate=%d, fmt=%s, bitrate=%"PRId64,
                shortid(t), layout_buf, octx->sample_rate,
                av_get_sample_fmt_name(octx->sample_fmt), (int64_t)octx->bit_rate);
 
@@ -718,7 +718,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
                                 "out_sample_fmt", octx->sample_fmt, 1))
         goto cleanup;
       if (avresample_open(as->resample_context) < 0) {
-        tvherror("transcode", "%04X: Error avresample_open", shortid(t));
+        tvherror(LS_TRANSCODE, "%04X: Error avresample_open", shortid(t));
         transcoder_stream_invalidate(ts);
         goto cleanup;
       }
@@ -728,26 +728,26 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     uint8_t **output = alloca(octx->channels * sizeof(uint8_t *));
 
     if (av_samples_alloc(output, NULL, octx->channels, frame->nb_samples, octx->sample_fmt, 1) < 0) {
-      tvherror("transcode", "%04X: av_resamples_alloc failed", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: av_resamples_alloc failed", shortid(t));
       transcoder_stream_invalidate(ts);
       goto scleanup;
     }
 
     length = avresample_convert(as->resample_context, NULL, 0, frame->nb_samples,
                                 frame->extended_data, 0, frame->nb_samples);
-    tvhtrace("transcode", "%04X: avresample_convert: %d", shortid(t), length);
+    tvhtrace(LS_TRANSCODE, "%04X: avresample_convert: %d", shortid(t), length);
     while (avresample_available(as->resample_context) > 0) {
       length = avresample_read(as->resample_context, output, frame->nb_samples);
 
       if (length > 0) {
         if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + length) < 0) {
-          tvhlog(LOG_ERR, "transcode", "%04X: Could not reallocate FIFO", shortid(t));
+          tvherror(LS_TRANSCODE, "%04X: Could not reallocate FIFO", shortid(t));
           transcoder_stream_invalidate(ts);
           goto scleanup;
         }
 
         if (av_audio_fifo_write(as->fifo, (void **)output, length) < length) {
-          tvhlog(LOG_ERR, "transcode", "%04X: Could not write to FIFO", shortid(t));
+          tvherror(LS_TRANSCODE, "%04X: Could not write to FIFO", shortid(t));
           goto scleanup;
         }
       }
@@ -764,7 +764,7 @@ scleanup:
 /*  Need to find out where we are going to do this. Normally at the end.
     int delay_samples = avresample_get_delay(as->resample_context);
     if (delay_samples) {
-      tvhlog(LOG_DEBUG, "transcode", "%d samples in resamples delay buffer.", delay_samples);
+      tvhdebug(LS_TRANSCODE, "%d samples in resamples delay buffer.", delay_samples);
       goto cleanup;
     }
 */
@@ -772,13 +772,13 @@ scleanup:
   } else {
 
     if (av_audio_fifo_realloc(as->fifo, av_audio_fifo_size(as->fifo) + frame->nb_samples) < 0) {
-      tvherror("transcode", "%04X: Could not reallocate FIFO", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: Could not reallocate FIFO", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
 
     if (av_audio_fifo_write(as->fifo, (void **)frame->extended_data, frame->nb_samples) < frame->nb_samples) {
-      tvherror("transcode", "%04X: Could not write to FIFO", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: Could not write to FIFO", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
@@ -788,7 +788,7 @@ scleanup:
   as->aud_dec_pts += pkt->pkt_duration;
 
   while (av_audio_fifo_size(as->fifo) >= octx->frame_size) {
-    tvhtrace("transcode", "%04X: audio loop: fifo=%d, frame=%d",
+    tvhtrace(LS_TRANSCODE, "%04X: audio loop: fifo=%d, frame=%d",
              shortid(t), av_audio_fifo_size(as->fifo), octx->frame_size);
 
     av_frame_free(&frame);
@@ -801,18 +801,18 @@ scleanup:
     frame->channel_layout = octx->channel_layout;
     frame->sample_rate = octx->sample_rate;
     if (av_frame_get_buffer(frame, 0) < 0) {
-      tvherror("transcode", "%04X: Could not allocate output frame samples", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: Could not allocate output frame samples", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
 
     if ((length = av_audio_fifo_read(as->fifo, (void **)frame->data, octx->frame_size)) != octx->frame_size) {
-      tvherror("transcode", "%04X: Could not read data from FIFO", shortid(t));
+      tvherror(LS_TRANSCODE, "%04X: Could not read data from FIFO", shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
 
-    tvhtrace("transcode", "%04X: pre-encode: linesize=%d, samples=%d, pts=%" PRIi64,
+    tvhtrace(LS_TRANSCODE, "%04X: pre-encode: linesize=%d, samples=%d, pts=%" PRIi64,
              shortid(t), frame->linesize[0], length, as->aud_enc_pts);
 
     frame->pts = as->aud_enc_pts;
@@ -822,12 +822,12 @@ scleanup:
     packet.data = NULL;
     packet.size = 0;
     length = avcodec_encode_audio2(octx, &packet, frame, &got_packet_ptr);
-    tvhtrace("transcode", "%04X: encoded: packet=%d, ret=%d, got=%d, pts=%" PRIi64,
+    tvhtrace(LS_TRANSCODE, "%04X: encoded: packet=%d, ret=%d, got=%d, pts=%" PRIi64,
              shortid(t), packet.size, length, got_packet_ptr, packet.pts);
 
     if ((length < 0) || (got_packet_ptr < -1)) {
 
-      tvherror("transcode", "%04X: Unable to encode audio (%d:%d)",
+      tvherror(LS_TRANSCODE, "%04X: Unable to encode audio (%d:%d)",
                shortid(t), length, got_packet_ptr);
       transcoder_stream_invalidate(ts);
       goto cleanup;
@@ -856,7 +856,7 @@ scleanup:
       if (octx->extradata_size)
         n->pkt_meta = pktbuf_alloc(octx->extradata, octx->extradata_size);
 
-      tvhtrace("transcode", "%04X: deliver audio (pts = %" PRIi64 ", delay = %i)",
+      tvhtrace(LS_TRANSCODE, "%04X: deliver audio (pts = %" PRIi64 ", delay = %i)",
                shortid(t), n->pkt_pts, octx->delay);
       sm = streaming_msg_create_pkt(n);
       streaming_target_deliver2(ts->ts_target, sm);
@@ -948,7 +948,7 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
 
   if (epkt->size <= 0) {
     if (epkt->size) {
-      tvherror("transcode", "%04X: Unable to encode video (%d)", shortid(t), epkt->size);
+      tvherror(LS_TRANSCODE, "%04X: Unable to encode video (%d)", shortid(t), epkt->size);
       transcoder_stream_invalidate(ts);
     }
 
@@ -1010,7 +1010,7 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
       extract_mpeg2_global_data(n, epkt->data, epkt->size);
   }
 
-  tvhtrace("transcode", "%04X: deliver video (dts = %" PRIu64 ", pts = %" PRIu64 ")", shortid(t), n->pkt_dts, n->pkt_pts);
+  tvhtrace(LS_TRANSCODE, "%04X: deliver video (dts = %" PRIu64 ", pts = %" PRIu64 ")", shortid(t), n->pkt_dts, n->pkt_pts);
 
   if (!vs->vid_first_encoded) {
     vs->vid_first_pkt = n;
@@ -1022,7 +1022,7 @@ send_video_packet(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt,
       sm = streaming_msg_create_pkt(vs->vid_first_pkt);
       streaming_target_deliver2(ts->ts_target, sm);
     } else {
-      tvhtrace("transcode", "%04X: video skip first packet", shortid(t));
+      tvhtrace(LS_TRANSCODE, "%04X: video skip first packet", shortid(t));
     }
     pkt_ref_dec(vs->vid_first_pkt);
     vs->vid_first_pkt = NULL;
@@ -1067,7 +1067,7 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
   flt_bufsrc = avfilter_get_by_name("buffer");
   flt_bufsink = avfilter_get_by_name("buffersink");
   if (!flt_bufsrc || !flt_bufsink) {
-    tvherror("transcode", "%04X: libav default buffers unknown", shortid(t));
+    tvherror(LS_TRANSCODE, "%04X: libav default buffers unknown", shortid(t));
     goto out_err;
   }
 
@@ -1084,14 +1084,14 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
   err = avfilter_graph_create_filter(&vs->flt_bufsrcctx, flt_bufsrc, "in",
                                      opt, NULL, vs->flt_graph);
   if (err < 0) {
-    tvherror("transcode", "%04X: fltchain IN init error", shortid(t));
+    tvherror(LS_TRANSCODE, "%04X: fltchain IN init error", shortid(t));
     goto out_err;
   }
 
   err = avfilter_graph_create_filter(&vs->flt_bufsinkctx, flt_bufsink,
                                      "out", NULL, NULL, vs->flt_graph);
   if (err < 0) {
-    tvherror("transcode", "%04X: fltchain OUT init error", shortid(t));
+    tvherror(LS_TRANSCODE, "%04X: fltchain OUT init error", shortid(t));
     goto out_err;
   }
 
@@ -1099,7 +1099,7 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
   err = av_opt_set_int_list(vs->flt_bufsinkctx, "pix_fmts", pix_fmts,
                             AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
   if (err < 0) {
-    tvherror("transcode", "%08X: fltchain cannot set output pixfmt",
+    tvherror(LS_TRANSCODE, "%08X: fltchain cannot set output pixfmt",
              shortid(t));
     goto out_err;
   }
@@ -1124,13 +1124,13 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
                                  &flt_outputs,
                                  NULL);
   if (err < 0) {
-    tvherror("transcode", "%04X: failed to init filter chain", shortid(t));
+    tvherror(LS_TRANSCODE, "%04X: failed to init filter chain", shortid(t));
     goto out_err;
   }
 
   err = avfilter_graph_config(vs->flt_graph, NULL);
   if (err < 0) {
-    tvherror("transcode", "%04X: failed to config filter chain", shortid(t));
+    tvherror(LS_TRANSCODE, "%04X: failed to config filter chain", shortid(t));
     goto out_err;
   }
 
@@ -1191,12 +1191,12 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         memcpy(ictx->extradata,
                pktbuf_ptr(ts->ts_input_gh), pktbuf_len(ts->ts_input_gh));
       } else {
-        tvherror("transcode", "%04X: missing meta data for H264", shortid(t));
+        tvherror(LS_TRANSCODE, "%04X: missing meta data for H264", shortid(t));
       }
     }
 
     if (avcodec_open2(ictx, icodec, NULL) < 0) {
-      tvherror("transcode", "%04X: Unable to open %s decoder", shortid(t), icodec->name);
+      tvherror(LS_TRANSCODE, "%04X: Unable to open %s decoder", shortid(t), icodec->name);
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
@@ -1232,7 +1232,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   length = avcodec_decode_video2(ictx, vs->vid_dec_frame, &got_picture, &packet);
   if (length <= 0) {
     if (length == AVERROR_INVALIDDATA) goto cleanup;
-    tvherror("transcode", "%04X: Unable to decode video (%d, %s)",
+    tvherror(LS_TRANSCODE, "%04X: Unable to decode video (%d, %s)",
              shortid(t), length, get_error_text(length));
     goto cleanup;
   }
@@ -1337,7 +1337,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       // Default = "medium". We gain more encoding speed compared to the loss of quality when lowering it _slightly_.
       // select preset according to system performance and codec type
       av_dict_set(&opts, "preset",  t->t_props.tp_vcodec_preset, 0);
-      tvhinfo("transcode", "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
+      tvhinfo(LS_TRANSCODE, "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
 
       // All modern devices should support "high" profile
       av_dict_set(&opts, "profile", "high", 0);
@@ -1368,7 +1368,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
       // on all hardware ultrafast (or maybe superfast) should be safe
       // select preset according to system performance
       av_dict_set(&opts, "preset",  t->t_props.tp_vcodec_preset, 0);
-      tvhinfo("transcode", "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
+      tvhinfo(LS_TRANSCODE, "%04X: Using preset %s", shortid(t), t->t_props.tp_vcodec_preset);
 
       // disables encoder features which tend to be bottlenecks for the decoder/player
       av_dict_set(&opts, "tune",   "fastdecode", 0);
@@ -1390,7 +1390,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         maxrate = ceil(bitrate * 1.25);
         bufsize = maxrate * 3;
 
-        tvhdebug("transcode", "tuning HEVC encoder for ABR rate control, "
+        tvhdebug(LS_TRANSCODE, "tuning HEVC encoder for ABR rate control, "
                  "bitrate: %dkbps, vbv-bufsize: %dkbits, vbv-maxrate: %dkbps",
                  bitrate, bufsize, maxrate);
 
@@ -1413,14 +1413,14 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
     }
 
     if (avcodec_open2(octx, ocodec, &opts) < 0) {
-      tvherror("transcode", "%04X: Unable to open %s encoder",
+      tvherror(LS_TRANSCODE, "%04X: Unable to open %s encoder",
                shortid(t), ocodec->name);
       transcoder_stream_invalidate(ts);
       goto cleanup;
     }
 
     if (create_video_filter(vs, t, ictx, octx)) {
-      tvherror("transcode", "%04X: Video filter creation failed",
+      tvherror(LS_TRANSCODE, "%04X: Video filter creation failed",
                shortid(t));
       transcoder_stream_invalidate(ts);
       goto cleanup;
@@ -1429,7 +1429,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   /* push decoded frame into filter chain */
   if (av_buffersrc_add_frame(vs->flt_bufsrcctx, vs->vid_dec_frame) < 0) {
-    tvherror("transcode", "%04X: filter input error", shortid(t));
+    tvherror(LS_TRANSCODE, "%04X: filter input error", shortid(t));
     transcoder_stream_invalidate(ts);
     goto cleanup;
   }
@@ -1441,7 +1441,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 	if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
 		break;
 	if (ret < 0) {
-		tvherror("transcode", "%04X: filter output error", shortid(t));
+		tvherror(LS_TRANSCODE, "%04X: filter output error", shortid(t));
 		transcoder_stream_invalidate(ts);
 		goto cleanup;
 	}
@@ -1461,7 +1461,7 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
 	ret = avcodec_encode_video2(octx, &packet2, vs->vid_enc_frame, &got_output);
 	if (ret < 0) {
-		tvherror("transcode", "%04X: Error encoding frame", shortid(t));
+		tvherror(LS_TRANSCODE, "%04X: Error encoding frame", shortid(t));
 		transcoder_stream_invalidate(ts);
 		goto cleanup;
 	}
@@ -1545,7 +1545,7 @@ transcoder_init_stream(transcoder_t *t, streaming_start_component_t *ssc)
     pktbuf_ref_inc(ssc->ssc_gh);
   }
 
-  tvhinfo("transcode", "%04X: %d:%s ==> Passthrough",
+  tvhinfo(LS_TRANSCODE, "%04X: %d:%s ==> Passthrough",
 	  shortid(t), ssc->ssc_index,
 	  streaming_component_type2txt(ssc->ssc_type));
 
@@ -1625,7 +1625,7 @@ transcoder_init_subtitle(transcoder_t *t, streaming_start_component_t *ssc)
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)ss, ts_link);
 
-  tvhinfo("transcode", "%04X: %d:%s ==> %s (%s)",
+  tvhinfo(LS_TRANSCODE, "%04X: %d:%s ==> %s (%s)",
 	  shortid(t), ssc->ssc_index,
 	  streaming_component_type2txt(ssc->ssc_type),
 	  streaming_component_type2txt(ss->ts_type),
@@ -1723,7 +1723,7 @@ transcoder_init_audio(transcoder_t *t, streaming_start_component_t *ssc)
 
   LIST_INSERT_HEAD(&t->t_stream_list, (transcoder_stream_t*)as, ts_link);
 
-  tvhinfo("transcode", "%04X: %d:%s ==> %s (%s)",
+  tvhinfo(LS_TRANSCODE, "%04X: %d:%s ==> %s (%s)",
 	  shortid(t), ssc->ssc_index,
 	  streaming_component_type2txt(ssc->ssc_type),
 	  streaming_component_type2txt(as->ts_type),
@@ -1852,7 +1852,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
     vs->vid_width  = ssc->ssc_width;
   }
 
-  tvhinfo("transcode", "%04X: %d:%s %dx%d ==> %s %dx%d (%s)",
+  tvhinfo(LS_TRANSCODE, "%04X: %d:%s %dx%d ==> %s %dx%d (%s)",
           shortid(t),
           ssc->ssc_index,
           streaming_component_type2txt(ssc->ssc_type),
@@ -1915,7 +1915,7 @@ transcoder_calc_stream_count(transcoder_t *t, streaming_start_t *ss) {
     }
   }
 
-  tvhtrace("transcode", "%04X: transcoder_calc_stream_count=%d (video=%d, audio=%d, subtitle=%d)",
+  tvhtrace(LS_TRANSCODE, "%04X: transcoder_calc_stream_count=%d (video=%d, audio=%d, subtitle=%d)",
            shortid(t), (video + audio + subtitle), video, audio, subtitle);
 
 
@@ -1956,7 +1956,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
 
       if (i == src->ss_num_components)
       {
-        tvhinfo("transcode", "Could not find requestd lang [%s] in stream, using first one", tp->tp_language);
+        tvhinfo(LS_TRANSCODE, "Could not find requestd lang [%s] in stream, using first one", tp->tp_language);
         requested_lang[0] = '\0';
       }
   }
@@ -1980,7 +1980,7 @@ transcoder_start(transcoder_t *t, streaming_start_t *src)
       rc = 0;
 
     if(!rc)
-      tvhinfo("transcode", "%04X: %d:%s ==> Filtered",
+      tvhinfo(LS_TRANSCODE, "%04X: %d:%s ==> Filtered",
 	      shortid(t), ssc->ssc_index,
 	      streaming_component_type2txt(ssc->ssc_type));
     else

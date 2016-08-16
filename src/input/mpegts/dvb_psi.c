@@ -88,7 +88,7 @@ typedef struct dvb_bat {
 int dvb_bouquets_parse = 1;
 
 static int
-psi_parse_pmt(mpegts_mux_t *mux, mpegts_service_t *t,
+psi_parse_pmt(mpegts_table_t *mt, mpegts_service_t *t,
               const uint8_t *ptr, int len, int *_update);
 
 static inline int
@@ -116,7 +116,7 @@ static void
 dvb_service_autoenable( mpegts_service_t *s, const char *where )
 {
   if (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING) {
-    tvhinfo("mpegts", "enabling service %s [sid %04X/%d] (found in %s)",
+    tvhinfo(LS_MPEGTS, "enabling service %s [sid %04X/%d] (found in %s)",
             s->s_nicename, s->s_dvb_service_id, s->s_dvb_service_id, where);
     service_set_enabled((service_t *)s, 1, SERVICE_AUTO_NORMAL);
   }
@@ -169,7 +169,7 @@ dvb_fs_mux_add ( mpegts_table_t *mt, mpegts_mux_t *mm, mpegts_mux_t *mux )
       return;
     }
   }
-  tvherror(mt->mt_name, "fastscan mux count overflow");
+  tvherror(mt->mt_subsys, "%s: fastscan mux count overflow", mt->mt_name);
 }
 #endif
 
@@ -213,11 +213,11 @@ dvb_desc_sat_del
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   if (!frequency) {
-    tvhlog(LOG_WARNING, mt->mt_name, "dvb-s frequency error");
+    tvhwarn(mt->mt_subsys, "%s: dvb-s frequency error", mt->mt_name);
     return NULL;
   }
   if (!symrate) {
-    tvhlog(LOG_WARNING, mt->mt_name, "dvb-s symbol rate error");
+    tvhwarn(mt->mt_subsys, "%s: dvb-s symbol rate error", mt->mt_name);
     return NULL;
   }
 
@@ -255,13 +255,13 @@ dvb_desc_sat_del
   dmc.dmc_fe_rolloff    = rtab[(ptr[6] >> 3) & 0x3];
   if (dmc.dmc_fe_delsys == DVB_SYS_DVBS &&
       dmc.dmc_fe_rolloff != DVB_ROLLOFF_35) {
-    tvhwarn(mt->mt_name, "dvb-s rolloff error");
+    tvhwarn(mt->mt_subsys, "%s: dvb-s rolloff error", mt->mt_name);
     return NULL;
   }
 
   /* Debug */
   dvb_mux_conf_str(&dmc, buf, sizeof(buf));
-  tvhdebug(mt->mt_name, "    %s", buf);
+  tvhdebug(mt->mt_subsys, "%s:    %s", mt->mt_name, buf);
 
   /* Create */
   return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, force);
@@ -296,11 +296,11 @@ dvb_desc_cable_del
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   if (!frequency) {
-    tvhwarn(mt->mt_name, "dvb-c frequency error");
+    tvhwarn(mt->mt_subsys, "%s: dvb-c frequency error", mt->mt_name);
     return NULL;
   }
   if (!symrate) {
-    tvhwarn(mt->mt_name, "dvb-c symbol rate error");
+    tvhwarn(mt->mt_subsys, "%s: dvb-c symbol rate error", mt->mt_name);
     return NULL;
   }
 
@@ -317,7 +317,7 @@ dvb_desc_cable_del
 
   /* Debug */
   dvb_mux_conf_str(&dmc, buf, sizeof(buf));
-  tvhdebug(mt->mt_name, "    %s", buf);
+  tvhdebug(mt->mt_subsys, "%s:    %s", mt->mt_name, buf);
 
   /* Create */
   return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, 0);
@@ -366,7 +366,7 @@ dvb_desc_terr_del
   /* Extract data */
   frequency     = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]);
   if (frequency < 1000000 || frequency > 200000000) {
-    tvhdebug(mt->mt_name, "dvb-t frequency error (%d)", frequency);
+    tvhdebug(mt->mt_subsys, "%s: dvb-t frequency error (%d)", mt->mt_name, frequency);
     return NULL;
   }
 
@@ -384,7 +384,7 @@ dvb_desc_terr_del
 
   /* Debug */
   dvb_mux_conf_str(&dmc, buf, sizeof(buf));
-  tvhdebug(mt->mt_name, "    %s", buf);
+  tvhdebug(mt->mt_subsys, "%s:    %s", mt->mt_name, buf);
   
   /* Create */
   return mm->mm_network->mn_create_mux(mm->mm_network, mm, onid, tsid, &dmc, 0);
@@ -454,7 +454,7 @@ dvb_bat_find_service( dvb_bat_id_t *bi, mpegts_service_t *s,
 
 static int
 dvb_desc_service_list
-  ( const char *dstr, const uint8_t *ptr, int len, mpegts_mux_t *mm,
+  ( mpegts_table_t *mt, const uint8_t *ptr, int len, mpegts_mux_t *mm,
     dvb_bat_id_t *bi )
 {
   uint16_t stype, sid;
@@ -464,7 +464,7 @@ dvb_desc_service_list
   for (i = 0; i < len; i += 3) {
     sid   = (ptr[i] << 8) | ptr[i+1];
     stype = ptr[i+2];
-    tvhdebug(dstr, "    service %04X (%d) type %02X (%d)", sid, sid, stype, stype);
+    tvhdebug(mt->mt_subsys, "%s:    service %04X (%d) type %02X (%d)", mt->mt_name, sid, sid, stype, stype);
     if (mm) {
       int save = 0;
       s = mpegts_service_find(mm, sid, 0, 1, &save);
@@ -479,7 +479,7 @@ dvb_desc_service_list
 
 static int
 dvb_desc_local_channel
-  ( const char *dstr, const uint8_t *ptr, int len,
+  ( mpegts_table_t *mt, const uint8_t *ptr, int len,
     uint8_t dtag, mpegts_mux_t *mm, dvb_bat_id_t *bi, int prefer )
 {
   int save = 0;
@@ -492,7 +492,7 @@ dvb_desc_local_channel
   while(len >= 4) {
     sid = (ptr[0] << 8) | ptr[1];
     lcn = ((ptr[2] & 3) << 8) | ptr[3];
-    tvhdebug(dstr, "    sid %d lcn %d", sid, lcn);
+    tvhdebug(mt->mt_subsys, "%s:    sid %d lcn %d", mt->mt_name, sid, lcn);
     if (sid && lcn && mm) {
       s = mpegts_service_find(mm, sid, 0, 0, &save);
       if (s) {
@@ -522,7 +522,7 @@ dvb_desc_local_channel
 
 static void
 dvb_freesat_local_channels
-  ( dvb_bat_id_t *bi, const char *dstr, const uint8_t *ptr, int len )
+  ( dvb_bat_id_t *bi, mpegts_table_t *mt, const uint8_t *ptr, int len )
 {
   uint16_t sid, lcn, regionid;
   uint16_t unk;
@@ -537,11 +537,11 @@ dvb_freesat_local_channels
     len -= 5;
     if (len2 > len)
       break;
-    tvhtrace(dstr, "      sid %04X (%d) uknown %04X (%d)", sid, sid, unk, unk);
+    tvhtrace(mt->mt_subsys, "%s:      sid %04X (%d) uknown %04X (%d)", mt->mt_name, sid, sid, unk, unk);
     while (len2 > 3) {
       lcn = ((ptr[0] & 0x0f) << 8) | ptr[1];
       regionid = (ptr[2] << 8) | ptr[3];
-      tvhtrace(dstr, "        lcn %d region %d", lcn, regionid);
+      tvhtrace(mt->mt_subsys, "%s:        lcn %d region %d", mt->mt_name, lcn, regionid);
       
       TAILQ_FOREACH(fs, &bi->fservices, link)
         if (fs->sid == sid && fs->regionid == regionid)
@@ -563,7 +563,7 @@ dvb_freesat_local_channels
 
 static void
 dvb_freesat_regions
-  ( dvb_bat_id_t *bi, const char *dstr, const uint8_t *ptr, int len )
+  ( dvb_bat_id_t *bi, mpegts_table_t *mt, const uint8_t *ptr, int len )
 {
   uint16_t id;
   char name[32];
@@ -578,7 +578,7 @@ dvb_freesat_regions
     /* language: ptr[2-4]: 'eng' */
     if ((r = dvb_get_string_with_len(name, sizeof(name), ptr + 5, len - 5, NULL, NULL)) < 0)
       break;
-    tvhtrace(dstr, "    region %u - '%s'", id, name);
+    tvhtrace(mt->mt_subsys, "%s:    region %u - '%s'", mt->mt_name, id, name);
 
     LIST_FOREACH(fr, &bi->fregions, link)
       if (fr->regionid == id)
@@ -618,7 +618,7 @@ dvb_freesat_add_service
 
 static void
 dvb_freesat_completed
-  ( dvb_bat_t *b, dvb_bat_id_t *bi, const char *dstr )
+  ( dvb_bat_t *b, dvb_bat_id_t *bi, mpegts_table_t *mt )
 {
   dvb_bat_svc_t *bs;
   dvb_freesat_svc_t *fs;
@@ -626,8 +626,8 @@ dvb_freesat_completed
   uint16_t sid;
   uint32_t total = 0, regions = 0, uregions = 0;
 
-  tvhtrace(dstr, "completed %s [%04X] bouquets '%s'",
-           bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
+  tvhtrace(mt->mt_subsys, "%s: completed %s [%04X] bouquets '%s'",
+           mt->mt_name, bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
 
   /* Find all "fallback" services and region specific */
   TAILQ_FOREACH(bs, &bi->services, link) {
@@ -645,7 +645,7 @@ dvb_freesat_completed
           if (fr->regionid == fs->regionid)
             break;
         if (!fr)
-          tvhtrace(dstr, "cannot find freesat region id %u", fs->regionid);
+          tvhtrace(mt->mt_subsys, "%s: cannot find freesat region id %u", mt->mt_name, fs->regionid);
         else
           TAILQ_INSERT_TAIL(&fr->services, fs, region_link);
       }
@@ -680,8 +680,8 @@ dvb_freesat_completed
     }
   }
 
-  tvhtrace(dstr, "completed %s [%04X] bouquets '%s' total %u regions %u (%u)",
-           bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name,
+  tvhtrace(mt->mt_subsys, "%s: completed %s [%04X] bouquets '%s' total %u regions %u (%u)",
+           mt->mt_name, bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name,
            total, regions, uregions);
 
   /* Remove all services associated to region, notify the completed status */
@@ -698,8 +698,8 @@ dvb_freesat_completed
   TAILQ_FOREACH(bs, &bi->services, link)
     bs->fallback = NULL;
 
-  tvhtrace(dstr, "completed %s [%04X] bouquets '%s' update finished",
-           bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
+  tvhtrace(mt->mt_subsys, "%s: completed %s [%04X] bouquets '%s' update finished",
+           mt->mt_name, bi->freesat ? "freesat" : "bskyb", bi->nbid, bi->name);
 
 }
 
@@ -759,7 +759,7 @@ static struct strtab bskyb_regions[] = {
 
 static void
 dvb_bskyb_local_channels
-  ( dvb_bat_id_t *bi, const char *dstr,
+  ( dvb_bat_id_t *bi, mpegts_table_t *mt,
     const uint8_t *ptr, int len, mpegts_mux_t *mm )
 {
   uint16_t sid, lcn, regionid;
@@ -790,8 +790,8 @@ dvb_bskyb_local_channels
   len -= 2;
   ptr += 2;
 
-  tvhtrace(dstr, "      region id %04X (%d) unknown %02X (%d)",
-           regionid, regionid, ptr[0], ptr[0]);
+  tvhtrace(mt->mt_subsys, "%s:      region id %04X (%d) unknown %02X (%d)",
+           mt->mt_name, regionid, regionid, ptr[0], ptr[0]);
 
   while (len > 8) {
     sid = (ptr[0] << 8) | ptr[1];
@@ -801,8 +801,8 @@ dvb_bskyb_local_channels
     ptr += 9;
     len -= 9;
 
-    tvhtrace(dstr, "      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)",
-             sid, sid, stype, stype, lcn, unk, unk);
+    tvhtrace(mt->mt_subsys, "%s:      sid %04X (%d) type %02X (%d) lcn %d unknown %04X (%d)",
+             mt->mt_name, sid, sid, stype, stype, lcn, unk, unk);
 
     TAILQ_FOREACH(fs, &bi->fservices, link)
       if (fs->sid == sid && fs->regionid == regionid)
@@ -876,24 +876,24 @@ dvb_pat_callback
   if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
     if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
       mpegts_mux_nice_name(mm, buf, sizeof(buf));
-      tvhwarn("pat", "%s: TSID zero value detected, ignoring", buf);
+      tvhwarn(mt->mt_subsys, "%s: %s: TSID zero value detected, ignoring", mt->mt_name, buf);
     }
     goto end;
   }
 
   /* Multiplex */
-  tvhdebug("pat", "%p: tsid %04X (%d)", mm, tsid, tsid);
+  tvhdebug(mt->mt_subsys, "%s: %p: tsid %04X (%d)", mt->mt_name, mm, tsid, tsid);
   if (mm->mm_tsid != MPEGTS_TSID_NONE) {
     if (mm->mm_tsid && mm->mm_tsid != tsid) {
       if (++mm->mm_tsid_checks > 12) {
         mpegts_mux_nice_name(mm, buf, sizeof(buf));
-        tvhwarn("pat", "%s: TSID change detected - old %04x (%d), new %04x (%d)",
-                buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
+        tvhwarn(mt->mt_subsys, "%s: %s: TSID change detected - old %04x (%d), new %04x (%d)",
+                mt->mt_name, buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid);
       } else {
         if (tvhtrace_enabled()) {
           mpegts_mux_nice_name(mm, buf, sizeof(buf));
-          tvhtrace("pat", "%s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
-                   buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
+          tvhtrace(mt->mt_subsys, "%s: %s: ignore TSID - old %04x (%d), new %04x (%d) (checks %d)",
+                   mt->mt_name, buf, mm->mm_tsid, mm->mm_tsid, tsid, tsid, mm->mm_tsid_checks);
         }
         return 0; /* keep rolling */
       }
@@ -913,16 +913,16 @@ dvb_pat_callback
     if (sid == 0) {
       if (pid) {
         nit_pid = pid;
-        tvhdebug("pat", "  nit on pid %04X (%d)", pid, pid);
+        tvhdebug(mt->mt_subsys, "%s:  nit on pid %04X (%d)", mt->mt_name, pid, pid);
       }
 
     /* Service */
     } else if (pid) {
-      tvhdebug("pat", "  sid %04X (%d) on pid %04X (%d)", sid, sid, pid, pid);
+      tvhdebug(mt->mt_subsys, "%s:  sid %04X (%d) on pid %04X (%d)", mt->mt_name, sid, sid, pid, pid);
       int save = 0;
       if ((s = mpegts_service_find(mm, sid, pid, 1, &save))) {
         mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
-                         NULL, "pmt",
+                         NULL, "pmt", LS_TBL_BASE,
                          MT_CRC | MT_QUICKREQ | MT_ONESHOT | MT_SCANSUBS,
                          pid, MPS_WEIGHT_PMT_SCAN);
 
@@ -939,7 +939,7 @@ dvb_pat_callback
   /* Install NIT handler */
   if (nit_pid)
     mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                     NULL, "nit", MT_QUICKREQ | MT_CRC, nit_pid,
+                     NULL, "nit", LS_TBL_BASE, MT_QUICKREQ | MT_CRC, nit_pid,
                      MPS_WEIGHT_NIT);
 
   /* End */
@@ -981,8 +981,8 @@ dvb_cat_callback
         if (len >= 4 && dlen >= 4) {
           caid = ( ptr[0]         << 8) | ptr[1];
           pid  = ((ptr[2] & 0x1f) << 8) | ptr[3];
-          tvhdebug("cat", "  caid %04X (%d) pid %04X (%d)",
-                   (uint16_t)caid, (uint16_t)caid, pid, pid);
+          tvhdebug(mt->mt_subsys, "%s:  caid %04X (%d) pid %04X (%d)",
+                   mt->mt_name, (uint16_t)caid, (uint16_t)caid, pid, pid);
         }
         break;
       default:
@@ -1040,10 +1040,10 @@ dvb_pmt_callback
   if (!s) return -1;
 
   /* Process */
-  tvhdebug("pmt", "sid %04X (%d)", sid, sid);
+  tvhdebug(mt->mt_subsys, "%s: sid %04X (%d)", mt->mt_name, sid, sid);
   update = 0;
   pthread_mutex_lock(&s->s_stream_mutex);
-  r = psi_parse_pmt(mt->mt_mux, s, ptr, len, &update);
+  r = psi_parse_pmt(mt, s, ptr, len, &update);
   pthread_mutex_unlock(&s->s_stream_mutex);
   if (r)
     service_restart((service_t*)s);
@@ -1108,7 +1108,7 @@ dvb_bat_destroy( mpegts_table_t *mt )
 
 static void
 dvb_bat_completed
-  ( dvb_bat_t *b, const char *dstr, int tableid, int tsid, int nbid,
+  ( dvb_bat_t *b, mpegts_table_t *mt, int tableid, int tsid, int nbid,
     mpegts_mux_t *mux, bouquet_t *bq_alt )
 {
   dvb_bat_id_t *bi;
@@ -1128,7 +1128,7 @@ dvb_bat_completed
 
     if (bi->freesat || bi->bskyb) {
 #if ENABLE_MPEGTS_DVB
-      dvb_freesat_completed(b, bi, dstr);
+      dvb_freesat_completed(b, bi, mt);
 #endif
       goto complete;
     }
@@ -1199,11 +1199,11 @@ dvb_nit_mux
     mpegts_mux_nice_name(mux, buf, sizeof(buf));
   else
     strcpy(buf, "<none>");
-  tvhdebug(mt->mt_name, "  onid %04X (%d) tsid %04X (%d) mux %s%s",
-           onid, onid, tsid, tsid, buf, discovery ? " (discovery)" : "");
+  tvhdebug(mt->mt_subsys, "%s:  onid %04X (%d) tsid %04X (%d) mux %s%s",
+           mt->mt_name, onid, onid, tsid, tsid, buf, discovery ? " (discovery)" : "");
 
-  DVB_DESC_FOREACH(lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
-    tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
+  DVB_DESC_FOREACH(mt, lptr, llen, 4, dlptr, dllen, dtag, dlen, dptr) {
+    tvhtrace(mt->mt_subsys, "%s:    dtag %02X dlen %d", mt->mt_name, dtag, dlen);
 
 #if ENABLE_MPEGTS_DVB
     /* Limit delivery descriptiors only in the discovery phase */
@@ -1262,7 +1262,7 @@ dvb_nit_mux
     case DVB_DESC_DEF_AUTHORITY:
       if (dvb_get_string(dauth, sizeof(dauth), dptr, dlen, charset, NULL))
         return -1;
-      tvhdebug(mt->mt_name, "    default auth [%s]", dauth);
+      tvhdebug(mt->mt_subsys, "%s:    default auth [%s]", mt->mt_name, dauth);
       if (mux && *dauth)
         mpegts_mux_set_crid_authority(mux, dauth);
       break;
@@ -1273,7 +1273,7 @@ dvb_nit_mux
     case DVB_DESC_PRIVATE_DATA:
       if (dlen == 4) {
         priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
-        tvhtrace(mt->mt_name, "      private %08X", priv);
+        tvhtrace(mt->mt_subsys, "%s:      private %08X", mt->mt_name, priv);
       }
       break;
     case 0x81:
@@ -1425,8 +1425,8 @@ dvb_nit_callback
   /* Network Descriptors */
   *name   = 0;
   charset = dvb_charset_find(mn, NULL, NULL);
-  DVB_DESC_FOREACH(ptr, len, 5, lptr, llen, dtag, dlen, dptr) {
-    tvhtrace(mt->mt_name, "  dtag %02X dlen %d", dtag, dlen);
+  DVB_DESC_FOREACH(mt, ptr, len, 5, lptr, llen, dtag, dlen, dptr) {
+    tvhtrace(mt->mt_subsys, "%s:  dtag %02X dlen %d", mt->mt_name, dtag, dlen);
 
     switch (dtag) {
       case DVB_DESC_BOUQUET_NAME:
@@ -1440,7 +1440,7 @@ dvb_nit_callback
       case DVB_DESC_PRIVATE_DATA:
         if (tableid == 0x4A && dlen == 4) {
           priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
-          tvhtrace(mt->mt_name, "    private %08X", priv);
+          tvhtrace(mt->mt_subsys, "%s:    private %08X", mt->mt_name, priv);
         }
         break;
       case DVB_DESC_FREESAT_REGIONS:
@@ -1454,7 +1454,7 @@ dvb_nit_callback
 
   /* Fastscan */
   if (tableid == DVB_FASTSCAN_NIT_BASE) {
-    tvhdebug(mt->mt_name, "fastscan %04X (%d) [%s]", nbid, nbid, name);
+    tvhdebug(mt->mt_subsys, "%s: fastscan %04X (%d) [%s]", mt->mt_name, nbid, nbid, name);
     if (bq && bi) {
       dvb_bouquet_comment(bq, mm);
       bq->bq_fastscan_bi = bi;
@@ -1462,7 +1462,7 @@ dvb_nit_callback
 
   /* BAT */
   } else if (tableid == 0x4A) {
-    tvhdebug(mt->mt_name, "bouquet %04X (%d) [%s]", nbid, nbid, name);
+    tvhdebug(mt->mt_subsys, "%s: bouquet %04X (%d) [%s]", mt->mt_name, nbid, nbid, name);
     if (bi && *name) {
       strncpy(bi->name, name, sizeof(bi->name)-1);
       bi->name[sizeof(bi->name)-1] = '\0';
@@ -1470,7 +1470,7 @@ dvb_nit_callback
 
   /* NIT */
   } else {
-    tvhdebug(mt->mt_name, "network %04X (%d) [%s]", nbid, nbid, name);
+    tvhdebug(mt->mt_subsys, "%s: network %04X (%d) [%s]", mt->mt_name, nbid, nbid, name);
     save |= mpegts_network_set_network_name(mn, name);
     if (save)
       idnode_changed(&mn->mn_id);
@@ -1479,7 +1479,7 @@ dvb_nit_callback
   }
 
   /* Transport length */
-  DVB_LOOP_FOREACH(ptr, len, 0, lptr, llen, 6) {
+  DVB_LOOP_FOREACH(mt, ptr, len, 0, lptr, llen, 6) {
     tsid  = (lptr[0] << 8) | lptr[1];
     onid  = (lptr[2] << 8) | lptr[3];
 
@@ -1534,7 +1534,7 @@ dvb_sdt_mux
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
 
-  tvhdebug("sdt", "mux %s", buf);
+  tvhdebug(mt->mt_subsys, "%s: mux %s", mt->mt_name, buf);
 
   /* Service loop */
   while(len >= 5) {
@@ -1547,11 +1547,11 @@ dvb_sdt_mux
     int      running_status            = (ptr[3] >> 5) & 0x7;
     const char *charset;
     *sprov = *sname = *sauth = 0;
-    tvhdebug("sdt", "  sid %04X (%d) running %d free_ca %d",
-             service_id, service_id, running_status, free_ca_mode);
+    tvhdebug(mt->mt_subsys, "%s:  sid %04X (%d) running %d free_ca %d",
+             mt->mt_name, service_id, service_id, running_status, free_ca_mode);
 
     /* Initialise the loop */
-    DVB_LOOP_INIT(ptr, len, 3, lptr, llen);
+    DVB_LOOP_INIT(mt, ptr, len, 3, lptr, llen);
   
     /* Find service */
     s       = mpegts_service_find(mm, service_id, 0, 1, &save);
@@ -1561,8 +1561,8 @@ dvb_sdt_mux
       dvb_service_autoenable(s, "SDT");
 
     /* Descriptor loop */
-    DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
-      tvhtrace("sdt", "    dtag %02X dlen %d", dtag, dlen);
+    DVB_DESC_EACH(mt, lptr, llen, dtag, dlen, dptr) {
+      tvhtrace(mt->mt_subsys, "%s:    dtag %02X dlen %d", mt->mt_name, dtag, dlen);
       switch (dtag) {
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
@@ -1576,7 +1576,7 @@ dvb_sdt_mux
         case DVB_DESC_PRIVATE_DATA:
           if (dlen == 4) {
             priv = (dptr[0] << 24) | (dptr[1] << 16) | (dptr[2] << 8) | dptr[3];
-            tvhtrace(mt->mt_name, "  private %08X", priv);
+            tvhtrace(mt->mt_subsys, "%s:  private %08X", mt->mt_name, priv);
           }
           break;
         case DVB_DESC_BSKYB_NVOD:
@@ -1587,8 +1587,8 @@ dvb_sdt_mux
       }
     }
 
-    tvhtrace("sdt", "  type %02X (%d) name [%s] provider [%s] def_auth [%s]",
-             stype, stype, sname, sprov, sauth);
+    tvhtrace(mt->mt_subsys, "%s:  type %02X (%d) name [%s] provider [%s] def_auth [%s]",
+             mt->mt_name, stype, stype, sname, sprov, sauth);
     if (!s) continue;
 
     /* Update service type */
@@ -1596,8 +1596,8 @@ dvb_sdt_mux
       int r;
       s->s_dvb_servicetype = stype;
       save = 1;
-      tvhtrace("sdt", "    type changed / old %02X (%i)",
-               s->s_dvb_servicetype, s->s_dvb_servicetype);
+      tvhtrace(mt->mt_subsys, "%s:    type changed / old %02X (%i)",
+               mt->mt_name, s->s_dvb_servicetype, s->s_dvb_servicetype);
 
       /* Set tvh service type */
       if ((r = dvb_servicetype_lookup(stype)) != -1)
@@ -1614,7 +1614,7 @@ dvb_sdt_mux
     if (*sauth && strcmp(s->s_dvb_cridauth ?: "", sauth)) {
       tvh_str_update(&s->s_dvb_cridauth, sauth);
       save = 1;
-      tvhtrace("sdt", "    cridauth changed");
+      tvhtrace(mt->mt_subsys, "%s:    cridauth changed", mt->mt_name);
     }
 
     /* Update name */
@@ -1622,7 +1622,7 @@ dvb_sdt_mux
       if (!s->s_dvb_svcname || master) {
         tvh_str_update(&s->s_dvb_svcname, sname);
         save2 = 1;
-        tvhtrace("sdt", "    name changed");
+        tvhtrace(mt->mt_subsys, "%s:    name changed", mt->mt_name);
       }
     }
     
@@ -1631,7 +1631,7 @@ dvb_sdt_mux
       if (!s->s_dvb_provider || master) {
         tvh_str_update(&s->s_dvb_provider, sprov);
         save2 = 1;
-        tvhtrace("sdt", "    provider changed");
+        tvhtrace(mt->mt_subsys, "%s:    provider changed", mt->mt_name);
       }
     }
 
@@ -1640,7 +1640,7 @@ dvb_sdt_mux
       pthread_mutex_lock(&s->s_stream_mutex);
       service_make_nicename((service_t*)s);
       pthread_mutex_unlock(&s->s_stream_mutex);
-      tvhdebug("sdt", "  nicename %s", s->s_nicename);
+      tvhdebug(mt->mt_subsys, "%s:  nicename %s", mt->mt_name, s->s_nicename);
       save = 1;
     }
 
@@ -1674,7 +1674,8 @@ dvb_sdt_callback
   if (r != 1) return r;
 
   /* ID */
-  tvhdebug("sdt", "onid %04X (%d) tsid %04X (%d)", onid, onid, tsid, tsid);
+  tvhdebug(mt->mt_subsys, "%s: onid %04X (%d) tsid %04X (%d)",
+           mt->mt_name, onid, onid, tsid, tsid);
 
   /* Service descriptors */
   len -= 8;
@@ -1732,11 +1733,11 @@ atsc_vct_callback
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 7, &st, &sect, &last, &ver);
   if (r != 1) return r;
-  tvhdebug("vct", "tsid %04X (%d)", tsid, tsid);
+  tvhdebug(mt->mt_subsys, "%s: tsid %04X (%d)", mt->mt_name, tsid, tsid);
 
   /* # channels */
   count = ptr[6];
-  tvhdebug("vct", "channel count %d", count);
+  tvhdebug(mt->mt_subsys, "%s: channel count %d", mt->mt_name, count);
   ptr  += 7;
   len  -= 7;
   for (i = 0; i < count && len >= 32; i++) {
@@ -1751,13 +1752,13 @@ atsc_vct_callback
     sid  = (ptr[24]) << 8 | ptr[25];
     type = ptr[27] & 0x3f;
     srcid  = (ptr[28]) << 8 | ptr[29];
-    tvhdebug("vct", "tsid   %04X (%d)", tsid, tsid);
-    tvhdebug("vct", "sid    %04X (%d)", sid, sid);
-    tvhdebug("vct", "chname %s",    chname);
-    tvhdebug("vct", "chnum  %d.%d", maj, min);
-    tvhdebug("vct", "type   %02X (%d)", type, type);
-    tvhdebug("vct", "srcid  %04X (%d)", srcid, srcid);
-    tvhdebug("vct", "dlen   %d", dlen);
+    tvhdebug(mt->mt_subsys, "%s: tsid   %04X (%d)", mt->mt_name, tsid, tsid);
+    tvhdebug(mt->mt_subsys, "%s: sid    %04X (%d)", mt->mt_name, sid, sid);
+    tvhdebug(mt->mt_subsys, "%s: chname %s", mt->mt_name, chname);
+    tvhdebug(mt->mt_subsys, "%s: chnum  %d.%d", mt->mt_name, maj, min);
+    tvhdebug(mt->mt_subsys, "%s: type   %02X (%d)", mt->mt_name, type, type);
+    tvhdebug(mt->mt_subsys, "%s: srcid  %04X (%d)", mt->mt_name, srcid, srcid);
+    tvhdebug(mt->mt_subsys, "%s: dlen   %d", mt->mt_name, dlen);
 
     /* Skip */
     if (type > 3)
@@ -1783,11 +1784,11 @@ atsc_vct_callback
                 x = lang_str_get(ls, "eng");
               if (x)
                 snprintf(chname, sizeof(chname), "%s", x);
-              tvhdebug("vct", "  extended channel name: '%s' (%d bytes)", x, len);
+              tvhdebug(mt->mt_subsys, "%s:  extended channel name: '%s' (%d bytes)", mt->mt_name, x, len);
               lang_str_destroy(ls);
             }
           } else {
-            tvhdebug("vct", "  tag 0x%02x, len %d", tag, len);
+            tvhdebug(mt->mt_subsys, "%s:  tag 0x%02x, len %d", mt->mt_name, tag, len);
           }
           j += len + 2;
         }
@@ -1849,8 +1850,8 @@ atsc_stt_callback
   gps_utc_offset = ptr[10];
   is_dst = ptr[11] >> 7;
 
-  tvhdebug("stt", "system_time %d, gps_utc_offset %d, is DST %d",
-      systemtime, gps_utc_offset, is_dst);
+  tvhdebug(mt->mt_subsys, "%s: system_time %d, gps_utc_offset %d, is DST %d",
+           mt->mt_name, systemtime, gps_utc_offset, is_dst);
 
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
@@ -1894,15 +1895,15 @@ dvb_fs_sdt_mux
     /* (ptr[14] << 8) | ptr[15] - pcr pid */
 
     /* Initialise the loop */
-    DVB_LOOP_INIT(ptr, len, 16, lptr, llen);
+    DVB_LOOP_INIT(mt, ptr, len, 16, lptr, llen);
 
     if (discovery) {
       /* Descriptor loop */
-      DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
+      DVB_DESC_EACH(mt, lptr, llen, dtag, dlen, dptr) {
         switch (dtag) {
           case DVB_DESC_SAT_DEL:
-            tvhtrace(mt->mt_name, "    dtag %02X dlen %d (discovery) onid %04X (%d) tsid %04X (%d)",
-                     dtag, dlen, onid, onid, tsid, tsid);
+            tvhtrace(mt->mt_subsys, "%s:    dtag %02X dlen %d (discovery) onid %04X (%d) tsid %04X (%d)",
+                     mt->mt_name, dtag, dlen, onid, onid, tsid, tsid);
             mux = dvb_desc_sat_del(mt, mm, onid, tsid, dptr, dlen, 1);
             if (mux) {
               mpegts_mux_set_onid(mux, onid);
@@ -1915,13 +1916,13 @@ dvb_fs_sdt_mux
       continue;
     }
 
-    tvhdebug(mt->mt_name, "  service %04X (%d) onid %04X (%d) tsid %04X (%d)",
-             service_id, service_id, onid, onid, tsid, tsid);
+    tvhdebug(mt->mt_subsys, "%s:  service %04X (%d) onid %04X (%d) tsid %04X (%d)",
+             mt->mt_name, service_id, service_id, onid, onid, tsid, tsid);
 
     /* Find existing mux */
     mux = dvb_fs_mux_find(mm, onid, tsid);
     if (mux == NULL) {
-      tvhtrace(mt->mt_name, "    mux not found");
+      tvhtrace(mt->mt_subsys, "%s:    mux not found", mt->mt_name);
       continue;
     }
     mn = mux->mm_network;
@@ -1931,8 +1932,8 @@ dvb_fs_sdt_mux
     charset = dvb_charset_find(mn, mux, s);
 
     /* Descriptor loop */
-    DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr) {
-      tvhtrace(mt->mt_name, "    dtag %02X dlen %d", dtag, dlen);
+    DVB_DESC_EACH(mt, lptr, llen, dtag, dlen, dptr) {
+      tvhtrace(mt->mt_subsys, "%s:    dtag %02X dlen %d", mt->mt_name, dtag, dlen);
       switch (dtag) {
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
@@ -1942,8 +1943,8 @@ dvb_fs_sdt_mux
       }
     }
 
-    tvhtrace(mt->mt_name, "    type %d name [%s] provider [%s]",
-             stype, sname, sprov);
+    tvhtrace(mt->mt_subsys, "%s:    type %d name [%s] provider [%s]",
+             mt->mt_name, stype, sname, sprov);
 
     if (bi)
       dvb_bat_find_service(bi, s, 0, UINT_MAX);
@@ -1953,7 +1954,7 @@ dvb_fs_sdt_mux
       int r;
       s->s_dvb_servicetype = stype;
       save = 1;
-      tvhtrace(mt->mt_name, "    type changed");
+      tvhtrace(mt->mt_subsys, "%s:    type changed", mt->mt_name);
 
       /* Set tvh service type */
       if ((r = dvb_servicetype_lookup(stype)) != -1)
@@ -1965,7 +1966,7 @@ dvb_fs_sdt_mux
       if (!s->s_dvb_svcname) {
         tvh_str_update(&s->s_dvb_svcname, sname);
         save = 1;
-        tvhtrace(mt->mt_name, "    name changed");
+        tvhtrace(mt->mt_subsys, "%s:    name changed", mt->mt_name);
       }
     }
 
@@ -1974,7 +1975,7 @@ dvb_fs_sdt_mux
       if (!s->s_dvb_provider) {
         tvh_str_update(&s->s_dvb_provider, sprov);
         save = 1;
-        tvhtrace(mt->mt_name, "    provider changed");
+        tvhtrace(mt->mt_subsys, "%s:    provider changed", mt->mt_name);
       }
     }
 
@@ -1983,7 +1984,7 @@ dvb_fs_sdt_mux
       pthread_mutex_lock(&s->s_stream_mutex);
       service_make_nicename((service_t*)s);
       pthread_mutex_unlock(&s->s_stream_mutex);
-      tvhdebug(mt->mt_name, "  nicename %s", s->s_nicename);
+      tvhdebug(mt->mt_subsys, "%s:  nicename %s", mt->mt_name, s->s_nicename);
       /* Save changes */
       idnode_changed(&s->s_id);
       service_refresh_channel((service_t*)s);
@@ -2053,14 +2054,15 @@ dvb_fs_sdt_callback
  */
 static int
 psi_desc_add_ca
-  (mpegts_service_t *t, uint16_t caid, uint32_t provid, uint16_t pid)
+  (mpegts_table_t *mt, mpegts_service_t *t,
+   uint16_t caid, uint32_t provid, uint16_t pid)
 {
   elementary_stream_t *st;
   caid_t *c;
   int r = 0;
 
-  tvhdebug("pmt", "  caid %04X (%s) provider %08X pid %04X",
-           caid, caid2name(caid), provid, pid);
+  tvhdebug(mt->mt_subsys, "%s:  caid %04X (%s) provider %08X pid %04X",
+           mt->mt_name, caid, caid2name(caid), provid, pid);
 
   if((st = service_stream_find((service_t*)t, pid)) == NULL) {
     st = service_stream_create((service_t*)t, pid, SCT_CA);
@@ -2100,7 +2102,7 @@ psi_desc_add_ca
  * Parser for CA descriptors
  */
 static int 
-psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
+psi_desc_ca(mpegts_table_t *mt, mpegts_service_t *t, const uint8_t *buffer, int size)
 {
   int r = 0;
   int i;
@@ -2117,7 +2119,7 @@ psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
       uint16_t xpid = ((buffer[i]&0x1F) << 8) | buffer[i + 1];
       uint16_t xprovid = (buffer[i + 2] << 8) | buffer[i + 3];
 
-      r |= psi_desc_add_ca(t, caid, xprovid, xpid);
+      r |= psi_desc_add_ca(mt, t, caid, xprovid, xpid);
     }
     break;
   case 0x0500:// Viaccess
@@ -2145,7 +2147,7 @@ psi_desc_ca(mpegts_service_t *t, const uint8_t *buffer, int size)
     break;
   }
 
-  r |= psi_desc_add_ca(t, caid, provid, pid);
+  r |= psi_desc_add_ca(mt, t, caid, provid, pid);
 
   return r;
 }
@@ -2209,7 +2211,7 @@ psi_desc_teletext(mpegts_service_t *t, const uint8_t *ptr, int size,
  */
 static int
 psi_parse_pmt
-  (mpegts_mux_t *mux, mpegts_service_t *t, const uint8_t *ptr, int len, int *_update)
+  (mpegts_table_t *mt, mpegts_service_t *t, const uint8_t *ptr, int len, int *_update)
 {
   int ret = 0;
   uint16_t pcr_pid, pid;
@@ -2227,7 +2229,7 @@ psi_parse_pmt
   int video_stream;
   const char *lang;
   uint8_t audio_type;
-
+  mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
 
   lock_assert(&t->s_stream_mutex);
@@ -2240,7 +2242,7 @@ psi_parse_pmt
     t->s_pcr_pid = pcr_pid;
     update |= PMT_UPDATE_PCR;
   }
-  tvhdebug("pmt", "  pcr_pid %04X", pcr_pid);
+  tvhdebug(mt->mt_subsys, "%s:  pcr_pid %04X", mt->mt_name, pcr_pid);
 
   ptr += 9;
   len -= 9;
@@ -2258,14 +2260,14 @@ psi_parse_pmt
     dtag = ptr[0];
     dlen = ptr[1];
 
-    tvhlog_hexdump("pmt", ptr, dlen + 2);
+    tvhlog_hexdump(mt->mt_subsys, ptr, dlen + 2);
     len -= 2; ptr += 2; dllen -= 2; 
     if(dlen > len)
       break;
 
     switch(dtag) {
     case DVB_DESC_CA:
-      update |= psi_desc_ca(t, ptr, dlen);
+      update |= psi_desc_ca(mt, t, ptr, dlen);
       break;
 
     default:
@@ -2278,8 +2280,8 @@ psi_parse_pmt
     estype  = ptr[0];
     pid     = (ptr[1] & 0x1f) << 8 | ptr[2];
     dllen   = (ptr[3] & 0xf) << 8 | ptr[4];
-    tvhdebug("pmt", "  pid %04X estype %d", pid, estype);
-    tvhlog_hexdump("pmt", ptr, 5);
+    tvhdebug(mt->mt_subsys, "%s:  pid %04X estype %d", mt->mt_name, pid, estype);
+    tvhlog_hexdump(mt->mt_subsys, ptr, 5);
 
     ptr += 5;
     len -= 5;
@@ -2339,14 +2341,14 @@ psi_parse_pmt
       dtag = ptr[0];
       dlen = ptr[1];
 
-      tvhlog_hexdump("pmt", ptr, dlen + 2);
+      tvhlog_hexdump(mt->mt_subsys, ptr, dlen + 2);
       len -= 2; ptr += 2; dllen -= 2; 
       if(dlen > len)
         break;
 
       switch(dtag) {
       case DVB_DESC_CA:
-        update |= psi_desc_ca(t, ptr, dlen);
+        update |= psi_desc_ca(mt, t, ptr, dlen);
         break;
 
       case DVB_DESC_VIDEO_STREAM:
@@ -2417,14 +2419,14 @@ psi_parse_pmt
 
       st->es_delete_me = 0;
 
-      tvhdebug("pmt", "  type %s position %d",
-               streaming_component_type2txt(st->es_type), position);
+      tvhdebug(mt->mt_subsys, "%s:  type %s position %d",
+               mt->mt_name, streaming_component_type2txt(st->es_type), position);
       if (lang)
-        tvhdebug("pmt", "  language %s", lang);
+        tvhdebug(mt->mt_subsys, "%s:  language %s", mt->mt_name, lang);
       if (composition_id != -1)
-        tvhdebug("pmt", "  composition_id %d", composition_id);
+        tvhdebug(mt->mt_subsys, "%s:  composition_id %d", mt->mt_name, composition_id);
       if (ancillary_id != -1)
-        tvhdebug("pmt", "  ancillary_id %d", ancillary_id);
+        tvhdebug(mt->mt_subsys, "%s:  ancillary_id %d", mt->mt_name, ancillary_id);
 
       if(st->es_position != position) {
         update |= PMT_REORDERED;
@@ -2478,8 +2480,9 @@ psi_parse_pmt
     sort_elementary_streams((service_t*)t);
 
   if(update) {
-    tvhdebug("pmt", "Service \"%s\" PMT (version %d) updated"
+    tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
      "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     mt->mt_name,
      service_nicename((service_t*)t), version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
      update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
@@ -2570,10 +2573,10 @@ static void
 psi_tables_default ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_PAT_BASE, DVB_PAT_MASK, dvb_pat_callback,
-                   NULL, "pat", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   NULL, "pat", LS_TBL_BASE, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_PAT_PID, MPS_WEIGHT_PAT);
   mpegts_table_add(mm, DVB_CAT_BASE, DVB_CAT_MASK, dvb_cat_callback,
-                   NULL, "cat", MT_QUICKREQ | MT_CRC, DVB_CAT_PID,
+                   NULL, "cat", LS_TBL_BASE, MT_QUICKREQ | MT_CRC, DVB_CAT_PID,
                    MPS_WEIGHT_CAT);
 }
 
@@ -2581,14 +2584,14 @@ psi_tables_default ( mpegts_mux_t *mm )
 static void
 psi_tables_dvb_fastscan( void *aux, bouquet_t *bq, const char *name, int pid )
 {
-  tvhtrace("fastscan", "adding table %04X (%i) for '%s'", pid, pid, name);
+  tvhtrace(LS_FASTSCAN, "adding table %04X (%i) for '%s'", pid, pid, name);
   bq->bq_fastscan_nit = 1;
   bq->bq_fastscan_sdt = 1;
   mpegts_table_add(aux, DVB_FASTSCAN_NIT_BASE, DVB_FASTSCAN_MASK,
-                   dvb_nit_callback, bq, "fs_nit", MT_CRC, pid,
+                   dvb_nit_callback, bq, "fs_nit", LS_FASTSCAN, MT_CRC, pid,
                    MPS_WEIGHT_NIT2);
   mpegts_table_add(aux, DVB_FASTSCAN_SDT_BASE, DVB_FASTSCAN_MASK,
-                   dvb_fs_sdt_callback, bq, "fs_sdt", MT_CRC, pid,
+                   dvb_fs_sdt_callback, bq, "fs_sdt", LS_FASTSCAN, MT_CRC, pid,
                    MPS_WEIGHT_SDT2);
 }
 #endif
@@ -2597,19 +2600,19 @@ static void
 psi_tables_dvb ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_NIT_BASE, DVB_NIT_MASK, dvb_nit_callback,
-                   NULL, "nit", MT_QUICKREQ | MT_CRC, DVB_NIT_PID,
+                   NULL, "nit", LS_TBL_BASE, MT_QUICKREQ | MT_CRC, DVB_NIT_PID,
                    MPS_WEIGHT_NIT);
   mpegts_table_add(mm, DVB_SDT_BASE, DVB_SDT_MASK, dvb_sdt_callback,
-                   NULL, "sdt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   NULL, "sdt", LS_TBL_BASE, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_SDT_PID, MPS_WEIGHT_SDT);
   mpegts_table_add(mm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback,
-                   NULL, "bat", MT_CRC, DVB_BAT_PID, MPS_WEIGHT_BAT);
+                   NULL, "bat", LS_TBL_BASE, MT_CRC, DVB_BAT_PID, MPS_WEIGHT_BAT);
   if (config.tvhtime_update_enabled) {
     mpegts_table_add(mm, DVB_TDT_BASE, DVB_TDT_MASK, dvb_tdt_callback,
-                     NULL, "tdt", MT_ONESHOT | MT_QUICKREQ | MT_RECORD,
+                     NULL, "tdt", LS_TBL_TIME, MT_ONESHOT | MT_QUICKREQ | MT_RECORD,
                      DVB_TDT_PID, MPS_WEIGHT_TDT);
     mpegts_table_add(mm, DVB_TOT_BASE, DVB_TOT_MASK, dvb_tot_callback,
-                     NULL, "tot", MT_ONESHOT | MT_QUICKREQ | MT_CRC | MT_RECORD,
+                     NULL, "tot", LS_TBL_TIME, MT_ONESHOT | MT_QUICKREQ | MT_CRC | MT_RECORD,
                      DVB_TDT_PID, MPS_WEIGHT_TDT);
   }
 #if ENABLE_MPEGTS_DVB
@@ -2626,10 +2629,10 @@ static void
 psi_tables_atsc_c ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_VCT_C_BASE, DVB_VCT_MASK, atsc_vct_callback,
-                   NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   NULL, "vct", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
   mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
-                   NULL, "stt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   NULL, "stt", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
 }
 
@@ -2637,10 +2640,10 @@ static void
 psi_tables_atsc_t ( mpegts_mux_t *mm )
 {
   mpegts_table_add(mm, DVB_VCT_T_BASE, DVB_VCT_MASK, atsc_vct_callback,
-                   NULL, "vct", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   NULL, "vct", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_VCT_PID, MPS_WEIGHT_VCT);
   mpegts_table_add(mm, DVB_ATSC_STT_BASE, DVB_ATSC_STT_MASK, atsc_stt_callback,
-                   NULL, "stt", MT_QUICKREQ | MT_CRC | MT_RECORD,
+                   NULL, "stt", LS_TBL_ATSC, MT_QUICKREQ | MT_CRC | MT_RECORD,
                    DVB_ATSC_STT_PID, MPS_WEIGHT_STT);
 }
 

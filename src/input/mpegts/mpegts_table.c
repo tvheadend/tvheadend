@@ -39,7 +39,7 @@ mpegts_table_consistency_check ( mpegts_mux_t *mm )
     c++;
 
   if (i != c) {
-    tvherror("mpegts", "table: mux %p count inconsistency (num %d, list %d)", mm, i, c);
+    tvherror(LS_MPEGTS, "table: mux %p count inconsistency (num %d, list %d)", mm, i, c);
     abort();
   }
 }
@@ -116,7 +116,7 @@ void
 mpegts_table_release_ ( mpegts_table_t *mt )
 {
   dvb_table_release((mpegts_psi_table_t *)mt);
-  tvhtrace("mpegts", "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
+  tvhtrace(LS_MPEGTS, "table: mux %p free %s %02X/%02X (%d) pid %04X (%d)",
            mt->mt_mux, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
            mt->mt_pid, mt->mt_pid);
   if (mt->mt_bat)
@@ -138,7 +138,7 @@ mpegts_table_destroy_ ( mpegts_table_t *mt )
 
   lock_assert(&mm->mm_tables_lock);
 
-  tvhtrace("mpegts", "table: mux %p destroy %s %02X/%02X (%d) pid %04X (%d)",
+  tvhtrace(LS_MPEGTS, "table: mux %p destroy %s %02X/%02X (%d) pid %04X (%d)",
            mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
            mt->mt_pid, mt->mt_pid);
   mpegts_table_consistency_check(mm);
@@ -180,7 +180,7 @@ mpegts_table_t *
 mpegts_table_add
   ( mpegts_mux_t *mm, int tableid, int mask,
     mpegts_table_callback_t callback, void *opaque,
-    const char *name, int flags, int pid, int weight )
+    const char *name, int subsys, int flags, int pid, int weight )
 {
   mpegts_table_t *mt;
   int subscribe = 1;
@@ -216,13 +216,14 @@ mpegts_table_add
     pthread_mutex_unlock(&mm->mm_tables_lock);
     return mt;
   }
-  tvhtrace("mpegts", "table: mux %p add %s %02X/%02X (%d) pid %04X (%d)",
+  tvhtrace(LS_MPEGTS, "table: mux %p add %s %02X/%02X (%d) pid %04X (%d)",
            mm, name, tableid, mask, tableid, pid, pid);
 
   /* Create */
   mt = calloc(1, sizeof(mpegts_table_t));
   mt->mt_arefcount  = 1;
   mt->mt_name       = strdup(name);
+  mt->mt_subsys     = subsys;
   mt->mt_callback   = callback;
   mt->mt_opaque     = opaque;
   mt->mt_pid        = pid;

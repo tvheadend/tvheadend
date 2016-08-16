@@ -338,7 +338,7 @@ parse_aac(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
     /* Wrong bytestream */
     } else {
-      tvhtrace("parser", "AAC skip byte %02x", d[0]);
+      tvhtrace(LS_PARSER, "AAC skip byte %02x", d[0]);
       p++;
     }
   }
@@ -366,7 +366,7 @@ parse_pes(service_t *t, elementary_stream_t *st, const uint8_t *data, int len,
     st->es_parser_state = 1;
     if (data[0] != 0 && data[1] != 0 && data[2] != 1)
       if (tvhlog_limit(&st->es_pes_log, 10))
-        tvhwarn("TS", "%s: Invalid start code %02x:%02x:%02x",
+        tvhwarn(LS_TS, "%s: Invalid start code %02x:%02x:%02x",
                 service_component_nicename(st),
                 data[0], data[1], data[2]);
     st->es_incomplete = 0;
@@ -977,7 +977,7 @@ parse_pes_header(service_t *t, elementary_stream_t *st,
   st->es_curdts = PTS_UNSET;
   st->es_curpts = PTS_UNSET;
   if (tvhlog_limit(&st->es_pes_log, 10))
-    tvhwarn("TS", "%s Corrupted PES header (errors %zi)",
+    tvhwarn(LS_TS, "%s Corrupted PES header (errors %zi)",
             service_component_nicename(st), st->es_pes_log.count);
   return -1;
 } 
@@ -1822,7 +1822,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
       pkt->pkt_pts < t->s_current_pts - 180000))
     t->s_current_pts = pkt->pkt_pts;
 
-  pkt_trace("parser", pkt, st->es_index, st->es_type, "deliver");
+  pkt_trace(LS_PARSER, pkt, st->es_index, st->es_type, "deliver");
 
   pkt->pkt_aspect_num = st->es_aspect_num;
   pkt->pkt_aspect_den = st->es_aspect_den;
@@ -1877,7 +1877,7 @@ parser_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
     int64_t pts = pkt->pkt_pts;
     pkt->pkt_dts = pts_no_backlog(dts);
     pkt->pkt_pts = pts_no_backlog(pts);
-    pkt_trace("parser", pkt, st->es_index, st->es_type, "backlog");
+    pkt_trace(LS_PARSER, pkt, st->es_index, st->es_type, "backlog");
     pkt->pkt_dts = dts;
     pkt->pkt_pts = pts;
   }
@@ -1895,7 +1895,7 @@ parser_do_backlog(service_t *t, elementary_stream_t *st,
   th_pkt_t *pkt, *npkt;
   size_t metalen;
 
-  tvhtrace("parser",
+  tvhtrace(LS_PARSER,
            "pkt bcklog %2d %-12s - backlog flush start - (meta %ld)",
            st->es_index,
            streaming_component_type2txt(st->es_type),
@@ -1966,7 +1966,7 @@ parser_do_backlog(service_t *t, elementary_stream_t *st,
     sm->sm_data = NULL;
     streaming_msg_free(sm);
   }
-  tvhtrace("parser",
+  tvhtrace(LS_PARSER,
            "pkt bcklog %2d %-12s - backlog flush end -",
            st->es_index,
            streaming_component_type2txt(st->es_type));

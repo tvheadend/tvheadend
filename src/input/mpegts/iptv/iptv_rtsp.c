@@ -83,14 +83,14 @@ iptv_rtsp_header ( http_client_t *hc )
   }
 
   if (hc->hc_cmd == RTSP_CMD_GET_PARAMETER && hc->hc_code != HTTP_STATUS_OK) {
-    tvhtrace("iptv", "GET_PARAMETER command returned invalid error code %d for '%s', "
+    tvhtrace(LS_IPTV, "GET_PARAMETER command returned invalid error code %d for '%s', "
         "fall back to OPTIONS in keep alive loop.", hc->hc_code, im->mm_iptv_url_raw);
     hc->hc_rtsp_keep_alive_cmd = RTSP_CMD_OPTIONS;
     return 0;
   }
 
   if (hc->hc_code != HTTP_STATUS_OK) {
-    tvherror("iptv", "invalid error code %d for '%s'", hc->hc_code, im->mm_iptv_url_raw);
+    tvherror(LS_IPTV, "invalid error code %d for '%s'", hc->hc_code, im->mm_iptv_url_raw);
     return 0;
   }
 
@@ -108,7 +108,7 @@ iptv_rtsp_header ( http_client_t *hc )
     // Now let's set peer port for RTCP
     // Use the HTTP host for sending RTCP reports, NOT the hc_rtp_dest (which is where the stream is sent)
     if (udp_connect(rp->rtcp_info->connection, "rtcp", hc->hc_host, hc->hc_rtcp_server_port)) {
-        tvhlog(LOG_WARNING, "rtsp", "Can't connect to remote, RTCP receiver reports won't be sent");
+        tvhwarn(LS_RTSP, "Can't connect to remote, RTCP receiver reports won't be sent");
     }
     hc->hc_cmd = HTTP_CMD_NONE;
     pthread_mutex_lock(&global_lock);
@@ -137,7 +137,7 @@ iptv_rtsp_data
     return 0;
 
   if (len > 0)
-    tvherror("iptv", "unknown data %zd received for '%s'", len, im->mm_iptv_url_raw);
+    tvherror(LS_IPTV, "unknown data %zd received for '%s'", len, im->mm_iptv_url_raw);
 
   return 0;
 }
@@ -164,7 +164,7 @@ iptv_rtsp_start
     hc->hc_rtsp_pass = strdup(u->pass);
 
   if (udp_bind_double(&rtp, &rtcp,
-                      "IPTV", "rtp", "rtcp",
+                      LS_IPTV, "rtp", "rtcp",
                       NULL, 0, NULL,
                       128*1024, 16384, 4*1024, 4*1024) < 0) {
     http_client_close(hc);

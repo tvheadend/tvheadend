@@ -46,7 +46,7 @@ timeshift_packet_log0
   ( const char *source, timeshift_t *ts, streaming_message_t *sm )
 {
   th_pkt_t *pkt = sm->sm_data;
-  tvhtrace("timeshift",
+  tvhtrace(LS_TIMESHIFT,
            "ts %d pkt %s - stream %d type %c pts %10"PRId64
            " dts %10"PRId64" dur %10d len %6zu time %14"PRId64,
            ts->id, source,

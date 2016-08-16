@@ -92,7 +92,7 @@ spawn_pipe_read( th_pipe_t *p, char **_buf, int level )
       break;
     }
     buf[len + r] = '\0';
-    tvhlog_hexdump("spawn", buf + len, r);
+    tvhlog_hexdump(LS_SPAWN, buf + len, r);
     while (1) {
       s = buf;
       while (*s && *s != '\n' && *s != '\r')
@@ -101,11 +101,11 @@ spawn_pipe_read( th_pipe_t *p, char **_buf, int level )
         break;
       *s++ = '\0';
       if (buf[0])
-        tvhlog(level, "spawn", "%s", buf);
+        tvhlog(level, LS_SPAWN, "%s", buf);
       memmove(buf, s, strlen(s) + 1);
     }
     if (strlen(buf) == SPAWN_PIPE_READ_SIZE - 1) {
-      tvherror("spawn", "pipe buffer full");
+      tvherror(LS_SPAWN, "pipe buffer full");
       buf[0] = '\0';
     }
   }
@@ -508,7 +508,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
 
   if(p == -1) {
     pthread_mutex_unlock(&fork_lock);
-    tvherror("spawn", "Unable to fork() for \"%s\" -- %s",
+    tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
              prog, strerror(errno));
     return -1;
   }
@@ -591,7 +591,7 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
 
   if(p == -1) {
     pthread_mutex_unlock(&fork_lock);
-    tvherror("spawn", "Unable to fork() for \"%s\" -- %s",
+    tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
 	     prog, strerror(errno));
     return -1;
   }

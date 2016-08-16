@@ -758,16 +758,16 @@ linuxdvb_satconf_start ( linuxdvb_satconf_t *ls, int delay, int vol )
     return -1;
 
   if (ls->ls_last_tone_off != 1) {
-    tvhtrace("diseqc", "initial tone off");
+    tvhtrace(LS_DISEQC, "initial tone off");
     if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_SET_TONE, SEC_TONE_OFF)) {
-      tvherror("diseqc", "failed to disable tone");
+      tvherror(LS_DISEQC, "failed to disable tone");
       return -1;
     }
     ls->ls_last_tone_off = 1;
   }
   /* the linuxdvb_diseqc_set_volt() fcn already sleeps for 15ms */
   if (delay > 15) {
-    tvhtrace("diseqc", "initial sleep %dms", delay);
+    tvhtrace(LS_DISEQC, "initial sleep %dms", delay);
     tvh_safe_usleep((delay-15)*1000);
   }
   return 0;
@@ -800,7 +800,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
     band = lse->lse_lnb->lnb_band(lse->lse_lnb, lm) & 0x1;
     freq = lse->lse_lnb->lnb_freq(lse->lse_lnb, lm);
   } else {
-    tvherror("linuxdvb", "LNB is not defined!!!");
+    tvherror(LS_LINUXDVB, "LNB is not defined!!!");
     return -1;
   }
   if (!lse->lse_en50494) {
@@ -834,7 +834,7 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
 
     /* Pending */
     if (r != 0) {
-      tvhtrace("diseqc", "waiting %d seconds to finish setup for %s", r, lds[i]->ld_type);
+      tvhtrace(LS_DISEQC, "waiting %d seconds to finish setup for %s", r, lds[i]->ld_type);
       mtimer_arm_rel(&ls->ls_diseqc_timer, linuxdvb_satconf_ele_tune_cb, lse, sec2mono(r));
       ls->ls_diseqc_idx = i + 1;
       return 0;
@@ -856,9 +856,9 @@ linuxdvb_satconf_ele_tune ( linuxdvb_satconf_ele_t *lse )
   if (!lse->lse_en50494) {
     if (ls->ls_last_tone_off != band + 1) {
       ls->ls_last_tone_off = 0;
-      tvhtrace("diseqc", "set diseqc tone %s", band ? "on" : "off");
+      tvhtrace(LS_DISEQC, "set diseqc tone %s", band ? "on" : "off");
       if (ioctl(lfe->lfe_fe_fd, FE_SET_TONE, band ? SEC_TONE_ON : SEC_TONE_OFF)) {
-        tvherror("diseqc", "failed to set diseqc tone (e=%s)", strerror(errno));
+        tvherror(LS_DISEQC, "failed to set diseqc tone (e=%s)", strerror(errno));
         return -1;
       }
       ls->ls_last_tone_off = band + 1;
@@ -900,7 +900,7 @@ linuxdvb_satconf_lnb_freq
   if (lse->lse_en50494) {
     f = lse->lse_en50494->ld_freq(lse->lse_en50494, lm, f);
     if (f < 0) {
-      tvherror("en50494", "invalid tuning freq");
+      tvherror(LS_EN50494, "invalid tuning freq");
       return -1;
     }
   }
@@ -985,20 +985,20 @@ linuxdvb_satconf_match_mux
   char buf1[256], buf2[256];
   dvb_mux_conf_str(&lm1->lm_tuning, buf1, sizeof(buf1));
   dvb_mux_conf_str(&lm2->lm_tuning, buf2, sizeof(buf2));
-  tvhtrace("diseqc", "match mux 1 - %s", buf1);
-  tvhtrace("diseqc", "match mux 2 - %s", buf2);
+  tvhtrace(LS_DISEQC, "match mux 1 - %s", buf1);
+  tvhtrace(LS_DISEQC, "match mux 2 - %s", buf2);
 #endif
 
   if (lse1 != lse2) {
-    tvhtrace("diseqc", "match position failed");
+    tvhtrace(LS_DISEQC, "match position failed");
     return 0;
   }
   if (!lse1->lse_lnb->lnb_match(lse1->lse_lnb, lm1, lm2)) {
-    tvhtrace("diseqc", "match LNB failed");
+    tvhtrace(LS_DISEQC, "match LNB failed");
     return 0;
   }
   if (lse1->lse_en50494 && !lse1->lse_en50494->ld_match(lse1->lse_en50494, lm1, lm2)) {
-    tvhtrace("diseqc", "match en50494 failed");
+    tvhtrace(LS_DISEQC, "match en50494 failed");
     return 0;
   }
   return 1;
@@ -1562,12 +1562,12 @@ linuxdvb_diseqc_send
   va_end(ap);
 
   if (tr)
-    tvhtrace("diseqc", "sending diseqc (len %d) %02X %02X %02X %s",
+    tvhtrace(LS_DISEQC, "sending diseqc (len %d) %02X %02X %02X %s",
              len + 3, framing, addr, cmd, buf);
 
   /* Send */
   if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {
-    tvherror("diseqc", "failed to send diseqc cmd (e=%s)", strerror(errno));
+    tvherror(LS_DISEQC, "failed to send diseqc cmd (e=%s)", strerror(errno));
     return -1;
   }
   return 0;
@@ -1580,10 +1580,10 @@ linuxdvb_diseqc_set_volt ( linuxdvb_satconf_t *ls, int vol )
   if (vol >= 0 && ls->ls_last_vol == vol + 1)
     return 0;
   /* Set voltage */
-  tvhtrace("diseqc", "set voltage %dV", vol ? (vol < 0 ? 0 : 18) : 13);
+  tvhtrace(LS_DISEQC, "set voltage %dV", vol ? (vol < 0 ? 0 : 18) : 13);
   if (ioctl(linuxdvb_satconf_fe_fd(ls), FE_SET_VOLTAGE,
             vol ? (vol < 0 ? SEC_VOLTAGE_OFF : SEC_VOLTAGE_18) : SEC_VOLTAGE_13)) {
-    tvherror("diseqc", "failed to set voltage (e=%s)", strerror(errno));
+    tvherror(LS_DISEQC, "failed to set voltage (e=%s)", strerror(errno));
     ls->ls_last_vol = 0;
     return -1;
   }

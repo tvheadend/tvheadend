@@ -113,7 +113,7 @@ mpegts_mux_sched_class_cron_set ( void *p, const void *v )
       mms->mms_cronstr = strdup(str);
       return 1;
     } else {
-      tvhwarn("muxsched", "invalid cronjob spec (%s)", str);
+      tvhwarn(LS_MUXSCHED, "invalid cronjob spec (%s)", str);
     }
   }
   return 0;
@@ -211,7 +211,7 @@ mpegts_mux_sched_timer ( void *p )
   
   /* Find mux */
   if (!(mm = mpegts_mux_find(mms->mms_mux))) {
-    tvhdebug("muxsched", "mux has been removed, delete sched entry");
+    tvhdebug(LS_MUXSCHED, "mux has been removed, delete sched entry");
     mpegts_mux_sched_delete(mms, 1);
     return;
   }
@@ -257,7 +257,7 @@ mpegts_mux_sched_timer ( void *p )
 
     /* Find next */
     if (cron_next(&mms->mms_cronjob, now, &nxt)) {
-      tvherror("muxsched", "failed to find next event");
+      tvherror(LS_MUXSCHED, "failed to find next event");
       return;
     }
 
@@ -276,7 +276,7 @@ mpegts_mux_sched_create ( const char *uuid, htsmsg_t *conf )
   mpegts_mux_sched_t *mms;
 
   if (!(mms = calloc(1, sizeof(mpegts_mux_sched_t)))) {
-    tvherror("muxsched", "calloc() failed");
+    tvherror(LS_MUXSCHED, "calloc() failed");
     assert(0);
     return NULL;
   }
@@ -284,7 +284,7 @@ mpegts_mux_sched_create ( const char *uuid, htsmsg_t *conf )
   /* Insert node */
   if (idnode_insert(&mms->mms_id, uuid, &mpegts_mux_sched_class, 0)) {
     if (uuid)
-      tvherror("muxsched", "invalid uuid '%s'", uuid);
+      tvherror(LS_MUXSCHED, "invalid uuid '%s'", uuid);
     free(mms);
     return NULL;
   }

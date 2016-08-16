@@ -58,10 +58,10 @@ tsfile_input_thread ( void *aux )
     tmi = (tsfile_mux_instance_t*)mmi;
     fd  = tvh_open(tmi->mmi_tsfile_path, O_RDONLY | O_NONBLOCK, 0);
     if (fd == -1)
-      tvhlog(LOG_ERR, "tsfile", "open(%s) failed %d (%s)",
-             tmi->mmi_tsfile_path, errno, strerror(errno));
+      tvherror(LS_TSFILE, "open(%s) failed %d (%s)",
+               tmi->mmi_tsfile_path, errno, strerror(errno));
     else
-      tvhtrace("tsfile", "adapter %d opened %s", mi->mi_instance, tmi->mmi_tsfile_path);
+      tvhtrace(LS_TSFILE, "adapter %d opened %s", mi->mi_instance, tmi->mmi_tsfile_path);
   }
   pthread_mutex_unlock(&global_lock);
   if (fd == -1) return NULL;
@@ -78,15 +78,15 @@ tsfile_input_thread ( void *aux )
 
   /* Get file length */
   if (fstat(fd, &st)) {
-    tvhlog(LOG_ERR, "tsfile", "stat() failed %d (%s)",
-           errno, strerror(errno));
+    tvherror(LS_TSFILE, "stat() failed %d (%s)",
+             errno, strerror(errno));
     goto exit;
   }
 
   /* Check for extra (incomplete) packet at end */
   rem = st.st_size % 188;
   len = 0;
-  tvhtrace("tsfile", "adapter %d file size %jd rem %zu",
+  tvhtrace(LS_TSFILE, "adapter %d file size %jd rem %zu",
            mi->mi_instance, (intmax_t)st.st_size, rem);
 
   pcr_last_mono = getfastmonoclock();
@@ -114,8 +114,8 @@ tsfile_input_thread ( void *aux )
     if (c < 0) {
       if (ERRNO_AGAIN(errno))
         continue;
-      tvhlog(LOG_ERR, "tsfile", "read() error %d (%s)",
-             errno, strerror(errno));
+      tvherror(LS_TSFILE, "read() error %d (%s)",
+               errno, strerror(errno));
       break;
     }
     len += c;
@@ -124,7 +124,7 @@ tsfile_input_thread ( void *aux )
     if (len >= st.st_size) {
       len = 0;
       c -= rem;
-      tvhtrace("tsfile", "adapter %d reached eof, resetting", mi->mi_instance);
+      tvhtrace(LS_TSFILE, "adapter %d reached eof, resetting", mi->mi_instance);
       lseek(fd, 0, SEEK_SET);
       pcr_last = PTS_UNSET;
     }
@@ -177,12 +177,12 @@ tsfile_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Stop thread */
   if (ti->ti_thread_pipe.rd != -1) {
-    tvhtrace("tsfile", "adapter %d stopping thread", mi->mi_instance);
+    tvhtrace(LS_TSFILE, "adapter %d stopping thread", mi->mi_instance);
     err = tvh_write(ti->ti_thread_pipe.wr, "", 1);
     assert(err != -1);
     pthread_join(ti->ti_thread_id, NULL);
     tvh_pipe_close(&ti->ti_thread_pipe);
-    tvhtrace("tsfile", "adapter %d stopped thread", mi->mi_instance);
+    tvhtrace(LS_TSFILE, "adapter %d stopped thread", mi->mi_instance);
   }
 
   mmi->mmi_mux->mm_active = NULL;
@@ -196,11 +196,11 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weigh
   mpegts_mux_t          *mm  = t->mmi_mux;
   tsfile_mux_instance_t *mmi = (tsfile_mux_instance_t*)t;
   tsfile_input_t        *ti  = (tsfile_input_t*)mi;
-  tvhtrace("tsfile", "adapter %d starting mmi %p", mi->mi_instance, mmi);
+  tvhtrace(LS_TSFILE, "adapter %d starting mmi %p", mi->mi_instance, mmi);
 
   /* Already tuned */
   if (mmi->mmi_mux->mm_active == t) {
-    tvhtrace("tsfile", "mmi %p is already active", mmi);
+    tvhtrace(LS_TSFILE, "mmi %p is already active", mmi);
     return 0;
   }
   assert(mmi->mmi_mux->mm_active == NULL);
@@ -208,8 +208,8 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weigh
 
   /* Check file is accessible */
   if (lstat(mmi->mmi_tsfile_path, &st)) {
-    tvhlog(LOG_ERR, "tsfile", "mmi %p could not stat '%s' (%i)",
-           mmi, mmi->mmi_tsfile_path, errno);
+    tvherror(LS_TSFILE, "mmi %p could not stat '%s' (%i)",
+             mmi, mmi->mmi_tsfile_path, errno);
     mmi->mmi_tune_failed = 1;
     return SM_CODE_TUNING_FAILED;
   }
@@ -218,10 +218,10 @@ tsfile_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *t, int weigh
   if (ti->ti_thread_pipe.rd == -1) {
     if (tvh_pipe(O_NONBLOCK, &ti->ti_thread_pipe)) {
       mmi->mmi_tune_failed = 1;
-      tvhlog(LOG_ERR, "tsfile", "failed to create thread pipe");
+      tvherror(LS_TSFILE, "failed to create thread pipe");
       return SM_CODE_TUNING_FAILED;
     }
-    tvhtrace("tsfile", "adapter %d starting thread", mi->mi_instance);
+    tvhtrace(LS_TSFILE, "adapter %d starting thread", mi->mi_instance);
     tvhthread_create(&ti->ti_thread_id, NULL, tsfile_input_thread, mi, "tsfile");
   }
 

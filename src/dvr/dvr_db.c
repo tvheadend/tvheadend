@@ -95,7 +95,7 @@ dvr_entry_trace_(const char *file, int line, dvr_entry_t *de, const char *fmt, .
   snprintf(buf, sizeof(buf), "entry %s - %s",
                              idnode_uuid_as_str(&de->de_id, ubuf),
                              fmt);
-  tvhlogv(file, line, LOG_TRACE, "dvr", buf, &args);
+  tvhlogv(file, line, LOG_TRACE, LS_DVR, buf, &args);
   va_end(args);
 }
 
@@ -120,7 +120,7 @@ dvr_entry_trace_time2_(const char *file, int line,
                              t2name ? " " : "",
                              t2name ? gmtime2local(t2, t2buf, sizeof(t2buf)) : "",
                              fmt);
-  tvhlogv(file, line, LOG_TRACE, "dvr", buf, &args);
+  tvhlogv(file, line, LOG_TRACE, LS_DVR, buf, &args);
   va_end(args);
 }
 
@@ -813,7 +813,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   if (idnode_insert(&de->de_id, uuid, &dvr_entry_class, IDNODE_SHORT_UUID)) {
     if (uuid)
-      tvhwarn("dvr", "invalid entry uuid '%s'", uuid);
+      tvhwarn(LS_DVR, "invalid entry uuid '%s'", uuid);
     free(de);
     return NULL;
   }
@@ -842,7 +842,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
          de2->de_sched_state != DVR_COMPLETED &&
          de2->de_sched_state != DVR_MISSED_TIME &&
          strcmp(de2->de_owner ?: "", de->de_owner ?: "") == 0) {
-        tvhlog(LOG_INFO, "dvr", "delete entry %s \"%s\" on \"%s\" start time %"PRId64", "
+        tvhinfo(LS_DVR, "delete entry %s \"%s\" on \"%s\" start time %"PRId64", "
            "scheduled for recording by \"%s\" (duplicate with %s)",
           idnode_uuid_as_str(&de->de_id, ubuf),
           lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
@@ -960,7 +960,7 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
   if (strftime(tbuf, sizeof(tbuf), "%F %T", &tm) <= 0)
     *tbuf = 0;
 
-  tvhlog(LOG_INFO, "dvr", "entry %s \"%s\" on \"%s\" starting at %s, "
+  tvhinfo(LS_DVR, "entry %s \"%s\" on \"%s\" starting at %s, "
 	 "scheduled for recording by \"%s\"",
          idnode_uuid_as_str(&de->de_id, ubuf),
 	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf, creator ?: "");
@@ -1357,8 +1357,8 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
           (de->de_sched_state == DVR_RECORDING)) count++;
 
     if (count >= max_count) {
-      tvhlog(LOG_DEBUG, "dvr", "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
-             dae->dae_name, lang_str_get(e->episode->title, NULL));
+      tvhinfo(LS_DVR, "Autorecord \"%s\": Not scheduling \"%s\" because of autorecord max schedules limit reached",
+              dae->dae_name, lang_str_get(e->episode->title, NULL));
       return;
     }
   }
@@ -1719,12 +1719,12 @@ dosave:
     idnode_changed(&de->de_id);
     htsp_dvr_entry_update(de);
     if (tvhlog_limit(&de->de_update_limit, 60)) {
-      tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": Updated%s (%s)",
-             lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
-             updated ? " Timer" : "",
-             dvr_updated_str(buf, sizeof(buf), save));
+      tvhinfo(LS_DVR, "\"%s\" on \"%s\": Updated%s (%s)",
+              lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+              updated ? " Timer" : "",
+              dvr_updated_str(buf, sizeof(buf), save));
     } else {
-      tvhtrace("dvr", "\"%s\" on \"%s\": Updated%s (%s)",
+      tvhtrace(LS_DVR, "\"%s\" on \"%s\": Updated%s (%s)",
                lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
                updated ? " Timer" : "",
                dvr_updated_str(buf, sizeof(buf), save));
@@ -1798,7 +1798,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
       RB_FOREACH(e2, &ch->ch_epg_schedule, sched_link) {
         if (dvr_entry_fuzzy_match(de, e2, e2->dvb_eid,
                                   de->de_config->dvr_update_window)) {
-          tvhtrace("dvr", "  replacement event %s on %s @ start %s stop %s",
+          tvhtrace(LS_DVR, "  replacement event %s on %s @ start %s stop %s",
                           epg_broadcast_get_title(e2, NULL),
                           channel_get_name(ch),
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
@@ -1878,7 +1878,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
 
   if (esrc != EPG_SOURCE_EIT || e->dvb_eid == 0 || e->channel == NULL)
     return;
-  tvhtrace("dvr", "dvr event running check for %s on %s running %d",
+  tvhtrace(LS_DVR, "dvr event running check for %s on %s running %d",
            epg_broadcast_get_title(e, NULL),
            channel_get_name(e->channel),
            running);
@@ -1891,14 +1891,14 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
     }
     if (running == EPG_RUNNING_NOW && de->de_dvb_eid == e->dvb_eid) {
       if (de->de_running_pause) {
-        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG unpause",
+        tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG unpause",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
         atomic_set_time_t(&de->de_running_pause, 0);
       }
       if (!de->de_running_start) {
-        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG marking start",
+        tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG marking start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
@@ -1907,7 +1907,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       if (dvr_entry_get_start_time(de, 1) > gclk()) {
         atomic_set_time_t(&de->de_start, gclk());
         dvr_entry_set_timer(de);
-        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG start",
+        tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
@@ -1925,7 +1925,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       srcname = de->de_dvb_eid == e->dvb_eid ? "event" : "other running event";
       if (!de->de_running_stop ||
           de->de_running_start > de->de_running_stop) {
-        tvhdebug("dvr", "dvr entry %s %s %s on %s - EPG marking stop",
+        tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG marking stop",
                  idnode_uuid_as_str(&de->de_id, ubuf), srcname,
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(de->de_channel));
@@ -1934,14 +1934,14 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       atomic_set_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
         dvr_stop_recording(de, SM_CODE_OK, 0, 0);
-        tvhdebug("dvr", "dvr entry %s %s %s on %s - EPG stop",
+        tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG stop",
                  idnode_uuid_as_str(&de->de_id, ubuf), srcname,
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(de->de_channel));
       }
     } else if (running == EPG_RUNNING_PAUSE && de->de_dvb_eid == e->dvb_eid) {
       if (!de->de_running_pause) {
-        tvhdebug("dvr", "dvr entry %s event %s on %s - EPG pause",
+        tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG pause",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
@@ -1973,10 +1973,10 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
   else
     dvr_entry_completed(de, stopcode);
 
-  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\": "
-	 "End of program: %s",
-	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
-	 dvr_entry_status(de));
+  tvhinfo(LS_DVR, "\"%s\" on \"%s\": "
+	  "End of program: %s",
+	  lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+	  dvr_entry_status(de));
 
   if (dvr_entry_rerecord(de))
     return;
@@ -2030,8 +2030,8 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
 
   dvr_entry_set_state(de, DVR_RECORDING, DVR_RS_PENDING, SM_CODE_OK);
 
-  tvhlog(LOG_INFO, "dvr", "\"%s\" on \"%s\" recorder starting",
-	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
+  tvhinfo(LS_DVR, "\"%s\" on \"%s\" recorder starting",
+	  lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
 
   if (!clone && (r = dvr_rec_subscribe(de)) < 0) {
     dvr_entry_completed(de, r == -EPERM ? SM_CODE_USER_ACCESS :
@@ -3444,11 +3444,11 @@ dvr_entry_delete(dvr_entry_t *de)
 
   str1 = dvr_entry_get_retention_string(de);
   str2 = dvr_entry_get_removal_string(de);
-  tvhlog(LOG_INFO, "dvr", "delete entry %s \"%s\" on \"%s\" start time %s, "
-	 "scheduled for recording by \"%s\", retention \"%s\" removal \"%s\"",
-         idnode_uuid_as_str(&de->de_id, ubuf),
-	 lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf,
-	 de->de_creator ?: "", str1, str2);
+  tvhinfo(LS_DVR, "delete entry %s \"%s\" on \"%s\" start time %s, "
+	  "scheduled for recording by \"%s\", retention \"%s\" removal \"%s\"",
+          idnode_uuid_as_str(&de->de_id, ubuf),
+	  lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), tbuf,
+	  de->de_creator ?: "", str1, str2);
   free(str2);
   free(str1);
 
@@ -3468,8 +3468,8 @@ dvr_entry_delete(dvr_entry_t *de)
       if (filename == NULL) continue;
       r = deferred_unlink(filename, rdir);
       if(r && r != -ENOENT)
-        tvhlog(LOG_WARNING, "dvr", "Unable to remove file '%s' from disk -- %s",
-  	       filename, strerror(-errno));
+        tvhwarn(LS_DVR, "Unable to remove file '%s' from disk -- %s",
+  	        filename, strerror(-errno));
 
       cmd = de->de_config->dvr_postremove;
       if (cmd && cmd[0])

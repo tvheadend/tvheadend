@@ -823,7 +823,7 @@ static void _xmltv_load_grabbers ( void )
         outbuf[i] = '\0';
         sprintf(name, "XMLTV: %s", &outbuf[n]);
         epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
-                                  &outbuf[p], "xmltv",
+                                  &outbuf[p], LS_XMLTV, "xmltv",
                                   name, 3, &outbuf[p],
                                   NULL, _xmltv_parse, NULL);
         p = n = i + 1;
@@ -842,7 +842,7 @@ static void _xmltv_load_grabbers ( void )
 
   /* Internal search */
   } else if ((tmp = getenv("PATH"))) {
-    tvhdebug("epggrab", "using internal grab search");
+    tvhdebug(LS_XMLTV, "using internal grab search");
     char bin[256];
     char *argv[] = {
       NULL,
@@ -871,7 +871,7 @@ static void _xmltv_load_grabbers ( void )
             if (outbuf[outlen-1] == '\n') outbuf[outlen-1] = '\0';
             snprintf(name, sizeof(name), "XMLTV: %s", outbuf);
             epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
-                                      bin, "xmltv", name, 3, bin,
+                                      bin, LS_XMLTV, "xmltv", name, 3, bin,
                                       NULL, _xmltv_parse, NULL);
             free(outbuf);
           } else {
@@ -891,7 +891,7 @@ void xmltv_init ( void )
 {
   /* External module */
   epggrab_module_ext_create(NULL, &epggrab_mod_ext_xmltv_class,
-                            "xmltv", "xmltv", "XMLTV", 3, "xmltv",
+                            "xmltv", LS_XMLTV, "xmltv", "XMLTV", 3, "xmltv",
                             _xmltv_parse, NULL);
 
   /* Standard modules */

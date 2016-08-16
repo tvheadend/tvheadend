@@ -146,7 +146,7 @@ dvb_fastscan_create(htsmsg_t *e)
   return;
 
 fail:
-  tvhwarn("fastscan", "wrong entry format");
+  tvhwarn(LS_FASTSCAN, "wrong entry format");
 }
 
 /*
@@ -158,7 +158,7 @@ void dvb_fastscan_init ( void )
   htsmsg_field_t *f;
 
   if (!(c = hts_settings_load("fastscan"))) {
-    tvhwarn("fastscan", "configuration file missing");
+    tvhwarn(LS_FASTSCAN, "configuration file missing");
     return;
   }
   

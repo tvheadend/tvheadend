@@ -83,7 +83,7 @@ hts_settings_makedirs ( const char *inpath )
     }
     x--;
   }
-  return makedirs("settings", path, 0700, 1, -1, -1);
+  return makedirs(LS_SETTINGS, path, 0700, 1, -1, -1);
 }
 
 /**
@@ -147,13 +147,13 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
   /* Create directories */
   if (hts_settings_makedirs(path)) return;
 
-  tvhdebug("settings", "saving to %s", path);
+  tvhdebug(LS_SETTINGS, "saving to %s", path);
 
   /* Create tmp file */
   snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
   if((fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
-    tvhlog(LOG_ALERT, "settings", "Unable to create \"%s\" - %s",
-	    tmppath, strerror(errno));
+    tvhalert(LS_SETTINGS, "Unable to create \"%s\" - %s",
+	     tmppath, strerror(errno));
     return;
   }
 
@@ -172,8 +172,8 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
     htsmsg_json_serialize(record, &hq, 1);
     TAILQ_FOREACH(hd, &hq.hq_q, hd_link)
       if(tvh_write(fd, hd->hd_data + hd->hd_data_off, hd->hd_data_len)) {
-        tvhlog(LOG_ALERT, "settings", "Failed to write file \"%s\" - %s",
-                tmppath, strerror(errno));
+        tvhalert(LS_SETTINGS, "Failed to write file \"%s\" - %s",
+                 tmppath, strerror(errno));
         ok = 0;
         break;
       }
@@ -188,7 +188,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
       if (r)
         ok = 0;
     } else {
-      tvhlog(LOG_ALERT, "settings", "Unable to pack the configuration data \"%s\"", path);
+      tvhalert(LS_SETTINGS, "Unable to pack the configuration data \"%s\"", path);
     }
     free(msgdata);
 #endif
@@ -203,8 +203,8 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
       r = rename(tmppath, path);
     }
     if (r)
-      tvhlog(LOG_ALERT, "settings", "Unable to rename file \"%s\" to \"%s\" - %s",
-	     tmppath, path, strerror(errno));
+      tvhalert(LS_SETTINGS, "Unable to rename file \"%s\" to \"%s\" - %s",
+	       tmppath, path, strerror(errno));
   
   /* Delete tmp */
   } else
@@ -237,7 +237,7 @@ hts_settings_load_one(const char *filename)
 #if ENABLE_ZLIB
       uint32_t orig = (mem[8] << 24) | (mem[9] << 16) | (mem[10] << 8) | mem[11];
       if (orig > 10*1024*1024U) {
-        tvhlog(LOG_ALERT, "settings", "too big gzip for %s", filename);
+        tvhalert(LS_SETTINGS, "too big gzip for %s", filename);
         r = NULL;
       } else if (orig > 0) {
         uint8_t *unpacked = tvh_gzip_inflate((uint8_t *)mem + 12, size - 12, orig);

@@ -217,7 +217,7 @@ rtsp_session_timer_cb(void *aux)
 {
   session_t *rs = aux;
 
-  tvhwarn("satips", "-/%s/%i: session closed (timeout)", rs->session, rs->stream);
+  tvhwarn(LS_SATIPS, "-/%s/%i: session closed (timeout)", rs->session, rs->stream);
   pthread_mutex_unlock(&global_lock);
   pthread_mutex_lock(&rtsp_lock);
   rtsp_close_session(rs);
@@ -323,14 +323,14 @@ rtsp_slave_add
                                               buf, 0, NULL, NULL,
                                               buf, NULL);
   if (sub->ths == NULL) {
-    tvherror("satips", "%i/%s/%i: unable to subscribe service %s\n",
+    tvherror(LS_SATIPS, "%i/%s/%i: unable to subscribe service %s\n",
              rs->frontend, rs->session, rs->stream, slave->s_nicename);
     profile_chain_close(&sub->prch);
     free(sub);
     master->s_unlink(master, slave);
   } else {
     LIST_INSERT_HEAD(&rs->slaves, sub, link);
-    tvhdebug("satips", "%i/%s/%i: slave service %s subscribed",
+    tvhdebug(LS_SATIPS, "%i/%s/%i: slave service %s subscribed",
              rs->frontend, rs->session, rs->stream, slave->s_nicename);
   }
 }
@@ -351,7 +351,7 @@ rtsp_slave_remove
       break;
   if (sub == NULL)
     return;
-  tvhdebug("satips", "%i/%s/%i: slave service %s unsubscribed",
+  tvhdebug(LS_SATIPS, "%i/%s/%i: slave service %s unsubscribed",
           rs->frontend, rs->session, rs->stream, slave->s_nicename);
   master->s_unlink(master, slave);
   if (sub->ths)
@@ -469,7 +469,7 @@ rtsp_manage_descramble(session_t *rs)
     idnode_set_remove(found, &s->s_id);
   }
   if (si < found->is_count)
-    tvhwarn("satips", "%i/%s/%i: limit for descrambled services reached (wanted %zd allowed %d)",
+    tvhwarn(LS_SATIPS, "%i/%s/%i: limit for descrambled services reached (wanted %zd allowed %d)",
             rs->frontend, rs->session, rs->stream,
             (used - si) + found->is_count, rtsp_descramble);
   
@@ -545,7 +545,7 @@ rtsp_start
     if (mux == NULL && mn2 &&
         (rtsp_muxcnf == MUXCNF_AUTO || rtsp_muxcnf == MUXCNF_KEEP)) {
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
-      tvhwarn("satips", "%i/%s/%i: create mux %s",
+      tvhwarn(LS_SATIPS, "%i/%s/%i: create mux %s",
               rs->frontend, rs->session, rs->stream, buf);
       mux =
         mn2->mn_create_mux(mn2, (void *)(intptr_t)rs->nsession,
@@ -558,7 +558,7 @@ rtsp_start
     }
     if (mux == NULL) {
       dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
-      tvhwarn("satips", "%i/%s/%i: unable to create mux %s%s",
+      tvhwarn(LS_SATIPS, "%i/%s/%i: unable to create mux %s%s",
               rs->frontend, rs->session, rs->stream, buf,
               (rtsp_muxcnf == MUXCNF_REJECT || rtsp_muxcnf == MUXCNF_REJECT_EXACT_MATCH ) ? " (configuration)" : "");
       goto endclean;
@@ -909,7 +909,7 @@ rtsp_parse_cmd
   if (fe > 0) {
     delsys = satip_rtsp_delsys(fe, &findex, NULL);
     if (delsys == DVB_SYS_NONE) {
-      tvherror("satips", "fe=%d does not exist", fe);
+      tvherror(LS_SATIPS, "fe=%d does not exist", fe);
       goto end;
     }
   } else {
@@ -1129,7 +1129,7 @@ play:
   if (mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r, 0, 0) == 0)
     tvh_strlcatf(buf, sizeof(buf), r, "<none>");
 
-  tvhdebug("satips", "%i/%s/%d: %s from %s:%d %s",
+  tvhdebug(LS_SATIPS, "%i/%s/%d: %s from %s:%d %s",
            rs->frontend, rs->session, rs->stream,
            caller, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer), buf);
 
@@ -1147,7 +1147,7 @@ end:
 
 eargs:
   TAILQ_FOREACH(arg, &hc->hc_req_args, link)
-    tvhwarn("satips", "%i/%s/%i: extra parameter '%s'='%s'",
+    tvhwarn(LS_SATIPS, "%i/%s/%i: extra parameter '%s'='%s'",
       rs->frontend, rs->session, rs->stream,
       arg->key, arg->val);
   goto end;
@@ -1367,7 +1367,7 @@ rtsp_process_play(http_connection_t *hc, int setup)
 
   if (setup && rs->rtp_peer_port != RTSP_TCP_DATA) {
     if (udp_bind_double(&rs->udp_rtp, &rs->udp_rtcp,
-                        "satips", "rtsp", "rtcp",
+                        LS_SATIPS, "rtsp", "rtcp",
                         rtsp_ip, 0, NULL,
                         4*1024, 4*1024,
                         RTP_BUFSIZE, RTCP_BUFSIZE)) {
@@ -1440,7 +1440,7 @@ rtsp_process_teardown(http_connection_t *hc)
     return 0;
   }
 
-  tvhdebug("satips", "-/%s/%i: teardown from %s:%d",
+  tvhdebug(LS_SATIPS, "-/%s/%i: teardown from %s:%d",
            hc->hc_session, stream, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer));
 
   pthread_mutex_lock(&rtsp_lock);
@@ -1656,7 +1656,7 @@ void satip_server_rtsp_init
   rtsp_nat_ip = nat_ip ? strdup(nat_ip) : NULL;
   free(s);
   if (!rtsp_server)
-    rtsp_server = tcp_server_create("satips", "SAT>IP RTSP", bindaddr, port, &ops, NULL);
+    rtsp_server = tcp_server_create(LS_SATIPS, "SAT>IP RTSP", bindaddr, port, &ops, NULL);
   if (reg)
     tcp_server_register(rtsp_server);
 }

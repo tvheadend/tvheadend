@@ -1034,7 +1034,7 @@ int mpegts_table_type
 mpegts_table_t *mpegts_table_add
   (mpegts_mux_t *mm, int tableid, int mask,
    mpegts_table_callback_t callback, void *opaque,
-   const char *name, int flags, int pid, int weight);
+   const char *name, int subsys, int flags, int pid, int weight);
 void mpegts_table_flush_all
   (mpegts_mux_t *mm);
 void mpegts_table_destroy ( mpegts_table_t *mt );

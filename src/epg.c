@@ -121,7 +121,7 @@ void epg_updated ( void )
 
   /* Remove unref'd */
   while ((eo = LIST_FIRST(&epg_object_unref))) {
-    tvhtrace("epg",
+    tvhtrace(LS_EPG,
              "unref'd object %u (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
     eo->destroy(eo);
@@ -147,7 +147,7 @@ static void _epg_object_destroy
   ( epg_object_t *eo, epg_object_tree_t *tree )
 {
   assert(eo->refcount == 0);
-  tvhtrace("epg", "eo [%p, %u, %d, %s] destroy",
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] destroy",
            eo, eo->id, eo->type, eo->uri);
   if (eo->uri) free(eo->uri);
   if (tree) RB_REMOVE(tree, eo, uri_link);
@@ -158,7 +158,7 @@ static void _epg_object_destroy
 static void _epg_object_getref ( void *o )
 {
   epg_object_t *eo = o;
-  tvhtrace("epg", "eo [%p, %u, %d, %s] getref %d",
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] getref %d",
            eo, eo->id, eo->type, eo->uri, eo->refcount+1);
   if (eo->refcount == 0) LIST_REMOVE(eo, un_link);
   eo->refcount++;
@@ -167,7 +167,7 @@ static void _epg_object_getref ( void *o )
 static void _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
-  tvhtrace("epg", "eo [%p, %u, %d, %s] putref %d",
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] putref %d",
            eo, eo->id, eo->type, eo->uri, eo->refcount-1);
   assert(eo->refcount>0);
   eo->refcount--;
@@ -178,7 +178,7 @@ static void _epg_object_set_updated ( void *o )
 {
   epg_object_t *eo = o;
   if (!eo->_updated) {
-    tvhtrace("epg", "eo [%p, %u, %d, %s] updated",
+    tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] updated",
              eo, eo->id, eo->type, eo->uri);
     eo->_updated = 1;
     eo->updated  = gclk();
@@ -216,7 +216,7 @@ static void _epg_object_create ( void *o )
   if (!eo->id) eo->id = ++_epg_object_idx;
   if (!eo->getref) eo->getref = _epg_object_getref;
   if (!eo->putref) eo->putref = _epg_object_putref;
-  tvhtrace("epg", "eo [%p, %u, %d, %s] created",
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] created",
            eo, eo->id, eo->type, eo->uri);
   _epg_object_set_updated(eo);
   LIST_INSERT_HEAD(&epg_object_unref, eo, un_link);
@@ -224,7 +224,7 @@ static void _epg_object_create ( void *o )
     if (!RB_INSERT_SORTED(epg_id_tree(eo), eo, id_link, _id_cmp))
       break;
     if (id) {
-      tvherror("epg", "fatal error, duplicate EPG ID");
+      tvherror(LS_EPG, "fatal error, duplicate EPG ID");
       abort();
     }
     eo->id = ++_epg_object_idx;
@@ -280,7 +280,7 @@ epg_object_t *epg_object_find_by_id ( uint32_t id, epg_object_type_t type )
 static htsmsg_t * _epg_object_serialize ( void *o )
 {
   epg_object_t *eo = o;
-  tvhtrace("epg", "eo [%p, %u, %d, %s] serialize",
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] serialize",
            eo, eo->id, eo->type, eo->uri);
   htsmsg_t *m;
   if (!eo->id || !eo->type) return NULL;
@@ -310,7 +310,7 @@ static epg_object_t *_epg_object_deserialize ( htsmsg_t *m, epg_object_t *eo )
     _epg_object_set_updated(eo);
     eo->updated = s64;
   }
-  tvhtrace("epg", "eo [%p, %u, %d, %s] deserialize",
+  tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] deserialize",
            eo, eo->id, eo->type, eo->uri);
   return eo;
 }
@@ -434,11 +434,11 @@ static void _epg_brand_destroy ( void *eo )
 {
   epg_brand_t *eb = (epg_brand_t*)eo;
   if (LIST_FIRST(&eb->seasons)) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destroy brand with seasons");
+    tvhlog(LOG_CRIT, LS_EPG, "attempt to destroy brand with seasons");
     assert(0);
   }
   if (LIST_FIRST(&eb->episodes)) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destroy brand with episodes");
+    tvhlog(LOG_CRIT, LS_EPG, "attempt to destroy brand with episodes");
     assert(0);
   }
   if (eb->title)   lang_str_destroy(eb->title);
@@ -645,7 +645,7 @@ static void _epg_season_destroy ( void *eo )
 {
   epg_season_t *es = (epg_season_t*)eo;
   if (LIST_FIRST(&es->episodes)) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destory season with episodes");
+    tvhlog(LOG_CRIT, LS_EPG, "attempt to destory season with episodes");
     assert(0);
   }
   if (es->brand)   _epg_brand_rem_season(es->brand, es);
@@ -891,7 +891,7 @@ static void _epg_episode_destroy ( void *eo )
   epg_genre_t *g;
   epg_episode_t *ee = eo;
   if (LIST_FIRST(&ee->broadcasts)) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destroy episode with broadcasts");
+    tvhlog(LOG_CRIT, LS_EPG, "attempt to destroy episode with broadcasts");
     assert(0);
   }
   if (ee->brand)       _epg_brand_rem_episode(ee->brand, ee);
@@ -1444,7 +1444,7 @@ static void _epg_serieslink_destroy ( void *eo )
 {
   epg_serieslink_t *es = (epg_serieslink_t*)eo;
   if (LIST_FIRST(&es->broadcasts)) {
-    tvhlog(LOG_CRIT, "epg", "attempt to destory series link with broadcasts");
+    tvhlog(LOG_CRIT, LS_EPG, "attempt to destory series link with broadcasts");
     assert(0);
   }
   _epg_object_destroy(eo, &epg_serieslinks);
@@ -1572,9 +1572,9 @@ static void _epg_channel_timer_callback ( void *p )
 
     /* Expire */
     if ( ebc->stop <= gclk() ) {
-      tvhlog(LOG_DEBUG, "epg", "expire event %u (%s) from %s",
-             ebc->id, epg_broadcast_get_title(ebc, NULL),
-             channel_get_name(ch));
+      tvhdebug(LS_EPG, "expire event %u (%s) from %s",
+               ebc->id, epg_broadcast_get_title(ebc, NULL),
+               channel_get_name(ch));
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -1594,19 +1594,19 @@ static void _epg_channel_timer_callback ( void *p )
   
   /* Change (update HTSP) */
   if (cur != ch->ch_epg_now || nxt != ch->ch_epg_next) {
-    tvhlog(LOG_DEBUG, "epg", "now/next %u/%u set on %s",
-           ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
-           ch->ch_epg_next ? ch->ch_epg_next->id : 0,
-           channel_get_name(ch));
-    tvhlog(LOG_DEBUG, "epg", "inform HTSP of now event change on %s",
-           channel_get_name(ch));
+    tvhdebug(LS_EPG, "now/next %u/%u set on %s",
+             ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
+             ch->ch_epg_next ? ch->ch_epg_next->id : 0,
+             channel_get_name(ch));
+    tvhdebug(LS_EPG, "inform HTSP of now event change on %s",
+             channel_get_name(ch));
     htsp_channel_update_nownext(ch);
   }
 
   /* re-arm */
   if (next) {
-    tvhlog(LOG_DEBUG, "epg", "arm channel timer @ %"PRItime_t" for %s",
-           next, channel_get_name(ch));
+    tvhdebug(LS_EPG, "arm channel timer @ %"PRItime_t" for %s",
+             next, channel_get_name(ch));
     gtimer_arm_absn(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
 
@@ -1642,7 +1642,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       _epg_object_create(ret);
       // Note: sets updated
       _epg_object_getref(ret);
-      tvhtrace("epg", "added event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+      tvhtrace(LS_EPG, "added event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
                ret->id, epg_broadcast_get_title(ret, NULL),
                channel_get_name(ch), ret->start, ret->stop);
 
@@ -1659,7 +1659,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       } else {
         ret->stop = (*bcast)->stop;
         _epg_object_set_updated(ret);
-        tvhtrace("epg", "updated event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+        tvhtrace(LS_EPG, "updated event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
                  ret->id, epg_broadcast_get_title(ret, NULL),
                  channel_get_name(ch), ret->start, ret->stop);
       }
@@ -1673,11 +1673,11 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ((ebc = RB_PREV(ret, sched_link)) != NULL) {
     if (ebc->stop <= ret->start) break;
     if (!_epg_object_can_remove(ebc, ret)) {
-      tvhtrace("epg", "grabber for event %u has lower priority than overlap (b), removing", ebc->id);
+      tvhtrace(LS_EPG, "grabber for event %u has lower priority than overlap (b), removing", ebc->id);
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
-    tvhtrace("epg", "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+    tvhtrace(LS_EPG, "remove overlap (b) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
              ebc->id, epg_broadcast_get_title(ebc, NULL),
              channel_get_name(ch), ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);
@@ -1687,11 +1687,11 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   while ((ebc = RB_NEXT(ret, sched_link)) != NULL) {
     if (ebc->start >= ret->stop) break;
     if (!_epg_object_can_remove(ebc, ret)) {
-      tvhtrace("epg", "grabber for event %u has lower priority than overlap (a), removing", ebc->id);
+      tvhtrace(LS_EPG, "grabber for event %u has lower priority than overlap (a), removing", ebc->id);
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
-    tvhtrace("epg", "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
+    tvhtrace(LS_EPG, "remove overlap (a) event %u (%s) on %s @ %"PRItime_t " to %"PRItime_t,
              ebc->id, epg_broadcast_get_title(ebc, NULL),
              channel_get_name(ch), ebc->start, ebc->stop);
     _epg_channel_rem_broadcast(ch, ebc, ret);

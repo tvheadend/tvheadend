@@ -72,8 +72,7 @@ void dvr_inotify_init ( void )
 {
   atomic_set(&_inot_fd, inotify_init1(IN_CLOEXEC));
   if (atomic_get(&_inot_fd) < 0) {
-    tvhlog(LOG_ERR, "dvr", "failed to initialise inotify (err=%s)",
-           strerror(errno));
+    tvherror(LS_DVR, "failed to initialise inotify (err=%s)", strerror(errno));
     return;
   }
 
@@ -141,8 +140,8 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
     LIST_INSERT_HEAD(&e->entries, dif, link);
 
     if (e->fd < 0) {
-      tvhlog(LOG_ERR, "dvr", "failed to add inotify watch to %s (err=%s)",
-             e->path, strerror(errno));
+      tvherror(LS_DVR, "failed to add inotify watch to %s (err=%s)",
+               e->path, strerror(errno));
       dvr_inotify_del(de);
     }
 

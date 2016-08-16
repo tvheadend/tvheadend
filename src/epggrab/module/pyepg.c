@@ -479,12 +479,13 @@ void pyepg_init ( void )
   /* Internal module */
   if (find_exec("pyepg", buf, sizeof(buf)-1))
     epggrab_module_int_create(NULL, &epggrab_mod_int_pyepg_class,
-                              "pyepg-internal", "pyepg", "PyEPG", 4, buf,
+                              "pyepg-internal", LS_PYEPG, "pyepg",
+                              "PyEPG", 4, buf,
                               NULL, _pyepg_parse, NULL);
 
   /* External module */
   epggrab_module_ext_create(NULL, &epggrab_mod_ext_pyepg_class,
-                            "pyepg", "pyepg", "PyEPG", 4, "pyepg",
+                            "pyepg", LS_PYEPG, "pyepg", "PyEPG", 4, "pyepg",
                             _pyepg_parse, NULL);
 }
 

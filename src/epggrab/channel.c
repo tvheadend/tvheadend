@@ -113,8 +113,8 @@ _epgggrab_channel_link_delete(idnode_list_mapping_t *ilm, int delconf)
 {
   epggrab_channel_t *ec = (epggrab_channel_t *)ilm->ilm_in1;
   channel_t *ch = (channel_t *)ilm->ilm_in2;
-  tvhdebug(ec->mod->id, "unlinking %s from %s",
-           ec->id, channel_get_name(ch));
+  tvhdebug(ec->mod->subsys, "%s: unlinking %s from %s",
+           ec->mod->id, ec->id, channel_get_name(ch));
   idnode_list_unlink(ilm, delconf ? ec : NULL);
 }
 
@@ -172,8 +172,8 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch, void *origin )
     }
 
   /* New link */
-  tvhdebug(ec->mod->id, "linking %s to %s",
-         ec->id, channel_get_name(ch));
+  tvhdebug(ec->mod->subsys, "%s: linking %s to %s",
+           ec->mod->id, ec->id, channel_get_name(ch));
 
   ilm = idnode_list_link(&ec->idnode, &ec->channels,
                          &ch->ch_id, &ch->ch_epggrab,
@@ -335,7 +335,7 @@ epggrab_channel_t *epggrab_channel_create
   ec = calloc(1, sizeof(*ec));
   if (idnode_insert(&ec->idnode, uuid, &epggrab_channel_class, 0)) {
     if (uuid)
-      tvherror("epggrab", "invalid uuid '%s'", uuid);
+      tvherror(LS_EPGGRAB, "invalid uuid '%s'", uuid);
     free(ec);
     return NULL;
   }
@@ -351,7 +351,7 @@ epggrab_channel_t *epggrab_channel_create
 
   TAILQ_INSERT_TAIL(&epggrab_channel_entries, ec, all_link);
   if (RB_INSERT_SORTED(&owner->channels, ec, link, _ch_id_cmp)) {
-    tvherror("epggrab", "removing duplicate channel id '%s' (uuid '%s')", ec->id, uuid);
+    tvherror(LS_EPGGRAB, "removing duplicate channel id '%s' (uuid '%s')", ec->id, uuid);
     epggrab_channel_destroy(ec, 1, 0);
     return NULL;
   }

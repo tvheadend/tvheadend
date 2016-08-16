@@ -37,8 +37,8 @@ static void
 bonjour_callback(CFNetServiceRef theService, CFStreamError* error, void* info)
 {  
   if (error->error) {
-    tvhlog(LOG_ERR, "bonjour", "callback error (domain = %ld, error =%d)",
-           error->domain, error->error);   
+    tvherror(LS_BONJOUR, "callback error (domain = %ld, error =%d)",
+             error->domain, error->error);   
   } 
 }
 
@@ -56,7 +56,7 @@ bonjour_start_service(CFNetServiceRef *svc, char *service_type,
 
   *svc = CFNetServiceCreate(NULL, CFSTR(""), str, CFSTR("Tvheadend"), port);
   if (!*svc) {
-    tvhlog(LOG_ERR, "bonjour", "service creation failed"); 
+    tvherror(LS_BONJOUR, "service creation failed"); 
     return;
   }
 
@@ -84,11 +84,11 @@ bonjour_start_service(CFNetServiceRef *svc, char *service_type,
   }
 
   if (!CFNetServiceRegisterWithOptions(*svc, 0, &error))
-    tvhlog(LOG_ERR, "bonjour", "registration failed (service type = %s, "
-           "domain = %ld, error =%d)", service_type, error.domain, error.error); 
+    tvherror(LS_BONJOUR, "registration failed (service type = %s, "
+             "domain = %ld, error =%d)", service_type, error.domain, error.error); 
   else
-    tvhlog(LOG_INFO, "bonjour", "service '%s' successfully established",
-           service_type);
+    tvherror(LS_BONJOUR, "service '%s' successfully established",
+             service_type);
 }
 
 static void

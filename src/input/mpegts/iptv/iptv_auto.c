@@ -317,7 +317,7 @@ iptv_auto_network_process_m3u(iptv_network_t *in, char *data,
   if (total == 0)
     ret = -1;
   else
-    tvhinfo("iptv", "m3u parse: %d new mux(es) in network '%s' (total %d)",
+    tvhinfo(LS_IPTV, "m3u parse: %d new mux(es) in network '%s' (total %d)",
             count, in->mn_network_name, total);
   return ret;
 }
@@ -369,11 +369,11 @@ iptv_auto_network_process(void *aux, const char *last_url,
       }
     }
     if (count > 0)
-      tvhinfo("iptv", "removed %d mux(es) from network '%s'", count, in->mn_network_name);
+      tvhinfo(LS_IPTV, "removed %d mux(es) from network '%s'", count, in->mn_network_name);
   } else {
     LIST_FOREACH(mm, &in->mn_muxes, mm_network_link)
       ((iptv_mux_t *)mm)->im_delete_flag = 0;
-    tvherror("iptv", "unknown playlist format for network '%s'", in->mn_network_name);
+    tvherror(LS_IPTV, "unknown playlist format for network '%s'", in->mn_network_name);
   }
 
   return -1;
@@ -425,7 +425,7 @@ iptv_auto_network_init( iptv_network_t *in )
   auto_private_t *ap = calloc(1, sizeof(auto_private_t));
   ap->in_network = in;
   in->in_auto = ap;
-  download_init(&ap->in_download, "iptv");
+  download_init(&ap->in_download, LS_IPTV);
   ap->in_download.process = iptv_auto_network_process;
   ap->in_download.stop = iptv_auto_network_stop;
   iptv_auto_network_trigger(in);

@@ -67,7 +67,7 @@ static void _charset_load_file()
   };
 
   if (i > 0)
-    tvhlog(LOG_INFO, "charset", "%d entries loaded", i);
+    tvhinfo(LS_CHARSET, "%d entries loaded", i);
 }
 
 /*

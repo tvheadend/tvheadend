@@ -112,7 +112,7 @@ tvhdhomerun_device_class_override_set( void *obj, const void * p )
     if ( hd->hd_override_type != NULL && strcmp(hd->hd_override_type,s) != 0 ) {
       free(hd->hd_override_type);
       hd->hd_override_type = strdup(p);
-      tvhlog(LOG_INFO, "tvhdhomerun", "Setting override_type : %s", hd->hd_override_type);
+      tvhinfo(LS_TVHDHOMERUN, "Setting override_type : %s", hd->hd_override_type);
       return 1;
     }
   }
@@ -304,7 +304,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
   }
 
   hd->hd_override_type = strdup(dvb_type2str(type));
-  tvhlog(LOG_INFO, "tvheadend","Using Network type : %s", hd->hd_override_type);
+  tvhinfo(LS_TVHDHOMERUN, "Using Network type : %s", hd->hd_override_type);
 
   /* some sane defaults */
   hd->hd_fullmux_ok  = 1;
@@ -337,9 +337,9 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
   for (j = 0; j < dInfo->tuner_count; ++j) {
       if (tvhdhomerun_frontend_create(hd, dInfo, feconf, type, j)) {
-        tvhlog(LOG_INFO, "tvhdhomerun", "Created frontend %08X tuner %d", dInfo->device_id, j);
+        tvhinfo(LS_TVHDHOMERUN, "Created frontend %08X tuner %d", dInfo->device_id, j);
       } else {
-        tvhlog(LOG_ERR, "tvhdhomerun", "Unable to create frontend-device. ( %08x-%d )", dInfo->device_id,j);
+        tvherror(LS_TVHDHOMERUN, "Unable to create frontend-device. ( %08x-%d )", dInfo->device_id,j);
       }
   }
 
@@ -374,8 +374,8 @@ tvhdhomerun_device_discovery_thread( void *aux )
           tvhdhomerun_device_t *existing = tvhdhomerun_device_find(cDev->device_id);
           if ( tvheadend_is_running() ) {
             if ( !existing ) {
-              tvhlog(LOG_INFO, "tvhdhomerun","Found HDHomerun device %08x with %d tuners",
-                     cDev->device_id, cDev->tuner_count);
+              tvhinfo(LS_TVHDHOMERUN,"Found HDHomerun device %08x with %d tuners",
+                      cDev->device_id, cDev->tuner_count);
               tvhdhomerun_device_create(cDev);
             } else if ( ((struct sockaddr_in *)&existing->hd_info.ip_address)->sin_addr.s_addr !=
                      htonl(cDev->ip_addr) ) {
@@ -392,7 +392,7 @@ tvhdhomerun_device_discovery_thread( void *aux )
               tcp_get_str_from_ip((struct sockaddr *)&detected_dev_addr, detected_ip,
                      sizeof(detected_ip));
 
-              tvhlog(LOG_INFO, "tvhdhomerun","HDHomerun device %08x switched IPs from %s to %s, updating",
+              tvhinfo(LS_TVHDHOMERUN,"HDHomerun device %08x switched IPs from %s to %s, updating",
                      cDev->device_id, existing_ip, detected_ip);
               tvhdhomerun_device_destroy(existing);
               tvhdhomerun_device_create(cDev);
@@ -477,7 +477,7 @@ tvhdhomerun_device_destroy( tvhdhomerun_device_t *hd )
 
   idnode_save_check(&hd->th_id, 0);
 
-  tvhlog(LOG_INFO, "tvhdhomerun", "Releasing locks for devices");
+  tvhinfo(LS_TVHDHOMERUN, "Releasing locks for devices");
   while ((lfe = TAILQ_FIRST(&hd->hd_frontends)) != NULL) {
     tvhdhomerun_frontend_delete(lfe);
   }

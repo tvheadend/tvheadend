@@ -91,25 +91,25 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
 void
 mpegts_done ( void )
 {
-  tvhftrace("main", mpegts_network_scan_done);
-  tvhftrace("main", mpegts_mux_sched_done);
+  tvhftrace(LS_MAIN, mpegts_network_scan_done);
+  tvhftrace(LS_MAIN, mpegts_mux_sched_done);
 #if ENABLE_MPEGTS_DVB
-  tvhftrace("main", dvb_network_done);
+  tvhftrace(LS_MAIN, dvb_network_done);
 #endif
 #if ENABLE_IPTV
-  tvhftrace("main", iptv_done);
+  tvhftrace(LS_MAIN, iptv_done);
 #endif
 #if ENABLE_LINUXDVB
-  tvhftrace("main", linuxdvb_done);
+  tvhftrace(LS_MAIN, linuxdvb_done);
 #endif
 #if ENABLE_SATIP_CLIENT
-  tvhftrace("main", satip_done);
+  tvhftrace(LS_MAIN, satip_done);
 #endif
 #if ENABLE_HDHOMERUN_CLIENT
-  tvhftrace("main", tvhdhomerun_done);
+  tvhftrace(LS_MAIN, tvhdhomerun_done);
 #endif
 #if ENABLE_TSFILE
-  tvhftrace("main", tsfile_done);
+  tvhftrace(LS_MAIN, tsfile_done);
 #endif
   dvb_fastscan_done();
 }

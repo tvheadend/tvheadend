@@ -45,7 +45,7 @@ satip_rtsp_setup_find(const char *prefix, tvh2satip_t *tbl,
      return tbl->s;
     tbl++;
   }
-  tvhtrace("satip", "%s - cannot translate %d", prefix, src);
+  tvhtrace(LS_SATIP, "%s - cannot translate %d", prefix, src);
   return defval;
 }
 
@@ -233,7 +233,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       strcat(buf, ",21");
   } else if (flags & SATIP_SETUP_PIDS21)
              strcat(buf, "&pids=21");
-  tvhtrace("satip", "setup params - %s", buf);
+  tvhtrace(LS_SATIP, "setup params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
              hc->hc_rtsp_stream_id);

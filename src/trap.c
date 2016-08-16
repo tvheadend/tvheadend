@@ -153,7 +153,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
 #endif
   const char *reason = NULL;
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "Signal: %d in %s ", sig, line1);
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "Signal: %d in %s ", sig, line1);
 
   switch(sig) {
   case SIGSEGV:
@@ -170,10 +170,10 @@ traphandler(int sig, siginfo_t *si, void *UC)
     break;
   }
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "Fault address %p (%s)",
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "Fault address %p (%s)",
 	       si->si_addr, reason ?: "N/A");
 
-  tvhlog_spawn(LOG_ALERT, "CRASH", "Loaded libraries: %s ", libs);
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "Loaded libraries: %s ", libs);
 #ifdef NGREG
   snprintf(tmpbuf, sizeof(tmpbuf), "Register dump [%d]: ", (int)NGREG);
 
@@ -181,10 +181,10 @@ traphandler(int sig, siginfo_t *si, void *UC)
     sappend(tmpbuf, sizeof(tmpbuf), "%016" PRIx64, uc->uc_mcontext.gregs[i]);
   }
 #endif
-  tvhlog_spawn(LOG_ALERT, "CRASH", "%s", tmpbuf);
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s", tmpbuf);
 
 #if ENABLE_EXECINFO
-  tvhlog_spawn(LOG_ALERT, "CRASH", "STACKTRACE");
+  tvhlog_spawn(LOG_ALERT, LS_CRASH, "STACKTRACE");
 
   for(i = 0; i < nframes; i++) {
 
@@ -192,7 +192,7 @@ traphandler(int sig, siginfo_t *si, void *UC)
     if(dladdr(frames[i], &dli)) {
 
       if(dli.dli_sname != NULL && dli.dli_saddr != NULL) {
-      	tvhlog_spawn(LOG_ALERT, "CRASH", "%s+0x%tx  (%s)",
+      	tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s+0x%tx  (%s)",
 		     dli.dli_sname,
 		     frames[i] - dli.dli_saddr,
 		     dli.dli_fname);
@@ -200,19 +200,19 @@ traphandler(int sig, siginfo_t *si, void *UC)
       }
 
       if(self[0] && !add2lineresolve(self, frames[i], buf, sizeof(buf))) {
-	tvhlog_spawn(LOG_ALERT, "CRASH", "%s %p", buf, frames[i]);
+	tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p", buf, frames[i]);
 	continue;
       }
 
       if(dli.dli_fname != NULL && dli.dli_fbase != NULL) {
-      	tvhlog_spawn(LOG_ALERT, "CRASH", "%s %p",
+      	tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p",
  		     dli.dli_fname,
 		     frames[i]);
 	continue;
       }
 
 
-      tvhlog_spawn(LOG_ALERT, "CRASH", "%p", frames[i]);
+      tvhlog_spawn(LOG_ALERT, LS_CRASH, "%p", frames[i]);
     }
   }
 #endif

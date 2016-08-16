@@ -23,7 +23,7 @@
 #include "http.h"
 
 typedef struct download {
-  char *log;
+  int   subsys;
   char *url;
   void *aux;
   int   ssl_peer_verify;
@@ -39,7 +39,7 @@ typedef struct download {
   pid_t          pipe_pid;
 } download_t;
 
-void download_init ( download_t *dn, const char *log );
+void download_init ( download_t *dn, int subsys );
 void download_start( download_t *dn, const char *url, void *aux );
 void download_done ( download_t *dn );
 

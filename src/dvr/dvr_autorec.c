@@ -123,7 +123,7 @@ dvr_autorec_completed(dvr_autorec_entry_t *dae, int error_code)
     if (count <= max_count)
       break;
     if (de_prev) {
-      tvhinfo("dvr", "autorec %s removing recordings %s (allowed count %u total %u)",
+      tvhinfo(LS_DVR, "autorec %s removing recordings %s (allowed count %u total %u)",
               dae->dae_name, idnode_uuid_as_str(&de_prev->de_id, ubuf), max_count, total);
       dvr_entry_cancel_delete(de_prev, 0);
     }
@@ -280,7 +280,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
   if (idnode_insert(&dae->dae_id, uuid, &dvr_autorec_entry_class, 0)) {
     if (uuid)
-      tvhwarn("dvr", "invalid autorec entry uuid '%s'", uuid);
+      tvhwarn(LS_DVR, "invalid autorec entry uuid '%s'", uuid);
     free(dae);
     return NULL;
   }
@@ -324,7 +324,7 @@ dvr_autorec_update_htsp(dvr_autorec_entry_t *dae, htsmsg_t *conf)
 {
   idnode_update(&dae->dae_id, conf);
   idnode_changed(&dae->dae_id);
-  tvhlog(LOG_INFO, "autorec", "\"%s\" on \"%s\": Updated", dae->dae_title ? dae->dae_title : "",
+  tvhinfo(LS_DVR, "autorec \"%s\" on \"%s\": Updated", dae->dae_title ? dae->dae_title : "",
       (dae->dae_channel && dae->dae_channel->ch_name) ? dae->dae_channel->ch_name : "any channel");
 }
 

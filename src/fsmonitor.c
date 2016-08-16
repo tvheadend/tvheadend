@@ -72,7 +72,7 @@ fsmonitor_thread ( void* p )
       i += sizeof(struct inotify_event) + ev->len;
       if (i > c)
         break;
-      tvhtrace("fsmonitor", "event fd %d name %s mask %08X",
+      tvhtrace(LS_FSMONITOR, "event fd %d name %s mask %08X",
                ev->wd, ev->len ? ev->name : NULL, ev->mask);
 
       /* Find */
@@ -158,14 +158,14 @@ fsmonitor_add ( const char *path, fsmonitor_t *fsm )
     if (fmp->fmp_fd <= 0) {
       RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
       free(fmp);
-      tvhdebug("fsmonitor", "failed to add %s (exists?)", path);
+      tvhdebug(LS_FSMONITOR, "failed to add %s (exists?)", path);
       printf("ERROR: failed to add %s\n", path);
       return -1;
     }
 
     /* Setup */
     fmp->fmp_path = strdup(path);
-    tvhdebug("fsmonitor", "watch %s", fmp->fmp_path);
+    tvhdebug(LS_FSMONITOR, "watch %s", fmp->fmp_path);
   } else {
     free(skel);
   }
@@ -218,7 +218,7 @@ fsmonitor_del ( const char *path, fsmonitor_t *fsm )
 
     /* Remove path */
     if (LIST_EMPTY(&fmp->fmp_monitors)) {
-      tvhdebug("fsmonitor", "unwatch %s", fmp->fmp_path);
+      tvhdebug(LS_FSMONITOR, "unwatch %s", fmp->fmp_path);
       RB_REMOVE(&fsmonitor_paths, fmp, fmp_link);
       fd = atomic_get(&fsmonitor_fd);
       if (fd >= 0)

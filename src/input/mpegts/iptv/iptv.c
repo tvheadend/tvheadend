@@ -67,7 +67,7 @@ iptv_handler_register ( iptv_handler_t *ih, int num )
   while (num) {
     r = RB_INSERT_SORTED(&iptv_handlers, ih, link, ih_cmp);
     if (r)
-      tvhwarn("iptv", "attempt to re-register handler for %s",
+      tvhwarn(LS_IPTV, "attempt to re-register handler for %s",
               ih->scheme);
     num--;
     ih++;
@@ -332,7 +332,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   } else {
 
     if (urlparse(raw ?: "", &url)) {
-      tvherror("iptv", "%s - invalid URL [%s]", buf, raw);
+      tvherror(LS_IPTV, "%s - invalid URL [%s]", buf, raw);
       return ret;
     }
     scheme = url.scheme;
@@ -342,7 +342,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   /* Find scheme handler */
   ih = iptv_handler_find(scheme ?: "");
   if (!ih) {
-    tvherror("iptv", "%s - unsupported scheme [%s]", buf, scheme ?: "none");
+    tvherror(LS_IPTV, "%s - unsupported scheme [%s]", buf, scheme ?: "none");
     return ret;
   }
 
@@ -423,7 +423,7 @@ iptv_input_pause_check ( iptv_mux_t *im )
   im->im_pcr_start += s64;
   im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
   im->im_pcr &= PTS_MASK;
-  tvhtrace("iptv-pcr", "pcr: updated %"PRId64", time start %"PRId64", limit %"PRId64,
+  tvhtrace(LS_IPTV_PCR, "pcr: updated %"PRId64", time start %"PRId64", limit %"PRId64,
            im->im_pcr, im->im_pcr_start, limit);
 
   /* queued more than 3 seconds? trigger the pause */
@@ -439,7 +439,7 @@ iptv_input_unpause ( void *aux )
   if (iptv_input_pause_check(im)) {
     pause = 1;
   } else {
-    tvhtrace("iptv-pcr", "unpause timer callback");
+    tvhtrace(LS_IPTV_PCR, "unpause timer callback");
     im->im_handler->pause(im, 0);
     pause = 0;
   }
@@ -460,8 +460,8 @@ iptv_input_thread ( void *aux )
     nfds = tvhpoll_wait(iptv_poll, &ev, 1, -1);
     if ( nfds < 0 ) {
       if (tvheadend_is_running() && !ERRNO_AGAIN(errno)) {
-        tvhlog(LOG_ERR, "iptv", "poll() error %s, sleeping 1 second",
-               strerror(errno));
+        tvherror(LS_IPTV, "poll() error %s, sleeping 1 second",
+                 strerror(errno));
         sleep(1);
       }
       continue;
@@ -477,7 +477,7 @@ iptv_input_thread ( void *aux )
     if (im->mm_active) {
       /* Get data */
       if ((n = im->im_handler->read(im)) < 0) {
-        tvhlog(LOG_ERR, "iptv", "read() error %s", strerror(errno));
+        tvherror(LS_IPTV, "read() error %s", strerror(errno));
         im->im_handler->stop(im);
         break;
       }
@@ -542,7 +542,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
     if (in->in_max_bandwidth &&
         in->in_bps > in->in_max_bandwidth * 1024) {
       if (!in->in_bw_limited) {
-        tvhinfo("iptv", "%s bandwidth limited exceeded",
+        tvhinfo(LS_IPTV, "%s bandwidth limited exceeded",
                 idnode_get_title(&in->mn_id, NULL));
         in->in_bw_limited = 1;
       }
@@ -555,7 +555,7 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
   mmi = im->mm_active;
   if (mmi) {
     if (iptv_input_pause_check(im)) {
-      tvhtrace("iptv-pcr", "pcr: paused");
+      tvhtrace(LS_IPTV_PCR, "pcr: paused");
       return 1;
     }
     mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
@@ -568,18 +568,18 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
           im->im_pcr = pcr.pcr_first;
           im->im_pcr_start = getfastmonoclock();
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace("iptv-pcr", "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
+          tvhtrace(LS_IPTV_PCR, "pcr: first %"PRId64" last %"PRId64", time start %"PRId64", end %"PRId64,
                    pcr.pcr_first, pcr.pcr_last, im->im_pcr_start, im->im_pcr_end);
         }
       } else {
         s64 = pts_diff(im->im_pcr, pcr.pcr_last);
         if (s64 != PTS_UNSET) {
           im->im_pcr_end = im->im_pcr_start + ((s64 * 100LL) + 50LL) / 9LL;
-          tvhtrace("iptv-pcr", "pcr: last %"PRId64", time end %"PRId64, pcr.pcr_last, im->im_pcr_end);
+          tvhtrace(LS_IPTV_PCR, "pcr: last %"PRId64", time end %"PRId64, pcr.pcr_last, im->im_pcr_end);
         }
       }
       if (iptv_input_pause_check(im)) {
-        tvhtrace("iptv-pcr", "pcr: paused");
+        tvhtrace(LS_IPTV_PCR, "pcr: paused");
         return 1;
       }
     }
@@ -603,7 +603,7 @@ iptv_input_fd_started ( iptv_mux_t *im )
     /* Error? */
     if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
       mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
-      tvherror("iptv", "%s - failed to add to poll q", buf);
+      tvherror(LS_IPTV, "%s - failed to add to poll q", buf);
       close(im->mm_iptv_fd);
       im->mm_iptv_fd = -1;
       return -1;
@@ -619,7 +619,7 @@ iptv_input_fd_started ( iptv_mux_t *im )
     /* Error? */
     if (tvhpoll_add(iptv_poll, &ev, 1) == -1) {
       mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
-      tvherror("iptv", "%s - failed to add to poll q (2)", buf);
+      tvherror(LS_IPTV, "%s - failed to add to poll q (2)", buf);
       close(im->mm_iptv_fd2);
       im->mm_iptv_fd2 = -1;
       return -1;

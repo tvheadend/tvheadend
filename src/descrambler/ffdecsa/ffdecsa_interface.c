@@ -180,7 +180,7 @@ ffdecsa_init(void)
 #ifdef CONFIG_SSE2
       if (std_caps & (1<<26)) {
 	current = funcs_128sse2;
-	tvhlog(LOG_INFO, "CSA", "Using SSE2 128bit parallel descrambling");
+	tvhinfo(LS_CSA, "Using SSE2 128bit parallel descrambling");
 	return;
       }
 #endif
@@ -188,7 +188,7 @@ ffdecsa_init(void)
 #ifdef CONFIG_MMX
       if (std_caps & (1<<23)) {
 	current = funcs_64mmx;
-	tvhlog(LOG_INFO, "CSA", "Using MMX 64bit parallel descrambling");
+	tvhinfo(LS_CSA, "Using MMX 64bit parallel descrambling");
 	return;
       }
 #endif
@@ -198,7 +198,7 @@ ffdecsa_init(void)
 #endif
 #endif
 
-  tvhlog(LOG_INFO, "CSA", "Using 32bit parallel descrambling");
+  tvhinfo(LS_CSA, "Using 32bit parallel descrambling");
 }
 
 

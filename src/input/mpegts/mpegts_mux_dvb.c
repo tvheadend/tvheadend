@@ -1013,7 +1013,7 @@ dvb_mux_create0
     idc = &dvb_mux_dab_class;
     delsys = DVB_SYS_DAB;
   } else {
-    tvherror("dvb", "unknown FE type %d", ln->ln_type);
+    tvherror(LS_DVB, "unknown FE type %d", ln->ln_type);
     return NULL;
   }
 

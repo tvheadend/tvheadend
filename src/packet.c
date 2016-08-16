@@ -147,7 +147,7 @@ pkt_ref_inc_poly(th_pkt_t *pkt, int n)
  *
  */
 void
-pkt_trace_(const char *file, int line, const char *subsys, th_pkt_t *pkt,
+pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
            int index, streaming_component_type_t type, const char *fmt, ...)
 {
   char buf[512], _dts[22], _pts[22], _type[2];

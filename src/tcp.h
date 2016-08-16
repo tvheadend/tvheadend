@@ -67,7 +67,7 @@ typedef void (tcp_server_callback_t)(int fd, void *opaque,
 				     struct sockaddr_storage *peer,
 				     struct sockaddr_storage *self);
 
-void *tcp_server_create(const char *subsystem, const char *name,
+void *tcp_server_create(int subsystem, const char *name,
                         const char *bindaddr, int port,
                         tcp_server_ops_t *ops, void *opaque);
 

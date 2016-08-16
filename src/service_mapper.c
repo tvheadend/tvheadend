@@ -83,19 +83,19 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
       }
       if (!f) continue;
     }
-    tvhtrace("service_mapper", "check service %s (%s)",
+    tvhtrace(LS_SERVICE_MAPPER, "check service %s (%s)",
              s->s_nicename, idnode_uuid_as_str(&s->s_id, ubuf));
 
     /* Already mapped (or in progress) */
     if (s->s_sm_onqueue) continue;
     if (LIST_FIRST(&s->s_channels)) continue;
-    tvhtrace("service_mapper", "  not mapped");
+    tvhtrace(LS_SERVICE_MAPPER, "  not mapped");
     service_mapper_stat.total++;
     service_mapper_stat.ignore++;
 
     /* Disabled */
     if (!s->s_is_enabled(s, 0)) continue;
-    tvhtrace("service_mapper", "  enabled");
+    tvhtrace(LS_SERVICE_MAPPER, "  enabled");
 
     /* Get service info */
     pthread_mutex_lock(&s->s_stream_mutex);
@@ -105,7 +105,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
 
     /* Skip non-TV / Radio */
     if (!tr) continue;
-    tvhtrace("service_mapper", "  radio or tv");
+    tvhtrace(LS_SERVICE_MAPPER, "  radio or tv");
 
     /* Skip encrypted */
     if (!conf->encrypted && e) continue;
@@ -113,7 +113,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     
     /* Queue */
     if (conf->check_availability) {
-      tvhtrace("service_mapper", "  queue for checking");
+      tvhtrace(LS_SERVICE_MAPPER, "  queue for checking");
       qd = 1;
       smi = malloc(sizeof(*smi));
       smi->s = s;
@@ -123,7 +123,7 @@ service_mapper_start ( const service_mapper_conf_t *conf, htsmsg_t *uuids )
     
     /* Process */
     } else {
-      tvhtrace("service_mapper", "  process");
+      tvhtrace(LS_SERVICE_MAPPER, "  process");
       service_mapper_process(conf, s, NULL);
     }
   }
@@ -272,9 +272,9 @@ service_mapper_process
   }
   if (!bq) {
     service_mapper_stat.ok++;
-    tvhinfo("service_mapper", "%s: success", s->s_nicename);
+    tvhinfo(LS_SERVICE_MAPPER, "%s: success", s->s_nicename);
   } else {
-    tvhinfo("bouquet", "%s: mapped service from %s", s->s_nicename, bq->bq_name ?: "<unknown>");
+    tvhinfo(LS_BOUQUET, "%s: mapped service from %s", s->s_nicename, bq->bq_name ?: "<unknown>");
   }
 
   /* Remove */
@@ -310,7 +310,7 @@ service_mapper_thread ( void *aux )
     while (!(smi = TAILQ_FIRST(&service_mapper_queue))) {
       if (working) {
         working = 0;
-        tvhinfo("service_mapper", "idle");
+        tvhinfo(LS_SERVICE_MAPPER, "idle");
       }
       tvh_cond_wait(&service_mapper_cond, &global_lock);
       if (!tvheadend_is_running())
@@ -323,11 +323,11 @@ service_mapper_thread ( void *aux )
 
     if (!working) {
       working = 1;
-      tvhinfo("service_mapper", "starting");
+      tvhinfo(LS_SERVICE_MAPPER, "starting");
     }
 
     /* Subscribe */
-    tvhinfo("service_mapper", "checking %s", s->s_nicename);
+    tvhinfo(LS_SERVICE_MAPPER, "checking %s", s->s_nicename);
     prch.prch_id = s;
     sub = subscription_create_from_service(&prch, NULL,
                                            SUBSCRIPTION_PRIO_MAPPER,
@@ -337,11 +337,11 @@ service_mapper_thread ( void *aux )
 
     /* Failed */
     if (!sub) {
-      tvhinfo("service_mapper", "%s: could not subscribe", s->s_nicename);
+      tvhinfo(LS_SERVICE_MAPPER, "%s: could not subscribe", s->s_nicename);
       continue;
     }
 
-    tvhinfo("service_mapper", "waiting for input");
+    tvhinfo(LS_SERVICE_MAPPER, "waiting for input");
     service_ref(s);
     service_mapper_stat.active = s;
     api_service_mapper_notify();
@@ -392,7 +392,7 @@ service_mapper_thread ( void *aux )
     subscription_unsubscribe(sub, UNSUBSCRIBE_FINAL);
 
     if(err) {
-      tvhinfo("service_mapper", "%s: failed [reason: %s]", s->s_nicename, err);
+      tvhinfo(LS_SERVICE_MAPPER, "%s: failed [reason: %s]", s->s_nicename, err);
       service_mapper_stat.fail++;
     } else
       service_mapper_process(&smi->conf, s, NULL);

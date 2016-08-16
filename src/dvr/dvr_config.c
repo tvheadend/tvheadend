@@ -85,10 +85,10 @@ dvr_config_find_by_name_default(const char *name)
 
   if (cfg == NULL) {
     if (name && *name)
-      tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not found, using default", name);
+      tvhwarn(LS_DVR, "Configuration '%s' not found, using default", name);
     cfg = dvrdefaultconfig;
   } else if (!cfg->dvr_enabled) {
-    tvhlog(LOG_WARNING, "dvr", "Configuration '%s' not enabled, using default", name);
+    tvhwarn(LS_DVR, "Configuration '%s' not enabled, using default", name);
     cfg = dvrdefaultconfig;
   }
 
@@ -170,7 +170,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
 
   if (idnode_insert(&cfg->dvr_id, uuid, &dvr_config_class, 0)) {
     if (uuid)
-      tvherror("dvr", "invalid config uuid '%s'", uuid);
+      tvherror(LS_DVR, "invalid config uuid '%s'", uuid);
     free(cfg);
     return NULL;
   }
@@ -204,7 +204,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
     cfg->dvr_valid = 1;
   }
 
-  tvhinfo("dvr", "Creating new configuration '%s'", cfg->dvr_config_name);
+  tvhinfo(LS_DVR, "Creating new configuration '%s'", cfg->dvr_config_name);
 
   if (cfg->dvr_profile == NULL) {
     cfg->dvr_profile = profile_find_by_name("dvr", NULL);
@@ -213,7 +213,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   }
 
   if (dvr_config_is_default(cfg) && dvr_config_find_by_name(NULL)) {
-    tvherror("dvr", "Unable to create second default config, removing");
+    tvherror(LS_DVR, "Unable to create second default config, removing");
     LIST_INSERT_HEAD(&dvrconfigs, cfg, config_link);
     dvr_config_destroy(cfg, 0);
     cfg = NULL;
@@ -239,7 +239,7 @@ dvr_config_destroy(dvr_config_t *cfg, int delconf)
   idnode_save_check(&cfg->dvr_id, delconf);
 
   if (delconf) {
-    tvhinfo("dvr", "Deleting configuration '%s'", cfg->dvr_config_name);
+    tvhinfo(LS_DVR, "Deleting configuration '%s'", cfg->dvr_config_name);
     hts_settings_remove("dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
   }
   LIST_REMOVE(cfg, config_link);
@@ -294,12 +294,12 @@ dvr_config_storage_check(dvr_config_t *cfg)
       cfg->dvr_storage = strdup(getcwd(buf, sizeof(buf)));
   }
 
-  tvhlog(LOG_WARNING, "dvr",
-         "Output directory for video recording is not yet configured "
-         "for DVR configuration \"%s\". "
-         "Defaulting to to \"%s\". "
-         "This can be changed from the web user interface.",
-         cfg->dvr_config_name, cfg->dvr_storage);
+  tvhwarn(LS_DVR,
+          "Output directory for video recording is not yet configured "
+          "for DVR configuration \"%s\". "
+          "Defaulting to to \"%s\". "
+          "This can be changed from the web user interface.",
+          cfg->dvr_config_name, cfg->dvr_storage);
 }
 
 /**
@@ -510,7 +510,7 @@ dvr_config_delete(const char *name)
   if (!dvr_config_is_default(cfg))
     dvr_config_destroy(cfg, 1);
   else
-    tvhwarn("dvr", "Attempt to delete default config ignored");
+    tvhwarn(LS_DVR, "Attempt to delete default config ignored");
 }
 
 /**

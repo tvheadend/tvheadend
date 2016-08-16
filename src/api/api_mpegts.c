@@ -50,8 +50,6 @@ api_mpegts_input_network_list
   if (!mi)
     goto exit;
 
-  tvhtrace("mpegts", "network-list: found input '%s'", mi->mi_name ?: "");
-
   htsmsg_t     *l  = htsmsg_create_list();
   if ((is = mi->mi_network_list(mi))) {
     for (i = 0; i < is->is_count; i++) {

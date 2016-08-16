@@ -305,7 +305,7 @@ scanfile_region_create
   }
 
   if (!reg) {
-    tvhtrace("scanfile", "%s region %s created", type, id);
+    tvhtrace(LS_SCANFILE, "%s region %s created", type, id);
     reg = calloc(1, sizeof(scanfile_region_t));
     reg->sfr_id   = strdup(id);
     reg->sfr_name = strdup(desc);
@@ -400,7 +400,7 @@ scanfile_load_one
       break;
   }
 
-  tvhtrace("scanfile", "[%s] %s", line, r ? "FAIL" : "OK");
+  tvhtrace(LS_SCANFILE, "[%s] %s", line, r ? "FAIL" : "OK");
   if (r) {
     free(mux);
   } else {
@@ -434,11 +434,11 @@ str_trim(char *s)
 }
 
 #define mux_fail0(r, text) do { \
-  tvhtrace("scanfile", text); \
+  tvhtrace(LS_SCANFILE, text); \
   ((r) = -1); \
 } while (0)
 #define mux_fail(r, text, val) do { \
-  tvhtrace("scanfile", text, val); \
+  tvhtrace(LS_SCANFILE, text, val); \
   ((r) = -1); \
 } while (0)
 #define mux_ok(r)   ((r) = ((r) > 0) ? 0 : (r))
@@ -687,7 +687,7 @@ scanfile_load_dvbv5
     free(mux);
   } else {
     dvb_mux_conf_str(mux, buf, sizeof(buf));
-    tvhtrace("scanfile", "mux %s", buf);
+    tvhtrace(LS_SCANFILE, "mux %s", buf);
     if (*net == NULL)
       if (scanfile_create_network(net, type, name, mux->dmc_fe_delsys))
         return -1;
@@ -709,7 +709,7 @@ scanfile_load_file
   char *str, buf[256];
   int load = 0;
 
-  tvhtrace("scanfile", "load file %s", name);
+  tvhtrace(LS_SCANFILE, "load file %s", name);
 
   if (scanfile_total_load > SCANFILE_LIMIT) return;
   fp = fb_open2(dir, name, 1, 0);
@@ -764,7 +764,7 @@ scanfile_load_dir
   char p[256];
   fb_dir *dir;
   fb_dirent *de;
-  tvhtrace("scanfile", "load dir %s", path);
+  tvhtrace(LS_SCANFILE, "load dir %s", path);
 
   if (lvl >= 3) return;
   if (!(dir = fb_opendir(path))) return;
@@ -799,7 +799,7 @@ scanfile_stats(const char *what, scanfile_region_list_t *list)
       networks++;
   }
   if (regions) {
-    tvhinfo("scanfile", "%s - loaded %i regions with %i networks", what, regions, networks);
+    tvhinfo(LS_SCANFILE, "%s - loaded %i regions with %i networks", what, regions, networks);
     return 1;
   }
   return 0;
@@ -867,10 +867,10 @@ scanfile_init ( const char *muxconf_path, int lock )
     r += scanfile_stats(buf, &scanfile_regions_load[i]);
   }
   if (!r) {
-    tvhwarn("scanfile", "no predefined muxes found, check path '%s%s'",
+    tvhwarn(LS_SCANFILE, "no predefined muxes found, check path '%s%s'",
             path[0] == '/' ? path : TVHEADEND_DATADIR "/",
             path[0] == '/' ? "" : path);
-    tvhwarn("scanfile", "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
+    tvhwarn(LS_SCANFILE, "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
     for (i = 0; i < REGIONS; i++)
       scanfile_done_region(&scanfile_regions_load[i]);
     free(scanfile_regions_load);

@@ -114,7 +114,7 @@ int file_lock(const char *lfile, int timeout)
 
     err = state_lock_(lfile, 1, timeout, -1);
     if (err < 0)
-        tvherror("lock", "file %s lock error: %s", lfile, strerror(-err));
+        tvherror(LS_LOCK, "file %s lock error: %s", lfile, strerror(-err));
     return err;
 }
 
@@ -124,6 +124,6 @@ int file_unlock(const char *lfile, int _fd)
 
     err = state_lock_(lfile, 0, 10, _fd);
     if (err < 0)
-        tvherror("lock", "file %s unlock error: %s", lfile, strerror(-err));
+        tvherror(LS_LOCK, "file %s unlock error: %s", lfile, strerror(-err));
     return err;
 }

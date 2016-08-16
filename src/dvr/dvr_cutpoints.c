@@ -73,7 +73,7 @@ dvr_parse_edl
   /* Sanity Checks */
   if(start < 0 || end < 0 || end < start || start == end ||
      action < DVR_CP_CUT || action > DVR_CP_COMM) {
-    tvhwarn("dvr", "Insane entry: start=%f, end=%f. Skipping.", start, end);
+    tvhwarn(LS_DVR, "Insane entry: start=%f, end=%f. Skipping.", start, end);
     return 1;
   }
 
@@ -120,7 +120,7 @@ dvr_parse_comskip
 
   /* Sanity Checks */
   if(start < 0 || end < 0 || end < start || start == end) {
-    tvherror("dvr", "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
+    tvherror(LS_DVR, "Insane EDL entry: start=%d, end=%d. Skipping.", start, end);
     return 1;
   }
 

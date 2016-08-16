@@ -77,7 +77,7 @@ satip_device_block( const char *addr, int block )
         TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
           mpegts_input_stop_all((mpegts_input_t *)lfe);
       }
-      tvhinfo("satip", "address %s is %s", addr,
+      tvhinfo(LS_SATIP, "address %s is %s", addr,
               block < 0 ? "stopped" : (block > 0 ? "allowed" : "disabled"));
     }
   }
@@ -531,8 +531,8 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_fullmux_ok  = 0;
     sd->sd_pids_max    = 32;
     sd->sd_pids_deladd = 0;
-    tvhwarn("satip", "Detected old Inverto firmware V1.13.0.105 and less");
-    tvhwarn("satip", "Upgrade to V1.16.0.120 - http://http://www.inverto.tv/support/ - IDL400s");
+    tvhwarn(LS_SATIP, "Detected old Inverto firmware V1.13.0.105 and less");
+    tvhwarn(LS_SATIP, "Upgrade to V1.16.0.120 - http://http://www.inverto.tv/support/ - IDL400s");
   } else
 #endif
   if (strstr(sd->sd_info.location, ":8888/octonet.xml")) {
@@ -668,11 +668,11 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 6);
     }
     if (type == DVB_TYPE_NONE) {
-      tvhlog(LOG_ERR, "satip", "%s: bad tuner type [%s]",
-             satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
+      tvherror(LS_SATIP, "%s: bad tuner type [%s]",
+               satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
     } else if (m < 0 || m > 32) {
-      tvhlog(LOG_ERR, "satip", "%s: bad tuner count [%s]",
-             satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
+      tvherror(LS_SATIP, "%s: bad tuner count [%s]",
+               satip_device_nicename(sd, buf2, sizeof(buf2)), argv[i]);
     } else {
       sd->sd_nosave = 1;
       for (j = 0; j < m; j++)
@@ -865,13 +865,13 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   }
   if (errn != 0 || s == NULL || hc->hc_code != 200 ||
       hc->hc_data_size == 0 || hc->hc_data == NULL) {
-    tvhlog(LOG_ERR, "satip", "Cannot get %s: %s", d->location, strerror(errn));
+    tvherror(LS_SATIP, "Cannot get %s: %s", d->location, strerror(errn));
     return;
   }
 
   if (tvhtrace_enabled()) {
-    tvhtrace("satip", "received XML description from %s", hc->hc_host);
-    tvhlog_hexdump("satip", hc->hc_data, hc->hc_data_size);
+    tvhtrace(LS_SATIP, "received XML description from %s", hc->hc_host);
+    tvhlog_hexdump(LS_SATIP, hc->hc_data, hc->hc_data_size);
   }
 
   if (d->myaddr == NULL || d->myaddr[0] == '\0') {
@@ -895,7 +895,7 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   xml = htsmsg_xml_deserialize(hc->hc_data, errbuf, sizeof(errbuf));
   hc->hc_data = NULL;
   if (!xml) {
-    tvhlog(LOG_ERR, "satip_discovery_desc", "htsmsg_xml_deserialize error %s", errbuf);
+    tvherror(LS_SATIP, "satip_discovery_desc htsmsg_xml_deserialize error %s", errbuf);
     goto finish;
   }
   if ((tags         = htsmsg_get_map(xml, "tags")) == NULL)

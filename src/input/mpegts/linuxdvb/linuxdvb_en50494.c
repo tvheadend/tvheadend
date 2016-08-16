@@ -162,7 +162,7 @@ linuxdvb_en50494_freq0
   /* transponder value - t */
   *t = round((((freq / 1000) + 2 + le->le_frequency) / 4) - 350);
   if (*t > 1024) {
-    tvherror("en50494", "transponder value bigger then 1024");
+    tvherror(LS_EN50494, "transponder value bigger then 1024");
     return -1;
   }
 
@@ -220,7 +220,7 @@ linuxdvb_en50494_tune
    */
   if (pthread_mutex_trylock(&linuxdvb_en50494_lock) != 0) {
     if (pthread_mutex_lock(&linuxdvb_en50494_lock) != 0) {
-      tvherror("en50494","failed to lock for tuning");
+      tvherror(LS_EN50494,"failed to lock for tuning");
       return -1;
     }
     tvh_safe_usleep(20000);
@@ -240,13 +240,13 @@ linuxdvb_en50494_tune
     /* use 18V */
     ret = linuxdvb_diseqc_set_volt(lsp, 1);
     if (ret) {
-      tvherror("en50494", "error setting lnb voltage to 18V");
+      tvherror(LS_EN50494, "error setting lnb voltage to 18V");
       break;
     }
     tvh_safe_usleep(15000); /* standard: 4ms < x < 22ms */
 
     /* send tune command (with/without pin) */
-    tvhdebug("en50494",
+    tvhdebug(LS_EN50494,
              "lnb=%i id=%i freq=%i pin=%i v/h=%i l/u=%i f=%i, data=0x%02X%02X",
              le->le_position, le->le_id, le->le_frequency, le->le_pin, pol,
              band, freq, data1, data2);
@@ -266,7 +266,7 @@ linuxdvb_en50494_tune
                                  data1, data2);
     }
     if (ret != 0) {
-      tvherror("en50494", "error send tune command");
+      tvherror(LS_EN50494, "error send tune command");
       break;
     }
     tvh_safe_usleep(50000); /* standard: 2ms < x < 60ms */
@@ -274,7 +274,7 @@ linuxdvb_en50494_tune
     /* return to 13V */
     ret = linuxdvb_diseqc_set_volt(lsp, 0);
     if (ret) {
-      tvherror("en50494", "error setting lnb voltage back to 13V");
+      tvherror(LS_EN50494, "error setting lnb voltage back to 13V");
       break;
     }
   }
@@ -292,7 +292,7 @@ void
 linuxdvb_en50494_init (void)
 {
   if (pthread_mutex_init(&linuxdvb_en50494_lock, NULL) != 0) {
-    tvherror("en50494", "failed to init lock mutex");
+    tvherror(LS_EN50494, "failed to init lock mutex");
   }
 }
 
@@ -316,7 +316,7 @@ linuxdvb_en50494_create0
     return NULL;
 
   if (port > 1) {
-    tvherror("en50494", "only 2 ports/positions are possible. given %i", port);
+    tvherror(LS_EN50494, "only 2 ports/positions are possible. given %i", port);
     port = 0;
   }
 

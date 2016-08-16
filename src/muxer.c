@@ -261,8 +261,8 @@ muxer_create(const muxer_config_t *m_cfg)
 #endif
 
   if(!m) {
-    tvhlog(LOG_ERR, "mux", "Can't find a muxer that supports '%s' container",
-	   muxer_container_type2txt(m_cfg->m_type));
+    tvherror(LS_MUXER, "Can't find a muxer that supports '%s' container",
+	    muxer_container_type2txt(m_cfg->m_type));
     return NULL;
   }
   

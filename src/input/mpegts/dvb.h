@@ -222,34 +222,34 @@ void atsc_utf16_to_utf8(const uint8_t *src, int len, char *buf, int buflen);
  * PSI processing
  */
 
-#define DVB_LOOP_INIT(ptr, len, off, lptr, llen)\
+#define DVB_LOOP_INIT(mt, ptr, len, off, lptr, llen)\
 do {\
   llen = ((ptr[off] & 0xF) << 8) | ptr[off+1];\
   lptr = 2 + off + ptr;\
   ptr += 2 + off + llen;\
   len -= 2 + off + llen;\
-  if (len < 0) {tvhtrace("psi", "len < 0"); return -1; }\
+  if (len < 0) {tvhtrace(mt->mt_subsys, "%s: len < 0", mt->mt_name); return -1; }\
 } while(0)
 
 #define DVB_LOOP_EACH(ptr, len, min)\
   for ( ; len > min ; )\
 
-#define DVB_LOOP_FOREACH(ptr, len, off, lptr, llen, min)\
-  DVB_LOOP_INIT(ptr, len, off, lptr, llen);\
+#define DVB_LOOP_FOREACH(mt, ptr, len, off, lptr, llen, min)\
+  DVB_LOOP_INIT(mt, ptr, len, off, lptr, llen);\
   DVB_LOOP_EACH(lptr, llen, min)
 
-#define DVB_DESC_EACH(ptr, len, dtag, dlen, dptr)\
+#define DVB_DESC_EACH(mt, ptr, len, dtag, dlen, dptr)\
   DVB_LOOP_EACH(ptr, len, 2)\
-    if      (!(dtag  = ptr[0]))      {tvhtrace("psi", "1");return -1;}\
-    else if ((dlen  = ptr[1]) < 0)   {tvhtrace("psi", "2");return -1;}\
-    else if (!(dptr  = ptr+2))       {tvhtrace("psi", "3");return -1;}\
-    else if ( (len -= 2 + dlen) < 0) {tvhtrace("psi", "4");return -1;}\
-    else if (!(ptr += 2 + dlen))     {tvhtrace("psi", "5");return -1;}\
+    if      (!(dtag  = ptr[0]))      {tvhtrace(mt->mt_subsys, "%s: 1", mt->mt_name);return -1;}\
+    else if ((dlen  = ptr[1]) < 0)   {tvhtrace(mt->mt_subsys, "%s: 2", mt->mt_name);return -1;}\
+    else if (!(dptr  = ptr+2))       {tvhtrace(mt->mt_subsys, "%s: 3", mt->mt_name);return -1;}\
+    else if ( (len -= 2 + dlen) < 0) {tvhtrace(mt->mt_subsys, "%s: 4", mt->mt_name);return -1;}\
+    else if (!(ptr += 2 + dlen))     {tvhtrace(mt->mt_subsys, "%s: 5", mt->mt_name);return -1;}\
     else
 
-#define DVB_DESC_FOREACH(ptr, len, off, lptr, llen, dtag, dlen, dptr)\
-  DVB_LOOP_INIT(ptr, len, off, lptr, llen);\
-  DVB_DESC_EACH(lptr, llen, dtag, dlen, dptr)\
+#define DVB_DESC_FOREACH(mt, ptr, len, off, lptr, llen, dtag, dlen, dptr)\
+  DVB_LOOP_INIT(mt, ptr, len, off, lptr, llen);\
+  DVB_DESC_EACH(mt, lptr, llen, dtag, dlen, dptr)\
 
 /*
  * SI typedefs
@@ -285,6 +285,7 @@ typedef struct mpegts_psi_table
   LIST_ENTRY(mpegts_table) mt_link;
   RB_HEAD(,mpegts_psi_table_state) mt_state;
 
+  int     mt_subsys;
   char   *mt_name;
   void   *mt_opaque;
 
@@ -327,7 +328,7 @@ typedef void (*mpegts_psi_parse_callback_t)
   ( mpegts_psi_table_t *, const uint8_t *buf, int len );
 
 void dvb_table_parse_init
-  ( mpegts_psi_table_t *mt, const char *name, int pid, void *opaque );
+  ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid, void *opaque );
 
 void dvb_table_parse_done ( mpegts_psi_table_t *mt);
 

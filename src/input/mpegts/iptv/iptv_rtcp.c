@@ -242,7 +242,7 @@ rtcp_append_rr(sbuf_t *buffer, rtcp_t *packet)
 static void
 rtcp_send(iptv_rtcp_info_t *info, sbuf_t *buffer)
 {
-  tvhlog(LOG_DEBUG, "rtsp", "Sending receiver report");
+  tvhdebug(LS_IPTV, "RTCP: Sending receiver report");
   // We don't care of the result right now
   udp_write(info->connection, buffer->sb_data, buffer->sb_ptr, & info->connection->peer);
 }

@@ -316,16 +316,16 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
       continue;
 
     if(!lav_muxer_support_stream(lm->m_config.m_type, ssc->ssc_type)) {
-      tvhlog(LOG_WARNING, "libav",  "%s is not supported in %s", 
-	     streaming_component_type2txt(ssc->ssc_type), 
-	     muxer_container_type2txt(lm->m_config.m_type));
+      tvhwarn(LS_LIBAV,  "%s is not supported in %s", 
+	      streaming_component_type2txt(ssc->ssc_type), 
+	      muxer_container_type2txt(lm->m_config.m_type));
       ssc->ssc_muxer_disabled = 1;
       continue;
     }
 
     if(lav_muxer_add_stream(lm, ssc)) {
-      tvhlog(LOG_ERR, "libav",  "Failed to add %s stream", 
-	     streaming_component_type2txt(ssc->ssc_type));
+      tvherror(LS_LIBAV,  "Failed to add %s stream", 
+	       streaming_component_type2txt(ssc->ssc_type));
       ssc->ssc_muxer_disabled = 1;
       continue;
     }
@@ -337,12 +337,12 @@ lav_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   }
 
   if(!lm->lm_oc->nb_streams) {
-    tvhlog(LOG_ERR, "libav",  "No supported streams available");
+    tvherror(LS_LIBAV,  "No supported streams available");
     lm->m_errors++;
     return -1;
   } else if(avformat_write_header(lm->lm_oc, &opts) < 0) {
-    tvhlog(LOG_ERR, "libav",  "Failed to write %s header", 
-	   muxer_container_type2txt(lm->m_config.m_type));
+    tvherror(LS_LIBAV,  "Failed to write %s header", 
+	     muxer_container_type2txt(lm->m_config.m_type));
     lm->m_errors++;
     return -1;
   }
@@ -404,15 +404,15 @@ lav_muxer_open_file(muxer_t *m, const char *filename)
 
   if((r = avio_open(&oc->pb, filename, AVIO_FLAG_WRITE)) < 0) {
     av_strerror(r, buf, sizeof(buf));
-    tvhlog(LOG_ERR, "libav",  "%s: Could not open -- %s", filename, buf);
+    tvherror(LS_LIBAV,  "%s: Could not open -- %s", filename, buf);
     lm->m_errors++;
     return -1;
   }
 
   /* bypass umask settings */
   if (chmod(filename, lm->m_config.m_file_permissions))
-    tvhlog(LOG_ERR, "libav", "%s: Unable to change permissions -- %s",
-           filename, strerror(errno));
+    tvherror(LS_LIBAV, "%s: Unable to change permissions -- %s",
+             filename, strerror(errno));
 
   return 0;
 }
@@ -439,13 +439,13 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
   oc = lm->lm_oc;
 
   if(!oc->nb_streams) {
-    tvhlog(LOG_ERR, "libav", "No streams to mux");
+    tvherror(LS_LIBAV, "No streams to mux");
     rc = -1;
     goto ret;
   }
 
   if(!lm->lm_init) {
-    tvhlog(LOG_ERR, "libav", "Muxer not initialized correctly");
+    tvherror(LS_LIBAV, "Muxer not initialized correctly");
     rc = -1;
     goto ret;
   }
@@ -475,7 +475,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 				    pktbuf_ptr(pkt->pkt_payload), 
 				    pktbuf_len(pkt->pkt_payload), 
 				    pkt->pkt_frametype < PKT_P_FRAME) < 0) {
-	tvhlog(LOG_WARNING, "libav",  "Failed to filter bitstream");
+	tvhwarn(LS_LIBAV,  "Failed to filter bitstream");
 	if (packet.data != pktbuf_ptr(pkt->pkt_payload))
 	  av_free(packet.data);
 	break;
@@ -507,7 +507,7 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
       packet.flags |= AV_PKT_FLAG_KEY;
 
     if((rc = av_interleaved_write_frame(oc, &packet)))
-      tvhlog(LOG_WARNING, "libav",  "Failed to write frame");
+      tvhwarn(LS_LIBAV,  "Failed to write frame");
 
     if(tofree && tofree != pktbuf_ptr(pkt->pkt_payload))
       av_free(tofree);
@@ -553,8 +553,8 @@ lav_muxer_close(muxer_t *m)
   lav_muxer_t *lm = (lav_muxer_t*)m;
 
   if(lm->lm_init && av_write_trailer(lm->lm_oc) < 0) {
-    tvhlog(LOG_WARNING, "libav",  "Failed to write %s trailer", 
-	   muxer_container_type2txt(lm->m_config.m_type));
+    tvhwarn(LS_LIBAV,  "Failed to write %s trailer", 
+	    muxer_container_type2txt(lm->m_config.m_type));
     lm->m_errors++;
     ret = -1;
   }
@@ -628,7 +628,7 @@ lav_muxer_create(const muxer_config_t *m_cfg)
 
   fmt = av_guess_format(mux_name, NULL, NULL);
   if(!fmt) {
-    tvhlog(LOG_ERR, "libav",  "Can't find the '%s' muxer", mux_name);
+    tvherror(LS_LIBAV,  "Can't find the '%s' muxer", mux_name);
     return NULL;
   }
 

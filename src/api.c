@@ -45,7 +45,7 @@ api_register ( const api_hook_t *hook )
   api_skel->hook = hook;
   t = RB_INSERT_SORTED(&api_hook_tree, api_skel, link, ah_cmp);
   if (t) {
-    tvherror("api", "trying to re-register subsystem");
+    tvherror(LS_API, "trying to re-register subsystem");
   } else {
     SKEL_USED(api_skel);
   }
@@ -80,7 +80,7 @@ api_exec ( access_t *perm, const char *subsystem,
   ah = RB_FIND(&api_hook_tree, &skel, link, ah_cmp);
 
   if (!ah) {
-    tvhwarn("api", "failed to find subsystem [%s]", subsystem);
+    tvhwarn(LS_API, "failed to find subsystem [%s]", subsystem);
     return ENOSYS; // TODO: is this really the right error code?
   }
 
