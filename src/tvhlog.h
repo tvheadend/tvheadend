@@ -38,6 +38,11 @@ typedef struct {
   size_t count;
 } tvhlog_limit_t;
 
+typedef struct {
+  const char *name;
+  const char *desc;
+} tvhlog_subsys_t;
+
 /* Config */
 extern int              tvhlog_level;
 extern htsmsg_t        *tvhlog_debug;
@@ -45,6 +50,7 @@ extern htsmsg_t        *tvhlog_trace;
 extern char            *tvhlog_path;
 extern int              tvhlog_options;
 extern pthread_mutex_t  tvhlog_mutex;
+extern tvhlog_subsys_t  tvhlog_subsystems[];
 
 /* Initialise */
 void tvhlog_init       ( int level, int options, const char *path ); 
@@ -181,7 +187,8 @@ enum {
   LS_WEBUI,
   LS_TIMESHIFT,
   LS_SCANFILE,
-  LS_TSFILE
+  LS_TSFILE,
+  LS_LAST     /* keep this last */
 };
 
 /* Macros */

@@ -533,6 +533,21 @@ show_usage
 }
 
 /**
+ * Show subsystems info
+ */
+static void
+show_subsystems(const char *argv0)
+{
+  int i;
+  tvhlog_subsys_t *ts = tvhlog_subsystems;
+  printf("Subsystems:\n\n");
+  for (i = 1, ts++; i < LS_LAST; i++, ts++) {
+    printf("  %-15s %s\n", ts->name, _(ts->desc));
+  }
+  exit(0);
+}
+
+/**
  *
  */
 static inline time_t
@@ -773,7 +788,8 @@ main(int argc, char **argv)
               opt_dbus         = 0,
               opt_dbus_session = 0,
               opt_nobackup     = 0,
-              opt_nobat        = 0;
+              opt_nobat        = 0,
+              opt_subsystems   = 0;
   const char *opt_config       = NULL,
              *opt_user         = NULL,
              *opt_group        = NULL,
@@ -857,6 +873,7 @@ main(int argc, char **argv)
 #if ENABLE_TRACE
     {   0, "trace",     N_("Enable trace subsystems"), OPT_STR,  &opt_log_trace },
 #endif
+    {   0, "subsystems",N_("List subsystems"),         OPT_BOOL, &opt_subsystems },
     {   0, "fileline",  N_("Add file and line numbers to debug"), OPT_BOOL, &opt_fileline },
     {   0, "threadid",  N_("Add the thread ID to debug"), OPT_BOOL, &opt_threadid },
 #if ENABLE_LIBAV
@@ -929,6 +946,8 @@ main(int argc, char **argv)
       show_usage(argv[0], cmdline_opts, ARRAY_SIZE(cmdline_opts), NULL);
     if (opt_version)
       show_version(argv[0]);
+    if (opt_subsystems)
+      show_subsystems(argv[0]);
   }
 
   /* Additional cmdline processing */

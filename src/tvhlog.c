@@ -67,12 +67,7 @@ static const char *logtxtmeta[9][2] = {
   {"TRACE",     "\033[32m"},
 };
 
-struct logsubsystxt {
-  const char *name;
-  const char *desc;
-};
-
-static struct logsubsystxt logsubsys[] = {
+tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_NONE]          = { "<none>",        N_("None") },
   [LS_START]         = { "START",         N_("START") },
   [LS_STOP]          = { "STOP",          N_("STOP") },
@@ -387,11 +382,11 @@ void tvhlogv ( const char *file, int line, int severity,
     if (severity <= atomic_get(&tvhlog_level)) {
       if (tvhlog_trace) {
         ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_trace, logsubsys[subsys].name, ok);
+        ok = htsmsg_get_u32_or_default(tvhlog_trace, tvhlog_subsystems[subsys].name, ok);
       }
       if (!ok && severity == LOG_DEBUG && tvhlog_debug) {
         ok = htsmsg_get_u32_or_default(tvhlog_debug, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_debug, logsubsys[subsys].name, ok);
+        ok = htsmsg_get_u32_or_default(tvhlog_debug, tvhlog_subsystems[subsys].name, ok);
       }
     }
   } else {
@@ -417,7 +412,7 @@ void tvhlogv ( const char *file, int line, int severity,
   if (options & TVHLOG_OPT_THREAD) {
     tvh_strlcatf(buf, sizeof(buf), l, "tid %ld: ", (long)pthread_self());
   }
-  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", logsubsys[subsys].name);
+  tvh_strlcatf(buf, sizeof(buf), l, "%s: ", tvhlog_subsystems[subsys].name);
   if (options & TVHLOG_OPT_FILELINE && severity >= LOG_DEBUG)
     tvh_strlcatf(buf, sizeof(buf), l, "(%s:%d) ", file, line);
   if (args)
