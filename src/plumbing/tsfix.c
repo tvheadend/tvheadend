@@ -362,10 +362,10 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
       switch(pkt->pkt_frametype) {
       case PKT_B_FRAME:
 	/* B-frames have same PTS as DTS, pass them on */
-	pkt->pkt_pts = pkt->pkt_dts;
-	tvhtrace(LS_TSFIX, "%-12s PTS b-frame set to %"PRId64,
+	tvhtrace(LS_TSFIX, "%-12s PTS b-frame set to %"PRId64" (old %"PRId64")",
 		    streaming_component_type2txt(tfs->tfs_type),
-		    pkt->pkt_dts);
+		    pkt->pkt_dts, pkt->pkt_pts);
+	pkt->pkt_pts = pkt->pkt_dts;
 	break;
       
       case PKT_I_FRAME:
@@ -380,10 +380,10 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 	  if (srch->pr_pkt->pkt_frametype <= PKT_P_FRAME &&
 	      pts_is_greater_or_equal(pkt->pkt_dts, srch->pr_pkt->pkt_dts) > 0 &&
 	      pts_diff(pkt->pkt_dts, srch->pr_pkt->pkt_dts) < 10 * 90000) {
-	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
-	    tvhtrace(LS_TSFIX, "%-12s PTS *-frame set to %"PRId64", DTS %"PRId64,
+	    tvhtrace(LS_TSFIX, "%-12s PTS *-frame set to %"PRId64" (old %"PRId64"), DTS %"PRId64,
 			streaming_component_type2txt(tfs->tfs_type),
-			pkt->pkt_pts, pkt->pkt_dts);
+			srch->pr_pkt->pkt_dts, pkt->pkt_pts, pkt->pkt_dts);
+	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
 	    break;
 	  }
 	  
