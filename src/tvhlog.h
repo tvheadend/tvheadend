@@ -161,6 +161,7 @@ enum {
   LS_CSA,
   LS_CAPMT,
   LS_CWC,
+  LS_DVBCAM,
   LS_DVR,
   LS_EPG,
   LS_EPGDB,

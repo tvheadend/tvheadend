@@ -132,6 +132,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_CSA]           = { "csa",           N_("CSA (descrambling)") },
   [LS_CAPMT]         = { "capmt",         N_("CAPMT CA Client") },
   [LS_CWC]           = { "cwc",           N_("CWC CA Client") },
+  [LS_DVBCAM]        = { "dvbcam",        N_("DVB CAM Client") },
   [LS_DVR]           = { "dvr",           N_("Digital Video Recorder") },
   [LS_EPG]           = { "epg",           N_("Electronic Program Guide") },
   [LS_EPGDB]         = { "epgdb",         N_("EPG Database") },
