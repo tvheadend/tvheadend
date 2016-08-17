@@ -74,7 +74,7 @@ entry_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
   switch (state) {
   case AVAHI_ENTRY_GROUP_ESTABLISHED :
     /* The entry group has been established successfully */
-    tvhoinfo(LS_AVAHI, "Service '%s' successfully established.", name);
+    tvhinfo(LS_AVAHI, "Service '%s' successfully established.", name);
     break;
 
   case AVAHI_ENTRY_GROUP_COLLISION : {
