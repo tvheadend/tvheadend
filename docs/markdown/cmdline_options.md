@@ -50,6 +50,7 @@ Usage: `tvheadend [OPTIONS]`
   -l, --logfile               Enable debug to file
       --debug                 Enable debug subsystems
       --trace                 Enable trace subsystems
+      --subsystems            List subsystems
       --fileline              Add file and line numbers to debug
       --threadid              Add the thread ID to debug
       --uidebug               Enable web UI debug (non-minified JS)
