@@ -1267,7 +1267,7 @@ dvb_nit_mux
         mpegts_mux_set_crid_authority(mux, dauth);
       break;
     case DVB_DESC_SERVICE_LIST:
-      if (dvb_desc_service_list(mt->mt_name, dptr, dlen, mux, bi))
+      if (dvb_desc_service_list(mt, dptr, dlen, mux, bi))
         return -1;
       break;
     case DVB_DESC_PRIVATE_DATA:
@@ -1292,7 +1292,7 @@ dvb_nit_mux
     case 0x88:
       if (priv == 0x28) {
         /* HD simulcast */
-        if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, dtag, mux, bi, 1))
+        if (dvb_desc_local_channel(mt, dptr, dlen, dtag, mux, bi, 1))
           return -1;
       }
       break;
@@ -1300,13 +1300,13 @@ dvb_nit_mux
       if (priv == 0 || priv == 0x362275)
       /* fall thru */
 lcn:
-      if (dvb_desc_local_channel(mt->mt_name, dptr, dlen, dtag, mux, bi, 0))
+      if (dvb_desc_local_channel(mt, dptr, dlen, dtag, mux, bi, 0))
         return -1;
       break;
     case DVB_DESC_FREESAT_LCN:
 #if ENABLE_MPEGTS_DVB
       if (bi && tableid == 0x4A && priv == PRIV_FSAT) {
-        dvb_freesat_local_channels(bi, mt->mt_name, dptr, dlen);
+        dvb_freesat_local_channels(bi, mt, dptr, dlen);
         bi->freesat = 1;
       }
 #endif
@@ -1314,7 +1314,7 @@ lcn:
     case DVB_DESC_BSKYB_LCN:
 #if ENABLE_MPEGTS_DVB
       if (bi && tableid == 0x4A && priv == 2) {
-        dvb_bskyb_local_channels(bi, mt->mt_name, dptr, dlen, mux);
+        dvb_bskyb_local_channels(bi, mt, dptr, dlen, mux);
         bi->bskyb = 1;
       }
 #endif
@@ -1367,7 +1367,7 @@ dvb_nit_callback
       }
       if ((b = mt->mt_bat) != NULL) {
         if (!b->complete) {
-          dvb_bat_completed(b, mt->mt_name, tableid, mm->mm_tsid, nbid,
+          dvb_bat_completed(b, mt, tableid, mm->mm_tsid, nbid,
                             mm, mt->mt_opaque);
           mt->mt_working -= st->working;
           st->working = 0;
@@ -1446,7 +1446,7 @@ dvb_nit_callback
       case DVB_DESC_FREESAT_REGIONS:
 #if ENABLE_MPEGTS_DVB
         if (priv == PRIV_FSAT)
-          dvb_freesat_regions(bi, mt->mt_name, dptr, dlen);
+          dvb_freesat_regions(bi, mt, dptr, dlen);
 #endif
         break;
     }
