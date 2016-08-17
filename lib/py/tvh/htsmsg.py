@@ -68,6 +68,8 @@ def hmf_type ( f ):
     return HMF_S64
   elif type(f) == hmf_bin:
     return HMF_BIN
+  elif type(f) == bool:
+    return HMF_BOOL
   else:
     raise Exception('invalid type')
 
