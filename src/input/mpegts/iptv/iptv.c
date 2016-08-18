@@ -1049,7 +1049,7 @@ iptv_input_wizard_get( tvh_input_t *ti, const char *lang )
 {
   iptv_input_t *mi = (iptv_input_t*)ti;
   mpegts_network_t *mn;
-  const idclass_t *idc;
+  const idclass_t *idc = NULL;
 
   mn = iptv_input_wizard_network(mi);
   if (mn == NULL || (mn && mn->mn_wizard))
