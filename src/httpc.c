@@ -927,7 +927,7 @@ http_client_run0( http_client_t *hc )
       return res;
   }
 
-  buf = alloca(hc->hc_io_size);
+  buf = alloca(hc->hc_io_size + 1);
   if (!hc->hc_in_data && !hc->hc_in_rtp_data && hc->hc_rpos > 3) {
     hc->hc_rbuf[hc->hc_rpos] = '\0';
     if (hc->hc_version == RTSP_VERSION_1_0 && hc->hc_rbuf[0] == '$')
