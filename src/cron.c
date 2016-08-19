@@ -111,12 +111,13 @@ cron_set ( cron_t *c, const char *str )
 {
   uint64_t ho, mi, mo, dm, dw;
   static const char *days[] = {
-    "sun", "mon", "tue", "wed", "thu", "fri", "sat"
+    "sun", "mon", "tue", "wed", "thu", "fri", "sat", NULL
   };
   static const char *months[] = {
     "ignore",
     "jan", "feb", "mar", "apr", "may", "jun",
-    "jul", "aug", "sep", "oct", "nov", "dec"
+    "jul", "aug", "sep", "oct", "nov", "dec",
+    NULL
   };
 
   /* Daily (01:01) */
