@@ -836,7 +836,7 @@ void *tcp_server_create
  */
 void *
 tcp_server_create
-  (const char *subsystem, const char *name, const char *bindaddr,
+  (int subsystem, const char *name, const char *bindaddr,
    int port, tcp_server_ops_t *ops, void *opaque)
 {
   int sd_fds_num, i, fd;
@@ -895,7 +895,7 @@ tcp_server_create
   } else {
     /* no systemd-managed socket found, create a new one */
     tvhinfo(LS_TCP, "No systemd socket: creating a new one");
-    ts =  tcp_server_create_new(subsystem, name, bindaddr, port, ops, opaque);
+    ts = tcp_server_create_new(subsystem, name, bindaddr, port, ops, opaque);
   }
 
   return ts;
