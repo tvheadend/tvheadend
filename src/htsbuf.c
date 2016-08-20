@@ -352,12 +352,16 @@ htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
 {
   const char *c = s;
   const char *e = s + strlen(s);
+  const char *esc;
+  int h;
+
   if(e == s)
     return;
 
   while(1) {
-    const char *esc;
-    switch(*c++) {
+    h = *c++;
+
+    switch(h) {
     case '<':  esc = "&lt;";   break;
     case '>':  esc = "&gt;";   break;
     case '&':  esc = "&amp;";  break;
@@ -369,6 +373,10 @@ htsbuf_append_and_escape_xml(htsbuf_queue_t *hq, const char *s)
     if(esc != NULL) {
       htsbuf_append(hq, s, c - s - 1);
       htsbuf_append_str(hq, esc);
+      s = c;
+    } else if (h < 0x20 && h != 0x09 && h != 0x0a && h != 0x0d) {
+      /* allow XML 1.0 valid characters only */
+      htsbuf_append(hq, s, c - s - 1);
       s = c;
     }
     
