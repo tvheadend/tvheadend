@@ -550,16 +550,17 @@ if enabled ffmpeg_static; then
 
   # omx
   if enabled omx; then
-    has_omx=true
+    OLDCFLAGS=$CFLAGS
+    if [ -d "/opt/vc/include" ]; then
+      CFLAGS="-I/opt/vc/include $CFLAGS"
+    fi
     check_cc_header "bcm_host" omx_rpi
     if enabled omx_rpi; then
-      check_cc_header "IL/OMX_Core" omx || has_omx=false
+      CFLAGS="-I/opt/vc/include/IL $OLDCFLAGS"
     else
-      check_cc_header OMX_Core omx || has_omx=false
+      CFLAGS=$OLDCFLAGS
     fi
-    if ! $has_omx; then
-      die "OpenMAX IL not found"
-    fi
+    check_cc_header OMX_Core omx || die "OpenMAX IL not found"
   fi
 
 else
