@@ -551,9 +551,9 @@ if enabled ffmpeg_static; then
   # omx
   if enabled omx; then
     has_omx=true
-    check_cc_header "/opt/vc/include/bcm_host" omx_rpi
+    check_cc_header "bcm_host" omx_rpi
     if enabled omx_rpi; then
-      check_cc_header "/opt/vc/include/IL/OMX_Core" omx || has_omx=false
+      check_cc_header "IL/OMX_Core" omx || has_omx=false
     else
       check_cc_header OMX_Core omx || has_omx=false
     fi
