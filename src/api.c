@@ -136,6 +136,7 @@ void api_init ( void )
   api_access_init();
   api_dvr_init();
   api_caclient_init();
+  api_codec_init();
   api_profile_init();
   api_language_init();
   api_satip_server_init();

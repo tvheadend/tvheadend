@@ -992,7 +992,7 @@ dvr_autorec_entry_class_btype_list ( void *o, const char *lang )
 }
 
 static uint32_t
-dvr_autorec_entry_class_owner_opts(void *o)
+dvr_autorec_entry_class_owner_opts(void *o, uint32_t opts)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae && dae->dae_id.in_access &&

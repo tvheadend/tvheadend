@@ -68,6 +68,7 @@
 #include "intlconv.h"
 #include "dbus.h"
 #include "libav.h"
+#include "transcoding/codec.h"
 #include "profile.h"
 #include "bouquet.h"
 #include "tvhtime.h"
@@ -98,7 +99,7 @@ typedef struct {
   enum {
     OPT_STR,
     OPT_INT,
-    OPT_BOOL, 
+    OPT_BOOL,
     OPT_STR_LIST,
   }          type;
   void       *param;
@@ -526,7 +527,7 @@ show_usage
       free(desc);
     }
   }
-  printf("%s", 
+  printf("%s",
          _("\n"
            "For more information please visit the Tvheadend website:\n"
            "https://tvheadend.org\n"));
@@ -615,7 +616,7 @@ mtimer_thread(void *aux)
     next = now + sec2mono(3600);
 
     while((mti = LIST_FIRST(&mtimers)) != NULL) {
-      
+
       if (mti->mti_expire > now) {
         next = mti->mti_expire;
         break;
@@ -648,7 +649,7 @@ mtimer_thread(void *aux)
     tvh_cond_timedwait(&mtimer_cond, &global_lock, next);
     pthread_mutex_unlock(&global_lock);
   }
-  
+
   return NULL;
 }
 
@@ -678,7 +679,7 @@ mainloop(void)
 
     // TODO: there is a risk that if timers re-insert themselves to
     //       the top of the list with a 0 offset we could loop indefinitely
-    
+
 #if 0
     tvhdebug(LS_GTIMER, "now %"PRItime_t, ts.tv_sec);
     LIST_FOREACH(gti, &gtimers, gti_link)
@@ -686,7 +687,7 @@ mainloop(void)
 #endif
 
     while((gti = LIST_FIRST(&gtimers)) != NULL) {
-      
+
       if (gti->gti_expire > now) {
         ts.tv_sec = gti->gti_expire;
         break;
@@ -1033,12 +1034,12 @@ main(int argc, char **argv)
   }
   if (opt_log_debug)
     log_debug  = opt_log_debug;
-    
+
   tvhlog_init(log_level, log_options, opt_logpath);
   tvhlog_set_debug(log_debug);
   tvhlog_set_trace(log_trace);
   tvhinfo(LS_MAIN, "Log started");
- 
+
   signal(SIGPIPE, handle_sigpipe); // will be redundant later
   signal(SIGILL, handle_sigill);   // see handler..
 
@@ -1144,7 +1145,7 @@ main(int argc, char **argv)
     tvhlog_options &= ~TVHLOG_OPT_STDERR;
   if (!isatty(2))
     tvhlog_options &= ~TVHLOG_OPT_DECORATE;
-  
+
   /* Initialise clock */
   pthread_mutex_lock(&global_lock);
   __mdispatch_clock = getmonoclock();
@@ -1199,6 +1200,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, fsmonitor_init);
   tvhftrace(LS_MAIN, libav_init);
   tvhftrace(LS_MAIN, tvhtime_init);
+  tvhftrace(LS_MAIN, codec_init);
   tvhftrace(LS_MAIN, profile_init);
   tvhftrace(LS_MAIN, imagecache_init);
   tvhftrace(LS_MAIN, http_client_init, opt_user_agent);
@@ -1330,6 +1332,8 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, lang_str_done);
   tvhftrace(LS_MAIN, esfilter_done);
   tvhftrace(LS_MAIN, profile_done);
+  tvhftrace(LS_MAIN, codec_done);
+  tvhftrace(LS_MAIN, libav_done);
   tvhftrace(LS_MAIN, intlconv_done);
   tvhftrace(LS_MAIN, urlparse_done);
   tvhftrace(LS_MAIN, streaming_done);
@@ -1346,8 +1350,6 @@ main(int argc, char **argv)
   if(opt_fork)
     unlink(opt_pidpath);
 
-  libav_done();
-    
   /* OpenSSL - welcome to the "cleanup" hell */
   ENGINE_cleanup();
   RAND_cleanup();

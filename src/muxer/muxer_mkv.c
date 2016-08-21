@@ -42,6 +42,7 @@
 #include "parsers/parser_hevc.h"
 #include "muxer_mkv.h"
 
+
 extern int dvr_iov_max;
 
 TAILQ_HEAD(mk_cue_queue, mk_cue);
@@ -170,35 +171,48 @@ mk_build_ebmlheader(mk_muxer_t *mk)
 
 
 /**
- *
+ * lifted from avpriv_split_xiph_headers() in libavcodec/xiph.c
  */
 static int
-mk_split_vorbis_headers(uint8_t *extradata, int extradata_size,
-			uint8_t *header_start[3],  int header_len[3])
+mk_split_xiph_headers(uint8_t *extradata, int extradata_size,
+                      int first_header_size, uint8_t *header_start[3],
+                      int header_len[3])
 {
-  int i;
-  if (extradata_size >= 3 && extradata_size < INT_MAX - 0x1ff && extradata[0] == 2) {
-    int overall_len = 3;
-    extradata++;
-    for (i=0; i<2; i++, extradata++) {
-      header_len[i] = 0;
-      for (; overall_len < extradata_size && *extradata==0xff; extradata++) {
-	header_len[i] += 0xff;
-	overall_len   += 0xff + 1;
-      }
-      header_len[i] += *extradata;
-      overall_len   += *extradata;
-      if (overall_len > extradata_size)
-	return -1;
+    int i;
+
+    if (extradata_size >= 6 && RB16(extradata) == first_header_size) {
+        int overall_len = 6;
+        for (i=0; i<3; i++) {
+            header_len[i] = RB16(extradata);
+            extradata += 2;
+            header_start[i] = extradata;
+            extradata += header_len[i];
+            if (overall_len > extradata_size - header_len[i])
+                return -1;
+            overall_len += header_len[i];
+        }
+    } else if (extradata_size >= 3 && extradata_size < INT_MAX - 0x1ff && extradata[0] == 2) {
+        int overall_len = 3;
+        extradata++;
+        for (i=0; i<2; i++, extradata++) {
+            header_len[i] = 0;
+            for (; overall_len < extradata_size && *extradata==0xff; extradata++) {
+                header_len[i] += 0xff;
+                overall_len   += 0xff + 1;
+            }
+            header_len[i] += *extradata;
+            overall_len   += *extradata;
+            if (overall_len > extradata_size)
+                return -1;
+        }
+        header_len[2] = extradata_size - overall_len;
+        header_start[0] = extradata;
+        header_start[1] = header_start[0] + header_len[0];
+        header_start[2] = header_start[1] + header_len[1];
+    } else {
+        return -1;
     }
-    header_len[2] = extradata_size - overall_len;
-    header_start[0] = extradata;
-    header_start[1] = header_start[0] + header_len[0];
-    header_start[2] = header_start[1] + header_len[1];
-  } else {
-    return -1;
-  }
-  return 0;
+    return 0;
 }
 
 
@@ -303,6 +317,12 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       mk->cluster_maxsize = 10000000;
       break;
 
+    case SCT_THEORA:
+      tracktype = 1;
+      codec_id = "V_THEORA";
+      mk->cluster_maxsize = 5242880;
+      break;
+
     case SCT_MPEG2AUDIO:
       tracktype = 2;
       codec_id  = "A_MPEG/L2";
@@ -332,6 +352,11 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
     case SCT_VORBIS:
       tracktype = 2;
       codec_id = "A_VORBIS";
+      break;
+
+    case SCT_OPUS:
+      tracktype = 2;
+      codec_id = "A_OPUS";
       break;
 
     case SCT_DVBSUB:
@@ -374,6 +399,7 @@ disable:
     case SCT_MPEG2VIDEO:
     case SCT_MP4A:
     case SCT_AAC:
+    case SCT_OPUS:
       if(ssc->ssc_gh) {
         sbuf_t hdr;
         sbuf_init(&hdr);
@@ -392,29 +418,27 @@ disable:
       }
       break;
 
+    case SCT_THEORA:
     case SCT_VORBIS:
       if(ssc->ssc_gh) {
-	htsbuf_queue_t *cp;
-	uint8_t *header_start[3];
-	int header_len[3];
-	int j;
-	if(mk_split_vorbis_headers(pktbuf_ptr(ssc->ssc_gh),
-				   pktbuf_len(ssc->ssc_gh),
-				   header_start,
-				   header_len) < 0)
-	  break;
+        htsbuf_queue_t *cp;
+        uint8_t *header_start[3];
+        int header_len[3];
+        int j;
+        int first_header_size = ssc->ssc_type == SCT_VORBIS ? 30 : 42;
 
-	cp = htsbuf_queue_alloc(0);
-
-	ebml_append_xiph_size(cp, 2);
-
-	for (j = 0; j < 2; j++)
-	  ebml_append_xiph_size(cp, header_len[j]);
-
-	for (j = 0; j < 3; j++)
-	  htsbuf_append(cp, header_start[j], header_len[j]);
-
-	ebml_append_master(t, 0x63a2, cp);
+        if(mk_split_xiph_headers(pktbuf_ptr(ssc->ssc_gh), pktbuf_len(ssc->ssc_gh),
+                                 first_header_size, header_start, header_len)) {
+          tvherror(LS_MKV, "failed to split xiph headers");
+          break;
+        }
+        cp = htsbuf_queue_alloc(0);
+        ebml_append_xiph_size(cp, 2);
+        for (j = 0; j < 2; j++)
+          ebml_append_xiph_size(cp, header_len[j]);
+        for (j = 0; j < 3; j++)
+          htsbuf_append(cp, header_start[j], header_len[j]);
+        ebml_append_master(t, 0x63a2, cp);
       }
       break;
 
@@ -437,15 +461,16 @@ disable:
       ebml_append_uint(vi, 0xb0, ssc->ssc_width);
       ebml_append_uint(vi, 0xba, ssc->ssc_height);
 
-      if(mk->webm && ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
-	// DAR is not supported by webm
-	ebml_append_uint(vi, 0x54b2, 1);
-	ebml_append_uint(vi, 0x54b0, (ssc->ssc_height * ssc->ssc_aspect_num) / ssc->ssc_aspect_den);
-	ebml_append_uint(vi, 0x54ba, ssc->ssc_height);
-      } else if(ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
-	ebml_append_uint(vi, 0x54b2, 3); // Display width/height is in DAR
-	ebml_append_uint(vi, 0x54b0, ssc->ssc_aspect_num);
-	ebml_append_uint(vi, 0x54ba, ssc->ssc_aspect_den);
+      if (ssc->ssc_aspect_num && ssc->ssc_aspect_den) {
+        if (mk->webm) {
+          ebml_append_uint(vi, 0x54b0, (ssc->ssc_height * ssc->ssc_aspect_num) / ssc->ssc_aspect_den);
+          ebml_append_uint(vi, 0x54ba, ssc->ssc_height);
+          ebml_append_uint(vi, 0x54b2, 0); // DisplayUnit: pixels because DAR is not supported by webm
+        } else {
+          ebml_append_uint(vi, 0x54b0, ssc->ssc_aspect_num);
+          ebml_append_uint(vi, 0x54ba, ssc->ssc_aspect_den);
+          ebml_append_uint(vi, 0x54b2, 3); // DisplayUnit: DAR
+        }
       }
 
       ebml_append_master(t, 0xe0, vi);

@@ -48,7 +48,8 @@ gh_require_meta(int type)
          type == SCT_MPEG2VIDEO ||
          type == SCT_MP4A ||
          type == SCT_AAC ||
-         type == SCT_VORBIS;
+         type == SCT_VORBIS ||
+         type == SCT_THEORA;
 }
 
 /**
@@ -84,7 +85,7 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   if(ssc->ssc_frameduration == 0 && pkt->pkt_duration != 0)
     ssc->ssc_frameduration = pkt->pkt_duration;
 
-  if(SCT_ISAUDIO(ssc->ssc_type) && !ssc->ssc_channels && !ssc->ssc_sri) {
+  if(SCT_ISAUDIO(ssc->ssc_type) && !ssc->ssc_channels) {
     ssc->ssc_channels = pkt->a.pkt_channels;
     ssc->ssc_sri      = pkt->a.pkt_sri;
     ssc->ssc_ext_sri  = pkt->a.pkt_ext_sri;
@@ -140,9 +141,9 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
       return 0;
   }
 
-  if(is_audio && (ssc->ssc_sri == 0 || ssc->ssc_channels == 0))
+  if(is_audio && !ssc->ssc_channels)
     return 0;
-  
+
   if(ssc->ssc_gh == NULL && gh_require_meta(ssc->ssc_type))
     return 0;
 
@@ -287,7 +288,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
   switch(sm->sm_type) {
   case SMT_PACKET:
     pkt = sm->sm_data;
-    ssc = streaming_start_component_find_by_index(gh->gh_ss, 
+    ssc = streaming_start_component_find_by_index(gh->gh_ss,
 						  pkt->pkt_componentindex);
     if (ssc == NULL) {
       tvherror(LS_GLOBALHEADERS, "Unable to find component %d", pkt->pkt_componentindex);
@@ -313,10 +314,10 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
       break;
 
     // Send our modified start
-    sm = streaming_msg_create_data(SMT_START, 
+    sm = streaming_msg_create_data(SMT_START,
 				   streaming_start_copy(gh->gh_ss));
     streaming_target_deliver2(gh->gh_output, sm);
-   
+
     // Send all pending packets
     while((pkt = pktref_get_first(&gh->gh_holdq)) != NULL) {
       if (pkt->pkt_payload) {
@@ -371,7 +372,7 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     /* restart */
     gh_start(gh, sm);
     break;
-    
+
   case SMT_STOP:
     gh->gh_passthru = 0;
     gh_flush(gh);

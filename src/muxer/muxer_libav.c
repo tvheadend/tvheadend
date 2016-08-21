@@ -200,7 +200,9 @@ lav_muxer_support_stream(muxer_container_type_t mc,
   case MC_WEBM:
   case MC_AVWEBM:
     ret |= type == SCT_VP8;
+    ret |= type == SCT_VP9;
     ret |= type == SCT_VORBIS;
+    ret |= type == SCT_OPUS;
     break;
 
   case MC_MPEGTS:

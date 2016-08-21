@@ -48,11 +48,13 @@ OPTIONS=(
   "libtheora_static:yes"
   "libvorbis:yes"
   "libvorbis_static:yes"
-  "libfdkaac:yes"
+  "libfdkaac:no"
   "libfdkaac_static:yes"
-  "nvenc:auto"
-  "qsv:no"
-  "libmfx_static:yes"
+  "libopus:yes"
+  "libopus_static:yes"
+  "nvenc:no"
+  "vaapi:no"
+  "omx:no"
   "inotify:auto"
   "epoll:auto"
   "pcre:auto"
@@ -522,28 +524,19 @@ if enabled ffmpeg_static; then
     disable libfdkaac_static
   fi
 
-  # nvenc
-  if enabled_or_auto nvenc; then
-    if check_cc_header nvEncodeAPI; then
-      enable nvenc
-    elif enabled nvenc; then
-      die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
+  # libopus
+  if enabled libopus; then
+    if disabled libopus_static; then
+      check_pkg opus ">=1.1" || die "opus package not found"
     fi
+  else
+    disable libopus_static
   fi
 
-  # qsv
-  if enabled qsv; then
-    if disabled libmfx_static; then
-      check_pkg libmfx ">=1.16" || die "libmfx package not found"
-    else
-      check_bin autoreconf       || die "autoreconf not found"
-      check_bin libtool          || die "libtool not found"
-      check_bin libtoolize       || die "libtoolize not found"
-      check_cc_lib stdc++ stdcpp || die "libstdc++ not found"
-    fi
-    enable vaapi
-  else
-    disable libmfx_static
+  # nvenc
+  if enabled nvenc; then
+    check_cc_header nvEncodeAPI || \
+      die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
   fi
 
   # vaapi
@@ -552,6 +545,13 @@ if enabled ffmpeg_static; then
       die "vaapi (Video Acceleration (VA) API for Linux) not found"
     check_pkg libva-x11 ">=0.38.0" || die "libva-x11 not found"
     check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
+    enable hwaccels
+  fi
+
+  # omx
+  if enabled omx; then
+    check_cc_header OMX_Core || die "OpenMAX IL not found"
+    check_cc_header "/opt/vc/include/bcm_host.h" omx_rpi
   fi
 
 else
@@ -559,13 +559,13 @@ else
   if enabled_or_auto libav; then
     has_libav=true
 
-    check_pkg libavfilter   ">=6.31.100"  || has_libav=false
-    check_pkg libswresample ">=2.0.101"   || has_libav=false
+    check_pkg libavfilter   ">=6.47.100"  || has_libav=false
+    check_pkg libswresample ">=2.1.100"   || has_libav=false
     check_pkg libavresample ">=3.0.0"     || has_libav=false
-    check_pkg libswscale    ">=4.0.100"   || has_libav=false
-    check_pkg libavformat   ">=57.25.100" || has_libav=false
-    check_pkg libavcodec    ">=57.24.102" || has_libav=false
-    check_pkg libavutil     ">=55.17.103" || has_libav=false
+    check_pkg libswscale    ">=4.1.100"   || has_libav=false
+    check_pkg libavformat   ">=57.41.100" || has_libav=false
+    check_pkg libavcodec    ">=57.48.101" || has_libav=false
+    check_pkg libavutil     ">=55.28.100" || has_libav=false
 
     if $has_libav; then
       enable libav
