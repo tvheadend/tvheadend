@@ -815,15 +815,17 @@ service_find_instance
 
   /* Already running? */
   TAILQ_FOREACH(si, sil, si_link)
-    if(si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0) {
+    if (si->si_s->s_status == SERVICE_RUNNING && si->si_error == 0) {
       tvhtrace(LS_SERVICE, "return already running %p", si);
       return si;
     }
 
-  /* Forced */
-  TAILQ_FOREACH(si, sil, si_link)
-    if(si->si_weight < 0 && si->si_error == 0)
-      break;
+  /* Forced, handle priority settings */
+  si = NULL;
+  TAILQ_FOREACH(next, sil, si_link)
+    if (next->si_weight < 0 && next->si_error == 0)
+      if (si == NULL || next->si_prio > si->si_prio)
+        si = next;
 
   /* Idle */
   if (!si) {
