@@ -34,6 +34,11 @@ typedef struct {
 static int
 tvh_codec_profile_omx_open(tvh_codec_profile_omx_t *self, AVDictionary **opts)
 {
+    AV_DICT_SET_FLAGS_GLOBAL_HEADER(opts);
+    // bit_rate
+    if (self->bit_rate) {
+        AV_DICT_SET_BIT_RATE(opts, self->bit_rate);
+    }
     if (self->libname && strlen(self->libname)) {
         AV_DICT_SET(opts, "omx_libname", self->libname, 0);
     }
@@ -51,6 +56,16 @@ static const codec_profile_class_t codec_profile_omx_class = {
         .ic_class   = "codec_profile_omx",
         .ic_caption = N_("omx_h264"),
         .ic_properties = (const property_t[]){
+            {
+                .type     = PT_DBL,
+                .id       = "bit_rate",
+                .name     = N_("Bitrate (kb/s) (0=auto)"),
+                .desc     = N_("Constant bitrate (CBR) mode."),
+                .group    = 3,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(TVHCodecProfile, bit_rate),
+                .def.d    = 0,
+            },
             {
                 .type     = PT_STR,
                 .id       = "omx_libname",
