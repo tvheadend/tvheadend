@@ -183,6 +183,7 @@ ifeq (yes,$(CONFIG_LIBX264))
 
 EXTLIBS  += libx264
 ENCODERS += libx264
+FFMPEG_DIFFS += ffmpeg.libx264.diff
 
 endif
 
@@ -603,6 +604,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@mkdir -p $(EBUILDIR)
 	$(call DOWNLOAD,$(FFMPEG_URL),$(LIB_ROOT)/$(FFMPEG_TB),$(FFMPEG_SHA1))
 	$(call UNTAR,$(FFMPEG_TB),j)
+	$(call PATCH,$(FFMPEG),$(FFMPEG_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
