@@ -211,8 +211,8 @@ libav_set_loglevel(void)
 {
   int level = AV_LOG_VERBOSE;
 
-  if (tvhlog_options & TVHLOG_OPT_LIBAV)
-    level = AV_LOG_DEBUG;
+  //if (tvhlog_options & TVHLOG_OPT_LIBAV)
+  //  level = AV_LOG_DEBUG;
 
   av_log_set_level(level);
 }
