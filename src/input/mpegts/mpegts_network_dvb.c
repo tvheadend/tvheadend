@@ -539,6 +539,9 @@ dvb_network_find_mux
     /* Reject if not same symbol rate (some tolerance due to changes and diff in NIT) */
     if (dvb_network_check_symbol_rate(lm, dmc, deltar)) continue;
 
+    /* Reject if not same polarisation */
+    if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+
     /* DVB-S extra checks */
     if (!approx_match && (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S)) {
 
@@ -549,9 +552,6 @@ dvb_network_find_mux
 
       /* Same FEC */
       if (lm->lm_tuning.u.dmc_fe_qpsk.fec_inner != dmc->u.dmc_fe_qpsk.fec_inner) continue;
-
-      /* Same polarisation */
-      if (lm->lm_tuning.u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
 
       /* Same orbital position */
       if (dvb_network_check_orbital_pos(lm->lm_tuning.u.dmc_fe_qpsk.orbital_pos,
