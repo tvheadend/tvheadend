@@ -490,6 +490,7 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
   int got_frame, got_packet_ptr;
   AVFrame *frame = av_frame_alloc();
   char layout_buf[100];
+  uint8_t *d;
 
   ictx = as->aud_ictx;
   octx = as->aud_octx;
@@ -501,11 +502,18 @@ transcoder_stream_audio(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
 
   if (!avcodec_is_open(ictx)) {
     if (icodec->id == AV_CODEC_ID_AAC || icodec->id == AV_CODEC_ID_VORBIS) {
-      if (ts->ts_input_gh) {
+      d = pktbuf_ptr(pkt->pkt_payload);
+      if (icodec->id == AV_CODEC_ID_AAC && d && pktbuf_len(pkt->pkt_payload) > 2 &&
+          d[0] == 0xff && (d[1] & 0xf0) == 0xf0) {
+        /* DTS packets have all info */
+      } else if (ts->ts_input_gh) {
         ictx->extradata_size = pktbuf_len(ts->ts_input_gh);
         ictx->extradata = av_malloc(ictx->extradata_size);
         memcpy(ictx->extradata,
                pktbuf_ptr(ts->ts_input_gh), pktbuf_len(ts->ts_input_gh));
+        tvhtrace(LS_TRANSCODE, "%04X: copy meta data for %s (len %zd)",
+                 shortid(t), icodec->id == AV_CODEC_ID_AAC ? "AAC" : "VORBIS",
+                 pktbuf_len(ts->ts_input_gh));
       } else {
         tvherror(LS_TRANSCODE, "%04X: missing meta data for %s",
                  shortid(t), icodec->id == AV_CODEC_ID_AAC ? "AAC" : "VORBIS");
@@ -1190,8 +1198,8 @@ transcoder_stream_video(transcoder_t *t, transcoder_stream_t *ts, th_pkt_t *pkt)
         ictx->extradata = av_malloc(ictx->extradata_size);
         memcpy(ictx->extradata,
                pktbuf_ptr(ts->ts_input_gh), pktbuf_len(ts->ts_input_gh));
-      } else {
-        tvherror(LS_TRANSCODE, "%04X: missing meta data for H264", shortid(t));
+        tvhtrace(LS_TRANSCODE, "%04X: copy meta data for H264 (len %zd)",
+                 shortid(t), pktbuf_len(ts->ts_input_gh));
       }
     }
 
