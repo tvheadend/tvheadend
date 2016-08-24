@@ -357,6 +357,19 @@ _exit:
   }
 }
 
+static htsmsg_t *
+timeshift_input_info(void *opaque, htsmsg_t *list)
+{
+  htsmsg_add_str(list, NULL, "wtimeshift input");
+  return list;
+}
+
+static streaming_ops_t timeshift_input_ops = {
+  .st_cb   = timeshift_input,
+  .st_info = timeshift_input_info
+};
+
+
 /**
  *
  */
@@ -442,7 +455,7 @@ streaming_target_t *timeshift_create
 
   /* Initialise input */
   streaming_queue_init(&ts->wr_queue, 0, 0);
-  streaming_target_init(&ts->input, timeshift_input, ts, 0);
+  streaming_target_init(&ts->input, &timeshift_input_ops, ts, 0);
   tvhthread_create(&ts->wr_thread, NULL, timeshift_writer, ts, "tshift-wr");
   tvhthread_create(&ts->rd_thread, NULL, timeshift_reader, ts, "tshift-rd");
 

@@ -38,10 +38,10 @@ streaming_pad_init(streaming_pad_t *sp)
  *
  */
 void
-streaming_target_init(streaming_target_t *st, st_callback_t *cb, void *opaque,
-		      int reject_filter)
+streaming_target_init(streaming_target_t *st, streaming_ops_t *ops,
+                      void *opaque, int reject_filter)
 {
-  st->st_cb = cb;
+  st->st_ops = *ops;
   st->st_opaque = opaque;
   st->st_reject_filter = reject_filter;
 }
@@ -89,6 +89,19 @@ streaming_queue_deliver(void *opauqe, streaming_message_t *sm)
 /**
  *
  */
+static htsmsg_t *
+streaming_queue_info(void *opaque, htsmsg_t *list)
+{
+  streaming_queue_t *sq = opaque;
+  char buf[256];
+  snprintf(buf, sizeof(buf), "streaming queue %p size %zd", sq, sq->sq_size);
+  htsmsg_add_str(list, NULL, buf);
+  return list;
+}
+
+/**
+ *
+ */
 void
 streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
 {
@@ -102,7 +115,12 @@ streaming_queue_remove(streaming_queue_t *sq, streaming_message_t *sm)
 void
 streaming_queue_init(streaming_queue_t *sq, int reject_filter, size_t maxsize)
 {
-  streaming_target_init(&sq->sq_st, streaming_queue_deliver, sq, reject_filter);
+  static streaming_ops_t ops = {
+    .st_cb   = streaming_queue_deliver,
+    .st_info = streaming_queue_info
+  };
+
+  streaming_target_init(&sq->sq_st, &ops, sq, reject_filter);
 
   pthread_mutex_init(&sq->sq_mutex, NULL);
   tvh_cond_init(&sq->sq_cond);

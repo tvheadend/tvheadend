@@ -196,7 +196,7 @@ subscription_create_from_mux(struct profile_chain *prch,
 
 th_subscription_t *subscription_create(struct profile_chain *prch,
                                        int weight, const char *name,
-				       int flags, st_callback_t *cb,
+				       int flags, streaming_ops_t *ops,
 				       const char *hostname,
 				       const char *username,
 				       const char *client);

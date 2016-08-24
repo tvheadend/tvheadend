@@ -94,8 +94,14 @@ static struct htsp_connection_list htsp_async_connections;
 static struct htsp_connection_list htsp_connections;
 
 static void htsp_streaming_input(void *opaque, streaming_message_t *sm);
+static htsmsg_t *htsp_streaming_input_info(void *opaque, htsmsg_t *list);
 const char * _htsp_get_subscription_status(int smcode);
 static void htsp_epg_send_waiting(struct htsp_connection *, int64_t mintime);
+
+static streaming_ops_t htsp_streaming_input_ops = {
+  .st_cb   = htsp_streaming_input,
+  .st_info = htsp_streaming_input_info
+};
 
 /**
  *
@@ -2378,7 +2384,7 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   htsp_init_queue(&hs->hs_q, 0);
 
   hs->hs_sid = sid;
-  streaming_target_init(&hs->hs_input, htsp_streaming_input, hs, 0);
+  streaming_target_init(&hs->hs_input, &htsp_streaming_input_ops, hs, 0);
 
 #if ENABLE_TIMESHIFT
   if (timeshiftPeriod != 0) {
@@ -4277,4 +4283,14 @@ htsp_streaming_input(void *opaque, streaming_message_t *sm)
     break;
   }
   streaming_msg_free(sm);
+}
+
+static htsmsg_t *
+htsp_streaming_input_info(void *opaque, htsmsg_t *list)
+{
+  char buf[512];
+  htsp_subscription_t *hs = opaque;
+  snprintf(buf, sizeof(buf), "htsp input: %s", hs->hs_htsp->htsp_logname);
+  htsmsg_add_str(list, NULL, buf);
+  return list;
 }

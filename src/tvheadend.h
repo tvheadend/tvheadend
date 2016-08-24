@@ -580,13 +580,18 @@ typedef struct streaming_message {
  * A streaming target receives data.
  */
 
-typedef void (st_callback_t)(void *opauqe, streaming_message_t *sm);
+typedef void (st_callback_t)(void *opaque, streaming_message_t *sm);
+
+typedef struct {
+  st_callback_t *st_cb;
+  htsmsg_t *(*st_info)(void *opaque, htsmsg_t *list);
+} streaming_ops_t;
 
 typedef struct streaming_target {
   LIST_ENTRY(streaming_target) st_link;
   streaming_pad_t *st_pad;               /* Source we are linked to */
 
-  st_callback_t *st_cb;
+ streaming_ops_t st_ops;
   void *st_opaque;
   int st_reject_filter;
 } streaming_target_t;

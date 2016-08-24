@@ -25,7 +25,6 @@
 #include "profile.h"
 
 static void mpegts_mux_sched_timer ( void *p );
-static void mpegts_mux_sched_input ( void *p, streaming_message_t *sm );
 
 mpegts_mux_sched_list_t mpegts_mux_sched_all;
 
@@ -190,6 +189,18 @@ mpegts_mux_sched_input ( void *p, streaming_message_t *sm )
   streaming_msg_free(sm);
 }
 
+static htsmsg_t *
+mpegts_mux_sched_input_info ( void *p, htsmsg_t *list )
+{
+  htsmsg_add_str(list, NULL, "mux sched input");
+  return list;
+}
+
+static streaming_ops_t mpegts_mux_sched_input_ops = {
+  .st_cb   = mpegts_mux_sched_input,
+  .st_info = mpegts_mux_sched_input_info
+};
+
 /******************************************************************************
  * Timer
  *****************************************************************************/
@@ -293,7 +304,7 @@ mpegts_mux_sched_create ( const char *uuid, htsmsg_t *conf )
   LIST_INSERT_HEAD(&mpegts_mux_sched_all, mms, mms_link);
 
   /* Initialise */
-  streaming_target_init(&mms->mms_input, mpegts_mux_sched_input, mms, 0);
+  streaming_target_init(&mms->mms_input, &mpegts_mux_sched_input_ops, mms, 0);
 
   /* Load conf */
   if (conf)

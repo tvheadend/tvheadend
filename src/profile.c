@@ -658,6 +658,22 @@ direct:
   profile_deliver(prch, sm);
 }
 
+static htsmsg_t *
+profile_input_info(void *opaque, htsmsg_t *list)
+{
+  profile_chain_t *prch = opaque;
+  streaming_target_t *st = prch->prch_share;
+  htsmsg_add_str(list, NULL, "profile input");
+  st->st_ops.st_info(st->st_opaque, list);
+  st = prch->prch_post_share;
+  return st->st_ops.st_info(st->st_opaque, list);
+}
+
+static streaming_ops_t profile_input_ops = {
+  .st_cb   = profile_input,
+  .st_info = profile_input_info
+};
+
 /*
  *
  */
@@ -734,6 +750,18 @@ profile_sharer_input(void *opaque, streaming_message_t *sm)
     streaming_msg_free(sm);
 }
 
+static htsmsg_t *
+profile_sharer_input_info(void *opaque, htsmsg_t *list)
+{
+  htsmsg_add_str(list, NULL, "profile sharer input");
+  return list;
+}
+
+static streaming_ops_t profile_sharer_input_ops = {
+  .st_cb   = profile_sharer_input,
+  .st_info = profile_sharer_input_info
+};
+
 /*
  *
  */
@@ -755,7 +783,7 @@ profile_sharer_find(profile_chain_t *prch)
   }
   if (!prsh) {
     prsh = calloc(1, sizeof(*prsh));
-    streaming_target_init(&prsh->prsh_input, profile_sharer_input, prsh, 0);
+    streaming_target_init(&prsh->prsh_input, &profile_sharer_input_ops, prsh, 0);
     LIST_INIT(&prsh->prsh_chains);
   }
   return prsh;
@@ -1008,7 +1036,7 @@ profile_htsp_work(profile_chain_t *prch,
 
   prch->prch_share = prsh->prsh_tsfix;
   prch->prch_flags = SUBSCRIPTION_PACKET;
-  streaming_target_init(&prch->prch_input, profile_input, prch, 0);
+  streaming_target_init(&prch->prch_input, &profile_input_ops, prch, 0);
   prch->prch_st = &prch->prch_input;
   return 0;
 
@@ -1923,7 +1951,7 @@ profile_transcode_work(profile_chain_t *prch,
     prsh->prsh_tsfix = tsfix_create(dst);
   }
   prch->prch_share = prsh->prsh_tsfix;
-  streaming_target_init(&prch->prch_input, profile_input, prch, 0);
+  streaming_target_init(&prch->prch_input, &profile_input_ops, prch, 0);
   prch->prch_st = &prch->prch_input;
   return 0;
 fail:
