@@ -24,6 +24,7 @@
 #include "muxer.h"
 #include "muxer/muxer_mkv.h"
 #include "muxer/muxer_pass.h"
+#include "muxer/muxer_audioes.h"
 #if CONFIG_LIBAV
 #include "muxer/muxer_libav.h"
 #endif
@@ -48,6 +49,7 @@ static struct strtab container_audio_mime[] = {
   { "audio/mp4",                MC_AVMP4 },
   { "application/octet-stream", MC_PASS },
   { "application/octet-stream", MC_RAW },
+  { "audio/mpeg",               MC_AUDIOES },
 };
 
 
@@ -82,6 +84,7 @@ static struct strtab container_name[] = {
   { "avmatroska", MC_AVMATROSKA },
   { "avwebm",     MC_AVWEBM },
   { "avmp4",      MC_AVMP4 },
+  { "audioes",  MC_AUDIOES },
 };
 
 
@@ -99,6 +102,7 @@ static struct strtab container_audio_file_suffix[] = {
   { "mka",  MC_AVMATROSKA },
   { "webm", MC_AVWEBM },
   { "mp4",  MC_AVMP4 },
+  { "mp2",  MC_AUDIOES }, /* Or maybe ac3 or adts */
 };
 
 
@@ -116,6 +120,7 @@ static struct strtab container_video_file_suffix[] = {
   { "mkv",  MC_AVMATROSKA },
   { "webm", MC_AVWEBM },
   { "mp4",  MC_AVMP4 },
+  { NULL,   MC_AUDIOES },
 };
 
 
@@ -254,6 +259,9 @@ muxer_create(const muxer_config_t *m_cfg)
 
   if(!m)
     m = mkv_muxer_create(m_cfg);
+
+  if(!m)
+	m = audioes_muxer_create(m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)

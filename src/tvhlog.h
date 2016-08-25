@@ -148,6 +148,7 @@ enum {
   LS_HEVC,
   LS_MUXER,
   LS_PASS,
+  LS_AUDIOES,
   LS_MKV,
   LS_SERVICE,
   LS_CHANNEL,
