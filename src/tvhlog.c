@@ -122,6 +122,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_HEVC]          = { "hevc",          N_("HEVC - H.265") },
   [LS_MUXER]         = { "muxer",         N_("Muxer") },
   [LS_PASS]          = { "pass",          N_("Pass-thru muxer") },
+  [LS_AUDIOES]       = { "audioes",       N_("Audioes muxer") },
   [LS_MKV]           = { "mkv",           N_("Matroska muxer") },
   [LS_SERVICE]       = { "service",       N_("Service") },
   [LS_CHANNEL]       = { "channel",       N_("Channel") },
