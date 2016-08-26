@@ -17,3 +17,5 @@ like to help translate Tvheadend see
 * Not selecting the correct EPG 
 language can result in garbled EPG text; if this happens, don't panic, 
 as you can easily change it later.
+
+**The interface will reload using your preferred language.**
