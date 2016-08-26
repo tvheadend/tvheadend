@@ -700,12 +700,17 @@ channel_get_number ( channel_t *ch )
   if (ch->ch_number) {
     n = ch->ch_number;
   } else {
-    LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
-      if (ch->ch_bouquet &&
-          (n = bouquet_get_channel_number(ch->ch_bouquet, (service_t *)ilm->ilm_in1)))
-        break;
-      if ((n = service_get_channel_number((service_t *)ilm->ilm_in1)))
-        break;
+    if (ch->ch_bouquet) {
+      LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+        if ((n = bouquet_get_channel_number(ch->ch_bouquet, (service_t *)ilm->ilm_in1)))
+          break;
+      }
+    }
+    if (n == 0) {
+      LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+        if ((n = service_get_channel_number((service_t *)ilm->ilm_in1)))
+          break;
+      }
     }
   }
   if (n) {
