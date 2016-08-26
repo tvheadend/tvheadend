@@ -34,7 +34,6 @@ typedef struct bouquet_download {
 bouquet_tree_t bouquets;
 
 static void bouquet_remove_service(bouquet_t *bq, service_t *s, int delconf);
-static uint64_t bouquet_get_channel_number0(bouquet_t *bq, service_t *t);
 static void bouquet_download_trigger(bouquet_t *bq);
 static void bouquet_download_stop(void *aux);
 static int bouquet_download_process(void *aux, const char *last_url, const char *host_url, char *data, size_t len);
@@ -298,8 +297,8 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   if (!bq->bq_mapradio && service_is_radio(t))
     return;
   if (!bq->bq_mapnolcn &&
-      (bq->bq_only_bq_lcn || service_get_channel_number(t) <= 0) &&
-      bouquet_get_channel_number0(bq, t) <= 0)
+      service_get_channel_number(t) <= 0 &&
+      bouquet_get_channel_number(bq, t) <= 0)
     return;
   if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
     return;
@@ -361,12 +360,6 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
       idnode_notify_changed(ilm->ilm_in2);
   }
   tl->sl_seen = 1;
-
-  if (lcn) {
-    bq->bq_only_bq_lcn = 1;
-    if (bq->bq_last_lcn < lcn)
-      bq->bq_last_lcn = lcn;
-  }
 
   if (bq->bq_enabled && bq->bq_maptoch)
     bouquet_map_channel(bq, s);
@@ -542,28 +535,14 @@ bouquet_notify_channels(bouquet_t *bq)
 /*
  *
  */
-static uint64_t
-bouquet_get_channel_number0(bouquet_t *bq, service_t *t)
+uint64_t
+bouquet_get_channel_number(bouquet_t *bq, service_t *t)
 {
   service_lcn_t *tl;
 
   LIST_FOREACH(tl, &t->s_lcns, sl_link)
     if (tl->sl_bouquet == bq)
       return (int64_t)tl->sl_lcn;
-  return 0;
-}
-
-/*
- *
- */
-uint64_t
-bouquet_get_channel_number(bouquet_t *bq, service_t *t)
-{
-  int64_t r = bouquet_get_channel_number0(bq, t);
-  if (r)
-    return r;
-  if (bq->bq_only_bq_lcn)
-    return bq->bq_last_lcn + 10 * CHANNEL_SPLIT;
   return 0;
 }
 
@@ -899,7 +878,7 @@ bouquet_class_services_get ( void *obj )
   for (z = 0; z < bq->bq_services->is_count; z++) {
     t = (service_t *)bq->bq_services->is_array[z];
     e = htsmsg_create_map();
-    if ((lcn = bouquet_get_channel_number0(bq, t)) != 0)
+    if ((lcn = bouquet_get_channel_number(bq, t)) != 0)
       htsmsg_add_s64(e, "lcn", lcn);
     if ((tag = bouquet_get_tag_name(bq, t)) != NULL)
       htsmsg_add_str(e, "tag", tag);

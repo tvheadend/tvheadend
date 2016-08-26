@@ -30,7 +30,6 @@ typedef struct bouquet {
 
   int           bq_saveflag;
   int           bq_in_load;
-  int           bq_only_bq_lcn;
 
   int           bq_shield;
   int           bq_enabled;
@@ -58,7 +57,6 @@ typedef struct bouquet {
   htsmsg_t     *bq_services_waiting;
   uint32_t      bq_services_seen;
   uint32_t      bq_lcn_offset;
-  uint64_t      bq_last_lcn;
 
   /* fastscan bouquet helpers */
   int           bq_fastscan_nit;
