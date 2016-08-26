@@ -343,11 +343,18 @@ tsfix_backlog_diff(tsfix_t *tf)
 /**
  *
  */
+#if 1
 static void
 recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
-  th_pktref_t *srch;
-  int total;
+  normalize_ts(tf, tfs, pkt, 1);
+}
+#else
+static void
+recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
+{
+  //th_pktref_t *srch;
+  //int total;
 
   pktref_enqueue(&tf->tf_ptsq, pkt);
 
@@ -407,6 +414,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
     normalize_ts(tf, tfs, pkt, 1);
   }
 }
+#endif
 
 
 /**
