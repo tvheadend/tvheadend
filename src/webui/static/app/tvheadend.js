@@ -307,6 +307,19 @@ tvheadend.AjaxConfirm = function(conf) {
     );
 };
 
+tvheadend.AjaxUUID = function(sel, conf)
+{
+    if (sel && sel.length > 0) {
+        var uuids = [];
+        for (var i = 0; i < sel.length; i++)
+            uuids.push(sel[i].id);
+        if (!conf.params)
+            conf.params = {};
+        conf.params.uuid = uuids;
+        tvheadend.Ajax(conf);
+    }    
+}
+
 tvheadend.loading = function(on) {
     if (on)
       Ext.getBody().mask(_('Loading, please wait...'), 'loading');

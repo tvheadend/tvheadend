@@ -118,7 +118,14 @@ tvheadend.channel_tab = function(panel, index)
 
     function reset_icons(ctx, e, store, sm) {
         Ext.each(sm.getSelections(), function(channel) {
-           channel.set('icon', '');
+            channel.set('icon', '');
+        });
+    }
+
+    function bouquet_detach(ctx, e, store, sm) {
+        tvheadend.AjaxUUID(sm.getSelections(), {
+            url: 'api/bouquet/detach',
+            success: function(d) { store.reload(); }
         });
     }
 
@@ -138,6 +145,12 @@ tvheadend.channel_tab = function(panel, index)
                 iconCls: 'clone',
                 text: _('Map all services'),
             });
+            m.add({
+                name: 'bqdetach',
+                tooltip: _('Detach from bouquet'),
+                iconCls: 'bouquets',
+                text: _('Detach selected channels from bouquet'),
+            });
             return new Ext.Toolbar.Button({
                 tooltip: _('Map services to channels'),
                 iconCls: 'clone',
@@ -149,6 +162,7 @@ tvheadend.channel_tab = function(panel, index)
         callback: {
             mapall: tvheadend.service_mapper_all,
             mapsel: tvheadend.service_mapper_none,
+            bqdetach: bouquet_detach
         }
     };
 

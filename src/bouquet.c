@@ -606,6 +606,37 @@ bouquet_scan ( bouquet_t *bq )
   bq->bq_rescan = 0;
 }
 
+/*
+ *
+ */
+void
+bouquet_detach ( channel_t *ch )
+{
+  bouquet_t *bq = ch->ch_bouquet;
+  idnode_list_mapping_t *ilm;
+  service_lcn_t *tl;
+  service_t *t;
+  int64_t n = 0;
+
+  if (!bq)
+    return;
+  LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link) {
+    t = (service_t *)ilm->ilm_in1;
+    LIST_FOREACH(tl, &t->s_lcns, sl_link)
+      if (tl->sl_bouquet == bq) {
+        n = (int64_t)tl->sl_lcn;
+        goto found;
+      }
+  }
+found:
+  if (n) {
+    n += (int64_t)ch->ch_bouquet->bq_lcn_offset * CHANNEL_SPLIT;
+    ch->ch_number = n;
+  }
+  ch->ch_bouquet = NULL;
+  idnode_changed(&ch->ch_id);
+}
+
 /* **************************************************************************
  * Class definition
  * **************************************************************************/

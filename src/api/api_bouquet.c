@@ -82,13 +82,14 @@ api_bouquet_create
 }
 
 static int
-api_bouquet_scan
-  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+bouquet_cb
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp,
+    int (*cb)(const char *uuid) )
 {
   htsmsg_field_t *f;
   htsmsg_t *uuids;
-  bouquet_t *bq;
   const char *uuid;
+  int r = 0;
 
   if (!(f = htsmsg_field_find(args, "uuid")))
     return -EINVAL;
@@ -96,24 +97,52 @@ api_bouquet_scan
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
       pthread_mutex_lock(&global_lock);
-      bq = bouquet_find_by_uuid(uuid);
-      if (bq)
-        bouquet_scan(bq);
+      cb(uuid);
       pthread_mutex_unlock(&global_lock);
     }
   } else if ((uuid = htsmsg_field_get_str(f))) {
     pthread_mutex_lock(&global_lock);
-    bq = bouquet_find_by_uuid(uuid);
-    if (bq)
-      bouquet_scan(bq);
+    r = cb(uuid);
     pthread_mutex_unlock(&global_lock);
-    if (!bq)
-      return -ENOENT;
   } else {
     return -EINVAL;
   }
 
-  return 0;
+  return r;
+}
+
+static int bouquet_cb_scan(const char *uuid)
+{
+  bouquet_t *bq = bouquet_find_by_uuid(uuid);
+  if (bq) {
+    bouquet_scan(bq);
+    return 0;
+  }
+  return -ENOENT;
+}
+
+static int
+api_bouquet_scan
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return bouquet_cb(perm, opaque, op, args, resp, bouquet_cb_scan);
+}
+
+static int bouquet_cb_detach(const char *uuid)
+{
+  channel_t *ch = channel_find_by_uuid(uuid);
+  if (ch) {
+    bouquet_detach(ch);
+    return 0;
+  }
+  return -ENOENT;
+}
+
+static int
+api_bouquet_detach
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return bouquet_cb(perm, opaque, op, args, resp, bouquet_cb_detach);
 }
 
 void api_bouquet_init ( void )
@@ -124,6 +153,7 @@ void api_bouquet_init ( void )
     { "bouquet/grid",    ACCESS_ADMIN, api_idnode_grid,  api_bouquet_grid },
     { "bouquet/create",  ACCESS_ADMIN, api_bouquet_create, NULL },
     { "bouquet/scan",    ACCESS_ADMIN, api_bouquet_scan, NULL },
+    { "bouquet/detach",  ACCESS_ADMIN, api_bouquet_detach, NULL },
 
     { NULL },
   };
