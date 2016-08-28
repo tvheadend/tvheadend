@@ -336,7 +336,7 @@ bouquet_add_service(bouquet_t *bq, service_t *s, uint64_t lcn, const char *tag)
     return;
 
   if (!idnode_set_exists(bq->bq_services, &s->s_id)) {
-    tvhtrace(LS_BOUQUET, "add service %s to %s lcn %ld(.%ld)",
+    tvhtrace(LS_BOUQUET, "add service %s to %s lcn %"PRIu64"(.%"PRIu64")",
              s->s_nicename, bq->bq_name ?: "<unknown>",
              lcn / CHANNEL_SPLIT, lcn % CHANNEL_SPLIT);
     idnode_set_add(bq->bq_services, &s->s_id, NULL, NULL);
