@@ -315,7 +315,7 @@ tvheadend.AjaxUUID = function(sel, conf)
             uuids.push(sel[i].id);
         if (!conf.params)
             conf.params = {};
-        conf.params.uuid = uuids;
+        conf.params.uuid = Ext.encode(uuids);
         tvheadend.Ajax(conf);
     }    
 }
