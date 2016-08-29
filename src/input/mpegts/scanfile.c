@@ -21,6 +21,7 @@
 #include "filebundle.h"
 #include "config.h"
 #include "scanfile.h"
+#include "memoryinfo.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -50,6 +51,7 @@ static const char *scanfile_region_types[][2] = {
 static scanfile_region_list_t *scanfile_regions;
 static scanfile_region_list_t *scanfile_regions_load;
 static int64_t scanfile_total_load;
+static memoryinfo_t scanfile_memoryinfo = { .my_name = "Scan files" };
 
 
 /* **************************************************************************
@@ -307,6 +309,7 @@ scanfile_region_create
   if (!reg) {
     tvhtrace(LS_SCANFILE, "%s region %s created", type, id);
     reg = calloc(1, sizeof(scanfile_region_t));
+    memoryinfo_alloc(&scanfile_memoryinfo, sizeof(*reg) + strlen(id) + 1 + strlen(desc) + 1);
     reg->sfr_id   = strdup(id);
     reg->sfr_name = strdup(desc);
     LIST_INSERT_SORTED(&list->srl_regions, reg, sfr_link, scanfile_region_cmp);
@@ -366,6 +369,7 @@ scanfile_create_network
   }
   snprintf(buf2, sizeof(buf2), "%s_%s", type, buf);
   net = calloc(1, sizeof(scanfile_network_t));
+  memoryinfo_alloc(&scanfile_memoryinfo, sizeof(*net) + strlen(buf2) + 1 + strlen(buf) + 1);
   net->sfn_id   = strdup(buf2);
   net->sfn_name = strdup(buf);
   net->sfn_satpos = opos;
@@ -408,6 +412,7 @@ scanfile_load_one
       free(mux);
       return -1;
     }
+    memoryinfo_alloc(&scanfile_memoryinfo, sizeof(*mux));
     LIST_INSERT_HEAD(&(*net)->sfn_muxes, mux, dmc_link);
   }
   return 1;
@@ -691,6 +696,7 @@ scanfile_load_dvbv5
     if (*net == NULL)
       if (scanfile_create_network(net, type, name, mux->dmc_fe_delsys))
         return -1;
+    memoryinfo_alloc(&scanfile_memoryinfo, sizeof(*mux));
     LIST_INSERT_HEAD(&(*net)->sfn_muxes, mux, dmc_link);
   }
 
@@ -821,13 +827,20 @@ scanfile_done_region( scanfile_region_list_t *list )
     while ((net = LIST_FIRST(&reg->sfr_networks)) != NULL) {
       LIST_REMOVE(net, sfn_link);
       while ((mux = LIST_FIRST(&net->sfn_muxes)) != NULL) {
+        memoryinfo_free(&scanfile_memoryinfo, sizeof(*mux));
         LIST_REMOVE(mux, dmc_link);
         free(mux);
       }
+      memoryinfo_free(&scanfile_memoryinfo, sizeof(*net) +
+                      (net->sfn_id ? strlen(net->sfn_id) + 1 : 0) +
+                      (net->sfn_name ? strlen(net->sfn_name) + 1 : 0));
       free((void *)net->sfn_id);
       free((void *)net->sfn_name);
       free(net);
     }
+    memoryinfo_free(&scanfile_memoryinfo, sizeof(*reg) +
+                    (reg->sfr_id ? strlen(reg->sfr_id) + 1 : 0) +
+                    (reg->sfr_name ? strlen(reg->sfr_name) + 1 : 0));
     free((void *)reg->sfr_id);
     free((void *)reg->sfr_name);
     free(reg);
@@ -840,6 +853,7 @@ scanfile_done_region( scanfile_region_list_t *list )
 void
 scanfile_init ( const char *muxconf_path, int lock )
 {
+  static int initialized = 0;
   const char *path = muxconf_path;
   char buf[32], *p;
   int r = 0, i;
@@ -852,8 +866,14 @@ scanfile_init ( const char *muxconf_path, int lock )
     path = "/usr/share/dvb";
 #endif
 
+  if (!initialized) {
+    memoryinfo_register(&scanfile_memoryinfo);
+    initialized = 1;
+  }
+
   scanfile_total_load = 0;
   scanfile_regions_load = calloc(REGIONS, sizeof(scanfile_region_list_t));
+  memoryinfo_alloc(&scanfile_memoryinfo, REGIONS * sizeof(scanfile_region_list_t));
   for (i = 0; i < REGIONS; i++) {
     scanfile_regions_load[i].srl_type = scanfile_region_types[i][0];
     scanfile_regions_load[i].srl_alt_type = scanfile_region_types[i][1];
@@ -874,6 +894,7 @@ scanfile_init ( const char *muxconf_path, int lock )
     tvhwarn(LS_SCANFILE, "expected tree structure - http://git.linuxtv.org/cgit.cgi/dtv-scan-tables.git/tree/");
     for (i = 0; i < REGIONS; i++)
       scanfile_done_region(&scanfile_regions_load[i]);
+    memoryinfo_free(&scanfile_memoryinfo, REGIONS * sizeof(scanfile_region_list_t));
     free(scanfile_regions_load);
     scanfile_regions_load = NULL;
   } else {
@@ -901,6 +922,7 @@ scanfile_done ( void )
   if (l) {
     for (i = 0; i < REGIONS; i++)
       scanfile_done_region(&l[i]);
+    memoryinfo_free(&scanfile_memoryinfo, REGIONS * sizeof(scanfile_region_list_t));
     free(l);
   }
 }
