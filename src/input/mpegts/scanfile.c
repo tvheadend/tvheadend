@@ -34,7 +34,7 @@
 #include <strings.h>
 #include <ctype.h>
 
-#define SCANFILE_LIMIT (4*1024*1024)
+#define SCANFILE_LIMIT (64*1024*1024)
 
 static const char *scanfile_region_types[][2] = {
   { "dvb-s", "dvbs" },
