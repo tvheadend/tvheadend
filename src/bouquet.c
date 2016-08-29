@@ -297,7 +297,6 @@ bouquet_map_channel(bouquet_t *bq, service_t *t)
   if (!bq->bq_mapradio && service_is_radio(t))
     return;
   if (!bq->bq_mapnolcn &&
-      service_get_channel_number(t) <= 0 &&
       bouquet_get_channel_number(bq, t) <= 0)
     return;
   if (!bq->bq_mapnoname && noname(service_get_channel_name(t)))
