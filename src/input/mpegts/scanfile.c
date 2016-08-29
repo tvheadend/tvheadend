@@ -709,7 +709,8 @@ scanfile_load_file
   char *str, buf[256];
   int load = 0;
 
-  tvhtrace(LS_SCANFILE, "load file %s", name);
+  tvhtrace(LS_SCANFILE, "load file %s (processed bytes %"PRId64")",
+           name, scanfile_total_load);
 
   if (scanfile_total_load > SCANFILE_LIMIT) return;
   fp = fb_open2(dir, name, 1, 0);
