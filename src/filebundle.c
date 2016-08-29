@@ -328,12 +328,15 @@ fb_file *fb_open2
     FILE *fp = tvh_fopen(path, "rb");
     if (fp) {
       struct stat st;
-      stat(path, &st);
-      ret         = calloc(1, sizeof(fb_file));
-      ret->type   = FB_DIRECT;
-      ret->size   = st.st_size;
-      ret->gzip   = 0;
-      ret->d.cur  = fp;
+      if (!stat(path, &st)) {
+        ret         = calloc(1, sizeof(fb_file));
+        ret->type   = FB_DIRECT;
+        ret->size   = st.st_size;
+        ret->gzip   = 0;
+        ret->d.cur  = fp;
+      } else {
+        fclose(fp);
+      }
     }
   }
 
