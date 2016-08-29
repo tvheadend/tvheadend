@@ -1067,8 +1067,8 @@ dvb_mux_conf_str_isdb_t ( dvb_mux_conf_t *dmc, char *buf, size_t bufsize )
            dmc->u.dmc_fe_isdbt.layers[1].time_interleaving,
            dvb_fec2str(dmc->u.dmc_fe_isdbt.layers[2].fec),
            dvb_qam2str(dmc->u.dmc_fe_isdbt.layers[2].modulation),
-           dmc->u.dmc_fe_isdbt.layers[3].segment_count,
-           dmc->u.dmc_fe_isdbt.layers[3].time_interleaving);
+           dmc->u.dmc_fe_isdbt.layers[2].segment_count,
+           dmc->u.dmc_fe_isdbt.layers[2].time_interleaving);
 }
 
 int
