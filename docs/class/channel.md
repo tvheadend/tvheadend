@@ -36,11 +36,22 @@ Numbering Button            | Function
 
 !['Add Channel Dialog'](static/img/doc/addchanneldialog.png)
 
+In the above example image, we're creating a channel called Channel 4 
+and mapping it to the service of the same name. You can name a channel 
+whatever you like, it doesn't have to match the service it's linking 
+to. 
+
+If you have a lot of services you may want to use the [Map services](class/mpegts_service) 
+functions or a [Bouquet](class/bouquet).
+
 ---
 
 <tvh_include>inc/edit_grid_entries</tvh_include>
 
 !['Edit Channel Dialog'](static/img/doc/channeleditsingle.png)
+
+Note that editing a channel created by a bouquet can have unexpected 
+results, please see *Detaching Channels* on the [Bouquet](class/bouquet) page for info.
 
 ---
 
