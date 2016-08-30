@@ -1395,7 +1395,7 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
 
   http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL, NULL);
 
-  while (1) {
+  while (!hc->hc_no_output) {
     c = read(fd, buf, sizeof(buf));
     if (c <= 0)
       break;
