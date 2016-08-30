@@ -45,8 +45,6 @@ typedef struct {
 
 /* Config */
 extern int              tvhlog_level;
-extern htsmsg_t        *tvhlog_debug;
-extern htsmsg_t        *tvhlog_trace;
 extern char            *tvhlog_path;
 extern int              tvhlog_options;
 extern pthread_mutex_t  tvhlog_mutex;

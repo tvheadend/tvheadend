@@ -165,6 +165,12 @@ uint64_t test(time_t *ptr){
 return __sync_fetch_and_add(ptr, 1);
 }'
 
+check_cc_snippet bitops64 '#include <stdint.h>
+int test(void){
+  int l = sizeof(long);
+  return l == 8 ? 0 : 1;
+}'
+
 check_cc_snippet lockowner '
 #include <sys/syscall.h>
 #include <unistd.h>

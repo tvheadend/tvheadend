@@ -27,15 +27,18 @@
 #include <execinfo.h>
 #endif
 
+#include "bitops.h"
 #include "libav.h"
 #include "webui/webui.h"
+
+#define TVHLOG_BITARRAY ((LS_LAST + (BITS_PER_LONG - 1)) / BITS_PER_LONG)
 
 int                      tvhlog_run;
 int                      tvhlog_level;
 int                      tvhlog_options;
 char                    *tvhlog_path;
-htsmsg_t                *tvhlog_debug;
-htsmsg_t                *tvhlog_trace;
+bitops_ulong_t           tvhlog_debug[TVHLOG_BITARRAY];
+bitops_ulong_t           tvhlog_trace[TVHLOG_BITARRAY];
 pthread_t                tvhlog_tid;
 pthread_mutex_t          tvhlog_mutex;
 tvh_cond_t               tvhlog_cond;
@@ -163,34 +166,34 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
 };
 
 static void
-tvhlog_get_subsys ( htsmsg_t *ss, char *subsys, size_t len )
+tvhlog_get_subsys ( bitops_ulong_t *ss, char *subsys, size_t len )
 {
   size_t c = 0;
-  int first = 1;
-  htsmsg_field_t *f;
+  uint_fast32_t first = 1, i;
   *subsys = '\0';
-  if (ss) {
-    HTSMSG_FOREACH(f, ss) {
-      if (f->hmf_type != HMF_S64) continue;
-      tvh_strlcatf(subsys, len, c, "%s%c%s",
-                    first ? "" : ",",
-                    f->hmf_s64 ? '+' : '-',
-                    f->hmf_name);
-      first = 0;
-    }
+  for (i = 0; i < LS_LAST; i++)
+    if (!test_bit(i, ss)) break;
+  if (i >= LS_LAST) {
+    tvh_strlcatf(subsys, len, c, "all");
+    return;
+  }
+  for (i = 0; i < LS_LAST; i++) {
+    if (!test_bit(i, ss)) continue;
+    tvh_strlcatf(subsys, len, c, "%s%s",
+                 first ? "" : ",",
+                 tvhlog_subsystems[i].name);
+    first = 0;
   }
 }
 
 /* Set subsys */
 static void
-tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
+tvhlog_set_subsys ( bitops_ulong_t *c, const char *subsys )
 {
-  uint32_t a;
+  uint_fast32_t a, i;
   char *s, *t, *r = NULL;
 
-  if (*c)
-    htsmsg_destroy(*c);
-  *c = NULL;
+  memset(c, 0, TVHLOG_BITARRAY * sizeof(bitops_ulong_t));
 
   if (!subsys)
     return;
@@ -207,13 +210,16 @@ tvhlog_set_subsys ( htsmsg_t **c, const char *subsys )
     }
     if (!*t) goto next;
     if (!strcmp(t, "all")) {
-      if (*c)
-        htsmsg_destroy(*c);
-      *c = NULL;
+      memset(c, a ? 0xff : 0, TVHLOG_BITARRAY * sizeof(bitops_ulong_t));
+    } else {
+      for (i = 0; i < LS_LAST; i++)
+        if (!strcmp(tvhlog_subsystems[i].name, t)) {
+          if (a) set_bit(i, c); else clear_bit(i, c);
+          break;
+        }
+      if (i >= LS_LAST)
+        tvherror(LS_CONFIG, "uknown subsystem '%s'", t);
     }
-    if (!*c)
-      *c = htsmsg_create_map();
-    htsmsg_set_u32(*c, t, a);
 next:
     t = strtok_r(NULL, ",", &r);
   }
@@ -223,13 +229,13 @@ next:
 void
 tvhlog_set_debug ( const char *subsys )
 {
-  tvhlog_set_subsys(&tvhlog_debug, subsys);
+  tvhlog_set_subsys(tvhlog_debug, subsys);
 }
 
 void
 tvhlog_set_trace ( const char *subsys )
 {
-  tvhlog_set_subsys(&tvhlog_trace, subsys);
+  tvhlog_set_subsys(tvhlog_trace, subsys);
 }
 
 void
@@ -368,34 +374,25 @@ void tvhlogv ( const char *file, int line, int severity,
   notify = (severity & LOG_TVH_NOTIFY) ? 1 : 0;
   severity &= ~LOG_TVH_NOTIFY;
 
-  pthread_mutex_lock(&tvhlog_mutex);
-
-  /* Check for full */
-  if (tvhlog_queue_full) {
-    pthread_mutex_unlock(&tvhlog_mutex);
-    return;
-  }
-
-  /* Check debug enabled (and cache config) */
-  options = tvhlog_options;
   if (severity >= LOG_DEBUG) {
     ok = 0;
     if (severity <= atomic_get(&tvhlog_level)) {
-      if (tvhlog_trace) {
-        ok = htsmsg_get_u32_or_default(tvhlog_trace, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_trace, tvhlog_subsystems[subsys].name, ok);
-      }
-      if (!ok && severity == LOG_DEBUG && tvhlog_debug) {
-        ok = htsmsg_get_u32_or_default(tvhlog_debug, "all", 0);
-        ok = htsmsg_get_u32_or_default(tvhlog_debug, tvhlog_subsystems[subsys].name, ok);
-      }
+      ok = test_bit(subsys, tvhlog_trace);
+      if (!ok && severity == LOG_DEBUG)
+        ok = test_bit(subsys, tvhlog_debug);
     }
   } else {
     ok = 1;
   }
 
   /* Ignore */
-  if (!ok) {
+  if (!ok)
+    return;
+
+  pthread_mutex_lock(&tvhlog_mutex);
+
+  /* Check for full */
+  if (tvhlog_queue_full) {
     pthread_mutex_unlock(&tvhlog_mutex);
     return;
   }
@@ -409,6 +406,7 @@ void tvhlogv ( const char *file, int line, int severity,
   }
 
   /* Basic message */
+  options = tvhlog_options;
   l = 0;
   if (options & TVHLOG_OPT_THREAD) {
     tvh_strlcatf(buf, sizeof(buf), l, "tid %ld: ", (long)pthread_self());
@@ -525,8 +523,8 @@ tvhlog_init ( int level, int options, const char *path )
   tvhlog_level   = level;
   tvhlog_options = options;
   tvhlog_path    = path ? strdup(path) : NULL;
-  tvhlog_trace   = NULL;
-  tvhlog_debug   = NULL;
+  memset(tvhlog_trace, 0, sizeof(tvhlog_trace));
+  memset(tvhlog_debug, 0, sizeof(tvhlog_debug));
   tvhlog_run     = 1;
   openlog("tvheadend", LOG_PID, LOG_DAEMON);
   pthread_mutex_init(&tvhlog_mutex, NULL);
@@ -561,8 +559,6 @@ tvhlog_end ( void )
   if (fp)
     fclose(fp);
   free(tvhlog_path);
-  htsmsg_destroy(tvhlog_debug);
-  htsmsg_destroy(tvhlog_trace);
   closelog();
 }
 
