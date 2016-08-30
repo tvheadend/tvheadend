@@ -139,7 +139,7 @@ idnode_insert(idnode_t *in, const char *uuid, const idclass_t *class, int flags)
   /* Register the class */
   in->in_domain = idclass_find_domain(class);
   if (in->in_domain == NULL) {
-    tvherror(LS_IDNODE, "classs '%s' is not registered", class->ic_class);
+    tvherror(LS_IDNODE, "class '%s' is not registered", class->ic_class);
     abort();
   }
   c = RB_INSERT_SORTED(in->in_domain, in, in_domain_link, in_cmp);
