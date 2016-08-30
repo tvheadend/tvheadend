@@ -100,6 +100,7 @@ dvb_network_scanfile_set ( dvb_network_t *ln, const char *id )
       }
     }
   }
+  scanfile_clean(sfn);
   return;
 }
 
