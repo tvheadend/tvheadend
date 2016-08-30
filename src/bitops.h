@@ -33,13 +33,13 @@ typedef uint32_t bitops_ulong_t;
 
 static inline void set_bit(int bit, void *addr)
 {
-  bitops_ulong_t *p = ((unsigned long *)addr) + BIT_WORD(bit);
+  bitops_ulong_t *p = ((bitops_ulong_t *)addr) + BIT_WORD(bit);
   *p |= BIT_MASK(bit);
 }
 
 static inline void clear_bit(int bit, void *addr)
 {
-  bitops_ulong_t *p = ((unsigned long *)addr) + BIT_WORD(bit);
+  bitops_ulong_t *p = ((bitops_ulong_t *)addr) + BIT_WORD(bit);
   *p &= BIT_MASK(bit);
 }
 
