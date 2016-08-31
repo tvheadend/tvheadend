@@ -71,7 +71,7 @@ tvhva_init()
         }
         else {
             tvhinfo(LS_VAAPI,
-                    "succesful context creation for device: %s", device);
+                    "successful context creation for device: %s", device);
             return 0;
         }
     }

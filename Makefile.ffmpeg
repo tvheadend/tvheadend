@@ -244,6 +244,7 @@ ifeq (yes,$(CONFIG_LIBX265))
 
 EXTLIBS  += libx265
 ENCODERS += libx265
+FFMPEG_DIFFS += ffmpeg.libx265.diff
 
 endif
 
