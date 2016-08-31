@@ -7,57 +7,43 @@
 static void
 libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
-    char message[8192];
-    char *nl;
-    char *l;
+  int severity = LOG_TVH_NOTIFY;
 
-    //if ((level == AV_LOG_DEBUG) && !(tvhlog_options & TVHLOG_OPT_LIBAV))
-    //  return;
-
-    memset(message, 0, sizeof(message));
-    vsnprintf(message, sizeof(message), fmt, vl);
-
-    l = message;
-
-    if(level == AV_LOG_DEBUG)
+  if (level != AV_LOG_QUIET &&
+      ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
+    switch(level) {
+    case AV_LOG_TRACE:
 #if ENABLE_TRACE
-      level = LOG_TRACE;
-#else
-      level = LOG_DEBUG;
+      severity |= LOG_TRACE;
+      break;
 #endif
-    else if(level == AV_LOG_VERBOSE)
-      level = LOG_DEBUG;
-    else if(level == AV_LOG_INFO)
-      level = LOG_INFO;
-    else if(level == AV_LOG_WARNING)
-      level = LOG_WARNING;
-    else if(level == AV_LOG_ERROR)
-      level = LOG_ERR;
-    else if(level == AV_LOG_FATAL)
-      level = LOG_CRIT;
-    else if(level == AV_LOG_PANIC)
-      level = LOG_EMERG;
-
-    if (level == LOG_INFO) {
-      if (!strncmp(message, "--prefix=/", 10))
-        return;
+    case AV_LOG_DEBUG:
+    case AV_LOG_VERBOSE:
+      severity |= LOG_DEBUG;
+      break;
+    case AV_LOG_INFO:
+      severity |= LOG_INFO;
+      break;
+    case AV_LOG_WARNING:
+      severity |= LOG_WARNING;
+      break;
+    case AV_LOG_ERROR:
+      severity |= LOG_ERR;
+      break;
+    case AV_LOG_FATAL:
+      severity |= LOG_CRIT;
+      break;
+    case AV_LOG_PANIC:
+      severity |= LOG_EMERG;
+      break;
+    default:
+      break;
     }
-
-    while(l < message + sizeof(message)) {
-      nl = strstr(l, "\n");
-      if(nl)
-        *nl = '\0';
-
-      if(!strlen(l))
-        break;
-
-      tvhlog(level, LS_LIBAV, "%s", l);
-
-      if(!nl)
-        break;
-
-      l = nl + 1;
-    }
+    va_list ap;
+    va_copy(ap, vl);
+    tvhlogv(__FILE__, __LINE__, severity, LS_LIBAV, fmt, &ap);
+    va_end(ap);
+  }
 }
 
 /**
@@ -116,7 +102,6 @@ streaming_component_type2codec_id(streaming_component_type_t type)
     codec_id = AV_CODEC_ID_DVB_TELETEXT;
     break;
   default:
-    codec_id = AV_CODEC_ID_NONE;
     break;
   }
 
@@ -182,7 +167,6 @@ codec_id2streaming_component_type(enum AVCodecID id)
     type = SCT_NONE;
     break;
   default:
-    type = SCT_UNKNOWN;
     break;
   }
 
@@ -209,11 +193,7 @@ libav_is_encoder(AVCodec *codec)
 void
 libav_set_loglevel(void)
 {
-  int level = AV_LOG_VERBOSE;
-
-  //if (tvhlog_options & TVHLOG_OPT_LIBAV)
-  //  level = AV_LOG_DEBUG;
-
+  int level = (tvhlog_options & TVHLOG_OPT_LIBAV) ? AV_LOG_DEBUG : AV_LOG_INFO;
   av_log_set_level(level);
 }
 
@@ -223,8 +203,8 @@ libav_set_loglevel(void)
 void
 libav_init(void)
 {
-  av_log_set_callback(libav_log_callback);
   libav_set_loglevel();
+  av_log_set_callback(libav_log_callback);
   av_register_all();
   avformat_network_init();
   avfilter_register_all();

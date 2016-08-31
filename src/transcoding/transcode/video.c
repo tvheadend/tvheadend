@@ -249,11 +249,11 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
     if (qsdata && qsdata_size >= 5) {
         pict_type = qsdata[4];
     }
-#if FF_API_CODED_FRAME
+/*#if FF_API_CODED_FRAME
     else if (self->oavctx->coded_frame) {
         pict_type = self->oavctx->coded_frame->pict_type;
     }
-#endif
+#endif*/
     switch (pict_type) {
         case AV_PICTURE_TYPE_I:
             pkt->v.pkt_frametype = PKT_I_FRAME;
@@ -265,6 +265,8 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             pkt->v.pkt_frametype = PKT_B_FRAME;
             break;
         default:
+            tvh_context_log(self, LOG_ERR, "unknown picture type: %d",
+                            pict_type);
             break;
     }
     pkt->pkt_duration   = avpkt->duration;
