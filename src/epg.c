@@ -2718,7 +2718,16 @@ static int _epg_sort_title_ascending ( const void *a, const void *b, void *eq )
   if (s1 == NULL && s2 == NULL) return 0;
   if (s1 == NULL && s2) return 1;
   if (s1 && s2 == NULL) return -1;
-  return strcmp(s1, s2);
+  int r = strcmp(s1, s2);
+  if (r == 0) {
+    s1 = epg_broadcast_get_subtitle(*(epg_broadcast_t**)a, ((epg_query_t *)eq)->lang);
+    s2 = epg_broadcast_get_subtitle(*(epg_broadcast_t**)b, ((epg_query_t *)eq)->lang);
+    if (s1 == NULL && s2 == NULL) return 0;
+    if (s1 == NULL && s2) return 1;
+    if (s1 && s2 == NULL) return -1;
+    r = strcmp(s1, s2);
+  }
+  return r;
 }
 
 static int _epg_sort_title_descending ( const void *a, const void *b, void *eq )
