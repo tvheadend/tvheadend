@@ -265,6 +265,7 @@ void tvh_gettext_init(void)
     "por",    "pt",
     "rus",    "ru",
     "slv",    "sl",
+    "slo",    "sk",
     "srp",    "sr",
     "swe",    "sv",
     "ukr",    "uk",
