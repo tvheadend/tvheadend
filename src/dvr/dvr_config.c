@@ -190,7 +190,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_cleanup_threshold_used = 0;    // disabled
 
   /* Muxer config */
-  cfg->dvr_muxcnf.m_cache  = MC_CACHE_DONTKEEP;
+  cfg->dvr_muxcnf.m_cache  = MC_CACHE_SYSTEM;
 
   /* Default recording file and directory permissions */
 

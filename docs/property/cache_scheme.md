@@ -7,6 +7,9 @@ means that there’s a disconnect when writing between the write request
 (from the application) and the actual write itself (to the disc/storage) 
 as changes are buffered to be written in one go.
 
+Warning, setting an incorrect scheme can lead to crashes. If you're 
+unsure select *System*.
+
 Scheme                 | Description 
 -----------------------|------------
 **Unknown**            | A placeholder status, meaning that the configuration isn’t properly set.
