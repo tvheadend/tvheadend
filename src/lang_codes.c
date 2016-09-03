@@ -105,7 +105,7 @@ const lang_code_t lang_codes[] = {
   { "chb", NULL, NULL , "Chibcha" },
   { "che", "ce", NULL , "Chechen" },
   { "chg", NULL, NULL , "Chagatai" },
-  { "chi", "zh", "zho", "Chinese" },
+  { "chi", "zh", "zho", "Chinese", "CN" },
   { "chk", NULL, NULL , "Chuukese" },
   { "chm", NULL, NULL , "Mari" },
   { "chn", NULL, NULL , "Chinook jargon" },

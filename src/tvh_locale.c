@@ -278,6 +278,7 @@ void tvh_gettext_init(void)
     "tur",    "tr",
     "ukr",    "uk",
     "chi",    "zh",
+    "chi_CN", "zh-Hans",
     NULL, NULL
   };
   const char **p;
