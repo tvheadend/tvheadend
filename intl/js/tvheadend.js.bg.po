@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-22 08:27+0000\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-08-07 16:13+0000\n"
 "Last-Translator: saen acro <saentist@gmail.com>\n"
 "Language-Team: Bulgarian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/bg/)\n"
 "MIME-Version: 1.0\n"
@@ -226,7 +226,7 @@ msgstr "Аудио стриим филтъри"
 
 #: src/webui/static/app/epg.js:164
 msgid "Audio description#EPG"
-msgstr ""
+msgstr "Аудио описание#ЕПУ"
 
 #: src/webui/static/app/i18n-post.js:42
 msgid "Aug"
@@ -494,7 +494,7 @@ msgstr "Дигитален видео рекордер"
 
 #: src/webui/static/app/epg.js:160
 msgid "Deaf signed#EPG"
-msgstr ""
+msgstr "Описание за нечуващи#ЕПУ"
 
 #: src/webui/static/app/tvheadend.js:771
 msgid "Debugging"
@@ -797,7 +797,7 @@ msgstr ""
 
 #: src/webui/static/app/idnode.js:1633
 msgid "Grid Update"
-msgstr ""
+msgstr "Обнови"
 
 #: src/webui/static/app/i18n-post.js:211
 msgid "Group By This Field"
@@ -853,7 +853,7 @@ msgstr "Игнориран"
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr ""
+msgstr "Лого кеш"
 
 #: src/webui/static/app/status.js:745
 msgid "In"
@@ -989,11 +989,11 @@ msgstr "Март"
 
 #: src/webui/static/app/dvr.js:386
 msgid "Mark the selected recording as failed"
-msgstr ""
+msgstr "Маркирай избраните записи като провалени."
 
 #: src/webui/static/app/dvr.js:523
 msgid "Mark the selected recording as finished"
-msgstr ""
+msgstr "Маркирай избраните записи като завършени"
 
 #: src/webui/static/app/i18n-post.js:24
 msgid "May"
@@ -1196,7 +1196,7 @@ msgstr "PER"
 
 #: src/webui/static/app/mpegts.js:166
 msgid "PID"
-msgstr ""
+msgstr "PID"
 
 #: src/webui/static/app/i18n-post.js:144
 msgid "Page"
@@ -1209,7 +1209,7 @@ msgstr "Параметри"
 
 #: src/webui/static/app/idnode.js:1939
 msgid "Parent disabled"
-msgstr "Изкл'чен родителски контрол"
+msgstr "Изключен предшестващ"
 
 #: src/webui/static/app/acleditor.js:78
 msgid "Password"
@@ -1376,7 +1376,7 @@ msgstr "Съхрани"
 
 #: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
-msgstr ""
+msgstr "Съхрани & Следващ"
 
 #: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
 #: src/webui/static/app/idnode.js:2789
@@ -1650,7 +1650,7 @@ msgstr "Изглежда има проблем с обновяването на 
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the help page!"
-msgstr ""
+msgstr "Има проблем да се покаже помощната страница!"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1672,7 +1672,7 @@ msgstr "Това поле е необходимо"
 msgid ""
 "This usually means there is no help available or the document couldn't be "
 "loaded."
-msgstr ""
+msgstr "Това обикновенно означава че има проблем със зареждането на страницата или няма статия."
 
 #: src/webui/static/app/epg.js:1059
 msgid ""
@@ -1694,11 +1694,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:697
 msgid "Timer"
-msgstr ""
+msgstr "Таймер"
 
 #: src/webui/static/app/dvr.js:698
 msgid "Timers"
-msgstr ""
+msgstr "Таймери"
 
 #: src/webui/static/app/timeshift.js:16
 msgid "Timeshift"
@@ -1765,7 +1765,7 @@ msgstr ""
 
 #: src/webui/static/app/wizard.js:188
 msgid "Unable to obtain wizard page!"
-msgstr ""
+msgstr "Невъзможен достъп до помощника!"
 
 #: src/webui/static/app/status.js:393
 msgid "Uncorrected Blocks"
@@ -1790,7 +1790,7 @@ msgstr "Предстоящи  Записи"
 
 #: src/webui/static/app/tvheadend.js:948
 msgid "Used by tvheadend"
-msgstr ""
+msgstr "Използван от TVHeadend"
 
 #: src/webui/static/app/status.js:94 src/webui/static/app/status.js:590
 msgid "Username"

@@ -6,6 +6,7 @@
 # Adrien Chevrier, 2015
 # Adrien Cosson <cadiyak.theory@gmail.com>, 2015
 # Glandos <bugs-transifex@antipoul.fr>, 2015
+# Cedric Octave <transifex@octvcdrc.fr>, 2016
 # Frédéric Ethève <portab2fred@mail.com>, 2015
 # Glandos <bugs-transifex@antipoul.fr>, 2015
 # Pablo Rodríguez <trujulu@gmail.com>, 2015
@@ -15,9 +16,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-18 14:11+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-06-25 13:53+0000\n"
+"Last-Translator: Cedric Octave <transifex@octvcdrc.fr>\n"
 "Language-Team: French (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -382,7 +383,7 @@ msgstr "Etiquettes de chaine"
 
 #: src/webui/static/app/chconf.js:184
 msgid "Channel number operations"
-msgstr ""
+msgstr "Opérations sur le numéro de chaîne"
 
 #: src/webui/static/app/chconf.js:218
 msgid "Channels"
@@ -677,7 +678,7 @@ msgstr "Episode"
 
 #: src/webui/static/app/tvheadend.js:238
 msgid "Error"
-msgstr ""
+msgstr "Erreur"
 
 #: src/webui/static/app/status.js:146
 msgid "Errors"
@@ -857,7 +858,7 @@ msgstr "Ignoré"
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr ""
+msgstr "Cache d'images"
 
 #: src/webui/static/app/status.js:745
 msgid "In"
@@ -909,7 +910,7 @@ msgstr "Langage"
 
 #: src/webui/static/app/tvheadend.js:127
 msgid "Last Help Pages"
-msgstr ""
+msgstr "Dernières pages d'aide"
 
 #: src/webui/static/app/i18n-post.js:149
 msgid "Last Page"
@@ -1065,11 +1066,11 @@ msgstr "Déplacer l'élément sélectionné en haut"
 
 #: src/webui/static/app/dvr.js:388
 msgid "Move to failed"
-msgstr ""
+msgstr "Échec du déplacement"
 
 #: src/webui/static/app/dvr.js:525
 msgid "Move to finished"
-msgstr ""
+msgstr "Déplacement effectué"
 
 #: src/webui/static/app/mpegts.js:97 src/webui/static/app/mpegts.js:103
 msgid "Mux"
@@ -1098,7 +1099,7 @@ msgstr "Réseaux"
 
 #: src/webui/static/app/epg.js:150
 msgid "New#EPG"
-msgstr ""
+msgstr "Nouveau#EPG"
 
 #: src/webui/static/app/i18n-post.js:132
 msgid "Next Month (Control+Right)"
@@ -1254,7 +1255,7 @@ msgstr "Lire ce programme"
 
 #: src/webui/static/app/tvheadend.js:446
 msgid "Play this stream"
-msgstr ""
+msgstr "Lire ce flux"
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
@@ -1294,11 +1295,11 @@ msgstr "Ré-enregistrer"
 
 #: src/webui/static/app/epggrab.js:6
 msgid "Re-run Internal EPG Grabbers"
-msgstr ""
+msgstr "Relancer l'acquisition EPG interne"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Re-run all internal EPG grabbers to import EPG data now"
-msgstr ""
+msgstr "Relancer toutes les acquisitions EPG afin d'importer les données EPG maintenant"
 
 #: src/webui/static/app/idnode.js:1047
 msgid "Read-only Info"
@@ -1334,7 +1335,7 @@ msgstr "Rafraichir"
 
 #: src/webui/static/app/epg.js:152
 msgid "Repeat#EPG"
-msgstr ""
+msgstr "Réitérer#EPG"
 
 #: src/webui/static/app/chconf.js:203
 msgid "Reset (clear) the selected icon URLs"
@@ -1572,7 +1573,7 @@ msgstr "Filtres du Flux de Sous-titre"
 
 #: src/webui/static/app/epg.js:162
 msgid "Subtitled#EPG"
-msgstr ""
+msgstr "Sous-titré#EPG"
 
 #: src/webui/static/app/i18n-post.js:93
 msgid "Sun"
@@ -1654,7 +1655,7 @@ msgstr "On dirait qu'il y a un problème avec la mise à jour en direct du flux 
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the help page!"
-msgstr ""
+msgstr "Il y a eu un problème lors de l'affichage de la page d'aide"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1676,7 +1677,7 @@ msgstr "Ce champ est requis"
 msgid ""
 "This usually means there is no help available or the document couldn't be "
 "loaded."
-msgstr ""
+msgstr "Cela est souvent dû au fait qu'aucune aide ne soit disponible ou bien que le document n'a pas pu être chargé"
 
 #: src/webui/static/app/epg.js:1059
 msgid ""
@@ -1755,7 +1756,7 @@ msgstr "Tvheadend Web-Panel"
 
 #: src/webui/static/app/tvheadend.js:1005
 msgid "Tvheadend log"
-msgstr ""
+msgstr "Journeaux de Tvheadend"
 
 #: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
@@ -1846,7 +1847,7 @@ msgstr "Poids"
 
 #: src/webui/static/app/epg.js:154
 msgid "Widescreen"
-msgstr ""
+msgstr "Écran large"
 
 #: src/webui/static/app/dvr.js:39
 msgid "Will be skipped"

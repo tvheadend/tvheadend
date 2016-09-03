@@ -10,13 +10,14 @@
 # Nilsen <nils.eickelkamp@gmail.com>, 2015-2016
 # Nilsen <nilsen.e@web.de>, 2015
 # stbenz, 2015
+# Tobias Hill <hill.tobias@gmail.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-18 14:11+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-07-07 12:03+0000\n"
+"Last-Translator: Tobias Hill <hill.tobias@gmail.com>\n"
 "Language-Team: German (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -241,7 +242,7 @@ msgstr "August"
 
 #: src/webui/static/app/epg.js:1059
 msgid "Auto Recorder"
-msgstr "Autorekorder"
+msgstr "Auto-Rekorder"
 
 #: src/webui/static/app/tvheadend.js:330
 msgid "Auto-refresh"
@@ -250,11 +251,11 @@ msgstr "Automatische Aktualisierung"
 #: src/webui/static/app/epg.js:260 src/webui/static/app/dvr.js:69
 #: src/webui/static/app/dvr.js:632
 msgid "Autorec"
-msgstr "Autoaufnahme"
+msgstr "Auto-Aufnahme"
 
 #: src/webui/static/app/dvr.js:633
 msgid "Autorecs"
-msgstr "Autoaufnahmen"
+msgstr "Auto-Aufnahmen"
 
 #: src/webui/static/app/idnode.js:446 src/webui/static/app/idnode.js:691
 msgid "Available"
@@ -355,11 +356,11 @@ msgstr "Nicht ausführbar"
 
 #: src/webui/static/app/idnode.js:622
 msgid "Change the user interface level (basic, advanced, expert)"
-msgstr "UI Modus ändern (Einfach, Erweitert, Experte)"
+msgstr "Ansichtsmodus ändern (Einfach, Erweitert, Experte)"
 
 #: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1502
 msgid "Changes were applied!"
-msgstr "Änderungen wurden ausgeführt"
+msgstr "Änderungen wurden ausgeführt!"
 
 #: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:581
 #: src/webui/static/app/epg.js:582 src/webui/static/app/epg.js:1063
@@ -393,7 +394,7 @@ msgstr "Monat auswählen (Strg+Hoch/Runter zum Umschalten zwischen Jahren)"
 
 #: src/webui/static/app/config.js:78
 msgid "Clean image (icon) cache"
-msgstr "Lösche Bild (Logo) Cache"
+msgstr "Lösche Bild-Cache (Logos)"
 
 #: src/webui/static/app/config.js:76
 msgid "Clean image cache on storage"
@@ -466,7 +467,7 @@ msgstr "Anlegen"
 
 #: src/webui/static/app/epg.js:879
 msgid "Create AutoRec"
-msgstr "Automatische Aufnahme anlegen"
+msgstr "Auto-Aufnahme anlegen"
 
 #: src/webui/static/app/epg.js:259 src/webui/static/app/epg.js:881
 msgid ""
@@ -480,7 +481,7 @@ msgstr "Neuen Eintrag anlegen"
 
 #: src/webui/static/app/epg.js:1081
 msgid "Created from EPG query"
-msgstr "Von EPG Abfrage erstellt"
+msgstr "Von EPG-Abfrage erstellt"
 
 #: src/webui/static/app/epg.js:1068
 #, javascript-format
@@ -623,15 +624,15 @@ msgstr "EPG-Grabber-Kanäle"
 
 #: src/webui/static/app/epggrab.js:86
 msgid "EPG Grabber Module"
-msgstr "EPG-Grabber Modul"
+msgstr "EPG-Grabber-Modul"
 
 #: src/webui/static/app/epggrab.js:87
 msgid "EPG Grabber Modules"
-msgstr "EPG-Grabber Module"
+msgstr "EPG-Grabber-Module"
 
 #: src/webui/static/app/epggrab.js:88
 msgid "EPG Grabber Name"
-msgstr "EPG-Grabbername"
+msgstr "EPG-Grabber-Name"
 
 #: src/webui/static/app/epg.js:989
 msgid "EPG Update"
@@ -676,7 +677,7 @@ msgstr "Episode"
 
 #: src/webui/static/app/tvheadend.js:238
 msgid "Error"
-msgstr ""
+msgstr "Fehler"
 
 #: src/webui/static/app/status.js:146
 msgid "Errors"
@@ -856,7 +857,7 @@ msgstr "Ignoriert"
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr ""
+msgstr "Bild-Cache"
 
 #: src/webui/static/app/status.js:745
 msgid "In"
@@ -964,7 +965,7 @@ msgstr "Gewählte Services zuordnen"
 
 #: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:131
 msgid "Map selected services to channels"
-msgstr "Gewählte Services Kanälen zuordnen"
+msgstr "Gewählte Services zu Kanälen zuordnen"
 
 #: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:144
 #: src/webui/static/app/servicemapper.js:119
@@ -1253,7 +1254,7 @@ msgstr "Diese Sendung abspielen"
 
 #: src/webui/static/app/tvheadend.js:446
 msgid "Play this stream"
-msgstr ""
+msgstr "Diesen Stream abspielen"
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
@@ -1293,11 +1294,11 @@ msgstr "Neu-Aufnehmen"
 
 #: src/webui/static/app/epggrab.js:6
 msgid "Re-run Internal EPG Grabbers"
-msgstr ""
+msgstr "Internen EPG-Grabber neu starten"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Re-run all internal EPG grabbers to import EPG data now"
-msgstr ""
+msgstr "Alle internen EPG-Grabber neu starten um jetzt die EPG Daten zu importieren"
 
 #: src/webui/static/app/idnode.js:1047
 msgid "Read-only Info"
@@ -1400,7 +1401,7 @@ msgstr "Durchsuche IMDB (Titel)"
 
 #: src/webui/static/app/epg.js:189 src/webui/static/app/dvr.js:86
 msgid "Search TheTVDB (for title)"
-msgstr "Durchsuche TheTVDB (nach Titel)"
+msgstr "Durchsuche TheTVDB (Titel)"
 
 #: src/webui/static/app/epg.js:651
 msgid "Search title..."
@@ -1653,7 +1654,7 @@ msgstr "Es scheint ein Problem mit dem Datenabruf von Tvheadend zu geben. Versuc
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the help page!"
-msgstr ""
+msgstr "Es gab ein Problem beim Anzeigen der Hilfeseite!"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1675,7 +1676,7 @@ msgstr "Dieses Feld ist erforderlich"
 msgid ""
 "This usually means there is no help available or the document couldn't be "
 "loaded."
-msgstr ""
+msgstr "Dies bedeutet meistens, dass keine Hilfe verfügbar ist oder das Dokument nicht geladen werden konnte."
 
 #: src/webui/static/app/epg.js:1059
 msgid ""
@@ -1734,7 +1735,7 @@ msgstr "Transportfehler"
 
 #: src/webui/static/app/epggrab.js:26
 msgid "Trigger OTA EPG Grabber"
-msgstr "OTA EPG Grabber auslösen"
+msgstr "OTA EPG-Grabber auslösen"
 
 #: src/webui/static/app/i18n-post.js:95
 msgid "Tue"
@@ -1754,7 +1755,7 @@ msgstr "Tvheadend Weboberfläche"
 
 #: src/webui/static/app/tvheadend.js:1005
 msgid "Tvheadend log"
-msgstr ""
+msgstr "Tvheadend Log"
 
 #: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
@@ -1813,11 +1814,11 @@ msgstr "Video Streamfilter"
 
 #: src/webui/static/app/idnode.js:624
 msgid "View level"
-msgstr "UI Modus"
+msgstr "Ansichtsmodus"
 
 #: src/webui/static/app/idnode.js:627
 msgid "View level: "
-msgstr "UI Modus"
+msgstr "Ansichtsmodus:"
 
 #: src/webui/static/app/tvheadend.js:584
 msgid "Volume"
@@ -1841,7 +1842,7 @@ msgstr "Mittwoch"
 
 #: src/webui/static/app/status.js:369
 msgid "Weight"
-msgstr "Gewicht"
+msgstr "Gewichtung"
 
 #: src/webui/static/app/epg.js:154
 msgid "Widescreen"

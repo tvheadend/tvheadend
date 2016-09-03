@@ -12,9 +12,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-18 14:11+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-07-07 12:23+0000\n"
+"Last-Translator: Jouk Hettema <joukio@gmail.com>\n"
 "Language-Team: Dutch (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/nl/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -674,7 +674,7 @@ msgstr "Aflevering"
 
 #: src/webui/static/app/tvheadend.js:238
 msgid "Error"
-msgstr ""
+msgstr "Fout"
 
 #: src/webui/static/app/status.js:146
 msgid "Errors"
@@ -854,7 +854,7 @@ msgstr "Genegeerd"
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr ""
+msgstr "Afbeelding cache"
 
 #: src/webui/static/app/status.js:745
 msgid "In"
@@ -1251,7 +1251,7 @@ msgstr "Speel dit programma af"
 
 #: src/webui/static/app/tvheadend.js:446
 msgid "Play this stream"
-msgstr ""
+msgstr "Speel deze stream"
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
@@ -1291,11 +1291,11 @@ msgstr "Her-opname"
 
 #: src/webui/static/app/epggrab.js:6
 msgid "Re-run Internal EPG Grabbers"
-msgstr ""
+msgstr "Voer interne EPG grabbers opnieuw uit"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Re-run all internal EPG grabbers to import EPG data now"
-msgstr ""
+msgstr "Voor alle interne EPG grabbers opnieuw uit om de EPG data nu te importeren"
 
 #: src/webui/static/app/idnode.js:1047
 msgid "Read-only Info"
@@ -1651,7 +1651,7 @@ msgstr "Er lijkt een probleem met de live update feed te zijn van Tvheadend. Pro
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the help page!"
-msgstr ""
+msgstr "Er was een probleem met het tonen van de help pagina!"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1673,7 +1673,7 @@ msgstr "Dit veld is verplicht"
 msgid ""
 "This usually means there is no help available or the document couldn't be "
 "loaded."
-msgstr ""
+msgstr "Dit betekent over het algemeen dat er geen help beschikbaar is of het document kon niet worden geladen."
 
 #: src/webui/static/app/epg.js:1059
 msgid ""
@@ -1752,7 +1752,7 @@ msgstr "Tvheadend Web-Paneel"
 
 #: src/webui/static/app/tvheadend.js:1005
 msgid "Tvheadend log"
-msgstr ""
+msgstr "Tvheadend log"
 
 #: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167

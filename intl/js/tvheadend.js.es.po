@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-18 15:50+0000\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-06-04 14:29+0000\n"
 "Last-Translator: Alex Platero <unhomen@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
 "MIME-Version: 1.0\n"
@@ -456,7 +456,7 @@ msgstr "Tipo de Contenido"
 
 #: src/webui/static/app/status.js:403
 msgid "Continuity Errors"
-msgstr "Continuidad de Errores"
+msgstr "Errores de continuidad"
 
 #: src/webui/static/app/idnode.js:1456
 msgid "Create"
@@ -830,7 +830,7 @@ msgstr "Esconder contraseñas"
 
 #: src/webui/static/app/status.js:88
 msgid "Hostname"
-msgstr "Nombre del Servidor"
+msgstr "Dirección IP cliente"
 
 #: src/webui/static/app/status.js:78
 msgid "ID"
@@ -1549,7 +1549,7 @@ msgstr "Perfiles de Retransmisión"
 
 #: src/webui/static/app/status.js:364
 msgid "Subs No."
-msgstr "Sus No"
+msgstr "Nº suscripciones"
 
 #: src/webui/static/app/status.js:214
 msgid "Subscriptions"
@@ -1708,7 +1708,7 @@ msgstr "Cambio de hora"
 #: src/webui/static/app/epg.js:518 src/webui/static/app/epg.js:519
 #: src/webui/static/app/epg.js:1062 src/webui/static/app/status.js:100
 msgid "Title"
-msgstr "Título"
+msgstr "Cliente"
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"

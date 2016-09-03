@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-18 14:11+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-08-17 08:36+0000\n"
+"Last-Translator: Anti <anti.siidiratsep@gmail.com>\n"
 "Language-Team: Estonian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -54,9 +54,9 @@ msgstr "# tune repeats"
 msgid "(Default profile)"
 msgstr "(Vaikimisi profiil)"
 
-#: src/webui/doc_md.c:127
+#: src/webui/doc_md.c:129
 msgid "(Read-only)"
-msgstr ""
+msgstr "(Mittemuudetav)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:70
 msgid "0"
@@ -66,22 +66,22 @@ msgstr "0"
 msgid "1"
 msgstr "1"
 
-#: src/dvr/dvr_db.c:2375 src/dvr/dvr_db.c:2399 src/dvr/dvr_config.c:722
+#: src/dvr/dvr_db.c:2376 src/dvr/dvr_db.c:2400 src/dvr/dvr_config.c:722
 #: src/dvr/dvr_config.c:745
 msgid "1 day"
 msgstr "1 päev"
 
-#: src/dvr/dvr_db.c:2381 src/dvr/dvr_db.c:2405 src/dvr/dvr_config.c:728
+#: src/dvr/dvr_db.c:2382 src/dvr/dvr_db.c:2406 src/dvr/dvr_config.c:728
 #: src/dvr/dvr_config.c:751
 msgid "1 month"
 msgstr "1 kuu"
 
-#: src/dvr/dvr_db.c:2378 src/dvr/dvr_db.c:2402 src/dvr/dvr_config.c:725
+#: src/dvr/dvr_db.c:2379 src/dvr/dvr_db.c:2403 src/dvr/dvr_config.c:725
 #: src/dvr/dvr_config.c:748
 msgid "1 week"
 msgstr "1 nädal"
 
-#: src/dvr/dvr_db.c:2385 src/dvr/dvr_db.c:2409 src/dvr/dvr_config.c:732
+#: src/dvr/dvr_db.c:2386 src/dvr/dvr_db.c:2410 src/dvr/dvr_config.c:732
 #: src/dvr/dvr_config.c:755
 msgid "1 year"
 msgstr "1 aasta"
@@ -114,17 +114,17 @@ msgstr "15"
 msgid "2"
 msgstr "2"
 
-#: src/dvr/dvr_db.c:2382 src/dvr/dvr_db.c:2406 src/dvr/dvr_config.c:729
+#: src/dvr/dvr_db.c:2383 src/dvr/dvr_db.c:2407 src/dvr/dvr_config.c:729
 #: src/dvr/dvr_config.c:752
 msgid "2 months"
 msgstr "2 kuud"
 
-#: src/dvr/dvr_db.c:2379 src/dvr/dvr_db.c:2403 src/dvr/dvr_config.c:726
+#: src/dvr/dvr_db.c:2380 src/dvr/dvr_db.c:2404 src/dvr/dvr_config.c:726
 #: src/dvr/dvr_config.c:749
 msgid "2 weeks"
 msgstr "2 nädalat"
 
-#: src/dvr/dvr_db.c:2386 src/dvr/dvr_db.c:2410 src/dvr/dvr_config.c:733
+#: src/dvr/dvr_db.c:2387 src/dvr/dvr_db.c:2411 src/dvr/dvr_config.c:733
 #: src/dvr/dvr_config.c:756
 msgid "2 years"
 msgstr "2 aastat"
@@ -137,22 +137,22 @@ msgstr "2 pordine switch (universaalne LNB)"
 msgid "3"
 msgstr "3"
 
-#: src/dvr/dvr_db.c:2376 src/dvr/dvr_db.c:2400 src/dvr/dvr_config.c:723
+#: src/dvr/dvr_db.c:2377 src/dvr/dvr_db.c:2401 src/dvr/dvr_config.c:723
 #: src/dvr/dvr_config.c:746
 msgid "3 days"
 msgstr "3 päeva"
 
-#: src/dvr/dvr_db.c:2383 src/dvr/dvr_db.c:2407 src/dvr/dvr_config.c:730
+#: src/dvr/dvr_db.c:2384 src/dvr/dvr_db.c:2408 src/dvr/dvr_config.c:730
 #: src/dvr/dvr_config.c:753
 msgid "3 months"
 msgstr "3 kuud"
 
-#: src/dvr/dvr_db.c:2380 src/dvr/dvr_db.c:2404 src/dvr/dvr_config.c:727
+#: src/dvr/dvr_db.c:2381 src/dvr/dvr_db.c:2405 src/dvr/dvr_config.c:727
 #: src/dvr/dvr_config.c:750
 msgid "3 weeks"
 msgstr "3 nädalat"
 
-#: src/dvr/dvr_db.c:2387 src/dvr/dvr_db.c:2411 src/dvr/dvr_config.c:734
+#: src/dvr/dvr_db.c:2388 src/dvr/dvr_db.c:2412 src/dvr/dvr_config.c:734
 #: src/dvr/dvr_config.c:757
 msgid "3 years"
 msgstr "3 aastat"
@@ -169,7 +169,7 @@ msgstr "4 pordine switch (universaalne LNB)"
 msgid "5"
 msgstr "5"
 
-#: src/dvr/dvr_db.c:2377 src/dvr/dvr_db.c:2401 src/dvr/dvr_config.c:724
+#: src/dvr/dvr_db.c:2378 src/dvr/dvr_db.c:2402 src/dvr/dvr_config.c:724
 #: src/dvr/dvr_config.c:747
 msgid "5 days"
 msgstr "5 päeva"
@@ -186,7 +186,7 @@ msgstr "5.1"
 msgid "6"
 msgstr "6"
 
-#: src/dvr/dvr_db.c:2384 src/dvr/dvr_db.c:2408 src/dvr/dvr_config.c:731
+#: src/dvr/dvr_db.c:2385 src/dvr/dvr_db.c:2409 src/dvr/dvr_config.c:731
 #: src/dvr/dvr_config.c:754
 msgid "6 months"
 msgstr "6 kuud"
@@ -244,7 +244,7 @@ msgstr "AKTIIVNE"
 
 #: src/descrambler/constcw.c:351
 msgid "AES Constant Code Word"
-msgstr ""
+msgstr "AES Constant Code Word"
 
 #: src/config.c:1891
 msgid "AF11"
@@ -312,11 +312,11 @@ msgstr "ATSC-C"
 
 #: src/input/mpegts/mpegts_network_dvb.c:343
 msgid "ATSC-C Network"
-msgstr ""
+msgstr "ATSC-C võrk"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:586
 msgid "ATSC-C multiplex"
-msgstr ""
+msgstr "ATSC-C multiplex"
 
 #: src/satip/server.c:726
 msgid "ATSC-T"
@@ -324,11 +324,11 @@ msgstr "ATSC-T"
 
 #: src/input/mpegts/mpegts_network_dvb.c:320
 msgid "ATSC-T Network"
-msgstr ""
+msgstr "ATSC-T võrk"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:545
 msgid "ATSC-T multiplex"
-msgstr ""
+msgstr "ATSC-T multiplex"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:232 src/input/mpegts/mpegts_mux_dvb.c:239
 #: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:251
@@ -362,18 +362,18 @@ msgstr "Ligipääs"
 
 #: src/access.c:1370
 msgid "Access Configuration - Access Entries"
-msgstr ""
+msgstr "Ligipääsu konfiguratsioon - ligipääsu kirjed"
 
 #: src/access.c:1954
 msgid "Access Configuration - IP Blocking"
-msgstr ""
+msgstr "Ligipääsu konfiguratsioon - IP blokeerimine"
 
 #: src/access.c:1802
 msgid "Access Configuration - Passwords"
-msgstr ""
+msgstr "Ligipääsu konfiguratsioon - Salasõnad"
 
-#: src/esfilter.c:698 src/esfilter.c:793 src/esfilter.c:888 src/esfilter.c:983
-#: src/esfilter.c:1088 src/esfilter.c:1170
+#: src/esfilter.c:697 src/esfilter.c:792 src/esfilter.c:887 src/esfilter.c:982
+#: src/esfilter.c:1087 src/esfilter.c:1169
 msgid "Action"
 msgstr "Põnevus"
 
@@ -381,11 +381,11 @@ msgstr "Põnevus"
 msgid "Adapter in use by another subscription"
 msgstr "Adapter on hõivatud mõne muu liitumisega"
 
-#: src/main.c:861
+#: src/main.c:860
 msgid "Add file and line numbers to debug"
 msgstr "Lisa fail ja rea number debugimiseks"
 
-#: src/main.c:862
+#: src/main.c:861
 msgid "Add the thread ID to debug"
 msgstr "Lisa threedi ID debugimiseks"
 
@@ -453,7 +453,7 @@ msgstr "Kõik (voogedastus + DVR)"
 msgid "All DVR (rw)"
 msgstr "Kõik DVR (rw)"
 
-#: src/dvr/dvr_config.c:1256
+#: src/dvr/dvr_config.c:1257
 msgid ""
 "All characters that could possibly cause problems for filenaming will be "
 "replaced with an underscore. See Help for details."
@@ -461,7 +461,7 @@ msgstr ""
 
 #: src/config.c:1930
 msgid "All lower-case"
-msgstr ""
+msgstr "Kõik väiketähed"
 
 #: src/webui/extjs.c:236
 msgid ""
@@ -471,27 +471,27 @@ msgstr "Kõik tulud kasutatakse serverite taristu ülalpidamiseks ja testseadmet
 
 #: src/dvr/dvr_autorec.c:938
 msgid "All: Record if different description"
-msgstr ""
+msgstr "Kõik: salvesta, kui kirjeldus on erinev"
 
 #: src/dvr/dvr_autorec.c:934
 msgid "All: Record if different episode number"
-msgstr ""
+msgstr "Kõik: salvesta, kui osa number on erinev"
 
 #: src/dvr/dvr_autorec.c:936
 msgid "All: Record if different subtitle"
-msgstr ""
+msgstr "Kõik: Salvesta, kui osa nimi on erinev"
 
 #: src/dvr/dvr_autorec.c:942
 msgid "All: Record once per day"
-msgstr ""
+msgstr "Kõik: salvesta üks kord päevas"
 
 #: src/dvr/dvr_autorec.c:940
 msgid "All: Record once per week"
-msgstr ""
+msgstr "Kõik: salvesta üks kord nädalas"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:197
 msgid "Allow high bitrate mode (CI+ CAMs only)."
-msgstr ""
+msgstr "Luba kõrge bitikiiruse režiim (ainult CI+ CAM'id)"
 
 #: src/input/mpegts/mpegts_input.c:294
 msgid "Allow idle scan tuning on this device."
@@ -523,15 +523,15 @@ msgstr ""
 
 #: src/access.c:1458
 msgid "Allow/disallow HTTP streaming."
-msgstr ""
+msgstr "Luba/keela HTTP voogedastus."
 
 #: src/access.c:1502
 msgid "Allow/disallow access to DVR via the HTSP protocol."
-msgstr ""
+msgstr "Luba/keela DVR'le ligipääs üle HTSP protokolli."
 
 #: src/access.c:1526
 msgid "Allow/disallow access to all failed DVR entries."
-msgstr ""
+msgstr "Luba/keela ligipääs kõigile ebaõnnestunud DVB kirjetele."
 
 #: src/access.c:1510
 msgid "Allow/disallow access to other users DVR entries (read only)."
@@ -539,12 +539,12 @@ msgstr ""
 
 #: src/access.c:1565
 msgid "Allow/disallow access to the 'Configuration' tab."
-msgstr ""
+msgstr "Luba/keela ligipääs \"Konfiguratsioon' vahelehele."
 
 #: src/access.c:1494
 msgid ""
 "Allow/disallow access to video recorder functionality (including Autorecs)."
-msgstr ""
+msgstr "Luba/keela ligipääs videosalvestuse toimingutele (sh automaatsalvestus)."
 
 #: src/access.c:1465
 msgid ""
@@ -570,19 +570,19 @@ msgstr "Lubatud võrk"
 
 #: src/access.c:1404
 msgid "Allowed networks"
-msgstr ""
+msgstr "Lubatud võrgud"
 
-#: src/main.c:805
+#: src/main.c:804
 msgid "Alternate PID path"
 msgstr "Alternatiivne PID viide"
 
-#: src/main.c:800
+#: src/main.c:799
 msgid "Alternate configuration path"
 msgstr "Alternatiivne seadistuste viide"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:613
 msgid "Altitude (in meters)."
-msgstr ""
+msgstr "Kõrgus merepinnast (meetrites)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:612
 msgid "Altitude (meters)"
@@ -629,19 +629,19 @@ msgstr "Kunstid"
 
 #: src/wizard.c:932
 msgid "Assign predefined muxes to networks"
-msgstr ""
+msgstr "Määra eeldefineeritud muxid võrkudeks"
 
 #: src/input/mpegts/mpegts_input.c:317
 msgid "Associate this device with one or more networks."
-msgstr ""
+msgstr "Liidesta see seade ühe või rohkema võrguga."
 
 #: src/epg.c:2251
 msgid "Athletics"
 msgstr "Kergejõustik"
 
-#: src/esfilter.c:732
+#: src/esfilter.c:731
 msgid "Audio Stream Filter"
-msgstr ""
+msgstr "Audio voogedastuse filter"
 
 #: src/profile.c:1810
 msgid "Audio birate to use for transcoding."
@@ -677,20 +677,20 @@ msgstr "Automaatne kontroll välja lülitatud"
 msgid "Auto check enabled"
 msgstr "Automaatne kontroll sisse lülitatud"
 
-#: src/dvr/dvr_db.c:3122
+#: src/dvr/dvr_db.c:3123
 msgid "Auto record"
 msgstr "Automaatselt salvesta"
 
-#: src/dvr/dvr_db.c:3131
+#: src/dvr/dvr_db.c:3132
 msgid "Auto record caption"
 msgstr "Automaatse salvestuse tekst"
 
-#: src/dvr/dvr_db.c:1279
+#: src/dvr/dvr_db.c:1280
 #, c-format
 msgid "Auto recording%s%s"
 msgstr "Automaatne salvestamine%s%s"
 
-#: src/dvr/dvr_db.c:3139
+#: src/dvr/dvr_db.c:3140
 msgid "Auto time record"
 msgstr "Automaatse kellaajaga salvestus"
 
@@ -702,17 +702,17 @@ msgstr "Automaatseosta kanaliteks"
 msgid "Automatic checking"
 msgstr "Automaatne kontollimine"
 
-#: src/dvr/dvr_db.c:3132
+#: src/dvr/dvr_db.c:3133
 msgid "Automatic recording caption."
-msgstr ""
+msgstr "Automaatse salvestuse tekst."
 
 #: src/htsp_server.c:2062 src/htsp_server.c:2098
 msgid "Automatic schedule entry not found"
-msgstr ""
+msgstr "Automaatse ajastuse kirjet ei leitud "
 
 #: src/htsp_server.c:2173 src/htsp_server.c:2208
 msgid "Automatic time scheduler entry not found"
-msgstr ""
+msgstr "Automaatse aja ajastuse kirjet ei leitud "
 
 #: src/channels.c:436
 msgid "Automatically map EPG source"
@@ -728,11 +728,11 @@ msgstr ""
 
 #: src/wizard.c:1078
 msgid "Automatically map all available services to channels."
-msgstr ""
+msgstr "Automaatselt seosta kõik saadaolevad teenused kanaliteks"
 
 #: src/bouquet.c:991
 msgid "Automatically map channels defined within the bouquet."
-msgstr ""
+msgstr "Automaatselt seosta kanalid, mis kimbu sees on defineeritud."
 
 #: src/channels.c:383
 msgid "Automatically name from network"
@@ -741,11 +741,11 @@ msgstr "Nimeta automaatselt võrgust"
 #: src/channels.c:384
 msgid ""
 "Automatically name from network. Always use the name defined by the network."
-msgstr ""
+msgstr "Automaatselt nimeta võrgust. Alati kasuta nime, mis on võrgu poolt määratud."
 
-#: src/dvr/dvr_db.c:3123
+#: src/dvr/dvr_db.c:3124
 msgid "Automatically record."
-msgstr ""
+msgstr "Automaatselt salvesta."
 
 #: src/epggrab.c:300
 msgid ""
@@ -797,7 +797,7 @@ msgstr "Halb"
 
 #: src/htsp_server.c:1320
 msgid "Bad request"
-msgstr ""
+msgstr "Halb päring"
 
 #: src/epg.c:2272
 msgid "Ballet"
@@ -825,7 +825,7 @@ msgstr ""
 
 #: src/access.c:1359
 msgid "Blue"
-msgstr ""
+msgstr "Sinine"
 
 #: src/input/mpegts/satip/satip.c:438
 msgid "Boot ID"
@@ -837,11 +837,11 @@ msgstr "Kanalite kimp"
 
 #: src/channels.c:522
 msgid "Bouquet (auto)"
-msgstr "kanalite kimp (automaatne)"
+msgstr "Kanalite kimp (automaatne)"
 
 #: src/channels.c:523
 msgid "Bouquet (auto). The bouquet the channel is associated with."
-msgstr ""
+msgstr "Kanalite kimp (auto). Kanalite kimp, millega antud kanal seotud on."
 
 #: src/bouquet.c:1081
 msgid "Bouquet source."
@@ -855,17 +855,17 @@ msgstr "Bränd"
 msgid "Branding information (if available)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3183
+#: src/dvr/dvr_db.c:3184
 msgid "Broadcast"
 msgstr "Levi"
 
 #: src/dvr/dvr_autorec.c:1067
 msgid "Broadcast type"
-msgstr ""
+msgstr "Levi tüüp"
 
-#: src/dvr/dvr_db.c:3184
+#: src/dvr/dvr_db.c:3185
 msgid "Broadcast."
-msgstr ""
+msgstr "Levi."
 
 #: src/epg.c:2295
 msgid "Broadcasting"
@@ -873,7 +873,7 @@ msgstr "Levitamine"
 
 #: src/input/mpegts/iptv/iptv_mux.c:252
 msgid "Buffering limit (ms)"
-msgstr ""
+msgstr "Puhverdamise limiit (ms)"
 
 #: src/webui/extjs.c:214
 msgid "Build"
@@ -893,20 +893,20 @@ msgstr ""
 msgid "CA ID"
 msgstr "CA ID"
 
-#: src/esfilter.c:1017
+#: src/esfilter.c:1016
 msgid "CA Stream Filter"
-msgstr ""
+msgstr "CA voogedastuse filter"
 
 #: src/descrambler/caclient.c:180
 #, c-format
 msgid "CA client %i"
 msgstr "CA klient %i"
 
-#: src/esfilter.c:1034
+#: src/esfilter.c:1033
 msgid "CA identification"
 msgstr "CA tuvastamine"
 
-#: src/esfilter.c:1044
+#: src/esfilter.c:1043
 msgid "CA provider"
 msgstr "CA pakkuja"
 
@@ -916,11 +916,11 @@ msgstr "CAID"
 
 #: src/descrambler/capmt.c:2375
 msgid "CAPMT (Linux Network DVBAPI)"
-msgstr ""
+msgstr "CAPMT (Linux Network DVBAPI)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:231
 msgid "CAPMT interval (in ms)."
-msgstr ""
+msgstr "CAPMT intervall (ms)."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:230
 msgid "CAPMT interval (ms)"
@@ -932,7 +932,7 @@ msgstr "CAPMT päringu intervall (ms)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:240
 msgid "CAPMT query interval (ms)."
-msgstr ""
+msgstr "CAPMT päringu intervall (ms)."
 
 #: src/input/mpegts/mpegts_mux.c:574 src/input/mpegts/mpegts_service.c:176
 msgid "CRID authority"
@@ -983,27 +983,27 @@ msgstr "Camd.socket filename / IP Address (TCP mode)"
 msgid "Cartoons"
 msgstr "Multikad"
 
-#: src/service.c:195 src/dvr/dvr_db.c:2915 src/dvr/dvr_autorec.c:1042
+#: src/service.c:195 src/dvr/dvr_db.c:2916 src/dvr/dvr_autorec.c:1042
 #: src/dvr/dvr_timerec.c:571
 msgid "Channel"
 msgstr "Kanal"
 
 #: src/channels.c:1407
 msgid "Channel Tags"
-msgstr ""
+msgstr "Kanali märked"
 
 #: src/htsp_server.c:1510 src/htsp_server.c:1552 src/htsp_server.c:1637
 #: src/htsp_server.c:1807 src/htsp_server.c:2343 src/htsp_server.c:2346
 msgid "Channel does not exist"
-msgstr ""
+msgstr "Kanal ei eksisteeri"
 
-#: src/dvr/dvr_db.c:2926
+#: src/dvr/dvr_db.c:2927
 msgid "Channel icon"
 msgstr "Kanali ikoon"
 
-#: src/dvr/dvr_db.c:2927
+#: src/dvr/dvr_db.c:2928
 msgid "Channel icon URL."
-msgstr ""
+msgstr "Kanali ikooni URL."
 
 #: src/epggrab/channel.c:825
 msgid "Channel icon as defined in EPG data."
@@ -1015,19 +1015,19 @@ msgstr ""
 
 #: src/config.c:2277
 msgid "Channel icon path"
-msgstr ""
+msgstr "Viide kanali ikoonile"
 
 #: src/bouquet.c:1000
 msgid "Channel mapping options"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2934
+#: src/dvr/dvr_db.c:2935
 msgid "Channel name"
 msgstr "Kanali nimi"
 
 #: src/htsp_server.c:2288
 msgid "Channel not found"
-msgstr ""
+msgstr "Kanalit ei leitud"
 
 #: src/input/mpegts/iptv/iptv_mux.c:175
 msgid "Channel number"
@@ -1043,7 +1043,7 @@ msgstr "Kanali numbrite tasakaalustus"
 
 #: src/epggrab/module/xmltv.c:751
 msgid "Channel numbers (heuristic)"
-msgstr ""
+msgstr "Kanali numbrid (heuristiline)"
 
 #: src/input/mpegts/iptv/iptv.c:851
 msgid "Channel numbers from"
@@ -1055,7 +1055,7 @@ msgstr "Kanali märge"
 
 #: src/htsp_server.c:1643
 msgid "Channel tag does not exist"
-msgstr ""
+msgstr "Kanali märge ei eksisteeri"
 
 #: src/bouquet.c:1036
 msgid "Channel tag reference"
@@ -1090,7 +1090,7 @@ msgstr ""
 msgid "Character set"
 msgstr "Tähestik kooditabeli alusel"
 
-#: src/dvr/dvr_config.c:1276
+#: src/dvr/dvr_config.c:1277
 msgid ""
 "Characters not supported in Windows filenames (e.g. for an SMB/CIFS share) "
 "will be stripped out or converted."
@@ -1144,7 +1144,7 @@ msgstr "Klooni ajastatud kirje vea juhtumisel "
 
 #: src/descrambler/cwc.c:1827
 msgid "Code Word Client (newcamd)"
-msgstr ""
+msgstr "Code Word Client (newcamd)"
 
 #: src/epg.c:2201
 msgid "Comedy"
@@ -1159,10 +1159,10 @@ msgid "Command time (ms) (10-100)"
 msgstr "Käskluse aeg (ms) (10-100)"
 
 #: src/access.c:1627 src/access.c:1845 src/access.c:1982 src/channels.c:1484
-#: src/esfilter.c:720 src/esfilter.c:815 src/esfilter.c:910
-#: src/esfilter.c:1005 src/esfilter.c:1110 src/esfilter.c:1192
+#: src/esfilter.c:719 src/esfilter.c:814 src/esfilter.c:909
+#: src/esfilter.c:1004 src/esfilter.c:1109 src/esfilter.c:1191
 #: src/profile.c:334 src/bouquet.c:1115 src/epggrab/channel.c:867
-#: src/dvr/dvr_db.c:3241 src/dvr/dvr_autorec.c:1282 src/dvr/dvr_timerec.c:675
+#: src/dvr/dvr_db.c:3242 src/dvr/dvr_autorec.c:1282 src/dvr/dvr_timerec.c:675
 #: src/dvr/dvr_config.c:867 src/descrambler/caclient.c:288
 msgid "Comment"
 msgstr "Kommentaar"
@@ -1173,8 +1173,9 @@ msgstr "Kommertsreklaam"
 
 #: src/dvr/dvr_config.c:1123
 msgid ""
-"Commercials will be dropped from the recordings. At the moment, commercial "
-"detection only works for the Swedish channel TV4."
+"Commercials will be dropped from the recordings. Commercial detection works "
+"using EITp/f (EPG running state) and for the Swedish channel TV4 (using "
+"teletext info)."
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:125
@@ -1187,11 +1188,11 @@ msgstr "Lõpetanud OK"
 
 #: src/config.c:2174
 msgid "Compress EPG database"
-msgstr ""
+msgstr "Paki kokku EPG andmebaas"
 
 #: src/config.c:2175
 msgid "Compress the EPG database to reduce disk I/O and space."
-msgstr ""
+msgstr "Paki kokku EGP andmebaas, et vähendada kõvaketta poole pöördumist ja ruumikasutust."
 
 #: src/input/mpegts/satip/satip_satconf.c:378
 msgid ""
@@ -1205,11 +1206,11 @@ msgstr ""
 
 #: src/descrambler/caclient.c:245
 msgid "Conditional Access Client"
-msgstr ""
+msgstr "Conditional Access Client"
 
 #: src/descrambler/constcw.c:291 src/descrambler/constcw.c:357
 msgid "Conditional Access Identification."
-msgstr ""
+msgstr "Conditional Access Identification."
 
 #: src/profile.c:287 src/profile.c:1054 src/profile.c:1186 src/profile.c:1356
 #: src/profile.c:1707 src/epggrab/channel.c:735
@@ -1218,15 +1219,15 @@ msgstr "Seaded"
 
 #: src/config.c:1981
 msgid "Configuration - Base"
-msgstr ""
+msgstr "Konfiguratsioon - Alus"
 
 #: src/imagecache.c:79
 msgid "Configuration - Image Cache"
-msgstr ""
+msgstr "Konfiguratsioon - Pildipuhver"
 
 #: src/satip/server.c:574
 msgid "Configuration - SAT>IP Server"
-msgstr ""
+msgstr "Konfiguratsioon - SAT>IP server"
 
 #: src/input/mpegts/satip/satip.c:446
 msgid "Configuration ID"
@@ -1265,13 +1266,13 @@ msgstr "Sisu tähestik kooditabeli alusel"
 msgid "Content reference identifier authority."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3174 src/dvr/dvr_autorec.c:1077
+#: src/dvr/dvr_db.c:3175 src/dvr/dvr_autorec.c:1077
 msgid "Content type"
 msgstr "Sisu tüüp"
 
-#: src/dvr/dvr_db.c:3175
+#: src/dvr/dvr_db.c:3176
 msgid "Content type."
-msgstr ""
+msgstr "Sisu tüüp."
 
 #: src/epg.c:2230
 msgid "Contest"
@@ -1283,11 +1284,11 @@ msgstr "Jätka isegi kui lahtikodeerimine ebaõnnestub"
 
 #: src/dvr/dvr_autorec.c:1122
 msgid "Continue recording for x minutes after scheduled stop time"
-msgstr ""
+msgstr "Jätka salvestamist x minutit peale ajastatud lõpuaega"
 
-#: src/dvr/dvr_db.c:2889 src/dvr/dvr_config.c:975
+#: src/dvr/dvr_db.c:2890 src/dvr/dvr_config.c:975
 msgid "Continue recording for x minutes after scheduled stop time."
-msgstr ""
+msgstr "Jätka salvestamist x minutit peale ajastatud lõpuaega."
 
 #: src/config.c:2087
 msgid "Cookie expiration (days)"
@@ -1307,27 +1308,27 @@ msgstr "Copy layout"
 
 #: src/memoryinfo.c:69
 msgid "Count of objects"
-msgstr ""
+msgstr "Objektide loend"
 
 #: src/service_mapper.c:528
 msgid "Create SDTV/HDTV/Radio tags."
-msgstr ""
+msgstr "Loo SDTV/HDTV/Raadio märkeid."
 
-#: src/dvr/dvr_config.c:1170
+#: src/dvr/dvr_config.c:1171
 msgid ""
 "Create a directory per channel when storing recordings. If both this and the"
 " 'directory per day' checkbox is enabled, the date-directory will be the "
 "parent of the per-channel directory."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1182
+#: src/dvr/dvr_config.c:1183
 msgid ""
 "Create a directory per title when storing recordings. If the day/channel "
 "directory checkboxes are also enabled, those directories will be parents of "
 "this directory."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1158
+#: src/dvr/dvr_config.c:1159
 msgid ""
 "Create a new directory per day in the recording system path. Folders will "
 "only be created when something is recorded. The format of the directory will"
@@ -1336,7 +1337,7 @@ msgstr ""
 
 #: src/service_mapper.c:536
 msgid "Create a provider name tag."
-msgstr ""
+msgstr "Loo teenusepakkuja nime märge."
 
 #: src/wizard.c:1096
 msgid "Create and associate a network tag to created channels."
@@ -1363,15 +1364,15 @@ msgstr "Loo kanalite kimp"
 
 #: src/bouquet.c:786
 msgid "Create bouquet tag"
-msgstr ""
+msgstr "Loo kanalite kimbu märge"
 
-#: src/dvr/dvr_config.c:1148
+#: src/dvr/dvr_config.c:1149
 msgid "Create directories using these permissions."
-msgstr ""
+msgstr "Loo kataloogid kasutades neid lube."
 
 #: src/dvr/dvr_config.c:1090
 msgid "Create files using these permissions."
-msgstr ""
+msgstr "Loo failid kasutades neid lube."
 
 #: src/service_mapper.c:543 src/bouquet.c:801
 msgid "Create network name tags"
@@ -1379,15 +1380,15 @@ msgstr "Loo võrgu nime märkeid"
 
 #: src/service_mapper.c:544
 msgid "Create network name tags (set by provider)."
-msgstr ""
+msgstr "Loo võrgu nime märkeid (määratud teenusepakkuja poolt)."
 
 #: src/wizard.c:1095
 msgid "Create network tags"
-msgstr ""
+msgstr "Loo uusi võrgu märkeid"
 
 #: src/service_mapper.c:535 src/bouquet.c:796
 msgid "Create provider name tags"
-msgstr "Loo pakkujate nimede märkeid"
+msgstr "Loo teenusepakkujate nimede märkeid"
 
 #: src/wizard.c:1086
 msgid "Create provider tags"
@@ -1404,14 +1405,14 @@ msgid ""
 msgstr ""
 
 #: src/service_mapper.c:527 src/bouquet.c:791
-msgid "Create type based tags"
-msgstr "Loo tüübile põhinevaid märkeid"
+msgid "Create type-based tags"
+msgstr ""
 
 #: src/input/mpegts/mpegts_service.c:240
 msgid "Created"
 msgstr "Loodud"
 
-#: src/dvr/dvr_db.c:3046 src/dvr/dvr_autorec.c:1272 src/dvr/dvr_timerec.c:665
+#: src/dvr/dvr_db.c:3047 src/dvr/dvr_autorec.c:1272 src/dvr/dvr_timerec.c:665
 msgid "Creator"
 msgstr "Autor"
 
@@ -1453,23 +1454,23 @@ msgstr "Omaloodud HTTP päised"
 
 #: src/input/mpegts/mpegts_network_dvb.c:435
 msgid "DAB Network"
-msgstr ""
+msgstr "DAB Network"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:877
 msgid "DAB multiplex"
-msgstr ""
+msgstr "DAB multiplex"
 
-#: src/main.c:815
+#: src/main.c:814
 msgid "DBus - use the session message bus instead of the system one"
 msgstr "DBus - kasuta sessioonipõhist teavitust eelistades seda süsteemsele teavitusele"
 
 #: src/descrambler/constcw.c:285
 msgid "DES Constant Code Word"
-msgstr ""
+msgstr "DES Constant Code Word"
 
 #: src/descrambler/cwc.c:1863
 msgid "DES Key."
-msgstr ""
+msgstr "DES võti."
 
 #: src/descrambler/cwc.c:1862
 msgid "DES key"
@@ -1479,17 +1480,17 @@ msgstr "DES võti"
 msgid "DSCP/TOS for streaming"
 msgstr "DSCP/TOS striimimiseks"
 
-#: src/dvr/dvr_db.c:3098
+#: src/dvr/dvr_db.c:3099
 msgid "DVB EPG ID"
 msgstr "DVB EPG ID"
 
 #: src/input/mpegts/mpegts_network.c:137
 msgid "DVB Inputs - Networks"
-msgstr ""
+msgstr "DVB sisendid - võrgud"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:143
 msgid "DVB multiplex"
-msgstr ""
+msgstr "DVB multiplex"
 
 #: src/config.c:2000
 msgid "DVB scan files"
@@ -1505,11 +1506,11 @@ msgstr "DVB-C"
 
 #: src/input/mpegts/mpegts_network_dvb.c:264
 msgid "DVB-C Network"
-msgstr ""
+msgstr "DVB-C võrk"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:311
 msgid "DVB-C multiplex"
-msgstr ""
+msgstr "DVB-C multiplex"
 
 #: src/satip/server.c:718
 msgid "DVB-C2"
@@ -1521,15 +1522,15 @@ msgstr "DVB-S"
 
 #: src/input/mpegts/mpegts_network_dvb.c:287
 msgid "DVB-S Network"
-msgstr ""
+msgstr "DVB-S võrk"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:217
 msgid "DVB-S Satellite Configuration"
-msgstr ""
+msgstr "DVB-S satelliidi seaded"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:442
 msgid "DVB-S multiplex"
-msgstr ""
+msgstr "DVB-S multiplex"
 
 #: src/satip/server.c:686
 msgid "DVB-S2"
@@ -1541,11 +1542,11 @@ msgstr "DVB-T"
 
 #: src/input/mpegts/mpegts_network_dvb.c:241
 msgid "DVB-T Network"
-msgstr ""
+msgstr "DVB-T võrk"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:215
 msgid "DVB-T multiplex"
-msgstr ""
+msgstr "DVB-T multiplex"
 
 #: src/satip/server.c:702
 msgid "DVB-T2"
@@ -1557,25 +1558,25 @@ msgstr "DVR"
 
 #: src/dvr/dvr_autorec.c:988
 msgid "DVR - Auto-recording (Autorecs)"
-msgstr ""
+msgstr "DVR - automaatne salvestus (automaatsalvestuse kirjed)"
 
 #: src/dvr/dvr_config.c:803
 msgid "DVR - Profiles"
-msgstr ""
+msgstr "DVR - profiilid"
 
 #: src/dvr/dvr_timerec.c:525
 msgid "DVR - Time-based Recording (Timers)"
 msgstr ""
 
-#: src/dvr/dvr_db.c:2831
+#: src/dvr/dvr_db.c:2832
 msgid "DVR Entries"
-msgstr ""
+msgstr "DVR kirjed"
 
 #: src/dvr/dvr_config.c:813
 msgid "DVR behavior"
 msgstr "DVR käitumine"
 
-#: src/dvr/dvr_db.c:2374 src/dvr/dvr_db.c:2398 src/dvr/dvr_db.c:3025
+#: src/dvr/dvr_db.c:2375 src/dvr/dvr_db.c:2399 src/dvr/dvr_db.c:3026
 #: src/dvr/dvr_autorec.c:1226 src/dvr/dvr_timerec.c:646
 msgid "DVR configuration"
 msgstr "DVRi seaded"
@@ -1586,14 +1587,14 @@ msgstr "DVRi seadete profiilid"
 
 #: src/htsp_server.c:1881
 msgid "DVR entry not found"
-msgstr ""
+msgstr "DVR kirjet ei leitud"
 
-#: src/dvr/dvr_db.c:3015 src/dvr/dvr_autorec.c:1198 src/dvr/dvr_timerec.c:636
+#: src/dvr/dvr_db.c:3016 src/dvr/dvr_autorec.c:1198 src/dvr/dvr_timerec.c:636
 #: src/dvr/dvr_config.c:912
 msgid "DVR file retention period"
 msgstr "DVRi faili alleshoidmise aeg"
 
-#: src/dvr/dvr_db.c:3005 src/dvr/dvr_autorec.c:1188 src/dvr/dvr_timerec.c:626
+#: src/dvr/dvr_db.c:3006 src/dvr/dvr_autorec.c:1188 src/dvr/dvr_timerec.c:626
 msgid "DVR log retention"
 msgstr "DVRi logi alleshoidmise aeg"
 
@@ -1623,11 +1624,11 @@ msgstr "DVR override: pole tähtis"
 
 #: src/dvr/dvr_timerec.c:647
 msgid "DVR profile to use/used for the recording."
-msgstr ""
+msgstr "DVP profiil salvestamise jaoks."
 
 #: src/htsp_server.c:2296 src/htsp_server.c:2657
 msgid "DVR schedule does not exist"
-msgstr ""
+msgstr "DVRi ajakava ei eksisteeri"
 
 #: src/htsp_server.c:2665
 msgid "DVR schedule does not have a file yet"
@@ -1635,19 +1636,19 @@ msgstr ""
 
 #: src/htsp_server.c:2244
 msgid "DVR schedule not found"
-msgstr ""
+msgstr "DVR ajakava ei leitud"
 
 #: src/epg.c:2272
 msgid "Dance"
 msgstr "Tants"
 
-#: src/dvr/dvr_db.c:3089
+#: src/dvr/dvr_db.c:3090
 msgid "Data errors"
 msgstr "Data vead"
 
 #: src/epggrab/channel.c:772
 msgid "Data path (if applicable)."
-msgstr ""
+msgstr "Data viide (kui on)"
 
 #: src/epggrab/channel.c:781
 msgid "Date the EPG data was last updated (not set for OTA grabbers)."
@@ -1678,7 +1679,7 @@ msgstr "Debugimise log libav kohta"
 msgid "Debug log path"
 msgstr "Debugimise logi viide"
 
-#: src/main.c:851
+#: src/main.c:850
 msgid "Debug options"
 msgstr "Debugimise valikud"
 
@@ -1708,7 +1709,7 @@ msgstr "Vaikimisi keel(ed)"
 
 #: src/access.c:1432
 msgid "Default language."
-msgstr ""
+msgstr "Vaikimisi keel."
 
 #: src/profile.c:343
 msgid "Default priority"
@@ -1716,11 +1717,11 @@ msgstr "Vaikimisi prioriteet"
 
 #: src/access.c:1414
 msgid "Default user interface level."
-msgstr ""
+msgstr "Vaikimisi kasutaja kasutajaliidese tase."
 
 #: src/input/mpegts/satip/satip_satconf.c:389
 msgid "Define network group to limit network usage."
-msgstr ""
+msgstr "Defineeri võrgu grupp piiramaks võrgukasutust."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:218 src/input/mpegts/mpegts_mux_dvb.c:314
 #: src/input/mpegts/mpegts_mux_dvb.c:445 src/input/mpegts/mpegts_mux_dvb.c:548
@@ -1742,7 +1743,7 @@ msgstr "Lahtikodeerimisteenused (piirang per mux)"
 msgid "Descrambler buffer (TS packets)"
 msgstr "Lahtikodeerija puhver (TS paketid)"
 
-#: src/dvr/dvr_db.c:2978 src/dvr/dvr_db.c:2986
+#: src/dvr/dvr_db.c:2979 src/dvr/dvr_db.c:2987
 msgid "Description"
 msgstr "Kirjeldus"
 
@@ -1779,7 +1780,7 @@ msgid ""
 "option should be enabled for standard usage."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3065 src/dvr/dvr_autorec.c:1014 src/dvr/dvr_timerec.c:560
+#: src/dvr/dvr_db.c:3066 src/dvr/dvr_autorec.c:1014 src/dvr/dvr_timerec.c:560
 msgid "Directory"
 msgstr "Kataloog"
 
@@ -1790,31 +1791,31 @@ msgid ""
 "subdirectory"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1147
+#: src/dvr/dvr_config.c:1148
 msgid "Directory permissions (octal, e.g. 0775)"
 msgstr "Kataloogi loabitid (numbritena, nt 0775)"
 
-#: src/dvr/dvr_db.c:3066
+#: src/dvr/dvr_db.c:3067
 msgid "Directory used by the entry."
-msgstr ""
+msgstr "Kirje poolt kasutatav kataloog."
 
 #: src/input/mpegts/mpegts_mux.c:463
 msgid "Disable"
 msgstr "Lülita välja"
 
-#: src/main.c:871
+#: src/main.c:870
 msgid "Disable DVB bouquets"
 msgstr "Lülita välja DVB kanalite kimbud"
 
-#: src/main.c:830
+#: src/main.c:829
 msgid "Disable SAT>IP client"
 msgstr "Lülita välja SAT>IP klient"
 
-#: src/main.c:869
+#: src/main.c:868
 msgid "Disable all access control checks"
 msgstr "Lülita välja kõik ligipääsu kontrollid"
 
-#: src/main.c:853
+#: src/main.c:852
 msgid "Disable debug on stderr"
 msgstr "Lülita välja debugimine standard veavoogu"
 
@@ -1822,7 +1823,7 @@ msgstr "Lülita välja debugimine standard veavoogu"
 msgid "Disable device/firmware-specific workarounds"
 msgstr "Lülita välja seadme/firmware spetsiifilised workaround'id"
 
-#: src/main.c:855
+#: src/main.c:854
 msgid "Disable syslog (all messages)"
 msgstr "Lülita välja syslog (kõik teated)"
 
@@ -1868,15 +1869,15 @@ msgid ""
 "client that normally should be able to decrypt the stream."
 msgstr ""
 
-#: src/main.c:801
+#: src/main.c:800
 msgid "Don't backup configuration tree at upgrade"
 msgstr "Ära tee tarkvara uuendamisel kõikidest seadetest tagavarakoopiat  "
 
-#: src/dvr/dvr_config.c:1247
+#: src/dvr/dvr_config.c:1248
 msgid "Don't include the title in the filename."
-msgstr ""
+msgstr "Ära kaasa pealkirja faili nimes."
 
-#: src/dvr/dvr_config.c:1246
+#: src/dvr/dvr_config.c:1247
 msgid "Don't include title in filename"
 msgstr "Ära kaasa pealkirja faili nimes"
 
@@ -1884,25 +1885,25 @@ msgstr "Ära kaasa pealkirja faili nimes"
 msgid "Don't keep"
 msgstr "Ära jäta alles"
 
-#: src/dvr/dvr_db.c:3114
+#: src/dvr/dvr_db.c:3115
 msgid "Don't re-record"
 msgstr "Ära taassalvesta"
 
-#: src/dvr/dvr_db.c:3115
+#: src/dvr/dvr_db.c:3116
 msgid "Don't re-record if recording fails."
-msgstr ""
+msgstr "Ära taassalvesta kui salvestus ebaõnnestub."
+
+#: src/dvr/dvr_db.c:3108
+msgid "Don't re-schedule if recording fails."
+msgstr "Ära taasajasta kui salvestus ebaõnnestub."
 
 #: src/dvr/dvr_db.c:3107
-msgid "Don't re-schedule if recording fails."
-msgstr ""
-
-#: src/dvr/dvr_db.c:3106
 msgid "Don't reschedule"
 msgstr "Ära taasajasta"
 
 #: src/input/mpegts/mpegts_network.c:221
 msgid "Don't use the provider's channel numbers."
-msgstr ""
+msgstr "Ära kasuta teenusepakkuja kanalite numeratsiooni."
 
 #: src/epg.c:2197 src/epg.c:2204 src/epg.c:2205 src/epg.c:2206 src/epg.c:2207
 #: src/epg.c:2208 src/epg.c:2209 src/epg.c:2210
@@ -1915,7 +1916,7 @@ msgstr "Duplikaatide käsitlemine"
 
 #: src/dvr/dvr_autorec.c:1179
 msgid "Duplicate recording handling."
-msgstr ""
+msgstr "Duplikaatsalvestuste käsitlemine."
 
 #: src/config.c:1907
 msgid "EF"
@@ -1931,23 +1932,23 @@ msgstr ""
 
 #: src/epggrab/module.c:111
 msgid "EPG Grabber"
-msgstr ""
+msgstr "EPG hankija"
 
 #: src/epggrab/channel.c:726
 msgid "EPG Grabber Channel"
-msgstr ""
+msgstr "EPG hankija kanal"
 
 #: src/epggrab.c:252
 msgid "EPG Grabber Configuration"
-msgstr ""
+msgstr "EPG hankija seaded"
 
 #: src/wizard.c:188
 msgid "EPG Language (priority order)"
-msgstr ""
+msgstr "EPG keel (prioriteedijärjekord)"
 
 #: src/epggrab/channel.c:791
 msgid "EPG data ID."
-msgstr ""
+msgstr "EPG data ID."
 
 #: src/input/mpegts/iptv/iptv_mux.c:187
 msgid "EPG name"
@@ -1995,7 +1996,7 @@ msgstr "Voogedastuse elementaarne filter"
 msgid "Enable (auto)"
 msgstr "Lülita sisse (automaatne)"
 
-#: src/main.c:813
+#: src/main.c:812
 msgid "Enable DBus"
 msgstr "Lülita sisse DBus"
 
@@ -2003,23 +2004,23 @@ msgstr "Lülita sisse DBus"
 msgid "Enable NTP driver"
 msgstr "Lülita sisse NTP draiver"
 
-#: src/main.c:868
+#: src/main.c:867
 msgid "Enable coredumps for daemon"
 msgstr "Lülita sisse deemoni coredump funktsionaalsus"
 
-#: src/main.c:852
+#: src/main.c:851
 msgid "Enable debug on stderr"
 msgstr "Lülita sisse debugimine stdrerr'i"
 
-#: src/main.c:857
+#: src/main.c:856
 msgid "Enable debug subsystems"
 msgstr "Lülita sisse alamsüsteemide debugimine"
 
-#: src/main.c:856
+#: src/main.c:855
 msgid "Enable debug to file"
 msgstr "Lülita sisse debugimine faili"
 
-#: src/main.c:854
+#: src/main.c:853
 msgid "Enable debug to syslog"
 msgstr "Lülita sisse debugimine syslog'i"
 
@@ -2071,7 +2072,7 @@ msgstr "Lülita sisse või välja EIT (Event Information Table) infoga arvestami
 
 #: src/input/mpegts/mpegts_mux.c:507
 msgid "Enable or disable the mux."
-msgstr ""
+msgstr "Lülita mux sisse või välja."
 
 #: src/input/mpegts/satip/satip_satconf.c:337
 msgid "Enable or disable this configuration."
@@ -2099,19 +2100,19 @@ msgstr ""
 
 #: src/esfilter.c:627
 msgid "Enable this filter."
-msgstr ""
+msgstr "Luba see filter."
 
-#: src/main.c:859
+#: src/main.c:858
 msgid "Enable trace subsystems"
 msgstr "Lülita sisse alamsüsteemide trace"
 
-#: src/main.c:866
+#: src/main.c:865
 msgid "Enable web UI debug (non-minified JS)"
 msgstr "Lülita sisse veebiliidese debugimine (mitteminimeeritud javascript)"
 
 #: src/descrambler/caclient.c:274
 msgid "Enable/Disable CA client."
-msgstr ""
+msgstr "Lülita CA klient sisse/välja."
 
 #: src/epggrab/channel.c:745
 msgid "Enable/disable EPG data for the entry."
@@ -2119,11 +2120,11 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:191
 msgid "Enable/disable LNA."
-msgstr ""
+msgstr "Lülita LNA sisse/välja."
 
 #: src/dvr/dvr_autorec.c:1001
 msgid "Enable/disable auto-rec rule."
-msgstr ""
+msgstr "Lülita automaatsalvestuse reegel sisse/välja."
 
 #: src/tvhlog.c:654
 msgid "Enable/disable debugging output to syslog."
@@ -2135,15 +2136,15 @@ msgstr ""
 
 #: src/config.c:2067
 msgid "Enable/disable interface quick tips."
-msgstr ""
+msgstr "Lülita kasutajaliidese vihjed sisse/välja."
 
 #: src/tvhlog.c:702
 msgid "Enable/disable libav log output."
-msgstr ""
+msgstr "Lülita sisse/välja libav logi väljund."
 
 #: src/tvhlog.c:645
 msgid "Enable/disable logging to syslog."
-msgstr ""
+msgstr "Lülita sisse/välja debugimine syslog'i."
 
 #: src/descrambler/cwc.c:1873
 msgid "Enable/disable offering of Entitlement Management Message updates."
@@ -2159,49 +2160,49 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:846
 msgid "Enable/disable profile."
-msgstr ""
+msgstr "Lülita profiil sisse/välja."
 
 #: src/bouquet.c:974
 msgid "Enable/disable the bouquet."
-msgstr ""
+msgstr "Lülita kanalikimp sisse/välja."
 
 #: src/channels.c:377
 msgid "Enable/disable the channel."
-msgstr ""
+msgstr "Lülita kanal sisse/välja."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:189
 msgid "Enable/disable the device."
-msgstr ""
+msgstr "Lülita seade sisse/välja."
 
-#: src/access.c:1391 src/access.c:1814 src/access.c:1966 src/dvr/dvr_db.c:2844
+#: src/access.c:1391 src/access.c:1814 src/access.c:1966 src/dvr/dvr_db.c:2845
 #: src/dvr/dvr_timerec.c:538 src/input/mpegts/mpegts_mux_sched.c:139
 msgid "Enable/disable the entry."
-msgstr ""
+msgstr "Lülita kirje sisse/välja."
 
 #: src/epggrab/module.c:148
 msgid "Enable/disable the grabber."
-msgstr ""
+msgstr "Lülita hankija sisse/välja."
 
 #: src/profile.c:306
 msgid "Enable/disable the profile."
-msgstr ""
+msgstr "Lülita profiil sisse/välja."
 
 #: src/channels.c:1418
 msgid "Enable/disable the tag."
-msgstr ""
+msgstr "Lülita märge sisse/välja."
 
 #: src/timeshift.c:185
 msgid "Enable/disable timeshift."
-msgstr ""
+msgstr "Lülita ajanihe sisse/välja."
 
 #: src/input/mpegts/mpegts_input.c:235
 msgid "Enable/disable tuner/adapter."
-msgstr ""
+msgstr "Lülita tüüner/adapter sisse/välja."
 
 #: src/access.c:1390 src/access.c:1813 src/access.c:1965 src/channels.c:356
 #: src/channels.c:376 src/channels.c:1417 src/service.c:176
 #: src/imagecache.c:88 src/esfilter.c:626 src/profile.c:305 src/bouquet.c:973
-#: src/epggrab/module.c:147 src/epggrab/channel.c:744 src/dvr/dvr_db.c:2843
+#: src/epggrab/module.c:147 src/epggrab/channel.c:744 src/dvr/dvr_db.c:2844
 #: src/dvr/dvr_autorec.c:1000 src/dvr/dvr_timerec.c:537
 #: src/dvr/dvr_config.c:845 src/descrambler/caclient.c:273
 #: src/input/mpegts/mpegts_input.c:234 src/input/mpegts/mpegts_mux.c:506
@@ -2280,7 +2281,7 @@ msgstr "Keskkond"
 msgid "Environment (pipe)"
 msgstr "Keskkonnamuutujad (pipe)"
 
-#: src/dvr/dvr_db.c:3192
+#: src/dvr/dvr_db.c:3193
 msgid "Episode"
 msgstr "Osa"
 
@@ -2289,19 +2290,19 @@ msgstr "Osa"
 msgid "Episode %d"
 msgstr "Osa %d"
 
-#: src/dvr/dvr_db.c:3193
+#: src/dvr/dvr_db.c:3194
 msgid "Episode number/ID."
-msgstr ""
+msgstr "Episoodi number/ID."
 
-#: src/dvr/dvr_db.c:3073
+#: src/dvr/dvr_db.c:3074
 msgid "Error code"
 msgstr "Veakood"
 
-#: src/dvr/dvr_db.c:3074
+#: src/dvr/dvr_db.c:3075
 msgid "Error code of entry."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3081
+#: src/dvr/dvr_db.c:3082
 msgid "Errors"
 msgstr "Veateateid"
 
@@ -2311,11 +2312,11 @@ msgstr "Paaris võti"
 
 #: src/descrambler/constcw.c:327 src/descrambler/constcw.c:393
 msgid "Even key."
-msgstr ""
+msgstr "Paaris võti"
 
 #: src/htsp_server.c:1530 src/htsp_server.c:1555
 msgid "Event does not exist"
-msgstr ""
+msgstr "Juhtum ei eksisteeri"
 
 #: src/dvr/dvr_autorec.c:789
 msgid "Every day"
@@ -2355,7 +2356,7 @@ msgstr "Väline IP aadress (NAT)"
 
 #: src/epggrab/module/pyepg.c:471
 msgid "External PyEPG Grabber"
-msgstr ""
+msgstr "Väline PyEPG hankija"
 
 #: src/bouquet.c:1052
 msgid "External URL"
@@ -2439,11 +2440,11 @@ msgstr "Faili ei loodud"
 msgid "File permissions (octal, e.g. 0664)"
 msgstr "Faili loabitid (numbrites, nt 0664)"
 
-#: src/dvr/dvr_db.c:3208
+#: src/dvr/dvr_db.c:3209
 msgid "File size"
 msgstr "Faili suurus"
 
-#: src/dvr/dvr_db.c:3057
+#: src/dvr/dvr_db.c:3058
 msgid "Filename"
 msgstr "Faili nimi"
 
@@ -2455,7 +2456,7 @@ msgstr "Faili nime tähestik kooditabeli alusel"
 msgid "Filename options"
 msgstr "Faili nime valikud"
 
-#: src/dvr/dvr_db.c:3058
+#: src/dvr/dvr_db.c:3059
 msgid "Filename used by the entry."
 msgstr ""
 
@@ -2564,16 +2565,16 @@ msgstr "Sunni peale sellele teenusele ise sisestatud CA ID."
 msgid "Foreign countries"
 msgstr "Välismaad"
 
-#: src/dvr/dvr_db.c:2389 src/dvr/dvr_db.c:2413 src/dvr/dvr_config.c:736
+#: src/dvr/dvr_db.c:2390 src/dvr/dvr_db.c:2414 src/dvr/dvr_config.c:736
 #: src/dvr/dvr_config.c:759
 msgid "Forever"
 msgstr "Igavesti"
 
-#: src/main.c:802
+#: src/main.c:801
 msgid "Fork and run as daemon"
 msgstr "Jagune ja tööta deemonina"
 
-#: src/dvr/dvr_config.c:1134
+#: src/dvr/dvr_config.c:1135
 msgid "Format string"
 msgstr "Format String"
 
@@ -2594,7 +2595,7 @@ msgid "Free-form field, enter whatever you like here."
 msgstr ""
 
 #: src/access.c:1628 src/access.c:1846 src/access.c:1981 src/channels.c:1485
-#: src/dvr/dvr_db.c:3242 src/dvr/dvr_autorec.c:1283 src/dvr/dvr_timerec.c:676
+#: src/dvr/dvr_db.c:3243 src/dvr/dvr_autorec.c:1283 src/dvr/dvr_timerec.c:676
 msgid "Free-form text field, enter whatever you like here."
 msgstr ""
 
@@ -2606,8 +2607,8 @@ msgstr ""
 msgid "Free-form text field. You can enter whatever you like here."
 msgstr ""
 
-#: src/esfilter.c:721 src/esfilter.c:816 src/esfilter.c:911
-#: src/esfilter.c:1006 src/esfilter.c:1111 src/esfilter.c:1193
+#: src/esfilter.c:720 src/esfilter.c:815 src/esfilter.c:910
+#: src/esfilter.c:1005 src/esfilter.c:1110 src/esfilter.c:1192
 msgid "Free-format text field. Enter whatever you like here."
 msgstr "Formaadivaba tekstiväli. Sisesta mida aga ise soovid."
 
@@ -2628,7 +2629,7 @@ msgstr "Sagedus (MHz)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:493
 msgid "Frequency (in MHz)."
-msgstr ""
+msgstr "Sagedus (MHz'ides)"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:451 src/input/mpegts/mpegts_mux_dvb.c:840
 msgid "Frequency (kHz)"
@@ -2709,7 +2710,7 @@ msgstr "Üldseaded"
 msgid "Generic"
 msgstr "Üldine"
 
-#: src/main.c:795
+#: src/main.c:794
 msgid "Generic options"
 msgstr "Üldised seaded"
 
@@ -2722,7 +2723,7 @@ msgstr ""
 
 #: src/access.c:1360
 msgid "Gray"
-msgstr ""
+msgstr "Hall"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:251 src/input/mpegts/mpegts_mux_dvb.c:693
 msgid "Guard interval"
@@ -2730,7 +2731,7 @@ msgstr "Guard interval"
 
 #: src/service.c:158
 msgid "HD TV"
-msgstr ""
+msgstr "HD TV"
 
 #: src/profile.c:268
 msgid "HD: high definition"
@@ -2766,22 +2767,22 @@ msgstr "HTSP voogedastuse vaikimisi seaded"
 
 #: src/profile.c:978
 msgid "HTSP Stream Profile"
-msgstr ""
+msgstr "HTSP voogedastuse profiil"
 
 #: src/access.c:1472
 msgid "HTSP streaming"
 msgstr "HTSP voogedastus"
 
+#: src/config.c:2098
+msgid ""
+"HTTP CORS (cross-origin resource sharing) origin. This option is usually set"
+" when Tvheadend is behind a proxy. Enter a domain (or IP) to allow cross-"
+"domain requests."
+msgstr ""
+
 #: src/config.c:2097
 msgid "HTTP CORS origin"
 msgstr "HTTP CORS päritolu"
-
-#: src/config.c:2098
-msgid ""
-"HTTP Cross-origin resource sharing origin. This option is usually set when "
-"Tvheadend is behind a proxy. Enter a domain (or IP) to allow cross-domain "
-"requests."
-msgstr ""
 
 #: src/epg.c:2332
 msgid "Handicraft"
@@ -2795,7 +2796,7 @@ msgstr "Vähenenud kuulmine"
 msgid "Hierarchy"
 msgstr "Hierarhia"
 
-#: src/profile.c:249 src/dvr/dvr_db.c:2362
+#: src/profile.c:249 src/dvr/dvr_db.c:2363
 msgid "High"
 msgstr "Kõrge"
 
@@ -2970,7 +2971,7 @@ msgid ""
 "priority by assigning a streaming profile with a higher priority."
 msgstr ""
 
-#: src/main.c:806
+#: src/main.c:805
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -3041,57 +3042,57 @@ msgstr ""
 msgid "Ignore provider's channel numbers"
 msgstr "Ignoreeri pakkujapoolseid kanalite numbreid"
 
-#: src/main.c:867
+#: src/main.c:866
 msgid "Immediately abort"
 msgstr "Katkesta koheselt"
 
-#: src/profile.c:248 src/dvr/dvr_db.c:2361
+#: src/profile.c:248 src/dvr/dvr_db.c:2362
 msgid "Important"
 msgstr "Tähtis"
 
-#: src/dvr/dvr_config.c:1193
+#: src/dvr/dvr_config.c:1194
 msgid "Include channel name in filename"
 msgstr "Kaasa faili nimes kanali nimi"
 
-#: src/dvr/dvr_config.c:1204
+#: src/dvr/dvr_config.c:1205
 msgid "Include date in filename"
 msgstr "Kaasa faili nimes kuupäev "
 
-#: src/dvr/dvr_config.c:1226
+#: src/dvr/dvr_config.c:1227
 msgid "Include episode in filename"
 msgstr "Kaasa faili nimes osa"
 
-#: src/dvr/dvr_config.c:1236
+#: src/dvr/dvr_config.c:1237
 msgid "Include subtitle in filename"
 msgstr "Kaasa faili nimes osa nimi"
 
-#: src/dvr/dvr_config.c:1205
+#: src/dvr/dvr_config.c:1206
 msgid ""
 "Include the date for the recording in the event title. This applies to both "
 "the title stored in the file and to the filename itself."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1237
+#: src/dvr/dvr_config.c:1238
 msgid "Include the episode subtitle in the title (if available)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1194
+#: src/dvr/dvr_config.c:1195
 msgid ""
 "Include the name of the channel in the event title. This applies to both the"
 " title stored in the file and to the filename itself."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1227
+#: src/dvr/dvr_config.c:1228
 msgid "Include the season and episode in the title (if available)."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1216
+#: src/dvr/dvr_config.c:1217
 msgid ""
 "Include the time for the recording in the event title. This applies to both "
 "the title stored in the file and to the filename itself."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1215
+#: src/dvr/dvr_config.c:1216
 msgid "Include time in filename"
 msgstr "Kaasa fail inimes kellaaeg"
 
@@ -3168,7 +3169,7 @@ msgstr "Kehtetu"
 msgid "Invalid EPG object request"
 msgstr ""
 
-#: src/main.c:951
+#: src/main.c:950
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr "Kehtetu adapteri number '%s'\n"
@@ -3203,7 +3204,7 @@ msgstr ""
 msgid "Invalid target"
 msgstr "Kehtetu sihtpunkt"
 
-#: src/webui/doc_md.c:116
+#: src/webui/doc_md.c:118
 msgid "Items"
 msgstr ""
 
@@ -3239,8 +3240,8 @@ msgstr "LNB"
 msgid "LNB type"
 msgstr "LNB tüüp"
 
-#: src/access.c:1431 src/esfilter.c:654 src/esfilter.c:749 src/esfilter.c:844
-#: src/esfilter.c:939 src/esfilter.c:1139 src/profile.c:1753 src/wizard.c:197
+#: src/access.c:1431 src/esfilter.c:654 src/esfilter.c:748 src/esfilter.c:843
+#: src/esfilter.c:938 src/esfilter.c:1138 src/profile.c:1753 src/wizard.c:197
 msgid "Language"
 msgstr "Keel"
 
@@ -3365,7 +3366,7 @@ msgstr ""
 msgid "Listen / Connect port"
 msgstr "Kuula / ühenda porti"
 
-#: src/main.c:836
+#: src/main.c:835
 msgid "Listen on IPv6"
 msgstr "Kuula IPv6 võrguliidesel"
 
@@ -3429,8 +3430,8 @@ msgstr "SAT>IP serveri lokaliseerimise detailid."
 msgid "Lock preferred CA PID"
 msgstr "Lukusta eelistatud CA PID"
 
-#: src/esfilter.c:711 src/esfilter.c:806 src/esfilter.c:901 src/esfilter.c:996
-#: src/esfilter.c:1101 src/esfilter.c:1183
+#: src/esfilter.c:710 src/esfilter.c:805 src/esfilter.c:900 src/esfilter.c:995
+#: src/esfilter.c:1100 src/esfilter.c:1182
 msgid "Log"
 msgstr "Logi"
 
@@ -3446,7 +3447,7 @@ msgstr ""
 msgid "Login/Logout"
 msgstr "Sisse-/väljalogimine"
 
-#: src/profile.c:251 src/dvr/dvr_db.c:2364
+#: src/profile.c:251 src/dvr/dvr_db.c:2365
 msgid "Low"
 msgstr "Madal"
 
@@ -3506,19 +3507,19 @@ msgstr "Hoia vabana salvestusmahtu, megabaitides"
 msgid "Maintain used storage space in MiB (0=disabled)"
 msgstr "Piira kasutuses olevat haldusmahtu, megabaitides (0=väljalülitatud)"
 
-#: src/dvr/dvr_db.c:2412 src/dvr/dvr_config.c:735
+#: src/dvr/dvr_db.c:2413 src/dvr/dvr_config.c:735
 msgid "Maintained space"
 msgstr "Hallatud salvestusmaht"
 
-#: src/dvr/dvr_config.c:1169
+#: src/dvr/dvr_config.c:1170
 msgid "Make subdirectories per channel"
 msgstr "Tee alamkataloogid per kanal"
 
-#: src/dvr/dvr_config.c:1157
+#: src/dvr/dvr_config.c:1158
 msgid "Make subdirectories per day"
 msgstr "Tee alamkataloogid per päev"
 
-#: src/dvr/dvr_config.c:1181
+#: src/dvr/dvr_config.c:1182
 msgid "Make subdirectories per title"
 msgstr "Tee alamkataloogid per pealkiri"
 
@@ -3566,8 +3567,8 @@ msgstr "Seosta nimetud kanalid"
 msgid "Map zero-numbered channels"
 msgstr "Seosta nulliga nummerdatud kanalid"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:286
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:317
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:287
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:318
 #: src/input/mpegts/satip/satip_frontend.c:339
 #: src/input/mpegts/satip/satip_frontend.c:371
 msgid "Master tuner"
@@ -3733,7 +3734,7 @@ msgstr "Esm"
 msgid "Mono"
 msgstr "Mono"
 
-#: src/main.c:864
+#: src/main.c:863
 msgid "More verbose libav log"
 msgstr "Rohkem kirjeldav libav logi"
 
@@ -3822,11 +3823,11 @@ msgstr "EI MIDAGI"
 msgid "Name"
 msgstr "Nimi"
 
-#: src/dvr/dvr_db.c:3234
+#: src/dvr/dvr_db.c:3235
 msgid "Name (or date) of program the entry is a rerun of."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2935
+#: src/dvr/dvr_db.c:2936
 msgid "Name of channel the entry recorded from."
 msgstr ""
 
@@ -4009,7 +4010,7 @@ msgstr "Pole PIN'i"
 msgid "No access"
 msgstr "Pole ligipääsu"
 
-#: src/main.c:964
+#: src/main.c:963
 msgid "No adapters specified!\n"
 msgstr "Ühtegi adapterit pole määratud!\n"
 
@@ -4056,7 +4057,7 @@ msgstr "Ühtegi allikat pole saadaval"
 msgid "None"
 msgstr "Ei midagi"
 
-#: src/profile.c:250 src/dvr/dvr_db.c:2363
+#: src/profile.c:250 src/dvr/dvr_db.c:2364
 msgid "Normal"
 msgstr "Tavaline"
 
@@ -4074,7 +4075,7 @@ msgstr ""
 msgid "Not linked"
 msgstr "Pole lingitud"
 
-#: src/channels.c:354 src/profile.c:1534 src/dvr/dvr_db.c:2360
+#: src/channels.c:354 src/profile.c:1534 src/dvr/dvr_db.c:2361
 msgid "Not set"
 msgstr "Pole seadistatud"
 
@@ -4082,7 +4083,7 @@ msgstr "Pole seadistatud"
 msgid "Not set (none or channel configuration)"
 msgstr "Pole seadistatud (kas pole midagi või kanali seadistus)"
 
-#: src/dvr/dvr_db.c:2811 src/dvr/dvr_autorec.c:666
+#: src/dvr/dvr_db.c:2812 src/dvr/dvr_autorec.c:666
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Pole seadistatud (kasuta kanali või DVR seadeid)"
 
@@ -4090,7 +4091,7 @@ msgstr "Pole seadistatud (kasuta kanali või DVR seadeid)"
 msgid "Number"
 msgstr "Number"
 
-#: src/dvr/dvr_db.c:3016
+#: src/dvr/dvr_db.c:3017
 msgid "Number of days to keep the file."
 msgstr ""
 
@@ -4102,7 +4103,7 @@ msgstr ""
 msgid "Number of days to keep the recorded files."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3006 src/dvr/dvr_timerec.c:627
+#: src/dvr/dvr_db.c:3007 src/dvr/dvr_timerec.c:627
 msgid "Number of days to retain entry information."
 msgstr ""
 
@@ -4114,11 +4115,11 @@ msgstr ""
 msgid "Number of days to retain infomation about recordings."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3090
+#: src/dvr/dvr_db.c:3091
 msgid "Number of errors that occurred during recording (Transport errors)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3082
+#: src/dvr/dvr_db.c:3083
 msgid "Number of errors that occurred during recording."
 msgstr ""
 
@@ -4150,7 +4151,7 @@ msgstr "Mitu sekundit oodata enne loobumist."
 msgid "Number of services."
 msgstr ""
 
-#: src/main.c:879
+#: src/main.c:878
 msgid "Number of tsfile tuners"
 msgstr "Tsfile tuunerite arv"
 
@@ -4213,7 +4214,7 @@ msgstr "Vanem OSCAM"
 msgid "On"
 msgstr "Sees"
 
-#: src/dvr/dvr_db.c:2388 src/dvr/dvr_config.c:758
+#: src/dvr/dvr_db.c:2389 src/dvr/dvr_config.c:758
 msgid "On file removal"
 msgstr "Faili eemaldamisel"
 
@@ -4295,7 +4296,7 @@ msgid ""
 "stop excessive oscillations on the system clock."
 msgstr ""
 
-#: src/main.c:819
+#: src/main.c:818
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
 msgstr ""
 
@@ -4347,11 +4348,11 @@ msgstr "Originaalvõrgu ID"
 msgid "Oscam mode."
 msgstr ""
 
-#: src/esfilter.c:1122
+#: src/esfilter.c:1121
 msgid "Other Stream Filter"
 msgstr ""
 
-#: src/main.c:883
+#: src/main.c:882
 msgid "Output directory for tsdebug"
 msgstr "Väljundkataloog tsdebug'i jaoks"
 
@@ -4384,11 +4385,11 @@ msgstr ""
 msgid "Override the frontend type."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3036 src/dvr/dvr_autorec.c:1264 src/dvr/dvr_timerec.c:657
+#: src/dvr/dvr_db.c:3037 src/dvr/dvr_autorec.c:1264 src/dvr/dvr_timerec.c:657
 msgid "Owner"
 msgstr "Omanik"
 
-#: src/dvr/dvr_db.c:3037 src/dvr/dvr_timerec.c:658
+#: src/dvr/dvr_db.c:3038 src/dvr/dvr_timerec.c:658
 msgid "Owner of the entry."
 msgstr ""
 
@@ -4400,8 +4401,8 @@ msgstr ""
 msgid "PEND"
 msgstr "PEND"
 
-#: src/esfilter.c:688 src/esfilter.c:783 src/esfilter.c:878 src/esfilter.c:973
-#: src/esfilter.c:1078 src/esfilter.c:1160
+#: src/esfilter.c:687 src/esfilter.c:782 src/esfilter.c:877 src/esfilter.c:972
+#: src/esfilter.c:1077 src/esfilter.c:1159
 msgid "PID"
 msgstr "PID"
 
@@ -4443,11 +4444,11 @@ msgstr "PLS kood"
 msgid "PLS mode"
 msgstr "PLS režiim"
 
-#: src/dvr/dvr_db.c:3156
+#: src/dvr/dvr_db.c:3157
 msgid "Parent entry"
 msgstr "Ülemkirje"
 
-#: src/dvr/dvr_db.c:3157
+#: src/dvr/dvr_db.c:3158
 msgid "Parent entry."
 msgstr ""
 
@@ -4600,7 +4601,7 @@ msgstr "Sisendi positsioon."
 msgid "Post-processor command"
 msgstr "Pärast käitlust antav käsklus"
 
-#: src/channels.c:477 src/dvr/dvr_db.c:2888 src/dvr/dvr_config.c:974
+#: src/channels.c:477 src/dvr/dvr_db.c:2889 src/dvr/dvr_config.c:974
 msgid "Post-recording padding"
 msgstr "Lisamine pärast salvestust"
 
@@ -4639,7 +4640,7 @@ msgstr "Eeldefineeritud muxid"
 msgid "Pre-processor command"
 msgstr ""
 
-#: src/channels.c:462 src/dvr/dvr_db.c:2860 src/dvr/dvr_config.c:957
+#: src/channels.c:462 src/dvr/dvr_db.c:2861 src/dvr/dvr_config.c:957
 msgid "Pre-recording padding"
 msgstr "Lisamine enne salvestust"
 
@@ -4694,7 +4695,7 @@ msgid ""
 "removes the view level drop-dowm from the interface."
 msgstr ""
 
-#: src/epggrab/module.c:155 src/dvr/dvr_db.c:2994 src/dvr/dvr_autorec.c:1166
+#: src/epggrab/module.c:155 src/dvr/dvr_db.c:2995 src/dvr/dvr_autorec.c:1166
 #: src/dvr/dvr_timerec.c:616 src/input/mpegts/mpegts_input.c:243
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1348
 #: src/input/mpegts/satip/satip_satconf.c:351 src/input/mpegts/iptv/iptv.c:728
@@ -4710,7 +4711,7 @@ msgstr "Prioriteet (-10..10)"
 msgid "Priority of the entry."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2995
+#: src/dvr/dvr_db.c:2996
 msgid "Priority of the recording."
 msgstr ""
 
@@ -4722,15 +4723,15 @@ msgstr "Privaatne"
 msgid "Profile name"
 msgstr "Profiili nimi"
 
-#: src/esfilter.c:689 src/esfilter.c:784 src/esfilter.c:879 src/esfilter.c:974
-#: src/esfilter.c:1079 src/esfilter.c:1161
+#: src/esfilter.c:688 src/esfilter.c:783 src/esfilter.c:878 src/esfilter.c:973
+#: src/esfilter.c:1078 src/esfilter.c:1160
 msgid ""
 "Program identification (PID) number to compare. Zero means any. This "
 "comparison is processed only when service comparison is active and for the "
 "Conditional Access filter."
 msgstr "Programmi identifikaatori (PID) number võrdlemiseks. Null tähendab kõiki. See võrdlus tehakse ainult siis, kui teenuse võrdlemine on sisselülitatud ja ainult Conditional Access filtrile."
 
-#: src/dvr/dvr_db.c:2979 src/dvr/dvr_db.c:2987
+#: src/dvr/dvr_db.c:2980 src/dvr/dvr_db.c:2988
 msgid "Program synopsis."
 msgstr ""
 
@@ -4740,7 +4741,7 @@ msgstr "Pakkuja"
 
 #: src/descrambler/constcw.c:299 src/descrambler/constcw.c:365
 msgid "Provider ID"
-msgstr "Pakkuja ID"
+msgstr "Teenusepakkuja ID"
 
 #: src/input/mpegts/mpegts_network.c:155 src/input/mpegts/mpegts_mux.c:549
 msgid "Provider network name"
@@ -4796,7 +4797,7 @@ msgid "Re-fetch period (mins)"
 msgstr "Taastõmbamise periood (minutites)"
 
 #: src/bouquet.c:1071
-msgid "Re-fetch the bouquet every x mins."
+msgid "Re-fetch the bouquet every x minutes."
 msgstr ""
 
 #: src/dvr/dvr_db.c:1052
@@ -4830,7 +4831,7 @@ msgstr ""
 msgid "Recording file options"
 msgstr "Salvestamise faili valikud"
 
-#: src/dvr/dvr_db.c:3209
+#: src/dvr/dvr_db.c:3210
 msgid "Recording file size."
 msgstr ""
 
@@ -4864,7 +4865,7 @@ msgstr "Erilised inimesed"
 msgid "Remove HTTP arguments"
 msgstr "Eelmalda HTTP argumendid"
 
-#: src/dvr/dvr_config.c:1255
+#: src/dvr/dvr_config.c:1256
 msgid "Remove all unsafe characters from filename"
 msgstr "Eemalda failinimest kõik tõlgendamatud tähemärgid"
 
@@ -4872,11 +4873,11 @@ msgstr "Eemalda failinimest kõik tõlgendamatud tähemärgid"
 msgid "Repeated"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1266
+#: src/dvr/dvr_config.c:1267
 msgid "Replace whitespace in title with '-'"
 msgstr "Asenda tühikud pealkirjas sidekriipsudega"
 
-#: src/dvr/dvr_config.c:1267
+#: src/dvr/dvr_config.c:1268
 msgid "Replaces all whitespace in the title with '-'."
 msgstr ""
 
@@ -4892,7 +4893,7 @@ msgstr ""
 msgid "Reports"
 msgstr "Raportid"
 
-#: src/dvr/dvr_db.c:3233
+#: src/dvr/dvr_db.c:3234
 msgid "Rerun of"
 msgstr "Taasesitus:"
 
@@ -5008,11 +5009,11 @@ msgstr "Rootori käimatõmbamise aeg (sekundites)"
 msgid "Rotor type"
 msgstr "Rootori tüüp"
 
-#: src/main.c:804
+#: src/main.c:803
 msgid "Run as group"
 msgstr "Käivita grupiga"
 
-#: src/main.c:803
+#: src/main.c:802
 msgid "Run as user"
 msgstr "Käivita kasutajana"
 
@@ -5060,7 +5061,7 @@ msgstr ""
 msgid "SAT>IP DVB-T frequency (Hz)"
 msgstr "SAT>IP DVB-T sagedus (Hz)"
 
-#: src/main.c:825
+#: src/main.c:824
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
@@ -5127,7 +5128,7 @@ msgstr "Lau"
 msgid "Satconf"
 msgstr "Satconf"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:275
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:276
 msgid "Satellite config"
 msgstr ""
 
@@ -5177,15 +5178,15 @@ msgstr "Ajasta taassalvestamine kui veateateid on rohkem kui (0=välja lülitatu
 msgid "Schedule frequency (in Cron format)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3225
+#: src/dvr/dvr_db.c:3226
 msgid "Schedule status"
 msgstr "Ajastamise olek"
 
-#: src/dvr/dvr_db.c:3226
+#: src/dvr/dvr_db.c:3227
 msgid "Schedule status."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2907
+#: src/dvr/dvr_db.c:2908
 msgid "Scheduled Duration"
 msgstr ""
 
@@ -5193,11 +5194,11 @@ msgstr ""
 msgid "Scheduled for recording"
 msgstr "Ajastatud salvestamiseks"
 
-#: src/dvr/dvr_db.c:2872
+#: src/dvr/dvr_db.c:2873
 msgid "Scheduled start time"
 msgstr "Ajastatud alguseg"
 
-#: src/dvr/dvr_db.c:2899
+#: src/dvr/dvr_db.c:2900
 msgid "Scheduled stop time"
 msgstr "Ajastatud lõpuaeg"
 
@@ -5390,7 +5391,7 @@ msgstr "Server"
 msgid "Server UUID"
 msgstr "Serveri UUID"
 
-#: src/main.c:835
+#: src/main.c:834
 msgid "Server connectivity"
 msgstr "Serveri ühenduvus"
 
@@ -5398,8 +5399,8 @@ msgstr "Serveri ühenduvus"
 msgid "Server details."
 msgstr "Serveri detailid."
 
-#: src/service.c:166 src/esfilter.c:664 src/esfilter.c:759 src/esfilter.c:854
-#: src/esfilter.c:949 src/esfilter.c:1054 src/esfilter.c:1149
+#: src/service.c:166 src/esfilter.c:664 src/esfilter.c:758 src/esfilter.c:853
+#: src/esfilter.c:948 src/esfilter.c:1053 src/esfilter.c:1148
 msgid "Service"
 msgstr "Teenus"
 
@@ -5412,7 +5413,7 @@ msgstr "Teenuse ID"
 msgid "Service Mapping (Map services to channels)"
 msgstr ""
 
-#: src/main.c:799
+#: src/main.c:798
 msgid "Service configuration"
 msgstr "Teenuse seaded"
 
@@ -5499,11 +5500,11 @@ msgstr "Seaded"
 msgid "Show"
 msgstr "Šhow"
 
-#: src/main.c:796
+#: src/main.c:795
 msgid "Show this page"
 msgstr "Näita sellel leheküljel"
 
-#: src/main.c:797
+#: src/main.c:796
 msgid "Show version information"
 msgstr "Näita versiooni informatsiooni"
 
@@ -5573,11 +5574,11 @@ msgstr ""
 msgid "Skip x number of transport packets."
 msgstr "Jäta vahele x numbrit transpordi pakette."
 
-#: src/dvr/dvr_db.c:3165
+#: src/dvr/dvr_db.c:3166
 msgid "Slave entry"
 msgstr "Slave kirje"
 
-#: src/dvr/dvr_db.c:3166
+#: src/dvr/dvr_db.c:3167
 msgid "Slave entry."
 msgstr ""
 
@@ -5648,31 +5649,31 @@ msgid ""
 "stream is paused."
 msgstr ""
 
-#: src/main.c:846
+#: src/main.c:845
 msgid "Specify User-Agent header for the http client"
 msgstr "Määra User-Agent päis HTTP kliendi jaoks"
 
-#: src/main.c:842
+#: src/main.c:841
 msgid "Specify alternative htsp port"
 msgstr "Määra altenatiivne HTSP port"
 
-#: src/main.c:838
+#: src/main.c:837
 msgid "Specify alternative http port"
 msgstr "Määra altenatiivne HTTP port"
 
-#: src/main.c:840
+#: src/main.c:839
 msgid "Specify alternative http webroot"
 msgstr "Määra alternatiivne HTTP juurkataloog"
 
-#: src/main.c:837
+#: src/main.c:836
 msgid "Specify bind address"
 msgstr "Määra seostuv IP aadress"
 
-#: src/main.c:823
+#: src/main.c:822
 msgid "Specify bind address for SAT>IP server"
 msgstr ""
 
-#: src/main.c:844
+#: src/main.c:843
 msgid "Specify extra htsp port"
 msgstr "Määra HTSP lisaport"
 
@@ -5708,7 +5709,7 @@ msgstr "Alusta pärast"
 msgid "Start before"
 msgstr "Alusta ennem"
 
-#: src/dvr/dvr_db.c:2861
+#: src/dvr/dvr_db.c:2862
 msgid ""
 "Start recording earlier than the EPG/timer-defined start time by x minutes."
 msgstr ""
@@ -5726,11 +5727,11 @@ msgstr ""
 msgid "Start recording earlier than the defined start time by x minutes."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2851
+#: src/dvr/dvr_db.c:2852
 msgid "Start time"
 msgstr "Algusaeg"
 
-#: src/dvr/dvr_db.c:3216 src/descrambler/caclient.c:295
+#: src/dvr/dvr_db.c:3217 src/descrambler/caclient.c:295
 msgid "Status"
 msgstr "Olek"
 
@@ -5746,7 +5747,7 @@ msgstr "Stereo"
 msgid "Stop"
 msgstr "Seiska"
 
-#: src/dvr/dvr_db.c:2880
+#: src/dvr/dvr_db.c:2881
 msgid "Stop time"
 msgstr "Seiskamise aeg"
 
@@ -5760,14 +5761,14 @@ msgstr "Andmekandja ruum"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:848
 msgid "Stream ID"
-msgstr ""
+msgstr "Voogedastuse ID"
 
 #: src/profile.c:278
 msgid "Stream Profile"
-msgstr ""
+msgstr "Voogedastuse profiil"
 
-#: src/esfilter.c:675 src/esfilter.c:770 src/esfilter.c:865 src/esfilter.c:960
-#: src/esfilter.c:1065
+#: src/esfilter.c:674 src/esfilter.c:769 src/esfilter.c:864 src/esfilter.c:959
+#: src/esfilter.c:1064
 msgid "Stream index"
 msgstr "Voogedastuse indeks"
 
@@ -5779,8 +5780,8 @@ msgstr "Voogedastuse profiil"
 msgid "Stream setup error"
 msgstr ""
 
-#: src/esfilter.c:643 src/esfilter.c:738 src/esfilter.c:833 src/esfilter.c:928
-#: src/esfilter.c:1023 src/esfilter.c:1128
+#: src/esfilter.c:643 src/esfilter.c:737 src/esfilter.c:832 src/esfilter.c:927
+#: src/esfilter.c:1022 src/esfilter.c:1127
 msgid "Stream type"
 msgstr "Voogedastuse tüüp"
 
@@ -5801,7 +5802,7 @@ msgstr "Voogedastuse profiilid"
 msgid "Subdirectory options"
 msgstr "Alamkataloogi valikud"
 
-#: src/main.c:873
+#: src/main.c:872
 msgid "Subscribe to a service permanently"
 msgstr "Liitu teenusega alatiseks"
 
@@ -5822,19 +5823,19 @@ msgstr "Liitumise kaalukus"
 msgid "Substitute formatters"
 msgstr "Vaheta formaatijad"
 
-#: src/dvr/dvr_db.c:2961 src/dvr/dvr_db.c:2969
+#: src/dvr/dvr_db.c:2962 src/dvr/dvr_db.c:2970
 msgid "Subtitle"
 msgstr "Subtiiter"
 
-#: src/esfilter.c:922
+#: src/esfilter.c:921
 msgid "Subtitle Stream Filter"
-msgstr ""
+msgstr "Subtiitrite voogedastuse filter"
 
 #: src/profile.c:1819
 msgid "Subtitle codec"
 msgstr "Subtiitrite koodek"
 
-#: src/dvr/dvr_db.c:2962 src/dvr/dvr_db.c:2970
+#: src/dvr/dvr_db.c:2963 src/dvr/dvr_db.c:2971
 msgid "Subtitle of the program (if any)."
 msgstr ""
 
@@ -5882,45 +5883,45 @@ msgstr "Sünkimine + ära hoia alles"
 msgid "System"
 msgstr "Süsteem"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:365
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:366
 msgid "TV Adapters - Linux ATSC-C Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux ATSC-C eesteenus"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:354
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:355
 msgid "TV Adapters - Linux ATSC-T Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux ATSC-T eesteenus"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:408
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:409
 msgid "TV Adapters - Linux DAB Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux DAB eesteenus"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:343
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:344
 msgid "TV Adapters - Linux DVB-C Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux DVB-C eesteenus"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:269
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:270
 msgid "TV Adapters - Linux DVB-S Frontend (Master)"
-msgstr ""
+msgstr "TV adapterid - Linux DVB-S eesteenus (Master)"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:312
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:313
 msgid "TV Adapters - Linux DVB-S Slave Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux DVB-S Slave eesteenus "
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:185
 msgid "TV Adapters - Linux DVB-T Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux DVB-T eesteenus"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:387
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:388
 msgid "TV Adapters - Linux ISDB-C Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux ISDB-C eesteenus"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:398
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:399
 msgid "TV Adapters - Linux ISDB-S Frontend (Master)"
-msgstr ""
+msgstr "TV adapterid - Linux ISDB-C eesteenus (Master)"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:376
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:377
 msgid "TV Adapters - Linux ISDB-T Frontend"
-msgstr ""
+msgstr "TV adapterid - Linux ISDB-T eesteenus"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:348
 msgid "TV Adapters - SatConfig - 4-Port"
@@ -5984,11 +5985,11 @@ msgstr "Võistkondlik sport (ei sisalda jalgpalli)"
 msgid "Technology"
 msgstr "Tehnoloogia"
 
-#: src/esfilter.c:827
+#: src/esfilter.c:826
 msgid "Teletext Stream Filter"
-msgstr ""
+msgstr "Teleteksti voogedastuse filter"
 
-#: src/esfilter.c:834
+#: src/esfilter.c:833
 msgid "Teletext stream type is only available for this filter."
 msgstr ""
 
@@ -6000,7 +6001,7 @@ msgstr "Tennis"
 msgid "Testing"
 msgstr "Testimine"
 
-#: src/main.c:878
+#: src/main.c:877
 msgid "Testing options"
 msgstr "Testimise valikud"
 
@@ -6008,15 +6009,15 @@ msgstr "Testimise valikud"
 msgid "The ATSC source ID as set by the provider."
 msgstr ""
 
-#: src/esfilter.c:1045
+#: src/esfilter.c:1044
 msgid "The CA provider to compare. Leave blank to apply to all providers."
 msgstr ""
 
-#: src/esfilter.c:1024
+#: src/esfilter.c:1023
 msgid "The CA stream type is only available for this filter."
 msgstr ""
 
-#: src/esfilter.c:1035
+#: src/esfilter.c:1034
 msgid "The CAID to compare. Leave blank to apply to all IDs."
 msgstr ""
 
@@ -6038,7 +6039,7 @@ msgstr ""
 msgid "The Content reference identifier (CRID) authority."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3026
+#: src/dvr/dvr_db.c:3027
 msgid "The DVR profile to be used/used by the recording."
 msgstr ""
 
@@ -6046,13 +6047,13 @@ msgstr ""
 msgid "The DVR profile to be used/used by this rule."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3099
+#: src/dvr/dvr_db.c:3100
 msgid "The EPG ID used by the entry."
 msgstr ""
 
 #: src/epggrab/module.c:129
 msgid "The EPG grabber name."
-msgstr ""
+msgstr "EPG hankija nimi."
 
 #: src/input/mpegts/mpegts_mux.c:516
 msgid ""
@@ -6061,9 +6062,9 @@ msgstr ""
 
 #: src/epggrab/module.c:138
 msgid "The EPG grabber type."
-msgstr ""
+msgstr "EPG hankija tüüp."
 
-#: src/esfilter.c:1129
+#: src/esfilter.c:1128
 msgid "The MPEGTS stream type is only available for this filter."
 msgstr ""
 
@@ -6073,7 +6074,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:213
 msgid "The PIN to use."
-msgstr ""
+msgstr "PIN kood."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:503
 msgid "The Physical Layer Scrambling (PLS) code used on the mux."
@@ -6099,15 +6100,15 @@ msgstr "SAT>IP serveri unikaalne identifikaator."
 
 #: src/input/mpegts/mpegts_network.c:231
 msgid "The SAT>IP source number."
-msgstr ""
+msgstr "SAT>IP lähteallika number."
 
 #: src/input/mpegts/satip/satip.c:487
 msgid "The SAT>IP's discovered IP address."
 msgstr "SAT>IP tuvastatud IP aadress."
 
-#: src/esfilter.c:739
+#: src/esfilter.c:738
 msgid "The audio stream types the filter should apply to."
-msgstr ""
+msgstr "Audio voo tüübid, millele filtrit rakendada."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:233 src/input/mpegts/mpegts_mux_dvb.c:687
 msgid ""
@@ -6122,7 +6123,7 @@ msgid ""
 " you have a special use case for one of the others. See Help for details."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2916
+#: src/dvr/dvr_db.c:2917
 msgid "The channel name the entry will record from."
 msgstr ""
 
@@ -6271,14 +6272,14 @@ msgstr ""
 msgid "The input path used by the device."
 msgstr ""
 
-#: src/webui/doc_md.c:119
+#: src/webui/doc_md.c:121
 msgid "The items have the following functions:"
 msgstr ""
 
-#: src/esfilter.c:655 src/esfilter.c:750 src/esfilter.c:845 src/esfilter.c:940
-#: src/esfilter.c:1140
-msgid "The language the filter should apply to."
-msgstr ""
+#: src/esfilter.c:655 src/esfilter.c:749 src/esfilter.c:844 src/esfilter.c:939
+#: src/esfilter.c:1139
+msgid "The language to which the filter should apply."
+msgstr "Keel, millele filter peaks rakenduma."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:704
 msgid "The layer A constellation."
@@ -6338,8 +6339,8 @@ msgid ""
 "Identifier. See Help for more information."
 msgstr ""
 
-#: src/esfilter.c:676 src/esfilter.c:771 src/esfilter.c:866 src/esfilter.c:961
-#: src/esfilter.c:1066
+#: src/esfilter.c:675 src/esfilter.c:770 src/esfilter.c:865 src/esfilter.c:960
+#: src/esfilter.c:1065
 msgid ""
 "The logical stream index to compare. Note that this index is computed using "
 "all filters.Example: If filter is set to AC3 audio type and the language to "
@@ -6441,11 +6442,11 @@ msgstr ""
 
 #: src/profile.c:325
 msgid "The name of the profile."
-msgstr ""
+msgstr "Profiili nimi."
 
 #: src/dvr/dvr_autorec.c:1008
 msgid "The name of the the rule."
-msgstr ""
+msgstr "Reegli nimi."
 
 #: src/access.c:1973
 msgid ""
@@ -6454,7 +6455,7 @@ msgstr ""
 
 #: src/input/mpegts/mpegts_mux.c:526
 msgid "The network the mux is on."
-msgstr ""
+msgstr "Võrk millel mux asub."
 
 #: src/input/mpegts/mpegts_service.c:97
 msgid "The network the service is on."
@@ -6566,7 +6567,7 @@ msgstr ""
 
 #: src/descrambler/constcw.c:300 src/descrambler/constcw.c:366
 msgid "The provider's ID."
-msgstr ""
+msgstr "Teenusepakkuja ID"
 
 #: src/input/mpegts/mpegts_service.c:169
 msgid "The provider's name."
@@ -6587,7 +6588,7 @@ msgid ""
 "sure of the value leave as AUTO."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3218
+#: src/dvr/dvr_db.c:3219
 msgid "The recording/entry status."
 msgstr ""
 
@@ -6595,14 +6596,14 @@ msgstr ""
 msgid "The rolloff used on the mux."
 msgstr ""
 
-#: src/esfilter.c:699 src/esfilter.c:794 src/esfilter.c:889 src/esfilter.c:984
-#: src/esfilter.c:1089 src/esfilter.c:1171
+#: src/esfilter.c:698 src/esfilter.c:793 src/esfilter.c:888 src/esfilter.c:983
+#: src/esfilter.c:1088 src/esfilter.c:1170
 msgid ""
 "The rule action defines the operation when all comparisons succeed. See Help"
 " for more information on what the various rules do."
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:276
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:277
 msgid "The satellite configuration to use."
 msgstr ""
 
@@ -6612,11 +6613,11 @@ msgid ""
 "You can change this to ACTIVE to queue a scan of this mux."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2873
+#: src/dvr/dvr_db.c:2874
 msgid "The scheduled start time, including any padding."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2900
+#: src/dvr/dvr_db.c:2901
 msgid "The scheduled stop time, including any padding."
 msgstr ""
 
@@ -6628,7 +6629,7 @@ msgstr ""
 
 #: src/descrambler/constcw.c:384
 msgid "The service ID"
-msgstr ""
+msgstr "Teenuse ID"
 
 #: src/input/mpegts/mpegts_service.c:121
 msgid "The service ID as set by the provider."
@@ -6636,17 +6637,23 @@ msgstr "Teenusepakkuja poolt määratud teenuse ID."
 
 #: src/descrambler/constcw.c:318
 msgid "The service ID."
-msgstr ""
+msgstr "Teenuse ID."
 
 #: src/input/mpegts/mpegts_service.c:161
 msgid "The service name as set by the provider."
 msgstr "Teenusepakkuja poolt määratud teenuse nimi."
 
-#: src/esfilter.c:665 src/esfilter.c:760 src/esfilter.c:855 src/esfilter.c:950
-#: src/esfilter.c:1055 src/esfilter.c:1150
+#: src/esfilter.c:759 src/esfilter.c:854 src/esfilter.c:949
+#: src/esfilter.c:1054 src/esfilter.c:1149
 msgid ""
 "The service the filter should apply to. Leave blank to apply the filter to "
 "all services."
+msgstr "Teenus, millele filter rakendada. Jäta tühjaks, kui soovid määrata kõigile teenustele."
+
+#: src/esfilter.c:665
+msgid ""
+"The service to which the filter should apply. Leave blank to apply the "
+"filter to all services."
 msgstr "Teenus, millele filter rakendada. Jäta tühjaks, kui soovid määrata kõigile teenustele."
 
 #: src/input/mpegts/mpegts_service.c:185
@@ -6665,9 +6672,9 @@ msgstr "Teenusepakkuja poolt määratud kanali number."
 
 #: src/service.c:217
 msgid "The service's encryption status."
-msgstr ""
+msgstr "Teenuse krüpteeringu staatus."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:287
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:288
 msgid ""
 "The signal from the standard universal LNB can be split using a simple "
 "coaxial splitter (no multiswitch) to several outputs. In this case, the "
@@ -6677,7 +6684,7 @@ msgid ""
 "(position, polarization, lo-hi)."
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:318
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:319
 msgid ""
 "The signal from the standard universal LNB can be split using a simple "
 "coaxial splitter (no multiswitch) to several outputs. In this case, the "
@@ -6687,13 +6694,13 @@ msgid ""
 "(position, polarization, lo-hi)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:2852
+#: src/dvr/dvr_db.c:2853
 msgid "The start time of the recording."
-msgstr ""
+msgstr "Salvestuse algusaeg."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:489 src/input/mpegts/mpegts_mux_dvb.c:849
 msgid "The stream ID used for the mux."
-msgstr ""
+msgstr "Voogedastuse ID muxi jaoks."
 
 #: src/dvr/dvr_config.c:876
 msgid "The stream profile the DVR profile will use for recordings."
@@ -6704,13 +6711,13 @@ msgid ""
 "The streaming profile to use/used. If not set, the default will be used."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1135
+#: src/dvr/dvr_config.c:1136
 msgid ""
 "The string allows you to manually specify the full path generation using "
 "predefined modifiers. See Help for full details."
 msgstr ""
 
-#: src/esfilter.c:929
+#: src/esfilter.c:928
 msgid "The subtitle stream types the filter should apply to."
 msgstr "Subtiitrite voo tüübid, millele filtrit rakendada."
 
@@ -6726,7 +6733,7 @@ msgstr ""
 msgid "The symbol rate."
 msgstr "Sümbolite määr."
 
-#: src/dvr/dvr_db.c:2881
+#: src/dvr/dvr_db.c:2882
 msgid "The time the entry stops/stopped being recorded."
 msgstr ""
 
@@ -6740,7 +6747,7 @@ msgstr ""
 msgid "The total number of services found on this mux."
 msgstr "Teenuseid leitud sellel muxil."
 
-#: src/dvr/dvr_db.c:2908
+#: src/dvr/dvr_db.c:2909
 msgid "The total scheduled duration."
 msgstr ""
 
@@ -6772,7 +6779,7 @@ msgid ""
 "the standard priority value is used."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3047 src/dvr/dvr_autorec.c:1273 src/dvr/dvr_timerec.c:666
+#: src/dvr/dvr_db.c:3048 src/dvr/dvr_autorec.c:1273 src/dvr/dvr_timerec.c:666
 msgid ""
 "The user who created the recording, or the auto-recording source and IP "
 "address if scheduled by a matching rule."
@@ -6790,7 +6797,7 @@ msgstr "Video voo tüübid, millele filtrit rakendada."
 msgid "Theme"
 msgstr ""
 
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:247
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:248
 #: src/input/mpegts/satip/satip_frontend.c:307
 msgid "This tuner"
 msgstr "See tuuner"
@@ -6826,7 +6833,7 @@ msgstr ""
 msgid "Time missed"
 msgstr "Aeg mööda läinud"
 
-#: src/dvr/dvr_db.c:3148
+#: src/dvr/dvr_db.c:3149
 msgid "Time record caption"
 msgstr "Kellaaja alusel salvestamise tekst"
 
@@ -6855,11 +6862,11 @@ msgstr "Timeout (sekundites) (0=lõputu)"
 msgid "Timeout (seconds)"
 msgstr "Timeout (sekundites)"
 
-#: src/dvr/dvr_db.c:3149
+#: src/dvr/dvr_db.c:3150
 msgid "Timer-based automatic record caption."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3140
+#: src/dvr/dvr_db.c:3141
 msgid "Timer-based automatic recording."
 msgstr ""
 
@@ -6871,7 +6878,7 @@ msgstr "Ajanihe"
 msgid "Timout (secs)"
 msgstr "Timeout (sekundites)"
 
-#: src/dvr/dvr_db.c:2944 src/dvr/dvr_db.c:2952 src/dvr/dvr_timerec.c:551
+#: src/dvr/dvr_db.c:2945 src/dvr/dvr_db.c:2953 src/dvr/dvr_timerec.c:551
 msgid "Title"
 msgstr "Saate nimi"
 
@@ -6879,7 +6886,7 @@ msgstr "Saate nimi"
 msgid "Title (regexp)"
 msgstr "Pealkiri (Regexp)"
 
-#: src/dvr/dvr_db.c:2945 src/dvr/dvr_db.c:2953
+#: src/dvr/dvr_db.c:2946 src/dvr/dvr_db.c:2954
 msgid "Title of the program."
 msgstr ""
 
@@ -6975,7 +6982,7 @@ msgstr "Tuuni ennem DiseqC'd"
 
 #: src/wizard.c:558
 msgid "Tuner"
-msgstr ""
+msgstr "Tuuner"
 
 #: src/input/mpegts/satip/satip_frontend.c:216
 msgid "Tuner bind IP address"
@@ -6987,7 +6994,7 @@ msgstr "Tuuneri seaded"
 
 #: src/input/mpegts/satip/satip.c:225
 msgid "Tuner configuration."
-msgstr ""
+msgstr "Tuuneri seaded."
 
 #: src/streaming.c:437
 msgid "Tuning failed"
@@ -7015,24 +7022,24 @@ msgstr "UDP RTP pordi number (2 porti)"
 
 #: src/service.c:159
 msgid "UHD TV"
-msgstr ""
+msgstr "UHD TV"
 
-#: src/wizard.c:808 src/dvr/dvr_db.c:3200 src/input/mpegts/iptv/iptv.c:825
+#: src/wizard.c:808 src/dvr/dvr_db.c:3201 src/input/mpegts/iptv/iptv.c:825
 #: src/input/mpegts/iptv/iptv_mux.c:139
 msgid "URL"
 msgstr "URL"
 
 #: src/wizard.c:809
 msgid "URL of the M3U playlist."
-msgstr ""
+msgstr "M3U esitluslisti URL."
 
-#: src/main.c:832
+#: src/main.c:831
 msgid "URL with the SAT>IP server XML location"
 msgstr "URL koos SAT>IP serveri XML asukohaga"
 
-#: src/dvr/dvr_db.c:3201
+#: src/dvr/dvr_db.c:3202
 msgid "URL."
-msgstr ""
+msgstr "URL."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:476
 msgid "USALS"
@@ -7040,139 +7047,139 @@ msgstr "USALS"
 
 #: src/input/mpegts/dvb_support.c:462
 msgid "UTC"
-msgstr ""
+msgstr "UTC"
 
 #: src/input/mpegts/dvb_support.c:479
 msgid "UTC+ 1"
-msgstr ""
+msgstr "UTC+ 1"
 
 #: src/input/mpegts/dvb_support.c:480
 msgid "UTC+ 2"
-msgstr ""
+msgstr "UTC+ 2"
 
 #: src/input/mpegts/dvb_support.c:481
 msgid "UTC+ 3"
-msgstr ""
+msgstr "UTC+ 3"
 
 #: src/input/mpegts/dvb_support.c:482
 msgid "UTC+ 4"
-msgstr ""
+msgstr "UTC+ 4"
 
 #: src/input/mpegts/dvb_support.c:483
 msgid "UTC+ 4:30"
-msgstr ""
+msgstr "UTC+ 4:30"
 
 #: src/input/mpegts/dvb_support.c:484
 msgid "UTC+ 5"
-msgstr ""
+msgstr "UTC+ 5"
 
 #: src/input/mpegts/dvb_support.c:485
 msgid "UTC+ 5:30"
-msgstr ""
+msgstr "UTC+ 5:30"
 
 #: src/input/mpegts/dvb_support.c:486
 msgid "UTC+ 5:45"
-msgstr ""
+msgstr "UTC+ 5:45"
 
 #: src/input/mpegts/dvb_support.c:487
 msgid "UTC+ 6"
-msgstr ""
+msgstr "UTC+ 6"
 
 #: src/input/mpegts/dvb_support.c:488
 msgid "UTC+ 6:30"
-msgstr ""
+msgstr "UTC+ 6:30"
 
 #: src/input/mpegts/dvb_support.c:489
 msgid "UTC+ 7"
-msgstr ""
+msgstr "UTC+ 7"
 
 #: src/input/mpegts/dvb_support.c:490
 msgid "UTC+ 8"
-msgstr ""
+msgstr "UTC+ 8"
 
 #: src/input/mpegts/dvb_support.c:491
 msgid "UTC+ 8:45"
-msgstr ""
+msgstr "UTC+ 8:45"
 
 #: src/input/mpegts/dvb_support.c:492
 msgid "UTC+ 9"
-msgstr ""
+msgstr "UTC+ 9"
 
 #: src/input/mpegts/dvb_support.c:493
 msgid "UTC+ 9:30"
-msgstr ""
+msgstr "UTC+ 9:30"
 
 #: src/input/mpegts/dvb_support.c:494
 msgid "UTC+10"
-msgstr ""
+msgstr "UTC+10"
 
 #: src/input/mpegts/dvb_support.c:495
 msgid "UTC+10:30"
-msgstr ""
+msgstr "UTC+10:30"
 
 #: src/input/mpegts/dvb_support.c:496
 msgid "UTC+11"
-msgstr ""
+msgstr "UTC+11"
 
 #: src/input/mpegts/dvb_support.c:464
 msgid "UTC- 1"
-msgstr ""
+msgstr "UTC- 1"
 
 #: src/input/mpegts/dvb_support.c:465
 msgid "UTC- 2"
-msgstr ""
+msgstr "UTC- 2"
 
 #: src/input/mpegts/dvb_support.c:466
 msgid "UTC- 2:30"
-msgstr ""
+msgstr "UTC- 2:30"
 
 #: src/input/mpegts/dvb_support.c:467
 msgid "UTC- 3"
-msgstr ""
+msgstr "UTC- 3"
 
 #: src/input/mpegts/dvb_support.c:468
 msgid "UTC- 3:30"
-msgstr ""
+msgstr "UTC- 3:30"
 
 #: src/input/mpegts/dvb_support.c:469
 msgid "UTC- 4"
-msgstr ""
+msgstr "UTC- 4"
 
 #: src/input/mpegts/dvb_support.c:470
 msgid "UTC- 4:30"
-msgstr ""
+msgstr "UTC- 4:30"
 
 #: src/input/mpegts/dvb_support.c:471
 msgid "UTC- 5"
-msgstr ""
+msgstr "UTC- 5"
 
 #: src/input/mpegts/dvb_support.c:472
 msgid "UTC- 6"
-msgstr ""
+msgstr "UTC- 6"
 
 #: src/input/mpegts/dvb_support.c:473
 msgid "UTC- 7"
-msgstr ""
+msgstr "UTC- 7"
 
 #: src/input/mpegts/dvb_support.c:474
 msgid "UTC- 8"
-msgstr ""
+msgstr "UTC- 8"
 
 #: src/input/mpegts/dvb_support.c:475
 msgid "UTC- 9"
-msgstr ""
+msgstr "UTC- 9"
 
 #: src/input/mpegts/dvb_support.c:476
 msgid "UTC- 9:30"
-msgstr ""
+msgstr "UTC- 9:30"
 
 #: src/input/mpegts/dvb_support.c:477
 msgid "UTC-10"
-msgstr ""
+msgstr "UTC-10"
 
 #: src/input/mpegts/dvb_support.c:478
 msgid "UTC-11"
-msgstr ""
+msgstr "UTC-11"
 
 #: src/input/mpegts/satip/satip.c:366
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:186
@@ -7181,19 +7188,19 @@ msgstr "UUID"
 
 #: src/htsp_server.c:1373
 msgid "Unable to get system UTC time"
-msgstr ""
+msgstr "Ei saa kätte süsteemi UTC aega"
 
 #: src/htsp_server.c:1366
 msgid "Unable to get system local time"
-msgstr ""
+msgstr "Ei saa kätte süsteemi kohalikku aega"
 
 #: src/htsp_server.c:1363
 msgid "Unable to get system time"
-msgstr ""
+msgstr "Ei saa kätte süsteemi aega"
 
 #: src/htsp_server.c:709
 msgid "Unable to open file"
-msgstr ""
+msgstr "Ei saa faili avada"
 
 #: src/htsp_server.c:1341
 msgid "Unable to stat path"
@@ -7219,7 +7226,7 @@ msgstr "Unicable switch (universaalne LNB, eksperimentaalne)"
 msgid "Unicable type"
 msgstr "Unicable tüüp"
 
-#: src/profile.c:252 src/dvr/dvr_db.c:2365
+#: src/profile.c:252 src/dvr/dvr_db.c:2366
 msgid "Unimportant"
 msgstr "Tähtsusetu"
 
@@ -7237,7 +7244,7 @@ msgstr "Tundmatu"
 
 #: src/htsp_server.c:2676
 msgid "Unknown file"
-msgstr ""
+msgstr "Tundmatu fail"
 
 #: src/streaming.c:462
 #, c-format
@@ -7294,7 +7301,7 @@ msgstr "Uuendatud"
 
 #: src/descrambler/cwc.c:1880
 msgid "Updates from one mux (EMM)"
-msgstr ""
+msgstr "Uuendused ühelt muxilt (EMM)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:558
 msgid ""
@@ -7310,7 +7317,7 @@ msgstr "Kasutamine: %s [valikud]\n"
 
 #: src/input/mpegts/mpegts_mux.c:632
 msgid "Use AC-3 detection on the mux."
-msgstr ""
+msgstr "Kasuta AC-3 tuvastust muxil."
 
 #: src/dvr/dvr_config.c:998
 msgid ""
@@ -7336,13 +7343,13 @@ msgstr ""
 
 #: src/profile.c:1200 src/profile.c:1370
 msgid "Use WEBM format."
-msgstr ""
+msgstr "Kasuta WEBM formaati."
 
-#: src/dvr/dvr_config.c:1275
+#: src/dvr/dvr_config.c:1276
 msgid "Use Windows-compatible filenames"
 msgstr "Kasuta Windows'iga ühilduvaid failinimesid"
 
-#: src/main.c:848
+#: src/main.c:847
 msgid "Use XSPF playlist instead of M3U"
 msgstr "Kasuta M3U asemel XSPF pleilisti"
 
@@ -7414,11 +7421,11 @@ msgstr "Kasuta teenuse ID'sid kanalite numbritena"
 
 #: src/channels.c:1440
 msgid "Use tag internally (don't expose to clients)."
-msgstr ""
+msgstr "Kasuta märget sisemiselt (ära avalda klientidele)."
 
 #: src/input/mpegts/mpegts_network.c:212
 msgid "Use the provider's service IDs as channel numbers."
-msgstr ""
+msgstr "Kasuta teenusepakkuja teenuste ID'sid kanalite numbritena."
 
 #: src/dvr/dvr_config.c:1100
 msgid "Use this character set when setting filenames."
@@ -7426,7 +7433,7 @@ msgstr ""
 
 #: src/dvr/dvr_config.c:1080
 msgid "Use x amount of storage space."
-msgstr ""
+msgstr "Kasuta x ühikut salvestusmahtu."
 
 #: src/streaming.c:422 src/dvr/dvr_db.c:506
 msgid "User access error"
@@ -7439,11 +7446,11 @@ msgstr "Kasutaja ligipääsu viga"
 #: src/htsp_server.c:2247 src/htsp_server.c:2290 src/htsp_server.c:2298
 #: src/htsp_server.c:2351 src/htsp_server.c:2660
 msgid "User does not have access"
-msgstr ""
+msgstr "Kasutajal pole ligipääsu"
 
 #: src/htsp_server.c:1919
 msgid "User does not have access to channel"
-msgstr ""
+msgstr "Kasutajal pole ligipääsu kanalile"
 
 #: src/channels.c:417
 msgid "User icon"
@@ -7489,7 +7496,7 @@ msgstr ""
 #: src/access.c:1821
 msgid ""
 "Username of the entry (this should match a username from within the \"Access"
-" Entries\" tab."
+" Entries\" tab)."
 msgstr ""
 
 #: src/epg.c:2231
@@ -7498,7 +7505,7 @@ msgstr "Varietee"
 
 #: src/bouquet.c:1062
 msgid "Verify the SSL certificate."
-msgstr ""
+msgstr "Kontrolli SSL sertifikaati."
 
 #: src/profile.c:1731
 msgid ""
@@ -7513,7 +7520,7 @@ msgstr "Video"
 
 #: src/esfilter.c:637
 msgid "Video Stream Filter"
-msgstr ""
+msgstr "Video voogedastuse filter"
 
 #: src/profile.c:1786
 msgid "Video bitrate (kb/s) (0=auto)"
@@ -7525,17 +7532,17 @@ msgstr "Video koodek"
 
 #: src/profile.c:1775
 msgid "Video codec preset"
-msgstr ""
+msgstr "Video koodeki eelseadistus"
 
 #: src/profile.c:1776
 msgid "Video codec preset to use for transcoding."
-msgstr ""
+msgstr "Video koodeki eelseadistus konverteerimiseks."
 
 #: src/profile.c:1764
 msgid ""
 "Video codec to use for the transcode. \"Do not use\" will disable video "
 "output."
-msgstr ""
+msgstr "Video koodek konverteerimiseks. \"Ära kasuta\" lülitab video väljundi välja."
 
 #: src/access.c:1493
 msgid "Video recorder"
@@ -7543,7 +7550,7 @@ msgstr "Video salvestaja"
 
 #: src/access.c:1509
 msgid "View all DVR entries"
-msgstr ""
+msgstr "Vaata kõiki DVR kirjeid"
 
 #: src/streaming.c:556
 msgid "Visually impaired commentary/audio description"
@@ -7619,15 +7626,15 @@ msgstr "Veebiliidese keel"
 
 #: src/access.c:1441
 msgid "Web interface language."
-msgstr ""
+msgstr "Veebiliidese keel."
 
 #: src/access.c:1450
 msgid "Web interface theme."
-msgstr ""
+msgstr "Veebiliidese välimus."
 
 #: src/access.c:1449
 msgid "Web theme"
-msgstr ""
+msgstr "Veebiliidese välimus"
 
 #: src/config.c:1996
 msgid "Web user interface"
@@ -7658,7 +7665,7 @@ msgid ""
 "When nothing else is happening Tvheadend will continuously rotate among all "
 "muxes and tune to them to verify that they are still working when the inputs"
 " are not used for streaming. If your adapters have problems with lots of "
-"(endless) tuning disable this. Note that this option should be OFF for the "
+"(endless) tuning, disable this. Note that this option should be OFF for the "
 "normal operation. This type of mux probing is not required and it may cause "
 "issues for SAT>IP (limited number of PID filters)."
 msgstr ""
@@ -7692,8 +7699,8 @@ msgstr "Juhendav abiprogramm"
 msgid "Wrapper (capmt_ca.so)"
 msgstr "Wrapper (capmt_ca.so)"
 
-#: src/esfilter.c:712 src/esfilter.c:807 src/esfilter.c:902 src/esfilter.c:997
-#: src/esfilter.c:1102 src/esfilter.c:1184
+#: src/esfilter.c:711 src/esfilter.c:806 src/esfilter.c:901 src/esfilter.c:996
+#: src/esfilter.c:1101 src/esfilter.c:1183
 msgid ""
 "Write a short message to log identifying the matched parameters. It is "
 "useful for debugging your setup or structure of incoming streams."
@@ -7716,11 +7723,11 @@ msgstr "addpids/delpids toetatud"
 
 #: src/profile.c:1667
 msgid "bd: nvenc(h264 / h265)"
-msgstr ""
+msgstr "bd: nvenc(h264 / h265)"
 
 #: src/profile.c:1671
 msgid "default: nvenc(h264 / h265)"
-msgstr ""
+msgstr "vaikimisi: nvenc(h264 / h265)"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:120
 msgid "en50494"
@@ -7728,75 +7735,75 @@ msgstr "en50494"
 
 #: src/profile.c:1659
 msgid "fast: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "kiire: h264 / h265 / qsv(h264 / h265)"
 
 #: src/profile.c:1658
 msgid "faster: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "kiirem: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1666
 msgid "hp: nvenc(h264 / h265)"
-msgstr ""
+msgstr "hp: nvenc(h264 / h265)"
 
 #: src/profile.c:1665
 msgid "hq: nvenc(h264 / h265)"
-msgstr ""
+msgstr "hq: nvenc(h264 / h265)"
 
-#: src/dvr/dvr_db.c:2780
+#: src/dvr/dvr_db.c:2781
 msgid "hrs"
 msgstr "tund(i)"
 
-#: src/main.c:908
+#: src/main.c:907
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr "vale valik määratletud [%s]"
 
 #: src/profile.c:1668
 msgid "ll: nvenc(h264 / h265)"
-msgstr ""
+msgstr "ll: nvenc(h264 / h265)"
 
 #: src/profile.c:1670
 msgid "llhp: nvenc(h264 / h265)"
-msgstr ""
+msgstr "llhp: nvenc(h264 / h265)"
 
 #: src/profile.c:1669
 msgid "llhq: nvenc(h264 / h265)"
-msgstr ""
+msgstr "llhq: nvenc(h264 / h265)"
 
 #: src/profile.c:1660
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "keskmine: h264 / h265 / qsv(h264 / h265)"
 
-#: src/dvr/dvr_db.c:2781
+#: src/dvr/dvr_db.c:2782
 msgid "min"
 msgstr "min"
 
-#: src/dvr/dvr_db.c:2782
+#: src/dvr/dvr_db.c:2783
 msgid "mins"
 msgstr "minutit"
 
-#: src/main.c:917
+#: src/main.c:916
 #, c-format
 msgid "option %s requires a value"
 msgstr "valik %s vajab väärtust"
 
 #: src/profile.c:1664
 msgid "placebo: h264 / h265"
-msgstr ""
+msgstr "placebo: h264 / h265"
 
 #: src/profile.c:1661
 msgid "slow: h264 / h265 / qsv(h264 / h265)"
-msgstr ""
+msgstr "aeglane: h264 / h265 / qsv(h264 / h265)"
 
 #: src/profile.c:1662
 msgid "slower: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "aeglasem: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1656
 msgid "superfast: h264 / h265"
-msgstr ""
+msgstr "ülikiire: h264 / h265"
 
-#: src/main.c:880
+#: src/main.c:879
 msgid "tsfile input (mux file)"
 msgstr "tsfile sisend (mux fail)"
 
@@ -7806,12 +7813,12 @@ msgstr "tvhdhomerun klient"
 
 #: src/profile.c:1655
 msgid "ultrafast: h264 / h265"
-msgstr ""
+msgstr "ultrakiire: h264 / h265"
 
 #: src/profile.c:1657
 msgid "veryfast: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "vägakiire: h264 / h265 / qsv(h264)"
 
 #: src/profile.c:1663
 msgid "veryslow: h264 / h265 / qsv(h264)"
-msgstr ""
+msgstr "vägaaeglane: h264 / h265 / qsv(h264)"

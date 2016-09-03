@@ -3,15 +3,16 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
+# BenEfrati <ben1189@gmail.com>, 2016
 # BenEfrati <ben1189@gmail.com>, 2015
 # dhead666 <myfoolishgames@gmail.com>, 2015
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-18 16:08+0200\n"
-"PO-Revision-Date: 2016-05-18 14:11+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-07-22 16:22+0000\n"
+"Last-Translator: BenEfrati <ben1189@gmail.com>\n"
 "Language-Team: Hebrew (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/he/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -150,7 +151,7 @@ msgstr "הוספה {0}"
 
 #: src/webui/static/app/idnode.js:594 src/webui/static/app/idnode.js:610
 msgid "Advanced"
-msgstr ""
+msgstr "מתקדם"
 
 #: src/webui/static/app/idnode.js:1043
 msgid "Advanced Settings"
@@ -180,7 +181,7 @@ msgstr "הכל"
 #: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1483
 #: src/webui/static/app/idnode.js:1501 src/webui/static/app/idnode.js:1511
 msgid "Apply"
-msgstr ""
+msgstr "החל"
 
 #: src/webui/static/app/tvhlog.js:25
 msgid "Apply any changes made below to the run-time configuration."
@@ -192,7 +193,7 @@ msgstr "החל הגדרות (זמן ריצה בלבד)"
 
 #: src/webui/static/app/idnode.js:1482
 msgid "Apply settings"
-msgstr ""
+msgstr "החל הגדרות"
 
 #: src/webui/static/app/i18n-post.js:38
 msgid "Apr"
@@ -416,7 +417,7 @@ msgstr ""
 
 #: src/webui/static/app/epg.js:267
 msgid "Close"
-msgstr ""
+msgstr "סגור"
 
 #: src/webui/static/app/i18n-post.js:205
 msgid "Columns"
@@ -671,7 +672,7 @@ msgstr "פרק"
 
 #: src/webui/static/app/tvheadend.js:238
 msgid "Error"
-msgstr ""
+msgstr "שגיאה"
 
 #: src/webui/static/app/status.js:146
 msgid "Errors"
@@ -687,7 +688,7 @@ msgstr "כל יום"
 
 #: src/webui/static/app/idnode.js:595 src/webui/static/app/idnode.js:616
 msgid "Expert"
-msgstr ""
+msgstr "מומחה"
 
 #: src/webui/static/app/idnode.js:1045
 msgid "Expert Settings"
@@ -803,7 +804,7 @@ msgstr "קיבוץ לפי שדה זה"
 
 #: src/webui/static/app/epg.js:148
 msgid "HDTV"
-msgstr ""
+msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
 #: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
@@ -851,7 +852,7 @@ msgstr ""
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr ""
+msgstr "מטמון תמונות"
 
 #: src/webui/static/app/status.js:745
 msgid "In"
@@ -899,7 +900,7 @@ msgstr ""
 
 #: src/webui/static/app/mpegts.js:168
 msgid "Language"
-msgstr ""
+msgstr "שפה"
 
 #: src/webui/static/app/tvheadend.js:127
 msgid "Last Help Pages"
@@ -943,23 +944,23 @@ msgstr "מיפוי הכל"
 
 #: src/webui/static/app/mpegts.js:269
 msgid "Map Selected"
-msgstr "מיפוי נבחר"
+msgstr "מיפוי נבחרים"
 
 #: src/webui/static/app/mpegts.js:250 src/webui/static/app/chconf.js:139
 msgid "Map all services"
-msgstr ""
+msgstr "מיפוי כל השירותים"
 
 #: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:137
 msgid "Map all services to channels"
-msgstr ""
+msgstr "מיפוי כל השירותים לערוצים"
 
 #: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:133
 msgid "Map selected services"
-msgstr ""
+msgstr "מיפוי שירותים נבחרים"
 
 #: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:131
 msgid "Map selected services to channels"
-msgstr ""
+msgstr "מיפוי שירותים נבחרים לערוצים"
 
 #: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:144
 #: src/webui/static/app/servicemapper.js:119
@@ -1284,7 +1285,7 @@ msgstr "טען תמונות מחדש"
 
 #: src/webui/static/app/dvr.js:359 src/webui/static/app/dvr.js:496
 msgid "Re-record"
-msgstr ""
+msgstr "הקלט מחדש"
 
 #: src/webui/static/app/epggrab.js:6
 msgid "Re-run Internal EPG Grabbers"
@@ -1374,7 +1375,7 @@ msgstr "שמירה"
 
 #: src/webui/static/app/wizard.js:160
 msgid "Save & Next"
-msgstr ""
+msgstr "שמור והמשך"
 
 #: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
 #: src/webui/static/app/idnode.js:2789
@@ -1840,7 +1841,7 @@ msgstr "משקל"
 
 #: src/webui/static/app/epg.js:154
 msgid "Widescreen"
-msgstr ""
+msgstr "מסך רחב"
 
 #: src/webui/static/app/dvr.js:39
 msgid "Will be skipped"
