@@ -245,6 +245,7 @@ void tvh_gettext_init(void)
   static const char *tbl[] = {
     "ach",    "ach",
     "ady",    "ady",
+    "ara",    "ar",
     "bul",    "bg",
     "cze",    "cs",
     "dan",    "da",
