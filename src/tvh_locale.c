@@ -265,6 +265,7 @@ void tvh_gettext_init(void)
     "kor",    "ko",
     "lav",    "lv",
     "dut",    "nl",
+    "nor",    "no",
     "pol",    "pl",
     "por",    "pt",
     "rus",    "ru",
