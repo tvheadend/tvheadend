@@ -275,6 +275,7 @@ void tvh_gettext_init(void)
     "srp",    "sr",
     "alb",    "sq",
     "swe",    "sv",
+    "tur",    "tr",
     "ukr",    "uk",
     NULL, NULL
   };
