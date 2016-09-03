@@ -262,6 +262,7 @@ void tvh_gettext_init(void)
     "hrv",    "hr",
     "hun",    "hu",
     "ita",    "it",
+    "kor",    "ko",
     "lav",    "lv",
     "dut",    "nl",
     "pol",    "pl",

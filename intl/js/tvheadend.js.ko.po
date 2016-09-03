@@ -1,0 +1,1960 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# 
+# Translators:
+# Jinbaek Lee <jinb92@gmail.com>, 2016
+msgid ""
+msgstr ""
+"Project-Id-Version: Tvheadend\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-05-24 08:46+0200\n"
+"PO-Revision-Date: 2016-07-26 09:29+0000\n"
+"Last-Translator: Jinbaek Lee <jinb92@gmail.com>\n"
+"Language-Team: Korean (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/ko/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: src/webui/static/app/i18n-post.js:137
+msgid "&#160;OK&#160;"
+msgstr "&#160;확인&#160;"
+
+#: src/webui/static/app/i18n-post.js:106
+msgid "(?:st|nd|rd|th)#parseCodes.S.s"
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
+
+#: src/webui/static/app/chconf.js:6 src/webui/static/app/chconf.js:27
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:68
+msgid "(Clear filter)"
+msgstr "(필터 지우기)"
+
+#: src/webui/static/app/i18n-post.js:210
+msgid "(None)"
+msgstr "(없음)"
+
+#: src/webui/static/app/epg.js:244
+msgid "(default DVR Profile)"
+msgstr "(기본 DVR 프로필)"
+
+#: src/webui/static/app/i18n-post.js:59
+msgid "0 #monthNumber"
+msgstr "0 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:224
+msgid "0,000.00#NumberColumn"
+msgstr "0,000.00#NumberColumn"
+
+#: src/webui/static/app/epg.js:69
+msgid "00:00:00 - 00:15:00"
+msgstr "00:00:00 - 00:15:00"
+
+#: src/webui/static/app/epg.js:70
+msgid "00:15:00 - 00:30:00"
+msgstr "00:15:00 - 00:30:00"
+
+#: src/webui/static/app/epg.js:71
+msgid "00:30:00 - 01:30:00"
+msgstr "00:30:00 - 01:30:00"
+
+#: src/webui/static/app/epg.js:72
+msgid "01:30:00 - 03:00:00"
+msgstr "01:30:00 - 03:00:00"
+
+#: src/webui/static/app/epg.js:73
+msgid "03:00:00 - No maximum"
+msgstr "03:00:00 - 무제한"
+
+#: src/webui/static/app/i18n-post.js:60
+msgid "1 #monthNumber"
+msgstr "1 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:69
+msgid "10 #monthNumber"
+msgstr "10 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:70
+msgid "11 #monthNumber"
+msgstr "11 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:61
+msgid "2 #monthNumber"
+msgstr "2 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:62
+msgid "3 #monthNumber"
+msgstr "3 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:63
+msgid "4 #monthNumber"
+msgstr "4 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:64
+msgid "5 #monthNumber"
+msgstr "5 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:65
+msgid "6 #monthNumber"
+msgstr "6 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:66
+msgid "7 #monthNumber"
+msgstr "7 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:67
+msgid "8 #monthNumber"
+msgstr "8 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:68
+msgid "9 #monthNumber"
+msgstr "9 #monthNumber"
+
+#: src/webui/static/app/dvr.js:246
+msgid "Abort"
+msgstr "중단"
+
+#: src/webui/static/app/dvr.js:244
+msgid "Abort the selected recording"
+msgstr "선택한 녹화를 중단"
+
+#: src/webui/static/app/tvheadend.js:796
+msgid "About"
+msgstr "정보"
+
+#: src/webui/static/app/acleditor.js:28
+msgid "Access Entries"
+msgstr "접근 항목"
+
+#: src/webui/static/app/acleditor.js:27
+msgid "Access Entry"
+msgstr "접근 항목"
+
+#: src/webui/static/app/servicemapper.js:22
+msgid "Active"
+msgstr "활성"
+
+#: src/webui/static/app/idnode.js:1793 src/webui/static/app/idnode.js:2289
+msgid "Add"
+msgstr "추가"
+
+#: src/webui/static/app/idnode.js:1791 src/webui/static/app/idnode.js:2287
+msgid "Add a new entry"
+msgstr "새 항목 추가"
+
+#: src/webui/static/app/idnode.js:1363 src/webui/static/app/idnode.js:1558
+msgid "Add {0}"
+msgstr "{0} 추가"
+
+#: src/webui/static/app/idnode.js:594 src/webui/static/app/idnode.js:610
+msgid "Advanced"
+msgstr "고급"
+
+#: src/webui/static/app/idnode.js:1043
+msgid "Advanced Settings"
+msgstr "고급 설정"
+
+#: src/webui/static/app/i18n-post.js:279
+msgid "After"
+msgstr "이후"
+
+#: src/webui/static/app/mpegts.js:209
+msgid "After filtering and reordering (without PCR and PMT)"
+msgstr "애프터 필터링과 재배열 (PCR 및 PMT 제외)"
+
+#: src/webui/static/app/epg.js:603 src/webui/static/app/epg.js:604
+msgid "Age"
+msgstr "연령"
+
+#: src/webui/static/app/epg.js:131
+msgid "Age Rating"
+msgstr "연령 등급"
+
+#: src/webui/static/app/idnode.js:1940 src/webui/static/app/idnode.js:1979
+msgid "All"
+msgstr "모두"
+
+#: src/webui/static/app/idnode.js:1153 src/webui/static/app/idnode.js:1166
+#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1483
+#: src/webui/static/app/idnode.js:1501 src/webui/static/app/idnode.js:1511
+msgid "Apply"
+msgstr "적용"
+
+#: src/webui/static/app/tvhlog.js:25
+msgid "Apply any changes made below to the run-time configuration."
+msgstr "아래 런타임 설정 변경 사항을 적용합니다."
+
+#: src/webui/static/app/tvhlog.js:24
+msgid "Apply configuration (run-time only)"
+msgstr "설정 적용 (런타임 전용)"
+
+#: src/webui/static/app/idnode.js:1482
+msgid "Apply settings"
+msgstr "설정 적용"
+
+#: src/webui/static/app/i18n-post.js:38
+msgid "Apr"
+msgstr "4월"
+
+#: src/webui/static/app/i18n-post.js:23
+msgid "April"
+msgstr "4월"
+
+#: src/webui/static/app/epg.js:156
+msgid "Aspect"
+msgstr "비율"
+
+#: src/webui/static/app/chconf.js:163
+msgid "Assign Number"
+msgstr "번호 할당"
+
+#: src/webui/static/app/chconf.js:161
+msgid "Assign lowest free channel number"
+msgstr "가장 낮은 채널 번호 할당"
+
+#: src/webui/static/app/esfilter.js:65
+msgid "Audio Stream Filter"
+msgstr "오디오 스트림 필터"
+
+#: src/webui/static/app/esfilter.js:66
+msgid "Audio Stream Filters"
+msgstr "오디오 스트림 필터"
+
+#: src/webui/static/app/epg.js:164
+msgid "Audio description#EPG"
+msgstr "오디오 설명#EPG"
+
+#: src/webui/static/app/i18n-post.js:42
+msgid "Aug"
+msgstr "8월"
+
+#: src/webui/static/app/i18n-post.js:27
+msgid "August"
+msgstr "8월"
+
+#: src/webui/static/app/epg.js:1059
+msgid "Auto Recorder"
+msgstr "자동 녹화기"
+
+#: src/webui/static/app/tvheadend.js:330
+msgid "Auto-refresh"
+msgstr "자동 갱신"
+
+#: src/webui/static/app/epg.js:260 src/webui/static/app/dvr.js:69
+#: src/webui/static/app/dvr.js:632
+msgid "Autorec"
+msgstr "자동 녹화"
+
+#: src/webui/static/app/dvr.js:633
+msgid "Autorecs"
+msgstr "자동 녹화"
+
+#: src/webui/static/app/idnode.js:446 src/webui/static/app/idnode.js:691
+msgid "Available"
+msgstr "가용"
+
+#: src/webui/static/app/status.js:381
+msgid "BER"
+msgstr "BER"
+
+#: src/webui/static/app/status.js:374
+msgid "Bandwidth (kb/s)"
+msgstr "대역폭 (kb/s)"
+
+#: src/webui/static/app/status.js:698 src/webui/static/app/status.js:791
+msgid "Bandwidth monitor"
+msgstr "대역폭 모니터"
+
+#: src/webui/static/app/config.js:29
+msgid "Base"
+msgstr "기본"
+
+#: src/webui/static/app/idnode.js:592 src/webui/static/app/idnode.js:604
+msgid "Basic"
+msgstr "기초"
+
+#: src/webui/static/app/idnode.js:1041
+msgid "Basic Settings"
+msgstr "기초 설정"
+
+#: src/webui/static/app/i18n-post.js:280
+msgid "Before"
+msgstr "이전"
+
+#: src/webui/static/app/cteditor.js:40
+msgid "Bouquet"
+msgstr "묶음"
+
+#: src/webui/static/app/cteditor.js:41
+msgid "Bouquets"
+msgstr "묶음"
+
+#: src/webui/static/app/epg.js:273
+msgid "Broadcast Details"
+msgstr "방송 정보"
+
+#: src/webui/static/app/epg.js:378
+msgid "Broadcast details"
+msgstr "방송 정보"
+
+#: src/webui/static/app/epg.js:866
+msgid "Buffering. Please wait..."
+msgstr "버퍼링 중. 기다리세요..."
+
+#: src/webui/static/app/caclient.js:32
+msgid "CA"
+msgstr "CA"
+
+#: src/webui/static/app/esfilter.js:116
+msgid "CA Stream Filter"
+msgstr "CA 스트림 필터"
+
+#: src/webui/static/app/esfilter.js:117
+msgid "CA Stream Filters"
+msgstr "CA 스트림 필터"
+
+#: src/webui/static/app/mpegts.js:188
+msgid "CAIDS: "
+msgstr "CAIDS:"
+
+#: src/webui/static/app/caclient.js:33
+msgid "CAs"
+msgstr "CAs"
+
+#: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
+#: src/webui/static/app/idnode.js:1110 src/webui/static/app/idnode.js:1522
+msgid "Cancel"
+msgstr "취소"
+
+#: src/webui/static/app/status.js:531
+msgid "Cancel Connection"
+msgstr "연결 취소"
+
+#: src/webui/static/app/idnode.js:1521
+msgid "Cancel operation"
+msgstr "작업 취소"
+
+#: src/webui/static/app/status.js:532
+msgid "Cancel the selected connection?"
+msgstr "선택한 연결을 취소하시겠습니까?"
+
+#: src/webui/static/app/status.js:528
+msgid "Cancel this connection"
+msgstr "이 연결 취소"
+
+#: src/webui/static/app/idnode.js:1175 src/webui/static/app/idnode.js:1511
+msgid "Cannot apply"
+msgstr "적용할 수 없음"
+
+#: src/webui/static/app/idnode.js:622
+msgid "Change the user interface level (basic, advanced, expert)"
+msgstr "사용자 인터페이스 레벨 변경 (기초, 고급, 전문가)"
+
+#: src/webui/static/app/idnode.js:1167 src/webui/static/app/idnode.js:1502
+msgid "Changes were applied!"
+msgstr "변경 사항이 적용되었습니다!"
+
+#: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:581
+#: src/webui/static/app/epg.js:582 src/webui/static/app/epg.js:1063
+#: src/webui/static/app/status.js:106
+msgid "Channel"
+msgstr "채널"
+
+#: src/webui/static/app/tvheadend.js:721
+msgid "Channel / EPG"
+msgstr "채널 / EPG"
+
+#: src/webui/static/app/cteditor.js:10
+msgid "Channel Tag"
+msgstr "채널 태그"
+
+#: src/webui/static/app/cteditor.js:11
+msgid "Channel Tags"
+msgstr "채널 태그"
+
+#: src/webui/static/app/chconf.js:184
+msgid "Channel number operations"
+msgstr "채널 번호 작업"
+
+#: src/webui/static/app/chconf.js:218
+msgid "Channels"
+msgstr "채널"
+
+#: src/webui/static/app/i18n-post.js:134
+msgid "Choose a month (Control+Up/Down to move years)"
+msgstr "달 선택 (컨트롤+위/아래 버튼으로 년도 이동)"
+
+#: src/webui/static/app/config.js:78
+msgid "Clean image (icon) cache"
+msgstr "이미지 (아이콘) 캐시 비우기"
+
+#: src/webui/static/app/config.js:76
+msgid "Clean image cache on storage"
+msgstr "이미지 캐시와 저장소 비우기"
+
+#: src/webui/static/app/status.js:273 src/webui/static/app/status.js:276
+msgid "Clear statistics"
+msgstr "통계 비우기"
+
+#: src/webui/static/app/status.js:277
+msgid "Clear statistics for selected input?"
+msgstr "선택한 입력에 대한 통계를 지우시겠습니까?"
+
+#: src/webui/static/app/caclient.js:34
+msgid "Client Name"
+msgstr "클라이언트 이름"
+
+#: src/webui/static/app/idnode.js:1430 src/webui/static/app/idnode.js:2299
+msgid "Clone"
+msgstr "복제"
+
+#: src/webui/static/app/idnode.js:2297
+msgid "Clone a new entry"
+msgstr "새 항목 복제"
+
+#: src/webui/static/app/epg.js:267
+msgid "Close"
+msgstr "닫기"
+
+#: src/webui/static/app/i18n-post.js:205
+msgid "Columns"
+msgstr "칼럼"
+
+#: src/webui/static/app/comet.js:55
+msgid "Comet failure"
+msgstr "Comet 실패"
+
+#: src/webui/static/app/dvr.js:67
+msgid "Comment"
+msgstr "코멘트"
+
+#: src/webui/static/app/status.js:747
+msgid "Compression ratio"
+msgstr "압축률"
+
+#: src/webui/static/app/caclient.js:46
+msgid "Conditional Access Client"
+msgstr "조건부 클라이언트 접근"
+
+#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:660
+msgid "Configuration"
+msgstr "설정"
+
+#: src/webui/static/app/status.js:639
+msgid "Connections"
+msgstr "연결"
+
+#: src/webui/static/app/epg.js:142 src/webui/static/app/epg.js:610
+#: src/webui/static/app/epg.js:611
+msgid "Content Type"
+msgstr "컨텐트 종류"
+
+#: src/webui/static/app/status.js:403
+msgid "Continuity Errors"
+msgstr "연속 오류"
+
+#: src/webui/static/app/idnode.js:1456
+msgid "Create"
+msgstr "생성"
+
+#: src/webui/static/app/epg.js:879
+msgid "Create AutoRec"
+msgstr "자동녹화 생성"
+
+#: src/webui/static/app/epg.js:259 src/webui/static/app/epg.js:881
+msgid ""
+"Create an automatic recording rule to record all future programs that match "
+"the current query."
+msgstr "현재 쿼리에 맞는 앞으로의 프로그램을 녹화하기 위한 자동 녹화 규칙을 만듭니다."
+
+#: src/webui/static/app/idnode.js:1455
+msgid "Create new entry"
+msgstr "새 항목 생성"
+
+#: src/webui/static/app/epg.js:1081
+msgid "Created from EPG query"
+msgstr "EPG 쿼리에서 생성됨"
+
+#: src/webui/static/app/epg.js:1068
+#, javascript-format
+msgid "Currently this will match (and record) %d events."
+msgstr "현재 %d개 이벤트 적중(녹화)"
+
+#: src/webui/static/app/tvheadend.js:702
+msgid "DVB Inputs"
+msgstr "DVB 입력"
+
+#: src/webui/static/app/epg.js:349
+msgid "DVR"
+msgstr "DVR"
+
+#: src/webui/static/app/epg.js:160
+msgid "Deaf signed#EPG"
+msgstr "청각장애인 보조#EPG"
+
+#: src/webui/static/app/tvheadend.js:771
+msgid "Debugging"
+msgstr "디버깅"
+
+#: src/webui/static/app/i18n-post.js:46
+msgid "Dec"
+msgstr "12월"
+
+#: src/webui/static/app/i18n-post.js:31
+msgid "December"
+msgstr "12월"
+
+#: src/webui/static/app/idnode.js:1807 src/webui/static/app/idnode.js:2312
+msgid "Delete"
+msgstr "삭제"
+
+#: src/webui/static/app/epg.js:233
+msgid "Delete recording"
+msgstr "녹화 삭제"
+
+#: src/webui/static/app/epg.js:232
+msgid "Delete scheduled recording of this program"
+msgstr "이 프로그램의 예약된 녹화 삭제"
+
+#: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2310
+msgid "Delete selected entries"
+msgstr "선택한 항목 삭제"
+
+#: src/webui/static/app/status.js:140
+msgid "Descramble"
+msgstr "해독"
+
+#: src/webui/static/app/mpegts.js:279
+msgid "Detailed stream info"
+msgstr "상세 스트림 정보"
+
+#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:275
+#: src/webui/static/app/epg.js:364 src/webui/static/app/epg.js:365
+#: src/webui/static/app/dvr.js:137 src/webui/static/app/dvr.js:138
+msgid "Details"
+msgstr "상세 정보"
+
+#: src/webui/static/app/dvr.js:747
+msgid "Digital Video Recorder"
+msgstr "디지털 비디오 녹화"
+
+#: src/webui/static/app/dvr.js:609
+msgid "Digital Video Recorder Profile"
+msgstr "디지털 비디오 녹화 프로필"
+
+#: src/webui/static/app/dvr.js:610
+msgid "Digital Video Recorder Profiles"
+msgstr "디지털 비디오 녹화 프로필"
+
+#: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
+msgid "Disabled"
+msgstr "비활성"
+
+#: src/webui/static/app/config.js:134
+msgid "Discover SAT>IP servers"
+msgstr "SAT>IP 서버 탐색"
+
+#: src/webui/static/app/i18n-post.js:151
+msgid "Displaying {0} - {1} of {2}"
+msgstr "{0} 표시 = {2} 중 {1}"
+
+#: src/webui/static/app/dvr.js:264
+msgid "Do you really want to abort/unschedule the selection?"
+msgstr "선택한 항목을 중단/예약 취소 하시겠습니까?"
+
+#: src/webui/static/app/dvr.js:429 src/webui/static/app/dvr.js:566
+msgid "Do you really want to delete the selected recordings?"
+msgstr "선택한 녹화를 삭제하시겠습니까?"
+
+#: src/webui/static/app/tvheadend.js:302
+msgid "Do you really want to delete the selection?"
+msgstr "선택한 항목을 삭제하시겠습니까?"
+
+#: src/webui/static/app/dvr.js:234
+msgid "Do you really want to gracefully stop/unschedule the selection?"
+msgstr "정말 이 선택을 정지/예약 취소하시겠습니까?"
+
+#: src/webui/static/app/epg.js:321
+msgid "Do you really want to gracefully stop/unschedule this recording?"
+msgstr "정말 이 녹화를 정지/예약 취소하시겠습니까?"
+
+#: src/webui/static/app/epg.js:334
+msgid "Do you really want to remove this recording?"
+msgstr "이 녹화를 제거하시겠습니까?"
+
+#: src/webui/static/app/epg.js:1042 src/webui/static/app/epg.js:1048
+#: src/webui/static/app/epg.js:1051 src/webui/static/app/epg.js:1054
+#: src/webui/static/app/epg.js:1057
+msgid "Don't care"
+msgstr "상관 없음"
+
+#: src/webui/static/app/dvr.js:340 src/webui/static/app/dvr.js:477
+msgid "Download"
+msgstr "다운로드"
+
+#: src/webui/static/app/dvr.js:338 src/webui/static/app/dvr.js:475
+msgid "Download the selected recording"
+msgstr "선택한 녹화 다운로드"
+
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:565
+#: src/webui/static/app/epg.js:566 src/webui/static/app/epg.js:1066
+#: src/webui/static/app/dvr.js:52
+msgid "Duration"
+msgstr "길이"
+
+#: src/webui/static/app/epggrab.js:41
+msgid "EPG Grabber"
+msgstr "EPG 그래버"
+
+#: src/webui/static/app/epggrab.js:57
+msgid "EPG Grabber Channel"
+msgstr "EPG 그래버 채널"
+
+#: src/webui/static/app/epggrab.js:58
+msgid "EPG Grabber Channels"
+msgstr "EPG 그래버 채널"
+
+#: src/webui/static/app/epggrab.js:86
+msgid "EPG Grabber Module"
+msgstr "EPG 그래버 모듈"
+
+#: src/webui/static/app/epggrab.js:87
+msgid "EPG Grabber Modules"
+msgstr "EPG 그래버 모듈"
+
+#: src/webui/static/app/epggrab.js:88
+msgid "EPG Grabber Name"
+msgstr "EPG 그래버 이름"
+
+#: src/webui/static/app/epg.js:989
+msgid "EPG Update"
+msgstr "EPG 업데이트"
+
+#: src/webui/static/app/idnode.js:1284 src/webui/static/app/idnode.js:1894
+msgid "Edit"
+msgstr "편집"
+
+#: src/webui/static/app/idnode.js:1892
+msgid "Edit selected entry"
+msgstr "선택한 항목 편집"
+
+#: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1908
+msgid "Edit {0}"
+msgstr "{0} 편집"
+
+#: src/webui/static/app/idnode.js:1318
+msgid "Edit {0} ({1} entries)"
+msgstr "{0} 편집 ({1} 항목)"
+
+#: src/webui/static/app/epg.js:924
+msgid "Electronic Program Guide"
+msgstr "전자 프로그램 가이드"
+
+#: src/webui/static/app/tvheadend.js:1009
+msgid "Enable debug output"
+msgstr "디버그 출력 활성"
+
+#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:557
+#: src/webui/static/app/epg.js:558
+msgid "End Time"
+msgstr "끝 시간"
+
+#: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
+msgid "Enter Filter Text..."
+msgstr "필터 텍스트 입력..."
+
+#: src/webui/static/app/epg.js:540 src/webui/static/app/epg.js:541
+msgid "Episode"
+msgstr "에피소드"
+
+#: src/webui/static/app/tvheadend.js:238
+msgid "Error"
+msgstr "에러"
+
+#: src/webui/static/app/status.js:146
+msgid "Errors"
+msgstr "에러"
+
+#: src/webui/static/app/epg.js:931
+msgid "Events"
+msgstr "이벤트"
+
+#: src/webui/static/app/dvr.js:162
+msgid "Every day"
+msgstr "매일"
+
+#: src/webui/static/app/idnode.js:595 src/webui/static/app/idnode.js:616
+msgid "Expert"
+msgstr "전문가"
+
+#: src/webui/static/app/idnode.js:1045
+msgid "Expert Settings"
+msgstr "전문가 설정"
+
+#: src/webui/static/app/servicemapper.js:13
+msgid "Failed"
+msgstr "실패"
+
+#: src/webui/static/app/dvr.js:560
+msgid "Failed Recording"
+msgstr "실패한 녹화"
+
+#: src/webui/static/app/dvr.js:561
+msgid "Failed Recordings"
+msgstr "실패한 녹화"
+
+#: src/webui/static/app/i18n-post.js:36
+msgid "Feb"
+msgstr "2월"
+
+#: src/webui/static/app/i18n-post.js:21
+msgid "February"
+msgstr "2월"
+
+#: src/webui/static/app/dvr.js:65
+msgid "File size"
+msgstr "파일 크기"
+
+#: src/webui/static/app/epg.js:671
+msgid "Filter channel..."
+msgstr "채널 필터..."
+
+#: src/webui/static/app/epg.js:718
+msgid "Filter content type..."
+msgstr "컨텐트 종류 필터..."
+
+#: src/webui/static/app/epg.js:739
+msgid "Filter duration..."
+msgstr "길이 필터..."
+
+#: src/webui/static/app/epg.js:694
+msgid "Filter tag..."
+msgstr "태그 필터..."
+
+#: src/webui/static/app/i18n-post.js:253
+msgid "Filters"
+msgstr "필터"
+
+#: src/webui/static/app/wizard.js:160
+msgid "Finish"
+msgstr "완료"
+
+#: src/webui/static/app/dvr.js:423
+msgid "Finished Recording"
+msgstr "완료한 녹화"
+
+#: src/webui/static/app/dvr.js:424
+msgid "Finished Recordings"
+msgstr "완료한 녹화"
+
+#: src/webui/static/app/i18n-post.js:146
+msgid "First Page"
+msgstr "첫 페이지"
+
+#: src/webui/static/app/mpegts.js:36
+msgid "Force Scan"
+msgstr "강제 스캔"
+
+#: src/webui/static/app/mpegts.js:34
+msgid "Force new scan (all muxes) for selected networks"
+msgstr "선택한 네트워크에 새로 강제 스캔 (모든 먹스)"
+
+#: src/webui/static/app/tvheadend.js:948
+msgid "Free"
+msgstr "무료"
+
+#: src/webui/static/app/i18n-post.js:98
+msgid "Fri"
+msgstr "금"
+
+#: src/webui/static/app/i18n-post.js:88
+msgid "Friday"
+msgstr "금요일"
+
+#: src/webui/static/app/tvheadend.js:565
+msgid "Fullscreen"
+msgstr "전체 화면"
+
+#: src/webui/static/app/epg.js:886 src/webui/static/app/epg.js:1044
+msgid "Fulltext"
+msgstr "전체 내용"
+
+#: src/webui/static/app/tvheadend.js:670
+msgid "General"
+msgstr "일반"
+
+#: src/webui/static/app/epg.js:1065
+msgid "Genre"
+msgstr "장르"
+
+#: src/webui/static/app/tvheadend.js:938
+msgid "GiB"
+msgstr "GiB"
+
+#: src/webui/static/app/idnode.js:1633
+msgid "Grid Update"
+msgstr "그리드 업데이트"
+
+#: src/webui/static/app/i18n-post.js:211
+msgid "Group By This Field"
+msgstr "이 필드로 그룹"
+
+#: src/webui/static/app/epg.js:148
+msgid "HDTV"
+msgstr "HDTV"
+
+#: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
+#: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
+#: src/webui/static/app/epg.js:910 src/webui/static/app/status.js:177
+#: src/webui/static/app/status.js:458 src/webui/static/app/status.js:602
+#: src/webui/static/app/servicemapper.js:53
+msgid "Help"
+msgstr "도움말"
+
+#: src/webui/static/app/tvheadend.js:182
+msgid "Help for"
+msgstr "도움말: "
+
+#: src/webui/static/app/idnode.js:1956
+msgid "Hide"
+msgstr "숨기기"
+
+#: src/webui/static/app/idnode.js:2387
+msgid "Hide passwords"
+msgstr "암호 숨기기"
+
+#: src/webui/static/app/status.js:88
+msgid "Hostname"
+msgstr "호스트 이름"
+
+#: src/webui/static/app/status.js:78
+msgid "ID"
+msgstr "아이디"
+
+#: src/webui/static/app/status.js:585
+msgid "IP Address"
+msgstr "IP 주소"
+
+#: src/webui/static/app/acleditor.js:114
+msgid "IP Blocking Record"
+msgstr "녹화 IP 차단"
+
+#: src/webui/static/app/acleditor.js:115
+msgid "IP Blocking Records"
+msgstr "녹화 IP 차단"
+
+#: src/webui/static/app/servicemapper.js:17
+msgid "Ignored"
+msgstr "무시됨"
+
+#: src/webui/static/app/config.js:108
+msgid "Image Cache"
+msgstr "이미지 캐시"
+
+#: src/webui/static/app/status.js:745
+msgid "In"
+msgstr "In"
+
+#: src/webui/static/app/mpegts.js:165
+msgid "Index"
+msgstr "인덱스"
+
+#: src/webui/static/app/status.js:354 src/webui/static/app/status.js:835
+msgid "Input"
+msgstr "입력"
+
+#: src/webui/static/app/status.js:152
+msgid "Input (kb/s)"
+msgstr "입력 (kb/s)"
+
+#: src/webui/static/app/i18n-post.js:35
+msgid "Jan"
+msgstr "1월"
+
+#: src/webui/static/app/i18n-post.js:20
+msgid "January"
+msgstr "1월"
+
+#: src/webui/static/app/i18n-post.js:41
+msgid "Jul"
+msgstr "7월"
+
+#: src/webui/static/app/i18n-post.js:26
+msgid "July"
+msgstr "7월"
+
+#: src/webui/static/app/i18n-post.js:40
+msgid "Jun"
+msgstr "6월"
+
+#: src/webui/static/app/i18n-post.js:25
+msgid "June"
+msgstr "6월"
+
+#: src/webui/static/app/tvheadend.js:942
+msgid "KiB"
+msgstr "KiB"
+
+#: src/webui/static/app/mpegts.js:168
+msgid "Language"
+msgstr "언어"
+
+#: src/webui/static/app/tvheadend.js:127
+msgid "Last Help Pages"
+msgstr "마지막 도움말 페이지"
+
+#: src/webui/static/app/i18n-post.js:149
+msgid "Last Page"
+msgstr "마지막 페이지"
+
+#: src/webui/static/app/epg.js:158
+msgid "Lines"
+msgstr "라인"
+
+#: src/webui/static/app/tvheadend.js:521
+msgid "Live TV Player"
+msgstr "라이브 TV 플레이어"
+
+#: src/webui/static/app/tvheadend.js:312
+msgid "Loading, please wait..."
+msgstr "로드 중, 기다리세요..."
+
+#: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:662
+#: src/webui/static/app/epg.js:685 src/webui/static/app/epg.js:709
+#: src/webui/static/app/epg.js:730 src/webui/static/app/tvheadend.js:459
+#: src/webui/static/app/tvheadend.js:497
+msgid "Loading..."
+msgstr "로드 중..."
+
+#: src/webui/static/app/tvheadend.js:919
+msgid "Logged in as"
+msgstr "로그인: "
+
+#: src/webui/static/app/config.js:132
+msgid "Look for new SAT>IP servers"
+msgstr "새로 SAT>IP 서버 찾기"
+
+#: src/webui/static/app/mpegts.js:271
+msgid "Map All"
+msgstr "모두 매핑"
+
+#: src/webui/static/app/mpegts.js:269
+msgid "Map Selected"
+msgstr "선택 항목 매핑"
+
+#: src/webui/static/app/mpegts.js:250 src/webui/static/app/chconf.js:139
+msgid "Map all services"
+msgstr "모든 서비스 매핑"
+
+#: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:137
+msgid "Map all services to channels"
+msgstr "모든 서비스를 채널에 매핑"
+
+#: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:133
+msgid "Map selected services"
+msgstr "선택한 서비스 매핑"
+
+#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:131
+msgid "Map selected services to channels"
+msgstr "채널에 선택한 서비스 매핑"
+
+#: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:144
+#: src/webui/static/app/servicemapper.js:119
+#: src/webui/static/app/servicemapper.js:135
+msgid "Map services"
+msgstr "서비스 매핑"
+
+#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:142
+#: src/webui/static/app/servicemapper.js:116
+#: src/webui/static/app/servicemapper.js:132
+msgid "Map services to channels"
+msgstr "채널에 서비스 매핑"
+
+#: src/webui/static/app/servicemapper.js:9
+msgid "Mapped"
+msgstr "매핑됨"
+
+#: src/webui/static/app/i18n-post.js:37
+msgid "Mar"
+msgstr "3월"
+
+#: src/webui/static/app/i18n-post.js:22
+msgid "March"
+msgstr "3월"
+
+#: src/webui/static/app/dvr.js:386
+msgid "Mark the selected recording as failed"
+msgstr "선택한 녹화를 실패로 표시"
+
+#: src/webui/static/app/dvr.js:523
+msgid "Mark the selected recording as finished"
+msgstr "선택한 녹화를 완료로 표시"
+
+#: src/webui/static/app/i18n-post.js:24
+msgid "May"
+msgstr "5월"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr "5월#ShortNameForMay"
+
+#: src/webui/static/app/tvhlog.js:36
+msgid "Memory Information Entries"
+msgstr "메모리 정보 항목"
+
+#: src/webui/static/app/tvhlog.js:35
+msgid "Memory Information Entry"
+msgstr "메모리 정보 항목"
+
+#: src/webui/static/app/tvheadend.js:301
+msgid "Message"
+msgstr "메시지"
+
+#: src/webui/static/app/tvheadend.js:940
+msgid "MiB"
+msgstr "MiB"
+
+#: src/webui/static/app/i18n-post.js:94
+msgid "Mon"
+msgstr "월"
+
+#: src/webui/static/app/i18n-post.js:84
+msgid "Monday"
+msgstr "월요일"
+
+#: src/webui/static/app/idnode.js:1863 src/webui/static/app/idnode.js:2359
+msgid "Move Down"
+msgstr "아래로 이동"
+
+#: src/webui/static/app/idnode.js:1838 src/webui/static/app/idnode.js:2338
+msgid "Move Up"
+msgstr "위로 이동"
+
+#: src/webui/static/app/chconf.js:173
+msgid "Move channel one number down"
+msgstr "채널 아래로 이동"
+
+#: src/webui/static/app/chconf.js:167
+msgid "Move channel one number up"
+msgstr "채널 위로 이동"
+
+#: src/webui/static/app/idnode.js:1861
+msgid "Move selected entries down"
+msgstr "선택 항목 아래로 이동"
+
+#: src/webui/static/app/idnode.js:1836
+msgid "Move selected entries up"
+msgstr "선택 항목 위로 이동"
+
+#: src/webui/static/app/idnode.js:2357
+msgid "Move selected entry down"
+msgstr "선택 항목 아래로 이동"
+
+#: src/webui/static/app/idnode.js:2336
+msgid "Move selected entry up"
+msgstr "선택 항목 위로 이동"
+
+#: src/webui/static/app/dvr.js:388
+msgid "Move to failed"
+msgstr "실패로 이동"
+
+#: src/webui/static/app/dvr.js:525
+msgid "Move to finished"
+msgstr "완료로 이동"
+
+#: src/webui/static/app/mpegts.js:97 src/webui/static/app/mpegts.js:103
+msgid "Mux"
+msgstr "먹스"
+
+#: src/webui/static/app/mpegts.js:348 src/webui/static/app/mpegts.js:355
+msgid "Mux Scheduler"
+msgstr "먹스 스케쥴러"
+
+#: src/webui/static/app/mpegts.js:349
+msgid "Mux Schedulers"
+msgstr "먹스 스케쥴러"
+
+#: src/webui/static/app/mpegts.js:98
+msgid "Muxes"
+msgstr "먹스"
+
+#: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:72
+#: src/webui/static/app/mpegts.js:105
+msgid "Network"
+msgstr "네트워크"
+
+#: src/webui/static/app/mpegts.js:67
+msgid "Networks"
+msgstr "네트워크"
+
+#: src/webui/static/app/epg.js:150
+msgid "New#EPG"
+msgstr "신규#EPG"
+
+#: src/webui/static/app/i18n-post.js:132
+msgid "Next Month (Control+Right)"
+msgstr "다음 달 (컨트롤+오른쪽)"
+
+#: src/webui/static/app/i18n-post.js:148
+msgid "Next Page"
+msgstr "다음 페이지"
+
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
+msgid "No"
+msgstr "아니오"
+
+#: src/webui/static/app/i18n-post.js:152
+msgid "No data to display"
+msgstr "표시할 항목 없음"
+
+#: src/webui/static/app/dvr.js:164
+msgid "No days"
+msgstr "날 없음"
+
+#: src/webui/static/app/tvheadend.js:922
+msgid "No verified access"
+msgstr "인증된 접근 없음"
+
+#. / {0} title (lowercase), {1} title
+#: src/webui/static/app/tvheadend.js:325
+msgid "No {0} to display"
+msgstr "표시할 {0} 없음"
+
+#: src/webui/static/app/idnode.js:1941 src/webui/static/app/mpegts.js:206
+#: src/webui/static/app/mpegts.js:216
+msgid "None"
+msgstr "없음"
+
+#: src/webui/static/app/idnode.js:355
+msgid "Not set"
+msgstr "설정되지 않음"
+
+#: src/webui/static/app/i18n-post.js:45
+msgid "Nov"
+msgstr "11월"
+
+#: src/webui/static/app/i18n-post.js:30
+msgid "November"
+msgstr "11월"
+
+#: src/webui/static/app/epg.js:572 src/webui/static/app/epg.js:573
+msgid "Number"
+msgstr "번호"
+
+#: src/webui/static/app/chconf.js:175
+msgid "Number Down"
+msgstr "번호 감소"
+
+#: src/webui/static/app/chconf.js:169
+msgid "Number Up"
+msgstr "번호 증가"
+
+#: src/webui/static/app/chconf.js:186
+msgid "Number operations"
+msgstr "번호 조작"
+
+#: src/webui/static/app/i18n-post.js:110
+msgid "OK"
+msgstr "확인"
+
+#: src/webui/static/app/i18n-post.js:44
+msgid "Oct"
+msgstr "10월"
+
+#: src/webui/static/app/i18n-post.js:29
+msgid "October"
+msgstr "10월"
+
+#: src/webui/static/app/i18n-post.js:281
+msgid "On#DateFilter"
+msgstr "켜짐#DateFilter"
+
+#: src/webui/static/app/esfilter.js:132
+msgid "Other Stream Filter"
+msgstr "다른 스트림 필터"
+
+#: src/webui/static/app/esfilter.js:133
+msgid "Other Stream Filters"
+msgstr "다른 스트림 필터"
+
+#: src/webui/static/app/status.js:746
+msgid "Out"
+msgstr "출력"
+
+#: src/webui/static/app/status.js:160
+msgid "Output (kb/s)"
+msgstr "출력 (kb/s)"
+
+#: src/webui/static/app/status.js:387
+msgid "PER"
+msgstr "PER"
+
+#: src/webui/static/app/mpegts.js:166
+msgid "PID"
+msgstr "PID"
+
+#: src/webui/static/app/i18n-post.js:144
+msgid "Page"
+msgstr "페이지"
+
+#: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2652
+#: src/webui/static/app/epg.js:166
+msgid "Parameters"
+msgstr "매개변수"
+
+#: src/webui/static/app/idnode.js:1939
+msgid "Parent disabled"
+msgstr "부모 비활성"
+
+#: src/webui/static/app/acleditor.js:78
+msgid "Password"
+msgstr "암호"
+
+#: src/webui/static/app/acleditor.js:79
+msgid "Passwords"
+msgstr "암호"
+
+#: src/webui/static/app/tvheadend.js:550
+msgid "Pause"
+msgstr "일시 정지"
+
+#: src/webui/static/app/tvheadend.js:336
+msgid "Per page"
+msgstr "페이지당"
+
+#: src/webui/static/app/mpegts.js:121 src/webui/static/app/mpegts.js:122
+#: src/webui/static/app/mpegts.js:320 src/webui/static/app/mpegts.js:321
+#: src/webui/static/app/chconf.js:230 src/webui/static/app/chconf.js:231
+#: src/webui/static/app/dvr.js:448 src/webui/static/app/dvr.js:449
+#: src/webui/static/app/dvr.js:585 src/webui/static/app/dvr.js:586
+#: src/webui/static/app/tvheadend.js:446 src/webui/static/app/tvheadend.js:533
+msgid "Play"
+msgstr "재생"
+
+#: src/webui/static/tv.js:466
+msgid "Play Selected Channel"
+msgstr "선택한 채널 재생"
+
+#: src/webui/static/app/epg.js:197
+msgid "Play program"
+msgstr "프로그램 재생"
+
+#: src/webui/static/app/epg.js:196
+msgid "Play this program"
+msgstr "이 프로그램 재생"
+
+#: src/webui/static/app/tvheadend.js:446
+msgid "Play this stream"
+msgstr "이 스트림 재생"
+
+#: src/webui/static/app/i18n-post.js:161
+msgid "Please Wait..."
+msgstr "기다리세요..."
+
+#: src/webui/static/app/wizard.js:66
+msgid "Previous"
+msgstr "이전"
+
+#: src/webui/static/app/i18n-post.js:133
+msgid "Previous Month (Control+Left)"
+msgstr "이전 달 (컨트롤+왼쪽)"
+
+#: src/webui/static/app/i18n-post.js:147
+msgid "Previous Page"
+msgstr "이전 페이지"
+
+#: src/webui/static/app/status.js:118
+msgid "Profile"
+msgstr "프로필"
+
+#: src/webui/static/app/dvr.js:611
+msgid "Profile Name"
+msgstr "프로필 이름"
+
+#: src/webui/static/app/epg.js:495 src/webui/static/app/epg.js:496
+msgid "Progress"
+msgstr "진행"
+
+#: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
+msgid "Re-fetch images"
+msgstr "이미지 다시 가져오기"
+
+#: src/webui/static/app/dvr.js:359 src/webui/static/app/dvr.js:496
+msgid "Re-record"
+msgstr "다시 녹화"
+
+#: src/webui/static/app/epggrab.js:6
+msgid "Re-run Internal EPG Grabbers"
+msgstr "내부 EPG 그래버 다시 시작"
+
+#: src/webui/static/app/epggrab.js:7
+msgid "Re-run all internal EPG grabbers to import EPG data now"
+msgstr "EPG 데이터를 가져오도록 모든 내부 EPG 그래버 재시작"
+
+#: src/webui/static/app/idnode.js:1047
+msgid "Read-only Info"
+msgstr "읽기 전용 정보"
+
+#: src/webui/static/app/comet.js:28
+msgid "Reconnected to Tvheadend"
+msgstr "Tvheadend에 다시 연결됨"
+
+#: src/webui/static/app/epg.js:254
+msgid "Record program"
+msgstr "프로그램 녹화"
+
+#: src/webui/static/app/epg.js:260
+msgid "Record series"
+msgstr "시리즈 녹화"
+
+#: src/webui/static/app/epg.js:253
+msgid "Record this program now"
+msgstr "이 프로그램 지금 녹화"
+
+#: src/webui/static/app/tvheadend.js:752
+msgid "Recording"
+msgstr "녹화중"
+
+#: src/webui/static/app/dvr.js:146
+msgid "Recording details"
+msgstr "녹화 상세 정보"
+
+#: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
+msgid "Refresh"
+msgstr "새로 고침"
+
+#: src/webui/static/app/epg.js:152
+msgid "Repeat#EPG"
+msgstr "반복#EPG"
+
+#: src/webui/static/app/chconf.js:203
+msgid "Reset (clear) the selected icon URLs"
+msgstr "선택한 아이콘 URL 재설정 (비우기)"
+
+#: src/webui/static/app/epg.js:892
+msgid "Reset All"
+msgstr "모두 재설정"
+
+#: src/webui/static/app/chconf.js:205
+msgid "Reset Icon"
+msgstr "아이콘 재설정"
+
+#: src/webui/static/app/epg.js:894
+msgid "Reset all filters (show all)"
+msgstr "모든 필터 재설정 (모두 보기)"
+
+#: src/webui/static/app/idnode.js:1777 src/webui/static/app/idnode.js:2274
+#: src/webui/static/app/idnode.js:2810
+msgid "Revert pending changes (marked with red border)"
+msgstr "보류중인 내용 원래대로 (빨간 표시)"
+
+#: src/webui/static/app/config.js:147
+msgid "SAT>IP Server"
+msgstr "SAT>IP 서버"
+
+#: src/webui/static/app/status.js:417
+msgid "SNR"
+msgstr "SNR"
+
+#: src/webui/static/app/i18n-post.js:99
+msgid "Sat"
+msgstr "토"
+
+#: src/webui/static/app/i18n-post.js:89
+msgid "Saturday"
+msgstr "토요일"
+
+#: src/webui/static/app/idnode.js:1120 src/webui/static/app/idnode.js:1752
+#: src/webui/static/app/idnode.js:2254 src/webui/static/app/idnode.js:2791
+msgid "Save"
+msgstr "저장"
+
+#: src/webui/static/app/wizard.js:160
+msgid "Save & Next"
+msgstr "저장 & 다음"
+
+#: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
+#: src/webui/static/app/idnode.js:2789
+msgid "Save pending changes (marked with red border)"
+msgstr "보류중인 내용 저장 (빨간 표시)"
+
+#: src/webui/static/app/dvr.js:48
+msgid "Scheduled Start Time"
+msgstr "예약된 시작 시각"
+
+#: src/webui/static/app/dvr.js:50
+msgid "Scheduled Stop Time"
+msgstr "예약된 끝 시각"
+
+#: src/webui/static/app/epg.js:182 src/webui/static/app/dvr.js:80
+msgid "Search IMDB (for title)"
+msgstr "IMDB (제목으로) 검색"
+
+#: src/webui/static/app/epg.js:189 src/webui/static/app/dvr.js:86
+msgid "Search TheTVDB (for title)"
+msgstr "TheTVDB (제목으로) 검색"
+
+#: src/webui/static/app/epg.js:651
+msgid "Search title..."
+msgstr "제목 검색..."
+
+#: src/webui/static/app/tvheadend.js:466
+msgid "Select channel..."
+msgstr "채널 선택..."
+
+#: src/webui/static/app/tvheadend.js:503
+msgid "Select stream profile..."
+msgstr "스트림 프로필 선택..."
+
+#: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:714
+msgid "Select {0} ..."
+msgstr "{0} 선택..."
+
+#: src/webui/static/app/idnode.js:445 src/webui/static/app/idnode.js:690
+msgid "Selected"
+msgstr "선택됨"
+
+#: src/webui/static/app/i18n-post.js:43
+msgid "Sep"
+msgstr "9월"
+
+#: src/webui/static/app/i18n-post.js:28
+msgid "September"
+msgstr "9월"
+
+#: src/webui/static/app/mpegts.js:310 src/webui/static/app/status.js:112
+msgid "Service"
+msgstr "서비스"
+
+#: src/webui/static/app/servicemapper.js:33
+#: src/webui/static/app/servicemapper.js:49
+msgid "Service Mapper"
+msgstr "서비스 매퍼"
+
+#: src/webui/static/app/mpegts.js:219
+msgid "Service details for"
+msgstr "서비스 정보: "
+
+#: src/webui/static/app/mpegts.js:311
+msgid "Services"
+msgstr "서비스"
+
+#: src/webui/static/app/idnode.js:991
+msgid "Settings"
+msgstr "설정"
+
+#: src/webui/static/app/i18n-post.js:212
+msgid "Show in Groups"
+msgstr "그룹으로 표시"
+
+#: src/webui/static/app/idnode.js:2381
+msgid "Show or hide passwords"
+msgstr "암호 표시/숨기기"
+
+#: src/webui/static/app/idnode.js:2383 src/webui/static/app/idnode.js:2387
+msgid "Show passwords"
+msgstr "암호 표시"
+
+#: src/webui/static/app/status.js:437
+msgid "Signal Strength"
+msgstr "신호 세기"
+
+#: src/webui/static/app/i18n-post.js:203
+msgid "Sort Ascending"
+msgstr "오름차순 정렬"
+
+#: src/webui/static/app/i18n-post.js:204
+msgid "Sort Descending"
+msgstr "내림차순 정렬"
+
+#: src/webui/static/app/epg.js:129
+msgid "Star Rating"
+msgstr "별 평가"
+
+#: src/webui/static/app/epg.js:595 src/webui/static/app/epg.js:596
+msgid "Stars"
+msgstr "별"
+
+#: src/webui/static/app/status.js:124
+msgid "Start"
+msgstr "시작"
+
+#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:548
+#: src/webui/static/app/epg.js:549
+msgid "Start Time"
+msgstr "시작 시각"
+
+#: src/webui/static/app/config.js:11
+msgid "Start initial configuration wizard"
+msgstr "초기 설정 마법사 시작"
+
+#: src/webui/static/app/config.js:13
+msgid "Start wizard"
+msgstr "마법사 시작"
+
+#: src/webui/static/app/status.js:595
+msgid "Started"
+msgstr "시작됨"
+
+#: src/webui/static/app/status.js:134
+msgid "State"
+msgstr "상태"
+
+#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:649
+msgid "Status"
+msgstr "상태"
+
+#: src/webui/static/app/dvr.js:216 src/webui/static/app/tvheadend.js:557
+msgid "Stop"
+msgstr "정지"
+
+#: src/webui/static/app/epg.js:224
+msgid "Stop recording"
+msgstr "녹화 정지"
+
+#: src/webui/static/app/epg.js:223
+msgid "Stop recording of this program"
+msgstr "이 프로그램 녹화 정지"
+
+#: src/webui/static/app/dvr.js:214
+msgid "Stop the selected recording"
+msgstr "선택한 녹화 정지"
+
+#: src/webui/static/app/tvheadend.js:945
+msgid "Storage space"
+msgstr "저장소 공간"
+
+#: src/webui/static/app/status.js:359 src/webui/static/app/status.js:497
+#: src/webui/static/app/tvheadend.js:739
+msgid "Stream"
+msgstr "스트림"
+
+#: src/webui/static/app/esfilter.js:23 src/webui/static/app/esfilter.js:30
+msgid "Stream Profile"
+msgstr "스트림 프로필"
+
+#: src/webui/static/app/esfilter.js:25
+msgid "Stream Profile Name"
+msgstr "스트림 프로필 "
+
+#: src/webui/static/app/esfilter.js:24
+msgid "Stream Profiles"
+msgstr "스트림 프로필"
+
+#: src/webui/static/app/status.js:364
+msgid "Subs No."
+msgstr "서브 번호."
+
+#: src/webui/static/app/status.js:214
+msgid "Subscriptions"
+msgstr "요청"
+
+#: src/webui/static/app/epg.js:532 src/webui/static/app/epg.js:533
+msgid "Subtitle"
+msgstr "자막"
+
+#: src/webui/static/app/esfilter.js:99
+msgid "Subtitle Stream Filter"
+msgstr "자막 스트림 필터"
+
+#: src/webui/static/app/esfilter.js:100
+msgid "Subtitle Stream Filters"
+msgstr "자막 스트림 필터"
+
+#: src/webui/static/app/epg.js:162
+msgid "Subtitled#EPG"
+msgstr "자막#EPG"
+
+#: src/webui/static/app/i18n-post.js:93
+msgid "Sun"
+msgstr "일"
+
+#: src/webui/static/app/i18n-post.js:83
+msgid "Sunday"
+msgstr "일요일"
+
+#: src/webui/static/app/chconf.js:181
+msgid "Swap Numbers"
+msgstr "번호 교환"
+
+#: src/webui/static/app/chconf.js:179
+msgid "Swap the numbers for the two selected channels"
+msgstr "선택한 채널의 번호를 교환합니다."
+
+#: src/webui/static/app/tvadapters.js:6
+msgid "TV adapters"
+msgstr "TV 어댑터"
+
+#: src/webui/static/app/epg.js:1064
+msgid "Tag"
+msgstr "태그"
+
+#: src/webui/static/app/esfilter.js:82
+msgid "Teletext Stream Filter"
+msgstr "자막 방송 스트림 필터"
+
+#: src/webui/static/app/esfilter.js:83
+msgid "Teletext Stream Filters"
+msgstr "자막 방송 스트림 필터"
+
+#: src/webui/static/app/dvr.js:430 src/webui/static/app/dvr.js:567
+msgid "The associated file will be removed from storage."
+msgstr "연결된 파일은 저장소에서 삭제됩니다."
+
+#: src/webui/static/app/i18n-post.js:187
+msgid "The date in this field must be after {0}"
+msgstr "이 필드의 날짜는 {0} 이후여야 함"
+
+#: src/webui/static/app/i18n-post.js:188
+msgid "The date in this field must be before {0}"
+msgstr "이 필드의 날짜는 {0} 이전이어야 함"
+
+#: src/webui/static/app/i18n-post.js:169
+msgid "The maximum length for this field is {0}"
+msgstr "이 필드의 최대 길이는 {0}임"
+
+#: src/webui/static/app/i18n-post.js:179
+msgid "The maximum value for this field is {0}"
+msgstr "이 필드의 최대값은 {0}임"
+
+#: src/webui/static/app/i18n-post.js:168
+msgid "The minimum length for this field is {0}"
+msgstr "이 필드의 최저 길이는 {0}임"
+
+#: src/webui/static/app/idnode.js:1430
+msgid "The selected entry is the original!"
+msgstr "선택한 항목은 원래대로입니다!"
+
+#: src/webui/static/app/i18n-post.js:234
+msgid "The time in this field must be equal to or after {0}"
+msgstr "이 필드의 시각은 {0} 이후여야 함"
+
+#: src/webui/static/app/i18n-post.js:235
+msgid "The time in this field must be equal to or before {0}"
+msgstr "이 필드의 시각은 {0} 이전이어야 함"
+
+#: src/webui/static/app/i18n-post.js:164
+msgid "The value in this field is invalid"
+msgstr "값이 올바르지 않음"
+
+#: src/webui/static/app/comet.js:36
+msgid ""
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr "Tvheadend 라이브 업데이트 피드에 문제가 있습니다. 다시 연결을 시도합니다..."
+
+#: src/webui/static/app/tvheadend.js:239
+msgid "There was a problem displaying the help page!"
+msgstr "도움말을 보이는 중 문제가 발생했습니다!"
+
+#: src/webui/static/app/tvhlog.js:26
+msgid "They will be lost when the application next restarts."
+msgstr "앱이 재시작되면 사라집니다."
+
+#: src/webui/static/app/i18n-post.js:127
+msgid "This date is after the maximum date"
+msgstr "최대 날짜 초과"
+
+#: src/webui/static/app/i18n-post.js:126
+msgid "This date is before the minimum date"
+msgstr "최저 날짜 미만"
+
+#: src/webui/static/app/i18n-post.js:170
+msgid "This field is required"
+msgstr "필수 항목"
+
+#: src/webui/static/app/tvheadend.js:240
+msgid ""
+"This usually means there is no help available or the document couldn't be "
+"loaded."
+msgstr "가용한 도움말이 없거나, 문서를 읽을 수 없습니다."
+
+#: src/webui/static/app/epg.js:1059
+msgid ""
+"This will create an automatic rule that continuously scans the EPG for "
+"programs to record that match this query"
+msgstr "이 쿼리에 맞는 프로그램을 녹화할 EPG를 지속적으로 검색하는 자동 규칙을 만들게 됨"
+
+#: src/webui/static/app/i18n-post.js:97
+msgid "Thu"
+msgstr "목"
+
+#: src/webui/static/app/i18n-post.js:87
+msgid "Thursday"
+msgstr "목요일"
+
+#: src/webui/static/app/dvr.js:71
+msgid "Time Scheduler"
+msgstr "시간 스케쥴러"
+
+#: src/webui/static/app/dvr.js:697
+msgid "Timer"
+msgstr "타이머"
+
+#: src/webui/static/app/dvr.js:698
+msgid "Timers"
+msgstr "타이머"
+
+#: src/webui/static/app/timeshift.js:16
+msgid "Timeshift"
+msgstr "타임시프트"
+
+#: src/webui/static/app/epg.js:518 src/webui/static/app/epg.js:519
+#: src/webui/static/app/epg.js:1062 src/webui/static/app/status.js:100
+msgid "Title"
+msgstr "제목"
+
+#: src/webui/static/app/i18n-post.js:125
+msgid "Today"
+msgstr "오늘"
+
+#: src/webui/static/app/tvheadend.js:575
+msgid "Toggle mute"
+msgstr "음소거 토글"
+
+#: src/webui/static/app/dvr.js:357 src/webui/static/app/dvr.js:494
+msgid "Toggle re-record functionality"
+msgstr "재녹화 기능 토글"
+
+#: src/webui/static/app/tvheadend.js:948
+msgid "Total"
+msgstr "전체"
+
+#: src/webui/static/app/status.js:398
+msgid "Transport Errors"
+msgstr "전송 오류"
+
+#: src/webui/static/app/epggrab.js:26
+msgid "Trigger OTA EPG Grabber"
+msgstr "OTA EPG 그래버 작동"
+
+#: src/webui/static/app/i18n-post.js:95
+msgid "Tue"
+msgstr "화"
+
+#: src/webui/static/app/i18n-post.js:85
+msgid "Tuesday"
+msgstr "화요일"
+
+#: src/webui/static/app/epggrab.js:27
+msgid "Tune to the over-the-air EPG muxes to grab new events now"
+msgstr "새 이벤트를 지금 가져오도록 OTA EPG 먹스를 조절함"
+
+#: src/webui/static/app/tvheadend.js:984
+msgid "Tvheadend Web-Panel"
+msgstr "Tvheadend 웹 패널"
+
+#: src/webui/static/app/tvheadend.js:1005
+msgid "Tvheadend log"
+msgstr "Tvheadend 로그"
+
+#: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
+#: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
+#: src/webui/static/app/status.js:580
+msgid "Type"
+msgstr "종류"
+
+#: src/webui/static/app/epg.js:146
+msgid "UHDTV"
+msgstr "UHDTV"
+
+#: src/webui/static/app/wizard.js:188
+msgid "Unable to obtain wizard page!"
+msgstr "마법사 페이지를 가져올 수 없습니다!"
+
+#: src/webui/static/app/status.js:393
+msgid "Uncorrected Blocks"
+msgstr "수정되지 않은 블록"
+
+#: src/webui/static/app/idnode.js:1779 src/webui/static/app/idnode.js:2276
+#: src/webui/static/app/idnode.js:2812
+msgid "Undo"
+msgstr "되돌리기"
+
+#: src/webui/static/app/status.js:430 src/webui/static/app/status.js:450
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#: src/webui/static/app/dvr.js:289
+msgid "Upcoming / Current Recordings"
+msgstr "다가오는 / 현재 녹화"
+
+#: src/webui/static/app/dvr.js:288
+msgid "Upcoming Recording"
+msgstr "다가오는 녹화"
+
+#: src/webui/static/app/tvheadend.js:948
+msgid "Used by tvheadend"
+msgstr "tvheadend가 사용"
+
+#: src/webui/static/app/status.js:94 src/webui/static/app/status.js:590
+msgid "Username"
+msgstr "사용자 이름"
+
+#: src/webui/static/app/tvheadend.js:686
+msgid "Users"
+msgstr "사용자"
+
+#: src/webui/static/app/esfilter.js:48
+msgid "Video Stream Filter"
+msgstr "비디오 스트림 필터"
+
+#: src/webui/static/app/esfilter.js:49
+msgid "Video Stream Filters"
+msgstr "비디오 스트림 필터"
+
+#: src/webui/static/app/idnode.js:624
+msgid "View level"
+msgstr "보기 수준"
+
+#: src/webui/static/app/idnode.js:627
+msgid "View level: "
+msgstr "보기 수준: "
+
+#: src/webui/static/app/tvheadend.js:584
+msgid "Volume"
+msgstr "볼륨"
+
+#: src/webui/static/app/epg.js:899
+msgid "Watch TV"
+msgstr "TV 시청"
+
+#: src/webui/static/app/epg.js:901
+msgid "Watch live TV in a new browser window."
+msgstr "TV를 새 브라우저 창에서 시청합니다."
+
+#: src/webui/static/app/i18n-post.js:96
+msgid "Wed"
+msgstr "수"
+
+#: src/webui/static/app/i18n-post.js:86
+msgid "Wednesday"
+msgstr "수요일"
+
+#: src/webui/static/app/status.js:369
+msgid "Weight"
+msgstr "우선도"
+
+#: src/webui/static/app/epg.js:154
+msgid "Widescreen"
+msgstr "와이드 화면"
+
+#: src/webui/static/app/dvr.js:39
+msgid "Will be skipped"
+msgstr "건너뛸 예정"
+
+#: src/webui/static/app/wizard.js:59
+msgid "Wizard - page \"{0}\" not found"
+msgstr "마법사 - 페이지 \"{0}\" 찾을 수 없음"
+
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
+msgid "Yes"
+msgstr "예"
+
+#: src/webui/static/app/idnode.js:473 src/webui/static/app/idnode.js:856
+msgid "You must provide a value - use octal chmod notation, e.g. 0664"
+msgstr "값을 제공하셔야 합니다 - 8진법 chmod 표기를 사용, 예: 0664"
+
+#: src/webui/static/app/i18n-post.js:243
+msgid "You must select at least one item in this group"
+msgstr "이 그룹에서 하나 이상 선택해야 함"
+
+#: src/webui/static/app/i18n-post.js:248
+msgid "You must select one item in this group"
+msgstr "이 그룹에서 하나만 선택해야 함"
+
+#: src/webui/static/app/dvr.js:39
+msgid "because it is a rerun of:"
+msgstr "재실행 이유: "
+
+#: src/webui/static/app/i18n-post.js:218
+msgid "false"
+msgstr "거짓"
+
+#: src/webui/static/app/i18n-post.js:237
+msgid "g:i A#TimeField"
+msgstr "g:i A#TimeField"
+
+#: src/webui/static/app/i18n-post.js:238
+msgid ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
+
+#: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
+#: src/webui/static/app/epg.js:462 src/webui/static/app/epg.js:464
+msgid "hrs"
+msgstr "시간"
+
+#: src/webui/static/app/tvheadend.js:923
+msgid "login"
+msgstr "로그인"
+
+#: src/webui/static/app/tvheadend.js:920
+msgid "logout"
+msgstr "로그아웃"
+
+#: src/webui/static/app/i18n-post.js:229
+msgid "m/d/Y#DateColumn"
+msgstr "Y/m/d#DateColumn"
+
+#: src/webui/static/app/i18n-post.js:282
+msgid "m/d/Y#DateFilter"
+msgstr "Y/m/d#DateFilter"
+
+#: src/webui/static/app/i18n-post.js:120
+msgid "m/d/Y#Format.date"
+msgstr "Y/m/d#Format.date"
+
+#: src/webui/static/app/i18n-post.js:191
+msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+msgstr "Y/m/d|y-m-d|Y-m-d|m/d|m-d|md|ymd|Ymd|d|Y-m-d#DateField"
+
+#: src/webui/static/app/i18n-post.js:190
+msgid "m/d/y#DateField"
+msgstr "y/m/d#DateField"
+
+#: src/webui/static/app/i18n-post.js:136
+msgid "m/d/y#DatePicker"
+msgstr "y/m/d#DatePicker"
+
+#: src/webui/static/app/idnode.js:364 src/webui/static/app/idnode.js:366
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:464
+#: src/webui/static/app/epg.js:467 src/webui/static/app/dvr.js:52
+msgid "min"
+msgstr "분"
+
+#: src/webui/static/app/i18n-post.js:145
+msgid "of {0}"
+msgstr "전체 {0}"
+
+#: src/webui/static/app/i18n-post.js:217
+msgid "true"
+msgstr "참"
+
+#: src/webui/static/app/i18n-post.js:135
+msgid "{0} (Spacebar)"
+msgstr "{0} (공백)"
+
+#: src/webui/static/app/i18n-post.js:189
+msgid "{0} is not a valid date - it must be in the format {1}"
+msgstr "{0}은(는) 올바르지 않음 - {1} 포맷이어야 함"
+
+#: src/webui/static/app/i18n-post.js:180
+msgid "{0} is not a valid number"
+msgstr "{0}은(는) 올바른 숫자가 아님"
+
+#: src/webui/static/app/i18n-post.js:236
+msgid "{0} is not a valid time"
+msgstr "{0}은(는) 올바른 시간이 아님"
+
+#: src/webui/static/app/i18n-post.js:14
+msgid "{0} selected row{1}"
+msgstr "{0}: {1}줄 선택"
+
+#. / {0} start, {1} end, {2} total, {3} title
+#: src/webui/static/app/tvheadend.js:323
+msgid "{3} {0} - {1} of {2}"
+msgstr "{3} {2} 중 {0} - {1}"
