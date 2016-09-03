@@ -277,6 +277,7 @@ void tvh_gettext_init(void)
     "swe",    "sv",
     "tur",    "tr",
     "ukr",    "uk",
+    "chi",    "zh",
     NULL, NULL
   };
   const char **p;
