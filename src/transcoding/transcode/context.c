@@ -477,12 +477,6 @@ tvh_context_close(TVHContext *self, int flush)
     if (self->type->close) {
         self->type->close(self);
     }
-    if (self->oavctx && avcodec_is_open(self->oavctx)) {
-        avcodec_close(self->oavctx);
-    }
-    if (self->iavctx && avcodec_is_open(self->iavctx)) {
-        avcodec_close(self->iavctx);
-    }
 }
 
 

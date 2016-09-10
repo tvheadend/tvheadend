@@ -218,8 +218,13 @@ static int
 tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 {
     avframe->pts = av_frame_get_best_effort_timestamp(avframe);
-    /*tvhinfo(LS_TRANSCODE, "encode avframe: pts: %"PRId64 ", pkt_pts: %"PRId64 ", pkt_dts: %"PRId64,
-            avframe->pts, avframe->pkt_pts, avframe->pkt_dts);*/
+    /*if (avframe->pts <= self->pts) {
+        tvh_context_log(self, LOG_ERR,
+                        "Invalid pts (%"PRId64") <= last (%"PRId64")",
+                        avframe->pts, self->pts);
+        return -1;
+    }
+    self->pts = avframe->pts;*/
     return 0;
 }
 
@@ -227,8 +232,6 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 static int
 tvh_video_context_ship(TVHContext *self, AVPacket *avpkt)
 {
-    /*tvhinfo(LS_TRANSCODE, "ship avpkt: pts: %"PRId64 ", dts: %"PRId64,
-            avpkt->pts, avpkt->dts);*/
     if (avpkt->size < 0 || avpkt->pts < avpkt->dts) {
         tvh_context_log(self, LOG_ERR, "encode failed");
         return -1;
