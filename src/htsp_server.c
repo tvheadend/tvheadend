@@ -629,9 +629,9 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   if (!(retval = htsmsg_get_u32(in, "enabled", &u32)) || add)
     htsmsg_add_u32(conf, "enabled", !retval ? (u32 > 0 ? 1 : 0) : 1); // default on
   if (!(retval = htsmsg_get_u32(in, "retention", &u32)) || add)
-    htsmsg_add_u32(conf, "retention", !retval ? u32 : DVR_RET_DVRCONFIG);
+    htsmsg_add_u32(conf, "retention", !retval ? u32 : DVR_RET_REM_DVRCONFIG);
   if (!(retval = htsmsg_get_u32(in, "removal", &u32)) || add)
-    htsmsg_add_u32(conf, "removal", !retval ? u32 : DVR_RET_DVRCONFIG);
+    htsmsg_add_u32(conf, "removal", !retval ? u32 : DVR_RET_REM_DVRCONFIG);
   if(!(retval = htsmsg_get_u32(in, "priority", &u32)) || add)
     htsmsg_add_u32(conf, "pri", !retval ? u32 : DVR_PRIO_NORMAL);
   if ((str = htsmsg_get_str(in, "name")) || add)
@@ -1803,9 +1803,9 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if(htsmsg_get_u32(in, "priority", &priority))
     priority = DVR_PRIO_NORMAL;
   if(htsmsg_get_u32(in, "retention", &retention))
-    retention = DVR_RET_DVRCONFIG;
+    retention = DVR_RET_REM_DVRCONFIG;
   if(htsmsg_get_u32(in, "removal", &removal))
-    removal = DVR_RET_DVRCONFIG;
+    removal = DVR_RET_REM_DVRCONFIG;
   comment = htsmsg_get_str(in, "comment");
   if (!(lang  = htsmsg_get_str(in, "language")))
     lang = htsp->htsp_language;
@@ -1934,8 +1934,8 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   stop        = htsmsg_get_s64_or_default(in, "stop",       0);
   start_extra = htsmsg_get_s64_or_default(in, "startExtra", 0);
   stop_extra  = htsmsg_get_s64_or_default(in, "stopExtra",  0);
-  retention   = htsmsg_get_u32_or_default(in, "retention",  DVR_RET_DVRCONFIG);
-  removal     = htsmsg_get_u32_or_default(in, "removal",    DVR_RET_DVRCONFIG);
+  retention   = htsmsg_get_u32_or_default(in, "retention",  DVR_RET_REM_DVRCONFIG);
+  removal     = htsmsg_get_u32_or_default(in, "removal",    DVR_RET_REM_DVRCONFIG);
   priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
   title       = htsmsg_get_str(in, "title");
   subtitle    = htsmsg_get_str(in, "subtitle");
@@ -1998,7 +1998,7 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (de == NULL)
     return out;
 
-  dvr_entry_cancel_delete(de, 0);
+  dvr_entry_cancel_delete(de, 0, 0);
 
   return htsp_success();
 }

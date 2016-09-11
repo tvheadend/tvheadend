@@ -54,6 +54,7 @@ typedef struct dvr_config {
   int dvr_clone;
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
+  uint32_t dvr_retention_minimal;
   uint32_t dvr_removal_days;
   uint32_t dvr_autorec_max_count;
   uint32_t dvr_autorec_max_sched_count;
@@ -128,24 +129,25 @@ typedef enum {
 } dvr_rs_state_t;
 
 typedef enum {
-  DVR_RET_DVRCONFIG = 0,
-  DVR_RET_1DAY      = 1,
-  DVR_RET_3DAY      = 3,
-  DVR_RET_5DAY      = 5,
-  DVR_RET_1WEEK     = 7,
-  DVR_RET_2WEEK     = 14,
-  DVR_RET_3WEEK     = 21,
-  DVR_RET_1MONTH    = (30+1),
-  DVR_RET_2MONTH    = (60+2),
-  DVR_RET_3MONTH    = (90+2),
-  DVR_RET_6MONTH    = (180+3),
-  DVR_RET_1YEAR     = (365+1),
-  DVR_RET_2YEARS    = (2*365+1),
-  DVR_RET_3YEARS    = (3*365+1),
-  DVR_RET_ONREMOVE  = INT32_MAX-1, // for retention only
-  DVR_RET_SPACE     = INT32_MAX-1, // for removal only
-  DVR_RET_FOREVER   = INT32_MAX
-} dvr_retention_t;
+  DVR_RET_MIN_DISABLED  = 0, /* For dvr config minimal retention only */
+  DVR_RET_REM_DVRCONFIG = 0,
+  DVR_RET_REM_1DAY      = 1,
+  DVR_RET_REM_3DAY      = 3,
+  DVR_RET_REM_5DAY      = 5,
+  DVR_RET_REM_1WEEK     = 7,
+  DVR_RET_REM_2WEEK     = 14,
+  DVR_RET_REM_3WEEK     = 21,
+  DVR_RET_REM_1MONTH    = (30+1),
+  DVR_RET_REM_2MONTH    = (60+2),
+  DVR_RET_REM_3MONTH    = (90+2),
+  DVR_RET_REM_6MONTH    = (180+3),
+  DVR_RET_REM_1YEAR     = (365+1),
+  DVR_RET_REM_2YEARS    = (2*365+1),
+  DVR_RET_REM_3YEARS    = (3*365+1),
+  DVR_RET_ONREMOVE      = INT32_MAX-1, /* For retention only */
+  DVR_REM_SPACE         = INT32_MAX-1, /* For removal only */
+  DVR_RET_REM_FOREVER   = INT32_MAX
+} dvr_retention_removal_t;
 
 typedef struct dvr_entry {
 
@@ -204,6 +206,7 @@ typedef struct dvr_entry {
   int de_pri;
   int de_dont_reschedule;
   int de_dont_rerecord;
+  uint32_t de_file_removed;
   uint32_t de_retention;
   uint32_t de_removal;
 
@@ -449,7 +452,7 @@ void dvr_config_destroy_by_profile(profile_t *pro, int delconf);
 
 static inline uint32_t dvr_retention_cleanup(uint32_t val)
 {
-  return val > DVR_RET_FOREVER ? DVR_RET_FOREVER : val;
+  return val > DVR_RET_REM_FOREVER ? DVR_RET_REM_FOREVER : val;
 }
 
 /*
@@ -584,7 +587,9 @@ void dvr_entry_dec_ref(dvr_entry_t *de);
 
 int dvr_entry_delete(dvr_entry_t *de);
 
-void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
+void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord, int forcedestroy);
+
+void dvr_entry_trydestroy(dvr_entry_t *de);
 
 int dvr_entry_file_moved(const char *src, const char *dst);
 

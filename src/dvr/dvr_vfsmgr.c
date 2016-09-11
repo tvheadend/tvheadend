@@ -231,7 +231,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
       if (dvr_entry_get_stop_time(de) > stoptime)
         continue;
 
-      if (dvr_entry_get_removal_days(de) != DVR_RET_SPACE) // only remove the allowed ones
+      if (dvr_entry_get_removal_days(de) != DVR_REM_SPACE) // only remove the allowed ones
         continue;
 
       if (dvr_get_filename(de) == NULL || dvr_get_filesize(de, DVR_FILESIZE_TOTAL) <= 0)

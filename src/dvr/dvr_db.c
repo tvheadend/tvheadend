@@ -360,9 +360,9 @@ dvr_entry_get_removal_string ( dvr_entry_t *de )
   char buf[24];
   uint32_t removal = dvr_entry_get_removal_days(de);
 
-  if (removal < DVR_RET_SPACE)
+  if (removal < DVR_REM_SPACE)
     snprintf(buf, sizeof(buf), "%i days", removal);
-  else if (removal == DVR_RET_SPACE)
+  else if (removal == DVR_REM_SPACE)
     return strdup("Until space needed");
   else
     return strdup("Forever");
@@ -374,12 +374,12 @@ uint32_t
 dvr_entry_get_retention_days( dvr_entry_t *de )
 {
   if (de->de_retention > 0) {
-    if (de->de_retention > DVR_RET_FOREVER)
-      return DVR_RET_FOREVER;
+    if (de->de_retention > DVR_RET_REM_FOREVER)
+      return DVR_RET_REM_FOREVER;
 
     /* As we need the db entry when deleting the file on disk */
-    if (dvr_entry_get_removal_days(de) != DVR_RET_FOREVER &&
-        dvr_entry_get_removal_days(de) > de->de_retention)
+    if (dvr_entry_get_removal_days(de) != DVR_RET_REM_FOREVER &&
+        dvr_entry_get_removal_days(de) > de->de_retention && !de->de_file_removed)
       return DVR_RET_ONREMOVE;
 
     return de->de_retention;
@@ -391,8 +391,8 @@ uint32_t
 dvr_entry_get_removal_days ( dvr_entry_t *de )
 {
   if (de->de_removal > 0) {
-    if (de->de_removal > DVR_RET_FOREVER)
-      return DVR_RET_FOREVER;
+    if (de->de_removal > DVR_RET_REM_FOREVER)
+      return DVR_RET_REM_FOREVER;
 
     return de->de_removal;
   }
@@ -481,7 +481,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   uint32_t retention = dvr_entry_get_retention_days(de);
   int save;
 
-  if ((removal > 0 || retention == 0) && removal < DVR_RET_SPACE) {
+  if ((removal > 0 || retention == 0) && removal < DVR_REM_SPACE && !de->de_file_removed) {
     stop = time_t_out_of_range((int64_t)de->de_stop + removal * (int64_t)86400);
     if (stop > gclk()) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
@@ -594,7 +594,9 @@ dvr_entry_status(dvr_entry_t *de)
     }
     if(de->de_data_errors >= DVR_MAX_DATA_ERRORS) /* user configurable threshold? */
       return N_("Too many data errors");
-    if(dvr_get_filesize(de, 0) == -1)
+    if (de->de_file_removed)
+      return N_("File removed");
+    if (dvr_get_filesize(de, 0) == -1)
       return N_("File missing");
     if(de->de_last_error)
       return streaming_code2txt(de->de_last_error);
@@ -630,7 +632,8 @@ dvr_entry_schedstatus(dvr_entry_t *de)
     break;
   case DVR_COMPLETED:
     s = "completed";
-    if(de->de_last_error || dvr_get_filesize(de, 0) == -1)
+    if(de->de_last_error ||
+      (dvr_get_filesize(de, 0) == -1 && !de->de_file_removed))
       s = "completedError";
     rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
@@ -1079,18 +1082,18 @@ dvr_entry_rerecord(dvr_entry_t *de)
       if (fsize1 / 5 < fsize2 / 6) {
         goto not_so_good;
       } else {
-        dvr_entry_cancel_delete(de2, 1);
+        dvr_entry_cancel_delete(de2, 1, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
       if(dvr_get_filesize(de, 0) == -1) {
 delete_me:
-        dvr_entry_cancel_delete(de, 0);
+        dvr_entry_cancel_delete(de, 0, 1);
         dvr_entry_rerecord(de2);
         return 1;
       }
 not_so_good:
       de->de_retention = DVR_RET_ONREMOVE;
-      de->de_removal = DVR_RET_1DAY;
+      de->de_removal = DVR_RET_REM_1DAY;
       dvr_entry_change_parent_child(de->de_parent, NULL, NULL, 1);
       dvr_entry_completed(de, SM_CODE_WEAK_STREAM);
       return 0;
@@ -2060,7 +2063,7 @@ dvr_timer_start_recording(void *aux)
 
   // if duplicate, then delete it now, don't record!
   if (_dvr_duplicate_event(de)) {
-    dvr_entry_cancel_delete(de, 1);
+    dvr_entry_cancel_delete(de, 1, 1);
     return;
   }
 
@@ -2150,7 +2153,8 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
 static void
 dvr_entry_class_delete(idnode_t *self)
 {
-  dvr_entry_cancel_delete((dvr_entry_t *)self, 0);
+  dvr_entry_t *de = (dvr_entry_t *)self;
+  dvr_entry_cancel_delete(de, 0, 0);
 }
 
 static int
@@ -2458,22 +2462,22 @@ htsmsg_t *
 dvr_entry_class_retention_list ( void *o, const char *lang )
 {
   static const struct strtab_u32 tab[] = {
-    { N_("DVR configuration"),  DVR_RET_DVRCONFIG },
-    { N_("1 day"),              DVR_RET_1DAY },
-    { N_("3 days"),             DVR_RET_3DAY },
-    { N_("5 days"),             DVR_RET_5DAY },
-    { N_("1 week"),             DVR_RET_1WEEK },
-    { N_("2 weeks"),            DVR_RET_2WEEK },
-    { N_("3 weeks"),            DVR_RET_3WEEK },
-    { N_("1 month"),            DVR_RET_1MONTH },
-    { N_("2 months"),           DVR_RET_2MONTH },
-    { N_("3 months"),           DVR_RET_3MONTH },
-    { N_("6 months"),           DVR_RET_6MONTH },
-    { N_("1 year"),             DVR_RET_1YEAR },
-    { N_("2 years"),            DVR_RET_2YEARS },
-    { N_("3 years"),            DVR_RET_3YEARS },
+    { N_("DVR configuration"),  DVR_RET_REM_DVRCONFIG },
+    { N_("1 day"),              DVR_RET_REM_1DAY },
+    { N_("3 days"),             DVR_RET_REM_3DAY },
+    { N_("5 days"),             DVR_RET_REM_5DAY },
+    { N_("1 week"),             DVR_RET_REM_1WEEK },
+    { N_("2 weeks"),            DVR_RET_REM_2WEEK },
+    { N_("3 weeks"),            DVR_RET_REM_3WEEK },
+    { N_("1 month"),            DVR_RET_REM_1MONTH },
+    { N_("2 months"),           DVR_RET_REM_2MONTH },
+    { N_("3 months"),           DVR_RET_REM_3MONTH },
+    { N_("6 months"),           DVR_RET_REM_6MONTH },
+    { N_("1 year"),             DVR_RET_REM_1YEAR },
+    { N_("2 years"),            DVR_RET_REM_2YEARS },
+    { N_("3 years"),            DVR_RET_REM_3YEARS },
     { N_("On file removal"),    DVR_RET_ONREMOVE },
-    { N_("Forever"),            DVR_RET_FOREVER },
+    { N_("Forever"),            DVR_RET_REM_FOREVER },
   };
   return strtab2htsmsg_u32(tab, 1, lang);
 }
@@ -2482,22 +2486,22 @@ htsmsg_t *
 dvr_entry_class_removal_list ( void *o, const char *lang )
 {
   static const struct strtab_u32 tab[] = {
-    { N_("DVR configuration"),  DVR_RET_DVRCONFIG },
-    { N_("1 day"),              DVR_RET_1DAY },
-    { N_("3 days"),             DVR_RET_3DAY },
-    { N_("5 days"),             DVR_RET_5DAY },
-    { N_("1 week"),             DVR_RET_1WEEK },
-    { N_("2 weeks"),            DVR_RET_2WEEK },
-    { N_("3 weeks"),            DVR_RET_3WEEK },
-    { N_("1 month"),            DVR_RET_1MONTH },
-    { N_("2 months"),           DVR_RET_2MONTH },
-    { N_("3 months"),           DVR_RET_3MONTH },
-    { N_("6 months"),           DVR_RET_6MONTH },
-    { N_("1 year"),             DVR_RET_1YEAR },
-    { N_("2 years"),            DVR_RET_2YEARS },
-    { N_("3 years"),            DVR_RET_3YEARS },
-    { N_("Maintained space"),   DVR_RET_SPACE },
-    { N_("Forever"),            DVR_RET_FOREVER },
+    { N_("DVR configuration"),  DVR_RET_REM_DVRCONFIG },
+    { N_("1 day"),              DVR_RET_REM_1DAY },
+    { N_("3 days"),             DVR_RET_REM_3DAY },
+    { N_("5 days"),             DVR_RET_REM_5DAY },
+    { N_("1 week"),             DVR_RET_REM_1WEEK },
+    { N_("2 weeks"),            DVR_RET_REM_2WEEK },
+    { N_("3 weeks"),            DVR_RET_REM_3WEEK },
+    { N_("1 month"),            DVR_RET_REM_1MONTH },
+    { N_("2 months"),           DVR_RET_REM_2MONTH },
+    { N_("3 months"),           DVR_RET_REM_3MONTH },
+    { N_("6 months"),           DVR_RET_REM_6MONTH },
+    { N_("1 year"),             DVR_RET_REM_1YEAR },
+    { N_("2 years"),            DVR_RET_REM_2YEARS },
+    { N_("3 years"),            DVR_RET_REM_3YEARS },
+    { N_("Maintained space"),   DVR_REM_SPACE },
+    { N_("Forever"),            DVR_RET_REM_FOREVER },
   };
   return strtab2htsmsg_u32(tab, 1, lang);
 }
@@ -3092,7 +3096,7 @@ const idclass_t dvr_entry_class = {
       .name     = N_("DVR log retention"),
       .desc     = N_("Number of days to retain entry information."),
       .off      = offsetof(dvr_entry_t, de_retention),
-      .def.i    = DVR_RET_DVRCONFIG,
+      .def.i    = DVR_RET_REM_DVRCONFIG,
       .list     = dvr_entry_class_retention_list,
       .opts     = PO_HIDDEN | PO_EXPERT | PO_DOC_NLIST,
     },
@@ -3102,7 +3106,7 @@ const idclass_t dvr_entry_class = {
       .name     = N_("DVR file retention period"),
       .desc     = N_("Number of days to keep the file."),
       .off      = offsetof(dvr_entry_t, de_removal),
-      .def.i    = DVR_RET_DVRCONFIG,
+      .def.i    = DVR_RET_REM_DVRCONFIG,
       .list     = dvr_entry_class_removal_list,
       .opts     = PO_HIDDEN | PO_ADVANCED | PO_DOC_NLIST,
     },
@@ -3202,6 +3206,14 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Don't re-record if recording fails."),
       .off      = offsetof(dvr_entry_t, de_dont_rerecord),
       .opts     = PO_HIDDEN | PO_ADVANCED,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "fileremoved",
+      .name     = N_("File removed"),
+      .desc     = N_("The recorded file was removed intentionally"),
+      .off      = offsetof(dvr_entry_t, de_file_removed),
+      .opts     = PO_HIDDEN | PO_NOUI,
     },
     {
       .type     = PT_STR,
@@ -3477,6 +3489,7 @@ dvr_entry_delete(dvr_entry_t *de)
       htsmsg_delete_field(m, "filename");
       ret = 1;
     }
+    de->de_file_removed = 1;
   }
 
   return ret;
@@ -3495,7 +3508,7 @@ dvr_entry_set_rerecord(dvr_entry_t *de, int cmd)
   if (cmd == 0 && !de->de_dont_rerecord) {
     de->de_dont_rerecord = 1;
     if (de->de_child)
-      dvr_entry_cancel_delete(de->de_child, 0);
+      dvr_entry_cancel_delete(de->de_child, 0, 1);
   } else {
     de->de_dont_rerecord = 0;
     dvr_entry_rerecord(de);
@@ -3566,7 +3579,7 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
  *
  */
 void
-dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
+dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord, int forcedestroy)
 {
   dvr_entry_t *parent = de->de_parent;
   dvr_autorec_entry_t *dae = de->de_autorec;
@@ -3576,7 +3589,10 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
   case DVR_COMPLETED:
     dvr_entry_delete(de);
-    dvr_entry_destroy(de, 1);
+    if (forcedestroy)
+      dvr_entry_destroy(de, 1);
+    else
+      dvr_entry_trydestroy(de);
     break;
 
   case DVR_SCHEDULED:
@@ -3599,7 +3615,41 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
   // Trigger autorec update in case of max sched count limit
   if (dae && dae->dae_max_sched_count > 0)
     dvr_autorec_changed(dae, 0);
+}
 
+/**
+ * Destroy db entry if possible.
+ * The deletion of the db entry can be prevented by the minimal retention setting.
+ * Prevention is needed in order to keep duplicate detection happy.
+ */
+void
+dvr_entry_trydestroy(dvr_entry_t *de)
+{
+  char ubuf[UUID_HEX_SIZE];
+  uint32_t minretention, removal;
+
+  if (!de->de_config || de->de_config->dvr_retention_minimal == DVR_RET_MIN_DISABLED)
+    dvr_entry_destroy(de, 1);
+  else {
+    minretention = time_t_out_of_range((int64_t)de->de_stop + de->de_config->dvr_retention_minimal * (int64_t)86400);
+    if (minretention < gclk()) /* Minimal retention period expired -> deleting db entry allowed  */
+      dvr_entry_destroy(de, 1);
+    else {
+      removal = (gclk() - (int64_t)de->de_stop)/(int64_t)86400;
+
+      de->de_removal      = removal > DVR_RET_REM_DVRCONFIG ?
+          removal : DVR_RET_REM_1DAY;                             /* Update removal to the current value */
+      de->de_retention    = de->de_config->dvr_retention_minimal; /* Update the retention to the minimum allowed value */
+      idnode_changed(&de->de_id);
+      dvr_entry_retention_timer(de);                              /* Rearm timer as retention was changed */
+
+      tvhinfo(LS_DVR, "delete entry %s not allowed \"%s\" on \"%s\", current retention period %"PRIu32", "
+         "minimal retention period %"PRIu32"",
+        idnode_uuid_as_str(&de->de_id, ubuf),
+        lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+        removal, de->de_config->dvr_retention_minimal);
+    }
+  }
 }
 
 /**
