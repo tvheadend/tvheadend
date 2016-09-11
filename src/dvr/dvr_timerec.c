@@ -625,7 +625,7 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "retention",
       .name     = N_("DVR log retention"),
       .desc     = N_("Number of days to retain entry information."),
-      .def.i    = DVR_RET_DVRCONFIG,
+      .def.i    = DVR_RET_REM_DVRCONFIG,
       .off      = offsetof(dvr_timerec_entry_t, dte_retention),
       .list     = dvr_entry_class_retention_list,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
@@ -635,7 +635,7 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "removal",
       .name     = N_("DVR file retention period"),
       .desc     = N_("Number of days to keep the recorded file."),
-      .def.i    = DVR_RET_DVRCONFIG,
+      .def.i    = DVR_RET_REM_DVRCONFIG,
       .off      = offsetof(dvr_timerec_entry_t, dte_removal),
       .list     = dvr_entry_class_removal_list,
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
@@ -788,11 +788,11 @@ uint32_t
 dvr_timerec_get_retention_days( dvr_timerec_entry_t *dte )
 {
   if (dte->dte_retention > 0) {
-    if (dte->dte_retention > DVR_RET_FOREVER)
-      return DVR_RET_FOREVER;
+    if (dte->dte_retention > DVR_RET_REM_FOREVER)
+      return DVR_RET_REM_FOREVER;
 
     /* As we need the db entry when deleting the file on disk */
-    if (dvr_timerec_get_removal_days(dte) != DVR_RET_FOREVER &&
+    if (dvr_timerec_get_removal_days(dte) != DVR_RET_REM_FOREVER &&
         dvr_timerec_get_removal_days(dte) > dte->dte_retention)
       return DVR_RET_ONREMOVE;
 
@@ -808,8 +808,8 @@ uint32_t
 dvr_timerec_get_removal_days( dvr_timerec_entry_t *dte )
 {
   if (dte->dte_removal > 0) {
-    if (dte->dte_removal > DVR_RET_FOREVER)
-      return DVR_RET_FOREVER;
+    if (dte->dte_removal > DVR_RET_REM_FOREVER)
+      return DVR_RET_REM_FOREVER;
 
     return dte->dte_removal;
   }

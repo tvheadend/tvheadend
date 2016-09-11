@@ -178,7 +178,8 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_enabled = 1;
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = DVR_RET_ONREMOVE;
-  cfg->dvr_removal_days = DVR_RET_FOREVER;
+  cfg->dvr_retention_minimal = DVR_RET_MIN_DISABLED;
+  cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
   cfg->dvr_clone = 1;
   cfg->dvr_tag_files = 1;
   cfg->dvr_skip_commercials = 1;
@@ -531,13 +532,13 @@ dvr_config_changed(dvr_config_t *cfg)
   dvr_config_storage_check(cfg);
   if (cfg->dvr_cleanup_threshold_free < 50)
     cfg->dvr_cleanup_threshold_free = 50; // as checking is only periodically, lower is not save
-  if (cfg->dvr_removal_days != DVR_RET_FOREVER &&
+  if (cfg->dvr_removal_days != DVR_RET_REM_FOREVER &&
       cfg->dvr_removal_days > cfg->dvr_retention_days)
     cfg->dvr_retention_days = DVR_RET_ONREMOVE;
-  if (cfg->dvr_removal_days > DVR_RET_FOREVER)
-    cfg->dvr_removal_days = DVR_RET_FOREVER;
-  if (cfg->dvr_retention_days > DVR_RET_FOREVER)
-    cfg->dvr_retention_days = DVR_RET_FOREVER;
+  if (cfg->dvr_removal_days > DVR_RET_REM_FOREVER)
+    cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
+  if (cfg->dvr_retention_days > DVR_RET_REM_FOREVER)
+    cfg->dvr_retention_days = DVR_RET_REM_FOREVER;
 }
 
 
@@ -719,21 +720,21 @@ static htsmsg_t *
 dvr_config_class_removal_list ( void *o, const char *lang )
 {
   static const struct strtab_u32 tab[] = {
-    { N_("1 day"),              DVR_RET_1DAY },
-    { N_("3 days"),             DVR_RET_3DAY },
-    { N_("5 days"),             DVR_RET_5DAY },
-    { N_("1 week"),             DVR_RET_1WEEK },
-    { N_("2 weeks"),            DVR_RET_2WEEK },
-    { N_("3 weeks"),            DVR_RET_3WEEK },
-    { N_("1 month"),            DVR_RET_1MONTH },
-    { N_("2 months"),           DVR_RET_2MONTH },
-    { N_("3 months"),           DVR_RET_3MONTH },
-    { N_("6 months"),           DVR_RET_6MONTH },
-    { N_("1 year"),             DVR_RET_1YEAR },
-    { N_("2 years"),            DVR_RET_2YEARS },
-    { N_("3 years"),            DVR_RET_3YEARS },
-    { N_("Maintained space"),   DVR_RET_SPACE },
-    { N_("Forever"),            DVR_RET_FOREVER },
+    { N_("1 day"),              DVR_RET_REM_1DAY },
+    { N_("3 days"),             DVR_RET_REM_3DAY },
+    { N_("5 days"),             DVR_RET_REM_5DAY },
+    { N_("1 week"),             DVR_RET_REM_1WEEK },
+    { N_("2 weeks"),            DVR_RET_REM_2WEEK },
+    { N_("3 weeks"),            DVR_RET_REM_3WEEK },
+    { N_("1 month"),            DVR_RET_REM_1MONTH },
+    { N_("2 months"),           DVR_RET_REM_2MONTH },
+    { N_("3 months"),           DVR_RET_REM_3MONTH },
+    { N_("6 months"),           DVR_RET_REM_6MONTH },
+    { N_("1 year"),             DVR_RET_REM_1YEAR },
+    { N_("2 years"),            DVR_RET_REM_2YEARS },
+    { N_("3 years"),            DVR_RET_REM_3YEARS },
+    { N_("Maintained space"),   DVR_REM_SPACE },
+    { N_("Forever"),            DVR_RET_REM_FOREVER },
   };
   return strtab2htsmsg_u32(tab, 1, lang);
 }
@@ -742,21 +743,44 @@ static htsmsg_t *
 dvr_config_class_retention_list ( void *o, const char *lang )
 {
   static const struct strtab_u32 tab[] = {
-    { N_("1 day"),              DVR_RET_1DAY },
-    { N_("3 days"),             DVR_RET_3DAY },
-    { N_("5 days"),             DVR_RET_5DAY },
-    { N_("1 week"),             DVR_RET_1WEEK },
-    { N_("2 weeks"),            DVR_RET_2WEEK },
-    { N_("3 weeks"),            DVR_RET_3WEEK },
-    { N_("1 month"),            DVR_RET_1MONTH },
-    { N_("2 months"),           DVR_RET_2MONTH },
-    { N_("3 months"),           DVR_RET_3MONTH },
-    { N_("6 months"),           DVR_RET_6MONTH },
-    { N_("1 year"),             DVR_RET_1YEAR },
-    { N_("2 years"),            DVR_RET_2YEARS },
-    { N_("3 years"),            DVR_RET_3YEARS },
+    { N_("1 day"),              DVR_RET_REM_1DAY },
+    { N_("3 days"),             DVR_RET_REM_3DAY },
+    { N_("5 days"),             DVR_RET_REM_5DAY },
+    { N_("1 week"),             DVR_RET_REM_1WEEK },
+    { N_("2 weeks"),            DVR_RET_REM_2WEEK },
+    { N_("3 weeks"),            DVR_RET_REM_3WEEK },
+    { N_("1 month"),            DVR_RET_REM_1MONTH },
+    { N_("2 months"),           DVR_RET_REM_2MONTH },
+    { N_("3 months"),           DVR_RET_REM_3MONTH },
+    { N_("6 months"),           DVR_RET_REM_6MONTH },
+    { N_("1 year"),             DVR_RET_REM_1YEAR },
+    { N_("2 years"),            DVR_RET_REM_2YEARS },
+    { N_("3 years"),            DVR_RET_REM_3YEARS },
     { N_("On file removal"),    DVR_RET_ONREMOVE },
-    { N_("Forever"),            DVR_RET_FOREVER },
+    { N_("Forever"),            DVR_RET_REM_FOREVER },
+  };
+  return strtab2htsmsg_u32(tab, 1, lang);
+}
+
+static htsmsg_t *
+dvr_config_class_retention_list_minimal ( void *o, const char *lang )
+{
+  static const struct strtab_u32 tab[] = {
+    { N_("Disabled"),           DVR_RET_MIN_DISABLED },
+    { N_("1 day"),              DVR_RET_REM_1DAY },
+    { N_("3 days"),             DVR_RET_REM_3DAY },
+    { N_("5 days"),             DVR_RET_REM_5DAY },
+    { N_("1 week"),             DVR_RET_REM_1WEEK },
+    { N_("2 weeks"),            DVR_RET_REM_2WEEK },
+    { N_("3 weeks"),            DVR_RET_REM_3WEEK },
+    { N_("1 month"),            DVR_RET_REM_1MONTH },
+    { N_("2 months"),           DVR_RET_REM_2MONTH },
+    { N_("3 months"),           DVR_RET_REM_3MONTH },
+    { N_("6 months"),           DVR_RET_REM_6MONTH },
+    { N_("1 year"),             DVR_RET_REM_1YEAR },
+    { N_("2 years"),            DVR_RET_REM_2YEARS },
+    { N_("3 years"),            DVR_RET_REM_3YEARS },
+    { N_("Forever"),            DVR_RET_REM_FOREVER },
   };
   return strtab2htsmsg_u32(tab, 1, lang);
 }
@@ -900,10 +924,21 @@ const idclass_t dvr_config_class = {
       .type     = PT_U32,
       .id       = "retention-days",
       .name     = N_("DVR log retention period"),
-      .desc     = N_("Number of days to retain infomation about recordings."),
+      .desc     = N_("Number of days to retain information about recordings. Once this period is exceeded, duplicate detection will not be possible for this recording."),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = DVR_RET_ONREMOVE,
       .list     = dvr_config_class_retention_list,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
+      .group    = 1,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "retention-minimal",
+      .name     = N_("Minimal log retention period"),
+      .desc     = N_("Minimal number of days to retain information from recordings that where deleted manually. Once this period is exceeded, duplicate detection will not be possible for this recording."),
+      .off      = offsetof(dvr_config_t, dvr_retention_minimal),
+      .def.u32  = DVR_RET_MIN_DISABLED,
+      .list     = dvr_config_class_retention_list_minimal,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
       .group    = 1,
     },
@@ -913,7 +948,7 @@ const idclass_t dvr_config_class = {
       .name     = N_("DVR file retention period"),
       .desc     = N_("Number of days to keep the recorded files."),
       .off      = offsetof(dvr_config_t, dvr_removal_days),
-      .def.u32  = DVR_RET_FOREVER,
+      .def.u32  = DVR_RET_REM_FOREVER,
       .list     = dvr_config_class_removal_list,
       .opts     = PO_DOC_NLIST,
       .group    = 1,
