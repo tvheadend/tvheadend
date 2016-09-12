@@ -160,10 +160,10 @@ typedef struct tvh_context_t {
     AVFilterContext *oavfltctx;
     th_pkt_t *src_pkt;
     int require_meta;
+    int64_t pts;
     // only for audio
     int64_t duration;
     int64_t delta;
-    int64_t pts;
     uint8_t sri;
 } TVHContext;
 

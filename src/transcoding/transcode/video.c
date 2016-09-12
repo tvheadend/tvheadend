@@ -214,16 +214,23 @@ tvh_video_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts
 
 
 static int
+tvh_video_context_decode(TVHContext *self, AVPacket *avpkt)
+{
+    if (avpkt->pts <= self->pts) {
+        tvh_context_log(self, LOG_WARNING,
+                        "Invalid pts (%"PRId64") <= last (%"PRId64"), dropping packet",
+                        avpkt->pts, self->pts);
+        return AVERROR_INVALIDDATA;
+    }
+    self->pts = avpkt->pts;
+    return 0;
+}
+
+
+static int
 tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 {
     avframe->pts = av_frame_get_best_effort_timestamp(avframe);
-    /*if (avframe->pts <= self->pts) {
-        tvh_context_log(self, LOG_ERR,
-                        "Invalid pts (%"PRId64") <= last (%"PRId64")",
-                        avframe->pts, self->pts);
-        return -1;
-    }
-    self->pts = avframe->pts;*/
     return 0;
 }
 
@@ -251,9 +258,22 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
     if (qsdata && qsdata_size >= 5) {
         pict_type = qsdata[4];
     }
+    else if (avpkt->flags & AV_PKT_FLAG_KEY) {
+        pict_type = AV_PICTURE_TYPE_I;
+    }
 #if FF_API_CODED_FRAME
     else if (self->oavctx->coded_frame) {
-        pict_type = self->oavctx->coded_frame->pict_type;
+        // some codecs do not set pict_type but set key_frame, in this case,
+        // we assume that when key_frame == 1 the frame is an I-frame
+        // (all the others are assumed to be P-frames)
+        if (!(pict_type = self->oavctx->coded_frame->pict_type)) {
+            if (self->oavctx->coded_frame->key_frame) {
+                pict_type = AV_PICTURE_TYPE_I;
+            }
+            else {
+                pict_type = AV_PICTURE_TYPE_P;
+            }
+        }
     }
 #endif
     switch (pict_type) {
@@ -267,7 +287,7 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             pkt->v.pkt_frametype = PKT_B_FRAME;
             break;
         default:
-            tvh_context_log(self, LOG_DEBUG, "unknown picture type: %d",
+            tvh_context_log(self, LOG_WARNING, "unknown picture type: %d",
                             pict_type);
             break;
     }
@@ -293,6 +313,7 @@ tvh_video_context_close(TVHContext *self)
 TVHContextType TVHVideoContext = {
     .media_type = AVMEDIA_TYPE_VIDEO,
     .open       = tvh_video_context_open,
+    .decode     = tvh_video_context_decode,
     .encode     = tvh_video_context_encode,
     .ship       = tvh_video_context_ship,
     .wrap       = tvh_video_context_wrap,
