@@ -126,6 +126,7 @@ tvh_codec_profile_libx264_open(tvh_codec_profile_libx26x_t *self,
     else {
         AV_DICT_SET_CRF(opts, self->crf, 15);
     }
+    // params
     if (self->params && strlen(self->params)) {
         AV_DICT_SET(opts, "x264-params", self->params, 0);
     }
@@ -223,6 +224,7 @@ tvh_codec_profile_libx265_open(tvh_codec_profile_libx26x_t *self,
     else {
         AV_DICT_SET_CRF(opts, self->crf, 18);
     }
+    // params
     if (self->params && strlen(self->params)) {
         AV_DICT_SET(opts, "x265-params", self->params, 0);
     }

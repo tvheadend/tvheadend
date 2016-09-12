@@ -93,6 +93,8 @@ tvh_codec_profile_video_open(TVHVideoCodecProfile *self, AVDictionary **opts)
     }
     // pix_fmt
     AV_DICT_SET_PIX_FMT(opts, self->pix_fmt, AV_PIX_FMT_YUV420P);
+    // max_b_frames
+    AV_DICT_SET_INT(opts, "bf", 3, AV_DICT_DONT_OVERWRITE);
     return 0;
 }
 

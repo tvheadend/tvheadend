@@ -267,7 +267,7 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             pkt->v.pkt_frametype = PKT_B_FRAME;
             break;
         default:
-            tvh_context_log(self, LOG_ERR, "unknown picture type: %d",
+            tvh_context_log(self, LOG_DEBUG, "unknown picture type: %d",
                             pict_type);
             break;
     }
