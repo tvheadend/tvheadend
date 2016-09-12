@@ -424,7 +424,7 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment" : "comment" } },
+        edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment,playcount" : "comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
