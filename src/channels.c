@@ -77,6 +77,9 @@ channel_class_changed ( idnode_t *self )
   /* update the EPG channel <-> channel mapping here */
   if (ch->ch_enabled && ch->ch_epgauto)
     epggrab_channel_add(ch);
+
+  /* Inform htsp clients */
+  htsp_channel_update(ch);
 }
 
 static htsmsg_t *

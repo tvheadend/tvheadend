@@ -72,11 +72,6 @@ static void *htsp_server, *htsp_server_2;
 #define HTSP_ASYNC_ON   0x01
 #define HTSP_ASYNC_EPG  0x02
 
-#define HTSP_ASYNC_AUX_CHTAG   0x01
-#define HTSP_ASYNC_AUX_DVR     0x02
-#define HTSP_ASYNC_AUX_AUTOREC 0x03
-#define HTSP_ASYNC_AUX_TIMEREC 0x04
-
 #define HTSP_ASYNC_EPG_INTERVAL 30
 
 #define HTSP_PRIV_MASK (ACCESS_HTSP_STREAMING)
@@ -3389,18 +3384,15 @@ htsp_done(void)
  *
  */
 static void
-htsp_async_send(htsmsg_t *m, int mode, int aux_type, void *aux)
+htsp_async_send(htsmsg_t *m, int mode)
 {
   htsp_connection_t *htsp;
 
   lock_assert(&global_lock);
-  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link)
-    if (htsp->htsp_async_mode & mode) {
-      if (aux_type == HTSP_ASYNC_AUX_CHTAG &&
-          !channel_tag_access(aux, htsp->htsp_granted_access, 0))
-        continue;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (htsp->htsp_async_mode & mode)
       htsp_send_message(htsp, htsmsg_copy(m), NULL);
-    }
+  }
   htsmsg_destroy(m);
 }
 
@@ -3457,7 +3449,10 @@ htsp_channel_add(channel_t *ch)
 void
 htsp_channel_update(channel_t *ch)
 {
-  _htsp_channel_update(ch, "channelUpdate", NULL);
+  if (ch  && ch->ch_enabled)
+    _htsp_channel_update(ch, "channelUpdate", NULL);
+  else
+    htsp_channel_delete(ch); /* Disabled channels should not be visible in clients */
 }
 
 /**
@@ -3469,9 +3464,25 @@ htsp_channel_delete(channel_t *ch)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "channelId", channel_get_id(ch));
   htsmsg_add_str(m, "method", "channelDelete");
-  _htsp_channel_update(ch, NULL, m);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
+/**
+ * Called from channel.c when a new tag is created
+ */
+static void
+_htsp_tag_update(channel_tag_t *ct, const char *method)
+{
+  htsp_connection_t *htsp;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON) {
+      if (channel_tag_access(ct, htsp->htsp_granted_access, 0)) {
+        htsmsg_t *m = htsp_build_tag(ct, method, 1);
+        htsp_send_message(htsp, m, NULL);
+      }
+    }
+  }
+}
 
 /**
  * Called from channel.c when a tag is exported
@@ -3479,8 +3490,7 @@ htsp_channel_delete(channel_t *ch)
 void
 htsp_tag_add(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagAdd", 1), HTSP_ASYNC_ON,
-                  HTSP_ASYNC_AUX_CHTAG, ct);
+  _htsp_tag_update(ct, "tagAdd");
 }
 
 
@@ -3490,8 +3500,10 @@ htsp_tag_add(channel_tag_t *ct)
 void
 htsp_tag_update(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1), HTSP_ASYNC_ON,
-                  HTSP_ASYNC_AUX_CHTAG, ct);
+  if (ct && ct->ct_enabled)
+    _htsp_tag_update(ct, "tagUpdate");
+  else
+    htsp_tag_delete(ct); /* Disabled tags should not be visible in clients */
 }
 
 
@@ -3504,7 +3516,7 @@ htsp_tag_delete(channel_tag_t *ct)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "tagId", htsp_channel_tag_get_identifier(ct));
   htsmsg_add_str(m, "method", "tagDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_CHTAG, ct);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 /**
@@ -3575,7 +3587,7 @@ htsp_dvr_entry_delete(dvr_entry_t *de)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "id", idnode_get_short_uuid(&de->de_id));
   htsmsg_add_str(m, "method", "dvrEntryDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_DVR, de);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 /**
@@ -3629,7 +3641,7 @@ htsp_autorec_entry_delete(dvr_autorec_entry_t *dae)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", idnode_uuid_as_str(&dae->dae_id, ubuf));
   htsmsg_add_str(m, "method", "autorecEntryDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_AUTOREC, dae);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 /**
@@ -3683,7 +3695,7 @@ htsp_timerec_entry_delete(dvr_timerec_entry_t *dte)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "id", idnode_uuid_as_str(&dte->dte_id, ubuf));
   htsmsg_add_str(m, "method", "timerecEntryDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_TIMEREC, dte);
+  htsp_async_send(m, HTSP_ASYNC_ON);
 }
 
 /**
