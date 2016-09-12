@@ -214,23 +214,16 @@ tvh_video_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts
 
 
 static int
-tvh_video_context_decode(TVHContext *self, AVPacket *avpkt)
-{
-    if (avpkt->pts <= self->pts) {
-        tvh_context_log(self, LOG_WARNING,
-                        "Invalid pts (%"PRId64") <= last (%"PRId64"), dropping packet",
-                        avpkt->pts, self->pts);
-        return AVERROR_INVALIDDATA;
-    }
-    self->pts = avpkt->pts;
-    return 0;
-}
-
-
-static int
 tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 {
     avframe->pts = av_frame_get_best_effort_timestamp(avframe);
+    /*if (avframe->pts <= self->pts) {
+        tvh_context_log(self, LOG_ERR,
+                        "Invalid pts (%"PRId64") <= last (%"PRId64")",
+                        avframe->pts, self->pts);
+        return -1;
+    }
+    self->pts = avframe->pts;*/
     return 0;
 }
 
@@ -313,7 +306,6 @@ tvh_video_context_close(TVHContext *self)
 TVHContextType TVHVideoContext = {
     .media_type = AVMEDIA_TYPE_VIDEO,
     .open       = tvh_video_context_open,
-    .decode     = tvh_video_context_decode,
     .encode     = tvh_video_context_encode,
     .ship       = tvh_video_context_ship,
     .wrap       = tvh_video_context_wrap,
