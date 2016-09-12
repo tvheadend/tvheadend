@@ -1941,7 +1941,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   stop_extra  = htsmsg_get_s64_or_default(in, "stopExtra",  0);
   retention   = htsmsg_get_u32_or_default(in, "retention",  DVR_RET_DVRCONFIG);
   removal     = htsmsg_get_u32_or_default(in, "removal",    DVR_RET_DVRCONFIG);
-  priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NORMAL);
+  priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NOTSET);
   title       = htsmsg_get_str(in, "title");
   subtitle    = htsmsg_get_str(in, "subtitle");
   desc        = htsmsg_get_str(in, "description");
