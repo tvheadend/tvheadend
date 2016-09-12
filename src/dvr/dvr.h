@@ -509,6 +509,9 @@ dvr_entry_t *
 dvr_entry_clone ( dvr_entry_t *de );
 
 dvr_entry_t *
+dvr_entry_duplicate_event( dvr_entry_t *de );
+
+dvr_entry_t *
 dvr_entry_create ( const char *uuid, htsmsg_t *conf, int clone );
 
 

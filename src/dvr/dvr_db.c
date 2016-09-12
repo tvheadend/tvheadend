@@ -1218,9 +1218,9 @@ static int _dvr_duplicate_per_day(dvr_entry_t *de, dvr_entry_t *de2, void **aux)
 }
 
 /**
- *
+ * Returns the master DVR entry in case of a rerun
  */
-static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
+dvr_entry_t * dvr_entry_duplicate_event(dvr_entry_t *de)
 {
   static _dvr_duplicate_fcn_t fcns[] = {
     [DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER]  = _dvr_duplicate_epnum,
@@ -2079,7 +2079,7 @@ dvr_timer_start_recording(void *aux)
   }
 
   // if duplicate, then delete it now, don't record!
-  if (_dvr_duplicate_event(de)) {
+  if (dvr_entry_duplicate_event(de)) {
     dvr_entry_cancel_delete(de, 1);
     return;
   }
@@ -2875,7 +2875,7 @@ dvr_entry_class_duplicate_get(void *o)
 {
   static time_t null = 0;
   dvr_entry_t *de = (dvr_entry_t *)o;
-  de = _dvr_duplicate_event(de);
+  de = dvr_entry_duplicate_event(de);
   return de ? &de->de_start : &null;
 }
 

@@ -887,6 +887,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
 {
   htsmsg_t *out = htsmsg_create_map(), *l, *m, *e, *info;
   htsmsg_field_t *f;
+  dvr_entry_t *dub;
   const char *s = NULL, *error = NULL, *subscriptionError = NULL;
   const char *p, *last;
   int64_t fsize = -1;
@@ -928,6 +929,12 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
       htsmsg_add_u32(out, "playcount",    de->de_playcount);
       htsmsg_add_u32(out, "playposition", de->de_playposition);
+    }
+
+    dub = dvr_entry_duplicate_event(de);
+    if (dub) {
+      htsmsg_add_u32(out, "rerunId",    idnode_get_short_uuid(&dub->de_id));
+      htsmsg_add_s64(out, "rerunStart", dub->de_start);
     }
 
     if(de->de_title && (s = lang_str_get(de->de_title, lang)))
