@@ -156,6 +156,9 @@ tvh_codec_profile_vaapi_hevc_open(tvh_codec_profile_vaapi_t *self,
     else {
         AV_DICT_SET_QP(opts, self->qp, 25);
     }
+    // max_b_frames
+    // XXX: remove when b-frames handling in vaapi_encode is fixed
+    AV_DICT_SET_INT(opts, "bf", 0, 0);
     return 0;
 }
 

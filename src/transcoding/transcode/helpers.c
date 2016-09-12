@@ -165,14 +165,6 @@ tvh_decoder_helpers_register()
 
 /* MPEG2VIDEO */
 static int
-tvh_mpeg2video_open(TVHContext *self, AVDictionary **opts)
-{
-    self->oavctx->gop_size = MIN(600, self->oavctx->gop_size);
-    self->oavctx->max_b_frames = MIN(16, self->oavctx->max_b_frames);
-    return 0;
-}
-
-static int
 tvh_mpeg2video_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 {
     const uint8_t *data = avpkt->data;
@@ -237,7 +229,6 @@ tvh_mpeg2video_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 static TVHContextHelper TVHMPEG2VIDEOEncoder = {
     .type   = AVMEDIA_TYPE_VIDEO,
     .id     = AV_CODEC_ID_MPEG2VIDEO,
-    .open   = tvh_mpeg2video_open,
     .meta   = tvh_mpeg2video_meta,
 };
 
@@ -341,27 +332,6 @@ static TVHContextHelper TVHHEVCEncoder = {
 };
 
 
-/* VPX */
-static int
-tvh_libvpx_open(TVHContext *self, AVDictionary **opts)
-{
-    self->oavctx->gop_size = MIN(128, self->oavctx->gop_size);
-    return 0;
-}
-
-static TVHContextHelper TVHVP8Encoder = {
-    .type   = AVMEDIA_TYPE_VIDEO,
-    .id     = AV_CODEC_ID_VP8,
-    .open   = tvh_libvpx_open,
-};
-
-static TVHContextHelper TVHVP9Encoder = {
-    .type   = AVMEDIA_TYPE_VIDEO,
-    .id     = AV_CODEC_ID_VP9,
-    .open   = tvh_libvpx_open,
-};
-
-
 /* AAC */
 static void
 tvh_aac_pack_adts_header(TVHContext *self, pktbuf_t *pb)
@@ -437,8 +407,6 @@ tvh_encoder_helpers_register()
     tvh_encoder_helper_register(&TVHMPEG2VIDEOEncoder);
     tvh_encoder_helper_register(&TVHH264Encoder);
     tvh_encoder_helper_register(&TVHHEVCEncoder);
-    tvh_encoder_helper_register(&TVHVP8Encoder);
-    tvh_encoder_helper_register(&TVHVP9Encoder);
     /* audio */
     tvh_encoder_helper_register(&TVHAACEncoder);
 }

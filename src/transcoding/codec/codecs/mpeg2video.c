@@ -33,6 +33,8 @@ tvh_codec_profile_mpeg2video_open(TVHCodecProfile *self, AVDictionary **opts)
     else {
         AV_DICT_SET_GLOBAL_QUALITY(opts, self->qscale, 5);
     }
+    // max_b_frames
+    AV_DICT_SET_INT(opts, "bf", 3, 0);
     return 0;
 }
 
