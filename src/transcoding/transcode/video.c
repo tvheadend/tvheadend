@@ -217,13 +217,13 @@ static int
 tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
 {
     avframe->pts = av_frame_get_best_effort_timestamp(avframe);
-    /*if (avframe->pts <= self->pts) {
-        tvh_context_log(self, LOG_ERR,
-                        "Invalid pts (%"PRId64") <= last (%"PRId64")",
+    if (avframe->pts <= self->pts) {
+        tvh_context_log(self, LOG_WARNING,
+                        "Invalid pts (%"PRId64") <= last (%"PRId64"), dropping frame",
                         avframe->pts, self->pts);
-        return -1;
+        return AVERROR(EAGAIN);
     }
-    self->pts = avframe->pts;*/
+    self->pts = avframe->pts;
     return 0;
 }
 
