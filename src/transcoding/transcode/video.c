@@ -246,29 +246,31 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
     int qsdata_size = 0;
     enum AVPictureType pict_type = AV_PICTURE_TYPE_NONE;
 
-    qsdata = av_packet_get_side_data(avpkt, AV_PKT_DATA_QUALITY_STATS,
-                                     &qsdata_size);
-    if (qsdata && qsdata_size >= 5) {
-        pict_type = qsdata[4];
-    }
-    else if (avpkt->flags & AV_PKT_FLAG_KEY) {
+    if (avpkt->flags & AV_PKT_FLAG_KEY) {
         pict_type = AV_PICTURE_TYPE_I;
     }
+    else {
+        qsdata = av_packet_get_side_data(avpkt, AV_PKT_DATA_QUALITY_STATS,
+                                         &qsdata_size);
+        if (qsdata && qsdata_size >= 5) {
+            pict_type = qsdata[4];
+        }
 #if FF_API_CODED_FRAME
-    else if (self->oavctx->coded_frame) {
-        // some codecs do not set pict_type but set key_frame, in this case,
-        // we assume that when key_frame == 1 the frame is an I-frame
-        // (all the others are assumed to be P-frames)
-        if (!(pict_type = self->oavctx->coded_frame->pict_type)) {
-            if (self->oavctx->coded_frame->key_frame) {
-                pict_type = AV_PICTURE_TYPE_I;
-            }
-            else {
-                pict_type = AV_PICTURE_TYPE_P;
+        else if (self->oavctx->coded_frame) {
+            // some codecs do not set pict_type but set key_frame, in this case,
+            // we assume that when key_frame == 1 the frame is an I-frame
+            // (all the others are assumed to be P-frames)
+            if (!(pict_type = self->oavctx->coded_frame->pict_type)) {
+                if (self->oavctx->coded_frame->key_frame) {
+                    pict_type = AV_PICTURE_TYPE_I;
+                }
+                else {
+                    pict_type = AV_PICTURE_TYPE_P;
+                }
             }
         }
-    }
 #endif
+    }
     switch (pict_type) {
         case AV_PICTURE_TYPE_I:
             pkt->v.pkt_frametype = PKT_I_FRAME;
