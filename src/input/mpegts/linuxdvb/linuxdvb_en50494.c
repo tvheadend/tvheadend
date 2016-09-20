@@ -382,9 +382,9 @@ htsmsg_t *
 linuxdvb_en50494_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
-  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_(UNICABLE_I_NAME)));
-  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_(UNICABLE_II_NAME)));
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("None"))));
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val(UNICABLE_I_NAME, tvh_gettext_lang(lang, N_(UNICABLE_I_NAME))));
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val(UNICABLE_II_NAME, tvh_gettext_lang(lang, N_(UNICABLE_II_NAME))));
   return m;
 }
 

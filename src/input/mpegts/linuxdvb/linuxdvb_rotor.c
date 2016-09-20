@@ -483,9 +483,9 @@ linuxdvb_rotor_list ( void *o, const char *lang )
 {
   int i;
   htsmsg_t *m = htsmsg_create_list(); 
-  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("None"))));
   for (i = 0; i < ARRAY_SIZE(linuxdvb_rotor_all); i++)
-    htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, linuxdvb_rotor_all[i].name));
+    htsmsg_add_msg(m, NULL, htsmsg_create_key_val(linuxdvb_rotor_all[i].name, tvh_gettext_lang(lang, linuxdvb_rotor_all[i].name)));
   return m;
 }
 

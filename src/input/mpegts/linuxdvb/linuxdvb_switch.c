@@ -259,8 +259,8 @@ htsmsg_t *
 linuxdvb_switch_list ( void *o, const char *lang )
 {
   htsmsg_t *m = htsmsg_create_list();
-  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("None")));
-  htsmsg_add_str(m, NULL, tvh_gettext_lang(lang, N_("Generic")));
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("None"))));
+  htsmsg_add_msg(m, NULL, htsmsg_create_key_val("Generic", tvh_gettext_lang(lang, N_("Generic"))));
   return m;
 }
 
