@@ -796,12 +796,8 @@ htsmsg_t *network_interfaces_enum(void *obj, const char *lang)
 
   if (ifnames) {
     struct if_nameindex *ifname;
-    for (ifname = ifnames; ifname->if_name; ifname++) {
-      htsmsg_t *entry = htsmsg_create_map();
-      htsmsg_add_str(entry, "key", ifname->if_name);
-      htsmsg_add_str(entry, "val", ifname->if_name);
-      htsmsg_add_msg(list, NULL, entry);
-    }
+    for (ifname = ifnames; ifname->if_name; ifname++)
+      htsmsg_add_msg(list, NULL, htsmsg_create_key_val(ifname->if_name, ifname->if_name));
     if_freenameindex(ifnames);
   }
 

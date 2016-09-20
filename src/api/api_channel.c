@@ -25,15 +25,6 @@
 #include "access.h"
 #include "api.h"
 
-static void
-api_channel_key_val(htsmsg_t *dst, const char *key, const char *val)
-{
-  htsmsg_t *e = htsmsg_create_map();
-  htsmsg_add_str(e, "key", key);
-  htsmsg_add_str(e, "val", val ?: "");
-  htsmsg_add_msg(dst, NULL, e);
-}
-
 static int
 api_channel_is_all(access_t *perm, htsmsg_t *args)
 {
@@ -50,6 +41,7 @@ api_channel_list
   htsmsg_t *l;
   int cfg = api_channel_is_all(perm, args);
   char buf[128], ubuf[UUID_HEX_SIZE];
+  const char *name;
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
@@ -57,10 +49,11 @@ api_channel_list
     if (!cfg && !channel_access(ch, perm, 0)) continue;
     if (!ch->ch_enabled) {
       snprintf(buf, sizeof(buf), "{%s}", channel_get_name(ch));
-      api_channel_key_val(l, idnode_uuid_as_str(&ch->ch_id, ubuf), buf);
+      name =buf;
     } else {
-      api_channel_key_val(l, idnode_uuid_as_str(&ch->ch_id, ubuf), channel_get_name(ch));
+      name = channel_get_name(ch);
     }
+    htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ch->ch_id, ubuf), name));
   }
   pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();
@@ -107,18 +100,19 @@ api_channel_tag_list
   channel_tag_t *ct;
   htsmsg_t *l;
   int cfg = api_channel_is_all(perm, args);
-  char buf[128], ubuf[UUID_HEX_SIZE];
+  char buf[128], ubuf[UUID_HEX_SIZE], *name;
 
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
   TAILQ_FOREACH(ct, &channel_tags, ct_link)
     if (cfg || channel_tag_access(ct, perm, 0)) {
       if (ct->ct_enabled) {
-        api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id, ubuf), ct->ct_name);
+        name = ct->ct_name;
       } else {
         snprintf(buf, sizeof(buf), "{%s}", ct->ct_name);
-        api_channel_key_val(l, idnode_uuid_as_str(&ct->ct_id, ubuf), buf);
+        name = buf;
       }
+      htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ct->ct_id, ubuf), name));
     }
   pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();

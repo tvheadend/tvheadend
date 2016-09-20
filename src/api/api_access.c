@@ -97,7 +97,7 @@ api_access_entry_userlist
   idnode_set_t    *is;
   idnode_t        *in;
   access_entry_t  *ae;
-  htsmsg_t        *l, *e;
+  htsmsg_t        *l;
 
   l = htsmsg_create_list();
 
@@ -113,12 +113,8 @@ api_access_entry_userlist
 
       ae = (access_entry_t *)in;
       if (ae->ae_username != NULL && ae->ae_username[0] != '\0' &&
-          ae->ae_username[0] != '*') {
-        e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", ae->ae_username);
-        htsmsg_add_str(e, "val", ae->ae_username);
-        htsmsg_add_msg(l, NULL, e);
-      }
+          ae->ae_username[0] != '*')
+        htsmsg_add_msg(l, NULL, htsmsg_create_key_val(ae->ae_username, ae->ae_username));
 
       idnode_perm_unset(in);
     }

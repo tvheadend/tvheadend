@@ -243,18 +243,14 @@ linuxdvb_frontend_dvbs_class_master_enum( void * self, const char *lang )
   char ubuf[UUID_HEX_SIZE];
   htsmsg_t *m = htsmsg_create_list();
   if (self == NULL) return m;
-  htsmsg_t *e = htsmsg_create_map();
-  htsmsg_add_str(e, "key", "");
-  htsmsg_add_str(e, "val", N_("This tuner"));
+  htsmsg_t *e = htsmsg_create_key_val("", N_("This tuner"));
   htsmsg_add_msg(m, NULL, e);
   LIST_FOREACH(th, &tvh_hardware, th_link) {
     if (!idnode_is_instance(&th->th_id, &linuxdvb_adapter_class)) continue;
     la = (linuxdvb_adapter_t*)th;
     LIST_FOREACH(lfe2, &la->la_frontends, lfe_link) {
       if (lfe2 != lfe && lfe2->lfe_type == lfe->lfe_type) {
-        e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", idnode_uuid_as_str(&lfe2->ti_id, ubuf));
-        htsmsg_add_str(e, "val", lfe2->mi_name);
+        e = htsmsg_create_key_val(idnode_uuid_as_str(&lfe2->ti_id, ubuf), lfe2->mi_name);
         htsmsg_add_msg(m, NULL, e);
       }
     }

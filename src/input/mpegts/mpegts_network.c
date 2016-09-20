@@ -537,9 +537,7 @@ mpegts_network_wizard_get
     mi->mi_display_name(mi, buf, sizeof(buf));
     htsmsg_add_str(m, "input_name", buf);
     l = htsmsg_create_list();
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", idc->ic_class);
-    htsmsg_add_str(e, "val", idclass_get_caption(idc, lang));
+    e = htsmsg_create_key_val(idc->ic_class, idclass_get_caption(idc, lang));
     htsmsg_add_msg(l, NULL, e);
     htsmsg_add_msg(m, "mpegts_network_types", l);
     if (mn)

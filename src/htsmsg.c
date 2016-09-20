@@ -1274,3 +1274,17 @@ htsmsg_csv_2_list(const char *str, char delim)
   }
   return m;
 }
+
+/*
+ *
+ */
+htsmsg_t *
+htsmsg_create_key_val(const char *key, const char *val)
+{
+  htsmsg_t *r = htsmsg_create_map();
+  if (r) {
+    htsmsg_add_str(r, "key", key);
+    htsmsg_add_str(r, "val", val);
+  }
+  return r;
+}

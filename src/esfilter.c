@@ -372,15 +372,13 @@ esfilter_class_language_enum(void *o, const char *lang)
   char buf[128];
 
   while (lc->code2b) {
-    htsmsg_t *e = htsmsg_create_map();
+    htsmsg_t *e;
     if (!strcmp(lc->code2b, "und")) {
-      htsmsg_add_str(e, "key", "");
-      htsmsg_add_str(e, "val", tvh_gettext_lang(lang, any));
+      e = htsmsg_create_key_val("", tvh_gettext_lang(lang, any));
     } else {
-      htsmsg_add_str(e, "key", lc->code2b);
       snprintf(buf, sizeof(buf), "%s (%s)", lc->desc, lc->code2b);
       buf[sizeof(buf)-1] = '\0';
-      htsmsg_add_str(e, "val", buf);
+      e = htsmsg_create_key_val(lc->code2b, buf);
     }
     htsmsg_add_msg(l, NULL, e);
     lc++;
@@ -441,7 +439,7 @@ esfilter_build_ca_cmp(const void *_a, const void *_b)
 static htsmsg_t *
 esfilter_build_ca_enum(int provider)
 {
-  htsmsg_t *e, *l;
+  htsmsg_t *l;
   uint32_t *a = alloca(sizeof(uint32_t) * MAX_ITEMS);
   char buf[16], buf2[128];
   service_t *s;
@@ -469,20 +467,14 @@ esfilter_build_ca_enum(int provider)
 
   l = htsmsg_create_list();
 
-  e = htsmsg_create_map();
-  htsmsg_add_str(e, "key", provider ? "ffffff" : "ffff");
-  htsmsg_add_str(e, "val", "ANY");
-  htsmsg_add_msg(l, NULL, e);
+  htsmsg_add_msg(l, NULL, htsmsg_create_key_val(provider ? "ffffff" : "ffff", "ANY"));
 
   for (i = 0; i < count; i++) {
-    e = htsmsg_create_map();
     snprintf(buf, sizeof(buf), provider ? "%06x" : "%04x", a[i]);
     if (!provider)
       snprintf(buf2, sizeof(buf2), "%04x - %s",
                a[i], caid2name(a[i]));
-    htsmsg_add_str(e, "key", buf);
-    htsmsg_add_str(e, "val", provider ? buf : buf2);
-    htsmsg_add_msg(l, NULL, e);
+    htsmsg_add_msg(l, NULL, htsmsg_create_key_val(buf, provider ? buf : buf2));
   }
   return l;
 

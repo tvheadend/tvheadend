@@ -196,9 +196,8 @@ api_idnode_load_by_class0
 
       /* Name/UUID only */
       if (_enum) {
-        e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", idnode_uuid_as_str(in, ubuf));
-        htsmsg_add_str(e, "val", idnode_get_title(in, perm->aa_lang_ui));
+        e = htsmsg_create_key_val(idnode_uuid_as_str(in, ubuf),
+                                  idnode_get_title(in, perm->aa_lang_ui));
 
       /* Full record */
       } else {

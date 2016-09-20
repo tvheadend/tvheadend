@@ -128,9 +128,7 @@ strtab2htsmsg0_str(const struct strtab_str tab[], uint32_t n, int i18n, const ch
   uint32_t i;
   htsmsg_t *e, *l = htsmsg_create_list();
   for (i = 0; i < n; i++) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", tab[i].val);
-    htsmsg_add_str(e, "val", i18n ? tvh_gettext_lang(lang, tab[i].str) : tab[i].str);
+    e = htsmsg_create_key_val(tab[i].val, i18n ? tvh_gettext_lang(lang, tab[i].str) : tab[i].str);
     htsmsg_add_msg(l, NULL, e);
   }
   return l;

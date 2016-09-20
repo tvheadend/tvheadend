@@ -111,7 +111,7 @@ linuxdvb_en50607_id_list ( void *o, const char *lang )
   return m;
 }
 
-static htsmsg_t *
+htsmsg_t *
 linuxdvb_en50494_pin_list ( void *o, const char *lang )
 {
   int32_t i;

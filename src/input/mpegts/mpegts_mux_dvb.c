@@ -68,9 +68,7 @@ dvb_mux_##c##_class_##l##_enum (void *o, const char *lang)\
   int i;\
   htsmsg_t *m = htsmsg_create_list(), *e;\
   for (i = 0; i < ARRAY_SIZE(t); i++) {\
-    e = htsmsg_create_map(); \
-    htsmsg_add_str(e, "key", dvb_##t##2str(t[i]));\
-    htsmsg_add_str(e, "val", tvh_gettext_lang(lang, dvb_##t##2str(t[i])));\
+    e = htsmsg_create_key_val(dvb_##t##2str(t[i]), tvh_gettext_lang(lang, dvb_##t##2str(t[i]))); \
     htsmsg_add_msg(m, NULL, e);\
   }\
   return m;\
@@ -98,9 +96,7 @@ dvb_mux_##c##_class_##l##_enum (void *o, const char *lang)\
   int i;\
   htsmsg_t *m = htsmsg_create_list(), *e;\
   for (i = 0; i < ARRAY_SIZE(t); i++) {\
-    e = htsmsg_create_map(); \
-    htsmsg_add_str(e, "key", dvb_##t##2str(t[i]));\
-    htsmsg_add_str(e, "val", tvh_gettext_lang(lang, dvb_##t##2str(t[i])));\
+    e = htsmsg_create_key_val(dvb_##t##2str(t[i]), tvh_gettext_lang(lang, dvb_##t##2str(t[i]))); \
     htsmsg_add_msg(m, NULL, e);\
   }\
   return m;\

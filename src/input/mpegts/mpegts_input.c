@@ -192,15 +192,6 @@ mpegts_input_class_linked_get ( void *self )
   return &prop_sbuf_ptr;
 }
 
-static void
-mpegts_input_add_keyval(htsmsg_t *l, const char *key, const char *val)
-{
-  htsmsg_t *e = htsmsg_create_map();
-  htsmsg_add_str(e, "key", key);
-  htsmsg_add_str(e, "val", val);
-  htsmsg_add_msg(l, NULL, e);
-}
-
 static htsmsg_t *
 mpegts_input_class_linked_enum( void * self, const char *lang )
 {
@@ -208,13 +199,16 @@ mpegts_input_class_linked_enum( void * self, const char *lang )
   tvh_input_t *ti;
   char ubuf[UUID_HEX_SIZE];
   htsmsg_t *m = htsmsg_create_list();
-  mpegts_input_add_keyval(m, "", tvh_gettext_lang(lang, N_("Not linked")));
+  htsmsg_t *e = htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("Not linked")));
+  htsmsg_add_msg(m, NULL, e);
   TVH_INPUT_FOREACH(ti)
     if (idnode_is_instance(&ti->ti_id, &mpegts_input_class)) {
       mi2 = (mpegts_input_t *)ti;
-      if (mi2 != mi)
-        mpegts_input_add_keyval(m, idnode_uuid_as_str(&ti->ti_id, ubuf),
-                                   idnode_get_title(&mi2->ti_id, lang));
+      if (mi2 != mi) {
+        e = htsmsg_create_key_val(idnode_uuid_as_str(&ti->ti_id, ubuf),
+                                  idnode_get_title(&mi2->ti_id, lang));
+        htsmsg_add_msg(m, NULL, e);
+      }
   }
   return m;
 }

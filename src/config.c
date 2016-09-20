@@ -1865,9 +1865,7 @@ static void
 config_class_info_area_list1 ( htsmsg_t *m, const char *key,
                                const char *val, const char *lang )
 {
-  htsmsg_t *e = htsmsg_create_map();
-  htsmsg_add_str(e, "key", key);
-  htsmsg_add_str(e, "val", tvh_gettext_lang(lang, val));
+  htsmsg_t *e = htsmsg_create_key_val(key, tvh_gettext_lang(lang, val));
   htsmsg_add_msg(m, NULL, e);
 }
 

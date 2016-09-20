@@ -54,12 +54,9 @@ api_mpegts_input_network_list
   if ((is = mi->mi_network_list(mi))) {
     for (i = 0; i < is->is_count; i++) {
       char buf[256];
-      htsmsg_t *e = htsmsg_create_map();
       mn = (mpegts_network_t*)is->is_array[i];
-      htsmsg_add_str(e, "key", idnode_uuid_as_str(is->is_array[i], ubuf));
       mn->mn_display_name(mn, buf, sizeof(buf));
-      htsmsg_add_str(e, "val", buf);
-      htsmsg_add_msg(l, NULL, e);
+      htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&mn->mn_id, ubuf), buf));
     }
     idnode_set_free(is);
   }

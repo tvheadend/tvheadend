@@ -58,7 +58,7 @@ api_profile_list
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   profile_t *pro;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
   int cfg = api_profile_is_all(perm, args);
   int sflags = htsmsg_get_bool_or_default(args, "htsp", 0) ? SUBSCRIPTION_HTSP : 0;
   char ubuf[UUID_HEX_SIZE];
@@ -70,10 +70,7 @@ api_profile_list
     idnode_uuid_as_str(&pro->pro_id, ubuf);
     if (!cfg && (!profile_verify(pro, sflags) || !api_profile_find(perm, ubuf)))
       continue;
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", ubuf);
-    htsmsg_add_str(e, "val", profile_get_name(pro));
-    htsmsg_add_msg(l, NULL, e);
+    htsmsg_add_msg(l, NULL, htsmsg_create_key_val(ubuf, profile_get_name(pro)));
   }
   pthread_mutex_unlock(&global_lock);
   *resp = htsmsg_create_map();

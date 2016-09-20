@@ -30,14 +30,11 @@ api_language_enum
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   const lang_code_t *c = lang_codes;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
 
   l = htsmsg_create_list();
   while (c->code2b) {
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "key", c->code2b);
-    htsmsg_add_str(e, "val", c->desc);
-    htsmsg_add_msg(l, NULL, e);
+    htsmsg_add_msg(l, NULL, htsmsg_create_key_val(c->code2b, c->desc));
     c++;
   }
   *resp = htsmsg_create_map();
@@ -50,19 +47,15 @@ _api_language_locale_enum
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp, int all )
 {
   const lang_code_t *c = lang_codes;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
   const char *s;
   char buf1[8];
   char buf2[128];
 
   l = htsmsg_create_list();
   while (c->code2b) {
-    if (all || tvh_gettext_langcode_valid(c->code2b)) {
-      e = htsmsg_create_map();
-      htsmsg_add_str(e, "key", c->code2b);
-      htsmsg_add_str(e, "val", c->desc);
-      htsmsg_add_msg(l, NULL, e);
-    }
+    if (all || tvh_gettext_langcode_valid(c->code2b))
+      htsmsg_add_msg(l, NULL, htsmsg_create_key_val(c->code2b, c->desc));
     s = c->locale;
     while (s && *s) {
       if (*s == '|')
@@ -72,10 +65,7 @@ _api_language_locale_enum
       snprintf(buf1, sizeof(buf1), "%s_%c%c", c->code2b, s[0], s[1]);
       if (all || tvh_gettext_langcode_valid(buf1)) {
         snprintf(buf2, sizeof(buf2), "%s (%c%c)", c->desc, s[0], s[1]);
-        e = htsmsg_create_map();
-        htsmsg_add_str(e, "key", buf1);
-        htsmsg_add_str(e, "val", buf2);
-        htsmsg_add_msg(l, NULL, e);
+        htsmsg_add_msg(l, NULL, htsmsg_create_key_val(buf1, buf2));
       }
       s += 2;
     }

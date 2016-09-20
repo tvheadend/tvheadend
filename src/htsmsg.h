@@ -427,6 +427,8 @@ char *htsmsg_list_2_csv(htsmsg_t *m, char delim, int human);
 
 htsmsg_t *htsmsg_csv_2_list(const char *str, char delim);
 
+htsmsg_t *htsmsg_create_key_val(const char *key, const char *val);
+
 /**
  *
  */
