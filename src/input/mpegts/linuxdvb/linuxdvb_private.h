@@ -329,6 +329,9 @@ struct linuxdvb_lnb
   int       (*lnb_pol)  (linuxdvb_lnb_t*, dvb_mux_t*);
 };
 
+#define UNICABLE_EN50494     50494
+#define UNICABLE_EN50607     50607
+
 struct linuxdvb_en50494
 {
   linuxdvb_diseqc_t;
@@ -448,6 +451,10 @@ linuxdvb_diseqc_t *linuxdvb_switch_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int c, int u );
 linuxdvb_diseqc_t *linuxdvb_rotor_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls );
+
+#define UNICABLE_I_NAME       "Unicable I (EN50494)"
+#define UNICABLE_II_NAME      "Unicable II (EN50607)"
+
 linuxdvb_diseqc_t *linuxdvb_en50494_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int port );
 
@@ -461,11 +468,18 @@ htsmsg_t *linuxdvb_switch_list  ( void *o, const char *lang );
 htsmsg_t *linuxdvb_rotor_list   ( void *o, const char *lang );
 htsmsg_t *linuxdvb_en50494_list ( void *o, const char *lang );
 
-htsmsg_t *linuxdvb_en50494_id_list ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50494_id_list  ( void *o, const char *lang );
+htsmsg_t *linuxdvb_en50607_id_list  ( void *o, const char *lang );
 htsmsg_t *linuxdvb_en50494_pin_list ( void *o, const char *lang );
+
+static inline int linuxdvb_unicable_is_en50607( const char *str )
+  { return strcmp(str, UNICABLE_II_NAME) == 0; }
+static inline int linuxdvb_unicable_is_en50494( const char *str )
+  { return !linuxdvb_unicable_is_en50607(str); }
 
 void linuxdvb_en50494_init (void);
 
+int linuxdvb_diseqc_raw_send (int fd, uint8_t len, ...);
 int
 linuxdvb_diseqc_send
   (int fd, uint8_t framing, uint8_t addr, uint8_t cmd, uint8_t len, ...);

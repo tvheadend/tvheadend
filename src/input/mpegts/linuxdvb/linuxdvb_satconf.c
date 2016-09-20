@@ -464,7 +464,7 @@ const idclass_t linuxdvb_satconf_en50494_class =
   .ic_super      = &linuxdvb_satconf_class,
   .ic_class      = "linuxdvb_satconf_en50494",
   .ic_doc        = tvh_doc_linuxdvb_satconf_class,
-  .ic_caption    = N_("TV Adapters - SatConfig - EN50494/UniCable (experimental)"),
+  .ic_caption    = N_("TV Adapters - SatConfig - EN50494/UniCable I"),
   .ic_properties = (const property_t[]) {
     {
       .type     = PT_U16,
@@ -517,6 +517,94 @@ const idclass_t linuxdvb_satconf_en50494_class =
       .set      = linuxdvb_satconf_class_network_set1,
       .list     = linuxdvb_satconf_class_network_enum,
       .rend     = linuxdvb_satconf_class_network_rend1,
+      .opts     = PO_NOSAVE,
+    },
+    {}
+  }
+};
+
+const idclass_t linuxdvb_satconf_en50607_class =
+{
+  .ic_super      = &linuxdvb_satconf_class,
+  .ic_class      = "linuxdvb_satconf_en50607",
+  .ic_doc        = tvh_doc_linuxdvb_satconf_class,
+  .ic_caption    = N_("TV Adapters - SatConfig - EN50607/UniCable II"),
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_U16,
+      .id       = "id",
+      .name     = N_("SCR (ID)"),
+      .desc     = N_("SCR (Satellite Channel Router) ID."),
+      .get      = linuxdvb_satconf_class_en50494_id_get,
+      .set      = linuxdvb_satconf_class_en50494_id_set,
+      .list     = linuxdvb_en50607_id_list,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "pin",
+      .name     = N_("PIN"),
+      .desc     = N_("PIN."),
+      .get      = linuxdvb_satconf_class_en50494_pin_get,
+      .set      = linuxdvb_satconf_class_en50494_pin_set,
+      .list     = linuxdvb_en50494_pin_list,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "frequency",
+      .name     = N_("Frequency (MHz)"),
+      .desc     = N_("Frequency (in MHz)."),
+      .get      = linuxdvb_satconf_class_en50494_freq_get,
+      .set      = linuxdvb_satconf_class_en50494_freq_set,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_a",
+      .name     = N_("Network A"),
+      .desc     = N_("Network for port A."),
+      .islist   = 1,
+      .get      = linuxdvb_satconf_class_network_get0,
+      .set      = linuxdvb_satconf_class_network_set0,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = linuxdvb_satconf_class_network_rend0,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_b",
+      .name     = N_("Network B"),
+      .desc     = N_("Network for port B."),
+      .islist   = 1,
+      .get      = linuxdvb_satconf_class_network_get1,
+      .set      = linuxdvb_satconf_class_network_set1,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = linuxdvb_satconf_class_network_rend1,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_c",
+      .name     = N_("Network C"),
+      .desc     = N_("Network for port C."),
+      .islist   = 1,
+      .get      = linuxdvb_satconf_class_network_get2,
+      .set      = linuxdvb_satconf_class_network_set2,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = linuxdvb_satconf_class_network_rend2,
+      .opts     = PO_NOSAVE,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "network_d",
+      .name     = N_("Network D"),
+      .desc     = N_("Network for port D."),
+      .islist   = 1,
+      .get      = linuxdvb_satconf_class_network_get3,
+      .set      = linuxdvb_satconf_class_network_set3,
+      .list     = linuxdvb_satconf_class_network_enum,
+      .rend     = linuxdvb_satconf_class_network_rend3,
       .opts     = PO_NOSAVE,
     },
     {}
@@ -653,9 +741,15 @@ static struct linuxdvb_satconf_type linuxdvb_satconf_types[] = {
   },
   {
     .type  = "en50494",
-    .name  = N_("Unicable switch (universal LNB, experimental)"),
+    .name  = N_("Unicable I switch (universal LNB)"),
     .idc   = &linuxdvb_satconf_en50494_class,
     .ports = 2,
+  },
+  {
+    .type  = "en50607",
+    .name  = N_("Unicable II switch (universal LNB)"),
+    .idc   = &linuxdvb_satconf_en50607_class,
+    .ports = 4,
   },
   {
     .type  = "advanced",
@@ -1078,7 +1172,10 @@ linuxdvb_satconf_create
     if (lst->ports > 1) {
       if (!strcmp(lst->type, "en50494")) {
         if (!lse->lse_en50494)
-          lse->lse_en50494 = linuxdvb_en50494_create0("Generic", NULL, lse, i);
+          lse->lse_en50494 = linuxdvb_en50494_create0(UNICABLE_I_NAME, NULL, lse, i);
+      } else if (!strcmp(lst->type, "en50607")) {
+        if (!lse->lse_en50494)
+          lse->lse_en50494 = linuxdvb_en50494_create0(UNICABLE_II_NAME, NULL, lse, i);
       } else {
         if (!lse->lse_switch)
           lse->lse_switch = linuxdvb_switch_create0("Generic", NULL, lse, i, -1);
@@ -1538,6 +1635,37 @@ linuxdvb_diseqc_destroy ( linuxdvb_diseqc_t *ld )
 }
 
 int
+linuxdvb_diseqc_raw_send
+  (int fd, uint8_t len, ...)
+{
+  int i;
+  va_list ap;
+  struct dvb_diseqc_master_cmd message;
+  char buf[256];
+  size_t c = 0;
+
+  /* Build message */
+  message.msg_len = len;
+  va_start(ap, len);
+  for (i = 0; i < len; i++) {
+    message.msg[i] = (uint8_t)va_arg(ap, int);
+    if (tvhtrace_enabled())
+      tvh_strlcatf(buf, sizeof(buf), c, "%02X ", message.msg[3 + i]);
+  }
+  va_end(ap);
+
+  if (tvhtrace_enabled())
+    tvhtrace(LS_DISEQC, "sending raw diseqc (len %d) %s", len, buf);
+
+  /* Send */
+  if (ioctl(fd, FE_DISEQC_SEND_MASTER_CMD, &message)) {
+    tvherror(LS_DISEQC, "failed to send diseqc cmd (e=%s)", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
+
+int
 linuxdvb_diseqc_send
   (int fd, uint8_t framing, uint8_t addr, uint8_t cmd, uint8_t len, ...)
 {
@@ -1546,7 +1674,6 @@ linuxdvb_diseqc_send
   struct dvb_diseqc_master_cmd message;
   char buf[256];
   size_t c = 0;
-  int tr = tvhtrace_enabled();
 
   /* Build message */
   message.msg_len = len + 3;
@@ -1556,12 +1683,12 @@ linuxdvb_diseqc_send
   va_start(ap, len);
   for (i = 0; i < len; i++) {
     message.msg[3 + i] = (uint8_t)va_arg(ap, int);
-    if (tr)
+    if (tvhtrace_enabled())
       tvh_strlcatf(buf, sizeof(buf), c, "%02X ", message.msg[3 + i]);
   }
   va_end(ap);
 
-  if (tr)
+  if (tvhtrace_enabled())
     tvhtrace(LS_DISEQC, "sending diseqc (len %d) %02X %02X %02X %s",
              len + 3, framing, addr, cmd, buf);
 
