@@ -40,7 +40,7 @@ static inline void set_bit(int bit, void *addr)
 static inline void clear_bit(int bit, void *addr)
 {
   bitops_ulong_t *p = ((bitops_ulong_t *)addr) + BIT_WORD(bit);
-  *p &= BIT_MASK(bit);
+  *p &= ~BIT_MASK(bit);
 }
 
 static inline int test_bit(int bit, void *addr)
