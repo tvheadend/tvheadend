@@ -224,6 +224,13 @@ tvh_video_context_encode(TVHContext *self, AVFrame *avframe)
         return AVERROR(EAGAIN);
     }
     self->pts = avframe->pts;
+    if (avframe->interlaced_frame) {
+        self->oavctx->field_order =
+            avframe->top_field_first ? AV_FIELD_TB : AV_FIELD_BT;
+    }
+    else {
+        self->oavctx->field_order = AV_FIELD_PROGRESSIVE;
+    }
     return 0;
 }
 
@@ -288,7 +295,7 @@ tvh_video_context_wrap(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
     }
     pkt->pkt_duration   = avpkt->duration;
     pkt->pkt_commercial = self->src_pkt->pkt_commercial;
-    pkt->v.pkt_field      = self->src_pkt->v.pkt_field;
+    pkt->v.pkt_field      = (self->oavctx->field_order > AV_FIELD_PROGRESSIVE);
     pkt->v.pkt_aspect_num = self->src_pkt->v.pkt_aspect_num;
     pkt->v.pkt_aspect_den = self->src_pkt->v.pkt_aspect_den;
     return 0;

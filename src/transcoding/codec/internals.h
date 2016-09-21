@@ -79,7 +79,6 @@
     _tvh_codec_getattr(c, a, AVMEDIA_TYPE_AUDIO, TVHAudioCodec)
 
 
-
 #define AV_DICT_SET(d, k, v, f) \
     do { \
         if (av_dict_set((d), (k), (v), (f)) < 0) { \

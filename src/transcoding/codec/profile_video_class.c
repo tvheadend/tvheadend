@@ -101,6 +101,23 @@ tvh_codec_profile_video_open(TVHVideoCodecProfile *self, AVDictionary **opts)
 
 /* codec_profile_video_class ================================================ */
 
+/* codec_profile_video_class.deinterlace */
+
+static int
+codec_profile_video_class_deinterlace_set(void *obj, const void *val)
+{
+    TVHVideoCodecProfile *self = (TVHVideoCodecProfile *)obj;
+    AVCodec *avcodec = NULL;
+
+    if (self &&
+        (avcodec = tvh_codec_profile_get_avcodec((TVHCodecProfile *)self))) {
+        self->deinterlace = (avcodec->id == AV_CODEC_ID_HEVC) ? 1 : *(int *)val;
+        return 1;
+    }
+    return 0;
+}
+
+
 /* codec_profile_video_class.pix_fmt */
 
 static uint32_t
@@ -134,6 +151,7 @@ const codec_profile_class_t codec_profile_video_class = {
                 .desc     = N_("Deinterlace."),
                 .group    = 2,
                 .off      = offsetof(TVHVideoCodecProfile, deinterlace),
+                .set      = codec_profile_video_class_deinterlace_set,
                 .def.i    = 1,
             },
             {
