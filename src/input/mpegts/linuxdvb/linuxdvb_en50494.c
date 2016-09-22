@@ -357,14 +357,12 @@ linuxdvb_en50494_tune
                                  2,
                                  data1, data2);
     } else if (ver2 && le->le_pin != LINUXDVB_EN50494_NOPIN) {
-      ret = linuxdvb_diseqc_raw_send(fd,
+      ret = linuxdvb_diseqc_raw_send(fd, 5,
                                      LINUXDVB_EN50607_FRAME_MULTIHOME,
-                                     4,
                                      data1, data2, data3, (uint8_t)le->le_pin);
     } else if (ver2) {
-      ret = linuxdvb_diseqc_raw_send(fd,
+      ret = linuxdvb_diseqc_raw_send(fd, 4,
                                      LINUXDVB_EN50607_FRAME_NORMAL,
-                                     3,
                                      data1, data2, data3);
     }
     if (ret != 0) {
