@@ -221,13 +221,29 @@ linuxdvb_en50494_freq0
 {
   /* transponder value - t */
   *t = round((((freq / 1000) + 2 + le->le_frequency) / 4) - 350);
-  if (*t > 1024) {
-    tvherror(LS_EN50494, "transponder value bigger then 1024");
+  if (*t >= 1023) {
+    tvherror(LS_EN50494, "transponder value bigger then 1023 for freq %d (%d)", freq, le->le_frequency);
     return -1;
   }
 
   /* tune frequency for the frontend */
   *rfreq = (*t + 350) * 4000 - freq;
+  return 0;
+}
+
+static int
+linuxdvb_en50607_freq0
+  ( linuxdvb_en50494_t *le, int freq, int *rfreq, uint16_t *t )
+{
+  /* transponder value - t */
+  *t = round(freq / 1000) - 100;
+  if (*t > 2047) {
+    tvherror(LS_EN50494, "transponder value bigger then 2047 for freq %d (%d)", freq, le->le_frequency);
+    return -1;
+  }
+
+  /* tune frequency for the frontend */
+  *rfreq = le->le_frequency * 1000;
   return 0;
 }
 
@@ -263,12 +279,12 @@ linuxdvb_en50494_tune
   uint8_t data1, data2, data3;
   uint16_t t;
 
-  /* tune frequency for the frontend */
-  if (linuxdvb_en50494_freq0(le, freq, &rfreq, &t))
-    return -1;
-  le->le_tune_freq = rfreq;
 
   if (!ver2) {
+    /* tune frequency for the frontend */
+    if (linuxdvb_en50494_freq0(le, freq, &rfreq, &t))
+      return -1;
+    le->le_tune_freq = rfreq;
     /* 2 data fields (16bit) */
     data1  = (le->le_id & 7) << 5;        /* 3bit user-band */
     data1 |= (le->le_position & 1) << 4;  /* 1bit position (satellite A(0)/B(1)) */
@@ -278,6 +294,10 @@ linuxdvb_en50494_tune
     data2  = t & 0xff;                    /* 8bit transponder value bit 3-10 */
     data3  = 0;
   } else {
+    /* tune frequency for the frontend */
+    if (linuxdvb_en50607_freq0(le, freq, &rfreq, &t))
+      return -1;
+    le->le_tune_freq = rfreq;
     /* 3 data fields (24bit) */
     data1  = (le->le_id & 0x1f) << 3;     /* 5bit user-band */
     data1 |= (t >> 8) & 7;                /* 3bit transponder value bit 1-3 */
