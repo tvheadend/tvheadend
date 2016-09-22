@@ -50,7 +50,7 @@
 #define CWC_ES_PIDS           8
 #define CWC_MAX_NOKS          3
 
-#define CWS_NETMSGSIZE 362
+#define CWS_NETMSGSIZE 500
 #define CWS_FIRSTCMDNO 0xe0
 
 typedef enum {
