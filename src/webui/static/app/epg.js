@@ -118,6 +118,9 @@ tvheadend.epgDetails = function(event) {
       content += '</div>'; /* x-epg-left */
       content += '<div class="x-epg-bottom">';
     }
+    if (event.image != null && event.image.length > 0) {
+      content += '<img class="x-epg-image" src="' + event.image + '">';
+    }
     content += '<hr class="x-epg-hr"/>';
     if (event.summary)
       content += '<div class="x-epg-summary">' + event.summary + '</div>';
@@ -139,7 +142,7 @@ tvheadend.epgDetails = function(event) {
         if (g1 || g2)
           genre.push((g1 ? '[' + g1 + '] ' : '') + g2);
       });
-      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-body">' + genre.join(', ') + '</span></div>';
+      content += '<div class="x-epg-meta"><span class="x-epg-prefix">' + _('Content Type') + ':</span><span class="x-epg-genre">' + genre.join(', ') + '</span></div>';
     }
     var tags = [];
     if (event.hd > 1)
@@ -405,6 +408,7 @@ tvheadend.epg = function() {
             { name: 'summary' },
             { name: 'description' },
             { name: 'episodeOnscreen' },
+            { name: 'image' },
             {
                 name: 'start',
                 type: 'date',
