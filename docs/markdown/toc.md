@@ -15,26 +15,23 @@ Web Interface Guide
 
 * [General](webui_general)
 
-* Electronic Program Guide
-
-  - [EPG Grid](epg)
+* [Electronic Program Guide](epg)
 
 * Digital Video Recorder
 
-  - [DVR Entries](class/dvrentry)
-  - [Upcoming/Current Recordings](class/dvrentry)
-  - [Finished Recordings](class/dvrentry)
-  - [Failed Recordings](class/dvrentry)
+  - [Upcoming / Current Recordings](dvr)
+  - [Finished Recordings](dvr)
+  - [Failed Recordings](dvr)
   - [Auto-recording (Autorecs)](class/dvrautorec)
   - [Time-based Recording (Timers)](class/dvrtimerec)
 
-Web Interface Configuration Guide
+Configuration Guide
 
 * General
 
-  - [Base Config](class/config)
-  - [Image Cache Config](class/imagecache)
-  - [SAT>IP Server Config](class/satip_server)
+  - [Base](class/config)
+  - [Image Cache](class/imagecache)
+  - [SAT>IP Server](class/satip_server)
 
 * Access Configuration (Users)
 
