@@ -53,8 +53,8 @@ than you have can lead to scanning/tuning failures, e.g. "No free tuner".
 
 Tvheadend won't export any tuners without any assigned networks, if you 
 haven't already done so you must enter a *SAT\>IP source number* for 
-a [network](mpegts_network). If you don't export a network you may see 
-the following debug error message.
+a [network](class/mpegts_network). If you don't export a network you 
+may see the following debug error message.
 
 `satips: SAT>IP server announces an empty tuner list to a client <IP ADDRESS OF CLIENT> (missing network assignment)` 
 
