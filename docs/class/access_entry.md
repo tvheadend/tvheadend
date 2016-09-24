@@ -31,16 +31,11 @@ Button                 | Function
 
 ####Example
 
-This is an example of a very limited user account entry.
+This is an example of a limited user account entry.
 
 !['Access Entry Example'](static/img/doc/accessentriesnewuser.png)
 
-If you would like to allow anonymous access to your Tvheadend 
-server you may set-up an anonymous account by entering an asterisk `*` 
-in the username field. **WARNING: All access rights given to an 
-anonymous account also apply to subsequent accounts.**
-
-**Don't forget** to also create a password entry for the user in the 
+Remember to also create a password entry for the user in the 
 *[Passwords](class/passwd)* tab!
 
 **Tips**:
@@ -48,14 +43,9 @@ anonymous account also apply to subsequent accounts.**
 over the Internet.
 * For extra security always enter (a comma-separated list of) 
 network prefix(es) (*Allowed networks*).
-* If you lock yourself out, you can use the [backdoor account](#emergency-backdoor-access) to regain 
-access, or restart Tvheadend with the `--noacl` argument.
 * You can have multiple entries using the same username with varying 
-rights, allowing you to enable / disable each as needed. Keep in mind 
-that matching account entry permissions are combined (enabled entries only).
-* If you create an anonymous account, it also requires 
-a [password](class/passwd) entry (enter an asterisk `*` for both the 
-username and password fields when adding the entry).
+rights, allowing you to enable / disable each as needed. Note, matching 
+(enabled) accounts will have permissions combined.
 
 ---
 
@@ -72,7 +62,7 @@ username and password fields when adding the entry).
 Tvheadend includes functionality that allows you to regain access to 
 your Tvheadend instance in case of emergency or if you find yourself 
 locked out, this is known as a superuser account. On some systems you 
-might been asked to enter a superuser username and password during 
+may been asked to enter a superuser username and password during 
 installation.
 
 To create a superuser account you must have access to your Tvheadend 
@@ -93,5 +83,16 @@ access entries grid.
 
 **Tip**: Remember to set the correct permissions so that Tvheadend 
 is able to read the superuser file.
+
+---
+
+###Anonymous Access
+
+If you would like to allow anonymous access to your Tvheadend server 
+you may set-up a wildcard account, you can do this by creating a new 
+user and entering an asterisk `*` in the username field.
+
+**WARNING**: Permissions given to a wildcard account apply 
+to **all** accounts.
 
 ---

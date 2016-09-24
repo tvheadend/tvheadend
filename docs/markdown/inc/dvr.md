@@ -2,24 +2,21 @@ This tab is where you manage your recordings. Each entry is moved
 between the *Upcoming / Current Recordings*, *Finished Recordings* and 
 *Failed Recordings* sub-tabs depending on its status.
 
-!['Digital Video Recorder' Tabs](static/img/doc/configdvrtabs4.png)
-
-####Upcoming / Current Recordings
-
-This sub-tab lists current and upcoming recording entries. Entries 
+**Upcoming / Current Recordings**
+: This sub-tab lists current and upcoming recording entries. Entries 
 that appear here are either currently recording or are soon-to-be 
 recorded.
 
-####Finished Recordings
-
-This sub-tab lists all completed recording entries. Entries that appear 
+**Finished Recordings**
+: This sub-tab lists all completed recording entries. Entries that appear 
 here have reached the end of the scheduled recording time.
 
-####Failed Recordings
-
-This sub-tab lists all failed recording entries. Entries that appear 
+**Failed Recordings**
+: This sub-tab lists all failed recording entries. Entries that appear 
 here have failed to record due to one (or more) errors that occurred 
 during the recording.
+
+!['Digital Video Recorder' Tabs](static/img/doc/configdvrtabs4.png)
 
 ---
 

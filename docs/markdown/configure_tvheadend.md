@@ -104,28 +104,12 @@ force a scan and effectively ask your tuner what it can see.
 This is where the services will appear as your tuners tune to the muxes based
 on the network you told them to look on. Again, remember what's happening: 
 Tvheadend is telling your tuner hardware (via the drivers) to sequentially
-tune to each mux it knows about, and then see what 'programmes' it can see
+tune to each mux it knows about, and then see what 'programs' it can see
 on that mux, each of which is identified by a series of unique identifiers
 that describe the audio stream(s), the video stream(s), the subtitle stream(s)
 and language(s), and so on.
 
 (For the technically-minded, these unique identifiers - the elementary streams - are referred to as 'packet identifiers' or 'PIDs').
-
-####5.1. Forcing a Scan
-
-  **Tvheadend web interface: _Configuration -> DVB Inputs -> Networks_**
-
-  Highlight the network(s) you would like to force scan and then press 
-  the "Force Scan" button. 
-  
-  Force scanning can take some time. You may continue to use Tvheadend 
-  while a scan is in progress, but doing so will increase the time 
-  needed for it to complete. Note that the time required can vary 
-  depending on a number of factors, such as how many tuners you 
-  have available and the number of muxes on each.
-  
-  **Tip**: You may select more than one network by holding ctrl and 
-  clicking on additional networks. 
 
 ###6. Map Services to Channels
 
@@ -133,46 +117,11 @@ and language(s), and so on.
 
   Once scanning for services is complete, you need to map the services to 
   channels so your client can actually request them (i.e. so you can watch
-  or record). There are a number of methods to mapping available services, 
-  mapping uses the following dialog.
-
-  !['Service mapper dialog'](static/img/doc/mapservicesdialog.png)
-
-####6.1 Mapping All
-
-  Press the *[Map services]* button and then *[Map all services]*.
-
-  !['Map All Services'](static/img/doc/mapservicesall.png)
-
-  The [Map services to channels](class/service_mapper) dialog will 
-  now be displayed with **all** services checked - feel free to make 
-  changes. Once you're happy with the selection press the 
-  "Map services" button, you will then be taken to the 
-  [Service Mapper](status_service_mapper) tab which will begin mapping 
-  the selected services to channels. 
+  or record).
   
-####6.2 Mapping Selected
+  See [Services](class/mpegts_service) for a detailed look into service mapping.
 
-  Click on the services you would like to map as channels, 
-  once you're done selecting press the "Map services" button and 
-  then "Map selected services". 
-
-  !['Map selected'](static/img/doc/mapselectedservices.png)
-    
-  The [Map services to channels](class/service_mapper) dialog will 
-  now be displayed with the **selected** services checked - feel free to make 
-  changes. Once you're happy with the selection press the 
-  "Map services" button, you will then be taken to the 
-  [Service Mapper](status_service_mapper) tab which will begin mapping 
-  the selected services to channels. 
-  
-<tvh_include>inc/selecting_entries_tip</tvh_include>
-
-  **Tip**: By default Tvheadend will only show a small selection of 
-  available services - you can increase this by using the paging 
-  selector at the bottom right of the page.
-
-####6.3. Bouquets
+####6.1. Bouquets
 
   **Tvheadend web interface: _Configuration -> Channel / EPG -> Bouquets_**
 
@@ -182,7 +131,7 @@ and language(s), and so on.
   
   If you would like to use bouquets see [Bouquets](class/bouquet).
 
-### 7. Watch TV
+###7. Watch TV
 
 That's it - you're done. You should now have a working basic Tvheadend
 installation with channels mapped and ready for use!

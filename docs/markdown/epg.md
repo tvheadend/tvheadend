@@ -138,7 +138,7 @@ Icon                                                   | Description
 
 ---
 
-###Event details and recording
+###Event Details and Recording
 
 If you click on a single event, a popup will display detailed
 information about the event. It also allows you to schedule the event
