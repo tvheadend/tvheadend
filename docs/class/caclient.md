@@ -11,7 +11,7 @@ The following functions are available:
 
 Button              | Function
 --------------------|---------
-**Save**            | Save any changes made to the CA client configuration
+**Save**            | Save any changes made to the CA client configuration.
 **Undo**            | Undo any changes made to the CA client configuration since the last save.
 **Add**             | Add a new CA client configuration.
 **Delete**          | Delete an existing CA client configuration.

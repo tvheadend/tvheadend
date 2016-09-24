@@ -21,8 +21,7 @@ can now be kept (*[Save]* button), or abandoned (*[Undo]* button).
 
 Highlight (select) the entries in the grid that you'd like to edit, then 
 click the *[Edit]* button from the menu bar, the edit dialog should now 
-be displayed. A common set of fields is used for the edit dialog, most 
-of which can be seen in the grid view. Note that when editing multiple 
+be displayed. Note that when editing multiple 
 entries there is an additional check box before each setting, 
 ticking it will apply that setting to all selected entries.
 

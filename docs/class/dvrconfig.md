@@ -12,7 +12,7 @@ The following functions are available:
 
 Button              | Function
 --------------------|---------
-**Save**            | Save any changes made to the selected profile
+**Save**            | Save any changes made to the selected profile.
 **Undo**            | Undo any changes made to the selected profile since the last save.
 **Add**             | Add a new profile.
 **Delete**          | Delete an existing profile.

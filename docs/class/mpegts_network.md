@@ -44,8 +44,7 @@ then select the required network type:
 !['Network selection'](static/img/doc/networktypeselect.png)
 
 Then using the resultant dialog enter/select the desired network 
-options. A common set of fields is used for the *[Add]* dialog, 
-most of which can be seen in the grid view. 
+options.
 
 !['Add new network'](static/img/doc/addnewnetwork.png)
 
