@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -469,12 +470,19 @@ static int _epg_write_sect ( sbuf_t *sb, const char *sect )
 
 static void epg_save_tsk_callback ( void *p, int dearmed )
 {
+  char tmppath[PATH_MAX];
+  char path[PATH_MAX];
   sbuf_t *sb = p;
   size_t size = sb->sb_ptr, orig;
   int fd, r;
 
   tvhinfo(LS_EPGDB, "save start");
-  fd = hts_settings_open_file(1, "epgdb.v%d", EPG_DB_VERSION);
+  hts_settings_buildpath(path, sizeof(path), "epgdb.v%d", EPG_DB_VERSION);
+  snprintf(tmppath, sizeof(tmppath), "%s.tmp", path);
+  if (hts_settings_makedirs(tmppath))
+    fd = -1;
+  else
+    fd = tvh_open(tmppath, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
   if (fd >= 0) {
 #if ENABLE_ZLIB
     if (config.epg_compress) {
@@ -483,10 +491,15 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
 #endif
       r = tvh_write(fd, sb->sb_data, orig = size);
     close(fd);
-    if (r)
+    if (r) {
       tvherror(LS_EPGDB, "write error (size %zd)", orig);
-    else
+      if (remove(tmppath))
+        tvherror(LS_EPGDB, "unable to remove file %s", tmppath);
+    } else {
       tvhinfo(LS_EPGDB, "stored (size %zd)", orig);
+      if (rename(tmppath, path))
+        tvherror(LS_EPGDB, "unable to rename file %s to %s", tmppath, path);
+    }
   } else
     tvherror(LS_EPGDB, "unable to open epgdb file");
   sbuf_free(sb);
