@@ -821,7 +821,7 @@ char *regexp_escape ( const char *str );
 uint8_t *tvh_gzip_inflate ( const uint8_t *data, size_t size, size_t orig );
 uint8_t *tvh_gzip_deflate ( const uint8_t *data, size_t orig, size_t *size );
 int      tvh_gzip_deflate_fd ( int fd, const uint8_t *data, size_t orig, size_t *size, int speed );
-int      tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig, int speed );
+int      tvh_gzip_deflate_fd_header ( int fd, const uint8_t *data, size_t orig, size_t *size, int speed );
 #endif
 
 /* URL decoding */

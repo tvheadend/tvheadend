@@ -344,12 +344,14 @@ void epg_init ( void )
 #if ENABLE_ZLIB
   if (remain > 12 && memcmp(rp, "\xff\xffGZIP00", 8) == 0) {
     uint32_t orig = (rp[8] << 24) | (rp[9] << 16) | (rp[10] << 8) | rp[11];
-    tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%%)",
-           (float)((remain * 100.0) / orig));
+    tvhinfo(LS_EPGDB, "gzip format detected, inflating (ratio %.1f%% deflated size %zd)",
+           (float)((remain * 100.0) / orig), remain);
     rp = zlib_mem = tvh_gzip_inflate(rp + 12, remain - 12, orig);
     remain = rp ? orig : 0;
   }
 #endif
+
+  tvhinfo(LS_EPGDB, "parsing %zd bytes", remain);
 
   /* Process */
   memset(&stats, 0, sizeof(stats));
@@ -402,7 +404,7 @@ void epg_init ( void )
   /* Stats */
   tvhinfo(LS_EPGDB, "loaded v%d", ver);
   tvhinfo(LS_EPGDB, "  config     %d", stats.config.total);
-  tvhinfo(LS_EPGDB, "  channels   %d", stats.channels.total);
+  //tvhinfo(LS_EPGDB, "  channels   %d", stats.channels.total);
   tvhinfo(LS_EPGDB, "  brands     %d", stats.brands.total);
   tvhinfo(LS_EPGDB, "  seasons    %d", stats.seasons.total);
   tvhinfo(LS_EPGDB, "  episodes   %d", stats.episodes.total);
@@ -468,7 +470,7 @@ static int _epg_write_sect ( sbuf_t *sb, const char *sect )
 static void epg_save_tsk_callback ( void *p, int dearmed )
 {
   sbuf_t *sb = p;
-  size_t size = sb->sb_ptr;
+  size_t size = sb->sb_ptr, orig;
   int fd, r;
 
   tvhinfo(LS_EPGDB, "save start");
@@ -476,15 +478,15 @@ static void epg_save_tsk_callback ( void *p, int dearmed )
   if (fd >= 0) {
 #if ENABLE_ZLIB
     if (config.epg_compress) {
-      r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, sb->sb_ptr, 3) < 0;
+      r = tvh_gzip_deflate_fd_header(fd, sb->sb_data, size, &orig, 3) < 0;
    } else
 #endif
-      r = tvh_write(fd, sb->sb_data, sb->sb_ptr);
+      r = tvh_write(fd, sb->sb_data, orig = size);
     close(fd);
     if (r)
-      tvherror(LS_EPGDB, "write error (size %zd)", size);
+      tvherror(LS_EPGDB, "write error (size %zd)", orig);
     else
-      tvhinfo(LS_EPGDB, "stored (size %zd)", size);
+      tvhinfo(LS_EPGDB, "stored (size %zd)", orig);
   } else
     tvherror(LS_EPGDB, "unable to open epgdb file");
   sbuf_free(sb);

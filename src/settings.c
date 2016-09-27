@@ -184,7 +184,7 @@ hts_settings_save(htsmsg_t *record, const char *pathfmt, ...)
     size_t msglen;
     r = htsmsg_binary_serialize(record, &msgdata, &msglen, 2*1024*1024);
     if (!r && msglen >= 4) {
-      r = tvh_gzip_deflate_fd_header(fd, msgdata + 4, msglen - 4, 3);
+      r = tvh_gzip_deflate_fd_header(fd, msgdata + 4, msglen - 4, NULL, 3);
       if (r)
         ok = 0;
     } else {
