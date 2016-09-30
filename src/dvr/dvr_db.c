@@ -3636,6 +3636,7 @@ dvr_entry_trydestroy(dvr_entry_t *de)
     else {
       removal = (gclk() - (int64_t)de->de_stop)/(int64_t)86400;
 
+      de->de_dont_reschedule = 1;
       de->de_removal      = removal > DVR_RET_REM_DVRCONFIG ?
           removal : DVR_RET_REM_1DAY;                             /* Update removal to the current value */
       de->de_retention    = de->de_config->dvr_retention_minimal; /* Update the retention to the minimum allowed value */
