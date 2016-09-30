@@ -194,7 +194,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
 skip_url:
   if (last_url) {
-    snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
+    if (name[0])
+      snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
+    else
+      n = (char *)last_url;
   } else {
     n = (char *)name;
   }
@@ -203,7 +206,7 @@ skip_url:
     im = (iptv_mux_t *)mm;
     if (strcmp(im->mm_iptv_url ?: "", url) == 0) {
       im->im_delete_flag = 0;
-      if (strcmp(im->mm_iptv_svcname ?: "", name ?: "")) {
+      if (strcmp(im->mm_iptv_svcname ?: "", name)) {
         free(im->mm_iptv_svcname);
         im->mm_iptv_svcname = strdup(name);
         change = 1;
