@@ -1319,12 +1319,13 @@ dvr_thread(void *aux)
 
       if (epg_pause != (epg_running == 2)) {
         epg_pause = epg_running == 2;
-	muxer_add_marker(prch->prch_muxer);
+	if (muxing) muxer_add_marker(prch->prch_muxer);
       } else if (commercial != pkt->pkt_commercial) {
-        muxer_add_marker(prch->prch_muxer);
+        commercial = pkt->pkt_commercial;
+        if (muxing) muxer_add_marker(prch->prch_muxer);
+      } else if (atomic_exchange(&de->de_running_change, 0)) {
+        if (muxing) muxer_add_marker(prch->prch_muxer);
       }
-
-      commercial = pkt->pkt_commercial;
 
       if (ss == NULL)
         break;
@@ -1387,6 +1388,13 @@ dvr_thread(void *aux)
           started = 0;
         }
         break;
+      }
+
+      if (epg_pause != (epg_running == 2)) {
+        epg_pause = epg_running == 2;
+	if (muxing) muxer_add_marker(prch->prch_muxer);
+      } else if (atomic_exchange(&de->de_running_change, 0)) {
+        if (muxing) muxer_add_marker(prch->prch_muxer);
       }
 
       if (muxing == 0 &&

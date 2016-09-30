@@ -187,6 +187,7 @@ typedef struct dvr_entry {
   time_t de_running_start;
   time_t de_running_stop;
   time_t de_running_pause;
+  int    de_running_change;
 
   char *de_owner;
   char *de_creator;

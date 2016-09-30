@@ -1883,12 +1883,6 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
            channel_get_name(e->channel),
            running);
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
-    if (!dvr_entry_get_epg_running(de)) {
-      atomic_set_time_t(&de->de_running_start, 0);
-      atomic_set_time_t(&de->de_running_stop, 0);
-      atomic_set_time_t(&de->de_running_pause, 0);
-      continue;
-    }
     if (running == EPG_RUNNING_NOW && de->de_dvb_eid == e->dvb_eid) {
       if (de->de_running_pause) {
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG unpause",
@@ -1896,6 +1890,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
         atomic_set_time_t(&de->de_running_pause, 0);
+        atomic_add(&de->de_running_change, 1);
       }
       if (!de->de_running_start) {
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG marking start",
@@ -1903,9 +1898,11 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
         atomic_set_time_t(&de->de_running_start, gclk());
+        atomic_add(&de->de_running_change, 1);
       }
       if (dvr_entry_get_start_time(de, 1) > gclk()) {
         atomic_set_time_t(&de->de_start, gclk());
+        atomic_add(&de->de_running_change, 1);
         dvr_entry_set_timer(de);
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
@@ -1925,6 +1922,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       srcname = de->de_dvb_eid == e->dvb_eid ? "event" : "other running event";
       if (!de->de_running_stop ||
           de->de_running_start > de->de_running_stop) {
+        atomic_add(&de->de_running_change, 1);
         tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG marking stop",
                  idnode_uuid_as_str(&de->de_id, ubuf), srcname,
                  epg_broadcast_get_title(e, NULL),
@@ -1946,6 +1944,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
         atomic_set_time_t(&de->de_running_pause, gclk());
+        atomic_add(&de->de_running_change, 1);
       }
     }
   }
