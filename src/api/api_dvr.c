@@ -69,7 +69,7 @@ static int is_dvr_entry_finished(dvr_entry_t *entry)
 {
   dvr_entry_sched_state_t state = entry->de_sched_state;
   return state == DVR_COMPLETED && !entry->de_last_error &&
-         dvr_get_filesize(entry, 0) != -1 &&
+         (dvr_get_filesize(entry, 0) != -1 || entry->de_file_removed) &&
          entry->de_data_errors < DVR_MAX_DATA_ERRORS;
 }
 
@@ -245,8 +245,8 @@ api_dvr_entry_create_by_event
                                        e, 0, 0,
                                        perm->aa_username,
                                        perm->aa_representative,
-                                       NULL, DVR_PRIO_NORMAL, DVR_RET_DVRCONFIG,
-                                       DVR_RET_DVRCONFIG, comment);
+                                       NULL, DVR_PRIO_NORMAL, DVR_RET_REM_DVRCONFIG,
+                                       DVR_RET_REM_DVRCONFIG, comment);
         if (de)
           idnode_changed(&de->de_id);
       }
