@@ -122,7 +122,7 @@ static inline int muxer_reconfigure (muxer_t *m, const struct streaming_start *s
   { if(m && ss) return m->m_reconfigure(m, ss); return -1; }
 
 static inline int muxer_add_marker (muxer_t *m)
-  { if (m) return m->m_add_marker(m); return -1; }
+  { if (m && m->m_add_marker) return m->m_add_marker(m); return -1; }
 
 static inline int muxer_close (muxer_t *m)
   { if (m) return m->m_close(m); return -1; }
