@@ -15,7 +15,8 @@ The following functions are available:
 
 Button             | Function
 -------------------|---------
-**Map Services**   | Map the services
+**Cancel**         | Cancel mapping and close the dialog.
+**Map Services**   | Map the services.
 <tvh_include>inc/common_button_table_end</tvh_include>
 
 ---

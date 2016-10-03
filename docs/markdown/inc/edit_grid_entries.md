@@ -24,7 +24,6 @@ click the *[Edit]* button from the menu bar, the edit dialog should now
 be displayed. Note that when editing multiple 
 entries there is an additional check box before each setting, 
 ticking it will apply that setting to all selected entries.
-
 After you've finished editing an entry you can save your pending changes 
 using the *[Save]* button (closing the dialog), save your changes and continue making 
 further adjustments by pressing the *[Apply]* button, or cancel any unsaved 
