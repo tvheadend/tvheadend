@@ -187,6 +187,7 @@ enum {
   LS_TIMESHIFT,
   LS_SCANFILE,
   LS_TSFILE,
+  LS_TSDEBUG,
   LS_LAST     /* keep this last */
 };
 

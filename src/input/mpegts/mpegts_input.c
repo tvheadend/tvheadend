@@ -847,12 +847,12 @@ mpegts_input_started_mux
              buf, (long)mono2sec(mclk()), mi);
     mmi->mmi_mux->mm_tsdebug_fd = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
     if (mmi->mmi_mux->mm_tsdebug_fd < 0)
-      tvherror("tsdebug", "unable to create file '%s' (%i)", path, errno);
+      tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
     snprintf(path, sizeof(path), "%s/%s-%li-%p-input.ts", tvheadend_tsdebug,
              buf, (long)mono2sec(mclk()), mi);
     mmi->mmi_mux->mm_tsdebug_fd2 = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
     if (mmi->mmi_mux->mm_tsdebug_fd2 < 0)
-      tvherror("tsdebug", "unable to create file '%s' (%i)", path, errno);
+      tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
   } else {
     mmi->mmi_mux->mm_tsdebug_fd = -1;
     mmi->mmi_mux->mm_tsdebug_fd2 = -1;

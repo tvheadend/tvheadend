@@ -163,6 +163,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TIMESHIFT]     = { "timeshift",     N_("Timeshift") },
   [LS_SCANFILE]      = { "scanfile",      N_("Scanfile") },
   [LS_TSFILE]        = { "tsfile",        N_("MPEG-TS File") },
+  [LS_TSDEBUG]       = { "tsdebug",       N_("MPEG-TS Input Debug") },
 };
 
 static void
