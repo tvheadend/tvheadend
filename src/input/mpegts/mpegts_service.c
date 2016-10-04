@@ -288,7 +288,7 @@ mpegts_service_enlist_raw
   ( service_t *t, tvh_input_t *ti, struct service_instance_list *sil,
     int flags, int weight )
 {
-  int p = 0, w;
+  int p, w, r, added = 0, errcnt = 0;
   mpegts_service_t      *s = (mpegts_service_t*)t;
   mpegts_input_t        *mi;
   mpegts_mux_t          *m = s->s_dvb_mux;
@@ -309,7 +309,14 @@ mpegts_service_enlist_raw
     if (ti && (tvh_input_t *)mi != ti)
       continue;
 
-    if (!mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight)) continue;
+    r = mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight);
+    if (!r)
+      continue;
+    if (r < 0) {
+      /* temporary error - retry later */
+      errcnt++;
+      continue;
+    }
 
     /* Set weight to -1 (forced) for already active mux */
     if (mmi->mmi_mux->mm_active == mmi) {
@@ -324,9 +331,10 @@ mpegts_service_enlist_raw
     }
 
     service_instance_add(sil, t, mi->mi_instance, mi->mi_name, p, w);
+    added++;
   }
 
-  return 0;
+  return added ? 0 : (errcnt ? SM_CODE_NO_FREE_ADAPTER : 0);
 }
 
 /*

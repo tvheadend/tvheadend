@@ -194,7 +194,7 @@ iptv_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   if (!mpegts_input_is_enabled(mi, mm, flags, weight)) return 0;
-  return iptv_input_is_free(mi, mm, 0, weight, NULL) == NULL;
+  return iptv_input_is_free(mi, mm, 0, weight, NULL) == NULL ? 1 : -1;
 }
 
 static int

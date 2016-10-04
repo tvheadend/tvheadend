@@ -764,7 +764,7 @@ service_find_instance
           r1 = s->s_enlist(s, ti, sil, flags, weight);
           if (r1 == 0)
             enlisted++;
-          else if (enlisted == 0)
+          else if (r == 0)
             r = r1;
         }
       }
@@ -776,19 +776,15 @@ service_find_instance
           r1 = s->s_enlist(s, ti, sil, flags, weight);
           if (r1 == 0)
             enlisted++;
-          else if (enlisted == 0)
+          else if (r == 0)
             r = r1;
         }
       }
     }
+    if (enlisted)
+      r = 0;
   } else {
     r = s->s_enlist(s, ti, sil, flags, weight);
-  }
-
-  if (r) {
-    if (*error < r)
-      *error = r;
-    return NULL;
   }
 
   /* Clean */
@@ -796,6 +792,13 @@ service_find_instance
     next = TAILQ_NEXT(si, si_link);
     if(si->si_mark)
       service_instance_destroy(sil, si);
+  }
+
+  /* Error handling */
+  if (r) {
+    if (*error < r)
+      *error = r;
+    return NULL;
   }
 
   if (TAILQ_EMPTY(sil)) {
