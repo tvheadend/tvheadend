@@ -262,13 +262,7 @@ dvr_disk_space_cleanup(dvr_config_t *cfg)
               lang_str_get(oldest->de_title, NULL), tbuf, TOMIB(fileSize));
 
       dvr_disk_space_config_lastdelete = mclk();
-      if (dvr_entry_get_retention_days(oldest) == DVR_RET_ONREMOVE) {
-        dvr_entry_delete(oldest);     // delete actual file
-        dvr_entry_destroy(oldest, 1); // also delete database entry
-      } else {
-        if (dvr_entry_delete(oldest)) // delete actual file
-          idnode_changed(&oldest->de_id);
-      }
+      dvr_entry_cancel_remove(oldest, 0); /* Remove stored files and mark as "removed" */
     } else {
       tvhwarn(LS_DVR, "%s \"until space needed\" recordings found for config \"%s\", you are running out of disk space very soon!",
               loops > 0 ? "Not enough" : "No", configName);

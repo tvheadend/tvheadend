@@ -1998,7 +1998,7 @@ htsp_method_deleteDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   if (de == NULL)
     return out;
 
-  dvr_entry_cancel_delete(de, 0, 0);
+  dvr_entry_cancel_remove(de, 0);
 
   return htsp_success();
 }

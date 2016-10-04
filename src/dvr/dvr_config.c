@@ -178,7 +178,6 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_enabled = 1;
   cfg->dvr_config_name = strdup(name);
   cfg->dvr_retention_days = DVR_RET_ONREMOVE;
-  cfg->dvr_retention_minimal = DVR_RET_MIN_DISABLED;
   cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
   cfg->dvr_clone = 1;
   cfg->dvr_tag_files = 1;
@@ -763,29 +762,6 @@ dvr_config_class_retention_list ( void *o, const char *lang )
 }
 
 static htsmsg_t *
-dvr_config_class_retention_list_minimal ( void *o, const char *lang )
-{
-  static const struct strtab_u32 tab[] = {
-    { N_("Disabled"),           DVR_RET_MIN_DISABLED },
-    { N_("1 day"),              DVR_RET_REM_1DAY },
-    { N_("3 days"),             DVR_RET_REM_3DAY },
-    { N_("5 days"),             DVR_RET_REM_5DAY },
-    { N_("1 week"),             DVR_RET_REM_1WEEK },
-    { N_("2 weeks"),            DVR_RET_REM_2WEEK },
-    { N_("3 weeks"),            DVR_RET_REM_3WEEK },
-    { N_("1 month"),            DVR_RET_REM_1MONTH },
-    { N_("2 months"),           DVR_RET_REM_2MONTH },
-    { N_("3 months"),           DVR_RET_REM_3MONTH },
-    { N_("6 months"),           DVR_RET_REM_6MONTH },
-    { N_("1 year"),             DVR_RET_REM_1YEAR },
-    { N_("2 years"),            DVR_RET_REM_2YEARS },
-    { N_("3 years"),            DVR_RET_REM_3YEARS },
-    { N_("Forever"),            DVR_RET_REM_FOREVER },
-  };
-  return strtab2htsmsg_u32(tab, 1, lang);
-}
-
-static htsmsg_t *
 dvr_config_class_extra_list(void *o, const char *lang)
 {
   return dvr_entry_class_duration_list(o, 
@@ -924,21 +900,10 @@ const idclass_t dvr_config_class = {
       .type     = PT_U32,
       .id       = "retention-days",
       .name     = N_("DVR log retention period"),
-      .desc     = N_("Number of days to retain information about recordings. Once this period is exceeded, duplicate detection will not be possible for this recording."),
+      .desc     = N_("Number of days to retain information about recordings. Once this period is exceeded, duplicate detection will not be possible anymore."),
       .off      = offsetof(dvr_config_t, dvr_retention_days),
       .def.u32  = DVR_RET_ONREMOVE,
       .list     = dvr_config_class_retention_list,
-      .opts     = PO_EXPERT | PO_DOC_NLIST,
-      .group    = 1,
-    },
-    {
-      .type     = PT_U32,
-      .id       = "retention-minimal",
-      .name     = N_("Minimal log retention period"),
-      .desc     = N_("Minimal number of days to retain information from recordings that where deleted manually. Once this period is exceeded, duplicate detection will not be possible for this recording."),
-      .off      = offsetof(dvr_config_t, dvr_retention_minimal),
-      .def.u32  = DVR_RET_MIN_DISABLED,
-      .list     = dvr_config_class_retention_list_minimal,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
       .group    = 1,
     },

@@ -407,6 +407,36 @@ tvheadend.dvr_finished = function(panel, index) {
             }
         }
     };
+    
+    var removeButton = {
+        name: 'remove',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Remove the selected recording from storage'),
+                iconCls: 'remove',
+                text: _('Remove'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.AjaxConfirm({
+                    url: 'api/dvr/entry/remove',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    },
+                    question: _('Do you really want to remove the selected recordings from storage?')   
+                });
+            }
+        }
+    };
 
     function selected(s, abuttons) {
         var r = s.getSelections();
@@ -414,6 +444,7 @@ tvheadend.dvr_finished = function(panel, index) {
         abuttons.download.setDisabled(!b);
         abuttons.rerecord.setDisabled(!b);
         abuttons.move.setDisabled(!b);
+        abuttons.remove.setDisabled(!b);
     }
 
     tvheadend.idnode_grid(panel, {
@@ -425,9 +456,7 @@ tvheadend.dvr_finished = function(panel, index) {
         iconCls: 'finishedRec',
         tabIndex: index,
         edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment" : "comment" } },
-        del: true,
-        delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
-                     _('The associated file will be removed from storage.'),
+        del: false,
         list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
               'duration,filesize,channelname,owner,creator,' +
               'config_name,sched_status,errors,data_errors,url,comment',
@@ -454,7 +483,7 @@ tvheadend.dvr_finished = function(panel, index) {
                     return tvheadend.playLink('play/dvrfile/' + r.id, title);
                 }
             }],
-        tbar: [downloadButton, rerecordButton, moveButton],
+        tbar: [removeButton, downloadButton, rerecordButton, moveButton],
         selected: selected
     });
 
@@ -592,6 +621,74 @@ tvheadend.dvr_failed = function(panel, index) {
                 }
             }],
         tbar: [downloadButton, rerecordButton, moveButton],
+        selected: selected
+    });
+
+    return panel;
+};
+
+/**
+ *
+ */
+tvheadend.dvr_removed = function(panel, index) {
+
+    var actions = tvheadend.dvrRowActions();
+
+    var rerecordButton = {
+        name: 'rerecord',
+        builder: function() {
+            return new Ext.Toolbar.Button({
+                tooltip: _('Toggle re-record functionality'),
+                iconCls: 'rerecord',
+                text: _('Re-record'),
+                disabled: true
+            });
+        },
+        callback: function(conf, e, store, select) {
+            var r = select.getSelections();
+            if (r && r.length > 0) {
+                var uuids = [];
+                for (var i = 0; i < r.length; i++)
+                    uuids.push(r[i].id);
+                tvheadend.Ajax({
+                    url: 'api/dvr/entry/rerecord/toggle',
+                    params: {
+                        uuid: Ext.encode(uuids)
+                    },
+                    success: function(d) {
+                        store.reload();
+                    }
+                });
+            }
+        }
+    };
+    
+    function selected(s, abuttons) {
+        var r = s.getSelections();
+        abuttons.rerecord.setDisabled(r.length <= 0);
+    }
+
+    tvheadend.idnode_grid(panel, {
+        url: 'api/dvr/entry',
+        gridURL: 'api/dvr/entry/grid_removed',
+        readonly: true,
+        titleS: _('Removed Recording'),
+        titleP: _('Removed Recordings'),
+        iconCls: 'remove',
+        tabIndex: index,
+        uilevel: 'expert',
+        edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
+        del: true,
+        list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
+              'duration,channelname,owner,creator,config_name,' +
+              'sched_status,errors,data_errors,url,comment',
+        sort: {
+          field: 'start_real',
+          direction: 'ASC'
+        },
+        plugins: [actions],
+        lcol: [actions],
+        tbar: [rerecordButton],
         selected: selected
     });
 
@@ -751,7 +848,8 @@ tvheadend.dvr = function(panel, index) {
     tvheadend.dvr_upcoming(p, 0);
     tvheadend.dvr_finished(p, 1);
     tvheadend.dvr_failed(p, 2);
-    tvheadend.autorec_editor(p, 3);
-    tvheadend.timerec_editor(p, 4);
+    tvheadend.dvr_removed(p, 3);
+    tvheadend.autorec_editor(p, 4);
+    tvheadend.timerec_editor(p, 5);
     return p;
 }
