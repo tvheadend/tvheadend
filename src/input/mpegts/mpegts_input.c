@@ -1255,7 +1255,7 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
     if (!t)
       return;
     pos =  4 + 24 + 4;
-    tvhdebug("descrambler", "Keys from MPEG-TS source (PID 0x1FFF)!");
+    tvhdebug(LS_DESCRAMBLER, "Keys from MPEG-TS source (PID 0x1FFF)!");
     tsdebugcw_new_keys((service_t *)t, type, pkt + pos, pkt + pos + keylen);
   }
 }
