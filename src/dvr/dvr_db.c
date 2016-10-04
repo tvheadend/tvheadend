@@ -494,8 +494,10 @@ dvr_entry_retention_timer(dvr_entry_t *de)
       dvr_entry_deferred_destroy(de); // also remove database entry
       return;
     }
-    if (save)
+    if (save) {
       idnode_changed(&de->de_id);
+      htsp_dvr_entry_update(de);
+    }
   }
 
   if (retention < DVR_RET_ONREMOVE) {
@@ -1082,12 +1084,12 @@ dvr_entry_rerecord(dvr_entry_t *de)
       if (fsize1 / 5 < fsize2 / 6) {
         goto not_so_good;
       } else {
-        dvr_entry_cancel_delete(de2, 1, 1);
+        dvr_entry_cancel_delete(de2, 1);
       }
     } else if (de->de_sched_state == DVR_COMPLETED) {
       if(dvr_get_filesize(de, 0) == -1) {
 delete_me:
-        dvr_entry_cancel_delete(de, 0, 1);
+        dvr_entry_cancel_delete(de, 0);
         dvr_entry_rerecord(de2);
         return 1;
       }
@@ -2062,7 +2064,7 @@ dvr_timer_start_recording(void *aux)
 
   // if duplicate, then delete it now, don't record!
   if (_dvr_duplicate_event(de)) {
-    dvr_entry_cancel_delete(de, 1, 1);
+    dvr_entry_cancel_delete(de, 1);
     return;
   }
 
@@ -2153,7 +2155,7 @@ static void
 dvr_entry_class_delete(idnode_t *self)
 {
   dvr_entry_t *de = (dvr_entry_t *)self;
-  dvr_entry_cancel_delete(de, 0, 0);
+  dvr_entry_cancel_delete(de, 0);
 }
 
 static int
@@ -3507,7 +3509,7 @@ dvr_entry_set_rerecord(dvr_entry_t *de, int cmd)
   if (cmd == 0 && !de->de_dont_rerecord) {
     de->de_dont_rerecord = 1;
     if (de->de_child)
-      dvr_entry_cancel_delete(de->de_child, 0, 1);
+      dvr_entry_cancel_delete(de->de_child, 0);
   } else {
     de->de_dont_rerecord = 0;
     dvr_entry_rerecord(de);
@@ -3540,7 +3542,7 @@ dvr_entry_stop(dvr_entry_t *de)
 }
 
 /**
- *
+ * Cancels an upcoming or active recording
  */
 dvr_entry_t *
 dvr_entry_cancel(dvr_entry_t *de, int rerecord)
@@ -3551,10 +3553,11 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
   case DVR_RECORDING:
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
     break;
-
-  case DVR_SCHEDULED:
+  /* Cancel is not valid for finished recordings */
   case DVR_COMPLETED:
   case DVR_MISSED_TIME:
+    return de;
+  case DVR_SCHEDULED:
   case DVR_NOSTATE:
     dvr_entry_destroy(de, 1);
     de = NULL;
@@ -3575,27 +3578,31 @@ dvr_entry_cancel(dvr_entry_t *de, int rerecord)
 }
 
 /**
- *
+ * Called by 'dvr_entry_cancel_remove' and 'dvr_entry_cancel_delete'
+ * delete = 0 -> remove finished and active recordings (visible as removed)
+ * delete = 1 -> delete finished and active recordings (not visible anymore)
  */
-void
-dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord, int forcedestroy)
+static void
+dvr_entry_cancel_delete_remove(dvr_entry_t *de, int rerecord, int _delete)
 {
   dvr_entry_t *parent = de->de_parent;
   dvr_autorec_entry_t *dae = de->de_autorec;
+  int save;
 
   switch(de->de_sched_state) {
   case DVR_RECORDING:
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
-  case DVR_COMPLETED:
-    dvr_entry_delete(de);
-    if (forcedestroy)
-      dvr_entry_destroy(de, 1);
-    else
-      dvr_entry_trydestroy(de);
-    break;
-
-  case DVR_SCHEDULED:
   case DVR_MISSED_TIME:
+  case DVR_COMPLETED:
+    save = dvr_entry_delete(de); /* Remove files */
+    if (_delete || dvr_entry_get_retention_days(de) == DVR_RET_ONREMOVE)
+      dvr_entry_destroy(de, 1);  /* Delete database */
+    else if (save) {
+      idnode_changed(&de->de_id);
+      htsp_dvr_entry_update(de);
+    }
+    break;
+  case DVR_SCHEDULED:
   case DVR_NOSTATE:
     dvr_entry_destroy(de, 1);
     break;
@@ -3617,39 +3624,27 @@ dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord, int forcedestroy)
 }
 
 /**
- * Destroy db entry if possible.
- * The deletion of the db entry can be prevented by the minimal retention setting.
- * Prevention is needed in order to keep duplicate detection happy.
+ * Upcoming recording  -> cancel
+ * Active recording    -> cancel + remove
+ * Finished recordings -> remove
+ * The latter 2 will be visible as "removed recording"
  */
 void
-dvr_entry_trydestroy(dvr_entry_t *de)
+dvr_entry_cancel_remove(dvr_entry_t *de, int rerecord)
 {
-  char ubuf[UUID_HEX_SIZE];
-  uint32_t minretention, removal;
+  dvr_entry_cancel_delete_remove(de, rerecord, 0);
+}
 
-  if (!de->de_config || de->de_config->dvr_retention_minimal == DVR_RET_MIN_DISABLED)
-    dvr_entry_destroy(de, 1);
-  else {
-    minretention = time_t_out_of_range((int64_t)de->de_stop + de->de_config->dvr_retention_minimal * (int64_t)86400);
-    if (minretention < gclk()) /* Minimal retention period expired -> deleting db entry allowed  */
-      dvr_entry_destroy(de, 1);
-    else {
-      removal = (gclk() - (int64_t)de->de_stop)/(int64_t)86400;
-
-      de->de_dont_reschedule = 1;
-      de->de_removal      = removal > DVR_RET_REM_DVRCONFIG ?
-          removal : DVR_RET_REM_1DAY;                             /* Update removal to the current value */
-      de->de_retention    = de->de_config->dvr_retention_minimal; /* Update the retention to the minimum allowed value */
-      idnode_changed(&de->de_id);
-      dvr_entry_retention_timer(de);                              /* Rearm timer as retention was changed */
-
-      tvhinfo(LS_DVR, "delete entry %s not allowed \"%s\" on \"%s\", current retention period %"PRIu32", "
-         "minimal retention period %"PRIu32"",
-        idnode_uuid_as_str(&de->de_id, ubuf),
-        lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
-        removal, de->de_config->dvr_retention_minimal);
-    }
-  }
+/**
+ * Upcoming recording  -> cancel
+ * Active recording    -> abort + delete
+ * Finished recordings -> delete
+ * The latter 2 will NOT be visible as "removed recording"
+ */
+void
+dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord)
+{
+  dvr_entry_cancel_delete_remove(de, rerecord, 1);
 }
 
 /**

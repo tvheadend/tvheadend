@@ -125,7 +125,7 @@ dvr_autorec_completed(dvr_autorec_entry_t *dae, int error_code)
     if (de_prev) {
       tvhinfo(LS_DVR, "autorec %s removing recordings %s (allowed count %u total %u)",
               dae->dae_name, idnode_uuid_as_str(&de_prev->de_id, ubuf), max_count, total);
-      dvr_entry_cancel_delete(de_prev, 0, 0);
+      dvr_entry_cancel_remove(de_prev, 0);
     }
   }
 }

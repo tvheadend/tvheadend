@@ -54,7 +54,6 @@ typedef struct dvr_config {
   int dvr_clone;
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
-  uint32_t dvr_retention_minimal;
   uint32_t dvr_removal_days;
   uint32_t dvr_autorec_max_count;
   uint32_t dvr_autorec_max_sched_count;
@@ -588,9 +587,9 @@ void dvr_entry_dec_ref(dvr_entry_t *de);
 
 int dvr_entry_delete(dvr_entry_t *de);
 
-void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord, int forcedestroy);
+void dvr_entry_cancel_delete(dvr_entry_t *de, int rerecord);
 
-void dvr_entry_trydestroy(dvr_entry_t *de);
+void dvr_entry_cancel_remove(dvr_entry_t *de, int rerecord);
 
 int dvr_entry_file_moved(const char *src, const char *dst);
 
