@@ -339,7 +339,8 @@ SRCS-2 += \
 	src/muxer.c \
 	src/muxer/muxer_pass.c \
 	src/muxer/ebml.c \
-	src/muxer/muxer_mkv.c
+	src/muxer/muxer_mkv.c \
+	src/muxer/muxer_audioes.c
 
 SRCS += $(SRCS-2)
 I18N-C += $(SRCS-2)
