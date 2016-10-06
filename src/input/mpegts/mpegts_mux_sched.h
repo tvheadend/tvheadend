@@ -47,12 +47,14 @@ typedef struct mpegts_mux_sched
   char           *mms_mux;      ///< Mux UUID
   char           *mms_creator;  ///< Creator of entry
   int             mms_timeout;  ///< Timeout (in seconds)
+  int             mms_restart;  ///< Restart subscription when overriden
   int             mms_weight;   ///< Weighting
 
   /*
    * Cron handling
    */
   int             mms_active;   ///< Subscription is active
+  time_t          mms_start;    ///< Start time
   gtimer_t        mms_timer;    ///< Timer for start/end
   cron_t          mms_cronjob;  ///< Cron spec
   
