@@ -40,6 +40,7 @@ typedef struct audioes_muxer {
   int   am_fd;
   int   am_seekable;
   int   am_error;
+  off_t am_off;
 
   /* Filename is also used for logging */
   char *am_filename;
@@ -49,36 +50,38 @@ typedef struct audioes_muxer {
 /**
  * Figure out the mimetype
  */
-static const char*
+static const char *
 audioes_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 {
   int i;
-  int has_audio;
+  muxer_container_type_t mc = MC_UNKNOWN;
   const streaming_start_component_t *ssc;
   
-  has_audio = 0;
-
-  for(i=0; i < ss->ss_num_components; i++) {
+  for (i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
-
-    if(ssc->ssc_disabled)
+    if (ssc->ssc_disabled)
       continue;
-
-    has_audio |= SCT_ISAUDIO(ssc->ssc_type);
+    switch (ssc->ssc_type) {
+    case SCT_MPEG2AUDIO:  mc = MC_MPEG2AUDIO; break;
+    case SCT_AC3:         mc = MC_AC3; break;
+    case SCT_EAC3:        mc = MC_AC3; break;
+    case SCT_AAC:         mc = MC_AAC; break;
+    case SCT_MP4A:        mc = MC_MP4A; break;
+    case SCT_VORBIS:      mc = MC_VORBIS; break;
+    default: break;
+    }
+    break;
   }
 
-  if(has_audio)
-    return muxer_container_type2mime(MC_AUDIOES, 0);
-  else
-    return muxer_container_type2mime(MC_UNKNOWN, 0);
+  return muxer_container_type2mime(mc, 0);
 }
 
 
 /**
- * Init the builtin mkv muxer with streams
+ * Reconfigure the muxer
  */
 static int
-audioes_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
+audioes_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 {
   audioes_muxer_t *am = (audioes_muxer_t*)m;
   const streaming_start_component_t *ssc;
@@ -86,7 +89,7 @@ audioes_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 
   am->am_index = -1;
 
-  for(i = 0; i < ss->ss_num_components;i++) {
+  for (i = 0; i < ss->ss_num_components;i++) {
     ssc = &ss->ss_components[i];
 
     if ((!ssc->ssc_disabled) && (SCT_ISAUDIO(ssc->ssc_type))) {
@@ -99,12 +102,13 @@ audioes_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 }
 
 
+/**
+ * Init the builtin mkv muxer with streams
+ */
 static int
-audioes_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
+audioes_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
 {
-  /* TODO: Check our stream still exists? */
-
-  return 0;
+  return audioes_muxer_reconfigure(m, ss);
 }
 
 
@@ -118,6 +122,7 @@ audioes_muxer_open_stream(muxer_t *m, int fd)
 
   am->am_fd       = fd;
   am->am_seekable = 0;
+  am->am_off      = 0;
   am->am_filename = strdup("Live stream");
 
   return 0;
@@ -151,6 +156,7 @@ audioes_muxer_open_file(muxer_t *m, const char *filename)
              filename, strerror(errno));
 
   am->am_seekable = 1;
+  am->am_off      = 0;
   am->am_fd       = fd;
   am->am_filename = strdup(filename);
   return 0;
@@ -164,26 +170,37 @@ audioes_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 {
   th_pkt_t *pkt = (th_pkt_t*)data;
   audioes_muxer_t *am = (audioes_muxer_t*)m;
+  size_t size;
 
   assert(smt == SMT_PACKET);
 
-  // TODO: pkt->pkt_componentindex
-  /* TODO: ^ What does this even mean? */	
-
-  if(pkt->pkt_componentindex != am->am_index) {
+  if (pkt->pkt_componentindex != am->am_index) {
     pkt_ref_dec(pkt);
     return am->error;
   }
 
-  if(am->am_error) {
+  size = pktbuf_len(pkt->pkt_payload);
+  if (size == 0) {
+    pkt_ref_dec(pkt);
+    return am->error;
+  }
+
+  if (am->am_error) {
     am->m_errors++;
-  } else if(tvh_write(am->am_fd, pktbuf_ptr(pkt->pkt_payload), pktbuf_len(pkt->pkt_payload))) {
+  } else if (tvh_write(am->am_fd, pktbuf_ptr(pkt->pkt_payload), size)) {
     am->am_error = errno;
-    tvherror(LS_AUDIOES, "%s: Write failed -- %s", am->am_filename, 
-           strerror(errno));
-    /* TODO: Do some EOS handling here. Whatever that is. See muxer_pass.c:415 */
+    if (!MC_IS_EOS_ERROR(errno)) {
+      tvherror(LS_AUDIOES, "%s: Write failed -- %s", am->am_filename,
+               strerror(errno));
+    } else {
+      am->m_eos = 1;
+    }
     am->m_errors++;
-	/* TODO: A muxer_cache_update() call is still missing here. */
+    muxer_cache_update(m, am->am_fd, am->am_off, 0);
+    am->am_off = lseek(am->am_fd, 0, SEEK_CUR);
+  } else {
+    muxer_cache_update(m, am->am_fd, am->am_off, 0);
+    am->am_off += size;
   }
 
   pkt_ref_dec(pkt);
@@ -228,12 +245,11 @@ audioes_muxer_close(muxer_t *m)
 static void
 audioes_muxer_destroy(muxer_t *m)
 {
-	audioes_muxer_t *am = (audioes_muxer_t*)m;
+  audioes_muxer_t *am = (audioes_muxer_t*)m;
 
-	if(am->am_filename)
-		free(am->am_filename);
-	
-	free(am);	
+  if (am->am_filename)
+    free(am->am_filename);
+  free(am);
 }
 
 
@@ -245,7 +261,11 @@ audioes_muxer_create(const muxer_config_t *m_cfg)
 {
   audioes_muxer_t *am;
 
-  if(m_cfg->m_type != MC_AUDIOES)
+  if(m_cfg->m_type != MC_MPEG2AUDIO &&
+     m_cfg->m_type != MC_AC3 &&
+     m_cfg->m_type != MC_AAC &&
+     m_cfg->m_type != MC_MP4A &&
+     m_cfg->m_type != MC_VORBIS)
     return NULL;
 
   am = calloc(1, sizeof(audioes_muxer_t));
@@ -258,8 +278,6 @@ audioes_muxer_create(const muxer_config_t *m_cfg)
   am->m_write_pkt    = audioes_muxer_write_pkt;
   am->m_close        = audioes_muxer_close;
   am->m_destroy      = audioes_muxer_destroy;
-  //am->m_container    = *m_cfg; //WTF DOES THIS DO?!
 
   return (muxer_t*)am;
 }
-

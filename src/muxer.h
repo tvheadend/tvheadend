@@ -34,7 +34,11 @@ typedef enum {
   MC_AVMATROSKA  = 7,
   MC_AVWEBM      = 8,
   MC_AVMP4       = 9,
-  MC_AUDIOES     = 10
+  MC_MPEG2AUDIO  = 10,
+  MC_AC3         = 11,
+  MC_AAC         = 12,
+  MC_MP4A        = 13,
+  MC_VORBIS      = 14
 } muxer_container_type_t;
 
 typedef enum {

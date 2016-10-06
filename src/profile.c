@@ -1298,15 +1298,15 @@ profile_matroska_builder(void)
 /*
  *  Audioes Muxer
  */
-typedef struct profile_audioes {
+typedef struct profile_audio {
   profile_t;
-} profile_audioes_t;
+} profile_audio_t;
 
-const idclass_t profile_audioes_class =
+const idclass_t profile_audio_class =
 {
   .ic_super      = &profile_class,
-  .ic_class      = "profile-audioes",
-  .ic_caption    = N_("Audioes"),
+  .ic_class      = "profile-audio",
+  .ic_caption    = N_("Audio stream"),
   .ic_properties = (const property_t[]){
     { }
   }
@@ -1314,8 +1314,8 @@ const idclass_t profile_audioes_class =
 
 
 static int
-profile_audioes_reopen(profile_chain_t *prch,
-                            muxer_config_t *m_cfg, int flags)
+profile_audio_reopen(profile_chain_t *prch,
+                     muxer_config_t *m_cfg, int flags)
 {
   muxer_config_t c;
 
@@ -1323,7 +1323,7 @@ profile_audioes_reopen(profile_chain_t *prch,
     c = *m_cfg; /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
-  c.m_type = MC_AUDIOES;
+  c.m_type = MC_MPEG2AUDIO;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1331,8 +1331,8 @@ profile_audioes_reopen(profile_chain_t *prch,
 }
 
 static int
-profile_audioes_open(profile_chain_t *prch,
-                          muxer_config_t *m_cfg, int flags, size_t qsize)
+profile_audio_open(profile_chain_t *prch,
+                   muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   int r;
 
@@ -1345,24 +1345,24 @@ profile_audioes_open(profile_chain_t *prch,
     return r;
   }
 
-  profile_audioes_reopen(prch, m_cfg, flags);
+  profile_audio_reopen(prch, m_cfg, flags);
   return 0;
 }
 
 static muxer_container_type_t
-profile_audioes_get_mc(profile_t *_pro)
+profile_audio_get_mc(profile_t *_pro)
 {
-  return MC_AUDIOES;
+  return MC_MPEG2AUDIO; /* may be incorrect */
 }
 
 static profile_t *
-profile_audioes_builder(void)
+profile_audio_builder(void)
 {
-  profile_audioes_t *pro = calloc(1, sizeof(*pro));
+  profile_audio_t *pro = calloc(1, sizeof(*pro));
   pro->pro_sflags = SUBSCRIPTION_PACKET;
-  pro->pro_reopen = profile_audioes_reopen;
-  pro->pro_open   = profile_audioes_open;
-  pro->pro_get_mc = profile_audioes_get_mc;
+  pro->pro_reopen = profile_audio_reopen;
+  pro->pro_open   = profile_audio_open;
+  pro->pro_get_mc = profile_audio_get_mc;
   return (profile_t *)pro;
 }
 
@@ -1641,7 +1641,7 @@ profile_class_mc_list ( void *o, const char *lang )
     { N_("WEBM/built-in"),                MC_WEBM, },
     { N_("MPEG-TS/av-lib"),               MC_MPEGTS },
     { N_("MPEG-PS (DVD)/av-lib"),         MC_MPEGPS },
-	{ N_("Audioes"),        			  MC_AUDIOES },
+    { N_("Raw Audio Stream"),             MC_MPEG2AUDIO },
     { N_("Matroska (mkv)/av-lib"),        MC_AVMATROSKA },
     { N_("WEBM/av-lib"),                  MC_AVWEBM },
   };
@@ -2037,7 +2037,10 @@ profile_transcode_mc_valid(int mc)
   case MC_WEBM:
   case MC_MPEGTS:
   case MC_MPEGPS:
-  case MC_AUDIOES:
+  case MC_MPEG2AUDIO:
+  case MC_AC3:
+  case MC_AAC:
+  case MC_VORBIS:
   case MC_AVMATROSKA:
     return 1;
   default:
@@ -2136,7 +2139,7 @@ profile_init(void)
   profile_register(&profile_mpegts_pass_class, profile_mpegts_pass_builder);
   profile_register(&profile_matroska_class, profile_matroska_builder);
   profile_register(&profile_htsp_class, profile_htsp_builder);
-  profile_register(&profile_audioes_class, profile_audioes_builder);
+  profile_register(&profile_audio_class, profile_audio_builder);
 #if ENABLE_LIBAV
   profile_register(&profile_libav_mpegts_class, profile_libav_mpegts_builder);
   profile_register(&profile_libav_matroska_class, profile_libav_matroska_builder);
@@ -2208,16 +2211,16 @@ profile_init(void)
     htsmsg_destroy(conf);
   }
 
-  name = "audioes";
+  name = "audio";
   pro = profile_find_by_name2(name, NULL, 1);
   if (pro == NULL || strcmp(profile_get_name(pro), name)) {
     htsmsg_t *conf;
 
     conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-audioes");
+    htsmsg_add_str (conf, "class", "profile-audio");
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("Audio-only MPEG elementary stream"));
+    htsmsg_add_str (conf, "comment", _("Audio-only stream"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);

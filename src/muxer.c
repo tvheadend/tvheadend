@@ -46,10 +46,14 @@ static struct strtab container_audio_mime[] = {
   { "audio/webm",               MC_AVWEBM },
   { "audio/mp2t",               MC_MPEGTS },
   { "audio/mpeg",               MC_MPEGPS },
+  { "audio/mp2",                MC_MPEG2AUDIO },
+  { "audio/ac3",                MC_AC3 },
+  { "audio/aac",                MC_AAC },
+  { "audio/mp4",                MC_MP4A },
+  { "audio/ogg",                MC_VORBIS },
   { "audio/mp4",                MC_AVMP4 },
   { "application/octet-stream", MC_PASS },
   { "application/octet-stream", MC_RAW },
-  { "audio/mpeg",               MC_AUDIOES },
 };
 
 
@@ -84,7 +88,11 @@ static struct strtab container_name[] = {
   { "avmatroska", MC_AVMATROSKA },
   { "avwebm",     MC_AVWEBM },
   { "avmp4",      MC_AVMP4 },
-  { "audioes",  MC_AUDIOES },
+  { "mp2",        MC_MPEG2AUDIO },
+  { "ac3",        MC_AC3 },
+  { "aac",        MC_AAC },
+  { "mp4a",       MC_MP4A },
+  { "oga",        MC_VORBIS },
 };
 
 
@@ -102,7 +110,11 @@ static struct strtab container_audio_file_suffix[] = {
   { "mka",  MC_AVMATROSKA },
   { "webm", MC_AVWEBM },
   { "mp4",  MC_AVMP4 },
-  { "mp2",  MC_AUDIOES }, /* Or maybe ac3 or adts */
+  { "mp2",  MC_MPEG2AUDIO },
+  { "ac3",  MC_AC3 },
+  { "aac",  MC_AAC },
+  { "mp4a", MC_MP4A },
+  { "oga",  MC_VORBIS },
 };
 
 
@@ -120,7 +132,6 @@ static struct strtab container_video_file_suffix[] = {
   { "mkv",  MC_AVMATROSKA },
   { "webm", MC_AVWEBM },
   { "mp4",  MC_AVMP4 },
-  { NULL,   MC_AUDIOES },
 };
 
 
@@ -261,7 +272,7 @@ muxer_create(const muxer_config_t *m_cfg)
     m = mkv_muxer_create(m_cfg);
 
   if(!m)
-	m = audioes_muxer_create(m_cfg);
+    m = audioes_muxer_create(m_cfg);
 
 #if CONFIG_LIBAV
   if(!m)
