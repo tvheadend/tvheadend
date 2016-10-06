@@ -1300,7 +1300,23 @@ profile_matroska_builder(void)
  */
 typedef struct profile_audio {
   profile_t;
+  int pro_mc;
+  int pro_index;
 } profile_audio_t;
+
+static htsmsg_t *
+profile_class_mc_audio_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Any"),                          MC_UNKNOWN },
+    { N_("MPEG-2 audio"),                 MC_MPEG2AUDIO, },
+    { N_("AC3 audio"),                    MC_AC3, },
+    { N_("AAC audio"),                    MC_AAC },
+    { N_("MP4 audio"),                    MC_MP4A },
+    { N_("Vorbis audio"),                 MC_VORBIS },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
 
 const idclass_t profile_audio_class =
 {
@@ -1308,6 +1324,23 @@ const idclass_t profile_audio_class =
   .ic_class      = "profile-audio",
   .ic_caption    = N_("Audio stream"),
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_INT,
+      .id       = "type",
+      .name     = N_("Audio type"),
+      .desc     = N_("Pick the stream with given audio type only."),
+      .off      = offsetof(profile_audio_t, pro_mc),
+      .list     = profile_class_mc_audio_list,
+      .group    = 1
+    },
+    {
+      .type     = PT_INT,
+      .id       = "index",
+      .name     = N_("Stream index"),
+      .desc     = N_("Stream index (starts with zero)."),
+      .off      = offsetof(profile_audio_t, pro_index),
+      .group    = 1
+    },
     { }
   }
 };
@@ -1318,12 +1351,15 @@ profile_audio_reopen(profile_chain_t *prch,
                      muxer_config_t *m_cfg, int flags)
 {
   muxer_config_t c;
+  profile_audio_t *pro = (profile_audio_t *)prch->prch_pro;
 
   if (m_cfg)
     c = *m_cfg; /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
-  c.m_type = MC_MPEG2AUDIO;
+  c.m_type = pro->pro_mc != MC_UNKNOWN ? pro->pro_mc : MC_MPEG2AUDIO;
+  c.m_force_type = pro->pro_mc;
+  c.m_index = pro->pro_index;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1352,7 +1388,10 @@ profile_audio_open(profile_chain_t *prch,
 static muxer_container_type_t
 profile_audio_get_mc(profile_t *_pro)
 {
-  return MC_MPEG2AUDIO; /* may be incorrect */
+  profile_audio_t *pro = (profile_audio_t *)_pro;
+  if (pro->pro_mc == MC_UNKNOWN)
+    return MC_MPEG2AUDIO;
+  return pro->pro_mc;
 }
 
 static profile_t *
@@ -1365,10 +1404,6 @@ profile_audio_builder(void)
   pro->pro_get_mc = profile_audio_get_mc;
   return (profile_t *)pro;
 }
-
-
-
-
 
 
 #if ENABLE_LIBAV

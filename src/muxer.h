@@ -60,6 +60,9 @@ typedef struct muxer_config {
   int                  m_rewrite_eit;
   int                  m_cache;
 
+  int                  m_force_type;
+  int                  m_index;
+
 /* 
  * directory_permissions should really be in dvr.h as it's not really needed for the muxer
  * but it's kept with file_permissions for neatness

@@ -48,28 +48,43 @@ typedef struct audioes_muxer {
 
 
 /**
+ *
+ */
+static int
+audioes_muxer_type(streaming_component_type_t type)
+{
+  muxer_container_type_t mc = MC_UNKNOWN;
+  switch (type) {
+  case SCT_MPEG2AUDIO:  mc = MC_MPEG2AUDIO; break;
+  case SCT_AC3:         mc = MC_AC3; break;
+  case SCT_EAC3:        mc = MC_AC3; break;
+  case SCT_AAC:         mc = MC_AAC; break;
+  case SCT_MP4A:        mc = MC_MP4A; break;
+  case SCT_VORBIS:      mc = MC_VORBIS; break;
+  default: break;
+  }
+  return mc;
+}
+
+
+/**
  * Figure out the mimetype
  */
 static const char *
-audioes_muxer_mime(muxer_t* m, const struct streaming_start *ss)
+audioes_muxer_mime(muxer_t *m, const struct streaming_start *ss)
 {
   int i;
   muxer_container_type_t mc = MC_UNKNOWN;
   const streaming_start_component_t *ssc;
-  
+
+  if (m->m_config.m_force_type != MC_UNKNOWN)
+    return muxer_container_type2mime(m->m_config.m_force_type, 0);
+
   for (i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
     if (ssc->ssc_disabled)
       continue;
-    switch (ssc->ssc_type) {
-    case SCT_MPEG2AUDIO:  mc = MC_MPEG2AUDIO; break;
-    case SCT_AC3:         mc = MC_AC3; break;
-    case SCT_EAC3:        mc = MC_AC3; break;
-    case SCT_AAC:         mc = MC_AAC; break;
-    case SCT_MP4A:        mc = MC_MP4A; break;
-    case SCT_VORBIS:      mc = MC_VORBIS; break;
-    default: break;
-    }
+    mc = audioes_muxer_type(ssc->ssc_type);
     break;
   }
 
@@ -81,11 +96,12 @@ audioes_muxer_mime(muxer_t* m, const struct streaming_start *ss)
  * Reconfigure the muxer
  */
 static int
-audioes_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
+audioes_muxer_reconfigure(muxer_t *m, const struct streaming_start *ss)
 {
   audioes_muxer_t *am = (audioes_muxer_t*)m;
   const streaming_start_component_t *ssc;
-  int i;
+  muxer_container_type_t mc;
+  int i, count = 0;
 
   am->am_index = -1;
 
@@ -93,8 +109,16 @@ audioes_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     ssc = &ss->ss_components[i];
 
     if ((!ssc->ssc_disabled) && (SCT_ISAUDIO(ssc->ssc_type))) {
-      am->am_index = ssc->ssc_index;
-      break;
+      if (m->m_config.m_force_type != MC_UNKNOWN) {
+        mc = audioes_muxer_type(ssc->ssc_type);
+        if (m->m_config.m_force_type != mc)
+          continue;
+      }
+      if (m->m_config.m_index == count) {
+        am->am_index = ssc->ssc_index;
+        break;
+      }
+      count++;
     }
   }
 
