@@ -120,6 +120,7 @@ tvheadend.ipblockeditor = function(panel, index)
             comment: { width: 250 }
         },
         tabIndex: index,
+        uilevel: 'expert',
         edit: {
             params: {
                 list: list
