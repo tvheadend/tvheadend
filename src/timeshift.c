@@ -197,6 +197,7 @@ const idclass_t timeshift_conf_class = {
                    "because there is no buffer on the first request "
                    "rewinding is not possible at that point."),
       .off    = offsetof(timeshift_conf_t, ondemand),
+      .opts   = PO_EXPERT,
     },
     {
       .type   = PT_STR,
@@ -206,6 +207,7 @@ const idclass_t timeshift_conf_class = {
                    "If nothing is specified this will default to "
                    "CONF_DIR/timeshift/buffer."),
       .off    = offsetof(timeshift_conf_t, path),
+      .opts   = PO_ADVANCED,
     },
     {
       .type   = PT_U32,
@@ -224,6 +226,7 @@ const idclass_t timeshift_conf_class = {
                    "enabling this option may cause your system to slow "
                    "down or crash completely!"),
       .off    = offsetof(timeshift_conf_t, unlimited_period),
+      .opts   = PO_EXPERT,
     },
     {
       .type   = PT_S64,
@@ -234,6 +237,7 @@ const idclass_t timeshift_conf_class = {
                    "recommended you specify a value here."),
       .set    = timeshift_conf_class_max_size_set,
       .get    = timeshift_conf_class_max_size_get,
+      .opts   = PO_ADVANCED,
     },
     {
       .type   = PT_S64,
@@ -245,6 +249,7 @@ const idclass_t timeshift_conf_class = {
                    "storage."),
       .set    = timeshift_conf_class_ram_size_set,
       .get    = timeshift_conf_class_ram_size_get,
+      .opts   = PO_ADVANCED,
     },
     {
       .type   = PT_BOOL,
@@ -254,6 +259,7 @@ const idclass_t timeshift_conf_class = {
                    "potentially grow unbounded until your storage media "
                    "runs out of space."),
       .off    = offsetof(timeshift_conf_t, unlimited_size),
+      .opts   = PO_EXPERT,
     },
     {
       .type   = PT_BOOL,
@@ -261,6 +267,7 @@ const idclass_t timeshift_conf_class = {
       .name   = N_("RAM only"),
       .desc   = N_("Only use system RAM for timeshift buffers."),
       .off    = offsetof(timeshift_conf_t, ram_only),
+      .opts   = PO_EXPERT,
     },
     {
       .type   = PT_BOOL,
@@ -269,6 +276,7 @@ const idclass_t timeshift_conf_class = {
       .desc   = N_("If possible, maintain the timeshift data in the server memory only. "
                    "This may reduce the amount of allowed rewind time."),
       .off    = offsetof(timeshift_conf_t, ram_fit),
+      .opts   = PO_EXPERT,
     },
     {}
   }
