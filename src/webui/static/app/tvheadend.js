@@ -777,18 +777,20 @@ function accessUpdate(o) {
             tvheadend.caclient(cp, 6);
 
         /* Debug */
-        var dbg = new Ext.TabPanel({
-            tabIndex: 7,
-            activeTab: 0,
-            autoScroll: true,
-            title: _('Debugging'),
-            iconCls: 'debug',
-            items: []
-        });
-        tvheadend.tvhlog(dbg, 0);
-        tvheadend.memoryinfo(dbg, 1);
+        if (o.uilevel == 'expert') {
+            var dbg = new Ext.TabPanel({
+                tabIndex: 7,
+                activeTab: 0,
+                autoScroll: true,
+                title: _('Debugging'),
+                iconCls: 'debug',
+                items: []
+            });
+            tvheadend.tvhlog(dbg, 0);
+            tvheadend.memoryinfo(dbg, 1);
 
-        cp.add(dbg);
+            cp.add(dbg);
+        }
 
         /* Finish */
         tvheadend.rootTabPanel.add(cp);
