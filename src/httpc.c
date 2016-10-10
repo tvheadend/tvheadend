@@ -613,10 +613,11 @@ error:
     TAILQ_FOREACH(h, header, link) {
       htsbuf_append_str(&q, h->key);
       htsbuf_append(&q, ": ", 2);
-      htsbuf_append_str(&q, h->val);
+      if (h->val)
+        htsbuf_append_str(&q, h->val);
       htsbuf_append(&q, "\r\n", 2);
       if (strcasecmp(h->key, "Connection") == 0 &&
-          strcasecmp(h->val, "close") == 0)
+          strcasecmp(h->val ?: "", "close") == 0)
         hc->hc_keepalive = 0;
     }
     http_arg_flush(header);

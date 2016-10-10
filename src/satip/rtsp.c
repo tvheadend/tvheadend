@@ -645,7 +645,7 @@ msys_to_tvh(http_connection_t *hc)
     { "dvbcb", DVB_SYS_DVBC_ANNEX_B }
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "msys");
-  return s[0] ? str2val(s, tab) : DVB_SYS_NONE;
+  return s && s[0] ? str2val(s, tab) : DVB_SYS_NONE;
 }
 
 static inline int
@@ -658,13 +658,13 @@ pol_to_tvh(http_connection_t *hc)
     { "r",  DVB_POLARISATION_CIRCULAR_RIGHT },
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "pol");
-  return s[0] ? str2val(s, tab) : -1;
+  return s && s[0] ? str2val(s, tab) : -1;
 }
 
 static int
 fec_to_tvh(http_connection_t *hc)
 {
-  switch (atoi(http_arg_get_remove(&hc->hc_req_args, "fec"))) {
+  switch (atoi(http_arg_get_remove(&hc->hc_req_args, "fec") ?: "0")) {
   case   0: return DVB_FEC_AUTO;
   case  12: return DVB_FEC_1_2;
   case  13: return DVB_FEC_1_3;
@@ -693,7 +693,7 @@ fec_to_tvh(http_connection_t *hc)
 static int
 bw_to_tvh(http_connection_t *hc)
 {
-  int bw = atof(http_arg_get_remove(&hc->hc_req_args, "bw")) * 1000;
+  int bw = atof(http_arg_get_remove(&hc->hc_req_args, "bw") ?: "0") * 1000;
   switch (bw) {
   case 0: return DVB_BANDWIDTH_AUTO;
   case DVB_BANDWIDTH_1_712_MHZ:
@@ -711,7 +711,7 @@ bw_to_tvh(http_connection_t *hc)
 static int
 rolloff_to_tvh(http_connection_t *hc)
 {
-  int ro = atof(http_arg_get_remove(&hc->hc_req_args, "ro")) * 1000;
+  int ro = atof(http_arg_get_remove(&hc->hc_req_args, "ro") ?: "0") * 1000;
   switch (ro) {
   case 0:
     return DVB_ROLLOFF_35;
@@ -728,11 +728,11 @@ static int
 pilot_to_tvh(http_connection_t *hc)
 {
   const char *s = http_arg_get_remove(&hc->hc_req_args, "plts");
-  if (strcmp(s, "on") == 0)
+  if (s && strcmp(s, "on") == 0)
     return DVB_PILOT_ON;
-  if (strcmp(s, "off") == 0)
+  if (s && strcmp(s, "off") == 0)
     return DVB_PILOT_OFF;
-  if (s[0] == '\0' || strcmp(s, "auto") == 0)
+  if (s == NULL || s[0] == '\0' || strcmp(s, "auto") == 0)
     return DVB_PILOT_AUTO;
   return DVB_ROLLOFF_NONE;
 }
@@ -750,7 +750,7 @@ tmode_to_tvh(http_connection_t *hc)
     { "32k",  DVB_TRANSMISSION_MODE_32K },
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "tmode");
-  if (s[0]) {
+  if (s && s[0]) {
     int v = str2val(s, tab);
     return v >= 0 ? v : DVB_TRANSMISSION_MODE_NONE;
   }
@@ -772,7 +772,7 @@ mtype_to_tvh(http_connection_t *hc)
     { "8vsb",   DVB_MOD_VSB_8 },
   };
   const char *s = http_arg_get_remove(&hc->hc_req_args, "mtype");
-  if (s[0]) {
+  if (s && s[0]) {
     int v = str2val(s, tab);
     return v >= 0 ? v : DVB_MOD_NONE;
   }
@@ -782,7 +782,7 @@ mtype_to_tvh(http_connection_t *hc)
 static int
 gi_to_tvh(http_connection_t *hc)
 {
-  switch (atoi(http_arg_get_remove(&hc->hc_req_args, "gi"))) {
+  switch (atoi(http_arg_get_remove(&hc->hc_req_args, "gi") ?: "0")) {
   case 0:     return DVB_GUARD_INTERVAL_AUTO;
   case 14:    return DVB_GUARD_INTERVAL_1_4;
   case 18:    return DVB_GUARD_INTERVAL_1_8;
@@ -885,7 +885,7 @@ rtsp_parse_cmd
 
   has_args = !TAILQ_EMPTY(&hc->hc_req_args);
 
-  fe = atoi(http_arg_get_remove(&hc->hc_req_args, "fe"));
+  fe = atoi(http_arg_get_remove(&hc->hc_req_args, "fe") ?: 0);
   s = http_arg_get_remove(&hc->hc_req_args, "addpids");
   if (parse_pids(s, &addpids)) goto end;
   s = http_arg_get_remove(&hc->hc_req_args, "delpids");
@@ -993,11 +993,11 @@ rtsp_parse_cmd
 
   if (msys == DVB_SYS_DVBS || msys == DVB_SYS_DVBS2) {
 
-    src = atoi(http_arg_get_remove(&hc->hc_req_args, "src"));
+    src = atoi(http_arg_get_remove(&hc->hc_req_args, "src") ?: "0");
     if (src < 1) goto end;
     pol = pol_to_tvh(hc);
     if (pol < 0) goto end;
-    sr = atof(http_arg_get_remove(&hc->hc_req_args, "sr")) * 1000;
+    sr = atof(http_arg_get_remove(&hc->hc_req_args, "sr") ?: "0") * 1000;
     if (sr < 1000) goto end;
     fec = fec_to_tvh(hc);
     if (fec == DVB_FEC_NONE) goto end;
@@ -1028,15 +1028,15 @@ rtsp_parse_cmd
     fec = fec_to_tvh(hc);
     if (fec == DVB_FEC_NONE) goto end;
     s = http_arg_get_remove(&hc->hc_req_args, "plp");
-    if (s[0]) {
+    if (s && s[0]) {
       plp = atoi(s);
       if (plp < 0 || plp > 255) goto end;
     } else {
       plp = DVB_NO_STREAM_ID_FILTER;
     }
-    t2id = atoi(http_arg_get_remove(&hc->hc_req_args, "t2id"));
+    t2id = atoi(http_arg_get_remove(&hc->hc_req_args, "t2id") ?: "0");
     if (t2id < 0 || t2id > 65535) goto end;
-    sm = atoi(http_arg_get_remove(&hc->hc_req_args, "sm"));
+    sm = atoi(http_arg_get_remove(&hc->hc_req_args, "sm") ?: "0");
     if (sm < 0 || sm > 1) goto end;
 
     if (!TAILQ_EMPTY(&hc->hc_req_args)) goto eargs;
@@ -1055,22 +1055,22 @@ rtsp_parse_cmd
 
     freq *= 1000;
     if (freq < 0) goto end;
-    c2tft = atoi(http_arg_get_remove(&hc->hc_req_args, "c2tft"));
+    c2tft = atoi(http_arg_get_remove(&hc->hc_req_args, "c2tft") ?: "0");
     if (c2tft < 0 || c2tft > 2) goto end;
     bw = bw_to_tvh(hc);
     if (bw == DVB_BANDWIDTH_NONE) goto end;
-    sr = atof(http_arg_get_remove(&hc->hc_req_args, "sr")) * 1000;
+    sr = atof(http_arg_get_remove(&hc->hc_req_args, "sr") ?: "0") * 1000;
     if (sr < 1000) goto end;
-    ds = atoi(http_arg_get_remove(&hc->hc_req_args, "ds"));
+    ds = atoi(http_arg_get_remove(&hc->hc_req_args, "ds") ?: "0");
     if (ds < 0 || ds > 255) goto end;
     s = http_arg_get_remove(&hc->hc_req_args, "plp");
-    if (s[0]) {
+    if (s && s[0]) {
       plp = atoi(http_arg_get_remove(&hc->hc_req_args, "plp"));
       if (plp < 0 || plp > 255) goto end;
     } else {
       plp = DVB_NO_STREAM_ID_FILTER;
     }
-    specinv = atoi(http_arg_get_remove(&hc->hc_req_args, "specinv"));
+    specinv = atoi(http_arg_get_remove(&hc->hc_req_args, "specinv") ?: "0");
     if (specinv < 0 || specinv > 1) goto end;
     fec = fec_to_tvh(hc);
     if (fec == DVB_FEC_NONE) goto end;

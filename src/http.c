@@ -429,7 +429,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     TAILQ_FOREACH(ra, args, link) {
       if (strcmp(ra->key, "Session") == 0)
         sess = 1;
-      htsbuf_qprintf(&hdrs, "%s: %s\r\n", ra->key, ra->val);
+      htsbuf_qprintf(&hdrs, "%s: %s\r\n", ra->key, ra->val ?: "");
     }
   }
   if(hc->hc_session && !sess)
@@ -637,8 +637,10 @@ http_redirect(http_connection_t *hc, const char *location,
         htsbuf_append(&hq, "?", 1);
       first = 0;
       htsbuf_append_and_escape_url(&hq, ra->key);
-      htsbuf_append(&hq, "=", 1);
-      htsbuf_append_and_escape_url(&hq, ra->val);
+      if (ra->val) {
+        htsbuf_append(&hq, "=", 1);
+        htsbuf_append_and_escape_url(&hq, ra->val);
+      }
     }
     loc = htsbuf_to_string(&hq);
     htsbuf_queue_flush(&hq);
@@ -699,7 +701,7 @@ http_get_hostpath(http_connection_t *hc)
   proto = http_arg_get(&hc->hc_args, "X-Forwarded-Proto");
 
   snprintf(buf, sizeof(buf), "%s://%s%s",
-           proto ?: "http", host, tvheadend_webroot ?: "");
+           proto ?: "http", host ?: "localhost", tvheadend_webroot ?: "");
 
   return strdup(buf);
 }
@@ -1240,16 +1242,20 @@ char *
 http_arg_get_remove(struct http_arg_list *list, const char *name)
 {
   static char __thread buf[128];
+  int empty;
   http_arg_t *ra;
   TAILQ_FOREACH(ra, list, link)
     if(!strcasecmp(ra->key, name)) {
       TAILQ_REMOVE(list, ra, link);
-      strncpy(buf, ra->val, sizeof(buf)-1);
-      buf[sizeof(buf)-1] = '\0';
+      empty = ra->val == NULL;
+      if (!empty) {
+        strncpy(buf, ra->val, sizeof(buf)-1);
+        buf[sizeof(buf)-1] = '\0';
+      }
       free(ra->key);
       free(ra->val);
       free(ra);
-      return buf;
+      return !empty ? buf : NULL;
     }
   buf[0] = '\0';
   return buf;
@@ -1267,7 +1273,7 @@ http_arg_set(struct http_arg_list *list, const char *key, const char *val)
   ra = malloc(sizeof(http_arg_t));
   TAILQ_INSERT_TAIL(list, ra, link);
   ra->key = strdup(key);
-  ra->val = strdup(val);
+  ra->val = val ? strdup(val) : NULL;
 }
 
 /*
@@ -1400,17 +1406,25 @@ http_parse_args(http_arg_list_t *list, char *args)
     args++;
   while(args) {
     k = args;
-    if((args = strchr(args, '=')) == NULL)
-      break;
-    *args++ = 0;
+    if((args = strchr(args, '=')) != NULL) {
+      *args++ = 0;
+    } else {
+      args = k;
+    }
+
     v = args;
     args = strchr(args, '&');
-
     if(args != NULL)
       *args++ = 0;
+    else if(v == k) {
+      if (*k == '\0')
+        break;
+      v = NULL;
+    }
 
     http_deescape(k);
-    http_deescape(v);
+    if (v)
+      http_deescape(v);
     //    printf("%s = %s\n", k, v);
     http_arg_set(list, k, v);
   }
