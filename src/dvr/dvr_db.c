@@ -1894,7 +1894,8 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
-        atomic_set_time_t(&de->de_running_pause, 0);
+        if (dvr_entry_get_epg_running(de))
+          atomic_set_time_t(&de->de_running_pause, 0);
         atomic_add(&de->de_running_change, 1);
       }
       if (!de->de_running_start) {
@@ -1902,11 +1903,13 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
-        atomic_set_time_t(&de->de_running_start, gclk());
+        if (dvr_entry_get_epg_running(de))
+          atomic_set_time_t(&de->de_running_start, gclk());
         atomic_add(&de->de_running_change, 1);
       }
       if (dvr_entry_get_start_time(de, 1) > gclk()) {
-        atomic_set_time_t(&de->de_start, gclk());
+        if (dvr_entry_get_epg_running(de))
+          atomic_set_time_t(&de->de_start, gclk());
         atomic_add(&de->de_running_change, 1);
         dvr_entry_set_timer(de);
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG start",
@@ -1933,8 +1936,10 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(de->de_channel));
       }
-      atomic_set_time_t(&de->de_running_stop, gclk());
-      atomic_set_time_t(&de->de_running_pause, 0);
+      if (dvr_entry_get_epg_running(de)) {
+        atomic_set_time_t(&de->de_running_stop, gclk());
+        atomic_set_time_t(&de->de_running_pause, 0);
+      }
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
         dvr_stop_recording(de, SM_CODE_OK, 0, 0);
         tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG stop",
@@ -1948,7 +1953,8 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
                  channel_get_name(e->channel));
-        atomic_set_time_t(&de->de_running_pause, gclk());
+        if (dvr_entry_get_epg_running(de))
+          atomic_set_time_t(&de->de_running_pause, gclk());
         atomic_add(&de->de_running_change, 1);
       }
     }
