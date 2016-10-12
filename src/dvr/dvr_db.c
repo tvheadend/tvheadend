@@ -3663,13 +3663,14 @@ dvr_entry_file_moved(const char *src, const char *dst)
   htsmsg_t *m;
   htsmsg_field_t *f;
   const char *filename;
-  int r = -1;
+  int r = -1, chg;
 
   if (!src || !dst || src[0] == '\0' || dst[0] == '\0' || access(dst, R_OK))
     return r;
   pthread_mutex_lock(&global_lock);
   LIST_FOREACH(de, &dvrentries, de_global_link) {
     if (htsmsg_is_empty(de->de_files)) continue;
+    chg = 0;
     HTSMSG_FOREACH(f, de->de_files)
       if ((m = htsmsg_field_get_map(f)) != NULL) {
         filename = htsmsg_get_str(m, "filename");
@@ -3679,6 +3680,8 @@ dvr_entry_file_moved(const char *src, const char *dst)
           r = 0;
         }
       }
+    if (chg)
+      idnode_changed(&de->de_id);
   }
   pthread_mutex_unlock(&global_lock);
   return r;
