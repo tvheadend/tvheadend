@@ -5,22 +5,23 @@
       "caid" : "2600"
     }
   ],
+  "comment1": "Rename _caid to caid for activation!",
   "quick_ecm" : [
     {
       "name" : "Sky UK",
-      "caid" : "0963"
+      "_caid" : "0963"
     },
     {
       "name" : "Sky DE",
-      "caid" : "098C"
+      "_caid" : "098C"
     },
     {
       "name" : "Sky DE",
-      "caid" : "09C4"
+      "_caid" : "09C4"
     },
     {
       "name" : "Sky IT",
-      "caid" : "09CD"
+      "_caid" : "09CD"
     }
   ]
 }
