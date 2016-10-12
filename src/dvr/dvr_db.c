@@ -1936,11 +1936,13 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       atomic_set_time_t(&de->de_running_stop, gclk());
       atomic_set_time_t(&de->de_running_pause, 0);
       if (de->de_sched_state == DVR_RECORDING && de->de_running_start) {
-        dvr_stop_recording(de, SM_CODE_OK, 0, 0);
-        tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG stop",
-                 idnode_uuid_as_str(&de->de_id, ubuf), srcname,
-                 epg_broadcast_get_title(e, NULL),
-                 channel_get_name(de->de_channel));
+        if (dvr_entry_get_epg_running(de)) {
+          dvr_stop_recording(de, SM_CODE_OK, 0, 0);
+          tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG stop",
+                   idnode_uuid_as_str(&de->de_id, ubuf), srcname,
+                   epg_broadcast_get_title(e, NULL),
+                   channel_get_name(de->de_channel));
+        }
       }
     } else if (running == EPG_RUNNING_PAUSE && de->de_dvb_eid == e->dvb_eid) {
       if (!de->de_running_pause) {
