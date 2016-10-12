@@ -3678,6 +3678,7 @@ dvr_entry_file_moved(const char *src, const char *dst)
           htsmsg_set_str(m, "filename", dst);
           dvr_vfs_refresh_entry(de);
           r = 0;
+          chg++;
         }
       }
     if (chg)
