@@ -2922,7 +2922,7 @@ PROP_DOC(dvr_stop_extra)
 
 const idclass_t dvr_entry_class = {
   .ic_class     = "dvrentry",
-  .ic_caption   = N_("DVR Entries"),
+  .ic_caption   = N_("Digital Video Recorder"),
   .ic_event     = "dvrentry",
   .ic_doc       = tvh_doc_dvrentry_class,
   .ic_changed   = dvr_entry_class_changed,

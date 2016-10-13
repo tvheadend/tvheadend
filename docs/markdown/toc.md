@@ -19,10 +19,10 @@ Web Interface Guide
 
 * Digital Video Recorder
 
-  - [Upcoming / Current Recordings](dvr)
-  - [Finished Recordings](dvr)
-  - [Failed Recordings](dvr)
-  - [Removed Recordings](dvr)
+  - [Upcoming / Current Recordings](class/dvrentry)
+  - [Finished Recordings](class/dvrentry)
+  - [Failed Recordings](class/dvrentry)
+  - [Removed Recordings](class/dvrentry)
   - [Auto-recording (Autorecs)](class/dvrautorec)
   - [Time-based Recording (Timers)](class/dvrtimerec)
 
