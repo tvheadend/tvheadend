@@ -236,8 +236,9 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
       return;
     }
   } else {
-    int64_t low   =   90000; /* one second */
-    int64_t upper = 2*90000; /* two seconds */
+    const int64_t nlimit =      -1; /* allow negative values - rounding errors? */
+    int64_t low          =   90000; /* one second */
+    int64_t upper        = 2*90000; /* two seconds */
     d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
     if (tfs->tfs_subtitle) {
@@ -249,7 +250,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
       upper = low - 1;
     }
 
-    if (d < 0 || d > low) {
+    if (d < nlimit || d > low) {
       if (d < -PTS_MASK || d > -PTS_MASK + upper) {
         if (pkt->pkt_err) {
           tsfix_packet_drop(tfs, pkt, "possible wrong discontinuity");
