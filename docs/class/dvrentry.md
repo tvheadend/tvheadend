@@ -27,16 +27,7 @@ Entries shown here link to file(s) that Tvheadend cannot locate
 
 ###Menu Bar/Buttons
 
-The following functions are available in all tabs:
-
-Button                       | Function
------------------------------|---------
-**Delete**                   | Delete the selected grid entries.
-**Edit**                     | Edit the selected grid entries.
-<tvh_include>inc/common_button_table_end</tvh_include>
-
-The following functions are only available in the 
-**Upcoming/Current Recordings** tab.
+The following functions are available (tab dependant):
 
 Button                       | Function
 -----------------------------|---------
@@ -45,28 +36,13 @@ Button                       | Function
 **Undo**                     | Revert all changes made to the grid entries since the last save.
 **Stop**                     | Gracefully stop the selected in-progress recording entries.
 **Abort**                    | Abruptly stop the selected in-progress recording entries. 
-
-The following functions are only available in the **Finished Recordings** 
-and **Failed Recordings** tabs:
-
-Button                       | Function
------------------------------|---------
+**Delete/Remove**            | Delete/Remove the selected grid entries.
+**Edit**                     | Edit the selected grid entries.
 **Download**                 | Download the recording.
 **Re-record**                | Re-schedule the selected entry/recording if possible.
-
-The following functions are only available in the **Finished Recordings** 
-tab.
-
-Button                       | Function
------------------------------|---------
 **Move to failed**           | Move the selected recording entries to the **Failed Recordings** tab.
-
-The following functions are only available in the **Failed Recordings** 
-tab.
-
-Button                       | Function
------------------------------|---------
-**Move to finished**         | Move the selected recording entries to the *Finished Recordings* tab.
+**Move to finished**         | Move the selected recording entries to the **Finished Recordings** tab.
+<tvh_include>inc/common_button_table_end</tvh_include>
 
 ---
 
