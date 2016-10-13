@@ -2033,6 +2033,7 @@ transcoder_input(void *opaque, streaming_message_t *sm)
     break;
 
   case SMT_START:
+    transcoder_stop(t);
     ss = transcoder_start(t, sm->sm_data);
     streaming_start_unref(sm->sm_data);
     sm->sm_data = ss;

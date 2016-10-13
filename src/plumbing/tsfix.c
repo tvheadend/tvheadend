@@ -574,6 +574,7 @@ tsfix_input(void *opaque, streaming_message_t *sm)
     return;
 
   case SMT_START:
+    tsfix_stop(tf);
     tsfix_start(tf, sm->sm_data);
     if (tf->tf_wait_for_video) {
       streaming_msg_free(sm);

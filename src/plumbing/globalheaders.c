@@ -329,7 +329,8 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     break;
 
   case SMT_START:
-    assert(gh->gh_ss == NULL);
+    if (gh->gh_ss)
+      gh_flush(gh);
     gh_start(gh, sm);
     break;
 
