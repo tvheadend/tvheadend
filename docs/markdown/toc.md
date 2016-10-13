@@ -22,6 +22,7 @@ Web Interface Guide
   - [Upcoming / Current Recordings](dvr)
   - [Finished Recordings](dvr)
   - [Failed Recordings](dvr)
+  - [Removed Recordings](dvr)
   - [Auto-recording (Autorecs)](class/dvrautorec)
   - [Time-based Recording (Timers)](class/dvrtimerec)
 
