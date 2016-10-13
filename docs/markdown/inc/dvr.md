@@ -4,17 +4,22 @@ between the *Upcoming / Current Recordings*, *Finished Recordings* and
 
 **Upcoming / Current Recordings**
 : This sub-tab lists current and upcoming recording entries. Entries 
-that appear here are either currently recording or are soon-to-be 
-recorded.
+shown here are either currently recording or are soon-to-be recorded.
 
 **Finished Recordings**
-: This sub-tab lists all completed recording entries. Entries that appear 
-here have reached the end of the scheduled recording time.
+: This sub-tab lists all completed recording entries. Entries shown 
+here have reached the end of the scheduled (or EITp/f defined) 
+recording time.
 
 **Failed Recordings**
-: This sub-tab lists all failed recording entries. Entries that appear 
-here have failed to record due to one (or more) errors that occurred 
-during the recording.
+: This sub-tab lists all failed recording entries. Entries shown here 
+have failed to record due to one (or more) errors that occurred during 
+the recording.
+
+**Removed Recordings**
+: This sub-tab lists all recording entries that have missing file(s). 
+Entries shown here link to file(s) that Tvheadend cannot locate 
+(files which have been externally removed).
 
 !['Digital Video Recorder' Tabs](static/img/doc/configdvrtabs4.png)
 
