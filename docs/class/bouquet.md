@@ -5,8 +5,8 @@ Bouquets are broadcaster-defined groupings and orders of channels.
 To use bouquets, ensure to add and scan all available muxes using the
 predefined muxes or manual configuration.
 
-The bouquets are obtained automatically from the DVB source during the
-mux scan period. Note that bouquets may use more muxes and only services
+Bouquets are usually obtained automatically from the DVB source during the
+mux scan period. Note that bouquets may use more muxes and only services 
 from scanned muxes are added. The mux with bouquets might require
 another scan when all muxes are discovered (manually using the rescan
 checkbox).
@@ -14,6 +14,8 @@ checkbox).
 The fastscan bouquets are pre-defined in the configuration tree. These
 bouquets must be manually enabled to let Tvheadend to subscribe and
 listen to the specific MPEG-TS PIDs.
+
+You may import your own bouquet using enigma2 (.tv) formatted files.
 
 ---
 
@@ -31,7 +33,11 @@ Button         | Function
 
 <tvh_include>inc/add_grid_entry</tvh_include>
 
+####Example
+
 !['Add Bouquet Dialog'](static/img/doc/bouquetadd.png)
+
+Note that the URL must begin with `file://` or `http(s)://`.
 
 ---
 
