@@ -436,10 +436,10 @@ static int _eit_process_event_one
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
-  tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, start=%"PRItime_t","
+  tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, running=%d, start=%"PRItime_t","
                        " stop=%"PRItime_t", ebc=%p",
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
-           eid, start, stop, ebc);
+           eid, tableid, running, start, stop, ebc);
   if (!ebc) return 0;
 
   /* Mark re-schedule detect (only now/next) */
