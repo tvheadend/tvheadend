@@ -1314,12 +1314,12 @@ main(int argc, char **argv)
 #if ENABLE_MPEGTS
   tvhftrace(LS_MAIN, mpegts_done);
 #endif
+  tvhftrace(LS_MAIN, dvr_done);
   tvhftrace(LS_MAIN, descrambler_done);
   tvhftrace(LS_MAIN, service_mapper_done);
   tvhftrace(LS_MAIN, service_done);
   tvhftrace(LS_MAIN, channel_done);
   tvhftrace(LS_MAIN, bouquet_done);
-  tvhftrace(LS_MAIN, dvr_done);
   tvhftrace(LS_MAIN, subscription_done);
   tvhftrace(LS_MAIN, access_done);
   tvhftrace(LS_MAIN, epg_done);

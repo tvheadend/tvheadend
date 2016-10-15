@@ -3738,6 +3738,9 @@ dvr_entry_done(void)
 {
   dvr_entry_t *de;
   lock_assert(&global_lock);
-  while ((de = LIST_FIRST(&dvrentries)) != NULL)
-      dvr_entry_destroy(de, 0);
+  while ((de = LIST_FIRST(&dvrentries)) != NULL) {
+    if (de->de_sched_state == DVR_RECORDING)
+      dvr_rec_unsubscribe(de);
+    dvr_entry_destroy(de, 0);
+  }
 }
