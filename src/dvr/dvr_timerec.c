@@ -188,6 +188,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
   dte->dte_pri = DVR_PRIO_NORMAL;
   dte->dte_start = -1;
   dte->dte_stop = -1;
+  dte->dte_enabled = 1;
   dte->dte_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dte->dte_config->dvr_timerec_entries, dte, dte_config_link);
 
@@ -536,6 +537,7 @@ const idclass_t dvr_timerec_entry_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the entry."),
+      .def.i    = 1,
       .off      = offsetof(dvr_timerec_entry_t, dte_enabled),
     },
     {
@@ -553,6 +555,7 @@ const idclass_t dvr_timerec_entry_class = {
       .doc      = prop_doc_dvr_timerec_title_format,
       .off      = offsetof(dvr_timerec_entry_t, dte_title),
       .def.s    = "Time-%F_%R",
+      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
