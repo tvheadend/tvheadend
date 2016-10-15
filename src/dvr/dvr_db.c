@@ -2937,7 +2937,6 @@ const idclass_t dvr_entry_class = {
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the entry."),
       .off      = offsetof(dvr_entry_t, de_enabled),
-      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_TIME,
@@ -3091,7 +3090,7 @@ const idclass_t dvr_entry_class = {
       .def.i    = DVR_PRIO_NORMAL,
       .set      = dvr_entry_class_pri_set,
       .list     = dvr_entry_class_pri_list,
-      .opts     = PO_SORTKEY | PO_DOC_NLIST,
+      .opts     = PO_SORTKEY | PO_DOC_NLIST | PO_ADVANCED,
     },
     {
       .type     = PT_U32,

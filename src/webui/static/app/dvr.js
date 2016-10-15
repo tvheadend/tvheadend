@@ -201,11 +201,10 @@ tvheadend.filesizeRenderer = function(st) {
 tvheadend.dvr_upcoming = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
-    var list = 'disp_title,start,start_extra,stop,stop_extra,' +
-               'channel,config_name,comment';
+    var list = 'disp_title,channel,start,start_extra,stop,stop_extra,config_name,comment';
     var elist = 'enabled,' +
                 (tvheadend.accessUpdate.admin ?
-                  list + ',retention,removal,owner,creator' : list);
+                list + ',owner,creator' : list) + ',pri,retention,removal';
 
     var stopButton = {
         name: 'stop',
@@ -302,9 +301,9 @@ tvheadend.dvr_upcoming = function(panel, index) {
             }
         },
         del: true,
-        list: 'enabled,duplicate,disp_title,disp_subtitle,episode,pri,start_real,' +
-              'stop_real,duration,filesize,channel,owner,creator,config_name,' +
-              'sched_status,errors,data_errors,comment',
+        list: 'enabled,duplicate,disp_title,disp_subtitle,episode,channel,' +
+              'start_real,stop_real,duration,pri,filesize,' +
+              'sched_status,errors,data_errors,config_name,owner,creator,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -455,11 +454,11 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "owner,retention,removal,comment" : "comment" } },
+        edit: { params: { list: tvheadend.admin ? "retention,removal,owner,comment" : "retention,removal,comment" } },
         del: false,
-        list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
-              'duration,filesize,channelname,owner,creator,' +
-              'config_name,sched_status,errors,data_errors,url,comment',
+        list: 'disp_title,disp_subtitle,episode,channelname,' +
+              'start_real,stop_real,duration,filesize,' +
+              'sched_status,errors,data_errors,config_name,owner,creator,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -590,13 +589,13 @@ tvheadend.dvr_failed = function(panel, index) {
         titleP: _('Failed Recordings'),
         iconCls: 'exclamation',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "owner,comment" : "comment" } },
+        edit: { params: { list: tvheadend.admin ? "retention,removal,owner,comment" : "retention,removal,comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
-        list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
-              'duration,filesize,channelname,owner,creator,config_name,' +
-              'status,sched_status,errors,data_errors,url,comment',
+        list: 'disp_title,disp_subtitle,episode,channelname,' +
+              'start_real,stop_real,duration,filesize,status,' +
+              'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -679,9 +678,9 @@ tvheadend.dvr_removed = function(panel, index) {
         uilevel: 'expert',
         edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
         del: true,
-        list: 'disp_title,disp_subtitle,episode,start_real,stop_real,' +
-              'duration,channelname,owner,creator,config_name,' +
-              'sched_status,errors,data_errors,url,comment',
+        list: 'disp_title,disp_subtitle,episode,channelname,' +
+              'start_real,stop_real,duration,filesize,status,' +
+              'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         sort: {
           field: 'start_real',
           direction: 'ASC'
@@ -724,6 +723,13 @@ tvheadend.dvr_settings = function(panel, index) {
  */
 tvheadend.autorec_editor = function(panel, index) {
 
+    var list = 'name,title,fulltext,channel,start,start_window,weekdays,' + 
+               'record,tag,btype,content_type,minduration,maxduration,' +
+               'dedup,directory,config_name,comment';
+    var elist = 'enabled,start_extra,stop_extra,' +
+                (tvheadend.accessUpdate.admin ?
+                list + ',owner,creator' : list) + ',pri,retention,removal,maxcount,maxsched';
+
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/autorec',
         titleS: _('Autorec'),
@@ -765,15 +771,19 @@ tvheadend.autorec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/autorec',
             params: {
-               list: 'enabled,name,directory,title,fulltext,channel,tag,btype,content_type,minduration,' +
-                     'maxduration,weekdays,start,start_window,pri,dedup,retention,removal,' +
-                     'maxcount,maxsched,config_name,comment'
+               list: list
             },
             create: { }
         },
+        edit: {
+            params: {
+                list: elist
+            },
+        },
         del: true,
-        list: 'enabled,name,directory,title,fulltext,channel,tag,btype,content_type,minduration,' +
-              'maxduration,weekdays,start,start_window,pri,dedup,config_name,owner,creator,comment',
+        list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
+              'weekdays,minduration,maxduration,btype,content_type,' +
+              'pri,dedup,directory,config_name,owner,creator,comment',
         sort: {
           field: 'name',
           direction: 'ASC'
@@ -788,6 +798,12 @@ tvheadend.autorec_editor = function(panel, index) {
  *
  */
 tvheadend.timerec_editor = function(panel, index) {
+
+    var list = 'name,title,channel,start,stop,weekdays,' +
+               'directory,config_name,comment';
+    var elist = 'enabled,' +
+                (tvheadend.accessUpdate.admin ?
+                list + ',owner,creator' : list) + ',pri,retention,removal';
 
     tvheadend.idnode_grid(panel, {
         url: 'api/dvr/timerec',
@@ -818,12 +834,17 @@ tvheadend.timerec_editor = function(panel, index) {
         add: {
             url: 'api/dvr/timerec',
             params: {
-               list: 'enabled,name,directory,title,channel,weekdays,start,stop,pri,config_name,comment'
+               list: list
             },
             create: { }
         },
+        edit: {
+            params: {
+                list: elist
+            },
+        },
         del: true,
-        list: 'enabled,name,directory,title,channel,weekdays,start,stop,pri,config_name,owner,creator,comment',
+        list: 'enabled,name,title,channel,start,stop,weekdays,pri,directory,config_name,owner,creator,comment',
         sort: {
           field: 'name',
           direction: 'ASC'

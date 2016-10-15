@@ -289,6 +289,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_pri = DVR_PRIO_NORMAL;
   dae->dae_start = -1;
   dae->dae_start_window = -1;
+  dae->dae_enabled = 1;
   dae->dae_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
@@ -1000,6 +1001,7 @@ const idclass_t dvr_autorec_entry_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable auto-rec rule."),
+      .def.i    = 1,
       .off      = offsetof(dvr_autorec_entry_t, dae_enabled),
     },
     {
@@ -1009,7 +1011,7 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("The name of the the rule."),
       .off      = offsetof(dvr_autorec_entry_t, dae_name),
     },
-	{
+	  {
       .type     = PT_STR,
       .id       = "directory",
       .name     = N_("Directory"),
@@ -1019,6 +1021,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "recordings done by this entry into the "
                      "subdirectory named here. See Help for more info."),
       .off      = offsetof(dvr_autorec_entry_t, dae_directory),
+      .opts     = PO_EXPERT,
     },
     {
       .type     = PT_STR,
@@ -1089,6 +1092,7 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("An event which starts between this \"start after\" "
                      "and \"start before\" will be matched (including "
                      "boundary values)."),
+      .def.s    = N_("Any"),
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -1101,6 +1105,7 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("An event which starts between this \"start after\" "
                      "and \"start before\" will be matched (including "
                      "boundary values)."),
+      .def.s    = N_("Any"),
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,
       .list     = dvr_autorec_entry_class_time_list_,
@@ -1148,7 +1153,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "shorter than this duration."),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -1159,7 +1164,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "longer than this duration."),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_U32,
