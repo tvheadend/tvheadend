@@ -64,6 +64,7 @@ typedef struct th_descrambler {
 typedef struct th_descrambler_runtime {
   struct service *dr_service;
   tvhcsa_t dr_csa;
+  uint32_t dr_external:1;
   uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
   uint32_t dr_key:1;
@@ -155,6 +156,7 @@ void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
 int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
+void descrambler_external      ( struct service *t, int state );
 void descrambler_keys          ( th_descrambler_t *t, int type,
                                  const uint8_t *even, const uint8_t *odd );
 void descrambler_notify        ( th_descrambler_t *t,

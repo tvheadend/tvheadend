@@ -19,6 +19,7 @@
 #include <ctype.h>
 #include "tvheadend.h"
 #include "caclient.h"
+#include "descrambler.h"
 #include "service.h"
 #include "input.h"
 
@@ -185,9 +186,11 @@ end_of_search_for_cam:
     list_mgmt = CA_LIST_MANAGEMENT_ONLY;
 
 enqueue:
-  if (as->ca)
+  if (as->ca) {
+    descrambler_external((service_t *)s, 1);
     linuxdvb_ca_enqueue_capmt(as->ca, as->slot, as->last_pmt, as->last_pmt_len,
                               list_mgmt, CA_PMT_CMD_ID_OK_DESCRAMBLING);
+  }
 done:
   pthread_mutex_unlock(&dvbcam_mutex);
 }

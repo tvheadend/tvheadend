@@ -418,6 +418,16 @@ descrambler_resolved( service_t *t, th_descrambler_t *ignore )
 }
 
 void
+descrambler_external ( service_t *t, int state )
+{
+  th_descrambler_runtime_t *dr;
+
+  if (t == NULL || (dr = t->s_descramble) == NULL)
+    return;
+  dr->dr_external = state ? 1 : 0;
+}
+
+void
 descrambler_keys ( th_descrambler_t *td, int type,
                    const uint8_t *even, const uint8_t *odd )
 {
@@ -667,12 +677,12 @@ descrambler_descramble ( service_t *t,
 
   lock_assert(&t->s_stream_mutex);
 
-  if (dr == NULL) {
+  if (dr == NULL || dr->dr_external) {
     if ((tsb[3] & 0x80) == 0) {
       ts_recv_packet2((mpegts_service_t *)t, tsb, len);
       return 1;
     }
-    return -1;
+    return dr->dr_external ? 1 : -1;
   }
 
   if (dr->dr_csa.csa_type == DESCRAMBLER_NONE && dr->dr_queue_total == 0)
