@@ -760,7 +760,8 @@ service_find_instance
         if (pro == NULL ||
             pro->pro_svfilter == PROFILE_SVF_NONE ||
             (pro->pro_svfilter == PROFILE_SVF_SD && service_is_sdtv(s)) ||
-            (pro->pro_svfilter == PROFILE_SVF_HD && service_is_hdtv(s))) {
+            (pro->pro_svfilter == PROFILE_SVF_HD && service_is_hdtv(s)) ||
+            (pro->pro_svfilter == PROFILE_SVF_UHD && service_is_uhdtv(s))) {
           r1 = s->s_enlist(s, ti, sil, flags, weight);
           if (r1 == 0)
             enlisted++;

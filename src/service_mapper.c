@@ -238,14 +238,18 @@ service_mapper_process
 
     /* Type tags */
     if (conf->type_tags) {
-      if (service_is_hdtv(s)) {
+      if (service_is_uhdtv(s)) {
+        channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
+        channel_tag_map(channel_tag_find_by_name("UHDTV", 1), chn, chn);
+      } else if (service_is_hdtv(s)) {
         channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
         channel_tag_map(channel_tag_find_by_name("HDTV", 1), chn, chn);
       } else if (service_is_sdtv(s)) {
         channel_tag_map(channel_tag_find_by_name("TV channels", 1), chn, chn);
         channel_tag_map(channel_tag_find_by_name("SDTV", 1), chn, chn);
       } else if (service_is_radio(s)) {
-        channel_tag_map(channel_tag_find_by_name("Radio", 1), chn, chn);
+        if (!channel_tag_map(channel_tag_find_by_name("Radio", 0), chn, chn))
+          channel_tag_map(channel_tag_find_by_name("Radio channels", 1), chn, chn);
       }
     }
 
