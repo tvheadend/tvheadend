@@ -425,6 +425,7 @@ descrambler_external ( service_t *t, int state )
   if (t == NULL || (dr = t->s_descramble) == NULL)
     return;
   dr->dr_external = state ? 1 : 0;
+  service_set_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
 }
 
 void
