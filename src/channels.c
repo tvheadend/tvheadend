@@ -376,6 +376,7 @@ const idclass_t channel_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the channel."),
+      .def.i    = 1,
       .off      = offsetof(channel_t, ch_enabled),
     },
     {
@@ -439,6 +440,7 @@ const idclass_t channel_class = {
                      "turn this option off, only the OTA EPG grabber "
                      "will be used for this channel unless you've "
                      "specifically set a different EPG Source."),
+      .def.i    = 1,
       .off      = offsetof(channel_t, ch_epgauto),
       .opts     = PO_ADVANCED,
     },
@@ -489,7 +491,7 @@ const idclass_t channel_class = {
       .doc      = prop_doc_runningstate,
       .off      = offsetof(channel_t, ch_epg_running),
       .list     = channel_class_epg_running_list,
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -501,7 +503,6 @@ const idclass_t channel_class = {
       .set      = channel_class_services_set,
       .list     = channel_class_services_enum,
       .rend     = channel_class_services_rend,
-      .opts     = PO_ADVANCED
     },
     {
       .type     = PT_STR,
@@ -1419,6 +1420,7 @@ const idclass_t channel_tag_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the tag."),
+      .def.i    = 1,
       .off      = offsetof(channel_tag_t, ct_enabled),
     },
     {
@@ -1452,7 +1454,7 @@ const idclass_t channel_tag_class = {
                      "no tags at all) set in "
                      "access configuration to use the tag."),
       .off      = offsetof(channel_tag_t, ct_private),
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
@@ -1479,7 +1481,7 @@ const idclass_t channel_tag_class = {
       .desc     = N_("If set, presentation of the tag icon will not "
                      "superimpose the tag name on top of the icon."),
       .off      = offsetof(channel_tag_t, ct_titled_icon),
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
