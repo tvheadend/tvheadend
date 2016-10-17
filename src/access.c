@@ -1394,6 +1394,7 @@ const idclass_t access_entry_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/Disable the entry."),
+      .def.i    = 1,
       .off      = offsetof(access_entry_t, ae_enabled),
     },
     {
@@ -1460,7 +1461,7 @@ const idclass_t access_entry_class = {
       .doc      = prop_doc_themes,
       .list     = theme_get_ui_list,
       .off      = offsetof(access_entry_t, ae_theme),
-      .opts     = PO_DOC_NLIST,
+      .opts     = PO_DOC_NLIST | PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -1536,8 +1537,9 @@ const idclass_t access_entry_class = {
       .id       = "failed_dvr",
       .name     = N_("Failed DVR"),
       .desc     = N_("Allow/disallow access to all failed DVR entries."),
+      .def.i    = 1,
       .off      = offsetof(access_entry_t, ae_failed_dvr),
-      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .opts     = PO_EXPERT | PO_HIDDEN,
     },
     {
       .type     = PT_BOOL,
@@ -1547,7 +1549,7 @@ const idclass_t access_entry_class = {
                      "the HTSP client like signal strength, input source "
                      "etc."),
       .off      = offsetof(access_entry_t, ae_htsp_anonymize),
-      .opts     = PO_ADVANCED | PO_HIDDEN,
+      .opts     = PO_EXPERT | PO_HIDDEN,
     },
     {
       .type     = PT_STR,
@@ -1603,6 +1605,7 @@ const idclass_t access_entry_class = {
       .name     = N_("Minimal channel number"),
       .desc     = N_("Lowest channel number the user can access."),
       .off      = offsetof(access_entry_t, ae_chmin),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_S64,
@@ -1611,6 +1614,7 @@ const idclass_t access_entry_class = {
       .name     = N_("Maximal channel number"),
       .desc     = N_("Highest channel number the user can access."),
       .off      = offsetof(access_entry_t, ae_chmax),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_BOOL,
@@ -1825,6 +1829,7 @@ const idclass_t passwd_entry_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the entry."),
+      .def.i    = 1,
       .off      = offsetof(passwd_entry_t, pw_enabled),
     },
     {
