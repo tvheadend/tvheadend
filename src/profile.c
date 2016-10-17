@@ -307,7 +307,8 @@ const idclass_t profile_class =
       .desc     = N_("Enable/disable the profile."),
       .off      = offsetof(profile_t, pro_enabled),
       .get_opts = profile_class_enabled_opts,
-      .group    = 1
+      .group    = 1,
+      .def.i    = 1
     },
     {
       .type     = PT_BOOL,
@@ -1098,7 +1099,7 @@ const idclass_t profile_mpegts_pass_class =
                      "include information about the currently-streamed "
                      "service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
     },
@@ -1110,7 +1111,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
     },
@@ -1122,7 +1123,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
     },
@@ -1134,7 +1135,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
     },
@@ -2258,6 +2259,7 @@ profile_init(void)
     htsmsg_add_str (conf, "name", name);
     htsmsg_add_str (conf, "comment", _("Audio-only stream"));
     htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
+    htsmsg_add_bool(conf, "shield", 1);
     (void)profile_create(NULL, conf, 1);
     htsmsg_destroy(conf);
   }
