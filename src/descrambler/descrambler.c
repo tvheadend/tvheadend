@@ -683,7 +683,7 @@ descrambler_descramble ( service_t *t,
       ts_recv_packet2((mpegts_service_t *)t, tsb, len);
       return 1;
     }
-    return dr->dr_external ? 1 : -1;
+    return dr && dr->dr_external ? 1 : -1;
   }
 
   if (dr->dr_csa.csa_type == DESCRAMBLER_NONE && dr->dr_queue_total == 0)
