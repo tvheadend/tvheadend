@@ -422,6 +422,8 @@ descrambler_external ( service_t *t, int state )
 {
   th_descrambler_runtime_t *dr;
 
+  lock_assert(&t->s_stream_mutex);
+
   if (t == NULL || (dr = t->s_descramble) == NULL)
     return;
   dr->dr_external = state ? 1 : 0;

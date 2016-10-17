@@ -187,7 +187,9 @@ end_of_search_for_cam:
 
 enqueue:
   if (as->ca) {
+    pthread_mutex_lock(&s->s_stream_mutex);
     descrambler_external((service_t *)s, 1);
+    pthread_mutex_unlock(&s->s_stream_mutex);
     linuxdvb_ca_enqueue_capmt(as->ca, as->slot, as->last_pmt, as->last_pmt_len,
                               list_mgmt, CA_PMT_CMD_ID_OK_DESCRAMBLING);
   }
