@@ -94,6 +94,9 @@ bouquet_create(const char *uuid, htsmsg_t *conf,
   bq->bq_active_services = idnode_set_create(1);
   bq->bq_ext_url_period = 60;
   bq->bq_mapencrypted = 1;
+  bq->bq_mapradio = 1;
+  bq->bq_maptoch = 1;
+  bq->bq_chtag = 1;
 
   if (idnode_insert(&bq->bq_id, uuid, &bouquet_class, 0)) {
     if (uuid)
@@ -978,6 +981,7 @@ const idclass_t bouquet_class = {
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable the bouquet."),
+      .def.i    = 1,
       .off      = offsetof(bouquet_t, bq_enabled),
       .notify   = bouquet_class_enabled_notify,
     },
