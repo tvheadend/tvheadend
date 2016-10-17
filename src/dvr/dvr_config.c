@@ -207,7 +207,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   tvhinfo(LS_DVR, "Creating new configuration '%s'", cfg->dvr_config_name);
 
   if (cfg->dvr_profile == NULL) {
-    cfg->dvr_profile = profile_find_by_name("dvr", NULL);
+    cfg->dvr_profile = profile_find_by_name("pass", NULL);
     assert(cfg->dvr_profile);
     LIST_INSERT_HEAD(&cfg->dvr_profile->pro_dvr_configs, cfg, profile_link);
   }
@@ -538,6 +538,8 @@ dvr_config_changed(dvr_config_t *cfg)
     cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
   if (cfg->dvr_retention_days > DVR_RET_REM_FOREVER)
     cfg->dvr_retention_days = DVR_RET_REM_FOREVER;
+  if (cfg->dvr_profile && !strcmp(profile_get_name(cfg->dvr_profile), "htsp")) // htsp is for streaming only
+    cfg->dvr_profile = profile_find_by_name("pass", NULL);
 }
 
 
@@ -640,7 +642,7 @@ dvr_config_class_profile_set(void *o, const void *v)
   profile_t *pro;
 
   pro = v ? profile_find_by_uuid(v) : NULL;
-  pro = pro ?: profile_find_by_name(v, "dvr");
+  pro = pro ?: profile_find_by_name(v, "pass");
   if (pro == NULL) {
     if (cfg->dvr_profile) {
       LIST_REMOVE(cfg, profile_link);
@@ -880,6 +882,7 @@ const idclass_t dvr_config_class = {
       .get      = dvr_config_class_profile_get,
       .rend     = dvr_config_class_profile_rend,
       .list     = profile_class_get_list,
+      .opts     = PO_ADVANCED,
       .group    = 1,
     },
     {
@@ -893,7 +896,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_cache),
       .def.i    = MC_CACHE_DONTKEEP,
       .list     = dvr_config_class_cache_list,
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
+      .opts     = PO_EXPERT | PO_DOC_NLIST,
       .group    = 1,
     },
     {
@@ -948,7 +951,7 @@ const idclass_t dvr_config_class = {
                      "those with tuners that take some time to tune "
                      "and/or send garbage data at the beginning. "),
       .off      = offsetof(dvr_config_t, dvr_warm_time),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .group    = 1,
       .def.u32  = 30
     },
@@ -966,7 +969,7 @@ const idclass_t dvr_config_class = {
                      "in the channel or DVR entry will be used."),
       .off      = offsetof(dvr_config_t, dvr_extra_time_pre),
       .list     = dvr_config_class_extra_list,
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
+      .opts     = PO_DOC_NLIST,
       .group    = 1,
     },
     {
@@ -977,7 +980,7 @@ const idclass_t dvr_config_class = {
                      "stop time."),
       .off      = offsetof(dvr_config_t, dvr_extra_time_post),
       .list     = dvr_config_class_extra_list,
-      .opts     = PO_ADVANCED | PO_DOC_NLIST,
+      .opts     = PO_DOC_NLIST,
       .group    = 1,
     },
     {
@@ -1102,7 +1105,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_charset),
       .set      = dvr_config_class_charset_set,
       .list     = dvr_config_class_charset_list,
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
       .def.s    = "UTF-8",
       .group    = 2,
     },
@@ -1197,7 +1200,7 @@ const idclass_t dvr_config_class = {
                      "the event title. This applies to both the title "
                      "stored in the file and to the filename itself."),
       .off      = offsetof(dvr_config_t, dvr_channel_in_title),
-      .opts     = PO_EXPERT,
+      .opts     = PO_ADVANCED,
       .group    = 5,
     },
     {
@@ -1208,7 +1211,7 @@ const idclass_t dvr_config_class = {
                      "the event title. This applies to both the title "
                      "stored in the file and to the filename itself."),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
-      .opts     = PO_EXPERT,
+      .opts     = PO_ADVANCED,
       .group    = 5,
     },
     {
@@ -1219,7 +1222,7 @@ const idclass_t dvr_config_class = {
                      "the event title. This applies to both the title "
                      "stored in the file and to the filename itself."),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
-      .opts     = PO_EXPERT,
+      .opts     = PO_ADVANCED,
       .group    = 5,
     },
     {
@@ -1279,7 +1282,7 @@ const idclass_t dvr_config_class = {
                      "(e.g. for an SMB/CIFS share) will be stripped out "
                      "or converted."),
       .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
-      .opts     = PO_EXPERT,
+      .opts     = PO_ADVANCED,
       .group    = 6,
     },
     {}
@@ -1296,7 +1299,7 @@ dvr_config_destroy_by_profile(profile_t *pro, int delconf)
 
   while((cfg = LIST_FIRST(&pro->pro_dvr_configs)) != NULL) {
     LIST_REMOVE(cfg, profile_link);
-    cfg->dvr_profile = profile_find_by_name(NULL, "dvr");
+    cfg->dvr_profile = profile_find_by_name(NULL, "pass");
   }
 }
 
