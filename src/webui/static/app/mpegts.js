@@ -349,6 +349,7 @@ tvheadend.mux_sched = function(panel, index)
         titleP: _('Mux Schedulers'),
         iconCls: 'muxSchedulers',
         tabIndex: index,
+        uilevel: 'expert',
         hidemode: true,
         add: {
             url: 'api/mpegts/mux_sched',
