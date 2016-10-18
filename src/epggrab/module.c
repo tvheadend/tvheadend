@@ -158,7 +158,7 @@ const idclass_t epggrab_mod_class = {
                    "grabber is enabled. Priority is given to the grabber "
                    "with the highest value set here."),
       .off    = offsetof(epggrab_module_t, priority),
-      .opts   = PO_ADVANCED,
+      .opts   = PO_EXPERT,
       .group  = 1
     },
     {}
