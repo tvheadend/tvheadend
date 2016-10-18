@@ -58,6 +58,7 @@ tvheadend.epggrab_map = function(panel, index) {
         titleP: _('EPG Grabber Channels'),
         iconCls: 'baseconf',
         tabIndex: index,
+        uilevel: 'expert',
         del: true,
         sort: {
           field: 'name',
@@ -81,6 +82,7 @@ tvheadend.epggrab_mod = function(panel, index) {
 
     tvheadend.idnode_form_grid(panel, {
         tabIndex: index,
+        uilevel: 'advanced',
         clazz: 'epggrab_mod',
         comet: 'epggrab_mod',
         titleS: _('EPG Grabber Module'),

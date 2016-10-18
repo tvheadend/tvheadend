@@ -280,6 +280,7 @@ const idclass_t epggrab_class = {
                    "Note: this may cause unwanted changes to "
                    "already defined channel names."),
       .off    = offsetof(epggrab_conf_t, channel_rename),
+      .opts   = PO_ADVANCED,
       .group  = 1,
     },
     {
@@ -291,6 +292,7 @@ const idclass_t epggrab_class = {
                    "Note: this may cause unwanted changes to "
                    "already defined channel numbers."),
       .off    = offsetof(epggrab_conf_t, channel_renumber),
+      .opts   = PO_ADVANCED,
       .group  = 1,
     },
     {
@@ -302,6 +304,7 @@ const idclass_t epggrab_class = {
                    "Note: this may cause unwanted changes to "
                    "already defined channel icons."),
       .off    = offsetof(epggrab_conf_t, channel_reicon),
+      .opts   = PO_ADVANCED,
       .group  = 1,
     },
     {
@@ -361,7 +364,7 @@ const idclass_t epggrab_class = {
                    "time at most. If the EPG data is complete before "
                    "this limit, the mux is released sooner."),
       .off    = offsetof(epggrab_conf_t, ota_timeout),
-      .opts   = PO_ADVANCED,
+      .opts   = PO_EXPERT,
       .group  = 3,
     },
     {}
