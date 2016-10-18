@@ -473,10 +473,12 @@ const idclass_t dvb_mux_dvbs_class =
     {
       MUX_PROP_STR("rolloff", N_("Rolloff"), dvbs, rolloff, "AUTO"),
       .desc     = N_("The rolloff used on the mux."),
+      .opts     = PO_ADVANCED,
     },
     {
       MUX_PROP_STR("pilot", N_("Pilot"), dvbs, pilot, "AUTO"),
       .desc     = N_("Enable/disable pilot tone."),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_INT,
@@ -485,12 +487,13 @@ const idclass_t dvb_mux_dvbs_class =
       .desc     = N_("The stream ID used for the mux."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_stream_id),
       .def.i	= DVB_NO_STREAM_ID_FILTER,
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       MUX_PROP_STR("pls_mode", N_("PLS mode"), dvbs, pls_mode, "ROOT"),
       .desc     = N_("The Physical Layer Scrambling (PLS) mode "
                      "used on the mux."),
+      .opts     = PO_ADVANCED,
     },
     {
       .type     = PT_U32,
@@ -500,7 +503,7 @@ const idclass_t dvb_mux_dvbs_class =
                      "used on the mux."),
       .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pls_code),
       .def.u32	= 1,
-      .opts     = PO_ADVANCED
+      .opts     = PO_EXPERT
     },
     {
       .type     = PT_STR,
