@@ -108,6 +108,7 @@ tvheadend.imgcacheconf = function(panel, index) {
         title: _('Image Cache'),
         iconCls: 'imgcacheconf',
         tabIndex: index,
+        uilevel: 'advanced',
         comet: 'imagecache',
         width: 550,
         labelWidth: 200,

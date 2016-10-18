@@ -2079,7 +2079,7 @@ const idclass_t config_class = {
                    "It is intended to replace unencrypted HTTP basic access authentication. "
                    "This option should be enabled for standard usage."),
       .off    = offsetof(config_t, digest),
-      .opts   = PO_ADVANCED,
+      .opts   = PO_EXPERT,
       .group  = 1
     },
     {
@@ -2090,7 +2090,7 @@ const idclass_t config_class = {
       .desc   = N_("The number of days cookies set by Tvheadend should "
                    "expire."),
       .off    = offsetof(config_t, cookie_expires),
-      .opts   = PO_ADVANCED,
+      .opts   = PO_EXPERT,
       .group  = 1
     },
     {
@@ -2131,6 +2131,7 @@ const idclass_t config_class = {
                    "for the advanced level. By default, this tab is visible only "
                    "in the expert level."),
       .off    = offsetof(config_t, caclient_ui),
+      .opts   = PO_ADVANCED,
       .group  = 1
     },
     {
