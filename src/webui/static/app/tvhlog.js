@@ -36,6 +36,7 @@ tvheadend.memoryinfo = function(panel, index)
         titleP: _('Memory Information Entries'),
         iconCls: 'exclamation',
         tabIndex: index,
+        uilevel: 'expert',
         readonly: true
     });
 };
