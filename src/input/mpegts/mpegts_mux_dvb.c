@@ -493,7 +493,7 @@ const idclass_t dvb_mux_dvbs_class =
       MUX_PROP_STR("pls_mode", N_("PLS mode"), dvbs, pls_mode, "ROOT"),
       .desc     = N_("The Physical Layer Scrambling (PLS) mode "
                      "used on the mux."),
-      .opts     = PO_ADVANCED,
+      .opts     = PO_EXPERT,
     },
     {
       .type     = PT_U32,

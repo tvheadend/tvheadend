@@ -612,7 +612,7 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_scan_state),
       .set      = mpegts_mux_class_scan_state_set,
       .list     = mpegts_mux_class_scan_state_enum,
-      .opts     = PO_NOSAVE | PO_SORTKEY | PO_DOC_NLIST,
+      .opts     = PO_ADVANCED | PO_NOSAVE | PO_SORTKEY | PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
@@ -656,7 +656,7 @@ const idclass_t mpegts_mux_class =
        .id       = "tsid_zero",
        .name     = N_("Accept zero value for TSID"),
        .off      = offsetof(mpegts_mux_t, mm_tsid_accept_zero_value),
-       .opts     = PO_ADVANCED
+       .opts     = PO_EXPERT
     },
     {
       .type     = PT_INT,

@@ -267,7 +267,7 @@ const idclass_t timeshift_conf_class = {
       .name   = N_("RAM only"),
       .desc   = N_("Only use system RAM for timeshift buffers."),
       .off    = offsetof(timeshift_conf_t, ram_only),
-      .opts   = PO_EXPERT,
+      .opts   = PO_ADVANCED,
     },
     {
       .type   = PT_BOOL,

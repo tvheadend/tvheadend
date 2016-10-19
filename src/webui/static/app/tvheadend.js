@@ -777,7 +777,7 @@ function accessUpdate(o) {
             tvheadend.caclient(cp, 6);
 
         /* Debug */
-        if (o.uilevel == 'expert') {
+        if (o.uilevel == 'advanced' || o.uilevel == 'expert') {
             var dbg = new Ext.TabPanel({
                 tabIndex: 7,
                 activeTab: 0,
