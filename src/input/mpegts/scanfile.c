@@ -911,7 +911,7 @@ scanfile_init ( const char *muxconf_path, int lock )
     memoryinfo_register(&scanfile_memoryinfo);
     initialized = 1;
     if (lock)
-      pthread_mutex_lock(&global_lock);
+      pthread_mutex_unlock(&global_lock);
   }
 
   scanfile_total_load = 0;
