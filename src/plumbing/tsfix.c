@@ -343,19 +343,28 @@ tsfix_backlog_diff(tsfix_t *tf)
 
 /**
  *
+ * Recover unset PTS.
+ *
+ * MPEG2 DTS/PTS example (rpts = result pts):
+ * 01: I dts 4922701936 pts 4922712736 rpts 4922712736
+ * 02: B dts 4922705536 pts <unset>    rpts 4922705536
+ * 03: B dts 4922709136 pts <unset>    rpts 4922709136
+ * 04: P dts 4922712736 pts <unset>    rpts 4922723536
+ * 05: B dts 4922716336 pts <unset>    rpts 4922716336
+ * 06: B dts 4922719936 pts <unset>    rpts 4922719936
+ * 07: P dts 4922723536 pts <unset>    rpts 4922734336
+ * 08: B dts 4922727136 pts <unset>    rpts 4922727136
+ * 09: B dts 4922730736 pts <unset>    rpts 4922730736
+ * 10: P dts 4922734336 pts <unset>    rpts 4922745136
+ * 11: B dts 4922737936 pts <unset>    rpts 4922737936
+ * 12: B dts 4922741536 pts <unset>    rpts 4922741536
+ * 13: I dts 4922745136 pts 4922755936 rpts 4922755936
  */
-#if 1
 static void
 recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
-  normalize_ts(tf, tfs, pkt, 1);
-}
-#else
-static void
-recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
-{
-  //th_pktref_t *srch;
-  //int total;
+  th_pktref_t *srch;
+  int total;
 
   pktref_enqueue(&tf->tf_ptsq, pkt);
 
@@ -369,41 +378,44 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
       switch(pkt->pkt_frametype) {
       case PKT_B_FRAME:
-	/* B-frames have same PTS as DTS, pass them on */
-	tvhtrace(LS_TSFIX, "%-12s PTS b-frame set to %"PRId64" (old %"PRId64")",
-		    streaming_component_type2txt(tfs->tfs_type),
-		    pkt->pkt_dts, pkt->pkt_pts);
-	pkt->pkt_pts = pkt->pkt_dts;
+        if (pkt->pkt_pts == PTS_UNSET) {
+	  /* B-frames have same PTS as DTS, pass them on */
+	  tvhtrace(LS_TSFIX, "%-12s PTS b-frame set to %"PRId64" (old %"PRId64")",
+		   streaming_component_type2txt(tfs->tfs_type),
+		   pkt->pkt_dts, pkt->pkt_pts);
+	  pkt->pkt_pts = pkt->pkt_dts;
+        }
 	break;
       
       case PKT_I_FRAME:
       case PKT_P_FRAME:
-	/* Presentation occures at DTS of next I or P frame,
-	   try to find it */
-        total = 0;
-	PKTREF_FOREACH(srch, &tf->tf_ptsq) {
-	  if (pkt->pkt_componentindex != tfs->tfs_index)
-	    continue;
-          total++;
-	  if (srch->pr_pkt->pkt_frametype <= PKT_P_FRAME &&
-	      pts_is_greater_or_equal(pkt->pkt_dts, srch->pr_pkt->pkt_dts) > 0 &&
-	      pts_diff(pkt->pkt_dts, srch->pr_pkt->pkt_dts) < 10 * 90000) {
-	    tvhtrace(LS_TSFIX, "%-12s PTS *-frame set to %"PRId64" (old %"PRId64"), DTS %"PRId64,
-			streaming_component_type2txt(tfs->tfs_type),
-			srch->pr_pkt->pkt_dts, pkt->pkt_pts, pkt->pkt_dts);
-	    pkt->pkt_pts = srch->pr_pkt->pkt_dts;
-	    break;
-	  }
-	  
-        }
-	if (srch == NULL) {
-	  if (total < 50) {
-            /* return packet back to tf_ptsq */
-	    pktref_insert_head(&tf->tf_ptsq, pkt);
-          } else {
-            tsfix_packet_drop(tfs, pkt, "mpeg2video overflow");
+        if (pkt->pkt_pts == PTS_UNSET) {
+	  /* Presentation occures at DTS of next I or P frame,
+	     try to find it */
+          total = 0;
+          PKTREF_FOREACH(srch, &tf->tf_ptsq) {
+            if (pkt->pkt_componentindex != tfs->tfs_index)
+              continue;
+            total++;
+            if (srch->pr_pkt->pkt_frametype <= PKT_P_FRAME &&
+                pts_is_greater_or_equal(pkt->pkt_dts, srch->pr_pkt->pkt_dts) > 0 &&
+                pts_diff(pkt->pkt_dts, srch->pr_pkt->pkt_dts) < 10 * 90000) {
+              tvhtrace(LS_TSFIX, "%-12s PTS *-frame set to %"PRId64" (old %"PRId64"), DTS %"PRId64,
+                          streaming_component_type2txt(tfs->tfs_type),
+                          srch->pr_pkt->pkt_dts, pkt->pkt_pts, pkt->pkt_dts);
+              pkt->pkt_pts = srch->pr_pkt->pkt_dts;
+              break;
+            }	  
           }
-          return; /* not arrived yet or invalid, wait */
+          if (srch == NULL) {
+            if (total < 50) {
+              /* return packet back to tf_ptsq */
+              pktref_insert_head(&tf->tf_ptsq, pkt);
+            } else {
+              tsfix_packet_drop(tfs, pkt, "mpeg2video overflow");
+            }
+            return; /* not arrived yet or invalid, wait */
+          }
         }
       }
       break;
@@ -415,7 +427,6 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
     normalize_ts(tf, tfs, pkt, 1);
   }
 }
-#endif
 
 
 /**
