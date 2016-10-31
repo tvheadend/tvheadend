@@ -161,7 +161,7 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link)
     if (mmi->mmi_mux->mm_network == (mpegts_network_t *)in) {
       w = mpegts_mux_instance_weight(mmi);
-      if (w < rw) {
+      if (w < rw && (!active || mmi->mmi_mux != mm)) {
         rmmi = mmi;
         rw = w;
       }
@@ -172,19 +172,18 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
   if (lweight)
     *lweight = rw == INT_MAX ? 0 : rw;
 
+  if (!rmmi)
+    return NULL;
+
   /* Limit reached */
-  if (in->in_max_streams && h >= in->in_max_streams) {
-    if (active) {
-      if (l == 0)
-        return rmmi;
-    } else {
+  if (in->in_max_streams && h >= in->in_max_streams)
+    if (rmmi->mmi_mux != mm)
       return rmmi;
-    }
-  }
   
   /* Bandwidth reached */
-  if (in->in_bw_limited && l == 0)
-    return rmmi;
+  if (in->in_bw_limited)
+    if (rmmi->mmi_mux != mm)
+      return rmmi;
 
   return NULL;
 }
