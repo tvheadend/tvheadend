@@ -458,7 +458,7 @@ tvheadend.dvr_finished = function(panel, index) {
         del: false,
         list: 'disp_title,disp_subtitle,episode,channelname,' +
               'start_real,stop_real,duration,filesize,' +
-              'sched_status,errors,data_errors,config_name,owner,creator,comment',
+              'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
