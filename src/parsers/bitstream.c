@@ -73,7 +73,7 @@ read_bits64(bitstream_t *bs, uint32_t num)
     num--;
 
     if(bs->rdata[bs->offset / 8] & (1 << (7 - (bs->offset & 7))))
-      r |= 1 << num;
+      r |= (int64_t)1 << num;
 
     bs->offset++;
   }
