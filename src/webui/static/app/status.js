@@ -35,31 +35,34 @@ tvheadend.status_subs = function(panel, index)
         if (subs)
             return;
 
+        var stype = Ext.data.SortTypes.asUCString;
+        var stypei = Ext.data.SortTypes.asInt;
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
             fields: [
-                { name: 'id' },
-                { name: 'hostname' },
-                { name: 'username' },
-                { name: 'title' },
-                { name: 'channel' },
-                { name: 'service' },
-                { name: 'profile' },
-                { name: 'state' },
-                { name: 'descramble' },
-                { name: 'errors' },
-                { name: 'in' },
-                { name: 'out' },
+                { name: 'id', sortType: stype },
+                { name: 'hostname', sortType: stype },
+                { name: 'username', sortType: stype },
+                { name: 'title', sortType: stype },
+                { name: 'channel', sortType: stype },
+                { name: 'service', sortType: stype },
+                { name: 'profile', sortType: stype },
+                { name: 'state', sortType: stype },
+                { name: 'descramble', sortType: stype },
+                { name: 'errors', sortType: stype },
+                { name: 'in', sortType: stype },
+                { name: 'out', sortType: stypei },
                 {
                     name: 'start',
                     type: 'date',
-                    dateFormat: 'U' /* unix time */
+                    dateFormat: 'U', /* unix time */
+                    sortType: Ext.data.SortTypes.asDate
                 }
             ],
             url: 'api/status/subscriptions',
             autoLoad: true,
-            id: 'id'
+            id: 'id',
         });
         tvheadend.subsStore = store;
 
@@ -77,6 +80,7 @@ tvheadend.status_subs = function(panel, index)
                 id: 'id',
                 header: _("ID"),
                 dataIndex: 'id',
+                sortable: true,
                 renderer: function(v) {
                     return ("0000000" + v.toString(16).toUpperCase()).substr(-8);
                 }
@@ -86,43 +90,50 @@ tvheadend.status_subs = function(panel, index)
                 width: 50,
                 id: 'hostname',
                 header: _("Hostname"),
-                dataIndex: 'hostname'
+                dataIndex: 'hostname',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'username',
                 header: _("Username"),
-                dataIndex: 'username'
+                dataIndex: 'username',
+                sortable: true
             },
             {
                 width: 80,
                 id: 'title',
                 header: _("Title"),
-                dataIndex: 'title'
+                dataIndex: 'title',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'channel',
                 header: _("Channel"),
-                dataIndex: 'channel'
+                dataIndex: 'channel',
+                sortable: true
             },
             {
                 width: 250,
                 id: 'service',
                 header: _("Service"),
-                dataIndex: 'service'
+                dataIndex: 'service',
+                sortable: true
             }, 
             {
                 width: 50,
                 id: 'profile',
                 header: _("Profile"),
-                dataIndex: 'profile'
+                dataIndex: 'profile',
+                sortable: true
             }, 
             {
                 width: 50,
                 id: 'start',
                 header: _("Start"),
                 dataIndex: 'start',
+                sortable: true,
                 renderer: function(v) {
                     var dt = new Date(v);
                     return dt.format('D j M H:i');
@@ -132,25 +143,29 @@ tvheadend.status_subs = function(panel, index)
                 width: 50,
                 id: 'state',
                 header: _("State"),
-                dataIndex: 'state'
+                dataIndex: 'state',
+                sortable: true
             },
             {
                 width: 80,
                 id: 'descramble',
                 header: _("Descramble"),
-                dataIndex: 'descramble'
+                dataIndex: 'descramble',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'errors',
                 header: _("Errors"),
-                dataIndex: 'errors'
+                dataIndex: 'errors',
+                sortable: true
             },
             {
                 width: 50,
                 id: 'in',
                 header: _("Input (kb/s)"),
                 dataIndex: 'in',
+                sortable: true,
                 listeners: { click: { fn: clicked } },
                 renderer: renderBw
             },
@@ -159,6 +174,7 @@ tvheadend.status_subs = function(panel, index)
                 id: 'out',
                 header: _("Output (kb/s)"),
                 dataIndex: 'out',
+                sortable: true,
                 listeners: { click: { fn: clicked } },
                 renderer: renderBw
             }
@@ -291,29 +307,31 @@ tvheadend.status_streams = function(panel, index)
             }
         });
 
+        var stype = Ext.data.SortTypes.asUCString;
+        var stypei = Ext.data.SortTypes.asInt;
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
             fields: [
                 { name: 'uuid' },
-                { name: 'input' },
-                { name: 'username' },
-                { name: 'stream' },
-                { name: 'subs' },
-                { name: 'weight' },
-                { name: 'signal' },
-                { name: 'ber' },
-                { name: 'unc' },
-                { name: 'snr' },
-                { name: 'bps' },
-                { name: 'cc' },
-                { name: 'te' },
+                { name: 'input', sortType: stype },
+                { name: 'username', sortType: stype },
+                { name: 'stream', sortType: stype },
+                { name: 'subs', sortType: stypei },
+                { name: 'weight', sortType: stypei },
+                { name: 'signal', sortType: stypei },
+                { name: 'ber', sortType: stypei },
+                { name: 'unc', sortType: stypei },
+                { name: 'snr', sortType: stypei },
+                { name: 'bps', sortType: stypei },
+                { name: 'cc', sortType: stypei },
+                { name: 'te', sortType: stypei },
                 { name: 'signal_scale' },
                 { name: 'snr_scale' },
-                { name: 'ec_bit' },
-                { name: 'tc_bit' },
-                { name: 'ec_block' },
-                { name: 'tc_block' }
+                { name: 'ec_bit', sortType: stypei },
+                { name: 'tc_bit', sorttype: stypei },
+                { name: 'ec_block', sortType: stypei },
+                { name: 'tc_block', sortType: stypei }
             ],
             url: 'api/status/inputs',
             autoLoad: true,
@@ -352,27 +370,32 @@ tvheadend.status_streams = function(panel, index)
             {
                 width: 120,
                 header: _("Input"),
-                dataIndex: 'input'
+                dataIndex: 'input',
+                sortable: true
             },
             {
                 width: 100,
                 header: _("Stream"),
-                dataIndex: 'stream'
+                dataIndex: 'stream',
+                sortable: true
             },
             {
                 width: 50,
                 header: _("Subs No."),
-                dataIndex: 'subs'
+                dataIndex: 'subs',
+                sortable: true
             },
             {
                 width: 50,
                 header: _("Weight"),
-                dataIndex: 'weight'
+                dataIndex: 'weight',
+                sortable: true
             },
             {
                 width: 50,
                 header: _("Bandwidth (kb/s)"),
                 dataIndex: 'bps',
+                sortable: true,
                 renderer: renderBw,
                 listeners: { click: { fn: clicked } }
             },
@@ -380,28 +403,33 @@ tvheadend.status_streams = function(panel, index)
                 width: 50,
                 header: _("BER"),
                 dataIndex: 'ber',
+                sortable: true,
                 renderer: renderBer
             },
             {
                 width: 50,
                 header: _("PER"),
                 dataIndex: 'tc_block',
+                sortable: true,
                 renderer: renderPer
             },
             {
                 width: 50,
                 header: _("Uncorrected Blocks"),
-                dataIndex: 'unc'
+                dataIndex: 'unc',
+                sortable: true
             },
             {
                 width: 50,
                 header: _("Transport Errors"),
-                dataIndex: 'te'
+                dataIndex: 'te',
+                sortable: true
             },
             {
                 width: 50,
                 header: _("Continuity Errors"),
-                dataIndex: 'cc'
+                dataIndex: 'cc',
+                sortable: true
             }
         ]);
 
@@ -546,18 +574,20 @@ tvheadend.status_conns = function(panel, index) {
             }
         });
 
+        var stype = Ext.data.SortTypes.asUCString;
         store = new Ext.data.JsonStore({
             root: 'entries',
             totalProperty: 'totalCount',
             fields: [
-                { name: 'id' },
-                { name: 'type' },
-                { name: 'peer' },
-                { name: 'user' },
+                { name: 'id', sortType: stype },
+                { name: 'type', sortType: stype },
+                { name: 'peer', sortType: stype },
+                { name: 'user', sortType: stype },
                 {
                     name: 'started',
                     type: 'date',
-                    dateFormat: 'U' /* unix time */
+                    dateFormat: 'U', /* unix time */
+                    sortType: Ext.data.SortTypes.asDate
                 }
             ],
             url: 'api/status/connections',
@@ -578,23 +608,27 @@ tvheadend.status_conns = function(panel, index) {
                 width: 50,
                 id: 'type',
                 header: _("Type"),
-                dataIndex: 'type'
+                dataIndex: 'type',
+                sortable: true
             }, {
                 width: 50,
                 id: 'peer',
                 header: _("IP Address"),
-                dataIndex: 'peer'
+                dataIndex: 'peer',
+                sortable: true
             }, {
                 width: 50,
                 id: 'user',
                 header: _("Username"),
-                dataIndex: 'user'
+                dataIndex: 'user',
+                sortable: true
             }, {
                 width: 50,
                 id: 'started',
                 header: _("Started"),
                 dataIndex: 'started',
-                renderer: renderDate
+                renderer: renderDate,
+                sortable: true
             }]);
 
         grid = new Ext.grid.GridPanel({
