@@ -1596,8 +1596,11 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
   case HEVC_NAL_IDR_W_RADL:
   case HEVC_NAL_IDR_N_LP:
   case HEVC_NAL_CRA_NUT:
+    if (st->es_curpkt != NULL)
+      break;
+
     l2 = len - 3 > 64 ? 64 : len - 3;
-    void *f = h264_nal_deescape(&bs, buf + 3, len - 3);
+    void *f = h264_nal_deescape(&bs, buf + 3, l2);
     r = hevc_decode_slice_header(st, &bs, &pkttype);
     free(f);
     if (r < 0)
@@ -1658,7 +1661,7 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
   }
 
   if(is_ssc(next_startcode) ||
-     ((next_startcode >> 1) & 0x3f) == HEVC_NAL_TRAIL_R) {
+     ((next_startcode >> 1) & 0x3f) == HEVC_NAL_AUD) {
     /* Complete frame - new start code or delimiter */
     if (st->es_incomplete)
       return PARSER_HEADER;
