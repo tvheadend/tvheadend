@@ -236,11 +236,36 @@ tvheadend.mdhelp = function(pagename) {
     var helpfailuremsg = function() { 
         Ext.MessageBox.show({
             title:_('Error'),
-            msg: _('There was a problem displaying the help page!') + '<br>' + 
-                 _('This usually means there is no help available or the document couldn\'t be loaded.'),
+            msg: _('There was a problem displaying the Help!') + '<br>' + 
+                 _('Please check Tvheadend is running and try again.'), 
             buttons: Ext.Msg.OK,
             icon: Ext.MessageBox.ERROR,
         });
+    }
+    
+    var helppagefail = function() { 
+        title = _('Not Available');
+        msg = _('There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n\n') + 
+              _('Please take a look at the other Help pages (Table of Contents). If you still can\'t find what you\'re ') + 
+              _('looking for please see the [Wiki](http://tvheadend.org/projects/tvheadend/wiki) ') + 
+              _('or join the [IRC channel on freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts).');
+              
+        // Fake the result.
+        result = [];
+        result['responseText'] = "## " + title + '\n\n' + msg;
+        
+        // Load the TOC.
+        if (!tvheadend.docs_toc) {
+            Ext.Ajax.request({
+                url: 'markdown/toc',
+                success: function(result_toc) {
+                    tvheadend.docs_toc = parse(result_toc.responseText);
+                    fcn(result);
+                },
+                failure: helpfailuremsg,
+            });
+        }
+        fcn(result);
     }
 
     Ext.Ajax.request({
@@ -259,7 +284,7 @@ tvheadend.mdhelp = function(pagename) {
                 fcn(result);
             }
         },
-        failure: helpfailuremsg,
+        failure: helppagefail,
     });
 };
 
