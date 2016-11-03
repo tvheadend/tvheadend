@@ -695,6 +695,10 @@ satip_frontend_update_pids
           mpegts_pid_add(&tr->sf_pids, mp->mp_pid, mps->mps_weight);
       }
     }
+    if (lfe->sf_device->sd_pids0)
+      mpegts_pid_add(&tr->sf_pids, 0, MPS_WEIGHT_PMT_SCAN);
+    if (lfe->sf_device->sd_pids21)
+      mpegts_pid_add(&tr->sf_pids, 21, MPS_WEIGHT_PMT_SCAN);
   }
   pthread_mutex_unlock(&lfe->sf_dvr_lock);
 
