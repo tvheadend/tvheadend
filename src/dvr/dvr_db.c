@@ -2798,7 +2798,7 @@ dvr_entry_class_filesize_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_sched_state == DVR_COMPLETED ||
       de->de_sched_state == DVR_RECORDING) {
-    size = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
+    size = dvr_get_filesize(de, DVR_FILESIZE_UPDATE | DVR_FILESIZE_TOTAL);
     if (size < 0)
       size = 0;
   } else
