@@ -1301,6 +1301,18 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(!(htsp->htsp_granted_access->aa_rights & HTSP_PRIV_MASK))
     htsmsg_add_u32(r, "noaccess", 1);
+  else if (htsp->htsp_version > 25) {
+    htsmsg_add_u32(r, "admin",          htsp->htsp_granted_access->aa_rights & ACCESS_ADMIN ? 1 : 0);
+    htsmsg_add_u32(r, "streaming",      htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_STREAMING ? 1 : 0);
+    htsmsg_add_u32(r, "dvr",            htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_RECORDER ? 1 : 0);
+    htsmsg_add_u32(r, "anonymous",      htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_ANONYMIZE ? 1 : 0);
+    htsmsg_add_u32(r, "limitall",       htsp->htsp_granted_access->aa_conn_limit);
+    htsmsg_add_u32(r, "limitdvr",       htsp->htsp_granted_access->aa_conn_limit_dvr);
+    htsmsg_add_u32(r, "limitstreaming", htsp->htsp_granted_access->aa_conn_limit_streaming);
+    htsmsg_add_u32(r, "uilevel",        htsp->htsp_granted_access->aa_uilevel == UILEVEL_DEFAULT ?
+        config.uilevel : htsp->htsp_granted_access->aa_uilevel);
+    htsmsg_add_str(r, "uilanguage",     htsp->htsp_granted_access->aa_lang_ui);
+  }
   
   return r;
 }
