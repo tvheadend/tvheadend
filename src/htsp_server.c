@@ -72,10 +72,12 @@ static void *htsp_server, *htsp_server_2;
 #define HTSP_ASYNC_ON   0x01
 #define HTSP_ASYNC_EPG  0x02
 
-#define HTSP_ASYNC_AUX_CHTAG   0x01
-#define HTSP_ASYNC_AUX_DVR     0x02
-#define HTSP_ASYNC_AUX_AUTOREC 0x03
-#define HTSP_ASYNC_AUX_TIMEREC 0x04
+#define HTSP_ASYNC_AUX_CH        0x01
+#define HTSP_ASYNC_AUX_CHTAG     0x02
+#define HTSP_ASYNC_AUX_CHTAG_DEL 0x03
+#define HTSP_ASYNC_AUX_DVR       0x04
+#define HTSP_ASYNC_AUX_AUTOREC   0x05
+#define HTSP_ASYNC_AUX_TIMEREC   0x06
 
 #define HTSP_ASYNC_EPG_INTERVAL 30
 
@@ -3448,7 +3450,10 @@ htsp_channel_add(channel_t *ch)
 void
 htsp_channel_update(channel_t *ch)
 {
-  _htsp_channel_update(ch, "channelUpdate", NULL);
+  if (ch->ch_enabled)
+    _htsp_channel_update(ch, "channelUpdate", NULL);
+  else // in case the channel was ever sent to the client
+    htsp_channel_delete(ch);
 }
 
 /**
@@ -3460,7 +3465,7 @@ htsp_channel_delete(channel_t *ch)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "channelId", channel_get_id(ch));
   htsmsg_add_str(m, "method", "channelDelete");
-  _htsp_channel_update(ch, NULL, m);
+  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_CH, ch);
 }
 
 
@@ -3481,8 +3486,12 @@ htsp_tag_add(channel_tag_t *ct)
 void
 htsp_tag_update(channel_tag_t *ct)
 {
-  htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1), HTSP_ASYNC_ON,
-                  HTSP_ASYNC_AUX_CHTAG, ct);
+  if (ct->ct_enabled && !ct->ct_internal) {
+    htsp_async_send(htsp_build_tag(ct, "tagUpdate", 1), HTSP_ASYNC_ON,
+                    HTSP_ASYNC_AUX_CHTAG, ct);
+  }
+  else // in case the tag was ever sent to the client
+    htsp_tag_delete(ct);
 }
 
 
@@ -3495,7 +3504,7 @@ htsp_tag_delete(channel_tag_t *ct)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_u32(m, "tagId", htsp_channel_tag_get_identifier(ct));
   htsmsg_add_str(m, "method", "tagDelete");
-  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_CHTAG, ct);
+  htsp_async_send(m, HTSP_ASYNC_ON, HTSP_ASYNC_AUX_CHTAG_DEL, ct);
 }
 
 /**
