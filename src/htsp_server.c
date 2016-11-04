@@ -78,6 +78,7 @@ static void *htsp_server, *htsp_server_2;
 #define HTSP_ASYNC_AUX_DVR       0x04
 #define HTSP_ASYNC_AUX_AUTOREC   0x05
 #define HTSP_ASYNC_AUX_TIMEREC   0x06
+#define HTSP_ASYNC_AUX_EPG       0x07
 
 #define HTSP_ASYNC_EPG_INTERVAL 30
 
@@ -890,7 +891,7 @@ htsp_build_tag(channel_tag_t *ct, const char *method, int include_channels)
  *
  */
 static htsmsg_t *
-htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method, const char *lang)
+htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method, const char *lang, int statsonly)
 {
   htsmsg_t *out = htsmsg_create_map(), *l, *m, *e, *info;
   htsmsg_field_t *f;
@@ -900,74 +901,76 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   char ubuf[UUID_HEX_SIZE];
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
-  htsmsg_add_u32(out, "enabled", de->de_enabled >= 1 ? 1 : 0);
-  if (de->de_channel)
-    htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
-  if (de->de_channel_name) /* stays valid after channel deletion */
-    htsmsg_add_str(out, "channelName", de->de_channel_name);
 
-  if (de->de_bcast)
-    htsmsg_add_u32(out, "eventId",  de->de_bcast->id);
+  if (!statsonly) {
+    htsmsg_add_u32(out, "enabled", de->de_enabled >= 1 ? 1 : 0);
+    if (de->de_channel)
+      htsmsg_add_u32(out, "channel", channel_get_id(de->de_channel));
+    if (de->de_channel_name) /* stays valid after channel deletion */
+      htsmsg_add_str(out, "channelName", de->de_channel_name);
 
-  if (de->de_autorec)
-    htsmsg_add_str(out, "autorecId", idnode_uuid_as_str(&de->de_autorec->dae_id, ubuf));
+    if (de->de_bcast)
+      htsmsg_add_u32(out, "eventId",  de->de_bcast->id);
 
-  if (de->de_timerec)
-    htsmsg_add_str(out, "timerecId", idnode_uuid_as_str(&de->de_timerec->dte_id, ubuf));
+    if (de->de_autorec)
+      htsmsg_add_str(out, "autorecId", idnode_uuid_as_str(&de->de_autorec->dae_id, ubuf));
 
-  htsmsg_add_s64(out, "start",       de->de_start);
-  htsmsg_add_s64(out, "stop",        de->de_stop);
-  htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de)/60);
-  htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de)/60);
+    if (de->de_timerec)
+      htsmsg_add_str(out, "timerecId", idnode_uuid_as_str(&de->de_timerec->dte_id, ubuf));
 
-  if (htsp->htsp_version > 24)
-    htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de));
-  else
-    htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de) == DVR_RET_ONREMOVE ?
-        dvr_entry_get_removal_days(de) : dvr_entry_get_retention_days(de));
+    htsmsg_add_s64(out, "start",       de->de_start);
+    htsmsg_add_s64(out, "stop",        de->de_stop);
+    htsmsg_add_s64(out, "startExtra",  dvr_entry_get_extra_time_pre(de)/60);
+    htsmsg_add_s64(out, "stopExtra",   dvr_entry_get_extra_time_post(de)/60);
 
-  htsmsg_add_u32(out, "removal",     dvr_entry_get_removal_days(de));
-  htsmsg_add_u32(out, "priority",    de->de_pri);
-  htsmsg_add_u32(out, "contentType", de->de_content_type);
+    if (htsp->htsp_version > 24)
+      htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de));
+    else
+      htsmsg_add_u32(out, "retention",   dvr_entry_get_retention_days(de) == DVR_RET_ONREMOVE ?
+          dvr_entry_get_removal_days(de) : dvr_entry_get_retention_days(de));
 
-  if(de->de_title && (s = lang_str_get(de->de_title, lang)))
-    htsmsg_add_str(out, "title", s);
-  if(de->de_subtitle && (s = lang_str_get(de->de_subtitle, lang)))
-    htsmsg_add_str(out, "subtitle", s);
-  if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
-    htsmsg_add_str(out, "description", s);
-  if(de->de_episode)
-    htsmsg_add_str(out, "episode", de->de_episode);
-  if(de->de_owner)
-    htsmsg_add_str(out, "owner",   de->de_owner);
-  if(de->de_creator)
-    htsmsg_add_str(out, "creator", de->de_creator);
-  if(de->de_comment)
-    htsmsg_add_str(out, "comment", de->de_comment);
+    htsmsg_add_u32(out, "removal",     dvr_entry_get_removal_days(de));
+    htsmsg_add_u32(out, "priority",    de->de_pri);
+    htsmsg_add_u32(out, "contentType", de->de_content_type);
 
+    if(de->de_title && (s = lang_str_get(de->de_title, lang)))
+      htsmsg_add_str(out, "title", s);
+    if(de->de_subtitle && (s = lang_str_get(de->de_subtitle, lang)))
+      htsmsg_add_str(out, "subtitle", s);
+    if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
+      htsmsg_add_str(out, "description", s);
+    if(de->de_episode)
+      htsmsg_add_str(out, "episode", de->de_episode);
+    if(de->de_owner)
+      htsmsg_add_str(out, "owner",   de->de_owner);
+    if(de->de_creator)
+      htsmsg_add_str(out, "creator", de->de_creator);
+    if(de->de_comment)
+      htsmsg_add_str(out, "comment", de->de_comment);
 
-  last = NULL;
-  if (!htsmsg_is_empty(de->de_files) && de->de_config) {
-    l = htsmsg_create_list();
-    HTSMSG_FOREACH(f, de->de_files) {
-      m = htsmsg_field_get_map(f);
-      if (m == NULL) continue;
-      s = last = htsmsg_get_str(m, "filename");
-      if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL) {
-        e = htsmsg_copy(m);
-        htsmsg_set_str(e, "filename", p);
-        info = htsmsg_get_list(m, "info");
-        if (info)
-          htsmsg_set_msg(e, "info", htsmsg_copy(info));
-        htsmsg_add_msg(l, NULL, e);
+    last = NULL;
+    if (!htsmsg_is_empty(de->de_files) && de->de_config) {
+      l = htsmsg_create_list();
+      HTSMSG_FOREACH(f, de->de_files) {
+        m = htsmsg_field_get_map(f);
+        if (m == NULL) continue;
+        s = last = htsmsg_get_str(m, "filename");
+        if (s && (p = tvh_strbegins(s, de->de_config->dvr_storage)) != NULL) {
+          e = htsmsg_copy(m);
+          htsmsg_set_str(e, "filename", p);
+          info = htsmsg_get_list(m, "info");
+          if (info)
+            htsmsg_set_msg(e, "info", htsmsg_copy(info));
+          htsmsg_add_msg(l, NULL, e);
+        }
       }
+      htsmsg_add_msg(out, "files", l);
     }
-    htsmsg_add_msg(out, "files", l);
-  }
 
-  if(last && de->de_config)
-    if ((p = tvh_strbegins(last, de->de_config->dvr_storage)))
-      htsmsg_add_str(out, "path", p);
+    if(last && de->de_config)
+      if ((p = tvh_strbegins(last, de->de_config->dvr_storage)))
+        htsmsg_add_str(out, "path", p);
+  }
 
   switch(de->de_sched_state) {
   case DVR_SCHEDULED:
@@ -1490,7 +1493,7 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
     if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1))
-      htsp_send_message(htsp, htsp_build_dvrentry(htsp, de, "dvrEntryAdd", htsp->htsp_language), NULL);
+      htsp_send_message(htsp, htsp_build_dvrentry(htsp, de, "dvrEntryAdd", htsp->htsp_language, 0), NULL);
 
   /* Send EPG updates */
   if (epg)
@@ -3518,7 +3521,7 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON)
       if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
         htsmsg_t *m = msg ? htsmsg_copy(msg)
-                        : htsp_build_dvrentry(htsp, de, method, htsp->htsp_language);
+                        : htsp_build_dvrentry(htsp, de, method, htsp->htsp_language, 0);
         htsp_send_message(htsp, m, NULL);
       }
   }
@@ -3542,6 +3545,23 @@ void
 htsp_dvr_entry_update(dvr_entry_t *de)
 {
   _htsp_dvr_entry_update(de, "dvrEntryUpdate", NULL);
+}
+
+/**
+ * Called from dvr_rec.c when a DVR entry is recording
+ */
+void
+htsp_dvr_entry_update_stats(dvr_entry_t *de)
+{
+  htsp_connection_t *htsp;
+  LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
+    if (htsp->htsp_async_mode & HTSP_ASYNC_ON){
+      if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
+        htsmsg_t *m = htsp_build_dvrentry(htsp, de, "dvrEntryUpdate", htsp->htsp_language, htsp->htsp_version <= 25 ? 0 : 1);
+        htsp_send_message(htsp, m, NULL);
+      }
+    }
+  }
 }
 
 
@@ -3720,8 +3740,7 @@ _htsp_event_update(epg_broadcast_t *ebc, const char *method, htsmsg_t *msg)
       if (!htsp->htsp_epg_window || ebc->start <= htsp->htsp_epg_lastupdate) {
         if (htsp_user_access_channel(htsp,ebc->channel)) {
           htsmsg_t *m = msg ? htsmsg_copy(msg)
-                          : htsp_build_event(ebc, method, htsp->htsp_language,
-                                             0, htsp);
+                          : htsp_build_event(ebc, method, htsp->htsp_language, 0, htsp);
           htsp_send_message(htsp, m, NULL);
         }
       }
@@ -3757,7 +3776,7 @@ htsp_event_delete(epg_broadcast_t *ebc)
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "eventDelete");
   htsmsg_add_u32(m, "eventId", ebc->id);
-  _htsp_event_update(ebc, NULL, m);
+  htsp_async_send(m, HTSP_ASYNC_EPG, HTSP_ASYNC_AUX_EPG, ebc);
 }
 
 const static char frametypearray[PKT_NTYPES] = {

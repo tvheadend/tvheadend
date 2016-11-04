@@ -38,6 +38,7 @@ void htsp_tag_delete(channel_tag_t *ct);
 
 void htsp_dvr_entry_add(dvr_entry_t *de);
 void htsp_dvr_entry_update(dvr_entry_t *de);
+void htsp_dvr_entry_update_stats(dvr_entry_t *de);
 void htsp_dvr_entry_delete(dvr_entry_t *de);
 
 void htsp_autorec_entry_add(dvr_autorec_entry_t *dae);

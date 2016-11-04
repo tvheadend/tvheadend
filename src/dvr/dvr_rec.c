@@ -881,7 +881,7 @@ dvr_notify(dvr_entry_t *de)
   if (de->de_last_notify + sec2mono(5) < mclk()) {
     idnode_notify_changed(&de->de_id);
     de->de_last_notify = mclk();
-    htsp_dvr_entry_update(de);
+    htsp_dvr_entry_update_stats(de);
   }
 }
 
