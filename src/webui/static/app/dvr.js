@@ -454,11 +454,11 @@ tvheadend.dvr_finished = function(panel, index) {
         titleP: _('Finished Recordings'),
         iconCls: 'finishedRec',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "retention,removal,owner,comment" : "retention,removal,comment" } },
+        edit: { params: { list: tvheadend.admin ? "playcount,retention,removal,owner,comment" : "retention,removal,comment" } },
         del: false,
         list: 'disp_title,disp_subtitle,episode,channelname,' +
               'start_real,stop_real,duration,filesize,' +
-              'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()
@@ -589,13 +589,13 @@ tvheadend.dvr_failed = function(panel, index) {
         titleP: _('Failed Recordings'),
         iconCls: 'exclamation',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "retention,removal,owner,comment" : "retention,removal,comment" } },
+        edit: { params: { list: tvheadend.admin ? "playcount,retention,removal,owner,comment" : "retention,removal,comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
         list: 'disp_title,disp_subtitle,episode,channelname,' +
               'start_real,stop_real,duration,filesize,status,' +
-              'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
+              'sched_status,errors,data_errors,playcount,url,config_name,owner,creator,comment',
         columns: {
             filesize: {
                 renderer: tvheadend.filesizeRenderer()

@@ -933,6 +933,11 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     htsmsg_add_u32(out, "priority",    de->de_pri);
     htsmsg_add_u32(out, "contentType", de->de_content_type);
 
+    if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
+      htsmsg_add_u32(out, "playcount",    de->de_playcount);
+      htsmsg_add_u32(out, "playposition", de->de_playposition);
+    }
+
     if(de->de_title && (s = lang_str_get(de->de_title, lang)))
       htsmsg_add_str(out, "title", s);
     if(de->de_subtitle && (s = lang_str_get(de->de_subtitle, lang)))
@@ -1927,10 +1932,10 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_t *out = NULL;
   uint32_t u32;
   dvr_entry_t *de;
-  time_t start, stop, start_extra, stop_extra, priority, retention, removal;
+  time_t start, stop, start_extra, stop_extra, priority;
   const char *dvr_config_name, *title, *subtitle, *desc, *lang;
   channel_t *channel = NULL;
-  int enabled;
+  int enabled, retention, removal, playcount = -1, playposition = -1;
 
   de = htsp_findDvrEntry(htsp, in, &out, 0);
   if (de == NULL)
@@ -1959,9 +1964,14 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
+  if(!htsmsg_get_u32(in, "playcount", &u32))
+    playcount = u32 > INT_MAX ? INT_MAX : u32;
+  if(!htsmsg_get_u32(in, "playposition", &u32))
+    playposition = u32 > INT_MAX ? INT_MAX : u32;
+
   de = dvr_entry_update(de, enabled, dvr_config_name, channel, title, subtitle,
                         desc, lang, start, stop, start_extra, stop_extra,
-                        priority, retention, removal);
+                        priority, retention, removal, playcount, playposition);
 
   return htsp_success();
 }
