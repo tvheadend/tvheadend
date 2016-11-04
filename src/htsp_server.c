@@ -3225,6 +3225,9 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   
   // Note: global_lock held on entry
 
+  if (config.dscp >= 0)
+    socket_set_dscp(fd, config.dscp, NULL, 0);
+
   tcp_get_str_from_ip((struct sockaddr*)source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
