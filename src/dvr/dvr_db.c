@@ -1294,14 +1294,22 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (de == de2)
         continue;
 
+      // check for valid states
+      if (de2->de_sched_state == DVR_NOSTATE ||
+          de2->de_sched_state == DVR_MISSED_TIME)
+        continue;
+
       // only earlier recordings qualify as master
       if (de2->de_start > de->de_start)
         continue;
 
+      // only enabled upcoming recordings
+      if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
+        continue;
+
       // only successful earlier recordings qualify as master
-      if (de2->de_sched_state == DVR_MISSED_TIME ||
-          (de2->de_sched_state == DVR_COMPLETED &&
-           de2->de_last_error != SM_CODE_OK))
+      if ((de2->de_sched_state == DVR_COMPLETED || de2->de_sched_state == DVR_RECORDING) &&
+          de2->de_last_error != SM_CODE_OK)
         continue;
 
       // if titles are not defined or do not match, don't dedup
@@ -1318,14 +1326,22 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (de == de2)
         continue;
 
+      // check for valid states
+      if (de2->de_sched_state == DVR_NOSTATE ||
+          de2->de_sched_state == DVR_MISSED_TIME)
+        continue;
+
       // only earlier recordings qualify as master
       if (de2->de_start > de->de_start)
         continue;
 
+      // only enabled upcoming recordings
+      if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
+        continue;
+
       // only successful earlier recordings qualify as master
-      if (de2->de_sched_state == DVR_MISSED_TIME ||
-          (de2->de_sched_state == DVR_COMPLETED &&
-           de2->de_last_error != SM_CODE_OK))
+      if ((de2->de_sched_state == DVR_COMPLETED || de2->de_sched_state == DVR_RECORDING) &&
+          de2->de_last_error != SM_CODE_OK)
         continue;
 
       // if titles are not defined or do not match, don't dedup
