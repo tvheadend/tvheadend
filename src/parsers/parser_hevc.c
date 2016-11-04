@@ -1677,6 +1677,7 @@ hevc_decode_slice_header(struct elementary_stream *st, bitstream_t *bs,
     u = ilog2((v - 1) << 1);
     if (u >= v)
       return -1;
+    skip_bits(bs, u);
   }
 
   if (dependent_slice_segment)

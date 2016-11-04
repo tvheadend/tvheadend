@@ -232,7 +232,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     if (flags & SATIP_SETUP_PIDS21)
       strcat(buf, ",21");
   } else if (flags & SATIP_SETUP_PIDS21)
-             strcat(buf, "&pids=21");
+    strcat(buf, "&pids=21");
   tvhtrace(LS_SATIP, "setup params - %s", buf);
   if (hc->hc_rtsp_stream_id >= 0)
     snprintf(stream = _stream, sizeof(_stream), "/stream=%li",
