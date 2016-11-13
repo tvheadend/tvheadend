@@ -129,6 +129,7 @@ const char *streaming_code2txt(int code);
 
 streaming_start_component_t *streaming_start_component_find_by_index(streaming_start_t *ss, int idx);
 
-
+void streaming_init(void);
+void streaming_done(void);
 
 #endif /* STREAMING_H_ */

@@ -72,6 +72,7 @@
 #include "bouquet.h"
 #include "tvhtime.h"
 #include "packet.h"
+#include "streaming.h"
 #include "memoryinfo.h"
 
 #ifdef PLATFORM_LINUX
@@ -1179,6 +1180,8 @@ main(int argc, char **argv)
   tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
+  streaming_init();
+
   tvh_hardware_init();
 
   dbus_server_init(opt_dbus, opt_dbus_session);
@@ -1352,6 +1355,7 @@ main(int argc, char **argv)
   tvhlog(LOG_NOTICE, LS_STOP, "Exiting HTS Tvheadend");
   tvhlog_end();
 
+  tvhftrace(LS_MAIN, streaming_done);
   tvhftrace(LS_MAIN, config_done);
   tvhftrace(LS_MAIN, hts_settings_done);
 

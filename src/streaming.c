@@ -26,6 +26,8 @@
 #include "service.h"
 #include "timeshift.h"
 
+static memoryinfo_t streaming_msg_memoryinfo = { .my_name = "Streaming message" };
+
 void
 streaming_pad_init(streaming_pad_t *sp)
 {
@@ -196,6 +198,7 @@ streaming_message_t *
 streaming_msg_create(streaming_message_type_t type)
 {
   streaming_message_t *sm = malloc(sizeof(streaming_message_t));
+  memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*sm));
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
   sm->sm_time      = 0;
@@ -250,6 +253,8 @@ streaming_msg_clone(streaming_message_t *src)
 {
   streaming_message_t *dst = malloc(sizeof(streaming_message_t));
   streaming_start_t *ss;
+
+  memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*dst));
 
   dst->sm_type      = src->sm_type;
 #if ENABLE_TIMESHIFT
@@ -376,6 +381,7 @@ streaming_msg_free(streaming_message_t *sm)
   default:
     abort();
   }
+  memoryinfo_free(&streaming_msg_memoryinfo, sizeof(*sm));
   free(sm);
 }
 
@@ -575,4 +581,19 @@ streaming_component_audio_type2desc(int audio_type)
   }
 
   return N_("Reserved");
+}
+
+/*
+ *
+ */
+void streaming_init(void)
+{
+  memoryinfo_register(&streaming_msg_memoryinfo);
+}
+
+void streaming_done(void)
+{
+  pthread_mutex_lock(&global_lock);
+  memoryinfo_unregister(&streaming_msg_memoryinfo);
+  pthread_mutex_unlock(&global_lock);
 }
