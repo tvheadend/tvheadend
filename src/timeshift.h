@@ -20,6 +20,7 @@
 #define __TVH_TIMESHIFT_H__
 
 #include "idnode.h"
+#include "memoryinfo.h"
 
 typedef struct timeshift_conf {
   idnode_t  idnode;
@@ -40,6 +41,9 @@ typedef struct timeshift_conf {
 
 extern struct timeshift_conf timeshift_conf;
 extern const idclass_t timeshift_conf_class;
+
+extern memoryinfo_t timeshift_memoryinfo;
+extern memoryinfo_t timeshift_memoryinfo_ram;
 
 void timeshift_init ( void );
 void timeshift_term ( void );

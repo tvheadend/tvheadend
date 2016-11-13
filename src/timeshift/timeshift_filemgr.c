@@ -1,4 +1,4 @@
-/**
+/*
  *  TV headend - Timeshift File Manager
  *  Copyright (C) 2012 Adam Sutton
  *
@@ -81,16 +81,20 @@ static void* timeshift_reaper_callback ( void *p )
     /* Free memory */
     while ((ti = TAILQ_FIRST(&tsf->iframes))) {
       TAILQ_REMOVE(&tsf->iframes, ti, link);
+      memoryinfo_free(&timeshift_memoryinfo, sizeof(*ti));
       free(ti);
     }
     while ((tid = TAILQ_FIRST(&tsf->sstart))) {
       TAILQ_REMOVE(&tsf->sstart, tid, link);
       sm = tid->data;
       streaming_msg_free(sm);
+      memoryinfo_free(&timeshift_memoryinfo, sizeof(*tid));
       free(tid);
     }
     free(tsf->path);
+    memoryinfo_free(&timeshift_memoryinfo_ram, tsf->ram_size);
     free(tsf->ram);
+    memoryinfo_free(&timeshift_memoryinfo, sizeof(*tsf));
     free(tsf);
 
     pthread_mutex_lock(&timeshift_reaper_lock);
@@ -178,6 +182,7 @@ void timeshift_filemgr_close ( timeshift_file_t *tsf )
     /* maintain unused memory block */
     ram = realloc(tsf->ram, tsf->woff);
     if (ram) {
+      memoryinfo_append(&timeshift_memoryinfo_ram, tsf->ram_size - tsf->woff);
       tsf->ram = ram;
       tsf->ram_size = tsf->woff;
     }
@@ -238,6 +243,7 @@ static timeshift_file_t * timeshift_filemgr_file_init
   timeshift_file_t *tsf;
 
   tsf = calloc(1, sizeof(timeshift_file_t));
+  memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*tsf));
   tsf->time     = mono2sec(start_time) / TIMESHIFT_FILE_PERIOD;
   tsf->last     = start_time;
   tsf->wfd      = -1;
@@ -331,6 +337,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
             tvhtrace(LS_TIMESHIFT, "ts %d create RAM segment with %"PRId64" bytes (time %"PRId64")",
                      ts->id, tsf_tmp->ram_size, start_time);
             ts->ram_segments++;
+            memoryinfo_alloc(&timeshift_memoryinfo_ram, tsf_tmp->ram_size);
           }
           break;
         } else {
@@ -371,6 +378,7 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
                    ts->id, ti ? " (from last file)" : "");
           timeshift_index_data_t *ti2 = calloc(1, sizeof(timeshift_index_data_t));
           if (ti) {
+            memoryinfo_alloc(&timeshift_memoryinfo, sizeof(timeshift_index_data_t));
             sm = streaming_msg_clone(ti->data);
           } else {
             sm = streaming_msg_create(SMT_START);
