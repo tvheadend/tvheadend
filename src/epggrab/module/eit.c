@@ -420,6 +420,7 @@ static int _eit_process_event_one
   epg_running_t run;
   eit_event_t ev;
   uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
+  char tm1[32], tm2[32];
 
   /* Core fields */
   eid   = ptr[0] << 8 | ptr[1];
@@ -436,10 +437,12 @@ static int _eit_process_event_one
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
-  tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, running=%d, start=%"PRItime_t","
-                       " stop=%"PRItime_t", ebc=%p",
+  tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, running=%d, start=%s,"
+                       " stop=%s, ebc=%p",
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
-           eid, tableid, running, start, stop, ebc);
+           eid, tableid, running,
+           gmtime2local(start, tm1, sizeof(tm1)),
+           gmtime2local(start, tm2, sizeof(tm2)), ebc);
   if (!ebc) return 0;
 
   /* Mark re-schedule detect (only now/next) */
