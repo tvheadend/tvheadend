@@ -724,6 +724,7 @@ dvb_network_create_mux
           dvb_network_check_orbital_pos(tuning_new.u.dmc_fe_qpsk.orbital_pos,
                                         dmc->u.dmc_fe_qpsk.orbital_pos))
         save |= COMPARE(u.dmc_fe_qpsk.orbital_pos, CBIT_ORBITAL_POS);
+        tuning_new.u.dmc_fe_qpsk.orbital_pos = dmc->u.dmc_fe_qpsk.orbital_pos;
     }
     /* Do not change anything else without autodiscovery flag */
     if (!ln->mn_autodiscovery)
