@@ -106,9 +106,9 @@ int mpegts_pid_del_group ( mpegts_apids_t *pids, mpegts_apids_t *vals );
 int mpegts_pid_find_windex ( mpegts_apids_t *pids, uint16_t pid, uint16_t weight );
 int mpegts_pid_find_rindex ( mpegts_apids_t *pids, uint16_t pid );
 static inline int mpegts_pid_wexists ( mpegts_apids_t *pids, uint16_t pid, uint16_t weight )
-  { return pids->all || mpegts_pid_find_windex(pids, pid, weight) >= 0; }
+  { return pids && (pids->all || mpegts_pid_find_windex(pids, pid, weight) >= 0); }
 static inline int mpegts_pid_rexists ( mpegts_apids_t *pids, uint16_t pid )
-  { return pids->all || mpegts_pid_find_rindex(pids, pid) >= 0; }
+  { return pids && (pids->all || mpegts_pid_find_rindex(pids, pid) >= 0); }
 int mpegts_pid_copy ( mpegts_apids_t *dst, mpegts_apids_t *src );
 int mpegts_pid_compare ( mpegts_apids_t *dst, mpegts_apids_t *src,
                          mpegts_apids_t *add, mpegts_apids_t *del );
