@@ -199,11 +199,12 @@ void
 http_client_unpause( http_client_t *hc )
 {
   if (hc->hc_pause) {
+    int pevents_pause = hc->hc_pevents_pause;
     tvhtrace(LS_HTTPC, "%04X: resuming input", shortid(hc));
-    http_client_poll_dir(hc, hc->hc_pevents_pause & TVHPOLL_IN,
-                             hc->hc_pevents_pause & TVHPOLL_OUT);
     hc->hc_pause = 0;
     hc->hc_pevents_pause = 0;
+    http_client_poll_dir(hc, pevents_pause & TVHPOLL_IN,
+            pevents_pause & TVHPOLL_OUT);
   }
 }
 
