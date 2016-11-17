@@ -442,7 +442,7 @@ static int _eit_process_event_one
            svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
            eid, tableid, running,
            gmtime2local(start, tm1, sizeof(tm1)),
-           gmtime2local(start, tm2, sizeof(tm2)), ebc);
+           gmtime2local(stop, tm2, sizeof(tm2)), ebc);
   if (!ebc) return 0;
 
   /* Mark re-schedule detect (only now/next) */
