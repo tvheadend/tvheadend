@@ -722,9 +722,10 @@ dvb_network_create_mux
     if (dmc->dmc_fe_type == DVB_TYPE_S) {
       if (tuning_new.u.dmc_fe_qpsk.orbital_pos == INT_MAX ||
           dvb_network_check_orbital_pos(tuning_new.u.dmc_fe_qpsk.orbital_pos,
-                                        dmc->u.dmc_fe_qpsk.orbital_pos))
+                                        dmc->u.dmc_fe_qpsk.orbital_pos)) {
         save |= COMPARE(u.dmc_fe_qpsk.orbital_pos, CBIT_ORBITAL_POS);
         tuning_new.u.dmc_fe_qpsk.orbital_pos = dmc->u.dmc_fe_qpsk.orbital_pos;
+      }
     }
     /* Do not change anything else without autodiscovery flag */
     if (!ln->mn_autodiscovery)
