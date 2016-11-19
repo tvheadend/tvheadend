@@ -1638,6 +1638,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.dscp = -1;
   config.descrambler_buffer = 9000;
   config.epg_compress = 1;
+  config.epg_cutwindow = 5*60;
   config_scanfile_ok = 0;
   config.theme_ui = strdup("blue");
 
@@ -2180,9 +2181,18 @@ const idclass_t config_class = {
       .off    = offsetof(config_t, epg_compress),
       .opts   = PO_EXPERT,
       .def.i  = 1,
-      .group  = 1
+      .group  = 2
     },
 #endif
+    {
+      .type   = PT_U32,
+      .id     = "epg_cutwindow",
+      .name   = N_("EPG overlap cut"),
+      .desc   = N_("The time window to cut the stop time from the overlapped event in seconds."),
+      .off    = offsetof(config_t, epg_cutwindow),
+      .opts   = PO_EXPERT,
+      .group  = 2
+    },
     {
       .type   = PT_STR,
       .islist = 1,

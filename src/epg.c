@@ -26,6 +26,7 @@
 #include <time.h>
 
 #include "tvheadend.h"
+#include "config.h"
 #include "queue.h"
 #include "channels.h"
 #include "settings.h"
@@ -1695,6 +1696,17 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
+    if (config.epg_cutwindow && ebc->stop - ebc->start > config.epg_cutwindow * 2 &&
+        ebc->stop - ret->start <= config.epg_cutwindow) {
+      tvhtrace(LS_EPG, "cut stop for overlap (b) event %u (%s) on %s @ %s to %s",
+               ebc->id, epg_broadcast_get_title(ebc, NULL),
+               channel_get_name(ch),
+               gmtime2local(ebc->start, tm1, sizeof(tm1)),
+               gmtime2local(ebc->stop, tm2, sizeof(tm2)));
+      ebc->stop = ret->start;
+      _epg_object_set_updated(ebc);
+      continue;
+    }
     tvhtrace(LS_EPG, "remove overlap (b) event %u (%s) on %s @ %s to %s",
              ebc->id, epg_broadcast_get_title(ebc, NULL),
              channel_get_name(ch),
@@ -1710,6 +1722,17 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       tvhtrace(LS_EPG, "grabber for event %u has lower priority than overlap (a), removing", ebc->id);
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
+    }
+    if (config.epg_cutwindow && ret->stop - ret->start > config.epg_cutwindow * 2 &&
+        ret->stop - ebc->start <= config.epg_cutwindow) {
+      tvhtrace(LS_EPG, "cut stop for overlap (a) event %u (%s) on %s @ %s to %s",
+               ebc->id, epg_broadcast_get_title(ebc, NULL),
+               channel_get_name(ch),
+               gmtime2local(ebc->start, tm1, sizeof(tm1)),
+               gmtime2local(ebc->stop, tm2, sizeof(tm2)));
+      ret->stop = ebc->start;
+      _epg_object_set_updated(ebc);
+      continue;
     }
     tvhtrace(LS_EPG, "remove overlap (a) event %u (%s) on %s @ %s to %s",
              ebc->id, epg_broadcast_get_title(ebc, NULL),

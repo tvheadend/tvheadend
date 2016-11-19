@@ -58,6 +58,7 @@ typedef struct config {
   int caclient_ui;
   int parser_backlog;
   int epg_compress;
+  uint32_t epg_cutwindow;
 } config_t;
 
 extern const idclass_t config_class;
