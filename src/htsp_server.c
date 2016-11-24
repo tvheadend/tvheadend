@@ -707,7 +707,7 @@ htsp_channel_tag_find_by_identifier(htsp_connection_t *htsp, uint32_t id)
  *
  */
 static htsmsg_t *
-htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
+htsp_file_open(htsp_connection_t *htsp, const char *path, int fd, dvr_entry_t *de)
 {
   struct stat st;
 
@@ -716,6 +716,11 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd)
     tvhdebug(LS_HTSP, "Opening file %s -- %s", path, fd < 0 ? strerror(errno) : "OK");
     if(fd == -1)
       return htsp_error(htsp, N_("Unable to open file"));
+  }
+
+  if (de) {
+    de->de_playcount++;
+    dvr_entry_changed_notify(de);
   }
 
   htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
@@ -2689,13 +2694,13 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     if (filename == NULL)
       return htsp_error(htsp, N_("DVR schedule does not have a file yet"));
 
-    return htsp_file_open(htsp, filename, 0);
+    return htsp_file_open(htsp, filename, 0, de);
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
     int fd = imagecache_open(atoi(s2));
     if (fd < 0)
       return htsp_error(htsp, N_("Failed to open image"));
-    return htsp_file_open(htsp, str, fd);
+    return htsp_file_open(htsp, str, fd, NULL);
 
   } else {
     return htsp_error(htsp, N_("Unknown file"));
