@@ -120,7 +120,8 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 
   epgid = htsmsg_get_str(item, "tvg-id");
   epgcfg = _epgcfg_from_str(htsmsg_get_str(item, "tvh-epg"));
-  tags  = htsmsg_get_str(item, "tvh-tags");
+  tags = htsmsg_get_str(item, "tvh-tags");
+  if (!tags) tags = htsmsg_get_str(item, "group-title");
   if (tags) {
     tags = n = strdupa(tags);
     while (*n) {
