@@ -262,6 +262,7 @@ mpegts_mux_instance_start
 
   /* Start */
   tvhdebug(LS_MPEGTS, "%s - started", buf);
+  mm->mm_start_monoclock = mclk();
   mi->mi_started_mux(mi, mmi);
 
   /* Event handler */

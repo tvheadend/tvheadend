@@ -35,8 +35,11 @@ static int
 mm_cmp ( mpegts_mux_t *a, mpegts_mux_t *b )
 {
   int r = b->mm_scan_weight - a->mm_scan_weight;
-  if (r == 0)
-    return mpegts_mux_compare(a, b);
+  if (r == 0) {
+    r = MINMAX(-1, 1, b->mm_start_monoclock - a->mm_start_monoclock);
+    if (r == 0)
+      return mpegts_mux_compare(a, b);
+  }
   return r;
 }
 
