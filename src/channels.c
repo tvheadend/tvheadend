@@ -77,6 +77,9 @@ channel_class_changed ( idnode_t *self )
   /* update the EPG channel <-> channel mapping here */
   if (ch->ch_enabled && ch->ch_epgauto)
     epggrab_channel_add(ch);
+
+  /* HTSP */
+  htsp_channel_update(ch);
 }
 
 static htsmsg_t *
@@ -1255,12 +1258,16 @@ channel_tag_create(const char *uuid, htsmsg_t *conf)
   if (conf)
     idnode_load(&ct->ct_id, conf);
 
+  /* Defaults */
   if (ct->ct_name == NULL)
     ct->ct_name = strdup("New tag");
   if (ct->ct_comment == NULL)
     ct->ct_comment = strdup("");
   if (ct->ct_icon == NULL)
     ct->ct_icon = strdup("");
+
+  /* HTSP */
+  htsp_tag_add(ct);
 
   TAILQ_INSERT_TAIL(&channel_tags, ct, ct_link);
   return ct;
@@ -1283,8 +1290,8 @@ channel_tag_destroy(channel_tag_t *ct, int delconf)
   if (delconf)
     hts_settings_remove("channel/tag/%s", idnode_uuid_as_str(&ct->ct_id, ubuf));
 
-  if(ct->ct_enabled && !ct->ct_internal)
-    htsp_tag_delete(ct);
+  /* HTSP */
+  htsp_tag_delete(ct);
 
   TAILQ_REMOVE(&channel_tags, ct, ct_link);
   idnode_unlink(&ct->ct_id);
@@ -1351,6 +1358,13 @@ chtags_ok:
  * Channel Tag Class definition
  * **************************************************************************/
 
+static void
+channel_tag_class_changed(idnode_t *self)
+{
+  /* HTSP */
+  htsp_tag_update((channel_tag_t *)self);
+}
+
 static htsmsg_t *
 channel_tag_class_save(idnode_t *self, char *filename, size_t fsize)
 {
@@ -1359,7 +1373,6 @@ channel_tag_class_save(idnode_t *self, char *filename, size_t fsize)
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&ct->ct_id, c);
   snprintf(filename, fsize, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id, ubuf));
-  htsp_tag_update(ct);
   return c;
 }
 
@@ -1411,6 +1424,7 @@ const idclass_t channel_tag_class = {
   .ic_caption    = N_("Channel Tags"),
   .ic_doc        = tvh_doc_channeltag_class,
   .ic_event      = "channeltag",
+  .ic_changed    = channel_tag_class_changed,
   .ic_save       = channel_tag_class_save,
   .ic_get_title  = channel_tag_class_get_title,
   .ic_delete     = channel_tag_class_delete,

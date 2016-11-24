@@ -149,6 +149,16 @@ dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
 /*
  *
  */
+void
+dvr_entry_changed_notify(dvr_entry_t *de)
+{
+  idnode_changed(&de->de_id);
+  htsp_dvr_entry_update(de);
+}
+
+/*
+ *
+ */
 int
 dvr_entry_set_state(dvr_entry_t *de, dvr_entry_sched_state_t state,
                     dvr_rs_state_t rec_state, int error_code)
@@ -213,9 +223,7 @@ dvr_entry_dont_rerecord(dvr_entry_t *de, int dont_rerecord)
   if (de->de_dont_rerecord ? 1 : 0 != dont_rerecord) {
     dvr_entry_trace(de, "don't rerecord change %d", dont_rerecord);
     de->de_dont_rerecord = dont_rerecord;
-    idnode_changed(&de->de_id);
-    idnode_notify_changed(&de->de_id);
-    htsp_dvr_entry_update(de);
+    dvr_entry_changed_notify(de);
   }
 }
 
@@ -1286,14 +1294,22 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (de == de2)
         continue;
 
+      // check for valid states
+      if (de2->de_sched_state == DVR_NOSTATE ||
+          de2->de_sched_state == DVR_MISSED_TIME)
+        continue;
+
       // only earlier recordings qualify as master
       if (de2->de_start > de->de_start)
         continue;
 
+      // only enabled upcoming recordings
+      if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
+        continue;
+
       // only successful earlier recordings qualify as master
-      if (de2->de_sched_state == DVR_MISSED_TIME ||
-          (de2->de_sched_state == DVR_COMPLETED &&
-           de2->de_last_error != SM_CODE_OK))
+      if ((de2->de_sched_state == DVR_COMPLETED || de2->de_sched_state == DVR_RECORDING) &&
+          de2->de_last_error != SM_CODE_OK)
         continue;
 
       // if titles are not defined or do not match, don't dedup
@@ -1310,14 +1326,22 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       if (de == de2)
         continue;
 
+      // check for valid states
+      if (de2->de_sched_state == DVR_NOSTATE ||
+          de2->de_sched_state == DVR_MISSED_TIME)
+        continue;
+
       // only earlier recordings qualify as master
       if (de2->de_start > de->de_start)
         continue;
 
+      // only enabled upcoming recordings
+      if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
+        continue;
+
       // only successful earlier recordings qualify as master
-      if (de2->de_sched_state == DVR_MISSED_TIME ||
-          (de2->de_sched_state == DVR_COMPLETED &&
-           de2->de_last_error != SM_CODE_OK))
+      if ((de2->de_sched_state == DVR_COMPLETED || de2->de_sched_state == DVR_RECORDING) &&
+          de2->de_last_error != SM_CODE_OK)
         continue;
 
       // if titles are not defined or do not match, don't dedup
@@ -1550,6 +1574,8 @@ dvr_timer_remove_files(void *aux)
 #define DVR_UPDATED_BROADCAST    (1<<15)
 #define DVR_UPDATED_EPISODE      (1<<16)
 #define DVR_UPDATED_CONFIG       (1<<17)
+#define DVR_UPDATED_PLAYPOS      (1<<18)
+#define DVR_UPDATED_PLAYCOUNT    (1<<19)
 
 static char *dvr_updated_str(char *buf, size_t buflen, int flags)
 {
@@ -1576,7 +1602,8 @@ static dvr_entry_t *_dvr_entry_update
     const char *title, const char *subtitle, const char *desc,
     const char *lang, time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
-    dvr_prio_t pri, int retention, int removal )
+    dvr_prio_t pri, int retention, int removal,
+    int playcount, int playposition)
 {
   char buf[40];
   int save = 0, updated = 0;
@@ -1607,6 +1634,16 @@ static dvr_entry_t *_dvr_entry_update
     if (save & (DVR_UPDATED_STOP|DVR_UPDATED_STOP_EXTRA)) {
       updated = 1;
       dvr_entry_set_timer(de);
+    }
+    if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
+      if (playcount >= 0 && playcount != de->de_playcount) {
+        de->de_playcount = playcount;
+        save |= DVR_UPDATED_PLAYCOUNT;
+      }
+      if (playposition >= 0 && playposition != de->de_playposition) {
+        de->de_playposition = playposition;
+        save |= DVR_UPDATED_PLAYPOS;
+      }
     }
     goto dosave;
   }
@@ -1721,8 +1758,7 @@ static dvr_entry_t *_dvr_entry_update
   /* Save changes */
 dosave:
   if (save) {
-    idnode_changed(&de->de_id);
-    htsp_dvr_entry_update(de);
+    dvr_entry_changed_notify(de);
     if (tvhlog_limit(&de->de_update_limit, 60)) {
       tvhinfo(LS_DVR, "\"%s\" on \"%s\": Updated%s (%s)",
               lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
@@ -1750,12 +1786,12 @@ dvr_entry_update
     const char *desc, const char *lang,
     time_t start, time_t stop,
     time_t start_extra, time_t stop_extra,
-    dvr_prio_t pri, int retention, int removal )
+    dvr_prio_t pri, int retention, int removal, int playcount, int playposition )
 {
   return _dvr_entry_update(de, enabled, dvr_config_uuid,
                            NULL, ch, title, subtitle, desc, lang,
                            start, stop, start_extra, stop_extra,
-                           pri, retention, removal);
+                           pri, retention, removal, playcount, playposition);
 }
 
 /**
@@ -1809,7 +1845,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
                           gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
-                            0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
+                            0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
           return;
         }
       }
@@ -1851,7 +1887,7 @@ void dvr_event_updated(epg_broadcast_t *e)
     if (de->de_bcast != e)
       continue;
     _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
-                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
+                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
     found++;
   }
   if (found == 0) {
@@ -1865,7 +1901,7 @@ void dvr_event_updated(epg_broadcast_t *e)
                               epg_broadcast_get_title(e, NULL),
                               channel_get_name(e->channel));
         _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
-                          NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0);
+                          NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
         break;
       }
     }
@@ -2778,7 +2814,7 @@ dvr_entry_class_filesize_get(void *o)
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_sched_state == DVR_COMPLETED ||
       de->de_sched_state == DVR_RECORDING) {
-    size = dvr_get_filesize(de, DVR_FILESIZE_UPDATE);
+    size = dvr_get_filesize(de, DVR_FILESIZE_UPDATE | DVR_FILESIZE_TOTAL);
     if (size < 0)
       size = 0;
   } else
@@ -3111,6 +3147,24 @@ const idclass_t dvr_entry_class = {
       .def.i    = DVR_RET_REM_DVRCONFIG,
       .list     = dvr_entry_class_removal_list,
       .opts     = PO_HIDDEN | PO_ADVANCED | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "playposition",
+      .name     = N_("Last played position"),
+      .desc     = N_("Last played position when the recording isn't fully watched yet."),
+      .off      = offsetof(dvr_entry_t, de_playposition),
+      .def.i    = 0,
+      .opts     = PO_HIDDEN | PO_NOUI | PO_DOC_NLIST,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "playcount",
+      .name     = N_("Recording play count"),
+      .desc     = N_("Number of times this recording was played."),
+      .off      = offsetof(dvr_entry_t, de_playcount),
+      .def.i    = 0,
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,

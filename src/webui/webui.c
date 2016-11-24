@@ -1523,6 +1523,12 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_UNAUTHORIZED;
   }
 
+  /* Play count + 1 when write access */
+  if (!dvr_entry_verify(de, hc->hc_access, 0)) {
+    de->de_playcount = de->de_playcount + 1;
+    dvr_entry_changed_notify(de);
+  }
+
   fname = tvh_strdupa(filename);
   content = muxer_container_filename2mime(fname, 1);
   charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
