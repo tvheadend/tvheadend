@@ -1146,7 +1146,7 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
                        int pids_size )
 {
   mpegts_apids_t wpid, padd, pdel;
-  int i, max = MAX(16, lfe->lfe_pids_max);
+  int i, max = MAX(14, lfe->lfe_pids_max);
 
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
 
