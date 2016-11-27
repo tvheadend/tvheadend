@@ -124,6 +124,33 @@ dvr_entry_trace_time2_(const char *file, int line,
   va_end(args);
 }
 
+int dvr_entry_is_upcoming(dvr_entry_t *entry)
+{
+  dvr_entry_sched_state_t state = entry->de_sched_state;
+  return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
+}
+
+int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
+{
+  if (dvr_entry_is_upcoming(entry))
+    return 0;
+  if (!flags || (flags & DVR_FINISHED_ALL))
+    return 1;
+
+  int removed = entry->de_file_removed ||                                               /* Removed by tvheadend */
+      (entry->de_sched_state != DVR_MISSED_TIME && dvr_get_filesize(entry, 0) == -1);   /* Removed externally? */
+  int success = entry->de_sched_state == DVR_COMPLETED &&
+      !entry->de_last_error && entry->de_data_errors < DVR_MAX_DATA_ERRORS;
+
+  if ((flags & DVR_FINISHED_REMOVED) && removed)
+    return 1;
+  if ((flags & DVR_FINISHED_SUCCESS) && success && !removed)
+    return 1;
+  if ((flags & DVR_FINISHED_FAILED) && !success && !removed)
+    return 1;
+  return 0;
+}
+
 /*
  *
  */
@@ -131,8 +158,7 @@ int
 dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly)
 {
   if (access_verify2(a, ACCESS_FAILED_RECORDER) &&
-      (de->de_sched_state == DVR_COMPLETED &&
-       de->de_last_error != SM_CODE_OK))
+      dvr_entry_is_finished(de, DVR_FINISHED_FAILED))
     return -1;
 
   if (readonly && !access_verify2(a, ACCESS_ALL_RECORDER))
@@ -1306,8 +1332,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only successful earlier recordings qualify as master
-      if ((de2->de_sched_state == DVR_COMPLETED || de2->de_sched_state == DVR_RECORDING) &&
-          de2->de_last_error != SM_CODE_OK)
+      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED))
         continue;
 
       // if titles are not defined or do not match, don't dedup
@@ -1338,8 +1363,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only successful earlier recordings qualify as master
-      if ((de2->de_sched_state == DVR_COMPLETED || de2->de_sched_state == DVR_RECORDING) &&
-          de2->de_last_error != SM_CODE_OK)
+      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED))
         continue;
 
       // if titles are not defined or do not match, don't dedup

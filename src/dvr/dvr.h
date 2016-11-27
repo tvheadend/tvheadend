@@ -33,6 +33,11 @@
 #define DVR_FILESIZE_UPDATE     (1<<0)
 #define DVR_FILESIZE_TOTAL      (1<<1)
 
+#define DVR_FINISHED_ALL        (1<<0)
+#define DVR_FINISHED_SUCCESS    (1<<1)
+#define DVR_FINISHED_REMOVED    (1<<2)
+#define DVR_FINISHED_FAILED     (1<<3)
+
 typedef struct dvr_vfs {
   LIST_ENTRY(dvr_vfs) link;
   tvh_fsid_t fsid;
@@ -605,6 +610,8 @@ htsmsg_t *dvr_entry_class_duration_list(void *o, const char *not_set, int max, i
 htsmsg_t *dvr_entry_class_retention_list ( void *o, const char *lang );
 htsmsg_t *dvr_entry_class_removal_list ( void *o, const char *lang );
 
+int dvr_entry_is_upcoming(dvr_entry_t *entry);
+int dvr_entry_is_finished(dvr_entry_t *entry, int flags);
 int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 
 void dvr_entry_changed_notify(dvr_entry_t *de);
