@@ -602,12 +602,10 @@ dvr_entry_status(dvr_entry_t *de)
       default:
         break;
     }
+    if (dvr_get_filesize(de, 0) == -1 && !de->de_file_removed)
+      return N_("File missing");
     if(de->de_data_errors >= DVR_MAX_DATA_ERRORS) /* user configurable threshold? */
       return N_("Too many data errors");
-    if (de->de_file_removed)
-      return N_("File removed");
-    if (dvr_get_filesize(de, 0) == -1)
-      return N_("File missing");
     if(de->de_last_error)
       return streaming_code2txt(de->de_last_error);
     else
