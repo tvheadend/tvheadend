@@ -65,37 +65,6 @@ api_dvr_config_create
   return 0;
 }
 
-static int is_dvr_entry_finished(dvr_entry_t *entry)
-{
-  dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_COMPLETED && !entry->de_last_error &&
-         dvr_get_filesize(entry, 0) != -1 && !entry->de_file_removed &&
-         entry->de_data_errors < DVR_MAX_DATA_ERRORS;
-}
-
-static int is_dvr_entry_removed(dvr_entry_t *entry)
-{
-  dvr_entry_sched_state_t state = entry->de_sched_state;
-  return ((state == DVR_COMPLETED || state == DVR_MISSED_TIME) && entry->de_file_removed);
-}
-
-static int is_dvr_entry_upcoming(dvr_entry_t *entry)
-{
-  dvr_entry_sched_state_t state = entry->de_sched_state;
-  return state == DVR_RECORDING || state == DVR_SCHEDULED || state == DVR_NOSTATE;
-}
-
-static int is_dvr_entry_failed(dvr_entry_t *entry)
-{
-  if (is_dvr_entry_finished(entry))
-    return 0;
-  if (is_dvr_entry_upcoming(entry))
-    return 0;
-  if (is_dvr_entry_removed(entry))
-    return 0;
-  return 1;
-}
-
 static void
 api_dvr_entry_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
@@ -113,7 +82,7 @@ api_dvr_entry_grid_upcoming
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (is_dvr_entry_upcoming(de))
+    if (dvr_entry_is_upcoming(de))
       idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
@@ -124,7 +93,7 @@ api_dvr_entry_grid_finished
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (is_dvr_entry_finished(de))
+    if (dvr_entry_is_finished(de, DVR_FINISHED_SUCCESS))
       idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
@@ -135,7 +104,7 @@ api_dvr_entry_grid_failed
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (is_dvr_entry_failed(de))
+    if (dvr_entry_is_finished(de, DVR_FINISHED_FAILED))
       idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
@@ -146,7 +115,7 @@ api_dvr_entry_grid_removed
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (is_dvr_entry_removed(de))
+    if (dvr_entry_is_finished(de, DVR_FINISHED_REMOVED))
       idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
