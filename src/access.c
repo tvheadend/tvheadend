@@ -561,7 +561,7 @@ access_update(access_t *a, access_entry_t *ae)
 
   LIST_FOREACH(ilm, &ae->ae_profiles, ilm_in1_link) {
     profile_t *pro = (profile_t *)ilm->ilm_in2;
-    if(pro && pro->pro_name[0] != '\0') {
+    if(pro && pro->pro_name && pro->pro_name[0] != '\0') {
       if (a->aa_profiles == NULL)
         a->aa_profiles = htsmsg_create_list();
       htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id, ubuf));
