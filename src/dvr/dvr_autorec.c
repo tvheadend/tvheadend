@@ -157,16 +157,19 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
      dae->dae_serieslink == NULL)
     return 0; // Avoid super wildcard match
 
-  // Note: we always test season first, though it will only be set
-  //       if configured
+  // Series link match trumps everything else
   if(dae->dae_serieslink) {
     if (!e->serieslink || dae->dae_serieslink != e->serieslink) return 0;
-  } else {
-    if(dae->dae_season)
-      if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
-    if(dae->dae_brand)
-      if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
+    return 1;
   }
+	
+  // Note: we always test season first, though it will only be set
+  //       if configured
+  if(dae->dae_season)
+    if (!e->episode->season || dae->dae_season != e->episode->season) return 0;
+  if(dae->dae_brand)
+    if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
+
   if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
     if (dae->dae_btype == DVR_AUTOREC_BTYPE_NEW && e->is_repeat)
       return 0;
