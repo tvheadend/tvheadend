@@ -167,13 +167,17 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(dae->dae_brand)
       if (!e->episode->brand || dae->dae_brand != e->episode->brand) return 0;
   }
+
   if(dae->dae_btype != DVR_AUTOREC_BTYPE_ALL) {
     if (dae->dae_btype == DVR_AUTOREC_BTYPE_NEW && e->is_repeat)
       return 0;
     if (dae->dae_btype == DVR_AUTOREC_BTYPE_REPEAT && e->is_repeat == 0)
       return 0;
   }
-  if(dae->dae_title != NULL && dae->dae_title[0] != '\0') {
+
+  /* Do not check title if the event is from the serieslink group */
+  if(dae->dae_serieslink == NULL &&
+     dae->dae_title != NULL && dae->dae_title[0] != '\0') {
     lang_str_ele_t *ls;
     if (!dae->dae_fulltext) {
       if(!e->episode->title) return 0;
