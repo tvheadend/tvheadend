@@ -33,10 +33,11 @@
 #define DVR_FILESIZE_UPDATE     (1<<0)
 #define DVR_FILESIZE_TOTAL      (1<<1)
 
-#define DVR_FINISHED_ALL        (1<<0)
-#define DVR_FINISHED_SUCCESS    (1<<1)
-#define DVR_FINISHED_REMOVED    (1<<2)
-#define DVR_FINISHED_FAILED     (1<<3)
+#define DVR_FINISHED_ALL             (1<<0)
+#define DVR_FINISHED_SUCCESS         (1<<1) 
+#define DVR_FINISHED_FAILED          (1<<2) 
+#define DVR_FINISHED_REMOVED_SUCCESS (1<<3) /* Removed recording, was succesful before */
+#define DVR_FINISHED_REMOVED_FAILED  (1<<4) /* Removed recording, was failed before */
 
 typedef struct dvr_vfs {
   LIST_ENTRY(dvr_vfs) link;
