@@ -679,7 +679,7 @@ tvheadend.dvr_removed = function(panel, index) {
         edit: { params: { list: tvheadend.admin ? "retention,owner,comment" : "retention,comment" } },
         del: true,
         list: 'disp_title,disp_subtitle,episode,channelname,' +
-              'start_real,stop_real,duration,filesize,status,' +
+              'start_real,stop_real,duration,status,' +
               'sched_status,errors,data_errors,url,config_name,owner,creator,comment',
         sort: {
           field: 'start_real',
