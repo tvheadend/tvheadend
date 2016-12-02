@@ -142,7 +142,9 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
   int success = entry->de_sched_state == DVR_COMPLETED &&
       !entry->de_last_error && entry->de_data_errors < DVR_MAX_DATA_ERRORS;
 
-  if ((flags & DVR_FINISHED_REMOVED) && removed)
+  if ((flags & DVR_FINISHED_REMOVED_SUCCESS) && removed && success)
+    return 1;
+  if ((flags & DVR_FINISHED_REMOVED_FAILED) && removed && !success)
     return 1;
   if ((flags & DVR_FINISHED_SUCCESS) && success && !removed)
     return 1;
@@ -1332,7 +1334,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only successful earlier recordings qualify as master
-      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED))
+      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED | DVR_FINISHED_REMOVED_FAILED))
         continue;
 
       // if titles are not defined or do not match, don't dedup
@@ -1363,7 +1365,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
         continue;
 
       // only successful earlier recordings qualify as master
-      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED))
+      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED | DVR_FINISHED_REMOVED_FAILED))
         continue;
 
       // if titles are not defined or do not match, don't dedup

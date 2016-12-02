@@ -115,7 +115,7 @@ api_dvr_entry_grid_removed
   dvr_entry_t *de;
 
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (dvr_entry_is_finished(de, DVR_FINISHED_REMOVED))
+    if (dvr_entry_is_finished(de, DVR_FINISHED_REMOVED_SUCCESS | DVR_FINISHED_REMOVED_FAILED))
       idnode_set_add(ins, (idnode_t*)de, &conf->filter, perm->aa_lang_ui);
 }
 
