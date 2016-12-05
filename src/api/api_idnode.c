@@ -734,11 +734,13 @@ api_idnode_create( htsmsg_t **resp, idnode_t *in )
 void
 api_idnode_create_list( htsmsg_t **resp, htsmsg_t *list )
 {
-  if (list == NULL)
+  if (list == NULL) {
+    htsmsg_destroy(list);
     return;
+  }
   if (*resp == NULL)
     *resp = htsmsg_create_map();
-  htsmsg_add_str(*resp, "uuid", list);
+  htsmsg_add_msg(*resp, "uuid", list);
 }
 
 void api_idnode_init ( void )
