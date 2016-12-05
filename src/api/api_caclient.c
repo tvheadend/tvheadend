@@ -76,6 +76,7 @@ api_caclient_create
   int err = 0;
   const char *clazz;
   htsmsg_t *conf;
+  caclient_t *cac;
 
   if (!(clazz = htsmsg_get_str(args, "class")))
     return EINVAL;
@@ -84,7 +85,10 @@ api_caclient_create
   htsmsg_set_str(conf, "class", clazz);
 
   pthread_mutex_lock(&global_lock);
-  if (caclient_create(NULL, conf, 1) == NULL)
+  cac = caclient_create(NULL, conf, 1);
+  if (cac)
+    api_idnode_create(resp, &cac->cac_id);
+  else
     err = -EINVAL;
   pthread_mutex_unlock(&global_lock);
 

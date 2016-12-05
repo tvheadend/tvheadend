@@ -720,6 +720,27 @@ api_idnode_movedown
   return api_idnode_handler(perm, args, resp, api_idnode_movedown_, "movedown", 0);
 }
 
+static void
+api_idnode_create( htsmsg_t **resp, idnode_t *in )
+{
+  char ubuf[UUID_HEX_SIZE];
+
+  idnode_changed(in);
+  if (*resp == NULL)
+    *resp = htsmsg_create_map();
+  htsmsg_add_str(*resp, "uuid", idnode_uuid_as_str(in, ubuf));
+}
+
+static void
+api_idnode_create_list( htsmsg_t **resp, htsmsg_t *list )
+{
+  if (list == NULL)
+    return;
+  if (*resp == NULL)
+    *resp = htsmsg_create_map();
+  htsmsg_add_str(*resp, "uuid", list);
+}
+
 void api_idnode_init ( void )
 {
   /*

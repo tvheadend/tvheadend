@@ -87,7 +87,7 @@ api_channel_create
   pthread_mutex_lock(&global_lock);
   ch = channel_create(NULL, conf, NULL);
   if (ch)
-    idnode_changed(&ch->ch_id);
+    api_idnode_create(resp, &ch->ch_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;
@@ -145,7 +145,7 @@ api_channel_tag_create
   pthread_mutex_lock(&global_lock);
   ct = channel_tag_create(NULL, conf);
   if (ct)
-    idnode_changed(&ct->ct_id);
+    api_idnode_create(resp, &ct->ct_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;

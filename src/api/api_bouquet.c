@@ -71,7 +71,7 @@ api_bouquet_create
   pthread_mutex_lock(&global_lock);
   bq = bouquet_create(NULL, conf, NULL, NULL);
   if (bq)
-    idnode_changed(&bq->bq_id);
+    api_idnode_create(resp, &bq->bq_id);
   pthread_mutex_unlock(&global_lock);
 
   return 0;

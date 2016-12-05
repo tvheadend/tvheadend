@@ -57,7 +57,7 @@ api_dvr_config_create
 
   pthread_mutex_lock(&global_lock);
   if ((cfg = dvr_config_create(NULL, NULL, conf))) {
-    idnode_changed(&cfg->dvr_id);
+    api_idnode_create(resp, &cfg->dvr_id);
     dvr_config_changed(cfg);
   }
   pthread_mutex_unlock(&global_lock);
@@ -164,7 +164,7 @@ api_dvr_entry_create
       htsmsg_add_msg(conf, "subtitle", m);
     }
     if ((de = dvr_entry_create(NULL, conf, 0)))
-      idnode_changed(&de->de_id);
+      api_idnode_create(resp, &de->de_id);
 
     res = 0;
     free(lang);
@@ -202,7 +202,7 @@ api_dvr_entry_create_by_event
   dvr_entry_t *de;
   const char *config_uuid, *comment;
   epg_broadcast_t *e;
-  htsmsg_t *entries, *entries2 = NULL, *m;
+  htsmsg_t *entries, *entries2 = NULL, *m, *l = NULL;
   htsmsg_field_t *f;
   const char *s;
   int count = 0, enabled;
@@ -235,8 +235,12 @@ api_dvr_entry_create_by_event
                                        perm->aa_representative,
                                        NULL, DVR_PRIO_NORMAL, DVR_RET_REM_DVRCONFIG,
                                        DVR_RET_REM_DVRCONFIG, comment);
-        if (de)
+        if (de) {
+          if (l == NULL)
+            l = htsmsg_create_list();
+          htsmsg_add_str(l, NULL, idnode_uuid_as_str(&de->de_id, ubuf));
           idnode_changed(&de->de_id);
+        }
       }
     }
     pthread_mutex_unlock(&global_lock);
@@ -244,6 +248,8 @@ api_dvr_entry_create_by_event
   }
 
   htsmsg_destroy(entries2);
+
+  api_idnode_create_list(resp, l);
 
   return !count ? EINVAL : 0;
 }
@@ -390,7 +396,7 @@ api_dvr_autorec_create
     htsmsg_set_str(conf, "config_name", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
     dae = dvr_autorec_create(NULL, conf);
     if (dae) {
-      idnode_changed(&dae->dae_id);
+      api_idnode_create(dae, &dae->dae_id);
       dvr_autorec_changed(dae, 0);
       dvr_autorec_completed(dae, 0);
     }
@@ -406,7 +412,7 @@ api_dvr_autorec_create_by_series
 {
   dvr_autorec_entry_t *dae;
   epg_broadcast_t *e;
-  htsmsg_t *entries, *entries2 = NULL, *m;
+  htsmsg_t *entries, *entries2 = NULL, *m, *l = NULL;
   htsmsg_field_t *f;
   const char *config_uuid, *s;
   int count = 0;
@@ -435,8 +441,12 @@ api_dvr_autorec_create_by_series
                                           perm->aa_username,
                                           perm->aa_representative,
                                           "Created from EPG query");
-        if (dae)
+        if (dae) {
+          if (l == NULL)
+            l = htsmsg_create_list();
+          htsmsg_add_str(l, NULL, idnode_uuid_as_str(&dae->dae_id, ubuf));
           idnode_changed(&dae->dae_id);
+        }
       }
     }
     pthread_mutex_unlock(&global_lock);
@@ -444,6 +454,8 @@ api_dvr_autorec_create_by_series
   }
 
   htsmsg_destroy(entries2);
+
+  api_idnode_create_list(resp, l);
 
   return !count ? EINVAL : 0;
 }
@@ -474,7 +486,7 @@ api_dvr_timerec_create
   pthread_mutex_lock(&global_lock);
   dte = dvr_timerec_create(NULL, conf);
   if (dte) {
-    idnode_changed(&dte->dte_id);
+    api_idnode_create(resp, &dte->dte_id);
     dvr_timerec_check(dte);
   }
   pthread_mutex_unlock(&global_lock);
