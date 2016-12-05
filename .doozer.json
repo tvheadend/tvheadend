@@ -101,33 +101,8 @@
       ]
     },
 
-    "vivid-amd64": {
-      "buildenv": "vivid-amd64",
-      "builddeps": [
-        "cmake",
-        "git",
-        "build-essential",
-        "pkg-config",
-        "gettext",
-        "libavahi-client-dev",
-        "libssl-dev",
-        "zlib1g-dev",
-        "wget",
-        "bzip2",
-        "git-core",
-        "liburiparser-dev",
-        "python",
-        "dvb-apps"
-      ],
-
-      "buildcmd": [
-        "./configure --disable-dvbscan --enable-ffmpeg_static --enable-hdhomerun_static",
-        "make -j ${PARALLEL}"
-      ]
-    },
-
-    "vivid-i386": {
-      "buildenv": "vivid-i386",
+    "xenial-amd64": {
+      "buildenv": "xenial-amd64",
       "builddeps": [
         "cmake",
         "git",
