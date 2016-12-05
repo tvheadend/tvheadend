@@ -1348,6 +1348,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, profile_done);
   tvhftrace(LS_MAIN, intlconv_done);
   tvhftrace(LS_MAIN, urlparse_done);
+  tvhftrace(LS_MAIN, streaming_done);
   tvhftrace(LS_MAIN, idnode_done);
   tvhftrace(LS_MAIN, notify_done);
   tvhftrace(LS_MAIN, spawn_done);
@@ -1355,7 +1356,6 @@ main(int argc, char **argv)
   tvhlog(LOG_NOTICE, LS_STOP, "Exiting HTS Tvheadend");
   tvhlog_end();
 
-  tvhftrace(LS_MAIN, streaming_done);
   tvhftrace(LS_MAIN, config_done);
   tvhftrace(LS_MAIN, hts_settings_done);
 
