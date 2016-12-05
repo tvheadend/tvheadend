@@ -943,7 +943,7 @@ dvb_mux_create_instances ( mpegts_mux_t *mm )
   mpegts_network_link_t *mnl;
   LIST_FOREACH(mnl, &mm->mm_network->mn_inputs, mnl_mn_link) {
     mpegts_input_t *mi = mnl->mnl_input;
-    if (mi->mi_is_enabled(mi, mm, 0, -1))
+    if (mi->mi_is_enabled(mi, mm, 0, -1) != MI_IS_ENABLED_NEVER)
       mi->mi_create_mux_instance(mi, mm);
   }
 }

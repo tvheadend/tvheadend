@@ -655,6 +655,12 @@ struct mpegts_mux_sub
   int                       mms_weight;
 };
 
+enum mpegts_input_is_enabled {
+  MI_IS_ENABLED_RETRY = -1,
+  MI_IS_ENABLED_NEVER = 0,
+  MI_IS_ENABLED_OK = 1,
+};
+
 /* Input source */
 struct mpegts_input
 {

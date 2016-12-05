@@ -483,11 +483,16 @@ linuxdvb_frontend_is_enabled
   tvh_hardware_t *th;
   char ubuf[UUID_HEX_SIZE];
 
-  if (lfe->lfe_fe_path == NULL) return 0;
-  if (!mpegts_input_is_enabled(mi, mm, flags, weight)) return 0;
-  if (access(lfe->lfe_fe_path, R_OK | W_OK)) return 0;
-  if (lfe->lfe_in_setup) return 0;
-  if (lfe->lfe_type != DVB_TYPE_S) return 1;
+  if (lfe->lfe_fe_path == NULL)
+    return MI_IS_ENABLED_NEVER;
+  if (!mpegts_input_is_enabled(mi, mm, flags, weight))
+    return MI_IS_ENABLED_NEVER;
+  if (access(lfe->lfe_fe_path, R_OK | W_OK))
+    return MI_IS_ENABLED_NEVER;
+  if (lfe->lfe_in_setup)
+    return MI_IS_ENABLED_RETRY;
+  if (lfe->lfe_type != DVB_TYPE_S)
+    return MI_IS_ENABLED_OK;
 
   /* check if any "blocking" tuner is running */
   LIST_FOREACH(th, &tvh_hardware, th_link) {
@@ -498,21 +503,23 @@ linuxdvb_frontend_is_enabled
       if (lfe2->lfe_type != DVB_TYPE_S) continue;
       if (lfe->lfe_master && !strcmp(lfe->lfe_master, idnode_uuid_as_str(&lfe2->ti_id, ubuf))) {
         if (lfe2->lfe_satconf == NULL)
-          return 0; /* invalid master */
+          return MI_IS_ENABLED_NEVER; /* invalid master */
         if (lfe2->lfe_refcount <= 0)
-          return 0; /* prefer master */
-        return linuxdvb_satconf_match_mux(lfe2->lfe_satconf, mm);
+          return MI_IS_ENABLED_RETRY; /* prefer master */
+        return linuxdvb_satconf_match_mux(lfe2->lfe_satconf, mm) ?
+               MI_IS_ENABLED_OK : MI_IS_ENABLED_RETRY;
       }
       if (lfe2->lfe_master &&
           !strcmp(lfe2->lfe_master, idnode_uuid_as_str(&lfe->ti_id, ubuf)) &&
           lfe2->lfe_refcount > 0) {
         if (lfe->lfe_satconf == NULL)
-          return 0;
-        return linuxdvb_satconf_match_mux(lfe->lfe_satconf, mm);
+          return MI_IS_ENABLED_NEVER;
+        return linuxdvb_satconf_match_mux(lfe->lfe_satconf, mm) ?
+               MI_IS_ENABLED_OK : MI_IS_ENABLED_RETRY;
       }
     }
   }
-  return 1;
+  return MI_IS_ENABLED_OK;
 }
 
 static void

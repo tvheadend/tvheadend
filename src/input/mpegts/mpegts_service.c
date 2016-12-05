@@ -310,9 +310,9 @@ mpegts_service_enlist_raw
       continue;
 
     r = mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight);
-    if (!r)
+    if (r == MI_IS_ENABLED_NEVER)
       continue;
-    if (r < 0) {
+    if (r == MI_IS_ENABLED_RETRY) {
       /* temporary error - retry later */
       errcnt++;
       continue;

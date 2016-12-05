@@ -347,12 +347,12 @@ mpegts_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   if ((flags & SUBSCRIPTION_EPG) != 0 && !mi->mi_ota_epg)
-    return 0;
+    return MI_IS_ENABLED_NEVER;
   if ((flags & SUBSCRIPTION_INITSCAN) != 0 && !mi->mi_initscan)
-    return 0;
+    return MI_IS_ENABLED_NEVER;
   if ((flags & SUBSCRIPTION_IDLESCAN) != 0 && !mi->mi_idlescan)
-    return 0;
-  return mi->mi_enabled;
+    return MI_IS_ENABLED_NEVER;
+  return mi->mi_enabled ? MI_IS_ENABLED_OK : MI_IS_ENABLED_NEVER;
 }
 
 void
