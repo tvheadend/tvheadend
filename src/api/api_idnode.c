@@ -720,7 +720,7 @@ api_idnode_movedown
   return api_idnode_handler(perm, args, resp, api_idnode_movedown_, "movedown", 0);
 }
 
-static void
+void
 api_idnode_create( htsmsg_t **resp, idnode_t *in )
 {
   char ubuf[UUID_HEX_SIZE];
@@ -731,7 +731,7 @@ api_idnode_create( htsmsg_t **resp, idnode_t *in )
   htsmsg_add_str(*resp, "uuid", idnode_uuid_as_str(in, ubuf));
 }
 
-static void
+void
 api_idnode_create_list( htsmsg_t **resp, htsmsg_t *list )
 {
   if (list == NULL)
