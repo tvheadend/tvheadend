@@ -525,7 +525,7 @@ satip_frontend_is_enabled
   lock_assert(&global_lock);
 
   if (!mpegts_input_is_enabled(mi, mm, flags, weight))
-    return MI_IS_EMABLED_NEVER;
+    return MI_IS_ENABLED_NEVER;
   if (lfe->sf_device->sd_dbus_allow <= 0)
     return MI_IS_ENABLED_NEVER;
   if (lfe->sf_type != DVB_TYPE_S)
