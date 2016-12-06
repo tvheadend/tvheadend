@@ -550,7 +550,7 @@ makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
  * Parse AAC MP4A
  */
 
-static const int aac_sample_rates[12] =
+static const int aac_sample_rates[16] =
 {
   96000,
   88200,
@@ -563,7 +563,11 @@ static const int aac_sample_rates[12] =
   16000,
   12000,
   11025,
-  8000
+  8000,
+  7350,
+  0,
+  0,
+  0
 };
 
 /**
