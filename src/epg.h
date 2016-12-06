@@ -149,7 +149,7 @@ struct epg_object
   struct epggrab_module  *grabber;    ///< Originating grabber
 
   void (*getref)  ( void *o );        ///< Get a reference
-  void (*putref)  ( void *o ); 	      ///< Release a reference
+  int  (*putref)  ( void *o ); 	      ///< Release a reference
   void (*destroy) ( void *o );        ///< Delete the object
   void (*update)  ( void *o );        ///< Updated
 };

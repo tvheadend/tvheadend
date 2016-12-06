@@ -165,14 +165,18 @@ static void _epg_object_getref ( void *o )
   eo->refcount++;
 }
 
-static void _epg_object_putref ( void *o )
+static int _epg_object_putref ( void *o )
 {
   epg_object_t *eo = o;
   tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] putref %d",
            eo, eo->id, eo->type, eo->uri, eo->refcount-1);
   assert(eo->refcount>0);
   eo->refcount--;
-  if (!eo->refcount) eo->destroy(eo);
+  if (!eo->refcount) {
+    eo->destroy(eo);
+    return 1;
+  }
+  return 0;
 }
 
 static void _epg_object_set_updated ( void *o )
@@ -1750,8 +1754,10 @@ static epg_broadcast_t *_epg_channel_add_broadcast
     timer = 1;
   }
 
-  /* Reset timer */
+  /* Reset timer - it might free return event! */
+  ret->getref(ret);
   if (timer) _epg_channel_timer_callback(ch);
+  if (ret->putref(ret)) return NULL;
   return ret;
 }
 
