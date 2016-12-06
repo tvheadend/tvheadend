@@ -141,7 +141,9 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
       pthread_join(lca->lca_en50221_thread, NULL);
     }
 
-    ioctl(lca->lca_ca_fd, CA_RESET, NULL);
+    if (ioctl(lca->lca_ca_fd, CA_RESET, NULL))
+      tvherror(LS_LINUXDVB, "unable to reset ca%u %s",
+               lca->lca_number, lca->lca_ca_path);
 
     close(lca->lca_ca_fd);
     lca->lca_ca_fd = -1;

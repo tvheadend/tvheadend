@@ -236,7 +236,7 @@ linuxdvb_en50607_freq0
   ( linuxdvb_en50494_t *le, int freq, int *rfreq, uint16_t *t )
 {
   /* transponder value - t */
-  *t = round(freq / 1000) - 100;
+  *t = round((double)freq / 1000) - 100;
   if (*t > 2047) {
     tvherror(LS_EN50494, "transponder value bigger then 2047 for freq %d (%d)", freq, le->le_frequency);
     return -1;

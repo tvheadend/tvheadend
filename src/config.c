@@ -519,7 +519,9 @@ config_migrate_v3 ( void )
   if (!access(dst, R_OK | W_OK))
     return;
 
-  hts_settings_makedirs(dst);
+  if (hts_settings_makedirs(dst))
+    return;
+
   hts_settings_buildpath(src, sizeof(src), "input/linuxdvb/networks");
   rename(src, dst);
 }
