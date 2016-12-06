@@ -130,7 +130,7 @@ htsmsg_t *parse_m3u
   while (*data && *data <= ' ') data++;
   p = data;
   data = until_eol(data);
-  if (strcmp(p, "#EXTM3U")) {
+  if (strncmp(p, "#EXTM3U", 7)) {
     htsmsg_add_msg(m, "items", htsmsg_create_list());
     return m;
   }
