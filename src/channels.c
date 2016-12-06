@@ -1061,6 +1061,11 @@ channel_delete ( channel_t *ch, int delconf )
   /* EPG */
   epggrab_channel_rem(ch);
   epg_channel_unlink(ch);
+  if (ch->ch_epg_parent) {
+    LIST_REMOVE(ch, ch_epg_slave_link);
+    free(ch->ch_epg_parent);
+    ch->ch_epg_parent = NULL;
+  }
   for (ch1 = LIST_FIRST(&ch->ch_epg_slaves); ch1; ch1 = ch2) {
     ch2 = LIST_NEXT(ch1, ch_epg_slave_link);
     LIST_REMOVE(ch1, ch_epg_slave_link);
