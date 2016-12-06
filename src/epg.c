@@ -125,7 +125,7 @@ void epg_updated ( void )
     tvhtrace(LS_EPG,
              "unref'd object %u (%s) created during update", eo->id, eo->uri);
     LIST_REMOVE(eo, un_link);
-    eo->destroy(eo);
+    eo->ops->destroy(eo);
   }
   // Note: we do things this way around since unref'd objects are not likely
   //       to be useful to DVR since they will relate to episode/seasons/brands
@@ -133,7 +133,7 @@ void epg_updated ( void )
 
   /* Update updated */
   while ((eo = LIST_FIRST(&epg_object_updated))) {
-    eo->update(eo);
+    eo->ops->update(eo);
     LIST_REMOVE(eo, up_link);
     eo->_updated = 0;
     eo->_created = 1;
@@ -173,7 +173,7 @@ static int _epg_object_putref ( void *o )
   assert(eo->refcount>0);
   eo->refcount--;
   if (!eo->refcount) {
-    eo->destroy(eo);
+    eo->ops->destroy(eo);
     return 1;
   }
   return 0;
@@ -219,8 +219,6 @@ static void _epg_object_create ( void *o )
   uint32_t id = eo->id;
   if (!id) eo->id = ++_epg_object_idx;
   if (!eo->id) eo->id = ++_epg_object_idx;
-  if (!eo->getref) eo->getref = _epg_object_getref;
-  if (!eo->putref) eo->putref = _epg_object_putref;
   tvhtrace(LS_EPG, "eo [%p, %u, %d, %s] created",
            eo, eo->id, eo->type, eo->uri);
   _epg_object_set_updated(eo);
@@ -458,14 +456,20 @@ static void _epg_brand_updated ( void *o )
   dvr_autorec_check_brand((epg_brand_t*)o);
 }
 
+static epg_object_ops_t _epg_brand_ops = {
+  .getref  = _epg_object_getref,
+  .putref  = _epg_object_putref,
+  .destroy = _epg_brand_destroy,
+  .update  = _epg_brand_updated,
+};
+
 static epg_object_t **_epg_brand_skel ( void )
 {
   static epg_object_t *skel = NULL;
   if (!skel) {
     skel = calloc(1, sizeof(epg_brand_t));
-    skel->type    = EPG_BRAND;
-    skel->destroy = _epg_brand_destroy;
-    skel->update  = _epg_brand_updated;
+    skel->type = EPG_BRAND;
+    skel->ops  = &_epg_brand_ops;
   }
   return &skel;
 }
@@ -665,14 +669,20 @@ static void _epg_season_updated ( void *eo )
   dvr_autorec_check_season((epg_season_t*)eo);
 }
 
+static epg_object_ops_t _epg_season_ops = {
+  .getref  = _epg_object_getref,
+  .putref  = _epg_object_putref,
+  .destroy = _epg_season_destroy,
+  .update  = _epg_season_updated,
+};
+
 static epg_object_t **_epg_season_skel ( void )
 {
   static epg_object_t *skel = NULL;
   if (!skel) {
     skel = calloc(1, sizeof(epg_season_t));
-    skel->type    = EPG_SEASON;
-    skel->destroy = _epg_season_destroy;
-    skel->update  = _epg_season_updated;
+    skel->type = EPG_SEASON;
+    skel->ops  = &_epg_season_ops;
   }
   return &skel;
 }
@@ -919,14 +929,20 @@ static void _epg_episode_updated ( void *eo )
 {
 }
 
+static epg_object_ops_t _epg_episode_ops = {
+  .getref  = _epg_object_getref,
+  .putref  = _epg_object_putref,
+  .destroy = _epg_episode_destroy,
+  .update  = _epg_episode_updated,
+};
+
 static epg_object_t **_epg_episode_skel ( void )
 {
   static epg_object_t *skel = NULL;
   if (!skel) {
     skel = calloc(1, sizeof(epg_episode_t));
-    skel->type    = EPG_EPISODE;
-    skel->destroy = _epg_episode_destroy;
-    skel->update  = _epg_episode_updated;
+    skel->type = EPG_EPISODE;
+    skel->ops  = &_epg_episode_ops;
   }
   return &skel;
 }
@@ -1461,14 +1477,20 @@ static void _epg_serieslink_updated ( void *eo )
   dvr_autorec_check_serieslink((epg_serieslink_t*)eo);
 }
 
+static epg_object_ops_t _epg_serieslink_ops = {
+  .getref  = _epg_object_getref,
+  .putref  = _epg_object_putref,
+  .destroy = _epg_serieslink_destroy,
+  .update  = _epg_serieslink_updated,
+};
+
 static epg_object_t **_epg_serieslink_skel ( void )
 {
   static epg_object_t *skel = NULL;
   if (!skel) {
     skel = calloc(1, sizeof(epg_serieslink_t));
-    skel->type    = EPG_SERIESLINK;
-    skel->destroy = _epg_serieslink_destroy;
-    skel->update  = _epg_serieslink_updated;
+    skel->type = EPG_SERIESLINK;
+    skel->ops  = &_epg_serieslink_ops;
   }
   return &skel;
 }
@@ -1567,10 +1589,10 @@ static void _epg_channel_timer_callback ( void *p )
       gtimer_arm_rel(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, 2);
       return;
     }
-    cur->getref(cur);
+    cur->ops->getref(cur);
   }
   if ((nxt = ch->ch_epg_next))
-    nxt->getref(nxt);
+    nxt->ops->getref(nxt);
   ch->ch_epg_now = ch->ch_epg_next = NULL;
 
   /* Check events */
@@ -1617,8 +1639,8 @@ static void _epg_channel_timer_callback ( void *p )
   }
 
   /* Remove refs */
-  if (cur) cur->putref(cur);
-  if (nxt) nxt->putref(nxt);
+  if (cur) cur->ops->putref(cur);
+  if (nxt) nxt->ops->putref(nxt);
 }
 
 static epg_broadcast_t *_epg_channel_add_broadcast 
@@ -1755,9 +1777,9 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   }
 
   /* Reset timer - it might free return event! */
-  ret->getref(ret);
+  ret->ops->getref(ret);
   if (timer) _epg_channel_timer_callback(ch);
-  if (ret->putref(ret)) return NULL;
+  if (ret->ops->putref(ret)) return NULL;
   return ret;
 }
 
@@ -1815,14 +1837,20 @@ static void _epg_broadcast_updated ( void *eo )
   }
 }
 
+static epg_object_ops_t _epg_broadcast_ops = {
+  .getref  = _epg_object_getref,
+  .putref  = _epg_object_putref,
+  .destroy = _epg_broadcast_destroy,
+  .update  = _epg_broadcast_updated,
+};
+
 static epg_broadcast_t **_epg_broadcast_skel ( void )
 {
   static epg_broadcast_t *skel = NULL;
   if (!skel) {
     skel = calloc(1, sizeof(epg_broadcast_t));
-    skel->type    = EPG_BROADCAST;
-    skel->destroy = _epg_broadcast_destroy;
-    skel->update  = _epg_broadcast_updated;
+    skel->type = EPG_BROADCAST;
+    skel->ops  = &_epg_broadcast_ops;
   }
   return &skel;
 }

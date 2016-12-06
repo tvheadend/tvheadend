@@ -128,6 +128,13 @@ typedef enum epg_object_type
 #define EPG_CHANGED_IMAGE         (1<<5)
 #define EPG_CHANGED_SLAST         2
 
+typedef struct epg_object_ops {
+  void (*getref)  ( void *o );        ///< Get a reference
+  int  (*putref)  ( void *o ); 	      ///< Release a reference
+  void (*destroy) ( void *o );        ///< Delete the object
+  void (*update)  ( void *o );        ///< Updated
+} epg_object_ops_t;
+
 /* Object */
 struct epg_object
 {
@@ -148,10 +155,7 @@ struct epg_object
 
   struct epggrab_module  *grabber;    ///< Originating grabber
 
-  void (*getref)  ( void *o );        ///< Get a reference
-  int  (*putref)  ( void *o ); 	      ///< Release a reference
-  void (*destroy) ( void *o );        ///< Delete the object
-  void (*update)  ( void *o );        ///< Updated
+  epg_object_ops_t       *ops;        ///< Operations on the object
 };
 
 /* Get an object by ID (special case usage) */
