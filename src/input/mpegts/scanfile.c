@@ -424,6 +424,7 @@ scanfile_load_one
       memoryinfo_alloc(&scanfile_memoryinfo, sizeof(*mux));
       LIST_INSERT_HEAD(&(*net)->sfn_muxes, mux, dmc_link);
     } else {
+      free(mux);
       return -1;
     }
   }
