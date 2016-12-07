@@ -256,7 +256,7 @@ static char *
 http_get_nonce(void)
 {
   struct http_nonce *n = calloc(1, sizeof(*n));
-  char stamp[32], *m;
+  char stamp[33], *m;
   int64_t mono;
 
   while (1) {
@@ -264,7 +264,8 @@ http_get_nonce(void)
     mono ^= 0xa1687211885fcd30LL;
     snprintf(stamp, sizeof(stamp), "%"PRId64, mono);
     m = md5sum(stamp, 1);
-    strcpy(n->nonce, m);
+    strncpy(n->nonce, m, sizeof(stamp));
+    n->nonce[sizeof(stamp)-1] = '\0';
     pthread_mutex_lock(&global_lock);
     if (RB_INSERT_SORTED(&http_nonces, n, link, http_nonce_cmp)) {
       pthread_mutex_unlock(&global_lock);
