@@ -63,7 +63,6 @@ struct http_client_ssl {
   size_t   wbio_pos;
 };
 
-
 static int
 http_client_redirected ( http_client_t *hc );
 static int
@@ -76,7 +75,6 @@ http_client_reconnect
 static void
 http_client_testsuite_run( void );
 #endif
-
 
 /*
  * Global state
@@ -96,6 +94,27 @@ static inline int
 shortid( http_client_t *hc )
 {
   return hc->hc_id;
+}
+
+/*
+ *
+ */
+static void
+http_client_get( http_client_t *hc )
+{
+  hc->hc_refcnt++;
+}
+
+static void
+http_client_put( http_client_t *hc )
+{
+  hc->hc_refcnt--;
+}
+
+static int
+http_client_busy( http_client_t *hc )
+{
+  return !!hc->hc_refcnt;
 }
 
 /*
@@ -154,9 +173,11 @@ http_client_shutdown ( http_client_t *hc, int force, int reconnect )
   }
   if (hc->hc_fd >= 0) {
     if (hc->hc_conn_closed) {
+      http_client_get(hc);
       pthread_mutex_unlock(&hc->hc_mutex);
       hc->hc_conn_closed(hc, -hc->hc_result);
       pthread_mutex_lock(&hc->hc_mutex);
+      http_client_put(hc);
     }
     if (hc->hc_fd >= 0)
       close(hc->hc_fd);
@@ -670,15 +691,19 @@ http_client_finish( http_client_t *hc )
   tvhtrace(LS_HTTPC, "%04X: finishing", shortid(hc));
 
   if (hc->hc_in_rtp_data && hc->hc_rtp_data_complete) {
+    http_client_get(hc);
     pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_rtp_data_complete(hc);
     pthread_mutex_lock(&hc->hc_mutex);
+    http_client_put(hc);
     if (res < 0)
       return http_client_flush(hc, res);
   } else if (hc->hc_data_complete) {
+    http_client_get(hc);
     pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_data_complete(hc);
     pthread_mutex_lock(&hc->hc_mutex);
+    http_client_put(hc);
     if (res < 0)
       return http_client_flush(hc, res);
   }
@@ -742,9 +767,11 @@ http_client_data_copy( http_client_t *hc, char *buf, size_t len )
   int res;
 
   if (hc->hc_data_received) {
+    http_client_get(hc);
     pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_data_received(hc, buf, len);
     pthread_mutex_lock(&hc->hc_mutex);
+    http_client_put(hc);
     if (res < 0)
       return res;
   } else {
@@ -1065,9 +1092,11 @@ header:
   if (p)
     hc->hc_chunked = strcasecmp(p, "chunked") == 0;
   if (hc->hc_hdr_received) {
+    http_client_get(hc);
     pthread_mutex_unlock(&hc->hc_mutex);
     res = hc->hc_hdr_received(hc);
     pthread_mutex_lock(&hc->hc_mutex);
+    http_client_put(hc);
     if (res < 0)
       return http_client_flush(hc, res);
   }
@@ -1113,9 +1142,11 @@ rtsp_data:
       return HTTP_CON_RECEIVING;
     }
     if (hc->hc_rtp_data_received) {
+      http_client_get(hc);
       pthread_mutex_unlock(&hc->hc_mutex);
       res = hc->hc_rtp_data_received(hc, hc->hc_rbuf + r, hc->hc_csize);
       pthread_mutex_lock(&hc->hc_mutex);
+      http_client_put(hc);
       if (res < 0)
         return res;
     } else {
@@ -1251,6 +1282,8 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
   tvhpoll_t *efd;
   int r;
 
+  lock_assert(&hc->hc_mutex);
+
   if (u->scheme == NULL || u->scheme[0] == '\0' ||
       u->host == NULL || u->host[0] == '\0' ||
       u->port < 0) {
@@ -1320,8 +1353,6 @@ http_client_redirected ( http_client_t *hc )
     free(location);
     return -EIO;
   }
-  free(hc->hc_url);
-  hc->hc_url = u.raw ? strdup(u.raw) : NULL;
   free(location);
 
   r = http_client_simple_reconnect(hc, &u, hc->hc_redirv);
@@ -1598,6 +1629,11 @@ http_client_close ( http_client_t *hc )
     pthread_mutex_unlock(&http_lock);
   }
   pthread_mutex_lock(&hc->hc_mutex);
+  while (http_client_busy(hc)) {
+    pthread_mutex_unlock(&hc->hc_mutex);
+    tvh_safe_usleep(10000);
+    pthread_mutex_lock(&hc->hc_mutex);
+  }
   http_client_shutdown(hc, 1, 0);
   http_client_flush(hc, 0);
   tvhtrace(LS_HTTPC, "%04X: Closed", shortid(hc));

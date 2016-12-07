@@ -316,6 +316,7 @@ struct http_client {
   char        *hc_location;
   uint8_t      hc_running;	/* outside hc_mutex */
   uint8_t      hc_shutdown_wait;/* outside hc_mutex */
+  int          hc_refcnt;       /* callback protection - outside hc_mutex */
   int          hc_redirects;
   int          hc_result;
   int          hc_shutdown:1;
