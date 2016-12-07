@@ -216,9 +216,9 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 #define tvhlog_hexdump(subsys, data, len) do { tvhtrace_no_warnings(NULL, subsys, data, len); } while (0)
 #endif
 
-#define tvhftrace(subsys, fcn) do { \
+#define tvhftrace(subsys, fcn, ...) do { \
   tvhtrace(subsys, "%s() enter", #fcn); \
-  fcn(); \
+  fcn(__VA_ARGS__); \
   tvhtrace(subsys, "%s() leave", #fcn); \
 } while (0)
 

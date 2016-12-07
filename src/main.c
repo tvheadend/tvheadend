@@ -1155,10 +1155,10 @@ main(int argc, char **argv)
   RAND_seed(&randseed, sizeof(randseed));
 
   /* Initialise configuration */
-  notify_init();
-  spawn_init();
-  idnode_init();
-  config_init(opt_nobackup == 0);
+  tvhftrace(LS_MAIN, notify_init);
+  tvhftrace(LS_MAIN, spawn_init);
+  tvhftrace(LS_MAIN, idnode_init);
+  tvhftrace(LS_MAIN, config_init, opt_nobackup == 0);
 
   /* Memoryinfo */
   idclass_register(&memoryinfo_class);
@@ -1180,82 +1180,55 @@ main(int argc, char **argv)
   tvhthread_create(&mtimer_tick_tid, NULL, mtimer_tick_thread, NULL, "mtick");
   tvhthread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
-  streaming_init();
-
-  tvh_hardware_init();
-
-  dbus_server_init(opt_dbus, opt_dbus_session);
-
-  intlconv_init();
-  
-  api_init();
-
-  fsmonitor_init();
-
-  libav_init();
-
-  tvhtime_init();
-
-  profile_init();
-
-  imagecache_init();
-
-  http_client_init(opt_user_agent);
-  esfilter_init();
-
-  bouquet_init();
-
-  service_init();
-
-  dvb_init();
-
+  tvhftrace(LS_MAIN, streaming_init);
+  tvhftrace(LS_MAIN, tvh_hardware_init);
+  tvhftrace(LS_MAIN, dbus_server_init, opt_dbus, opt_dbus_session);
+  tvhftrace(LS_MAIN, intlconv_init);
+  tvhftrace(LS_MAIN, api_init);
+  tvhftrace(LS_MAIN, fsmonitor_init);
+  tvhftrace(LS_MAIN, libav_init);
+  tvhftrace(LS_MAIN, tvhtime_init);
+  tvhftrace(LS_MAIN, profile_init);
+  tvhftrace(LS_MAIN, imagecache_init);
+  tvhftrace(LS_MAIN, http_client_init, opt_user_agent);
+  tvhftrace(LS_MAIN, esfilter_init);
+  tvhftrace(LS_MAIN, bouquet_init);
+  tvhftrace(LS_MAIN, service_init);
+  tvhftrace(LS_MAIN, dvb_init);
 #if ENABLE_MPEGTS
-  mpegts_init(adapter_mask, opt_nosatip, &opt_satip_xml,
-              &opt_tsfile, opt_tsfile_tuner);
+  tvhftrace(LS_MAIN, mpegts_init, adapter_mask, opt_nosatip, &opt_satip_xml,
+            &opt_tsfile, opt_tsfile_tuner);
 #endif
-
-  channel_init();
-
-  bouquet_service_resolve();
-
-  subscription_init();
-
-  dvr_config_init();
-
-  access_init(opt_firstrun, opt_noacl);
-
+  tvhftrace(LS_MAIN, channel_init);
+  tvhftrace(LS_MAIN, bouquet_service_resolve);
+  tvhftrace(LS_MAIN, subscription_init);
+  tvhftrace(LS_MAIN, dvr_config_init);
+  tvhftrace(LS_MAIN, access_init, opt_firstrun, opt_noacl);
 #if ENABLE_TIMESHIFT
-  timeshift_init();
+  tvhftrace(LS_MAIN, timeshift_init);
 #endif
-
-  tcp_server_init();
-  webui_init(opt_xspf);
+  tvhftrace(LS_MAIN, tcp_server_init);
+  tvhftrace(LS_MAIN, webui_init, opt_xspf);
 #if ENABLE_UPNP
-  upnp_server_init(opt_bindaddr);
+  tvhftrace(LS_MAIN, upnp_server_init, opt_bindaddr);
 #endif
-
-  service_mapper_init();
-
-  descrambler_init();
-
-  epggrab_init();
-  epg_init();
-
-  dvr_init();
-
-  dbus_server_start();
-
-  http_server_register();
-  satip_server_register();
-  htsp_register();
+  tvhftrace(LS_MAIN, service_mapper_init);
+  tvhftrace(LS_MAIN, descrambler_init);
+  tvhftrace(LS_MAIN, epggrab_init);
+  tvhftrace(LS_MAIN, epg_init);
+  tvhftrace(LS_MAIN, dvr_init);
+  tvhftrace(LS_MAIN, dbus_server_start);
+  tvhftrace(LS_MAIN, http_server_register);
+  tvhftrace(LS_MAIN, satip_server_register);
+  tvhftrace(LS_MAIN, htsp_register);
 
   if(opt_subscribe != NULL)
     subscription_dummy_join(opt_subscribe, 1);
 
-  avahi_init();
-  bonjour_init();
+  tvhftrace(LS_MAIN, avahi_init);
+  tvhftrace(LS_MAIN, bonjour_init);
 
-  epg_updated(); // cleanup now all prev ref's should have been created
+  tvhftrace(LS_MAIN, epg_updated); // cleanup now all prev ref's should have been created
   epg_in_load = 0;
 
   pthread_mutex_unlock(&global_lock);
