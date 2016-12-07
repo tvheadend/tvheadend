@@ -361,8 +361,10 @@ iptv_http_reconnect ( http_client_t *hc, const char *url )
 
   urlinit(&u);
   if (!urlparse(url, &u)) {
+    pthread_mutex_lock(&hc->hc_mutex);
     hc->hc_keepalive = 0;
     r = http_client_simple_reconnect(hc, &u, HTTP_VERSION_1_1);
+    pthread_mutex_unlock(&hc->hc_mutex);
     if (r < 0)
       tvherror(LS_IPTV, "cannot reopen http client: %d'", r);
   } else {
