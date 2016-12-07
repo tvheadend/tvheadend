@@ -892,8 +892,10 @@ http_access_verify_channel(http_connection_t *hc, int mask,
 
   if (res) {
     access_destroy(hc->hc_access);
-    if (http_verify_prepare(hc, &v))
+    if (http_verify_prepare(hc, &v)) {
+      hc->hc_access = NULL;
       return -1;
+    }
     hc->hc_access = access_get((struct sockaddr *)hc->hc_peer, hc->hc_username,
                                http_verify_callback, &v);
     http_verify_free(&v);
