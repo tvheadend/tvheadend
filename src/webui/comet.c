@@ -148,26 +148,28 @@ comet_access_update(http_connection_t *hc, comet_mailbox_t *cmb)
   extern int access_noacl;
 
   htsmsg_t *m = htsmsg_create_map();
-  const char *username;
+  const char *username = "";
   int64_t bfree, bused, btotal;
   int dvr = !http_access_verify(hc, ACCESS_RECORDER);
   int admin = !http_access_verify(hc, ACCESS_ADMIN);
   const char *s;
 
-  username = hc->hc_access ? (hc->hc_access->aa_username ?: "") : "";
-
   htsmsg_add_str(m, "notificationClass", "accessUpdate");
 
-  switch (hc->hc_access->aa_uilevel) {
-  case UILEVEL_BASIC:    s = "basic";    break;
-  case UILEVEL_ADVANCED: s = "advanced"; break;
-  case UILEVEL_EXPERT:   s = "expert";   break;
-  default:               s = NULL;       break;
-  }
-  if (s) {
-    htsmsg_add_str(m, "uilevel", s);
-    if (config.uilevel_nochange)
-      htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
+  if (hc->hc_access) {
+    username = hc->hc_access->aa_username ?: "";
+
+    switch (hc->hc_access->aa_uilevel) {
+    case UILEVEL_BASIC:    s = "basic";    break;
+    case UILEVEL_ADVANCED: s = "advanced"; break;
+    case UILEVEL_EXPERT:   s = "expert";   break;
+    default:               s = NULL;       break;
+    }
+    if (s) {
+      htsmsg_add_str(m, "uilevel", s);
+      if (config.uilevel_nochange)
+        htsmsg_add_u32(m, "uilevel_nochange", config.uilevel_nochange);
+    }
   }
   htsmsg_add_str(m, "theme", access_get_theme(hc->hc_access));
   htsmsg_add_u32(m, "quicktips", config.ui_quicktips);
