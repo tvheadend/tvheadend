@@ -271,6 +271,48 @@ tvheadend.services = function(panel, index)
                 abuttons.map.setText(_('Map All'));
         };
 
+        var unseencb = function(type) {
+            tvheadend.Ajax({
+                url: 'api/service/removeunseen',
+                params: {
+                    type: type,
+                },    
+                success: function(d) {
+                    store.reload();
+                }
+            });
+        };
+
+        var maintenanceButton = {
+            name: 'misc',
+            builder: function() {
+                var m = new Ext.menu.Menu()
+                m.add({
+                    name: 'rmunsnpat',
+                    tooltip: _('Remove old services marked as missing in PAT/SDT which were not detected more than 7 days (last seen column)'),
+                    iconCls: 'remove',
+                    text: _('Remove unseen services (PAT/SDT) (7 days+)'),
+                });
+                m.add({
+                    name: 'rmunsn',
+                    tooltip: _('Remove old services which were not detected more than 7 days (last seen column)'),
+                    iconCls: 'remove',
+                    text: _('Remove all unseen services (7 days+)'),
+                });
+                return new Ext.Toolbar.Button({
+                    tooltip: _('Maintenance operations'),
+                    iconCls: 'wrench',
+                    text: _('Maintenance'),
+                    menu: m,
+                    disabled: false
+                });
+            },
+            callback: {
+                rmunsnpat: function() { unseencb('pat'); },
+                rmunsn: function() { unseencb(''); }
+            }
+        };
+
         var actions = new Ext.ux.grid.RowActions({
             header: _('Details'),
             width: 10,
@@ -293,7 +335,7 @@ tvheadend.services = function(panel, index)
             destroy: function() {
             }
         });
-        conf.tbar = [mapButton];
+        conf.tbar = [mapButton, maintenanceButton];
         conf.selected = selected;
         conf.lcol[1] = actions;
         conf.plugins = [actions];

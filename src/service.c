@@ -2017,6 +2017,23 @@ void service_save ( service_t *t, htsmsg_t *m )
 /**
  *
  */
+void
+service_remove_unseen(const char *type, int days)
+{
+  service_t *s, *sn;
+  time_t before = gclk() - MAX(days, 5) * 24 * 3600;
+
+  lock_assert(&global_lock);
+  for (s = TAILQ_FIRST(&service_all); s; s = sn) {
+    sn = TAILQ_NEXT(s, s_all_link);
+    if (s->s_unseen && s->s_unseen(s, type, before))
+      service_destroy(s, 1);
+  }
+}
+
+/**
+ *
+ */
 static int
 escmp(const void *A, const void *B)
 {

@@ -333,6 +333,8 @@ typedef struct service {
 
   void (*s_memoryinfo)(struct service *t, int64_t *size);
 
+  int (*s_unseen)(struct service *t, const char *type, time_t before);
+
   /**
    * Channel info
    */
@@ -618,6 +620,8 @@ htsmsg_t *servicetype_list (void);
 void service_load ( service_t *s, htsmsg_t *c );
 
 void service_save ( service_t *s, htsmsg_t *c );
+
+void service_remove_unseen(const char *type, int days);
 
 void sort_elementary_streams(service_t *t);
 
