@@ -95,7 +95,6 @@ dvr_rec_subscribe(dvr_entry_t *de)
              channel_get_name(de->de_channel));
     profile_chain_close(prch);
     free(prch);
-    de->de_chain = NULL;
     return;
   }
 

@@ -1204,6 +1204,12 @@ dvr_timer_start_recording(void *aux)
   idnode_changed(&de->de_id);
   htsp_dvr_entry_update(de);
   dvr_rec_subscribe(de);
+  if (!de->de_chain) {
+    de->de_rec_state = DVR_RS_ERROR;
+    de->de_last_error = SM_CODE_BAD_SOURCE;
+    dvr_entry_assign_sched_state(de, DVR_COMPLETED);
+    return;
+  }
 
   gtimer_arm_abs(&de->de_timer, dvr_timer_stop_recording, de, 
                  dvr_entry_get_stop_time(de));
