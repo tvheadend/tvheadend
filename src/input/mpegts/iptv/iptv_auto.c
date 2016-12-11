@@ -241,7 +241,7 @@ skip_url:
       }
       if (strcmp(im->mm_iptv_tags ?: "", tags ?: "")) {
         free(im->mm_iptv_tags);
-        im->mm_iptv_tags = strdup(tags);
+        im->mm_iptv_tags = tags ? strdup(tags) : NULL;
         change = 1;
       }
       if (epgcfg >= 0 && im->mm_epg != epgcfg) {
