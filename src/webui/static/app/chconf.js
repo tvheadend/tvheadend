@@ -29,6 +29,7 @@ insertChannelClearOption = function( scope, records, options ){
 
 tvheadend.channels = tvheadend.idnode_get_enum({
     url: 'api/channel/list',
+    event: 'channel',
     listeners: {
         'load': insertChannelClearOption
     }
