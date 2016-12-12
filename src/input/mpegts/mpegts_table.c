@@ -65,7 +65,10 @@ mpegts_table_fastswitch ( mpegts_mux_t *mm, mpegts_table_t *mtm )
   LIST_FOREACH(mt, &mm->mm_tables, mt_link) {
     if (!(mt->mt_flags & MT_QUICKREQ) && !mt->mt_working)
       continue;
-    if(!mt->mt_complete || mt->mt_working) {
+    if (!mt->mt_complete || mt->mt_working) {
+      tvhtrace(LS_MPEGTS, "table: mux %p no fastswitch %s %02X/%02X (%d) pid %04X (%d)",
+               mm, mt->mt_name, mt->mt_table, mt->mt_mask, mt->mt_table,
+               mt->mt_pid, mt->mt_pid);
       pthread_mutex_unlock(&mm->mm_tables_lock);
       return;
     }
