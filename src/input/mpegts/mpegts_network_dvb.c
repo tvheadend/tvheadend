@@ -720,7 +720,7 @@ dvb_network_create_mux
     tuning_new = tuning_old = lm->lm_tuning;
     /* Always save the orbital position */
     if (dmc->dmc_fe_type == DVB_TYPE_S) {
-      if (tuning_new.u.dmc_fe_qpsk.orbital_pos == INT_MAX ||
+      if (dmc->u.dmc_fe_qpsk.orbital_pos == INT_MAX ||
           dvb_network_check_orbital_pos(tuning_new.u.dmc_fe_qpsk.orbital_pos,
                                         dmc->u.dmc_fe_qpsk.orbital_pos)) {
         save |= COMPARE(u.dmc_fe_qpsk.orbital_pos, CBIT_ORBITAL_POS);
