@@ -355,7 +355,7 @@ epggrab_ota_register
     if (!ota) {
       char buf[256];
       mpegts_mux_nice_name(mm, buf, sizeof(buf));
-      tvhinfo(mod->subsys, "%s: registering mux %s", buf, mod->id);
+      tvhinfo(LS_EPGGRAB, "%s - registering mux for OTA EPG", buf);
       ota  = epggrab_ota_mux_skel;
       SKEL_USED(epggrab_ota_mux_skel);
       ota->om_mux_uuid = strdup(uuid);
