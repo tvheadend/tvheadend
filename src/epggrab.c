@@ -174,7 +174,8 @@ static void _epggrab_load ( void )
     epggrab_conf.cron = strdup("# Default config (00:04 and 12:04 everyday)\n4 */12 * * *");
     LIST_FOREACH(mod, &epggrab_modules, link) // enable only OTA EIT and OTA PSIP by default
       if (mod->type == EPGGRAB_OTA &&
-          (mod->subsys == LS_TBL_EIT || mod->subsys == LS_PSIP)) {
+          ((mod->subsys == LS_TBL_EIT && strcmp(mod->id, "eit") == 0) ||
+           mod->subsys == LS_PSIP)) {
         mod->enabled = 1;
         epggrab_activate_module(mod, 1);
       }
