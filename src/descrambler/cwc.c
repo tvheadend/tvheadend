@@ -194,6 +194,7 @@ typedef struct cwc {
 
   int cwc_fd;
 
+  int cwc_keepalive_interval;
   int cwc_retry_delay;
 
   pthread_t cwc_tid;
@@ -1067,9 +1068,9 @@ cwc_writer_thread(void *aux)
     }
 
 
-    /* If nothing is to be sent in CWC_KEEPALIVE_INTERVAL seconds we
+    /* If nothing is to be sent in keepalive interval seconds we
        need to send a keepalive */
-    mono = mclk() + sec2mono(CWC_KEEPALIVE_INTERVAL);
+    mono = mclk() + sec2mono(cwc->cwc_keepalive_interval);
     do {
       r = tvh_cond_timedwait(&cwc->cwc_writer_cond, &cwc->cwc_writer_mutex, mono);
       if(r == ETIMEDOUT) {
@@ -1160,7 +1161,7 @@ cwc_session(cwc_t *cwc)
   while(!cwc_must_break(cwc)) {
 
     if((r = cwc_read_message(cwc, "Decoderloop", 
-                             CWC_KEEPALIVE_INTERVAL * 2 * 1000)) < 0)
+                             cwc->cwc_keepalive_interval * 2 * 1000)) < 0)
       break;
     cwc_running_reply(cwc, cwc->cwc_buf[12], cwc->cwc_buf, r);
   }
@@ -1882,6 +1883,13 @@ const idclass_t caclient_cwc_class =
       .off      = offsetof(cwc_t, cwc_emmex),
       .def.i    = 1
     },
+    {
+      .type     = PT_INT,
+      .id       = "keepalive_interval",
+      .name     = N_("Keepalive interval"),
+      .desc     = N_("Keepalive interval in seconds"),
+      .def.i    = CWC_KEEPALIVE_INTERVAL,
+    },
     { }
   }
 };
@@ -1899,6 +1907,7 @@ caclient_t *cwc_create(void)
   cwc->cac_start        = cwc_service_start;
   cwc->cac_conf_changed = cwc_conf_changed;
   cwc->cac_caid_update  = cwc_caid_update;
+  cwc->cwc_keepalive_interval = CWC_KEEPALIVE_INTERVAL;
   return (caclient_t *)cwc;
 }
 
