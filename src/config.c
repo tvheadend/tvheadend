@@ -1406,7 +1406,48 @@ config_migrate_v23 ( void )
   config_migrate_v23_one("pyepg");
 }
 
+static void
+config_migrate_v24_helper ( const char **list, htsmsg_t *e, const char *name )
+{
+  htsmsg_t *l = htsmsg_create_list();
+  const char **p = list;
+  for (p = list; *p; p += 2)
+    if (htsmsg_get_bool_or_default(e, p[0], 0))
+      htsmsg_add_str(l, NULL, p[1]);
+  for (p = list; *p; p += 2)
+    htsmsg_delete_field(e, p[0]);
+  htsmsg_add_msg(e, name, l);
+}
 
+static void
+config_migrate_v24 ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  static const char *streaming_list[] = {
+    "streaming", "basic",
+    "adv_streaming", "advanced",
+    "htsp_streaming", "htsp",
+    NULL
+  };
+  static const char *dvr_list[] = {
+    "dvr", "basic",
+    "htsp_dvr", "htsp",
+    "all_dvr", "all",
+    "all_rw_dvr", "all_rw",
+    "failed_dvr", "failed",
+    NULL
+  };
+  if ((c = hts_settings_load("accesscontrol")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      config_migrate_v24_helper(streaming_list, e, "streaming");
+      config_migrate_v24_helper(dvr_list, e, "dvr");
+      hts_settings_save(e, "accesscontrol/%s", f->hmf_name);
+    }
+    htsmsg_destroy(c);
+  }
+}
 
 /*
  * Perform backup
@@ -1528,7 +1569,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v20,
   config_migrate_v21,
   config_migrate_v22,
-  config_migrate_v23
+  config_migrate_v23,
+  config_migrate_v24
 };
 
 /*

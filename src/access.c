@@ -1488,6 +1488,103 @@ access_entry_class_change_set ( void *obj, const void *p )
   return idnode_slist_set(obj, access_entry_class_change_slist, p);
 }
 
+
+static idnode_slist_t access_entry_class_streaming_slist[] = {
+  {
+    .id   = "basic",
+    .name = N_("Basic"),
+    .off  = offsetof(access_entry_t, ae_streaming),
+  },
+  {
+    .id   = "advanced",
+    .name = N_("Advanced"),
+    .off  = offsetof(access_entry_t, ae_adv_streaming),
+  },
+  {
+    .id   = "htsp",
+    .name = N_("HTSP"),
+    .off  = offsetof(access_entry_t, ae_htsp_streaming),
+  },
+  {}
+};
+
+static htsmsg_t *
+access_entry_class_streaming_enum ( void *obj, const char *lang )
+{
+  return idnode_slist_enum(obj, access_entry_class_streaming_slist, lang);
+}
+
+static const void *
+access_entry_class_streaming_get ( void *obj )
+{
+  return idnode_slist_get(obj, access_entry_class_streaming_slist);
+}
+
+static char *
+access_entry_class_streaming_rend ( void *obj, const char *lang )
+{
+  return idnode_slist_rend(obj, access_entry_class_streaming_slist, lang);
+}
+
+static int
+access_entry_class_streaming_set ( void *obj, const void *p )
+{
+  return idnode_slist_set(obj, access_entry_class_streaming_slist, p);
+}
+
+static idnode_slist_t access_entry_class_dvr_slist[] = {
+  {
+    .id   = "basic",
+    .name = N_("Basic"),
+    .off  = offsetof(access_entry_t, ae_dvr),
+  },
+  {
+    .id   = "htsp",
+    .name = N_("HTSP"),
+    .off  = offsetof(access_entry_t, ae_htsp_dvr),
+  },
+  {
+    .id   = "all",
+    .name = N_("View all"),
+    .off  = offsetof(access_entry_t, ae_all_dvr),
+  },
+  {
+    .id   = "all_rw",
+    .name = N_("Manage all"),
+    .off  = offsetof(access_entry_t, ae_all_rw_dvr),
+  },
+  {
+    .id   = "failed",
+    .name = N_("Failed view"),
+    .off  = offsetof(access_entry_t, ae_failed_dvr),
+  },
+  {}
+};
+
+static htsmsg_t *
+access_entry_class_dvr_enum ( void *obj, const char *lang )
+{
+  return idnode_slist_enum(obj, access_entry_class_dvr_slist, lang);
+}
+
+static const void *
+access_entry_class_dvr_get ( void *obj )
+{
+  return idnode_slist_get(obj, access_entry_class_dvr_slist);
+}
+
+static char *
+access_entry_class_dvr_rend ( void *obj, const char *lang )
+{
+  return idnode_slist_rend(obj, access_entry_class_dvr_slist, lang);
+}
+
+static int
+access_entry_class_dvr_set ( void *obj, const void *p )
+{
+  return idnode_slist_set(obj, access_entry_class_dvr_slist, p);
+}
+
 CLASS_DOC(access_entry)
 PROP_DOC(viewlevel_access_entries)
 PROP_DOC(themes)
@@ -1601,27 +1698,18 @@ const idclass_t access_entry_class = {
       .opts     = PO_DOC_NLIST | PO_ADVANCED,
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
+      .islist   = 1,
       .id       = "streaming",
       .name     = N_("Streaming"),
-      .desc     = N_("Allow/Disallow HTTP streaming."),
-      .off      = offsetof(access_entry_t, ae_streaming),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "adv_streaming",
-      .name     = N_("Advanced streaming"),
-      .desc     = N_("Allow/Disallow advanced http streaming, "
-                     "e.g, direct service or mux links."),
-      .off      = offsetof(access_entry_t, ae_adv_streaming),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "htsp_streaming",
-      .name     = N_("HTSP streaming"),
-      .desc     = N_("Allow/Disallow HTSP protocol streaming, "
-                     "e.g Kodi (via pvr.hts) or Movian."),
-      .off      = offsetof(access_entry_t, ae_htsp_streaming),
+      .desc     = N_("Streaming flags, allow/disallow HTTP streaming, "
+                     "advanced HTTP streming (e.g, direct service or mux links), "
+                     "HTSP protocol streaming (e.g, Kodi (via pvr.hts) or Movian."),
+      .list     = access_entry_class_streaming_enum,
+      .get      = access_entry_class_streaming_get,
+      .set      = access_entry_class_streaming_set,
+      .rend     = access_entry_class_streaming_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_STR,
@@ -1638,45 +1726,19 @@ const idclass_t access_entry_class = {
       .opts     = PO_ADVANCED,
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_INT,
+      .islist   = 1,
       .id       = "dvr",
       .name     = N_("Video recorder"),
-      .desc     = N_("Allow/Disallow access to video recorder "
-                     "functionality (including Autorecs)."),
-      .off      = offsetof(access_entry_t, ae_dvr),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "htsp_dvr",
-      .name     = N_("HTSP DVR"),
-      .desc     = N_("Allow/Disallow access to DVR via the HTSP "
-                     "protocol."),
-      .off      = offsetof(access_entry_t, ae_htsp_dvr),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "all_dvr",
-      .name     = N_("View all DVR entries"),
-      .desc     = N_("Allow/Disallow access to other users DVR entries "
-                     "(read only)."),
-      .off      = offsetof(access_entry_t, ae_all_dvr),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "all_rw_dvr",
-      .name     = N_("All DVR (rw)"),
-      .desc     = N_("Allow/Disallow read/write access to other users' "
-                     "DVR entries."),
-      .off      = offsetof(access_entry_t, ae_all_rw_dvr),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "failed_dvr",
-      .name     = N_("Failed DVR"),
-      .desc     = N_("Allow/disallow access to all failed DVR entries."),
-      .def.i    = 1,
-      .off      = offsetof(access_entry_t, ae_failed_dvr),
-      .opts     = PO_EXPERT | PO_HIDDEN,
+      .desc     = N_("Video recorder flags, allow/disallow access to video recorder "
+                     "functionality (including Autorecs), allow/disallow users to "
+                     "view other DVR entries, allow/disallow users to work with "
+                     "DVR entries of other users (remove, edit) etc."),
+      .list     = access_entry_class_dvr_enum,
+      .get      = access_entry_class_dvr_get,
+      .set      = access_entry_class_dvr_set,
+      .rend     = access_entry_class_dvr_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_BOOL,
