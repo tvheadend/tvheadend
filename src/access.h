@@ -97,13 +97,17 @@ typedef struct access_entry {
   char *ae_username;
   char *ae_comment;
   char *ae_lang;
+  int ae_change_lang;
   char *ae_lang_ui;
+  int ae_change_lang_ui;
   char *ae_theme;
+  int ae_change_theme;
 
   int ae_index;
   int ae_wizard;
   int ae_enabled;
   int ae_uilevel;
+  int ae_change_uilevel;
   int ae_uilevel_nochange;
 
   int ae_streaming;
@@ -111,9 +115,11 @@ typedef struct access_entry {
   int ae_htsp_streaming;
 
   idnode_list_head_t ae_profiles;
+  int ae_change_profiles;
 
   int ae_conn_limit_type;
   uint32_t ae_conn_limit;
+  int ae_change_conn_limit;
 
   int ae_dvr;
   int ae_htsp_dvr;
@@ -124,16 +130,20 @@ typedef struct access_entry {
   int ae_htsp_anonymize;
 
   idnode_list_head_t ae_dvr_configs;
+  int ae_change_dvr_configs;
 
   int ae_webui;
   int ae_admin;
 
   uint64_t ae_chmin;
   uint64_t ae_chmax;
+  int ae_change_chrange;
 
   int ae_chtags_exclude;
   idnode_list_head_t ae_chtags;
+  int ae_change_chtags;
 
+  int ae_change_rights;
   uint32_t ae_rights;
 
   struct access_ipmask_queue ae_ipmasks;

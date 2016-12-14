@@ -4,7 +4,7 @@
 
 tvheadend.acleditor = function(panel, index)
 {
-    var list = 'enabled,username,password,prefix,' +
+    var list = 'enabled,username,password,prefix,change,' +
                'lang,webui,uilevel,uilevel_nochange,admin,' +
                'streaming,adv_streaming,htsp_streaming,' +
                'profile,conn_limit_type,conn_limit,' +
@@ -12,7 +12,7 @@ tvheadend.acleditor = function(panel, index)
 	       'dvr_config,channel_min,channel_max,' +
 	       'channel_tag_exclude,channel_tag,comment';
 
-    var list2 = 'enabled,username,password,prefix,' +
+    var list2 = 'enabled,username,password,prefix,change,' +
                 'lang,webui,themeui,langui,uilevel,uilevel_nochange,admin,' +
                 'streaming,adv_streaming,htsp_streaming,' +
                 'profile,conn_limit_type,conn_limit,' +
@@ -32,6 +32,7 @@ tvheadend.acleditor = function(panel, index)
             username:       { width: 250 },
             password:       { width: 250 },
             prefix:         { width: 350 },
+            change:         { width: 350 },
             streaming:      { width: 110 },
             adv_streaming:  { width: 200 },
             htsp_streaming: { width: 200 },

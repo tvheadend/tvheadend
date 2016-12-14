@@ -3,11 +3,20 @@ is initially wide open**.
 
 Tvheadend verifies access by scanning through all enabled access control
 entries in sequence, from the top of the list to the bottom. The permission
-flags, streaming profiles, DVR config profiles, channel tags and so on are
-combined for all matching access entries. An access entry is said to match
-if the username matches and the IP source address of the requesting peer
-is within the prefix. There is also anonymous access, if the user is set
-to asterisk. Only network prefix is matched then.
+flags, streaming profiles, DVR config profiles, channel tags, channel
+number ranges are combined for all matching access entries if allowed using
+the change flag. If the parameter is empty (permission
+flags, all types of profiles, channel tags and ranges) in an access
+control entry and the parameter change flag is turned on,
+the parameter (value, list or range) is cleared (unset).
+
+An access entry is said to match if the username matches and the IP
+source address of the requesting peer is within the prefix. There is also
+anonymous access, if the user is set to asterisk. Only network prefix is
+matched then.
+
+*The order of entries is really important!* It is recommended to put the
+wildcards on top of the entries and the special permissions to the bottom.
 
 !['Access Entries Grid'](static/img/doc/accessentriesgrid.png)
 

@@ -527,96 +527,133 @@ access_update(access_t *a, access_entry_t *ae)
   const char *s;
   char ubuf[UUID_HEX_SIZE];
 
-  switch (ae->ae_conn_limit_type) {
-  case ACCESS_CONN_LIMIT_TYPE_ALL:
-    if (a->aa_conn_limit < ae->ae_conn_limit)
+  if (ae->ae_change_conn_limit) {
+    switch (ae->ae_conn_limit_type) {
+    case ACCESS_CONN_LIMIT_TYPE_ALL:
       a->aa_conn_limit = ae->ae_conn_limit;
-    break;
-  case ACCESS_CONN_LIMIT_TYPE_STREAMING:
-    if (a->aa_conn_limit_streaming < ae->ae_conn_limit)
+    case ACCESS_CONN_LIMIT_TYPE_STREAMING:
       a->aa_conn_limit_streaming = ae->ae_conn_limit;
-    break;
-  case ACCESS_CONN_LIMIT_TYPE_DVR:
-    if (a->aa_conn_limit_dvr < ae->ae_conn_limit)
+      break;
+    case ACCESS_CONN_LIMIT_TYPE_DVR:
       a->aa_conn_limit_dvr = ae->ae_conn_limit;
-    break;
+      break;
+    }
   }
 
-  if(ae->ae_uilevel > a->aa_uilevel)
+  if (ae->ae_change_uilevel) {
     a->aa_uilevel = ae->ae_uilevel;
-
-  if(a->aa_uilevel_nochange < 0)
     a->aa_uilevel_nochange = ae->ae_uilevel_nochange;
-  else if(a->aa_uilevel_nochange && !ae->ae_uilevel_nochange)
-    a->aa_uilevel_nochange = 0;
+  }
 
-  if(ae->ae_chmin || ae->ae_chmax) {
-    uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
-    if (p) {
-      p[a->aa_chrange_count++] = ae->ae_chmin;
-      p[a->aa_chrange_count++] = ae->ae_chmax;
-      a->aa_chrange = p;
+  if (ae->ae_change_chrange) {
+    if (ae->ae_chmin || ae->ae_chmax) {
+      uint64_t *p = realloc(a->aa_chrange, (a->aa_chrange_count + 2) * sizeof(uint64_t));
+      if (p) {
+        p[a->aa_chrange_count++] = ae->ae_chmin;
+        p[a->aa_chrange_count++] = ae->ae_chmax;
+        a->aa_chrange = p;
+      }
+    } else {
+      free(a->aa_chrange);
+      a->aa_chrange = NULL;
     }
   }
 
-  LIST_FOREACH(ilm, &ae->ae_profiles, ilm_in1_link) {
-    profile_t *pro = (profile_t *)ilm->ilm_in2;
-    if(pro && pro->pro_name && pro->pro_name[0] != '\0') {
-      if (a->aa_profiles == NULL)
-        a->aa_profiles = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id, ubuf));
+  if (ae->ae_change_profiles) {
+    if (LIST_EMPTY(&ae->ae_profiles)) {
+      idnode_list_destroy(&ae->ae_profiles, ae);
+    } else {
+      LIST_FOREACH(ilm, &ae->ae_profiles, ilm_in1_link) {
+        profile_t *pro = (profile_t *)ilm->ilm_in2;
+        if(pro && pro->pro_name && pro->pro_name[0] != '\0') {
+          if (a->aa_profiles == NULL)
+            a->aa_profiles = htsmsg_create_list();
+          htsmsg_add_str_exclusive(a->aa_profiles, idnode_uuid_as_str(&pro->pro_id, ubuf));
+        }
+      }
     }
   }
 
-  LIST_FOREACH(ilm, &ae->ae_dvr_configs, ilm_in1_link) {
-    dvr_config_t *dvr = (dvr_config_t *)ilm->ilm_in2;
-    if(dvr && dvr->dvr_config_name[0] != '\0') {
-      if (a->aa_dvrcfgs == NULL)
-        a->aa_dvrcfgs = htsmsg_create_list();
-      htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id, ubuf));
-     }
+  if (ae->ae_change_dvr_configs) {
+    if (LIST_EMPTY(&ae->ae_dvr_configs)) {
+      idnode_list_destroy(&ae->ae_dvr_configs, ae);
+    } else {
+      LIST_FOREACH(ilm, &ae->ae_dvr_configs, ilm_in1_link) {
+        dvr_config_t *dvr = (dvr_config_t *)ilm->ilm_in2;
+        if(dvr && dvr->dvr_config_name[0] != '\0') {
+          if (a->aa_dvrcfgs == NULL)
+            a->aa_dvrcfgs = htsmsg_create_list();
+          htsmsg_add_str_exclusive(a->aa_dvrcfgs, idnode_uuid_as_str(&dvr->dvr_id, ubuf));
+         }
+      }
+    }
   }
 
-  if (ae->ae_chtags_exclude) {
-    channel_tag_t *ct;
-    TAILQ_FOREACH(ct, &channel_tags, ct_link) {
-      if(ct && ct->ct_name[0] != '\0') {
+  if (ae->ae_change_chtags) {
+    if (ae->ae_chtags_exclude && !LIST_EMPTY(&ae->ae_chtags)) {
+      channel_tag_t *ct;
+      TAILQ_FOREACH(ct, &channel_tags, ct_link) {
+        if(ct && ct->ct_name[0] != '\0') {
+          LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
+            channel_tag_t *ct2 = (channel_tag_t *)ilm->ilm_in2;
+            if (ct == ct2) break;
+          }
+          if (ilm == NULL) {
+            if (a->aa_chtags == NULL)
+              a->aa_chtags = htsmsg_create_list();
+            htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
+          }
+        }
+      }
+    } else {
+      if (LIST_EMPTY(&ae->ae_chtags)) {
+        idnode_list_destroy(&ae->ae_chtags, ae);
+      } else {
         LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
-          channel_tag_t *ct2 = (channel_tag_t *)ilm->ilm_in2;
-          if (ct == ct2) break;
+          channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
+          if(ct && ct->ct_name[0] != '\0') {
+            if (a->aa_chtags == NULL)
+              a->aa_chtags = htsmsg_create_list();
+            htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
+          }
         }
-        if (ilm == NULL) {
-          if (a->aa_chtags == NULL)
-            a->aa_chtags = htsmsg_create_list();
-          htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
-        }
-      }
-    }
-  } else {
-    LIST_FOREACH(ilm, &ae->ae_chtags, ilm_in1_link) {
-      channel_tag_t *ct = (channel_tag_t *)ilm->ilm_in2;
-      if(ct && ct->ct_name[0] != '\0') {
-        if (a->aa_chtags == NULL)
-          a->aa_chtags = htsmsg_create_list();
-        htsmsg_add_str_exclusive(a->aa_chtags, idnode_uuid_as_str(&ct->ct_id, ubuf));
       }
     }
   }
 
-  if (!a->aa_lang && ae->ae_lang && ae->ae_lang[0])
-    a->aa_lang = lang_code_user(ae->ae_lang);
+  if (ae->ae_change_lang) {
+    free(a->aa_lang);
+    if (ae->ae_lang && ae->ae_lang[0]) {
+      a->aa_lang = lang_code_user(ae->ae_lang);
+    } else {
+      a->aa_lang = NULL;
+    }
+  }
 
-  if (!a->aa_lang_ui) {
+  if (ae->ae_change_lang_ui) {
+    free(ae->ae_lang_ui);
     if (ae->ae_lang_ui && ae->ae_lang_ui[0])
       a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
     else if ((s = config_get_language_ui()) != NULL)
       a->aa_lang_ui = lang_code_user(s);
+    else
+      a->aa_lang_ui = NULL;
   }
 
-  if ((!a->aa_theme || a->aa_theme[0] == '\0') && ae->ae_theme && ae->ae_theme[0])
-    a->aa_theme = strdup(ae->ae_theme);
+  if (ae->ae_change_theme) {
+    free(a->aa_theme);
+    if (ae->ae_theme && ae->ae_theme[0])
+      a->aa_theme = strdup(ae->ae_theme);
+    else
+      a->aa_theme = NULL;
+  }
 
-  a->aa_rights |= ae->ae_rights;
+  if (ae->ae_change_rights) {
+    if (ae->ae_rights == 0)
+      a->aa_rights = 0;
+    else
+      a->aa_rights |= ae->ae_rights;
+  }
 }
 
 /**
@@ -1007,6 +1044,16 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
 
   if (conf) {
     /* defaults */
+    ae->ae_change_lang    = 1;
+    ae->ae_change_lang_ui = 1;
+    ae->ae_change_theme   = 1;
+    ae->ae_change_uilevel = 1;
+    ae->ae_change_profiles = 1;
+    ae->ae_change_conn_limit = 1;
+    ae->ae_change_dvr_configs = 1;
+    ae->ae_change_chrange = 1;
+    ae->ae_change_chtags  = 1;
+    ae->ae_change_rights  = 1;
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
@@ -1363,6 +1410,84 @@ theme_get_ui_list ( void *p, const char *lang )
   return strtab2htsmsg_str(tab, 1, lang);
 }
 
+static idnode_slist_t access_entry_class_change_slist[] = {
+  {
+    .id   = "change_rights",
+    .name = N_("Rights"),
+    .off  = offsetof(access_entry_t, ae_change_rights),
+  },
+  {
+    .id   = "change_chrange",
+    .name = N_("Channel range"),
+    .off  = offsetof(access_entry_t, ae_change_chrange),
+  },
+  {
+    .id   = "change_chtags",
+    .name = N_("Channel tags"),
+    .off  = offsetof(access_entry_t, ae_change_chtags),
+  },
+  {
+    .id   = "change_dvr_configs",
+    .name = N_("DVR configurations"),
+    .off  = offsetof(access_entry_t, ae_change_dvr_configs),
+  },
+  {
+    .id   = "change_profiles",
+    .name = N_("Streaming profiles"),
+    .off  = offsetof(access_entry_t, ae_change_profiles),
+  },
+  {
+    .id   = "change_conn_limit",
+    .name = N_("Connection limits"),
+    .off  = offsetof(access_entry_t, ae_change_conn_limit),
+  },
+  {
+    .id   = "change_lang",
+    .name = N_("Language"),
+    .off  = offsetof(access_entry_t, ae_change_lang),
+  },
+  {
+    .id   = "change_lang_ui",
+    .name = N_("Web interface language"),
+    .off  = offsetof(access_entry_t, ae_change_lang_ui),
+  },
+  {
+    .id   = "change_theme",
+    .name = N_("Theme"),
+    .off  = offsetof(access_entry_t, ae_change_theme),
+  },
+  {
+    .id   = "change_uilevel",
+    .name = N_("User interface level"),
+   .off  = offsetof(access_entry_t, ae_change_uilevel),
+  },
+  {}
+};
+
+static htsmsg_t *
+access_entry_class_change_enum ( void *obj, const char *lang )
+{
+  return idnode_slist_enum(obj, access_entry_class_change_slist, lang);
+}
+
+static const void *
+access_entry_class_change_get ( void *obj )
+{
+  return idnode_slist_get(obj, access_entry_class_change_slist);
+}
+
+static char *
+access_entry_class_change_rend ( void *obj, const char *lang )
+{
+  return idnode_slist_rend(obj, access_entry_class_change_slist, lang);
+}
+
+static int
+access_entry_class_change_set ( void *obj, const void *p )
+{
+  return idnode_slist_set(obj, access_entry_class_change_slist, p);
+}
+
 CLASS_DOC(access_entry)
 PROP_DOC(viewlevel_access_entries)
 PROP_DOC(themes)
@@ -1412,6 +1537,18 @@ const idclass_t access_entry_class = {
       .set      = access_entry_class_prefix_set,
       .get      = access_entry_class_prefix_get,
       .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_INT,
+      .islist   = 1,
+      .id       = "change",
+      .name     = N_("Change parameters"),
+      .desc     = N_("Specify the parameters to be changed."),
+      .list     = access_entry_class_change_enum,
+      .get      = access_entry_class_change_get,
+      .set      = access_entry_class_change_set,
+      .rend     = access_entry_class_change_rend,
+      .opts     = PO_DOC_NLIST,
     },
     {
       .type     = PT_INT,
