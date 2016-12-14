@@ -1833,6 +1833,7 @@ const idclass_t caclient_cwc_class =
       .name     = N_("Username"),
       .desc     = N_("Login username."),
       .off      = offsetof(cwc_t, cwc_username),
+      .opts     = PO_TRIM,
     },
     {
       .type     = PT_STR,
@@ -1849,6 +1850,7 @@ const idclass_t caclient_cwc_class =
       .desc     = N_("Hostname (or IP) of the server."),
       .off      = offsetof(cwc_t, cwc_hostname),
       .def.s    = "localhost",
+      .opts     = PO_TRIM,
     },
     {
       .type     = PT_INT,

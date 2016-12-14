@@ -75,18 +75,19 @@ prop_write_values
   htsmsg_field_t *f;
   const property_t *p;
   void *cur;
-  const void *new;
+  const void *snew;
+  void *dnew;
   double dbl;
-  int i;
+   int i;
   int64_t s64;
-  uint32_t u32;
+  uint32_t u32, opts;
   uint16_t u16;
   time_t tm;
 #define PROP_UPDATE(v, t)\
-  new = &v;\
-  if (!p->set && (*((t*)cur) != *((t*)new))) {\
+  snew = &v;\
+  if (!p->set && (*((t*)cur) != *((t*)snew))) {\
     save = 1;\
-    *((t*)cur) = *((t*)new);\
+    *((t*)cur) = *((t*)snew);\
   } (void)0
 
   if (!pl) return 0;
@@ -99,8 +100,8 @@ prop_write_values
     if (!f) continue;
 
     /* Ignore */
-    u32 = p->get_opts ? p->get_opts(obj) : p->opts;
-    if(u32 & optmask) continue;
+    opts = p->get_opts ? p->get_opts(obj) : p->opts;
+    if(opts & optmask) continue;
 
     /* Sanity check */
     assert(p->set || p->off);
@@ -108,11 +109,11 @@ prop_write_values
     /* Write */
     save = 0;
     cur  = obj + p->off;
-    new  = NULL;
+    snew = dnew = NULL;
 
     /* List */
     if (p->islist)
-      new = (f->hmf_type == HMF_MAP) ?
+      snew = (f->hmf_type == HMF_MAP) ?
               htsmsg_field_get_map(f) :
               htsmsg_field_get_list(f);
 
@@ -142,10 +143,10 @@ prop_write_values
       case PT_U32: {
         if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
           char *s;
-          if (!(new = htsmsg_field_get_str(f)))
+          if (!(snew = htsmsg_field_get_str(f)))
             continue;
-          u32 = atol(new) * p->intextra;
-          if ((s = strchr(new, '.')) != NULL)
+          u32 = atol(snew) * p->intextra;
+          if ((s = strchr(snew, '.')) != NULL)
             u32 += (atol(s + 1) % p->intextra);
         } else {
           if (htsmsg_field_get_u32(f, &u32))
@@ -156,9 +157,9 @@ prop_write_values
       }
       case PT_S64: {
         if (p->intextra && INTEXTRA_IS_SPLIT(p->intextra)) {
-          if (!(new = htsmsg_field_get_str(f)))
+          if (!(snew = htsmsg_field_get_str(f)))
             continue;
-          s64 = prop_intsplit_from_str(new, p->intextra);
+          s64 = prop_intsplit_from_str(snew, p->intextra);
         } else {
           if (htsmsg_field_get_s64(f, &s64))
             continue;
@@ -176,12 +177,28 @@ prop_write_values
       }
       case PT_STR: {
         char **str = cur;
-        if (!(new = htsmsg_field_get_str(f)))
+        if (!(snew = htsmsg_field_get_str(f)))
           continue;
-        if (!p->set && strcmp((*str) ?: "", new)) {
+        if (opts & PO_TRIM) {
+          if (*(char *)snew <= ' ' || ((char *)snew)[strlen(snew)-1] <= ' ') {
+            const char *x = snew;
+            char *y;
+            while (*x && *x <= ' ') x++;
+            snew = dnew = strdup(x);
+            if (*x) {
+              y = dnew + strlen(dnew);
+              while (y != x) {
+                y--;
+                if (*y <= ' ') break;
+              }
+              *y = '\0';
+            }
+          }
+        }
+        if (!p->set && strcmp((*str) ?: "", snew)) {
           /* make sure that the string is valid all time */
           void *old = *str;
-          *str = strdup(new);
+          *str = strdup(snew);
           free(old);
           save = 1;
         }
@@ -197,11 +214,11 @@ prop_write_values
       case PT_LANGSTR: {
         lang_str_t **lstr1 = cur;
         lang_str_t  *lstr2;
-        new = htsmsg_field_get_map(f);
-        if (!new)
+        snew = htsmsg_field_get_map(f);
+        if (!snew)
           continue;
         if (!p->set) {
-          lstr2 = lang_str_deserialize_map((htsmsg_t *)new);
+          lstr2 = lang_str_deserialize_map((htsmsg_t *)snew);
           if (lang_str_compare(*lstr1, lstr2)) {
             lang_str_destroy(*lstr1);
             *lstr1 = lstr2;
@@ -213,9 +230,9 @@ prop_write_values
         break;
       }
       case PT_PERM: {
-        if (!(new = htsmsg_field_get_str(f)))
+        if (!(snew = htsmsg_field_get_str(f)))
           continue;
-        u32 = (int)strtol(new,NULL,0);
+        u32 = (int)strtol(snew, NULL, 0);
         PROP_UPDATE(u32, uint32_t);
         break;
       }
@@ -225,8 +242,12 @@ prop_write_values
     }
   
     /* Setter */
-    if (p->set && new)
-      save = p->set(obj, new);
+    if (p->set && snew)
+      save = p->set(obj, snew);
+
+    /* Remove dynamic contents */
+    if (dnew)
+      free(dnew);
 
     /* Updated */
     if (save) {

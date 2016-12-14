@@ -65,6 +65,7 @@ typedef enum {
 #define PO_PERSIST   (1<<17) // Persistent value (return back on save)
 #define PO_DOC       (1<<18) // Use doc callback instead description if exists
 #define PO_DOC_NLIST (1<<19) // Do not show list in doc
+#define PO_TRIM      (1<<20) // Trim whitespaces (left & right) on load
 
 /*
  * min/max/step helpers
