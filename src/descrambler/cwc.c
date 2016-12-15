@@ -1890,6 +1890,7 @@ const idclass_t caclient_cwc_class =
       .id       = "keepalive_interval",
       .name     = N_("Keepalive interval"),
       .desc     = N_("Keepalive interval in seconds"),
+      .off      = offsetof(cwc_t, cwc_keepalive_interval),
       .def.i    = CWC_KEEPALIVE_INTERVAL,
     },
     { }
