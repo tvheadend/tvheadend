@@ -631,7 +631,7 @@ access_update(access_t *a, access_entry_t *ae)
   }
 
   if (ae->ae_change_lang_ui) {
-    free(ae->ae_lang_ui);
+    free(a->aa_lang_ui);
     if (ae->ae_lang_ui && ae->ae_lang_ui[0])
       a->aa_lang_ui = lang_code_user(ae->ae_lang_ui);
     else if ((s = config_get_language_ui()) != NULL)
