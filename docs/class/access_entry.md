@@ -3,20 +3,19 @@ is initially wide open**.
 
 Tvheadend verifies access by scanning through all enabled access control
 entries in sequence, from the top of the list to the bottom. The permission
-flags, streaming profiles, DVR config profiles, channel tags, channel
-number ranges are combined for all matching access entries if allowed using
-the change flag. If the parameter is empty (permission
-flags, all types of profiles, channel tags and ranges) in an access
-control entry and the parameter change flag is turned on,
-the parameter (value, list or range) is cleared (unset).
+flags, streaming profiles, DVR config profiles, channel tags, and channel
+number ranges are combined for all matching access entries. You can 
+control which parameters are merged (on a per-entry basis), see 
+*Change parameters* [below](#items) for details. 
 
-An access entry is said to match if the username matches and the IP
-source address of the requesting peer is within the prefix. There is also
-anonymous access, if the user is set to asterisk. Only network prefix is
-matched then.
+An access entry is said to match if the username and the IP source 
+address of the requesting peer is within the prefix (*Allowed networks*).
+Wildcard ([anonymous](#anonymous-access)) accounts are matched using the 
+prefix only.
 
-*The order of entries is really important!* It is recommended to put the
-wildcards on top of the entries and the special permissions to the bottom.
+*The order of entries is **extremely** important!* It's recommended 
+that you put the wildcard (asterisk `*`) accounts at top and all other 
+accounts (with special permissions) at the bottom.
 
 !['Access Entries Grid'](static/img/doc/accessentriesgrid.png)
 
@@ -40,12 +39,12 @@ Button                 | Function
 
 ####Example
 
-This is an example of a limited user account entry.
+This is an example of a limited user entry.
 
 !['Access Entry Example'](static/img/doc/accessentriesnewuser.png)
 
-Remember to also create a password entry for the user in the 
-*[Passwords](class/passwd)* tab!
+Remember to also add a password entry in the 
+*[Passwords](class/passwd)* tab - not required for wildcard accounts. 
 
 **Tips**:
 * Be as limiting as possible especially when making Tvheadend available 
