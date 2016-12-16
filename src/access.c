@@ -1418,7 +1418,7 @@ static idnode_slist_t access_entry_class_change_slist[] = {
   },
   {
     .id   = "change_chrange",
-    .name = N_("Channel range"),
+    .name = N_("Channel number range"),
     .off  = offsetof(access_entry_t, ae_change_chrange),
   },
   {
@@ -1591,6 +1591,7 @@ PROP_DOC(themes)
 PROP_DOC(connection_limit)
 PROP_DOC(persistent_viewlevel)
 PROP_DOC(streaming_profile)
+PROP_DOC(change_parameters)
 
 const idclass_t access_entry_class = {
   .ic_class      = "access",
@@ -1640,7 +1641,8 @@ const idclass_t access_entry_class = {
       .islist   = 1,
       .id       = "change",
       .name     = N_("Change parameters"),
-      .desc     = N_("Specify the parameters to be changed."),
+      .desc     = N_("Specify the parameters to be changed. See Help for details."),
+      .doc      = prop_doc_change_parameters,
       .list     = access_entry_class_change_enum,
       .get      = access_entry_class_change_get,
       .set      = access_entry_class_change_set,
@@ -1703,7 +1705,7 @@ const idclass_t access_entry_class = {
       .id       = "streaming",
       .name     = N_("Streaming"),
       .desc     = N_("Streaming flags, allow/disallow HTTP streaming, "
-                     "advanced HTTP streming (e.g, direct service or mux links), "
+                     "advanced HTTP streaming (e.g, direct service or mux links), "
                      "HTSP protocol streaming (e.g, Kodi (via pvr.hts) or Movian."),
       .list     = access_entry_class_streaming_enum,
       .get      = access_entry_class_streaming_get,
