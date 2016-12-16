@@ -4,8 +4,8 @@ Allows you to control which parameters are merged. If the
 *Change parameters* flag is turned on and a parameter 
 (permission flags, all types of profiles, channel tags and ranges)
 for an entry is not set the parameter (value, list or range) is cleared 
-(unset). This allows the previous/next matching entry in the sequence to set 
-it.
+(unset). This allows the next matching entry (if any) in the sequence 
+to set it.
 
 For example, say you have a wildcard account with the theme set to Gray, 
 and an admin account with the Blue theme. Unchecking the theme checkbox 
