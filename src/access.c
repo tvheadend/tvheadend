@@ -2265,6 +2265,7 @@ access_init(int createdefault, int noacl)
     ae->ae_comment = strdup(ACCESS_DEFAULT_COMMENT);
 
     ae->ae_enabled        = 1;
+    ae->ae_change_rights  = 1;
     ae->ae_streaming      = 1;
     ae->ae_adv_streaming  = 1;
     ae->ae_htsp_streaming = 1;
