@@ -1311,7 +1311,8 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_u32(r, "limitstreaming", htsp->htsp_granted_access->aa_conn_limit_streaming);
     htsmsg_add_u32(r, "uilevel",        htsp->htsp_granted_access->aa_uilevel == UILEVEL_DEFAULT ?
         config.uilevel : htsp->htsp_granted_access->aa_uilevel);
-    htsmsg_add_str(r, "uilanguage",     htsp->htsp_granted_access->aa_lang_ui);
+    htsmsg_add_str(r, "uilanguage",     htsp->htsp_granted_access->aa_lang_ui ?
+        htsp->htsp_granted_access->aa_lang_ui : (config.language_ui ? config.language_ui : ""));
   }
   
   return r;
