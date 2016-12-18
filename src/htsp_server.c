@@ -521,6 +521,10 @@ htsp_generate_challenge(htsp_connection_t *htsp)
 static inline int
 htsp_user_access_channel(htsp_connection_t *htsp, channel_t *ch)
 {
+  if (!ch || !ch->ch_enabled || LIST_FIRST(&ch->ch_services) == NULL) /* Don't pass unplayable channels to clients */
+    return 0;
+  if (!htsp)
+    return 1;
   return channel_access(ch, htsp->htsp_granted_access, 0);
 }
 
@@ -3481,7 +3485,7 @@ htsp_channel_add(channel_t *ch)
 void
 htsp_channel_update(channel_t *ch)
 {
-  if (ch->ch_enabled)
+  if (htsp_user_access_channel(NULL, ch))
     _htsp_channel_update(ch, "channelUpdate", NULL);
   else // in case the channel was ever sent to the client
     htsp_channel_delete(ch);
