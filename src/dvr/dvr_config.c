@@ -531,9 +531,6 @@ dvr_config_changed(dvr_config_t *cfg)
   dvr_config_storage_check(cfg);
   if (cfg->dvr_cleanup_threshold_free < 50)
     cfg->dvr_cleanup_threshold_free = 50; // as checking is only periodically, lower is not save
-  if (cfg->dvr_removal_days != DVR_RET_REM_FOREVER &&
-      cfg->dvr_removal_days > cfg->dvr_retention_days)
-    cfg->dvr_retention_days = DVR_RET_ONREMOVE;
   if (cfg->dvr_removal_days > DVR_RET_REM_FOREVER)
     cfg->dvr_removal_days = DVR_RET_REM_FOREVER;
   if (cfg->dvr_retention_days > DVR_RET_REM_FOREVER)

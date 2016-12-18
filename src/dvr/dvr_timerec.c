@@ -793,12 +793,7 @@ dvr_timerec_get_retention_days( dvr_timerec_entry_t *dte )
   if (dte->dte_retention > 0) {
     if (dte->dte_retention > DVR_RET_REM_FOREVER)
       return DVR_RET_REM_FOREVER;
-
-    /* As we need the db entry when deleting the file on disk */
-    if (dvr_timerec_get_removal_days(dte) != DVR_RET_REM_FOREVER &&
-        dvr_timerec_get_removal_days(dte) > dte->dte_retention)
-      return DVR_RET_ONREMOVE;
-
+      
     return dte->dte_retention;
   }
   return dvr_retention_cleanup(dte->dte_config->dvr_retention_days);

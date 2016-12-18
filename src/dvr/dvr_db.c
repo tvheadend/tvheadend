@@ -46,6 +46,7 @@ static void dvr_entry_deferred_destroy(dvr_entry_t *de);
 static void dvr_entry_set_timer(dvr_entry_t *de);
 static void dvr_timer_rerecord(void *aux);
 static void dvr_timer_expire(void *aux);
+static void dvr_timer_disarm(void *aux);
 static void dvr_timer_remove_files(void *aux);
 static void dvr_entry_start_recording(dvr_entry_t *de, int clone);
 static void dvr_timer_start_recording(void *aux);
@@ -413,11 +414,6 @@ dvr_entry_get_retention_days( dvr_entry_t *de )
     if (de->de_retention > DVR_RET_REM_FOREVER)
       return DVR_RET_REM_FOREVER;
 
-    /* As we need the db entry when deleting the file on disk */
-    if (dvr_entry_get_removal_days(de) != DVR_RET_REM_FOREVER &&
-        dvr_entry_get_removal_days(de) > de->de_retention && !de->de_file_removed)
-      return DVR_RET_ONREMOVE;
-
     return de->de_retention;
   }
   return dvr_retention_cleanup(de->de_config->dvr_retention_days);
@@ -507,6 +503,26 @@ dvr_entry_retention_arm(dvr_entry_t *de, gti_callback_t *cb, time_t when)
 }
 
 /*
+ * Returns 1 if the database entry should be deleted on file removal
+ * NOTE: retention can be postponed when retention < removal
+ */
+static int
+dvr_entry_delete_retention_expired(dvr_entry_t *de)
+{
+  uint32_t retention = dvr_entry_get_retention_days(de);
+  time_t stop;
+
+  if (retention == DVR_RET_ONREMOVE)
+    return 1;
+  if (retention < DVR_RET_ONREMOVE) {
+    stop = time_t_out_of_range((int64_t)de->de_stop + retention * (int64_t)86400);
+    if (stop <= gclk())
+      return 1;
+  }
+  return 0;
+}
+
+/*
  *
  */
 static void
@@ -517,7 +533,7 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   uint32_t retention = dvr_entry_get_retention_days(de);
   int save;
 
-  if ((removal > 0 || retention == 0) && removal < DVR_REM_SPACE && !de->de_file_removed) {
+  if ((removal > 0 || retention == 0) && removal < DVR_REM_SPACE && dvr_get_filesize(de, 0) > 0) {
     stop = time_t_out_of_range((int64_t)de->de_stop + removal * (int64_t)86400);
     if (stop > gclk()) {
       dvr_entry_retention_arm(de, dvr_timer_remove_files, stop);
@@ -525,9 +541,9 @@ dvr_entry_retention_timer(dvr_entry_t *de)
     }
     save = 0;
     if (dvr_get_filename(de))
-      save = dvr_entry_delete(de);    // delete actual file
-    if (retention == DVR_RET_ONREMOVE) {
-      dvr_entry_deferred_destroy(de); // also remove database entry
+      save = dvr_entry_delete(de);                // delete actual file
+    if (dvr_entry_delete_retention_expired(de)) { // in case retention was postponed (retention < removal)
+      dvr_entry_deferred_destroy(de);             // also remove database entry
       return;
     }
     if (save) {
@@ -536,12 +552,14 @@ dvr_entry_retention_timer(dvr_entry_t *de)
     }
   }
 
-  if (retention < DVR_RET_ONREMOVE) {
+  if (retention < DVR_RET_ONREMOVE &&
+      (dvr_get_filesize(de, 0) < 0 || removal == DVR_RET_REM_FOREVER)) { // we need the database entry for later file removal
     stop = time_t_out_of_range((int64_t)de->de_stop + retention * (int64_t)86400);
     dvr_entry_retention_arm(de, dvr_timer_expire, stop);
-  } else {
-    dvr_entry_trace(de, "retention timer - disarm");
-    gtimer_disarm(&de->de_timer);
+  }
+  else {
+    dvr_entry_retention_arm(de, dvr_timer_disarm,
+        dvr_entry_get_rerecord_errors(de) ? INT_MAX : 0); // extend disarm to keep the rerecord logic running
   }
 }
 
@@ -1565,6 +1583,17 @@ dvr_timer_expire(void *aux)
   dvr_entry_destroy(de, 1);
 }
 
+
+/**
+ *
+ */
+static void
+dvr_timer_disarm(void *aux)
+{
+  dvr_entry_t *de = aux;
+  dvr_entry_trace(de, "retention timer - disarm");
+  gtimer_disarm(&de->de_timer);
+}
 
 /**
  *
@@ -3673,12 +3702,13 @@ dvr_entry_cancel_delete_remove(dvr_entry_t *de, int rerecord, int _delete)
     dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
   case DVR_MISSED_TIME:
   case DVR_COMPLETED:
-    save = dvr_entry_delete(de); /* Remove files */
-    if (_delete || dvr_entry_get_retention_days(de) == DVR_RET_ONREMOVE)
-      dvr_entry_destroy(de, 1);  /* Delete database */
+    save = dvr_entry_delete(de);                           /* Remove files */
+    if (_delete || dvr_entry_delete_retention_expired(de)) /* In case retention was postponed (retention < removal) */
+      dvr_entry_destroy(de, 1);                            /* Delete database */
     else if (save) {
       idnode_changed(&de->de_id);
       htsp_dvr_entry_update(de);
+      dvr_entry_retention_timer(de);                       /* As retention timer depends on file removal */
     }
     break;
   case DVR_SCHEDULED:
