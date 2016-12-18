@@ -764,6 +764,10 @@ dvr_entry_set_timer(dvr_entry_t *de)
       return;
 
   } else if (de->de_sched_state == DVR_RECORDING)  {
+    if (!de->de_enabled) {
+      dvr_stop_recording(de, SM_CODE_ABORTED, 1, 0);
+      return;
+    }
 
 recording:
     dvr_entry_trace_time1(de, "stop", stop, "set timer - arm");
@@ -1684,7 +1688,7 @@ static dvr_entry_t *_dvr_entry_update
       de->de_stop_extra = stop_extra;
       save |= DVR_UPDATED_STOP_EXTRA;
     }
-    if (save & (DVR_UPDATED_STOP|DVR_UPDATED_STOP_EXTRA)) {
+    if (save & (DVR_UPDATED_STOP|DVR_UPDATED_STOP_EXTRA|DVR_UPDATED_ENABLED)) {
       updated = 1;
       dvr_entry_set_timer(de);
     }
