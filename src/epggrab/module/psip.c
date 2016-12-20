@@ -127,7 +127,6 @@ psip_update_table(psip_status_t *ps, uint16_t pid, int type)
     if (pt->pt_type != type && pt->pt_table) {
       mpegts_table_destroy(pt->pt_table);
       pt->pt_table = NULL;
-      ps->ps_refcount--;
       goto assign;
     }
     return pt;
