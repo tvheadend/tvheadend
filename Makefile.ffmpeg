@@ -446,7 +446,7 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBFDKAAC) && \
-		CXXFLAGS="$(CFLAGS_PI)" CFLAGS="$(CFLAGS_PI)" $(CONFIGURE)
+		CXXFLAGS="$(CFLAGS_PI) -std=c++98" CFLAGS="$(CFLAGS_PI)" $(CONFIGURE)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
 	@touch $@
