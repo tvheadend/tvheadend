@@ -1152,6 +1152,8 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
         if((n = http_tokenize(authbuf, argv, 2, ':')) == 2) {
           hc->hc_username = tvh_strdupa(argv[0]);
           hc->hc_password = tvh_strdupa(argv[1]);
+          http_deescape(hc->hc_username);
+          http_deescape(hc->hc_password);
           // No way to actually track this
         }
       } else if (strcasecmp(argv[0], "digest") == 0) {
@@ -1166,6 +1168,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
         v = http_get_header_value(argv[1], "username");
         hc->hc_authhdr  = tvh_strdupa(argv[1]);
         hc->hc_username = tvh_strdupa(v);
+        http_deescape(hc->hc_username);
         free(v);
       } else {
         http_error(hc, HTTP_STATUS_BAD_REQUEST);
