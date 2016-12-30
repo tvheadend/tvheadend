@@ -816,7 +816,7 @@ void *tcp_server_create
     return NULL;
   }
 
-  listen(fd, 1);
+  listen(fd, 511);
 
   ts = malloc(sizeof(tcp_server_t));
   ts->serverfd = fd;
