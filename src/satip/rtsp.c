@@ -1116,7 +1116,7 @@ rtsp_parse_cmd
     rs->shutdown_on_close = hc;
 
 play:
-  if (pids.count > 0)
+  if (pids.count > 0 || pids.all)
     mpegts_pid_copy(&rs->pids, &pids);
   if (delpids.count > 0)
     mpegts_pid_del_group(&rs->pids, &delpids);
