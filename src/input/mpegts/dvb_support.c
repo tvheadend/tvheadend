@@ -82,13 +82,21 @@ static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,char *dst, size
 {
   while (srclen>0 && (*dstlen)>0){
     uint16_t uc = *src<<8|*(src+1);
-    int len = encode_utf8(uc, dst, *dstlen);
-    if (len == -1) {
-      errno = E2BIG;
-      return -1;
+    if (uc >= 0xe080 && uc <= 0xe09f) {
+      // codes 0xe080 - 0xe09f (control codes) are ignored except CR/LF
+      if (uc == 0xe08a) {
+        *dst = '\n';
+        (*dstlen)--;
+      }
     } else {
-      (*dstlen) -= len;
-      dst += len;
+      int len = encode_utf8(uc, dst, *dstlen);
+      if (len == -1) {
+        errno = E2BIG;
+        return -1;
+      } else {
+        (*dstlen) -= len;
+        dst += len;
+      }
     }
     srclen-=2;
     src+=2;
@@ -129,7 +137,11 @@ static inline size_t conv_8859(int conv,
       (*dstlen)--;
       dst++;
     } else if (c <= 0x9f) {
-      // codes 0x80 - 0x9f (control codes) are ignored
+      // codes 0x80 - 0x9f (control codes) are ignored except CR/LF
+      if (c == 0x8a) {
+        *dst = '\n';
+        (*dstlen)--;
+      }
     } else {
       // map according to character table, skipping
       // unmapped chars (value 0 in the table)
@@ -166,7 +178,11 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
       (*dstlen)--;
       dst++;
     } else if (c <= 0x9f) {
-      // codes 0x80 - 0x9f (control codes) are ignored
+      // codes 0x80 - 0x9f (control codes) are ignored except CR/LF
+      if (c == 0x8a) {
+        *dst = '\n';
+        (*dstlen)--;
+      }
     } else {
       uint16_t uc;
       if (c >= 0xc0 && c <= 0xcf) {

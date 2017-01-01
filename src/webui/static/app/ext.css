@@ -652,12 +652,14 @@
     font-weight: bold;
     text-align: center;
     border-bottom: 1px solid #000000;
+    white-space: pre-wrap;
 }
 
 .x-epg-subtitle {
     margin: 5px;
     font: normal 12px arial, tahoma, helvetica, sans-serif;
     font-weight: bold;
+    white-space: pre-wrap;
 }
 
 .x-epg-prefix {
@@ -674,10 +676,12 @@
 .x-epg-summary {
     margin: 5px;
     font-weight: bold;
+    white-space: pre-wrap;
 }
 
 .x-epg-desc {
     margin: 10px;
+    white-space: pre-wrap;
 }
 
 .x-epg-left {
