@@ -87,6 +87,7 @@ static inline size_t conv_UCS2(const uint8_t *src, size_t srclen,char *dst, size
       if (uc == 0xe08a) {
         *dst = '\n';
         (*dstlen)--;
+        dst++;
       }
     } else {
       int len = encode_utf8(uc, dst, *dstlen);
