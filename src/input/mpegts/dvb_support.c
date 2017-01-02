@@ -141,6 +141,7 @@ static inline size_t conv_8859(int conv,
       if (c == 0x8a) {
         *dst = '\n';
         (*dstlen)--;
+        dst++;
       }
     } else {
       // map according to character table, skipping
@@ -182,6 +183,7 @@ static inline size_t conv_6937(const uint8_t *src, size_t srclen,
       if (c == 0x8a) {
         *dst = '\n';
         (*dstlen)--;
+        dst++;
       }
     } else {
       uint16_t uc;
