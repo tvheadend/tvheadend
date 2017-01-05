@@ -12,12 +12,18 @@ The following tab specific buttons are available:
 
 Button                     | Function
 ---------------------------|---------
-**Map Services**           | Drop down menu (see mapping button table below). 
+**Map Services**           | Drop-down menu (see *Map Services* button table below). 
+**Maintenance**            | Drop-down menu (see *Maintenance* button table below).
 
-Mapping Button              | Function
+Map Services Button         | Function
 ----------------------------|--------------------
 **Map selected services**   | Map the highlighted services within the grid. 
 **Map all services**        | Map all available services as channels. 
+
+Maintenance Button                              | Function 
+------------------------------------------------|-------------------
+**Remove unseen services (PAT/SDT) (7 days+)**  | Remove services marked as *Missing in PAT/SDT* for 7+ days. 
+**Remove all unseen services**                  | Remove all services not seen for 7+ days. 
 
 ---
 
