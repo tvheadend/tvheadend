@@ -162,7 +162,7 @@ tvheadend.wizard_start = function(page) {
             cancel: cancel,
             uilevel: 'expert',
             help: function() {
-                new tvheadend.mdhelp('wizard');
+                new tvheadend.mdhelp('index');
             }
         });
     }
