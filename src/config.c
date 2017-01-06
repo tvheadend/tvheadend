@@ -2347,7 +2347,7 @@ const idclass_t config_class = {
       .type   = PT_INT,
       .id     = "chiconscheme",
       .name   = N_("Channel icon name scheme"),
-      .desc   = N_("Scheme to generate the the channel icon names "
+      .desc   = N_("Scheme to generate the channel icon names "
                    "(all lower-case, service name picons etc.)."),
       .list   = config_class_chiconscheme_list,
       .doc    = prop_doc_config_channelname_scheme,
