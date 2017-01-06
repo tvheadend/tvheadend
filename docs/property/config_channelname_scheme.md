@@ -1,9 +1,9 @@
 : 
-You must correctly set the *Channel icon path* (above) to be able to generate icon 
-filenames. Note that changing this option **won't** automatically (re-)generate 
-icon filenames, you must manually (re-)generate them using the 
-*[Reset Icons]* button in the *Configuration -> Channel / EPG -> Channels* 
-tab.
+
+The *Channel icon path* (above) must be set to generate the filenames. 
+Also note that changing the scheme will not update existing icons, you must 
+use the *[Reset Icons]* button in the [Channels](class/channel) tab
+to re-generate them.
 
 Scheme                 | Description
 -----------------------|-------------------
