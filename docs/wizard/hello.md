@@ -18,4 +18,4 @@ like to help translate Tvheadend see
 language can result in garbled EPG text; if this happens, don't panic, 
 as you can easily change it later.
 
-**The interface will reload using your preferred language (if the translation is available).**
+**The interface will reload in your chosen language (if the translation is available).**
