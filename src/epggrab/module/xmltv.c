@@ -657,7 +657,7 @@ static int _xmltv_parse_channel
       int n = 0;
 
       name = htsmsg_get_str(subtag, "cdata");
-      if (chnum) {
+      if (chnum && name) {
         while (isdigit(*(name + n))) n++;
         if (n > 0) {
           if (*(name + n) == 0 || (*(name + n) == ' ' && chnum == 1)) {
