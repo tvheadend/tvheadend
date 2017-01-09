@@ -287,6 +287,15 @@ const idclass_t timeshift_conf_class = {
       .off    = offsetof(timeshift_conf_t, ram_fit),
       .opts   = PO_EXPERT,
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "teletext",
+      .name   = N_("Include teletext"),
+      .desc   = N_("Include the teletext stream to the timeshift buffer. It may cause "
+                   "issues for channels where the teletext DTS is invalid."),
+      .off    = offsetof(timeshift_conf_t, teletext),
+      .opts   = PO_EXPERT,
+    },
     {}
   }
 };

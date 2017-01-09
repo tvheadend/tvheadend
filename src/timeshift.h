@@ -37,6 +37,7 @@ typedef struct timeshift_conf {
   uint64_t  total_ram_size;
   int       ram_only;
   int       ram_fit;
+  int       teletext;
 } timeshift_conf_t;
 
 extern struct timeshift_conf timeshift_conf;
