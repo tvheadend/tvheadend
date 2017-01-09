@@ -1889,6 +1889,10 @@ webui_init(int xspf)
 
   webui_static_content("/static",        "src/webui/static");
 
+  webui_static_content("/extjs/resources",     "src/webui/static/extjs/resources");
+  webui_static_content("/icons",               "src/webui/static/icons");
+  webui_static_content("/img",                 "src/webui/static/img");
+
   simpleui_start();
   extjs_start();
   comet_init();
