@@ -369,9 +369,8 @@ static void _process_msg
       }
       if (sm->sm_type == SMT_START)
         _update_smt_start(ts, (streaming_start_t *)sm->sm_data);
-      if (ts->dobuf) {
-        if (teletext) /* do not save teletext packets */
-          goto end;
+      /* do buffering, but without teletext packets */
+      if (ts->dobuf && !teletext) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
           if (tsf->wfd >= 0 || tsf->ram) {
             if ((err = _process_msg0(ts, tsf, sm)) < 0) {
@@ -390,7 +389,6 @@ static void _process_msg
   }
 
   /* Next */
-end:
   streaming_msg_free(sm);
   return;
 
