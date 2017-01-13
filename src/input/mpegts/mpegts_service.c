@@ -440,7 +440,7 @@ static int64_t
 mpegts_service_channel_number ( service_t *s )
 {
   mpegts_service_t *ms = (mpegts_service_t*)s;
-  int r = 0;
+  int64_t r = 0;
 
   if (!ms->s_dvb_mux->mm_network->mn_ignore_chnum) {
     r = ms->s_dvb_channel_num * CHANNEL_SPLIT + ms->s_dvb_channel_minor;
