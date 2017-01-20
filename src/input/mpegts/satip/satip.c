@@ -1116,7 +1116,7 @@ satip_discovery_service_received
     goto add_uuid;
   if (location == NULL || strncmp(location, "http://", 7))
     goto add_uuid;
-  if (bootid == NULL || configid == NULL || server == NULL)
+  if (server == NULL)
     goto add_uuid;
 
   /* Forward information to next layer */
@@ -1131,9 +1131,9 @@ satip_discovery_service_received
   d->location = strdup(location);
   d->server   = strdup(server);
   d->uuid     = strdup(uuid);
-  d->bootid   = strdup(bootid);
-  d->configid = strdup(configid);
-  d->deviceid = strdup(deviceid ? deviceid : "");
+  d->bootid   = strdup(bootid ?: "");
+  d->configid = strdup(configid ?: "");
+  d->deviceid = strdup(deviceid ?: "");
   if (urlparse(d->location, &d->url)) {
     satip_discovery_destroy(d, 0);
     return;
