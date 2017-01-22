@@ -1611,6 +1611,7 @@ htsp_method_authenticate(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_u32(r, "admin",          htsp->htsp_granted_access->aa_rights & ACCESS_ADMIN ? 1 : 0);
     htsmsg_add_u32(r, "streaming",      htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_STREAMING ? 1 : 0);
     htsmsg_add_u32(r, "dvr",            htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_RECORDER ? 1 : 0);
+    htsmsg_add_u32(r, "faileddvr",      htsp->htsp_granted_access->aa_rights & ACCESS_FAILED_RECORDER ? 1 : 0);
     htsmsg_add_u32(r, "anonymous",      htsp->htsp_granted_access->aa_rights & ACCESS_HTSP_ANONYMIZE ? 1 : 0);
     htsmsg_add_u32(r, "limitall",       htsp->htsp_granted_access->aa_conn_limit);
     htsmsg_add_u32(r, "limitdvr",       htsp->htsp_granted_access->aa_conn_limit_dvr);
