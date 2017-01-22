@@ -481,6 +481,8 @@ streaming_code2txt(int code)
     return N_("No access");
   case SM_CODE_NO_INPUT:
     return N_("No input detected");
+  case SM_CODE_NO_SPACE:
+    return N_("Not enough disk space");
 
   default:
     snprintf(ret, sizeof(ret), _("Unknown reason (%i)"), code);

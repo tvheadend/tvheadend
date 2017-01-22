@@ -4599,6 +4599,8 @@ _htsp_get_subscription_status(int smcode)
     return "userLimit";
   case SM_CODE_WEAK_STREAM:
     return "weakStream";
+  case SM_CODE_NO_SPACE:
+    return "noDiskSpace";
   default:
     return streaming_code2txt(smcode);
   }
