@@ -559,7 +559,8 @@ dvr_entry_retention_timer(dvr_entry_t *de)
   }
   else {
     dvr_entry_retention_arm(de, dvr_timer_disarm,
-        dvr_entry_get_rerecord_errors(de) ? INT_MAX : 0); // extend disarm to keep the rerecord logic running
+        dvr_entry_get_rerecord_errors(de) ?
+            time_t_out_of_range((int64_t)de->de_stop + DVR_RET_REM_1MONTH * (int64_t)86400) : 0); // extend disarm to keep the rerecord logic running, give up after one month
   }
 }
 
