@@ -929,6 +929,11 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
     return -1;
   }
 
+  if (!dvr_vfs_rec_start_check(cfg)) {
+    dvr_rec_fatal_error(de, "Not enough free disk space");
+    return SM_CODE_NO_SPACE;
+  }
+
   if (!(muxer = prch->prch_muxer)) {
     if (profile_chain_reopen(prch, &cfg->dvr_muxcnf, 0)) {
       dvr_rec_fatal_error(de, "Unable to reopen muxer");
@@ -1191,11 +1196,12 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
     if (!dvr_thread_global_lock(de, run))
       return 0;
     dvr_rec_set_state(de, DVR_RS_WAIT_PROGRAM_START, 0);
-    if(dvr_rec_start(de, ss) == 0) {
+    int code = dvr_rec_start(de, ss);
+    if(code == 0) {
       ret = 1;
       *started = 1;
     } else
-      dvr_stop_recording(de, SM_CODE_INVALID_TARGET, 1, 0);
+      dvr_stop_recording(de, code == SM_CODE_NO_SPACE ? SM_CODE_NO_SPACE : SM_CODE_INVALID_TARGET, 1, 0);
     dvr_thread_global_unlock(de);
   }
   return ret;

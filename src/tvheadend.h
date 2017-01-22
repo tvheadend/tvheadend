@@ -537,6 +537,7 @@ typedef enum {
 #define SM_CODE_NO_DESCRAMBLER            400
 #define SM_CODE_NO_ACCESS                 401
 #define SM_CODE_NO_INPUT                  402
+#define SM_CODE_NO_SPACE                  403
 
 typedef enum
 {

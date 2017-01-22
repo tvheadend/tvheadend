@@ -645,6 +645,8 @@ dvr_entry_status(dvr_entry_t *de)
         return N_("User access error");
       case SM_CODE_USER_LIMIT:
         return N_("User limit reached");
+      case SM_CODE_NO_SPACE:
+        return streaming_code2txt(de->de_last_error);
       default:
         break;
     }
@@ -658,7 +660,7 @@ dvr_entry_status(dvr_entry_t *de)
       return N_("Completed OK");
 
   case DVR_MISSED_TIME:
-    if (de->de_last_error == SM_CODE_SVC_NOT_ENABLED)
+    if (de->de_last_error == SM_CODE_SVC_NOT_ENABLED || de->de_last_error == SM_CODE_NO_SPACE)
       return streaming_code2txt(de->de_last_error);
     return N_("Time missed");
 
