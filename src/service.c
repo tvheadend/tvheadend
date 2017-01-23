@@ -1770,10 +1770,10 @@ tss2errcode(int tss)
 void
 service_refresh_channel(service_t *t)
 {
-#if 0
-  if(t->s_ch != NULL)
-    htsp_channel_update(t->s_ch);
-#endif
+  idnode_list_mapping_t *ilm;
+  LIST_FOREACH(ilm, &t->s_channels, ilm_in1_link) {
+    htsp_channel_update((channel_t *)ilm->ilm_in2);
+  }
 }
 
 
