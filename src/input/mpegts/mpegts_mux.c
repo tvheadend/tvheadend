@@ -416,11 +416,7 @@ mpegts_mux_class_scan_state_set ( void *o, const void *p )
   /* Start */
   if (state == MM_SCAN_STATE_PEND || state == MM_SCAN_STATE_ACTIVE) {
 
-    /* No change */
-    if (mm->mm_scan_state != MM_SCAN_STATE_IDLE)
-      return 0;
-
-    /* Start */
+    /* Start (only if required) */
     mpegts_network_scan_queue_add(mm, SUBSCRIPTION_PRIO_SCAN_USER,
                                   SUBSCRIPTION_USERSCAN, 0);
 
