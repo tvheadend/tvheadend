@@ -44,7 +44,7 @@
  *
  */
 static void *dvr_thread(void *aux);
-static void dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc);
+static void dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc, int lock);
 
 
 const static int prio2weight[6] = {
@@ -1167,7 +1167,7 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
 
     // Try to restart the recording if the muxer doesn't
     // support reconfiguration of the streams.
-    dvr_thread_epilog(de, postproc);
+    dvr_thread_epilog(de, postproc, 1);
     *dts_offset = PTS_UNSET;
     *started = 0;
     if (!dvr_thread_global_lock(de, run))
@@ -1446,8 +1446,8 @@ dvr_thread(void *aux)
                 streaming_code2txt(sm->sm_code));
 
 fin:
-        streaming_queue_clear(&backlog);
-	dvr_thread_epilog(de, postproc);
+  streaming_queue_clear(&backlog);
+	dvr_thread_epilog(de, postproc, 1);
 	start_time = 0;
 	started = 0;
 	muxing = 0;
@@ -1513,7 +1513,7 @@ fin:
   streaming_queue_clear(&backlog);
 
   if (prch->prch_muxer)
-    dvr_thread_epilog(de, postproc);
+    dvr_thread_epilog(de, postproc, 0);
 
   if (ss)
     streaming_start_unref(ss);
@@ -1571,8 +1571,12 @@ dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
  *
  */
 static void
-dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
+dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc, int lock)
 {
+  if (lock)
+    pthread_mutex_lock(&global_lock);
+  lock_assert(&global_lock);
+
   profile_chain_t *prch = de->de_chain;
   htsmsg_t *e;
   htsmsg_field_t *f;
@@ -1592,4 +1596,6 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
     dvr_spawn_cmd(de, dvr_postproc, NULL, 0);
 
   idnode_changed(&de->de_id);
+  if (lock)
+    pthread_mutex_unlock(&global_lock);
 }
