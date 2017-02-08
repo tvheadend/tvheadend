@@ -66,7 +66,7 @@ Many Linux distros include a package for the most common devices (e.g.
 *linux-firmwares* under Ubuntu or *firmware-linux-nonfree* under Debian).
 If this isn't sufficient, a good source of firmware files are the
 [OpenElec](https://github.com/OpenELEC/dvb-firmware) and [LibreELEC](https://github.com/libreELEC/dvb-firmware)
-firmware repositories on github.
+firmware repositories on Github.
 
 Typically, download the binary file and install it into `/lib/firmware`, owned
 by `root:root`, permissions `rw-r--r--` (0644)
