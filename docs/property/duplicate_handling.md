@@ -6,6 +6,7 @@ Option                                       | Description
 **Record if different episode number**       | Record a matching event only if the episode number is different.
 **Record if different subtitle**             | Record a matching event only if the subtitle is different.
 **Record if different description**          | Record a matching event only if the description is different.
+**Record once per month**                    | Record the first matching event once per month. 
 **Record once per week**                     | Record the first matching event once a week.
 **Record once per day**                      | Record the first matching event once a day.
 
