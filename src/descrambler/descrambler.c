@@ -293,6 +293,9 @@ descrambler_service_start ( service_t *t )
 #if ENABLE_LINUXDVB_CA
   dvbcam_service_start(t);
 #endif
+
+  if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff)
+    descrambler_external(t, 1);
 }
 
 void
