@@ -80,7 +80,7 @@ to change much and are universal over a large area, but terrestrial muxes
 are typically very localised and you'll need to know which specific transmitter
 you're listening to. 
 
-**Note**: some tuners (or drivers) require more tuning parameters than others so 
+**Note**: Some tuners (or drivers) require more tuning parameters than others so 
 **be sure to enter as many tuning parameters as possible**.
 
 Good sources of transmitter/mux information include:
