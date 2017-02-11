@@ -294,8 +294,11 @@ descrambler_service_start ( service_t *t )
   dvbcam_service_start(t);
 #endif
 
-  if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff)
+  if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff) {
+    pthread_mutex_lock(&t->s_stream_mutex);
     descrambler_external(t, 1);
+    pthread_mutex_unlock(&t->s_stream_mutex);
+  }
 }
 
 void
