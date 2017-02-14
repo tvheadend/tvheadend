@@ -244,7 +244,7 @@ descrambler_service_start ( service_t *t )
   if (t->s_scrambled_pass)
     return;
 
-  if (!((mpegts_service_t *)t)->s_dvb_forcecaid) {
+  if (!t->s_dvb_forcecaid) {
 
     count = 0;
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
@@ -266,7 +266,7 @@ descrambler_service_start ( service_t *t )
 
     if (constcw_table) {
       for (p = constcw_table; *p; p++)
-        if (*p == ((mpegts_service_t *)t)->s_dvb_forcecaid) {
+        if (*p == t->s_dvb_forcecaid) {
           constcw = 1;
           break;
         }
@@ -288,13 +288,15 @@ descrambler_service_start ( service_t *t )
     dr->dr_force_skip = 0;
     tvhcsa_init(&dr->dr_csa);
   }
-  caclient_start(t);
+
+  if (t->s_dvb_forcecaid != 0xffff)
+    caclient_start(t);
 
 #if ENABLE_LINUXDVB_CA
   dvbcam_service_start(t);
 #endif
 
-  if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff) {
+  if (t->s_dvb_forcecaid == 0xffff) {
     pthread_mutex_lock(&t->s_stream_mutex);
     descrambler_external(t, 1);
     pthread_mutex_unlock(&t->s_stream_mutex);

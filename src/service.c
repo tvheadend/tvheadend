@@ -1332,6 +1332,10 @@ int
 service_is_encrypted(service_t *t)
 {
   elementary_stream_t *st;
+  if (((mpegts_service_t *)t)->s_dvb_forcecaid == 0xffff)
+    return 0;
+  if (((mpegts_service_t *)t)->s_dvb_forcecaid)
+    return 1;
   TAILQ_FOREACH(st, &t->s_components, es_link)
     if (st->es_type == SCT_CA)
       return 1;

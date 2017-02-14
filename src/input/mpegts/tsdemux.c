@@ -179,8 +179,9 @@ ts_recv_packet1
   (mpegts_service_t *t, const uint8_t *tsb, int len, int table)
 {
   elementary_stream_t *st;
-  int pid, r;
-  int error = 0;
+  int_fast16_t pid;
+  uint_fast8_t scrambled, error = 0;
+  int r;
   
   /* Error */
   if (tsb[1] & 0x80)
@@ -218,14 +219,14 @@ ts_recv_packet1
   if(!error)
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
+  scrambled = t->s_scrambled_seen;
   if(!t->s_scrambled_pass &&
-     ((tsb[3] & 0xc0) ||
-       (t->s_scrambled_seen && st && st->es_type != SCT_CA))) {
+     ((tsb[3] & 0xc0) || (scrambled && st && st->es_type != SCT_CA))) {
 
     /**
      * Lock for descrambling, but only if packet was not in error
      */
-    if(!error)
+    if(!scrambled && !error)
       t->s_scrambled_seen |= service_is_encrypted((service_t*)t);
 
     /* scrambled stream */

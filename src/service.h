@@ -457,6 +457,7 @@ typedef struct service {
    * Descrambling support
    */
 
+  uint16_t s_dvb_forcecaid;
   struct th_descrambler_list s_descramblers;
   uint8_t s_scrambled_seen;
   uint8_t s_scrambled_pass;
