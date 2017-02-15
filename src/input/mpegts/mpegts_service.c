@@ -235,6 +235,14 @@ const idclass_t mpegts_service_class =
       .opts     = PO_EXPERT | PO_HEXA,
     },
     {
+      .type     = PT_INT,
+      .id       = "pts_shift",
+      .name     = N_("Shift PTS (ms)"),
+      .desc     = N_("Add this value to PTS for the teletext subtitles. The time value is in milliseconds and may be negative."),
+      .off      = offsetof(mpegts_service_t, s_pts_shift),
+      .opts     = PO_EXPERT,
+    },
+    {
       .type     = PT_TIME,
       .id       = "created",
       .name     = N_("Created"),

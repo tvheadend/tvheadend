@@ -1826,8 +1826,9 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
   if(SCT_ISAUDIO(st->es_type) && pkt->pkt_pts != PTS_UNSET &&
      (t->s_current_pts == PTS_UNSET ||
       pkt->pkt_pts > t->s_current_pts ||
-      pkt->pkt_pts < t->s_current_pts - 180000))
-    t->s_current_pts = pkt->pkt_pts;
+      pkt->pkt_pts < t->s_current_pts - 180000)) {
+    t->s_current_pts = (pkt->pkt_pts + (int64_t)t->s_pts_shift * 900) % PTS_MASK;
+  }
 
   pkt_trace(LS_PARSER, pkt, st->es_index, st->es_type, "deliver");
 
