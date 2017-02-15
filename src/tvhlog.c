@@ -132,6 +132,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_ESFILTER]      = { "esfilter",      N_("Elementary Stream Filter") },
   [LS_PROFILE]       = { "profile",       N_("Streaming Profile") },
   [LS_DESCRAMBLER]   = { "descrambler",   N_("Descrambler") },
+  [LS_DESCRAMBLER_EMM]={ "descrambler-emm",N_("Descrambler EMM") },
   [LS_CACLIENT]      = { "caclient",      N_("CA (descrambling) Client") },
   [LS_CSA]           = { "csa",           N_("CSA (descrambling)") },
   [LS_CAPMT]         = { "capmt",         N_("CAPMT CA Client") },

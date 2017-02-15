@@ -923,15 +923,15 @@ descrambler_table_callback
                    ptr[0], des->number, len, mt->mt_pid);
       } else {
         if (len >= 18)
-          tvhtrace(LS_DESCRAMBLER, "EMM message %02x:{%02x:%02x}:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x (len %d, pid %d)",
+          tvhtrace(LS_DESCRAMBLER_EMM, "EMM message %02x:{%02x:%02x}:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x (len %d, pid %d)",
                    ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], ptr[6], ptr[7],
                    ptr[8], ptr[9], ptr[10], ptr[11], ptr[12], ptr[13], ptr[14], ptr[15],
                    ptr[16], ptr[17], len, mt->mt_pid);
         else if (len >= 6)
-          tvhtrace(LS_DESCRAMBLER, "EMM message %02x:{%02x:%02x}:%02x:%02x:%02x (len %d, pid %d)",
+          tvhtrace(LS_DESCRAMBLER_EMM, "EMM message %02x:{%02x:%02x}:%02x:%02x:%02x (len %d, pid %d)",
                    ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], ptr[5], len, mt->mt_pid);
         else if (len >= 4)
-          tvhtrace(LS_DESCRAMBLER, "EMM message %02x:{%02x:%02x}:%02x (len %d, pid %d)",
+          tvhtrace(LS_DESCRAMBLER_EMM, "EMM message %02x:{%02x:%02x}:%02x (len %d, pid %d)",
                    ptr[0], ptr[1], ptr[2], ptr[3], len, mt->mt_pid);
       }
     }
