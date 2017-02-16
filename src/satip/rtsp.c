@@ -263,9 +263,13 @@ rtsp_check_urlbase(char *u)
       return NULL;
 #endif
   }
-  if (strcmp(u, rtsp_ip))
-    if (rtsp_nat_ip == NULL || rtsp_nat_ip[0] == '\0' || strcmp(u, rtsp_nat_ip))
+  if (strcmp(u, rtsp_ip)) {
+    if (rtsp_nat_ip == NULL)
       return NULL;
+    if (rtsp_nat_ip[0] != '*')
+      if (rtsp_nat_ip[0] == '\0' || strcmp(u, rtsp_nat_ip))
+        return NULL;
+  }
   return p ? p + 1 : u + strlen(u);
 }
 

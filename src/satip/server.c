@@ -667,7 +667,7 @@ const idclass_t satip_server_class = {
       .id     = "satip_nat_ip",
       .name   = N_("External IP (NAT)"),
       .desc   = N_("Enter external IP if behind Network address "
-                   "translation (NAT)."),
+                   "translation (NAT). Asterisk (*) means accept all IP addresses."),
       .off    = offsetof(struct satip_server_conf, satip_nat_ip),
       .opts   = PO_EXPERT,
       .group  = 1,
