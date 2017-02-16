@@ -46,6 +46,7 @@ struct satip_server_conf {
   int satip_descramble;
   int satip_rewrite_pmt;
   int satip_muxcnf;
+  int satip_nom3u;
   int satip_dvbs;
   int satip_dvbs2;
   int satip_dvbt;

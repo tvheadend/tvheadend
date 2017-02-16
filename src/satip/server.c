@@ -106,7 +106,7 @@ satip_server_http_xml(http_connection_t *hc)
 </iconList>\n\
 <presentationURL>http://%s:%d</presentationURL>\n\
 <satip:X_SATIPCAP xmlns:satip=\"urn:ses-com:satip\">%s</satip:X_SATIPCAP>\n\
-<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/playlist/satip/channels</satip:X_SATIPM3U>\n\
+%s\
 </device>\n\
 </root>\n"
 
@@ -195,7 +195,9 @@ satip_server_http_xml(http_connection_t *hc)
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
            http_server_ip, http_server_port,
-           devicelist ?: "");
+           devicelist ?: "",
+           satip_server_conf.satip_nom3u ? "" :
+             "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/playlist/satip/channels</satip:X_SATIPM3U>\n");
 
   free(devicelist);
 
@@ -669,6 +671,15 @@ const idclass_t satip_server_class = {
       .desc   = N_("Enter external IP if behind Network address "
                    "translation (NAT). Asterisk (*) means accept all IP addresses."),
       .off    = offsetof(struct satip_server_conf, satip_nat_ip),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_nom3u",
+      .name   = N_("Disable X_SATIPM3U tag"),
+      .desc   = N_("Do not send X_SATIPM3U information in the XML description to clients."),
+      .off    = offsetof(struct satip_server_conf, satip_nom3u),
       .opts   = PO_EXPERT,
       .group  = 1,
     },
