@@ -304,6 +304,19 @@ const idclass_t timeshift_conf_class = {
  * Process a packet
  */
 
+static void
+timeshift_smt_start ( timeshift_t *ts, streaming_start_t *ss )
+{
+  int i;
+
+  /* Update early teletext index */
+  for (i = 0; i < ss->ss_num_components; i++)
+    if (ss->ss_components[i].ssc_type == SCT_TELETEXT) {
+      ts->teletextidx0 = ss->ss_components[i].ssc_index;
+      break;
+    }
+}
+
 static int
 timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
 {
@@ -311,9 +324,12 @@ timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
   int64_t time;
 
   if (pkt->pkt_pts != PTS_UNSET) {
-    time = ts_rescale(pkt->pkt_pts, 1000000);
-    if (ts->last_wr_time < time)
-      ts->last_wr_time = time;
+    /* avoid to update last_wr_time for TELETEXT packets */
+    if (ts->teletextidx0 != pkt->pkt_componentindex) {
+      time = ts_rescale(pkt->pkt_pts, 1000000);
+      if (ts->last_wr_time < time)
+        ts->last_wr_time = time;
+    }
   }
   sm->sm_time = ts->last_wr_time;
   timeshift_packet_log("wr ", ts, sm);
@@ -360,6 +376,9 @@ static void timeshift_input
 
     else if (type == SMT_MPEGTS)
       ts->packet_mode = 0;
+
+    else if (type == SMT_START)
+      timeshift_smt_start(ts, (streaming_start_t *)sm->sm_data);
 
     /* Send to the writer thread */
     if (ts->packet_mode) {
