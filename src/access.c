@@ -1054,6 +1054,8 @@ access_entry_create(const char *uuid, htsmsg_t *conf)
     ae->ae_change_chrange = 1;
     ae->ae_change_chtags  = 1;
     ae->ae_change_rights  = 1;
+    ae->ae_streaming      = 1;
+    ae->ae_dvr            = 1;
     ae->ae_htsp_streaming = 1;
     ae->ae_htsp_dvr       = 1;
     ae->ae_all_dvr        = 1;
