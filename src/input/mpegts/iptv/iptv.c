@@ -169,6 +169,8 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
     }
   pthread_mutex_unlock(&mi->mi_output_lock);
 
+  tvhtrace(LS_IPTV_SUB, "is free[%p]: h = %d, l = %d, rw = %d", mm, h, l, rw);
+
   if (lweight)
     *lweight = rw == INT_MAX ? 0 : rw;
 
@@ -192,22 +194,29 @@ static int
 iptv_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  if (mpegts_input_is_enabled(mi, mm, flags, weight) == MI_IS_ENABLED_NEVER)
-    return MI_IS_ENABLED_NEVER;
-  return iptv_input_is_free(mi, mm, 0, weight, NULL) == NULL ?
-         MI_IS_ENABLED_OK : MI_IS_ENABLED_RETRY;
+  int r;
+  mpegts_mux_instance_t *mmi;
+
+  r = mpegts_input_is_enabled(mi, mm, flags, weight);
+  if (r != MI_IS_ENABLED_OK) {
+    tvhtrace(LS_IPTV_SUB, "enabled[%p]: generic %d", mm, r);
+    return r;
+  }
+  mmi = iptv_input_is_free(mi, mm, 0, weight, NULL);
+  tvhtrace(LS_IPTV_SUB, "enabled[%p]: free %p", mm, mmi);
+  return mmi == NULL ? MI_IS_ENABLED_OK : MI_IS_ENABLED_RETRY;
 }
 
 static int
 iptv_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
   int w;
+  mpegts_mux_instance_t *mmi;
 
   /* Find the "min" weight */
-  if (iptv_input_is_free(mi, mm, 1, weight, &w) == NULL)
-    w = 0;
-
-  return w;
+  mmi = iptv_input_is_free(mi, mm, 1, weight, &w);
+  tvhtrace(LS_IPTV_SUB, "get weight[%p]: %p (%d)", mm, mmi, w);
+  return mmi == NULL ? 0 : w;
 
 }
 
@@ -245,6 +254,7 @@ iptv_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   /* Do we need to stop something? */
   lmmi = iptv_input_is_free(mi, mmi->mmi_mux, 1, mmi->mmi_start_weight, NULL);
+  tvhtrace(LS_IPTV_SUB, "warm mux[%p]: %p (%d)", im, lmmi, mmi->mmi_start_weight);
   if (lmmi) {
     /* Stop */
     lmmi->mmi_mux->mm_stop(lmmi->mmi_mux, 1, SM_CODE_ABORTED);
