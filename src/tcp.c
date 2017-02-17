@@ -230,7 +230,7 @@ static int
 tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
 {
   htsbuf_data_t *hd = TAILQ_LAST(&hq->hq_q, htsbuf_data_queue);
-  int c;
+  int c, r;
 
   if(hd != NULL) {
     /* Fill out any previous buffer */
@@ -238,12 +238,14 @@ tcp_fill_htsbuf_from_fd(int fd, htsbuf_queue_t *hq)
 
     if(c > 0) {
 
-      c = read(fd, hd->hd_data + hd->hd_data_len, c);
-      if(c < 1)
+      do {
+        r = read(fd, hd->hd_data + hd->hd_data_len, c);
+      } while (r < 0 && ERRNO_AGAIN(errno));
+      if(r < 1)
 	return -1;
 
-      hd->hd_data_len += c;
-      hq->hq_size += c;
+      hd->hd_data_len += r;
+      hq->hq_size += r;
       return 0;
     }
   }
