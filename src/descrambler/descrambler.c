@@ -693,7 +693,7 @@ descrambler_descramble ( service_t *t,
 
   if (dr == NULL || dr->dr_external) {
     if ((tsb[3] & 0x80) == 0) {
-      ts_recv_packet2((mpegts_service_t *)t, tsb, len);
+      ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
       return 1;
     }
     return dr && dr->dr_external ? 1 : -1;
@@ -701,7 +701,7 @@ descrambler_descramble ( service_t *t,
 
   if (dr->dr_csa.csa_type == DESCRAMBLER_NONE && dr->dr_queue_total == 0)
     if ((tsb[3] & 0x80) == 0) {
-      ts_recv_packet2((mpegts_service_t *)t, tsb, len);
+      ts_recv_packet0((mpegts_service_t *)t, st, tsb, len);
       return 1;
     }
 

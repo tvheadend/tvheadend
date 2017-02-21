@@ -48,7 +48,7 @@ static void ts_skip(mpegts_service_t *t, const uint8_t *tsb, int len);
 /**
  * Continue processing of transport stream packets
  */
-static void
+void
 ts_recv_packet0
   (mpegts_service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
 {
