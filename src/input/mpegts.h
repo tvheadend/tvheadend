@@ -134,7 +134,8 @@ struct mpegts_pcr {
   uint16_t pcr_pid;
 };
 
-#define MPEGTS_DATA_CC_RESTART (1<<0)
+#define MPEGTS_DATA_CC_RESTART		(1<<0)
+#define MPEGTS_DATA_REMOVE_SCRAMBLED	(1<<1)
 
 typedef int (*mpegts_table_callback_t)
   ( mpegts_table_t*, const uint8_t *buf, int len, int tableid );
@@ -710,6 +711,7 @@ struct mpegts_input
   TAILQ_HEAD(,mpegts_packet)      mi_input_queue;
   uint64_t                        mi_input_queue_size;
   tvhlog_limit_t                  mi_input_queue_loglimit;
+  int                             mi_remove_scrambled_bits;
 
   /* Data processing/output */
   // Note: this lock (mi_output_lock) protects all the remaining

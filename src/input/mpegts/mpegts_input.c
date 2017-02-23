@@ -310,6 +310,17 @@ const idclass_t mpegts_input_class =
       .opts     = PO_ADVANCED,
     },
     {
+      .type     = PT_BOOL,
+      .id       = "remove_scrambled",
+      .name     = N_("Remove scrambled bits"),
+      .desc     = N_("The scrambled bits in MPEG-TS packets are always cleared. "
+                     "It is a workaround for the special streams which are "
+                     "descrambled, but these bits are not touched."),
+      .off      = offsetof(mpegts_input_t, mi_remove_scrambled_bits),
+      .def.i    = 1,
+      .opts     = PO_EXPERT,
+    },
+    {
       .type     = PT_STR,
       .id       = "networks",
       .name     = N_("Networks"),
@@ -1111,7 +1122,13 @@ retry:
     mp->mp_mux        = mmi->mmi_mux;
     mp->mp_len        = len2;
     mp->mp_cc_restart = (flags & MPEGTS_DATA_CC_RESTART) ? 1 : 0;
+
     memcpy(mp->mp_data, tsb, len2);
+    if (mi->mi_remove_scrambled_bits || (flags & MPEGTS_DATA_REMOVE_SCRAMBLED) != 0) {
+      uint8_t *tmp, *end;
+      for (tmp = mp->mp_data, end = mp->mp_data + len2; tmp < end; tmp += 188)
+        tmp[3] &= ~0xc0;
+    }
 
     len -= len2;
     off += len2;

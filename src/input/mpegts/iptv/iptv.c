@@ -570,7 +570,9 @@ iptv_input_recv_packets ( iptv_mux_t *im, ssize_t len )
       return 1;
     }
     mpegts_input_recv_packets((mpegts_input_t*)iptv_input, mmi,
-                              &im->mm_iptv_buffer, 0, &pcr);
+                              &im->mm_iptv_buffer,
+                              in->in_remove_scrambled_bits ?
+                                MPEGTS_DATA_REMOVE_SCRAMBLED : 0, &pcr);
     if (pcr.pcr_first != PTS_UNSET && pcr.pcr_last != PTS_UNSET) {
       im->im_pcr_pid = pcr.pcr_pid;
       if (im->im_pcr == PTS_UNSET) {
@@ -797,6 +799,17 @@ const idclass_t iptv_network_class = {
       .off      = offsetof(iptv_network_t, in_icon_url),
       .set      = iptv_network_class_icon_url_set,
       .opts     = PO_MULTILINE | PO_ADVANCED
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "remove_scrambled",
+      .name     = N_("Remove scrambled bits"),
+      .desc     = N_("The scrambled bits in MPEG-TS packets are always cleared. "
+                     "It is a workaround for the special streams which are "
+                     "descrambled, but these bits are not touched."),
+      .off      = offsetof(iptv_network_t, in_remove_scrambled_bits),
+      .def.i    = 1,
+      .opts     = PO_EXPERT,
     },
     {
       .id       = "autodiscovery",

@@ -83,6 +83,7 @@ struct iptv_network
   int in_scan_create;
   int in_priority;
   int in_streaming_priority;
+  int in_remove_scrambled_bits;
 
   uint16_t in_service_id;
 
