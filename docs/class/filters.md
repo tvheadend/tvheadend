@@ -5,8 +5,12 @@ available streams then second and so on.
 
 !['Stream filters'](static/img/doc/streamfiltertab.png)
 
-If any elementary stream is not marked as ignored or exclusive, it is 
-used. If you like to ignore unknown elementary streams, add a rule to 
+If any elementary stream is not marked as ignored, used or exlusive,
+it is used. The implicit use rules are marked as last after all user
+rules. Actions like 'empty' which require to know the used streams must
+not rely on the implicit use rules.
+
+If you like to ignore unknown elementary streams, add a rule to
 the end of grid with the any (not defined) comparisons and with the 
 action ignore.
 
