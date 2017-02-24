@@ -233,7 +233,7 @@ typedef struct tasklet {
   TAILQ_ENTRY(tasklet) tsk_link;
   tsk_callback_t *tsk_callback;
   void *tsk_opaque;
-  int tsk_allocated;
+  void (*tsk_free)(void *);
 } tasklet_t;
 
 tasklet_t *tasklet_arm_alloc(tsk_callback_t *callback, void *opaque);

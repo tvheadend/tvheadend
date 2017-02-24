@@ -370,7 +370,7 @@ tasklet_arm_alloc(tsk_callback_t *callback, void *opaque)
   tasklet_t *tsk = calloc(1, sizeof(*tsk));
   if (tsk) {
     memoryinfo_alloc(&tasklet_memoryinfo, sizeof(*tsk));
-    tsk->tsk_allocated = 1;
+    tsk->tsk_free = free;
     tasklet_arm(tsk, callback, opaque);
   }
   return tsk;
@@ -410,8 +410,7 @@ tasklet_disarm(tasklet_t *tsk)
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk->tsk_callback(tsk->tsk_opaque, 1);
     tsk->tsk_callback = NULL;
-    if (tsk->tsk_allocated)
-      free(tsk);
+    if (tsk->tsk_free) tsk->tsk_free(tsk);
   }
 
   pthread_mutex_unlock(&tasklet_lock);
@@ -428,9 +427,9 @@ tasklet_flush()
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk->tsk_callback(tsk->tsk_opaque, 1);
     tsk->tsk_callback = NULL;
-    if (tsk->tsk_allocated) {
+    if (tsk->tsk_free) {
       memoryinfo_free(&tasklet_memoryinfo, sizeof(*tsk));
-      free(tsk);
+      tsk->tsk_free(tsk);
     }
   }
 
@@ -456,14 +455,14 @@ tasklet_thread ( void *aux )
       tvh_cond_wait(&tasklet_cond, &tasklet_lock);
       continue;
     }
-    /* the callback might re-initialize tasklet, save everythin */
+    /* the callback might re-initialize tasklet, save everything */
     TAILQ_REMOVE(&tasklets, tsk, tsk_link);
     tsk_cb = tsk->tsk_callback;
     opaque = tsk->tsk_opaque;
     tsk->tsk_callback = NULL;
-    if (tsk->tsk_allocated) {
+    if (tsk->tsk_free) {
       memoryinfo_free(&tasklet_memoryinfo, sizeof(*tsk));
-      free(tsk);
+      tsk->tsk_free(tsk);
     }
     /* now, the callback can be safely called */
     if (tsk_cb) {
