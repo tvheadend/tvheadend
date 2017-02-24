@@ -1,27 +1,10 @@
-This tab defines rules to filter and order the elementary streams 
-(PIDs) like video or audio from the input feed. The execution order of 
-commands is granted. It means that first rule is executed for all 
-available streams then second and so on.
+This tab allows you to define rules that filter and order various 
+elementary streams. 
 
 !['Stream filters'](static/img/doc/streamfiltertab.png)
 
-If any elementary stream is not marked as ignored, used or exlusive,
-it is used. The implicit use rules are marked as last after all user
-rules. Actions like 'empty' which require to know the used streams must
-not rely on the implicit use rules.
-
-If you like to ignore unknown elementary streams, add a rule to
-the end of grid with the any (not defined) comparisons and with the 
-action ignore.
-
-The rules for different elementary stream groups (video, audio,
-teletext, subtitle, CA, other) are executed separately (as visually edited).
-
-For the visual verification of the filtering, there is a service 
-info dialog in the [Services](class/mpegts_service) tab. 
-This dialog shows the received PIDs and filtered PIDs in one window.
-
 ---
+
 <tvh_include>inc/common_button_table_start</tvh_include>
 
 <tvh_include>inc/common_button_table_end</tvh_include>
@@ -35,9 +18,47 @@ Button                 | Function
 
 ---
 
+###Filter Basics
+
+* Each rule is executed in sequence (as displayed in the grid). 
+* If a rule removes a stream, it will not be available to other rules
+unless explicitly added back in (by another rule).
+* Elementary streams not marked IGNORE, USE or EXCLUSIVE will not be 
+filtered out.
+* Rules with fields not defined (or set to *ANY*) will apply to ALL 
+elementary streams. For example, not defining/selecting *ANY* for 
+the *Language* field will apply the filter to all streams available/not 
+already filtered out by another rule.
+* USE / EMPTY rules have precedence against IGNORE (if the stream is 
+already selected - it cannot be ignored).
+
+---
+
+###Visual Verification of Filtering
+
+For visual verification of filtering, there is the service 
+info dialog in the [Services](class/mpegts_service) tab. 
+This dialog shows the received PIDs and filtered PIDs in one window.
+
+---
+
 <tvh_include>inc/add_grid_entry</tvh_include>
 
-!['Stream filter dialog'](static/img/doc/addfilterdialog.png)
+Below are some examples:
+
+####Filtering out a Stream
+
+!['Removing a stream'](static/img/doc/filterexample.png)
+
+Here we're removing the Bulgarian language audio from the 
+input (first rule). However, if Bulgarian is the only language 
+available add it back in as a last resort (second rule).
+
+####Ignoring Unknown Streams
+
+If you'd like to ignore unknown elementary streams, add a rule to the 
+end of grid with the *ANY* (not defined) comparison(s) and the 
+action set to *IGNORE*.
 
 ---
 

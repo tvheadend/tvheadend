@@ -107,6 +107,8 @@ you'd like to associate/disassociate the service with.
 Clicking the !['Information Icon'](static/icons/information.png) 
 information icon will display service details.
 
+!['Service Information'](static/img/doc/serviceinfo.png)
+
 ---
 
 <tvh_include>inc/play</tvh_include>
