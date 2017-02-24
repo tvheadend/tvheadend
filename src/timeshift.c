@@ -191,7 +191,7 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "enabled",
       .name   = N_("Enabled"),
-      .desc   = N_("Enable/disable timeshift."),
+      .desc   = N_("Enable/Disable timeshift."),
       .off    = offsetof(timeshift_conf_t, enabled),
     },
     {
@@ -274,7 +274,9 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "ram_only",
       .name   = N_("RAM only"),
-      .desc   = N_("Only use system RAM for timeshift buffers."),
+      .desc   = N_("Keep timeshift buffers in RAM only. "
+                   "With this option enabled, the amount of rewind time "
+                   "is limited by how much RAM Tvheadend is allowed."),
       .off    = offsetof(timeshift_conf_t, ram_only),
       .opts   = PO_ADVANCED,
     },
@@ -282,8 +284,10 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "ram_fit",
       .name   = N_("Fit to RAM (cut rewind)"),
-      .desc   = N_("If possible, maintain the timeshift data in the server memory only. "
-                   "This may reduce the amount of allowed rewind time."),
+      .desc   = N_("With \"RAM only\" enabled, and when \"Maximum RAM "
+                   "size\" is reached, remove the oldest segment in the "
+                   "buffer instead of replacing it completely. Note, "
+                   "this may reduce the amount of rewind time."),
       .off    = offsetof(timeshift_conf_t, ram_fit),
       .opts   = PO_EXPERT,
     },
@@ -291,8 +295,9 @@ const idclass_t timeshift_conf_class = {
       .type   = PT_BOOL,
       .id     = "teletext",
       .name   = N_("Include teletext"),
-      .desc   = N_("Include the teletext stream to the timeshift buffer. It may cause "
-                   "issues for channels where the teletext DTS is invalid."),
+      .desc   = N_("Include teletext in the timeshift buffer. Enabling "
+                   "this may cause issues with some services where the "
+                   "teletext DTS is invalid."),
       .off    = offsetof(timeshift_conf_t, teletext),
       .opts   = PO_EXPERT,
     },
