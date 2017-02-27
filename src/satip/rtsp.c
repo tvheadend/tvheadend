@@ -1683,7 +1683,7 @@ void satip_server_rtsp_done(void)
   rtsp_port = -1;
   free(rtsp_ip);
   free(rtsp_nat_ip);
-  rtsp_ip = NULL;
+  rtsp_ip = rtsp_nat_ip = NULL;
   satip_rtp_done();
   pthread_mutex_unlock(&global_lock);
 }

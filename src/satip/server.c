@@ -529,6 +529,10 @@ static void satip_server_info(const char *prefix, int descramble, int muxcnf)
   int fe, findex;
   const char *ftype;
 
+  if (satip_server_rtsp_port <= 0) {
+    tvhinfo(LS_SATIPS, "SAT>IP Server inactive");
+    return;
+  }
   tvhinfo(LS_SATIPS, "SAT>IP Server %sinitialized", prefix);
   tvhinfo(LS_SATIPS, "  HTTP %s:%d, RTSP %s:%d",
               http_server_ip, http_server_port,
@@ -761,6 +765,9 @@ static void satip_server_init_common(const char *prefix, int announce)
   int descramble, rewrite_pmt, muxcnf;
   char *nat_ip;
 
+  if (satip_server_rtsp_port <= 0)
+    return;
+
   if (http_server_ip == NULL) {
     if (tcp_server_onall(http_server) && satip_server_bindaddr == NULL) {
       tvherror(LS_SATIPS, "use --satip_bindaddr parameter to select the local IP for SAT>IP");
@@ -774,9 +781,6 @@ static void satip_server_init_common(const char *prefix, int announce)
     http_server_ip = strdup(satip_server_bindaddr ?: http_ip);
     http_server_port = ntohs(IP_PORT(http));
   }
-
-  if (satip_server_rtsp_port <= 0)
-    return;
 
   descramble = satip_server_conf.satip_descramble;
   rewrite_pmt = satip_server_conf.satip_rewrite_pmt;
