@@ -46,16 +46,16 @@ YASM_TB        = $(YASM).tar.gz
 YASM_URL       = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
 YASM_SHA1      = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
-LIBX264        = x264-snapshot-20160502-2245
+LIBX264        = x264-snapshot-20170305-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 90c48dab878520a819905880bc4912834fe694fb
+LIBX264_SHA1   = c56f34a5c09abf91a80b28cc79340dc5cf6ad6f5
 LIBX264_DIFFS  = libx264.configure.diff
 
-LIBX265        = x265_2.1
+LIBX265        = x265_2.3
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = 37ed92b83dbe9e1420e1c226d35caeea16d4b0e4
+LIBX265_SHA1   = 575003e50e7f06aa3c983679d4399581394adbf9
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
@@ -94,10 +94,10 @@ LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
 LIBMFX_SHA1    = 84dbdf4a6b409067e863eb9564bb2efdec6d39ce
 LIBMFX_DIFFS   = libmfx.linux.path.diff
 
-FFMPEG         = ffmpeg-3.2
+FFMPEG         = ffmpeg-3.2.4
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = aac4876d1bc4d2cd8d9833b20649c3eed984f6ef
+FFMPEG_SHA1    = bfdd9bc3bb9808f1c31e5eede37c932ea9785812
 
 
 # ##############################################################################
