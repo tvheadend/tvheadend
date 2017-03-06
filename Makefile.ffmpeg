@@ -94,10 +94,10 @@ LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
 LIBMFX_SHA1    = 84dbdf4a6b409067e863eb9564bb2efdec6d39ce
 LIBMFX_DIFFS   = libmfx.linux.path.diff
 
-FFMPEG         = ffmpeg-3.2
+FFMPEG         = ffmpeg-3.2.4
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = aac4876d1bc4d2cd8d9833b20649c3eed984f6ef
+FFMPEG_SHA1    = bfdd9bc3bb9808f1c31e5eede37c932ea9785812
 
 
 # ##############################################################################
