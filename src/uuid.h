@@ -64,7 +64,7 @@ int uuid_hex2bin  ( const tvh_uuid_t *a, tvh_uuid_t *b );
 /**
  * Copy
  */
-static inline void uuid_copy ( tvh_uuid_t *dst, const tvh_uuid_t *src )
+static inline void uuid_duplicate ( tvh_uuid_t *dst, const tvh_uuid_t *src )
 {
   *dst = *src;
 }
