@@ -25,7 +25,7 @@
 #define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
 #endif
 
-#ifdef PLATFORM_DARWIN
+#if defined(PLATFORM_DARWIN) && !defined(CLOCK_MONOTONIC)
 #error "Platforms without monotonic clocks are not supported!"
 #define CLOCK_MONOTONIC 0
 #define CLOCK_REALTIME 0
