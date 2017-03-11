@@ -215,7 +215,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
       ADD(u.dmc_fe_ofdm.guard_interval, gi, "18");
     if (dmc->dmc_fe_delsys == DVB_SYS_DVBT2)
       if (dmc->dmc_fe_stream_id != DVB_NO_STREAM_ID_FILTER)
-        satip_rtsp_add_val("pls", buf, (dmc->dmc_fe_stream_id & 0xff) * 1000);
+        satip_rtsp_add_val("plp", buf, (dmc->dmc_fe_stream_id & 0xff) * 1000);
   } else if (dmc->dmc_fe_delsys == DVB_SYS_ATSC ||
              dmc->dmc_fe_delsys == DVB_SYS_DVBC_ANNEX_B) {
     satip_rtsp_add_val("freq", buf, dmc->dmc_fe_freq / 1000);
