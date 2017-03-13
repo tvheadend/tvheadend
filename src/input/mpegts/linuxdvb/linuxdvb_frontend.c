@@ -412,11 +412,40 @@ const idclass_t linuxdvb_frontend_dab_class =
  * Class methods
  * *************************************************************************/
 
+static int
+linuxdvb_frontend_open_fd ( linuxdvb_frontend_t *lfe, const char *name )
+{
+  linuxdvb_frontend_t *lfe2;
+  const char *extra = "";
+
+  if (lfe->lfe_fe_fd > 0)
+    return 0;
+
+  /* Share FD across frontends */
+  if (lfe->lfe_adapter->la_exclusive) {
+    LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
+      if (lfe2->lfe_fe_fd > 0) {
+        lfe->lfe_fe_fd = dup(lfe2->lfe_fe_fd);
+        extra = " (shared)";
+        break;
+      }
+    }
+  }
+
+  if (lfe->lfe_fe_fd <= 0)
+    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
+
+  tvhtrace(LS_LINUXDVB, "%s - opening FE %s (%d)%s",
+           name, lfe->lfe_fe_path, lfe->lfe_fe_fd, extra);
+
+  return lfe->lfe_fe_fd <= 0;
+}
+
 static void
 linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
 {
   char buf[512];
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi;
 
   mi->mi_display_name(mi, buf, sizeof(buf));
 
@@ -434,20 +463,8 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
   /* Ensure FE opened (if not powersave) */
   } else if (!lfe->lfe_powersave && lfe->lfe_fe_fd <= 0 && lfe->lfe_fe_path) {
 
-    /* Share FD across frontends */
-    if (lfe->lfe_adapter->la_exclusive) {
-      LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
-        if (lfe2->lfe_fe_fd > 0) {
-          lfe->lfe_fe_fd = dup(lfe2->lfe_fe_fd);
-          break;
-        }
-      }
-    }
+    linuxdvb_frontend_open_fd(lfe, buf);
 
-    if (lfe->lfe_fe_fd <= 0)
-      lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace(LS_LINUXDVB, "%s - opening FE %s (%d)",
-             buf, lfe->lfe_fe_path, lfe->lfe_fe_fd);
   }
 }
 
@@ -1442,13 +1459,9 @@ linuxdvb_frontend_clear
   lfe->mi_display_name((mpegts_input_t*)lfe, buf1, sizeof(buf1));
   tvhtrace(LS_LINUXDVB, "%s - frontend clear", buf1);
 
-  if (lfe->lfe_fe_fd <= 0) {
-    lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
-    tvhtrace(LS_LINUXDVB, "%s - opening FE %s (%d)", buf1, lfe->lfe_fe_path, lfe->lfe_fe_fd);
-    if (lfe->lfe_fe_fd <= 0) {
-      return SM_CODE_TUNING_FAILED;
-    }
-  }
+  if (linuxdvb_frontend_open_fd(lfe, buf1))
+    return SM_CODE_TUNING_FAILED;
+
   lfe->lfe_locked  = 0;
   lfe->lfe_status  = 0;
   lfe->lfe_status2 = 0;
