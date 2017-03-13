@@ -18,12 +18,16 @@
 #ifndef __TVH_ENDIAN_H
 #define __TVH_ENDIAN_H
 
-#include <byteswap.h>
 #if defined(PLATFORM_DARWIN)
 #include <machine/endian.h>
+#define bswap_16(x) OSSwapInt16(x)
+#define bswap_32(x) OSSwapInt32(x)
+#define bswap_64(x) OSSwapInt64(x)
 #elif defined(PLATFORM_FREEBSD)
+#include <byteswap.h>
 #include <sys/endian.h>
 #else
+#include <byteswap.h>
 #include <endian.h>
 #endif
 
