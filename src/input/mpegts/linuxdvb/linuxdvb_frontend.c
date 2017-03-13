@@ -432,8 +432,10 @@ linuxdvb_frontend_open_fd ( linuxdvb_frontend_t *lfe, const char *name )
     }
   }
 
-  if (lfe->lfe_fe_fd <= 0)
+  if (lfe->lfe_fe_fd <= 0) {
     lfe->lfe_fe_fd = tvh_open(lfe->lfe_fe_path, O_RDWR | O_NONBLOCK, 0);
+    extra = "";
+  }
 
   tvhtrace(LS_LINUXDVB, "%s - opening FE %s (%d)%s",
            name, lfe->lfe_fe_path, lfe->lfe_fe_fd, extra);
