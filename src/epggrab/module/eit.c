@@ -28,6 +28,11 @@
 #include "input/mpegts/dvb_charset.h"
 #include "dvr/dvr.h"
 
+#define EIT_PID_MASK          0x3fff
+#define EIT_CONV_TYPE_MASK    0xff0000
+
+#define EIT_CONV_HUFFMAN      0x010000
+
 /* ************************************************************************
  * Status handling
  * ***********************************************************************/
@@ -92,20 +97,15 @@ static dvb_string_conv_t _eit_freesat_conv[2] = {
  * Get string
  */
 static int _eit_get_string_with_len
-  ( epggrab_module_t *m,
+  ( epggrab_module_t *mod,
     char *dst, size_t dstlen, 
-		const uint8_t *src, size_t srclen, const char *charset )
+    const uint8_t *src, size_t srclen, const char *charset )
 {
+  epggrab_module_ota_t *m = (epggrab_module_ota_t *)mod;
   dvb_string_conv_t *cptr = NULL;
 
-  /* Enable huffman decode (for freeview and/or freesat) */
-  m = epggrab_module_find_by_id("uk_freesat");
-  if (m && m->enabled) {
+  if (((intptr_t)m->opaque & EIT_CONV_TYPE_MASK) == EIT_CONV_HUFFMAN)
     cptr = _eit_freesat_conv;
-  } else {
-    m = epggrab_module_find_by_id("uk_freeview");
-    if (m && m->enabled) cptr = _eit_freesat_conv;
-  }
 
   /* Convert */
   return dvb_get_string_with_len(dst, dstlen, src, srclen, charset, cptr);
@@ -763,13 +763,11 @@ static int _eit_start
     if (m->enabled) return -1;
   }
 
-  pid = (intptr_t)m->opaque;
+  pid = (intptr_t)m->opaque & EIT_PID_MASK;
 
   /* Freesat (3002/3003) */
-  if (!strcmp("uk_freesat", m->id)) {
+  if (!strcmp("uk_freesat", m->id))
     mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
-    pid = 3003;
-  }
 
   /* Standard (0x12) */
   if (pid == 0) {
@@ -817,11 +815,11 @@ static int _eit_tune
   return r;
 }
 
-#define EIT_OPS(name, pid) \
+#define EIT_OPS(name, pid ) \
   static epggrab_ota_module_ops_t name = { \
     .start  = _eit_start, \
     .tune   = _eit_tune, \
-    .opaque = (void *)pid, \
+    .opaque = (void *)(pid), \
   }
 
 #define EIT_CREATE(id, name, prio, ops) \
@@ -830,23 +828,25 @@ static int _eit_tune
 void eit_init ( void )
 {
   EIT_OPS(ops, 0);
+  EIT_OPS(ops_uk_freesat, 3003 | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_uk_freeview, EIT_CONV_HUFFMAN);
   EIT_OPS(ops_baltic, 0x39);
   EIT_OPS(ops_bulsat, 0x12b);
-  EIT_OPS(ops_nz_auckland, 0x19);
-  EIT_OPS(ops_nz_central, 0x1a);
-  EIT_OPS(ops_nz_wellington, 0x1b);
-  EIT_OPS(ops_nz_south_island, 0x1c);
-  EIT_OPS(ops_nz_tvworks, 0x1d);
-  EIT_OPS(ops_nz_tvworks_central, 0x1e);
-  EIT_OPS(ops_nz_tvworks_wellington, 0x1f);
-  EIT_OPS(ops_nz_tvworks_south_island, 0x20);
-  EIT_OPS(ops_nz_kordia1, 0x21);
-  EIT_OPS(ops_nz_kordia2, 0x22);
-  EIT_OPS(ops_nz_hawke, 0x26);
+  EIT_OPS(ops_nz_auckland, 0x19 | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_central, 0x1a | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_wellington, 0x1b | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_south_island, 0x1c | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_tvworks, 0x1d | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_tvworks_central, 0x1e | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_tvworks_wellington, 0x1f | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_tvworks_south_island, 0x20 | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_kordia1, 0x21 | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_kordia2, 0x22 | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops_nz_hawke, 0x26 | EIT_CONV_HUFFMAN);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
-  EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops);
-  EIT_CREATE("uk_freeview", "UK: Freeview", 5, &ops);
+  EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
+  EIT_CREATE("uk_freeview", "UK: Freeview", 5, &ops_uk_freeview);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
   EIT_CREATE("nz_auckland", "New Zealand: Auckland", 5, &ops_nz_auckland);
