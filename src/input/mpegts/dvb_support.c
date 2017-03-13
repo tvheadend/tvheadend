@@ -513,6 +513,10 @@ static struct strtab dvb_timezone_strtab[] = {
   { N_("UTC+10"),     10*60 },
   { N_("UTC+10:30"),  10*60+30 },
   { N_("UTC+11"),     11*60 },
+  { N_("UTC+12"),     12*60 },
+  { N_("UTC+12:45"),  12*60+45 },
+  { N_("UTC+13"),     13*60 },
+  { N_("UTC+14"),     14*60 }
 };
 
 htsmsg_t *

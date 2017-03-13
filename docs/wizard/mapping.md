@@ -18,3 +18,6 @@ map services to channels manually.**
 **Notes**:
 * Many providers include undesirable services - Teleshopping, Adult
   Entertainment, etc; using the 'Map all services' will include these.
+* You may need to enable specific EPG grabbers to receive OTA EPG data,
+See the *EPG Grabber Modules* Help doc for details.
+
