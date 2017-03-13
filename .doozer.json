@@ -1,4 +1,5 @@
 {
+  "concurrent": false,
   "targets": {
     "precise-amd64": {
       "buildenv": "precise-amd64",
@@ -262,4 +263,3 @@
     }
   }
 }
-
