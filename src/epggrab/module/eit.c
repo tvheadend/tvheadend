@@ -757,27 +757,22 @@ static int _eit_start
   if (!m->enabled && !map->om_forced) return -1;
 
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
-  // Note: do this as PID is the same
+  /* Note: do this as PID is the same */
   if (!strcmp(m->id, "uk_freeview")) {
     m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
     if (m->enabled) return -1;
   }
 
+  pid = (intptr_t)m->opaque;
+
   /* Freesat (3002/3003) */
   if (!strcmp("uk_freesat", m->id)) {
     mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
     pid = 3003;
-
-  /* Viasat Baltic (0x39) */
-  } else if (!strcmp("viasat_baltic", m->id)) {
-    pid = 0x39;
-
-  /* Bulsatcom 39E (0x12b) */
-  } else if (!strcmp("Bulsatcom_39E", m->id)) {
-    pid = 0x12b;
+  }
 
   /* Standard (0x12) */
-  } else {
+  if (pid == 0) {
     pid  = DVB_EIT_PID;
     opts = MT_RECORD;
   }
@@ -822,18 +817,49 @@ static int _eit_tune
   return r;
 }
 
+#define EIT_OPS(name, pid) \
+  static epggrab_ota_module_ops_t name = { \
+    .start  = _eit_start, \
+    .tune   = _eit_tune, \
+    .opaque = (void *)pid, \
+  }
+
+#define EIT_CREATE(id, name, prio, ops) \
+  epggrab_module_ota_create(NULL, id, LS_TBL_EIT, NULL, name, prio, ops)
+
 void eit_init ( void )
 {
-  static epggrab_ota_module_ops_t ops = {
-    .start = _eit_start,
-    .tune  = _eit_tune,
-  };
+  EIT_OPS(ops, 0);
+  EIT_OPS(ops_baltic, 0x39);
+  EIT_OPS(ops_bulsat, 0x12b);
+  EIT_OPS(ops_nz_auckland, 0x19);
+  EIT_OPS(ops_nz_central, 0x1a);
+  EIT_OPS(ops_nz_wellington, 0x1b);
+  EIT_OPS(ops_nz_south_island, 0x1c);
+  EIT_OPS(ops_nz_tvworks, 0x1d);
+  EIT_OPS(ops_nz_tvworks_central, 0x1e);
+  EIT_OPS(ops_nz_tvworks_wellington, 0x1f);
+  EIT_OPS(ops_nz_tvworks_south_island, 0x20);
+  EIT_OPS(ops_nz_kordia1, 0x21);
+  EIT_OPS(ops_nz_kordia2, 0x22);
+  EIT_OPS(ops_nz_hawke, 0x26);
 
-  epggrab_module_ota_create(NULL, "eit", LS_TBL_EIT, NULL, "EIT: DVB Grabber", 1, &ops);
-  epggrab_module_ota_create(NULL, "uk_freesat", LS_TBL_EIT, NULL, "UK: Freesat", 5, &ops);
-  epggrab_module_ota_create(NULL, "uk_freeview", LS_TBL_EIT, NULL, "UK: Freeview", 5, &ops);
-  epggrab_module_ota_create(NULL, "viasat_baltic", LS_TBL_EIT, NULL, "VIASAT: Baltic", 5, &ops);
-  epggrab_module_ota_create(NULL, "Bulsatcom_39E", LS_TBL_EIT, NULL, "Bulsatcom: Bula 39E", 5, &ops);
+  EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
+  EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops);
+  EIT_CREATE("uk_freeview", "UK: Freeview", 5, &ops);
+  EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
+  EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
+  EIT_CREATE("nz_auckland", "New Zealand: Auckland", 5, &ops_nz_auckland);
+  EIT_CREATE("nz_central", "New Zealand: Central", 6, &ops_nz_central);
+  EIT_CREATE("nz_wellington", "New Zealand: Wellington", 6, &ops_nz_wellington);
+  EIT_CREATE("nz_south_island", "New Zealand: South Island", 6, &ops_nz_south_island);
+  EIT_CREATE("nz_tvworks", "New Zealand: TVWorks", 5, &ops_nz_tvworks);
+  EIT_CREATE("nz_tvworks_central", "New Zealand: TVWorks Central", 6, &ops_nz_tvworks_central);
+  EIT_CREATE("nz_tvworks_wellington", "New Zealand: TVWorks Wellington", 6, &ops_nz_tvworks_wellington);
+  EIT_CREATE("nz_tvworks_south_island", "New Zealand: TVWorks South Island", 6, &ops_nz_tvworks_south_island);
+  EIT_CREATE("nz_kordia1", "New Zealand: Kordia1", 5, &ops_nz_kordia1);
+  EIT_CREATE("nz_kordia2", "New Zealand: Kordia2", 5, &ops_nz_kordia2);
+  EIT_CREATE("nz_hawke", "New Zealand: Hawke's Bay TV", 5, &ops_nz_hawke);
 }
 
 void eit_done ( void )

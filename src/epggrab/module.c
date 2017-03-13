@@ -607,6 +607,7 @@ epggrab_module_ota_t *epggrab_module_ota_create
   skel->start    = ops->start;
   skel->done     = ops->done;
   skel->tune     = ops->tune;
+  skel->opaque   = ops->opaque;
 
   return skel;
 }

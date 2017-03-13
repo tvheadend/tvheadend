@@ -257,6 +257,7 @@ struct epggrab_module_ota
   int  (*start) ( epggrab_ota_map_t *map, struct mpegts_mux *mm );
   int  (*tune)  ( epggrab_ota_map_t *map, epggrab_ota_mux_t *om,
                   struct mpegts_mux *mm );
+  void  *opaque;
 };
 
 /*
