@@ -1927,6 +1927,19 @@ config_class_info_area_list ( void *o, const char *lang )
 static htsmsg_t *
 config_class_dscp_list ( void *o, const char *lang )
 {
+#if defined(PLATFORM_DARWIN)
+  static const struct strtab tab[] = {
+    { N_("Default"), -1 },
+    { N_("CS0"),  IPTOS_CLASS_CS0 },
+    { N_("CS1"),  IPTOS_CLASS_CS1 },
+    { N_("CS2"),  IPTOS_CLASS_CS2 },
+    { N_("CS3"),  IPTOS_CLASS_CS3 },
+    { N_("CS4"),  IPTOS_CLASS_CS4 },
+    { N_("CS5"),  IPTOS_CLASS_CS5 },
+    { N_("CS6"),  IPTOS_CLASS_CS6 },
+    { N_("CS7"),  IPTOS_CLASS_CS7 },
+  };
+#else
   static const struct strtab tab[] = {
     { N_("Default"), -1 },
     { N_("CS0"),  IPTOS_CLASS_CS0 },
@@ -1951,6 +1964,7 @@ config_class_dscp_list ( void *o, const char *lang )
     { N_("CS6"),  IPTOS_CLASS_CS6 },
     { N_("CS7"),  IPTOS_CLASS_CS7 },
   };
+#endif
   return strtab2htsmsg(tab, 1, lang);
 }
 

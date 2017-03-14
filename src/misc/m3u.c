@@ -103,7 +103,11 @@ static const char *get_url
   if (rel[0] == '/') {
     snprintf(buf, buflen, "%s%s", url, rel + 1);
   } else {
+#if defined(PLATFORM_DARWIN)
+    url2 = strdup(url);
+#else
     url2 = strdupa(url);
+#endif
     p = strrchr(url2, '/');
     if (p == NULL)
       return rel;

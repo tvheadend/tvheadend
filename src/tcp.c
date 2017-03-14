@@ -58,7 +58,11 @@ socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
 {
   int r, v;
 
+#if defined(PLATFORM_DARWIN)
+  v = dscp;
+#else
   v = dscp & IPTOS_DSCP_MASK;
+#endif  
   r = setsockopt(sockfd, IPPROTO_IP, IP_TOS, &v, sizeof(v));
   if (r < 0) {
     if (errbuf && errbufsize)
