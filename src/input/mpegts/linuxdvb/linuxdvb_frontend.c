@@ -636,6 +636,11 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
   mpegts_mux_instance_t *lmmi;
+  int r;
+
+  r = mpegts_input_warm_mux(mi, mmi);
+  if (r)
+    return r;
 
   if (!lfe->lfe_adapter->la_exclusive)
     return 0;
