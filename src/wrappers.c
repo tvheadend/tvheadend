@@ -18,6 +18,10 @@
 #include <pthread_np.h>
 #endif
 
+#ifdef PLATFORM_DARWIN
+#include <misc/timing_mach.h>
+#endif
+
 /*
  * filedescriptor routines
  */
@@ -191,6 +195,10 @@ tvhtread_renice(int value)
   pid_t tid;
   tid = gettid();
   ret = setpriority(PRIO_PROCESS, tid, value);
+#elif defined(PLATFORM_DARWIN)
+  pid_t tid;
+  pthread_threadid_np(NULL, &tid);
+  ret = setpriority(PRIO_PROCESS, tid, value);
 #else
 #warning "Implement renice for your platform!"
 #endif
@@ -222,15 +230,20 @@ int
 tvh_cond_init
   ( tvh_cond_t *cond )
 {
-  int r;
-
   pthread_condattr_t attr;
   pthread_condattr_init(&attr);
+#if defined(PLATFORM_DARWIN)
+  /*
+   * Workaround: pthread_condattr_setclock not supported on platform darwin
+   */
+#else
+  int r;
   r = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
   if (r) {
     fprintf(stderr, "Unable to set monotonic clocks for conditions! (%d)", r);
     abort();
   }
+#endif
   return pthread_cond_init(&cond->cond, &attr);
 }
 
@@ -300,7 +313,11 @@ tvh_usleep(int64_t us)
     return 0;
   ts.tv_sec = us / 1000000LL;
   ts.tv_nsec = (us % 1000000LL) * 1000LL;
-  r = clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, &ts);
+#if defined(PLATFORM_DARWIN)
+  r = clock_nanosleep_abstime(&ts);
+#else
+  r = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, &ts);
+#endif
   val = (ts.tv_sec * 1000000LL) + ((ts.tv_nsec + 500LL) / 1000LL);
   if (ERRNO_AGAIN(r))
     return val;
@@ -317,7 +334,11 @@ tvh_usleep_abs(int64_t us)
     return 0;
   ts.tv_sec = us / 1000000LL;
   ts.tv_nsec = (us % 1000000LL) * 1000LL;
+#if defined(PLATFORM_DARWIN)
+  r = clock_nanosleep_abstime(&ts);
+#else
   r = clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &ts, &ts);
+#endif
   val = (ts.tv_sec * 1000000LL) + ((ts.tv_nsec + 500LL) / 1000LL);
   if (ERRNO_AGAIN(r))
     return val;
