@@ -475,8 +475,9 @@ linuxdvb_adapter_add ( const char *path )
                             a, fetypes[i], dvb_type2str(i));
   } else if (!r && j > 1) {
     la->la_exclusive = 1;
-    tvhinfo(LS_LINUXDVB, "adapter %d setting exlusive flag", a);
   }
+  if (la->la_exclusive)
+    tvhinfo(LS_LINUXDVB, "adapter %d setting exclusive flag", a);
 #endif
 
   /* Save configuration */
