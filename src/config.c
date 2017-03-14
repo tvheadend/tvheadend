@@ -2396,7 +2396,7 @@ const idclass_t config_class = {
 
 const char *config_get_server_name ( void )
 {
-  return config.server_name;
+  return config.server_name ?: "Tvheadend";
 }
 
 const char *config_get_language ( void )

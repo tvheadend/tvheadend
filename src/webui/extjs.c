@@ -135,7 +135,7 @@ Ext.onReady(tvheadend.app.init, tvheadend.app);\
 		 "}\n"
 		 "</style>\n"
 		 "<title>");
-  htsbuf_append_str(hq, config.server_name);
+  htsbuf_append_str(hq, config_get_server_name());
   htsbuf_append_str(hq,
 		 "</title>\n"
 		 "</head>\n"
@@ -161,7 +161,7 @@ extjs_livetv(http_connection_t *hc, const char *remain, void *opaque)
   htsbuf_append_str(hq, "<head>\n");
   htsbuf_append_str(hq, "<link rel=\"shortcut icon\" href=\"static/img/logo.png\" type=\"image/png\">\n");
   htsbuf_append_str(hq, "<title>");
-  htsbuf_append_str(hq, config.server_name);
+  htsbuf_append_str(hq, config_get_server_name());
   htsbuf_append_str(hq, "</title>\n");
 
   if (tvheadend_webui_debug) {

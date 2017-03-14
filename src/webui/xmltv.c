@@ -45,7 +45,7 @@ http_xmltv_begin(htsbuf_queue_t *hq)
 <tv generator-info-name=\"TVHeadend-");
   htsbuf_append_and_escape_xml(hq, tvheadend_version);
   htsbuf_append_str(hq, "\" source-info-name=\"tvh-");
-  htsbuf_append_and_escape_xml(hq, config.server_name);
+  htsbuf_append_and_escape_xml(hq, config_get_server_name());
   htsbuf_append_str(hq, "\">\n");
 }
 
