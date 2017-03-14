@@ -20,9 +20,9 @@
 
 #if defined(PLATFORM_DARWIN)
 #include <machine/endian.h>
-#define bswap_16(x) OSSwapInt16(x)
-#define bswap_32(x) OSSwapInt32(x)
-#define bswap_64(x) OSSwapInt64(x)
+#define bswap_16(x) _OSSwapInt16(x)
+#define bswap_32(x) _OSSwapInt32(x)
+#define bswap_64(x) _OSSwapInt64(x)
 #elif defined(PLATFORM_FREEBSD)
 #include <byteswap.h>
 #include <sys/endian.h>
