@@ -28,7 +28,7 @@
 #include "input/mpegts/dvb_charset.h"
 #include "dvr/dvr.h"
 
-#define EIT_PID_MASK          0x3fff
+#define EIT_PID_MASK          0x1fff
 #define EIT_CONV_TYPE_MASK    0xff0000
 
 #define EIT_CONV_HUFFMAN      0x010000
@@ -750,23 +750,34 @@ complete:
 static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
-  epggrab_module_ota_t *m = map->om_module;
+  epggrab_module_ota_t *m = map->om_module, *eit = NULL;
   int pid, opts = 0;
+  intptr_t opaque;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
 
+  /* Do string conversions also for the EIT table */
+  /* FIXME: It should be done only for selected muxes or networks */
+  if ((intptr_t)m->opaque & EIT_CONV_TYPE_MASK) {
+    eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
+    opaque = (intptr_t)eit->opaque & ~EIT_CONV_TYPE_MASK;
+    opaque |= (intptr_t)m->opaque & EIT_CONV_TYPE_MASK;
+    eit->opaque = (void *)opaque;
+  }
+
   /* Freeview (switch to EIT, ignore if explicitly enabled) */
   /* Note: do this as PID is the same */
   if (!strcmp(m->id, "uk_freeview")) {
-    m = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    if (m->enabled) return -1;
+    if (eit == NULL)
+      eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
+    if (eit->enabled) return -1;
   }
 
   pid = (intptr_t)m->opaque & EIT_PID_MASK;
 
   /* Freesat (3002/3003) */
-  if (!strcmp("uk_freesat", m->id))
+  if (pid == 3003 && !strcmp("uk_freesat", m->id))
     mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
 
   /* Standard (0x12) */
@@ -815,7 +826,7 @@ static int _eit_tune
   return r;
 }
 
-#define EIT_OPS(name, pid ) \
+#define EIT_OPS(name, pid) \
   static epggrab_ota_module_ops_t name = { \
     .start  = _eit_start, \
     .tune   = _eit_tune, \
