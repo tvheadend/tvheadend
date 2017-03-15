@@ -412,6 +412,27 @@ const idclass_t linuxdvb_frontend_dab_class =
  * Class methods
  * *************************************************************************/
 
+static void
+linuxdvb_frontend_close_fd ( linuxdvb_frontend_t *lfe, const char *name )
+{
+  char buf[256];
+
+  if (lfe->lfe_fe_fd > 0)
+    return;
+
+  if (name == NULL) {
+    lfe->mi_display_name((mpegts_input_t *)lfe, buf, sizeof(buf));
+    name = buf;
+  }
+
+  tvhtrace(LS_LINUXDVB, "%s - closing FE %s (%d)",
+           name, lfe->lfe_fe_path, lfe->lfe_fe_fd);
+  close(lfe->lfe_fe_fd);
+  lfe->lfe_fe_fd = -1;
+  if (lfe->lfe_satconf)
+    linuxdvb_satconf_reset(lfe->lfe_satconf);
+}
+
 static int
 linuxdvb_frontend_open_fd ( linuxdvb_frontend_t *lfe, const char *name )
 {
@@ -454,12 +475,7 @@ linuxdvb_frontend_enabled_updated ( mpegts_input_t *mi )
   /* Ensure disabled */
   if (!mi->mi_enabled) {
     tvhtrace(LS_LINUXDVB, "%s - disabling tuner", buf);
-    if (lfe->lfe_fe_fd > 0) {
-      close(lfe->lfe_fe_fd);
-      lfe->lfe_fe_fd = -1;
-      if (lfe->lfe_satconf)
-        linuxdvb_satconf_reset(lfe->lfe_satconf);
-    }
+    linuxdvb_frontend_close_fd(lfe, buf);
     mtimer_disarm(&lfe->lfe_monitor_timer);
 
   /* Ensure FE opened (if not powersave) */
@@ -634,7 +650,7 @@ linuxdvb_frontend_stop_mux
 static int
 linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2 = NULL;
   mpegts_mux_instance_t *lmmi;
   int r;
 
@@ -648,15 +664,17 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   /* Stop other active frontend */
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
     if (lfe2 == lfe) continue;
-    pthread_mutex_lock(&lfe->mi_output_lock);
-    lmmi = LIST_FIRST(&lfe->mi_mux_active);
-    pthread_mutex_unlock(&lfe->mi_output_lock);
+    pthread_mutex_lock(&lfe2->mi_output_lock);
+    lmmi = LIST_FIRST(&lfe2->mi_mux_active);
+    pthread_mutex_unlock(&lfe2->mi_output_lock);
     if (lmmi)
       break;
   }
   if (lmmi) {
     /* Stop */
     lmmi->mmi_mux->mm_stop(lmmi->mmi_mux, 1, SM_CODE_ABORTED);
+    if (lfe2)
+      linuxdvb_frontend_close_fd(lfe2, NULL);
   }
   return 0;
 }
@@ -790,13 +808,8 @@ linuxdvb_frontend_monitor ( void *aux )
     mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1, SM_CODE_ABORTED);
 
   /* Close FE */
-  if (lfe->lfe_fe_fd > 0 && !lfe->lfe_refcount && lfe->lfe_powersave) {
-    tvhtrace(LS_LINUXDVB, "%s - closing frontend", buf);
-    close(lfe->lfe_fe_fd);
-    lfe->lfe_fe_fd = -1;
-    if (lfe->lfe_satconf)
-      linuxdvb_satconf_reset(lfe->lfe_satconf);
-  }
+  if (lfe->lfe_fe_fd > 0 && !lfe->lfe_refcount && lfe->lfe_powersave)
+    linuxdvb_frontend_close_fd(lfe, buf);
 
   /* Check accessibility */
   if (lfe->lfe_fe_fd <= 0) {
