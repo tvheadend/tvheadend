@@ -786,7 +786,7 @@ static int _eit_start
 
   /* Freeview UK/NZ (switch to EIT, ignore if explicitly enabled) */
   /* Note: do this as PID is the same */
-  if (pid == 0) {
+  if (pid == 0 && strcmp(m->id, "eit")) {
     if (eit == NULL)
       eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
     if (eit->enabled) return -1;
