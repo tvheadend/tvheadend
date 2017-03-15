@@ -651,7 +651,7 @@ static int
 linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)mi, *lfe2 = NULL;
-  mpegts_mux_instance_t *lmmi;
+  mpegts_mux_instance_t *lmmi = NULL;
   int r;
 
   r = mpegts_input_warm_mux(mi, mmi);
@@ -661,20 +661,18 @@ linuxdvb_frontend_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   if (!lfe->lfe_adapter->la_exclusive)
     return 0;
 
-  /* Stop other active frontend */
+  /* Stop other active frontend (should be only one) */
   LIST_FOREACH(lfe2, &lfe->lfe_adapter->la_frontends, lfe_link) {
     if (lfe2 == lfe) continue;
     pthread_mutex_lock(&lfe2->mi_output_lock);
     lmmi = LIST_FIRST(&lfe2->mi_mux_active);
     pthread_mutex_unlock(&lfe2->mi_output_lock);
-    if (lmmi)
-      break;
-  }
-  if (lmmi) {
-    /* Stop */
-    lmmi->mmi_mux->mm_stop(lmmi->mmi_mux, 1, SM_CODE_ABORTED);
-    if (lfe2)
-      linuxdvb_frontend_close_fd(lfe2, NULL);
+    if (lmmi) {
+      /* Stop */
+      lmmi->mmi_mux->mm_stop(lmmi->mmi_mux, 1, SM_CODE_ABORTED);
+    }
+    linuxdvb_frontend_close_fd(lfe2, NULL);
+    mtimer_disarm(&lfe2->lfe_monitor_timer);
   }
   return 0;
 }
@@ -808,8 +806,10 @@ linuxdvb_frontend_monitor ( void *aux )
     mmi->mmi_mux->mm_stop(mmi->mmi_mux, 1, SM_CODE_ABORTED);
 
   /* Close FE */
-  if (lfe->lfe_fe_fd > 0 && !lfe->lfe_refcount && lfe->lfe_powersave)
+  if (lfe->lfe_fe_fd > 0 && !lfe->lfe_refcount && lfe->lfe_powersave) {
     linuxdvb_frontend_close_fd(lfe, buf);
+    return;
+  }
 
   /* Check accessibility */
   if (lfe->lfe_fe_fd <= 0) {
