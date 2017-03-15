@@ -648,6 +648,7 @@ mpegts_network_find_mux
   ( mpegts_network_t *mn, uint16_t onid, uint16_t tsid, int check )
 {
   mpegts_mux_t *mm;
+
   LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
     if (mm->mm_onid && onid && mm->mm_onid != onid) continue;
     if (mm->mm_tsid == tsid) {
@@ -656,6 +657,24 @@ mpegts_network_find_mux
     }
   }
   return mm;
+}
+
+mpegts_service_t *
+mpegts_network_find_active_service
+  ( mpegts_network_t *mn, uint16_t sid, mpegts_mux_t **rmm )
+{
+  mpegts_mux_t *mm;
+  mpegts_service_t *s;
+
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+    if (mm->mm_enabled != MM_ENABLE) continue;
+    s = mpegts_mux_find_service(mm, sid);
+    if (s && s->s_enabled) {
+      if (rmm) *rmm = mm;
+      return s;
+    }
+  }
+  return NULL;
 }
 
 /******************************************************************************

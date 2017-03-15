@@ -28,10 +28,21 @@
 #include "input/mpegts/dvb_charset.h"
 #include "dvr/dvr.h"
 
-#define EIT_PID_MASK          0x1fff
-#define EIT_CONV_TYPE_MASK    0xff0000
+/* ************************************************************************
+ * Opaque
+ * ***********************************************************************/
 
-#define EIT_CONV_HUFFMAN      0x010000
+typedef struct eit_private
+{
+  uint16_t pid;
+  uint8_t  conv;
+  uint8_t  spec;
+} eit_private_t;
+
+#define EIT_CONV_HUFFMAN    1
+
+#define EIT_SPEC_FREESAT    1
+#define EIT_SPEC_NZ_FREESAT 2
 
 /* ************************************************************************
  * Status handling
@@ -104,7 +115,7 @@ static int _eit_get_string_with_len
   epggrab_module_ota_t *m = (epggrab_module_ota_t *)mod;
   dvb_string_conv_t *cptr = NULL;
 
-  if (((intptr_t)m->opaque & EIT_CONV_TYPE_MASK) == EIT_CONV_HUFFMAN)
+  if (((eit_private_t *)m->opaque)->conv == EIT_CONV_HUFFMAN)
     cptr = _eit_freesat_conv;
 
   /* Convert */
@@ -609,8 +620,7 @@ static int
 _eit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int r;
-  int sect, last, ver, save, resched;
+  int r, sect, last, ver, save, resched, spec;
   uint8_t  seg;
   uint16_t onid, tsid, sid;
   uint32_t extraid;
@@ -629,6 +639,7 @@ _eit_callback
   mm  = mt->mt_mux;
   map = mt->mt_opaque;
   mod = (epggrab_module_t *)map->om_module;
+  spec = ((eit_private_t *)((epggrab_module_ota_t *)mod)->opaque)->spec;
 
   /* Statistics */
   ths = mpegts_mux_find_subscription_by_name(mm, "epggrab");
@@ -654,7 +665,7 @@ _eit_callback
 
   /* Register interest */
   if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60) ||
-      mt->mt_pid == 3003 /* uk_freesat */)
+      spec == EIT_SPEC_FREESAT /* uk_freesat hack */)
     ota = epggrab_ota_register((epggrab_module_ota_t*)mod, NULL, mm);
 
   /* Begin */
@@ -677,7 +688,6 @@ _eit_callback
   //       so must find the tdmi
   if(tableid == 0x4f || tableid >= 0x60) {
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
-
   } else {
     if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&
         !mm->mm_eit_tsid_nocheck) {
@@ -695,10 +705,18 @@ _eit_callback
   /* Get service */
   svc = mpegts_mux_find_service(mm, sid);
   if (!svc) {
+    /* NZ Freesat */
+    if (spec == EIT_SPEC_NZ_FREESAT && onid == 0x222a) {
+      svc = mpegts_network_find_active_service(mm->mm_network, sid, &mm);
+      if (svc)
+        goto svc_ok;
+    }
+
     tvhtrace(LS_TBL_EIT, "sid %i not found", sid);
     goto done;
   }
 
+svc_ok:
   if (map->om_first) {
     map->om_tune_count++;
     map->om_first = 0;
@@ -752,29 +770,27 @@ static int _eit_start
 {
   epggrab_module_ota_t *m = map->om_module, *eit = NULL;
   int pid, opts = 0;
-  intptr_t opaque;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
 
   /* Do string conversions also for the EIT table */
   /* FIXME: It should be done only for selected muxes or networks */
-  if ((intptr_t)m->opaque & EIT_CONV_TYPE_MASK) {
+  if (((eit_private_t *)m->opaque)->conv) {
     eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    opaque = (intptr_t)eit->opaque & ~EIT_CONV_TYPE_MASK;
-    opaque |= (intptr_t)m->opaque & EIT_CONV_TYPE_MASK;
-    eit->opaque = (void *)opaque;
+    ((eit_private_t *)m->opaque)->spec = ((eit_private_t *)eit->opaque)->spec;
+    ((eit_private_t *)m->opaque)->conv = ((eit_private_t *)eit->opaque)->conv;
   }
 
-  /* Freeview (switch to EIT, ignore if explicitly enabled) */
+  pid = ((eit_private_t *)m->opaque)->pid;
+
+  /* Freeview UK/NZ (switch to EIT, ignore if explicitly enabled) */
   /* Note: do this as PID is the same */
-  if (!strcmp(m->id, "uk_freeview")) {
+  if (pid == 0) {
     if (eit == NULL)
       eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
     if (eit->enabled) return -1;
   }
-
-  pid = (intptr_t)m->opaque & EIT_PID_MASK;
 
   /* Freesat (3002/3003) */
   if (pid == 3003 && !strcmp("uk_freesat", m->id))
@@ -826,11 +842,16 @@ static int _eit_tune
   return r;
 }
 
-#define EIT_OPS(name, pid) \
+#define EIT_OPS(name, _pid, _conv, _spec) \
+  static eit_private_t opaque_##name = { \
+    .pid = (_pid), \
+    .conv = (_conv), \
+    .spec = (_spec), \
+  }; \
   static epggrab_ota_module_ops_t name = { \
     .start  = _eit_start, \
     .tune   = _eit_tune, \
-    .opaque = (void *)(pid), \
+    .opaque = &opaque_##name, \
   }
 
 #define EIT_CREATE(id, name, prio, ops) \
@@ -838,39 +859,19 @@ static int _eit_tune
 
 void eit_init ( void )
 {
-  EIT_OPS(ops, 0);
-  EIT_OPS(ops_uk_freesat, 3003 | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_uk_freeview, EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_baltic, 0x39);
-  EIT_OPS(ops_bulsat, 0x12b);
-  EIT_OPS(ops_nz_auckland, 0x19 | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_central, 0x1a | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_wellington, 0x1b | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_south_island, 0x1c | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_tvworks, 0x1d | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_tvworks_central, 0x1e | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_tvworks_wellington, 0x1f | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_tvworks_south_island, 0x20 | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_kordia1, 0x21 | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_kordia2, 0x22 | EIT_CONV_HUFFMAN);
-  EIT_OPS(ops_nz_hawke, 0x26 | EIT_CONV_HUFFMAN);
+  EIT_OPS(ops, 0, 0, 0);
+  EIT_OPS(ops_uk_freesat, 3003, EIT_CONV_HUFFMAN, EIT_SPEC_FREESAT);
+  EIT_OPS(ops_uk_freeview, 0, EIT_CONV_HUFFMAN, 0);
+  EIT_OPS(ops_nz_freesat, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREESAT);
+  EIT_OPS(ops_baltic, 0x39, 0, 0);
+  EIT_OPS(ops_bulsat, 0x12b, 0, 0);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
   EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
   EIT_CREATE("uk_freeview", "UK: Freeview", 5, &ops_uk_freeview);
+  EIT_CREATE("nz_freesat", "New Zealand: Freesat", 5, &ops_nz_freesat);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
-  EIT_CREATE("nz_auckland", "New Zealand: Auckland", 5, &ops_nz_auckland);
-  EIT_CREATE("nz_central", "New Zealand: Central", 6, &ops_nz_central);
-  EIT_CREATE("nz_wellington", "New Zealand: Wellington", 6, &ops_nz_wellington);
-  EIT_CREATE("nz_south_island", "New Zealand: South Island", 6, &ops_nz_south_island);
-  EIT_CREATE("nz_tvworks", "New Zealand: TVWorks", 5, &ops_nz_tvworks);
-  EIT_CREATE("nz_tvworks_central", "New Zealand: TVWorks Central", 6, &ops_nz_tvworks_central);
-  EIT_CREATE("nz_tvworks_wellington", "New Zealand: TVWorks Wellington", 6, &ops_nz_tvworks_wellington);
-  EIT_CREATE("nz_tvworks_south_island", "New Zealand: TVWorks South Island", 6, &ops_nz_tvworks_south_island);
-  EIT_CREATE("nz_kordia1", "New Zealand: Kordia1", 5, &ops_nz_kordia1);
-  EIT_CREATE("nz_kordia2", "New Zealand: Kordia2", 5, &ops_nz_kordia2);
-  EIT_CREATE("nz_hawke", "New Zealand: Hawke's Bay TV", 5, &ops_nz_hawke);
 }
 
 void eit_done ( void )

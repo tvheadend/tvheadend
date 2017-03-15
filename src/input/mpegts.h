@@ -853,6 +853,9 @@ static inline mpegts_network_t *mpegts_network_find(const char *uuid)
 mpegts_mux_t *mpegts_network_find_mux
   (mpegts_network_t *mn, uint16_t onid, uint16_t tsid, int check);
 
+mpegts_service_t *mpegts_network_find_active_service
+  (mpegts_network_t *mn, uint16_t sid, mpegts_mux_t **rmm);
+
 void mpegts_network_class_delete ( const idclass_t *idc, int delconf );
 
 void mpegts_network_delete ( mpegts_network_t *mn, int delconf );
