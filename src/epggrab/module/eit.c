@@ -39,10 +39,10 @@ typedef struct eit_private
   uint8_t  spec;
 } eit_private_t;
 
-#define EIT_CONV_HUFFMAN    1
+#define EIT_CONV_HUFFMAN     1
 
-#define EIT_SPEC_UK_FREESAT 1
-#define EIT_SPEC_NZ_FREESAT 2
+#define EIT_SPEC_UK_FREESAT  1
+#define EIT_SPEC_NZ_FREEVIEW 2
 
 /* ************************************************************************
  * Status handling
@@ -664,7 +664,7 @@ _eit_callback
   // TODO: extra ID should probably include onid
 
   /* Local EIT contents - give them another priority to override main events */
-  if (spec == EIT_SPEC_NZ_FREESAT &&
+  if (spec == EIT_SPEC_NZ_FREEVIEW &&
       ((tsid > 0x19 && tsid < 0x1d) ||
        (tsid > 0x1e && tsid < 0x21)))
     mod = epggrab_module_find_by_id("nz_freesat");
@@ -712,7 +712,7 @@ _eit_callback
   svc = mpegts_mux_find_service(mm, sid);
   if (!svc) {
     /* NZ Freesat: use main data */
-    if (spec == EIT_SPEC_NZ_FREESAT && onid == 0x222a &&
+    if (spec == EIT_SPEC_NZ_FREEVIEW && onid == 0x222a &&
         (tsid == 0x19 || tsid == 0x1d)) {
       svc = mpegts_network_find_active_service(mm->mm_network, sid, &mm);
       if (svc)
@@ -791,7 +791,7 @@ static int _eit_start
     ((eit_private_t *)m->opaque)->conv = ((eit_private_t *)eit->opaque)->conv;
   }
 
-  if (spec == EIT_SPEC_NZ_FREESAT) {
+  if (spec == EIT_SPEC_NZ_FREEVIEW) {
     if (eit == NULL)
       eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
     if (eit->enabled)
@@ -879,14 +879,14 @@ void eit_init ( void )
   EIT_OPS(ops, 0, 0, 0);
   EIT_OPS(ops_uk_freesat, 3003, EIT_CONV_HUFFMAN, EIT_SPEC_UK_FREESAT);
   EIT_OPS(ops_uk_freeview, 0, EIT_CONV_HUFFMAN, 0);
-  EIT_OPS(ops_nz_freesat, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREESAT);
+  EIT_OPS(ops_nz_freeview, 0, EIT_CONV_HUFFMAN, EIT_SPEC_NZ_FREEVIEW);
   EIT_OPS(ops_baltic, 0x39, 0, 0);
   EIT_OPS(ops_bulsat, 0x12b, 0, 0);
 
   EIT_CREATE("eit", "EIT: DVB Grabber", 1, &ops);
   EIT_CREATE("uk_freesat", "UK: Freesat", 5, &ops_uk_freesat);
   EIT_CREATE("uk_freeview", "UK: Freeview", 5, &ops_uk_freeview);
-  EIT_CREATE("nz_freesat", "New Zealand: Freesat", 5, &ops_nz_freesat);
+  EIT_CREATE("nz_freeview", "New Zealand: Freeview", 5, &ops_nz_freeview);
   EIT_CREATE("viasat_baltic", "VIASAT: Baltic", 5, &ops_baltic);
   EIT_CREATE("Bulsatcom_39E", "Bulsatcom: Bula 39E", 5, &ops_bulsat);
 }
