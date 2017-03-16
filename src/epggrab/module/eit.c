@@ -663,6 +663,8 @@ _eit_callback
   extraid = ((uint32_t)tsid << 16) | sid;
   // TODO: extra ID should probably include onid
 
+  tvhtrace(LS_TBL_EIT, "sid %i tsid %04x onid %04x seg %02x len %d", sid, tsid, onid, seg, len);
+
   /* Local EIT contents - give them another priority to override main events */
   if (spec == EIT_SPEC_NZ_FREEVIEW &&
       ((tsid > 0x19 && tsid < 0x1d) ||
