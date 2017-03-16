@@ -1676,6 +1676,7 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.idnode.in_class = &config_class;
   config.ui_quicktips = 1;
   config.digest = 1;
+  config.proxy = 0;
   config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
   config.cookie_expires = 7;
@@ -2124,6 +2125,20 @@ const idclass_t config_class = {
                    "It is intended to replace unencrypted HTTP basic access authentication. "
                    "This option should be enabled for standard usage."),
       .off    = offsetof(config_t, digest),
+      .opts   = PO_EXPERT,
+      .group  = 1
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "proxy",
+      .name   = N_("Use PROXY protocol & X-Forwarded-For"),
+      .desc   = N_("PROXY protocol is an extension for support incoming "
+                   "TCP connections from a remote server (like a firewall) "
+                   "sending the original IP address of the client. "
+                   "The HTTP header 'X-Forwarded-For' do the same with "
+                   "HTTP connections. Both enable tunneled connections."
+                   "This option should be disabled for standard usage."),
+      .off    = offsetof(config_t, proxy),
       .opts   = PO_EXPERT,
       .group  = 1
     },

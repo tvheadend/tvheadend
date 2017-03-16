@@ -450,6 +450,28 @@ tcp_get_ip_from_str(const char *src, struct sockaddr *sa)
 /**
  *
  */
+int
+tcp_get_sockaddr(struct sockaddr *sa, const char *s)
+{
+  if(sa == NULL || s == NULL)
+    return -1;
+
+  struct sockaddr_in *sin = (struct sockaddr_in*)sa;
+  struct sockaddr_in6 *sin6 = (struct sockaddr_in6*)sa;
+
+  if (inet_pton(AF_INET, s, &sin->sin_addr) == 1)
+    sa->sa_family = AF_INET;
+  else if (inet_pton(AF_INET6, s, &sin6->sin6_addr) == 1)
+    sa->sa_family = AF_INET6;
+  else
+    return -1;
+
+  return 0;
+}
+
+/**
+ *
+ */
 static tvhpoll_t *tcp_server_poll;
 static uint32_t tcp_server_launch_id;
 
