@@ -417,7 +417,7 @@ linuxdvb_frontend_close_fd ( linuxdvb_frontend_t *lfe, const char *name )
 {
   char buf[256];
 
-  if (lfe->lfe_fe_fd > 0)
+  if (lfe->lfe_fe_fd <= 0)
     return;
 
   if (name == NULL) {
