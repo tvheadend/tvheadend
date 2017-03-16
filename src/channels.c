@@ -74,6 +74,8 @@ channel_class_changed ( idnode_t *self )
 {
   channel_t *ch = (channel_t *)self;
 
+  tvhdebug(LS_CHANNEL, "channel '%s' changed", channel_get_name(ch));
+
   /* update the EPG channel <-> channel mapping here */
   if (ch->ch_enabled && ch->ch_epgauto)
     epggrab_channel_add(ch);
@@ -90,6 +92,7 @@ channel_class_save ( idnode_t *self, char *filename, size_t fsize )
   char ubuf[UUID_HEX_SIZE];
   /* save channel (on demand) */
   if (ch->ch_dont_save == 0) {
+    tvhdebug(LS_CHANNEL, "channel '%s' save", channel_get_name(ch));
     c = htsmsg_create_map();
     idnode_save(&ch->ch_id, c);
     snprintf(filename, fsize, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id, ubuf));

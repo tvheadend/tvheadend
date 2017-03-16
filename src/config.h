@@ -34,6 +34,7 @@ typedef struct config {
   int uilevel_nochange;
   int ui_quicktips;
   int digest;
+  int proxy;
   char *realm;
   char *wizard;
   char *full_version;
