@@ -41,6 +41,8 @@
 #include "notify.h"
 #include "access.h"
 #include "dvr/dvr.h"
+#define COMPAT_IPTOS
+#include "compat.h"
 
 #if ENABLE_LIBSYSTEMD_DAEMON
 #include <systemd/sd-daemon.h>
@@ -53,10 +55,6 @@ th_pipe_t tcp_server_pipe;
 /**
  *
  */
-#ifndef IPTOS_DSCP_MASK
-#define IPTOS_DSCP_MASK 0xfc
-#endif
-
 int
 socket_set_dscp(int sockfd, uint32_t dscp, char *errbuf, size_t errbufsize)
 {
