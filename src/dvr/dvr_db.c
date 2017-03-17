@@ -17,6 +17,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _ISOC9X_SOURCE
+
 #include <pthread.h>
 #include <sys/stat.h>
 #include <unistd.h>
