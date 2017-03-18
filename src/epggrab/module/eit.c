@@ -663,7 +663,8 @@ _eit_callback
   extraid = ((uint32_t)tsid << 16) | sid;
   // TODO: extra ID should probably include onid
 
-  tvhtrace(LS_TBL_EIT, "sid %i tsid %04x onid %04x seg %02x len %d", sid, tsid, onid, seg, len);
+  tvhtrace(LS_TBL_EIT, "%s: sid %i tsid %04x onid %04x seg %02x",
+           mt->mt_name, sid, tsid, onid, seg);
 
   /* Local EIT contents - give them another priority to override main events */
   if (spec == EIT_SPEC_NZ_FREEVIEW &&
@@ -694,7 +695,7 @@ _eit_callback
   /* Get transport stream */
   // Note: tableid=0x4f,0x60-0x6f is other TS
   //       so must find the tdmi
-  if(tableid == 0x4f || tableid >= 0x60) {
+  if (tableid == 0x4f || tableid >= 0x60) {
     mm = mpegts_network_find_mux(mm->mm_network, onid, tsid, 1);
   } else {
     if ((mm->mm_tsid != tsid || mm->mm_onid != onid) &&
@@ -702,8 +703,8 @@ _eit_callback
       if (mm->mm_onid != MPEGTS_ONID_NONE &&
           mm->mm_tsid != MPEGTS_TSID_NONE)
         tvhtrace(LS_TBL_EIT,
-                "invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
-                tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
+                "%s: invalid tsid found tid 0x%02X, onid:tsid %d:%d != %d:%d",
+                mt->mt_name, tableid, mm->mm_onid, mm->mm_tsid, onid, tsid);
       mm = NULL;
     }
   }
@@ -778,19 +779,20 @@ static int _eit_start
   ( epggrab_ota_map_t *map, mpegts_mux_t *dm )
 {
   epggrab_module_ota_t *m = map->om_module, *eit = NULL;
+  eit_private_t *priv = (eit_private_t *)m->opaque;
   int pid, opts = 0, spec;
 
   /* Disabled */
   if (!m->enabled && !map->om_forced) return -1;
 
-  spec = ((eit_private_t *)m->opaque)->spec;
+  spec = priv->spec;
 
   /* Do string conversions also for the EIT table */
   /* FIXME: It should be done only for selected muxes or networks */
   if (((eit_private_t *)m->opaque)->conv) {
     eit = (epggrab_module_ota_t*)epggrab_module_find_by_id("eit");
-    ((eit_private_t *)m->opaque)->spec = ((eit_private_t *)eit->opaque)->spec;
-    ((eit_private_t *)m->opaque)->conv = ((eit_private_t *)eit->opaque)->conv;
+    ((eit_private_t *)eit->opaque)->spec = priv->spec;
+    ((eit_private_t *)eit->opaque)->conv = priv->conv;
   }
 
   if (spec == EIT_SPEC_NZ_FREEVIEW) {
@@ -800,7 +802,7 @@ static int _eit_start
       map->om_complete = 1;
   }
 
-  pid = ((eit_private_t *)m->opaque)->pid;
+  pid = priv->pid;
 
   /* Freeview UK/NZ (switch to EIT, ignore if explicitly enabled) */
   /* Note: do this as PID is the same */
