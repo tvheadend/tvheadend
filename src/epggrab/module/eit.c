@@ -670,7 +670,7 @@ _eit_callback
   if (spec == EIT_SPEC_NZ_FREEVIEW &&
       ((tsid > 0x19 && tsid < 0x1d) ||
        (tsid > 0x1e && tsid < 0x21)))
-    mod = epggrab_module_find_by_id("nz_freesat");
+    mod = epggrab_module_find_by_id("nz_freeview");
 
   /* Register interest */
   if (tableid == 0x4e || (tableid >= 0x50 && tableid < 0x60) ||
