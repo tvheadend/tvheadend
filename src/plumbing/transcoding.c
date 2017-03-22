@@ -1820,10 +1820,10 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 		codec_match=1;
 	}
      }
-  }
 
-  if(!codec_match)
+     if(!codec_match)
 	return transcoder_init_stream(t, ssc); //copy codec
+  }
 
   if (tp->tp_vcodec[0] == '\0')
     return 0;
