@@ -54,3 +54,6 @@ src/webui/static/intl
 Thumbs.db
 #Folder config file
 Desktop.ini
+
+*.SH
+*.LOG
