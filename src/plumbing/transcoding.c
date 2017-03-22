@@ -1815,7 +1815,7 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
      for (str=codec_list; ; str = NULL) {
 	token = strtok_r(str," ,|;" , &saveptr);
 	if (token == NULL)
-		break; //no match found, use profile settings
+		break;
 	if(!strcasecmp(token, streaming_component_type2txt(ssc->ssc_type))) {//match found
 		codec_match=1;
 	}
