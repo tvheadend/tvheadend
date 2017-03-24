@@ -2,6 +2,10 @@
 %global commit @COMMIT@
 %global shortcommit %(c=%{commit}; echo ${c:0:7})
 
+#Allow static builds on Fedora >= 23
+#see https://fedoraproject.org/wiki/Changes/Harden_All_Packages
+%undefine _hardened_build
+
 Name:           tvheadend
 Summary:        TV streaming server and Digital Video Recorder
 Version:        @VERSION@
@@ -82,6 +86,9 @@ exit 0
 %{_unitdir}/*
 
 %changelog
+* Wed Nov 4 2015 Daniele Viganò <daniele@vigano.me> 4.1-859-ac12606
+- disable compilation hardening
+
 * Wed May 27 2015 Jaroslav Kysela <perex@perex.cz> 4.0.3-1
 - rpmlint fixes
 
