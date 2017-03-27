@@ -119,7 +119,6 @@ udp_get_ifindex( const char *ifname )
   return r;
 }
 
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_DARWIN)
 static int
 udp_get_ifaddr( int fd, const char *ifname, struct in_addr *addr )
 {
@@ -138,7 +137,6 @@ udp_get_ifaddr( int fd, const char *ifname, struct in_addr *addr )
          sizeof(struct in_addr));
   return 0;
 }
-#endif
 
 static int
 udp_get_solip( void )
@@ -204,13 +202,6 @@ udp_bind ( int subsystem, const char *name,
 
   /* IPv4 */
   if (uc->ip.ss_family == AF_INET) {
-#if defined(PLATFORM_DARWIN)
-    struct ip_mreq       m;
-#else
-    struct ip_mreqn      m;
-#endif
-    memset(&m,   0, sizeof(m));
-
     /* Bind */
     if (bind(fd, (struct sockaddr *)&uc->ip, sizeof(struct sockaddr_in))) {
       inet_ntop(AF_INET, &IP_AS_V4(uc->ip, addr), buf, sizeof(buf));
@@ -220,29 +211,16 @@ udp_bind ( int subsystem, const char *name,
     }
 
     if (uc->multicast) {
-      /* Join group */
-      m.imr_multiaddr      = IP_AS_V4(uc->ip, addr);
-#if !defined(PLATFORM_DARWIN)
-      m.imr_address.s_addr = 0;
-      m.imr_ifindex        = ifindex;
-#else
-      if (udp_get_ifaddr(fd, ifname, &m.imr_interface) == -1) {
-        tvherror(subsystem, "%s - cannot find ip address for interface %s [e=%s]",
-                 name, ifname,  strerror(errno));
-        goto error;
-      }
-#endif
-
-#if defined(PLATFORM_LINUX)
+      /* Join multicast group */
       if (multicast_src) {
-
+        /* Join with specific source address (SSM) */
         struct ip_mreq_source ms;
         memset(&ms, 0, sizeof(ms));
 
         ms.imr_multiaddr = IP_AS_V4(uc->ip, addr);
 
-        /* Unfortunately, ip_mreq_source does not support the ifindex parameter,
-           so we have to resolve to the ip of the interface. */
+        /* Note, ip_mreq_source does not support the ifindex parameter,
+           so we have to resolve to the ip of the interface on all platforms. */
         if (udp_get_ifaddr(fd, ifname, &ms.imr_interface) == -1) {
           tvherror(subsystem, "%s - cannot find ip address for interface %s [e=%s]",
                    name, ifname,  strerror(errno));
@@ -261,20 +239,34 @@ udp_bind ( int subsystem, const char *name,
                    name,  strerror(errno));
           goto error;
         }
-
       }
       else {
+        /* Standard multicast join (non-SSM) */
+#if defined(PLATFORM_DARWIN)
+        struct ip_mreq       m;
+#else
+        struct ip_mreqn      m;
 #endif
+        memset(&m,   0, sizeof(m));
+
+        m.imr_multiaddr      = IP_AS_V4(uc->ip, addr);
+#if !defined(PLATFORM_DARWIN)
+        m.imr_address.s_addr = 0;
+        m.imr_ifindex        = ifindex;
+#else
+        if (udp_get_ifaddr(fd, ifname, &m.imr_interface) == -1) {
+          tvherror(subsystem, "%s - cannot find ip address for interface %s [e=%s]",
+                   name, ifname,  strerror(errno));
+          goto error;
+        }
+#endif
+
         if (setsockopt(fd, udp_get_solip(), IP_ADD_MEMBERSHIP, &m, sizeof(m))) {
           inet_ntop(AF_INET, &m.imr_multiaddr, buf, sizeof(buf));
           tvhwarn(subsystem, "%s - cannot join %s [%s]",
                   name, buf, strerror(errno));
         }
-#if defined(PLATFORM_LINUX)
       }
-#endif
-
-
    }
 
   /* Bind to IPv6 group */
