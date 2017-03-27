@@ -292,7 +292,7 @@ static void login_changed(idnode_t *in)
   wizard_login_t *w = p->aux;
   access_entry_t *ae, *ae_next;
   passwd_entry_t *pw, *pw_next;
-  htsmsg_t *conf;
+  htsmsg_t *conf, *list;
   const char *s;
 
   for (ae = TAILQ_FIRST(&access_entries); ae; ae = ae_next) {
@@ -312,11 +312,15 @@ static void login_changed(idnode_t *in)
   htsmsg_add_bool(conf, "enabled", 1);
   htsmsg_add_str(conf, "prefix", w->network);
   htsmsg_add_str(conf, "username", s);
-  htsmsg_add_bool(conf, "streaming", 1);
-  htsmsg_add_bool(conf, "adv_streaming", 1);
-  htsmsg_add_bool(conf, "htsp_streaming", 1);
-  htsmsg_add_bool(conf, "dvr", 1);
-  htsmsg_add_bool(conf, "htsp_dvr", 1);
+  list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, "basic");
+  htsmsg_add_str(list, NULL, "advanced");
+  htsmsg_add_str(list, NULL, "htsp");
+  htsmsg_add_msg(conf, "streaming", list);
+  list = htsmsg_create_list();
+  htsmsg_add_str(list, NULL, "basic");
+  htsmsg_add_str(list, NULL, "htsp");
+  htsmsg_add_msg(conf, "dvr", list);
   htsmsg_add_bool(conf, "webui", 1);
   htsmsg_add_bool(conf, "admin", 1);
   ae = access_entry_create(NULL, conf);
@@ -345,10 +349,14 @@ static void login_changed(idnode_t *in)
     htsmsg_add_bool(conf, "enabled", 1);
     htsmsg_add_str(conf, "prefix", w->network);
     htsmsg_add_str(conf, "username", s);
-    htsmsg_add_bool(conf, "streaming", 1);
-    htsmsg_add_bool(conf, "htsp_streaming", 1);
-    htsmsg_add_bool(conf, "dvr", 1);
-    htsmsg_add_bool(conf, "htsp_dvr", 1);
+    list = htsmsg_create_list();
+    htsmsg_add_str(list, NULL, "basic");
+    htsmsg_add_str(list, NULL, "htsp");
+    htsmsg_add_msg(conf, "streaming", list);
+    list = htsmsg_create_list();
+    htsmsg_add_str(list, NULL, "basic");
+    htsmsg_add_str(list, NULL, "htsp");
+    htsmsg_add_msg(conf, "dvr", list);
     htsmsg_add_bool(conf, "webui", 1);
     ae = access_entry_create(NULL, conf);
     if (ae) {
