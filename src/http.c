@@ -389,9 +389,11 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
     }
   }
   if (hc->hc_logout_cookie == 1) {
-    htsbuf_append_str(&hdrs, "Set-Cookie: logout=1; Path=\"/logout\"\r\n");
+    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=1; Path=\"%s/logout\"\r\n",
+                   tvheadend_webroot ? tvheadend_webroot : "");
   } else if (hc->hc_logout_cookie == 2) {
-    htsbuf_append_str(&hdrs, "Set-Cookie: logout=0; Path=\"/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n");
+    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"%s/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n",
+                   tvheadend_webroot ? tvheadend_webroot : "");
   }
 
   if (hc->hc_version != RTSP_VERSION_1_0)
