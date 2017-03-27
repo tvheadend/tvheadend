@@ -43,7 +43,7 @@ typedef struct udp_connection {
 
 udp_connection_t *
 udp_bind ( int subsystem, const char *name,
-           const char *bindaddr, int port,
+           const char *bindaddr, int port, const char *multicast_src,
            const char *ifname, int rxsize, int txsize );
 int
 udp_bind_double ( udp_connection_t **_u1, udp_connection_t **_u2,

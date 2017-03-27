@@ -138,11 +138,11 @@ upnp_thread( void *aux )
   int r, delay_ms;
 
   multicast = udp_bind(LS_UPNP, "upnp_thread_multicast",
-                       "239.255.255.250", 1900,
+                       "239.255.255.250", 1900, NULL,
                        NULL, 32*1024, 32*1024);
   if (multicast == NULL || multicast == UDP_FATAL_ERROR)
     goto error;
-  unicast = udp_bind(LS_UPNP, "upnp_thread_unicast", bindaddr, 0,
+  unicast = udp_bind(LS_UPNP, "upnp_thread_unicast", bindaddr, 0, NULL,
                      NULL, 32*1024, 32*1024);
   if (unicast == NULL || unicast == UDP_FATAL_ERROR)
     goto error;
