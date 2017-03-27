@@ -580,7 +580,7 @@ http_error(http_connection_t *hc, int error)
                    error, errtxt, error, errtxt);
 
     if (error == HTTP_STATUS_UNAUTHORIZED)
-      htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"%s/\">Default Login</A></P>",
+      htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"%s/logout\">Default Login</A></P>",
                      tvheadend_webroot ? tvheadend_webroot : "");
 
     htsbuf_append_str(&hc->hc_reply, "</BODY></HTML>\r\n");
