@@ -40,7 +40,9 @@ iptv_udp_start ( iptv_mux_t *im, const char *raw, const url_t *url )
 
   mpegts_mux_nice_name((mpegts_mux_t*)im, name, sizeof(name));
 
-  conn = udp_bind(LS_IPTV, name, url->host, url->port,
+  /* Note: url->user is used for specifying multicast source address (SSM)
+     here. The URL format is rtp://<srcaddr>@<grpaddr>:<port> */
+  conn = udp_bind(LS_IPTV, name, url->host, url->port, url->user,
                   im->mm_iptv_interface, IPTV_BUF_SIZE, 4*1024);
   if (conn == UDP_FATAL_ERROR)
     return SM_CODE_TUNING_FAILED;
