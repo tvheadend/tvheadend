@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-24 08:46+0200\n"
-"PO-Revision-Date: 2016-08-14 11:52+0000\n"
-"Last-Translator: Anti <anti.siidiratsep@gmail.com>\n"
+"POT-Creation-Date: 2016-12-16 18:36+0100\n"
+"PO-Revision-Date: 2016-12-16 17:37+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Estonian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -35,7 +35,7 @@ msgstr "(Puhasta filter)"
 msgid "(None)"
 msgstr "(Ei midagi)"
 
-#: src/webui/static/app/epg.js:244
+#: src/webui/static/app/epg.js:247
 msgid "(default DVR Profile)"
 msgstr "(vaikimisi DVR profiil)"
 
@@ -111,29 +111,29 @@ msgstr "8 #kuuNumber"
 msgid "9 #monthNumber"
 msgstr "9 #kuuNumber"
 
-#: src/webui/static/app/dvr.js:246
+#: src/webui/static/app/dvr.js:245
 msgid "Abort"
 msgstr "Katkesta"
 
-#: src/webui/static/app/dvr.js:244
+#: src/webui/static/app/dvr.js:243
 msgid "Abort the selected recording"
 msgstr "Katkesta valitud salvestamine"
 
-#: src/webui/static/app/tvheadend.js:796
+#: src/webui/static/app/tvheadend.js:836
 msgid "About"
 msgstr "Üldnfo"
 
-#: src/webui/static/app/acleditor.js:28
+#: src/webui/static/app/acleditor.js:24
 msgid "Access Entries"
 msgstr "Kasutajate haldamine"
 
-#: src/webui/static/app/acleditor.js:27
+#: src/webui/static/app/acleditor.js:23
 msgid "Access Entry"
-msgstr "kasutamise kirje"
+msgstr "Kasutamise kirje"
 
 #: src/webui/static/app/servicemapper.js:22
 msgid "Active"
-msgstr "Aktiivne"
+msgstr "Edenemine:"
 
 #: src/webui/static/app/idnode.js:1793 src/webui/static/app/idnode.js:2289
 msgid "Add"
@@ -163,11 +163,11 @@ msgstr "Pärast"
 msgid "After filtering and reordering (without PCR and PMT)"
 msgstr "Pärast filtreerimist ja uuesti järjestamist (ilma PCR ja PMT)"
 
-#: src/webui/static/app/epg.js:603 src/webui/static/app/epg.js:604
+#: src/webui/static/app/epg.js:607 src/webui/static/app/epg.js:608
 msgid "Age"
-msgstr "Vanus"
+msgstr "Vanusemärge"
 
-#: src/webui/static/app/epg.js:131
+#: src/webui/static/app/epg.js:134
 msgid "Age Rating"
 msgstr "Vanusepiirang"
 
@@ -201,15 +201,15 @@ msgstr "Apr"
 msgid "April"
 msgstr "Aprill"
 
-#: src/webui/static/app/epg.js:156
+#: src/webui/static/app/epg.js:159
 msgid "Aspect"
 msgstr "Aspekt"
 
-#: src/webui/static/app/chconf.js:163
+#: src/webui/static/app/chconf.js:178
 msgid "Assign Number"
 msgstr "Määra number"
 
-#: src/webui/static/app/chconf.js:161
+#: src/webui/static/app/chconf.js:176
 msgid "Assign lowest free channel number"
 msgstr "Määra madalaim vaba kanali number"
 
@@ -221,7 +221,7 @@ msgstr "Audio voogedastuse filter"
 msgid "Audio Stream Filters"
 msgstr "Audio voogedastuse filtrid"
 
-#: src/webui/static/app/epg.js:164
+#: src/webui/static/app/epg.js:167
 msgid "Audio description#EPG"
 msgstr "Audio kirjeldus#EPG"
 
@@ -233,20 +233,20 @@ msgstr "Aug"
 msgid "August"
 msgstr "August"
 
-#: src/webui/static/app/epg.js:1059
+#: src/webui/static/app/epg.js:1063
 msgid "Auto Recorder"
 msgstr "Automaatsalvestaja"
 
-#: src/webui/static/app/tvheadend.js:330
+#: src/webui/static/app/tvheadend.js:368
 msgid "Auto-refresh"
 msgstr "Automaatvärskendus"
 
-#: src/webui/static/app/epg.js:260 src/webui/static/app/dvr.js:69
-#: src/webui/static/app/dvr.js:632
+#: src/webui/static/app/epg.js:263 src/webui/static/app/dvr.js:69
+#: src/webui/static/app/dvr.js:735
 msgid "Autorec"
 msgstr "Automaatsalvestus"
 
-#: src/webui/static/app/dvr.js:633
+#: src/webui/static/app/dvr.js:736
 msgid "Autorecs"
 msgstr "Automaatsalvestused"
 
@@ -254,15 +254,15 @@ msgstr "Automaatsalvestused"
 msgid "Available"
 msgstr "Saadaval"
 
-#: src/webui/static/app/status.js:381
+#: src/webui/static/app/status.js:404
 msgid "BER"
 msgstr "BER"
 
-#: src/webui/static/app/status.js:374
+#: src/webui/static/app/status.js:396
 msgid "Bandwidth (kb/s)"
 msgstr "Võrguühendus (kb/s)"
 
-#: src/webui/static/app/status.js:698 src/webui/static/app/status.js:791
+#: src/webui/static/app/status.js:732 src/webui/static/app/status.js:825
 msgid "Bandwidth monitor"
 msgstr "Võrguühenduse jälgija"
 
@@ -282,23 +282,23 @@ msgstr "Põhiseaded"
 msgid "Before"
 msgstr "Ennem"
 
-#: src/webui/static/app/cteditor.js:40
+#: src/webui/static/app/cteditor.js:73
 msgid "Bouquet"
 msgstr "Kanalite kimp"
 
-#: src/webui/static/app/cteditor.js:41
+#: src/webui/static/app/cteditor.js:74
 msgid "Bouquets"
 msgstr "Kanalite kimbud"
 
-#: src/webui/static/app/epg.js:273
+#: src/webui/static/app/epg.js:276
 msgid "Broadcast Details"
-msgstr "Levi detailid"
+msgstr "Saate detailid"
 
-#: src/webui/static/app/epg.js:378
+#: src/webui/static/app/epg.js:381
 msgid "Broadcast details"
-msgstr "Levi detailid"
+msgstr "Saate detailid"
 
-#: src/webui/static/app/epg.js:866
+#: src/webui/static/app/epg.js:870
 msgid "Buffering. Please wait..."
 msgstr "Puhverdamas. Palun oota ..."
 
@@ -327,7 +327,7 @@ msgstr "CA'd"
 msgid "Cancel"
 msgstr "Loobu"
 
-#: src/webui/static/app/status.js:531
+#: src/webui/static/app/status.js:559
 msgid "Cancel Connection"
 msgstr "Katkesta ühendus"
 
@@ -335,11 +335,11 @@ msgstr "Katkesta ühendus"
 msgid "Cancel operation"
 msgstr "Katkesta tegevus"
 
-#: src/webui/static/app/status.js:532
+#: src/webui/static/app/status.js:560
 msgid "Cancel the selected connection?"
 msgstr "Katkestada valitud ühendus?"
 
-#: src/webui/static/app/status.js:528
+#: src/webui/static/app/status.js:556
 msgid "Cancel this connection"
 msgstr "Katkesta see ühendus"
 
@@ -355,13 +355,13 @@ msgstr "Vaheta kasutajaliidese tasemeid (tavaline, täppis, ekspert)"
 msgid "Changes were applied!"
 msgstr "Muudatused rakendatud!"
 
-#: src/webui/static/app/chconf.js:217 src/webui/static/app/epg.js:581
-#: src/webui/static/app/epg.js:582 src/webui/static/app/epg.js:1063
-#: src/webui/static/app/status.js:106
+#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:585
+#: src/webui/static/app/epg.js:586 src/webui/static/app/epg.js:1067
+#: src/webui/static/app/status.js:113
 msgid "Channel"
 msgstr "Kanal"
 
-#: src/webui/static/app/tvheadend.js:721
+#: src/webui/static/app/tvheadend.js:759
 msgid "Channel / EPG"
 msgstr "Kanal / EPG"
 
@@ -373,11 +373,11 @@ msgstr "Kanali märge"
 msgid "Channel Tags"
 msgstr "Kanali märked"
 
-#: src/webui/static/app/chconf.js:184
+#: src/webui/static/app/chconf.js:199
 msgid "Channel number operations"
 msgstr "Kanali nummerdamise tegevused"
 
-#: src/webui/static/app/chconf.js:218
+#: src/webui/static/app/chconf.js:233
 msgid "Channels"
 msgstr "Kanalid"
 
@@ -393,11 +393,11 @@ msgstr "Puhasta pildi (ikooni) vahemälu"
 msgid "Clean image cache on storage"
 msgstr "Puhasta pildi vahemälu andmekandjal"
 
-#: src/webui/static/app/status.js:273 src/webui/static/app/status.js:276
+#: src/webui/static/app/status.js:289 src/webui/static/app/status.js:292
 msgid "Clear statistics"
 msgstr "Nullida statistika"
 
-#: src/webui/static/app/status.js:277
+#: src/webui/static/app/status.js:293
 msgid "Clear statistics for selected input?"
 msgstr "Kas nullida valitud sisendi statistika?"
 
@@ -413,7 +413,7 @@ msgstr "Klooni"
 msgid "Clone a new entry"
 msgstr "Klooni uueks kirjeks"
 
-#: src/webui/static/app/epg.js:267
+#: src/webui/static/app/epg.js:270
 msgid "Close"
 msgstr "Sulge"
 
@@ -429,7 +429,7 @@ msgstr "Comet'i viga"
 msgid "Comment"
 msgstr "Kommentaar"
 
-#: src/webui/static/app/status.js:747
+#: src/webui/static/app/status.js:781
 msgid "Compression ratio"
 msgstr "Kompressioon"
 
@@ -437,20 +437,20 @@ msgstr "Kompressioon"
 msgid "Conditional Access Client"
 msgstr "Conditional Access Client"
 
-#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:660
+#: src/webui/static/app/tvhlog.js:17 src/webui/static/app/tvheadend.js:698
 msgid "Configuration"
 msgstr "Seaded"
 
-#: src/webui/static/app/status.js:639
+#: src/webui/static/app/status.js:673
 msgid "Connections"
 msgstr "Ühendused"
 
-#: src/webui/static/app/epg.js:142 src/webui/static/app/epg.js:610
-#: src/webui/static/app/epg.js:611
+#: src/webui/static/app/epg.js:145 src/webui/static/app/epg.js:614
+#: src/webui/static/app/epg.js:615
 msgid "Content Type"
 msgstr "Sisu tüüp"
 
-#: src/webui/static/app/status.js:403
+#: src/webui/static/app/status.js:430
 msgid "Continuity Errors"
 msgstr "Continuity Errors"
 
@@ -458,11 +458,11 @@ msgstr "Continuity Errors"
 msgid "Create"
 msgstr "Loo uus"
 
-#: src/webui/static/app/epg.js:879
+#: src/webui/static/app/epg.js:883
 msgid "Create AutoRec"
 msgstr "Loo automaatsalvestus"
 
-#: src/webui/static/app/epg.js:259 src/webui/static/app/epg.js:881
+#: src/webui/static/app/epg.js:262 src/webui/static/app/epg.js:885
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
@@ -472,28 +472,28 @@ msgstr "Loo uus automaatsalvestuse reegel salvestamaks edaspidi kõik  tulevikus
 msgid "Create new entry"
 msgstr "Loo uus kirje"
 
-#: src/webui/static/app/epg.js:1081
+#: src/webui/static/app/epg.js:1085
 msgid "Created from EPG query"
-msgstr "Loodud EPG päringust"
+msgstr "Loodud EPG päringuga"
 
-#: src/webui/static/app/epg.js:1068
+#: src/webui/static/app/epg.js:1072
 #, javascript-format
 msgid "Currently this will match (and record) %d events."
 msgstr "Hetkel valib (ja salvestab) see %d juhtumit."
 
-#: src/webui/static/app/tvheadend.js:702
+#: src/webui/static/app/tvheadend.js:740
 msgid "DVB Inputs"
 msgstr "DVB sisendid"
 
-#: src/webui/static/app/epg.js:349
+#: src/webui/static/app/epg.js:352
 msgid "DVR"
 msgstr "DVR"
 
-#: src/webui/static/app/epg.js:160
+#: src/webui/static/app/epg.js:163
 msgid "Deaf signed#EPG"
 msgstr "Viipekeelne#EPG"
 
-#: src/webui/static/app/tvheadend.js:771
+#: src/webui/static/app/tvheadend.js:810
 msgid "Debugging"
 msgstr "Debugimine"
 
@@ -509,11 +509,11 @@ msgstr "Detsember"
 msgid "Delete"
 msgstr "Kustuta"
 
-#: src/webui/static/app/epg.js:233
+#: src/webui/static/app/epg.js:236
 msgid "Delete recording"
 msgstr "Kustuta salvestus"
 
-#: src/webui/static/app/epg.js:232
+#: src/webui/static/app/epg.js:235
 msgid "Delete scheduled recording of this program"
 msgstr "Kustuta selle saate ajastatud salvestamine"
 
@@ -521,29 +521,37 @@ msgstr "Kustuta selle saate ajastatud salvestamine"
 msgid "Delete selected entries"
 msgstr "Kustuta valitud kirjed"
 
-#: src/webui/static/app/status.js:140
+#: src/webui/static/app/status.js:152
 msgid "Descramble"
 msgstr "Lahtikodeerimine"
 
-#: src/webui/static/app/mpegts.js:279
+#: src/webui/static/app/chconf.js:151
+msgid "Detach from bouquet"
+msgstr "Eralda kanalite kimbust"
+
+#: src/webui/static/app/chconf.js:153
+msgid "Detach selected channels from bouquet"
+msgstr "Eralda valitud kanalid kanalite kimbust"
+
+#: src/webui/static/app/mpegts.js:321
 msgid "Detailed stream info"
 msgstr "Detailne voo info"
 
-#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:275
-#: src/webui/static/app/epg.js:364 src/webui/static/app/epg.js:365
+#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:317
+#: src/webui/static/app/epg.js:367 src/webui/static/app/epg.js:368
 #: src/webui/static/app/dvr.js:137 src/webui/static/app/dvr.js:138
 msgid "Details"
 msgstr "Detailid"
 
-#: src/webui/static/app/dvr.js:747
+#: src/webui/static/app/dvr.js:865
 msgid "Digital Video Recorder"
 msgstr "Digitaalne videosalvestaja"
 
-#: src/webui/static/app/dvr.js:609
+#: src/webui/static/app/dvr.js:705
 msgid "Digital Video Recorder Profile"
 msgstr "Digitaalse videosalvestaja profiil"
 
-#: src/webui/static/app/dvr.js:610
+#: src/webui/static/app/dvr.js:706
 msgid "Digital Video Recorder Profiles"
 msgstr "Digitaalse videosalvestaja profiilid"
 
@@ -551,7 +559,7 @@ msgstr "Digitaalse videosalvestaja profiilid"
 msgid "Disabled"
 msgstr "Väljalülitatud"
 
-#: src/webui/static/app/config.js:134
+#: src/webui/static/app/config.js:135
 msgid "Discover SAT>IP servers"
 msgstr "Avasta SAT>IP servereid"
 
@@ -559,46 +567,50 @@ msgstr "Avasta SAT>IP servereid"
 msgid "Displaying {0} - {1} of {2}"
 msgstr "Kuvamas {0} - {1} / {2}st"
 
-#: src/webui/static/app/dvr.js:264
+#: src/webui/static/app/dvr.js:263
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr "Oled Sa kindel, et valitu katkestada/mitteajastada?"
 
-#: src/webui/static/app/dvr.js:429 src/webui/static/app/dvr.js:566
+#: src/webui/static/app/dvr.js:594
 msgid "Do you really want to delete the selected recordings?"
 msgstr "Oled Sa kindel, et kustutada valitud salvestused?"
 
-#: src/webui/static/app/tvheadend.js:302
+#: src/webui/static/app/tvheadend.js:327
 msgid "Do you really want to delete the selection?"
 msgstr "Oled Sa kindel, et see valik tuleb kustutada?"
 
-#: src/webui/static/app/dvr.js:234
+#: src/webui/static/app/dvr.js:233
 msgid "Do you really want to gracefully stop/unschedule the selection?"
 msgstr "Oled Sa kindel, et valitu viisakalt peatada/mitteajastada?"
 
-#: src/webui/static/app/epg.js:321
+#: src/webui/static/app/epg.js:324
 msgid "Do you really want to gracefully stop/unschedule this recording?"
 msgstr "Oled Sa kindel, et see salvestamine viisakalt peatada/mitteajastada?"
 
-#: src/webui/static/app/epg.js:334
+#: src/webui/static/app/dvr.js:434
+msgid "Do you really want to remove the selected recordings from storage?"
+msgstr ""
+
+#: src/webui/static/app/epg.js:337
 msgid "Do you really want to remove this recording?"
 msgstr "Oled Sa kindel, et see salvestamine tuleb eemaldada?"
 
-#: src/webui/static/app/epg.js:1042 src/webui/static/app/epg.js:1048
-#: src/webui/static/app/epg.js:1051 src/webui/static/app/epg.js:1054
-#: src/webui/static/app/epg.js:1057
+#: src/webui/static/app/epg.js:1046 src/webui/static/app/epg.js:1052
+#: src/webui/static/app/epg.js:1055 src/webui/static/app/epg.js:1058
+#: src/webui/static/app/epg.js:1061
 msgid "Don't care"
 msgstr "Ei hooli"
 
-#: src/webui/static/app/dvr.js:340 src/webui/static/app/dvr.js:477
+#: src/webui/static/app/dvr.js:339 src/webui/static/app/dvr.js:505
 msgid "Download"
 msgstr "Allalaadimine"
 
-#: src/webui/static/app/dvr.js:338 src/webui/static/app/dvr.js:475
+#: src/webui/static/app/dvr.js:337 src/webui/static/app/dvr.js:503
 msgid "Download the selected recording"
 msgstr "Valitud salvestuse allalaadimine"
 
-#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:565
-#: src/webui/static/app/epg.js:566 src/webui/static/app/epg.js:1066
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:569
+#: src/webui/static/app/epg.js:570 src/webui/static/app/epg.js:1070
 #: src/webui/static/app/dvr.js:52
 msgid "Duration"
 msgstr "Kestvus"
@@ -615,48 +627,48 @@ msgstr "EPG hankija kanal"
 msgid "EPG Grabber Channels"
 msgstr "EPG hankija kanalid"
 
-#: src/webui/static/app/epggrab.js:86
+#: src/webui/static/app/epggrab.js:88
 msgid "EPG Grabber Module"
 msgstr "EPG hankija moodul"
 
-#: src/webui/static/app/epggrab.js:87
+#: src/webui/static/app/epggrab.js:89
 msgid "EPG Grabber Modules"
 msgstr "EPG hankija moodulid"
 
-#: src/webui/static/app/epggrab.js:88
+#: src/webui/static/app/epggrab.js:90
 msgid "EPG Grabber Name"
 msgstr "EPG hankija nimi"
 
-#: src/webui/static/app/epg.js:989
+#: src/webui/static/app/epg.js:993
 msgid "EPG Update"
 msgstr "EPG uuendus"
 
 #: src/webui/static/app/idnode.js:1284 src/webui/static/app/idnode.js:1894
 msgid "Edit"
-msgstr "Korrigeeri"
+msgstr "Muuda"
 
 #: src/webui/static/app/idnode.js:1892
 msgid "Edit selected entry"
-msgstr "Korrigeeri valitud kirjet"
+msgstr "Muuda valitud kirjet"
 
 #: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1908
 msgid "Edit {0}"
-msgstr "Korrigeeri {0}"
+msgstr "Muuda {0}"
 
 #: src/webui/static/app/idnode.js:1318
 msgid "Edit {0} ({1} entries)"
 msgstr "Edit {0} ({1} kirjet)"
 
-#: src/webui/static/app/epg.js:924
+#: src/webui/static/app/epg.js:928
 msgid "Electronic Program Guide"
 msgstr "Elektrooniline saatekava"
 
-#: src/webui/static/app/tvheadend.js:1009
+#: src/webui/static/app/tvheadend.js:1049
 msgid "Enable debug output"
 msgstr "Lülita sisse debugimise väljund"
 
-#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:557
-#: src/webui/static/app/epg.js:558
+#: src/webui/static/app/epg.js:114 src/webui/static/app/epg.js:561
+#: src/webui/static/app/epg.js:562
 msgid "End Time"
 msgstr "Lõpuaeg"
 
@@ -664,7 +676,7 @@ msgstr "Lõpuaeg"
 msgid "Enter Filter Text..."
 msgstr "Sisesta filtri tekst..."
 
-#: src/webui/static/app/epg.js:540 src/webui/static/app/epg.js:541
+#: src/webui/static/app/epg.js:544 src/webui/static/app/epg.js:545
 msgid "Episode"
 msgstr "Osa"
 
@@ -672,11 +684,11 @@ msgstr "Osa"
 msgid "Error"
 msgstr "Viga"
 
-#: src/webui/static/app/status.js:146
+#: src/webui/static/app/status.js:159
 msgid "Errors"
 msgstr "Vigu"
 
-#: src/webui/static/app/epg.js:931
+#: src/webui/static/app/epg.js:935
 msgid "Events"
 msgstr "Juhtumid"
 
@@ -696,11 +708,11 @@ msgstr "Eksperdi seaded"
 msgid "Failed"
 msgstr "Ebaõnnestunud"
 
-#: src/webui/static/app/dvr.js:560
+#: src/webui/static/app/dvr.js:588
 msgid "Failed Recording"
 msgstr "Ebaõnnestunud salvestus"
 
-#: src/webui/static/app/dvr.js:561
+#: src/webui/static/app/dvr.js:589
 msgid "Failed Recordings"
 msgstr "Ebaõnnestunud salvestused"
 
@@ -716,19 +728,19 @@ msgstr "Veebruar"
 msgid "File size"
 msgstr "Faili suurus"
 
-#: src/webui/static/app/epg.js:671
+#: src/webui/static/app/epg.js:675
 msgid "Filter channel..."
 msgstr "Filtreeri kanal..."
 
-#: src/webui/static/app/epg.js:718
+#: src/webui/static/app/epg.js:722
 msgid "Filter content type..."
 msgstr "Filtreeri sisu tüüp..."
 
-#: src/webui/static/app/epg.js:739
+#: src/webui/static/app/epg.js:743
 msgid "Filter duration..."
 msgstr "Filtreeri kestvus..."
 
-#: src/webui/static/app/epg.js:694
+#: src/webui/static/app/epg.js:698
 msgid "Filter tag..."
 msgstr "Filtreeri märge..."
 
@@ -740,19 +752,19 @@ msgstr "Filtrid"
 msgid "Finish"
 msgstr "Lõpeta"
 
-#: src/webui/static/app/dvr.js:423
+#: src/webui/static/app/dvr.js:453
 msgid "Finished Recording"
-msgstr "Lõppenud salvestus"
+msgstr "Valmis salvestus"
 
-#: src/webui/static/app/dvr.js:424
+#: src/webui/static/app/dvr.js:454
 msgid "Finished Recordings"
-msgstr "Lõppenud salvestused"
+msgstr "Valmis salvestused"
 
 #: src/webui/static/app/i18n-post.js:146
 msgid "First Page"
 msgstr "Esimene lehekülg"
 
-#: src/webui/static/app/mpegts.js:36
+#: src/webui/static/app/cteditor.js:44 src/webui/static/app/mpegts.js:36
 msgid "Force Scan"
 msgstr "Sunni peale skaneerimine"
 
@@ -760,7 +772,7 @@ msgstr "Sunni peale skaneerimine"
 msgid "Force new scan (all muxes) for selected networks"
 msgstr "Sunni skaneerima valituid võrke (kõik muxid) "
 
-#: src/webui/static/app/tvheadend.js:948
+#: src/webui/static/app/tvheadend.js:988
 msgid "Free"
 msgstr "Vaba"
 
@@ -772,23 +784,23 @@ msgstr "R"
 msgid "Friday"
 msgstr "Reede"
 
-#: src/webui/static/app/tvheadend.js:565
+#: src/webui/static/app/tvheadend.js:603
 msgid "Fullscreen"
 msgstr "Täisekraan"
 
-#: src/webui/static/app/epg.js:886 src/webui/static/app/epg.js:1044
+#: src/webui/static/app/epg.js:890 src/webui/static/app/epg.js:1048
 msgid "Fulltext"
 msgstr "Täistekst"
 
-#: src/webui/static/app/tvheadend.js:670
+#: src/webui/static/app/tvheadend.js:708
 msgid "General"
 msgstr "Üldine"
 
-#: src/webui/static/app/epg.js:1065
+#: src/webui/static/app/epg.js:1069
 msgid "Genre"
 msgstr "Žanr"
 
-#: src/webui/static/app/tvheadend.js:938
+#: src/webui/static/app/tvheadend.js:978
 msgid "GiB"
 msgstr "GiB"
 
@@ -800,14 +812,14 @@ msgstr "Grid Update"
 msgid "Group By This Field"
 msgstr "Grupeeri selle välja alusel"
 
-#: src/webui/static/app/epg.js:148
+#: src/webui/static/app/epg.js:151
 msgid "HDTV"
 msgstr "HDTV"
 
 #: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
 #: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
-#: src/webui/static/app/epg.js:910 src/webui/static/app/status.js:177
-#: src/webui/static/app/status.js:458 src/webui/static/app/status.js:602
+#: src/webui/static/app/epg.js:914 src/webui/static/app/status.js:193
+#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:636
 #: src/webui/static/app/servicemapper.js:53
 msgid "Help"
 msgstr "Abi"
@@ -824,23 +836,23 @@ msgstr "Peida"
 msgid "Hide passwords"
 msgstr "Peida salasõnad"
 
-#: src/webui/static/app/status.js:88
+#: src/webui/static/app/status.js:92
 msgid "Hostname"
 msgstr "Hosti nimi"
 
-#: src/webui/static/app/status.js:78
+#: src/webui/static/app/status.js:81
 msgid "ID"
 msgstr "ID"
 
-#: src/webui/static/app/status.js:585
+#: src/webui/static/app/status.js:616
 msgid "IP Address"
 msgstr "IP aadress"
 
-#: src/webui/static/app/acleditor.js:114
+#: src/webui/static/app/acleditor.js:106
 msgid "IP Blocking Record"
 msgstr "IP Blocking Record"
 
-#: src/webui/static/app/acleditor.js:115
+#: src/webui/static/app/acleditor.js:107
 msgid "IP Blocking Records"
 msgstr "IP Blocking Records"
 
@@ -852,7 +864,7 @@ msgstr "Ignoreeritud"
 msgid "Image Cache"
 msgstr "Pildi vahemälu"
 
-#: src/webui/static/app/status.js:745
+#: src/webui/static/app/status.js:779
 msgid "In"
 msgstr "In"
 
@@ -860,11 +872,11 @@ msgstr "In"
 msgid "Index"
 msgstr "Indeks"
 
-#: src/webui/static/app/status.js:354 src/webui/static/app/status.js:835
+#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:869
 msgid "Input"
 msgstr "Sisend"
 
-#: src/webui/static/app/status.js:152
+#: src/webui/static/app/status.js:166
 msgid "Input (kb/s)"
 msgstr "Sissetulev (kb/s)"
 
@@ -892,7 +904,7 @@ msgstr "Juuni"
 msgid "June"
 msgstr "Juuni"
 
-#: src/webui/static/app/tvheadend.js:942
+#: src/webui/static/app/tvheadend.js:982
 msgid "KiB"
 msgstr "KiB"
 
@@ -908,33 +920,41 @@ msgstr "Viimased abi leheküljed"
 msgid "Last Page"
 msgstr "Viimane lehekülg"
 
-#: src/webui/static/app/epg.js:158
+#: src/webui/static/app/epg.js:161
 msgid "Lines"
 msgstr "Ridu"
 
-#: src/webui/static/app/tvheadend.js:521
+#: src/webui/static/app/tvheadend.js:559
 msgid "Live TV Player"
 msgstr "Live TV Player"
 
-#: src/webui/static/app/tvheadend.js:312
+#: src/webui/static/app/tvheadend.js:350
 msgid "Loading, please wait..."
 msgstr "Laadimas, palun oota..."
 
 #: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
-#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:662
-#: src/webui/static/app/epg.js:685 src/webui/static/app/epg.js:709
-#: src/webui/static/app/epg.js:730 src/webui/static/app/tvheadend.js:459
-#: src/webui/static/app/tvheadend.js:497
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/epg.js:666
+#: src/webui/static/app/epg.js:689 src/webui/static/app/epg.js:713
+#: src/webui/static/app/epg.js:734 src/webui/static/app/tvheadend.js:497
+#: src/webui/static/app/tvheadend.js:535
 msgid "Loading..."
 msgstr "Laadimas..."
 
-#: src/webui/static/app/tvheadend.js:919
+#: src/webui/static/app/tvheadend.js:959
 msgid "Logged in as"
 msgstr "Sisse loginud kui"
 
-#: src/webui/static/app/config.js:132
+#: src/webui/static/app/config.js:133
 msgid "Look for new SAT>IP servers"
 msgstr "Otsi uusi SAT>IP servereid"
+
+#: src/webui/static/app/mpegts.js:305
+msgid "Maintenance"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:303
+msgid "Maintenance operations"
+msgstr ""
 
 #: src/webui/static/app/mpegts.js:271
 msgid "Map All"
@@ -944,33 +964,33 @@ msgstr "Seosta kõik"
 msgid "Map Selected"
 msgstr "Seosta valitud"
 
-#: src/webui/static/app/mpegts.js:250 src/webui/static/app/chconf.js:139
+#: src/webui/static/app/mpegts.js:250 src/webui/static/app/chconf.js:147
 msgid "Map all services"
 msgstr "Seosta kõik teenused"
 
-#: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:137
+#: src/webui/static/app/mpegts.js:248 src/webui/static/app/chconf.js:145
 msgid "Map all services to channels"
 msgstr "Seosta kõik teenused kanaliteks"
 
-#: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:133
+#: src/webui/static/app/mpegts.js:244 src/webui/static/app/chconf.js:141
 msgid "Map selected services"
 msgstr "Seosta valitud teenused"
 
-#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:131
+#: src/webui/static/app/mpegts.js:242 src/webui/static/app/chconf.js:139
 msgid "Map selected services to channels"
 msgstr "Seosta valitud teenused kanaliteks"
 
-#: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:144
+#: src/webui/static/app/mpegts.js:255 src/webui/static/app/chconf.js:158
 #: src/webui/static/app/servicemapper.js:119
 #: src/webui/static/app/servicemapper.js:135
 msgid "Map services"
 msgstr "Seosta teenused"
 
-#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:142
+#: src/webui/static/app/mpegts.js:253 src/webui/static/app/chconf.js:156
 #: src/webui/static/app/servicemapper.js:116
 #: src/webui/static/app/servicemapper.js:132
 msgid "Map services to channels"
-msgstr "Seosta teenused kanaliteks"
+msgstr "Seosta teenused kanalitena kasutamiseks"
 
 #: src/webui/static/app/servicemapper.js:9
 msgid "Mapped"
@@ -984,11 +1004,11 @@ msgstr "Mär"
 msgid "March"
 msgstr "Märts"
 
-#: src/webui/static/app/dvr.js:386
+#: src/webui/static/app/dvr.js:385
 msgid "Mark the selected recording as failed"
 msgstr "Märgi valitud salvestus kui ebaõnnestunud"
 
-#: src/webui/static/app/dvr.js:523
+#: src/webui/static/app/dvr.js:551
 msgid "Mark the selected recording as finished"
 msgstr "Märgi valitud salvestus kui lõpuni jõudnud"
 
@@ -1008,11 +1028,11 @@ msgstr "Memory Information Entries"
 msgid "Memory Information Entry"
 msgstr "Memory Information Entry"
 
-#: src/webui/static/app/tvheadend.js:301
+#: src/webui/static/app/tvheadend.js:326
 msgid "Message"
 msgstr "Sõnum"
 
-#: src/webui/static/app/tvheadend.js:940
+#: src/webui/static/app/tvheadend.js:980
 msgid "MiB"
 msgstr "MiB"
 
@@ -1032,11 +1052,11 @@ msgstr "Liiguta alla"
 msgid "Move Up"
 msgstr "Liiguta üles"
 
-#: src/webui/static/app/chconf.js:173
+#: src/webui/static/app/chconf.js:188
 msgid "Move channel one number down"
 msgstr "Liiguta kanali number ühe võrra väiksemaks"
 
-#: src/webui/static/app/chconf.js:167
+#: src/webui/static/app/chconf.js:182
 msgid "Move channel one number up"
 msgstr "Liiguta kanali number ühe võrra suuremaks"
 
@@ -1056,11 +1076,11 @@ msgstr "Liiguta valitud kirje allapoole"
 msgid "Move selected entry up"
 msgstr "Liiguta valitud kirje ülespoole"
 
-#: src/webui/static/app/dvr.js:388
+#: src/webui/static/app/dvr.js:387
 msgid "Move to failed"
 msgstr "Liiguta ebaõnnestunute hulka"
 
-#: src/webui/static/app/dvr.js:525
+#: src/webui/static/app/dvr.js:553
 msgid "Move to finished"
 msgstr "Liiguta lõpetanute hulka"
 
@@ -1068,11 +1088,11 @@ msgstr "Liiguta lõpetanute hulka"
 msgid "Mux"
 msgstr "Mux"
 
-#: src/webui/static/app/mpegts.js:348 src/webui/static/app/mpegts.js:355
+#: src/webui/static/app/mpegts.js:390 src/webui/static/app/mpegts.js:398
 msgid "Mux Scheduler"
 msgstr "Mux ajastaja"
 
-#: src/webui/static/app/mpegts.js:349
+#: src/webui/static/app/mpegts.js:391
 msgid "Mux Schedulers"
 msgstr "Mux ajastajad"
 
@@ -1089,7 +1109,7 @@ msgstr "Võrk"
 msgid "Networks"
 msgstr "Võrgud"
 
-#: src/webui/static/app/epg.js:150
+#: src/webui/static/app/epg.js:153
 msgid "New#EPG"
 msgstr "Uus#EPG"
 
@@ -1113,12 +1133,12 @@ msgstr "Pole datat kuvada"
 msgid "No days"
 msgstr "Pole päevi"
 
-#: src/webui/static/app/tvheadend.js:922
+#: src/webui/static/app/tvheadend.js:962
 msgid "No verified access"
 msgstr "Pole kinnitatud juurdepääsu"
 
 #. / {0} title (lowercase), {1} title
-#: src/webui/static/app/tvheadend.js:325
+#: src/webui/static/app/tvheadend.js:363
 msgid "No {0} to display"
 msgstr "Ei saa kuvada: {0}"
 
@@ -1126,6 +1146,10 @@ msgstr "Ei saa kuvada: {0}"
 #: src/webui/static/app/mpegts.js:216
 msgid "None"
 msgstr "Ei midagi"
+
+#: src/webui/static/app/tvheadend.js:247
+msgid "Not Available"
+msgstr ""
 
 #: src/webui/static/app/idnode.js:355
 msgid "Not set"
@@ -1139,19 +1163,19 @@ msgstr "Nov"
 msgid "November"
 msgstr "November"
 
-#: src/webui/static/app/epg.js:572 src/webui/static/app/epg.js:573
+#: src/webui/static/app/epg.js:576 src/webui/static/app/epg.js:577
 msgid "Number"
 msgstr "Number"
 
-#: src/webui/static/app/chconf.js:175
+#: src/webui/static/app/chconf.js:190
 msgid "Number Down"
 msgstr "Number alla"
 
-#: src/webui/static/app/chconf.js:169
+#: src/webui/static/app/chconf.js:184
 msgid "Number Up"
 msgstr "Number üles"
 
-#: src/webui/static/app/chconf.js:186
+#: src/webui/static/app/chconf.js:201
 msgid "Number operations"
 msgstr "Nummerdamise tegevused"
 
@@ -1179,15 +1203,15 @@ msgstr "Muu voogedastuse filter"
 msgid "Other Stream Filters"
 msgstr "Muud voogedastuse filtrid"
 
-#: src/webui/static/app/status.js:746
+#: src/webui/static/app/status.js:780
 msgid "Out"
 msgstr "Välja"
 
-#: src/webui/static/app/status.js:160
+#: src/webui/static/app/status.js:175
 msgid "Output (kb/s)"
 msgstr "Väljaminev (kb/s)"
 
-#: src/webui/static/app/status.js:387
+#: src/webui/static/app/status.js:411
 msgid "PER"
 msgstr "PER"
 
@@ -1200,7 +1224,7 @@ msgid "Page"
 msgstr "Lehekülg"
 
 #: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2652
-#: src/webui/static/app/epg.js:166
+#: src/webui/static/app/epg.js:169
 msgid "Parameters"
 msgstr "Parameetrid"
 
@@ -1208,28 +1232,28 @@ msgstr "Parameetrid"
 msgid "Parent disabled"
 msgstr "Parent disabled"
 
-#: src/webui/static/app/acleditor.js:78
+#: src/webui/static/app/acleditor.js:70
 msgid "Password"
 msgstr "Salasõna"
 
-#: src/webui/static/app/acleditor.js:79
+#: src/webui/static/app/acleditor.js:71
 msgid "Passwords"
 msgstr "Salasõnad"
 
-#: src/webui/static/app/tvheadend.js:550
+#: src/webui/static/app/tvheadend.js:588
 msgid "Pause"
 msgstr "Paus"
 
-#: src/webui/static/app/tvheadend.js:336
+#: src/webui/static/app/tvheadend.js:374
 msgid "Per page"
 msgstr "Per lehekülg"
 
 #: src/webui/static/app/mpegts.js:121 src/webui/static/app/mpegts.js:122
-#: src/webui/static/app/mpegts.js:320 src/webui/static/app/mpegts.js:321
-#: src/webui/static/app/chconf.js:230 src/webui/static/app/chconf.js:231
-#: src/webui/static/app/dvr.js:448 src/webui/static/app/dvr.js:449
-#: src/webui/static/app/dvr.js:585 src/webui/static/app/dvr.js:586
-#: src/webui/static/app/tvheadend.js:446 src/webui/static/app/tvheadend.js:533
+#: src/webui/static/app/mpegts.js:362 src/webui/static/app/mpegts.js:363
+#: src/webui/static/app/chconf.js:245 src/webui/static/app/chconf.js:246
+#: src/webui/static/app/dvr.js:476 src/webui/static/app/dvr.js:477
+#: src/webui/static/app/dvr.js:613 src/webui/static/app/dvr.js:614
+#: src/webui/static/app/tvheadend.js:484 src/webui/static/app/tvheadend.js:571
 msgid "Play"
 msgstr "Vaata"
 
@@ -1237,21 +1261,31 @@ msgstr "Vaata"
 msgid "Play Selected Channel"
 msgstr "Vaata valitud kanalit"
 
-#: src/webui/static/app/epg.js:197
+#: src/webui/static/app/epg.js:200
 msgid "Play program"
 msgstr "Vaata saadet"
 
-#: src/webui/static/app/epg.js:196
+#: src/webui/static/app/epg.js:199
 msgid "Play this program"
 msgstr "Vaata seda saadet"
 
-#: src/webui/static/app/tvheadend.js:446
+#: src/webui/static/app/tvheadend.js:484
 msgid "Play this stream"
 msgstr "Vaata seda voogu"
 
 #: src/webui/static/app/i18n-post.js:161
 msgid "Please Wait..."
 msgstr "Palun oota..."
+
+#: src/webui/static/app/tvheadend.js:240
+msgid "Please check Tvheadend is running and try again."
+msgstr ""
+
+#: src/webui/static/app/tvheadend.js:249
+msgid ""
+"Please take a look at the other Help pages (Table of Contents). If you still"
+" can't find what you're "
+msgstr ""
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
@@ -1265,15 +1299,15 @@ msgstr "Eelmine kuu (CRTL+Vasakule)"
 msgid "Previous Page"
 msgstr "Eelmine lehekülg"
 
-#: src/webui/static/app/status.js:118
+#: src/webui/static/app/status.js:127
 msgid "Profile"
 msgstr "Profiil"
 
-#: src/webui/static/app/dvr.js:611
+#: src/webui/static/app/dvr.js:707
 msgid "Profile Name"
 msgstr "Profiili nimi"
 
-#: src/webui/static/app/epg.js:495 src/webui/static/app/epg.js:496
+#: src/webui/static/app/epg.js:499 src/webui/static/app/epg.js:500
 msgid "Progress"
 msgstr "Edenemine"
 
@@ -1281,7 +1315,8 @@ msgstr "Edenemine"
 msgid "Re-fetch images"
 msgstr "Taastõmba pildid"
 
-#: src/webui/static/app/dvr.js:359 src/webui/static/app/dvr.js:496
+#: src/webui/static/app/dvr.js:358 src/webui/static/app/dvr.js:524
+#: src/webui/static/app/dvr.js:642
 msgid "Re-record"
 msgstr "Taassalvesta"
 
@@ -1301,19 +1336,19 @@ msgstr "Mittemuudetav info"
 msgid "Reconnected to Tvheadend"
 msgstr "Taasühendatud Tvheadend'iga"
 
-#: src/webui/static/app/epg.js:254
+#: src/webui/static/app/epg.js:257
 msgid "Record program"
 msgstr "Salvesta saade"
 
-#: src/webui/static/app/epg.js:260
+#: src/webui/static/app/epg.js:263
 msgid "Record series"
 msgstr "Salvesta seriaale"
 
-#: src/webui/static/app/epg.js:253
+#: src/webui/static/app/epg.js:256
 msgid "Record this program now"
 msgstr "Hakka kohe seda saadet salvestama"
 
-#: src/webui/static/app/tvheadend.js:752
+#: src/webui/static/app/tvheadend.js:790
 msgid "Recording"
 msgstr "Salvestamine"
 
@@ -1325,23 +1360,63 @@ msgstr "Salvestamise detailid"
 msgid "Refresh"
 msgstr "Värskenda"
 
-#: src/webui/static/app/epg.js:152
+#: src/webui/static/app/dvr.js:416
+msgid "Remove"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:300
+msgid "Remove all unseen services (7 days+)"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:292
+msgid ""
+"Remove old services marked as missing in PAT/SDT which were not detected "
+"more than 7 days (last seen column)"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:298
+msgid ""
+"Remove old services which were not detected more than 7 days (last seen "
+"column)"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:414
+msgid "Remove the selected recording from storage"
+msgstr ""
+
+#: src/webui/static/app/mpegts.js:294
+msgid "Remove unseen services (PAT/SDT) (7 days+)"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:674
+msgid "Removed Recording"
+msgstr ""
+
+#: src/webui/static/app/dvr.js:675
+msgid "Removed Recordings"
+msgstr ""
+
+#: src/webui/static/app/epg.js:155
 msgid "Repeat#EPG"
 msgstr "Korda#EPG"
 
-#: src/webui/static/app/chconf.js:203
+#: src/webui/static/app/cteditor.js:42
+msgid "Rescan the mux for changes to the bouquet."
+msgstr "Skaneeri muxi uuesti leidmaks kanalite kimbu muudatusi."
+
+#: src/webui/static/app/chconf.js:218
 msgid "Reset (clear) the selected icon URLs"
 msgstr "Puhasta (võta ära) valitud ikooni URL"
 
-#: src/webui/static/app/epg.js:892
+#: src/webui/static/app/epg.js:896
 msgid "Reset All"
 msgstr "Puhasta kõik"
 
-#: src/webui/static/app/chconf.js:205
+#: src/webui/static/app/chconf.js:220
 msgid "Reset Icon"
 msgstr "Puhasta ikoon"
 
-#: src/webui/static/app/epg.js:894
+#: src/webui/static/app/epg.js:898
 msgid "Reset all filters (show all)"
 msgstr "Puhasta kõik filtrid (näita kõike)"
 
@@ -1350,11 +1425,11 @@ msgstr "Puhasta kõik filtrid (näita kõike)"
 msgid "Revert pending changes (marked with red border)"
 msgstr "Võta tagasi ootel muudatused (märgitud punase nurgaga)"
 
-#: src/webui/static/app/config.js:147
+#: src/webui/static/app/config.js:148
 msgid "SAT>IP Server"
 msgstr "SAT>IP server"
 
-#: src/webui/static/app/status.js:417
+#: src/webui/static/app/status.js:445
 msgid "SNR"
 msgstr "SNR"
 
@@ -1388,23 +1463,23 @@ msgstr "Ajastatud algusaeg"
 msgid "Scheduled Stop Time"
 msgstr "Ajastatud lõpuaeg"
 
-#: src/webui/static/app/epg.js:182 src/webui/static/app/dvr.js:80
+#: src/webui/static/app/epg.js:185 src/webui/static/app/dvr.js:80
 msgid "Search IMDB (for title)"
-msgstr "Otsi IMDB'st (pealkirja)"
+msgstr "Otsi IMDB'st (pealkirja järgi)"
 
-#: src/webui/static/app/epg.js:189 src/webui/static/app/dvr.js:86
+#: src/webui/static/app/epg.js:192 src/webui/static/app/dvr.js:86
 msgid "Search TheTVDB (for title)"
-msgstr "Otsi TheTVDB'st (pealkirja)"
+msgstr "Otsi TheTVDB'st (pealkirja järgi)"
 
-#: src/webui/static/app/epg.js:651
+#: src/webui/static/app/epg.js:655
 msgid "Search title..."
 msgstr "Otsi pealkirja..."
 
-#: src/webui/static/app/tvheadend.js:466
+#: src/webui/static/app/tvheadend.js:504
 msgid "Select channel..."
 msgstr "Vali kanal..."
 
-#: src/webui/static/app/tvheadend.js:503
+#: src/webui/static/app/tvheadend.js:541
 msgid "Select stream profile..."
 msgstr "Vali voogedastuse profiil..."
 
@@ -1424,7 +1499,7 @@ msgstr "Sept"
 msgid "September"
 msgstr "September"
 
-#: src/webui/static/app/mpegts.js:310 src/webui/static/app/status.js:112
+#: src/webui/static/app/mpegts.js:352 src/webui/static/app/status.js:120
 msgid "Service"
 msgstr "Teenus"
 
@@ -1437,7 +1512,7 @@ msgstr "Teenuse seostaja"
 msgid "Service details for"
 msgstr "Teenuse detailid"
 
-#: src/webui/static/app/mpegts.js:311
+#: src/webui/static/app/mpegts.js:353
 msgid "Services"
 msgstr "Teenused"
 
@@ -1457,7 +1532,7 @@ msgstr "Näita või peida salasõnad"
 msgid "Show passwords"
 msgstr "Näita salasõnu"
 
-#: src/webui/static/app/status.js:437
+#: src/webui/static/app/status.js:465
 msgid "Signal Strength"
 msgstr "Signaali tugevus"
 
@@ -1469,20 +1544,20 @@ msgstr "Sordi suurenevas järjekorras"
 msgid "Sort Descending"
 msgstr "Sordi kahanevas järjekorras"
 
-#: src/webui/static/app/epg.js:129
+#: src/webui/static/app/epg.js:132
 msgid "Star Rating"
 msgstr "Tähtede reiting"
 
-#: src/webui/static/app/epg.js:595 src/webui/static/app/epg.js:596
+#: src/webui/static/app/epg.js:599 src/webui/static/app/epg.js:600
 msgid "Stars"
-msgstr "Tähti"
+msgstr "Reitingutähed"
 
-#: src/webui/static/app/status.js:124
+#: src/webui/static/app/status.js:134
 msgid "Start"
 msgstr "Algus"
 
-#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:548
-#: src/webui/static/app/epg.js:549
+#: src/webui/static/app/epg.js:112 src/webui/static/app/epg.js:552
+#: src/webui/static/app/epg.js:553
 msgid "Start Time"
 msgstr "Algusaeg"
 
@@ -1494,40 +1569,40 @@ msgstr "Käivita algkonfiguratsiooniks juhendav abiprogramm"
 msgid "Start wizard"
 msgstr "Käivita juhendav abiprogramm"
 
-#: src/webui/static/app/status.js:595
+#: src/webui/static/app/status.js:628
 msgid "Started"
 msgstr "Alustatud"
 
-#: src/webui/static/app/status.js:134
+#: src/webui/static/app/status.js:145
 msgid "State"
-msgstr "Staatus"
+msgstr "Hetkeseis"
 
-#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:649
+#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:683
 msgid "Status"
-msgstr "Staatus"
+msgstr "Hetkeseis"
 
-#: src/webui/static/app/dvr.js:216 src/webui/static/app/tvheadend.js:557
+#: src/webui/static/app/dvr.js:215 src/webui/static/app/tvheadend.js:595
 msgid "Stop"
 msgstr "Seiska"
 
-#: src/webui/static/app/epg.js:224
+#: src/webui/static/app/epg.js:227
 msgid "Stop recording"
 msgstr "Lõpeta salvestamine"
 
-#: src/webui/static/app/epg.js:223
+#: src/webui/static/app/epg.js:226
 msgid "Stop recording of this program"
 msgstr "Lõpeta selle saate salvestamine"
 
-#: src/webui/static/app/dvr.js:214
+#: src/webui/static/app/dvr.js:213
 msgid "Stop the selected recording"
 msgstr "Lõpeta valitu salvestamine"
 
-#: src/webui/static/app/tvheadend.js:945
+#: src/webui/static/app/tvheadend.js:985
 msgid "Storage space"
 msgstr "Andmekandja ruum"
 
-#: src/webui/static/app/status.js:359 src/webui/static/app/status.js:497
-#: src/webui/static/app/tvheadend.js:739
+#: src/webui/static/app/status.js:378 src/webui/static/app/status.js:525
+#: src/webui/static/app/tvheadend.js:777
 msgid "Stream"
 msgstr "Voogedastus"
 
@@ -1543,15 +1618,15 @@ msgstr "Voogedastuse profiili nimi"
 msgid "Stream Profiles"
 msgstr "Voogedastuse profiilid"
 
-#: src/webui/static/app/status.js:364
+#: src/webui/static/app/status.js:384
 msgid "Subs No."
 msgstr "Subtiitrite arv"
 
-#: src/webui/static/app/status.js:214
+#: src/webui/static/app/status.js:230
 msgid "Subscriptions"
 msgstr "Liitumised"
 
-#: src/webui/static/app/epg.js:532 src/webui/static/app/epg.js:533
+#: src/webui/static/app/epg.js:536 src/webui/static/app/epg.js:537
 msgid "Subtitle"
 msgstr "Alampealkiri"
 
@@ -1563,7 +1638,7 @@ msgstr "Subtiitrite voogedastuse filter"
 msgid "Subtitle Stream Filters"
 msgstr "Subtiitrite voogedastuse filtrid"
 
-#: src/webui/static/app/epg.js:162
+#: src/webui/static/app/epg.js:165
 msgid "Subtitled#EPG"
 msgstr "Subtiitritega#EPG"
 
@@ -1575,11 +1650,11 @@ msgstr "Püh"
 msgid "Sunday"
 msgstr "Pühapäev"
 
-#: src/webui/static/app/chconf.js:181
+#: src/webui/static/app/chconf.js:196
 msgid "Swap Numbers"
 msgstr "Vaheta numbrid"
 
-#: src/webui/static/app/chconf.js:179
+#: src/webui/static/app/chconf.js:194
 msgid "Swap the numbers for the two selected channels"
 msgstr "Vaheta kahe valitud kanali numbrid"
 
@@ -1587,7 +1662,7 @@ msgstr "Vaheta kahe valitud kanali numbrid"
 msgid "TV adapters"
 msgstr "TV adapterid"
 
-#: src/webui/static/app/epg.js:1064
+#: src/webui/static/app/epg.js:1068
 msgid "Tag"
 msgstr "Märge"
 
@@ -1599,7 +1674,7 @@ msgstr "Teleteksti voogedastuse filter"
 msgid "Teletext Stream Filters"
 msgstr "Teleteksti voogedastuse filtrid"
 
-#: src/webui/static/app/dvr.js:430 src/webui/static/app/dvr.js:567
+#: src/webui/static/app/dvr.js:595
 msgid "The associated file will be removed from storage."
 msgstr "Seotud fail eemaldatakse andmekandjalt."
 
@@ -1639,6 +1714,12 @@ msgstr "Kellaaeg sellel väljal peab kas võrduma või olema ennem {0}"
 msgid "The value in this field is invalid"
 msgstr "Selle välja väärtus pole korrektne"
 
+#: src/webui/static/app/tvheadend.js:248
+msgid ""
+"There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n"
+"\n"
+msgstr ""
+
 #: src/webui/static/app/comet.js:36
 msgid ""
 "There seems to be a problem with the live update feed from Tvheadend. Trying"
@@ -1646,8 +1727,8 @@ msgid ""
 msgstr "Paistab, et Tvheadend'ist edastusega on probleeme. Üritan uuesti ühenduda..."
 
 #: src/webui/static/app/tvheadend.js:239
-msgid "There was a problem displaying the help page!"
-msgstr "Abi lehekülje kuvamisel läks midagi valesti!"
+msgid "There was a problem displaying the Help!"
+msgstr ""
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1665,17 +1746,11 @@ msgstr "See kuupäev on ennem minimaalset võimalikku"
 msgid "This field is required"
 msgstr "See väli on kohustuslik"
 
-#: src/webui/static/app/tvheadend.js:240
-msgid ""
-"This usually means there is no help available or the document couldn't be "
-"loaded."
-msgstr "See tavaliselt tähendab seda, et kas abi pole saadaval või dokumenti ei saanud laadida."
-
-#: src/webui/static/app/epg.js:1059
+#: src/webui/static/app/epg.js:1063
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query"
-msgstr "See tekitab automaatse reegli, mis järjepidevalt skännib elektroonilist saatekava salvestamaks kõiki saated, mis vastavad sellele päringule"
+msgstr "See tekitab automaatse reegli, mis järjepidevalt skaneerib elektroonilist saatekava salvestamaks kõiki saated, mis vastavad sellele päringule"
 
 #: src/webui/static/app/i18n-post.js:97
 msgid "Thu"
@@ -1689,11 +1764,11 @@ msgstr "Neljapäev"
 msgid "Time Scheduler"
 msgstr "Ajastaja"
 
-#: src/webui/static/app/dvr.js:697
+#: src/webui/static/app/dvr.js:810
 msgid "Timer"
 msgstr "Taimer"
 
-#: src/webui/static/app/dvr.js:698
+#: src/webui/static/app/dvr.js:811
 msgid "Timers"
 msgstr "Taimerid"
 
@@ -1701,8 +1776,8 @@ msgstr "Taimerid"
 msgid "Timeshift"
 msgstr "Ajanihe"
 
-#: src/webui/static/app/epg.js:518 src/webui/static/app/epg.js:519
-#: src/webui/static/app/epg.js:1062 src/webui/static/app/status.js:100
+#: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:523
+#: src/webui/static/app/epg.js:1066 src/webui/static/app/status.js:106
 msgid "Title"
 msgstr "Saate nimi"
 
@@ -1710,19 +1785,20 @@ msgstr "Saate nimi"
 msgid "Today"
 msgstr "Täna"
 
-#: src/webui/static/app/tvheadend.js:575
+#: src/webui/static/app/tvheadend.js:613
 msgid "Toggle mute"
 msgstr "Lülita heli summutamist"
 
-#: src/webui/static/app/dvr.js:357 src/webui/static/app/dvr.js:494
+#: src/webui/static/app/dvr.js:356 src/webui/static/app/dvr.js:522
+#: src/webui/static/app/dvr.js:640
 msgid "Toggle re-record functionality"
 msgstr "Lülita taassalvestamist"
 
-#: src/webui/static/app/tvheadend.js:948
+#: src/webui/static/app/tvheadend.js:988
 msgid "Total"
 msgstr "Kokku"
 
-#: src/webui/static/app/status.js:398
+#: src/webui/static/app/status.js:424
 msgid "Transport Errors"
 msgstr "Transportimise vead"
 
@@ -1742,21 +1818,21 @@ msgstr "Teisipäev"
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr "Pöördu nüüd kohe üle-õhu EPG muxide poole haaramaks uusi sündmusi"
 
-#: src/webui/static/app/tvheadend.js:984
+#: src/webui/static/app/tvheadend.js:1024
 msgid "Tvheadend Web-Panel"
 msgstr "Tvheadend veebipaneel"
 
-#: src/webui/static/app/tvheadend.js:1005
+#: src/webui/static/app/tvheadend.js:1045
 msgid "Tvheadend log"
 msgstr "Tvheadendi logi"
 
 #: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
-#: src/webui/static/app/status.js:580
+#: src/webui/static/app/status.js:610
 msgid "Type"
 msgstr "Tüüp"
 
-#: src/webui/static/app/epg.js:146
+#: src/webui/static/app/epg.js:149
 msgid "UHDTV"
 msgstr "UHDTV"
 
@@ -1764,7 +1840,7 @@ msgstr "UHDTV"
 msgid "Unable to obtain wizard page!"
 msgstr "Ei saa juhendava abiprogrammi lehele!"
 
-#: src/webui/static/app/status.js:393
+#: src/webui/static/app/status.js:418
 msgid "Uncorrected Blocks"
 msgstr "Korrigeerimata plokid"
 
@@ -1773,27 +1849,27 @@ msgstr "Korrigeerimata plokid"
 msgid "Undo"
 msgstr "Võta tagasi"
 
-#: src/webui/static/app/status.js:430 src/webui/static/app/status.js:450
+#: src/webui/static/app/status.js:458 src/webui/static/app/status.js:478
 msgid "Unknown"
 msgstr "Tundmatu"
 
-#: src/webui/static/app/dvr.js:289
+#: src/webui/static/app/dvr.js:288
 msgid "Upcoming / Current Recordings"
 msgstr "Tulevased / Käimasolevad salvestused"
 
-#: src/webui/static/app/dvr.js:288
+#: src/webui/static/app/dvr.js:287
 msgid "Upcoming Recording"
 msgstr "Tulevased salvestused"
 
-#: src/webui/static/app/tvheadend.js:948
+#: src/webui/static/app/tvheadend.js:988
 msgid "Used by tvheadend"
 msgstr "Tvheadendi poolt kasutuses"
 
-#: src/webui/static/app/status.js:94 src/webui/static/app/status.js:590
+#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:622
 msgid "Username"
 msgstr "Kasutajanimi"
 
-#: src/webui/static/app/tvheadend.js:686
+#: src/webui/static/app/tvheadend.js:724
 msgid "Users"
 msgstr "Kasutajad"
 
@@ -1813,17 +1889,17 @@ msgstr "Vaate tase"
 msgid "View level: "
 msgstr "Vaate tase:"
 
-#: src/webui/static/app/tvheadend.js:584
+#: src/webui/static/app/tvheadend.js:622
 msgid "Volume"
 msgstr "Helitugevus"
 
-#: src/webui/static/app/epg.js:899
+#: src/webui/static/app/epg.js:903
 msgid "Watch TV"
 msgstr "TV vaatamine"
 
-#: src/webui/static/app/epg.js:901
+#: src/webui/static/app/epg.js:905
 msgid "Watch live TV in a new browser window."
-msgstr "TV vaatamine uues brauseri aknas"
+msgstr "TV vaatamine brauseri eraldi aknas."
 
 #: src/webui/static/app/i18n-post.js:96
 msgid "Wed"
@@ -1833,11 +1909,11 @@ msgstr "Kol"
 msgid "Wednesday"
 msgstr "Kolmapäev"
 
-#: src/webui/static/app/status.js:369
+#: src/webui/static/app/status.js:390
 msgid "Weight"
-msgstr "Kaalukus"
+msgstr "Prioriteetsus"
 
-#: src/webui/static/app/epg.js:154
+#: src/webui/static/app/epg.js:157
 msgid "Widescreen"
 msgstr "Laiekraan"
 
@@ -1884,17 +1960,23 @@ msgid ""
 msgstr "g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g A|gi|hi|gia|hia|g|H#TimeField"
 
 #: src/webui/static/app/idnode.js:363 src/webui/static/app/idnode.js:364
-#: src/webui/static/app/epg.js:462 src/webui/static/app/epg.js:464
+#: src/webui/static/app/epg.js:466 src/webui/static/app/epg.js:468
 msgid "hrs"
 msgstr "t"
 
-#: src/webui/static/app/tvheadend.js:923
+#: src/webui/static/app/tvheadend.js:963
 msgid "login"
 msgstr "sisselogimine"
 
-#: src/webui/static/app/tvheadend.js:920
+#: src/webui/static/app/tvheadend.js:960
 msgid "logout"
-msgstr "välja logimine"
+msgstr "väljalogimine"
+
+#: src/webui/static/app/tvheadend.js:250
+msgid ""
+"looking for please see the "
+"[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
@@ -1921,14 +2003,20 @@ msgid "m/d/y#DatePicker"
 msgstr "m/d/y#DatePicker"
 
 #: src/webui/static/app/idnode.js:364 src/webui/static/app/idnode.js:366
-#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:464
-#: src/webui/static/app/epg.js:467 src/webui/static/app/dvr.js:52
+#: src/webui/static/app/epg.js:116 src/webui/static/app/epg.js:468
+#: src/webui/static/app/epg.js:471 src/webui/static/app/dvr.js:52
 msgid "min"
 msgstr "min"
 
 #: src/webui/static/app/i18n-post.js:145
 msgid "of {0}"
 msgstr "{0}st"
+
+#: src/webui/static/app/tvheadend.js:251
+msgid ""
+"or join the [IRC channel on "
+"freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
+msgstr ""
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"
@@ -1955,6 +2043,6 @@ msgid "{0} selected row{1}"
 msgstr "{0} valitud rida{1}"
 
 #. / {0} start, {1} end, {2} total, {3} title
-#: src/webui/static/app/tvheadend.js:323
+#: src/webui/static/app/tvheadend.js:361
 msgid "{3} {0} - {1} of {2}"
 msgstr "{3} {0} - {1} / {2}st"

@@ -1,5 +1,5 @@
 # common (consts) file
 
 LANGUAGES_ALL  = ach ady ar bg cs da de en_US en_GB es et fa fi fr
-LANGUAGES_ALL += he hr hu it ko lv nl no pl pt ro ru sl sk sq sv
+LANGUAGES_ALL += he hr hu it ko lv lt nl no pl pt ro ru sl sk sq sv
 LANGUAGES_ALL += tr uk zh zh-Hans
