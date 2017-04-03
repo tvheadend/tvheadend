@@ -249,12 +249,6 @@ static void _update_smt_start ( timeshift_t *ts, streaming_start_t *ss )
       ts->vididx = ss->ss_components[i].ssc_index;
       break;
     }
-  /* Update teletext index */
-  for (i = 0; i < ss->ss_num_components; i++)
-    if (ss->ss_components[i].ssc_type == SCT_TELETEXT) {
-      ts->teletextidx = ss->ss_components[i].ssc_index;
-      break;
-    }
 }
 
 /*
@@ -353,7 +347,7 @@ static void _process_msg
     case SMT_PACKET:
       if (timeshift_conf.teletext && sm->sm_type == SMT_PACKET) {
         pkt = sm->sm_data;
-        teletext = pkt->pkt_componentindex == ts->teletextidx;
+        teletext = pkt->pkt_type == SCT_TELETEXT;
       }
       /* fall thru */
     case SMT_SIGNAL_STATUS:
