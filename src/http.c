@@ -1102,7 +1102,13 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   char authbuf[150];
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
+
+  v = (config.proxy) ? http_arg_get(&hc->hc_args, "x-forwarded-for") : NULL;
+  if (v)
+    tcp_get_sockaddr((struct sockaddr*)hc->hc_peer, v);
+
   tcp_get_str_from_ip((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+
   hc->hc_peer_ipstr = tvh_strdupa(authbuf);
   hc->hc_representative = hc->hc_peer_ipstr;
   hc->hc_username = NULL;
@@ -1462,6 +1468,48 @@ http_serve_requests(http_connection_t *hc)
     if ((cmdline = tcp_read_line(hc->hc_fd, &spill)) == NULL)
       goto error;
 
+    // PROXY Protocol v1 support
+    // Format: 'PROXY TCP4 192.168.0.1 192.168.0.11 56324 9981\r\n'
+    //                     SRC-ADDRESS DST-ADDRESS  SPORT DPORT
+    //
+    if ((config.proxy) && (strlen(cmdline) >= 6) && (strncmp(cmdline,"PROXY ",6) == 0 )) {
+        tvhinfo(LS_HTTP, "[PROXY] PROXY protocol detected! cmdline='%s'",cmdline);
+
+        char* pl = cmdline + 6;
+
+        if ((cmdline = tcp_read_line(hc->hc_fd, &spill)) == NULL) {
+            goto error;  // No more data after the PROXY protocol
+        }
+
+        if ( (strlen(pl) >= 7) && (strncmp(pl,"UNKNOWN",7) == 0))
+            goto error;  // Unknown PROXY protocol
+        
+        if ( (strlen(pl) < 5) || (strncmp(pl,"TCP4 ",5) != 0))
+            goto error;  // Only IPv4 supported
+        pl += 5;
+
+        // Check the SRC-ADDRESS
+        c = pl;
+        char ch;
+        for ( ;; ) {
+            if (strlen(pl) == 0) goto error;  // Incomplete PROXY format
+            ch = *pl++;
+            if (ch == ' ') break;
+            if (ch != '.' && (ch < '0' || ch > '9')) goto error;  // Not valid IP address
+        }
+        if (((pl-c) < 8) || ((pl-c) > 16)) goto error;  // Not valid IP address
+        
+        // Here 'c' points to a dotted IPv4 SRC-ADRRESS
+        char srcaddr[16];
+        memset(srcaddr, 0, 16);
+        strncpy(srcaddr, c, (pl-c)-1);
+
+        // Don't care about DST-ADDRESS, SRC-PORT & DST-PORT
+        // All it's OK, push the original client IP
+        tvhinfo(LS_HTTP, "[PROXY] Original source='%s'",srcaddr);
+        http_arg_set(&hc->hc_args, "x-forwarded-for", srcaddr);
+    }
+  
     if((n = http_tokenize(cmdline, argv, 3, -1)) != 3)
       goto error;
     
