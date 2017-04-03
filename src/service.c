@@ -1448,7 +1448,6 @@ refresh:
   descrambler_service_start(t);
 }
 
-
 /**
  * Generate a message containing info about all components
  */
@@ -1478,6 +1477,7 @@ service_build_stream_start(service_t *t)
 
     memcpy(ssc->ssc_lang, st->es_lang, 4);
     ssc->ssc_audio_type = st->es_audio_type;
+    ssc->ssc_audio_version = st->es_audio_version;
     ssc->ssc_composition_id = st->es_composition_id;
     ssc->ssc_ancillary_id = st->es_ancillary_id;
     ssc->ssc_pid = st->es_pid;
@@ -1977,8 +1977,11 @@ void service_save ( service_t *t, htsmsg_t *m )
     if(st->es_lang[0])
       htsmsg_add_str(sub, "language", st->es_lang);
 
-    if (SCT_ISAUDIO(st->es_type))
+    if (SCT_ISAUDIO(st->es_type)) {
       htsmsg_add_u32(sub, "audio_type", st->es_audio_type);
+      if (st->es_audio_version)
+        htsmsg_add_u32(sub, "audio_version", st->es_audio_version);
+    }
 
     if(st->es_type == SCT_CA) {
       caid_t *c;
@@ -2177,6 +2180,8 @@ void service_load ( service_t *t, htsmsg_t *c )
       if (SCT_ISAUDIO(type)) {
         if(!htsmsg_get_u32(c, "audio_type", &u32))
           st->es_audio_type = u32;
+        if(!htsmsg_get_u32(c, "audio_version", &u32))
+          st->es_audio_version = u32;
       }
 
       if(!htsmsg_get_u32(c, "position", &u32))

@@ -70,6 +70,7 @@ typedef struct elementary_stream {
 
   char es_lang[4];           /* ISO 639 2B 3-letter language code */
   uint8_t es_audio_type;     /* Audio type */
+  uint8_t es_audio_version;  /* Audio version/layer */
 
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
@@ -441,6 +442,7 @@ typedef struct service {
    */
   int s_streaming_live;
   int s_running;
+  int s_pending_restart;
 
   // Live status
 #define TSS_LIVE             0x01

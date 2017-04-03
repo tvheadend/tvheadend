@@ -1004,19 +1004,21 @@ dvb_cat_callback
 /* PMT update reason flags */
 #define PMT_UPDATE_PCR                (1<<0)
 #define PMT_UPDATE_NEW_STREAM         (1<<1)
-#define PMT_UPDATE_LANGUAGE           (1<<2)
-#define PMT_UPDATE_AUDIO_TYPE         (1<<3)
-#define PMT_UPDATE_FRAME_DURATION     (1<<4)
-#define PMT_UPDATE_COMPOSITION_ID     (1<<5)
-#define PMT_UPDATE_ANCILLARY_ID       (1<<6)
-#define PMT_UPDATE_STREAM_DELETED     (1<<7)
-#define PMT_UPDATE_NEW_CA_STREAM      (1<<8)
-#define PMT_UPDATE_NEW_CAID           (1<<9)
-#define PMT_UPDATE_CA_PROVIDER_CHANGE (1<<10)
-#define PMT_UPDATE_PARENT_PID         (1<<11)
-#define PMT_UPDATE_CAID_DELETED       (1<<12)
-#define PMT_UPDATE_CAID_PID           (1<<13)
-#define PMT_REORDERED                 (1<<14)
+#define PMT_UPDATE_STREAM_CHANGE      (1<<2)
+#define PMT_UPDATE_STREAM_DELETED     (1<<3)
+#define PMT_UPDATE_LANGUAGE           (1<<4)
+#define PMT_UPDATE_AUDIO_TYPE         (1<<5)
+#define PMT_UPDATE_AUDIO_VERSION      (1<<6)
+#define PMT_UPDATE_FRAME_DURATION     (1<<7)
+#define PMT_UPDATE_COMPOSITION_ID     (1<<8)
+#define PMT_UPDATE_ANCILLARY_ID       (1<<9)
+#define PMT_UPDATE_NEW_CA_STREAM      (1<<10)
+#define PMT_UPDATE_NEW_CAID           (1<<11)
+#define PMT_UPDATE_CA_PROVIDER_CHANGE (1<<12)
+#define PMT_UPDATE_PARENT_PID         (1<<13)
+#define PMT_UPDATE_CAID_DELETED       (1<<14)
+#define PMT_UPDATE_CAID_PID           (1<<15)
+#define PMT_REORDERED                 (1<<16)
 
 int
 dvb_pmt_callback
@@ -2228,7 +2230,7 @@ psi_parse_pmt
   int tt_position;
   int video_stream;
   const char *lang;
-  uint8_t audio_type;
+  uint8_t audio_type, audio_version;
   mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
 
@@ -2293,6 +2295,7 @@ psi_parse_pmt
     tt_position = 1000;
     lang = NULL;
     audio_type = 0;
+    audio_version = 0;
     video_stream = 0;
 
     switch(estype) {
@@ -2305,6 +2308,7 @@ psi_parse_pmt
     case 0x03:
     case 0x04:
       hts_stream_type = SCT_MPEG2AUDIO;
+      audio_version = 2; /* Assume Layer 2 */
       break;
 
     case 0x06:
@@ -2415,7 +2419,11 @@ psi_parse_pmt
         st = service_stream_create((service_t*)t, pid, hts_stream_type);
       }
 
-      st->es_type = hts_stream_type;
+      if (st->es_type != hts_stream_type) {
+        update |= PMT_UPDATE_STREAM_CHANGE;
+        st->es_type = hts_stream_type;
+        st->es_audio_version = audio_version;
+      }
 
       st->es_delete_me = 0;
 
@@ -2441,6 +2449,15 @@ psi_parse_pmt
       if(st->es_audio_type != audio_type) {
         update |= PMT_UPDATE_AUDIO_TYPE;
         st->es_audio_type = audio_type;
+        st->es_audio_version = audio_version;
+      }
+
+      /* FIXME: it might make sense that PMT info has greater priority */
+      /*        but we use this field only for MPEG1/2/3 audio which */
+      /*        is detected in the parser code */
+      if(audio_version && !st->es_audio_version) {
+        update |= PMT_UPDATE_AUDIO_VERSION;
+        st->es_audio_version = audio_version;
       }
 
       if(composition_id != -1 && st->es_composition_id != composition_id) {
@@ -2469,7 +2486,6 @@ psi_parse_pmt
       }
     }
 
-
     if(st->es_delete_me) {
       service_stream_destroy((service_t*)t, st);
       update |= PMT_UPDATE_STREAM_DELETED;
@@ -2481,16 +2497,19 @@ psi_parse_pmt
 
   if(update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      mt->mt_name,
      service_nicename((service_t*)t), version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
      update&PMT_UPDATE_NEW_STREAM        ? ", New elementary stream":"",
+     update&PMT_UPDATE_STREAM_CHANGE     ? ", Changed elementary stream":"",
+     update&PMT_UPDATE_STREAM_DELETED    ? ", Stream deleted":"",
      update&PMT_UPDATE_LANGUAGE          ? ", Language changed":"",
+     update&PMT_UPDATE_AUDIO_TYPE        ? ", Audio type changed":"",
+     update&PMT_UPDATE_AUDIO_VERSION     ? ", Audio version changed":"",
      update&PMT_UPDATE_FRAME_DURATION    ? ", Frame duration changed":"",
      update&PMT_UPDATE_COMPOSITION_ID    ? ", Composition ID changed":"",
      update&PMT_UPDATE_ANCILLARY_ID      ? ", Ancillary ID changed":"",
-     update&PMT_UPDATE_STREAM_DELETED    ? ", Stream deleted":"",
      update&PMT_UPDATE_NEW_CA_STREAM     ? ", New CA stream":"",
      update&PMT_UPDATE_NEW_CAID          ? ", New CAID":"",
      update&PMT_UPDATE_CA_PROVIDER_CHANGE? ", CA provider changed":"",
@@ -2514,6 +2533,11 @@ psi_parse_pmt
 
   if (service_has_audio_or_video((service_t *)t))
     dvb_service_autoenable(t, "PAT and PMT");
+
+  /* FIXME: Move pending_restart handling to another place? */
+  if (atomic_set(&t->s_pending_restart, 0) && !ret)
+    tvhdebug(mt->mt_subsys, "%s: Service \"%s\" forced restart",
+             mt->mt_name, service_nicename((service_t*)t));
 
   *_update = update;
   return ret;

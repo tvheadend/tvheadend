@@ -1009,6 +1009,8 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
     if(SCT_ISAUDIO(ssc->ssc_type)) {
       htsmsg_add_u32(e, "audio_type", ssc->ssc_audio_type);
+      if(ssc->ssc_audio_version)
+        htsmsg_add_u32(e, "audio_version", ssc->ssc_audio_version);
       if(ssc->ssc_sri)
 	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
       else

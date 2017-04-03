@@ -688,6 +688,11 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
     default: fsize = 0;
     }
 
+    if (fsize && st->es_audio_version != layer) {
+      st->es_audio_version = layer;
+      atomic_set(&t->s_pending_restart, 1);
+    }
+
     duration = 90000 * 1152 / sr;
     channels = ((h >> 6) & 3) == 3 ? 1 : 2;
     dts = st->es_curdts;
