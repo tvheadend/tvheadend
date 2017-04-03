@@ -376,7 +376,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 
     case SCT_MPEG2VIDEO:
 
-      switch(pkt->pkt_frametype) {
+      switch(pkt->v.pkt_frametype) {
       case PKT_B_FRAME:
         if (pkt->pkt_pts == PTS_UNSET) {
 	  /* B-frames have same PTS as DTS, pass them on */
@@ -397,7 +397,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
             if (pkt->pkt_componentindex != tfs->tfs_index)
               continue;
             total++;
-            if (srch->pr_pkt->pkt_frametype <= PKT_P_FRAME &&
+            if (srch->pr_pkt->v.pkt_frametype <= PKT_P_FRAME &&
                 pts_is_greater_or_equal(pkt->pkt_dts, srch->pr_pkt->pkt_dts) > 0 &&
                 pts_diff(pkt->pkt_dts, srch->pr_pkt->pkt_dts) < 10 * 90000) {
               tvhtrace(LS_TSFIX, "%-12s PTS *-frame set to %"PRId64" (old %"PRId64"), DTS %"PRId64,
@@ -469,7 +469,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 
   if(pkt->pkt_dts != PTS_UNSET && tf->tf_tsref == PTS_UNSET &&
      ((!tf->tf_hasvideo && tfs->tfs_audio) ||
-      (tfs->tfs_video && pkt->pkt_frametype == PKT_I_FRAME))) {
+      (tfs->tfs_video && pkt->v.pkt_frametype == PKT_I_FRAME))) {
     if (pkt->pkt_err) {
       tsfix_packet_drop(tfs, pkt, "ref1");
       return;
@@ -534,7 +534,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     }
   }
 
-  int pdur = pkt->pkt_duration >> pkt->pkt_field;
+  int pdur = pkt->pkt_duration >> pkt->v.pkt_field;
 
   if(pkt->pkt_dts == PTS_UNSET) {
     if(tfs->tfs_last_dts_in == PTS_UNSET) {

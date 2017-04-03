@@ -958,10 +958,13 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 {
   int64_t pts = pkt->pkt_pts, delta, nxt;
   unsigned char c_delta_flags[3];
+  int video = SCT_ISVIDEO(pkt->pkt_type);
+  int keyframe = 0, skippable = 0;
 
-  int keyframe  = pkt->pkt_frametype < PKT_P_FRAME;
-  int skippable = pkt->pkt_frametype == PKT_B_FRAME;
-  int vkeyframe = SCT_ISVIDEO(t->type) && keyframe;
+  if (video) {
+    keyframe  = pkt->v.pkt_frametype < PKT_P_FRAME;
+    skippable = pkt->v.pkt_frametype == PKT_B_FRAME;
+  }
 
   uint8_t *data = pktbuf_ptr(pkt->pkt_payload);
   size_t len = pktbuf_len(pkt->pkt_payload);
@@ -974,7 +977,7 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
     pts = t->nextpts;
 
   if(pts != PTS_UNSET) {
-    t->nextpts = pts + (pkt->pkt_duration >> pkt->pkt_field);
+    t->nextpts = pts + (pkt->pkt_duration >> (video ? pkt->v.pkt_field : 0));
 
     nxt = ts_rescale(t->nextpts, 1000000000 / MATROSKA_TIMESCALE);
     pts = ts_rescale(pts,        1000000000 / MATROSKA_TIMESCALE);
@@ -983,7 +986,7 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
       mk->totduration = nxt;
 
     delta = pts - mk->cluster_tc;
-    if((vkeyframe || !mk->has_video) && (delta > 30000ll || delta < -30000ll))
+    if((keyframe || !mk->has_video) && (delta > 30000ll || delta < -30000ll))
       mk_close_cluster(mk);
 
   } else {
@@ -992,7 +995,7 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
 
   if(mk->cluster) {
 
-    if(vkeyframe &&
+    if(keyframe &&
        (mk->cluster->hq_size > mk->cluster_maxsize ||
         mk->cluster_last_close + sec2mono(1) < mclk()))
       mk_close_cluster(mk);
@@ -1018,7 +1021,7 @@ mk_write_frame_i(mk_muxer_t *mk, mk_track_t *t, th_pkt_t *pkt)
     delta = 0;
   }
 
-  if(mk->addcue && vkeyframe) {
+  if(mk->addcue && keyframe) {
     mk->addcue = 0;
     addcue(mk, pts, t->tracknum);
   }
@@ -1101,26 +1104,29 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
   }
 
   mark = 0;
-  if(pkt->pkt_channels != t->channels &&
-     pkt->pkt_channels) {
-    mark = 1;
-    t->channels = pkt->pkt_channels;
-  }
-  if(pkt->pkt_aspect_num != t->aspect_num &&
-     pkt->pkt_aspect_num) {
-    mark = 1;
-    t->aspect_num = pkt->pkt_aspect_num;
-  }
-  if(pkt->pkt_aspect_den != t->aspect_den &&
-     pkt->pkt_aspect_den) {
-    mark = 1;
-    t->aspect_den = pkt->pkt_aspect_den;
-  }
-  if(pkt->pkt_sri != t->sri &&
-     pkt->pkt_sri) {
-    mark = 1;
-    t->sri = pkt->pkt_sri;
-    t->ext_sri = pkt->pkt_ext_sri;
+  if(SCT_ISAUDIO(pkt->pkt_type)) {
+    if(pkt->a.pkt_channels != t->channels &&
+       pkt->a.pkt_channels) {
+      mark = 1;
+      t->channels = pkt->a.pkt_channels;
+    }
+    if(pkt->a.pkt_sri != t->sri &&
+       pkt->a.pkt_sri) {
+      mark = 1;
+      t->sri = pkt->a.pkt_sri;
+      t->ext_sri = pkt->a.pkt_ext_sri;
+    }
+  } else if (SCT_ISVIDEO(pkt->pkt_type)) {
+    if(pkt->v.pkt_aspect_num != t->aspect_num &&
+       pkt->v.pkt_aspect_num) {
+      mark = 1;
+      t->aspect_num = pkt->v.pkt_aspect_num;
+    }
+    if(pkt->v.pkt_aspect_den != t->aspect_den &&
+       pkt->v.pkt_aspect_den) {
+      mark = 1;
+      t->aspect_den = pkt->v.pkt_aspect_den;
+    }
   }
   if(pkt->pkt_commercial != t->commercial &&
      pkt->pkt_commercial != COMMERCIAL_UNKNOWN) {

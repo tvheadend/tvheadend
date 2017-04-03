@@ -3829,6 +3829,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
   int qlen = hs->hs_q.hmq_payload;
+  int video = SCT_ISVIDEO(pkt->pkt_type);
   size_t payloadlen;
 
   if (pkt->pkt_err)
@@ -3842,11 +3843,12 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     return;
   }
 
-  if((qlen > hs->hs_queue_depth     && pkt->pkt_frametype == PKT_B_FRAME) ||
-     (qlen > hs->hs_queue_depth * 2 && pkt->pkt_frametype == PKT_P_FRAME) || 
-     (qlen > hs->hs_queue_depth * 3)) {
+  if(video &&
+     ((qlen > hs->hs_queue_depth     && pkt->v.pkt_frametype == PKT_B_FRAME) ||
+      (qlen > hs->hs_queue_depth * 2 && pkt->v.pkt_frametype == PKT_P_FRAME) ||
+      (qlen > hs->hs_queue_depth * 3))) {
 
-    hs->hs_dropstats[pkt->pkt_frametype]++;
+    hs->hs_dropstats[pkt->v.pkt_frametype]++;
 
     /* Queue size protection */
     pkt_ref_dec(pkt);
@@ -3857,7 +3859,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
  
   htsmsg_add_str(m, "method", "muxpkt");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-  htsmsg_add_u32(m, "frametype", frametypearray[pkt->pkt_frametype]);
+  if (video)
+    htsmsg_add_u32(m, "frametype", frametypearray[pkt->v.pkt_frametype]);
 
   htsmsg_add_u32(m, "stream", pkt->pkt_componentindex);
   htsmsg_add_u32(m, "com", pkt->pkt_commercial);

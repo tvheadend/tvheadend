@@ -59,15 +59,20 @@ typedef struct th_pkt {
   uint8_t pkt_componentindex;
   uint8_t pkt_commercial;
 
-  uint8_t pkt_frametype;
-  uint8_t pkt_field;  // Set if packet is only a half frame (a field)
+  union {
+    struct {
+      uint8_t pkt_frametype;
+      uint8_t pkt_field;  // Set if packet is only a half frame (a field)
 
-  uint8_t pkt_channels;
-  uint8_t pkt_sri;
-  uint8_t pkt_ext_sri;
-
-  uint16_t pkt_aspect_num;
-  uint16_t pkt_aspect_den;
+      uint16_t pkt_aspect_num;
+      uint16_t pkt_aspect_den;
+    } v;
+    struct {
+      uint8_t pkt_channels;
+      uint8_t pkt_sri;
+      uint8_t pkt_ext_sri;
+    } a;
+  };
 
   pktbuf_t *pkt_meta;
   pktbuf_t *pkt_payload;

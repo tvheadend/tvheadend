@@ -156,8 +156,8 @@ pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
   va_list args;
 
   va_start(args, fmt);
-  if (pkt->pkt_frametype) {
-    _type[0] = pkt_frametype_to_char(pkt->pkt_frametype);
+  if (SCT_ISVIDEO(pkt->pkt_type) && pkt->v.pkt_frametype) {
+    _type[0] = pkt_frametype_to_char(pkt->v.pkt_frametype);
     _type[1] = '\0';
   } else {
     _type[0] = '\0';

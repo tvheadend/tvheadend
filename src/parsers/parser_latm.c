@@ -264,9 +264,9 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
 
   pkt->pkt_commercial = t->s_tt_commercial_advice;
   pkt->pkt_duration   = st->es_frame_duration;
-  pkt->pkt_sri        = latm->sri;
-  pkt->pkt_ext_sri    = latm->ext_sri;
-  pkt->pkt_channels   = latm->channel_config == 7 ? 8 : latm->channel_config;
+  pkt->a.pkt_sri      = latm->sri;
+  pkt->a.pkt_ext_sri  = latm->ext_sri;
+  pkt->a.pkt_channels = latm->channel_config == 7 ? 8 : latm->channel_config;
 
   /* 7 bytes of ADTS header */
   init_wbits(&out, pktbuf_ptr(pkt->pkt_payload), 7 * 8);

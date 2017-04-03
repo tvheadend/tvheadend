@@ -85,15 +85,15 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
     ssc->ssc_frameduration = pkt->pkt_duration;
 
   if(SCT_ISAUDIO(ssc->ssc_type) && !ssc->ssc_channels && !ssc->ssc_sri) {
-    ssc->ssc_channels = pkt->pkt_channels;
-    ssc->ssc_sri      = pkt->pkt_sri;
-    ssc->ssc_ext_sri  = pkt->pkt_ext_sri;
+    ssc->ssc_channels = pkt->a.pkt_channels;
+    ssc->ssc_sri      = pkt->a.pkt_sri;
+    ssc->ssc_ext_sri  = pkt->a.pkt_ext_sri;
   }
 
   if(SCT_ISVIDEO(ssc->ssc_type)) {
-    if(pkt->pkt_aspect_num && pkt->pkt_aspect_den) {
-      ssc->ssc_aspect_num = pkt->pkt_aspect_num;
-      ssc->ssc_aspect_den = pkt->pkt_aspect_den;
+    if(pkt->v.pkt_aspect_num && pkt->v.pkt_aspect_den) {
+      ssc->ssc_aspect_num = pkt->v.pkt_aspect_num;
+      ssc->ssc_aspect_den = pkt->v.pkt_aspect_den;
     }
   }
 
@@ -107,16 +107,16 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
   }
 
   if (ssc->ssc_type == SCT_MP4A || ssc->ssc_type == SCT_AAC) {
-    ssc->ssc_gh = pktbuf_alloc(NULL, pkt->pkt_ext_sri ? 5 : 2);
+    ssc->ssc_gh = pktbuf_alloc(NULL, pkt->a.pkt_ext_sri ? 5 : 2);
     uint8_t *d = pktbuf_ptr(ssc->ssc_gh);
 
     const int profile = 2; /* AAC LC */
-    d[0] = (profile << 3) | ((pkt->pkt_sri & 0xe) >> 1);
-    d[1] = ((pkt->pkt_sri & 0x1) << 7) | (pkt->pkt_channels << 3);
-    if (pkt->pkt_ext_sri) { /* SBR extension */
+    d[0] = (profile << 3) | ((pkt->a.pkt_sri & 0xe) >> 1);
+    d[1] = ((pkt->a.pkt_sri & 0x1) << 7) | (pkt->a.pkt_channels << 3);
+    if (pkt->a.pkt_ext_sri) { /* SBR extension */
       d[2] = 0x56;
       d[3] = 0xe5;
-      d[4] = 0x80 | ((pkt->pkt_ext_sri - 1) << 3);
+      d[4] = 0x80 | ((pkt->a.pkt_ext_sri - 1) << 3);
     }
   }
 }

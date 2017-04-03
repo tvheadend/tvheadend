@@ -285,7 +285,7 @@ static inline ssize_t _process_msg0
 
       /* Index video iframes */
       if (pkt->pkt_componentindex == ts->vididx &&
-          pkt->pkt_frametype      == PKT_I_FRAME) {
+          pkt->v.pkt_frametype    == PKT_I_FRAME) {
         timeshift_index_iframe_t *ti = calloc(1, sizeof(timeshift_index_iframe_t));
         memoryinfo_alloc(&timeshift_memoryinfo, sizeof(*ti));
         ti->pos  = tsf->size;

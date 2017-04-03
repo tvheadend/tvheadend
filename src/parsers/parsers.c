@@ -536,8 +536,8 @@ makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
 
   pkt->pkt_commercial = t->s_tt_commercial_advice;
   pkt->pkt_duration = duration;
-  pkt->pkt_channels = channels;
-  pkt->pkt_sri = sri;
+  pkt->a.pkt_channels = channels;
+  pkt->a.pkt_sri = sri;
   pkt->pkt_err = errors;
 
   parser_deliver(t, st, pkt);
@@ -1197,7 +1197,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
       pkt_ref_dec(st->es_curpkt);
 
     pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts);
-    pkt->pkt_frametype = frametype;
+    pkt->v.pkt_frametype = frametype;
     pkt->pkt_duration = st->es_frame_duration;
     pkt->pkt_commercial = t->s_tt_commercial_advice;
 
@@ -1348,22 +1348,22 @@ parse_h264_backlog(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
     nal_start = nal_end;
   }
 
-  pkt->pkt_frametype = pkttype;
-  pkt->pkt_field = isfield;
+  pkt->v.pkt_frametype = pkttype;
+  pkt->v.pkt_field = isfield;
   pkt->pkt_duration = st->es_frame_duration;
 }
 
 static void
 parse_h264_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
 {
-  if (pkt->pkt_frametype > 0) {
+  if (pkt->v.pkt_frametype > 0) {
     if (TAILQ_EMPTY(&st->es_backlog)) {
-      if (pkt->pkt_frametype > 0) {
+      if (pkt->v.pkt_frametype > 0) {
 deliver:
         parser_deliver(t, st, pkt);
         return;
       }
-    } else if (pkt->pkt_frametype > 0 &&
+    } else if (pkt->v.pkt_frametype > 0 &&
          (st->es_curdts != PTS_UNSET && (st->es_curdts & PTS_BACKLOG) == 0) &&
          (st->es_curpts != PTS_UNSET && (st->es_curpts & PTS_BACKLOG) == 0) &&
          st->es_frame_duration > 1) {
@@ -1488,8 +1488,8 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
         st->es_frame_duration = 1;
 
       pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts);
-      pkt->pkt_frametype = pkttype;
-      pkt->pkt_field = isfield;
+      pkt->v.pkt_frametype = pkttype;
+      pkt->v.pkt_field = isfield;
       pkt->pkt_duration = st->es_frame_duration;
       pkt->pkt_commercial = t->s_tt_commercial_advice;
       st->es_curpkt = pkt;
@@ -1613,8 +1613,8 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
       return PARSER_APPEND;
 
     st->es_curpkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts);
-    st->es_curpkt->pkt_frametype = pkttype;
-    st->es_curpkt->pkt_field = 0;
+    st->es_curpkt->v.pkt_frametype = pkttype;
+    st->es_curpkt->v.pkt_field = 0;
     st->es_curpkt->pkt_duration = st->es_frame_duration;
     st->es_curpkt->pkt_commercial = t->s_tt_commercial_advice;
     break;
@@ -1830,12 +1830,16 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
     t->s_current_pts = (pkt->pkt_pts + (int64_t)t->s_pts_shift * 900) % PTS_MASK;
   }
 
+  assert(pkt->pkt_type == st->es_type);
+
   pkt->pkt_componentindex = st->es_index;
 
   pkt_trace(LS_PARSER, pkt, "deliver");
 
-  pkt->pkt_aspect_num = st->es_aspect_num;
-  pkt->pkt_aspect_den = st->es_aspect_den;
+  if (SCT_ISVIDEO(pkt->pkt_type)) {
+    pkt->v.pkt_aspect_num = st->es_aspect_num;
+    pkt->v.pkt_aspect_den = st->es_aspect_den;
+  }
 
   /**
    * Input is ok

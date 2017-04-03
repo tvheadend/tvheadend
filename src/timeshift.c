@@ -54,7 +54,7 @@ timeshift_packet_log0
            " dts %10"PRId64" dur %10d len %6zu time %14"PRId64,
            ts->id, source,
            pkt->pkt_componentindex,
-           pkt_frametype_to_char(pkt->pkt_frametype),
+           SCT_ISVIDEO(pkt->pkt_type) ? pkt_frametype_to_char(pkt->v.pkt_frametype) : '-',
            ts_rescale(pkt->pkt_pts, 1000000),
            ts_rescale(pkt->pkt_dts, 1000000),
            pkt->pkt_duration,
