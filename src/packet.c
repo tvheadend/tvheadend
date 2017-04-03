@@ -52,12 +52,14 @@ pkt_destroy(th_pkt_t *pkt)
  * suppoed to take care of)
  */
 th_pkt_t *
-pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts)
+pkt_alloc(streaming_component_type_t type, const void *data, size_t datalen,
+          int64_t pts, int64_t dts)
 {
   th_pkt_t *pkt;
 
   pkt = calloc(1, sizeof(th_pkt_t));
   if (pkt) {
+    pkt->pkt_type = type;
     if(datalen)
       pkt->pkt_payload = pktbuf_alloc(data, datalen);
     pkt->pkt_dts = dts;
@@ -148,7 +150,7 @@ pkt_ref_inc_poly(th_pkt_t *pkt, int n)
  */
 void
 pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
-           int index, streaming_component_type_t type, const char *fmt, ...)
+           const char *fmt, ...)
 {
   char buf[512], _dts[22], _pts[22], _type[2];
   va_list args;
@@ -166,8 +168,8 @@ pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
            " dur %d len %zu err %i%s",
            fmt ? fmt : "",
            fmt ? " (" : "",
-           index,
-           streaming_component_type2txt(type),
+           pkt->pkt_componentindex,
+           streaming_component_type2txt(pkt->pkt_type),
            _type[0] ? " type " : "", _type,
            pts_to_string(pkt->pkt_dts, _dts),
            pts_to_string(pkt->pkt_pts, _pts),

@@ -295,7 +295,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
       return;
     }
 
-    pkt_trace(LS_GLOBALHEADERS, pkt, pkt->pkt_componentindex, ssc->ssc_type, "hold receive");
+    pkt_trace(LS_GLOBALHEADERS, pkt, "hold receive");
 
     pkt_ref_inc(pkt);
 

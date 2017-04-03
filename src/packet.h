@@ -54,15 +54,17 @@ typedef struct th_pkt {
   int pkt_duration;
   int pkt_refcount;
 
-  uint8_t pkt_commercial;
+  uint8_t pkt_type;
+  uint8_t pkt_err;
   uint8_t pkt_componentindex;
+  uint8_t pkt_commercial;
+
   uint8_t pkt_frametype;
   uint8_t pkt_field;  // Set if packet is only a half frame (a field)
 
   uint8_t pkt_channels;
   uint8_t pkt_sri;
   uint8_t pkt_ext_sri;
-  uint8_t pkt_err;
 
   uint16_t pkt_aspect_num;
   uint16_t pkt_aspect_den;
@@ -111,7 +113,8 @@ void pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt);
 
 #define PKTREF_FOREACH(item, queue) TAILQ_FOREACH((item), (queue), pr_link)
 
-th_pkt_t *pkt_alloc(const void *data, size_t datalen, int64_t pts, int64_t dts);
+th_pkt_t *pkt_alloc(streaming_component_type_t type,
+                    const void *data, size_t datalen, int64_t pts, int64_t dts);
 
 th_pkt_t *pkt_copy_shallow(th_pkt_t *pkt);
 
@@ -121,12 +124,12 @@ th_pktref_t *pktref_create(th_pkt_t *pkt);
 
 void pkt_trace_
   (const char *file, int line, int subsys, th_pkt_t *pkt,
-   int index, streaming_component_type_t type, const char *fmt, ...);
+   const char *fmt, ...);
 
-#define pkt_trace(subsys, pkt, index, type, fmt, ...) \
+#define pkt_trace(subsys, pkt, fmt, ...) \
   do { \
     if (tvhtrace_enabled()) \
-      pkt_trace_(__FILE__, __LINE__, subsys, pkt, index, type, fmt, ##__VA_ARGS__); \
+      pkt_trace_(__FILE__, __LINE__, subsys, pkt, fmt, ##__VA_ARGS__); \
   } while (0)
 
 /*

@@ -191,7 +191,7 @@ tsfix_stop(tsfix_t *tf)
 static void
 tsfix_packet_drop(tfstream_t *tfs, th_pkt_t *pkt, const char *reason)
 {
-  pkt_trace(LS_TSFIX, pkt, tfs->tfs_index, tfs->tfs_type, "drop");
+  pkt_trace(LS_TSFIX, pkt, "drop");
   pkt_ref_dec(pkt);
 }
 
@@ -288,7 +288,7 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 deliver:
   if (tvhtrace_enabled()) {
     char _odts[22], _opts[22];
-    pkt_trace(LS_TSFIX, pkt, tfs->tfs_index, tfs->tfs_type,
+    pkt_trace(LS_TSFIX, pkt,
               "deliver odts %s opts %s ref %"PRId64" epoch %"PRId64,
               pts_to_string(odts, _odts), pts_to_string(opts, _opts),
               ref, tfs->tfs_dts_epoch);
