@@ -292,7 +292,11 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
 
     case SCT_MPEG2AUDIO:
       tracktype = 2;
-      codec_id = "A_MPEG/L3";
+      codec_id  = "A_MPEG/L2";
+      if (ssc->ssc_audio_version == 3)
+        codec_id = "A_MPEG/L3";
+      else if (ssc->ssc_audio_version == 1)
+        codec_id = "A_MPEG/L1";
       break;
 
     case SCT_AC3:
