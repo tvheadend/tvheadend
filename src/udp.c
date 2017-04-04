@@ -212,7 +212,7 @@ udp_bind ( int subsystem, const char *name,
 
     if (uc->multicast) {
       /* Join multicast group */
-      if (multicast_src) {
+      if (multicast_src && *multicast_src) {
         /* Join with specific source address (SSM) */
         struct ip_mreq_source ms;
         memset(&ms, 0, sizeof(ms));
@@ -223,13 +223,13 @@ udp_bind ( int subsystem, const char *name,
            so we have to resolve to the ip of the interface on all platforms. */
         if (udp_get_ifaddr(fd, ifname, &ms.imr_interface) == -1) {
           tvherror(subsystem, "%s - cannot find ip address for interface %s [e=%s]",
-                   name, ifname,  strerror(errno));
+                   name, ifname, strerror(errno));
           goto error;
         }
 
         if (inet_pton(AF_INET, multicast_src, &ms.imr_sourceaddr) < 1) {
           tvherror(subsystem, "%s - invalid ipv4 address '%s' specified as multicast source [e=%s]",
-                   name, multicast_src,  strerror(errno));
+                   name, multicast_src, strerror(errno));
           goto error;
         }
 
