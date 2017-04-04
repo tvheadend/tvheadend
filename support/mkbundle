@@ -25,6 +25,8 @@ optp.add_option('-z', '--gzip', action='store_true',
                 help='Compress the files with gzip')
 optp.add_option('-l', '--gzlevel', type='int', default=9,
                 help='Specify compression level if using gzip')
+optp.add_option('-q', '--pngquant', action='store_true',
+                help='Compress the png files with pngquant')
 optp.add_option('-o', '--output', default=None,
                 help='Specify output file (default /dev/stdout)')
 optp.add_option('-d', '--deps', default=None,
@@ -40,7 +42,15 @@ if opts.deps:
   depf = open(opts.deps, 'w')
   depf.write('%s: \\\n' % opts.output)
 
-# Build heirarchy
+# PNGquant
+pngquant_bin = '/usr/bin/pngquant'
+if opts.pngquant:
+  import distutils.spawn
+  import subprocess
+  import time
+  distutils.spawn.find_executable('pngquant')
+
+# Build hierarchy
 root  = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
 ents  = {}
 for path in args:
@@ -76,6 +86,25 @@ def output_file ( path, name, idx, next = -1 ):
   outf.write('static const uint8_t filebundle_data_%06d[] = {' % idx)
   o = -1
   d = open(p, 'rb').read()
+  if opts.pngquant and p.endswith('.png'):
+    fd = subprocess.PIPE
+    child = subprocess.Popen([pngquant_bin, '-Q80-95', '-'],
+                             stdin=fd, stdout=fd, stderr=fd)
+    child.stdin.write(d)
+    child.stdin.close()
+    d = b''
+    while 1:
+      rc = child.poll()
+      if rc is not None:
+        break
+      d2 = child.stdout.read(64*1024)
+      if not d2:
+        time.sleep(0.05)
+      d += d2
+    d += child.stdout.read()
+    if rc != 0: d = ''
+    if not d:
+      d = open(p, 'rb').read()
   if p.endswith('.gz'):
     t = BytesIO(d)
     z = gzip.GzipFile(filename=name, mode='r', fileobj=t)

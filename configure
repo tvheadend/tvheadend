@@ -58,6 +58,7 @@ OPTIONS=(
   "ccache:auto"
   "tvhcsa:auto"
   "bundle:no"
+  "pngquant:no"
   "dvbcsa:no"
   "dvben50221:auto"
   "kqueue:no"

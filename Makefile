@@ -164,7 +164,8 @@ vpath %.h $(ROOTDIR)
 # Other config
 #
 
-BUNDLE_FLAGS-${CONFIG_ZLIB} = -z
+BUNDLE_FLAGS-${CONFIG_ZLIB} += -z
+BUNDLE_FLAGS-${CONFIG_PNGQUANT} += -q
 BUNDLE_FLAGS = ${BUNDLE_FLAGS-yes}
 
 #
