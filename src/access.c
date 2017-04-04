@@ -298,6 +298,8 @@ access_get_lang(access_t *a, const char *lang)
 const char *
 access_get_theme(access_t *a)
 {
+  if (a == NULL)
+    return "blue";
   if (a->aa_theme == NULL || a->aa_theme[0] == '\0') {
     if (config.theme_ui == NULL || config.theme_ui[0] == '\0')
       return "blue";
