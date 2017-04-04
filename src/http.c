@@ -1451,8 +1451,8 @@ void
 http_serve_requests(http_connection_t *hc)
 {
   htsbuf_queue_t spill;
-  char *argv[3], *c, *cmdline = NULL, *hdrline = NULL;
-  int n, r;
+  char *argv[3], *c, *s, *cmdline = NULL, *hdrline = NULL;
+  int n, r, delim;
 
   pthread_mutex_init(&hc->hc_fd_lock, NULL);
   http_arg_init(&hc->hc_args);
@@ -1468,46 +1468,50 @@ http_serve_requests(http_connection_t *hc)
     if ((cmdline = tcp_read_line(hc->hc_fd, &spill)) == NULL)
       goto error;
 
-    // PROXY Protocol v1 support
-    // Format: 'PROXY TCP4 192.168.0.1 192.168.0.11 56324 9981\r\n'
-    //                     SRC-ADDRESS DST-ADDRESS  SPORT DPORT
-    //
-    if ((config.proxy) && (strlen(cmdline) >= 6) && (strncmp(cmdline,"PROXY ",6) == 0 )) {
-        tvhinfo(LS_HTTP, "[PROXY] PROXY protocol detected! cmdline='%s'",cmdline);
+    /* PROXY Protocol v1 support
+     * Format: 'PROXY TCP4 192.168.0.1 192.168.0.11 56324 9981\r\n'
+     *                     SRC-ADDRESS DST-ADDRESS  SPORT DPORT */
+    if (config.proxy && strncmp(cmdline, "PROXY ", 6) == 0) {
+      tvhtrace(LS_HTTP, "[PROXY] PROXY protocol detected! cmdline='%s'", cmdline);
 
-        char* pl = cmdline + 6;
+      argv[0] = cmdline;
+      s = cmdline + 6;
 
-        if ((cmdline = tcp_read_line(hc->hc_fd, &spill)) == NULL) {
-            goto error;  // No more data after the PROXY protocol
-        }
-
-        if ( (strlen(pl) >= 7) && (strncmp(pl,"UNKNOWN",7) == 0))
-            goto error;  // Unknown PROXY protocol
+      if ((cmdline = tcp_read_line(hc->hc_fd, &spill)) == NULL)
+        goto error;  /* No more data after the PROXY protocol */
         
-        if ( (strlen(pl) < 5) || (strncmp(pl,"TCP4 ",5) != 0))
-            goto error;  // Only IPv4 supported
-        pl += 5;
+      delim = '.';
+      if (strncmp(s, "TCP6 ", 5) == 0) {
+        delim = ':';
+      } else if (strncmp(s, "TCP4 ", 5) != 0) {
+        goto error;
+      }
 
-        // Check the SRC-ADDRESS
-        c = pl;
-        char ch;
-        for ( ;; ) {
-            if (strlen(pl) == 0) goto error;  // Incomplete PROXY format
-            ch = *pl++;
-            if (ch == ' ') break;
-            if (ch != '.' && (ch < '0' || ch > '9')) goto error;  // Not valid IP address
+      s += 5;
+
+      /* Check the SRC-ADDRESS */
+      for (c = s; *c != ' '; c++) {
+        if (*c == '\0') goto error;  /* Incomplete PROXY format */
+        if (*c != delim && (*c < '0' || *c > '9')) {
+          if (delim == ':') {
+            if (*c >= 'a' && *c <= 'f') continue;
+            if (*c >= 'A' && *c <= 'F') continue;
+          }
+          goto error;  /* Not valid IP address */
         }
-        if (((pl-c) < 8) || ((pl-c) > 16)) goto error;  // Not valid IP address
-        
-        // Here 'c' points to a dotted IPv4 SRC-ADRRESS
-        char srcaddr[16];
-        memset(srcaddr, 0, 16);
-        strncpy(srcaddr, c, (pl-c)-1);
+      }
+      /* Check length */
+      if ((s-c) < 8) goto error;
+      if ((s-c) > (delim == ':' ? 39 : 16)) goto error;
+      
+      /* Add null terminator */
+      *(c-1) = '\0';
 
-        // Don't care about DST-ADDRESS, SRC-PORT & DST-PORT
-        // All it's OK, push the original client IP
-        tvhinfo(LS_HTTP, "[PROXY] Original source='%s'",srcaddr);
-        http_arg_set(&hc->hc_args, "X-Forwarded-For", srcaddr);
+      /* Don't care about DST-ADDRESS, SRC-PORT & DST-PORT
+         All it's OK, push the original client IP */
+      tvhtrace(LS_HTTP, "[PROXY] Original source='%s'", s);
+      http_arg_set(&hc->hc_args, "X-Forwarded-For", s);
+      free(argv[0]);
     }
 
     if((n = http_tokenize(cmdline, argv, 3, -1)) != 3)
