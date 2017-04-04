@@ -62,10 +62,10 @@ else
 LIBX265_DIFFS  = libx265.pic.diff
 endif
 
-LIBVPX         = libvpx-1.6.0
+LIBVPX         = libvpx-1.6.1
 LIBVPX_TB      = $(LIBVPX).tar.bz2
 LIBVPX_URL     = http://storage.googleapis.com/downloads.webmproject.org/releases/webm/$(LIBVPX_TB)
-LIBVPX_SHA1    = 57ec789410151f2a17cb06cbd4a77a871dcaf3b2
+LIBVPX_SHA1    = a8bd0596915489d3bd8eded98d408ab8705e2f5d
 
 LIBOGG         = libogg-1.3.2
 LIBOGG_TB      = $(LIBOGG).tar.gz
