@@ -575,8 +575,8 @@ subscription_input(void *opaque, streaming_message_t *sm)
           s->ths_testing_error = error;
         subsetstate(s, SUBSCRIPTION_BAD_SERVICE);
         streaming_msg_free(sm);
+        return;
       }
-      return;
     }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
