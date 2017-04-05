@@ -749,7 +749,7 @@ service_find_instance
     if (flags & SUBSCRIPTION_SWSERVICE) {
       for (next = TAILQ_NEXT(si, si_link); next;
            next = TAILQ_NEXT(next, si_link))
-        if (si->si_s == next->si_s)
+        if (si->si_s == next->si_s && si->si_error)
           next->si_error = si->si_error;
     }
   }
@@ -1392,7 +1392,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 
   t->s_streaming_status = set;
 
-  tvhdebug(LS_SERVICE, "%s: Status changed to %s%s%s%s%s%s%s%s%s",
+  tvhdebug(LS_SERVICE, "%s: Status changed to %s%s%s%s%s%s%s%s%s%s",
 	 service_nicename(t),
 	 set & TSS_INPUT_HARDWARE ? "[Hardware input] " : "",
 	 set & TSS_INPUT_SERVICE  ? "[Input on service] " : "",
@@ -1400,6 +1400,7 @@ service_set_streaming_status_flags_(service_t *t, int set)
 	 set & TSS_PACKETS        ? "[Reassembled packets] " : "",
 	 set & TSS_NO_DESCRAMBLER ? "[No available descrambler] " : "",
 	 set & TSS_NO_ACCESS      ? "[No access] " : "",
+	 set & TSS_CA_CHECK       ? "[CA check] " : "",
 	 set & TSS_TUNING         ? "[Tuning failed] " : "",
 	 set & TSS_GRACEPERIOD    ? "[Graceperiod expired] " : "",
 	 set & TSS_TIMEOUT        ? "[Data timeout] " : "");

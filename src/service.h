@@ -426,6 +426,7 @@ typedef struct service {
 #define TSS_MUX_PACKETS      0x4
 #define TSS_PACKETS          0x8
 #define TSS_NO_ACCESS        0x10
+#define TSS_CA_CHECK         0x20
 
 
   // Errors

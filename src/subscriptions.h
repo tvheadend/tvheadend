@@ -83,6 +83,7 @@ typedef struct th_subscription {
   int ths_testing_error;
 
   mtimer_t ths_remove_timer;
+  mtimer_t ths_ca_check_timer;
 
   LIST_ENTRY(th_subscription) ths_channel_link;
   struct channel *ths_channel;          /* May be NULL if channel has been
@@ -97,7 +98,6 @@ typedef struct th_subscription {
 
   char *ths_title; /* display title */
   time_t ths_start;  /* time when subscription started */
-  int64_t ths_service_start; /* time when service started */
   int ths_total_err; /* total errors during entire subscription */
   uint64_t ths_total_bytes_in; /* total bytes since the subscription started */
   uint64_t ths_total_bytes_out; /* total bytes since the subscription started */

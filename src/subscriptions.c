@@ -294,6 +294,29 @@ subscription_reschedule_cb(void *aux)
 /**
  *
  */
+static void
+subscription_ca_check_cb(void *aux)
+{
+  th_subscription_t *s = aux;
+  service_t *t = s->ths_service;
+  int flags = 0;
+
+  if (t == NULL)
+    return;
+
+  pthread_mutex_lock(&t->s_stream_mutex);
+
+  if(t->s_streaming_status & TSS_NO_ACCESS)
+    flags |= TSS_CA_CHECK;
+  if (flags)
+    service_set_streaming_status_flags(t, flags);
+
+  pthread_mutex_unlock(&t->s_stream_mutex);
+}
+
+/**
+ *
+ */
 static service_instance_t *
 subscription_start_instance
   (th_subscription_t *s, int *error)
@@ -312,8 +335,8 @@ subscription_start_instance
                              s->ths_flags, s->ths_timeout,
                              mclk() > s->ths_postpone_end ?
                                0 : mono2sec(s->ths_postpone_end - mclk()));
-  if (si)
-    s->ths_service_start = mclk();
+  if (si && (s->ths_flags & SUBSCRIPTION_CONTACCESS))
+    mtimer_arm_rel(&s->ths_ca_check_timer, subscription_ca_check_cb, s, s->ths_ca_timeout);
   return s->ths_current_instance = si;
 }
 
@@ -542,13 +565,8 @@ static streaming_ops_t subscription_input_direct_ops = {
 static void
 subscription_input(void *opaque, streaming_message_t *sm)
 {
-  int error, mask2 = 0;
+  int error;
   th_subscription_t *s = opaque;
-
-  /* handle NO_ACCESS condition with some delay */
-  if(sm->sm_code & TSS_NO_ACCESS &&
-     s->ths_service_start + s->ths_ca_timeout < mclk())
-    mask2 |= TSS_NO_ACCESS;
 
   if(subgetstate(s) == SUBSCRIPTION_TESTING_SERVICE) {
     // We are just testing if this service is good
@@ -565,19 +583,20 @@ subscription_input(void *opaque, streaming_message_t *sm)
     }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
-       (sm->sm_code & (TSS_ERRORS|mask2))) {
+       (sm->sm_code & (TSS_ERRORS|TSS_CA_CHECK))) {
       // No, mark our subscription as bad_service
       // the scheduler will take care of things
       error = tss2errcode(sm->sm_code);
-      if (error != SM_CODE_NO_ACCESS ||
-          (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
-        if (error > s->ths_testing_error)
-          s->ths_testing_error = error;
-        subsetstate(s, SUBSCRIPTION_BAD_SERVICE);
-        streaming_msg_free(sm);
-        return;
-      }
-    }
+      if (error != SM_CODE_OK)
+        if (error != SM_CODE_NO_ACCESS ||
+            (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
+          if (error > s->ths_testing_error)
+            s->ths_testing_error = error;
+          subsetstate(s, SUBSCRIPTION_BAD_SERVICE);
+          streaming_msg_free(sm);
+          return;
+        }
+  }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
        (sm->sm_code & TSS_PACKETS)) {
@@ -597,14 +616,15 @@ subscription_input(void *opaque, streaming_message_t *sm)
   }
 
   if (sm->sm_type == SMT_SERVICE_STATUS &&
-      (sm->sm_code & (TSS_TUNING|TSS_TIMEOUT|mask2))) {
+      (sm->sm_code & (TSS_TUNING|TSS_TIMEOUT|TSS_CA_CHECK))) {
     error = tss2errcode(sm->sm_code);
-    if (error != SM_CODE_NO_ACCESS ||
-        (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
-      if (error > s->ths_testing_error)
-        s->ths_testing_error = error;
-      s->ths_state = SUBSCRIPTION_BAD_SERVICE;
-    }
+    if (error != SM_CODE_OK)
+      if (error != SM_CODE_NO_ACCESS ||
+          (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
+        if (error > s->ths_testing_error)
+          s->ths_testing_error = error;
+        s->ths_state = SUBSCRIPTION_BAD_SERVICE;
+      }
   }
 
   /* Pass to direct handler to log traffic */
@@ -714,6 +734,7 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
   service_instance_list_clear(&s->ths_instances);
 
   mtimer_disarm(&s->ths_remove_timer);
+  mtimer_disarm(&s->ths_ca_check_timer);
 
   if ((flags & UNSUBSCRIBE_FINAL) != 0 ||
       (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
