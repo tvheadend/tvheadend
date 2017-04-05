@@ -84,7 +84,7 @@ LIBVORBIS_SHA1 = 10c7fee173178d72855aa7593dfe49d9b3d6c804
 
 LIBFDKAAC      = fdk-aac-0.1.4
 LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
-LIBFDKAAC_URL  = http://sourceforge.net/projects/opencore-amr/files/fdk-aac/$(LIBFDKAAC_TB)
+LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
 LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
 LIBMFX_HASH    = 9f4a84d73fb73d430f07a80cea3688c424439f6a
