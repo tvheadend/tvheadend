@@ -316,8 +316,8 @@ static void
 satip_satconf_class_changed ( idnode_t *in )
 {
   satip_satconf_t *sfc = (satip_satconf_t*)in;
-  satip_device_changed(sfc->sfc_lfe->sf_device);
   satip_satconf_sanity_check(sfc->sfc_lfe);
+  satip_device_changed(sfc->sfc_lfe->sf_device);
 }
 
 CLASS_DOC(satip_satconf)

@@ -1202,6 +1202,7 @@ void
 idnode_changed( idnode_t *self )
 {
   idnode_notify_changed(self);
+  idnode_changedfn(self);
   idnode_save_queue(self);
 }
 
