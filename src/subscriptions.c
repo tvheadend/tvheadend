@@ -547,7 +547,7 @@ subscription_input(void *opaque, streaming_message_t *sm)
 
   /* handle NO_ACCESS condition with some delay */
   if(sm->sm_code & TSS_NO_ACCESS &&
-     s->ths_service_start + sec2mono(s->ths_ca_timeout) < mclk())
+     s->ths_service_start + s->ths_ca_timeout < mclk())
     mask2 |= TSS_NO_ACCESS;
 
   if(subgetstate(s) == SUBSCRIPTION_TESTING_SERVICE) {
