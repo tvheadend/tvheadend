@@ -34,6 +34,7 @@
 #include "imagecache.h"
 #include "access.h"
 #include "notify.h"
+#include "compat.h"
 
 struct dvr_entry_list dvrentries;
 static int dvr_in_init;

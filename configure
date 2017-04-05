@@ -287,6 +287,15 @@ int test(void)
 }
 '
 
+check_cc_snippet llabs '
+#include <stdlib.h>
+int test(void)
+{
+  llabs(-10);
+  return 0;
+}
+'
+
 #
 # Python
 #
@@ -549,6 +558,14 @@ fi
 if enabled_or_auto inotify; then
   if check_cc_header "sys/inotify" inotify_h; then
     enable inotify
+    check_cc_snippet inotify_init1 '
+    #include <sys/inotify.h>
+    int test(void)
+    {
+      inotify_init1(IN_CLOEXEC);
+      return 0;
+    }
+    '
   elif enabled inotify; then
     die "Inotify support not found (use --disable-inotify)"
   fi
@@ -601,6 +618,14 @@ fi
 #
 if [ ${PLATFORM} = "linux" ]; then
   enable epoll
+  check_cc_snippet epoll_create1 '
+  #include <sys/epoll.h>
+  int test(void)
+  {
+    epoll_create1(EPOLL_CLOEXEC);
+    return 0;
+  }
+  '
 fi
 
 #

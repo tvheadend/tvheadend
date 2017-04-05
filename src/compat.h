@@ -15,8 +15,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef COMPAT_H
-#define COMPAT_H
+#ifndef TVH_COMPAT_H
+#define TVH_COMPAT_H
 
 #if ENABLE_ANDROID
 #ifndef strdupa
@@ -35,13 +35,24 @@
 #define pthread_yield() sched_yield()
 #endif
 #define S_IEXEC S_IXUSR
-#define epoll_create1(EPOLL_CLOEXEC) epoll_create(n)
-#define inotify_init1(IN_CLOEXEC) inotify_init()
 #include <time64.h>
 // 32-bit Android has only timegm64() and not timegm().
 // We replicate the behaviour of timegm() when the result overflows time_t.
 
 #endif /* ENABLE_ANDROID */
+
+#ifndef ENABLE_EPOLL_CREATE1
+#define epoll_create1(EPOLL_CLOEXEC) epoll_create(n)
+#endif
+#ifndef ENABLE_INOTIFY_INIT1
+#define inotify_init1(IN_CLOEXEC) inotify_init()
+#endif
+#ifndef ENABLE_LLABS
+static inline long long int llabs(long long int a)
+{
+  if (a < 0) return -a; else return a;
+}
+#endif
 
 #ifdef COMPAT_IPTOS
 
@@ -88,4 +99,4 @@
 
 #endif /* COMPAT_IPTOS */
 
-#endif /* COMPAT_H */
+#endif /* TVH_COMPAT_H */
