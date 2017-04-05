@@ -299,17 +299,13 @@ subscription_ca_check_cb(void *aux)
 {
   th_subscription_t *s = aux;
   service_t *t = s->ths_service;
-  int flags = 0;
 
   if (t == NULL)
     return;
 
   pthread_mutex_lock(&t->s_stream_mutex);
 
-  if(t->s_streaming_status & TSS_NO_ACCESS)
-    flags |= TSS_CA_CHECK;
-  if (flags)
-    service_set_streaming_status_flags(t, flags);
+  service_set_streaming_status_flags(t, TSS_CA_CHECK);
 
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
