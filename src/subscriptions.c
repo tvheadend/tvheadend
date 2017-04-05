@@ -546,7 +546,8 @@ subscription_input(void *opaque, streaming_message_t *sm)
   th_subscription_t *s = opaque;
 
   /* handle NO_ACCESS condition with some delay */
-  if(sm->sm_code & TSS_NO_ACCESS && s->ths_service_start + sec2mono(2) < mclk())
+  if(sm->sm_code & TSS_NO_ACCESS &&
+     s->ths_service_start + sec2mono(s->ths_ca_timeout) < mclk())
     mask2 |= TSS_NO_ACCESS;
 
   if(subgetstate(s) == SUBSCRIPTION_TESTING_SERVICE) {
@@ -788,7 +789,14 @@ subscription_create
       s->ths_flags |= SUBSCRIPTION_RESTART;
     if (pro->pro_contaccess)
       s->ths_flags |= SUBSCRIPTION_CONTACCESS;
+    if (pro->pro_swservice)
+      s->ths_flags |= SUBSCRIPTION_SWSERVICE;
   }
+
+  if (pro->pro_ca_timeout)
+    s->ths_ca_timeout = ms2mono(MINMAX(pro->pro_ca_timeout, 100, 5000));
+  else
+    s->ths_ca_timeout = sec2mono(2);
 
   time(&s->ths_start);
 

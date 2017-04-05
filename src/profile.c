@@ -397,6 +397,29 @@ const idclass_t profile_class =
     },
     {
       .type     = PT_INT,
+      .id       = "catimeout",
+      .name     = N_("Descrambling timeout (ms)"),
+      .desc     = N_("Check the descrambling status after this timeout."),
+      .off      = offsetof(profile_t, pro_timeout),
+      .opts     = PO_EXPERT,
+      .def.i    = 2000,
+      .group    = 1
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "swservice",
+      .name     = N_("Switch to another service"),
+      .desc     = N_("If something fails, try to switch to a different "
+                     "service on another network. Do not try to iterate "
+                     "through all inputs/tuners which are capable to "
+                     "receive the service."),
+      .off      = offsetof(profile_t, pro_swservice),
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 1
+    },
+    {
+      .type     = PT_INT,
       .id       = "svfilter",
       .name     = N_("Preferred service video type"),
       .desc     = N_("The selected video type should be preferred when "

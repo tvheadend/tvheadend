@@ -25,23 +25,24 @@ struct profile_chain;
 
 extern struct th_subscription_list subscriptions;
 
-#define SUBSCRIPTION_NONE       0x000
-#define SUBSCRIPTION_MPEGTS     0x001
-#define SUBSCRIPTION_PACKET     0x002
-#define SUBSCRIPTION_TYPE_MASK  0x00f
-#define SUBSCRIPTION_STREAMING  0x010
-#define SUBSCRIPTION_RESTART    0x020
-#define SUBSCRIPTION_CONTACCESS 0x040
-#define SUBSCRIPTION_ONESHOT    0x080
-#define SUBSCRIPTION_TABLES     0x100
-#define SUBSCRIPTION_MINIMAL    0x200
-#define SUBSCRIPTION_NODESCR    0x400 ///< no decramble
-#define SUBSCRIPTION_EMM        0x800 ///< add EMM PIDs for no descramble subscription
-#define SUBSCRIPTION_INITSCAN  0x1000 ///< for mux subscriptions
-#define SUBSCRIPTION_IDLESCAN  0x2000 ///< for mux subscriptions
-#define SUBSCRIPTION_USERSCAN  0x4000 ///< for mux subscriptions
-#define SUBSCRIPTION_EPG       0x8000 ///< for mux subscriptions
-#define SUBSCRIPTION_HTSP     0x10000
+#define SUBSCRIPTION_NONE        0x000
+#define SUBSCRIPTION_MPEGTS      0x001
+#define SUBSCRIPTION_PACKET      0x002
+#define SUBSCRIPTION_TYPE_MASK   0x00f
+#define SUBSCRIPTION_STREAMING   0x010
+#define SUBSCRIPTION_RESTART     0x020
+#define SUBSCRIPTION_CONTACCESS  0x040
+#define SUBSCRIPTION_ONESHOT     0x080
+#define SUBSCRIPTION_TABLES      0x100
+#define SUBSCRIPTION_MINIMAL     0x200
+#define SUBSCRIPTION_NODESCR     0x400 ///< no decramble
+#define SUBSCRIPTION_EMM         0x800 ///< add EMM PIDs for no descramble subscription
+#define SUBSCRIPTION_INITSCAN   0x1000 ///< for mux subscriptions
+#define SUBSCRIPTION_IDLESCAN   0x2000 ///< for mux subscriptions
+#define SUBSCRIPTION_USERSCAN   0x4000 ///< for mux subscriptions
+#define SUBSCRIPTION_EPG        0x8000 ///< for mux subscriptions
+#define SUBSCRIPTION_HTSP      0x10000
+#define SUBSCRIPTION_SWSERVICE 0x20000
 
 /* Some internal priorities */
 #define SUBSCRIPTION_PRIO_KEEP        1 ///< Keep input rolling
@@ -111,6 +112,7 @@ typedef struct th_subscription {
 
   int ths_flags;
   int ths_timeout;
+  int ths_ca_timeout;
 
   int64_t ths_last_find;
   int ths_last_error;
