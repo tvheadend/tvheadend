@@ -331,7 +331,7 @@ subscription_start_instance
                              s->ths_flags, s->ths_timeout,
                              mclk() > s->ths_postpone_end ?
                                0 : mono2sec(s->ths_postpone_end - mclk()));
-  if (si && (s->ths_flags & SUBSCRIPTION_CONTACCESS))
+  if (si && (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0)
     mtimer_arm_rel(&s->ths_ca_check_timer, subscription_ca_check_cb, s, s->ths_ca_timeout);
   return s->ths_current_instance = si;
 }
