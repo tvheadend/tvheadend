@@ -775,6 +775,7 @@ subscription_create
   s->ths_output            = st;
   s->ths_flags             = flags;
   s->ths_timeout           = pro ? pro->pro_timeout : 0;
+  s->ths_ca_timeout        = sec2mono(2);
   s->ths_postpone          = subscription_postpone;
   s->ths_postpone_end      = mclk() + sec2mono(s->ths_postpone);
   atomic_set(&s->ths_total_err, 0);
@@ -791,12 +792,9 @@ subscription_create
       s->ths_flags |= SUBSCRIPTION_CONTACCESS;
     if (pro->pro_swservice)
       s->ths_flags |= SUBSCRIPTION_SWSERVICE;
+    if (pro->pro_ca_timeout)
+      s->ths_ca_timeout = ms2mono(MINMAX(pro->pro_ca_timeout, 100, 5000));
   }
-
-  if (pro->pro_ca_timeout)
-    s->ths_ca_timeout = ms2mono(MINMAX(pro->pro_ca_timeout, 100, 5000));
-  else
-    s->ths_ca_timeout = sec2mono(2);
 
   time(&s->ths_start);
 
