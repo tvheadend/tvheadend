@@ -312,6 +312,8 @@ subscription_start_instance
                              s->ths_flags, s->ths_timeout,
                              mclk() > s->ths_postpone_end ?
                                0 : mono2sec(s->ths_postpone_end - mclk()));
+  if (si)
+    s->ths_service_start = mclk();
   return s->ths_current_instance = si;
 }
 
@@ -538,10 +540,14 @@ static streaming_ops_t subscription_input_direct_ops = {
  * the currently bound service
  */
 static void
-subscription_input(void *opauqe, streaming_message_t *sm)
+subscription_input(void *opaque, streaming_message_t *sm)
 {
-  int error;
-  th_subscription_t *s = opauqe;
+  int error, mask2 = 0;
+  th_subscription_t *s = opaque;
+
+  /* handle NO_ACCESS condition with some delay */
+  if(sm->sm_code & TSS_NO_ACCESS && s->ths_service_start + sec2mono(2) < mclk())
+    mask2 |= TSS_NO_ACCESS;
 
   if(subgetstate(s) == SUBSCRIPTION_TESTING_SERVICE) {
     // We are just testing if this service is good
@@ -558,7 +564,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
-       sm->sm_code & (TSS_ERRORS|TSS_NO_ACCESS)) {
+       (sm->sm_code & (TSS_ERRORS|mask2))) {
       // No, mark our subscription as bad_service
       // the scheduler will take care of things
       error = tss2errcode(sm->sm_code);
@@ -573,7 +579,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
     }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
-       sm->sm_code & TSS_PACKETS) {
+       (sm->sm_code & TSS_PACKETS)) {
       if(s->ths_start_message != NULL) {
         streaming_target_deliver(s->ths_output, s->ths_start_message);
         s->ths_start_message = NULL;
@@ -590,7 +596,7 @@ subscription_input(void *opauqe, streaming_message_t *sm)
   }
 
   if (sm->sm_type == SMT_SERVICE_STATUS &&
-      sm->sm_code & (TSS_TUNING|TSS_TIMEOUT|TSS_NO_ACCESS)) {
+      (sm->sm_code & (TSS_TUNING|TSS_TIMEOUT|mask2))) {
     error = tss2errcode(sm->sm_code);
     if (error != SM_CODE_NO_ACCESS ||
         (s->ths_flags & SUBSCRIPTION_CONTACCESS) == 0) {
