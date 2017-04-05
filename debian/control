@@ -7,7 +7,7 @@ Standards-Version: 3.7.3
 
 Package: tvheadend
 Architecture: any
-Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1
+Depends: ${shlibs:Depends}, libavahi-client3, zlib1g, liburiparser1, dvb-apps
 Recommends: xmltv-util
 Enhances: showtime
 Replaces: hts-tvheadend
