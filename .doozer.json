@@ -19,8 +19,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -45,8 +43,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -71,8 +67,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -97,8 +91,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -123,8 +115,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -149,8 +139,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -175,8 +163,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -201,8 +187,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -227,8 +211,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
@@ -253,8 +235,6 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "libcurl4-gnutls-dev",
-        "curl",
         "ccache"
       ],
       "buildcmd": [
