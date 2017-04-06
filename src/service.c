@@ -747,10 +747,9 @@ service_find_instance
   TAILQ_FOREACH(si, sil, si_link) {
     si->si_mark = 1;
     if (flags & SUBSCRIPTION_SWSERVICE) {
-      for (next = TAILQ_NEXT(si, si_link); next;
-           next = TAILQ_NEXT(next, si_link))
-        if (si->si_s == next->si_s && si->si_error)
-          next->si_error = si->si_error;
+      TAILQ_FOREACH(next, sil, si_link)
+        if (next != si && si->si_s == next->si_s && si->si_error)
+          next->si_error = MAX(next->si_error, si->si_error);
     }
   }
 
