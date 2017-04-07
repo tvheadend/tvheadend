@@ -5,7 +5,7 @@
 Tvheadend is a lightweight, easily-configured, general-purpose TV/video 
 streaming server and recorder (PVR/DVR) for GNU/Linux, FreeBSD and Android.
 
-![Tvheadend interface](images/overall_screenshot.png)
+![Tvheadend interface](static/img/doc/overview/screenshot.png)
 
 It supports input from:
 

@@ -4,7 +4,7 @@ This tab shows information about current service mapping activity.
 
 This is a read-only tab; nothing is configurable. 
 
-!['Status - Subscriptions' Tab](static/img/doc/statusservicemapper.png) 
+!['Status - Subscriptions' Tab](static/img/doc/status_service_mapper/tab.png) 
 
 
 The [Map services to channels](class/service_mapper) dialog 

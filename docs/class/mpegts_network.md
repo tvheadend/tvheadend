@@ -20,7 +20,7 @@ supports several different types of network, notably:
 Click the desired network type (above) to see all available 
 [parameters](#items).
 
-!['Networks' Tab Screenshot](static/img/doc/dvbinputsnetwork.png)
+!['Networks' Tab Screenshot](static/img/doc/mpegts_network/tab.png)
 
 ---
 
@@ -36,59 +36,12 @@ Button         | Function
 
 ---
 
-###Adding an Entry/Network
-
-To create a network click the *[Add]* button from the menu bar and 
-then select the required network type:
-
-!['Network selection'](static/img/doc/networktypeselect.png)
-
-Then using the resultant dialog enter/select the desired network 
-options.
-
-!['Add new network'](static/img/doc/addnewnetwork.png)
-
-Once you're happy with what you've entered into the dialog you can save 
-the network using the *[Save]* button (closing the dialog), save your 
-pending changes and continue making further adjustments by pressing the 
-*[Apply]* button, or cancel any unsaved changes (and close the dialog) 
-by pressing the *[Cancel]* button.
-
-**Notes**:
-
-* Once you've created a network (and added muxes) you must assign it to 
-an **enabled** adapter.
-* There is a 5-10 minute delay before a scan starts, this is so you can 
-make changes if needed (this does not apply to IPTV networks).
-
-For more detailed information on networks and how to set them up, see 
-[Configure Tvheadend.](configure_tvheadend) 
-
----
-
-<tvh_include>inc/edit_grid_entries</tvh_include>
-
-!['Add/Edit Network' Dialog - DVB-S/2](static/img/doc/dvbnetworkedit.png)
-
----
-
-<tvh_include>inc/del_grid_entries</tvh_include>
-
----
-
 ###Force Scanning
-
-Highlight (select) the network(s) you would like to force scan, and 
-then press the "Force Scan" button from the menu bar.
 
 Force scanning can take some time. You may continue to use Tvheadend 
 while a scan is in progress, but doing so will increase the time needed 
 for it to complete. Note that the time required can vary depending on a 
 number of factors, such as how many tuners you have available and the 
 number of muxes on each.
-
-<tvh_include>inc/selecting_entries_tip</tvh_include>
-
-<tvh_include>inc/paging_tip</tvh_include>
 
 ---

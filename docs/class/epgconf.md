@@ -1,7 +1,7 @@
 This tab is used to configure the Electronic Program Guide (EPG) 
 [grabbing](class/epggrab_mod) capabilities.
 
-!['EPG Grabber Configuration'](static/img/doc/epggrabberconfig.png)
+!['EPG Grabber Configuration'](static/img/doc/epgconf/tab.png)
 
 ---
 

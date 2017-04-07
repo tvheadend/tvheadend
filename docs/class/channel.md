@@ -1,6 +1,6 @@
 This tab lists all defined channels.
 
-!['Channel lists'](static/img/doc/configchannellist.png)
+!['Channel lists'](static/img/doc/channel/tab.png)
 
 ---
 
@@ -30,11 +30,9 @@ Numbering Button            | Function
 
 ---
 
-<tvh_include>inc/add_grid_entry</tvh_include>
+###Example
 
-####Example
-
-!['Add Channel Dialog'](static/img/doc/addchanneldialog.png)
+!['Add Channel Dialog'](static/img/doc/channel/add.png)
 
 In the above example image, we're creating a channel called Channel 4 
 and mapping it to the service of the same name. You can name a channel 
@@ -44,18 +42,8 @@ to.
 If you have a lot of services you may want to use the [Map services](class/mpegts_service) 
 functions or a [Bouquet](class/bouquet).
 
----
-
-<tvh_include>inc/edit_grid_entries</tvh_include>
-
-!['Edit Channel Dialog'](static/img/doc/channeleditsingle.png)
-
-Note that editing a channel created by a bouquet can have unexpected 
+Note, that editing a channel created by a bouquet can have unexpected 
 results, please see *Detaching Channels* on the [Bouquet](class/bouquet) page for info.
-
----
-
-<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
 

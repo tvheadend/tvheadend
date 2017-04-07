@@ -1,7 +1,7 @@
 Tvheadend supports connecting to card clients via the cwc (newcamd) and
 capmt (linux network dvbapi) protocols for so-called 'softcam' descrambling.
 
-!['CA Client Configuration Example'](static/img/doc/caclientconfig.png)
+!['CA Client Configuration Example'](static/img/doc/caclient/tab.png)
 
 ---
 
@@ -47,32 +47,5 @@ Icon                                         | Description
 !['Accept/OK Icon'](icons/accept.png)        | The client is connected.
 !['Error Icon'](icons/exclamation.png)       | There was an error.
 !['Stop/Disabled Icon'](icons/stop.png)      | The client is disabled.
-
----
-
-###Adding/Editing a CA Configuration
-
-To create a new CA configuration press the *[Add]* button from the 
-menu bar, you will then be asked to select a client type. Once you've 
-selected a type you can then enter/select the desired options from the 
-resultant *Add* dialog.
-
-!['Add CA Config'](static/img/doc/configcaadd.png)
-
-To edit an existing configuration, click on it from within the grid, the 
-*Parameters* panel should then appear on the right hand side.
-
-**Tips**: 
-* Remember to *[Save]* your changes before selecting another config 
-from within the grid.
-* You can clone an existing config by clicking the *[Clone]* 
-button.
-
----
-
-###Deleting a CA Configuration
-
-Highlight (select) the desired entry from the grid, then press the 
-*[Delete]* button from the menu bar. 
 
 ---

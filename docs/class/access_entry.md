@@ -17,7 +17,7 @@ prefix only.
 that you put the wildcard (asterisk `*`) accounts at top and all other 
 accounts (with special permissions) at the bottom.
 
-!['Access Entries Grid'](static/img/doc/accessentriesgrid.png)
+!['Access Entries Grid'](static/img/doc/access_entry/tab.png)
 
 ---
 
@@ -26,7 +26,7 @@ accounts (with special permissions) at the bottom.
 <tvh_include>inc/common_button_table_end</tvh_include>
 
 Entries are checked in order (when logging in, etc), the following 
-functions allows you to change the ordering:
+functions allow you to change the ordering:
 
 Button                 | Function
 -----------------------|---------
@@ -35,13 +35,11 @@ Button                 | Function
 
 ---
 
-<tvh_include>inc/add_grid_entry</tvh_include>
-
-####Example
+###Example
 
 This is an example of a limited user entry.
 
-!['Access Entry Example'](static/img/doc/accessentriesnewuser.png)
+!['Access Entry Example'](static/img/doc/access_entry/new.png)
 
 Remember to also add a password entry in the 
 *[Passwords](class/passwd)* tab - not required for wildcard accounts. 
@@ -54,14 +52,6 @@ network prefix(es) (*Allowed networks*).
 * You can have multiple entries using the same username with varying 
 rights, allowing you to enable / disable each as needed. Note, matching 
 (enabled) accounts will have permissions combined.
-
----
-
-<tvh_include>inc/edit_grid_entries</tvh_include>
-
----
-
-<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
 

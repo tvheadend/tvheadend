@@ -1,7 +1,7 @@
 This panel lists all the available satellite (DVB-S/ISDB-S) frontend 
 parameters.
 
-!['DVB-S frontend parameters'](static/img/doc/dvbsfrontendparams.png)
+!['DVB-S frontend parameters'](static/img/doc/linuxdvb_frontend_dvbs/tab.png)
 
 ---
 

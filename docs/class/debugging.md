@@ -1,6 +1,6 @@
 This tab is used to configure various debugging options in tvheadend.
 
-!['Debugging tab'](static/img/doc/debuggingtab.png)
+!['Debugging tab'](static/img/doc/debugging/tab.png)
 
 Changes to any of these settings must be confirmed by pressing the 
 *[Apply configuration]* button before taking effect.

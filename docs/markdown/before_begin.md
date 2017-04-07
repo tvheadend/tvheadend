@@ -67,4 +67,4 @@ go and get the signal for you.
 
 The following diagram explains the relationship between these components:
 
-![Relationship Between Tuners, Neworks, Muxes, Services and Channels](images/tvh_schematic.png)
+![Relationship Between Tuners, Neworks, Muxes, Services and Channels](static/img/doc/before_begin/schematic.png)
