@@ -2,7 +2,7 @@
 
 The adapters and tuners are listed and edited in a tree.
 
-!['TV Adapter tree'](static/img/doc/tvadaptertree.png)
+!['TV Adapter tree'](static/img/doc/tv_adapters/tree.png)
 
 ---
 
@@ -23,7 +23,7 @@ The device tree lists the available frontends, LNB configuration and
 so on related to your device(s) in sections. Clicking on these sections 
 will display available parameters and device information.
 
-!['TV Adapter params'](static/img/doc/tvadapterparams.png)
+!['TV Adapter params'](static/img/doc/tv_adapters/params.png)
 
 **Tip**: Remember to save your changes *before* switching panels.
 

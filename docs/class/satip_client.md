@@ -1,6 +1,6 @@
 This panel displays all available SAT>IP client parameters.
 
-!['SAT>IP Panel'](static/img/doc/satipclient.png)
+!['SAT>IP Panel'](static/img/doc/satip_client/tab.png)
 
 ---
 

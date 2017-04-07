@@ -4,7 +4,7 @@ This tab shows information about all active connections.
 
 This is a read-only tab; nothing is configurable.
 
-!['Status - Subscriptions' Tab](static/img/doc/status_connections.png)
+!['Status - Subscriptions' Tab](static/img/doc/status_connections/tab.png)
 
 ---
 

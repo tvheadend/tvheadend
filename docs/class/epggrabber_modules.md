@@ -3,7 +3,7 @@ grabber modules. Tvheadend supports a variety of different EPG
 grabbing mechanisms. These fall into 3 broad categories, within which 
 there are a variety of specific grabber implementations.
 
-!['EPG Grabber Configuration'](static/img/doc/epggrabmodules.png)
+!['EPG Grabber Configuration'](static/img/doc/epggrabber_modules/tab.png)
 
 ---
 

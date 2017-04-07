@@ -2,7 +2,7 @@ SAT\>IP Server is something like DVB network tuner. Tvheadend can
 forward mpegts input streams including on-the-fly descrambling to SAT\>IP
 clients.
 
-!['SAT\>IP Config tab'](static/img/doc/satipconfig.png)
+!['SAT\>IP Config tab'](static/img/doc/satip_server/tab.png)
 
 ---
 

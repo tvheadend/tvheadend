@@ -3,7 +3,7 @@ to be served from the local webserver. This can be useful for
 multi-client systems and, generally, to reduce hits on upstream
 providers.
 
-!['Configuration - Image Cache tab'](static/img/doc/configimagecache.png)
+!['Configuration - Image Cache tab'](static/img/doc/imagecache/tab.png)
 
 ---
 

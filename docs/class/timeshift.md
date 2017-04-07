@@ -1,6 +1,6 @@
 This tab is used to configure timeshift properties.
 
-!['Timeshift Tab'](static/img/doc/timeshifttab.png)
+!['Timeshift Tab'](static/img/doc/timeshift/tab.png)
 
 ---
 

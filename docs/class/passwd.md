@@ -1,7 +1,7 @@
 This tab is the second part of Tvheadend's access control mechanism. It is
 where you set and maintain all user passwords (e.g. for streaming or DVR access).
 
-!['Configuration - Passwords tab'](static/img/doc/configpasswordentries.png)
+!['Configuration - Passwords tab'](static/img/doc/passwd/tab.png)
 
 ---
 
@@ -11,24 +11,14 @@ where you set and maintain all user passwords (e.g. for streaming or DVR access)
 
 ---
 
-<tvh_include>inc/add_grid_entry</tvh_include>
-
-####Example
+###Example
 
 This is an example of a password entry.
 
-!['Add Password dialog'](static/img/doc/configpasswdadd.png)
+!['Add Password dialog'](static/img/doc/passwd/add.png)
 
 Be aware that the username you enter here must match a username/entry in 
-the [Access Entries](class/access_entry) tab for it to apply. You may 
+the Access Entries tab for it to apply. You may 
 have multiple password entries for the same username if you wish. 
-
----
-
-<tvh_include>inc/edit_grid_entries</tvh_include>
-
----
-
-<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---

@@ -1,7 +1,7 @@
 This tabs allow configuration of several general parameters that affect
 the core Tvheadend functionality.
 
-!['General Base' Tab Screenshot 1](static/img/doc/configbaseall.png)
+!['General Base' Tab Screenshot 1](static/img/doc/config/tab.png)
 
 ---
 

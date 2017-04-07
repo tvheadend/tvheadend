@@ -21,7 +21,7 @@ the recording.
 Entries shown here link to file(s) that Tvheadend cannot locate 
 (files which have been externally removed).
 
-!['Digital Video Recorder' Tabs](static/img/doc/configdvrtabs4.png)
+!['Digital Video Recorder' Tabs](static/img/doc/dvrentry/tab.png)
 
 ---
 
@@ -60,18 +60,14 @@ Icon                                       | Description
 ![Accept icon](icons/accept.png)           | the program recorded successfully
 
 ---
-<tvh_include>inc/add_grid_entry</tvh_include>
 
-Note that the *[Add]* functionality is only available in 
-the *Upcoming/Current Recordings* tab. 
-
-####Manual Recording Entry Example
+###Manual Recording Entry Example
 
 This is an example of a one-time recording entry.
 
-!['Add new recording dialog'](static/img/doc/addnewrecentry.png)
+!['Add new recording dialog'](static/img/doc/dvrentry/add.png)
 
-####Adding an Entry Using the EPG
+###Adding an Entry Using the EPG
 
 Using the Electronic Program Guide search functionality, find the 
 program/event you would like to record. Click on it, then using the broadcast 
@@ -84,7 +80,7 @@ details dialog you can:
 For full instructions on how to search and record using the EPG take a 
 look at the [EPG](epg) page.
 
-####Adding an Entry Using Autorec Rules
+###Adding an Entry Using Autorec Rules
 
 Autorec rules allow you to match events using various options. 
 
@@ -92,18 +88,6 @@ Autorec rules allow you to match events using various options.
 * Record events that broadcast between certain times or days of the week.
 
 See [Autorec](class/dvrautorec) for more information.
-
----
-
-<tvh_include>inc/edit_grid_entries</tvh_include>
-
----
-
-<tvh_include>inc/del_grid_entries</tvh_include>
-
----
-
-<tvh_include>inc/play</tvh_include>
 
 ---
 

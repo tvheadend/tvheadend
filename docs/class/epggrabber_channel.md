@@ -1,6 +1,6 @@
 This tab displays EPG data used by channels.
 
-!['EPG Grabber Channels Tab'](static/img/doc/epggrabberchannels.png)
+!['EPG Grabber Channels Tab'](static/img/doc/epggrabber_channel/tab.png)
 
 ---
 
@@ -14,15 +14,5 @@ Button                      | Function
 **Undo**                    | Revert any changes made since the last save.
 **Delete**                  | Delete the selected grid entries.
 **Edit**                    | Edit the selected grid entries.
-
-<tvh_include>inc/common_button_table_end</tvh_include>
-
----
-
-<tvh_include>inc/edit_grid_entries</tvh_include>
-
----
-
-<tvh_include>inc/del_grid_entries</tvh_include>
 
 ---
