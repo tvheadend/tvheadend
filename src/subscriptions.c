@@ -592,7 +592,7 @@ subscription_input(void *opaque, streaming_message_t *sm)
           streaming_msg_free(sm);
           return;
         }
-  }
+    }
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
        (sm->sm_code & TSS_PACKETS)) {
