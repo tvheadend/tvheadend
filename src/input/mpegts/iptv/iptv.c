@@ -185,7 +185,7 @@ iptv_input_is_free ( mpegts_input_t *mi, mpegts_mux_t *mm,
 
   /* Limit reached */
   w = h;
-  if (conf->warm) w += l;
+  if (conf->weight || conf->warm) w += l;
   if (in->in_max_streams && w >= in->in_max_streams)
     if (rmmi->mmi_mux != mm)
       return rmmi;
