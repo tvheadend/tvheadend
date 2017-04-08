@@ -404,12 +404,12 @@ tcp_socket_dead(int fd)
  *
  */
 char *
-tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen)
+tcp_get_str_from_ip(const struct sockaddr_storage *sa, char *dst, size_t maxlen)
 {
   if (sa == NULL || dst == NULL)
     return NULL;
 
-  switch(sa->sa_family)
+  switch(sa->ss_family)
   {
     case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), dst, maxlen);
@@ -428,18 +428,18 @@ tcp_get_str_from_ip(const struct sockaddr *sa, char *dst, size_t maxlen)
 /**
  *
  */
-struct sockaddr *
-tcp_get_ip_from_str(const char *src, struct sockaddr *sa)
+struct sockaddr_storage *
+tcp_get_ip_from_str(const char *src, struct sockaddr_storage *sa)
 {
   if (sa == NULL || src == NULL)
     return NULL;
 
   if (strstr(src, ":")) {
-    sa->sa_family = AF_INET6;
+    sa->ss_family = AF_INET6;
     if (inet_pton(AF_INET6, src, &(((struct sockaddr_in6*)sa)->sin6_addr)) != 1)
       return NULL;
   } else if (strstr(src, ".")) {
-    sa->sa_family = AF_INET;
+    sa->ss_family = AF_INET;
     if (inet_pton(AF_INET, src, &(((struct sockaddr_in*)sa)->sin_addr)) != 1)
       return NULL;
   } else {
@@ -830,7 +830,7 @@ void *tcp_server_create
   ts->ops    = *ops;
   ts->opaque = opaque;
 
-  tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
+  tcp_get_str_from_ip(&bound, buf, sizeof(buf));
   tvhinfo(subsystem, "Starting %s server %s:%d", name, buf, htons(IP_PORT(bound)));
 
   return ts;
@@ -867,7 +867,7 @@ tcp_server_create
     fd = SD_LISTEN_FDS_START + i;
     memset(&bound, 0, sizeof(bound));
     s_len = sizeof(bound);
-    if (getsockname(fd, (struct sockaddr *) &bound, &s_len) != 0) {
+    if (getsockname(fd, &bound, &s_len) != 0) {
       tvherror(LS_TCP, "getsockname failed: %s", strerror(errno));
       continue;
     }
@@ -896,7 +896,7 @@ tcp_server_create
     ts->bound  = bound;
     ts->ops    = *ops;
     ts->opaque = opaque;
-    tcp_get_str_from_ip((const struct sockaddr *)&bound, buf, sizeof(buf));
+    tcp_get_str_from_ip(&bound, buf, sizeof(buf));
     tvhinfo(subsystem, "Starting %s server %s:%d (systemd)", name, buf, htons(IP_PORT(bound)));
   } else {
     /* no systemd-managed socket found, create a new one */
@@ -1074,7 +1074,7 @@ tcp_server_connections ( void )
     if (!tsl->status) continue;
     c++;
     e = htsmsg_create_map();
-    tcp_get_str_from_ip((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
+    tcp_get_str_from_ip(&tsl->peer, buf, sizeof(buf));
     htsmsg_add_u32(e, "id", tsl->id);
     htsmsg_add_str(e, "peer", buf);
     htsmsg_add_s64(e, "started", tsl->started);

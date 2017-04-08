@@ -66,7 +66,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
   int weight;
   profile_t *pro;
   profile_chain_t *prch;
-  struct sockaddr sa;
+  struct sockaddr_storage sa;
   access_t *aa;
   uint32_t rec_count, net_count;
   int c1, c2;

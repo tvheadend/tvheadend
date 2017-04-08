@@ -811,7 +811,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       char buf[50];
       addrlen = sizeof(addr);
       getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
-      tcp_get_str_from_ip((struct sockaddr*)&addr, buf, 50);
+      tcp_get_str_from_ip(&addr, buf, 50);
       snprintf(url, sizeof(url), "http://%s%s%s:%d%s/%s",
                     (addr.ss_family == AF_INET6)?"[":"",
                     buf,
@@ -2978,7 +2978,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
 
     vs.digest = digest;
     vs.challenge = htsp->htsp_challenge;
-    rights = access_get((struct sockaddr *)htsp->htsp_peer, username,
+    rights = access_get(htsp->htsp_peer, username,
                         htsp_verify_callback, &vs);
 
     if (rights->aa_rights == 0) {
@@ -3098,8 +3098,7 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   pthread_mutex_lock(&global_lock);
 
-  htsp->htsp_granted_access = 
-    access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
+  htsp->htsp_granted_access = access_get_by_addr(htsp->htsp_peer);
   htsp->htsp_granted_access->aa_rights |= ACCESS_HTSP_INTERFACE;
 
   tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
@@ -3266,7 +3265,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   if (config.dscp >= 0)
     socket_set_dscp(fd, config.dscp, NULL, 0);
 
-  tcp_get_str_from_ip((struct sockaddr*)source, buf, 50);
+  tcp_get_str_from_ip(source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
   *opaque = &htsp;

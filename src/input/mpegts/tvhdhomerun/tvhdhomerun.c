@@ -86,7 +86,7 @@ tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
 {
   tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)in;
   char ip[64];
-  tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, ip, sizeof(ip));
+  tcp_get_str_from_ip(&hd->hd_info.ip_address, ip, sizeof(ip));
   snprintf(prop_sbuf, PROP_SBUF_LEN,
            "%s - %s", hd->hd_info.friendlyname, ip);
   return prop_sbuf;
@@ -154,7 +154,7 @@ static const void *
 tvhdhomerun_device_class_get_ip_address ( void *obj )
 {
   tvhdhomerun_device_t *hd = obj;
-  tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, prop_sbuf, PROP_SBUF_LEN);
+  tcp_get_str_from_ip(&hd->hd_info.ip_address, prop_sbuf, PROP_SBUF_LEN);
   return &prop_sbuf_ptr;
 }
 
@@ -385,12 +385,10 @@ tvhdhomerun_device_discovery_thread( void *aux )
               ((struct sockaddr_in *)&detected_dev_addr)->sin_addr.s_addr = htonl(cDev->ip_addr);
 
               char existing_ip[64];
-              tcp_get_str_from_ip((struct sockaddr *)&existing->hd_info.ip_address,
-                     existing_ip, sizeof(existing_ip));
+              tcp_get_str_from_ip(&existing->hd_info.ip_address, existing_ip, sizeof(existing_ip));
 
               char detected_ip[64];
-              tcp_get_str_from_ip((struct sockaddr *)&detected_dev_addr, detected_ip,
-                     sizeof(detected_ip));
+              tcp_get_str_from_ip(&detected_dev_addr, detected_ip, sizeof(detected_ip));
 
               tvhinfo(LS_TVHDHOMERUN,"HDHomerun device %08x switched IPs from %s to %s, updating",
                      cDev->device_id, existing_ip, detected_ip);

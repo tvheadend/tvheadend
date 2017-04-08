@@ -863,7 +863,7 @@ http_access_verify(http_connection_t *hc, int mask)
       hc->hc_access = NULL;
       return -1;
     }
-    hc->hc_access = access_get((struct sockaddr *)hc->hc_peer, hc->hc_username,
+    hc->hc_access = access_get(hc->hc_peer, hc->hc_username,
                                http_verify_callback, &v);
     http_verify_free(&v);
     if (hc->hc_access)
@@ -899,7 +899,7 @@ http_access_verify_channel(http_connection_t *hc, int mask,
       hc->hc_access = NULL;
       return -1;
     }
-    hc->hc_access = access_get((struct sockaddr *)hc->hc_peer, hc->hc_username,
+    hc->hc_access = access_get(hc->hc_peer, hc->hc_username,
                                http_verify_callback, &v);
     http_verify_free(&v);
     if (hc->hc_access) {
@@ -1105,9 +1105,9 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
 
   v = (config.proxy) ? http_arg_get(&hc->hc_args, "X-Forwarded-For") : NULL;
   if (v)
-    tcp_get_ip_from_str(v, (struct sockaddr*)hc->hc_peer);
+    tcp_get_ip_from_str(v, hc->hc_peer);
 
-  tcp_get_str_from_ip((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+  tcp_get_str_from_ip(hc->hc_peer, authbuf, sizeof(authbuf));
 
   hc->hc_peer_ipstr = tvh_strdupa(authbuf);
   hc->hc_representative = hc->hc_peer_ipstr;

@@ -359,7 +359,7 @@ satip_rtp_thread(void *aux)
   int alive = 1, fatal = 0, r;
   int tcp = rtp->port == RTSP_TCP_DATA;
 
-  tcp_get_str_from_ip((struct sockaddr *)&rtp->peer, peername, sizeof(peername));
+  tcp_get_str_from_ip(&rtp->peer, peername, sizeof(peername));
   tvhdebug(LS_SATIPS, "RTP streaming to %s:%d open", peername,
            tcp ? IP_PORT(rtp->peer) : rtp->port);
 
@@ -883,7 +883,7 @@ satip_rtcp_thread(void *aux)
       if (len <= 0) continue;
       if (tvhtrace_enabled()) {
         msg[len] = '\0';
-        tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
+        tcp_get_str_from_ip(&rtp->peer2, addrbuf, sizeof(addrbuf));
         tvhtrace(LS_SATIPS, "RTCP send to %s:%d : %s", addrbuf, ntohs(IP_PORT(rtp->peer2)), msg + 16);
       }
       if (rtp->port == RTSP_TCP_DATA) {
@@ -897,7 +897,7 @@ satip_rtcp_thread(void *aux)
       }
       if (r < 0) {
         err = errno;
-        tcp_get_str_from_ip((struct sockaddr*)&rtp->peer2, addrbuf, sizeof(addrbuf));
+        tcp_get_str_from_ip(&rtp->peer2, addrbuf, sizeof(addrbuf));
         tvhwarn(LS_SATIPS, "RTCP send to error %s:%d : %s",
                 addrbuf, IP_PORT(rtp->peer2), strerror(err));
       }

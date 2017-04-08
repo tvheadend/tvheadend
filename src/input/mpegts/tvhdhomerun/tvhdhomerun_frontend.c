@@ -735,7 +735,7 @@ tvhdhomerun_frontend_create(tvhdhomerun_device_t *hd, struct hdhomerun_discover_
        strstr(hfe->mi_name, " #"))) {
     char lname[256];
     char ip[64];
-    tcp_get_str_from_ip((struct sockaddr *)&hd->hd_info.ip_address, ip, sizeof(ip));
+    tcp_get_str_from_ip(&hd->hd_info.ip_address, ip, sizeof(ip));
     snprintf(lname, sizeof(lname), "HDHomeRun %s Tuner #%i (%s)",
              dvb_type2str(type), hfe->hf_tunerNumber, ip);
     free(hfe->mi_name);

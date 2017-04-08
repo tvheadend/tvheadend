@@ -367,7 +367,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
     return;
 
   if (tvhtrace_enabled()) {
-    tcp_get_str_from_ip((struct sockaddr *)dst, buf, sizeof(buf));
+    tcp_get_str_from_ip(dst, buf, sizeof(buf));
     tvhtrace(LS_SATIPS, "sending discover reply to %s:%d%s%s",
              buf, ntohs(IP_PORT(*dst)), deviceid ? " device: " : "", deviceid ?: "");
   }
@@ -472,7 +472,7 @@ satips_upnp_discovery_received
     return;
 
   if (tvhtrace_enabled()) {
-    tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
+    tcp_get_str_from_ip(storage, buf2, sizeof(buf2));
     tvhtrace(LS_SATIPS, "received %s M-SEARCH from %s:%d",
              conn->multicast ? "multicast" : "unicast",
              buf2, ntohs(IP_PORT(*storage)));
@@ -484,7 +484,7 @@ satips_upnp_discovery_received
       satip_server_deviceid += 1;
       if (satip_server_deviceid >= 254)
         satip_server_deviceid = 1;
-      tcp_get_str_from_ip((struct sockaddr *)storage, buf2, sizeof(buf2));
+      tcp_get_str_from_ip(storage, buf2, sizeof(buf2));
       tvhwarn(LS_SATIPS, "received duplicate SAT>IP DeviceID %s from %s:%d, using %d",
               deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
       satips_upnp_send_discover_reply(storage, deviceid, 0);
@@ -777,7 +777,7 @@ static void satip_server_init_common(const char *prefix, int announce)
       tvherror(LS_SATIPS, "Unable to determine the HTTP/RTSP address");
       return;
     }
-    tcp_get_str_from_ip((const struct sockaddr *)&http, http_ip, sizeof(http_ip));
+    tcp_get_str_from_ip(&http, http_ip, sizeof(http_ip));
     http_server_ip = strdup(satip_server_bindaddr ?: http_ip);
     http_server_port = ntohs(IP_PORT(http));
   }
