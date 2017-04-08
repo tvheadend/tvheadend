@@ -2551,7 +2551,7 @@ static void dvb_time_update(const uint8_t *ptr, const char *srcname)
 {
   static int64_t dvb_last_update = 0;
   time_t t;
-  if (dvb_last_update + sec2mono(1800) < mclk()) {
+  if (dvb_last_update == 0 || dvb_last_update + sec2mono(1800) < mclk()) {
     t = dvb_convert_date(ptr, 0);
     if (t > 0) {
       tvhtime_update(t, srcname);
