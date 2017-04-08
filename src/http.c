@@ -516,8 +516,7 @@ http_access_verify(http_connection_t *hc, int mask)
   http_access_verify_ticket(hc);
 
   if (hc->hc_access == NULL) {
-    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                               (struct sockaddr *)hc->hc_peer);
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password, hc->hc_peer);
     if (hc->hc_access == NULL)
       return -1;
   }
@@ -540,8 +539,7 @@ http_access_verify_channel(http_connection_t *hc, int mask,
     http_access_verify_ticket(hc);
 
   if (hc->hc_access == NULL) {
-    hc->hc_access = access_get(hc->hc_username, hc->hc_password,
-                               (struct sockaddr *)hc->hc_peer);
+    hc->hc_access = access_get(hc->hc_username, hc->hc_password, hc->hc_peer);
     if (hc->hc_access == NULL)
       return -1;
   }
@@ -734,7 +732,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   char authbuf[150];
 
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
-  tcp_get_ip_str((struct sockaddr*)hc->hc_peer, authbuf, sizeof(authbuf));
+  tcp_get_ip_str(hc->hc_peer, authbuf, sizeof(authbuf));
   hc->hc_peer_ipstr = tvh_strdupa(authbuf);
   hc->hc_representative = hc->hc_peer_ipstr;
   hc->hc_username = NULL;

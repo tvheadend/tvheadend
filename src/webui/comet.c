@@ -166,7 +166,7 @@ comet_serverIpPort(http_connection_t *hc, comet_mailbox_t *cmb)
   char buf[50];
   uint32_t port;
 
-  tcp_get_ip_str((struct sockaddr*)hc->hc_self, buf, 50);
+  tcp_get_ip_str(hc->hc_self, buf, 50);
 
   if(hc->hc_self->ss_family == AF_INET)
     port = ((struct sockaddr_in*)hc->hc_self)->sin_port;

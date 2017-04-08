@@ -161,7 +161,7 @@ access_t *access_copy(access_t *src);
  * Return 0 if access is granted, -1 otherwise
  */
 int access_verify(const char *username, const char *password,
-		  struct sockaddr *src, uint32_t mask);
+		  struct sockaddr_storage *src, uint32_t mask);
 
 static inline int access_verify2(access_t *a, uint32_t mask)
   { return (mask & ACCESS_OR) ?
@@ -174,20 +174,20 @@ int access_verify_list(htsmsg_t *list, const char *item);
  * Get the access structure
  */
 access_t *access_get(const char *username, const char *password,
-                     struct sockaddr *src);
+                     struct sockaddr_storage *src);
 
 /**
  *
  */
 access_t *
 access_get_hashed(const char *username, const uint8_t digest[20],
-		  const uint8_t *challenge, struct sockaddr *src);
+		  const uint8_t *challenge, struct sockaddr_storage *src);
 
 /**
  *
  */
 access_t *
-access_get_by_addr(struct sockaddr *src);
+access_get_by_addr(struct sockaddr_storage *src);
 
 /**
  *

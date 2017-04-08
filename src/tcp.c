@@ -355,12 +355,12 @@ tcp_read_timeout(int fd, void *buf, size_t len, int timeout)
  *
  */
 char *
-tcp_get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen)
+tcp_get_ip_str(const struct sockaddr_storage *sa, char *s, size_t maxlen)
 {
   if(sa == NULL || s == NULL)
     return NULL;
 
-  switch(sa->sa_family)
+  switch(sa->ss_family)
   {
     case AF_INET:
       inet_ntop(AF_INET, &(((struct sockaddr_in*)sa)->sin_addr), s, maxlen);
@@ -857,7 +857,7 @@ tcp_server_connections ( void )
     if (!tsl->status) continue;
     c++;
     e = htsmsg_create_map();
-    tcp_get_ip_str((struct sockaddr*)&tsl->peer, buf, sizeof(buf));
+    tcp_get_ip_str(&tsl->peer, buf, sizeof(buf));
     htsmsg_add_u32(e, "id", tsl->id);
     htsmsg_add_str(e, "peer", buf);
     htsmsg_add_s64(e, "started", tsl->started);

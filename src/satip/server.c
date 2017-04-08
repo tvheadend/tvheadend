@@ -348,7 +348,7 @@ CONFIGID.UPNP.ORG: 0\r\n"
     return;
 
 #if ENABLE_TRACE
-  tcp_get_ip_str((struct sockaddr *)dst, buf, sizeof(buf));
+  tcp_get_ip_str(dst, buf, sizeof(buf));
   tvhtrace("satips", "sending discover reply to %s:%d%s%s",
            buf, IP_PORT(*dst), deviceid ? " device: " : "", deviceid ?: "");
 #endif
@@ -453,7 +453,7 @@ satips_upnp_discovery_received
     return;
 
 #if ENABLE_TRACE
-  tcp_get_ip_str((struct sockaddr *)storage, buf2, sizeof(buf2));
+  tcp_get_ip_str(storage, buf2, sizeof(buf2));
   tvhtrace("satips", "received %s M-SEARCH from %s:%d",
            conn->multicast ? "multicast" : "unicast",
            buf2, ntohs(IP_PORT(*storage)));
@@ -465,7 +465,7 @@ satips_upnp_discovery_received
       satip_server_deviceid += 1;
       if (satip_server_deviceid >= 254)
         satip_server_deviceid = 1;
-      tcp_get_ip_str((struct sockaddr *)storage, buf2, sizeof(buf2));
+      tcp_get_ip_str(storage, buf2, sizeof(buf2));
       tvhwarn("satips", "received duplicate SAT>IP DeviceID %s from %s:%d, using %d",
               deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
       satips_upnp_send_discover_reply(storage, deviceid);
@@ -571,7 +571,7 @@ void satip_server_init(int rtsp_port)
     tvherror("satips", "Unable to determine the HTTP/RTSP address");
     return;
   }
-  tcp_get_ip_str((const struct sockaddr *)&http, http_ip, sizeof(http_ip));
+  tcp_get_ip_str(&http, http_ip, sizeof(http_ip));
   http_server_ip = strdup(http_ip);
   http_server_port = ntohs(IP_PORT(http));
 

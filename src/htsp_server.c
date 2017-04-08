@@ -578,7 +578,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       char buf[50];
       addrlen = sizeof(addr);
       getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
-      tcp_get_ip_str((struct sockaddr*)&addr, buf, 50);
+      tcp_get_ip_str(&addr, buf, 50);
       snprintf(url, sizeof(url), "http://%s%s%s:%d%s/%s",
                     (addr.ss_family == AF_INET6)?"[":"",
                     buf,
@@ -2542,8 +2542,7 @@ htsp_authenticate(htsp_connection_t *htsp, htsmsg_t *m)
   if(htsmsg_get_bin(m, "digest", &digest, &digestlen))
     return 0;
 
-  rights = access_get_hashed(username, digest, htsp->htsp_challenge,
-			     (struct sockaddr *)htsp->htsp_peer);
+  rights = access_get_hashed(username, digest, htsp->htsp_challenge, htsp->htsp_peer);
 
   privgain = (rights->aa_rights |
               htsp->htsp_granted_access->aa_rights) !=
@@ -2630,8 +2629,7 @@ htsp_read_loop(htsp_connection_t *htsp)
 
   pthread_mutex_lock(&global_lock);
 
-  htsp->htsp_granted_access = 
-    access_get_by_addr((struct sockaddr *)htsp->htsp_peer);
+  htsp->htsp_granted_access = access_get_by_addr(htsp->htsp_peer);
 
   tcp_id = tcp_connection_launch(htsp->htsp_fd, htsp_server_status,
                                  htsp->htsp_granted_access);
@@ -2793,7 +2791,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   
   // Note: global_lock held on entry
 
-  tcp_get_ip_str((struct sockaddr*)source, buf, 50);
+  tcp_get_ip_str(source, buf, 50);
 
   memset(&htsp, 0, sizeof(htsp_connection_t));
   *opaque = &htsp;

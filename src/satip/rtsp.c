@@ -1446,7 +1446,7 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
 
   memset(&aa, 0, sizeof(aa));
   strcpy(buf, "SAT>IP Client ");
-  tcp_get_ip_str((struct sockaddr *)peer, buf + strlen(buf), sizeof(buf) - strlen(buf));
+  tcp_get_ip_str(peer, buf + strlen(buf), sizeof(buf) - strlen(buf));
   aa.aa_representative = buf;
 
   tcp = tcp_connection_launch(fd, rtsp_stream_status, &aa);

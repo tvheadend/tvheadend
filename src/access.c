@@ -225,13 +225,13 @@ access_destroy(access_t *a)
  *
  */
 static int
-netmask_verify(access_entry_t *ae, struct sockaddr *src)
+netmask_verify(access_entry_t *ae, struct sockaddr_storage *src)
 {
   access_ipmask_t *ai;
   int isv4v6 = 0;
   uint32_t v4v6 = 0;
   
-  if (src->sa_family == AF_INET6) {
+  if (src->ss_family == AF_INET6) {
     struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
     uint32_t *a32 = (uint32_t*)in6->s6_addr;
     if (a32[0] == 0 && a32[1] == 0 && ntohl(a32[2]) == 0x0000FFFFu) {
@@ -242,7 +242,7 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
 
   TAILQ_FOREACH(ai, &ae->ae_ipmasks, ai_link) {
 
-    if (ai->ai_family == AF_INET && src->sa_family == AF_INET) {
+    if (ai->ai_family == AF_INET && src->ss_family == AF_INET) {
 
       struct sockaddr_in *in4 = (struct sockaddr_in *)src;
       uint32_t b = ntohl(in4->sin_addr.s_addr);
@@ -258,7 +258,7 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
 
       continue;
 
-    } else if (ai->ai_family == AF_INET6 && src->sa_family == AF_INET6) {
+    } else if (ai->ai_family == AF_INET6 && src->ss_family == AF_INET6) {
 
       struct in6_addr *in6 = &(((struct sockaddr_in6 *)src)->sin6_addr);
       uint8_t *a8 = (uint8_t*)in6->s6_addr;
@@ -294,7 +294,7 @@ netmask_verify(access_entry_t *ae, struct sockaddr *src)
  */
 int
 access_verify(const char *username, const char *password,
-	      struct sockaddr *src, uint32_t mask)
+	      struct sockaddr_storage *src, uint32_t mask)
 {
   uint32_t bits = 0;
   access_entry_t *ae;
@@ -476,7 +476,7 @@ access_update(access_t *a, access_entry_t *ae)
  *
  */
 access_t *
-access_get(const char *username, const char *password, struct sockaddr *src)
+access_get(const char *username, const char *password, struct sockaddr_storage *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
@@ -486,7 +486,7 @@ access_get(const char *username, const char *password, struct sockaddr *src)
     a->aa_representative = strdup(username);
   } else {
     a->aa_representative = malloc(50);
-    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+    tcp_get_ip_str(src, a->aa_representative, 50);
   }
 
   if (access_noacl) {
@@ -543,7 +543,7 @@ access_get(const char *username, const char *password, struct sockaddr *src)
  */
 access_t *
 access_get_hashed(const char *username, const uint8_t digest[20],
-		  const uint8_t *challenge, struct sockaddr *src)
+		  const uint8_t *challenge, struct sockaddr_storage *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
@@ -555,7 +555,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
     a->aa_representative = strdup(username);
   } else {
     a->aa_representative = malloc(50);
-    tcp_get_ip_str((struct sockaddr*)src, a->aa_representative, 50);
+    tcp_get_ip_str(src, a->aa_representative, 50);
   }
 
   if(access_noacl) {
@@ -621,7 +621,7 @@ access_get_hashed(const char *username, const uint8_t digest[20],
  *
  */
 access_t *
-access_get_by_addr(struct sockaddr *src)
+access_get_by_addr(struct sockaddr_storage *src)
 {
   access_t *a = calloc(1, sizeof(*a));
   access_entry_t *ae;
