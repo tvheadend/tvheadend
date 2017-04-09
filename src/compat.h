@@ -54,6 +54,8 @@ static inline long long int llabs(long long int a)
 }
 #endif
 
+#endif /* TVH_COMPAT_H */
+
 #ifdef COMPAT_IPTOS
 
 #ifndef IPTOS_DSCP_MASK
@@ -99,4 +101,3 @@ static inline long long int llabs(long long int a)
 
 #endif /* COMPAT_IPTOS */
 
-#endif /* TVH_COMPAT_H */
