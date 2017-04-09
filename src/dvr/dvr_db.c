@@ -757,6 +757,11 @@ dvr_entry_set_timer(dvr_entry_t *de)
       }
     }
 
+    if (de->de_sched_state == DVR_RECORDING) {
+      dvr_stop_recording(de, de->de_last_error, 1, 0);
+      return;
+    }
+
     /* Files are missing and job was completed */
     if(htsmsg_is_empty(de->de_files) && !de->de_dont_reschedule)
       dvr_entry_missed_time(de, de->de_last_error);
@@ -2227,6 +2232,8 @@ static void
 dvr_entry_class_changed(idnode_t *self)
 {
   dvr_entry_t *de = (dvr_entry_t *)self;
+  if (de->de_in_unsubscribe)
+    return;
   if (dvr_entry_is_valid(de))
     dvr_entry_set_timer(de);
   htsp_dvr_entry_update(de);

@@ -160,6 +160,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   assert(de->de_s != NULL);
   assert(prch != NULL);
 
+  de->de_in_unsubscribe = 1;
+
   streaming_target_deliver(prch->prch_st, streaming_msg_create(SMT_EXIT));
 
   atomic_add(&de->de_thread_shutdown, 1);
@@ -179,6 +181,8 @@ dvr_rec_unsubscribe(dvr_entry_t *de)
   free(prch);
 
   dvr_vfs_refresh_entry(de);
+
+  de->de_in_unsubscribe = 0;
 }
 
 /**

@@ -159,6 +159,7 @@ typedef struct dvr_entry {
   idnode_t de_id;
 
   int de_refcnt;   /* Modification is protected under global_lock */
+  int de_in_unsubscribe;
 
 
   /**
