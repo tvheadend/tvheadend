@@ -1667,7 +1667,7 @@ typedef struct profile_transcode {
   char    *pro_vcodec_preset;
   char    *pro_acodec;
   char    *pro_scodec;
-  char	  *pro_src_vcodec;
+  char    *pro_src_vcodec;
 } profile_transcode_t;
 
 
