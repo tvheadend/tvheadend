@@ -240,6 +240,58 @@
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
+    },
+    "fedora24-x86_64": {
+      "buildenv": "fedora24-x86_64",
+      "builddeps": [
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "python",
+        "ccache",
+        "strace"
+      ],
+      "buildcmd": [
+        "./configure && make -C rpm build-doozer"
+      ]
+    },
+    "centos7-x86_64": {
+      "buildenv": "centos7-x86_64",
+      "builddeps": [
+        "gcc-c++",
+        "which",
+        "rpm-build",
+        "rpmdevtools",
+        "git",
+        "make",
+        "cmake",
+        "gettext-devel",
+        "dbus-devel",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "python",
+        "ccache",
+        "strace"
+      ],
+      "buildcmd": [
+        "./configure && make -C rpm build-doozer"
+      ]
     }
   }
 }
