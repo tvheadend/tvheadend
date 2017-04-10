@@ -33,7 +33,7 @@ typedef struct transcoder_prop {
   int32_t  tp_resolution;
 
   long     tp_nrprocessors;
-  char	   tp_src_vcodec[128];
+  char     tp_src_vcodec[64];
 } transcoder_props_t;
 
 extern uint32_t transcoding_enabled;

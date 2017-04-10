@@ -1912,11 +1912,11 @@ const idclass_t profile_transcode_class =
       .type     = PT_STR,
       .id       = "src_vcodec",
       .name     = N_("Source video codec"),
-      .desc     = N_("Transcode video only if source video codec mattch.  "
+      .desc     = N_("Transcode video only if source video codec mattch. "
                      "\"Any\" will ingnore source vcodec check and always do transcode. "
 		     "Separate codec names with coma. "
                      "If no codec match found - transcode with \"copy\" codec, "
-		     "if match found - transcode with parameters in this profile."),
+                     "if match found - transcode with parameters in this profile."),
       .off      = offsetof(profile_transcode_t, pro_src_vcodec),
       .def.i    = SCT_UNKNOWN,
       .list     = profile_class_src_vcodec_list,
