@@ -11,6 +11,17 @@ build()
     export JOBSARGS
     export JARGS
     export AUTOBUILD_CONFIGURE_EXTRA
+
+    if ccache=$(which ccache); then
+        echo "Using ccache"
+        ccache -s
+        USE_CCACHE="--ccache"
+    else
+        USE_CCACHE=""
+    fi
+
+    export USE_CCACHE
+
     dpkg-buildpackage -b -us -uc
 
     for a in ../tvheadend*${VER}*.deb; do
