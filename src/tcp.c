@@ -867,7 +867,7 @@ tcp_server_create
     fd = SD_LISTEN_FDS_START + i;
     memset(&bound, 0, sizeof(bound));
     s_len = sizeof(bound);
-    if (getsockname(fd, &bound, &s_len) != 0) {
+    if (getsockname(fd, (struct sockaddr *) &bound, &s_len) != 0) {
       tvherror(LS_TCP, "getsockname failed: %s", strerror(errno));
       continue;
     }
