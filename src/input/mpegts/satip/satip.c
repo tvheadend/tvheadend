@@ -844,7 +844,7 @@ satip_discovery_http_closed(http_client_t *hc, int errn)
   if ((friendlyname = htsmsg_xml_get_cdata_str(device, "friendlyName")) == NULL)
     goto finish;
   if ((manufacturer = htsmsg_xml_get_cdata_str(device, "manufacturer")) == NULL)
-    goto finish;
+    manufacturer = "";
   if ((manufacturerURL = htsmsg_xml_get_cdata_str(device, "manufacturerURL")) == NULL)
     manufacturerURL = "";
   if ((modeldesc    = htsmsg_xml_get_cdata_str(device, "modelDescription")) == NULL)
