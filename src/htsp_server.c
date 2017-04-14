@@ -236,9 +236,10 @@ typedef struct htsp_subscription {
  */
 typedef struct htsp_file {
   LIST_ENTRY(htsp_file) hf_link;
-  int hf_id;  // ID sent to client
-  int hf_fd;  // Our file descriptor
-  char *hf_path; // For logging
+  int hf_id;          // ID sent to client
+  int hf_fd;          // Our file descriptor
+  char *hf_path;      // For logging
+  uint32_t  hf_de_id; // Associated dvr entry
 } htsp_file_t;
 
 #define HTSP_DEFAULT_QUEUE_DEPTH 500000
@@ -722,15 +723,11 @@ htsp_file_open(htsp_connection_t *htsp, const char *path, int fd, dvr_entry_t *d
       return htsp_error(htsp, N_("Unable to open file"));
   }
 
-  if (de) {
-    de->de_playcount++;
-    dvr_entry_changed_notify(de);
-  }
-
   htsp_file_t *hf = calloc(1, sizeof(htsp_file_t));
   hf->hf_fd = fd;
   hf->hf_id = ++htsp->htsp_file_id;
   hf->hf_path = strdup(path);
+  hf->hf_de_id = de ? idnode_get_short_uuid(&de->de_id) : 0;
   LIST_INSERT_HEAD(&htsp->htsp_files, hf, hf_link);
 
   htsmsg_t *rep = htsmsg_create_map();
@@ -1975,8 +1972,27 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   desc        = htsmsg_get_str(in, "description");
   lang        = htsmsg_get_str(in, "language") ?: htsp->htsp_language;
 
-  if(!htsmsg_get_u32(in, "playcount", &u32))
-    playcount = u32 > INT_MAX ? INT_MAX : u32;
+  if(!htsmsg_get_u32(in, "playcount", &u32)) {
+    if (u32 > INT_MAX)
+      u32 = HTSP_DVR_PLAYCOUNT_INCR;
+    switch (u32) {
+      case HTSP_DVR_PLAYCOUNT_INCR:
+        playcount = de->de_playcount + 1;
+        break;
+      case HTSP_DVR_PLAYCOUNT_SET:
+        if (!de->de_playcount)
+          playcount = 1;
+        break;
+      case HTSP_DVR_PLAYCOUNT_RESET:
+        playcount = 0;
+        break;
+      case HTSP_DVR_PLAYCOUNT_KEEP:
+        break;
+      default:
+        playcount = u32;
+        break;
+    }
+  }
   if(!htsmsg_get_u32(in, "playposition", &u32))
     playposition = u32 > INT_MAX ? INT_MAX : u32;
 
@@ -2785,9 +2801,27 @@ static htsmsg_t *
 htsp_method_file_close(htsp_connection_t *htsp, htsmsg_t *in)
 {
   htsp_file_t *hf = htsp_file_find(htsp, in);
+  uint32_t u32;
+  dvr_entry_t *de;
 
   if(hf == NULL)
     return htsp_error(htsp, N_("Invalid file"));
+
+  if (hf->hf_de_id > 0 && (de = dvr_entry_find_by_id(hf->hf_de_id)))
+  {
+    int save = 0;
+    /* Only allow incrementing playcount on file close, the rest can be done with "updateDvrEntry" */
+    if (htsp->htsp_version < 27 || htsmsg_get_u32_or_default(in, "playcount", HTSP_DVR_PLAYCOUNT_INCR) == HTSP_DVR_PLAYCOUNT_INCR) {
+      de->de_playcount++;
+      save = 1;
+    }
+    if(htsp->htsp_version >= 27 && !htsmsg_get_u32(in, "playposition", &u32)) {
+      de->de_playposition = u32;
+      save = 1;
+    }
+    if (save)
+      dvr_entry_changed_notify(de);
+  }
 
   htsp_file_destroy(hf);
   return htsmsg_create_map();
