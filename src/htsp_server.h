@@ -22,6 +22,13 @@
 #include "epg.h"
 #include "dvr/dvr.h"
 
+typedef enum {
+  HTSP_DVR_PLAYCOUNT_RESET = 0,
+  HTSP_DVR_PLAYCOUNT_SET   = 1,
+  HTSP_DVR_PLAYCOUNT_KEEP  = INT32_MAX-1,
+  HTSP_DVR_PLAYCOUNT_INCR  = INT32_MAX
+} dvr_playcount_t;
+
 void htsp_init(const char *bindaddr);
 void htsp_register(void);
 void htsp_done(void);
