@@ -19,7 +19,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -43,7 +44,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -67,7 +69,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -91,7 +94,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -115,7 +119,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -139,7 +144,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -163,7 +169,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -187,7 +194,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -211,7 +219,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -235,7 +244,8 @@
         "python",
         "dvb-apps",
         "debhelper",
-        "ccache"
+        "ccache",
+        "curl"
       ],
       "buildcmd": [
         "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
@@ -261,7 +271,7 @@
         "uriparser-devel",
         "python",
         "ccache",
-        "strace"
+        "curl"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan && make -C rpm build-doozer"
@@ -287,7 +297,7 @@
         "uriparser-devel",
         "python",
         "ccache",
-        "strace"
+        "curl"
       ],
       "buildcmd": [
         "./configure --disable-dvbscan && make -C rpm build-doozer"
