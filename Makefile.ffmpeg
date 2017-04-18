@@ -108,7 +108,28 @@ LIB_NAME  := ffmpeg
 LIB_ROOT  := $(BUILDDIR)/$(LIB_NAME)
 EBUILDIR  := $(LIB_ROOT)/build
 EPREFIX   := $(EBUILDIR)/ffmpeg
-LIB_FILES := $(EPREFIX)
+LIB_FILES := \
+		$(LIB_ROOT)/$(YASM)/.tvh_download \
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBX264)/.tvh_download \
+		$(LIB_ROOT)/$(LIBX264)/.tvh_build \
+		$(LIB_ROOT)/$(LIBX265)/.tvh_download \
+		$(LIB_ROOT)/$(LIBX265)/.tvh_build \
+		$(LIB_ROOT)/$(LIBVPX)/.tvh_download \
+		$(LIB_ROOT)/$(LIBVPX)/.tvh_build \
+		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download \
+		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOGG)/.tvh_download \
+		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
+		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download \
+		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
+		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download \
+		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
+		$(LIB_ROOT)/$(LIBMFX)/.tvh_download \
+		$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
+		$(LIB_ROOT)/$(FFMPEG)/.tvh_download \
+		$(LIB_ROOT)/$(FFMPEG)/.tvh_build \
+		$(EPREFIX)
 
 include $(DIR)/Makefile.static
 

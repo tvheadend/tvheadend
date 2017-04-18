@@ -754,11 +754,14 @@ ${BUILDDIR}/libffmpeg_stamp: ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a
 	@touch $@
 
 ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a: Makefile.ffmpeg
+ifeq ($(CONFIG_BINTRAY_CACHE),yes)
+	$(MAKE) -f Makefile.ffmpeg libcacheget
+endif
 	$(MAKE) -f Makefile.ffmpeg
 
 # Static HDHOMERUN library
 
-ifeq ($(CONFIG_LIBHDHOMERUN_STATIC),yes)
+ifeq ($(CONFIG_HDHOMERUN_STATIC),yes)
 src/input/mpegts/tvhdhomerun/tvhdhomerun_private.h ${SRCS-HDHOMERUN}: ${BUILDDIR}/libhdhomerun_stamp
 endif
 
@@ -766,6 +769,9 @@ ${BUILDDIR}/libhdhomerun_stamp: ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.
 	@touch $@
 
 ${BUILDDIR}/hdhomerun/libhdhomerun/libhdhomerun.a: Makefile.hdhomerun
+ifeq ($(CONFIG_BINTRAY_CACHE),yes)
+	$(MAKE) -f Makefile.hdhomerun libcacheget
+endif
 	$(MAKE) -f Makefile.hdhomerun
 
 # linuxdvb git tree

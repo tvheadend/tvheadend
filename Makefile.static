@@ -44,7 +44,7 @@ MAKEFILE      ?= $(firstword $(MAKEFILE_LIST))
 # ./configure override
 BINTRAY_CACHE ?= $(CONFIG_BINTRAY_CACHE)
 
-default: liball
+default: libcacheput
 
 # Setup environment for scripts
 export ARCH
@@ -57,24 +57,23 @@ export BINTRAY_USER
 export BINTRAY_PASS
 export BINTRAY_REPO
 
+LIB_STATIC_STAMP := $(BUILDDIR)/$(LIB_NAME)_static_stamp
+
 # Download cache
 .PHONY: libcacheget
 libcacheget:
 ifeq ($(BINTRAY_CACHE),yes)
 	@( $(ROOTDIR)/support/lib.sh download $(LIB_NAME) &&\
 	 $(ROOTDIR)/support/lib.sh unpack $(LIB_NAME) ) || true
+	@touch $(BUILDDIR)/$(LIB_NAME)_static_stamp
 endif
 
-# Upload
+# Download and Upload on demand
 .PHONY: libcacheput
 libcacheput: build
 ifneq ($(BINTRAY_USER),)
 	@$(ROOTDIR)/support/lib.sh upload $(LIB_NAME) $(LIB_FILES)
 endif
-
-# Do it all
-.PHONY: liball
-liball: libcacheget libcacheput
 
 # ############################################################################
 # Helper routines

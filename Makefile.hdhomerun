@@ -44,10 +44,10 @@ LIBHDHR_SHA1    = 24ce6003b1e815ec4c642d180b621c1d524ca1cf
 LIB_NAME       := hdhomerun
 LIB_ROOT       := $(BUILDDIR)/$(LIB_NAME)
 LIB_FILES      := \
-	$(LIB_ROOT)/$(LIBHDHR)/.tvh_download\
-	$(LIB_ROOT)/$(LIBHDHR)/.tvh_build\
-	$(LIB_ROOT)/libhdhomerun/libhdhomerun.a\
-	$(LIB_ROOT)/libhdhomerun/*.h
+			$(LIB_ROOT)/$(LIBHDHR)/.tvh_download \
+			$(LIB_ROOT)/$(LIBHDHR)/.tvh_build \
+			$(LIB_ROOT)/libhdhomerun/libhdhomerun.a \
+			$(LIB_ROOT)/libhdhomerun/*.h
 
 include $(DIR)/Makefile.static
 

@@ -38,15 +38,23 @@
 [ -z "$BINTRAY_REPO" ] && BINTRAY_REPO=tvheadend/misc
 [ -z "$ARCH"         ] && ARCH=$(uname -m)
 if [ -z "$CODENAME" ]; then
-  if [ -f /etc/lsb-release ]; then
+  CODENAME=$(lsb_release -irs 2> /dev/null)
+  if [ -z "$CODENAME" -a -f /etc/lsb-release ]; then
     . /etc/lsb-release
     CODENAME=${DISTRIB_CODENAME}
   fi
-  # TODO: support more than debian
+  if [ -z "$CODENAME" -a -f /etc/redhat-release ]; then
+    CODENAME=$(cat /etc/redhat-release | \
+               cut -d '(' -f 1 | sed -e 's/Red Hat Enterprise Linux/rhel/g' -e 's/ release / /g' -e 's/ Linux / /g')
+  fi
+  if [ -z "$CODENAME" ]; then
+    CODENAME="unknown"
+  fi
 fi
+CODENAME=$(echo "$CODENAME" | tr '\n' ' ' | sed -e 's/[[:blank:]]*$//g' -e 's: :%20:g')
 
-# Convert x86_64 (ensure uniformity)
-[ "${ARCH}" = "x86_64" ] && ARCH=amd64
+# Convert amd64 to x86_64 (ensure uniformity)
+[ "${ARCH}" = "amd64" ] && ARCH=x86_64
 
 # ############################################################################
 # Config
@@ -102,7 +110,7 @@ function download
   fi
 
   # Move tmp file
-  mv ${P}.tmp ${P}
+  mv ${P}.tmp ${P} || return 1
 
   return ${R}
 }
@@ -127,12 +135,12 @@ function unpack
   fi
 
   # Cleanup
-  rm -rf ${BUILDDIR}/${LIB_NAME}
-  mkdir -p ${BUILDDIR}/${LIB_NAME}
+  rm -rf ${BUILDDIR}/${LIB_NAME} || return 1
+  mkdir -p ${BUILDDIR}/${LIB_NAME} || return 1
   
   # Unpack
   echo "UNPACK          ${P}"
-  tar -C ${BUILDDIR}/${LIB_NAME} -xf ${P}
+  tar -C ${BUILDDIR}/${LIB_NAME} -xf ${P} || return 1
 
   # Record
   echo ${LIB_HASH} > ${U}
@@ -159,16 +167,23 @@ function upload
 
   # Build temporary file
   echo "PACK            ${P} [${LIB_FILES}]"
-  tar -C ${BUILDDIR}/${LIB_NAME} -zcf ${P}.tmp ${LIB_FILES}
+  tar -C ${BUILDDIR}/${LIB_NAME} -zcf ${P}.tmp ${LIB_FILES} || return 1
 
   # Upload
   N=staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz
   URL="https://api.bintray.com/content/${BINTRAY_REPO}/staticlib/${LIB_NAME}-${LIB_HASH}/${N};publish=1"
   echo "UPLOAD          ${URL}"
-  curl -s -T ${P}.tmp -u${BINTRAY_USER}:${BINTRAY_PASS} "${URL}" || return 1
+  curl -s -T ${P}.tmp -u${BINTRAY_USER}:${BINTRAY_PASS} "${URL}"
+  R=$?
+  if [ ${R} -ne 0 ]; then
+    echo "  UPLOAD FAILED! RETRYING..."
+    sleep 10
+    curl -s -T ${P}.tmp -u${BINTRAY_USER}:${BINTRAY_PASS} "${URL}" || return 1
+  fi
+  echo
 
   # Done
-  mv ${P}.tmp ${P}
+  mv ${P}.tmp ${P} || return 1
 }
 
 # Run command
