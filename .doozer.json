@@ -22,7 +22,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "precise-i386": {
@@ -46,7 +46,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "trusty-amd64": {
@@ -70,7 +70,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "trusty-i386": {
@@ -94,7 +94,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "xenial-amd64": {
@@ -118,7 +118,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "xenial-i386": {
@@ -142,7 +142,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "jessie-i386": {
@@ -166,7 +166,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "jessie-amd64": {
@@ -190,7 +190,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "xenial-armhf": {
@@ -214,7 +214,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "xenial-arm64": {
@@ -238,7 +238,7 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--disable-bintray_cache\\ --enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
       ]
     },
     "fedora24-x86_64": {
@@ -264,7 +264,7 @@
         "strace"
       ],
       "buildcmd": [
-        "./configure && make -C rpm build-doozer"
+        "./configure --disable-dvbscan && make -C rpm build-doozer"
       ]
     },
     "centos7-x86_64": {
@@ -290,7 +290,7 @@
         "strace"
       ],
       "buildcmd": [
-        "./configure && make -C rpm build-doozer"
+        "./configure --disable-dvbscan && make -C rpm build-doozer"
       ]
     }
   }
