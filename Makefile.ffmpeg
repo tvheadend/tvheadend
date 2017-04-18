@@ -106,6 +106,9 @@ FFMPEG_SHA1    = bfdd9bc3bb9808f1c31e5eede37c932ea9785812
 
 LIB_NAME  := ffmpeg
 LIB_ROOT  := $(BUILDDIR)/$(LIB_NAME)
+EBUILDIR  := $(LIB_ROOT)/build
+EPREFIX   := $(EBUILDIR)/ffmpeg
+LIB_FILES := $(EPREFIX)
 
 include $(DIR)/Makefile.static
 
@@ -125,8 +128,6 @@ else
 CFLAGS_PI = -fPIC
 endif
 
-EBUILDIR  := $(LIB_ROOT)/build
-EPREFIX   := $(EBUILDIR)/ffmpeg
 ECFLAGS   := -I$(EPREFIX)/include $(CFLAGS_PI)
 ELIBS     := -L$(EPREFIX)/lib -ldl
 
