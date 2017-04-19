@@ -171,16 +171,9 @@ function upload
 
   # Upload
   N=staticlib/${CODENAME}/${ARCH}/${LIB_NAME}-${LIB_HASH}.tgz
-  URL="https://api.bintray.com/content/${BINTRAY_REPO}/staticlib/${LIB_NAME}-${LIB_HASH}/${N};publish=1"
-  echo "UPLOAD          ${URL}"
-  curl -s -T ${P}.tmp -u${BINTRAY_USER}:${BINTRAY_PASS} "${URL}"
-  R=$?
-  if [ ${R} -ne 0 ]; then
-    echo "  UPLOAD FAILED! RETRYING..."
-    sleep 10
-    curl -s -T ${P}.tmp -u${BINTRAY_USER}:${BINTRAY_PASS} "${URL}" || return 1
-  fi
-  echo
+  BPATH="/content/${BINTRAY_REPO}/staticlib/${LIB_NAME}-${LIB_HASH}/${N};publish=1"
+  echo "UPLOAD          ${BPATH}"
+  ${ROOTDIR}/support/bintray.py upload ${BPATH} ${P}.tmp || return 1
 
   # Done
   mv ${P}.tmp ${P} || return 1
