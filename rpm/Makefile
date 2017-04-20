@@ -54,12 +54,12 @@ srpm: ~/rpmbuild/SOURCES tvheadend.spec
 .PHONY: build
 build: ~/rpmbuild/SOURCES tvheadend.spec
 	spectool --get-files --sourcedir tvheadend.spec
-	rpmbuild -ba tvheadend.spec
+	rpmbuild --build-root=/project/repo/rpmbuild -ba tvheadend.spec
 
 .PHONY: build-doozer
 build-doozer: build
-	@for a in /project//rpmbuild/RPMS/$$(uname -m)/tvheadend-$(VERSION)-$(RELEASE)*.rpm \
-	          /project//rpmbuild/RPMS/$$(uname -m)/tvheadend-debuginfo-$(VERSION)-$(RELEASE)*.rpm; do \
+	@for a in /project//repo/rpmbuild/RPMS/$$(uname -m)/tvheadend-$(VERSION)-$(RELEASE)*.rpm \
+	          /project//repo/rpmbuild/RPMS/$$(uname -m)/tvheadend-debuginfo-$(VERSION)-$(RELEASE)*.rpm; do \
 		name=$$(basename $$a); \
 		echo "doozer-versioned-artifact:$$a:rpm:application/x-rpm:$$name"; \
 	 done
