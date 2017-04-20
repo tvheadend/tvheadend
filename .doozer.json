@@ -22,7 +22,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "precise-i386": {
@@ -46,7 +47,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --disable-libx265_static\\ --disable-libx265\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "trusty-amd64": {
@@ -70,7 +72,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "trusty-i386": {
@@ -94,7 +97,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "xenial-amd64": {
@@ -118,7 +122,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "xenial-i386": {
@@ -141,7 +146,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "jessie-i386": {
@@ -165,7 +171,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "jessie-amd64": {
@@ -189,7 +196,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-ffmpeg_static\\ --enable-hdhomerun_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "xenial-armhf": {
@@ -213,7 +221,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "xenial-arm64": {
@@ -237,7 +246,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+        "AUTOBUILD_CONFIGURE_EXTRA=--enable-ccache\\ --enable-hdhomerun_static\\ --disable-ffmpeg_static ./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "fedora24-x86_64": {
@@ -262,7 +272,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer"
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
       ]
     },
     "centos7-x86_64": {
@@ -287,7 +298,8 @@
         "ccache"
       ],
       "buildcmd": [
-        "./configure --disable-dvbscan && make -C rpm build-doozer"
+        "./configure --disable-dvbscan && make -C rpm build-doozer",
+        "support/bintray.py publish filelist.txt"
       ]
     }
   }

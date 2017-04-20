@@ -15,6 +15,7 @@ JOBSARGS=""
 TARGET="debian"
 RELEASE="--release"
 WORKINGDIR="/var/tmp/showtime-autobuild"
+FILELIST="$PWD/filelist.txt"
 OP="build"
 while getopts "vht:e:j:w:o:c:" OPTION
 do
@@ -59,10 +60,12 @@ fi
 #
 artifact() {
     echo "doozer-artifact:$PWD/$1:$2:$3:$4"
+    echo "$PWD/$1" >> "$FILELIST"
 }
 
 versioned_artifact() {
     echo "doozer-versioned-artifact:$PWD/$1:$2:$3:$4"
+    echo "$PWD/$1" >> "$FILELIST"
 }
 
 if [ -f Autobuild/${TARGET}.sh ]; then
