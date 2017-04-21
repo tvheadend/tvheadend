@@ -88,7 +88,7 @@ def info(msg, *args):
 def do_upload(*args):
     if len(args) < 2: error(1, 'upload [url] [file]')
     bpath, file = args[0], args[1]
-    data = open(file, "br").read()
+    data = open(file, 'rb').read()
     resp = Bintray(bpath).put(data, binary=1)
     if resp.code != 200 and resp.code != 201:
         error(10, 'HTTP ERROR "%s" %s %s' % (resp.url, resp.code, resp.reason))
