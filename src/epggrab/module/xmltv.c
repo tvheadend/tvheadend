@@ -667,7 +667,7 @@ static int _xmltv_parse_channel
           }
         }
       }
-      if (*name)
+      if (name && *name)
         htsmsg_add_str_exclusive(dnames, name);
     }
     else if (strcmp(f->hmf_name, "icon") == 0) {
