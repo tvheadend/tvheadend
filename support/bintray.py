@@ -113,8 +113,8 @@ def get_component(version):
     major, minor, rest = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
         if rest.find('~') > 0:
-            return 'stable'
-        return 'release'
+            return 'stable-%d.%d' % (major, minor)
+        return 'release-%d.%d' % (major, minor)
     return 'unstable'
 
 def get_repo(filename, hint=None):
