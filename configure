@@ -252,6 +252,9 @@ int test(void)
 }
 '
 
+# a check for the external iconv library
+# for build-in libc iconv routines this check should fail
+# note that iconv routines are mandatory
 check_cc_snippet libiconv '
 #include <iconv.h>
 int test(void)
