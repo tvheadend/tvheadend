@@ -106,9 +106,11 @@ def get_ver(version):
       rest = ''
     return (major, minor, rest, git)
 
-def get_path(version):
+def get_path(version, repo):
     major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
+        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') > 0:
+            return '%s.%s-release' % (major, minor)
         return '%s.%s' % (major, minor)
     return 't'
 
@@ -147,7 +149,7 @@ def get_bintray_params(filename, hint=None):
         debname, debversion = debbase.split('_', 1)
         debversion, debdistro = debversion.rsplit('~', 1)
         args.version = debversion
-        args.path = 'pool/' + get_path(debversion) + '/' + args.package
+        args.path = 'pool/' + get_path(debversion, args.repo) + '/' + args.package
         extra.append('deb_component=' + get_component(debversion))
         extra.append('deb_distribution=' + debdistro)
         extra.append('deb_architecture=' + debarch)
@@ -161,7 +163,7 @@ def get_bintray_params(filename, hint=None):
         rpmversion, rpmdist = rpmver2.split('.', 1)
         rpmversion = rpmver1 + '-' + rpmversion
         args.version = rpmversion
-        args.path = 'linux/' + get_path(rpmversion) + \
+        args.path = 'linux/' + get_path(rpmversion, args.repo) + \
                     '/' + rpmdist + '/' + rpmarch
     extra = ';'.join(extra)
     if extra: extra = ';' + extra
