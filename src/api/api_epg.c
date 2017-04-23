@@ -165,6 +165,22 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
     /* Image */
     if (ee->image)
       htsmsg_add_str(m, "image", ee->image);
+      
+    /* Cast */
+    if (ee->cast)
+      htsmsg_add_str(m, "cast", ee->cast);
+      
+    /* Director */
+    if (ee->director)
+      htsmsg_add_str(m, "director", ee->director);
+      
+    /* Writer */
+    if (ee->writer)
+      htsmsg_add_str(m, "writer", ee->writer);
+      
+     /* Year */
+    if (ee->year)
+      htsmsg_add_u32(m, "year", ee->year);
 
     /* Rating */
     if (ee->star_rating)

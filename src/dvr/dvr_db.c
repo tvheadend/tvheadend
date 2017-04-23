@@ -982,6 +982,13 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
       lang_str_serialize(e->summary, conf, "description");
     else if (e->episode && e->episode->summary)
       lang_str_serialize(e->episode->summary, conf, "description");
+    if (e->episode && e->episode->image)
+      htsmsg_add_str(conf, "image", e->episode->image);
+    if (e->episode) {
+      epg_genre_t *g = LIST_FIRST(&e->episode->genre);
+      if (g)
+        htsmsg_add_u32(conf, "genre", g->code);
+    }
     if (e->episode && (s = dvr_entry_get_episode(e, tbuf, sizeof(tbuf))))
       htsmsg_add_str(conf, "episode", s);
   } else if (title) {
@@ -1002,8 +1009,10 @@ dvr_entry_create_(int enabled, const char *config_uuid, epg_broadcast_t *e,
       lang_str_destroy(l);
     }
   }
-  if (content_type)
+  if (content_type) {
+    htsmsg_add_u32(conf, "genre", content_type->code);
     htsmsg_add_u32(conf, "content_type", content_type->code / 16);
+  }
   if (e)
     htsmsg_add_u32(conf, "broadcast", e->id);
   if (dae)
@@ -1513,6 +1522,7 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   dvr_entry_assign_broadcast(de, NULL);
   free(de->de_channel_name);
   free(de->de_episode);
+  if (de->de_image != NULL)  free(de->de_image);
 
   free(de);
 }
@@ -1659,6 +1669,7 @@ dvr_timer_remove_files(void *aux)
 #define DVR_UPDATED_CONFIG       (1<<17)
 #define DVR_UPDATED_PLAYPOS      (1<<18)
 #define DVR_UPDATED_PLAYCOUNT    (1<<19)
+#define DVR_UPDATED_IMAGE        (1<<20)
 
 static char *dvr_updated_str(char *buf, size_t buflen, int flags)
 {
@@ -1813,12 +1824,23 @@ static dvr_entry_t *_dvr_entry_update
   } else if (desc) {
     save |= lang_str_set(&de->de_desc, desc, lang) ? DVR_UPDATED_DESCRIPTION : 0;
   }
+  
+  /* Episode image */
+  if (e && e->episode && e->episode->image)
+    if (!de->de_image || !strcmp(e->episode->image, de->de_image)) {
+  	  de->de_image = e->episode->image;
+  	  save |= DVR_UPDATED_IMAGE;
+  	}
 
   /* Genre */
   if (e && e->episode) {
     epg_genre_t *g = LIST_FIRST(&e->episode->genre);
     if (g && (g->code / 16) != de->de_content_type) {
       de->de_content_type = g->code / 16;
+      save |= DVR_UPDATED_GENRE;
+    }
+    if (g && g->code != de->de_genre) {
+      de->de_genre = g->code;
       save |= DVR_UPDATED_GENRE;
     }
   }
@@ -2979,6 +3001,20 @@ dvr_entry_class_channel_icon_url_get(void *o)
 }
 
 static const void *
+dvr_entry_class_episode_image_url_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  char *img = de->de_image;
+  static const char *s;
+  if (img == NULL) {
+    s = "";
+  } else {
+    s = img;
+  }
+  return &s;
+}
+
+static const void *
 dvr_entry_class_duplicate_get(void *o)
 {
   static time_t null = 0;
@@ -3203,6 +3239,15 @@ const idclass_t dvr_entry_class = {
       .opts     = PO_RDONLY | PO_NOSAVE | PO_HIDDEN,
     },
     {
+      .type     = PT_STR,
+      .id       = "image",
+      .name     = N_("Episode image"),
+      .desc     = N_("Episode image URL."),
+      .get      = dvr_entry_class_episode_image_url_get,
+      .off      = offsetof(dvr_entry_t, de_image),
+      .opts     = PO_RDONLY,
+    },
+    {
       .type     = PT_INT,
       .id       = "pri",
       .name     = N_("Priority"),
@@ -3416,6 +3461,15 @@ const idclass_t dvr_entry_class = {
       .list     = dvr_entry_class_content_type_list,
       .off      = offsetof(dvr_entry_t, de_content_type),
       .opts     = PO_RDONLY | PO_SORTKEY,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "genre",
+      .name     = N_("Episode genre"),
+      .desc     = N_("Episode genre code."),
+      .list     = dvr_entry_class_content_type_list,
+      .off      = offsetof(dvr_entry_t, de_genre),
+      .opts     = PO_RDONLY,
     },
     {
       .type     = PT_U32,
