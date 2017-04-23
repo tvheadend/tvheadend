@@ -23,6 +23,7 @@
 #include "htsmsg.h"
 
 #define ACCESS_DEFAULT_COMMENT "Default access entry"
+#define ACCESS_WIZARD_COMMENT "Wizard access entry"
 
 struct profile;
 struct dvr_config;

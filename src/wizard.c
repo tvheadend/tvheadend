@@ -323,6 +323,7 @@ static void login_changed(idnode_t *in)
   htsmsg_add_msg(conf, "dvr", list);
   htsmsg_add_bool(conf, "webui", 1);
   htsmsg_add_bool(conf, "admin", 1);
+  htsmsg_add_str(conf, "comment", ACCESS_WIZARD_COMMENT);
   ae = access_entry_create(NULL, conf);
   if (ae) {
     ae->ae_wizard = 1;
@@ -358,6 +359,7 @@ static void login_changed(idnode_t *in)
     htsmsg_add_str(list, NULL, "htsp");
     htsmsg_add_msg(conf, "dvr", list);
     htsmsg_add_bool(conf, "webui", 1);
+    htsmsg_add_str(conf, "comment", ACCESS_WIZARD_COMMENT);
     ae = access_entry_create(NULL, conf);
     if (ae) {
       ae->ae_wizard = 1;
