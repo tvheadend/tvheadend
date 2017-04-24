@@ -1801,6 +1801,29 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
   AVCodec *icodec, *ocodec;
   transcoder_props_t *tp = &t->t_props;
   int sct;
+  char *str, *token, *saveptr, codec_list[sizeof(tp->tp_src_vcodec)];
+  int codec_match=0;
+
+  strncpy(codec_list, tp->tp_src_vcodec, sizeof(tp->tp_src_vcodec)-1);
+
+  tvhinfo(LS_TRANSCODE, "tp->tp_src_vcodec=\"%s\" ssc->ssc_type=%d (%s)\n", 
+		  tp->tp_src_vcodec, 
+		  ssc->ssc_type,
+		  streaming_component_type2txt(ssc->ssc_type));
+
+  if (codec_list[0] != '\0') {
+     for (str=codec_list; ; str = NULL) {
+	token = strtok_r(str," ,|;" , &saveptr);
+	if (token == NULL)
+		break;
+	if(!strcasecmp(token, streaming_component_type2txt(ssc->ssc_type))) {//match found
+		codec_match=1;
+	}
+     }
+
+     if(!codec_match)
+	return transcoder_init_stream(t, ssc); //copy codec
+  }
 
   if (tp->tp_vcodec[0] == '\0')
     return 0;
@@ -2116,6 +2139,8 @@ transcoder_set_properties(streaming_target_t *st,
   tp->tp_resolution = props->tp_resolution;
 
   memcpy(tp->tp_language, props->tp_language, 4);
+
+  strncpy(tp->tp_src_vcodec, props->tp_src_vcodec, sizeof(tp->tp_src_vcodec)-1);
 }
 
 
