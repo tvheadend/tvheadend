@@ -92,7 +92,7 @@ def do_upload(*args):
     data = open(file, 'rb').read()
     resp = Bintray(bpath).put(data, binary=1)
     if resp.code != 200 and resp.code != 201:
-        error(10, 'HTTP ERROR "%s" %s %s' % (resp.url, resp.code, resp.reason))
+        error(10, 'HTTP ERROR "%s" %s %s', resp.url, resp.code, resp.reason)
 
 def get_ver(version):
     if version.find('-'):
@@ -203,10 +203,10 @@ def do_publish(*args):
     data = { 'name': args.version, 'desc': PACKAGE_DESC }
     resp = Bintray(bpath).post(data)
     if resp.code != 200 and resp.code != 201 and resp.code != 409:
-        error(10, 'Version %s/%s: HTTP ERROR %s %s' %
-                  (args.repo, args.version, resp.code, resp.reason))
+        error(10, 'Version %s/%s: HTTP ERROR %s %s',
+                  args.repo, args.version, resp.code, resp.reason)
     else:
-        info('Version %s/%s created' % (args.repo, args.version))
+        info('Version %s/%s created', args.repo, args.version)
     for file in files:
         file = file.strip()
         basename, args, extra = get_bintray_params(file, hint)
@@ -216,8 +216,8 @@ def do_publish(*args):
         data = open(file, 'rb').read()
         resp = Bintray(bpath).put(data, binary=1)
         if resp.code != 200 and resp.code != 201:
-            error(10, 'File %s: HTTP ERROR "%s" %s' %
-                      (file, resp.code, resp.reason))
+            error(10, 'File %s: HTTP ERROR "%s" %s',
+                      file, resp.code, resp.reason)
         else:
             info('File %s: uploaded', file)
 
