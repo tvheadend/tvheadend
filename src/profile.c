@@ -1675,12 +1675,12 @@ static htsmsg_t *
 profile_class_src_vcodec_list ( void *o, const char *lang )
 {
   static const struct strtab_str tab[] = {
-    { N_("Any"),		"" },
-    { "MPEG2VIDEO",      	"MPEG2VIDEO" },
-    { "H264",      		"H264" },
-    { "VP8",      		"VP8" },
-    { "HEVC",      		"HEVC" },
-    { "VP9",      		"VP9" },
+    { N_("Any"),                "" },
+    { "MPEG2VIDEO",             "MPEG2VIDEO" },
+    { "H264",                   "H264" },
+    { "VP8",                    "VP8" },
+    { "HEVC",                   "HEVC" },
+    { "VP9",                    "VP9" },
   };
   return strtab2htsmsg_str(tab, 1, lang);
 }
