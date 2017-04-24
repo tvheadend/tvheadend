@@ -1897,7 +1897,8 @@ webui_init(int xspf)
   tvheadend_webroot = s;
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
-  http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  hp = http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  hp->hp_no_verification = 1; /* redirect only */
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
   hp->hp_no_verification = 1;
