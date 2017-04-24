@@ -156,7 +156,6 @@ typedef struct http_connection {
   struct config_head *hc_user_config;
 
   int hc_no_output;
-  int hc_logout_cookie;
   int hc_shutdown;
   uint64_t hc_cseq;
   char *hc_session;
@@ -227,6 +226,7 @@ typedef struct http_path {
   void *hp_opaque;
   http_callback_t *hp_callback;
   int hp_len;
+  int hp_no_verification;
   uint32_t hp_accessmask;
   http_path_modify_t *hp_path_modify;
 } http_path_t;
