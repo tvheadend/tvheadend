@@ -998,6 +998,13 @@ tvheadend.RootTabPanel = Ext.extend(Ext.TabPanel, {
     },
 
     onLoginCmdClicked: function(e) {
+        if (this.login && (document.all || window.navigator.userAgent.indexOf("Edge") > -1 ||
+                           (!!window.MSInputMethodContext && !!document.documentMode))) {
+            document.execCommand("ClearAuthenticationCache");
+            window.location.href = '';
+            return;
+        }
+        XMLHttpRequest.prototype.send = function(){};
         window.location.href = this.login ? 'logout' : 'login';
     }
 
