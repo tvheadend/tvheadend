@@ -291,15 +291,6 @@ int test(void)
 }
 '
 
-check_cc_snippet llabs '
-#include <stdlib.h>
-int test(void)
-{
-  llabs(-10);
-  return 0;
-}
-'
-
 #
 # Python
 #
