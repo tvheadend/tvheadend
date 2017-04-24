@@ -272,7 +272,7 @@ http_get_nonce(void)
       free(m);
       continue; /* get unique md5 */
     }
-    mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(10));
+    mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(30));
     pthread_mutex_unlock(&global_lock);
     break;
   }
