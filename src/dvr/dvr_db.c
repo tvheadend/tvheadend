@@ -1827,7 +1827,7 @@ static dvr_entry_t *_dvr_entry_update
   
   /* Episode image */
   if (e && e->episode && e->episode->image)
-    if (!de->de_image || !strcmp(e->episode->image, de->de_image)) {
+    if (!de->de_image || strcmp(e->episode->image, de->de_image)) {
   	  de->de_image = e->episode->image;
   	  save |= DVR_UPDATED_IMAGE;
   	}
@@ -3072,6 +3072,15 @@ dvr_entry_class_content_type_list(void *o, const char *lang)
   return m;
 }
 
+static htsmsg_t *
+dvr_entry_class_genre_list(void *o, const char *lang)
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_add_str(m, "type",  "api");
+  htsmsg_add_str(m, "uri",   "epg/genre/list");
+  return m;
+}
+
 CLASS_DOC(dvrentry)
 PROP_DOC(dvr_status)
 PROP_DOC(dvr_start_extra)
@@ -3467,7 +3476,7 @@ const idclass_t dvr_entry_class = {
       .id       = "genre",
       .name     = N_("Episode genre"),
       .desc     = N_("Episode genre code."),
-      .list     = dvr_entry_class_content_type_list,
+      .list     = dvr_entry_class_genre_list,
       .off      = offsetof(dvr_entry_t, de_genre),
       .opts     = PO_RDONLY,
     },
