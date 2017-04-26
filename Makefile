@@ -1,6 +1,8 @@
 #
 #  Tvheadend streaming server.
 #  Copyright (C) 2007-2009 Andreas Öman
+#  Copyright (C) 2012-2015 Adam Sutton
+#  Copyright (C) 2012-2017 Jaroslav Kysela
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by

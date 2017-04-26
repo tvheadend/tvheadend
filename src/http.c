@@ -272,7 +272,7 @@ http_get_nonce(void)
       free(m);
       continue; /* get unique md5 */
     }
-    mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(10));
+    mtimer_arm_rel(&n->expire, http_nonce_timeout, n, sec2mono(30));
     pthread_mutex_unlock(&global_lock);
     break;
   }
@@ -387,13 +387,6 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
       htsbuf_append_str(&hdrs, realm);
       htsbuf_append_str(&hdrs, "\"\r\n");
     }
-  }
-  if (hc->hc_logout_cookie == 1) {
-    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=1; Path=\"%s/logout\"\r\n",
-                   tvheadend_webroot ? tvheadend_webroot : "");
-  } else if (hc->hc_logout_cookie == 2) {
-    htsbuf_qprintf(&hdrs, "Set-Cookie: logout=0; Path=\"%s/logout'\"; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n",
-                   tvheadend_webroot ? tvheadend_webroot : "");
   }
 
   if (hc->hc_version != RTSP_VERSION_1_0)
@@ -555,6 +548,7 @@ void
 http_error(http_connection_t *hc, int error)
 {
   const char *errtxt = http_rc2str(error);
+  const char *lang;
   int level;
 
   if (!atomic_get(&http_server_running)) return;
@@ -581,9 +575,15 @@ http_error(http_connection_t *hc, int error)
                    "<H1>%d %s</H1>\r\n",
                    error, errtxt, error, errtxt);
 
-    if (error == HTTP_STATUS_UNAUTHORIZED)
-      htsbuf_qprintf(&hc->hc_reply, "<P><A HREF=\"%s/logout\">Default Login</A></P>",
-                     tvheadend_webroot ? tvheadend_webroot : "");
+    if (error == HTTP_STATUS_UNAUTHORIZED) {
+      lang = tvh_gettext_get_lang(hc->hc_access ? hc->hc_access->aa_lang_ui : NULL);
+      htsbuf_qprintf(&hc->hc_reply, "<P STYLE=\"text-align: center; margin: 2em\"><A HREF=\"%s/\" STYLE=\"border: 1px solid; border-radius: 4px; padding: .6em\">%s</A></P>",
+                     tvheadend_webroot ? tvheadend_webroot : "",
+                     tvh_gettext_lang(lang, N_("Default login")));
+      htsbuf_qprintf(&hc->hc_reply, "<P STYLE=\"text-align: center; margin: 2em\"><A HREF=\"%s/login\" STYLE=\"border: 1px solid; border-radius: 4px; padding: .6em\">%s</A></P>",
+                     tvheadend_webroot ? tvheadend_webroot : "",
+                     tvh_gettext_lang(lang, N_("New login")));
+    }
 
     htsbuf_append_str(&hc->hc_reply, "</BODY></HTML>\r\n");
 
@@ -925,10 +925,15 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 {
   int err;
 
-  if(http_access_verify(hc, hp->hp_accessmask))
-    err = HTTP_STATUS_UNAUTHORIZED;
-  else
-    err = hp->hp_callback(hc, remain, hp->hp_opaque);
+  if ((hc->hc_username && hc->hc_username[0] == '\0') ||
+      http_access_verify(hc, hp->hp_accessmask)) {
+    if (!hp->hp_no_verification) {
+      err = HTTP_STATUS_UNAUTHORIZED;
+      goto destroy;
+    }
+  }
+  err = hp->hp_callback(hc, remain, hp->hp_opaque);
+destroy:
   access_destroy(hc->hc_access);
   hc->hc_access = NULL;
 
@@ -1163,12 +1168,15 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
           http_deescape(hc->hc_username);
           http_deescape(hc->hc_password);
           // No way to actually track this
+        } else {
+          http_error(hc, HTTP_STATUS_UNAUTHORIZED);
+          return -1;
         }
       } else if (strcasecmp(argv[0], "digest") == 0) {
         v = http_get_header_value(argv[1], "nonce");
         if (v == NULL || !http_nonce_exists(v)) {
-          http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           free(v);
+          http_error(hc, HTTP_STATUS_UNAUTHORIZED);
           return -1;
         }
         free(hc->hc_nonce);
@@ -1338,6 +1346,7 @@ http_path_add_modify(const char *path, void *opaque, http_callback_t *callback,
   hp->hp_callback = callback;
   hp->hp_accessmask = accessmask;
   hp->hp_path_modify = path_modify;
+  hp->hp_no_verification = 0;
   pthread_mutex_lock(&http_paths_mutex);
   LIST_INSERT_HEAD(&http_paths, hp, hp_link);
   pthread_mutex_unlock(&http_paths_mutex);
@@ -1561,8 +1570,6 @@ http_serve_requests(http_connection_t *hc)
 
     if (r)
       break;
-
-    hc->hc_logout_cookie = 0;
 
   } while(hc->hc_keep_alive && atomic_get(&http_server_running));
 

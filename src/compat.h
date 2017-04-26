@@ -47,12 +47,6 @@
 #ifndef ENABLE_INOTIFY_INIT1
 #define inotify_init1(IN_CLOEXEC) inotify_init()
 #endif
-#ifndef ENABLE_LLABS
-static inline long long int llabs(long long int a)
-{
-  if (a < 0) return -a; else return a;
-}
-#endif
 
 #endif /* TVH_COMPAT_H */
 

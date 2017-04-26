@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import base64
+import traceback
 try:
     # Python 3
     import urllib.request as urllib
@@ -88,33 +89,37 @@ def info(msg, *args):
 def do_upload(*args):
     if len(args) < 2: error(1, 'upload [url] [file]')
     bpath, file = args[0], args[1]
-    data = open(file, "br").read()
+    data = open(file, 'rb').read()
     resp = Bintray(bpath).put(data, binary=1)
     if resp.code != 200 and resp.code != 201:
-        error(10, 'HTTP ERROR "%s" %s %s' % (resp.url, resp.code, resp.reason))
+        error(10, 'HTTP ERROR "%s" %s %s', resp.url, resp.code, resp.reason)
 
 def get_ver(version):
     if version.find('-'):
-        version, _ = version.split('-', 1)
+        version, git = version.split('-', 1)
+    else:
+        git = None
     try:
       major, minor, rest = version.split('.', 2)
     except:
       major, minor = version.split('.', 1)
       rest = ''
-    return (major, minor, rest)
+    return (major, minor, rest, git)
 
-def get_path(version):
-    major, minor, rest = get_ver(version)
+def get_path(version, repo):
+    major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        return '%d.%d' % (major, minor)
+        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') > 0:
+            return '%s.%s-release' % (major, minor)
+        return '%s.%s' % (major, minor)
     return 't'
 
 def get_component(version):
-    major, minor, rest = get_ver(version)
+    major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        if rest.find('~') > 0:
-            return 'stable'
-        return 'release'
+        if git.find('~') > 0:
+            return 'stable-%s.%s' % (major, minor)
+        return 'release-%s.%s' % (major, minor)
     return 'unstable'
 
 def get_repo(filename, hint=None):
@@ -144,7 +149,7 @@ def get_bintray_params(filename, hint=None):
         debname, debversion = debbase.split('_', 1)
         debversion, debdistro = debversion.rsplit('~', 1)
         args.version = debversion
-        args.path = 'pool/' + get_path(debversion) + '/' + args.package
+        args.path = 'pool/' + get_path(debversion, args.repo) + '/' + args.package
         extra.append('deb_component=' + get_component(debversion))
         extra.append('deb_distribution=' + debdistro)
         extra.append('deb_architecture=' + debarch)
@@ -158,7 +163,7 @@ def get_bintray_params(filename, hint=None):
         rpmversion, rpmdist = rpmver2.split('.', 1)
         rpmversion = rpmver1 + '-' + rpmversion
         args.version = rpmversion
-        args.path = 'linux/' + get_path(rpmversion) + \
+        args.path = 'linux/' + get_path(rpmversion, args.repo) + \
                     '/' + rpmdist + '/' + rpmarch
     extra = ';'.join(extra)
     if extra: extra = ';' + extra
@@ -188,14 +193,20 @@ def do_publish(*args):
             break
         except:
             pass
+    if not args:
+        for file in files:
+            try:
+                basename, args, extra = get_bintray_params(file)
+            except:
+                traceback.print_exc()
     bpath = '/packages/tvheadend/%s/tvheadend/versions' % args.repo
     data = { 'name': args.version, 'desc': PACKAGE_DESC }
     resp = Bintray(bpath).post(data)
     if resp.code != 200 and resp.code != 201 and resp.code != 409:
-        error(10, 'Version %s/%s: HTTP ERROR %s %s' %
-                  (args.repo, args.version, resp.code, resp.reason))
+        error(10, 'Version %s/%s: HTTP ERROR %s %s',
+                  args.repo, args.version, resp.code, resp.reason)
     else:
-        info('Version %s/%s created' % (args.repo, args.version))
+        info('Version %s/%s created', args.repo, args.version)
     for file in files:
         file = file.strip()
         basename, args, extra = get_bintray_params(file, hint)
@@ -205,8 +216,8 @@ def do_publish(*args):
         data = open(file, 'rb').read()
         resp = Bintray(bpath).put(data, binary=1)
         if resp.code != 200 and resp.code != 201:
-            error(10, 'File %s: HTTP ERROR "%s" %s' %
-                      (file, resp.code, resp.reason))
+            error(10, 'File %s: HTTP ERROR "%s" %s',
+                      file, resp.code, resp.reason)
         else:
             info('File %s: uploaded', file)
 

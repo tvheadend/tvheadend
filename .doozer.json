@@ -153,6 +153,7 @@
     "jessie-i386": {
       "buildenv": "jessie-i386",
       "builddeps": [
+        "lsb-release",
         "cmake",
         "git",
         "build-essential",
@@ -178,6 +179,7 @@
     "jessie-amd64": {
       "buildenv": "jessie-amd64",
       "builddeps": [
+        "lsb-release",
         "cmake",
         "git",
         "build-essential",

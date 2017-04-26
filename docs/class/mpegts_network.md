@@ -15,7 +15,7 @@ supports several different types of network, notably:
    - [ATSC-T](class/dvb_network_atsc_t) - common in north and central America
  * IPTV - TV over the Internet via your broadband connection
    - [IPTV](class/iptv_network)
-   - [IPTV Automatic Network](class/iptv_auto_network) - IPTV using a playlist as the source
+   - [IPTV Automatic Network](class/iptv_auto_network) - IPTV using a playlist as the source - **Please read *IPTV Automatic Network - Don't Probe Services* below for important information!**  
   
 Click the desired network type (above) to see all available 
 [parameters](#items).
@@ -43,5 +43,19 @@ while a scan is in progress, but doing so will increase the time needed
 for it to complete. Note that the time required can vary depending on a 
 number of factors, such as how many tuners you have available and the 
 number of muxes on each.
+
+---
+
+###IPTV Automatic Network - Don't Probe Services
+
+Tvheadend will by default probe each playlist entry for service information. 
+Some service providers do not allow such probing & will deny (or rate 
+limit) access, leading to scan failures. 
+
+To create services without probing, *Service ID* must be set 
+(usually to 1) and the *Scan after creation* check box un-ticked. 
+
+Note, the above two settings are only visible with the view level set to 
+Expert.
 
 ---

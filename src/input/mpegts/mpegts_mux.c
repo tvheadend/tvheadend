@@ -1485,7 +1485,7 @@ mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
     if (r == 0)
       r = mc1->dmc_fe_freq - mc2->dmc_fe_freq;
   }
-  return r;
+  return r ?: uuid_cmp(&a->mm_id.in_uuid, &b->mm_id.in_uuid);
 }
 
 /******************************************************************************

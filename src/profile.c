@@ -1691,7 +1691,23 @@ typedef struct profile_transcode {
   char    *pro_vcodec_preset;
   char    *pro_acodec;
   char    *pro_scodec;
+  char    *pro_src_vcodec;
 } profile_transcode_t;
+
+
+static htsmsg_t *
+profile_class_src_vcodec_list ( void *o, const char *lang )
+{
+  static const struct strtab_str tab[] = {
+    { N_("Any"),		"" },
+    { "MPEG2VIDEO",      	"MPEG2VIDEO" },
+    { "H264",      		"H264" },
+    { "VP8",      		"VP8" },
+    { "HEVC",      		"HEVC" },
+    { "VP9",      		"VP9" },
+  };
+  return strtab2htsmsg_str(tab, 1, lang);
+}
 
 static htsmsg_t *
 profile_class_mc_list ( void *o, const char *lang )
@@ -1918,6 +1934,21 @@ const idclass_t profile_transcode_class =
     },
     {
       .type     = PT_STR,
+      .id       = "src_vcodec",
+      .name     = N_("Source video codec"),
+      .desc     = N_("Transcode video only if source video codec mattch.  "
+                     "\"Any\" will ingnore source vcodec check and always do transcode. "
+		     "Separate codec names with coma. "
+                     "If no codec match found - transcode with \"copy\" codec, "
+		     "if match found - transcode with parameters in this profile."),
+      .off      = offsetof(profile_transcode_t, pro_src_vcodec),
+      .def.i    = SCT_UNKNOWN,
+      .list     = profile_class_src_vcodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
       .id       = "vcodec",
       .name     = N_("Video codec"),
       .desc     = N_("Video codec to use for the transcode. "
@@ -2064,6 +2095,14 @@ profile_transcode_work(profile_chain_t *prch,
   props.tp_vbitrate   = profile_transcode_vbitrate(pro);
   props.tp_abitrate   = profile_transcode_abitrate(pro);
   strncpy(props.tp_language, pro->pro_language ?: "", 3);
+
+  if (!pro->pro_src_vcodec) {
+     strcpy(props.tp_src_vcodec, "");
+  } else if(!strncasecmp("Any",pro->pro_src_vcodec,3)) {
+     strcpy(props.tp_src_vcodec, "");
+  } else {
+     strncpy(props.tp_src_vcodec, pro->pro_src_vcodec ?: "", sizeof(props.tp_src_vcodec)-1);
+  }
 
   dst = prch->prch_gh = globalheaders_create(dst);
 

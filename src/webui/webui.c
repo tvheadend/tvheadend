@@ -185,27 +185,59 @@ page_login(http_connection_t *hc, const char *remain, void *opaque)
 static int
 page_logout(http_connection_t *hc, const char *remain, void *opaque)
 {
-  if (hc->hc_access == NULL ||
-      hc->hc_access->aa_username == NULL ||
-      hc->hc_access->aa_username == '\0') {
-redirect:
-    http_redirect(hc, "/", &hc->hc_req_args, 0);
-    return 0;
-  } else {
-    const char *s = http_arg_get(&hc->hc_args, "Cookie");
-    if (s) {
-      while (*s && *s != ';')
-        s++;
-      if (*s) s++;
-      while (*s && *s <= ' ') s++;
-      if (!strncmp(s, "logout=1", 8)) {
-        hc->hc_logout_cookie = 2;
-        goto redirect;
-      }
-      hc->hc_logout_cookie = 1;
-    }
+  const char *username, *busername, *lang, *title, *text, *logout;
+  char url[512];
+
+  username = hc->hc_access ? hc->hc_access->aa_username : NULL;
+  busername = hc->hc_username ? hc->hc_username : NULL;
+
+  tvhtrace(LS_HTTP, "logout: username '%s', busername '%s'\n", username, busername);
+
+  if (http_arg_get(&hc->hc_req_args, "_logout"))
     return HTTP_STATUS_UNAUTHORIZED;
-  }
+
+  if (!http_arg_get(&hc->hc_args, "Authorization"))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  lang = tvh_gettext_get_lang(hc->hc_access ? hc->hc_access->aa_lang_ui : NULL);
+  title = tvh_gettext_lang(lang, N_("Logout"));
+  htsbuf_qprintf(&hc->hc_reply,
+                 "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
+                 "<HTML><HEAD>\r\n"
+                 "<TITLE>%s</TITLE>\r\n"
+                 "</HEAD><BODY>\r\n"
+                 "<H1>%s</H1>\r\n"
+                 "<P>",
+                 title, title);
+
+  text = tvh_gettext_lang(lang, N_("Authenticated user"));
+  htsbuf_qprintf(&hc->hc_reply, "<P>%s: %s</P>\r\n", text, username ?: "---");
+
+  text = tvh_gettext_lang(lang, N_("\
+Please, follow %s link and cancel the next authorization to correctly clear \
+the cached browser credentals (login and password cache). Then click to \
+the 'Default login' (anonymous access) or 'New login' link in the error page \
+to reauthenticate."));
+  logout = tvh_gettext_lang(lang, N_("logout"));
+
+  snprintf(url, sizeof(url), "<A HREF=\"%s/logout?_logout=1\">%s</A>",
+                             tvheadend_webroot ? tvheadend_webroot : "", logout);
+
+  htsbuf_qprintf(&hc->hc_reply, text, url);
+
+  snprintf(url, sizeof(url), "<A HREF=\"%s/logout?_logout=1\" "
+                             "STYLE=\"border: 1px solid; border-radius: 4px; padding: .6em\">%s</A>",
+                             tvheadend_webroot ? tvheadend_webroot : "", logout);
+
+  text = tvh_gettext_lang(lang, N_("return"));
+
+  htsbuf_qprintf(&hc->hc_reply, "</P>\r\n"
+                                "<P STYLE=\"text-align: center; margin: 2em\">%s</P>\r\n"
+                                "<P STYLE=\"text-align: center; margin: 2em\"><A HREF=\"%s/\" STYLE=\"border: 1px solid; border-radius: 4px; padding: .6em\">%s</A></P>\r\n"
+                                "</BODY></HTML>\r\n",
+                                url, tvheadend_webroot ? tvheadend_webroot : "", text);
+  http_output_html(hc);
+  return 0;
 }
 
 /**
@@ -1852,6 +1884,7 @@ void
 webui_init(int xspf)
 {
   const char *s;
+  http_path_t *hp;
 
   webui_xspf = xspf;
 
@@ -1864,9 +1897,11 @@ webui_init(int xspf)
   tvheadend_webroot = s;
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
-  http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  hp = http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
+  hp->hp_no_verification = 1; /* redirect only */
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
-  http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
+  hp = http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
+  hp->hp_no_verification = 1;
 
 #if CONFIG_SATIP_SERVER
   http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);

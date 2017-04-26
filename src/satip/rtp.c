@@ -28,6 +28,8 @@
 #if ENABLE_ANDROID
 #include <sys/socket.h>
 #endif
+#define COMPAT_IPTOS
+#include "compat.h"
 
 #define RTP_PACKETS 128
 #define RTP_PAYLOAD (7*188+12)
