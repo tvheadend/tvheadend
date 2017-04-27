@@ -484,7 +484,8 @@ typedef struct service {
 
   tvhlog_limit_t s_tei_log;
 
-  int64_t s_current_pts;
+  int64_t s_current_pcr;
+  int64_t s_candidate_pcr;
 
   /*
    * Local channel numbers per bouquet

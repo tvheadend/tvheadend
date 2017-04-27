@@ -55,6 +55,7 @@ ts_recv_packet0
   mpegts_service_t *m;
   int len2, off, pusi, cc, pid, error, errors = 0;
   const uint8_t *tsb2;
+  int64_t pcr;
 
   service_set_streaming_status_flags((service_t*)t, TSS_MUX_PACKETS);
 
@@ -69,7 +70,7 @@ ts_recv_packet0
 
     /* Check CC */
 
-    if(tsb2[3] & 0x10) {
+    if (tsb2[3] & 0x10) {
       cc = tsb2[3] & 0xf;
       if(st->es_cc != -1 && cc != st->es_cc) {
         /* Let the hardware to stabilize and don't flood the log */
@@ -84,7 +85,7 @@ ts_recv_packet0
       st->es_cc = (cc + 1) & 0xf;
     }
 
-    if(!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+    if (!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
       continue;
 
     if (st->es_type == SCT_CA)
@@ -93,9 +94,33 @@ ts_recv_packet0
     if (tsb2[3] & 0xc0) /* scrambled */
       continue;
 
-    off = tsb2[3] & 0x20 ? tsb2[4] + 5 : 4;
+    if (tsb2[3] & 0x20) {
+      off = tsb2[4] + 5;
+      if (st->es_pid == t->s_pcr_pid && !error && off > 10 && (tsb2[5] & 0x10) != 0) {
+        pcr  =  (uint64_t)tsb2[6] << 25;
+        pcr |=  (uint64_t)tsb2[7] << 17;
+        pcr |=  (uint64_t)tsb2[8] << 9;
+        pcr |=  (uint64_t)tsb2[9] << 1;
+        pcr |= ((uint64_t)tsb2[10] >> 7) & 0x01;
+        /* handle the broken info using candidate variable */
+        if (t->s_current_pcr == PTS_UNSET || pts_diff(t->s_current_pcr, pcr) <= 90000 ||
+            (t->s_candidate_pcr != PTS_UNSET && pts_diff(t->s_candidate_pcr, pcr) <= 90000)) {
+          if (t->s_current_pcr == PTS_UNSET)
+            tvhtrace(LS_TS, "%s: Initial PCR: %"PRId64, service_nicename((service_t*)t), pcr);
+          t->s_current_pcr = pcr;
+          if (t->s_candidate_pcr != PTS_UNSET) {
+            tvhtrace(LS_TS, "%s: PCR change: %"PRId64, service_nicename((service_t*)t), pcr);
+            t->s_candidate_pcr = PTS_UNSET;
+          }
+        } else {
+          t->s_candidate_pcr = pcr;
+        }
+      }
+    } else {
+      off = 4;
+    }
 
-    if(off <= 188 && t->s_status == SERVICE_RUNNING)
+    if (off <= 188 && t->s_status == SERVICE_RUNNING)
       parse_mpeg_ts((service_t*)t, st, tsb2 + off, 188 - off, pusi, error);
 
   }

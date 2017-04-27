@@ -1812,9 +1812,9 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   psize -= hlen;
   buf = d + 6 + hlen;
   
-  if(psize >= 46) {
+  if(psize >= 46 && t->s_current_pcr != PTS_UNSET) {
     teletext_input((mpegts_service_t *)t, st, buf, psize);
-    pkt = pkt_alloc(st->es_type, buf, psize, st->es_curpts, st->es_curdts);
+    pkt = pkt_alloc(st->es_type, buf, psize, t->s_current_pcr, t->s_current_pcr);
     pkt->pkt_commercial = t->s_tt_commercial_advice;
     pkt->pkt_err = st->es_buf.sb_err;
     parser_deliver(t, st, pkt);
@@ -1828,13 +1828,6 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
 static void
 parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
 {
-  if(SCT_ISAUDIO(st->es_type) && pkt->pkt_pts != PTS_UNSET &&
-     (t->s_current_pts == PTS_UNSET ||
-      pkt->pkt_pts > t->s_current_pts ||
-      pkt->pkt_pts < t->s_current_pts - 180000)) {
-    t->s_current_pts = (pkt->pkt_pts + (int64_t)t->s_pts_shift * 900) % PTS_MASK;
-  }
-
   assert(pkt->pkt_type == st->es_type);
 
   pkt->pkt_componentindex = st->es_index;

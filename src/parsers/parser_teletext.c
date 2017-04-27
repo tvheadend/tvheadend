@@ -914,7 +914,7 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
     if(update_tt_clock(t, buf + 34))
       teletext_rundown_scan(t, ttp);
 
-    ttm->ttm_current_pts = t->s_current_pts;
+    ttm->ttm_current_pts = t->s_current_pcr + (int64_t)t->s_pts_shift * 900;
     break;
 
   case 1 ... 23:
