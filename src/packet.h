@@ -51,6 +51,7 @@ static inline char pkt_frametype_to_char ( int frametype )
 typedef struct th_pkt {
   int64_t pkt_dts;
   int64_t pkt_pts;
+  int64_t pkt_pcr;
   int pkt_duration;
   int pkt_refcount;
 
@@ -119,7 +120,8 @@ void pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt);
 #define PKTREF_FOREACH(item, queue) TAILQ_FOREACH((item), (queue), pr_link)
 
 th_pkt_t *pkt_alloc(streaming_component_type_t type,
-                    const void *data, size_t datalen, int64_t pts, int64_t dts);
+                    const void *data, size_t datalen,
+                    int64_t pts, int64_t dts, int64_t pcr);
 
 th_pkt_t *pkt_copy_shallow(th_pkt_t *pkt);
 

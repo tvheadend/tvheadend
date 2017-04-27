@@ -532,7 +532,7 @@ makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
          int len, int64_t dts, int duration, int channels, int sri,
          int errors)
 {
-  th_pkt_t *pkt = pkt_alloc(st->es_type, buf, len, dts, dts);
+  th_pkt_t *pkt = pkt_alloc(st->es_type, buf, len, dts, dts, t->s_current_pcr);
 
   pkt->pkt_commercial = t->s_tt_commercial_advice;
   pkt->pkt_duration = duration;
@@ -1201,7 +1201,7 @@ parse_mpeg2video(service_t *t, elementary_stream_t *st, size_t len,
     if(st->es_curpkt != NULL)
       pkt_ref_dec(st->es_curpkt);
 
-    pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts);
+    pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->s_current_pcr);
     pkt->v.pkt_frametype = frametype;
     pkt->pkt_duration = st->es_frame_duration;
     pkt->pkt_commercial = t->s_tt_commercial_advice;
@@ -1492,7 +1492,7 @@ parse_h264(service_t *t, elementary_stream_t *st, size_t len,
       if (st->es_frame_duration == 0)
         st->es_frame_duration = 1;
 
-      pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts);
+      pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->s_current_pcr);
       pkt->v.pkt_frametype = pkttype;
       pkt->v.pkt_field = isfield;
       pkt->pkt_duration = st->es_frame_duration;
@@ -1617,7 +1617,7 @@ parse_hevc(service_t *t, elementary_stream_t *st, size_t len,
     if (r > 0)
       return PARSER_APPEND;
 
-    st->es_curpkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts);
+    st->es_curpkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->s_current_pcr);
     st->es_curpkt->v.pkt_frametype = pkttype;
     st->es_curpkt->v.pkt_field = 0;
     st->es_curpkt->pkt_duration = st->es_frame_duration;
@@ -1762,7 +1762,7 @@ parse_subtitles(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
     // end_of_PES_data_field_marker
     if(buf[psize - 1] == 0xff) {
-      pkt = pkt_alloc(st->es_type, buf, psize - 1, st->es_curpts, st->es_curdts);
+      pkt = pkt_alloc(st->es_type, buf, psize - 1, st->es_curpts, st->es_curdts, t->s_current_pcr);
       pkt->pkt_commercial = t->s_tt_commercial_advice;
       pkt->pkt_err = st->es_buf.sb_err;
       parser_deliver(t, st, pkt);
@@ -1814,7 +1814,7 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
   
   if(psize >= 46 && t->s_current_pcr != PTS_UNSET) {
     teletext_input((mpegts_service_t *)t, st, buf, psize);
-    pkt = pkt_alloc(st->es_type, buf, psize, t->s_current_pcr, t->s_current_pcr);
+    pkt = pkt_alloc(st->es_type, buf, psize, t->s_current_pcr, t->s_current_pcr, t->s_current_pcr);
     pkt->pkt_commercial = t->s_tt_commercial_advice;
     pkt->pkt_err = st->es_buf.sb_err;
     parser_deliver(t, st, pkt);
@@ -1865,7 +1865,7 @@ parser_deliver_error(service_t *t, elementary_stream_t *st)
 
   if (!st->es_buf.sb_err)
     return;
-  pkt = pkt_alloc(st->es_type, NULL, 0, PTS_UNSET, PTS_UNSET);
+  pkt = pkt_alloc(st->es_type, NULL, 0, PTS_UNSET, PTS_UNSET, t->s_current_pcr);
   pkt->pkt_err = st->es_buf.sb_err;
   parser_deliver(t, st, pkt);
   st->es_buf.sb_err = 0;

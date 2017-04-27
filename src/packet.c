@@ -53,7 +53,7 @@ pkt_destroy(th_pkt_t *pkt)
  */
 th_pkt_t *
 pkt_alloc(streaming_component_type_t type, const void *data, size_t datalen,
-          int64_t pts, int64_t dts)
+          int64_t pts, int64_t dts, int64_t pcr)
 {
   th_pkt_t *pkt;
 
@@ -64,6 +64,7 @@ pkt_alloc(streaming_component_type_t type, const void *data, size_t datalen,
       pkt->pkt_payload = pktbuf_alloc(data, datalen);
     pkt->pkt_dts = dts;
     pkt->pkt_pts = pts;
+    pkt->pkt_pcr = pcr;
     pkt->pkt_refcount = 1;
     memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
   }

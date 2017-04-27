@@ -260,7 +260,7 @@ parse_latm_audio_mux_element(service_t *t, elementary_stream_t *st,
   if(st->es_curdts == PTS_UNSET)
     return NULL;
 
-  th_pkt_t *pkt = pkt_alloc(st->es_type, NULL, slot_len + 7, st->es_curdts, st->es_curdts);
+  th_pkt_t *pkt = pkt_alloc(st->es_type, NULL, slot_len + 7, st->es_curdts, st->es_curdts, t->s_current_pcr);
 
   pkt->pkt_commercial = t->s_tt_commercial_advice;
   pkt->pkt_duration   = st->es_frame_duration;
