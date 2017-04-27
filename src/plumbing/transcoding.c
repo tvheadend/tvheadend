@@ -1806,24 +1806,25 @@ transcoder_init_video(transcoder_t *t, streaming_start_component_t *ssc)
 
   strncpy(codec_list, tp->tp_src_vcodec, sizeof(tp->tp_src_vcodec)-1);
 
-  tvhinfo(LS_TRANSCODE, "tp->tp_src_vcodec=\"%s\" ssc->ssc_type=%d (%s)\n",
+  tvhtrace(LS_TRANSCODE, "src_vcodec=\"%s\" ssc_type=%d (%s)\n",
 		  tp->tp_src_vcodec,
 		  ssc->ssc_type,
 		  streaming_component_type2txt(ssc->ssc_type));
 
   if (codec_list[0] != '\0') {
-     for (str=codec_list; ; str = NULL) {
-	token = strtok_r(str," ,|;" , &saveptr);
-	if (token == NULL)
-		break; //no match found, use profile settings
-	if(!strcasecmp(token, streaming_component_type2txt(ssc->ssc_type))) {//match found
-		codec_match=1;
-	}
-     }
+    for (str=codec_list; ; str = NULL) {
+      token = strtok_r(str," ,|;" , &saveptr);
+      if (token == NULL)
+        break; //no match found, use profile settings
+      if(!strcasecmp(token, streaming_component_type2txt(ssc->ssc_type))) { //match found
+	codec_match=1;
+	break;
+      }
+    }
+    if (!codec_match)
+      return transcoder_init_stream(t, ssc); //copy codec
   }
 
-  if(!codec_match)
-	return transcoder_init_stream(t, ssc); //copy codec
 
   if (tp->tp_vcodec[0] == '\0')
     return 0;
