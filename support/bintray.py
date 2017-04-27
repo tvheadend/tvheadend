@@ -27,6 +27,7 @@ DEBUG=False
 BINTRAY_API='https://bintray.com/api/v1'
 BINTRAY_USER=env('BINTRAY_USER')
 BINTRAY_PASS=env('BINTRAY_PASS')
+BINTRAY_COMPONENT=env('BINTRAY_COMPONENT')
 BINTRAY_ORG='tvheadend'
 BINTRAY_PACKAGE='tvheadend'
 
@@ -150,7 +151,7 @@ def get_bintray_params(filename, hint=None):
         debversion, debdistro = debversion.rsplit('~', 1)
         args.version = debversion
         args.path = 'pool/' + get_path(debversion, args.repo) + '/' + args.package
-        extra.append('deb_component=' + get_component(debversion))
+        extra.append('deb_component=' + BINTRAY_COMPONENT or get_component(debversion))
         extra.append('deb_distribution=' + debdistro)
         extra.append('deb_architecture=' + debarch)
     else:
