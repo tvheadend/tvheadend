@@ -310,6 +310,7 @@ stream_clean(elementary_stream_t *st)
 
   tvhlog_limit_reset(&st->es_cc_log);
   tvhlog_limit_reset(&st->es_pes_log);
+  tvhlog_limit_reset(&st->es_pcr_log);
 }
 
 /**

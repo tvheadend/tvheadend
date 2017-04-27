@@ -127,6 +127,7 @@ typedef struct elementary_stream {
 
   tvhlog_limit_t es_cc_log;
   tvhlog_limit_t es_pes_log;
+  tvhlog_limit_t es_pcr_log;
   
   char *es_nicename;
 
