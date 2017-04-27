@@ -1721,6 +1721,7 @@ profile_class_mc_list ( void *o, const char *lang )
     { N_("Raw Audio Stream"),             MC_MPEG2AUDIO },
     { N_("Matroska (mkv)/av-lib"),        MC_AVMATROSKA },
     { N_("WEBM/av-lib"),                  MC_AVWEBM },
+    { N_("MP4/av-lib"),                   MC_AVMP4 },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -2142,6 +2143,7 @@ profile_transcode_mc_valid(int mc)
   case MC_AAC:
   case MC_VORBIS:
   case MC_AVMATROSKA:
+  case MC_AVMP4:
     return 1;
   default:
     return 0;
