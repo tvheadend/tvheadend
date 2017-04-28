@@ -1119,7 +1119,7 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
   }
 
   if (pkt->pkt_type == SCT_DVBSUB && pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 90000) {
-    tvhtrace(LS_MKV, "insert pkt to holdq: pts %ld, pcr %ld, diff %ld\n", pkt->pkt_pcr, pkt->pkt_pts, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
+    tvhtrace(LS_MKV, "insert pkt to holdq: pts %"PRId64", pcr %"PRId64", diff %"PRId64"\n", pkt->pkt_pcr, pkt->pkt_pts, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
     pktref_enqueue_sorted(&mk->holdq, pkt, mk_pktref_cmp);
     return mk->error;
   }
@@ -1130,7 +1130,7 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
       if (pts_diff(opkt->pkt_pts, pkt->pkt_pts) > 90000)
         break;
       opkt = pktref_get_first(&mk->holdq);
-      tvhtrace(LS_MKV, "hold push, pts %ld\n", opkt->pkt_pts);
+      tvhtrace(LS_MKV, "hold push, pts %"PRId64"\n", opkt->pkt_pts);
       tpkt = pkt_copy_shallow(opkt);
       pkt_ref_dec(opkt);
       tpkt->pkt_pcr = tpkt->pkt_pts;
