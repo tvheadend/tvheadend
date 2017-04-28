@@ -1830,12 +1830,11 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
 {
   assert(pkt->pkt_type == st->es_type);
 
-  if (tvhlog_limit(&st->es_pcr_log, 2)) {
-    if (pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 2*90000) {
+  if (pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 2*90000) {
+    if (tvhlog_limit(&st->es_pcr_log, 2))
       tvhwarn(LS_PARSER, "%s: PTS and PCR diff is very large (%"PRId64")",
               service_component_nicename(st), pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
-      goto end;
-    }
+    goto end;
   }
 
   pkt->pkt_componentindex = st->es_index;
