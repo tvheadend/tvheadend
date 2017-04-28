@@ -217,6 +217,22 @@ pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt)
 
 
 /**
+ * Reference count is transfered to queue
+ */
+void
+pktref_enqueue_sorted(struct th_pktref_queue *q, th_pkt_t *pkt,
+                      int (*cmp)(const void *, const void *))
+{
+  th_pktref_t *pr = malloc(sizeof(th_pktref_t));
+  if (pr) {
+    pr->pr_pkt = pkt;
+    TAILQ_INSERT_SORTED(q, pr, pr_link, cmp);
+    memoryinfo_alloc(&pktref_memoryinfo, sizeof(*pr));
+  }
+}
+
+
+/**
  *
  */
 void

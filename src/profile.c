@@ -716,11 +716,13 @@ profile_sharer_deliver(profile_chain_t *prch, streaming_message_t *sm)
      * time correction here
      */
     if (pkt->pkt_pts >= prch->prch_ts_delta &&
-        pkt->pkt_dts >= prch->prch_ts_delta) {
+        pkt->pkt_dts >= prch->prch_ts_delta &&
+        pkt->pkt_pcr >= prch->prch_ts_delta) {
       th_pkt_t *n = pkt_copy_shallow(pkt);
       pkt_ref_dec(pkt);
       n->pkt_pts -= prch->prch_ts_delta;
       n->pkt_dts -= prch->prch_ts_delta;
+      n->pkt_pcr -= prch->prch_ts_delta;
       sm->sm_data = n;
     } else {
       streaming_msg_free(sm);

@@ -282,8 +282,20 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     d = ((pkt->pkt_pts & PTS_MASK) - pkt->pkt_dts) & PTS_MASK;
     pkt->pkt_pts = dts + d;
   }
+  if(pkt->pkt_pcr != PTS_UNSET) {
+    /* Compute delta between PCR and DTS (and watch out for 33 bit wrap) */
+    d = ((pkt->pkt_pcr & PTS_MASK) - pkt->pkt_dts) & PTS_MASK;
+    if (d > PTS_MASK / 2)
+      d = -(PTS_MASK - d);
+    pkt->pkt_pcr = dts + d;
+  }
 
   pkt->pkt_dts = dts;
+
+  if (pkt->pkt_pts < 0 || pkt->pkt_dts < 0 || pkt->pkt_pcr < 0) {
+    tsfix_packet_drop(tfs, pkt, "negative2/error");
+    return;
+  }
 
 deliver:
   if (tvhtrace_enabled()) {

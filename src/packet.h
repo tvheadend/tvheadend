@@ -111,7 +111,14 @@ void pktref_clear_queue(struct th_pktref_queue *q);
 // Reference count is transfered to queue
 void pktref_enqueue(struct th_pktref_queue *q, th_pkt_t *pkt);
 
+// Reference count is transfered to queue
+void pktref_enqueue_sorted(struct th_pktref_queue *q, th_pkt_t *pkt,
+                           int (*cmp)(const void *, const void *));
+
 void pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr);
+
+static inline th_pkt_t *pktref_first(struct th_pktref_queue *q)
+  { return (th_pkt_t *)TAILQ_FIRST(q); }
 
 th_pkt_t *pktref_get_first(struct th_pktref_queue *q);
 

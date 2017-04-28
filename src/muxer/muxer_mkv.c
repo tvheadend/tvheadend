@@ -131,13 +131,24 @@ typedef struct mk_muxer {
   char *title;
 
   int webm;
+
+  struct th_pktref_queue holdq;
 } mk_muxer_t;
 
 /* --- */
 
 static int mk_mux_insert_chapter(mk_muxer_t *mk);
 
-/**
+/*
+ *
+ */
+static int mk_pktref_cmp(const void *_a, const void *_b)
+{
+  const th_pktref_t *a = _a, *b = _b;
+  return a->pr_pkt->pkt_pts - b->pr_pkt->pkt_pts;
+}
+
+/*
  *
  */
 static htsbuf_queue_t *
@@ -1094,7 +1105,7 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
 {
   int i, mark;
   mk_track_t *t = NULL;
-  th_pkt_t *opkt;
+  th_pkt_t *opkt, *tpkt;
 
   for (i = 0; i < mk->ntracks; i++) {
     t = &mk->tracks[i];
@@ -1107,8 +1118,24 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
     return mk->error;
   }
 
+  if (pkt->pkt_type == SCT_DVBSUB && pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 90000) {
+    tvhtrace(LS_MKV, "insert pkt to holdq: pts %ld, pcr %ld, diff %ld\n", pkt->pkt_pcr, pkt->pkt_pts, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
+    pktref_enqueue_sorted(&mk->holdq, pkt, mk_pktref_cmp);
+    return mk->error;
+  }
+
   mark = 0;
   if(SCT_ISAUDIO(pkt->pkt_type)) {
+    while ((opkt = pktref_first(&mk->holdq)) != NULL) {
+      if (pts_diff(opkt->pkt_pts, pkt->pkt_pts) > 90000)
+        break;
+      opkt = pktref_get_first(&mk->holdq);
+      tvhtrace(LS_MKV, "hold push, pts %ld\n", opkt->pkt_pts);
+      tpkt = pkt_copy_shallow(opkt);
+      pkt_ref_dec(opkt);
+      tpkt->pkt_pcr = tpkt->pkt_pts;
+      mk_mux_write_pkt(mk, tpkt);
+    }
     if(pkt->a.pkt_channels != t->channels &&
        pkt->a.pkt_channels) {
       mark = 1;
@@ -1432,6 +1459,8 @@ mkv_muxer_close(muxer_t *m)
     return -1;
   }
 
+  pktref_clear_queue(&mk->holdq);
+
   return 0;
 }
 
@@ -1480,6 +1509,8 @@ mkv_muxer_create(const muxer_config_t *m_cfg)
   mk->m_destroy      = mkv_muxer_destroy;
   mk->webm           = m_cfg->m_type == MC_WEBM;
   mk->fd             = -1;
+
+  TAILQ_INIT(&mk->holdq);
 
   return (muxer_t*)mk;
 }
