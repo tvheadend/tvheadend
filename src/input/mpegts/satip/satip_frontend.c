@@ -1274,7 +1274,7 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
       pos += (((p[pos+2] << 8) | p[pos+3]) + 1) * 4;
     }
     r = c - pos;
-    if (c <= pos || (r % 188) != 0)
+    if (c < pos || (r % 188) != 0)
       return 0;
     /* Use uncorrectable value to notify RTP delivery issues */
     nseq = (p[2] << 8) | p[3];
@@ -1286,6 +1286,8 @@ satip_frontend_rtp_data_received( http_client_t *hc, void *buf, size_t len )
       tvhtrace(LS_SATIP, "TCP/RTP discontinuity (%i != %i)", lfe->sf_seq + 1, nseq);
     }
     lfe->sf_seq = nseq;
+    if (r == 0)
+      return 0;
 
     /* Process */
     if (lfe->sf_skip_ts > 0) {
@@ -1856,7 +1858,7 @@ new_tune:
         pos += (((p[pos+2] << 8) | p[pos+3]) + 1) * 4;
       }
       r = c - pos;
-      if (c <= pos || (r % 188) != 0)
+      if (c < pos || (r % 188) != 0)
         continue;
       /* Use uncorrectable value to notify RTP delivery issues */
       nseq = (p[2] << 8) | p[3];
@@ -1867,6 +1869,8 @@ new_tune:
         tvhtrace(LS_SATIP, "RTP discontinuity (%i != %i)", seq + 1, nseq);
       }
       seq = nseq;
+      if (r == 0)
+        continue;
       /* Process */
       if (lfe->sf_skip_ts > 0) {
         if (lfe->sf_skip_ts < r) {
