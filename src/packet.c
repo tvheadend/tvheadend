@@ -251,6 +251,20 @@ pktref_remove(struct th_pktref_queue *q, th_pktref_t *pr)
  *
  */
 th_pkt_t *
+pktref_first(struct th_pktref_queue *q)
+{
+  th_pktref_t *pr;
+
+  pr = TAILQ_FIRST(q);
+  if (pr)
+    return pr->pr_pkt;
+  return NULL;
+}
+
+/**
+ *
+ */
+th_pkt_t *
 pktref_get_first(struct th_pktref_queue *q)
 {
   th_pktref_t *pr;

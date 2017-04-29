@@ -1127,10 +1127,10 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
   mark = 0;
   if(SCT_ISAUDIO(pkt->pkt_type)) {
     while ((opkt = pktref_first(&mk->holdq)) != NULL) {
-      if (pts_diff(opkt->pkt_pts, pkt->pkt_pts) > 90000)
+      if (pts_diff(pkt->pkt_pts, opkt->pkt_pts) > 90000)
         break;
       opkt = pktref_get_first(&mk->holdq);
-      tvhtrace(LS_MKV, "hold push, pts %"PRId64"\n", opkt->pkt_pts);
+      tvhtrace(LS_MKV, "hold push, pts %"PRId64", audio pts %"PRId64"\n", opkt->pkt_pts, pkt->pkt_pts);
       tpkt = pkt_copy_shallow(opkt);
       pkt_ref_dec(opkt);
       tpkt->pkt_pcr = tpkt->pkt_pts;
@@ -1473,6 +1473,8 @@ mkv_muxer_destroy(muxer_t *m)
 {
   mk_muxer_t *mk = (mk_muxer_t*)m;
   mk_chapter_t *ch;
+
+  pktref_clear_queue(&mk->holdq);
 
   while((ch = TAILQ_FIRST(&mk->chapters)) != NULL) {
     TAILQ_REMOVE(&mk->chapters, ch, link);
