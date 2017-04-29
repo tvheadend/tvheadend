@@ -2206,6 +2206,7 @@ profile_transcode_free(profile_t *_pro)
   free(pro->pro_vcodec_preset);
   free(pro->pro_acodec);
   free(pro->pro_scodec);
+  free(pro->pro_src_vcodec);
 }
 
 static profile_t *
