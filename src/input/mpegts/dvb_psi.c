@@ -1286,7 +1286,8 @@ dvb_nit_mux
       break;
     case 0x83:
       if (priv == 0 || priv == 0x28 || priv == 0x29 || priv == 0xa5 ||
-          priv == 0x233A || priv == 0x3200 || priv == 0x3201) goto lcn;
+          priv == 0x212c || priv == 0x233A ||
+          priv == 0x3200 || priv == 0x3201) goto lcn;
       break;
     case 0x86:
       if (priv == 0) goto lcn;
@@ -1331,7 +1332,7 @@ int
 dvb_nit_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  int save = 0;
+  int save = 0, retry = 0;
   int r, sect, last, ver;
   uint32_t priv = 0;
   uint8_t  dtag;
@@ -1503,19 +1504,24 @@ dvb_nit_callback
       }
     } else
 #endif
-    LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link)
+    LIST_FOREACH(mux, &mn->mn_muxes, mm_network_link) {
       if (mux->mm_onid == onid && mux->mm_tsid == tsid &&
           (mm == mux || mpegts_mux_alive(mux))) {
         r = dvb_nit_mux(mt, mux, mm, onid, tsid, lptr, llen, tableid, bi, 0);
         if (r < 0)
           return r;
       }
+      if (mux->mm_onid == 0xffff && mux->mm_tsid == tsid)
+        retry = 1; /* keep rolling - perhaps PAT was not parsed yet */
+    }
       
     lptr += r;
     llen -= r;
   }
 
   /* End */
+  if (retry)
+    return 0;
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
