@@ -105,13 +105,15 @@ ts_recv_packet0
         /* handle the broken info using candidate variable */
         if (t->s_current_pcr == PTS_UNSET || pts_diff(t->s_current_pcr, pcr) <= 90000 ||
             (t->s_candidate_pcr != PTS_UNSET && pts_diff(t->s_candidate_pcr, pcr) <= 90000)) {
-          if (t->s_current_pcr == PTS_UNSET)
-            tvhtrace(LS_TS, "%s: Initial PCR: %"PRId64, service_nicename((service_t*)t), pcr);
-          t->s_current_pcr = pcr;
-          if (t->s_candidate_pcr != PTS_UNSET) {
-            tvhtrace(LS_TS, "%s: PCR change: %"PRId64, service_nicename((service_t*)t), pcr);
-            t->s_candidate_pcr = PTS_UNSET;
+          if (pcr != t->s_current_pcr) {
+            if (t->s_current_pcr == PTS_UNSET)
+              tvhtrace(LS_TS, "%s: PCR initial: %"PRId64, service_nicename((service_t*)t), pcr);
+            else
+              tvhtrace(LS_TS, "%s: PCR change : %"PRId64"%s", service_nicename((service_t*)t), pcr,
+                                                t->s_candidate_pcr != PTS_UNSET ? " (candidate)" : "");
+            t->s_current_pcr = pcr;
           }
+          t->s_candidate_pcr = PTS_UNSET;
         } else {
           t->s_candidate_pcr = pcr;
         }
