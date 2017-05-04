@@ -354,7 +354,8 @@ mpegts_service_enlist
     int flags, int weight )
 {
   /* invalid PMT */
-  if (t->s_pmt_pid <= 0 || t->s_pmt_pid >= 8191)
+  if (t->s_pmt_pid != SERVICE_PMT_AUTO &&
+      (t->s_pmt_pid <= 0 || t->s_pmt_pid >= 8191))
     return SM_CODE_INVALID_SERVICE;
 
   return mpegts_service_enlist_raw(t, ti, sil, flags, weight);
@@ -985,6 +986,9 @@ mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
   int i;
 
   lock_assert(&s->s_stream_mutex);
+
+  if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+    return;
 
   pids = mpegts_pid_alloc();
 

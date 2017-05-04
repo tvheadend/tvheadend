@@ -208,6 +208,8 @@ typedef struct service_lcn {
 #define SERVICE_AUTO_OFF          1
 #define SERVICE_AUTO_PAT_MISSING  2
 
+#define SERVICE_PMT_AUTO	  0xffff
+
 /**
  *
  */

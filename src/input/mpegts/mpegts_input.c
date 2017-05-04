@@ -722,6 +722,9 @@ mpegts_input_open_service
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
 
+    if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+      goto no_pids;
+
     mpegts_input_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s, reopen);
     mpegts_input_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s, reopen);
     if (s->s_scrambled_pass)
@@ -753,6 +756,7 @@ mpegts_input_open_service
     }
   }
 
+no_pids:
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);
 
@@ -799,6 +803,9 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
 
+    if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+      goto no_pids;
+
     mpegts_input_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s);
     mpegts_input_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
     if (s->s_scrambled_pass)
@@ -817,6 +824,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
     mpegts_input_close_pids(mi, mm, s, 1);
   }
 
+no_pids:
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);
 
