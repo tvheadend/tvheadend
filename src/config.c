@@ -1402,6 +1402,8 @@ config_migrate_v24_helper ( const char **list, htsmsg_t *e, const char *name )
 {
   htsmsg_t *l = htsmsg_create_list();
   const char **p = list;
+  if (!strcmp(name, "dvr") && !htsmsg_get_bool_or_default(e, "failed_dvr", 0))
+    htsmsg_add_str(l, NULL, "failed");
   for (p = list; *p; p += 2)
     if (htsmsg_get_bool_or_default(e, p[0], 0))
       htsmsg_add_str(l, NULL, p[1]);
