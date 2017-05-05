@@ -1078,7 +1078,8 @@ satip_frontend_wake_other_waiting
     if ((lfe->sf_master && lfe2->sf_number != lfe->sf_master) ||
         (lfe2->sf_master && lfe->sf_number != lfe2->sf_master))
       continue;
-    pthread_mutex_lock(&lfe2->sf_dvr_lock);
+    while (pthread_mutex_trylock(&lfe2->sf_dvr_lock))
+      tvh_usleep(1000);
     hash2 = lfe2->sf_req ? lfe2->sf_req->sf_netposhash : 0;
     if (hash2 != 0 && hash1 != hash2 && lfe2->sf_running)
       tvh_write(lfe2->sf_dvr_pipe.wr, "o", 1);
