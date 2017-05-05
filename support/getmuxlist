@@ -11,9 +11,13 @@ DIR=$1
 if [ -d "${DIR}/.git" ]; then
   LAST=$(pwd)
   cd "${DIR}" || exit 1
-  git fetch > /dev/null 2>&1 || exit 1
-  git reset --hard > /dev/null 2>&1 || exit 1
-  git pull > /dev/null 2>&1 || exit 1
+  git fetch --tags > /dev/null 2>&1 || exit 1
+  hash1=$(git rev-parse HEAD)
+  hash2=$(git rev-parse origin/tvheadend)
+  if [ "$hash1" != "$hash2" ]; then
+    git reset --hard origin/master > /dev/null 2>&1 || exit 1
+    git pull > /dev/null 2>&1 || exit 1
+  fi
   cd "${LAST}" || exit 1
 # Fetch
 elif [ ! -d "${DIR}" ]; then
