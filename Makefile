@@ -657,7 +657,9 @@ $(ROOTDIR)/src/version.c: FORCE
 FORCE:
 
 # Include dependency files if they exist.
+ifeq ($(filter clean distclean, $(MAKECMDGOALS)),)
 -include $(DEPS)
+endif
 
 # Some hardcoded deps
 src/webui/extjs.c: make_webui
