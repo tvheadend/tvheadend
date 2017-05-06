@@ -116,6 +116,7 @@ struct linuxdvb_frontend
   char                     *lfe_fe_path;
   char                     *lfe_dmx_path;
   char                     *lfe_dvr_path;
+  char                     *lfe_sysfs;
 
   /*
    * Reception

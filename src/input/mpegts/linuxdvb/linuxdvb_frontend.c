@@ -97,6 +97,14 @@ const idclass_t linuxdvb_frontend_class =
       .off      = offsetof(linuxdvb_frontend_t, lfe_number),
     },
     {
+      .type     = PT_STR,
+      .id       = "sysfs_device",
+      .name     = N_("Device path in sysfs"),
+      .desc     = N_("The device path in sysfs filesystem (/sys)."),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_MULTILINE,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_sysfs),
+    },
+    {
       .type     = PT_INT,
       .id       = "pids_max",
       .name     = N_("Maximum PIDs"),
@@ -1985,9 +1993,10 @@ linuxdvb_frontend_create
 {
   const idclass_t *idc;
   const char *str, *uuid = NULL, *muuid = NULL;
-  char id[16], lname[256];
+  char id[16], lname[256], buf[256];
   linuxdvb_frontend_t *lfe;
   htsmsg_t *scconf;
+  ssize_t r;
 
   /* Tuner slave */
   snprintf(id, sizeof(id), "master for #%d", number);
@@ -2054,6 +2063,16 @@ linuxdvb_frontend_create
   lfe->lfe_pids_max = 32;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
+
+  /* Sysfs path */
+  snprintf(lname, sizeof(lname), "/sys/class/dvb/dvb%d.frontend%d", la->la_dvb_number, number);
+  r = readlink(lname, buf, sizeof(buf));
+  if (r > 0) {
+    if (r == sizeof(buf)) r--;
+    buf[r] = '\0';
+    if (strncmp(str = buf, "../../", 6) == 0) str += 6;
+    lfe->lfe_sysfs = strdup(str);
+  }
 
   /* Callbacks */
   lfe->mi_get_weight   = linuxdvb_frontend_get_weight;
@@ -2151,6 +2170,7 @@ linuxdvb_frontend_delete ( linuxdvb_frontend_t *lfe )
   LIST_REMOVE(lfe, lfe_link);
 
   /* Free memory */
+  free(lfe->lfe_sysfs);
   free(lfe->lfe_fe_path);
   free(lfe->lfe_dmx_path);
   free(lfe->lfe_dvr_path);
