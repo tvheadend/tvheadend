@@ -363,7 +363,7 @@ satip_rtp_thread(void *aux)
 
   tcp_get_str_from_ip(&rtp->peer, peername, sizeof(peername));
   tvhdebug(LS_SATIPS, "RTP streaming to %s:%d open", peername,
-           tcp ? IP_PORT(rtp->peer) : rtp->port);
+           tcp ? ntohs(IP_PORT(rtp->peer)) : rtp->port);
 
   pthread_mutex_lock(&sq->sq_mutex);
   while (rtp->sq && !fatal) {
@@ -901,7 +901,7 @@ satip_rtcp_thread(void *aux)
         err = errno;
         tcp_get_str_from_ip(&rtp->peer2, addrbuf, sizeof(addrbuf));
         tvhwarn(LS_SATIPS, "RTCP send to error %s:%d : %s",
-                addrbuf, IP_PORT(rtp->peer2), strerror(err));
+                addrbuf, ntohs(IP_PORT(rtp->peer2)), strerror(err));
       }
     }
     pthread_mutex_unlock(&satip_rtp_lock);
