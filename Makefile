@@ -782,7 +782,7 @@ endif
 $(ROOTDIR)/data/dvb-scan/.stamp:
 	@echo "Receiving data/dvb-scan from https://github.com/tvheadend/dtv-scan-tables.git#tvheadend"
 	@rm -rf $(ROOTDIR)/data/dvb-scan/*
-	@$(ROOTDIR)/support/getmuxlist $(ROOTDIR)/data/dvb-scan
+	sh -x $(ROOTDIR)/support/getmuxlist $(ROOTDIR)/data/dvb-scan
 	@touch $@
 
 .PHONY: check_dvb_scan
