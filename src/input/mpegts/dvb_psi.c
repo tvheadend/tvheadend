@@ -247,11 +247,13 @@ dvb_desc_sat_del
     DVB_ROLLOFF_35, DVB_ROLLOFF_25, DVB_ROLLOFF_20, DVB_ROLLOFF_AUTO
   };
   dmc.dmc_fe_modulation = mtab[ptr[6] & 0x3];
+#if 0
   if (dmc.dmc_fe_modulation != DVB_MOD_NONE &&
       dmc.dmc_fe_modulation != DVB_MOD_QPSK)
     /* standard DVB-S allows only QPSK */
     /* on 13.0E, there are (ptr[6] & 4) == 0 muxes with 8PSK and DVB-S2 */
     dmc.dmc_fe_delsys = DVB_SYS_DVBS2;
+#endif
   dmc.dmc_fe_rolloff    = rtab[(ptr[6] >> 3) & 0x3];
   if (dmc.dmc_fe_delsys == DVB_SYS_DVBS &&
       dmc.dmc_fe_rolloff != DVB_ROLLOFF_35) {
