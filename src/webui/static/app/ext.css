@@ -78,6 +78,20 @@
     background-image: url(../icons/tv_cards.png);
 }
 
+.x-tree-node-on a::before {
+    content: " \25cf";
+    color: lightgreen;
+}
+
+.x-tree-node-on a {
+    font-weight: bold;
+}
+
+.x-tree-node-off a::before {
+    content: " \25cf";
+    color: lightcoral;
+}
+
 .ux-mselect {
     overflow: auto;
     background: white;
