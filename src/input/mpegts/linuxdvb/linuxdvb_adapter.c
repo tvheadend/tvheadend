@@ -104,6 +104,27 @@ linuxdvb_adapter_class_get_title ( idnode_t *in, const char *lang )
   return la->la_name ?: la->la_rootpath;
 }
 
+static const void *
+linuxdvb_adapter_class_active_get ( void *obj )
+{
+  static int active;
+#if ENABLE_LINUXDVB_CA
+  linuxdvb_ca_t *lca;
+#endif
+  linuxdvb_adapter_t *la = (linuxdvb_adapter_t*)obj;
+  active = la->la_is_enabled(la);
+#if ENABLE_LINUXDVB_CA
+  if (!active) {
+    LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
+      if (lca->lca_enabled) {
+        active = 1;
+        break;
+      }
+  }
+#endif
+  return &active;
+}
+
 const idclass_t linuxdvb_adapter_class =
 {
   .ic_class      = "linuxdvb_adapter",
@@ -113,6 +134,13 @@ const idclass_t linuxdvb_adapter_class =
   .ic_get_childs = linuxdvb_adapter_class_get_childs,
   .ic_get_title  = linuxdvb_adapter_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get	= linuxdvb_adapter_class_active_get,
+    },
     {
       .type     = PT_STR,
       .id       = "rootpath",

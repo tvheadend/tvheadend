@@ -51,6 +51,17 @@ linuxdvb_frontend_class_changed ( idnode_t *in )
   linuxdvb_adapter_changed(la);
 }
 
+const void *
+linuxdvb_frontend_class_active_get ( void *obj )
+{
+  int *active;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t*)obj;
+  active = (int *)mpegts_input_class_active_get(obj);
+  if (!(*active) && lfe->lfe_adapter->la_exclusive)
+    *active = lfe->lfe_adapter->la_is_enabled(lfe->lfe_adapter);
+  return active;
+}
+
 CLASS_DOC(linuxdvb_frontend)
 CLASS_DOC(linuxdvb_frontend_dvbs)
 CLASS_DOC(linuxdvb_frontend_dvbt) 
@@ -64,6 +75,13 @@ const idclass_t linuxdvb_frontend_class =
   .ic_doc        = tvh_doc_linuxdvb_frontend_class,
   .ic_changed    = linuxdvb_frontend_class_changed,
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = linuxdvb_frontend_class_active_get,
+    },
     {
       .type     = PT_STR,
       .id       = "fe_path",
@@ -541,10 +559,13 @@ linuxdvb_frontend_is_enabled
 
   if (lfe->lfe_fe_path == NULL)
     return MI_IS_ENABLED_NEVER;
-  if (!mpegts_input_is_enabled(mi, mm, flags, weight))
-    return MI_IS_ENABLED_NEVER;
+  w = mpegts_input_is_enabled(mi, mm, flags, weight);
+  if (w != MI_IS_ENABLED_OK)
+    return w;
   if (access(lfe->lfe_fe_path, R_OK | W_OK))
     return MI_IS_ENABLED_NEVER;
+  if (mm == NULL)
+    return MI_IS_ENABLED_OK;
   if (lfe->lfe_in_setup)
     return MI_IS_ENABLED_RETRY;
   if (lfe->lfe_type != DVB_TYPE_S)

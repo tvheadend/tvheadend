@@ -76,6 +76,15 @@ mpegts_input_class_get_title ( idnode_t *in, const char *lang )
 }
 
 const void *
+mpegts_input_class_active_get ( void *obj )
+{
+  static int active;
+  mpegts_input_t *mi = obj;
+  active = mi->mi_is_enabled((mpegts_input_t*)mi, NULL, 0, -1) != MI_IS_ENABLED_NEVER;
+  return &active;
+}
+
+const void *
 mpegts_input_class_network_get ( void *obj )
 {
   mpegts_network_link_t *mnl;  
@@ -225,6 +234,13 @@ const idclass_t mpegts_input_class =
   .ic_perm_def   = ACCESS_ADMIN,
   .ic_get_title  = mpegts_input_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = mpegts_input_class_active_get,
+    },
     {
       .type     = PT_BOOL,
       .id       = "enabled",

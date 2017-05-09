@@ -25,6 +25,17 @@
  * Frontend callbacks
  * *************************************************************************/
 
+static const void *
+satip_satconf_class_active_get ( void *obj )
+{
+  static int active;
+  satip_satconf_t *sfc = obj;
+  active = 0;
+  if (*(int *)mpegts_input_class_active_get(sfc->sfc_lfe))
+    active = sfc->sfc_enabled;
+  return &active;
+}
+
 static satip_satconf_t *
 satip_satconf_find_ele( satip_frontend_t *lfe, mpegts_mux_t *mux )
 {
@@ -331,6 +342,13 @@ const idclass_t satip_satconf_class =
   .ic_get_title  = satip_satconf_class_get_title,
   .ic_changed    = satip_satconf_class_changed,
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = satip_satconf_class_active_get,
+    },
     {
       .type     = PT_BOOL,
       .id       = "enabled",

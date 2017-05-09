@@ -141,6 +141,21 @@ satip_device_class_save ( idnode_t *in, char *filename, size_t fsize )
   return m;
 }
 
+static const void *
+satip_device_class_active_get ( void * obj )
+{
+  static int active;
+  satip_device_t *sd = (satip_device_t *)obj;
+  satip_frontend_t *lfe;
+  active = 0;
+  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+    if (*(int *)mpegts_input_class_active_get(lfe)) {
+      active = 1;
+      break;
+    }
+  return &active;
+}
+
 static idnode_set_t *
 satip_device_class_get_childs ( idnode_t *in )
 {
@@ -218,6 +233,13 @@ const idclass_t satip_device_class =
   .ic_get_childs = satip_device_class_get_childs,
   .ic_get_title  = satip_device_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = satip_device_class_active_get,
+    },
     {
       .type     = PT_STR,
       .id       = "tunercfgu",
