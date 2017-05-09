@@ -544,6 +544,9 @@ service_stream_find(service_t *t, int pid)
     return t->s_last_es;
 }
 
+elementary_stream_t *
+service_stream_type_find(service_t *t, streaming_component_type_t type);
+
 elementary_stream_t *service_stream_create(service_t *t, int pid,
 				     streaming_component_type_t type);
 

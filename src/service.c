@@ -429,26 +429,26 @@ service_build_filter_add(service_t *t, elementary_stream_t *st,
 static void
 service_print_filter(service_t *t)
 {
-#if 0
   elementary_stream_t *st;
   caid_t *ca;
 
+  if (!tvhtrace_enabled())
+    return;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (LIST_EMPTY(&st->es_caids)) {
-      tvhinfo(LS_SERVICE, "esfilter: \"%s\" %03d %05d %s %s",
+      tvhtrace(LS_SERVICE, "esfilter: \"%s\" %03d %05d %s %s",
               t->s_nicename, st->es_index, st->es_pid,
               streaming_component_type2txt(st->es_type),
               lang_code_get(st->es_lang));
     } else {
       LIST_FOREACH(ca, &st->es_caids, link)
         if (ca->use)
-          tvhinfo(LS_SERVICE, "esfilter: \"%s\" %03d %05d %s %04x %06x",
+          tvhtrace(LS_SERVICE, "esfilter: \"%s\" %03d %05d %s %04x %06x",
                   t->s_nicename, st->es_index, st->es_pid,
                   streaming_component_type2txt(st->es_type),
                   ca->caid, ca->providerid);
     }
   }
-#endif
 }
 
 /**
@@ -1208,6 +1208,22 @@ service_stream_find_(service_t *t, int pid)
       return st;
     }
   }
+  return NULL;
+}
+
+/**
+ * Find a first elementary stream in a service (by type)
+ */
+elementary_stream_t *
+service_stream_type_find(service_t *t, streaming_component_type_t type)
+{
+  elementary_stream_t *st;
+
+  lock_assert(&t->s_stream_mutex);
+
+  TAILQ_FOREACH(st, &t->s_components, es_link)
+    if(st->es_type == type)
+      return st;
   return NULL;
 }
 
@@ -1978,6 +1994,10 @@ void service_save ( service_t *t, htsmsg_t *m )
 
   list = htsmsg_create_list();
   TAILQ_FOREACH(st, &t->s_components, es_link) {
+
+    if (st->es_type == SCT_PCR)
+      continue;
+
     sub = htsmsg_create_map();
 
     htsmsg_add_u32(sub, "pid", st->es_pid);
@@ -2176,7 +2196,7 @@ void service_load ( service_t *t, htsmsg_t *c )
         continue;
 
       type = streaming_component_txt2type(v);
-      if(type == -1)
+      if(type == -1 || type == SCT_PCR)
         continue;
 
       if(htsmsg_get_u32(c, "pid", &pid))

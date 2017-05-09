@@ -538,6 +538,8 @@ streaming_start_component_find_by_index(streaming_start_t *ss, int idx)
 static struct strtab streamtypetab[] = {
   { "NONE",       SCT_NONE },
   { "UNKNOWN",    SCT_UNKNOWN },
+  { "RAW",        SCT_RAW },
+  { "PCR",        SCT_PCR },
   { "MPEG2VIDEO", SCT_MPEG2VIDEO },
   { "MPEG2AUDIO", SCT_MPEG2AUDIO },
   { "H264",       SCT_H264 },

@@ -85,12 +85,6 @@ ts_recv_packet0
       st->es_cc = (cc + 1) & 0xf;
     }
 
-    if (!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
-      continue;
-
-    if (st->es_type == SCT_CA)
-      continue;
-
     if (tsb2[3] & 0xc0) /* scrambled */
       continue;
 
@@ -121,6 +115,12 @@ ts_recv_packet0
     } else {
       off = 4;
     }
+
+    if (!streaming_pad_probe_type(&t->s_streaming_pad, SMT_PACKET))
+      continue;
+
+    if (st->es_type == SCT_CA)
+      continue;
 
     if (off <= 188 && t->s_status == SERVICE_RUNNING)
       parse_mpeg_ts((service_t*)t, st, tsb2 + off, 188 - off, pusi, error);

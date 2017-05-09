@@ -2237,6 +2237,7 @@ psi_parse_pmt
   int position;
   int tt_position;
   int video_stream;
+  int pcr_shared = 0;
   const char *lang;
   uint8_t audio_type, audio_version;
   mpegts_mux_t *mux = mt->mt_mux;
@@ -2477,8 +2478,21 @@ psi_parse_pmt
         st->es_ancillary_id = ancillary_id;
         update |= PMT_UPDATE_ANCILLARY_ID;
       }
+
+      if (st->es_pid == t->s_pcr_pid)
+        pcr_shared = 1;
     }
     position++;
+  }
+
+  /* Handle PCR 'elementary stream' */
+  if (!pcr_shared) {
+    st = service_stream_type_find((service_t *)t, SCT_PCR);
+    if (st)
+      st->es_pid = t->s_pcr_pid;
+    else
+      st = service_stream_create((service_t*)t, t->s_pcr_pid, SCT_PCR);
+    st->es_delete_me = 0;
   }
 
   /* Scan again to see if any streams should be deleted */

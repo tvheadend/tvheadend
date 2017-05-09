@@ -273,6 +273,7 @@ typedef enum {
   SCT_NONE = -1,
   SCT_UNKNOWN = 0,
   SCT_RAW = 1,
+  SCT_PCR,
   SCT_MPEG2VIDEO,
   SCT_MPEG2AUDIO,
   SCT_H264,
