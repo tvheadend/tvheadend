@@ -1832,7 +1832,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
 
   assert(pkt->pkt_type == st->es_type);
 
-  diff = st->es_type == SCT_DVBSUB ? 4*90000 : 3*90000;
+  diff = st->es_type == SCT_DVBSUB ? 6*90000 : 3*90000;
 
   if (pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > diff) {
     printf("%s: PTS and PCR diff is very big (%"PRId64")\n",

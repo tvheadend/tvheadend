@@ -521,7 +521,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
         if(tfs2->tfs_audio && tfs2->tfs_last_dts_in != PTS_UNSET) {
           diff = tsfix_ts_diff(tfs2->tfs_last_dts_in, pkt->pkt_dts);
-          if (diff > 4 * 90000) {
+          if (diff > 6 * 90000) {
             tvhwarn(LS_TSFIX, "The timediff for %s is big (%"PRId64"), using audio dts",
                     streaming_component_type2txt(tfs->tfs_type), diff);
             tfs->tfs_parent = tfs2;
