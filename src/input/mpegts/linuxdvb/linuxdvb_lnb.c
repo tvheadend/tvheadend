@@ -439,14 +439,17 @@ linuxdvb_lnb_create0
 
   lsc2 = malloc(sizeof(linuxdvb_lnb_conf_t));
   *lsc2 = *lsc;
-  return linuxdvb_diseqc_create0(lsc2, NULL, &linuxdvb_lnb_class, conf, lsc->ld_type, ls);
+  return (linuxdvb_lnb_t *)
+            linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)lsc2,
+                                    NULL, &linuxdvb_lnb_class,
+                                    conf, lsc->ld_type, ls);
 }
 
 void
-linuxdvb_lnb_destroy ( linuxdvb_diseqc_t *ld )
+linuxdvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
 {
-  linuxdvb_diseqc_destroy(ld);
-  free(ld);
+  linuxdvb_diseqc_destroy((linuxdvb_diseqc_t *)lnb);
+  free(lnb);
 }
 
 /******************************************************************************

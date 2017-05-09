@@ -461,7 +461,7 @@ linuxdvb_diseqc_t *linuxdvb_rotor_create0
 linuxdvb_diseqc_t *linuxdvb_en50494_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls, int port );
 
-void linuxdvb_lnb_destroy     ( linuxdvb_diseqc_t *ld );
+void linuxdvb_lnb_destroy     ( linuxdvb_lnb_t *lnb );
 void linuxdvb_switch_destroy  ( linuxdvb_diseqc_t *ld );
 void linuxdvb_rotor_destroy   ( linuxdvb_diseqc_t *ld );
 void linuxdvb_en50494_destroy ( linuxdvb_diseqc_t *ld );
