@@ -11,7 +11,7 @@ tvheadend.tvadapters = function(panel, index) {
             var p = n.attributes.params;
             if (!p) return;
             for (var i = 0; i < p.length; i++)
-                if (p[i].id == "enabled" && p[i].value) {
+                if (p[i].id == "active" && p[i].value) {
                     n.ui.addClass('x-tree-node-on');
                     break;
                 }

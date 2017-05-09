@@ -821,6 +821,7 @@ const void *mpegts_input_class_network_get  ( void *o );
 int         mpegts_input_class_network_set  ( void *o, const void *p );
 htsmsg_t   *mpegts_input_class_network_enum ( void *o, const char *lang );
 char       *mpegts_input_class_network_rend ( void *o, const char *lang );
+const void *mpegts_input_class_active_get   ( void *o );
 
 int mpegts_mps_weight(elementary_stream_t *st);
 

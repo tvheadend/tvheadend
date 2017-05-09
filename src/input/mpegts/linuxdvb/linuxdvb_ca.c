@@ -177,6 +177,15 @@ linuxdvb_ca_class_get_title ( idnode_t *in, const char *lang )
   return buf;
 }
 
+static const void *
+linuxdvb_ca_class_active_get ( void *obj )
+{
+  static int active;
+  linuxdvb_ca_t *lca = (linuxdvb_ca_t*)obj;
+  active = !!lca->lca_enabled;
+  return &active;
+}
+
 const idclass_t linuxdvb_ca_class =
 {
   .ic_class      = "linuxdvb_ca",
@@ -184,6 +193,13 @@ const idclass_t linuxdvb_ca_class =
   .ic_changed    = linuxdvb_ca_class_changed,
   .ic_get_title  = linuxdvb_ca_class_get_title,
   .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = linuxdvb_ca_class_active_get,
+    },
     {
       .type     = PT_BOOL,
       .id       = "enabled",
