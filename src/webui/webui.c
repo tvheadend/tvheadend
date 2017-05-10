@@ -1753,7 +1753,6 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
 {
   int ret;
   const char *filename;
-  char *basename;
   dvr_entry_t *de;
   page_dvrfile_priv_t priv;
 
