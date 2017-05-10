@@ -560,7 +560,7 @@ channel_find_by_name ( const char *name )
   if (name == NULL)
     return NULL;
   CHANNEL_FOREACH(ch)
-    if (ch->ch_enabled && !strcmp(channel_get_name(ch), name))
+    if (ch->ch_enabled && !strcasecmp(channel_get_name(ch), name))
       break;
   return ch;
 }
