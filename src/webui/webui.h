@@ -23,6 +23,9 @@
 #include "idnode.h"
 #include "http.h"
 
+#define MIME_M3U "audio/x-mpegurl"
+#define MIME_E2 "application/x-e2-bouquet"
+
 void webui_init(int xspf);
 void webui_done(void);
 
@@ -32,6 +35,14 @@ void extjs_start(void);
 
 size_t html_escaped_len(const char *src);
 const char* html_escape(char *dst, const char *src, size_t len);
+
+int
+http_serve_file(http_connection_t *hc, const char *fname,
+                int fconv, const char *content,
+                int (*preop)(http_connection_t *hc, off_t file_start,
+                             size_t content_len, void *opaque),
+                void (*stats)(http_connection_t *hc, size_t len, void *opaque),
+                void *opaque);
 
 int page_static_file(http_connection_t *hc, const char *remain, void *opaque);
 int page_xmltv(http_connection_t *hc, const char *remain, void *opaque);
