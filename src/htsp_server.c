@@ -2705,7 +2705,7 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 {
   const char *str, *s2;
   const char *filename = NULL;
-
+  char buf[PATH_MAX];
 
   if((str = htsmsg_get_str(in, "file")) == NULL)
     return htsp_error(htsp, N_("Invalid arguments"));
@@ -2731,7 +2731,9 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
     return htsp_file_open(htsp, filename, 0, de);
 
   } else if ((s2 = tvh_strbegins(str, "imagecache/")) != NULL) {
-    int fd = imagecache_open(atoi(s2));
+    int fd = -1;
+    if (!imagecache_filename(atoi(s2), buf, sizeof(buf)))
+      fd = tvh_open(buf, O_RDONLY, 0);
     if (fd < 0)
       return htsp_error(htsp, N_("Failed to open image"));
     return htsp_file_open(htsp, str, fd, NULL);

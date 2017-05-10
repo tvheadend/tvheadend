@@ -61,9 +61,6 @@
 #include <sys/socket.h>
 #endif
 
-#define MIME_M3U "audio/x-mpegurl"
-#define MIME_E2 "application/x-e2-bouquet"
-
 typedef int (sortfcn_t)(const void *, const void *);
 
 enum {
@@ -1550,24 +1547,25 @@ page_play(http_connection_t *hc, const char *remain, void *opaque)
 }
 
 /**
- * Download a recorded file
+ * Send a file
  */
-static int
-page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
+int
+http_serve_file(http_connection_t *hc, const char *fname,
+                int fconv, const char *content,
+                int (*preop)(http_connection_t *hc, off_t file_start,
+                             size_t content_len, void *opaque),
+                void (*stats)(http_connection_t *hc, size_t len, void *opaque),
+                void *opaque)
 {
   int fd, ret;
   struct stat st;
-  const char *content = NULL, *range, *filename;
-  dvr_entry_t *de;
-  char *fname, *charset;
+  const char *range;
   char *basename;
   char *str, *str0;
   char range_buf[255];
   char *disposition = NULL;
   off_t content_len, chunk;
   intmax_t file_start, file_end;
-  void *tcp_id;
-  th_subscription_t *sub;
   htsbuf_queue_t q;
 #if defined(PLATFORM_LINUX)
   ssize_t r;
@@ -1575,53 +1573,26 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   off_t r;
 #endif
   
-  if(remain == NULL)
-    return HTTP_STATUS_BAD_REQUEST;
-
-  if(hc->hc_access == NULL ||
-     (access_verify2(hc->hc_access, ACCESS_OR |
-                                    ACCESS_STREAMING |
-                                    ACCESS_ADVANCED_STREAMING |
-                                    ACCESS_RECORDER)))
-    return HTTP_STATUS_UNAUTHORIZED;
-
-  pthread_mutex_lock(&global_lock);
-  de = dvr_entry_find_by_uuid(remain);
-  if (de == NULL)
-    de = dvr_entry_find_by_id(atoi(remain));
-  if(de == NULL || (filename = dvr_get_filename(de)) == NULL) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_NOT_FOUND;
-  }
-  if(dvr_entry_verify(de, hc->hc_access, 1)) {
-    pthread_mutex_unlock(&global_lock);
-    return HTTP_STATUS_UNAUTHORIZED;
-  }
-
-  fname = tvh_strdupa(filename);
-  content = muxer_container_filename2mime(fname, 1);
-  charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
-
-  pthread_mutex_unlock(&global_lock);
-
-  basename = strrchr(fname, '/');
-  if (basename) {
-    basename++; /* Skip '/' */
-    str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
-                                basename, strlen(basename) * 3);
-    if (str0 == NULL)
-      return HTTP_STATUS_INTERNAL;
-    htsbuf_queue_init(&q, 0);
-    htsbuf_append_and_escape_url(&q, basename);
-    str = htsbuf_to_string(&q);
-    r = 50 + strlen(str0) + strlen(str);
-    disposition = alloca(r);
-    snprintf(disposition, r,
-             "attachment; filename=\"%s\"; filename*=UTF-8''%s",
-             str0, str);
-    htsbuf_queue_flush(&q);
-    free(str);
-    free(str0);
+  if (fconv) {
+    basename = strrchr(fname, '/');
+    if (basename) {
+      basename++; /* Skip '/' */
+      str0 = intlconv_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                  basename, strlen(basename) * 3);
+      if (str0 == NULL)
+        return HTTP_STATUS_INTERNAL;
+      htsbuf_queue_init(&q, 0);
+      htsbuf_append_and_escape_url(&q, basename);
+      str = htsbuf_to_string(&q);
+      r = 50 + strlen(str0) + strlen(str);
+      disposition = alloca(r);
+      snprintf(disposition, r,
+               "attachment; filename=\"%s\"; filename*=UTF-8''%s",
+               str0, str);
+      htsbuf_queue_flush(&q);
+      free(str);
+      free(str0);
+    }
   }
 
   fd = tvh_open(fname, O_RDONLY, 0);
@@ -1666,46 +1637,12 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
       return HTTP_STATUS_INTERNAL;
     }
 
-  pthread_mutex_lock(&global_lock);
-  tcp_id = http_stream_preop(hc);
-  sub = NULL;
-  if (tcp_id && !hc->hc_no_output && content_len > 64*1024) {
-    sub = subscription_create(NULL, 1, "HTTP",
-                              SUBSCRIPTION_NONE, NULL,
-                              hc->hc_peer_ipstr, hc->hc_username,
-                              http_arg_get(&hc->hc_args, "User-Agent"));
-    if (sub == NULL) {
-      http_stream_postop(tcp_id);
-      tcp_id = NULL;
-    } else {
-      str = intlconv_to_utf8safestr(charset, fname, strlen(fname) * 3);
-      if (str == NULL)
-        str = intlconv_to_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
-                                      fname, strlen(fname) * 3);
-      if (str == NULL)
-        str = strdup("error");
-      basename = malloc(strlen(str) + 7 + 1);
-      strcpy(basename, "file://");
-      strcat(basename, str);
-      sub->ths_dvrfile = basename;
-      free(str);
+  if (preop) {
+    ret = preop(hc, file_start, content_len, opaque);
+    if (ret) {
+      close(fd);
+      return ret;
     }
-  }
-  /* Play count + 1 when write access */
-  if (!hc->hc_no_output && file_start <= 0 &&
-      !dvr_entry_verify(de, hc->hc_access, 0)) {
-    de = dvr_entry_find_by_uuid(remain);
-    if (de == NULL)
-      de = dvr_entry_find_by_id(atoi(remain));
-    if (de) {
-      de->de_playcount = de->de_playcount + 1;
-      dvr_entry_changed_notify(de);
-    }
-  }
-  pthread_mutex_unlock(&global_lock);
-  if (tcp_id == NULL) {
-    close(fd);
-    return HTTP_STATUS_NOT_ALLOWED;
   }
 
   pthread_mutex_lock(&hc->hc_fd_lock);
@@ -1716,7 +1653,7 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
   ret = 0;
   if(!hc->hc_no_output) {
     while(content_len > 0) {
-      chunk = MIN(1024 * (sub ? 128 : 1024 * 1024), content_len);
+      chunk = MIN(1024 * ((stats ? 128 : 1024) * 1024), content_len);
 #if defined(PLATFORM_LINUX)
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
 #elif defined(PLATFORM_FREEBSD)
@@ -1730,19 +1667,133 @@ page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
         break;
       }
       content_len -= r;
-      if (sub) {
-        subscription_add_bytes_in(sub, r);
-        subscription_add_bytes_out(sub, r);
-      }
+      if (stats)
+        stats(hc, r, opaque);
     }
   }
   pthread_mutex_unlock(&hc->hc_fd_lock);
   close(fd);
 
+  return ret;
+}
+
+/**
+ * Download a recorded file
+ */
+typedef struct page_dvrfile_priv {
+  const char *uuid;
+  char *fname;
+  const char *charset;
+  const char *content;
+  void *tcp_id;
+  th_subscription_t *sub;
+} page_dvrfile_priv_t;
+
+static int
+page_dvrfile_preop(http_connection_t *hc, off_t file_start,
+                   size_t content_len, void *opaque)
+{
+  page_dvrfile_priv_t *priv = opaque;
+  char *str, *basename;
+  dvr_entry_t *de;
+
   pthread_mutex_lock(&global_lock);
-  if (sub)
-    subscription_unsubscribe(sub, UNSUBSCRIBE_FINAL);
-  http_stream_postop(tcp_id);
+  priv->tcp_id = http_stream_preop(hc);
+  priv->sub = NULL;
+  if (priv->tcp_id && !hc->hc_no_output && content_len > 64*1024) {
+    priv->sub = subscription_create(NULL, 1, "HTTP",
+                                    SUBSCRIPTION_NONE, NULL,
+                                    hc->hc_peer_ipstr, hc->hc_username,
+                                    http_arg_get(&hc->hc_args, "User-Agent"));
+    if (priv->sub == NULL) {
+      http_stream_postop(priv->tcp_id);
+      priv->tcp_id = NULL;
+    } else {
+      str = intlconv_to_utf8safestr(priv->charset, priv->fname, strlen(priv->fname) * 3);
+      if (str == NULL)
+        str = intlconv_to_utf8safestr(intlconv_charset_id("ASCII", 1, 1),
+                                      priv->fname, strlen(priv->fname) * 3);
+      if (str == NULL)
+        str = strdup("error");
+      basename = malloc(strlen(str) + 7 + 1);
+      strcpy(basename, "file://");
+      strcat(basename, str);
+      priv->sub->ths_dvrfile = basename;
+      free(str);
+    }
+  }
+  /* Play count + 1 when write access */
+  if (!hc->hc_no_output && file_start <= 0) {
+    de = dvr_entry_find_by_uuid(priv->uuid);
+    if (de == NULL)
+      de = dvr_entry_find_by_id(atoi(priv->uuid));
+    if (de && !dvr_entry_verify(de, hc->hc_access, 0)) {
+      de->de_playcount = de->de_playcount + 1;
+      dvr_entry_changed_notify(de);
+    }
+  }
+  pthread_mutex_unlock(&global_lock);
+  if (priv->tcp_id == NULL)
+    return HTTP_STATUS_NOT_ALLOWED;
+  return 0;
+}
+
+static void
+page_dvrfile_stats(http_connection_t *hc, size_t len, void *opaque)
+{
+  page_dvrfile_priv_t *priv = opaque;
+  if (priv->sub) {
+    subscription_add_bytes_in(priv->sub, len);
+    subscription_add_bytes_out(priv->sub, len);
+  }
+}
+
+static int
+page_dvrfile(http_connection_t *hc, const char *remain, void *opaque)
+{
+  int ret;
+  const char *filename;
+  char *basename;
+  dvr_entry_t *de;
+  page_dvrfile_priv_t priv;
+
+  if(remain == NULL)
+    return HTTP_STATUS_BAD_REQUEST;
+
+  if(hc->hc_access == NULL ||
+     (access_verify2(hc->hc_access, ACCESS_OR |
+                                    ACCESS_STREAMING |
+                                    ACCESS_ADVANCED_STREAMING |
+                                    ACCESS_RECORDER)))
+    return HTTP_STATUS_UNAUTHORIZED;
+
+  pthread_mutex_lock(&global_lock);
+  de = dvr_entry_find_by_uuid(remain);
+  if (de == NULL)
+    de = dvr_entry_find_by_id(atoi(remain));
+  if(de == NULL || (filename = dvr_get_filename(de)) == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_NOT_FOUND;
+  }
+  if(dvr_entry_verify(de, hc->hc_access, 1)) {
+    pthread_mutex_unlock(&global_lock);
+    return HTTP_STATUS_UNAUTHORIZED;
+  }
+
+  priv.uuid = remain;
+  priv.fname = tvh_strdupa(filename);
+  priv.content = muxer_container_filename2mime(priv.fname, 1);
+  priv.charset = de->de_config ? de->de_config->dvr_charset_id : NULL;
+
+  pthread_mutex_unlock(&global_lock);
+
+  ret = http_serve_file(hc, priv.fname, 1, priv.content,
+                        page_dvrfile_preop, page_dvrfile_stats, &priv);
+
+  pthread_mutex_lock(&global_lock);
+  if (priv.sub)
+    subscription_unsubscribe(priv.sub, UNSUBSCRIBE_FINAL);
+  http_stream_postop(priv.tcp_id);
   pthread_mutex_unlock(&global_lock);
   return ret;
 }
@@ -1757,10 +1808,8 @@ static int
 page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
 {
   uint32_t id;
-  int fd;
-  char buf[8192];
-  struct stat st;
-  ssize_t c;
+  int r;
+  char fname[PATH_MAX];
 
   if(remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -1780,31 +1829,13 @@ page_imagecache(http_connection_t *hc, const char *remain, void *opaque)
 
   /* Fetch details */
   pthread_mutex_lock(&global_lock);
-  fd = imagecache_open(id);
+  r = imagecache_filename(id, fname, sizeof(fname));
   pthread_mutex_unlock(&global_lock);
 
-  /* Check result */
-  if (fd < 0)
+  if (r)
     return HTTP_STATUS_NOT_FOUND;
-  if (fstat(fd, &st)) {
-    close(fd);
-    return HTTP_STATUS_NOT_FOUND;
-  }
 
-  pthread_mutex_lock(&hc->hc_fd_lock);
-  http_send_header(hc, 200, NULL, st.st_size, 0, NULL, 10, 0, NULL, NULL);
-
-  while (!hc->hc_no_output) {
-    c = read(fd, buf, sizeof(buf));
-    if (c <= 0)
-      break;
-    if (tvh_write(hc->hc_fd, buf, c))
-      break;
-  }
-  pthread_mutex_unlock(&hc->hc_fd_lock);
-  close(fd);
-
-  return 0;
+  return http_serve_file(hc, fname, 0, NULL, NULL, NULL, NULL);
 }
 
 /**
@@ -1814,7 +1845,7 @@ static void
 webui_static_content(const char *http_path, const char *source)
 {
   http_path_add(http_path, (void *)source, page_static_file,
-    ACCESS_WEB_INTERFACE);
+                ACCESS_WEB_INTERFACE);
 }
 
 
