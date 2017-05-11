@@ -53,7 +53,7 @@ linuxdvb_satconf_class_active_get ( void *obj )
   linuxdvb_satconf_t *ls = obj;
   linuxdvb_satconf_ele_t *lse;
   active = 0;
-  if (linuxdvb_frontend_class_active_get(ls->ls_frontend)) {
+  if (*(int *)linuxdvb_frontend_class_active_get(ls->ls_frontend)) {
     TAILQ_FOREACH(lse, &ls->ls_elements, lse_link) {
       if (lse->lse_enabled) {
         active = 1;
