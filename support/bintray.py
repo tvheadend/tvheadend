@@ -151,7 +151,7 @@ def get_bintray_params(filename, hint=None):
         debversion, debdistro = debversion.rsplit('~', 1)
         args.version = debversion
         args.path = 'pool/' + get_path(debversion, args.repo) + '/' + args.package
-        extra.append('deb_component=' + BINTRAY_COMPONENT or get_component(debversion))
+        extra.append('deb_component=' + (BINTRAY_COMPONENT or get_component(debversion)))
         extra.append('deb_distribution=' + debdistro)
         extra.append('deb_architecture=' + debarch)
     else:
