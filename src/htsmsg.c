@@ -313,6 +313,18 @@ htsmsg_add_bool(htsmsg_t *msg, const char *name, int b)
  *
  */
 void
+htsmsg_set_bool(htsmsg_t *msg, const char *name, int b)
+{
+  htsmsg_field_t *f = htsmsg_field_find(msg, name);
+  if (!f)
+    f = htsmsg_field_add(msg, name, HMF_BOOL, HMF_NAME_INALLOCED, 0);
+  f->hmf_bool = !!b;
+}
+
+/*
+ *
+ */
+void
 htsmsg_add_s64(htsmsg_t *msg, const char *name, int64_t s64)
 {
   htsmsg_field_t *f = htsmsg_field_add(msg, name, HMF_S64, HMF_NAME_INALLOCED, 0);
