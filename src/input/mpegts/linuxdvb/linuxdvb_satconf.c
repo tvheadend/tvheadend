@@ -1185,9 +1185,9 @@ linuxdvb_satconf_create
           htsmsg_add_str(l, NULL, str);
           htsmsg_add_msg(e, "networks", l);
         }
-        lse = linuxdvb_satconf_ele_create0(htsmsg_get_str(e, "uuid"), e, ls);
         if (lst->enable)
-          lse->lse_enabled = 1;
+          htsmsg_set_bool(e, "enabled", 1);
+        lse = linuxdvb_satconf_ele_create0(htsmsg_get_str(e, "uuid"), e, ls);
       }
     }
     
