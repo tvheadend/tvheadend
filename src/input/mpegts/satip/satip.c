@@ -684,7 +684,7 @@ satip_device_create( satip_device_info_t *info )
       m = atoi(argv[i] + 5);
     } else if (strncmp(argv[i], "ATSCT-", 5) == 0) {
       type = DVB_TYPE_ATSC_T;
-      m = atoi(argv[i] + 5);
+      m = atoi(argv[i] + 6);
     } else if (strncmp(argv[i], "ATSCC-", 6) == 0) {
       type = DVB_TYPE_ATSC_C;
       m = atoi(argv[i] + 6);
