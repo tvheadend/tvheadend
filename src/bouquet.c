@@ -24,6 +24,7 @@
 #include "channels.h"
 #include "service_mapper.h"
 #include "download.h"
+#include "input.h"
 
 typedef struct bouquet_download {
   bouquet_t  *bq;
@@ -599,13 +600,23 @@ void
 bouquet_scan ( bouquet_t *bq )
 {
   void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
-  void iptv_bouquet_trigger_by_uuid( const char *uuid );
+  char *mpegts_network_uuid = NULL;
+  if (bq->bq_src) {
 #if ENABLE_IPTV
-  if (bq->bq_src && strncmp(bq->bq_src, "iptv-network://", 15) == 0)
-    return iptv_bouquet_trigger_by_uuid(bq->bq_src + 15);
+    if (strncmp(bq->bq_src, "iptv-network://", 15) == 0)
+      mpegts_network_uuid = bq->bq_src + 15;
 #endif
-  if (bq->bq_src && strncmp(bq->bq_src, "exturl://", 9) == 0)
-    return bouquet_download_trigger(bq);
+    if (strncmp(bq->bq_src, "mpegts-network://", 17) == 0)
+      mpegts_network_uuid = bq->bq_src + 17;
+    else if (strncmp(bq->bq_src, "exturl://", 9) == 0)
+      return bouquet_download_trigger(bq);
+
+    if (mpegts_network_uuid) {
+      mpegts_network_t *mn = mpegts_network_find(mpegts_network_uuid);
+      if (mn)
+        return mpegts_network_bouquet_trigger(mn, 0);
+    }
+  }
   mpegts_mux_bouquet_rescan(bq->bq_src, bq->bq_comment);
   bq->bq_rescan = 0;
 }

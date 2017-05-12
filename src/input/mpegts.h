@@ -330,12 +330,15 @@ struct mpegts_network
   mpegts_mux_queue_t mn_scan_pend;    // Pending muxes
   mpegts_mux_queue_t mn_scan_active;  // Active muxes
   mtimer_t           mn_scan_timer;   // Timer for activity
+  mtimer_t           mn_bouquet_timer;
 
   /*
    * Functions
    */
   void              (*mn_delete)       (mpegts_network_t*, int delconf);
   void              (*mn_display_name) (mpegts_network_t*, char *buf, size_t len);
+  int               (*mn_bouquet_source) (mpegts_network_t*, char *buf, size_t len);
+  int               (*mn_bouquet_comment) (mpegts_network_t*, char *buf, size_t len);
   htsmsg_t *        (*mn_config_save)  (mpegts_network_t*, char *filename, size_t fsize);
   mpegts_mux_t*     (*mn_create_mux)
     (mpegts_network_t*, void *origin, uint16_t onid, uint16_t tsid,
@@ -352,6 +355,7 @@ struct mpegts_network
   uint16_t mn_satip_source;
   int      mn_autodiscovery;
   int      mn_skipinitscan;
+  int      mn_bouquet;
   char    *mn_charset;
   int      mn_idlescan;
   int      mn_ignore_chnum;
@@ -865,6 +869,10 @@ int mpegts_network_set_nid          ( mpegts_network_t *mn, uint16_t nid );
 int mpegts_network_set_network_name ( mpegts_network_t *mn, const char *name );
 void mpegts_network_scan ( mpegts_network_t *mn );
 void mpegts_network_get_type_str( mpegts_network_t *mn, char *buf, size_t buflen );
+
+void mpegts_network_bouquet_trigger0(mpegts_network_t *mn, int timeout);
+static inline void mpegts_network_bouquet_trigger(mpegts_network_t *mn, int timeout)
+{ if (mn->mn_bouquet) mpegts_network_bouquet_trigger0(mn, timeout); }
 
 htsmsg_t * mpegts_network_wizard_get ( mpegts_input_t *mi, const idclass_t *idc,
                                        mpegts_network_t *mn, const char *lang );

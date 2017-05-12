@@ -373,7 +373,7 @@ iptv_mux_create0 ( iptv_network_t *in, const char *uuid, htsmsg_t *conf )
     ms->s_pmt_pid = SERVICE_PMT_AUTO;
     htsmsg_destroy(conf);
     if (ms)
-      iptv_bouquet_trigger(in, 0);
+      mpegts_network_bouquet_trigger((mpegts_network_t *)in, 0);
   }
   htsmsg_destroy(c2);
 

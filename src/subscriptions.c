@@ -936,7 +936,6 @@ subscription_create_from_service(profile_chain_t *prch,
  *
  */
 #if ENABLE_MPEGTS
-#include "input/mpegts.h"
 th_subscription_t *
 subscription_create_from_mux(profile_chain_t *prch,
                              tvh_input_t *ti,

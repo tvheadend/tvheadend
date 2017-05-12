@@ -541,6 +541,7 @@ opentv_desc_channels
       tvhtrace(LS_OPENTV, "%s:      cnum changed (%i != %i)", mt->mt_name, cnum, (int)svc->s_dvb_opentv_chnum);
       svc->s_dvb_opentv_chnum = cnum;
       svc->s_dvb_opentv_id = unk;
+      mpegts_network_bouquet_trigger(mm->mm_network, 0);
       service_request_save((service_t *)svc, 0);
     }
 skip_chnum:

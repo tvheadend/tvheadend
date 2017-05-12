@@ -215,7 +215,7 @@ skip_url:
         change = 1;
       }
       if (im->mm_iptv_chnum != chnum) {
-        iptv_bouquet_trigger(in, 0); /* propagate LCN change */
+        mpegts_network_bouquet_trigger((mpegts_network_t *)in, 0); /* propagate LCN change */
         im->mm_iptv_chnum = chnum;
         change = 1;
       }

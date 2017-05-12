@@ -481,7 +481,7 @@ dvb_desc_service_list
 
 static int
 dvb_desc_local_channel
-  ( mpegts_table_t *mt, const uint8_t *ptr, int len,
+  ( mpegts_table_t *mt, mpegts_network_t *mn, const uint8_t *ptr, int len,
     uint8_t dtag, mpegts_mux_t *mm, dvb_bat_id_t *bi, int prefer )
 {
   int save = 0;
@@ -505,6 +505,7 @@ dvb_desc_local_channel
                     s->s_dvb_channel_num != lcn) {
           s->s_dvb_channel_dtag = dtag;
           s->s_dvb_channel_num = lcn;
+          mpegts_network_bouquet_trigger(mn, 0);
           idnode_changed(&s->s_id);
           service_refresh_channel((service_t*)s);
         }
@@ -1192,12 +1193,14 @@ dvb_nit_mux
   int dllen, dlen;
   const uint8_t *dlptr, *dptr, *lptr_orig = lptr;
   const char *charset;
+  mpegts_network_t *mn;
   char buf[128], dauth[256];
 
   if (mux && mux->mm_enabled != MM_ENABLE)
     bi = NULL;
 
-  charset = dvb_charset_find(mux ? mux->mm_network : mm->mm_network, mux, NULL);
+  mn = mux ? mux->mm_network : mm->mm_network;
+  charset = dvb_charset_find(mn, mux, NULL);
 
   if (mux)
     mpegts_mux_nice_name(mux, buf, sizeof(buf));
@@ -1297,7 +1300,7 @@ dvb_nit_mux
     case 0x88:
       if (priv == 0x28) {
         /* HD simulcast */
-        if (dvb_desc_local_channel(mt, dptr, dlen, dtag, mux, bi, 1))
+        if (dvb_desc_local_channel(mt, mn, dptr, dlen, dtag, mux, bi, 1))
           return -1;
       }
       break;
@@ -1305,7 +1308,7 @@ dvb_nit_mux
       if (priv == 0 || priv == 0x362275)
       /* fall thru */
 lcn:
-      if (dvb_desc_local_channel(mt, dptr, dlen, dtag, mux, bi, 0))
+      if (dvb_desc_local_channel(mt, mn, dptr, dlen, dtag, mux, bi, 0))
         return -1;
       break;
     case DVB_DESC_FREESAT_LCN:
@@ -1809,6 +1812,7 @@ atsc_vct_callback
           save = 1;
         }
         if (s->s_dvb_channel_num != maj || s->s_dvb_channel_minor != min) {
+          mpegts_network_bouquet_trigger(mn, 0);
           s->s_dvb_channel_num = maj;
           s->s_dvb_channel_minor = min;
           save = 1;
