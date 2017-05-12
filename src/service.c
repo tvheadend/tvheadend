@@ -1070,7 +1070,7 @@ service_create0
 static void
 service_stream_make_nicename(service_t *t, elementary_stream_t *st)
 {
-  char buf[200];
+  char buf[256];
   if(st->es_pid != -1)
     snprintf(buf, sizeof(buf), "%s: %s @ #%d",
 	     service_nicename(t),
