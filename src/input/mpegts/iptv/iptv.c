@@ -629,7 +629,7 @@ iptv_input_mux_started ( iptv_mux_t *im )
 static int
 iptv_network_bouquet_source (mpegts_network_t *mn, char *source, size_t len)
 {
-  iptv_network_t *in = (mpegts_network_t *)mn;
+  iptv_network_t *in = (iptv_network_t *)mn;
   char ubuf[UUID_HEX_SIZE];
   snprintf(source, len, "iptv-network://%s", idnode_uuid_as_str(&in->mn_id, ubuf));
   return 0;
@@ -638,7 +638,7 @@ iptv_network_bouquet_source (mpegts_network_t *mn, char *source, size_t len)
 static int
 iptv_network_bouquet_comment (mpegts_network_t *mn, char *comment, size_t len)
 {
-  iptv_network_t *in = (mpegts_network_t *)mn;
+  iptv_network_t *in = (iptv_network_t *)mn;
   if (in->in_url == NULL || in->in_url[0] == '\0')
     return -1;
   snprintf(comment, len, "%s", in->in_url);
