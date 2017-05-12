@@ -612,8 +612,8 @@ dvr_sub_basic_info(const char *id, const char *fmt, const void *aux, char *tmp, 
   tmp[0] = '\0';
   HTSMSG_FOREACH(f, info) {
     if (!(e = htsmsg_field_get_map(f))) continue;
-    if ((s = htsmsg_get_str(e, "type")) != NULL) continue;
-    tvh_strlcatf(tmp, tmplen, l, "%s%s", l > 0 ? "," : "", s);
+    if ((s = htsmsg_get_str(e, "type")) != NULL)
+      tvh_strlcatf(tmp, tmplen, l, "%s%s", l > 0 ? "," : "", s);
   }
   return tmp;
 }
@@ -915,7 +915,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   const source_info_t *si = &ss->ss_si;
   streaming_start_t *ss_copy;
   const streaming_start_component_t *ssc;
-  char res[11], asp[6], sr[6], ch[7];
+  char res[14], asp[14], sr[6], ch[7];
   dvr_config_t *cfg = de->de_config;
   profile_chain_t *prch = de->de_chain;
   htsmsg_t *info, *e;

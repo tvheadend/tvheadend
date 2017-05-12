@@ -211,7 +211,7 @@ page_login(http_connection_t *hc, const char *remain, void *opaque)
 {
   if (hc->hc_access != NULL &&
       hc->hc_access->aa_username != NULL &&
-      hc->hc_access->aa_username != '\0') {
+      *hc->hc_access->aa_username != '\0') {
     http_redirect(hc, "/", &hc->hc_req_args, 0);
     return 0;
   } else {

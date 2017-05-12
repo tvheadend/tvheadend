@@ -976,7 +976,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   descramble_info_t *di;
   service_t *t;
   profile_t *pro;
-  char buf[256];
+  char buf[284];
   const char *state;
 
   htsmsg_add_u32(m, "id", s->ths_id);
