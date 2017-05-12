@@ -2358,10 +2358,10 @@ static htsmsg_t *
 caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("OSCam new pc-nodmx (rev >= 10389)"), CAPMT_OSCAM_UNIX_SOCKET_NP },
     { N_("OSCam net protocol (rev >= 10389)"), CAPMT_OSCAM_NET_PROTO },
-    { N_("OSCam pc-nodmx (rev >= 9756)"),      CAPMT_OSCAM_UNIX_SOCKET },
+    { N_("OSCam new pc-nodmx (rev >= 10389)"), CAPMT_OSCAM_UNIX_SOCKET_NP },
     { N_("OSCam TCP (rev >= 9574)"),           CAPMT_OSCAM_TCP },
+    { N_("OSCam pc-nodmx (rev >= 9756)"),      CAPMT_OSCAM_UNIX_SOCKET },
     { N_("OSCam (rev >= 9095)"),               CAPMT_OSCAM_MULTILIST },
     { N_("Older OSCam"),                       CAPMT_OSCAM_OLD },
     { N_("Wrapper (capmt_ca.so)"),             CAPMT_OSCAM_SO_WRAPPER },
@@ -2369,11 +2369,14 @@ caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+CLASS_DOC(caclient_capmt)
+
 const idclass_t caclient_capmt_class =
 {
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_capmt",
   .ic_caption    = N_("CAPMT (Linux Network DVBAPI)"),
+  .ic_doc        = tvh_doc_caclient_capmt_class,
   .ic_properties = (const property_t[]){
     {
       .type     = PT_INT,
@@ -2382,7 +2385,7 @@ const idclass_t caclient_capmt_class =
       .desc     = N_("Oscam mode."),
       .off      = offsetof(capmt_t, capmt_oscam),
       .list     = caclient_capmt_class_oscam_mode_list,
-      .def.i    = CAPMT_OSCAM_MULTILIST,
+      .def.i    = CAPMT_OSCAM_NET_PROTO,
     },
     {
       .type     = PT_STR,
@@ -2390,13 +2393,13 @@ const idclass_t caclient_capmt_class =
       .name     = N_("Camd.socket filename / IP Address (TCP mode)"),
       .desc     = N_("Socket or IP Address (when in TCP mode)."),
       .off      = offsetof(capmt_t, capmt_sockfile),
-      .def.s    = "/tmp/camd.socket",
+      .def.s    = "127.0.0.1",
     },
     {
       .type     = PT_INT,
       .id       = "port",
       .name     = N_("Listen / Connect port"),
-      .desc     = N_("Port to listen on."),
+      .desc     = N_("Port to listen on or to connect to."),
       .off      = offsetof(capmt_t, capmt_port),
       .def.i    = 9000
     },
