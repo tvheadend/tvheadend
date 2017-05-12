@@ -1546,7 +1546,7 @@ idnode_slist_set ( idnode_t *in, idnode_slist_t *options, const htsmsg_t *vals )
     ip = (void *)in + o->off;
     if (!changed) {
       HTSMSG_FOREACH(f, vals) {
-        if ((s = htsmsg_field_get_str(f)) != NULL)
+        if ((s = htsmsg_field_get_str(f)) == NULL)
           continue;
         if (strcmp(s, o->id))
           continue;

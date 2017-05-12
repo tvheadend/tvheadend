@@ -843,7 +843,7 @@ static void _xmltv_load_grabbers ( void )
   /* Internal search */
   } else if ((tmp = getenv("PATH"))) {
     tvhdebug(LS_XMLTV, "using internal grab search");
-    char bin[256];
+    char bin[PATH_MAX];
     char *argv[] = {
       NULL,
       (char *)"--description",

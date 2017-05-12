@@ -31,7 +31,7 @@ int state_lock_(const char *lfile, int lock, int timeout, int _fd)
     int fd = -1, err = 0;
     struct flock lck;
     struct stat st;
-    char lcktxt[12];
+    char lcktxt[13];
 
     lck.l_type = lock ? F_WRLCK : F_UNLCK;
     lck.l_whence = SEEK_SET;
