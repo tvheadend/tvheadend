@@ -757,6 +757,8 @@ static void muxes_changed(idnode_t *in)
                w->iptv_url[idx][0]) {
       htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "url", w->iptv_url[idx]);
+      htsmsg_add_u32(m, "max_streams", 1);
+      htsmsg_add_bool(m, "bouquet", 1);
       idnode_load(&mn->mn_id, m);
       idnode_changed(&mn->mn_id);
       htsmsg_destroy(m);
