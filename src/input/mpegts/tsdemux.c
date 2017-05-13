@@ -97,8 +97,8 @@ ts_recv_packet0
         pcr |=  (uint64_t)tsb2[9] << 1;
         pcr |= ((uint64_t)tsb2[10] >> 7) & 0x01;
         /* handle the broken info using candidate variable */
-        if (t->s_current_pcr == PTS_UNSET || pts_diff(t->s_current_pcr, pcr) <= 2*90000 ||
-            (t->s_candidate_pcr != PTS_UNSET && pts_diff(t->s_candidate_pcr, pcr) <= 2*90000)) {
+        if (t->s_current_pcr == PTS_UNSET || pts_diff(t->s_current_pcr, pcr) <= 3*90000 ||
+            (t->s_candidate_pcr != PTS_UNSET && pts_diff(t->s_candidate_pcr, pcr) <= 3*90000)) {
           if (pcr != t->s_current_pcr) {
             if (t->s_current_pcr == PTS_UNSET)
               tvhtrace(LS_TS, "%s: PCR initial: %"PRId64, service_nicename((service_t*)t), pcr);
