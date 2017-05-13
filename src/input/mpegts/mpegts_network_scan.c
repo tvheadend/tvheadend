@@ -171,11 +171,14 @@ mpegts_network_scan_mux_partial ( mpegts_mux_t *mm )
 void
 mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert )
 {
-  if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
-    return;
-
-  if (!reinsert)
+  if (reinsert) {
+    if (mm->mm_scan_state != MM_SCAN_STATE_ACTIVE)
+      return;
+  } else {
+    if (mm->mm_scan_state == MM_SCAN_STATE_IDLE)
+      return;
     mm->mm_scan_flags = 0;
+  }
 
   mpegts_network_scan_mux_done0(mm, MM_SCAN_NONE,
                                 reinsert ? mm->mm_scan_weight : 0);
