@@ -41,6 +41,9 @@ Example for nginx (--http_root=/my/tvh/server):
 ```
 location /my/tvh/server {
   proxy_pass http://1.1.1.1:9981;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }
 ```
 
