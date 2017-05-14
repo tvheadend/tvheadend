@@ -115,6 +115,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
   [LS_TBL_PASS]      = { "tbl-pass",      N_("Passthrough Muxer SI Tables") },
   [LS_TBL_SATIP]     = { "tbl-satip",     N_("SAT>IP Server SI Tables") },
   [LS_FASTSCAN]      = { "fastscan",      N_("Fastscan DVB") },
+  [LS_PCR]           = { "pcr",           N_("PCR Clocks") },
   [LS_PARSER]        = { "parser",        N_("MPEG-TS Parser") },
   [LS_TS]            = { "TS",            N_("Transport Stream") },
   [LS_GLOBALHEADERS] = { "globalheaders", N_("Global Headers") }, 
