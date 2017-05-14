@@ -85,6 +85,10 @@ typedef struct elementary_stream {
 
   int es_peak_presentation_delay; /* Max seen diff. of DTS and PTS */
 
+  /* PCR clocks */
+  int64_t  es_last_pcr;
+  int64_t  es_last_pcr_dts;
+
   /* For service stream packet reassembly */
 
   sbuf_t es_buf;
@@ -477,7 +481,7 @@ typedef struct service {
    */
   struct elementary_stream_queue s_components;
   struct elementary_stream_queue s_filt_components;
-  int s_last_pid;
+  short s_last_pid;
   elementary_stream_t *s_last_es;
 
   /**
@@ -489,6 +493,7 @@ typedef struct service {
 
   int64_t s_current_pcr;
   int64_t s_candidate_pcr;
+  uint8_t s_current_pcr_guess;
 
   /*
    * Local channel numbers per bouquet

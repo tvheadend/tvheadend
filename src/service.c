@@ -264,6 +264,9 @@ stream_init(elementary_stream_t *st)
 {
   st->es_cc = -1;
 
+  st->es_last_pcr = PTS_UNSET;
+  st->es_last_pcr_dts = PTS_UNSET;
+
   st->es_incomplete = 0;
   st->es_header_mode = 0;
   st->es_parser_state = 0;
@@ -707,6 +710,7 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_status = SERVICE_RUNNING;
   t->s_current_pcr = PTS_UNSET;
   t->s_candidate_pcr = PTS_UNSET;
+  t->s_current_pcr_guess = 0;
 
   /**
    * Initialize stream
