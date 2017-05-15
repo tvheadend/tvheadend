@@ -507,8 +507,7 @@ depacketize(service_t *t, elementary_stream_t *st, size_t len,
  */
 static void
 makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
-         int len, int64_t dts, int duration, int channels, int sri,
-         int errors)
+         int len, int64_t dts, int duration, int channels, int sri)
 {
   th_pkt_t *pkt = pkt_alloc(st->es_type, buf, len, dts, dts, t->s_current_pcr);
 
@@ -516,7 +515,8 @@ makeapkt(service_t *t, elementary_stream_t *st, const void *buf,
   pkt->pkt_duration = duration;
   pkt->a.pkt_channels = channels;
   pkt->a.pkt_sri = sri;
-  pkt->pkt_err = errors;
+  pkt->pkt_err = st->es_buf_a.sb_err;
+  st->es_buf_a.sb_err = 0;
 
   parser_deliver(t, st, pkt);
 
@@ -589,9 +589,7 @@ static void parse_mp4a_data(service_t *t, elementary_stream_t *st,
 
           int channels = ((p[2] & 0x01) << 2) | ((p[3] & 0xc0) >> 6);
 
-          makeapkt(t, st, p, fsize, dts, duration, channels, sri,
-                   st->es_buf_a.sb_err);
-          st->es_buf_a.sb_err = 0;
+          makeapkt(t, st, p, fsize, dts, duration, channels, sri);
           sbuf_cut(&st->es_buf_a, i + fsize);
           goto again;
         }
@@ -684,9 +682,7 @@ parse_mpa123(service_t *t, elementary_stream_t *st)
     h = RB32(buf + i + fsize);
     if(mpa_valid_frame(h)) {
       makeapkt(t, st, buf + i, fsize, dts, duration,
-               channels, mpa_sri[(buf[i+2] >> 2) & 3],
-               st->es_buf_a.sb_err);
-      st->es_buf_a.sb_err = 0;
+               channels, mpa_sri[(buf[i+2] >> 2) & 3]);
       sbuf_cut(&st->es_buf_a, i + fsize);
       goto again;
     }
@@ -825,9 +821,7 @@ parse_ac3(service_t *t, elementary_stream_t *st, size_t ilen,
           int lfeon = read_bits(&bs, 1);
           int channels = acmodtab[acmod] + lfeon;
 
-          makeapkt(t, st, p, fsize, dts, duration, channels, sri,
-                   st->es_buf_a.sb_err);
-          st->es_buf_a.sb_err = 0;
+          makeapkt(t, st, p, fsize, dts, duration, channels, sri);
           sbuf_cut(&st->es_buf_a, i + fsize);
           goto again;
         }
@@ -896,9 +890,7 @@ parse_eac3(service_t *t, elementary_stream_t *st, size_t ilen,
 
       if(dts != PTS_UNSET && len >= i + fsize + 6 &&
          eac3_valid_frame(p + fsize)) {
-        makeapkt(t, st, p, fsize, dts, duration, channels, sri,
-                 st->es_buf_a.sb_err);
-        st->es_buf_a.sb_err = 0;
+        makeapkt(t, st, p, fsize, dts, duration, channels, sri);
         sbuf_cut(&st->es_buf_a, i + fsize);
         goto again;
       }
