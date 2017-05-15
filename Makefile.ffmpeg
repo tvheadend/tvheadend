@@ -46,11 +46,10 @@ YASM_TB        = $(YASM).tar.gz
 YASM_URL       = http://www.tortall.net/projects/yasm/releases/$(YASM_TB)
 YASM_SHA1      = b7574e9f0826bedef975d64d3825f75fbaeef55e
 
-LIBX264        = x264-snapshot-20160502-2245
+LIBX264        = x264-snapshot-20170509-2245
 LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
-LIBX264_SHA1   = 90c48dab878520a819905880bc4912834fe694fb
-LIBX264_DIFFS  = libx264.configure.diff
+LIBX264_SHA1 = 744fecee43a34cec938c5b3350009ca41f910a1c
 
 LIBX265        = x265_2.1
 LIBX265_TB     = $(LIBX265).tar.gz
@@ -94,10 +93,10 @@ LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
 LIBMFX_SHA1    = 84dbdf4a6b409067e863eb9564bb2efdec6d39ce
 LIBMFX_DIFFS   = libmfx.linux.path.diff
 
-FFMPEG         = ffmpeg-3.2.4
+FFMPEG         = ffmpeg-3.3
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = bfdd9bc3bb9808f1c31e5eede37c932ea9785812
+FFMPEG_SHA1    = 2590af8c754ce8d55745b1e5647e498bf271dc77
 
 
 # ##############################################################################
@@ -200,7 +199,6 @@ endif
 $(LIB_ROOT)/$(LIBX264)/.tvh_download:
 	$(call DOWNLOAD,$(LIBX264_URL),$(LIB_ROOT)/$(LIBX264_TB),$(LIBX264_SHA1))
 	$(call UNTAR,$(LIBX264_TB),j)
-	$(call PATCH,$(LIBX264),$(LIBX264_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
