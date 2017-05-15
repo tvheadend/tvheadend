@@ -135,6 +135,7 @@ struct satip_frontend
   int                        sf_udp_rtp_port;
   int                        sf_play2;
   int                        sf_tdelay;
+  int                        sf_grace_period;
   int                        sf_teardown_delay;
   int                        sf_pass_weight;
   char                      *sf_tuner_bindaddr;
