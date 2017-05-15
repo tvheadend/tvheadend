@@ -54,6 +54,7 @@ OPTIONS=(
   "libmfx_static:yes"
   "inotify:auto"
   "epoll:auto"
+  "pcre:auto"
   "uriparser:auto"
   "ccache:auto"
   "tvhcsa:auto"
@@ -382,6 +383,17 @@ fi
 #
 if enabled_or_auto satip_client; then
   enable upnp
+fi
+
+#
+# PCRE
+#
+if enabled_or_auto pcre; then
+  if check_pkg libpcre; then
+    enable pcre
+  elif enabled pcre; then
+    die "pcre development support not found (use --disable-pcre)"
+  fi
 fi
 
 #

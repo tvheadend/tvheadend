@@ -20,6 +20,9 @@
 #define DVR_H
 
 #include <regex.h>
+#if ENABLE_PCRE
+#include <pcre.h>
+#endif
 #include "epg.h"
 #include "channels.h"
 #include "subscriptions.h"
@@ -338,7 +341,12 @@ typedef struct dvr_autorec_entry {
   char *dae_comment;
 
   char *dae_title;
+  int dae_pcre;
   regex_t dae_title_preg;
+#if ENABLE_PCRE
+  pcre *dae_title_pcre;
+  pcre_extra *dae_title_pcre_extra;
+#endif
   int dae_fulltext;
   
   uint32_t dae_content_type;

@@ -723,7 +723,7 @@ tvheadend.dvr_settings = function(panel, index) {
  */
 tvheadend.autorec_editor = function(panel, index) {
 
-    var list = 'name,title,fulltext,channel,start,start_window,weekdays,' + 
+    var list = 'name,title,fulltext,pcre,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,minduration,maxduration,' +
                'dedup,directory,config_name,comment';
     var elist = 'enabled,start_extra,stop_extra,' +
@@ -742,6 +742,7 @@ tvheadend.autorec_editor = function(panel, index) {
             directory:    { width: 200 },
             title:        { width: 300 },
             fulltext:     { width: 70 },
+            pcre:         { width: 70 },
             channel:      { width: 200 },
             tag:          { width: 200 },
             btype:        { width: 50 },
@@ -781,7 +782,7 @@ tvheadend.autorec_editor = function(panel, index) {
             },
         },
         del: true,
-        list: 'enabled,name,title,fulltext,channel,tag,start,start_window,' +
+        list: 'enabled,name,title,fulltext,pcre,channel,tag,start,start_window,' +
               'weekdays,minduration,maxduration,btype,content_type,' +
               'pri,dedup,directory,config_name,owner,creator,comment',
         sort: {

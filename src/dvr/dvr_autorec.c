@@ -39,6 +39,51 @@ struct dvr_autorec_entry_queue autorec_entries;
 /*
  *
  */
+static inline int autorec_regexec(dvr_autorec_entry_t *dae, const char *str)
+{
+  int r;
+#if ENABLE_PCRE
+  if (dae->dae_pcre) {
+    int vec[30];
+    r = pcre_exec(dae->dae_title_pcre, dae->dae_title_pcre_extra,
+                  str, strlen(str), 0, 0, vec, ARRAY_SIZE(vec));
+    return r < 0;
+  } else
+#endif
+  {
+    return regexec(&dae->dae_title_preg, str, 0, NULL, 0);
+  }
+}
+
+/*
+ *
+ */
+static void autorec_regfree(dvr_autorec_entry_t *dae)
+{
+  if (dae->dae_title) {
+#if ENABLE_PCRE
+    if (dae->dae_pcre) {
+#ifdef PCRE_CONFIG_JIT
+      pcre_free_study(dae->dae_title_pcre_extra);
+#else
+      pcre_free(dae->dae_title_pcre_extra);
+#endif
+      pcre_free(dae->dae_title_pcre);
+      dae->dae_title_pcre_extra = NULL;
+      dae->dae_title_pcre = NULL;
+    } else
+#endif
+    {
+      regfree(&dae->dae_title_preg);
+    }
+    free(dae->dae_title);
+    dae->dae_title = NULL;
+  }
+}
+
+/*
+ *
+ */
 static uint32_t dvr_autorec_get_max_count(dvr_autorec_entry_t *dae)
 {
   uint32_t max_count = dae->dae_max_count;
@@ -175,33 +220,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-  /* Do not check title if the event is from the serieslink group */
-  if(dae->dae_serieslink == NULL &&
-     dae->dae_title != NULL && dae->dae_title[0] != '\0') {
-    lang_str_ele_t *ls;
-    if (!dae->dae_fulltext) {
-      if(!e->episode->title) return 0;
-      RB_FOREACH(ls, e->episode->title, link)
-        if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-    } else {
-      ls = NULL;
-      if (e->episode->title)
-        RB_FOREACH(ls, e->episode->title, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-      if (!ls && e->episode->subtitle)
-        RB_FOREACH(ls, e->episode->subtitle, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-      if (!ls && e->summary)
-        RB_FOREACH(ls, e->summary, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-      if (!ls && e->description)
-        RB_FOREACH(ls, e->description, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-    }
-    if (!ls) return 0;
-  }
-
-  // Note: ignore channel test if we allow quality unlocking 
+  /* Note: ignore channel test if we allow quality unlocking */
   if ((cfg = dae->dae_config) == NULL)
     return 0;
   if(dae->dae_channel != NULL) {
@@ -269,6 +288,33 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(!((1 << ((tm.tm_wday ?: 7) - 1)) & dae->dae_weekdays))
       return 0;
   }
+
+  /* Do not check title if the event is from the serieslink group */
+  if(dae->dae_serieslink == NULL &&
+     dae->dae_title != NULL && dae->dae_title[0] != '\0') {
+    lang_str_ele_t *ls;
+    if (!dae->dae_fulltext) {
+      if(!e->episode->title) return 0;
+      RB_FOREACH(ls, e->episode->title, link)
+        if (!autorec_regexec(dae, ls->str)) break;
+    } else {
+      ls = NULL;
+      if (e->episode->title)
+        RB_FOREACH(ls, e->episode->title, link)
+          if (!autorec_regexec(dae, ls->str)) break;
+      if (!ls && e->episode->subtitle)
+        RB_FOREACH(ls, e->episode->subtitle, link)
+          if (!autorec_regexec(dae, ls->str)) break;
+      if (!ls && e->summary)
+        RB_FOREACH(ls, e->summary, link)
+          if (!autorec_regexec(dae, ls->str)) break;
+      if (!ls && e->description)
+        RB_FOREACH(ls, e->description, link)
+          if (!autorec_regexec(dae, ls->str)) break;
+    }
+    if (!ls) return 0;
+  }
+
   return 1;
 }
 
@@ -397,10 +443,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   free(dae->dae_creator);
   free(dae->dae_comment);
 
-  if(dae->dae_title != NULL) {
-    free(dae->dae_title);
-    regfree(&dae->dae_title_preg);
-  }
+  autorec_regfree(dae);
 
   if(dae->dae_channel != NULL)
     LIST_REMOVE(dae, dae_channel_link);
@@ -526,15 +569,52 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   const char *title = v ?: "";
   if (strcmp(title, dae->dae_title ?: "")) {
-    if (dae->dae_title) {
-       regfree(&dae->dae_title_preg);
-       free(dae->dae_title);
-       dae->dae_title = NULL;
+    if (dae->dae_title)
+      autorec_regfree(dae);
+    if (title[0] != '\0') {
+#if ENABLE_PCRE
+      if (dae->dae_pcre) {
+        const char *estr;
+        int eoff;
+        dae->dae_title_pcre = pcre_compile(title, PCRE_CASELESS | PCRE_UTF8,
+                                           &estr, &eoff, NULL);
+        if (dae->dae_title_pcre == NULL) {
+          tvherror(LS_DVR, "Unable to compile PCRE '%s': %s", title, estr);
+        } else {
+          dae->dae_title_pcre_extra = pcre_study(dae->dae_title_pcre,
+                                                 PCRE_STUDY_JIT_COMPILE, &estr);
+          if (dae->dae_title_pcre_extra == NULL && estr)
+            tvherror(LS_DVR, "Unable to study PCRE '%s': %s", title, estr);
+          else
+            dae->dae_title = strdup(title);
+        }
+      } else
+#endif
+      {
+        if (!regcomp(&dae->dae_title_preg, title,
+                     REG_ICASE | REG_EXTENDED | REG_NOSUB))
+          dae->dae_title = strdup(title);
+        else
+          tvherror(LS_DVR, "Unable to compile regex '%s'", title);
+      }
     }
-    if (title[0] != '\0' &&
-        !regcomp(&dae->dae_title_preg, title,
-                 REG_ICASE | REG_EXTENDED | REG_NOSUB))
-      dae->dae_title = strdup(title);
+    return 1;
+  }
+  return 0;
+}
+
+static int
+dvr_autorec_entry_class_pcre_set(void *o, const void *v)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  int pcre = v ? *(int *)v : 0;
+  char *title;
+  if (dae->dae_pcre != pcre) {
+    title = dae->dae_title ? strdup(dae->dae_title) : NULL;
+    autorec_regfree(dae);
+    dae->dae_pcre = pcre;
+    dvr_autorec_entry_class_title_set(o, title);
+    free(title);
     return 1;
   }
   return 0;
@@ -1047,6 +1127,15 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("When the fulltext is checked, the title pattern is "
                      "matched against title, subtitle, summary and description."),
       .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "pcre",
+      .name     = N_("PCRE"),
+      .desc     = N_("Use PCRE regular expression library instead posix "
+                     "extended regular expressions."),
+      .set      = dvr_autorec_entry_class_pcre_set,
+      .off      = offsetof(dvr_autorec_entry_t, dae_pcre),
     },
     {
       .type     = PT_STR,
