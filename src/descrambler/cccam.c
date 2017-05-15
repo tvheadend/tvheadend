@@ -49,32 +49,30 @@
 /**
  *
  */
-#define CCCAM_KEEPALIVE_INTERVAL 30
-#define CCCAM_ES_PIDS           8
-#define CCCAM_MAX_NOKS           3
-#define CCCAM_NETMSGSIZE 0x400
+#define CCCAM_KEEPALIVE_INTERVAL  0
+#define CCCAM_ES_PIDS             8
+#define CCCAM_MAX_NOKS            3
+#define CCCAM_NETMSGSIZE          0x400
 
 
 typedef enum {
-  MSG_CLI_DATA, // client -> server
-  MSG_ECM_REQUEST, // client -> server
-  MSG_EMM_REQUEST, // client -> server
+  MSG_CLI_DATA,         // client -> server
+  MSG_ECM_REQUEST,      // client -> server
+  MSG_EMM_REQUEST,      // client -> server
   MSG_CARD_REMOVED = 4, // server -> client
   MSG_CMD_05,
-  MSG_KEEPALIVE, // client -> server
-  MSG_NEW_CARD, // server -> client
-  MSG_SRV_DATA, // server -> client
+  MSG_KEEPALIVE,        // client -> server
+  MSG_NEW_CARD,         // server -> client
+  MSG_SRV_DATA,         // server -> client
   MSG_CMD_0A = 0x0a,
   MSG_CMD_0B = 0x0b,
-  MSG_CMD_0C = 0x0c, // CCcam 2.2.x fake client checks
-  MSG_CMD_0D = 0x0d, // "
-  MSG_CMD_0E = 0x0e, // "
+  MSG_CMD_0C = 0x0c,    // CCcam 2.2.x fake client checks
+  MSG_CMD_0D = 0x0d,    // "
+  MSG_CMD_0E = 0x0e,    // "
   MSG_NEW_CARD_SIDINFO = 0x0f,
-  MSG_SLEEPSEND = 0x80, //Sleepsend support
-	MSG_CACHE_PUSH = 0x81, //CacheEx Cache-Push In/Out
-	MSG_CACHE_FILTER = 0x82, //CacheEx Cache-Filter Request
-  MSG_ECM_NOK1 = 0xfe, // server -> client ecm queue full, card not found
-  MSG_ECM_NOK2 = 0xff, // server -> client
+  MSG_SLEEPSEND = 0x80, // Sleepsend support
+  MSG_ECM_NOK1 = 0xfe,  // server -> client ecm queue full, card not found
+  MSG_ECM_NOK2 = 0xff,  // server -> client
   MSG_NO_HEADER = 0xffff
 } cccam_msg_type_t;
 
@@ -185,7 +183,7 @@ typedef struct cccam_message {
 struct cccam;
 
 typedef struct cs_card_data {
-  
+
   LIST_ENTRY(cs_card_data) cs_card;
 
   emm_reass_t cs_ra;
@@ -222,9 +220,9 @@ typedef struct cccam {
 
   pthread_t cccam_tid;
   tvh_cond_t cccam_cond;
-  
+
   pthread_mutex_t cccam_mutex;
-  pthread_mutex_t cccam_writer_mutex; 
+  pthread_mutex_t cccam_writer_mutex;
   tvh_cond_t cccam_writer_cond;
   int cccam_writer_running;
   struct cccam_message_queue cccam_writeq;
@@ -243,11 +241,12 @@ typedef struct cccam {
   int64_t cccam_emm_update_time;
   void *cccam_emm_mux;
 #endif
-  
+
   /* From configuration */
   char *cccam_username;
   char *cccam_password;
   char *cccam_hostname;
+  uint8_t cccam_nodeid[8];
 
   int cccam_port;
   int cccam_emm;
@@ -359,7 +358,7 @@ cccam_encrypt(struct cccam_crypt_block *block, uint8_t *data, int32_t len)
 }
 
 static void
-cccam_decrypt_cw(char *nodeid, uint32_t card_id, uint8_t *cws)
+cccam_decrypt_cw(uint8_t *nodeid, uint32_t card_id, uint8_t *cws)
 {
   uint8_t tmp, i;
   uint64_t node_id = be64toh(*((uint64_t *) nodeid));
@@ -496,7 +495,7 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
                   ua[4] || ua[5] || ua[6] || ua[7];
 
     if (!emm_allowed) {
-      tvhinfo(LS_CCCAM, 
+      tvhinfo(LS_CCCAM,
               "%s:%i: Will not forward EMMs (not allowed by server)",
               cccam->cccam_hostname, cccam->cccam_port);
     } else if (pcard->cs_ra.type != CARD_UNKNOWN) {
@@ -504,7 +503,7 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
               cccam->cccam_hostname, cccam->cccam_port);
       cccam->cccam_forward_emm = 1;
     } else {
-      tvhinfo(LS_CCCAM, 
+      tvhinfo(LS_CCCAM,
              "%s:%i: Will not forward EMMs (unsupported CA system)",
               cccam->cccam_hostname, cccam->cccam_port);
     }
@@ -612,7 +611,7 @@ forbid:
         }
     if (i && es->es_nok < CCCAM_MAX_NOKS)
       return;
-    
+
     es->es_keystate = ES_FORBIDDEN;
     LIST_FOREACH(ep, &ct->cs_pids, ep_link) {
       LIST_FOREACH(es2, &ep->ep_sections, es_link)
@@ -671,7 +670,7 @@ forbid:
       es->es_keystate = ES_RESOLVED;
       es->es_resolved = 1;
       off = 8;
-    //} 
+    //}
     //TODO: AES
     #if 0
     else {
@@ -748,7 +747,7 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
       uint8_t dcw[16];
       uint8_t seq = buf[0];
 
-      cccam_decrypt_cw(cccam->cccam_username, cccam->card_id, &buf[4]);
+      cccam_decrypt_cw(cccam->cccam_nodeid, cccam->card_id, &buf[4]);
       memcpy(dcw, buf + 4, 16);
       cccam_decrypt(&cccam->recvblock, buf + 4, len - 4);
       tvhtrace(LS_CCCAM, "HEADER:");
@@ -901,7 +900,7 @@ cccam_flush_services(cccam_t *cccam)
  *
  */
 static uint8_t
-cccam_send_msg(cccam_t *cccam, 
+cccam_send_msg(cccam_t *cccam,
       cccam_msg_type_t cmd, uint8_t *buf, size_t len, int enq, int seq, uint32_t card_id)
 {
   cccam_message_t *cm = malloc(sizeof(cccam_message_t));
@@ -944,7 +943,7 @@ cccam_send_msg(cccam_t *cccam,
   }
   return seq;
 }
-#if 0
+#if 1
 /**
  * Send keep alive
  */
@@ -998,14 +997,15 @@ cccam_writer_thread(void *aux)
     }
 
     /* If nothing is to be sent in keepalive interval seconds we
-       need to send a keepalive */
-    mono = mclk() + sec2mono(cccam->cccam_keepalive_interval);
+       need to send a keepalive
+       when disabled default to 1 min but don't send ka messages */
+    int delay = cccam->cccam_keepalive_interval ? cccam->cccam_keepalive_interval : 60;
+    mono = mclk() + sec2mono(delay);
     do {
       r = tvh_cond_timedwait(&cccam->cccam_writer_cond, &cccam->cccam_writer_mutex, mono);
       if(r == ETIMEDOUT) {
-        /* TODO: cccam doesn't seem to care about keepalive messages
-                 (server just sends them) */
-        //cccam_send_ka(cccam);
+        if (cccam->cccam_keepalive_interval)
+          cccam_send_ka(cccam);
         break;
       }
     } while (ERRNO_AGAIN(r));
@@ -1035,7 +1035,7 @@ sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
 
   cccam_crypt_init(&cccam->recvblock, hash, 20);
   cccam_decrypt(&cccam->recvblock, buf, 16);
-  
+
   cccam_crypt_init(&cccam->sendblock, buf, 16);
   cccam_decrypt(&cccam->sendblock, hash, 20);
 
@@ -1103,8 +1103,7 @@ cccam_send_cli_data(cccam_t *cccam)
 
   memset(buf, 0, CCCAM_NETMSGSIZE);
   memcpy(buf, cccam->cccam_username, 20);
-  // TODO: add proper NODEID to config webui (using username atm)
-  memcpy(buf + 20, cccam->cccam_username, 8 ); 
+  memcpy(buf + 20, cccam->cccam_nodeid, 8);
   buf[28] = 0; // TODO: wantemus = 1;
   memcpy(buf + 29, cccam_version_str[cccam->cccam_version], 32);
   memcpy(buf + 61, "tvh", 32); // build number (ascii)
@@ -1209,7 +1208,7 @@ cccam_thread(void *aux)
   while(cccam->cccam_running) {
     cccam_invalidate_cards(cccam);
     caclient_set_status((caclient_t *)cccam, CACLIENT_STATUS_READY);
-    
+
     snprintf(hostname, sizeof(hostname), "%s", cccam->cccam_hostname);
     port = cccam->cccam_port;
 
@@ -1221,7 +1220,7 @@ cccam_thread(void *aux)
 
     if(fd == -1) {
       attempts++;
-      tvhinfo(LS_CCCAM, 
+      tvhinfo(LS_CCCAM,
               "Connection attempt to %s:%d failed: %s",
               hostname, port, errbuf);
     } else {
@@ -1241,7 +1240,7 @@ cccam_thread(void *aux)
 
       cccam->cccam_fd = -1;
       close(fd);
-      tvhinfo(LS_CCCAM, "Disconnected from %s:%i", 
+      tvhinfo(LS_CCCAM, "Disconnected from %s:%i",
               cccam->cccam_hostname, cccam->cccam_port);
     }
 
@@ -1255,7 +1254,7 @@ cccam_thread(void *aux)
 
     d = 3;
 
-    tvhinfo(LS_CCCAM, 
+    tvhinfo(LS_CCCAM,
             "%s:%i: Automatic connection attempt in %d seconds",
             cccam->cccam_hostname, cccam->cccam_port, d-1);
 
@@ -1284,7 +1283,7 @@ verify_provider(cs_card_data_t *pcard, uint32_t providerid)
 
   if(providerid == 0)
     return 1;
-  
+
   for(i = 0; i < pcard->cs_ra.providers_count; i++)
     if(providerid == pcard->cs_ra.providers[i].id)
       return 1;
@@ -1327,7 +1326,7 @@ cccam_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
   pthread_mutex_lock(&cccam->cccam_mutex);
   /* TODO: emm
   mux = pcard->cccam_mux;
-  
+
   if (pcard->running && cccam->cccam_forward_emm && cccam->cccam_writer_running) {
     if (cccam->cccam_emmex) {
       if (cccam->cccam_emm_mux && cccam->cccam_emm_mux != mux) {
@@ -1473,11 +1472,11 @@ found:
     case 0x80:
     case 0x81:
       /* ECM */
-      
+
       if((pcard->cs_ra.caid >> 8) == 6) {
         ep->ep_last_section = data[5];
         section = data[4];
-        
+
       } else {
         ep->ep_last_section = 0;
         section = 0;
@@ -1542,7 +1541,7 @@ end:
 /**
  * cccam_mutex is held
  */
-static void 
+static void
 cccam_service_pid_free(cccam_service_t *ct)
 {
   ecm_pid_t *ep;
@@ -1795,7 +1794,67 @@ cccam_conf_changed(caclient_t *cac)
   }
 }
 
-#if 0
+/**
+ *
+ */
+static int
+nibble(char c)
+{
+  switch(c) {
+  case '0' ... '9':
+    return c - '0';
+  case 'a' ... 'f':
+    return c - 'a' + 10;
+  case 'A' ... 'F':
+    return c - 'A' + 10;
+  default:
+    return 0;
+  }
+}
+
+/**
+ *
+ */
+static int
+caclient_cccam_nodeid_set(void *o, const void *v)
+{
+  cccam_t *cccam = o;
+  const char *s = v ?: "";
+  uint8_t key[8];
+  int i, u, l;
+
+  for(i = 0; i < ARRAY_SIZE(key); i++) {
+    while(*s != 0 && !isxdigit(*s)) s++;
+    u = *s ? nibble(*s++) : 0;
+    while(*s != 0 && !isxdigit(*s)) s++;
+    l = *s ? nibble(*s++) : 0;
+    key[7-i] = (u << 4) | l;
+  }
+  i = memcmp(cccam->cccam_nodeid, key, ARRAY_SIZE(key)) != 0;
+  memcpy(cccam->cccam_nodeid, key, ARRAY_SIZE(key));
+  return i;
+}
+
+static const void *
+caclient_cccam_nodeid_get(void *o)
+{
+  cccam_t *cccam = o;
+  static char buf[64];
+  static const char *ret = buf;
+  snprintf(buf, sizeof(buf),
+           "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
+           cccam->cccam_nodeid[0x7],
+           cccam->cccam_nodeid[0x6],
+           cccam->cccam_nodeid[0x5],
+           cccam->cccam_nodeid[0x4],
+           cccam->cccam_nodeid[0x3],
+           cccam->cccam_nodeid[0x2],
+           cccam->cccam_nodeid[0x1],
+           cccam->cccam_nodeid[0x0]);
+  return &ret;
+}
+
+
 static htsmsg_t *
 caclient_cccam_class_cccam_version_list ( void *o, const char *lang )
 {
@@ -1811,7 +1870,7 @@ caclient_cccam_class_cccam_version_list ( void *o, const char *lang )
   };
   return strtab2htsmsg(tab, 1, lang);
 }
-#endif
+
 
 const idclass_t caclient_cccam_class =
 {
@@ -1851,7 +1910,14 @@ const idclass_t caclient_cccam_class =
       .desc     = N_("Port to connect to."),
       .off      = offsetof(cccam_t, cccam_port),
     },
-#if 0
+    {
+      .type     = PT_STR,
+      .id       = "nodeid",
+      .name     = N_("Node ID"),
+      .desc     = N_("Client node ID."),
+      .set      = caclient_cccam_nodeid_set,
+      .get      = caclient_cccam_nodeid_get,
+    },
     {
       .type     = PT_INT,
       .id       = "version",
@@ -1861,7 +1927,7 @@ const idclass_t caclient_cccam_class =
       .list     = caclient_cccam_class_cccam_version_list,
       .def.i    = CCCAM_VERSION_2_3_0,
     },
-#endif
+#if 0
     {
       .type     = PT_BOOL,
       .id       = "emm",
@@ -1878,10 +1944,11 @@ const idclass_t caclient_cccam_class =
       .off      = offsetof(cccam_t, cccam_emmex),
       .def.i    = 1
     },
+#endif
     {
       .type     = PT_INT,
       .id       = "keepalive_interval",
-      .name     = N_("Keepalive interval"),
+      .name     = N_("Keepalive interval (0=disable)"),
       .desc     = N_("Keepalive interval in seconds"),
       .off      = offsetof(cccam_t, cccam_keepalive_interval),
       .def.i    = CCCAM_KEEPALIVE_INTERVAL,
@@ -1905,6 +1972,7 @@ caclient_t *cccam_create(void)
   cccam->cac_caid_update  = cccam_caid_update;
   cccam->cccam_keepalive_interval = CCCAM_KEEPALIVE_INTERVAL;
   cccam->cccam_version = CCCAM_VERSION_2_3_0;
+  uuid_random(cccam->cccam_nodeid, 8);
   return (caclient_t *)cccam;
 }
 
