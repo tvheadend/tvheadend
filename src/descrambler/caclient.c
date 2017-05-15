@@ -24,6 +24,9 @@ const idclass_t *caclient_classes[] = {
 #if ENABLE_CWC
   &caclient_cwc_class,
 #endif
+#if ENABLE_CCCAM
+  &caclient_cccam_class,
+#endif
 #if ENABLE_CAPMT
   &caclient_capmt_class,
 #endif
@@ -95,6 +98,10 @@ caclient_create
 #if ENABLE_CWC
   if (c == &caclient_cwc_class)
     cac = cwc_create();
+#endif
+#if ENABLE_CCCAM
+  if (c == &caclient_cccam_class)
+    cac = cccam_create();
 #endif
 #if ENABLE_CAPMT
   if (c == &caclient_capmt_class)

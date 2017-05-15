@@ -122,6 +122,7 @@ JAVASCRIPT += $(ROOTPATH)/app/cteditor.js
 JAVASCRIPT += $(ROOTPATH)/app/acleditor.js
 
 CACLIENT-$(CONFIG_CWC) = yes
+CACLIENT-$(CONFIG_CCCAM) = yes
 CACLIENT-$(CONFIG_CAPMT) = yes
 
 ifeq ($(CACLIENT-yes), yes)

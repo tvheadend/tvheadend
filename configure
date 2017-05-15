@@ -20,6 +20,7 @@ OPTIONS=(
   "pie:yes"
   "ccdebug:no"
   "cwc:yes"
+  "cccam:yes"
   "capmt:yes"
   "constcw:yes"
   "linuxdvb:yes"
@@ -597,7 +598,7 @@ fi
 #
 # libdvbcsa, tvhcsa
 #
-if enabled cwc || enabled capmt || enabled constcw; then
+if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
   enable tvhcsa
   if enabled dvbcsa; then
     (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\
