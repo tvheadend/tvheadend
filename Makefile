@@ -496,6 +496,12 @@ SRCS-CWC = \
 SRCS-${CONFIG_CWC} += $(SRCS-CWC)
 I18N-C += $(SRCS-CWC)
 
+# CCCAM
+SRCS-CCCAM = \
+	src/descrambler/cccam.c
+SRCS-${CONFIG_CCCAM} += $(SRCS-CCCAM)
+I18N-C += $(SRCS-CCCAM)
+
 # CAPMT
 SRCS-CAPMT = \
 	src/descrambler/capmt.c

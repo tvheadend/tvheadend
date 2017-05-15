@@ -152,7 +152,7 @@ descrambler_init ( void )
   uint32_t caid;
   int idx;
 
-#if (ENABLE_CWC || ENABLE_CAPMT) && !ENABLE_DVBCSA
+#if (ENABLE_CWC || ENABLE_CAPMT || ENABLE_CCCAM) && !ENABLE_DVBCSA
   ffdecsa_init();
 #endif
   caclient_init();

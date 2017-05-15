@@ -162,6 +162,7 @@ enum {
   LS_CSA,
   LS_CAPMT,
   LS_CWC,
+  LS_CCCAM,
   LS_DVBCAM,
   LS_DVR,
   LS_EPG,
