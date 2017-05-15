@@ -186,6 +186,17 @@ const idclass_t satip_frontend_class =
       .off      = offsetof(satip_frontend_t, sf_play2),
     },
     {
+      .type     = PT_INT,
+      .id       = "grace_period",
+      .name     = N_("Grace period"),
+      .desc     = N_("Force the grace period for which SAT>IP client waits "
+                     "for the data from server. After this grace period, "
+                     "the tuner is handled as dead. The default value is "
+                     "5 seconds (for DVB-S/S2: 10 seconds)."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(satip_frontend_t, sf_grace_period),
+    },
+    {
       .type     = PT_BOOL,
       .id       = "teardown_delay",
       .name     = N_("Force teardown delay"),
@@ -449,7 +460,7 @@ static int
 satip_frontend_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
   satip_frontend_t *lfe = (satip_frontend_t*)mi;
-  int r = 5;
+  int r = lfe->sf_grace_period > 0 ? MINMAX(lfe->sf_grace_period, 1, 60) : 5;
   if (lfe->sf_positions || lfe->sf_master)
     r = MINMAX(satip_satconf_get_grace(lfe, mm) ?: 10, r, 60);
   return r;
