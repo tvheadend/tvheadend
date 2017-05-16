@@ -605,7 +605,8 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
 #elif ENABLE_PCRE2
       if (dae->dae_pcre) {
         PCRE2_UCHAR8 ebuf[128];
-        int ecode, eoff;
+        int ecode;
+        PCRE2_SIZE eoff;
         dae->dae_title_pcre = pcre2_compile((PCRE2_SPTR8)title, -1,
                                             PCRE2_CASELESS | PCRE2_UTF,
                                             &ecode, &eoff, NULL);
