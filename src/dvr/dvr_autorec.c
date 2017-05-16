@@ -34,6 +34,10 @@
 #include "epg.h"
 #include "htsp_server.h"
 
+#ifndef PCRE_STUDY_JIT_COMPILE
+#define PCRE_STUDY_JIT_COMPILE 0
+#endif
+
 struct dvr_autorec_entry_queue autorec_entries;
 
 /*
