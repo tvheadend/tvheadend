@@ -1851,24 +1851,23 @@ caclient_cccam_nodeid_set(void *o, const void *v)
   cccam_t *cccam = o;
   const char *s = v ?: "";
   uint8_t key[8];
-  int u, l, i = 0;
+  int i, u, l;
+  uint64_t node_id;
 
-  if (!strlen(v)) {
-    uuid_random(cccam->cccam_nodeid, 8);
-    i = 1;
-  } else {
-    for(i = 0; i < ARRAY_SIZE(key); i++) {
-      while(*s != 0 && !isxdigit(*s)) s++;
-      u = *s ? nibble(*s++) : 0;
-      while(*s != 0 && !isxdigit(*s)) s++;
-      l = *s ? nibble(*s++) : 0;
-      key[7-i] = (u << 4) | l;
-    }
-    if (memcmp(cccam->cccam_nodeid, key, ARRAY_SIZE(key)) != 0) {
-      memcpy(cccam->cccam_nodeid, key, ARRAY_SIZE(key));
-      i = 1;
-    }
+  for(i = 0; i < ARRAY_SIZE(key); i++) {
+    while(*s != 0 && !isxdigit(*s)) s++;
+    u = *s ? nibble(*s++) : 0;
+    while(*s != 0 && !isxdigit(*s)) s++;
+    l = *s ? nibble(*s++) : 0;
+    key[i] = (u << 4) | l;
   }
+
+  node_id = be64toh(*((uint64_t*) key));
+  if (!node_id)
+    uuid_random(key, 8);
+
+  if ((i = memcmp(cccam->cccam_nodeid, key, ARRAY_SIZE(key))) != 0)
+    memcpy(cccam->cccam_nodeid, key, ARRAY_SIZE(key));
   return i;
 }
 
@@ -1880,14 +1879,14 @@ caclient_cccam_nodeid_get(void *o)
   static const char *ret = buf;
   snprintf(buf, sizeof(buf),
            "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-           cccam->cccam_nodeid[0x7],
-           cccam->cccam_nodeid[0x6],
-           cccam->cccam_nodeid[0x5],
-           cccam->cccam_nodeid[0x4],
-           cccam->cccam_nodeid[0x3],
-           cccam->cccam_nodeid[0x2],
+           cccam->cccam_nodeid[0x0],
            cccam->cccam_nodeid[0x1],
-           cccam->cccam_nodeid[0x0]);
+           cccam->cccam_nodeid[0x2],
+           cccam->cccam_nodeid[0x3],
+           cccam->cccam_nodeid[0x4],
+           cccam->cccam_nodeid[0x5],
+           cccam->cccam_nodeid[0x6],
+           cccam->cccam_nodeid[0x7]);
   return &ret;
 }
 
