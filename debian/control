@@ -14,8 +14,8 @@ Replaces: hts-tvheadend
 Homepage: https://tvheadend.org
 Description: Tvheadend
  Tvheadend is a TV streaming server and digital video recorder.
-   - supports a variety of inputs (DVB-S(2)/T(2)/C, IPTV, SAT>IP, HDHR)
-   - supports a variety of clients (Showtime, Kodi, VLC)
+   - supports a variety of inputs (DVB-S(2)/T(2)/C, ISDB-S/T/C, ATSC-T/C, IPTV, SAT>IP, HDHR)
+   - supports a variety of clients (Showtime, SmartTV, Kodi, VLC)
 
 Package: tvheadend-dbg
 Architecture: any
