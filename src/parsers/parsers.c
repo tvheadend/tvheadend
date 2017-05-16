@@ -1828,7 +1828,7 @@ parser_deliver(service_t *t, elementary_stream_t *st, th_pkt_t *pkt)
   d = pts_diff(pkt->pkt_pcr, (pkt->pkt_dts + 30000) & PTS_MASK);
 
   if (d > diff || d == PTS_UNSET) {
-    if (tvhlog_limit(&st->es_pcr_log, 2))
+    if (d != PTS_UNSET && tvhlog_limit(&st->es_pcr_log, 2))
       tvhwarn(LS_PARSER, "%s: DTS and PCR diff is very big (%"PRId64")",
               service_component_nicename(st), pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
     pkt_trace(LS_PARSER, pkt, "pcr drop");
