@@ -110,7 +110,7 @@ def get_ver(version):
 def get_path(version, repo):
     major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') > 0:
+        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') <= 0:
             return '%s.%s-release' % (major, minor)
         return '%s.%s' % (major, minor)
     return 't'
@@ -240,14 +240,18 @@ def test_filename():
         "tvheadend-4.2.2~xenial_amd64.deb",
         "tvheadend_4.2.2~xenial_arm64.deb",
         "tvheadend-4.2.2-1.el7.centos.x86_64.rpm",
-        "tvheadend-4.2.2-1.fc24.x86_64.rpm"
+        "tvheadend-4.2.2-1.fc24.x86_64.rpm",
+        "tvheadend-4.2.2-1~g82c8872~xenial_amd64.deb",
+        "tvheadend_4.2.2-1~g82c8872~xenial_arm64.deb",
+        "tvheadend-4.2.2-1~g82c8872.el7.centos.x86_64.rpm",
+        "tvheadend-4.2.2-1~g82c8872.fc24.x86_64.rpm",
     ]
     from pprint import pprint
     for f in FILES:
         basename, args, extra = get_bintray_params(f)
         print('\n')
         print('BASENAME:', basename)
-        print('EXTRA:', basename)
+        print('EXTRA:', extra)
         pprint(vars(args), indent=2)
 
 def main(argv):
