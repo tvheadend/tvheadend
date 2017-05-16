@@ -188,6 +188,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_pathname = strdup("$t$n.$x");
   cfg->dvr_cleanup_threshold_free = 1000; // keep 1000 MiB of free space on disk by default
   cfg->dvr_cleanup_threshold_used = 0;    // disabled
+  cfg->dvr_autorec_max_count = 50;
 
   /* Muxer config */
   cfg->dvr_muxcnf.m_cache  = MC_CACHE_SYSTEM;
@@ -1012,6 +1013,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The maximum number of entries that can be matched."),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_count),
       .opts     = PO_ADVANCED,
+      .def.i    = 50,
       .group    = 1,
     },
     {
