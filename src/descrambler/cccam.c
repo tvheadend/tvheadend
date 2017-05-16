@@ -486,7 +486,7 @@ cccam_decode_card_data_reply(cccam_t *cccam, uint8_t *msg)
   }
 
   caclient_set_status((caclient_t *)cccam, CACLIENT_STATUS_CONNECTED);
-  cccam_new_card(cccam, msg, NULL, nprov, pid, NULL); /* TODO: psa? 4bytes cccam / 8bytes cccam */
+  cccam_new_card(cccam, msg, NULL, nprov, pid, NULL); /* TODO: psa? 4bytes cccam / 8bytes cwc */
 /* TODO: EMM
   cccam->cccam_forward_emm = 0;
   if (cccam->cccam_emm) {
@@ -1851,17 +1851,24 @@ caclient_cccam_nodeid_set(void *o, const void *v)
   cccam_t *cccam = o;
   const char *s = v ?: "";
   uint8_t key[8];
-  int i, u, l;
+  int u, l, i = 0;
 
-  for(i = 0; i < ARRAY_SIZE(key); i++) {
-    while(*s != 0 && !isxdigit(*s)) s++;
-    u = *s ? nibble(*s++) : 0;
-    while(*s != 0 && !isxdigit(*s)) s++;
-    l = *s ? nibble(*s++) : 0;
-    key[7-i] = (u << 4) | l;
+  if (!strlen(v)) {
+    uuid_random(cccam->cccam_nodeid, 8);
+    i = 1;
+  } else {
+    for(i = 0; i < ARRAY_SIZE(key); i++) {
+      while(*s != 0 && !isxdigit(*s)) s++;
+      u = *s ? nibble(*s++) : 0;
+      while(*s != 0 && !isxdigit(*s)) s++;
+      l = *s ? nibble(*s++) : 0;
+      key[7-i] = (u << 4) | l;
+    }
+    if (memcmp(cccam->cccam_nodeid, key, ARRAY_SIZE(key)) != 0) {
+      memcpy(cccam->cccam_nodeid, key, ARRAY_SIZE(key));
+      i = 1;
+    }
   }
-  i = memcmp(cccam->cccam_nodeid, key, ARRAY_SIZE(key)) != 0;
-  memcpy(cccam->cccam_nodeid, key, ARRAY_SIZE(key));
   return i;
 }
 
@@ -1944,7 +1951,7 @@ const idclass_t caclient_cccam_class =
       .type     = PT_STR,
       .id       = "nodeid",
       .name     = N_("Node ID"),
-      .desc     = N_("Client node ID."),
+      .desc     = N_("Client node ID. Leave field empty to generate a random ID."),
       .set      = caclient_cccam_nodeid_set,
       .get      = caclient_cccam_nodeid_get,
     },
@@ -2002,7 +2009,6 @@ caclient_t *cccam_create(void)
   cccam->cac_caid_update  = cccam_caid_update;
   cccam->cccam_keepalive_interval = CCCAM_KEEPALIVE_INTERVAL;
   cccam->cccam_version = CCCAM_VERSION_2_3_0;
-  uuid_random(cccam->cccam_nodeid, 8);
   return (caclient_t *)cccam;
 }
 
