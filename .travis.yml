@@ -3,7 +3,7 @@
 #
 
 sudo: required
-dist: trusty
+dist: xenial
 language: c
 before_install:
   - sudo apt-get -qq update
