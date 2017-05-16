@@ -41,14 +41,18 @@ struct dvr_autorec_entry_queue autorec_entries;
  */
 static inline int autorec_regexec(dvr_autorec_entry_t *dae, const char *str)
 {
-  int r;
 #if ENABLE_PCRE
   if (dae->dae_pcre) {
-    int vec[30];
+    int r, vec[30];
     r = pcre_exec(dae->dae_title_pcre, dae->dae_title_pcre_extra,
                   str, strlen(str), 0, 0, vec, ARRAY_SIZE(vec));
     return r < 0;
   } else
+#elif ENABLE_PCRE2
+    int r;
+    r = pcre2_match(dae->dae_title_pcre, (PCRE2_SPTR8)str, -1, 0, 0,
+                    dae->dae_title_pcre_match, NULL);
+    return r <= 0;
 #endif
   {
     return regexec(&dae->dae_title_preg, str, 0, NULL, 0);
@@ -70,6 +74,12 @@ static void autorec_regfree(dvr_autorec_entry_t *dae)
 #endif
       pcre_free(dae->dae_title_pcre);
       dae->dae_title_pcre_extra = NULL;
+      dae->dae_title_pcre = NULL;
+    } else
+#elif ENABLE_PCRE2
+    if (dae->dae_pcre) {
+      pcre2_match_data_free(dae->dae_title_pcre_match);
+      dae->dae_title_pcre_match = NULL;
       dae->dae_title_pcre = NULL;
     } else
 #endif
@@ -345,6 +355,9 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
 
+  /* PCRE flag must be set before load (order issue) */
+  if (conf)
+    dae->dae_pcre = htsmsg_get_bool_or_default(conf, "pcre", 0);
   idnode_load(&dae->dae_id, conf);
 
   htsp_autorec_entry_add(dae);
@@ -587,6 +600,21 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
             tvherror(LS_DVR, "Unable to study PCRE '%s': %s", title, estr);
           else
             dae->dae_title = strdup(title);
+        }
+      } else
+#elif ENABLE_PCRE2
+      if (dae->dae_pcre) {
+        PCRE2_UCHAR8 ebuf[128];
+        int ecode, eoff;
+        dae->dae_title_pcre = pcre2_compile((PCRE2_SPTR8)title, -1,
+                                            PCRE2_CASELESS | PCRE2_UTF,
+                                            &ecode, &eoff, NULL);
+        if (dae->dae_title_pcre == NULL) {
+          (void)pcre2_get_error_message(ecode, ebuf, 120);
+          tvherror(LS_DVR, "Unable to compile PCRE2 '%s': %s", title, ebuf);
+        } else {
+          dae->dae_title_pcre_match = pcre2_match_data_create(20, NULL);
+          dae->dae_title = strdup(title);
         }
       } else
 #endif

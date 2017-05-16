@@ -23,6 +23,10 @@
 #if ENABLE_PCRE
 #include <pcre.h>
 #endif
+#if ENABLE_PCRE2
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+#endif
 #include "epg.h"
 #include "channels.h"
 #include "subscriptions.h"
@@ -346,6 +350,9 @@ typedef struct dvr_autorec_entry {
 #if ENABLE_PCRE
   pcre *dae_title_pcre;
   pcre_extra *dae_title_pcre_extra;
+#elif ENABLE_PCRE2
+  pcre2_code *dae_title_pcre;
+  pcre2_match_data *dae_title_pcre_match;
 #endif
   int dae_fulltext;
   
