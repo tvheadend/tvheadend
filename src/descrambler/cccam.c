@@ -232,15 +232,15 @@ typedef struct cccam {
   struct cccam_cards_list cccam_cards;
   int cccam_seq;
 
-
 #if 0
   /* Emm forwarding */
   int cccam_forward_emm;
+#endif
 
   /* Emm exclusive update */
   int64_t cccam_emm_update_time;
   void *cccam_emm_mux;
-#endif
+
 
   /* From configuration */
   char *cccam_username;
@@ -739,9 +739,14 @@ cccam_running_reply(cccam_t *cccam, uint8_t *buf, int len)
     case MSG_KEEPALIVE:
       tvhdebug(LS_CCCAM, "keepalive");
       break;
-    case MSG_ECM_NOK1:    /* retry */
-    case MSG_ECM_NOK2:    /* decode failed */
-    //case MSG_CMD_05:     /* ? */
+    case MSG_EMM_REQUEST:   /* emm ack */
+      //cccam_send_msg(cccam, MSG_EMM_REQUEST, NULL, 0, 0, 0, 0);
+      sem_post(&cccam->ecm_mutex);
+      tvhtrace(LS_CCCAM, "EMM message ACK received");
+      break;
+    case MSG_ECM_NOK1:      /* retry */
+    case MSG_ECM_NOK2:      /* decode failed */
+    //case MSG_CMD_05:      /* ? */
     case MSG_ECM_REQUEST: { /* request reply */
 
       uint8_t dcw[16];
@@ -906,7 +911,7 @@ cccam_send_msg(cccam_t *cccam,
   cccam_message_t *cm = malloc(sizeof(cccam_message_t));
   uint8_t *netbuf = cm->cm_data;
 
-  if ((len < 4) || ((len + 4) > CCCAM_NETMSGSIZE)) {
+  if ((len + 4) > CCCAM_NETMSGSIZE) {
     free(cm);
     return 0;
   }
@@ -943,7 +948,7 @@ cccam_send_msg(cccam_t *cccam,
   }
   return seq;
 }
-#if 1
+
 /**
  * Send keep alive
  */
@@ -960,7 +965,7 @@ cccam_send_ka(cccam_t *cccam)
   tvhdebug(LS_CCCAM, "send keepalive");
   cccam_send_msg(cccam, MSG_NO_HEADER, buf, 4, 0, 0, 0);
 }
-#endif
+
 /**
  *
  */
@@ -1290,7 +1295,6 @@ verify_provider(cs_card_data_t *pcard, uint32_t providerid)
   return 0;
 }
 
-#if 0
 /**
  *
  */
@@ -1298,23 +1302,25 @@ static void
 cccam_emm_send(void *aux, const uint8_t *radata, int ralen, void *mux)
 {
   cs_card_data_t *pcard = aux;
-  cccam_t *cccam = pcard->cccam;
+  //cccam_t *cccam = pcard->cccam;
 
   tvhtrace(LS_CCCAM, "sending EMM for %04x mux %p", pcard->cs_ra.caid, mux);
   tvhlog_hexdump(LS_CCCAM, radata, ralen);
-  cccam_send_msg(cccam, radata, ralen, 0, 1, 0, 0);
+
+  // FIXME: missing arguments
+  //cccam_send_emm(cccam, radata, ralen, pcard->SID,
+  //              pcard->cs_ra.caid, ->provider, pcard->id);
 }
-#endif
+
 /**
  *
  */
-
 static void
 cccam_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
 {
   cs_card_data_t *pcard = opaque;
   cccam_t *cccam;
-  //void *mux;
+  void *mux;
 
   if (data == NULL) {  /* end-of-data */
     pcard->cccam_mux = NULL;
@@ -1324,10 +1330,10 @@ cccam_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
     return;
   cccam = pcard->cccam;
   pthread_mutex_lock(&cccam->cccam_mutex);
-  /* TODO: emm
   mux = pcard->cccam_mux;
 
-  if (pcard->running && cccam->cccam_forward_emm && cccam->cccam_writer_running) {
+  //orig: if (pcard->running && cccam->cccam_forward_emm && cccam->cccam_writer_running) {
+  if (pcard->running && cccam->cccam_writer_running) {
     if (cccam->cccam_emmex) {
       if (cccam->cccam_emm_mux && cccam->cccam_emm_mux != mux) {
         if (cccam->cccam_emm_update_time + sec2mono(25) > mclk())
@@ -1338,7 +1344,7 @@ cccam_emm(void *opaque, int pid, const uint8_t *data, int len, int emm)
     cccam->cccam_emm_mux = mux;
     emm_filter(&pcard->cs_ra, data, len, mux, cccam_emm_send, pcard);
   }
-end_of_job:*/
+end_of_job:
   pthread_mutex_unlock(&cccam->cccam_mutex);
 }
 
@@ -1368,7 +1374,31 @@ cccam_send_ecm(cccam_t *cccam, const uint8_t *msg, size_t len, int sid,
   return cccam_send_msg(cccam, MSG_ECM_REQUEST, buf, 13 + len, 1, seq, card_id);
 }
 
+#if 0
+static int
+cccam_send_emm(cccam_t *cccam, const uint8_t *msg, size_t len, int sid,
+                uint16_t st_caid, uint32_t st_provider, uint32_t card_id)
+{
+  unsigned char buf[CCCAM_NETMSGSIZE-4];
 
+  int seq = atomic_add(&cccam->cccam_seq, 1);
+
+  buf[0] = st_caid >> 8;
+  buf[1] = st_caid & 0xff;
+  buf[2] = 0;
+  buf[3] = st_provider >> 24;
+  buf[4] = st_provider >> 16;
+  buf[5] = st_provider >> 8;
+  buf[6] = st_provider & 0xff;
+  buf[7] = card_id >> 24;
+  buf[8] = card_id >> 16;
+  buf[9] = card_id >> 8;
+  buf[10] = card_id & 0xff;
+  buf[11] = len & 0xff;
+  memcpy(buf + 12, msg, len);
+  return cccam_send_msg(cccam, MSG_EMM_REQUEST, buf, 12 + len, 1, seq, card_id);
+}
+#endif
 /**
  *
  */
