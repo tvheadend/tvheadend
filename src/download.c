@@ -172,7 +172,11 @@ download_pipe_read(void *aux)
     sbuf_alloc(&dn->pipe_sbuf, 2048);
     len = sbuf_read(&dn->pipe_sbuf, dn->pipe_fd);
     if (len == 0) {
+#if defined(PLATFORM_DARWIN)
+      s = dn->url ? strdup(dn->url) : strdup("");
+#else
       s = dn->url ? strdupa(dn->url) : strdupa("");
+#endif
       p = strchr(s, ' ');
       if (p)
         *p = '\0';
@@ -248,7 +252,11 @@ download_fetch(void *aux)
     goto done;
 
   if (strncmp(dn->url, "file://", 7) == 0) {
+#if defined(PLATFORM_DARWIN)
+    char *f = strdup(dn->url + 7);
+#else
     char *f = strdupa(dn->url + 7);
+#endif
     http_deescape(f);
     download_file(dn, f);
     goto done;

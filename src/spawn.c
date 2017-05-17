@@ -302,8 +302,12 @@ spawn_reaper(void)
   pthread_mutex_lock(&spawn_mutex);
   LIST_FOREACH(s, &spawns, link)
     if (s->killed && s->killed < mclk()) {
+#if defined(PLATFORM_DARWIN)
+      /* Workaround: no solution found */
+#else
       /* kill the whole process group */
       kill(-(s->pid), SIGKILL);
+#endif
     }
   pthread_mutex_unlock(&spawn_mutex);
 }
@@ -327,8 +331,12 @@ spawn_kill(pid_t pid, int sig, int timeout)
     if (s) {
       if (!s->killed)
         s->killed = mclk() + sec2mono(MINMAX(timeout, 5, 3600));
-      /* kill the whole process group */
-      r = kill(-pid, sig);
+#if defined(PLATFORM_DARWIN)
+        /* Workaround: no solution found */
+#else
+        /* kill the whole process group */
+        kill(-(s->pid), SIGKILL);
+#endif
       if (r < 0)
         r = -errno;
     }
