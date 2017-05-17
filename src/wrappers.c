@@ -390,17 +390,25 @@ tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, c
 void regex_free(tvh_regex_t *regex)
 {
 #if ENABLE_PCRE
+  pcre_jit_stack_free(regex->re_jit_stack);
 #ifdef PCRE_CONFIG_JIT
   pcre_free_study(regex->re_extra);
 #else
   pcre_free(regex->re_extra);
 #endif
-  pcre_free(regex->re_comp);
+  pcre_free(regex->re_code);
   regex->re_extra = NULL;
-  regex->re_comp = NULL;
+  regex->re_code = NULL;
+  regex->re_jit_stack = NULL;
 #elif ENABLE_PCRE2
+  pcre2_jit_stack_free(regex->re_jit_stack);
   pcre2_match_data_free(regex->re_match);
   pcre2_code_free(regex->re_code);
+  pcre2_match_context_free(regex->re_mcontext);
+  regex->re_match = NULL;
+  regex->re_code = NULL;
+  regex->re_mcontext = NULL;
+  regex->re_jit_stack = NULL;
 #else
   regfree(&regex->re_code);
 #endif
@@ -416,18 +424,25 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
   if (regex->re_code == NULL) {
     tvherror(subsys, "Unable to compile PCRE '%s': %s", re_str, estr);
   } else {
-    regex->re_code_extra = pcre_study(regex->re_code,
-                                      PCRE_STUDY_JIT_COMPILE, &estr);
-    if (regex->re_code_extra == NULL && estr)
+    regex->re_extra = pcre_study(regex->re_code,
+                                 PCRE_STUDY_JIT_COMPILE, &estr);
+    if (regex->re_extra == NULL && estr)
       tvherror(subsys, "Unable to study PCRE '%s': %s", re_str, estr);
-    else
+    else {
+      regex->re_jit_stack = pcre_jit_stack_alloc(32*1024, 512*1024);
+      if (regex->re_jit_stack)
+        pcre_assign_jit_stack(regex->re_extra, NULL, regex->re_jit_stack);
       return 0;
+    }
   }
   return -1;
 #elif ENABLE_PCRE2
   PCRE2_UCHAR8 ebuf[128];
   int ecode;
   PCRE2_SIZE eoff;
+  size_t jsz;
+  assert(regex->re_jit_stack == NULL);
+  regex->re_mcontext = pcre2_match_context_create(NULL);
   regex->re_code = pcre2_compile((PCRE2_SPTR8)re_str, -1,
                                  PCRE2_CASELESS | PCRE2_UTF,
                                  &ecode, &eoff, NULL);
@@ -436,6 +451,14 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
     tvherror(subsys, "Unable to compile PCRE2 '%s': %s", re_str, ebuf);
   } else {
     regex->re_match = pcre2_match_data_create(20, NULL);
+    if (re_str[0] && pcre2_jit_compile(regex->re_code, PCRE2_JIT_COMPLETE) >= 0) {
+      jsz = 0;
+      if (pcre2_pattern_info(regex->re_code, PCRE2_INFO_JITSIZE, &jsz) >= 0 && jsz > 0) {
+        regex->re_jit_stack = pcre2_jit_stack_create(32 * 1024, 512 * 1024, NULL);
+        if (regex->re_jit_stack)
+          pcre2_jit_stack_assign(regex->re_mcontext, NULL, regex->re_jit_stack);
+      }
+    }
     return 0;
   }
   return -1;

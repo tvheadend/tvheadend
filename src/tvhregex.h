@@ -41,9 +41,12 @@ typedef struct {
 #if ENABLE_PCRE
   pcre *re_code;
   pcre_extra *re_extra;
+  pcre_jit_stack *re_jit_stack;
 #elif ENABLE_PCRE2
   pcre2_code *re_code;
   pcre2_match_data *re_match;
+  pcre2_match_context *re_mcontext;
+  pcre2_jit_stack *re_jit_stack;
 #else
   regex_t re_code;
 #endif
@@ -53,11 +56,11 @@ static inline int regex_match(tvh_regex_t *regex, const char *str)
 {
 #if ENABLE_PCRE
   int vec[30];
-  return pcre_exec(regex->re_code, re->re_extra,
-                str, strlen(str), 0, 0, vec, ARRAY_SIZE(vec)) < 0;
+  return pcre_exec(regex->re_code, regex->re_extra,
+                   str, strlen(str), 0, 0, vec, ARRAY_SIZE(vec)) < 0;
 #elif ENABLE_PCRE2
   return pcre2_match(regex->re_code, (PCRE2_SPTR8)str, -1, 0, 0,
-                     regex->re_match, NULL) <= 0;
+                     regex->re_match, regex->re_mcontext) <= 0;
 #else
   return regexec(&regex->re_code, str, 0, NULL, 0);
 #endif
