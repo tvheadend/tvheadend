@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <regex.h>
 #include <assert.h>
 #include <inttypes.h>
 #include <time.h>
@@ -2659,7 +2658,7 @@ _eq_comp_str ( epg_filter_str_t *f, const char *str )
     case EC_LT: return strcmp(str, f->str) > 0;
     case EC_GT: return strcmp(str, f->str) < 0;
     case EC_IN: return strstr(str, f->str) != NULL;
-    case EC_RE: return regexec(&f->re, str, 0, NULL, 0) != 0;
+    case EC_RE: return regex_match(&f->re, str) != 0;
     default: return 0;
   }
 }
@@ -2701,13 +2700,13 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
   }
   if (fulltext) {
     if ((s = epg_episode_get_title(ep, lang)) == NULL ||
-        regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+        regex_match(&eq->stitle_re, s)) {
       if ((s = epg_episode_get_subtitle(ep, lang)) == NULL ||
-          regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+          regex_match(&eq->stitle_re, s)) {
         if ((s = epg_broadcast_get_summary(e, lang)) == NULL ||
-            regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+            regex_match(&eq->stitle_re, s)) {
           if ((s = epg_broadcast_get_description(e, lang)) == NULL ||
-              regexec(&eq->stitle_re, s, 0, NULL, 0)) {
+              regex_match(&eq->stitle_re, s)) {
             return;
           }
         }
@@ -2716,7 +2715,7 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
   }
   if (eq->title.comp != EC_NO || (eq->stitle && !fulltext)) {
     if ((s = epg_episode_get_title(ep, lang)) == NULL) return;
-    if (eq->stitle && !fulltext && regexec(&eq->stitle_re, s, 0, NULL, 0)) return;
+    if (eq->stitle && !fulltext && regex_match(&eq->stitle_re, s)) return;
     if (eq->title.comp != EC_NO && _eq_comp_str(&eq->title, s)) return;
   }
   if (eq->subtitle.comp != EC_NO) {
@@ -2756,14 +2755,14 @@ static int
 _eq_init_str( epg_filter_str_t *f )
 {
   if (f->comp != EC_RE) return 0;
-  return regcomp(&f->re, f->str, REG_ICASE | REG_EXTENDED | REG_NOSUB);
+  return regex_compile(&f->re, f->str, LS_EPG);
 }
 
 static void
 _eq_done_str( epg_filter_str_t *f )
 {
   if (f->comp == EC_RE)
-    regfree(&f->re);
+    regex_free(&f->re);
   free(f->str);
   f->str = NULL;
 }
@@ -2961,7 +2960,7 @@ epg_query ( epg_query_t *eq, access_t *perm )
   if (_eq_init_str(&eq->channel_name)) goto fin;
 
   if (eq->stitle)
-    if (regcomp(&eq->stitle_re, eq->stitle, REG_ICASE | REG_EXTENDED | REG_NOSUB))
+    if (regex_compile(&eq->stitle_re, eq->stitle, LS_EPG))
       goto fin;
 
   channel = channel_find_by_uuid(eq->channel) ?:
@@ -3038,7 +3037,7 @@ fin:
   _eq_done_str(&eq->channel_name);
 
   if (eq->stitle)
-    regfree(&eq->stitle_re);
+    regex_free(&eq->stitle_re);
 
   free(eq->lang); eq->lang = NULL;
   free(eq->channel); eq->channel = NULL;
