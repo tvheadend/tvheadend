@@ -425,6 +425,12 @@ dvr_sub_stop(const char *id, const char *fmt, const void *aux, char *tmp, size_t
   return dvr_do_prefix(id, fmt, buf, tmp, tmplen);
 }
 
+static const char *
+dvr_sub_comment(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  return dvr_do_prefix(id, fmt, ((dvr_entry_t *)aux)->de_comment, tmp, tmplen);
+}
+
 static htsstr_substitute_t dvr_subs_entry[] = {
   { .id = "?t",  .getval = dvr_sub_title },
   { .id = "? t", .getval = dvr_sub_title },
@@ -579,6 +585,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "E",  .getval = dvr_sub_stop },
   { .id = "r",  .getval = dvr_sub_errors },
   { .id = "R",  .getval = dvr_sub_data_errors },
+  { .id = "Z",  .getval = dvr_sub_comment },
   { .id = NULL, .getval = NULL }
 };
 

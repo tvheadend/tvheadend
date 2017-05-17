@@ -24,6 +24,7 @@ Format | Description                               | Example value
 `%r`   | Number of errors during recording         |  0
 `%R`   | Number of data errors during recording    |  6
 `%i`   | Streams (comma separated)                 |  H264,AC3,TELETEXT
+`%Z`   | Comment                                   |  A string
 
 *Example usage*
 
