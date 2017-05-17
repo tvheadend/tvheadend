@@ -17,6 +17,7 @@ Format | Description                               | Example value
 `%d`   | Program description                       |  News and stories…
 `%S`   | Start time stamp of recording, UNIX epoch |  1224421200
 `%E`   | Stop time stamp of recording, UNIX epoch  |  1224426600
+`%Z`   | Comment                                   |  A string
 
 *Example usage*
 
