@@ -3,10 +3,10 @@
 #
 
 sudo: required
-dist: xenial
+dist: trusty
 language: c
 before_install:
   - sudo apt-get -qq update
-  - sudo ./Autobuild.sh -o deps
+  - sudo ./Autobuild.sh -t trusty-amd64 -o deps
 script:
-  - ./Autobuild.sh
+  - ./Autobuild.sh -t trusty-amd64

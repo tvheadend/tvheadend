@@ -24,6 +24,11 @@ END {
   print out;
 }' debian/control`
 
+case "${DEBDIST}" in
+precise|trusty|jessie)
+  BUILD_DEPS=`echo ${BUILD_DEPS} | sed -e 's/libpcre2-dev/libpcre3-dev/g'` ;;
+esac
+
 build() 
 {
     $(dirname $0)/support/changelog "$CHANGELOG" "$DEBDIST" "$VER"
