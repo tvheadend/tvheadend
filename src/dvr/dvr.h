@@ -19,14 +19,7 @@
 #ifndef DVR_H
 #define DVR_H
 
-#include <regex.h>
-#if ENABLE_PCRE
-#include <pcre.h>
-#endif
-#if ENABLE_PCRE2
-#define PCRE2_CODE_UNIT_WIDTH 8
-#include <pcre2.h>
-#endif
+#include "tvhregex.h"
 #include "epg.h"
 #include "channels.h"
 #include "subscriptions.h"
@@ -340,20 +333,13 @@ typedef struct dvr_autorec_entry {
   LIST_ENTRY(dvr_autorec_entry) dae_config_link;
 
   int dae_enabled;
+  int dae_error;
   char *dae_owner;
   char *dae_creator;
   char *dae_comment;
 
   char *dae_title;
-  int dae_pcre;
-  regex_t dae_title_preg;
-#if ENABLE_PCRE
-  pcre *dae_title_pcre;
-  pcre_extra *dae_title_pcre_extra;
-#elif ENABLE_PCRE2
-  pcre2_code *dae_title_pcre;
-  pcre2_match_data *dae_title_pcre_match;
-#endif
+  tvh_regex_t dae_title_regex;
   int dae_fulltext;
   
   uint32_t dae_content_type;

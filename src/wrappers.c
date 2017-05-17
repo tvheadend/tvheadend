@@ -18,6 +18,8 @@
 #include <pthread_np.h>
 #endif
 
+#include "tvhregex.h"
+
 /*
  * filedescriptor routines
  */
@@ -379,5 +381,69 @@ tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, c
     qsort_r(base, nmemb, size, &swap_arg, tvh_qsort_swap);
 #else
     qsort_r(base, nmemb, size, compar, arg);
+#endif
+}
+
+/*
+ * Regex stuff
+ */
+void regex_free(tvh_regex_t *regex)
+{
+#if ENABLE_PCRE
+#ifdef PCRE_CONFIG_JIT
+  pcre_free_study(regex->re_extra);
+#else
+  pcre_free(regex->re_extra);
+#endif
+  pcre_free(regex->re_comp);
+  regex->re_extra = NULL;
+  regex->re_comp = NULL;
+#elif ENABLE_PCRE2
+  pcre2_match_data_free(regex->re_match);
+  pcre2_code_free(regex->re_code);
+#else
+  regfree(&regex->re_code);
+#endif
+}
+
+int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
+{
+#if ENABLE_PCRE
+  const char *estr;
+  int eoff;
+  regex->re_code = pcre_compile(re_str, PCRE_CASELESS | PCRE_UTF8,
+                                &estr, &eoff, NULL);
+  if (regex->re_code == NULL) {
+    tvherror(subsys, "Unable to compile PCRE '%s': %s", re_str, estr);
+  } else {
+    regex->re_code_extra = pcre_study(regex->re_code,
+                                      PCRE_STUDY_JIT_COMPILE, &estr);
+    if (regex->re_code_extra == NULL && estr)
+      tvherror(subsys, "Unable to study PCRE '%s': %s", re_str, estr);
+    else
+      return 0;
+  }
+  return -1;
+#elif ENABLE_PCRE2
+  PCRE2_UCHAR8 ebuf[128];
+  int ecode;
+  PCRE2_SIZE eoff;
+  regex->re_code = pcre2_compile((PCRE2_SPTR8)re_str, -1,
+                                 PCRE2_CASELESS | PCRE2_UTF,
+                                 &ecode, &eoff, NULL);
+  if (regex->re_code == NULL) {
+    (void)pcre2_get_error_message(ecode, ebuf, 120);
+    tvherror(subsys, "Unable to compile PCRE2 '%s': %s", re_str, ebuf);
+  } else {
+    regex->re_match = pcre2_match_data_create(20, NULL);
+    return 0;
+  }
+  return -1;
+#else
+  if (!regcomp(&regex->re_code, re_str,
+               REG_ICASE | REG_EXTENDED | REG_NOSUB))
+    return 0;
+  tvherror(subsys, "Unable to compile regex '%s'", title);
+  return -1;
 #endif
 }

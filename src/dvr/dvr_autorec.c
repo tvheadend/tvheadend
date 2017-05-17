@@ -34,62 +34,12 @@
 #include "epg.h"
 #include "htsp_server.h"
 
-#ifndef PCRE_STUDY_JIT_COMPILE
-#define PCRE_STUDY_JIT_COMPILE 0
-#endif
-
 struct dvr_autorec_entry_queue autorec_entries;
 
-/*
- *
- */
-static inline int autorec_regexec(dvr_autorec_entry_t *dae, const char *str)
-{
-#if ENABLE_PCRE
-  if (dae->dae_pcre) {
-    int r, vec[30];
-    r = pcre_exec(dae->dae_title_pcre, dae->dae_title_pcre_extra,
-                  str, strlen(str), 0, 0, vec, ARRAY_SIZE(vec));
-    return r < 0;
-  } else
-#elif ENABLE_PCRE2
-    int r;
-    r = pcre2_match(dae->dae_title_pcre, (PCRE2_SPTR8)str, -1, 0, 0,
-                    dae->dae_title_pcre_match, NULL);
-    return r <= 0;
-#endif
-  {
-    return regexec(&dae->dae_title_preg, str, 0, NULL, 0);
-  }
-}
-
-/*
- *
- */
 static void autorec_regfree(dvr_autorec_entry_t *dae)
 {
   if (dae->dae_title) {
-#if ENABLE_PCRE
-    if (dae->dae_pcre) {
-#ifdef PCRE_CONFIG_JIT
-      pcre_free_study(dae->dae_title_pcre_extra);
-#else
-      pcre_free(dae->dae_title_pcre_extra);
-#endif
-      pcre_free(dae->dae_title_pcre);
-      dae->dae_title_pcre_extra = NULL;
-      dae->dae_title_pcre = NULL;
-    } else
-#elif ENABLE_PCRE2
-    if (dae->dae_pcre) {
-      pcre2_match_data_free(dae->dae_title_pcre_match);
-      dae->dae_title_pcre_match = NULL;
-      dae->dae_title_pcre = NULL;
-    } else
-#endif
-    {
-      regfree(&dae->dae_title_preg);
-    }
+    regex_free(&dae->dae_title_regex);
     free(dae->dae_title);
     dae->dae_title = NULL;
   }
@@ -310,21 +260,21 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if (!dae->dae_fulltext) {
       if(!e->episode->title) return 0;
       RB_FOREACH(ls, e->episode->title, link)
-        if (!autorec_regexec(dae, ls->str)) break;
+        if (!regex_match(&dae->dae_title_regex, ls->str)) break;
     } else {
       ls = NULL;
       if (e->episode->title)
         RB_FOREACH(ls, e->episode->title, link)
-          if (!autorec_regexec(dae, ls->str)) break;
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
       if (!ls && e->episode->subtitle)
         RB_FOREACH(ls, e->episode->subtitle, link)
-          if (!autorec_regexec(dae, ls->str)) break;
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
       if (!ls && e->summary)
         RB_FOREACH(ls, e->summary, link)
-          if (!autorec_regexec(dae, ls->str)) break;
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
       if (!ls && e->description)
         RB_FOREACH(ls, e->description, link)
-          if (!autorec_regexec(dae, ls->str)) break;
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
     }
     if (!ls) return 0;
   }
@@ -359,9 +309,6 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 
   TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
 
-  /* PCRE flag must be set before load (order issue) */
-  if (conf)
-    dae->dae_pcre = htsmsg_get_bool_or_default(conf, "pcre", 0);
   idnode_load(&dae->dae_id, conf);
 
   htsp_autorec_entry_add(dae);
@@ -487,6 +434,8 @@ dvr_autorec_entry_class_changed(idnode_t *self)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
 
+  if (dae->dae_error)
+    dae->dae_enabled = 0;
   dvr_autorec_changed(dae, 1);
   dvr_autorec_completed(dae, 0);
   htsp_autorec_entry_update(dae);
@@ -588,66 +537,11 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
   if (strcmp(title, dae->dae_title ?: "")) {
     if (dae->dae_title)
       autorec_regfree(dae);
-    if (title[0] != '\0') {
-#if ENABLE_PCRE
-      if (dae->dae_pcre) {
-        const char *estr;
-        int eoff;
-        dae->dae_title_pcre = pcre_compile(title, PCRE_CASELESS | PCRE_UTF8,
-                                           &estr, &eoff, NULL);
-        if (dae->dae_title_pcre == NULL) {
-          tvherror(LS_DVR, "Unable to compile PCRE '%s': %s", title, estr);
-        } else {
-          dae->dae_title_pcre_extra = pcre_study(dae->dae_title_pcre,
-                                                 PCRE_STUDY_JIT_COMPILE, &estr);
-          if (dae->dae_title_pcre_extra == NULL && estr)
-            tvherror(LS_DVR, "Unable to study PCRE '%s': %s", title, estr);
-          else
-            dae->dae_title = strdup(title);
-        }
-      } else
-#elif ENABLE_PCRE2
-      if (dae->dae_pcre) {
-        PCRE2_UCHAR8 ebuf[128];
-        int ecode;
-        PCRE2_SIZE eoff;
-        dae->dae_title_pcre = pcre2_compile((PCRE2_SPTR8)title, -1,
-                                            PCRE2_CASELESS | PCRE2_UTF,
-                                            &ecode, &eoff, NULL);
-        if (dae->dae_title_pcre == NULL) {
-          (void)pcre2_get_error_message(ecode, ebuf, 120);
-          tvherror(LS_DVR, "Unable to compile PCRE2 '%s': %s", title, ebuf);
-        } else {
-          dae->dae_title_pcre_match = pcre2_match_data_create(20, NULL);
-          dae->dae_title = strdup(title);
-        }
-      } else
-#endif
-      {
-        if (!regcomp(&dae->dae_title_preg, title,
-                     REG_ICASE | REG_EXTENDED | REG_NOSUB))
-          dae->dae_title = strdup(title);
-        else
-          tvherror(LS_DVR, "Unable to compile regex '%s'", title);
-      }
-    }
-    return 1;
-  }
-  return 0;
-}
-
-static int
-dvr_autorec_entry_class_pcre_set(void *o, const void *v)
-{
-  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
-  int pcre = v ? *(int *)v : 0;
-  char *title;
-  if (dae->dae_pcre != pcre) {
-    title = dae->dae_title ? strdup(dae->dae_title) : NULL;
-    autorec_regfree(dae);
-    dae->dae_pcre = pcre;
-    dvr_autorec_entry_class_title_set(o, title);
-    free(title);
+    dae->dae_error = 0;
+    if (!regex_compile(&dae->dae_title_regex, title, LS_DVR))
+      dae->dae_title = strdup(title);
+    else
+      dae->dae_error = 1;
     return 1;
   }
   return 0;
@@ -1160,15 +1054,6 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("When the fulltext is checked, the title pattern is "
                      "matched against title, subtitle, summary and description."),
       .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
-    },
-    {
-      .type     = PT_BOOL,
-      .id       = "pcre",
-      .name     = N_("PCRE"),
-      .desc     = N_("Use PCRE regular expression library instead posix "
-                     "extended regular expressions."),
-      .set      = dvr_autorec_entry_class_pcre_set,
-      .off      = offsetof(dvr_autorec_entry_t, dae_pcre),
     },
     {
       .type     = PT_STR,
