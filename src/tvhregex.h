@@ -41,7 +41,9 @@ typedef struct {
 #if ENABLE_PCRE
   pcre *re_code;
   pcre_extra *re_extra;
+#if PCRE_STUDY_JIT_COMPILE
   pcre_jit_stack *re_jit_stack;
+#endif
 #elif ENABLE_PCRE2
   pcre2_code *re_code;
   pcre2_match_data *re_match;

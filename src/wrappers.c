@@ -390,8 +390,11 @@ tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void *, c
 void regex_free(tvh_regex_t *regex)
 {
 #if ENABLE_PCRE
-  pcre_jit_stack_free(regex->re_jit_stack);
 #ifdef PCRE_CONFIG_JIT
+#if PCRE_STUDY_JIT_COMPILE
+  pcre_jit_stack_free(regex->re_jit_stack);
+  regex->re_jit_stack = NULL;
+#endif
   pcre_free_study(regex->re_extra);
 #else
   pcre_free(regex->re_extra);
@@ -399,7 +402,6 @@ void regex_free(tvh_regex_t *regex)
   pcre_free(regex->re_code);
   regex->re_extra = NULL;
   regex->re_code = NULL;
-  regex->re_jit_stack = NULL;
 #elif ENABLE_PCRE2
   pcre2_jit_stack_free(regex->re_jit_stack);
   pcre2_match_data_free(regex->re_match);
@@ -429,9 +431,11 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
     if (regex->re_extra == NULL && estr)
       tvherror(subsys, "Unable to study PCRE '%s': %s", re_str, estr);
     else {
+#if PCRE_STUDY_JIT_COMPILE
       regex->re_jit_stack = pcre_jit_stack_alloc(32*1024, 512*1024);
       if (regex->re_jit_stack)
         pcre_assign_jit_stack(regex->re_extra, NULL, regex->re_jit_stack);
+#endif
       return 0;
     }
   }
