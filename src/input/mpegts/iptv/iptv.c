@@ -32,9 +32,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <string.h>
-#include <regex.h>
 #include <unistd.h>
-#include <regex.h>
 #include <errno.h>
 #include <signal.h>
 #include <pthread.h>
