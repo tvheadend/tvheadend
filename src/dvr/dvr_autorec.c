@@ -300,7 +300,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   }
 
   dae->dae_weekdays = 0x7f;
-  dae->dae_pri = DVR_PRIO_NORMAL;
+  dae->dae_pri = DVR_PRIO_DEFAULT;
   dae->dae_start = -1;
   dae->dae_start_window = -1;
   dae->dae_enabled = 1;
@@ -1185,11 +1185,12 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .id       = "pri",
       .name     = N_("Priority"),
-      .desc     = N_("The priority of any recordings set because of this "
-                     "rule will take precedence and "
-                     "cancel lower-priority events."),
+      .desc     = N_("Priority of the recording. Higher priority entries "
+                     "will take precedence and cancel lower-priority events. "
+                     "The 'Not Set' value inherits the settings from "
+                     "the assigned DVR configuration."),
       .list     = dvr_entry_class_pri_list,
-      .def.i    = DVR_PRIO_NORMAL,
+      .def.i    = DVR_PRIO_DEFAULT,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },

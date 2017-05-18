@@ -185,7 +185,7 @@ dvr_timerec_create(const char *uuid, htsmsg_t *conf)
 
   dte->dte_title = strdup("Time-%F_%R");
   dte->dte_weekdays = 0x7f;
-  dte->dte_pri = DVR_PRIO_NORMAL;
+  dte->dte_pri = DVR_PRIO_DEFAULT;
   dte->dte_start = -1;
   dte->dte_stop = -1;
   dte->dte_enabled = 1;
@@ -617,9 +617,12 @@ const idclass_t dvr_timerec_entry_class = {
       .type     = PT_U32,
       .id       = "pri",
       .name     = N_("Priority"),
-      .desc     = N_("Priority of the entry, higher-priority entries will take precedence and cancel lower-priority events."),
+      .desc     = N_("Priority of the recording. Higher priority entries "
+                     "will take precedence and cancel lower-priority events. "
+                     "The 'Not Set' value inherits the settings from "
+                     "the assigned DVR configuration."),
       .list     = dvr_entry_class_pri_list,
-      .def.i    = DVR_PRIO_NORMAL,
+      .def.i    = DVR_PRIO_DEFAULT,
       .off      = offsetof(dvr_timerec_entry_t, dte_pri),
       .opts     = PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
     },

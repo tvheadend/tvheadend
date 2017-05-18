@@ -891,6 +891,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
   de->de_config = dvr_config_find_by_name_default(NULL);
   if (de->de_config)
     LIST_INSERT_HEAD(&de->de_config->dvr_entries, de, de_config_link);
+  de->de_pri = DVR_PRIO_DEFAULT;
 
   idnode_load(&de->de_id, conf);
 
@@ -2565,14 +2566,17 @@ static int
 dvr_entry_class_pri_set(void *o, const void *v)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  return dvr_entry_class_int_set(de, &de->de_pri, *(int *)v);
+  int pri = *(int *)v;
+  if (pri == DVR_PRIO_NOTSET || pri < 0 || pri > DVR_PRIO_DEFAULT)
+    pri = DVR_PRIO_DEFAULT;
+  return dvr_entry_class_int_set(de, &de->de_pri, pri);
 }
 
 htsmsg_t *
 dvr_entry_class_pri_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Not set"),        DVR_PRIO_NOTSET },
+    { N_("Default"),        DVR_PRIO_DEFAULT },
     { N_("Important"),      DVR_PRIO_IMPORTANT },
     { N_("High"),           DVR_PRIO_HIGH, },
     { N_("Normal"),         DVR_PRIO_NORMAL },
@@ -3206,9 +3210,12 @@ const idclass_t dvr_entry_class = {
       .type     = PT_INT,
       .id       = "pri",
       .name     = N_("Priority"),
-      .desc     = N_("Priority of the recording. Higher priority entries will take precedence and cancel lower-priority events."),
+      .desc     = N_("Priority of the recording. Higher priority entries "
+                     "will take precedence and cancel lower-priority events. "
+                     "The 'Not Set' value inherits the settings from "
+                     "the assigned DVR configuration."),
       .off      = offsetof(dvr_entry_t, de_pri),
-      .def.i    = DVR_PRIO_NORMAL,
+      .def.i    = DVR_PRIO_DEFAULT,
       .set      = dvr_entry_class_pri_set,
       .list     = dvr_entry_class_pri_list,
       .opts     = PO_SORTKEY | PO_DOC_NLIST | PO_ADVANCED,
@@ -3549,29 +3556,6 @@ dvr_get_filesize(dvr_entry_t *de, int flags)
     }
 
   return first ? -1 : res;
-}
-
-/**
- *
- */
-static struct strtab priotab[] = {
-  { "important",   DVR_PRIO_IMPORTANT },
-  { "high",        DVR_PRIO_HIGH },
-  { "normal",      DVR_PRIO_NORMAL },
-  { "low",         DVR_PRIO_LOW },
-  { "unimportant", DVR_PRIO_UNIMPORTANT }
-};
-
-dvr_prio_t
-dvr_pri2val(const char *s)
-{
-  return str2val_def(s, priotab, DVR_PRIO_NORMAL);
-}
-
-const char *
-dvr_val2pri(dvr_prio_t v)
-{
-  return val2str(v, priotab) ?: "invalid";
 }
 
 /**

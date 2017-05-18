@@ -69,15 +69,18 @@ dvr_rec_subscribe(dvr_entry_t *de)
   struct sockaddr_storage sa;
   access_t *aa;
   uint32_t rec_count, net_count;
-  int c1, c2;
+  int pri, c1, c2;
 
   assert(de->de_s == NULL);
   assert(de->de_chain == NULL);
 
-  if(de->de_pri >= 0 && de->de_pri < ARRAY_SIZE(prio2weight))
+  pri = de->de_pri;
+  if(pri == DVR_PRIO_NOTSET)
+    pri = de->de_config->dvr_pri;
+  if(pri >= 0 && pri < ARRAY_SIZE(prio2weight))
     weight = prio2weight[de->de_pri];
   else
-    weight = 300;
+    weight = prio2weight[DVR_PRIO_NORMAL];
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
 

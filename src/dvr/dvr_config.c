@@ -884,6 +884,17 @@ const idclass_t dvr_config_class = {
       .group    = 1,
     },
     {
+      .type     = PT_U32,
+      .id       = "pri",
+      .name     = N_("Priority"),
+      .desc     = N_("Priority of the entry, higher-priority entries will "
+                     "take precedence and cancel lower-priority events."),
+      .list     = dvr_entry_class_pri_list,
+      .def.i    = DVR_PRIO_NORMAL,
+      .off      = offsetof(dvr_config_t, dvr_pri),
+      .opts     = PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
+    },
+    {
       .type     = PT_INT,
       .id       = "cache",
       .name     = N_("Cache scheme"),

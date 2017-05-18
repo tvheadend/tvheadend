@@ -57,6 +57,7 @@ typedef struct dvr_config {
   char *dvr_comment;
   profile_t *dvr_profile;
   char *dvr_storage;
+  int dvr_pri;
   int dvr_clone;
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
@@ -111,6 +112,7 @@ typedef enum {
   DVR_PRIO_LOW         = 3,
   DVR_PRIO_UNIMPORTANT = 4,
   DVR_PRIO_NOTSET      = 5,
+  DVR_PRIO_DEFAULT     = 6,
 } dvr_prio_t;
 
 typedef enum {
@@ -763,13 +765,6 @@ static inline int dvr_timerec_entry_verify
 uint32_t dvr_timerec_get_retention_days( dvr_timerec_entry_t *dte );
 
 uint32_t dvr_timerec_get_removal_days( dvr_timerec_entry_t *dte );
-
-/**
- *
- */
-dvr_prio_t dvr_pri2val(const char *s);
-
-const char *dvr_val2pri(dvr_prio_t v);
 
 /**
  * Inotify support
