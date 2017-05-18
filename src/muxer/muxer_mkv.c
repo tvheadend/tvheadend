@@ -88,7 +88,7 @@ typedef struct mk_cue {
  */
 typedef struct mk_chapter {
   TAILQ_ENTRY(mk_chapter) link;
-  int uuid;
+  uint32_t uuid;
   int64_t ts;
 } mk_chapter_t;
 
@@ -915,23 +915,9 @@ addcue(mk_muxer_t *mk, int64_t pts, int tracknum)
  *
  */
 static void
-mk_add_chapter(mk_muxer_t *mk, int64_t ts)
+mk_add_chapter0(mk_muxer_t *mk, uint32_t uuid, int64_t ts)
 {
   mk_chapter_t *ch;
-  int uuid;
-
-  ch = TAILQ_LAST(&mk->chapters, mk_chapter_queue);
-  if(ch) {
-    // don't add a new chapter if the previous one was
-    // added less than 10s ago
-    if(ts - ch->ts < 10000)
-      return;
-
-    uuid = ch->uuid + 1;
-  }
-  else {
-    uuid = 1;
-  }
 
   ch = malloc(sizeof(mk_chapter_t));
 
@@ -939,6 +925,34 @@ mk_add_chapter(mk_muxer_t *mk, int64_t ts)
   ch->ts = ts;
 
   TAILQ_INSERT_TAIL(&mk->chapters, ch, link);
+}
+
+/**
+ *
+ */
+static void
+mk_add_chapter(mk_muxer_t *mk, int64_t ts)
+{
+  mk_chapter_t *ch;
+  int uuid;
+
+  ch = TAILQ_LAST(&mk->chapters, mk_chapter_queue);
+  if(ch) {
+    /* don't add a new chapter if the previous one was added less than 5s ago */
+    if(ts - ch->ts < 5000)
+      return;
+
+    uuid = ch->uuid + 1;
+  } else {
+    uuid = 1;
+    /* create first chapter at zero position */
+    if (ts >= 5000) {
+      mk_add_chapter0(mk, uuid++, ts);
+    } else {
+      ts = 0;
+    }
+  }
+  mk_add_chapter0(mk, uuid, ts);
 }
 
 /**
@@ -1329,6 +1343,7 @@ mkv_muxer_open_stream(muxer_t *m, int fd)
   mk->filename = strdup("Live stream");
   mk->fd = fd;
   mk->cluster_maxsize = 0;
+  mk->totduration = 0;
 
   return 0;
 }
@@ -1365,6 +1380,7 @@ mkv_muxer_open_file(muxer_t *m, const char *filename)
   mk->fd = fd;
   mk->cluster_maxsize = 2000000;
   mk->seekable = 1;
+  mk->totduration = 0;
 
   return 0;
 }
