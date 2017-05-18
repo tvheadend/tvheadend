@@ -90,7 +90,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     tvherror(LS_DVR, "unable to find access (owner '%s', creator '%s')",
              de->de_owner, de->de_creator);
     return -EPERM;
- }
+  }
 
   if (aa->aa_conn_limit || aa->aa_conn_limit_dvr) {
     rec_count = dvr_usage_count(aa);
