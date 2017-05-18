@@ -58,8 +58,9 @@ static void ts_recv_pcr(mpegts_service_t *t, const uint8_t *tsb)
   pcr |= ((uint64_t)tsb[10] >> 7) & 0x01;
   /* handle the broken info using candidate variable */
   if (t->s_current_pcr == PTS_UNSET || t->s_current_pcr_guess ||
-      pts_diff(t->s_current_pcr, pcr) <= 90000 ||
-      (t->s_candidate_pcr != PTS_UNSET && pts_diff(t->s_candidate_pcr, pcr) <= 90000)) {
+      pts_diff(t->s_current_pcr, pcr) <= (int64_t)t->s_pcr_boundary ||
+      (t->s_candidate_pcr != PTS_UNSET &&
+       pts_diff(t->s_candidate_pcr, pcr) <= (int64_t)t->s_pcr_boundary)) {
     if (pcr != t->s_current_pcr) {
       if (t->s_current_pcr == PTS_UNSET)
         tvhtrace(LS_PCR, "%s: initial  : %"PRId64, service_nicename((service_t*)t), pcr);

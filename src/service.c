@@ -693,12 +693,16 @@ service_start(service_t *t, int instance, int weight, int flags,
   t->s_scrambled_seen   = 0;
   t->s_scrambled_pass   = !!(flags & SUBSCRIPTION_NODESCR);
   t->s_start_time       = mclk();
+  t->s_pcr_boundary     = 90000;
 
   pthread_mutex_lock(&t->s_stream_mutex);
   service_build_filter(t);
   pthread_mutex_unlock(&t->s_stream_mutex);
 
   descrambler_caid_changed(t);
+
+  if (service_has_no_audio(t, 1))
+    t->s_pcr_boundary = 4*90000;
 
   if((r = t->s_start_feed(t, instance, weight, flags)))
     return r;
@@ -1268,6 +1272,17 @@ service_has_audio_or_video(service_t *t)
     if (SCT_ISVIDEO(st->es_type) || SCT_ISAUDIO(st->es_type))
       return 1;
   return 0;
+}
+
+int
+service_has_no_audio(service_t *t, int filtered)
+{
+  elementary_stream_t *st;
+  TAILQ_FOREACH(st, filtered ? &t->s_filt_components :
+                               &t->s_components, es_link)
+    if (SCT_ISAUDIO(st->es_type))
+      return 0;
+  return 1;
 }
 
 int

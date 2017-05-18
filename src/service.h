@@ -312,6 +312,7 @@ typedef struct service {
   int s_prio;
   int s_type_user;
   int s_pts_shift; // in ms (may be negative)
+  int s_pcr_boundary;
 
   LIST_ENTRY(service) s_active_link;
 
@@ -560,6 +561,7 @@ void service_settings_write(service_t *t);
 const char *service_servicetype_txt(service_t *t);
 
 int service_has_audio_or_video(service_t *t);
+int service_has_no_audio(service_t *t, int filtered);
 int service_is_sdtv(service_t *t);
 int service_is_uhdtv(service_t *t);
 int service_is_hdtv(service_t *t);
