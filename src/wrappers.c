@@ -470,7 +470,7 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
   if (!regcomp(&regex->re_code, re_str,
                REG_ICASE | REG_EXTENDED | REG_NOSUB))
     return 0;
-  tvherror(subsys, "Unable to compile regex '%s'", title);
+  tvherror(subsys, "Unable to compile regex '%s'", re_str);
   return -1;
 #endif
 }
