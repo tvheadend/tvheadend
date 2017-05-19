@@ -947,7 +947,7 @@ mk_add_chapter(mk_muxer_t *mk, int64_t ts)
     uuid = 1;
     /* create first chapter at zero position */
     if (ts >= 5000) {
-      mk_add_chapter0(mk, uuid++, ts);
+      mk_add_chapter0(mk, uuid++, 0);
     } else {
       ts = 0;
     }
