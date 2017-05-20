@@ -290,7 +290,8 @@ typedef enum {
   SCT_VORBIS,
   SCT_HEVC,
   SCT_VP9,
-  SCT_LAST = SCT_VP9
+  SCT_HBBTV,
+  SCT_LAST = SCT_HBBTV
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))

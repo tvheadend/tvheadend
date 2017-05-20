@@ -2324,6 +2324,10 @@ psi_parse_pmt
       audio_version = 2; /* Assume Layer 2 */
       break;
 
+    case 0x05:
+      hts_stream_type = SCT_HBBTV;
+      break;
+
     case 0x06:
       /* 0x06 is Chinese Cable TV AC-3 audio track */
       /* but mark it so only when no more descriptors exist */
