@@ -23,6 +23,7 @@
 #include "idnode.h"
 #include "profile.h"
 #include "descrambler.h"
+#include "input/mpegts/dvb.h"
 
 extern const idclass_t service_class;
 extern const idclass_t service_raw_class;
@@ -143,6 +144,9 @@ typedef struct elementary_stream {
 
   /* Filter temporary variable */
   uint32_t es_filter;
+
+  /* HBBTV PSI table (AIT) */
+  mpegts_psi_table_t es_psi;
 
 } elementary_stream_t;
 
@@ -500,6 +504,11 @@ typedef struct service {
    * Local channel numbers per bouquet
    */
   LIST_HEAD(,service_lcn) s_lcns;
+
+  /*
+   * HBBTV
+   */
+  htsmsg_t *s_hbbtv;
 
 } service_t;
 

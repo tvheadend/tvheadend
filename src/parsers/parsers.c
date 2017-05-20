@@ -94,6 +94,9 @@ static void parse_subtitles(service_t *t, elementary_stream_t *st,
 static void parse_teletext(service_t *t, elementary_stream_t *st, 
                            const uint8_t *data, int len, int start);
 
+static void parse_hbbtv(service_t *t, elementary_stream_t *st,
+                        const uint8_t *data, int len, int start);
+
 static int parse_mpa(service_t *t, elementary_stream_t *st, size_t len,
                      uint32_t next_startcode, int sc_offset);
 
@@ -195,6 +198,10 @@ parse_mpeg_ts(service_t *t, elementary_stream_t *st, const uint8_t *data,
 
   case SCT_TELETEXT:
     parse_teletext(t, st, data, len, start);
+    break;
+
+  case SCT_HBBTV:
+    parse_hbbtv(t, st, data, len, start);
     break;
 
   default:
@@ -1790,6 +1797,18 @@ parse_teletext(service_t *t, elementary_stream_t *st, const uint8_t *data,
     parser_deliver(t, st, pkt);
     sbuf_reset(&st->es_buf, 4000);
   }
+}
+
+/**
+ * Hbbtv parser (=forwarder)
+ */
+static void
+parse_hbbtv(service_t *t, elementary_stream_t *st, const uint8_t *data,
+            int len, int start)
+{
+  th_pkt_t *pkt = pkt_alloc(st->es_type, data, len, t->s_current_pcr, t->s_current_pcr, t->s_current_pcr);
+  pkt->pkt_err = st->es_buf.sb_err;
+  parser_deliver(t, st, pkt);
 }
 
 /**

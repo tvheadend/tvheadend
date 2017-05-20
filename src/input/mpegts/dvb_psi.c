@@ -1328,9 +1328,12 @@ lcn:
 #endif
       break;
     }
-  }
+  }}
 
   return lptr - lptr_orig;
+
+dvberr:
+  return -1;
 }
 
 int
@@ -1458,7 +1461,7 @@ dvb_nit_callback
 #endif
         break;
     }
-  }
+  }}
 
   /* Fastscan */
   if (tableid == DVB_FASTSCAN_NIT_BASE) {
@@ -1528,6 +1531,9 @@ dvb_nit_callback
   if (retry)
     return 0;
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
+
+dvberr:
+  return -1;
 }
 
 /**
@@ -1598,7 +1604,7 @@ dvb_sdt_mux
               return -1;
           break;
       }
-    }
+    }}
 
     tvhtrace(mt->mt_subsys, "%s:  type %02X (%d) name [%s] provider [%s] def_auth [%s]",
              mt->mt_name, stype, stype, sname, sprov, sauth);
@@ -1665,6 +1671,9 @@ dvb_sdt_mux
   }
 
   return 0;
+
+dvberr:
+  return -1;
 }
 
 int
@@ -1926,7 +1935,7 @@ dvb_fs_sdt_mux
             }
             break;
         }
-      }
+      }}
       continue;
     }
 
@@ -1955,7 +1964,7 @@ dvb_fs_sdt_mux
             return -1;
           break;
       }
-    }
+    }}
 
     tvhtrace(mt->mt_subsys, "%s:    type %d name [%s] provider [%s]",
              mt->mt_name, stype, sname, sprov);
@@ -2012,6 +2021,9 @@ dvb_fs_sdt_mux
   }
 
   return 0;
+
+dvberr:
+  return -1;
 }
 
 

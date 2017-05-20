@@ -277,6 +277,9 @@ stream_init(elementary_stream_t *st)
 
   st->es_blank = 0;
 
+  if (st->es_type == SCT_HBBTV)
+    dvb_table_parse_init(&st->es_psi, "hbbtv", LS_TS, st->es_pid, st);
+
   TAILQ_INIT(&st->es_backlog);
 }
 
@@ -327,6 +330,9 @@ service_stream_destroy(service_t *t, elementary_stream_t *es)
 
   if(t->s_status == SERVICE_RUNNING)
     stream_clean(es);
+
+  if (es->es_psi.mt_name)
+    dvb_table_parse_done(&es->es_psi);
 
   if (t->s_last_es == es) {
     t->s_last_pid = -1;
@@ -954,6 +960,11 @@ service_destroy(service_t *t, int delconf)
   TAILQ_INIT(&t->s_filt_components);
   while((st = TAILQ_FIRST(&t->s_components)) != NULL)
     service_stream_destroy(t, st);
+
+  if (t->s_hbbtv) {
+    htsmsg_destroy(t->s_hbbtv);
+    t->s_hbbtv = NULL;
+  }
 
   switch (t->s_type) {
   case STYPE_RAW:
@@ -2002,7 +2013,7 @@ htsmsg_t *servicetype_list ( void )
 void service_save ( service_t *t, htsmsg_t *m )
 {
   elementary_stream_t *st;
-  htsmsg_t *list, *sub;
+  htsmsg_t *list, *sub, *hbbtv;
 
   idnode_save(&t->s_id, m);
 
@@ -2066,8 +2077,14 @@ void service_save ( service_t *t, htsmsg_t *m )
 
     htsmsg_add_msg(list, NULL, sub);
   }
+
+  hbbtv = htsmsg_copy(t->s_hbbtv);
+
   pthread_mutex_unlock(&t->s_stream_mutex);
+
   htsmsg_add_msg(m, "stream", list);
+  if (hbbtv)
+    htsmsg_add_msg(m, "hbbtv", hbbtv);
 }
 
 /**
@@ -2190,7 +2207,7 @@ load_caid(htsmsg_t *m, elementary_stream_t *st)
 
 void service_load ( service_t *t, htsmsg_t *c )
 {
-  htsmsg_t *m;
+  htsmsg_t *m, *hbbtv;
   htsmsg_field_t *f;
   uint32_t u32, pid;
   elementary_stream_t *st;
@@ -2203,6 +2220,14 @@ void service_load ( service_t *t, htsmsg_t *c )
     t->s_pcr_pid = u32;
   if(!htsmsg_get_u32(c, "pmt", &u32))
     t->s_pmt_pid = u32;
+
+  hbbtv = htsmsg_get_map(c, "hbbtv");
+  if (hbbtv) {
+    t->s_hbbtv = htsmsg_copy(hbbtv);
+  } else {
+    htsmsg_destroy(t->s_hbbtv);
+    t->s_hbbtv = NULL;
+  }
 
   pthread_mutex_lock(&t->s_stream_mutex);
   m = htsmsg_get_list(c, "stream");

@@ -15,22 +15,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define _GNU_SOURCE
-#include <stdlib.h>
-
-#include <pthread.h>
-
-#include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <errno.h>
-
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
 
 #include "tvheadend.h"
 #include "subscriptions.h"
@@ -210,6 +194,11 @@ ts_recv_packet0
 
     if (st->es_type == SCT_CA)
       continue;
+
+    if (st->es_type == SCT_HBBTV) {
+      dvb_table_parse(&st->es_psi, "ts", tsb2, 188, 1, 0, ts_recv_hbbtv_cb);
+      continue;
+    }
 
     if (off <= 188 && t->s_status == SERVICE_RUNNING)
       parse_mpeg_ts((service_t*)t, st, tsb2 + off, 188 - off, pusi, error);

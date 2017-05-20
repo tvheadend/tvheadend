@@ -361,6 +361,7 @@ SRCS-MPEGTS = \
 	src/input/mpegts/mpegts_pid.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/tsdemux.c \
+	src/input/mpegts/dvb_psi_hbbtv.c \
 	src/input/mpegts/dvb_psi_lib.c \
 	src/input/mpegts/mpegts_network.c \
 	src/input/mpegts/mpegts_mux.c \
