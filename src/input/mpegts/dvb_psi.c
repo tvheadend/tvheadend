@@ -2438,14 +2438,14 @@ psi_parse_pmt
 
       st->es_delete_me = 0;
 
-      tvhdebug(mt->mt_subsys, "%s:  type %s position %d",
+      tvhdebug(mt->mt_subsys, "%s:    type %s position %d",
                mt->mt_name, streaming_component_type2txt(st->es_type), position);
       if (lang)
-        tvhdebug(mt->mt_subsys, "%s:  language %s", mt->mt_name, lang);
+        tvhdebug(mt->mt_subsys, "%s:    language %s", mt->mt_name, lang);
       if (composition_id != -1)
-        tvhdebug(mt->mt_subsys, "%s:  composition_id %d", mt->mt_name, composition_id);
+        tvhdebug(mt->mt_subsys, "%s:    composition_id %d", mt->mt_name, composition_id);
       if (ancillary_id != -1)
-        tvhdebug(mt->mt_subsys, "%s:  ancillary_id %d", mt->mt_name, ancillary_id);
+        tvhdebug(mt->mt_subsys, "%s:    ancillary_id %d", mt->mt_name, ancillary_id);
 
       if(st->es_position != position) {
         update |= PMT_REORDERED;
