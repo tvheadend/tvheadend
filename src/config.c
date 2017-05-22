@@ -2079,6 +2079,14 @@ const idclass_t config_class = {
       .group  = 1
     },
     {
+      .type   = PT_BOOL,
+      .id     = "hbbtv",
+      .name   = N_("Parse HbbTV info"),
+      .desc   = N_("Parse HbbTV information from the services."),
+      .off    = offsetof(config_t, hbbtv),
+      .group  = 1
+    },
+    {
       .type   = PT_INT,
       .id     = "uilevel",
       .name   = N_("User interface level"),

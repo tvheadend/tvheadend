@@ -30,6 +30,7 @@
 typedef struct config {
   idnode_t idnode;
   uint32_t version;
+  int hbbtv;
   int uilevel;
   int uilevel_nochange;
   int ui_quicktips;

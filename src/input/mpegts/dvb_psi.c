@@ -2337,7 +2337,8 @@ psi_parse_pmt
       break;
 
     case 0x05:
-      hts_stream_type = SCT_HBBTV;
+      if (config.hbbtv)
+        hts_stream_type = SCT_HBBTV;
       break;
 
     case 0x06:

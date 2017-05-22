@@ -49,6 +49,7 @@
 #include "esfilter.h"
 #include "bouquet.h"
 #include "memoryinfo.h"
+#include "config.h"
 
 static void service_data_timeout(void *aux);
 static void service_class_delete(struct idnode *self);
@@ -2221,12 +2222,14 @@ void service_load ( service_t *t, htsmsg_t *c )
   if(!htsmsg_get_u32(c, "pmt", &u32))
     t->s_pmt_pid = u32;
 
-  hbbtv = htsmsg_get_map(c, "hbbtv");
-  if (hbbtv) {
-    t->s_hbbtv = htsmsg_copy(hbbtv);
-  } else {
-    htsmsg_destroy(t->s_hbbtv);
-    t->s_hbbtv = NULL;
+  if (config.hbbtv) {
+    hbbtv = htsmsg_get_map(c, "hbbtv");
+    if (hbbtv) {
+      t->s_hbbtv = htsmsg_copy(hbbtv);
+    } else {
+      htsmsg_destroy(t->s_hbbtv);
+      t->s_hbbtv = NULL;
+    }
   }
 
   pthread_mutex_lock(&t->s_stream_mutex);
