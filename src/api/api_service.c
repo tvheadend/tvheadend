@@ -112,7 +112,7 @@ api_service_streams
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
   const char *uuid;
-  htsmsg_t *e, *st, *stf;
+  htsmsg_t *e, *st, *stf, *hbbtv = NULL;
   service_t *s;
   elementary_stream_t *es;
 
@@ -153,9 +153,14 @@ api_service_streams
     htsmsg_add_msg(stf, NULL, api_service_streams_get_one(es, 1));
   *resp = htsmsg_create_map();
   htsmsg_add_str(*resp, "name", s->s_nicename);
+  if (s->s_hbbtv)
+    hbbtv = htsmsg_copy(s->s_hbbtv);
+  pthread_mutex_unlock(&s->s_stream_mutex);
+
   htsmsg_add_msg(*resp, "streams", st);
   htsmsg_add_msg(*resp, "fstreams", stf);
-  pthread_mutex_unlock(&s->s_stream_mutex);
+  if (hbbtv)
+    htsmsg_add_msg(*resp, "hbbtv", hbbtv);
 
   /* Done */
   pthread_mutex_unlock(&global_lock);
