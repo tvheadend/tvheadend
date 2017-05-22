@@ -76,15 +76,15 @@ static char *until_eol(char *d)
  */
 static int is_full_url(const char *url)
 {
-  return
-    strncmp(url, "file://", 7) == 0 ||
-    strncmp(url, "pipe://", 7) == 0 ||
-    strncmp(url, "http://", 7) == 0 ||
-    strncmp(url, "https://", 8) == 0 ||
-    strncmp(url, "rtsp://", 7) == 0 ||
-    strncmp(url, "rtsps://", 8) == 0 ||
-    strncmp(url, "udp://", 6) == 0 ||
-    strncmp(url, "rtp://", 6) == 0;
+  if (strncmp(url, "file://", 7) == 0) return 7;
+  if (strncmp(url, "pipe://", 7) == 0) return 7;
+  if (strncmp(url, "http://", 7) == 0) return 7;
+  if (strncmp(url, "https://", 8) == 0) return 8;
+  if (strncmp(url, "rtsp://", 7) == 0) return 7;
+  if (strncmp(url, "rtsps://", 8) == 0) return 8;
+  if (strncmp(url, "udp://", 6) == 0) return 6;
+  if (strncmp(url, "rtp://", 6) == 0) return 6;
+  return 0;
 }
 
 /*
@@ -94,22 +94,19 @@ static const char *get_url
   (char *buf, size_t buflen, const char *rel, const char *url)
 {
   char *url2, *p;
+  int l;
 
   if (url == NULL)
     return rel;
-  if (!is_full_url(url) || is_full_url(rel))
+  if ((l = is_full_url(url)) == 0 || is_full_url(rel))
     return rel;
 
-  if (rel[0] == '/') {
-    snprintf(buf, buflen, "%s%s", url, rel + 1);
-  } else {
-    url2 = strdupa(url);
-    p = strrchr(url2, '/');
-    if (p == NULL)
-      return rel;
-    *(p + 1) = '\0';
-    snprintf(buf, buflen, "%s%s", url2, rel);
-  }
+  url2 = strdupa(url);
+  p = strchr(url2 + l, '/');
+  if (p == NULL)
+    return rel;
+  *(p + (rel[0] == '/' ? 0 : 1)) = '\0';
+  snprintf(buf, buflen, "%s%s", url2, rel);
   return buf;
 }
 
