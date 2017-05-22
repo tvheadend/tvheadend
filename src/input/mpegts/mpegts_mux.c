@@ -675,7 +675,7 @@ const idclass_t mpegts_mux_class =
       .opts     = PO_HIDDEN | PO_EXPERT
     },
     {
-      .type     = PT_BOOL,
+      .type     = PT_U16,
       .id       = "sid_filter",
       .name     = N_("Service ID"),
       .desc     = N_("Use only this service ID, filter out others."),
