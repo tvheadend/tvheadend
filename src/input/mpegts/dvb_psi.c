@@ -2574,8 +2574,10 @@ psi_parse_pmt
     }
   }
 
-  if (service_has_audio_or_video((service_t *)t))
+  if (service_has_audio_or_video((service_t *)t)) {
     dvb_service_autoenable(t, "PAT and PMT");
+    t->s_verified = 1;
+  }
 
   /* FIXME: Move pending_restart handling to another place? */
   if (atomic_set(&t->s_pending_restart, 0) && !ret)

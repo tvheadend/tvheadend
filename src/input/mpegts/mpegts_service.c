@@ -274,6 +274,7 @@ mpegts_service_is_enabled(service_t *t, int flags)
 {
   mpegts_service_t *s = (mpegts_service_t*)t;
   mpegts_mux_t *mm    = s->s_dvb_mux;
+  if (!s->s_verified) return 0;
   return mm->mm_is_enabled(mm) ? s->s_enabled : 0;
 }
 
