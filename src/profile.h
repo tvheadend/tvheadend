@@ -134,6 +134,7 @@ typedef struct profile {
   int pro_ca_timeout;
   int pro_swservice;
   int pro_svfilter;
+  int pro_dvbsub_reorder;
 
   void (*pro_free)(struct profile *pro);
   void (*pro_conf_changed)(struct profile *pro);

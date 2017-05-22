@@ -307,8 +307,8 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
 
   pm->pm_service_id = ss->ss_service_id;
   pm->pm_pmt_pid    = ss->ss_pmt_pid;
-  pm->pm_rewrite_sdt = !!pm->m_config.m_rewrite_sdt;
-  pm->pm_rewrite_eit = !!pm->m_config.m_rewrite_eit;
+  pm->pm_rewrite_sdt = !!pm->m_config.u.pass.m_rewrite_sdt;
+  pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
@@ -325,7 +325,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   }
 
 
-  if (pm->m_config.m_rewrite_pmt) {
+  if (pm->m_config.u.pass.m_rewrite_pmt) {
 
     if (pm->pm_ss)
       streaming_start_unref(pm->pm_ss);
@@ -440,7 +440,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   size_t  len = pktbuf_len(pb), len2;
   
   /* Rewrite PAT/PMT in operation */
-  if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt ||
+  if (pm->m_config.u.pass.m_rewrite_pat || pm->m_config.u.pass.m_rewrite_pmt ||
       pm->pm_rewrite_sdt || pm->pm_rewrite_eit) {
 
     for (tsb = pktbuf_ptr(pb), len2 = pktbuf_len(pb), len = 0;
@@ -450,8 +450,8 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       l = mpegts_word_count(tsb, len2, 0x001FFF00);
 
       /* Process */
-      if ( (pm->m_config.m_rewrite_pat && pid == DVB_PAT_PID) ||
-           (pm->m_config.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
+      if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
+           (pm->m_config.u.pass.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
            (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
            (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
 

@@ -1182,10 +1182,10 @@ profile_mpegts_pass_reopen(profile_chain_t *prch,
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_RAW)
     c.m_type = MC_PASS;
-  c.m_rewrite_pat = pro->pro_rewrite_pat;
-  c.m_rewrite_pmt = pro->pro_rewrite_pmt;
-  c.m_rewrite_sdt = pro->pro_rewrite_sdt;
-  c.m_rewrite_eit = pro->pro_rewrite_eit;
+  c.u.pass.m_rewrite_pat = pro->pro_rewrite_pat;
+  c.u.pass.m_rewrite_pmt = pro->pro_rewrite_pmt;
+  c.u.pass.m_rewrite_sdt = pro->pro_rewrite_sdt;
+  c.u.pass.m_rewrite_eit = pro->pro_rewrite_eit;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1259,6 +1259,16 @@ const idclass_t profile_matroska_class =
       .def.i    = 0,
       .group    = 2
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "dvbsub_reorder",
+      .name     = N_("Reorder DVBSUB"),
+      .desc     = N_("Reorder DVB subtitle packets."),
+      .off      = offsetof(profile_matroska_t, pro_dvbsub_reorder),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1,
+      .group    = 2
+    },
     { }
   }
 };
@@ -1278,6 +1288,8 @@ profile_matroska_reopen(profile_chain_t *prch,
     c.m_type = MC_MATROSKA;
   if (pro->pro_webm)
     c.m_type = MC_WEBM;
+
+  c.u.mkv.m_dvbsub_reorder = pro->pro_dvbsub_reorder;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1319,6 +1331,7 @@ profile_matroska_builder(void)
   pro->pro_reopen = profile_matroska_reopen;
   pro->pro_open   = profile_matroska_open;
   pro->pro_get_mc = profile_matroska_get_mc;
+  pro->pro_dvbsub_reorder = 1;
   return (profile_t *)pro;
 }
 
@@ -1386,8 +1399,8 @@ profile_audio_reopen(profile_chain_t *prch,
   else
     memset(&c, 0, sizeof(c));
   c.m_type = pro->pro_mc != MC_UNKNOWN ? pro->pro_mc : MC_MPEG2AUDIO;
-  c.m_force_type = pro->pro_mc;
-  c.m_index = pro->pro_index;
+  c.u.audioes.m_force_type = pro->pro_mc;
+  c.u.audioes.m_index = pro->pro_index;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1830,23 +1843,23 @@ static htsmsg_t *
 profile_class_vcodec_preset_list(void *o, const char *lang)
 {
   static const struct strtab_str tab[] = {
-    {N_("ultrafast: h264 / h265") 	     , "ultrafast" },
-    {N_("superfast: h264 / h265") 	     , "superfast" },
-    {N_("veryfast: h264 / h265 / qsv(h264)") 	     , "veryfast"  },
-    {N_("faster: h264 / h265 / qsv(h264)") 	     , "faster"    },
-    {N_("fast: h264 / h265 / qsv(h264 / h265)") 	     , "fast"      },
-    {N_("medium: h264 / h265 / qsv(h264 / h265)") 	     , "medium"    },
-    {N_("slow: h264 / h265 / qsv(h264 / h265)") 	     , "slow"      },
-    {N_("slower: h264 / h265 / qsv(h264)") 	     , "slower"    },
-    {N_("veryslow: h264 / h265 / qsv(h264)") 	     , "veryslow"  },
-    {N_("placebo: h264 / h265") 	     , "placebo"   },
-    {N_("hq: nvenc(h264 / h265)") 	     , "hq"        },
-    {N_("hp: nvenc(h264 / h265)") 	     , "hp"        },
-    {N_("bd: nvenc(h264 / h265)") 	     , "bd"        },
-    {N_("ll: nvenc(h264 / h265)") 	     , "ll"        },
-    {N_("llhq: nvenc(h264 / h265)")     , "llhq"      },
-    {N_("llhp: nvenc(h264 / h265)")     , "llhp"      },
-    {N_("default: nvenc(h264 / h265)")  , "default"   }
+    {N_("ultrafast: h264 / h265")                    , "ultrafast" },
+    {N_("superfast: h264 / h265")                    , "superfast" },
+    {N_("veryfast: h264 / h265 / qsv(h264)")         , "veryfast"  },
+    {N_("faster: h264 / h265 / qsv(h264)")           , "faster"    },
+    {N_("fast: h264 / h265 / qsv(h264 / h265)")      , "fast"      },
+    {N_("medium: h264 / h265 / qsv(h264 / h265)")    , "medium"    },
+    {N_("slow: h264 / h265 / qsv(h264 / h265)")      , "slow"      },
+    {N_("slower: h264 / h265 / qsv(h264)")           , "slower"    },
+    {N_("veryslow: h264 / h265 / qsv(h264)")         , "veryslow"  },
+    {N_("placebo: h264 / h265")                      , "placebo"   },
+    {N_("hq: nvenc(h264 / h265)")                    , "hq"        },
+    {N_("hp: nvenc(h264 / h265)")                    , "hp"        },
+    {N_("bd: nvenc(h264 / h265)")                    , "bd"        },
+    {N_("ll: nvenc(h264 / h265)")                    , "ll"        },
+    {N_("llhq: nvenc(h264 / h265)")                  , "llhq"      },
+    {N_("llhp: nvenc(h264 / h265)")                  , "llhp"      },
+    {N_("default: nvenc(h264 / h265)")               , "default"   }
   };
   return strtab2htsmsg_str(tab, 1, lang);
 }

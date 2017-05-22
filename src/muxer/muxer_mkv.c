@@ -131,6 +131,7 @@ typedef struct mk_muxer {
   char *title;
 
   int webm;
+  int dvbsub_reorder;
 
   struct th_pktref_queue holdq;
 } mk_muxer_t;
@@ -1132,7 +1133,9 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
     return mk->error;
   }
 
-  if (pkt->pkt_type == SCT_DVBSUB && pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 90000) {
+  if (mk->dvbsub_reorder &&
+      pkt->pkt_type == SCT_DVBSUB &&
+      pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 90000) {
     tvhtrace(LS_MKV, "insert pkt to holdq: pts %"PRId64", pcr %"PRId64", diff %"PRId64"\n", pkt->pkt_pcr, pkt->pkt_pts, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
     pktref_enqueue_sorted(&mk->holdq, pkt, mk_pktref_cmp);
     return mk->error;
@@ -1526,6 +1529,7 @@ mkv_muxer_create(const muxer_config_t *m_cfg)
   mk->m_close        = mkv_muxer_close;
   mk->m_destroy      = mkv_muxer_destroy;
   mk->webm           = m_cfg->m_type == MC_WEBM;
+  mk->dvbsub_reorder = m_cfg->u.mkv.m_dvbsub_reorder;
   mk->fd             = -1;
 
   TAILQ_INIT(&mk->holdq);
