@@ -841,6 +841,9 @@ mpegts_service_find
   /* Validate */
   lock_assert(&global_lock);
 
+  if (mm->mm_sid_filter > 0 && sid != mm->mm_sid_filter)
+    return NULL;
+
   /* Find existing service */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
     if (s->s_dvb_service_id == sid) {

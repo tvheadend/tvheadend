@@ -529,6 +529,7 @@ struct mpegts_mux
   char *mm_charset;
   int   mm_pmt_ac3;
   int   mm_eit_tsid_nocheck;
+  int   mm_sid_filter;
 
   /*
    * TSDEBUG

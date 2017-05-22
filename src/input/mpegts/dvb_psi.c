@@ -1034,6 +1034,8 @@ dvb_pmt_callback
 
   /* Start */
   sid = ptr[0] << 8 | ptr[1];
+  if (mm->mm_sid_filter > 0 && sid != mm->mm_sid_filter)
+    goto end;
   r   = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                         tableid, sid, 9, &st, &sect, &last, &ver);
   if (r != 1) return r;
@@ -1061,6 +1063,7 @@ dvb_pmt_callback
 #endif
 
   /* Finish */
+end:
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 }
 
