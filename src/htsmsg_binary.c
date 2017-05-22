@@ -105,6 +105,8 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
       sub = &f->hmf_msg;
       TAILQ_INIT(&sub->hm_fields);
       sub->hm_data = NULL;
+      sub->hm_data_size = 0;
+      sub->hm_islist = type == HMF_LIST;
       i = htsmsg_binary_des0(sub, buf, datalen);
       if (i < 0) {
 #if ENABLE_SLOW_MEMORYINFO
