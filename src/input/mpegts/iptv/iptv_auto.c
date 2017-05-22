@@ -82,7 +82,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   http_arg_t *ra1, *ra2, *ra2_next;
   htsbuf_queue_t q;
   size_t l;
-  int64_t chnum2;
+  int64_t chnum2, vlcprog;
   const char *url, *name, *logo, *epgid, *tags;
   char url2[512], custom[512], name2[128], buf[32], *n;
 
@@ -281,6 +281,10 @@ skip_url:
     htsmsg_add_s32(conf, "epg", epgcfg);
   if (in->in_tsid_accept_zero_value)
     htsmsg_add_s32(conf, "tsid_zero", 1);
+  if (!htsmsg_get_s64(item, "vlc-program", &vlcprog) &&
+      vlcprog > 1 && vlcprog < 8191)
+    htsmsg_add_s32(conf, "sid_filter", vlcprog);
+
   im = iptv_mux_create0(in, NULL, conf);
   htsmsg_destroy(conf);
 

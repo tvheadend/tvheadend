@@ -180,9 +180,9 @@ htsmsg_t *parse_m3u
         free(y);
       }
       continue;
-    } else if (strncmp(data, "#EXT-X-VERSION", 14) == 0) {
-      htsmsg_add_s64(m, "version", strtoll(data + 14, NULL, 10));
-      data = until_eol(data + 14);
+    } else if (strncmp(data, "#EXT-X-VERSION:", 15) == 0) {
+      htsmsg_add_s64(m, "version", strtoll(data + 15, NULL, 10));
+      data = until_eol(data + 15);
       continue;
     } else if (strncmp(data, "#EXT-X-MEDIA-SEQUENCE:", 22) == 0) {
       htsmsg_add_s64(m, "media-sequence", strtoll(data + 22, NULL, 10));
@@ -235,6 +235,9 @@ multi:
       htsmsg_add_bool(m, "x-endlist", 1);
       data = until_eol(data + 14);
       continue;
+    } else if (strncmp(data, "#EXTVLCOPT:program=", 19) == 0) {
+      htsmsg_add_s64(m, "vlc-program", strtoll(data + 19, NULL, 10));
+      data = until_eol(data + 19);
     } else if (strncmp(data, "#EXT", 4) == 0) {
       data = until_eol(data + 4);
       continue;
