@@ -856,6 +856,11 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
       htsmsg_add_u32(svcmsg, "caid", 65535);
       htsmsg_add_str(svcmsg, "caname", tvh_gettext_lang(htsp->htsp_language, N_("Encrypted service")));
     }
+
+    /* HbbTv */
+    if (t->s_hbbtv)
+      htsmsg_add_msg(svcmsg, "hbbtv", htsmsg_copy(t->s_hbbtv));
+
     htsmsg_add_msg(services, NULL, svcmsg);
   }
 
