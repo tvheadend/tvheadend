@@ -1094,17 +1094,32 @@ profile_htsp_builder(void)
  */
 typedef struct profile_mpegts {
   profile_t;
+  uint16_t pro_rewrite_sid;
   int pro_rewrite_pmt;
   int pro_rewrite_pat;
   int pro_rewrite_sdt;
   int pro_rewrite_eit;
 } profile_mpegts_t;
 
+static htsmsg_t *
+profile_class_pass_save ( idnode_t *in, char *filename, size_t fsize )
+{
+  profile_mpegts_t *pro = (profile_mpegts_t *)in;
+  if (pro->pro_rewrite_sid > 0) {
+    pro->pro_rewrite_pmt =
+    pro->pro_rewrite_pat =
+    pro->pro_rewrite_sdt =
+    pro->pro_rewrite_eit = 1;
+  }
+  return profile_class_save(in, filename, fsize);
+}
+
 const idclass_t profile_mpegts_pass_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
   .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
+  .ic_save       = profile_class_pass_save,
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("Configuration"),
@@ -1117,6 +1132,17 @@ const idclass_t profile_mpegts_pass_class =
     {}
   },
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_U16,
+      .id       = "sid",
+      .name     = N_("Rewrite Service ID"),
+      .desc     = N_("Rewrite service identificator (SID) using the specified "
+                     "value (usually 1)."),
+      .off      = offsetof(profile_mpegts_t, pro_rewrite_sid),
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 2
+    },
     {
       .type     = PT_BOOL,
       .id       = "rewrite_pmt",
@@ -1182,6 +1208,7 @@ profile_mpegts_pass_reopen(profile_chain_t *prch,
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_RAW)
     c.m_type = MC_PASS;
+  c.u.pass.m_rewrite_sid = pro->pro_rewrite_sid;
   c.u.pass.m_rewrite_pat = pro->pro_rewrite_pat;
   c.u.pass.m_rewrite_pmt = pro->pro_rewrite_pmt;
   c.u.pass.m_rewrite_sdt = pro->pro_rewrite_sdt;
@@ -1221,6 +1248,11 @@ profile_mpegts_pass_builder(void)
   pro->pro_reopen = profile_mpegts_pass_reopen;
   pro->pro_open   = profile_mpegts_pass_open;
   pro->pro_get_mc = profile_mpegts_pass_get_mc;
+  pro->pro_rewrite_sid = 1;
+  pro->pro_rewrite_pat = 1;
+  pro->pro_rewrite_pmt = 1;
+  pro->pro_rewrite_sdt = 1;
+  pro->pro_rewrite_eit = 1;
   return (profile_t *)pro;
 }
 
@@ -1230,6 +1262,7 @@ profile_mpegts_pass_builder(void)
 typedef struct profile_matroska {
   profile_t;
   int pro_webm;
+  int pro_dvbsub_reorder;
 } profile_matroska_t;
 
 const idclass_t profile_matroska_class =

@@ -67,6 +67,7 @@ typedef struct muxer_config {
    */
   union {
     struct {
+      int              m_rewrite_sid;
       int              m_rewrite_pat;
       int              m_rewrite_pmt;
       int              m_rewrite_sdt;
