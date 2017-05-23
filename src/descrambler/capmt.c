@@ -96,12 +96,6 @@ typedef struct dmx_filter {
 #define CAPMT_LIST_ADD     0x04    // append an 'ADD' CAPMT object to the current list and start working with the updated list
 #define CAPMT_LIST_UPDATE  0x05    // replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
-// ca_pmt_cmd_id values:
-#define CAPMT_CMD_OK_DESCRAMBLING   0x01  // start descrambling the service in this CAPMT object as soon as the list of CAPMT objects is complete
-#define CAPMT_CMD_OK_MMI            0x02  //
-#define CAPMT_CMD_QUERY             0x03  //
-#define CAPMT_CMD_NOT_SELECTED      0x04
-
 // ca_pmt_descriptor types
 #define CAPMT_DESC_PRIVATE 0x81
 #define CAPMT_DESC_DEMUX   0x82
@@ -152,30 +146,6 @@ typedef struct ca_info {
     CA_MODE_CBC,
   } cipher_mode;
 } ca_info_t;
-
-/** 
- * capmt descriptor
- */
-typedef struct capmt_descriptor {
-  uint8_t cad_type;
-  uint8_t cad_length;
-  uint8_t cad_data[17];
-} __attribute__((packed)) capmt_descriptor_t;
-
-/**
- * capmt header structure 
- */
-typedef struct capmt_header {
-  uint8_t  capmt_indicator[6];
-  uint8_t  capmt_list_management;
-  uint16_t program_number;
-  unsigned reserved1                : 2;
-  unsigned version_number           : 5;
-  unsigned current_next_indicator   : 1;
-  unsigned reserved2                : 4;
-  unsigned program_info_length      : 12;
-  uint8_t  capmt_cmd_id;
-} __attribute__((packed)) capmt_header_t;
 
 /**
  * caid <-> ecm mapping 
@@ -297,6 +267,7 @@ typedef struct capmt {
   capmt_adapter_t capmt_adapters[MAX_CA];
   TAILQ_HEAD(, capmt_message) capmt_writeq;
   pthread_mutex_t capmt_mutex;
+  uint8_t         capmt_pmtversion;
 } capmt_t;
 
 static void capmt_enumerate_services(capmt_t *capmt, int force);
@@ -774,29 +745,35 @@ capmt_send_stop(capmt_service_t *t)
     int pos = 0;
     uint8_t buf[4094];
 
-    capmt_header_t head = {
-      .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
-      .capmt_list_management  = CAPMT_LIST_ONLY,
-      .program_number         = s->s_dvb_service_id,
-      .version_number         = 0,
-      .current_next_indicator = 0,
-      .program_info_length    = 0,
-      .capmt_cmd_id           = CAPMT_CMD_NOT_SELECTED,
-    };
-    memcpy(&buf[pos], &head, sizeof(head));
-    pos    += sizeof(head);
+    buf[pos++] = 0x9f;
+    buf[pos++] = 0x80;
+    buf[pos++] = 0x32;
+    buf[pos++] = 0x82;
+    buf[pos++] = 0; /* total length */
+    buf[pos++] = 0; /* total length */
+    buf[pos++] = CAPMT_LIST_ONLY;
+    buf[pos++] = s->s_dvb_service_id >> 8;
+    buf[pos++] = s->s_dvb_service_id;
+    buf[pos++] = capmt->capmt_pmtversion;
+    capmt->capmt_pmtversion = (capmt->capmt_pmtversion + 1) & 0x1F;
+    buf[pos++] = 0; /* room for length - program info tags */
+    buf[pos++] = 0; /* room for length - program info tags */
+    buf[pos++] = 1; /* 1 = OK DESCRAMBLING or 4 = NOT SELECTED */
 
-    uint8_t end[] = {
-      0x01, (t->ct_pids[0] >> 8) & 0xFF, t->ct_pids[0] & 0xFF, 0x00, 0x06 };
-    memcpy(&buf[pos], end, sizeof(end));
-    pos    += sizeof(end);
+    /* tags length */
+    buf[10] = ((pos - 12) & 0xF00) >> 8;
+    buf[11] = ((pos - 12) & 0xFF);
+
+    /* build elementary stream info */
+    buf[pos++] = 0x01;
+    buf[pos++] = t->ct_pids[0] >> 8;
+    buf[pos++] = t->ct_pids[0];
+    buf[pos++] = 0; /* SI tag length */
+    buf[pos++] = 0; /* SI tag length */
+
+    /* update total length */
     buf[4]  = ((pos - 6) >> 8);
     buf[5]  = ((pos - 6) & 0xFF);
-    buf[7]  = s->s_dvb_service_id >> 8;
-    buf[8]  = s->s_dvb_service_id & 0xFF;
-    buf[9]  = 1;
-    buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
-    buf[11] = ((pos - 5 - 12) & 0xFF);
   
     capmt_queue_msg(capmt, t->ct_adapter, s->s_dvb_service_id,
                     buf, pos, CAPMT_MSG_CLEAR);
@@ -1999,125 +1976,144 @@ capmt_send_request(capmt_service_t *ct, int lm)
   uint16_t pmtpid = t->s_pmt_pid;
   uint16_t transponder = t->s_dvb_mux->mm_tsid;
   uint16_t onid = t->s_dvb_mux->mm_onid;
-  static uint8_t pmtversion = 1;
   int adapter_num = ct->ct_adapter;
 
   /* buffer for capmt */
-  int pos = 0;
+  int pos = 0, pos2;
   uint8_t buf[4094];
 
-  capmt_header_t head = {
-    .capmt_indicator        = { 0x9F, 0x80, 0x32, 0x82, 0x00, 0x00 },
-    .capmt_list_management  = lm,
-    .program_number         = sid,
-    .version_number         = 0, 
-    .current_next_indicator = 0,
-    .program_info_length    = 0,
-    .capmt_cmd_id           = CAPMT_CMD_OK_DESCRAMBLING,
-  };
-  memcpy(&buf[pos], &head, sizeof(head));
-  pos += sizeof(head);
+  buf[pos++] = 0x9f;
+  buf[pos++] = 0x80;
+  buf[pos++] = 0x32;
+  buf[pos++] = 0x82;
+  buf[pos++] = 0; /* total length */
+  buf[pos++] = 0; /* total length */
+  buf[pos++] = lm;
+  buf[pos++] = sid >> 8;
+  buf[pos++] = sid & 0xFF;
+  buf[pos++] = capmt->capmt_pmtversion;
+  capmt->capmt_pmtversion = (capmt->capmt_pmtversion + 1) & 0x1F;
+  buf[pos++] = 0; /* room for length - program info tags */
+  buf[pos++] = 0; /* room for length - program info tags */
+  if (!capmt_oscam_new(capmt))
+    buf[pos++] = 1; /* OK DESCRAMBLING */
+
+  /* build program info tags */
 
   if (capmt->capmt_oscam != CAPMT_OSCAM_SO_WRAPPER) {
-    capmt_descriptor_t dmd = { 
-      .cad_type = CAPMT_DESC_DEMUX, 
-      .cad_length = 0x02,
-      .cad_data = { 
-        0, adapter_num }};
-    memcpy(&buf[pos], &dmd, dmd.cad_length + 2);
-    pos += dmd.cad_length + 2;
+    /* build SI tag */
+    buf[pos++] = CAPMT_DESC_DEMUX;
+    buf[pos++] = 2;
+    buf[pos++] = 0;
+    buf[pos++] = adapter_num;
   }
 
-  capmt_descriptor_t prd = { 
-    .cad_type = CAPMT_DESC_PRIVATE, 
-    .cad_length = 0x08,
-    .cad_data = { 0x00, 0x00, 0x00, 0x00, // enigma namespace goes here              
-      transponder >> 8, transponder & 0xFF,
-      onid >> 8, onid & 0xFF }};
-  memcpy(&buf[pos], &prd, prd.cad_length + 2);
-  pos += prd.cad_length + 2;
+  /* build SI tag */
+  buf[pos++] = CAPMT_DESC_PRIVATE;
+  buf[pos++] = 8;
+  buf[pos++] = 0; /* enigma namespace goes here */
+  buf[pos++] = 0; /* enigma namespace goes here */
+  buf[pos++] = 0; /* enigma namespace goes here */
+  buf[pos++] = 0; /* enigma namespace goes here */
+  buf[pos++] = transponder >> 8;
+  buf[pos++] = transponder;
+  buf[pos++] = onid >> 8;
+  buf[pos++] = onid;
 
   if (capmt->capmt_oscam == CAPMT_OSCAM_SO_WRAPPER) {
-    capmt_descriptor_t dmd = { 
-      .cad_type = CAPMT_DESC_DEMUX, 
-      .cad_length = 0x02,
-      .cad_data = { 
-        1 << adapter_num, adapter_num }};
-    memcpy(&buf[pos], &dmd, dmd.cad_length + 2);
-    pos += dmd.cad_length + 2;
+    /* build SI tag */
+    buf[pos++] = CAPMT_DESC_DEMUX;
+    buf[pos++] = 2;
+    buf[pos++] = 1 << adapter_num;
+    buf[pos++] = adapter_num;
   }
 
-  capmt_descriptor_t ecd = { 
-    .cad_type = CAPMT_DESC_PID, 
-    .cad_length = 0x02,
-    .cad_data = { 
-      pmtpid >> 8, pmtpid & 0xFF }};
-  memcpy(&buf[pos], &ecd, ecd.cad_length + 2);
-  pos += ecd.cad_length + 2;
+  /* build SI tag */
+  buf[pos++] = CAPMT_DESC_PID;
+  buf[pos++] = 2;
+  buf[pos++] = pmtpid >> 8;
+  buf[pos++] = pmtpid;
 
   capmt_caid_ecm_t *cce2;
   LIST_FOREACH(cce2, &ct->ct_caid_ecm, cce_link) {
-    capmt_descriptor_t cad = { 
-      .cad_type = 0x09, 
-      .cad_length = 0x04,
-      .cad_data = { 
-        cce2->cce_caid   >> 8,        cce2->cce_caid   & 0xFF, 
-        cce2->cce_ecmpid >> 8 | 0xE0, cce2->cce_ecmpid & 0xFF}};
-    if (cce2->cce_providerid) { //we need to add provider ID to the data
+    /* build SI tag */
+    pos2 = pos;
+    buf[pos2++] = 0x09;
+    buf[pos2++] = 4;
+    buf[pos2++] = cce2->cce_caid >> 8;
+    buf[pos2++] = cce2->cce_caid;
+    buf[pos2++] = cce2->cce_ecmpid >> 8;
+    buf[pos2++] = cce2->cce_ecmpid;
+    if (cce2->cce_providerid) { // we need to add provider ID to the data
       if (cce2->cce_caid >> 8 == 0x01) {
-        cad.cad_length = 0x11;
-        cad.cad_data[4] = cce2->cce_providerid >> 8;
-        cad.cad_data[5] = cce2->cce_providerid & 0xff;
+        buf[pos+1] = 17;
+        buf[pos2++] = cce2->cce_providerid >> 8;
+        buf[pos2++] = cce2->cce_providerid & 0xff;
       } else if (cce2->cce_caid >> 8 == 0x05) {
-        cad.cad_length = 0x0f;
-        cad.cad_data[10] = 0x14;
-        cad.cad_data[11] = cce2->cce_providerid >> 24;
-        cad.cad_data[12] = cce2->cce_providerid >> 16;
-        cad.cad_data[13] = cce2->cce_providerid >> 8;
-        cad.cad_data[14] = cce2->cce_providerid & 0xff;
+        buf[pos+1] = 15;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = 0x14;
+        buf[pos2++] = 0x00;
+        buf[pos2++] = cce2->cce_providerid >> 16;
+        buf[pos2++] = cce2->cce_providerid >> 8;
+        buf[pos2++] = cce2->cce_providerid & 0xff;
       } else if (cce2->cce_caid >> 8 == 0x18) {
-        cad.cad_length = 0x07;
-        cad.cad_data[5] = cce2->cce_providerid >> 8;
-        cad.cad_data[6] = cce2->cce_providerid & 0xff;
+        buf[pos+1] = 7;
+        buf[pos2++] = cce2->cce_providerid >> 8;
+        buf[pos2++] = cce2->cce_providerid & 0xff;
       } else if (cce2->cce_caid >> 8 == 0x4a && cce2->cce_caid != 0x4ad2) {
-          cad.cad_length = 0x05;
-          cad.cad_data[4] = cce2->cce_providerid & 0xff;
-      } else if (cce2->cce_caid == 0x4ad2) {
-          cad.cad_length = 0x04;
-          cad.cad_data[3] = cce2->cce_providerid & 0xffffff;
-      } else
+        buf[pos+1] = 0x05;
+        buf[pos2++] = cce2->cce_providerid & 0xff;
+      } else if (((cce2->cce_caid >> 8) == 0x4a) || (cce2->cce_caid == 0x2710)) {
+        if (cce2->cce_caid == 0x4AE0 || cce2->cce_caid == 0x4AE1 || cce2->cce_caid == 0x2710) {
+          buf[pos+1] = 10;
+          buf[pos2++] = cce2->cce_providerid & 0xff;
+          buf[pos2++] = 0x00;
+          buf[pos2++] = 0x00; /* CA data */
+          buf[pos2++] = 0x00; /* CA data */
+          buf[pos2++] = 0x00; /* CA data */
+          buf[pos2++] = 0x00; /* CA data */
+        } else {
+          buf[pos+1] = 5;
+          buf[pos2++] = cce2->cce_providerid & 0xff;
+        }
+      } else {
         tvhwarn(LS_CAPMT, "%s: Unknown CAID type, don't know where to put provider ID", capmt_name(capmt));
+      }
     }
-    memcpy(&buf[pos], &cad, cad.cad_length + 2);
-    pos += cad.cad_length + 2;
+    pos = pos2;
     tvhdebug(LS_CAPMT, "%s: adding ECMPID=0x%X (%d), "
              "CAID=0x%X (%d) PROVID=0x%X (%d), SID=%d, ADAPTER=%d",
-      capmt_name(capmt),
-      cce2->cce_ecmpid, cce2->cce_ecmpid,
-      cce2->cce_caid, cce2->cce_caid,
-      cce2->cce_providerid, cce2->cce_providerid,
-      sid, adapter_num);
+               capmt_name(capmt),
+               cce2->cce_ecmpid, cce2->cce_ecmpid,
+               cce2->cce_caid, cce2->cce_caid,
+               cce2->cce_providerid, cce2->cce_providerid,
+               sid, adapter_num);
   }
 
-  uint8_t end[] = { 
-    0x01, (ct->ct_pids[0] >> 8) & 0xFF, ct->ct_pids[0] & 0xFF, 0x00, 0x06 };
-  memcpy(&buf[pos], end, sizeof(end));
-  pos += sizeof(end);
-  buf[10] = ((pos - 5 - 12) & 0xF00) >> 8;
-  buf[11] = ((pos - 5 - 12) & 0xFF);
-  buf[4]  = ((pos - 6) >> 8);
-  buf[5]  = ((pos - 6) & 0xFF);
+  /* update length of program info tags */
+  buf[10] = ((pos - 12) & 0xF00) >> 8;
+  buf[11] =   pos - 12;
 
-  buf[7]  = sid >> 8;
-  buf[8]  = sid & 0xFF;
+  /* build elementary stream info */
+  buf[pos++] = 0x01; /* stream type */
+  buf[pos++] = ct->ct_pids[0] >> 8;
+  buf[pos++] = ct->ct_pids[0];
+  buf[pos++] = 0x00; /* SI descriptors length */
+  buf[pos++] = 0x00; /* SI descriptors length */
 
+  /* update total length (except 4 byte header) */
+  buf[4]  = (pos - 6) >> 8;
+  buf[5]  =  pos - 6;
 
   if(ct->td_keystate != DS_RESOLVED)
     tvhdebug(LS_CAPMT, "%s: Trying to obtain key for service \"%s\"",
              capmt_name(capmt), t->s_dvb_svcname);
-
-  buf[9] = pmtversion;
-  pmtversion = (pmtversion + 1) & 0x1F;
 
   capmt_queue_msg(capmt, adapter_num, sid, buf, pos, 0);
 }
@@ -2413,6 +2409,8 @@ const idclass_t caclient_capmt_class =
 caclient_t *capmt_create(void)
 {
   capmt_t *capmt = calloc(1, sizeof(*capmt));
+
+  capmt->capmt_pmtversion = 1;
 
   pthread_mutex_init(&capmt->capmt_mutex, NULL);
   tvh_cond_init(&capmt->capmt_cond);
