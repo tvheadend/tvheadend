@@ -40,6 +40,7 @@ typedef struct config {
   char *wizard;
   char *full_version;
   char *server_name;
+  char *http_server_name;
   char *language;
   char *info_area;
   char *language_ui;
