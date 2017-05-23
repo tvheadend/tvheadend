@@ -169,7 +169,7 @@ def deserialize0(data, typ=HMF_MAP):
         dlen = bin2int(data[2:6])
         data = data[6:]
 
-        if len < nlen + dlen: raise Exception('not enough data')
+        if len(data) < nlen + dlen: raise Exception('not enough data')
 
         name = data[:nlen]
         data = data[nlen:]
