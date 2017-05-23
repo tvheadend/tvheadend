@@ -183,6 +183,9 @@ typedef struct capmt_service {
 
   /* PIDs list */
   uint16_t ct_pids[MAX_PIDS];
+
+  /* Elementary stream types */
+  uint8_t ct_types[MAX_PIDS];
 } capmt_service_t;
 
 /**
@@ -1875,6 +1878,38 @@ capmt_caid_add(capmt_service_t *ct, mpegts_service_t *t, int pid, caid_t *c)
   LIST_INSERT_HEAD(&ct->ct_caid_ecm, cce, cce_link);
 }
 
+static int
+capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
+                               elementary_stream_t *st)
+{
+  uint8_t type;
+  int i = *_i;
+
+  switch (st->es_type) {
+  case SCT_MPEG2VIDEO: type = 0x02; break;
+  case SCT_MPEG2AUDIO: type = 0x04; break;
+  case SCT_AC3:        type = 0x81; break;
+  case SCT_EAC3:       type = 0x81; break;
+  case SCT_MP4A:       type = 0x0f; break;
+  case SCT_AAC:        type = 0x11; break;
+  case SCT_H264:       type = 0x1b; break;
+  case SCT_HEVC:       type = 0x24; break;
+  default:
+    if (SCT_ISVIDEO(st->es_type)) type = 0x02;
+    else if (SCT_ISAUDIO(st->es_type)) type = 0x04;
+    else return 0;
+  }
+
+  *_i = i + 1;
+  if (st->es_pid != ct->ct_pids[i] || type != ct->ct_types[i]) {
+    ct->ct_pids[i] = st->es_pid;
+    ct->ct_types[i] = type;
+    return 1;
+  }
+
+  return 0;
+}
+
 static void
 capmt_caid_change(th_descrambler_t *td)
 {
@@ -1893,9 +1928,8 @@ capmt_caid_change(th_descrambler_t *td)
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
-      /* we use this first A/V PID in the PMT message */
-      if (i == 0 && ct->ct_pids[i] != st->es_pid) change = 1;
-      ct->ct_pids[i++] = st->es_pid;
+      if (capmt_update_elementary_stream(ct, &i, st))
+        change = 1;
     }
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
@@ -1916,8 +1950,10 @@ capmt_caid_change(th_descrambler_t *td)
   }
 
   /* clear rest */
-  for (; i < MAX_PIDS; i++)
+  for (; i < MAX_PIDS; i++) {
     ct->ct_pids[i] = 0;
+    ct->ct_types[i] = 0;
+  }
 
   /* find removed ECM PIDs */
   LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link) {
@@ -1977,6 +2013,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
   uint16_t transponder = t->s_dvb_mux->mm_tsid;
   uint16_t onid = t->s_dvb_mux->mm_onid;
   int adapter_num = ct->ct_adapter;
+  int i;
 
   /* buffer for capmt */
   int pos = 0, pos2;
@@ -2101,11 +2138,21 @@ capmt_send_request(capmt_service_t *ct, int lm)
   buf[11] =   pos - 12;
 
   /* build elementary stream info */
-  buf[pos++] = 0x01; /* stream type */
-  buf[pos++] = ct->ct_pids[0] >> 8;
-  buf[pos++] = ct->ct_pids[0];
-  buf[pos++] = 0x00; /* SI descriptors length */
-  buf[pos++] = 0x00; /* SI descriptors length */
+  if (capmt_oscam_new(capmt)) {
+    for (i = 0; i < MAX_PIDS && ct->ct_pids[i]; i++) {
+      buf[pos++] = ct->ct_types[i];
+      buf[pos++] = ct->ct_pids[i] >> 8;
+      buf[pos++] = ct->ct_pids[i];
+      buf[pos++] = 0x00; /* SI descriptors length */
+      buf[pos++] = 0x00; /* SI descriptors length */
+    }
+  } else {
+    buf[pos++] = 0x01; /* stream type */
+    buf[pos++] = ct->ct_pids[0] >> 8;
+    buf[pos++] = ct->ct_pids[0];
+    buf[pos++] = 0x00; /* SI descriptors length */
+    buf[pos++] = 0x00; /* SI descriptors length */
+  }
 
   /* update total length (except 4 byte header) */
   buf[4]  = (pos - 6) >> 8;
@@ -2241,7 +2288,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (i < MAX_PIDS && SCT_ISAV(st->es_type))
-      ct->ct_pids[i++] = st->es_pid;
+      capmt_update_elementary_stream(ct, &i, st);
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
       continue;
