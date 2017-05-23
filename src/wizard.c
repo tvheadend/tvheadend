@@ -54,7 +54,7 @@ static const void *description_get(wizard_page_t *page, const char **doc)
     htsbuf_queue_init(&q, 0);
     for (; *doc; doc++) {
       if (*doc[0] == '\xff') {
-        htsbuf_append_str(&q, tvh_gettext_lang(config.language_ui, *doc + 1));
+        htsbuf_append_str(&q, tvh_gettext_lang(config.language_ui, *doc + 2));
       } else {
         htsbuf_append_str(&q, *doc);
       }
