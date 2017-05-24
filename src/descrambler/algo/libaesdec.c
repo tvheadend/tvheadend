@@ -41,7 +41,7 @@ void aes_set_control_words(void *keys,
 }
 
 /* allocate key structure */
-void * aes_get_key_struct(void)
+void * aes_get_priv_struct(void)
 {
   aes_priv_t *keys;
 
@@ -54,13 +54,13 @@ void * aes_get_key_struct(void)
 }
 
 /* free key structure */
-void aes_free_key_struct(void *keys)
+void aes_free_priv_struct(void *keys)
 {
   free(keys);
 }
 
 /* decrypt */
-void aes_decrypt_packet(void *keys, uint8_t *pkt)
+void aes_decrypt_packet(void *keys, const uint8_t *pkt)
 {
   uint8_t ev_od = 0;
   uint_fast8_t xc0, offset, n;
@@ -78,7 +78,7 @@ void aes_decrypt_packet(void *keys, uint8_t *pkt)
 
   if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted
     ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-    pkt[3] &= 0x3f;  // consider it decrypted now
+    ((uint8_t *)pkt)[3] &= 0x3f;  // consider it decrypted now
     if (pkt[3] & 0x20) { // incomplete packet
       offset = 4 + pkt[4] + 1;
       n = (188 - offset) >> 4;
@@ -94,6 +94,6 @@ void aes_decrypt_packet(void *keys, uint8_t *pkt)
 
   k = &((aes_priv_t *) keys)->keys[ev_od];
   for (; offset <= (188 - 16); offset += 16) {
-    AES_ecb_encrypt(pkt + offset, pkt + offset, k, AES_DECRYPT);
+    AES_ecb_encrypt(pkt + offset, (uint8_t *)(pkt + offset), k, AES_DECRYPT);
   }
 }

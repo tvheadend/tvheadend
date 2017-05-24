@@ -25,20 +25,38 @@
 #include <assert.h>
 
 static void
-tvhcsa_aes_flush
+tvhcsa_aes_ecb_flush
   ( tvhcsa_t *csa, struct mpegts_service *s )
 {
   /* empty - no queue */
 }
 
 static void
-tvhcsa_aes_descramble
+tvhcsa_aes_ecb_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb, int len )
 {
   const uint8_t *tsb2, *end2;
 
   for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
-    aes_decrypt_packet(csa->csa_aes_keys, (unsigned char *)tsb2);
+    aes_decrypt_packet(csa->csa_aes_priv, tsb2);
+  ts_recv_packet2(s, tsb, len);
+}
+
+static void
+tvhcsa_des_ncb_flush
+  ( tvhcsa_t *csa, struct mpegts_service *s )
+{
+  /* empty - no queue */
+}
+
+static void
+tvhcsa_des_ncb_descramble
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb, int len )
+{
+  const uint8_t *tsb2, *end2;
+
+  for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
+    des_decrypt_packet(csa->csa_des_priv, tsb2);
   ts_recv_packet2(s, tsb, len);
 }
 
@@ -181,9 +199,14 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
     csa->csa_flush      = tvhcsa_csa_cbc_flush;
     csa->csa_keylen     = 8;
     break;
+  case DESCRAMBLER_DES_NCB:
+    csa->csa_descramble = tvhcsa_des_ncb_descramble;
+    csa->csa_flush      = tvhcsa_des_ncb_flush;
+    csa->csa_keylen     = 8;
+    break;
   case DESCRAMBLER_AES_ECB:
-    csa->csa_descramble = tvhcsa_aes_descramble;
-    csa->csa_flush      = tvhcsa_aes_flush;
+    csa->csa_descramble = tvhcsa_aes_ecb_descramble;
+    csa->csa_flush      = tvhcsa_aes_ecb_flush;
     csa->csa_keylen     = 16;
     break;
   default:
@@ -204,8 +227,11 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
     set_even_control_word((csa)->csa_keys, even);
 #endif
     break;
+  case DESCRAMBLER_DES_NCB:
+    des_set_even_control_word(csa->csa_des_priv, even);
+    break;
   case DESCRAMBLER_AES_ECB:
-    aes_set_even_control_word(csa->csa_aes_keys, even);
+    aes_set_even_control_word(csa->csa_aes_priv, even);
     break;
   default:
     assert(0);
@@ -223,8 +249,11 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
     set_odd_control_word((csa)->csa_keys, odd);
 #endif
     break;
+  case DESCRAMBLER_DES_NCB:
+    des_set_odd_control_word(csa->csa_des_priv, odd);
+    break;
   case DESCRAMBLER_AES_ECB:
-    aes_set_odd_control_word(csa->csa_aes_keys, odd);
+    aes_set_odd_control_word(csa->csa_aes_priv, odd);
     break;
   default:
     assert(0);
@@ -255,7 +284,8 @@ tvhcsa_init ( tvhcsa_t *csa )
 #else
   csa->csa_keys          = get_key_struct();
 #endif
-  csa->csa_aes_keys      = aes_get_key_struct();
+  csa->csa_aes_priv      = aes_get_priv_struct();
+  csa->csa_des_priv      = des_get_priv_struct();
 }
 
 void
@@ -269,6 +299,7 @@ tvhcsa_destroy ( tvhcsa_t *csa )
 #else
   free_key_struct(csa->csa_keys);
 #endif
-  aes_free_key_struct(csa->csa_aes_keys);
+  aes_free_priv_struct(csa->csa_aes_priv);
+  des_free_priv_struct(csa->csa_des_priv);
   free(csa->csa_tsbcluster);
 }
