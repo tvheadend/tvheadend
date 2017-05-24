@@ -545,6 +545,11 @@ EOF
 
   # Add build config string declaration
   cat >> "${CONFIG_H}" <<EOF
+#define DESCRAMBLER_MAX_KEYS 64
+EOF
+
+  # Add build config string declaration
+  cat >> "${CONFIG_H}" <<EOF
 extern const char* build_config_str;
 extern const char* build_timestamp;
 EOF

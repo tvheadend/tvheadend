@@ -169,7 +169,7 @@ constcw_service_start(caclient_t *cac, service_t *t)
   LIST_INSERT_HEAD(&ccw->ccw_services, ct, cs_link);
 
   descrambler_keys(td, constcw_algo(cac),
-                   ccw->ccw_key_even, ccw->ccw_key_odd);
+                   0, ccw->ccw_key_even, ccw->ccw_key_odd);
 }
 
 

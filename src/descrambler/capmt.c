@@ -1105,7 +1105,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint32_t index,
     continue;
 
 found:
-    descrambler_keys((th_descrambler_t *)ct, type, even, odd);
+    descrambler_keys((th_descrambler_t *)ct, type, 0, even, odd);
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }

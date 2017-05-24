@@ -702,7 +702,7 @@ forbid:
     pthread_mutex_unlock(&cccam->cccam_mutex);
     descrambler_keys((th_descrambler_t *)ct,
                      off == 16 ? DESCRAMBLER_AES_ECB : DESCRAMBLER_CSA_CBC,
-                     dcw, dcw + off);
+                     0, dcw, dcw + off);
     snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cccam->cccam_hostname, cccam->cccam_port);
     descrambler_notify((th_descrambler_t *)ct,
                        es3.es_caid, es3.es_provid,

@@ -62,30 +62,33 @@ typedef struct th_descrambler {
 
 } th_descrambler_t;
 
+typedef struct th_descrambler_key {
+  uint8_t  key_data[2][16]; /* 0 = even, 1 = odd, max 16-byte key */
+  tvhcsa_t key_csa;
+  uint16_t key_pid;         /* keys are assigned to this pid (when multipid is set) */
+  uint64_t key_interval;
+  int64_t  key_start;
+  int64_t  key_timestamp[2];
+  uint8_t  key_index;
+  uint8_t  key_valid;
+  uint8_t  key_changed;
+} th_descrambler_key_t;
+
 typedef struct th_descrambler_runtime {
   struct service *dr_service;
-  tvhcsa_t dr_csa;
   uint32_t dr_external:1;
   uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
-  uint32_t dr_key:1;
-  uint32_t dr_key_first:1;
   uint32_t dr_key_const:1;
-  uint8_t  dr_key_index;
-  uint8_t  dr_key_valid;
-  uint8_t  dr_key_changed;
-  uint64_t dr_key_interval;
-  int64_t  dr_key_start;
-  int64_t  dr_key_timestamp[2];
+  uint32_t dr_key_multipid:1;
   int64_t  dr_ecm_start[2];
   int64_t  dr_ecm_last_key_time;
   int64_t  dr_last_err;
   int64_t  dr_force_skip;
+  th_descrambler_key_t dr_keys[DESCRAMBLER_MAX_KEYS];
   TAILQ_HEAD(, th_descrambler_data) dr_queue;
   uint32_t dr_queue_total;
   tvhlog_limit_t dr_loglimit_key;
-  uint8_t  dr_key_even[16];
-  uint8_t  dr_key_odd[16];
 } th_descrambler_runtime_t;
 
 typedef void (*descrambler_section_callback_t)
@@ -158,7 +161,7 @@ void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
 int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
 void descrambler_external      ( struct service *t, int state );
-void descrambler_keys          ( th_descrambler_t *t, int type,
+void descrambler_keys          ( th_descrambler_t *t, int type, uint16_t pid,
                                  const uint8_t *even, const uint8_t *odd );
 void descrambler_notify        ( th_descrambler_t *t,
                                  uint16_t caid, uint32_t provid,

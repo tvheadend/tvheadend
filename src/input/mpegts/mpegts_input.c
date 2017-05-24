@@ -1286,7 +1286,8 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
     type = pkt[pos + 0];
     keylen = pkt[pos + 1];
     sid = (pkt[pos + 2] << 8) | pkt[pos + 3];
-    pos += 4 + 2 * keylen;
+    pid = (pkt[pos + 4] << 8) | pkt[pos + 5];
+    pos += 6 + 2 * keylen;
     if (pos > 184)
       return;
     crc = (pkt[pos + 0] << 24) | (pkt[pos + 1] << 16) |
