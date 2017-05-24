@@ -115,6 +115,7 @@ typedef struct channel_tag {
 
 extern const idclass_t channel_class;
 extern const idclass_t channel_tag_class;
+extern const char *channel_blank_name;
 
 void channel_init(void);
 void channel_done(void);
@@ -163,7 +164,7 @@ void channel_tag_unmap(channel_t *ch, void *origin);
 
 int channel_tag_access(channel_tag_t *ct, struct access *a, int disabled);
 
-const char *channel_get_name ( channel_t *ch );
+const char *channel_get_name ( channel_t *ch, const char *blank );
 int channel_set_name ( channel_t *ch, const char *name );
 
 #define CHANNEL_SPLIT ((int64_t)1000000)

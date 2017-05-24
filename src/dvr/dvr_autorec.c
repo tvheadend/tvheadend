@@ -354,8 +354,12 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf;
+  const char *chname;
   char *title;
   if (!event || !event->episode)
+    return NULL;
+  chname = channel_get_name(event->channel, NULL);
+  if (!chname)
     return NULL;
   conf = htsmsg_create_map();
   title = regexp_escape(epg_broadcast_get_title(event, NULL));
@@ -363,7 +367,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   htsmsg_add_str(conf, "title", title);
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
-  htsmsg_add_str(conf, "channel", channel_get_name(event->channel));
+  htsmsg_add_str(conf, "channel", chname);
   if (event->serieslink)
     htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
   htsmsg_add_str(conf, "owner", owner ?: "");
@@ -525,7 +529,7 @@ dvr_autorec_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
-    return strdup(channel_get_name(dae->dae_channel));
+    return strdup(channel_get_name(dae->dae_channel, tvh_gettext_lang(lang, channel_blank_name)));
   return NULL;
 }
 

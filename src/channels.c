@@ -46,12 +46,11 @@
 #include "intlconv.h"
 #include "memoryinfo.h"
 
-#define CHANNEL_BLANK_NAME  "{name-not-set}"
-
 struct channel_tree channels;
 
 struct channel_tag_queue channel_tags;
 
+const char *channel_blank_name = N_("{name-not-set}");
 static int channel_in_load;
 
 static void channel_tag_init ( void );
@@ -74,7 +73,7 @@ channel_class_changed ( idnode_t *self )
 {
   channel_t *ch = (channel_t *)self;
 
-  tvhdebug(LS_CHANNEL, "channel '%s' changed", channel_get_name(ch));
+  tvhdebug(LS_CHANNEL, "channel '%s' changed", channel_get_name(ch, channel_blank_name));
 
   /* update the EPG channel <-> channel mapping here */
   if (ch->ch_enabled && ch->ch_epgauto)
@@ -92,7 +91,7 @@ channel_class_save ( idnode_t *self, char *filename, size_t fsize )
   char ubuf[UUID_HEX_SIZE];
   /* save channel (on demand) */
   if (ch->ch_dont_save == 0) {
-    tvhdebug(LS_CHANNEL, "channel '%s' save", channel_get_name(ch));
+    tvhdebug(LS_CHANNEL, "channel '%s' save", channel_get_name(ch, channel_blank_name));
     c = htsmsg_create_map();
     idnode_save(&ch->ch_id, c);
     snprintf(filename, fsize, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id, ubuf));
@@ -114,9 +113,13 @@ channel_class_autoname_set ( void *obj, const void *p )
   int b = *(int *)p;
   if (ch->ch_autoname != b) {
     if (b == 0 && (!ch->ch_name || *ch->ch_name == '\0')) {
-      s = channel_get_name(ch);
-      free(ch->ch_name);
-      ch->ch_name = strdup(s);
+      s = channel_get_name(ch, NULL);
+      if (s) {
+        free(ch->ch_name);
+        ch->ch_name = strdup(s);
+      } else {
+        return 0;
+      }
     } else if (b) {
       if (ch->ch_name)
         ch->ch_name[0] = '\0';
@@ -211,7 +214,7 @@ channel_class_get_icon ( void *obj )
 static const char *
 channel_class_get_title ( idnode_t *self, const char *lang )
 {
-  return channel_get_name((channel_t*)self);
+  return channel_get_name((channel_t*)self, tvh_gettext_lang(lang, channel_blank_name));
 }
 
 /* exported for others */
@@ -247,7 +250,7 @@ static const void *
 channel_class_get_name ( void *o )
 {
   static const char *s;
-  s = channel_get_name(o);
+  s = channel_get_name(o, channel_blank_name);
   return &s;
 }
 
@@ -557,11 +560,16 @@ channel_t *
 channel_find_by_name ( const char *name )
 {
   channel_t *ch;
+  const char *s;
+
   if (name == NULL)
     return NULL;
-  CHANNEL_FOREACH(ch)
-    if (ch->ch_enabled && !strcmp(channel_get_name(ch), name))
-      break;
+  CHANNEL_FOREACH(ch) {
+    if (!ch->ch_enabled) continue;
+    s = channel_get_name(ch, NULL);
+    if (s == NULL) continue;
+    if (strcmp(s, name) == 0) break;
+  }
   return ch;
 }
 
@@ -674,9 +682,8 @@ channel_epg_update_all ( channel_t *ch )
  * *************************************************************************/
 
 const char *
-channel_get_name ( channel_t *ch )
+channel_get_name ( channel_t *ch, const char *blank )
 {
-  static const char *blank = CHANNEL_BLANK_NAME;
   const char *s;
   idnode_list_mapping_t *ilm;
   if (ch->ch_name && *ch->ch_name) return ch->ch_name;
@@ -825,8 +832,7 @@ channel_get_icon ( channel_t *ch )
 
     /* No user icon - try to get the channel icon by name */
     if (!pick && chicon && chicon[0] >= ' ' && chicon[0] <= 122 &&
-        (chname = channel_get_name(ch)) != NULL && chname[0] &&
-        strcmp(chname, CHANNEL_BLANK_NAME)) {
+        (chname = channel_get_name(ch, NULL)) != NULL && chname[0]) {
       const char *chi, *send, *sname, *s;
       chi = strdup(chicon);
 
@@ -966,7 +972,7 @@ channel_get_epgid ( channel_t *ch )
   LIST_FOREACH(ilm, &ch->ch_services, ilm_in2_link)
     if ((s = service_get_channel_epgid((service_t *)ilm->ilm_in1)))
       return s;
-  return channel_get_name(ch);
+  return channel_get_name(ch, NULL);
 }
 
 /* **************************************************************************
@@ -1040,7 +1046,7 @@ channel_delete ( channel_t *ch, int delconf )
   idnode_save_check(&ch->ch_id, delconf);
 
   if (delconf)
-    tvhinfo(LS_CHANNEL, "%s - deleting", channel_get_name(ch));
+    tvhinfo(LS_CHANNEL, "%s - deleting", channel_get_name(ch, channel_blank_name));
 
   /* Tags */
   while((ilm = LIST_FIRST(&ch->ch_ctms)) != NULL)

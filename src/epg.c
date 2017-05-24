@@ -1601,7 +1601,7 @@ static void _epg_channel_timer_callback ( void *p )
     if ( ebc->stop <= gclk() ) {
       tvhdebug(LS_EPG, "expire event %u (%s) from %s",
                ebc->id, epg_broadcast_get_title(ebc, NULL),
-               channel_get_name(ch));
+               channel_get_name(ch, channel_blank_name));
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -1624,16 +1624,16 @@ static void _epg_channel_timer_callback ( void *p )
     tvhdebug(LS_EPG, "now/next %u/%u set on %s",
              ch->ch_epg_now  ? ch->ch_epg_now->id : 0,
              ch->ch_epg_next ? ch->ch_epg_next->id : 0,
-             channel_get_name(ch));
+             channel_get_name(ch, channel_blank_name));
     tvhdebug(LS_EPG, "inform HTSP of now event change on %s",
-             channel_get_name(ch));
+             channel_get_name(ch, channel_blank_name));
     htsp_channel_update_nownext(ch);
   }
 
   /* re-arm */
   if (next) {
     tvhdebug(LS_EPG, "arm channel timer @ %s for %s",
-             gmtime2local(next, tm1, sizeof(tm1)), channel_get_name(ch));
+             gmtime2local(next, tm1, sizeof(tm1)), channel_get_name(ch, channel_blank_name));
     gtimer_arm_absn(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, next);
   }
 
@@ -1653,7 +1653,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
   if (!src) {
     tvherror(LS_EPG, "skipped event (!grabber) %u (%s) on %s @ %s to %s",
              (*bcast)->id, epg_broadcast_get_title(*bcast, NULL),
-             channel_get_name(ch),
+             channel_get_name(ch, channel_blank_name),
              gmtime2local((*bcast)->start, tm1, sizeof(tm1)),
              gmtime2local((*bcast)->stop, tm2, sizeof(tm2)));
     return NULL;
@@ -1682,7 +1682,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       ret->grabber = src;
       tvhtrace(LS_EPG, "added event %u (%s) on %s @ %s to %s (grabber %s)",
                ret->id, epg_broadcast_get_title(ret, NULL),
-               channel_get_name(ch),
+               channel_get_name(ch, channel_blank_name),
                gmtime2local(ret->start, tm1, sizeof(tm1)),
                gmtime2local(ret->stop, tm2, sizeof(tm2)),
                src->id);
@@ -1702,7 +1702,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
         _epg_object_set_updated(ret);
         tvhtrace(LS_EPG, "updated event %u (%s) on %s @ %s to %s (grabber %s)",
                  ret->id, epg_broadcast_get_title(ret, NULL),
-                 channel_get_name(ch),
+                 channel_get_name(ch, channel_blank_name),
                  gmtime2local(ret->start, tm1, sizeof(tm1)),
                  gmtime2local(ret->stop, tm2, sizeof(tm2)),
                  src->id);
@@ -1725,7 +1725,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
         ebc->stop - ret->start <= config.epg_cutwindow) {
       tvhtrace(LS_EPG, "cut stop for overlap (b) event %u (%s) on %s @ %s to %s",
                ebc->id, epg_broadcast_get_title(ebc, NULL),
-               channel_get_name(ch),
+               channel_get_name(ch, channel_blank_name),
                gmtime2local(ebc->start, tm1, sizeof(tm1)),
                gmtime2local(ebc->stop, tm2, sizeof(tm2)));
       ebc->stop = ret->start;
@@ -1734,7 +1734,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
     }
     tvhtrace(LS_EPG, "remove overlap (b) event %u (%s) on %s @ %s to %s",
              ebc->id, epg_broadcast_get_title(ebc, NULL),
-             channel_get_name(ch),
+             channel_get_name(ch, channel_blank_name),
              gmtime2local(ebc->start, tm1, sizeof(tm1)),
              gmtime2local(ebc->stop, tm2, sizeof(tm2)));
     _epg_channel_rem_broadcast(ch, ebc, ret);
@@ -1752,7 +1752,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
         ret->stop - ebc->start <= config.epg_cutwindow) {
       tvhtrace(LS_EPG, "cut stop for overlap (a) event %u (%s) on %s @ %s to %s",
                ebc->id, epg_broadcast_get_title(ebc, NULL),
-               channel_get_name(ch),
+               channel_get_name(ch, channel_blank_name),
                gmtime2local(ebc->start, tm1, sizeof(tm1)),
                gmtime2local(ebc->stop, tm2, sizeof(tm2)));
       ret->stop = ebc->start;
@@ -1761,7 +1761,7 @@ static epg_broadcast_t *_epg_channel_add_broadcast
     }
     tvhtrace(LS_EPG, "remove overlap (a) event %u (%s) on %s @ %s to %s",
              ebc->id, epg_broadcast_get_title(ebc, NULL),
-             channel_get_name(ch),
+             channel_get_name(ch, channel_blank_name),
              gmtime2local(ebc->start, tm1, sizeof(tm1)),
              gmtime2local(ebc->stop, tm2, sizeof(tm2)));
     _epg_channel_rem_broadcast(ch, ebc, ret);
@@ -2653,6 +2653,7 @@ _eq_comp_num ( epg_filter_num_t *f, int64_t val )
 static inline int
 _eq_comp_str ( epg_filter_str_t *f, const char *str )
 {
+  if (!str) return 0;
   switch (f->comp) {
     case EC_EQ: return strcmp(str, f->str);
     case EC_LT: return strcmp(str, f->str) > 0;
@@ -2687,7 +2688,7 @@ _eq_add ( epg_query_t *eq, epg_broadcast_t *e )
   if (eq->channel_num.comp != EC_NO)
     if (_eq_comp_num(&eq->channel_num, channel_get_number(e->channel))) return;
   if (eq->channel_name.comp != EC_NO)
-    if (_eq_comp_str(&eq->channel_name, channel_get_name(e->channel))) return;
+    if (_eq_comp_str(&eq->channel_name, channel_get_name(e->channel, NULL))) return;
   if (eq->genre_count) {
     epg_genre_t genre;
     uint32_t i, r = 0;
@@ -2873,10 +2874,9 @@ static int _epg_sort_description_descending ( const void *a, const void *b, void
 
 static int _epg_sort_channel_ascending ( const void *a, const void *b, void *eq )
 {
-  char *s1 = strdup(channel_get_name((*(epg_broadcast_t**)a)->channel));
-  char *s2 = strdup(channel_get_name((*(epg_broadcast_t**)b)->channel));
+  char *s1 = strdup(channel_get_name((*(epg_broadcast_t**)a)->channel, ""));
+  const char *s2 =  channel_get_name((*(epg_broadcast_t**)b)->channel, "");
   int r = strcmp(s1, s2);
-  free(s2);
   free(s1);
   return r;
 }

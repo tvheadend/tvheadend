@@ -450,7 +450,8 @@ static int _eit_process_event_one
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes2);
   tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, running=%d, start=%s,"
                        " stop=%s, ebc=%p",
-           svc->s_dvb_svcname ?: "(null)", ch ? channel_get_name(ch) : "(null)",
+           svc->s_dvb_svcname ?: "(null)",
+           ch ? channel_get_name(ch, channel_blank_name) : "(null)",
            eid, tableid, running,
            gmtime2local(start, tm1, sizeof(tm1)),
            gmtime2local(stop, tm2, sizeof(tm2)), ebc);

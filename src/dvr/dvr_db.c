@@ -1202,7 +1202,7 @@ not_so_good:
   dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
                         "rerecord event %s on %s",
                         epg_broadcast_get_title(e, NULL),
-                        channel_get_name(e->channel));
+                        channel_get_name(e->channel, channel_blank_name));
 
   idnode_uuid_as_str(&de->de_config->dvr_id, cfg_uuid);
   snprintf(buf, sizeof(buf), _("Re-record%s%s"),
@@ -1905,7 +1905,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
     dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
                           "event replaced %s on %s",
                           epg_broadcast_get_title(e, NULL),
-                          channel_get_name(ch));
+                          channel_get_name(ch, channel_blank_name));
 
     /* Ignore - already in progress */
     if (de->de_sched_state != DVR_SCHEDULED)
@@ -1925,7 +1925,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                                   de->de_config->dvr_update_window)) {
           tvhtrace(LS_DVR, "  replacement event %s on %s @ start %s stop %s",
                           epg_broadcast_get_title(e2, NULL),
-                          channel_get_name(ch),
+                          channel_get_name(ch, channel_blank_name),
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
                           gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
@@ -1983,7 +1983,7 @@ void dvr_event_updated(epg_broadcast_t *e)
         dvr_entry_trace_time2(de, "start", e->start, "stop", e->stop,
                               "link to event %s on %s",
                               epg_broadcast_get_title(e, NULL),
-                              channel_get_name(e->channel));
+                              channel_get_name(e->channel, channel_blank_name));
         _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
                           NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
         break;
@@ -2005,7 +2005,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
     return;
   tvhtrace(LS_DVR, "dvr event running check for %s on %s running %d",
            epg_broadcast_get_title(e, NULL),
-           channel_get_name(e->channel),
+           channel_get_name(e->channel, channel_blank_name),
            running);
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
     if (running == EPG_RUNNING_NOW && de->de_dvb_eid == e->dvb_eid) {
@@ -2013,7 +2013,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG unpause",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
-                 channel_get_name(e->channel));
+                 channel_get_name(e->channel, channel_blank_name));
         atomic_set_time_t(&de->de_running_pause, 0);
         atomic_add(&de->de_running_change, 1);
       }
@@ -2021,7 +2021,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG marking start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
-                 channel_get_name(e->channel));
+                 channel_get_name(e->channel, channel_blank_name));
         atomic_set_time_t(&de->de_running_start, gclk());
         atomic_add(&de->de_running_change, 1);
       }
@@ -2032,7 +2032,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG start",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
-                 channel_get_name(e->channel));
+                 channel_get_name(e->channel, channel_blank_name));
       }
     } else if ((running == EPG_RUNNING_STOP && de->de_dvb_eid == e->dvb_eid) ||
                 running == EPG_RUNNING_NOW) {
@@ -2051,7 +2051,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
         tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG marking stop",
                  idnode_uuid_as_str(&de->de_id, ubuf), srcname,
                  epg_broadcast_get_title(e, NULL),
-                 channel_get_name(de->de_channel));
+                 channel_get_name(de->de_channel, channel_blank_name));
       }
       atomic_set_time_t(&de->de_running_stop, gclk());
       atomic_set_time_t(&de->de_running_pause, 0);
@@ -2061,7 +2061,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
           tvhdebug(LS_DVR, "dvr entry %s %s %s on %s - EPG stop",
                    idnode_uuid_as_str(&de->de_id, ubuf), srcname,
                    epg_broadcast_get_title(e, NULL),
-                   channel_get_name(de->de_channel));
+                   channel_get_name(de->de_channel, channel_blank_name));
         }
       }
     } else if (running == EPG_RUNNING_PAUSE && de->de_dvb_eid == e->dvb_eid) {
@@ -2069,7 +2069,7 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG pause",
                  idnode_uuid_as_str(&de->de_id, ubuf),
                  epg_broadcast_get_title(e, NULL),
-                 channel_get_name(e->channel));
+                 channel_get_name(e->channel, channel_blank_name));
         atomic_set_time_t(&de->de_running_pause, gclk());
         atomic_add(&de->de_running_change, 1);
       }
@@ -2502,7 +2502,7 @@ dvr_entry_class_channel_set(void *o, const void *v)
     if (de->de_channel)
       LIST_REMOVE(de, de_channel_link);
     free(de->de_channel_name);
-    de->de_channel_name = strdup(channel_get_name(ch));
+    de->de_channel_name = strdup(channel_get_name(ch, ""));
     de->de_channel = ch;
     LIST_INSERT_HEAD(&ch->ch_dvrs, de, de_channel_link);
     return 1;
@@ -2526,7 +2526,7 @@ dvr_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_channel)
-    return strdup(channel_get_name(de->de_channel));
+    return strdup(channel_get_name(de->de_channel, tvh_gettext_lang(lang, channel_blank_name)));
   return NULL;
 }
 
@@ -2556,7 +2556,7 @@ dvr_entry_class_channel_name_get(void *o)
   static const char *ret;
   dvr_entry_t *de = (dvr_entry_t *)o;
   if (de->de_channel)
-    ret = channel_get_name(de->de_channel);
+    ret = channel_get_name(de->de_channel, channel_blank_name);
   else
     ret = de->de_channel_name;
   return &ret;
@@ -3505,7 +3505,7 @@ dvr_destroy_by_channel(channel_t *ch, int delconf)
     LIST_REMOVE(de, de_channel_link);
     de->de_channel = NULL;
     free(de->de_channel_name);
-    de->de_channel_name = strdup(channel_get_name(ch));
+    de->de_channel_name = strdup(channel_get_name(ch, ""));
     dvr_entry_purge(de, delconf);
   }
 }

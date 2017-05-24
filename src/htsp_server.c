@@ -797,7 +797,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
   if (channel_get_minor(chnum))
     htsmsg_add_u32(out, "channelNumberMinor", channel_get_minor(chnum));
 
-  htsmsg_add_str(out, "channelName", channel_get_name(ch));
+  htsmsg_add_str(out, "channelName", channel_get_name(ch, channel_blank_name));
   if ((icon = channel_get_icon(ch))) {
 
     /* Handle older clients */
@@ -2493,7 +2493,8 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   LIST_INSERT_HEAD(&htsp->htsp_subscriptions, hs, hs_link);
 
   tvhdebug(LS_HTSP, "%s - subscribe to %s using profile %s",
-           htsp->htsp_logname, channel_get_name(ch), profile_get_name(pro));
+           htsp->htsp_logname, channel_get_name(ch, channel_blank_name),
+           profile_get_name(pro));
   hs->hs_s = subscription_create_from_channel(&hs->hs_prch, NULL, weight,
 					      htsp->htsp_logname,
 					      SUBSCRIPTION_PACKET |

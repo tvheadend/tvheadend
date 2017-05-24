@@ -834,7 +834,7 @@ service_find_instance
 
   /* Debug */
   TAILQ_FOREACH(si, sil, si_link) {
-    const char *name = ch ? channel_get_name(ch) : NULL;
+    const char *name = ch ? channel_get_name(ch, NULL) : NULL;
     if (!name && s) name = s->s_nicename;
     tvhdebug(LS_SERVICE, "%d: %s si %p %s weight %d prio %d error %d",
              si->si_instance, name, si, si->si_source, si->si_weight, si->si_prio,

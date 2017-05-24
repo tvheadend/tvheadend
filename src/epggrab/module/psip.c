@@ -381,7 +381,8 @@ _psip_eit_callback_channel
     if (title == NULL) continue;
 
     tvhtrace(LS_PSIP, "  %03d: [%s] eventid 0x%04x at %"PRItime_t", duration %d, title: '%s' (%d bytes)",
-             i, ch ? channel_get_name(ch) : "(null)", eventid, start, length,
+             i, ch ? channel_get_name(ch, channel_blank_name) : "(null)",
+             eventid, start, length,
              lang_str_get(title, NULL), titlelen);
 
     save2 = save3 = changes2 = changes3 = 0;

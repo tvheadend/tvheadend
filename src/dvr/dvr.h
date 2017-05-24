@@ -295,7 +295,8 @@ typedef struct dvr_entry {
 
 } dvr_entry_t;
 
-#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel))
+#define DVR_CH_NAME(e) \
+  ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel, channel_blank_name))
 
 typedef enum {
   DVR_AUTOREC_RECORD_ALL = 0,

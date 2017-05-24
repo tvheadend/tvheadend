@@ -356,7 +356,7 @@ dvr_timerec_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte->dte_channel)
-    return strdup(channel_get_name(dte->dte_channel));
+    return strdup(channel_get_name(dte->dte_channel, tvh_gettext_lang(lang, channel_blank_name)));
   return NULL;
 }
 

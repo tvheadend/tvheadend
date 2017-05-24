@@ -387,8 +387,8 @@ bouquet_unmap_channel(bouquet_t *bq, service_t *t)
     ilm_next = LIST_NEXT(ilm, ilm_in1_link);
     if (((channel_t *)ilm->ilm_in2)->ch_bouquet == bq) {
       tvhinfo(LS_BOUQUET, "%s / %s: unmapped from %s",
-              channel_get_name((channel_t *)ilm->ilm_in2), t->s_nicename,
-              bq->bq_name ?: "<unknown>");
+              channel_get_name((channel_t *)ilm->ilm_in2, channel_blank_name),
+              t->s_nicename, bq->bq_name ?: "<unknown>");
       channel_delete((channel_t *)ilm->ilm_in2, 1);
     }
     ilm = ilm_next;

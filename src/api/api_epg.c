@@ -50,12 +50,12 @@ api_epg_get_list ( const char *s )
 }
 
 static void
-api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
+api_epg_add_channel ( htsmsg_t *m, channel_t *ch, const char *blank )
 {
   int64_t chnum;
   char buf[32], ubuf[UUID_HEX_SIZE];
   const char *s;
-  htsmsg_add_str(m, "channelName", channel_get_name(ch));
+  htsmsg_add_str(m, "channelName", channel_get_name(ch, blank));
   htsmsg_add_str(m, "channelUuid", channel_get_uuid(ch, ubuf));
   if ((chnum = channel_get_number(ch)) >= 0) {
     uint32_t maj = chnum / CHANNEL_SPLIT;
@@ -71,7 +71,7 @@ api_epg_add_channel ( htsmsg_t *m, channel_t *ch )
 }
 
 static htsmsg_t *
-api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
+api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const char **blank )
 {
   const char *s;
   char buf[64];
@@ -84,6 +84,9 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
   char ubuf[UUID_HEX_SIZE];
 
   if (!ee || !ch) return NULL;
+
+  if (*blank == NULL)
+    *blank = tvh_gettext_lang(lang, channel_blank_name);
 
   m = htsmsg_create_map();
 
@@ -101,7 +104,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm )
   }
   
   /* Channel Info */
-  api_epg_add_channel(m, ch);
+  api_epg_add_channel(m, ch, *blank);
   
   /* Time */
   htsmsg_add_s64(m, "start", eb->start);
@@ -307,7 +310,7 @@ api_epg_grid
 {
   int i;
   epg_query_t eq;
-  const char *str;
+  const char *str, *blank = NULL;
   char *lang;
   uint32_t start, limit, end, genre;
   int64_t duration_min, duration_max;
@@ -458,7 +461,7 @@ api_epg_grid
   end   = MIN(eq.entries, start + limit);
   l     = htsmsg_create_list();
   for (i = start; i < end; i++) {
-    if (!(e = api_epg_entry(eq.result[i], lang, perm))) continue;
+    if (!(e = api_epg_entry(eq.result[i], lang, perm, &blank))) continue;
     htsmsg_add_msg(l, NULL, e);
   }
   pthread_mutex_unlock(&global_lock);
@@ -487,7 +490,7 @@ api_epg_episode_broadcasts
     ch = ebc->channel;
     if (ch == NULL) continue;
     if (ebc == ebc_skip) continue;
-    m = api_epg_entry(ebc, lang, perm);
+    m = api_epg_entry(ebc, lang, perm, NULL);
     htsmsg_add_msg(l, NULL, m);
     (*entries)++;
   }
@@ -573,6 +576,7 @@ api_epg_load
   htsmsg_t *l = htsmsg_create_list(), *ids = NULL, *m;
   htsmsg_field_t *f;
   epg_broadcast_t *e;
+  const char *blank = NULL;
   char *lang;
 
   if (!(f = htsmsg_field_find(args, "eventId")))
@@ -589,13 +593,13 @@ api_epg_load
       if (htsmsg_field_get_u32(f, &id)) continue;
       e = epg_broadcast_find_by_id(id);
       if (e == NULL) continue;
-      if ((m = api_epg_entry(e, lang, perm)) == NULL) continue;
+      if ((m = api_epg_entry(e, lang, perm, &blank)) == NULL) continue;
       htsmsg_add_msg(l, NULL, m);
       entries++;
     }
   } else {
     e = epg_broadcast_find_by_id(id);
-    if (e != NULL && (m = api_epg_entry(e, lang, perm)) != NULL) {
+    if (e != NULL && (m = api_epg_entry(e, lang, perm, &blank)) != NULL) {
       htsmsg_add_msg(l, NULL, m);
       entries++;
     }

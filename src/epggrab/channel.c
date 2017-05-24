@@ -78,7 +78,7 @@ int epggrab_channel_match_name ( epggrab_channel_t *ec, channel_t *ch )
   if (!epggrab_channel_check(ec, ch))
     return 0;
 
-  name = channel_get_name(ch);
+  name = channel_get_name(ch, NULL);
   if (name == NULL)
     return 0;
 
@@ -114,7 +114,7 @@ _epgggrab_channel_link_delete(idnode_list_mapping_t *ilm, int delconf)
   epggrab_channel_t *ec = (epggrab_channel_t *)ilm->ilm_in1;
   channel_t *ch = (channel_t *)ilm->ilm_in2;
   tvhdebug(ec->mod->subsys, "%s: unlinking %s from %s",
-           ec->mod->id, ec->id, channel_get_name(ch));
+           ec->mod->id, ec->id, channel_get_name(ch, channel_blank_name));
   idnode_list_unlink(ilm, delconf ? ec : NULL);
 }
 
@@ -173,7 +173,7 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch, void *origin )
 
   /* New link */
   tvhdebug(ec->mod->subsys, "%s: linking %s to %s",
-           ec->mod->id, ec->id, channel_get_name(ch));
+           ec->mod->id, ec->id, channel_get_name(ch, channel_blank_name));
 
   ilm = idnode_list_link(&ec->idnode, &ec->channels,
                          &ch->ch_id, &ch->ch_epggrab,

@@ -745,7 +745,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
 
   if(ch)
     addtag(q, build_tag_string("TVCHANNEL",
-                               channel_get_name(ch), NULL, 0, NULL));
+                               channel_get_name(ch, channel_blank_name), NULL, 0, NULL));
 
   if (ee && ee->summary)
     ls = ee->summary;
