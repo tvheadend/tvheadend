@@ -333,7 +333,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
   if (hc->hc_version != RTSP_VERSION_1_0){
-    htsbuf_qprintf(&hdrs, "Server: %s\r\n", config.http_server_name ?: "HTV/tvheadend");
+    htsbuf_qprintf(&hdrs, "Server: %s\r\n", config.http_server_name ?: "HTS/tvheadend");
     if (config.cors_origin && config.cors_origin[0]) {
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
       htsbuf_append_str(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
