@@ -1264,9 +1264,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_DES, cw, empty, 1);
+      capmt_process_key(capmt, adapter, index, DESCRAMBLER_CSA_CBC, cw, empty, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_DES, empty, cw, 1);
+      capmt_process_key(capmt, adapter, index, DESCRAMBLER_CSA_CBC, empty, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR for adapter%d", capmt_name(capmt), parity, adapter);
 
@@ -1286,9 +1286,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES, cw, empty, 1);
+      capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES_ECB, cw, empty, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES, empty, cw, 1);
+      capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES_ECB, empty, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
 
@@ -1619,7 +1619,7 @@ handle_ca0_wrapper(capmt_t *capmt)
 
       capmt_process_key(capmt, 0,
                         buffer[0] | ((uint16_t)buffer[1] << 8),
-                        DESCRAMBLER_DES,
+                        DESCRAMBLER_CSA_CBC,
                         buffer + 2, buffer + 10,
                         ret == 18);
     }

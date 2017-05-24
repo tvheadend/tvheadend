@@ -849,7 +849,7 @@ forbid:
     es3 = *es;
     pthread_mutex_unlock(&cwc->cwc_mutex);
     descrambler_keys((th_descrambler_t *)ct,
-                     off == 16 ? DESCRAMBLER_AES : DESCRAMBLER_DES,
+                     off == 16 ? DESCRAMBLER_AES_ECB : DESCRAMBLER_CSA_CBC,
                      msg + 3, msg + 3 + off);
     snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cwc->cwc_hostname, cwc->cwc_port);
     descrambler_notify((th_descrambler_t *)ct,

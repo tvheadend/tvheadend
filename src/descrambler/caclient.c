@@ -31,8 +31,9 @@ const idclass_t *caclient_classes[] = {
   &caclient_capmt_class,
 #endif
 #if ENABLE_CONSTCW
-  &caclient_ccw_des_class,
-  &caclient_ccw_aes_class,
+  &caclient_ccw_csa_cbc_class,
+  &caclient_ccw_des_ncb_class,
+  &caclient_ccw_aes_ecb_class,
 #endif
   NULL
 };
@@ -92,8 +93,8 @@ caclient_create
   if ((s = htsmsg_get_str(conf, "class")) != NULL)
     c = caclient_class_find(s);
   if (c == NULL) {
-    tvherror(LS_CACLIENT, "wrong class %s!", s);
-    abort();
+    tvherror(LS_CACLIENT, "unknown class %s!", s);
+    return NULL;
   }
 #if ENABLE_CWC
   if (c == &caclient_cwc_class)
@@ -108,9 +109,9 @@ caclient_create
     cac = capmt_create();
 #endif
 #if ENABLE_CONSTCW
-  if (c == &caclient_ccw_des_class)
-    cac = constcw_create();
-  if (c == &caclient_ccw_aes_class)
+  if (c == &caclient_ccw_csa_cbc_class ||
+      c == &caclient_ccw_des_ncb_class ||
+      c == &caclient_ccw_aes_ecb_class)
     cac = constcw_create();
 #endif
   if (cac == NULL) {

@@ -701,7 +701,7 @@ forbid:
     es3 = *es;
     pthread_mutex_unlock(&cccam->cccam_mutex);
     descrambler_keys((th_descrambler_t *)ct,
-                     off == 16 ? DESCRAMBLER_AES : DESCRAMBLER_DES,
+                     off == 16 ? DESCRAMBLER_AES_ECB : DESCRAMBLER_CSA_CBC,
                      dcw, dcw + off);
     snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cccam->cccam_hostname, cccam->cccam_port);
     descrambler_notify((th_descrambler_t *)ct,

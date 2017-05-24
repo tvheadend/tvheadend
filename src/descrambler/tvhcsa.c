@@ -43,7 +43,7 @@ tvhcsa_aes_descramble
 }
 
 static void
-tvhcsa_des_flush
+tvhcsa_csa_cbc_flush
   ( tvhcsa_t *csa, struct mpegts_service *s )
 {
 #if ENABLE_DVBCSA
@@ -90,7 +90,7 @@ tvhcsa_des_flush
 }
 
 static void
-tvhcsa_des_descramble
+tvhcsa_csa_cbc_descramble
   ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb, int tsb_len )
 {
   const uint8_t *tsb_end = tsb + tsb_len;
@@ -149,7 +149,7 @@ tvhcsa_des_descramble
    } while(0);
 
    if(csa->csa_fill == csa->csa_cluster_size)
-     tvhcsa_des_flush(csa, s);
+     tvhcsa_csa_cbc_flush(csa, s);
 
   }
 
@@ -161,7 +161,7 @@ tvhcsa_des_descramble
     csa->csa_fill++;
 
     if(csa->csa_fill == csa->csa_cluster_size)
-      tvhcsa_des_flush(csa, s);
+      tvhcsa_csa_cbc_flush(csa, s);
 
   }
 
@@ -176,12 +176,12 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
   if (csa->csa_descramble)
     return -1;
   switch (type) {
-  case DESCRAMBLER_DES:
-    csa->csa_descramble = tvhcsa_des_descramble;
-    csa->csa_flush      = tvhcsa_des_flush;
+  case DESCRAMBLER_CSA_CBC:
+    csa->csa_descramble = tvhcsa_csa_cbc_descramble;
+    csa->csa_flush      = tvhcsa_csa_cbc_flush;
     csa->csa_keylen     = 8;
     break;
-  case DESCRAMBLER_AES:
+  case DESCRAMBLER_AES_ECB:
     csa->csa_descramble = tvhcsa_aes_descramble;
     csa->csa_flush      = tvhcsa_aes_flush;
     csa->csa_keylen     = 16;
@@ -197,14 +197,14 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
 void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
 {
   switch (csa->csa_type) {
-  case DESCRAMBLER_DES:
+  case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
     dvbcsa_bs_key_set(even, csa->csa_key_even);
 #else
     set_even_control_word((csa)->csa_keys, even);
 #endif
     break;
-  case DESCRAMBLER_AES:
+  case DESCRAMBLER_AES_ECB:
     aes_set_even_control_word(csa->csa_aes_keys, even);
     break;
   default:
@@ -216,14 +216,14 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
 {
   assert(csa->csa_type);
   switch (csa->csa_type) {
-  case DESCRAMBLER_DES:
+  case DESCRAMBLER_CSA_CBC:
 #if ENABLE_DVBCSA
     dvbcsa_bs_key_set(odd, csa->csa_key_odd);
 #else
     set_odd_control_word((csa)->csa_keys, odd);
 #endif
     break;
-  case DESCRAMBLER_AES:
+  case DESCRAMBLER_AES_ECB:
     aes_set_odd_control_word(csa->csa_aes_keys, odd);
     break;
   default:
