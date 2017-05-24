@@ -545,7 +545,7 @@ ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
 # libaesdec
-SRCS-${CONFIG_SSL} += src/descrambler/libaesdec/libaesdec.c
+SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c
 
 # DBUS
 SRCS-${CONFIG_DBUS_1}  += src/dbus.c

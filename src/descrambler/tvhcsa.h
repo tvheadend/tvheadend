@@ -30,7 +30,7 @@ struct elementary_stream;
 #include "ffdecsa/FFdecsa.h"
 #endif
 
-#include "libaesdec/libaesdec.h"
+#include "algo/libaesdec.h"
 
 typedef struct tvhcsa
 {
