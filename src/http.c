@@ -576,7 +576,7 @@ http_error(http_connection_t *hc, int error)
                    error, errtxt, error, errtxt);
 
     if (error == HTTP_STATUS_UNAUTHORIZED) {
-      lang = tvh_gettext_get_lang(hc->hc_access ? hc->hc_access->aa_lang_ui : NULL);
+      lang = hc->hc_access ? hc->hc_access->aa_lang_ui : NULL;
       htsbuf_qprintf(&hc->hc_reply, "<P STYLE=\"text-align: center; margin: 2em\"><A HREF=\"%s/\" STYLE=\"border: 1px solid; border-radius: 4px; padding: .6em\">%s</A></P>",
                      tvheadend_webroot ? tvheadend_webroot : "",
                      tvh_gettext_lang(lang, N_("Default login")));

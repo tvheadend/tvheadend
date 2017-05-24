@@ -236,7 +236,7 @@ page_logout(http_connection_t *hc, const char *remain, void *opaque)
   if (!http_arg_get(&hc->hc_args, "Authorization"))
     return HTTP_STATUS_UNAUTHORIZED;
 
-  lang = tvh_gettext_get_lang(hc->hc_access ? hc->hc_access->aa_lang_ui : NULL);
+  lang = hc->hc_access ? hc->hc_access->aa_lang_ui : NULL;
   title = tvh_gettext_lang(lang, N_("Logout"));
   htsbuf_qprintf(&hc->hc_reply,
                  "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\r\n"
