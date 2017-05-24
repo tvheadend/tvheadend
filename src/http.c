@@ -803,7 +803,8 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
       realm = http_get_header_value(hc->hc_authhdr, "realm");
       nonce_count = http_get_header_value(hc->hc_authhdr, "nc");
       cnonce = http_get_header_value(hc->hc_authhdr, "cnonce");
-      if (realm == NULL || nonce_count == NULL || cnonce == NULL) {
+      if (realm == NULL || strcmp(realm, config.realm) ||
+          nonce_count == NULL || cnonce == NULL) {
         goto end;
       } else {
         snprintf(all, sizeof(all), "%s:%s:%s:%s:%s",

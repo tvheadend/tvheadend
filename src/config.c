@@ -1751,6 +1751,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   htsmsg_destroy(config2);
   if (config.server_name == NULL || config.server_name[0] == '\0')
     config.server_name = strdup("Tvheadend");
+  if (config.realm == NULL || config.realm[0] == '\0')
+    config.realm = strdup("tvheadend");
   if (config.http_server_name == NULL || config.http_server_name[0] == '\0')
     config.http_server_name = strdup("HTS/tvheadend");
   if (!config_scanfile_ok)
@@ -1775,6 +1777,7 @@ config_init ( int backup )
     config.version = ARRAY_SIZE(config_migrate_table);
     tvh_str_set(&config.full_version, tvheadend_version);
     tvh_str_set(&config.server_name, "Tvheadend");
+    tvh_str_set(&config.realm, "tvheadend");
     tvh_str_set(&config.http_server_name, "HTS/tvheadend");
     idnode_changed(&config.idnode);
   
@@ -2088,6 +2091,15 @@ const idclass_t config_class = {
       .name   = N_("HTTP server name"),
       .desc   = N_("The server name for 'Server:' HTTP headers."),
       .off    = offsetof(config_t, http_server_name),
+      .opts   = PO_HIDDEN | PO_EXPERT,
+      .group  = 1
+    },
+    {
+      .type   = PT_STR,
+      .id     = "http_realm_name",
+      .name   = N_("HTTP realm name"),
+      .desc   = N_("The realm name for the HTTP authorization."),
+      .off    = offsetof(config_t, realm),
       .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 1
     },
