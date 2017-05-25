@@ -25,7 +25,7 @@
 #include <assert.h>
 
 static void
-tvhcsa_aes_ecb_flush
+tvhcsa_empty_flush
   ( tvhcsa_t *csa, struct mpegts_service *s )
 {
   /* empty - no queue */
@@ -40,13 +40,6 @@ tvhcsa_aes_ecb_descramble
   for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
     aes_decrypt_packet(csa->csa_aes_priv, tsb2);
   ts_recv_packet2(s, tsb, len);
-}
-
-static void
-tvhcsa_des_ncb_flush
-  ( tvhcsa_t *csa, struct mpegts_service *s )
-{
-  /* empty - no queue */
 }
 
 static void
@@ -195,19 +188,40 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
     return -1;
   switch (type) {
   case DESCRAMBLER_CSA_CBC:
-    csa->csa_descramble = tvhcsa_csa_cbc_descramble;
-    csa->csa_flush      = tvhcsa_csa_cbc_flush;
-    csa->csa_keylen     = 8;
+    csa->csa_descramble    = tvhcsa_csa_cbc_descramble;
+    csa->csa_flush         = tvhcsa_csa_cbc_flush;
+    csa->csa_keylen        = 8;
+#if ENABLE_DVBCSA
+    csa->csa_cluster_size  = dvbcsa_bs_batch_size();
+#else
+    csa->csa_cluster_size  = get_suggested_cluster_size();
+#endif
+    /* Note: the optimized routines might read memory after last TS packet */
+    /*       allocate safe memory and fill it with zeros */
+    csa->csa_tsbcluster    = malloc((csa->csa_cluster_size + 1) * 188);
+    memset(csa->csa_tsbcluster + csa->csa_cluster_size * 188, 0, 188);
+#if ENABLE_DVBCSA
+    csa->csa_tsbbatch_even = malloc((csa->csa_cluster_size + 1) *
+                                    sizeof(struct dvbcsa_bs_batch_s));
+    csa->csa_tsbbatch_odd  = malloc((csa->csa_cluster_size + 1) *
+                                    sizeof(struct dvbcsa_bs_batch_s));
+    csa->csa_key_even      = dvbcsa_bs_key_alloc();
+    csa->csa_key_odd       = dvbcsa_bs_key_alloc();
+#else
+    csa->csa_keys          = get_key_struct();
+#endif
     break;
   case DESCRAMBLER_DES_NCB:
-    csa->csa_descramble = tvhcsa_des_ncb_descramble;
-    csa->csa_flush      = tvhcsa_des_ncb_flush;
-    csa->csa_keylen     = 8;
+    csa->csa_des_priv      = des_get_priv_struct();
+    csa->csa_descramble    = tvhcsa_des_ncb_descramble;
+    csa->csa_flush         = tvhcsa_empty_flush;
+    csa->csa_keylen        = 8;
     break;
   case DESCRAMBLER_AES_ECB:
-    csa->csa_descramble = tvhcsa_aes_ecb_descramble;
-    csa->csa_flush      = tvhcsa_aes_ecb_flush;
-    csa->csa_keylen     = 16;
+    csa->csa_aes_priv      = aes_get_priv_struct();
+    csa->csa_descramble    = tvhcsa_aes_ecb_descramble;
+    csa->csa_flush         = tvhcsa_empty_flush;
+    csa->csa_keylen        = 16;
     break;
   default:
     assert(0);
@@ -265,25 +279,6 @@ tvhcsa_init ( tvhcsa_t *csa )
 {
   csa->csa_type          = 0;
   csa->csa_keylen        = 0;
-#if ENABLE_DVBCSA
-  csa->csa_cluster_size  = dvbcsa_bs_batch_size();
-#else
-  csa->csa_cluster_size  = get_suggested_cluster_size();
-#endif
-  /* Note: the optimized routines might read memory after last TS packet */
-  /*       allocate safe memory and fill it with zeros */
-  csa->csa_tsbcluster    = malloc((csa->csa_cluster_size + 1) * 188);
-  memset(csa->csa_tsbcluster + csa->csa_cluster_size * 188, 0, 188);
-#if ENABLE_DVBCSA
-  csa->csa_tsbbatch_even = malloc((csa->csa_cluster_size + 1) *
-                                   sizeof(struct dvbcsa_bs_batch_s));
-  csa->csa_tsbbatch_odd  = malloc((csa->csa_cluster_size + 1) *
-                                   sizeof(struct dvbcsa_bs_batch_s));
-  csa->csa_key_even      = dvbcsa_bs_key_alloc();
-  csa->csa_key_odd       = dvbcsa_bs_key_alloc();
-#else
-  csa->csa_keys          = get_key_struct();
-#endif
   csa->csa_aes_priv      = aes_get_priv_struct();
   csa->csa_des_priv      = des_get_priv_struct();
 }
@@ -292,14 +287,38 @@ void
 tvhcsa_destroy ( tvhcsa_t *csa )
 {
 #if ENABLE_DVBCSA
-  dvbcsa_bs_key_free(csa->csa_key_odd);
-  dvbcsa_bs_key_free(csa->csa_key_even);
-  free(csa->csa_tsbbatch_odd);
-  free(csa->csa_tsbbatch_even);
+  if (csa->csa_key_odd) {
+    dvbcsa_bs_key_free(csa->csa_key_odd);
+    csa->csa_key_odd = NULL;
+  }
+  if (csa->csa_key_even) {
+    dvbcsa_bs_key_free(csa->csa_key_even);
+    csa->csa_key_even = NULL;
+  }
+  if (csa->csa_tsbbatch_odd) {
+    free(csa->csa_tsbbatch_odd);
+    csa->csa_tsbbatch_odd = NULL;
+  }
+  if (csa->csa_tsbbatch_even) {
+    free(csa->csa_tsbbatch_even);
+    csa->csa_tsbbatch_even = NULL;
+  }
 #else
-  free_key_struct(csa->csa_keys);
+  if (csa->csa_keys) {
+    free_key_struct(csa->csa_keys);
+    csa->csa_keys = NULL;
+  }
 #endif
-  aes_free_priv_struct(csa->csa_aes_priv);
-  des_free_priv_struct(csa->csa_des_priv);
-  free(csa->csa_tsbcluster);
+  if (csa->csa_tsbcluster) {
+    free(csa->csa_tsbcluster);
+    csa->csa_tsbcluster = NULL;
+  }
+  if (csa->csa_aes_priv) {
+    aes_free_priv_struct(csa->csa_aes_priv);
+    csa->csa_aes_priv = NULL;
+  }
+  if (csa->csa_des_priv) {
+    des_free_priv_struct(csa->csa_des_priv);
+    csa->csa_des_priv = NULL;
+  }
 }
