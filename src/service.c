@@ -278,7 +278,7 @@ stream_init(elementary_stream_t *st)
 
   st->es_blank = 0;
 
-  if (st->es_type == SCT_HBBTV)
+  if (st->es_type == SCT_HBBTV && st->es_psi.mt_name == NULL)
     dvb_table_parse_init(&st->es_psi, "hbbtv", LS_TS, st->es_pid, st);
 
   TAILQ_INIT(&st->es_backlog);
@@ -318,6 +318,9 @@ stream_clean(elementary_stream_t *st)
   tvhlog_limit_reset(&st->es_cc_log);
   tvhlog_limit_reset(&st->es_pes_log);
   tvhlog_limit_reset(&st->es_pcr_log);
+
+  if (st->es_psi.mt_name)
+    dvb_table_reset(&st->es_psi);
 }
 
 /**
