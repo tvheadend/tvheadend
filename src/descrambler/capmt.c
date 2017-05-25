@@ -97,7 +97,7 @@ typedef struct dmx_filter {
 #define CAPMT_LIST_UPDATE  0x05    // replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
 // ca_pmt_descriptor types
-#define CAPMT_DESC_PRIVATE 0x81
+#define CAPMT_DESC_ENIGMA  0x81
 #define CAPMT_DESC_DEMUX   0x82
 #define CAPMT_DESC_PID     0x84
 
@@ -2032,8 +2032,8 @@ capmt_send_request(capmt_service_t *ct, int lm)
   capmt->capmt_pmtversion = (capmt->capmt_pmtversion + 1) & 0x1F;
   buf[pos++] = 0; /* room for length - program info tags */
   buf[pos++] = 0; /* room for length - program info tags */
-  if (!capmt_oscam_new(capmt))
-    buf[pos++] = 1; /* OK DESCRAMBLING */
+  buf[pos++] = 1; /* OK DESCRAMBLING, skipped for parse_descriptors, but */
+                  /* mandatory for getDemuxOptions() */
 
   /* build program info tags */
 
@@ -2046,7 +2046,7 @@ capmt_send_request(capmt_service_t *ct, int lm)
   }
 
   /* build SI tag */
-  buf[pos++] = CAPMT_DESC_PRIVATE;
+  buf[pos++] = CAPMT_DESC_ENIGMA;
   buf[pos++] = 8;
   buf[pos++] = 0; /* enigma namespace goes here */
   buf[pos++] = 0; /* enigma namespace goes here */
