@@ -375,10 +375,12 @@ mpegts_input_is_enabled
 {
   if ((flags & SUBSCRIPTION_EPG) != 0 && !mi->mi_ota_epg)
     return MI_IS_ENABLED_NEVER;
-  if ((flags & SUBSCRIPTION_INITSCAN) != 0 && !mi->mi_initscan)
-    return MI_IS_ENABLED_NEVER;
-  if ((flags & SUBSCRIPTION_IDLESCAN) != 0 && !mi->mi_idlescan)
-    return MI_IS_ENABLED_NEVER;
+  if ((flags & SUBSCRIPTION_USERSCAN) == 0) {
+    if ((flags & SUBSCRIPTION_INITSCAN) != 0 && !mi->mi_initscan)
+      return MI_IS_ENABLED_NEVER;
+    if ((flags & SUBSCRIPTION_IDLESCAN) != 0 && !mi->mi_idlescan)
+      return MI_IS_ENABLED_NEVER;
+  }
   return mi->mi_enabled ? MI_IS_ENABLED_OK : MI_IS_ENABLED_NEVER;
 }
 
