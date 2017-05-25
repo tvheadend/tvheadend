@@ -319,10 +319,15 @@ mpegts_service_enlist_raw
       continue;
 
     r = mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight);
-    if (r == MI_IS_ENABLED_NEVER)
+    if (r == MI_IS_ENABLED_NEVER) {
+      tvhtrace(LS_MPEGTS, "enlist: input %p not enabled for mux %p service %s weight %d flags %x",
+                          mi, mmi->mmi_mux, s->s_nicename, weight, flags);
       continue;
+    }
     if (r == MI_IS_ENABLED_RETRY) {
       /* temporary error - retry later */
+      tvhtrace(LS_MPEGTS, "enlist: input %p postponed for mux %p service %s weight %d flags %x",
+                          mi, mmi->mmi_mux, s->s_nicename, weight, flags);
       errcnt++;
       continue;
     }
