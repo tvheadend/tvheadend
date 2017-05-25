@@ -1072,7 +1072,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint32_t index,
   capmt_service_t *ct;
   ca_info_t *cai;
   uint16_t *pids;
-  int i, j;
+  int i, j, pid;
 
   pthread_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
@@ -1097,15 +1097,16 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint32_t index,
     for (i = 0; i < MAX_PIDS; i++) {
       if (pids[i] == 0) continue;
       for (j = 0; j < MAX_PIDS; j++) {
-        if (ct->ct_pids[j] == 0) break;
-        if (ct->ct_pids[j] == pids[i])
+        pid = ct->ct_pids[j];
+        if (pid == 0) break;
+        if (pid == pids[i])
           goto found;
       }
     }
     continue;
 
 found:
-    descrambler_keys((th_descrambler_t *)ct, type, 0, even, odd);
+    descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
 }
@@ -1255,6 +1256,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    ca_info_t *cai;
+    int type;
 
     tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
              capmt_name(capmt), adapter, parity, index,
@@ -1263,10 +1266,30 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
+    cai = &capmt->capmt_adapters[adapter].ca_info[index];
+    switch (cai->algo) {
+    case CA_ALGO_DVBCSA:
+      type = DESCRAMBLER_CSA_CBC;
+      break;
+    case CA_ALGO_DES:
+      type = DESCRAMBLER_DES_NCB;
+      break;
+    case CA_ALGO_AES128:
+      if (cai->cipher_mode == CA_MODE_ECB) {
+        type = DESCRAMBLER_AES_ECB;
+      } else {
+        tvherror(LS_CAPMT, "uknown cipher mode %d", cai->cipher_mode);
+        return;
+      }
+      break;
+    default:
+      tvherror(LS_CAPMT, "unknown crypto algorightm %d (mode %d)", cai->algo, cai->cipher_mode);
+      return;
+    }
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_CSA_CBC, cw, empty, 1);
+      capmt_process_key(capmt, adapter, index, type, cw, empty, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_CSA_CBC, empty, cw, 1);
+      capmt_process_key(capmt, adapter, index, type, empty, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR for adapter%d", capmt_name(capmt), parity, adapter);
 
