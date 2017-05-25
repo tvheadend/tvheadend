@@ -205,15 +205,14 @@ void
 mpegts_network_scan_queue_del ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
-  char buf[256], buf2[256];
+  char buf[384];
   if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
     TAILQ_REMOVE(&mn->mn_scan_active, mm, mm_scan_link);
   } else if (mm->mm_scan_state == MM_SCAN_STATE_PEND) {
     TAILQ_REMOVE(&mn->mn_scan_pend, mm, mm_scan_link);
   }
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  mn->mn_display_name(mn, buf2, sizeof(buf2));
-  tvhdebug(LS_MPEGTS, "%s - removing mux %s from scan queue", buf2, buf);
+  tvhdebug(LS_MPEGTS, "removing mux %s from scan queue", buf);
   mm->mm_scan_state  = MM_SCAN_STATE_IDLE;
   mm->mm_scan_weight = 0;
   mtimer_disarm(&mm->mm_scan_timeout);
@@ -226,7 +225,7 @@ mpegts_network_scan_queue_add
   ( mpegts_mux_t *mm, int weight, int flags, int delay )
 {
   int reload = 0;
-  char buf[256], buf2[256];;
+  char buf[384];
   mpegts_network_t *mn = mm->mm_network;
 
   if (!mm->mm_is_enabled(mm)) return;
@@ -250,9 +249,8 @@ mpegts_network_scan_queue_add
   }
 
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
-  mn->mn_display_name(mn, buf2, sizeof(buf2));
-  tvhdebug(LS_MPEGTS, "%s - adding mux %s to scan queue weight %d flags %04X",
-           buf2, buf, weight, flags);
+  tvhdebug(LS_MPEGTS, "adding mux %s to scan queue weight %d flags %04X",
+                      buf, weight, flags);
 
   /* Add new entry */
   mm->mm_scan_state  = MM_SCAN_STATE_PEND;
