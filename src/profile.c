@@ -1101,17 +1101,59 @@ typedef struct profile_mpegts {
   int pro_rewrite_eit;
 } profile_mpegts_t;
 
-static htsmsg_t *
-profile_class_pass_save ( idnode_t *in, char *filename, size_t fsize )
+static int
+profile_pass_rewrite_sid_set (void *in, const void *v)
 {
   profile_mpegts_t *pro = (profile_mpegts_t *)in;
-  if (pro->pro_rewrite_sid > 0) {
-    pro->pro_rewrite_pmt =
-    pro->pro_rewrite_pat =
-    pro->pro_rewrite_sdt =
-    pro->pro_rewrite_eit = 1;
+  const uint16_t *val = v;
+  if (*val != pro->pro_rewrite_sid) {
+    if (*val > 0) {
+      pro->pro_rewrite_pmt =
+      pro->pro_rewrite_pat =
+      pro->pro_rewrite_sdt =
+      pro->pro_rewrite_eit = 1;
+    }
+    pro->pro_rewrite_sid = *val;
+    return 1;
   }
-  return profile_class_save(in, filename, fsize);
+  return 0;
+}
+
+static int
+profile_pass_int_set (void *in, const void *v, int *prop)
+{
+  profile_mpegts_t *pro = (profile_mpegts_t *)in;
+  int val = *(int *)v;
+  if (pro->pro_rewrite_sid > 0) val = 1;
+  if (val != *prop) {
+    *prop = val;
+    return 1;
+  }
+  return 0;
+}
+
+static int
+profile_pass_rewrite_pmt_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_pmt);
+}
+
+static int
+profile_pass_rewrite_pat_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_pat);
+}
+
+static int
+profile_pass_rewrite_sdt_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_sdt);
+}
+
+static int
+profile_pass_rewrite_eit_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_eit);
 }
 
 const idclass_t profile_mpegts_pass_class =
@@ -1119,7 +1161,6 @@ const idclass_t profile_mpegts_pass_class =
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts",
   .ic_caption    = N_("MPEG-TS Pass-thru/built-in"),
-  .ic_save       = profile_class_pass_save,
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("Configuration"),
@@ -1139,6 +1180,7 @@ const idclass_t profile_mpegts_pass_class =
       .desc     = N_("Rewrite service identificator (SID) using the specified "
                      "value (usually 1)."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sid),
+      .set      = profile_pass_rewrite_sid_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1151,6 +1193,7 @@ const idclass_t profile_mpegts_pass_class =
                      "include information about the currently-streamed "
                      "service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
+      .set      = profile_pass_rewrite_pmt_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1163,6 +1206,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
+      .set      = profile_pass_rewrite_pat_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1175,6 +1219,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
+      .set      = profile_pass_rewrite_sdt_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1187,6 +1232,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
+      .set      = profile_pass_rewrite_eit_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
