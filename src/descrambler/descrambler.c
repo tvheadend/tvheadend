@@ -720,7 +720,7 @@ key_flush( th_descrambler_key_t *tk, service_t *t )
   if (tk->key_changed) {
     tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
     if (tk->key_changed & 1)
-      tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[0]);
+      tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0]);
     if (tk->key_changed & 2)
       tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[1]);
     tk->key_changed = 0;
