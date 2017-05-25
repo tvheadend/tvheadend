@@ -283,8 +283,10 @@ tvhlog_process
 
   /* Comet (debug must still be enabled??) */
   if (msg->notify && msg->severity < LOG_TRACE) {
-    htsmsg_t *m = htsmsg_create_map();
     snprintf(buf, sizeof(buf), "%s %s", t, msg->msg);
+    comet_mailbox_add_logmsg(buf, msg->severity >= LOG_DEBUG, 0);
+
+    htsmsg_t *m = htsmsg_create_map();
     htsmsg_add_str(m, "notificationClass", "logmessage");
     htsmsg_add_str(m, "logtxt", buf);
     comet_mailbox_add_message(m, msg->severity >= LOG_DEBUG, 0);
