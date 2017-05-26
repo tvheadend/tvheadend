@@ -270,10 +270,10 @@ comet_mailbox_poll(http_connection_t *hc, const char *remain, void *opaque)
   cmb->cmb_last_used = 0; /* Make sure we're not flushed out */
   if (http_access_verify(hc, ACCESS_ADMIN)) {
     if (!cmb->cmb_restricted) {
+      cmb->cmb_restricted = 1;
       pthread_mutex_unlock(&comet_mutex);
       comet_mailbox_add_logmsg(tvh_gettext_lang(lang, N_("Restricted log mode (no administrator)")), 0, 0);
       pthread_mutex_lock(&comet_mutex);
-      cmb->cmb_restricted = 1;
     }
   }
 
