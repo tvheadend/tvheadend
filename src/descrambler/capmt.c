@@ -109,8 +109,9 @@ typedef struct dmx_filter {
 
 // cw modes
 #define CAPMT_CWMODE_AUTO	0
-#define CAPMT_CWMODE_EXTENDED	1  // CA_SET_DESCR_MODE follows CA_SET_DESCR
-#define CAPMT_CWMODE_EXTENDED2	2  // DES signalled through PID index
+#define CAPMT_CWMODE_OE22	1  // CA_SET_DESCR_MODE before CA_SET_DESCR
+#define CAPMT_CWMODE_OE22SW	2  // CA_SET_DESCR_MODE follows CA_SET_DESCR
+#define CAPMT_CWMODE_OE20	3  // DES signalled through PID index
 
 // limits
 #define MAX_CA       16
@@ -1288,9 +1289,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     tvhdebug(LS_CAPMT, "%s: CA_SET_PID adapter %d index %d pid %d (0x%04x)", capmt_name(capmt), adapter, index, pid, pid);
     if (index > 0x100 && index < 0x200 && (index & 0xff) < MAX_INDEX) {
       index &= 0xff;
-      if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED2) {
-        tvhwarn(LS_CAPMT, "Autoswitch to Extended DES CW Mode");
-        capmt->capmt_cwmode = CAPMT_CWMODE_EXTENDED2;
+      if (capmt->capmt_cwmode != CAPMT_CWMODE_OE20) {
+        tvhwarn(LS_CAPMT, "Autoswitch to Extended DES (OE 2.0) CW Mode");
+        capmt->capmt_cwmode = CAPMT_CWMODE_OE20;
       }
       cai = &capmt->capmt_adapters[adapter].ca_info[index];
       cai->algo = CA_ALGO_DES;
@@ -1340,7 +1341,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     capmt->capmt_last_key.index = index;
     capmt->capmt_last_key.parity = parity;
     memcpy(capmt->capmt_last_key.cw, cw, 8);
-    if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED) /* wait for CA_SET_DESCR_MODE */
+    if (capmt->capmt_cwmode != CAPMT_CWMODE_OE22SW) /* wait for CA_SET_DESCR_MODE */
       capmt_send_key(capmt);
   } else if (cmd == CA_SET_DESCR_AES) {
 
@@ -1373,6 +1374,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t cipher_mode = sbuf_peek_s32(sb, offset + 12);
     ca_info_t *cai;
 
+    tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR_MODE adapter %d algo %d cipher mode %d",
+             capmt_name(capmt), adapter, algo, cipher_mode);
     if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX) {
       tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
@@ -1388,12 +1391,10 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (algo != cai->algo && cai->cipher_mode != cipher_mode) {
-      tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR_MODE adapter %d algo %d cipher mode %d",
-               capmt_name(capmt), adapter, algo, cipher_mode);
       cai->algo        = algo;
       cai->cipher_mode = cipher_mode;
     }
-    if (capmt->capmt_cwmode == CAPMT_CWMODE_EXTENDED)
+    if (capmt->capmt_cwmode == CAPMT_CWMODE_OE22SW)
       capmt_send_key(capmt);
 
   } else if (cmd == DMX_SET_FILTER) {
@@ -2504,9 +2505,10 @@ static htsmsg_t *
 caclient_capmt_class_cwmode_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Standard / auto"),		       CAPMT_CWMODE_AUTO },
-    { N_("Extended (OE 2.2)"),	               CAPMT_CWMODE_EXTENDED },
-    { N_("Extended DES (OE 2.0)"),	       CAPMT_CWMODE_EXTENDED2 },
+    { N_("Standard / auto"),		         CAPMT_CWMODE_AUTO },
+    { N_("Extended (OE 2.2)"),	                 CAPMT_CWMODE_OE22 },
+    { N_("Extended (OE 2.2), mode follows key"), CAPMT_CWMODE_OE22SW },
+    { N_("Extended DES (OE 2.0)"),	         CAPMT_CWMODE_OE20 },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
