@@ -848,11 +848,11 @@ descrambler_descramble ( service_t *t,
         len2 = sb->sb_ptr;
         for (; len2 > 0; tsb2 += len3, len2 -= len3) {
           ki = tsb2[3];
+          if (dr->dr_key_multipid) {
+            tk = key_find_struct(dr, tk, tsb2, t);
+            if (tk == NULL) goto next;
+          }
           if ((ki & 0x80) != 0x00) {
-            if (dr->dr_key_multipid) {
-              tk = key_find_struct(dr, tk, tsb2, t);
-              if (tk == NULL) goto next;
-            }
             if (key_valid(tk, ki) == 0)
               goto next;
             if (key_changed(dr, tk, ki, dd->dd_timestamp)) {
@@ -881,11 +881,11 @@ descrambler_descramble ( service_t *t,
 
     /* check for key change */
     ki = tsb[3];
+    if (dr->dr_key_multipid) {
+      tk = key_find_struct(dr, tk, tsb, t);
+      if (tk == NULL) goto next;
+    }
     if ((ki & 0x80) != 0x00) {
-      if (dr->dr_key_multipid) {
-        tk = key_find_struct(dr, tk, tsb, t);
-        if (tk == NULL) goto next;
-      }
       if (key_valid(tk, ki) == 0) {
         if (!key_started(dr, ki) && tvhlog_limit(&dr->dr_loglimit_key, 10))
           tvhwarn(LS_DESCRAMBLER, "%s %s stream key[%d] is not valid",
