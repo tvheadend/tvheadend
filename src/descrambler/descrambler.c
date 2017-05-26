@@ -480,6 +480,17 @@ descrambler_external ( service_t *t, int state )
   service_reset_streaming_status_flags(t, TSS_NO_DESCRAMBLER);
 }
 
+int
+descrambler_multi_pid ( th_descrambler_t *td )
+{
+  service_t *t = td->td_service;
+  th_descrambler_runtime_t *dr;
+
+  if (t == NULL || (dr = t->s_descramble) == NULL)
+    return 0;
+  return dr->dr_key_multipid;
+}
+
 void
 descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
                    const uint8_t *even, const uint8_t *odd )

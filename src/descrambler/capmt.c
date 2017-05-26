@@ -1111,8 +1111,13 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
       for (j = 0; j < MAX_PIDS; j++) {
         pid = ct->ct_pids[j];
         if (pid == 0) break;
-        if (pid == pids[i])
+        if (pid == pids[i]) {
+          if (descrambler_multi_pid((th_descrambler_t *)ct)) {
+            descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
+            continue;
+          }
           goto found;
+        }
       }
     }
     continue;
