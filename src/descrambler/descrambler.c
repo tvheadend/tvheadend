@@ -1,7 +1,7 @@
 /*
  *  Tvheadend
  *  Copyright (C) 2013 Andreas Öman
- *  Copyright (C) 2014,2015 Jaroslav Kysela
+ *  Copyright (C) 2014,2015,2016,2017 Jaroslav Kysela
  *
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -30,21 +30,26 @@
 #include "dvbcam.h"
 #include "streaming.h"
 
-#define MAX_QUICK_ECM_ENTRIES 100
-#define MAX_CONSTCW_ENTRIES   100
-#define MAX_MULTI_PID_ENTRIES 100
-
 typedef struct th_descrambler_data {
   TAILQ_ENTRY(th_descrambler_data) dd_link;
   int64_t dd_timestamp;
   sbuf_t dd_sbuf;
 } th_descrambler_data_t;
 
-TAILQ_HEAD(th_descrambler_queue, th_descrambler_data);
+typedef struct th_descrambler_hint {
+  TAILQ_ENTRY(th_descrambler_hint) dh_link;
+  uint16_t dh_caid;
+  uint16_t dh_mask;
+  uint32_t dh_interval;
+  uint32_t dh_constcw: 1;
+  uint32_t dh_quickecm: 1;
+  uint32_t dh_multipid: 1;
+} th_descrambler_hint_t;
 
-uint16_t *multi_pid_table = NULL;
-uint16_t *quick_ecm_table = NULL;
-uint16_t *constcw_table = NULL;
+TAILQ_HEAD(th_descrambler_queue, th_descrambler_data);
+static TAILQ_HEAD( , th_descrambler_hint) ca_hints;
+
+static int ca_hints_quickecm;
 
 /*
  *
@@ -145,33 +150,38 @@ descrambler_data_key_check(th_descrambler_runtime_t *dr, uint8_t key, int len)
 /*
  *
  */
-static uint16_t *
-descrambler_load_table(htsmsg_t *c, const char *name, const char *field, int max)
+static void
+descrambler_load_hints(htsmsg_t *m)
 {
-  htsmsg_t *e, *q;
+  th_descrambler_hint_t hint, *dhint;
+  htsmsg_t *e;
   htsmsg_field_t *f;
   const char *s;
-  uint32_t caid;
-  int idx;
-  uint16_t *table = NULL;
 
-  idx = 0;
-  if ((q = htsmsg_get_list(c, field)) != NULL) {
-    HTSMSG_FOREACH(f, q) {
-      if (!(e = htsmsg_field_get_map(f))) continue;
-      if (idx + 1 >= max) break;
-      if ((s = htsmsg_get_str(e, "caid")) == NULL) continue;
-      caid = strtol(s, NULL, 16);
-      tvhinfo(LS_DESCRAMBLER, "adding CAID %04X as %s (%s)",
-                              caid, name, htsmsg_get_str(e, "name") ?: "unknown");
-      if (!quick_ecm_table)
-        quick_ecm_table = malloc(sizeof(uint16_t) * max);
-      quick_ecm_table[idx++] = caid;
-    }
-    if (table)
-      table[idx] = 0;
+  HTSMSG_FOREACH(f, m) {
+    if (!(e = htsmsg_field_get_map(f))) continue;
+    if ((s = htsmsg_get_str(e, "caid")) == NULL) continue;
+    memset(&hint, 0, sizeof(hint));
+    hint.dh_caid = strtol(s, NULL, 16);
+    hint.dh_mask = 0xffff;
+    if ((s = htsmsg_get_str(e, "mask")) != NULL)
+      hint.dh_mask = strtol(s, NULL, 16);
+    hint.dh_constcw = htsmsg_get_bool_or_default(e, "constcw", 0);
+    hint.dh_quickecm = htsmsg_get_bool_or_default(e, "quickecm", 0);
+    hint.dh_multipid = htsmsg_get_bool_or_default(e, "multipid", 0);
+    hint.dh_interval = htsmsg_get_s32_or_default(e, "interval", 10000);
+    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums (%s)",
+                            hint.dh_caid, hint.dh_mask,
+                            hint.dh_constcw ? " ConstCW" : "",
+                            hint.dh_quickecm ? " QuickECM" : "",
+                            hint.dh_multipid ? " MultiPID" : "",
+                            hint.dh_interval,
+                            htsmsg_get_str(e, "name") ?: "unknown");
+    dhint = malloc(sizeof(*dhint));
+    *dhint = hint;
+    TAILQ_INSERT_TAIL(&ca_hints, dhint, dh_link);
+    if (hint.dh_quickecm) ca_hints_quickecm++;
   }
-  return table;
 }
 
 /*
@@ -180,7 +190,10 @@ descrambler_load_table(htsmsg_t *c, const char *name, const char *field, int max
 void
 descrambler_init ( void )
 {
-  htsmsg_t *c;
+  htsmsg_t *c, *m;
+
+  TAILQ_INIT(&ca_hints);
+  ca_hints_quickecm = 0;
 
 #if (ENABLE_CWC || ENABLE_CAPMT || ENABLE_CCCAM) && !ENABLE_DVBCSA
   ffdecsa_init();
@@ -191,9 +204,9 @@ descrambler_init ( void )
 #endif
 
   if ((c = hts_settings_load("descrambler")) != NULL) {
-    quick_ecm_table = descrambler_load_table(c, "quick ECM", "quick_ecm", MAX_QUICK_ECM_ENTRIES);
-    constcw_table = descrambler_load_table(c, "const_cw", "constant crypto-word", MAX_CONSTCW_ENTRIES);
-    multi_pid_table = descrambler_load_table(c, "multi_pid", "multiple PIDs", MAX_MULTI_PID_ENTRIES);
+    m = htsmsg_get_list(c, "caid");
+    if (m)
+      descrambler_load_hints(m);
     htsmsg_destroy(c);
   }
 }
@@ -201,13 +214,13 @@ descrambler_init ( void )
 void
 descrambler_done ( void )
 {
+  th_descrambler_hint_t *hint;
+
   caclient_done();
-  free(quick_ecm_table);
-  quick_ecm_table = NULL;
-  free(constcw_table);
-  constcw_table = NULL;
-  free(multi_pid_table);
-  multi_pid_table = NULL;
+  while ((hint = TAILQ_FIRST(&ca_hints)) != NULL) {
+    TAILQ_REMOVE(&ca_hints, hint, dh_link);
+    free(hint);
+  }
 }
 
 /*
@@ -217,17 +230,21 @@ static int
 descrambler_quick_ecm ( mpegts_service_t *t, int pid )
 {
   elementary_stream_t *st;
+  th_descrambler_hint_t *hint;
   caid_t *ca;
-  uint16_t *p;
 
-  if (!quick_ecm_table)
+  if (!ca_hints_quickecm)
     return 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
     if (st->es_pid != pid) continue;
-    LIST_FOREACH(ca, &st->es_caids, link)
-      for (p = quick_ecm_table; *p; p++)
-        if (ca->caid == *p)
+    TAILQ_FOREACH(hint, &ca_hints, dh_link) {
+      if (!hint->dh_quickecm) continue;
+      LIST_FOREACH(ca, &st->es_caids, link) {
+        if (ca->use == 0) continue;
+        if (hint->dh_caid == (ca->caid & hint->dh_mask))
           return 1;
+      }
+    }
   }
   return 0;
 }
@@ -242,10 +259,10 @@ descrambler_service_start ( service_t *t )
 {
   th_descrambler_runtime_t *dr;
   th_descrambler_key_t *tk;
+  th_descrambler_hint_t *hint;
   elementary_stream_t *st;
   caid_t *ca;
-  int i, count, constcw = 0, multipid = 0;
-  uint16_t *p;
+  int i, count, constcw = 0, multipid = 0, interval = 10000;
 
   if (t->s_scrambled_pass)
     return;
@@ -256,14 +273,13 @@ descrambler_service_start ( service_t *t )
     TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link)
       LIST_FOREACH(ca, &st->es_caids, link) {
         if (ca->use == 0) continue;
-        for (p = constcw_table; p && *p; p++)
-          if (ca->caid == *p) {
-            constcw = 1;
+        TAILQ_FOREACH(hint, &ca_hints, dh_link) {
+          if (hint->dh_caid == (ca->caid & hint->dh_mask)) {
+            if (hint->dh_constcw) constcw = 1;
+            if (hint->dh_multipid) multipid = 1;
+            if (hint->dh_interval) interval = hint->dh_interval;
           }
-        for (p = multi_pid_table; p && *p; p++)
-          if (ca->caid == *p) {
-            multipid = 1;
-          }
+        }
         count++;
       }
 
@@ -273,20 +289,12 @@ descrambler_service_start ( service_t *t )
 
   } else {
 
-    if (constcw_table) {
-      for (p = constcw_table; *p; p++)
-        if (*p == t->s_dvb_forcecaid) {
-          constcw = 1;
-          break;
-        }
-    }
-
-    if (multi_pid_table) {
-      for (p = multi_pid_table; *p; p++)
-        if (*p == t->s_dvb_forcecaid) {
-          multipid = 1;
-          break;
-        }
+    TAILQ_FOREACH(hint, &ca_hints, dh_link) {
+      if (hint->dh_caid == (t->s_dvb_forcecaid & hint->dh_mask)) {
+        if (hint->dh_constcw) constcw = 1;
+        if (hint->dh_multipid) multipid = 1;
+        if (hint->dh_interval) interval = hint->dh_interval;
+      }
     }
 
   }
@@ -299,10 +307,11 @@ descrambler_service_start ( service_t *t )
     for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
       tk = &dr->dr_keys[i];
       tk->key_index = 0xff;
-      tk->key_interval = multipid ? sec2mono(2) : sec2mono(10);
+      tk->key_interval = ms2mono(interval);
       tvhcsa_init(&tk->key_csa);
       if (!multipid) break;
     }
+    dr->dr_ecm_key_margin = interval / 5;
     dr->dr_key_const = constcw;
     dr->dr_key_multipid = multipid;
     if (constcw)
@@ -669,10 +678,10 @@ key_update( th_descrambler_key_t *tk, uint8_t key, int64_t timestamp )
 }
 
 static inline int
-key_changed ( th_descrambler_key_t *tk, uint8_t ki, int64_t timestamp )
+key_changed ( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, uint8_t ki, int64_t timestamp )
 {
   return tk->key_index != (ki & 0x40) &&
-         tk->key_start + sec2mono(2) < timestamp;
+         tk->key_start + dr->dr_ecm_key_margin < timestamp;
 }
 
 static inline int
@@ -697,7 +706,7 @@ key_late( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, uint8_t ki, in
       goto late;
   }
   /* ECM was sent, but no new key was received */
-  if (dr->dr_ecm_last_key_time + sec2mono(2) < tk->key_start &&
+  if (dr->dr_ecm_last_key_time + dr->dr_ecm_key_margin < tk->key_start &&
       (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + 4 < tk->key_start)) {
 late:
     tk->key_valid &= ~((ki & 0x40) + 0x40);
@@ -710,7 +719,7 @@ static inline int
 key_started( th_descrambler_runtime_t *dr, uint8_t ki )
 {
   uint8_t kidx = (ki & 0x40) >> 6;
-  return mclk() - dr->dr_ecm_start[kidx] < sec2mono(5);
+  return mclk() - dr->dr_ecm_start[kidx] < dr->dr_ecm_key_margin * 2;
 }
 
 static void
@@ -842,7 +851,7 @@ descrambler_descramble ( service_t *t,
             }
             if (key_valid(tk, ki) == 0)
               goto next;
-            if (key_changed(tk, ki, dd->dd_timestamp)) {
+            if (key_changed(dr, tk, ki, dd->dd_timestamp)) {
               tvhtrace(LS_DESCRAMBLER, "stream key[%d] changed to %s for service \"%s\"",
                                       tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                       ((mpegts_service_t *)t)->s_dvb_svcname);
@@ -880,7 +889,7 @@ descrambler_descramble ( service_t *t,
                    (ki & 0x40) ? "odd" : "even", tk->key_pid);
         goto next;
       }
-      if (key_changed(tk, ki, mclk())) {
+      if (key_changed(dr, tk, ki, mclk())) {
         tvhtrace(LS_DESCRAMBLER, "stream key[%d] changed to %s for service \"%s\"",
                                 tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
@@ -935,7 +944,7 @@ next:
           }
         }
       } else if (tk->key_index != (ki & 0x40) &&
-                 tk->key_start + sec2mono(2) < mclk()) {
+                 tk->key_start + dr->dr_ecm_key_margin < mclk()) {
 update:
         tvhtrace(LS_DESCRAMBLER, "stream key changed to %s for service \"%s\"",
                                 (ki & 0x40) ? "odd" : "even",
