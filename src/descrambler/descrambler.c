@@ -547,6 +547,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   if (even && memcmp(empty, even, tk->key_csa.csa_keylen)) {
     j++;
     memcpy(tk->key_data[0], even, tk->key_csa.csa_keylen);
+    tk->key_pid = pid;
     tk->key_changed |= 1;
     tk->key_valid |= 0x40;
     tk->key_timestamp[0] = mclk();
@@ -556,6 +557,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   if (odd && memcmp(empty, odd, tk->key_csa.csa_keylen)) {
     j++;
     memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
+    tk->key_pid = pid;
     tk->key_changed |= 2;
     tk->key_valid |= 0x80;
     tk->key_timestamp[1] = mclk();
