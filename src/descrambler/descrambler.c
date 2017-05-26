@@ -501,6 +501,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   th_descrambler_key_t *tk;
   th_descrambler_t *td2;
   char pidname[16];
+  const char *ktype;
   uint16_t pid2;
   int j = 0;
 
@@ -566,28 +567,34 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     pidname[0] = '\0';
   else
     snprintf(pidname, sizeof(pidname), "[%d]", pid);
+  switch(type) {
+  case DESCRAMBLER_CSA_CBC: ktype = "CSA"; break;
+  case DESCRAMBLER_DES_NCB: ktype = "DES"; break;
+  case DESCRAMBLER_AES_ECB: ktype = "AES EBC"; break;
+  default: abort();
+  }
   if (j) {
     if (td->td_keystate != DS_RESOLVED)
       tvhdebug(LS_DESCRAMBLER,
-               "Obtained keys%s from %s for service \"%s\"%s",
-               pidname, td->td_nicename,
+               "Obtained %s keys%s from %s for service \"%s\"%s",
+               ktype, pidname, td->td_nicename,
                ((mpegts_service_t *)t)->s_dvb_svcname,
                dr->dr_key_const ? " (const)" : "");
     if (tk->key_csa.csa_keylen == 8) {
-      tvhtrace(LS_DESCRAMBLER, "Obtained keys%s "
+      tvhtrace(LS_DESCRAMBLER, "Obtained %s keys%s "
                "%02X%02X%02X%02X%02X%02X%02X%02X:%02X%02X%02X%02X%02X%02X%02X%02X"
                " pid %04X from %s for service \"%s\"",
-               pidname,
+               ktype, pidname,
                even[0], even[1], even[2], even[3], even[4], even[5], even[6], even[7],
                odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
                pid, td->td_nicename,
                ((mpegts_service_t *)t)->s_dvb_svcname);
     } else if (tk->key_csa.csa_keylen == 16) {
-      tvhtrace(LS_DESCRAMBLER, "Obtained keys%s "
+      tvhtrace(LS_DESCRAMBLER, "Obtained %s keys%s "
                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X:"
                "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X"
                " pid %04X from %s for service \"%s\"",
-               pidname,
+               ktype, pidname,
                even[0], even[1], even[2], even[3], even[4], even[5], even[6], even[7],
                even[8], even[9], even[10], even[11], even[12], even[13], even[14], even[15],
                odd[0], odd[1], odd[2], odd[3], odd[4], odd[5], odd[6], odd[7],
@@ -603,8 +610,8 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     td->td_service->s_descrambler = td;
   } else {
     tvhdebug(LS_DESCRAMBLER,
-             "Empty keys%s received from %s for service \"%s\"%s",
-             pidname, td->td_nicename,
+             "Empty %s keys%s received from %s for service \"%s\"%s",
+             ktype, pidname, td->td_nicename,
              ((mpegts_service_t *)t)->s_dvb_svcname,
              dr->dr_key_const ? " (const)" : "");
   }
