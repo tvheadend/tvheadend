@@ -2500,8 +2500,8 @@ caclient_capmt_class_cwmode_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
     { N_("Standard / auto"),		       CAPMT_CWMODE_AUTO },
-    { N_("Extended"),			       CAPMT_CWMODE_EXTENDED },
-    { N_("Extended DES"),		       CAPMT_CWMODE_EXTENDED2 },
+    { N_("Extended (OE 2.2)"),	               CAPMT_CWMODE_EXTENDED },
+    { N_("Extended DES (OE 2.0)"),	       CAPMT_CWMODE_EXTENDED2 },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
