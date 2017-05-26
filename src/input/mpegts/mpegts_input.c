@@ -296,8 +296,11 @@ const idclass_t mpegts_input_class =
       .id       = "initscan",
       .name     = N_("Initial scan"),
       .desc     = N_("Allow the initial scan tuning on this device "
-                     "(scan when Tvheadend starts). See 'Skip Initial "
-                     "Scan' in the network settings for further details."),
+                     "(scan when Tvheadend starts or when a new multiplex "
+                     "is added automatically). At least one tuner or input "
+                     "should have this settings turned on. "
+                     "See also 'Skip Startup Scan' in the network settings "
+                     "for further details."),
       .off      = offsetof(mpegts_input_t, mi_initscan),
       .def.i    = 1,
       .opts     = PO_ADVANCED,
