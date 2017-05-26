@@ -1064,13 +1064,12 @@ capmt_ecm_reset(th_descrambler_t *th)
 }
 
 static void
-capmt_process_key(capmt_t *capmt, uint8_t adapter, uint32_t index,
+capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
                   int type, const uint8_t *even, const uint8_t *odd,
                   int ok)
 {
   mpegts_service_t *t;
   capmt_service_t *ct;
-  ca_info_t *cai;
   uint16_t *pids;
   int i, j, pid;
 
@@ -1091,7 +1090,6 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, uint32_t index,
     if (adapter != ct->ct_adapter)
       continue;
 
-    cai = &capmt->capmt_adapters[adapter].ca_info[index];
     pids = cai->pids;
 
     for (i = 0; i < MAX_PIDS; i++) {
@@ -1287,9 +1285,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     }
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, index, type, cw, empty, 1);
+      capmt_process_key(capmt, adapter, cai, type, cw, empty, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, index, type, empty, cw, 1);
+      capmt_process_key(capmt, adapter, cai, type, empty, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR for adapter%d", capmt_name(capmt), parity, adapter);
 
@@ -1298,6 +1296,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    ca_info_t *cai;
 
     tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_AES adapter %d par %d idx %d "
              "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -1308,10 +1307,11 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     if (adapter >= MAX_CA || index >= MAX_INDEX)
       return;
+    cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES_ECB, cw, empty, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, cw, empty, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, index, DESCRAMBLER_AES_ECB, empty, cw, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, empty, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
 
@@ -1614,6 +1614,8 @@ static void
 handle_ca0_wrapper(capmt_t *capmt)
 {
   uint8_t buffer[18];
+  uint32_t index;
+  ca_info_t *cai;
   int ret;
 
   show_connection(capmt, ".so wrapper");
@@ -1640,11 +1642,15 @@ handle_ca0_wrapper(capmt_t *capmt)
       tvhtrace(LS_CAPMT, "%s: Received message from socket %i", capmt_name(capmt), capmt->capmt_adapters[0].ca_sock);
       tvhlog_hexdump(LS_CAPMT, buffer, ret);
 
-      capmt_process_key(capmt, 0,
-                        buffer[0] | ((uint16_t)buffer[1] << 8),
-                        DESCRAMBLER_CSA_CBC,
-                        buffer + 2, buffer + 10,
-                        ret == 18);
+      index = buffer[0] | ((uint16_t)buffer[1] << 8);
+      if (index < MAX_INDEX) {
+        cai = &capmt->capmt_adapters[0].ca_info[index];
+        capmt_process_key(capmt, 0,
+                          cai,
+                          DESCRAMBLER_CSA_CBC,
+                          buffer + 2, buffer + 10,
+                          ret == 18);
+      }
     }
   }
 
