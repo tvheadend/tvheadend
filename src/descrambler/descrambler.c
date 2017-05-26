@@ -532,19 +532,23 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
       goto fin;
     }
 
-  if (memcmp(empty, even, tk->key_csa.csa_keylen)) {
+  if (even && memcmp(empty, even, tk->key_csa.csa_keylen)) {
     j++;
     memcpy(tk->key_data[0], even, tk->key_csa.csa_keylen);
     tk->key_changed |= 1;
     tk->key_valid |= 0x40;
     tk->key_timestamp[0] = mclk();
+  } else {
+    even = empty;
   }
-  if (memcmp(empty, odd, tk->key_csa.csa_keylen)) {
+  if (odd && memcmp(empty, odd, tk->key_csa.csa_keylen)) {
     j++;
     memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
     tk->key_changed |= 2;
     tk->key_valid |= 0x80;
     tk->key_timestamp[1] = mclk();
+  } else {
+    odd = empty;
   }
 
   if (pid == 0)

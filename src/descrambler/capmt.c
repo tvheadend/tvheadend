@@ -107,6 +107,11 @@ typedef struct dmx_filter {
 #define CAPMT_MSG_NODUP    0x04
 #define CAPMT_MSG_HELLO    0x08
 
+// cw modes
+#define CAPMT_CWMODE_AUTO	0
+#define CAPMT_CWMODE_EXTENDED	1  // CA_SET_DESCR_MODE follows CA_SET_DESCR
+#define CAPMT_CWMODE_EXTENDED2	2  // DES signalled through PID index
+
 // limits
 #define MAX_CA       16
 #define MAX_INDEX    64
@@ -251,6 +256,7 @@ typedef struct capmt {
   char *capmt_sockfile;
   int   capmt_port;
   int   capmt_oscam;
+  int   capmt_cwmode;
 
   /* capmt sockets */
   int   sids[MAX_SOCKETS];
@@ -271,6 +277,14 @@ typedef struct capmt {
   TAILQ_HEAD(, capmt_message) capmt_writeq;
   pthread_mutex_t capmt_mutex;
   uint8_t         capmt_pmtversion;
+
+  /* last key */
+  struct {
+    int     adapter;
+    int     index;
+    int     parity;
+    uint8_t cw[16];
+  } capmt_last_key;
 } capmt_t;
 
 static void capmt_enumerate_services(capmt_t *capmt, int force);
@@ -1110,6 +1124,46 @@ found:
 }
 
 static void
+capmt_send_key(capmt_t *capmt)
+{
+  const int adapter = capmt->capmt_last_key.adapter;
+  const int index = capmt->capmt_last_key.index;
+  const int parity = capmt->capmt_last_key.parity;
+  const uint8_t *cw = capmt->capmt_last_key.cw;
+  ca_info_t *cai = &capmt->capmt_adapters[adapter].ca_info[index];
+  int type;
+
+  capmt->capmt_last_key.adapter = -1;
+  if (adapter < 0)
+    return;
+  switch (cai->algo) {
+  case CA_ALGO_DVBCSA:
+    type = DESCRAMBLER_CSA_CBC;
+    break;
+  case CA_ALGO_DES:
+    type = DESCRAMBLER_DES_NCB;
+    break;
+  case CA_ALGO_AES128:
+    if (cai->cipher_mode == CA_MODE_ECB) {
+      type = DESCRAMBLER_AES_ECB;
+    } else {
+      tvherror(LS_CAPMT, "uknown cipher mode %d", cai->cipher_mode);
+      return;
+    }
+    break;
+  default:
+    tvherror(LS_CAPMT, "unknown crypto algorightm %d (mode %d)", cai->algo, cai->cipher_mode);
+    return;
+  }
+
+  if (parity == 0) {
+    capmt_process_key(capmt, adapter, cai, type, cw, NULL, 1);
+  } else if (parity == 1) {
+    capmt_process_key(capmt, adapter, cai, type, NULL, cw, 1);
+  }
+}
+
+static void
 capmt_process_notify(capmt_t *capmt, uint8_t adapter,
                      uint16_t sid, uint16_t caid, uint32_t provid,
                      const char *cardsystem, uint16_t pid, uint32_t ecmtime,
@@ -1210,7 +1264,6 @@ capmt_peek_str(sbuf_t *sb, int *offset)
 static void
 capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
-  static uint8_t empty[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   uint32_t cmd;
 
   cmd = sbuf_peek_u32(sb, offset);
@@ -1228,6 +1281,15 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     ca_info_t *cai;
 
     tvhdebug(LS_CAPMT, "%s: CA_SET_PID adapter %d index %d pid %d (0x%04x)", capmt_name(capmt), adapter, index, pid, pid);
+    if (index > 0x100 && index < 0x200) {
+      if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED2) {
+        tvhwarn(LS_CAPMT, "Autoswitch to Extended DES CW Mode");
+        capmt->capmt_cwmode = CAPMT_CWMODE_EXTENDED2;
+      }
+      cai = &capmt->capmt_adapters[adapter].ca_info[index];
+      cai->algo = CA_ALGO_DES;
+      cai->cipher_mode = 0;
+    }
     if (adapter < MAX_CA && index >= 0 && index < MAX_INDEX) {
       cai = &capmt->capmt_adapters[adapter].ca_info[index];
       for (i = 0, j = -1; i < MAX_PIDS; i++) {
@@ -1254,43 +1316,26 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
     int32_t parity = sbuf_peek_s32(sb, offset + 8);
     uint8_t *cw    = sbuf_peek    (sb, offset + 12);
-    ca_info_t *cai;
-    int type;
 
     tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
              capmt_name(capmt), adapter, parity, index,
              cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index < 0)   // skipping removal request
       return;
-    if (adapter >= MAX_CA || index >= MAX_INDEX)
-      return;
-    cai = &capmt->capmt_adapters[adapter].ca_info[index];
-    switch (cai->algo) {
-    case CA_ALGO_DVBCSA:
-      type = DESCRAMBLER_CSA_CBC;
-      break;
-    case CA_ALGO_DES:
-      type = DESCRAMBLER_DES_NCB;
-      break;
-    case CA_ALGO_AES128:
-      if (cai->cipher_mode == CA_MODE_ECB) {
-        type = DESCRAMBLER_AES_ECB;
-      } else {
-        tvherror(LS_CAPMT, "uknown cipher mode %d", cai->cipher_mode);
-        return;
-      }
-      break;
-    default:
-      tvherror(LS_CAPMT, "unknown crypto algorightm %d (mode %d)", cai->algo, cai->cipher_mode);
+    if (adapter >= MAX_CA || index >= MAX_INDEX) {
+      tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
     }
-    if (parity == 0) {
-      capmt_process_key(capmt, adapter, cai, type, cw, empty, 1);
-    } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, cai, type, empty, cw, 1);
-    } else
+    if (parity > 1) {
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR for adapter%d", capmt_name(capmt), parity, adapter);
-
+      return;
+    }
+    capmt->capmt_last_key.adapter = adapter;
+    capmt->capmt_last_key.index = index;
+    capmt->capmt_last_key.parity = parity;
+    memcpy(capmt->capmt_last_key.cw, cw, 8);
+    if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED) /* wait for CA_SET_DESCR_MODE */
+      capmt_send_key(capmt);
   } else if (cmd == CA_SET_DESCR_AES) {
 
     int32_t index  = sbuf_peek_s32(sb, offset + 4);
@@ -1309,9 +1354,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, cw, empty, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, cw, NULL, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, empty, cw, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, NULL, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
 
@@ -1322,12 +1367,18 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     int32_t cipher_mode = sbuf_peek_s32(sb, offset + 12);
     ca_info_t *cai;
 
-    if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX)
+    if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX) {
+      tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
-    if (algo < 0 || algo > 2)
+    }
+    if (algo < 0 || algo > 2) {
+      tvherror(LS_CAPMT, "%s: Invalid algo %d", capmt_name(capmt), algo);
       return;
-    if (cipher_mode < 0 || cipher_mode > 1)
+    }
+    if (cipher_mode < 0 || cipher_mode > 1) {
+      tvherror(LS_CAPMT, "%s: Invalid cipher mode %d", capmt_name(capmt), cipher_mode);
       return;
+    }
 
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (algo != cai->algo && cai->cipher_mode != cipher_mode) {
@@ -1336,6 +1387,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       cai->algo        = algo;
       cai->cipher_mode = cipher_mode;
     }
+    if (capmt->capmt_cwmode == CAPMT_CWMODE_EXTENDED)
+      capmt_send_key(capmt);
 
   } else if (cmd == DMX_SET_FILTER) {
 
@@ -2441,6 +2494,17 @@ caclient_capmt_class_oscam_mode_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static htsmsg_t *
+caclient_capmt_class_cwmode_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Standard / auto"),		       CAPMT_CWMODE_AUTO },
+    { N_("Extended"),			       CAPMT_CWMODE_EXTENDED },
+    { N_("Extended DES"),		       CAPMT_CWMODE_EXTENDED2 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 CLASS_DOC(caclient_capmt)
 
 const idclass_t caclient_capmt_class =
@@ -2474,6 +2538,15 @@ const idclass_t caclient_capmt_class =
       .desc     = N_("Port to listen on or to connect to."),
       .off      = offsetof(capmt_t, capmt_port),
       .def.i    = 9000
+    },
+    {
+      .type     = PT_INT,
+      .id       = "cwmode",
+      .name     = N_("CW Mode"),
+      .desc     = N_("CryptoWord mode."),
+      .off      = offsetof(capmt_t, capmt_cwmode),
+      .list     = caclient_capmt_class_cwmode_list,
+      .def.i    = CAPMT_CWMODE_AUTO,
     },
     { }
   }
