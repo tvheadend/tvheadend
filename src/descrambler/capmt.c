@@ -1390,7 +1390,7 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     }
 
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
-    if (algo != cai->algo && cai->cipher_mode != cipher_mode) {
+    if (algo != cai->algo || cai->cipher_mode != cipher_mode) {
       cai->algo        = algo;
       cai->cipher_mode = cipher_mode;
     }
