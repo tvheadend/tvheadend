@@ -1281,7 +1281,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     ca_info_t *cai;
 
     tvhdebug(LS_CAPMT, "%s: CA_SET_PID adapter %d index %d pid %d (0x%04x)", capmt_name(capmt), adapter, index, pid, pid);
-    if (index > 0x100 && index < 0x200) {
+    if (index > 0x100 && index < 0x200 && (index & 0xff) < MAX_INDEX) {
+      index &= 0xff;
       if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED2) {
         tvhwarn(LS_CAPMT, "Autoswitch to Extended DES CW Mode");
         capmt->capmt_cwmode = CAPMT_CWMODE_EXTENDED2;
