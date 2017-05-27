@@ -33,4 +33,6 @@ void ts_skip_packet2(struct mpegts_service *t, const uint8_t *tsb, int len);
 
 void ts_recv_raw(struct mpegts_service *t, const uint8_t *tsb, int len);
 
+void ts_recv_hbbtv_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len);
+
 #endif /* TSDEMUX_H */

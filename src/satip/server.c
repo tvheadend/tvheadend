@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "config.h"
 #include "input/mpegts/iptv/iptv_private.h"
+#include "webui/webui.h"
 #include "satip/server.h"
 
 #define UPNP_MAX_AGE 1800
@@ -115,7 +116,7 @@ satip_server_http_xml(http_connection_t *hc)
   htsbuf_queue_t q;
   mpegts_network_t *mn;
   int dvbt = 0, dvbs = 0, dvbc = 0, atsc = 0;
-  int srcs = 0, delim = 0, tuners = 0, i;
+  int srcs = 0, delim = 0, tuners = 0, i, satipm3u = 0;
   struct xml_type_xtab *p;
   http_arg_list_t args;
 
@@ -186,6 +187,9 @@ satip_server_http_xml(http_connection_t *hc)
   else
     snprintf(buf2, sizeof(buf2), " %s", satip_server_conf.satip_uuid  + 26);
 
+  if (!hts_settings_buildpath(buf, sizeof(buf), "satip.m3u"))
+    satipm3u = access(buf, R_OK) == 0;
+
   snprintf(buf, sizeof(buf), MSG,
            config_get_server_name(),
            buf2, tvheadend_version,
@@ -197,7 +201,9 @@ satip_server_http_xml(http_connection_t *hc)
            http_server_ip, http_server_port,
            devicelist ?: "",
            satip_server_conf.satip_nom3u ? "" :
-             "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/playlist/satip/channels</satip:X_SATIPM3U>\n");
+             (satipm3u ?
+               "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/satip_server/satip.m3u</satip:X_SATIPM3U>\n" :
+               "<satip:X_SATIPM3U xmlns:satip=\"urn:ses-com:satip\">/playlist/satip/channels</satip:X_SATIPM3U>\n"));
 
   free(devicelist);
 
@@ -220,12 +226,25 @@ satip_server_http_xml(http_connection_t *hc)
 #undef MSG
 }
 
+static int
+satip_server_satip_m3u(http_connection_t *hc)
+{
+  char path[PATH_MAX];
+
+  if (hts_settings_buildpath(path, sizeof(path), "satip.m3u"))
+    return HTTP_STATUS_SERVICE;
+
+  return http_serve_file(hc, path, 0, MIME_M3U, NULL, NULL, NULL);
+}
+
 int
 satip_server_http_page(http_connection_t *hc,
                        const char *remain, void *opaque)
 {
   if (strcmp(remain, "desc.xml") == 0)
     return satip_server_http_xml(hc);
+  if (strcmp(remain, "satip.m3u") == 0)
+    return satip_server_satip_m3u(hc);
   return 0;
 }
 

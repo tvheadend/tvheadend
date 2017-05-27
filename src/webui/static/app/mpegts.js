@@ -159,7 +159,7 @@ tvheadend.show_service_streams = function(data) {
         return r;
     }
 
-    function header( ) {
+    function header() {
         html += '<table style="font-size:8pt;font-family:monospace;padding:2px"';
         html += '<tr>';
         html += '<th style="width:50px;font-weight:bold">' + _('Index') + '</th>';
@@ -169,6 +169,10 @@ tvheadend.show_service_streams = function(data) {
         html += '<th style="width:*;font-weight:bold">' + _('Details') + '</th>';
         html += '</tr>';
 
+    }
+
+    function footer() {
+        html += '</table>';
     }
 
     function single(s) {
@@ -198,22 +202,49 @@ tvheadend.show_service_streams = function(data) {
     }
 
     header();
-
     if (data.streams.length) {
         for (i = 0; i < data.streams.length; i++)
             stream(data.streams[i]);
     } else
         single(_('None'));
+    footer();
 
-    single('&nbsp;');
     single('<h3>' + _('After filtering and reordering (without PCR and PMT)') + '</h3>');
-    header();
 
+    header();
     if (data.fstreams.length)
         for (i = 0; i < data.fstreams.length; i++)
             stream(data.fstreams[i]);
     else
-        single('<p>' + _('None') + '</p>');
+        single(_('None'));
+    footer();
+
+    if (data.hbbtv) {
+        html += '<h3>' + _('HbbTv') + '</h3>';
+        html += '<table style="font-size:8pt;font-family:monospace;padding:2px"';
+        html += '<tr>';
+        html += '<th style="width:50px;font-weight:bold">' + _('Section') + '</th>';
+        html += '<th style="width:50px;font-weight:bold">' + _('Language') + '</th>';
+        html += '<th style="width:200px;font-weight:bold">' + _('Name') + '</th>';
+        html += '<th style="width:310px;font-weight:bold">' + _('Link') + '</th>';
+        html += '</tr>';
+        for (var sect in data.hbbtv) {
+            for (var appidx in data.hbbtv[sect]) {
+                var app = data.hbbtv[sect][appidx];
+                if (!app.title) continue;
+                for (var titleidx = 0; titleidx < app.title.length; titleidx++) {
+                    var title = app.title[titleidx];
+                    html += '<tr>';
+                    html += '<td>' + sect + '</td>';
+                    html += '<td>' + title.lang + '</td>';
+                    html += '<td>' + title.name + '</td>';
+                    html += '<td><a href="' + app.url + '" target="_blank">' + app.url + '</td>';
+                    html += '</tr>';
+                }
+            }
+        }
+        html += '</table>';
+    }
 
     var win = new Ext.Window({
         title: _('Service details for') + ' ' + data.name,

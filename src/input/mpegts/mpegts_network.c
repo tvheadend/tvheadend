@@ -21,8 +21,11 @@
 #include "channels.h"
 #include "access.h"
 #include "dvb_charset.h"
+#include "bouquet.h"
 
 #include <assert.h>
+
+static bouquet_t * mpegts_network_bouquet_get (mpegts_network_t *, int);
 
 /* ****************************************************************************
  * Class definition
@@ -140,6 +143,20 @@ mpegts_network_discovery_enum ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static void
+mpegts_network_class_notify_bouquet( void *in, const char *lang )
+{
+  mpegts_network_t *mn = in;
+  bouquet_t *bq;
+  if (mn->mn_bouquet) {
+    mpegts_network_bouquet_trigger(mn, 0);
+  } else {
+    bq = mpegts_network_bouquet_get(mn, 0);
+    if (bq)
+      bouquet_delete(bq);
+  }
+}
+
 CLASS_DOC(mpegts_network)
 PROP_DOC(network_discovery)
 
@@ -191,10 +208,19 @@ const idclass_t mpegts_network_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "bouquet",
+      .name     = N_("Create bouquet"),
+      .desc     = N_("Create a bouquet with all services in the network."),
+      .off      = offsetof(mpegts_network_t, mn_bouquet),
+      .notify   = mpegts_network_class_notify_bouquet,
+    },
+
+    {
+      .type     = PT_BOOL,
       .id       = "skipinitscan",
-      .name     = N_("Skip initial scan"),
+      .name     = N_("Skip startup scan"),
       .desc     = N_("Skip scanning known muxes when Tvheadend starts. "
-                     "If \"initial scan\" is allowed and new muxes are "
+                     "If \"startup scan\" is allowed and new muxes are "
                      "found then they will still be scanned. See Help for "
                      "more details."),
       .off      = offsetof(mpegts_network_t, mn_skipinitscan),
@@ -320,6 +346,65 @@ mpegts_network_display_name
   strncpy(buf, mn->mn_network_name ?: "unknown", len);
 }
 
+static bouquet_t *
+mpegts_network_bouquet_get (mpegts_network_t *mn, int create)
+{
+  char buf[128];
+  if (mn->mn_bouquet_source(mn, buf, sizeof(buf)))
+    return NULL;
+  return bouquet_find_by_source(mn->mn_network_name, buf, create);
+}
+
+static void
+mpegts_network_bouquet_update(void *aux)
+{
+  mpegts_network_t *mn = aux;
+  mpegts_mux_t *mm;
+  mpegts_service_t *ms;
+  int64_t chnum;
+  char buf[128];
+  uint32_t seen = 0;
+  bouquet_t *bq = mn->mn_bouquet ? mpegts_network_bouquet_get(mn, 1) : NULL;
+  if (bq == NULL)
+    return;
+  if (!mn->mn_bouquet_comment(mn, buf, sizeof(buf)))
+    bouquet_change_comment(bq, buf, 1);
+  LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
+    LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+      chnum = ms->s_channel_number((service_t *)ms);
+      bouquet_add_service(bq, (service_t *)ms, chnum, NULL);
+      seen++;
+    }
+  bouquet_completed(bq, seen);
+}
+
+void
+mpegts_network_bouquet_trigger0(mpegts_network_t *mn, int timeout)
+{
+  mtimer_arm_rel(&mn->mn_bouquet_timer, mpegts_network_bouquet_update,
+                 mn, sec2mono(timeout));
+}
+
+static int
+mpegts_network_bouquet_source
+  ( mpegts_network_t *mn, char *source, size_t len)
+{
+  char ubuf[UUID_HEX_SIZE];
+  snprintf(source, len, "mpegts-network://%s",
+           idnode_uuid_as_str(&mn->mn_id, ubuf));
+  return 0;
+}
+
+static int
+mpegts_network_bouquet_comment
+  ( mpegts_network_t *mn, char *comment, size_t len)
+{
+  if (!mn->mn_provider_network_name || mn->mn_provider_network_name[0] == '\0')
+    return -1;
+  snprintf(comment, len, "%s", mn->mn_provider_network_name);
+  return 0;
+}
+
 static htsmsg_t *
 mpegts_network_config_save
   ( mpegts_network_t *mn, char *filename, size_t size )
@@ -376,6 +461,11 @@ mpegts_network_delete
 
   idnode_save_check(&mn->mn_id, delconf);
 
+  /* Bouquet */
+  mtimer_disarm(&mn->mn_bouquet_timer);
+  if (delconf)
+    bouquet_delete(mpegts_network_bouquet_get(mn, 0));
+
   /* Remove from global list */
   LIST_REMOVE(mn, mn_global_link);
 
@@ -422,6 +512,8 @@ mpegts_network_create0
 
   /* Default callbacks */
   mn->mn_display_name   = mpegts_network_display_name;
+  mn->mn_bouquet_source = mpegts_network_bouquet_source;
+  mn->mn_bouquet_comment= mpegts_network_bouquet_comment;
   mn->mn_config_save    = mpegts_network_config_save;
   mn->mn_create_mux     = mpegts_network_create_mux;
   mn->mn_create_service = mpegts_network_create_service;

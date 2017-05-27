@@ -41,17 +41,18 @@ api_channel_list
   htsmsg_t *l;
   int cfg = api_channel_is_all(perm, args);
   char buf[128], ubuf[UUID_HEX_SIZE];
-  const char *name;
+  const char *name, *blank;
 
+  blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
   l = htsmsg_create_list();
   pthread_mutex_lock(&global_lock);
   CHANNEL_FOREACH(ch) {
     if (!cfg && !channel_access(ch, perm, 0)) continue;
     if (!ch->ch_enabled) {
-      snprintf(buf, sizeof(buf), "{%s}", channel_get_name(ch));
-      name =buf;
+      snprintf(buf, sizeof(buf), "{%s}", channel_get_name(ch, blank));
+      name = buf;
     } else {
-      name = channel_get_name(ch);
+      name = channel_get_name(ch, blank);
     }
     htsmsg_add_msg(l, NULL, htsmsg_create_key_val(idnode_uuid_as_str(&ch->ch_id, ubuf), name));
   }

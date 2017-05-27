@@ -119,7 +119,6 @@ iptv_service_create0
   ( iptv_mux_t *im, uint16_t sid, uint16_t pmt,
     const char *uuid, htsmsg_t *conf )
 {
-  iptv_network_t *in = (iptv_network_t *)im->mm_network;
   iptv_service_t *is = (iptv_service_t*)
     mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),
                            &mpegts_service_class, uuid,
@@ -137,9 +136,6 @@ iptv_service_create0
   if (!is->s_dvb_svcname || !*is->s_dvb_svcname)
     if (im->mm_iptv_svcname)
       is->s_dvb_svcname = strdup(im->mm_iptv_svcname);
-
-  if (in->in_bouquet)
-    iptv_bouquet_trigger(in, 1);
 
   return is;
 }

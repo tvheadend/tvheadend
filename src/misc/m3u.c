@@ -76,15 +76,15 @@ static char *until_eol(char *d)
  */
 static int is_full_url(const char *url)
 {
-  return
-    strncmp(url, "file://", 7) == 0 ||
-    strncmp(url, "pipe://", 7) == 0 ||
-    strncmp(url, "http://", 7) == 0 ||
-    strncmp(url, "https://", 8) == 0 ||
-    strncmp(url, "rtsp://", 7) == 0 ||
-    strncmp(url, "rtsps://", 8) == 0 ||
-    strncmp(url, "udp://", 6) == 0 ||
-    strncmp(url, "rtp://", 6) == 0;
+  if (strncmp(url, "file://", 7) == 0) return 7;
+  if (strncmp(url, "pipe://", 7) == 0) return 7;
+  if (strncmp(url, "http://", 7) == 0) return 7;
+  if (strncmp(url, "https://", 8) == 0) return 8;
+  if (strncmp(url, "rtsp://", 7) == 0) return 7;
+  if (strncmp(url, "rtsps://", 8) == 0) return 8;
+  if (strncmp(url, "udp://", 6) == 0) return 6;
+  if (strncmp(url, "rtp://", 6) == 0) return 6;
+  return 0;
 }
 
 /*
@@ -94,22 +94,19 @@ static const char *get_url
   (char *buf, size_t buflen, const char *rel, const char *url)
 {
   char *url2, *p;
+  int l;
 
   if (url == NULL)
     return rel;
-  if (!is_full_url(url) || is_full_url(rel))
+  if ((l = is_full_url(url)) == 0 || is_full_url(rel))
     return rel;
 
-  if (rel[0] == '/') {
-    snprintf(buf, buflen, "%s%s", url, rel + 1);
-  } else {
-    url2 = strdupa(url);
-    p = strrchr(url2, '/');
-    if (p == NULL)
-      return rel;
-    *(p + 1) = '\0';
-    snprintf(buf, buflen, "%s%s", url2, rel);
-  }
+  url2 = strdupa(url);
+  p = strchr(url2 + l, '/');
+  if (p == NULL)
+    return rel;
+  *(p + (rel[0] == '/' ? 0 : 1)) = '\0';
+  snprintf(buf, buflen, "%s%s", url2, rel);
   return buf;
 }
 
@@ -180,9 +177,9 @@ htsmsg_t *parse_m3u
         free(y);
       }
       continue;
-    } else if (strncmp(data, "#EXT-X-VERSION", 14) == 0) {
-      htsmsg_add_s64(m, "version", strtoll(data + 14, NULL, 10));
-      data = until_eol(data + 14);
+    } else if (strncmp(data, "#EXT-X-VERSION:", 15) == 0) {
+      htsmsg_add_s64(m, "version", strtoll(data + 15, NULL, 10));
+      data = until_eol(data + 15);
       continue;
     } else if (strncmp(data, "#EXT-X-MEDIA-SEQUENCE:", 22) == 0) {
       htsmsg_add_s64(m, "media-sequence", strtoll(data + 22, NULL, 10));
@@ -235,6 +232,9 @@ multi:
       htsmsg_add_bool(m, "x-endlist", 1);
       data = until_eol(data + 14);
       continue;
+    } else if (strncmp(data, "#EXTVLCOPT:program=", 19) == 0) {
+      htsmsg_add_s64(item, "vlc-program", strtoll(data + 19, NULL, 10));
+      data = until_eol(data + 19);
     } else if (strncmp(data, "#EXT", 4) == 0) {
       data = until_eol(data + 4);
       continue;

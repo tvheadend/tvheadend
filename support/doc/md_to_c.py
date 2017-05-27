@@ -361,7 +361,7 @@ def optimize(text):
     return '"' + repl(t) + '",\n'
 
   def lang(t):
-    return 'LANGPREF N_("' + repl(x) + '"),\n'
+    return 'LANGPREF N_("' + repl(t) + '"),\n'
 
   text = text.lstrip().rstrip()
   while text.find('\n\n\n') >= 0:

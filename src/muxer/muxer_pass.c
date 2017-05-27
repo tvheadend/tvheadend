@@ -50,7 +50,8 @@ typedef struct pass_muxer {
   uint8_t  pm_rewrite_eit;
 
   uint16_t pm_pmt_pid;
-  uint16_t pm_service_id;
+  uint16_t pm_src_sid;
+  uint16_t pm_dst_sid;
 
   mpegts_psi_table_t pm_pat;
   mpegts_psi_table_t pm_pmt;
@@ -85,8 +86,8 @@ pass_muxer_pat_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   out[2] = 13; /* section_length (number of bytes after this field, including CRC) */
   out[7] = 0;
 
-  out[8] = (pm->pm_service_id & 0xff00) >> 8;
-  out[9] = pm->pm_service_id & 0x00ff;
+  out[8] = (pm->pm_dst_sid & 0xff00) >> 8;
+  out[9] = pm->pm_dst_sid & 0x00ff;
   out[10] = 0xe0 | ((pm->pm_pmt_pid & 0x1f00) >> 8);
   out[11] = pm->pm_pmt_pid & 0x00ff;
 
@@ -121,10 +122,12 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     return;
 
   pm = (pass_muxer_t*)mt->mt_opaque;
-  if (sid != pm->pm_service_id)
+  if (sid != pm->pm_src_sid)
     return;
 
-  memcpy(out + ol, buf, 9);
+  out[ol + 0] = pm->pm_dst_sid >> 8;
+  out[ol + 1] = pm->pm_dst_sid & 0xff;
+  memcpy(out + ol + 2, buf + 2, 7);
 
   ol  += 9;     /* skip common descriptors */
   buf += 9 + l;
@@ -195,7 +198,7 @@ pass_muxer_sdt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   while (len >= 5) {
     sid = (buf[0] << 8) | buf[1];
     l = (buf[3] & 0x0f) << 8 | buf[4];
-    if (sid != pm->pm_service_id) {
+    if (sid != pm->pm_src_sid) {
       buf += l + 5;
       len -= l + 5;
       continue;
@@ -204,7 +207,9 @@ pass_muxer_sdt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
       tvherror(LS_PASS, "SDT entry too long (%i)", l);
       return;
     }
-    memcpy(out + ol, buf, l + 5);
+    out[ol + 0] = pm->pm_dst_sid >> 8;
+    out[ol + 1] = pm->pm_dst_sid & 0xff;
+    memcpy(out + ol + 2, buf + 2, l + 3);
     /* set free CA */
     out[ol + 3] = out[ol + 3] & ~0x10;
     ol += l + 5;
@@ -231,7 +236,7 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
   pass_muxer_t *pm;
   uint16_t sid;
-  uint8_t *out;
+  uint8_t *sbuf, *out;
   int olen;
 
   /* filter out the other transponders */
@@ -240,17 +245,23 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 
   pm = (pass_muxer_t*)mt->mt_opaque;
   sid = (buf[3] << 8) | buf[4];
-  if (sid != pm->pm_service_id)
+  if (sid != pm->pm_src_sid)
     return;
 
   /* TODO: set free_CA_mode bit to zero */
 
-  len = dvb_table_append_crc32((uint8_t *)buf, len, len + 4);
+  sbuf = malloc(len + 4);
+  memcpy(sbuf, buf, len);
+  sbuf[3] = pm->pm_dst_sid >> 8;
+  sbuf[4] = pm->pm_dst_sid & 0xff;
 
-  if (len > 0 && (olen = dvb_table_remux(mt, buf, len, &out)) > 0) {
+  len = dvb_table_append_crc32(sbuf, len, len + 4);
+  if (len > 0 && (olen = dvb_table_remux(mt, sbuf, len, &out)) > 0) {
     pass_muxer_write((muxer_t *)pm, out, olen);
     free(out);
   }
+
+  free(sbuf);
 }
 
 /**
@@ -305,10 +316,14 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   const streaming_start_component_t *ssc;
   int i;
 
-  pm->pm_service_id = ss->ss_service_id;
-  pm->pm_pmt_pid    = ss->ss_pmt_pid;
-  pm->pm_rewrite_sdt = !!pm->m_config.m_rewrite_sdt;
-  pm->pm_rewrite_eit = !!pm->m_config.m_rewrite_eit;
+  pm->pm_src_sid     = ss->ss_service_id;
+  if (pm->m_config.u.pass.m_rewrite_sid > 0)
+    pm->pm_dst_sid   = pm->m_config.u.pass.m_rewrite_sid;
+  else
+    pm->pm_dst_sid   = ss->ss_service_id;
+  pm->pm_pmt_pid     = ss->ss_pmt_pid;
+  pm->pm_rewrite_sdt = !!pm->m_config.u.pass.m_rewrite_sdt;
+  pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
@@ -325,7 +340,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   }
 
 
-  if (pm->m_config.m_rewrite_pmt) {
+  if (pm->m_config.u.pass.m_rewrite_pmt) {
 
     if (pm->pm_ss)
       streaming_start_unref(pm->pm_ss);
@@ -440,7 +455,7 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
   size_t  len = pktbuf_len(pb), len2;
   
   /* Rewrite PAT/PMT in operation */
-  if (pm->m_config.m_rewrite_pat || pm->m_config.m_rewrite_pmt ||
+  if (pm->m_config.u.pass.m_rewrite_pat || pm->m_config.u.pass.m_rewrite_pmt ||
       pm->pm_rewrite_sdt || pm->pm_rewrite_eit) {
 
     for (tsb = pktbuf_ptr(pb), len2 = pktbuf_len(pb), len = 0;
@@ -450,8 +465,8 @@ pass_muxer_write_ts(muxer_t *m, pktbuf_t *pb)
       l = mpegts_word_count(tsb, len2, 0x001FFF00);
 
       /* Process */
-      if ( (pm->m_config.m_rewrite_pat && pid == DVB_PAT_PID) ||
-           (pm->m_config.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
+      if ( (pm->m_config.u.pass.m_rewrite_pat && pid == DVB_PAT_PID) ||
+           (pm->m_config.u.pass.m_rewrite_pmt && pid == pm->pm_pmt_pid) ||
            (pm->pm_rewrite_sdt && pid == DVB_SDT_PID) ||
            (pm->pm_rewrite_eit && pid == DVB_EIT_PID) ) {
 

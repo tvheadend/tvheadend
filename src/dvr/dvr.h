@@ -19,7 +19,7 @@
 #ifndef DVR_H
 #define DVR_H
 
-#include <regex.h>
+#include "tvhregex.h"
 #include "epg.h"
 #include "channels.h"
 #include "subscriptions.h"
@@ -57,6 +57,7 @@ typedef struct dvr_config {
   char *dvr_comment;
   profile_t *dvr_profile;
   char *dvr_storage;
+  int dvr_pri;
   int dvr_clone;
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_retention_days;
@@ -111,6 +112,7 @@ typedef enum {
   DVR_PRIO_LOW         = 3,
   DVR_PRIO_UNIMPORTANT = 4,
   DVR_PRIO_NOTSET      = 5,
+  DVR_PRIO_DEFAULT     = 6,
 } dvr_prio_t;
 
 typedef enum {
@@ -295,7 +297,8 @@ typedef struct dvr_entry {
 
 } dvr_entry_t;
 
-#define DVR_CH_NAME(e) ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel))
+#define DVR_CH_NAME(e) \
+  ((e)->de_channel == NULL ? (e)->de_channel_name : channel_get_name((e)->de_channel, channel_blank_name))
 
 typedef enum {
   DVR_AUTOREC_RECORD_ALL = 0,
@@ -335,12 +338,13 @@ typedef struct dvr_autorec_entry {
   LIST_ENTRY(dvr_autorec_entry) dae_config_link;
 
   int dae_enabled;
+  int dae_error;
   char *dae_owner;
   char *dae_creator;
   char *dae_comment;
 
   char *dae_title;
-  regex_t dae_title_preg;
+  tvh_regex_t dae_title_regex;
   int dae_fulltext;
   
   uint32_t dae_content_type;
@@ -764,13 +768,6 @@ static inline int dvr_timerec_entry_verify
 uint32_t dvr_timerec_get_retention_days( dvr_timerec_entry_t *dte );
 
 uint32_t dvr_timerec_get_removal_days( dvr_timerec_entry_t *dte );
-
-/**
- *
- */
-dvr_prio_t dvr_pri2val(const char *s);
-
-const char *dvr_val2pri(dvr_prio_t v);
 
 /**
  * Inotify support

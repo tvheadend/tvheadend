@@ -119,7 +119,15 @@ void htsmsg_field_destroy(htsmsg_t *msg, htsmsg_field_t *f);
  */
 void htsmsg_destroy(htsmsg_t *msg);
 
+/**
+ * Add an boolean field.
+ */
 void htsmsg_add_bool(htsmsg_t *msg, const char *name, int b);
+
+/**
+ * Add/update an boolean field.
+ */
+void htsmsg_set_bool(htsmsg_t *msg, const char *name, int b);
 
 /**
  * Add an integer field where source is signed 64 bit.

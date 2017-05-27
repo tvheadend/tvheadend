@@ -2616,6 +2616,8 @@ tvheadend.idnode_tree = function(panel, conf)
             }
             if (n.attributes.uuid === uuid)
                 n.select();
+            if (conf.node_added)
+                conf.node_added(n);
         }
 
         loader.on('load', function(l, n, r) {

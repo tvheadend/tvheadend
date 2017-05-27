@@ -333,7 +333,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
 
   if (hc->hc_version != RTSP_VERSION_1_0){
-    htsbuf_append_str(&hdrs, "Server: HTS/tvheadend\r\n");
+    htsbuf_qprintf(&hdrs, "Server: %s\r\n", config.http_server_name ?: "HTS/tvheadend");
     if (config.cors_origin && config.cors_origin[0]) {
       htsbuf_qprintf(&hdrs, "Access-Control-Allow-Origin: %s\r\n", config.cors_origin);
       htsbuf_append_str(&hdrs, "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
@@ -576,7 +576,7 @@ http_error(http_connection_t *hc, int error)
                    error, errtxt, error, errtxt);
 
     if (error == HTTP_STATUS_UNAUTHORIZED) {
-      lang = tvh_gettext_get_lang(hc->hc_access ? hc->hc_access->aa_lang_ui : NULL);
+      lang = hc->hc_access ? hc->hc_access->aa_lang_ui : NULL;
       htsbuf_qprintf(&hc->hc_reply, "<P STYLE=\"text-align: center; margin: 2em\"><A HREF=\"%s/\" STYLE=\"border: 1px solid; border-radius: 4px; padding: .6em\">%s</A></P>",
                      tvheadend_webroot ? tvheadend_webroot : "",
                      tvh_gettext_lang(lang, N_("Default login")));
@@ -803,7 +803,8 @@ http_verify_prepare(http_connection_t *hc, struct http_verify_structure *v)
       realm = http_get_header_value(hc->hc_authhdr, "realm");
       nonce_count = http_get_header_value(hc->hc_authhdr, "nc");
       cnonce = http_get_header_value(hc->hc_authhdr, "cnonce");
-      if (realm == NULL || nonce_count == NULL || cnonce == NULL) {
+      if (realm == NULL || strcmp(realm, config.realm) ||
+          nonce_count == NULL || cnonce == NULL) {
         goto end;
       } else {
         snprintf(all, sizeof(all), "%s:%s:%s:%s:%s",

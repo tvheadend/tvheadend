@@ -401,7 +401,9 @@ void dvb_table_parse_init
 
 void dvb_table_parse_done( mpegts_psi_table_t *mt )
 {
+  dvb_table_release(mt);
   free(mt->mt_name);
+  mt->mt_name = NULL;
 }
 
 struct psi_parse {

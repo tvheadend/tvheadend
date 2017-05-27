@@ -1,27 +1,44 @@
 {
-  "const_cw" : [
+  "caid": [
     {
-      "name" : "BISS",
-      "caid" : "2600"
-    }
-  ],
-  "comment1": "Rename _caid to caid for activation!",
-  "quick_ecm" : [
-    {
-      "name" : "Sky UK",
-      "_caid" : "0963"
+      "name": "BISS",
+      "caid": "2600",
+      "mask": "FFFF",
+      "constcw": 1
     },
     {
-      "name" : "Sky DE",
-      "_caid" : "098C"
+      "name": "PowerVu",
+      "caid": "0E00",
+      "multipid": 1,
+      "interval": 1000
     },
     {
-      "name" : "Sky DE",
-      "_caid" : "09C4"
+      "name": "Sky UK",
+      "____": "Rename _caid to caid for activation!",
+      "_caid": "0963",
+      "mask": "FFFF",
+      "quickecm": 1
     },
     {
-      "name" : "Sky IT",
-      "_caid" : "09CD"
+      "name": "Sky DE",
+      "____": "Rename _caid to caid for activation!",
+      "_caid" : "098C",
+      "mask": "FFFF",
+      "quickecm": 1
+    },
+    {
+      "name": "Sky DE",
+      "____": "Rename _caid to caid for activation!",
+      "_caid" : "09C4",
+      "mask": "FFFF",
+      "quickecm": 1
+    },
+    {
+      "name": "Sky IT",
+      "____": "Rename _caid to caid for activation!",
+      "_caid": "09CD",
+      "mask": "FFFF",
+      "quickecm": 1
     }
   ]
 }

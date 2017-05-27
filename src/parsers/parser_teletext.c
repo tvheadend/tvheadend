@@ -793,7 +793,7 @@ extract_subtitle(mpegts_service_t *t, elementary_stream_t *st,
 
   sub[off++] = 0;
 
-  th_pkt_t *pkt = pkt_alloc(st->es_type, sub, off, pts, pts);
+  th_pkt_t *pkt = pkt_alloc(st->es_type, sub, off, pts, pts, pts);
   pkt->pkt_componentindex = st->es_index;
 
   streaming_pad_deliver(&t->s_streaming_pad, streaming_msg_create_pkt(pkt));
@@ -914,7 +914,7 @@ tt_decode_line(mpegts_service_t *t, elementary_stream_t *st, uint8_t *buf)
     if(update_tt_clock(t, buf + 34))
       teletext_rundown_scan(t, ttp);
 
-    ttm->ttm_current_pts = t->s_current_pts;
+    ttm->ttm_current_pts = t->s_current_pcr + (int64_t)t->s_pts_shift * 900;
     break;
 
   case 1 ... 23:

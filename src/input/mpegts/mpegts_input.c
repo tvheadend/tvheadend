@@ -76,6 +76,15 @@ mpegts_input_class_get_title ( idnode_t *in, const char *lang )
 }
 
 const void *
+mpegts_input_class_active_get ( void *obj )
+{
+  static int active;
+  mpegts_input_t *mi = obj;
+  active = mi->mi_is_enabled((mpegts_input_t*)mi, NULL, 0, -1) != MI_IS_ENABLED_NEVER;
+  return &active;
+}
+
+const void *
 mpegts_input_class_network_get ( void *obj )
 {
   mpegts_network_link_t *mnl;  
@@ -227,6 +236,13 @@ const idclass_t mpegts_input_class =
   .ic_properties = (const property_t[]){
     {
       .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = mpegts_input_class_active_get,
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
       .desc     = N_("Enable/disable tuner/adapter."),
@@ -280,8 +296,11 @@ const idclass_t mpegts_input_class =
       .id       = "initscan",
       .name     = N_("Initial scan"),
       .desc     = N_("Allow the initial scan tuning on this device "
-                     "(scan when Tvheadend starts). See 'Skip Initial "
-                     "Scan' in the network settings for further details."),
+                     "(scan when Tvheadend starts or when a new multiplex "
+                     "is added automatically). At least one tuner or input "
+                     "should have this settings turned on. "
+                     "See also 'Skip Startup Scan' in the network settings "
+                     "for further details."),
       .off      = offsetof(mpegts_input_t, mi_initscan),
       .def.i    = 1,
       .opts     = PO_ADVANCED,
@@ -359,10 +378,12 @@ mpegts_input_is_enabled
 {
   if ((flags & SUBSCRIPTION_EPG) != 0 && !mi->mi_ota_epg)
     return MI_IS_ENABLED_NEVER;
-  if ((flags & SUBSCRIPTION_INITSCAN) != 0 && !mi->mi_initscan)
-    return MI_IS_ENABLED_NEVER;
-  if ((flags & SUBSCRIPTION_IDLESCAN) != 0 && !mi->mi_idlescan)
-    return MI_IS_ENABLED_NEVER;
+  if ((flags & SUBSCRIPTION_USERSCAN) == 0) {
+    if ((flags & SUBSCRIPTION_INITSCAN) != 0 && !mi->mi_initscan)
+      return MI_IS_ENABLED_NEVER;
+    if ((flags & SUBSCRIPTION_IDLESCAN) != 0 && !mi->mi_idlescan)
+      return MI_IS_ENABLED_NEVER;
+  }
   return mi->mi_enabled ? MI_IS_ENABLED_OK : MI_IS_ENABLED_NEVER;
 }
 
@@ -722,6 +743,9 @@ mpegts_input_open_service
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
 
+    if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+      goto no_pids;
+
     mpegts_input_open_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s, reopen);
     mpegts_input_open_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s, reopen);
     if (s->s_scrambled_pass)
@@ -753,6 +777,7 @@ mpegts_input_open_service
     }
   }
 
+no_pids:
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);
 
@@ -799,6 +824,9 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
   pthread_mutex_lock(&s->s_stream_mutex);
   if (s->s_type == STYPE_STD) {
 
+    if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+      goto no_pids;
+
     mpegts_input_close_pid(mi, mm, s->s_pmt_pid, MPS_SERVICE, MPS_WEIGHT_PMT, s);
     mpegts_input_close_pid(mi, mm, s->s_pcr_pid, MPS_SERVICE, MPS_WEIGHT_PCR, s);
     if (s->s_scrambled_pass)
@@ -817,6 +845,7 @@ mpegts_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
     mpegts_input_close_pids(mi, mm, s, 1);
   }
 
+no_pids:
   pthread_mutex_unlock(&s->s_stream_mutex);
   pthread_mutex_unlock(&mi->mi_output_lock);
 
@@ -1260,7 +1289,8 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
     type = pkt[pos + 0];
     keylen = pkt[pos + 1];
     sid = (pkt[pos + 2] << 8) | pkt[pos + 3];
-    pos += 4 + 2 * keylen;
+    pid = (pkt[pos + 4] << 8) | pkt[pos + 5];
+    pos += 6 + 2 * keylen;
     if (pos > 184)
       return;
     crc = (pkt[pos + 0] << 24) | (pkt[pos + 1] << 16) |

@@ -141,6 +141,21 @@ satip_device_class_save ( idnode_t *in, char *filename, size_t fsize )
   return m;
 }
 
+static const void *
+satip_device_class_active_get ( void * obj )
+{
+  static int active;
+  satip_device_t *sd = (satip_device_t *)obj;
+  satip_frontend_t *lfe;
+  active = 0;
+  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+    if (*(int *)mpegts_input_class_active_get(lfe)) {
+      active = 1;
+      break;
+    }
+  return &active;
+}
+
 static idnode_set_t *
 satip_device_class_get_childs ( idnode_t *in )
 {
@@ -218,6 +233,13 @@ const idclass_t satip_device_class =
   .ic_get_childs = satip_device_class_get_childs,
   .ic_get_title  = satip_device_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = satip_device_class_active_get,
+    },
     {
       .type     = PT_STR,
       .id       = "tunercfgu",
@@ -660,9 +682,9 @@ satip_device_create( satip_device_info_t *info )
     } else if (strncmp(argv[i], "DVBC-", 5) == 0) {
       type = DVB_TYPE_C;
       m = atoi(argv[i] + 5);
-    } else if (strncmp(argv[i], "ATSCT-", 5) == 0) {
+    } else if (strncmp(argv[i], "ATSCT-", 6) == 0) {
       type = DVB_TYPE_ATSC_T;
-      m = atoi(argv[i] + 5);
+      m = atoi(argv[i] + 6);
     } else if (strncmp(argv[i], "ATSCC-", 6) == 0) {
       type = DVB_TYPE_ATSC_C;
       m = atoi(argv[i] + 6);

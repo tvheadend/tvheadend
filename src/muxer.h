@@ -53,23 +53,34 @@ typedef enum {
 /* Muxer configuration used when creating a muxer. */
 typedef struct muxer_config {
   int                  m_type; /* MC_* */
-
-  int                  m_rewrite_pat;
-  int                  m_rewrite_pmt;
-  int                  m_rewrite_sdt;
-  int                  m_rewrite_eit;
   int                  m_cache;
 
-  int                  m_force_type;
-  int                  m_index;
-
-/* 
- * directory_permissions should really be in dvr.h as it's not really needed for the muxer
- * but it's kept with file_permissions for neatness
- */
-
+  /*
+   * directory_permissions should really be in dvr.h as it's not really
+   * needed for the muxer, but it's kept with file_permissions for neatness
+   */
   int                  m_file_permissions;
   int                  m_directory_permissions; 
+
+  /*
+   * type specific section
+   */
+  union {
+    struct {
+      int              m_rewrite_sid;
+      int              m_rewrite_pat;
+      int              m_rewrite_pmt;
+      int              m_rewrite_sdt;
+      int              m_rewrite_eit;
+    } pass;
+    struct {
+      int              m_dvbsub_reorder;
+    } mkv;
+    struct {
+      int              m_force_type;
+      int              m_index;
+    } audioes;
+  } u;
 } muxer_config_t;
 
 struct muxer;

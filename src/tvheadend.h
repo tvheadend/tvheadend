@@ -273,6 +273,7 @@ typedef enum {
   SCT_NONE = -1,
   SCT_UNKNOWN = 0,
   SCT_RAW = 1,
+  SCT_PCR,
   SCT_MPEG2VIDEO,
   SCT_MPEG2AUDIO,
   SCT_H264,
@@ -289,7 +290,8 @@ typedef enum {
   SCT_VORBIS,
   SCT_HEVC,
   SCT_VP9,
-  SCT_LAST = SCT_VP9
+  SCT_HBBTV,
+  SCT_LAST = SCT_HBBTV
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))

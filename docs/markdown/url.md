@@ -43,6 +43,15 @@ dvrid         | One DVR record specified by short DVR ID
 Option   | Explanation
 ---------|------------------------------------------------------------------------------
 profile  | Override streaming profile, otherwise the default profile for the user is used.
+sort     | Sorting method
+
+Sorting method | Scope    | Description
+---------------|----------|-----------------------------------------------------------
+numname        | channel  | Channel number as first key, channel name as second key
+name           | channel  | Channel name only
+idxname        | tag      | Tag index as first key, tag name as second key
+name           | tag      | Tag name only
+
 
 ### /stream/WHAT/IDENTIFIER
 

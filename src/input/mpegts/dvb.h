@@ -168,6 +168,19 @@ struct lang_str;
 #define DVB_DESC_FREESAT_LCN          0xD3
 #define DVB_DESC_FREESAT_REGIONS      0xD4
 
+/* HBBTV */
+#define DVB_DESC_APP		      0x00
+#define DVB_DESC_APP_NAME             0x01
+#define DVB_DESC_APP_TRANSPORT        0x02
+#define DVB_DESC_APP_EXT_AUTH         0x05
+#define DVB_DESC_APP_REC	      0x06
+#define DVB_DESC_APP_ICONS            0x0B
+#define DVB_DESC_APP_STORAGE          0x10
+#define DVB_DESC_APP_GRAPHICS_CONSTR  0x14
+#define DVB_DESC_APP_SIMPLE_LOCATION  0x15
+#define DVB_DESC_APP_USAGE	      0x16
+#define DVB_DESC_APP_SIMPLE_BOUNDARY  0x17
+
 /* Descriptors defined in A/65:2009 */
 
 #define ATSC_DESC_STUFFING            0x80
@@ -228,7 +241,7 @@ do {\
   lptr = 2 + off + ptr;\
   ptr += 2 + off + llen;\
   len -= 2 + off + llen;\
-  if (len < 0) {tvhtrace(mt->mt_subsys, "%s: len < 0", mt->mt_name); return -1; }\
+  if (len < 0) {tvhtrace(mt->mt_subsys, "%s: len < 0", mt->mt_name);goto dvberr;}\
 } while(0)
 
 #define DVB_LOOP_EACH(ptr, len, min)\
@@ -239,13 +252,9 @@ do {\
   DVB_LOOP_EACH(lptr, llen, min)
 
 #define DVB_DESC_EACH(mt, ptr, len, dtag, dlen, dptr)\
-  DVB_LOOP_EACH(ptr, len, 2)\
-    if      (!(dtag  = ptr[0]))      {tvhtrace(mt->mt_subsys, "%s: 1", mt->mt_name);return -1;}\
-    else if ((dlen  = ptr[1]) < 0)   {tvhtrace(mt->mt_subsys, "%s: 2", mt->mt_name);return -1;}\
-    else if (!(dptr  = ptr+2))       {tvhtrace(mt->mt_subsys, "%s: 3", mt->mt_name);return -1;}\
-    else if ( (len -= 2 + dlen) < 0) {tvhtrace(mt->mt_subsys, "%s: 4", mt->mt_name);return -1;}\
-    else if (!(ptr += 2 + dlen))     {tvhtrace(mt->mt_subsys, "%s: 5", mt->mt_name);return -1;}\
-    else
+  DVB_LOOP_EACH(ptr, len, 2) { \
+    dtag = ptr[0], dlen = ptr[1], dptr = ptr+2, ptr += 2+dlen; \
+    if ((len -= 2+dlen) < 0) {tvhtrace(mt->mt_subsys, "%s: dlen < 0", mt->mt_name);goto dvberr;}\
 
 #define DVB_DESC_FOREACH(mt, ptr, len, off, lptr, llen, dtag, dlen, dptr)\
   DVB_LOOP_INIT(mt, ptr, len, off, lptr, llen);\

@@ -276,6 +276,7 @@ api_mpegts_service_grid
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
       if (hide && !mm->mm_is_enabled(mm)) continue;
       LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
+        if (hide && !ms->s_verified) continue;
         if (hide == 2 && !ms->s_is_enabled((service_t*)ms, 0)) continue;
         idnode_set_add(ins, (idnode_t*)ms, &conf->filter, perm->aa_lang_ui);
       }

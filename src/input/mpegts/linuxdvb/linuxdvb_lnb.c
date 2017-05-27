@@ -60,6 +60,30 @@ const idclass_t linuxdvb_lnb_class =
   .ic_class       = "linuxdvb_lnb_basic",
   .ic_caption     = N_("LNB"),
   .ic_get_title   = linuxdvb_lnb_class_get_title,
+  .ic_properties = (const property_t[]) {
+    {
+      .type     = PT_INT,
+      .id       = "lfo",
+      .name     = N_("Low frequency offset"),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_lnb_conf_t, lnb_low),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "hfo",
+      .name     = N_("High frequency offset"),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_lnb_conf_t, lnb_high),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "sfo",
+      .name     = N_("Switch frequency offset"),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .off      = offsetof(linuxdvb_lnb_conf_t, lnb_switch),
+    },
+    {}
+  }
 };
 
 /* **************************************************************************
@@ -185,7 +209,7 @@ linuxdvb_lnb_bandstack_pol
  * Static list
  * *************************************************************************/
 
-struct linuxdvb_lnb_conf linuxdvb_lnb_all[] = {
+linuxdvb_lnb_conf_t linuxdvb_lnb_all[] = {
   {
     { {
       .ld_type    = "Universal",
@@ -401,26 +425,31 @@ linuxdvb_lnb_t *
 linuxdvb_lnb_create0
   ( const char *name, htsmsg_t *conf, linuxdvb_satconf_ele_t *ls )
 {
+  linuxdvb_lnb_conf_t *lsc = &linuxdvb_lnb_all[0], *lsc2;
   int i;
-
-  /* Setup static entries */
-  for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
-    if (!linuxdvb_lnb_all[i].ld_id.in_class)
-      idnode_insert(&linuxdvb_lnb_all[i].ld_id, NULL, &linuxdvb_lnb_class, 0);
 
   /* Find */
   if (name) {
-    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++) {
-      if (!strcmp(linuxdvb_lnb_all[i].ld_type, name))
-        return (linuxdvb_lnb_t*)&linuxdvb_lnb_all[i];
-    }
+    for (i = 0; i < ARRAY_SIZE(linuxdvb_lnb_all); i++)
+      if (!strcmp(linuxdvb_lnb_all[i].ld_type, name)) {
+        lsc = &linuxdvb_lnb_all[i];
+        break;
+      }
   }
-  return (linuxdvb_lnb_t*)linuxdvb_lnb_all; // Universal
+
+  lsc2 = malloc(sizeof(linuxdvb_lnb_conf_t));
+  *lsc2 = *lsc;
+  return (linuxdvb_lnb_t *)
+            linuxdvb_diseqc_create0((linuxdvb_diseqc_t *)lsc2,
+                                    NULL, &linuxdvb_lnb_class,
+                                    conf, lsc->ld_type, ls);
 }
 
 void
 linuxdvb_lnb_destroy ( linuxdvb_lnb_t *lnb )
 {
+  linuxdvb_diseqc_destroy((linuxdvb_diseqc_t *)lnb);
+  free(lnb);
 }
 
 /******************************************************************************

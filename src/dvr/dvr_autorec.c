@@ -36,6 +36,15 @@
 
 struct dvr_autorec_entry_queue autorec_entries;
 
+static void autorec_regfree(dvr_autorec_entry_t *dae)
+{
+  if (dae->dae_title) {
+    regex_free(&dae->dae_title_regex);
+    free(dae->dae_title);
+    dae->dae_title = NULL;
+  }
+}
+
 /*
  *
  */
@@ -175,33 +184,7 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
       return 0;
   }
 
-  /* Do not check title if the event is from the serieslink group */
-  if(dae->dae_serieslink == NULL &&
-     dae->dae_title != NULL && dae->dae_title[0] != '\0') {
-    lang_str_ele_t *ls;
-    if (!dae->dae_fulltext) {
-      if(!e->episode->title) return 0;
-      RB_FOREACH(ls, e->episode->title, link)
-        if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-    } else {
-      ls = NULL;
-      if (e->episode->title)
-        RB_FOREACH(ls, e->episode->title, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-      if (!ls && e->episode->subtitle)
-        RB_FOREACH(ls, e->episode->subtitle, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-      if (!ls && e->summary)
-        RB_FOREACH(ls, e->summary, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-      if (!ls && e->description)
-        RB_FOREACH(ls, e->description, link)
-          if (!regexec(&dae->dae_title_preg, ls->str, 0, NULL, 0)) break;
-    }
-    if (!ls) return 0;
-  }
-
-  // Note: ignore channel test if we allow quality unlocking 
+  /* Note: ignore channel test if we allow quality unlocking */
   if ((cfg = dae->dae_config) == NULL)
     return 0;
   if(dae->dae_channel != NULL) {
@@ -269,6 +252,33 @@ autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
     if(!((1 << ((tm.tm_wday ?: 7) - 1)) & dae->dae_weekdays))
       return 0;
   }
+
+  /* Do not check title if the event is from the serieslink group */
+  if(dae->dae_serieslink == NULL &&
+     dae->dae_title != NULL && dae->dae_title[0] != '\0') {
+    lang_str_ele_t *ls;
+    if (!dae->dae_fulltext) {
+      if(!e->episode->title) return 0;
+      RB_FOREACH(ls, e->episode->title, link)
+        if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+    } else {
+      ls = NULL;
+      if (e->episode->title)
+        RB_FOREACH(ls, e->episode->title, link)
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      if (!ls && e->episode->subtitle)
+        RB_FOREACH(ls, e->episode->subtitle, link)
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      if (!ls && e->summary)
+        RB_FOREACH(ls, e->summary, link)
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+      if (!ls && e->description)
+        RB_FOREACH(ls, e->description, link)
+          if (!regex_match(&dae->dae_title_regex, ls->str)) break;
+    }
+    if (!ls) return 0;
+  }
+
   return 1;
 }
 
@@ -290,7 +300,7 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   }
 
   dae->dae_weekdays = 0x7f;
-  dae->dae_pri = DVR_PRIO_NORMAL;
+  dae->dae_pri = DVR_PRIO_DEFAULT;
   dae->dae_start = -1;
   dae->dae_start_window = -1;
   dae->dae_enabled = 1;
@@ -344,8 +354,12 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 {
   dvr_autorec_entry_t *dae;
   htsmsg_t *conf;
+  const char *chname;
   char *title;
   if (!event || !event->episode)
+    return NULL;
+  chname = channel_get_name(event->channel, NULL);
+  if (!chname)
     return NULL;
   conf = htsmsg_create_map();
   title = regexp_escape(epg_broadcast_get_title(event, NULL));
@@ -353,7 +367,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
   htsmsg_add_str(conf, "title", title);
   free(title);
   htsmsg_add_str(conf, "config_name", dvr_config_name ?: "");
-  htsmsg_add_str(conf, "channel", channel_get_name(event->channel));
+  htsmsg_add_str(conf, "channel", chname);
   if (event->serieslink)
     htsmsg_add_str(conf, "serieslink", event->serieslink->uri);
   htsmsg_add_str(conf, "owner", owner ?: "");
@@ -397,10 +411,7 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   free(dae->dae_creator);
   free(dae->dae_comment);
 
-  if(dae->dae_title != NULL) {
-    free(dae->dae_title);
-    regfree(&dae->dae_title_preg);
-  }
+  autorec_regfree(dae);
 
   if(dae->dae_channel != NULL)
     LIST_REMOVE(dae, dae_channel_link);
@@ -427,6 +438,8 @@ dvr_autorec_entry_class_changed(idnode_t *self)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)self;
 
+  if (dae->dae_error)
+    dae->dae_enabled = 0;
   dvr_autorec_changed(dae, 1);
   dvr_autorec_completed(dae, 0);
   htsp_autorec_entry_update(dae);
@@ -516,7 +529,7 @@ dvr_autorec_entry_class_channel_rend(void *o, const char *lang)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae->dae_channel)
-    return strdup(channel_get_name(dae->dae_channel));
+    return strdup(channel_get_name(dae->dae_channel, tvh_gettext_lang(lang, channel_blank_name)));
   return NULL;
 }
 
@@ -526,15 +539,13 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   const char *title = v ?: "";
   if (strcmp(title, dae->dae_title ?: "")) {
-    if (dae->dae_title) {
-       regfree(&dae->dae_title_preg);
-       free(dae->dae_title);
-       dae->dae_title = NULL;
-    }
-    if (title[0] != '\0' &&
-        !regcomp(&dae->dae_title_preg, title,
-                 REG_ICASE | REG_EXTENDED | REG_NOSUB))
+    if (dae->dae_title)
+      autorec_regfree(dae);
+    dae->dae_error = 0;
+    if (!regex_compile(&dae->dae_title_regex, title, LS_DVR))
       dae->dae_title = strdup(title);
+    else
+      dae->dae_error = 1;
     return 1;
   }
   return 0;
@@ -1178,11 +1189,12 @@ const idclass_t dvr_autorec_entry_class = {
       .type     = PT_U32,
       .id       = "pri",
       .name     = N_("Priority"),
-      .desc     = N_("The priority of any recordings set because of this "
-                     "rule will take precedence and "
-                     "cancel lower-priority events."),
+      .desc     = N_("Priority of the recording. Higher priority entries "
+                     "will take precedence and cancel lower-priority events. "
+                     "The 'Not Set' value inherits the settings from "
+                     "the assigned DVR configuration."),
       .list     = dvr_entry_class_pri_list,
-      .def.i    = DVR_PRIO_NORMAL,
+      .def.i    = DVR_PRIO_DEFAULT,
       .off      = offsetof(dvr_autorec_entry_t, dae_pri),
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
     },

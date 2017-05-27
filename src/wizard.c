@@ -54,7 +54,7 @@ static const void *description_get(wizard_page_t *page, const char **doc)
     htsbuf_queue_init(&q, 0);
     for (; *doc; doc++) {
       if (*doc[0] == '\xff') {
-        htsbuf_append_str(&q, tvh_gettext_lang(config.language_ui, *doc + 1));
+        htsbuf_append_str(&q, tvh_gettext_lang(config.language_ui, *doc + 2));
       } else {
         htsbuf_append_str(&q, *doc);
       }
@@ -757,6 +757,8 @@ static void muxes_changed(idnode_t *in)
                w->iptv_url[idx][0]) {
       htsmsg_t *m = htsmsg_create_map();
       htsmsg_add_str(m, "url", w->iptv_url[idx]);
+      htsmsg_add_u32(m, "max_streams", 1);
+      htsmsg_add_bool(m, "bouquet", 1);
       idnode_load(&mn->mn_id, m);
       idnode_changed(&mn->mn_id);
       htsmsg_destroy(m);

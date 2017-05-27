@@ -201,10 +201,10 @@ tvheadend.filesizeRenderer = function(st) {
 tvheadend.dvr_upcoming = function(panel, index) {
 
     var actions = tvheadend.dvrRowActions();
-    var list = 'disp_title,channel,start,start_extra,stop,stop_extra,config_name,comment';
+    var list = 'disp_title,channel,start,start_extra,stop,stop_extra,pri,config_name,comment';
     var elist = 'enabled,' +
                 (tvheadend.accessUpdate.admin ?
-                list + ',owner,creator' : list) + ',pri,retention,removal';
+                list + ',owner,creator' : list) + ',retention,removal';
 
     var stopButton = {
         name: 'stop',
@@ -723,7 +723,7 @@ tvheadend.dvr_settings = function(panel, index) {
  */
 tvheadend.autorec_editor = function(panel, index) {
 
-    var list = 'name,title,fulltext,channel,start,start_window,weekdays,' + 
+    var list = 'name,title,fulltext,channel,start,start_window,weekdays,' +
                'record,tag,btype,content_type,minduration,maxduration,' +
                'dedup,directory,config_name,comment';
     var elist = 'enabled,start_extra,stop_extra,' +

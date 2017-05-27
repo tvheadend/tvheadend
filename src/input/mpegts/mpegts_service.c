@@ -274,6 +274,7 @@ mpegts_service_is_enabled(service_t *t, int flags)
 {
   mpegts_service_t *s = (mpegts_service_t*)t;
   mpegts_mux_t *mm    = s->s_dvb_mux;
+  if (!s->s_verified) return 0;
   return mm->mm_is_enabled(mm) ? s->s_enabled : 0;
 }
 
@@ -318,10 +319,15 @@ mpegts_service_enlist_raw
       continue;
 
     r = mi->mi_is_enabled(mi, mmi->mmi_mux, flags, weight);
-    if (r == MI_IS_ENABLED_NEVER)
+    if (r == MI_IS_ENABLED_NEVER) {
+      tvhtrace(LS_MPEGTS, "enlist: input %p not enabled for mux %p service %s weight %d flags %x",
+                          mi, mmi->mmi_mux, s->s_nicename, weight, flags);
       continue;
+    }
     if (r == MI_IS_ENABLED_RETRY) {
       /* temporary error - retry later */
+      tvhtrace(LS_MPEGTS, "enlist: input %p postponed for mux %p service %s weight %d flags %x",
+                          mi, mmi->mmi_mux, s->s_nicename, weight, flags);
       errcnt++;
       continue;
     }
@@ -354,7 +360,8 @@ mpegts_service_enlist
     int flags, int weight )
 {
   /* invalid PMT */
-  if (t->s_pmt_pid <= 0 || t->s_pmt_pid >= 8191)
+  if (t->s_pmt_pid != SERVICE_PMT_AUTO &&
+      (t->s_pmt_pid <= 0 || t->s_pmt_pid >= 8191))
     return SM_CODE_INVALID_SERVICE;
 
   return mpegts_service_enlist_raw(t, ti, sil, flags, weight);
@@ -767,6 +774,7 @@ mpegts_service_create0
 {
   int r;
   char buf[256];
+  mpegts_network_t *mn = mm->mm_network;
   time_t dispatch_clock = gclk();
 
   /* defaults for older version */
@@ -816,6 +824,9 @@ mpegts_service_create0
   mpegts_mux_nice_name(mm, buf, sizeof(buf));
   tvhdebug(LS_MPEGTS, "%s - add service %04X %s", buf, s->s_dvb_service_id, s->s_dvb_svcname);
 
+  /* Bouquet */
+  mpegts_network_bouquet_trigger(mn, 1);
+
   /* Notification */
   idnode_notify_changed(&mm->mm_id);
   idnode_notify_changed(&mm->mm_network->mn_id);
@@ -839,6 +850,9 @@ mpegts_service_find
 
   /* Validate */
   lock_assert(&global_lock);
+
+  if (mm->mm_sid_filter > 0 && sid != mm->mm_sid_filter)
+    return NULL;
 
   /* Find existing service */
   LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
@@ -985,6 +999,9 @@ mpegts_service_update_slave_pids ( mpegts_service_t *s, int del )
   int i;
 
   lock_assert(&s->s_stream_mutex);
+
+  if (s->s_pmt_pid == SERVICE_PMT_AUTO)
+    return;
 
   pids = mpegts_pid_alloc();
 

@@ -520,7 +520,7 @@ dvb_network_find_mux
 
     /* if ONID/TSID are a perfect match (and this is DVB-S, allow greater deltaf) */
     if (lm->lm_tuning.dmc_fe_type == DVB_TYPE_S) {
-      deltar = 10000;
+      deltar = 7000;
       if (onid != MPEGTS_ONID_NONE && tsid != MPEGTS_TSID_NONE) {
         deltaf = 16000; // This is slightly crazy, but I have seen 10MHz changes in freq
                         // and remember the ONID and TSID must agree

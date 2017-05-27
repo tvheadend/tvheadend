@@ -361,6 +361,7 @@ SRCS-MPEGTS = \
 	src/input/mpegts/mpegts_pid.c \
 	src/input/mpegts/mpegts_input.c \
 	src/input/mpegts/tsdemux.c \
+	src/input/mpegts/dvb_psi_hbbtv.c \
 	src/input/mpegts/dvb_psi_lib.c \
 	src/input/mpegts/mpegts_network.c \
 	src/input/mpegts/mpegts_mux.c \
@@ -496,6 +497,12 @@ SRCS-CWC = \
 SRCS-${CONFIG_CWC} += $(SRCS-CWC)
 I18N-C += $(SRCS-CWC)
 
+# CCCAM
+SRCS-CCCAM = \
+	src/descrambler/cccam.c
+SRCS-${CONFIG_CCCAM} += $(SRCS-CCCAM)
+I18N-C += $(SRCS-CCCAM)
+
 # CAPMT
 SRCS-CAPMT = \
 	src/descrambler/capmt.c
@@ -537,8 +544,9 @@ ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_mmx.o  : CFLAGS += -mmmx
 ${BUILDDIR}/src/descrambler/ffdecsa/ffdecsa_sse2.o : CFLAGS += -msse2
 endif
 
-# libaesdec
-SRCS-${CONFIG_SSL} += src/descrambler/libaesdec/libaesdec.c
+# crypto algorithms
+SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c
+SRCS-${CONFIG_SSL} += src/descrambler/algo/libdesdec.c
 
 # DBUS
 SRCS-${CONFIG_DBUS_1}  += src/dbus.c
@@ -657,7 +665,9 @@ $(ROOTDIR)/src/version.c: FORCE
 FORCE:
 
 # Include dependency files if they exist.
+ifeq ($(filter clean distclean, $(MAKECMDGOALS)),)
 -include $(DEPS)
+endif
 
 # Some hardcoded deps
 src/webui/extjs.c: make_webui
@@ -778,7 +788,7 @@ endif
 
 # linuxdvb git tree
 $(ROOTDIR)/data/dvb-scan/.stamp:
-	@echo "Receiving data/dvb-scan/dvb-t from https://github.com/tvheadend/dtv-scan-tables.git#tvheadend"
+	@echo "Receiving data/dvb-scan from https://github.com/tvheadend/dtv-scan-tables.git#tvheadend"
 	@rm -rf $(ROOTDIR)/data/dvb-scan/*
 	@$(ROOTDIR)/support/getmuxlist $(ROOTDIR)/data/dvb-scan
 	@touch $@

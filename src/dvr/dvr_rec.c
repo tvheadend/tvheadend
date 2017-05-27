@@ -69,15 +69,18 @@ dvr_rec_subscribe(dvr_entry_t *de)
   struct sockaddr_storage sa;
   access_t *aa;
   uint32_t rec_count, net_count;
-  int c1, c2;
+  int pri, c1, c2;
 
   assert(de->de_s == NULL);
   assert(de->de_chain == NULL);
 
-  if(de->de_pri >= 0 && de->de_pri < ARRAY_SIZE(prio2weight))
+  pri = de->de_pri;
+  if(pri == DVR_PRIO_NOTSET)
+    pri = de->de_config->dvr_pri;
+  if(pri >= 0 && pri < ARRAY_SIZE(prio2weight))
     weight = prio2weight[de->de_pri];
   else
-    weight = 300;
+    weight = prio2weight[DVR_PRIO_NORMAL];
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
 
@@ -90,7 +93,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
     tvherror(LS_DVR, "unable to find access (owner '%s', creator '%s')",
              de->de_owner, de->de_creator);
     return -EPERM;
- }
+  }
 
   if (aa->aa_conn_limit || aa->aa_conn_limit_dvr) {
     rec_count = dvr_usage_count(aa);
@@ -115,12 +118,12 @@ dvr_rec_subscribe(dvr_entry_t *de)
   if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
     profile_chain_close(prch);
     tvherror(LS_DVR, "unable to create new channel streaming chain '%s' for '%s', using default",
-             profile_get_name(pro), channel_get_name(de->de_channel));
+             profile_get_name(pro), channel_get_name(de->de_channel, channel_blank_name));
     pro = profile_find_by_name(NULL, NULL);
     profile_chain_init(prch, pro, de->de_channel);
     if (profile_chain_open(prch, &de->de_config->dvr_muxcnf, 0, 0)) {
       tvherror(LS_DVR, "unable to create channel streaming default chain '%s' for '%s'",
-               profile_get_name(pro), channel_get_name(de->de_channel));
+               profile_get_name(pro), channel_get_name(de->de_channel, channel_blank_name));
       profile_chain_close(prch);
       free(prch);
       return -EINVAL;
@@ -132,7 +135,7 @@ dvr_rec_subscribe(dvr_entry_t *de)
 					      NULL, NULL, NULL, NULL);
   if (de->de_s == NULL) {
     tvherror(LS_DVR, "unable to create new channel subcription for '%s' profile '%s'",
-             channel_get_name(de->de_channel), profile_get_name(pro));
+             channel_get_name(de->de_channel, channel_blank_name), profile_get_name(pro));
     profile_chain_close(prch);
     free(prch);
     return -EINVAL;
@@ -431,6 +434,12 @@ dvr_sub_stop(const char *id, const char *fmt, const void *aux, char *tmp, size_t
   return dvr_do_prefix(id, fmt, buf, tmp, tmplen);
 }
 
+static const char *
+dvr_sub_comment(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  return dvr_do_prefix(id, fmt, ((dvr_entry_t *)aux)->de_comment, tmp, tmplen);
+}
+
 static htsstr_substitute_t dvr_subs_entry[] = {
   { .id = "?t",  .getval = dvr_sub_title },
   { .id = "? t", .getval = dvr_sub_title },
@@ -586,6 +595,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "E",  .getval = dvr_sub_stop },
   { .id = "r",  .getval = dvr_sub_errors },
   { .id = "R",  .getval = dvr_sub_data_errors },
+  { .id = "Z",  .getval = dvr_sub_comment },
   { .id = NULL, .getval = NULL }
 };
 
@@ -619,8 +629,8 @@ dvr_sub_basic_info(const char *id, const char *fmt, const void *aux, char *tmp, 
   tmp[0] = '\0';
   HTSMSG_FOREACH(f, info) {
     if (!(e = htsmsg_field_get_map(f))) continue;
-    if ((s = htsmsg_get_str(e, "type")) != NULL) continue;
-    tvh_strlcatf(tmp, tmplen, l, "%s%s", l > 0 ? "," : "", s);
+    if ((s = htsmsg_get_str(e, "type")) != NULL)
+      tvh_strlcatf(tmp, tmplen, l, "%s%s", l > 0 ? "," : "", s);
   }
   return tmp;
 }
@@ -922,7 +932,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   const source_info_t *si = &ss->ss_si;
   streaming_start_t *ss_copy;
   const streaming_start_component_t *ssc;
-  char res[11], asp[6], sr[6], ch[7];
+  char res[14], asp[14], sr[6], ch[7];
   dvr_config_t *cfg = de->de_config;
   profile_chain_t *prch = de->de_chain;
   htsmsg_t *info, *e;

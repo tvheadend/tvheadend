@@ -197,7 +197,8 @@ subscription_show_none(th_subscription_t *s)
 	        s->ths_title);
   if (s->ths_channel)
     tvh_strlcatf(buf, sizeof(buf), l, " to channel \"%s\"",
-                  s->ths_channel ? channel_get_name(s->ths_channel) : "none");
+                  s->ths_channel ?
+                    channel_get_name(s->ths_channel, channel_blank_name) : "none");
 #if ENABLE_MPEGTS
   else if (s->ths_raw_service) {
     mpegts_service_t *ms = (mpegts_service_t *)s->ths_raw_service;
@@ -231,7 +232,8 @@ subscription_show_info(th_subscription_t *s)
   tvh_strlcatf(buf, sizeof(buf), l, "\"%s\" subscribing", s->ths_title);
   if (s->ths_channel) {
     tvh_strlcatf(buf, sizeof(buf), l, " on channel \"%s\"",
-                  s->ths_channel ? channel_get_name(s->ths_channel) : "none");
+                  s->ths_channel ?
+                    channel_get_name(s->ths_channel, channel_blank_name) : "none");
 #if ENABLE_MPEGTS
   } else if (s->ths_raw_service && si.si_mux) {
     tvh_strlcatf(buf, sizeof(buf), l, " to mux \"%s\"", si.si_mux);
@@ -321,7 +323,7 @@ subscription_start_instance
 
   if (s->ths_channel)
     tvhtrace(LS_SUBSCRIPTION, "%04X: find service for %s weight %d",
-             shortid(s), channel_get_name(s->ths_channel), s->ths_weight);
+             shortid(s), channel_get_name(s->ths_channel, channel_blank_name), s->ths_weight);
   else
     tvhtrace(LS_SUBSCRIPTION, "%04X: find instance for %s weight %d",
              shortid(s), s->ths_service->s_nicename, s->ths_weight);
@@ -410,7 +412,7 @@ subscription_reschedule(void)
       if (s->ths_flags & SUBSCRIPTION_RESTART) {
         if (s->ths_channel)
           tvhwarn(LS_SUBSCRIPTION, "%04X: restarting channel %s",
-                  shortid(s), channel_get_name(s->ths_channel));
+                  shortid(s), channel_get_name(s->ths_channel, channel_blank_name));
         else
           tvhwarn(LS_SUBSCRIPTION, "%04X: restarting service %s",
                   shortid(s), s->ths_service->s_nicename);
@@ -710,7 +712,7 @@ subscription_unsubscribe(th_subscription_t *s, int flags)
   if (s->ths_channel != NULL) {
     LIST_REMOVE(s, ths_channel_link);
     tvh_strlcatf(buf, sizeof(buf), l, "\"%s\" unsubscribing from \"%s\"",
-             s->ths_title, channel_get_name(s->ths_channel));
+             s->ths_title, channel_get_name(s->ths_channel, channel_blank_name));
   } else {
     tvh_strlcatf(buf, sizeof(buf), l, "\"%s\" unsubscribing", s->ths_title);
   }
@@ -862,7 +864,7 @@ subscription_create_from_channel_or_service(profile_chain_t *prch,
     const char *pro_name = prch->prch_pro ? profile_get_name(prch->prch_pro) : "<none>";
     if (ch)
       tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for %s weight %d using profile %s",
-               shortid(s), channel_get_name(ch), weight, pro_name);
+               shortid(s), channel_get_name(ch, channel_blank_name), weight, pro_name);
     else
       tvhtrace(LS_SUBSCRIPTION, "%04X: creating subscription for service %s weight %d using profile %s",
                shortid(s), service->s_nicename, weight, pro_name);
@@ -936,7 +938,6 @@ subscription_create_from_service(profile_chain_t *prch,
  *
  */
 #if ENABLE_MPEGTS
-#include "input/mpegts.h"
 th_subscription_t *
 subscription_create_from_mux(profile_chain_t *prch,
                              tvh_input_t *ti,
@@ -976,7 +977,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   descramble_info_t *di;
   service_t *t;
   profile_t *pro;
-  char buf[256];
+  char buf[284];
   const char *state;
 
   htsmsg_add_u32(m, "id", s->ths_id);
@@ -1015,7 +1016,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     htsmsg_add_str(m, "title", s->ths_title);
   
   if(s->ths_channel != NULL)
-    htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel));
+    htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel, tvh_gettext_lang(lang, channel_blank_name)));
   
   if((t = s->ths_service) != NULL) {
     htsmsg_add_str(m, "service", service_adapter_nicename(t, buf, sizeof(buf)));

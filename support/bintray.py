@@ -27,6 +27,7 @@ DEBUG=False
 BINTRAY_API='https://bintray.com/api/v1'
 BINTRAY_USER=env('BINTRAY_USER')
 BINTRAY_PASS=env('BINTRAY_PASS')
+BINTRAY_COMPONENT=env('BINTRAY_COMPONENT')
 BINTRAY_ORG='tvheadend'
 BINTRAY_PACKAGE='tvheadend'
 
@@ -95,7 +96,7 @@ def do_upload(*args):
         error(10, 'HTTP ERROR "%s" %s %s', resp.url, resp.code, resp.reason)
 
 def get_ver(version):
-    if version.find('-'):
+    if version.find('-') > 0:
         version, git = version.split('-', 1)
     else:
         git = None
@@ -109,7 +110,7 @@ def get_ver(version):
 def get_path(version, repo):
     major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') > 0:
+        if repo in ['fedora', 'centos', 'rhel'] and git.find('~') <= 0:
             return '%s.%s-release' % (major, minor)
         return '%s.%s' % (major, minor)
     return 't'
@@ -117,7 +118,7 @@ def get_path(version, repo):
 def get_component(version):
     major, minor, rest, git = get_ver(version)
     if int(major) >= 4 and int(minor) & 1 == 0:
-        if git.find('~') > 0:
+        if git and git.find('~') > 0:
             return 'stable-%s.%s' % (major, minor)
         return 'release-%s.%s' % (major, minor)
     return 'unstable'
@@ -146,19 +147,21 @@ def get_bintray_params(filename, hint=None):
     extra = []
     if args.repo == 'deb':
         debbase, debarch = name.rsplit('_', 1)
-        debname, debversion = debbase.split('_', 1)
+        try:
+            debname, debversion = debbase.split('_', 1)
+        except:
+            debname, debversion = debbase.split('-', 1)
         debversion, debdistro = debversion.rsplit('~', 1)
         args.version = debversion
         args.path = 'pool/' + get_path(debversion, args.repo) + '/' + args.package
-        extra.append('deb_component=' + get_component(debversion))
+        extra.append('deb_component=' + (BINTRAY_COMPONENT or get_component(debversion)))
         extra.append('deb_distribution=' + debdistro)
         extra.append('deb_architecture=' + debarch)
     else:
         rpmbase, rpmarch = name.rsplit('.', 1)
         rpmname, rpmversion = rpmbase.rsplit('-', 1)
-        if rpmversion.find('~') > 0:
-            rpmname, rpmversion2 = rpmname.rsplit('-', 1)
-            rpmversion = rpmversion2 + '-' + rpmversion
+        rpmname, rpmversion2 = rpmname.rsplit('-', 1)
+        rpmversion = rpmversion2 + '-' + rpmversion
         rpmver1, rpmver2 = rpmversion.split('-', 1)
         rpmversion, rpmdist = rpmver2.split('.', 1)
         rpmversion = rpmver1 + '-' + rpmversion
@@ -228,8 +231,33 @@ def do_unknown(*args):
             r += '  ' + n[3:] + '\n'
     error(1, r[:-1])
 
+def test_filename():
+    FILES=[
+        "tvheadend_4.3-86~g7d2c4e8~xenial_amd64.deb",
+        "tvheadend_4.3-86~g7d2c4e8~xenial_arm64.deb",
+        "tvheadend-4.3-86~g7d2c4e8.el7.centos.x86_64.rpm",
+        "tvheadend-4.3-86~g7d2c4e8.fc24.x86_64.rpm",
+        "tvheadend-4.2.2~xenial_amd64.deb",
+        "tvheadend_4.2.2~xenial_arm64.deb",
+        "tvheadend-4.2.2-1.el7.centos.x86_64.rpm",
+        "tvheadend-4.2.2-1.fc24.x86_64.rpm",
+        "tvheadend-4.2.2-1~g82c8872~xenial_amd64.deb",
+        "tvheadend_4.2.2-1~g82c8872~xenial_arm64.deb",
+        "tvheadend-4.2.2-1~g82c8872.el7.centos.x86_64.rpm",
+        "tvheadend-4.2.2-1~g82c8872.fc24.x86_64.rpm",
+    ]
+    from pprint import pprint
+    for f in FILES:
+        basename, args, extra = get_bintray_params(f)
+        print('\n')
+        print('BASENAME:', basename)
+        print('EXTRA:', extra)
+        pprint(vars(args), indent=2)
+
 def main(argv):
     global DEBUG
+    if argv[1] == '--test-filename':
+        return test_filename()
     if not BINTRAY_USER or not BINTRAY_PASS:
         error(2, 'No credentals')
     if argv[1] == '--debug':

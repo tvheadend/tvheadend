@@ -4,22 +4,29 @@
 #
 
 # Arguments
-DIR=$1
-[ -z "$DIR" ] && DIR=$(dirname "$0")/../data/dvb-scan
+[ -z "$BRANCH" ] && BRANCH=tvheadend
+[ -z "$URL" ] && URL=https://github.com/tvheadend/dtv-scan-tables.git
+DIR="$1" && [ -z "$DIR" ] && DIR=$(dirname "$0")/../data/dvb-scan
 
 # Update
 if [ -d "${DIR}/.git" ]; then
   LAST=$(pwd)
   cd "${DIR}" || exit 1
-  git fetch > /dev/null 2>&1 || exit 1
-  git reset --hard > /dev/null 2>&1 || exit 1
-  git pull > /dev/null 2>&1 || exit 1
+  git fetch --tags > /dev/null 2>&1 || exit 1
+  hash1=$(git rev-parse HEAD)
+  hash2=$(git rev-parse origin/${BRANCH})
+  if [ "$hash1" != "$hash2" ]; then
+    git reset --hard origin/master > /dev/null 2>&1 || exit 1
+    git pull > /dev/null 2>&1 || exit 1
+  else
+    if [ ! -r README ]; then
+      git reset --hard > /dev/null 2>&1 || exit 1
+    fi
+  fi
   cd "${LAST}" || exit 1
 # Fetch
 elif [ ! -d "${DIR}" ]; then
-  URL=https://github.com/tvheadend/dtv-scan-tables.git
-  BRANCH=tvheadend
-  git clone -b $BRANCH $URL "${DIR}" > /dev/null 2>&1 || exit 1
+  git clone -b "${BRANCH}" "${URL}" "${DIR}" > /dev/null 2>&1 || exit 1
 fi
 
 # Note: will not update existing set (if not .git)

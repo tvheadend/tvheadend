@@ -92,6 +92,21 @@ tvhdhomerun_device_class_get_title( idnode_t *in, const char *lang )
   return prop_sbuf;
 }
 
+static const void *
+tvhdhomerun_device_class_active_get ( void * obj )
+{
+  static int active;
+  tvhdhomerun_device_t *hd = (tvhdhomerun_device_t *)obj;
+  tvhdhomerun_frontend_t *lfe;
+  active = 0;
+  TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
+    if (*(int *)mpegts_input_class_active_get(lfe)) {
+      active = 1;
+      break;
+    }
+  return &active;
+}
+
 static htsmsg_t *
 tvhdhomerun_device_class_override_enum( void * p, const char *lang )
 {
@@ -166,6 +181,13 @@ const idclass_t tvhdhomerun_device_class =
   .ic_get_childs = tvhdhomerun_device_class_get_childs,
   .ic_get_title  = tvhdhomerun_device_class_get_title,
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "active",
+      .name     = N_("Active"),
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+      .get      = tvhdhomerun_device_class_active_get,
+    },
     {
       .type     = PT_STR,
       .id       = "networkType",

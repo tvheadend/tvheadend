@@ -674,6 +674,14 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_eit_tsid_nocheck),
       .opts     = PO_HIDDEN | PO_EXPERT
     },
+    {
+      .type     = PT_U16,
+      .id       = "sid_filter",
+      .name     = N_("Service ID"),
+      .desc     = N_("Use only this service ID, filter out others."),
+      .off      = offsetof(mpegts_mux_t, mm_sid_filter),
+      .opts     = PO_HIDDEN | PO_EXPERT
+    },
     {}
   }
 };

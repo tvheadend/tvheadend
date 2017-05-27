@@ -88,7 +88,7 @@ typedef struct mk_cue {
  */
 typedef struct mk_chapter {
   TAILQ_ENTRY(mk_chapter) link;
-  int uuid;
+  uint32_t uuid;
   int64_t ts;
 } mk_chapter_t;
 
@@ -131,13 +131,25 @@ typedef struct mk_muxer {
   char *title;
 
   int webm;
+  int dvbsub_reorder;
+
+  struct th_pktref_queue holdq;
 } mk_muxer_t;
 
 /* --- */
 
 static int mk_mux_insert_chapter(mk_muxer_t *mk);
 
-/**
+/*
+ *
+ */
+static int mk_pktref_cmp(const void *_a, const void *_b)
+{
+  const th_pktref_t *a = _a, *b = _b;
+  return a->pr_pkt->pkt_pts - b->pr_pkt->pkt_pts;
+}
+
+/*
  *
  */
 static htsbuf_queue_t *
@@ -733,7 +745,7 @@ _mk_build_metadata(const dvr_entry_t *de, const epg_broadcast_t *ebc,
 
   if(ch)
     addtag(q, build_tag_string("TVCHANNEL",
-                               channel_get_name(ch), NULL, 0, NULL));
+                               channel_get_name(ch, channel_blank_name), NULL, 0, NULL));
 
   if (ee && ee->summary)
     ls = ee->summary;
@@ -915,23 +927,9 @@ addcue(mk_muxer_t *mk, int64_t pts, int tracknum)
  *
  */
 static void
-mk_add_chapter(mk_muxer_t *mk, int64_t ts)
+mk_add_chapter0(mk_muxer_t *mk, uint32_t uuid, int64_t ts)
 {
   mk_chapter_t *ch;
-  int uuid;
-
-  ch = TAILQ_LAST(&mk->chapters, mk_chapter_queue);
-  if(ch) {
-    // don't add a new chapter if the previous one was
-    // added less than 10s ago
-    if(ts - ch->ts < 10000)
-      return;
-
-    uuid = ch->uuid + 1;
-  }
-  else {
-    uuid = 1;
-  }
 
   ch = malloc(sizeof(mk_chapter_t));
 
@@ -939,6 +937,34 @@ mk_add_chapter(mk_muxer_t *mk, int64_t ts)
   ch->ts = ts;
 
   TAILQ_INSERT_TAIL(&mk->chapters, ch, link);
+}
+
+/**
+ *
+ */
+static void
+mk_add_chapter(mk_muxer_t *mk, int64_t ts)
+{
+  mk_chapter_t *ch;
+  int uuid;
+
+  ch = TAILQ_LAST(&mk->chapters, mk_chapter_queue);
+  if(ch) {
+    /* don't add a new chapter if the previous one was added less than 5s ago */
+    if(ts - ch->ts < 5000)
+      return;
+
+    uuid = ch->uuid + 1;
+  } else {
+    uuid = 1;
+    /* create first chapter at zero position */
+    if (ts >= 5000) {
+      mk_add_chapter0(mk, uuid++, 0);
+    } else {
+      ts = 0;
+    }
+  }
+  mk_add_chapter0(mk, uuid, ts);
 }
 
 /**
@@ -1094,7 +1120,7 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
 {
   int i, mark;
   mk_track_t *t = NULL;
-  th_pkt_t *opkt;
+  th_pkt_t *opkt, *tpkt;
 
   for (i = 0; i < mk->ntracks; i++) {
     t = &mk->tracks[i];
@@ -1107,8 +1133,26 @@ mk_mux_write_pkt(mk_muxer_t *mk, th_pkt_t *pkt)
     return mk->error;
   }
 
+  if (mk->dvbsub_reorder &&
+      pkt->pkt_type == SCT_DVBSUB &&
+      pts_diff(pkt->pkt_pcr, pkt->pkt_pts) > 90000) {
+    tvhtrace(LS_MKV, "insert pkt to holdq: pts %"PRId64", pcr %"PRId64", diff %"PRId64"\n", pkt->pkt_pcr, pkt->pkt_pts, pts_diff(pkt->pkt_pcr, pkt->pkt_pts));
+    pktref_enqueue_sorted(&mk->holdq, pkt, mk_pktref_cmp);
+    return mk->error;
+  }
+
   mark = 0;
   if(SCT_ISAUDIO(pkt->pkt_type)) {
+    while ((opkt = pktref_first(&mk->holdq)) != NULL) {
+      if (pts_diff(pkt->pkt_pts, opkt->pkt_pts) > 90000)
+        break;
+      opkt = pktref_get_first(&mk->holdq);
+      tvhtrace(LS_MKV, "hold push, pts %"PRId64", audio pts %"PRId64"\n", opkt->pkt_pts, pkt->pkt_pts);
+      tpkt = pkt_copy_shallow(opkt);
+      pkt_ref_dec(opkt);
+      tpkt->pkt_pcr = tpkt->pkt_pts;
+      mk_mux_write_pkt(mk, tpkt);
+    }
     if(pkt->a.pkt_channels != t->channels &&
        pkt->a.pkt_channels) {
       mark = 1;
@@ -1329,6 +1373,7 @@ mkv_muxer_open_stream(muxer_t *m, int fd)
   mk->filename = strdup("Live stream");
   mk->fd = fd;
   mk->cluster_maxsize = 0;
+  mk->totduration = 0;
 
   return 0;
 }
@@ -1365,6 +1410,7 @@ mkv_muxer_open_file(muxer_t *m, const char *filename)
   mk->fd = fd;
   mk->cluster_maxsize = 2000000;
   mk->seekable = 1;
+  mk->totduration = 0;
 
   return 0;
 }
@@ -1432,6 +1478,8 @@ mkv_muxer_close(muxer_t *m)
     return -1;
   }
 
+  pktref_clear_queue(&mk->holdq);
+
   return 0;
 }
 
@@ -1444,6 +1492,8 @@ mkv_muxer_destroy(muxer_t *m)
 {
   mk_muxer_t *mk = (mk_muxer_t*)m;
   mk_chapter_t *ch;
+
+  pktref_clear_queue(&mk->holdq);
 
   while((ch = TAILQ_FIRST(&mk->chapters)) != NULL) {
     TAILQ_REMOVE(&mk->chapters, ch, link);
@@ -1479,7 +1529,10 @@ mkv_muxer_create(const muxer_config_t *m_cfg)
   mk->m_close        = mkv_muxer_close;
   mk->m_destroy      = mkv_muxer_destroy;
   mk->webm           = m_cfg->m_type == MC_WEBM;
+  mk->dvbsub_reorder = m_cfg->u.mkv.m_dvbsub_reorder;
   mk->fd             = -1;
+
+  TAILQ_INIT(&mk->holdq);
 
   return (muxer_t*)mk;
 }

@@ -1,8 +1,33 @@
-BUILD_DEPS=`awk 'BEGIN {cnt = 1;} /^Build-Depends:/ {split($0, line, ":");split(line[2], deps, ",");for (i in deps) {d = deps[i];sub(/^ */, "", d);sub(/ *$/, "", d);split(d, tokens, " ");packages[cnt] = tokens[1];cnt++;}} END {out = ""; for(i = 1; i <= cnt; i++) {out = out packages[i] " ";} print out; }' debian/control`
 CHANGELOG=debian/changelog
 NOW=`date -R`
 VER=`$(dirname $0)/support/version`
 [ -z "${DEBDIST:-}" ] && DEBDIST=""
+
+BUILD_DEPS=`awk '\
+BEGIN {cnt = 1;}
+/^Build-Depends:/ {
+  split($0, line, ":");
+  split(line[2], deps, ",");
+  for (i in deps) {
+    d = deps[i];
+    sub(/^ */, "", d);
+    sub(/ *$/, "", d);
+    n = split(d, tokens, " ");
+    packages[cnt++] = tokens[1];
+  }
+}
+END {
+  out = "";
+  for(i = 1; i <= cnt; i++) {
+    out = out packages[i] " ";
+  }
+  print out;
+}' debian/control`
+
+case "${DEBDIST}" in
+precise|trusty|jessie)
+  BUILD_DEPS=`echo ${BUILD_DEPS} | sed -e 's/libpcre2-dev/libpcre3-dev/g'` ;;
+esac
 
 build() 
 {

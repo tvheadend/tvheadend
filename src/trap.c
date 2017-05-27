@@ -74,7 +74,7 @@ sappend(char *buf, size_t l, const char *fmt, ...)
  */
 #if ENABLE_EXECINFO
 static int
-add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
+addr2lineresolve(const char *binary, intptr_t addr, char *buf0, size_t buflen)
 {
   char *buf = buf0;
   int fd[2], r, f;
@@ -88,7 +88,7 @@ add2lineresolve(const char *binary, void *addr, char *buf0, size_t buflen)
   argv[3] = addrstr;
   argv[4] = NULL;
 
-  snprintf(addrstr, sizeof(addrstr), "%p", (void *)((intptr_t)addr-1));
+  snprintf(addrstr, sizeof(addrstr), "%p", (void *)(addr-1));
 
   if(pipe(fd) == -1)
     return -1;
@@ -188,27 +188,26 @@ traphandler(int sig, siginfo_t *si, void *UC)
 
   for(i = 0; i < nframes; i++) {
 
-    
     if(dladdr(frames[i], &dli)) {
 
       if(dli.dli_sname != NULL && dli.dli_saddr != NULL) {
-      	tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s+0x%tx  (%s)",
-		     dli.dli_sname,
-		     frames[i] - dli.dli_saddr,
-		     dli.dli_fname);
-	continue;
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s+0x%tx  (%s)",
+                     dli.dli_sname,
+                     frames[i] - dli.dli_saddr,
+                     dli.dli_fname);
+        continue;
       }
 
-      if(self[0] && !add2lineresolve(self, frames[i], buf, sizeof(buf))) {
-	tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p", buf, frames[i]);
-	continue;
+      if(self[0] && !addr2lineresolve(self, frames[i] - dli.dli_fbase, buf, sizeof(buf))) {
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p %p", buf, frames[i], dli.dli_fbase);
+        continue;
       }
 
       if(dli.dli_fname != NULL && dli.dli_fbase != NULL) {
-      	tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p",
- 		     dli.dli_fname,
-		     frames[i]);
-	continue;
+        tvhlog_spawn(LOG_ALERT, LS_CRASH, "%s %p",
+                     dli.dli_fname,
+                     frames[i]);
+        continue;
       }
 
 

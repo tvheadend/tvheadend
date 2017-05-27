@@ -670,7 +670,8 @@ api_idnode_handler
         err = EPERM;
       } else {
         handler(perm, in);
-        idnode_perm_unset(in);
+        if (!destroyed)
+          idnode_perm_unset(in);
       }
       htsmsg_destroy(msg);
     }

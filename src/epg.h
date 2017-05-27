@@ -19,7 +19,7 @@
 #ifndef EPG_H
 #define EPG_H
 
-#include <regex.h>
+#include "tvhregex.h"
 #include "settings.h"
 #include "lang_str.h"
 #include "access.h"
@@ -646,9 +646,9 @@ typedef enum {
 } epg_comp_t;
 
 typedef struct epg_filter_str {
-  char      *str;
-  regex_t    re;
-  epg_comp_t comp;
+  char       *str;
+  tvh_regex_t re;
+  epg_comp_t  comp;
 } epg_filter_str_t;
 
 typedef struct epg_filter_num {
@@ -675,7 +675,7 @@ typedef struct epg_query {
   epg_filter_str_t  channel_name;
   epg_filter_num_t  channel_num;
   char             *stitle;
-  regex_t           stitle_re;
+  tvh_regex_t       stitle_re;
   int               fulltext;
   char             *channel;
   char             *channel_tag;

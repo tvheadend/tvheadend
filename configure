@@ -20,6 +20,7 @@ OPTIONS=(
   "pie:yes"
   "ccdebug:no"
   "cwc:yes"
+  "cccam:yes"
   "capmt:yes"
   "constcw:yes"
   "linuxdvb:yes"
@@ -54,6 +55,8 @@ OPTIONS=(
   "libmfx_static:yes"
   "inotify:auto"
   "epoll:auto"
+  "pcre:auto"
+  "pcre2:auto"
   "uriparser:auto"
   "ccache:auto"
   "tvhcsa:auto"
@@ -385,6 +388,32 @@ if enabled_or_auto satip_client; then
 fi
 
 #
+# PCRE2
+#
+if enabled_or_auto pcre2; then
+  if check_pkg libpcre2-8; then
+    enable pcre2
+  elif enabled pcre2; then
+    die "pcre2 development support not found (use --disable-pcre2)"
+  fi
+fi
+
+#
+# PCRE
+#
+if enabled pcre2; then
+  disable pcre
+else
+  if enabled_or_auto pcre; then
+    if check_pkg libpcre; then
+      enable pcre
+    elif enabled pcre; then
+      die "pcre development support not found (use --disable-pcre)"
+    fi
+  fi
+fi
+
+#
 # uriparser
 #
 if enabled_or_auto uriparser; then
@@ -569,7 +598,7 @@ fi
 #
 # libdvbcsa, tvhcsa
 #
-if enabled cwc || enabled capmt || enabled constcw; then
+if enabled cwc || enabled cccam || enabled capmt || enabled constcw; then
   enable tvhcsa
   if enabled dvbcsa; then
     (check_cc_header "dvbcsa/dvbcsa" dvbcsa_h &&\

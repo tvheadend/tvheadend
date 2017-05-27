@@ -28,3 +28,27 @@ see if the block device files (i.e. the files used to communicate with the tuner
 
 The other major cause of this issue is when you're running Tvheadend as a user who doesn't have sufficient
 access to the tuners, such as not being a member of the *video* group.
+
+###Q: Access Tvheadend through HTTP proxy
+
+Use '--http_root' directive to specify the alternative http webroot (initial
+path prefix). The proxy server *MUST* pass this webroot path in the HTTP
+request, otherwise an access to the Tvheadend server will end with
+the endless redirect loop.
+
+Example for nginx (--http_root=/my/tvh/server):
+
+```
+location /my/tvh/server {
+  proxy_pass http://1.1.1.1:9981;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+Example for apache (--http_root=/my/tvh/server):
+
+```
+ProxyPass "/my/tvh/server" "http://1.1.1.9981/my/tvh/server";
+```

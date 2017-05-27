@@ -282,8 +282,20 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     d = ((pkt->pkt_pts & PTS_MASK) - pkt->pkt_dts) & PTS_MASK;
     pkt->pkt_pts = dts + d;
   }
+  if(pkt->pkt_pcr != PTS_UNSET) {
+    /* Compute delta between PCR and DTS (and watch out for 33 bit wrap) */
+    d = ((pkt->pkt_pcr & PTS_MASK) - pkt->pkt_dts) & PTS_MASK;
+    if (d > PTS_MASK / 2)
+      d = -(PTS_MASK - d);
+    pkt->pkt_pcr = dts + d;
+  }
 
   pkt->pkt_dts = dts;
+
+  if (pkt->pkt_pts < 0 || pkt->pkt_dts < 0 || pkt->pkt_pcr < 0) {
+    tsfix_packet_drop(tfs, pkt, "negative2/error");
+    return;
+  }
 
 deliver:
   if (tvhtrace_enabled()) {
@@ -509,7 +521,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
       LIST_FOREACH(tfs2, &tf->tf_streams, tfs_link)
         if(tfs2->tfs_audio && tfs2->tfs_last_dts_in != PTS_UNSET) {
           diff = tsfix_ts_diff(tfs2->tfs_last_dts_in, pkt->pkt_dts);
-          if (diff > 3 * 90000) {
+          if (diff > 6 * 90000) {
             tvhwarn(LS_TSFIX, "The timediff for %s is big (%"PRId64"), using audio dts",
                     streaming_component_type2txt(tfs->tfs_type), diff);
             tfs->tfs_parent = tfs2;

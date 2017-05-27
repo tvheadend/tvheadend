@@ -716,11 +716,13 @@ profile_sharer_deliver(profile_chain_t *prch, streaming_message_t *sm)
      * time correction here
      */
     if (pkt->pkt_pts >= prch->prch_ts_delta &&
-        pkt->pkt_dts >= prch->prch_ts_delta) {
+        pkt->pkt_dts >= prch->prch_ts_delta &&
+        pkt->pkt_pcr >= prch->prch_ts_delta) {
       th_pkt_t *n = pkt_copy_shallow(pkt);
       pkt_ref_dec(pkt);
       n->pkt_pts -= prch->prch_ts_delta;
       n->pkt_dts -= prch->prch_ts_delta;
+      n->pkt_pcr -= prch->prch_ts_delta;
       sm->sm_data = n;
     } else {
       streaming_msg_free(sm);
@@ -1092,11 +1094,67 @@ profile_htsp_builder(void)
  */
 typedef struct profile_mpegts {
   profile_t;
+  uint16_t pro_rewrite_sid;
   int pro_rewrite_pmt;
   int pro_rewrite_pat;
   int pro_rewrite_sdt;
   int pro_rewrite_eit;
 } profile_mpegts_t;
+
+static int
+profile_pass_rewrite_sid_set (void *in, const void *v)
+{
+  profile_mpegts_t *pro = (profile_mpegts_t *)in;
+  const uint16_t *val = v;
+  if (*val != pro->pro_rewrite_sid) {
+    if (*val > 0) {
+      pro->pro_rewrite_pmt =
+      pro->pro_rewrite_pat =
+      pro->pro_rewrite_sdt =
+      pro->pro_rewrite_eit = 1;
+    }
+    pro->pro_rewrite_sid = *val;
+    return 1;
+  }
+  return 0;
+}
+
+static int
+profile_pass_int_set (void *in, const void *v, int *prop)
+{
+  profile_mpegts_t *pro = (profile_mpegts_t *)in;
+  int val = *(int *)v;
+  if (pro->pro_rewrite_sid > 0) val = 1;
+  if (val != *prop) {
+    *prop = val;
+    return 1;
+  }
+  return 0;
+}
+
+static int
+profile_pass_rewrite_pmt_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_pmt);
+}
+
+static int
+profile_pass_rewrite_pat_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_pat);
+}
+
+static int
+profile_pass_rewrite_sdt_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_sdt);
+}
+
+static int
+profile_pass_rewrite_eit_set (void *in, const void *v)
+{
+  return profile_pass_int_set(in, v, &((profile_mpegts_t *)in)->pro_rewrite_eit);
+}
 
 const idclass_t profile_mpegts_pass_class =
 {
@@ -1116,6 +1174,18 @@ const idclass_t profile_mpegts_pass_class =
   },
   .ic_properties = (const property_t[]){
     {
+      .type     = PT_U16,
+      .id       = "sid",
+      .name     = N_("Rewrite Service ID"),
+      .desc     = N_("Rewrite service identificator (SID) using the specified "
+                     "value (usually 1)."),
+      .off      = offsetof(profile_mpegts_t, pro_rewrite_sid),
+      .set      = profile_pass_rewrite_sid_set,
+      .opts     = PO_EXPERT,
+      .def.i    = 1,
+      .group    = 2
+    },
+    {
       .type     = PT_BOOL,
       .id       = "rewrite_pmt",
       .name     = N_("Rewrite PMT"),
@@ -1123,6 +1193,7 @@ const idclass_t profile_mpegts_pass_class =
                      "include information about the currently-streamed "
                      "service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pmt),
+      .set      = profile_pass_rewrite_pmt_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1135,6 +1206,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_pat),
+      .set      = profile_pass_rewrite_pat_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1147,6 +1219,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sdt),
+      .set      = profile_pass_rewrite_sdt_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1159,6 +1232,7 @@ const idclass_t profile_mpegts_pass_class =
                      "to only include information about the currently-"
                      "streamed service."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_eit),
+      .set      = profile_pass_rewrite_eit_set,
       .opts     = PO_EXPERT,
       .def.i    = 1,
       .group    = 2
@@ -1180,10 +1254,11 @@ profile_mpegts_pass_reopen(profile_chain_t *prch,
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_RAW)
     c.m_type = MC_PASS;
-  c.m_rewrite_pat = pro->pro_rewrite_pat;
-  c.m_rewrite_pmt = pro->pro_rewrite_pmt;
-  c.m_rewrite_sdt = pro->pro_rewrite_sdt;
-  c.m_rewrite_eit = pro->pro_rewrite_eit;
+  c.u.pass.m_rewrite_sid = pro->pro_rewrite_sid;
+  c.u.pass.m_rewrite_pat = pro->pro_rewrite_pat;
+  c.u.pass.m_rewrite_pmt = pro->pro_rewrite_pmt;
+  c.u.pass.m_rewrite_sdt = pro->pro_rewrite_sdt;
+  c.u.pass.m_rewrite_eit = pro->pro_rewrite_eit;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1219,6 +1294,11 @@ profile_mpegts_pass_builder(void)
   pro->pro_reopen = profile_mpegts_pass_reopen;
   pro->pro_open   = profile_mpegts_pass_open;
   pro->pro_get_mc = profile_mpegts_pass_get_mc;
+  pro->pro_rewrite_sid = 1;
+  pro->pro_rewrite_pat = 1;
+  pro->pro_rewrite_pmt = 1;
+  pro->pro_rewrite_sdt = 1;
+  pro->pro_rewrite_eit = 1;
   return (profile_t *)pro;
 }
 
@@ -1228,6 +1308,7 @@ profile_mpegts_pass_builder(void)
 typedef struct profile_matroska {
   profile_t;
   int pro_webm;
+  int pro_dvbsub_reorder;
 } profile_matroska_t;
 
 const idclass_t profile_matroska_class =
@@ -1257,6 +1338,16 @@ const idclass_t profile_matroska_class =
       .def.i    = 0,
       .group    = 2
     },
+    {
+      .type     = PT_BOOL,
+      .id       = "dvbsub_reorder",
+      .name     = N_("Reorder DVBSUB"),
+      .desc     = N_("Reorder DVB subtitle packets."),
+      .off      = offsetof(profile_matroska_t, pro_dvbsub_reorder),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1,
+      .group    = 2
+    },
     { }
   }
 };
@@ -1276,6 +1367,8 @@ profile_matroska_reopen(profile_chain_t *prch,
     c.m_type = MC_MATROSKA;
   if (pro->pro_webm)
     c.m_type = MC_WEBM;
+
+  c.u.mkv.m_dvbsub_reorder = pro->pro_dvbsub_reorder;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1317,6 +1410,7 @@ profile_matroska_builder(void)
   pro->pro_reopen = profile_matroska_reopen;
   pro->pro_open   = profile_matroska_open;
   pro->pro_get_mc = profile_matroska_get_mc;
+  pro->pro_dvbsub_reorder = 1;
   return (profile_t *)pro;
 }
 
@@ -1384,8 +1478,8 @@ profile_audio_reopen(profile_chain_t *prch,
   else
     memset(&c, 0, sizeof(c));
   c.m_type = pro->pro_mc != MC_UNKNOWN ? pro->pro_mc : MC_MPEG2AUDIO;
-  c.m_force_type = pro->pro_mc;
-  c.m_index = pro->pro_index;
+  c.u.audioes.m_force_type = pro->pro_mc;
+  c.u.audioes.m_index = pro->pro_index;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1721,6 +1815,7 @@ profile_class_mc_list ( void *o, const char *lang )
     { N_("Raw Audio Stream"),             MC_MPEG2AUDIO },
     { N_("Matroska (mkv)/av-lib"),        MC_AVMATROSKA },
     { N_("WEBM/av-lib"),                  MC_AVWEBM },
+    { N_("MP4/av-lib"),                   MC_AVMP4 },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
@@ -1827,23 +1922,23 @@ static htsmsg_t *
 profile_class_vcodec_preset_list(void *o, const char *lang)
 {
   static const struct strtab_str tab[] = {
-    {N_("ultrafast: h264 / h265") 	     , "ultrafast" },
-    {N_("superfast: h264 / h265") 	     , "superfast" },
-    {N_("veryfast: h264 / h265 / qsv(h264)") 	     , "veryfast"  },
-    {N_("faster: h264 / h265 / qsv(h264)") 	     , "faster"    },
-    {N_("fast: h264 / h265 / qsv(h264 / h265)") 	     , "fast"      },
-    {N_("medium: h264 / h265 / qsv(h264 / h265)") 	     , "medium"    },
-    {N_("slow: h264 / h265 / qsv(h264 / h265)") 	     , "slow"      },
-    {N_("slower: h264 / h265 / qsv(h264)") 	     , "slower"    },
-    {N_("veryslow: h264 / h265 / qsv(h264)") 	     , "veryslow"  },
-    {N_("placebo: h264 / h265") 	     , "placebo"   },
-    {N_("hq: nvenc(h264 / h265)") 	     , "hq"        },
-    {N_("hp: nvenc(h264 / h265)") 	     , "hp"        },
-    {N_("bd: nvenc(h264 / h265)") 	     , "bd"        },
-    {N_("ll: nvenc(h264 / h265)") 	     , "ll"        },
-    {N_("llhq: nvenc(h264 / h265)")     , "llhq"      },
-    {N_("llhp: nvenc(h264 / h265)")     , "llhp"      },
-    {N_("default: nvenc(h264 / h265)")  , "default"   }
+    {N_("ultrafast: h264 / h265")                    , "ultrafast" },
+    {N_("superfast: h264 / h265")                    , "superfast" },
+    {N_("veryfast: h264 / h265 / qsv(h264)")         , "veryfast"  },
+    {N_("faster: h264 / h265 / qsv(h264)")           , "faster"    },
+    {N_("fast: h264 / h265 / qsv(h264 / h265)")      , "fast"      },
+    {N_("medium: h264 / h265 / qsv(h264 / h265)")    , "medium"    },
+    {N_("slow: h264 / h265 / qsv(h264 / h265)")      , "slow"      },
+    {N_("slower: h264 / h265 / qsv(h264)")           , "slower"    },
+    {N_("veryslow: h264 / h265 / qsv(h264)")         , "veryslow"  },
+    {N_("placebo: h264 / h265")                      , "placebo"   },
+    {N_("hq: nvenc(h264 / h265)")                    , "hq"        },
+    {N_("hp: nvenc(h264 / h265)")                    , "hp"        },
+    {N_("bd: nvenc(h264 / h265)")                    , "bd"        },
+    {N_("ll: nvenc(h264 / h265)")                    , "ll"        },
+    {N_("llhq: nvenc(h264 / h265)")                  , "llhq"      },
+    {N_("llhp: nvenc(h264 / h265)")                  , "llhp"      },
+    {N_("default: nvenc(h264 / h265)")               , "default"   }
   };
   return strtab2htsmsg_str(tab, 1, lang);
 }
@@ -2142,6 +2237,7 @@ profile_transcode_mc_valid(int mc)
   case MC_AAC:
   case MC_VORBIS:
   case MC_AVMATROSKA:
+  case MC_AVMP4:
     return 1;
   default:
     return 0;
@@ -2204,6 +2300,7 @@ profile_transcode_free(profile_t *_pro)
   free(pro->pro_vcodec_preset);
   free(pro->pro_acodec);
   free(pro->pro_scodec);
+  free(pro->pro_src_vcodec);
 }
 
 static profile_t *

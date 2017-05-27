@@ -38,7 +38,7 @@ rtsp_send_ext( http_client_t *hc, http_cmd_t cmd,
                 (hc->hc_port != 554 ? 7 : 0) +
                 (path ? strlen(path) : 1) + 1;
   char *buf = alloca(blen);
-  char buf2[7];
+  char buf2[11];
   char buf_body[size + 3];
 
   if (hc->hc_rtsp_session) {

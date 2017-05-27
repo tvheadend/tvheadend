@@ -1074,9 +1074,13 @@ tcp_server_connections ( void )
     if (!tsl->status) continue;
     c++;
     e = htsmsg_create_map();
-    tcp_get_str_from_ip(&tsl->peer, buf, sizeof(buf));
     htsmsg_add_u32(e, "id", tsl->id);
+    tcp_get_str_from_ip(&tsl->self, buf, sizeof(buf));
+    htsmsg_add_str(e, "server", buf);
+    htsmsg_add_u32(e, "server_port", ntohs(IP_PORT(tsl->self)));
+    tcp_get_str_from_ip(&tsl->peer, buf, sizeof(buf));
     htsmsg_add_str(e, "peer", buf);
+    htsmsg_add_u32(e, "peer_port", ntohs(IP_PORT(tsl->peer)));
     htsmsg_add_s64(e, "started", tsl->started);
     tsl->status(tsl->opaque, e);
     htsmsg_add_msg(l, NULL, e);

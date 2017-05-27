@@ -21,6 +21,27 @@
 
 #include "packet.h"
 
+static inline int64_t
+getpts(const uint8_t *p)
+{
+  int a =  p[0];
+  int b = (p[1] << 8) | p[2];
+  int c = (p[3] << 8) | p[4];
+
+  if ((a & 1) && (b & 1) && (c & 1)) {
+
+    return
+      ((int64_t)((a >> 1) & 0x07) << 30) |
+      ((int64_t)((b >> 1)       ) << 15) |
+      ((int64_t)((c >> 1)       ))
+      ;
+
+  } else {
+    // Marker bits not present
+    return PTS_UNSET;
+  }
+}
+
 void parse_mpeg_ts(struct service *t, struct elementary_stream *st,
 		   const uint8_t *data, 
 		   int len, int start, int err);
