@@ -320,6 +320,12 @@ capmt_oscam_netproto(capmt_t *capmt)
          oscam == CAPMT_OSCAM_UNIX_SOCKET_NP;
 }
 
+static inline int
+capmt_include_elementary_stream(streaming_component_type_t type)
+{
+  return SCT_ISAV(type) || type == SCT_DVBSUB;
+}
+
 static void
 capmt_poll_add(capmt_t *capmt, int fd, uint32_t u32)
 {
@@ -1983,6 +1989,7 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   case SCT_AAC:        type = 0x11; break;
   case SCT_H264:       type = 0x1b; break;
   case SCT_HEVC:       type = 0x24; break;
+  case SCT_DVBSUB:     type = 0x06; break;
   default:
     if (SCT_ISVIDEO(st->es_type)) type = 0x02;
     else if (SCT_ISAUDIO(st->es_type)) type = 0x04;
@@ -2016,7 +2023,7 @@ capmt_caid_change(th_descrambler_t *td)
   /* add missing A/V PIDs and ECM PIDs */
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-    if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
+    if (i < MAX_PIDS && capmt_include_elementary_stream(st->es_type)) {
       if (capmt_update_elementary_stream(ct, &i, st))
         change = 1;
     }
@@ -2376,7 +2383,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-    if (i < MAX_PIDS && SCT_ISAV(st->es_type))
+    if (i < MAX_PIDS && capmt_include_elementary_stream(st->es_type))
       capmt_update_elementary_stream(ct, &i, st);
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
