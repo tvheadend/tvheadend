@@ -96,12 +96,12 @@ void des_decrypt_packet(void *priv, const uint8_t *pkt)
     offset2 = (offset + 3) & ~3;
     memcpy(buf + offset2, pkt + offset, 188 - offset2);
     for (; offset2 <= (188 - 8); offset2 += 8) {
-      DES_encrypt2((DES_LONG *)(buf + offset2), sched, 0);
+      DES_encrypt1((DES_LONG *)(buf + offset2), sched, 0);
     }
     memcpy((uint8_t *)(pkt + offset), buf + offset2, 188 - offset2);
   } else {
     for (; offset <= (188 - 8); offset += 8) {
-      DES_encrypt2((DES_LONG *)(pkt + offset), sched, 0);
+      DES_encrypt1((DES_LONG *)(pkt + offset), sched, 0);
     }
   }
 }
