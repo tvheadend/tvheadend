@@ -958,8 +958,8 @@ next:
         /* do not use the first TS packet to decide - it may be wrong */
         while (dr->dr_queue_total > 20 * 188) {
           if (descrambler_data_key_check(dr, ki & 0xc0, 20 * 188)) {
-            tvhtrace(LS_DESCRAMBLER, "initial stream key set to %s for service \"%s\"",
-                                    (ki & 0x40) ? "odd" : "even",
+            tvhtrace(LS_DESCRAMBLER, "initial stream key[%d] set to %s for service \"%s\"",
+                                    tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             key_update(tk, ki, mclk());
             break;
@@ -970,8 +970,8 @@ next:
       } else if (tk->key_index != (ki & 0x40) &&
                  tk->key_start + dr->dr_ecm_key_margin < mclk()) {
 update:
-        tvhtrace(LS_DESCRAMBLER, "stream key changed to %s for service \"%s\"",
-                                (ki & 0x40) ? "odd" : "even",
+        tvhtrace(LS_DESCRAMBLER, "stream key[%d] changed to %s for service \"%s\"",
+                                tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
         key_update(tk, ki, mclk());
       }
