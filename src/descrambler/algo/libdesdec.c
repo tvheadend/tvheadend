@@ -59,44 +59,33 @@ void des_free_priv_struct(void *priv)
 /* decrypt */
 void des_decrypt_packet(void *priv, const uint8_t *pkt)
 {
-  uint8_t ev_od = 0;
-  uint_fast8_t xc0, offset, offset2, n;
+  uint_fast8_t ev_od = 0;
+  uint_fast8_t xc0, offset, offset2, offset3;
   DES_key_schedule *sched;
   uint8_t buf[188];
 
-  xc0 = pkt[3] & 0xc0;
-
-  //skip clear pkt
-  if (xc0 == 0x00)
+  // skip reserved and not encrypted pkt
+  if (((xc0 = pkt[3]) & 0x80) == 0)
     return;
 
-  //skip reserved pkt
-  if (xc0 == 0x40)
-    return;
-
-  if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted
-    ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-    ((uint8_t *)pkt)[3] &= 0x3f;  // consider it decrypted now
-    if (pkt[3] & 0x20) { // incomplete packet
-      offset = 4 + pkt[4] + 1;
-      n = (188 - offset) >> 4;
-      if (n == 0) { // decrypted==encrypted!
-        return;  // this doesn't need more processing
-      }
-    } else {
-      offset = 4;
+  ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
+  ((uint8_t *)pkt)[3] = xc0 & 0x3f;  // consider it decrypted now
+  if (xc0 & 0x20) { // incomplete packet
+    offset = 4 + pkt[4] + 1;
+    if (offset + 8 > 188) { // decrypted==encrypted!
+      return;  // this doesn't need more processing
     }
   } else {
-    return;
+    offset = 4;
   }
 
   sched = &((des_priv_t *)priv)->sched[ev_od];
   if (offset & 3) {
-    /* data must be aligned for DES_encrypt2() */
+    /* data must be aligned for DES_encrypt1() */
     offset2 = (offset + 3) & ~3;
     memcpy(buf + offset2, pkt + offset, 188 - offset2);
-    for (; offset2 <= (188 - 8); offset2 += 8) {
-      DES_encrypt1((DES_LONG *)(buf + offset2), sched, 0);
+    for (offset3 = offset2; offset3 <= (188 - 8); offset3 += 8) {
+      DES_encrypt1((DES_LONG *)(buf + offset3), sched, 0);
     }
     memcpy((uint8_t *)(pkt + offset), buf + offset2, 188 - offset2);
   } else {

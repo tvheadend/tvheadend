@@ -62,34 +62,23 @@ void aes_free_priv_struct(void *keys)
 /* decrypt */
 void aes_decrypt_packet(void *keys, const uint8_t *pkt)
 {
-  uint8_t ev_od = 0;
-  uint_fast8_t xc0, offset, n;
+  uint_fast8_t ev_od = 0;
+  uint_fast8_t xc0, offset;
   AES_KEY *k;
 
-  xc0 = pkt[3] & 0xc0;
-
-  //skip clear pkt
-  if (xc0 == 0x00)
+  // skip reserved and not encrypted pkt
+  if (((xc0 = pkt[3]) & 0x80) == 0)
     return;
 
-  //skip reserved pkt
-  if (xc0 == 0x40)
-    return;
-
-  if (xc0 == 0x80 || xc0 == 0xc0) { // encrypted
-    ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
-    ((uint8_t *)pkt)[3] &= 0x3f;  // consider it decrypted now
-    if (pkt[3] & 0x20) { // incomplete packet
-      offset = 4 + pkt[4] + 1;
-      n = (188 - offset) >> 4;
-      if (n == 0) { // decrypted==encrypted!
-        return;  // this doesn't need more processing
-      }
-    } else {
-      offset = 4;
+  ev_od = (xc0 & 0x40) >> 6; // 0 even, 1 odd
+  ((uint8_t *)pkt)[3] = xc0 & 0x3f;  // consider it decrypted now
+  if (xc0 & 0x20) { // incomplete packet
+    offset = 4 + pkt[4] + 1;
+    if (offset + 16 > 188) { // decrypted==encrypted!
+      return;  // this doesn't need more processing
     }
   } else {
-    return;
+    offset = 4;
   }
 
   k = &((aes_priv_t *) keys)->keys[ev_od];
