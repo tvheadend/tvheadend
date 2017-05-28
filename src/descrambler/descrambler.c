@@ -747,11 +747,11 @@ key_started( th_descrambler_runtime_t *dr, uint8_t ki )
 }
 
 static void
-key_flush( th_descrambler_key_t *tk, service_t *t )
+key_flush( th_descrambler_key_t *tk, service_t *t, int force )
 {
-  /* update the keys */
-  if (tk->key_changed) {
+  if (tk->key_changed || force) {
     tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
+    /* update the keys */
     if (tk->key_changed & 1)
       tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0]);
     if (tk->key_changed & 2)
@@ -772,7 +772,8 @@ key_find_struct( th_descrambler_runtime_t *dr,
     tk = &dr->dr_keys[i];
     if (tk->key_pid == pid) {
       if (tk != tk_old && tk_old)
-        key_flush(tk_old, t);
+        key_flush(tk_old, t, 1);
+      key_flush(tk, t, 0);
       return tk;
     }
   }
@@ -852,7 +853,7 @@ descrambler_descramble ( service_t *t,
 
     if (!dr->dr_key_multipid) {
       tk = &dr->dr_keys[0];
-      key_flush(tk, t);
+      key_flush(tk, t, 0);
     } else {
       tk = NULL;
     }
