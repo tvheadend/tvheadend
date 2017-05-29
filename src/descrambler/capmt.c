@@ -2182,6 +2182,8 @@ capmt_send_request(capmt_service_t *ct, int lm)
         buf[pos+1] = 17;
         buf[pos2++] = cce2->cce_providerid >> 8;
         buf[pos2++] = cce2->cce_providerid & 0xff;
+        memset(buf + pos2, 0, 17 - 6);
+        pos2 += 17 - 6;
       } else if (cce2->cce_caid >> 8 == 0x05) {
         buf[pos+1] = 15;
         buf[pos2++] = 0x00;
