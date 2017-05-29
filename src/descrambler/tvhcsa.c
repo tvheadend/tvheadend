@@ -279,8 +279,6 @@ tvhcsa_init ( tvhcsa_t *csa )
 {
   csa->csa_type          = 0;
   csa->csa_keylen        = 0;
-  csa->csa_aes_priv      = aes_get_priv_struct();
-  csa->csa_des_priv      = des_get_priv_struct();
 }
 
 void
