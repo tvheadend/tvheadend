@@ -2199,8 +2199,9 @@ capmt_send_request(capmt_service_t *ct, int lm)
         buf[pos+1] = 7;
         buf[pos2++] = cce2->cce_providerid >> 8;
         buf[pos2++] = cce2->cce_providerid & 0xff;
+        buf[pos2++] = 0;
       } else if (cce2->cce_caid >> 8 == 0x4a && cce2->cce_caid != 0x4ad2) {
-        buf[pos+1] = 0x05;
+        buf[pos+1] = 5;
         buf[pos2++] = cce2->cce_providerid & 0xff;
       } else if (((cce2->cce_caid >> 8) == 0x4a) || (cce2->cce_caid == 0x2710)) {
         if (cce2->cce_caid == 0x4AE0 || cce2->cce_caid == 0x4AE1 || cce2->cce_caid == 0x2710) {
