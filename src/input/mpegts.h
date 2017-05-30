@@ -1006,27 +1006,36 @@ int mpegts_input_close_pid
 void mpegts_input_close_pids
   ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner, int all );
 
+#if ENABLE_TSDEBUG
+
+void tsdebug_started_mux(mpegts_input_t *mi, mpegts_mux_t *mm);
+void tsdebug_stopped_mux(mpegts_input_t *mi, mpegts_mux_t *mm);
+void tsdebug_check_tspkt(mpegts_mux_t *mm, uint8_t *pkt, int len);
+
 static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
 {
-#if ENABLE_TSDEBUG
   if (mm && mm->mm_tsdebug_fd2 >= 0)
     if (write(mm->mm_tsdebug_fd2, buf, len) != len)
       tvherror(LS_TSDEBUG, "unable to write input data (%i)", errno);
-#endif
 }
 
 static inline ssize_t
 sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd)
 {
-#if ENABLE_TSDEBUG
   ssize_t r = sbuf_read(sb, fd);
   tsdebug_write(mm, sb->sb_data + sb->sb_ptr - r, r);
   return r;
-#else
-  return sbuf_read(sb, fd);
-#endif
 }
+
+#else
+
+static inline void tsdebug_started_mux(mpegts_input_t *mi, mpegts_mux_t *mm) { return; }
+static inline void tsdebug_stopped_mux(mpegts_input_t *mi, mpegts_mux_t *mm) { return; }
+static inline void tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len) { return; }
+static inline ssize_t sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd) { return sbuf_read(sb, fd); }
+
+#endif
 
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);

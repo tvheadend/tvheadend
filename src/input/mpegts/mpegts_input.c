@@ -18,20 +18,11 @@
 
 #include "input.h"
 #include "tsdemux.h"
-#include "packet.h"
 #include "streaming.h"
-#include "subscriptions.h"
 #include "access.h"
-#include "atomic.h"
 #include "notify.h"
-#include "idnode.h"
 #include "dbus.h"
 #include "memoryinfo.h"
-
-#include <pthread.h>
-#include <assert.h>
-#include <fcntl.h>
-#include <sys/stat.h>
 
 memoryinfo_t mpegts_input_queue_memoryinfo = { .my_name = "MPEG-TS input queue" };
 memoryinfo_t mpegts_input_table_memoryinfo = { .my_name = "MPEG-TS table queue" };
@@ -871,33 +862,9 @@ static void
 mpegts_input_started_mux
   ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
-#if ENABLE_TSDEBUG
-  extern char *tvheadend_tsdebug;
-  static const char *tmpdir = "/tmp/tvheadend.tsdebug/";
-  char buf[128];
-  char path[PATH_MAX];
-  struct stat st;
-  if (!tvheadend_tsdebug && !stat(tmpdir, &st) && (st.st_mode & S_IFDIR) != 0)
-    tvheadend_tsdebug = (char *)tmpdir;
-  if (tvheadend_tsdebug && !strcmp(tvheadend_tsdebug, tmpdir) && stat(tmpdir, &st))
-    tvheadend_tsdebug = NULL;
-  if (tvheadend_tsdebug) {
-    mpegts_mux_nice_name(mmi->mmi_mux, buf, sizeof(buf));
-    snprintf(path, sizeof(path), "%s/%s-%li-%p-mux.ts", tvheadend_tsdebug,
-             buf, (long)mono2sec(mclk()), mi);
-    mmi->mmi_mux->mm_tsdebug_fd = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-    if (mmi->mmi_mux->mm_tsdebug_fd < 0)
-      tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
-    snprintf(path, sizeof(path), "%s/%s-%li-%p-input.ts", tvheadend_tsdebug,
-             buf, (long)mono2sec(mclk()), mi);
-    mmi->mmi_mux->mm_tsdebug_fd2 = tvh_open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-    if (mmi->mmi_mux->mm_tsdebug_fd2 < 0)
-      tvherror(LS_TSDEBUG, "unable to create file '%s' (%i)", path, errno);
-  } else {
-    mmi->mmi_mux->mm_tsdebug_fd = -1;
-    mmi->mmi_mux->mm_tsdebug_fd2 = -1;
-  }
-#endif
+  mpegts_mux_t *mm = mmi->mmi_mux;
+
+  tsdebug_started_mux(mi, mm);
 
   /* Deliver first TS packets as fast as possible */
   mi->mi_last_dispatch = 0;
@@ -907,7 +874,7 @@ mpegts_input_started_mux
     mtimer_arm_rel(&mi->mi_status_timer, mpegts_input_status_timer, mi, sec2mono(1));
 
   /* Update */
-  mmi->mmi_mux->mm_active = mmi;
+  mm->mm_active = mmi;
 
   /* Accept packets */
   LIST_INSERT_HEAD(&mi->mi_mux_active, mmi, mmi_active_link);
@@ -953,20 +920,7 @@ mpegts_input_stopped_mux
   notify_reload("input_status");
   mpegts_input_dbus_notify(mi, 0);
 
-#if ENABLE_TSDEBUG
-  tsdebug_packet_t *tp;
-  if (mm->mm_tsdebug_fd >= 0)
-    close(mm->mm_tsdebug_fd);
-  if (mm->mm_tsdebug_fd2 >= 0)
-    close(mm->mm_tsdebug_fd2);
-  mm->mm_tsdebug_fd = -1;
-  mm->mm_tsdebug_fd2 = -1;
-  mm->mm_tsdebug_pos = 0;
-  while ((tp = TAILQ_FIRST(&mm->mm_tsdebug_packets)) != NULL) {
-    TAILQ_REMOVE(&mm->mm_tsdebug_packets, tp, link);
-    free(tp);
-  }
-#endif
+  tsdebug_stopped_mux(mi, mm);
 }
 
 static int
@@ -1273,41 +1227,6 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
   mpegts_table_consistency_check(mm);
   pthread_mutex_unlock(&mm->mm_tables_lock);
 }
-
-#if ENABLE_TSDEBUG
-static void
-tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
-{
-  void tsdebugcw_new_keys(service_t *t, int type, uint16_t pid, uint8_t *odd, uint8_t *even);
-  uint32_t pos, type, keylen, sid, crc;
-  uint16_t pid;
-  mpegts_service_t *t;
-
-  for ( ; len > 0; pkt += 188, len -= 188) {
-    if (memcmp(pkt + 4, "TVHeadendDescramblerKeys", 24))
-      continue;
-    pos = 4 + 24;
-    type = pkt[pos + 0];
-    keylen = pkt[pos + 1];
-    sid = (pkt[pos + 2] << 8) | pkt[pos + 3];
-    pid = (pkt[pos + 4] << 8) | pkt[pos + 5];
-    pos += 6 + 2 * keylen;
-    if (pos > 184)
-      return;
-    crc = (pkt[pos + 0] << 24) | (pkt[pos + 1] << 16) |
-          (pkt[pos + 2] << 8) | pkt[pos + 3];
-    if (crc != tvh_crc32(pkt, pos, 0x859aa5ba))
-      return;
-    LIST_FOREACH(t, &mm->mm_services, s_dvb_mux_link)
-      if (t->s_dvb_service_id == sid) break;
-    if (!t)
-      return;
-    pos = 4 + 24 + 4;
-    tvhdebug(LS_DESCRAMBLER, "Keys from MPEG-TS source (PID 0x1FFF)!");
-    tsdebugcw_new_keys((service_t *)t, type, pid, pkt + pos, pkt + pos + keylen);
-  }
-}
-#endif
 
 static int
 mpegts_input_process

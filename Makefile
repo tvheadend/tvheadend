@@ -524,6 +524,7 @@ I18N-C += $(SRCS-DVBCAM)
 
 # TSDEBUGCW
 SRCS-TSDEBUG = \
+	src/input/mpegts/mpegts_tsdebug.c \
 	src/descrambler/tsdebugcw.c
 SRCS-${CONFIG_TSDEBUG} += $(SRCS-TSDEBUG)
 I18N-C += $(SRCS-TSDEBUG)
