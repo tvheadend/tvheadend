@@ -31,10 +31,15 @@ struct mpegts_table;
 struct mpegts_mux;
 struct th_descrambler_data;
 
-#define DESCRAMBLER_NONE     0
-#define DESCRAMBLER_CSA_CBC  1
-#define DESCRAMBLER_DES_NCB  2 /* no block cipher mode! */
-#define DESCRAMBLER_AES_ECB  3
+#define DESCRAMBLER_NONE	0
+/* 64-bit keys */
+#define DESCRAMBLER_CSA_CBC	1
+#define DESCRAMBLER_DES_NCB	2 /* no block cipher mode! */
+#define DESCRAMBLER_AES_ECB	3
+/* 128-bit keys */
+#define DESCRAMBLER_AES128_ECB  16
+
+#define DESCRAMBLER_KEY_SIZE(type) ((type >= DESCRAMBLER_AES128_ECB) ? 16 : 8)
 
 /**
  * Descrambler superclass

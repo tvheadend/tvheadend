@@ -67,6 +67,8 @@ constcw_algo(caclient_t *cac)
     return DESCRAMBLER_DES_NCB;
   if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_aes_ecb_class))
     return DESCRAMBLER_AES_ECB;
+  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_aes128_ecb_class))
+    return DESCRAMBLER_AES128_ECB;
   return DESCRAMBLER_CSA_CBC;
 }
 
@@ -78,11 +80,9 @@ constcw_key_size(caclient_t *cac)
 {
   constcw_t *ccw = (constcw_t *)cac;
 
-  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_csa_cbc_class))
-    return 8;
-  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_des_ncb_class))
-    return 8;
-  return 16;
+  if (idnode_is_instance(&ccw->cac_id, &caclient_ccw_aes128_ecb_class))
+    return 16;
+  return 8;
 }
 
 /*
@@ -431,6 +431,72 @@ const idclass_t caclient_ccw_aes_ecb_class =
   .ic_super      = &caclient_class,
   .ic_class      = "caclient_ccw_aes_ecb",
   .ic_caption    = N_("AES ECB Constant Code Word"),
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_U16,
+      .id       = "caid",
+      .name     = N_("CA ID"),
+      .desc     = N_("Conditional Access Identification."),
+      .off      = offsetof(constcw_t, ccw_caid),
+      .opts     = PO_HEXA,
+      .def.u16  = 0x2600
+    },
+    {
+      .type     = PT_U32,
+      .id       = "providerid",
+      .name     = N_("Provider ID"),
+      .desc     = N_("The provider's ID."),
+      .off      = offsetof(constcw_t, ccw_providerid),
+      .opts     = PO_HEXA,
+      .def.u32  = 0
+    },
+    {
+      .type     = PT_U16,
+      .id       = "tsid",
+      .name     = N_("Transponder ID"),
+      .desc     = N_("The transponder ID."),
+      .off      = offsetof(constcw_t, ccw_tsid),
+      .opts     = PO_HEXA,
+      .def.u16  = 1,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "sid",
+      .name     = N_("Service ID"),
+      .desc     = N_("The service ID."),
+      .off      = offsetof(constcw_t, ccw_sid),
+      .opts     = PO_HEXA,
+      .def.u16  = 1,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "key_even",
+      .name     = N_("Even key"),
+      .desc     = N_("Even key."),
+      .set      = constcw_class_key_even_set,
+      .get      = constcw_class_key_even_get,
+      .opts     = PO_PASSWORD,
+      .def.s    = "00:00:00:00:00:00:00:00",
+    },
+    {
+      .type     = PT_STR,
+      .id       = "key_odd",
+      .name     = N_("Odd key"),
+      .desc     = N_("Odd key."),
+      .set      = constcw_class_key_odd_set,
+      .get      = constcw_class_key_odd_get,
+      .opts     = PO_PASSWORD,
+      .def.s    = "00:00:00:00:00:00:00:00",
+    },
+    { }
+  }
+};
+
+const idclass_t caclient_ccw_aes128_ecb_class =
+{
+  .ic_super      = &caclient_class,
+  .ic_class      = "caclient_ccw_aes128_ecb",
+  .ic_caption    = N_("AES128 ECB Constant Code Word"),
   .ic_properties = (const property_t[]){
     {
       .type     = PT_U16,

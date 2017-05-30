@@ -20,6 +20,10 @@
 #include "input.h"
 #include "input/mpegts/tsdemux.h"
 
+#include "descrambler/algo/libaesdec.h"
+#include "descrambler/algo/libaes128dec.h"
+#include "descrambler/algo/libdesdec.h"
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
@@ -38,7 +42,18 @@ tvhcsa_aes_ecb_descramble
   const uint8_t *tsb2, *end2;
 
   for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
-    aes_decrypt_packet(csa->csa_aes_priv, tsb2);
+    aes_decrypt_packet(csa->csa_priv, tsb2);
+  ts_recv_packet2(s, tsb, len);
+}
+
+static void
+tvhcsa_aes128_ecb_descramble
+  ( tvhcsa_t *csa, struct mpegts_service *s, const uint8_t *tsb, int len )
+{
+  const uint8_t *tsb2, *end2;
+
+  for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
+    aes128_decrypt_packet(csa->csa_priv, tsb2);
   ts_recv_packet2(s, tsb, len);
 }
 
@@ -49,7 +64,7 @@ tvhcsa_des_ncb_descramble
   const uint8_t *tsb2, *end2;
 
   for (tsb2 = tsb, end2 = tsb + len; tsb2 < end2; tsb2 += 188)
-    des_decrypt_packet(csa->csa_des_priv, tsb2);
+    des_decrypt_packet(csa->csa_priv, tsb2);
   ts_recv_packet2(s, tsb, len);
 }
 
@@ -212,14 +227,20 @@ tvhcsa_set_type( tvhcsa_t *csa, int type )
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
-    csa->csa_des_priv      = des_get_priv_struct();
+    csa->csa_priv          = des_get_priv_struct();
     csa->csa_descramble    = tvhcsa_des_ncb_descramble;
     csa->csa_flush         = tvhcsa_empty_flush;
     csa->csa_keylen        = 8;
     break;
   case DESCRAMBLER_AES_ECB:
-    csa->csa_aes_priv      = aes_get_priv_struct();
+    csa->csa_priv          = aes_get_priv_struct();
     csa->csa_descramble    = tvhcsa_aes_ecb_descramble;
+    csa->csa_flush         = tvhcsa_empty_flush;
+    csa->csa_keylen        = 8;
+    break;
+  case DESCRAMBLER_AES128_ECB:
+    csa->csa_priv          = aes128_get_priv_struct();
+    csa->csa_descramble    = tvhcsa_aes128_ecb_descramble;
     csa->csa_flush         = tvhcsa_empty_flush;
     csa->csa_keylen        = 16;
     break;
@@ -242,10 +263,13 @@ void tvhcsa_set_key_even( tvhcsa_t *csa, const uint8_t *even )
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
-    des_set_even_control_word(csa->csa_des_priv, even);
+    des_set_even_control_word(csa->csa_priv, even);
     break;
   case DESCRAMBLER_AES_ECB:
-    aes_set_even_control_word(csa->csa_aes_priv, even);
+    aes_set_even_control_word(csa->csa_priv, even);
+    break;
+  case DESCRAMBLER_AES128_ECB:
+    aes128_set_even_control_word(csa->csa_priv, even);
     break;
   default:
     assert(0);
@@ -264,10 +288,13 @@ void tvhcsa_set_key_odd( tvhcsa_t *csa, const uint8_t *odd )
 #endif
     break;
   case DESCRAMBLER_DES_NCB:
-    des_set_odd_control_word(csa->csa_des_priv, odd);
+    des_set_odd_control_word(csa->csa_priv, odd);
     break;
   case DESCRAMBLER_AES_ECB:
-    aes_set_odd_control_word(csa->csa_aes_priv, odd);
+    aes_set_odd_control_word(csa->csa_priv, odd);
+    break;
+  case DESCRAMBLER_AES128_ECB:
+    aes128_set_odd_control_word(csa->csa_priv, odd);
     break;
   default:
     assert(0);
@@ -311,12 +338,24 @@ tvhcsa_destroy ( tvhcsa_t *csa )
     free(csa->csa_tsbcluster);
     csa->csa_tsbcluster = NULL;
   }
-  if (csa->csa_aes_priv) {
-    aes_free_priv_struct(csa->csa_aes_priv);
-    csa->csa_aes_priv = NULL;
+  if (csa->csa_priv) {
+    switch (csa->csa_type) {
+    case DESCRAMBLER_CSA_CBC:
+      break;
+    case DESCRAMBLER_DES_NCB:
+      des_free_priv_struct(csa->csa_priv);
+      break;
+    case DESCRAMBLER_AES_ECB:
+      aes_free_priv_struct(csa->csa_priv);
+      break;
+    case DESCRAMBLER_AES128_ECB:
+      aes128_free_priv_struct(csa->csa_priv);
+      break;
+    default:
+      assert(0);
+    }
+    csa->csa_priv = NULL;
   }
-  if (csa->csa_des_priv) {
-    des_free_priv_struct(csa->csa_des_priv);
-    csa->csa_des_priv = NULL;
-  }
+  csa->csa_type   = 0;
+  csa->csa_keylen = 0;
 }

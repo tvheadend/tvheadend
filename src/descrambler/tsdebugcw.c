@@ -116,7 +116,7 @@ tsdebugcw_new_keys(service_t *t, int type, uint16_t pid, uint8_t *odd, uint8_t *
   th_descrambler_t *td;
   tsdebugcw_service_t *ct;
   tsdebugcw_request_t *ctr;
-  int keylen = type == DESCRAMBLER_AES_ECB ? 16 : 8;
+  int keylen = DESCRAMBLER_KEY_SIZE(type);
 
   LIST_FOREACH(td, &t->s_descramblers, td_service_link)
     if (td->td_stop == tsdebugcw_service_destroy)

@@ -1,7 +1,8 @@
 /*
  * libaesdec.c
  *
- * Based on code from spdfrk1
+ *  Created on: Jun 22, 2014
+ *      Author: spdfrk1
  */
 
 #include <sys/types.h>
@@ -11,55 +12,55 @@
 
 #include "openssl/aes.h"
 
-#include "libaesdec.h"
+#include "libaes128dec.h"
 
 /* key structure */
-typedef struct aes_priv {
+typedef struct aes128_priv {
   AES_KEY keys[2]; /* 0 = even, 1 = odd */
-} aes_priv_t;
+} aes128_priv_t;
 
-/* even cw represents one full 64-bit AES key */
-void aes_set_even_control_word(void *keys, const uint8_t *pk)
+/* even cw represents one full 128-bit AES key */
+void aes128_set_even_control_word(void *keys, const uint8_t *pk)
 {
-  AES_set_decrypt_key(pk, 64, &((aes_priv_t *) keys)->keys[0]);
+  AES_set_decrypt_key(pk, 128, &((aes128_priv_t *) keys)->keys[0]);
 }
 
-/* odd cw represents one full 64-bit AES key */
-void aes_set_odd_control_word(void *keys, const uint8_t *pk)
+/* odd cw represents one full 128-bit AES key */
+void aes128_set_odd_control_word(void *keys, const uint8_t *pk)
 {
-  AES_set_decrypt_key(pk, 64, &((aes_priv_t *) keys)->keys[1]);
+  AES_set_decrypt_key(pk, 128, &((aes128_priv_t *) keys)->keys[1]);
 }
 
 /* set control words */
-void aes_set_control_words(void *keys,
+void aes128_set_control_words(void *keys,
                            const uint8_t *ev,
                            const uint8_t *od)
 {
-  AES_set_decrypt_key(ev, 64, &((aes_priv_t *) keys)->keys[0]);
-  AES_set_decrypt_key(od, 64, &((aes_priv_t *) keys)->keys[1]);
+  AES_set_decrypt_key(ev, 128, &((aes128_priv_t *) keys)->keys[0]);
+  AES_set_decrypt_key(od, 128, &((aes128_priv_t *) keys)->keys[1]);
 }
 
 /* allocate key structure */
-void * aes_get_priv_struct(void)
+void * aes128_get_priv_struct(void)
 {
-  aes_priv_t *keys;
+  aes128_priv_t *keys;
 
-  keys = (aes_priv_t *) malloc(sizeof(aes_priv_t));
+  keys = (aes128_priv_t *) malloc(sizeof(aes128_priv_t));
   if (keys) {
     static const uint8_t pk[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    aes_set_control_words(keys, pk, pk);
+    aes128_set_control_words(keys, pk, pk);
   }
   return keys;
 }
 
 /* free key structure */
-void aes_free_priv_struct(void *keys)
+void aes128_free_priv_struct(void *keys)
 {
   free(keys);
 }
 
 /* decrypt */
-void aes_decrypt_packet(void *keys, const uint8_t *pkt)
+void aes128_decrypt_packet(void *keys, const uint8_t *pkt)
 {
   uint_fast8_t ev_od = 0;
   uint_fast8_t xc0, offset;
@@ -80,8 +81,8 @@ void aes_decrypt_packet(void *keys, const uint8_t *pkt)
     offset = 4;
   }
 
-  k = &((aes_priv_t *) keys)->keys[ev_od];
-  for (; offset <= (188 - 8); offset += 8) {
+  k = &((aes128_priv_t *) keys)->keys[ev_od];
+  for (; offset <= (188 - 16); offset += 16) {
     AES_ecb_encrypt(pkt + offset, (uint8_t *)(pkt + offset), k, AES_DECRYPT);
   }
 }

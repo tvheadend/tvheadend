@@ -547,6 +547,7 @@ endif
 
 # crypto algorithms
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c
+SRCS-${CONFIG_SSL} += src/descrambler/algo/libaes128dec.c
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libdesdec.c
 
 # DBUS

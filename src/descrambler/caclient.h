@@ -31,6 +31,7 @@ extern const idclass_t caclient_capmt_class;
 extern const idclass_t caclient_ccw_csa_cbc_class;
 extern const idclass_t caclient_ccw_des_ncb_class;
 extern const idclass_t caclient_ccw_aes_ecb_class;
+extern const idclass_t caclient_ccw_aes128_ecb_class;
 
 TAILQ_HEAD(caclient_entry_queue, caclient);
 
