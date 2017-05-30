@@ -78,7 +78,7 @@ void caclient_init(void);
 void caclient_done(void);
 
 void tsdebugcw_service_start(struct service *t);
-void tsdebugcw_new_keys(struct service *t, int type, uint8_t *odd, uint8_t *even);
+void tsdebugcw_new_keys(struct service *t, int type, uint16_t pid, uint8_t *odd, uint8_t *even);
 void tsdebugcw_go(void);
 void tsdebugcw_init(void);
 

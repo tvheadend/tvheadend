@@ -619,19 +619,22 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   }
 
 fin:
-  pthread_mutex_unlock(&t->s_stream_mutex);
 #if ENABLE_TSDEBUG
   if (j) {
     tsdebug_packet_t *tp = malloc(sizeof(*tp));
     uint16_t keylen = tk->key_csa.csa_keylen;
-    uint16_t sid = ((mpegts_service_t *)td->td_service)->s_dvb_service_id;
+    mpegts_service_t *ms = (mpegts_service_t *)t;
+    uint16_t sid = ms->s_dvb_service_id;
     uint32_t pos = 0, crc;
-    mpegts_mux_t *mm = ((mpegts_service_t *)td->td_service)->s_dvb_mux;
-    if (!mm->mm_active) {
+    mpegts_mux_t *mm = ms->s_dvb_mux;
+    mpegts_mux_instance_t *mmi = mm ? mm->mm_active : NULL;
+    mpegts_input_t *mi = mmi ? mmi->mmi_input : NULL;
+    if (mi == NULL) {
       free(tp);
       return;
-	}
-    pthread_mutex_lock(&mm->mm_active->mmi_input->mi_output_lock);
+    }
+    pthread_mutex_unlock(&t->s_stream_mutex);
+    pthread_mutex_lock(&mi->mi_output_lock);
     tp->pos = mm->mm_tsdebug_pos;
     memset(tp->pkt, 0xff, sizeof(tp->pkt));
     tp->pkt[pos++] = 0x47; /* sync byte */
@@ -655,9 +658,11 @@ fin:
     tp->pkt[pos++] = (crc >> 8) & 0xff;
     tp->pkt[pos++] = crc & 0xff;
     TAILQ_INSERT_HEAD(&mm->mm_tsdebug_packets, tp, link);
-    pthread_mutex_unlock(&mm->mm_active->mmi_input->mi_output_lock);
+    pthread_mutex_unlock(&mi->mi_output_lock);
+    return;
   }
 #endif
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 void

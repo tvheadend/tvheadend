@@ -1278,8 +1278,9 @@ mpegts_input_table_waiting ( mpegts_input_t *mi, mpegts_mux_t *mm )
 static void
 tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
 {
-  void tsdebugcw_new_keys(service_t *t, int type, uint8_t *odd, uint8_t *even);
+  void tsdebugcw_new_keys(service_t *t, int type, uint16_t pid, uint8_t *odd, uint8_t *even);
   uint32_t pos, type, keylen, sid, crc;
+  uint16_t pid;
   mpegts_service_t *t;
 
   for ( ; len > 0; pkt += 188, len -= 188) {
@@ -1301,9 +1302,9 @@ tsdebug_check_tspkt( mpegts_mux_t *mm, uint8_t *pkt, int len )
       if (t->s_dvb_service_id == sid) break;
     if (!t)
       return;
-    pos =  4 + 24 + 4;
+    pos = 4 + 24 + 4;
     tvhdebug(LS_DESCRAMBLER, "Keys from MPEG-TS source (PID 0x1FFF)!");
-    tsdebugcw_new_keys((service_t *)t, type, pkt + pos, pkt + pos + keylen);
+    tsdebugcw_new_keys((service_t *)t, type, pid, pkt + pos, pkt + pos + keylen);
   }
 }
 #endif
