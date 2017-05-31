@@ -1886,7 +1886,7 @@ save_thread ( void *aux )
   htsmsg_t *m;
   char filename[PATH_MAX];
 
-  tvhtread_renice(15);
+  tvhthread_renice(15);
 
   pthread_mutex_lock(&global_lock);
 

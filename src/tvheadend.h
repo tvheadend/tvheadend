@@ -703,7 +703,7 @@ int tvhthread_create
    void *(*start_routine) (void *), void *arg,
    const char *name);
 
-int tvhtread_renice(int value);
+int tvhthread_renice(int value);
 
 int tvh_mutex_timedlock(pthread_mutex_t *mutex, int64_t usec);
 
