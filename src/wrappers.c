@@ -169,6 +169,12 @@ tvhthread_create
 {
   int r;
   struct thread_state *ts = calloc(1, sizeof(struct thread_state));
+  pthread_attr_t _attr;
+  if (attr == NULL) {
+    pthread_attr_init(&_attr);
+    pthread_attr_setstacksize(&_attr, 2*1024*1024);
+    attr = &_attr;
+  }
   strncpy(ts->name, "tvh:", 4);
   strncpy(ts->name+4, name, sizeof(ts->name)-4);
   ts->name[sizeof(ts->name)-1] = '\0';
@@ -180,7 +186,7 @@ tvhthread_create
 
 /* linux style: -19 .. 20 */
 int
-tvhtread_renice(int value)
+tvhthread_renice(int value)
 {
   int ret = 0;
 #ifdef SYS_gettid

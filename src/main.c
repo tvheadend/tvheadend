@@ -78,6 +78,7 @@
 #ifdef PLATFORM_LINUX
 #include <sys/prctl.h>
 #endif
+#include <sys/resource.h>
 #include <openssl/ssl.h>
 #include <openssl/conf.h>
 #include <openssl/err.h>
@@ -446,7 +447,7 @@ tasklet_thread ( void *aux )
   tsk_callback_t *tsk_cb;
   void *opaque;
 
-  tvhtread_renice(20);
+  tvhthread_renice(20);
 
   pthread_mutex_lock(&tasklet_lock);
   while (tvheadend_is_running()) {
@@ -740,6 +741,7 @@ main(int argc, char **argv)
     struct timeval tv;
     uint8_t ru[32];
   } randseed;
+  struct rlimit rl;
   extern int dvb_bouquets_parse;
 
   main_tid = pthread_self();
@@ -1120,6 +1122,16 @@ main(int argc, char **argv)
     }
 
     umask(0);
+  }
+
+  memset(&rl, 0, sizeof(rl));
+  if (getrlimit(RLIMIT_STACK, &rl) || rl.rlim_cur < 2*1024*1024) {
+    rlim_t rl2 = rl.rlim_cur;
+    rl.rlim_cur = 2*1024*1024;
+    if (setrlimit(RLIMIT_STACK, &rl)) {
+      tvhlog(LOG_ALERT, LS_START, "too small stack size - %ld", (long)rl2);
+      return 1;
+    }
   }
 
   atomic_set(&tvheadend_running, 1);
