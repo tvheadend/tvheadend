@@ -1516,8 +1516,8 @@ dvb_nit_callback
         if (r < 0)
           return r;
       }
-      if (mux->mm_onid == 0xffff && mux->mm_tsid == tsid)
-        retry = 1; /* keep rolling - perhaps PAT was not parsed yet */
+      if (mm == mux && mux->mm_onid == 0xffff && mux->mm_tsid == tsid)
+        retry = 1; /* keep rolling - perhaps SDT was not parsed yet */
     }
       
     lptr += r;
