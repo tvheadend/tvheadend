@@ -997,7 +997,7 @@ const idclass_t dvr_config_class = {
       .id       = "epg-update-window",
       .name     = N_("EPG update window"),
       .desc     = N_("Maximum allowed difference between event start time when "
-                     "the EPG event is changed."),
+                     "the EPG event is changed in seconds."),
       .off      = offsetof(dvr_config_t, dvr_update_window),
       .list     = dvr_config_entry_class_update_window_list,
       .def.u32  = 24*3600,

@@ -846,7 +846,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
     return 0;
   
   /* Title match (or contains?) */
-  if (strcmp(title1, title2))
+  if (strcasecmp(title1, title2))
     return 0;
 
   /* episode check */

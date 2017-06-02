@@ -1721,8 +1721,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
-    if (config.epg_cutwindow && ebc->stop - ebc->start > config.epg_cutwindow * 2 &&
-        ebc->stop - ret->start <= config.epg_cutwindow) {
+    if (config.epg_cut_window && ebc->stop - ebc->start > config.epg_cut_window * 2 &&
+        ebc->stop - ret->start <= config.epg_cut_window) {
       tvhtrace(LS_EPG, "cut stop for overlap (b) event %u (%s) on %s @ %s to %s",
                ebc->id, epg_broadcast_get_title(ebc, NULL),
                channel_get_name(ch, channel_blank_name),
@@ -1748,8 +1748,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
       _epg_channel_rem_broadcast(ch, ret, NULL);
       return NULL;
     }
-    if (config.epg_cutwindow && ret->stop - ret->start > config.epg_cutwindow * 2 &&
-        ret->stop - ebc->start <= config.epg_cutwindow) {
+    if (config.epg_cut_window && ret->stop - ret->start > config.epg_cut_window * 2 &&
+        ret->stop - ebc->start <= config.epg_cut_window) {
       tvhtrace(LS_EPG, "cut stop for overlap (a) event %u (%s) on %s @ %s to %s",
                ebc->id, epg_broadcast_get_title(ebc, NULL),
                channel_get_name(ch, channel_blank_name),
@@ -1788,6 +1788,66 @@ void epg_channel_unlink ( channel_t *ch )
   while ((ebc = RB_FIRST(&ch->ch_epg_schedule)))
     _epg_channel_rem_broadcast(ch, ebc, NULL);
   gtimer_disarm(&ch->ch_epg_timer);
+}
+
+static int epg_match_event_fuzzy(epg_broadcast_t *a, epg_broadcast_t *b)
+{
+  time_t t1, t2;
+  const char *title1, *title2;
+  epg_episode_num_t num1, num2;
+
+  /* Matching ID */
+  if (a->dvb_eid) {
+    if (b->dvb_eid && a->dvb_eid == b->dvb_eid)
+      return 1;
+    return 0;
+  }
+
+  /* Wrong length (+/-20%) */
+  t1 = a->stop - a->start;
+  t2 = b->stop - b->start;
+  if (labs((long)(t2 - t1)) > (t1 / 5))
+    return 0;
+
+  /* No title */
+  if (!(title1 = epg_broadcast_get_title(a, NULL)))
+    return 0;
+  if (!(title2 = epg_broadcast_get_title(b, NULL)))
+    return 0;
+
+  /* Outside of window */
+  if ((int64_t)llabs(b->start - a->start) > config.epg_update_window)
+    return 0;
+
+  /* Title match (or contains?) */
+  if (strcasecmp(title1, title2))
+    return 0;
+
+  /* episode check */
+  if (a->episode && b->episode) {
+    epg_episode_get_epnum(a->episode, &num1);
+    epg_episode_get_epnum(b->episode, &num2);
+    if (epg_episode_number_cmp(&num1, &num2) == 0)
+      return 1;
+  }
+
+  return 0;
+}
+
+epg_broadcast_t *epg_match_now_next ( channel_t *ch, epg_broadcast_t *ebc )
+{
+  epg_broadcast_t *ret;
+
+  if (epg_match_event_fuzzy(ch->ch_epg_now, ebc))
+    ret = ch->ch_epg_now;
+  else if (epg_match_event_fuzzy(ch->ch_epg_next, ebc))
+    ret = ch->ch_epg_next;
+  else
+    return NULL;
+  /* update eid for further lookups */
+  if (ret->dvb_eid != ebc->dvb_eid && ret->dvb_eid == 0 && ebc->dvb_eid)
+    ret->dvb_eid = ebc->dvb_eid;
+  return ret;
 }
 
 /* **************************************************************************
