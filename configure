@@ -611,9 +611,11 @@ fi
 #
 # libdvben50221
 #
-if enabled libdvben50221; then
-  LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
-  enable linuxdvb_ca
+if enabled linuxdvb; then
+  if enabled libdvben50221; then
+    LDFLAGS="$LDFLAGS -ldvben50221 -ldvbapi -lucsi"
+    enable linuxdvb_ca
+  fi
 fi
 
 #
