@@ -544,27 +544,6 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
       goto fin;
     }
 
-  if (even && memcmp(empty, even, tk->key_csa.csa_keylen)) {
-    j++;
-    memcpy(tk->key_data[0], even, tk->key_csa.csa_keylen);
-    tk->key_pid = pid;
-    tk->key_changed |= 1;
-    tk->key_valid |= 0x40;
-    tk->key_timestamp[0] = mclk();
-  } else {
-    even = empty;
-  }
-  if (odd && memcmp(empty, odd, tk->key_csa.csa_keylen)) {
-    j++;
-    memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
-    tk->key_pid = pid;
-    tk->key_changed |= 2;
-    tk->key_valid |= 0x80;
-    tk->key_timestamp[1] = mclk();
-  } else {
-    odd = empty;
-  }
-
   if (pid == 0)
     pidname[0] = '\0';
   else
@@ -575,6 +554,40 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   case DESCRAMBLER_AES_ECB: ktype = "AES EBC"; break;
   default: abort();
   }
+
+  if (even && memcmp(empty, even, tk->key_csa.csa_keylen)) {
+    j++;
+    memcpy(tk->key_data[0], even, tk->key_csa.csa_keylen);
+    tk->key_pid = pid;
+    tk->key_changed |= 1;
+    tk->key_valid |= 0x40;
+    tk->key_timestamp[0] = mclk();
+    if (dr->dr_ecm_start[0] < dr->dr_ecm_start[1]) {
+      dr->dr_ecm_start[0] = dr->dr_ecm_start[1];
+      tvhdebug(LS_DESCRAMBLER,
+               "Both keys received, marking ECM start for even key%s for service \"%s\"",
+               pidname, ((mpegts_service_t *)t)->s_dvb_svcname);
+    }
+  } else {
+    even = empty;
+  }
+  if (odd && memcmp(empty, odd, tk->key_csa.csa_keylen)) {
+    j++;
+    memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
+    tk->key_pid = pid;
+    tk->key_changed |= 2;
+    tk->key_valid |= 0x80;
+    tk->key_timestamp[1] = mclk();
+    if (dr->dr_ecm_start[1] < dr->dr_ecm_start[0]) {
+      dr->dr_ecm_start[1] = dr->dr_ecm_start[0];
+      tvhdebug(LS_DESCRAMBLER,
+               "Both keys received, marking ECM start for odd key%s for service \"%s\"",
+               pidname, ((mpegts_service_t *)t)->s_dvb_svcname);
+    }
+  } else {
+    odd = empty;
+  }
+
   if (j) {
     if (td->td_keystate != DS_RESOLVED)
       tvhdebug(LS_DESCRAMBLER,
@@ -1025,8 +1038,10 @@ descrambler_table_callback
   th_descrambler_runtime_t *dr;
   th_descrambler_key_t *tk;
   int emm = (mt->mt_flags & MT_FAST) == 0;
+  mpegts_service_t *t;
+  int64_t clk;
   uint8_t ki;
-  int i;
+  int i, j;
 
   if (len < 6)
     return 0;
@@ -1056,8 +1071,7 @@ descrambler_table_callback
       }
       ds->callback(ds->opaque, mt->mt_pid, ptr, len, emm);
       if (!emm) { /* ECM */
-        mpegts_service_t *t = mt->mt_service;
-        if (t) {
+        if ((t = mt->mt_service) != NULL) {
           /* The keys are requested from this moment */
           dr = t->s_descramble;
           if (dr) {
@@ -1101,6 +1115,24 @@ descrambler_table_callback
         else if (len >= 4)
           tvhtrace(LS_DESCRAMBLER_EMM, "%s message %02x:{%02x:%02x}:%02x (len %d, pid %d)",
                    s, ptr[0], ptr[1], ptr[2], ptr[3], len, mt->mt_pid);
+      }
+    } else if (des->last_data && !emm) {
+      if ((t = mt->mt_service) != NULL) {
+        if ((dr = t->s_descramble) != NULL) {
+          clk = mclk();
+          for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
+            tk = &dr->dr_keys[i];
+            for (j = 0; j < 2; j++) {
+              if (tk->key_timestamp[j] > dr->dr_ecm_start[j] &&
+                  tk->key_timestamp[j] + ms2mono(200) <= clk) {
+                tk->key_timestamp[j] = clk;
+                tvhtrace(LS_DESCRAMBLER, "ECM: %s key[%d] for service \"%s\" still valid",
+                                         j == 0 ? "Even" : "Odd",
+                                         tk->key_pid, t->s_dvb_svcname);
+              }
+            }
+          }
+        }
       }
     }
   }
