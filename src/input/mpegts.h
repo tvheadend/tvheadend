@@ -1116,6 +1116,8 @@ void mpegts_service_unref ( service_t *s );
 
 void mpegts_service_delete ( service_t *s, int delconf );
 
+int64_t mpegts_service_channel_number ( service_t *s );
+
 /*
  * MPEG-TS event handler
  */

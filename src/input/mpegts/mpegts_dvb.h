@@ -99,9 +99,4 @@ dvb_mux_t *dvb_mux_create0
 #define dvb_mux_create1(n, u, c)\
   dvb_mux_create0(n, MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, NULL, u, c)
 
-/*
- *
- */
-int64_t mpegts_service_channel_number ( service_t *s );
-
 #endif /* __TVH_MPEGTS_DVB_H__ */

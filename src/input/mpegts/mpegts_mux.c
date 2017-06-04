@@ -1482,6 +1482,7 @@ mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
                    &b->mm_network->mn_id.in_uuid);
   if (r)
     return r;
+#if ENABLE_MPEGTS_DVB
   if (idnode_is_instance(&a->mm_id, &dvb_mux_dvbs_class) &&
       idnode_is_instance(&b->mm_id, &dvb_mux_dvbs_class)) {
     dvb_mux_conf_t *mc1 = &((dvb_mux_t *)a)->lm_tuning;
@@ -1493,6 +1494,7 @@ mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
     if (r == 0)
       r = mc1->dmc_fe_freq - mc2->dmc_fe_freq;
   }
+#endif
   return r ?: uuid_cmp(&a->mm_id.in_uuid, &b->mm_id.in_uuid);
 }
 
