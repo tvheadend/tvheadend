@@ -346,7 +346,7 @@ descrambler_service_start ( service_t *t )
       tvhcsa_init(&tk->key_csa);
       if (!multipid) break;
     }
-    dr->dr_ecm_key_margin = interval / 5;
+    dr->dr_ecm_key_margin = ms2mono(interval) / 5;
     dr->dr_key_const = constcw;
     dr->dr_key_multipid = multipid;
     if (constcw)
