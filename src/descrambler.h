@@ -72,6 +72,7 @@ typedef struct th_descrambler_key {
   tvhcsa_t key_csa;
   uint16_t key_pid;         /* keys are assigned to this pid (when multipid is set) */
   uint64_t key_interval;
+  uint64_t key_initial_interval;
   int64_t  key_start;
   int64_t  key_timestamp[2];
   uint8_t  key_index;
