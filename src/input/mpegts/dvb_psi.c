@@ -213,11 +213,11 @@ dvb_desc_sat_del
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   if (!frequency) {
-    tvhwarn(mt->mt_subsys, "%s: dvb-s frequency error", mt->mt_name);
+    tvhtrace(mt->mt_subsys, "%s: dvb-s frequency error", mt->mt_name);
     return NULL;
   }
   if (!symrate) {
-    tvhwarn(mt->mt_subsys, "%s: dvb-s symbol rate error", mt->mt_name);
+    tvhtrace(mt->mt_subsys, "%s: dvb-s symbol rate error", mt->mt_name);
     return NULL;
   }
 
@@ -257,7 +257,7 @@ dvb_desc_sat_del
   dmc.dmc_fe_rolloff    = rtab[(ptr[6] >> 3) & 0x3];
   if (dmc.dmc_fe_delsys == DVB_SYS_DVBS &&
       dmc.dmc_fe_rolloff != DVB_ROLLOFF_35) {
-    tvhwarn(mt->mt_subsys, "%s: dvb-s rolloff error", mt->mt_name);
+    tvhtrace(mt->mt_subsys, "%s: dvb-s rolloff error", mt->mt_name);
     return NULL;
   }
 
@@ -298,11 +298,11 @@ dvb_desc_cable_del
     bcdtoint(ptr[7]) * 100000 + bcdtoint(ptr[8]) * 1000 + 
     bcdtoint(ptr[9]) * 10     + (ptr[10] >> 4);
   if (!frequency) {
-    tvhwarn(mt->mt_subsys, "%s: dvb-c frequency error", mt->mt_name);
+    tvhtrace(mt->mt_subsys, "%s: dvb-c frequency error", mt->mt_name);
     return NULL;
   }
   if (!symrate) {
-    tvhwarn(mt->mt_subsys, "%s: dvb-c symbol rate error", mt->mt_name);
+    tvhtrace(mt->mt_subsys, "%s: dvb-c symbol rate error", mt->mt_name);
     return NULL;
   }
 
@@ -368,7 +368,7 @@ dvb_desc_terr_del
   /* Extract data */
   frequency     = ((ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3]);
   if (frequency < 1000000 || frequency > 200000000) {
-    tvhdebug(mt->mt_subsys, "%s: dvb-t frequency error (%d)", mt->mt_name, frequency);
+    tvhtrace(mt->mt_subsys, "%s: dvb-t frequency error (%d)", mt->mt_name, frequency);
     return NULL;
   }
 
