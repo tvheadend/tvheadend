@@ -1112,6 +1112,15 @@ create_video_filter(video_stream_t *vs, transcoder_t *t,
     goto out_err;
   }
 
+  pix_fmts[0] = octx->pix_fmt;
+  err = av_opt_set_int_list(vs->flt_bufsinkctx, "pix_fmts", pix_fmts,
+                            AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
+  if (err < 0) {
+    tvherror("transcode", "%08X: fltchain cannot set output pixfmt",
+             shortid(t));
+    goto out_err;
+  }
+
   flt_outputs->name = av_strdup("in");
   flt_outputs->filter_ctx = vs->flt_bufsrcctx;
   flt_outputs->pad_idx = 0;
