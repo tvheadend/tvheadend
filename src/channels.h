@@ -46,6 +46,7 @@ typedef struct channel
   int ch_refcount;
   int ch_load;
   int ch_dont_save;
+  int ch_changed_ref;
 
   /* Channel info */
   int     ch_enabled;

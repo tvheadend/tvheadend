@@ -73,6 +73,9 @@ channel_class_changed ( idnode_t *self )
 {
   channel_t *ch = (channel_t *)self;
 
+  if (atomic_add(&ch->ch_changed_ref, 1) > 0)
+    goto end;
+
   tvhdebug(LS_CHANNEL, "channel '%s' changed", channel_get_name(ch, channel_blank_name));
 
   /* update the EPG channel <-> channel mapping here */
@@ -81,6 +84,9 @@ channel_class_changed ( idnode_t *self )
 
   /* HTSP */
   htsp_channel_update(ch);
+
+end:
+  atomic_dec(&ch->ch_changed_ref, 0);
 }
 
 static htsmsg_t *
@@ -1008,6 +1014,8 @@ channel_create0
   ch->ch_autoname = 1;
   ch->ch_epgauto  = 1;
   ch->ch_epg_running = -1;
+
+  atomic_set(&ch->ch_changed_ref, 0);
 
   if (conf) {
     ch->ch_load = 1;
