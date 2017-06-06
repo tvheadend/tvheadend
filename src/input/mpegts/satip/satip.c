@@ -604,7 +604,6 @@ satip_device_create( satip_device_info_t *info )
   sd->sd_sig_scale   = 240;
   sd->sd_dbus_allow  = 1;
 
-
   if (!tvh_hardware_create0((tvh_hardware_t*)sd, &satip_device_class,
                             uuid.hex, conf)) {
     /* Note: sd is freed in above fcn */
@@ -615,6 +614,8 @@ satip_device_create( satip_device_info_t *info )
 
   TAILQ_INIT(&sd->sd_frontends);
   TAILQ_INIT(&sd->sd_serialize_queue);
+
+  atomic_set(&sd->sd_wake_ref, 0);
 
   /* we may check if uuid matches, but the SHA hash should be enough */
   if (sd->sd_info.uuid)

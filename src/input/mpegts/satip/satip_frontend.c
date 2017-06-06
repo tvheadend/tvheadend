@@ -1085,6 +1085,9 @@ satip_frontend_wake_other_waiting
   if (tr == NULL)
     return;
 
+  if (atomic_add(&lfe->sf_device->sd_wake_ref, 1) > 0)
+    goto end;
+
   hash1 = tr->sf_netposhash;
 
   TAILQ_FOREACH(lfe2, &lfe->sf_device->sd_frontends, sf_link) {
@@ -1100,6 +1103,9 @@ satip_frontend_wake_other_waiting
       tvh_write(lfe2->sf_dvr_pipe.wr, "o", 1);
     pthread_mutex_unlock(&lfe2->sf_dvr_lock);
   }
+
+end:
+  atomic_dec(&lfe->sf_device->sd_wake_ref, 1);
 }
 
 static void
