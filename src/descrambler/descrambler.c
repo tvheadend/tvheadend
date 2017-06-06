@@ -1037,8 +1037,7 @@ next:
             descrambler_data_cut(dr, 188);
           }
         }
-      } else if (tk->key_index != (ki & 0x40) &&
-                 tk->key_start + dr->dr_ecm_key_margin < mclk()) {
+      } else if (key_changed(dr, tk, ki, mclk())) {
         tvhtrace(LS_DESCRAMBLER, "stream key[%d] changed to %s for service \"%s\"",
                                 tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
