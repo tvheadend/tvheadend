@@ -515,6 +515,8 @@ static int _eit_process_event_one
   }
 
   if (rsonly) {
+    if (!ev.title)
+      goto tidy;
     memset(&_ebc, 0, sizeof(_ebc));
     if (*ev.suri)
       if ((es = epg_serieslink_find_by_uri(ev.suri, mod, 0, 0, NULL)))
