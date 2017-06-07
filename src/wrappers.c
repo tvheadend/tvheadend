@@ -427,6 +427,10 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
 #if ENABLE_PCRE
   const char *estr;
   int eoff;
+#if PCRE_STUDY_JIT_COMPILE
+  regex->re_jit_stack = NULL;
+#endif
+  regex->re_extra = NULL;
   regex->re_code = pcre_compile(re_str, PCRE_CASELESS | PCRE_UTF8,
                                 &estr, &eoff, NULL);
   if (regex->re_code == NULL) {
@@ -452,6 +456,8 @@ int regex_compile(tvh_regex_t *regex, const char *re_str, int subsys)
   PCRE2_SIZE eoff;
   size_t jsz;
   assert(regex->re_jit_stack == NULL);
+  regex->re_jit_stack = NULL;
+  regex->re_match = NULL;
   regex->re_mcontext = pcre2_match_context_create(NULL);
   regex->re_code = pcre2_compile((PCRE2_SPTR8)re_str, -1,
                                  PCRE2_CASELESS | PCRE2_UTF,
