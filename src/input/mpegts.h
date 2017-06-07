@@ -527,21 +527,22 @@ struct mpegts_mux
   /*
    * Configuration
    */
-  char *mm_crid_authority;
-  int   mm_enabled;
-  int   mm_epg;
-  char *mm_charset;
-  int   mm_pmt_ac3;
-  int   mm_eit_tsid_nocheck;
+  char    *mm_crid_authority;
+  int      mm_enabled;
+  int      mm_epg;
+  char    *mm_charset;
+  int      mm_pmt_ac3;
+  int      mm_eit_tsid_nocheck;
   uint16_t mm_sid_filter;
 
   /*
    * TSDEBUG
    */
 #if ENABLE_TSDEBUG
-  int   mm_tsdebug_fd;
-  int   mm_tsdebug_fd2;
-  off_t mm_tsdebug_pos;
+  pthread_mutex_t mm_tsdebug_lock;
+  int             mm_tsdebug_fd;
+  int             mm_tsdebug_fd2;
+  off_t           mm_tsdebug_pos;
   TAILQ_HEAD(, tsdebug_packet) mm_tsdebug_packets;
 #endif
 };

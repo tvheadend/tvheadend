@@ -1396,10 +1396,11 @@ done:
     pktbuf_ref_dec(pb);
   }
 #if ENABLE_TSDEBUG
-  {
+  if (mm->mm_tsdebug_fd >= 0 || mm->mm_tsdebug_fd2 >= 0) {
     tsdebug_packet_t *tp, *tp_next;
     off_t pos = 0;
     size_t used = tsb - mpkt->mp_data;
+    pthread_mutex_lock(&mm->mm_tsdebug_lock);
     for (tp = TAILQ_FIRST(&mm->mm_tsdebug_packets); tp; tp = tp_next) {
       tp_next = TAILQ_NEXT(tp, link);
       assert((tp->pos % 188) == 0);
@@ -1414,6 +1415,7 @@ done:
     }
     if (pos < used && mm->mm_tsdebug_fd >= 0)
       tvh_write(mm->mm_tsdebug_fd, mpkt->mp_data + pos, used - pos);
+    pthread_mutex_unlock(&mm->mm_tsdebug_lock);
   }
 #endif
 

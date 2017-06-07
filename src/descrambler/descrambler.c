@@ -699,13 +699,11 @@ fin:
     mpegts_mux_t *mm = ms->s_dvb_mux;
     mpegts_mux_instance_t *mmi = mm ? mm->mm_active : NULL;
     mpegts_input_t *mi = mmi ? mmi->mmi_input : NULL;
-    if (mi == NULL) {
+    if (mi == NULL || (mm->mm_tsdebug_fd < 0 && mm->mm_tsdebug_fd2 < 0)) {
       free(tp);
-      return;
+      goto end;
     }
     pthread_mutex_unlock(&t->s_stream_mutex);
-    pthread_mutex_lock(&mi->mi_output_lock);
-    tp->pos = mm->mm_tsdebug_pos;
     memset(tp->pkt, 0xff, sizeof(tp->pkt));
     tp->pkt[pos++] = 0x47; /* sync byte */
     tp->pkt[pos++] = 0x1f; /* PID MSB */
@@ -727,11 +725,14 @@ fin:
     tp->pkt[pos++] = (crc >> 16) & 0xff;
     tp->pkt[pos++] = (crc >> 8) & 0xff;
     tp->pkt[pos++] = crc & 0xff;
+    pthread_mutex_lock(&mm->mm_tsdebug_lock);
+    tp->pos = mm->mm_tsdebug_pos;
     TAILQ_INSERT_HEAD(&mm->mm_tsdebug_packets, tp, link);
-    pthread_mutex_unlock(&mi->mi_output_lock);
+    pthread_mutex_unlock(&mm->mm_tsdebug_lock);
     return;
   }
 #endif
+end:
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
