@@ -532,8 +532,7 @@ static int _eit_process_event_one
     _ebc.dvb_eid = eid;
     _ebc.start = start;
     _ebc.stop = stop;
-    _ee.title = title_copy = ev.title;
-    ev.title = NULL;
+    _ee.title = title_copy = lang_str_copy(ev.title);
 
     ebc = epg_match_now_next(ch, &_ebc);
     tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
@@ -627,7 +626,7 @@ tidy:
     }
   }
 
-  free(title_copy);
+  if (title_copy) lang_str_destroy(title_copy);
   return 0;
 }
 
