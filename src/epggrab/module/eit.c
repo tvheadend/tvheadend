@@ -430,6 +430,7 @@ static int _eit_process_event_one
   epg_serieslink_t *es;
   epg_running_t run;
   eit_event_t ev;
+  lang_str_t *title_copy = NULL;
   uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
   char tm1[32], tm2[32];
 
@@ -531,7 +532,8 @@ static int _eit_process_event_one
     _ebc.dvb_eid = eid;
     _ebc.start = start;
     _ebc.stop = stop;
-    _ee.title = ev.title;
+    _ee.title = title_copy = ev.title;
+    ev.title = NULL;
 
     ebc = epg_match_now_next(ch, &_ebc);
     tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
@@ -625,6 +627,7 @@ tidy:
     }
   }
 
+  free(title_copy);
   return 0;
 }
 
