@@ -731,8 +731,8 @@ fin:
     pthread_mutex_unlock(&mm->mm_tsdebug_lock);
     return;
   }
-#endif
 end:
+#endif
   pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
