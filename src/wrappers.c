@@ -398,8 +398,10 @@ void regex_free(tvh_regex_t *regex)
 #if ENABLE_PCRE
 #ifdef PCRE_CONFIG_JIT
 #if PCRE_STUDY_JIT_COMPILE
-  pcre_jit_stack_free(regex->re_jit_stack);
-  regex->re_jit_stack = NULL;
+  if (regex->re_jit_stack) {
+    pcre_jit_stack_free(regex->re_jit_stack);
+    regex->re_jit_stack = NULL;
+  }
 #endif
   pcre_free_study(regex->re_extra);
 #else
