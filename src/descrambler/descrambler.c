@@ -160,7 +160,7 @@ static int
 descrambler_data_key_check(th_descrambler_runtime_t *dr, uint8_t key, int len)
 {
   th_descrambler_data_t *dd;
-  int off = 0;
+  int off = 0, l;
 
   if ((dd = TAILQ_FIRST(&dr->dr_queue)) == NULL)
     return 0;
@@ -168,16 +168,11 @@ descrambler_data_key_check(th_descrambler_runtime_t *dr, uint8_t key, int len)
     while (dd && dd->dd_sbuf.sb_data == NULL)
       dd = TAILQ_NEXT(dd, dd_link);
     if (dd == NULL) break;
-    if (dd->dd_sbuf.sb_ptr <= off) {
-      dd = TAILQ_NEXT(dd, dd_link);
-      if (dd == NULL)
+    l = dd->dd_sbuf.sb_ptr;
+    for (off = 0; off < l && len > 0; off += 128, l -= 128)
+      if ((dd->dd_sbuf.sb_data[off + 3] & 0xc0) != key)
         return 0;
-      off = 0;
-    }
-    if ((dd->dd_sbuf.sb_data[off + 3] & 0xc0) != key)
-      return 0;
-    off += 188;
-    len -= 188;
+    dd = TAILQ_NEXT(dd, dd_link);
   }
   return 1;
 }
