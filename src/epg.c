@@ -1796,6 +1796,9 @@ static int epg_match_event_fuzzy(epg_broadcast_t *a, epg_broadcast_t *b)
   const char *title1, *title2;
   epg_episode_num_t num1, num2;
 
+  if (a == NULL || b == NULL)
+    return 0;
+
   /* Matching ID */
   if (a->dvb_eid) {
     if (b->dvb_eid && a->dvb_eid == b->dvb_eid)
