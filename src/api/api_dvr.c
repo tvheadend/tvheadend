@@ -233,7 +233,7 @@ api_dvr_entry_create_by_event
                                        e, 0, 0,
                                        perm->aa_username,
                                        perm->aa_representative,
-                                       NULL, DVR_PRIO_NORMAL, DVR_RET_REM_DVRCONFIG,
+                                       NULL, DVR_PRIO_DEFAULT, DVR_RET_REM_DVRCONFIG,
                                        DVR_RET_REM_DVRCONFIG, comment);
         if (de) {
           if (l == NULL)
