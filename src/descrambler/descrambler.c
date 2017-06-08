@@ -30,8 +30,6 @@
 #include "dvbcam.h"
 #include "streaming.h"
 
-#define KEY_PARITY_THRESHOLD (20*188)
-
 //#define DEBUG2 1
 
 typedef struct th_descrambler_data {
@@ -46,6 +44,7 @@ typedef struct th_descrambler_hint {
   uint16_t dh_caid;
   uint16_t dh_mask;
   uint32_t dh_interval;
+  uint32_t dh_paritycheck;
   uint32_t dh_constcw: 1;
   uint32_t dh_quickecm: 1;
   uint32_t dh_multipid: 1;
@@ -190,7 +189,7 @@ descrambler_data_analyze(th_descrambler_runtime_t *dr,
     if (tsb0 == NULL) continue;
     if ((tsb0[3] & 0x40) == (ki & 0x40)) {
       packets += dd2->dd_sbuf.sb_ptr;
-      if (packets >= KEY_PARITY_THRESHOLD)
+      if (packets >= dr->dr_paritycheck)
         return 1;
     } else {
       packets = 0;
@@ -224,12 +223,14 @@ descrambler_load_hints(htsmsg_t *m)
     hint.dh_quickecm = htsmsg_get_bool_or_default(e, "quickecm", 0);
     hint.dh_multipid = htsmsg_get_bool_or_default(e, "multipid", 0);
     hint.dh_interval = htsmsg_get_s32_or_default(e, "interval", 10000);
-    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums (%s)",
+    hint.dh_paritycheck = htsmsg_get_s32_or_default(e, "paritycheck", 20);
+    tvhinfo(LS_DESCRAMBLER, "adding CAID %04X/%04X as%s%s%s interval %ums pc %d (%s)",
                             hint.dh_caid, hint.dh_mask,
                             hint.dh_constcw ? " ConstCW" : "",
                             hint.dh_quickecm ? " QuickECM" : "",
                             hint.dh_multipid ? " MultiPID" : "",
                             hint.dh_interval,
+                            hint.dh_paritycheck,
                             htsmsg_get_str(e, "name") ?: "unknown");
     dhint = malloc(sizeof(*dhint));
     *dhint = hint;
@@ -316,7 +317,7 @@ descrambler_service_start ( service_t *t )
   th_descrambler_hint_t *hint;
   elementary_stream_t *st;
   caid_t *ca;
-  int i, count, constcw = 0, multipid = 0, interval = 10000;
+  int i, count, constcw = 0, multipid = 0, interval = 10000, paritycheck = 20;
 
   if (t->s_scrambled_pass)
     return;
@@ -365,6 +366,8 @@ descrambler_service_start ( service_t *t )
       tvhcsa_init(&tk->key_csa);
       if (!multipid) break;
     }
+    dr->dr_paritycheck = MINMAX(paritycheck, 1, 200) * 188;
+    dr->dr_initial_paritycheck = MINMAX(paritycheck, 4, 200) * 188;
     dr->dr_ecm_key_margin = ms2mono(interval) / 5;
     dr->dr_key_const = constcw;
     dr->dr_key_multipid = multipid;
@@ -1051,8 +1054,8 @@ next:
       }
       if (tk->key_start == 0) {
         /* do not use the first TS packet to decide - it may be wrong */
-        while (dr->dr_queue_total > KEY_PARITY_THRESHOLD) {
-          if (descrambler_data_key_check(dr, ki & 0xc0, 20 * 188)) {
+        while (dr->dr_queue_total > dr->dr_initial_paritycheck) {
+          if (descrambler_data_key_check(dr, ki & 0xc0, dr->dr_initial_paritycheck)) {
             tvhtrace(LS_DESCRAMBLER, "initial stream key[%d] set to %s for service \"%s\"",
                                     tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);

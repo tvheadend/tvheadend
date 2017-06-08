@@ -95,6 +95,8 @@ typedef struct th_descrambler_runtime {
   th_descrambler_key_t dr_keys[DESCRAMBLER_MAX_KEYS];
   TAILQ_HEAD(, th_descrambler_data) dr_queue;
   uint32_t dr_queue_total;
+  uint32_t dr_paritycheck;
+  uint32_t dr_initial_paritycheck;
   tvhlog_limit_t dr_loglimit_key;
 } th_descrambler_runtime_t;
 
