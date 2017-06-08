@@ -554,13 +554,13 @@ else
   if enabled_or_auto libav; then
     has_libav=true
 
-    check_pkg libavfilter   ">=6.31.100"  || has_libav=false
-    check_pkg libswresample ">=2.0.101"   || has_libav=false
-    check_pkg libavresample ">=3.0.0"     || has_libav=false
-    check_pkg libswscale    ">=4.0.100"   || has_libav=false
-    check_pkg libavformat   ">=57.25.100" || has_libav=false
-    check_pkg libavcodec    ">=57.24.102" || has_libav=false
-    check_pkg libavutil     ">=55.17.103" || has_libav=false
+    check_pkg libavfilter   ">=3.79.101"  || has_libav=false
+    check_pkg libswresample ">=0.17.102"   || has_libav=false
+    check_pkg libavresample ">=1.1.0"     || has_libav=false
+    check_pkg libswscale    ">=2.3.100"   || has_libav=false
+    check_pkg libavformat   ">=55.12.100" || has_libav=false
+    check_pkg libavcodec    ">=55.18.102" || has_libav=false
+    check_pkg libavutil     ">=52.38.100" || has_libav=false
 
     if $has_libav; then
       enable libav
