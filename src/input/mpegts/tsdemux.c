@@ -168,6 +168,13 @@ ts_recv_packet0
         if (!error)
           errors++;
         error |= 2;
+
+        // Skip packet and return so it does not corupt time offset
+        // for timeshift        
+        st->es_cc = (cc + 1) & 0xf;
+        ts_skip(t,tsb,len);
+        return;
+
       }
       st->es_cc = (cc + 1) & 0xf;
     }
@@ -350,7 +357,13 @@ ts_recv_packet1
     }
 
   } else {
-    ts_recv_packet0(t, st, tsb, len);
+    // If we had an errot, skip packet and return so it does not corrupt
+    // time offset for timeshift        
+    if(error){
+      ts_skip(t,tsb,len);
+    } else {
+      ts_recv_packet0(t, st, tsb, len);
+    }
   }
   pthread_mutex_unlock(&t->s_stream_mutex);
   return 1;
