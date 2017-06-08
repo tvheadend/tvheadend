@@ -96,6 +96,11 @@ tvheadend.wizard_start = function(page) {
         var data = conf.fullData;
         var icon = getvalue(data, 'icon');
         var text = getvalue(data, 'description');
+        /*
+         * Chrome and a few other browsers display the SOH character 
+         * in the wizard text which looks ugly, replace it.
+         */
+        text = text.replace(/[\x01]/g,"");
         var progress = getvalue(data, 'progress');
         conf.form = panel.getForm();
         var c = '';
