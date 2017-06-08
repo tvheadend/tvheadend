@@ -641,7 +641,7 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
   if (!(retval = htsmsg_get_u32(in, "removal", &u32)) || add)
     htsmsg_add_u32(conf, "removal", !retval ? u32 : DVR_RET_REM_DVRCONFIG);
   if(!(retval = htsmsg_get_u32(in, "priority", &u32)) || add)
-    htsmsg_add_u32(conf, "pri", !retval ? u32 : DVR_PRIO_NORMAL);
+    htsmsg_add_u32(conf, "pri", !retval ? u32 : DVR_PRIO_DEFAULT);
   if ((str = htsmsg_get_str(in, "name")) || add)
     htsmsg_add_str(conf, "name", str ?: "");
   if ((str = htsmsg_get_str(in, "comment")) || add)
@@ -1836,7 +1836,7 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     ch = e ? e->channel : ch;
   }
   if(htsmsg_get_u32(in, "priority", &priority))
-    priority = DVR_PRIO_NORMAL;
+    priority = DVR_PRIO_DEFAULT;
   if(htsmsg_get_u32(in, "retention", &retention))
     retention = DVR_RET_REM_DVRCONFIG;
   if(htsmsg_get_u32(in, "removal", &removal))
@@ -1971,7 +1971,7 @@ htsp_method_updateDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   stop_extra  = htsmsg_get_s64_or_default(in, "stopExtra",  0);
   retention   = htsmsg_get_u32_or_default(in, "retention",  DVR_RET_REM_DVRCONFIG);
   removal     = htsmsg_get_u32_or_default(in, "removal",    DVR_RET_REM_DVRCONFIG);
-  priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_NOTSET);
+  priority    = htsmsg_get_u32_or_default(in, "priority",   DVR_PRIO_DEFAULT);
   title       = htsmsg_get_str(in, "title");
   subtitle    = htsmsg_get_str(in, "subtitle");
   desc        = htsmsg_get_str(in, "description");
