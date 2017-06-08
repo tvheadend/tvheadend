@@ -315,6 +315,28 @@
         "./configure --disable-dvbscan && make -C rpm build-doozer",
         "support/bintray.py publish filelist.txt"
       ]
+    },
+    "fedora24-x86_64": {
+      "buildenv": "fedora24-x86_64",
+      "builddeps": [
+        "rpm-build",
+        "git",
+        "build-essential",
+        "pkg-config",
+        "gettext",
+        "avahi-devel",
+        "openssl-devel",
+        "zlib-devel",
+        "wget",
+        "bzip2",
+        "uriparser-devel",
+        "python",
+        "ccache"
+      ],
+      "buildcmd": [
+        "./configure",
+        "make -C rpm build"
+      ]
     }
   }
 }
