@@ -1929,7 +1929,7 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                           gmtime2local(e2->start, t1buf, sizeof(t1buf)),
                           gmtime2local(e2->stop, t2buf, sizeof(t2buf)));
           _dvr_entry_update(de, -1, NULL, e2, NULL, NULL, NULL, NULL, NULL,
-                            0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                            0, 0, 0, 0, DVR_PRIO_DEFAULT, 0, 0, -1, -1);
           return;
         }
       }
@@ -1971,7 +1971,7 @@ void dvr_event_updated(epg_broadcast_t *e)
     if (de->de_bcast != e)
       continue;
     _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
-                      NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                      NULL, 0, 0, 0, 0, DVR_PRIO_DEFAULT, 0, 0, -1, -1);
     found++;
   }
   if (found == 0) {
@@ -1985,7 +1985,7 @@ void dvr_event_updated(epg_broadcast_t *e)
                               epg_broadcast_get_title(e, NULL),
                               channel_get_name(e->channel, channel_blank_name));
         _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL,
-                          NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1);
+                          NULL, 0, 0, 0, 0, DVR_PRIO_DEFAULT, 0, 0, -1, -1);
         break;
       }
     }
