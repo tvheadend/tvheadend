@@ -30,7 +30,14 @@
 #include "dvbcam.h"
 #include "streaming.h"
 
-//#define DEBUG2 1
+#if 0
+#define DEBUG2 1
+#define debug2(fmt, ...) tvhtrace(LS_DESCRAMBLER, fmt, ##__VA_ARGS__)
+#else
+#undef DEBUG2
+#define debug2(fmt, ...) do { } while(0)
+#endif
+
 
 typedef struct th_descrambler_data {
   TAILQ_ENTRY(th_descrambler_data) dd_link;
@@ -96,9 +103,7 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
     if (dd && monocmpfastsec(dd->dd_timestamp, mclk()) &&
         (tsb0[3] & 0xc0) == (tsb[3] & 0xc0) && /* key match */
         pid1 == pid2) {
-#ifdef DEBUG2
-      tvhtrace(LS_DESCRAMBLER, "data append %d, timestamp %ld", len, dd->dd_timestamp);
-#endif
+      debug2("%p: data append %d, timestamp %ld", dr, len, dd->dd_timestamp);
       sbuf_append(&dd->dd_sbuf, tsb, len);
       dr->dr_queue_total += len;
       return;
@@ -107,9 +112,7 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
   dd = malloc(sizeof(*dd));
   dd->dd_key = NULL;
   dd->dd_timestamp = mclk();
-#ifdef DEBUG2
-  tvhtrace(LS_DESCRAMBLER, "data append2 %d, timestamp %ld", len, dd->dd_timestamp);
-#endif
+  debug2("%p: data append2 %d, timestamp %ld", dr, len, dd->dd_timestamp);
   sbuf_init(&dd->dd_sbuf);
   sbuf_append(&dd->dd_sbuf, tsb, len);
   TAILQ_INSERT_TAIL(&dr->dr_queue, dd, dd_link);
@@ -124,9 +127,7 @@ descrambler_data_add_key(th_descrambler_runtime_t *dr, th_descrambler_key_t *tk,
   dd = calloc(1, sizeof(*dd));
   dd->dd_timestamp = mclk();
   dd->dd_key = tk;
-#ifdef DEBUG2
-  tvhtrace(LS_DESCRAMBLER, "data %s key %d, timestamp %ld", insert ? "insert" : "append", tk->key_pid, dd->dd_timestamp);
-#endif
+  debug2("%p: data %s key %d, timestamp %ld", dr, head ? "insert" : "append", tk->key_pid, dd->dd_timestamp);
   if (head)
     TAILQ_INSERT_HEAD(&dr->dr_queue, dd, dd_link);
   else
@@ -826,15 +827,20 @@ key_started( th_descrambler_runtime_t *dr, uint8_t ki )
 }
 
 static void
-key_flush( th_descrambler_key_t *tk, service_t *t )
+key_flush( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, service_t *t )
 {
   if (tk->key_changed) {
+    debug2("%p: key[%d] flush", dr, tk->key_pid);
     tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
     /* update the keys */
-    if (tk->key_changed & 1)
+    if (tk->key_changed & 1) {
+      debug2("%p: even key[%d] set for decoder", dr, tk->key_pid);
       tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0]);
-    if (tk->key_changed & 2)
+    }
+    if (tk->key_changed & 2) {
+      debug2("%p: odd key[%d] set for decoder", dr, tk->key_pid);
       tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[1]);
+    }
     tk->key_changed = 0;
   }
 }
@@ -943,7 +949,7 @@ descrambler_descramble ( service_t *t,
       tsb2 = sb->sb_data;
       len2 = sb->sb_ptr;
       if (dd->dd_key) {
-        key_flush(dd->dd_key, t);
+        key_flush(dr, dd->dd_key, t);
         dd->dd_key = NULL;
       }
       if (len2 == 0)
@@ -958,13 +964,11 @@ descrambler_descramble ( service_t *t,
       int64_t t1, t2;
       t1 = dd->dd_timestamp;
       t2 = tk->key_interval - tk->key_interval / 5;
-      tvhtrace(LS_DESCRAMBLER, "timestamp %ld < %ld now %ld (interval %ldms) %d %s\n", t1, now - t2, (now - t1) / 1000, t2 / 1000, tk->key_pid, (tsb2[3] & 0x40) ? "odd" : "even");
+      debug2("%p: timestamp %ld thres %ld now %ld (interval %ldms) %d %s\n", dr, t1, now - t2, (now - t1) / 1000, t2 / 1000, tk->key_pid, (tsb2[3] & 0x40) ? "odd" : "even");
       }
 #endif
       if (dd->dd_timestamp < now - (tk->key_interval - tk->key_interval / 5)) {
-#ifdef DEBUG2
-        tvhtrace(LS_DESCRAMBLER, "^^^ destroy\n");
-#endif
+        debug2("%p: ^^^ destroy\n", dr);
         descrambler_data_destroy(dr, dd, 1);
         continue;
       }
@@ -998,9 +1002,7 @@ descrambler_descramble ( service_t *t,
         }
 doit:
         len3 = mpegts_word_count(tsb2, len2, 0xFF0000C0);
-#ifdef DEBUG2
-        tvhtrace(LS_DESCRAMBLER, "descramble3 %d", len3);
-#endif
+        debug2("%p: descramble3 %d", dr, len3);
         tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb2, len3);
       }
       if (len2 == 0)
@@ -1031,9 +1033,7 @@ doit:
     dr->dr_skip = 1;
     tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb, len);
     service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
-#ifdef DEBUG2
-    tvhtrace(LS_DESCRAMBLER, "descrambled %d", len);
-#endif
+    debug2("%p: descrambled %d", dr, len);
     return 1;
   }
 next:
@@ -1101,9 +1101,7 @@ queue:
   if (flush_data)
     descrambler_flush_table_data(t);
 end:
-#ifdef DEBUG2
-  tvhtrace(LS_DESCRAMBLER, "end");
-#endif
+  debug2("%p: end", dr);
   if (count && count == failed)
     return -1;
   return count;
