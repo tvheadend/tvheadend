@@ -806,12 +806,12 @@ key_late( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, uint8_t ki, in
   /* required key is older than previous? */
   if (tk->key_timestamp[kidx] < tk->key_timestamp[kidx^1]) {
     /* but don't take in account the keys modified just now */
-    if (tk->key_timestamp[kidx^1] + 2 < timestamp)
+    if (tk->key_timestamp[kidx^1] + ms2mono(350) < timestamp)
       goto late;
   }
   /* ECM was sent, but no new key was received */
   if (dr->dr_ecm_last_key_time + dr->dr_ecm_key_margin < tk->key_start &&
-      (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + 4 < tk->key_start)) {
+      (!dr->dr_quick_ecm || dr->dr_ecm_start[kidx] + ms2mono(10) < tk->key_start)) {
 late:
     tk->key_valid &= ~((ki & 0x40) + 0x40);
     return 1;
