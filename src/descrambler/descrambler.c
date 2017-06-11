@@ -953,7 +953,7 @@ descrambler_descramble ( service_t *t,
         dd->dd_key = NULL;
       }
       if (len2 == 0)
-        continue;
+        goto dd_destroy;
       if (dr->dr_key_multipid) {
         tk = key_find_struct(dr, tk, tsb2, t);
         if (tk == NULL) goto next;
@@ -1007,6 +1007,7 @@ doit:
       }
       if (len2 == 0)
         service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
+dd_destroy:
       descrambler_data_destroy(dr, dd, 0);
     }
 
