@@ -677,9 +677,10 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   else
     snprintf(pidname, sizeof(pidname), "[%d]", pid);
   switch(type) {
-  case DESCRAMBLER_CSA_CBC: ktype = "CSA"; break;
-  case DESCRAMBLER_DES_NCB: ktype = "DES"; break;
-  case DESCRAMBLER_AES_ECB: ktype = "AES EBC"; break;
+  case DESCRAMBLER_CSA_CBC:    ktype = "CSA"; break;
+  case DESCRAMBLER_DES_NCB:    ktype = "DES"; break;
+  case DESCRAMBLER_AES_ECB:    ktype = "AES EBC"; break;
+  case DESCRAMBLER_AES128_ECB: ktype = "AES128 EBC"; break;
   default: abort();
   }
 

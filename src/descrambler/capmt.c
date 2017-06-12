@@ -145,7 +145,7 @@ typedef struct ca_info {
   enum {
     CA_ALGO_DVBCSA,
     CA_ALGO_DES,
-    CA_ALGO_AES128,
+    CA_ALGO_AES,
   } algo;
   enum {
     CA_MODE_ECB,
@@ -1153,7 +1153,7 @@ capmt_send_key(capmt_t *capmt)
   case CA_ALGO_DES:
     type = DESCRAMBLER_DES_NCB;
     break;
-  case CA_ALGO_AES128:
+  case CA_ALGO_AES:
     if (cai->cipher_mode == CA_MODE_ECB) {
       type = DESCRAMBLER_AES_ECB;
     } else {
@@ -1358,9 +1358,9 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
       return;
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, cw, NULL, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES128_ECB, cw, NULL, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, NULL, cw, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES128_ECB, NULL, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
 
