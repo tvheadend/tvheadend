@@ -887,9 +887,9 @@ capmt_filter_data(capmt_t *capmt, uint8_t adapter, uint8_t demux_index,
 static void
 capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
-  uint8_t demux_index  = sbuf_peek_u8 (sb, offset + 4);
-  uint8_t filter_index = sbuf_peek_u8 (sb, offset + 5);
-  uint16_t pid         = sbuf_peek_u16(sb, offset + 6);
+  uint8_t demux_index  = sbuf_peek_u8 (sb, offset + 0);
+  uint8_t filter_index = sbuf_peek_u8 (sb, offset + 1);
+  uint16_t pid         = sbuf_peek_u16(sb, offset + 2);
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
   capmt_service_t *ct;
@@ -922,7 +922,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     if (t) break;
   }
   if (t) {
-    dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 8);
+    dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 4);
     /* OK, probably ECM, but sometimes, it's shared */
     /* Inspect the filter */
     for (i = 1; i < DMX_FILTER_SIZE; i++) {
@@ -947,7 +947,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   }
   filter->pid = pid;
   filter->flags = flags;
-  memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
+  memcpy(&filter->filter, sbuf_peek(sb, offset + 4), sizeof(filter->filter));
   tvhlog_hexdump(LS_CAPMT, filter->filter.filter, DMX_FILTER_SIZE);
   tvhlog_hexdump(LS_CAPMT, filter->filter.mask, DMX_FILTER_SIZE);
   tvhlog_hexdump(LS_CAPMT, filter->filter.mode, DMX_FILTER_SIZE);
@@ -966,17 +966,17 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 static void
 capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
-  uint8_t demux_index  = sbuf_peek_u8   (sb, offset + 4);
-  uint8_t filter_index = sbuf_peek_u8   (sb, offset + 5);
+  uint8_t demux_index  = sbuf_peek_u8   (sb, offset + 0);
+  uint8_t filter_index = sbuf_peek_u8   (sb, offset + 1);
   int16_t pid;
   uint32_t flags;
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
 
   if (capmt_oscam_netproto(capmt))
-    pid          = sbuf_peek_s16  (sb, offset + 6);
+    pid          = sbuf_peek_s16  (sb, offset + 2);
   else
-    pid          = sbuf_peek_s16be(sb, offset + 6);
+    pid          = sbuf_peek_s16be(sb, offset + 2);
 
   tvhtrace(LS_CAPMT, "%s: stopping filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            capmt_name(capmt), adapter, demux_index, filter_index, pid);
@@ -1143,8 +1143,9 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   if (sb->sb_ptr - offset < 4)
     return 0;
   cmd = sbuf_peek_u32(sb, offset);
-  if (capmt_oscam_netproto(capmt))  {
-    adapter_byte = 1; //we need to take into account the adapter index byte which is now after the cmd
+  if (capmt_oscam_netproto(capmt)) {
+    /* we need to take into account the adapter index byte which is now after the cmd */
+    adapter_byte = 1;
   } else {
     if (!sb->sb_bswap && !sb->sb_err) {
       if (cmd == CA_SET_PID_X ||
@@ -1167,7 +1168,8 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   else if (cmd == CA_SET_DESCR_MODE && capmt_oscam_netproto(capmt))
     return 4 + 12;
   else if (oscam_new && cmd == DMX_SET_FILTER)
-    //when using network protocol the dmx_sct_filter_params fields are added seperately to avoid padding problems, so we substract 2 bytes:
+    /* when using network protocol the dmx_sct_filter_params fields are added */
+    /* seperately to avoid padding problems, so we substract 2 bytes: */
     return 4 + 2 + 60 + adapter_byte + (capmt_oscam_netproto(capmt) ? -2 : 0);
   else if (oscam_new && cmd == DMX_STOP)
     return 4 + 4 + adapter_byte;
@@ -1206,22 +1208,14 @@ capmt_peek_str(sbuf_t *sb, int *offset)
 }
 
 static void
-capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
+capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int offset)
 {
   static uint8_t empty[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-  uint32_t cmd;
-
-  cmd = sbuf_peek_u32(sb, offset);
-
-  if (capmt_oscam_netproto(capmt) && cmd != DVBAPI_SERVER_INFO) {
-    adapter = sbuf_peek_u8(sb, 4);
-    offset = 1;
-  }
 
   if (cmd == CA_SET_PID) {
 
-    uint32_t pid   = sbuf_peek_u32(sb, offset + 4);
-    int32_t  index = sbuf_peek_s32(sb, offset + 8);
+    uint32_t pid   = sbuf_peek_u32(sb, offset + 0);
+    int32_t  index = sbuf_peek_s32(sb, offset + 4);
     int i, j;
     ca_info_t *cai;
 
@@ -1249,11 +1243,11 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR) {
 
-    int32_t index  = sbuf_peek_s32(sb, offset + 4);
-    int32_t parity = sbuf_peek_s32(sb, offset + 8);
-    uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    int32_t index  = sbuf_peek_s32(sb, offset + 0);
+    int32_t parity = sbuf_peek_s32(sb, offset + 4);
+    uint8_t *cw    = sbuf_peek    (sb, offset + 8);
 
-    tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
+    tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
              capmt_name(capmt), adapter, parity, index,
              cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index < 0)   // skipping removal request
@@ -1269,9 +1263,9 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR_AES) {
 
-    int32_t index  = sbuf_peek_s32(sb, offset + 4);
-    int32_t parity = sbuf_peek_s32(sb, offset + 8);
-    uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    int32_t index  = sbuf_peek_s32(sb, offset + 0);
+    int32_t parity = sbuf_peek_s32(sb, offset + 4);
+    uint8_t *cw    = sbuf_peek    (sb, offset + 8);
 
     tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_AES adapter %d par %d idx %d "
              "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
@@ -1291,13 +1285,17 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR_MODE) {
 
-    int32_t index       = sbuf_peek_s32(sb, offset + 4);
-    int32_t algo        = sbuf_peek_s32(sb, offset + 8);
-    int32_t cipher_mode = sbuf_peek_s32(sb, offset + 12);
+    int32_t index       = sbuf_peek_s32(sb, offset + 0);
+    int32_t algo        = sbuf_peek_s32(sb, offset + 4);
+    int32_t cipher_mode = sbuf_peek_s32(sb, offset + 8);
     ca_info_t *cai;
 
-    if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX)
+    tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_MODE adapter %d algo %d cipher mode %d",
+             capmt_name(capmt), adapter, algo, cipher_mode);
+    if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX) {
+      tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
+    }
     if (algo < 0 || algo > 2)
       return;
     if (cipher_mode < 0 || cipher_mode > 1)
@@ -1321,11 +1319,11 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == DVBAPI_ECM_INFO) {
 
-    uint16_t sid     = sbuf_peek_u16(sb, offset + 4);
-    uint16_t caid    = sbuf_peek_u16(sb, offset + 6);
-    uint16_t pid     = sbuf_peek_u16(sb, offset + 8);
-    uint32_t provid  = sbuf_peek_u32(sb, offset + 10);
-    uint32_t ecmtime = sbuf_peek_u32(sb, offset + 14);
+    uint16_t sid     = sbuf_peek_u16(sb, offset + 0);
+    uint16_t caid    = sbuf_peek_u16(sb, offset + 2);
+    uint16_t pid     = sbuf_peek_u16(sb, offset + 4);
+    uint32_t provid  = sbuf_peek_u32(sb, offset + 6);
+    uint32_t ecmtime = sbuf_peek_u32(sb, offset + 10);
     int offset2      = offset + 18;
     char *cardsystem = capmt_peek_str(sb, &offset2);
     char *reader     = capmt_peek_str(sb, &offset2);
@@ -1347,8 +1345,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == DVBAPI_SERVER_INFO) {
 
-    uint16_t protover = sbuf_peek_u16(sb, offset + 4);
-    int offset2       = offset + 6;
+    uint16_t protover = sbuf_peek_u16(sb, offset);
+    int offset2       = offset + 2;
     char *info        = capmt_peek_str(sb, &offset2);
 
     tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
@@ -1392,6 +1390,7 @@ show_connection(capmt_t *capmt, const char *what)
 static void 
 handle_ca0(capmt_t *capmt) {
   int i, ret, recvsock, adapter, nfds, cmd_size;
+  uint32_t cmd;
   uint8_t buf[256];
   sbuf_t buffer[MAX_CA];
   sbuf_t *pbuf;
@@ -1472,7 +1471,8 @@ handle_ca0(capmt_t *capmt) {
             sbuf_cut(pbuf, 1);
         }
         if (cmd_size <= pbuf->sb_ptr) {
-          capmt_analyze_cmd(capmt, adapter, pbuf, 0);
+          cmd = sbuf_peek_u32(pbuf, 0);
+          capmt_analyze_cmd(capmt, cmd, adapter, pbuf, 4);
           sbuf_cut(pbuf, cmd_size);
         } else {
           break;
@@ -1493,9 +1493,11 @@ static void
 handle_single(capmt_t *capmt)
 {
   int ret, recvsock, adapter, nfds, cmd_size, reconnect, offset;
+  uint32_t cmd;
   uint8_t buf[256];
   sbuf_t buffer;
   tvhpoll_event_t ev;
+  int netproto = capmt_oscam_netproto(capmt);
 
   show_connection(capmt, "single");
 
@@ -1552,25 +1554,48 @@ handle_single(capmt_t *capmt)
     sbuf_append(&buffer, buf, ret);
 
     while (buffer.sb_ptr > 0) {
-      cmd_size = 0;
-      adapter = -1;
-      offset = 0;
       while (buffer.sb_ptr > 0) {
-        if (capmt_oscam_netproto(capmt)) {
+        adapter = -1;
+        offset = 0;
+        cmd_size = 0;
+        cmd = 0;
+        if (netproto) {
           buffer.sb_bswap = 1;
-        } else {
-          adapter = buffer.sb_data[0];
-          offset = 1;
-        }
-        if (adapter < MAX_CA) {
-          cmd_size = capmt_msg_size(capmt, &buffer, offset);
-          if (cmd_size >= 0)
+          cmd_size = capmt_msg_size(capmt, &buffer, 0);
+          if (cmd_size > 0) {
+            cmd = sbuf_peek_u32(&buffer, 0);
+            if (cmd != DVBAPI_SERVER_INFO) {
+              adapter = sbuf_peek_u8(&buffer, 4);
+              if (adapter >= MAX_CA) {
+                sbuf_cut(&buffer, 5);
+                continue;
+              }
+              cmd_size -= 5;
+              offset = 5;
+              break;
+            } else {
+              cmd_size -= 4;
+              offset = 4;
+            }
+          } else if (cmd_size == 0)
             break;
+        } else {
+          adapter = sbuf_peek_u8(&buffer, 0);
+          if (adapter < MAX_CA) {
+            cmd_size = capmt_msg_size(capmt, &buffer, 1);
+            if (cmd_size > 0) {
+              cmd_size -= 4;
+              cmd = sbuf_peek_u32(&buffer, 1);
+              offset = 5;
+              break;
+            } else if (cmd_size == 0)
+              break;
+          }
         }
         sbuf_cut(&buffer, 1);
       }
-      if (cmd_size > 0 && cmd_size + offset <= buffer.sb_ptr) {
-        capmt_analyze_cmd(capmt, adapter, &buffer, offset);
+      if (cmd && cmd_size > 0 && cmd_size + offset <= buffer.sb_ptr) {
+        capmt_analyze_cmd(capmt, cmd, adapter, &buffer, offset);
         sbuf_cut(&buffer, cmd_size + offset);
       } else {
         break;
