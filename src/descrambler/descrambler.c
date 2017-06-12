@@ -65,6 +65,22 @@ static int ca_hints_quickecm;
 /*
  *
  */
+static inline int extractpid(const uint8_t *tsb)
+{
+  return (tsb[1] & 0x1f) << 8 | tsb[2];
+}
+
+static inline const char *keystr(const uint8_t *tsb)
+{
+  uint8_t b = tsb[3];
+  if (b & 0x80)
+    return (b & 0x40) ? "odd" : "even";
+  return (b & 0x40) ? "none2" : "none";
+}
+
+/*
+ *
+ */
 static void
 descrambler_data_destroy(th_descrambler_runtime_t *dr, th_descrambler_data_t *dd, int skip)
 {
@@ -95,15 +111,15 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
   dd = TAILQ_LAST(&dr->dr_queue, th_descrambler_queue);
   if (dd && (tsb0 = dd->dd_sbuf.sb_data) != NULL) {
     if (dr->dr_key_multipid) {
-      pid1 = (tsb0[1] & 0x1f) << 8 | tsb0[2];
-      pid2 = (tsb [1] & 0x1f) << 8 | tsb [2];
+      pid1 = extractpid(tsb0);
+      pid2 = extractpid(tsb);
     } else {
       pid1 = pid2 = 0;
     }
     if (dd && monocmpfastsec(dd->dd_timestamp, mclk()) &&
         (tsb0[3] & 0xc0) == (tsb[3] & 0xc0) && /* key match */
         pid1 == pid2) {
-      debug2("%p: data append %d, timestamp %ld", dr, len, dd->dd_timestamp);
+      debug2("%p: data append %d, timestamp %ld, %s[%d]", dr, len, dd->dd_timestamp, keystr(tsb0), extractpid(tsb0));
       sbuf_append(&dd->dd_sbuf, tsb, len);
       dr->dr_queue_total += len;
       return;
@@ -112,7 +128,7 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
   dd = malloc(sizeof(*dd));
   dd->dd_key = NULL;
   dd->dd_timestamp = mclk();
-  debug2("%p: data append2 %d, timestamp %ld", dr, len, dd->dd_timestamp);
+  debug2("%p: data append2 %d, timestamp %ld, %s[%d]", dr, len, dd->dd_timestamp, keystr(tsb), extractpid(tsb));
   sbuf_init(&dd->dd_sbuf);
   sbuf_append(&dd->dd_sbuf, tsb, len);
   TAILQ_INSERT_TAIL(&dr->dr_queue, dd, dd_link);
@@ -187,8 +203,8 @@ descrambler_data_analyze(th_descrambler_runtime_t *dr,
 
   for (dd2 = TAILQ_NEXT(dd, dd_link); dd2; dd2 = TAILQ_NEXT(dd2, dd_link)) {
     tsb0 = dd->dd_sbuf.sb_data;
-    if (tsb0 == NULL) continue;
-    if ((tsb0[3] & 0x40) == (ki & 0x40)) {
+    if (tsb0 == NULL || dd->dd_sbuf.sb_ptr == 0) continue;
+    if ((tsb0[3] & 0x80) != 0 && (tsb0[3] & 0x40) == (ki & 0x40)) {
       packets += dd2->dd_sbuf.sb_ptr;
       if (packets >= dr->dr_paritycheck)
         return 1;
@@ -334,6 +350,7 @@ descrambler_service_start ( service_t *t )
             if (hint->dh_constcw) constcw = 1;
             if (hint->dh_multipid) multipid = 1;
             if (hint->dh_interval) interval = hint->dh_interval;
+            if (hint->dh_paritycheck) paritycheck = hint->dh_paritycheck;
           }
         }
         count++;
@@ -767,13 +784,17 @@ descrambler_flush_table_data( service_t *t )
 }
 
 static inline void 
-key_update( th_descrambler_key_t *tk, uint8_t key, int64_t timestamp )
+key_update( service_t *t, th_descrambler_key_t *tk, uint8_t key, int64_t timestamp )
 {
   /* set the even (0) or odd (0x40) key index */
   tk->key_index = key & 0x40;
   if (tk->key_start) {
-    tk->key_interval = tk->key_start + sec2mono(50) < timestamp ?
-                         tk->key_initial_interval : timestamp - tk->key_start;
+    /* don't change key interval for fast rolling keys */
+    if (tk->key_initial_interval > 2000000) {
+      tk->key_interval = tk->key_start + sec2mono(50) < timestamp ?
+                         tk->key_initial_interval : MAX(5000000, timestamp - tk->key_start);
+      tvhtrace(LS_DESCRAMBLER, "update key[%d] interval for \"%s\" to %ldms", tk->key_pid, t->s_nicename, (long)(tk->key_interval / 1000));
+    }
     tk->key_start = timestamp;
   } else {
     /* We don't know the exact start key switch time */
@@ -852,7 +873,7 @@ key_find_struct( th_descrambler_runtime_t *dr,
                  service_t *t )
 {
   th_descrambler_key_t *tk;
-  int i, pid = (tsb[1] & 0x1f) << 8 | tsb[2];
+  int i, pid = extractpid(tsb);
   for (i = 0; i < DESCRAMBLER_MAX_KEYS; i++) {
     tk = &dr->dr_keys[i];
     if (tk->key_pid == pid) {
@@ -964,7 +985,7 @@ descrambler_descramble ( service_t *t,
       int64_t t1, t2;
       t1 = dd->dd_timestamp;
       t2 = tk->key_interval - tk->key_interval / 5;
-      debug2("%p: timestamp %ld thres %ld now %ld (interval %ldms) %d %s\n", dr, t1, now - t2, (now - t1) / 1000, t2 / 1000, tk->key_pid, (tsb2[3] & 0x40) ? "odd" : "even");
+      debug2("%p: timestamp %ld thres %ld now %ld (interval %ldms) %s[%d]", dr, t1, now - t2, (now - t1) / 1000, t2 / 1000, keystr(tsb2), extractpid(tsb2));
       }
 #endif
       if (dd->dd_timestamp < now - (tk->key_interval - tk->key_interval / 5)) {
@@ -976,7 +997,7 @@ descrambler_descramble ( service_t *t,
         ki = tsb2[3];
         if ((ki & 0x80) != 0x00) {
           if (key_valid(tk, ki) == 0)
-            goto next;
+            goto queue;
           if (key_changed(dr, tk, ki, dd->dd_timestamp)) {
             r = descrambler_data_analyze(dr, dd, ki);
             if (r == 0) {
@@ -994,15 +1015,15 @@ descrambler_descramble ( service_t *t,
               if (ecm_reset(t, dr)) {
                 descrambler_data_cut(dr, tsb2 - sb->sb_data);
                 flush_data = 1;
-                goto next;
+                goto queue;
               }
             }
-            key_update(tk, ki, dd->dd_timestamp);
+            key_update(t, tk, ki, dd->dd_timestamp);
           }
         }
 doit:
         len3 = mpegts_word_count(tsb2, len2, 0xFF0000C0);
-        debug2("%p: descramble3 %d", dr, len3);
+        debug2("%p: descramble3 %d, %s[%d]", dr, len3, keystr(tsb2), extractpid(tsb2));
         tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb2, len3);
       }
       if (len2 == 0)
@@ -1032,9 +1053,9 @@ dd_destroy:
       }
     }
     dr->dr_skip = 1;
+    debug2("%p: descramble %d, %s[%d]", dr, len, keystr(tsb), extractpid(tsb));
     tk->key_csa.csa_descramble(&tk->key_csa, (mpegts_service_t *)t, tsb, len);
     service_reset_streaming_status_flags(t, TSS_NO_ACCESS);
-    debug2("%p: descrambled %d", dr, len);
     return 1;
   }
 next:
@@ -1060,7 +1081,7 @@ next:
             tvhtrace(LS_DESCRAMBLER, "initial stream key[%d] set to %s for service \"%s\"",
                                     tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
-            key_update(tk, ki, mclk());
+            key_update(t, tk, ki, mclk());
             break;
           } else {
             descrambler_data_cut(dr, 188);
@@ -1070,7 +1091,7 @@ next:
         tvhtrace(LS_DESCRAMBLER, "stream key[%d] changed to %s for service \"%s\"",
                                 tk->key_pid, (ki & 0x40) ? "odd" : "even",
                                 ((mpegts_service_t *)t)->s_dvb_svcname);
-        key_update(tk, ki, mclk());
+        key_update(t, tk, ki, mclk());
       }
     }
 queue:
@@ -1102,7 +1123,7 @@ queue:
   if (flush_data)
     descrambler_flush_table_data(t);
 end:
-  debug2("%p: end", dr);
+  debug2("%p: end, %s", dr, keystr(tsb));
   if (count && count == failed)
     return -1;
   return count;
