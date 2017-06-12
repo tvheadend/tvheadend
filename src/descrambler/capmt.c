@@ -1068,7 +1068,7 @@ capmt_abort(capmt_t *capmt, int keystate)
                t->s_dvb_svcname,
                keystate == DS_FORBIDDEN ?
                  "access denied" : "connection close");
-      ct->td_keystate = keystate;
+      descrambler_change_keystate((th_descrambler_t *)ct, keystate, 1);
     }
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -1078,9 +1078,7 @@ capmt_abort(capmt_t *capmt, int keystate)
 static int
 capmt_ecm_reset(th_descrambler_t *th)
 {
-  capmt_service_t *ct = (capmt_service_t *)th;
-
-  ct->td_keystate = DS_UNKNOWN;
+  descrambler_change_keystate(th, DS_READY, 1);
   return 0;
 }
 
@@ -1103,7 +1101,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
         tvherror(LS_CAPMT,
                  "%s: Can not descramble service \"%s\", access denied",
                  capmt_name(capmt), t->s_dvb_svcname);
-        ct->td_keystate = DS_FORBIDDEN;
+        descrambler_change_keystate((th_descrambler_t *)ct, DS_FORBIDDEN, 1);
       }
       continue;
     }
@@ -1740,7 +1738,7 @@ handle_ca0_wrapper(capmt_t *capmt)
     }
   }
 
-  capmt_abort(capmt, DS_UNKNOWN);
+  capmt_abort(capmt, DS_READY);
   tvhinfo(LS_CAPMT, "%s: connection from client closed ...", capmt_name(capmt));
 }
 #endif
@@ -2445,6 +2443,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
   LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
+
+  descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
 
   /* wake-up idle thread */
   tvh_cond_signal(&capmt->capmt_cond, 0);

@@ -566,6 +566,59 @@ descrambler_multi_pid ( th_descrambler_t *td )
   return dr->dr_key_multipid;
 }
 
+static struct strtab keystatetab[] = {
+  { "INIT",       DS_INIT },
+  { "READY",      DS_READY },
+  { "RESOLVED",   DS_RESOLVED },
+  { "FORBIDDEN",  DS_FORBIDDEN },
+  { "IDLE",       DS_IDLE },
+};
+
+const char *
+descrambler_keystate2str( th_descrambler_keystate_t keystate )
+{
+  return val2str(keystate, keystatetab) ?: "INVALID";
+}
+
+void
+descrambler_change_keystate( th_descrambler_t *td, th_descrambler_keystate_t keystate, int lock )
+{
+  service_t *t = td->td_service;
+  th_descrambler_runtime_t *dr;
+  int count = 0, failed = 0, resolved = 0;
+
+  if (td->td_keystate == keystate)
+    return;
+
+  tvhtrace(LS_DESCRAMBLER, "%s: key state changed from %s to %s for \"%s\"",
+                           td->td_nicename,
+                           descrambler_keystate2str(td->td_keystate),
+                           descrambler_keystate2str(keystate),
+                           t->s_nicename);
+  td->td_keystate = keystate;
+  if (t == NULL || (dr = t->s_descramble) == NULL)
+    return;
+
+  if (lock)
+    pthread_mutex_lock(&t->s_stream_mutex);
+  count = failed = resolved = 0;
+  LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
+    count++;
+    switch (td->td_keystate) {
+    case DS_FORBIDDEN: failed++;   break;
+    case DS_RESOLVED : resolved++; break;
+    default: break;
+    }
+  }
+  dr->dr_ca_count = count;
+  dr->dr_ca_resolved = resolved;
+  dr->dr_ca_failed = failed;
+  tvhtrace(LS_DESCRAMBLER, "service \"%s\": %d descramblers (%d ok %d failed)",
+                           t->s_nicename, count, resolved, failed);
+  if (lock)
+    pthread_mutex_unlock(&t->s_stream_mutex);
+}
+
 void
 descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
                    const uint8_t *even, const uint8_t *odd )
@@ -581,7 +634,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   int j = 0, insert = 0;
 
   if (t == NULL || (dr = t->s_descramble) == NULL) {
-    td->td_keystate = DS_FORBIDDEN;
+    descrambler_change_keystate(td, DS_FORBIDDEN, 1);
     return;
   }
 
@@ -613,7 +666,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
                ((mpegts_service_t *)td2->td_service)->s_dvb_svcname,
                td->td_nicename,
                dr->dr_key_const ? " (const)" : "");
-      td->td_keystate = DS_IDLE;
+      descrambler_change_keystate(td, DS_IDLE, 0);
       if (td->td_ecm_idle)
         td->td_ecm_idle(td);
       goto fin;
@@ -699,7 +752,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
                pidname, pid, td->td_nicename, ((mpegts_service_t *)t)->s_dvb_svcname);
     }
     dr->dr_ecm_last_key_time = mclk();
-    td->td_keystate = DS_RESOLVED;
+    descrambler_change_keystate(td, DS_RESOLVED, 0);
     td->td_service->s_descrambler = td;
   } else {
     tvhdebug(LS_DESCRAMBLER,
@@ -913,11 +966,10 @@ descrambler_descramble ( service_t *t,
                          const uint8_t *tsb,
                          int len )
 {
-  th_descrambler_t *td;
   th_descrambler_runtime_t *dr = t->s_descramble;
   th_descrambler_key_t *tk;
   th_descrambler_data_t *dd, *dd_next;
-  int count, failed, resolved, len2, len3, r, flush_data = 0;
+  int len2, len3, r, flush_data = 0;
   uint32_t dbuflen;
   const uint8_t *tsb2;
   int64_t now;
@@ -945,23 +997,7 @@ descrambler_descramble ( service_t *t,
       return 1;
     }
 
-  count = failed = resolved = 0;
-  LIST_FOREACH(td, &t->s_descramblers, td_service_link) {
-    count++;
-    switch (td->td_keystate) {
-    case DS_FORBIDDEN: failed++;   break;
-    case DS_RESOLVED : resolved++; break;
-    default: break;
-    }
-  }
-
-  if (resolved) {
-
-    if (!dr->dr_key_multipid) {
-      tk = &dr->dr_keys[0];
-    } else {
-      tk = NULL;
-    }
+  if (dr->dr_ca_resolved > 0) {
 
     /* process the queued TS packets or key updates */
     for (dd = TAILQ_FIRST(&dr->dr_queue); dd; dd = dd_next) {
@@ -1012,7 +1048,10 @@ descrambler_descramble ( service_t *t,
                                     ((mpegts_service_t *)t)->s_dvb_svcname);
             if (key_late(dr, tk, ki, dd->dd_timestamp)) {
               descrambler_notify_nokey(dr);
-              if (ecm_reset(t, dr)) {
+              pthread_mutex_unlock(&t->s_stream_mutex);
+              r = ecm_reset(t, dr);
+              pthread_mutex_lock(&t->s_stream_mutex);
+              if (r) {
                 descrambler_data_cut(dr, tsb2 - sb->sb_data);
                 flush_data = 1;
                 goto queue;
@@ -1095,7 +1134,7 @@ next:
       }
     }
 queue:
-    if (count != failed) {
+    if (dr->dr_ca_count != dr->dr_ca_failed) {
       /*
        * Fill a temporary buffer until the keys are known to make
        * streaming faster.
@@ -1116,7 +1155,7 @@ queue:
       service_set_streaming_status_flags(t, TSS_NO_ACCESS);
     }
   } else {
-    if (dr->dr_skip || count == 0)
+    if (dr->dr_skip || dr->dr_ca_count == 0)
       ts_skip_packet2((mpegts_service_t *)dr->dr_service, tsb, len);
     service_set_streaming_status_flags(t, TSS_NO_ACCESS);
   }
@@ -1124,9 +1163,9 @@ queue:
     descrambler_flush_table_data(t);
 end:
   debug2("%p: end, %s", dr, keystr(tsb));
-  if (count && count == failed)
+  if (dr->dr_ca_count > 0 && dr->dr_ca_count == dr->dr_ca_failed)
     return -1;
-  return count;
+  return dr->dr_ca_count;
 }
 
 static int

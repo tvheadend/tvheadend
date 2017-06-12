@@ -103,7 +103,10 @@ tsdebugcw_service_start(service_t *t)
   td->td_service       = t;
   td->td_stop          = tsdebugcw_service_destroy;
   td->td_ecm_reset     = tsdebugcw_ecm_reset;
+  pthread_mutex_lock(&t->s_stream_mutex);
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
+  descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 /*

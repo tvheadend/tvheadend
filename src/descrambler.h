@@ -41,6 +41,14 @@ struct th_descrambler_data;
 
 #define DESCRAMBLER_KEY_SIZE(type) ((type >= DESCRAMBLER_AES128_ECB) ? 16 : 8)
 
+typedef enum {
+    DS_INIT,
+    DS_READY,
+    DS_RESOLVED,
+    DS_FORBIDDEN,
+    DS_IDLE
+} th_descrambler_keystate_t;
+
 /**
  * Descrambler superclass
  *
@@ -51,12 +59,7 @@ typedef struct th_descrambler {
 
   char *td_nicename;
 
-  enum {
-    DS_UNKNOWN,
-    DS_RESOLVED,
-    DS_FORBIDDEN,
-    DS_IDLE
-  } td_keystate;
+  th_descrambler_keystate_t td_keystate;
 
   struct service *td_service;
 
@@ -82,6 +85,9 @@ typedef struct th_descrambler_key {
 
 typedef struct th_descrambler_runtime {
   struct service *dr_service;
+  int      dr_ca_count;
+  int      dr_ca_resolved;
+  int      dr_ca_failed;
   uint32_t dr_external:1;
   uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
@@ -165,6 +171,8 @@ LIST_HEAD(caid_list, caid);
 
 void descrambler_init          ( void );
 void descrambler_done          ( void );
+void descrambler_change_keystate ( th_descrambler_t *t, th_descrambler_keystate_t state, int lock );
+const char *descrambler_keystate2str( th_descrambler_keystate_t keystate );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
