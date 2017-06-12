@@ -81,6 +81,7 @@ typedef struct th_descrambler_key {
   uint8_t  key_index;
   uint8_t  key_valid;
   uint8_t  key_changed;
+  tvhlog_limit_t key_loglimit;
 } th_descrambler_key_t;
 
 typedef struct th_descrambler_runtime {
