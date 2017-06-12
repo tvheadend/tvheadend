@@ -1162,7 +1162,7 @@ capmt_send_key(capmt_t *capmt)
     }
     break;
   default:
-    tvherror(LS_CAPMT, "unknown crypto algorightm %d (mode %d)", cai->algo, cai->cipher_mode);
+    tvherror(LS_CAPMT, "unknown crypto algorithm %d (mode %d)", cai->algo, cai->cipher_mode);
     return;
   }
 
@@ -1371,8 +1371,8 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     int32_t cipher_mode = sbuf_peek_s32(sb, offset + 8);
     ca_info_t *cai;
 
-    tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_MODE adapter %d algo %d cipher mode %d",
-             capmt_name(capmt), adapter, algo, cipher_mode);
+    tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_MODE adapter %d index %d algo %d cipher mode %d",
+             capmt_name(capmt), adapter, index, algo, cipher_mode);
     if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX) {
       tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
@@ -2008,6 +2008,7 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   case SCT_H264:       type = 0x1b; break;
   case SCT_HEVC:       type = 0x24; break;
   case SCT_DVBSUB:     type = 0x06; break;
+  case SCT_TELETEXT:   type = 0x06; break;
   default:
     if (SCT_ISVIDEO(st->es_type)) type = 0x02;
     else if (SCT_ISAUDIO(st->es_type)) type = 0x04;
