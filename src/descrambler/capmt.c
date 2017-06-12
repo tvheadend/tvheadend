@@ -1579,8 +1579,8 @@ handle_ca0(capmt_t *capmt) {
 static void
 handle_single(capmt_t *capmt)
 {
-  int ret, recvsock, adapter, nfds, cmd_size, reconnect, offset;
-  uint32_t cmd;
+  int ret, recvsock, adapter = -1, nfds, cmd_size = 0, reconnect, offset = 0;
+  uint32_t cmd = 0;
   uint8_t buf[256];
   sbuf_t buffer;
   tvhpoll_event_t ev;
