@@ -1015,7 +1015,7 @@ descrambler_descramble ( service_t *t,
       if (dr->dr_key_multipid) {
         tk = key_find_struct(dr, tk, tsb2, t);
         if (tk == NULL) {
-          if (t->s_start_time + MAX(3000000, tk->key_interval) < mclk() &&
+          if (t->s_start_time + 3000000 < mclk() &&
               tvhlog_limit(&dr->dr_loglimit_key, 10))
             tvhwarn(LS_DESCRAMBLER, "%s stream key[%d] is not available",
                     ((mpegts_service_t *)t)->s_dvb_svcname, tk->key_pid);
