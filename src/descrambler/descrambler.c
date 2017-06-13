@@ -1037,7 +1037,7 @@ descrambler_descramble ( service_t *t,
           if (t->s_start_time + 3000000 < mclk() &&
               tvhlog_limit(&dr->dr_loglimit_key, 10))
             tvhwarn(LS_DESCRAMBLER, "%s stream key[%d] is not available",
-                    ((mpegts_service_t *)t)->s_dvb_svcname, tk->key_pid);
+                    ((mpegts_service_t *)t)->s_dvb_svcname, extractpid(tsb2));
           goto next;
         }
       }
