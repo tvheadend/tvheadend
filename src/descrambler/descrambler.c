@@ -622,6 +622,7 @@ descrambler_change_keystate( th_descrambler_t *td, th_descrambler_keystate_t key
 }
 
 static struct strtab keytypetab[] = {
+  { "NONE",       DESCRAMBLER_NONE },
   { "CSA",        DESCRAMBLER_CSA_CBC },
   { "DES",        DESCRAMBLER_DES_NCB },
   { "AES EBC",    DESCRAMBLER_AES_ECB },
@@ -678,6 +679,13 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   if (tvhcsa_set_type(&tk->key_csa, type) < 0) {
     if (tk->key_type_overwritten)
       goto fin;
+    if (type == DESCRAMBLER_CSA_CBC && tk->key_csa.csa_type == DESCRAMBLER_DES_NCB) {
+      tvhwarn(LS_DESCRAMBLER,
+              "Keep key%s type %s (requested %s) for service \"%s\", check your caclient",
+              pidname, descrambler_keytype2str(tk->key_csa.csa_type), ktype,
+              ((mpegts_service_t *)t)->s_dvb_svcname);
+      goto cont;
+    }
     tk->key_type_overwritten = 1;
     tvhwarn(LS_DESCRAMBLER,
             "Overwrite key%s type from %s to %s for service \"%s\"",
@@ -690,6 +698,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     tk->key_valid = 0;
   }
 
+cont:
   LIST_FOREACH(td2, &t->s_descramblers, td_service_link)
     if (td2 != td && td2->td_keystate == DS_RESOLVED) {
       tvhdebug(LS_DESCRAMBLER,
