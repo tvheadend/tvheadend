@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Jinbaek Lee <jinb92@gmail.com>, 2016
+# Jinbaek Lee <jinb92@gmail.com>, 2016-2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2016-12-16 17:37+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2017-04-22 06:05+0000\n"
+"Last-Translator: Jinbaek Lee <jinb92@gmail.com>\n"
 "Language-Team: Korean (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/ko/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -589,7 +589,7 @@ msgstr "정말 이 녹화를 정지/예약 취소하시겠습니까?"
 
 #: src/webui/static/app/dvr.js:434
 msgid "Do you really want to remove the selected recordings from storage?"
-msgstr ""
+msgstr "저장소에서 선택한 녹화를 제거하시겠습니까?"
 
 #: src/webui/static/app/epg.js:337
 msgid "Do you really want to remove this recording?"
@@ -950,11 +950,11 @@ msgstr "새로 SAT>IP 서버 찾기"
 
 #: src/webui/static/app/mpegts.js:305
 msgid "Maintenance"
-msgstr ""
+msgstr "유지보수"
 
 #: src/webui/static/app/mpegts.js:303
 msgid "Maintenance operations"
-msgstr ""
+msgstr "유지보수 작업"
 
 #: src/webui/static/app/mpegts.js:271
 msgid "Map All"
@@ -1149,7 +1149,7 @@ msgstr "없음"
 
 #: src/webui/static/app/tvheadend.js:247
 msgid "Not Available"
-msgstr ""
+msgstr "사용 불가"
 
 #: src/webui/static/app/idnode.js:355
 msgid "Not set"
@@ -1279,13 +1279,13 @@ msgstr "기다리세요..."
 
 #: src/webui/static/app/tvheadend.js:240
 msgid "Please check Tvheadend is running and try again."
-msgstr ""
+msgstr "Tvheadend가 실행중인지 확인 후 다시 시도하세요."
 
 #: src/webui/static/app/tvheadend.js:249
 msgid ""
 "Please take a look at the other Help pages (Table of Contents). If you still"
 " can't find what you're "
-msgstr ""
+msgstr "도움말을 참조하세요 (목차 항목). 찾고 있는 항목이 없는 경우:"
 
 #: src/webui/static/app/wizard.js:66
 msgid "Previous"
@@ -1362,39 +1362,39 @@ msgstr "새로 고침"
 
 #: src/webui/static/app/dvr.js:416
 msgid "Remove"
-msgstr ""
+msgstr "제거"
 
 #: src/webui/static/app/mpegts.js:300
 msgid "Remove all unseen services (7 days+)"
-msgstr ""
+msgstr "모든 발견되지 않은 서비스 (7일+) 제거"
 
 #: src/webui/static/app/mpegts.js:292
 msgid ""
 "Remove old services marked as missing in PAT/SDT which were not detected "
 "more than 7 days (last seen column)"
-msgstr ""
+msgstr "7일(최종 발견 열 기준) 이상 PAT/SDT에서 소실로 표시된 오래된 서비스를 제거"
 
 #: src/webui/static/app/mpegts.js:298
 msgid ""
 "Remove old services which were not detected more than 7 days (last seen "
 "column)"
-msgstr ""
+msgstr "7일(최종 발견 열 기준) 이상 발견되지 않은 오래된 서비스를 제거"
 
 #: src/webui/static/app/dvr.js:414
 msgid "Remove the selected recording from storage"
-msgstr ""
+msgstr "저장소에서 선택한 녹화 제거"
 
 #: src/webui/static/app/mpegts.js:294
 msgid "Remove unseen services (PAT/SDT) (7 days+)"
-msgstr ""
+msgstr "발견되지 않은 서비스 (PAT/SDT) 제거 (7일+)"
 
 #: src/webui/static/app/dvr.js:674
 msgid "Removed Recording"
-msgstr ""
+msgstr "삭제된 녹화"
 
 #: src/webui/static/app/dvr.js:675
 msgid "Removed Recordings"
-msgstr ""
+msgstr "삭제된 녹화"
 
 #: src/webui/static/app/epg.js:155
 msgid "Repeat#EPG"
@@ -1718,7 +1718,7 @@ msgstr "값이 올바르지 않음"
 msgid ""
 "There is no documentation associated with the Help button pressed, or there was an problem loading the page.\n"
 "\n"
-msgstr ""
+msgstr "도움말 버튼에 연결된 문서가 없거나, 페이지 로드에 문제가 있었습니다.\n\n"
 
 #: src/webui/static/app/comet.js:36
 msgid ""
@@ -1728,7 +1728,7 @@ msgstr "Tvheadend 라이브 업데이트 피드에 문제가 있습니다. 다�
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the Help!"
-msgstr ""
+msgstr "도움말을 보이는 중 문제가 발생했습니다!"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1976,7 +1976,7 @@ msgstr "로그아웃"
 msgid ""
 "looking for please see the "
 "[Wiki](http://tvheadend.org/projects/tvheadend/wiki) "
-msgstr ""
+msgstr "[Wiki]를 참조(http://tvheadend.org/projects/tvheadend/wiki)"
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
@@ -2016,7 +2016,7 @@ msgstr "전체 {0}"
 msgid ""
 "or join the [IRC channel on "
 "freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)."
-msgstr ""
+msgstr "또는 [IRC channel on freenode](https://kiwiirc.com/client/chat.freenode.net/?nick=tvhhelp|?#hts)에 참가하세요."
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"

@@ -4,14 +4,14 @@
 # 
 # Translators:
 # gogo <trebelnik2@gmail.com>, 2015
-# gogo <trebelnik2@gmail.com>, 2015-2016
+# gogo <trebelnik2@gmail.com>, 2015-2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2016-12-16 17:37+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2017-04-26 09:50+0000\n"
+"Last-Translator: gogo <trebelnik2@gmail.com>\n"
 "Language-Team: Croatian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -863,7 +863,7 @@ msgstr "Zanemareno"
 
 #: src/webui/static/app/config.js:108
 msgid "Image Cache"
-msgstr "Predmemorija sllike"
+msgstr "Predmemorija slike"
 
 #: src/webui/static/app/status.js:779
 msgid "In"
@@ -1391,11 +1391,11 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:674
 msgid "Removed Recording"
-msgstr ""
+msgstr "Uklonjena snimanja"
 
 #: src/webui/static/app/dvr.js:675
 msgid "Removed Recordings"
-msgstr ""
+msgstr "Uklonjena snimanja"
 
 #: src/webui/static/app/epg.js:155
 msgid "Repeat#EPG"

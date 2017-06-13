@@ -3,14 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # 
 # Translators:
-# Anti <anti.siidiratsep@gmail.com>, 2015-2016
+# Anti <anti.siidiratsep@gmail.com>, 2015-2017
 msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2016-12-16 17:37+0000\n"
-"Last-Translator: Jaroslav Kysela\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2017-04-27 07:44+0000\n"
+"Last-Translator: Anti <anti.siidiratsep@gmail.com>\n"
 "Language-Team: Estonian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -117,7 +117,7 @@ msgstr "Katkesta"
 
 #: src/webui/static/app/dvr.js:243
 msgid "Abort the selected recording"
-msgstr "Katkesta valitud salvestamine"
+msgstr "Valitud salvestamise katkestamine - läheb ebaõnnestunud salvestuste hulka"
 
 #: src/webui/static/app/tvheadend.js:836
 msgid "About"
@@ -363,7 +363,7 @@ msgstr "Kanal"
 
 #: src/webui/static/app/tvheadend.js:759
 msgid "Channel / EPG"
-msgstr "Kanal / EPG"
+msgstr "Kanalid / EPG"
 
 #: src/webui/static/app/cteditor.js:10
 msgid "Channel Tag"
@@ -466,7 +466,7 @@ msgstr "Loo automaatsalvestus"
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
-msgstr "Loo uus automaatsalvestuse reegel salvestamaks edaspidi kõik  tulevikus saadaval olevad saated, mis vastavad praegusele päringule."
+msgstr "Loo uus automaatsalvestuse reegel salvestamaks edaspidi kõik  tulevikus saadaval olevad saated, mis vastavad käesolevale päringule."
 
 #: src/webui/static/app/idnode.js:1455
 msgid "Create new entry"
@@ -511,7 +511,7 @@ msgstr "Kustuta"
 
 #: src/webui/static/app/epg.js:236
 msgid "Delete recording"
-msgstr "Kustuta salvestus"
+msgstr "Salvestuse kustutamine"
 
 #: src/webui/static/app/epg.js:235
 msgid "Delete scheduled recording of this program"
@@ -519,7 +519,7 @@ msgstr "Kustuta selle saate ajastatud salvestamine"
 
 #: src/webui/static/app/idnode.js:1805 src/webui/static/app/idnode.js:2310
 msgid "Delete selected entries"
-msgstr "Kustuta valitud kirjed"
+msgstr "Valitud kirjete kustutamine"
 
 #: src/webui/static/app/status.js:152
 msgid "Descramble"
@@ -573,11 +573,11 @@ msgstr "Oled Sa kindel, et valitu katkestada/mitteajastada?"
 
 #: src/webui/static/app/dvr.js:594
 msgid "Do you really want to delete the selected recordings?"
-msgstr "Oled Sa kindel, et kustutada valitud salvestused?"
+msgstr "Oled Sa ikka kindel, et valitud salvestused tuleb kustutada?"
 
 #: src/webui/static/app/tvheadend.js:327
 msgid "Do you really want to delete the selection?"
-msgstr "Oled Sa kindel, et see valik tuleb kustutada?"
+msgstr "Oled Sa ikka kindel, et see valik tuleb kustutada?"
 
 #: src/webui/static/app/dvr.js:233
 msgid "Do you really want to gracefully stop/unschedule the selection?"
@@ -589,7 +589,7 @@ msgstr "Oled Sa kindel, et see salvestamine viisakalt peatada/mitteajastada?"
 
 #: src/webui/static/app/dvr.js:434
 msgid "Do you really want to remove the selected recordings from storage?"
-msgstr ""
+msgstr "Oled Sa ikka kindel, et valitud salvestused tuleb andmekandjalt kustutada?"
 
 #: src/webui/static/app/epg.js:337
 msgid "Do you really want to remove this recording?"
@@ -649,7 +649,7 @@ msgstr "Muuda"
 
 #: src/webui/static/app/idnode.js:1892
 msgid "Edit selected entry"
-msgstr "Muuda valitud kirjet"
+msgstr "Valitud kirje muutmine"
 
 #: src/webui/static/app/idnode.js:1321 src/webui/static/app/idnode.js:1908
 msgid "Edit {0}"
@@ -730,19 +730,19 @@ msgstr "Faili suurus"
 
 #: src/webui/static/app/epg.js:675
 msgid "Filter channel..."
-msgstr "Filtreeri kanal..."
+msgstr "Filtreeri kanali alusel ..."
 
 #: src/webui/static/app/epg.js:722
 msgid "Filter content type..."
-msgstr "Filtreeri sisu tüüp..."
+msgstr "Filtreeri sisu tüübi alusel ..."
 
 #: src/webui/static/app/epg.js:743
 msgid "Filter duration..."
-msgstr "Filtreeri kestvus..."
+msgstr "Filtreeri kestvuse alusel ..."
 
 #: src/webui/static/app/epg.js:698
 msgid "Filter tag..."
-msgstr "Filtreeri märge..."
+msgstr "Filtreeri märke alusel ..."
 
 #: src/webui/static/app/i18n-post.js:253
 msgid "Filters"
@@ -950,11 +950,11 @@ msgstr "Otsi uusi SAT>IP servereid"
 
 #: src/webui/static/app/mpegts.js:305
 msgid "Maintenance"
-msgstr ""
+msgstr "Hooldamine"
 
 #: src/webui/static/app/mpegts.js:303
 msgid "Maintenance operations"
-msgstr ""
+msgstr "Hooldamise toimingud"
 
 #: src/webui/static/app/mpegts.js:271
 msgid "Map All"
@@ -1149,7 +1149,7 @@ msgstr "Ei midagi"
 
 #: src/webui/static/app/tvheadend.js:247
 msgid "Not Available"
-msgstr ""
+msgstr "Pole saadaval"
 
 #: src/webui/static/app/idnode.js:355
 msgid "Not set"
@@ -1279,7 +1279,7 @@ msgstr "Palun oota..."
 
 #: src/webui/static/app/tvheadend.js:240
 msgid "Please check Tvheadend is running and try again."
-msgstr ""
+msgstr "Kontrolli palun Tvheadend'i töötamist ja proovi uuesti."
 
 #: src/webui/static/app/tvheadend.js:249
 msgid ""
@@ -1326,7 +1326,7 @@ msgstr "Taaskäivita sisemised EPG hankijad"
 
 #: src/webui/static/app/epggrab.js:7
 msgid "Re-run all internal EPG grabbers to import EPG data now"
-msgstr "Taaskäivita sisemised EPG hankijad importimaks EPG infot kohe"
+msgstr "Taaskäivita sisemised EPG hankijad importimaks EPG infot"
 
 #: src/webui/static/app/idnode.js:1047
 msgid "Read-only Info"
@@ -1362,11 +1362,11 @@ msgstr "Värskenda"
 
 #: src/webui/static/app/dvr.js:416
 msgid "Remove"
-msgstr ""
+msgstr "Kustuta"
 
 #: src/webui/static/app/mpegts.js:300
 msgid "Remove all unseen services (7 days+)"
-msgstr ""
+msgstr "Kustuta kõik ärakadunud teenused (7 ja rohkem päeva)"
 
 #: src/webui/static/app/mpegts.js:292
 msgid ""
@@ -1382,19 +1382,19 @@ msgstr ""
 
 #: src/webui/static/app/dvr.js:414
 msgid "Remove the selected recording from storage"
-msgstr ""
+msgstr "Kustuta valitud salvestus andmekandja pealt"
 
 #: src/webui/static/app/mpegts.js:294
 msgid "Remove unseen services (PAT/SDT) (7 days+)"
-msgstr ""
+msgstr "Kustuta kõik ärakadunud teenused (PAT/SDT) (7 ja rohkem päeva)"
 
 #: src/webui/static/app/dvr.js:674
 msgid "Removed Recording"
-msgstr ""
+msgstr "Kustutatud salvestus"
 
 #: src/webui/static/app/dvr.js:675
 msgid "Removed Recordings"
-msgstr ""
+msgstr "Kustutatud salvestused"
 
 #: src/webui/static/app/epg.js:155
 msgid "Repeat#EPG"
@@ -1410,7 +1410,7 @@ msgstr "Puhasta (võta ära) valitud ikooni URL"
 
 #: src/webui/static/app/epg.js:896
 msgid "Reset All"
-msgstr "Puhasta kõik"
+msgstr "Puhasta kõik väljad"
 
 #: src/webui/static/app/chconf.js:220
 msgid "Reset Icon"
@@ -1473,7 +1473,7 @@ msgstr "Otsi TheTVDB'st (pealkirja järgi)"
 
 #: src/webui/static/app/epg.js:655
 msgid "Search title..."
-msgstr "Otsi pealkirja..."
+msgstr "Otsi pealkirjade hulgast ..."
 
 #: src/webui/static/app/tvheadend.js:504
 msgid "Select channel..."
@@ -1595,11 +1595,11 @@ msgstr "Lõpeta selle saate salvestamine"
 
 #: src/webui/static/app/dvr.js:213
 msgid "Stop the selected recording"
-msgstr "Lõpeta valitu salvestamine"
+msgstr "Valitud salvestamise lõpetamine - läheb valmis salvestuste hulka"
 
 #: src/webui/static/app/tvheadend.js:985
 msgid "Storage space"
-msgstr "Andmekandja ruum"
+msgstr "Andmekandja ruumikasutus"
 
 #: src/webui/static/app/status.js:378 src/webui/static/app/status.js:525
 #: src/webui/static/app/tvheadend.js:777
@@ -1728,7 +1728,7 @@ msgstr "Paistab, et Tvheadend'ist edastusega on probleeme. Üritan uuesti ühend
 
 #: src/webui/static/app/tvheadend.js:239
 msgid "There was a problem displaying the Help!"
-msgstr ""
+msgstr "Abiinfo kuvamisel läks midagi valesti!"
 
 #: src/webui/static/app/tvhlog.js:26
 msgid "They will be lost when the application next restarts."
@@ -1792,7 +1792,7 @@ msgstr "Lülita heli summutamist"
 #: src/webui/static/app/dvr.js:356 src/webui/static/app/dvr.js:522
 #: src/webui/static/app/dvr.js:640
 msgid "Toggle re-record functionality"
-msgstr "Lülita taassalvestamist"
+msgstr "Taassalvestamisele suunamine"
 
 #: src/webui/static/app/tvheadend.js:988
 msgid "Total"

@@ -8,9 +8,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2017-03-19 19:13+0000\n"
-"Last-Translator: Aurimantas Kulisauskas <meskiokas@gmail.com>\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2017-03-29 19:07+0000\n"
+"Last-Translator: Jaroslav Kysela\n"
 "Language-Team: Lithuanian (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/lt/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -18,14 +18,14 @@ msgstr ""
 "Language: lt\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: src/main.c:530
+#: src/main.c:529
 msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
 msgstr "\nPapildomai informaciją rasite Tvheadend puslapyje: https://tvheadend.org\n"
 
-#: src/input/mpegts/mpegts_mux.c:649
+#: src/input/mpegts/mpegts_mux.c:645
 msgid "# Channels"
 msgstr "# Kanalai"
 
@@ -38,7 +38,7 @@ msgid "# Muxes"
 msgstr "# Multiplekseriai"
 
 #: src/bouquet.c:1100 src/input/mpegts/mpegts_network.c:280
-#: src/input/mpegts/mpegts_mux.c:641
+#: src/input/mpegts/mpegts_mux.c:637
 msgid "# Services"
 msgstr "# Servisai"
 
@@ -50,7 +50,7 @@ msgstr "# Matyti servisai"
 msgid "# tune repeats"
 msgstr "# pakartotiniai kreipimaisi"
 
-#: src/dvr/dvr_config.c:688
+#: src/dvr/dvr_config.c:685
 msgid "(Default profile)"
 msgstr "(Numatytasis profilis)"
 
@@ -66,23 +66,23 @@ msgstr "0"
 msgid "1"
 msgstr "1"
 
-#: src/dvr/dvr_db.c:2527 src/dvr/dvr_db.c:2551 src/dvr/dvr_config.c:724
-#: src/dvr/dvr_config.c:747
+#: src/dvr/dvr_db.c:2582 src/dvr/dvr_db.c:2606 src/dvr/dvr_config.c:721
+#: src/dvr/dvr_config.c:744
 msgid "1 day"
 msgstr "1 diena"
 
-#: src/dvr/dvr_db.c:2533 src/dvr/dvr_db.c:2557 src/dvr/dvr_config.c:730
-#: src/dvr/dvr_config.c:753
+#: src/dvr/dvr_db.c:2588 src/dvr/dvr_db.c:2612 src/dvr/dvr_config.c:727
+#: src/dvr/dvr_config.c:750
 msgid "1 month"
 msgstr "1 mėnuo"
 
-#: src/dvr/dvr_db.c:2530 src/dvr/dvr_db.c:2554 src/dvr/dvr_config.c:727
-#: src/dvr/dvr_config.c:750
+#: src/dvr/dvr_db.c:2585 src/dvr/dvr_db.c:2609 src/dvr/dvr_config.c:724
+#: src/dvr/dvr_config.c:747
 msgid "1 week"
 msgstr "1 savaitė"
 
-#: src/dvr/dvr_db.c:2537 src/dvr/dvr_db.c:2561 src/dvr/dvr_config.c:734
-#: src/dvr/dvr_config.c:757
+#: src/dvr/dvr_db.c:2592 src/dvr/dvr_db.c:2616 src/dvr/dvr_config.c:731
+#: src/dvr/dvr_config.c:754
 msgid "1 year"
 msgstr "1 metai"
 
@@ -114,18 +114,18 @@ msgstr "15"
 msgid "2"
 msgstr "2"
 
-#: src/dvr/dvr_db.c:2534 src/dvr/dvr_db.c:2558 src/dvr/dvr_config.c:731
-#: src/dvr/dvr_config.c:754
+#: src/dvr/dvr_db.c:2589 src/dvr/dvr_db.c:2613 src/dvr/dvr_config.c:728
+#: src/dvr/dvr_config.c:751
 msgid "2 months"
 msgstr "2 mėnesiai"
 
-#: src/dvr/dvr_db.c:2531 src/dvr/dvr_db.c:2555 src/dvr/dvr_config.c:728
-#: src/dvr/dvr_config.c:751
+#: src/dvr/dvr_db.c:2586 src/dvr/dvr_db.c:2610 src/dvr/dvr_config.c:725
+#: src/dvr/dvr_config.c:748
 msgid "2 weeks"
 msgstr "2 savaitės"
 
-#: src/dvr/dvr_db.c:2538 src/dvr/dvr_db.c:2562 src/dvr/dvr_config.c:735
-#: src/dvr/dvr_config.c:758
+#: src/dvr/dvr_db.c:2593 src/dvr/dvr_db.c:2617 src/dvr/dvr_config.c:732
+#: src/dvr/dvr_config.c:755
 msgid "2 years"
 msgstr "2 metai"
 
@@ -137,23 +137,23 @@ msgstr "2-jų portų relė (universali LNB)"
 msgid "3"
 msgstr "3"
 
-#: src/dvr/dvr_db.c:2528 src/dvr/dvr_db.c:2552 src/dvr/dvr_config.c:725
-#: src/dvr/dvr_config.c:748
+#: src/dvr/dvr_db.c:2583 src/dvr/dvr_db.c:2607 src/dvr/dvr_config.c:722
+#: src/dvr/dvr_config.c:745
 msgid "3 days"
 msgstr "3 dienos"
 
-#: src/dvr/dvr_db.c:2535 src/dvr/dvr_db.c:2559 src/dvr/dvr_config.c:732
-#: src/dvr/dvr_config.c:755
+#: src/dvr/dvr_db.c:2590 src/dvr/dvr_db.c:2614 src/dvr/dvr_config.c:729
+#: src/dvr/dvr_config.c:752
 msgid "3 months"
 msgstr "3 mėnesiai"
 
-#: src/dvr/dvr_db.c:2532 src/dvr/dvr_db.c:2556 src/dvr/dvr_config.c:729
-#: src/dvr/dvr_config.c:752
+#: src/dvr/dvr_db.c:2587 src/dvr/dvr_db.c:2611 src/dvr/dvr_config.c:726
+#: src/dvr/dvr_config.c:749
 msgid "3 weeks"
 msgstr "3 savaitės"
 
-#: src/dvr/dvr_db.c:2539 src/dvr/dvr_db.c:2563 src/dvr/dvr_config.c:736
-#: src/dvr/dvr_config.c:759
+#: src/dvr/dvr_db.c:2594 src/dvr/dvr_db.c:2618 src/dvr/dvr_config.c:733
+#: src/dvr/dvr_config.c:756
 msgid "3 years"
 msgstr "3 mėnesiai"
 
@@ -169,8 +169,8 @@ msgstr "4-ių portų relė (universalus LNB)"
 msgid "5"
 msgstr "5"
 
-#: src/dvr/dvr_db.c:2529 src/dvr/dvr_db.c:2553 src/dvr/dvr_config.c:726
-#: src/dvr/dvr_config.c:749
+#: src/dvr/dvr_db.c:2584 src/dvr/dvr_db.c:2608 src/dvr/dvr_config.c:723
+#: src/dvr/dvr_config.c:746
 msgid "5 days"
 msgstr "5 dienos"
 
@@ -186,8 +186,8 @@ msgstr "5.1"
 msgid "6"
 msgstr "6"
 
-#: src/dvr/dvr_db.c:2536 src/dvr/dvr_db.c:2560 src/dvr/dvr_config.c:733
-#: src/dvr/dvr_config.c:756
+#: src/dvr/dvr_db.c:2591 src/dvr/dvr_db.c:2615 src/dvr/dvr_config.c:730
+#: src/dvr/dvr_config.c:753
 msgid "6 months"
 msgstr "6 mėnesiai"
 
@@ -216,7 +216,7 @@ msgstr "9"
 msgid "A"
 msgstr "A"
 
-#: src/dvr/dvr_autorec.c:1064
+#: src/dvr/dvr_autorec.c:1068
 msgid "A channel tag (e.g. a group of channels) to which this rule applies."
 msgstr "Kanalų žyma (grupė), kuriai priskiriama ši taisyklė"
 
@@ -234,11 +234,11 @@ msgstr "AAC audio"
 msgid "AB"
 msgstr "AB"
 
-#: src/input/mpegts/mpegts_mux.c:506
+#: src/input/mpegts/mpegts_mux.c:502
 msgid "AC-3 = descriptor 6"
 msgstr "AC-3 = 6-as deskritporius"
 
-#: src/input/mpegts/mpegts_mux.c:665
+#: src/input/mpegts/mpegts_mux.c:661
 msgid "AC-3 detection"
 msgstr "AC-3 atradimas"
 
@@ -254,51 +254,51 @@ msgstr "AKTYVU"
 msgid "AES Constant Code Word"
 msgstr "AES Nuolatinis Kodo Žodis"
 
-#: src/config.c:1934
+#: src/config.c:1925
 msgid "AF11"
 msgstr "AF11"
 
-#: src/config.c:1935
+#: src/config.c:1926
 msgid "AF12"
 msgstr "AF12"
 
-#: src/config.c:1936
+#: src/config.c:1927
 msgid "AF13"
 msgstr "AF13"
 
-#: src/config.c:1938
+#: src/config.c:1929
 msgid "AF21"
 msgstr "AF21"
 
-#: src/config.c:1939
+#: src/config.c:1930
 msgid "AF22"
 msgstr "AF22"
 
-#: src/config.c:1940
+#: src/config.c:1931
 msgid "AF23"
 msgstr "AF23"
 
-#: src/config.c:1942
+#: src/config.c:1933
 msgid "AF31"
 msgstr "AF31"
 
-#: src/config.c:1943
+#: src/config.c:1934
 msgid "AF32"
 msgstr "AF32"
 
-#: src/config.c:1944
+#: src/config.c:1935
 msgid "AF33"
 msgstr "AF33"
 
-#: src/config.c:1946
+#: src/config.c:1937
 msgid "AF41"
 msgstr "AF41"
 
-#: src/config.c:1947
+#: src/config.c:1938
 msgid "AF42"
 msgstr "AF42"
 
-#: src/config.c:1948
+#: src/config.c:1939
 msgid "AF43"
 msgstr "AF43"
 
@@ -314,7 +314,7 @@ msgstr "API"
 msgid "ATSC"
 msgstr "ATSC"
 
-#: src/tvhlog.c:159
+#: src/tvhlog.c:161
 msgid "ATSC PSIP EPG"
 msgstr "ATSC PSIP EPG"
 
@@ -326,7 +326,7 @@ msgstr "ATSC SI lentelės"
 msgid "ATSC source ID"
 msgstr "ATSC šaltinio ID"
 
-#: src/satip/server.c:734
+#: src/satip/server.c:749
 msgid "ATSC-C"
 msgstr "ATSC-C"
 
@@ -338,7 +338,7 @@ msgstr "ATSC-C Tinklas"
 msgid "ATSC-C multiplex"
 msgstr "ATSC-C multiplekseris"
 
-#: src/satip/server.c:726
+#: src/satip/server.c:741
 msgid "ATSC-T"
 msgstr "ATSC-T"
 
@@ -368,15 +368,15 @@ msgstr "AUTO"
 msgid "Aborted by user"
 msgstr "Atšaukta vartotojo"
 
-#: src/satip/server.c:625
+#: src/satip/server.c:631
 msgid "Accept remote subscription weight"
 msgstr "Sutikti su nuotoliniu svoriu"
 
-#: src/satip/server.c:626
+#: src/satip/server.c:632
 msgid "Accept the remote subscription weight (from the SAT>IP client)."
 msgstr "Sutikti su nuotoliniu svoriu (iš SAT>IP kliento)"
 
-#: src/input/mpegts/mpegts_mux.c:658 src/input/mpegts/iptv/iptv.c:898
+#: src/input/mpegts/mpegts_mux.c:654 src/input/mpegts/iptv/iptv.c:934
 msgid "Accept zero value for TSID"
 msgstr "Sutikti su TSID nuline reikšme"
 
@@ -397,15 +397,21 @@ msgstr "Veiksmas"
 msgid "Adapter in use by another subscription"
 msgstr "Kita prenumerata naudoją šį adapterį"
 
-#: src/main.c:880
+#: src/main.c:879
 msgid "Add file and line numbers to debug"
 msgstr "Pridėti failą ir eilučių skaičių debuginimui"
 
-#: src/main.c:881
+#: src/main.c:880
 msgid "Add the thread ID to debug"
 msgstr ""
 
-#: src/epggrab/module.c:186
+#: src/input/mpegts/mpegts_service.c:241
+msgid ""
+"Add this value to PTS for the teletext subtitles. The time value is in "
+"milliseconds and may be negative."
+msgstr ""
+
+#: src/epggrab/module.c:188
 msgid "Additional arguments to pass to the grabber."
 msgstr "Papildomi argumentai graberiui"
 
@@ -413,7 +419,7 @@ msgstr "Papildomi argumentai graberiui"
 msgid "Additional service names found in EPG data."
 msgstr "Papildomi servisų pavadinimai rasti EPG duomenyse"
 
-#: src/dvr/dvr_config.c:949
+#: src/dvr/dvr_config.c:946
 msgid ""
 "Additional time (in seconds) in which to get the tuner ready for recording. "
 "This is useful for those with tuners that take some time to tune and/or send"
@@ -424,15 +430,15 @@ msgstr "Papildomas laikas (sekundėmis) tiuneriui pasiruošti įrašymui. Tai na
 msgid "Admin"
 msgstr "Administratorius"
 
-#: src/wizard.c:425
+#: src/wizard.c:433
 msgid "Admin password"
 msgstr "Administratoriaus slaptažodis"
 
-#: src/wizard.c:414
+#: src/wizard.c:422
 msgid "Admin username"
 msgstr "Administratoriaus vartotojo vardas"
 
-#: src/wizard.c:391
+#: src/wizard.c:399
 msgid "Administrator login"
 msgstr "Administratoriaus prisijungimas"
 
@@ -440,7 +446,7 @@ msgstr "Administratoriaus prisijungimas"
 msgid "Adult movie"
 msgstr "Suagusiųjų filmas"
 
-#: src/access.c:1385 src/access.c:1500 src/config.c:1962
+#: src/access.c:1385 src/access.c:1500 src/config.c:1953
 msgid "Advanced"
 msgstr "Pažangiau"
 
@@ -456,7 +462,7 @@ msgstr "Nuotykiai"
 msgid "Advertisement / Shopping"
 msgstr "Reklamos / Apsipirkimai"
 
-#: src/input/mpegts/iptv/iptv.c:717
+#: src/input/mpegts/iptv/iptv.c:742
 msgid "After creating the network scan it for services."
 msgstr "Ieškoti servisų sukūrus tinklą."
 
@@ -464,13 +470,13 @@ msgstr "Ieškoti servisų sukūrus tinklą."
 msgid "All (Streaming plus DVR)"
 msgstr "Viskas (Transliacija+DVR)"
 
-#: src/dvr/dvr_config.c:1261
+#: src/dvr/dvr_config.c:1258
 msgid ""
 "All characters that could possibly cause problems for filenaming will be "
 "replaced with an underscore. See Help for details."
 msgstr "Visi probleminiai simboliai bus pakeisti pabraukimu. Papildomą informaciją rasite vartotojo gide."
 
-#: src/config.c:1973
+#: src/config.c:1964
 msgid "All lower-case"
 msgstr "Viskas mažosiomis raidėmis"
 
@@ -492,11 +498,15 @@ msgstr "Viskas: Įrašyti, jei skiriasi epizodo numeris"
 msgid "All: Record if different subtitle"
 msgstr "Viskas: Įrašyti, jei skiriasi paantraštė"
 
-#: src/dvr/dvr_autorec.c:947
+#: src/dvr/dvr_autorec.c:949
 msgid "All: Record once per day"
 msgstr "Viskas: Įrašyti kartą per dieną"
 
 #: src/dvr/dvr_autorec.c:945
+msgid "All: Record once per month"
+msgstr ""
+
+#: src/dvr/dvr_autorec.c:947
 msgid "All: Record once per week"
 msgstr "Viskas: Įrašyti kartą per savaitę"
 
@@ -540,7 +550,7 @@ msgstr "Leisti/Neleisti prieigą prie naršyklės interfeiso (taip pat ir prie E
 msgid "Allowed DVR profiles. This limits the profiles the user has access to."
 msgstr "Leistini DVR profiliai. Vartotojui bus suaktyvinti tik pasirinkti profiliai."
 
-#: src/wizard.c:404
+#: src/wizard.c:412
 msgid "Allowed network"
 msgstr "Leistinas tinklas"
 
@@ -548,11 +558,11 @@ msgstr "Leistinas tinklas"
 msgid "Allowed networks"
 msgstr "Leistini tinklai"
 
-#: src/main.c:823
+#: src/main.c:822
 msgid "Alternate PID path"
 msgstr "Alternatyvus PID kelias"
 
-#: src/main.c:818
+#: src/main.c:817
 msgid "Alternate configuration path"
 msgstr "Alternatyvi konfigūracijos vieta/takas"
 
@@ -583,7 +593,7 @@ msgid ""
 "values using the new v5 linuxdvb API."
 msgstr "Visada naudoti seną ioctls linuxdvb būsenai (signalo stiprumo, SNR, klaidų skaitliukų) nuskaityti. Kai kurios tvarkyklės yra nepakankamai ištobulintos naudoti naująjį linuxdvb v5 API."
 
-#: src/dvr/dvr_autorec.c:1096 src/dvr/dvr_autorec.c:1109
+#: src/dvr/dvr_autorec.c:1100 src/dvr/dvr_autorec.c:1113
 msgid ""
 "An event which starts between this \"start after\" and \"start before\" will"
 " be matched (including boundary values)."
@@ -599,8 +609,8 @@ msgstr "Anonimizuoti HTSP prieigą"
 
 #: src/profile.c:1313 src/dvr/dvr_autorec.c:628 src/dvr/dvr_autorec.c:664
 #: src/dvr/dvr_autorec.c:678 src/dvr/dvr_autorec.c:685
-#: src/dvr/dvr_autorec.c:969 src/dvr/dvr_autorec.c:1099
-#: src/dvr/dvr_autorec.c:1112 src/dvr/dvr_timerec.c:408
+#: src/dvr/dvr_autorec.c:973 src/dvr/dvr_autorec.c:1103
+#: src/dvr/dvr_autorec.c:1116 src/dvr/dvr_timerec.c:408
 msgid "Any"
 msgstr "Bet koks"
 
@@ -616,11 +626,11 @@ msgstr "Menai / Kultūra (be muzikos)"
 msgid "Arts magazines"
 msgstr "Menų žurnalai"
 
-#: src/wizard.c:933
+#: src/wizard.c:941
 msgid "Assign predefined muxes to networks"
 msgstr "Priskirti tinklams iš anksto sugeneruotą multiplekserių sąrašą "
 
-#: src/input/mpegts/mpegts_input.c:316
+#: src/input/mpegts/mpegts_input.c:327
 msgid "Associate this device with one or more networks."
 msgstr "Susieti šį įrenginį su vienu ar daugiau tinklų."
 
@@ -670,7 +680,7 @@ msgstr "Tik audio srautas"
 msgid "Audioes muxer"
 msgstr "Audio mukseris"
 
-#: src/satip/server.c:562
+#: src/satip/server.c:568
 msgid "Auto"
 msgstr "Auto"
 
@@ -682,20 +692,20 @@ msgstr "Automatinis patikrinimas išjungtas"
 msgid "Auto check enabled"
 msgstr "Automatinis patikrinimas įjungtas"
 
-#: src/dvr/dvr_db.c:3299
+#: src/dvr/dvr_db.c:3354
 msgid "Auto record"
 msgstr "Automatinis įrašymas"
 
-#: src/dvr/dvr_db.c:3308
+#: src/dvr/dvr_db.c:3363
 msgid "Auto record caption"
 msgstr "Automatinio įrašymo antraštė"
 
-#: src/dvr/dvr_db.c:1417
+#: src/dvr/dvr_db.c:1461
 #, c-format
 msgid "Auto recording%s%s"
 msgstr "Automatinis įrašymas%s%s"
 
-#: src/dvr/dvr_db.c:3316
+#: src/dvr/dvr_db.c:3371
 msgid "Auto time record"
 msgstr "Automatinis laiko įrašas"
 
@@ -707,15 +717,15 @@ msgstr "Automatiškai priskirti prie kanalų"
 msgid "Automatic checking"
 msgstr "Automatinis patikrinimas"
 
-#: src/dvr/dvr_db.c:3309
+#: src/dvr/dvr_db.c:3364
 msgid "Automatic recording caption."
 msgstr "Automatinė įrašo antraštė"
 
-#: src/htsp_server.c:2104 src/htsp_server.c:2140
+#: src/htsp_server.c:2110 src/htsp_server.c:2146
 msgid "Automatic schedule entry not found"
 msgstr "Automatinis tvarkaraščio įrašas nerastas"
 
-#: src/htsp_server.c:2215 src/htsp_server.c:2250
+#: src/htsp_server.c:2221 src/htsp_server.c:2256
 msgid "Automatic time scheduler entry not found"
 msgstr "Automatinis tvarkaraščio įrašas nerastas"
 
@@ -730,7 +740,7 @@ msgstr "Automatiškai susieti EPG duomenis su kanalu (naudojant kanalo pavadinim
 msgid "Automatically map EPG source"
 msgstr "Automatiškai susieti EPG šaltinį"
 
-#: src/wizard.c:1079
+#: src/wizard.c:1087
 msgid "Automatically map all available services to channels."
 msgstr "Automatiškai susieti visus prieinamus servisus su kanalais."
 
@@ -742,7 +752,7 @@ msgstr "Automatiškai susieti buketuose nurodytus kanalus."
 msgid "Automatically name from network"
 msgstr "Automatiškai naudoti pavadinimą iš tinklo"
 
-#: src/dvr/dvr_db.c:3300
+#: src/dvr/dvr_db.c:3355
 msgid "Automatically record."
 msgstr "Automatiškai įrašyti."
 
@@ -767,11 +777,11 @@ msgid ""
 "defined channel numbers."
 msgstr "Automatiškai atnaujinti kanalo numerius naudojant įgalintų EPG tiekėjų informaciją. Pastaba: tai gali sukelti nepageidaujamų pokyčių jau nustatytiems numeriams."
 
-#: src/dvr/dvr_config.c:1014
+#: src/dvr/dvr_config.c:1011
 msgid "Autorec maximum count (0=unlimited)"
 msgstr "Automatinių įrašų kiekis (0=neribojama)"
 
-#: src/dvr/dvr_config.c:1023
+#: src/dvr/dvr_config.c:1020
 msgid "Autorec maximum schedules limit (0=unlimited)"
 msgstr "Maksimalus automatinių įrašų grafikų kiekis (0=neribojama)"
 
@@ -798,7 +808,7 @@ msgstr "BB"
 msgid "Bad"
 msgstr "Blogas"
 
-#: src/htsp_server.c:1355
+#: src/htsp_server.c:1361
 msgid "Bad request"
 msgstr "Bloga užklausa"
 
@@ -818,7 +828,7 @@ msgstr "Pagrindinės DVB SI lentelės (PAT,CAT,PMT,SDT ir t.t.)"
 msgid "Based on software from"
 msgstr "Pagrįsta programine įranga iš"
 
-#: src/access.c:1384 src/access.c:1495 src/access.c:1538 src/config.c:1961
+#: src/access.c:1384 src/access.c:1495 src/access.c:1538 src/config.c:1952
 msgid "Basic"
 msgstr "Pagrindinis"
 
@@ -858,23 +868,23 @@ msgstr "Buketo šaltinis."
 msgid "Bouquets"
 msgstr "Buketai"
 
-#: src/dvr/dvr_autorec.c:1248
+#: src/dvr/dvr_autorec.c:1252
 msgid "Brand"
 msgstr "Markė"
 
-#: src/dvr/dvr_autorec.c:1249
+#: src/dvr/dvr_autorec.c:1253
 msgid "Branding information (if available)."
 msgstr "Prekės ženklo informacija (jei prieinama)."
 
-#: src/dvr/dvr_db.c:3360
+#: src/dvr/dvr_db.c:3415
 msgid "Broadcast"
 msgstr "Transliacija"
 
-#: src/dvr/dvr_autorec.c:1075
+#: src/dvr/dvr_autorec.c:1079
 msgid "Broadcast type"
 msgstr "Transliacijos tipas"
 
-#: src/dvr/dvr_db.c:3361
+#: src/dvr/dvr_db.c:3416
 msgid "Broadcast."
 msgstr "Transliacija."
 
@@ -900,7 +910,7 @@ msgid ""
 "faster."
 msgstr "Pagal nutylėjimą linuxdvb busenos nuskaitymo periodas yra 1000ms (viena sekundė). Priimtinas rėžis yra tarp 250ms ir 8000ms. Pastaba: kai kurioms plokštėms ar jų tvarkyklėms (kaip kad USB) būsenos operacijos užima perdaug laiko ir eikvoja perdaug procesoriaus resursų. Naudojant sparčią \"geležį\" ši reikšmė gali būti sumažinta, siekiant paspartinti signalo būsena paremtą derinimo algoritmo veikimą."
 
-#: src/tvhlog.c:135
+#: src/tvhlog.c:136
 msgid "CA (descrambling) Client"
 msgstr "CA (iškodavimo) klientas"
 
@@ -933,7 +943,7 @@ msgstr "CAID"
 msgid "CAPMT (Linux Network DVBAPI)"
 msgstr "CAPMT (Linux tinklinis DVBAPI)"
 
-#: src/tvhlog.c:137
+#: src/tvhlog.c:138
 msgid "CAPMT CA Client"
 msgstr "CAPMT CA klientas"
 
@@ -953,7 +963,7 @@ msgstr "CAPMT užklausos intervalas (ms)"
 msgid "CAPMT query interval (ms)."
 msgstr "CAPMT užklausos intervalas (ms)."
 
-#: src/tvhlog.c:154
+#: src/tvhlog.c:156
 msgid "CI Module"
 msgstr "CI modulis"
 
@@ -965,51 +975,51 @@ msgstr "CPU"
 msgid "CRASH"
 msgstr "NULŪŽO"
 
-#: src/input/mpegts/mpegts_mux.c:601 src/input/mpegts/mpegts_service.c:176
+#: src/input/mpegts/mpegts_mux.c:597 src/input/mpegts/mpegts_service.c:176
 msgid "CRID authority"
 msgstr "CRID authority"
 
-#: src/config.c:1932
+#: src/config.c:1923
 msgid "CS0"
 msgstr "CS0"
 
-#: src/config.c:1933
+#: src/config.c:1924
 msgid "CS1"
 msgstr "CS1"
 
-#: src/config.c:1937
+#: src/config.c:1928
 msgid "CS2"
 msgstr "CS2"
 
-#: src/config.c:1941
+#: src/config.c:1932
 msgid "CS3"
 msgstr "CS3"
 
-#: src/config.c:1945
+#: src/config.c:1936
 msgid "CS4"
 msgstr "CS4"
 
-#: src/config.c:1949
+#: src/config.c:1940
 msgid "CS5"
 msgstr "CS5"
 
-#: src/config.c:1951
+#: src/config.c:1942
 msgid "CS6"
 msgstr "CS6"
 
-#: src/config.c:1952
+#: src/config.c:1943
 msgid "CS7"
 msgstr "CS7"
 
-#: src/tvhlog.c:136
+#: src/tvhlog.c:137
 msgid "CSA (descrambling)"
 msgstr "CSA (iškodavimas)"
 
-#: src/tvhlog.c:138
+#: src/tvhlog.c:139
 msgid "CWC CA Client"
 msgstr "CWC CA klientas"
 
-#: src/dvr/dvr_config.c:891
+#: src/dvr/dvr_config.c:888
 msgid "Cache scheme"
 msgstr "Podėlio schema."
 
@@ -1025,8 +1035,8 @@ msgstr "Filmukai"
 msgid "Change parameters"
 msgstr "Keisti parametrus"
 
-#: src/tvhlog.c:128 src/service.c:200 src/dvr/dvr_db.c:3066
-#: src/dvr/dvr_autorec.c:1050 src/dvr/dvr_timerec.c:574
+#: src/tvhlog.c:128 src/service.c:200 src/dvr/dvr_db.c:3121
+#: src/dvr/dvr_autorec.c:1054 src/dvr/dvr_timerec.c:574
 msgid "Channel"
 msgstr "Kanalas"
 
@@ -1034,16 +1044,16 @@ msgstr "Kanalas"
 msgid "Channel Tags"
 msgstr "Kanalų žymos"
 
-#: src/htsp_server.c:1547 src/htsp_server.c:1589 src/htsp_server.c:1674
-#: src/htsp_server.c:1844 src/htsp_server.c:2385 src/htsp_server.c:2388
+#: src/htsp_server.c:1553 src/htsp_server.c:1595 src/htsp_server.c:1680
+#: src/htsp_server.c:1850 src/htsp_server.c:2391 src/htsp_server.c:2394
 msgid "Channel does not exist"
 msgstr "Kanalas neegzistuoja"
 
-#: src/dvr/dvr_db.c:3077
+#: src/dvr/dvr_db.c:3132
 msgid "Channel icon"
 msgstr "Kanalo ikona"
 
-#: src/dvr/dvr_db.c:3078
+#: src/dvr/dvr_db.c:3133
 msgid "Channel icon URL."
 msgstr "Kanalo ikonos URL."
 
@@ -1051,11 +1061,11 @@ msgstr "Kanalo ikonos URL."
 msgid "Channel icon as defined in EPG data."
 msgstr "Kanalo ikona iš EPG duomenų."
 
-#: src/config.c:2349
+#: src/config.c:2340
 msgid "Channel icon name scheme"
 msgstr "Kanalo ikonų pavadinimo schema"
 
-#: src/config.c:2336
+#: src/config.c:2327
 msgid "Channel icon path"
 msgstr "Kanalo ikonos kelias"
 
@@ -1063,11 +1073,11 @@ msgstr "Kanalo ikonos kelias"
 msgid "Channel mapping options"
 msgstr "Kanalų susiejimo nuostatos"
 
-#: src/dvr/dvr_db.c:3085
+#: src/dvr/dvr_db.c:3140
 msgid "Channel name"
 msgstr "Kanalo pavadinimas"
 
-#: src/htsp_server.c:2330
+#: src/htsp_server.c:2336
 msgid "Channel not found"
 msgstr "Kanalas nerastas"
 
@@ -1091,15 +1101,15 @@ msgstr "Kanalo numerių rėžis"
 msgid "Channel numbers (heuristic)"
 msgstr "Kanalo numeriai (euristiškai)"
 
-#: src/input/mpegts/iptv/iptv.c:874
+#: src/input/mpegts/iptv/iptv.c:910
 msgid "Channel numbers from"
 msgstr "Kanalų numeriai iš"
 
-#: src/dvr/dvr_autorec.c:1063
+#: src/dvr/dvr_autorec.c:1067
 msgid "Channel tag"
 msgstr "Kanalo žyma"
 
-#: src/htsp_server.c:1680
+#: src/htsp_server.c:1686
 msgid "Channel tag does not exist"
 msgstr "Kanalo žyma neegzistuoja"
 
@@ -1131,18 +1141,18 @@ msgstr "Kanalai"
 msgid "Channels EPG data is used by."
 msgstr "Kanalai, kurie naudoja šį EPG"
 
-#: src/input/mpegts/mpegts_network.c:253 src/input/mpegts/mpegts_mux.c:630
+#: src/input/mpegts/mpegts_network.c:253 src/input/mpegts/mpegts_mux.c:626
 #: src/input/mpegts/mpegts_service.c:203
 msgid "Character set"
 msgstr "Simbolių rinkinys"
 
-#: src/dvr/dvr_config.c:1281
+#: src/dvr/dvr_config.c:1278
 msgid ""
 "Characters not supported in Windows filenames (e.g. for an SMB/CIFS share) "
 "will be stripped out or converted."
 msgstr "Windows failų varduose (pvz. SMB/CIFS bendrinimuose) nenaudojami simboliai bus iškirpti ar konvertuoti."
 
-#: src/tvhlog.c:144
+#: src/tvhlog.c:145
 msgid "Charset"
 msgstr "Simbolių rinkinys"
 
@@ -1185,7 +1195,7 @@ msgstr "Klasikinis"
 msgid "Classical music"
 msgstr "Klasikinė muzika"
 
-#: src/streaming.c:578
+#: src/streaming.c:580
 msgid "Clean effects"
 msgstr "Švarūs efektai"
 
@@ -1193,7 +1203,7 @@ msgstr "Švarūs efektai"
 msgid "Client name"
 msgstr "Kliento pavadinimas"
 
-#: src/dvr/dvr_config.c:927
+#: src/dvr/dvr_config.c:924
 msgid "Clone scheduled entry on error"
 msgstr "Esant klaidai klonuoti planuojamąjį įrašą"
 
@@ -1216,17 +1226,17 @@ msgstr "Komandos laikas (ms) (10-100)"
 #: src/access.c:1845 src/access.c:2064 src/access.c:2201 src/channels.c:1508
 #: src/esfilter.c:711 src/esfilter.c:806 src/esfilter.c:901 src/esfilter.c:996
 #: src/esfilter.c:1101 src/esfilter.c:1183 src/profile.c:336
-#: src/bouquet.c:1108 src/epggrab/channel.c:867 src/dvr/dvr_db.c:3418
-#: src/dvr/dvr_autorec.c:1293 src/dvr/dvr_timerec.c:678
-#: src/dvr/dvr_config.c:870 src/descrambler/caclient.c:288
+#: src/bouquet.c:1108 src/epggrab/channel.c:867 src/dvr/dvr_db.c:3473
+#: src/dvr/dvr_autorec.c:1297 src/dvr/dvr_timerec.c:678
+#: src/dvr/dvr_config.c:867 src/descrambler/caclient.c:288
 msgid "Comment"
 msgstr "Komentaras"
 
-#: src/dvr/dvr_db.c:609
+#: src/dvr/dvr_db.c:629
 msgid "Commercial break"
 msgstr "Komercinė pertraukėlė"
 
-#: src/dvr/dvr_config.c:1127
+#: src/dvr/dvr_config.c:1124
 msgid ""
 "Commercials will be dropped from the recordings. Commercial detection works "
 "using EITp/f (EPG running state) and for the Swedish channel TV4 (using "
@@ -1237,15 +1247,15 @@ msgstr "Reklamos bus iškirptos. Reklamų atrandamimas veikia naudojant EITp/f (
 msgid "Committed"
 msgstr "Priskirta"
 
-#: src/dvr/dvr_db.c:638
+#: src/dvr/dvr_db.c:660
 msgid "Completed OK"
 msgstr "Užbaigta gerai"
 
-#: src/config.c:2222
+#: src/config.c:2213
 msgid "Compress EPG database"
 msgstr "Suspausti EPG duomenų bazę"
 
-#: src/config.c:2223
+#: src/config.c:2214
 msgid "Compress the EPG database to reduce disk I/O and space."
 msgstr "Suspausti EPG duomenų bazę siekiant sumažinti skaitymo/rašymo operacijų skaičių ir taupyti vietą."
 
@@ -1255,7 +1265,7 @@ msgid ""
 "The first limit number is for src=1 (AA), second for src=2 (AB) etc."
 msgstr ""
 
-#: src/config.c:2174
+#: src/config.c:2165
 msgid "Conditional Access"
 msgstr "Sąliginė prieiga (CA)"
 
@@ -1272,7 +1282,7 @@ msgstr "Sąliginės prieigos identifikacija."
 msgid "Configuration"
 msgstr "Konfigūracija"
 
-#: src/config.c:2026
+#: src/config.c:2017
 msgid "Configuration - Base"
 msgstr "Konfigūracija - Pagrindinė"
 
@@ -1280,7 +1290,7 @@ msgstr "Konfigūracija - Pagrindinė"
 msgid "Configuration - Image Cache"
 msgstr "Konfigūracija - Paveiksliukų podėlis"
 
-#: src/satip/server.c:576
+#: src/satip/server.c:582
 msgid "Configuration - SAT>IP Server"
 msgstr "Konfigūracija - SAT>IP Serveris"
 
@@ -1288,11 +1298,11 @@ msgstr "Konfigūracija - SAT>IP Serveris"
 msgid "Configuration ID"
 msgstr "Konfigūracijos ID"
 
-#: src/dvr/dvr_config.c:859
+#: src/dvr/dvr_config.c:856
 msgid "Configuration name"
 msgstr "Konfigūracijos pavadinimas"
 
-#: src/config.c:2062
+#: src/config.c:2053
 msgid "Configuration version"
 msgstr "Konfigūracijos versija"
 
@@ -1317,7 +1327,7 @@ msgstr "Konteineris"
 msgid "Container to use for the transcoded stream."
 msgstr "Perkoduotam srautui naudoti šį konteinerį."
 
-#: src/input/mpegts/iptv/iptv.c:863
+#: src/input/mpegts/iptv/iptv.c:899
 msgid "Content character set"
 msgstr "Turinio simbolių rinkinys"
 
@@ -1325,11 +1335,11 @@ msgstr "Turinio simbolių rinkinys"
 msgid "Content reference identifier authority."
 msgstr "Turinio nuorodos identifikatoriaus šaltinis."
 
-#: src/dvr/dvr_db.c:3351 src/dvr/dvr_autorec.c:1085
+#: src/dvr/dvr_db.c:3406 src/dvr/dvr_autorec.c:1089
 msgid "Content type"
 msgstr "Turinio tipas"
 
-#: src/dvr/dvr_db.c:3352
+#: src/dvr/dvr_db.c:3407
 msgid "Content type."
 msgstr "Turinio tipas."
 
@@ -1341,15 +1351,15 @@ msgstr "Konkursas"
 msgid "Continue even if descrambling fails"
 msgstr "Tęsti net, jei iškodavimas nepavyksta"
 
-#: src/dvr/dvr_autorec.c:1132
+#: src/dvr/dvr_autorec.c:1136
 msgid "Continue recording for x minutes after scheduled stop time"
 msgstr "Tęsti įrašymą x minučių po suplanuoto pabaigos laiko"
 
-#: src/channels.c:482 src/dvr/dvr_db.c:3040 src/dvr/dvr_config.c:979
+#: src/channels.c:482 src/dvr/dvr_db.c:3095 src/dvr/dvr_config.c:976
 msgid "Continue recording for x minutes after scheduled stop time."
 msgstr "Tęsti įrašymą x minučių po suplanuoto pabaigos laiko."
 
-#: src/config.c:2134
+#: src/config.c:2125
 msgid "Cookie expiration (days)"
 msgstr "Sausainiukų pasibaigimas (dienomis)"
 
@@ -1373,25 +1383,25 @@ msgstr "Objektų kiekis"
 msgid "Create SDTV/HDTV/Radio tags."
 msgstr "Sukurti SDTV/HDTV/Radijo žymes."
 
-#: src/input/mpegts/iptv/iptv.c:856
+#: src/input/mpegts/iptv/iptv.c:892
 msgid "Create a bouquet from the playlist."
 msgstr "Sukurti buketą iš grojaraščio."
 
-#: src/dvr/dvr_config.c:1175
+#: src/dvr/dvr_config.c:1172
 msgid ""
 "Create a directory per channel when storing recordings. If both this and the"
 " 'directory per day' checkbox is enabled, the date-directory will be the "
 "parent of the per-channel directory."
 msgstr "Įrašant sukurti direktoriją pagal kanalo pavadinimą. Jei šis nustatymas pažymėtas kartu su \"direktorija per dieną\", kanalo direktorija bus dienos kategorijos viduje."
 
-#: src/dvr/dvr_config.c:1187
+#: src/dvr/dvr_config.c:1184
 msgid ""
 "Create a directory per title when storing recordings. If the day/channel "
 "directory checkboxes are also enabled, those directories will be parents of "
 "this directory."
 msgstr "Įrašant sukurti direktoriją pagal įrašo pavadinimą. Jei taip pat pažymeti dienos/kanalo langeliai, pavadinimo katalogas bus jų viduje."
 
-#: src/dvr/dvr_config.c:1163
+#: src/dvr/dvr_config.c:1160
 msgid ""
 "Create a new directory per day in the recording system path. Folders will "
 "only be created when something is recorded. The format of the directory will"
@@ -1402,11 +1412,11 @@ msgstr "Sukurti direktorijas įrašų sistemos kelyje remiantis dienomis. Katalo
 msgid "Create a provider name tag."
 msgstr "Kurti tiekėjo pavadinimo žymę."
 
-#: src/wizard.c:1097
+#: src/wizard.c:1105
 msgid "Create and associate a network tag to created channels."
 msgstr "Sukurti ir priskirti tinklo pavadinimo žymę sukurtiems kanalams."
 
-#: src/wizard.c:1088
+#: src/wizard.c:1096
 msgid "Create and associate a provider tag to created channels."
 msgstr "Sukurti ir priskirti tiekėjo pavadinimo žymę sukurtiems kanalams."
 
@@ -1414,7 +1424,7 @@ msgstr "Sukurti ir priskirti tiekėjo pavadinimo žymę sukurtiems kanalams."
 msgid "Create and link these tags to channels when mapping."
 msgstr "Sukurti ir priskirti šias žymes kanalams susiejimo metu."
 
-#: src/input/mpegts/iptv/iptv.c:855
+#: src/input/mpegts/iptv/iptv.c:891
 msgid "Create bouquet"
 msgstr "Sukurti buketą"
 
@@ -1422,11 +1432,11 @@ msgstr "Sukurti buketą"
 msgid "Create bouquet tag"
 msgstr "Sukurti buketo žymę"
 
-#: src/dvr/dvr_config.c:1153
+#: src/dvr/dvr_config.c:1150
 msgid "Create directories using these permissions."
 msgstr "Sukurti direktorijas naudojant šias teises."
 
-#: src/dvr/dvr_config.c:1094
+#: src/dvr/dvr_config.c:1091
 msgid "Create files using these permissions."
 msgstr "Sukurti failus naudojant šias teises."
 
@@ -1438,7 +1448,7 @@ msgstr "Sukurti tinklo vardo žymes"
 msgid "Create network name tags (set by provider)."
 msgstr "Sukurti tinklo vardo žymes (nustatytas tiekėjo)."
 
-#: src/wizard.c:1096
+#: src/wizard.c:1104
 msgid "Create network tags"
 msgstr "Sukurti tinklo žymes."
 
@@ -1446,7 +1456,7 @@ msgstr "Sukurti tinklo žymes."
 msgid "Create provider name tags"
 msgstr "Sukurti tiekėjo vardo žymes"
 
-#: src/wizard.c:1087
+#: src/wizard.c:1095
 msgid "Create provider tags"
 msgstr "Sukurti tiekėjo žymes"
 
@@ -1454,7 +1464,7 @@ msgstr "Sukurti tiekėjo žymes"
 msgid "Create tags"
 msgstr "Sukurti žymes"
 
-#: src/dvr/dvr_config.c:1116
+#: src/dvr/dvr_config.c:1113
 msgid ""
 "Create tags in recordings using media containers that support metadata (if "
 "possible)."
@@ -1464,11 +1474,11 @@ msgstr "Sukurti žymes įrašuose naudojant media konteinerius, kurie palaiko me
 msgid "Create type-based tags"
 msgstr "Sukurti tipu paremtas žymes"
 
-#: src/input/mpegts/mpegts_service.c:240
+#: src/input/mpegts/mpegts_service.c:248
 msgid "Created"
 msgstr "Sukurta"
 
-#: src/dvr/dvr_db.c:3215 src/dvr/dvr_autorec.c:1283 src/dvr/dvr_timerec.c:668
+#: src/dvr/dvr_db.c:3270 src/dvr/dvr_autorec.c:1287 src/dvr/dvr_timerec.c:668
 msgid "Creator"
 msgstr "Kūrėjas"
 
@@ -1524,7 +1534,7 @@ msgstr "DAB multiplekseris"
 msgid "DBUS"
 msgstr "DBUS"
 
-#: src/main.c:833
+#: src/main.c:832
 msgid "DBus - use the session message bus instead of the system one"
 msgstr "DBus - naudoti session message bus vietoje system"
 
@@ -1540,15 +1550,15 @@ msgstr "DES Raktas."
 msgid "DES key"
 msgstr "DES raktas"
 
-#: src/config.c:2157
+#: src/config.c:2148
 msgid "DSCP/TOS for streaming"
 msgstr "DSCP/TOS transliavimui"
 
-#: src/tvhlog.c:145
+#: src/tvhlog.c:146
 msgid "DVB"
 msgstr "DVB"
 
-#: src/tvhlog.c:139
+#: src/tvhlog.c:140
 msgid "DVB CAM Client"
 msgstr "DVB CAM Klientas"
 
@@ -1556,7 +1566,7 @@ msgstr "DVB CAM Klientas"
 msgid "DVB CSA (descrambling) Tables"
 msgstr "DVB CSA (iškodavimo) Lentelės"
 
-#: src/dvr/dvr_db.c:3267
+#: src/dvr/dvr_db.c:3322
 msgid "DVB EPG ID"
 msgstr "DVB EPG ID"
 
@@ -1580,15 +1590,15 @@ msgstr "DVB Tvarkaraščiai"
 msgid "DVB multiplex"
 msgstr "DVB multiplekseris"
 
-#: src/config.c:2045
+#: src/config.c:2036
 msgid "DVB scan files"
 msgstr "DVB skanavimo failai"
 
-#: src/config.c:2278
+#: src/config.c:2269
 msgid "DVB scan files path"
 msgstr "DVB skanavimo failų kelias"
 
-#: src/satip/server.c:710
+#: src/satip/server.c:725
 msgid "DVB-C"
 msgstr "DVB-C"
 
@@ -1600,11 +1610,11 @@ msgstr "DVB-C Tinklai"
 msgid "DVB-C multiplex"
 msgstr "DVB-C multiplekseris"
 
-#: src/satip/server.c:718
+#: src/satip/server.c:733
 msgid "DVB-C2"
 msgstr "DVB-C2"
 
-#: src/satip/server.c:678
+#: src/satip/server.c:693
 msgid "DVB-S"
 msgstr "DVB-S"
 
@@ -1620,11 +1630,11 @@ msgstr "DVB-S palydovo konfigūracija"
 msgid "DVB-S multiplex"
 msgstr "DVB-S multiplekseris"
 
-#: src/satip/server.c:686
+#: src/satip/server.c:701
 msgid "DVB-S2"
 msgstr "DVB-S2"
 
-#: src/satip/server.c:694
+#: src/satip/server.c:709
 msgid "DVB-T"
 msgstr "DVB-T"
 
@@ -1636,7 +1646,7 @@ msgstr "DVB-T Tinklas"
 msgid "DVB-T multiplex"
 msgstr "DVB-T multiplekseris"
 
-#: src/satip/server.c:702
+#: src/satip/server.c:717
 msgid "DVB-T2"
 msgstr "DVB-T2"
 
@@ -1644,11 +1654,11 @@ msgstr "DVB-T2"
 msgid "DVR"
 msgstr "DVR"
 
-#: src/dvr/dvr_autorec.c:994
+#: src/dvr/dvr_autorec.c:998
 msgid "DVR - Auto-recording (Autorecs)"
 msgstr "DVR - Auto-įrašymas (Autoįrašai)"
 
-#: src/dvr/dvr_config.c:806
+#: src/dvr/dvr_config.c:803
 msgid "DVR - Profiles"
 msgstr "DVR - Profiliai"
 
@@ -1656,12 +1666,12 @@ msgstr "DVR - Profiliai"
 msgid "DVR - Time-based Recording (Timers)"
 msgstr "DVR - Laiku paremtas įrašymas (taimeriai)"
 
-#: src/dvr/dvr_config.c:816
+#: src/dvr/dvr_config.c:813
 msgid "DVR behavior"
 msgstr "DVR elgesys"
 
-#: src/dvr/dvr_db.c:2526 src/dvr/dvr_db.c:2550 src/dvr/dvr_db.c:3194
-#: src/dvr/dvr_autorec.c:1237 src/dvr/dvr_timerec.c:649
+#: src/dvr/dvr_db.c:2581 src/dvr/dvr_db.c:2605 src/dvr/dvr_db.c:3249
+#: src/dvr/dvr_autorec.c:1241 src/dvr/dvr_timerec.c:649
 msgid "DVR configuration"
 msgstr "DVR konfigūracija"
 
@@ -1673,20 +1683,20 @@ msgstr "DVR konfigūracijos profiliai"
 msgid "DVR configurations"
 msgstr "DVR konfigūracijos"
 
-#: src/htsp_server.c:1918
+#: src/htsp_server.c:1924
 msgid "DVR entry not found"
 msgstr "DVR įrašas nerastas"
 
-#: src/dvr/dvr_db.c:3166 src/dvr/dvr_autorec.c:1209 src/dvr/dvr_timerec.c:639
-#: src/dvr/dvr_config.c:916
+#: src/dvr/dvr_db.c:3221 src/dvr/dvr_autorec.c:1213 src/dvr/dvr_timerec.c:639
+#: src/dvr/dvr_config.c:913
 msgid "DVR file retention period"
 msgstr "DVR failo išsaugojimo laikotarpis"
 
-#: src/dvr/dvr_db.c:3156 src/dvr/dvr_autorec.c:1199 src/dvr/dvr_timerec.c:629
+#: src/dvr/dvr_db.c:3211 src/dvr/dvr_autorec.c:1203 src/dvr/dvr_timerec.c:629
 msgid "DVR log retention"
 msgstr "DVR žurnalo išsaugojimas"
 
-#: src/dvr/dvr_config.c:905
+#: src/dvr/dvr_config.c:902
 msgid "DVR log retention period"
 msgstr "DVR žurnalo išsaugojimo laikotarpis"
 
@@ -1714,15 +1724,15 @@ msgstr "DVR nepaisymas: nesvarbus"
 msgid "DVR profile to use/used for the recording."
 msgstr "DVR profilis naudoti/naudojamas įrašymams."
 
-#: src/htsp_server.c:2338 src/htsp_server.c:2699
+#: src/htsp_server.c:2344 src/htsp_server.c:2705
 msgid "DVR schedule does not exist"
 msgstr "DVR tvarkaraštis neegzistuoja"
 
-#: src/htsp_server.c:2707
+#: src/htsp_server.c:2713
 msgid "DVR schedule does not have a file yet"
 msgstr "DVR tvarkarašis kol kas neturi failo"
 
-#: src/htsp_server.c:2286
+#: src/htsp_server.c:2292
 msgid "DVR schedule not found"
 msgstr "DVR tvarkaraštis nerastas"
 
@@ -1730,7 +1740,7 @@ msgstr "DVR tvarkaraštis nerastas"
 msgid "Dance"
 msgstr "Šokiai"
 
-#: src/dvr/dvr_db.c:3258
+#: src/dvr/dvr_db.c:3313
 msgid "Data errors"
 msgstr "Duomenų klaidos"
 
@@ -1746,11 +1756,11 @@ msgstr "Laikas kada paskutinį kartą buvo atnaujinti EPG duomenys (nesiskaito o
 msgid "Days of Week"
 msgstr "Savaitės dienos"
 
-#: src/dvr/dvr_autorec.c:1143
+#: src/dvr/dvr_autorec.c:1147
 msgid "Days of the week to which the rule should apply."
 msgstr "Savaitės dienos, kurioms taisyklė taikoma."
 
-#: src/dvr/dvr_autorec.c:1142
+#: src/dvr/dvr_autorec.c:1146
 msgid "Days of week"
 msgstr "Savaitės dienos"
 
@@ -1758,39 +1768,39 @@ msgstr "Savaitės dienos"
 msgid "Debate"
 msgstr "Debatai"
 
-#: src/tvhlog.c:793
+#: src/tvhlog.c:795
 msgid "Debug libav log"
 msgstr "Debuginti libav žurnalą"
 
-#: src/tvhlog.c:725
+#: src/tvhlog.c:727
 msgid "Debug log path"
 msgstr "Debuginimo žurnalo kelias"
 
-#: src/main.c:869
+#: src/main.c:868
 msgid "Debug options"
 msgstr "Debuginimo nuostatos"
 
-#: src/tvhlog.c:754
+#: src/tvhlog.c:756
 msgid "Debug subsystems"
 msgstr "Debuginimo subsistemos"
 
-#: src/tvhlog.c:745
+#: src/tvhlog.c:747
 msgid "Debug to syslog"
 msgstr "Debuginti į syslog"
 
-#: src/tvhlog.c:766
+#: src/tvhlog.c:768
 msgid "Debug trace (low-level)"
 msgstr "Debuginimo pėdsakas (žemo lygio)"
 
-#: src/tvhlog.c:710
+#: src/tvhlog.c:712
 msgid "Debugging"
 msgstr "Debuginimas"
 
-#: src/access.c:1383 src/access.c:1395 src/config.c:1931 src/profile.c:316
+#: src/access.c:1383 src/access.c:1395 src/config.c:1922 src/profile.c:316
 msgid "Default"
 msgstr "Numatyta"
 
-#: src/config.c:2207
+#: src/config.c:2198
 msgid "Default language(s)"
 msgstr "Numatyta kalba (-os)"
 
@@ -1822,7 +1832,7 @@ msgstr "Pristatymo sistema"
 msgid "Demux path"
 msgstr "Demux takas"
 
-#: src/satip/server.c:635
+#: src/satip/server.c:641
 msgid "Descramble services (limit per mux)"
 msgstr "Iškoduoti servisus (apriboti per multiplekserį)"
 
@@ -1830,11 +1840,15 @@ msgstr "Iškoduoti servisus (apriboti per multiplekserį)"
 msgid "Descrambler"
 msgstr "Iškoduotojas"
 
-#: src/config.c:2185
+#: src/tvhlog.c:135
+msgid "Descrambler EMM"
+msgstr ""
+
+#: src/config.c:2176
 msgid "Descrambler buffer (TS packets)"
 msgstr "Iškoduotojo buferis (TS paketai)"
 
-#: src/dvr/dvr_db.c:3129 src/dvr/dvr_db.c:3137
+#: src/dvr/dvr_db.c:3184 src/dvr/dvr_db.c:3192
 msgid "Description"
 msgstr "Aprašymas"
 
@@ -1855,7 +1869,7 @@ msgstr "Įrenginio modelis"
 msgid "Device path"
 msgstr "Įrenginio kelias"
 
-#: src/config.c:2158
+#: src/config.c:2149
 msgid ""
 "Differentiated Services Code Point / Type of Service: Set the service class "
 "Tvheadend sends with each packet. Depending on the option selected this "
@@ -1864,18 +1878,18 @@ msgid ""
 "https://en.wikipedia.org/wiki/Differentiated_services for more information. "
 msgstr "Differentiated Services Code Point / Type of Service: nustatykite serviso klasę, kurią Tvheadend siunčia su kiekvienu paketu. Priklausomai nuo pasirinimo, tuo maršrutizatoriui nurodoma kokį prioritetą suteikti Tvheadend serveriui. Paprastai šio nustatymo keisti nereikia. Papildomą informaciją rasite: https://en.wikipedia.org/wiki/Differentiated_services"
 
-#: src/config.c:2123
+#: src/config.c:2114
 msgid ""
 "Digest access authentication is intended as a security trade-off. It is "
 "intended to replace unencrypted HTTP basic access authentication. This "
 "option should be enabled for standard usage."
 msgstr "Digest access authentication skirtas apsaugoti prisijungimo duomenis prisijungimo metu. \nFunkcija skirta pakeisti nešifruotą HTTP basic access authentication. Šis nustatymas turėtų būti įjungtas."
 
-#: src/tvhlog.c:140 src/dvr/dvr_db.c:2983
+#: src/tvhlog.c:141 src/dvr/dvr_db.c:3038
 msgid "Digital Video Recorder"
 msgstr "Skaitmeninis Vaizdo Magnetofonas"
 
-#: src/dvr/dvr_db.c:3234 src/dvr/dvr_autorec.c:1021 src/dvr/dvr_timerec.c:563
+#: src/dvr/dvr_db.c:3289 src/dvr/dvr_autorec.c:1025 src/dvr/dvr_timerec.c:563
 msgid "Directory"
 msgstr "Direktorija"
 
@@ -1886,32 +1900,36 @@ msgid ""
 "subdirectory"
 msgstr "Direktorijos nepaisymas. Nepaisyti DVR subdirektorijų taisyklių ir talpinti visus įrašus į pateiktą subdirektoriją"
 
-#: src/dvr/dvr_config.c:1152
+#: src/dvr/dvr_config.c:1149
 msgid "Directory permissions (octal, e.g. 0775)"
 msgstr "Direktorijų teisės (pvz. 0775)"
 
-#: src/dvr/dvr_db.c:3235
+#: src/dvr/dvr_db.c:3290
 msgid "Directory used by the entry."
 msgstr "Įrašo naudojama direktorija."
 
-#: src/input/mpegts/mpegts_network.c:136 src/input/mpegts/mpegts_mux.c:475
-#: src/input/mpegts/mpegts_mux.c:485
+#: src/input/mpegts/mpegts_network.c:136 src/input/mpegts/mpegts_mux.c:471
+#: src/input/mpegts/mpegts_mux.c:481
 msgid "Disable"
 msgstr "Išjungti"
 
-#: src/main.c:890
+#: src/main.c:889
 msgid "Disable DVB bouquets"
 msgstr "Išjungti DVB buketus"
 
-#: src/main.c:848
+#: src/main.c:847
 msgid "Disable SAT>IP client"
 msgstr "Išjungti SAT>IP klientą"
 
-#: src/main.c:888
+#: src/satip/server.c:684
+msgid "Disable X_SATIPM3U tag"
+msgstr ""
+
+#: src/main.c:887
 msgid "Disable all access control checks"
 msgstr "Išjungti visus prieigos kontrolės patikrinimus"
 
-#: src/main.c:871
+#: src/main.c:870
 msgid "Disable debug on stderr"
 msgstr "Išjungti stderr debuginimą "
 
@@ -1919,7 +1937,7 @@ msgstr "Išjungti stderr debuginimą "
 msgid "Disable device/firmware-specific workarounds"
 msgstr "Išjungti įrenginio/firmwaro apėjimus"
 
-#: src/main.c:873
+#: src/main.c:872
 msgid "Disable syslog (all messages)"
 msgstr "Išjungti syslog (visos žinutės)"
 
@@ -1936,13 +1954,17 @@ msgstr "Atrasti daugiau multiplekserių naudojant Tinklo Informacijos Lentelę (
 msgid "Discussion"
 msgstr "Diskusija"
 
-#: src/tvhlog.c:153 src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1601
+#: src/tvhlog.c:155 src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1601
 msgid "DiseqC"
 msgstr "DiSEqC"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:237
 msgid "DiseqC repeats"
 msgstr "DiSEqC pakartojimai"
+
+#: src/satip/server.c:685
+msgid "Do not send X_SATIPM3U information in the XML description to clients."
+msgstr ""
 
 #: src/access.c:1749
 msgid ""
@@ -1964,35 +1986,35 @@ msgid ""
 "client that normally should be able to decrypt the stream."
 msgstr "Nenutraukti transliavimo kai užšifruota programa negali būti iššifruota CA kliento, kuris paprastai turėtų galėti iššifruoti konkretų srautą."
 
-#: src/main.c:819
+#: src/main.c:818
 msgid "Don't backup configuration tree at upgrade"
 msgstr "Nedaryti konfigūracijos medžio atsarginės kopijos atnaujinant."
 
-#: src/dvr/dvr_config.c:1252
+#: src/dvr/dvr_config.c:1249
 msgid "Don't include the title in the filename."
 msgstr "Neįtraukti transliacijos pavadinimo į failo vardą."
 
-#: src/dvr/dvr_config.c:1251
+#: src/dvr/dvr_config.c:1248
 msgid "Don't include title in filename"
 msgstr "Neįtraukti transliacijos pavadinimo į failo vardą"
 
-#: src/dvr/dvr_config.c:713
+#: src/dvr/dvr_config.c:710
 msgid "Don't keep"
 msgstr "Nelaikyti"
 
-#: src/dvr/dvr_db.c:3283
+#: src/dvr/dvr_db.c:3338
 msgid "Don't re-record"
 msgstr "Pakartotinai neįrašinėti"
 
-#: src/dvr/dvr_db.c:3284
+#: src/dvr/dvr_db.c:3339
 msgid "Don't re-record if recording fails."
 msgstr "Pakartotinai neįrašinėti, jei įrašas nepavyko."
 
-#: src/dvr/dvr_db.c:3276
+#: src/dvr/dvr_db.c:3331
 msgid "Don't re-schedule if recording fails."
 msgstr "Neperplanuoti, jei įrašas nepavyko."
 
-#: src/dvr/dvr_db.c:3275
+#: src/dvr/dvr_db.c:3330
 msgid "Don't reschedule"
 msgstr "Neperplanuoti"
 
@@ -2004,19 +2026,19 @@ msgstr "Nenaudoti tiekėjo pateikiamų kanalų numerių."
 msgid "Drama"
 msgstr "Drama"
 
-#: src/dvr/dvr_autorec.c:1188
+#: src/dvr/dvr_autorec.c:1192
 msgid "Duplicate handling"
 msgstr "Dublikatų tvarkymas"
 
-#: src/dvr/dvr_autorec.c:1189
+#: src/dvr/dvr_autorec.c:1193
 msgid "Duplicate recording handling."
 msgstr "Vienodų įrašų tvarkymas."
 
-#: src/config.c:1950
+#: src/config.c:1941
 msgid "EF"
 msgstr "EF"
 
-#: src/input/mpegts/mpegts_mux.c:675
+#: src/input/mpegts/mpegts_mux.c:671
 msgid "EIT - skip TSID check"
 msgstr "EIT - praleisti TSID patikrą"
 
@@ -2024,11 +2046,11 @@ msgstr "EIT - praleisti TSID patikrą"
 msgid "EIT time offset"
 msgstr "EIT laiko kompensavimas"
 
-#: src/tvhlog.c:142
+#: src/tvhlog.c:143
 msgid "EPG Database"
 msgstr "EPG Duombazė"
 
-#: src/tvhlog.c:143 src/epggrab/module.c:111
+#: src/tvhlog.c:144 src/epggrab/module.c:112
 msgid "EPG Grabber"
 msgstr "EPG Graberis"
 
@@ -2052,11 +2074,11 @@ msgstr "EPG duomenų ID."
 msgid "EPG name"
 msgstr "EPG pavadinimas"
 
-#: src/config.c:2234
+#: src/config.c:2225
 msgid "EPG overlap cut"
 msgstr "EPG persidengimo kirpimas"
 
-#: src/input/mpegts/mpegts_mux.c:541
+#: src/input/mpegts/mpegts_mux.c:537
 msgid "EPG scan"
 msgstr "EPG skanavimas"
 
@@ -2068,7 +2090,7 @@ msgstr "EPG skanavimo laiko pasibaigimas sekundėmis (30-7200)"
 msgid "EPG source"
 msgstr "EPG šaltinis"
 
-#: src/dvr/dvr_config.c:989
+#: src/dvr/dvr_config.c:986
 msgid "EPG update window"
 msgstr "EPG atnaujinimo langas"
 
@@ -2089,7 +2111,7 @@ msgstr "Švietimas / Mokslas / Faktinės temos"
 msgid "Educational"
 msgstr "Pedagoginis"
 
-#: src/tvhlog.c:141
+#: src/tvhlog.c:142
 msgid "Electronic Program Guide"
 msgstr "Elektroninis Programų Gidas"
 
@@ -2101,39 +2123,39 @@ msgstr "Elementarus Srauto Filtras"
 msgid "Elementary stream filter"
 msgstr "Elementarus srauto filtras"
 
-#: src/input/mpegts/mpegts_mux.c:476
+#: src/input/mpegts/mpegts_mux.c:472
 msgid "Enable"
 msgstr "Įjungti"
 
-#: src/input/mpegts/mpegts_mux.c:486
+#: src/input/mpegts/mpegts_mux.c:482
 msgid "Enable (auto)"
 msgstr "Įjungti (automatiškai)"
 
-#: src/main.c:831
+#: src/main.c:830
 msgid "Enable DBus"
 msgstr "Įjungti DBus"
 
-#: src/config.c:2302
+#: src/config.c:2293
 msgid "Enable NTP driver"
 msgstr "Įjungti NTP tvarkyklę"
 
-#: src/main.c:887
+#: src/main.c:886
 msgid "Enable coredumps for daemon"
 msgstr "Įjungti coredumps demonui"
 
-#: src/main.c:870
+#: src/main.c:869
 msgid "Enable debug on stderr"
 msgstr "Įjungti stderr debuginimą"
 
-#: src/main.c:875
+#: src/main.c:874
 msgid "Enable debug subsystems"
 msgstr "Įjungti debuginimą subsistemoms"
 
-#: src/main.c:874
+#: src/main.c:873
 msgid "Enable debug to file"
 msgstr "Įjungti debuginimą į failą"
 
-#: src/main.c:872
+#: src/main.c:871
 msgid "Enable debug to syslog"
 msgstr "Įjungti debuginimą į syslog"
 
@@ -2193,17 +2215,17 @@ msgstr "Įjungti arba išjungti šią konfigūraciją."
 msgid "Enable over-the-air program guide (EPG) scanning on this input device."
 msgstr "Įjungti oru gaunamo programų gido (EPG) skanavimą šiam įrenginiui."
 
-#: src/tvhlog.c:736
+#: src/tvhlog.c:738
 msgid "Enable syslog"
 msgstr "Įjungti syslog"
 
-#: src/config.c:2292
+#: src/config.c:2283
 msgid ""
 "Enable system time updates. This will only work if the user running "
 "Tvheadend has rights to update the system clock (normally only root)."
 msgstr "Įjungti sistemos laiko atnaujinimus. Nustatymas veiks tik tuo atveju, jei vartotojas paleidęs Tvheadend turi pakankamas teises sistemos laikrodžiui atnaujinti (paprastai tik root)."
 
-#: src/config.c:2175
+#: src/config.c:2166
 msgid ""
 "Enable the CAs (conditional accesses) tab in web user interface for the "
 "advanced level. By default, this tab is visible only in the expert level."
@@ -2213,15 +2235,15 @@ msgstr "Įjungti CAs (conditional accesses) skirtuką vartotojo interfeise pasir
 msgid "Enable this filter."
 msgstr "Įjungti šį filtrą."
 
-#: src/main.c:877
+#: src/main.c:876
 msgid "Enable trace subsystems"
 msgstr "Įjungti subsistemų sekimą"
 
-#: src/main.c:885
+#: src/main.c:884
 msgid "Enable web UI debug (non-minified JS)"
 msgstr "Įjungti naršyklinį debuginimą (nesumažintas JS)"
 
-#: src/input/mpegts/mpegts_mux.c:529
+#: src/input/mpegts/mpegts_mux.c:525
 msgid ""
 "Enable, disable or ignore the mux. When the mux is marked as ignore, all "
 "discovered services are removed."
@@ -2239,6 +2261,10 @@ msgstr "Įjungti/Išjungti servisą."
 msgid "Enable/Disable the entry."
 msgstr "Įjungti/Išjungti įrašą."
 
+#: src/timeshift.c:194
+msgid "Enable/Disable timeshift."
+msgstr ""
+
 #: src/epggrab/channel.c:745
 msgid "Enable/disable EPG data for the entry."
 msgstr "Įjungti/Išjungti įrašui EPG duomenis."
@@ -2247,27 +2273,27 @@ msgstr "Įjungti/Išjungti įrašui EPG duomenis."
 msgid "Enable/disable LNA."
 msgstr "Įjungti/Išjungti žematriukšmį stiprintuvą."
 
-#: src/dvr/dvr_autorec.c:1007
+#: src/dvr/dvr_autorec.c:1011
 msgid "Enable/disable auto-rec rule."
 msgstr "Įjungti/Išjungti autoįrašymo taisyklę."
 
-#: src/tvhlog.c:746
+#: src/tvhlog.c:748
 msgid "Enable/disable debugging output to syslog."
 msgstr "Įjungti/Išjungti debuginimo išvestį į syslog."
 
-#: src/tvhlog.c:767
+#: src/tvhlog.c:769
 msgid "Enable/disable inclusion of low-level debug traces."
 msgstr "Įjungti/Išjungti žemo lygio debuginimo pėdsakų įtraukimą."
 
-#: src/config.c:2114
+#: src/config.c:2105
 msgid "Enable/disable interface quick tips."
 msgstr "Įjungti/Išjungti greituosius interfeiso patarimus."
 
-#: src/tvhlog.c:794
+#: src/tvhlog.c:796
 msgid "Enable/disable libav log output."
 msgstr "Įjungti/Išjungti libav žurnalo išvestį."
 
-#: src/tvhlog.c:737
+#: src/tvhlog.c:739
 msgid "Enable/disable logging to syslog."
 msgstr "Įjungti/Išjungti žurnalizavimą į syslog."
 
@@ -2283,7 +2309,7 @@ msgstr "Įjungti/Išjungti pilot toną."
 msgid "Enable/disable power save mode (if supported by the device)."
 msgstr "Įjungti/Išjungti energijos taupymo režimą (jei palaiko įrenginys)."
 
-#: src/dvr/dvr_config.c:849
+#: src/dvr/dvr_config.c:846
 msgid "Enable/disable profile."
 msgstr "Įjungti/Išjungti profilį."
 
@@ -2299,12 +2325,12 @@ msgstr "Įjungti/Išjungti kanalą."
 msgid "Enable/disable the device."
 msgstr "Įjungti/Išjungti įrenginį."
 
-#: src/access.c:2032 src/access.c:2185 src/dvr/dvr_db.c:2996
+#: src/access.c:2032 src/access.c:2185 src/dvr/dvr_db.c:3051
 #: src/dvr/dvr_timerec.c:539 src/input/mpegts/mpegts_mux_sched.c:138
 msgid "Enable/disable the entry."
 msgstr "Įjungti/Išjungti įrašą."
 
-#: src/epggrab/module.c:148
+#: src/epggrab/module.c:149
 msgid "Enable/disable the grabber."
 msgstr "Įjungti/Išjungti graberį."
 
@@ -2316,10 +2342,6 @@ msgstr "Įjungti/Išjungti profilį."
 msgid "Enable/disable the tag."
 msgstr "Įjungti/Išjungti žymą."
 
-#: src/timeshift.c:194
-msgid "Enable/disable timeshift."
-msgstr "Įjungti/Išjungti laiko poslinkį."
-
 #: src/input/mpegts/mpegts_input.c:232
 msgid "Enable/disable tuner/adapter."
 msgstr "Įjungti/Išjungti tiunerį/adapterį."
@@ -2327,10 +2349,10 @@ msgstr "Įjungti/Išjungti tiunerį/adapterį."
 #: src/access.c:1618 src/access.c:2031 src/access.c:2184 src/channels.c:359
 #: src/channels.c:380 src/channels.c:1440 src/service.c:179
 #: src/imagecache.c:88 src/esfilter.c:618 src/profile.c:306 src/bouquet.c:982
-#: src/epggrab/module.c:147 src/epggrab/channel.c:744 src/dvr/dvr_db.c:2995
-#: src/dvr/dvr_autorec.c:1006 src/dvr/dvr_timerec.c:538
-#: src/dvr/dvr_config.c:848 src/descrambler/caclient.c:273
-#: src/input/mpegts/mpegts_input.c:231 src/input/mpegts/mpegts_mux.c:528
+#: src/epggrab/module.c:148 src/epggrab/channel.c:744 src/dvr/dvr_db.c:3050
+#: src/dvr/dvr_autorec.c:1010 src/dvr/dvr_timerec.c:538
+#: src/dvr/dvr_config.c:845 src/descrambler/caclient.c:273
+#: src/input/mpegts/mpegts_input.c:231 src/input/mpegts/mpegts_mux.c:524
 #: src/input/mpegts/mpegts_mux_sched.c:137
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1432
 #: src/input/mpegts/satip/satip_satconf.c:337 src/timeshift.c:193
@@ -2342,53 +2364,55 @@ msgstr "Įjungta"
 msgid "Encrypted"
 msgstr "Užšifruotas"
 
-#: src/htsp_server.c:856
+#: src/htsp_server.c:860
 msgid "Encrypted service"
 msgstr "Užšifruotas servisas"
 
-#: src/tvhlog.c:728
+#: src/tvhlog.c:730
 msgid "Enter a filename you want to save the debug log to."
 msgstr "Įveskite failo vardą, kuriame norite išsaugoti debuginimo žurnalą."
 
-#: src/wizard.c:444
+#: src/wizard.c:452
 msgid "Enter a non-admin user password."
 msgstr "Įveskite ne administratoriaus vartotojo slaptažodį."
 
-#: src/wizard.c:435
+#: src/wizard.c:443
 msgid "Enter a non-admin user username."
 msgstr "Įveskite ne administratoriaus vartotojo vardą."
 
-#: src/wizard.c:405
+#: src/wizard.c:413
 msgid ""
 "Enter allowed network prefix(es). You can enter a comma-seperated list of "
 "prefixes here."
 msgstr "Įveskite leistino tinklo prefiksą(-us). Galima nurodyti daugiau prefiksų, juos atskriant kableliais."
 
-#: src/wizard.c:426
+#: src/wizard.c:434
 msgid "Enter an administrator password."
 msgstr "Įveskite administratoriaus slaptažodį."
 
-#: src/wizard.c:415
+#: src/wizard.c:423
 msgid ""
 "Enter an administrator username. Note: do not use the same username as the "
 "superuser backdoor account."
 msgstr "Įveskite administratoriaus vartotojo vardą. Pastaba: nenaudokite to paties vartotojo vardo kaip ir superuser."
 
-#: src/tvhlog.c:755
+#: src/tvhlog.c:757
 msgid ""
 "Enter comma-separated list of subsystems you want debugging output for (e.g "
 "+linuxdvb,+subscriptions,+mpegts)."
 msgstr ""
 
-#: src/tvhlog.c:779
+#: src/tvhlog.c:781
 msgid ""
 "Enter comma-separated list of subsystems you want to get traces for (e.g "
 "+linuxdvb,+subscriptions,+mpegts)."
 msgstr ""
 
-#: src/satip/server.c:669
-msgid "Enter external IP if behind Network address translation (NAT)."
-msgstr "Įveskite išorinį IP adresa, jei Tvheadend \"stovi\" už maršrutizatoriaus (NAT)."
+#: src/satip/server.c:675
+msgid ""
+"Enter external IP if behind Network address translation (NAT). Asterisk (*) "
+"means accept all IP addresses."
+msgstr ""
 
 #: src/epg.c:2355
 msgid "Entertainment programs for 10 to 16"
@@ -2406,16 +2430,16 @@ msgstr "Aplinka"
 msgid "Environment (pipe)"
 msgstr "Aplinka (vamzdis)"
 
-#: src/dvr/dvr_db.c:3369
+#: src/dvr/dvr_db.c:3424
 msgid "Episode"
 msgstr "Epizodas"
 
-#: src/dvr/dvr_db.c:781
+#: src/dvr/dvr_db.c:807
 #, c-format
 msgid "Episode %d"
 msgstr "%d epizodas"
 
-#: src/dvr/dvr_db.c:3370
+#: src/dvr/dvr_db.c:3425
 msgid "Episode number/ID."
 msgstr "Epizodo numeris/ID."
 
@@ -2423,15 +2447,15 @@ msgstr "Epizodo numeris/ID."
 msgid "Equestrian"
 msgstr "Jodinėjimas"
 
-#: src/dvr/dvr_db.c:3242
+#: src/dvr/dvr_db.c:3297
 msgid "Error code"
 msgstr "Klaidos kodas"
 
-#: src/dvr/dvr_db.c:3243
+#: src/dvr/dvr_db.c:3298
 msgid "Error code of entry."
 msgstr "Įrašo klaidos kodas."
 
-#: src/dvr/dvr_db.c:3250
+#: src/dvr/dvr_db.c:3305
 msgid "Errors"
 msgstr "Klaidos"
 
@@ -2443,7 +2467,7 @@ msgstr "Lyginis raktas"
 msgid "Even key."
 msgstr "Lyginis raktas."
 
-#: src/htsp_server.c:1567 src/htsp_server.c:1592
+#: src/htsp_server.c:1573 src/htsp_server.c:1598
 msgid "Event does not exist"
 msgstr "Įvykis neegzistuoja"
 
@@ -2463,11 +2487,11 @@ msgstr "Ekspedicijos"
 msgid "Experimental film"
 msgstr "Eksperimentiniai filmai"
 
-#: src/access.c:1386 src/config.c:1963
+#: src/access.c:1386 src/config.c:1954
 msgid "Expert"
 msgstr "Ekspertas"
 
-#: src/satip/server.c:587
+#: src/satip/server.c:593
 msgid "Exported tuners"
 msgstr "Eksportuoti tiuneriai"
 
@@ -2475,11 +2499,11 @@ msgstr "Eksportuoti tiuneriai"
 msgid "External"
 msgstr "Išorinis"
 
-#: src/epggrab/module.c:198
+#: src/epggrab/module.c:200
 msgid "External EPG grabber"
 msgstr "Išorinis EPG graberis"
 
-#: src/satip/server.c:668
+#: src/satip/server.c:674
 msgid "External IP (NAT)"
 msgstr "Išorinis IP (NAT)"
 
@@ -2499,19 +2523,19 @@ msgstr "Išorinis buketo URL."
 msgid "External XMLTV EPG Grabber"
 msgstr "Išorinis XMLTV EPG Graberis"
 
-#: src/epggrab/module.c:185
+#: src/epggrab/module.c:187
 msgid "Extra arguments"
 msgstr "Papildomi argumentai"
 
-#: src/dvr/dvr_autorec.c:1121
+#: src/dvr/dvr_autorec.c:1125
 msgid "Extra start time"
 msgstr "Papildomas laikas pradėti"
 
-#: src/dvr/dvr_autorec.c:1131
+#: src/dvr/dvr_autorec.c:1135
 msgid "Extra stop time"
 msgstr "Papildomas laikas sustabdyti"
 
-#: src/dvr/dvr_config.c:948
+#: src/dvr/dvr_config.c:945
 msgid "Extra warming up time (seconds)"
 msgstr "Papildomas apšilimo laikas (sekundės)"
 
@@ -2541,7 +2565,7 @@ msgstr "Faktinės temos"
 msgid "Failed"
 msgstr "Nepavyko"
 
-#: src/htsp_server.c:2714
+#: src/htsp_server.c:2720
 msgid "Failed to open image"
 msgstr "Paveikslėlio atverti nepavyko "
 
@@ -2565,39 +2589,39 @@ msgstr "Greitas įvesties perjungimas"
 msgid "Fastscan DVB"
 msgstr "Spartus DVB skanavimas"
 
-#: src/dvr/dvr_db.c:632
+#: src/dvr/dvr_db.c:654
 msgid "File missing"
 msgstr "Failas nerastas"
 
-#: src/dvr/dvr_db.c:623
+#: src/dvr/dvr_db.c:643
 msgid "File not created"
 msgstr "Failas nesukurtas"
 
-#: src/dvr/dvr_config.c:1093
+#: src/dvr/dvr_config.c:1090
 msgid "File permissions (octal, e.g. 0664)"
 msgstr "Failo teisės (pvz. 0664)"
 
-#: src/dvr/dvr_db.c:3291
+#: src/dvr/dvr_db.c:3346
 msgid "File removed"
 msgstr "Failas pašalintas"
 
-#: src/dvr/dvr_db.c:3385
+#: src/dvr/dvr_db.c:3440
 msgid "File size"
 msgstr "Failo dydis"
 
-#: src/dvr/dvr_db.c:3226
+#: src/dvr/dvr_db.c:3281
 msgid "Filename"
 msgstr "Failo vardas"
 
-#: src/dvr/dvr_config.c:1103
+#: src/dvr/dvr_config.c:1100
 msgid "Filename character set"
 msgstr "Failo simbolių rinkinys"
 
-#: src/dvr/dvr_config.c:832
+#: src/dvr/dvr_config.c:829
 msgid "Filename options"
 msgstr "Failo vardo nuostatos"
 
-#: src/dvr/dvr_db.c:3227
+#: src/dvr/dvr_db.c:3282
 msgid "Filename used by the entry."
 msgstr "Įrašo naudojama failo vardas."
 
@@ -2613,7 +2637,7 @@ msgstr "Filmas"
 msgid "Fine arts"
 msgstr "Dailė"
 
-#: src/wizard.c:1161 src/dvr/dvr_db.c:615
+#: src/wizard.c:1169 src/dvr/dvr_db.c:635
 msgid "Finished"
 msgstr "Užbaigta"
 
@@ -2621,7 +2645,7 @@ msgstr "Užbaigta"
 msgid "First word"
 msgstr "Pirmas žodis"
 
-#: src/timeshift.c:284
+#: src/timeshift.c:286
 msgid "Fit to RAM (cut rewind)"
 msgstr "Talpinti operatyviojoje atmintyje RAM (prikirpti atsukimą)"
 
@@ -2641,7 +2665,7 @@ msgstr "Liaudiška"
 msgid "Football"
 msgstr "Futbolas"
 
-#: src/input/mpegts/mpegts_mux.c:487
+#: src/input/mpegts/mpegts_mux.c:483
 msgid "Force (auto)"
 msgstr "Priverstinai (auto)"
 
@@ -2677,7 +2701,7 @@ msgstr "Priverstinai naudoti pilot'ą DVB-S2"
 msgid "Force priority"
 msgstr "Priverstinis pirmumas"
 
-#: src/config.c:1984
+#: src/config.c:1975
 msgid "Force service type to 1"
 msgstr "Priverstinai naudoti 1-netą serviso tipui"
 
@@ -2710,24 +2734,24 @@ msgstr "Šiam įrenginiui priverstinai naudoti įvestą CA ID."
 msgid "Foreign countries"
 msgstr "Užsienio valstybės"
 
-#: src/dvr/dvr_db.c:2541 src/dvr/dvr_db.c:2565 src/dvr/dvr_config.c:738
-#: src/dvr/dvr_config.c:761
+#: src/dvr/dvr_db.c:2596 src/dvr/dvr_db.c:2620 src/dvr/dvr_config.c:735
+#: src/dvr/dvr_config.c:758
 msgid "Forever"
 msgstr "Amžinai"
 
-#: src/main.c:820
+#: src/main.c:819
 msgid "Fork and run as daemon"
 msgstr ""
 
-#: src/dvr/dvr_config.c:1139
+#: src/dvr/dvr_config.c:1136
 msgid "Format string"
 msgstr "Failo vardas"
 
-#: src/wizard.c:994
+#: src/wizard.c:1002
 msgid "Found muxes"
 msgstr "Rasti multiplekseriai"
 
-#: src/wizard.c:1003
+#: src/wizard.c:1011
 msgid "Found services"
 msgstr "Rasti servisai"
 
@@ -2735,12 +2759,12 @@ msgstr "Rasti servisai"
 msgid "Free subscription weight"
 msgstr "Laisvas prenumeratos svoris"
 
-#: src/dvr/dvr_config.c:871
+#: src/dvr/dvr_config.c:868
 msgid "Free-form field, enter whatever you like here."
 msgstr "Laisvos formos laukas. Įveskite betką, kas tik Jums patinka."
 
 #: src/access.c:1846 src/access.c:2065 src/access.c:2200 src/channels.c:1509
-#: src/dvr/dvr_db.c:3419 src/dvr/dvr_autorec.c:1294 src/dvr/dvr_timerec.c:679
+#: src/dvr/dvr_db.c:3474 src/dvr/dvr_autorec.c:1298 src/dvr/dvr_timerec.c:679
 msgid "Free-form text field, enter whatever you like here."
 msgstr "Laisvos formos tekstinis laukas. Įveskite betką, kas tik Jums patinka."
 
@@ -2816,11 +2840,11 @@ msgid ""
 "logotype, etc."
 msgstr "Pilnas kelias iki ikonos žymei atvaizduoti. Tai gali būti TV tinklo logotipas ir pan."
 
-#: src/dvr/dvr_config.c:824
+#: src/dvr/dvr_config.c:821
 msgid "Full pathname specification"
 msgstr "Pilnos tako specifikacijos"
 
-#: src/dvr/dvr_autorec.c:1042
+#: src/dvr/dvr_autorec.c:1046
 msgid "Full-text"
 msgstr "Pilnas tekstas"
 
@@ -2844,7 +2868,7 @@ msgstr "Žaidimų šou"
 msgid "Gardening"
 msgstr "Sodininkystė"
 
-#: src/satip/server.c:583
+#: src/satip/server.c:589
 msgid "General"
 msgstr "Bendra"
 
@@ -2856,7 +2880,7 @@ msgstr "Bendra konfigūracija"
 msgid "Generic"
 msgstr "Bendras"
 
-#: src/main.c:813
+#: src/main.c:812
 msgid "Generic options"
 msgstr "Bendros parinktys"
 
@@ -2868,12 +2892,12 @@ msgstr "Visuotinės Antraštės"
 msgid "Global timer"
 msgstr "Visuotinis taimeris"
 
-#: src/epggrab/module.c:156
+#: src/epggrab/module.c:157
 msgid ""
-"Grabber priority. This option lets you pick which EPG grabber's data gets "
-"used first if more than one grabber is enabled. Priority is given to the "
-"grabber with the highest value set here."
-msgstr "Graberio pirmenybė. Ši parinktis leidžia pasirinkti kurio EPG graberio duomenys bus naudojami pirmiau, jei daugiau nei vienas yra įjungtas. Pirmumas suteikiamas graberiui, turinciam aukščiausią reikšmę įvestą čia."
+"Grabber priority. This option let's you pick which EPG grabber's data get "
+"used first. Priority is given to the grabber with the highest value set "
+"here. See Help for more info."
+msgstr ""
 
 #: src/access.c:1407
 msgid "Gray"
@@ -2943,14 +2967,14 @@ msgstr "HTSP Srauto Profilis"
 msgid "HTSP Subscription"
 msgstr "HTSP Prenumerata"
 
-#: src/config.c:2145
+#: src/config.c:2136
 msgid ""
 "HTTP CORS (cross-origin resource sharing) origin. This option is usually set"
 " when Tvheadend is behind a proxy. Enter a domain (or IP) to allow cross-"
 "domain requests."
 msgstr ""
 
-#: src/config.c:2144
+#: src/config.c:2135
 msgid "HTTP CORS origin"
 msgstr "HTTP CORS kilmė"
 
@@ -2966,7 +2990,7 @@ msgstr "HTTP Serveris"
 msgid "Handicraft"
 msgstr "Amatai"
 
-#: src/streaming.c:579
+#: src/streaming.c:581
 msgid "Hearing impaired"
 msgstr "Neprigirdintiems"
 
@@ -2974,7 +2998,7 @@ msgstr "Neprigirdintiems"
 msgid "Hierarchy"
 msgstr "Hierarchija"
 
-#: src/profile.c:249 src/dvr/dvr_db.c:2514
+#: src/profile.c:249 src/dvr/dvr_db.c:2569
 msgid "High"
 msgstr "Aukštas"
 
@@ -3020,7 +3044,7 @@ msgstr "Kaip dažnai bus tikrinami pokyčiai tiekėjo pusėje."
 msgid "ID"
 msgstr "ID"
 
-#: src/wizard.c:802
+#: src/wizard.c:810
 msgid "ID of the network."
 msgstr "Tinklo ID"
 
@@ -3041,11 +3065,11 @@ msgstr "IP adresas"
 msgid "IP blocking"
 msgstr "IP blokavimas"
 
-#: src/tvhlog.c:150 src/input/mpegts/iptv/iptv.c:138
+#: src/tvhlog.c:151 src/input/mpegts/iptv/iptv.c:138
 msgid "IPTV"
 msgstr "IPTV"
 
-#: src/input/mpegts/iptv/iptv.c:840
+#: src/input/mpegts/iptv/iptv.c:876
 msgid "IPTV Automatic Network"
 msgstr "IPTV Automatinis Tinklas"
 
@@ -3053,13 +3077,17 @@ msgstr "IPTV Automatinis Tinklas"
 msgid "IPTV Multiplex"
 msgstr "IPTV Multiplekseris"
 
-#: src/input/mpegts/iptv/iptv.c:710
+#: src/input/mpegts/iptv/iptv.c:735
 msgid "IPTV Network"
 msgstr "IPTV Tinklas"
 
-#: src/tvhlog.c:151
+#: src/tvhlog.c:152
 msgid "IPTV PCR"
 msgstr "IPTV PCR"
+
+#: src/tvhlog.c:153
+msgid "IPTV Subcription"
+msgstr ""
 
 #: src/input/mpegts/iptv/iptv.c:145
 msgid "IPTV input"
@@ -3105,11 +3133,11 @@ msgstr "Ikona (pilnas URL)"
 msgid "Icon URL"
 msgstr "Ikonos URL"
 
-#: src/input/mpegts/iptv/iptv.c:785
+#: src/input/mpegts/iptv/iptv.c:810
 msgid "Icon base URL"
 msgstr "Ikonų šaltinio URL"
 
-#: src/input/mpegts/iptv/iptv.c:786
+#: src/input/mpegts/iptv/iptv.c:811
 msgid "Icon base URL."
 msgstr "Ikonų šaltinio URL."
 
@@ -3133,19 +3161,19 @@ msgstr "Tuščiaeigis skanavimas"
 msgid "Idle scan muxes"
 msgstr "Tuščiaeigis multiplekserių skanavimas"
 
-#: src/dvr/dvr_config.c:928
+#: src/dvr/dvr_config.c:925
 msgid ""
 "If an error occurs clone the scheduled entry and try to record again (if "
 "possible)."
 msgstr "Klaidos atveju klonuoti planuojamąjį įrašą ir bandyti įrašyti dar kartą (jei įmanoma)."
 
-#: src/config.c:2327
+#: src/config.c:2318
 msgid ""
 "If both a picon and a channel-specific (e.g. channelname.jpg) icon are "
 "defined, prefer the picon."
 msgstr "Jei abu, pikona ir konkretaus kanalo ikona (pvz. kanalas.jpg) nurodyti, naudoti pikoną."
 
-#: src/dvr/dvr_config.c:939
+#: src/dvr/dvr_config.c:936
 msgid ""
 "If more than x errors occur during a recording schedule a re-record (if "
 "possible)."
@@ -3157,7 +3185,7 @@ msgid ""
 "priority by assigning a streaming profile with a higher priority."
 msgstr ""
 
-#: src/main.c:824
+#: src/main.c:823
 msgid ""
 "If no user account exists then create one with\n"
 "no username and no password. Use with care as\n"
@@ -3165,12 +3193,6 @@ msgid ""
 "to your Tvheadend installation until you create or edit\n"
 "the access control from within the Tvheadend web interface."
 msgstr "Jei jokia vartotojo paskyra neegzistuoja, \nsukurkite vieną be jokio vartotojo vardo ir slaptažodžio.\nNaudokite tai su atsarga, nes tokiu būdu suteiksite viešą,\npasauliniu lygiu prieinamą administratoriaus prieigą prie\nsavo Tvheadend, kol sukursite naują ar neparedaguosite\nPrieigos Kontrolė esančio skirtuko naršyklėje."
-
-#: src/timeshift.c:285
-msgid ""
-"If possible, maintain the timeshift data in the server memory only. This may"
-" reduce the amount of allowed rewind time."
-msgstr "Jei įmanoma, laiko poslinkio duomenis saugoti tik serverio operatyviojoje atmintyje. Tai gali sutrumpinti atsukamo laiko trukmę."
 
 #: src/channels.c:1500
 msgid ""
@@ -3203,7 +3225,7 @@ msgstr "Jei prenumeratos svoris įvesčiai yra žemesnis nei nurodytas slenkstis
 msgid "If you'd like to support the project, please consider a donation."
 msgstr "Jei pageidautumėte paremti projektą, prašome apsvarstyti pinigų paaukojimą."
 
-#: src/input/mpegts/mpegts_mux.c:474
+#: src/input/mpegts/mpegts_mux.c:470
 msgid "Ignore"
 msgstr "Ignoruoti"
 
@@ -3211,7 +3233,7 @@ msgstr "Ignoruoti"
 msgid "Ignore EPG (EIT)"
 msgstr "Ignoruoti EPG (EIT)"
 
-#: src/input/mpegts/mpegts_mux.c:507
+#: src/input/mpegts/mpegts_mux.c:503
 msgid "Ignore descriptor 5"
 msgstr "Ignoruoti 5 deskriptorių"
 
@@ -3236,57 +3258,67 @@ msgstr "Ignoruoti tiekėjo kanalų numerius"
 msgid "Image Cache"
 msgstr "Paveikslėlių podėlis"
 
-#: src/main.c:886
+#: src/main.c:885
 msgid "Immediately abort"
 msgstr "Atšaukti tučtuojau"
 
-#: src/profile.c:248 src/dvr/dvr_db.c:2513
+#: src/profile.c:248 src/dvr/dvr_db.c:2568
 msgid "Important"
 msgstr "Svarbu"
 
-#: src/dvr/dvr_config.c:1198
+#: src/dvr/dvr_config.c:1195
 msgid "Include channel name in filename"
 msgstr "Įtraukti kanalo pavadinimą į failo vardą"
 
-#: src/dvr/dvr_config.c:1209
+#: src/dvr/dvr_config.c:1206
 msgid "Include date in filename"
 msgstr "Įtraukti datą į failo vardą"
 
-#: src/dvr/dvr_config.c:1231
+#: src/dvr/dvr_config.c:1228
 msgid "Include episode in filename"
 msgstr "Įtraukti epizodą į failo vardą"
 
-#: src/dvr/dvr_config.c:1241
+#: src/dvr/dvr_config.c:1238
 msgid "Include subtitle in filename"
 msgstr "Įtraukti subpavadinimą į failo vardą"
 
-#: src/dvr/dvr_config.c:1210
+#: src/timeshift.c:297
+msgid "Include teletext"
+msgstr ""
+
+#: src/timeshift.c:298
+msgid ""
+"Include teletext in the timeshift buffer. Enabling this may cause issues "
+"with some services where the teletext DTS is invalid."
+msgstr ""
+
+#: src/dvr/dvr_config.c:1207
 msgid ""
 "Include the date for the recording in the event title. This applies to both "
 "the title stored in the file and to the filename itself."
 msgstr "Įtraukti datą į įvykio pavadinimo įrašą. Tai galioja abiems, faile talpinimam pavadinimui ir pačiam failo vardui."
 
-#: src/dvr/dvr_config.c:1242
+#: src/dvr/dvr_config.c:1239
 msgid "Include the episode subtitle in the title (if available)."
 msgstr "Įtraukti epizodo subpavadinimą į pavadinimą (jei prieinama)."
 
-#: src/dvr/dvr_config.c:1199
+#: src/dvr/dvr_config.c:1196
 msgid ""
 "Include the name of the channel in the event title. This applies to both the"
 " title stored in the file and to the filename itself."
 msgstr "Įtraukti kanalo pavadinimą į įvykio pavadinimą. Tai galioja abiems, Tai galioja abiems, faile talpinimam pavadinimui ir pačiam failo vardui."
 
-#: src/dvr/dvr_config.c:1232
+#: src/dvr/dvr_config.c:1229
 msgid "Include the season and episode in the title (if available)."
 msgstr "Įtraukti sezono ir epizodo numerį į pavadinimą (jei prieinama)."
 
-#: src/dvr/dvr_config.c:1221
+#: src/dvr/dvr_config.c:1218
 msgid ""
 "Include the time for the recording in the event title. This applies to both "
 "the title stored in the file and to the filename itself."
 msgstr "Įtraukti įrašo laiką į įvykio pavadinimą. Tai galioja abiems, Tai galioja abiems, faile talpinimam pavadinimui ir pačiam failo vardui."
 
-#: src/dvr/dvr_config.c:1220
+#: src/dvr/dvr_config.c:1217
 msgid "Include time in filename"
 msgstr "Įtraukti laiką į failo vardą"
 
@@ -3294,7 +3326,7 @@ msgstr "Įtraukti laiką į failo vardą"
 msgid "Index"
 msgstr "Indeksas"
 
-#: src/config.c:2244
+#: src/config.c:2235
 msgid "Information area"
 msgstr "Informacijos sritis"
 
@@ -3330,7 +3362,7 @@ msgstr "Interfeisas"
 msgid "Internal"
 msgstr "Vidinis"
 
-#: src/epggrab/module.c:171
+#: src/epggrab/module.c:173
 msgid "Internal EPG grabber"
 msgstr "Vidinis EPG graberis"
 
@@ -3342,7 +3374,7 @@ msgstr "Vidinis PyEPG graberis"
 msgid "Internal XMLTV EPG Grabber"
 msgstr "Vidinis XMLTV EPG Graberis"
 
-#: src/htsp_server.c:1754
+#: src/htsp_server.c:1760
 msgid "Internal error"
 msgstr "Vidinė klaida"
 
@@ -3354,38 +3386,38 @@ msgstr "Vidinis graberis"
 msgid "Interview"
 msgstr "Interviu"
 
-#: src/dvr/dvr_db.c:617 src/dvr/dvr_db.c:646 src/dvr/dvr_timerec.c:430
+#: src/dvr/dvr_db.c:637 src/dvr/dvr_db.c:668 src/dvr/dvr_timerec.c:430
 msgid "Invalid"
 msgstr "Negaliojantis"
 
-#: src/htsp_server.c:1750
+#: src/htsp_server.c:1756
 msgid "Invalid EPG object request"
 msgstr "Negaliojanti EPG objekto užklausa"
 
-#: src/main.c:972
+#: src/main.c:971
 #, c-format
 msgid "Invalid adapter number '%s'\n"
 msgstr "Negaliojantis adapterio numeris '%s'\n"
 
-#: src/htsp_server.c:1261 src/htsp_server.c:1264 src/htsp_server.c:1545
-#: src/htsp_server.c:1563 src/htsp_server.c:1663 src/htsp_server.c:1740
-#: src/htsp_server.c:1853 src/htsp_server.c:1913 src/htsp_server.c:2054
-#: src/htsp_server.c:2101 src/htsp_server.c:2137 src/htsp_server.c:2166
-#: src/htsp_server.c:2212 src/htsp_server.c:2247 src/htsp_server.c:2283
-#: src/htsp_server.c:2345 src/htsp_server.c:2381 src/htsp_server.c:2390
-#: src/htsp_server.c:2493 src/htsp_server.c:2522 src/htsp_server.c:2551
-#: src/htsp_server.c:2573 src/htsp_server.c:2593 src/htsp_server.c:2595
-#: src/htsp_server.c:2622 src/htsp_server.c:2650 src/htsp_server.c:2689
-#: src/htsp_server.c:3164
+#: src/htsp_server.c:1265 src/htsp_server.c:1268 src/htsp_server.c:1551
+#: src/htsp_server.c:1569 src/htsp_server.c:1669 src/htsp_server.c:1746
+#: src/htsp_server.c:1859 src/htsp_server.c:1919 src/htsp_server.c:2060
+#: src/htsp_server.c:2107 src/htsp_server.c:2143 src/htsp_server.c:2172
+#: src/htsp_server.c:2218 src/htsp_server.c:2253 src/htsp_server.c:2289
+#: src/htsp_server.c:2351 src/htsp_server.c:2387 src/htsp_server.c:2396
+#: src/htsp_server.c:2499 src/htsp_server.c:2528 src/htsp_server.c:2557
+#: src/htsp_server.c:2579 src/htsp_server.c:2599 src/htsp_server.c:2601
+#: src/htsp_server.c:2628 src/htsp_server.c:2656 src/htsp_server.c:2695
+#: src/htsp_server.c:3170
 msgid "Invalid arguments"
 msgstr "Negaliojantys argumentai"
 
-#: src/htsp_server.c:2736 src/htsp_server.c:2784 src/htsp_server.c:2802
-#: src/htsp_server.c:2830
+#: src/htsp_server.c:2742 src/htsp_server.c:2790 src/htsp_server.c:2808
+#: src/htsp_server.c:2836
 msgid "Invalid file"
 msgstr "Negaliojantis failas"
 
-#: src/htsp_server.c:2739 src/htsp_server.c:2833 src/htsp_server.c:2843
+#: src/htsp_server.c:2745 src/htsp_server.c:2839 src/htsp_server.c:2849
 msgid "Invalid parameters"
 msgstr "Negaliojantys parametrai"
 
@@ -3405,11 +3437,17 @@ msgstr "Daiktai"
 msgid "Jazz"
 msgstr "Džiazas"
 
-#: src/satip/server.c:563
+#: src/satip/server.c:569
 msgid "Keep"
 msgstr "Laikyti"
 
-#: src/dvr/dvr_config.c:1074
+#: src/timeshift.c:277
+msgid ""
+"Keep timeshift buffers in RAM only. With this option enabled, the amount of "
+"rewind time is limited by how much RAM Tvheadend is allowed."
+msgstr ""
+
+#: src/dvr/dvr_config.c:1071
 msgid "Keep x amount of storage space free."
 msgstr "Laikyti nurodytą kiekė laisvos vietos."
 
@@ -3421,7 +3459,7 @@ msgstr "Žadinimo intervalas"
 msgid "Keepalive interval in seconds"
 msgstr "Žadinimo intervalas sekundėmis"
 
-#: src/input/mpegts/iptv/iptv.c:905
+#: src/input/mpegts/iptv/iptv.c:941
 msgid "Key and value pairs to remove from the query string in the URL."
 msgstr ""
 
@@ -3463,7 +3501,7 @@ msgstr "Kalba 2"
 msgid "Language 3"
 msgstr "Kalba 3"
 
-#: src/config.c:2037
+#: src/config.c:2028
 msgid "Language settings"
 msgstr "Kalbos nustatymai"
 
@@ -3475,19 +3513,19 @@ msgstr "Kalbos"
 msgid "Largest size the object has reached."
 msgstr "Didžiausias objekto pasiektas dydis"
 
-#: src/dvr/dvr_db.c:3176
+#: src/dvr/dvr_db.c:3231
 msgid "Last played position"
 msgstr "Paskutinė grota pozicija"
 
-#: src/dvr/dvr_db.c:3177
+#: src/dvr/dvr_db.c:3232
 msgid "Last played position when the recording isn't fully watched yet."
 msgstr "Paskutinė grota pozicija kada įrašas nėra pilnai peržiūrėtas."
 
-#: src/input/mpegts/mpegts_service.c:248
+#: src/input/mpegts/mpegts_service.c:256
 msgid "Last seen"
 msgstr "Paskutinį kartą matyta"
 
-#: src/config.c:2071
+#: src/config.c:2062
 msgid "Last updated from"
 msgstr "Paskutinis atnaujinimas iš"
 
@@ -3552,7 +3590,7 @@ msgstr "Apriboti jungtis"
 msgid "Limited/limit scanning to this network ID only."
 msgstr "Apribota/riboti skanavimą tik šiuo ID."
 
-#: src/input/mpegts/mpegts_input.c:326
+#: src/input/mpegts/mpegts_input.c:337
 msgid "Linked input"
 msgstr "Susietą įvestis"
 
@@ -3564,7 +3602,7 @@ msgstr "Linux DVB CA"
 msgid "Linux DVB frontend"
 msgstr "Linux DVB sąsaja"
 
-#: src/tvhlog.c:152
+#: src/tvhlog.c:154
 msgid "LinuxDVB Input"
 msgstr "LinuxDVB įvestis"
 
@@ -3580,7 +3618,7 @@ msgstr "LinuxDVB tinklas"
 msgid "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
 msgstr "Leistinų IPv4 ar IPv6 įrenginių ar tinklų sąrašas (atskirtas kabutėmis)."
 
-#: src/main.c:879
+#: src/main.c:878
 msgid "List subsystems"
 msgstr "Pateikti subsistemas"
 
@@ -3588,7 +3626,7 @@ msgstr "Pateikti subsistemas"
 msgid "Listen / Connect port"
 msgstr "Klausyti / prisijungti prie porto"
 
-#: src/main.c:854
+#: src/main.c:853
 msgid "Listen on IPv6"
 msgstr "Klausyti IPv6"
 
@@ -3596,7 +3634,7 @@ msgstr "Klausyti IPv6"
 msgid "Literature"
 msgstr "Literatūra"
 
-#: src/input/mpegts/dvb_support.c:463
+#: src/input/mpegts/dvb_support.c:482
 msgid "Local (server) time"
 msgstr "Vietinis (serverio) laikas"
 
@@ -3616,27 +3654,31 @@ msgstr "Vietinio kanalo numeris"
 msgid "Local discovery IP address"
 msgstr "Vietinio atradimo IP adresas"
 
-#: src/dvr/dvr_autorec.c:955
+#: src/dvr/dvr_autorec.c:957
 msgid "Local: Record if different description"
 msgstr "Vietinis: Įrašyti, jei skiriasi aprašymas"
 
-#: src/dvr/dvr_autorec.c:949
+#: src/dvr/dvr_autorec.c:951
 msgid "Local: Record if different episode number"
 msgstr "Vietinis: Įrašyti, jei skiriasi epizodo numeris"
 
-#: src/dvr/dvr_autorec.c:953
+#: src/dvr/dvr_autorec.c:955
 msgid "Local: Record if different subtitle"
 msgstr "Vietinis: Įrašyti, jei skiriasi subpavadinimas"
 
-#: src/dvr/dvr_autorec.c:951
+#: src/dvr/dvr_autorec.c:953
 msgid "Local: Record if different title"
 msgstr "Vietinis: Įrašyti, jei skiriasi pavadinimas"
 
-#: src/dvr/dvr_autorec.c:959
+#: src/dvr/dvr_autorec.c:963
 msgid "Local: Record once per day"
 msgstr "Vietinis: Įrašyti kartą per dieną"
 
-#: src/dvr/dvr_autorec.c:957
+#: src/dvr/dvr_autorec.c:959
+msgid "Local: Record once per month"
+msgstr ""
+
+#: src/dvr/dvr_autorec.c:961
 msgid "Local: Record once per week"
 msgstr "Vietinis: Įrašyti kartą per savaitę"
 
@@ -3669,11 +3711,11 @@ msgstr "Prisijungimo slaptažodis."
 msgid "Login username."
 msgstr "Prisijungimo vartotojo vardas."
 
-#: src/config.c:1921
+#: src/config.c:1912
 msgid "Login/Logout"
 msgstr "Prisijungti/Atsijungti"
 
-#: src/profile.c:251 src/dvr/dvr_db.c:2516
+#: src/profile.c:251 src/dvr/dvr_db.c:2571
 msgid "Low"
 msgstr "Žemas"
 
@@ -3681,7 +3723,7 @@ msgstr "Žemas"
 msgid "Lowest channel number the user can access."
 msgstr "Žemiausias kanalo numeris, kuri vartotojas gali pasiekti"
 
-#: src/input/mpegts/iptv/iptv.c:875
+#: src/input/mpegts/iptv/iptv.c:911
 msgid "Lowest starting channel number."
 msgstr "Žemiausias prasidedantis kanalo numeris."
 
@@ -3701,19 +3743,19 @@ msgstr "MPEG-2 audio"
 msgid "MPEG-PS (DVD)/av-lib"
 msgstr "MPEG-PS (DVD)/av-lib"
 
-#: src/tvhlog.c:146
+#: src/tvhlog.c:147
 msgid "MPEG-TS"
 msgstr "MPEG-TS"
 
-#: src/tvhlog.c:166
+#: src/tvhlog.c:168
 msgid "MPEG-TS File"
 msgstr "MPEG-TS Failas"
 
-#: src/tvhlog.c:167
+#: src/tvhlog.c:169
 msgid "MPEG-TS Input Debug"
 msgstr "MPEG-TS Įvesties Debuginimas"
 
-#: src/input/mpegts/mpegts_mux.c:517
+#: src/input/mpegts/mpegts_mux.c:513
 msgid "MPEG-TS Multiplex"
 msgstr "MPEG-TS Multiplekseris"
 
@@ -3741,7 +3783,7 @@ msgstr "MPEG-TS Įvestis"
 msgid "MPEG-TS multiplex PHY"
 msgstr "MPEG-TS multiplekserio PHY"
 
-#: src/input/mpegts/mpegts_service.c:895
+#: src/input/mpegts/mpegts_service.c:903
 msgid "MPEG-TS raw service"
 msgstr "MPEG-TS \"žaliasis\" servisas"
 
@@ -3757,27 +3799,27 @@ msgstr "Žurnalai"
 msgid "Main"
 msgstr "Pagrindinis"
 
-#: src/dvr/dvr_config.c:1073
+#: src/dvr/dvr_config.c:1070
 msgid "Maintain free storage space in MiB"
 msgstr "Išlaikyti laisvos vietos kiekį megabaitais"
 
-#: src/dvr/dvr_config.c:1083
+#: src/dvr/dvr_config.c:1080
 msgid "Maintain used storage space in MiB (0=disabled)"
 msgstr "Išlaikyti laisvos vietos kiekį megabaitais (0=išjungta)"
 
-#: src/dvr/dvr_db.c:2564 src/dvr/dvr_config.c:737
+#: src/dvr/dvr_db.c:2619 src/dvr/dvr_config.c:734
 msgid "Maintained space"
 msgstr "Išlaikyta vieta"
 
-#: src/dvr/dvr_config.c:1174
+#: src/dvr/dvr_config.c:1171
 msgid "Make subdirectories per channel"
 msgstr "Daryti subdirektorijas per kanalą"
 
-#: src/dvr/dvr_config.c:1162
+#: src/dvr/dvr_config.c:1159
 msgid "Make subdirectories per day"
 msgstr "Daryti subdirektorijas per dieną"
 
-#: src/dvr/dvr_config.c:1186
+#: src/dvr/dvr_config.c:1183
 msgid "Make subdirectories per title"
 msgstr "Daryti subdirektorijas per pavadinimą"
 
@@ -3809,7 +3851,7 @@ msgstr "Gamintojo produkto informacijos puslapis įrenginiui."
 msgid "Manufacturer's product name."
 msgstr "Gamintojo produkto pavadinimas."
 
-#: src/wizard.c:1078
+#: src/wizard.c:1086
 msgid "Map all services"
 msgstr "Susieti visus servisus"
 
@@ -3868,7 +3910,7 @@ msgstr "Matroska/av-lib"
 msgid "Maximal channel number"
 msgstr "Maksimalus kanalo numeris"
 
-#: src/input/mpegts/iptv/iptv.c:758
+#: src/input/mpegts/iptv/iptv.c:783
 msgid "Maximum # input streams"
 msgstr "Maksimalus įvesties srautų skaičius"
 
@@ -3881,25 +3923,25 @@ msgstr "Maksimalus PID skaičius"
 msgid "Maximum RAM size (MB)"
 msgstr "Maksimalus naudojamas RAM dydis (MB)"
 
-#: src/dvr/dvr_config.c:990
+#: src/dvr/dvr_config.c:987
 msgid ""
 "Maximum allowed difference between event start time when the EPG event is "
 "changed."
 msgstr "Maksimalus leistinas skirtumas tarp įvykio ir EPG pradžios pokyčio."
 
-#: src/input/mpegts/iptv/iptv.c:767
+#: src/input/mpegts/iptv/iptv.c:792
 msgid "Maximum bandwidth (Kbps)"
 msgstr "Maksimalus pralaidumas (Kbps)"
 
-#: src/dvr/dvr_autorec.c:1219
+#: src/dvr/dvr_autorec.c:1223
 msgid "Maximum count (0=default)"
 msgstr "Maksimalus kiekis (0=default)"
 
-#: src/dvr/dvr_autorec.c:1165
+#: src/dvr/dvr_autorec.c:1169
 msgid "Maximum duration"
 msgstr "Maksimali trukmė"
 
-#: src/input/mpegts/iptv/iptv.c:768
+#: src/input/mpegts/iptv/iptv.c:793
 msgid "Maximum input bandwidth."
 msgstr "Maksimalus įvesties pralaidumas"
 
@@ -3916,7 +3958,7 @@ msgstr "Maksimalus PID'ų ilgis"
 msgid "Maximum period (mins)"
 msgstr "Maksimalus laikotarpis (minutės)"
 
-#: src/dvr/dvr_autorec.c:1228
+#: src/dvr/dvr_autorec.c:1232
 msgid "Maximum schedules limit (0=default)"
 msgstr "Maksimalus planuoklių kiekis (0=pagal nutylėjimą)"
 
@@ -3924,11 +3966,11 @@ msgstr "Maksimalus planuoklių kiekis (0=pagal nutylėjimą)"
 msgid "Maximum size (MB)"
 msgstr "Maksimalus dydis (MB)"
 
-#: src/input/mpegts/iptv/iptv.c:776
+#: src/input/mpegts/iptv/iptv.c:801
 msgid "Maximum time to wait (in seconds) for a stream before a timeout."
 msgstr "Maksimalus laukimo laikas (sekundėmis) prieš srauto laikui pasibaigiant."
 
-#: src/input/mpegts/iptv/iptv.c:775
+#: src/input/mpegts/iptv/iptv.c:800
 msgid "Maximum timeout (seconds)"
 msgstr "Maksimalus laiko pasibaigimas (sekundės)"
 
@@ -3952,7 +3994,7 @@ msgstr "Sujungti vienodu pavadinimu"
 msgid "Merge services with the same name to one channel."
 msgstr "Sujungti servisus tuo pačiu pavadinimu į vieną kanalą."
 
-#: src/htsp_server.c:3160
+#: src/htsp_server.c:3166
 msgid "Method not found"
 msgstr "Metodas nerastas"
 
@@ -3960,7 +4002,7 @@ msgstr "Metodas nerastas"
 msgid "Minimal channel number"
 msgstr "Minimalus kanalo numeris"
 
-#: src/dvr/dvr_autorec.c:1154
+#: src/dvr/dvr_autorec.c:1158
 msgid "Minimum duration"
 msgstr "Minimali trukmė"
 
@@ -4016,7 +4058,7 @@ msgstr ""
 msgid "Mono"
 msgstr ""
 
-#: src/main.c:883
+#: src/main.c:882
 msgid "More verbose libav log"
 msgstr "Išsamesnis libav žurnalizavimas"
 
@@ -4077,7 +4119,7 @@ msgstr "Miuziklai"
 msgid "Mux"
 msgstr "Multiplekseris"
 
-#: src/tvhlog.c:147 src/input/mpegts/mpegts_mux_sched.c:127
+#: src/tvhlog.c:148 src/input/mpegts/mpegts_mux_sched.c:127
 msgid "Mux Scheduler"
 msgstr "Multiplekserių planuoklis"
 
@@ -4085,7 +4127,7 @@ msgstr "Multiplekserių planuoklis"
 msgid "Mux UUID"
 msgstr "Multiplekserio UUID"
 
-#: src/satip/server.c:656
+#: src/satip/server.c:662
 msgid "Mux handling"
 msgstr "Multiplekserio tvarkymas"
 
@@ -4109,20 +4151,20 @@ msgid "NONE"
 msgstr "JOKS"
 
 #: src/channels.c:397 src/channels.c:1456 src/bouquet.c:1038
-#: src/memoryinfo.c:45 src/epggrab/module.c:128 src/epggrab/channel.c:657
-#: src/epggrab/channel.c:798 src/dvr/dvr_autorec.c:1014
+#: src/memoryinfo.c:45 src/epggrab/module.c:129 src/epggrab/channel.c:657
+#: src/epggrab/channel.c:798 src/dvr/dvr_autorec.c:1018
 #: src/dvr/dvr_timerec.c:546 src/input/mpegts/mpegts_input.c:264
-#: src/input/mpegts/mpegts_mux.c:568
+#: src/input/mpegts/mpegts_mux.c:564
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1438
 #: src/input/mpegts/satip/satip_satconf.c:344
 msgid "Name"
 msgstr "Pavadinimas"
 
-#: src/dvr/dvr_db.c:3411
+#: src/dvr/dvr_db.c:3466
 msgid "Name (or date) of program the entry is a rerun of."
 msgstr "Įrašo gražintas pavadinimas (arba data)."
 
-#: src/dvr/dvr_db.c:3086
+#: src/dvr/dvr_db.c:3141
 msgid "Name of channel the entry recorded from."
 msgstr "Įrašo įrašytas kanalo pavadinimas."
 
@@ -4152,11 +4194,11 @@ msgid ""
 "channels EPG info."
 msgstr "Modulio, graberio ar kanalo pavadinmas, kuris turėtų būti naudojamas atnaujinti šio kanalo EPG informaciją."
 
-#: src/wizard.c:794 src/input/mpegts/mpegts_network.c:160
+#: src/wizard.c:802 src/input/mpegts/mpegts_network.c:160
 msgid "Name of the network."
 msgstr "Tinklo pavadinimas."
 
-#: src/dvr/dvr_config.c:860
+#: src/dvr/dvr_config.c:857
 msgid "Name of the profile."
 msgstr "Profilio pavadinimas."
 
@@ -4164,7 +4206,7 @@ msgstr "Profilio pavadinimas."
 msgid "Name of the tag."
 msgstr "Žymės pavadinimas."
 
-#: src/wizard.c:559 src/wizard.c:567
+#: src/wizard.c:567 src/wizard.c:575
 msgid "Name of the tuner."
 msgstr "Tiunerio vardas."
 
@@ -4184,13 +4226,13 @@ msgstr "Gamtos mokslai"
 msgid "Nature"
 msgstr "Gamta"
 
-#: src/wizard.c:769 src/wizard.c:793 src/input/mpegts/mpegts_mux.c:552
+#: src/wizard.c:777 src/wizard.c:801 src/input/mpegts/mpegts_mux.c:548
 #: src/input/mpegts/mpegts_service.c:96
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:172
 msgid "Network"
 msgstr "Tinklas"
 
-#: src/wizard.c:551
+#: src/wizard.c:559
 msgid "Network "
 msgstr "Tinklas"
 
@@ -4216,11 +4258,11 @@ msgstr "Tinklas D"
 msgid "Network ID (limit scanning)"
 msgstr "Tinklo ID (riboti skanavimą)"
 
-#: src/input/mpegts/mpegts_mux.c:560
+#: src/input/mpegts/mpegts_mux.c:556
 msgid "Network UUID"
 msgstr "Tinklo UUID"
 
-#: src/wizard.c:387
+#: src/wizard.c:395
 msgid "Network access"
 msgstr "Tinklo prieiga"
 
@@ -4280,24 +4322,24 @@ msgstr "Tinklo pavadinimas"
 msgid "Network prefix"
 msgstr "Tinklo prefiksas"
 
-#: src/wizard.c:660
+#: src/wizard.c:668
 msgid "Network settings"
 msgstr "Tinklo nustatymai"
 
-#: src/wizard.c:574 src/input/mpegts/satip/satip_frontend.c:233
+#: src/wizard.c:582 src/input/mpegts/satip/satip_frontend.c:233
 #: src/input/mpegts/satip/satip_frontend.c:398
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:207
 msgid "Network type"
 msgstr "Tinklo tipas"
 
-#: src/input/mpegts/mpegts_input.c:315
+#: src/input/mpegts/mpegts_input.c:326
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1453
 #: src/input/mpegts/satip/satip_satconf.c:397
 msgid "Networks"
 msgstr "Tinklai"
 
-#: src/dvr/dvr_autorec.c:971
+#: src/dvr/dvr_autorec.c:975
 msgid "New / premiere / unknown"
 msgstr "Nauja / premjera / nežinoma"
 
@@ -4343,7 +4385,7 @@ msgstr "Jokio PIN"
 msgid "No access"
 msgstr "Jokios prieigos"
 
-#: src/main.c:985
+#: src/main.c:984
 msgid "No adapters specified!\n"
 msgstr "Nenurodyti jokie adapteriai!\n"
 
@@ -4367,7 +4409,7 @@ msgstr "Nėra laisvo adapterio"
 msgid "No input detected"
 msgstr "Nerasta įvestis"
 
-#: src/config.c:1972
+#: src/config.c:1963
 msgid "No scheme"
 msgstr "Jokios schemos"
 
@@ -4394,7 +4436,7 @@ msgstr "Mazgo posistemė"
 msgid "None"
 msgstr "Joks"
 
-#: src/profile.c:250 src/dvr/dvr_db.c:2515
+#: src/profile.c:250 src/dvr/dvr_db.c:2570
 msgid "Normal"
 msgstr "Normalus"
 
@@ -4404,7 +4446,11 @@ msgid ""
 "the signal level displayed within Tvheadend looks too low."
 msgstr ""
 
-#: src/htsp_server.c:2755
+#: src/streaming.c:485
+msgid "Not enough disk space"
+msgstr ""
+
+#: src/htsp_server.c:2761
 msgid "Not enough memory"
 msgstr "Nepakanka atminties"
 
@@ -4412,15 +4458,15 @@ msgstr "Nepakanka atminties"
 msgid "Not linked"
 msgstr "Nesusieta"
 
-#: src/channels.c:357 src/profile.c:1676 src/dvr/dvr_db.c:2512
+#: src/channels.c:357 src/profile.c:1676 src/dvr/dvr_db.c:2567
 msgid "Not set"
 msgstr "Nenustatyta"
 
-#: src/dvr/dvr_config.c:770
+#: src/dvr/dvr_config.c:767
 msgid "Not set (none or channel configuration)"
 msgstr "Nenustatyta (joks arba kanalo konfigūracija)"
 
-#: src/dvr/dvr_db.c:2963 src/dvr/dvr_autorec.c:671
+#: src/dvr/dvr_db.c:3018 src/dvr/dvr_autorec.c:671
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Nenustatyta (naudokite kanalo arba DVR konfigūracija)"
 
@@ -4428,41 +4474,41 @@ msgstr "Nenustatyta (naudokite kanalo arba DVR konfigūracija)"
 msgid "Number"
 msgstr "Numeris"
 
-#: src/dvr/dvr_db.c:3167
+#: src/dvr/dvr_db.c:3222
 msgid "Number of days to keep the file."
 msgstr "Dienų skaičius kiek laikyti failą."
 
-#: src/dvr/dvr_autorec.c:1210 src/dvr/dvr_timerec.c:640
+#: src/dvr/dvr_autorec.c:1214 src/dvr/dvr_timerec.c:640
 msgid "Number of days to keep the recorded file."
 msgstr "Dienų skaičius išlaikyti įrašytą failą."
 
-#: src/dvr/dvr_config.c:917
+#: src/dvr/dvr_config.c:914
 msgid "Number of days to keep the recorded files."
 msgstr "Dienų skaičius išlaikyti įrašytus failus."
 
-#: src/dvr/dvr_db.c:3157 src/dvr/dvr_timerec.c:630
+#: src/dvr/dvr_db.c:3212 src/dvr/dvr_timerec.c:630
 msgid "Number of days to retain entry information."
 msgstr "Dienų skaičius išlaikyti įrašo informaciją."
 
-#: src/dvr/dvr_autorec.c:1200
-msgid "Number of days to retain infomation about recording."
-msgstr "Dienų skaičius išlaikyti informaciją apie įrašą."
+#: src/dvr/dvr_autorec.c:1204
+msgid "Number of days to retain information about recording."
+msgstr ""
 
-#: src/dvr/dvr_config.c:906
+#: src/dvr/dvr_config.c:903
 msgid ""
 "Number of days to retain information about recordings. Once this period is "
 "exceeded, duplicate detection will not be possible anymore."
 msgstr "Dienų skaičius išlaikyti informaciją apie įrašus. Šiam laikotarpiui pasibaigus dublikatų nustatymas nebegalimas."
 
-#: src/dvr/dvr_db.c:3259
+#: src/dvr/dvr_db.c:3314
 msgid "Number of errors that occurred during recording (Transport errors)."
 msgstr "Nutikusių klaidų skaičius įrašymo metu (Transportavimo klaidos)."
 
-#: src/dvr/dvr_db.c:3251
+#: src/dvr/dvr_db.c:3306
 msgid "Number of errors that occurred during recording."
 msgstr "Nutikusių klaidų skaičius įrašymo metu."
 
-#: src/wizard.c:995
+#: src/wizard.c:1003
 msgid "Number of muxes found."
 msgstr "Rastų multiplekserių skaičius."
 
@@ -4490,11 +4536,11 @@ msgstr ""
 msgid "Number of services."
 msgstr "Servisų skaičius."
 
-#: src/dvr/dvr_db.c:3186
+#: src/dvr/dvr_db.c:3241
 msgid "Number of times this recording was played."
 msgstr "Tiek kartų šis įrašas buvo grotas."
 
-#: src/main.c:898
+#: src/main.c:897
 msgid "Number of tsfile tuners"
 msgstr "tsfile tiunerių skaičius"
 
@@ -4550,7 +4596,7 @@ msgstr "Senesnis OSCam"
 msgid "On"
 msgstr "Įjungta"
 
-#: src/dvr/dvr_db.c:2540 src/dvr/dvr_config.c:760
+#: src/dvr/dvr_db.c:2595 src/dvr/dvr_config.c:757
 msgid "On file removal"
 msgstr "Failo šalinimo metu"
 
@@ -4568,39 +4614,39 @@ msgid ""
 "settings). Some linux drivers require this procedure."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:493
+#: src/input/mpegts/mpegts_mux.c:489
 msgid "Only Bulsatcom 39E"
 msgstr "Tik Bulsatcom 39E"
 
-#: src/input/mpegts/mpegts_mux.c:488
+#: src/input/mpegts/mpegts_mux.c:484
 msgid "Only EIT"
 msgstr "Tik EIT"
 
-#: src/input/mpegts/mpegts_mux.c:496
+#: src/input/mpegts/mpegts_mux.c:492
 msgid "Only OpenTV Sky Ausat"
 msgstr "Tik OpenTV Sky Ausat"
 
-#: src/input/mpegts/mpegts_mux.c:495
+#: src/input/mpegts/mpegts_mux.c:491
 msgid "Only OpenTV Sky Italia"
 msgstr "Tik OpenTV Sky Italia"
 
-#: src/input/mpegts/mpegts_mux.c:494
+#: src/input/mpegts/mpegts_mux.c:490
 msgid "Only OpenTV Sky UK"
 msgstr "Tik OpenTV Sky UK"
 
-#: src/input/mpegts/mpegts_mux.c:489
+#: src/input/mpegts/mpegts_mux.c:485
 msgid "Only PSIP (ATSC)"
 msgstr "Tik PSIP (ATSC)"
 
-#: src/input/mpegts/mpegts_mux.c:490
+#: src/input/mpegts/mpegts_mux.c:486
 msgid "Only UK Freesat"
 msgstr "Tik UK Freesat"
 
-#: src/input/mpegts/mpegts_mux.c:491
+#: src/input/mpegts/mpegts_mux.c:487
 msgid "Only UK Freeview"
 msgstr "Tik UK Freeview"
 
-#: src/input/mpegts/mpegts_mux.c:492
+#: src/input/mpegts/mpegts_mux.c:488
 msgid "Only Viasat Baltic"
 msgstr "Tik Viasat Baltic"
 
@@ -4625,19 +4671,15 @@ msgstr "Tik skaičiai"
 msgid "Only preferred CA PID"
 msgstr "Tik pageidaujami CA PID"
 
-#: src/config.c:2315
+#: src/config.c:2306
 msgid ""
 "Only update the system clock (doesn't affect NTP driver) if the delta "
 "between the system clock and DVB time is greater than this. This can help "
 "stop excessive oscillations on the system clock."
 msgstr ""
 
-#: src/main.c:837
+#: src/main.c:836
 msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
-msgstr ""
-
-#: src/timeshift.c:277
-msgid "Only use system RAM for timeshift buffers."
 msgstr ""
 
 #: src/epggrab/channel.c:845
@@ -4646,7 +4688,7 @@ msgid ""
 "set for a channel."
 msgstr ""
 
-#: src/tvhlog.c:160
+#: src/tvhlog.c:162
 msgid "OpenTV EPG"
 msgstr "OpenTV EPG"
 
@@ -4679,7 +4721,7 @@ msgstr "Pozicijos orbitoje"
 msgid "Orbital positions."
 msgstr "Pozicijos orbitoje."
 
-#: src/input/mpegts/mpegts_mux.c:584
+#: src/input/mpegts/mpegts_mux.c:580
 msgid "Original network ID"
 msgstr "Orginalus tinklo ID"
 
@@ -4691,7 +4733,7 @@ msgstr "Oscam režimas."
 msgid "Other Stream Filter"
 msgstr "Kitas Srauto Filtras"
 
-#: src/main.c:902
+#: src/main.c:901
 msgid "Output directory for tsdebug"
 msgstr "Išvesties direktorija tsdebug'inimui"
 
@@ -4707,7 +4749,7 @@ msgstr "Oru gaunamo Cron daugiaeilutė įvestis"
 msgid "Over-the-air EPG"
 msgstr "Oru gaunamas EPG"
 
-#: src/epggrab/module.c:216
+#: src/epggrab/module.c:218
 msgid "Over-the-air EPG grabber"
 msgstr "Oru gaunamo EPG graberis"
 
@@ -4724,15 +4766,15 @@ msgstr "Nepaisyti išjungimo"
 msgid "Override the frontend type."
 msgstr "Nepaisyti sąsajos tipo."
 
-#: src/dvr/dvr_db.c:3205 src/dvr/dvr_autorec.c:1275 src/dvr/dvr_timerec.c:660
+#: src/dvr/dvr_db.c:3260 src/dvr/dvr_autorec.c:1279 src/dvr/dvr_timerec.c:660
 msgid "Owner"
 msgstr "Savininkas"
 
-#: src/dvr/dvr_db.c:3206 src/dvr/dvr_timerec.c:661
+#: src/dvr/dvr_db.c:3261 src/dvr/dvr_timerec.c:661
 msgid "Owner of the entry."
 msgstr "Įrašo savininkas."
 
-#: src/dvr/dvr_autorec.c:1276
+#: src/dvr/dvr_autorec.c:1280
 msgid "Owner of the rule."
 msgstr "Taisyklės savininkas."
 
@@ -4786,11 +4828,11 @@ msgstr "PLS kodas"
 msgid "PLS mode"
 msgstr "PLS režimas"
 
-#: src/dvr/dvr_db.c:3333
+#: src/dvr/dvr_db.c:3388
 msgid "Parent entry"
 msgstr "Pirminis įrašas"
 
-#: src/dvr/dvr_db.c:3334
+#: src/dvr/dvr_db.c:3389
 msgid "Parent entry."
 msgstr "Pirminis įrašas."
 
@@ -4812,7 +4854,7 @@ msgstr "Kiaurai praleidžiamas multiplekseris"
 msgid "Passthrough Muxer SI Tables"
 msgstr "Kiaurai praleidžiamo multiplekserio SI Lentelės"
 
-#: src/access.c:2047 src/wizard.c:443 src/descrambler/cwc.c:1841
+#: src/access.c:2047 src/wizard.c:451 src/descrambler/cwc.c:1841
 msgid "Password"
 msgstr "Slaptažodis"
 
@@ -4824,17 +4866,17 @@ msgstr "Slaptažodis įrašui."
 msgid "Password2"
 msgstr "Slaptažodis2"
 
-#: src/epggrab/module.c:176 src/epggrab/module.c:203 src/epggrab/channel.c:771
+#: src/epggrab/module.c:178 src/epggrab/module.c:205 src/epggrab/channel.c:771
 msgid "Path"
 msgstr "Kelias"
 
-#: src/config.c:2362
+#: src/config.c:2353
 msgid ""
 "Path to a directory (folder) containing your picon collection. See Help for "
 "more detailed information."
 msgstr "Kelias iki direktorijos (katalogo) su Jūsų pikonų kolekcija.\nPapildomą informaciją rasite pagalbos skiltyje."
 
-#: src/config.c:2337
+#: src/config.c:2328
 msgid ""
 "Path to an icon for this channel. This can be named however you wish, as "
 "either a local (file://) or remote (http://) image. See Help for more "
@@ -4845,11 +4887,11 @@ msgstr "Kelias į ikoną šiam kanalui. Galima naudoti tiek vietinį (file://), 
 msgid "Path to the frontend used by the device."
 msgstr "Kelias iki šio įrenginio naudojamos sąsajos."
 
-#: src/epggrab/module.c:177
+#: src/epggrab/module.c:179
 msgid "Path to the grabber executable."
 msgstr "Kelias iki graberio vykdomojo failo."
 
-#: src/epggrab/module.c:204
+#: src/epggrab/module.c:206
 msgid "Path to the socket Tvheadend will read data from."
 msgstr "Kelias iki socket'o, kurio informaciją nuskaitys Tvheadend."
 
@@ -4864,7 +4906,7 @@ msgstr "Kelias iki vietos, kur laiko poslinkio duomenys bus saugomi. Jei kelias 
 msgid "Path used by the device."
 msgstr "Šio įrenginio naudojamas kelias."
 
-#: src/dvr/dvr_config.c:1064
+#: src/dvr/dvr_config.c:1061
 msgid ""
 "Path where the recordings are stored. If components of the path do not "
 "exist, Tvheadend will try to create them."
@@ -4886,7 +4928,7 @@ msgstr "Vaizduojamasis menas"
 msgid "Periodically save EPG to disk (hours)"
 msgstr "Periodiškai saugoti EPG į diską (valandos)"
 
-#: src/access.c:1665 src/config.c:2102
+#: src/access.c:1665 src/config.c:2093
 msgid "Persistent user interface level"
 msgstr "Nuolatinis vartotojo interfeiso lygis"
 
@@ -4898,15 +4940,15 @@ msgstr "Psichologija"
 msgid "Pick the stream with given audio type only."
 msgstr "Pasirinkti srautą tik su duotuoju garso tipu."
 
-#: src/config.c:2053
+#: src/config.c:2044
 msgid "Picon"
 msgstr "Pikona"
 
-#: src/config.c:2373
+#: src/config.c:2364
 msgid "Picon name scheme"
 msgstr "Pikonų įvardinimo schema"
 
-#: src/config.c:2361
+#: src/config.c:2352
 msgid "Picon path"
 msgstr "Pikonų kelias"
 
@@ -4956,15 +4998,15 @@ msgstr "Pozicija"
 msgid "Position of the input."
 msgstr "Įvesties pozicija."
 
-#: src/dvr/dvr_config.c:1043
+#: src/dvr/dvr_config.c:1040
 msgid "Post-processor command"
 msgstr "Po veiksmo atliekama komanda"
 
-#: src/channels.c:481 src/dvr/dvr_db.c:3039 src/dvr/dvr_config.c:978
+#: src/channels.c:481 src/dvr/dvr_db.c:3094 src/dvr/dvr_config.c:975
 msgid "Post-recording padding"
 msgstr "Pratęsti įrašą"
 
-#: src/dvr/dvr_config.c:1053
+#: src/dvr/dvr_config.c:1050
 msgid "Post-remove command"
 msgstr "Komanda po pašalinimo"
 
@@ -4977,7 +5019,7 @@ msgstr "Energijos taupymas"
 msgid "Power-up time (ms) (15-200)"
 msgstr "Užsikurimo laikas (ms) (15-200)"
 
-#: src/wizard.c:783 src/input/mpegts/mpegts_network_dvb.c:247
+#: src/wizard.c:791 src/input/mpegts/mpegts_network_dvb.c:247
 #: src/input/mpegts/mpegts_network_dvb.c:270
 #: src/input/mpegts/mpegts_network_dvb.c:293
 #: src/input/mpegts/mpegts_network_dvb.c:326
@@ -4989,11 +5031,11 @@ msgstr "Užsikurimo laikas (ms) (15-200)"
 msgid "Pre-defined muxes"
 msgstr "Iš anksto apibrėti multiplekseriai"
 
-#: src/dvr/dvr_config.c:1032
+#: src/dvr/dvr_config.c:1029
 msgid "Pre-processor command"
 msgstr "Prieš veiksmą atliekama komanda"
 
-#: src/channels.c:466 src/dvr/dvr_db.c:3011 src/dvr/dvr_config.c:961
+#: src/channels.c:466 src/dvr/dvr_db.c:3066 src/dvr/dvr_config.c:958
 msgid "Pre-recording padding"
 msgstr "Paankstinti įrašą"
 
@@ -5001,7 +5043,7 @@ msgstr "Paankstinti įrašą"
 msgid "Pre-school children's programs"
 msgstr "Priešmokyklinukų programos"
 
-#: src/config.c:2326
+#: src/config.c:2317
 msgid "Prefer picons over channel name"
 msgstr "Teikti pirmenybę pikonoms vietoje kanalo pavadinimo"
 
@@ -5035,16 +5077,16 @@ msgid ""
 "and removes the view level drop-dowm from the interface."
 msgstr "Neleisti vartotojui nepaisyti vartotojo interfeiso lygio nustatymų ir pašalina interfeiso lygio pasirinkimo nuostatą."
 
-#: src/config.c:2103
+#: src/config.c:2094
 msgid ""
 "Prevents users from overriding the above user interface level setting and "
 "removes the view level drop-dowm from the interface."
 msgstr ""
 
-#: src/epggrab/module.c:155 src/dvr/dvr_db.c:3145 src/dvr/dvr_autorec.c:1176
+#: src/epggrab/module.c:156 src/dvr/dvr_db.c:3200 src/dvr/dvr_autorec.c:1180
 #: src/dvr/dvr_timerec.c:619 src/input/mpegts/mpegts_input.c:240
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1445
-#: src/input/mpegts/satip/satip_satconf.c:352 src/input/mpegts/iptv/iptv.c:734
+#: src/input/mpegts/satip/satip_satconf.c:352 src/input/mpegts/iptv/iptv.c:759
 #: src/input/mpegts/iptv/iptv_mux.c:123
 msgid "Priority"
 msgstr "Pirmumas"
@@ -5059,7 +5101,7 @@ msgid ""
 "cancel lower-priority events."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3146
+#: src/dvr/dvr_db.c:3201
 msgid ""
 "Priority of the recording. Higher priority entries will take precedence and "
 "cancel lower-priority events."
@@ -5081,11 +5123,11 @@ msgid ""
 "Conditional Access filter."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3138
+#: src/dvr/dvr_db.c:3193
 msgid "Program synopsis (display only)."
 msgstr "Trumpa programos apžvalga (tik rodomas)."
 
-#: src/dvr/dvr_db.c:3130
+#: src/dvr/dvr_db.c:3185
 msgid "Program synopsis."
 msgstr "Trumpa programos apžvalga."
 
@@ -5097,7 +5139,7 @@ msgstr "Tiekėjas"
 msgid "Provider ID"
 msgstr "Tiekėjo ID"
 
-#: src/input/mpegts/mpegts_network.c:167 src/input/mpegts/mpegts_mux.c:576
+#: src/input/mpegts/mpegts_network.c:167 src/input/mpegts/mpegts_mux.c:572
 msgid "Provider network name"
 msgstr "Tiekėjo tinklo pavadinimas"
 
@@ -5113,7 +5155,7 @@ msgstr "Psichologija"
 msgid "Puppets"
 msgstr "Lėlės"
 
-#: src/tvhlog.c:161
+#: src/tvhlog.c:163
 msgid "PyEPG Import"
 msgstr "PyEPG Importas"
 
@@ -5141,7 +5183,7 @@ msgstr "RTSP Protokolas"
 msgid "RTSP port"
 msgstr "RTSP Portas"
 
-#: src/satip/server.c:605
+#: src/satip/server.c:611
 msgid "RTSP port (554 or 9983, 0 = disable)"
 msgstr "RTSP portas (554 arba 9983, 0 = išjungta)"
 
@@ -5157,7 +5199,7 @@ msgstr "Nepakeistas Audio Srautas"
 msgid "Re-fetch period (hours)"
 msgstr "Pakartotinio parsiuntimo laikotarpis (valandos)"
 
-#: src/bouquet.c:1063 src/input/mpegts/iptv/iptv.c:881
+#: src/bouquet.c:1063 src/input/mpegts/iptv/iptv.c:917
 msgid "Re-fetch period (mins)"
 msgstr "Pakartotinio parsiuntimo laikotarpis (minutės)"
 
@@ -5165,7 +5207,7 @@ msgstr "Pakartotinio parsiuntimo laikotarpis (minutės)"
 msgid "Re-fetch the bouquet every x minutes."
 msgstr "Pakartotinai parsiųsti buketą kas x minučių."
 
-#: src/dvr/dvr_db.c:1175
+#: src/dvr/dvr_db.c:1201
 #, c-format
 msgid "Re-record%s%s"
 msgstr "Pakartotinai įrašyti%s%s"
@@ -5174,11 +5216,11 @@ msgstr "Pakartotinai įrašyti%s%s"
 msgid "Re-try period (hours)"
 msgstr "Pakartotinio bandymo laikotarpis (valandos)"
 
-#: src/htsp_server.c:2762
+#: src/htsp_server.c:2768
 msgid "Read error"
 msgstr "Nuskaitymo klaida"
 
-#: src/satip/server.c:606
+#: src/satip/server.c:612
 msgid ""
 "Real Time Streaming Protocol (RTSP) port the server should listen on (554 or"
 " 9983, 0 = disable)."
@@ -5192,27 +5234,27 @@ msgstr "Įrašyti viską"
 msgid "Record on these days only."
 msgstr "Įrašinėti tik šiomis dienomis."
 
-#: src/dvr/dvr_config.c:820
+#: src/dvr/dvr_config.c:817
 msgid "Recording file options"
 msgstr "Įrašomo failo nuostatos"
 
-#: src/dvr/dvr_db.c:3386
+#: src/dvr/dvr_db.c:3441
 msgid "Recording file size."
 msgstr "Įrašomo failo dydis."
 
-#: src/dvr/dvr_db.c:3185
+#: src/dvr/dvr_db.c:3240
 msgid "Recording play count"
 msgstr "Įrašo peržiūrų kiekis"
 
-#: src/dvr/dvr_config.c:1063
+#: src/dvr/dvr_config.c:1060
 msgid "Recording system path"
 msgstr "Įrašinėjimo sistemos kelias"
 
-#: src/satip/server.c:564
+#: src/satip/server.c:570
 msgid "Reject"
 msgstr "Atmesti"
 
-#: src/satip/server.c:565
+#: src/satip/server.c:571
 msgid "Reject exact match"
 msgstr "Atmesti visišką atitikmenį"
 
@@ -5232,23 +5274,27 @@ msgstr "Religinga"
 msgid "Remarkable people"
 msgstr "Nepaprasti žmonės"
 
-#: src/input/mpegts/iptv/iptv.c:904
+#: src/input/mpegts/iptv/iptv.c:940
 msgid "Remove HTTP arguments"
 msgstr "Pašalinti HTTP argumentus"
 
-#: src/dvr/dvr_config.c:1260
+#: src/dvr/dvr_config.c:1257
 msgid "Remove all unsafe characters from filename"
 msgstr "Pašalinti visus nesaugius simbolius iš failo pavadinimo"
 
-#: src/dvr/dvr_autorec.c:973
+#: src/input/mpegts/mpegts_input.c:315 src/input/mpegts/iptv/iptv.c:819
+msgid "Remove scrambled bits"
+msgstr ""
+
+#: src/dvr/dvr_autorec.c:977
 msgid "Repeated"
 msgstr "Pakartota"
 
-#: src/dvr/dvr_config.c:1271
+#: src/dvr/dvr_config.c:1268
 msgid "Replace whitespace in title with '-'"
 msgstr "Pakeisti tarpus pavadinime brūkšniais"
 
-#: src/dvr/dvr_config.c:1272
+#: src/dvr/dvr_config.c:1269
 msgid "Replaces all whitespace in the title with '-'."
 msgstr "Pakeisti visus tarpus pavadinime brūkšniais."
 
@@ -5264,11 +5310,11 @@ msgstr "Atsakyti į PIN pasiteiravimus."
 msgid "Reports"
 msgstr "Ataskaitos"
 
-#: src/dvr/dvr_db.c:3410
+#: src/dvr/dvr_db.c:3465
 msgid "Rerun of"
 msgstr "Pakartotas"
 
-#: src/streaming.c:583
+#: src/streaming.c:585
 msgid "Reserved"
 msgstr "Rezervuota"
 
@@ -5335,7 +5381,7 @@ msgid ""
 "about the currently-streamed service."
 msgstr ""
 
-#: src/profile.c:1097 src/satip/server.c:645
+#: src/profile.c:1097 src/satip/server.c:651
 msgid "Rewrite PMT"
 msgstr "Perrašyti PMT"
 
@@ -5345,7 +5391,7 @@ msgid ""
 "the currently-streamed service."
 msgstr ""
 
-#: src/satip/server.c:646
+#: src/satip/server.c:652
 msgid ""
 "Rewrite Program Association Table (PMT) packets to only include information "
 "about the currently streamed service."
@@ -5385,15 +5431,15 @@ msgstr "Rotoriaus pasiruošimo laikas (sekundės)"
 msgid "Rotor type"
 msgstr "Rotoriaus tipas"
 
-#: src/main.c:822
+#: src/main.c:821
 msgid "Run as group"
 msgstr "Paleisti kaip grupę"
 
-#: src/main.c:821
+#: src/main.c:820
 msgid "Run as user"
 msgstr "Paleisti kaip vartotoją"
 
-#: src/subscriptions.c:967 src/dvr/dvr_db.c:607
+#: src/subscriptions.c:967 src/dvr/dvr_db.c:627
 msgid "Running"
 msgstr "Veikia"
 
@@ -5409,7 +5455,7 @@ msgstr "SAT>IP ATSC-C Sąsaja"
 msgid "SAT>IP ATSC-T Frontend"
 msgstr "SAT>IP ATSC-T Sąsaja"
 
-#: src/tvhlog.c:156 src/input/mpegts/satip/satip.c:215
+#: src/tvhlog.c:158 src/input/mpegts/satip/satip.c:215
 msgid "SAT>IP Client"
 msgstr "SAT>IP Klientas"
 
@@ -5437,7 +5483,7 @@ msgstr "SAT>IP DVB-T Sąsaja"
 msgid "SAT>IP DVB-T frequency (Hz)"
 msgstr "SAT>IP DVB-T dažnis (Hz)"
 
-#: src/main.c:843
+#: src/main.c:842
 msgid ""
 "SAT>IP RTSP port number for server\n"
 "(default: -1 = disable, 0 = webconfig, standard port is 554)"
@@ -5447,7 +5493,7 @@ msgstr "SAT>IP RTSP porto numeris serveriui\n(numatytasis: -1 = išjungta, 0 = w
 msgid "SAT>IP Satellite Configuration"
 msgstr "SAT>IP Palydovų Konfigūracija"
 
-#: src/tvhlog.c:157
+#: src/tvhlog.c:159
 msgid "SAT>IP Server"
 msgstr "SAT>IP Serveris"
 
@@ -5503,7 +5549,7 @@ msgstr "SIGUSR1"
 msgid "SIGUSR2"
 msgstr "SIGUSR2"
 
-#: src/bouquet.c:1054 src/input/mpegts/iptv/iptv.c:890
+#: src/bouquet.c:1054 src/input/mpegts/iptv/iptv.c:926
 msgid "SSL verify peer"
 msgstr "SSL patikrinti prisijungusįjį"
 
@@ -5545,11 +5591,11 @@ msgstr "Palydovo pozicija."
 msgid "Satellite positions"
 msgstr "Palydovų pozicijos"
 
-#: src/input/mpegts/iptv/iptv.c:716
+#: src/input/mpegts/iptv/iptv.c:741
 msgid "Scan after creation"
 msgstr "Skanuoti sukūrus"
 
-#: src/wizard.c:762
+#: src/wizard.c:770
 msgid "Scan progress"
 msgstr "Skanavimo eiga"
 
@@ -5557,19 +5603,19 @@ msgstr "Skanavimo eiga"
 msgid "Scan queue length"
 msgstr "Skanavimo eilės ilgis"
 
-#: src/input/mpegts/mpegts_mux.c:621
+#: src/input/mpegts/mpegts_mux.c:617
 msgid "Scan result"
 msgstr "Skanavimo rezultatai"
 
-#: src/wizard.c:1016 src/input/mpegts/mpegts_mux.c:609
+#: src/wizard.c:1024 src/input/mpegts/mpegts_mux.c:605
 msgid "Scan status"
 msgstr "Skanavimo būsena"
 
-#: src/tvhlog.c:165
+#: src/tvhlog.c:167
 msgid "Scanfile"
 msgstr "Skanavimo failas"
 
-#: src/dvr/dvr_config.c:938
+#: src/dvr/dvr_config.c:935
 msgid "Schedule a re-recording if more errors than (0=off)"
 msgstr ""
 
@@ -5577,35 +5623,35 @@ msgstr ""
 msgid "Schedule frequency (in cron format)."
 msgstr "Planuoklio dažnumas (Cron formatu)."
 
-#: src/dvr/dvr_db.c:3402
+#: src/dvr/dvr_db.c:3457
 msgid "Schedule status"
 msgstr "Planuoklio būsena"
 
-#: src/dvr/dvr_db.c:3403
+#: src/dvr/dvr_db.c:3458
 msgid "Schedule status."
 msgstr "Planuoklio būsena."
 
-#: src/dvr/dvr_db.c:3058
+#: src/dvr/dvr_db.c:3113
 msgid "Scheduled Duration"
 msgstr "Suplanuota Trukmė"
 
-#: src/dvr/dvr_db.c:597
+#: src/dvr/dvr_db.c:617
 msgid "Scheduled for recording"
 msgstr "Suplanuota įrašyti"
 
-#: src/dvr/dvr_db.c:3023
+#: src/dvr/dvr_db.c:3078
 msgid "Scheduled start time"
 msgstr "Suplanuotas pradžios laikas"
 
-#: src/dvr/dvr_db.c:3050
+#: src/dvr/dvr_db.c:3105
 msgid "Scheduled stop time"
 msgstr "Suplanuotas pabaigos laikas"
 
-#: src/config.c:2350
+#: src/config.c:2341
 msgid ""
-"Scheme to generate the the channel icon names (all lower-case, service name "
+"Scheme to generate the channel icon names (all lower-case, service name "
 "picons etc.)."
-msgstr "Kanalų ikonų vardų generavimo schema (viskas mažosiomis raidėmis, servisų pavadinimų pikonos ir t.t.)."
+msgstr ""
 
 #: src/epg.c:2356
 msgid "School programs"
@@ -5619,38 +5665,38 @@ msgstr "Mokslas"
 msgid "Science fiction"
 msgstr "Mokslinė fantastika"
 
-#: src/dvr/dvr_config.c:1044
+#: src/dvr/dvr_config.c:1041
 msgid "Script/program to be run when a recording completes."
 msgstr "Paleisti skriptą/programą įrašui pasibaigus."
 
-#: src/dvr/dvr_config.c:1054
+#: src/dvr/dvr_config.c:1051
 msgid "Script/program to be run when a recording gets removed."
 msgstr "Paleisti skriptą/programą pašalinus įrašą."
 
-#: src/dvr/dvr_config.c:1033
+#: src/dvr/dvr_config.c:1030
 msgid ""
 "Script/program to be run when a recording starts (service is subscribed but "
 "no filename available)."
 msgstr "Paleisti skriptą/programą įrašui prasidėjus (servisas užprenumeruotas, bet nėra jokio failo vardo)."
 
-#: src/dvr/dvr_autorec.c:1257
+#: src/dvr/dvr_autorec.c:1261
 msgid "Season"
 msgstr "Sezonas"
 
-#: src/dvr/dvr_db.c:781
+#: src/dvr/dvr_db.c:807
 #, c-format
 msgid "Season %d"
 msgstr "Sezonas %d"
 
-#: src/dvr/dvr_autorec.c:1258
+#: src/dvr/dvr_autorec.c:1262
 msgid "Season information (if available)."
 msgstr "Sezono informacija (jei prieinama)."
 
-#: src/htsp_server.c:2853
+#: src/htsp_server.c:2859
 msgid "Seek error"
 msgstr "Ieškoti klaidos"
 
-#: src/wizard.c:575
+#: src/wizard.c:583
 msgid "Select an available network type for this tuner."
 msgstr "Pasirinkti prieinamą tinklo tipą šiam tiuneriui."
 
@@ -5658,7 +5704,7 @@ msgstr "Pasirinkti prieinamą tinklo tipą šiam tiuneriui."
 msgid "Select high priority (default) EPG language."
 msgstr "Pasirinkti aukšto prioriteto (numatytą) EPG kalbą."
 
-#: src/satip/server.c:657
+#: src/satip/server.c:663
 msgid "Select how Tvheadend should handle muxes. See Help for details."
 msgstr "Pasrinkite kaip Tvheadend turėtų tvarkytis su multiplekseriais. Daugiau informacijos rasite pagalbos skiltyje."
 
@@ -5670,7 +5716,7 @@ msgstr "Pasirinkti žemo prioriteto EPG kalbą."
 msgid "Select medium priority EPG language."
 msgstr "Pasirinkti vidutinio prioriteto EPG kalbą."
 
-#: src/config.c:2374
+#: src/config.c:2365
 msgid ""
 "Select scheme to generate the picon names (standard, force service type to "
 "1)"
@@ -5686,7 +5732,7 @@ msgid ""
 "\"Access Entries\" on a per-user basis."
 msgstr ""
 
-#: src/config.c:2208
+#: src/config.c:2199
 msgid ""
 "Select the list of languages (in order of priority) to be used for supplying"
 " EPG information to clients that don't provide their own configuration."
@@ -5709,7 +5755,7 @@ msgid ""
 "and your coaxial cable wiring."
 msgstr ""
 
-#: src/config.c:2279
+#: src/config.c:2270
 msgid ""
 "Select the path to use for DVB scan configuration files. Typically dvb-apps "
 "stores these in /usr/share/dvb/. Leave blank to use Tvheadend's internal "
@@ -5720,7 +5766,7 @@ msgstr ""
 msgid "Select the time offset for EIT events."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1076
+#: src/dvr/dvr_autorec.c:1080
 msgid "Select type of broadcast."
 msgstr ""
 
@@ -5747,7 +5793,7 @@ msgstr "Siųsti CAPMT užklausą"
 msgid "Send full PLAY cmd"
 msgstr "Siųsti pilną PLAY komandą"
 
-#: src/config.c:2196
+#: src/config.c:2187
 msgid ""
 "Send previous stream frames to upper layers (before frame start is signalled"
 " in the stream). It may cause issues with some clients / players."
@@ -5763,11 +5809,11 @@ msgstr ""
 msgid "Serial number"
 msgstr "Serijinis numeris"
 
-#: src/dvr/dvr_autorec.c:1266
+#: src/dvr/dvr_autorec.c:1270
 msgid "Series link"
 msgstr "Serijos nuoroda"
 
-#: src/dvr/dvr_autorec.c:1267
+#: src/dvr/dvr_autorec.c:1271
 msgid "Series link ID."
 msgstr "Serijos nuorodos ID."
 
@@ -5779,15 +5825,15 @@ msgstr "Rimta"
 msgid "Serious music"
 msgstr "Rimta muzika"
 
-#: src/config.c:2033 src/input/mpegts/satip/satip.c:479
+#: src/config.c:2024 src/input/mpegts/satip/satip.c:479
 msgid "Server"
 msgstr "Serveris"
 
-#: src/satip/server.c:596
+#: src/satip/server.c:602
 msgid "Server UUID"
 msgstr "Serverio UUID"
 
-#: src/main.c:853
+#: src/main.c:852
 msgid "Server connectivity"
 msgstr "Serverio jungiamumas"
 
@@ -5801,7 +5847,7 @@ msgstr "Serverio detalės."
 msgid "Service"
 msgstr "Servisai"
 
-#: src/input/mpegts/mpegts_service.c:120 src/input/mpegts/iptv/iptv.c:725
+#: src/input/mpegts/mpegts_service.c:120 src/input/mpegts/iptv/iptv.c:750
 #: src/descrambler/constcw.c:317 src/descrambler/constcw.c:383
 msgid "Service ID"
 msgstr "Serviso ID"
@@ -5814,7 +5860,7 @@ msgstr "Servisų Susiejiklis"
 msgid "Service Mapping (Map services to channels)"
 msgstr "Servisų Susiejimas (Servisų susiejimas su kanalais)"
 
-#: src/main.c:817
+#: src/main.c:816
 msgid "Service configuration"
 msgstr "Servisų konfigūracija"
 
@@ -5823,7 +5869,7 @@ msgstr "Servisų konfigūracija"
 msgid "Service count %zi"
 msgstr "Servisų kiekis %zi"
 
-#: src/wizard.c:1108
+#: src/wizard.c:1116
 msgid "Service mapping"
 msgstr "Servisų susiejimas"
 
@@ -5835,7 +5881,7 @@ msgstr "Serviso pavadinimas"
 msgid "Service name found in EPG data."
 msgstr "Serviso pavadinimas rastas EPG duomenyse."
 
-#: src/config.c:1974
+#: src/config.c:1965
 msgid "Service name picons"
 msgstr "Servisų pavadinimų pikonos"
 
@@ -5879,7 +5925,7 @@ msgstr "Nustatyti atvaizduojamą vardą."
 msgid "Set the maxiumum packet identifiers your SAT>IP server supports."
 msgstr "Nustatyti maksimalų paketų identifikatorių kiekį, kurį palaiko Jūsų SAT>IP serveris."
 
-#: src/config.c:2082
+#: src/config.c:2073
 msgid ""
 "Set the name of the server so you can distinguish multiple instances apart "
 "on your LAN."
@@ -5889,13 +5935,17 @@ msgstr ""
 msgid "Set the priority of this configuration."
 msgstr "Nustatyti šios konfigūracijos prioritetą."
 
-#: src/config.c:2091
+#: src/config.c:2082
 msgid "Sets the default interface view level (next to the Help button)."
 msgstr ""
 
-#: src/tvhlog.c:94 src/tvhlog.c:716 src/epggrab/module.c:119
+#: src/tvhlog.c:94 src/tvhlog.c:718 src/epggrab/module.c:120
 msgid "Settings"
 msgstr "Nustatymai"
+
+#: src/input/mpegts/mpegts_service.c:240
+msgid "Shift PTS (ms)"
+msgstr ""
 
 #: src/epg.c:2316
 msgid "Show"
@@ -5907,15 +5957,15 @@ msgstr "Šou"
 msgid "Show / Game show"
 msgstr "Šou / Žaidimų šou"
 
-#: src/main.c:814
+#: src/main.c:813
 msgid "Show this page"
 msgstr "Rodyti šį puslapį"
 
-#: src/main.c:815
+#: src/main.c:814
 msgid "Show version information"
 msgstr "Rodyti versijos informaciją"
 
-#: src/config.c:2245
+#: src/config.c:2236
 msgid ""
 "Show, hide and sort the various details that appear on the interface next to"
 " the About tab."
@@ -5953,12 +6003,12 @@ msgstr "Dydis"
 msgid "Skip TS packets (0-200)"
 msgstr "Praleisti TS paketus (0-200)"
 
-#: src/input/mpegts/mpegts_mux.c:676
+#: src/input/mpegts/mpegts_mux.c:672
 msgid ""
 "Skip TSID checking. For when providers use invalid Transport Stream IDs."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1126
+#: src/dvr/dvr_config.c:1123
 msgid "Skip commercials"
 msgstr "Praleisti reklamas"
 
@@ -5981,11 +6031,11 @@ msgstr ""
 msgid "Skip x number of transport packets."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3342
+#: src/dvr/dvr_db.c:3397
 msgid "Slave entry"
 msgstr "Pavaldinio įrašas"
 
-#: src/dvr/dvr_db.c:3343
+#: src/dvr/dvr_db.c:3398
 msgid "Slave entry."
 msgstr "Pavaldinio įrašas."
 
@@ -6066,31 +6116,31 @@ msgid ""
 "stream is paused."
 msgstr ""
 
-#: src/main.c:864
+#: src/main.c:863
 msgid "Specify User-Agent header for the http client"
 msgstr ""
 
-#: src/main.c:860
+#: src/main.c:859
 msgid "Specify alternative htsp port"
 msgstr "Nurodykite alternatyvų HTSP portą"
 
-#: src/main.c:856
+#: src/main.c:855
 msgid "Specify alternative http port"
 msgstr "Nurodykite alternatyvų HTTP portą"
 
-#: src/main.c:858
+#: src/main.c:857
 msgid "Specify alternative http webroot"
 msgstr "Nurodykite alternatyvią HTTP šaknį"
 
-#: src/main.c:855
+#: src/main.c:854
 msgid "Specify bind address"
 msgstr "Nurodykite priskiriamą adresą"
 
-#: src/main.c:841
+#: src/main.c:840
 msgid "Specify bind address for SAT>IP server"
 msgstr "Nurodykite SAT>IP serveriui priskiriamą adresą"
 
-#: src/main.c:862
+#: src/main.c:861
 msgid "Specify extra htsp port"
 msgstr "Nurodykite papildomą HTSP portą"
 
@@ -6114,7 +6164,7 @@ msgstr "Sporto žurnalai"
 msgid "Squash"
 msgstr ""
 
-#: src/config.c:1983 src/input/mpegts/mpegts_mux.c:505
+#: src/config.c:1974 src/input/mpegts/mpegts_mux.c:501
 msgid "Standard"
 msgstr "Standartinis"
 
@@ -6122,11 +6172,11 @@ msgstr "Standartinis"
 msgid "Start"
 msgstr "Pradėti"
 
-#: src/dvr/dvr_autorec.c:1095
+#: src/dvr/dvr_autorec.c:1099
 msgid "Start after"
 msgstr "Pradėti po"
 
-#: src/dvr/dvr_autorec.c:1108
+#: src/dvr/dvr_autorec.c:1112
 msgid "Start before"
 msgstr "Pradėti prieš"
 
@@ -6139,12 +6189,12 @@ msgid ""
 "entry or DVR profile will be used."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3012
+#: src/dvr/dvr_db.c:3067
 msgid ""
 "Start recording earlier than the EPG/timer-defined start time by x minutes."
 msgstr ""
 
-#: src/dvr/dvr_config.c:962
+#: src/dvr/dvr_config.c:959
 msgid ""
 "Start recording earlier than the defined Start recording earlier than the "
 "defined start time by x minutes: for example, if a program is to start at "
@@ -6153,15 +6203,15 @@ msgid ""
 "recording padding as set in the channel or DVR entry will be used."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1122
+#: src/dvr/dvr_autorec.c:1126
 msgid "Start recording earlier than the defined start time by x minutes."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3002
+#: src/dvr/dvr_db.c:3057
 msgid "Start time"
 msgstr "Pradžios laikas"
 
-#: src/dvr/dvr_db.c:3393 src/descrambler/caclient.c:295
+#: src/dvr/dvr_db.c:3448 src/descrambler/caclient.c:295
 msgid "Status"
 msgstr "Būsena"
 
@@ -6177,7 +6227,7 @@ msgstr "Stereo"
 msgid "Stop"
 msgstr "Stabdyti"
 
-#: src/dvr/dvr_db.c:3031
+#: src/dvr/dvr_db.c:3086
 msgid "Stop time"
 msgstr "Stabdymo laikas"
 
@@ -6185,7 +6235,7 @@ msgstr "Stabdymo laikas"
 msgid "Storage path"
 msgstr "Laikemos kelias"
 
-#: src/config.c:1922
+#: src/config.c:1913
 msgid "Storage space"
 msgstr "Laikmenos vieta"
 
@@ -6206,11 +6256,11 @@ msgstr "Srauto Indeksas"
 msgid "Stream index (starts with zero)."
 msgstr "Srauto Indeksas (prasideda nuliu)"
 
-#: src/dvr/dvr_config.c:878
+#: src/dvr/dvr_config.c:875
 msgid "Stream profile"
 msgstr "Srauto profilis"
 
-#: src/htsp_server.c:2437
+#: src/htsp_server.c:2443
 msgid "Stream setup error"
 msgstr "Srauto parametrų klaida"
 
@@ -6234,7 +6284,7 @@ msgid ""
 "pvr.hts) or Movian."
 msgstr "Transliavimo vėliavos, leisti/neleisti HTTP transliavimą, pažangus HTTP transliavimas (pvz. tiesioginiai servisai ar multiplekserių siejiniai), transliavimas HTSP protokolu pvz. Kodi (per pvr.hts) ar Movian."
 
-#: src/input/mpegts/mpegts_input.c:251 src/input/mpegts/iptv/iptv.c:746
+#: src/input/mpegts/mpegts_input.c:251 src/input/mpegts/iptv/iptv.c:771
 #: src/input/mpegts/iptv/iptv_mux.c:131
 msgid "Streaming priority"
 msgstr "Srauto pirmumas"
@@ -6243,11 +6293,11 @@ msgstr "Srauto pirmumas"
 msgid "Streaming profiles"
 msgstr "Srautų profiliai"
 
-#: src/dvr/dvr_config.c:828
+#: src/dvr/dvr_config.c:825
 msgid "Subdirectory options"
 msgstr "Subdirektorijos nuostatos"
 
-#: src/main.c:892
+#: src/main.c:891
 msgid "Subscribe to a service permanently"
 msgstr "Prenumeruoti servisą nuolat"
 
@@ -6255,8 +6305,8 @@ msgstr "Prenumeruoti servisą nuolat"
 msgid "Subscription"
 msgstr "Prenumerata"
 
-#: src/htsp_server.c:2531 src/htsp_server.c:2558 src/htsp_server.c:2602
-#: src/htsp_server.c:2629 src/htsp_server.c:2657
+#: src/htsp_server.c:2537 src/htsp_server.c:2564 src/htsp_server.c:2608
+#: src/htsp_server.c:2635 src/htsp_server.c:2663
 msgid "Subscription does not exist"
 msgstr "Prenumerata neegzistuoja"
 
@@ -6264,7 +6314,7 @@ msgstr "Prenumerata neegzistuoja"
 msgid "Subscription overridden"
 msgstr "Nepaisoma prenumeratos"
 
-#: src/satip/server.c:615
+#: src/satip/server.c:621
 msgid "Subscription weight"
 msgstr "Prenumeratos svoris"
 
@@ -6272,7 +6322,7 @@ msgstr "Prenumeratos svoris"
 msgid "Substitute formatters"
 msgstr "Keisti apipavidalintojus"
 
-#: src/dvr/dvr_db.c:3112 src/dvr/dvr_db.c:3120
+#: src/dvr/dvr_db.c:3167 src/dvr/dvr_db.c:3175
 msgid "Subtitle"
 msgstr "Titrai"
 
@@ -6284,11 +6334,11 @@ msgstr "Titrų Srauto Filtras"
 msgid "Subtitle codec"
 msgstr "Titrų kodekas"
 
-#: src/dvr/dvr_db.c:3121
+#: src/dvr/dvr_db.c:3176
 msgid "Subtitle of the program (if any) (display only)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3113
+#: src/dvr/dvr_db.c:3168
 msgid "Subtitle of the program (if any)."
 msgstr ""
 
@@ -6324,15 +6374,15 @@ msgstr "Komutatorius: %s"
 msgid "Symbol rate (Sym/s)"
 msgstr "Simbolių rodiklis (Sym/s)"
 
-#: src/dvr/dvr_config.c:714
+#: src/dvr/dvr_config.c:711
 msgid "Sync"
 msgstr "Sinchronizuoti"
 
-#: src/dvr/dvr_config.c:715
+#: src/dvr/dvr_config.c:712
 msgid "Sync + Don't keep"
 msgstr "Sinchronizuoti + Nelaikyti"
 
-#: src/dvr/dvr_config.c:712
+#: src/dvr/dvr_config.c:709
 msgid "System"
 msgstr "Sistema"
 
@@ -6420,11 +6470,11 @@ msgstr ""
 msgid "TV Adapters - SatConfig - Universal LNB (Simple)"
 msgstr ""
 
-#: src/tvhlog.c:158
+#: src/tvhlog.c:160
 msgid "TVHDHomeRun Client"
 msgstr "TVHDHomeRun Klientas"
 
-#: src/dvr/dvr_config.c:1115
+#: src/dvr/dvr_config.c:1112
 msgid "Tag files with metadata"
 msgstr "Žymėti failus meta duomenimis"
 
@@ -6464,7 +6514,7 @@ msgstr "Tenisas"
 msgid "Testing"
 msgstr "Testuojama"
 
-#: src/main.c:897
+#: src/main.c:896
 msgid "Testing options"
 msgstr "Testavimo parinktys"
 
@@ -6498,32 +6548,32 @@ msgstr "Multiplekserio naudojama COFDM moduliacija. Jei nesate tikri dėl reikš
 msgid "The Conditional Access ID used for the service."
 msgstr "Serviso naudojamas CS ID."
 
-#: src/input/mpegts/mpegts_mux.c:602
+#: src/input/mpegts/mpegts_mux.c:598
 msgid "The Content reference identifier (CRID) authority."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3195
+#: src/dvr/dvr_db.c:3250
 msgid "The DVR profile to be used/used by the recording."
 msgstr "DVR profilį naudoti/naudojmas įrašams."
 
-#: src/dvr/dvr_autorec.c:1238
+#: src/dvr/dvr_autorec.c:1242
 msgid "The DVR profile to be used/used by this rule."
 msgstr "Šios taisyklės naudojmas/naudoti DVR profilis."
 
-#: src/dvr/dvr_db.c:3268
+#: src/dvr/dvr_db.c:3323
 msgid "The EPG ID used by the entry."
 msgstr "Šio įrašo naudojamas EPG ID."
 
-#: src/epggrab/module.c:129
+#: src/epggrab/module.c:130
 msgid "The EPG grabber name."
 msgstr "EPG graberio pavadinimas."
 
-#: src/input/mpegts/mpegts_mux.c:542
+#: src/input/mpegts/mpegts_mux.c:538
 msgid ""
 "The EPG grabber to use on the mux. Enable (auto) is the recommended value."
 msgstr "Naudoti EPG graberį multiplekseriui. Auto nustatymas yra rekomenduojama reikšmė."
 
-#: src/epggrab/module.c:138
+#: src/epggrab/module.c:139
 msgid "The EPG grabber type."
 msgstr "EPG graberio tipas"
 
@@ -6573,7 +6623,7 @@ msgstr "SAT>IP atrastas IP adresas."
 msgid "The URL (or path) to the icon to use/used for the channel."
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:846
+#: src/input/mpegts/iptv/iptv.c:882
 msgid "The URL to the playlist."
 msgstr "M3U grojaraščio URL."
 
@@ -6592,17 +6642,17 @@ msgstr ""
 msgid "The bouquet the channel is associated with."
 msgstr "Buketas, su kuriuo kanalas yra susietas."
 
-#: src/dvr/dvr_config.c:892
+#: src/dvr/dvr_config.c:889
 msgid ""
 "The cache scheme to use/used to store recordings. Leave as \"system\" unless"
 " you have a special use case for one of the others. See Help for details."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3067
+#: src/dvr/dvr_db.c:3122
 msgid "The channel name the entry will record from."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1051
+#: src/dvr/dvr_autorec.c:1055
 msgid ""
 "The channel on which this rule applies, i.e. the channel you're aiming to "
 "record. You can leave this field blank to apply the rule to all channels."
@@ -6620,13 +6670,13 @@ msgstr "Simbolių rinkinys naudojamas šiam tinklui (pvz. UTF-8)."
 msgid "The character encoding for this service (e.g. UTF-8)."
 msgstr "Simbolių rinkinys naudojamas šiam servisui (pvz. UTF-8)."
 
-#: src/input/mpegts/mpegts_mux.c:631
+#: src/input/mpegts/mpegts_mux.c:627
 msgid ""
 "The character set used on this mux. You should not have to change this "
 "unless channel names, etc  appear garbled."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1086
+#: src/dvr/dvr_autorec.c:1090
 msgid ""
 "The content type (Movie/Drama, Sports, etc.) to be used to filter matching "
 "events/programs."
@@ -6640,21 +6690,21 @@ msgstr ""
 msgid "The current configuration ID."
 msgstr "Dabartinės konfigūracijos ID."
 
-#: src/config.c:2063
+#: src/config.c:2054
 msgid "The current configuration version."
 msgstr "Dabartinės konfigūracijos versija."
 
-#: src/config.c:2257
+#: src/config.c:2248
 msgid ""
 "The default language to use if the user  language isn't set in the Access "
 "Entries tab."
 msgstr ""
 
-#: src/satip/server.c:616
+#: src/satip/server.c:622
 msgid "The default subscription weight for each subscription."
 msgstr ""
 
-#: src/config.c:2267
+#: src/config.c:2258
 msgid ""
 "The default web interface to use if the user's  theme isn't set in the "
 "Access Entries tab."
@@ -6727,7 +6777,6 @@ msgid "The frequency of the mux/transponder in Hertz."
 msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:95
-#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:103
 msgid "The frontend number given to the device."
 msgstr ""
 
@@ -6812,6 +6861,10 @@ msgstr ""
 msgid "The length of time (in seconds) to play the mux (1 hour = 3600)."
 msgstr ""
 
+#: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:103
+msgid "The limit for the PID filter (driver or hardware)."
+msgstr ""
+
 #: src/input/mpegts/mpegts_service.c:222
 msgid ""
 "The locking mechanism selection for The Preferred Conditional Access Packet "
@@ -6831,7 +6884,7 @@ msgstr ""
 msgid "The manufacturer of the SAT>IP server."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1166
+#: src/dvr/dvr_autorec.c:1170
 msgid ""
 "The maximal duration of a matching event - in other words, only match "
 "programmes that are no longer than this duration."
@@ -6850,27 +6903,27 @@ msgid ""
 "unlimited period it's highly recommended you specify a value here."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1015
+#: src/dvr/dvr_config.c:1012
 msgid "The maximum number of entries that can be matched."
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:759
+#: src/input/mpegts/iptv/iptv.c:784
 msgid "The maximum number of input streams allowed on this network."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1229
+#: src/dvr/dvr_autorec.c:1233
 msgid "The maximum number of recording entries this rule can create."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1024
+#: src/dvr/dvr_config.c:1021
 msgid "The maximum number of recordings that can be scheduled."
 msgstr ""
 
-#: src/satip/server.c:636
+#: src/satip/server.c:642
 msgid "The maximum number of services to decrypt per mux."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1220
+#: src/dvr/dvr_autorec.c:1224
 msgid "The maximum number of times this rule can be triggered."
 msgstr ""
 
@@ -6880,7 +6933,7 @@ msgid ""
 "subscription."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1155
+#: src/dvr/dvr_autorec.c:1159
 msgid ""
 "The minimal duration of a matching event - in other words, only match "
 "programs that are no shorter than this duration."
@@ -6919,7 +6972,7 @@ msgstr ""
 msgid "The mux's universally unique identifier."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:569
+#: src/input/mpegts/mpegts_mux.c:565
 msgid "The name (or frequency) the mux is on."
 msgstr ""
 
@@ -6932,7 +6985,7 @@ msgstr ""
 msgid "The name of the profile."
 msgstr "Profilio pavadinimas"
 
-#: src/dvr/dvr_autorec.c:1015
+#: src/dvr/dvr_autorec.c:1019
 msgid "The name of the the rule."
 msgstr "Taisyklės pavadinimas."
 
@@ -6941,7 +6994,7 @@ msgid ""
 "The network prefix(es) to block, e.g.192.168.2.0/24 (comma-separated list)."
 msgstr "Blokuoti tinklo prefiksą(-us), pvz.: 192.168.2.0/24 (kableliais atskirtas sąrašas)."
 
-#: src/input/mpegts/mpegts_mux.c:553
+#: src/input/mpegts/mpegts_mux.c:549
 msgid "The network the mux is on."
 msgstr "Tinklo multiplekseris įjungtas."
 
@@ -6949,13 +7002,13 @@ msgstr "Tinklo multiplekseris įjungtas."
 msgid "The network the service is on."
 msgstr "Tinklo servisas yra įjungtas."
 
-#: src/input/mpegts/iptv/iptv.c:735
+#: src/input/mpegts/iptv/iptv.c:760
 msgid ""
 "The network's priority. The network with the highest priority value will be "
 "used out of preference if available. See Help for details."
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:726
+#: src/input/mpegts/iptv/iptv.c:751
 msgid "The network's service ID"
 msgstr "Tinklo serviso ID"
 
@@ -6967,43 +7020,43 @@ msgstr "Šiam įrenginiui priskirti tinklai."
 msgid "The networks using this configuration."
 msgstr "Tinklai naudojantys šią konfigūraciją."
 
-#: src/input/mpegts/mpegts_mux.c:561
+#: src/input/mpegts/mpegts_mux.c:557
 msgid "The networks' universally unique identifier (UUID)."
 msgstr "Tinklo universaliai unikalus identifikatorius (UUID)."
 
-#: src/satip/server.c:735
+#: src/satip/server.c:750
 msgid "The number of ATSC-C (Cable/AnnexB) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:727
+#: src/satip/server.c:742
 msgid "The number of ATSC-T (Terresterial) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:711
+#: src/satip/server.c:726
 msgid "The number of DVB-C (Cable) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:719
+#: src/satip/server.c:734
 msgid "The number of DVB-C2 (Cable) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:679
+#: src/satip/server.c:694
 msgid "The number of DVB-S (Satellite) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:687
+#: src/satip/server.c:702
 msgid "The number of DVB-S2 (Satellite) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:695
+#: src/satip/server.c:710
 msgid "The number of DVB-T (Terresterial) tuners to export."
 msgstr ""
 
-#: src/satip/server.c:703
+#: src/satip/server.c:718
 msgid "The number of DVB-T2 (Terresterial) tuners to export."
 msgstr ""
 
-#: src/config.c:2186
+#: src/config.c:2177
 msgid ""
 "The number of MPEG-TS packets Tvheadend buffers in case there is a delay "
 "receiving CA keys. "
@@ -7019,7 +7072,7 @@ msgid ""
 "bytes long. The accepted range is 18800-1880000 bytes."
 msgstr ""
 
-#: src/config.c:2135
+#: src/config.c:2126
 msgid "The number of days cookies set by Tvheadend should expire."
 msgstr ""
 
@@ -7031,7 +7084,7 @@ msgstr "Šiame tinkle likusių skanuoti multiplekserių skaičius."
 msgid "The number of seconds to wait for a stream to start."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:650
+#: src/input/mpegts/mpegts_mux.c:646
 msgid "The number of services on the mux that are mapped to channels."
 msgstr ""
 
@@ -7043,7 +7096,7 @@ msgstr ""
 msgid "The orbital position of the satellite your dish is pointing at."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:622
+#: src/input/mpegts/mpegts_mux.c:618
 msgid "The outcome of the last scan performed on this mux."
 msgstr ""
 
@@ -7053,7 +7106,7 @@ msgid ""
 "setting."
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:864
+#: src/input/mpegts/iptv/iptv.c:900
 msgid "The playlist's character set."
 msgstr ""
 
@@ -7068,7 +7121,7 @@ msgid ""
 "mapping to remote control buttons, presentation order, etc."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1177
+#: src/dvr/dvr_autorec.c:1181
 msgid ""
 "The priority of any recordings set because of this rule will take precedence"
 " and cancel lower-priority events."
@@ -7082,11 +7135,11 @@ msgstr "Tiekėjo ID."
 msgid "The provider's name."
 msgstr "Tiekėjo pavadinimas."
 
-#: src/input/mpegts/mpegts_mux.c:585
+#: src/input/mpegts/mpegts_mux.c:581
 msgid "The provider's network ID."
 msgstr "Tiekėjo tinklo ID."
 
-#: src/input/mpegts/mpegts_mux.c:577
+#: src/input/mpegts/mpegts_mux.c:573
 msgid "The provider's network name."
 msgstr "Tiekėjo tinklo pavadinimas."
 
@@ -7097,11 +7150,11 @@ msgid ""
 "sure of the value leave as AUTO."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3292
+#: src/dvr/dvr_db.c:3347
 msgid "The recorded file was removed intentionally"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3395
+#: src/dvr/dvr_db.c:3450
 msgid "The recording/entry status."
 msgstr "Įrašymo/įrašo būsena."
 
@@ -7120,18 +7173,25 @@ msgstr ""
 msgid "The satellite configuration to use."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:610
+#: src/input/mpegts/mpegts_mux.c:606
 msgid ""
 "The scan state. New muxes will automatically be changed to the PEND state. "
 "You can change this to ACTIVE to queue a scan of this mux."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3024
+#: src/dvr/dvr_db.c:3079
 msgid "The scheduled start time, including any padding."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3051
+#: src/dvr/dvr_db.c:3106
 msgid "The scheduled stop time, including any padding."
+msgstr ""
+
+#: src/input/mpegts/mpegts_input.c:316 src/input/mpegts/iptv/iptv.c:820
+msgid ""
+"The scrambled bits in MPEG-TS packets are always cleared. It is a workaround"
+" for the special streams which are descrambled, but these bits are not "
+"touched."
 msgstr ""
 
 #: src/profile.c:402
@@ -7207,7 +7267,7 @@ msgid ""
 "(position, polarization, lo-hi)."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3003
+#: src/dvr/dvr_db.c:3058
 msgid "The start time of the recording."
 msgstr ""
 
@@ -7215,7 +7275,7 @@ msgstr ""
 msgid "The stream ID used for the mux."
 msgstr ""
 
-#: src/dvr/dvr_config.c:879
+#: src/dvr/dvr_config.c:876
 msgid "The stream profile the DVR profile will use for recordings."
 msgstr ""
 
@@ -7224,7 +7284,7 @@ msgid ""
 "The streaming profile to use/used. If not set, the default will be used."
 msgstr ""
 
-#: src/dvr/dvr_config.c:1140
+#: src/dvr/dvr_config.c:1137
 msgid ""
 "The string allows you to manually specify the full path generation using "
 "predefined modifiers. See Help for full details."
@@ -7246,26 +7306,26 @@ msgstr ""
 msgid "The symbol rate."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3032
+#: src/dvr/dvr_db.c:3087
 msgid "The time the entry stops/stopped being recorded."
 msgstr ""
 
-#: src/config.c:2235
+#: src/config.c:2226
 msgid ""
 "The time window to cut the stop time from the overlapped event in seconds."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1034
+#: src/dvr/dvr_autorec.c:1038
 msgid ""
 "The title of the program to look for. Note that this accepts case-"
 "insensitive regular expressions."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:642
+#: src/input/mpegts/mpegts_mux.c:638
 msgid "The total number of services found on this mux."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3059
+#: src/dvr/dvr_db.c:3114
 msgid "The total scheduled duration."
 msgstr ""
 
@@ -7280,7 +7340,7 @@ msgstr ""
 msgid "The transponder ID."
 msgstr ""
 
-#: src/input/mpegts/mpegts_mux.c:593
+#: src/input/mpegts/mpegts_mux.c:589
 msgid "The transport stream ID of the mux within the network."
 msgstr ""
 
@@ -7297,13 +7357,13 @@ msgid ""
 "the standard priority value is used. See Help for details."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3216 src/dvr/dvr_autorec.c:1284 src/dvr/dvr_timerec.c:669
+#: src/dvr/dvr_db.c:3271 src/dvr/dvr_autorec.c:1288 src/dvr/dvr_timerec.c:669
 msgid ""
 "The user who created the recording, or the auto-recording source and IP "
 "address if scheduled by a matching rule."
 msgstr ""
 
-#: src/config.c:2072
+#: src/config.c:2063
 msgid "The version of Tvheadend that last updated the config."
 msgstr ""
 
@@ -7311,7 +7371,7 @@ msgstr ""
 msgid "The video stream types the filter should apply to."
 msgstr ""
 
-#: src/access.c:1456 src/config.c:2266
+#: src/access.c:1456 src/config.c:2257
 msgid "Theme"
 msgstr ""
 
@@ -7320,7 +7380,7 @@ msgstr ""
 msgid "This tuner"
 msgstr ""
 
-#: src/config.c:2303
+#: src/config.c:2294
 msgid ""
 "This will create an NTP driver (using shmem interface) that you can feed "
 "into ntpd. This can be run without root privileges, but generally the "
@@ -7339,7 +7399,7 @@ msgstr "Trileris"
 msgid "Thu"
 msgstr "Ket"
 
-#: src/tvhlog.c:84 src/config.c:1923
+#: src/tvhlog.c:84 src/config.c:1914
 msgid "Time"
 msgstr "Laikas"
 
@@ -7351,7 +7411,7 @@ msgstr "Laikas (milisekundėmis) komandai užbaigti."
 msgid "Time (in milliseconds) for the rotor to power up."
 msgstr "Laikas (milisekundėmis) rotoriui įsijungti."
 
-#: src/input/mpegts/iptv/iptv.c:882
+#: src/input/mpegts/iptv/iptv.c:918
 msgid "Time (in minutes) to re-fetch the playlist."
 msgstr "Laikas (minutėmis) pakartotinai atsiųsti grojaraštį."
 
@@ -7359,11 +7419,11 @@ msgstr "Laikas (minutėmis) pakartotinai atsiųsti grojaraštį."
 msgid "Time Stamp Fix"
 msgstr "Laiko Spaudo Pataisa"
 
-#: src/dvr/dvr_db.c:643
+#: src/dvr/dvr_db.c:665
 msgid "Time missed"
 msgstr "Laikas praleistas"
 
-#: src/dvr/dvr_db.c:3325
+#: src/dvr/dvr_db.c:3380
 msgid "Time record caption"
 msgstr "Laiko įrašo antraštė"
 
@@ -7380,7 +7440,7 @@ msgstr "Laikas pradėti įrašinėti/laikas kada įrašymas pradėtas."
 msgid "Time to stop recording/time the recording stopped."
 msgstr "Laikas nustoti įrašinėti/laikas kada įrašymas baigėsi."
 
-#: src/config.c:2049
+#: src/config.c:2040
 msgid "Time update"
 msgstr "Laiko atnaujinimas"
 
@@ -7396,31 +7456,31 @@ msgstr "Pasibaigsiantis liakas (sekundės)"
 msgid "Timeout (secs)"
 msgstr "Pasibaigsiantis liakas (sekundės)"
 
-#: src/dvr/dvr_db.c:3326
+#: src/dvr/dvr_db.c:3381
 msgid "Timer-based automatic record caption."
 msgstr ""
 
-#: src/dvr/dvr_db.c:3317
+#: src/dvr/dvr_db.c:3372
 msgid "Timer-based automatic recording."
 msgstr ""
 
-#: src/tvhlog.c:164 src/timeshift.c:183
+#: src/tvhlog.c:166 src/timeshift.c:183
 msgid "Timeshift"
 msgstr "Laiko poslinkis"
 
-#: src/dvr/dvr_db.c:3095 src/dvr/dvr_db.c:3103 src/dvr/dvr_timerec.c:553
+#: src/dvr/dvr_db.c:3150 src/dvr/dvr_db.c:3158 src/dvr/dvr_timerec.c:553
 msgid "Title"
 msgstr "Pavadinimas"
 
-#: src/dvr/dvr_autorec.c:1033
+#: src/dvr/dvr_autorec.c:1037
 msgid "Title (regexp)"
 msgstr "Pavadinimas (regexp)"
 
-#: src/dvr/dvr_db.c:3104
+#: src/dvr/dvr_db.c:3159
 msgid "Title of the program (display only)."
 msgstr "Programos pavadinimas (tik rodymui)"
 
-#: src/dvr/dvr_db.c:3096
+#: src/dvr/dvr_db.c:3151
 msgid "Title of the program."
 msgstr "Programos pavadinimas."
 
@@ -7436,7 +7496,7 @@ msgstr "Perjungti detales"
 msgid "Tone burst"
 msgstr ""
 
-#: src/dvr/dvr_db.c:634
+#: src/dvr/dvr_db.c:656
 msgid "Too many data errors"
 msgstr "Perdaug duomenų klaidų"
 
@@ -7452,7 +7512,7 @@ msgstr "Visas šiame tinkle surastų multiplekserių skaičius."
 msgid "Total number of services found on this network."
 msgstr "Visas šiame tinkle surastų servisų skaičius."
 
-#: src/wizard.c:1004
+#: src/wizard.c:1012
 msgid "Total number of services found."
 msgstr "Visas surastų servisų skaičius."
 
@@ -7468,7 +7528,7 @@ msgstr "Visas servisų skaičius."
 msgid "Tourism / Travel"
 msgstr "Turizmas / Kelionės"
 
-#: src/tvhlog.c:778
+#: src/tvhlog.c:780
 msgid "Trace subsystems"
 msgstr ""
 
@@ -7480,7 +7540,7 @@ msgstr "Tradiciniai menai"
 msgid "Traditional music"
 msgstr "Tradicinė muzika"
 
-#: src/tvhlog.c:149
+#: src/tvhlog.c:150
 msgid "Transcode"
 msgstr "Perkoduoti"
 
@@ -7504,7 +7564,7 @@ msgstr "Transponderio ID"
 msgid "Transport Stream"
 msgstr "Transportavimo Srautas"
 
-#: src/input/mpegts/mpegts_mux.c:592
+#: src/input/mpegts/mpegts_mux.c:588
 msgid "Transport stream ID"
 msgstr "Transportavimo srauto ID"
 
@@ -7522,7 +7582,7 @@ msgstr "Ant"
 msgid "Tune before DiseqC"
 msgstr ""
 
-#: src/wizard.c:558
+#: src/wizard.c:566
 msgid "Tuner"
 msgstr "Tiuneris"
 
@@ -7546,11 +7606,11 @@ msgstr ""
 msgid "Turn off LNB when idle"
 msgstr "Išjungti LNB neveiksnumo būsenoje"
 
-#: src/config.c:2081
+#: src/config.c:2072
 msgid "Tvheadend server name"
 msgstr "Tvheadend serverio vardas"
 
-#: src/epggrab/module.c:137
+#: src/epggrab/module.c:138
 msgid "Type"
 msgstr "Tipas"
 
@@ -7574,20 +7634,20 @@ msgstr "UHD: ultra aukšta raiška"
 msgid "UPnP Protocol"
 msgstr "UPnP Protokolas"
 
-#: src/tvhlog.c:90 src/wizard.c:809 src/dvr/dvr_db.c:3377
-#: src/input/mpegts/iptv/iptv.c:845 src/input/mpegts/iptv/iptv_mux.c:139
+#: src/tvhlog.c:90 src/wizard.c:817 src/dvr/dvr_db.c:3432
+#: src/input/mpegts/iptv/iptv.c:881 src/input/mpegts/iptv/iptv_mux.c:139
 msgid "URL"
 msgstr "URL"
 
-#: src/wizard.c:810
+#: src/wizard.c:818
 msgid "URL of the M3U playlist."
 msgstr "M3U grojaraščio URL."
 
-#: src/main.c:850
+#: src/main.c:849
 msgid "URL with the SAT>IP server XML location"
 msgstr ""
 
-#: src/dvr/dvr_db.c:3378
+#: src/dvr/dvr_db.c:3433
 msgid "URL."
 msgstr "URL."
 
@@ -7595,139 +7655,155 @@ msgstr "URL."
 msgid "USALS"
 msgstr "USALS"
 
-#: src/input/mpegts/dvb_support.c:462
+#: src/input/mpegts/dvb_support.c:481
 msgid "UTC"
 msgstr "UTC"
 
-#: src/input/mpegts/dvb_support.c:479
+#: src/input/mpegts/dvb_support.c:498
 msgid "UTC+ 1"
 msgstr "UTC+ 1"
 
-#: src/input/mpegts/dvb_support.c:480
+#: src/input/mpegts/dvb_support.c:499
 msgid "UTC+ 2"
 msgstr "UTC+ 2"
 
-#: src/input/mpegts/dvb_support.c:481
+#: src/input/mpegts/dvb_support.c:500
 msgid "UTC+ 3"
 msgstr "UTC+ 3"
 
-#: src/input/mpegts/dvb_support.c:482
+#: src/input/mpegts/dvb_support.c:501
 msgid "UTC+ 4"
 msgstr "UTC+ 4"
 
-#: src/input/mpegts/dvb_support.c:483
+#: src/input/mpegts/dvb_support.c:502
 msgid "UTC+ 4:30"
 msgstr "UTC+ 4:30"
 
-#: src/input/mpegts/dvb_support.c:484
+#: src/input/mpegts/dvb_support.c:503
 msgid "UTC+ 5"
 msgstr "UTC+ 5"
 
-#: src/input/mpegts/dvb_support.c:485
+#: src/input/mpegts/dvb_support.c:504
 msgid "UTC+ 5:30"
 msgstr "UTC+ 5:30"
 
-#: src/input/mpegts/dvb_support.c:486
+#: src/input/mpegts/dvb_support.c:505
 msgid "UTC+ 5:45"
 msgstr "UTC+ 5:45"
 
-#: src/input/mpegts/dvb_support.c:487
+#: src/input/mpegts/dvb_support.c:506
 msgid "UTC+ 6"
 msgstr "UTC+ 6"
 
-#: src/input/mpegts/dvb_support.c:488
+#: src/input/mpegts/dvb_support.c:507
 msgid "UTC+ 6:30"
 msgstr "UTC+ 6:30"
 
-#: src/input/mpegts/dvb_support.c:489
+#: src/input/mpegts/dvb_support.c:508
 msgid "UTC+ 7"
 msgstr "UTC+ 7"
 
-#: src/input/mpegts/dvb_support.c:490
+#: src/input/mpegts/dvb_support.c:509
 msgid "UTC+ 8"
 msgstr "UTC+ 8"
 
-#: src/input/mpegts/dvb_support.c:491
+#: src/input/mpegts/dvb_support.c:510
 msgid "UTC+ 8:45"
 msgstr "UTC+ 8:45"
 
-#: src/input/mpegts/dvb_support.c:492
+#: src/input/mpegts/dvb_support.c:511
 msgid "UTC+ 9"
 msgstr "UTC+ 9"
 
-#: src/input/mpegts/dvb_support.c:493
+#: src/input/mpegts/dvb_support.c:512
 msgid "UTC+ 9:30"
 msgstr "UTC+ 9:30"
 
-#: src/input/mpegts/dvb_support.c:494
+#: src/input/mpegts/dvb_support.c:513
 msgid "UTC+10"
 msgstr "UTC+10"
 
-#: src/input/mpegts/dvb_support.c:495
+#: src/input/mpegts/dvb_support.c:514
 msgid "UTC+10:30"
 msgstr "UTC+10:30"
 
-#: src/input/mpegts/dvb_support.c:496
+#: src/input/mpegts/dvb_support.c:515
 msgid "UTC+11"
 msgstr "UTC+11"
 
-#: src/input/mpegts/dvb_support.c:464
+#: src/input/mpegts/dvb_support.c:516
+msgid "UTC+12"
+msgstr ""
+
+#: src/input/mpegts/dvb_support.c:517
+msgid "UTC+12:45"
+msgstr ""
+
+#: src/input/mpegts/dvb_support.c:518
+msgid "UTC+13"
+msgstr ""
+
+#: src/input/mpegts/dvb_support.c:519
+msgid "UTC+14"
+msgstr ""
+
+#: src/input/mpegts/dvb_support.c:483
 msgid "UTC- 1"
 msgstr "UTC- 1"
 
-#: src/input/mpegts/dvb_support.c:465
+#: src/input/mpegts/dvb_support.c:484
 msgid "UTC- 2"
 msgstr "UTC- 2"
 
-#: src/input/mpegts/dvb_support.c:466
+#: src/input/mpegts/dvb_support.c:485
 msgid "UTC- 2:30"
 msgstr "UTC- 2:30"
 
-#: src/input/mpegts/dvb_support.c:467
+#: src/input/mpegts/dvb_support.c:486
 msgid "UTC- 3"
 msgstr "UTC- 3"
 
-#: src/input/mpegts/dvb_support.c:468
+#: src/input/mpegts/dvb_support.c:487
 msgid "UTC- 3:30"
 msgstr "UTC- 3:30"
 
-#: src/input/mpegts/dvb_support.c:469
+#: src/input/mpegts/dvb_support.c:488
 msgid "UTC- 4"
 msgstr "UTC- 4"
 
-#: src/input/mpegts/dvb_support.c:470
+#: src/input/mpegts/dvb_support.c:489
 msgid "UTC- 4:30"
 msgstr "UTC- 4:30"
 
-#: src/input/mpegts/dvb_support.c:471
+#: src/input/mpegts/dvb_support.c:490
 msgid "UTC- 5"
 msgstr "UTC- 5"
 
-#: src/input/mpegts/dvb_support.c:472
+#: src/input/mpegts/dvb_support.c:491
 msgid "UTC- 6"
 msgstr "UTC- 6"
 
-#: src/input/mpegts/dvb_support.c:473
+#: src/input/mpegts/dvb_support.c:492
 msgid "UTC- 7"
 msgstr "UTC- 7"
 
-#: src/input/mpegts/dvb_support.c:474
+#: src/input/mpegts/dvb_support.c:493
 msgid "UTC- 8"
 msgstr "UTC- 8"
 
-#: src/input/mpegts/dvb_support.c:475
+#: src/input/mpegts/dvb_support.c:494
 msgid "UTC- 9"
 msgstr "UTC- 9"
 
-#: src/input/mpegts/dvb_support.c:476
+#: src/input/mpegts/dvb_support.c:495
 msgid "UTC- 9:30"
 msgstr "UTC- 9:30"
 
-#: src/input/mpegts/dvb_support.c:477
+#: src/input/mpegts/dvb_support.c:496
 msgid "UTC-10"
 msgstr "UTC-10"
 
-#: src/input/mpegts/dvb_support.c:478
+#: src/input/mpegts/dvb_support.c:497
 msgid "UTC-11"
 msgstr "UTC-11"
 
@@ -7736,23 +7812,23 @@ msgstr "UTC-11"
 msgid "UUID"
 msgstr "UUID"
 
-#: src/htsp_server.c:1410
+#: src/htsp_server.c:1416
 msgid "Unable to get system UTC time"
 msgstr "Nepavyksta gauti sistemos UTC laiko"
 
-#: src/htsp_server.c:1403
+#: src/htsp_server.c:1409
 msgid "Unable to get system local time"
 msgstr "Nepavyksta gauti sistemos vietinio laiko"
 
-#: src/htsp_server.c:1400
+#: src/htsp_server.c:1406
 msgid "Unable to get system time"
 msgstr "Nepavyksta gauti sistemos laiko"
 
-#: src/htsp_server.c:718
+#: src/htsp_server.c:722
 msgid "Unable to open file"
 msgstr "Nepavyksta atidaryti failo"
 
-#: src/htsp_server.c:1378
+#: src/htsp_server.c:1384
 msgid "Unable to stat path"
 msgstr ""
 
@@ -7764,7 +7840,7 @@ msgstr "Nepriskirta"
 msgid "Uncommitted first"
 msgstr "Nepriskirti pirmiausia"
 
-#: src/tvhlog.c:155
+#: src/tvhlog.c:157
 msgid "Unicable (EN50494)"
 msgstr "Unicable (EN50494)"
 
@@ -7788,7 +7864,7 @@ msgstr "Unicable II komutatorius (universalus LNB)"
 msgid "Unicable type"
 msgstr "Unicable tipas"
 
-#: src/profile.c:252 src/dvr/dvr_db.c:2517
+#: src/profile.c:252 src/dvr/dvr_db.c:2572
 msgid "Unimportant"
 msgstr "Nesvarbus"
 
@@ -7796,19 +7872,19 @@ msgstr "Nesvarbus"
 msgid "Universal LNB only"
 msgstr "Tik universalus LNB"
 
-#: src/satip/server.c:597
+#: src/satip/server.c:603
 msgid "Universally unique identifier. Read only."
 msgstr ""
 
-#: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:711
+#: src/epggrab/module.c:60 src/dvr/dvr_timerec.c:95 src/dvr/dvr_config.c:708
 msgid "Unknown"
 msgstr "Nežinoma"
 
-#: src/htsp_server.c:2718
+#: src/htsp_server.c:2724
 msgid "Unknown file"
 msgstr "Nežinomas failas"
 
-#: src/streaming.c:486
+#: src/streaming.c:488
 #, c-format
 msgid "Unknown reason (%i)"
 msgstr "Nežinoma priežastis (%i)"
@@ -7845,15 +7921,15 @@ msgstr "Atnaujinti kanalo pavadinimą"
 msgid "Update channel number"
 msgstr "Atnaujinti kanalo numerį"
 
-#: src/dvr/dvr_config.c:778
+#: src/dvr/dvr_config.c:775
 msgid "Update disabled"
 msgstr "Atnaujinimas išjungtas"
 
-#: src/config.c:2291
+#: src/config.c:2282
 msgid "Update time"
 msgstr "Atnaujinimo laikas"
 
-#: src/config.c:2314
+#: src/config.c:2305
 msgid "Update tolerance (ms)"
 msgstr "Atnaujinimo tolerancija (ms)"
 
@@ -7872,26 +7948,26 @@ msgid ""
 "the first movement is requested."
 msgstr ""
 
-#: src/main.c:499
+#: src/main.c:498
 #, c-format
 msgid "Usage: %s [OPTIONS]\n"
 msgstr "Panaudojimas: %s [NUOSTATOS]\n"
 
-#: src/input/mpegts/mpegts_mux.c:666
+#: src/input/mpegts/mpegts_mux.c:662
 msgid "Use AC-3 detection on the mux."
 msgstr ""
 
-#: src/channels.c:491 src/dvr/dvr_config.c:1002
+#: src/channels.c:491 src/dvr/dvr_config.c:999
 msgid ""
 "Use EITp/f to decide event start/stop. This is also known as \"Accurate "
 "Recording\". See Help for details."
 msgstr ""
 
-#: src/channels.c:490 src/dvr/dvr_config.c:1001
+#: src/channels.c:490 src/dvr/dvr_config.c:998
 msgid "Use EPG running state"
 msgstr ""
 
-#: src/config.c:2122
+#: src/config.c:2113
 msgid "Use HTTP digest authentication"
 msgstr "Naudoti HTTP digest autentifikavimą"
 
@@ -7899,11 +7975,11 @@ msgstr "Naudoti HTTP digest autentifikavimą"
 msgid "Use WEBM format."
 msgstr "Naudoti WEBM formatą."
 
-#: src/dvr/dvr_config.c:1280
+#: src/dvr/dvr_config.c:1277
 msgid "Use Windows-compatible filenames"
 msgstr "Su Windows suderinami failų vardai"
 
-#: src/main.c:866
+#: src/main.c:865
 msgid "Use XSPF playlist instead of M3U"
 msgstr ""
 
@@ -7965,7 +8041,7 @@ msgstr ""
 msgid "Use original"
 msgstr "Naudoti orginalą"
 
-#: src/config.c:2195
+#: src/config.c:2186
 msgid "Use packet backlog"
 msgstr ""
 
@@ -7981,28 +8057,28 @@ msgstr "Naudoti žymą tik vidiniam naudojimui (neperteikti klientams)."
 msgid "Use the provider's service IDs as channel numbers."
 msgstr "Naudoti tiekėjo serviso ID kaip kanalų numerius."
 
-#: src/dvr/dvr_config.c:1104
+#: src/dvr/dvr_config.c:1101
 msgid "Use this character set when setting filenames."
 msgstr "Naudoti šį simbolių rinkinį nustatant failų vardus."
 
-#: src/dvr/dvr_config.c:1084
+#: src/dvr/dvr_config.c:1081
 msgid "Use x amount of storage space."
 msgstr "Naudoti x kiekį disko vietos."
 
-#: src/streaming.c:446 src/dvr/dvr_db.c:625
+#: src/streaming.c:446 src/dvr/dvr_db.c:645
 msgid "User access error"
 msgstr "Vartotojo prieigos klaida"
 
-#: src/htsp_server.c:1606 src/htsp_server.c:1703 src/htsp_server.c:1842
-#: src/htsp_server.c:1923 src/htsp_server.c:2069 src/htsp_server.c:2107
-#: src/htsp_server.c:2117 src/htsp_server.c:2143 src/htsp_server.c:2181
-#: src/htsp_server.c:2218 src/htsp_server.c:2228 src/htsp_server.c:2253
-#: src/htsp_server.c:2289 src/htsp_server.c:2332 src/htsp_server.c:2340
-#: src/htsp_server.c:2393 src/htsp_server.c:2702
+#: src/htsp_server.c:1612 src/htsp_server.c:1709 src/htsp_server.c:1848
+#: src/htsp_server.c:1929 src/htsp_server.c:2075 src/htsp_server.c:2113
+#: src/htsp_server.c:2123 src/htsp_server.c:2149 src/htsp_server.c:2187
+#: src/htsp_server.c:2224 src/htsp_server.c:2234 src/htsp_server.c:2259
+#: src/htsp_server.c:2295 src/htsp_server.c:2338 src/htsp_server.c:2346
+#: src/htsp_server.c:2399 src/htsp_server.c:2708
 msgid "User does not have access"
 msgstr "Vartotojas neturi prieigos"
 
-#: src/htsp_server.c:1956
+#: src/htsp_server.c:1962
 msgid "User does not have access to channel"
 msgstr "Vartotojas neturi prieigos prie kanalo"
 
@@ -8010,23 +8086,23 @@ msgstr "Vartotojas neturi prieigos prie kanalo"
 msgid "User icon"
 msgstr "Vartotojo ikona"
 
-#: src/access.c:1461 src/access.c:1655 src/config.c:2090
+#: src/access.c:1461 src/access.c:1655 src/config.c:2081
 msgid "User interface level"
 msgstr "Vartotojo interfeiso lygis"
 
-#: src/config.c:2113
+#: src/config.c:2104
 msgid "User interface quick tips (tooltips)"
 msgstr ""
 
-#: src/config.c:2256
+#: src/config.c:2247
 msgid "User language"
 msgstr "Vartotojo kalba"
 
-#: src/streaming.c:448 src/dvr/dvr_db.c:627
+#: src/streaming.c:448 src/dvr/dvr_db.c:647
 msgid "User limit reached"
 msgstr "Pasiektas vartotojo limitas"
 
-#: src/wizard.c:395
+#: src/wizard.c:403
 msgid "User login"
 msgstr "Vartotojo prisijungimas"
 
@@ -8034,7 +8110,7 @@ msgstr "Vartotojo prisijungimas"
 msgid "User request"
 msgstr "Vartotojo užklausa"
 
-#: src/access.c:1626 src/access.c:2039 src/wizard.c:434
+#: src/access.c:1626 src/access.c:2039 src/wizard.c:442
 #: src/descrambler/cwc.c:1833
 msgid "Username"
 msgstr "Vartotojo vardas"
@@ -8069,7 +8145,7 @@ msgstr "Estradinės"
 msgid "Verify the SSL certificate."
 msgstr "Patikrinti SSL sertifikatą."
 
-#: src/input/mpegts/iptv/iptv.c:891
+#: src/input/mpegts/iptv/iptv.c:927
 msgid "Verify the peer's SSL."
 msgstr ""
 
@@ -8126,7 +8202,7 @@ msgstr ""
 msgid "View all"
 msgstr "Rodyti viską"
 
-#: src/streaming.c:580
+#: src/streaming.c:582
 msgid "Visually impaired commentary/audio description"
 msgstr "Vaizdiškai papildyti komentarai/audio apibūdinimai"
 
@@ -8158,19 +8234,19 @@ msgstr "WEBTV profilis H264/AAC/Matroska"
 msgid "WEBTV profile VP8/Vorbis/WEBM"
 msgstr "WEBTV profilis VP8/Vorbis/WEBM"
 
-#: src/dvr/dvr_db.c:613
+#: src/dvr/dvr_db.c:633
 msgid "Waiting for EPG running flag"
 msgstr "Laukiama EPG paleisties vėliavos"
 
-#: src/dvr/dvr_db.c:605
+#: src/dvr/dvr_db.c:625
 msgid "Waiting for program start"
 msgstr "Laukiama programos pradžios"
 
-#: src/dvr/dvr_db.c:603
+#: src/dvr/dvr_db.c:623
 msgid "Waiting for stream"
 msgstr "Laukiama srauto"
 
-#: src/input/mpegts/mpegts_input.c:327
+#: src/input/mpegts/mpegts_input.c:338
 msgid ""
 "Wake up the linked input whenever this adapter is used. The subscriptions "
 "are named as \"keep\". Note that this isn't normally needed, and is here "
@@ -8194,7 +8270,7 @@ msgstr "Silpnas srautas"
 msgid "Weather report"
 msgstr "Orai"
 
-#: src/tvhlog.c:163
+#: src/tvhlog.c:165
 msgid "Web User Interface"
 msgstr "Naršyklinis Vartotojo Interfeisas"
 
@@ -8218,7 +8294,7 @@ msgstr "Naršyklinio interfeiso tema."
 msgid "Web theme"
 msgstr "Naršyklės tema"
 
-#: src/config.c:2041
+#: src/config.c:2032
 msgid "Web user interface"
 msgstr "Naršyklinis vartotojo interfeisas"
 
@@ -8226,7 +8302,7 @@ msgstr "Naršyklinis vartotojo interfeisas"
 msgid "Wed"
 msgstr "Tre"
 
-#: src/wizard.c:243 src/wizard.c:457
+#: src/wizard.c:243 src/wizard.c:465
 msgid "Welcome - Tvheadend - your TV streaming server and video recorder"
 msgstr "Sveiki - Tvheadend - Jūsų TV transliavimo serveris ir vaizdo magnetofonas"
 
@@ -8252,36 +8328,43 @@ msgid ""
 "issues for SAT>IP (limited number of PID filters)."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1022
+#: src/dvr/dvr_autorec.c:1026
 msgid ""
 "When specified, this setting overrides the subdirectory rules (except the "
 "base directory) defined in the DVR configuration and puts all recordings "
 "done by this entry into the subdirectory named here. See Help for more info."
 msgstr ""
 
-#: src/input/mpegts/iptv/iptv.c:747
+#: src/input/mpegts/iptv/iptv.c:772
 msgid ""
 "When streaming a service (via http or htsp) Tvheadend will use the network "
 "with the highest streaming priority set here. See Help for details."
 msgstr ""
 
-#: src/dvr/dvr_autorec.c:1043
+#: src/dvr/dvr_autorec.c:1047
 msgid ""
 "When the fulltext is checked, the title pattern is matched against title, "
 "subtitle, summary and description."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:241
+#: src/input/mpegts/mpegts_service.c:249
 msgid "When the service was first identified and recorded."
 msgstr ""
 
-#: src/input/mpegts/mpegts_service.c:249
+#: src/input/mpegts/mpegts_service.c:257
 msgid "When the service was last seen during a mux scan."
 msgstr ""
 
 #: src/epg.c:2343
 msgid "Winter sports"
 msgstr "Žiemos sportas"
+
+#: src/timeshift.c:287
+msgid ""
+"With \"RAM only\" enabled, and when \"Maximum RAM size\" is reached, remove "
+"the oldest segment in the buffer instead of replacing it completely. Note, "
+"this may reduce the amount of rewind time."
+msgstr ""
 
 #: src/access.c:1852 src/access.c:2071 src/input/mpegts/mpegts_network.c:304
 msgid "Wizard"
@@ -8305,7 +8388,7 @@ msgid ""
 "database (re-read on next startup). Set to 0 to disable."
 msgstr ""
 
-#: src/tvhlog.c:162
+#: src/tvhlog.c:164
 msgid "XMLTV EPG Import"
 msgstr "XMLTV EPG Importas"
 
@@ -8349,16 +8432,16 @@ msgstr "hp: nvenc(h264 / h265)"
 msgid "hq: nvenc(h264 / h265)"
 msgstr "hq: nvenc(h264 / h265)"
 
-#: src/dvr/dvr_db.c:2932
+#: src/dvr/dvr_db.c:2987
 msgid "hrs"
 msgstr "val"
 
-#: src/main.c:927
+#: src/main.c:926
 #, c-format
 msgid "invalid option specified [%s]"
 msgstr ""
 
-#: src/tvhlog.c:148
+#: src/tvhlog.c:149
 msgid "libav / ffmpeg"
 msgstr "libav / ffmpeg"
 
@@ -8378,15 +8461,15 @@ msgstr "llhq: nvenc(h264 / h265)"
 msgid "medium: h264 / h265 / qsv(h264 / h265)"
 msgstr "vidutinis: h264 / h265 / qsv(h264 / h265)"
 
-#: src/dvr/dvr_db.c:2933
+#: src/dvr/dvr_db.c:2988
 msgid "min"
 msgstr "min"
 
-#: src/dvr/dvr_db.c:2934
+#: src/dvr/dvr_db.c:2989
 msgid "mins"
 msgstr "minuės"
 
-#: src/main.c:936
+#: src/main.c:935
 #, c-format
 msgid "option %s requires a value"
 msgstr "%s parinkčiai būtina reikšmė"
@@ -8407,7 +8490,7 @@ msgstr "lėtesnis: h264 / h265 / qsv(h264)"
 msgid "superfast: h264 / h265"
 msgstr "super greitas: h264 / h265"
 
-#: src/main.c:899
+#: src/main.c:898
 msgid "tsfile input (mux file)"
 msgstr ""
 

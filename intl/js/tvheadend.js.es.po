@@ -12,8 +12,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Tvheadend\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-12-16 18:36+0100\n"
-"PO-Revision-Date: 2017-03-09 12:12+0000\n"
+"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"PO-Revision-Date: 2017-06-01 18:19+0000\n"
 "Last-Translator: Pablo Rodríguez <trujulu@gmail.com>\n"
 "Language-Team: Spanish (http://www.transifex.com/tvheadend-foundation-cic/tvheadend/language/es/)\n"
 "MIME-Version: 1.0\n"
@@ -456,7 +456,7 @@ msgstr "Tipo de Contenido"
 
 #: src/webui/static/app/status.js:430
 msgid "Continuity Errors"
-msgstr "Errores de continuidad"
+msgstr "Errores de Continuidad"
 
 #: src/webui/static/app/idnode.js:1456
 msgid "Create"
@@ -1783,7 +1783,7 @@ msgstr "Cambio de hora"
 #: src/webui/static/app/epg.js:522 src/webui/static/app/epg.js:523
 #: src/webui/static/app/epg.js:1066 src/webui/static/app/status.js:106
 msgid "Title"
-msgstr "Cliente"
+msgstr "Título"
 
 #: src/webui/static/app/i18n-post.js:125
 msgid "Today"
