@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-29 21:07+0200\n"
+"POT-Creation-Date: 2017-06-13 17:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -261,7 +261,7 @@ msgstr ""
 msgid "Bandwidth (kb/s)"
 msgstr ""
 
-#: src/webui/static/app/status.js:732 src/webui/static/app/status.js:825
+#: src/webui/static/app/status.js:753 src/webui/static/app/status.js:846
 msgid "Bandwidth monitor"
 msgstr ""
 
@@ -428,7 +428,7 @@ msgstr ""
 msgid "Comment"
 msgstr ""
 
-#: src/webui/static/app/status.js:781
+#: src/webui/static/app/status.js:802
 msgid "Compression ratio"
 msgstr ""
 
@@ -440,7 +440,7 @@ msgstr ""
 msgid "Configuration"
 msgstr ""
 
-#: src/webui/static/app/status.js:673
+#: src/webui/static/app/status.js:694
 msgid "Connections"
 msgstr ""
 
@@ -662,7 +662,7 @@ msgstr ""
 msgid "Electronic Program Guide"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1049
+#: src/webui/static/app/tvheadend.js:1056
 msgid "Enable debug output"
 msgstr ""
 
@@ -816,9 +816,9 @@ msgid "HDTV"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:1209 src/webui/static/app/idnode.js:2052
-#: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2877
+#: src/webui/static/app/idnode.js:2439 src/webui/static/app/idnode.js:2879
 #: src/webui/static/app/epg.js:914 src/webui/static/app/status.js:193
-#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:636
+#: src/webui/static/app/status.js:486 src/webui/static/app/status.js:657
 #: src/webui/static/app/servicemapper.js:53
 msgid "Help"
 msgstr ""
@@ -843,7 +843,7 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: src/webui/static/app/status.js:616
+#: src/webui/static/app/status.js:619
 msgid "IP Address"
 msgstr ""
 
@@ -855,6 +855,10 @@ msgstr ""
 msgid "IP Blocking Records"
 msgstr ""
 
+#: src/webui/static/app/status.js:625
+msgid "IP Port"
+msgstr ""
+
 #: src/webui/static/app/servicemapper.js:17
 msgid "Ignored"
 msgstr ""
@@ -863,7 +867,7 @@ msgstr ""
 msgid "Image Cache"
 msgstr ""
 
-#: src/webui/static/app/status.js:779
+#: src/webui/static/app/status.js:800
 msgid "In"
 msgstr ""
 
@@ -871,7 +875,7 @@ msgstr ""
 msgid "Index"
 msgstr ""
 
-#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:869
+#: src/webui/static/app/status.js:372 src/webui/static/app/status.js:890
 msgid "Input"
 msgstr ""
 
@@ -1202,7 +1206,7 @@ msgstr ""
 msgid "Other Stream Filters"
 msgstr ""
 
-#: src/webui/static/app/status.js:780
+#: src/webui/static/app/status.js:801
 msgid "Out"
 msgstr ""
 
@@ -1222,7 +1226,7 @@ msgstr ""
 msgid "Page"
 msgstr ""
 
-#: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2652
+#: src/webui/static/app/idnode.js:2469 src/webui/static/app/idnode.js:2654
 #: src/webui/static/app/epg.js:169
 msgid "Parameters"
 msgstr ""
@@ -1420,7 +1424,7 @@ msgid "Reset all filters (show all)"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:1777 src/webui/static/app/idnode.js:2274
-#: src/webui/static/app/idnode.js:2810
+#: src/webui/static/app/idnode.js:2812
 msgid "Revert pending changes (marked with red border)"
 msgstr ""
 
@@ -1441,7 +1445,7 @@ msgid "Saturday"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:1120 src/webui/static/app/idnode.js:1752
-#: src/webui/static/app/idnode.js:2254 src/webui/static/app/idnode.js:2791
+#: src/webui/static/app/idnode.js:2254 src/webui/static/app/idnode.js:2793
 msgid "Save"
 msgstr ""
 
@@ -1450,7 +1454,7 @@ msgid "Save & Next"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:1750 src/webui/static/app/idnode.js:2252
-#: src/webui/static/app/idnode.js:2789
+#: src/webui/static/app/idnode.js:2791
 msgid "Save pending changes (marked with red border)"
 msgstr ""
 
@@ -1496,6 +1500,14 @@ msgstr ""
 
 #: src/webui/static/app/i18n-post.js:28
 msgid "September"
+msgstr ""
+
+#: src/webui/static/app/status.js:644
+msgid "Server Address"
+msgstr ""
+
+#: src/webui/static/app/status.js:650
+msgid "Server Port"
 msgstr ""
 
 #: src/webui/static/app/mpegts.js:352 src/webui/static/app/status.js:120
@@ -1568,7 +1580,7 @@ msgstr ""
 msgid "Start wizard"
 msgstr ""
 
-#: src/webui/static/app/status.js:628
+#: src/webui/static/app/status.js:637
 msgid "Started"
 msgstr ""
 
@@ -1576,7 +1588,7 @@ msgstr ""
 msgid "State"
 msgstr ""
 
-#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:683
+#: src/webui/static/app/dvr.js:63 src/webui/static/app/status.js:704
 msgid "Status"
 msgstr ""
 
@@ -1818,17 +1830,17 @@ msgstr ""
 msgid "Tune to the over-the-air EPG muxes to grab new events now"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1024
+#: src/webui/static/app/tvheadend.js:1031
 msgid "Tvheadend Web-Panel"
 msgstr ""
 
-#: src/webui/static/app/tvheadend.js:1045
+#: src/webui/static/app/tvheadend.js:1052
 msgid "Tvheadend log"
 msgstr ""
 
 #: src/webui/static/app/caclient.js:48 src/webui/static/app/esfilter.js:32
 #: src/webui/static/app/mpegts.js:74 src/webui/static/app/mpegts.js:167
-#: src/webui/static/app/status.js:610
+#: src/webui/static/app/status.js:613
 msgid "Type"
 msgstr ""
 
@@ -1845,7 +1857,7 @@ msgid "Uncorrected Blocks"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:1779 src/webui/static/app/idnode.js:2276
-#: src/webui/static/app/idnode.js:2812
+#: src/webui/static/app/idnode.js:2814
 msgid "Undo"
 msgstr ""
 
@@ -1865,7 +1877,7 @@ msgstr ""
 msgid "Used by tvheadend"
 msgstr ""
 
-#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:622
+#: src/webui/static/app/status.js:99 src/webui/static/app/status.js:631
 msgid "Username"
 msgstr ""
 
