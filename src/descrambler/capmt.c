@@ -1409,7 +1409,7 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
     uint16_t pid     = sbuf_peek_u16(sb, offset + 4);
     uint32_t provid  = sbuf_peek_u32(sb, offset + 6);
     uint32_t ecmtime = sbuf_peek_u32(sb, offset + 10);
-    int offset2      = offset + 18;
+    int offset2      = offset + 14;
     char *cardsystem = capmt_peek_str(sb, &offset2);
     char *reader     = capmt_peek_str(sb, &offset2);
     char *from       = capmt_peek_str(sb, &offset2);
