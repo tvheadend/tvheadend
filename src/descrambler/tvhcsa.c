@@ -312,32 +312,20 @@ void
 tvhcsa_destroy ( tvhcsa_t *csa )
 {
 #if ENABLE_DVBCSA
-  if (csa->csa_key_odd) {
+  if (csa->csa_key_odd)
     dvbcsa_bs_key_free(csa->csa_key_odd);
-    csa->csa_key_odd = NULL;
-  }
-  if (csa->csa_key_even) {
+  if (csa->csa_key_even)
     dvbcsa_bs_key_free(csa->csa_key_even);
-    csa->csa_key_even = NULL;
-  }
-  if (csa->csa_tsbbatch_odd) {
+  if (csa->csa_tsbbatch_odd)
     free(csa->csa_tsbbatch_odd);
-    csa->csa_tsbbatch_odd = NULL;
-  }
-  if (csa->csa_tsbbatch_even) {
+  if (csa->csa_tsbbatch_even)
     free(csa->csa_tsbbatch_even);
-    csa->csa_tsbbatch_even = NULL;
-  }
 #else
-  if (csa->csa_keys) {
+  if (csa->csa_keys)
     free_key_struct(csa->csa_keys);
-    csa->csa_keys = NULL;
-  }
 #endif
-  if (csa->csa_tsbcluster) {
+  if (csa->csa_tsbcluster)
     free(csa->csa_tsbcluster);
-    csa->csa_tsbcluster = NULL;
-  }
   if (csa->csa_priv) {
     switch (csa->csa_type) {
     case DESCRAMBLER_CSA_CBC:
@@ -354,8 +342,6 @@ tvhcsa_destroy ( tvhcsa_t *csa )
     default:
       assert(0);
     }
-    csa->csa_priv = NULL;
   }
-  csa->csa_type   = 0;
-  csa->csa_keylen = 0;
+  memset(csa, 0, sizeof(*csa));
 }

@@ -44,6 +44,7 @@ typedef struct th_descrambler_data {
   int64_t dd_timestamp;
   sbuf_t dd_sbuf;
   th_descrambler_key_t *dd_key;
+  uint8_t dd_key_changed;
 } th_descrambler_data_t;
 
 typedef struct th_descrambler_hint {
@@ -136,13 +137,14 @@ descrambler_data_append(th_descrambler_runtime_t *dr, const uint8_t *tsb, int le
 }
 
 static void
-descrambler_data_add_key(th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, int head)
+descrambler_data_add_key(th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, int change, int head)
 {
   th_descrambler_data_t *dd;
 
   dd = calloc(1, sizeof(*dd));
   dd->dd_timestamp = mclk();
   dd->dd_key = tk;
+  dd->dd_key_changed = change;
   debug2("%p: data %s key %d, timestamp %ld", dr, head ? "insert" : "append", tk->key_pid, dd->dd_timestamp);
   if (head)
     TAILQ_INSERT_HEAD(&dr->dr_queue, dd, dd_link);
@@ -619,6 +621,19 @@ descrambler_change_keystate( th_descrambler_t *td, th_descrambler_keystate_t key
     pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
+static struct strtab keytypetab[] = {
+  { "CSA",        DESCRAMBLER_CSA_CBC },
+  { "DES",        DESCRAMBLER_DES_NCB },
+  { "AES EBC",    DESCRAMBLER_AES_ECB },
+  { "AES128 EBC", DESCRAMBLER_AES128_ECB },
+};
+
+const char *
+descrambler_keytype2str( th_descrambler_keystate_t keytype )
+{
+  return val2str(keytype, keytypetab) ?: "INVALID";
+}
+
 void
 descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
                    const uint8_t *even, const uint8_t *odd )
@@ -631,7 +646,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
   char pidname[16];
   const char *ktype;
   uint16_t pid2;
-  int j = 0, insert = 0;
+  int j, changed = 0, insert = 0;
 
   if (t == NULL || (dr = t->s_descramble) == NULL) {
     descrambler_change_keystate(td, DS_FORBIDDEN, 1);
@@ -654,8 +669,26 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     goto fin;
   }
 
-  if (tvhcsa_set_type(&tk->key_csa, type) < 0)
-    goto fin;
+  if (pid == 0)
+    pidname[0] = '\0';
+  else
+    snprintf(pidname, sizeof(pidname), "[%d]", pid);
+  ktype = descrambler_keytype2str(type);
+
+  if (tvhcsa_set_type(&tk->key_csa, type) < 0) {
+    if (tk->key_type_overwritten)
+      goto fin;
+    tk->key_type_overwritten = 1;
+    tvhwarn(LS_DESCRAMBLER,
+            "Overwrite key%s type from %s to %s for service \"%s\"",
+            pidname, descrambler_keytype2str(tk->key_csa.csa_type),
+            ktype, ((mpegts_service_t *)t)->s_dvb_svcname);
+    tvhcsa_destroy(&tk->key_csa);
+    tvhcsa_init(&tk->key_csa);
+    if (tvhcsa_set_type(&tk->key_csa, type) < 0)
+      goto fin;
+    tk->key_valid = 0;
+  }
 
   LIST_FOREACH(td2, &t->s_descramblers, td_service_link)
     if (td2 != td && td2->td_keystate == DS_RESOLVED) {
@@ -672,24 +705,10 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
       goto fin;
     }
 
-  if (pid == 0)
-    pidname[0] = '\0';
-  else
-    snprintf(pidname, sizeof(pidname), "[%d]", pid);
-  switch(type) {
-  case DESCRAMBLER_CSA_CBC:    ktype = "CSA"; break;
-  case DESCRAMBLER_DES_NCB:    ktype = "DES"; break;
-  case DESCRAMBLER_AES_ECB:    ktype = "AES EBC"; break;
-  case DESCRAMBLER_AES128_ECB: ktype = "AES128 EBC"; break;
-  default: abort();
-  }
-
   if (even && memcmp(empty, even, tk->key_csa.csa_keylen)) {
-    j++;
     memcpy(tk->key_data[0], even, tk->key_csa.csa_keylen);
     tk->key_pid = pid;
-    tk->key_changed |= 1;
-    tk->key_valid |= 0x40;
+    changed |= 1;
     if (tk->key_timestamp[0] == 0) insert |= 1;
     tk->key_timestamp[0] = mclk();
     if (dr->dr_ecm_start[0] < dr->dr_ecm_start[1]) {
@@ -705,8 +724,7 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     j++;
     memcpy(tk->key_data[1], odd, tk->key_csa.csa_keylen);
     tk->key_pid = pid;
-    tk->key_changed |= 2;
-    tk->key_valid |= 0x80;
+    changed |= 2;
     if (tk->key_timestamp[1] == 0) insert |= 2;
     tk->key_timestamp[1] = mclk();
     if (dr->dr_ecm_start[1] < dr->dr_ecm_start[0]) {
@@ -719,8 +737,8 @@ descrambler_keys ( th_descrambler_t *td, int type, uint16_t pid,
     odd = empty;
   }
 
-  if (j) {
-    descrambler_data_add_key(dr, tk, insert);
+  if (changed) {
+    descrambler_data_add_key(dr, tk, changed, insert);
     if (td->td_keystate != DS_RESOLVED)
       tvhdebug(LS_DESCRAMBLER,
                "Obtained %s keys%s from %s for service \"%s\"%s",
@@ -902,21 +920,22 @@ key_started( th_descrambler_runtime_t *dr, uint8_t ki )
 }
 
 static void
-key_flush( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, service_t *t )
+key_flush( th_descrambler_runtime_t *dr, th_descrambler_key_t *tk, uint8_t changed, service_t *t )
 {
-  if (tk->key_changed) {
-    debug2("%p: key[%d] flush", dr, tk->key_pid);
-    tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
-    /* update the keys */
-    if (tk->key_changed & 1) {
-      debug2("%p: even key[%d] set for decoder", dr, tk->key_pid);
-      tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0]);
-    }
-    if (tk->key_changed & 2) {
-      debug2("%p: odd key[%d] set for decoder", dr, tk->key_pid);
-      tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[1]);
-    }
-    tk->key_changed = 0;
+  if (!changed)
+    return;
+  debug2("%p: key[%d] flush", dr, tk->key_pid);
+  tk->key_csa.csa_flush(&tk->key_csa, (mpegts_service_t *)t);
+  /* update the keys */
+  if (changed & 1) {
+    debug2("%p: even key[%d] set for decoder", dr, tk->key_pid);
+    tvhcsa_set_key_even(&tk->key_csa, tk->key_data[0]);
+    tk->key_valid |= 0x40;
+  }
+  if (changed & 2) {
+    debug2("%p: odd key[%d] set for decoder", dr, tk->key_pid);
+    tvhcsa_set_key_odd(&tk->key_csa, tk->key_data[1]);
+    tk->key_valid |= 0x80;
   }
 }
 
@@ -1007,7 +1026,7 @@ descrambler_descramble ( service_t *t,
       tsb2 = sb->sb_data;
       len2 = sb->sb_ptr;
       if (dd->dd_key) {
-        key_flush(dr, dd->dd_key, t);
+        key_flush(dr, dd->dd_key, dd->dd_key_changed, t);
         dd->dd_key = NULL;
       }
       if (len2 == 0)
@@ -1163,7 +1182,7 @@ queue:
     }
   } else {
     if (dr->dr_skip || dr->dr_ca_count == 0)
-      ts_skip_packet2((mpegts_service_t *)dr->dr_service, tsb, len);
+      ts_skip_packet2((mpegts_service_t *)t, tsb, len);
     service_set_streaming_status_flags(t, TSS_NO_ACCESS);
   }
   if (flush_data)

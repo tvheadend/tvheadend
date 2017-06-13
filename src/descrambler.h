@@ -80,7 +80,7 @@ typedef struct th_descrambler_key {
   int64_t  key_timestamp[2];
   uint8_t  key_index;
   uint8_t  key_valid;
-  uint8_t  key_changed;
+  uint8_t  key_type_overwritten;
   tvhlog_limit_t key_loglimit;
 } th_descrambler_key_t;
 
@@ -174,6 +174,7 @@ void descrambler_init          ( void );
 void descrambler_done          ( void );
 void descrambler_change_keystate ( th_descrambler_t *t, th_descrambler_keystate_t state, int lock );
 const char *descrambler_keystate2str( th_descrambler_keystate_t keystate );
+const char *descrambler_keytype2str( th_descrambler_keystate_t keytype );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
