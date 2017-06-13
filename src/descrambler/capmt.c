@@ -323,7 +323,7 @@ capmt_oscam_netproto(capmt_t *capmt)
 static inline int
 capmt_include_elementary_stream(streaming_component_type_t type)
 {
-  return SCT_ISAV(type) || type == SCT_DVBSUB;
+  return SCT_ISAV(type) || type == SCT_DVBSUB || type == SCT_TELETEXT;
 }
 
 static void
