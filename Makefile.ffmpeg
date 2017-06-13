@@ -51,10 +51,10 @@ LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
 LIBX264_SHA1   = 8079e472b3af5d54a20a8907d364b615a67fa6f2
 
-LIBX265        = x265_2.1
+LIBX265        = x265_2.4
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = 37ed92b83dbe9e1420e1c226d35caeea16d4b0e4
+LIBX265_SHA1   = f8bfb348defa86fbfdce4dcc1d0c48c855e0e987
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
@@ -86,17 +86,17 @@ LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
 LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
 LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
-LIBMFX_HASH    = 9f4a84d73fb73d430f07a80cea3688c424439f6a
+LIBMFX_HASH    = e6fc25c974839dcbcf483edee01f51142ddc74f3
 LIBMFX         = mfx_dispatch-$(LIBMFX_HASH)
 LIBMFX_TB      = $(LIBMFX_HASH).tar.gz
 LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
-LIBMFX_SHA1    = 84dbdf4a6b409067e863eb9564bb2efdec6d39ce
-LIBMFX_DIFFS   = libmfx.linux.path.diff
+LIBMFX_SHA1    = 33dec0b054d842e8380eb31b97afe02d07d5c6fc
+LIBMFX_DIFFS   =
 
-FFMPEG         = ffmpeg-3.3
+FFMPEG         = ffmpeg-3.3.2
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 2590af8c754ce8d55745b1e5647e498bf271dc77
+FFMPEG_SHA1    = 584544ced449e4a05f17711da33d7c46fd72f2e4
 
 
 # ##############################################################################
