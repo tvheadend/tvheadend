@@ -511,13 +511,13 @@ linuxdvb_ca_ca_info_callback(void *arg, uint8_t slot_id, uint16_t session_num,
     linuxdvb_ca_t * lca = arg;
     uint32_t i, j;
     char buf[256];
-    size_t c = 0;
+    size_t c;
 
     dvbcam_unregister_cam(lca, 0);
     dvbcam_register_cam(lca, 0, ca_ids, ca_id_count);
 
     for (i = 0; i < ca_id_count; ) {
-      for (j = 0, buf[0] = '\0'; j < 4 && i < ca_id_count; i++, j++)
+      for (j = 0, c = 0; j < 4 && i < ca_id_count; i++, j++)
           tvh_strlcatf(buf, sizeof(buf), c, " %04X (%s)",
                        ca_ids[i], caid2name(ca_ids[i]));
       tvhinfo(LS_EN50221, "CAM slot %u supported CAIDs: %s", slot_id, buf);
