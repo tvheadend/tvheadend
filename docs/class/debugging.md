@@ -17,7 +17,7 @@ command-line parameters.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
@@ -28,7 +28,7 @@ Button     | Function
 
 ---
 
-###Subsystems
+### Subsystems
 
 The following options can be passed to tvheadend to provide detailed debugging 
 information while the application is running.

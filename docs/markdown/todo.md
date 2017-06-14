@@ -1,6 +1,6 @@
-##Things To Do on This Guide... 
+## Things To Do on This Guide... 
 
-####Work-in-progress notes
+#### Work-in-progress notes
 These are not part of the final product, obviously!
 
 They're just some of the areas I'm aware of that we need to close off before release

@@ -30,7 +30,7 @@ Numbering Button            | Function
 
 ---
 
-###Example
+### Example
 
 !['Add Channel Dialog'](static/img/doc/channel/add.png)
 

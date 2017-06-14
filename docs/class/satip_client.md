@@ -4,7 +4,7 @@ This panel displays all available SAT>IP client parameters.
 
 ---
 
-###Buttons
+### Buttons
 
 The following buttons are available:
 

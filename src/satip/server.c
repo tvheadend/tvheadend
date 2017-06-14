@@ -668,7 +668,7 @@ const idclass_t satip_server_class = {
       .type   = PT_BOOL,
       .id     = "satip_rewrite_pmt",
       .name   = N_("Rewrite PMT"),
-      .desc   = N_("Rewrite Program Association Table (PMT) packets "
+      .desc   = N_("Rewrite Program Map Table (PMT) packets "
                    "to only include information about the currently "
                    "streamed service."),
       .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),

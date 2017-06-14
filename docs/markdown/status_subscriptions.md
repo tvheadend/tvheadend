@@ -1,4 +1,4 @@
-##Status - Subscriptions
+## Status - Subscriptions
 
 This tab shows information about all active subscriptions to Tvheadend.
 
@@ -8,7 +8,7 @@ This is a read-only tab; nothing is configurable.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
@@ -18,7 +18,7 @@ Button     | Function
 
 ---
 
-####Grid Items
+#### Items
 
 The main grid items have the following functions:
 

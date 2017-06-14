@@ -31,7 +31,7 @@ Button         | Function
 
 ---
 
-###Example
+### Example
 
 !['Add Bouquet Dialog'](static/img/doc/bouquet/add.png)
 
@@ -39,7 +39,7 @@ Note that the URL must begin with `file://` or `http(s)://`.
 
 ---
 
-###Detaching Channels
+### Detaching Channels
 
 If you're mapping another service to a channel created by a bouquet you 
 must first detach the channel to prevent unexpected 

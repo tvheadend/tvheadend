@@ -5,7 +5,7 @@ This tab is used to configure the Electronic Program Guide (EPG)
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 

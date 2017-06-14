@@ -5,7 +5,7 @@ capmt (linux network dvbapi) protocols for so-called 'softcam' descrambling.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
@@ -23,7 +23,7 @@ Button              | Function
 
 ---
 
-###Connection Status
+### Connection Status
 
 The icon next to each entry within the grid indicates the client's 
 connection status.
@@ -36,7 +36,7 @@ Icon                                         | Description
 
 ---
 
-###Modes
+### Modes
 
 #### OSCam net protocol (rev >= 10389)
 
