@@ -1089,7 +1089,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "services_seen",
-      .name     = N_("# Services seen"),
+      .name     = N_("Services seen"),
       .desc     = N_("Total number of services seen."),
       .off      = offsetof(bouquet_t, bq_services_seen),
       .opts     = PO_RDONLY,
@@ -1097,7 +1097,7 @@ const idclass_t bouquet_class = {
     {
       .type     = PT_U32,
       .id       = "services_count",
-      .name     = N_("# Services"),
+      .name     = N_("Services"),
       .desc     = N_("Total number of services."),
       .get      = bouquet_class_services_count_get,
       .opts     = PO_RDONLY | PO_NOSAVE,

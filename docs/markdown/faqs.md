@@ -20,7 +20,7 @@ This usually happens when Tvheadend is installed incorrectly. As a start, make s
 
 Note: The above path only applies to Debian/Ubuntu systems others may differ.
 
-###Q: Why can't I see my tuners in Tvheadend's interface?
+### Q: Why can't I see my tuners in Tvheadend's interface?
 
 This is normally because they're not installed properly. Check syslog/dmesg (e.g. `dmesg | grep dvb`) and see that you have startup 
 messages that indicate whether or not the tuners have initialized properly. Similarly, check `/dev/dvb` to 
@@ -29,7 +29,7 @@ see if the block device files (i.e. the files used to communicate with the tuner
 The other major cause of this issue is when you're running Tvheadend as a user who doesn't have sufficient
 access to the tuners, such as not being a member of the *video* group.
 
-###Q: Access Tvheadend through HTTP proxy
+### Q: Access Tvheadend through HTTP proxy
 
 Use '--http_root' directive to specify the alternative http webroot (initial
 path prefix). The proxy server *MUST* pass this webroot path in the HTTP

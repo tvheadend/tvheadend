@@ -1,9 +1,9 @@
-##Before You Begin
+## Before You Begin
 
 There are some basic concepts that will make life much easier if you 
 understand them from the outset.
 
-###Hardware/Software Fundamentals
+### Hardware/Software Fundamentals
 
 * A **tuner** is the hardware (chipset) needed to interpret a digital 
 television signal and extract from it the programme stream. The tuner hardware
@@ -24,7 +24,7 @@ sends to the tuner upon initialisation. This is the cause of more problems
 than you'd imagine... if you find yourself in trouble, this is the first
 thing to check along with kernel support for your hardware.
 
-###Application/Tvheadend Fundamentals
+### Application/Tvheadend Fundamentals
 
 The Tvheadend software then sets up a series of configuration elements, and
 the way in which these interact determines how a TV signal ends up in front
@@ -52,7 +52,7 @@ catch-up IPTV services.
 and your client software think in terms of: _"I'd like to watch BBC One
 now, please"_.
 
-###Why The Complexity?
+### Why The Complexity?
 
 Simply, because 'BBC One' might exist in many different places... it 
 might have regional variations on multiple frequencies (so different services

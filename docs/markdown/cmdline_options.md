@@ -1,14 +1,14 @@
-##Command-line Options
+## Command-line Options
 
 Usage: `tvheadend [OPTIONS]`
 
-###Generic options
+### Generic options
 
 ```
   -h, --help                  Show this page
   -v, --version               Show version information
 ```
-###Service configuration
+### Service configuration
 ```
   -c, --config                Alternate configuration path
   -B, --nobackup              Don't backup configuration tree at upgrade
@@ -30,7 +30,7 @@ Usage: `tvheadend [OPTIONS]`
       --nosatip               Disable SAT>IP client
       --satip_xml             URL with the SAT>IP server XML location
 ```
-###Server connectivity
+### Server connectivity
 ```
   -6, --ipv6                  Listen on IPv6
   -b, --bindaddr              Specify bind address
@@ -41,7 +41,7 @@ Usage: `tvheadend [OPTIONS]`
       --useragent             Specify User-Agent header for the http client
       --xspf                  Use XSPF playlist instead of M3U
 ```
-###Debug options
+### Debug options
 ```
   -d, --stderr                Enable debug on stderr
   -n, --nostderr              Disable debug on stderr
@@ -60,7 +60,7 @@ Usage: `tvheadend [OPTIONS]`
       --nobat                 Disable DVB bouquets
   -j, --join                  Subscribe to a service permanently
 ```
-###Testing options
+### Testing options
 ```
       --tsfile_tuners         Number of tsfile tuners
       --tsfile                tsfile input (mux file)

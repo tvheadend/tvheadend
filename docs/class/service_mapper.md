@@ -9,7 +9,7 @@ See [Services](class/mpegts_service) for more details on service mapping.
 
 ---
 
-###Buttons
+### Buttons
 
 The following functions are available:
 

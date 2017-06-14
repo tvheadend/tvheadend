@@ -615,7 +615,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_INT,
       .id       = "scan_result",
       .name     = N_("Scan result"),
-      .desc     = N_("The outcome of the last scan performed on this mux."),
+      .desc     = N_("The outcome of the last scan performed."),
       .off      = offsetof(mpegts_mux_t, mm_scan_result),
       .opts     = PO_RDONLY | PO_SORTKEY | PO_DOC_NLIST,
       .list     = mpegts_mux_class_scan_result_enum,
@@ -624,9 +624,9 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "charset",
       .name     = N_("Character set"),
-      .desc     = N_("The character set used on this mux. You should "
-                     "not have to change this unless channel names, etc "
-                     " appear garbled."),
+      .desc     = N_("The character set to use/used. You should "
+                     "not have to change this unless channel names "
+                      "and EPG data appear garbled."),
       .off      = offsetof(mpegts_mux_t, mm_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
@@ -634,17 +634,17 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "num_svc",
-      .name     = N_("# Services"),
-      .desc     = N_("The total number of services found on this mux."),
+      .name     = N_("Services"),
+      .desc     = N_("The total number of services found."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
     },
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = N_("# Channels"),
-      .desc     = N_("The number of services on the mux that are "
-                     "mapped to channels."),
+      .name     = N_("Mapped"),
+      .desc     = N_("The number of services currently mapped to "
+                     "channels."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_chn,
     },
@@ -659,7 +659,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_INT,
       .id       = "pmt_06_ac3",
       .name     = N_("AC-3 detection"),
-      .desc     = N_("Use AC-3 detection on the mux."),
+      .desc     = N_("Use AC-3 detection."),
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,

@@ -2072,7 +2072,7 @@ const idclass_t config_class = {
       .id     = "server_name",
       .name   = N_("Tvheadend server name"),
       .desc   = N_("Set the name of the server so you can distinguish "
-                   "multiple instances apart on your LAN."),
+                   "multiple instances apart."),
       .off    = offsetof(config_t, server_name),
       .group  = 1
     },
@@ -2092,8 +2092,8 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "uilevel_nochange",
       .name   = N_("Persistent user interface level"),
-      .desc   = N_("Prevents users from overriding the above user "
-                   "interface level setting and removes the view level "
+      .desc   = N_("Prevent users from overriding the user "
+                   "interface level setting, and remove the view level "
                    "drop-dowm from the interface."),
       .off    = offsetof(config_t, uilevel_nochange),
       .opts   = PO_ADVANCED,
@@ -2270,7 +2270,7 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "theme_ui",
       .name   = N_("Theme"),
-      .desc   = N_("The default web interface to use if the user's "
+      .desc   = N_("The default web interface to use if the user "
                    " theme isn't set in the Access Entries tab."),
       .doc    = prop_doc_themes,
       .list   = theme_get_ui_list,
@@ -2284,7 +2284,7 @@ const idclass_t config_class = {
       .name   = N_("DVB scan files path"),
       .desc   = N_("Select the path to use for DVB scan configuration "
                    "files. Typically dvb-apps stores these in "
-                   "/usr/share/dvb/. Leave blank to use Tvheadend's "
+                   "/usr/share/dvb/. Leave blank to use the "
                    "internal file set."),
       .off    = offsetof(config_t, muxconf_path),
       .notify = config_muxconfpath_notify,
