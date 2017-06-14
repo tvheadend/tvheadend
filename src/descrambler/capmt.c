@@ -1559,6 +1559,8 @@ handle_single(capmt_t *capmt)
         offset = 0;
         cmd_size = 0;
         cmd = 0;
+        if (buffer.sb_ptr < 5)
+          break;
         if (netproto) {
           buffer.sb_bswap = 1;
           cmd_size = capmt_msg_size(capmt, &buffer, 0);
