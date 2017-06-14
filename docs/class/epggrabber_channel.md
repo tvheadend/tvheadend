@@ -4,7 +4,7 @@ This tab displays EPG data used by channels.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 

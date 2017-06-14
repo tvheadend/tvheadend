@@ -305,7 +305,7 @@ const idclass_t profile_class =
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
-      .desc     = N_("Enable/disable the profile."),
+      .desc     = N_("Enable/disable profile."),
       .off      = offsetof(profile_t, pro_enabled),
       .get_opts = profile_class_enabled_opts,
       .group    = 1,
@@ -315,7 +315,7 @@ const idclass_t profile_class =
       .type     = PT_BOOL,
       .id       = "default",
       .name     = N_("Default"),
-      .desc     = N_("Set profile as default."),
+      .desc     = N_("Set as default profile."),
       .set      = profile_class_default_set,
       .get      = profile_class_default_get,
       .opts     = PO_EXPERT,
@@ -345,9 +345,9 @@ const idclass_t profile_class =
       .id       = "priority",
       .name     = N_("Default priority"),
       .desc     = N_("If no specific priority was requested. This "
-		             "gives certain users a higher priority by "
-		             "assigning a streaming profile with a higher "
-		             "priority."),
+                     "gives certain users a higher priority by "
+                     "assigning a streaming profile with a higher "
+                     "priority."),
       .list     = profile_class_priority_list,
       .off      = offsetof(profile_t, pro_prio),
       .opts     = PO_SORTKEY | PO_ADVANCED,
@@ -358,7 +358,7 @@ const idclass_t profile_class =
       .type     = PT_INT,
       .id       = "fpriority",
       .name     = N_("Force priority"),
-      .desc     = N_("Force the stream profile to use this priority."),
+      .desc     = N_("Force profile to use this priority."),
       .off      = offsetof(profile_t, pro_fprio),
       .opts     = PO_EXPERT,
       .group    = 1
@@ -387,7 +387,7 @@ const idclass_t profile_class =
     {
       .type     = PT_BOOL,
       .id       = "contaccess",
-      .name     = N_("Continue even if descrambling fails"),
+      .name     = N_("Continue if descrambling fails"),
       .desc     = N_("Don't abort streaming when an encrypted stream "
                      "can't be decrypted by a CA client that normally "
                      "should be able to decrypt the stream."),
@@ -1177,7 +1177,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_U16,
       .id       = "sid",
       .name     = N_("Rewrite Service ID"),
-      .desc     = N_("Rewrite service identificator (SID) using the specified "
+      .desc     = N_("Rewrite service identifier (SID) using the specified "
                      "value (usually 1)."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sid),
       .set      = profile_pass_rewrite_sid_set,
@@ -2031,11 +2031,13 @@ const idclass_t profile_transcode_class =
       .type     = PT_STR,
       .id       = "src_vcodec",
       .name     = N_("Source video codec"),
-      .desc     = N_("Transcode video only if source video codec mattch.  "
-                     "\"Any\" will ingnore source vcodec check and always do transcode. "
-		     "Separate codec names with coma. "
-                     "If no codec match found - transcode with \"copy\" codec, "
-		     "if match found - transcode with parameters in this profile."),
+      .desc     = N_("Transcode video only if source video codec matches. "
+                     "\"Any\" ignores source video codec checking and "
+                     "always transcodes. If no codec match is found, "
+                     "transcoding is done using the \"copy\" codec. "
+                     "if a match is found, transcode with the "
+                     "parameters in this profile. Separate codec names "
+                     "with comma."),
       .off      = offsetof(profile_transcode_t, pro_src_vcodec),
       .def.i    = SCT_UNKNOWN,
       .list     = profile_class_src_vcodec_list,
@@ -2070,7 +2072,7 @@ const idclass_t profile_transcode_class =
       .id       = "vbitrate",
       .name     = N_("Video bitrate (kb/s) (0=auto)"),
       .desc     = N_("Bitrate to use for the transcode. See Help for "
-                     "detailed information."),
+                     "details."),
       .off      = offsetof(profile_transcode_t, pro_vbitrate),
       .opts     = PO_ADVANCED,
       .def.u32  = 0,
@@ -2092,7 +2094,7 @@ const idclass_t profile_transcode_class =
       .type     = PT_U32,
       .id       = "abitrate",
       .name     = N_("Audio bitrate (kb/s) (0=auto)"),
-      .desc     = N_("Audio birate to use for transcoding."),
+      .desc     = N_("Audio bitrate to use for transcoding."),
       .off      = offsetof(profile_transcode_t, pro_abitrate),
       .opts     = PO_ADVANCED,
       .def.u32  = 0,

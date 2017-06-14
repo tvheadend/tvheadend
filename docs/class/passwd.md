@@ -11,7 +11,7 @@ where you set and maintain all user passwords (e.g. for streaming or DVR access)
 
 ---
 
-###Example
+### Example
 
 This is an example of a password entry.
 

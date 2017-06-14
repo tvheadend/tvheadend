@@ -1,6 +1,6 @@
-##Overview of Tvheadend
+## Overview of Tvheadend
 
-###Welcome to Tvheadend!
+### Welcome to Tvheadend!
 
 Tvheadend is a lightweight, easily-configured, general-purpose TV/video 
 streaming server and recorder (PVR/DVR) for GNU/Linux, FreeBSD and Android.

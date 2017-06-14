@@ -27,14 +27,14 @@ Maintenance Button                              | Function
 
 ---
 
-###Mapping Services to Channels
+### Mapping Services to Channels
 
   There are a number of methods to mapping available services, 
   mapping uses the following dialog.
 
   !['Service mapper dialog'](static/img/doc/service_mapper/dialog.png)
 
-####Mapping All
+#### Mapping All
 
 Press the *[Map services]* button and then *[Map all services]*.
 
@@ -45,7 +45,7 @@ checked - feel free to make changes. Once you're happy with the selection press 
 then be taken to the [Service Mapper](status_service_mapper) tab which 
 will begin mapping the selected services to channels. 
   
-####Mapping Selected
+#### Mapping Selected
 
 Click on the services you would like to map as channels, 
 once you're done selecting press the "Map services" button and 
@@ -64,7 +64,7 @@ the selected services to channels.
 available services - you can increase this by using the paging 
 selector at the bottom right of the page.
   
-####Mapping/Removing a Service to/from an Existing Channel
+#### Mapping/Removing a Service to/from an Existing Channel
 
 You can map/remove a service to/from an existing channel by doing the following:
 
@@ -88,7 +88,7 @@ you'd like to associate/disassociate the service with.
 
 ---
 
-###Service Information
+### Service Information
 
 Clicking the !['Information Icon'](static/icons/information.png) 
 information icon will display service details.

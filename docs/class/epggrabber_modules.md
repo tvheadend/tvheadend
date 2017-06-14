@@ -7,7 +7,7 @@ there are a variety of specific grabber implementations.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
@@ -20,7 +20,7 @@ Button                      | Function
 
 ---
 
-###Notes
+### Notes
 
 * Only OTA EIT and PSIP (ATSC) grabbers are enabled by default. If 
 you're missing EPG data, make sure to enable the correct grabber(s) 

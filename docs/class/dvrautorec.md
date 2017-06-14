@@ -10,7 +10,7 @@ This tab controls EPG-driven recording rules.
 
 ---
 
-###Example
+### Example
 
 If you wanted to record any programs matching "BBC News" on 
 BBC One you would enter something like this into the add entry dialog: 

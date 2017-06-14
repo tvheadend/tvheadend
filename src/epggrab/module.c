@@ -154,7 +154,7 @@ const idclass_t epggrab_mod_class = {
       .type   = PT_INT,
       .id     = "priority",
       .name   = N_("Priority"),
-      .desc   = N_("Grabber priority. This option let's you pick which "
+      .desc   = N_("Grabber priority. This option lets you pick which "
                    "EPG grabber's data get used first. Priority is "
                    "given to the grabber with the highest value set here. "
                    "See Help for more info."),

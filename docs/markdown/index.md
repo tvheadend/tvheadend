@@ -1,8 +1,8 @@
-#Tvheadend 4.2 User Guide
+# Tvheadend 4.2 User Guide
 
 ![Tvheadend Logo](static/img/doc/index/logo.png)
 
-#Purpose
+# Purpose
 
 This document is intended to give you a high-level overview of how to set 
 up Tvheadend for the first time. It does not aim to provide a complete description

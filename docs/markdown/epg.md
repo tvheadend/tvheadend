@@ -1,4 +1,4 @@
-##Electronic Program Guide
+## Electronic Program Guide
 
 Tvheadend has a built-in Electronic Program Guide. The EPG is an
 in-memory database populated with all the information about events
@@ -12,11 +12,11 @@ based on start time.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
-####Filtering (or searching)
+#### Filtering (or searching)
 
 In the EPG top tool bar you can access five input fields. These are used
 to filter/search for events. The form uses implicit AND between the
@@ -62,7 +62,7 @@ by selecting *‘(Clear filter)’* as appropriate on all except the title
 filter. If you want to clear all filters, just press the *[Reset All]*
 button.
 
-####Buttons
+#### Buttons
 
 The following buttons are also available:
 
@@ -75,7 +75,7 @@ Button              | Function
 
 ---
 
-###Grid Items
+### Grid Items
 
 The main grid items have the following functions:
 
@@ -138,7 +138,7 @@ Icon                                                   | Description
 
 ---
 
-###Event Details and Recording
+### Event Details and Recording
 
 If you click on a single event, a popup will display detailed
 information about the event. It also allows you to schedule the event
@@ -178,7 +178,7 @@ you can open as many detailed information popups as you want.
 
 ---
 
-###Autorecordings
+### Autorecordings
 
 Should you wish to record all events matching a specific query (to
 record your favourite show every week, for example) you can press the
@@ -191,7 +191,7 @@ channel, tag, or similar.
 
 ---
 
-###Watch TV
+### Watch TV
 
 If you want to watch live TV in the web UI, the *[Watch TV]* button will
 pop up a HTML5 video player, where you can select the channel to watch and a
@@ -199,21 +199,21 @@ stream profile to use. A transcoding stream profile is required to transcode
 the stream to a format that is supported by your browser, as browsers only
 support certain formats and codecs.
 
-####Supported formats (containers)
+#### Supported formats (containers)
 
 Browser | MPEG-TS | MPEG-PS | Matroska | WebM
 ------- | :-----: | :-----: | :------: | :--:
 Google Chrome | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
 Mozilla Firefox | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
 
-####Supported video codecs
+#### Supported video codecs
 
 Browser | MPEG2 Video | H.264 | VP8
 ------- | :---------: | :---: | :-:
 Google Chrome | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
 Mozilla Firefox | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
 
-####Supported audio codecs
+#### Supported audio codecs
 
 Browser | MPEG2 Audio | Dolby Digital (AC3) | AAC | Vorbis
 ------- | :---------: | :-----------------: | :-: | :----:

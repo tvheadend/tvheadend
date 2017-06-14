@@ -36,7 +36,7 @@ Button         | Function
 
 ---
 
-###Force Scanning
+### Force Scanning
 
 Force scanning can take some time. You may continue to use Tvheadend 
 while a scan is in progress, but doing so will increase the time needed 
@@ -46,7 +46,7 @@ number of muxes on each.
 
 ---
 
-###IPTV Automatic Network - Don't Probe Services
+### IPTV Automatic Network - Don't Probe Services
 
 Tvheadend will by default probe each playlist entry for service information. 
 Some service providers do not allow such probing & will deny (or rate 
