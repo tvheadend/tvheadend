@@ -28,7 +28,7 @@ BINTRAY_API='https://bintray.com/api/v1'
 BINTRAY_USER=env('BINTRAY_USER')
 BINTRAY_PASS=env('BINTRAY_PASS')
 BINTRAY_COMPONENT=env('BINTRAY_COMPONENT')
-BINTRAY_ORG='tvheadend'
+BINTRAY_ORG=env('BINTRAY_ORG') or 'tvheadend'
 BINTRAY_PACKAGE='tvheadend'
 
 PACKAGE_DESC='Tvheadend is a TV streaming server and recorder for Linux, FreeBSD and Android'
@@ -213,9 +213,12 @@ def do_publish(*args):
     for file in files:
         file = file.strip()
         basename, args, extra = get_bintray_params(file, hint)
-        bpath = '/content/%s/%s/%s/%s/%s/%s%s;publish=1' % \
+        pub = 1
+        if "-dirty" in basename.lower():
+            pub = 0
+        bpath = '/content/%s/%s/%s/%s/%s/%s%s;publish=%s' % \
                 (args.org, args.repo, args.package, args.version,
-                 args.path, basename, extra)
+                 args.path, basename, extra, pub)
         data = open(file, 'rb').read()
         resp = Bintray(bpath).put(data, binary=1)
         if resp.code != 200 and resp.code != 201:
@@ -235,6 +238,7 @@ def test_filename():
     FILES=[
         "tvheadend_4.3-86~g7d2c4e8~xenial_amd64.deb",
         "tvheadend_4.3-86~g7d2c4e8~xenial_arm64.deb",
+        "tvheadend_4.3-666~a6b0mfyj-dirty~jessie_armhf.deb",
         "tvheadend-4.3-86~g7d2c4e8.el7.centos.x86_64.rpm",
         "tvheadend-4.3-86~g7d2c4e8.fc24.x86_64.rpm",
         "tvheadend-4.2.2~xenial_amd64.deb",
