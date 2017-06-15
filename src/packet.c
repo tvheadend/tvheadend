@@ -153,7 +153,7 @@ void
 pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
            const char *fmt, ...)
 {
-  char buf[512], _pcr[22], _dts[22], _pts[22], _type[2];
+  char buf[512], _pcr[22], _dts[22], _pts[22], _type[2], _meta[20];
   va_list args;
 
   va_start(args, fmt);
@@ -163,10 +163,14 @@ pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
   } else {
     _type[0] = '\0';
   }
+  if (pkt->pkt_meta)
+    snprintf(_meta, sizeof(_meta), " meta %zu", pktbuf_len(pkt->pkt_meta));
+  else
+    _meta[0] = '\0';
   snprintf(buf, sizeof(buf),
            "%s%spkt stream %d %s%s%s"
            " pcr %s dts %s pts %s"
-           " dur %d len %zu err %i%s",
+           " dur %d len %zu err %i%s%s",
            fmt ? fmt : "",
            fmt ? " (" : "",
            pkt->pkt_componentindex,
@@ -178,6 +182,7 @@ pkt_trace_(const char *file, int line, int subsys, th_pkt_t *pkt,
            pkt->pkt_duration,
            pktbuf_len(pkt->pkt_payload),
            pkt->pkt_err,
+           _meta,
            fmt ? ")" : "");
   tvhlogv(file, line, LOG_TRACE, subsys, buf, &args);
   va_end(args);
