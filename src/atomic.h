@@ -30,7 +30,16 @@ extern pthread_mutex_t atomic_lock;
 static inline int
 atomic_add(volatile int *ptr, int incr)
 {
+#if ENABLE_ATOMIC32
   return __sync_fetch_and_add(ptr, incr);
+#else
+  int ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr += incr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
 }
 
 static inline uint64_t
@@ -144,7 +153,16 @@ atomic_pre_add_s64_peak(volatile int64_t *ptr, int64_t incr,
 static inline int
 atomic_dec(volatile int *ptr, int decr)
 {
+#if ENABLE_ATOMIC32
   return __sync_fetch_and_sub(ptr, decr);
+#else
+  int ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr -= decr;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
 }
 
 static inline uint64_t
@@ -184,7 +202,16 @@ atomic_dec_s64(volatile int64_t *ptr, int64_t decr)
 static inline int
 atomic_exchange(volatile int *ptr, int val)
 {
+#if ENABLE_ATOMIC32
   return  __sync_lock_test_and_set(ptr, val);
+#else
+  int ret;
+  pthread_mutex_lock(&atomic_lock);
+  ret = *ptr;
+  *ptr = val;
+  pthread_mutex_unlock(&atomic_lock);
+  return ret;
+#endif
 }
 
 static inline uint64_t
