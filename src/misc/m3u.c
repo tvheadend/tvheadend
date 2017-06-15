@@ -102,10 +102,17 @@ static const char *get_url
     return rel;
 
   url2 = strdupa(url);
-  p = strchr(url2 + l, '/');
-  if (p == NULL)
-    return rel;
-  *(p + (rel[0] == '/' ? 0 : 1)) = '\0';
+  if (rel[0] == '/') {
+    p = strchr(url2 + l, '/');
+    if (p == NULL)
+      return rel;
+    *p = '\0';
+  } else {
+    p = strrchr(url2 + l, '/');
+    if (p == NULL)
+      return rel;
+    *(p + 1) = '\0';
+  }
   snprintf(buf, buflen, "%s%s", url2, rel);
   return buf;
 }
