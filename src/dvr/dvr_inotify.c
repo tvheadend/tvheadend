@@ -119,7 +119,7 @@ static void dvr_inotify_add_one ( dvr_entry_t *de, htsmsg_t *m )
   if (filename == NULL || fd < 0)
     return;
 
-  path = strdupa(filename);
+  path = tvh_strdupa(filename);
 
   SKEL_ALLOC(dvr_inotify_entry_skel);
   dvr_inotify_entry_skel->path = dirname(path);

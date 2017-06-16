@@ -19,15 +19,6 @@
 #define TVH_COMPAT_H
 
 #if ENABLE_ANDROID
-#ifndef strdupa
-#define strdupa(s)                                                            \
-    ({                                                                        \
-      const char *__old = (s);                                                \
-      size_t __len = strlen(__old) + 1;                                       \
-      char *__new = (char *) alloca(__len);                                   \
-      (char *) memcpy(__new, __old, __len);                                   \
-    })
-#endif
 #ifndef index
 #define index(...) strchr(__VA_ARGS__)
 #endif
