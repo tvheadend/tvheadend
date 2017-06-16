@@ -1365,60 +1365,6 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
 }
 
 /**
- * De-escape HTTP URL
- */
-void
-http_deescape(char *s)
-{
-  char v, *d = s;
-
-  while(*s) {
-    if(*s == '+') {
-      *d++ = ' ';
-      s++;
-    } else if(*s == '%') {
-      s++;
-      switch(*s) {
-      case '0' ... '9':
-	v = (*s - '0') << 4;
-	break;
-      case 'a' ... 'f':
-	v = (*s - 'a' + 10) << 4;
-	break;
-      case 'A' ... 'F':
-	v = (*s - 'A' + 10) << 4;
-	break;
-      default:
-	*d = 0;
-	return;
-      }
-      s++;
-      switch(*s) {
-      case '0' ... '9':
-	v |= (*s - '0');
-	break;
-      case 'a' ... 'f':
-	v |= (*s - 'a' + 10);
-	break;
-      case 'A' ... 'F':
-	v |= (*s - 'A' + 10);
-	break;
-      default:
-	*d = 0;
-	return;
-      }
-      s++;
-
-      *d++ = v;
-    } else {
-      *d++ = *s++;
-    }
-  }
-  *d = 0;
-}
-
-
-/**
  * Parse arguments of a HTTP GET url, not perfect, but works for us
  */
 void

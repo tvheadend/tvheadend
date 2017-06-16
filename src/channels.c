@@ -792,8 +792,11 @@ svcnamepicons(const char *svcname)
 static int
 check_file( const char *url )
 {
-  if (url && !strncmp(url, "file://", 7))
-    return access(url + 7, R_OK) == 0;
+  if (url && !strncmp(url, "file://", 7)) {
+    char *s = tvh_strdupa(url + 7);
+    http_deescape(s);
+    return access(s, R_OK) == 0;
+  }
   return 1;
 }
 

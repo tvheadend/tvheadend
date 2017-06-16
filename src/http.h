@@ -246,8 +246,6 @@ int http_access_verify(http_connection_t *hc, int mask);
 int http_access_verify_channel(http_connection_t *hc, int mask,
                                struct channel *ch);
 
-void http_deescape(char *s);
-
 void http_parse_args(http_arg_list_t *list, char *args);
 
 char *http_get_hostpath(http_connection_t *hc);
