@@ -143,10 +143,10 @@ api_idnode_grid
   list  = htsmsg_create_list();
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
     in = ins.is_array[i];
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
     if (idnode_perm(in, perm, NULL))
       continue;
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
     idnode_read0(in, e, flist, 0, conf.sort.lang);
     idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
