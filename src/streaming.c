@@ -201,7 +201,7 @@ streaming_msg_create(streaming_message_type_t type)
   memoryinfo_alloc(&streaming_msg_memoryinfo, sizeof(*sm));
   sm->sm_type = type;
 #if ENABLE_TIMESHIFT
-  sm->sm_time      = 0;
+  sm->sm_time = 0;
 #endif
   return sm;
 }
