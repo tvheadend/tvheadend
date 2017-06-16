@@ -656,7 +656,7 @@ imagecache_filename ( uint32_t id, char *name, size_t len )
 
   /* Local file */
   if (!strncasecmp(i->url, "file://", 7)) {
-    fn = strdupa(i->url + 7);
+    fn = tvh_strdupa(i->url + 7);
     http_deescape(fn);
     strncpy(name, fn, len);
     name[len-1] = '\0';

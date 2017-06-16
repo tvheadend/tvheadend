@@ -101,7 +101,7 @@ static const char *get_url
   if ((l = is_full_url(url)) == 0 || is_full_url(rel))
     return rel;
 
-  url2 = strdupa(url);
+  url2 = tvh_strdupa(url);
   if (rel[0] == '/') {
     p = strchr(url2 + l, '/');
     if (p == NULL)
