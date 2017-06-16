@@ -496,6 +496,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_SERVICE_STATUS:
+    case SMT_SIGNAL_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       if(tcp_socket_dead(hc->hc_fd)) {
         tvhdebug(LS_WEBUI,  "Stop streaming %s, client hung up",
                  hc->hc_url_orig);
@@ -510,8 +512,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_NOSTART_WARN:
     case SMT_SKIP:
     case SMT_SPEED:
-    case SMT_SIGNAL_STATUS:
-    case SMT_DESCRAMBLE_INFO:
     case SMT_TIMESHIFT_STATUS:
       break;
 
