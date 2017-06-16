@@ -321,6 +321,7 @@ access_destroy(access_t *a)
   free(a->aa_lang);
   free(a->aa_lang_ui);
   free(a->aa_theme);
+  free(a->aa_chrange);
   htsmsg_destroy(a->aa_profiles);
   htsmsg_destroy(a->aa_dvrcfgs);
   htsmsg_destroy(a->aa_chtags);
