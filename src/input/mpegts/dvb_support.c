@@ -280,7 +280,8 @@ dvb_get_string
   // automatic charset detection
   switch(src[0]) {
   case 0:
-    return -1;
+    *dst = 0; // empty string (confirmed!)
+    return 0;
 
   case 0x01 ... 0x0b:
     if (auto_pl_charset && (src[0] + 4) == 5)
@@ -365,9 +366,8 @@ dvb_get_string
 
   outlen = dstlen - 1;
 
-  if (dvb_convert(ic, src, srclen, dst, &outlen) == -1) {
+  if (dvb_convert(ic, src, srclen, dst, &outlen) == -1)
     return -1;
-  }
 
   len = dstlen - outlen - 1;
   dst[len] = 0;
