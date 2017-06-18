@@ -1316,15 +1316,17 @@ dvb_nit_mux
 
     /* Both */
     case DVB_DESC_DEF_AUTHORITY:
-      if (dvb_get_string(dauth, sizeof(dauth), dptr, dlen, charset, NULL))
-        return -1;
-      tvhdebug(mt->mt_subsys, "%s:    default auth [%s]", mt->mt_name, dauth);
-      if (mux && *dauth)
-        mpegts_mux_set_crid_authority(mux, dauth);
+      if (!dvb_get_string(dauth, sizeof(dauth), dptr, dlen, charset, NULL)) {
+        tvhdebug(mt->mt_subsys, "%s:    default auth [%s]", mt->mt_name, dauth);
+        if (mux && *dauth)
+          mpegts_mux_set_crid_authority(mux, dauth);
+      } else {
+        tvhtrace(mt->mt_subsys, "%s:    auth error", mt->mt_name);
+      }
       break;
     case DVB_DESC_SERVICE_LIST:
       if (dvb_desc_service_list(mt, dptr, dlen, mux, bi))
-        return -1;
+        tvhtrace(mt->mt_subsys, "%s:    service list error", mt->mt_name);
       break;
     case DVB_DESC_PRIVATE_DATA:
       if (dlen == 4) {
@@ -1350,7 +1352,7 @@ dvb_nit_mux
       if (priv == 0x28) {
         /* HD simulcast */
         if (dvb_desc_local_channel(mt, mn, dptr, dlen, dtag, mux, bi, 1))
-          return -1;
+          tvhtrace(mt->mt_subsys, "%s:    lcn 88 error", mt->mt_name);
       }
       break;
     case 0x93:
@@ -1358,7 +1360,7 @@ dvb_nit_mux
       /* fall thru */
 lcn:
       if (dvb_desc_local_channel(mt, mn, dptr, dlen, dtag, mux, bi, 0))
-        return -1;
+        tvhtrace(mt->mt_subsys, "%s:    lcn %02X error", mt->mt_name, dtag);
       break;
     case DVB_DESC_FREESAT_LCN:
 #if ENABLE_MPEGTS_DVB
@@ -1382,6 +1384,7 @@ lcn:
   return lptr - lptr_orig;
 
 dvberr:
+  tvhtrace(mt->mt_subsys, "%s:  error", mt->mt_name);
   return -1;
 }
 
@@ -1492,7 +1495,7 @@ dvb_nit_callback
       case DVB_DESC_BOUQUET_NAME:
       case DVB_DESC_NETWORK_NAME:
         if (dvb_get_string(name, sizeof(name), dptr, dlen, charset, NULL))
-          return -1;
+          tvhtrace(mt->mt_subsys, "%s:    %s name error", mt->mt_name, dtag == DVB_DESC_BOUQUET_NAME ? "bouquet" : "network");
         break;
       case DVB_DESC_MULTI_NETWORK_NAME:
         // TODO: implement this?
@@ -1582,6 +1585,7 @@ dvb_nit_callback
   return dvb_table_end((mpegts_psi_table_t *)mt, st, sect);
 
 dvberr:
+  tvhtrace(mt->mt_subsys, "%s: error", mt->mt_name);
   return -1;
 }
 
@@ -1635,11 +1639,11 @@ dvb_sdt_mux
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
                                 sizeof(sprov), sname, sizeof(sname), charset))
-            return -1;
+            tvhtrace(mt->mt_subsys, "%s:      service name error", mt->mt_name);
           break;
         case DVB_DESC_DEF_AUTHORITY:
           if (dvb_get_string(sauth, sizeof(sauth), dptr, dlen, charset, NULL))
-            return -1;
+            tvhtrace(mt->mt_subsys, "%s:      auth error", mt->mt_name);
           break;
         case DVB_DESC_PRIVATE_DATA:
           if (dlen == 4) {
@@ -1650,7 +1654,7 @@ dvb_sdt_mux
         case DVB_DESC_BSKYB_NVOD:
           if (priv == 2)
             if (dvb_get_string(sname, sizeof(sname), dptr, dlen, charset, NULL))
-              return -1;
+              tvhtrace(mt->mt_subsys, "%s:      bskyb nvod error", mt->mt_name);
           break;
       }
     }}
@@ -1722,6 +1726,7 @@ dvb_sdt_mux
   return 0;
 
 dvberr:
+  tvhtrace(mt->mt_subsys, "%s: error", mt->mt_name);
   return -1;
 }
 
@@ -2010,7 +2015,7 @@ dvb_fs_sdt_mux
         case DVB_DESC_SERVICE:
           if (dvb_desc_service(dptr, dlen, &stype, sprov,
                                sizeof(sprov), sname, sizeof(sname), charset))
-            return -1;
+            tvhtrace(mt->mt_subsys, "%s:      service name error", mt->mt_name);
           break;
       }
     }}
@@ -2072,6 +2077,7 @@ dvb_fs_sdt_mux
   return 0;
 
 dvberr:
+  tvhtrace(mt->mt_subsys, "%s:  error", mt->mt_name);
   return -1;
 }
 
