@@ -128,6 +128,7 @@ struct linuxdvb_frontend
   tvh_cond_t                lfe_dvr_cond;
   mpegts_apids_t            lfe_pids;
   int                       lfe_pids_max;
+  int                       lfe_pids_use_all;
  
   /*
    * Tuning
