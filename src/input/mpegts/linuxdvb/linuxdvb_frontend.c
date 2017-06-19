@@ -133,6 +133,15 @@ const idclass_t linuxdvb_frontend_class =
     },
     {
       .type     = PT_BOOL,
+      .id       = "pids_use_all",
+      .name     = N_("Allow all PIDs"),
+      .desc     = N_("Allow all PIDs (no filter) when the 'Maximum PIDs' limit is reached."),
+      .off      = offsetof(linuxdvb_frontend_t, lfe_pids_use_all),
+      .opts     = PO_ADVANCED,
+      .def.i    = 1
+    },
+    {
+      .type     = PT_BOOL,
       .id       = "powersave",
       .name     = N_("Power save"),
       .desc     = N_("Enable/disable power save mode (if supported by "
@@ -1276,10 +1285,11 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
 {
   mpegts_apids_t wpid, padd, pdel;
   int i, max = MAX(14, lfe->lfe_pids_max);
+  int all = lfe->lfe_pids.all;
 
   pthread_mutex_lock(&lfe->lfe_dvr_lock);
 
-  if (!lfe->lfe_pids.all) {
+  if (!all) {
     mpegts_pid_weighted(&wpid, &lfe->lfe_pids, max);
     if (wpid.count > max && lfe->lfe_pids_use_all) {
       all = 1;
@@ -1298,9 +1308,9 @@ linuxdvb_update_pids ( linuxdvb_frontend_t *lfe, const char *name,
     }
   }
 
-  if (lfe->lfe_pids.all && !linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
+  if (all && !linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
     linuxdvb_frontend_open_pid0(lfe, name, pids, pids_size, MPEGTS_FULLMUX_PID);
-  else if (!lfe->lfe_pids.all && linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
+  else if (!all && linuxdvb_pid_exists(pids, pids_size, MPEGTS_FULLMUX_PID))
     linuxdvb_frontend_close_pid0(lfe, name, pids, pids_size, MPEGTS_FULLMUX_PID);
 
   tuned->all = lfe->lfe_pids.all;
@@ -2090,6 +2100,7 @@ linuxdvb_frontend_create
   lfe->lfe_ibuf_size = 188000;
   lfe->lfe_status_period = 1000;
   lfe->lfe_pids_max = 32;
+  lfe->lfe_pids_use_all = 1;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 
