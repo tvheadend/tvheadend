@@ -115,9 +115,15 @@ typedef void (*descrambler_section_callback_t)
  */
 typedef struct descrambler_ecmsec {
   LIST_ENTRY(descrambler_ecmsec) link;
+  LIST_ENTRY(descrambler_ecmsec) active_link;
+  int       refcnt;
+  uint8_t   changed;
   uint8_t   number;
+  uint8_t   quick_ecm_called;
   uint8_t  *last_data;
   int       last_data_len;
+  descrambler_section_callback_t callback;
+  void     *opaque;
 } descrambler_ecmsec_t;
 
 typedef struct descrambler_section {
@@ -125,7 +131,6 @@ typedef struct descrambler_section {
   descrambler_section_callback_t callback;
   void     *opaque;
   LIST_HEAD(, descrambler_ecmsec) ecmsecs;
-  uint8_t   quick_ecm_called;
 } descrambler_section_t;
 
 typedef struct descrambler_table {
