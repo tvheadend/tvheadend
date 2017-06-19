@@ -378,9 +378,6 @@ service_stop(service_t *t)
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
 
-  assert(LIST_FIRST(&t->s_streaming_pad.sp_targets) == NULL);
-  assert(LIST_FIRST(&t->s_subscriptions) == NULL);
-
   /**
    * Clean up each stream
    */
