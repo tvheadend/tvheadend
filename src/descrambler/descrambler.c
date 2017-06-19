@@ -471,8 +471,11 @@ descrambler_keys ( th_descrambler_t *td, int type,
                td->td_nicename,
                dr->dr_key_const ? " (const)" : "");
       td->td_keystate = DS_IDLE;
-      if (td->td_ecm_idle)
+      if (td->td_ecm_idle) {
+        pthread_mutex_unlock(&t->s_stream_mutex);
         td->td_ecm_idle(td);
+        pthread_mutex_lock(&t->s_stream_mutex);
+      }
       goto fin;
     }
 
@@ -592,7 +595,8 @@ descrambler_flush_table_data( service_t *t )
       while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
         LIST_REMOVE(des, link);
         free(des->last_data);
-        free(des);
+        if (atomic_dec(&des->refcnt, 1) == 0)
+          free(des);
       }
   }
   pthread_mutex_unlock(&mux->mm_descrambler_lock);
@@ -868,10 +872,12 @@ descrambler_table_callback
   descrambler_section_t *ds;
   descrambler_ecmsec_t *des;
   th_descrambler_runtime_t *dr;
+  LIST_HEAD(,descrambler_ecmsec) sections;
   int emm = (mt->mt_flags & MT_FAST) == 0;
 
   if (len < 6)
     return 0;
+  LIST_INIT(&sections);
   pthread_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
   TAILQ_FOREACH(ds, &dt->sections, link) {
     if (!emm) {
@@ -896,15 +902,29 @@ descrambler_table_callback
       } else {
         des->last_data_len = 0;
       }
-      ds->callback(ds->opaque, mt->mt_pid, ptr, len, emm);
+      des->changed = 2;
+    } else {
+      des->changed = des->last_data != NULL ? 1 : 0;
+    }
+    atomic_add(&des->refcnt, 1);
+    des->callback = ds->callback;
+    des->opaque = ds->opaque;
+    LIST_INSERT_HEAD(&sections, des, active_link);
+  }
+  pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
+
+  LIST_FOREACH(des, &sections, active_link) {
+    if (des->changed == 2) {
+      des->callback(des->opaque, mt->mt_pid, ptr, len, emm);
       if (!emm) { /* ECM */
         mpegts_service_t *t = mt->mt_service;
         if (t) {
+          pthread_mutex_lock(&t->s_stream_mutex);
           /* The keys are requested from this moment */
           dr = t->s_descramble;
           if (dr) {
-            if (!dr->dr_quick_ecm && !ds->quick_ecm_called) {
-              ds->quick_ecm_called = 1;
+            if (!dr->dr_quick_ecm && !des->quick_ecm_called) {
+              des->quick_ecm_called = 1;
               dr->dr_quick_ecm = descrambler_quick_ecm(mt->mt_service, mt->mt_pid);
               if (dr->dr_quick_ecm)
                 tvhdebug(LS_DESCRAMBLER, "quick ECM enabled for service '%s'",
@@ -918,6 +938,7 @@ descrambler_table_callback
             tvhtrace(LS_DESCRAMBLER, "ECM message %02x (section %d, len %d, pid %d) for service \"%s\"",
                      ptr[0], des->number, len, mt->mt_pid, t->s_dvb_svcname);
           }
+          pthread_mutex_unlock(&t->s_stream_mutex);
         } else
           tvhtrace(LS_DESCRAMBLER, "Unknown fast table message %02x (section %d, len %d, pid %d)",
                    ptr[0], des->number, len, mt->mt_pid);
@@ -940,7 +961,12 @@ descrambler_table_callback
       }
     }
   }
-  pthread_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
+
+  while ((des = LIST_FIRST(&sections)) != NULL) {
+    LIST_REMOVE(des, active_link);
+    if (atomic_dec(&des->refcnt, 1) == 0)
+      free(des);
+  }
   return 0;
 }
 
@@ -1023,7 +1049,8 @@ descrambler_close_pid_( mpegts_mux_t *mux, void *opaque, int pid )
         while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
           LIST_REMOVE(des, link);
           free(des->last_data);
-          free(des);
+          if (atomic_dec(&des->refcnt, 1) == 0)
+            free(des);
         }
         if (TAILQ_FIRST(&dt->sections) == NULL) {
           TAILQ_REMOVE(&mux->mm_descrambler_tables, dt, link);
@@ -1071,7 +1098,8 @@ descrambler_flush_tables( mpegts_mux_t *mux )
       while ((des = LIST_FIRST(&ds->ecmsecs)) != NULL) {
         LIST_REMOVE(des, link);
         free(des->last_data);
-        free(des);
+        if (atomic_dec(&des->refcnt, 1) == 0)
+          free(des);
       }
       free(ds);
     }
