@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-06-20 09:45+0200\n"
+"POT-Creation-Date: 2017-06-20 09:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -298,7 +298,7 @@ msgid ""
 msgstr ""
 
 #: src/docs_inc.c:1299
-msgid "(c) 2006 - 2016 Tvheadend Foundation CIC"
+msgid "(c) 2006 - 2017 Tvheadend Foundation CIC"
 msgstr ""
 
 #: src/docs_inc.c:1495
@@ -2492,8 +2492,7 @@ msgstr ""
 msgid "Gray"
 msgstr ""
 
-#: src/docs_inc.c:681 src/docs_inc.c:1077 src/docs_inc.c:1593
-#: src/docs_inc.c:1767
+#: src/docs_inc.c:681 src/docs_inc.c:1767
 msgid "Grid Items"
 msgstr ""
 
@@ -3090,7 +3089,7 @@ msgid ""
 "software (e.g. Kodi), with all files stored locally."
 msgstr ""
 
-#: src/docs_inc.c:127
+#: src/docs_inc.c:127 src/docs_inc.c:1077 src/docs_inc.c:1593
 msgid "Items"
 msgstr ""
 
@@ -5794,7 +5793,7 @@ msgid ""
 "dialog, or in some cases (where a list/split panel is used), a parameter "
 "panel. You can now fill in the desired/required fields, the entry can then "
 "be saved (_Create/Save_ button), applied (_Apply_ button), or abandoned "
-"(*Cancel button)."
+"(_Cancel_ button)."
 msgstr ""
 
 #: src/docs_inc.c:5231
@@ -5839,7 +5838,7 @@ msgstr ""
 msgid ""
 "To edit a single entry in the grid, double click on the desired field/cell. "
 "It should now be editable. Once you've made your changes you can then save "
-"(_Save_ button), apply (_Apply_ button), or abandon (_Cancel_ button) them."
+"(_Save_ button), apply (_Apply_ button), or abandon (_Cancel_ button)."
 msgstr ""
 
 #: src/docs_inc.c:1189
@@ -6501,8 +6500,8 @@ msgstr ""
 
 #: src/docs_inc.c:2231
 msgid ""
-"You may put your custom m3u playlist which is advertised to the clients to "
-"your tvheadend's configuration directory - filename _satip.m3u_ ."
+"You may put your custom m3u playlist which is advertised to clients in your "
+"tvheadend's configuration directory - filename _satip.m3u_ ."
 msgstr ""
 
 #: src/docs_inc.c:2215

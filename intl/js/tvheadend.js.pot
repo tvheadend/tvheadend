@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-06-20 09:45+0200\n"
+"POT-Creation-Date: 2017-06-20 09:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -400,8 +400,16 @@ msgstr ""
 msgid "Clear statistics for selected input?"
 msgstr ""
 
+#: src/webui/static/app/status.js:619
+msgid "Client Address"
+msgstr ""
+
 #: src/webui/static/app/caclient.js:34
 msgid "Client Name"
+msgstr ""
+
+#: src/webui/static/app/status.js:625
+msgid "Client Port"
 msgstr ""
 
 #: src/webui/static/app/idnode.js:1430 src/webui/static/app/idnode.js:2299
@@ -843,20 +851,12 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: src/webui/static/app/status.js:619
-msgid "IP Address"
-msgstr ""
-
 #: src/webui/static/app/acleditor.js:106
 msgid "IP Blocking Record"
 msgstr ""
 
 #: src/webui/static/app/acleditor.js:107
 msgid "IP Blocking Records"
-msgstr ""
-
-#: src/webui/static/app/status.js:625
-msgid "IP Port"
 msgstr ""
 
 #: src/webui/static/app/servicemapper.js:17
