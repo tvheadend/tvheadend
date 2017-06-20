@@ -1324,6 +1324,12 @@ dvr_config_init(void)
   dvr_config_t *cfg;
 
   dvr_iov_max = sysconf(_SC_IOV_MAX);
+  if( dvr_iov_max == -1 )
+#ifdef IOV_MAX
+    dvr_iov_max = IOV_MAX;
+#else
+    dvr_iov_max = 16;
+#endif
 
   /* Default settings */
 
