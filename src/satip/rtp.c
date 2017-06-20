@@ -489,10 +489,11 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
     socket_set_dscp(rtp->fd_rtcp, dscp, NULL, 0);
 
   if (perm_lock) {
+    int tmp = ((satip_server_conf.satip_iptv_sig_level * 0xffff) + 0x8000) / 245;
     rtp->sig.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-    rtp->sig.signal = 0xa000;
+    rtp->sig.signal = MINMAX(tmp, 0, 0xffff);
     rtp->sig.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-    rtp->sig.snr = 28000;
+    rtp->sig.snr = MAX(0xffff, (rtp->sig.signal * 3) / 2);
   }
 
   tvhtrace(LS_SATIPS, "rtp queue %p", rtp);

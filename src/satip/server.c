@@ -572,7 +572,8 @@ struct satip_server_conf satip_server_conf = {
   .idnode.in_class = &satip_server_class,
   .satip_descramble = 1,
   .satip_weight = 100,
-  .satip_allow_remote_weight = 1
+  .satip_allow_remote_weight = 1,
+  .satip_iptv_sig_level = 220,
 };
 
 static void satip_server_class_changed(idnode_t *self)
@@ -705,6 +706,16 @@ const idclass_t satip_server_class = {
       .off    = offsetof(struct satip_server_conf, satip_nom3u),
       .opts   = PO_EXPERT,
       .group  = 1,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "satip_iptv_sig_level",
+      .name   = N_("IPTV signal level"),
+      .desc   = N_("Signal level for IPTV sources (0-240)."),
+      .off    = offsetof(struct satip_server_conf, satip_iptv_sig_level),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+      .def.i  = 220,
     },
     {
       .type   = PT_INT,
