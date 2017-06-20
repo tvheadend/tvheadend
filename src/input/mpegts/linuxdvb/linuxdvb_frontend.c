@@ -40,6 +40,14 @@ linuxdvb_frontend_monitor ( void *aux );
 static void *
 linuxdvb_frontend_input_thread ( void *aux );
 
+/*
+ *
+ */
+static inline int sig_multiply(int value, uint32_t multiplier)
+{
+  return ((value * multiplier) + 99) / 100;
+}
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -196,6 +204,26 @@ const idclass_t linuxdvb_frontend_class =
                      "algorithm based on the signal status faster."),
       .opts     = PO_ADVANCED,
       .off      = offsetof(linuxdvb_frontend_t, lfe_status_period),
+    },
+    {
+      .type     = PT_U32,
+      .id       = "sig_multiplier",
+      .name     = N_("Signal multiplier"),
+      .desc     = N_("The signal level reported by the driver is multiplied "
+                     "with this value and divided by 100."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_sig_multiplier),
+      .def.u32  = 100,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "snr_multiplier",
+      .name     = N_("SNR multiplier"),
+      .desc     = N_("The SNR level reported by the driver is multiplied "
+                     "with this value and divided by 100."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(linuxdvb_frontend_t, lfe_snr_multiplier),
+      .def.u32  = 100,
     },
     {
       .type     = PT_BOOL,
@@ -982,12 +1010,12 @@ linuxdvb_frontend_monitor ( void *aux )
     if(ioctl_check(lfe, 1) && fe_properties[0].u.st.len > 0) {
       if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-        mmi->tii_stats.signal = fe_properties[0].u.st.stat[0].uvalue;
+        mmi->tii_stats.signal = sig_multiply(fe_properties[0].u.st.stat[0].uvalue, lfe->lfe_sig_multiplier);
         gotprop = 1;
       }
       else if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_DECIBEL;
-        mmi->tii_stats.signal = fe_properties[0].u.st.stat[0].svalue;
+        mmi->tii_stats.signal = sig_multiply(fe_properties[0].u.st.stat[0].svalue, lfe->lfe_sig_multiplier);
         gotprop = 1;
       }
       else {
@@ -1002,7 +1030,7 @@ linuxdvb_frontend_monitor ( void *aux )
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-        mmi->tii_stats.signal = u16;
+        mmi->tii_stats.signal = sig_multiply(u16, lfe->lfe_sig_multiplier);
       }
       else {
         ioctl_bad(lfe, 2);
@@ -1057,12 +1085,12 @@ linuxdvb_frontend_monitor ( void *aux )
     if(ioctl_check(lfe, 6) && fe_properties[3].u.st.len > 0) {
       if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_RELATIVE) {
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-        mmi->tii_stats.snr = fe_properties[3].u.st.stat[0].uvalue;
+        mmi->tii_stats.snr = sig_multiply(fe_properties[3].u.st.stat[0].uvalue, lfe->lfe_snr_multiplier);
         gotprop = 1;
       }
       else if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_DECIBEL) {
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_DECIBEL;
-        mmi->tii_stats.snr = fe_properties[3].u.st.stat[0].svalue;
+        mmi->tii_stats.snr = sig_multiply(fe_properties[3].u.st.stat[0].svalue, lfe->lfe_snr_multiplier);
         gotprop = 1;
       }
       else if(fe_properties[3].u.st.stat[0].scale == FE_SCALE_NOT_AVAILABLE) {
@@ -1081,7 +1109,7 @@ linuxdvb_frontend_monitor ( void *aux )
       /* try old API */
       if (!ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
         mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-        mmi->tii_stats.snr = u16;
+        mmi->tii_stats.snr = sig_multiply(u16, lfe->lfe_snr_multiplier);
       }
       else {
         ioctl_bad(lfe, 7);
@@ -1143,7 +1171,7 @@ linuxdvb_frontend_monitor ( void *aux )
     ioctl_bad(lfe, 0);
     if (ioctl_check(lfe, 1) && !ioctl(lfe->lfe_fe_fd, FE_READ_SIGNAL_STRENGTH, &u16)) {
       mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-      mmi->tii_stats.signal = u16;
+      mmi->tii_stats.signal = sig_multiply(u16, lfe->lfe_sig_multiplier);
     }
     else {
       ioctl_bad(lfe, 1);
@@ -1160,7 +1188,7 @@ linuxdvb_frontend_monitor ( void *aux )
     }
     if (ioctl_check(lfe, 3) && !ioctl(lfe->lfe_fe_fd, FE_READ_SNR, &u16)) {
       mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_RELATIVE;
-      mmi->tii_stats.snr = u16;
+      mmi->tii_stats.snr = sig_multiply(u16, lfe->lfe_snr_multiplier);
     }
     else {
       ioctl_bad(lfe, 3);
@@ -2098,6 +2126,8 @@ linuxdvb_frontend_create
   lfe->lfe_status_period = 1000;
   lfe->lfe_pids_max = 32;
   lfe->lfe_pids_use_all = 1;
+  lfe->lfe_sig_multiplier = 100;
+  lfe->lfe_snr_multiplier = 100;
   lfe = (linuxdvb_frontend_t*)mpegts_input_create0((mpegts_input_t*)lfe, idc, uuid, conf);
   if (!lfe) return NULL;
 
