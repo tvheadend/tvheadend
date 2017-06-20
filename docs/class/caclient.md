@@ -5,7 +5,7 @@ capmt (linux network dvbapi) protocols for so-called 'softcam' descrambling.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
@@ -23,7 +23,7 @@ Button              | Function
 
 ---
 
-###Available CA types
+### Available CA types
 
 The following configuration parameters are used, depending on the type 
 of CA access:
@@ -37,7 +37,7 @@ of CA access:
 
 ---
 
-###Connection Status
+### Connection Status
 
 The icon next to each entry within the grid indicates the client's 
 connection status.

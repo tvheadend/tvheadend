@@ -86,7 +86,7 @@ const idclass_t imagecache_class = {
       .type   = PT_BOOL,
       .id     = "enabled",
       .name   = N_("Enabled"),
-      .desc   = N_("Select whether or not to enable caching. Note: "
+      .desc   = N_("Select whether or not to enable caching. Note, "
                    "even with this disabled you can still specify "
                    "local (file://) icons and these will be served by "
                    "the built-in webserver."),

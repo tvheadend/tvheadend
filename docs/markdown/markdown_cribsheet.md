@@ -1,4 +1,4 @@
-##Markdown/Formatting Crib Sheet
+## Markdown/Formatting Crib Sheet
 
 Some notable items about how formatting is used on this particular site.
 
@@ -6,11 +6,11 @@ In general, **keep it simple**, especially if you're contributing to the
 pages that get carried over into the web help. The simpler the formatting,
 the cleaner the conversion, the less tidying up there is afterwards.
 
-###References
+### References
 
 * Markdown basics: [GitHub mastering markdown](https://guides.github.com/features/mastering-markdown)
 
-###Including Documentation/Items
+### Including Documentation/Items
 
 You can include documentation/items in other markdown 
 files by using the tvh_class_doc, tvh_include and tvh_class_items tags.
@@ -33,7 +33,7 @@ To include multi-use docs (placed in the `docs/markdown/inc/` folder:
 <tvh_include>inc/common_button_table_end</tvh_include>
 ```
 
-###Paragraphs Versus Definition Lists
+### Paragraphs Versus Definition Lists
 
 Watch this one - indentation is key.
 

@@ -1,4 +1,4 @@
-##About
+## About
 
 This page displays general information about the current Tvheadend 
 version.

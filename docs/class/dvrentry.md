@@ -25,7 +25,7 @@ Entries shown here link to file(s) that Tvheadend cannot locate
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available (tab dependant):
 
@@ -46,7 +46,7 @@ Button                       | Function
 
 ---
 
-###Entry Overview
+### Entry Overview
 
 The *Details* column gives a quick overview as to the status of each 
 entry:
@@ -61,13 +61,13 @@ Icon                                       | Description
 
 ---
 
-###Manual Recording Entry Example
+### Manual Recording Entry Example
 
 This is an example of a one-time recording entry.
 
 !['Add new recording dialog'](static/img/doc/dvrentry/add.png)
 
-###Adding an Entry Using the EPG
+### Adding an Entry Using the EPG
 
 Using the Electronic Program Guide search functionality, find the 
 program/event you would like to record. Click on it, then using the broadcast 
@@ -80,7 +80,7 @@ details dialog you can:
 For full instructions on how to search and record using the EPG take a 
 look at the [EPG](epg) page.
 
-###Adding an Entry Using Autorec Rules
+### Adding an Entry Using Autorec Rules
 
 Autorec rules allow you to match events using various options. 
 
@@ -91,14 +91,14 @@ See [Autorec](class/dvrautorec) for more information.
 
 ---
 
-###Downloading a Recording
+### Downloading a Recording
 
 Highlight (select) the desired entry, then press the *[Download]* 
 button on the menu bar.
 
 ---
 
-###Re-recording an Entry/Re-schedule a Recording
+### Re-recording an Entry/Re-schedule a Recording
 
 You can re-schedule an entry by pressing the *[Re-record]* button on the menu bar.
 

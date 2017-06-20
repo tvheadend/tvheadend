@@ -1,6 +1,6 @@
-##Basic Requirements
+## Basic Requirements
 
-###Physical Architecture
+### Physical Architecture
 
 It's perfectly possible to install and run Tvheadend as a single-seat installation,
 with the software running on the same system as any client software (e.g. Kodi),
@@ -14,7 +14,7 @@ you use SAT>IP or have some other way to transport your TV signal over a LAN,
 your Tvheadend installation has to live where you can actually connect your
 tuners. 
 
-###System Requirements
+### System Requirements
 
 Wherever you install it, Tvheadend primarily runs on **Linux** - pre-built
 binaries are available for most Debian-based distributions (Debian itself, Ubuntu,
@@ -45,7 +45,7 @@ have an accurate clock for EPG timers to work, for example, but this can be
 synchronised from the broadcast signal if you're not in a position to use
 `ntp` or similar.
 
-###How Lightweight?
+### How Lightweight?
 
 How about light enough to run on a travel router? Take a look at this
 [example](https://tvheadend.org/boards/4/topics/16579) from one of our users...

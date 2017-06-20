@@ -35,7 +35,7 @@ Button                 | Function
 
 ---
 
-###Example
+### Example
 
 This is an example of a limited user entry.
 
@@ -55,7 +55,7 @@ rights, allowing you to enable / disable each as needed. Note, matching
 
 ---
 
-###Emergency/Backdoor Access
+### Emergency/Backdoor Access
 
 Tvheadend includes functionality that allows you to regain access to 
 your Tvheadend instance in case of emergency or if you find yourself 
@@ -84,7 +84,7 @@ is able to read the superuser file.
 
 ---
 
-###Anonymous Access
+### Anonymous Access
 
 If you would like to allow anonymous access to your Tvheadend server 
 you may set-up a wildcard account, you can do this by creating a new 

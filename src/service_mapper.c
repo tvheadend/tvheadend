@@ -505,8 +505,10 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "check_availability",
       .name   = N_("Check availability"),
-      .desc   = N_("Check service availability (add live services "
-                   "only)."),
+      .desc   = N_("Check services for availability. If enabled, "
+                   "services that are not currently broadcasting (or "
+                   "can't be decrypted) will be ignored. Leave disabled "
+                   "if you want Tvheadend to also map offline services."),
       .off    = offsetof(service_mapper_t, d.check_availability),
       .opts   = PO_ADVANCED
     },
@@ -522,7 +524,7 @@ static const idclass_t service_mapper_conf_class = {
       .type   = PT_BOOL,
       .id     = "merge_same_name",
       .name   = N_("Merge same name"),
-      .desc   = N_("Merge services with the same name to one channel."),
+      .desc   = N_("Merge services with the same name into one channel."),
       .off    = offsetof(service_mapper_t, d.merge_same_name),
     },
     {

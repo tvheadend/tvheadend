@@ -1,4 +1,4 @@
-##Updating the Documentation 
+## Updating the Documentation 
 
 The documentation is written in markdown, and then converted for
 direct inclusion to tvheadend binary. The markdown processor in
@@ -10,7 +10,7 @@ in [documentatation repository](https://github.com/tvheadend/tvheadend-documenta
 fetches the markdown files using the build-in web server and use
 them as source for mkdocs.
 
-###Instructions For Built-in Help
+### Instructions For Built-in Help
 
 Change markdown files in `docs/markdown`, `docs/markdown/inc`, `docs/class`, `docs/wizard`, etc.
 Images are placed in `src/webui/static/img/doc/`.

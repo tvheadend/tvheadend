@@ -1,4 +1,4 @@
-###Playing a Stream/File
+### Playing a Stream/File
 
 You can play a stream/file by clicking the play icon !['Play Icon Image'](static/icons/control_play.png).
 This will automatically launch an appropriate player, otherwise you will

@@ -10,7 +10,7 @@ This tab controls timer-driven recording rules.
 
 ---
 
-###Example
+### Example
 
 This is an example of a one-time timer-based recording entry.
 

@@ -1,4 +1,4 @@
-##Configure Tvheadend
+## Configure Tvheadend
 
 This section gives a high-level overview of the steps needed to get Tvheadend
 up and running. For more detailed information, please consult the rest of
@@ -8,7 +8,7 @@ Tvheadend interface so you know where to look.
 You can also consult the in-application help text, which mirrors this guide
 to a very great extent.
 
-###1. Ensure Tuners are Available for Use
+### 1. Ensure Tuners are Available for Use
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> TV Adapters_**
 
@@ -23,7 +23,7 @@ is checked in the 'Parameters' list
 If anything is obviously wrong at this point, you probably have a
 driver/firmware error which you'll need to resolve before going any further.
 
-###2. Set up Relevant Network(s)
+### 2. Set up Relevant Network(s)
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Networks_**
 
@@ -45,7 +45,7 @@ you may not be able to receive.
 * Network discovery (enabled by default) increases the likelihood of 
 receiving all available muxes and services.
 
-###3. Associate the Network with the Respective Tuner(s)
+### 3. Associate the Network with the Respective Tuner(s)
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> TV Adapters_**
 
@@ -63,7 +63,7 @@ At this point, your tuners now know what networks to use: one network can
 appear on multiple tuners (many-to-one), and one tuner can have multiple
 networks.
 
-###4. If Necessary, Manually Add Muxes
+### 4. If Necessary, Manually Add Muxes
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Muxes_**
 
@@ -97,7 +97,7 @@ central and northern Europe
 You can also use [dvbscan](http://www.linuxtv.org/wiki/index.php/Dvbscan) to
 force a scan and effectively ask your tuner what it can see.
 
-###5. Scan for Services
+### 5. Scan for Services
 
 **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
 
@@ -111,7 +111,7 @@ and language(s), and so on.
 
 (For the technically-minded, these unique identifiers - the elementary streams - are referred to as 'packet identifiers' or 'PIDs').
 
-###6. Map Services to Channels
+### 6. Map Services to Channels
 
   **Tvheadend web interface: _Configuration -> DVB Inputs -> Services_**
 
@@ -121,7 +121,7 @@ and language(s), and so on.
   
   See [Services](class/mpegts_service) for a detailed look into service mapping.
 
-####6.1. Bouquets
+#### 6.1. Bouquets
 
   **Tvheadend web interface: _Configuration -> Channel / EPG -> Bouquets_**
 
@@ -131,7 +131,7 @@ and language(s), and so on.
   
   If you would like to use bouquets see [Bouquets](class/bouquet).
 
-###7. Watch TV
+### 7. Watch TV
 
 That's it - you're done. You should now have a working basic Tvheadend
 installation with channels mapped and ready for use!
