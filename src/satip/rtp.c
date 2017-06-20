@@ -57,6 +57,7 @@ typedef struct satip_rtp_session {
   int frontend;
   int source;
   int allow_data;
+  int disable_rtcp;
   dvb_mux_conf_t dmc;
   mpegts_apids_t pids;
   TAILQ_HEAD(, satip_rtp_table) pmt_tables;
@@ -901,7 +902,7 @@ satip_rtcp_thread(void *aux)
     } while (us > 0);
     pthread_mutex_lock(&satip_rtp_lock);
     TAILQ_FOREACH(rtp, &satip_rtp_sessions, link) {
-      if (rtp->sq == NULL) continue;
+      if (rtp->sq == NULL || rtp->disable_rtcp) continue;
       len = satip_rtcp_build(rtp, msg);
       if (len <= 0) continue;
       if (tvhtrace_enabled()) {
@@ -920,9 +921,13 @@ satip_rtcp_thread(void *aux)
       }
       if (r < 0) {
         err = errno;
-        tcp_get_str_from_ip(&rtp->peer2, addrbuf, sizeof(addrbuf));
-        tvhwarn(LS_SATIPS, "RTCP send to error %s:%d : %s",
-                addrbuf, ntohs(IP_PORT(rtp->peer2)), strerror(err));
+        if (err != ECONNREFUSED) {
+          tcp_get_str_from_ip(&rtp->peer2, addrbuf, sizeof(addrbuf));
+          tvhwarn(LS_SATIPS, "RTCP send to error %s:%d : %s",
+                  addrbuf, ntohs(IP_PORT(rtp->peer2)), strerror(err));
+        } else {
+          rtp->disable_rtcp = 1;
+        }
       }
     }
     pthread_mutex_unlock(&satip_rtp_lock);
