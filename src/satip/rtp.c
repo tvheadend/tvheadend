@@ -660,7 +660,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     level = MINMAX((rtp->sig.signal + 90000) / 375, 0, 240);
     break;
   default:
-    level = lock ? 10 : 0;
+    level = lock ? 120 : 0;
     break;
   }
   switch (rtp->sig.snr_scale) {
