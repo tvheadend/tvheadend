@@ -1520,7 +1520,7 @@ static void
 cwc_service_destroy0(th_descrambler_t *td)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
-  cwc_t *cwc = ct->cs_cwc;
+  int i;
 
   for (i = 0; i < CWC_ES_PIDS; i++)
     if (ct->cs_epids[i])
@@ -1543,6 +1543,9 @@ cwc_service_destroy0(th_descrambler_t *td)
 static void
 cwc_service_destroy(th_descrambler_t *td)
 {
+  cwc_service_t *ct = (cwc_service_t *)td;
+  cwc_t *cwc = ct->cs_cwc;
+
   pthread_mutex_lock(&cwc->cwc_mutex);
   cwc_service_destroy0(td);
   pthread_mutex_unlock(&cwc->cwc_mutex);

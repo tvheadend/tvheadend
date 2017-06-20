@@ -1,4 +1,4 @@
-/*
+  /*
  *  tvheadend, CCCAM interface
  *  Copyright (C) 2007 Andreas Öman
  *  Copyright (C) 2017 Luis Alves
@@ -1594,7 +1594,6 @@ static void
 cccam_service_destroy0(th_descrambler_t *td)
 {
   cccam_service_t *ct = (cccam_service_t *)td;
-  cccam_t *cccam = ct->cs_cccam;
   int i;
 
   for (i = 0; i < CCCAM_ES_PIDS; i++)
@@ -1618,6 +1617,9 @@ cccam_service_destroy0(th_descrambler_t *td)
 static void
 cccam_service_destroy(th_descrambler_t *td)
 {
+  cccam_service_t *ct = (cccam_service_t *)td;
+  cccam_t *cccam = ct->cs_cccam;
+
   pthread_mutex_lock(&cccam->cccam_mutex);
   cccam_service_destroy0(td);
   pthread_mutex_unlock(&cccam->cccam_mutex);
