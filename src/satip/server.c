@@ -715,7 +715,16 @@ const idclass_t satip_server_class = {
       .off    = offsetof(struct satip_server_conf, satip_iptv_sig_level),
       .opts   = PO_EXPERT,
       .group  = 1,
-      .def.i  = 220,
+      .def.u32 = 220,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "force_sig_level",
+      .name   = N_("Force signal level"),
+      .desc   = N_("Force signal level for all streaming (1-240, 0=do not use)."),
+      .off    = offsetof(struct satip_server_conf, satip_force_sig_level),
+      .opts   = PO_EXPERT,
+      .group  = 1,
     },
     {
       .type   = PT_INT,

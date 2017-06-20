@@ -668,27 +668,32 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   int r, level = 0, lock = 0, quality = 0;
 
   lock = rtp->sig_lock;
-  switch (rtp->sig.signal_scale) {
-  case SIGNAL_STATUS_SCALE_RELATIVE:
-    level = MINMAX((rtp->sig.signal * 245) / 0xffff, 0, 240);
-    break;
-  case SIGNAL_STATUS_SCALE_DECIBEL:
-    level = MINMAX((rtp->sig.signal + 90000) / 375, 0, 240);
-    break;
-  default:
-    level = lock ? 120 : 0;
-    break;
-  }
-  switch (rtp->sig.snr_scale) {
-  case SIGNAL_STATUS_SCALE_RELATIVE:
-    quality = MINMAX((rtp->sig.snr * 16) / 0xffff, 0, 15);
-    break;
-  case SIGNAL_STATUS_SCALE_DECIBEL:
-    quality = MINMAX(rtp->sig.snr / 2000, 0, 15);
-    break;
-  default:
-    quality = lock ? 10 : 0;
-    break;
+  if (satip_server_conf.satip_force_sig_level > 0) {
+    level = MINMAX(satip_server_conf.satip_force_sig_level, 1, 240);
+    quality = MAX((level + 15) / 15, 15);
+  } else {
+    switch (rtp->sig.signal_scale) {
+    case SIGNAL_STATUS_SCALE_RELATIVE:
+      level = MINMAX((rtp->sig.signal * 245) / 0xffff, 0, 240);
+      break;
+    case SIGNAL_STATUS_SCALE_DECIBEL:
+      level = MINMAX((rtp->sig.signal + 90000) / 375, 0, 240);
+      break;
+    default:
+      level = lock ? 120 : 0;
+      break;
+    }
+    switch (rtp->sig.snr_scale) {
+    case SIGNAL_STATUS_SCALE_RELATIVE:
+      quality = MINMAX((rtp->sig.snr * 16) / 0xffff, 0, 15);
+      break;
+    case SIGNAL_STATUS_SCALE_DECIBEL:
+      quality = MINMAX(rtp->sig.snr / 2000, 0, 15);
+      break;
+    default:
+      quality = lock ? 10 : 0;
+      break;
+    }
   }
 
   mpegts_pid_dump(&rtp->pids, pids, sizeof(pids), 0, 0);
