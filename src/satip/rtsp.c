@@ -512,6 +512,7 @@ rtsp_start
   dvb_mux_conf_t dmc;
   char buf[384];
   int res = HTTP_STATUS_NOT_ALLOWED, qsize = 3000000, created = 0, weight;
+  int osetup = setup;
 
   pthread_mutex_lock(&global_lock);
   weight = satip_server_conf.satip_weight;
@@ -592,8 +593,9 @@ rtsp_start
       goto endclean;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
+    /* trigger play when first SETUP arrived */
     /* retrigger play when new setup arrived */
-    if (oldstate) {
+    if (oldstate != STATE_DESCRIBE || setup) {
       setup = 0;
       rs->state = STATE_SETUP;
     }
@@ -618,13 +620,15 @@ pids:
                     rs->udp_rtp ? rs->udp_rtp->fd : hc->hc_fd,
                     rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                     rs->frontend, rs->findex, &rs->dmc_tuned,
-                    &rs->pids, rs->perm_lock);
+                    &rs->pids, osetup == 0, rs->perm_lock);
     rs->tcp_data = rs->udp_rtp ? NULL : hc;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     rs->state = STATE_PLAY;
+  } else if (osetup == 0) {
+    satip_rtp_allow_data((void *)(intptr_t)rs->stream);
   }
   rtsp_manage_descramble(rs);
   pthread_mutex_unlock(&global_lock);

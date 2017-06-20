@@ -57,6 +57,7 @@ typedef struct satip_rtp_session {
   int frontend;
   int source;
   int disable_rtcp;
+  int allow_data;
   dvb_mux_conf_t dmc;
   mpegts_apids_t pids;
   TAILQ_HEAD(, satip_rtp_table) pmt_tables;
@@ -389,13 +390,15 @@ satip_rtp_thread(void *aux)
     case SMT_MPEGTS:
       pb = sm->sm_data;
       subscription_add_bytes_out(subs, pktbuf_len(pb));
-      pthread_mutex_lock(&rtp->lock);
-      if (tcp)
-        r = satip_rtp_tcp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
-      else
-        r = satip_rtp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
-      pthread_mutex_unlock(&rtp->lock);
-      if (r) fatal = 1;
+      if (atomic_get(&rtp->allow_data)) {
+        pthread_mutex_lock(&rtp->lock);
+        if (tcp)
+          r = satip_rtp_tcp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
+        else
+          r = satip_rtp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
+        pthread_mutex_unlock(&rtp->lock);
+        if (r) fatal = 1;
+      }
       break;
     case SMT_SIGNAL_STATUS:
       satip_rtp_signal_status(rtp, sm->sm_data);
@@ -453,7 +456,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
                      struct sockaddr_storage *peer, int port,
                      int fd_rtp, int fd_rtcp,
                      int frontend, int source, dvb_mux_conf_t *dmc,
-                     mpegts_apids_t *pids, int perm_lock)
+                     mpegts_apids_t *pids, int allow_data, int perm_lock)
 {
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
   int dscp;
@@ -472,6 +475,7 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   rtp->subs = subs;
   rtp->sq = sq;
   rtp->tcp_lock = tcp_lock;
+  atomic_set(&rtp->allow_data, allow_data);
   mpegts_pid_init(&rtp->pids);
   mpegts_pid_copy(&rtp->pids, pids);
   TAILQ_INIT(&rtp->pmt_tables);
@@ -502,6 +506,17 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   pthread_mutex_lock(&satip_rtp_lock);
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
   tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
+  pthread_mutex_unlock(&satip_rtp_lock);
+}
+
+void satip_rtp_allow_data(void *id)
+{
+  satip_rtp_session_t *rtp;
+
+  pthread_mutex_lock(&satip_rtp_lock);
+  rtp = satip_rtp_find(id);
+  if (rtp)
+    atomic_set(&rtp->allow_data, 1);
   pthread_mutex_unlock(&satip_rtp_lock);
 }
 
