@@ -1,11 +1,11 @@
-##General Overview of Web Interface
+## General Overview of Web Interface
 
 Tvheadend is operated primarily through a tabbed web interface. 
 
 There are some basic navigation concepts that will help you get around and
 make the best of it.
 
-###Page Structure
+### Page Structure
 
 The interface is made up of nested tabs, so similar functions are grouped
 together (e.g. all configuration items at the top level, then all configuration
@@ -24,7 +24,7 @@ parameters common to DVB-S, -T, -C and IPTV networks, but specific things
 such as FEC rolloff or mux URL are then only in the dialogs for networks
 that need these values.
 
-####View level
+#### View level
 
 The *View level* drop-down/button - next to the Help button, 
 displays/hides the more advanced features. By default it is set to Basic.
@@ -37,7 +37,7 @@ View level            | Description
 
 Depending on configuration, the view-level drop-down is not always visible.
 
-###Displaying and Manipulating Columns
+### Displaying and Manipulating Columns
 
 * Not all columns are necessarily visible. If you hover your mouse over a
   column heading, you'll see a down arrow - click here, and a drop-down menu
@@ -61,7 +61,7 @@ Depending on configuration, the view-level drop-down is not always visible.
 * A cookie is used to remember your column/filtering preferences. Clearing
   your cookies will reset the interface to default.
 
-###Adding, Editing and More
+### Adding, Editing and More
 
 * Rows (in the grid) are multi-selectable, so you can carry out certain actions on
   more than one entry at the same time. So, for example, you can select
