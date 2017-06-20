@@ -1591,13 +1591,12 @@ cccam_service_pid_free(cccam_service_t *ct)
  * cccam_mutex is held
  */
 static void
-cccam_service_destroy(th_descrambler_t *td)
+cccam_service_destroy0(th_descrambler_t *td)
 {
   cccam_service_t *ct = (cccam_service_t *)td;
   cccam_t *cccam = ct->cs_cccam;
   int i;
 
-  pthread_mutex_lock(&cccam->cccam_mutex);
   for (i = 0; i < CCCAM_ES_PIDS; i++)
     if (ct->cs_epids[i])
       descrambler_close_pid(ct->cs_mux, ct,
@@ -1611,6 +1610,16 @@ cccam_service_destroy(th_descrambler_t *td)
 
   free(ct->td_nicename);
   free(ct);
+}
+
+/**
+ *
+ */
+static void
+cccam_service_destroy(th_descrambler_t *td)
+{
+  pthread_mutex_lock(&cccam->cccam_mutex);
+  cccam_service_destroy0(td);
   pthread_mutex_unlock(&cccam->cccam_mutex);
 }
 
@@ -1635,10 +1644,8 @@ cccam_service_start(caclient_t *cac, service_t *t)
   if (!idnode_is_instance(&t->s_id, &mpegts_service_class))
     return;
 
-
   pthread_mutex_lock(&cccam->cccam_mutex);
   pthread_mutex_lock(&t->s_stream_mutex);
-
 
   LIST_FOREACH(ct, &cccam->cccam_services, cs_link) {
     if (ct->td_service == t && ct->cs_cccam == cccam)
@@ -1663,7 +1670,7 @@ cccam_service_start(caclient_t *cac, service_t *t)
     if (st) break;
   }
   if (!pcard) {
-    if (ct) cccam_service_destroy((th_descrambler_t*)ct);
+    if (ct) cccam_service_destroy0((th_descrambler_t*)ct);
     goto end;
   }
   if (ct) {
