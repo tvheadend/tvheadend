@@ -115,7 +115,7 @@ typedef struct dmx_filter {
 
 // limits
 #define MAX_CA       16
-#define MAX_INDEX    64
+#define MAX_INDEX    128
 #define MAX_FILTER   64
 #define MAX_SOCKETS  16   // max sockets (simultaneous channels) per demux
 #define MAX_PIDS     64   // max opened pids
