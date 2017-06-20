@@ -84,13 +84,6 @@ const idclass_t linuxdvb_frontend_class =
   .ic_changed    = linuxdvb_frontend_class_changed,
   .ic_properties = (const property_t[]) {
     {
-      .type     = PT_BOOL,
-      .id       = "active",
-      .name     = N_("Active"),
-      .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
-      .get      = linuxdvb_frontend_class_active_get,
-    },
-    {
       .type     = PT_STR,
       .id       = "fe_path",
       .name     = N_("Frontend path"),

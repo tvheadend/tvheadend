@@ -71,7 +71,7 @@ mpegts_input_class_active_get ( void *obj )
 {
   static int active;
   mpegts_input_t *mi = obj;
-  active = mi->mi_is_enabled((mpegts_input_t*)mi, NULL, 0, -1) != MI_IS_ENABLED_NEVER;
+  active = mi->mi_enabled ? 1 : 0;
   return &active;
 }
 
