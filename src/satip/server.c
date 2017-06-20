@@ -636,6 +636,15 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_anonymize",
+      .name   = N_("Anonymize"),
+      .desc   = N_("Show only information for sessions which "
+                   "are initiated from an IP address of the requester."),
+      .off    = offsetof(struct satip_server_conf, satip_anonymize),
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),

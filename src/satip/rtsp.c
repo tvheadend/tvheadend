@@ -44,6 +44,7 @@ typedef struct slave_subscription {
 
 typedef struct session {
   TAILQ_ENTRY(session) link;
+  char *peer_ipstr;
   int delsys;
   int stream;
   int frontend;
@@ -169,13 +170,14 @@ result:
  *
  */
 static struct session *
-rtsp_new_session(int delsys, uint32_t nsession, int session)
+rtsp_new_session(const char *ipstr, int delsys, uint32_t nsession, int session)
 {
   struct session *rs = calloc(1, sizeof(*rs));
 
   if (rs == NULL)
     return NULL;
 
+  rs->peer_ipstr = strdup(ipstr);
   rs->nsession = nsession ?: session_number;
   snprintf(rs->session, sizeof(rs->session), "%08X", session_number);
   if (!nsession) {
@@ -197,7 +199,9 @@ rtsp_find_session(http_connection_t *hc, int stream)
   struct session *rs, *first = NULL;
 
   TAILQ_FOREACH(rs, &rtsp_sessions, link) {
-    if (hc->hc_session && !strcmp(rs->session, hc->hc_session)) {
+    if (hc->hc_session &&
+        strcmp(rs->session, hc->hc_session) == 0 &&
+        strcmp(rs->peer_ipstr, hc->hc_peer_ipstr) == 0) {
       if (stream == rs->stream)
         return rs;
       if (first == NULL)
@@ -926,12 +930,12 @@ rtsp_parse_cmd
 
   if (cmd) {
     if (!rs) {
-      rs = rtsp_new_session(msys, 0, -1);
+      rs = rtsp_new_session(hc->hc_peer_ipstr, msys, 0, -1);
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
     } else if (stream != rs->stream) {
-      rs = rtsp_new_session(msys, rs->nsession, stream);
+      rs = rtsp_new_session(hc->hc_peer_ipstr, msys, rs->nsession, stream);
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
@@ -1309,6 +1313,9 @@ rtsp_process_describe(http_connection_t *hc)
       if (stream > 0 && rs->stream != stream)
         continue;
     }
+    if (satip_server_conf.satip_anonymize &&
+        strcmp(hc->hc_peer_ipstr, rs->peer_ipstr))
+      continue;
     if (first) {
       rtsp_describe_header(hc->hc_session ? rs : NULL, &q);
       first = 0;
@@ -1604,6 +1611,7 @@ rtsp_free_session(session_t *rs)
   mtimer_disarm(&rs->timer);
   pthread_mutex_unlock(&global_lock);
   mpegts_pid_done(&rs->pids);
+  free(rs->peer_ipstr);
   free(rs);
 }
 
