@@ -1255,10 +1255,10 @@ rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
     htsbuf_append_str(q, "c=IN IP6 ::0\r\n");
   else
     htsbuf_append_str(q, "c=IN IP4 0.0.0.0\r\n");
-  if (rs->state == STATE_PLAY) {
+  if (rs->state == STATE_PLAY || rs->state == STATE_SETUP) {
     satip_rtp_status((void *)(intptr_t)rs->stream, buf, sizeof(buf));
     htsbuf_qprintf(q, "a=fmtp:33 %s\r\n", buf);
-    htsbuf_append_str(q, "a=sendonly\r\n");
+    htsbuf_qprintf(q, "a=%s\r\n", rs->state == STATE_SETUP ? "inactive" : "sendonly");
   } else {
     htsbuf_append_str(q, "a=fmtp:33\r\n");
     htsbuf_append_str(q, "a=inactive\r\n");
