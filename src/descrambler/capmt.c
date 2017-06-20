@@ -1164,9 +1164,9 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   else if (cmd == CA_SET_DESCR)
     return 4 + 16 + adapter_byte;
   else if (cmd == CA_SET_DESCR_AES)
-    return 4 + 32;
+    return 4 + 32 + adapter_byte;
   else if (cmd == CA_SET_DESCR_MODE && capmt_oscam_netproto(capmt))
-    return 4 + 12;
+    return 4 + 12 + adapter_byte;
   else if (oscam_new && cmd == DMX_SET_FILTER)
     /* when using network protocol the dmx_sct_filter_params fields are added */
     /* seperately to avoid padding problems, so we substract 2 bytes: */
