@@ -1517,13 +1517,11 @@ cwc_service_pid_free(cwc_service_t *ct)
  * cwc_mutex is held
  */
 static void
-cwc_service_destroy(th_descrambler_t *td)
+cwc_service_destroy0(th_descrambler_t *td)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
   cwc_t *cwc = ct->cs_cwc;
-  int i;
 
-  pthread_mutex_lock(&cwc->cwc_mutex);
   for (i = 0; i < CWC_ES_PIDS; i++)
     if (ct->cs_epids[i])
       descrambler_close_pid(ct->cs_mux, ct,
@@ -1537,6 +1535,16 @@ cwc_service_destroy(th_descrambler_t *td)
 
   free(ct->td_nicename);
   free(ct);
+}
+
+/**
+ * cwc_mutex is held
+ */
+static void
+cwc_service_destroy(th_descrambler_t *td)
+{
+  pthread_mutex_lock(&cwc->cwc_mutex);
+  cwc_service_destroy0(td);
   pthread_mutex_unlock(&cwc->cwc_mutex);
 }
 
@@ -1586,7 +1594,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
     if (st) break;
   }
   if (!pcard) {
-    if (ct) cwc_service_destroy((th_descrambler_t*)ct);
+    if (ct) cwc_service_destroy0((th_descrambler_t*)ct);
     goto end;
   }
   if (ct) {
