@@ -671,7 +671,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
     quality = MINMAX(rtp->sig.snr / 2000, 0, 15);
     break;
   default:
-    quality = lock ? 1 : 0;
+    quality = lock ? 10 : 0;
     break;
   }
 
