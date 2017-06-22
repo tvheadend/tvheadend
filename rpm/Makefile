@@ -50,12 +50,12 @@ SOURCES:
 	mkdir -p $(foreach f,BUILD RPMS SOURCES SPECS SRPMS,$(f))
 
 .PHONY: srpm
-srpm: SOURCES tvheadend.spec
+srpm: clean SOURCES tvheadend.spec
 	spectool --get-files -C SOURCES tvheadend.spec
 	rpmbuild $(DEFINES) -bs tvheadend.spec
 
 .PHONY: build
-build: SOURCES tvheadend.spec
+build: clean SOURCES tvheadend.spec
 	spectool --get-files -C SOURCES tvheadend.spec
 	rpmbuild $(DEFINES) -ba tvheadend.spec
 
@@ -73,3 +73,5 @@ build-doozer: build
 .PHONY: clean.
 clean:
 	rm -f tvheadend.spec
+	rm -fr BUILD/*
+	rm -f SOURCES/*
