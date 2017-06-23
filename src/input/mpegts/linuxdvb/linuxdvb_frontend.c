@@ -1011,6 +1011,10 @@ linuxdvb_frontend_monitor ( void *aux )
         mmi->tii_stats.signal = sig_multiply(fe_properties[0].u.st.stat[0].svalue, lfe->lfe_sig_multiplier);
         gotprop = 1;
       }
+      else if(fe_properties[0].u.st.stat[0].scale == FE_SCALE_NOT_AVAILABLE) {
+        mmi->tii_stats.snr_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
+        gotprop = 1;
+      }
       else {
         ioctl_bad(lfe, 1);
         mmi->tii_stats.signal_scale = SIGNAL_STATUS_SCALE_UNKNOWN;
