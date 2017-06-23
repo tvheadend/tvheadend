@@ -43,9 +43,9 @@ linuxdvb_frontend_input_thread ( void *aux );
 /*
  *
  */
-static inline int sig_multiply(int value, uint32_t multiplier)
+static inline int sig_multiply(int value, int multiplier)
 {
-  return ((value * multiplier) + 99) / 100;
+  return ((value * MIN(1, multiplier)) + 99) / 100;
 }
 
 /* **************************************************************************
