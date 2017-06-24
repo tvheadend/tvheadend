@@ -90,9 +90,9 @@ urlparse ( const char *str, url_t *url )
 #define uri_copy_static(y, s, x)\
   if (x.first) {\
     size_t len = x.afterLast - x.first;\
-    if (len > sizeof(y) - 1) s = strndup(x.first, len); else \
-    { s = NULL; strncpy(y, x.first, len); }\
-    y[len] = '\0';\
+    if (len > sizeof(y) - 1) \
+    { y[0] = '\0'; s = strndup(x.first, len); } else \
+    { s = NULL; strncpy(y, x.first, len); y[len] = '\0'; }\
   } else {\
     s = NULL;\
     y[0] = '\0';\
