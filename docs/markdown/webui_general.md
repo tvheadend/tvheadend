@@ -9,8 +9,12 @@ make the best of it.
 
 The interface is made up of nested tabs, so similar functions are grouped
 together (e.g. all configuration items at the top level, then all configuration
-items for a particular topic are below that). However, be aware that not all tabs are 
-shown by default, some tabs are hidden depending on the current [view level](#view-level).
+items for a particular topic are below that). 
+
+!["Tabs"](static/img/doc/webui_general/tabbar.png)
+
+However, be aware that not all tabs are 
+shown by default, some are hidden depending on the current [view level](#view-level).
 
 Each tab is then typically laid out with a menu bar that provides access 
 to Add/Save/Edit-type functions, and a grid like a spreadsheet below that.
@@ -28,6 +32,10 @@ that need these values.
 
 The *View level* drop-down/button - next to the Help button, 
 displays/hides the more advanced features. By default it is set to Basic.
+Depending on [configuration](class/config), the view-level drop-down is 
+not always visible.
+
+!["Column options"](static/img/doc/webui_general/viewlevel.png)
 
 View level            | Description
 ----------------------|-------------------------------------------------
@@ -35,7 +43,27 @@ View level            | Description
 **Advanced**          | Display the more advanced tabs/items.
 **Expert**            | Show all tabs/items.
 
-Depending on configuration, the view-level drop-down is not always visible.
+#### Paging Toolbar
+
+The paging toolbar - at the bottom of most grids - offers many useful 
+tools. 
+
+!["Column options"](static/img/doc/webui_general/pagebar.png)
+
+* General paging functions ```|< < > >|``` allow you to quickly move 
+between data sets.
+
+* Lists the number of current and maximum (per page) rows displayed, followed by 
+the total number of items available.
+
+* The *Per page* drop-down allows you to control how many rows are 
+displayed within the grid. By default, this is set to 50. Note that 
+increasing the number of rows displayed can affect performance.
+
+* The refresh icon allows you to refresh the currently-displayed rows. 
+
+* The *Auto refresh* check-box allows the interface to automatically 
+refresh the rows for you, every 30 seconds.
 
 ### Displaying and Manipulating Columns
 
@@ -58,9 +86,11 @@ Depending on configuration, the view-level drop-down is not always visible.
 * **Re-size** the columns by dragging the very edges of the column header as
   required. 
   
-* A cookie is used to remember your column/filtering preferences. Clearing
-  your cookies will reset the interface to default.
+Note, a cookie is used to remember your column/filtering preferences. Clearing
+your cookies will reset the interface to default.
 
+!["Column options"](static/img/doc/webui_general/columnoptions.png)
+  
 ### Adding, Editing and More
 
 * Rows (in the grid) are multi-selectable, so you can carry out certain actions on

@@ -798,6 +798,9 @@ PROP_DOC(postremove)
 PROP_DOC(pathname)
 PROP_DOC(cache_scheme)
 PROP_DOC(runningstate)
+PROP_DOC(dvrconfig_whitespace)
+PROP_DOC(dvrconfig_unsafe)
+PROP_DOC(dvrconfig_windows)
 
 const idclass_t dvr_config_class = {
   .ic_class      = "dvrconfig",
@@ -1271,6 +1274,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("All characters that could possibly "
                      "cause problems for filenaming will be replaced "
                      "with an underscore. See Help for details."),
+      .doc      = prop_doc_dvrconfig_unsafe,
       .off      = offsetof(dvr_config_t, dvr_clean_title),
       .opts     = PO_EXPERT,
       .group    = 6,
@@ -1280,6 +1284,7 @@ const idclass_t dvr_config_class = {
       .id       = "whitespace-in-title",
       .name     = N_("Replace whitespace in title with '-'"),
       .desc     = N_("Replaces all whitespace in the title with '-'."),
+      .doc      = prop_doc_dvrconfig_whitespace,
       .off      = offsetof(dvr_config_t, dvr_whitespace_in_title),
       .opts     = PO_EXPERT,
       .group    = 6,
@@ -1291,6 +1296,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("Characters not supported in Windows filenames "
                      "(e.g. for an SMB/CIFS share) will be stripped out "
                      "or converted."),
+      .doc      = prop_doc_dvrconfig_windows,
       .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
       .opts     = PO_ADVANCED,
       .group    = 6,
