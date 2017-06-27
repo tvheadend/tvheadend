@@ -62,6 +62,6 @@ it to perform a service discovery.
 ### Custom M3U Playlist
 
 You may put your custom m3u playlist which is advertised to clients
-in your tvheadend's configuration directory - filename *satip.m3u*.
+in your tvheadend configuration directory - filename *satip.m3u*.
 
 ---

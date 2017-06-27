@@ -73,9 +73,6 @@ You can map/remove a service to/from an existing channel by doing the following:
 have a lot of services you may want to use [filtering](webui_general) to limit the 
 number of grid entries. 
 
-**Tip**: Remember to remove the filter when you're finished (uncheck the 
-check box next to the "Filters" option). 
-
 **2.** Double click on the channel field, a drop down listing of all defined 
 channels will appear, check/uncheck the check box next to the channel 
 you'd like to associate/disassociate the service with. 

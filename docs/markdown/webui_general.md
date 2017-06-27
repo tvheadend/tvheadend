@@ -57,8 +57,8 @@ between data sets.
 the total number of items available.
 
 * The *Per page* drop-down allows you to control how many rows are 
-displayed within the grid. By default, this is set to 50. Note that 
-increasing the number of rows displayed can affect performance.
+displayed within the grid. By default, this is set to 50, increasing 
+the number of rows displayed may affect performance.
 
 * The refresh icon allows you to refresh the currently-displayed rows. 
 
@@ -79,12 +79,13 @@ refresh the rows for you, every 30 seconds.
 * And the same drop-down menu also gives you access to a **filter** function
   if defined. The filter does simple pattern-matching on any string you
   provide. A small blue flag or triangle will appear in the top-left 
-  corner to indicate that a filter is active.
+  corner to indicate that a filter is active. Filters persist until 
+  cleared.  
   
 * **Re-arrange** the columns by simply dragging he header to a new spot.
 
 * **Re-size** the columns by dragging the very edges of the column header as
-  required. 
+  required.
   
 Note, a cookie is used to remember your column/filtering preferences. Clearing
 your cookies will reset the interface to default.
@@ -95,29 +96,29 @@ your cookies will reset the interface to default.
 
 * Rows (in the grid) are multi-selectable, so you can carry out certain actions on
   more than one entry at the same time. So, for example, you can select
-  multiple items by using ctrl+click on each entry or click, 
+  multiple items by using ctrl+click on each entry or click,
   shift+click to select a range, or ctrl+A to select all.
 
-* To add an entry, click the *Add* button from the menu bar. You'll then 
-  see a dialog, or in some cases (where a list/split panel is used), a 
-  parameter panel. You can now fill in the desired/required fields, the 
-  entry can then be saved (*Create/Save* button), applied (*Apply* button), 
+* To add an entry, click the *Add* button from the menu bar. You'll then
+  see a dialog, or in some cases - where a list/split panel is used - a
+  parameter panel. You can now fill in the desired/required fields, the
+  entry can then be saved (*Create/Save* button), applied (*Apply* button),
   or abandoned (*Cancel* button).
   
-* To edit a single entry in the grid, double click on the desired field/cell. 
-  It should now be editable. Once you've made your changes you can then 
+* To edit a single entry in the grid, double click on the desired field/cell.
+  It should now be editable. Once you've made your changes you can then
   save (*Save* button), apply (*Apply* button), or abandon (*Cancel* button).
   
-  After a cell is changed, a small red flag or triangle will appear in 
+  After a cell is changed, a small red flag or triangle will appear in
   the top-left corner to indicate that it has been changed.
   
   To change a check box or radio button, click once.
 
-* To edit multiple entries, select the desired entries (as explained above), and 
-  then press the *Edit* button - a dialog will be displayed. You can now make 
-  your changes to each field. These changes can then be kept (*Save* button), 
-  applied (*Apply* button), or abandoned (*Undo* button). Remember to tick the 
-  check box before each field when saving/applying, so that the changes are applied 
+* To edit multiple entries, select the desired entries (as explained above), and
+  then press the *Edit* button - a dialog will be displayed. You can now make
+  your changes to each field. These changes can then be kept (*Save* button),
+  applied (*Apply* button), or abandoned (*Undo* button). Remember to tick the
+  check box before each field when saving/applying, so that the changes are applied
   to all selected entries.
   
 * To delete entries, simply select the entry/entries and press the *Delete* button.
