@@ -910,7 +910,7 @@ rtsp_parse_cmd
   weight = atoi(http_arg_get_remove(&hc->hc_req_args, "tvhweight"));
 
   if (addpids.count > 0 || delpids.count > 0) {
-    if (cmd)
+    if (cmd == RTSP_CMD_SETUP)
       goto end;
     if (!stream)
       goto end;
@@ -928,7 +928,7 @@ rtsp_parse_cmd
     delsys = msys;
   }
 
-  if (cmd) {
+  if (cmd == RTSP_CMD_SETUP) {
     if (!rs) {
       rs = rtsp_new_session(hc->hc_peer_ipstr, msys, 0, -1);
       if (delsys == DVB_SYS_NONE) goto end;
@@ -940,11 +940,11 @@ rtsp_parse_cmd
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
     } else {
-      if (cmd < 0 && rs->state != STATE_DESCRIBE) {
+      if (cmd == RTSP_CMD_DESCRIBE && rs->state != STATE_DESCRIBE) {
         errcode = HTTP_STATUS_CONFLICT;
         goto end;
       }
-      if (!has_args && rs->state == STATE_DESCRIBE && cmd > 0) {
+      if (!has_args && rs->state == STATE_DESCRIBE && cmd == RTSP_CMD_SETUP) {
         r = parse_transport(hc);
         if (r < 0) {
           errcode = HTTP_STATUS_BAD_TRANSFER;
@@ -957,7 +957,7 @@ rtsp_parse_cmd
       *oldstate = rs->state;
       rtsp_close_session(rs);
     }
-    if (cmd > 0) {
+    if (cmd == RTSP_CMD_SETUP) {
       r = parse_transport(hc);
       if (r < 0) {
         errcode = HTTP_STATUS_BAD_TRANSFER;
@@ -1112,11 +1112,11 @@ rtsp_parse_cmd
   rs->findex = findex;
   if (weight > 0)
     rs->weight = weight;
-  else if (cmd == 1)
+  else if (cmd == RTSP_CMD_SETUP)
     rs->weight = 0;
   rs->old_hc = hc;
 
-  if (cmd) {
+  if (cmd == RTSP_CMD_SETUP) {
     stream_id++;
     if (stream_id == 0)
       stream_id++;
@@ -1124,7 +1124,7 @@ rtsp_parse_cmd
   }
   rs->src = src;
 
-  if (cmd < 0)
+  if (cmd == RTSP_CMD_DESCRIBE)
     rs->shutdown_on_close = hc;
 
 play:
