@@ -883,10 +883,10 @@ rtsp_parse_cmd
   http_arg_t *arg;
 
   switch (cmd) {
-  case -1: caller = "DESCRIBE"; break;
-  case  0: caller = "PLAY"; break;
-  case  1: caller = "SETUP"; break;
-  default: caller = NULL; break;
+  case RTSP_CMD_DESCRIBE: caller = "DESCRIBE"; break;
+  case RTSP_CMD_PLAY:     caller = "PLAY";     break;
+  case RTSP_CMD_SETUP:    caller = "SETUP";    break;
+  default:                caller = NULL;       break;
   }
 
   *rrs = NULL;
@@ -1298,7 +1298,7 @@ rtsp_process_describe(http_connection_t *hc)
       pthread_mutex_unlock(&rtsp_lock);
       goto error;
     }
-    r = rtsp_parse_cmd(hc, stream, -1, &rs, &valid, &oldstate);
+    r = rtsp_parse_cmd(hc, stream, RTSP_CMD_DESCRIBE, &rs, &valid, &oldstate);
     if (r) {
       pthread_mutex_unlock(&rtsp_lock);
       goto error;
