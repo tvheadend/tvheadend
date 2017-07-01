@@ -668,10 +668,16 @@ src/webui/extjs.c: make_webui
 include ${ROOTDIR}/support/${OSENV}.mk
 
 # Build files
+DATE_FMT = %Y-%m-%dT%H:%M:%S%z
+ifdef SOURCE_DATE_EPOCH
+	BUILD_DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "+$(DATE_FMT)"  2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" "+$(DATE_FMT)" 2>/dev/null || date -u "+$(DATE_FMT)")
+else
+	BUILD_DATE ?= $(shell date "+$(DATE_FMT)")
+endif
 $(BUILDDIR)/timestamp.c: FORCE
 	@mkdir -p $(dir $@)
 	@echo '#include "build.h"' > $@
-	@echo 'const char* build_timestamp = "'`date +%Y-%m-%dT%H:%M:%S%z`'";' >> $@
+	@echo 'const char* build_timestamp = "'$(BUILD_DATE)'";' >> $@
 
 $(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
 	$(pCC) -c -o $@ $<
