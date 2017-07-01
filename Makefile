@@ -574,11 +574,11 @@ I18N-DOCS  += $(wildcard docs/markdown/inc/*.md)
 I18N-DOCS  += $(wildcard docs/class/*.md)
 I18N-DOCS  += $(wildcard docs/property/*.md)
 I18N-DOCS  += $(wildcard docs/wizard/*.md)
-MD-ROOT     = $(patsubst docs/markdown/%.md,%,$(wildcard docs/markdown/*.md))
-MD-ROOT    += $(patsubst docs/markdown/inc/%.md,inc/%,$(wildcard docs/markdown/inc/*.md))
-MD-CLASS    = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
-MD-PROP     = $(patsubst docs/property/%.md,%,$(wildcard docs/property/*.md))
-MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(wildcard docs/wizard/*.md))
+MD-ROOT     = $(patsubst docs/markdown/%.md,%,$(sort $(wildcard docs/markdown/*.md)))
+MD-ROOT    += $(patsubst docs/markdown/inc/%.md,inc/%,$(sort $(wildcard docs/markdown/inc/*.md)))
+MD-CLASS    = $(patsubst docs/class/%.md,%,$(sort $(wildcard docs/class/*.md)))
+MD-PROP     = $(patsubst docs/property/%.md,%,$(sort $(wildcard docs/property/*.md)))
+MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(sort $(wildcard docs/wizard/*.md)))
 
 #
 # Internationalization
