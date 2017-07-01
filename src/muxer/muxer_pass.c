@@ -347,7 +347,8 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
     pm->pm_ss = streaming_start_copy(ss);
 
     dvb_table_parse_done(&pm->pm_pmt);
-    dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, pm->pm_pmt_pid, pm);
+    dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, pm->pm_pmt_pid,
+                         DVB_PMT_BASE, DVB_PMT_MASK, pm);
   }
 
   return 0;
@@ -614,10 +615,14 @@ pass_muxer_create(const muxer_config_t *m_cfg)
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
 
-  dvb_table_parse_init(&pm->pm_pat, "pass-pat", LS_TBL_PASS, DVB_PAT_PID, pm);
-  dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, 100,         pm);
-  dvb_table_parse_init(&pm->pm_sdt, "pass-sdt", LS_TBL_PASS, DVB_SDT_PID, pm);
-  dvb_table_parse_init(&pm->pm_eit, "pass-eit", LS_TBL_PASS, DVB_EIT_PID, pm);
+  dvb_table_parse_init(&pm->pm_pat, "pass-pat", LS_TBL_PASS, DVB_PAT_PID,
+                       DVB_PAT_BASE, DVB_PAT_MASK, pm);
+  dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, 100,
+                       DVB_PMT_BASE, DVB_PMT_MASK, pm);
+  dvb_table_parse_init(&pm->pm_sdt, "pass-sdt", LS_TBL_PASS, DVB_SDT_PID,
+                       DVB_SDT_BASE, DVB_SDT_MASK, pm);
+  dvb_table_parse_init(&pm->pm_eit, "pass-eit", LS_TBL_PASS, DVB_EIT_PID,
+                       0, 0, pm);
 
   return (muxer_t *)pm;
 }

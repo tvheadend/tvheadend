@@ -554,7 +554,8 @@ void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids)
           break;
       if (!tbl) {
         tbl = calloc(1, sizeof(*tbl));
-        dvb_table_parse_init(&tbl->tbl, "satip-pmt", LS_TBL_SATIP, pid, rtp);
+        dvb_table_parse_init(&tbl->tbl, "satip-pmt", LS_TBL_SATIP, pid,
+                             DVB_PMT_BASE, DVB_PMT_MASK, rtp);
         tbl->pid = pid;
         TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
       }
