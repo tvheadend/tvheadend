@@ -76,7 +76,7 @@ mpegts_psi_section_reassemble0
     int len, int start, int crc,
     mpegts_psi_section_callback_t cb, void *opaque)
 {
-
+  uint8_t *p = mt->mt_sect.ps_data;
   int excess, tsize;
 
   if(len <= 0)
