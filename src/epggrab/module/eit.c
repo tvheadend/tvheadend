@@ -814,7 +814,8 @@ static int _eit_start
 
   /* Freesat (3002/3003) */
   if (pid == 3003 && !strcmp("uk_freesat", m->id))
-    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
+    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
+                     "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
 
   /* Standard (0x12) */
   if (pid == 0) {
