@@ -1726,6 +1726,20 @@ static dvr_entry_t *_dvr_entry_update
         de->de_playposition = playposition;
         save |= DVR_UPDATED_PLAYPOS;
       }
+      if (retention && (retention != de->de_retention)) {
+        de->de_retention = retention;
+        save |= DVR_UPDATED_RETENTION;
+      }
+      if (removal && (removal != de->de_removal)) {
+        de->de_removal = removal;
+        save |= DVR_UPDATED_REMOVAL;
+      }
+      if (title) {
+        save |= lang_str_set(&de->de_title, title, lang) ? DVR_UPDATED_TITLE : 0;
+      }
+      if (subtitle) {
+        save |= lang_str_set(&de->de_subtitle, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
+      }
     }
     goto dosave;
   }
