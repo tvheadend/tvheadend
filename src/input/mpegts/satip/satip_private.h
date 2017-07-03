@@ -139,6 +139,7 @@ struct satip_frontend
   int                        sf_grace_period;
   int                        sf_teardown_delay;
   int                        sf_pass_weight;
+  int                        sf_delsys;
   char                      *sf_tuner_bindaddr;
 
   /*

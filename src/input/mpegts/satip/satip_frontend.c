@@ -232,6 +232,17 @@ const idclass_t satip_frontend_class =
   }
 };
 
+static htsmsg_t *
+satip_frontend_dvbt_delsys_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("All"),     DVB_SYS_NONE },
+    { N_("DVB-T"),   DVB_SYS_DVBT },
+    { N_("DVB-T2"),  DVB_SYS_DVBT2 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t satip_frontend_dvbt_class =
 {
   .ic_super      = &satip_frontend_class,
@@ -246,6 +257,15 @@ const idclass_t satip_frontend_dvbt_class =
       .set      = satip_frontend_class_override_set,
       .list     = satip_frontend_class_override_enum,
       .off      = offsetof(satip_frontend_t, sf_type_override),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "delsys",
+      .name     = N_("Delivery system"),
+      .desc     = N_("Limit delivery system."),
+      .opts     = PO_EXPERT,
+      .list     = satip_frontend_dvbt_delsys_list,
+      .off      = offsetof(satip_frontend_t, sf_delsys),
     },
     {}
   }
@@ -320,6 +340,17 @@ satip_frontend_dvbs_class_master_enum( void * self, const char *lang )
   return m;
 }
 
+static htsmsg_t *
+satip_frontend_dvbs_delsys_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("All"),     DVB_SYS_NONE },
+    { N_("DVB-S"),   DVB_SYS_DVBS },
+    { N_("DVB-S2"),  DVB_SYS_DVBS2 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t satip_frontend_dvbs_class =
 {
   .ic_super      = &satip_frontend_class,
@@ -356,6 +387,15 @@ const idclass_t satip_frontend_dvbs_class =
       .set      = satip_frontend_dvbs_class_master_set,
       .list     = satip_frontend_dvbs_class_master_enum,
       .off      = offsetof(satip_frontend_t, sf_master),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "delsys",
+      .name     = N_("Delivery system"),
+      .desc     = N_("Limit delivery system."),
+      .opts     = PO_EXPERT,
+      .list     = satip_frontend_dvbs_delsys_list,
+      .off      = offsetof(satip_frontend_t, sf_delsys),
     },
     {
       .id       = "networks",
@@ -397,6 +437,17 @@ const idclass_t satip_frontend_dvbs_slave_class =
   }
 };
 
+static htsmsg_t *
+satip_frontend_dvbc_delsys_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("All"),     DVB_SYS_NONE },
+    { N_("DVB-C"),   DVB_SYS_DVBC_ANNEX_A },
+    { N_("DVB-C2"),  DVB_SYS_DVBC_ANNEX_C },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t satip_frontend_dvbc_class =
 {
   .ic_super      = &satip_frontend_class,
@@ -411,6 +462,15 @@ const idclass_t satip_frontend_dvbc_class =
       .set      = satip_frontend_class_override_set,
       .list     = satip_frontend_class_override_enum,
       .off      = offsetof(satip_frontend_t, sf_type_override),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "delsys",
+      .name     = N_("Delivery system"),
+      .desc     = N_("Limit delivery system."),
+      .opts     = PO_EXPERT,
+      .list     = satip_frontend_dvbc_delsys_list,
+      .off      = offsetof(satip_frontend_t, sf_delsys),
     },
     {}
   }
@@ -545,6 +605,14 @@ satip_frontend_is_enabled
     return MI_IS_ENABLED_OK;
   if (lfe->sf_type != DVB_TYPE_S)
     return MI_IS_ENABLED_OK;
+  /* delivery system specific check */
+  lfe2 = lfe->sf_master ? satip_frontend_find_by_number(lfe->sf_device, lfe->sf_master) : lfe;
+  if (lfe2 == NULL) lfe2 = lfe;
+  if (lfe2->sf_delsys != DVB_SYS_NONE) {
+    dvb_mux_conf_t *dmc = &((dvb_mux_t *)mm)->lm_tuning;
+    if (dmc->dmc_fe_delsys != lfe2->sf_delsys)
+      return MI_IS_ENABLED_NEVER;
+  }
   /* check if the position is enabled */
   sfc = satip_satconf_get_position(lfe, mm, NULL, 1, flags, weight);
   if (!sfc) return MI_IS_ENABLED_NEVER;
