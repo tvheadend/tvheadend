@@ -106,7 +106,8 @@ FFMPEG_SHA1    = 584544ced449e4a05f17711da33d7c46fd72f2e4
 LIB_NAME  := ffmpeg
 LIB_ROOT  := $(BUILDDIR)/$(LIB_NAME)
 EBUILDIR  := $(LIB_ROOT)/build
-EPREFIX   := $(EBUILDIR)/ffmpeg
+EPREFIX0  := ffmpeg
+EPREFIX   := $(EBUILDIR)/$(EPREFIX0)
 LIB_FILES := \
 		$(LIB_ROOT)/$(YASM)/.tvh_download \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
@@ -166,7 +167,8 @@ $(LIB_ROOT)/$(YASM)/.tvh_download:
 
 $(LIB_ROOT)/$(YASM)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_download
-	cd $(LIB_ROOT)/$(YASM) && $(CONFIGURE)
+	cd $(LIB_ROOT)/$(YASM) && $(CONFIGURE) \
+		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(YASM) install
 	@touch $@
@@ -340,7 +342,9 @@ $(LIB_ROOT)/$(LIBOGG)/.tvh_download:
 $(LIB_ROOT)/$(LIBOGG)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBOGG) && CFLAGS="$(CFLAGS_PI)" $(CONFIGURE)
+	cd $(LIB_ROOT)/$(LIBOGG) && \
+		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBOGG) install
 	@touch $@
@@ -379,6 +383,7 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBTHEORA) && \
 		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		--libdir=/$(EPREFIX0)/lib \
 		--with-ogg=$(EPREFIX) \
 		--disable-examples \
 		--disable-spec \
@@ -426,6 +431,7 @@ $(LIB_ROOT)/$(LIBVORBIS)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVORBIS) && \
 		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		--libdir=/$(EPREFIX0)/lib \
 		--with-ogg=$(EPREFIX)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBVORBIS) install
@@ -466,7 +472,8 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBFDKAAC) && \
-		CXXFLAGS="$(CFLAGS_PI) -std=c++98" CFLAGS="$(CFLAGS_PI)" $(CONFIGURE)
+		CXXFLAGS="$(CFLAGS_PI) -std=c++98" CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
 	@touch $@
