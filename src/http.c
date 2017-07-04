@@ -1109,8 +1109,12 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   hc->hc_url_orig = tvh_strdupa(hc->hc_url);
 
   v = (config.proxy) ? http_arg_get(&hc->hc_args, "X-Forwarded-For") : NULL;
-  if (v)
-    tcp_get_ip_from_str(v, hc->hc_peer);
+  if (v) {
+    if (tcp_get_ip_from_str(v, hc->hc_peer) == NULL) {
+      http_error(hc, HTTP_STATUS_BAD_REQUEST);
+      return -1;
+    }
+  }
 
   tcp_get_str_from_ip(hc->hc_peer, authbuf, sizeof(authbuf));
 
@@ -1455,12 +1459,13 @@ http_serve_requests(http_connection_t *hc)
           goto error;  /* Not valid IP address */
         }
       }
+      if (*c != ' ') goto error;
       /* Check length */
-      if ((s-c) < 8) goto error;
-      if ((s-c) > (delim == ':' ? 39 : 16)) goto error;
+      if ((c-s) < 7) goto error;
+      if ((c-s) > (delim == ':' ? 45 : 15)) goto error;
       
       /* Add null terminator */
-      *(c-1) = '\0';
+      *c = '\0';
 
       /* Don't care about DST-ADDRESS, SRC-PORT & DST-PORT
          All it's OK, push the original client IP */
