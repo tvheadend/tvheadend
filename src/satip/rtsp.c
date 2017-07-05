@@ -1428,6 +1428,10 @@ rtsp_process_play(http_connection_t *hc, int cmd)
   goto end;
 
 error:
+  if (rs) {
+    rtsp_close_session(rs);
+    rtsp_free_session(rs);
+  }
   pthread_mutex_unlock(&rtsp_lock);
 error2:
   http_error(hc, errcode);
