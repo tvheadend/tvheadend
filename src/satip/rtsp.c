@@ -1428,7 +1428,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
   goto end;
 
 error:
-  if (rs && setup) {
+  if (rs && cmd == RTSP_CMD_SETUP) {
     rtsp_close_session(rs);
     rtsp_free_session(rs);
   }
