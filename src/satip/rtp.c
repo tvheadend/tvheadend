@@ -222,8 +222,6 @@ satip_rtp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
   satip_rtp_table_t *tbl;
 
   assert((len % 188) == 0);
-  if (len > 0)
-    rtp->sig_lock = 1;
   for ( ; len >= 188 ; data += 188, len -= 188) {
     pid = ((data[1] & 0x1f) << 8) | data[2];
     if (pid != last_pid && !rtp->pids.all) {
@@ -309,8 +307,6 @@ satip_rtp_tcp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
   satip_rtp_table_t *tbl;
 
   assert((len % 188) == 0);
-  if (len > 0)
-    rtp->sig_lock = 1;
   for ( ; len >= 188 ; data += 188, len -= 188) {
     pid = ((data[1] & 0x1f) << 8) | data[2];
     if (pid != last_pid && !rtp->pids.all) {
@@ -389,13 +385,16 @@ satip_rtp_thread(void *aux)
     switch (sm->sm_type) {
     case SMT_MPEGTS:
       pb = sm->sm_data;
-      subscription_add_bytes_out(subs, pktbuf_len(pb));
+      r = pktbuf_len(pb);
+      subscription_add_bytes_out(subs, r);
+      if (r > 0)
+        atomic_set(&rtp->sig_lock, 1);
       if (atomic_get(&rtp->allow_data)) {
         pthread_mutex_lock(&rtp->lock);
         if (tcp)
-          r = satip_rtp_tcp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
+          r = satip_rtp_tcp_loop(rtp, pktbuf_ptr(pb), r);
         else
-          r = satip_rtp_loop(rtp, pktbuf_ptr(pb), pktbuf_len(pb));
+          r = satip_rtp_loop(rtp, pktbuf_ptr(pb), r);
         pthread_mutex_unlock(&rtp->lock);
         if (r) fatal = 1;
       }
@@ -669,7 +668,7 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
   const char *bw, *tmode, *gi, *plp, *t2id, *sm, *c2tft, *ds, *specinv;
   int r, level = 0, lock = 0, quality = 0;
 
-  lock = rtp->sig_lock;
+  lock = atomic_get(&rtp->sig_lock);
   if (satip_server_conf.satip_force_sig_level > 0) {
     level = MINMAX(satip_server_conf.satip_force_sig_level, 1, 240);
     quality = MAX((level + 15) / 15, 15);
