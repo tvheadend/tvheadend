@@ -122,7 +122,7 @@ mpegts_psi_section_reassemble0
   }
 
   excess = mt->mt_sect.ps_offset - tsize;
-  mt->mt_sect.ps_offset = 0;
+  mt->mt_sect.ps_lock = 0;
 
   if (cb)
     cb(p, tsize - (crc ? 4 : 0), opaque);
