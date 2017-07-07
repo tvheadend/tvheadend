@@ -620,7 +620,9 @@ pids:
                     rs->udp_rtp ? rs->udp_rtp->fd : hc->hc_fd,
                     rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                     rs->frontend, rs->findex, &rs->dmc_tuned,
-                    &rs->pids, ocmd == RTSP_CMD_PLAY, rs->perm_lock);
+                    &rs->pids,
+                    ocmd == RTSP_CMD_PLAY || oldstate == STATE_PLAY,
+                    rs->perm_lock);
     rs->tcp_data = rs->udp_rtp ? NULL : hc;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
@@ -1310,9 +1312,9 @@ rtsp_process_describe(http_connection_t *hc)
       if (strcmp(hc->hc_session, rs->session))
         continue;
       rtsp_rearm_session_timer(rs);
-      if (stream > 0 && rs->stream != stream)
-        continue;
     }
+    if (stream > 0 && rs->stream != stream)
+      continue;
     if (satip_server_conf.satip_anonymize &&
         strcmp(hc->hc_peer_ipstr, rs->peer_ipstr))
       continue;
