@@ -582,7 +582,7 @@ static int _xmltv_parse_programme_tags
   if (title)    lang_str_destroy(title);
   if (subtitle) lang_str_destroy(subtitle);
   if (desc)     lang_str_destroy(desc);
-  if (summary)     lang_str_destroy(summary);
+  if (summary)  lang_str_destroy(summary);
   
   return save | save2 | save3;
 }
