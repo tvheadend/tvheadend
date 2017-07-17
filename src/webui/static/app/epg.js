@@ -361,12 +361,16 @@ tvheadend.epg = function() {
     var detailsfcn = function(grid, rec, act, row) {
         new tvheadend.epgDetails(grid.getStore().getAt(row).data);
     };
+    var watchfcn = function(grid, rec, act, row) {
+        var item = grid.getStore().getAt(row);
+        new tvheadend.VideoPlayer(item.data.channelUuid);
+    };
 
     var actions = new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
         tooltip: _('Details'),
-        width: 45,
+        width: 67,
         dataIndex: 'actions',
         callbacks: {
             'recording':      detailsfcn,
@@ -380,6 +384,11 @@ tvheadend.epg = function() {
                 iconCls: 'broadcast_details',
                 qtip: _('Broadcast details'),
                 cb: detailsfcn
+            },
+            {
+                iconCls: 'watchTv',
+                qtip: _('Watch TV'),
+                cb: watchfcn
             },
             {
                 iconIndex: 'dvrState'
@@ -982,6 +991,9 @@ tvheadend.epg = function() {
                    /* do not restore sorting and filters */
                    state.sort = {};
                    state.filters = {};
+                   /* Otherwise this non-resizable column will not expand to newly set width */
+                   if (state.columns)
+                       state.columns[0].width = actions.width;
                }
             }
         }
