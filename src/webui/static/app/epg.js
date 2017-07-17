@@ -649,6 +649,27 @@ tvheadend.epg = function() {
         ]
     });
 
+    // Mode filter
+    var epgMode = new Ext.form.ComboBox({
+        width: 60,
+        displayField: 'val',
+        valueField: 'key',
+        store: new Ext.data.ArrayStore({
+            id: 0,
+            fields: [ 'key', 'val' ],
+            data: [
+                [ 'all', _("All") ],
+                [ 'now', _("Now") ]
+            ]
+        }),
+        mode: 'local',
+        editable: false,
+        forceSelection: true,
+        triggerAction: 'all',
+        typeAhead: true,
+        value: 'all'
+    });
+
     // Title search box
 
     var epgFilterTitle = new Ext.form.TextField({
@@ -787,7 +808,13 @@ tvheadend.epg = function() {
         epgFilterDuration.setValue("");
     };
 
+    clearModeFilter = function() {
+        delete epgStore.baseParams.mode;
+        epgMode.setValue("all");
+    };
+
     function epgQueryClear() {
+        clearModeFilter();
         clearTitleFilter();
         clearFulltextFilter();
         clearChannelFilter();
@@ -798,6 +825,11 @@ tvheadend.epg = function() {
         delete epgStore.sortInfo;
         epgView.reset();
     };
+
+    function clearModeFilterAndReload() {
+        clearModeFilter();
+        epgView.reset();
+    }
 
 /*
  * Filter selection event handlers
@@ -845,6 +877,15 @@ tvheadend.epg = function() {
         epgView.reset();
     });
 
+    epgMode.on('select', function(c, r) {
+        epgStore.baseParams.mode = r.data.key;
+        if (epgStore.baseParams.mode == "next" || epgStore.baseParams.mode == "now") {
+            // Change ordering to ordering by number asc, because that's what users would expect to see
+            epgStore.sortInfo = { field: 'channelNumber', direction: 'ASC' };
+        }
+        epgView.reset();
+    });
+
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
 
@@ -887,6 +928,7 @@ tvheadend.epg = function() {
     });
 
     var tbar = [
+        epgMode, '-',
         epgFilterTitle, { text: _('Fulltext') }, epgFilterFulltext, '-',
         epgFilterChannels, '-',
         epgFilterChannelTags, '-',
@@ -1008,6 +1050,7 @@ tvheadend.epg = function() {
             value = tvheadend.regexEscape(value);
             if (value && epgStore.baseParams.title !== value) {
                 epgFilterTitle.setValue(value);
+                clearModeFilterAndReload();
                 return false;
             }
         } else if (column.dataIndex === 'channelName') {
@@ -1016,6 +1059,7 @@ tvheadend.epg = function() {
             if (value && epgStore.baseParams.channel !== value) {
                 epgFilterChannels.setValue(rec['channelName']);
                 epgFilterChannelSet(value);
+                clearModeFilterAndReload();
                 return false;
             }
         } else if (column.dataIndex === 'genre') {
@@ -1026,6 +1070,7 @@ tvheadend.epg = function() {
                     var l = tvheadend.contentGroupLookupName(value);
                     epgFilterContentGroup.setValue(l);
                     epgFilterContentGroupSet(value);
+                    clearModeFilterAndReload();
                     return false;
                 }
             }
