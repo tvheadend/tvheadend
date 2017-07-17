@@ -316,12 +316,14 @@ api_epg_grid
   int64_t duration_min, duration_max;
   htsmsg_field_t *f, *f2;
   htsmsg_t *l = NULL, *e, *filter;
+  const char* mode;
 
   memset(&eq, 0, sizeof(eq));
 
   lang = access_get_lang(perm, htsmsg_get_str(args, "lang"));
   if (lang)
     eq.lang = strdup(lang);
+  mode = htsmsg_get_str(args, "mode");
   str = htsmsg_get_str(args, "title");
   if (str)
     eq.stitle = strdup(str);
@@ -332,6 +334,14 @@ api_epg_grid
   str = htsmsg_get_str(args, "channelTag");
   if (str)
     eq.channel_tag = strdup(str);
+
+  if (mode != NULL) {
+      if (!strcmp(mode, "now")) {
+        eq.start.comp = EC_LT;
+        eq.stop.comp = EC_GT;
+        eq.start.val1 = eq.stop.val1 = gclk();
+      }
+  }
 
   duration_min = -1;
   duration_max = -1;
