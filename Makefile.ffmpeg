@@ -51,10 +51,10 @@ LIBX264_TB     = $(LIBX264).tar.bz2
 LIBX264_URL    = http://ftp.videolan.org/x264/snapshots/$(LIBX264_TB)
 LIBX264_SHA1   = 1905ef0bf257c0f12eac0ed00ec18fbaa0b7d43f
 
-LIBX265        = x265_2.4
+LIBX265        = x265_2.5
 LIBX265_TB     = $(LIBX265).tar.gz
 LIBX265_URL    = http://ftp.videolan.org/videolan/x265/$(LIBX265_TB)
-LIBX265_SHA1   = f8bfb348defa86fbfdce4dcc1d0c48c855e0e987
+LIBX265_SHA1   = 239e51560a6bdde934142f1c6f884d6e37cbe755
 ifeq ($(CONFIG_PIE),yes)
 LIBX265_DIFFS  = libx265.pie.diff
 else
