@@ -385,7 +385,7 @@ dvr_autorec_add_series_link(const char *dvr_config_name,
 /**
  *
  */
-static void
+void
 autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
 {
   char ubuf[UUID_HEX_SIZE];
