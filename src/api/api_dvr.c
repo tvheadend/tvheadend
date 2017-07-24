@@ -463,7 +463,7 @@ api_dvr_autorec_create_by_series
 static void
 api_dvr_autorec_entry_cancel(access_t *perm, idnode_t *self)
 {
-  autorec_entry_destroy((dvr_entry_t *)self, 0);
+  autorec_entry_destroy((dvr_autorec_entry_t *)self, 0);
 }
 
 static int
