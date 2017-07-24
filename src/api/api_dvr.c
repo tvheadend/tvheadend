@@ -461,6 +461,19 @@ api_dvr_autorec_create_by_series
 }
 
 static void
+api_dvr_autorec_entry_cancel(access_t *perm, idnode_t *self)
+{
+  autorec_entry_destroy((dvr_entry_t *)self, 0);
+}
+
+static int
+api_dvr_autorec_cancel
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  return api_idnode_handler(perm, args, resp, api_dvr_autorec_entry_cancel, "cancel", 0);
+}
+
+static void
 api_dvr_timerec_grid
   ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
@@ -540,6 +553,7 @@ void api_dvr_init ( void )
     { "dvr/autorec/grid",          ACCESS_RECORDER, api_idnode_grid,  api_dvr_autorec_grid },
     { "dvr/autorec/create",        ACCESS_RECORDER, api_dvr_autorec_create, NULL },
     { "dvr/autorec/create_by_series", ACCESS_RECORDER, api_dvr_autorec_create_by_series, NULL },
+    { "dvr/autorec/cancel",        ACCESS_RECORDER, api_dvr_autorec_cancel, NULL },
 
     { "dvr/timerec/class",         ACCESS_RECORDER, api_idnode_class, (void*)&dvr_timerec_entry_class },
     { "dvr/timerec/grid",          ACCESS_RECORDER, api_idnode_grid,  api_dvr_timerec_grid },
