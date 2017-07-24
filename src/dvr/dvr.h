@@ -690,7 +690,7 @@ void autorec_destroy_by_channel_tag(channel_tag_t *ct, int delconf);
 
 void autorec_destroy_by_id(const char *id, int delconf);
 
-static void autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf);
+void autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf);
 
 void dvr_autorec_init(void);
 
