@@ -198,6 +198,8 @@ rtsp_find_session(http_connection_t *hc, int stream)
 {
   struct session *rs, *first = NULL;
 
+  if (stream <= 0)
+    return NULL;
   TAILQ_FOREACH(rs, &rtsp_sessions, link) {
     if (hc->hc_session &&
         strcmp(rs->session, hc->hc_session) == 0 &&
@@ -594,9 +596,8 @@ rtsp_start
       goto endclean;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
-    /* trigger play when first SETUP arrived */
     /* retrigger play when new setup arrived */
-    if (oldstate != STATE_DESCRIBE || cmd == RTSP_CMD_SETUP) {
+    if (oldstate == STATE_PLAY && cmd == RTSP_CMD_SETUP) {
       cmd = RTSP_CMD_PLAY;
       rs->state = STATE_SETUP;
     }
@@ -878,6 +879,7 @@ rtsp_parse_cmd
   int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 1, has_args, weight = 0;
   int delsys = DVB_SYS_NONE, msys, fe, src, freq, pol, sr;
   int fec, ro, plts, bw, tmode, mtype, gi, plp, t2id, sm, c2tft, ds, specinv;
+  int alloc_stream_id = 0;
   char *s;
   const char *caller;
   mpegts_apids_t pids, addpids, delpids;
@@ -937,17 +939,15 @@ rtsp_parse_cmd
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
+      alloc_stream_id = 1;
     } else if (stream != rs->stream) {
       rs = rtsp_new_session(hc->hc_peer_ipstr, msys, rs->nsession, stream);
       if (delsys == DVB_SYS_NONE) goto end;
       if (msys == DVB_SYS_NONE) goto end;
       if (!(*valid)) goto end;
+      alloc_stream_id = 1;
     } else {
-      if (cmd == RTSP_CMD_DESCRIBE && rs->state != STATE_DESCRIBE) {
-        errcode = HTTP_STATUS_CONFLICT;
-        goto end;
-      }
-      if (!has_args && rs->state == STATE_DESCRIBE && cmd == RTSP_CMD_SETUP) {
+      if (!has_args && rs->state == STATE_DESCRIBE) {
         r = parse_transport(hc);
         if (r < 0) {
           errcode = HTTP_STATUS_BAD_TRANSFER;
@@ -958,22 +958,18 @@ rtsp_parse_cmd
         goto ok;
       }
       *oldstate = rs->state;
-      rtsp_close_session(rs);
     }
-    if (cmd == RTSP_CMD_SETUP) {
-      r = parse_transport(hc);
-      if (r < 0) {
-        errcode = HTTP_STATUS_BAD_TRANSFER;
-        goto end;
-      }
-      if (rs->state == STATE_PLAY && rs->rtp_peer_port != r) {
-        errcode = HTTP_STATUS_METHOD_INVALID;
-        goto end;
-      }
-      rs->rtp_peer_port = r;
+    r = parse_transport(hc);
+    if (r < 0) {
+      errcode = HTTP_STATUS_BAD_TRANSFER;
+      goto end;
     }
+    if (rs->state == STATE_PLAY && rs->rtp_peer_port != r) {
+      errcode = HTTP_STATUS_METHOD_INVALID;
+      goto end;
+    }
+    rs->rtp_peer_port = r;
     rs->frontend = fe > 0 ? fe : 1;
-    dmc = &rs->dmc;
   } else {
     if (!rs || stream != rs->stream) {
       if (rs)
@@ -981,7 +977,6 @@ rtsp_parse_cmd
       goto end;
     }
     *oldstate = rs->state;
-    dmc = &rs->dmc;
     if (rs->mux == NULL)
       *oldstate = rs->state = STATE_SETUP;
     if (!fe) {
@@ -999,7 +994,7 @@ rtsp_parse_cmd
     }
   }
 
-  dvb_mux_conf_init(dmc, msys);
+  dvb_mux_conf_init(dmc = &rs->dmc, msys);
 
   mtype = mtype_to_tvh(hc);
   if (mtype == DVB_MOD_NONE) goto end;
@@ -1111,22 +1106,27 @@ rtsp_parse_cmd
   dmc->dmc_fe_freq = freq;
   dmc->dmc_fe_modulation = mtype;
   dmc->dmc_fe_delsys = delsys;
+
   rs->delsys = delsys;
   rs->frontend = fe;
   rs->findex = findex;
+  rs->src = src;
   if (weight > 0)
     rs->weight = weight;
   else if (cmd == RTSP_CMD_SETUP)
     rs->weight = 0;
   rs->old_hc = hc;
 
-  if (cmd == RTSP_CMD_SETUP) {
+  if (alloc_stream_id) {
     stream_id++;
     if (stream_id == 0)
       stream_id++;
     rs->stream = stream_id % 0x7fff;
+  } else {
+    /* don't subscribe to the new mux, if it was already done */
+    if (memcmp(dmc, &rs->dmc_tuned, sizeof(*dmc)) == 0)
+      *valid = 0;
   }
-  rs->src = src;
 
   if (cmd == RTSP_CMD_DESCRIBE)
     rs->shutdown_on_close = hc;
@@ -1139,7 +1139,7 @@ play:
   if (addpids.count > 0)
     mpegts_pid_add_group(&rs->pids, &addpids);
 
-  dvb_mux_conf_str(dmc, buf, sizeof(buf));
+  dvb_mux_conf_str(&rs->dmc, buf, sizeof(buf));
   r = strlen(buf);
   tvh_strlcatf(buf, sizeof(buf), r, " pids ");
   if (mpegts_pid_dump(&rs->pids, buf + r, sizeof(buf) - r, 0, 0) == 0)
