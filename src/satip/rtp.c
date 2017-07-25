@@ -811,7 +811,9 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
       c2tft, ds, plp, specinv, pids);
     break;
   default:
-    return 0;
+    r = snprintf(buf, len, "ver=1.0;src=%d;tuner=%d,%d,%d,%d,,,,,,,,;pids=%s",
+                 rtp->source, rtp->frontend, level, lock, quality, pids);
+    break;
   }
 
   return r >= len ? len - 1 : r;

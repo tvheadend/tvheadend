@@ -562,6 +562,7 @@ rtsp_start
                            &rs->dmc, 1);
       if (mux) {
         created = 1;
+        dmc = ((dvb_mux_t *)mux)->lm_tuning;
         rs->perm_lock = 1;
       }
     }
@@ -619,7 +620,7 @@ pids:
                     &hc->hc_fd_lock, hc->hc_peer, rs->rtp_peer_port,
                     rs->udp_rtp ? rs->udp_rtp->fd : hc->hc_fd,
                     rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
-                    rs->frontend, rs->findex, &rs->dmc_tuned,
+                    rs->findex, rs->src, &rs->dmc_tuned,
                     &rs->pids,
                     ocmd == RTSP_CMD_PLAY || oldstate == STATE_PLAY,
                     rs->perm_lock);
@@ -874,7 +875,7 @@ rtsp_parse_cmd
    session_t **rrs, int *valid, int *oldstate)
 {
   session_t *rs = NULL;
-  int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 0, has_args, weight = 0;
+  int errcode = HTTP_STATUS_BAD_REQUEST, r, findex = 1, has_args, weight = 0;
   int delsys = DVB_SYS_NONE, msys, fe, src, freq, pol, sr;
   int fec, ro, plts, bw, tmode, mtype, gi, plp, t2id, sm, c2tft, ds, specinv;
   char *s;
@@ -1109,6 +1110,7 @@ rtsp_parse_cmd
 
   dmc->dmc_fe_freq = freq;
   dmc->dmc_fe_modulation = mtype;
+  dmc->dmc_fe_delsys = delsys;
   rs->delsys = delsys;
   rs->frontend = fe;
   rs->findex = findex;
