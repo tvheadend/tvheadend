@@ -892,6 +892,8 @@ tvheadend.epg = function() {
             // Change ordering to ordering by number asc, because that's what users would expect to see
             epgStore.sortInfo = { field: 'channelNumber', direction: 'ASC' };
         }
+        else
+            epgStore.sortInfo = { field: 'start', direction: 'date' };
         epgView.reset();
     });
 
