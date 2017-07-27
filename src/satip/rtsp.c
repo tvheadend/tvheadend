@@ -1526,6 +1526,7 @@ rtsp_flush_requests(http_connection_t *hc)
     } else if (rs->tcp_data == hc) {
       satip_rtp_close((void *)(intptr_t)rs->stream);
       rs->tcp_data = NULL;
+      rs->state = STATE_SETUP;
     }
   }
   pthread_mutex_unlock(&rtsp_lock);
