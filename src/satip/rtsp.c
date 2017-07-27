@@ -56,6 +56,7 @@ typedef struct session {
   http_connection_t *shutdown_on_close;
   http_connection_t *tcp_data;
   int perm_lock;
+  int no_data;
   uint32_t nsession;
   char session[9];
   dvb_mux_conf_t dmc;
@@ -405,6 +406,16 @@ rtsp_clean(session_t *rs)
 /*
  *
  */
+static void
+rtsp_no_data(void *opaque)
+{
+  session_t *rs = opaque;
+  rs->no_data = 1;
+}
+
+/*
+ *
+ */
 static int
 rtsp_validate_service(mpegts_service_t *s, mpegts_apids_t *pids)
 {
@@ -576,8 +587,11 @@ rtsp_start
               (rtsp_muxcnf == MUXCNF_REJECT || rtsp_muxcnf == MUXCNF_REJECT_EXACT_MATCH ) ? " (configuration)" : "");
       goto endclean;
     }
-    if (rs->mux == mux && rs->subs)
+    if (rs->mux == mux && rs->subs) {
+      if (rs->no_data)
+        goto endclean;
       goto pids;
+    }
     rtsp_clean(rs);
     rs->dmc_tuned = dmc;
     rs->mux = mux;
@@ -612,6 +626,7 @@ pids:
   if (cmd != RTSP_CMD_DESCRIBE && rs->state != STATE_PLAY) {
     if (rs->mux == NULL)
       goto endclean;
+    rs->no_data = 0;
     rs->rtp_handle =
       satip_rtp_queue(rs->subs, &rs->prch.prch_sq,
                       &hc->hc_fd_lock, hc->hc_peer, rs->rtp_peer_port,
@@ -620,7 +635,7 @@ pids:
                       rs->findex, rs->src, &rs->dmc_tuned,
                       &rs->pids,
                       cmd == RTSP_CMD_PLAY || oldstate == STATE_PLAY,
-                      rs->perm_lock);
+                      rs->perm_lock, rtsp_no_data, rs);
     if (rs->rtp_handle == NULL) {
       res = HTTP_STATUS_INTERNAL;
       goto endclean;
