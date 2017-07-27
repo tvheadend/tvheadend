@@ -53,6 +53,7 @@ static void dvr_entry_start_recording(dvr_entry_t *de, int clone);
 static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_rerecord(dvr_entry_t *de);
+static time_t dvr_get_stop_time(epg_broadcast_t *e);
 
 /*
  *
@@ -1066,6 +1067,68 @@ dvr_entry_create_htsp(int enabled, const char *config_uuid,
 }
 
 /**
+ * Determine stop time for the broadcast taking in
+ * to account segmented programmes via EIT.
+ */
+static time_t dvr_get_stop_time(epg_broadcast_t *e)
+{
+  const char *ep_uri = e->episode->uri;
+  time_t stop = e->stop;
+
+  if (!ep_uri || strncmp(ep_uri, "crid://", 7) || !strstr(ep_uri, "#"))
+      return stop;
+
+  /* This URI is a CRID (from EIT) which contains an IMI so the
+   * programme is segmented such as part1, <5 minute news>, part2. So
+   * we need to check if the next few programmes have the same
+   * crid+imi in which case we extend our stop time to include that.
+   *
+   * We record the "news" programme too since often these segmented
+   * programmes have incorrect start/stop times.  This is also
+   * consistent with xmltv that normally just merges these programmes
+   * together.
+   *
+   * The Freeview NZ documents say we only need to check for segments
+   * on the same channel and where each segment is within three hours
+   * of the end of the previous segment. We'll use that as best
+   * practice.
+   *
+   * We also put a couple of safety checks on the number of programmes
+   * we check in case broadcast data is bad.
+   */
+  enum
+  {
+      THREE_HOURS   = 3 * 60 * 60,
+      MAX_STOP_TIME = 9 * 60 * 60
+  };
+
+  const time_t start = e->start;
+  const time_t maximum_stop_time = start + MAX_STOP_TIME;
+  int max_progs_to_check = 10;
+
+  for (epg_broadcast_t *next = epg_broadcast_get_next(e);
+       --max_progs_to_check && stop < maximum_stop_time &&
+           next && next->episode && next->start < stop + THREE_HOURS;
+       next = epg_broadcast_get_next(next))
+  {
+      const char *next_uri = next->episode->uri;
+      if (next_uri && strcmp(ep_uri, next_uri) == 0)
+      {
+          /* Identical CRID+IMI. So that means that programme is a
+           * segment part of this programme. So extend our stop time
+           * to include this programme.
+           */
+          tvhinfo(LS_DVR, "Increasing stop for episode %s from %"PRId64" to %"PRId64,
+              lang_str_get(e->episode->title, NULL), stop, next->stop);
+
+          stop = next->stop;
+      }
+  }
+  return stop;
+}
+
+
+/**
  *
  */
 dvr_entry_t *
@@ -1080,8 +1143,11 @@ dvr_entry_create_by_event(int enabled, const char *config_uuid,
   if(!e->channel || !e->episode || !e->episode->title)
     return NULL;
 
+  /* Stop time handles segmented programmes */
+  const time_t stop = dvr_get_stop_time(e);
+
   return dvr_entry_create_(enabled, config_uuid, e,
-                           e->channel, e->start, e->stop,
+                           e->channel, e->start, stop,
                            start_extra, stop_extra,
                            NULL, NULL, NULL, NULL,
                            LIST_FIRST(&e->episode->genre),
