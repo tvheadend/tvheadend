@@ -73,7 +73,9 @@ void *satip_rtp_queue(th_subscription_t *subs,
                       int frontend, int source,
                       dvb_mux_conf_t *dmc,
                       mpegts_apids_t *pids,
-                      int allow_data, int perm_lock);
+                      int allow_data, int perm_lock,
+                      void (*no_data_cb)(void *opaque),
+                      void *no_data_opaque);
 void satip_rtp_allow_data(void *_rtp);
 void satip_rtp_update_pids(void *_rtp, mpegts_apids_t *pids);
 void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids);

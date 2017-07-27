@@ -71,6 +71,8 @@ typedef struct satip_rtp_session {
   pthread_mutex_t *tcp_lock;
   uint8_t *table_data;
   int table_data_len;
+  void (*no_data_cb)(void *opaque);
+  void *no_data_opaque;
 } satip_rtp_session_t;
 
 static pthread_mutex_t satip_rtp_lock;
@@ -403,6 +405,8 @@ satip_rtp_thread(void *aux)
       break;
     case SMT_NOSTART:
     case SMT_EXIT:
+      if (rtp->no_data_cb)
+        rtp->no_data_cb(rtp->no_data_opaque);
       alive = 0;
       break;
 
@@ -440,7 +444,9 @@ void *satip_rtp_queue(th_subscription_t *subs,
                       struct sockaddr_storage *peer, int port,
                       int fd_rtp, int fd_rtcp,
                       int frontend, int source, dvb_mux_conf_t *dmc,
-                      mpegts_apids_t *pids, int allow_data, int perm_lock)
+                      mpegts_apids_t *pids, int allow_data, int perm_lock,
+                      void (*no_data_cb)(void *opaque),
+                      void *no_data_opaque)
 {
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
   int dscp;
@@ -458,6 +464,8 @@ void *satip_rtp_queue(th_subscription_t *subs,
   rtp->subs = subs;
   rtp->sq = sq;
   rtp->tcp_lock = tcp_lock;
+  rtp->no_data_cb = no_data_cb;
+  rtp->no_data_opaque = no_data_opaque;
   atomic_set(&rtp->allow_data, allow_data);
   mpegts_pid_init(&rtp->pids);
   mpegts_pid_copy(&rtp->pids, pids);
