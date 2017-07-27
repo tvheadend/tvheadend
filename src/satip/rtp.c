@@ -46,7 +46,6 @@ typedef struct satip_rtp_table {
 typedef struct satip_rtp_session {
   TAILQ_ENTRY(satip_rtp_session) link;
   pthread_t tid;
-  void *id;
   struct sockaddr_storage peer;
   struct sockaddr_storage peer2;
   int port;
@@ -435,35 +434,20 @@ satip_rtp_thread(void *aux)
 /*
  *
  */
-static satip_rtp_session_t *
-satip_rtp_find(void *id)
-{
-  satip_rtp_session_t *rtp;
-
-  TAILQ_FOREACH(rtp, &satip_rtp_sessions, link)
-    if (rtp->id == id)
-      break;
-  return rtp;
-}
-
-/*
- *
- */
-void satip_rtp_queue(void *id, th_subscription_t *subs,
-                     streaming_queue_t *sq,
-                     pthread_mutex_t *tcp_lock,
-                     struct sockaddr_storage *peer, int port,
-                     int fd_rtp, int fd_rtcp,
-                     int frontend, int source, dvb_mux_conf_t *dmc,
-                     mpegts_apids_t *pids, int allow_data, int perm_lock)
+void *satip_rtp_queue(th_subscription_t *subs,
+                      streaming_queue_t *sq,
+                      pthread_mutex_t *tcp_lock,
+                      struct sockaddr_storage *peer, int port,
+                      int fd_rtp, int fd_rtcp,
+                      int frontend, int source, dvb_mux_conf_t *dmc,
+                      mpegts_apids_t *pids, int allow_data, int perm_lock)
 {
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
   int dscp;
 
   if (rtp == NULL)
-    return;
+    return NULL;
 
-  rtp->id = id;
   rtp->peer = *peer;
   rtp->peer2 = *peer;
   if (port != RTSP_TCP_DATA)
@@ -506,108 +490,104 @@ void satip_rtp_queue(void *id, th_subscription_t *subs,
   TAILQ_INSERT_TAIL(&satip_rtp_sessions, rtp, link);
   tvhthread_create(&rtp->tid, NULL, satip_rtp_thread, rtp, "satip-rtp");
   pthread_mutex_unlock(&satip_rtp_lock);
+  return rtp;
 }
 
-void satip_rtp_allow_data(void *id)
+void satip_rtp_allow_data(void *_rtp)
 {
-  satip_rtp_session_t *rtp;
+  satip_rtp_session_t *rtp = _rtp;
 
+  if (rtp == NULL)
+    return;
   pthread_mutex_lock(&satip_rtp_lock);
-  rtp = satip_rtp_find(id);
-  if (rtp)
-    atomic_set(&rtp->allow_data, 1);
+  atomic_set(&rtp->allow_data, 1);
   pthread_mutex_unlock(&satip_rtp_lock);
 }
 
-void satip_rtp_update_pids(void *id, mpegts_apids_t *pids)
+void satip_rtp_update_pids(void *_rtp, mpegts_apids_t *pids)
 {
-  satip_rtp_session_t *rtp;
+  satip_rtp_session_t *rtp = _rtp;
 
+  if (rtp == NULL)
+    return;
   pthread_mutex_lock(&satip_rtp_lock);
-  rtp = satip_rtp_find(id);
-  if (rtp) {
-    pthread_mutex_lock(&rtp->lock);
-    mpegts_pid_copy(&rtp->pids, pids);
-    pthread_mutex_unlock(&rtp->lock);
-  }
+  pthread_mutex_lock(&rtp->lock);
+  mpegts_pid_copy(&rtp->pids, pids);
+  pthread_mutex_unlock(&rtp->lock);
   pthread_mutex_unlock(&satip_rtp_lock);
 }
 
-void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids)
+void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids)
 {
-  satip_rtp_session_t *rtp;
+  satip_rtp_session_t *rtp = _rtp;
   satip_rtp_table_t *tbl, *tbl_next;
   int i, pid;
 
+  if (rtp == NULL)
+    return;
   pthread_mutex_lock(&satip_rtp_lock);
-  rtp = satip_rtp_find(id);
-  if (rtp) {
-    pthread_mutex_lock(&rtp->lock);
+  pthread_mutex_lock(&rtp->lock);
+  TAILQ_FOREACH(tbl, &rtp->pmt_tables, link)
+    if (!mpegts_pid_rexists(pmt_pids, tbl->pid))
+      tbl->remove_mark = 1;
+  for (i = 0; i < pmt_pids->count; i++) {
+    pid = pmt_pids->pids[i].pid;
     TAILQ_FOREACH(tbl, &rtp->pmt_tables, link)
-      if (!mpegts_pid_rexists(pmt_pids, tbl->pid))
-        tbl->remove_mark = 1;
-    for (i = 0; i < pmt_pids->count; i++) {
-      pid = pmt_pids->pids[i].pid;
-      TAILQ_FOREACH(tbl, &rtp->pmt_tables, link)
-        if (tbl->pid == pid)
-          break;
-      if (!tbl) {
-        tbl = calloc(1, sizeof(*tbl));
-        dvb_table_parse_init(&tbl->tbl, "satip-pmt", LS_TBL_SATIP, pid,
-                             DVB_PMT_BASE, DVB_PMT_MASK, rtp);
-        tbl->pid = pid;
-        TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
-      }
+      if (tbl->pid == pid)
+        break;
+    if (!tbl) {
+      tbl = calloc(1, sizeof(*tbl));
+      dvb_table_parse_init(&tbl->tbl, "satip-pmt", LS_TBL_SATIP, pid,
+                           DVB_PMT_BASE, DVB_PMT_MASK, rtp);
+      tbl->pid = pid;
+      TAILQ_INSERT_TAIL(&rtp->pmt_tables, tbl, link);
     }
-    for (tbl = TAILQ_FIRST(&rtp->pmt_tables); tbl; tbl = tbl_next){
-      tbl_next = TAILQ_NEXT(tbl, link);
-      if (tbl->remove_mark) {
-        TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
-        free(tbl);
-      }
-    }
-    pthread_mutex_unlock(&rtp->lock);
   }
-  pthread_mutex_unlock(&satip_rtp_lock);
-}
-
-void satip_rtp_close(void *id)
-{
-  satip_rtp_session_t *rtp;
-  satip_rtp_table_t *tbl;
-  streaming_queue_t *sq;
-
-  pthread_mutex_lock(&satip_rtp_lock);
-  rtp = satip_rtp_find(id);
-  tvhtrace(LS_SATIPS, "rtp close %p", rtp);
-  if (rtp) {
-    TAILQ_REMOVE(&satip_rtp_sessions, rtp, link);
-    sq = rtp->sq;
-    pthread_mutex_lock(&sq->sq_mutex);
-    rtp->sq = NULL;
-    tvh_cond_signal(&sq->sq_cond, 0);
-    pthread_mutex_unlock(&sq->sq_mutex);
-    pthread_mutex_unlock(&satip_rtp_lock);
-    if (rtp->port == RTSP_TCP_DATA)
-      pthread_mutex_lock(rtp->tcp_lock);
-    pthread_join(rtp->tid, NULL);
-    if (rtp->port == RTSP_TCP_DATA) {
-      pthread_mutex_unlock(rtp->tcp_lock);
-      free(rtp->tcp_data.iov_base);
-    } else {
-      udp_multisend_free(&rtp->um);
-    }
-    mpegts_pid_done(&rtp->pids);
-    while ((tbl = TAILQ_FIRST(&rtp->pmt_tables)) != NULL) {
-      dvb_table_parse_done(&tbl->tbl);
+  for (tbl = TAILQ_FIRST(&rtp->pmt_tables); tbl; tbl = tbl_next){
+    tbl_next = TAILQ_NEXT(tbl, link);
+    if (tbl->remove_mark) {
       TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
       free(tbl);
     }
-    pthread_mutex_destroy(&rtp->lock);
-    free(rtp);
-  } else {
-    pthread_mutex_unlock(&satip_rtp_lock);
   }
+  pthread_mutex_unlock(&rtp->lock);
+  pthread_mutex_unlock(&satip_rtp_lock);
+}
+
+void satip_rtp_close(void *_rtp)
+{
+  satip_rtp_session_t *rtp = _rtp;
+  satip_rtp_table_t *tbl;
+  streaming_queue_t *sq;
+
+  if (rtp == NULL)
+    return;
+  pthread_mutex_lock(&satip_rtp_lock);
+  tvhtrace(LS_SATIPS, "rtp close %p", rtp);
+  TAILQ_REMOVE(&satip_rtp_sessions, rtp, link);
+  sq = rtp->sq;
+  pthread_mutex_lock(&sq->sq_mutex);
+  rtp->sq = NULL;
+  tvh_cond_signal(&sq->sq_cond, 0);
+  pthread_mutex_unlock(&sq->sq_mutex);
+  pthread_mutex_unlock(&satip_rtp_lock);
+  if (rtp->port == RTSP_TCP_DATA)
+    pthread_mutex_lock(rtp->tcp_lock);
+  pthread_join(rtp->tid, NULL);
+  if (rtp->port == RTSP_TCP_DATA) {
+    pthread_mutex_unlock(rtp->tcp_lock);
+    free(rtp->tcp_data.iov_base);
+  } else {
+    udp_multisend_free(&rtp->um);
+  }
+  mpegts_pid_done(&rtp->pids);
+  while ((tbl = TAILQ_FIRST(&rtp->pmt_tables)) != NULL) {
+    dvb_table_parse_done(&tbl->tbl);
+    TAILQ_REMOVE(&rtp->pmt_tables, tbl, link);
+    free(tbl);
+  }
+  pthread_mutex_destroy(&rtp->lock);
+  free(rtp);
 }
 
 /*
@@ -822,19 +802,18 @@ satip_status_build(satip_rtp_session_t *rtp, char *buf, int len)
 /*
  *
  */
-int satip_rtp_status(void *id, char *buf, int len)
+int satip_rtp_status(void *_rtp, char *buf, int len)
 {
-  satip_rtp_session_t *rtp;
+  satip_rtp_session_t *rtp = _rtp;
   int r = 0;
 
   buf[0] = '\0';
+  if (rtp == NULL)
+    return 0;
   pthread_mutex_lock(&satip_rtp_lock);
-  rtp = satip_rtp_find(id);
-  if (rtp) {
-    pthread_mutex_lock(&rtp->lock);
-    r = satip_status_build(rtp, buf, len);
-    pthread_mutex_unlock(&rtp->lock);
-  }
+  pthread_mutex_lock(&rtp->lock);
+  r = satip_status_build(rtp, buf, len);
+  pthread_mutex_unlock(&rtp->lock);
   pthread_mutex_unlock(&satip_rtp_lock);
   return r;
 }

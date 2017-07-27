@@ -65,24 +65,24 @@ extern struct satip_server_conf satip_server_conf;
 
 extern const idclass_t satip_server_class;
 
-void satip_rtp_queue(void *id, th_subscription_t *subs,
-                     streaming_queue_t *sq,
-                     pthread_mutex_t *tcp_lock,
-                     struct sockaddr_storage *peer, int port,
-                     int fd_rtp, int fd_rtcp,
-                     int frontend, int source,
-                     dvb_mux_conf_t *dmc,
-                     mpegts_apids_t *pids,
-                     int allow_data, int perm_lock);
-void satip_rtp_update(void *id, th_subscription_t *subs,
+void *satip_rtp_queue(th_subscription_t *subs,
+                      streaming_queue_t *sq,
+                      pthread_mutex_t *tcp_lock,
+                      struct sockaddr_storage *peer, int port,
+                      int fd_rtp, int fd_rtcp,
+                      int frontend, int source,
+                      dvb_mux_conf_t *dmc,
+                      mpegts_apids_t *pids,
+                      int allow_data, int perm_lock);
+void satip_rtp_update(void *_rtp, th_subscription_t *subs,
                       streaming_queue_t *sq,
                       int frontend, int source,
                       dvb_mux_conf_t *dmc,
                       mpegts_apids_t *pids,
                       mpegts_apids_t *pmt_pids);
-void satip_rtp_allow_data(void *id);
-void satip_rtp_update_pids(void *id, mpegts_apids_t *pids);
-void satip_rtp_update_pmt_pids(void *id, mpegts_apids_t *pmt_pids);
+void satip_rtp_allow_data(void *_rtp);
+void satip_rtp_update_pids(void *_rtp, mpegts_apids_t *pids);
+void satip_rtp_update_pmt_pids(void *_rtp, mpegts_apids_t *pmt_pids);
 int satip_rtp_status(void *id, char *buf, int len);
 void satip_rtp_close(void *id);
 
