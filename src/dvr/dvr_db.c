@@ -1105,8 +1105,8 @@ static time_t dvr_get_stop_time(epg_broadcast_t *e)
   const time_t start = e->start;
   const time_t maximum_stop_time = start + MAX_STOP_TIME;
   int max_progs_to_check = 10;
-
-  for (epg_broadcast_t *next = epg_broadcast_get_next(e);
+  epg_broadcast_t *next;
+  for (next = epg_broadcast_get_next(e);
        --max_progs_to_check && stop < maximum_stop_time &&
            next && next->episode && next->start < stop + THREE_HOURS;
        next = epg_broadcast_get_next(next))
