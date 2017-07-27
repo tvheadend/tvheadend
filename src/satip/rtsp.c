@@ -516,7 +516,6 @@ rtsp_start
   dvb_mux_conf_t dmc;
   char buf[384];
   int res = HTTP_STATUS_NOT_ALLOWED, qsize = 3000000, created = 0, weight;
-  int ocmd = cmd;
 
   pthread_mutex_lock(&global_lock);
   weight = satip_server_conf.satip_weight;
@@ -598,11 +597,6 @@ rtsp_start
       goto endclean;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
-    /* retrigger play when new setup arrived */
-    if (oldstate == STATE_PLAY && cmd == RTSP_CMD_SETUP) {
-      cmd = RTSP_CMD_PLAY;
-      rs->state = STATE_SETUP;
-    }
   } else {
 pids:
     if (!rs->subs)
@@ -615,7 +609,7 @@ pids:
     if (rs->used_weight != weight && weight > 0)
       subscription_set_weight(rs->subs, rs->used_weight = weight);
   }
-  if (cmd == RTSP_CMD_PLAY && rs->state != STATE_PLAY) {
+  if (cmd != RTSP_CMD_DESCRIBE && rs->state != STATE_PLAY) {
     if (rs->mux == NULL)
       goto endclean;
     rs->rtp_handle =
@@ -625,15 +619,19 @@ pids:
                       rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                       rs->findex, rs->src, &rs->dmc_tuned,
                       &rs->pids,
-                      ocmd == RTSP_CMD_PLAY || oldstate == STATE_PLAY,
+                      cmd == RTSP_CMD_PLAY || oldstate == STATE_PLAY,
                       rs->perm_lock);
+    if (rs->rtp_handle == NULL) {
+      res = HTTP_STATUS_INTERNAL;
+      goto endclean;
+    }
     rs->tcp_data = rs->udp_rtp ? NULL : hc;
     if (!rs->pids.all && rs->pids.count == 0)
       mpegts_pid_add(&rs->pids, 0, MPS_WEIGHT_RAW);
     svc = (mpegts_service_t *)rs->subs->ths_raw_service;
     svc->s_update_pids(svc, &rs->pids);
     rs->state = STATE_PLAY;
-  } else if (ocmd == RTSP_CMD_PLAY) {
+  } else if (cmd == RTSP_CMD_PLAY) {
     satip_rtp_allow_data(rs->rtp_handle);
   }
   rtsp_manage_descramble(rs);
