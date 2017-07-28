@@ -66,7 +66,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 28
+#define HTSP_PROTO_VERSION 29
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -599,6 +599,10 @@ htsp_serierec_convert(htsp_connection_t *htsp, htsmsg_t *in, channel_t *ch, int 
       htsmsg_add_s64(conf, "start_extra", !retval ? (s64 < 0 ? 0 : s64)  : 0); // 0 = dvr config
     if (!(retval = htsmsg_get_s64(in, "stopExtra", &s64)) || add)
       htsmsg_add_s64(conf, "stop_extra", !retval ? (s64 < 0 ? 0 : s64) : 0);   // 0 = dvr config
+    if (!(retval = htsmsg_get_u32(in, "serieslinkId", &u32)) || add)
+      htsmsg_add_u32(conf, "serieslinkId", !retval ? u32 : 0);
+    if((str = htsmsg_get_str(in, "serieslinkUri")) || add)
+      htsmsg_add_str(conf, "serieslink", str ?: ""); // for compat reasons, htsp name is not same as internal name
 
     if (add) { // for add, stay compatible with older "approxTime
       if(htsmsg_get_s32(in, "approxTime", &approx_time))
@@ -1090,6 +1094,11 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   if(dae->dae_channel)
     htsmsg_add_u32(out, "channel",   channel_get_id(dae->dae_channel));
 
+  if (dae->dae_serieslink) {
+    htsmsg_add_u32(out, "serieslinkId", dae->dae_serieslink->id);
+    if (dae->dae_serieslink->uri)
+      htsmsg_add_str(out, "serieslinkUri", dae->dae_serieslink->uri);
+  }
   htsmsg_add_str(out, "method", method);
 
   return out;
