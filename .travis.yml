@@ -7,6 +7,7 @@ dist: trusty
 language: c
 before_install:
   - sudo apt-get -qqy update && sudo apt-get install fakeroot -qqy
+  - git fetch --unshallow
   - sudo ./Autobuild.sh -t trusty-amd64 -o deps
 script:
-  - ./Autobuild.sh -t trusty-amd64
+  - sudo ./Autobuild.sh -t trusty-amd64
