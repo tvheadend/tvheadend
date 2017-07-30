@@ -25,7 +25,7 @@ END {
 }' debian/control`
 
 case "${DEBDIST}" in
-precise|trusty|jessie)
+precise|trusty|jessie|raspbianjessie)
   BUILD_DEPS=`echo ${BUILD_DEPS} | sed -e 's/libpcre2-dev/libpcre3-dev/g'` ;;
 esac
 
