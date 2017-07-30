@@ -1978,10 +1978,10 @@ webui_init(int xspf)
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
-  hp->hp_no_verification = 1; /* redirect only */
+  hp->hp_flags = HTTP_PATH_NO_VERIFICATION; /* redirect only */
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
-  hp->hp_no_verification = 1;
+  hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
 
 #if CONFIG_SATIP_SERVER
   http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);

@@ -1088,7 +1088,7 @@ tvheadend.app = function() {
                 tvheadend.log(m.logtxt);
             });
 
-            new tvheadend.cometPoller;
+            tvheadend.cometInit();
 
             Ext.QuickTips.init();
         }

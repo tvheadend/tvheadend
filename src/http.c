@@ -39,6 +39,7 @@
 #include "notify.h"
 #include "channels.h"
 #include "config.h"
+#include "htsmsg_json.h"
 
 #if ENABLE_ANDROID
 #include <sys/socket.h>
@@ -199,6 +200,7 @@ static const char *
 http_rc2str(int code)
 {
   switch(code) {
+  case HTTP_STATUS_PSWITCH:         /* 101 */ return "Switching Protocols";
   case HTTP_STATUS_OK:              /* 200 */ return "OK";
   case HTTP_STATUS_PARTIAL_CONTENT: /* 206 */ return "Partial Content";
   case HTTP_STATUS_FOUND:           /* 302 */ return "Found";
@@ -437,6 +439,46 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 }
 
 /*
+ * Transmit a websocket upgrade reply
+ */
+int
+http_send_header_websocket(http_connection_t *hc, const char *protocol)
+{
+  htsbuf_queue_t hdrs;
+  const int rc = HTTP_STATUS_PSWITCH;
+  uint8_t hash[20];
+  const char *s;
+  const char *guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+  char encoded[512];
+
+  s = http_arg_get(&hc->hc_args, "sec-websocket-key");
+  if (s == NULL || strlen(s) < 10) {
+    http_error(hc, HTTP_STATUS_UNSUPPORTED);
+    return -1;
+  }
+
+  htsbuf_queue_init(&hdrs, 0);
+
+  htsbuf_qprintf(&hdrs, "%s %d %s\r\n",
+		 http_ver2str(hc->hc_version), rc, http_rc2str(rc));
+
+  sha1_calc(hash, (uint8_t *)s, strlen(s), (uint8_t *)guid, strlen(guid));
+  base64_encode(encoded, sizeof(encoded), hash, sizeof(hash));
+
+  htsbuf_qprintf(&hdrs, "Upgrade: websocket\r\n"
+                        "Connection: Upgrade\r\n"
+                        "Sec-WebSocket-Accept: %s\r\n"
+                        "Sec-WebSocket-Protocol: %s\r\n"
+                        "\r\n",
+                        encoded, protocol);
+
+  pthread_mutex_lock(&hc->hc_fd_lock);
+  tcp_write_queue(hc->hc_fd, &hdrs);
+  pthread_mutex_unlock(&hc->hc_fd_lock);
+  return 0;
+}
+
+/*
  *
  */
 int
@@ -465,6 +507,39 @@ http_encoding_valid(http_connection_t *hc, const char *encoding)
       *s = '\0';
     // check for matching encoding with q > 0
     if ((!strcasecmp(tok, encoding) || !strcmp(tok, "*")) && (q == NULL || strncmp(q, "q=0.000", strlen(q))))
+      return 1;
+    tok = strtok_r(NULL, ",", &saveptr);
+  }
+  return 0;
+}
+
+/**
+ *
+ */
+int
+http_header_match(http_connection_t *hc, const char *name, const char *value)
+{
+  char *tokbuf, *tok, *saveptr = NULL, *q, *s;
+
+  s = http_arg_get(&hc->hc_args, name);
+  if (s == NULL)
+    return 0;
+  tokbuf = tvh_strdupa(s);
+  tok = strtok_r(tokbuf, ",", &saveptr);
+  while (tok) {
+    while (*tok == ' ')
+      tok++;
+    s = tok;
+    if (*s == '"') {
+      q = strchr(++s, '"');
+      if (q)
+        *q = '\0';
+    } else {
+      q = strchr(s, ' ');
+      if (q)
+        *q = '\0';
+    }
+    if (strcasecmp(s, value) == 0)
       return 1;
     tok = strtok_r(NULL, ",", &saveptr);
   }
@@ -916,6 +991,18 @@ http_access_verify_channel(http_connection_t *hc, int mask,
 }
 
 /**
+ *
+ */
+static int
+http_websocket_valid(http_connection_t *hc)
+{
+  if (!http_header_match(hc, "connection", "upgrade") ||
+      http_arg_get(&hc->hc_args, "sec-websocket-key") == NULL)
+    return HTTP_STATUS_UNSUPPORTED;
+  return 0;
+}
+
+/**
  * Execute url callback
  *
  * Returns 1 if we should disconnect
@@ -928,10 +1015,15 @@ http_exec(http_connection_t *hc, http_path_t *hp, char *remain)
 
   if ((hc->hc_username && hc->hc_username[0] == '\0') ||
       http_access_verify(hc, hp->hp_accessmask)) {
-    if (!hp->hp_no_verification) {
+    if ((hp->hp_flags & HTTP_PATH_NO_VERIFICATION) == 0) {
       err = HTTP_STATUS_UNAUTHORIZED;
       goto destroy;
     }
+  }
+  if (hp->hp_flags & HTTP_PATH_WEBSOCKET) {
+    err = http_websocket_valid(hc);
+    if (err)
+      goto destroy;
   }
   err = hp->hp_callback(hc, remain, hp->hp_opaque);
 destroy:
@@ -1351,7 +1443,7 @@ http_path_add_modify(const char *path, void *opaque, http_callback_t *callback,
   hp->hp_callback = callback;
   hp->hp_accessmask = accessmask;
   hp->hp_path_modify = path_modify;
-  hp->hp_no_verification = 0;
+  hp->hp_flags    = 0;
   pthread_mutex_lock(&http_paths_mutex);
   LIST_INSERT_HEAD(&http_paths, hp, hp_link);
   pthread_mutex_unlock(&http_paths_mutex);
@@ -1366,6 +1458,160 @@ http_path_add(const char *path, void *opaque, http_callback_t *callback,
               uint32_t accessmask)
 {
   return http_path_add_modify(path, opaque, callback, accessmask, NULL);
+}
+
+/**
+ *
+ */
+int
+http_websocket_send(http_connection_t *hc, uint8_t *buf, uint64_t buflen,
+                    int opcode)
+{
+  int op, r = 0;
+  uint8_t b[10];
+  uint64_t bsize;
+
+  switch (opcode) {
+  case HTTP_WSOP_TEXT:   op = 0x01; break;
+  case HTTP_WSOP_BINARY: op = 0x02; break;
+  case HTTP_WSOP_PING:   op = 0x09; break;
+  case HTTP_WSOP_PONG:   op = 0x0a; break;
+  default: return -1;
+  }
+
+  b[0] = 0x80 | op; /* FIN + opcode */
+  if (buflen <= 125) {
+    b[1] = buflen;
+    bsize = 2;
+  } else if (buflen <= 65535) {
+    b[1] = 126;
+    b[2] = (buflen >> 8) & 0xff;
+    b[3] = buflen & 0xff;
+    bsize = 4;
+  } else {
+    b[1] = 127;
+    b[2] = (buflen >> 56) & 0xff;
+    b[3] = (buflen >> 48) & 0xff;
+    b[4] = (buflen >> 40) & 0xff;
+    b[5] = (buflen >> 32) & 0xff;
+    b[6] = (buflen >> 24) & 0xff;
+    b[7] = (buflen >> 16) & 0xff;
+    b[8] = (buflen >>  8) & 0xff;
+    b[9] = (buflen >>  0) & 0xff;
+    bsize = 10;
+  }
+  pthread_mutex_lock(&hc->hc_fd_lock);
+  if (tvh_write(hc->hc_fd, b, bsize))
+    r = -1;
+  if (r == 0 && tvh_write(hc->hc_fd, buf, buflen))
+    r = -1;
+  pthread_mutex_unlock(&hc->hc_fd_lock);
+  return r;
+}
+
+/**
+ *
+ */
+int
+http_websocket_send_json(http_connection_t *hc, htsmsg_t *msg)
+{
+  htsbuf_queue_t q;
+  char *s;
+  int r;
+
+  htsbuf_queue_init(&q, 0);
+  htsmsg_json_serialize(msg, &q, 0);
+  s = htsbuf_to_string(&q);
+  htsbuf_queue_flush(&q);
+  r = http_websocket_send(hc, (uint8_t *)s, strlen(s), HTTP_WSOP_TEXT);
+  free(s);
+  return r;
+}
+
+/**
+ *
+ */
+int
+http_websocket_read(http_connection_t *hc, htsmsg_t **_res, int timeout)
+{
+  htsmsg_t *msg, *msg1;
+  uint8_t b[2], bl[8], *p;
+  int op, r;
+  uint64_t plen, pi;
+
+  *_res = NULL;
+again:
+  r = tcp_read_timeout(hc->hc_fd, b, 2, timeout);
+  if (r == ETIMEDOUT)
+    return 0;
+  if (r)                  /* closed connection */
+    return -1;
+  if ((b[1] & 0x80) == 0) /* accept only masked messages */
+    return -1;
+  switch (b[0] & 0x0f) {  /* opcode */
+  case 0x0:               /* continuation */
+    goto again;
+  case 0x1:               /* text */
+    op = HTTP_WSOP_TEXT;
+    break;
+  case 0x2:               /* binary */
+    op = HTTP_WSOP_BINARY;
+    break;
+  case 0x8:               /* close connection */
+    return -1;
+  case 0x9:               /* ping */
+    op = HTTP_WSOP_PING;
+    break;
+  case 0xa:               /* pong */
+    op = HTTP_WSOP_PONG;
+    break;
+  default:
+    return -1;
+  }
+  plen = b[1] & 0x7f;
+  if (plen == 126) {
+    if (tcp_read(hc->hc_fd, bl, 2))
+      return -1;
+    plen = (bl[0] << 8) | bl[1];
+  } else if (plen == 127) {
+    if (tcp_read(hc->hc_fd, bl, 8))
+      return -1;
+    plen = ((uint64_t)bl[0] << 56) | ((uint64_t)bl[1] << 48) |
+           ((uint64_t)bl[2] << 40) | ((uint64_t)bl[3] << 32) |
+           ((uint64_t)bl[4] << 24) | ((uint64_t)bl[5] << 16) |
+           ((uint64_t)bl[6] << 8 ) | ((uint64_t)bl[7] << 0);
+  }
+  if (plen > 5*1024*1024)
+    return -1;
+  p = malloc(plen + 1);
+  if (p == NULL)
+    return -1;
+  if (tcp_read(hc->hc_fd, bl, 4))
+    return -1;
+  if (tcp_read(hc->hc_fd, p, plen))
+    return -1;
+  /* apply mask descrambling */
+  for (pi = 0; pi < plen; pi++)
+    p[pi] ^= bl[pi & 3];
+  if (op == HTTP_WSOP_PING) {
+    http_websocket_send(hc, p, plen, HTTP_WSOP_PONG);
+    goto again;
+  }
+  msg = htsmsg_create_map();
+  htsmsg_add_s32(msg, "op", op);
+  if (op == HTTP_WSOP_TEXT) {
+    p[plen] = '\0';
+    msg1 = p[0] == '{' || p[0] == '[' ?
+             htsmsg_json_deserialize((char *)p) : NULL;
+    if (msg1)
+      htsmsg_add_msg(msg, "json", msg1);
+    else
+      htsmsg_add_str(msg, "text", (char *)p);
+  } else {
+    htsmsg_add_bin(msg, "bin", p, plen);
+  }
+  *_res = msg;
+  return 0;
 }
 
 /**
