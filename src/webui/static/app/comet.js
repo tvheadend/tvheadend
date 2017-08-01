@@ -74,7 +74,7 @@ tvheadend.cometWebsocket = function() {
         var uri = tvheadend.wsURI;
         if (tvheadend.boxid)
           uri = uri + '?boxid=' + tvheadend.boxid;
-        tvheadend.ws = new WebSocket(uri);
+        tvheadend.ws = new WebSocket(uri, ['tvheadend-comet']);
         if (failures > 5)
             window.location.reload();
         if (failures > 1)
