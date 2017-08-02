@@ -876,7 +876,8 @@ parse_transport(http_connection_t *hc)
     if (a + 1 != b)
       return -1;
     return a;
-  } else if (strncmp(s, "RTP/AVP/TCP;interleaved=0-1", 27) == 0) {
+  } else if ((strncmp(s, "RTP/AVP/TCP;interleaved=0-1", 27) == 0) &&
+             !satip_server_conf.satip_notcp_mode) {
     return RTSP_TCP_DATA;
   }
   return -1;

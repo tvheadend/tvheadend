@@ -717,6 +717,16 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_notcp_mode",
+      .name   = N_("Disable RTP/AVP/TCP support"),
+      .desc   = N_("Remove server support for RTP/AVP/TCP transfer mode "
+                   "(embedded data in the RTSP session)."),
+      .off    = offsetof(struct satip_server_conf, satip_notcp_mode),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
       .type   = PT_U32,
       .id     = "satip_iptv_sig_level",
       .name   = N_("IPTV signal level"),
