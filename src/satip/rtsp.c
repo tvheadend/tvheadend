@@ -1415,6 +1415,9 @@ rtsp_process_play(http_connection_t *hc, int cmd)
     }
   }
 
+  if (cmd == RTSP_CMD_SETUP && rs->rtp_peer_port == RTSP_TCP_DATA)
+    rs->shutdown_on_close = hc;
+
   if ((errcode = rtsp_start(hc, rs, hc->hc_peer_ipstr, valid, cmd, oldstate)) != 0)
     goto error;
 
