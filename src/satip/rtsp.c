@@ -1597,9 +1597,11 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
 
   http_serve_requests(&hc);
 
-  close(fd);
+  shutdown(fd, SHUT_RDWR);
 
   rtsp_flush_requests(&hc);
+
+  close(fd);
 
   /* Note: leave global_lock held for parent */
   pthread_mutex_lock(&global_lock);
