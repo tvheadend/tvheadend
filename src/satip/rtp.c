@@ -237,14 +237,16 @@ found:
         if (tbl->pid == pid) {
           dvb_table_parse(&tbl->tbl, "-", data, 188, 1, 0, satip_rtp_pmt_cb);
           if (rtp->table_data && rtp->table_data_len) {
-            for (i = 0; i < rtp->table_data_len; i += 188) {
+            for (i = r = 0; i < rtp->table_data_len; i += 188) {
               r = satip_rtp_append_data(rtp, &v, rtp->table_data + i);
-              if (r < 0)
-                return r;
+              if (r)
+                break;
             }
             free(rtp->table_data);
             rtp->table_data = NULL;
             rtp->table_data_len = 0;
+            if (r)
+              return r;
           }
           break;
         }
@@ -259,34 +261,43 @@ found:
   return 0;
 }
 
-static void
+static int
 satip_rtp_tcp_data(satip_rtp_session_t *rtp, uint8_t stream, uint8_t *data, size_t data_len)
 {
+  int r = 0;
+
   assert(data_len <= 0xffff);
   data[0] = '$';
   data[1] = stream;
   data[2] = (data_len - 4) >> 8;
   data[3] = (data_len - 4) & 0xff;
   pthread_mutex_lock(rtp->tcp_lock);
-  tvh_write(rtp->fd_rtp, data, data_len);
+  if (!tvh_write(rtp->fd_rtp, data, data_len))
+    r = errno;
   pthread_mutex_unlock(rtp->tcp_lock);
+  return r;
 }
 
-static inline void
+static inline int
 satip_rtp_flush_tcp_data(satip_rtp_session_t *rtp)
 {
   struct iovec *v = &rtp->tcp_data;
+  int r;
+
   if (v->iov_len)
-    satip_rtp_tcp_data(rtp, 0, v->iov_base, v->iov_len);
+    r = satip_rtp_tcp_data(rtp, 0, v->iov_base, v->iov_len);
   free(v->iov_base);
   v->iov_base = NULL;
   v->iov_len = 0;
+  return r;
 }
 
 static inline int
 satip_rtp_append_tcp_data(satip_rtp_session_t *rtp, uint8_t *data, size_t len)
 {
   struct iovec *v = &rtp->tcp_data;
+  int r = 0;
+
   if (v->iov_base == NULL) {
     v->iov_base = malloc(RTP_TCP_PAYLOAD);
     satip_rtp_header(rtp, v, 4);
@@ -295,8 +306,8 @@ satip_rtp_append_tcp_data(satip_rtp_session_t *rtp, uint8_t *data, size_t len)
   memcpy(v->iov_base + v->iov_len, data, len);
   v->iov_len += len;
   if (v->iov_len == RTP_TCP_PAYLOAD)
-    satip_rtp_flush_tcp_data(rtp);
-  return 0;
+    r = satip_rtp_flush_tcp_data(rtp);
+  return r;
 }
 
 
@@ -322,10 +333,12 @@ found:
         if (tbl->pid == pid) {
           dvb_table_parse(&tbl->tbl, "-", data, 188, 1, 0, satip_rtp_pmt_cb);
           if (rtp->table_data && rtp->table_data_len) {
-            satip_rtp_append_tcp_data(rtp, rtp->table_data, rtp->table_data_len);
+            r = satip_rtp_append_tcp_data(rtp, rtp->table_data, rtp->table_data_len);
             free(rtp->table_data);
             rtp->table_data = NULL;
             rtp->table_data_len = 0;
+            if (r)
+              return -1;
           }
           break;
         }
@@ -334,8 +347,8 @@ found:
       last_pid = pid;
     }
     r = satip_rtp_append_tcp_data(rtp, data, 188);
-    if (r < 0)
-      return r;
+    if (r)
+      return -1;
   }
   return 0;
 }
@@ -900,16 +913,16 @@ satip_rtcp_thread(void *aux)
         tvhtrace(LS_SATIPS, "RTCP send to %s:%d : %s", addrbuf, ntohs(IP_PORT(rtp->peer2)), msg + 16);
       }
       if (rtp->port == RTSP_TCP_DATA) {
-        satip_rtp_tcp_data(rtp, 1, msg, len);
-        r = 0;
+        err = satip_rtp_tcp_data(rtp, 1, msg, len);
+        r = err ? -1 : 0;
       } else {
         r = sendto(rtp->fd_rtcp, msg, len, 0,
                    (struct sockaddr*)&rtp->peer2,
                    rtp->peer2.ss_family == AF_INET6 ?
                      sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
+        err = errno;
       }
       if (r < 0) {
-        err = errno;
         if (err != ECONNREFUSED) {
           tcp_get_str_from_ip(&rtp->peer2, addrbuf, sizeof(addrbuf));
           tvhwarn(LS_SATIPS, "RTCP send to error %s:%d : %s",
