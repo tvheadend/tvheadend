@@ -49,6 +49,7 @@ struct satip_server_conf {
   int satip_nom3u;
   int satip_notcp_mode;
   int satip_anonymize;
+  int satip_noupnp;
   int satip_iptv_sig_level;
   int satip_force_sig_level;
   int satip_dvbs;

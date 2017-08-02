@@ -645,6 +645,14 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_noupnp",
+      .name   = N_("Disable UPnP"),
+      .desc   = N_("Disable UPnP discovery."),
+      .off    = offsetof(struct satip_server_conf, satip_noupnp),
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
@@ -947,12 +955,16 @@ void satip_server_register(void)
   if (save)
     idnode_changed(&config.idnode);
 
-  satips_upnp_discovery = upnp_service_create(upnp_service);
-  if (satips_upnp_discovery == NULL) {
-    tvherror(LS_SATIPS, "unable to create UPnP discovery service");
+  if (!satip_server_conf.satip_noupnp) {
+    satips_upnp_discovery = upnp_service_create(upnp_service);
+    if (satips_upnp_discovery == NULL) {
+      tvherror(LS_SATIPS, "unable to create UPnP discovery service");
+    } else {
+      satips_upnp_discovery->us_received = satips_upnp_discovery_received;
+      satips_upnp_discovery->us_destroy  = satips_upnp_discovery_destroy;
+    }
   } else {
-    satips_upnp_discovery->us_received = satips_upnp_discovery_received;
-    satips_upnp_discovery->us_destroy  = satips_upnp_discovery_destroy;
+    satips_upnp_discovery = NULL;
   }
 
   satip_server_rtsp_register();
