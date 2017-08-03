@@ -709,8 +709,8 @@ service_start(service_t *t, int instance, int weight, int flags,
 
   descrambler_caid_changed(t);
 
-  if (service_has_no_audio(t, 1))
-    t->s_pcr_boundary = 4*90000;
+  if (!service_has_no_audio(t, 1))
+    t->s_pcr_boundary = 6*90000;
 
   if((r = t->s_start_feed(t, instance, weight, flags)))
     return r;
