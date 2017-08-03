@@ -160,15 +160,13 @@ mpegts_psi_section_reassemble
   }
 
   if(pusi) {
-    int len = tsb[off++];
-    if(len > 0) {
-      if(len > 188 - off) {
-        mt->mt_sect.ps_lock = 0;
-        return;
-      }
-      mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
-      off += len;
+    uint8_t len = tsb[off++];
+    if (len > 188 - off) {
+      mt->mt_sect.ps_lock = 0;
+      return;
     }
+    mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
+    off += len;
   }
 
   while(off < 188) {
@@ -179,7 +177,6 @@ mpegts_psi_section_reassemble
       break;
     }
     off += r;
-    pusi = 0;
   }
 }
 
