@@ -432,6 +432,7 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
     if (res >= 0) {
       comet_mailbox_ws_msg(hc, cmb, first, msg);
       htsmsg_destroy(msg);
+      http_alive(hc);
       first = 0;
     }
   }

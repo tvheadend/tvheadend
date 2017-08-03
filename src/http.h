@@ -199,6 +199,8 @@ static inline int http_args_empty(const struct http_arg_list *list) { return TAI
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
+void http_alive(http_connection_t *hc);
+
 void http_error(http_connection_t *hc, int error);
 
 int http_encoding_valid(http_connection_t *hc, const char *encoding);

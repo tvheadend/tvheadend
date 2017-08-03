@@ -311,6 +311,16 @@ http_get_opaque(const char *realm, const char *nonce)
 }
 
 /**
+ *
+ */
+void
+http_alive(http_connection_t *hc)
+{
+  if (hc->hc_nonce)
+    http_nonce_exists(hc->hc_nonce); /* update timer */
+}
+
+/**
  * Transmit a HTTP reply
  */
 void
