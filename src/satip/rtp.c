@@ -282,7 +282,7 @@ static inline int
 satip_rtp_flush_tcp_data(satip_rtp_session_t *rtp)
 {
   struct iovec *v = &rtp->tcp_data;
-  int r;
+  int r = 0;
 
   if (v->iov_len)
     r = satip_rtp_tcp_data(rtp, 0, v->iov_base, v->iov_len);
@@ -382,13 +382,13 @@ satip_rtp_thread(void *aux)
     sm = TAILQ_FIRST(&sq->sq_queue);
     if (sm == NULL) {
       if (tcp) {
-        satip_rtp_flush_tcp_data(rtp);
+        r = satip_rtp_flush_tcp_data(rtp);
       } else {
         r = satip_rtp_send(rtp);
-        if (r) {
-          fatal = 1;
-          continue;
-        }
+      }
+      if (r) {
+        fatal = 1;
+        continue;
       }
       tvh_cond_wait(&sq->sq_cond, &sq->sq_mutex);
       continue;
