@@ -1143,7 +1143,7 @@ play:
 
   tvhdebug(LS_SATIPS, "%i/%s/%d: %s from %s:%d %s",
            rs->frontend, rs->session, rs->stream,
-           caller, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer), buf);
+           caller, hc->hc_peer_ipstr, ntohs(IP_PORT(*hc->hc_peer)), buf);
 
 ok:
   errcode = 0;
@@ -1460,7 +1460,7 @@ rtsp_process_teardown(http_connection_t *hc)
   }
 
   tvhdebug(LS_SATIPS, "-/%s/%i: teardown from %s:%d",
-           hc->hc_session, stream, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer));
+           hc->hc_session, stream, hc->hc_peer_ipstr, ntohs(IP_PORT(*hc->hc_peer)));
 
   pthread_mutex_lock(&rtsp_lock);
   rs = rtsp_find_session(hc, stream);
