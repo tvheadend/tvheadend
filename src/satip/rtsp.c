@@ -237,7 +237,7 @@ rtsp_session_timer_cb(void *aux)
 static inline void
 rtsp_rearm_session_timer(session_t *rs)
 {
-  if (!rs->shutdown_on_close) {
+  if (!rs->shutdown_on_close || (rs->rtp_peer_port == RTSP_TCP_DATA)) {
     pthread_mutex_lock(&global_lock);
     mtimer_arm_rel(&rs->timer, rtsp_session_timer_cb, rs, sec2mono(RTSP_TIMEOUT));
     pthread_mutex_unlock(&global_lock);
