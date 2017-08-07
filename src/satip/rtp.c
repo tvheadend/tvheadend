@@ -442,7 +442,9 @@ satip_rtp_thread(void *aux)
   pthread_mutex_unlock(&sq->sq_mutex);
 
   tvhdebug(LS_SATIPS, "RTP streaming to %s:%d closed (%s request)%s",
-           peername, rtp->port, alive ? "remote" : "streaming",
+           peername,
+           tcp ? ntohs(IP_PORT(rtp->peer)) : rtp->port,
+           alive ? "remote" : "streaming",
            fatal ? " (fatal)" : "");
 
   return NULL;
