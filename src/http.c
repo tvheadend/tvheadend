@@ -325,7 +325,7 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
   time_t t;
   int sess = 0;
 
-  lock_assert(&hc->hc_fd_lock);
+  assert(atomic_get(&hc->hc_extra_insend) > 0);
 
   htsbuf_queue_init(&hdrs, 0);
 
@@ -525,7 +525,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
   }
 #endif
 
-  pthread_mutex_lock(&hc->hc_fd_lock);
+  http_send_begin(hc);
   http_send_header(hc, rc, content, size,
 		   encoding, location, maxage, 0, NULL, NULL);
   
@@ -535,7 +535,7 @@ http_send_reply(http_connection_t *hc, int rc, const char *content,
     else
       tvh_write(hc->hc_fd, data, size);
   }
-  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_send_end(hc);
 
   free(data);
 }
@@ -688,6 +688,131 @@ http_css_import(http_connection_t *hc, const char *location)
   htsbuf_qprintf(&hc->hc_reply, "@import url('%s');\r\n", loc);
 
   http_send_reply(hc, HTTP_STATUS_OK, "text/css", NULL, loc, 0);
+}
+
+/**
+ *
+ */
+void
+http_extra_destroy(http_connection_t *hc)
+{
+  htsbuf_data_t *hd, *hd_next;
+
+  pthread_mutex_lock(&hc->hc_extra_lock);
+  for (hd = TAILQ_FIRST(&hc->hc_extra.hq_q); hd; hd = hd_next) {
+    hd_next = TAILQ_NEXT(hd, hd_link);
+    if (hd->hd_data_off <= 0) {
+      htsbuf_data_free(&hc->hc_extra, hd);
+      atomic_dec(&hc->hc_extra_chunks, 1);
+    }
+  }
+  pthread_mutex_unlock(&hc->hc_extra_lock);
+}
+
+/**
+ *
+ */
+int
+http_extra_flush(http_connection_t *hc)
+{
+  htsbuf_data_t *hd;
+  int r = 0, serr;
+
+  if (atomic_add(&hc->hc_extra_insend, 1) != 0)
+    goto fin;
+
+  while (1) {
+    pthread_mutex_lock(&hc->hc_extra_lock);
+    hd = TAILQ_FIRST(&hc->hc_extra.hq_q);
+    do {
+      r = send(hc->hc_fd, hd->hd_data + hd->hd_data_off,
+               hd->hd_data_size - hd->hd_data_off,
+               MSG_DONTWAIT | (TAILQ_NEXT(hd, hd_link) ? MSG_MORE : 0));
+      serr = errno;
+    } while (r < 0 && serr == EINTR);
+    if (r + hd->hd_data_off >= hd->hd_data_size) {
+      atomic_dec(&hc->hc_extra_chunks, 1);
+      htsbuf_data_free(&hc->hc_extra, hd);
+    } else if (r > 0) {
+      hd->hd_data_off += r;
+      hc->hc_extra.hq_size -= r;
+    }
+    pthread_mutex_unlock(&hc->hc_extra_lock);
+
+    if (r < 0) {
+      if (ERRNO_AGAIN(serr))
+        r = 0;
+      break;
+    }
+  }
+
+fin:
+  atomic_dec(&hc->hc_extra_insend, 1);
+  return r;
+}
+
+/**
+ *
+ */
+int
+http_extra_flush_partial(http_connection_t *hc)
+{
+  htsbuf_data_t *hd;
+  int r = 0;
+  unsigned int off, size;
+  void *data = NULL;
+
+  atomic_add(&hc->hc_extra_insend, 1);
+
+  pthread_mutex_lock(&hc->hc_extra_lock);
+  hd = TAILQ_FIRST(&hc->hc_extra.hq_q);
+  if (hd && hd->hd_data_off > 0) {
+    data = hd->hd_data;
+    hd->hd_data = NULL;
+    off = hd->hd_data_off;
+    size = hd->hd_data_size;
+    atomic_dec(&hc->hc_extra_chunks, 1);
+    htsbuf_data_free(&hc->hc_extra, hd);
+  }
+  pthread_mutex_unlock(&hc->hc_extra_lock);
+  if (data == NULL)
+    goto finish;
+
+  r = tvh_write(hc->hc_fd, data + off, size - off);
+  free(data);
+
+finish:
+  atomic_dec(&hc->hc_extra_insend, 1);
+  return r;
+}
+
+/**
+ *
+ */
+int
+http_extra_send(http_connection_t *hc, const void *data, size_t data_len)
+{
+  uint8_t *b = malloc(data_len);
+  memcpy(b, data, data_len);
+  return http_extra_send_prealloc(hc, b, data_len);
+}
+
+/**
+ *
+ */
+int
+http_extra_send_prealloc(http_connection_t *hc, const void *data, size_t data_len)
+{
+  if (data == NULL) return 0;
+  pthread_mutex_lock(&hc->hc_extra_lock);
+  if (hc->hc_extra.hq_size <= 1024*1024) {
+    atomic_add(&hc->hc_extra_chunks, 1);
+    htsbuf_append_prealloc(&hc->hc_extra, data, data_len);
+  } else {
+    free((void *)data);
+  }
+  pthread_mutex_unlock(&hc->hc_extra_lock);
+  return http_extra_flush(hc);
 }
 
 /**
@@ -979,10 +1104,10 @@ dump_request(http_connection_t *hc)
 static int
 http_cmd_options(http_connection_t *hc)
 {
-  pthread_mutex_lock(&hc->hc_fd_lock);
+  http_send_begin(hc);
   http_send_header(hc, HTTP_STATUS_OK, NULL, INT64_MIN,
 		   NULL, NULL, -1, 0, NULL, NULL);
-  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_send_end(hc);
   return 0;
 }
 
@@ -1413,11 +1538,14 @@ http_serve_requests(http_connection_t *hc)
   char *argv[3], *c, *s, *cmdline = NULL, *hdrline = NULL;
   int n, r, delim;
 
-  pthread_mutex_init(&hc->hc_fd_lock, NULL);
+  pthread_mutex_init(&hc->hc_extra_lock, NULL);
   http_arg_init(&hc->hc_args);
   http_arg_init(&hc->hc_req_args);
   htsbuf_queue_init(&spill, 0);
   htsbuf_queue_init(&hc->hc_reply, 0);
+  htsbuf_queue_init(&hc->hc_extra, 0);
+  atomic_set(&hc->hc_extra_insend, 0);
+  atomic_set(&hc->hc_extra_chunks, 0);
 
   do {
     hc->hc_no_output  = 0;
@@ -1528,6 +1656,7 @@ error:
   free(hdrline);
   free(cmdline);
   htsbuf_queue_flush(&spill);
+  htsbuf_queue_flush(&hc->hc_extra);
 
   free(hc->hc_nonce);
   hc->hc_nonce = NULL;

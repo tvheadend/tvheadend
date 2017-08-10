@@ -227,8 +227,6 @@ rtsp_session_timer_cb(void *aux)
   tvhwarn(LS_SATIPS, "-/%s/%i: session closed (timeout)", rs->session, rs->stream);
   pthread_mutex_unlock(&global_lock);
   pthread_mutex_lock(&rtsp_lock);
-  if (rs->rtp_peer_port == RTSP_TCP_DATA && rs->tcp_data)
-    shutdown(rs->tcp_data->hc_fd, SHUT_RDWR);
   rtsp_close_session(rs);
   rtsp_free_session(rs);
   pthread_mutex_unlock(&rtsp_lock);
@@ -630,7 +628,7 @@ pids:
     rs->no_data = 0;
     rs->rtp_handle =
       satip_rtp_queue(rs->subs, &rs->prch.prch_sq,
-                      &hc->hc_fd_lock, hc->hc_peer, rs->rtp_peer_port,
+                      hc, hc->hc_peer, rs->rtp_peer_port,
                       rs->udp_rtp ? rs->udp_rtp->fd : hc->hc_fd,
                       rs->udp_rtcp ? rs->udp_rtcp->fd : -1,
                       rs->findex, rs->src, &rs->dmc_tuned,
@@ -1217,9 +1215,9 @@ rtsp_process_options(http_connection_t *hc)
   http_arg_set(&args, "Public", "OPTIONS,DESCRIBE,SETUP,PLAY,TEARDOWN");
   if (hc->hc_session)
     http_arg_set(&args, "Session", hc->hc_session);
-  pthread_mutex_lock(&hc->hc_fd_lock);
+  http_send_begin(hc);
   http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, &args);
-  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_send_end(hc);
   http_arg_flush(&args);
   return 0;
 
@@ -1360,11 +1358,11 @@ rtsp_process_describe(http_connection_t *hc)
   else
     snprintf(buf, sizeof(buf), "rtsp://%s", rtsp_ip);
   http_arg_set(&args, "Content-Base", buf);
-  pthread_mutex_lock(&hc->hc_fd_lock);
+  http_send_begin(hc);
   http_send_header(hc, HTTP_STATUS_OK, "application/sdp", q.hq_size,
                    NULL, NULL, 0, NULL, NULL, &args);
   tcp_write_queue(hc->hc_fd, &q);
-  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_send_end(hc);
   http_arg_flush(&args);
   htsbuf_queue_flush(&q);
   return 0;
@@ -1444,9 +1442,9 @@ rtsp_process_play(http_connection_t *hc, int cmd)
 
   pthread_mutex_unlock(&rtsp_lock);
 
-  pthread_mutex_lock(&hc->hc_fd_lock);
+  http_send_begin(hc);
   http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, &args);
-  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_send_end(hc);
 
   goto end;
 
@@ -1498,9 +1496,9 @@ rtsp_process_teardown(http_connection_t *hc)
     pthread_mutex_unlock(&rtsp_lock);
     http_arg_init(&args);
     http_arg_set(&args, "Session", session);
-    pthread_mutex_lock(&hc->hc_fd_lock);
+    http_send_begin(hc);
     http_send_header(hc, HTTP_STATUS_OK, NULL, 0, NULL, NULL, 0, NULL, NULL, NULL);
-    pthread_mutex_unlock(&hc->hc_fd_lock);
+    http_send_end(hc);
     http_arg_flush(&args);
   }
   return 0;
@@ -1596,8 +1594,6 @@ rtsp_serve(int fd, void **opaque, struct sockaddr_storage *peer,
   hc.hc_cseq    = 1;
 
   http_serve_requests(&hc);
-
-  shutdown(fd, SHUT_RDWR);
 
   rtsp_flush_requests(&hc);
 

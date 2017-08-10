@@ -67,6 +67,7 @@ htsbuf_queue_free(htsbuf_queue_t *hq)
 void
 htsbuf_data_free(htsbuf_queue_t *hq, htsbuf_data_t *hd)
 {
+  hq->hq_size -= hd->hd_data_size - hd->hd_data_off;
   TAILQ_REMOVE(&hq->hq_q, hd, hd_link);
   free(hd->hd_data);
   free(hd);

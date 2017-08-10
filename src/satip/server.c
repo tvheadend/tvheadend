@@ -216,10 +216,10 @@ satip_server_http_xml(http_connection_t *hc)
     snprintf(buf2, sizeof(buf2), "%d", srcs);
     http_arg_set(&args, "X-SATIP-Sources", buf2);
   }
-  pthread_mutex_lock(&hc->hc_fd_lock);
+  http_send_begin(hc);
   http_send_header(hc, 200, "text/xml", strlen(buf), 0, NULL, 10, 0, NULL, &args);
   tvh_write(hc->hc_fd, buf, strlen(buf));
-  pthread_mutex_unlock(&hc->hc_fd_lock);
+  http_send_end(hc);
   http_arg_flush(&args);
 
   return 0;
