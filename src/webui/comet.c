@@ -397,8 +397,10 @@ comet_mailbox_ws_msg(http_connection_t *hc, comet_mailbox_t *cmb, int first, hts
   m = comet_message(cmb, first, 1);
   cmb->cmb_last_used = 0;
   pthread_mutex_unlock(&comet_mutex);
-  if (m)
+  if (m) {
     http_websocket_send_json(hc, m);
+    htsmsg_destroy(m);
+  }
 }
 
 /**
@@ -438,7 +440,8 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
   }
 
   pthread_mutex_lock(&comet_mutex);
-  cmb->cmb_refcount--;
+  if (atomic_get(&comet_running))
+    cmb->cmb_refcount--;
   pthread_mutex_unlock(&comet_mutex);
 
   return res;
