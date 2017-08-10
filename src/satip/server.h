@@ -69,7 +69,7 @@ extern const idclass_t satip_server_class;
 
 void *satip_rtp_queue(th_subscription_t *subs,
                       streaming_queue_t *sq,
-                      pthread_mutex_t *tcp_lock,
+                      http_connection_t *hc,
                       struct sockaddr_storage *peer, int port,
                       int fd_rtp, int fd_rtcp,
                       int frontend, int source,

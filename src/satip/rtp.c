@@ -73,7 +73,7 @@ typedef struct satip_rtp_session {
   signal_status_t sig;
   int sig_lock;
   pthread_mutex_t lock;
-  pthread_mutex_t *tcp_lock;
+  http_connection_t *hc;
   uint8_t *table_data;
   int table_data_len;
   void (*no_data_cb)(void *opaque);
@@ -269,18 +269,12 @@ found:
 static int
 satip_rtp_tcp_data(satip_rtp_session_t *rtp, uint8_t stream, uint8_t *data, size_t data_len)
 {
-  int r = 0;
-
   assert(data_len <= 0xffff);
   data[0] = '$';
   data[1] = stream;
   data[2] = (data_len - 4) >> 8;
   data[3] = (data_len - 4) & 0xff;
-  pthread_mutex_lock(rtp->tcp_lock);
-  if (!tvh_write(rtp->fd_rtp, data, data_len))
-    r = errno;
-  pthread_mutex_unlock(rtp->tcp_lock);
-  return r;
+  return http_extra_send_prealloc(rtp->hc, data, data_len);
 }
 
 static inline int
@@ -291,7 +285,8 @@ satip_rtp_flush_tcp_data(satip_rtp_session_t *rtp)
 
   if (v->iov_len)
     r = satip_rtp_tcp_data(rtp, 0, v->iov_base, v->iov_len);
-  free(v->iov_base);
+  else
+    free(v->iov_base);
   v->iov_base = NULL;
   v->iov_len = 0;
   return r;
@@ -459,7 +454,7 @@ satip_rtp_thread(void *aux)
  */
 void *satip_rtp_queue(th_subscription_t *subs,
                       streaming_queue_t *sq,
-                      pthread_mutex_t *tcp_lock,
+                      http_connection_t *hc,
                       struct sockaddr_storage *peer, int port,
                       int fd_rtp, int fd_rtcp,
                       int frontend, int source, dvb_mux_conf_t *dmc,
@@ -484,7 +479,7 @@ void *satip_rtp_queue(th_subscription_t *subs,
   rtp->fd_rtcp = fd_rtcp;
   rtp->subs = subs;
   rtp->sq = sq;
-  rtp->tcp_lock = tcp_lock;
+  rtp->hc = hc;
   rtp->tcp_payload = RTP_TCP_PAYLOAD;
   rtp->tcp_buffer_size = 16*1024*1024;
   rtp->no_data_cb = no_data_cb;
@@ -618,11 +613,9 @@ void satip_rtp_close(void *_rtp)
   tvh_cond_signal(&sq->sq_cond, 0);
   pthread_mutex_unlock(&sq->sq_mutex);
   pthread_mutex_unlock(&satip_rtp_lock);
-  if (rtp->port == RTSP_TCP_DATA)
-    pthread_mutex_lock(rtp->tcp_lock);
   pthread_join(rtp->tid, NULL);
   if (rtp->port == RTSP_TCP_DATA) {
-    pthread_mutex_unlock(rtp->tcp_lock);
+    http_extra_destroy(rtp->hc);
     free(rtp->tcp_data.iov_base);
   } else {
     udp_multisend_free(&rtp->um);
