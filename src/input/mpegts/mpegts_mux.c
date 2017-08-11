@@ -682,6 +682,30 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_sid_filter),
       .opts     = PO_HIDDEN | PO_EXPERT
     },
+    {
+      .type     = PT_TIME,
+      .id       = "created",
+      .name     = N_("Created"),
+      .desc     = N_("When the mux was created."),
+      .off      = offsetof(mpegts_mux_t, mm_created),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "scan_first",
+      .name     = N_("First scan"),
+      .desc     = N_("When the mux was successfully scanned for the first time."),
+      .off      = offsetof(mpegts_mux_t, mm_scan_first),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "scan_last",
+      .name     = N_("Last scan"),
+      .desc     = N_("When the mux was successfully scanned."),
+      .off      = offsetof(mpegts_mux_t, mm_scan_last_seen),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
     {}
   }
 };
@@ -1218,6 +1242,7 @@ mpegts_mux_create0
   pthread_mutex_init(&mm->mm_descrambler_lock, NULL);
 
   mm->mm_last_pid            = -1;
+  mm->mm_created             = gclk();
 
 #if ENABLE_TSDEBUG
   pthread_mutex_init(&mm->mm_tsdebug_lock, NULL);

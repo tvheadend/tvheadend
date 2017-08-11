@@ -439,6 +439,7 @@ struct mpegts_mux
   int                     mm_tsid_accept_zero_value;
   tvhlog_limit_t          mm_tsid_loglimit;
   int64_t                 mm_start_monoclock;
+  time_t                  mm_created;
 
   int                     mm_update_pids_flag;
   mtimer_t                mm_update_pids_timer;
@@ -453,6 +454,9 @@ struct mpegts_mux
    * Scanning
    */
 
+  time_t                   mm_scan_first;   ///< Time for the first successful scan
+  time_t                   mm_scan_last_seen; ///< Time for the last successful scan
+
   mpegts_mux_scan_result_t mm_scan_result;  ///< Result of last scan
   int                      mm_scan_weight;  ///< Scan priority
   int                      mm_scan_flags;   ///< Subscription flags
@@ -461,13 +465,6 @@ struct mpegts_mux
   TAILQ_ENTRY(mpegts_mux)  mm_scan_link;    ///< Link to Queue
   mpegts_mux_scan_state_t  mm_scan_state;   ///< Scanning state
 
-#if 0
-  enum {
-    MM_ORIG_USER, ///< Manually added
-    MM_ORIG_FILE, ///< Added from scan file
-    MM_ORIG_AUTO  ///< From NIT
-  }                        mm_dmc_origin2;
-#endif
   void                    *mm_dmc_origin;
   int64_t                  mm_dmc_origin_expire;
 

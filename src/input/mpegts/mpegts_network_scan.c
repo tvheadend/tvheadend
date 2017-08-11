@@ -111,6 +111,13 @@ mpegts_network_scan_mux_done0
   mpegts_network_t *mn = mm->mm_network;
   mpegts_mux_scan_state_t state = mm->mm_scan_state;
 
+  if (result == MM_SCAN_OK || result == MM_SCAN_PARTIAL) {
+    mm->mm_scan_last_seen = gclk();
+    if (mm->mm_scan_first == 0)
+      mm->mm_scan_first = mm->mm_scan_last_seen;
+    idnode_changed(&mm->mm_id);
+  }
+
   /* prevent double del: */
   /*   mpegts_mux_stop -> mpegts_network_scan_mux_cancel */
   mm->mm_scan_state = MM_SCAN_STATE_IDLE;

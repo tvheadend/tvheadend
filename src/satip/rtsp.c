@@ -228,6 +228,8 @@ rtsp_session_timer_cb(void *aux)
   tvhwarn(LS_SATIPS, "-/%s/%i: session closed (timeout)", rs->session, rs->stream);
   pthread_mutex_unlock(&global_lock);
   pthread_mutex_lock(&rtsp_lock);
+  if (rs->rtp_peer_port == RTSP_TCP_DATA && rs->tcp_data)
+    shutdown(rs->tcp_data->hc_fd, SHUT_RDWR);
   rtsp_close_session(rs);
   rtsp_free_session(rs);
   pthread_mutex_unlock(&rtsp_lock);
@@ -237,7 +239,7 @@ rtsp_session_timer_cb(void *aux)
 static inline void
 rtsp_rearm_session_timer(session_t *rs)
 {
-  if (!rs->shutdown_on_close) {
+  if (!rs->shutdown_on_close || (rs->rtp_peer_port == RTSP_TCP_DATA)) {
     pthread_mutex_lock(&global_lock);
     mtimer_arm_rel(&rs->timer, rtsp_session_timer_cb, rs, sec2mono(RTSP_TIMEOUT));
     pthread_mutex_unlock(&global_lock);
@@ -1163,7 +1165,7 @@ play:
 
   tvhdebug(LS_SATIPS, "%i/%s/%d: %s from %s:%d %s",
            rs->frontend, rs->session, rs->stream,
-           caller, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer), buf);
+           caller, hc->hc_peer_ipstr, ntohs(IP_PORT(*hc->hc_peer)), buf);
 
 ok:
   errcode = 0;
@@ -1483,7 +1485,7 @@ rtsp_process_teardown(http_connection_t *hc)
   }
 
   tvhdebug(LS_SATIPS, "-/%s/%i: teardown from %s:%d",
-           hc->hc_session, stream, hc->hc_peer_ipstr, IP_PORT(*hc->hc_peer));
+           hc->hc_session, stream, hc->hc_peer_ipstr, ntohs(IP_PORT(*hc->hc_peer)));
 
   pthread_mutex_lock(&rtsp_lock);
   rs = rtsp_find_session(hc, stream);

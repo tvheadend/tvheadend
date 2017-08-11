@@ -36,6 +36,9 @@
 #define RTP_TCP_PAYLOAD (87*188+12+4) /* cca 16kB */
 #define RTCP_PAYLOAD (1420)
 
+#define RTP_TCP_BUFFER_SIZE (64*1024*1024)
+#define RTP_TCP_BUFFER_ROOM (2048)
+
 typedef struct satip_rtp_table {
   TAILQ_ENTRY(satip_rtp_table) link;
   mpegts_psi_table_t tbl;
@@ -63,6 +66,8 @@ typedef struct satip_rtp_session {
   udp_multisend_t um;
   struct iovec *um_iovec;
   struct iovec tcp_data;
+  uint32_t tcp_payload;
+  uint32_t tcp_buffer_size;
   int um_packet;
   uint16_t seq;
   signal_status_t sig;
@@ -299,17 +304,16 @@ satip_rtp_append_tcp_data(satip_rtp_session_t *rtp, uint8_t *data, size_t len)
   int r = 0;
 
   if (v->iov_base == NULL) {
-    v->iov_base = malloc(RTP_TCP_PAYLOAD);
+    v->iov_base = malloc(rtp->tcp_payload);
     satip_rtp_header(rtp, v, 4);
   }
-  assert(v->iov_len + len <= RTP_TCP_PAYLOAD);
+  assert(v->iov_len + len <= rtp->tcp_payload);
   memcpy(v->iov_base + v->iov_len, data, len);
   v->iov_len += len;
-  if (v->iov_len == RTP_TCP_PAYLOAD)
+  if (v->iov_len == rtp->tcp_payload)
     r = satip_rtp_flush_tcp_data(rtp);
   return r;
 }
-
 
 static int
 satip_rtp_tcp_loop(satip_rtp_session_t *rtp, uint8_t *data, int len)
@@ -442,7 +446,9 @@ satip_rtp_thread(void *aux)
   pthread_mutex_unlock(&sq->sq_mutex);
 
   tvhdebug(LS_SATIPS, "RTP streaming to %s:%d closed (%s request)%s",
-           peername, rtp->port, alive ? "remote" : "streaming",
+           peername,
+           tcp ? ntohs(IP_PORT(rtp->peer)) : rtp->port,
+           alive ? "remote" : "streaming",
            fatal ? " (fatal)" : "");
 
   return NULL;
@@ -462,6 +468,8 @@ void *satip_rtp_queue(th_subscription_t *subs,
                       void *no_data_opaque)
 {
   satip_rtp_session_t *rtp = calloc(1, sizeof(*rtp));
+  size_t len;
+  socklen_t socklen;
   int dscp;
 
   if (rtp == NULL)
@@ -477,6 +485,8 @@ void *satip_rtp_queue(th_subscription_t *subs,
   rtp->subs = subs;
   rtp->sq = sq;
   rtp->tcp_lock = tcp_lock;
+  rtp->tcp_payload = RTP_TCP_PAYLOAD;
+  rtp->tcp_buffer_size = 16*1024*1024;
   rtp->no_data_cb = no_data_cb;
   rtp->no_data_opaque = no_data_opaque;
   atomic_set(&rtp->allow_data, allow_data);
@@ -486,6 +496,22 @@ void *satip_rtp_queue(th_subscription_t *subs,
   if (port != RTSP_TCP_DATA) {
     udp_multisend_init(&rtp->um, RTP_PACKETS, RTP_PAYLOAD, &rtp->um_iovec);
     satip_rtp_header(rtp, rtp->um_iovec, 0);
+  } else {
+    socklen = sizeof(len);
+    if (getsockopt(fd_rtp, SOL_SOCKET, SO_SNDBUF, &len, &socklen) == 0 &&
+        len < RTP_TCP_BUFFER_SIZE) {
+      len = RTP_TCP_BUFFER_SIZE;
+      setsockopt(fd_rtp, SOL_SOCKET, SO_SNDBUF, &len, sizeof(len));
+    }
+    socklen = sizeof(len);
+    if (getsockopt(fd_rtp, SOL_SOCKET, SO_SNDBUF, &len, &socklen) == 0) {
+      rtp->tcp_buffer_size = len;
+      if (len - RTP_TCP_BUFFER_ROOM < rtp->tcp_payload) {
+        rtp->tcp_payload = len - RTP_TCP_BUFFER_ROOM;
+        rtp->tcp_payload -= rtp->tcp_payload % 188;
+        rtp->tcp_payload += 12 + 4;
+      }
+    }
   }
   rtp->frontend = frontend;
   rtp->dmc = *dmc;
