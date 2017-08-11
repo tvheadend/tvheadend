@@ -1,13 +1,80 @@
-#
-# Basic Build Setup
-#
-
-sudo: required
-dist: trusty
 language: c
+sudo: required
+services:
+  - docker
+cache: ccache
+
+env:
+  global:
+    - GIT_BRANCH: "test-builds"
+matrix:
+    include:
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "stretch-amd64"
+          - AUTOBUILD_TARGET: "stretch-amd64"
+          - DOCKER_IMAGE: "debian:stretch-slim"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "debian-unstable-amd64"
+          - AUTOBUILD_TARGET: "sid-amd64"
+          - DOCKER_IMAGE: "debian:sid-slim"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "debian-unstable-amd64"
+          - AUTOBUILD_TARGET: "sid-i386"
+          - DOCKER_IMAGE: "i386/debian:sid-slim"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "artful-amd64"
+          - AUTOBUILD_TARGET: "artful-amd64"
+          - DOCKER_IMAGE: "ubuntu:artful"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "artful-i386"
+          - AUTOBUILD_TARGET: "artful-i386"
+          - DOCKER_IMAGE: "i386/ubuntu:artful"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "zesty-amd64"
+          - AUTOBUILD_TARGET: "zesty-amd64"
+          - DOCKER_IMAGE: "ubuntu:zesty"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "zesty-i386"
+          - AUTOBUILD_TARGET: "zesty-i386"
+          - DOCKER_IMAGE: "i386/ubuntu:zesty"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "stretch-i386"
+          - AUTOBUILD_TARGET: "stretch-i386"
+          - DOCKER_IMAGE: "i386/debian:stretch-slim"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
+      - os: linux
+        dist: trusty
+        env:
+          - BUILD_NAME: "jessie-i386"
+          - AUTOBUILD_TARGET: "jessie-i386"
+          - DOCKER_IMAGE: "i386/debian:jessie-slim"
+          - AUTOBUILD_CONFIGURE_EXTRA: ""
 before_install:
-  - sudo apt-get -qqy update && sudo apt-get install fakeroot -qqy
   - git fetch --unshallow
-  - sudo ./Autobuild.sh -t trusty-amd64 -o deps
+  - git checkout -qf ${TRAVIS_COMMIT}
 script:
-  - sudo ./Autobuild.sh -t trusty-amd64
+  - docker pull ${DOCKER_IMAGE}
+  - docker run -v ${TRAVIS_BUILD_DIR}:${TRAVIS_BUILD_DIR} ${DOCKER_IMAGE} /bin/sh -c "apt-get -qqy update && apt-get install -qqy git && cd ${TRAVIS_BUILD_DIR} && ./Autobuild.sh -t ${AUTOBUILD_TARGET} -o deps && AUTOBUILD_CONFIGURE_EXTRA=${AUTOBUILD_CONFIGURE_EXTRA} ./Autobuild.sh -t ${AUTOBUILD_TARGET} && BINTRAY_USER=${BINTRAY_USER} BINTRAY_PASS=${BINTRAY_PASS} BINTRAY_ORG=${BINTRAY_ORG} GIT_BRANCH=${GIT_BRANCH} python ./support/bintray.py publish filelist.txt"

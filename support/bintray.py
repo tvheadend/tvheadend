@@ -30,6 +30,7 @@ BINTRAY_PASS=env('BINTRAY_PASS')
 BINTRAY_COMPONENT=env('BINTRAY_COMPONENT')
 BINTRAY_ORG=env('BINTRAY_ORG') or 'tvheadend'
 BINTRAY_PACKAGE='tvheadend'
+GIT_BRANCH=env('GIT_BRANCH')
 
 PACKAGE_DESC='Tvheadend is a TV streaming server and recorder for Linux, FreeBSD and Android'
 
@@ -130,6 +131,8 @@ def get_component(version):
         if git and git.find('~') > 0:
             return 'stable-%s.%s' % (major, minor)
         return 'release-%s.%s' % (major, minor)
+        if GIT_BRANCH:
+            return str(GIT_BRANCH) + '%s-%s' % (major, minor)
     return 'unstable'
 
 def get_repo(filename, hint=None):
@@ -196,6 +199,9 @@ def do_publish(*args):
                 b = b[1:]
             b = b.strip()
             if b == 'master' or b.startswith('release/'):
+                ok = 1
+                break
+            if GIT_BRANCH:
                 ok = 1
                 break
         if not ok:
