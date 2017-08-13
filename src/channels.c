@@ -862,7 +862,7 @@ channel_get_icon ( channel_t *ch )
           s = sname;
           while (s && *s) {
             c = *s;
-            if (c > 122 || strchr("/:\\<>|*?'\"", c) != NULL)
+            if (c > 122 || strchr(":<>|*?'\"", c) != NULL)
               *(char *)s = '_';
             else if (config.chicon_scheme == CHICON_LOWERCASE && c >= 'A' && c <= 'Z')
               *(char *)s = c - 'A' + 'a';
@@ -906,7 +906,7 @@ channel_get_icon ( channel_t *ch )
         for (s = sname; *s == '.'; s++)
           *(char *)s = '_';
 
-        for (s = sname; *s; s++)
+        for ( ; *s; s++)
           if (*s == '/' || *s == '\\')
             *(char *)s = '-';
           else if (*s < ' ')
@@ -918,6 +918,7 @@ channel_get_icon ( channel_t *ch )
       }
 
       snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
+
       free((char *)sname);
       free((char *)send);
       free((char *)chi);
