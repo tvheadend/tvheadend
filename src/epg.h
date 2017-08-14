@@ -304,6 +304,7 @@ epg_season_t *epg_season_deserialize ( htsmsg_t *m, int create, int *save );
 #define EPG_CHANGED_DIRECTOR     (1<<(EPG_CHANGED_SLAST+16))
 #define EPG_CHANGED_WRITER       (1<<(EPG_CHANGED_SLAST+17))
 #define EPG_CHANGED_YEAR         (1<<(EPG_CHANGED_SLAST+18))
+#define EPG_CHANGED_ORIG_TITLE   (1<<(EPG_CHANGED_SLAST+19))
 
 /* Episode numbering object - this is for some back-compat and also
  * to allow episode information to be "collated" into easy to use object
@@ -332,6 +333,7 @@ struct epg_episode
   char                      *cast;          ///< Episode cast
   char                      *director;      ///< Episode director
   char                      *writer;        ///< Episode writer
+  char                      *original_title;///< Original title
   uint16_t                   year;          ///< Episode year
   epg_genre_list_t           genre;         ///< Episode genre(s)
   epg_episode_num_t          epnum;         ///< Episode numbering
@@ -412,6 +414,9 @@ int epg_episode_set_director
   __attribute__((warn_unused_result));
 int epg_episode_set_writer
   ( epg_episode_t *e, const char *writer, uint32_t *changed )
+  __attribute__((warn_unused_result));
+int epg_episode_set_original_title
+  ( epg_episode_t *e, const char *original_title, uint32_t *changed )
   __attribute__((warn_unused_result));
 int epg_episode_set_year
   ( epg_episode_t *e, uint16_t year, uint32_t *changed )

@@ -1248,6 +1248,8 @@ htsp_build_event
       htsmsg_add_str(out, "director", ee->director);
     if (ee->writer)
       htsmsg_add_str(out, "writer", ee->writer);
+    if (ee->original_title)
+      htsmsg_add_str(out, "original_title", ee->original_title);
     if (ee->year)
       htsmsg_add_u32(out, "year", ee->year);
   }

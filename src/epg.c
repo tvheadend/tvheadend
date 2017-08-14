@@ -918,11 +918,12 @@ static void _epg_episode_destroy ( void *eo )
     LIST_REMOVE(g, link);
     free(g);
   }
-  if (ee->image)       free(ee->image);
-  if (ee->cast)        free(ee->cast);
-  if (ee->director)    free(ee->director);
-  if (ee->writer)      free(ee->writer);
-  if (ee->epnum.text)  free(ee->epnum.text);
+  if (ee->image)          free(ee->image);
+  if (ee->cast)           free(ee->cast);
+  if (ee->director)       free(ee->director);
+  if (ee->writer)         free(ee->writer);
+  if (ee->original_title) free(ee->original_title);
+  if (ee->epnum.text)     free(ee->epnum.text);
   _epg_object_destroy(eo, &epg_episodes);
   free(ee);
 }
@@ -1018,6 +1019,8 @@ int epg_episode_change_finish
     save |= epg_episode_set_director(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_WRITER))
     save |= epg_episode_set_writer(episode, NULL, NULL);
+  if (!(changes & EPG_CHANGED_ORIG_TITLE))
+    save |= epg_episode_set_original_title(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_BRAND))
     save |= epg_episode_set_brand(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_SEASON))
@@ -1200,6 +1203,14 @@ int epg_episode_set_writer
   if (!episode) return 0;
   return _epg_object_set_str(episode, &episode->writer, writer,
                              changed, EPG_CHANGED_WRITER);
+}
+
+int epg_episode_set_original_title
+  ( epg_episode_t *episode, const char *original_title, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_str(episode, &episode->original_title, original_title,
+                             changed, EPG_CHANGED_ORIG_TITLE);
 }
 
 int epg_episode_set_genre
@@ -1395,6 +1406,8 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_str(m, "director", episode->director);
   if (episode->writer)
     htsmsg_add_str(m, "writer", episode->writer);
+  if (episode->original_title)
+    htsmsg_add_str(m, "original_title", episode->original_title);
   if (episode->year)
     htsmsg_add_u32(m, "year", episode->year);
 
@@ -1482,6 +1495,9 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
     
   if ((str = htsmsg_get_str(m, "writer")))
     *save |= epg_episode_set_writer(ee, str, &changes);
+    
+  if ((str = htsmsg_get_str(m, "original_title")))
+    *save |= epg_episode_set_original_title(ee, str, &changes);
     
   if (!htsmsg_get_u32(m, "year", &u32))
     *save |= epg_episode_set_year(ee, u32, &changes);

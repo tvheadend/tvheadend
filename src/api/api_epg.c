@@ -181,6 +181,10 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     if (ee->writer)
       htsmsg_add_str(m, "writer", ee->writer);
       
+    /* Original Title */
+    if (ee->original_title)
+      htsmsg_add_str(m, "original_title", ee->original_title);
+      
      /* Year */
     if (ee->year)
       htsmsg_add_u32(m, "year", ee->year);

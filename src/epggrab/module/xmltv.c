@@ -457,6 +457,19 @@ static int _xmltv_parse_writer
   return epg_episode_set_writer(ee, writer, changes);
 }
 
+static int _xmltv_parse_original_title
+  ( epg_episode_t *ee, htsmsg_t *body, uint32_t *changes )
+{
+  htsmsg_t *credits, *tags;
+  const char *original_title;
+
+  if (!ee || !body) return 0;
+  if (!(tags  = htsmsg_get_map(body, "tags"))) return 0;
+  if (!(original_title = htsmsg_xml_get_cdata_str(tags, "original_title"))) return 0;
+
+  return epg_episode_set_original_title(ee, original_title, changes);
+}
+
 static int _xmltv_parse_year
   ( epg_episode_t *ee, htsmsg_t *body, uint32_t *changes )
 {
@@ -630,6 +643,8 @@ static int _xmltv_parse_programme_tags
     save3 |= _xmltv_parse_director(ee, tags, &changes3);
     
     save3 |= _xmltv_parse_writer(ee, tags, &changes3);
+    
+    save3 |= _xmltv_parse_original_title(ee, tags, &changes3);
     
     save3 |= _xmltv_parse_year(ee, tags, &changes3);
 
