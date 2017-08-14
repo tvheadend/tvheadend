@@ -460,7 +460,7 @@ static int _xmltv_parse_writer
 static int _xmltv_parse_original_title
   ( epg_episode_t *ee, htsmsg_t *body, uint32_t *changes )
 {
-  htsmsg_t *credits, *tags;
+  htsmsg_t *tags;
   const char *original_title;
 
   if (!ee || !body) return 0;
