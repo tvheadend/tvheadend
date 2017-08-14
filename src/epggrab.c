@@ -279,7 +279,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Update channel name"),
       .desc   = N_("Automatically update channel names using "
                    "information provided by the enabled EPG providers. "
-                   "Note: this may cause unwanted changes to "
+                   "Note, this may cause unwanted changes to "
                    "already defined channel names."),
       .off    = offsetof(epggrab_conf_t, channel_rename),
       .opts   = PO_ADVANCED,
@@ -291,7 +291,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Update channel number"),
       .desc   = N_("Automatically update channel numbers using "
                    "information provided by the enabled EPG providers. "
-                   "Note: this may cause unwanted changes to "
+                   "Note, this may cause unwanted changes to "
                    "already defined channel numbers."),
       .off    = offsetof(epggrab_conf_t, channel_renumber),
       .opts   = PO_ADVANCED,
@@ -303,7 +303,7 @@ const idclass_t epggrab_class = {
       .name   = N_("Update channel icon"),
       .desc   = N_("Automatically update channel icons using "
                    "information provided by the enabled EPG providers. "
-                   "Note: this may cause unwanted changes to "
+                   "Note, this may cause unwanted changes to "
                    "already defined channel icons."),
       .off    = offsetof(epggrab_conf_t, channel_reicon),
       .opts   = PO_ADVANCED,
@@ -349,7 +349,7 @@ const idclass_t epggrab_class = {
       .id     = "ota_cron",
       .name   = N_("Over-the-air Cron multi-line"),
       .desc   = N_("Multiple lines of the cron time specification. "
-                   "The default cron triggers the Over-the-air "
+                   "The default cron triggers the over-the-air "
                    "grabber daily at 02:04 and 14:04. See Help on how "
                    "to define your own."),
       .doc    = prop_doc_cron,
@@ -361,10 +361,9 @@ const idclass_t epggrab_class = {
     {
       .type   = PT_U32,
       .id     = "ota_timeout",
-      .name   = N_("EPG scan timeout in seconds (30-7200)"),
-      .desc   = N_("The multiplex (mux) is tuned for this amount of "
-                   "time at most. If the EPG data is complete before "
-                   "this limit, the mux is released sooner."),
+      .name   = N_("EPG scan time-out in seconds (30-7200)"),
+      .desc   = N_("The maximum amount of time a grabber is allowed "
+                   "scan a mux for data (in seconds)."),
       .off    = offsetof(epggrab_conf_t, ota_timeout),
       .opts   = PO_EXPERT,
       .group  = 3,

@@ -143,10 +143,10 @@ api_idnode_grid
   list  = htsmsg_create_list();
   for (i = conf.start; i < ins.is_count && conf.limit != 0; i++) {
     in = ins.is_array[i];
-    e = htsmsg_create_map();
-    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
     if (idnode_perm(in, perm, NULL))
       continue;
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
     idnode_read0(in, e, flist, 0, conf.sort.lang);
     idnode_perm_unset(in);
     htsmsg_add_msg(list, NULL, e);
@@ -610,7 +610,8 @@ exit:
 
 int
 api_idnode_handler
-  ( access_t *perm, htsmsg_t *args, htsmsg_t **resp,
+  ( const idclass_t *idc,
+    access_t *perm, htsmsg_t *args, htsmsg_t **resp,
     void (*handler)(access_t *perm, idnode_t *in),
     const char *op, int destroyed )
 {
@@ -636,7 +637,7 @@ api_idnode_handler
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_string(f))) continue;
       pthread_mutex_lock(&global_lock);
-      if ((in = idnode_find(uuid, NULL, domain)) != NULL) {
+      if ((in = idnode_find(uuid, idc, domain)) != NULL) {
         domain = in->in_domain;
         if (idnode_perm(in, perm, msg)) {
           pthread_mutex_unlock(&global_lock);
@@ -661,7 +662,7 @@ api_idnode_handler
   } else {
     uuid = htsmsg_field_get_string(f);
     pthread_mutex_lock(&global_lock);
-    if (!(in   = idnode_find(uuid, NULL, NULL))) {
+    if (!(in   = idnode_find(uuid, idc, NULL))) {
       err = ENOENT;
     } else {
       msg = htsmsg_create_map();
@@ -692,7 +693,7 @@ static int
 api_idnode_delete
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_delete_, "delete", 1);
+  return api_idnode_handler(NULL, perm, args, resp, api_idnode_delete_, "delete", 1);
 }
 
 static void
@@ -705,7 +706,7 @@ static int
 api_idnode_moveup
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_moveup_, "moveup", 0);
+  return api_idnode_handler(NULL, perm, args, resp, api_idnode_moveup_, "moveup", 0);
 }
 
 static void
@@ -718,7 +719,7 @@ static int
 api_idnode_movedown
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
-  return api_idnode_handler(perm, args, resp, api_idnode_movedown_, "movedown", 0);
+  return api_idnode_handler(NULL, perm, args, resp, api_idnode_movedown_, "movedown", 0);
 }
 
 void

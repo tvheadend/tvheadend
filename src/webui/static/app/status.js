@@ -616,13 +616,13 @@ tvheadend.status_conns = function(panel, index) {
             }, {
                 width: 50,
                 id: 'peer',
-                header: _("IP Address"),
+                header: _("Client Address"),
                 dataIndex: 'peer',
                 sortable: true
             }, {
                 width: 50,
                 id: 'peer_port',
-                header: _("IP Port"),
+                header: _("Client Port"),
                 dataIndex: 'peer_port',
                 sortable: true
             }, {

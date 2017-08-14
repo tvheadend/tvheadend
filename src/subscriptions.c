@@ -134,7 +134,7 @@ subscription_link_service(th_subscription_t *s, service_t *t)
  * Called from service code
  */
 static int
-subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
+subscription_unlink_service0(th_subscription_t *s, int reason, int resched)
 {
   streaming_message_t *sm;
   service_t *t = s->ths_service;
@@ -147,7 +147,7 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 
   streaming_target_disconnect(&t->s_streaming_pad, &s->ths_input);
 
-  if(stop && t->s_running) {
+  if(!resched && t->s_running) {
     // Send a STOP message to the subscription client
     sm = streaming_msg_create_code(SMT_STOP, reason);
     streaming_target_deliver(s->ths_output, sm);
@@ -158,11 +158,11 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int stop)
 
   LIST_REMOVE(s, ths_service_link);
 
-  if (stop && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
+  if (!resched && (s->ths_flags & SUBSCRIPTION_ONESHOT) != 0)
     mtimer_arm_rel(&s->ths_remove_timer, subscription_unsubscribe_cb, s, 0);
 
 stop:
-  if(LIST_FIRST(&t->s_subscriptions) == NULL)
+  if(resched || LIST_FIRST(&t->s_subscriptions) == NULL)
     service_stop(t);
   return 1;
 }
@@ -170,7 +170,7 @@ stop:
 void
 subscription_unlink_service(th_subscription_t *s, int reason)
 {
-  subscription_unlink_service0(s, reason, 1);
+  subscription_unlink_service0(s, reason, 0);
 }
 
 /* **************************************************************************
@@ -375,7 +375,7 @@ subscription_reschedule(void)
       /* Already got a service */
 
       if(subgetstate(s) != SUBSCRIPTION_BAD_SERVICE)
-	continue; /* And it not bad, so we're happy */
+	continue; /* And it is not bad, so we're happy */
 
       tvhwarn(LS_SUBSCRIPTION, "%04X: service instance is bad, reason: %s",
               shortid(s), streaming_code2txt(s->ths_testing_error));
@@ -386,7 +386,7 @@ subscription_reschedule(void)
       si = s->ths_current_instance;
       assert(si != NULL);
 
-      subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 0);
+      subscription_unlink_service0(s, SM_CODE_BAD_SOURCE, 1);
 
       si->si_error = s->ths_testing_error;
       time(&si->si_error_time);

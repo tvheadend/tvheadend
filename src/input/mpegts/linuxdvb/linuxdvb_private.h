@@ -128,6 +128,7 @@ struct linuxdvb_frontend
   tvh_cond_t                lfe_dvr_cond;
   mpegts_apids_t            lfe_pids;
   int                       lfe_pids_max;
+  int                       lfe_pids_use_all;
  
   /*
    * Tuning
@@ -156,6 +157,8 @@ struct linuxdvb_frontend
   uint32_t                  lfe_status_period;
   int                       lfe_old_status;
   int                       lfe_lna;
+  uint32_t                  lfe_sig_multiplier;
+  uint32_t                  lfe_snr_multiplier;
 
   /*
    * Satconf (DVB-S only)

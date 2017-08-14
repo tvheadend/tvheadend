@@ -1676,7 +1676,8 @@ config_boot ( const char *path, gid_t gid, uid_t uid )
   config.dscp = -1;
   config.descrambler_buffer = 9000;
   config.epg_compress = 1;
-  config.epg_cutwindow = 5*60;
+  config.epg_cut_window = 5*60;
+  config.epg_update_window = 24*3600;
   config_scanfile_ok = 0;
   config.theme_ui = strdup("blue");
 
@@ -2081,7 +2082,7 @@ const idclass_t config_class = {
       .id     = "server_name",
       .name   = N_("Tvheadend server name"),
       .desc   = N_("Set the name of the server so you can distinguish "
-                   "multiple instances apart on your LAN."),
+                   "multiple instances apart."),
       .off    = offsetof(config_t, server_name),
       .group  = 1
     },
@@ -2098,7 +2099,7 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "http_realm_name",
       .name   = N_("HTTP realm name"),
-      .desc   = N_("The realm name for the HTTP authorization."),
+      .desc   = N_("The realm name for HTTP authorization."),
       .off    = offsetof(config_t, realm),
       .opts   = PO_HIDDEN | PO_EXPERT,
       .group  = 1
@@ -2107,7 +2108,7 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "hbbtv",
       .name   = N_("Parse HbbTV info"),
-      .desc   = N_("Parse HbbTV information from the services."),
+      .desc   = N_("Parse HbbTV information from services."),
       .off    = offsetof(config_t, hbbtv),
       .group  = 1
     },
@@ -2127,8 +2128,8 @@ const idclass_t config_class = {
       .type   = PT_BOOL,
       .id     = "uilevel_nochange",
       .name   = N_("Persistent user interface level"),
-      .desc   = N_("Prevents users from overriding the above user "
-                   "interface level setting and removes the view level "
+      .desc   = N_("Prevent users from overriding the user "
+                   "interface level setting, and remove the view level "
                    "drop-dowm from the interface."),
       .off    = offsetof(config_t, uilevel_nochange),
       .opts   = PO_ADVANCED,
@@ -2274,7 +2275,17 @@ const idclass_t config_class = {
       .id     = "epg_cutwindow",
       .name   = N_("EPG overlap cut"),
       .desc   = N_("The time window to cut the stop time from the overlapped event in seconds."),
-      .off    = offsetof(config_t, epg_cutwindow),
+      .off    = offsetof(config_t, epg_cut_window),
+      .opts   = PO_EXPERT,
+      .group  = 2
+    },
+    {
+      .type   = PT_U32,
+      .id     = "epg_window",
+      .name   = N_("EPG update window"),
+      .desc   = N_("Maximum allowed difference between event start time when "
+                   "the EPG event is changed (in seconds)."),
+      .off    = offsetof(config_t, epg_update_window),
       .opts   = PO_EXPERT,
       .group  = 2
     },
@@ -2305,7 +2316,7 @@ const idclass_t config_class = {
       .type   = PT_STR,
       .id     = "theme_ui",
       .name   = N_("Theme"),
-      .desc   = N_("The default web interface to use if the user's "
+      .desc   = N_("The default web interface to use if the user "
                    " theme isn't set in the Access Entries tab."),
       .doc    = prop_doc_themes,
       .list   = theme_get_ui_list,
@@ -2319,7 +2330,7 @@ const idclass_t config_class = {
       .name   = N_("DVB scan files path"),
       .desc   = N_("Select the path to use for DVB scan configuration "
                    "files. Typically dvb-apps stores these in "
-                   "/usr/share/dvb/. Leave blank to use Tvheadend's "
+                   "/usr/share/dvb/. Leave blank to use the "
                    "internal file set."),
       .off    = offsetof(config_t, muxconf_path),
       .notify = config_muxconfpath_notify,

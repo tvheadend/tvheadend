@@ -78,6 +78,9 @@ struct lang_str;
 #define DVB_TOT_BASE                  0x73
 #define DVB_TOT_MASK                  0xFF
 
+#define DVB_HBBTV_BASE                0x74
+#define DVB_HBBTV_MASK                0xFF
+
 #define DVB_FASTSCAN_NIT_BASE         0xBC
 #define DVB_FASTSCAN_SDT_BASE         0xBD
 #define DVB_FASTSCAN_MASK             0xFF
@@ -268,6 +271,8 @@ do {\
 
 typedef struct mpegts_psi_section
 {
+  uint8_t ps_table;  // SI table ID
+  uint8_t ps_mask;   // mask
   int8_t  ps_cc;
   int8_t  ps_cco;
   int     ps_offset;
@@ -337,7 +342,8 @@ typedef void (*mpegts_psi_parse_callback_t)
   ( mpegts_psi_table_t *, const uint8_t *buf, int len );
 
 void dvb_table_parse_init
-  ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid, void *opaque );
+  ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid,
+    uint8_t table, uint8_t mask, void *opaque );
 
 void dvb_table_parse_done ( mpegts_psi_table_t *mt);
 

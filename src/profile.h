@@ -69,17 +69,6 @@ typedef LIST_HEAD(, profile_build) profile_builders_queue;
 
 extern profile_builders_queue profile_builders;
 
-typedef struct profile_sharer {
-  streaming_target_t        prsh_input;
-  LIST_HEAD(,profile_chain) prsh_chains;
-  struct profile_chain     *prsh_master;
-  struct streaming_start   *prsh_start_msg;
-  struct streaming_target  *prsh_tsfix;
-#if ENABLE_LIBAV
-  struct streaming_target  *prsh_transcoder;
-#endif
-} profile_sharer_t;
-
 typedef struct profile_chain {
   LIST_ENTRY(profile_chain) prch_link;
   int                       prch_linked;
@@ -146,6 +135,29 @@ typedef struct profile {
   int (*pro_open)(profile_chain_t *prch,
                   muxer_config_t *m_cfg, int flags, size_t qsize);
 } profile_t;
+
+typedef struct profile_sharer_message {
+  TAILQ_ENTRY(profile_sharer_message) psm_link;
+  profile_chain_t *psm_prch;
+  streaming_message_t *psm_sm;
+} profile_sharer_message_t;
+
+typedef struct profile_sharer {
+  uint32_t                  prsh_do_queue: 1;
+  uint32_t                  prsh_queue_run: 1;
+  pthread_t                 prsh_queue_thread;
+  pthread_mutex_t           prsh_queue_mutex;
+  tvh_cond_t                prsh_queue_cond;
+  TAILQ_HEAD(,profile_sharer_message) prsh_queue;
+  streaming_target_t        prsh_input;
+  LIST_HEAD(,profile_chain) prsh_chains;
+  struct profile_chain     *prsh_master;
+  struct streaming_start   *prsh_start_msg;
+  struct streaming_target  *prsh_tsfix;
+#if ENABLE_LIBAV
+  struct streaming_target  *prsh_transcoder;
+#endif
+} profile_sharer_t;
 
 void profile_register(const idclass_t *clazz, profile_builder_t builder);
 

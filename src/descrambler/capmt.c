@@ -109,12 +109,13 @@ typedef struct dmx_filter {
 
 // cw modes
 #define CAPMT_CWMODE_AUTO	0
-#define CAPMT_CWMODE_EXTENDED	1  // CA_SET_DESCR_MODE follows CA_SET_DESCR
-#define CAPMT_CWMODE_EXTENDED2	2  // DES signalled through PID index
+#define CAPMT_CWMODE_OE22	1  // CA_SET_DESCR_MODE before CA_SET_DESCR
+#define CAPMT_CWMODE_OE22SW	2  // CA_SET_DESCR_MODE follows CA_SET_DESCR
+#define CAPMT_CWMODE_OE20	3  // DES signalled through PID index
 
 // limits
 #define MAX_CA       16
-#define MAX_INDEX    64
+#define MAX_INDEX    128
 #define MAX_FILTER   64
 #define MAX_SOCKETS  16   // max sockets (simultaneous channels) per demux
 #define MAX_PIDS     64   // max opened pids
@@ -144,7 +145,7 @@ typedef struct ca_info {
   enum {
     CA_ALGO_DVBCSA,
     CA_ALGO_DES,
-    CA_ALGO_AES128,
+    CA_ALGO_AES,
   } algo;
   enum {
     CA_MODE_ECB,
@@ -191,6 +192,7 @@ typedef struct capmt_service {
 
   /* Elementary stream types */
   uint8_t ct_types[MAX_PIDS];
+  uint8_t ct_type_sok[MAX_PIDS];
 } capmt_service_t;
 
 /**
@@ -317,6 +319,12 @@ capmt_oscam_netproto(capmt_t *capmt)
   int oscam = capmt->capmt_oscam;
   return oscam == CAPMT_OSCAM_NET_PROTO ||
          oscam == CAPMT_OSCAM_UNIX_SOCKET_NP;
+}
+
+static inline int
+capmt_include_elementary_stream(streaming_component_type_t type)
+{
+  return SCT_ISAV(type) || type == SCT_DVBSUB || type == SCT_TELETEXT;
 }
 
 static void
@@ -904,9 +912,9 @@ capmt_filter_data(capmt_t *capmt, uint8_t adapter, uint8_t demux_index,
 static void
 capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
-  uint8_t demux_index  = sbuf_peek_u8 (sb, offset + 4);
-  uint8_t filter_index = sbuf_peek_u8 (sb, offset + 5);
-  uint16_t pid         = sbuf_peek_u16(sb, offset + 6);
+  uint8_t demux_index  = sbuf_peek_u8 (sb, offset + 0);
+  uint8_t filter_index = sbuf_peek_u8 (sb, offset + 1);
+  uint16_t pid         = sbuf_peek_u16(sb, offset + 2);
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
   capmt_service_t *ct;
@@ -939,7 +947,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     if (t) break;
   }
   if (t) {
-    dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 8);
+    dmx_filter_t *pf = (dmx_filter_t *)sbuf_peek(sb, offset + 4);
     /* OK, probably ECM, but sometimes, it's shared */
     /* Inspect the filter */
     for (i = 1; i < DMX_FILTER_SIZE; i++) {
@@ -964,7 +972,7 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
   }
   filter->pid = pid;
   filter->flags = flags;
-  memcpy(&filter->filter, sbuf_peek(sb, offset + 8), sizeof(filter->filter));
+  memcpy(&filter->filter, sbuf_peek(sb, offset + 4), sizeof(filter->filter));
   tvhlog_hexdump(LS_CAPMT, filter->filter.filter, DMX_FILTER_SIZE);
   tvhlog_hexdump(LS_CAPMT, filter->filter.mask, DMX_FILTER_SIZE);
   tvhlog_hexdump(LS_CAPMT, filter->filter.mode, DMX_FILTER_SIZE);
@@ -983,17 +991,17 @@ capmt_set_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 static void
 capmt_stop_filter(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 {
-  uint8_t demux_index  = sbuf_peek_u8   (sb, offset + 4);
-  uint8_t filter_index = sbuf_peek_u8   (sb, offset + 5);
+  uint8_t demux_index  = sbuf_peek_u8   (sb, offset + 0);
+  uint8_t filter_index = sbuf_peek_u8   (sb, offset + 1);
   int16_t pid;
   uint32_t flags;
   capmt_dmx_t *filter;
   capmt_filters_t *cf;
 
   if (capmt_oscam_netproto(capmt))
-    pid          = sbuf_peek_s16  (sb, offset + 6);
+    pid          = sbuf_peek_s16  (sb, offset + 2);
   else
-    pid          = sbuf_peek_s16be(sb, offset + 6);
+    pid          = sbuf_peek_s16be(sb, offset + 2);
 
   tvhtrace(LS_CAPMT, "%s: stopping filter: adapter=%d, demux=%d, filter=%d, pid=%d",
            capmt_name(capmt), adapter, demux_index, filter_index, pid);
@@ -1061,7 +1069,7 @@ capmt_abort(capmt_t *capmt, int keystate)
                t->s_dvb_svcname,
                keystate == DS_FORBIDDEN ?
                  "access denied" : "connection close");
-      ct->td_keystate = keystate;
+      descrambler_change_keystate((th_descrambler_t *)ct, keystate, 1);
     }
   }
   pthread_mutex_unlock(&capmt->capmt_mutex);
@@ -1071,9 +1079,7 @@ capmt_abort(capmt_t *capmt, int keystate)
 static int
 capmt_ecm_reset(th_descrambler_t *th)
 {
-  capmt_service_t *ct = (capmt_service_t *)th;
-
-  ct->td_keystate = DS_UNKNOWN;
+  descrambler_change_keystate(th, DS_READY, 1);
   return 0;
 }
 
@@ -1085,7 +1091,7 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
   mpegts_service_t *t;
   capmt_service_t *ct;
   uint16_t *pids;
-  int i, j, pid;
+  int i, j, pid, multipid;
 
   pthread_mutex_lock(&capmt->capmt_mutex);
   LIST_FOREACH(ct, &capmt->capmt_services, ct_link) {
@@ -1096,13 +1102,15 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
         tvherror(LS_CAPMT,
                  "%s: Can not descramble service \"%s\", access denied",
                  capmt_name(capmt), t->s_dvb_svcname);
-        ct->td_keystate = DS_FORBIDDEN;
+        descrambler_change_keystate((th_descrambler_t *)ct, DS_FORBIDDEN, 1);
       }
       continue;
     }
 
     if (adapter != ct->ct_adapter)
       continue;
+
+    multipid = descrambler_multi_pid((th_descrambler_t *)ct);
 
     pids = cai->pids;
 
@@ -1111,8 +1119,13 @@ capmt_process_key(capmt_t *capmt, uint8_t adapter, ca_info_t *cai,
       for (j = 0; j < MAX_PIDS; j++) {
         pid = ct->ct_pids[j];
         if (pid == 0) break;
-        if (pid == pids[i])
-          goto found;
+        if (pid == pids[i]) {
+          if (multipid) {
+            descrambler_keys((th_descrambler_t *)ct, type, pid, even, odd);
+            continue;
+          } else if (ct->ct_type_sok[j])
+            goto found;
+        }
       }
     }
     continue;
@@ -1143,7 +1156,7 @@ capmt_send_key(capmt_t *capmt)
   case CA_ALGO_DES:
     type = DESCRAMBLER_DES_NCB;
     break;
-  case CA_ALGO_AES128:
+  case CA_ALGO_AES:
     if (cai->cipher_mode == CA_MODE_ECB) {
       type = DESCRAMBLER_AES_ECB;
     } else {
@@ -1152,7 +1165,7 @@ capmt_send_key(capmt_t *capmt)
     }
     break;
   default:
-    tvherror(LS_CAPMT, "unknown crypto algorightm %d (mode %d)", cai->algo, cai->cipher_mode);
+    tvherror(LS_CAPMT, "unknown crypto algorithm %d (mode %d)", cai->algo, cai->cipher_mode);
     return;
   }
 
@@ -1199,8 +1212,9 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   if (sb->sb_ptr - offset < 4)
     return 0;
   cmd = sbuf_peek_u32(sb, offset);
-  if (capmt_oscam_netproto(capmt))  {
-    adapter_byte = 1; //we need to take into account the adapter index byte which is now after the cmd
+  if (capmt_oscam_netproto(capmt)) {
+    /* we need to take into account the adapter index byte which is now after the cmd */
+    adapter_byte = 1;
   } else {
     if (!sb->sb_bswap && !sb->sb_err) {
       if (cmd == CA_SET_PID_X ||
@@ -1219,11 +1233,12 @@ capmt_msg_size(capmt_t *capmt, sbuf_t *sb, int offset)
   else if (cmd == CA_SET_DESCR)
     return 4 + 16 + adapter_byte;
   else if (cmd == CA_SET_DESCR_AES)
-    return 4 + 32;
+    return 4 + 32 + adapter_byte;
   else if (cmd == CA_SET_DESCR_MODE && capmt_oscam_netproto(capmt))
-    return 4 + 12;
+    return 4 + 12 + adapter_byte;
   else if (oscam_new && cmd == DMX_SET_FILTER)
-    //when using network protocol the dmx_sct_filter_params fields are added seperately to avoid padding problems, so we substract 2 bytes:
+    /* when using network protocol the dmx_sct_filter_params fields are added */
+    /* seperately to avoid padding problems, so we substract 2 bytes: */
     return 4 + 2 + 60 + adapter_byte + (capmt_oscam_netproto(capmt) ? -2 : 0);
   else if (oscam_new && cmd == DMX_STOP)
     return 4 + 4 + adapter_byte;
@@ -1262,29 +1277,21 @@ capmt_peek_str(sbuf_t *sb, int *offset)
 }
 
 static void
-capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
+capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int offset)
 {
-  uint32_t cmd;
-
-  cmd = sbuf_peek_u32(sb, offset);
-
-  if (capmt_oscam_netproto(capmt) && cmd != DVBAPI_SERVER_INFO) {
-    adapter = sbuf_peek_u8(sb, 4);
-    offset = 1;
-  }
-
   if (cmd == CA_SET_PID) {
 
-    uint32_t pid   = sbuf_peek_u32(sb, offset + 4);
-    int32_t  index = sbuf_peek_s32(sb, offset + 8);
+    uint32_t pid   = sbuf_peek_u32(sb, offset + 0);
+    int32_t  index = sbuf_peek_s32(sb, offset + 4);
     int i, j;
     ca_info_t *cai;
 
     tvhdebug(LS_CAPMT, "%s: CA_SET_PID adapter %d index %d pid %d (0x%04x)", capmt_name(capmt), adapter, index, pid, pid);
-    if (index > 0x100 && index < 0x200) {
-      if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED2) {
-        tvhwarn(LS_CAPMT, "Autoswitch to Extended DES CW Mode");
-        capmt->capmt_cwmode = CAPMT_CWMODE_EXTENDED2;
+    if (index > 0x100 && index < 0x200 && (index & 0xff) < MAX_INDEX) {
+      index &= 0xff;
+      if (capmt->capmt_cwmode != CAPMT_CWMODE_OE20) {
+        tvhwarn(LS_CAPMT, "Autoswitch to Extended DES (OE 2.0) CW Mode");
+        capmt->capmt_cwmode = CAPMT_CWMODE_OE20;
       }
       cai = &capmt->capmt_adapters[adapter].ca_info[index];
       cai->algo = CA_ALGO_DES;
@@ -1313,11 +1320,11 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == CA_SET_DESCR) {
 
-    int32_t index  = sbuf_peek_s32(sb, offset + 4);
-    int32_t parity = sbuf_peek_s32(sb, offset + 8);
-    uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    int32_t index  = sbuf_peek_s32(sb, offset + 0);
+    int32_t parity = sbuf_peek_s32(sb, offset + 4);
+    uint8_t *cw    = sbuf_peek    (sb, offset + 8);
 
-    tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
+    tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR adapter %d par %d idx %d %02x%02x%02x%02x%02x%02x%02x%02x",
              capmt_name(capmt), adapter, parity, index,
              cw[0], cw[1], cw[2], cw[3], cw[4], cw[5], cw[6], cw[7]);
     if (index < 0)   // skipping removal request
@@ -1334,13 +1341,13 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     capmt->capmt_last_key.index = index;
     capmt->capmt_last_key.parity = parity;
     memcpy(capmt->capmt_last_key.cw, cw, 8);
-    if (capmt->capmt_cwmode != CAPMT_CWMODE_EXTENDED) /* wait for CA_SET_DESCR_MODE */
+    if (capmt->capmt_cwmode != CAPMT_CWMODE_OE22SW) /* wait for CA_SET_DESCR_MODE */
       capmt_send_key(capmt);
   } else if (cmd == CA_SET_DESCR_AES) {
 
-    int32_t index  = sbuf_peek_s32(sb, offset + 4);
-    int32_t parity = sbuf_peek_s32(sb, offset + 8);
-    uint8_t *cw    = sbuf_peek    (sb, offset + 12);
+    int32_t index  = sbuf_peek_s32(sb, offset + 0);
+    int32_t parity = sbuf_peek_s32(sb, offset + 4);
+    uint8_t *cw    = sbuf_peek    (sb, offset + 8);
     ca_info_t *cai;
 
     tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_AES adapter %d par %d idx %d "
@@ -1354,19 +1361,21 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
       return;
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
     if (parity == 0) {
-      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, cw, NULL, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES128_ECB, cw, NULL, 1);
     } else if (parity == 1) {
-      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES_ECB, NULL, cw, 1);
+      capmt_process_key(capmt, adapter, cai, DESCRAMBLER_AES128_ECB, NULL, cw, 1);
     } else
       tvherror(LS_CAPMT, "%s: Invalid parity %d in CA_SET_DESCR_AES for adapter%d", capmt_name(capmt), parity, adapter);
 
   } else if (cmd == CA_SET_DESCR_MODE) {
 
-    int32_t index       = sbuf_peek_s32(sb, offset + 4);
-    int32_t algo        = sbuf_peek_s32(sb, offset + 8);
-    int32_t cipher_mode = sbuf_peek_s32(sb, offset + 12);
+    int32_t index       = sbuf_peek_s32(sb, offset + 0);
+    int32_t algo        = sbuf_peek_s32(sb, offset + 4);
+    int32_t cipher_mode = sbuf_peek_s32(sb, offset + 8);
     ca_info_t *cai;
 
+    tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_MODE adapter %d index %d algo %d cipher mode %d",
+             capmt_name(capmt), adapter, index, algo, cipher_mode);
     if (adapter >= MAX_CA || index < 0 || index >= MAX_INDEX) {
       tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
@@ -1381,13 +1390,11 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
     }
 
     cai = &capmt->capmt_adapters[adapter].ca_info[index];
-    if (algo != cai->algo && cai->cipher_mode != cipher_mode) {
-      tvhdebug(LS_CAPMT, "%s, CA_SET_DESCR_MODE adapter %d algo %d cipher mode %d",
-               capmt_name(capmt), adapter, algo, cipher_mode);
+    if (algo != cai->algo || cai->cipher_mode != cipher_mode) {
       cai->algo        = algo;
       cai->cipher_mode = cipher_mode;
     }
-    if (capmt->capmt_cwmode == CAPMT_CWMODE_EXTENDED)
+    if (capmt->capmt_cwmode == CAPMT_CWMODE_OE22SW)
       capmt_send_key(capmt);
 
   } else if (cmd == DMX_SET_FILTER) {
@@ -1400,12 +1407,12 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == DVBAPI_ECM_INFO) {
 
-    uint16_t sid     = sbuf_peek_u16(sb, offset + 4);
-    uint16_t caid    = sbuf_peek_u16(sb, offset + 6);
-    uint16_t pid     = sbuf_peek_u16(sb, offset + 8);
-    uint32_t provid  = sbuf_peek_u32(sb, offset + 10);
-    uint32_t ecmtime = sbuf_peek_u32(sb, offset + 14);
-    int offset2      = offset + 18;
+    uint16_t sid     = sbuf_peek_u16(sb, offset + 0);
+    uint16_t caid    = sbuf_peek_u16(sb, offset + 2);
+    uint16_t pid     = sbuf_peek_u16(sb, offset + 4);
+    uint32_t provid  = sbuf_peek_u32(sb, offset + 6);
+    uint32_t ecmtime = sbuf_peek_u32(sb, offset + 10);
+    int offset2      = offset + 14;
     char *cardsystem = capmt_peek_str(sb, &offset2);
     char *reader     = capmt_peek_str(sb, &offset2);
     char *from       = capmt_peek_str(sb, &offset2);
@@ -1426,8 +1433,8 @@ capmt_analyze_cmd(capmt_t *capmt, int adapter, sbuf_t *sb, int offset)
 
   } else if (cmd == DVBAPI_SERVER_INFO) {
 
-    uint16_t protover = sbuf_peek_u16(sb, offset + 4);
-    int offset2       = offset + 6;
+    uint16_t protover = sbuf_peek_u16(sb, offset);
+    int offset2       = offset + 2;
     char *info        = capmt_peek_str(sb, &offset2);
 
     tvhinfo(LS_CAPMT, "%s: Connected to server '%s' (protocol version %d)", capmt_name(capmt), info, protover);
@@ -1471,6 +1478,7 @@ show_connection(capmt_t *capmt, const char *what)
 static void 
 handle_ca0(capmt_t *capmt) {
   int i, ret, recvsock, adapter, nfds, cmd_size;
+  uint32_t cmd;
   uint8_t buf[256];
   sbuf_t buffer[MAX_CA];
   sbuf_t *pbuf;
@@ -1551,7 +1559,8 @@ handle_ca0(capmt_t *capmt) {
             sbuf_cut(pbuf, 1);
         }
         if (cmd_size <= pbuf->sb_ptr) {
-          capmt_analyze_cmd(capmt, adapter, pbuf, 0);
+          cmd = sbuf_peek_u32(pbuf, 0);
+          capmt_analyze_cmd(capmt, cmd, adapter, pbuf, 4);
           sbuf_cut(pbuf, cmd_size);
         } else {
           break;
@@ -1571,10 +1580,12 @@ handle_ca0(capmt_t *capmt) {
 static void
 handle_single(capmt_t *capmt)
 {
-  int ret, recvsock, adapter, nfds, cmd_size, reconnect, offset;
+  int ret, recvsock, adapter = -1, nfds, cmd_size = 0, reconnect, offset = 0;
+  uint32_t cmd = 0;
   uint8_t buf[256];
   sbuf_t buffer;
   tvhpoll_event_t ev;
+  int netproto = capmt_oscam_netproto(capmt);
 
   show_connection(capmt, "single");
 
@@ -1631,25 +1642,50 @@ handle_single(capmt_t *capmt)
     sbuf_append(&buffer, buf, ret);
 
     while (buffer.sb_ptr > 0) {
-      cmd_size = 0;
-      adapter = -1;
-      offset = 0;
       while (buffer.sb_ptr > 0) {
-        if (capmt_oscam_netproto(capmt)) {
+        adapter = -1;
+        offset = 0;
+        cmd_size = 0;
+        cmd = 0;
+        if (buffer.sb_ptr < 5)
+          break;
+        if (netproto) {
           buffer.sb_bswap = 1;
-        } else {
-          adapter = buffer.sb_data[0];
-          offset = 1;
-        }
-        if (adapter < MAX_CA) {
-          cmd_size = capmt_msg_size(capmt, &buffer, offset);
-          if (cmd_size >= 0)
+          cmd_size = capmt_msg_size(capmt, &buffer, 0);
+          if (cmd_size > 0) {
+            cmd = sbuf_peek_u32(&buffer, 0);
+            if (cmd != DVBAPI_SERVER_INFO) {
+              adapter = sbuf_peek_u8(&buffer, 4);
+              if (adapter >= MAX_CA) {
+                sbuf_cut(&buffer, 5);
+                continue;
+              }
+              cmd_size -= 5;
+              offset = 5;
+              break;
+            } else {
+              cmd_size -= 4;
+              offset = 4;
+            }
+          } else if (cmd_size == 0)
             break;
+        } else {
+          adapter = sbuf_peek_u8(&buffer, 0);
+          if (adapter < MAX_CA) {
+            cmd_size = capmt_msg_size(capmt, &buffer, 1);
+            if (cmd_size > 0) {
+              cmd_size -= 4;
+              cmd = sbuf_peek_u32(&buffer, 1);
+              offset = 5;
+              break;
+            } else if (cmd_size == 0)
+              break;
+          }
         }
         sbuf_cut(&buffer, 1);
       }
-      if (cmd_size > 0 && cmd_size + offset <= buffer.sb_ptr) {
-        capmt_analyze_cmd(capmt, adapter, &buffer, offset);
+      if (cmd && cmd_size > 0 && cmd_size + offset <= buffer.sb_ptr) {
+        capmt_analyze_cmd(capmt, cmd, adapter, &buffer, offset);
         sbuf_cut(&buffer, cmd_size + offset);
       } else {
         break;
@@ -1707,7 +1743,7 @@ handle_ca0_wrapper(capmt_t *capmt)
     }
   }
 
-  capmt_abort(capmt, DS_UNKNOWN);
+  capmt_abort(capmt, DS_READY);
   tvhinfo(LS_CAPMT, "%s: connection from client closed ...", capmt_name(capmt));
 }
 #endif
@@ -1976,6 +2012,8 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   case SCT_AAC:        type = 0x11; break;
   case SCT_H264:       type = 0x1b; break;
   case SCT_HEVC:       type = 0x24; break;
+  case SCT_DVBSUB:     type = 0x06; break;
+  case SCT_TELETEXT:   type = 0x06; break;
   default:
     if (SCT_ISVIDEO(st->es_type)) type = 0x02;
     else if (SCT_ISAUDIO(st->es_type)) type = 0x04;
@@ -1986,6 +2024,10 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   if (st->es_pid != ct->ct_pids[i] || type != ct->ct_types[i]) {
     ct->ct_pids[i] = st->es_pid;
     ct->ct_types[i] = type;
+    /* mark as valid for !multipid - TELETEXT may be shared */
+    ct->ct_type_sok[i] = SCT_ISVIDEO(st->es_type) ||
+                         SCT_ISAUDIO(st->es_type) ||
+                         st->es_type == SCT_DVBSUB;
     return 1;
   }
 
@@ -2009,7 +2051,7 @@ capmt_caid_change(th_descrambler_t *td)
   /* add missing A/V PIDs and ECM PIDs */
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-    if (i < MAX_PIDS && SCT_ISAV(st->es_type)) {
+    if (i < MAX_PIDS && capmt_include_elementary_stream(st->es_type)) {
       if (capmt_update_elementary_stream(ct, &i, st))
         change = 1;
     }
@@ -2168,6 +2210,8 @@ capmt_send_request(capmt_service_t *ct, int lm)
         buf[pos+1] = 17;
         buf[pos2++] = cce2->cce_providerid >> 8;
         buf[pos2++] = cce2->cce_providerid & 0xff;
+        memset(buf + pos2, 0, 17 - 6);
+        pos2 += 17 - 6;
       } else if (cce2->cce_caid >> 8 == 0x05) {
         buf[pos+1] = 15;
         buf[pos2++] = 0x00;
@@ -2185,8 +2229,9 @@ capmt_send_request(capmt_service_t *ct, int lm)
         buf[pos+1] = 7;
         buf[pos2++] = cce2->cce_providerid >> 8;
         buf[pos2++] = cce2->cce_providerid & 0xff;
+        buf[pos2++] = 0;
       } else if (cce2->cce_caid >> 8 == 0x4a && cce2->cce_caid != 0x4ad2) {
-        buf[pos+1] = 0x05;
+        buf[pos+1] = 5;
         buf[pos2++] = cce2->cce_providerid & 0xff;
       } else if (((cce2->cce_caid >> 8) == 0x4a) || (cce2->cce_caid == 0x2710)) {
         if (cce2->cce_caid == 0x4AE0 || cce2->cce_caid == 0x4AE1 || cce2->cce_caid == 0x2710) {
@@ -2369,7 +2414,7 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   i = 0;
   TAILQ_FOREACH(st, &t->s_filt_components, es_filt_link) {
-    if (i < MAX_PIDS && SCT_ISAV(st->es_type))
+    if (i < MAX_PIDS && capmt_include_elementary_stream(st->es_type))
       capmt_update_elementary_stream(ct, &i, st);
     if (t->s_dvb_prefcapid_lock == PREFCAPID_FORCE &&
         t->s_dvb_prefcapid != st->es_pid)
@@ -2408,6 +2453,8 @@ capmt_service_start(caclient_t *cac, service_t *s)
 
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
   LIST_INSERT_HEAD(&capmt->capmt_services, ct, ct_link);
+
+  descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
 
   /* wake-up idle thread */
   tvh_cond_signal(&capmt->capmt_cond, 0);
@@ -2498,9 +2545,10 @@ static htsmsg_t *
 caclient_capmt_class_cwmode_list ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("Standard / auto"),		       CAPMT_CWMODE_AUTO },
-    { N_("Extended"),			       CAPMT_CWMODE_EXTENDED },
-    { N_("Extended DES"),		       CAPMT_CWMODE_EXTENDED2 },
+    { N_("Standard / auto"),		         CAPMT_CWMODE_AUTO },
+    { N_("Extended (OE 2.2)"),	                 CAPMT_CWMODE_OE22 },
+    { N_("Extended (OE 2.2), mode follows key"), CAPMT_CWMODE_OE22SW },
+    { N_("Extended DES (OE 2.0)"),	         CAPMT_CWMODE_OE20 },
   };
   return strtab2htsmsg(tab, 1, lang);
 }

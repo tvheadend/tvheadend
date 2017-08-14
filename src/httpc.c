@@ -203,7 +203,7 @@ http_client_poll_dir ( http_client_t *hc, int in, int out )
       ev.data.ptr = hc;
       tvhpoll_rem(hc->hc_efd, &ev, 1);
     } else if (hc->hc_pevents != events) {
-      tvhtrace(LS_HTTPC, "%04X: add poll for input%s", shortid(hc), out ? " and output" : "");
+      tvhtrace(LS_HTTPC, "%04X: add poll for input%s (%x)", shortid(hc), out ? " and output" : "", events);
       memset(&ev, 0, sizeof(ev));
       ev.fd       = hc->hc_fd;
       ev.events   = events | TVHPOLL_IN;
@@ -212,7 +212,7 @@ http_client_poll_dir ( http_client_t *hc, int in, int out )
     }
   }
   hc->hc_pevents = events;
-  /* make sure to se the correct errno for our SSL routines */
+  /* make sure to set the correct errno for our SSL routines */
   errno = EAGAIN;
 }
 
@@ -1253,7 +1253,7 @@ http_client_add_args ( http_client_t *hc, http_arg_list_t *h, const char *args )
 
   if (args == NULL)
     return;
-  p = strdupa(args);
+  p = tvh_strdupa(args);
   while (*p) {
     while (*p && *p <= ' ') p++;
     if (*p == '\0') break;
@@ -1298,12 +1298,12 @@ http_client_simple_reconnect ( http_client_t *hc, const url_t *u,
     http_client_shutdown(hc, 1, 1);
     r = http_client_reconnect(hc, hc->hc_version,
                               u->scheme, u->host, u->port);
+    hc->hc_efd = efd;
     if (r < 0)
       return r;
     r = hc->hc_verify_peer;
     hc->hc_verify_peer = -1;
     http_client_ssl_peer_verify(hc, r);
-    hc->hc_efd = efd;
   }
 
   http_client_flush(hc, 0);

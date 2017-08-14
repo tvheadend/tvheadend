@@ -174,7 +174,7 @@ upnp_thread( void *aux )
           inet_ntop(ip.ss_family, IP_IN_ADDR(ip), tbuf, sizeof(tbuf));
           tvhtrace(LS_UPNP, "%s - received data from %s:%hu [size=%zi]",
                    conn == multicast ? "multicast" : "unicast",
-                   tbuf, (unsigned short) IP_PORT(ip), size);
+                   tbuf, (unsigned short) ntohs(IP_PORT(ip)), size);
           tvhlog_hexdump(LS_UPNP, buf, size);
         }
         /* TODO: a filter */

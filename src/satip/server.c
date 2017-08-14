@@ -572,7 +572,8 @@ struct satip_server_conf satip_server_conf = {
   .idnode.in_class = &satip_server_class,
   .satip_descramble = 1,
   .satip_weight = 100,
-  .satip_allow_remote_weight = 1
+  .satip_allow_remote_weight = 1,
+  .satip_iptv_sig_level = 220,
 };
 
 static void satip_server_class_changed(idnode_t *self)
@@ -635,6 +636,23 @@ const idclass_t satip_server_class = {
       .group  = 1,
     },
     {
+      .type   = PT_BOOL,
+      .id     = "satip_anonymize",
+      .name   = N_("Anonymize"),
+      .desc   = N_("Show only information for sessions which "
+                   "are initiated from an IP address of the requester."),
+      .off    = offsetof(struct satip_server_conf, satip_anonymize),
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_noupnp",
+      .name   = N_("Disable UPnP"),
+      .desc   = N_("Disable UPnP discovery."),
+      .off    = offsetof(struct satip_server_conf, satip_noupnp),
+      .group  = 1,
+    },
+    {
       .type   = PT_INT,
       .id     = "satip_weight",
       .name   = N_("Subscription weight"),
@@ -668,7 +686,7 @@ const idclass_t satip_server_class = {
       .type   = PT_BOOL,
       .id     = "satip_rewrite_pmt",
       .name   = N_("Rewrite PMT"),
-      .desc   = N_("Rewrite Program Association Table (PMT) packets "
+      .desc   = N_("Rewrite Program Map Table (PMT) packets "
                    "to only include information about the currently "
                    "streamed service."),
       .off    = offsetof(struct satip_server_conf, satip_rewrite_pmt),
@@ -703,6 +721,35 @@ const idclass_t satip_server_class = {
       .name   = N_("Disable X_SATIPM3U tag"),
       .desc   = N_("Do not send X_SATIPM3U information in the XML description to clients."),
       .off    = offsetof(struct satip_server_conf, satip_nom3u),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "satip_notcp_mode",
+      .name   = N_("Disable RTP/AVP/TCP support"),
+      .desc   = N_("Remove server support for RTP/AVP/TCP transfer mode "
+                   "(embedded data in the RTSP session)."),
+      .off    = offsetof(struct satip_server_conf, satip_notcp_mode),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "satip_iptv_sig_level",
+      .name   = N_("IPTV signal level"),
+      .desc   = N_("Signal level for IPTV sources (0-240)."),
+      .off    = offsetof(struct satip_server_conf, satip_iptv_sig_level),
+      .opts   = PO_EXPERT,
+      .group  = 1,
+      .def.u32 = 220,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "force_sig_level",
+      .name   = N_("Force signal level"),
+      .desc   = N_("Force signal level for all streaming (1-240, 0=do not use)."),
+      .off    = offsetof(struct satip_server_conf, satip_force_sig_level),
       .opts   = PO_EXPERT,
       .group  = 1,
     },
@@ -908,12 +955,16 @@ void satip_server_register(void)
   if (save)
     idnode_changed(&config.idnode);
 
-  satips_upnp_discovery = upnp_service_create(upnp_service);
-  if (satips_upnp_discovery == NULL) {
-    tvherror(LS_SATIPS, "unable to create UPnP discovery service");
+  if (!satip_server_conf.satip_noupnp) {
+    satips_upnp_discovery = upnp_service_create(upnp_service);
+    if (satips_upnp_discovery == NULL) {
+      tvherror(LS_SATIPS, "unable to create UPnP discovery service");
+    } else {
+      satips_upnp_discovery->us_received = satips_upnp_discovery_received;
+      satips_upnp_discovery->us_destroy  = satips_upnp_discovery_destroy;
+    }
   } else {
-    satips_upnp_discovery->us_received = satips_upnp_discovery_received;
-    satips_upnp_discovery->us_destroy  = satips_upnp_discovery_destroy;
+    satips_upnp_discovery = NULL;
   }
 
   satip_server_rtsp_register();

@@ -1,16 +1,20 @@
-##General Overview of Web Interface
+## General Overview of Web Interface
 
 Tvheadend is operated primarily through a tabbed web interface. 
 
 There are some basic navigation concepts that will help you get around and
 make the best of it.
 
-###Page Structure
+### Page Structure
 
 The interface is made up of nested tabs, so similar functions are grouped
 together (e.g. all configuration items at the top level, then all configuration
-items for a particular topic are below that). However, be aware that not all tabs are 
-shown by default, some tabs are hidden depending on the current [view level](#view-level).
+items for a particular topic are below that). 
+
+!["Tabs"](static/img/doc/webui_general/tabbar.png)
+
+However, be aware that not all tabs are 
+shown by default, some are hidden depending on the current [view level](#view-level).
 
 Each tab is then typically laid out with a menu bar that provides access 
 to Add/Save/Edit-type functions, and a grid like a spreadsheet below that.
@@ -24,10 +28,14 @@ parameters common to DVB-S, -T, -C and IPTV networks, but specific things
 such as FEC rolloff or mux URL are then only in the dialogs for networks
 that need these values.
 
-####View level
+#### View level
 
 The *View level* drop-down/button - next to the Help button, 
 displays/hides the more advanced features. By default it is set to Basic.
+Depending on [configuration](class/config), the view-level drop-down is 
+not always visible.
+
+!["Column options"](static/img/doc/webui_general/viewlevel.png)
 
 View level            | Description
 ----------------------|-------------------------------------------------
@@ -35,9 +43,29 @@ View level            | Description
 **Advanced**          | Display the more advanced tabs/items.
 **Expert**            | Show all tabs/items.
 
-Depending on configuration, the view-level drop-down is not always visible.
+#### Paging Toolbar
 
-###Displaying and Manipulating Columns
+The paging toolbar - at the bottom of most grids - offers many useful 
+tools. 
+
+!["Column options"](static/img/doc/webui_general/pagebar.png)
+
+* General paging functions ```|< < > >|``` allow you to quickly move 
+between data sets.
+
+* Lists the number of current and maximum (per page) rows displayed, followed by 
+the total number of items available.
+
+* The *Per page* drop-down allows you to control how many rows are 
+displayed within the grid. By default, this is set to 50, increasing 
+the number of rows displayed may affect performance.
+
+* The refresh icon allows you to refresh the currently-displayed rows. 
+
+* The *Auto refresh* check-box allows the interface to automatically 
+refresh the rows for you, every 30 seconds.
+
+### Displaying and Manipulating Columns
 
 * Not all columns are necessarily visible. If you hover your mouse over a
   column heading, you'll see a down arrow - click here, and a drop-down menu
@@ -51,44 +79,46 @@ Depending on configuration, the view-level drop-down is not always visible.
 * And the same drop-down menu also gives you access to a **filter** function
   if defined. The filter does simple pattern-matching on any string you
   provide. A small blue flag or triangle will appear in the top-left 
-  corner to indicate that a filter is active.
+  corner to indicate that a filter is active. Filters persist until 
+  cleared.  
   
 * **Re-arrange** the columns by simply dragging he header to a new spot.
 
 * **Re-size** the columns by dragging the very edges of the column header as
-  required. 
+  required.
   
-* A cookie is used to remember your column/filtering preferences. Clearing
-  your cookies will reset the interface to default.
+Note, a cookie is used to remember your column/filtering preferences. Clearing
+your cookies will reset the interface to default.
 
-###Adding, Editing and More
+!["Column options"](static/img/doc/webui_general/columnoptions.png)
+  
+### Adding, Editing and More
 
 * Rows (in the grid) are multi-selectable, so you can carry out certain actions on
   more than one entry at the same time. So, for example, you can select
-  multiple items by using ctrl+click on each entry or click, 
+  multiple items by using ctrl+click on each entry or click,
   shift+click to select a range, or ctrl+A to select all.
 
-* To add an entry, click the *Add* button from the menu bar. You'll then 
-  see a dialog, or in some cases (where a list/split panel is used), a 
-  parameter panel. You can now fill in the desired/required fields, the 
-  entry can then be saved (*Create/Save* button), applied (*Apply* button), 
-  or abandoned (*Cancel button).
+* To add an entry, click the *Add* button from the menu bar. You'll then
+  see a dialog, or in some cases - where a list/split panel is used - a
+  parameter panel. You can now fill in the desired/required fields, the
+  entry can then be saved (*Create/Save* button), applied (*Apply* button),
+  or abandoned (*Cancel* button).
   
-* To edit a single entry in the grid, double click on the desired field/cell. 
-  It should now be editable. Once you've made your changes you can then 
-  save (*Save* button), apply (*Apply* button), or abandon (*Cancel* button) 
-  them. 
+* To edit a single entry in the grid, double click on the desired field/cell.
+  It should now be editable. Once you've made your changes you can then
+  save (*Save* button), apply (*Apply* button), or abandon (*Cancel* button).
   
-  After a cell is changed, a small red flag or triangle will appear in 
+  After a cell is changed, a small red flag or triangle will appear in
   the top-left corner to indicate that it has been changed.
   
   To change a check box or radio button, click once.
 
-* To edit multiple entries, select the desired entries (as explained above), and 
-  then press the *Edit* button - a dialog will be displayed. You can now make 
-  your changes to each field. These changes can then be kept (*Save* button), 
-  applied (*Apply* button), or abandoned (*Undo* button). Remember to tick the 
-  check box before each field when saving/applying, so that the changes are applied 
+* To edit multiple entries, select the desired entries (as explained above), and
+  then press the *Edit* button - a dialog will be displayed. You can now make
+  your changes to each field. These changes can then be kept (*Save* button),
+  applied (*Apply* button), or abandoned (*Undo* button). Remember to tick the
+  check box before each field when saving/applying, so that the changes are applied
   to all selected entries.
   
 * To delete entries, simply select the entry/entries and press the *Delete* button.

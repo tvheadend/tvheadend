@@ -547,10 +547,8 @@ dvr_entry_retention_timer(dvr_entry_t *de)
       dvr_entry_deferred_destroy(de);             // also remove database entry
       return;
     }
-    if (save) {
-      idnode_changed(&de->de_id);
-      htsp_dvr_entry_update(de);
-    }
+    if (save)
+      dvr_entry_changed_notify(de);
   }
 
   if (retention < DVR_RET_ONREMOVE &&
@@ -846,7 +844,7 @@ dvr_entry_fuzzy_match(dvr_entry_t *de, epg_broadcast_t *e, uint16_t eid, int64_t
     return 0;
   
   /* Title match (or contains?) */
-  if (strcmp(title1, title2))
+  if (strcasecmp(title1, title2))
     return 0;
 
   /* episode check */
@@ -1738,6 +1736,20 @@ static dvr_entry_t *_dvr_entry_update
       if (playposition >= 0 && playposition != de->de_playposition) {
         de->de_playposition = playposition;
         save |= DVR_UPDATED_PLAYPOS;
+      }
+      if (retention && (retention != de->de_retention)) {
+        de->de_retention = retention;
+        save |= DVR_UPDATED_RETENTION;
+      }
+      if (removal && (removal != de->de_removal)) {
+        de->de_removal = removal;
+        save |= DVR_UPDATED_REMOVAL;
+      }
+      if (title) {
+        save |= lang_str_set(&de->de_title, title, lang) ? DVR_UPDATED_TITLE : 0;
+      }
+      if (subtitle) {
+        save |= lang_str_set(&de->de_subtitle, subtitle, lang) ? DVR_UPDATED_SUBTITLE : 0;
       }
     }
     goto dosave;
@@ -3785,8 +3797,7 @@ dvr_entry_cancel_delete_remove(dvr_entry_t *de, int rerecord, int _delete)
     if (_delete || dvr_entry_delete_retention_expired(de)) /* In case retention was postponed (retention < removal) */
       dvr_entry_destroy(de, 1);                            /* Delete database */
     else if (save) {
-      idnode_changed(&de->de_id);
-      htsp_dvr_entry_update(de);
+      dvr_entry_changed_notify(de);
       dvr_entry_retention_timer(de);                       /* As retention timer depends on file removal */
     }
     break;

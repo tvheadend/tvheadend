@@ -421,15 +421,16 @@ static int _eit_process_event_one
     const uint8_t *ptr, int len,
     int local, int *resched, int *save )
 {
-  int dllen, save2 = 0;
+  int dllen, save2 = 0, rsonly = 0;
   time_t start, stop;
   uint16_t eid;
   uint8_t dtag, dlen, running;
-  epg_broadcast_t *ebc;
-  epg_episode_t *ee = NULL;
+  epg_broadcast_t *ebc, _ebc;
+  epg_episode_t *ee = NULL, _ee;
   epg_serieslink_t *es;
   epg_running_t run;
   eit_event_t ev;
+  lang_str_t *title_copy = NULL;
   uint32_t changes2 = 0, changes3 = 0, changes4 = 0;
   char tm1[32], tm2[32];
 
@@ -455,11 +456,18 @@ static int _eit_process_event_one
            eid, tableid, running,
            gmtime2local(start, tm1, sizeof(tm1)),
            gmtime2local(stop, tm2, sizeof(tm2)), ebc);
-  if (!ebc) return 0;
+  if (!ebc) {
+    if (tableid == 0x4e)
+      rsonly = 1;
+    else
+      return 0;
+  }
 
   /* Mark re-schedule detect (only now/next) */
-  if (save2 && tableid < 0x50) *resched = 1;
-  *save |= save2;
+  if (!rsonly) {
+    if (save2 && tableid < 0x50) *resched = 1;
+    *save |= save2;
+  }
 
   /* Process tags */
   memset(&ev, 0, sizeof(ev));
@@ -505,6 +513,30 @@ static int _eit_process_event_one
     if (r < 0) break;
     dllen -= dlen;
     ptr   += dlen;
+  }
+
+  if (rsonly) {
+    if (!ev.title)
+      goto tidy;
+    memset(&_ebc, 0, sizeof(_ebc));
+    if (*ev.suri)
+      if ((es = epg_serieslink_find_by_uri(ev.suri, mod, 0, 0, NULL)))
+        _ebc.serieslink = es;
+    
+    if (*ev.uri && (ee = epg_episode_find_by_uri(ev.uri, mod, 0, 0, NULL))) {
+      _ee = *ee;
+    } else {
+      memset(&_ee, 0, sizeof(_ee));
+    }
+    _ebc.episode = &_ee;
+    _ebc.dvb_eid = eid;
+    _ebc.start = start;
+    _ebc.stop = stop;
+    _ee.title = title_copy = lang_str_copy(ev.title);
+
+    ebc = epg_match_now_next(ch, &_ebc);
+    tvhtrace(mod->subsys, "%s:  running state only ebc=%p", svc->s_dvb_svcname ?: "(null)", ebc);
+    goto tidy;
   }
 
   /*
@@ -569,6 +601,8 @@ static int _eit_process_event_one
 
   *save |= epg_broadcast_change_finish(ebc, changes2, 0);
 
+
+tidy:
   /* Tidy up */
 #if TODO_ADD_EXTRA
   if (ev.extra)   htsmsg_destroy(ev.extra);
@@ -579,7 +613,7 @@ static int _eit_process_event_one
   if (ev.desc)    lang_str_destroy(ev.desc);
 
   /* use running flag only for current broadcast */
-  if (running && tableid == 0x4e) {
+  if (ebc && running && tableid == 0x4e) {
     if (sect == 0) {
       switch (running) {
       case 2:  run = EPG_RUNNING_WARM;  break;
@@ -589,10 +623,10 @@ static int _eit_process_event_one
       }
       epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, run);
     } else if (sect == 1 && running != 2 && running != 3 && running != 4) {
-      epg_broadcast_notify_running(ebc, EPG_SOURCE_EIT, EPG_RUNNING_STOP);
     }
   }
 
+  if (title_copy) lang_str_destroy(title_copy);
   return 0;
 }
 
@@ -815,7 +849,8 @@ static int _eit_start
 
   /* Freesat (3002/3003) */
   if (pid == 3003 && !strcmp("uk_freesat", m->id))
-    mpegts_table_add(dm, 0, 0, dvb_bat_callback, NULL, "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
+    mpegts_table_add(dm, DVB_BAT_BASE, DVB_BAT_MASK, dvb_bat_callback, NULL,
+                     "bat", LS_TBL_BASE, MT_CRC, 3002, MPS_WEIGHT_EIT);
 
   /* Standard (0x12) */
   if (pid == 0) {

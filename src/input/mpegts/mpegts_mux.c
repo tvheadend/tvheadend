@@ -615,7 +615,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_INT,
       .id       = "scan_result",
       .name     = N_("Scan result"),
-      .desc     = N_("The outcome of the last scan performed on this mux."),
+      .desc     = N_("The outcome of the last scan performed."),
       .off      = offsetof(mpegts_mux_t, mm_scan_result),
       .opts     = PO_RDONLY | PO_SORTKEY | PO_DOC_NLIST,
       .list     = mpegts_mux_class_scan_result_enum,
@@ -624,9 +624,9 @@ const idclass_t mpegts_mux_class =
       .type     = PT_STR,
       .id       = "charset",
       .name     = N_("Character set"),
-      .desc     = N_("The character set used on this mux. You should "
-                     "not have to change this unless channel names, etc "
-                     " appear garbled."),
+      .desc     = N_("The character set to use/used. You should "
+                     "not have to change this unless channel names "
+                      "and EPG data appear garbled."),
       .off      = offsetof(mpegts_mux_t, mm_charset),
       .list     = dvb_charset_enum,
       .opts     = PO_ADVANCED | PO_DOC_NLIST,
@@ -634,17 +634,17 @@ const idclass_t mpegts_mux_class =
     {
       .type     = PT_INT,
       .id       = "num_svc",
-      .name     = N_("# Services"),
-      .desc     = N_("The total number of services found on this mux."),
+      .name     = N_("Services"),
+      .desc     = N_("The total number of services found."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_svc,
     },
     {
       .type     = PT_INT,
       .id       = "num_chn",
-      .name     = N_("# Channels"),
-      .desc     = N_("The number of services on the mux that are "
-                     "mapped to channels."),
+      .name     = N_("Mapped"),
+      .desc     = N_("The number of services currently mapped to "
+                     "channels."),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_chn,
     },
@@ -659,7 +659,7 @@ const idclass_t mpegts_mux_class =
       .type     = PT_INT,
       .id       = "pmt_06_ac3",
       .name     = N_("AC-3 detection"),
-      .desc     = N_("Use AC-3 detection on the mux."),
+      .desc     = N_("Use AC-3 detection."),
       .off      = offsetof(mpegts_mux_t, mm_pmt_ac3),
       .def.i    = MM_AC3_STANDARD,
       .list     = mpegts_mux_ac3_list,
@@ -681,6 +681,30 @@ const idclass_t mpegts_mux_class =
       .desc     = N_("Use only this service ID, filter out others."),
       .off      = offsetof(mpegts_mux_t, mm_sid_filter),
       .opts     = PO_HIDDEN | PO_EXPERT
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "created",
+      .name     = N_("Created"),
+      .desc     = N_("When the mux was created."),
+      .off      = offsetof(mpegts_mux_t, mm_created),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "scan_first",
+      .name     = N_("First scan"),
+      .desc     = N_("When the mux was successfully scanned for the first time."),
+      .off      = offsetof(mpegts_mux_t, mm_scan_first),
+      .opts     = PO_ADVANCED | PO_RDONLY,
+    },
+    {
+      .type     = PT_TIME,
+      .id       = "scan_last",
+      .name     = N_("Last scan"),
+      .desc     = N_("When the mux was successfully scanned."),
+      .off      = offsetof(mpegts_mux_t, mm_scan_last_seen),
+      .opts     = PO_ADVANCED | PO_RDONLY,
     },
     {}
   }
@@ -1218,6 +1242,12 @@ mpegts_mux_create0
   pthread_mutex_init(&mm->mm_descrambler_lock, NULL);
 
   mm->mm_last_pid            = -1;
+  mm->mm_created             = gclk();
+
+#if ENABLE_TSDEBUG
+  pthread_mutex_init(&mm->mm_tsdebug_lock, NULL);
+  mm->mm_tsdebug_fd = mm->mm_tsdebug_fd2 = -1;
+#endif
 
   /* Configuration */
   if (conf)
@@ -1482,6 +1512,7 @@ mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
                    &b->mm_network->mn_id.in_uuid);
   if (r)
     return r;
+#if ENABLE_MPEGTS_DVB
   if (idnode_is_instance(&a->mm_id, &dvb_mux_dvbs_class) &&
       idnode_is_instance(&b->mm_id, &dvb_mux_dvbs_class)) {
     dvb_mux_conf_t *mc1 = &((dvb_mux_t *)a)->lm_tuning;
@@ -1493,6 +1524,7 @@ mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
     if (r == 0)
       r = mc1->dmc_fe_freq - mc2->dmc_fe_freq;
   }
+#endif
   return r ?: uuid_cmp(&a->mm_id.in_uuid, &b->mm_id.in_uuid);
 }
 

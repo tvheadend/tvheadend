@@ -86,7 +86,7 @@ const idclass_t imagecache_class = {
       .type   = PT_BOOL,
       .id     = "enabled",
       .name   = N_("Enabled"),
-      .desc   = N_("Select whether or not to enable caching. Note: "
+      .desc   = N_("Select whether or not to enable caching. Note, "
                    "even with this disabled you can still specify "
                    "local (file://) icons and these will be served by "
                    "the built-in webserver."),
@@ -656,7 +656,7 @@ imagecache_filename ( uint32_t id, char *name, size_t len )
 
   /* Local file */
   if (!strncasecmp(i->url, "file://", 7)) {
-    fn = strdupa(i->url + 7);
+    fn = tvh_strdupa(i->url + 7);
     http_deescape(fn);
     strncpy(name, fn, len);
     name[len-1] = '\0';

@@ -439,6 +439,7 @@ struct mpegts_mux
   int                     mm_tsid_accept_zero_value;
   tvhlog_limit_t          mm_tsid_loglimit;
   int64_t                 mm_start_monoclock;
+  time_t                  mm_created;
 
   int                     mm_update_pids_flag;
   mtimer_t                mm_update_pids_timer;
@@ -453,6 +454,9 @@ struct mpegts_mux
    * Scanning
    */
 
+  time_t                   mm_scan_first;   ///< Time for the first successful scan
+  time_t                   mm_scan_last_seen; ///< Time for the last successful scan
+
   mpegts_mux_scan_result_t mm_scan_result;  ///< Result of last scan
   int                      mm_scan_weight;  ///< Scan priority
   int                      mm_scan_flags;   ///< Subscription flags
@@ -461,13 +465,6 @@ struct mpegts_mux
   TAILQ_ENTRY(mpegts_mux)  mm_scan_link;    ///< Link to Queue
   mpegts_mux_scan_state_t  mm_scan_state;   ///< Scanning state
 
-#if 0
-  enum {
-    MM_ORIG_USER, ///< Manually added
-    MM_ORIG_FILE, ///< Added from scan file
-    MM_ORIG_AUTO  ///< From NIT
-  }                        mm_dmc_origin2;
-#endif
   void                    *mm_dmc_origin;
   int64_t                  mm_dmc_origin_expire;
 
@@ -527,21 +524,22 @@ struct mpegts_mux
   /*
    * Configuration
    */
-  char *mm_crid_authority;
-  int   mm_enabled;
-  int   mm_epg;
-  char *mm_charset;
-  int   mm_pmt_ac3;
-  int   mm_eit_tsid_nocheck;
+  char    *mm_crid_authority;
+  int      mm_enabled;
+  int      mm_epg;
+  char    *mm_charset;
+  int      mm_pmt_ac3;
+  int      mm_eit_tsid_nocheck;
   uint16_t mm_sid_filter;
 
   /*
    * TSDEBUG
    */
 #if ENABLE_TSDEBUG
-  int   mm_tsdebug_fd;
-  int   mm_tsdebug_fd2;
-  off_t mm_tsdebug_pos;
+  pthread_mutex_t mm_tsdebug_lock;
+  int             mm_tsdebug_fd;
+  int             mm_tsdebug_fd2;
+  off_t           mm_tsdebug_pos;
   TAILQ_HEAD(, tsdebug_packet) mm_tsdebug_packets;
 #endif
 };
@@ -1006,27 +1004,36 @@ int mpegts_input_close_pid
 void mpegts_input_close_pids
   ( mpegts_input_t *mi, mpegts_mux_t *mm, void *owner, int all );
 
+#if ENABLE_TSDEBUG
+
+void tsdebug_started_mux(mpegts_input_t *mi, mpegts_mux_t *mm);
+void tsdebug_stopped_mux(mpegts_input_t *mi, mpegts_mux_t *mm);
+void tsdebug_check_tspkt(mpegts_mux_t *mm, uint8_t *pkt, int len);
+
 static inline void
 tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len)
 {
-#if ENABLE_TSDEBUG
   if (mm && mm->mm_tsdebug_fd2 >= 0)
     if (write(mm->mm_tsdebug_fd2, buf, len) != len)
       tvherror(LS_TSDEBUG, "unable to write input data (%i)", errno);
-#endif
 }
 
 static inline ssize_t
 sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd)
 {
-#if ENABLE_TSDEBUG
   ssize_t r = sbuf_read(sb, fd);
   tsdebug_write(mm, sb->sb_data + sb->sb_ptr - r, r);
   return r;
-#else
-  return sbuf_read(sb, fd);
-#endif
 }
+
+#else
+
+static inline void tsdebug_started_mux(mpegts_input_t *mi, mpegts_mux_t *mm) { return; }
+static inline void tsdebug_stopped_mux(mpegts_input_t *mi, mpegts_mux_t *mm) { return; }
+static inline void tsdebug_write(mpegts_mux_t *mm, uint8_t *buf, size_t len) { return; }
+static inline ssize_t sbuf_tsdebug_read(mpegts_mux_t *mm, sbuf_t *sb, int fd) { return sbuf_read(sb, fd); }
+
+#endif
 
 void mpegts_table_dispatch
   (const uint8_t *sec, size_t r, void *mt);
@@ -1123,6 +1130,8 @@ static inline mpegts_service_t *mpegts_service_find_by_uuid(const char *uuid)
 void mpegts_service_unref ( service_t *s );
 
 void mpegts_service_delete ( service_t *s, int delconf );
+
+int64_t mpegts_service_channel_number ( service_t *s );
 
 /*
  * MPEG-TS event handler

@@ -73,6 +73,9 @@ channel_class_changed ( idnode_t *self )
 {
   channel_t *ch = (channel_t *)self;
 
+  if (atomic_add(&ch->ch_changed_ref, 1) > 0)
+    goto end;
+
   tvhdebug(LS_CHANNEL, "channel '%s' changed", channel_get_name(ch, channel_blank_name));
 
   /* update the EPG channel <-> channel mapping here */
@@ -81,6 +84,9 @@ channel_class_changed ( idnode_t *self )
 
   /* HTSP */
   htsp_channel_update(ch);
+
+end:
+  atomic_dec(&ch->ch_changed_ref, 0);
 }
 
 static htsmsg_t *
@@ -786,8 +792,11 @@ svcnamepicons(const char *svcname)
 static int
 check_file( const char *url )
 {
-  if (url && !strncmp(url, "file://", 7))
-    return access(url + 7, R_OK) == 0;
+  if (url && !strncmp(url, "file://", 7)) {
+    char *s = tvh_strdupa(url + 7);
+    http_deescape(s);
+    return access(s, R_OK) == 0;
+  }
   return 1;
 }
 
@@ -853,8 +862,7 @@ channel_get_icon ( channel_t *ch )
           s = sname;
           while (s && *s) {
             c = *s;
-            if (c <= ' ' || c > 122 ||
-                strchr("/:\\<>|*?'\"", c) != NULL)
+            if (c > 122 || strchr(":<>|*?'\"", c) != NULL)
               *(char *)s = '_';
             else if (config.chicon_scheme == CHICON_LOWERCASE && c >= 'A' && c <= 'Z')
               *(char *)s = c - 'A' + 'a';
@@ -889,18 +897,28 @@ channel_get_icon ( channel_t *ch )
 
       if (send) {
         *(char *)send = '\0';
-        send += 2;
+        send = url_encode(send + 2);
       }
 
       if (sname) {
-        char *aname = url_encode(sname);
+        char *aname;
+
+        for (s = sname; *s == '.'; s++)
+          *(char *)s = '_';
+
+        for ( ; *s; s++)
+          if (*s == '/' || *s == '\\')
+            *(char *)s = '-';
+          else if (*s < ' ')
+            *(char *)s = '_';
+
+        aname = url_encode(sname);
         free((char *)sname);
         sname = aname;
       }
-      if (send)
-        send = url_encode(send);
 
       snprintf(buf, sizeof(buf), "%s%s%s", chi, sname ?: "", send ?: "");
+
       free((char *)sname);
       free((char *)send);
       free((char *)chi);
@@ -1008,6 +1026,8 @@ channel_create0
   ch->ch_autoname = 1;
   ch->ch_epgauto  = 1;
   ch->ch_epg_running = -1;
+
+  atomic_set(&ch->ch_changed_ref, 0);
 
   if (conf) {
     ch->ch_load = 1;

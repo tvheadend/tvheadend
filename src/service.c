@@ -279,7 +279,8 @@ stream_init(elementary_stream_t *st)
   st->es_blank = 0;
 
   if (st->es_type == SCT_HBBTV && st->es_psi.mt_name == NULL)
-    dvb_table_parse_init(&st->es_psi, "hbbtv", LS_TS, st->es_pid, st);
+    dvb_table_parse_init(&st->es_psi, "hbbtv", LS_TS, st->es_pid,
+                         DVB_HBBTV_BASE, DVB_HBBTV_MASK, st);
 
   TAILQ_INIT(&st->es_backlog);
 }
@@ -377,9 +378,6 @@ service_stop(service_t *t)
   pthread_mutex_lock(&t->s_stream_mutex);
 
   t->s_tt_commercial_advice = COMMERCIAL_UNKNOWN;
-
-  assert(LIST_FIRST(&t->s_streaming_pad.sp_targets) == NULL);
-  assert(LIST_FIRST(&t->s_subscriptions) == NULL);
 
   /**
    * Clean up each stream

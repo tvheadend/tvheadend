@@ -1,4 +1,4 @@
-##DVB Inputs - TV Adapters
+## DVB Inputs - TV Adapters
 
 The adapters and tuners are listed and edited in a tree.
 
@@ -6,7 +6,7 @@ The adapters and tuners are listed and edited in a tree.
 
 ---
 
-###Buttons
+### Buttons
 
 The following functions are available:
 
@@ -17,7 +17,7 @@ Button         | Function
 
 ---
 
-###Device Tree
+### Device Tree
 
 The device tree lists the available frontends, LNB configuration and 
 so on related to your device(s) in sections. Clicking on these sections 
@@ -29,11 +29,11 @@ will display available parameters and device information.
 
 ---
 
-###Device Configuration
+### Device Configuration
 
 Click on an item to display more information.
 
-####Satellite (DVB-S/ISDB-S)
+#### Satellite (DVB-S/ISDB-S)
 
 * Frontend
   - [Master](class/linuxdvb_frontend_dvbs)
@@ -51,21 +51,21 @@ Click on an item to display more information.
   - [Rotor (GOTOX)](class/linuxdvb_rotor_gotox)
   - [Rotor (USALS)](class/linuxdvb_rotor_usals)
   
-####Terrestrial (DVB-T/ATSC-T/ISDB-T)
+#### Terrestrial (DVB-T/ATSC-T/ISDB-T)
 
 * Frontend
   - [DVB-T/DVB-T2](class/linuxdvb_frontend_dvbt)
   - [ATSC-T](class/linuxdvb_frontend_atsc_t)
   - [ISDB-T](class/linuxdvb_frontend_isdb_t)
 
-####Cable (DVB-C/ATSC-C/ISDB-C)
+#### Cable (DVB-C/ATSC-C/ISDB-C)
 
 * Frontend
   - [DVB-C](class/linuxdvb_frontend_dvbc)
   - [ATSC-C](class/linuxdvb_frontend_atsc_c)
   - [ISDB-C](class/linuxdvb_frontend_isdb_c)
 
-####SAT>IP (DVB-T/ATSC-T/ATSC-C/DVB-S)
+#### SAT>IP (DVB-T/ATSC-T/ATSC-C/DVB-S)
 
 * [Client](class/satip_client)
    

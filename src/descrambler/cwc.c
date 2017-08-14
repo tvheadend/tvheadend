@@ -676,7 +676,7 @@ cwc_ecm_reset(th_descrambler_t *th)
   ecm_section_t *es;
 
   pthread_mutex_lock(&cwc->cwc_mutex);
-  ct->td_keystate = DS_UNKNOWN;
+  descrambler_change_keystate(th, DS_READY, 1);
   LIST_FOREACH(ep, &ct->cs_pids, ep_link)
     LIST_FOREACH(es, &ep->ep_sections, es_link)
       es->es_keystate = ES_UNKNOWN;
@@ -742,8 +742,8 @@ handle_ecm_reply(cwc_service_t *ct, ecm_section_t *es, uint8_t *msg,
                es->es_section, ct->td_nicename, t->s_dvb_svcname);
       es->es_nok = CWC_MAX_NOKS; /* do not send more ECM requests */
       es->es_keystate = ES_IDLE;
-      if (ct->td_keystate == DS_UNKNOWN)
-        ct->td_keystate = DS_IDLE;
+      if (ct->td_keystate == DS_READY)
+        descrambler_change_keystate((th_descrambler_t *)ct, DS_IDLE, 1);
     }
 
     tvhdebug(LS_CWC,
@@ -778,7 +778,7 @@ forbid:
                "Can not descramble service \"%s\", access denied (seqno: %d "
                "Req delay: %"PRId64" ms) from %s",
                t->s_dvb_svcname, seq, delay, ct->td_nicename);
-      ct->td_keystate = DS_FORBIDDEN;
+      descrambler_change_keystate((th_descrambler_t *)ct, DS_FORBIDDEN, 1);
       ct->ecm_state = ECM_RESET;
       /* this pid is not valid, force full scan */
       if (t->s_dvb_prefcapid == ct->cs_channel && t->s_dvb_prefcapid_lock == PREFCAPID_OFF)
@@ -849,7 +849,7 @@ forbid:
     es3 = *es;
     pthread_mutex_unlock(&cwc->cwc_mutex);
     descrambler_keys((th_descrambler_t *)ct,
-                     off == 16 ? DESCRAMBLER_AES_ECB : DESCRAMBLER_CSA_CBC,
+                     off == 16 ? DESCRAMBLER_AES128_ECB : DESCRAMBLER_CSA_CBC,
                      0, msg + 3, msg + 3 + off);
     snprintf(chaninfo, sizeof(chaninfo), "%s:%i", cwc->cwc_hostname, cwc->cwc_port);
     descrambler_notify((th_descrambler_t *)ct,
@@ -1455,7 +1455,7 @@ found:
 
       if(cwc->cwc_fd == -1) {
         // New key, but we are not connected (anymore), can not descramble
-        ct->td_keystate = DS_UNKNOWN;
+        descrambler_change_keystate((th_descrambler_t *)ct, DS_READY, 0);
         break;
       }
 
@@ -1517,13 +1517,11 @@ cwc_service_pid_free(cwc_service_t *ct)
  * cwc_mutex is held
  */
 static void
-cwc_service_destroy(th_descrambler_t *td)
+cwc_service_destroy0(th_descrambler_t *td)
 {
   cwc_service_t *ct = (cwc_service_t *)td;
-  cwc_t *cwc = ct->cs_cwc;
   int i;
 
-  pthread_mutex_lock(&cwc->cwc_mutex);
   for (i = 0; i < CWC_ES_PIDS; i++)
     if (ct->cs_epids[i])
       descrambler_close_pid(ct->cs_mux, ct,
@@ -1537,6 +1535,19 @@ cwc_service_destroy(th_descrambler_t *td)
 
   free(ct->td_nicename);
   free(ct);
+}
+
+/**
+ * cwc_mutex is held
+ */
+static void
+cwc_service_destroy(th_descrambler_t *td)
+{
+  cwc_service_t *ct = (cwc_service_t *)td;
+  cwc_t *cwc = ct->cs_cwc;
+
+  pthread_mutex_lock(&cwc->cwc_mutex);
+  cwc_service_destroy0(td);
   pthread_mutex_unlock(&cwc->cwc_mutex);
 }
 
@@ -1586,7 +1597,7 @@ cwc_service_start(caclient_t *cac, service_t *t)
     if (st) break;
   }
   if (!pcard) {
-    if (ct) cwc_service_destroy((th_descrambler_t*)ct);
+    if (ct) cwc_service_destroy0((th_descrambler_t*)ct);
     goto end;
   }
   if (ct) {
@@ -1625,6 +1636,8 @@ cwc_service_start(caclient_t *cac, service_t *t)
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
 
   LIST_INSERT_HEAD(&cwc->cwc_services, ct, cs_link);
+
+  descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
 
 add:
   i = 0;

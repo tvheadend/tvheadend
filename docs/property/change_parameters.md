@@ -1,16 +1,17 @@
 :
 
-Allows you to control which parameters are merged. If the 
-*Change parameters* flag is turned on and a parameter 
-(permission flags, all types of profiles, channel tags and ranges)
-for an entry is not set the parameter (value, list or range) is cleared 
-(unset). This allows the next matching entry (if any) in the sequence 
-to set it.
+The *Change parameters* flag allows you to control which parameters
+(permission flags, all types of profiles, channel tags and ranges) are
+combined when multiple entries match a username/login. When the
+change parameter flag is enabled (checked) for a parameter that
+isn't set, the next matching entry (if any) in the sequence can set it.
 
-For example, say you have a wildcard account with the theme set to Gray, 
-and an admin account with the Blue theme. Unchecking the theme checkbox 
-for the admin user would mean that the theme from the last matching 
-entry (which in this case would be the wildcard account) applies instead.
+Username/Entry (matched in sequence)   | "Change parameters" "Rights" checked?     | Admin enabled/set?  | Can access configuration tab?
+---------------------------------------|-------------------------------------------|---------------------|------------------------------
+* (Anon entry).                        | Yes.                                      | No.                 | No.
+* (Another anon entry).                | No.                                       | Yes.                | Yes, this is because the above entry "Change parameters" rights **is** checked and this user has admin rights.
+John doe.                              | Yes.                                      | Yes.                | No, this is because the above entry "Change parameters" rights **isn't** checked even though this user has admin rights.
+John doe (Another entry).              | Yes.                                      | No.                 | No, this is because the even though above entry "Change parameters" rights **is** checked this user has no admin rights.
 
 Option                     | Description/Properties
 ---------------------------|---------------------------

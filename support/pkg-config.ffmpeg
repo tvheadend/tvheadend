@@ -4,9 +4,13 @@ if test -z "$FFMPEG_PREFIX"; then
   exit 1
 fi
 
-CONFIG="`which pkg-config` --static"
+CONFIG=$(which pkg-config)
 CONFIG_PREFIX="PKG_CONFIG_LIBDIR=$FFMPEG_PREFIX/lib/pkgconfig"
-CONFIG_SUFFIX="--silence-errors --define-variable=prefix=$FFMPEG_PREFIX"
+if [ "$1" != "--version" ]; then
+  CONFIG_SUFFIX="--static --silence-errors --define-variable=prefix=$FFMPEG_PREFIX"
+else
+  CONFIG_SUFFIX=""
+fi
 CONFIG_ARGS=$(printf "%q " "$@")
 
 eval "$CONFIG_PREFIX $CONFIG $CONFIG_SUFFIX $CONFIG_ARGS || $CONFIG $CONFIG_ARGS"

@@ -1,4 +1,4 @@
-##Service Mapper 
+## Service Mapper 
 
 This tab shows information about current service mapping activity. 
 
@@ -12,7 +12,7 @@ determines how services are mapped.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 
@@ -22,7 +22,7 @@ Button     | Function
 
 ---
 
-###Items
+### Items
 
 **Mapped** 
 : Number of services mapped. 

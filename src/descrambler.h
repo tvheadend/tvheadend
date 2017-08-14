@@ -31,10 +31,23 @@ struct mpegts_table;
 struct mpegts_mux;
 struct th_descrambler_data;
 
-#define DESCRAMBLER_NONE     0
-#define DESCRAMBLER_CSA_CBC  1
-#define DESCRAMBLER_DES_NCB  2 /* no block cipher mode! */
-#define DESCRAMBLER_AES_ECB  3
+#define DESCRAMBLER_NONE	0
+/* 64-bit keys */
+#define DESCRAMBLER_CSA_CBC	1
+#define DESCRAMBLER_DES_NCB	2 /* no block cipher mode! */
+#define DESCRAMBLER_AES_ECB	3
+/* 128-bit keys */
+#define DESCRAMBLER_AES128_ECB  16
+
+#define DESCRAMBLER_KEY_SIZE(type) ((type >= DESCRAMBLER_AES128_ECB) ? 16 : 8)
+
+typedef enum {
+    DS_INIT,
+    DS_READY,
+    DS_RESOLVED,
+    DS_FORBIDDEN,
+    DS_IDLE
+} th_descrambler_keystate_t;
 
 /**
  * Descrambler superclass
@@ -46,12 +59,7 @@ typedef struct th_descrambler {
 
   char *td_nicename;
 
-  enum {
-    DS_UNKNOWN,
-    DS_RESOLVED,
-    DS_FORBIDDEN,
-    DS_IDLE
-  } td_keystate;
+  th_descrambler_keystate_t td_keystate;
 
   struct service *td_service;
 
@@ -67,15 +75,20 @@ typedef struct th_descrambler_key {
   tvhcsa_t key_csa;
   uint16_t key_pid;         /* keys are assigned to this pid (when multipid is set) */
   uint64_t key_interval;
+  uint64_t key_initial_interval;
   int64_t  key_start;
   int64_t  key_timestamp[2];
   uint8_t  key_index;
   uint8_t  key_valid;
-  uint8_t  key_changed;
+  uint8_t  key_type_overwritten;
+  tvhlog_limit_t key_loglimit;
 } th_descrambler_key_t;
 
 typedef struct th_descrambler_runtime {
   struct service *dr_service;
+  int      dr_ca_count;
+  int      dr_ca_resolved;
+  int      dr_ca_failed;
   uint32_t dr_external:1;
   uint32_t dr_skip:1;
   uint32_t dr_quick_ecm:1;
@@ -89,6 +102,8 @@ typedef struct th_descrambler_runtime {
   th_descrambler_key_t dr_keys[DESCRAMBLER_MAX_KEYS];
   TAILQ_HEAD(, th_descrambler_data) dr_queue;
   uint32_t dr_queue_total;
+  uint32_t dr_paritycheck;
+  uint32_t dr_initial_paritycheck;
   tvhlog_limit_t dr_loglimit_key;
 } th_descrambler_runtime_t;
 
@@ -100,9 +115,15 @@ typedef void (*descrambler_section_callback_t)
  */
 typedef struct descrambler_ecmsec {
   LIST_ENTRY(descrambler_ecmsec) link;
+  LIST_ENTRY(descrambler_ecmsec) active_link;
+  int       refcnt;
+  uint8_t   changed;
   uint8_t   number;
+  uint8_t   quick_ecm_called;
   uint8_t  *last_data;
   int       last_data_len;
+  descrambler_section_callback_t callback;
+  void     *opaque;
 } descrambler_ecmsec_t;
 
 typedef struct descrambler_section {
@@ -110,7 +131,6 @@ typedef struct descrambler_section {
   descrambler_section_callback_t callback;
   void     *opaque;
   LIST_HEAD(, descrambler_ecmsec) ecmsecs;
-  uint8_t   quick_ecm_called;
 } descrambler_section_t;
 
 typedef struct descrambler_table {
@@ -157,11 +177,15 @@ LIST_HEAD(caid_list, caid);
 
 void descrambler_init          ( void );
 void descrambler_done          ( void );
+void descrambler_change_keystate ( th_descrambler_t *t, th_descrambler_keystate_t state, int lock );
+const char *descrambler_keystate2str( th_descrambler_keystate_t keystate );
+const char *descrambler_keytype2str( th_descrambler_keystate_t keytype );
 void descrambler_service_start ( struct service *t );
 void descrambler_service_stop  ( struct service *t );
 void descrambler_caid_changed  ( struct service *t );
 int  descrambler_resolved      ( struct service *t, th_descrambler_t *ignore );
 void descrambler_external      ( struct service *t, int state );
+int  descrambler_multi_pid     ( th_descrambler_t *t );
 void descrambler_keys          ( th_descrambler_t *t, int type, uint16_t pid,
                                  const uint8_t *even, const uint8_t *odd );
 void descrambler_notify        ( th_descrambler_t *t,

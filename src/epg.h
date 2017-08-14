@@ -624,6 +624,8 @@ epg_broadcast_t *epg_broadcast_deserialize
 
 /* Unlink */
 void epg_channel_unlink ( struct channel *ch );
+/* Match now / next events */
+epg_broadcast_t *epg_match_now_next ( struct channel *ch, epg_broadcast_t *ebc );
 
 /* ************************************************************************
  * Global config

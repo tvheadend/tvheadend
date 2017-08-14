@@ -361,12 +361,16 @@ tvheadend.epg = function() {
     var detailsfcn = function(grid, rec, act, row) {
         new tvheadend.epgDetails(grid.getStore().getAt(row).data);
     };
+    var watchfcn = function(grid, rec, act, row) {
+        var item = grid.getStore().getAt(row);
+        new tvheadend.VideoPlayer(item.data.channelUuid);
+    };
 
     var actions = new Ext.ux.grid.RowActions({
         id: 'details',
         header: _('Details'),
         tooltip: _('Details'),
-        width: 45,
+        width: 67,
         dataIndex: 'actions',
         callbacks: {
             'recording':      detailsfcn,
@@ -380,6 +384,11 @@ tvheadend.epg = function() {
                 iconCls: 'broadcast_details',
                 qtip: _('Broadcast details'),
                 cb: detailsfcn
+            },
+            {
+                iconCls: 'watchTv',
+                qtip: _('Watch TV'),
+                cb: watchfcn
             },
             {
                 iconIndex: 'dvrState'
@@ -649,6 +658,27 @@ tvheadend.epg = function() {
         ]
     });
 
+    // Mode filter
+    var epgMode = new Ext.form.ComboBox({
+        width: 60,
+        displayField: 'val',
+        valueField: 'key',
+        store: new Ext.data.ArrayStore({
+            id: 0,
+            fields: [ 'key', 'val' ],
+            data: [
+                [ 'all', _("All") ],
+                [ 'now', _("Now") ]
+            ]
+        }),
+        mode: 'local',
+        editable: false,
+        forceSelection: true,
+        triggerAction: 'all',
+        typeAhead: true,
+        value: 'all'
+    });
+
     // Title search box
 
     var epgFilterTitle = new Ext.form.TextField({
@@ -787,7 +817,13 @@ tvheadend.epg = function() {
         epgFilterDuration.setValue("");
     };
 
+    clearModeFilter = function() {
+        delete epgStore.baseParams.mode;
+        epgMode.setValue("all");
+    };
+
     function epgQueryClear() {
+        clearModeFilter();
         clearTitleFilter();
         clearFulltextFilter();
         clearChannelFilter();
@@ -798,6 +834,11 @@ tvheadend.epg = function() {
         delete epgStore.sortInfo;
         epgView.reset();
     };
+
+    function clearModeFilterAndReload() {
+        clearModeFilter();
+        epgView.reset();
+    }
 
 /*
  * Filter selection event handlers
@@ -845,6 +886,17 @@ tvheadend.epg = function() {
         epgView.reset();
     });
 
+    epgMode.on('select', function(c, r) {
+        epgStore.baseParams.mode = r.data.key;
+        if (epgStore.baseParams.mode == "next" || epgStore.baseParams.mode == "now") {
+            // Change ordering to ordering by number asc, because that's what users would expect to see
+            epgStore.sortInfo = { field: 'channelNumber', direction: 'ASC' };
+        }
+        else
+            epgStore.sortInfo = { field: 'start', direction: 'date' };
+        epgView.reset();
+    });
+
     epgFilterTitle.on('valid', function(c) {
         var value = c.getValue();
 
@@ -887,6 +939,7 @@ tvheadend.epg = function() {
     });
 
     var tbar = [
+        epgMode, '-',
         epgFilterTitle, { text: _('Fulltext') }, epgFilterFulltext, '-',
         epgFilterChannels, '-',
         epgFilterChannelTags, '-',
@@ -940,6 +993,9 @@ tvheadend.epg = function() {
                    /* do not restore sorting and filters */
                    state.sort = {};
                    state.filters = {};
+                   /* Otherwise this non-resizable column will not expand to newly set width */
+                   if (state.columns)
+                       state.columns[0].width = actions.width;
                }
             }
         }
@@ -1008,6 +1064,7 @@ tvheadend.epg = function() {
             value = tvheadend.regexEscape(value);
             if (value && epgStore.baseParams.title !== value) {
                 epgFilterTitle.setValue(value);
+                clearModeFilterAndReload();
                 return false;
             }
         } else if (column.dataIndex === 'channelName') {
@@ -1016,6 +1073,7 @@ tvheadend.epg = function() {
             if (value && epgStore.baseParams.channel !== value) {
                 epgFilterChannels.setValue(rec['channelName']);
                 epgFilterChannelSet(value);
+                clearModeFilterAndReload();
                 return false;
             }
         } else if (column.dataIndex === 'genre') {
@@ -1026,6 +1084,7 @@ tvheadend.epg = function() {
                     var l = tvheadend.contentGroupLookupName(value);
                     epgFilterContentGroup.setValue(l);
                     epgFilterContentGroupSet(value);
+                    clearModeFilterAndReload();
                     return false;
                 }
             }

@@ -93,8 +93,7 @@ mpegts_table_dispatch
   tid = sec[0];
 
   /* Check table mask */
-  if((tid & mt->mt_mask) != mt->mt_table)
-    return;
+  assert((tid & mt->mt_mask) == mt->mt_table);
 
   len = ((sec[1] & 0x0f) << 8) | sec[2];
   crc_len = (mt->mt_flags & MT_CRC) ? 4 : 0;
@@ -236,6 +235,8 @@ mpegts_table_add
   mt->mt_mask       = mask;
   mt->mt_mux        = mm;
   mt->mt_sect.ps_cc = -1;
+  mt->mt_sect.ps_table = tableid;
+  mt->mt_sect.ps_mask = mask;
 
   /* Open table */
   if (pid < 0) {

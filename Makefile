@@ -524,6 +524,7 @@ I18N-C += $(SRCS-DVBCAM)
 
 # TSDEBUGCW
 SRCS-TSDEBUG = \
+	src/input/mpegts/mpegts_tsdebug.c \
 	src/descrambler/tsdebugcw.c
 SRCS-${CONFIG_TSDEBUG} += $(SRCS-TSDEBUG)
 I18N-C += $(SRCS-TSDEBUG)
@@ -546,6 +547,7 @@ endif
 
 # crypto algorithms
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libaesdec.c
+SRCS-${CONFIG_SSL} += src/descrambler/algo/libaes128dec.c
 SRCS-${CONFIG_SSL} += src/descrambler/algo/libdesdec.c
 
 # DBUS
@@ -572,11 +574,11 @@ I18N-DOCS  += $(wildcard docs/markdown/inc/*.md)
 I18N-DOCS  += $(wildcard docs/class/*.md)
 I18N-DOCS  += $(wildcard docs/property/*.md)
 I18N-DOCS  += $(wildcard docs/wizard/*.md)
-MD-ROOT     = $(patsubst docs/markdown/%.md,%,$(wildcard docs/markdown/*.md))
-MD-ROOT    += $(patsubst docs/markdown/inc/%.md,inc/%,$(wildcard docs/markdown/inc/*.md))
-MD-CLASS    = $(patsubst docs/class/%.md,%,$(wildcard docs/class/*.md))
-MD-PROP     = $(patsubst docs/property/%.md,%,$(wildcard docs/property/*.md))
-MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(wildcard docs/wizard/*.md))
+MD-ROOT     = $(patsubst docs/markdown/%.md,%,$(sort $(wildcard docs/markdown/*.md)))
+MD-ROOT    += $(patsubst docs/markdown/inc/%.md,inc/%,$(sort $(wildcard docs/markdown/inc/*.md)))
+MD-CLASS    = $(patsubst docs/class/%.md,%,$(sort $(wildcard docs/class/*.md)))
+MD-PROP     = $(patsubst docs/property/%.md,%,$(sort $(wildcard docs/property/*.md)))
+MD-WIZARD   = $(patsubst docs/wizard/%.md,%,$(sort $(wildcard docs/wizard/*.md)))
 
 #
 # Internationalization
@@ -676,10 +678,16 @@ src/webui/extjs.c: make_webui
 include ${ROOTDIR}/support/${OSENV}.mk
 
 # Build files
+DATE_FMT = %Y-%m-%dT%H:%M:%S%z
+ifdef SOURCE_DATE_EPOCH
+	BUILD_DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "+$(DATE_FMT)"  2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" "+$(DATE_FMT)" 2>/dev/null || date -u "+$(DATE_FMT)")
+else
+	BUILD_DATE ?= $(shell date "+$(DATE_FMT)")
+endif
 $(BUILDDIR)/timestamp.c: FORCE
 	@mkdir -p $(dir $@)
 	@echo '#include "build.h"' > $@
-	@echo 'const char* build_timestamp = "'`date -Iseconds`'";' >> $@
+	@echo 'const char* build_timestamp = "'$(BUILD_DATE)'";' >> $@
 
 $(BUILDDIR)/timestamp.o: $(BUILDDIR)/timestamp.c
 	$(pCC) -c -o $@ $<

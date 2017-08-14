@@ -487,11 +487,17 @@ tvheadend.playLink = function(link, title) {
 /**
  * Displays a mediaplayer using the html5 video element
  */
-tvheadend.VideoPlayer = function(url) {
+tvheadend.VideoPlayer = function(channelId) {
 
     var videoPlayer = new tv.ui.VideoPlayer({
         params: { }
     });
+    
+    var initialChannelName;
+    if (channelId) {
+        var record = tvheadend.channels.getById(channelId);
+        initialChannelName = record.data.val;
+    }
 
     var selectChannel = new Ext.form.ComboBox({
         loadingText: _('Loading...'),
@@ -501,7 +507,8 @@ tvheadend.VideoPlayer = function(url) {
         mode: 'local',
         editable: true,
         triggerAction: 'all',
-        emptyText: _('Select channel...')
+        emptyText: _('Select channel...'),
+        value: initialChannelName
     });
 
     selectChannel.on('select', function(c, r) {
@@ -631,8 +638,13 @@ tvheadend.VideoPlayer = function(url) {
         win.getTopToolbar().add(new Ext.Toolbar.Spacer());
         win.getTopToolbar().add(new Ext.Toolbar.Spacer());
         win.getTopToolbar().add(sliderLabel);
-    });
 
+        // Zap to initial channel when the player is ready
+        if (channelId) {
+            videoPlayer.zapTo(channelId);
+        }
+    });
+    
     win.on('close', function() {
         videoPlayer.stop();
     });
@@ -1076,7 +1088,7 @@ tvheadend.app = function() {
                 tvheadend.log(m.logtxt);
             });
 
-            new tvheadend.cometPoller;
+            tvheadend.cometInit();
 
             Ext.QuickTips.init();
         }

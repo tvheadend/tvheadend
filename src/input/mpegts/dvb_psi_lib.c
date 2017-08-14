@@ -79,10 +79,16 @@ mpegts_psi_section_reassemble0
   uint8_t *p = mt->mt_sect.ps_data;
   int excess, tsize;
 
+  if(len <= 0)
+    return -1;
+
   if(start) {
     // Payload unit start indicator
     mt->mt_sect.ps_offset = 0;
-    mt->mt_sect.ps_lock = 1;
+    if((data[0] & mt->mt_sect.ps_mask) != mt->mt_sect.ps_table)
+      mt->mt_sect.ps_lock = 0;
+    else
+      mt->mt_sect.ps_lock = 1;
   }
 
   if(!mt->mt_sect.ps_lock)
@@ -116,7 +122,7 @@ mpegts_psi_section_reassemble0
   }
 
   excess = mt->mt_sect.ps_offset - tsize;
-  mt->mt_sect.ps_offset = 0;
+  mt->mt_sect.ps_lock = 0;
 
   if (cb)
     cb(p, tsize - (crc ? 4 : 0), opaque);
@@ -154,15 +160,13 @@ mpegts_psi_section_reassemble
   }
 
   if(pusi) {
-    int len = tsb[off++];
-    if(len > 0) {
-      if(len > 188 - off) {
-        mt->mt_sect.ps_lock = 0;
-        return;
-      }
-      mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
-      off += len;
+    uint8_t len = tsb[off++];
+    if (len > 188 - off) {
+      mt->mt_sect.ps_lock = 0;
+      return;
     }
+    mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, len, 0, crc, cb, opaque);
+    off += len;
   }
 
   while(off < 188) {
@@ -173,7 +177,6 @@ mpegts_psi_section_reassemble
       break;
     }
     off += r;
-    pusi = 0;
   }
 }
 
@@ -389,7 +392,8 @@ dvb_table_release(mpegts_psi_table_t *mt)
  */
 
 void dvb_table_parse_init
-  ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid, void *opaque )
+  ( mpegts_psi_table_t *mt, const char *name, int subsys, int pid,
+    uint8_t table, uint8_t mask, void *opaque )
 {
   memset(mt, 0, sizeof(*mt));
   mt->mt_name = strdup(name);
@@ -397,6 +401,8 @@ void dvb_table_parse_init
   mt->mt_opaque = opaque;
   mt->mt_pid = pid;
   mt->mt_sect.ps_cc = -1;
+  mt->mt_sect.ps_table = table;
+  mt->mt_sect.ps_mask = mask;
 }
 
 void dvb_table_parse_done( mpegts_psi_table_t *mt )

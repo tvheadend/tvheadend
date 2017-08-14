@@ -10,7 +10,8 @@
       "name": "PowerVu",
       "caid": "0E00",
       "multipid": 1,
-      "interval": 1000
+      "interval": 1000,
+      "paritycheck": 2
     },
     {
       "name": "Sky UK",

@@ -20,9 +20,10 @@
 #define HTTP_H_
 
 #include "htsbuf.h"
+#include "htsmsg.h"
 #include "url.h"
 #include "tvhpoll.h"
-  #include "access.h"
+#include "access.h"
 
 struct channel;
 struct http_path;
@@ -121,6 +122,13 @@ typedef enum http_ver {
   RTSP_VERSION_1_0,
 } http_ver_t;
 
+typedef enum http_wsop {
+  HTTP_WSOP_TEXT = 0,
+  HTTP_WSOP_BINARY = 1,
+  HTTP_WSOP_PING = 2,
+  HTTP_WSOP_PONG = 3
+} http_wsop_t;
+
 typedef struct http_connection {
   pthread_mutex_t hc_fd_lock;
   int hc_fd;
@@ -191,9 +199,13 @@ static inline int http_args_empty(const struct http_arg_list *list) { return TAI
 
 int http_tokenize(char *buf, char **vec, int vecsize, int delimiter);
 
+void http_alive(http_connection_t *hc);
+
 void http_error(http_connection_t *hc, int error);
 
 int http_encoding_valid(http_connection_t *hc, const char *encoding);
+
+int http_header_match(http_connection_t *hc, const char *name, const char *value);
 
 void http_output_html(http_connection_t *hc);
 
@@ -209,6 +221,14 @@ void http_send_header(http_connection_t *hc, int rc, const char *content,
 		      const char *location, int maxage, const char *range,
 		      const char *disposition, http_arg_list_t *args);
 
+int http_send_header_websocket(http_connection_t *hc, const char *protocol);
+
+int http_websocket_send(http_connection_t *hc, uint8_t *buf, uint64_t buflen, int opcode);
+
+int http_websocket_send_json(http_connection_t *hc, htsmsg_t *msg);
+
+int http_websocket_read(http_connection_t *hc, htsmsg_t **_res, int timeout);
+
 void http_serve_requests(http_connection_t *hc);
 
 void http_cancel(void *opaque);
@@ -219,6 +239,8 @@ typedef int (http_callback_t)(http_connection_t *hc,
 typedef char * (http_path_modify_t)(http_connection_t *hc,
                                     const char * path, int *cut);
                                  
+#define HTTP_PATH_NO_VERIFICATION    (1 << 0)
+#define HTTP_PATH_WEBSOCKET          (1 << 1)
 
 typedef struct http_path {
   LIST_ENTRY(http_path) hp_link;
@@ -226,7 +248,7 @@ typedef struct http_path {
   void *hp_opaque;
   http_callback_t *hp_callback;
   int hp_len;
-  int hp_no_verification;
+  uint32_t hp_flags;
   uint32_t hp_accessmask;
   http_path_modify_t *hp_path_modify;
 } http_path_t;
@@ -245,8 +267,6 @@ void http_server_done(void);
 int http_access_verify(http_connection_t *hc, int mask);
 int http_access_verify_channel(http_connection_t *hc, int mask,
                                struct channel *ch);
-
-void http_deescape(char *s);
 
 void http_parse_args(http_arg_list_t *list, char *args);
 

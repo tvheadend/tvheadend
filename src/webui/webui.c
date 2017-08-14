@@ -496,6 +496,8 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
       break;
 
     case SMT_SERVICE_STATUS:
+    case SMT_SIGNAL_STATUS:
+    case SMT_DESCRAMBLE_INFO:
       if(tcp_socket_dead(hc->hc_fd)) {
         tvhdebug(LS_WEBUI,  "Stop streaming %s, client hung up",
                  hc->hc_url_orig);
@@ -510,8 +512,6 @@ http_stream_run(http_connection_t *hc, profile_chain_t *prch,
     case SMT_NOSTART_WARN:
     case SMT_SKIP:
     case SMT_SPEED:
-    case SMT_SIGNAL_STATUS:
-    case SMT_DESCRAMBLE_INFO:
     case SMT_TIMESHIFT_STATUS:
       break;
 
@@ -1978,10 +1978,10 @@ webui_init(int xspf)
 
   http_path_add("", NULL, page_root2, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/", NULL, page_root, ACCESS_WEB_INTERFACE);
-  hp->hp_no_verification = 1; /* redirect only */
+  hp->hp_flags = HTTP_PATH_NO_VERIFICATION; /* redirect only */
   http_path_add("/login", NULL, page_login, ACCESS_WEB_INTERFACE);
   hp = http_path_add("/logout", NULL, page_logout, ACCESS_WEB_INTERFACE);
-  hp->hp_no_verification = 1;
+  hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
 
 #if CONFIG_SATIP_SERVER
   http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);

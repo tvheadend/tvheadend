@@ -34,6 +34,7 @@ const idclass_t *caclient_classes[] = {
   &caclient_ccw_csa_cbc_class,
   &caclient_ccw_des_ncb_class,
   &caclient_ccw_aes_ecb_class,
+  &caclient_ccw_aes128_ecb_class,
 #endif
   NULL
 };

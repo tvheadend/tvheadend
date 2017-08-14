@@ -87,12 +87,14 @@ urlparse ( const char *str, url_t *url )
     size_t len = x.afterLast - x.first;\
     y = strndup(x.first, len);\
   }
-#define uri_copy_static(y, x)\
+#define uri_copy_static(y, s, x)\
   if (x.first) {\
     size_t len = x.afterLast - x.first;\
-    strncpy(y, x.first, len);\
-    y[len] = '\0';\
+    if (len > sizeof(y) - 1) \
+    { y[0] = '\0'; s = strndup(x.first, len); } else \
+    { s = NULL; strncpy(y, x.first, len); y[len] = '\0'; }\
   } else {\
+    s = NULL;\
     y[0] = '\0';\
   }
   uri_copy(url->scheme, uri.scheme);
@@ -100,21 +102,25 @@ urlparse ( const char *str, url_t *url )
   uri_copy(url->user,   uri.userInfo);
   uri_copy(url->query,  uri.query);
   uri_copy(url->frag,   uri.fragment);
-  uri_copy_static(buf,  uri.portText);
-  if (*buf)
+  uri_copy_static(buf, s, uri.portText);
+  if (s) {
+    url->port = atoi(s);
+    free(s);
+  } else if (*buf)
     url->port = atoi(buf);
   else
     url->port = 0;
   path       = uri.pathHead;
   while (path) {
-    uri_copy_static(buf, path->text);
+    uri_copy_static(buf, s, path->text);
     if (url->path)
-      url->path = realloc(url->path, strlen(url->path) + strlen(buf) + 2);
+      url->path = realloc(url->path, strlen(url->path) + strlen(s ?: buf) + 2);
     else
-      url->path = calloc(1, strlen(buf) + 2);
+      url->path = calloc(1, strlen(s ?: buf) + 2);
     strcat(url->path, "/");
-    strcat(url->path, buf);
+    strcat(url->path, s ?: buf);
     path = path->next;
+    free(s);
   }
   // TODO: query/fragment
 

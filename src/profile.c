@@ -305,7 +305,7 @@ const idclass_t profile_class =
       .type     = PT_BOOL,
       .id       = "enabled",
       .name     = N_("Enabled"),
-      .desc     = N_("Enable/disable the profile."),
+      .desc     = N_("Enable/disable profile."),
       .off      = offsetof(profile_t, pro_enabled),
       .get_opts = profile_class_enabled_opts,
       .group    = 1,
@@ -315,7 +315,7 @@ const idclass_t profile_class =
       .type     = PT_BOOL,
       .id       = "default",
       .name     = N_("Default"),
-      .desc     = N_("Set profile as default."),
+      .desc     = N_("Set as default profile."),
       .set      = profile_class_default_set,
       .get      = profile_class_default_get,
       .opts     = PO_EXPERT,
@@ -345,9 +345,9 @@ const idclass_t profile_class =
       .id       = "priority",
       .name     = N_("Default priority"),
       .desc     = N_("If no specific priority was requested. This "
-		             "gives certain users a higher priority by "
-		             "assigning a streaming profile with a higher "
-		             "priority."),
+                     "gives certain users a higher priority by "
+                     "assigning a streaming profile with a higher "
+                     "priority."),
       .list     = profile_class_priority_list,
       .off      = offsetof(profile_t, pro_prio),
       .opts     = PO_SORTKEY | PO_ADVANCED,
@@ -358,7 +358,7 @@ const idclass_t profile_class =
       .type     = PT_INT,
       .id       = "fpriority",
       .name     = N_("Force priority"),
-      .desc     = N_("Force the stream profile to use this priority."),
+      .desc     = N_("Force profile to use this priority."),
       .off      = offsetof(profile_t, pro_fprio),
       .opts     = PO_EXPERT,
       .group    = 1
@@ -387,7 +387,7 @@ const idclass_t profile_class =
     {
       .type     = PT_BOOL,
       .id       = "contaccess",
-      .name     = N_("Continue even if descrambling fails"),
+      .name     = N_("Continue if descrambling fails"),
       .desc     = N_("Don't abort streaming when an encrypted stream "
                      "can't be decrypted by a CA client that normally "
                      "should be able to decrypt the stream."),
@@ -645,6 +645,11 @@ profile_input(void *opaque, streaming_message_t *sm)
   profile_chain_t *prch = opaque, *prch2;
   profile_sharer_t *prsh = prch->prch_sharer;
 
+  if (prsh == NULL) {
+    streaming_msg_free(sm);
+    return;
+  }
+
   if (sm->sm_type == SMT_START) {
     if (!prsh->prsh_master)
       prsh->prsh_master = prch;
@@ -698,6 +703,42 @@ profile_input_info(void *opaque, htsmsg_t *list)
 static streaming_ops_t profile_input_ops = {
   .st_cb   = profile_input,
   .st_info = profile_input_info
+};
+
+/*
+ *
+ */
+static void
+profile_input_queue(void *opaque, streaming_message_t *sm)
+{
+  profile_chain_t *prch = opaque;
+  profile_sharer_t *prsh = prch->prch_sharer;
+  profile_sharer_message_t *psm = malloc(sizeof(*psm));
+  psm->psm_prch = prch;
+  psm->psm_sm = sm;
+  pthread_mutex_lock(&prsh->prsh_queue_mutex);
+  if (prsh->prsh_queue_run) {
+    if (TAILQ_FIRST(&prsh->prsh_queue))
+      tvh_cond_signal(&prsh->prsh_queue_cond, 0);
+    TAILQ_INSERT_TAIL(&prsh->prsh_queue, psm, psm_link);
+  } else {
+    streaming_msg_free(sm);
+    free(psm);
+  }
+  pthread_mutex_unlock(&prsh->prsh_queue_mutex);
+}
+
+static htsmsg_t *
+profile_input_queue_info(void *opaque, htsmsg_t *list)
+{
+  htsmsg_add_str(list, NULL, "profile queue input");
+  profile_input_info(opaque, list);
+  return list;
+}
+
+static streaming_ops_t profile_input_queue_ops = {
+  .st_cb   = profile_input_queue,
+  .st_info = profile_input_queue_info
 };
 
 /*
@@ -798,6 +839,7 @@ profile_sharer_find(profile_chain_t *prch)
 {
   profile_sharer_t *prsh = NULL;
   profile_chain_t *prch2;
+  int do_queue = prch->prch_can_share != NULL;
 
   LIST_FOREACH(prch2, &profile_chains, prch_link) {
     if (prch2->prch_id != prch->prch_id)
@@ -811,10 +853,68 @@ profile_sharer_find(profile_chain_t *prch)
   }
   if (!prsh) {
     prsh = calloc(1, sizeof(*prsh));
+    prsh->prsh_do_queue = do_queue;
+    if (do_queue) {
+      pthread_mutex_init(&prsh->prsh_queue_mutex, NULL);
+      tvh_cond_init(&prsh->prsh_queue_cond);
+      TAILQ_INIT(&prsh->prsh_queue);
+    }
     streaming_target_init(&prsh->prsh_input, &profile_sharer_input_ops, prsh, 0);
     LIST_INIT(&prsh->prsh_chains);
   }
   return prsh;
+}
+
+/*
+ *
+ */
+static void *
+profile_sharer_thread(void *aux)
+{
+  profile_sharer_t *prsh = aux;
+  profile_sharer_message_t *psm;
+  int run = 1;
+
+  while (run) {
+    pthread_mutex_lock(&prsh->prsh_queue_mutex);
+    run = prsh->prsh_queue_run;
+    psm = TAILQ_FIRST(&prsh->prsh_queue);
+    if (run && psm == NULL) {
+      tvh_cond_wait(&prsh->prsh_queue_cond, &prsh->prsh_queue_mutex);
+      run = prsh->prsh_queue_run;
+      psm = TAILQ_FIRST(&prsh->prsh_queue);
+    }
+    if (run && psm) {
+      if (psm) {
+        profile_input(psm->psm_prch, psm->psm_sm);
+        TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
+        free(psm);
+      }
+    }
+    pthread_mutex_unlock(&prsh->prsh_queue_mutex);
+  }
+  return NULL;
+}
+
+/*
+ *
+ */
+static int
+profile_sharer_postinit(profile_sharer_t *prsh)
+{
+  int r;
+
+  if (!prsh->prsh_do_queue)
+    return 0;
+  if (prsh->prsh_queue_run)
+    return 0;
+  r = tvhthread_create(&prsh->prsh_queue_thread, NULL,
+                       profile_sharer_thread, prsh, "sharer");
+  if (!r)
+    prsh->prsh_queue_run = 1;
+  else
+    tvherror(LS_PROFILE, "unable to create sharer thread");
+  return r;
 }
 
 /*
@@ -841,13 +941,24 @@ static void
 profile_sharer_destroy(profile_chain_t *prch)
 {
   profile_sharer_t *prsh = prch->prch_sharer;
+  profile_sharer_message_t *psm, *psm2;
 
   if (prsh == NULL)
     return;
   LIST_REMOVE(prch, prch_sharer_link);
-  prch->prch_sharer = NULL;
-  prch->prch_post_share = NULL;
   if (LIST_EMPTY(&prsh->prsh_chains)) {
+    if (prsh->prsh_queue_run) {
+      pthread_mutex_lock(&prsh->prsh_queue_mutex);
+      prsh->prsh_queue_run = 0;
+      tvh_cond_signal(&prsh->prsh_queue_cond, 0);
+      pthread_mutex_unlock(&prsh->prsh_queue_mutex);
+      pthread_join(prsh->prsh_queue_thread, NULL);
+      while ((psm = TAILQ_FIRST(&prsh->prsh_queue)) != NULL) {
+        streaming_msg_free(psm->psm_sm);
+        TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
+        free(psm);
+      }
+    }
     if (prsh->prsh_tsfix)
       tsfix_destroy(prsh->prsh_tsfix);
 #if ENABLE_LIBAV
@@ -857,6 +968,29 @@ profile_sharer_destroy(profile_chain_t *prch)
     if (prsh->prsh_start_msg)
       streaming_start_unref(prsh->prsh_start_msg);
     free(prsh);
+    prch->prch_sharer = NULL;
+    prch->prch_post_share = NULL;
+  } else {
+    if (prsh->prsh_queue_run) {
+      pthread_mutex_lock(&prsh->prsh_queue_mutex);
+      for (psm = TAILQ_FIRST(&prsh->prsh_queue); psm; psm = psm2) {
+        psm2 = TAILQ_NEXT(psm, psm_link);
+        if (psm->psm_prch != prch) continue;
+        if (psm->psm_sm->sm_type == SMT_PACKET ||
+            psm->psm_sm->sm_type == SMT_MPEGTS)
+          streaming_msg_free(psm->psm_sm);
+        else
+          profile_input(psm->psm_prch, psm->psm_sm);
+        TAILQ_REMOVE(&prsh->prsh_queue, psm, psm_link);
+        free(psm);
+      }
+    }
+    prch->prch_sharer = NULL;
+    prch->prch_post_share = NULL;
+    if (prsh->prsh_master == prch)
+      prsh->prsh_master = NULL;
+    if (prsh->prsh_queue_run)
+      pthread_mutex_unlock(&prsh->prsh_queue_mutex);
   }
 }
 
@@ -1064,8 +1198,13 @@ profile_htsp_work(profile_chain_t *prch,
 
   prch->prch_share = prsh->prsh_tsfix;
   prch->prch_flags = SUBSCRIPTION_PACKET;
-  streaming_target_init(&prch->prch_input, &profile_input_ops, prch, 0);
+  streaming_target_init(&prch->prch_input,
+                        prsh->prsh_do_queue ?
+                          &profile_input_queue_ops : &profile_input_ops, prch,
+                        0);
   prch->prch_st = &prch->prch_input;
+  if (profile_sharer_postinit(prsh))
+    goto fail;
   return 0;
 
 fail:
@@ -1177,7 +1316,7 @@ const idclass_t profile_mpegts_pass_class =
       .type     = PT_U16,
       .id       = "sid",
       .name     = N_("Rewrite Service ID"),
-      .desc     = N_("Rewrite service identificator (SID) using the specified "
+      .desc     = N_("Rewrite service identifier (SID) using the specified "
                      "value (usually 1)."),
       .off      = offsetof(profile_mpegts_t, pro_rewrite_sid),
       .set      = profile_pass_rewrite_sid_set,
@@ -2031,11 +2170,13 @@ const idclass_t profile_transcode_class =
       .type     = PT_STR,
       .id       = "src_vcodec",
       .name     = N_("Source video codec"),
-      .desc     = N_("Transcode video only if source video codec mattch.  "
-                     "\"Any\" will ingnore source vcodec check and always do transcode. "
-		     "Separate codec names with coma. "
-                     "If no codec match found - transcode with \"copy\" codec, "
-		     "if match found - transcode with parameters in this profile."),
+      .desc     = N_("Transcode video only if source video codec matches. "
+                     "\"Any\" ignores source video codec checking and "
+                     "always transcodes. If no codec match is found, "
+                     "transcoding is done using the \"copy\" codec. "
+                     "if a match is found, transcode with the "
+                     "parameters in this profile. Separate codec names "
+                     "with comma."),
       .off      = offsetof(profile_transcode_t, pro_src_vcodec),
       .def.i    = SCT_UNKNOWN,
       .list     = profile_class_src_vcodec_list,
@@ -2070,7 +2211,7 @@ const idclass_t profile_transcode_class =
       .id       = "vbitrate",
       .name     = N_("Video bitrate (kb/s) (0=auto)"),
       .desc     = N_("Bitrate to use for the transcode. See Help for "
-                     "detailed information."),
+                     "details."),
       .off      = offsetof(profile_transcode_t, pro_vbitrate),
       .opts     = PO_ADVANCED,
       .def.u32  = 0,
@@ -2092,7 +2233,7 @@ const idclass_t profile_transcode_class =
       .type     = PT_U32,
       .id       = "abitrate",
       .name     = N_("Audio bitrate (kb/s) (0=auto)"),
-      .desc     = N_("Audio birate to use for transcoding."),
+      .desc     = N_("Audio bitrate to use for transcoding."),
       .off      = offsetof(profile_transcode_t, pro_abitrate),
       .opts     = PO_ADVANCED,
       .def.u32  = 0,
@@ -2178,8 +2319,6 @@ profile_transcode_work(profile_chain_t *prch,
   if (!prsh)
     goto fail;
 
-  prch->prch_can_share = profile_transcode_can_share;
-
   memset(&props, 0, sizeof(props));
   strncpy(props.tp_vcodec, pro->pro_vcodec ?: "", sizeof(props.tp_vcodec)-1);
   strncpy(props.tp_vcodec_preset, pro->pro_vcodec_preset ?: "", sizeof(props.tp_vcodec_preset)-1);
@@ -2216,8 +2355,13 @@ profile_transcode_work(profile_chain_t *prch,
     prsh->prsh_tsfix = tsfix_create(dst);
   }
   prch->prch_share = prsh->prsh_tsfix;
-  streaming_target_init(&prch->prch_input, &profile_input_ops, prch, 0);
+  streaming_target_init(&prch->prch_input,
+                        prsh->prsh_do_queue ?
+                          &profile_input_queue_ops : &profile_input_ops, prch,
+                        0);
   prch->prch_st = &prch->prch_input;
+  if (profile_sharer_postinit(prsh))
+    goto fail;
   return 0;
 fail:
   profile_chain_close(prch);
@@ -2271,6 +2415,8 @@ profile_transcode_open(profile_chain_t *prch,
                        muxer_config_t *m_cfg, int flags, size_t qsize)
 {
   int r;
+
+  prch->prch_can_share = profile_transcode_can_share;
 
   prch->prch_flags = SUBSCRIPTION_PACKET;
   prch->prch_sq.sq_maxsize = qsize;

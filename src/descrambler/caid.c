@@ -62,6 +62,7 @@ static struct caid_tab caidnametab[] = {
   { "GI",               0x4700, 0xff00 },
   { "Telemann",         0x4800, 0xff00 },
   { "DGCrypt",          0x4abf, 0xffff },
+  { "XCrypt",           0x4ad0, 0xfffe },
   { "StreamGuard",      0x4ad2, 0xffff },
   { "DRECrypt",         0x4ae0, 0xffff },
   { "DRECrypt2",        0x4ae1, 0xffff },

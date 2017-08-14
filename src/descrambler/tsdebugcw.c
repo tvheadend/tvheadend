@@ -29,6 +29,7 @@ typedef struct tsdebugcw_service {
   th_descrambler_t;
 
   int        tdcw_type;
+  uint16_t   tdcw_pid;
   uint8_t    tdcw_key_even[16];   /* DES or AES key */
   uint8_t    tdcw_key_odd [16];   /* DES or AES key */
 
@@ -102,20 +103,23 @@ tsdebugcw_service_start(service_t *t)
   td->td_service       = t;
   td->td_stop          = tsdebugcw_service_destroy;
   td->td_ecm_reset     = tsdebugcw_ecm_reset;
+  pthread_mutex_lock(&t->s_stream_mutex);
   LIST_INSERT_HEAD(&t->s_descramblers, td, td_service_link);
+  descrambler_change_keystate((th_descrambler_t *)td, DS_READY, 0);
+  pthread_mutex_unlock(&t->s_stream_mutex);
 }
 
 /*
  *
  */
 void
-tsdebugcw_new_keys(service_t *t, int type, uint8_t *odd, uint8_t *even)
+tsdebugcw_new_keys(service_t *t, int type, uint16_t pid, uint8_t *odd, uint8_t *even)
 {
   static char empty[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   th_descrambler_t *td;
   tsdebugcw_service_t *ct;
   tsdebugcw_request_t *ctr;
-  int keylen = type == DESCRAMBLER_AES ? 16 : 8;
+  int keylen = DESCRAMBLER_KEY_SIZE(type);
 
   LIST_FOREACH(td, &t->s_descramblers, td_service_link)
     if (td->td_stop == tsdebugcw_service_destroy)
@@ -124,9 +128,10 @@ tsdebugcw_new_keys(service_t *t, int type, uint8_t *odd, uint8_t *even)
     return;
   ct = (tsdebugcw_service_t *)td;
   ct->tdcw_type = type;
-  if (memcmp(empty, odd, keylen))
+  ct->tdcw_pid = pid;
+  if (odd && memcmp(empty, odd, keylen))
     memcpy(ct->tdcw_key_odd, odd, keylen);
-  if (memcmp(empty, even, keylen))
+  if (even && memcmp(empty, even, keylen))
     memcpy(ct->tdcw_key_even, even, keylen);
   ctr = malloc(sizeof(*ctr));
   ctr->ct = ct;
@@ -152,7 +157,8 @@ tsdebugcw_go(void)
     pthread_mutex_unlock(&tsdebugcw_mutex);
     if (!ctr) break;
     ct = ctr->ct;
-    descrambler_keys((th_descrambler_t *)ct, ct->tdcw_type,
+    descrambler_keys((th_descrambler_t *)ct,
+                     ct->tdcw_type, ct->tdcw_pid,
                      ct->tdcw_key_odd, ct->tdcw_key_even);
     free(ctr);
   }

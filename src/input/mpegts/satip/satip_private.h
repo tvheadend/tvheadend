@@ -96,6 +96,7 @@ struct satip_device
   int                        sd_dbus_allow;
   int                        sd_skip_ts;
   int                        sd_disable_workarounds;
+  int                        sd_wake_ref;
   pthread_mutex_t            sd_tune_mutex;
   TAILQ_HEAD(,satip_frontend)sd_serialize_queue;
 };
@@ -138,6 +139,7 @@ struct satip_frontend
   int                        sf_grace_period;
   int                        sf_teardown_delay;
   int                        sf_pass_weight;
+  int                        sf_delsys;
   char                      *sf_tuner_bindaddr;
 
   /*

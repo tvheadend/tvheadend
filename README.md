@@ -1,6 +1,6 @@
 Tvheadend
 ========================================
-(c) 2006 - 2016 Tvheadend Foundation CIC
+(c) 2006 - 2017 Tvheadend Foundation CIC
 
 Status
 ------
@@ -69,16 +69,14 @@ Transcoding is currently not supported.
 Packages
 --------
 
-The latest official packages can be downloaded from:
-
-  * Debian/Ubuntu : https://bintray.com/tvheadend/deb
+The latest official packages can be downloaded from https://bintray.com/tvheadend/.
 
 Further information
 -------------------
 
 For more information about building, including generating packages, please visit:
-> https://tvheadend.org/projects/tvheadend/wiki/AptRepository
-> https://tvheadend.org/projects/tvheadend/wiki/Building  
-> https://tvheadend.org/projects/tvheadend/wiki/Packaging  
-> https://tvheadend.org/projects/tvheadend/wiki/Git
-> https://tvheadend.org/projects/tvheadend/wiki/Internationalization
+* https://tvheadend.org/projects/tvheadend/wiki/Download
+* https://tvheadend.org/projects/tvheadend/wiki/Building
+* https://tvheadend.org/projects/tvheadend/wiki/Packaging
+* https://tvheadend.org/projects/tvheadend/wiki/Git
+* https://tvheadend.org/projects/tvheadend/wiki/Internationalization

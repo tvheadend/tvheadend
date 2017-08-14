@@ -4,7 +4,7 @@ This tab is used to configure timeshift properties.
 
 ---
 
-###Menu Bar/Buttons
+### Menu Bar/Buttons
 
 The following functions are available:
 

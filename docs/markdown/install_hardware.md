@@ -1,4 +1,4 @@
-##Install Your Tuners
+## Install Your Tuners
 
 This section will give you some basic ideas on how to get your tuner working
 with your operating system. However, it's clearly way beyond the scope of
@@ -9,7 +9,7 @@ before you hand over any money.
 There is a discussion about supported hardware on [the Tvheadend
 forums](https://tvheadend.org/boards/5/topics/5102).
 
-###1. Install the Tuner Hardware
+### 1. Install the Tuner Hardware
 
 This is obviously a core requirement that's outside of the scope of this guide.
 
@@ -24,7 +24,7 @@ Follow the appropriate installation instructions and, if relevant, the
 setup instruction (e.g. for SAT>IP, which are effectively small, standalone
 computers).
 
-####A Note on USB Tuners
+#### A Note on USB Tuners
 
 USB tuners are cheap, work well and are frequently well-matched to physically-smaller
 builds (e.g. HTPCs) which simply don't have the internal slots. However, please
@@ -39,7 +39,7 @@ bandwidth with the Ethernet port. Don't be surprised if this kind of platform st
 and/or reports errors in a multi-tuner configuration, especially on
 high-bandwidth (e.g. HD) streams.
 
-###2. Install Firmware and/or Drivers
+### 2. Install Firmware and/or Drivers
 
 Similar to the above, Tvheadend can do nothing if your tuners aren't working
 properly. A good place to check how to set up your tuners is the

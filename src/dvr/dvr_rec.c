@@ -75,12 +75,11 @@ dvr_rec_subscribe(dvr_entry_t *de)
   assert(de->de_chain == NULL);
 
   pri = de->de_pri;
-  if(pri == DVR_PRIO_NOTSET)
+  if(pri == DVR_PRIO_NOTSET || pri == DVR_PRIO_DEFAULT)
     pri = de->de_config->dvr_pri;
-  if(pri >= 0 && pri < ARRAY_SIZE(prio2weight))
-    weight = prio2weight[de->de_pri];
-  else
-    weight = prio2weight[DVR_PRIO_NORMAL];
+  if(pri < 0 || pri >= ARRAY_SIZE(prio2weight))
+    pri = DVR_PRIO_NORMAL;
+  weight = prio2weight[pri];
 
   snprintf(buf, sizeof(buf), "DVR: %s", lang_str_get(de->de_title, NULL));
 

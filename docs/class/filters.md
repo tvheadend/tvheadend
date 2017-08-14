@@ -18,7 +18,7 @@ Button                 | Function
 
 ---
 
-###Filter Basics
+### Filter Basics
 
 * Each rule is executed in sequence (as displayed in the grid). 
 * If a rule removes a stream, it will not be available to other rules
@@ -34,7 +34,7 @@ already selected - it cannot be ignored).
 
 ---
 
-###Visual Verification of Filtering
+### Visual Verification of Filtering
 
 For visual verification of filtering, there is the service 
 info dialog in the [Services](class/mpegts_service) tab. 
@@ -42,7 +42,7 @@ This dialog shows the received PIDs and filtered PIDs in one window.
 
 ---
 
-###Filtering out a Stream
+### Filtering out a Stream
 
 !['Removing a stream'](static/img/doc/filters/example.png)
 
@@ -50,7 +50,7 @@ Here we're removing the Bulgarian language audio from the
 input (first rule). However, if Bulgarian is the only language 
 available add it back in as a last resort (second rule).
 
-###Ignoring Unknown Streams
+### Ignoring Unknown Streams
 
 If you'd like to ignore unknown elementary streams, add a rule to the 
 end of grid with the *ANY* (not defined) comparison(s) and the 

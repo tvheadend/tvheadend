@@ -28,6 +28,7 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <signal.h>
 
 #include "tvheadend.h"
 #include "tvhpoll.h"
