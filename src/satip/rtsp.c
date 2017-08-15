@@ -45,7 +45,6 @@ typedef struct slave_subscription {
 typedef struct session {
   TAILQ_ENTRY(session) link;
   char *peer_ipstr;
-  int delsys;
   int stream;
   int frontend;
   int findex;
@@ -1123,9 +1122,8 @@ rtsp_parse_cmd
 
   dmc->dmc_fe_freq = freq;
   dmc->dmc_fe_modulation = mtype;
-  dmc->dmc_fe_delsys = delsys;
+  dmc->dmc_fe_delsys = msys;
 
-  rs->delsys = delsys;
   rs->frontend = fe;
   rs->findex = findex;
   rs->src = src;
