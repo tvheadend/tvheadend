@@ -465,7 +465,7 @@ static int _xmltv_parse_original_title
 
   if (!ee || !body) return 0;
   if (!(tags  = htsmsg_get_map(body, "tags"))) return 0;
-  if (!(original_title = htsmsg_xml_get_cdata_str(tags, "original_title"))) return 0;
+  if (!(original_title = htsmsg_xml_get_cdata_str(tags, "original-title"))) return 0;
 
   return epg_episode_set_original_title(ee, original_title, changes);
 }
@@ -474,12 +474,11 @@ static int _xmltv_parse_year
   ( epg_episode_t *ee, htsmsg_t *body, uint32_t *changes )
 {
   uint32_t year;
-  htsmsg_t *credits, *tags;
+  htsmsg_t *tags;
   const char *s1;
 
   if (!ee || !body) return 0;
-  if (!(credits = htsmsg_get_map(body, "date"))) return 0;
-  if (!(tags  = htsmsg_get_map(credits, "tags"))) return 0;
+  if (!(tags  = htsmsg_get_map(body, "tags"))) return 0;
   if (!(s1 = htsmsg_xml_get_cdata_str(tags, "year"))) return 0;
 
   year = atoi(s1);
