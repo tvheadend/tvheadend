@@ -37,6 +37,7 @@
 #include "access.h"
 #include "notify.h"
 #include "tcp.h"
+#include "memoryinfo.h"
 
 static pthread_mutex_t comet_mutex = PTHREAD_MUTEX_INITIALIZER;
 static tvh_cond_t comet_cond;
@@ -53,6 +54,10 @@ static LIST_HEAD(, comet_mailbox) mailboxes;
 
 int mailbox_tally;
 int comet_running;
+
+static memoryinfo_t comet_memoryinfo = {
+  .my_name = "Comet",
+};
 
 typedef struct comet_mailbox {
   char *cmb_boxid; /* SHA-1 hash */
@@ -78,6 +83,11 @@ cmb_destroy(comet_mailbox_t *cmb)
     htsmsg_destroy(cmb->cmb_messages);
 
   LIST_REMOVE(cmb, cmb_link);
+
+  memoryinfo_free(&comet_memoryinfo,
+                  sizeof(*cmb) +
+                    (strlen(cmb->cmb_boxid) + 1) +
+                    (cmb->cmb_lang ? strlen(cmb->cmb_lang) + 1 : 0));
 
   free(cmb->cmb_lang);
   free(cmb->cmb_boxid);
@@ -138,6 +148,10 @@ comet_mailbox_create(const char *lang)
   mailbox_tally++;
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
+
+  memoryinfo_alloc(&comet_memoryinfo, sizeof(*cmb) +
+                                      (strlen(id) + 1) +
+                                      (lang ? strlen(lang) + 1 : 0));
   return cmb;
 }
 
@@ -442,6 +456,7 @@ comet_mailbox_ws(http_connection_t *hc, const char *remain, void *opaque)
   pthread_mutex_lock(&comet_mutex);
   if (atomic_get(&comet_running))
     cmb->cmb_refcount--;
+  cmb->cmb_last_used = mclk();
   pthread_mutex_unlock(&comet_mutex);
 
   return res;
@@ -455,6 +470,7 @@ comet_init(void)
 {
   http_path_t *hp;
 
+  memoryinfo_register(&comet_memoryinfo);
   pthread_mutex_lock(&comet_mutex);
   tvh_cond_init(&comet_cond);
   atomic_set(&comet_running, 1);
@@ -488,6 +504,9 @@ comet_done(void)
 
   tvh_cond_destroy(&comet_cond);
 
+  pthread_mutex_lock(&global_lock);
+  memoryinfo_unregister(&comet_memoryinfo);
+  pthread_mutex_unlock(&global_lock);
 }
 
 /**
