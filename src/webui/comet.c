@@ -107,7 +107,6 @@ comet_flush(void)
   for(cmb = LIST_FIRST(&mailboxes); cmb != NULL; cmb = next) {
     next = LIST_NEXT(cmb, cmb_link);
 
-    printf("refcount %d boxid %s last_used %ld mclk %ld\n", cmb->cmb_refcount, cmb->cmb_boxid, mono2sec(cmb->cmb_last_used), mono2sec(mclk()));
     if(cmb->cmb_refcount == 1 &&
        cmb->cmb_last_used && cmb->cmb_last_used + sec2mono(60) < mclk())
       cmb_destroy(cmb);
