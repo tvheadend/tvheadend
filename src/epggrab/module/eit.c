@@ -316,7 +316,7 @@ static int _eit_desc_content
   while (len > 1) {
     if (*ptr == 0xb1)
       ev->bw = 1;
-    else if (*ptr < 0xb0) {
+    else if (*ptr < 0xe0) {
       if (!ev->genre) ev->genre = calloc(1, sizeof(epg_genre_list_t));
       epg_genre_list_add_by_eit(ev->genre, *ptr);
     }

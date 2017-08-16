@@ -168,6 +168,26 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, access_t *perm, const cha
     /* Image */
     if (ee->image)
       htsmsg_add_str(m, "image", ee->image);
+      
+    /* Cast */
+    if (ee->cast)
+      htsmsg_add_str(m, "cast", ee->cast);
+      
+    /* Director */
+    if (ee->director)
+      htsmsg_add_str(m, "director", ee->director);
+      
+    /* Writer */
+    if (ee->writer)
+      htsmsg_add_str(m, "writer", ee->writer);
+      
+    /* Original Title */
+    if (ee->original_title)
+      htsmsg_add_str(m, "originalTitle", ee->original_title);
+      
+     /* Year */
+    if (ee->year)
+      htsmsg_add_u32(m, "year", ee->year);
 
     /* Rating */
     if (ee->star_rating)

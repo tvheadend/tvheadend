@@ -342,6 +342,12 @@ dvr_sub_description(const char *id, const char *fmt, const void *aux, char *tmp,
 }
 
 static const char *
+dvr_sub_image(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
+{
+  return dvr_do_prefix(id, fmt, ((dvr_entry_t *)aux)->de_image, tmp, tmplen);
+}
+
+static const char *
 dvr_sub_episode(const char *id, const char *fmt, const void *aux, char *tmp, size_t tmplen)
 {
   const dvr_entry_t *de = aux;
@@ -578,6 +584,7 @@ static htsstr_substitute_t dvr_subs_postproc_entry[] = {
   { .id = "s",  .getval = dvr_sub_subtitle },
   { .id = "p",  .getval = dvr_sub_episode },
   { .id = "d",  .getval = dvr_sub_description },
+  { .id = "i",  .getval = dvr_sub_image },
   { .id = "g",  .getval = dvr_sub_genre },
   { .id = "c",  .getval = dvr_sub_channel },
   { .id = "e",  .getval = dvr_sub_last_error },

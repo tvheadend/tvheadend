@@ -947,6 +947,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     htsmsg_add_u32(out, "removal",     dvr_entry_get_removal_days(de));
     htsmsg_add_u32(out, "priority",    de->de_pri);
     htsmsg_add_u32(out, "contentType", de->de_content_type);
+    htsmsg_add_u32(out, "genre",       de->de_genre);
 
     if (de->de_sched_state == DVR_RECORDING || de->de_sched_state == DVR_COMPLETED) {
       htsmsg_add_u32(out, "playcount",    de->de_playcount);
@@ -959,6 +960,8 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
       htsmsg_add_str(out, "subtitle", s);
     if(de->de_desc && (s = lang_str_get(de->de_desc, lang)))
       htsmsg_add_str(out, "description", s);
+    if(de->de_image)
+      htsmsg_add_str(out, "image",   de->de_image);
     if(de->de_episode)
       htsmsg_add_str(out, "episode", de->de_episode);
     if(de->de_owner)
@@ -1239,6 +1242,16 @@ htsp_build_event
       htsmsg_add_str(out, "episodeOnscreen", epnum.text);
     if (ee->image)
       htsmsg_add_str(out, "image", ee->image);
+    if (ee->cast)
+      htsmsg_add_str(out, "cast", ee->cast);
+    if (ee->director)
+      htsmsg_add_str(out, "director", ee->director);
+    if (ee->writer)
+      htsmsg_add_str(out, "writer", ee->writer);
+    if (ee->original_title)
+      htsmsg_add_str(out, "originalTitle", ee->original_title);
+    if (ee->year)
+      htsmsg_add_u32(out, "year", ee->year);
   }
 
   if (e->channel) {

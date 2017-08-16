@@ -918,8 +918,12 @@ static void _epg_episode_destroy ( void *eo )
     LIST_REMOVE(g, link);
     free(g);
   }
-  if (ee->image)       free(ee->image);
-  if (ee->epnum.text)  free(ee->epnum.text);
+  if (ee->image)          free(ee->image);
+  if (ee->cast)           free(ee->cast);
+  if (ee->director)       free(ee->director);
+  if (ee->writer)         free(ee->writer);
+  if (ee->original_title) free(ee->original_title);
+  if (ee->epnum.text)     free(ee->epnum.text);
   _epg_object_destroy(eo, &epg_episodes);
   free(ee);
 }
@@ -1007,6 +1011,16 @@ int epg_episode_change_finish
     save |= _epg_object_set_u16(episode, &episode->epnum.p_cnt, 0, NULL, 0);
   if (!(changes & EPG_CHANGED_EPTEXT))
     save |= _epg_object_set_str(episode, &episode->epnum.text, NULL, NULL, 0);
+  if (!(changes & EPG_CHANGED_YEAR))
+    save |= epg_episode_set_year(episode, 0, NULL);
+  if (!(changes & EPG_CHANGED_CAST))
+    save |= epg_episode_set_cast(episode, NULL, NULL);
+  if (!(changes & EPG_CHANGED_DIRECTOR))
+    save |= epg_episode_set_director(episode, NULL, NULL);
+  if (!(changes & EPG_CHANGED_WRITER))
+    save |= epg_episode_set_writer(episode, NULL, NULL);
+  if (!(changes & EPG_CHANGED_ORIG_TITLE))
+    save |= epg_episode_set_original_title(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_BRAND))
     save |= epg_episode_set_brand(episode, NULL, NULL);
   if (!(changes & EPG_CHANGED_SEASON))
@@ -1157,6 +1171,46 @@ int epg_episode_set_season
     save = 1;
   }
   return save;
+}
+
+int epg_episode_set_year
+  ( epg_episode_t *episode, uint16_t year, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_u16(episode, &episode->year, year,
+                            changed, EPG_CHANGED_YEAR);
+}
+
+int epg_episode_set_cast
+  ( epg_episode_t *episode, const char *cast, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_str(episode, &episode->cast, cast,
+                             changed, EPG_CHANGED_CAST);
+}
+
+int epg_episode_set_director
+  ( epg_episode_t *episode, const char *director, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_str(episode, &episode->director, director,
+                             changed, EPG_CHANGED_DIRECTOR);
+}
+
+int epg_episode_set_writer
+  ( epg_episode_t *episode, const char *writer, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_str(episode, &episode->writer, writer,
+                             changed, EPG_CHANGED_WRITER);
+}
+
+int epg_episode_set_original_title
+  ( epg_episode_t *episode, const char *original_title, uint32_t *changed )
+{
+  if (!episode) return 0;
+  return _epg_object_set_str(episode, &episode->original_title, original_title,
+                             changed, EPG_CHANGED_ORIG_TITLE);
 }
 
 int epg_episode_set_genre
@@ -1346,6 +1400,16 @@ htsmsg_t *epg_episode_serialize ( epg_episode_t *episode )
     htsmsg_add_s64(m, "first_aired", episode->first_aired);
   if (episode->image)
     htsmsg_add_str(m, "image", episode->image);
+  if (episode->cast)
+    htsmsg_add_str(m, "cast", episode->cast);
+  if (episode->director)
+    htsmsg_add_str(m, "director", episode->director);
+  if (episode->writer)
+    htsmsg_add_str(m, "writer", episode->writer);
+  if (episode->original_title)
+    htsmsg_add_str(m, "original_title", episode->original_title);
+  if (episode->year)
+    htsmsg_add_u32(m, "year", episode->year);
 
   return m;
 }
@@ -1422,6 +1486,21 @@ epg_episode_t *epg_episode_deserialize ( htsmsg_t *m, int create, int *save )
 
   if ((str = htsmsg_get_str(m, "image")))
     *save |= epg_episode_set_image(ee, str, &changes);
+    
+  if ((str = htsmsg_get_str(m, "cast")))
+    *save |= epg_episode_set_cast(ee, str, &changes);
+    
+  if ((str = htsmsg_get_str(m, "director")))
+    *save |= epg_episode_set_director(ee, str, &changes);
+    
+  if ((str = htsmsg_get_str(m, "writer")))
+    *save |= epg_episode_set_writer(ee, str, &changes);
+    
+  if ((str = htsmsg_get_str(m, "original_title")))
+    *save |= epg_episode_set_original_title(ee, str, &changes);
+    
+  if (!htsmsg_get_u32(m, "year", &u32))
+    *save |= epg_episode_set_year(ee, u32, &changes);
 
   *save |= epg_episode_change_finish(ee, changes, 0);
 
@@ -2335,10 +2414,10 @@ epg_broadcast_t *epg_broadcast_deserialize
 
 #define C_ (const char *[])
 static const char **_epg_genre_names[16][16] = {
-  { /* 00 */
+  { /* 00 (codes 0x00 to 0x0F) */
     C_{ "", NULL  }
   },
-  { /* 01 */
+  { /* 01 (codes 0x10 to 0x1F) */
     C_{ N_("Movie"), N_("Drama"), NULL },
     C_{ N_("Detective"), N_("Thriller"), NULL },
     C_{ N_("Adventure"), N_("Western"), N_("War"), NULL },
@@ -2348,51 +2427,51 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Romance"), NULL },
     C_{ N_("Serious"), N_("Classical"), N_("Religious"), N_("Historical movie"), N_("Drama"), NULL },
     C_{ N_("Adult movie"), N_("Drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
-    C_{ N_("Movie / drama"), NULL },
+    C_{ N_("Romantic Drama"), NULL },
+    C_{ N_("Animation"), N_("Kids"), NULL },
+    C_{ N_("Action"), N_("Crime"), N_("Drama"), N_("Suspense"), NULL },
+    C_{ N_("Suspense"), N_("Action"), N_("Sci-Fi"), NULL },
+    C_{ N_("Western"), N_("Adventure"), N_("Action"), N_("Drama"), NULL },
+    C_{ N_("Fantasy"), N_("Comedy"), N_("Family"), NULL },
+    C_{ N_("Movie / Other"), NULL },
   },
-  { /* 02 */
+  { /* 02 (codes 0x20 to 0x2F) */
     C_{ N_("News"), N_("Current affairs"), NULL },
     C_{ N_("News"), N_("Weather report"), NULL },
     C_{ N_("News magazine"), NULL },
     C_{ N_("Documentary"), NULL },
     C_{ N_("Discussion"), N_("Interview"), N_("Debate"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
-    C_{ N_("News / Current Affairs"), NULL },
+    C_{ N_("News / Other (1)"), NULL },
+    C_{ N_("News / Other (2)"), NULL },
+    C_{ N_("News / Other (3)"), NULL },
+    C_{ N_("News / Other (4)"), NULL },
+    C_{ N_("News / Other (5)"), NULL },
+    C_{ N_("News / Other (6)"), NULL },
+    C_{ N_("News / Other (7)"), NULL },
+    C_{ N_("News / Other (8)"), NULL },
+    C_{ N_("News / Other (9)"), NULL },
+    C_{ N_("News / Other (10)"), NULL },
+    C_{ N_("News / Other (11)"), NULL },
   },
-  { /* 03 */
+  { /* 03 (codes 0x30 to 0x3F) */
     C_{ N_("Show"), N_("Game show"), NULL },
     C_{ N_("Game show"), N_("Quiz"), N_("Contest"), NULL },
     C_{ N_("Variety show"), NULL },
     C_{ N_("Talk show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
-    C_{ N_("Show / Game show"), NULL },
+    C_{ N_("Show / Other (1)"), NULL },
+    C_{ N_("Show / Other (2)"), NULL },
+    C_{ N_("Show / Other (3)"), NULL },
+    C_{ N_("Show / Other (4)"), NULL },
+    C_{ N_("Show / Other (5)"), NULL },
+    C_{ N_("Show / Other (6)"), NULL },
+    C_{ N_("Show / Other (7)"), NULL },
+    C_{ N_("Show / Other (8)"), NULL },
+    C_{ N_("Show / Other (9)"), NULL },
+    C_{ N_("Show / Other (10)"), NULL },
+    C_{ N_("Show / Other (11)"), NULL },
+    C_{ N_("Show / Other (12)"), NULL },
   },
-  { /* 04 */
+  { /* 04 (codes 0x40 to 0x4F) */
     C_{ N_("Sports"), NULL },
     C_{ N_("Special events (Olympic Games, World Cup, etc.)"), NULL },
     C_{ N_("Sports magazines"), NULL },
@@ -2405,30 +2484,30 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Winter sports"), NULL },
     C_{ N_("Equestrian"), NULL },
     C_{ N_("Martial sports"), NULL },
-    C_{ N_("Sports"), NULL },
-    C_{ N_("Sports"), NULL },
-    C_{ N_("Sports"), NULL },
-    C_{ N_("Sports"), NULL },
+    C_{ N_("Basketball"), NULL },
+    C_{ N_("Handball"), NULL },
+    C_{ N_("Sports / Other (1)"), NULL },
+    C_{ N_("Sports / Other (2)"), NULL },
   },
-  { /* 05 */
+  { /* 05 (codes 0x50 to 0x5F) */
     C_{ N_("Children's / Youth programs"), NULL },
     C_{ N_("Pre-school children's programs"), NULL },
     C_{ N_("Entertainment programs for 6 to 14"), NULL },
     C_{ N_("Entertainment programs for 10 to 16"), NULL },
     C_{ N_("Informational"), N_("Educational"), N_("School programs"), NULL },
     C_{ N_("Cartoons"), N_("Puppets"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
-    C_{ N_("Children's / Youth Programs"), NULL },
+    C_{ N_("Kids / Other (1)"), NULL },
+    C_{ N_("Kids / Other (2)"), NULL },
+    C_{ N_("Kids / Other (3)"), NULL },
+    C_{ N_("Kids / Other (4)"), NULL },
+    C_{ N_("Kids / Other (5)"), NULL },
+    C_{ N_("Kids / Other (6)"), NULL },
+    C_{ N_("Kids / Other (7)"), NULL },
+    C_{ N_("Kids / Other (8)"), NULL },
+    C_{ N_("Kids / Other (9)"), NULL },
+    C_{ N_("Kids / Other (10)"), NULL },
   },
-  { /* 06 */
+  { /* 06 (codes 0x60 to 0x6F) */
     C_{ N_("Music"), N_("Ballet"), N_("Dance"), NULL },
     C_{ N_("Rock"), N_("Pop"), NULL },
     C_{ N_("Serious music"), N_("Classical music"), NULL },
@@ -2436,17 +2515,17 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Jazz"), NULL },
     C_{ N_("Musical"), N_("Opera"), NULL },
     C_{ N_("Ballet"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
-    C_{ N_("Music / Ballet / Dance"), NULL },
+    C_{ N_("Music / Other (1)"), NULL },
+    C_{ N_("Music / Other (2)"), NULL },
+    C_{ N_("Music / Other (3)"), NULL },
+    C_{ N_("Music / Other (4)"), NULL },
+    C_{ N_("Music / Other (5)"), NULL },
+    C_{ N_("Music / Other (6)"), NULL },
+    C_{ N_("Music / Other (7)"), NULL },
+    C_{ N_("Music / Other (8)"), NULL },
+    C_{ N_("Music / Other (9)"), NULL },
   },
-  { /* 07 */
+  { /* 07 (codes 0x70 to 0x7F) */
     C_{ N_("Arts"), N_("Culture (without music)"), NULL },
     C_{ N_("Performing arts"), NULL },
     C_{ N_("Fine arts"), NULL },
@@ -2459,30 +2538,30 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("New media"), NULL },
     C_{ N_("Arts magazines"), N_("Culture magazines"), NULL },
     C_{ N_("Fashion"), NULL },
-    C_{ N_("Arts / Culture (without music)"), NULL },
-    C_{ N_("Arts / Culture (without music)"), NULL },
-    C_{ N_("Arts / Culture (without music)"), NULL },
-    C_{ N_("Arts / Culture (without music)"), NULL },
+    C_{ N_("Arts and Culture / Other (1)"), NULL },
+    C_{ N_("Arts and Culture / Other (2)"), NULL },
+    C_{ N_("Arts and Culture / Other (3)"), NULL },
+    C_{ N_("Arts and Culture / Other (4)"), NULL },
   },
-  { /* 08 */
+  { /* 08 (codes 0x80 to 0x8F) */
     C_{ N_("Social"), N_("Political issues"), N_("Economics"), NULL },
     C_{ N_("Magazines"), N_("Reports"), N_("Documentary"), NULL },
     C_{ N_("Economics"), N_("Social advisory"), NULL },
     C_{ N_("Remarkable people"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
-    C_{ N_("Social / Political issues / Economics"), NULL },
+    C_{ N_("Social / Politics / Other (1)"), NULL },
+    C_{ N_("Social / Politics / Other (2)"), NULL },
+    C_{ N_("Social / Politics / Other (3)"), NULL },
+    C_{ N_("Social / Politics / Other (4)"), NULL },
+    C_{ N_("Social / Politics / Other (5)"), NULL },
+    C_{ N_("Social / Politics / Other (6)"), NULL },
+    C_{ N_("Social / Politics / Other (7)"), NULL },
+    C_{ N_("Social / Politics / Other (8)"), NULL },
+    C_{ N_("Social / Politics / Other (9)"), NULL },
+    C_{ N_("Social / Politics / Other (10)"), NULL },
+    C_{ N_("Social / Politics / Other (11)"), NULL },
+    C_{ N_("Social / Politics / Other (12)"), NULL },
   },
-  { /* 09 */
+  { /* 09 (codes 0x90 to 0x9F) */
     C_{ N_("Education"), N_("Science"), N_("Factual topics"), NULL },
     C_{ N_("Nature"), N_("Animals"), N_("Environment"), NULL },
     C_{ N_("Technology"), N_("Natural sciences"), NULL },
@@ -2491,16 +2570,16 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Social"), N_("Spiritual sciences"), NULL },
     C_{ N_("Further education"), NULL },
     C_{ N_("Languages"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
-    C_{ N_("Education / Science / Factual topics"), NULL },
+    C_{ N_("Education / Other (1)"), NULL },
+    C_{ N_("Education / Other (2)"), NULL },
+    C_{ N_("Education / Other (3)"), NULL },
+    C_{ N_("Education / Other (4)"), NULL },
+    C_{ N_("Education / Other (5)"), NULL },
+    C_{ N_("Education / Other (6)"), NULL },
+    C_{ N_("Education / Other (7)"), NULL },
+    C_{ N_("Education / Other (8)"), NULL },
   },
-  { /* 10 */
+  { /* 10 (codes 0xA0 to 0xAF) */
     C_{ N_("Leisure hobbies"), NULL },
     C_{ N_("Tourism / Travel"), NULL },
     C_{ N_("Handicraft"), NULL },
@@ -2509,14 +2588,68 @@ static const char **_epg_genre_names[16][16] = {
     C_{ N_("Cooking"), NULL },
     C_{ N_("Advertisement / Shopping"), NULL },
     C_{ N_("Gardening"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
-    C_{ N_("Leisure hobbies"), NULL },
+    C_{ N_("Hobbies / Other (1)"), NULL },
+    C_{ N_("Hobbies / Other (2)"), NULL },
+    C_{ N_("Hobbies / Other (3)"), NULL },
+    C_{ N_("Hobbies / Other (4)"), NULL },
+    C_{ N_("Hobbies / Other (5)"), NULL },
+    C_{ N_("Hobbies / Other (6)"), NULL },
+    C_{ N_("Hobbies / Other (7)"), NULL },
+    C_{ N_("Hobbies / Other (8)"), NULL },
+  },
+  { /* 11 (codes 0xB0 to 0xBF) */
+    C_{ N_("Original Language"), NULL },
+    C_{ N_("Black and White"), NULL },
+    C_{ N_("Unpublished"), NULL },
+    C_{ N_("Live Broadcast"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+    C_{ N_("Reserved"), NULL },
+  },
+  { /* 12 (codes 0xC0 to 0xCF) */
+    C_{ N_("TV Series"), NULL },
+    C_{ N_("Horror"), N_("Suspense"), N_("Action"), N_("Drama"), NULL },
+    C_{ N_("Sci-fi"), N_("Fantasy"), N_("Horror"), NULL },
+    C_{ N_("Family Comedy"), NULL },
+    C_{ N_("Drama"), NULL },
+    C_{ N_("Series / Other (A)"), NULL },
+    C_{ N_("Series / Other (B)"), NULL },
+    C_{ N_("Soap Opera"), NULL },
+    C_{ N_("Cartoon"), N_("Animation"), NULL },
+    C_{ N_("Action"), N_("Adventure"), N_("Drama"), NULL },
+    C_{ N_("Series / Other (C)"), NULL },
+    C_{ N_("Crime"), N_("Suspense"), N_("Drama"), NULL },
+    C_{ N_("Series / Other (1)"), NULL },
+    C_{ N_("Series / Other (2)"), NULL },
+    C_{ N_("Series / Other (3)"), NULL },
+    C_{ N_("Series / Other (4)"), NULL },
+  },
+  { /* 13 (codes 0xD0 to 0xDF) */
+    C_{ N_("Documentary Film"), NULL },
+    C_{ N_("Criminal"), N_("Drama"), NULL },
+    C_{ N_("Culture"), NULL },
+    C_{ N_("Educational"), NULL },
+    C_{ N_("Reality"), N_("Drama"), NULL },
+    C_{ N_("Science"), N_("Technology"), NULL },
+    C_{ N_("Sport"), NULL },
+    C_{ N_("Business"), N_("Finance"), NULL },
+    C_{ N_("Travel"), NULL },
+    C_{ N_("History"), N_("Reality"), NULL },
+    C_{ N_("Animals"), N_("Nature"), NULL },
+    C_{ N_("Auction"), N_("Lifestyle"), N_("Drama"), NULL },
+    C_{ N_("Lifestyle"), N_("Travel"), NULL },
+    C_{ N_("Documentary Film / Other (1)"), NULL },
+    C_{ N_("Documentary Film / Other (2)"), NULL },
+    C_{ N_("Documentary Film / Other (3)"), NULL },
   }
 };
 
@@ -2552,7 +2685,7 @@ static uint8_t _epg_genre_find_by_name ( const char *name, const char *lang )
 {
   uint8_t a, b;
   const char *s;
-  for (a = 1; a < 11; a++) {
+  for (a = 1; a <= 13; a++) {
     for (b = 0; b < 16; b++) {
       s = _genre_get_name(a, b, lang);
       if (_genre_str_match(name, s))
