@@ -53,6 +53,7 @@ static void dvr_entry_start_recording(dvr_entry_t *de, int clone);
 static void dvr_timer_start_recording(void *aux);
 static void dvr_timer_stop_recording(void *aux);
 static int dvr_entry_rerecord(dvr_entry_t *de);
+static time_t dvr_entry_get_segment_stop_extra(dvr_entry_t *de);
 
 /*
  *
@@ -341,7 +342,7 @@ dvr_entry_get_start_time( dvr_entry_t *de, int warm )
 time_t
 dvr_entry_get_stop_time( dvr_entry_t *de )
 {
-  return time_t_out_of_range((int64_t)de->de_stop + dvr_entry_get_extra_time_post(de));
+  return time_t_out_of_range((int64_t)de->de_stop + dvr_entry_get_segment_stop_extra(de) + dvr_entry_get_extra_time_post(de));
 }
 
 time_t
@@ -1064,6 +1065,84 @@ dvr_entry_create_htsp(int enabled, const char *config_uuid,
                            owner, creator, dae, NULL, pri, retention, removal,
                            comment);
 }
+
+/**
+ * Determine stop time for the broadcast taking in
+ * to account segmented programmes via EIT.
+ */
+static time_t dvr_entry_get_segment_stop_extra( dvr_entry_t *de )
+{
+  if (!de)
+    return 0;
+
+  /* Return any cached value we have previous calculated. */
+  time_t segment_stop_extra = de->de_segment_stop_extra;
+  if (segment_stop_extra) {
+    return segment_stop_extra;
+  }
+
+  /* If we have no broadcast data then can not search for matches */
+  epg_broadcast_t *e = de->de_bcast;
+  if (!e) {
+    return 0;
+  }
+
+  const char *ep_uri = e->episode->uri;
+
+  /* If not a segmented programme then no segment extra time */
+  if (!ep_uri || strncmp(ep_uri, "crid://", 7) || !strstr(ep_uri, "#"))
+    return 0;
+
+  /* This URI is a CRID (from EIT) which contains an IMI so the
+   * programme is segmented such as part1, <5 minute news>, part2. So
+   * we need to check if the next few programmes have the same
+   * crid+imi in which case we extend our stop time to include that.
+   *
+   * We record the "news" programme too since often these segmented
+   * programmes have incorrect start/stop times.  This is also
+   * consistent with xmltv that normally just merges these programmes
+   * together.
+   *
+   * The Freeview NZ documents say we only need to check for segments
+   * on the same channel and where each segment is within three hours
+   * of the end of the previous segment. We'll use that as best
+   * practice.
+   *
+   * We also put a couple of safety checks on the number of programmes
+   * we check in case broadcast data is bad.
+   */
+  enum
+  {
+    THREE_HOURS   = 3 * 60 * 60,
+    MAX_STOP_TIME = 9 * 60 * 60
+  };
+
+  const time_t start = e->start;
+  const time_t stop  = e->stop;
+  const time_t maximum_stop_time = start + MAX_STOP_TIME;
+  int max_progs_to_check = 10;
+  epg_broadcast_t *next;
+  for (next = epg_broadcast_get_next(e);
+       --max_progs_to_check && stop < maximum_stop_time &&
+         next && next->episode && next->start < stop + THREE_HOURS;
+       next = epg_broadcast_get_next(next)) {
+    const char *next_uri = next->episode->uri;
+    if (next_uri && strcmp(ep_uri, next_uri) == 0) {
+      /* Identical CRID+IMI. So that means that programme is a
+       * segment part of this programme. So extend our stop time
+       * to include this programme.
+       */
+      segment_stop_extra = next->stop - stop;
+      tvhinfo(LS_DVR, "Increasing stop for \"%s\" on \"%s\" \"%s\" by %"PRId64" seconds at start %"PRId64" and original stop %"PRId64,
+              lang_str_get(e->episode->title, NULL), DVR_CH_NAME(de), ep_uri, (int64_t)segment_stop_extra, (int64_t)start, (int64_t)stop);
+    }
+  }
+
+  /* Cache the value */
+  de->de_segment_stop_extra = segment_stop_extra;
+  return segment_stop_extra;
+}
+
 
 /**
  *
@@ -2048,6 +2127,15 @@ void dvr_event_running(epg_broadcast_t *e, epg_source_t esrc, epg_running_t runn
       }
     } else if ((running == EPG_RUNNING_STOP && de->de_dvb_eid == e->dvb_eid) ||
                 running == EPG_RUNNING_NOW) {
+      /* Don't stop recording if we are a segmented programme since
+       * (by definition) the first segment will be marked as stop long
+       * before the second segment is marked as started. Otherwise if we
+       * processed the stop then we will stop the dvr_thread from
+       * recording tv packets.
+       */
+      if (de->de_segment_stop_extra) {
+        continue;
+      }
       /*
        * make checking more robust
        * sometimes, the running bits are parsed randomly for a few moments
@@ -2144,7 +2232,15 @@ dvr_timer_stop_recording(void *aux)
                         "rstop", de->de_running_stop,
                         "stop recording timer called");
   /* EPG thinks that the program is running */
-  if (de->de_running_start > de->de_running_stop) {
+  if (de->de_segment_stop_extra) {
+    const time_t now = gclk();
+    const time_t stop = dvr_entry_get_stop_time(de);
+    tvhinfo(LS_DVR, "dvr_timer_stop_recording - forcing stop of programme \"%s\" on \"%s\" due to exceeding stop time with running_start %"PRId64" and running_stop %"PRId64" segment stop %"PRId64" now %"PRId64" stop %"PRId64,
+            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), (int64_t)de->de_running_start, (int64_t)de->de_running_stop, (int64_t)de->de_segment_stop_extra, (int64_t)now, (int64_t)stop);
+    /* no-op. We fall through to the final dvr_stop_recording below.
+    * This path is here purely to get a log.
+    */
+  } else if (de->de_running_start > de->de_running_stop) {
     gtimer_arm_rel(&de->de_timer, dvr_timer_stop_recording, de, 10);
     return;
   }
@@ -2177,6 +2273,20 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
                             SM_CODE_BAD_SOURCE));
     return;
   }
+
+  /* Reset cached value for segment stopping so it can be recalculated
+   * immediately at start of recording. This handles case where a
+   * programme is split in to three-or-more segments and we want to
+   * ensure we correctly pick up all segments at the start of a
+   * recording. Otherwise if a broadcaster has an EIT window of say
+   * 24h and we get the first two segments when we first calculate the
+   * stop time then we would not recalculate the stop time when
+   * further segments enter the EIT window.
+   */
+  de->de_segment_stop_extra = 0;
+  const time_t stop = dvr_entry_get_stop_time(de);
+  tvhinfo(LS_DVR, "About to set stop timer for \"%s\" on \"%s\" at start %"PRId64" and original stop %"PRId64" and overall stop at %"PRId64,
+          lang_str_get(de->de_title, NULL), DVR_CH_NAME(de), (int64_t)de->de_start, (int64_t)de->de_stop, (int64_t)stop);
 
   gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de,
                   dvr_entry_get_stop_time(de));
