@@ -193,6 +193,7 @@ typedef struct dvr_entry {
 
   time_t de_start_extra;
   time_t de_stop_extra;
+  time_t de_segment_stop_extra; /* Automatic extra time for segmented prog (from EPG) */
 
   time_t de_running_start;
   time_t de_running_stop;
