@@ -20,9 +20,6 @@
 #include "tvheadend.h"
 #include "linuxdvb_private.h"
 #include "notify.h"
-#include "atomic.h"
-#include "tvhpoll.h"
-#include "streaming.h"
 
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -36,6 +33,8 @@
 
 #include "descrambler/caid.h"
 #include "descrambler/dvbcam.h"
+
+static void linuxdvb_ca_monitor ( void *aux );
 
 typedef enum {
   CA_SLOT_STATE_EMPTY = 0,
@@ -131,22 +130,28 @@ linuxdvb_ca_class_enabled_notify ( void *p, const char *lang )
       lca->lca_ca_fd = tvh_open(lca->lca_ca_path, O_RDWR | O_NONBLOCK, 0);
       tvhtrace(LS_LINUXDVB, "opening ca%u %s (fd %d)",
                lca->lca_number, lca->lca_ca_path, lca->lca_ca_fd);
+      if (lca->lca_ca_fd >= 0)
+        mtimer_arm_rel(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, ms2mono(250));
     }
   } else {
     tvhtrace(LS_LINUXDVB, "closing ca%u %s (fd %d)",
              lca->lca_number, lca->lca_ca_path, lca->lca_ca_fd);
+
+    mtimer_disarm(&lca->lca_monitor_timer);
 
     if (lca->lca_en50221_thread_running) {
       lca->lca_en50221_thread_running = 0;
       pthread_join(lca->lca_en50221_thread, NULL);
     }
 
-    if (ioctl(lca->lca_ca_fd, CA_RESET, NULL))
-      tvherror(LS_LINUXDVB, "unable to reset ca%u %s",
-               lca->lca_number, lca->lca_ca_path);
+    if (lca->lca_ca_fd >= 0) {
+      if (ioctl(lca->lca_ca_fd, CA_RESET, NULL))
+        tvherror(LS_LINUXDVB, "unable to reset ca%u %s",
+                 lca->lca_number, lca->lca_ca_path);
 
-    close(lca->lca_ca_fd);
-    lca->lca_ca_fd = -1;
+      close(lca->lca_ca_fd);
+      lca->lca_ca_fd = -1;
+    }
 
     idnode_notify_title_changed(&lca->lca_id, lang);
   }
@@ -744,42 +749,40 @@ linuxdvb_ca_monitor ( void *aux )
   ca_slot_info_t csi;
   int state;
 
-  csi.num = 0;
+  if (lca->lca_ca_fd < 0)
+    return;
 
-  if (lca->lca_ca_fd >= 0) {
-    if ((ioctl(lca->lca_ca_fd, CA_GET_SLOT_INFO, &csi)) != 0) {
-      tvherror(LS_LINUXDVB, "failed to get CAM slot %u info [e=%s]",
-               csi.num, strerror(errno));
-    }
-    if (csi.flags & CA_CI_MODULE_READY)
-      state = CA_SLOT_STATE_MODULE_READY;
-    else if (csi.flags & CA_CI_MODULE_PRESENT)
-      state = CA_SLOT_STATE_MODULE_PRESENT;
-    else
-      state = CA_SLOT_STATE_EMPTY;
+  memset(&csi, 0, sizeof(csi));
 
-    lca->lca_state_str = ca_slot_state2str(state);
+  if ((ioctl(lca->lca_ca_fd, CA_GET_SLOT_INFO, &csi)) != 0) {
+    tvherror(LS_LINUXDVB, "failed to get CAM slot %u info [e=%s]",
+             csi.num, strerror(errno));
+  }
+  if (csi.flags & CA_CI_MODULE_READY)
+    state = CA_SLOT_STATE_MODULE_READY;
+  else if (csi.flags & CA_CI_MODULE_PRESENT)
+    state = CA_SLOT_STATE_MODULE_PRESENT;
+  else
+    state = CA_SLOT_STATE_EMPTY;
 
-    if (lca->lca_state != state) {
-      tvhnotice(LS_LINUXDVB, "CAM slot %u status changed to %s",
-                csi.num, lca->lca_state_str);
-      idnode_notify_title_changed(&lca->lca_id, NULL);
-      lca->lca_state = state;
-    }
+  lca->lca_state_str = ca_slot_state2str(state);
 
-    if ((!lca->lca_en50221_thread_running) &&
-        (state == CA_SLOT_STATE_MODULE_READY)) 
-    {
-      lca->lca_en50221_thread_running = 1;
-      tvhthread_create(&lca->lca_en50221_thread, NULL,
-                       linuxdvb_ca_en50221_thread, lca, "lnxdvb-ca");
-    } else if (lca->lca_en50221_thread_running &&
-               (state != CA_SLOT_STATE_MODULE_READY))
-    {
-      lca->lca_en50221_thread_running = 0;
-      pthread_join(lca->lca_en50221_thread, NULL);
-    }
+  if (lca->lca_state != state) {
+    tvhnotice(LS_LINUXDVB, "CAM slot %u status changed to %s",
+              csi.num, lca->lca_state_str);
+    idnode_notify_title_changed(&lca->lca_id, NULL);
+    lca->lca_state = state;
+  }
 
+  if ((!lca->lca_en50221_thread_running) &&
+      (state == CA_SLOT_STATE_MODULE_READY)) {
+    lca->lca_en50221_thread_running = 1;
+    tvhthread_create(&lca->lca_en50221_thread, NULL,
+                     linuxdvb_ca_en50221_thread, lca, "lnxdvb-ca");
+  } else if (lca->lca_en50221_thread_running &&
+             (state != CA_SLOT_STATE_MODULE_READY)) {
+    lca->lca_en50221_thread_running = 0;
+    pthread_join(lca->lca_en50221_thread, NULL);
   }
 
   mtimer_arm_rel(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, ms2mono(250));
@@ -822,8 +825,6 @@ linuxdvb_ca_create
   LIST_INSERT_HEAD(&la->la_ca_devices, lca, lca_link);
 
   TAILQ_INIT(&lca->lca_capmt_queue);
-
-  mtimer_arm_rel(&lca->lca_monitor_timer, linuxdvb_ca_monitor, lca, ms2mono(250));
 
   return lca;
 }
