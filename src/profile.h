@@ -137,7 +137,6 @@ typedef struct profile {
 
   void (*pro_free)(struct profile *pro);
   void (*pro_conf_changed)(struct profile *pro);
-  muxer_container_type_t (*pro_get_mc)(struct profile *pro);
 
   int (*pro_work)(profile_chain_t *prch, struct streaming_target *dst,
                   uint32_t timeshift_period, int flags);
@@ -188,9 +187,6 @@ htsmsg_t * profile_class_get_list(void *o, const char *lang);
 char *profile_validate_name(const char *name);
 
 const char *profile_get_name(profile_t *pro);
-
-static inline muxer_container_type_t profile_get_mc(profile_t *pro)
-  { return pro->pro_get_mc(pro); }
 
 void profile_get_htsp_list(htsmsg_t *array, htsmsg_t *filter);
 
