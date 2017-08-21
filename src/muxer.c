@@ -271,10 +271,24 @@ muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
 
 
 /**
+ * Copy muxer settings
+ */
+void
+muxer_config_free(muxer_config_t *m_cfg)
+{
+  if (m_cfg->m_type == MC_RAW || m_cfg->m_type == MC_PASS) {
+    free(m_cfg->u.pass.m_cmdline);
+    free(m_cfg->u.pass.m_mime);
+  }
+  memset(m_cfg, 0, sizeof(*m_cfg));
+}
+
+
+/**
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(const muxer_config_t *m_cfg)
+muxer_create(muxer_config_t *m_cfg)
 {
   muxer_t *m;
 
@@ -300,6 +314,7 @@ muxer_create(const muxer_config_t *m_cfg)
   }
   
   memcpy(&m->m_config, m_cfg, sizeof(muxer_config_t));
+  memset(m_cfg, 0, sizeof(*m_cfg));
 
   return m;
 }

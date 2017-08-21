@@ -127,9 +127,11 @@ muxer_container_type_t muxer_container_mime2type (const char *str);
 const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
 
 /* Muxer factory */
-muxer_t *muxer_create(const muxer_config_t *m_cfg);
+muxer_t *muxer_create(muxer_config_t *m_cfg);
 
 void muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src);
+
+void muxer_config_free(muxer_config_t *m_cfg);
 
 /* Wrapper functions */
 static inline int muxer_open_file (muxer_t *m, const char *filename)
@@ -151,7 +153,7 @@ static inline int muxer_close (muxer_t *m)
   { if (m) return m->m_close(m); return -1; }
 
 static inline int muxer_destroy (muxer_t *m)
-  { if (m) { m->m_destroy(m); return 0; } return -1; }
+  { if (m) { m->m_destroy(m); muxer_config_free(&m->m_config); return 0; } return -1; }
 
 static inline int muxer_write_meta (muxer_t *m, struct epg_broadcast *eb, const char *comment)
   { if (m) return m->m_write_meta(m, eb, comment); return -1; }
