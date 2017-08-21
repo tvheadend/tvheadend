@@ -483,8 +483,6 @@ static inline int dvr_entry_is_editable(dvr_entry_t *de)
 static inline int dvr_entry_is_valid(dvr_entry_t *de)
   { return de->de_refcnt > 0; }
 
-int dvr_entry_get_mc(dvr_entry_t *de);
-
 char *dvr_entry_get_retention_string ( dvr_entry_t *de );
 
 char *dvr_entry_get_removal_string ( dvr_entry_t *de );

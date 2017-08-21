@@ -1212,19 +1212,12 @@ fail:
   return -1;
 }
 
-static muxer_container_type_t
-profile_htsp_get_mc(profile_t *_pro)
-{
-  return MC_UNKNOWN;
-}
-
 static profile_t *
 profile_htsp_builder(void)
 {
   profile_t *pro = calloc(1, sizeof(*pro));
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_work   = profile_htsp_work;
-  pro->pro_get_mc = profile_htsp_get_mc;
   return pro;
 }
 
@@ -1419,12 +1412,6 @@ profile_mpegts_pass_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_mpegts_pass_get_mc(profile_t *_pro)
-{
-  return MC_PASS;
-}
-
 static profile_t *
 profile_mpegts_pass_builder(void)
 {
@@ -1432,7 +1419,6 @@ profile_mpegts_pass_builder(void)
   pro->pro_sflags = SUBSCRIPTION_MPEGTS;
   pro->pro_reopen = profile_mpegts_pass_reopen;
   pro->pro_open   = profile_mpegts_pass_open;
-  pro->pro_get_mc = profile_mpegts_pass_get_mc;
   pro->pro_rewrite_sid = 1;
   pro->pro_rewrite_pat = 1;
   pro->pro_rewrite_pmt = 1;
@@ -1530,12 +1516,6 @@ profile_mpegts_spawn_open(profile_chain_t *prch,
   return profile_mpegts_pass_reopen(prch, m_cfg, flags);
 }
 
-static muxer_container_type_t
-profile_mpegts_spawn_get_mc(profile_t *_pro)
-{
-  return MC_PASS;
-}
-
 static void
 profile_mpegts_spawn_free(profile_t *_pro)
 {
@@ -1552,7 +1532,6 @@ profile_mpegts_spawn_builder(void)
   pro->pro_free   = profile_mpegts_spawn_free;
   pro->pro_reopen = profile_mpegts_spawn_reopen;
   pro->pro_open   = profile_mpegts_spawn_open;
-  pro->pro_get_mc = profile_mpegts_spawn_get_mc;
   return (profile_t *)pro;
 }
 
@@ -1647,15 +1626,6 @@ profile_matroska_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_matroska_get_mc(profile_t *_pro)
-{
-  profile_matroska_t *pro = (profile_matroska_t *)_pro;
-  if (pro->pro_webm)
-    return MC_WEBM;
-  return MC_MATROSKA;
-}
-
 static profile_t *
 profile_matroska_builder(void)
 {
@@ -1663,7 +1633,6 @@ profile_matroska_builder(void)
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_matroska_reopen;
   pro->pro_open   = profile_matroska_open;
-  pro->pro_get_mc = profile_matroska_get_mc;
   pro->pro_dvbsub_reorder = 1;
   return (profile_t *)pro;
 }
@@ -1759,15 +1728,6 @@ profile_audio_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_audio_get_mc(profile_t *_pro)
-{
-  profile_audio_t *pro = (profile_audio_t *)_pro;
-  if (pro->pro_mc == MC_UNKNOWN)
-    return MC_MPEG2AUDIO;
-  return pro->pro_mc;
-}
-
 static profile_t *
 profile_audio_builder(void)
 {
@@ -1775,7 +1735,6 @@ profile_audio_builder(void)
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_audio_reopen;
   pro->pro_open   = profile_audio_open;
-  pro->pro_get_mc = profile_audio_get_mc;
   return (profile_t *)pro;
 }
 
@@ -1835,12 +1794,6 @@ profile_libav_mpegts_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_libav_mpegts_get_mc(profile_t *_pro)
-{
-  return MC_MPEGTS;
-}
-
 static profile_t *
 profile_libav_mpegts_builder(void)
 {
@@ -1848,7 +1801,6 @@ profile_libav_mpegts_builder(void)
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_libav_mpegts_reopen;
   pro->pro_open   = profile_libav_mpegts_open;
-  pro->pro_get_mc = profile_libav_mpegts_get_mc;
   return (profile_t *)pro;
 }
 
@@ -1932,15 +1884,6 @@ profile_libav_matroska_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_libav_matroska_get_mc(profile_t *_pro)
-{
-  profile_libav_matroska_t *pro = (profile_libav_matroska_t *)_pro;
-  if (pro->pro_webm)
-    return MC_AVWEBM;
-  return MC_AVMATROSKA;
-}
-
 static profile_t *
 profile_libav_matroska_builder(void)
 {
@@ -1948,7 +1891,6 @@ profile_libav_matroska_builder(void)
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_libav_matroska_reopen;
   pro->pro_open   = profile_libav_matroska_open;
-  pro->pro_get_mc = profile_libav_matroska_get_mc;
   return (profile_t *)pro;
 }
 
@@ -2004,12 +1946,6 @@ profile_libav_mp4_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_libav_mp4_get_mc(profile_t *_pro)
-{
-  return MC_AVMP4;
-}
-
 static profile_t *
 profile_libav_mp4_builder(void)
 {
@@ -2017,7 +1953,6 @@ profile_libav_mp4_builder(void)
   pro->pro_sflags = SUBSCRIPTION_PACKET;
   pro->pro_reopen = profile_libav_mp4_reopen;
   pro->pro_open   = profile_libav_mp4_open;
-  pro->pro_get_mc = profile_libav_mp4_get_mc;
   return (profile_t *)pro;
 }
 
@@ -2546,13 +2481,6 @@ profile_transcode_open(profile_chain_t *prch,
   return 0;
 }
 
-static muxer_container_type_t
-profile_transcode_get_mc(profile_t *_pro)
-{
-  profile_transcode_t *pro = (profile_transcode_t *)_pro;
-  return pro->pro_mc;
-}
-
 static void
 profile_transcode_free(profile_t *_pro)
 {
@@ -2573,7 +2501,6 @@ profile_transcode_builder(void)
   pro->pro_work   = profile_transcode_work;
   pro->pro_reopen = profile_transcode_reopen;
   pro->pro_open   = profile_transcode_open;
-  pro->pro_get_mc = profile_transcode_get_mc;
   return (profile_t *)pro;
 }
 
