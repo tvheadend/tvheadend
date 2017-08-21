@@ -420,10 +420,13 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size)
       /* this is an end-of-streaming notification */
       m->m_eos = 1;
     m->m_errors++;
-    muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
-    pm->pm_off = lseek(pm->pm_fd, 0, SEEK_CUR);
+    if (pm->pm_seekable) {
+      muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
+      pm->pm_off = lseek(pm->pm_fd, 0, SEEK_CUR);
+    }
   } else {
-    muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
+    if (pm->pm_seekable)
+      muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
     pm->pm_off += size;
   }
 }

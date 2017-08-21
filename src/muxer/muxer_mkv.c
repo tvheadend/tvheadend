@@ -490,7 +490,8 @@ mk_write_to_fd(mk_muxer_t *mk, htsbuf_queue_t *hq)
     iov += iovcnt;
   } while(i);
 
-  muxer_cache_update((muxer_t *)mk, mk->fd, oldpos, 0);
+  if (mk->seekable)
+    muxer_cache_update((muxer_t *)mk, mk->fd, oldpos, 0);
 
   return 0;
 }

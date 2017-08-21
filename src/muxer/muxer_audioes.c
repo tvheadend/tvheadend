@@ -228,10 +228,13 @@ audioes_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
       am->m_eos = 1;
     }
     am->m_errors++;
-    muxer_cache_update(m, am->am_fd, am->am_off, 0);
-    am->am_off = lseek(am->am_fd, 0, SEEK_CUR);
+    if (am->am_seekable) {
+      muxer_cache_update(m, am->am_fd, am->am_off, 0);
+      am->am_off = lseek(am->am_fd, 0, SEEK_CUR);
+    }
   } else {
-    muxer_cache_update(m, am->am_fd, am->am_off, 0);
+    if (am->am_seekable)
+      muxer_cache_update(m, am->am_fd, am->am_off, 0);
     am->am_off += size;
   }
 
