@@ -1388,7 +1388,7 @@ profile_mpegts_pass_reopen(profile_chain_t *prch,
   muxer_config_t c;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_RAW)
@@ -1438,6 +1438,121 @@ profile_mpegts_pass_builder(void)
   pro->pro_rewrite_pmt = 1;
   pro->pro_rewrite_sdt = 1;
   pro->pro_rewrite_eit = 1;
+  return (profile_t *)pro;
+}
+
+/*
+ *  MPEG-TS spawn muxer
+ */
+typedef struct profile_mpegts_spawn {
+  profile_t;
+  char *pro_cmdline;
+  char *pro_mime;
+} profile_mpegts_spawn_t;
+
+const idclass_t profile_mpegts_spawn_class =
+{
+  .ic_super      = &profile_class,
+  .ic_class      = "profile-mpegts-spawn",
+  .ic_caption    = N_("MPEG-TS spawn/built-in"),
+  .ic_groups     = (const property_group_t[]) {
+    {
+      .name   = N_("Configuration"),
+      .number = 1,
+    },
+    {
+      .name   = N_("Spawned task"),
+      .number = 1,
+    },
+    {}
+  },
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "cmdline",
+      .name     = N_("Command line"),
+      .desc     = N_("Command line to run a task which accepts MPEG-TS stream"
+                     " on stdin and writes output to stdout in format specified"
+                     " by the selected mime type."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_cmdline),
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
+      .id       = "mime",
+      .name     = N_("Mime type"),
+      .desc     = N_("Mime type string (for example video/mp2t')."),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_mime),
+      .group    = 2
+    },
+    { }
+  }
+};
+
+static int
+profile_mpegts_spawn_reopen(profile_chain_t *prch,
+                           muxer_config_t *m_cfg, int flags)
+{
+  profile_mpegts_spawn_t *pro = (profile_mpegts_spawn_t *)prch->prch_pro;
+  muxer_config_t c;
+
+  if (m_cfg)
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
+  else
+    memset(&c, 0, sizeof(c));
+  if (c.m_type != MC_RAW)
+    c.m_type = MC_PASS;
+
+  c.u.pass.m_rewrite_sid = 1;
+  c.u.pass.m_rewrite_pat = 1;
+  c.u.pass.m_rewrite_pmt = 1;
+  c.u.pass.m_rewrite_sdt = 1;
+  c.u.pass.m_rewrite_eit = 1;
+  mystrset(&c.u.pass.m_cmdline, pro->pro_cmdline);
+  mystrset(&c.u.pass.m_mime, pro->pro_mime);
+
+  assert(!prch->prch_muxer);
+  prch->prch_muxer = muxer_create(&c);
+  return 0;
+}
+
+static int
+profile_mpegts_spawn_open(profile_chain_t *prch,
+                         muxer_config_t *m_cfg, int flags, size_t qsize)
+{
+  prch->prch_flags = SUBSCRIPTION_MPEGTS;
+
+  prch->prch_sq.sq_st.st_reject_filter = SMT_PACKET;
+  prch->prch_sq.sq_maxsize = qsize;
+
+  prch->prch_st    = &prch->prch_sq.sq_st;
+
+  return profile_mpegts_pass_reopen(prch, m_cfg, flags);
+}
+
+static muxer_container_type_t
+profile_mpegts_spawn_get_mc(profile_t *_pro)
+{
+  return MC_PASS;
+}
+
+static void
+profile_mpegts_spawn_free(profile_t *_pro)
+{
+  profile_mpegts_spawn_t *pro = (profile_mpegts_spawn_t *)_pro;
+  free(pro->pro_cmdline);
+  free(pro->pro_mime);
+}
+
+static profile_t *
+profile_mpegts_spawn_builder(void)
+{
+  profile_mpegts_spawn_t *pro = calloc(1, sizeof(*pro));
+  pro->pro_sflags = SUBSCRIPTION_MPEGTS;
+  pro->pro_free   = profile_mpegts_spawn_free;
+  pro->pro_reopen = profile_mpegts_spawn_reopen;
+  pro->pro_open   = profile_mpegts_spawn_open;
+  pro->pro_get_mc = profile_mpegts_spawn_get_mc;
   return (profile_t *)pro;
 }
 
@@ -1499,7 +1614,7 @@ profile_matroska_reopen(profile_chain_t *prch,
   muxer_config_t c;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_WEBM)
@@ -1613,7 +1728,7 @@ profile_audio_reopen(profile_chain_t *prch,
   profile_audio_t *pro = (profile_audio_t *)prch->prch_pro;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   c.m_type = pro->pro_mc != MC_UNKNOWN ? pro->pro_mc : MC_MPEG2AUDIO;
@@ -1691,7 +1806,7 @@ profile_libav_mpegts_reopen(profile_chain_t *prch,
   muxer_config_t c;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   c.m_type = MC_MPEGTS;
@@ -1784,7 +1899,7 @@ profile_libav_matroska_reopen(profile_chain_t *prch,
   muxer_config_t c;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_AVWEBM)
@@ -1858,7 +1973,7 @@ profile_libav_mp4_reopen(profile_chain_t *prch,
   muxer_config_t c;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   if (c.m_type != MC_AVMP4)
@@ -2396,7 +2511,7 @@ profile_transcode_reopen(profile_chain_t *prch,
   muxer_config_t c;
 
   if (m_cfg)
-    c = *m_cfg; /* do not alter the original parameter */
+    muxer_config_copy(&c, m_cfg); /* do not alter the original parameter */
   else
     memset(&c, 0, sizeof(c));
   if (!profile_transcode_mc_valid(c.m_type)) {
@@ -2480,6 +2595,7 @@ profile_init(void)
   LIST_INIT(&profile_chains);
 
   profile_register(&profile_mpegts_pass_class, profile_mpegts_pass_builder);
+  profile_register(&profile_mpegts_spawn_class, profile_mpegts_spawn_builder);
   profile_register(&profile_matroska_class, profile_matroska_builder);
   profile_register(&profile_htsp_class, profile_htsp_builder);
   profile_register(&profile_audio_class, profile_audio_builder);

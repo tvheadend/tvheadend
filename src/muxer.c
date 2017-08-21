@@ -257,6 +257,20 @@ muxer_container_mime2type(const char *str)
 
 
 /**
+ * Copy muxer settings
+ */
+void
+muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
+{
+  *dst = *src;
+  if (src->m_type == MC_RAW || src->m_type == MC_PASS) {
+    mystrset(&dst->u.pass.m_cmdline, src->u.pass.m_cmdline);
+    mystrset(&dst->u.pass.m_mime, src->u.pass.m_mime);
+  }
+}
+
+
+/**
  * Create a new muxer
  */
 muxer_t* 

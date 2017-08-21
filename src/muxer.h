@@ -72,6 +72,8 @@ typedef struct muxer_config {
       int              m_rewrite_pmt;
       int              m_rewrite_sdt;
       int              m_rewrite_eit;
+      char            *m_cmdline;
+      char            *m_mime;
     } pass;
     struct {
       int              m_dvbsub_reorder;
@@ -126,6 +128,8 @@ const char*            muxer_container_suffix(muxer_container_type_t mc, int vid
 
 /* Muxer factory */
 muxer_t *muxer_create(const muxer_config_t *m_cfg);
+
+void muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src);
 
 /* Wrapper functions */
 static inline int muxer_open_file (muxer_t *m, const char *filename)
