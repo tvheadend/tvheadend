@@ -267,6 +267,18 @@ TAILQ_HEAD(th_pktref_queue, th_pktref);
 LIST_HEAD(streaming_target_list, streaming_target);
 
 /**
+ *
+ */
+#define TVH_KILL_KILL   0
+#define TVH_KILL_TERM   1
+#define TVH_KILL_INT    2
+#define TVH_KILL_HUP    3
+#define TVH_KILL_USR1   4
+#define TVH_KILL_USR2   5
+
+int tvh_kill_to_sig(int tvh_kill);
+
+/**
  * Stream component types
  */
 typedef enum {

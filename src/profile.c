@@ -1434,6 +1434,8 @@ typedef struct profile_mpegts_spawn {
   profile_t;
   char *pro_cmdline;
   char *pro_mime;
+  int   pro_killsig;
+  int   pro_killtimeout;
 } profile_mpegts_spawn_t;
 
 const idclass_t profile_mpegts_spawn_class =
@@ -1472,6 +1474,25 @@ const idclass_t profile_mpegts_spawn_class =
       .off      = offsetof(profile_mpegts_spawn_t, pro_mime),
       .group    = 2
     },
+    {
+      .type     = PT_INT,
+      .id       = "killsig",
+      .name     = N_("Kill signal (pipe)"),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_killsig),
+      .list     = proplib_kill_list,
+      .opts     = PO_EXPERT,
+      .def.i    = TVH_KILL_TERM,
+      .group    = 2
+    },
+    {
+      .type     = PT_INT,
+      .id       = "kill_timeout",
+      .name     = N_("Kill timeout (pipe/secs)"),
+      .off      = offsetof(profile_mpegts_spawn_t, pro_killtimeout),
+      .opts     = PO_EXPERT,
+      .def.i    = 15,
+      .group    = 2
+    },
     { }
   }
 };
@@ -1497,6 +1518,8 @@ profile_mpegts_spawn_reopen(profile_chain_t *prch,
   c.u.pass.m_rewrite_eit = 1;
   mystrset(&c.u.pass.m_cmdline, pro->pro_cmdline);
   mystrset(&c.u.pass.m_mime, pro->pro_mime);
+  c.u.pass.m_killsig = pro->pro_killsig;
+  c.u.pass.m_killtimeout = pro->pro_killtimeout;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c);
@@ -1533,6 +1556,8 @@ profile_mpegts_spawn_builder(void)
   pro->pro_free   = profile_mpegts_spawn_free;
   pro->pro_reopen = profile_mpegts_spawn_reopen;
   pro->pro_open   = profile_mpegts_spawn_open;
+  pro->pro_killsig = TVH_KILL_TERM;
+  pro->pro_killtimeout = 15;
   return (profile_t *)pro;
 }
 

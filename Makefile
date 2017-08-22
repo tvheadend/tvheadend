@@ -203,6 +203,7 @@ SRCS-1 = \
 	src/tvhlog.c \
 	src/idnode.c \
 	src/prop.c \
+	src/proplib.c \
 	src/utils.c \
 	src/wrappers.c \
 	src/access.c \

@@ -97,20 +97,6 @@ iptv_mux_url_set ( void *p, const void *v )
   return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
 }
 
-static htsmsg_t *
-iptv_muxdvr_class_kill_list ( void *o, const char *lang )
-{
-  static const struct strtab tab[] = {
-    { N_("SIGKILL"),   IPTV_KILL_KILL },
-    { N_("SIGTERM"),   IPTV_KILL_TERM },
-    { N_("SIGINT"),    IPTV_KILL_INT, },
-    { N_("SIGHUP"),    IPTV_KILL_HUP },
-    { N_("SIGUSR1"),   IPTV_KILL_USR1 },
-    { N_("SIGUSR2"),   IPTV_KILL_USR2 },
-  };
-  return strtab2htsmsg(tab, 1, lang);
-}
-
 const idclass_t iptv_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -207,7 +193,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_kill",
       .name     = N_("Kill signal (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_kill),
-      .list     = iptv_muxdvr_class_kill_list,
+      .list     = proplib_kill_list,
       .opts     = PO_EXPERT
     },
     {

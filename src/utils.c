@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <signal.h>
 #include <net/if.h>
 
 #include <openssl/sha.h>
@@ -867,4 +868,17 @@ gmtime2local(time_t gmt, char *buf, size_t buflen)
   localtime_r(&gmt, &tm);
   strftime(buf, buflen, "%F;%T(%z)", &tm);
   return buf;
+}
+
+int
+tvh_kill_to_sig(int tvh_kill)
+{
+  switch (tvh_kill) {
+  case TVH_KILL_TERM: return SIGTERM;
+  case TVH_KILL_INT:  return SIGINT;
+  case TVH_KILL_HUP:  return SIGHUP;
+  case TVH_KILL_USR1: return SIGUSR1;
+  case TVH_KILL_USR2: return SIGUSR2;
+  }
+  return SIGKILL;
 }

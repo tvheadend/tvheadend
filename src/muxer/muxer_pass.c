@@ -598,7 +598,8 @@ pass_muxer_close(muxer_t *m)
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   if(pm->pm_spawn_pid > 0)
-    spawn_kill(pm->pm_spawn_pid, SIGTERM, 15);
+    spawn_kill(pm->pm_spawn_pid, tvh_kill_to_sig(pm->m_config.u.pass.m_killsig),
+               pm->m_config.u.pass.m_killtimeout);
   if(pm->pm_seekable && close(pm->pm_ofd)) {
     pm->pm_error = errno;
     tvherror(LS_PASS, "%s: Unable to close file, close failed -- %s",

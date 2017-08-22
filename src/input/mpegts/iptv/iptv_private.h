@@ -29,13 +29,6 @@
 #define IPTV_PKTS        32
 #define IPTV_PKT_PAYLOAD 1472
 
-#define IPTV_KILL_KILL   0
-#define IPTV_KILL_TERM   1
-#define IPTV_KILL_INT    2
-#define IPTV_KILL_HUP    3
-#define IPTV_KILL_USR1   4
-#define IPTV_KILL_USR2   5
-
 extern pthread_mutex_t iptv_lock;
 
 typedef struct iptv_input   iptv_input_t;
