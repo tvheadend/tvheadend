@@ -21,7 +21,6 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <sys/stat.h>
-#include <signal.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
