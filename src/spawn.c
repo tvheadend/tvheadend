@@ -564,10 +564,137 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
 }
 
 /**
+ * Execute the given program and return its standard input as file-descriptor (pipe).
+ * The standard output file-decriptor (od) must be valid, too.
+ */
+int
+spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
+                       int od, int *wd, pid_t *pid, int redir_stderr)
+{
+  pid_t p;
+  int fd[2], f, i, maxfd;
+  char bin[256];
+  const char *local_argv[2] = { NULL, NULL };
+  char **e, **e0, **e2, **e3, *p1, *p2;
+
+  if (*prog != '/' && *prog != '.') {
+    if (!find_exec(prog, bin, sizeof(bin))) return -1;
+    prog = bin;
+  }
+
+  if (!argv) argv = (void *)local_argv;
+  if (!argv[0]) {
+    if (argv != (void *)local_argv) {
+      for (i = 1, e = argv + 1; *e; i++, e++);
+      i = (i + 1) * sizeof(char *);
+      e = alloca(i);
+      memcpy(e, argv, i);
+      argv = e;
+    }
+    argv[0] = (char *)prog;
+  }
+
+  if (!envp || !envp[0]) {
+    e = environ;
+  } else {
+    for (i = 0, e2 = environ; *e2; i++, e2++);
+    for (f = 0, e2 = envp; *e2; f++, e2++);
+    e = alloca((i + f + 1) * sizeof(char *));
+    memcpy(e, environ, i * sizeof(char *));
+    e0 = e + i;
+    *e0 = NULL;
+    for (e2 = envp; *e2; e2++) {
+      for (e3 = e; *e3; e3++) {
+        p1 = strchr(*e2, '=');
+        p2 = strchr(*e3, '=');
+        if (p1 - *e2 == p2 - *e3 && !strncmp(*e2, *e3, p1 - *e2)) {
+          *e3 = *e2;
+          break;
+        }
+      }
+      if (!*e3) {
+        *e0++ = *e2;
+        *e0 = NULL;
+      }
+    }
+    *e0 = NULL;
+  }
+
+  maxfd = sysconf(_SC_OPEN_MAX);
+
+  pthread_mutex_lock(&fork_lock);
+
+  if(pipe(fd) == -1) {
+    pthread_mutex_unlock(&fork_lock);
+    return -1;
+  }
+
+  p = fork();
+
+  if(p == -1) {
+    pthread_mutex_unlock(&fork_lock);
+    tvherror(LS_SPAWN, "Unable to fork() for \"%s\" -- %s",
+             prog, strerror(errno));
+    return -1;
+  }
+
+  if(p == 0) {
+    if (redir_stderr) {
+      f = spawn_pipe_error.wr;
+    } else {
+      f = open("/dev/null", O_RDWR);
+      if(f == -1) {
+        spawn_error("pid %d cannot open /dev/null for redirect %s -- %s",
+                    getpid(), prog, strerror(errno));
+        exit(1);
+      }
+    }
+
+    close(0);
+    close(1);
+    close(2);
+
+    dup2(fd[0], 0);
+    dup2(od, 1);
+    dup2(f, 2);
+
+    close(fd[0]);
+    close(fd[1]);
+    close(f);
+
+    spawn_info("Executing \"%s\"\n", prog);
+
+    for (f = 3; f < maxfd; f++)
+      close(f);
+
+    execve(prog, argv, e);
+    spawn_error("pid %d cannot execute %s -- %s\n",
+                getpid(), prog, strerror(errno));
+    exit(1);
+  }
+
+  pthread_mutex_unlock(&fork_lock);
+
+  spawn_enq(prog, p);
+
+  close(fd[0]);
+
+  *wd = fd[1];
+  if (pid) {
+    *pid = p;
+
+    // make the spawned process a session leader so killing the
+    // process group recursively kills any child process that
+    // might have been spawned
+    setpgid(p, p);
+  }
+  return 0;
+}
+
+/**
  * Execute the given program with arguments
  * 
  * *outp will point to the allocated buffer
- * The function will return the size of the buffer
  */
 int
 spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr)

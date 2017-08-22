@@ -21,6 +21,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <sys/stat.h>
+#include <signal.h>
 
 #include "tvheadend.h"
 #include "streaming.h"
@@ -28,7 +29,7 @@
 #include "service.h"
 #include "input/mpegts/dvb.h"
 #include "muxer_pass.h"
-#include "dvr/dvr.h"
+#include "spawn.h"
 
 typedef struct pass_muxer {
   muxer_t;
@@ -36,8 +37,10 @@ typedef struct pass_muxer {
   /* File descriptor stuff */
   off_t pm_off;
   int   pm_fd;
+  int   pm_ofd;
   int   pm_seekable;
   int   pm_error;
+  int   pm_spawn_pid;
 
   /* Filename is also used for logging */
   char *pm_filename;
@@ -67,7 +70,6 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size);
 /*
  * Rewrite a PAT packet to only include the service included in the transport stream.
  */
-
 static void
 pass_muxer_pat_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
@@ -276,6 +278,10 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
   muxer_container_type_t mc;
   const streaming_start_component_t *ssc;
   const source_info_t *si = &ss->ss_si;
+  const char *mime = m->m_config.u.pass.m_mime;
+
+  if (mime && mime[0])
+    return mime;
 
   has_audio = 0;
   has_video = 0;
@@ -364,6 +370,36 @@ pass_muxer_init(muxer_t* m, struct streaming_start *ss, const char *name)
   return pass_muxer_reconfigure(m, ss);
 }
 
+/**
+ * Open the spawned task on demand
+ */
+static int
+pass_muxer_open2(pass_muxer_t *pm)
+{
+  const char *cmdline = pm->m_config.u.pass.m_cmdline;
+  char **argv = NULL;
+
+  pm->pm_spawn_pid = -1;
+  if (cmdline && cmdline[0]) {
+    argv = NULL;
+    if (spawn_parse_args(&argv, 64, cmdline, NULL))
+      goto error;
+    if (spawn_with_passthrough(argv[0], argv, NULL, pm->pm_ofd, &pm->pm_fd, &pm->pm_spawn_pid, 1)) {
+      tvherror(LS_PASS, "Unable to start pipe '%s' (wrong executable?)", cmdline);
+      goto error;
+    }
+    spawn_free_args(argv);
+  } else {
+    pm->pm_fd = pm->pm_ofd;
+  }
+  return 0;
+
+error:
+  if (argv)
+    spawn_free_args(argv);
+  pm->pm_error = ENOMEM;
+  return -1;
+}
 
 /**
  * Open the muxer as a stream muxer (using a non-seekable socket)
@@ -374,11 +410,11 @@ pass_muxer_open_stream(muxer_t *m, int fd)
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   pm->pm_off      = 0;
-  pm->pm_fd       = fd;
+  pm->pm_ofd      = fd;
   pm->pm_seekable = 0;
   pm->pm_filename = strdup("Live stream");
 
-  return 0;
+  return pass_muxer_open2(pm);
 }
 
 
@@ -410,9 +446,10 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 
   pm->pm_off      = 0;
   pm->pm_seekable = 1;
-  pm->pm_fd       = fd;
+  pm->pm_ofd      = fd;
   pm->pm_filename = strdup(filename);
-  return 0;
+
+  return pass_muxer_open2(pm);
 }
 
 
@@ -560,7 +597,9 @@ pass_muxer_close(muxer_t *m)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
-  if(pm->pm_seekable && close(pm->pm_fd)) {
+  if(pm->pm_spawn_pid > 0)
+    spawn_kill(pm->pm_spawn_pid, SIGTERM, 15);
+  if(pm->pm_seekable && close(pm->pm_ofd)) {
     pm->pm_error = errno;
     tvherror(LS_PASS, "%s: Unable to close file, close failed -- %s",
 	     pm->pm_filename, strerror(errno));
@@ -617,6 +656,8 @@ pass_muxer_create(const muxer_config_t *m_cfg)
   pm->m_close        = pass_muxer_close;
   pm->m_destroy      = pass_muxer_destroy;
   pm->pm_fd          = -1;
+  pm->pm_ofd         = -1;
+  pm->pm_spawn_pid   = -1;
 
   dvb_table_parse_init(&pm->pm_pat, "pass-pat", LS_TBL_PASS, DVB_PAT_PID,
                        DVB_PAT_BASE, DVB_PAT_MASK, pm);
