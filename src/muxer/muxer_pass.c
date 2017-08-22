@@ -630,6 +630,8 @@ pass_muxer_destroy(muxer_t *m)
   dvb_table_parse_done(&pm->pm_sdt);
   dvb_table_parse_done(&pm->pm_eit);
 
+  muxer_config_free(&pm->m_config);
+  muxer_hints_free(pm->m_hints);
   free(pm);
 }
 
@@ -638,7 +640,8 @@ pass_muxer_destroy(muxer_t *m)
  * Create a new passthrough muxer
  */
 muxer_t*
-pass_muxer_create(const muxer_config_t *m_cfg)
+pass_muxer_create(const muxer_config_t *m_cfg,
+                  const muxer_hints_t *hints)
 {
   pass_muxer_t *pm;
 

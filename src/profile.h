@@ -129,10 +129,10 @@ typedef struct profile {
 
   int (*pro_work)(profile_chain_t *prch, struct streaming_target *dst,
                   uint32_t timeshift_period, int flags);
-  int (*pro_reopen)(profile_chain_t *prch,
-                    muxer_config_t *m_cfg, int flags);
-  int (*pro_open)(profile_chain_t *prch,
-                  muxer_config_t *m_cfg, int flags, size_t qsize);
+  int (*pro_reopen)(profile_chain_t *prch, muxer_config_t *m_cfg,
+                    muxer_hints_t *hints, int flags);
+  int (*pro_open)(profile_chain_t *prch, muxer_config_t *m_cfg,
+                  muxer_hints_t *hints, int flags, size_t qsize);
 } profile_t;
 
 typedef struct profile_sharer_message {
@@ -173,15 +173,15 @@ static inline void profile_release( profile_t *pro )
     if (--pro->pro_refcount == 0) profile_release_(pro);
   }
 
-int
-profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
-                   uint32_t timeshift_period, int flags);
-int
-profile_chain_reopen(profile_chain_t *prch,
-                     muxer_config_t *m_cfg, int flags);
-int
-profile_chain_open(profile_chain_t *prch,
-                   muxer_config_t *m_cfg, int flags, size_t qsize);
+int profile_chain_work(profile_chain_t *prch, struct streaming_target *dst,
+                       uint32_t timeshift_period, int flags);
+int profile_chain_reopen(profile_chain_t *prch,
+                         muxer_config_t *m_cfg,
+                         muxer_hints_t *hints, int flags);
+int profile_chain_open(profile_chain_t *prch,
+                       muxer_config_t *m_cfg,
+                       muxer_hints_t *hints,
+                       int flags, size_t qsize);
 void profile_chain_init(profile_chain_t *prch, profile_t *pro, void *id);
 int  profile_chain_raw_open(profile_chain_t *prch, void *id, size_t qsize, int muxer);
 void profile_chain_close(profile_chain_t *prch);

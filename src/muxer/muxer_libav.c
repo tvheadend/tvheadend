@@ -592,6 +592,8 @@ lav_muxer_destroy(muxer_t *m)
     lm->lm_oc = NULL;
   }
 
+  muxer_config_free(&lm->m_config);
+  muxer_hints_free(lm->m_hints);
   free(lm);
 }
 
@@ -600,7 +602,8 @@ lav_muxer_destroy(muxer_t *m)
  * Create a new libavformat based muxer
  */
 muxer_t*
-lav_muxer_create(const muxer_config_t *m_cfg)
+lav_muxer_create(const muxer_config_t *m_cfg,
+                 const muxer_hints_t *hints)
 {
   const char *mux_name;
   lav_muxer_t *lm;

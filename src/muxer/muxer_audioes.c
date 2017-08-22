@@ -283,6 +283,8 @@ audioes_muxer_destroy(muxer_t *m)
 
   if (am->am_filename)
     free(am->am_filename);
+  muxer_config_free(&am->m_config);
+  muxer_hints_free(am->m_hints);
   free(am);
 }
 
@@ -291,7 +293,8 @@ audioes_muxer_destroy(muxer_t *m)
  * Create a new builtin muxer
  */
 muxer_t*
-audioes_muxer_create(const muxer_config_t *m_cfg)
+audioes_muxer_create(const muxer_config_t *m_cfg,
+                     const muxer_hints_t *hints)
 {
   audioes_muxer_t *am;
 
