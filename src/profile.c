@@ -1440,15 +1440,15 @@ const idclass_t profile_mpegts_spawn_class =
 {
   .ic_super      = &profile_class,
   .ic_class      = "profile-mpegts-spawn",
-  .ic_caption    = N_("MPEG-TS spawn/built-in"),
+  .ic_caption    = N_("MPEG-TS Spawn/built-in"),
   .ic_groups     = (const property_group_t[]) {
     {
       .name   = N_("Configuration"),
       .number = 1,
     },
     {
-      .name   = N_("Spawned task"),
-      .number = 1,
+      .name   = N_("Spawn configuration"),
+      .number = 2,
     },
     {}
   },
@@ -1461,13 +1461,14 @@ const idclass_t profile_mpegts_spawn_class =
                      " on stdin and writes output to stdout in format specified"
                      " by the selected mime type."),
       .off      = offsetof(profile_mpegts_spawn_t, pro_cmdline),
+      .opts     = PO_MULTILINE,
       .group    = 2
     },
     {
       .type     = PT_STR,
       .id       = "mime",
       .name     = N_("Mime type"),
-      .desc     = N_("Mime type string (for example video/mp2t')."),
+      .desc     = N_("Mime type string (for example 'video/mp2t')."),
       .off      = offsetof(profile_mpegts_spawn_t, pro_mime),
       .group    = 2
     },
@@ -1513,7 +1514,7 @@ profile_mpegts_spawn_open(profile_chain_t *prch,
 
   prch->prch_st    = &prch->prch_sq.sq_st;
 
-  return profile_mpegts_pass_reopen(prch, m_cfg, flags);
+  return profile_mpegts_spawn_reopen(prch, m_cfg, flags);
 }
 
 static void
