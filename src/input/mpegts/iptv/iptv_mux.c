@@ -97,6 +97,17 @@ iptv_mux_url_set ( void *p, const void *v )
   return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
 }
 
+static htsmsg_t *
+iptv_mux_libav_enum ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Network settings"),   0 },
+    { N_("Use"),                1 },
+    { N_("Do not use"),        -1 },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
 const idclass_t iptv_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
@@ -134,6 +145,18 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_substitute),
       .opts     = PO_ADVANCED
     },
+#if ENABLE_LIBAV
+    {
+      .type     = PT_INT,
+      .id       = "use_libav",
+      .name     = N_("Use A/V library"),
+      .desc     = N_("The input stream is remuxed with A/V library (libav or"
+                     " or ffmpeg) to the MPEG-TS format which is accepted by"
+                     " tvheadend."),
+      .list     = iptv_mux_libav_enum,
+      .off      = offsetof(iptv_mux_t, mm_iptv_libav),
+    },
+#endif
     {
       .type     = PT_STR,
       .id       = "iptv_interface",

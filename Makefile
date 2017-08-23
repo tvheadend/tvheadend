@@ -480,6 +480,7 @@ DEPS-LIBAV = \
 	src/tvhlog.c
 SRCS-LIBAV = \
 	src/libav.c \
+	src/input/mpegts/iptv/iptv_libav.c \
 	src/muxer/muxer_libav.c \
 	src/plumbing/transcoding.c
 SRCS-$(CONFIG_LIBAV) += $(SRCS-LIBAV)

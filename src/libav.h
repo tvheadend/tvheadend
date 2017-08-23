@@ -59,11 +59,13 @@ streaming_component_type_t codec_id2streaming_component_type(enum AVCodecID id);
 int libav_is_encoder(AVCodec *codec);
 void libav_set_loglevel(void);
 void libav_init(void);
+void libav_done(void);
 
 #else
 
 static inline void libav_set_loglevel(void) { };
 static inline void libav_init(void) { };
+static inline void libav_done(void) { };
 
 #endif
 

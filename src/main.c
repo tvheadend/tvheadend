@@ -1345,6 +1345,8 @@ main(int argc, char **argv)
 
   if(opt_fork)
     unlink(opt_pidpath);
+
+  libav_done();
     
   /* OpenSSL - welcome to the "cleanup" hell */
   ENGINE_cleanup();

@@ -386,6 +386,21 @@ sbuf_append(sbuf_t *sb, const void *data, int len)
 }
 
 void
+sbuf_append_from_sbuf(sbuf_t *sb, sbuf_t *src)
+{
+  if (sb->sb_ptr == 0) {
+    sbuf_free(sb);
+    sb->sb_data = src->sb_data;
+    sb->sb_ptr = src->sb_ptr;
+    sb->sb_size = src->sb_size;
+    sbuf_steal_data(src);
+  } else {
+    sbuf_append(sb, src->sb_data, src->sb_ptr);
+    src->sb_ptr = 0;
+  }
+}
+
+void
 sbuf_put_be32(sbuf_t *sb, uint32_t u32)
 {
   u32 = htonl(u32);

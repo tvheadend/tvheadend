@@ -296,13 +296,27 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   mpegts_mux_nice_name((mpegts_mux_t*)im, buf, sizeof(buf));
   urlinit(&url);
 
-  if (raw && !strncmp(raw, "pipe://", 7)) {
+#if ENABLE_LIBAV
+  if (im->mm_iptv_libav > 0 ||
+      (im->mm_iptv_libav == 0 && ((iptv_network_t *)im->mm_network)->in_libav)) {
+
+    scheme = "libav";
+
+  } else
+#endif
+         if (raw && !strncmp(raw, "pipe://", 7)) {
 
     scheme = "pipe";
 
   } else if (raw && !strncmp(raw, "file://", 7)) {
 
     scheme = "file";
+
+#if ENABLE_LIBAV
+  } else if (raw && !strncmp(raw, "libav:", 6)) {
+
+    scheme = "libav";
+#endif
 
   } else {
 
@@ -327,7 +341,7 @@ iptv_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   im->mm_iptv_url_raw = strdup(raw);
   im->mm_active = mmi; // Note: must set here else mux_started call
                        // will not realise we're ready to accept pid open calls
-  ret = ih->start(im, raw, &url);
+  ret = ih->start(im, im->mm_iptv_url_raw, &url);
   if (!ret)
     im->im_handler = ih;
   else
@@ -384,9 +398,9 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 static inline int
 iptv_input_pause_check ( iptv_mux_t *im )
 {
-  int64_t s64, limit;
+  int64_t old, s64, limit;
 
-  if (im->im_pcr == PTS_UNSET)
+  if ((old = im->im_pcr) == PTS_UNSET)
     return 0;
   limit = im->mm_iptv_buffer_limit;
   if (!limit)
@@ -398,8 +412,9 @@ iptv_input_pause_check ( iptv_mux_t *im )
   im->im_pcr_start += s64;
   im->im_pcr += (((s64 / 10LL) * 9LL) + 4LL) / 10LL;
   im->im_pcr &= PTS_MASK;
-  tvhtrace(LS_IPTV_PCR, "pcr: updated %"PRId64", time start %"PRId64", limit %"PRId64,
-           im->im_pcr, im->im_pcr_start, limit);
+  if (old != im->im_pcr)
+    tvhtrace(LS_IPTV_PCR, "pcr: updated %"PRId64", time start %"PRId64", limit %"PRId64,
+             im->im_pcr, im->im_pcr_start, limit);
 
   /* queued more than 3 seconds? trigger the pause */
   return im->im_pcr_end - im->im_pcr_start >= limit;
@@ -701,6 +716,19 @@ const idclass_t iptv_network_class = {
   .ic_caption    = N_("IPTV Network"),
   .ic_delete     = iptv_network_class_delete,
   .ic_properties = (const property_t[]){
+#if ENABLE_LIBAV
+    {
+      .type     = PT_BOOL,
+      .id       = "use_libav",
+      .name     = N_("Use A/V library"),
+      .desc     = N_("The input stream is remuxed with A/V library (libav or"
+                     " or ffmpeg) to the MPEG-TS format which is accepted by"
+                     " tvheadend."),
+      .off      = offsetof(iptv_network_t, in_libav),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+#endif
     {
       .type     = PT_BOOL,
       .id       = "scan_create",
@@ -1058,6 +1086,9 @@ void iptv_init ( void )
   iptv_rtsp_init();
   iptv_pipe_init();
   iptv_file_init();
+#if ENABLE_LIBAV
+  iptv_libav_init();
+#endif
 
   iptv_input = calloc(1, sizeof(iptv_input_t));
 

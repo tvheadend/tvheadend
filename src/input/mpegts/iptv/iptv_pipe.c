@@ -28,7 +28,7 @@
 #include <assert.h>
 
 /*
- * Connect UDP/RTP
+ * Spawn task and create pipes
  */
 static int
 iptv_pipe_start ( iptv_mux_t *im, const char *raw, const url_t *url )

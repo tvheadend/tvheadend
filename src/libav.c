@@ -214,6 +214,13 @@ libav_init(void)
   av_log_set_callback(libav_log_callback);
   libav_set_loglevel();
   av_register_all();
+  avformat_network_init();
   avfilter_register_all();
   transcoding_init();
+}
+
+void
+libav_done(void)
+{
+  avformat_network_deinit();
 }

@@ -1047,6 +1047,8 @@ mpegts_input_recv_packets
 #define MIN_TS_PKT 100
 #define MIN_TS_SYN (5*188)
 
+  if (sb->sb_ptr == 0)
+    return;
 retry:
   len2 = 0;
   off  = 0;

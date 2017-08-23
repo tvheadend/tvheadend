@@ -798,6 +798,8 @@ void sbuf_realloc(sbuf_t *sb, int len);
 
 void sbuf_append(sbuf_t *sb, const void *data, int len);
 
+void sbuf_append_from_sbuf(sbuf_t *sb, sbuf_t *src);
+
 void sbuf_cut(sbuf_t *sb, int off);
 
 void sbuf_put_be32(sbuf_t *sb, uint32_t u32);
