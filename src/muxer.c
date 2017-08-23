@@ -302,7 +302,8 @@ muxer_hints_create(const char *agent)
 void
 muxer_hints_free(muxer_hints_t *hints)
 {
-  free(hints->mh_agent);
+  if (hints)
+    free(hints->mh_agent);
   free(hints);
 }
 
