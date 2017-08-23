@@ -26,6 +26,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <signal.h>
 #include <net/if.h>
 
 #include <openssl/sha.h>
@@ -382,6 +383,21 @@ sbuf_append(sbuf_t *sb, const void *data, int len)
   sbuf_alloc(sb, len);
   memcpy(sb->sb_data + sb->sb_ptr, data, len);
   sb->sb_ptr += len;
+}
+
+void
+sbuf_append_from_sbuf(sbuf_t *sb, sbuf_t *src)
+{
+  if (sb->sb_ptr == 0) {
+    sbuf_free(sb);
+    sb->sb_data = src->sb_data;
+    sb->sb_ptr = src->sb_ptr;
+    sb->sb_size = src->sb_size;
+    sbuf_steal_data(src);
+  } else {
+    sbuf_append(sb, src->sb_data, src->sb_ptr);
+    src->sb_ptr = 0;
+  }
 }
 
 void
@@ -867,4 +883,17 @@ gmtime2local(time_t gmt, char *buf, size_t buflen)
   localtime_r(&gmt, &tm);
   strftime(buf, buflen, "%F;%T(%z)", &tm);
   return buf;
+}
+
+int
+tvh_kill_to_sig(int tvh_kill)
+{
+  switch (tvh_kill) {
+  case TVH_KILL_TERM: return SIGTERM;
+  case TVH_KILL_INT:  return SIGINT;
+  case TVH_KILL_HUP:  return SIGHUP;
+  case TVH_KILL_USR1: return SIGUSR1;
+  case TVH_KILL_USR2: return SIGUSR2;
+  }
+  return SIGKILL;
 }

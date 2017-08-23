@@ -132,6 +132,7 @@ typedef struct mk_muxer {
 
   int webm;
   int dvbsub_reorder;
+  int dvbsub_skip;
 
   struct th_pktref_queue holdq;
 } mk_muxer_t;
@@ -334,6 +335,8 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       break;
 
     case SCT_DVBSUB:
+      if (mk->dvbsub_skip)
+        goto disable;
       tracktype = 0x11;
       codec_id = "S_DVBSUB";
       break;
@@ -344,6 +347,7 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       break;
 
     default:
+disable:
       ssc->ssc_muxer_disabled = 1;
       tr->disabled = 1;
       continue;
@@ -502,7 +506,8 @@ mk_write_to_fd(mk_muxer_t *mk, htsbuf_queue_t *hq)
     iov += iovcnt;
   } while(i);
 
-  muxer_cache_update((muxer_t *)mk, mk->fd, oldpos, 0);
+  if (mk->seekable)
+    muxer_cache_update((muxer_t *)mk, mk->fd, oldpos, 0);
 
   return 0;
 }
@@ -1503,6 +1508,8 @@ mkv_muxer_destroy(muxer_t *m)
   free(mk->filename);
   free(mk->tracks);
   free(mk->title);
+  muxer_config_free(&mk->m_config);
+  muxer_hints_free(mk->m_hints);
   free(mk);
 }
 
@@ -1510,9 +1517,11 @@ mkv_muxer_destroy(muxer_t *m)
  * Create a new builtin muxer
  */
 muxer_t*
-mkv_muxer_create(const muxer_config_t *m_cfg)
+mkv_muxer_create(const muxer_config_t *m_cfg,
+                 const muxer_hints_t *hints)
 {
   mk_muxer_t *mk;
+  const char *agent = hints ? hints->mh_agent : NULL;
 
   if(m_cfg->m_type != MC_MATROSKA && m_cfg->m_type != MC_WEBM)
     return NULL;
@@ -1531,6 +1540,11 @@ mkv_muxer_create(const muxer_config_t *m_cfg)
   mk->webm           = m_cfg->m_type == MC_WEBM;
   mk->dvbsub_reorder = m_cfg->u.mkv.m_dvbsub_reorder;
   mk->fd             = -1;
+
+  /*
+   * VLC has no support for MKV S_DVBSUB codec format
+   */
+  mk->dvbsub_skip    = strstr(agent, "LibVLC/") != NULL;
 
   TAILQ_INIT(&mk->holdq);
 

@@ -29,13 +29,6 @@
 #define IPTV_PKTS        32
 #define IPTV_PKT_PAYLOAD 1472
 
-#define IPTV_KILL_KILL   0
-#define IPTV_KILL_TERM   1
-#define IPTV_KILL_INT    2
-#define IPTV_KILL_HUP    3
-#define IPTV_KILL_USR1   4
-#define IPTV_KILL_USR2   5
-
 extern pthread_mutex_t iptv_lock;
 
 typedef struct iptv_input   iptv_input_t;
@@ -99,6 +92,7 @@ struct iptv_network
   int      in_ssl_peer_verify;
   char    *in_remove_args;
   int      in_tsid_accept_zero_value;
+  int      in_libav;
 
   void    *in_auto; /* private structure for auto-network */
 };
@@ -121,6 +115,7 @@ struct iptv_mux
   char                 *mm_iptv_interface;
 
   int                   mm_iptv_substitute;
+  int                   mm_iptv_libav;
   int                   mm_iptv_atsc;
 
   char                 *mm_iptv_muxname;
@@ -155,6 +150,8 @@ struct iptv_mux
   void                 *im_data;
 
   int                   im_delete_flag;
+
+  void                 *im_opaque;
 };
 
 iptv_mux_t* iptv_mux_create0
@@ -191,6 +188,7 @@ void iptv_udp_init     ( void );
 void iptv_rtsp_init    ( void );
 void iptv_pipe_init    ( void );
 void iptv_file_init    ( void );
+void iptv_libav_init   ( void );
 
 ssize_t iptv_rtp_read ( iptv_mux_t *im, udp_multirecv_t *um,
                         void (*pkt_cb)(iptv_mux_t *im, uint8_t *buf, int len) );

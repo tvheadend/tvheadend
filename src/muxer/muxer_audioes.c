@@ -227,10 +227,13 @@ audioes_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
       am->m_eos = 1;
     }
     am->m_errors++;
-    muxer_cache_update(m, am->am_fd, am->am_off, 0);
-    am->am_off = lseek(am->am_fd, 0, SEEK_CUR);
+    if (am->am_seekable) {
+      muxer_cache_update(m, am->am_fd, am->am_off, 0);
+      am->am_off = lseek(am->am_fd, 0, SEEK_CUR);
+    }
   } else {
-    muxer_cache_update(m, am->am_fd, am->am_off, 0);
+    if (am->am_seekable)
+      muxer_cache_update(m, am->am_fd, am->am_off, 0);
     am->am_off += size;
   }
 
@@ -280,6 +283,8 @@ audioes_muxer_destroy(muxer_t *m)
 
   if (am->am_filename)
     free(am->am_filename);
+  muxer_config_free(&am->m_config);
+  muxer_hints_free(am->m_hints);
   free(am);
 }
 
@@ -288,7 +293,8 @@ audioes_muxer_destroy(muxer_t *m)
  * Create a new builtin muxer
  */
 muxer_t*
-audioes_muxer_create(const muxer_config_t *m_cfg)
+audioes_muxer_create(const muxer_config_t *m_cfg,
+                     const muxer_hints_t *hints)
 {
   audioes_muxer_t *am;
 

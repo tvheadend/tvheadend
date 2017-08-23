@@ -1345,6 +1345,8 @@ main(int argc, char **argv)
 
   if(opt_fork)
     unlink(opt_pidpath);
+
+  libav_done();
     
   /* OpenSSL - welcome to the "cleanup" hell */
   ENGINE_cleanup();
@@ -1352,12 +1354,12 @@ main(int argc, char **argv)
   CRYPTO_cleanup_all_ex_data();
   EVP_cleanup();
   CONF_modules_free();
-#ifndef OPENSSL_NO_COMP
+#if !defined(OPENSSL_NO_COMP)
   COMP_zlib_cleanup();
 #endif
   ERR_remove_state(0);
   ERR_free_strings();
-#ifndef OPENSSL_NO_COMP
+#if !defined(OPENSSL_NO_COMP) && OPENSSL_VERSION_NUMBER < 0x1010006f
   sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 #endif
   /* end of OpenSSL cleanup code */

@@ -83,7 +83,7 @@ define DOWNLOAD
 	@mkdir -p $(LIB_ROOT)/build
 	@if test -z "$${TVHEADEND_FILE_CACHE}"; then \
 		printf "WGET            $(1)\n"; \
-		wget --no-verbose -O $(2) $(1); \
+		wget --no-verbose --no-check-certificate -O $(2) $(1); \
 	else \
 		file=$$(basename $(2)); \
 		cp "$$TVHEADEND_FILE_CACHE/$${file}" $(2); \

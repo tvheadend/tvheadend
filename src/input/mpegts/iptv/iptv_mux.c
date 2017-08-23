@@ -97,19 +97,18 @@ iptv_mux_url_set ( void *p, const void *v )
   return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
 }
 
+#if ENABLE_LIBAV
 static htsmsg_t *
-iptv_muxdvr_class_kill_list ( void *o, const char *lang )
+iptv_mux_libav_enum ( void *o, const char *lang )
 {
   static const struct strtab tab[] = {
-    { N_("SIGKILL"),   IPTV_KILL_KILL },
-    { N_("SIGTERM"),   IPTV_KILL_TERM },
-    { N_("SIGINT"),    IPTV_KILL_INT, },
-    { N_("SIGHUP"),    IPTV_KILL_HUP },
-    { N_("SIGUSR1"),   IPTV_KILL_USR1 },
-    { N_("SIGUSR2"),   IPTV_KILL_USR2 },
+    { N_("Network settings"),   0 },
+    { N_("Use"),                1 },
+    { N_("Do not use"),        -1 },
   };
   return strtab2htsmsg(tab, 1, lang);
 }
+#endif
 
 const idclass_t iptv_mux_class =
 {
@@ -148,6 +147,18 @@ const idclass_t iptv_mux_class =
       .off      = offsetof(iptv_mux_t, mm_iptv_substitute),
       .opts     = PO_ADVANCED
     },
+#if ENABLE_LIBAV
+    {
+      .type     = PT_INT,
+      .id       = "use_libav",
+      .name     = N_("Use A/V library"),
+      .desc     = N_("The input stream is remuxed with A/V library (libav or"
+                     " or ffmpeg) to the MPEG-TS format which is accepted by"
+                     " tvheadend."),
+      .list     = iptv_mux_libav_enum,
+      .off      = offsetof(iptv_mux_t, mm_iptv_libav),
+    },
+#endif
     {
       .type     = PT_STR,
       .id       = "iptv_interface",
@@ -207,7 +218,7 @@ const idclass_t iptv_mux_class =
       .id       = "iptv_kill",
       .name     = N_("Kill signal (pipe)"),
       .off      = offsetof(iptv_mux_t, mm_iptv_kill),
-      .list     = iptv_muxdvr_class_kill_list,
+      .list     = proplib_kill_list,
       .opts     = PO_EXPERT
     },
     {

@@ -167,6 +167,7 @@ epggrab_channel_link ( epggrab_channel_t *ec, channel_t *ch, void *origin )
   /* Already linked */
   LIST_FOREACH(ilm, &ec->channels, ilm_in1_link)
     if (ilm->ilm_in2 == &ch->ch_id) {
+      ilm->ilm_mark = 0;
       epggrab_channel_sync(ec, ch);
       return 0;
     }

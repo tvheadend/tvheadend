@@ -34,10 +34,12 @@ unexport LDFLAGS
 
 EXTLIBS        =
 COMPONENTS     = avutil avcodec avformat swscale avresample swresample avfilter
-PROTOCOLS      = file
+PROTOCOLS      = file http https hls mmsh mmst rtmp rtmpe rtmps rtmpt rtmpte rtmpts \
+                 ffrtmpcrypt ffrtmphttp rtp srtp tcp udp udplite unix
 DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm h264 hevc
 ENCODERS       = mpeg2video mp2 aac vorbis
-MUXERS         = mpegts mpeg2dvd matroska webm mp4
+MUXERS         = mpegts dvd matroska mp4
+DEMUXERS       = mpegts mpeg matroska mp4 hls flv live_flv
 BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif scale null aresample anull
 
@@ -93,10 +95,10 @@ LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
 LIBMFX_SHA1    = 33dec0b054d842e8380eb31b97afe02d07d5c6fc
 LIBMFX_DIFFS   =
 
-FFMPEG         = ffmpeg-3.3.2
+FFMPEG         = ffmpeg-3.3.3
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
-FFMPEG_SHA1    = 584544ced449e4a05f17711da33d7c46fd72f2e4
+FFMPEG_SHA1    = 23bce5ccc4aeae23e1893d6cea7b1bd57b2591cb
 
 
 # ##############################################################################
@@ -606,6 +608,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(foreach protocol,$(PROTOCOLS),--enable-protocol=$(protocol)) \
 		$(foreach decoder,$(DECODERS),--enable-decoder=$(decoder)) \
 		$(foreach encoder,$(ENCODERS),--enable-encoder=$(encoder)) \
+		$(foreach demuxer,$(DEMUXERS),--enable-demuxer=$(demuxer)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf)) \
 		$(foreach filter,$(FILTERS),--enable-filter=$(filter))

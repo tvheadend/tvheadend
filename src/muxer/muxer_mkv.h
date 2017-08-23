@@ -21,6 +21,6 @@
 
 #include "muxer.h"
 
-muxer_t* mkv_muxer_create (const muxer_config_t* m_cfg);
+muxer_t *mkv_muxer_create (const muxer_config_t *m_cfg, const muxer_hints_t *hints);
 
 #endif /* MUXER_MKV_H_ */

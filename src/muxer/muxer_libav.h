@@ -21,6 +21,6 @@
 
 #include "muxer.h"
 
-muxer_t* lav_muxer_create (const muxer_config_t* m_cfg);
+muxer_t *lav_muxer_create (const muxer_config_t *m_cfg, const muxer_hints_t *hints);
 
 #endif

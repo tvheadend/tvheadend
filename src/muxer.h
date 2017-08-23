@@ -72,6 +72,10 @@ typedef struct muxer_config {
       int              m_rewrite_pmt;
       int              m_rewrite_sdt;
       int              m_rewrite_eit;
+      char            *m_cmdline;
+      char            *m_mime;
+      int              m_killsig;
+      int              m_killtimeout;
     } pass;
     struct {
       int              m_dvbsub_reorder;
@@ -82,6 +86,10 @@ typedef struct muxer_config {
     } audioes;
   } u;
 } muxer_config_t;
+
+typedef struct muxer_hints {
+  char *mh_agent;
+} muxer_hints_t;
 
 struct muxer;
 struct streaming_start;
@@ -111,6 +119,7 @@ typedef struct muxer {
   int                    m_eos;        /* End of stream */
   int                    m_errors;     /* Number of errors */
   muxer_config_t         m_config;     /* general configuration */
+  muxer_hints_t         *m_hints;      /* other hints */
 } muxer_t;
 
 
@@ -125,7 +134,15 @@ muxer_container_type_t muxer_container_mime2type (const char *str);
 const char*            muxer_container_suffix(muxer_container_type_t mc, int video);
 
 /* Muxer factory */
-muxer_t *muxer_create(const muxer_config_t *m_cfg);
+muxer_t *muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints);
+
+void muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src);
+
+void muxer_config_free(muxer_config_t *m_cfg);
+
+muxer_hints_t *muxer_hints_create(const char *agent);
+
+void muxer_hints_free(muxer_hints_t *hints);
 
 /* Wrapper functions */
 static inline int muxer_open_file (muxer_t *m, const char *filename)

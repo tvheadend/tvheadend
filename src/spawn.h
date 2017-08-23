@@ -32,6 +32,9 @@ void spawn_free_args(char **argv);
 int spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
                           int *rd, pid_t *pid, int redir_stderr);
 
+int spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
+                           int od, int *wd, pid_t *pid, int redir_stderr);
+
 int spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr);
 
 int spawn_reap(pid_t pid, char *stxt, size_t stxtlen);

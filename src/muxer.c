@@ -257,35 +257,90 @@ muxer_container_mime2type(const char *str)
 
 
 /**
+ * Copy muxer settings
+ */
+void
+muxer_config_copy(muxer_config_t *dst, const muxer_config_t *src)
+{
+  *dst = *src;
+  if (src->m_type == MC_RAW || src->m_type == MC_PASS) {
+    mystrset(&dst->u.pass.m_cmdline, src->u.pass.m_cmdline);
+    mystrset(&dst->u.pass.m_mime, src->u.pass.m_mime);
+  }
+}
+
+
+/**
+ * Free muxer settings
+ */
+void
+muxer_config_free(muxer_config_t *m_cfg)
+{
+  if (m_cfg->m_type == MC_RAW || m_cfg->m_type == MC_PASS) {
+    free(m_cfg->u.pass.m_cmdline);
+    free(m_cfg->u.pass.m_mime);
+  }
+  memset(m_cfg, 0, sizeof(*m_cfg));
+}
+
+
+/**
+ * Create muxer hints
+ */
+muxer_hints_t *
+muxer_hints_create(const char *agent)
+{
+  muxer_hints_t *hints = calloc(1, sizeof(*hints));
+  mystrset(&hints->mh_agent, agent);
+  return hints;
+}
+
+
+/**
+ * Free muxer hints
+ */
+void
+muxer_hints_free(muxer_hints_t *hints)
+{
+  if (hints)
+    free(hints->mh_agent);
+  free(hints);
+}
+
+
+/**
  * Create a new muxer
  */
 muxer_t* 
-muxer_create(const muxer_config_t *m_cfg)
+muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints)
 {
   muxer_t *m;
 
   assert(m_cfg);
 
-  m = pass_muxer_create(m_cfg);
+  m = pass_muxer_create(m_cfg, hints);
 
   if(!m)
-    m = mkv_muxer_create(m_cfg);
+    m = mkv_muxer_create(m_cfg, hints);
 
   if(!m)
-    m = audioes_muxer_create(m_cfg);
+    m = audioes_muxer_create(m_cfg, hints);
 
 #if CONFIG_LIBAV
   if(!m)
-    m = lav_muxer_create(m_cfg);
+    m = lav_muxer_create(m_cfg, hints);
 #endif
 
   if(!m) {
     tvherror(LS_MUXER, "Can't find a muxer that supports '%s' container",
 	    muxer_container_type2txt(m_cfg->m_type));
+    muxer_hints_free(hints);
     return NULL;
   }
   
   memcpy(&m->m_config, m_cfg, sizeof(muxer_config_t));
+  memset(m_cfg, 0, sizeof(*m_cfg));
+  m->m_hints = hints;
 
   return m;
 }

@@ -160,6 +160,9 @@ prop_doc_##name(const struct property *p, const char *lang) \
 { return prop_md_doc(tvh_doc_##name##_property, lang); }
 
 
+/* helpers */
+htsmsg_t *proplib_kill_list ( void *o, const char *lang );
+
 #endif /* __TVH_PROP_H__ */
 
 /******************************************************************************
