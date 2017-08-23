@@ -59,7 +59,7 @@ iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
       }
       sbuf_append(&la->sbuf, buf, buf_size);
       /* notify iptv layer that we have new data to read */
-      (void)write(la->pipe.wr, "", 1);
+      if (write(la->pipe.wr, "", 1)) { };
     }
 fin:
     pthread_mutex_unlock(&la->lock);
@@ -221,7 +221,7 @@ iptv_libav_read ( iptv_mux_t *im )
   ret = la->sbuf.sb_ptr;
   sbuf_append_from_sbuf(&im->mm_iptv_buffer, &la->sbuf);
   sbuf_reset(&la->sbuf, WRITE_BUFFER_SIZE * 2);
-  (void)read(la->pipe.rd, buf, sizeof(buf));
+  if (read(la->pipe.rd, buf, sizeof(buf))) {};
   pthread_mutex_unlock(&la->lock);
   return ret;
 }
