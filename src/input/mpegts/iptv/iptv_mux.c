@@ -97,6 +97,7 @@ iptv_mux_url_set ( void *p, const void *v )
   return iptv_url_set(&im->mm_iptv_url, &im->mm_iptv_url_sane, v, 1, 1);
 }
 
+#if ENABLE_LIBAV
 static htsmsg_t *
 iptv_mux_libav_enum ( void *o, const char *lang )
 {
@@ -107,6 +108,7 @@ iptv_mux_libav_enum ( void *o, const char *lang )
   };
   return strtab2htsmsg(tab, 1, lang);
 }
+#endif
 
 const idclass_t iptv_mux_class =
 {
