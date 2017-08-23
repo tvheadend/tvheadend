@@ -908,12 +908,13 @@ profile_sharer_postinit(profile_sharer_t *prsh)
     return 0;
   if (prsh->prsh_queue_run)
     return 0;
+  prsh->prsh_queue_run = 1;
   r = tvhthread_create(&prsh->prsh_queue_thread, NULL,
                        profile_sharer_thread, prsh, "sharer");
-  if (!r)
-    prsh->prsh_queue_run = 1;
-  else
+  if (r) {
+    prsh->prsh_queue_run = 0;
     tvherror(LS_PROFILE, "unable to create sharer thread");
+  }
   return r;
 }
 
