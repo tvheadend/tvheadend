@@ -59,7 +59,7 @@ iptv_libav_write_packet(void *opaque, uint8_t *buf, int buf_size)
       }
       sbuf_append(&la->sbuf, buf, buf_size);
       /* notify iptv layer that we have new data to read */
-      if (write(la->pipe.wr, "", 1)) { };
+      if (write(la->pipe.wr, "", 1)) {};
     }
 fin:
     pthread_mutex_unlock(&la->lock);
@@ -144,6 +144,9 @@ iptv_libav_thread(void *aux)
       break;
     }
     if (atomic_get(&la->running) == 0)
+      goto unref;
+    if ((pkt.dts != AV_NOPTS_VALUE && pkt.dts < 0) ||
+        (pkt.pts != AV_NOPTS_VALUE && pkt.pts < 0))
       goto unref;
     in_stream  = la->ictx->streams[pkt.stream_index];
     out_stream = la->octx->streams[pkt.stream_index];
