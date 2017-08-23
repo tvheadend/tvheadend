@@ -784,6 +784,13 @@ ifeq ($(CONFIG_BINTRAY_CACHE),yes)
 endif
 	$(MAKE) -f Makefile.hdhomerun
 
+.PHONY: ffmpeg_rebuild
+ffmpeg_rebuild:
+	-rm ${BUILDDIR}/ffmpeg/build/ffmpeg/lib/libavcodec.a
+	-rm ${BUILDDIR}/libffmpeg_stamp
+	-rm ${BUILDDIR}/ffmpeg/ffmpeg-*/.tvh_build
+	$(MAKE) all
+
 # linuxdvb git tree
 $(ROOTDIR)/data/dvb-scan/.stamp:
 	@echo "Receiving data/dvb-scan from https://github.com/tvheadend/dtv-scan-tables.git#tvheadend"
