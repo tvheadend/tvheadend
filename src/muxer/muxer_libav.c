@@ -499,9 +499,12 @@ lav_muxer_write_pkt(muxer_t *m, streaming_message_type_t smt, void *data)
 
     packet.stream_index = st->index;
  
-    packet.pts      = av_rescale_q(pkt->pkt_pts     , mpeg_tc, st->time_base);
-    packet.dts      = av_rescale_q(pkt->pkt_dts     , mpeg_tc, st->time_base);
-    packet.duration = av_rescale_q(pkt->pkt_duration, mpeg_tc, st->time_base);
+    packet.pts      = av_rescale_q_rnd(pkt->pkt_pts, mpeg_tc, st->time_base,
+                                       AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+    packet.dts      = av_rescale_q_rnd(pkt->pkt_dts, mpeg_tc, st->time_base,
+                                       AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+    packet.duration = av_rescale_q_rnd(pkt->pkt_duration, mpeg_tc, st->time_base,
+                                       AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
 
     if(!SCT_ISVIDEO(pkt->pkt_type) || pkt->v.pkt_frametype < PKT_P_FRAME)
       packet.flags |= AV_PKT_FLAG_KEY;
