@@ -362,7 +362,7 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
 {
   char *s, *f, *p, *a;
   const char **r;
-  int i = 0, l;
+  int i = 0, l, eow = 0;
 
   if (!argv || !cmd)
     return -1;
@@ -374,7 +374,8 @@ spawn_parse_args(char ***argv, int argc, const char *cmd, const char **replace)
     while (*s == ' ')
       s++;
     f = s;
-    while (*s && *s != ' ') {
+    eow = *s == '\'' || *s == '"' ? *s++ : ' ';
+    while (*s && *s != eow) {
       if (*s == '\\') {
         l = *(s + 1);
         if (l == 'b')
