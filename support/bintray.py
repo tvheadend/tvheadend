@@ -38,8 +38,11 @@ class Response(object):
         self.url = response.geturl()
         self.code = response.getcode()
         self.reason = response.msg
-        self.body = response.read()
         self.headers = response.info()
+        if 'Content-type' in self.headers and self.headers['Content-type'] == 'application/json':
+          self.body = json.loads(response.read())
+        else:
+          self.body = response.read()
 
 class Bintray(object):
 
@@ -73,6 +76,12 @@ class Bintray(object):
         except urllib.HTTPError as e:
             r = Response(e)
         return r
+
+    def get(self, binary=None):
+        return self._push(None, method='GET')
+
+    def delete(self, binary=None):
+        return self._push(None, method='DELETE')
 
     def put(self, data, binary=None):
         return self._push(data, binary)
@@ -136,6 +145,17 @@ def get_repo(filename, hint=None):
         elif name.find('.el') > 0:
             return 'rhel'
 
+def rpmversion(name):
+    ver = type('',(object,),{})()
+    rpmbase, ver.arch = name.rsplit('.', 1)
+    rpmname, rpmversion = rpmbase.rsplit('-', 1)
+    rpmname, rpmversion2 = rpmname.rsplit('-', 1)
+    rpmversion = rpmversion2 + '-' + rpmversion
+    rpmver1, rpmver2 = rpmversion.split('-', 1)
+    rpmversion, ver.dist = rpmver2.split('.', 1)
+    ver.version = rpmver1 + '-' + rpmversion
+    return ver
+
 def get_bintray_params(filename, hint=None):
     filename = filename.strip()
     basename = os.path.basename(filename)
@@ -158,16 +178,10 @@ def get_bintray_params(filename, hint=None):
         extra.append('deb_distribution=' + debdistro)
         extra.append('deb_architecture=' + debarch)
     else:
-        rpmbase, rpmarch = name.rsplit('.', 1)
-        rpmname, rpmversion = rpmbase.rsplit('-', 1)
-        rpmname, rpmversion2 = rpmname.rsplit('-', 1)
-        rpmversion = rpmversion2 + '-' + rpmversion
-        rpmver1, rpmver2 = rpmversion.split('-', 1)
-        rpmversion, rpmdist = rpmver2.split('.', 1)
-        rpmversion = rpmver1 + '-' + rpmversion
-        args.version = rpmversion
-        args.path = 'linux/' + get_path(rpmversion, args.repo) + \
-                    '/' + rpmdist + '/' + rpmarch
+        rpmver = rpmversion(name)
+        args.version = rpmver.version
+        args.path = 'linux/' + get_path(rpmver.version, args.repo) + \
+                    '/' + rpmver.dist + '/' + rpmver.arch
     extra = ';'.join(extra)
     if extra: extra = ';' + extra
     return (basename, args, extra)
@@ -208,8 +222,7 @@ def do_publish(*args):
     if resp.code != 200 and resp.code != 201 and resp.code != 409:
         error(10, 'Version %s/%s: HTTP ERROR %s %s',
                   args.repo, args.version, resp.code, resp.reason)
-    else:
-        info('Version %s/%s created', args.repo, args.version)
+    info('Version %s/%s created', args.repo, args.version)
     for file in files:
         file = file.strip()
         basename, args, extra = get_bintray_params(file, hint)
@@ -226,6 +239,84 @@ def do_publish(*args):
                       file, resp.code, resp.reason)
         else:
             info('File %s: uploaded', file)
+
+def get_versions(repo, package):
+    bpath = '/packages/%s/%s/%s' % (BINTRAY_ORG, repo, package)
+    resp = Bintray(bpath).get()
+    if resp.code != 200 and resp.code != 201:
+        error(10, ' %s/%s: HTTP ERROR %s %s',
+               repo, package, resp.code, resp.reason)
+    return resp.body
+
+def get_files(repo, package, unpublished=0):
+    bpath = '/packages/%s/%s/%s/files?include_unpublished=%d' % (BINTRAY_ORG, repo, package, unpublished)
+    resp = Bintray(bpath).get()
+    if resp.code != 200 and resp.code != 201:
+        error(10, ' %s/%s: HTTP ERROR %s %s',
+               repo, package, resp.code, resp.reason)
+    return resp.body
+
+def delete_file(repo, file):
+    bpath = '/content/%s/%s/%s' % (BINTRAY_ORG, repo, urllib.quote(file))
+    resp = Bintray(bpath).delete()
+    if resp.code != 200 and resp.code != 201:
+        error(10, ' %s/%s: HTTP ERROR %s %s',
+               repo, file, resp.code, resp.reason)
+
+def delete_up_to_count(repo, files, max_count, auxfcn=None):
+    files.sort(key=lambda x: x['sortkey'], reverse=True)
+    key = ''
+    count = 0
+    for f in files:
+      a, b = f['sortkey'].split('*')
+      if a == key:
+        if count > max_count:
+          info('delete %s', f['path'])
+          if auxfcn:
+              auxfcn(repo, f['path'])
+          else:
+              delete_file(repo, f['path'])
+        else:
+          info('keep %s', f['path'])
+        count += 1
+      else:
+        key = a
+        count = 0
+
+def do_tidy(*args):
+
+    def fedora_delete(repo, path):
+        rest = '-' + '-'.join(path.split('tvheadend-')[1:])
+        for f in files:
+            if f['path'].find(rest) >= 0:
+                delete_file(repo, f['path'])
+
+    def fedora_files(repo):
+      files = get_files(repo, 'tvheadend')
+      sfiles = []
+      for f in files:
+        if f['name'].startswith('tvheadend-debuginfo-'):
+          continue
+        if f['name'].find('~') < 0:
+          continue
+        name, ext = os.path.splitext(f['name'])
+        rpmver = rpmversion(name)
+        f['ver1'], f['ver2'] = rpmver.version.split('~')[0].split('-')
+        f['sortkey'] = "%s/%s/%s*%08d" % (rpmver.dist, rpmver.arch, f['ver1'], long(f['ver2']))
+        sfiles.append(f)
+      return files, sfiles
+
+    files, sfiles = fedora_files('centos')
+    delete_up_to_count('centos', sfiles, 10, fedora_delete)
+
+    files, sfiles = fedora_files('fedora')
+    delete_up_to_count('fedora', sfiles, 10, fedora_delete)
+
+    files = get_files('misc', 'staticlib', 1)
+    for f in files:
+      a, b = f['path'].split('-')
+      f['sortkey'] = a + '*' + f['created']
+    delete_up_to_count('misc', files, 4)
 
 def do_unknown(*args):
     r = 'Please, specify a valid command:\n'
