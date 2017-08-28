@@ -160,8 +160,8 @@ _context_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             self->require_meta = self->helper->meta(self, avpkt, pkt);
         }
         else if (self->oavctx->extradata_size) {
-            pkt->pkt_meta = pktbuf_create(self->oavctx->extradata,
-                                          self->oavctx->extradata_size);
+            pkt->pkt_meta = pktbuf_alloc(self->oavctx->extradata,
+                                         self->oavctx->extradata_size);
             self->require_meta = (pkt->pkt_meta) ? 0 : -1;
         }
     }
@@ -269,7 +269,7 @@ tvh_context_pack(TVHContext *self, AVPacket *avpkt)
         pkt = self->helper->pack(self, avpkt);
     }
     else {
-        pkt = pkt_create(avpkt->data, avpkt->size, avpkt->pts, avpkt->dts);
+        pkt = pkt_alloc(self->stream->type, avpkt->data, avpkt->size, avpkt->pts, avpkt->dts, 0);
     }
     if (!pkt) {
         tvh_context_log(self, LOG_ERR, "failed to create packet");

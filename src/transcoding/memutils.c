@@ -20,8 +20,6 @@
 
 #include "memutils.h"
 
-#include "memoryinfo.h"
-
 #include <libavutil/mem.h>
 
 
@@ -96,29 +94,6 @@ str_snprintf(char *str, size_t size, const char *format, ...)
     return (ret < 0 || ret >= size) ? -1 : 0;
 }
 
-
-/* meant to replace streaming_msg_create_pkt in streaming.h
-   IMPORTANT: takes ownership of pkt */
-streaming_message_t *
-msg_create(th_pkt_t *pkt)
-{
-    static const size_t msg_size = sizeof(streaming_message_t);
-    streaming_message_t *msg = NULL;
-
-    if ((msg = calloc(1, msg_size))) {
-        msg->sm_type = SMT_PACKET;
-#if ENABLE_TIMESHIFT
-        msg->sm_time = 0;
-#endif
-        msg->sm_data = pkt; // takes ownership
-    }
-    else {
-        TVHPKT_DECREF(pkt);
-    }
-    return msg;
-}
-
-
 /* _IMPORTANT!_: need to check for pb->pb_size and pb->pb_data
    _BEFORE_ calling pktbuf_copy_data */
 uint8_t *
@@ -129,61 +104,4 @@ pktbuf_copy_data(pktbuf_t *pb)
         memcpy(data, pb->pb_data, pb->pb_size);
     }
     return data;
-}
-
-
-/* meant to replace pktbuf_alloc in packet.h */
-pktbuf_t *
-pktbuf_create(const uint8_t *data, size_t size)
-{
-    static const size_t pktbuf_size = sizeof(pktbuf_t);
-    pktbuf_t *pktbuf = NULL;
-    uint8_t *buffer = NULL;
-
-    if (size) {
-        if (!(buffer = calloc(1, size))) {
-            return NULL;
-        }
-        else if (data) {
-            memcpy(buffer, data, size);
-        }
-    }
-    if ((pktbuf = calloc(1, pktbuf_size))) {
-        pktbuf->pb_refcount = 1;
-        pktbuf->pb_err = 0;
-        pktbuf->pb_data = buffer;
-        pktbuf->pb_size = size;
-        memoryinfo_alloc(&pktbuf_memoryinfo, pktbuf_size + pktbuf->pb_size);
-    }
-    else if (buffer) {
-        free(buffer);
-        buffer = NULL;
-    }
-    return pktbuf;
-}
-
-
-/* meant to replace pkt_alloc in packet.h */
-th_pkt_t *
-pkt_create(const uint8_t *data, size_t size, int64_t pts, int64_t dts)
-{
-    static const size_t pkt_size = sizeof(th_pkt_t);
-    th_pkt_t *pkt = NULL;
-    pktbuf_t *payload = NULL;
-
-    if (size && !(payload = pktbuf_create(data, size))) {
-        return NULL;
-    }
-    if ((pkt = calloc(1, pkt_size))) {
-        pkt->pkt_refcount = 1;
-        pkt->pkt_pts = pts;
-        pkt->pkt_dts = dts;
-        pkt->pkt_payload = payload;
-        memoryinfo_alloc(&pkt_memoryinfo, pkt_size);
-    }
-    else if (payload) {
-        pktbuf_ref_dec(payload);
-        payload = NULL;
-    }
-    return pkt;
 }

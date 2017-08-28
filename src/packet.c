@@ -52,21 +52,32 @@ pkt_destroy(th_pkt_t *pkt)
  * suppoed to take care of)
  */
 th_pkt_t *
-pkt_alloc(streaming_component_type_t type, const void *data, size_t datalen,
+pkt_alloc(streaming_component_type_t type, const uint8_t *data, size_t datalen,
           int64_t pts, int64_t dts, int64_t pcr)
 {
   th_pkt_t *pkt;
+  pktbuf_t *payload;
+
+  if (datalen > 0) {
+    payload = pktbuf_alloc(data, datalen);
+    if (payload == NULL)
+      return NULL;
+  } else {
+    payload = NULL;
+  }
 
   pkt = calloc(1, sizeof(th_pkt_t));
   if (pkt) {
     pkt->pkt_type = type;
-    if(datalen)
-      pkt->pkt_payload = pktbuf_alloc(data, datalen);
+    pkt->pkt_payload = payload;
     pkt->pkt_dts = dts;
     pkt->pkt_pts = pts;
     pkt->pkt_pcr = pcr;
     pkt->pkt_refcount = 1;
     memoryinfo_alloc(&pkt_memoryinfo, sizeof(*pkt));
+  } else {
+    if (payload)
+      pktbuf_ref_dec(payload);
   }
   return pkt;
 }
@@ -350,26 +361,28 @@ pktbuf_ref_inc(pktbuf_t *pb)
 }
 
 pktbuf_t *
-pktbuf_alloc(const void *data, size_t size)
+pktbuf_alloc(const uint8_t *data, size_t size)
 {
-  pktbuf_t *pb = malloc(sizeof(pktbuf_t));
+  pktbuf_t *pb;
+  uint8_t *buffer;
 
-  if (pb == NULL) return NULL;
+  buffer = size > 0 ? malloc(size) : NULL;
+  if (buffer) {\
+    if (data != NULL)
+      memcpy(buffer, data, size);
+  } else if (size > 0) {
+    return NULL;
+  }
+  pb = malloc(sizeof(pktbuf_t));
+  if (pb == NULL) {
+    free(buffer);
+    return NULL;
+  }
   pb->pb_refcount = 1;
+  pb->pb_data = buffer;
   pb->pb_size = size;
   pb->pb_err = 0;
-  if(size > 0) {
-    pb->pb_data = malloc(size);
-    if (pb->pb_data != NULL) {
-      if (data != NULL)
-        memcpy(pb->pb_data, data, size);
-    } else {
-      pb->pb_size = 0;
-    }
-  } else {
-    pb->pb_data = NULL;
-  }
-  memoryinfo_alloc(&pktbuf_memoryinfo, sizeof(*pb) + pb->pb_size);
+  memoryinfo_alloc(&pktbuf_memoryinfo, sizeof(*pb) + size);
   return pb;
 }
 

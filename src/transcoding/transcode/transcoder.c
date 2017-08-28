@@ -219,7 +219,7 @@ tvh_transcoder_deliver(TVHTranscoder *self, th_pkt_t *pkt)
 {
     tvh_sm_t *msg = NULL;
 
-    if (!(msg = msg_create(pkt))) { // takes ownership of pkt
+    if (!(msg = streaming_msg_create_pkt(pkt))) { // takes ownership of pkt
         tvh_transcoder_log(self, LOG_ERR, "failed to create message");
         return -1;
     }

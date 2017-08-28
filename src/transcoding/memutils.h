@@ -64,20 +64,9 @@ str_join(const char *separator, ...);
 int
 str_snprintf(char *str, size_t size, const char *format, ...);
 
-
-streaming_message_t *
-msg_create(th_pkt_t *pkt);
-
 /* _IMPORTANT!_: need to check for pb->pb_size and pb->pb_data
    _BEFORE_ calling pktbuf_copy_data */
 uint8_t *
 pktbuf_copy_data(pktbuf_t *pb);
-
-pktbuf_t *
-pktbuf_create(const uint8_t *data, size_t size);
-
-th_pkt_t *
-pkt_create(const uint8_t *data, size_t size, int64_t pts, int64_t dts);
-
 
 #endif // TVH_TRANSCODING_MEMUTILS_H__

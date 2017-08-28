@@ -218,7 +218,7 @@ tvh_mpeg2video_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             return -1;
         }
         size += 8;
-        if (!(pkt->pkt_meta = pktbuf_create(data, size))) {
+        if (!(pkt->pkt_meta = pktbuf_alloc(data, size))) {
             return -1;
         }
         return 0;
@@ -264,7 +264,7 @@ tvh_h264_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             break;
         }
         if (size) {
-            if (!(pkt->pkt_meta = pktbuf_create(avpkt->data, size))) {
+            if (!(pkt->pkt_meta = pktbuf_alloc(avpkt->data, size))) {
                 return -1;
             }
             return 0;
@@ -316,7 +316,7 @@ tvh_hevc_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
             break;
         }
         if (size) {
-            if (!(pkt->pkt_meta = pktbuf_create(avpkt->data, size))) {
+            if (!(pkt->pkt_meta = pktbuf_alloc(avpkt->data, size))) {
                 return -1;
             }
             return 0;
@@ -380,14 +380,14 @@ tvh_aac_pack(TVHContext *self, AVPacket *avpkt)
         tvh_context_log(self, LOG_ERR, "aac frame data too big");
     }
     else if (avpkt->data[0] != 0xff || (avpkt->data[1] & 0xf0) != 0xf0) {
-        if ((pkt = pkt_create(NULL, pkt_size, avpkt->pts, avpkt->dts))) {
+        if ((pkt = pkt_alloc(self->stream->type, NULL, pkt_size, avpkt->pts, avpkt->dts, 0))) {
             tvh_aac_pack_adts_header(self, pkt->pkt_payload);
             memcpy(pktbuf_ptr(pkt->pkt_payload) + header_size,
                    avpkt->data, avpkt->size);
         }
     }
     else {
-        pkt = pkt_create(avpkt->data, avpkt->size, avpkt->pts, avpkt->dts);
+        pkt = pkt_alloc(self->stream->type, avpkt->data, avpkt->size, avpkt->pts, avpkt->dts, 0);
     }
     return pkt;
 }

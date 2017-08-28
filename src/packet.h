@@ -126,7 +126,7 @@ void pktref_insert_head(struct th_pktref_queue *q, th_pkt_t *pkt);
 #define PKTREF_FOREACH(item, queue) TAILQ_FOREACH((item), (queue), pr_link)
 
 th_pkt_t *pkt_alloc(streaming_component_type_t type,
-                    const void *data, size_t datalen,
+                    const uint8_t *data, size_t datalen,
                     int64_t pts, int64_t dts, int64_t pcr);
 
 th_pkt_t *pkt_copy_shallow(th_pkt_t *pkt);
@@ -155,7 +155,7 @@ void pktbuf_destroy(pktbuf_t *pb);
 
 pktbuf_t *pktbuf_ref_inc(pktbuf_t *pb);
 
-pktbuf_t *pktbuf_alloc(const void *data, size_t size);
+pktbuf_t *pktbuf_alloc(const uint8_t *data, size_t size);
 
 pktbuf_t *pktbuf_make(void *data, size_t size);
 

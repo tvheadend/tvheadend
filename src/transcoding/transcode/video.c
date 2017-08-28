@@ -114,7 +114,10 @@ tvh_video_context_notify_gh(TVHContext *self)
     /* the video packets might be delayed */
     th_pkt_t *pkt = NULL;
 
-    pkt = pkt_create(NULL, 0, self->src_pkt->pkt_pts, self->src_pkt->pkt_dts);
+    pkt = pkt_alloc(self->stream->type, NULL, 0,
+                    self->src_pkt->pkt_pts,
+                    self->src_pkt->pkt_dts,
+                    self->src_pkt->pkt_pcr);
     if (pkt) {
         return tvh_context_deliver(self, pkt);
     }
