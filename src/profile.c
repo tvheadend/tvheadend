@@ -2456,123 +2456,53 @@ profile_init(void)
     htsmsg_destroy(c);
   }
 
-  name = "pass";
-  pro = profile_find_by_name2(name, NULL, 1);
-  if (pro == NULL || strcmp(profile_get_name(pro), name)) {
-    htsmsg_t *conf;
-
-    conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-mpegts");
-    htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_bool(conf, "default", 1);
-    htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("MPEG-TS Pass-thru"));
-    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
-    htsmsg_add_bool(conf, "rewrite_pmt", 1);
-    htsmsg_add_bool(conf, "rewrite_pat", 1);
-    htsmsg_add_bool(conf, "rewrite_sdt", 1);
-    htsmsg_add_bool(conf, "rewrite_eit", 1);
-    htsmsg_add_bool(conf, "shield", 1);
-    (void)profile_create(NULL, conf, 1);
-    htsmsg_destroy(conf);
+  if ((c = hts_settings_load("profiles")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      if ((name = htsmsg_get_str(e, "name")) == NULL)
+        continue;
+      pro = profile_find_by_name2(name, NULL, 1);
+      if (pro == NULL || strcmp(profile_get_name(pro), name)) {
+        if (!htsmsg_field_find(e, "enabled"))
+          htsmsg_add_bool(e, "enabled", 1);
+        if (!htsmsg_field_find(e, "priority"))
+          htsmsg_add_s32(e, "priority", PROFILE_SPRIO_NORMAL);
+        if (!htsmsg_field_find(e, "shield"))
+          htsmsg_add_bool(e, "shield", 1);
+        (void)profile_create(NULL, e, 1);
+      }
+    }
+    htsmsg_destroy(c);
   }
 
-  name = "matroska";
-  pro = profile_find_by_name2(name, NULL, 1);
-  if (pro == NULL || strcmp(profile_get_name(pro), name)) {
-    htsmsg_t *conf;
-
-    conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-matroska");
-    htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("Matroska"));
-    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
-    htsmsg_add_bool(conf, "shield", 1);
-    (void)profile_create(NULL, conf, 1);
-    htsmsg_destroy(conf);
-  }
-
-  name = "htsp";
-  pro = profile_find_by_name2(name, NULL, 1);
-  if (pro == NULL || strcmp(profile_get_name(pro), name)) {
-    htsmsg_t *conf;
-
-    conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-htsp");
-    htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("HTSP Default Stream Settings"));
-    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_IMPORTANT);
-    htsmsg_add_bool(conf, "shield", 1);
-    (void)profile_create(NULL, conf, 1);
-    htsmsg_destroy(conf);
-  }
-
-//#if ENABLE_LIBAV
-#if 0
-  name = "webtv-vp8-vorbis-webm";
-  pro = profile_find_by_name2(name, NULL, 1);
-  if (pro == NULL || strcmp(profile_get_name(pro), name)) {
-    htsmsg_t *conf;
-
-    conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-transcode");
-    htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("WEBTV profile VP8/Vorbis/WEBM"));
-    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
-    htsmsg_add_s32 (conf, "container", MC_WEBM);
-    htsmsg_add_u32 (conf, "resolution", 384);
-    htsmsg_add_u32 (conf, "channels", 2);
-    htsmsg_add_str (conf, "vcodec", "libvpx");
-    htsmsg_add_str (conf, "vcodec_preset", "faster");
-    htsmsg_add_str (conf, "acodec", "libvorbis");
-    htsmsg_add_bool(conf, "shield", 1);
-    (void)profile_create(NULL, conf, 1);
-    htsmsg_destroy(conf);
-  }
-  name = "webtv-h264-aac-mpegts";
-  pro = profile_find_by_name2(name, NULL, 1);
-  if (pro == NULL || strcmp(profile_get_name(pro), name)) {
-    htsmsg_t *conf;
-
-    conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-transcode");
-    htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("WEBTV profile H264/AAC/MPEG-TS"));
-    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
-    htsmsg_add_s32 (conf, "container", MC_MPEGTS);
-    htsmsg_add_u32 (conf, "resolution", 384);
-    htsmsg_add_u32 (conf, "channels", 2);
-    htsmsg_add_str (conf, "vcodec", "libx264");
-    htsmsg_add_str (conf, "vcodec_preset", "faster");
-    htsmsg_add_str (conf, "acodec", "aac");
-    htsmsg_add_bool(conf, "shield", 1);
-    (void)profile_create(NULL, conf, 1);
-    htsmsg_destroy(conf);
-  }
-  name = "webtv-h264-aac-matroska";
-  pro = profile_find_by_name2(name, NULL, 1);
-  if (pro == NULL || strcmp(profile_get_name(pro), name)) {
-    htsmsg_t *conf;
-
-    conf = htsmsg_create_map();
-    htsmsg_add_str (conf, "class", "profile-transcode");
-    htsmsg_add_bool(conf, "enabled", 1);
-    htsmsg_add_str (conf, "name", name);
-    htsmsg_add_str (conf, "comment", _("WEBTV profile H264/AAC/Matroska"));
-    htsmsg_add_s32 (conf, "priority", PROFILE_SPRIO_NORMAL);
-    htsmsg_add_s32 (conf, "container", MC_MATROSKA);
-    htsmsg_add_u32 (conf, "resolution", 384);
-    htsmsg_add_u32 (conf, "channels", 2);
-    htsmsg_add_str (conf, "vcodec", "libx264");
-    htsmsg_add_str (conf, "vcodec_preset", "faster");
-    htsmsg_add_str (conf, "acodec", "aac");
-    htsmsg_add_bool(conf, "shield", 1);
-    (void)profile_create(NULL, conf, 1);
-    htsmsg_destroy(conf);
+#if ENABLE_LIBAV
+  if ((c = hts_settings_load("transcoder/profiles")) != NULL) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f)))
+        continue;
+      if ((name = htsmsg_get_str(e, "name")) == NULL)
+        continue;
+      pro = profile_find_by_name2(name, NULL, 1);
+      if (pro == NULL || strcmp(profile_get_name(pro), name)) {
+transcoder_create:
+        htsmsg_add_str(e, "class", "profile-transcode");
+        if (!htsmsg_field_find(e, "enabled"))
+          htsmsg_add_bool(e, "enabled", 1);
+        if (!htsmsg_field_find(e, "priority"))
+          htsmsg_add_s32(e, "priority", PROFILE_SPRIO_NORMAL);
+        if (!htsmsg_field_find(e, "shield"))
+          htsmsg_add_bool(e, "shield", 1);
+        (void)profile_create(NULL, e, 1);
+      } else if (pro && idnode_is_instance(&pro->pro_id, &profile_transcode_class)) {
+        profile_transcode_t *prot = (profile_transcode_t *)pro;
+        if (prot->pro_vcodec == NULL || prot->pro_vcodec[0] == '\0') {
+          profile_delete(pro, 1);
+          goto transcoder_create;
+        }
+      }
+    }
+    htsmsg_destroy(c);
   }
 #endif
 

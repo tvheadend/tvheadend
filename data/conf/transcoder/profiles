@@ -1,0 +1,30 @@
+[
+    {
+	"comment": "WEBTV profile VP8/Vorbis/WEBM",
+	"name": "webtv-vp8-vorbis-webm",
+	"pro_vcodec": "webtv-vp8",
+	"pro_acodec": "webtv-vorbis",
+	"container": 6
+    },
+    {
+	"comment": "WEBTV profile H264/AAC/MPEG-TS",
+	"name": "webtv-h264-aac-mpegts",
+	"pro_vcodec": "webtv-h264",
+	"pro_acodec": "webtv-aac",
+	"container": 2
+    },
+    {
+	"comment": "WEBTV profile H264/AAC/Matroska",
+	"name": "webtv-h264-aac-matroska",
+	"pro_vcodec": "webtv-h264",
+	"pro_acodec": "webtv-aac",
+	"container": 1
+    },
+    {
+	"comment": "WEBTV profile H264/Vorbis/MP4",
+	"name": "webtv-h264-vorbis-mp4",
+	"pro_vcodec": "webtv-h264",
+	"pro_acodec": "webtv-vorbis",
+	"container": 9
+    }
+]

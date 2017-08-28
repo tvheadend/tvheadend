@@ -65,6 +65,25 @@ tvh_codec_profile_load(htsmsg_field_t *config)
 }
 
 
+static void
+tvh_codec_profile_create2(htsmsg_field_t *config)
+{
+    htsmsg_t *conf = NULL;
+    const char *name = NULL;
+
+    if ((conf = htsmsg_field_get_map(config)) != NULL) {
+        name = htsmsg_get_str(conf, "name");
+        if (name == NULL)
+            return;
+        if (tvh_codec_profile_find(name))
+            return;
+        if (tvh_codec_profile_create(conf, NULL, 0))
+          tvherror(LS_CODEC, "unable to create codec profile from config tree: '%s'",
+                   (name = htsmsg_get_str(conf, "name")) ? name : "<unknown>");
+    }
+}
+
+
 static int
 tvh_codec_profile_setup(TVHCodecProfile *self, tvh_ssc_t *ssc)
 {
@@ -323,7 +342,12 @@ tvh_codec_profiles_load()
             tvh_codec_profile_load(config);
         }
         htsmsg_destroy(settings);
-        settings = NULL;
+    }
+    if ((settings = hts_settings_load("transcoder/codecs"))) {
+        HTSMSG_FOREACH(config, settings) {
+            tvh_codec_profile_create2(config);
+        }
+        htsmsg_destroy(settings);
     }
 }
 
