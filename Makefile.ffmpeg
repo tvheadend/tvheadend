@@ -89,10 +89,10 @@ LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
 LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
 LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
-LIBOPUS        = opus-1.1.3
+LIBOPUS        = opus-1.2.1
 LIBOPUS_TB     = $(LIBOPUS).tar.gz
 LIBOPUS_URL    = http://downloads.xiph.org/releases/opus/$(LIBOPUS_TB)
-LIBOPUS_SHA1   = 7cb1bef20975afbf14a8a43308aed9cb41629f37
+LIBOPUS_SHA1   = 35d108ca9d6a8d05e52d06c5421a5f95b39fdac9
 
 FFMPEG         = ffmpeg-3.3.3
 FFMPEG_TB      = $(FFMPEG).tar.bz2
