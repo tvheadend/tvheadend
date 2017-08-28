@@ -24,8 +24,29 @@
 /* TVHStream ================================================================ */
 
 static int
-tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc)
+tvh_stream_is_copy(TVHCodecProfile *profile, tvh_ssc_t *ssc,
+                   const char *src_codecs)
 {
+    const char *txtname;
+    char *codecs, *str, *token, *saveptr;
+
+    /* if the source codec is in the list, do the stream copy only */
+    if (src_codecs && *src_codecs != '\0' && *src_codecs != '-') {
+        txtname = streaming_component_type2txt(ssc->ssc_type);
+        if (txtname == NULL)
+            goto cont;
+        codecs = tvh_strdupa(src_codecs);
+        if (codecs == NULL)
+            goto cont;
+        for (str = codecs; ; str = NULL) {
+            token = strtok_r(str," ,|;" , &saveptr);
+            if (token == NULL)
+                break;
+            if (!strcasecmp(token, txtname))
+                return 0; /* copy */
+        }
+    }
+cont:
     if (profile == tvh_codec_profile_copy) {
         return 1;
     }
@@ -105,7 +126,7 @@ tvh_stream_deliver(TVHStream *self, th_pkt_t *pkt)
 
 TVHStream *
 tvh_stream_create(TVHTranscoder *transcoder, TVHCodecProfile *profile,
-                  tvh_ssc_t *ssc)
+                  tvh_ssc_t *ssc, const char *src_codecs)
 {
     TVHStream *self = NULL;
     int is_copy = -1;
@@ -117,7 +138,7 @@ tvh_stream_create(TVHTranscoder *transcoder, TVHCodecProfile *profile,
     self->transcoder = transcoder;
     self->id = self->index = ssc->ssc_index;
     self->type = ssc->ssc_type;
-    if ((is_copy = tvh_stream_is_copy(profile, ssc)) > 0) {
+    if ((is_copy = tvh_stream_is_copy(profile, ssc, src_codecs)) > 0) {
         if (ssc->ssc_gh) {
             pktbuf_ref_inc(ssc->ssc_gh);
         }

@@ -2007,8 +2007,11 @@ typedef struct profile_transcode {
   profile_t;
   int   pro_mc;
   char *pro_vcodec;
+  char *pro_src_vcodec;
   char *pro_acodec;
+  char *pro_src_acodec;
   char *pro_scodec;
+  char *pro_src_scodec;
 } profile_transcode_t;
 
 
@@ -2087,15 +2090,57 @@ profile_class_pro_vcodec_list(void *o, const char *lang)
 }
 
 static htsmsg_t *
+profile_class_src_vcodec_list ( void *o, const char *lang )
+{
+  static const struct strtab_str tab[] = {
+    { "-",                     "" },
+    { "MPEG2VIDEO",            "MPEG2VIDEO" },
+    { "H264",                  "H264" },
+    { "VP8",                   "VP8" },
+    { "HEVC",                  "HEVC" },
+    { "VP9",                   "VP9" },
+    { "THEORA",                "THEORA" },
+  };
+  return strtab2htsmsg_str(tab, 1, lang);
+}
+
+static htsmsg_t *
 profile_class_pro_acodec_list(void *o, const char *lang)
 {
   return profile_class_codec_profiles_list(AVMEDIA_TYPE_AUDIO, lang);
 }
 
 static htsmsg_t *
+profile_class_src_acodec_list ( void *o, const char *lang )
+{
+  static const struct strtab_str tab[] = {
+    { "-",                     "" },
+    { "MPEG2AUDIO",            "MPEG2AUDIO" },
+    { "AC3",                   "AC3" },
+    { "AAC",                   "AAC" },
+    { "MP4A",                  "MP4A" },
+    { "EAC3",                  "EAC3" },
+    { "VORBIS",                "VORBIS" },
+    { "OPUS",                  "OPUS" },
+  };
+  return strtab2htsmsg_str(tab, 1, lang);
+}
+
+static htsmsg_t *
 profile_class_pro_scodec_list(void *o, const char *lang)
 {
   return profile_class_codec_profiles_list(AVMEDIA_TYPE_SUBTITLE, lang);
+}
+
+static htsmsg_t *
+profile_class_src_scodec_list ( void *o, const char *lang )
+{
+  static const struct strtab_str tab[] = {
+    { "-",                     "" },
+    { "DVBSUB",                "DVBSUB" },
+    { "TEXTSUB",               "TEXTSUB" },
+  };
+  return strtab2htsmsg_str(tab, 1, lang);
 }
 
 const idclass_t profile_transcode_class =
@@ -2137,6 +2182,21 @@ const idclass_t profile_transcode_class =
     },
     {
       .type     = PT_STR,
+      .id       = "src_vcodec",
+      .name     = N_("Source video codec"),
+      .desc     = N_("Transcode video only if source video codec match. "
+                     "Empty or minus string will ignore source video codec "
+                     "check and continue with transcode. Separate codec names "
+                     "with coma. If no codec match found - transcode with "
+                     "\"copy\" codec, if match found - transcode with video "
+                     "codec defined in this profile."),
+      .off      = offsetof(profile_transcode_t, pro_src_vcodec),
+      .list     = profile_class_src_vcodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
       .id       = "pro_acodec",
       .name     = N_("Audio codec profile"),
       .desc     = N_("Select audio codec profile to use for transcoding."),
@@ -2147,11 +2207,41 @@ const idclass_t profile_transcode_class =
     },
     {
       .type     = PT_STR,
+      .id       = "src_acodec",
+      .name     = N_("Source audio codec"),
+      .desc     = N_("Transcode audio only if source audio codec match. "
+                     "Empty or minus string will ignore source audio codec "
+                     "check and continue with transcode. Separate codec names "
+                     "with coma. If no codec match found - transcode with "
+                     "\"copy\" codec, if match found - transcode with audio "
+                     "codec defined in this profile."),
+      .off      = offsetof(profile_transcode_t, pro_src_acodec),
+      .list     = profile_class_src_acodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
       .id       = "pro_scodec",
       .name     = N_("Subtitle codec profile"),
       .desc     = N_("Select subtitle codec profile to use for transcoding."),
       .off      = offsetof(profile_transcode_t, pro_scodec),
       .list     = profile_class_pro_scodec_list,
+      .opts     = PO_ADVANCED,
+      .group    = 2
+    },
+    {
+      .type     = PT_STR,
+      .id       = "src_scodec",
+      .name     = N_("Source subtitle codec"),
+      .desc     = N_("Transcode subtitle only if source subtitle codec match. "
+                     "Empty or minus string will ignore source subtitle codec "
+                     "check and continue with transcode. Separate codec names "
+                     "with coma. If no codec match found - transcode with "
+                     "\"copy\" codec, if match found - transcode with subtitle "
+                     "codec defined in this profile."),
+      .off      = offsetof(profile_transcode_t, pro_src_acodec),
+      .list     = profile_class_src_scodec_list,
       .opts     = PO_ADVANCED,
       .group    = 2
     },
@@ -2175,9 +2265,15 @@ profile_transcode_can_share(profile_chain_t *prch,
    */
   if (strcmp(pro1->pro_vcodec ?: "", pro2->pro_vcodec ?: ""))
     return 0;
+  if (strcmp(pro1->pro_src_vcodec ?: "", pro2->pro_src_vcodec ?: ""))
+    return 0;
   if (strcmp(pro1->pro_acodec ?: "", pro2->pro_acodec ?: ""))
     return 0;
+  if (strcmp(pro1->pro_src_acodec ?: "", pro2->pro_src_acodec ?: ""))
+    return 0;
   if (strcmp(pro1->pro_scodec ?: "", pro2->pro_scodec ?: ""))
+    return 0;
+  if (strcmp(pro1->pro_src_scodec ?: "", pro2->pro_src_scodec ?: ""))
     return 0;
   return 1;
 }
@@ -2190,6 +2286,7 @@ profile_transcode_work(profile_chain_t *prch,
   profile_sharer_t *prsh;
   profile_transcode_t *pro = (profile_transcode_t *)prch->prch_pro;
   const char *profiles[AVMEDIA_TYPE_NB] = { NULL };
+  const char *src_codecs[AVMEDIA_TYPE_NB] = { NULL };
 
   prsh = profile_sharer_find(prch);
   if (!prsh)
@@ -2201,6 +2298,10 @@ profile_transcode_work(profile_chain_t *prch,
   profiles[AVMEDIA_TYPE_AUDIO] = pro->pro_acodec ?: "";
   profiles[AVMEDIA_TYPE_SUBTITLE] = pro->pro_scodec ?: "";
 
+  src_codecs[AVMEDIA_TYPE_VIDEO] = pro->pro_src_vcodec ?: "";
+  src_codecs[AVMEDIA_TYPE_AUDIO] = pro->pro_src_acodec ?: "";
+  src_codecs[AVMEDIA_TYPE_SUBTITLE] = pro->pro_src_scodec ?: "";
+
   dst = prch->prch_gh = globalheaders_create(dst);
 
 #if ENABLE_TIMESHIFT
@@ -2211,7 +2312,8 @@ profile_transcode_work(profile_chain_t *prch,
     goto fail;
   if (!prsh->prsh_transcoder) {
     assert(!prsh->prsh_tsfix);
-    dst = prsh->prsh_transcoder = transcoder_create(&prsh->prsh_input, profiles);
+    dst = prsh->prsh_transcoder = transcoder_create(&prsh->prsh_input,
+                                                    profiles, src_codecs);
     if (!dst)
       goto fail;
     prsh->prsh_tsfix = tsfix_create(dst);

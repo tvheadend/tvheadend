@@ -29,9 +29,11 @@
 /* TVHTranscoder ============================================================ */
 
 streaming_target_t *
-transcoder_create(streaming_target_t *output, const char **profiles)
+transcoder_create(streaming_target_t *output,
+                  const char **profiles,
+                  const char **src_profiles)
 {
-    return (streaming_target_t *)tvh_transcoder_create(output, profiles);
+    return (streaming_target_t *)tvh_transcoder_create(output, profiles, src_profiles);
 }
 
 

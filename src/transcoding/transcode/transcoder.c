@@ -30,6 +30,9 @@ TVHCodecProfile *tvh_codec_profile_copy = &_codec_profile_copy;
 static enum AVMediaType
 ssc_get_media_type(tvh_ssc_t *ssc)
 {
+    if (ssc->ssc_disabled) {
+        return AVMEDIA_TYPE_UNKNOWN;
+    }
     if (SCT_ISVIDEO(ssc->ssc_type)) {
         return AVMEDIA_TYPE_VIDEO;
     }
@@ -43,19 +46,6 @@ ssc_get_media_type(tvh_ssc_t *ssc)
 }
 
 
-static TVHCodecProfile *
-ssc_is_stream(tvh_ssc_t *ssc, TVHCodecProfile **profiles)
-{
-    enum AVMediaType media_type = AVMEDIA_TYPE_UNKNOWN;
-
-    if (!ssc->ssc_disabled &&
-        (media_type = ssc_get_media_type(ssc)) != AVMEDIA_TYPE_UNKNOWN) {
-        return profiles[media_type];
-    }
-    return NULL;
-}
-
-
 static int
 stream_count(tvh_ss_t *ss, TVHCodecProfile **profiles)
 {
@@ -63,7 +53,8 @@ stream_count(tvh_ss_t *ss, TVHCodecProfile **profiles)
     tvh_ssc_t *ssc = NULL;
 
     for (i = 0; i < ss->ss_num_components; i++) {
-        if ((ssc = &ss->ss_components[i]) && ssc_is_stream(ssc, profiles)) {
+        if ((ssc = &ss->ss_components[i]) &&
+             ssc_get_media_type(ssc) != AVMEDIA_TYPE_UNKNOWN) {
             count++;
         }
     }
@@ -108,6 +99,7 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
     TVHCodecProfile *profile = NULL;
     TVHStream *stream = NULL;
     int i, j, count = stream_count(ss_src, self->profiles);
+    enum AVMediaType media_type;
 
     ss = calloc(1, (sizeof(tvh_ss_t) + (sizeof(tvh_ssc_t) * count)));
     if (ss) {
@@ -120,10 +112,13 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
             ssc_src = &ss_src->ss_components[i];
             ssc = &ss->ss_components[j];
             if (ssc) {
-                if ((profile = ssc_is_stream(ssc_src, self->profiles))) {
+                media_type = ssc_get_media_type(ssc_src);
+                if (media_type != AVMEDIA_TYPE_UNKNOWN) {
+                    profile = self->profiles[media_type];
                     *ssc = *ssc_src;
                     j++;
-                    if ((stream = tvh_stream_create(self, profile, ssc))) {
+                    if ((stream = tvh_stream_create(self, profile, ssc,
+                                                    self->src_codecs[media_type]))) {
                         SLIST_INSERT_HEAD(&self->streams, stream, link);
                     }
                     else {
@@ -184,7 +179,9 @@ tvh_transcoder_stream(void *opaque, tvh_sm_t *msg)
 
 
 static int
-tvh_transcoder_setup(TVHTranscoder *self, const char **profiles)
+tvh_transcoder_setup(TVHTranscoder *self,
+                     const char **profiles,
+                     const char **src_codecs)
 {
     const char *profile = NULL;
     int i;
@@ -196,6 +193,8 @@ tvh_transcoder_setup(TVHTranscoder *self, const char **profiles)
                                    "failed to find codec profile: '%s'", profile);
                 return -1;
             }
+            if (src_codecs[i])
+                self->src_codecs[i] = strdup(src_codecs[i]);
         }
     }
     return 0;
@@ -235,7 +234,9 @@ static streaming_ops_t tvh_transcoder_ops = {
 
 
 TVHTranscoder *
-tvh_transcoder_create(tvh_st_t *output, const char **profiles)
+tvh_transcoder_create(tvh_st_t *output,
+                      const char **profiles,
+                      const char **src_codecs)
 {
     static uint32_t id = 0;
     TVHTranscoder *self = NULL;
@@ -250,7 +251,7 @@ tvh_transcoder_create(tvh_st_t *output, const char **profiles)
         self->id = ++id;
     }
     self->output = output;
-    if (tvh_transcoder_setup(self, profiles)) {
+    if (tvh_transcoder_setup(self, profiles, src_codecs)) {
         tvh_transcoder_destroy(self);
         return NULL;
     }
@@ -263,6 +264,7 @@ void
 tvh_transcoder_destroy(TVHTranscoder *self)
 {
     TVHStream *stream = NULL;
+    int i;
 
     if (self) {
         tvh_transcoder_stop(self, 0);
@@ -272,6 +274,8 @@ tvh_transcoder_destroy(TVHTranscoder *self)
             SLIST_REMOVE_HEAD(&self->streams, link);
             tvh_stream_destroy(stream);
         }
+        for (i = 0; i < AVMEDIA_TYPE_NB; i++)
+          free(self->src_codecs[i]);
         free(self);
         self = NULL;
     }

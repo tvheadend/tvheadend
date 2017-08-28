@@ -76,13 +76,16 @@ typedef struct tvh_transcoder_t {
     uint32_t id;
     tvh_st_t *output;
     TVHCodecProfile *profiles[AVMEDIA_TYPE_NB];
+    char *src_codecs[AVMEDIA_TYPE_NB];
 } TVHTranscoder;
 
 int
 tvh_transcoder_deliver(TVHTranscoder *self, th_pkt_t *pkt);
 
 TVHTranscoder *
-tvh_transcoder_create(tvh_st_t *output, const char **profiles);
+tvh_transcoder_create(tvh_st_t *output,
+                      const char **profiles,
+                      const char **src_codecs);
 
 void
 tvh_transcoder_destroy(TVHTranscoder *self);
@@ -110,7 +113,7 @@ tvh_stream_deliver(TVHStream *self, th_pkt_t *pkt);
 
 TVHStream *
 tvh_stream_create(TVHTranscoder *transcoder, TVHCodecProfile *profile,
-                  tvh_ssc_t *ssc);
+                  tvh_ssc_t *ssc, const char *src_codecs);
 
 void
 tvh_stream_destroy(TVHStream *self);

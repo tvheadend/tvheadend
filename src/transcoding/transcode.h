@@ -28,7 +28,9 @@
 /* TVHTranscoder ============================================================ */
 
 streaming_target_t *
-transcoder_create(streaming_target_t *output, const char **profiles);
+transcoder_create(streaming_target_t *output,
+                  const char **profiles,
+                  const char **src_codecs);
 
 void
 transcoder_destroy(streaming_target_t *st);
