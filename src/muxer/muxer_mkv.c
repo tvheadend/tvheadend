@@ -1544,7 +1544,8 @@ mkv_muxer_create(const muxer_config_t *m_cfg,
   /*
    * VLC has no support for MKV S_DVBSUB codec format
    */
-  mk->dvbsub_skip    = strstr(agent, "LibVLC/") != NULL;
+  if (agent)
+    mk->dvbsub_skip  = strstr(agent, "LibVLC/") != NULL;
 
   TAILQ_INIT(&mk->holdq);
 
