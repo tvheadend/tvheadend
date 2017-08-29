@@ -20,6 +20,9 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
       fmt1[l-1] = '\0';
     }
 
+    if (strcmp(fmt1, "forced frame type (%d) at %d was changed to frame type (%d)") == 0)
+      level = AV_LOG_TRACE;
+
     switch(level) {
     case AV_LOG_TRACE:
 #if ENABLE_TRACE
