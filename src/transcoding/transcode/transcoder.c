@@ -144,16 +144,31 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
         indexes[count++] = video_index;
     }
     if (audio_index >= 0) {
-        indexes[count++] = audio_index;
+        for (i = j = 0; i < ARRAY_SIZE(audio_pindex); i++) {
+            if (audio_pindex[i] >= 0) {
+                indexes[count++] = audio_pindex[i];
+                if ((ssc = &ss_src->ss_components[audio_pindex[i]]) == NULL)
+                    continue;
+                media_type = ssc_get_media_type(ssc);
+                if (media_type != AVMEDIA_TYPE_AUDIO)
+                    continue;
+                aprofile = (TVHAudioCodecProfile *)self->profiles[media_type];
+                if (++j >= aprofile->tracks)
+                    break;
+            }
+        }
     } else {
         /* nothing is preferred, use all audio tracks */
-        for (i = 0; i < ss_src->ss_num_components; i++) {
+        for (i = j = 0; i < ss_src->ss_num_components; i++) {
             if ((ssc = &ss_src->ss_components[i]) == NULL)
                 continue;
             media_type = ssc_get_media_type(ssc);
             if (media_type != AVMEDIA_TYPE_AUDIO)
                 continue;
             indexes[count++] = i;
+            aprofile = (TVHAudioCodecProfile *)self->profiles[media_type];
+            if (++j >= aprofile->tracks)
+                break;
         }
     }
     if (subtitle_index >= 0) {

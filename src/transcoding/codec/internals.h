@@ -224,6 +224,7 @@ extern const codec_profile_class_t codec_profile_audio_class;
 
 typedef struct tvh_codec_profile_audio_t {
     TVHCodecProfile;
+    int tracks;
     const char *language1;
     const char *language2;
     const char *language3;

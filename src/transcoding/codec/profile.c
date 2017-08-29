@@ -289,6 +289,7 @@ tvh_codec_profile_audio_init(TVHCodecProfile *_self, htsmsg_t *conf)
 {
     TVHAudioCodecProfile *self = (TVHAudioCodecProfile *)_self;
     self->sample_fmt = AV_SAMPLE_FMT_NONE;
+    self->tracks = 1;
     return 0;
 }
 

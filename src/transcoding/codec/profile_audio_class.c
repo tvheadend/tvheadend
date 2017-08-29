@@ -255,6 +255,15 @@ const codec_profile_class_t codec_profile_audio_class = {
         .ic_caption    = N_("audio"),
         .ic_properties = (const property_t[]) {
             {
+                .type     = PT_INT,
+                .id       = "tracks",
+                .name     = N_("Limit audio tracks"),
+                .desc     = N_("Use only defined number of audio tracks at maximum."),
+                .group    = 2,
+                .off      = offsetof(TVHAudioCodecProfile, tracks),
+                .def.i    = 1,
+            },
+            {
                 .type     = PT_STR,
                 .id       = "language1",
                 .name     = N_("1. Language"),
