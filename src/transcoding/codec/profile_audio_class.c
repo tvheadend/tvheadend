@@ -163,7 +163,6 @@ tvh_codec_profile_audio_open(TVHAudioCodecProfile *self, AVDictionary **opts)
 static htsmsg_t *
 codec_profile_audio_class_language_list(void *obj, const char *lang)
 {
-    // TODO: rewrite
     htsmsg_t *list = htsmsg_create_list();
     lang_code_t *lc = (lang_code_t *)lang_codes;
     static char lc_buf[128];
@@ -257,11 +256,31 @@ const codec_profile_class_t codec_profile_audio_class = {
         .ic_properties = (const property_t[]) {
             {
                 .type     = PT_STR,
-                .id       = "language",
-                .name     = N_("Language"),
+                .id       = "language1",
+                .name     = N_("1. Language"),
                 .desc     = N_("Preferred audio language."),
                 .group    = 2,
-                .off      = offsetof(TVHAudioCodecProfile, language),
+                .off      = offsetof(TVHAudioCodecProfile, language1),
+                .list     = codec_profile_audio_class_language_list,
+                .def.s    = "",
+            },
+            {
+                .type     = PT_STR,
+                .id       = "language2",
+                .name     = N_("2. Language"),
+                .desc     = N_("Preferred audio language."),
+                .group    = 2,
+                .off      = offsetof(TVHAudioCodecProfile, language2),
+                .list     = codec_profile_audio_class_language_list,
+                .def.s    = "",
+            },
+            {
+                .type     = PT_STR,
+                .id       = "language3",
+                .name     = N_("3. Language"),
+                .desc     = N_("Preferred audio language."),
+                .group    = 2,
+                .off      = offsetof(TVHAudioCodecProfile, language3),
                 .list     = codec_profile_audio_class_language_list,
                 .def.s    = "",
             },

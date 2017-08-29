@@ -19,6 +19,7 @@
 
 
 #include "internals.h"
+#include "../codec/internals.h"
 
 
 static TVHCodecProfile _codec_profile_copy = { .name = "copy" };
@@ -46,22 +47,6 @@ ssc_get_media_type(tvh_ssc_t *ssc)
 }
 
 
-static int
-stream_count(tvh_ss_t *ss, TVHCodecProfile **profiles)
-{
-    int i, count = 0;
-    tvh_ssc_t *ssc = NULL;
-
-    for (i = 0; i < ss->ss_num_components; i++) {
-        if ((ssc = &ss->ss_components[i]) &&
-             ssc_get_media_type(ssc) != AVMEDIA_TYPE_UNKNOWN) {
-            count++;
-        }
-    }
-    return count;
-}
-
-
 static TVHCodecProfile *
 _find_profile(const char *name)
 {
@@ -69,6 +54,19 @@ _find_profile(const char *name)
         return tvh_codec_profile_copy;
     }
     return codec_find_profile(name);
+}
+
+
+static int
+lang_match(const char *lang, tvh_ssc_t *ssc, int *index, int value)
+{
+    if (*index >= 0)
+        return 0;
+    if (lang && strcmp(lang, ssc->ssc_lang) == 0) {
+        *index = value;
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -93,13 +91,74 @@ tvh_transcoder_handle(TVHTranscoder *self, th_pkt_t *pkt)
 static tvh_ss_t *
 tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
 {
-    // TODO: rewrite, include language selection
-    tvh_ss_t *ss = NULL;
-    tvh_ssc_t *ssc_src = NULL, *ssc = NULL;
-    TVHCodecProfile *profile = NULL;
+    tvh_ss_t *ss;
+    tvh_ssc_t *ssc_src, *ssc;
+    const char *codecs;
+    TVHCodecProfile *profile;
+    TVHAudioCodecProfile *aprofile;
     TVHStream *stream = NULL;
-    int i, j, count = stream_count(ss_src, self->profiles);
+    int indexes[ss_src->ss_num_components];
+    int i, j, count;
+    int video_index = -1;
+    int audio_index = -1;
+    int audio_pindex[3] = { -1, -1, -1 };
+    int subtitle_index = -1;
     enum AVMediaType media_type;
+
+    for (i = 0; i < ss_src->ss_num_components; i++) {
+        if ((ssc = &ss_src->ss_components[i]) == NULL)
+            continue;
+        media_type = ssc_get_media_type(ssc);
+        if (media_type == AVMEDIA_TYPE_UNKNOWN)
+            continue;
+        switch (media_type) {
+        case AVMEDIA_TYPE_VIDEO:
+            if (video_index < 0)
+                video_index = i;
+            break;
+        case AVMEDIA_TYPE_AUDIO:
+            aprofile = (TVHAudioCodecProfile *)self->profiles[media_type];
+            if (lang_match(aprofile->language1, ssc, &audio_pindex[0], i) == 0 &&
+                lang_match(aprofile->language2, ssc, &audio_pindex[1], i) == 0)
+                lang_match(aprofile->language3, ssc, &audio_pindex[2], i);
+            break;
+        case AVMEDIA_TYPE_SUBTITLE:
+           if (subtitle_index < 0)
+                subtitle_index = i;
+            break;
+        default:
+            break;
+        }
+    }
+
+    /* select the preferred audio stream */
+    for (i = 0; i < ARRAY_SIZE(audio_pindex); i++) {
+        if (audio_pindex[i] >= 0) {
+            audio_index = audio_pindex[i];
+            break;
+        }
+    }
+
+    count = 0;
+    if (video_index >= 0) {
+        indexes[count++] = video_index;
+    }
+    if (audio_index >= 0) {
+        indexes[count++] = audio_index;
+    } else {
+        /* nothing is preferred, use all audio tracks */
+        for (i = 0; i < ss_src->ss_num_components; i++) {
+            if ((ssc = &ss_src->ss_components[i]) == NULL)
+                continue;
+            media_type = ssc_get_media_type(ssc);
+            if (media_type != AVMEDIA_TYPE_AUDIO)
+                continue;
+            indexes[count++] = i;
+        }
+    }
+    if (subtitle_index >= 0) {
+        indexes[count++] = subtitle_index;
+    }
 
     ss = calloc(1, (sizeof(tvh_ss_t) + (sizeof(tvh_ssc_t) * count)));
     if (ss) {
@@ -108,35 +167,46 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
         ss->ss_pmt_pid = ss_src->ss_pmt_pid;
         service_source_info_copy(&ss->ss_si, &ss_src->ss_si);
         ss->ss_num_components = count;
-        for (i = j = 0; i < ss_src->ss_num_components && j < count; i++) {
+        for (j = 0; j < count; j++) {
+            i = indexes[j];
             ssc_src = &ss_src->ss_components[i];
             ssc = &ss->ss_components[j];
-            if (ssc) {
-                media_type = ssc_get_media_type(ssc_src);
-                if (media_type != AVMEDIA_TYPE_UNKNOWN) {
-                    profile = self->profiles[media_type];
-                    if (profile == NULL)
-                        goto fout;
-                    *ssc = *ssc_src;
-                    j++;
-                    if ((stream = tvh_stream_create(self, profile, ssc,
-                                                    self->src_codecs[media_type]))) {
-                        SLIST_INSERT_HEAD(&self->streams, stream, link);
-                    } else {
-                        goto fout;
-                    }
-                } else {
-fout:
-                    switch (ssc_src->ssc_type) {
-                    case SCT_CA:
-                    case SCT_HBBTV:
-                    case SCT_TELETEXT:
-                        break;
-                    default:
-                        tvh_ssc_log(ssc_src, LOG_INFO, "==> Filtered out", self);
-                        break;
-                    }
-                }
+            assert(ssc);
+            media_type = ssc_get_media_type(ssc_src);
+            assert(media_type != AVMEDIA_TYPE_UNKNOWN);
+            profile = self->profiles[media_type];
+            codecs = self->src_codecs[media_type];
+            if (profile == NULL) {
+                indexes[j] = -1;
+                continue;
+            }
+            *ssc = *ssc_src;
+            if ((stream = tvh_stream_create(self, profile, ssc, codecs))) {
+                tvh_ssc_log(ssc_src, LOG_INFO, "==> Using profile %s", self,
+                            tvh_codec_profile_get_name(profile));
+                SLIST_INSERT_HEAD(&self->streams, stream, link);
+            } else {
+                memset(ssc, 0, sizeof(*ssc));
+                indexes[j] = -1;
+                continue;
+            }
+        }
+        for (i = 0; i < ss_src->ss_num_components; i++) {
+            for (j = 0; j < count; j++) {
+                if (i == indexes[j])
+                    break;
+            }
+            if (j < count)
+                continue;
+            ssc_src = &ss_src->ss_components[i];
+            switch (ssc_src->ssc_type) {
+            case SCT_CA:
+            case SCT_HBBTV:
+            case SCT_TELETEXT:
+                break;
+            default:
+                tvh_ssc_log(ssc_src, LOG_INFO, "==> Filtered out", self);
+                break;
             }
         }
     }
