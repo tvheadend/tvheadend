@@ -110,4 +110,5 @@ TVHVideoCodec tvh_codec_omx_h264 = {
     .name    = "h264_omx",
     .size    = sizeof(tvh_codec_profile_omx_t),
     .idclass = &codec_profile_omx_class,
+    .profile_init = tvh_codec_profile_video_init,
 };

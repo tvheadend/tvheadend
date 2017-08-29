@@ -66,5 +66,6 @@ TVHAudioCodec tvh_codec_vorbis = {
     .name            = "vorbis",
     .size            = sizeof(TVHAudioCodecProfile),
     .idclass         = &codec_profile_vorbis_class,
+    .profile_init    = tvh_codec_profile_audio_init,
     .channel_layouts = vorbis_channel_layouts,
 };

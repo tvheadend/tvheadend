@@ -178,4 +178,5 @@ TVHVideoCodec tvh_codec_vaapi_hevc = {
     .size     = sizeof(tvh_codec_profile_vaapi_t),
     .idclass  = &codec_profile_vaapi_hevc_class,
     .profiles = vaapi_hevc_profiles,
+    .profile_init = tvh_codec_profile_video_init,
 };

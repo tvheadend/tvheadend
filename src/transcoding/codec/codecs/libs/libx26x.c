@@ -298,6 +298,7 @@ TVHVideoCodec tvh_codec_libx265 = {
     .name    = "libx265",
     .size    = sizeof(tvh_codec_profile_libx26x_t),
     .idclass = &codec_profile_libx265_class,
+    .profile_init = tvh_codec_profile_video_init,
 };
 
 #endif

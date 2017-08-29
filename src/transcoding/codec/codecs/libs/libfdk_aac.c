@@ -136,4 +136,6 @@ TVHAudioCodec tvh_codec_libfdk_aac = {
     .name    = "libfdk_aac",
     .size    = sizeof(tvh_codec_profile_libfdk_aac_t),
     .idclass = &codec_profile_libfdk_aac_class,
+    .profile_init = tvh_codec_profile_audio_init,
+
 };

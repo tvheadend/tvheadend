@@ -29,12 +29,18 @@ struct TVHCodecProfiles tvh_codec_profiles;
 /* TVHCodecProfile ========================================================== */
 
 static TVHCodecProfile *
-tvh_codec_profile_alloc(TVHCodec *codec)
+tvh_codec_profile_alloc(TVHCodec *codec, htsmsg_t *conf)
 {
     TVHCodecProfile *self = NULL;
 
     if ((self = calloc(1, codec->size))) {
         self->codec = codec;
+        if (codec->profile_init) {
+            if (codec->profile_init(self, conf)) {
+                free(self);
+                return NULL;
+            }
+        }
     }
     return self;
 }
@@ -77,7 +83,7 @@ tvh_codec_profile_create2(htsmsg_field_t *config)
             return;
         if (tvh_codec_profile_find(name))
             return;
-        if (tvh_codec_profile_create(conf, NULL, 0))
+        if (tvh_codec_profile_create(conf, NULL, 1))
           tvherror(LS_CODEC, "unable to create codec profile from config tree: '%s'",
                    (name = htsmsg_get_str(conf, "name")) ? name : "<unknown>");
     }
@@ -130,7 +136,7 @@ tvh_codec_profile_create(htsmsg_t *conf, const char *uuid, int save)
         tvherror(LS_CODEC, "codec '%s' not found", codec_name);
         return ENOENT;
     }
-    if (!(profile = tvh_codec_profile_alloc(codec))) {
+    if (!(profile = tvh_codec_profile_alloc(codec, conf))) {
         tvherror(LS_CODEC, "failed to allocate TVHCodecProfile");
         return ENOMEM;
     }
@@ -251,6 +257,14 @@ tvh_codec_profile_open(TVHCodecProfile *self, AVDictionary **opts)
 
 /* video */
 int
+tvh_codec_profile_video_init(TVHCodecProfile *_self, htsmsg_t *conf)
+{
+    TVHVideoCodecProfile *self = (TVHVideoCodecProfile *)_self;
+    self->pix_fmt = AV_PIX_FMT_NONE;
+    return 0;
+}
+
+int
 tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self)
 {
     TVHCodec *codec = tvh_codec_profile_get_codec(self);
@@ -270,6 +284,14 @@ tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self)
 
 
 /* audio */
+int
+tvh_codec_profile_audio_init(TVHCodecProfile *_self, htsmsg_t *conf)
+{
+    TVHAudioCodecProfile *self = (TVHAudioCodecProfile *)_self;
+    self->sample_fmt = AV_SAMPLE_FMT_NONE;
+    return 0;
+}
+
 const enum AVSampleFormat *
 tvh_codec_profile_audio_get_sample_fmts(TVHCodecProfile *self)
 {

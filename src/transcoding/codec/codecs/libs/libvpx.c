@@ -158,4 +158,5 @@ TVHVideoCodec tvh_codec_libvpx_vp9 = {
     .name    = "libvpx-vp9",
     .size    = sizeof(tvh_codec_profile_libvpx_t),
     .idclass = &codec_profile_libvpx_class,
+    .profile_init = tvh_codec_profile_video_init,
 };

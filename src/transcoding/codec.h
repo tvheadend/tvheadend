@@ -63,6 +63,7 @@ typedef struct tvh_codec_t {
     const codec_profile_class_t *idclass;
     AVCodec *codec;
     const AVProfile *profiles;
+    int (*profile_init)(TVHCodecProfile *, htsmsg_t *conf);
     SLIST_ENTRY(tvh_codec_t) link;
 } TVHCodec;
 
@@ -124,6 +125,9 @@ tvh_codec_profile_open(TVHCodecProfile *self, AVDictionary **opts);
 
 /* video */
 int
+tvh_codec_profile_video_init(TVHCodecProfile *_self, htsmsg_t *conf);
+
+int
 tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self);
 
 const enum AVPixelFormat *
@@ -131,6 +135,9 @@ tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self);
 
 
 /* audio */
+int
+tvh_codec_profile_audio_init(TVHCodecProfile *_self, htsmsg_t *conf);
+
 const enum AVSampleFormat *
 tvh_codec_profile_audio_get_sample_fmts(TVHCodecProfile *self);
 

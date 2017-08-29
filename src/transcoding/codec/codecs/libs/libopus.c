@@ -133,4 +133,5 @@ TVHAudioCodec tvh_codec_libopus = {
     .name    = "libopus",
     .size    = sizeof(tvh_codec_profile_libopus_t),
     .idclass = &codec_profile_libopus_class,
+    .profile_init = tvh_codec_profile_audio_init,
 };

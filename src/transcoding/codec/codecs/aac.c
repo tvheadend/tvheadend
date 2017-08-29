@@ -127,5 +127,6 @@ TVHAudioCodec tvh_codec_aac = {
     .size            = sizeof(tvh_codec_profile_aac_t),
     .idclass         = &codec_profile_aac_class,
     .profiles        = aac_profiles,
+    .profile_init    = tvh_codec_profile_audio_init,
     .channel_layouts = aac_channel_layouts,
 };

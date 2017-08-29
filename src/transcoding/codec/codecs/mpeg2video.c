@@ -75,4 +75,5 @@ TVHVideoCodec tvh_codec_mpeg2video = {
     .name    = "mpeg2video",
     .size    = sizeof(TVHVideoCodecProfile),
     .idclass = &codec_profile_mpeg2video_class,
+    .profile_init = tvh_codec_profile_video_init,
 };
