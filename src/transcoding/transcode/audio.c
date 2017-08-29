@@ -187,9 +187,10 @@ tvh_audio_context_open(TVHContext *self, TVHOpenPhase phase, AVDictionary **opts
         case OPEN_ENCODER:
             return tvh_audio_context_open_encoder(self, opts);
         case OPEN_ENCODER_POST:
-            self->delta = av_rescale_q(self->oavctx->frame_size,
-                                       self->oavctx->time_base,
-                                       self->iavctx->time_base);
+            self->delta = av_rescale_q_rnd(self->oavctx->frame_size,
+                                           self->oavctx->time_base,
+                                           self->iavctx->time_base,
+                                           AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
             return tvh_audio_context_open_filters(self, opts);
         default:
             break;
@@ -202,9 +203,15 @@ static int
 tvh_audio_context_decode(TVHContext *self, AVPacket *avpkt)
 {
     int64_t prev_pts = self->pts;
+    int64_t new_pts = avpkt->pts - self->duration;
 
-    if (prev_pts != (self->pts = avpkt->pts - self->duration)) {
-        tvh_context_log(self, LOG_WARNING, "Detected framedrop in audio");
+    // rounding error?
+    if (new_pts - 10 <= prev_pts && new_pts + 10 >= prev_pts) {
+      prev_pts = new_pts;
+    }
+
+    if (prev_pts != (self->pts = new_pts) && prev_pts > 12000) {
+        tvh_context_log(self, LOG_WARNING, "Detected framedrop in audio (%"PRId64" != %"PRId64")", prev_pts, new_pts);
     }
     self->duration += avpkt->duration;
     return 0;
