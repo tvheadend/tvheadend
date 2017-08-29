@@ -53,7 +53,7 @@ OPTIONS=(
   "libopus:yes"
   "libopus_static:yes"
   "nvenc:no"
-  "vaapi:no"
+  "vaapi:auto"
   "omx:no"
   "inotify:auto"
   "epoll:auto"
@@ -539,15 +539,6 @@ if enabled ffmpeg_static; then
       die "NVENC library (https://developer.nvidia.com/nvidia-video-codec-sdk) not found"
   fi
 
-  # vaapi
-  if enabled vaapi; then
-    check_pkg libva ">=0.38.0"     || \
-      die "vaapi (Video Acceleration (VA) API for Linux) not found"
-    check_pkg libva-x11 ">=0.38.0" || die "libva-x11 not found"
-    check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
-    enable hwaccels
-  fi
-
   # omx
   if enabled omx; then
     OLDCFLAGS=$CFLAGS
@@ -588,6 +579,22 @@ else
 
   fi
 
+fi
+
+#
+# vaapi
+#
+if enabled_or_auto vaapi; then
+  if enabled libav; then
+    if check_pkg libva ">=0.38.0"; then
+      check_pkg libva-x11 ">=0.38.0" || die "libva-x11 not found"
+      check_pkg libva-drm ">=0.38.0" || die "libva-drm not found"
+      enable vaapi
+      enable hwaccels
+    elif enabled vaapi; then
+      die "vaapi (Video Acceleration (VA) API for Linux) not found"
+    fi
+  fi
 fi
 
 #
