@@ -127,7 +127,15 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
                     }
                 } else {
 fout:
-                    tvh_ssc_log(ssc, LOG_INFO, "==> Filtered out", self);
+                    switch (ssc_src->ssc_type) {
+                    case SCT_CA:
+                    case SCT_HBBTV:
+                    case SCT_TELETEXT:
+                        break;
+                    default:
+                        tvh_ssc_log(ssc_src, LOG_INFO, "==> Filtered out", self);
+                        break;
+                    }
                 }
             }
         }
