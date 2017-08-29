@@ -151,6 +151,10 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         return -1;
     }
 
+    // resample also if there should be a format conversion
+    if (self->iavctx->sample_fmt != self->oavctx->sample_fmt)
+        resample = 1;
+
     // context filters
     memset(filters, 0, sizeof(filters));
     if (str_snprintf(filters, sizeof(filters), "%s",
