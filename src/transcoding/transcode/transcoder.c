@@ -115,17 +115,18 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
                 media_type = ssc_get_media_type(ssc_src);
                 if (media_type != AVMEDIA_TYPE_UNKNOWN) {
                     profile = self->profiles[media_type];
+                    if (profile == NULL)
+                        goto fout;
                     *ssc = *ssc_src;
                     j++;
                     if ((stream = tvh_stream_create(self, profile, ssc,
                                                     self->src_codecs[media_type]))) {
                         SLIST_INSERT_HEAD(&self->streams, stream, link);
+                    } else {
+                        goto fout;
                     }
-                    else {
-                        tvh_ssc_log(ssc, LOG_ERR, "==> Filtered out", self);
-                    }
-                }
-                else {
+                } else {
+fout:
                     tvh_ssc_log(ssc, LOG_INFO, "==> Filtered out", self);
                 }
             }
