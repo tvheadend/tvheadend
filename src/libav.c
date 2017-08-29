@@ -7,10 +7,19 @@
 static void
 libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
-  int severity = LOG_TVH_NOTIFY;
+  int severity = LOG_TVH_NOTIFY, l;
+  char *fmt1 = (char *)fmt;
 
   if (level != AV_LOG_QUIET &&
       ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
+
+    /* remove trailing newline */
+    l = strlen(fmt);
+    if (fmt[l-1] == '\n') {
+      fmt1 = tvh_strdupa(fmt);
+      fmt1[l-1] = '\0';
+    }
+
     switch(level) {
     case AV_LOG_TRACE:
 #if ENABLE_TRACE
@@ -41,7 +50,7 @@ libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
     }
     va_list ap;
     va_copy(ap, vl);
-    tvhlogv(__FILE__, __LINE__, severity, LS_LIBAV, fmt, &ap);
+    tvhlogv(__FILE__, __LINE__, severity, LS_LIBAV, fmt1, &ap);
     va_end(ap);
   }
 }
