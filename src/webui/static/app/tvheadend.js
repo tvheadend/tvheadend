@@ -791,7 +791,8 @@ function accessUpdate(o) {
             items: []
         });
         tvheadend.profile_tab(stream);
-        tvheadend.codec_tab(stream);
+        if (tvheadend.capabilities.indexOf('libav') !== -1)
+            tvheadend.codec_tab(stream);
         tvheadend.esfilter_tab(stream);
 
         cp.add(stream);
