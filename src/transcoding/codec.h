@@ -21,6 +21,9 @@
 #ifndef TVH_TRANSCODING_CODEC_H__
 #define TVH_TRANSCODING_CODEC_H__
 
+#include "build.h"
+
+#if ENABLE_LIBAV
 
 #include "tvheadend.h"
 #include "idnode.h"
@@ -162,5 +165,18 @@ codec_init(void);
 void
 codec_done(void);
 
+#else
+
+static inline void
+codec_init(void)
+{
+}
+
+static inline void
+codec_done(void)
+{
+}
+
+#endif
 
 #endif // TVH_TRANSCODING_CODEC_H__

@@ -293,7 +293,6 @@ SRCS-2 = \
 	src/api/api_access.c \
 	src/api/api_dvr.c \
 	src/api/api_caclient.c \
-	src/api/api_codec.c \
 	src/api/api_profile.c \
 	src/api/api_bouquet.c \
 	src/api/api_language.c \
@@ -519,7 +518,8 @@ DEPS-LIBAV = \
 SRCS-LIBAV = \
 	src/libav.c \
 	src/input/mpegts/iptv/iptv_libav.c \
-	src/muxer/muxer_libav.c
+	src/muxer/muxer_libav.c \
+	src/api/api_codec.c
 SRCS-LIBAV += $(wildcard src/transcoding/*.c)
 SRCS-LIBAV += $(wildcard src/transcoding/transcode/*.c)
 SRCS-LIBAV += $(SRCS-HWACCELS)
