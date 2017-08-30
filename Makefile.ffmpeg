@@ -125,8 +125,8 @@ LIB_FILES := \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
-		$(LIB_ROOT)/$(LIBMFX)/.tvh_download \
-		$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOPUS)/.tvh_download \
+		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_build \
 		$(EPREFIX)
