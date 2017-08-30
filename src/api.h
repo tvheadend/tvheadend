@@ -62,6 +62,7 @@ void api_init               ( void );
 void api_done               ( void );
 void api_config_init        ( void );
 void api_idnode_init        ( void );
+void api_idnode_raw_init    ( void );
 void api_input_init         ( void );
 void api_service_init       ( void );
 void api_channel_init       ( void );

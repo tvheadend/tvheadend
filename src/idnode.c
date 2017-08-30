@@ -1121,7 +1121,7 @@ idnode_changedfn ( idnode_t *self )
   }
 }
 
-static htsmsg_t *
+htsmsg_t *
 idnode_savefn ( idnode_t *self, char *filename, size_t fsize )
 {
   const idclass_t *idc = self->in_class;

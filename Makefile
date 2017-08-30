@@ -281,6 +281,7 @@ SRCS-2 = \
 	src/api/api_config.c \
 	src/api/api_status.c \
 	src/api/api_idnode.c \
+	src/api/api_raw.c \
 	src/api/api_input.c \
 	src/api/api_channel.c \
 	src/api/api_service.c \
