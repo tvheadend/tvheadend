@@ -210,7 +210,8 @@ esfilter_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(self, c);
-  snprintf(filename, fsize, "esfilter/%s", idnode_uuid_as_str(self, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "esfilter/%s", idnode_uuid_as_str(self, ubuf));
   return c;
 }
 

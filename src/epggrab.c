@@ -222,7 +222,8 @@ epggrab_class_save(idnode_t *self, char *filename, size_t fsize)
     htsmsg_add_msg(a, mod->id, m);
   }
   htsmsg_add_msg(m, "modules", a);
-  snprintf(filename, fsize, "epggrab/config");
+  if (filename)
+    snprintf(filename, fsize, "epggrab/config");
   return m;
 }
 

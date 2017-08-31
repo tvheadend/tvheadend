@@ -131,13 +131,16 @@ satip_device_class_save ( idnode_t *in, char *filename, size_t fsize )
   m = htsmsg_create_map();
   idnode_save(&sd->th_id, m);
 
-  l = htsmsg_create_map();
-  TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
-    satip_frontend_save(lfe, l);
-  htsmsg_add_msg(m, "frontends", l);
+  if (filename) {
+    l = htsmsg_create_map();
+    TAILQ_FOREACH(lfe, &sd->sd_frontends, sf_link)
+      satip_frontend_save(lfe, l);
+    htsmsg_add_msg(m, "frontends", l);
 
-  snprintf(filename, fsize, "input/satip/adapters/%s",
-           idnode_uuid_as_str(&sd->th_id, ubuf));
+    snprintf(filename, fsize, "input/satip/adapters/%s",
+             idnode_uuid_as_str(&sd->th_id, ubuf));
+  }
+
   return m;
 }
 

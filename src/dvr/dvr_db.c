@@ -2283,7 +2283,8 @@ dvr_entry_class_save(idnode_t *self, char *filename, size_t fsize)
       }
     htsmsg_add_msg(m, "files", l);
   }
-  snprintf(filename, fsize, "dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "dvr/log/%s", idnode_uuid_as_str(&de->de_id, ubuf));
   return m;
 }
 

@@ -586,8 +586,9 @@ dvb_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&mn->mn_id, c);
   htsmsg_add_str(c, "class", mn->mn_id.in_class->ic_class);
-  snprintf(filename, fsize, "input/dvb/networks/%s/config",
-           idnode_uuid_as_str(&mn->mn_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "input/dvb/networks/%s/config",
+             idnode_uuid_as_str(&mn->mn_id, ubuf));
   return c;
 }
 

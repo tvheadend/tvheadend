@@ -901,10 +901,14 @@ dvb_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
-  mpegts_mux_save(mm, c);
-  snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s",
-           idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
-           idnode_uuid_as_str(&mm->mm_id, ubuf2));
+  if (filename == NULL) {
+    mpegts_mux_save(mm, c, 1);
+  } else {
+    mpegts_mux_save(mm, c, 0);
+    snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s",
+             idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
+             idnode_uuid_as_str(&mm->mm_id, ubuf2));
+  }
   return c;
 }
 

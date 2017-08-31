@@ -92,14 +92,11 @@ tvh_codec_profile_base_open(TVHCodecProfile *self, AVDictionary **opts)
 static htsmsg_t *
 codec_profile_class_save(idnode_t *idnode, char *filename, size_t fsize)
 {
-    htsmsg_t *map = NULL;
+    htsmsg_t *map = htsmsg_create_map();
     static char uuid[UUID_HEX_SIZE];
-
-    memset(uuid, 0, sizeof(uuid));
-    if (!str_snprintf(filename, fsize, "codec/%s", idnode_uuid_as_str(idnode, uuid)) &&
-        (map = htsmsg_create_map())) {
-        idnode_save(idnode, map);
-    }
+    idnode_save(idnode, map);
+    if (filename)
+      snprintf(filename, fsize, "codec/%s", idnode_uuid_as_str(idnode, uuid));
     return map;
 }
 

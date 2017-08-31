@@ -946,8 +946,9 @@ iptv_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&mn->mn_id, c);
-  snprintf(filename, fsize, "input/iptv/networks/%s/config",
-           idnode_uuid_as_str(&mn->mn_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "input/iptv/networks/%s/config",
+             idnode_uuid_as_str(&mn->mn_id, ubuf));
   return c;
 }
 

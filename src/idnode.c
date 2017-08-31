@@ -1133,6 +1133,20 @@ idnode_savefn ( idnode_t *self, char *filename, size_t fsize )
   return NULL;
 }
 
+void
+idnode_loadfn ( idnode_t *self, htsmsg_t *conf )
+{
+  const idclass_t *idc = self->in_class;
+  while (idc) {
+    if (idc->ic_load) {
+      idc->ic_load(self, conf);
+      return;
+    }
+    idc = idc->ic_super;
+  }
+  idnode_load(self, conf);
+}
+
 static void
 idnode_save_trigger_thread_cb( void *aux )
 {

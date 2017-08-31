@@ -663,7 +663,8 @@ bouquet_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&bq->bq_id, c);
-  snprintf(filename, fsize, "bouquet/%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "bouquet/%s", idnode_uuid_as_str(&bq->bq_id, ubuf));
   if (bq->bq_shield)
     htsmsg_add_bool(c, "shield", 1);
   bq->bq_saveflag = 0;

@@ -100,7 +100,8 @@ channel_class_save ( idnode_t *self, char *filename, size_t fsize )
     tvhdebug(LS_CHANNEL, "channel '%s' save", channel_get_name(ch, channel_blank_name));
     c = htsmsg_create_map();
     idnode_save(&ch->ch_id, c);
-    snprintf(filename, fsize, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id, ubuf));
+    if (filename)
+      snprintf(filename, fsize, "channel/config/%s", idnode_uuid_as_str(&ch->ch_id, ubuf));
   }
   return c;
 }
@@ -1406,7 +1407,8 @@ channel_tag_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&ct->ct_id, c);
-  snprintf(filename, fsize, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "channel/tag/%s", idnode_uuid_as_str(&ct->ct_id, ubuf));
   return c;
 }
 

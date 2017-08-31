@@ -24,6 +24,32 @@
 #include "api.h"
 
 static int
+api_idnode_classes
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  idclass_t const **all, **all2;
+  const idclass_t *ic;
+
+  *resp = htsmsg_create_map();
+  pthread_mutex_lock(&global_lock);
+  all = idclass_find_all();
+  if (all == NULL) {
+    pthread_mutex_unlock(&global_lock);
+    return EINVAL;
+  }
+  for (all2 = all; *all2; all2++) {
+    ic = *all2;
+    htsmsg_add_str(*resp, ic->ic_class, ic->ic_caption ?: "");
+  }
+  pthread_mutex_unlock(&global_lock);
+
+  free(all);
+  return 0;
+}
+
+
+
+static int
 api_idnode_raw_export_by_class0
   ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
 {
@@ -32,7 +58,7 @@ api_idnode_raw_export_by_class0
   idnode_set_t    *is;
   idnode_t        *in;
   htsmsg_t        *l, *e;
-  char filename[PATH_MAX];
+  char ubuf[UUID_HEX_SIZE];
 
   /* Find class */
   idc = opaque;
@@ -46,10 +72,12 @@ api_idnode_raw_export_by_class0
       if (idnode_perm(in, perm, NULL))
         continue;
 
-      e = idnode_savefn(in, filename, sizeof(filename));
+      e = idnode_savefn(in, NULL, 0);
 
-      if (e)
+      if (e) {
+        htsmsg_set_str(e, "uuid", idnode_uuid_as_str(in, ubuf));
         htsmsg_add_msg(l, NULL, e);
+      }
 
       idnode_perm_unset(in);
     }
@@ -57,8 +85,7 @@ api_idnode_raw_export_by_class0
     free(is);
   }
 
-  *resp = htsmsg_create_map();
-  htsmsg_add_msg(*resp, "entries", l);
+  *resp = l;
 
   return 0;
 }
@@ -72,7 +99,7 @@ api_idnode_raw_export
   htsmsg_t *uuids, *l = NULL, *m;
   htsmsg_field_t *f;
   const char *uuid = NULL, *class;
-  char filename[PATH_MAX];
+  char ubuf[UUID_HEX_SIZE];
 
   /* Class based */
   if ((class = htsmsg_get_str(args, "class"))) {
@@ -95,11 +122,11 @@ api_idnode_raw_export
       return EINVAL;
 
   pthread_mutex_lock(&global_lock);
+  l = htsmsg_create_list();
 
   /* Multiple */
   if (uuids) {
     const idnodes_rb_t *domain = NULL;
-    l = htsmsg_create_list();
     HTSMSG_FOREACH(f, uuids) {
       if (!(uuid = htsmsg_field_get_str(f))) continue;
       if (!(in   = idnode_find(uuid, NULL, domain))) continue;
@@ -108,9 +135,11 @@ api_idnode_raw_export
         err = EPERM;
         continue;
       }
-      m = idnode_savefn(in, filename, sizeof(filename));
-      if (m)
+      m = idnode_savefn(in, NULL, 0);
+      if (m) {
+        htsmsg_set_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
         htsmsg_add_msg(l, NULL, m);
+      }
       count++;
       idnode_perm_unset(in);
     }
@@ -120,22 +149,22 @@ api_idnode_raw_export
 
   /* Single */
   } else {
-    l = htsmsg_create_list();
     if ((in = idnode_find(uuid, NULL, NULL)) != NULL) {
       if (idnode_perm(in, perm, NULL)) {
         err = EPERM;
       } else {
-        m = idnode_savefn(in, filename, sizeof(filename));
-        if (m)
+        m = idnode_savefn(in, NULL, 0);
+        if (m) {
+          htsmsg_set_str(m, "uuid", idnode_uuid_as_str(in, ubuf));
           htsmsg_add_msg(l, NULL, m);
+        }
         idnode_perm_unset(in);
       }
     }
   }
 
   if (l && err == 0) {
-    *resp = htsmsg_create_map();
-    htsmsg_add_msg(*resp, "entries", l);
+    *resp = l;
   } else {
     htsmsg_destroy(l);
   }
@@ -157,11 +186,13 @@ api_idnode_raw_import
   int count = 0;
   const idnodes_rb_t *domain = NULL;
 
+  htsmsg_print(args);
   if (!(f = htsmsg_field_find(args, "node")))
     return EINVAL;
   if (!(msg = htsmsg_field_get_list(f)))
     if (!(msg = htsmsg_field_get_map(f)))
       return EINVAL;
+  htsmsg_print(msg);
 
   pthread_mutex_lock(&global_lock);
 
@@ -185,7 +216,7 @@ api_idnode_raw_import
           continue;
         }
         count++;
-        idnode_update(in, msg);
+        idnode_loadfn(in, msg);
         idnode_perm_unset(in);
       }
       if (count)
@@ -199,7 +230,7 @@ api_idnode_raw_import
         err = EPERM;
         goto exit;
       }
-      idnode_update(in, msg);
+      idnode_loadfn(in, msg);
       idnode_perm_unset(in);
       err = 0;
 
@@ -221,7 +252,7 @@ api_idnode_raw_import
         continue;
       }
       count++;
-      idnode_update(in, conf);
+      idnode_load(in, conf);
       idnode_perm_unset(in);
     }
     if (count)
@@ -243,6 +274,7 @@ void api_idnode_raw_init ( void )
    * note: permissions are verified using idnode_perm() calls
    */
   static api_hook_t ah[] = {
+    { "classes",        ACCESS_ANONYMOUS, api_idnode_classes,        NULL },
     { "raw/export",     ACCESS_ANONYMOUS, api_idnode_raw_export,     NULL },
     { "raw/import",     ACCESS_ANONYMOUS, api_idnode_raw_import,     NULL },
     { NULL },

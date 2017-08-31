@@ -175,7 +175,8 @@ caclient_class_save ( idnode_t *in, char *filename, size_t fsize )
   char ubuf[UUID_HEX_SIZE];
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(in, c);
-  snprintf(filename, fsize, "caclient/%s", idnode_uuid_as_str(in, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "caclient/%s", idnode_uuid_as_str(in, ubuf));
   return c;
 }
 

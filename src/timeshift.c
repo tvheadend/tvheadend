@@ -129,7 +129,8 @@ timeshift_conf_class_save ( idnode_t *self, char *filename, size_t fsize )
 {
   htsmsg_t *m = htsmsg_create_map();
   idnode_save(&timeshift_conf.idnode, m);
-  snprintf(filename, fsize, "timeshift/config");
+  if (filename)
+    snprintf(filename, fsize, "timeshift/config");
   return m;
 }
 

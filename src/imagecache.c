@@ -518,7 +518,8 @@ imagecache_save ( idnode_t *self, char *filename, size_t fsize )
 {
   htsmsg_t *c = htsmsg_create_map();
   idnode_save(&imagecache_conf.idnode, c);
-  snprintf(filename, fsize, "imagecache/config");
+  if (filename)
+    snprintf(filename, fsize, "imagecache/config");
   tvh_cond_signal(&imagecache_cond, 1);
   return c;
 }
