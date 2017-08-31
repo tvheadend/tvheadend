@@ -5,12 +5,12 @@
 	"name": "pass",
 	"default": 1
     },
-    {,
+    {
 	"comment": "Matroska",
 	"class": "profile-matroska",
 	"name": "matroska"
     },
-    {,
+    {
 	"comment": "HTSP Default Stream Settings",
 	"class": "profile-htsp",
 	"name": "htsp"

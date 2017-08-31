@@ -2510,7 +2510,8 @@ transcoder_create:
   /* Assign the default profile if config files are corrupted */
   if (!profile_default) {
     pro = profile_find_by_name2("pass", NULL, 1);
-    assert(pro);
+    if (pro == NULL)
+      tvhabort(LS_PROFILE, "no default streaming profile! reinstall data files");
     profile_default = pro;
   }
 }

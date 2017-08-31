@@ -234,6 +234,11 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 #define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
 #define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
 #define tvhalert(...)  tvhlog(LOG_ALERT,   ##__VA_ARGS__)
+#define tvhabort(...) do { \
+  tvhlog(LOG_ALERT,   ##__VA_ARGS__); \
+  tvh_safe_usleep(2000000); \
+  abort(); \
+} while (0)
 
 void tvhlog_backtrace_printf(const char *fmt, ...);
 
