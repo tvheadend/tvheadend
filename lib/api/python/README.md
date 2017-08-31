@@ -18,7 +18,7 @@ Environment variables
 ---------------------
 
 Name          | Description
------------------------------------------------------------
+--------------|--------------------------------------------
 TVH_URL_API   | URL like http://localhost:9981/api
 TVH_USER      | username for HTTP API
 TVH_PASS      | password for HTTP API
@@ -82,5 +82,7 @@ Examples:
 ---------
 
 `TVH_USER=admin TVH_PASS=admin ./tvh-json.py exportcls dvb_mux_dvbs`
+
 `TVH_USER=admin TVH_PASS=admin ./tvh-json.py export 6dbdb849bd8eae9c1fecf684f773baca > a.json`
+
 `TVH_USER=admin TVH_PASS=admin ./tvh-json.py import 6dbdb849bd8eae9c1fecf684f773baca < a.json`
