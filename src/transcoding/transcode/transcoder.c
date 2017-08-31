@@ -118,7 +118,7 @@ tvh_transcoder_start(TVHTranscoder *self, tvh_ss_t *ss_src)
             break;
         case AVMEDIA_TYPE_AUDIO:
             aprofile = (TVHAudioCodecProfile *)self->profiles[media_type];
-            if (avprofile &&
+            if (aprofile &&
                 lang_match(aprofile->language1, ssc, &audio_pindex[0], i) == 0 &&
                 lang_match(aprofile->language2, ssc, &audio_pindex[1], i) == 0)
                 lang_match(aprofile->language3, ssc, &audio_pindex[2], i);
