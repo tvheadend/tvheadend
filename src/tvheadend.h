@@ -303,17 +303,21 @@ typedef enum {
   SCT_HEVC,
   SCT_VP9,
   SCT_HBBTV,
-  SCT_LAST = SCT_HBBTV
+  SCT_THEORA,
+  SCT_OPUS,
+  SCT_LAST = SCT_OPUS
 } streaming_component_type_t;
 
 #define SCT_MASK(t) (1 << (t))
 
-#define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 ||	\
-			(t) == SCT_VP8 || (t) == SCT_HEVC || (t) == SCT_VP9)
+#define SCT_ISVIDEO(t) ((t) == SCT_MPEG2VIDEO || (t) == SCT_H264 || \
+			(t) == SCT_VP8 || (t) == SCT_HEVC || \
+			(t) == SCT_VP9 || (t) == SCT_THEORA)
 
 #define SCT_ISAUDIO(t) ((t) == SCT_MPEG2AUDIO || (t) == SCT_AC3 || \
-                        (t) == SCT_AAC  || (t) == SCT_MP4A ||	   \
-			(t) == SCT_EAC3 || (t) == SCT_VORBIS)
+			(t) == SCT_AAC  || (t) == SCT_MP4A || \
+			(t) == SCT_EAC3 || (t) == SCT_VORBIS || \
+			(t) == SCT_OPUS)
 
 #define SCT_ISAV(t) (SCT_ISVIDEO(t) || SCT_ISAUDIO(t))
 
@@ -423,7 +427,7 @@ typedef enum {
   /**
    * Packet with data.
    *
-   * sm_data points to a th_pkt. th_pkt will be unref'ed when 
+   * sm_data points to a th_pkt. th_pkt will be unref'ed when
    * the message is destroyed
    */
   SMT_PACKET,
@@ -471,7 +475,7 @@ typedef enum {
    *
    * End of streaming. If sm_code is 0 this was a result to an
    * unsubscription. Otherwise the reason was external and the
-   * subscription scheduler will attempt to start a new streaming 
+   * subscription scheduler will attempt to start a new streaming
    * session.
    */
   SMT_STOP,
@@ -616,7 +620,7 @@ typedef struct streaming_target {
  *
  */
 typedef struct streaming_queue {
-  
+
   streaming_target_t sq_st;
 
   pthread_mutex_t sq_mutex;    /* Protects sp_queue */
@@ -624,7 +628,7 @@ typedef struct streaming_queue {
 
   size_t          sq_maxsize;  /* Max queue size (bytes) */
   size_t          sq_size;     /* Actual queue size (bytes) - only data */
-  
+
   struct streaming_message_queue sq_queue;
 
 } streaming_queue_t;
@@ -855,7 +859,7 @@ void sha1_calc(uint8_t *dst, const uint8_t *d1, size_t d1_len, const uint8_t *d2
 uint32_t gcdU32(uint32_t a, uint32_t b);
 static inline int32_t deltaI32(int32_t a, int32_t b) { return (a > b) ? (a - b) : (b - a); }
 static inline uint32_t deltaU32(uint32_t a, uint32_t b) { return (a > b) ? (a - b) : (b - a); }
-  
+
 #define SKEL_DECLARE(name, type) type *name;
 #define SKEL_ALLOC(name) do { if (!name) name = calloc(1, sizeof(*name)); } while (0)
 #define SKEL_USED(name) do { name = NULL; } while (0)
@@ -888,5 +892,9 @@ void tvh_qsort_r(void *base, size_t nmemb, size_t size, int (*compar)(const void
 #else
 #define PRItime_t       "ld"
 #endif
+
+/* transcoding */
+#define TVH_NAME_LEN 32
+#define TVH_TITLE_LEN 256
 
 #endif /* TVHEADEND_H */

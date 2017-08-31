@@ -51,7 +51,7 @@ extern pthread_mutex_t  tvhlog_mutex;
 extern tvhlog_subsys_t  tvhlog_subsystems[];
 
 /* Initialise */
-void tvhlog_init       ( int level, int options, const char *path ); 
+void tvhlog_init       ( int level, int options, const char *path );
 void tvhlog_start      ( void );
 void tvhlog_end        ( void );
 void tvhlog_set_debug  ( const char *subsys );
@@ -193,6 +193,8 @@ enum {
   LS_SCANFILE,
   LS_TSFILE,
   LS_TSDEBUG,
+  LS_CODEC,
+  LS_VAAPI,
   LS_LAST     /* keep this last */
 };
 
@@ -232,6 +234,11 @@ static inline void tvhtrace_no_warnings(const char *fmt, ...) { (void)fmt; }
 #define tvhnotice(...) tvhlog(LOG_NOTICE,  ##__VA_ARGS__)
 #define tvherror(...)  tvhlog(LOG_ERR,     ##__VA_ARGS__)
 #define tvhalert(...)  tvhlog(LOG_ALERT,   ##__VA_ARGS__)
+#define tvhabort(...) do { \
+  tvhlog(LOG_ALERT,   ##__VA_ARGS__); \
+  tvh_safe_usleep(2000000); \
+  abort(); \
+} while (0)
 
 void tvhlog_backtrace_printf(const char *fmt, ...);
 

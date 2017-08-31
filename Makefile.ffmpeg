@@ -36,12 +36,13 @@ EXTLIBS        =
 COMPONENTS     = avutil avcodec avformat swscale avresample swresample avfilter
 PROTOCOLS      = file http https hls mmsh mmst rtmp rtmpe rtmps rtmpt rtmpte rtmpts \
                  ffrtmpcrypt ffrtmphttp rtp srtp tcp udp udplite unix
-DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm h264 hevc
+DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm opus h264 hevc theora
 ENCODERS       = mpeg2video mp2 aac vorbis
 MUXERS         = mpegts dvd matroska mp4
 DEMUXERS       = mpegts mpeg matroska mp4 hls flv live_flv
 BSFS           = h264_mp4toannexb hevc_mp4toannexb
-FILTERS        = yadif scale null aresample anull
+FILTERS        = yadif format hwupload hwdownload scale null aresample anull
+HWACCELS       =
 
 YASM           = yasm-1.3.0
 YASM_TB        = $(YASM).tar.gz
@@ -88,18 +89,15 @@ LIBFDKAAC_TB   = $(LIBFDKAAC).tar.gz
 LIBFDKAAC_URL  = https://freefr.dl.sourceforge.net/project/opencore-amr/fdk-aac/$(LIBFDKAAC_TB)
 LIBFDKAAC_SHA1 = 9215d19bdd911954fd5bc879c707ab571716ba0d
 
-LIBMFX_HASH    = e6fc25c974839dcbcf483edee01f51142ddc74f3
-LIBMFX         = mfx_dispatch-$(LIBMFX_HASH)
-LIBMFX_TB      = $(LIBMFX_HASH).tar.gz
-LIBMFX_URL     = https://github.com/lu-zero/mfx_dispatch/archive/$(LIBMFX_TB)
-LIBMFX_SHA1    = 33dec0b054d842e8380eb31b97afe02d07d5c6fc
-LIBMFX_DIFFS   =
+LIBOPUS        = opus-1.2.1
+LIBOPUS_TB     = $(LIBOPUS).tar.gz
+LIBOPUS_URL    = http://downloads.xiph.org/releases/opus/$(LIBOPUS_TB)
+LIBOPUS_SHA1   = 35d108ca9d6a8d05e52d06c5421a5f95b39fdac9
 
 FFMPEG         = ffmpeg-3.3.3
 FFMPEG_TB      = $(FFMPEG).tar.bz2
 FFMPEG_URL     = http://ffmpeg.org/releases/$(FFMPEG_TB)
 FFMPEG_SHA1    = 23bce5ccc4aeae23e1893d6cea7b1bd57b2591cb
-
 
 # ##############################################################################
 # Library Config
@@ -127,8 +125,8 @@ LIB_FILES := \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
-		$(LIB_ROOT)/$(LIBMFX)/.tvh_download \
-		$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOPUS)/.tvh_download \
+		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_build \
 		$(EPREFIX)
@@ -157,6 +155,7 @@ ELIBS     := -L$(EPREFIX)/lib -ldl
 CONFIGURE := FFMPEG_PREFIX=$(EPREFIX) \
              PKG_CONFIG=$(ROOTDIR)/support/pkg-config.ffmpeg \
              ./configure --prefix=/ffmpeg --enable-static --disable-shared
+CONFIGURE_PI := CC="$(COMPILER) $(CFLAGS_PI)" $(CONFIGURE)
 
 # ##############################################################################
 # YASM
@@ -169,7 +168,7 @@ $(LIB_ROOT)/$(YASM)/.tvh_download:
 
 $(LIB_ROOT)/$(YASM)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_download
-	cd $(LIB_ROOT)/$(YASM) && $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(YASM) && $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(YASM) install
@@ -184,6 +183,7 @@ ifeq (yes,$(CONFIG_LIBX264))
 
 EXTLIBS  += libx264
 ENCODERS += libx264
+FFMPEG_DIFFS += ffmpeg.libx264.diff
 
 endif
 
@@ -210,7 +210,7 @@ $(LIB_ROOT)/$(LIBX264)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBX264)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBX264) && $(CONFIGURE) \
 		--extra-asflags="-DPIC" \
-                --extra-cflags="$(CFLAGS_PI)" \
+		--extra-cflags="$(CFLAGS_PI)" \
 		--disable-cli \
 		--disable-swscale \
 		--disable-lavf \
@@ -244,6 +244,7 @@ ifeq (yes,$(CONFIG_LIBX265))
 
 EXTLIBS  += libx265
 ENCODERS += libx265
+FFMPEG_DIFFS += ffmpeg.libx265.diff
 
 endif
 
@@ -312,7 +313,7 @@ $(LIB_ROOT)/$(LIBVPX)/.tvh_build: \
 		--disable-examples \
 		--disable-docs \
 		--disable-unit-tests \
-                $(LIBVPX_TARGET)
+		$(LIBVPX_TARGET)
 	DIST_DIR=$(EPREFIX) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBVPX) install
 	@touch $@
@@ -345,7 +346,7 @@ $(LIB_ROOT)/$(LIBOGG)/.tvh_build: \
 		$(LIB_ROOT)/$(YASM)/.tvh_build \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBOGG) && \
-		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		$(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBOGG) install
@@ -384,7 +385,7 @@ $(LIB_ROOT)/$(LIBTHEORA)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBTHEORA) && \
-		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		$(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib \
 		--with-ogg=$(EPREFIX) \
 		--disable-examples \
@@ -432,7 +433,7 @@ $(LIB_ROOT)/$(LIBVORBIS)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBOGG)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_download
 	cd $(LIB_ROOT)/$(LIBVORBIS) && \
-		CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+		$(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib \
 		--with-ogg=$(EPREFIX)
 	DESTDIR=$(EBUILDIR) \
@@ -473,8 +474,7 @@ $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download:
 
 $(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBFDKAAC) && \
-		CXXFLAGS="$(CFLAGS_PI) -std=c++98" CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
+	cd $(LIB_ROOT)/$(LIBFDKAAC) && CXXFLAGS="-std=c++98" $(CONFIGURE_PI) \
 		--libdir=/$(EPREFIX0)/lib
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(LIBFDKAAC) install
@@ -494,15 +494,46 @@ endif
 
 
 # ##############################################################################
-# VAAPI
+# LIBOPUS
 #
 
-ifeq (yes,$(CONFIG_VAAPI))
+ifeq (yes,$(CONFIG_LIBOPUS))
 
-EXTLIBS += vaapi
-ENCODERS += h264_vaapi hevc_vaapi
+EXTLIBS  += libopus
+ENCODERS += libopus
 
 endif
+
+
+ifeq (yes,$(CONFIG_LIBOPUS_STATIC))
+
+$(LIB_ROOT)/$(LIBOPUS)/.tvh_download:
+	$(call DOWNLOAD,$(LIBOPUS_URL),$(LIB_ROOT)/$(LIBOPUS_TB),$(LIBOPUS_SHA1))
+	$(call UNTAR,$(LIBOPUS_TB),z)
+	@touch $@
+
+$(LIB_ROOT)/$(LIBOPUS)/.tvh_build: \
+		$(LIB_ROOT)/$(YASM)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOPUS)/.tvh_download
+	cd $(LIB_ROOT)/$(LIBOPUS) && $(CONFIGURE_PI) \
+		--disable-doc \
+		--disable-extra-programs
+	DESTDIR=$(EBUILDIR) \
+		$(MAKE) -C $(LIB_ROOT)/$(LIBOPUS) install
+	@touch $@
+
+else
+
+$(LIB_ROOT)/$(LIBOPUS)/.tvh_download:
+	@mkdir -p $(LIB_ROOT)/$(LIBOPUS)
+	@touch $@
+
+$(LIB_ROOT)/$(LIBOPUS)/.tvh_build: \
+	$(LIB_ROOT)/$(LIBOPUS)/.tvh_download
+	@touch $@
+
+endif
+
 
 # ##############################################################################
 # NVENC
@@ -515,46 +546,36 @@ ENCODERS += nvenc_h264 nvenc_hevc
 
 endif
 
+
 # ##############################################################################
-# LIBMFX
+# VAAPI
 #
 
-ifeq (yes,$(CONFIG_QSV))
+ifeq (yes,$(CONFIG_VAAPI))
 
-EXTLIBS  += libmfx
-DECODERS += mpeg2_qsv h264_qsv hevc_qsv
-ENCODERS += mpeg2_qsv h264_qsv hevc_qsv
+EXTLIBS  += vaapi
+ENCODERS += h264_vaapi hevc_vaapi
+HWACCELS += mpeg2_vaapi h264_vaapi hevc_vaapi
+FILTERS  += scale_vaapi
+FFMPEG_DIFFS += ffmpeg.vaapi_encode.diff
 
 endif
 
 
-ifeq (yes,$(CONFIG_LIBMFX_STATIC))
+# ##############################################################################
+# OMX
+#
 
-$(LIB_ROOT)/$(LIBMFX)/.tvh_download:
-	$(call DOWNLOAD,$(LIBMFX_URL),$(LIB_ROOT)/$(LIBMFX_TB),$(LIBMFX_SHA1))
-	$(call UNTAR,$(LIBMFX_TB),z)
-	$(call PATCH,$(LIBMFX),$(LIBMFX_DIFFS))
-	@touch $@
+ifeq (yes,$(CONFIG_OMX))
 
-$(LIB_ROOT)/$(LIBMFX)/.tvh_build: \
-		$(LIB_ROOT)/$(LIBMFX)/.tvh_download
-	cd $(LIB_ROOT)/$(LIBMFX) && autoreconf -i && \
-		CXXFLAGS="$(CFLAGS_PI)" CFLAGS="$(CFLAGS_PI)" $(CONFIGURE) \
-		--with-libva_x11 \
-		--with-libva_drm
-	DESTDIR=$(EBUILDIR) \
-		$(MAKE) -C $(LIB_ROOT)/$(LIBMFX) install
-	@touch $@
+EXTLIBS  += omx
+ENCODERS += h264_omx
 
-else
+endif
 
-$(LIB_ROOT)/$(LIBMFX)/.tvh_download:
-	@mkdir -p $(LIB_ROOT)/$(LIBMFX)
-	@touch $@
+ifeq (yes,$(CONFIG_OMX_RPI))
 
-$(LIB_ROOT)/$(LIBMFX)/.tvh_build: \
-	$(LIB_ROOT)/$(LIBMFX)/.tvh_download
-	@touch $@
+EXTLIBS  += omx_rpi
 
 endif
 
@@ -585,6 +606,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_download:
 	@mkdir -p $(EBUILDIR)
 	$(call DOWNLOAD,$(FFMPEG_URL),$(LIB_ROOT)/$(FFMPEG_TB),$(FFMPEG_SHA1))
 	$(call UNTAR,$(FFMPEG_TB),j)
+	$(call PATCH,$(FFMPEG),$(FFMPEG_DIFFS))
 	@touch $@
 
 $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
@@ -595,7 +617,7 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(LIB_ROOT)/$(LIBTHEORA)/.tvh_build \
 		$(LIB_ROOT)/$(LIBVORBIS)/.tvh_build \
 		$(LIB_ROOT)/$(LIBFDKAAC)/.tvh_build \
-		$(LIB_ROOT)/$(LIBMFX)/.tvh_build \
+		$(LIB_ROOT)/$(LIBOPUS)/.tvh_build \
 		$(LIB_ROOT)/$(FFMPEG)/.tvh_download
 	cd $(LIB_ROOT)/$(FFMPEG) && $(CONFIGURE) \
 		--disable-all \
@@ -611,7 +633,8 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
 		$(foreach demuxer,$(DEMUXERS),--enable-demuxer=$(demuxer)) \
 		$(foreach muxer,$(MUXERS),--enable-muxer=$(muxer)) \
 		$(foreach bsf,$(BSFS),--enable-bsf=$(bsf)) \
-		$(foreach filter,$(FILTERS),--enable-filter=$(filter))
+		$(foreach filter,$(FILTERS),--enable-filter=$(filter)) \
+		$(foreach hwaccel,$(HWACCELS),--enable-hwaccel=$(hwaccel))
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(FFMPEG) install
 	@touch $@

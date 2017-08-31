@@ -1121,7 +1121,7 @@ idnode_changedfn ( idnode_t *self )
   }
 }
 
-static htsmsg_t *
+htsmsg_t *
 idnode_savefn ( idnode_t *self, char *filename, size_t fsize )
 {
   const idclass_t *idc = self->in_class;
@@ -1131,6 +1131,20 @@ idnode_savefn ( idnode_t *self, char *filename, size_t fsize )
     idc = idc->ic_super;
   }
   return NULL;
+}
+
+void
+idnode_loadfn ( idnode_t *self, htsmsg_t *conf )
+{
+  const idclass_t *idc = self->in_class;
+  while (idc) {
+    if (idc->ic_load) {
+      idc->ic_load(self, conf);
+      return;
+    }
+    idc = idc->ic_super;
+  }
+  idnode_load(self, conf);
 }
 
 static void

@@ -279,7 +279,8 @@ dvr_timerec_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *m = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&dte->dte_id, m);
-  snprintf(filename, fsize, "dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "dvr/timerec/%s", idnode_uuid_as_str(&dte->dte_id, ubuf));
   return m;
 }
 
@@ -509,7 +510,7 @@ dvr_timerec_entry_class_weekdays_rend(void *o, const char *lang)
 }
 
 static uint32_t
-dvr_timerec_entry_class_owner_opts(void *o)
+dvr_timerec_entry_class_owner_opts(void *o, uint32_t opts)
 {
   dvr_timerec_entry_t *dte = (dvr_timerec_entry_t *)o;
   if (dte && dte->dte_id.in_access &&

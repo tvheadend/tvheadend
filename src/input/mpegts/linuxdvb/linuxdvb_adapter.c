@@ -59,23 +59,25 @@ linuxdvb_adapter_class_save ( idnode_t *in, char *filename, size_t fsize )
   m = htsmsg_create_map();
   idnode_save(&la->th_id, m);
 
-  /* Frontends */
-  l = htsmsg_create_map();
-  LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
-    linuxdvb_frontend_save(lfe, l);
-  htsmsg_add_msg(m, "frontends", l);
+  if (filename) {
+    /* Frontends */
+    l = htsmsg_create_map();
+    LIST_FOREACH(lfe, &la->la_frontends, lfe_link)
+      linuxdvb_frontend_save(lfe, l);
+    htsmsg_add_msg(m, "frontends", l);
 
-  /* CAs */
-#if ENABLE_LINUXDVB_CA
-  l = htsmsg_create_map();
-  LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
-    linuxdvb_ca_save(lca, l);
-  htsmsg_add_msg(m, "ca_devices", l);
-#endif
+    /* CAs */
+  #if ENABLE_LINUXDVB_CA
+    l = htsmsg_create_map();
+    LIST_FOREACH(lca, &la->la_ca_devices, lca_link)
+      linuxdvb_ca_save(lca, l);
+    htsmsg_add_msg(m, "ca_devices", l);
+  #endif
 
-  /* Save */
-  snprintf(filename, fsize, "input/linuxdvb/adapters/%s",
-           idnode_uuid_as_str(&la->th_id, ubuf));
+    /* Filename */
+    snprintf(filename, fsize, "input/linuxdvb/adapters/%s",
+             idnode_uuid_as_str(&la->th_id, ubuf));
+  }
   return m;
 }
 

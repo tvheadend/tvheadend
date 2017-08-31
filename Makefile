@@ -133,8 +133,8 @@ ifeq ($(CONFIG_LIBFDKAAC_STATIC),yes)
 FFMPEG_DEPS += libfdk-aac
 endif
 
-ifeq ($(CONFIG_LIBMFX_STATIC),yes)
-FFMPEG_DEPS += libmfx
+ifeq ($(CONFIG_LIBOPUS_STATIC),yes)
+FFMPEG_DEPS += libopus
 endif
 
 LDFLAGS += $(foreach lib,$(FFMPEG_LIBS),$(FFMPEG_LIBDIR)/$(lib).a)
@@ -281,6 +281,7 @@ SRCS-2 = \
 	src/api/api_config.c \
 	src/api/api_status.c \
 	src/api/api_idnode.c \
+	src/api/api_raw.c \
 	src/api/api_input.c \
 	src/api/api_channel.c \
 	src/api/api_service.c \
@@ -474,6 +475,43 @@ SRCS-BONJOUR = \
 SRCS-$(CONFIG_BONJOUR) = $(SRCS-BONJOUR)
 I18N-C += $(SRCS-BONJOUR)
 
+# codecs
+SRCS-CODECS = $(wildcard src/transcoding/codec/*.c)
+SRCS-CODECS += $(wildcard src/transcoding/codec/codecs/*.c)
+ifneq (,$(filter yes,$(CONFIG_LIBX264) $(CONFIG_LIBX265)))
+LIBS-CODECS += libx26x
+endif
+ifeq ($(CONFIG_LIBVPX),yes)
+LIBS-CODECS += libvpx
+endif
+ifeq ($(CONFIG_LIBTHEORA),yes)
+LIBS-CODECS += libtheora
+endif
+ifeq ($(CONFIG_LIBVORBIS),yes)
+LIBS-CODECS += libvorbis
+endif
+ifeq ($(CONFIG_LIBFDKAAC),yes)
+LIBS-CODECS += libfdk_aac
+endif
+ifeq ($(CONFIG_LIBOPUS),yes)
+LIBS-CODECS += libopus
+endif
+ifeq ($(CONFIG_VAAPI),yes)
+LIBS-CODECS += vaapi
+endif
+ifeq ($(CONFIG_OMX),yes)
+LIBS-CODECS += omx
+endif
+SRCS-CODECS += $(foreach lib,$(LIBS-CODECS),src/transcoding/codec/codecs/libs/$(lib).c)
+
+#hwaccels
+ifeq ($(CONFIG_HWACCELS),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/hwaccels.c
+ifeq ($(CONFIG_VAAPI),yes)
+SRCS-HWACCELS += src/transcoding/transcode/hwaccels/vaapi.c
+endif
+endif
+
 # libav
 DEPS-LIBAV = \
 	src/main.c \
@@ -482,7 +520,11 @@ SRCS-LIBAV = \
 	src/libav.c \
 	src/input/mpegts/iptv/iptv_libav.c \
 	src/muxer/muxer_libav.c \
-	src/plumbing/transcoding.c
+	src/api/api_codec.c
+SRCS-LIBAV += $(wildcard src/transcoding/*.c)
+SRCS-LIBAV += $(wildcard src/transcoding/transcode/*.c)
+SRCS-LIBAV += $(SRCS-HWACCELS)
+SRCS-LIBAV += $(SRCS-CODECS)
 SRCS-$(CONFIG_LIBAV) += $(SRCS-LIBAV)
 I18N-C += $(SRCS-LIBAV)
 

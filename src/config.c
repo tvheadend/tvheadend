@@ -1821,7 +1821,8 @@ config_class_save(idnode_t *self, char *filename, size_t fsize)
 #if ENABLE_SATIP_SERVER
   idnode_save(&satip_server_conf.idnode, c);
 #endif
-  snprintf(filename, fsize, "config");
+  if (filename)
+    snprintf(filename, fsize, "config");
   return c;
 }
 

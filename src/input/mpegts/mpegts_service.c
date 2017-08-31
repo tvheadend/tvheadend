@@ -284,8 +284,12 @@ mpegts_service_is_enabled(service_t *t, int flags)
 static htsmsg_t *
 mpegts_service_config_save ( service_t *t, char *filename, size_t fsize )
 {
-  mpegts_service_t *s = (mpegts_service_t*)t;
-  idnode_changed(&s->s_dvb_mux->mm_id);
+  if (filename == NULL) {
+    htsmsg_t *e = htsmsg_create_map();
+    service_save(t, e);
+    return e;
+  }
+  idnode_changed(&((mpegts_service_t *)t)->s_dvb_mux->mm_id);
   return NULL;
 }
 

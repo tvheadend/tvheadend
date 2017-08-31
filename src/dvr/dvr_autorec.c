@@ -452,7 +452,8 @@ dvr_autorec_entry_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *m = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&dae->dae_id, m);
-  snprintf(filename, fsize, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
   return m;
 }
 
@@ -992,7 +993,7 @@ dvr_autorec_entry_class_btype_list ( void *o, const char *lang )
 }
 
 static uint32_t
-dvr_autorec_entry_class_owner_opts(void *o)
+dvr_autorec_entry_class_owner_opts(void *o, uint32_t opts)
 {
   dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
   if (dae && dae->dae_id.in_access &&

@@ -24,6 +24,7 @@
 #include "url.h"
 #include "tvhpoll.h"
 #include "access.h"
+#include "atomic.h"
 
 struct channel;
 struct http_path;
@@ -130,7 +131,6 @@ typedef enum http_wsop {
 } http_wsop_t;
 
 typedef struct http_connection {
-  pthread_mutex_t hc_fd_lock;
   int hc_fd;
   struct sockaddr_storage *hc_peer;
   char *hc_peer_ipstr;
@@ -146,6 +146,11 @@ typedef struct http_connection {
   int hc_keep_alive;
 
   htsbuf_queue_t  hc_reply;
+
+  int             hc_extra_insend;
+  pthread_mutex_t hc_extra_lock;
+  int             hc_extra_chunks;
+  htsbuf_queue_t  hc_extra;
 
   http_arg_list_t hc_args;
 
@@ -215,6 +220,30 @@ void http_redirect(http_connection_t *hc, const char *location,
                    struct http_arg_list *req_args, int external);
 
 void http_css_import(http_connection_t *hc, const char *location);
+
+void http_extra_destroy(http_connection_t *hc);
+
+int http_extra_flush(http_connection_t *hc);
+
+int http_extra_flush_partial(http_connection_t *hc);
+
+int http_extra_send(http_connection_t *hc, const void *data, size_t data_len);
+
+int http_extra_send_prealloc(http_connection_t *hc, const void *data, size_t data_len);
+
+static inline void http_send_begin(http_connection_t *hc)
+{
+  if (atomic_get(&hc->hc_extra_chunks) > 0)
+    http_extra_flush_partial(hc);
+  atomic_add(&hc->hc_extra_insend, 1);
+}
+
+static inline void http_send_end(http_connection_t *hc)
+{
+  atomic_dec(&hc->hc_extra_insend, 1);
+  if (atomic_get(&hc->hc_extra_chunks) > 0)
+    http_extra_flush(hc);
+}
 
 void http_send_header(http_connection_t *hc, int rc, const char *content, 
 		      int64_t contentlen, const char *encoding,

@@ -558,7 +558,8 @@ dvr_config_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *m = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&cfg->dvr_id, m);
-  snprintf(filename, fsize, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "dvr/config/%s", idnode_uuid_as_str(&cfg->dvr_id, ubuf));
   return m;
 }
 
@@ -609,7 +610,7 @@ dvr_config_class_enabled_set(void *o, const void *v)
 }
 
 static uint32_t
-dvr_config_class_enabled_opts(void *o)
+dvr_config_class_enabled_opts(void *o, uint32_t opts)
 {
   dvr_config_t *cfg = (dvr_config_t *)o;
   if (cfg && dvr_config_is_default(cfg) && dvr_config_is_valid(cfg))
@@ -764,7 +765,7 @@ dvr_config_class_retention_list ( void *o, const char *lang )
 static htsmsg_t *
 dvr_config_class_extra_list(void *o, const char *lang)
 {
-  return dvr_entry_class_duration_list(o, 
+  return dvr_entry_class_duration_list(o,
            tvh_gettext_lang(lang, N_("Not set (none or channel configuration)")),
            4*60, 1, lang);
 }

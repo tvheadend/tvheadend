@@ -917,7 +917,7 @@ static inline int mpegts_mux_release ( mpegts_mux_t *mm )
   return 0;
 }
 
-void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c );
+void mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c, int refs );
 
 void mpegts_mux_tuning_error( const char *mux_uuid, mpegts_mux_instance_t *mmi_match );
 

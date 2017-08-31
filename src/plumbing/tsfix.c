@@ -379,9 +379,7 @@ recover_pts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
   int total;
 
   pktref_enqueue(&tf->tf_ptsq, pkt);
-
   while((pkt = pktref_get_first(&tf->tf_ptsq)) != NULL) {
-    
     tfs = tfs_find(tf, pkt);
 
     switch(tfs->tfs_type) {
@@ -473,7 +471,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
   tfstream_t *tfs = tfs_find(tf, pkt), *tfs2;
   streaming_msg_free(sm);
   int64_t diff, diff2, threshold;
-  
+
   if(tfs == NULL || mclk() < tf->tf_start_time) {
     pkt_ref_dec(pkt);
     return;

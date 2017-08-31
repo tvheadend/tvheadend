@@ -1,0 +1,61 @@
+diff -urN ../ffmpeg-3.1.3.orig/libavcodec/vaapi_encode.c ./libavcodec/vaapi_encode.c
+--- ../ffmpeg-3.1.3.orig/libavcodec/vaapi_encode.c	2016-06-27 01:54:29.000000000 +0200
++++ ./libavcodec/vaapi_encode.c	2016-08-31 11:53:21.159413291 +0200
+@@ -26,6 +26,7 @@
+ 
+ #include "vaapi_encode.h"
+ #include "avcodec.h"
++#include "internal.h"
+ 
+ static const char *picture_type_name[] = { "IDR", "I", "P", "B" };
+ 
+@@ -395,7 +396,7 @@
+     VAAPIEncodeContext *ctx = avctx->priv_data;
+     VACodedBufferSegment *buf_list, *buf;
+     VAStatus vas;
+-    int err;
++    int err, pict_type;
+ 
+     err = vaapi_encode_wait(avctx, pic);
+     if (err < 0)
+@@ -427,6 +428,28 @@
+ 
+     pkt->pts = pic->pts;
+ 
++    switch (pic->type) {
++    case PICTURE_TYPE_IDR:
++    case PICTURE_TYPE_I:
++        pict_type = AV_PICTURE_TYPE_I;
++        break;
++    case PICTURE_TYPE_P:
++        pict_type = AV_PICTURE_TYPE_P;
++        break;
++    case PICTURE_TYPE_B:
++        pict_type = AV_PICTURE_TYPE_B;
++        break;
++    default:
++        pict_type = AV_PICTURE_TYPE_NONE;
++        break;
++    }
++#if FF_API_CODED_FRAME
++FF_DISABLE_DEPRECATION_WARNINGS
++    avctx->coded_frame->pict_type = pict_type;
++FF_ENABLE_DEPRECATION_WARNINGS
++#endif
++    ff_side_data_set_encoder_stats(pkt, -1, NULL, 0, pict_type);
++
+     vas = vaUnmapBuffer(ctx->hwctx->display, pic->output_buffer);
+     if (vas != VA_STATUS_SUCCESS) {
+         av_log(avctx, AV_LOG_ERROR, "Failed to unmap output buffers: "
+diff -urN ../ffmpeg-3.1.3.orig/libavcodec/vaapi_encode_h265.c ./libavcodec/vaapi_encode_h265.c
+--- ../ffmpeg-3.1.3.orig/libavcodec/vaapi_encode_h265.c	2016-08-09 00:53:26.000000000 +0200
++++ ./libavcodec/vaapi_encode_h265.c	2016-08-31 13:05:03.827533472 +0200
+@@ -300,7 +300,7 @@
+ 
+     u(6, mseq_var(vps_max_layer_id));
+     ue(mseq_var(vps_num_layer_sets_minus1));
+-    for (i = 1; i <= mseq->vps_num_layer_sets_minus1; i++) {
++    for (i = 0; i <= mseq->vps_num_layer_sets_minus1; i++) {
+         for (j = 0; j < mseq->vps_max_layer_id; j++)
+             u(1, mseq_var(layer_id_included_flag[i][j]));
+     }

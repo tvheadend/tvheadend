@@ -25,8 +25,12 @@ extern const idclass_t mpegts_service_class;
 static htsmsg_t *
 iptv_service_config_save ( service_t *s, char *filename, size_t fsize )
 {
-  mpegts_mux_t *mm = ((mpegts_service_t *)s)->s_dvb_mux;
-  idnode_changed(&mm->mm_id);
+  if (filename == NULL) {
+    htsmsg_t *e = htsmsg_create_map();
+    service_save(s, e);
+    return e;
+  }
+  idnode_changed(&((mpegts_service_t *)s)->s_dvb_mux->mm_id);
   return NULL;
 }
 

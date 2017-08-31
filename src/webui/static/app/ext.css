@@ -2,9 +2,9 @@
  * Ext JS Library 2.1
  * Copyright(c) 2006-2008, Ext JS, LLC.
  * licensing@extjs.com
- * 
+ *
  * http://extjs.com/license
- */ 
+ */
 #header {
     font-family: tahoma,arial;
     background-color: #507AAA;
@@ -624,6 +624,14 @@
     background-image: url(../icons/exclamation.png) !important;
 }
 
+.codecDisabled {
+    background-image: url(../icons/plugin_disabled.png) !important;
+}
+
+.codecEnabled {
+    background-image: url(../icons/plugin.png) !important;
+}
+
 .x-linked {
     display: inline-block;
     background-image: url(../icons/linked.gif) !important;
@@ -1040,9 +1048,9 @@
     height: auto;
 }
 
-/** vim: ts=4:sw=4:nu:fdc=4:nospell 
+/** vim: ts=4:sw=4:nu:fdc=4:nospell
  *
- * Ext.ux.grid.RowActions.css 
+ * Ext.ux.grid.RowActions.css
  *
  * Style sheets for Grid RowActions Plugin
  *
@@ -1054,7 +1062,7 @@
  * the Open Source LGPL 3.0 license.  Commercial use is permitted to the extent
  * that the code/component(s) do NOT become part of another Open Source or Commercially
  * licensed development library or toolkit without explicit permission.
- * 
+ *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 
@@ -1135,10 +1143,10 @@
  * @version   $Id: Ext.ux.form.LovCombo.css 189 2008-04-16 21:01:06Z jozo $
  *
  * @license Ext.ux.form.LovCombo.css is licensed under the terms of the Open Source
- * LGPL 3.0 license. Commercial use is permitted to the extent that the 
+ * LGPL 3.0 license. Commercial use is permitted to the extent that the
  * code/component(s) do NOT become part of another Open Source or Commercially
  * licensed development library or toolkit without explicit permission.
- * 
+ *
  * License details: http://www.gnu.org/licenses/lgpl.html
  */
 .ux-lovcombo-icon {
@@ -1155,7 +1163,7 @@
 }
 
 .ux-lovcombo-icon-unchecked {
-    background: transparent 
+    background: transparent
         url(../extjs/resources/images/default/menu/unchecked.gif);
 }
 

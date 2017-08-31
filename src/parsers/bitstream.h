@@ -69,4 +69,6 @@ RB24(const uint8_t *d)
   return (d[0] << 16) | (d[1] << 8) | d[2];
 }
 
+#define RB16(x) ((((const uint8_t*)(x))[0] << 8) | ((const uint8_t*)(x))[1])
+
 #endif /* BITSTREAM_H_ */

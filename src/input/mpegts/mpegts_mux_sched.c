@@ -73,7 +73,8 @@ mpegts_mux_sched_class_save ( idnode_t *in, char *filename, size_t fsize )
   htsmsg_t *c = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(in, c);
-  snprintf(filename, fsize, "muxsched/%s", idnode_uuid_as_str(in, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "muxsched/%s", idnode_uuid_as_str(in, ubuf));
   return c;
 }
 

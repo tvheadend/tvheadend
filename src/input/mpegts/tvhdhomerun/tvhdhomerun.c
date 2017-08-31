@@ -44,15 +44,17 @@ tvhdhomerun_device_class_save ( idnode_t *in, char *filename, size_t fsize )
   m = htsmsg_create_map();
   idnode_save(&hd->th_id, m);
 
-  l = htsmsg_create_map();
-  TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
-    tvhdhomerun_frontend_save(lfe, l);
-  htsmsg_add_msg(m, "frontends", l);
+  if (filename) {
+    l = htsmsg_create_map();
+    TAILQ_FOREACH(lfe, &hd->hd_frontends, hf_link)
+      tvhdhomerun_frontend_save(lfe, l);
+    htsmsg_add_msg(m, "frontends", l);
+
+    snprintf(filename, fsize, "input/tvhdhomerun/adapters/%s",
+             idnode_uuid_as_str(&hd->th_id, ubuf));
+  }
 
   htsmsg_add_str(m, "fe_override", hd->hd_override_type);
-
-  snprintf(filename, fsize, "input/tvhdhomerun/adapters/%s",
-           idnode_uuid_as_str(&hd->th_id, ubuf));
   return m;
 }
 

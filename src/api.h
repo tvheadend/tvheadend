@@ -62,6 +62,7 @@ void api_init               ( void );
 void api_done               ( void );
 void api_config_init        ( void );
 void api_idnode_init        ( void );
+void api_idnode_raw_init    ( void );
 void api_input_init         ( void );
 void api_service_init       ( void );
 void api_channel_init       ( void );
@@ -81,6 +82,12 @@ void api_language_init      ( void );
 void api_satip_server_init  ( void );
 void api_timeshift_init     ( void );
 void api_wizard_init        ( void );
+
+#if ENABLE_LIBAV
+void api_codec_init         ( void );
+#else
+static inline void api_codec_init(void) {};
+#endif
 
 /*
  * IDnode

@@ -82,6 +82,7 @@ struct idclass {
   const char     *(*ic_get_title)  (idnode_t *self, const char *lang);
   void            (*ic_changed)    (idnode_t *self);
   htsmsg_t       *(*ic_save)       (idnode_t *self, char *filename, size_t fsize);
+  void            (*ic_load)       (idnode_t *self, htsmsg_t *conf);
   void            (*ic_delete)     (idnode_t *self);
   void            (*ic_moveup)     (idnode_t *self);
   void            (*ic_movedown)   (idnode_t *self);
@@ -234,6 +235,8 @@ htsmsg_t *idnode_serialize0  (idnode_t *self, htsmsg_t *list, int optmask, const
 void      idnode_read0  (idnode_t *self, htsmsg_t *m, htsmsg_t *list, int optmask, const char *lang);
 int       idnode_write0 (idnode_t *self, htsmsg_t *m, int optmask, int dosave);
 void      idnode_save_check (idnode_t *self, int weak);
+htsmsg_t *idnode_savefn (idnode_t *self, char *filename, size_t fsize);
+void      idnode_loadfn (idnode_t *self, htsmsg_t *conf);
 
 #define idclass_serialize(idc, lang)    idclass_serialize0(idc, NULL, 0, lang)
 #define idclass_serializedoc(idc, lang) idclass_serialize0(idc, NULL, PO_DOC, lang)

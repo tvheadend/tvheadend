@@ -431,7 +431,8 @@ service_mapper_conf_class_save ( idnode_t *self, char *filename, size_t fsize )
 
   m = htsmsg_create_map();
   idnode_save(&service_mapper_conf.idnode, m);
-  snprintf(filename, fsize, "service_mapper/config");
+  if (filename)
+    snprintf(filename, fsize, "service_mapper/config");
 
   if (!htsmsg_is_empty(service_mapper_conf.services))
     service_mapper_start(&service_mapper_conf.d, service_mapper_conf.services);

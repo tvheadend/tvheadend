@@ -1,4 +1,4 @@
-#include "plumbing/transcoding.h"
+#include "transcoding/transcode.h"
 #include "libav.h"
 
 /**
@@ -7,57 +7,55 @@
 static void
 libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
-    char message[8192];
-    char *nl;
-    char *l;
+  int severity = LOG_TVH_NOTIFY, l;
+  char *fmt1 = (char *)fmt;
 
-    if ((level == AV_LOG_DEBUG) && !(tvhlog_options & TVHLOG_OPT_LIBAV))
-      return;
+  if (level != AV_LOG_QUIET &&
+      ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
 
-    memset(message, 0, sizeof(message));
-    vsnprintf(message, sizeof(message), fmt, vl);
+    /* remove trailing newline */
+    l = strlen(fmt);
+    if (fmt[l-1] == '\n') {
+      fmt1 = tvh_strdupa(fmt);
+      fmt1[l-1] = '\0';
+    }
 
-    l = message;
+    if (strcmp(fmt1, "forced frame type (%d) at %d was changed to frame type (%d)") == 0)
+      level = AV_LOG_TRACE;
 
-    if(level == AV_LOG_DEBUG)
+    switch(level) {
+    case AV_LOG_TRACE:
 #if ENABLE_TRACE
-      level = LOG_TRACE;
-#else
-      level = LOG_DEBUG;
+      severity |= LOG_TRACE;
+      break;
 #endif
-    else if(level == AV_LOG_VERBOSE)
-      level = LOG_DEBUG;
-    else if(level == AV_LOG_INFO)
-      level = LOG_INFO;
-    else if(level == AV_LOG_WARNING)
-      level = LOG_WARNING;
-    else if(level == AV_LOG_ERROR)
-      level = LOG_ERR;
-    else if(level == AV_LOG_FATAL)
-      level = LOG_CRIT;
-    else if(level == AV_LOG_PANIC)
-      level = LOG_EMERG;
-
-    if (level == LOG_INFO) {
-      if (!strncmp(message, "--prefix=/", 10))
-        return;
+    case AV_LOG_DEBUG:
+    case AV_LOG_VERBOSE:
+      severity |= LOG_DEBUG;
+      break;
+    case AV_LOG_INFO:
+      severity |= LOG_INFO;
+      break;
+    case AV_LOG_WARNING:
+      severity |= LOG_WARNING;
+      break;
+    case AV_LOG_ERROR:
+      severity |= LOG_ERR;
+      break;
+    case AV_LOG_FATAL:
+      severity |= LOG_CRIT;
+      break;
+    case AV_LOG_PANIC:
+      severity |= LOG_EMERG;
+      break;
+    default:
+      break;
     }
-
-    while(l < message + sizeof(message)) {
-      nl = strstr(l, "\n");
-      if(nl)
-        *nl = '\0';
-
-      if(!strlen(l))
-        break;
-
-      tvhlog(level, LS_LIBAV, "%s", l);
-
-      if(!nl)
-        break;
-
-      l = nl + 1;
-    }
+    va_list ap;
+    va_copy(ap, vl);
+    tvhlogv(__FILE__, __LINE__, severity, LS_LIBAV, fmt1, &ap);
+    va_end(ap);
+  }
 }
 
 /**
@@ -84,6 +82,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_HEVC:
     codec_id = AV_CODEC_ID_HEVC;
     break;
+  case SCT_THEORA:
+    codec_id = AV_CODEC_ID_THEORA;
+    break;
   case SCT_AC3:
     codec_id = AV_CODEC_ID_AC3;
     break;
@@ -100,6 +101,9 @@ streaming_component_type2codec_id(streaming_component_type_t type)
   case SCT_VORBIS:
     codec_id = AV_CODEC_ID_VORBIS;
     break;
+  case SCT_OPUS:
+    codec_id = AV_CODEC_ID_OPUS;
+    break;
   case SCT_DVBSUB:
     codec_id = AV_CODEC_ID_DVB_SUBTITLE;
     break;
@@ -110,7 +114,6 @@ streaming_component_type2codec_id(streaming_component_type_t type)
     codec_id = AV_CODEC_ID_DVB_TELETEXT;
     break;
   default:
-    codec_id = AV_CODEC_ID_NONE;
     break;
   }
 
@@ -124,7 +127,7 @@ streaming_component_type2codec_id(streaming_component_type_t type)
 streaming_component_type_t
 codec_id2streaming_component_type(enum AVCodecID id)
 {
-  streaming_component_type_t type = SCT_NONE;
+  streaming_component_type_t type = SCT_UNKNOWN;
 
   switch(id) {
   case AV_CODEC_ID_H264:
@@ -142,6 +145,9 @@ codec_id2streaming_component_type(enum AVCodecID id)
   case AV_CODEC_ID_HEVC:
     type = SCT_HEVC;
     break;
+  case AV_CODEC_ID_THEORA:
+    type = SCT_THEORA;
+    break;
   case AV_CODEC_ID_AC3:
     type = SCT_AC3;
     break;
@@ -157,6 +163,9 @@ codec_id2streaming_component_type(enum AVCodecID id)
   case AV_CODEC_ID_VORBIS:
     type = SCT_VORBIS;
     break;
+  case AV_CODEC_ID_OPUS:
+    type = SCT_OPUS;
+    break;
   case AV_CODEC_ID_DVB_SUBTITLE:
     type = SCT_DVBSUB;
     break;
@@ -170,7 +179,6 @@ codec_id2streaming_component_type(enum AVCodecID id)
     type = SCT_NONE;
     break;
   default:
-    type = SCT_UNKNOWN;
     break;
   }
 
@@ -179,8 +187,8 @@ codec_id2streaming_component_type(enum AVCodecID id)
 
 
 /**
- * 
- */ 
+ *
+ */
 int
 libav_is_encoder(AVCodec *codec)
 {
@@ -192,16 +200,12 @@ libav_is_encoder(AVCodec *codec)
 }
 
 /**
- * 
- */ 
+ *
+ */
 void
 libav_set_loglevel(void)
 {
-  int level = AV_LOG_VERBOSE;
-
-  if (tvhlog_options & TVHLOG_OPT_LIBAV)
-    level = AV_LOG_DEBUG;
-
+  int level = (tvhlog_options & TVHLOG_OPT_LIBAV) ? AV_LOG_DEBUG : AV_LOG_INFO;
   av_log_set_level(level);
 }
 
@@ -211,16 +215,20 @@ libav_set_loglevel(void)
 void
 libav_init(void)
 {
-  av_log_set_callback(libav_log_callback);
   libav_set_loglevel();
+  av_log_set_callback(libav_log_callback);
   av_register_all();
   avformat_network_init();
   avfilter_register_all();
-  transcoding_init();
+  transcode_init();
 }
 
+/**
+ *
+ */
 void
 libav_done(void)
 {
+  transcode_done();
   avformat_network_deinit();
 }

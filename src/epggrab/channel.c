@@ -551,8 +551,9 @@ epggrab_channel_class_save(idnode_t *self, char *filename, size_t fsize)
   htsmsg_t *m = htsmsg_create_map();
   char ubuf[UUID_HEX_SIZE];
   idnode_save(&ec->idnode, m);
-  snprintf(filename, fsize, "epggrab/%s/channels/%s",
-           ec->mod->saveid, idnode_uuid_as_str(&ec->idnode, ubuf));
+  if (filename)
+    snprintf(filename, fsize, "epggrab/%s/channels/%s",
+             ec->mod->saveid, idnode_uuid_as_str(&ec->idnode, ubuf));
   return m;
 }
 

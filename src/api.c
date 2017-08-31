@@ -111,16 +111,30 @@ api_serverinfo
   return 0;
 }
 
+static int
+api_pathlist
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  api_link_t *t;
+  *resp = htsmsg_create_list();
+  RB_FOREACH(t, &api_hook_tree, link) {
+    htsmsg_add_str(*resp, NULL, t->hook->ah_subsystem);
+  }
+  return 0;
+}
+
 void api_init ( void )
 {
   static api_hook_t h[] = {
     { "serverinfo", ACCESS_ANONYMOUS, api_serverinfo, NULL },
+    { "pathlist", ACCESS_ANONYMOUS, api_pathlist, NULL },
     { NULL, 0, NULL, NULL }
   };
   api_register_all(h);
 
   /* Subsystems */
   api_idnode_init();
+  api_idnode_raw_init();
   api_config_init();
   api_input_init();
   api_mpegts_init();
@@ -136,6 +150,7 @@ void api_init ( void )
   api_access_init();
   api_dvr_init();
   api_caclient_init();
+  api_codec_init();
   api_profile_init();
   api_language_init();
   api_satip_server_init();

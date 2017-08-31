@@ -242,7 +242,7 @@ cleanup_filename(dvr_config_t *cfg, char *s, int dosubs)
     else if (cfg->dvr_whitespace_in_title &&
              (*s == ' ' || *s == '\t') &&
              dosubs)
-      *s = '-';	
+      *s = '-';
 
     else if (cfg->dvr_clean_title &&
              ((*s < 32) || (*s > 122) ||
@@ -990,7 +990,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 	 "adapter: \"%s\", "
 	 "network: \"%s\", mux: \"%s\", provider: \"%s\", "
 	 "service: \"%s\"",
-		
+
 	 dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
 	 si->si_adapter  ?: "<N/A>",
 	 si->si_network  ?: "<N/A>",
@@ -1024,7 +1024,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
       htsmsg_add_u32(e, "audio_type", ssc->ssc_audio_type);
       if(ssc->ssc_audio_version)
         htsmsg_add_u32(e, "audio_version", ssc->ssc_audio_version);
-      if(ssc->ssc_sri)
+      if(ssc->ssc_sri < 16)
 	snprintf(sr, sizeof(sr), "%d", sri_to_rate(ssc->ssc_sri));
       else
 	strcpy(sr, "?");
@@ -1493,7 +1493,7 @@ fin:
 
     case SMT_SERVICE_STATUS:
       if (sm->sm_code & TSS_PACKETS) {
-	
+
       } else if (sm->sm_code & TSS_ERRORS) {
 
 	int code = SM_CODE_UNDEFINED_ERROR;
@@ -1592,7 +1592,7 @@ dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
   args = htsstr_argsplit(buf1);
   if(args[0])
     spawnv(args[0], (void *)args, NULL, 1, 1);
-    
+
   htsstr_argsplit_free(args);
 }
 

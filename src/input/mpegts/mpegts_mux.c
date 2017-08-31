@@ -1271,22 +1271,27 @@ mpegts_mux_create0
 }
 
 void
-mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c )
+mpegts_mux_save ( mpegts_mux_t *mm, htsmsg_t *c, int refs )
 {
   mpegts_service_t *ms;
-  htsmsg_t *root = htsmsg_create_map();
-  htsmsg_t *services = htsmsg_create_map();
+  htsmsg_t *root = !refs ? htsmsg_create_map() : c;
+  htsmsg_t *services = !refs ? htsmsg_create_map() : htsmsg_create_list();
   htsmsg_t *e;
   char ubuf[UUID_HEX_SIZE];
 
   idnode_save(&mm->mm_id, root);
   LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
-    e = htsmsg_create_map();
-    service_save((service_t *)ms, e);
-    htsmsg_add_msg(services, idnode_uuid_as_str(&ms->s_id, ubuf), e);
+    if (refs) {
+      htsmsg_add_str(services, NULL, idnode_uuid_as_str(&ms->s_id, ubuf));
+    } else {
+      e = htsmsg_create_map();
+      service_save((service_t *)ms, e);
+      htsmsg_add_msg(services, idnode_uuid_as_str(&ms->s_id, ubuf), e);
+    }
   }
   htsmsg_add_msg(root, "services", services);
-  htsmsg_add_msg(c, "config", root);
+  if (!refs)
+    htsmsg_add_msg(c, "config", root);
 }
 
 int

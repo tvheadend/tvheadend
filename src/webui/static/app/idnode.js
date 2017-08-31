@@ -884,6 +884,7 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
     var df = [];
     var groups = null;
     var width = 0;
+    var hiddenFields = [];
 
     /* Fields */
     for (var i = 0; i < d.length; i++) {
@@ -919,7 +920,9 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
                 ]
             });
         }
-        if (p.group && meta && meta.groups) {
+        if (p.hidden) {
+            hiddenFields.push(f);
+        } else if (p.group && meta && meta.groups) {
             f.tvh_uilevel = p.expert ? 'expert' : (p.advanced ? 'advanced' : 'basic');
             if (!groups)
                 groups = {};
@@ -1046,7 +1049,25 @@ tvheadend.idnode_editor_form = function(uilevel, d, meta, panel, conf)
         if (rf.length)
             panel.add(newFieldSet({ title: _("Read-only Info"), items: rf, collapsed: 'true'}));
     }
+
+    if (hiddenFields.length) {
+        var f = newFieldSet({ items: hiddenFields });
+        f.setVisible(false);
+        panel.add(f);
+    }
+
+    // form customization (if any) before layout()
+    if (conf.forms) {
+        if ('default' in conf.forms) {
+            conf.forms['default'](panel.getForm());
+        }
+        if (meta['class'] in conf.forms) {
+            conf.forms[meta['class']](panel.getForm());
+        }
+    }
+
     panel.doLayout();
+
     if (width)
         panel.fixedWidth = width + 50;
     if (conf.uuids) {
@@ -1085,7 +1106,8 @@ tvheadend.idnode_editor = function(_uilevel, item, conf)
         var c = {
             showpwd: conf.showpwd,
             uuids: conf.uuids,
-            labelWidth: conf.labelWidth || 200
+            labelWidth: conf.labelWidth || 200,
+            forms: conf.forms
         };
 
         tvheadend.idnode_editor_form(uilevel, item.props || item.params, item.meta, panel, c);
@@ -1362,10 +1384,14 @@ tvheadend.idnode_create = function(conf, onlyDefault, cloneValues)
                         pclass = r.get(conf.select.valueField);
                         win.setTitle(String.format(_('Add {0}'), s.lastSelectionText));
                         panel.remove(s);
-                        tvheadend.idnode_editor_form(uilevel, d, r.json, panel, { create: true, showpwd: true });
+                        tvheadend.idnode_editor_form(uilevel, d, r.json, panel, { create: true, showpwd: true, forms: conf.forms });
                         abuttons.save.setVisible(true);
                         abuttons.apply.setVisible(true);
                         win.setOriginSize(true);
+                        if (conf.select.formField) {
+                            values = values || {};
+                            values[conf.select.formField] = r.data[conf.select.valueField];
+                        }
                         if (values)
                             panel.getForm().setValues(values);
                     }
@@ -2289,6 +2315,9 @@ tvheadend.idnode_form_grid = function(panel, conf)
                 text: _('Add'),
                 disabled: false,
                 handler: function() {
+                    if (!conf.add.forms && conf.forms) {
+                        conf.add['forms'] = conf['forms'];
+                    }
                     tvheadend.idnode_create(conf.add, true);
                 }
             });
@@ -2474,7 +2503,8 @@ tvheadend.idnode_form_grid = function(panel, conf)
                         noButtons: true,
                         width: 730,
                         noautoWidth: true,
-                        showpwd: conf.showpwd
+                        showpwd: conf.showpwd,
+                        forms: conf.forms
                     });
                     abuttons.save.setDisabled(false);
                     abuttons.undo.setDisabled(false);
