@@ -21,7 +21,11 @@
 #include "transcoding/codec/internals.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#if ENABLE_LIBDRM_H
+#include <libdrm/drm.h>
+#else
 #include <drm/drm.h>
+#endif
 
 
 #define AV_DICT_SET_QP(d, v, a) \
