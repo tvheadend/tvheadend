@@ -102,6 +102,7 @@ tvh_video_context_open_decoder(TVHContext *self, AVDictionary **opts)
     if (hwaccel) {
         self->iavctx->get_format = hwaccels_decode_get_format;
     }
+    mystrset(&self->hw_accel_device, self->profile->device);
 #endif
     return 0;
 }

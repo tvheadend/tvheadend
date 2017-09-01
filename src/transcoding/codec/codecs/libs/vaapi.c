@@ -19,6 +19,9 @@
 
 
 #include "transcoding/codec/internals.h"
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <drm/drm.h>
 
 
 #define AV_DICT_SET_QP(d, v, a) \
@@ -35,6 +38,55 @@ typedef struct {
 
 
 static int
+probe_vaapi_device(const char *device, char *name, size_t namelen)
+{
+    drm_version_t dv;
+    char dname[128];
+    int fd;
+
+    if ((fd = open(device, O_RDWR)) < 0)
+        return -1;
+    memset(&dv, 0, sizeof(dv));
+    memset(dname, 0, sizeof(dname));
+    dv.name = dname;
+    dv.name_len = sizeof(dname)-1;
+    if (ioctl(fd, DRM_IOCTL_VERSION, &dv) < 0) {
+        close(fd);
+        return -1;
+    }
+    snprintf(name, namelen, "%s v%d.%d.%d (%s)",
+             dv.name, dv.version_major, dv.version_minor,
+             dv.version_patchlevel, device);
+    close(fd);
+    return 0;
+}
+
+static htsmsg_t *
+tvh_codec_profile_vaapi_device_list(void *obj, const char *lang)
+{
+    static const char *renderD_fmt = "/dev/dri/renderD%d";
+    static const char *card_fmt = "/dev/dri/card%d";
+    htsmsg_t *result = htsmsg_create_list();
+    char device[PATH_MAX];
+    char name[128];
+    int i, dev_num;
+
+    for (i = 0; i < 32; i++) {
+        dev_num = i + 128;
+        snprintf(device, sizeof(device), renderD_fmt, dev_num);
+        if (probe_vaapi_device(device, name, sizeof(name)) == 0)
+            htsmsg_add_msg(result, NULL, htsmsg_create_key_val(device, name));
+    }
+    for (i = 0; i < 32; i++) {
+        dev_num = i + 128;
+        snprintf(device, sizeof(device), card_fmt, dev_num);
+        if (probe_vaapi_device(device, name, sizeof(name)) == 0)
+            htsmsg_add_msg(result, NULL, htsmsg_create_key_val(device, name));
+    }
+    return result;
+}
+
+static int
 tvh_codec_profile_vaapi_open(tvh_codec_profile_vaapi_t *self,
                              AVDictionary **opts)
 {
@@ -43,13 +95,21 @@ tvh_codec_profile_vaapi_open(tvh_codec_profile_vaapi_t *self,
     return 0;
 }
 
-
 static const codec_profile_class_t codec_profile_vaapi_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_video_class,
         .ic_class      = "codec_profile_vaapi",
         .ic_caption    = N_("vaapi"),
         .ic_properties = (const property_t[]){
+            {
+                .type     = PT_STR,
+                .id       = "device",
+                .name     = N_("Device name"),
+                .desc     = N_("Device name (e.g. /dev/dri/renderD129)."),
+                .group    = 3,
+                .off      = offsetof(tvh_codec_profile_vaapi_t, device),
+                .list     = tvh_codec_profile_vaapi_device_list,
+            },
             {
                 .type     = PT_DBL,
                 .id       = "bit_rate",

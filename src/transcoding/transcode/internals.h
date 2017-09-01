@@ -168,6 +168,10 @@ typedef struct tvh_context_t {
     int64_t duration;
     int64_t delta;
     uint8_t sri;
+    // hardware acceleration
+    char *hw_accel_device;
+    AVBufferRef *hw_device_ref;
+    AVBufferRef *hw_device_ctx;
 } TVHContext;
 
 int

@@ -96,6 +96,7 @@ typedef struct tvh_codec_profile_t {
     double bit_rate;
     double qscale;
     int profile;
+    char *device; // for hardware acceleration
     LIST_ENTRY(tvh_codec_profile_t) link;
 } TVHCodecProfile;
 

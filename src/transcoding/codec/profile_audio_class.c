@@ -168,16 +168,14 @@ codec_profile_audio_class_language_list(void *obj, const char *lang)
     static char lc_buf[128];
 
     while (lc->code2b) {
-        htsmsg_t *map = htsmsg_create_map();
+        htsmsg_t *map = NULL;
         if (!strcmp(lc->code2b, "und")) {
-            htsmsg_add_str(map, "key", "");
-            htsmsg_add_str(map, "val", tvh_gettext_lang(lang, N_("Use original")));
+            map = htsmsg_create_key_val("", tvh_gettext_lang(lang, N_("Use original")));
         }
         else {
             memset(lc_buf, 0, sizeof(lc_buf));
             if (!str_snprintf(lc_buf, sizeof(lc_buf), "%s (%s)", lc->desc, lc->code2b)) {
-                htsmsg_add_str(map, "key", lc->code2b);
-                htsmsg_add_str(map, "val", lc_buf);
+                map = htsmsg_create_key_val(lc->code2b, lc_buf);
             }
             else {
                 htsmsg_destroy(list);
