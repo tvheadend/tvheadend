@@ -66,7 +66,12 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
 
     memset(deint, 0, sizeof(deint));
     memset(hw_deint, 0, sizeof(hw_deint));
-    if (filter_deint && hwaccels_get_deint_filter(self->iavctx, hw_deint, sizeof(hw_deint))) {
+#if ENABLE_HWACCELS
+    if (filter_deint &&
+        !hwaccels_get_deint_filter(self->iavctx, hw_deint, sizeof(hw_deint))) {
+#else
+    if (filter_deint) {
+#endif
         if (str_snprintf(deint, sizeof(deint), "yadif")) {
             return -1;
         }
