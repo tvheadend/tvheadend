@@ -330,6 +330,7 @@ tvh_transcoder_deliver(TVHTranscoder *self, th_pkt_t *pkt)
         tvh_transcoder_log(self, LOG_ERR, "failed to create message");
         return -1;
     }
+    pkt_ref_dec(pkt);
     streaming_target_deliver2(self->output, msg);
     return 0;
 }

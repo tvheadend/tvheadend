@@ -18,6 +18,7 @@
  */
 
 #include "hwaccels.h"
+#include "../internals.h"
 
 #if ENABLE_VAAPI
 #include "vaapi.h"
@@ -90,7 +91,9 @@ hwaccels_decode_get_format(AVCodecContext *avctx,
 void
 hwaccels_decode_close_context(AVCodecContext *avctx)
 {
-    if (avctx->hwaccel_context) {
+    TVHContext *ctx = avctx->opaque;
+
+    if (ctx->hw_accel_ictx) {
         switch (avctx->pix_fmt) {
 #if ENABLE_VAAPI
             case AV_PIX_FMT_VAAPI:
@@ -100,7 +103,7 @@ hwaccels_decode_close_context(AVCodecContext *avctx)
             default:
                 break;
         }
-        avctx->hwaccel_context = NULL;
+        ctx->hw_accel_ictx = NULL;
     }
 }
 
