@@ -507,7 +507,9 @@ vaapi_get_buffer2(AVCodecContext *avctx, AVFrame *avframe, int flags)
 int
 vaapi_decode_setup_context(AVCodecContext *avctx)
 {
-    if (!(avctx->hwaccel_context =
+    TVHContext *ctx = avctx->opaque;
+
+    if (!(ctx->hw_accel_ictx =
           tvhva_context_create("decode", avctx, VAEntrypointVLD))) {
         return -1;
     }
@@ -522,11 +524,9 @@ vaapi_decode_setup_context(AVCodecContext *avctx)
 void
 vaapi_decode_close_context(AVCodecContext *avctx)
 {
-    /*if (avctx->hw_frames_ctx) {
-        av_buffer_unref(&avctx->hw_frames_ctx);
-        avctx->hw_frames_ctx = NULL;
-    }*/
-    tvhva_context_destroy(avctx->hwaccel_context);
+    TVHContext *ctx = avctx->opaque;
+
+    tvhva_context_destroy(ctx->hw_accel_ictx);
 }
 
 
@@ -550,7 +550,7 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
           tvhva_context_create("encode", avctx, VAEntrypointEncSlice))) {
         return -1;
     }
-    if (!(ctx->hw_device_ctx = av_buffer_ref(hwaccel_context->hw_device_ref))) {
+    if (!(ctx->hw_device_octx = av_buffer_ref(hwaccel_context->hw_device_ref))) {
         tvhva_context_destroy(hwaccel_context);
         return AVERROR(ENOMEM);
     }
@@ -562,13 +562,9 @@ vaapi_encode_setup_context(AVCodecContext *avctx)
 void
 vaapi_encode_close_context(AVCodecContext *avctx)
 {
-    /*if (avctx->hw_frames_ctx) {
-        av_buffer_unref(&avctx->hw_frames_ctx);
-        avctx->hw_frames_ctx = NULL;
-    }*/
     TVHContext *ctx = avctx->opaque;
-    av_buffer_unref(&ctx->hw_device_ctx);
-    ctx->hw_device_ctx = NULL;
+    av_buffer_unref(&ctx->hw_device_octx);
+    ctx->hw_device_octx = NULL;
 }
 
 

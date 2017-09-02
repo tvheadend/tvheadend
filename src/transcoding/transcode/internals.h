@@ -171,7 +171,8 @@ typedef struct tvh_context_t {
     // hardware acceleration
     char *hw_accel_device;
     AVBufferRef *hw_device_ref;
-    AVBufferRef *hw_device_ctx;
+    void *hw_accel_ictx;
+    AVBufferRef *hw_device_octx;
 } TVHContext;
 
 int

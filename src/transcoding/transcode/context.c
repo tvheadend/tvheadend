@@ -578,10 +578,10 @@ tvh_context_open_filters(TVHContext *self,
     }
 
     // additional filtergraph params
-    if (!strcmp("buffer", source_name) && self->hw_device_ctx) {
+    if (!strcmp("buffer", source_name) && self->hw_device_octx) {
         for (i = 0; i < self->avfltgraph->nb_filters; i++) {
             if (!(self->avfltgraph->filters[i]->hw_device_ctx =
-                      av_buffer_ref(self->hw_device_ctx))) {
+                      av_buffer_ref(self->hw_device_octx))) {
                 ret = -1;
                 goto finish;
             }
