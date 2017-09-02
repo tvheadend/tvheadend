@@ -36,6 +36,9 @@ hwaccels_decode_get_format(AVCodecContext *avctx,
 void
 hwaccels_decode_close_context(AVCodecContext *avctx);
 
+int
+hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
+
 
 /* encoding ================================================================= */
 

@@ -105,6 +105,24 @@ hwaccels_decode_close_context(AVCodecContext *avctx)
 }
 
 
+int
+hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len)
+{
+    if (avctx->hwaccel_context) {
+        switch (avctx->pix_fmt) {
+#if ENABLE_VAAPI
+            case AV_PIX_FMT_VAAPI:
+                return vaapi_get_deint_filter(avctx, filter, filter_len);
+#endif
+            default:
+                break;
+        }
+    }
+    
+    return -1;
+}
+
+
 /* encoding ================================================================= */
 
 int

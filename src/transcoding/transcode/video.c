@@ -41,10 +41,11 @@ _video_filters_hw_pix_fmt(enum AVPixelFormat pix_fmt)
 static int
 _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters)
 {
-    static char download[48];
-    static char deint[8];
-    static char scale[24];
-    static char upload[48];
+    char download[48];
+    char deint[8];
+    char hw_deint[64];
+    char scale[24];
+    char upload[48];
     int ihw = _video_filters_hw_pix_fmt(self->iavctx->pix_fmt);
     int ohw = _video_filters_hw_pix_fmt(self->oavctx->pix_fmt);
     int filter_scale = (self->iavctx->height != self->oavctx->height);
@@ -64,8 +65,11 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
     }
 
     memset(deint, 0, sizeof(deint));
-    if (filter_deint && str_snprintf(deint, sizeof(deint), "yadif")) {
-        return -1;
+    memset(hw_deint, 0, sizeof(hw_deint));
+    if (filter_deint && hwaccels_get_deint_filter(self->iavctx, hw_deint, sizeof(hw_deint))) {
+        if (str_snprintf(deint, sizeof(deint), "yadif")) {
+            return -1;
+        }
     }
 
     memset(scale, 0, sizeof(scale));
@@ -83,7 +87,7 @@ _video_filters_get_filters(TVHContext *self, AVDictionary **opts, char **filters
         return -1;
     }
 
-    if (!(*filters = str_join(",", download, deint, scale, upload, NULL))) {
+    if (!(*filters = str_join(",", download, deint, scale, upload, hw_deint, NULL))) {
         return -1;
     }
 
