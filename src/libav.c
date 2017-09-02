@@ -7,21 +7,41 @@
 static void
 libav_log_callback(void *ptr, int level, const char *fmt, va_list vl)
 {
-  int severity = LOG_TVH_NOTIFY, l;
-  char *fmt1 = (char *)fmt;
+  int severity = LOG_TVH_NOTIFY, l1, l2;
+  const char *class_name;
+  char *fmt1;
 
   if (level != AV_LOG_QUIET &&
       ((level <= AV_LOG_INFO) || (tvhlog_options & TVHLOG_OPT_LIBAV))) {
 
-    /* remove trailing newline */
-    l = strlen(fmt);
-    if (fmt[l-1] == '\n') {
-      fmt1 = tvh_strdupa(fmt);
-      fmt1[l-1] = '\0';
-    }
+    class_name = av_default_item_name(ptr);
 
-    if (strcmp(fmt1, "forced frame type (%d) at %d was changed to frame type (%d)") == 0)
-      level = AV_LOG_TRACE;
+    l1 = strlen(fmt);
+    l2 = strlen(class_name);
+    fmt1 = alloca(l1 + l2 + 3);
+    if (fmt == NULL)
+      return;
+
+    strcpy(fmt1, class_name);
+    strcat(fmt1, ": ");
+    strcat(fmt1, fmt);
+
+    /* remove trailing newline */
+    if (fmt[l1-1] == '\n')
+      fmt1[l1 + l2 + 1] = '\0';
+
+    if (strcmp(class_name, "AVFormatContext") == 0) {
+      if (strcmp(fmt, "Negative cts, previous timestamps might be wrong.\n") == 0) {
+        level = AV_LOG_TRACE;
+      } else if (strcmp(fmt, "Invalid timestamps stream=%d, pts=%s, dts=%s, size=%d\n") == 0 &&
+                 strstr(fmt, ", pts=-") == 0) {
+        level = AV_LOG_TRACE;
+      }
+    } else if (strcmp(class_name, "AVCodecContext") == 0) {
+      if (strcmp(fmt, "forced frame type (%d) at %d was changed to frame type (%d)\n") == 0) {
+        level = AV_LOG_TRACE;
+      }
+    }
 
     switch(level) {
     case AV_LOG_TRACE:
