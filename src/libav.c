@@ -1,5 +1,8 @@
 #include "transcoding/transcode.h"
 #include "libav.h"
+#if ENABLE_VAAPI
+#include <va/va.h>
+#endif
 
 /**
  *
@@ -222,6 +225,49 @@ libav_is_encoder(AVCodec *codec)
 /**
  *
  */
+#if ENABLE_VAAPI
+static void libav_va_log(int severity, const char *msg)
+{
+  char *s;
+  int l;
+
+  if (msg == NULL || *msg == '\0')
+    return;
+  s = tvh_strdupa(msg);
+  l = strlen(s);
+  if (s[l-1] == '\n')
+    s[l-1] = '\0';
+  tvhlog(severity, LS_VAAPI, "%s", s);
+}
+
+static void libav_va_error_callback(const char *msg)
+{
+  libav_va_log(LOG_ERR, msg);
+}
+
+static void libav_va_info_callback(const char *msg)
+{
+  libav_va_log(LOG_INFO, msg);
+}
+#endif
+
+/**
+ *
+ */
+static void
+libav_vaapi_init(void)
+{
+#if ENABLE_VAAPI
+#ifdef VA_FOURCC_I010
+  vaSetErrorCallback(libav_va_error_callback);
+  vaSetInfoCallback(libav_va_info_callback);
+#endif
+#endif
+}
+
+/**
+ *
+ */
 void
 libav_set_loglevel(void)
 {
@@ -235,6 +281,7 @@ libav_set_loglevel(void)
 void
 libav_init(void)
 {
+  libav_vaapi_init();
   libav_set_loglevel();
   av_log_set_callback(libav_log_callback);
   av_register_all();
