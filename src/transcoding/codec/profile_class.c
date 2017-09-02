@@ -93,7 +93,7 @@ static htsmsg_t *
 codec_profile_class_save(idnode_t *idnode, char *filename, size_t fsize)
 {
     htsmsg_t *map = htsmsg_create_map();
-    static char uuid[UUID_HEX_SIZE];
+    char uuid[UUID_HEX_SIZE];
     idnode_save(idnode, map);
     if (filename)
       snprintf(filename, fsize, "codec/%s", idnode_uuid_as_str(idnode, uuid));

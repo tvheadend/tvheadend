@@ -168,7 +168,7 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
 static int
 tvh_video_context_open_filters(TVHContext *self, AVDictionary **opts)
 {
-    static char source_args[128];
+    char source_args[128];
     char *filters = NULL;
 
     // source args

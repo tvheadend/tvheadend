@@ -90,7 +90,7 @@ tvh_codec_audio_get_list_channel_layouts(TVHAudioCodec *self)
     htsmsg_t *list = NULL, *map = NULL;
     const uint64_t *channel_layouts = self->channel_layouts;
     uint64_t l = 0;
-    static char l_buf[16];
+    char l_buf[16];
     int i;
 
     if (channel_layouts && (list = htsmsg_create_list())) {
@@ -165,7 +165,7 @@ codec_profile_audio_class_language_list(void *obj, const char *lang)
 {
     htsmsg_t *list = htsmsg_create_list();
     lang_code_t *lc = (lang_code_t *)lang_codes;
-    static char lc_buf[128];
+    char lc_buf[128];
 
     while (lc->code2b) {
         htsmsg_t *map = NULL;

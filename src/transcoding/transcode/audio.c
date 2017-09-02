@@ -135,8 +135,8 @@ tvh_audio_context_open_encoder(TVHContext *self, AVDictionary **opts)
 static int
 tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
 {
-    static char source_args[128];
-    static char filters[16];
+    char source_args[128];
+    char filters[16];
     int resample = (self->iavctx->sample_rate != self->oavctx->sample_rate);
 
     // source args
